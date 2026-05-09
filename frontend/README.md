@@ -22,7 +22,8 @@ npm run dev
 El entorno de desarrollo usa proxy de Vite para evitar problemas CORS:
 
 - `/api/*` -> `http://localhost:8080/*`
-- Si no usas proxy, define `VITE_GATEWAY_BASE_URL=http://localhost:8080` y configura CORS en gateway.
+- Con `VITE_GATEWAY_BASE_URL` vacío (o sin definir), las llamadas van a rutas relativas `/api/...` y el proxy aplica; no hace falta rellenar la variable para desarrollo local típico.
+- Si no usas proxy (u otro host), define `VITE_GATEWAY_BASE_URL=http://localhost:8080` (u otra URL absoluta) y configura CORS en gateway.
 
 ## Textos e internacionalización
 

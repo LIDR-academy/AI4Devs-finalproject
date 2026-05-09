@@ -36,7 +36,7 @@ Como persona suscrita por correo, quiero recibir un aviso cuando exista el alta 
 - Consumo de eventos desde Kafka topic `catalog.arbol.evento` publicados por el alta de árbol.
 - Filtrado de `tipo_evento` para MVP: solo `ARBOL_CREADO` dispara flujo de notificación.
 - Persistencia mínima en `notification-service` para registrar evento consumido e idempotencia.
-- Resolución de suscriptores activos y envío de correo con plantilla mínima no sensible.
+- Resolución de suscriptores **ACTIVA** y envío de correo con **texto fijo o cuerpo mínimo** (sin sistema de plantillas en el MVP).
 - Manejo de reentregas sin duplicar envíos (no-op idempotente si evento ya procesado).
 - Pruebas de integración del flujo consumidor + persistencia + envío simulado.
 
@@ -66,14 +66,14 @@ Como persona suscrita por correo, quiero recibir un aviso cuando exista el alta 
 
 - Política de reintentos de correo y estrategia de backoff en fallo temporal SMTP.
 - Modelo final de estado de notificación en BD (`pendiente`, `enviado`, `error`) si se requiere en MVP.
-- Nivel de detalle del contenido del email (copy final y campos mínimos).
+- Redacción concreta del cuerpo del email (texto fijo permitido en MVP; sin plantillas).
 - Evidencia mínima de cierre manual/E2E cuando no haya suscriptores (caso no-op).
 
 ## 3. Criterios de aceptación (BDD)
 
 ### Referencias
 
-Backlog `HU-007`, [HU-007-ticket-breakdown.md](HU-007-ticket-breakdown.md), [kafka-events.md](../events/kafka-events.md), reglas R7 y UC-09.
+Backlog `HU-007`, [HU-007-ticket-breakdown.md](HU-007-ticket-breakdown.md), [kafka-events.md](../events/kafka-events.md), reglas R7 y UC-09; «suscriptor activo» = **`estado_suscripcion` = ACTIVA** ([data-model.md](../data-model/data-model.md) §2).
 
 ### Escenario 1 — Notificación tras alta de árbol
 

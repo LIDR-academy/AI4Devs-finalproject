@@ -9,7 +9,7 @@ alwaysApply: false
 
 # Frontend security & quality
 
-Complementa [fronted-vue3.mdc](fronted-vue3.mdc); aquí viven las reglas de auth, HTTP, seguridad y testing.
+Complementa [frontend-vue3.mdc](frontend-vue3.mdc); aquí viven las reglas de auth, HTTP, seguridad y testing.
 
 ## Estado y autenticación
 - Estado compartido (sesión, locale, feature flags) en **Pinia**, no en `ref` a nivel de módulo.

@@ -28,7 +28,7 @@ Carpetas principales: **`frontend/`**, **`services/`**, **`platform/observabilit
 - **Seguridad API / JWT:** [.cursor/rules/api-security.mdc](.cursor/rules/api-security.mdc) · [docs/security/jwt-gateway-strategy.md](docs/security/jwt-gateway-strategy.md) · Keycloak local: [infra/compose/README.md](infra/compose/README.md) · visión producto: [readme.md](readme.md) §2.5.
 - **Logging:** [.cursor/rules/logging.mdc](.cursor/rules/logging.mdc).
 - **Contrato HTTP (cliente):** [docs/api/openapi.yaml](docs/api/openapi.yaml) · convenciones [.cursor/rules/api-design.mdc](.cursor/rules/api-design.mdc) · reglas [.cursor/rules/api-contract.mdc](.cursor/rules/api-contract.mdc).
-- **Frontend Vue 3 (`frontend/`):** [.cursor/rules/vue3-frontend.mdc](.cursor/rules/vue3-frontend.mdc).
+- **Frontend Vue 3 (`frontend/`):** [.cursor/rules/frontend-vue3.mdc](.cursor/rules/frontend-vue3.mdc).
 - **Eventos Kafka:** [docs/events/kafka-events.md](docs/events/kafka-events.md) · [.cursor/rules/kafka-events.mdc](.cursor/rules/kafka-events.mdc).
 - **Híbrido SQL + Mongo (catálogo):** [docs/data-model/mongo.md](docs/data-model/mongo.md) · [.cursor/rules/mongo-hybrid.mdc](.cursor/rules/mongo-hybrid.mdc).
 

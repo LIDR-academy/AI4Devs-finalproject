@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { buildNavigationProfileState } from '@/navigation/navigationProfile'
 
+const route = useRoute()
 const auth = useAuth()
 const { t } = useI18n()
 const navigationProfile = computed(() =>
@@ -69,7 +70,7 @@ const canShowLogout = computed(() => navigationProfile.value.canShowLogout)
     </header>
 
     <main class="container page-content">
-      <RouterView />
+      <RouterView :key="route.fullPath" />
     </main>
   </div>
 </template>

@@ -9,6 +9,6 @@ export const appConfig = {
     scope: import.meta.env.VITE_OIDC_SCOPE ?? 'openid profile email',
   },
   api: {
-    gatewayBaseUrl: import.meta.env.VITE_GATEWAY_BASE_URL ?? defaultGatewayBaseUrl,
+    gatewayBaseUrl: String(import.meta.env.VITE_GATEWAY_BASE_URL ?? defaultGatewayBaseUrl).trim(),
   },
 }

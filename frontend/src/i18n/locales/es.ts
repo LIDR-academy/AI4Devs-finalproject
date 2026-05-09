@@ -16,23 +16,53 @@ export const es = {
     logout: 'Cerrar sesión',
   },
   home: {
+    panelNavAria: 'Accesos del panel',
     collaboratorTitle: 'Panel de colaborador',
     collaboratorDescription: 'Gestiona el catálogo y crea nuevas fichas de árboles.',
     adminTitle: 'Panel de administrador',
     adminDescription: 'Gestiona maestros, suscripciones y la operación del catálogo.',
-    logoAlt: 'Logotipo de MyTreeLibrary',
     authInitializing: 'Inicializando la sesión...',
-    publicSectionTitle: 'Acciones para visitantes',
+    publicSectionTitle: 'Bienvenido',
+    visitorHeroDescription:
+      'Explora el catálogo colaborativo de árboles singulares, recibe avisos por correo o inicia sesión para colaborar con la comunidad.',
+    /** Texto alternativo del hero ilustrado; complementa el h2 visible */
+    dashboardHeroIllustrationAlt: 'Ilustración decorativa junto al título de esta sección.',
     collaboratorSectionTitle: 'Acciones de colaborador',
     adminSectionTitle: 'Acciones de administración',
     login: 'Iniciar sesión con Keycloak',
-    publicViewTrees: 'Ver árboles publicados',
-    publicSubscribe: 'Suscribirme por correo',
-    goToCreate: 'Ir a alta de ficha',
-    goToMyTrees: 'Ir a mis árboles',
-    goToAdminMasters: 'Ir a maestros',
-    goToAdminSubscriptions: 'Ir a suscripciones',
     logout: 'Cerrar sesión',
+    tiles: {
+      createTree: {
+        title: 'Alta de ficha',
+        desc: 'Registrar un árbol singular con fotos, ubicación y datos de la ficha.',
+      },
+      myTrees: {
+        title: 'Mis árboles',
+        desc: 'Revisar y gestionar las fichas que has dado de alta como colaborador.',
+      },
+      masters: {
+        title: 'Maestros',
+        desc: 'Mantener provincias, especies y demás datos de referencia del catálogo.',
+      },
+      subscriptions: {
+        title: 'Suscripciones',
+        desc: 'Gestionar altas, bajas y estado de las notificaciones por correo.',
+      },
+    },
+    publicTiles: {
+      trees: {
+        title: 'Catálogo público',
+        desc: 'Explorar árboles publicados en listado y mapa.',
+      },
+      subscribe: {
+        title: 'Suscripción por correo',
+        desc: 'Recibir avisos sobre novedades sin cuenta de colaborador.',
+      },
+      login: {
+        title: 'Iniciar sesión',
+        desc: 'Accede con Keycloak para colaborar o administrar.',
+      },
+    },
   },
   login: {
     title: 'Redirigiendo a Keycloak...',
@@ -51,6 +81,34 @@ export const es = {
     backHomeCta: 'Volver al inicio',
     retryError: 'No se pudo iniciar la autenticación. Inténtalo de nuevo en unos segundos.',
   },
+  subscriptionNew: {
+    title: 'Suscripción por correo',
+    intro:
+      'Recibirás avisos sobre el catálogo público. No sustituye una cuenta de colaborador; es solo notificaciones por correo.',
+    fields: {
+      email: {
+        label: 'Correo electrónico',
+        // En vue-i18n 9+, `@` en el literal inicia sintaxis "linked"; usar token literal.
+        placeholder: "tu.correo{'@'}ejemplo.org",
+      },
+    },
+    submit: 'Suscribirme',
+    submitting: 'Enviando…',
+    cancel: 'Volver al inicio',
+    success: 'Te has suscrito correctamente con {email}.',
+    subscribeAnother: 'Suscribir otro correo',
+    errors: {
+      emailRequired: 'Indica un correo electrónico.',
+      conflictAlreadyActive: 'Este correo ya está suscrito a las notificaciones.',
+      conflictCancelled:
+        'Esta suscripción está cancelada. Solo un administrador puede reactivarla desde la gestión de suscripciones.',
+      conflictGeneric: 'No se pudo completar el alta por un conflicto con el correo indicado.',
+      badRequest: 'Los datos enviados no son válidos. Revisa el correo.',
+      network: 'No se pudo conectar con el servicio. Comprueba tu conexión o que el API Gateway esté en marcha.',
+      serviceError: 'Error en el servicio (código {status}).',
+      unexpected: 'No se pudo completar la suscripción por un error inesperado.',
+    },
+  },
   pendingViews: {
     default: {
       title: 'Pantalla pendiente',
@@ -62,9 +120,6 @@ export const es = {
     },
     treesDetail: {
       title: 'Detalle de árbol',
-    },
-    subscriptionNew: {
-      title: 'Suscripción por correo',
     },
     treesEdit: {
       title: 'Edición de árbol',
@@ -131,6 +186,8 @@ export const es = {
     messages: {
       badRequest: 'Los filtros indicados no son válidos.',
       networkError: 'No se pudo conectar con el servicio. Verifica el entorno local.',
+      badGateway:
+        'El catálogo no está disponible: el API Gateway no alcanza catalog-service (p. ej. puerto 8081). Arranca el microservicio o revisa la URL del gateway.',
       serviceError: 'Error en el servicio ({status}).',
       unexpectedError: 'No se pudo cargar el listado por un error inesperado.',
     },

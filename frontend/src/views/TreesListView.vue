@@ -61,6 +61,18 @@ const hasNext = computed(() => page.value + 1 < totalPages.value)
 const hasResults = computed(() => trees.value.length > 0)
 const isSuccess = computed(() => !isLoading.value && !errorMessage.value)
 
+function isCatalogDownstreamMessage(error: HttpError): boolean {
+  if (error.status === 502 || error.status === 503) {
+    return true
+  }
+  if (error.status !== 500) {
+    return false
+  }
+  const raw = error.problem as Record<string, unknown> | undefined
+  const blob = [error.problem?.detail, raw?.message].filter((v) => typeof v === 'string').join(' ')
+  return blob.includes('Connection refused')
+}
+
 function mapError(error: unknown): string {
   if (error instanceof NetworkError) {
     return t('treesList.messages.networkError')
@@ -68,6 +80,9 @@ function mapError(error: unknown): string {
   if (error instanceof HttpError) {
     if (error.status === 400) {
       return t('treesList.messages.badRequest')
+    }
+    if (isCatalogDownstreamMessage(error)) {
+      return t('treesList.messages.badGateway')
     }
     return t('treesList.messages.serviceError', { status: error.status })
   }

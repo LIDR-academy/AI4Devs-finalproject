@@ -17,7 +17,7 @@
 
 **Reglas aplicables por capa (referencia rápida):**
 
-- **Frontend:** [fronted-vue3.mdc](../../.cursor/rules/fronted-vue3.mdc), [frontend-ux.mdc](../../.cursor/rules/frontend-ux.mdc), [frontend-security.mdc](../../.cursor/rules/frontend-security.mdc)
+- **Frontend:** [frontend-vue3.mdc](../../.cursor/rules/frontend-vue3.mdc), [frontend-ux.mdc](../../.cursor/rules/frontend-ux.mdc), [frontend-security.mdc](../../.cursor/rules/frontend-security.mdc)
 - **Backend:** [spring-boot-4-backend.mdc](../../.cursor/rules/spring-boot-4-backend.mdc), [backend-generation-standard.mdc](../../.cursor/rules/backend-generation-standard.mdc)
 - **API / contrato:** [api-design.mdc](../../.cursor/rules/api-design.mdc), [api-contract.mdc](../../.cursor/rules/api-contract.mdc), [openapi.yaml](../api/openapi.yaml)
 - **Calidad / pruebas:** [quality-and-testing.mdc](../../.cursor/rules/quality-and-testing.mdc), [testing-java.md](../engineering/testing-java.md), [testing-frontend.md](../engineering/testing-frontend.md)
@@ -63,7 +63,7 @@ flowchart LR
 
 | ID | Título | Descripción breve | Estado |
 |----|--------|-------------------|--------|
-| **TASK-HU-002-05** | Vista de listado público | `TreesListView.vue` + `catalogService` / `fetchPublicProvinceNames`: listado, paginación, filtros básicos, roles **COLABORADOR**/**ADMIN** con **Más filtros** / **Menos filtros** (estado/visibilidad) y barra de acciones alineada al criterio del proyecto (secundarios a la izquierda, **Aplicar filtros** a la derecha; ver reglas `frontend-ux` / `fronted-vue3`). Navegación a detalle por `RouterLink`. | Hecho |
+| **TASK-HU-002-05** | Vista de listado público | `TreesListView.vue` + `catalogService` / `fetchPublicProvinceNames`: listado, paginación, filtros básicos, roles **COLABORADOR**/**ADMIN** con **Más filtros** / **Menos filtros** (estado/visibilidad) y barra de acciones alineada al criterio del proyecto (secundarios a la izquierda, **Aplicar filtros** a la derecha; ver reglas `frontend-ux` / `frontend-vue3`). Navegación a detalle por `RouterLink`. | Hecho |
 | **TASK-HU-002-06** | Vista de detalle público (sin mapa) | Implementar/ajustar detalle público base con información principal de ficha publicada y manejo de 404. La integración de mapa queda en HU-003, pero la estructura de detalle debe quedar lista para ambos trabajos en paralelo. | Hecho |
 | **TASK-HU-002-07** | Guardas y navegación pública | Verificar que `listado` y `detalle` sean accesibles sin autenticación y que no aparezcan bloqueos de sesión en este flujo público. | Hecho |
 
@@ -73,7 +73,7 @@ flowchart LR
 
 - **Código revisado:** `frontend/src/views/TreesListView.vue` — `type="button"` en Limpiar y Más/Menos (no envían el formulario); **Aplicar** es `type="submit"` con clase `trees-filter-btn-submit`. Estilos en `frontend/src/style.css` (`.trees-filter-actions`, `.trees-filter-btn-submit`; en viewport estrecho se anula `margin-left` del primario y `flex: 1` en botones). Filtros `estado`/`visibilidad` solo se envían al API con rol privilegiado y panel expandido (`loadTrees`).
 - **Coherencia de botones con el alta:** `CreateTreeView.vue` — pie con `tree-form-submit` y `.tree-form .actions` (mismo criterio horizontal que el listado).
-- **Documentación normativa:** criterio de filas de acciones en [.cursor/rules/frontend-ux.mdc](../../.cursor/rules/frontend-ux.mdc) y [.cursor/rules/fronted-vue3.mdc](../../.cursor/rules/fronted-vue3.mdc) (sección Estilos en Vue 3).
+- **Documentación normativa:** criterio de filas de acciones en [.cursor/rules/frontend-ux.mdc](../../.cursor/rules/frontend-ux.mdc) y [.cursor/rules/frontend-vue3.mdc](../../.cursor/rules/frontend-vue3.mdc) (sección Estilos en Vue 3).
 
 ### Calidad y pruebas
 

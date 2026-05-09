@@ -23,6 +23,6 @@ Al **encargar trabajo** suele bastar con la regla que hace de índice (p. ej. [b
 | Tests frontend por capa, Vitest (Vue 3) | [testing-frontend.md](testing-frontend.md) | [frontend-security.mdc](../../.cursor/rules/frontend-security.mdc) y [quality-and-testing.mdc](../../.cursor/rules/quality-and-testing.mdc) |
 | Eventos Kafka (topics, payload, idempotencia) | [docs/events/kafka-events.md](../events/kafka-events.md) | [.cursor/rules/kafka-events.mdc](../../.cursor/rules/kafka-events.mdc) |
 | Checklist al tocar `services/` | (índice) | [.cursor/rules/backend-generation-standard.mdc](../../.cursor/rules/backend-generation-standard.mdc) |
-| Frontend Vue 3 (`frontend/`) | (convenciones en regla; guías en `docs/` cuando existan) | [.cursor/rules/vue3-frontend.mdc](../../.cursor/rules/vue3-frontend.mdc) |
+| Frontend Vue 3 (`frontend/`) | (convenciones en regla; guías en `docs/` cuando existan) | [.cursor/rules/frontend-vue3.mdc](../../.cursor/rules/frontend-vue3.mdc) |
 
 Registro del plan de redacción aplicado (prioridades y ficheros): [ADR-0003](../adr/0003-cursor-rules-refinement-and-canonical-map.md).

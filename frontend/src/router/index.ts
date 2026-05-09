@@ -5,6 +5,7 @@ import CreateTreeView from '@/views/CreateTreeView.vue'
 import HomeView from '@/views/HomeView.vue'
 import LoginView from '@/views/LoginView.vue'
 import PendingView from '@/views/PendingView.vue'
+import SubscribeByEmailView from '@/views/SubscribeByEmailView.vue'
 import TreesDetailView from '@/views/TreesDetailView.vue'
 import TreesListView from '@/views/TreesListView.vue'
 import { authService } from '@/services/auth/oidc'
@@ -148,9 +149,9 @@ const router = createRouter({
     {
       path: '/subscriptions/new',
       name: 'subscriptions-new',
-      component: PendingView,
+      component: SubscribeByEmailView,
       meta: {
-        pageTitleKey: 'pendingViews.subscriptionNew.title',
+        pageTitleKey: 'subscriptionNew.title',
       },
     },
     {
