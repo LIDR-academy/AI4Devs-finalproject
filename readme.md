@@ -733,7 +733,7 @@ flowchart LR
 | Autorización              | Roles de realm `COLABORADOR` y `ADMIN`; políticas en recursos sensibles                                                                                                                 |
 | Gateway                   | Validación de JWT en el gateway (`spring-boot-starter-oauth2-resource-server`); rutas públicas según OpenAPI; **cabeceras de correlación** en roadmap (propagación gateway → servicios) |
 | Almacenamiento de objetos | Buckets privados; **URLs prefirmadas** de corta duración; sin credenciales en el cliente                                                                                                |
-| Datos personales          | Suscripciones por email con **token hash** para baja; minimización de logs                                                                                                              |
+| Suscripciones y privacidad | En el **MVP** solo se solicita **correo electrónico** para el aviso por alta de ficha; **no** se piden otros datos personales (nombre, teléfono, documento, etc.). La baja operativa es por estado (**ACTIVA** / **CANCELADA**) gestionada por **ADMIN**; minimización de datos en logs y APIs según contrato y modelo. |
 | Transporte                | TLS en producción; CORS restringido al origen del SPA                                                                                                                                   |
 | Observabilidad            | Health/metrics Prometheus; Grafana                                                    |
 
@@ -1121,6 +1121,32 @@ En la generación ed ticket de trabajo se incluye explicitamente una sección co
 > Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
 
 **Pull Request 1**
+## Resumen
+
+Implementa la **HU-004**: alta de suscripción por correo sin cuenta de colaborador, con API en **notification-service**, exposición vía **gateway**, contrato en **OpenAPI**, pantalla y flujo en **frontend** (formulario, validación, i18n, tests), y documentación de backlog / modelo de datos / onboarding Git.
+
+## Cambios principales
+
+- **Backend (`notification-service`)**: registro de suscriptores, migración `V2__suscriptor.sql`, seguridad Keycloak, controlador REST de altas públicas, manejo de errores tipo Problem Details, tests (servicio + WebMvc).
+- **Gateway**: filtro global ante errores de conexión a downstream y utilidades asociadas (con tests).
+- **Frontend**: vista `SubscribeByEmailView`, composable `usePublicSubscriptionForm`, servicio `publicSubscription`, ampliación de `apiClient` (p. ej. cuerpo sin JSON / conflictos), iconos y tiles del home, hero visitante con ilustración `tree_map_illustration_clean.svg`, estilos e i18n (`es.ts`), rutas y tests (Vitest).
+- **Contrato y configuración**: `docs/api/openapi.yaml`, `frontend/.env.example` y README donde aplique.
+- **Documentación**: HU-004 en backlog (historia + desglose de tickets), actualización de `backlog.md`, `data-model.md`, guía de ramas GitHub, revisión de enlaces a reglas (`frontend-vue3.mdc`, etc.).
+
+## Cómo probar (orientativo)
+
+1. **Backend**: arrancar stack local según `services/README.md`; verificar migración y endpoint de alta de suscripción público según OpenAPI.
+2. **Frontend**: `npm run build` / tests en `frontend/`; flujo manual en `/suscripcion` (o ruta configurada) con correo válido y casos de error (409/conflicto si aplica).
+3. **Gateway**: comprobar que las peticiones al notification-service y respuestas de error se propagan de forma coherente.
+
+## Referencias
+
+- Historia / desglose: `docs/backlog/HU-004-suscripcion-por-correo-sin-cuenta-colaborador.md`, `docs/backlog/HU-004-ticket-breakdown.md`
+
+## Notas
+
+- Renombrado de regla Cursor `fronted-vue3.mdc` → `frontend-vue3.mdc` y actualización de enlaces en docs y `AGENTS.md`.
+- Commit: `a0ba685` — *Implementación HU-004 Alta suscripción*.
 
 **Pull Request 2**
 

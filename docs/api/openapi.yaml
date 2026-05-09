@@ -451,15 +451,26 @@ paths:
   /api/notifications/subscriptions:
     get:
       tags: [notifications]
-      summary: Listar suscripciones (admin o según política)
+      summary: Listar suscripciones (solo rol ADMIN)
+      description: >
+        Listado paginado para gestión **ADMIN** (**UC-08**, **HU-012**). Requiere JWT con rol de realm **ADMIN**.
+        En el MVP las suscripciones no se eliminan físicamente; la administración opera solo sobre **estado_suscripcion**
+        (**ACTIVA** / **CANCELADA**). Orden por defecto del servidor: **altaEn** descendente (más recientes primero).
+        Ver docs/data-model/data-model.md §2.
       security:
         - bearerAuth: []
       parameters:
         - $ref: "#/components/parameters/Page"
         - $ref: "#/components/parameters/Size"
+        - $ref: "#/components/parameters/NotificationSubscriptionEstadoFilter"
+        - $ref: "#/components/parameters/NotificationSubscriptionEmailFilter"
       responses:
         "200":
-          description: Listado
+          description: Listado paginado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationSubscriptionAdminPage"
         "401":
           $ref: "#/components/responses/ProblemUnauthorized"
         "403":
@@ -502,6 +513,41 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
+
+  /api/notifications/subscriptions/{subscriptionId}:
+    parameters:
+      - $ref: "#/components/parameters/SubscriptionId"
+    patch:
+      tags: [notifications]
+      summary: Actualizar estado de suscripción (solo rol ADMIN)
+      description: >
+        Cambia **estado_suscripcion** entre **ACTIVA** y **CANCELADA** (**UC-08**, **HU-012**). Sin borrado de fila.
+        **Idempotencia:** si el estado solicitado coincide con el persistido, la respuesta es **200** con el ítem actual
+        (no se considera error). Al pasar a **CANCELADA** el servidor registra **baja_en**; al volver a **ACTIVA**
+        limpia **baja_en** según implementación alineada al modelo §2.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationSubscriptionStateUpdateRequest"
+      responses:
+        "200":
+          description: Estado actualizado o ya era el solicitado (idempotente)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationSubscriptionAdminItem"
+        "400":
+          $ref: "#/components/responses/ProblemBadRequest"
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+        "404":
+          $ref: "#/components/responses/ProblemNotFound"
 
   /api/ai/species-identification:
     post:
@@ -566,6 +612,31 @@ components:
         type: integer
         format: int64
       description: Identificador de FOTOGRAFIA (`fotografia_id`) en esquema media
+    SubscriptionId:
+      name: subscriptionId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+      description: Identificador de SUSCRIPTOR (`suscriptor_id`, esquema notification).
+    NotificationSubscriptionEstadoFilter:
+      name: estadoSuscripcion
+      in: query
+      required: false
+      schema:
+        $ref: "#/components/schemas/NotificationSubscriptionEstadoEnum"
+      description: Filtro opcional por estado de suscripción.
+    NotificationSubscriptionEmailFilter:
+      name: email
+      in: query
+      required: false
+      schema:
+        type: string
+        maxLength: 320
+      description: >
+        Filtro opcional por texto del correo (coincidencia parcial, sin distinguir mayúsculas/minúsculas).
+        Cadena vacía o solo espacios se ignora.
     Page:
       name: page
       in: query
@@ -1087,6 +1158,75 @@ components:
           type: boolean
         last:
           type: boolean
+    NotificationSubscriptionEstadoEnum:
+      type: string
+      enum: [ACTIVA, CANCELADA]
+      description: Valores de estado_suscripcion (MVP, data-model §2).
+    NotificationSubscriptionAdminItem:
+      type: object
+      required:
+        - subscriptionId
+        - email
+        - estadoSuscripcion
+        - altaEn
+      properties:
+        subscriptionId:
+          type: integer
+          format: int64
+          description: Identificador interno del suscriptor (suscriptor_id).
+        email:
+          type: string
+          format: email
+        estadoSuscripcion:
+          $ref: "#/components/schemas/NotificationSubscriptionEstadoEnum"
+        altaEn:
+          type: string
+          format: date-time
+        confirmadoEn:
+          type: string
+          format: date-time
+          nullable: true
+        bajaEn:
+          type: string
+          format: date-time
+          nullable: true
+    NotificationSubscriptionAdminPage:
+      type: object
+      required:
+        - content
+        - totalElements
+        - totalPages
+        - page
+        - size
+        - unpaged
+        - first
+        - last
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/NotificationSubscriptionAdminItem"
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+        page:
+          type: integer
+        size:
+          type: integer
+        unpaged:
+          type: boolean
+        first:
+          type: boolean
+        last:
+          type: boolean
+    NotificationSubscriptionStateUpdateRequest:
+      type: object
+      required: [estadoSuscripcion]
+      properties:
+        estadoSuscripcion:
+          $ref: "#/components/schemas/NotificationSubscriptionEstadoEnum"
     Problem:
       type: object
       description: Problem Details (RFC 9457)

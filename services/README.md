@@ -67,6 +67,8 @@ Los `application-dev.properties` de los servicios con JDBC usan `jdbc:postgresql
 
 **Suscripción pública por correo (HU-004):** `POST /api/notifications/subscriptions` está expuesto sin JWT en **`notification-service`** y en el **api-gateway**; en pruebas E2E y desde la SPA use la **URL base del gateway** (`http://localhost:8080`), no el puerto **8083** directo, salvo depuración local consciente.
 
+**Gestión administrativa de suscripciones (HU-012 / UC-08):** `GET /api/notifications/subscriptions` y `PATCH /api/notifications/subscriptions/{subscriptionId}` requieren JWT con rol de realm **ADMIN**; la SPA los invoca vía el mismo gateway. Contrato: [docs/api/openapi.yaml](../docs/api/openapi.yaml).
+
 Desde **`services/`**: **`mvn verify`** o **`mvn -pl catalog-service spring-boot:run -Dspring-boot.run.profiles=dev`** (tras tener Postgres en marcha).
 
 ---

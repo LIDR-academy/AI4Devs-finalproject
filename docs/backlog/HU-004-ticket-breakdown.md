@@ -81,7 +81,7 @@ flowchart LR
 | ID | Título | Descripción breve | Estado |
 |----|--------|-------------------|--------|
 | **TASK-HU-004-06** | Vista **`/subscriptions/new`** y cliente HTTP | **`SubscribeByEmailView`**: campo email, **`publicApiFetch`** → **`POST`** gateway (`appConfig.api.gatewayBaseUrl` / `VITE_GATEWAY_BASE_URL`), **sin** Bearer. **`usePublicSubscriptionForm`**: loading / éxito / error; **409** con i18n según detalle del servidor (ya activo / cancelada / genérico + `detail`). | Hecho |
-| **TASK-HU-004-07** | Pruebas Vitest composable / mapper | Mapeo **201** `{ email }`, **Problem** para **409**/**400**; sin llamadas reales al gateway. | Pendiente |
+| **TASK-HU-004-07** | Pruebas Vitest composable / mapper | Mapeo **201** `{ email }`, **Problem** para **409**/**400**; sin llamadas reales al gateway. | Hecho |
 
 ---
 

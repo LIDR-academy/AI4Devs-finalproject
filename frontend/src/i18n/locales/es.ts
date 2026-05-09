@@ -1,4 +1,7 @@
 export const es = {
+  common: {
+    cancel: 'Cancelar',
+  },
   appShell: {
     brand: 'MyTreeLibrary',
     tagline: 'Catálogo colaborativo de árboles singulares',
@@ -107,6 +110,71 @@ export const es = {
       network: 'No se pudo conectar con el servicio. Comprueba tu conexión o que el API Gateway esté en marcha.',
       serviceError: 'Error en el servicio (código {status}).',
       unexpected: 'No se pudo completar la suscripción por un error inesperado.',
+    },
+  },
+  adminSubscriptions: {
+    title: 'Gestión de suscripciones',
+    intro:
+      'Listado de correos suscritos a avisos del catálogo. Puedes pasar cada suscripción a cancelada o reactivarla; no se borran filas (MVP).',
+    loading: 'Cargando suscripciones…',
+    empty: 'No hay suscripciones que mostrar con el filtro actual.',
+    resultsCount: '{count} resultado(s)',
+    filters: {
+      email: {
+        label: 'Correo electrónico',
+        placeholder: 'Texto parcial del correo',
+      },
+      estado: {
+        label: 'Estado',
+        all: 'Todos',
+        activa: 'Activas',
+        cancelada: 'Canceladas',
+      },
+      apply: 'Aplicar filtro',
+      clear: 'Limpiar',
+    },
+    fields: {
+      email: 'Correo',
+      estado: 'Estado',
+      altaEn: 'Alta',
+      confirmadoEn: 'Confirmado',
+      bajaEn: 'Baja',
+      actions: 'Acciones',
+    },
+    estado: {
+      ACTIVA: 'Activa',
+      CANCELADA: 'Cancelada',
+    },
+    actions: {
+      cancel: 'Cancelar',
+      reactivate: 'Reactivar',
+    },
+    pagination: {
+      navLabel: 'Paginación de suscripciones',
+      previous: 'Anterior',
+      next: 'Siguiente',
+      pageStatus: 'Página {current} de {total}',
+    },
+    confirmCancel: '¿Dar de baja la suscripción de {email}? Pasará a estado cancelada.',
+    confirmReactivate: '¿Reactivar la suscripción de {email}?',
+    modal: {
+      titleCancel: 'Dar de baja suscripción',
+      titleReactivate: 'Reactivar suscripción',
+      confirmCancel: 'Dar de baja',
+      confirmReactivate: 'Reactivar',
+    },
+    messages: {
+      patchSuccess: 'Estado actualizado correctamente.',
+      network: 'No se pudo conectar con el servicio. Comprueba el API Gateway y notification-service.',
+      badRequest: 'La petición no es válida.',
+      unauthorized: 'Tu sesión no es válida o ha caducado. Vuelve a iniciar sesión.',
+      forbidden: 'No tienes permisos para esta operación (se requiere rol administrador).',
+      notFound: 'No se encontró el listado o el recurso solicitado.',
+      patchNotFound: 'No existe la suscripción indicada o ya no está disponible.',
+      badGateway:
+        'El servicio de notificaciones no está disponible (502/503). Arranca notification-service o revisa el gateway.',
+      serviceError: 'Error en el servicio (código {status}).',
+      unexpected: 'Ha ocurrido un error inesperado.',
     },
   },
   pendingViews: {
