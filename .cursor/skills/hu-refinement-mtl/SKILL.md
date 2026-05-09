@@ -36,6 +36,7 @@ Tu trabajo es revisar y completar la historia **[HU-XXX]** usando como fuentes *
 
 ### Objetivo
 
+- Entender la historia
 - Validar que la información existente sea correcta.
 - Comprobar si la historia cumple INVEST.
 - Completar solo la información necesaria para refinamiento y desarrollo.

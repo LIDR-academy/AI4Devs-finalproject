@@ -65,6 +65,8 @@ Los `application-dev.properties` de los servicios con JDBC usan `jdbc:postgresql
 | ai-assistant-service | 8084 |
 | system-e2e-tests | (no aplica: solo tests contra URLs configurables) |
 
+**Suscripción pública por correo (HU-004):** `POST /api/notifications/subscriptions` está expuesto sin JWT en **`notification-service`** y en el **api-gateway**; en pruebas E2E y desde la SPA use la **URL base del gateway** (`http://localhost:8080`), no el puerto **8083** directo, salvo depuración local consciente.
+
 Desde **`services/`**: **`mvn verify`** o **`mvn -pl catalog-service spring-boot:run -Dspring-boot.run.profiles=dev`** (tras tener Postgres en marcha).
 
 ---
@@ -82,6 +84,7 @@ Desde **`services/`**: **`mvn verify`** o **`mvn -pl catalog-service spring-boot
 ## 3. Gateway y seguridad JWT
 
 - **Arranque del módulo:** `mvn -pl api-gateway spring-boot:run -Dspring-boot.run.profiles=dev` (infra lista; Keycloak accesible si pruebas JWT reales).
+- **Microservicios aguas abajo:** si el gateway responde **502** con título *Servicio de destino no disponible*, el destino (p. ej. **catalog-service** en **8081**) no acepta conexión: arranca ese servicio o revisa `mtl.catalog.uri` / `MTL_*`. Sin **catalog-service**, rutas como **`/api/catalog/public/trees`** fallan (no es un fallo de **media-service**).
 - **Stack, rutas (`spring.cloud.gateway.server.webflux.*`), variables (`mtl.*.uri` / `MTL_*`), issuer, token relay, lista blanca, CORS y pendientes (correlación, timeouts):** [docs/security/jwt-gateway-strategy.md](../docs/security/jwt-gateway-strategy.md).
 - **Reglas para implementación:** `.cursor/rules/api-security.mdc`. Código: `services/api-gateway/`.
 

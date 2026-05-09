@@ -173,7 +173,7 @@ Cuando crees una vista nueva en `frontend/src/views`:
 - Ejemplo landing/home: `frontend/src/views/HomeView.vue`
 - Ejemplo formulario: `frontend/src/views/CreateTreeView.vue`
 - Reglas Vue/UX/seguridad:
-  - `.cursor/rules/fronted-vue3.mdc`
+  - `.cursor/rules/frontend-vue3.mdc`
   - `.cursor/rules/frontend-ux.mdc`
   - `.cursor/rules/frontend-security.mdc`
 

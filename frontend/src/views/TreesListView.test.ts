@@ -108,7 +108,7 @@ describe('TreesListView', () => {
     })
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Error en el servicio (503).')
+    expect(wrapper.text()).toContain('El catálogo no está disponible')
   })
 
   it('renders public tree card and navigation link to detail route', async () => {

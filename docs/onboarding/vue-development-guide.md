@@ -4,7 +4,7 @@ Guía para el equipo que **empieza con Vue** en este monorepo. El objetivo es qu
 
 **Referencias obligatorias (léelas en paralelo):**
 
-- Reglas Cursor (normas del repo): [`.cursor/rules/fronted-vue3.mdc`](../../.cursor/rules/fronted-vue3.mdc), [`.cursor/rules/frontend-security.mdc`](../../.cursor/rules/frontend-security.mdc), [`.cursor/rules/frontend-ux.mdc`](../../.cursor/rules/frontend-ux.mdc)
+- Reglas Cursor (normas del repo): [`.cursor/rules/frontend-vue3.mdc`](../../.cursor/rules/frontend-vue3.mdc), [`.cursor/rules/frontend-security.mdc`](../../.cursor/rules/frontend-security.mdc), [`.cursor/rules/frontend-ux.mdc`](../../.cursor/rules/frontend-ux.mdc)
 - Revisión de arquitectura implementada: [docs/software-revisions/2026-04-25-frontend-architecture-review.md](../software-revisions/2026-04-25-frontend-architecture-review.md)
 - Arranque y variables: [frontend/README.md](../../frontend/README.md)
 - Producto y copy (IA orientativa): [`.cursor/rules/product-context.mdc`](../../.cursor/rules/product-context.mdc) (si aplica a tu pantalla)

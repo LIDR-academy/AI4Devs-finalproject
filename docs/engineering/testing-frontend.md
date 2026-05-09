@@ -72,6 +72,6 @@ Desde `frontend/`:
 
 ## 7. Referencias relacionadas (sin duplicar)
 
-- Reglas cortas IA: [frontend-security.mdc](../../.cursor/rules/frontend-security.mdc), [fronted-vue3.mdc](../../.cursor/rules/fronted-vue3.mdc), [quality-and-testing.mdc](../../.cursor/rules/quality-and-testing.mdc).
+- Reglas cortas IA: [frontend-security.mdc](../../.cursor/rules/frontend-security.mdc), [frontend-vue3.mdc](../../.cursor/rules/frontend-vue3.mdc), [quality-and-testing.mdc](../../.cursor/rules/quality-and-testing.mdc).
 - Guía de inicio frontend: [docs/onboarding/vue-development-guide.md](../onboarding/vue-development-guide.md).
 - Estrategia general de calidad del proyecto: [readme.md](../../readme.md) (apartado 2.6).

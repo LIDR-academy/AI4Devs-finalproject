@@ -57,7 +57,7 @@ function applyQueryParams(searchParams: URLSearchParams, query: Record<string, Q
   }
 }
 
-function buildUrl(path: string, query?: Record<string, QueryValue>): string {
+function buildGatewayUrl(path: string, query?: Record<string, QueryValue>): string {
   const [pathWithoutQuery, existingQuery = ''] = path.split('?')
   const searchParams = new URLSearchParams(existingQuery)
 
@@ -84,6 +84,18 @@ function buildHeaders(init: ApiFetchOptions, token: string | null): Headers {
   return headers
 }
 
+/** Cabeceras JSON sin `Authorization` (rutas públicas del gateway). */
+function buildPublicHeaders(init: ApiFetchOptions): Headers {
+  const headers = new Headers(init.headers)
+  if (!headers.has('Accept')) {
+    headers.set('Accept', 'application/json')
+  }
+  if (init.body !== undefined && !(init.body instanceof FormData) && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json')
+  }
+  return headers
+}
+
 async function parseProblem(response: Response): Promise<ProblemDetails | undefined> {
   try {
     return (await response.json()) as ProblemDetails
@@ -97,7 +109,7 @@ async function requestWithAuthRetry<T>(path: string, init: ApiFetchOptions, hasR
   const token = authService.getAccessToken(user)
   const headers = buildHeaders(init, token)
   const { query, ...requestInit } = init
-  const url = buildUrl(path, query)
+  const url = buildGatewayUrl(path, query)
 
   let response: Response
   try {
@@ -144,6 +156,43 @@ export async function apiFetch<T>(
   return requestWithAuthRetry<T>(path, init, false)
 }
 
+/**
+ * Petición al gateway **sin** Bearer ni flujo OIDC (no reintenta 401).
+ * Para endpoints públicos documentados en OpenAPI con `security: []`.
+ */
+export async function publicApiFetch<T>(path: string, init: ApiFetchOptions = {}): Promise<T> {
+  const headers = buildPublicHeaders(init)
+  const { query, ...requestInit } = init
+  const url = buildGatewayUrl(path, query)
+
+  let response: Response
+  try {
+    response = await fetch(url, {
+      ...requestInit,
+      headers,
+    })
+  } catch (error) {
+    if (isAbortError(error)) {
+      throw error
+    }
+    throw new NetworkError()
+  }
+
+  if (response.ok) {
+    if (response.status === 204) {
+      return undefined as T
+    }
+    try {
+      return (await response.json()) as T
+    } catch {
+      throw new HttpError(response.status, undefined, 'INVALID_JSON_RESPONSE')
+    }
+  }
+
+  const problem = await parseProblem(response)
+  throw new HttpError(response.status, problem)
+}
+
 async function requestWithAuthRetryBlob(
   path: string,
   init: ApiFetchOptions,
@@ -154,7 +203,7 @@ async function requestWithAuthRetryBlob(
   const headers = buildHeaders(init, token)
   headers.set('Accept', '*/*')
   const { query, ...requestInit } = init
-  const url = buildUrl(path, query)
+  const url = buildGatewayUrl(path, query)
 
   let response: Response
   try {

@@ -10,8 +10,8 @@ alwaysApply: false
 ## Proyecto y paquetes (`com.mtl`)
 - **GroupId Maven:** `com.mtl`; **artifactId** alineado con la carpeta del servicio (p. ej. `catalog-service`).
 - **Paquete base** por servicio: `com.mtl.<contexto>` — ver tabla siguiente. La clase **`@SpringBootApplication`** solo en ese paquete base.
-- **Lista blanca — paquetes de primer nivel bajo `com.mtl.<contexto>` (REST/MVC):** `config`, `controller`, `application`, `domain`, `dto`, `exception`, `web`, `infrastructure`, `util`. **No** crear otros de primer nivel (p. ej. `api`, `integration`, `storage`). Clientes HTTP, almacenamiento, Kafka, etc. van **bajo `infrastructure`** (`…infrastructure.client`, `…infrastructure.storage`, `…infrastructure.messaging`, …). JPA/Mongo: solo bajo **`…infrastructure.persistence.jpa`** / **`…infrastructure.persistence.mongo`** (véase **Persistencia**).
-- **Fuera de lista blanca:** antes de añadir un paquete de primer nivel nuevo o una capa equivalente, **parar** y **pedir confirmación explícita al usuario** (motivo, alternativas dentro de `infrastructure` / `application`, y si aplica decisión en `docs/adr/`).
+- **Lista blanca — paquetes de primer nivel bajo `com.mtl.<contexto>` en `src/main/java` (REST/MVC):** `config`, `controller`, `application`, `domain`, `dto`, `exception`, `web`, `infrastructure`, `util`. **No** crear otros de primer nivel **en producción** (p. ej. `api`, `integration`, `storage`). Clientes HTTP, almacenamiento, Kafka, etc. van **bajo `infrastructure`** (`…infrastructure.client`, `…infrastructure.storage`, `…infrastructure.messaging`, …). JPA/Mongo: solo bajo **`…infrastructure.persistence.jpa`** / **`…infrastructure.persistence.mongo`** (véase **Persistencia**).
+- **Fuera de lista blanca (`src/main/java`):** antes de añadir un paquete de primer nivel nuevo en producción o una capa equivalente, **parar** y **pedir confirmación explícita al usuario** (motivo, alternativas dentro de `infrastructure` / `application`, y si aplica decisión en `docs/adr/`).
 - **Paquete `config`:** `@Configuration` (seguridad, WebMvc/WebFlux, beans de integración, `JpaAuditing`, etc.) en **`com.mtl.<contexto>.config`**, no en la raíz del contexto.
 
 ### Módulo Maven ↔ paquete Java raíz
@@ -39,11 +39,11 @@ Al generar código nuevo, **no** mezclar contextos (p. ej. clases de `catalog` d
 
 **catalog — alta de árbol y auditoría R3:** [ADR-0004](../../docs/adr/0004-catalog-rest-write-and-audit.md).
 
-Tests: **`src/test/java`** (`*Test`, Surefire), **`src/testIT/java`** (`*IT`, Failsafe) según el padre Maven en `services/pom.xml` y [docs/engineering/testing-java.md](../../docs/engineering/testing-java.md).
+Tests: **`src/test/java`** (`*Test`, Surefire), **`src/testIT/java`** (`*IT`, Failsafe) según el padre Maven en `services/pom.xml` y [docs/engineering/testing-java.md](../../docs/engineering/testing-java.md). Los IT suelen vivir bajo **`com.mtl.<contexto>.integration`** (y `…integration.support`): esa convención **no** forma parte de la lista blanca de `src/main/java` y **no** debe usarse para código de producción (`src/main/java`).
 
 ### API Gateway (`api-gateway`, WebFlux)
 
-- **`com.mtl.gateway`:** misma **lista blanca** de primer nivel; en la práctica casi todo en **`config`**. **No** JPA/Mongo salvo decisión explícita (ADR).
+- **`com.mtl.gateway`:** misma **lista blanca** de primer nivel en **`src/main/java`**; en la práctica casi todo en **`config`**. **No** JPA/Mongo salvo decisión explícita (ADR).
 - Misma disciplina de **no loguear secretos**, **correlación** y **contrato HTTP** hacia clientes donde el gateway emita respuestas propias; el detalle de rutas y JWT está en [api-security.mdc](api-security.mdc) y [jwt-gateway-strategy.md](../../docs/security/jwt-gateway-strategy.md).
 
 ## Build (padre Maven)

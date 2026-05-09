@@ -34,6 +34,7 @@ Ejemplos futuros: `HU-004-ticket-breakdown.md`, `HU-010-ticket-breakdown.md`.
 | HU-014 | [HU-014-ticket-breakdown.md](HU-014-ticket-breakdown.md) · Refinamiento: [HU-014-consulta-de-fotografias-del-arbol.md](HU-014-consulta-de-fotografias-del-arbol.md) |
 | HU-007 | [HU-007-ticket-breakdown.md](HU-007-ticket-breakdown.md) |
 | HU-013 | [HU-013-ticket-breakdown.md](HU-013-ticket-breakdown.md) |
-| HU-004, HU-008–HU-012 | Pendiente — al crear cada fichero, añadir aquí una fila (ver [backlog.md](backlog.md) §3). |
+| HU-004 | [HU-004-ticket-breakdown.md](HU-004-ticket-breakdown.md) · Refinamiento: [HU-004-suscripcion-por-correo-sin-cuenta-colaborador.md](HU-004-suscripcion-por-correo-sin-cuenta-colaborador.md) |
+| HU-008–HU-012 | Pendiente — al crear cada fichero, añadir aquí una fila (ver [backlog.md](backlog.md) §3). |
 
 *(Añadir aquí una fila al crear cada nuevo `HU-*-ticket-breakdown.md`.)*

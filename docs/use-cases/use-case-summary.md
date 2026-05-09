@@ -24,7 +24,7 @@ Para visualizarlo: extensión PlantUML en el IDE, [plantuml.com](https://www.pla
 | ID | Nombre | Actor principal | Autenticación | Objetivo / resultado |
 |----|--------|-----------------|---------------|----------------------|
 | UC-01 | Consultar árboles publicados y mapa | Público | No | Visualizar fichas y localización de ejemplares públicos. |
-| UC-02 | Registrarse para recibir notificaciones (e-mail) | Público | No | Alta de suscripción por correo (sin cuenta de Colaborador), según flujo de confirmación definido en implementación. |
+| UC-02 | Registrarse para recibir notificaciones (e-mail) | Público | No | Alta de suscripción por correo (sin cuenta de Colaborador); en el **MVP** la suscripción queda **ACTIVA** al validar el correo, sin confirmación por e-mail ([data-model.md](../data-model/data-model.md) §2, **HU-004**). |
 | UC-03 | Registrar árbol | Colaborador | **Sí** | Crear ficha con datos, fotos y ubicación; opcionalmente publicar para consulta pública. |
 | UC-04 | Modificar árboles registrados por el usuario | Colaborador | **Sí** | Actualizar solo los árboles dados de alta por ese colaborador. |
 | UC-05 | Identificar árbol asistido por IA (imagen) | Colaborador | **Sí** | Extensión opcional en UC-03 / UC-04: sugerencia orientativa de especie a partir de imagen (no sustituye validación experta). |
@@ -43,6 +43,6 @@ Para visualizarlo: extensión PlantUML en el IDE, [plantuml.com](https://www.pla
 
 ## Reglas y supuestos explícitos
 
-1. **Autenticación:** UC-03 … UC-08 requieren usuario autenticado (Keycloak / JWT en la arquitectura prevista). UC-01 y UC-02 son anónimos.
+1. **Autenticación:** UC-03 … UC-08 requieren usuario autenticado (Keycloak / JWT en la arquitectura prevista). UC-01 y UC-02 son anónimos. Para **UC-02**, el endpoint de alta **no** incorpora en el MVP rate limiting ni captcha; el riesgo queda explícito en [data-model.md](../data-model/data-model.md) §2.
 2. **UC-09 y modificaciones:** en el MVP **solo el alta** (UC-03) dispara notificación a suscriptores; las ediciones (UC-04) **no** lo hacen (regla R7 en [data-model.md](../data-model/data-model.md)).
 3. **UC-07 “tablas de catálogo”:** se entienden **maestros de dominio** gestionados por administración; no confundir con el CRUD de árboles del colaborador (UC-03 / UC-04).

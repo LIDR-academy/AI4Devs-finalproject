@@ -4,7 +4,7 @@
 - **Revisor**: Asistente IA (perfil: experto frontend Vue)
 - **Estado**: Borrador
 ## Resumen ejecutivo
-Tras el avance de los cortes anteriores, el frontend cumple ya la mayoría de reglas de [`fronted-vue3.mdc`](../../.cursor/rules/fronted-vue3.mdc) y [`frontend-security.mdc`](../../.cursor/rules/frontend-security.mdc): Pinia como estado de auth, capa HTTP tipada con `NetworkError` / `HttpError`, composables de validación puros, guard de router con silent refresh, alias `@/`, i18n centralizada y tests mínimos con Vitest. Quedan **una incidencia crítica** y **seis altas** de tipo arquitectural / seguridad / performance que deberían abordarse antes de añadir nuevas HU significativas.
+Tras el avance de los cortes anteriores, el frontend cumple ya la mayoría de reglas de [`frontend-vue3.mdc`](../../.cursor/rules/frontend-vue3.mdc) y [`frontend-security.mdc`](../../.cursor/rules/frontend-security.mdc): Pinia como estado de auth, capa HTTP tipada con `NetworkError` / `HttpError`, composables de validación puros, guard de router con silent refresh, alias `@/`, i18n centralizada y tests mínimos con Vitest. Quedan **una incidencia crítica** y **seis altas** de tipo arquitectural / seguridad / performance que deberían abordarse antes de añadir nuevas HU significativas.
 ## Críticas
 ### [CRÍTICA] C1 — Duplicación íntegra de la lógica de extracción de roles entre store y router guard
 - **Archivos**: `frontend/src/stores/auth.ts` (líneas ~8–85) y `frontend/src/router/index.ts` (líneas ~32–116).
@@ -25,7 +25,7 @@ Tras el avance de los cortes anteriores, el frontend cumple ya la mayoría de re
 ### [ALTA] A3 — `useApiErrorMapper` acoplado a las claves i18n del formulario de árbol
 - **Archivo**: `frontend/src/composables/useApiErrorMapper.ts`.
 - **Síntoma**: todas las claves que usa son `treeForm.messages.*` (`networkError`, `unauthorized`, `badRequest`, `forbidden`, `serviceError`, `unexpectedError`), pese a que el composable se presenta como genérico y ya se usa desde `useCreateTreeForm`.
-- **Riesgo**: el día que otro flujo (suscripciones, admin, media) lo reutilice, la UI mostrará textos de “crear árbol” en contextos ajenos. Incumple la regla [*una responsabilidad por composable*](../../.cursor/rules/fronted-vue3.mdc) que separa **mapeo** de **copy**.
+- **Riesgo**: el día que otro flujo (suscripciones, admin, media) lo reutilice, la UI mostrará textos de “crear árbol” en contextos ajenos. Incumple la regla [*una responsabilidad por composable*](../../.cursor/rules/frontend-vue3.mdc) que separa **mapeo** de **copy**.
 - **Fix recomendado**: dos opciones equivalentes.
   1. Renombrar a `useCreateTreeErrorMapper` y restringir su ámbito explícitamente.
   2. Devolver un código estable (`'networkError' | 'unauthorized' | 'badRequest' | 'forbidden' | 'serviceError' | 'unexpectedError'`) y que cada vista aplique su `t(...)` local (mapper sin dependencia de i18n).
@@ -51,7 +51,7 @@ Tras el avance de los cortes anteriores, el frontend cumple ya la mayoría de re
 - Leaflet se empaqueta por import estático (se resuelve con A1 al aplicar code-splitting).
 Estos quedan documentados para seguimiento pero fuera del alcance de este corte (severidad media/baja).
 ## Referencias
-- Reglas: [`fronted-vue3.mdc`](../../.cursor/rules/fronted-vue3.mdc), [`frontend-security.mdc`](../../.cursor/rules/frontend-security.mdc), [`frontend-ux.mdc`](../../.cursor/rules/frontend-ux.mdc).
+- Reglas: [`frontend-vue3.mdc`](../../.cursor/rules/frontend-vue3.mdc), [`frontend-security.mdc`](../../.cursor/rules/frontend-security.mdc), [`frontend-ux.mdc`](../../.cursor/rules/frontend-ux.mdc).
 - Revisiones previas: [2026-04-25 (primera)](./2026-04-25-frontend-architecture-review.md), [2026-04-25 (segunda)](./2026-04-25-frontend-architecture-second-review.md).
 - Guía de tests frontend: [testing-frontend.md](../engineering/testing-frontend.md).
 Cuando cambies a modo Agent, dímelo y lo creo directamente en esa ruta. ¿Quieres que además añada una sección de plan de acción con orden sugerido de ataque (p. ej. C1 → A2 → A1 → resto)?

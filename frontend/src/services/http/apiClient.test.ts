@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { apiFetch, apiFetchBlob, HttpError } from '@/services/http/apiClient'
+import { apiFetch, apiFetchBlob, HttpError, publicApiFetch } from '@/services/http/apiClient'
 
 vi.mock('@/services/auth/oidc', () => ({
   authService: {
@@ -52,6 +52,57 @@ describe('apiFetch', () => {
     })
 
     await expect(promise).rejects.toBe(abortError)
+  })
+})
+
+describe('publicApiFetch', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('no llama a authService y no envía Authorization', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ email: 'user@example.com' }), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    const result = await publicApiFetch('/api/notifications/subscriptions', {
+      method: 'POST',
+      body: JSON.stringify({ email: 'user@example.com' }),
+    })
+
+    expect(result).toEqual({ email: 'user@example.com' })
+    expect(fetchSpy).toHaveBeenCalledOnce()
+    const [, init] = fetchSpy.mock.calls[0] as [string, RequestInit]
+    const headers = new Headers(init.headers)
+    expect(headers.get('Authorization')).toBeNull()
+  })
+
+  it('lanza HttpError con Problem en error 4xx/5xx', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          title: 'Conflicto',
+          status: 409,
+          detail: 'Este correo electrónico ya está suscrito a las notificaciones.',
+        }),
+        { status: 409, headers: { 'Content-Type': 'application/json' } },
+      ),
+    )
+
+    const promise = publicApiFetch('/api/notifications/subscriptions', {
+      method: 'POST',
+      body: JSON.stringify({ email: 'dup@example.com' }),
+    })
+
+    await expect(promise).rejects.toMatchObject({
+      status: 409,
+      problem: expect.objectContaining({
+        detail: 'Este correo electrónico ya está suscrito a las notificaciones.',
+      }),
+    })
   })
 })
 

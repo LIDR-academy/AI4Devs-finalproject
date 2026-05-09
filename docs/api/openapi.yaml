@@ -466,7 +466,7 @@ paths:
           $ref: "#/components/responses/ProblemForbidden"
     post:
       tags: [notifications]
-      summary: Alta de suscripción por correo (público o flujo acordado)
+      summary: Alta de suscripción por correo (público, estado ACTIVA en el MVP)
       security: []
       requestBody:
         required: true
@@ -481,9 +481,27 @@ paths:
                   format: email
       responses:
         "201":
-          description: Creada o pendiente de confirmación
+          description: Suscripción creada en estado ACTIVA (MVP sin confirmación por correo; ver docs/data-model/data-model.md §2)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [email]
+                properties:
+                  email:
+                    type: string
+                    format: email
+                    description: Correo registrado tal como en la solicitud (sin exponer identificadores internos)
         "400":
           $ref: "#/components/responses/ProblemBadRequest"
+        "409":
+          description: >
+            Conflicto: correo ya suscrito (ACTIVA) o suscripción cancelada (el alta público no reactiva;
+            gestión solo administración HU-012). Ver docs/data-model/data-model.md §2.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
 
   /api/ai/species-identification:
     post:
@@ -1104,6 +1122,12 @@ components:
             $ref: "#/components/schemas/Problem"
     ProblemForbidden:
       description: Prohibido
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    ProblemConflict:
+      description: Conflicto (p. ej. correo ya suscrito)
       content:
         application/problem+json:
           schema:
