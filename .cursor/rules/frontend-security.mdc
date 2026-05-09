@@ -1,0 +1,67 @@
+---
+description: Reglas frontend para autenticación, capa HTTP, seguridad y testing
+globs:
+  - "frontend/src/**/*.vue"
+  - "frontend/src/**/*.ts"
+  - "frontend/src/**/*.js"
+alwaysApply: false
+---
+
+# Frontend security & quality
+
+Complementa [frontend-vue3.mdc](frontend-vue3.mdc); aquí viven las reglas de auth, HTTP, seguridad y testing.
+
+## Estado y autenticación
+- Estado compartido (sesión, locale, feature flags) en **Pinia**, no en `ref` a nivel de módulo.
+- Sesión OIDC:
+  - `automaticSilentRenew: true` y suscribirse a eventos del `UserManager` (`addUserLoaded`, `addUserUnloaded`, `addAccessTokenExpired`, `addSilentRenewError`) para mantener el estado reactivo.
+  - exponer `isAuthenticated` como `computed`, no como método.
+- `main.ts` no debe bloquear el montaje con `await` de inicialización; exponer `auth.ready` y manejar el estado en la primera vista.
+- Guards de router: intentar `signinSilent` antes de redirigir a login; ante error de IdP, ir a una vista de error con CTA, no `return false` silencioso.
+
+## Capa HTTP
+- Toda llamada sale por `services/` o composables; nunca `fetch` directo desde un componente.
+- No hardcodear URLs; usar `appConfig` y variables `VITE_*`.
+- Cliente HTTP:
+  - tipar errores como `NetworkError` (sin respuesta) vs `HttpError(status, problem)` (RFC 9457).
+  - **no** incluir copy de UI en el cliente; los textos viven en i18n.
+  - interceptor único para 401 (silent refresh + reintento; si falla, redirect a login con `returnPath`).
+  - soportar `AbortController` (cancelación en navegación) y omitir `Content-Type` cuando el body sea `FormData`.
+- Validación de cliente nunca sustituye a la del servidor.
+
+## Seguridad
+- Toda variable `VITE_*` es **pública** en el bundle; no poner secretos ahí.
+- Tokens:
+  - no loggear `access_token` ni `id_token`
+  - no enviar a servicios externos
+  - no incluir en URLs ni query params
+- `localStorage` solo para artefactos no sensibles o gestionados por `oidc-client-ts`; preferir memoria para datos sensibles temporales.
+- No usar `v-html` con contenido del usuario o del backend sin saneamiento explícito.
+- Enlaces externos `target="_blank"` siempre con `rel="noopener noreferrer"`.
+- No deshabilitar protecciones del navegador (CSP, SameSite) desde el frontend.
+
+## Calidad y testing
+Detalle canónico para desarrolladores en [docs/engineering/testing-frontend.md](../../docs/engineering/testing-frontend.md).
+
+- Tests con **Vitest**:
+  - **Composables con lógica** (validación, mapeo de errores, estado derivado)
+  - **Cliente HTTP / servicios** (parseo de Problem Details, manejo de 401, abort/cancelación)
+  - **Router guards** cuando cambie autenticación/autorización
+  - **Componentes** solo si gestionan estado o flujos críticos
+- Convención de nombres:
+  - `*.test.ts` para unitarios/componente
+  - ubicar el test junto al fichero probado cuando sea posible
+- Estructura de test:
+  - patrón **Arrange / Act / Assert**
+  - un único comportamiento verificable por test
+  - títulos descriptivos de comportamiento (no de implementación)
+- Aislamiento:
+  - tests unitarios **sin** llamadas reales a Keycloak/gateway
+  - mockear dependencias externas en el borde (authService, cliente HTTP, router)
+  - no compartir estado mutable entre tests; reset de mocks en `beforeEach`
+- Criterios de calidad:
+  - priorizar aserciones explícitas (evitar snapshots masivos de vistas completas)
+  - cubrir caminos de error relevantes (`401`, `403`, `5xx`, red)
+  - si un cambio introduce lógica nueva y no añade tests, justificarlo en PR
+- Verificar tipado con `vue-tsc` (sin errores) antes de cerrar un cambio.
+- Mocks aislados: no llamar a Keycloak ni al gateway en tests unitarios.

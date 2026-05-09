@@ -1,0 +1,39 @@
+---
+description: Seguridad OIDC/JWT, roles y exposición de APIs en gateway y microservicios
+globs:
+  - "services/**/*.java"
+alwaysApply: false
+---
+
+# Seguridad de API (MyTreeLibrary)
+
+Visión de producto: [readme.md](../../readme.md) §2.5. **Rutas y contrato HTTP:** [docs/api/openapi.yaml](../../docs/api/openapi.yaml). **Flujo OIDC/JWT, gateway, relay y alternativas:** [jwt-gateway-strategy.md](../../docs/security/jwt-gateway-strategy.md) (no duplicar aquí el relato largo).
+
+## Autenticación y capa de confianza
+
+- **SPA:** Authorization Code + PKCE contra **Keycloak**, realm **`mtl`**, cliente **`mtl-spa`** ([mtl-realm.json](../../infra/compose/init/keycloak/mtl-realm.json)).
+- Clientes → **API Gateway** con `Authorization: Bearer` (JWT de acceso).
+- **MVP:** gateway valida JWT (**OAuth2 Resource Server**); microservicios **revalidan** (**token relay**, mismo `issuer-uri`). Otras variantes solo con red de confianza documentada en **jwt-gateway-strategy**.
+- No aceptar operaciones sensibles sin token cuando el caso de uso lo exija ([use-case-summary.md](../../docs/use-cases/use-case-summary.md)).
+- **`issuer-uri`** alineado al realm (p. ej. `http://localhost:8180/realms/mtl`; puerto según `KEYCLOAK_PORT`).
+
+## Autorización por roles
+
+- Roles de realm previstos: **`COLABORADOR`** y **`ADMIN`** (nombre exacto según realm).
+- Endpoints de **gestión de maestros** y operaciones administrativas: solo **`ADMIN`** salvo que el modelo de casos de uso indique lo contrario.
+- **Registro y edición de árboles** del colaborador: **`COLABORADOR`** (o **`ADMIN`** actuando con las mismas reglas de propiedad que un colaborador, si se documenta).
+- Rutas **públicas** (`/api/catalog/public/...`, consulta sin login): **sin** requisito de JWT; seguir limitando datos a lo publicable según reglas de negocio ([data-model.md](../../docs/data-model/data-model.md)).
+
+## Datos sensibles y errores
+
+- **No** registrar tokens, contraseñas, secretos ni datos personales completos en logs.
+- **Cuerpo y códigos de error al cliente:** [api-contract.mdc](api-contract.mdc) y OpenAPI (Problem, sin stack ni detalle interno).
+
+## Correlación y auditoría
+
+- Propagar **cabecera de correlación** (p. ej. `X-Correlation-Id` o el nombre acordado en gateway) en llamadas internas entre servicios cuando existan cadenas síncronas; uso en **MDC** y niveles de log: [logging.mdc](logging.mdc).
+- Las operaciones de negocio relevantes deben ser trazables según política de auditoría del dominio (véase reglas de datos y `AUDITORIA_*` en documentación).
+
+## Integración con almacenamiento
+
+- Objetos en **S3/MinIO**: buckets privados; al cliente solo **URLs prefirmadas** de corta duración; nunca credenciales de bucket en frontend o en respuestas API.

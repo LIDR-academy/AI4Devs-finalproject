@@ -1,0 +1,12 @@
+﻿{
+  "java.autobuild.enabled": true,
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.import.maven.enabled": true,
+  "java.import.gradle.enabled": false,
+  "java.compile.nullAnalysis.mode": "disabled",
+  "java.project.importOnFirstTimeStartup": "automatic",
+  "java.project.resourceFilters": [
+    "node_modules",
+    ".git"
+  ]
+}
