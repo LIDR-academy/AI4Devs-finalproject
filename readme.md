@@ -150,6 +150,7 @@ En `[infra/compose/](infra/compose/)` hay un `docker-compose.yml` que levanta la
 | MinIO                   | Almacenamiento de objetos                                       |
 | Kafka                   | Modo KRaft, con topic `catalog.arbol.evento`                    |
 | Keycloak                | Versión 26 en modo desarrollo                                   |
+| Mailpit                 | SMTP de prueba (captura correo; UI web); puertos en [infra/compose/README.md](infra/compose/README.md) |
 
 
 > **Nota:** por defecto, Postgres del Compose se expone en el host en el **puerto `5433`**  
@@ -646,6 +647,7 @@ sequenceDiagram
 | ai-assistant-service | **Spring Boot 4**, Spring WebClient (o equivalente), Spring Data JPA                                                                                                                                              | Orquestación hacia proveedor IA; datos de auditoria en esquema `**ai`** (p. ej. **AUDITORIA_USO_IA**); delegación de datos de catálogo en **catalog-service**                                                                                                                                                                                                                    |
 | Keycloak             | Keycloak 26                                                                                                                                                                                                       | Realm, clientes, roles, emisión de JWT                                                                                                                                                                                                                                                                                                                                           |
 | Kafka                | Apache Kafka (KRaft en dev)                                                                                                                                                                                       | Topics p. ej. `catalog.arbol.evento`                                                                                                                                                                                                                                                                                                                                             |
+| Mailpit              | Mailpit (imagen `axllent/mailpit`, Compose)                                                                                                                                                                       | SMTP de prueba en desarrollo local; bandeja en UI web; sin relay a dominios reales ([infra/compose/README.md](infra/compose/README.md))                                                                                                                                                                                                                                         |
 | PostgreSQL           | 16                                                                                                                                                                                                                | **Un servidor**; **cuatro esquemas** (`catalog`, `media`, `notification`, `ai`). En **catalog**, el DDL actual   usa **latitud/longitud** `NUMERIC` (sin columna PostGIS); la extensión PostGIS está prevista en el contenedor para iteraciones posteriores ([V1__baseline.sql](services/catalog-service/src/main/resources/db/migration/V1__baseline.sql)). |
 | MongoDB              | 7                                                                                                                                                                                                                 | Colecciones de enriquecimiento y notas; proyección mínima para búsqueda sin SQL (véase [mongo.md](docs/data-model/mongo.md))                                                                                                                                                                                                                                                     |
 | Redis                | 7                                                                                                                                                                                                                 | Caché                                                                                                                                                                                                                                                                                                                                                                            |
@@ -685,7 +687,7 @@ proyecto/
 
 ### **3.4. Infraestructura y despliegue**
 
-**Desarrollo:** Docker Compose (o equivalente) con **un** PostgreSQL con extensión **PostGIS** (cuatro esquemas de aplicación: `catalog`, `media`, `notification`, `ai`), MongoDB, Redis, MinIO, Kafka y Keycloak; los microservicios pueden ejecutarse en el host o como contenedores.
+**Desarrollo:** Docker Compose (o equivalente) con **un** PostgreSQL con extensión **PostGIS** (cuatro esquemas de aplicación: `catalog`, `media`, `notification`, `ai`), MongoDB, Redis, MinIO, Kafka, Keycloak y **Mailpit** (SMTP de prueba para notificaciones en local); los microservicios pueden ejecutarse en el host o como contenedores.
 
 **Despliegue Producción:** orquestación (Kubernetes), secretos externos, Keycloak y Kafka en HA según entorno, bases de datos gestionadas y almacenamiento de objetos S3 en nube.
 
@@ -705,6 +707,7 @@ flowchart LR
         %% Servicios
         KCd["🔐 Keycloak"]:::service
         Kd["⚡ Kafka"]:::service
+        MPd["📧 Mailpit"]:::service
         
         %% Almacenamiento
         PGd[("🐘 Postgres + PostGIS")]:::db
@@ -720,6 +723,7 @@ flowchart LR
     DC --> S3d
     DC --> Kd
     DC --> KCd
+    DC --> MPd
 ```
 
 

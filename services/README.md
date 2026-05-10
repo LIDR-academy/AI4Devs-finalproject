@@ -69,6 +69,10 @@ Los `application-dev.properties` de los servicios con JDBC usan `jdbc:postgresql
 
 **Gestión administrativa de suscripciones (HU-012 / UC-08):** `GET /api/notifications/subscriptions` y `PATCH /api/notifications/subscriptions/{subscriptionId}` requieren JWT con rol de realm **ADMIN**; la SPA los invoca vía el mismo gateway. Contrato: [docs/api/openapi.yaml](../docs/api/openapi.yaml).
 
+**Correo saliente en desarrollo (HU-007, Mailpit):** con perfil **`dev`**, **notification-service** usa `spring.mail.host` / `spring.mail.port` hacia **Mailpit** del Compose (por defecto `localhost:1025`; UI en [infra/compose/README.md](../infra/compose/README.md)). Variables opcionales: **`MTL_NOTIFICATION_MAIL_HOST`**, **`MTL_NOTIFICATION_MAIL_PORT`**, **`MTL_NOTIFICATION_MAIL_FROM`**. En perfil **`test`** no se define `spring.mail.host` (no hay `JavaMailSender` real; los tests de envío usan mock).
+
+**Verificación manual (TASK-HU-007-04, cierre):** Compose con **`mailpit`** arriba; Postgres, Kafka y **notification-service** en **`dev`** (`mtl.notification.kafka.enabled=true`). Al menos un **suscriptor** en **ACTIVA** (p. ej. vía `POST /api/notifications/subscriptions` por el gateway). Tras publicar **`ARBOL_CREADO`** (alta de árbol con **catalog-service** en dev o productor equivalente), comprobar en Mailpit **http://localhost:8025** los mensajes capturados y en BD esquema **`notification`** filas coherentes en **`evento_catalogo`** (**`PROCESADO`**), **`notificacion`** y **`envio_notificacion`** (**`ENVIADA`** o **`ERROR`** si SMTP falla).
+
 Desde **`services/`**: **`mvn verify`** o **`mvn -pl catalog-service spring-boot:run -Dspring-boot.run.profiles=dev`** (tras tener Postgres en marcha).
 
 ---

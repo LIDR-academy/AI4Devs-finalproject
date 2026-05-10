@@ -1,6 +1,6 @@
 # Infraestructura local (Docker Compose)
 
-Entorno de **desarrollo** alineado con [readme.md](../../readme.md) (PostgreSQL + PostGIS, MongoDB, Redis, MinIO, Kafka en KRaft, Keycloak).
+Entorno de **desarrollo** alineado con [readme.md](../../readme.md) (PostgreSQL + PostGIS, MongoDB, Redis, MinIO, Kafka en KRaft, Keycloak, Mailpit).
 
 ## Requisitos
 
@@ -16,7 +16,7 @@ docker compose up -d
 
 En Unix: `cp .env.example .env`.
 
-La primera vez, Postgres ejecuta los scripts en `init/postgres/` (esquemas, PostGIS, BD `keycloak` y rol `keycloak`). El servicio **`kafka-init`** crea el topic `catalog.arbol.evento` si no existe. El servicio **`minio-init`** crea el bucket `mtl-photos`; CORS para la SPA se configura con **`MINIO_API_CORS_ALLOW_ORIGIN`** en el servicio `minio` (véase § MinIO).
+La primera vez, Postgres ejecuta los scripts en `init/postgres/` (esquemas, PostGIS, BD `keycloak` y rol `keycloak`). El servicio **`kafka-init`** crea el topic `catalog.arbol.evento` si no existe. El servicio **`minio-init`** crea el bucket `mtl-photos`; CORS para la SPA se configura con **`MINIO_API_CORS_ALLOW_ORIGIN`** en el servicio `minio` (véase § MinIO). El servicio **`mailpit`** expone SMTP de prueba y la UI de mensajes capturados (véase § Mailpit).
 
 ## Puertos por defecto
 
@@ -29,8 +29,21 @@ La primera vez, Postgres ejecuta los scripts en `init/postgres/` (esquemas, Post
 | MinIO consola | 9001   | Interfaz web |
 | Kafka (desde el host) | 9094 | `bootstrap.servers=localhost:9094` |
 | Keycloak   | 8180        | Consola `http://localhost:8180` |
+| Mailpit SMTP (desde el host) | 1025 (`MAILPIT_SMTP_PORT`) | `spring.mail.host=localhost`, `spring.mail.port` = este puerto (notification-service en dev) |
+| Mailpit UI | 8025 (`MAILPIT_UI_PORT`) | Bandeja de mensajes capturados: `http://localhost:8025` |
 
-Dentro de la red Docker, Kafka PLAINTEXT: `kafka:9092`.
+Dentro de la red Docker, Kafka PLAINTEXT: `kafka:9092`. El SMTP de Mailpit dentro de Compose: `mailpit:1025`.
+
+## Mailpit (SMTP de prueba, HU-007)
+
+**Mailpit** recibe correo por SMTP y los muestra en la **interfaz web**; no entrega a dominios reales. Sirve para desarrollar **TASK-HU-007-04** (`notification-service`) sin credenciales de relay externos.
+
+1. Arranque: `docker compose up -d` (el servicio `mailpit` queda en la red `mtl`).
+2. **Ver correos:** abre `http://localhost:${MAILPIT_UI_PORT:-8025}` en el navegador.
+3. **Microservicio en el host (IDE / `mvn spring-boot:run`):** apunta el cliente SMTP a `localhost` y al puerto **`MAILPIT_SMTP_PORT`** (por defecto **1025**). Sin auth TLS típico en local.
+4. **Microservicio dentro de Docker** (si algún día se conteneriza): host SMTP `mailpit`, puerto **1025** en la red `mtl`.
+
+Imagen: `axllent/mailpit` (versión fijada en [docker-compose.yml](docker-compose.yml)).
 
 ## MinIO y subida de fotos (media-service)
 
@@ -131,3 +144,4 @@ Estrategia de validación JWT en gateway y microservicios: [docs/security/jwt-ga
 
 - **Microservicios** no están en este compose: solo dependencias. El gateway y los `services/*` se ejecutan aparte (IDE, Maven): orden y puertos en [services/README.md](../../services/README.md).
 - **Keycloak** arranca en modo `start-dev` con administrador de arranque (`KEYCLOAK_ADMIN` / `KEYCLOAK_ADMIN_PASSWORD`); el realm `mtl` se importa como se indica arriba.
+- **Mailpit** captura el correo enviado por SMTP en local (sin entrega a Internet); puertos y uso con **notification-service** en la sección Mailpit y en la tabla de puertos.

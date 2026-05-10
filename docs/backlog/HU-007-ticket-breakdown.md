@@ -35,10 +35,10 @@ flowchart LR
 
 | ID | Título | Descripción breve | Estado |
 |----|--------|-------------------|--------|
-| **TASK-HU-007-01** | Modelo persistencia en `notification-service` | Flyway (o equivalente) en esquema **notification**: tablas alineadas al modelo para **EVENTO_CATALOGO** (o nombre acordado), vínculo con **NOTIFICACION** y lectura de **SUSCRIPTOR** activos según fuentes del proyecto. | Pendiente |
-| **TASK-HU-007-02** | Consumer `catalog.arbol.evento` | `notification-service`: Spring Kafka / listener, deserialización JSON, filtrado **`ARBOL_CREADO`** según [kafka-events.md](../events/kafka-events.md). Manejo de errores y logs sin PII masiva. | Pendiente |
-| **TASK-HU-007-03** | Idempotencia y registro de evento | Antes de enviar correo: deduplicar por **`evento_id`** (y/o clave acordada); persistir fila de evento consumido para reentregas Kafka. Si el mensaje ya fue procesado, **no-op** idempotente. | Pendiente |
-| **TASK-HU-007-04** | Envío de correo a suscriptores | Para eventos válidos: resolver destinatarios **ACTIVA**, crear registros **NOTIFICACION**, integración SMTP (o cola interna MVP), **cuerpo de texto fijo o mínimo** sin motor de plantillas en el MVP; **no-op** si no hay suscriptores (coherente con UC-09). | Pendiente |
+| **TASK-HU-007-01** | Modelo persistencia en `notification-service` | Flyway (o equivalente) en esquema **notification**: tablas alineadas al modelo para **EVENTO_CATALOGO** (o nombre acordado), vínculo con **NOTIFICACION** y lectura de **SUSCRIPTOR** activos según fuentes del proyecto. | Hecho |
+| **TASK-HU-007-02** | Consumer `catalog.arbol.evento` | `notification-service`: Spring Kafka / listener, deserialización JSON, filtrado **`ARBOL_CREADO`** según [kafka-events.md](../events/kafka-events.md). Manejo de errores y logs sin PII masiva. | Hecho |
+| **TASK-HU-007-03** | Idempotencia y registro de evento | Antes de enviar correo: deduplicar por **`evento_id`** (y/o clave acordada); persistir fila de evento consumido para reentregas Kafka. Si el mensaje ya fue procesado, **no-op** idempotente. | Hecho |
+| **TASK-HU-007-04** | Envío de correo a suscriptores | Para eventos válidos: resolver destinatarios **ACTIVA**, crear registros **NOTIFICACION** / **ENVIO_NOTIFICACION**, SMTP vía `spring-boot-starter-mail` (Mailpit en dev, `SmtpArbolCreadoCorreoAvisoSender`), cuerpo de texto fijo MVP; sin suscriptores **ACTIVA**: `notificacion` con `SIN_DESTINATARIOS_ACTIVOS` y evento a **PROCESADO**. | Hecho |
 | **TASK-HU-007-05** | Pruebas de integración | Testcontainers: Kafka + Postgres **notification**; publicar fixture `ARBOL_CREADO` y verificar una sola fila de evento y/o un envío simulado (p. ej. `JavaMailSender` mock). Convención [testing-java.md](../engineering/testing-java.md). | Pendiente |
 
 ---
@@ -46,3 +46,5 @@ flowchart LR
 ## Definición de hecho sugerida (MVP)
 
 Tras **TASK-HU-005-05** publicando un mensaje real, el **notification-service** consume al menos una vez, registra idempotencia y genera notificación/correo (o no-op documentado) verificable por test o traza controlada.
+
+**TASK-HU-007-04 (cerrado):** verificación manual orientativa en [services/README.md](../../services/README.md) (apartado notificaciones / Mailpit) e infra Mailpit en [infra/compose/README.md](../../infra/compose/README.md). Cierre funcional completo de **HU-007** pendiente de **TASK-HU-007-05** (IT Testcontainers).

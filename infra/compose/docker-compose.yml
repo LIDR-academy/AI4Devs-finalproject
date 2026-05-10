@@ -130,6 +130,16 @@ services:
     networks:
       - mtl
 
+  # Mailpit: SMTP de prueba sin entrega a Internet (HU-007, notification-service en dev). Ver infra/compose/README.md.
+  mailpit:
+    image: docker.io/axllent/mailpit:v1.22
+    restart: unless-stopped
+    ports:
+      - "${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+    networks:
+      - mtl
+
   # Keycloak: start-dev es SOLO para desarrollo local (no producción). Ver infra/compose/README.md.
   # Realm `mtl` se importa desde init/keycloak/ al arrancar con --import-realm (primera carga en BD vacía).
   keycloak:

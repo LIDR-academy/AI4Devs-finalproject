@@ -2,6 +2,7 @@ package com.mtl.notification.infrastructure.persistence.jpa.repository;
 
 import com.mtl.notification.domain.EstadoSuscripcion;
 import com.mtl.notification.domain.Suscriptor;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +14,11 @@ public interface SuscriptorRepository extends JpaRepository<Suscriptor, Long> {
 
   @Query("select s from Suscriptor s where lower(trim(s.email)) = :normalizedEmail")
   Optional<Suscriptor> findByNormalizedEmail(@Param("normalizedEmail") String normalizedEmail);
+
+  /**
+   * Listado no paginado para envío masivo (p. ej. HU-007): orden estable por {@code suscriptor_id}.
+   */
+  List<Suscriptor> findAllByEstadoSuscripcionOrderByIdAsc(EstadoSuscripcion estadoSuscripcion);
 
   Page<Suscriptor> findAllByEstadoSuscripcion(EstadoSuscripcion estadoSuscripcion, Pageable pageable);
 
