@@ -1,0 +1,18 @@
+---
+description: Contrato OpenAPI como fuente de verdad de la API HTTP
+globs:
+  - "docs/api/**/*.yaml"
+  - "docs/api/**/*.yml"
+  - "services/**/controller/**/*.java"
+  - "services/**/web/**/*.java"
+alwaysApply: false
+---
+
+# Contrato OpenAPI
+
+- La especificación canónica del API expuesto vía **gateway** es **[docs/api/openapi.yaml](../../docs/api/openapi.yaml)**.
+- Toda **operación REST** expuesta (método, path, parámetros, cuerpos, respuestas, códigos de error y seguridad por operación) debe estar **definida** ahí: el OpenAPI es la referencia de la API pública, no solo un anexo.
+- Cualquier **nuevo endpoint**, cambio de path, método, seguridad, códigos de error o esquema de request/response debe **reflejarse** en ese fichero (o en imports `$ref` si más adelante se divide el contrato).
+- Los errores deben alinearse con **RFC 9457** (`ProblemDetails` / `application/problem+json`) como en el componente `Problem` del OpenAPI.
+- Las reglas de diseño de recursos y prefijos `/api/<contexto>/` están en [api-design.mdc](api-design.mdc).
+- **Seguridad** (JWT, roles, rutas públicas, correlación, PII en logs, almacenamiento prefirmado): [api-security.mdc](api-security.mdc).

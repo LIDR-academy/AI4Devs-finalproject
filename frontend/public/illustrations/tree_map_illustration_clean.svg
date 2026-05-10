@@ -1,0 +1,278 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900" role="img" aria-labelledby="title desc">
+  <title id="title">Mapa estilizado con chinchetas en forma de árbol</title>
+  <desc id="desc">Ilustración vectorial plana de un mapa urbano con parques, estanque, río y marcadores de posición en forma de árbol.</desc>
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fbfcfd"/>
+      <stop offset="100%" stop-color="#f1f4f6"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#c6d0d8" flood-opacity="0.28"/>
+    </filter>
+    <g id="treeR">
+      <circle cx="0" cy="0" r="15" fill="#9fd3cb"/>
+      <rect x="-2" y="8" width="4" height="16" rx="2" fill="#44506a"/>
+    </g>
+    <g id="treeT">
+      <path d="M0,-18 C11,-18 17,-9 17,0 C17,11 8,19 0,23 C-8,19 -17,11 -17,0 C-17,-9 -11,-18 0,-18Z" fill="#7fc7bf"/>
+      <rect x="-2" y="13" width="4" height="18" rx="2" fill="#44506a"/>
+    </g>
+    <g id="pin">
+      <path d="M0,-54 C24,-54 42,-36 42,-12 C42,10 27,30 0,60 C-27,30 -42,10 -42,-12 C-42,-36 -24,-54 0,-54Z" fill="#ffffff" stroke="#12857d" stroke-width="4"/>
+      <path d="M0,-28 C14,-28 20,-14 20,-2 C20,12 9,22 0,28 C-9,22 -20,12 -20,-2 C-20,-14 -14,-28 0,-28Z" fill="#1e9f97"/>
+      <rect x="-2.5" y="4" width="5" height="24" rx="2.5" fill="#44506a"/>
+      <path d="M0,28 L0,40" stroke="#12857d" stroke-width="4" stroke-linecap="round"/>
+    </g>
+    <style>
+      .ro{stroke:#606885;stroke-width:26;stroke-linecap:round;stroke-linejoin:round;fill:none}
+      .rf{stroke:#ffffff;stroke-width:18;stroke-linecap:round;stroke-linejoin:round;fill:none}
+      .rd{stroke:#e8eaed;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:14 12;fill:none}
+      .park{fill:#dfeee7}
+      .water{fill:#73c7c1}
+      .lot{fill:#eef0f2;stroke:#d1d7dd;stroke-width:1.5}
+    </style>
+  </defs>
+
+  <!-- fondo transparente -->
+
+  <!--
+    CUADRÍCULA DE CARRETERAS
+    ─────────────────────────────────────────────────────
+    Eje vertical izquierdo:  x = 310  (corre de y=56 a y=844)
+    Eje vertical derecho:    x = 790  (corre de y=56 a y=844)
+    Eje horizontal norte:    y = 254  (corre de x=56 a x=1144)
+    Eje horizontal sur:      y = 624  (corre de x=56 a x=1144)
+
+    Esto crea 9 manzanas. Los parques, solares y edificios
+    se ubican dentro de cada manzana con margen ≥ 30 px
+    respecto al centro de cada eje (stroke±13 + 17 de aire).
+    Márgenes interiores de manzana: left/right: 56+30=86 / 310-30=280
+    ─────────────────────────────────────────────────────
+    Manzanas (interior útil, margen ya incluido):
+      NO: x 86–280,  y  74–224
+      NC: x 86–280,  y 284–594
+      SO: x 86–280,  y 654–824
+      MO: x 340–760, y  74–224   ← manzana media-oeste
+      CC: x 340–760, y 284–594   ← centro
+      MS: x 340–760, y 654–824   ← media-sur
+      NE: x 820–1124,y  74–224
+      CE: x 820–1124,y 284–594
+      SE: x 820–1124,y 654–824
+  -->
+
+  <!-- ══ CAPA 1: PARQUES Y AGUA ══ -->
+
+  <!-- Parque NE — manzana NE completa -->
+  <rect class="park" x="820" y="74"  width="304" height="150" rx="8"/>
+
+  <!-- Parque CC — manzana central completa -->
+  <rect class="park" x="340" y="284" width="420" height="310" rx="8"/>
+
+  <!-- Parque SE — manzana SE completa -->
+  <rect class="park" x="820" y="654" width="304" height="170" rx="8"/>
+
+  <!-- Estanque en parque CC -->
+  <ellipse cx="550" cy="440" rx="68" ry="46" class="water"/>
+
+  <!-- Estanque pequeño manzana NO -->
+  <ellipse cx="148" cy="148" rx="54" ry="40" class="water" opacity="0.85"/>
+
+  <!-- Río decorativo — pegado al borde derecho del marco, dentro de manzana CE -->
+  <path d="M1124 284 C1108 340 1106 400 1112 460 C1118 524 1106 580 1094 624"
+        fill="none" stroke="#73c7c1" stroke-width="18" stroke-linecap="round"/>
+
+  <!-- ══ CAPA 2: SOLARES ══ -->
+
+  <!-- Manzana NO — solar eliminado por solapar con el estanque -->
+
+  <!-- Manzana NC — dos columnas de bloques -->
+  <rect class="lot" x="86"  y="284" width="86" height="68" rx="3"/>
+  <rect class="lot" x="86"  y="366" width="86" height="68" rx="3"/>
+  <rect class="lot" x="86"  y="448" width="86" height="68" rx="3"/>
+  <rect class="lot" x="86"  y="530" width="86" height="58" rx="3"/>
+  <rect class="lot" x="192" y="284" width="82" height="68" rx="3"/>
+  <rect class="lot" x="192" y="366" width="82" height="68" rx="3"/>
+  <rect class="lot" x="192" y="448" width="82" height="68" rx="3"/>
+  <rect class="lot" x="192" y="530" width="82" height="58" rx="3"/>
+
+  <!-- Manzana MO (medio-oeste) -->
+  <rect class="lot" x="348" y="80"  width="120" height="138" rx="3"/>
+  <rect class="lot" x="484" y="80"  width="120" height="138" rx="3"/>
+  <rect class="lot" x="620" y="80"  width="120" height="138" rx="3"/>
+
+  <!-- Manzana CE (centro-este) -->
+  <rect class="lot" x="820" y="284" width="96"  height="88"  rx="3"/>
+  <rect class="lot" x="928" y="284" width="96"  height="88"  rx="3"/>
+
+  <rect class="lot" x="820" y="390" width="96"  height="88"  rx="3"/>
+  <rect class="lot" x="928" y="390" width="96"  height="88"  rx="3"/>
+  <rect class="lot" x="820" y="496" width="96"  height="92"  rx="3"/>
+  <rect class="lot" x="928" y="496" width="96"  height="92"  rx="3"/>
+
+
+  <!-- Manzana MS (medio-sur) -->
+  <rect class="lot" x="348" y="654" width="116" height="80"  rx="3"/>
+  <rect class="lot" x="480" y="654" width="116" height="80"  rx="3"/>
+  <rect class="lot" x="612" y="654" width="116" height="80"  rx="3"/>
+  <rect class="lot" x="348" y="748" width="116" height="70"  rx="3"/>
+  <rect class="lot" x="480" y="748" width="116" height="70"  rx="3"/>
+  <rect class="lot" x="612" y="748" width="116" height="70"  rx="3"/>
+
+  <!-- Manzana SO -->
+  <rect class="lot" x="86"  y="654" width="86"  height="68"  rx="3"/>
+  <rect class="lot" x="86"  y="738" width="86"  height="80"  rx="3"/>
+  <rect class="lot" x="192" y="654" width="82"  height="68"  rx="3"/>
+  <rect class="lot" x="192" y="738" width="82"  height="80"  rx="3"/>
+
+  <!-- ══ CAPA 3: EDIFICIOS ══ -->
+
+  <!-- Edificio manzana NO eliminado por solapar con el estanque -->
+
+  <!-- Edificios manzana NC col-1 -->
+  <rect x="92"  y="290" width="74"  height="56"  rx="2" fill="#4b5074"/>
+  <rect x="104" y="302" width="11"  height="9"   rx="1" fill="#2aa39a" opacity="0.7"/>
+  <rect x="121" y="302" width="11"  height="9"   rx="1" fill="#2aa39a" opacity="0.7"/>
+  <rect x="92"  y="454" width="74"  height="56"  rx="2" fill="#4b5074"/>
+  <rect x="104" y="466" width="11"  height="9"   rx="1" fill="#2aa39a" opacity="0.7"/>
+  <rect x="92"  y="536" width="74"  height="46"  rx="2" fill="#4b5074"/>
+  <rect x="100" y="550" width="18"  height="28"  rx="1" fill="#2aa39a" opacity="0.8"/>
+
+  <!-- Edificios manzana NC col-2 -->
+  <rect x="198" y="372" width="70"  height="56"  rx="2" fill="#4b5074"/>
+  <rect x="210" y="384" width="11"  height="9"   rx="1" fill="#2aa39a" opacity="0.7"/>
+  <rect x="227" y="384" width="11"  height="9"   rx="1" fill="#2aa39a" opacity="0.7"/>
+  <rect x="198" y="536" width="70"  height="46"  rx="2" fill="#4b5074"/>
+  <rect x="210" y="550" width="11"  height="9"   rx="1" fill="#2aa39a" opacity="0.7"/>
+
+  <!-- Edificios manzana MO -->
+  <rect x="354" y="86"  width="108" height="126" rx="2" fill="#4b5074"/>
+  <rect x="368" y="100" width="12"  height="10"  rx="1" fill="#2aa39a" opacity="0.7"/>
+  <rect x="388" y="100" width="12"  height="10"  rx="1" fill="#2aa39a" opacity="0.7"/>
+  <rect x="408" y="100" width="12"  height="10"  rx="1" fill="#2aa39a" opacity="0.7"/>
+  <rect x="626" y="86"  width="108" height="126" rx="2" fill="#4b5074"/>
+  <rect x="640" y="100" width="12"  height="10"  rx="1" fill="#2aa39a" opacity="0.7"/>
+  <rect x="660" y="100" width="12"  height="10"  rx="1" fill="#2aa39a" opacity="0.7"/>
+  <rect x="640" y="120" width="12"  height="10"  rx="1" fill="#2aa39a" opacity="0.5"/>
+
+  <!-- Edificios manzana CE -->
+  <rect x="826" y="290" width="84"  height="76"  rx="2" fill="#4b5074"/>
+  <rect x="838" y="302" width="12"  height="10"  rx="1" fill="#2aa39a" opacity="0.7"/>
+  <rect x="858" y="302" width="12"  height="10"  rx="1" fill="#2aa39a" opacity="0.7"/>
+  <rect x="934" y="396" width="84"  height="76"  rx="2" fill="#4b5074"/>
+  <rect x="946" y="410" width="12"  height="10"  rx="1" fill="#2aa39a" opacity="0.7"/>
+  <rect x="826" y="502" width="84"  height="80"  rx="2" fill="#4b5074"/>
+  <rect x="838" y="516" width="12"  height="10"  rx="1" fill="#2aa39a" opacity="0.7"/>
+  <rect x="934" y="502" width="84"  height="80"  rx="2" fill="#4b5074"/>
+  <rect x="946" y="516" width="12"  height="10"  rx="1" fill="#2aa39a" opacity="0.8"/>
+  <rect x="966" y="516" width="12"  height="10"  rx="1" fill="#2aa39a" opacity="0.8"/>
+
+  <!-- Edificios manzana SO -->
+  <rect x="92"  y="660" width="74"  height="56"  rx="2" fill="#4b5074"/>
+  <rect x="104" y="672" width="11"  height="9"   rx="1" fill="#2aa39a" opacity="0.7"/>
+  <rect x="198" y="744" width="70"  height="68"  rx="2" fill="#4b5074"/>
+  <rect x="210" y="758" width="11"  height="9"   rx="1" fill="#2aa39a" opacity="0.7"/>
+  <rect x="227" y="758" width="11"  height="9"   rx="1" fill="#2aa39a" opacity="0.7"/>
+
+  <!-- Edificios manzana MS -->
+  <rect x="354" y="660" width="104" height="68"  rx="2" fill="#4b5074"/>
+  <rect x="368" y="672" width="12"  height="10"  rx="1" fill="#2aa39a" opacity="0.7"/>
+  <rect x="388" y="672" width="12"  height="10"  rx="1" fill="#2aa39a" opacity="0.7"/>
+  <rect x="618" y="754" width="104" height="58"  rx="2" fill="#4b5074"/>
+  <rect x="632" y="768" width="12"  height="10"  rx="1" fill="#2aa39a" opacity="0.7"/>
+  <rect x="652" y="768" width="12"  height="10"  rx="1" fill="#2aa39a" opacity="0.7"/>
+
+  <!-- ══ CAPA 4: CARRETERAS ══ -->
+
+  <!-- Eje vertical izquierdo  x=310 -->
+  <path class="ro" d="M310 56 L310 844"/>
+  <path class="rf" d="M310 56 L310 844"/>
+  <path class="rd" d="M310 56 L310 844"/>
+
+  <!-- Eje vertical derecho  x=790 -->
+  <path class="ro" d="M790 56 L790 844"/>
+  <path class="rf" d="M790 56 L790 844"/>
+  <path class="rd" d="M790 56 L790 844"/>
+
+  <!-- Eje horizontal norte  y=254 -->
+  <path class="ro" d="M56 254 L1144 254"/>
+  <path class="rf" d="M56 254 L1144 254"/>
+  <path class="rd" d="M56 254 L1144 254"/>
+
+  <!-- Eje horizontal sur  y=624 -->
+  <path class="ro" d="M56 624 L1144 624"/>
+  <path class="rf" d="M56 624 L1144 624"/>
+  <path class="rd" d="M56 624 L1144 624"/>
+
+  <!-- Nodos de intersección -->
+  <circle cx="310" cy="254" r="20" fill="#73c7c1" stroke="#606885" stroke-width="3"/>
+  <circle cx="790" cy="254" r="20" fill="#73c7c1" stroke="#606885" stroke-width="3"/>
+  <circle cx="310" cy="624" r="20" fill="#73c7c1" stroke="#606885" stroke-width="3"/>
+  <circle cx="790" cy="624" r="20" fill="#73c7c1" stroke="#606885" stroke-width="3"/>
+
+  <!-- ══ CAPA 5: CAMINOS EN PARQUES ══ -->
+
+  <!-- Sendero parque CC -->
+  <path d="M390 350 C450 400 510 420 550 440 C590 460 650 490 740 520"
+        fill="none" stroke="#c8ddd5" stroke-width="7" stroke-linecap="round" stroke-dasharray="12 10"/>
+
+  <!-- Sendero parque NE -->
+  <path d="M868 90 C940 120 1010 148 1080 162 C1102 168 1118 172 1124 176"
+        fill="none" stroke="#c8ddd5" stroke-width="7" stroke-linecap="round" stroke-dasharray="12 10"/>
+
+  <!-- Sendero parque SE -->
+  <path d="M862 672 C920 698 980 718 1040 736 C1078 748 1108 758 1124 764"
+        fill="none" stroke="#c8ddd5" stroke-width="7" stroke-linecap="round" stroke-dasharray="12 10"/>
+
+  <!-- ══ CAPA 6: ÁRBOLES PEQUEÑOS ══ -->
+
+  <!-- Parque CC -->
+  <g transform="translate(374 310)"><use href="#treeR"/></g>
+  <g transform="translate(424 310)"><use href="#treeR"/></g>
+  <g transform="translate(474 310)"><use href="#treeT"/></g>
+  <g transform="translate(680 310)"><use href="#treeR"/></g>
+  <g transform="translate(730 310)"><use href="#treeR"/></g>
+  <g transform="translate(374 562)"><use href="#treeR"/></g>
+  <g transform="translate(440 562)"><use href="#treeT"/></g>
+  <g transform="translate(660 562)"><use href="#treeR"/></g>
+  <g transform="translate(720 562)"><use href="#treeR"/></g>
+
+  <!-- Parque NE -->
+  <g transform="translate(864 96)"><use href="#treeR"/></g>
+  <g transform="translate(924 110)"><use href="#treeT"/></g>
+  <g transform="translate(998 96)"><use href="#treeR"/></g>
+  <g transform="translate(1064 116)"><use href="#treeR"/></g>
+  <g transform="translate(1110 94)"><use href="#treeT"/></g>
+
+  <!-- Parque SE -->
+  <g transform="translate(862 690)"><use href="#treeR"/></g>
+  <g transform="translate(922 714)"><use href="#treeT"/></g>
+  <g transform="translate(994 690)"><use href="#treeR"/></g>
+  <g transform="translate(1060 716)"><use href="#treeR"/></g>
+  <g transform="translate(1108 692)"><use href="#treeT"/></g>
+  <g transform="translate(880 780)"><use href="#treeR"/></g>
+  <g transform="translate(950 790)"><use href="#treeR"/></g>
+
+  <!-- ══ CAPA 7: CHINCHETAS ÁRBOL ══ -->
+
+  <!-- En parque CC -->
+  <g transform="translate(460 410)"><use href="#pin"/></g>
+  <g transform="translate(648 480)"><use href="#pin"/></g>
+
+  <!-- En parque NE -->
+  <g transform="translate(972 142)"><use href="#pin"/></g>
+
+  <!-- En parque SE -->
+  <g transform="translate(952 758)"><use href="#pin"/></g>
+
+  <!-- En solares eliminados al este (sobre el río) → chinchetas árbol -->
+  <g transform="translate(1078 328)"><use href="#pin"/></g>
+  <g transform="translate(1078 542)"><use href="#pin"/></g>
+
+  <!-- Al lado del estanque NO -->
+  <g transform="translate(210 148)"><use href="#pin"/></g>
+
+  <!-- En zonas urbanas -->
+  <g transform="translate(160 460)"><use href="#pin"/></g>
+  <g transform="translate(880 330)"><use href="#pin"/></g>
+
+</svg>

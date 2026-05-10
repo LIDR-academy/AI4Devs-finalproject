@@ -1,0 +1,42 @@
+---
+description: Reglas de diseño de API REST
+globs:
+  - "services/**/controller/**/*.java"
+  - "services/**/dto/**/*.java"
+  - "services/**/web/**/*.java"
+alwaysApply: false
+---
+
+# API design rules
+- Diseñar endpoints orientados a recursos.
+- Los nombres se propondrán en inglés, aunque el campo de base de datos y atributo estará en español
+- Mantener nombres consistentes y predecibles.
+- Versionar la API si aparece una necesidad real.
+- Usar DTOs separados para request y response.
+
+## Convención de URLs (API Gateway)
+
+La SPA y el resto de clientes llaman **solo** al **API Gateway** bajo el prefijo común **`/api/<contexto>/`**, alineado con cada carpeta en `services/`:
+
+| Prefijo `/api/...` | Microservicio (`services/`) |
+|--------------------|-----------------------------|
+| `catalog` | `catalog-service` |
+| `media` | `media-service` |
+| `notifications` | `notification-service` |
+| `ai` | `ai-assistant-service` |
+
+Los controladores de cada servicio pueden publicar rutas sin el prefijo `/api/<contexto>` si el gateway las **prefija o reescribe** al enrutar; lo normativo para el contrato externo son las rutas **completas** vistas desde el cliente.
+
+## Rutas del MVP
+
+Listado de operaciones y paths **canónico** en [docs/api/openapi.yaml](../../docs/api/openapi.yaml); mantenerlo al día al cambiar el diseño de recursos.
+
+## Reglas
+- Los listados deben permitir paginación.
+- Los filtros deben ser simples y explícitos.
+- **Errores HTTP al cliente:** [api-contract.mdc](api-contract.mdc) y OpenAPI (estructura Problem, códigos, sin fugas de detalle interno).
+
+## Documentación enlazada
+
+- Contrato OpenAPI: [docs/api/openapi.yaml](../../docs/api/openapi.yaml).
+- Seguridad: [api-security.mdc](api-security.mdc); cambios de API alineados con [api-contract.mdc](api-contract.mdc).
