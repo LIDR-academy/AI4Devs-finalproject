@@ -35,6 +35,10 @@ public class NotificationSecurityConfig {
                     .permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/notifications/subscriptions")
                     .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/notifications/subscriptions")
+                    .hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.PATCH, "/api/notifications/subscriptions/*")
+                    .hasRole("ADMIN")
                     .anyRequest()
                     .authenticated())
         .exceptionHandling(

@@ -26,7 +26,7 @@ rectangle "MyTreeLibrary" #LightBlue {
   usecase "UC-06\nConsultar asistente IA\n(chat conversacional)" as UC6
 
   usecase "UC-07\nGestionar tablas\nde catálogo (maestros)" as UC7
-  usecase "UC-08\nGestionar solicitudes\nde notificación\n(inactivar / borrar)" as UC8
+  usecase "UC-08\nGestionar solicitudes\nde notificación\n(ACTIVA / CANCELADA)" as UC8
 
   usecase "UC-09\nNotificar por correo\na suscriptores" as UC9
 }

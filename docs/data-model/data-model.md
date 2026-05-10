@@ -25,9 +25,11 @@ Atributo de la entidad **SUSCRIPTOR** (PostgreSQL esquema `notification`, readme
 | Valor | Significado |
 |-------|-------------|
 | **ACTIVA** | Suscripción válida ante **R7**: puede ser destinataria de notificaciones por alta de ficha (**UC-09**, **HU-007**); coincide con «suscriptores activos» en el lenguaje de casos de uso. |
-| **CANCELADA** | Alta anulada por **ADMIN** (**UC-08**, **HU-012**); **no** recibe envíos por **R7**. |
+| **CANCELADA** | Baja lógica por **ADMIN** (**UC-08**, **HU-012**): la fila **SUSCRIPTOR** se mantiene; **no** recibe envíos por **R7**. |
 
 **Transiciones en el MVP:** el alta público (**UC-02**, **HU-004**) con correo válido crea la fila ya en **ACTIVA** (sin confirmación por correo) **solo** si no existe ya una fila con ese correo en **ACTIVA** ni en **CANCELADA**. Si ya existe **CANCELADA**, el flujo público **no** reactiva: devuelve conflicto explícito (**409**); volver a **ACTIVA** queda solo en gestión **ADMIN** (**HU-012**). El paso a **CANCELADA** es exclusivo del flujo de administración (**UC-08**); el público no modifica estado.
+
+**Eliminación de suscriptores:** en el MVP **no** se borran filas de **SUSCRIPTOR**; la administración (**UC-08**, **HU-012**) solo cambia **`estado_suscripcion`** entre **ACTIVA** y **CANCELADA**. La fila permanece por trazabilidad y coherencia con posibles históricos de envío.
 
 Solo **ACTIVA** satisface «suscripción válida (**ACTIVA**)» en **R7**.
 

@@ -10,6 +10,7 @@ vi.mock('@/services/auth/oidc', () => ({
   authService: mockedAuthService,
 }))
 
+vi.mock('@/views/AdminSubscriptionsView.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/views/AuthCallbackView.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/views/AuthGuardErrorView.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/views/CreateTreeView.vue', () => ({ default: { template: '<div />' } }))
@@ -18,6 +19,7 @@ vi.mock('@/views/LoginView.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/views/PendingView.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/views/SubscribeByEmailView.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/views/TreesDetailView.vue', () => ({ default: { template: '<div />' } }))
+vi.mock('@/views/TreesListView.vue', () => ({ default: { template: '<div />' } }))
 
 import router from '@/router'
 
@@ -101,5 +103,13 @@ describe('router guards', () => {
     await navigate('/admin/masters')
 
     expect(router.currentRoute.value.name).toBe('admin-masters')
+  })
+
+  it('allows admin subscriptions route when user has ADMIN role', async () => {
+    mockedAuthService.getUser.mockResolvedValue(buildUserWithRealmRoles(['ADMIN']))
+
+    await navigate('/admin/subscriptions')
+
+    expect(router.currentRoute.value.name).toBe('admin-subscriptions')
   })
 })

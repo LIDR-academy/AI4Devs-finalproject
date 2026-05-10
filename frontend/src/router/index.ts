@@ -4,6 +4,7 @@ import AuthGuardErrorView from '@/views/AuthGuardErrorView.vue'
 import CreateTreeView from '@/views/CreateTreeView.vue'
 import HomeView from '@/views/HomeView.vue'
 import LoginView from '@/views/LoginView.vue'
+import AdminSubscriptionsView from '@/views/AdminSubscriptionsView.vue'
 import PendingView from '@/views/PendingView.vue'
 import SubscribeByEmailView from '@/views/SubscribeByEmailView.vue'
 import TreesDetailView from '@/views/TreesDetailView.vue'
@@ -191,11 +192,11 @@ const router = createRouter({
     {
       path: '/admin/subscriptions',
       name: 'admin-subscriptions',
-      component: PendingView,
+      component: AdminSubscriptionsView,
       meta: {
         requiresAuth: true,
         requiredRoles: ['ADMIN'],
-        pageTitleKey: 'pendingViews.adminSubscriptions.title',
+        pageTitleKey: 'adminSubscriptions.title',
       },
     },
   ],

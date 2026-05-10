@@ -30,7 +30,7 @@ Para visualizarlo: extensión PlantUML en el IDE, [plantuml.com](https://www.pla
 | UC-05 | Identificar árbol asistido por IA (imagen) | Colaborador | **Sí** | Extensión opcional en UC-03 / UC-04: sugerencia orientativa de especie a partir de imagen (no sustituye validación experta). |
 | UC-06 | Consultar asistente IA (chat) | Colaborador | **Sí** | Interacción conversacional con el asistente. |
 | UC-07 | Gestionar tablas de catálogo (maestros) | ADMIN | **Sí** | Administrar datos de referencia (p. ej. taxonomía, vocabularios) que alimentan el catálogo. |
-| UC-08 | Gestionar solicitudes de notificación | ADMIN | **Sí** | Dejar inactivas o eliminar registros de suscripción a notificaciones. |
+| UC-08 | Gestionar solicitudes de notificación | ADMIN | **Sí** | Cambiar el estado de la suscripción entre **ACTIVA** y **CANCELADA** (baja lógica); **no** se eliminan filas de suscriptor en el MVP (ver [data-model.md](../data-model/data-model.md) §2). |
 | UC-09 | Notificar por correo a suscriptores | Sistema | N/A | Tras la **alta** (creación) de ficha de árbol, informar por e-mail a suscriptores activos. En el MVP **no** se notifica por modificaciones posteriores (regla R7). |
 
 ## Relaciones UML aplicadas

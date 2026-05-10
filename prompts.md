@@ -46,7 +46,7 @@ Casos de uso:
 Deben modelarse estos casos: 
 - Usuario público: puede consultar y registrarse para recibir notificaciones - 
 - Colaborador: además de los casos de uso públicos, puede dar del alta árboles o modificar los que ha registrado él; como punto de extensión está la consulta a la IA para identificar un árbol; puede consultar a la IA vía chat. 
-- Administrador: puede realizar las tareas de los usuarios anteriores y Gestionar las tablas de catálogo; puede modificar las solicitudes de notificación dejándolas inactivas o borrándolas. 
+- Administrador: puede realizar las tareas de los usuarios anteriores y Gestionar las tablas de catálogo; puede modificar las solicitudes de notificación pasando el estado entre activa y cancelada (baja lógica; sin borrado físico de suscriptores en el MVP alineado con data-model §2). 
 - Además el sistema debe mandar notificaciones por mail a los usuarios registrados cuando se produzca una alta/modificación
 ---
 Restricciones

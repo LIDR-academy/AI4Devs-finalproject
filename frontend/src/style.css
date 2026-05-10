@@ -452,6 +452,7 @@ body {
 }
 
 .tree-detail-visual-grid {
+  --tree-detail-media-h: 20rem; /* 320px: misma caja para foto y mapa Leaflet */
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-4);
@@ -471,17 +472,24 @@ body {
 }
 
 .tree-detail-gallery-frame {
-  min-height: 320px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  height: var(--tree-detail-media-h);
+  min-height: var(--tree-detail-media-h);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
   overflow: hidden;
 }
 
 .tree-detail-gallery-open-btn {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   height: 100%;
   border: none;
@@ -491,16 +499,18 @@ body {
 }
 
 .tree-detail-gallery-image {
-  width: 100%;
-  height: 100%;
-  min-height: 320px;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
   border-radius: 10px;
   cursor: zoom-in;
 }
 
 .tree-detail-map-block .map-preview {
-  min-height: 320px;
+  height: var(--tree-detail-media-h);
+  min-height: var(--tree-detail-media-h);
 }
 
 .tree-detail-gallery-empty {
@@ -533,6 +543,65 @@ dialog.tree-photo-viewer-overlay[open] {
 
 dialog.tree-photo-viewer-overlay::backdrop {
   background: color-mix(in srgb, var(--secondary) 52%, transparent);
+}
+
+/* Modal de confirmación reutilizable (MtlConfirmDialog): mismo lenguaje visual que el visor de fotos, panel compacto */
+dialog.mtl-confirm-dialog[open] {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  max-height: none;
+  z-index: 1010;
+  border: none;
+  margin: 0;
+  padding: var(--space-4);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+dialog.mtl-confirm-dialog::backdrop {
+  background: color-mix(in srgb, var(--secondary) 42%, transparent);
+}
+
+.mtl-confirm-dialog-panel {
+  width: min(26rem, 100%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: 0 12px 32px rgba(16, 24, 40, 0.22);
+}
+
+.mtl-confirm-dialog-title {
+  margin: 0 0 var(--space-3);
+  font-size: 1.05rem;
+  font-weight: 650;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.mtl-confirm-dialog-message {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.mtl-confirm-dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-top: var(--space-5);
+}
+
+.mtl-confirm-dialog-confirm {
+  margin-left: auto;
 }
 
 .tree-photo-viewer-content {
@@ -642,7 +711,12 @@ dialog.tree-photo-viewer-overlay::backdrop {
 }
 
 .tree-detail-map-unavailable {
-  margin-top: var(--space-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tree-detail-media-h);
+  margin: 0;
+  text-align: center;
 }
 
 .trees-pagination {
@@ -1063,6 +1137,18 @@ dialog.tree-photo-viewer-overlay::backdrop {
   background: var(--bg-soft);
 }
 
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+  border-color: color-mix(in srgb, var(--danger) 82%, #000 18%);
+  box-shadow: var(--shadow-soft);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--danger) 88%, #000 12%);
+  border-color: color-mix(in srgb, var(--danger) 72%, #000 28%);
+}
+
 .tree-form {
   margin-top: var(--space-4);
   display: grid;
@@ -1245,13 +1331,8 @@ select.form-control {
   }
 
   .tree-detail-visual-grid {
+    --tree-detail-media-h: 16.25rem; /* 260px en estrecho: foto y mapa alineados */
     grid-template-columns: 1fr;
-  }
-
-  .tree-detail-gallery-frame,
-  .tree-detail-gallery-image,
-  .tree-detail-map-block .map-preview {
-    min-height: 260px;
   }
 
   .tree-detail-form .actions .tree-detail-id {
