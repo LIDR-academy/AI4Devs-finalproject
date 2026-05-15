@@ -57,7 +57,7 @@ Los `application-dev.properties` de los servicios con JDBC usan `jdbc:postgresql
 
 ### Orden recomendado
 
-1. **Infra de apoyo** (Postgres, Mongo, Redis, MinIO, Kafka, Keycloak): [infra/compose/README.md](../infra/compose/README.md) — `docker compose up -d` desde `infra/compose/` con `.env` copiado de `.env.example`.
+1. **Infra de apoyo** (Postgres, Mongo, Redis, MinIO, Kafka, Keycloak, Mailpit, Prometheus, Grafana): [infra/compose/README.md](../infra/compose/README.md) — `docker compose up -d` desde `infra/compose/` con `.env` copiado de `.env.example`.
 2. **Microservicios** con perfil **`dev`** (no está fijado en `application.properties`; actívalo con `SPRING_PROFILES_ACTIVE=dev`, argumentos `--spring.profiles.active=dev`, Maven `-Dspring-boot.run.profiles=dev`, o las configuraciones **`* (dev)`** en [`.vscode/launch.json`](../.vscode/launch.json)): conexión a Postgres según el punto anterior; usuario/contraseña como en `.env` / `.env.example` (p. ej. `mtl` / `mtl_dev_password`).
 3. **Flyway** (servicios con SQL bajo `services/`): scripts **solo** en **`src/main/resources/db/migration/`** (convención `V1__….sql`, `V2__….sql`, …). No hay otra carpeta obligatoria bajo `db/` para el arranque. En **Spring Boot 4** hace falta **`spring-boot-starter-flyway`**. En **catalog-service**: DDL en `V1__baseline.sql`, datos iniciales de maestros en `V2__seed_maestros_inicial.sql`. Para más cambios de esquema o semillas en entornos donde ya se aplicó Flyway, añade migraciones **`V3__…`**, **`V4__…`**, **`V5__…`**, etc. (no reescribas migraciones ya desplegadas en compartido).
 
@@ -82,7 +82,24 @@ Cada microservicio expone Actuator con **`/actuator/health`**, **`/actuator/prom
 
 En **desarrollo local**, `/actuator/prometheus` está en lista blanca (sin JWT) para que Prometheus en Docker pueda hacer scrape; en producción conviene restringir por red o puerto de management.
 
-**Stack Prometheus + Grafana:** [platform/observability/README.md](../platform/observability/README.md) · Compose: [infra/compose/README.md](../infra/compose/README.md). Orden: infra de apoyo → microservicios en `dev` → `docker compose up -d prometheus grafana`.
+**Imágenes Docker (Compose)** — configuración en [platform/observability/](../platform/observability/README.md):
+
+| Servicio | Imagen | Puerto host (por defecto) | Uso |
+|----------|--------|---------------------------|-----|
+| Prometheus | `prom/prometheus:v3.2.1` | 9090 (`PROMETHEUS_PORT`) | Scrape de `http://host.docker.internal:8080`–`8084/actuator/prometheus` |
+| Grafana | `grafana/grafana:11.5.2` | 3000 (`GRAFANA_PORT`) | Dashboard **MTL Microservices**; login `GRAFANA_ADMIN_*` en `.env` |
+
+**Arranque:**
+
+```bash
+cd infra/compose
+docker compose pull prometheus grafana
+docker compose up -d prometheus grafana
+```
+
+Orden recomendado: infra de apoyo → microservicios en **`dev`** (puertos de la tabla anterior) → Prometheus/Grafana. Comprobar targets en http://localhost:9090/targets y el dashboard en http://localhost:3000.
+
+Documentación: [platform/observability/README.md](../platform/observability/README.md) · [infra/compose/README.md](../infra/compose/README.md) · [ADR-0005](../docs/adr/0005-microservices-observabilty-spring-boot.md).
 
 **Suscripción pública por correo (HU-004):** `POST /api/notifications/subscriptions` está expuesto sin JWT en **`notification-service`** y en el **api-gateway**; en pruebas E2E y desde la SPA use la **URL base del gateway** (`http://localhost:8080`), no el puerto **8083** directo, salvo depuración local consciente.
 
