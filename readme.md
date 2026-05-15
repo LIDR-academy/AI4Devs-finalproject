@@ -150,7 +150,9 @@ En `[infra/compose/](infra/compose/)` hay un `docker-compose.yml` que levanta la
 | MinIO                   | Almacenamiento de objetos                                       |
 | Kafka                   | Modo KRaft, con topic `catalog.arbol.evento`                    |
 | Keycloak                | Versión 26 en modo desarrollo                                   |
-| Mailpit                 | SMTP de prueba (captura correo; UI web); puertos en [infra/compose/README.md](infra/compose/README.md) |
+| Mailpit                 | SMTP de prueba (captura correo; UI web); imagen `axllent/mailpit`; puertos en [infra/compose/README.md](infra/compose/README.md) |
+| Prometheus              | Métricas; imagen `prom/prometheus:v3.2.1`; scrape de microservicios en el host (`/actuator/prometheus`); UI en puerto **9090** |
+| Grafana                 | Dashboards; imagen `grafana/grafana:11.5.2`; datasource y dashboard provisionados desde [platform/observability/](platform/observability/README.md); UI en puerto **3000** |
 
 
 > **Nota:** por defecto, Postgres del Compose se expone en el host en el **puerto `5433`**  
@@ -159,9 +161,10 @@ En `[infra/compose/](infra/compose/)` hay un `docker-compose.yml` que levanta la
 #### Pasos:
 
 - Copiar `infra/compose/.env.example` a `infra/compose/.env` (en Windows `copy .env.example .env`; en Unix `cp .env.example .env`), 
-- Ejecutar `docker compose up -d` desde `infra/compose/`.
+- Ejecutar `docker compose up -d` desde `infra/compose/` (incluye Prometheus y Grafana).
+- Opcional, solo observabilidad: `docker compose pull prometheus grafana` y `docker compose up -d prometheus grafana` (requiere microservicios en el host en puertos **8080–8084** con perfil `dev` para que el scrape muestre targets **UP**).
 
-#### Detalle y puertos: [infra/compose/README.md](infra/compose/README.md).
+#### Detalle y puertos: [infra/compose/README.md](infra/compose/README.md). Observabilidad: [platform/observability/README.md](platform/observability/README.md) · [ADR-0005](docs/adr/0005-microservices-observabilty-spring-boot.md).
 
 #### Backend: microservicios y gateway
 
@@ -252,6 +255,7 @@ La aplicación se desarrollará en microservicios con Spring en la parte de back
 - **Base de datos NoSQL:** MongoDB
 - **Caché:** Redis
 - **Almacenamiento de imágenes:** Compatible S3 (MinIO)
+- **Observabilidad (local):** Prometheus + Grafana (imágenes Docker en Compose); métricas vía Actuator/Micrometer en cada microservicio
 
 
 
@@ -648,6 +652,8 @@ sequenceDiagram
 | Keycloak             | Keycloak 26                                                                                                                                                                                                       | Realm, clientes, roles, emisión de JWT                                                                                                                                                                                                                                                                                                                                           |
 | Kafka                | Apache Kafka (KRaft en dev)                                                                                                                                                                                       | Topics p. ej. `catalog.arbol.evento`                                                                                                                                                                                                                                                                                                                                             |
 | Mailpit              | Mailpit (imagen `axllent/mailpit`, Compose)                                                                                                                                                                       | SMTP de prueba en desarrollo local; bandeja en UI web; sin relay a dominios reales ([infra/compose/README.md](infra/compose/README.md))                                                                                                                                                                                                                                         |
+| Prometheus           | Prometheus (imagen `prom/prometheus:v3.2.1`, Compose)                                                                                                                                                             | Recolección de métricas desde `/actuator/prometheus` de los microservicios en el host; UI **http://localhost:9090** ([platform/observability/README.md](platform/observability/README.md))                                                                                                                                                                                      |
+| Grafana              | Grafana (imagen `grafana/grafana:11.5.2`, Compose)                                                                                                                                                                | Visualización; dashboard provisionado **MTL Microservices**; UI **http://localhost:3000** (credenciales `GRAFANA_ADMIN_*` en `.env`)                                                                                                                                                                                                                                            |
 | PostgreSQL           | 16                                                                                                                                                                                                                | **Un servidor**; **cuatro esquemas** (`catalog`, `media`, `notification`, `ai`). En **catalog**, el DDL actual   usa **latitud/longitud** `NUMERIC` (sin columna PostGIS); la extensión PostGIS está prevista en el contenedor para iteraciones posteriores ([V1__baseline.sql](services/catalog-service/src/main/resources/db/migration/V1__baseline.sql)). |
 | MongoDB              | 7                                                                                                                                                                                                                 | Colecciones de enriquecimiento y notas; proyección mínima para búsqueda sin SQL (véase [mongo.md](docs/data-model/mongo.md))                                                                                                                                                                                                                                                     |
 | Redis                | 7                                                                                                                                                                                                                 | Caché                                                                                                                                                                                                                                                                                                                                                                            |
@@ -687,7 +693,7 @@ proyecto/
 
 ### **3.4. Infraestructura y despliegue**
 
-**Desarrollo:** Docker Compose (o equivalente) con **un** PostgreSQL con extensión **PostGIS** (cuatro esquemas de aplicación: `catalog`, `media`, `notification`, `ai`), MongoDB, Redis, MinIO, Kafka, Keycloak y **Mailpit** (SMTP de prueba para notificaciones en local); los microservicios pueden ejecutarse en el host o como contenedores.
+**Desarrollo:** Docker Compose (o equivalente) con **un** PostgreSQL con extensión **PostGIS** (cuatro esquemas de aplicación: `catalog`, `media`, `notification`, `ai`), MongoDB, Redis, MinIO, Kafka, Keycloak, **Mailpit** (SMTP de prueba para notificaciones en local), **Prometheus** (`prom/prometheus:v3.2.1`) y **Grafana** (`grafana/grafana:11.5.2`) para métricas y dashboards ([ADR-0005](docs/adr/0005-microservices-observabilty-spring-boot.md)); los microservicios Spring Boot suelen ejecutarse en el **host** (puertos 8080–8084) para que Prometheus haga scrape vía `host.docker.internal`, o como contenedores si se adaptan los targets.
 
 **Despliegue Producción:** orquestación (Kubernetes), secretos externos, Keycloak y Kafka en HA según entorno, bases de datos gestionadas y almacenamiento de objetos S3 en nube.
 
@@ -708,6 +714,8 @@ flowchart LR
         KCd["🔐 Keycloak"]:::service
         Kd["⚡ Kafka"]:::service
         MPd["📧 Mailpit"]:::service
+        PRd["📊 Prometheus"]:::service
+        GRd["📈 Grafana"]:::service
         
         %% Almacenamiento
         PGd[("🐘 Postgres + PostGIS")]:::db
@@ -724,6 +732,9 @@ flowchart LR
     DC --> Kd
     DC --> KCd
     DC --> MPd
+    DC --> PRd
+    DC --> GRd
+    PRd --> GRd
 ```
 
 
