@@ -1,4 +1,4 @@
-package com.mtl.gateway.config;
+
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,7 +23,7 @@ public class GatewaySecurityConfig {
         .authorizeExchange(
             exchanges ->
                 exchanges
-                    .pathMatchers("/actuator/health", "/actuator/info")
+                    .pathMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus")
                     .permitAll()
                     .pathMatchers(HttpMethod.OPTIONS, "/api/**")
                     .permitAll()

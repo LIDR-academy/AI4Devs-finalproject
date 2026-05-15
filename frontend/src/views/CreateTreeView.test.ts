@@ -9,6 +9,14 @@ const loadMastersMock = vi.hoisted(() => vi.fn(async () => {}))
 const submitMock = vi.hoisted(() => vi.fn(async () => {}))
 const reverseGeocodeWithOpenStreetMapMock = vi.hoisted(() => vi.fn())
 
+const { readGpsFromImageFileMock } = vi.hoisted(() => ({
+  readGpsFromImageFileMock: vi.fn().mockResolvedValue(null),
+}))
+
+vi.mock('@/composables/imageExifGps', () => ({
+  readGpsFromImageFile: (...args: unknown[]) => readGpsFromImageFileMock(...args),
+}))
+
 const form = reactive({
   speciesId: '',
   provinceId: '',
@@ -95,5 +103,61 @@ describe('CreateTreeView', () => {
     expect(form.municipality).toBe('Madrid')
     expect((wrapper.get('#provinceId').element as HTMLSelectElement).value).toBe('28')
     expect((wrapper.get('#municipality').element as HTMLInputElement).value).toBe('Madrid')
+  })
+
+  it('actualiza latitud y longitud del formulario cuando la primera foto aporta EXIF GPS', async () => {
+    readGpsFromImageFileMock.mockResolvedValue({
+      latitude: '41.500000',
+      longitude: '-3.600000',
+    })
+    reverseGeocodeWithOpenStreetMapMock.mockResolvedValue({
+      provinceId: '28',
+      municipalityName: 'Madrid',
+    })
+
+    form.latitude = ''
+    form.longitude = ''
+    form.provinceId = ''
+    form.municipality = ''
+
+    const createObjectUrlSpy = vi.fn(() => 'blob:create-tree-test')
+    const revokeObjectUrlSpy = vi.fn()
+    vi.stubGlobal('URL', {
+      createObjectURL: createObjectUrlSpy,
+      revokeObjectURL: revokeObjectUrlSpy,
+    })
+
+    try {
+      const wrapper = mount(CreateTreeView, {
+        global: {
+          plugins: [createTestI18n()],
+          stubs: {
+            RouterLink: true,
+            TreeLocationMapPreview: {
+              name: 'TreeLocationMapPreview',
+              template: '<div />',
+            },
+          },
+        },
+      })
+
+      const file = new File([new Uint8Array(512)], 'from-exif.jpg', { type: 'image/jpeg' })
+      const input = wrapper.get('input[type="file"]')
+      Object.defineProperty(input.element, 'files', {
+        value: [file],
+        configurable: true,
+      })
+      await input.trigger('change')
+      await flushPromises()
+
+      expect(form.latitude).toBe('41.500000')
+      expect(form.longitude).toBe('-3.600000')
+      expect(form.provinceId).toBe('28')
+      expect(form.municipality).toBe('Madrid')
+    } finally {
+      vi.unstubAllGlobals()
+      readGpsFromImageFileMock.mockReset()
+      readGpsFromImageFileMock.mockResolvedValue(null)
+    }
   })
 })

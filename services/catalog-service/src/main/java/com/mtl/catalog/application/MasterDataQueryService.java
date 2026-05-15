@@ -1,12 +1,14 @@
 package com.mtl.catalog.application;
 
+import com.mtl.catalog.config.CatalogCacheConfig;
 import com.mtl.catalog.dto.MasterDataPageResponse;
-import com.mtl.catalog.dto.PublicProvinceNamesResponse;
 import com.mtl.catalog.dto.ProvinceListItemDto;
+import com.mtl.catalog.dto.PublicProvinceNamesResponse;
 import com.mtl.catalog.dto.SpeciesListItemDto;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.EspecieReadRepository;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.ProvinciaReadRepository;
 import java.util.List;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +29,10 @@ public class MasterDataQueryService {
   }
 
   @Transactional(readOnly = true)
+  @Cacheable(
+      cacheNames = CatalogCacheConfig.CACHE_SPECIES_UNPAGED,
+      key = "'all'",
+      condition = "#unpaged && (#q == null || #q.isBlank())")
   public MasterDataPageResponse<SpeciesListItemDto> listSpecies(
       int page, int size, String q, boolean unpaged) {
     Pageable pageable =
@@ -38,12 +44,17 @@ public class MasterDataQueryService {
   }
 
   @Transactional(readOnly = true)
+  @Cacheable(cacheNames = CatalogCacheConfig.CACHE_PUBLIC_PROVINCE_NAMES, key = "'all'")
   public PublicProvinceNamesResponse listPublicProvinceNames() {
     List<String> nombres = provinciaReadRepository.findAllProvinceNamesOrdered();
     return new PublicProvinceNamesResponse(nombres);
   }
 
   @Transactional(readOnly = true)
+  @Cacheable(
+      cacheNames = CatalogCacheConfig.CACHE_PROVINCES_UNPAGED,
+      key = "'all'",
+      condition = "#unpaged && (#q == null || #q.isBlank())")
   public MasterDataPageResponse<ProvinceListItemDto> listProvinces(
       int page, int size, String q, boolean unpaged) {
     Pageable pageable =

@@ -79,7 +79,6 @@ public class TreeCreationService {
     UsuarioApp creator =
         ensureUsuarioApp(subject, emailNorm, truncate(blankToNull(command.nombrePerfil()), MAX_NOMBRE));
     Long creatorId = creator.getId();
-    Instant now = Instant.now();
 
     Arbol arbol = new Arbol();
     arbol.setEspecieId(command.especieId());
@@ -96,10 +95,6 @@ public class TreeCreationService {
     arbol.setEstadoPublicacion(
         validateAndNormalizePublicationState(
             truncate(blankToNull(command.estadoPublicacion()), MAX_ESTADO_PUBLICACION)));
-    arbol.setCreadoEn(now);
-    arbol.setModificadoEn(now);
-    arbol.setCreadoPor(creatorId);
-    arbol.setModificadoPor(creatorId);
 
     Arbol saved = arbolRepository.save(arbol);
     return new CreatedTreeResult(saved.getId(), creatorId, saved.getCreadoEn());

@@ -121,4 +121,62 @@ describe('TreePhotoUploadPicker', () => {
     })
     expect(wrapper.text()).toContain('Coordenadas actualizadas desde la primera fotografía')
   })
+
+  it('acepta como máximo 10 fotos válidas y muestra mensaje si se intentan 11', async () => {
+    const wrapper = mountPicker()
+    const files = Array.from({ length: 11 }, (_, i) =>
+      buildFile(`p-${i}.jpg`, 'image/jpeg', 200 + i),
+    )
+    await triggerFileSelection(wrapper, files)
+
+    const updateEvents = wrapper.emitted('update:modelValue')
+    const lastEvent = updateEvents?.at(-1)
+    expect(lastEvent?.[0]).toHaveLength(10)
+    expect(wrapper.text()).toContain('Solo se permiten 10 fotografías por árbol.')
+  })
+
+  it('al quitar la primera foto relee EXIF del nuevo primero y emite last first-photo-gps acorde', async () => {
+    readGpsSpy
+      .mockResolvedValueOnce({
+        latitude: '10.000000',
+        longitude: '20.000000',
+      })
+      .mockResolvedValueOnce({
+        latitude: '99.000000',
+        longitude: '88.000000',
+      })
+
+    const wrapper = mountPicker()
+    const first = buildFile('first.jpg', 'image/jpeg', 1024)
+    const second = buildFile('second.jpg', 'image/jpeg', 2048)
+    await triggerFileSelection(wrapper, [first, second])
+    await flushPromises()
+
+    expect(readGpsSpy).toHaveBeenCalledTimes(1)
+    expect(readGpsSpy.mock.calls[0][0]).toBe(first)
+
+    const removeFirst = wrapper.findAll('.photo-preview-item').at(0)?.get('button[type="button"]')
+    expect(removeFirst).toBeTruthy()
+    await removeFirst!.trigger('click')
+    await flushPromises()
+
+    expect(readGpsSpy).toHaveBeenCalledTimes(2)
+    expect(readGpsSpy.mock.calls[1][0]).toBe(second)
+    expect(wrapper.text()).toContain('Foto principal')
+
+    const gpsEvents = wrapper.emitted('first-photo-gps')
+    expect(gpsEvents?.at(-1)?.[0]).toEqual({
+      latitude: '99.000000',
+      longitude: '88.000000',
+    })
+  })
+
+  it('no emite first-photo-gps si la primera imagen no tiene GPS en EXIF', async () => {
+    readGpsSpy.mockResolvedValue(null)
+    const wrapper = mountPicker()
+    await triggerFileSelection(wrapper, [buildFile('no-gps.jpg', 'image/jpeg', 1024)])
+    await flushPromises()
+
+    expect(wrapper.emitted('first-photo-gps')).toBeUndefined()
+  })
 })

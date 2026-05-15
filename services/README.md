@@ -44,6 +44,17 @@ Los `application-dev.properties` de los servicios con JDBC usan `jdbc:postgresql
   - `mtl.catalog.kafka.arbol-evento-topic` — por defecto `catalog.arbol.evento`.
   - `spring.kafka.bootstrap-servers` — equivalente estándar Spring; se puede sobreescribir con **`MTL_KAFKA_BOOTSTRAP_SERVERS`** (p. ej. otro host/puerto).
 
+### Caché Redis y **catalog-service**
+
+- **Por defecto desactivada** (`spring.cache.type=none` en `application.properties`): tests y builds sin Docker no requieren Redis.
+- **Perfil `dev`** la activa a Redis (`spring.cache.type=redis`) apuntando al contenedor del Compose en `localhost:6379` (variables opcionales: **`MTL_REDIS_HOST`**, **`MTL_REDIS_PORT`**).
+- **Qué se cachea** (lecturas de maestros de baja cardinalidad y alta frecuencia, definido en `CatalogCacheConfig`):
+  - `catalog.publicProvinceNames` — `GET /api/catalog/public/provinces/names`, TTL 10 min.
+  - `catalog.provincesUnpaged` — `GET /api/catalog/provinces` cuando `unpaged=true` y sin `q`, TTL 5 min.
+  - `catalog.speciesUnpaged` — `GET /api/catalog/species` cuando `unpaged=true` y sin `q`, TTL 5 min.
+- **Invalidación:** solo por TTL en el MVP (no hay `@CacheEvict`). Para forzar refresco en dev: `docker compose -f infra/compose/docker-compose.yml exec redis redis-cli FLUSHDB`.
+- **Smoke manual:** con `dev` arriba, llamar dos veces el mismo endpoint cacheable y comprobar en logs SQL de catálogo que la segunda no ejecuta el `select`; o `redis-cli KEYS 'catalog.*'` para ver las entradas.
+
 ### Orden recomendado
 
 1. **Infra de apoyo** (Postgres, Mongo, Redis, MinIO, Kafka, Keycloak): [infra/compose/README.md](../infra/compose/README.md) — `docker compose up -d` desde `infra/compose/` con `.env` copiado de `.env.example`.
@@ -52,7 +63,7 @@ Los `application-dev.properties` de los servicios con JDBC usan `jdbc:postgresql
 
 **Si Flyway ya aplicó versiones antiguas y has cambiado `V1`/`V2`:** en desarrollo, reset de esquema o volumen — [docs/engineering/flyway-dev-reset.md](../docs/engineering/flyway-dev-reset.md).
 
-4. **Tests:** **`mvn test`** (Surefire, p. ej. catálogo con H2). **`mvn verify`** añade Failsafe (`*IT` en `testIT`). En **catalog-service**, los IT con Testcontainers se **omiten** sin Docker (no rompen el build); detalle y JWT de prueba: [testing-java.md](../docs/engineering/testing-java.md) §4 y "Docker y IT". Lanzar una clase: **§7** del mismo doc.
+4. **Tests:** **`mvn test`** (Surefire, p. ej. catálogo con H2). **`mvn verify`** añade Failsafe (`*IT` en `testIT`). En **catalog-service** y **notification-service**, los IT con Testcontainers se **omiten** sin Docker (no rompen el build); detalle y JWT de prueba: [testing-java.md](../docs/engineering/testing-java.md) §4 y "Docker y IT". Dónde colocar properties y scripts de IT en classpath: **§1** del mismo doc. Lanzar una clase: **§7** del mismo doc.
 
 **Puertos HTTP locales (MVP esqueleto)**
 
@@ -64,6 +75,14 @@ Los `application-dev.properties` de los servicios con JDBC usan `jdbc:postgresql
 | notification-service | 8083 |
 | ai-assistant-service | 8084 |
 | system-e2e-tests | (no aplica: solo tests contra URLs configurables) |
+
+### Observabilidad (ADR-0005)
+
+Cada microservicio expone Actuator con **`/actuator/health`**, **`/actuator/prometheus`** y logs **JSON** en consola (`logging.structured.format.console=logstash`). Etiquetas Micrometer: `application` (`spring.application.name`) y `environment` (`APP_ENV`, por defecto `local`).
+
+En **desarrollo local**, `/actuator/prometheus` está en lista blanca (sin JWT) para que Prometheus en Docker pueda hacer scrape; en producción conviene restringir por red o puerto de management.
+
+**Stack Prometheus + Grafana:** [platform/observability/README.md](../platform/observability/README.md) · Compose: [infra/compose/README.md](../infra/compose/README.md). Orden: infra de apoyo → microservicios en `dev` → `docker compose up -d prometheus grafana`.
 
 **Suscripción pública por correo (HU-004):** `POST /api/notifications/subscriptions` está expuesto sin JWT en **`notification-service`** y en el **api-gateway**; en pruebas E2E y desde la SPA use la **URL base del gateway** (`http://localhost:8080`), no el puerto **8083** directo, salvo depuración local consciente.
 
@@ -99,3 +118,5 @@ Desde **`services/`**: **`mvn verify`** o **`mvn -pl catalog-service spring-boot
 ## 4. Enfoque por historias de usuario
 
 Los puntos **5 en adelante** del roadmap (dominio, Kafka, media, IA, front, CI, etc.) se irán desarrollando **historia a historia**; este README puede ampliarse cuando cerréis el primer flujo extremo a extremo (JWT + catálogo + notificación, etc.).
+
+**Subida de fotografías al árbol (HU-006):** flujo **presign → PUT en MinIO → confirmación** en `media-service`, propiedades `mtl.media.upload.*` / `mtl.media.storage.*` / `mtl.media.presign.*`, criterio de **foto principal** (primera confirmación en servidor; orden en cliente) y **EXIF** solo en la SPA. Guía técnica: [docs/engineering/media-upload-hu006.md](../docs/engineering/media-upload-hu006.md). Arranque local: gateway **8080**, **media-service** **8082**, MinIO **9000** (véase [infra/compose/README.md](../infra/compose/README.md)).

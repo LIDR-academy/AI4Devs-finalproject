@@ -2,18 +2,25 @@ package com.mtl.catalog.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.Instant;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "arbol", schema = "catalog")
 @Getter
 @Setter
@@ -57,15 +64,19 @@ public class Arbol {
   @Column(name = "estado_publicacion", length = 64)
   private String estadoPublicacion;
 
+  @CreatedDate
   @Column(name = "creado_en", nullable = false)
   private Instant creadoEn;
 
+  @CreatedBy
   @Column(name = "creado_por")
   private Long creadoPor;
 
+  @LastModifiedDate
   @Column(name = "modificado_en", nullable = false)
   private Instant modificadoEn;
 
+  @LastModifiedBy
   @Column(name = "modificado_por")
   private Long modificadoPor;
 }

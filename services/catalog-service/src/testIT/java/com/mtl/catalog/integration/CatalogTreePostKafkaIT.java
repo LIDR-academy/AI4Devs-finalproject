@@ -32,10 +32,10 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -50,12 +50,10 @@ import tools.jackson.databind.json.JsonMapper;
 @ActiveProfiles("test-it-pg-kafka")
 @Import(JwtDecoderConfigTest.class)
 @EnabledIf("com.mtl.catalog.integration.support.DockerConditions#dockerDisponible")
-@SuppressWarnings("deprecation")
 class CatalogTreePostKafkaIT {
 
   private static final DockerImageName KAFKA_IMAGE =
-      DockerImageName.parse("apache/kafka-native:3.8.1")
-          .asCompatibleSubstituteFor("confluentinc/cp-kafka");
+      DockerImageName.parse("apache/kafka-native:3.8.1");
 
   /** Primera especie sembrada (p. ej. Quercus ilex); ver V2__seed_maestros_inicial.sql */
   private static final long SPECIES_ID = 1L;
@@ -117,7 +115,7 @@ class CatalogTreePostKafkaIT {
           "municipio": "Madrid",
           "description": "IT Kafka",
           "altitude": 600,
-          "publicMapVisibility": "VISIBLE",
+          "publicMapVisibility": "PUBLICO",
           "publicationState": "PUBLICADO"
         }
         """

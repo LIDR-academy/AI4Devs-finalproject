@@ -21,6 +21,7 @@ Al **encargar trabajo** suele bastar con la regla que hace de índice (p. ej. [b
 | Híbrido SQL + Mongo (catálogo) | [docs/data-model/mongo.md](../data-model/mongo.md) y [.cursor/rules/mongo-hybrid.mdc](../../.cursor/rules/mongo-hybrid.mdc) | Negocio del híbrido; paquetes → `spring-boot-4-backend` |
 | Tests backend por capa, Surefire/Failsafe | [testing-java.md](testing-java.md) | [quality-and-testing.mdc](../../.cursor/rules/quality-and-testing.mdc) |
 | Tests frontend por capa, Vitest (Vue 3) | [testing-frontend.md](testing-frontend.md) | [frontend-security.mdc](../../.cursor/rules/frontend-security.mdc) y [quality-and-testing.mdc](../../.cursor/rules/quality-and-testing.mdc) |
+| Subida de fotos (presign, MinIO, confirm, principal, EXIF cliente, props `mtl.media.*`) | [docs/engineering/media-upload-hu006.md](media-upload-hu006.md) y [docs/api/openapi.yaml](../api/openapi.yaml) | [.cursor/rules/api-security.mdc](../../.cursor/rules/api-security.mdc) (JWT/objeto privado) |
 | Eventos Kafka (topics, payload, idempotencia) | [docs/events/kafka-events.md](../events/kafka-events.md) | [.cursor/rules/kafka-events.mdc](../../.cursor/rules/kafka-events.mdc) |
 | Checklist al tocar `services/` | (índice) | [.cursor/rules/backend-generation-standard.mdc](../../.cursor/rules/backend-generation-standard.mdc) |
 | Frontend Vue 3 (`frontend/`) | (convenciones en regla; guías en `docs/` cuando existan) | [.cursor/rules/frontend-vue3.mdc](../../.cursor/rules/frontend-vue3.mdc) |

@@ -167,6 +167,41 @@ services:
     networks:
       - mtl
 
+  # Observabilidad (ADR-0005): scrape de microservicios en el host vía host.docker.internal.
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ../../platform/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+    networks:
+      - mtl
+
+  grafana:
+    image: grafana/grafana:11.5.2
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin_dev_password}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ../../platform/observability/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ../../platform/observability/grafana/provisioning/dashboards/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
+      - ../../platform/observability/grafana/provisioning/dashboards/json:/etc/grafana/provisioning/dashboards/json:ro
+    networks:
+      - mtl
+
 networks:
   mtl:
     driver: bridge

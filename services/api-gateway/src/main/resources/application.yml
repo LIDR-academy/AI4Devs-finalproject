@@ -56,4 +56,18 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+      environment: ${APP_ENV:local}
+
+logging:
+  structured:
+    format:
+      console: logstash

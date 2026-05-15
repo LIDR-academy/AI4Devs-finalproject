@@ -23,8 +23,8 @@ Se necesita:
 2. **Creación perezosa (elegida)**  
    Si existe `usuario_app` por `subject_oidc` → se reutiliza la PK y se **sincronizan** `email`/`nombre` si difieren. Si no existe → **INSERT** con datos mínimos del token. Colisiones concurrentes: reintento tras `DataIntegrityViolationException` y `merge` de perfil.
 
-3. **`@EnableJpaAuditing` global** para columnas de auditoría en `arbol`  
-   Descartado en el MVP de esta historia; timestamps y `creado_por`/`modificado_por` se rellenan en el servicio de creación (véase TASK-HU-005-11 en backlog).
+3. **`@EnableJpaAuditing` en `Arbol` (TASK-HU-005-11)**  
+   En una iteración posterior al MVP inicial de esta ADR se activó Spring Data JPA Auditing en la entidad **`Arbol`**: `creado_en` / `modificado_en` / `creado_por` / `modificado_por` rellenados por `@EntityListeners(AuditingEntityListener.class)` y un `AuditorAware<Long>` que resuelve `usuario_app_id` desde el JWT (subject → `usuario_app`). La orquestación de alta sigue materializando `usuario_app` en `TreeCreationService` **antes** del `save` del árbol para que el auditor resuelva en la misma transacción. Detalle: [HU-005-ticket-breakdown.md](../backlog/HU-005-ticket-breakdown.md) (TASK-HU-005-11).
 
 ## Decisión
 
@@ -37,6 +37,7 @@ Se necesita:
 
 ## Consecuencias
 
+- **JPA Auditing (TASK-HU-005-11):** la entidad `Arbol` usa `@CreatedDate` / `@LastModifiedDate` / `@CreatedBy` / `@LastModifiedBy`; el auditor devuelve el `usuario_app_id` del subject OIDC actual. `Usuario_app` y maestros taxonómicos siguen sin listeners de auditoría JPA en este corte.
 - **Cliente SPA / herramientas:** al obtener el token deben solicitar scopes que incluyan **`profile`** y **`email`** para que el access token lleve los claims necesarios (en dev, el realm importado `mtl` con `mtl-spa` y `fullScopeAllowed: true` hereda los *default client scopes* de Keycloak; conviene fijar `scope=openid profile email` en el flujo OIDC).
 - **Kafka (`ARBOL_CREADO` en topic)** queda fuera de este ADR (TASK-HU-005-05).
 - **Tests:** `mvn test` con H2 y Flyway desactivado siguen validando capas con mocks; IT con Postgres requieren Docker donde aplique.

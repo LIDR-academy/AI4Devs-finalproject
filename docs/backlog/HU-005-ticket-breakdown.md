@@ -88,7 +88,7 @@ flowchart LR
 
 | ID | Título | Descripción breve | Estado |
 |----|--------|-------------------|--------|
-| **TASK-HU-005-11** | `@EnableJpaAuditing` en catalog-service | Estandarizar `creado_en` / `modificado_en` / `creado_por` / `modificado_por` con `@EntityListeners(AuditingEntityListener.class)`, `AuditorAware` alineado a `usuario_app_id` (resolución OIDC → fila maestra) y revisión de entidades que escriban; valorar migración gradual desde el patrón manual usado en TASK-04 y maestros. | Pendiente |
+| **TASK-HU-005-11** | `@EnableJpaAuditing` en catalog-service | Estandarizar `creado_en` / `modificado_en` / `creado_por` / `modificado_por` con `@EntityListeners(AuditingEntityListener.class)`, `AuditorAware` alineado a `usuario_app_id` (resolución OIDC → fila maestra) y revisión de entidades que escriban; valorar migración gradual desde el patrón manual usado en TASK-04 y maestros. | Hecho |
 
 ---
 

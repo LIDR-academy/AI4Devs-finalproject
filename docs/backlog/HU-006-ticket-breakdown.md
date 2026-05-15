@@ -45,8 +45,9 @@ flowchart LR
   T06 --> T09
   T09 --> T10[TASK-10 tests backend]
   T09 --> T11[TASK-11 tests frontend]
-  T10 --> T12[TASK-12 documentación operativa]
+  T10 --> T12[TASK-12 tests frontend]
   T11 --> T12
+  T12 --> T13[TASK-13 docs HU-006]
 ```
 
 ---
@@ -83,8 +84,8 @@ flowchart LR
 | ID | Título | Descripción breve | Estado |
 |----|--------|-------------------|--------|
 | **TASK-HU-006-11** | Pruebas backend de validación y permisos | Pruebas unitarias + integración (`Test`/`IT` según capa): límites MIME/tamaño, máximo 10 fotos, autorización por rol/árbol, persistencia de `es_principal` y errores RFC 9457. | Hecho |
-| **TASK-HU-006-12** | Pruebas frontend del componente y EXIF | Tests de composable/componente (Vitest): selección múltiple, bloqueo por límite/MIME/tamaño, marcaje de principal y sobrescritura de coordenadas cuando EXIF válido en primera imagen. | Pendiente |
-| **TASK-HU-006-13** | Documentación técnica del corte HU-006 | Actualizar docs afectados (OpenAPI ya cubierto en TASK-06, más README/engineering si aplica) con propiedades configurables, secuencia presign->upload->confirmación y criterio de principal/EXIF. | Pendiente |
+| **TASK-HU-006-12** | Pruebas frontend del componente y EXIF | Tests de composable/componente (Vitest): selección múltiple, bloqueo por límite/MIME/tamaño, marcaje de principal y sobrescritura de coordenadas cuando EXIF válido en primera imagen. | Hecho |
+| **TASK-HU-006-13** | Documentación técnica del corte HU-006 | Actualizar docs afectados (OpenAPI ya cubierto en TASK-06, más README/engineering si aplica) con propiedades configurables, secuencia presign->upload->confirmación y criterio de principal/EXIF. | Hecho |
 
 ---
 

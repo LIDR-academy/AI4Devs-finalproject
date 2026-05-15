@@ -8,7 +8,7 @@
 | **Formato “Como… quiero… para…”** | Correcto; **usuario autenticado** con acceso de edición según rol (**COLABORADOR** y **ADMIN**, coherente con readme y fila de [backlog.md](backlog.md)); subida segura y visibilidad alineadas a las reglas de fotografía del modelo de datos. |
 | **Estimación (S/M/L)** | **M** coherente con alcance típico de primer corte (presign, persistencia de metadatos, bucket MinIO, UI mínima). |
 | **Prioridad** | **Alta** alineada con MVP. |
-| **Inconsistencias detectadas** | El contrato OpenAPI declara rutas `/api/media/uploads/presign` y `/api/media/photos/{photoId}` con cuerpos o esquemas aún genéricos; el refinamiento y el desglose posterior deberán cerrarlos sin contradecir el readme (objetos privados, URLs prefirmadas, esquema `media` en PostgreSQL). |
+| **Inconsistencias detectadas** | **Cerrado** (TASK-HU-006-06): el contrato media en [openapi.yaml](../api/openapi.yaml) define DTOs de presign y confirmación; guía operativa del flujo y propiedades: [media-upload-hu006.md](../engineering/media-upload-hu006.md). |
 | **Tamaño / división** | Adecuado para **M** si se acota a usuarios autenticados con permiso sobre la ficha (**COLABORADOR** y **ADMIN**), metadatos en `media-service` y subida a MinIO vía gateway; riesgo de crecimiento si se mezcla la galería de consulta (**HU-014**) o tratamiento de imágenes en la misma entrega. |
 
 ---
@@ -60,28 +60,30 @@ Como usuario autenticado, quiero asociar una o varias fotografías a los árbole
 
 ### Riesgos
 
-- **Contrato HTTP incompleto** en OpenAPI para cuerpos de presign y respuestas de metadatos: riesgo de divergencia entre SPA, gateway y servicio hasta cerrar el esquema.
+- **Contrato HTTP (presign / confirm):** cerrado en OpenAPI (TASK-HU-006-06); flujo y propiedades operativas en [media-upload-hu006.md](../engineering/media-upload-hu006.md).
 - **Autoría y permisos:** reglas distintas por rol (p. ej. colaborador frente a árbol ajeno frente a **ADMIN**); deben quedar explícitas en implementación y pruebas, en coherencia con la matriz del readme (alta y edición de árbol para colaborador y administrador).
 - **Ventana de la URL prefirmada** y reintentos: UX y seguridad si la subida falla o caduca.
 - **Extracción de metadatos EXIF** en cliente: no todas las imágenes incorporan GPS; además puede haber diferencias de formato entre dispositivos.
 - **Foto principal**: riesgo de inconsistencias si se permite borrar o reordenar imágenes sin recalcular cuál queda marcada como principal.
 - **Alineación R4–R5** con **HU-014**: los endpoints y la UI de **lectura** masiva o en detalle público deben cerrarse en la otra historia; aquí solo hace falta no contradecir el modelo de visibilidad.
 
-### Aclaraciones pendientes (refinamiento)
+### Decisiones de refinamiento (registro)
+
+Resumen técnico actualizado: [media-upload-hu006.md](../engineering/media-upload-hu006.md). Contrato: [openapi.yaml](../api/openapi.yaml).
 
 - Límite de tamaño fijado en **20 MB por fotografía** con configuración por propiedad de aplicación.
 - Número máximo de fotografías por árbol fijado en **10** para el primer release.
 - Tipos MIME permitidos en contrato: `image/jpeg`, `image/png`, `image/webp`.
-- Detalle del **JSON de presign** y del **DTO de metadatos** de fotografía en OpenAPI (campos obligatorios, indicador de foto principal y herencia de visibilidad desde árbol, sin enumeración por imagen).
+- Detalle del **JSON de presign** y del **DTO de metadatos** de fotografía en OpenAPI (campos obligatorios, indicador de foto principal y herencia de visibilidad desde árbol, sin enumeración por imagen). **Implementado** en `docs/api/openapi.yaml` (operaciones media).
 - Matriz concreta cuando **ADMIN** asocia fotos a un árbol creado por otro colaborador (permitido en MVP, condiciones o mismos endpoints que el colaborador con comprobación de rol en backend).
 - Regla de EXIF cerrada: si la primera imagen tiene latitud y longitud válidas, **sobrescribe** los valores actuales de coordenadas en pantalla.
-- En la primera versión la visibilidad de las fotografías se hereda de la visibilidad del árbol: las fotografías de un árbol público tienen visibiliadd pública
+- En la primera versión la visibilidad de las fotografías se hereda de la visibilidad del árbol: las fotografías de un árbol público tienen visibilidad pública
 
 ## 3. Criterios de aceptación (BDD)
 
 ### Referencias
 
-Readme (microservicio **media-service**, **MinIO**, enrutado `/api/media`); [docs/api/openapi.yaml](../api/openapi.yaml) (`/api/media/uploads/presign`, `/api/media/photos/{photoId}`); [docs/data-model/data-model.md](../data-model/data-model.md) (reglas R4 y R5 y matriz de visibilidad); épicas en [backlog.md](backlog.md); dependencia de ficha de árbol (**HU-005**).
+Readme (microservicio **media-service**, **MinIO**, enrutado `/api/media`); [docs/api/openapi.yaml](../api/openapi.yaml) (`/api/media/uploads/presign`, `/api/media/photos/confirm`, …); [docs/engineering/media-upload-hu006.md](../engineering/media-upload-hu006.md); [docs/data-model/data-model.md](../data-model/data-model.md) (reglas R4 y R5 y matriz de visibilidad); épicas en [backlog.md](backlog.md); dependencia de ficha de árbol (**HU-005**).
 
 ### Escenario 1 — Subida múltiple autorizada con foto principal
 

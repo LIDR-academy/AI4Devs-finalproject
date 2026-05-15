@@ -14,6 +14,7 @@ import com.mtl.catalog.infrastructure.persistence.jpa.repository.EspecieReadRepo
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.ProvinciaReadRepository;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.UsuarioAppRepository;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
@@ -44,6 +45,7 @@ class TreeCreationServiceTest {
         .thenAnswer(
             inv -> {
               Arbol a = inv.getArgument(0);
+              mimicJpaAuditingOnSave(a);
               a.setId(100L);
               return a;
             });
@@ -251,6 +253,7 @@ class TreeCreationServiceTest {
         .thenAnswer(
             inv -> {
               Arbol a = inv.getArgument(0);
+              mimicJpaAuditingOnSave(a);
               a.setId(200L);
               return a;
             });
@@ -267,6 +270,23 @@ class TreeCreationServiceTest {
     u.setId(id);
     u.setSubjectOidc(subject);
     return u;
+  }
+
+  /**
+   * {@link TreeCreationServiceTest} usa repositorio mockeado: Spring Data JPA no ejecuta
+   * {@link org.springframework.data.jpa.domain.support.AuditingEntityListener}; se simulan los
+   * campos que rellenaría el listener en persistencia real.
+   */
+  private static void mimicJpaAuditingOnSave(Arbol a) {
+    if (a.getCreadoEn() != null) {
+      return;
+    }
+    Instant now = Instant.now();
+    a.setCreadoEn(now);
+    a.setModificadoEn(now);
+    Long actor = a.getUsuarioAppId();
+    a.setCreadoPor(actor);
+    a.setModificadoPor(actor);
   }
 
   private CommandBuilder baseCommand() {

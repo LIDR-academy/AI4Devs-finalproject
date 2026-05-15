@@ -6,6 +6,7 @@ Guía breve para alinear implementación, Maven e IDE. Comandos y perfiles gener
 
 - **`src/test/java`**: tests que ejecuta **Surefire** en `mvn test`. Por convención del parent, Surefire **excluye** `**/*IT.java` (por si un IT quedara mezclado por error).
 - **`src/testIT/java`**: fuentes de **integración**; el parent añade el directorio con **build-helper-maven-plugin**; **Failsafe** (`mvn verify`) ejecuta clases que coinciden con `**/*IT.java`.
+- **`src/test/resources`**: recursos del **classpath de tests** (unitarios e integración): perfiles tipo `application-test-it-….properties`, scripts para `PostgreSQLContainer.withInitScript(…)`, fixtures, etc. Maven los copia a `target/test-classes`; ahí los buscan Spring y Testcontainers. **`src/testIT/resources`** no entra en el classpath salvo que el `pom.xml` del módulo declare explícitamente ese directorio como `testResource` (en este monorepo no es el patrón por defecto).
 - Paquetes habituales: `…integration` para IT, `…integration.support` para utilidades y `@TestConfiguration` usados solo por IT (stubs, WireMock, tokens de prueba).
 
 ## 2. Qué testear por capa (reglas mínimas, MVP)

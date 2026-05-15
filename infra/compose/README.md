@@ -31,8 +31,26 @@ La primera vez, Postgres ejecuta los scripts en `init/postgres/` (esquemas, Post
 | Keycloak   | 8180        | Consola `http://localhost:8180` |
 | Mailpit SMTP (desde el host) | 1025 (`MAILPIT_SMTP_PORT`) | `spring.mail.host=localhost`, `spring.mail.port` = este puerto (notification-service en dev) |
 | Mailpit UI | 8025 (`MAILPIT_UI_PORT`) | Bandeja de mensajes capturados: `http://localhost:8025` |
+| Prometheus | 9090 (`PROMETHEUS_PORT`) | Métricas: `http://localhost:9090` (targets en **Status → Targets**) |
+| Grafana | 3000 (`GRAFANA_PORT`) | Dashboards: `http://localhost:3000` (credenciales `GRAFANA_ADMIN_*` en `.env`) |
 
 Dentro de la red Docker, Kafka PLAINTEXT: `kafka:9092`. El SMTP de Mailpit dentro de Compose: `mailpit:1025`.
+
+## Observabilidad (Prometheus + Grafana)
+
+Stack según [ADR-0005](../../docs/adr/0005-microservices-observabilty-spring-boot.md). Configuración en [platform/observability/](../../platform/observability/README.md).
+
+Prometheus hace **scrape** de los microservicios Spring Boot en el **host** (`localhost:8080`–`8084`, perfil `dev` con `mvn spring-boot:run`). Los contenedores usan `host.docker.internal` (en Linux, `extra_hosts: host-gateway` en el servicio `prometheus`).
+
+Descargar imágenes y levantar solo observabilidad:
+
+```bash
+cd infra/compose
+docker compose pull prometheus grafana
+docker compose up -d prometheus grafana
+```
+
+Los microservicios deben estar en marcha en el host para que los cinco targets aparezcan **UP** en Prometheus.
 
 ## Mailpit (SMTP de prueba, HU-007)
 
@@ -47,7 +65,7 @@ Imagen: `axllent/mailpit` (versión fijada en [docker-compose.yml](docker-compos
 
 ## MinIO y subida de fotos (media-service)
 
-El **media-service** genera URLs prefirmadas (SigV4) para que el navegador haga `PUT` directamente contra MinIO. Hace falta el bucket **`mtl-photos`** y cabeceras **CORS** que permitan el origen del Vite.
+El **media-service** genera URLs prefirmadas (SigV4) para que el navegador haga `PUT` directamente contra MinIO. Hace falta el bucket **`mtl-photos`** y cabeceras **CORS** que permitan el origen del Vite. Flujo y propiedades `mtl.media.*`: [docs/engineering/media-upload-hu006.md](../../docs/engineering/media-upload-hu006.md).
 
 ### Arranque automático (sin pasos manuales)
 

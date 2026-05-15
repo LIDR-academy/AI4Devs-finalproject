@@ -31,7 +31,7 @@ public class CatalogSecurityConfig {
         .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(
             auth ->
-                auth.requestMatchers("/actuator/health", "/actuator/info")
+                auth.requestMatchers("/actuator/health", "/actuator/info", "/actuator/prometheus")
                     .permitAll()
                     .requestMatchers("/api/catalog/public/**")
                     .permitAll()
