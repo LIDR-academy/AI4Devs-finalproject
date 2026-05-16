@@ -1,0 +1,403 @@
+openapi: 3.1.0
+info:
+  title: Booking API
+  version: 1.0.0
+  description: Endpoints for creating, viewing, and managing bookings
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/v1/bookings:
+    post:
+      operationId: createBooking
+      summary: Create a booking (initiate payment)
+      description: |
+        Creates a booking in "pending payment" state, places a 10-minute
+        availability hold, and returns a Stripe client_secret for frontend
+        payment confirmation.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBookingRequest"
+      responses:
+        "201":
+          description: Booking created, awaiting payment confirmation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateBookingResponse"
+        "400":
+          $ref: "./error-responses.yml#/components/responses/BadRequest"
+        "401":
+          $ref: "./error-responses.yml#/components/responses/Unauthorized"
+        "409":
+          description: Dates no longer available (held or booked)
+          content:
+            application/json:
+              schema:
+                $ref: "./error-responses.yml#/components/schemas/ErrorResponse"
+
+  /api/v1/bookings/{bookingId}/confirm:
+    post:
+      operationId: confirmBooking
+      summary: Confirm booking after successful payment
+      description: |
+        Called after Stripe payment succeeds (webhook or client-side).
+        Transitions booking to "confirmed" and marks dates as booked.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [payment_intent_id]
+              properties:
+                payment_intent_id:
+                  type: string
+                  description: Stripe PaymentIntent ID for verification
+      responses:
+        "200":
+          description: Booking confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingDetailResponse"
+        "400":
+          $ref: "./error-responses.yml#/components/responses/BadRequest"
+        "401":
+          $ref: "./error-responses.yml#/components/responses/Unauthorized"
+        "404":
+          $ref: "./error-responses.yml#/components/responses/NotFound"
+
+  /api/v1/bookings/{bookingId}/cancel:
+    post:
+      operationId: cancelBooking
+      summary: Cancel a confirmed booking
+      description: |
+        Cancels a booking and processes refund per cancellation policy.
+        Full refund if 48+ hours before check-in, no refund otherwise.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  maxLength: 500
+      responses:
+        "200":
+          description: Booking cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CancellationResponse"
+        "401":
+          $ref: "./error-responses.yml#/components/responses/Unauthorized"
+        "404":
+          $ref: "./error-responses.yml#/components/responses/NotFound"
+        "422":
+          description: Booking cannot be cancelled (already completed or cancelled)
+          content:
+            application/json:
+              schema:
+                $ref: "./error-responses.yml#/components/schemas/ErrorResponse"
+
+  /api/v1/bookings/my-trips:
+    get:
+      operationId: getMyTrips
+      summary: Get current guest's bookings
+      description: Returns upcoming and past bookings for the authenticated guest.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [upcoming, past, cancelled, all]
+            default: all
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        "200":
+          description: Guest's bookings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MyTripsResponse"
+        "401":
+          $ref: "./error-responses.yml#/components/responses/Unauthorized"
+
+  /api/v1/bookings/{bookingId}:
+    get:
+      operationId: getBookingDetails
+      summary: Get booking details
+      description: Returns full details for a single booking owned by the guest.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Booking details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingDetailResponse"
+        "401":
+          $ref: "./error-responses.yml#/components/responses/Unauthorized"
+        "403":
+          $ref: "./error-responses.yml#/components/responses/Forbidden"
+        "404":
+          $ref: "./error-responses.yml#/components/responses/NotFound"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CreateBookingRequest:
+      type: object
+      required: [property_id, check_in, check_out, guest_count]
+      properties:
+        property_id:
+          type: string
+          format: uuid
+        check_in:
+          type: string
+          format: date
+        check_out:
+          type: string
+          format: date
+        guest_count:
+          type: integer
+          minimum: 1
+
+    CreateBookingResponse:
+      type: object
+      required: [booking_id, reference_number, price_breakdown, stripe_client_secret, hold_expires_at]
+      properties:
+        booking_id:
+          type: string
+          format: uuid
+        reference_number:
+          type: string
+        price_breakdown:
+          type: object
+          required: [nights, nightly_rate_eur, subtotal_eur, cleaning_fee_eur, service_fee_eur, tax_eur, total_eur]
+          properties:
+            nights:
+              type: integer
+            nightly_rate_eur:
+              type: number
+              format: double
+            subtotal_eur:
+              type: number
+              format: double
+            cleaning_fee_eur:
+              type: number
+              format: double
+            service_fee_eur:
+              type: number
+              format: double
+            tax_eur:
+              type: number
+              format: double
+            total_eur:
+              type: number
+              format: double
+        stripe_client_secret:
+          type: string
+          description: Stripe PaymentIntent client_secret for Elements
+        hold_expires_at:
+          type: string
+          format: date-time
+          description: When the availability hold expires
+
+    BookingDetailResponse:
+      type: object
+      required: [id, reference_number, property, check_in, check_out, guest_count, status, price_breakdown, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        reference_number:
+          type: string
+        property:
+          type: object
+          required: [id, title, photo_url, city, country]
+          properties:
+            id:
+              type: string
+              format: uuid
+            title:
+              type: string
+            photo_url:
+              type: string
+              format: uri
+            city:
+              type: string
+            country:
+              type: string
+            address:
+              type: string
+              description: Full address (only for confirmed bookings)
+            host_name:
+              type: string
+        check_in:
+          type: string
+          format: date
+        check_out:
+          type: string
+          format: date
+        guest_count:
+          type: integer
+        status:
+          type: string
+          enum: [confirmed, cancelled, completed]
+        price_breakdown:
+          type: object
+          properties:
+            nights:
+              type: integer
+            nightly_rate_eur:
+              type: number
+            subtotal_eur:
+              type: number
+            cleaning_fee_eur:
+              type: number
+            service_fee_eur:
+              type: number
+            tax_eur:
+              type: number
+            total_eur:
+              type: number
+        cancellation_policy:
+          type: string
+          description: "Full refund if cancelled 48+ hours before check-in"
+        can_cancel:
+          type: boolean
+          description: Whether this booking can still be cancelled
+        refund_amount_eur:
+          type: number
+          format: double
+          nullable: true
+          description: Amount that would be refunded if cancelled now
+        created_at:
+          type: string
+          format: date-time
+
+    CancellationResponse:
+      type: object
+      required: [booking_id, status, refund_amount_eur, refund_status]
+      properties:
+        booking_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [cancelled]
+        refund_amount_eur:
+          type: number
+          format: double
+        refund_status:
+          type: string
+          enum: [full_refund, no_refund]
+          description: "full_refund if 48+ hours before check-in, no_refund otherwise"
+
+    MyTripsResponse:
+      type: object
+      required: [bookings, pagination]
+      properties:
+        bookings:
+          type: array
+          items:
+            $ref: "#/components/schemas/BookingSummary"
+        pagination:
+          type: object
+          required: [page, size, total_results, total_pages]
+          properties:
+            page:
+              type: integer
+            size:
+              type: integer
+            total_results:
+              type: integer
+            total_pages:
+              type: integer
+
+    BookingSummary:
+      type: object
+      required: [id, reference_number, property_title, property_photo_url, city, check_in, check_out, status, total_eur]
+      properties:
+        id:
+          type: string
+          format: uuid
+        reference_number:
+          type: string
+        property_title:
+          type: string
+        property_photo_url:
+          type: string
+          format: uri
+        city:
+          type: string
+        check_in:
+          type: string
+          format: date
+        check_out:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [confirmed, cancelled, completed]
+        total_eur:
+          type: number
+          format: double

@@ -1,0 +1,275 @@
+openapi: 3.1.0
+info:
+  title: Property Search API
+  version: 1.0.0
+  description: Endpoints for searching and filtering vacation rental properties
+
+paths:
+  /api/v1/properties/search:
+    get:
+      operationId: searchProperties
+      summary: Search properties by location and dates
+      description: |
+        Returns paginated properties within the given map viewport
+        that are available for the specified dates.
+      parameters:
+        - name: sw_lat
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+            minimum: -90
+            maximum: 90
+          description: Southwest corner latitude of map viewport
+        - name: sw_lng
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+            minimum: -180
+            maximum: 180
+          description: Southwest corner longitude of map viewport
+        - name: ne_lat
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+            minimum: -90
+            maximum: 90
+          description: Northeast corner latitude of map viewport
+        - name: ne_lng
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+            minimum: -180
+            maximum: 180
+          description: Northeast corner longitude of map viewport
+        - name: check_in
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Check-in date (YYYY-MM-DD)
+        - name: check_out
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Check-out date (YYYY-MM-DD)
+        - name: guests
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Number of guests
+        - name: min_price
+          in: query
+          required: false
+          schema:
+            type: number
+            format: double
+            minimum: 0
+          description: Minimum nightly price (EUR)
+        - name: max_price
+          in: query
+          required: false
+          schema:
+            type: number
+            format: double
+            minimum: 0
+          description: Maximum nightly price (EUR)
+        - name: property_type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [apartment, house, villa, cabin, studio]
+          description: Filter by property type
+        - name: bedrooms
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+          description: Minimum number of bedrooms
+        - name: amenities
+          in: query
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          description: Required amenities (all must be present)
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [relevance, price_asc, price_desc, rating]
+            default: relevance
+          description: Sort order for results
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number (1-indexed)
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+          description: Results per page
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResultsResponse"
+        "400":
+          $ref: "./error-responses.yml#/components/responses/BadRequest"
+
+  /api/v1/properties/geocode:
+    get:
+      operationId: geocodeLocation
+      summary: Convert location name to coordinates
+      description: |
+        Forward geocoding — converts a city/region name to map coordinates
+        for centering the viewport.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+          description: Location search query (city, region, address)
+      responses:
+        "200":
+          description: Geocoding results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeocodeResponse"
+        "400":
+          $ref: "./error-responses.yml#/components/responses/BadRequest"
+
+components:
+  schemas:
+    SearchResultsResponse:
+      type: object
+      required: [results, pagination]
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/PropertySummary"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    PropertySummary:
+      type: object
+      required: [id, title, photo_url, nightly_rate_eur, location, avg_rating, review_count, property_type, max_guests]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        photo_url:
+          type: string
+          format: uri
+          description: Primary photo thumbnail URL
+        nightly_rate_eur:
+          type: number
+          format: double
+        cleaning_fee_eur:
+          type: number
+          format: double
+        location:
+          type: object
+          required: [lat, lng, city, country]
+          properties:
+            lat:
+              type: number
+              format: double
+            lng:
+              type: number
+              format: double
+            city:
+              type: string
+            country:
+              type: string
+        avg_rating:
+          type: number
+          format: double
+          nullable: true
+        review_count:
+          type: integer
+        property_type:
+          type: string
+        max_guests:
+          type: integer
+        bedrooms:
+          type: integer
+
+    Pagination:
+      type: object
+      required: [page, size, total_results, total_pages]
+      properties:
+        page:
+          type: integer
+        size:
+          type: integer
+        total_results:
+          type: integer
+        total_pages:
+          type: integer
+
+    GeocodeResponse:
+      type: object
+      required: [results]
+      properties:
+        results:
+          type: array
+          maxItems: 5
+          items:
+            type: object
+            required: [name, lat, lng]
+            properties:
+              name:
+                type: string
+                description: Human-readable place name
+              lat:
+                type: number
+                format: double
+              lng:
+                type: number
+                format: double
+              bbox:
+                type: object
+                description: Suggested viewport bounding box
+                properties:
+                  sw_lat:
+                    type: number
+                  sw_lng:
+                    type: number
+                  ne_lat:
+                    type: number
+                  ne_lng:
+                    type: number
