@@ -1,0 +1,13 @@
+package com.mtl.catalog.infrastructure.client.media;
+
+import org.springframework.security.oauth2.jwt.Jwt;
+
+/** Cliente HTTP hacia media-service (TASK-HU-008-06). */
+public interface MediaTreePhotosClient {
+
+  /**
+   * Invoca {@code DELETE /api/media/trees/{treeId}/photos} con relay del JWT del actor. Media
+   * responde 204 aunque no haya fotografías.
+   */
+  void deleteAllPhotosForTree(long treeId, Jwt jwt);
+}

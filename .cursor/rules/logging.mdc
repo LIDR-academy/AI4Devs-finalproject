@@ -1,0 +1,36 @@
+---
+description: Logging en backend (SLF4J, niveles, MDC, correlación)
+globs:
+  - "services/**/*.java"
+alwaysApply: false
+---
+
+# Logging (microservicios Spring Boot)
+
+Las prohibiciones de **tokens, secretos y PII** en logs están en [api-security.mdc](api-security.mdc); aquí se fija el **cómo** registrar trazas útiles.
+
+## API y librería
+
+- Usar **SLF4J** (`LoggerFactory.getLogger(...)`) con la implementación por defecto del starter (**Logback**), sin abstraer salvo necesidad real.
+- Mensajes **parametrizados**: `log.info("Árbol {} actualizado", id)`; evitar concatenación de strings y evitar `toString()` de objetos grandes o con datos sensibles.
+
+## Niveles (orientación MVP)
+
+- **ERROR**: fallo que impide completar la operación o requiere intervención; incluir contexto mínimo (ids, operación), nunca datos personales completos.
+- **WARN**: situación anómala recuperable o degradación (reintentos, validación de negocio rechazada con trazabilidad).
+- **INFO**: hitos de negocio relevantes o arranque/configuración acotada; evitar ruido por petición en bucles calientes.
+- **DEBUG/TRACE**: solo en desarrollo o con flag explícito; no depender de ellos para auditoría (usar dominio / BD según modelo).
+
+## Correlación y contexto
+
+- Propagar en **MDC** el identificador de correlación alineado con el gateway ([api-security.mdc](api-security.mdc)), p. ej. `X-Correlation-Id`, para que aparezca en el patrón de log configurado.
+- Limpiar MDC al cerrar la petición (filtro/interceptor) para no filtrar contexto entre hilos reutilizados.
+
+## Errores y integraciones
+
+- Al capturar excepciones, registrar **mensaje + causa** con nivel adecuado; el **detalle al cliente** sigue [api-contract.mdc](api-contract.mdc) / OpenAPI (Problem), no el stack en la respuesta HTTP.
+- Clientes HTTP, Kafka, S3: log de **operación, duración y resultado** (éxito/código/error genérico), no cuerpos completos de petición/respuesta salvo depuración acotada.
+
+## Observabilidad
+
+- Preferir **métricas y trazas** (p. ej. OpenTelemetry/Micrometer en despliegue) para latencias y dependencias; los logs complementan, no sustituyen métricas de SLAs.

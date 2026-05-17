@@ -1,0 +1,94 @@
+{
+  "realm": "mtl",
+  "enabled": true,
+  "displayName": "MyTreeLibrary",
+  "displayNameHtml": "<div>MyTreeLibrary</div>",
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": false,
+  "roles": {
+    "realm": [
+      {
+        "name": "COLABORADOR",
+        "description": "Colaborador del catálogo (registro y edición de árboles según modelo de casos de uso)."
+      },
+      {
+        "name": "ADMIN",
+        "description": "Administrador (maestros, gestión de suscripciones según modelo de casos de uso)."
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "mtl-spa",
+      "name": "MyTreeLibrary SPA",
+      "description": "Cliente público Vue 3: Authorization Code con PKCE (S256).",
+      "enabled": true,
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "authorizationServicesEnabled": false,
+      "frontchannelLogout": true,
+      "consentRequired": false,
+      "rootUrl": "http://localhost:5173",
+      "baseUrl": "/",
+      "redirectUris": [
+        "http://localhost:5173/*",
+        "http://127.0.0.1:5173/*",
+        "https://oauth.pstmn.io/v1/callback",
+        "https://oauth.pstmn.io/v1/browser-callback"
+      ],
+      "webOrigins": [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://oauth.pstmn.io"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:5173/*##http://127.0.0.1:5173/*"
+      },
+      "fullScopeAllowed": true
+    }
+  ],
+  "users": [
+    {
+      "username": "colaborador",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "colaborador@example.invalid",
+      "firstName": "Dev",
+      "lastName": "Colaborador",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "colaborador_dev",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["COLABORADOR"]
+    },
+    {
+      "username": "admin_mtl",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "admin_mtl@example.invalid",
+      "firstName": "Dev",
+      "lastName": "Administrador",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin_mtl_dev",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["ADMIN", "COLABORADOR"]
+    }
+  ]
+}
