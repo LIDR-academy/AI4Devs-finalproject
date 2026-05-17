@@ -4,18 +4,28 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.mtl.catalog.application.CollaboratorTreeQueryService;
 import com.mtl.catalog.application.CreatedTreeResult;
 import com.mtl.catalog.application.PublicTreeQueryService;
 import com.mtl.catalog.application.TreeMediaSubmissionPermissionService;
+import com.mtl.catalog.application.TreeDeletionService;
+import com.mtl.catalog.application.TreeModificationService;
 import com.mtl.catalog.application.TreeRegistrationService;
+import com.mtl.catalog.dto.CollaboratorTreeDetailDto;
+import com.mtl.catalog.dto.CollaboratorTreeListItemDto;
+import com.mtl.catalog.dto.CollaboratorTreePageResponse;
 import com.mtl.catalog.config.JwtAuthenticationPrincipalTestMvcConfig;
 import com.mtl.catalog.dto.MediaSubmissionPermissionResponse;
 import com.mtl.catalog.dto.PublicTreeDetailDto;
@@ -55,6 +65,9 @@ class CatalogTreesControllerWebMvcTest {
   @Autowired private MockMvc mockMvc;
 
   @MockitoBean private TreeRegistrationService treeRegistrationService;
+  @MockitoBean private TreeModificationService treeModificationService;
+  @MockitoBean private TreeDeletionService treeDeletionService;
+  @MockitoBean private CollaboratorTreeQueryService collaboratorTreeQueryService;
   @MockitoBean private PublicTreeQueryService publicTreeQueryService;
   @MockitoBean private TreeMediaSubmissionPermissionService treeMediaSubmissionPermissionService;
 
@@ -144,6 +157,130 @@ class CatalogTreesControllerWebMvcTest {
   }
 
   @Test
+  void putCollaboratorTree_devuelve200ConDetalle() throws Exception {
+    when(treeModificationService.updateTree(anyLong(), any(), any(Jwt.class)))
+        .thenReturn(
+            new CollaboratorTreeDetailDto(
+                42L,
+                11L,
+                29L,
+                new BigDecimal("40.4168"),
+                new BigDecimal("-3.7038"),
+                "Madrid",
+                "Nota",
+                600,
+                "PUBLICADO",
+                "PUBLICO",
+                7L,
+                "Encina (Quercus ilex)",
+                "Madrid (29)",
+                Instant.parse("2024-01-01T10:00:00Z"),
+                Instant.parse("2024-02-01T12:00:00Z")));
+
+    mockMvc
+        .perform(
+            withJwtPrincipal(
+                put("/api/catalog/trees/{treeId}", 42)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {
+                          "speciesId": 11,
+                          "provinceId": 29,
+                          "latitude": 40.4168,
+                          "longitude": -3.7038,
+                          "publicationState": "PUBLICADO",
+                          "publicMapVisibility": "PUBLICO"
+                        }
+                        """),
+                collaboratorAuthentication()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.treeId").value(42))
+        .andExpect(jsonPath("$.speciesId").value(11))
+        .andExpect(jsonPath("$.createdByUserId").value(7));
+  }
+
+  @Test
+  void getCollaboratorTreeDetail_devuelve200() throws Exception {
+    when(collaboratorTreeQueryService.getCollaboratorTreeDetail(anyLong(), any(Jwt.class)))
+        .thenReturn(
+            new CollaboratorTreeDetailDto(
+                42L,
+                10L,
+                28L,
+                new BigDecimal("40.4168"),
+                new BigDecimal("-3.7038"),
+                "Madrid",
+                "Nota",
+                600,
+                "PUBLICADO",
+                "PUBLICO",
+                7L,
+                "Encina (Quercus ilex)",
+                "Madrid (28)",
+                Instant.parse("2024-01-01T10:00:00Z"),
+                Instant.parse("2024-02-01T12:00:00Z")));
+
+    mockMvc
+        .perform(
+            withJwtPrincipal(
+                get("/api/catalog/trees/{treeId}", 42), collaboratorAuthentication()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.treeId").value(42))
+        .andExpect(jsonPath("$.speciesId").value(10))
+        .andExpect(jsonPath("$.provinceId").value(28))
+        .andExpect(jsonPath("$.speciesLabel").value("Encina (Quercus ilex)"))
+        .andExpect(jsonPath("$.createdByUserId").value(7));
+  }
+
+  @Test
+  void getCollaboratorTrees_devuelve200ConListadoPaginado() throws Exception {
+    when(
+            collaboratorTreeQueryService.listCollaboratorTrees(
+                anyInt(),
+                anyInt(),
+                anyString(),
+                any(CollaboratorTreeQueryService.CollaboratorTreeFilters.class),
+                any(Jwt.class)))
+        .thenReturn(
+            new CollaboratorTreePageResponse(
+                List.of(
+                    new CollaboratorTreeListItemDto(
+                        42L,
+                        10L,
+                        "Encina",
+                        "Quercus ilex",
+                        "Madrid",
+                        "Madrid",
+                        "PUBLICADO",
+                        "PUBLICO",
+                        Instant.parse("2024-01-01T10:00:00Z"),
+                        Instant.parse("2024-02-01T12:00:00Z"),
+                        7L)),
+                1L,
+                0,
+                20,
+                "modificado_en,desc"));
+
+    mockMvc
+        .perform(
+            withJwtPrincipal(
+                get("/api/catalog/trees")
+                    .param("page", "0")
+                    .param("size", "20")
+                    .param("speciesId", "10")
+                    .param("createdFrom", "2024-01-01")
+                    .param("createdTo", "2024-12-31"),
+                collaboratorAuthentication()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalResults").value(1))
+        .andExpect(jsonPath("$.content[0].treeId").value(42))
+        .andExpect(jsonPath("$.content[0].speciesId").value(10))
+        .andExpect(jsonPath("$.content[0].publicationState").value("PUBLICADO"))
+        .andExpect(jsonPath("$.content[0].createdByUserId").value(7));
+  }
+
+  @Test
   void getPublicTrees_devuelve200ConListadoPaginado() throws Exception {
     when(
             publicTreeQueryService.listPublishedTrees(
@@ -222,6 +359,17 @@ class CatalogTreesControllerWebMvcTest {
             withJwtPrincipal(
                 get("/api/catalog/public/trees/{treeId}", 999), collaboratorAuthentication()))
         .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void deleteCollaboratorTree_devuelve204() throws Exception {
+    mockMvc
+        .perform(
+            withJwtPrincipal(
+                delete("/api/catalog/trees/{treeId}", 42), collaboratorAuthentication()))
+        .andExpect(status().isNoContent());
+
+    verify(treeDeletionService).deleteTree(eq(42L), any(Jwt.class));
   }
 
   @Test

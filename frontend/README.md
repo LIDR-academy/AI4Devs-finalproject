@@ -80,3 +80,18 @@ async function loadItems() {
 Notas:
 - Si el token caduca, ante `401` la pantalla redirige automáticamente al login.
 - Los mensajes de validación de `400` se muestran de forma legible en la UI.
+
+## Verificación manual E2E (TASK-HU-008-16, HU-008)
+
+Prerrequisitos: infra Compose (Postgres, Keycloak, MinIO), **api-gateway** **8080**, **catalog-service** **8081**, **media-service** **8082** en perfil `dev`; `mtl.media.base-url` en catálogo apuntando a media (véase [services/README.md](../services/README.md) apartado HU-008). En `frontend/`: `npm run dev`.
+
+Usuario de prueba (Keycloak): `colaborador` / `colaborador_dev` (rol **COLABORADOR**); para filtro por creador y edición ajena, usuario **ADMIN** si está configurado.
+
+1. **Listado y filtros (escenarios BDD 6–7):** abrir `http://localhost:5173/my-trees`. Comprobar paginación, filtro por especie y rango de fechas de creación. Como **COLABORADOR**, solo deben aparecer fichas propias. Como **ADMIN**, probar filtro por usuario creador si el selector está disponible.
+2. **Edición (escenarios 1–3):** desde el listado, abrir una ficha propia (`/trees/:id/edit`). Modificar campos válidos y **Guardar** → **PUT** `200` y datos coherentes al recargar. Intentar guardar sin especie/coordenadas válidas → **400** con Problem legible. Con otra ficha ajena (otro colaborador), **PUT** debe fallar con **403** (o no permitir abrir edición).
+3. **Galería en edición (HU-006-14):** en la misma pantalla, añadir una foto (**+**) y eliminar una con confirmación; comprobar que la galería se actualiza sin errores.
+4. **Baja con fotos (escenarios 4–5):** en una ficha propia **con** fotos, **Eliminar árbol** → confirmar. Resultado: **204** en `DELETE /api/catalog/trees/{id}`; el árbol desaparece del listado; fotos ya no listables para ese `treeId`. Para comprobar aborto por media: parar **media-service** y repetir → el árbol debe **seguir** en listado y el cliente mostrar error (p. ej. **502**).
+5. **Baja sin fotos:** repetir en ficha sin fotografías → baja correcta sin depender de objetos en MinIO.
+6. **Sin notificación por edición/baja (R7):** tras **PUT** o **DELETE**, no debe generarse correo de “nuevo árbol” a suscriptores (solo el alta dispara **UC-09**).
+
+Checks automáticos previos: `npm run build`, `npm run test` en `frontend/`; `mvn -f services/pom.xml -pl catalog-service,media-service test` en backend.

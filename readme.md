@@ -62,6 +62,10 @@ La solución está dirigida a aficionados a la naturaleza en general y puede res
 
 El sistema permite registrar árboles mediante fichas con información relevante, fotografías y ubicación, posibilitando su publicación para consulta pública.
 
+#### Edición y baja de fichas (colaborador)
+
+El colaborador autenticado puede **listar y filtrar** sus fichas (**Mis árboles**), **editar** los datos de un ejemplar propio y **eliminarlo** con confirmación. La baja es **física** en catálogo y dispara borrado de fotografías en **media-service** antes del registro SQL; un usuario **ADMIN** puede operar sobre fichas de cualquier colaborador. Las modificaciones y bajas **no** envían correo a suscriptores (solo el alta, regla R7). Detalle: [HU-008](docs/backlog/HU-008-edicion-de-mis-arboles.md) (**Cerrada**); verificación manual: [frontend/README.md](frontend/README.md) (apartado HU-008).
+
 #### Consulta pública y visualización geográfica
 
 El sistema implementa una consulta pública de árboles publicados mediante listado y detalle, mostrando en la ficha de detalle las fotografias de cada árbol y su localización sobre mapa de forma clara e intuitiva.
@@ -125,9 +129,10 @@ La aplicación implementa una navegación simple por roles con una **home de ent
 - **Colaborador (autenticado):**
   - Todas las páginas públicas
   - `Alta de árbol (Nueva ficha)` (`/trees/new`)
-    - `IA orientativa` (`/ai/identify`, `/ai/chat
-  - `Mis árboles (Edición de mis árboles)` (`/trees/:id/edit`)
-    - `IA orientativa` (`/ai/identify`, `/ai/chat`) 
+    - `IA orientativa` (`/ai/identify`, `/ai/chat`) *(pendiente de producto)*
+  - `Mis árboles` (`/my-trees`) — listado con filtros
+    - `Edición de ficha` (`/trees/:id/edit`) — datos, galería y baja
+    - `IA orientativa` (`/ai/identify`, `/ai/chat`) *(pendiente de producto)*
 - **ADMIN (autenticado):**
   - Todas las páginas de colaborador
   - `Maestros (Administración de maestro de especies)` (`/admin/masters`)
@@ -645,7 +650,7 @@ sequenceDiagram
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | SPA                  | Vue 3, Vite, TypeScript                                                                                                                                                                                           | UI: biblioteca, mapa, IA, flujos OIDC con Keycloak                                                                                                                                                                                                                                                                                                                               |
 | API Gateway          | Spring Cloud Gateway (**WebFlux**), **Spring Boot 4**                                                                                                                                                             | Enrutado `/api/catalog`, `/api/media`, `/api/notifications`, `/api/ai`; **validación JWT** (OAuth2 Resource Server, Keycloak); actuator; token relay hacia microservicios (MVP)                                                                                                                                                                                                  |
-| catalog-service      | **Spring Boot 4**, JPA, Flyway, PostgreSQL, Redis (Mongo según evolución); **productor Kafka** topic `catalog.arbol.evento` (`ARBOL_CREADO` tras alta; [TASK-HU-005-05](docs/backlog/HU-005-ticket-breakdown.md)) | Árboles, coordenadas numéricas (MVP sin geometría PostGIS en DDL); **PostgreSQL** (esquema **catalog**); publicación de eventos de dominio según [kafka-events.md](docs/events/kafka-events.md)                                                                                                                                                                                  |
+| catalog-service      | **Spring Boot 4**, JPA, Flyway, PostgreSQL, Redis (Mongo según evolución); **productor Kafka** topic `catalog.arbol.evento` (`ARBOL_CREADO` tras alta; [TASK-HU-005-05](docs/backlog/HU-005-ticket-breakdown.md)) | Árboles, coordenadas numéricas (MVP sin geometría PostGIS en DDL); **PostgreSQL** (esquema **catalog**); publicación de eventos de dominio según [kafka-events.md](docs/events/kafka-events.md). **UC-04 / HU-008:** `GET`/`PUT`/`DELETE` en `/api/catalog/trees`, orquestación de baja hacia media ([services/README.md](services/README.md) § HU-008).                                                                                                                                                                                  |
 | media-service        | **Spring Boot 4**, JPA, Flyway, AWS SDK v2 (S3)                                                                                                                                                                   | Metadatos solo en esquema `**media`**; objetos en bucket MinIO/S3; URLs prefirmadas                                                                                                                                                                                                                                                                                              |
 | notification-service | **Spring Boot 4**, JPA, Flyway, Spring Kafka, JavaMail                                                                                                                                                            | Consume `catalog.arbol.evento`; datos solo en esquema `**notification`**; envío SMTP                                                                                                                                                                                                                                                                                             |
 | ai-assistant-service | **Spring Boot 4**, Spring WebClient (o equivalente), Spring Data JPA                                                                                                                                              | Orquestación hacia proveedor IA; datos de auditoria en esquema `**ai`** (p. ej. **AUDITORIA_USO_IA**); delegación de datos de catálogo en **catalog-service**                                                                                                                                                                                                                    |
@@ -1108,7 +1113,33 @@ La definición y refinamiento de cada una de las historias de usuario incluidas 
 
 Por operativa práctica, al comienzo de la historia se hacen unas comprobaciones iniciales que permiten detectar historias incompletas o mal formadas.   
 
-**Historia de Usuario 1**
+**Historia de Usuario — HU-008** (Edición y baja de mis árboles) — **Estado: Cerrada**
+
+Refinamiento: [docs/backlog/HU-008-edicion-de-mis-arboles.md](docs/backlog/HU-008-edicion-de-mis-arboles.md) · Tickets: [docs/backlog/HU-008-ticket-breakdown.md](docs/backlog/HU-008-ticket-breakdown.md) (TASK-008-11 rechazado; verificación manual en [frontend/README.md](frontend/README.md) § HU-008)
+
+**Prompt 1:**
+
+Vamos a esarrollar la historia HU-008@.cursor/skills/hu-refinement-mtl
+
+**Prompt 2:**
+
+Vamos a revisar los puntos que quedan fuera de la historia. 1.- Añade en HU-006 el ticket para incluir la posibilidad de añadir y borrar fotografías desde la pantalla de edición de Mis arboles 2.- Incluye en  el Backlog una nueva historia histroias para abordar Proyección o enriquecimiento Mongo 3.- Incluye en la historia que estamos abordando la posibiliad de borrar árboles
+
+**Prompt 3:**
+
+El borrado se rá físico; cuando se borre un árbol se deben eliminar sus fotografías y su ampliación en Mongo; dado que aún no tenemos implementado en Mongo se necesitará un ticket solo para implementar esta acción que por ahora quedará como pendiente. Revisa si con estas aclaraciones podemos cerrar este punto y abordar los dos siguientes que serán Riesgos y Aclaraciones pendientes
+
+**Prompt 4:**
+
+Respecto al riesgo de Listado sin filtros vamos a añadir en la historia el filtro por especie y por fecha de creación: desde - hasta. Para el borrado de todas las fotos de un árbol vamos a incluir un nuevo endpoint en media-service que será consumido por el microservicio de vatalogo; dejalo anotado en esta historia como ticket que debe modificar los dos microservicios. Ante un fallo parcial del borrado en cascada se producirá un Rollback (no se usará un patrón sagas en el MVP). Dime si queda algo pendiente antes de abordar el desglose de la historia en ticket, no abordes este desglose hasta que yo te lo diga
+
+**Prompt 5:**
+
+1.- Path de borrado: DELETE /api/media/trees/{treeId}/photos 2.- Si un arbol tiene fotografías primero se invoca al servicio de borrado de todas lasa fotografías; si el servicio da error se para el proceso; si se han borrado todas las fotografías se elimina el arbol en PostgreSQL 3.- Fehcas en formato date a ser posible en UTC 4.- Para ADMIN se añade un filtro más para poder seleccionar los árboles dados de alta por un usuario determinado
+
+**Prompt 6:**
+
+vuelca los prompt que he usado en este hilo en la línea 113 de @readme.md , incluye sólo mi parte de los prompt NO incluyas la tuya; el objetivo es completar la memoria del trabajo con los prompt usados en una historia de usuario
 
 **Historia de Usuario 2**
 
@@ -1123,11 +1154,31 @@ Como se ha comentado en el punto anterior, para mantener formato homogéneo se u
 En la generación ed ticket de trabajo se incluye explicitamente una sección con las rules de Cursor que debe aplicar el agente de IA al implementarlos.
 
 
-**Ticket 1**
+**Ticket 1 — HU-008**
+
+Desglose: [docs/backlog/HU-008-ticket-breakdown.md](docs/backlog/HU-008-ticket-breakdown.md) · Refinamiento: [docs/backlog/HU-008-edicion-de-mis-arboles.md](docs/backlog/HU-008-edicion-de-mis-arboles.md)
+
+**Prompt 1:**
+
+Vamos a generar los ticket de la historia; a partir de aquí incluye mis prompt utiliza la información que tienes en el contexto y a partir de la línea 1154 del readme (Ticket 1) solo incluye mi parte, no tu respuesta al prompt. Usa la información que hemos definido y /hu-refinement-mtl HU-008
+
+**Prompt 2:**
+
+Vamos con TASK-HU-008-01, Cierre OpenAPI catálogo y media (HU-008). Además de las operraciones que propone el ticket vamos a incluir además del endpoint de borrado de todas ls fotografías el endpoint del borrado de una fotografía (va también dentor de /api/media)
+
+**Prompt 3** (TASK-HU-008-02 — Listado colaborador con filtros)
+
+así está bien, implementa en endpoint del Listado de TASK-HU-008-02, si tienes alguna duda preguntame antes; recuerda las reglas que se deben seguir ya indicadas en @docs/backlog/HU-008-ticket-breakdown.md para la parte back
+
 
 **Ticket 2**
+**Ticket 3 — HU-008** (TASK-HU-008-03 — Detalle de ficha para edición)
 
-**Ticket 3**
+Desglose: [docs/backlog/HU-008-ticket-breakdown.md](docs/backlog/HU-008-ticket-breakdown.md) · Refinamiento: [docs/backlog/HU-008-edicion-de-mis-arboles.md](docs/backlog/HU-008-edicion-de-mis-arboles.md)
+
+**Prompt 1:**
+
+vamos con el siguiente ticket
 
 ---
 

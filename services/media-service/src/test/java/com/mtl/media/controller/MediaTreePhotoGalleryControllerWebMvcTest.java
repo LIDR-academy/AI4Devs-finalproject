@@ -2,11 +2,14 @@ package com.mtl.media.controller;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.mtl.media.application.MediaTreePhotoGalleryService;
+import com.mtl.media.application.MediaTreePhotosDeleteService;
 import com.mtl.media.config.MediaJwtAuthenticationPrincipalTestMvcConfig;
 import com.mtl.media.config.MediaPresignProperties;
 import com.mtl.media.domain.CategoriaFotografia;
@@ -44,6 +47,7 @@ class MediaTreePhotoGalleryControllerWebMvcTest {
   @Autowired private MockMvc mockMvc;
 
   @MockitoBean private MediaTreePhotoGalleryService galleryService;
+  @MockitoBean private MediaTreePhotosDeleteService photosDeleteService;
   @MockitoBean private ObjectStoragePresigner objectStoragePresigner;
   @MockitoBean private MediaPresignProperties presignProperties;
 
@@ -99,6 +103,17 @@ class MediaTreePhotoGalleryControllerWebMvcTest {
         .andExpect(jsonPath("$[0].categoria").value("PUBLIC"))
         .andExpect(jsonPath("$[1].id").value(11))
         .andExpect(jsonPath("$[1].orden").value(1));
+  }
+
+  @Test
+  void deleteAllForTree_returnsNoContent() throws Exception {
+    JwtAuthenticationToken authentication = collaboratorAuthentication();
+
+    mockMvc
+        .perform(withJwtPrincipal(delete("/api/media/trees/5/photos"), authentication))
+        .andExpect(status().isNoContent());
+
+    verify(photosDeleteService).deleteAllPhotosForTree(eq(5L), org.mockito.ArgumentMatchers.any());
   }
 
   @Test

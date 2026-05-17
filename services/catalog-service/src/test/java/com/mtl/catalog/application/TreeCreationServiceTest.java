@@ -12,23 +12,20 @@ import com.mtl.catalog.exception.CatalogValidationException;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.ArbolRepository;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.EspecieReadRepository;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.ProvinciaReadRepository;
-import com.mtl.catalog.infrastructure.persistence.jpa.repository.UsuarioAppRepository;
+import com.mtl.catalog.util.OidcUserProfileExtractor.OidcUserProfile;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.DataIntegrityViolationException;
 
 @ExtendWith(MockitoExtension.class)
 class TreeCreationServiceTest {
 
-  @Mock private UsuarioAppRepository usuarioAppRepository;
+  @Mock private UsuarioAppMaterializationService usuarioAppMaterializationService;
   @Mock private EspecieReadRepository especieReadRepository;
   @Mock private ProvinciaReadRepository provinciaReadRepository;
   @Mock private ArbolRepository arbolRepository;
@@ -40,7 +37,7 @@ class TreeCreationServiceTest {
     when(especieReadRepository.existsById(10L)).thenReturn(true);
     when(provinciaReadRepository.existsById(28L)).thenReturn(true);
     UsuarioApp user = usuario(5L, "kc-sub-1");
-    when(usuarioAppRepository.findBySubjectOidc("kc-sub-1")).thenReturn(Optional.of(user));
+    when(usuarioAppMaterializationService.materialize(any(OidcUserProfile.class))).thenReturn(user);
     when(arbolRepository.save(any(Arbol.class)))
         .thenAnswer(
             inv -> {
@@ -108,6 +105,10 @@ class TreeCreationServiceTest {
   void create_sinEmail_rechaza() {
     when(especieReadRepository.existsById(10L)).thenReturn(true);
     when(provinciaReadRepository.existsById(28L)).thenReturn(true);
+    when(usuarioAppMaterializationService.materialize(any(OidcUserProfile.class)))
+        .thenThrow(
+            new CatalogValidationException(
+                "Se requiere correo electrónico en el token para crear el usuario de aplicación."));
 
     assertThatThrownBy(
             () ->
@@ -177,7 +178,8 @@ class TreeCreationServiceTest {
   void create_visibilidadMapaInvalida_rechaza() {
     when(especieReadRepository.existsById(10L)).thenReturn(true);
     when(provinciaReadRepository.existsById(28L)).thenReturn(true);
-    when(usuarioAppRepository.findBySubjectOidc("sub")).thenReturn(Optional.of(usuario(5L, "sub")));
+    when(usuarioAppMaterializationService.materialize(any(OidcUserProfile.class)))
+        .thenReturn(usuario(5L, "sub"));
 
     assertThatThrownBy(
             () ->
@@ -203,7 +205,8 @@ class TreeCreationServiceTest {
   void create_estadoPublicacionInvalido_rechaza() {
     when(especieReadRepository.existsById(10L)).thenReturn(true);
     when(provinciaReadRepository.existsById(28L)).thenReturn(true);
-    when(usuarioAppRepository.findBySubjectOidc("sub")).thenReturn(Optional.of(usuario(5L, "sub")));
+    when(usuarioAppMaterializationService.materialize(any(OidcUserProfile.class)))
+        .thenReturn(usuario(5L, "sub"));
 
     assertThatThrownBy(
             () ->
@@ -230,39 +233,6 @@ class TreeCreationServiceTest {
     assertThatThrownBy(() -> baseCommand().withSubject("  ").buildAndCreate())
         .isInstanceOf(CatalogValidationException.class)
         .hasMessageContaining("subject");
-  }
-
-  @Test
-  void create_usuarioConcurrente_recuperaTrasDataIntegrityViolation() {
-    when(especieReadRepository.existsById(10L)).thenReturn(true);
-    when(provinciaReadRepository.existsById(28L)).thenReturn(true);
-    UsuarioApp existing = usuario(7L, "kc-sub-race");
-    when(usuarioAppRepository.findBySubjectOidc("kc-sub-race"))
-        .thenReturn(Optional.empty())
-        .thenReturn(Optional.of(existing));
-    AtomicInteger usuarioSaves = new AtomicInteger();
-    when(usuarioAppRepository.save(any(UsuarioApp.class)))
-        .thenAnswer(
-            inv -> {
-              if (usuarioSaves.getAndIncrement() == 0) {
-                throw new DataIntegrityViolationException("duplicate key");
-              }
-              return inv.getArgument(0);
-            });
-    when(arbolRepository.save(any(Arbol.class)))
-        .thenAnswer(
-            inv -> {
-              Arbol a = inv.getArgument(0);
-              mimicJpaAuditingOnSave(a);
-              a.setId(200L);
-              return a;
-            });
-
-    CreatedTreeResult result = baseCommand().withSubject("kc-sub-race").buildAndCreate();
-
-    assertThat(result.arbolId()).isEqualTo(200L);
-    assertThat(result.actorUsuarioAppId()).isEqualTo(7L);
-    verify(arbolRepository).save(any(Arbol.class));
   }
 
   private static UsuarioApp usuario(Long id, String subject) {

@@ -36,6 +36,8 @@ Ejemplos futuros: `HU-004-ticket-breakdown.md`, `HU-010-ticket-breakdown.md`.
 | HU-013 | [HU-013-ticket-breakdown.md](HU-013-ticket-breakdown.md) |
 | HU-004 | [HU-004-ticket-breakdown.md](HU-004-ticket-breakdown.md) · Refinamiento: [HU-004-suscripcion-por-correo-sin-cuenta-colaborador.md](HU-004-suscripcion-por-correo-sin-cuenta-colaborador.md) |
 | HU-012 | [HU-012-ticket-breakdown.md](HU-012-ticket-breakdown.md) · Refinamiento: [HU-012-gestion-de-suscripciones-a-notificaciones.md](HU-012-gestion-de-suscripciones-a-notificaciones.md) |
-| HU-008–HU-011 | Pendiente — al crear cada fichero, añadir aquí una fila (ver [backlog.md](backlog.md) §3). |
+| HU-008 | [HU-008-edicion-de-mis-arboles.md](HU-008-edicion-de-mis-arboles.md) · [Tickets](HU-008-ticket-breakdown.md) (**Cerrada**; TASK-008-11 rechazado) |
+| HU-015 | [HU-015-proyeccion-y-enriquecimiento-mongo.md](HU-015-proyeccion-y-enriquecimiento-mongo.md) · [Tickets](HU-015-ticket-breakdown.md) (TASK-01 borrado cascada, pendiente) |
+| HU-009–HU-011 | Pendiente — al crear cada fichero, añadir aquí una fila (ver [backlog.md](backlog.md) §3). |
 
 *(Añadir aquí una fila al crear cada nuevo `HU-*-ticket-breakdown.md`.)*

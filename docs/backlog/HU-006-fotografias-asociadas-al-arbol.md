@@ -8,7 +8,8 @@
 | **Formato “Como… quiero… para…”** | Correcto; **usuario autenticado** con acceso de edición según rol (**COLABORADOR** y **ADMIN**, coherente con readme y fila de [backlog.md](backlog.md)); subida segura y visibilidad alineadas a las reglas de fotografía del modelo de datos. |
 | **Estimación (S/M/L)** | **M** coherente con alcance típico de primer corte (presign, persistencia de metadatos, bucket MinIO, UI mínima). |
 | **Prioridad** | **Alta** alineada con MVP. |
-| **Inconsistencias detectadas** | **Cerrado** (TASK-HU-006-06): el contrato media en [openapi.yaml](../api/openapi.yaml) define DTOs de presign y confirmación; guía operativa del flujo y propiedades: [media-upload-hu006.md](../engineering/media-upload-hu006.md). |
+| **Inconsistencias detectadas** | **Cerrado** (TASK-HU-006-06): contrato media en [openapi.yaml](../api/openapi.yaml); guía: [media-upload-hu006.md](../engineering/media-upload-hu006.md). Ampliación edición (**TASK-HU-006-14**): cerrada. |
+| **Estado** | **Cerrada** (tickets en [HU-006-ticket-breakdown.md](HU-006-ticket-breakdown.md)) |
 | **Tamaño / división** | Adecuado para **M** si se acota a usuarios autenticados con permiso sobre la ficha (**COLABORADOR** y **ADMIN**), metadatos en `media-service` y subida a MinIO vía gateway; riesgo de crecimiento si se mezcla la galería de consulta (**HU-014**) o tratamiento de imágenes en la misma entrega. |
 
 ---
@@ -42,6 +43,7 @@ Como usuario autenticado, quiero asociar una o varias fotografías a los árbole
 - Autorización por **JWT** en las rutas de media que lo exijan, coherente con el gateway y con el hecho de que las fotografías enlazan con fichas de catálogo existentes.
 - Criterios de visibilidad de fotografías alineados a la **matriz** documentada en el modelo de datos (solo **PUBLIC** y **PRIVATE**, heredados de la ficha/árbol; no parametrizados por foto en esta HU).
 - Componente de **previsualización previa a subida a MinIO** en la pantalla de alta: al cargar la primera imagen, el cliente lee metadatos de imagen y, si existen latitud y longitud válidas, **sobrescribe** los campos de coordenadas de la pantalla y posiciona el marcador en el mapa.
+- **Alta y baja de fotos en edición** (`/trees/:id/edit`): presign → MinIO → confirmación para añadir; `DELETE` de una foto con confirmación UX y promoción de principal (**TASK-HU-006-14**).
 
 #### Queda fuera de esta historia
 
@@ -50,6 +52,7 @@ Como usuario autenticado, quiero asociar una o varias fotografías a los árbole
 - **Notificaciones** por correo o consumo de eventos Kafka de notificación (**HU-007**).
 - **Identificación por IA** a partir de la imagen (**HU-009**) y **chat** (**HU-010**).
 - **Consulta**, listado y visualización de galerías en detalle público o en contexto autenticado (**HU-014**), incluida la experiencia completa del visitante frente a fotos **PUBLIC** / **PRIVATE**.
+- Reordenación manual de galería y cambio explícito de foto principal tras la subida inicial (el recálculo al borrar una foto en edición sí está en **TASK-HU-006-14**, cerrado).
 
 ### Dependencias
 

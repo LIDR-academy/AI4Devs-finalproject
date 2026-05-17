@@ -8,6 +8,8 @@ import AdminSubscriptionsView from '@/views/AdminSubscriptionsView.vue'
 import PendingView from '@/views/PendingView.vue'
 import SubscribeByEmailView from '@/views/SubscribeByEmailView.vue'
 import TreesDetailView from '@/views/TreesDetailView.vue'
+import EditTreeView from '@/views/EditTreeView.vue'
+import MyTreesListView from '@/views/MyTreesListView.vue'
 import TreesListView from '@/views/TreesListView.vue'
 import { authService } from '@/services/auth/oidc'
 import type { AppRole } from '@/types/auth'
@@ -164,19 +166,19 @@ const router = createRouter({
     {
       path: '/trees/:id/edit',
       name: 'trees-edit',
-      component: PendingView,
+      component: EditTreeView,
       meta: {
         requiresAuth: true,
-        pageTitleKey: 'pendingViews.treesEdit.title',
+        pageTitleKey: 'treeEdit.title',
       },
     },
     {
       path: '/my-trees',
       name: 'my-trees',
-      component: PendingView,
+      component: MyTreesListView,
       meta: {
         requiresAuth: true,
-        pageTitleKey: 'pendingViews.myTrees.title',
+        pageTitleKey: 'myTrees.title',
       },
     },
     {

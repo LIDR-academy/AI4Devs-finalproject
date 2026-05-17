@@ -19,6 +19,8 @@ vi.mock('@/views/LoginView.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/views/PendingView.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/views/SubscribeByEmailView.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/views/TreesDetailView.vue', () => ({ default: { template: '<div />' } }))
+vi.mock('@/views/EditTreeView.vue', () => ({ default: { template: '<div />' } }))
+vi.mock('@/views/MyTreesListView.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/views/TreesListView.vue', () => ({ default: { template: '<div />' } }))
 
 import router from '@/router'

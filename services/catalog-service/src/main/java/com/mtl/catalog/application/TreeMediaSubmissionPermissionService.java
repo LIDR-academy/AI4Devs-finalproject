@@ -7,8 +7,7 @@ import com.mtl.catalog.exception.CatalogForbiddenException;
 import com.mtl.catalog.exception.CatalogNotFoundException;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.ArbolRepository;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.UsuarioAppRepository;
-import java.util.List;
-import java.util.Map;
+import com.mtl.catalog.util.JwtRealmRoles;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,12 +42,12 @@ public class TreeMediaSubmissionPermissionService {
                     new CatalogForbiddenException(
                         "No existe un usuario de aplicación asociado a este token."));
 
-    boolean admin = hasRealmRole(jwt, "ADMIN");
+    boolean admin = JwtRealmRoles.hasRealmRole(jwt, "ADMIN");
     if (admin) {
       return new MediaSubmissionPermissionResponse(treeId, actor.getId());
     }
 
-    if (!hasRealmRole(jwt, "COLABORADOR")) {
+    if (!JwtRealmRoles.hasRealmRole(jwt, "COLABORADOR")) {
       throw new CatalogForbiddenException(
           "Se requiere rol COLABORADOR o ADMIN para asociar fotografías a un árbol.");
     }
@@ -59,17 +58,5 @@ public class TreeMediaSubmissionPermissionService {
     }
 
     return new MediaSubmissionPermissionResponse(treeId, actor.getId());
-  }
-
-  private static boolean hasRealmRole(Jwt jwt, String role) {
-    Map<String, Object> realmAccess = jwt.getClaimAsMap("realm_access");
-    if (realmAccess == null) {
-      return false;
-    }
-    Object rolesObj = realmAccess.get("roles");
-    if (!(rolesObj instanceof List<?> roles)) {
-      return false;
-    }
-    return roles.stream().filter(String.class::isInstance).map(String.class::cast).anyMatch(role::equals);
   }
 }

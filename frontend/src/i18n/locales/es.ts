@@ -260,6 +260,45 @@ export const es = {
       unexpectedError: 'No se pudo cargar el listado por un error inesperado.',
     },
   },
+  myTrees: {
+    title: 'Mis árboles',
+    loading: 'Cargando tus fichas...',
+    empty: 'No hay resultados para los filtros seleccionados.',
+    edit: 'Editar',
+    resultsCount: '{count} resultado(s)',
+    fields: {
+      province: 'Provincia',
+      municipality: 'Municipio',
+      state: 'Estado',
+      visibility: 'Visibilidad',
+    },
+    filters: {
+      species: {
+        label: 'Especie',
+        placeholder: 'Ej.: Encina o Quercus ilex',
+      },
+      createdFrom: {
+        label: 'Fecha creación desde',
+      },
+      createdTo: {
+        label: 'Fecha creación hasta',
+      },
+      createdByUserId: {
+        label: 'Usuario (ID)',
+        placeholder: 'ID de usuario_app',
+      },
+      moreFilters: 'Más filtros',
+      fewerFilters: 'Menos filtros',
+      apply: 'Aplicar filtros',
+      clear: 'Limpiar',
+    },
+    pagination: {
+      navLabel: 'Paginación de mis árboles',
+      previous: 'Anterior',
+      next: 'Siguiente',
+      pageStatus: 'Página {current} de {total}',
+    },
+  },
   treesDetail: {
     title: 'Detalle de árbol publicado',
     backToList: 'Volver al listado',
@@ -301,6 +340,52 @@ export const es = {
       unexpectedError: 'No se pudo cargar el detalle por un error inesperado.',
     },
     notFoundHint: 'Comprueba el enlace o vuelve al listado de fichas publicadas.',
+  },
+  collaboratorCatalog: {
+    messages: {
+      networkError: 'No se pudo conectar con el servicio. Verifica tu conexión o el entorno local.',
+      unauthorized: 'Tu sesión no es válida o ha caducado. Inicia sesión de nuevo para continuar.',
+      badRequest: 'Los datos enviados no son válidos.',
+      forbidden: 'No tienes permiso para realizar esta operación sobre la ficha.',
+      notFound: 'No se encontró la ficha de árbol indicada.',
+      badGateway:
+        'El catálogo no está disponible: el API Gateway no alcanza catalog-service (p. ej. puerto 8081). Arranca el microservicio o revisa la URL del gateway.',
+      serviceError: 'Error en el servicio.',
+      unexpectedError: 'No se pudo completar la operación por un error inesperado.',
+    },
+  },
+  treeEdit: {
+    title: 'Edición Id {id}',
+    titleInvalid: 'Edición de árbol',
+    loading: 'Cargando ficha para edición...',
+    backToList: 'Volver al listado',
+    save: 'Guardar',
+    saving: 'Guardando...',
+    delete: 'Eliminar ficha',
+    deleting: 'Eliminando...',
+    galleryFallbackAlt: 'Fotografía del árbol',
+    gallery: {
+      deletePhoto: 'Eliminar esta fotografía',
+      addPhoto: 'Añadir fotografía',
+      noPhotosHint: 'Sin fotografías',
+      deleteConfirm: {
+        title: 'Eliminar fotografía',
+        message:
+          '¿Confirmas la eliminación de esta fotografía? Esta acción no se puede deshacer.',
+        confirm: 'Eliminar',
+        cancel: 'Cancelar',
+      },
+    },
+    deleteConfirm: {
+      title: 'Eliminar ficha',
+      message:
+        '¿Confirmas la eliminación de esta ficha? Se borrarán también sus fotografías asociadas. Esta acción no se puede deshacer.',
+      confirm: 'Eliminar',
+      cancel: 'Cancelar',
+    },
+    messages: {
+      invalidId: 'Identificador de ficha no válido.',
+    },
   },
   treeForm: {
     title: 'Alta de árbol',
