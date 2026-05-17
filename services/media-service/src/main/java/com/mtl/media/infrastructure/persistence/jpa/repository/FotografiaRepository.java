@@ -30,4 +30,11 @@ public interface FotografiaRepository extends JpaRepository<Fotografia, Long> {
   @Query(
       "SELECT f FROM Fotografia f WHERE f.arbolId = :arbolId AND f.eliminadoEn IS NULL AND (f.categoria = 'PUBLIC' OR f.categoria IS NULL) ORDER BY f.esPrincipal DESC, f.orden ASC, f.fotografiaId ASC")
   List<Fotografia> findPublicForTreeOrdered(@Param("arbolId") long arbolId);
+
+  @Query("SELECT f FROM Fotografia f WHERE f.arbolId = :arbolId")
+  List<Fotografia> findAllByArbolId(@Param("arbolId") long arbolId);
+
+  @Query(
+      "SELECT f FROM Fotografia f WHERE f.fotografiaId = :photoId AND f.eliminadoEn IS NULL")
+  Optional<Fotografia> findActiveById(@Param("photoId") long photoId);
 }

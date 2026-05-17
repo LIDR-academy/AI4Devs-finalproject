@@ -1,7 +1,9 @@
 package com.mtl.media.config;
 
 import com.mtl.media.infrastructure.storage.MinioObjectStoragePresigner;
+import com.mtl.media.infrastructure.storage.MinioObjectStorageRemover;
 import com.mtl.media.infrastructure.storage.ObjectStoragePresigner;
+import com.mtl.media.infrastructure.storage.ObjectStorageRemover;
 import io.minio.MinioClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,5 +22,10 @@ public class MediaMinioConfig {
   @Bean
   public ObjectStoragePresigner objectStoragePresigner(MinioClient mediaMinioClient) {
     return new MinioObjectStoragePresigner(mediaMinioClient);
+  }
+
+  @Bean
+  public ObjectStorageRemover objectStorageRemover(MinioClient mediaMinioClient) {
+    return new MinioObjectStorageRemover(mediaMinioClient);
   }
 }

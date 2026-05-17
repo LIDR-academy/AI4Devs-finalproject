@@ -524,6 +524,55 @@ body {
   gap: var(--space-3);
 }
 
+.tree-detail-gallery-controls-spacer {
+  flex: 0 0 5.5rem;
+}
+
+.tree-detail-gallery-position {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+}
+
+.tree-detail-gallery-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+.tree-gallery-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.5rem;
+  line-height: 1;
+}
+
+.tree-gallery-action-icon {
+  display: block;
+}
+
+.tree-gallery-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.tree-edit-gallery-error {
+  margin-top: var(--space-2);
+  margin-bottom: 0;
+}
+
 dialog.tree-photo-viewer-overlay[open] {
   position: fixed;
   inset: 0;

@@ -81,13 +81,26 @@ export async function putFileToObjectStorageUrl(uploadUrl: string, file: File): 
   }
 }
 
+export interface UploadPhotosForTreeOptions {
+  startOrden?: number
+  signal?: AbortSignal
+}
+
 /**
- * Tras crear el árbol: presign → PUT binario → confirmar metadatos, en orden estable por fichero.
- * Cada confirmación incrementa el contador en servidor; `orden` debe coincidir con el índice siguiente.
+ * presign → PUT binario → confirmar metadatos, en orden estable por fichero.
+ * `orden` de cada confirmación = `startOrden + índice` (debe coincidir con fotos ya confirmadas en servidor).
  */
-export async function uploadPhotosForTreeAfterCreate(treeId: number, files: readonly File[]): Promise<void> {
+export async function uploadPhotosForTree(
+  treeId: number,
+  files: readonly File[],
+  options: UploadPhotosForTreeOptions = {},
+): Promise<void> {
+  const startOrden = options.startOrden ?? 0
+  const signal = options.signal
+
   for (let index = 0; index < files.length; index++) {
     const file = files[index]
+    const orden = startOrden + index
     const presignBody: PresignUploadRequest = {
       arbolId: treeId,
       nombreFicheroOriginal: file.name,
@@ -97,6 +110,7 @@ export async function uploadPhotosForTreeAfterCreate(treeId: number, files: read
     const presign = await apiFetch<PresignUploadResponse>('/api/media/uploads/presign', {
       method: 'POST',
       body: JSON.stringify(presignBody),
+      signal,
     })
 
     await putFileToObjectStorageUrl(presign.uploadUrl, file)
@@ -111,13 +125,19 @@ export async function uploadPhotosForTreeAfterCreate(treeId: number, files: read
       tamanoBytes: file.size,
       anchoPx: dims.width ?? null,
       altoPx: dims.height ?? null,
-      orden: index,
+      orden,
       esPrincipal: false,
       checksumSha256: null,
     }
     await apiFetch<PhotoMetadataResponse>('/api/media/photos/confirm', {
       method: 'POST',
       body: JSON.stringify(confirmBody),
+      signal,
     })
   }
+}
+
+/** Tras crear el árbol: sube desde orden 0. */
+export async function uploadPhotosForTreeAfterCreate(treeId: number, files: readonly File[]): Promise<void> {
+  await uploadPhotosForTree(treeId, files, { startOrden: 0 })
 }

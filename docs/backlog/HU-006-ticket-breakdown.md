@@ -6,14 +6,15 @@
 | **Refinamiento** | [HU-006-fotografias-asociadas-al-arbol.md](HU-006-fotografias-asociadas-al-arbol.md) |
 | **Épica** | Fotografías |
 | **Título HU** | Subida de fotografías al árbol |
+| **Estado HU** | **Cerrada** (14/14 tickets **Hecho**) |
 
 **Convención de ID de ticket:** `TASK-HU-006-<nn>`.
 
-**Estado del ticket:** columna **Estado** en cada fila; valores recomendados **Pendiente** (por defecto), **En curso**, **Hecho**.
+**Estado del ticket:** columna **Estado** en cada fila; valores recomendados **Pendiente** (por defecto), **En curso**, **Hecho**. Actualízala al cerrar o arrancar trabajo.
 
 **Contexto de equipo:** un ingeniero/a **full-stack** con HTML/CSS sólidos; stack y arquitectura en [readme.md](../../readme.md). Se asume **HU-001** (auth OIDC/JWT) y **HU-005** (alta de árbol con coordenadas y mapa en frontend) en estado utilizable para poder cerrar este flujo.
 
-**Objetivo de este desglose:** cerrar un vertical de **subida** de fotografías (no consulta completa) con `media-service` + MinIO + gateway, incluyendo: subida múltiple (máx. 10), validaciones MIME/tamaño (20 MB por defecto por foto), marca de foto principal (primera seleccionada), y previsualización con lectura EXIF para sobrescritura de coordenadas en la pantalla de alta del árbol.
+**Objetivo de este desglose:** cerrar un vertical de **subida y gestión** de fotografías (no consulta completa; lectura en **HU-014**) con `media-service` + MinIO + gateway: subida múltiple (máx. 10), validaciones MIME/tamaño (20 MB por defecto por foto), marca de foto principal (primera seleccionada), previsualización con EXIF en alta (**HU-005**) y **alta/baja** en edición de ficha (**HU-008**, **TASK-HU-006-14**).
 
 **Reglas aplicables por capa (referencia rápida):**
 
@@ -26,7 +27,7 @@
 
 - Frontend: `npm run build` y `npm run test`
 - Backend: `mvn -f services/pom.xml test` (y `verify` si se tocan `testIT`)
-- Integración funcional: subida de 2+ fotos a un árbol autorizado, marca de principal persistida, validación de límite/MIME/tamaño y autocompletado EXIF de coordenadas en la primera imagen
+- Integración funcional: subida de 2+ fotos en alta y en edición, marca de principal persistida, validación de límite/MIME/tamaño, autocompletado EXIF en la primera imagen (alta) y borrado de una foto con confirmación en edición
 
 ---
 
@@ -48,6 +49,9 @@ flowchart LR
   T10 --> T12[TASK-12 tests frontend]
   T11 --> T12
   T12 --> T13[TASK-13 docs HU-006]
+  T08 --> T14[TASK-14 fotos edición HU-008]
+  T05 --> T14
+  T11 --> T14
 ```
 
 ---
@@ -87,11 +91,19 @@ flowchart LR
 | **TASK-HU-006-12** | Pruebas frontend del componente y EXIF | Tests de composable/componente (Vitest): selección múltiple, bloqueo por límite/MIME/tamaño, marcaje de principal y sobrescritura de coordenadas cuando EXIF válido en primera imagen. | Hecho |
 | **TASK-HU-006-13** | Documentación técnica del corte HU-006 | Actualizar docs afectados (OpenAPI ya cubierto en TASK-06, más README/engineering si aplica) con propiedades configurables, secuencia presign->upload->confirmación y criterio de principal/EXIF. | Hecho |
 
+### Ampliación — fotos en pantalla de edición (HU-008)
+
+Depende de que exista la pantalla de edición de ficha en **HU-008** (`/trees/:id/edit`, listado **Mis árboles**). Reutiliza el componente de subida de **TASK-HU-006-08** y el flujo presign → MinIO → confirmación de **TASK-HU-006-03**.
+
+| ID | Título | Descripción breve | Estado |
+|----|--------|-------------------|--------|
+| **TASK-HU-006-14** | Alta y baja de fotografías desde la edición de Mis árboles | **Backend (`media-service`):** **`DELETE /api/media/photos/{photoId}`** (contrato **TASK-HU-008-01**), borrado metadatos + objeto, autorización **TASK-HU-006-05**; al borrar la principal, promover otra como `es_principal`. **Frontend:** galería en `/trees/:id/edit` con añadir (presign/confirmación, `startOrden`) y eliminar con diálogo de confirmación. **Pruebas:** `MediaPhotoDeleteServiceTest`, WebMvc delete, Vitest (`useEditTreeForm`, `EditTreeView`). | Hecho |
+
 ---
 
 ## Qué puede quedar para después (sigue siendo MVP global, no este corte)
 
-- Reordenación/edición avanzada de galerías y cambio manual de foto principal tras la subida inicial.
+- Reordenación manual de galería y cambio explícito de foto principal tras la subida inicial (distinto del recálculo al borrar en **TASK-HU-006-14**).
 - Transformación de imágenes (resize, thumbnails, optimización, CDN).
 - Consulta pública/privada completa de fotos y enlaces de lectura firmados (cubierto en **HU-014**).
 
@@ -99,8 +111,9 @@ flowchart LR
 
 - **HU-001:** autenticación OIDC/JWT y roles operativos.
 - **HU-005:** flujo de alta de árbol disponible para asociar fotos y reutilizar mapa/coordenadas.
+- **HU-008:** **cerrada** — pantalla de edición (`/trees/:id/edit`) y listado **Mis árboles** operativos para **TASK-HU-006-14**.
 - **Infra Compose:** MinIO, Postgres y gateway operativos según [infra/compose/README.md](../../infra/compose/README.md).
 
 ## Cierre sugerido (definición de “hecho” para el corte)
 
-Usuario `COLABORADOR` o `ADMIN` autenticado, sobre un árbol autorizado, puede seleccionar hasta 10 fotos (`jpeg/png/webp`), ver previsualización previa, obtener autocompletado EXIF de coordenadas en la primera imagen (con sobrescritura), subirlas vía URL prefirmada y confirmar metadatos en `media-service`, quedando persistida una única foto principal y validaciones de seguridad/tamaño/MIME comprobadas por tests.
+Usuario `COLABORADOR` o `ADMIN` autenticado, sobre un árbol autorizado, puede: (1) en **alta**, seleccionar hasta 10 fotos (`jpeg/png/webp`), ver previsualización previa, obtener autocompletado EXIF en la primera imagen y subir vía presign → MinIO → confirmación; (2) en **edición**, añadir fotos adicionales (respetando el máximo) y eliminar una foto con confirmación, con promoción automática de principal si aplica. Persistencia en `media-service`, una única foto principal por árbol y validaciones de seguridad/tamaño/MIME cubiertas por tests. Consulta de galería en detalle público: **HU-014**.

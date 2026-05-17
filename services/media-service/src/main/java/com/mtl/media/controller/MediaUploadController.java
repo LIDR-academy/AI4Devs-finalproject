@@ -1,5 +1,6 @@
 package com.mtl.media.controller;
 
+import com.mtl.media.application.MediaPhotoDeleteService;
 import com.mtl.media.application.MediaUploadService;
 import com.mtl.media.dto.ConfirmPhotoUploadRequest;
 import com.mtl.media.dto.PhotoMetadataResponse;
@@ -9,6 +10,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,9 +24,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class MediaUploadController {
 
   private final MediaUploadService mediaUploadService;
+  private final MediaPhotoDeleteService mediaPhotoDeleteService;
 
-  public MediaUploadController(MediaUploadService mediaUploadService) {
+  public MediaUploadController(
+      MediaUploadService mediaUploadService, MediaPhotoDeleteService mediaPhotoDeleteService) {
     this.mediaUploadService = mediaUploadService;
+    this.mediaPhotoDeleteService = mediaPhotoDeleteService;
   }
 
   @PostMapping("/uploads/presign")
@@ -44,5 +49,11 @@ public class MediaUploadController {
   public PhotoMetadataResponse findById(
       @PathVariable Long photoId, @AuthenticationPrincipal Jwt jwt) {
     return mediaUploadService.getPhotoMetadata(photoId, jwt);
+  }
+
+  @DeleteMapping("/photos/{photoId}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void deletePhoto(@PathVariable long photoId, @AuthenticationPrincipal Jwt jwt) {
+    mediaPhotoDeleteService.deletePhoto(photoId, jwt);
   }
 }

@@ -2,11 +2,13 @@ package com.mtl.media.controller;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.mtl.media.application.MediaPhotoDeleteService;
 import com.mtl.media.application.MediaUploadService;
 import com.mtl.media.config.MediaJwtAuthenticationPrincipalTestMvcConfig;
 import com.mtl.media.dto.PhotoMetadataResponse;
@@ -47,6 +49,7 @@ class MediaUploadControllerWebMvcTest {
   @Autowired private MockMvc mockMvc;
 
   @MockitoBean private MediaUploadService mediaUploadService;
+  @MockitoBean private MediaPhotoDeleteService mediaPhotoDeleteService;
 
   @AfterEach
   void clearSecurityContext() {
@@ -186,6 +189,17 @@ class MediaUploadControllerWebMvcTest {
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.title").value("Solicitud inválida para subida de fotografía"))
         .andExpect(jsonPath("$.instance").value("/api/media/photos/confirm"));
+  }
+
+  @Test
+  void deletePhoto_devuelve204() throws Exception {
+    JwtAuthenticationToken authentication = collaboratorAuthentication();
+
+    mockMvc
+        .perform(withJwtPrincipal(delete("/api/media/photos/10"), authentication))
+        .andExpect(status().isNoContent());
+
+    org.mockito.Mockito.verify(mediaPhotoDeleteService).deletePhoto(10L, authentication.getToken());
   }
 
   @Test

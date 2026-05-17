@@ -43,6 +43,13 @@ Colaborador --> UC6
 UC5 .> UC3 : <<extend>>\nPunto de extensión:\ndisponible al aportar\nimagen en el alta
 UC5 .> UC4 : <<extend>>\nPunto de extensión:\ndisponible al editar\ncon imagen
 
+note right of UC4
+  **HU-008 (cerrada):** listado con filtros,
+  edición (**PUT**), baja (**DELETE**)
+  con cascada media→SQL; sin UC-09.
+  Ver [HU-008-edicion-de-mis-arboles.md]
+end note
+
 ' --- ADMIN (requiere autenticación; hereda Colaborador) ---
 Admin --> UC7
 Admin --> UC8

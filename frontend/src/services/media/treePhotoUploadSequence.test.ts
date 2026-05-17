@@ -18,6 +18,7 @@ import { NetworkError } from '@/services/http/apiClient'
 import {
   ObjectStorageUploadError,
   putFileToObjectStorageUrl,
+  uploadPhotosForTree,
   uploadPhotosForTreeAfterCreate,
 } from '@/services/media/treePhotoUploadSequence'
 
@@ -155,5 +156,45 @@ describe('uploadPhotosForTreeAfterCreate', () => {
 
     const confirm2 = JSON.parse(String(apiFetchMock.mock.calls[3][1]?.body))
     expect(confirm2).toMatchObject({ orden: 1, bucket: 'b2', objectKey: 'k2' })
+  })
+})
+
+describe('uploadPhotosForTree', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
+    apiFetchMock.mockReset()
+    class FakeImage {
+      onload: (() => void) | null = null
+      onerror: (() => void) | null = null
+      naturalWidth = 0
+      naturalHeight = 0
+      set src(_value: string) {
+        queueMicrotask(() => this.onload?.())
+      }
+    }
+    vi.stubGlobal('Image', FakeImage as unknown as typeof Image)
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('usa startOrden en la confirmación cuando ya hay fotos en el árbol', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 200 }))
+    const file = new File(['a'], 'extra.jpg', { type: 'image/jpeg' })
+
+    apiFetchMock
+      .mockResolvedValueOnce({
+        uploadUrl: 'https://minio/extra',
+        bucket: 'b1',
+        objectKey: 'k1',
+        expiresAt: '2026-01-01T00:00:00Z',
+      })
+      .mockResolvedValueOnce({ id: 12 })
+
+    await uploadPhotosForTree(7, [file], { startOrden: 2 })
+
+    const confirm = JSON.parse(String(apiFetchMock.mock.calls[1][1]?.body))
+    expect(confirm).toMatchObject({ orden: 2, arbolId: 7 })
   })
 })
