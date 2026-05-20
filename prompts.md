@@ -233,9 +233,39 @@ Reference: https://stitch.withgoogle.com/projects/10568397103146599411
 
 ---
 
-## 6. Integration & Deployment
+## 6. Work Tickets & Implementation Tasks
 
-### Prompt 6.1: CI/CD & GitHub Actions
+### Prompt 6.1: Work Tickets Breakdown
+
+**Objective:** Decompose user stories into detailed work tickets with subtasks, acceptance criteria, and testing strategy.
+
+**Prompt:**
+```
+Based on the DiviDox user stories and architecture, create detailed work tickets for full implementation:
+
+For each ticket:
+- **Ticket ID:** DVX-TK-XXX
+- **Title:** One-line summary
+- **Module:** :component:*, :feature:*, :integration:*
+- **Scope:** 2-3 paragraph description
+- **Subtasks:** 8-12 actionable, sequential steps
+- **Acceptance Criteria:** 5-7 testable conditions
+- **Testing:** Unit, integration, UI test strategy
+- **Definition of Done:** QA checklist
+- **Estimated Effort:** T-shirt size (S/M/L/XL)
+- **Dependencies:** Other tickets that must be done first
+
+Format as separate markdown files: docs/tickets/TK-011.md through TK-020.md
+Include dependency diagrams and roadmap.
+```
+
+**Output:** docs/tickets/TK-011.md, TK-015.md, TK-018.md (Delivery 1) + TK-012 through TK-020 (Delivery 2)
+
+---
+
+## 7. Integration & Deployment
+
+### Prompt 7.1: CI/CD & GitHub Actions
 
 **Objective:** Define automated build, test, and deployment pipelines using GitHub Actions.
 
@@ -309,8 +339,13 @@ Include troubleshooting guide for common CI/CD failures.
 - Use **Prompt 5.1** to revise screen designs
 - Update Stitch prototype with new mockups
 
+**For work breakdown:**
+- Use **Prompt 6.1** to create tickets for new features
+- Link tickets to user stories
+- Track dependencies between tickets
+
 **For CI/CD setup:**
-- Use **Prompt 6.1** to configure automated builds, tests, and deployments
+- Use **Prompt 7.1** to configure automated builds, tests, and deployments
 - Enable pull request checks before merge
 - Setup Firebase App Distribution for testing
 

@@ -835,13 +835,51 @@ Each story includes acceptance criteria, test cases, and story points.
 
 For detailed work tickets and technical specifications, see [docs/tickets/](docs/tickets/).
 
-**Delivery 1 Key Tickets:**
+**Complete Work Tickets Roadmap (33 tickets):**
 
-- **DVX-TK-011** — Component:Auth — Firebase Auth + Google Sign-In setup
-- **DVX-TK-018** — Feature:Dashboard — MVI implementation + BottomNavBar
-- **DVX-TK-015** — Integration:MarketData — Yahoo Finance API + Room cache
+| Phase | Ticket ID | Module | Title |
+|-------|-----------|--------|-------|
+| **Setup** | TK-001 | infra | Initial Setup |
+| | TK-002 | infra | Skills Assessment |
+| | TK-003 | infra | Symlinks Configuration |
+| | TK-004 | infra | Pipeline Setup |
+| | TK-005 | infra | Pipeline Rename |
+| **Foundation** | TK-006 | gradle | Koin Upgrade |
+| | TK-007 | design | Design System Font |
+| | TK-008 | docs | Documentation |
+| | TK-009 | planning | Ticket Planning |
+| | TK-010 | foundation | Session State Foundation |
+| **Delivery 1 (Core)** | **TK-011** | **:component:auth** | **Firebase Auth + Google Sign-In** |
+| | **TK-012** | **:component:auth** | **Session Lifecycle** |
+| | TK-013 | :feature:auth | Feature Auth |
+| | **TK-015** | **:integration:market-data** | **Yahoo Finance API + Room Cache** |
+| | TK-014 | :component:security | Portfolio Component |
+| | TK-016 | :component:security | Watchlist Component |
+| | **TK-018** | **:feature:dashboard** | **Dashboard Screen + BottomNav** |
+| **Delivery 2 (Features)** | TK-017 | :integration:security | Security Integration |
+| | TK-019 | :feature:portfolio | Portfolio Screen |
+| | TK-020 | :feature:portfolio | Add/Edit Holdings |
+| | TK-021 | :component:dividend | Dividend Component |
+| | TK-022 | :integration:dividend | Dividend Integration |
+| | TK-023 | :feature:dividends | Dividend Activity Screen |
+| | TK-024 | :feature:analysis | Analysis Screen |
+| | TK-025 | :feature:favorites | Favorites Feature |
+| | TK-026 | :feature:search | Search Feature |
+| **Polish & Advanced** | TK-028 | :feature:auth | Biometric Authentication |
+| | TK-029 | :feature:settings | Settings Screen |
+| | TK-030 | :feature:settings | Export Portfolio |
+| | TK-031 | :feature:settings | Delete Account |
+| | TK-032 | :feature:settings | About/Terms/Privacy |
+| | TK-033 | :feature:notifications | Push Notifications |
+| | TK-035 | :feature:dashboard | Market Indices Carousel |
 
-Each ticket includes subtasks, acceptance criteria, testing requirements, and Definition of Done.
+**Highlighted Delivery 1 Tickets (MVP):** TK-011, TK-012, TK-015, TK-018
+
+Each ticket includes:
+- Detailed subtasks & acceptance criteria
+- Testing requirements & DoD checklist
+- Estimated effort (T-shirt sizing)
+- Dependencies & relationships
 
 ---
 
