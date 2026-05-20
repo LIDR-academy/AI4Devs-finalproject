@@ -116,6 +116,7 @@ DiviDox is a cross-platform application (Android, iOS, Desktop) built with **Kot
 
 | Screen | Description |
 |--------|-------------|
+| <img src="docs/images/auth.png" width="250"/> | **Authentication** — Google Sign-In and Email/Password login screens with Material Design 3 styling |
 | <img src="docs/images/dashboard-android.png" width="250"/> | **Dashboard** — Portfolio overview with total value, today's metrics, favorites quick access, and period selector |
 | <img src="docs/images/portfolio.png" width="250"/> | **Portfolio** — Holdings list showing ticker, company name, current value, position size, and gain/loss % |
 | <img src="docs/images/stock-analysis.png" width="250"/> | **Analysis** — Detailed security view with price chart (multiple timeframes), fundamental metrics (P/E, Market Cap, Yield) |
