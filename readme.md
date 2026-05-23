@@ -78,7 +78,7 @@ La solución ofrece un sistema de notificaciones para comunicar novedades a usua
 
 El producto se entegra con IA para obtener información de las características de cada especie y como apoyo a la identificación orientativa de la especie a partir de fotografías.
 
-#### Diagrama de contexto del sistema (C1)
+### **2.2.1 Diagrama de contexto del sistema (C1)**
 
 ```mermaid
 graph TD
@@ -109,7 +109,8 @@ graph TD
     S --> MAP
 ```
 
-#### Diagrama de Casos de Uso del sistema
+
+### **2.2.2 Diagrama de Casos de Uso del sistema**
 
 ![Casos de uso](./docs/use-cases/use-case-model.png)
 
@@ -772,7 +773,7 @@ Estrategia prevista: pruebas unitarias de dominio; **integración** con **Testco
 
 **Documentación relacionada:** [Notas de negocio y reglas](docs/data-model/data-model.md) · [Modelo técnico MongoDB (colecciones, validación, índices)](docs/data-model/mongo.md) · [Eventos Kafka](docs/events/kafka-events.md)
 
-### **3.1. Modelo lógico del sistema completo**
+### **4.1. Modelo lógico del sistema completo**
 
 A continuación se muestra el **Modelo lógico** del sistema; una vista unificada de entidades principales del sistema y sus relaciones; se incluyen todas las entidades lógicas del sistema, independientemente del modo y servicio en el que se realice su implementación física; los tipos indican el modelo físico previsto alineado con §3.2.
 
@@ -844,7 +845,7 @@ erDiagram
 
 ### **4.2. Diagrama de persistencia (implementación)**
 
-#### **PostgreSQL: catalog_service:**
+#### **4.2.1 PostgreSQL: catalog_service:**
 
 Esquema con los datos generales de cada árbol y auditoria del usuario que los registró.
 
@@ -944,7 +945,7 @@ Para el alta de árbol, los valores admitidos son:
 - `estado_publicacion`: `BORRADOR` o `PUBLICADO`.
 - `visibilidad_mapa_publico`: `PRIVADO` o `PUBLICO`.
 
-#### **Mongo catalog_service:**
+#### **4.2.2 Mongo catalog_service:**
 
 Base de datos NoSQL que permite almacenar información no estructurada de cada árbol.
 
@@ -985,7 +986,7 @@ erDiagram
 ```
 
 
-#### **PostgreSQL media_service:**
+#### **4.2.3 PostgreSQL media_service:**
 
 Información de las fotografías de cada árbol almacenadas en el  sistema.
 
@@ -1014,7 +1015,7 @@ erDiagram
 ```
 
 
-#### **PostgreSQL notification_service:**
+#### **4.2.4 PostgreSQL notification_service:**
 
 Avisos de de nuevas altas en el sistema a los suscriptores.
 
@@ -1065,7 +1066,7 @@ erDiagram
 
 
 
-#### **PostgreSQL ai_assistant_service (esquema `ai`):**
+#### **4.2.5 PostgreSQL ai_assistant_service (esquema `ai`):**
 
 Audtoría de las consultas realizadas al asistnete de IA (ChatGPT).
 
@@ -1117,13 +1118,11 @@ El proceso seguido es:
 
 Por operativa práctica, al comienzo de la historia se hacen unas comprobaciones iniciales que permiten detectar historias incompletas o mal formadas.   
 
-**Ejemplo del proceso**
-
-**Historia de Usuario — HU-008** (Edición y baja de mis árboles) 
+**Ejemplo del proceso: Historia de Usuario — HU-008 (Edición y baja de mis árboles) **
 
 **Prompt 1:**
 
-Vamos a esarrollar la historia HU-008@.cursor/skills/hu-refinement-mtl
+Vamos a desarrollar la historia HU-008@.cursor/skills/hu-refinement-mtl
 
 **Prompt 2:**
 
@@ -1151,9 +1150,7 @@ Como se ha comentado en el punto anterior, para mantener formato homogéneo se u
 En la generación ed ticket de trabajo se incluye explicitamente una sección con las rules de Cursor que debe aplicar el agente de IA al implementarlos.
 
 
-**Ejemplo del proceso**
-
-**Ticket 1 — HU-008**
+**Ejemplo del proceso: Ticket 1 — HU-008**
 
 **Prompt 1:**
 
