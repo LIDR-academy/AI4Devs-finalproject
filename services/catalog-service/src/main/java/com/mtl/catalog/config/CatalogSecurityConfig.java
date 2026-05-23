@@ -37,6 +37,22 @@ public class CatalogSecurityConfig {
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/catalog/species", "/api/catalog/provinces")
                     .hasAnyRole("COLABORADOR", "ADMIN")
+                    .requestMatchers(
+                        HttpMethod.GET,
+                        "/api/catalog/families",
+                        "/api/catalog/genera",
+                        "/api/catalog/species/*")
+                    .hasRole("ADMIN")
+                    .requestMatchers(
+                        HttpMethod.POST,
+                        "/api/catalog/families",
+                        "/api/catalog/genera",
+                        "/api/catalog/species")
+                    .hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.PUT, "/api/catalog/species/*")
+                    .hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.DELETE, "/api/catalog/species/*")
+                    .hasRole("ADMIN")
                     .requestMatchers(HttpMethod.GET, "/api/catalog/trees")
                     .hasAnyRole("COLABORADOR", "ADMIN")
                     .requestMatchers(HttpMethod.GET, "/api/catalog/trees/*")

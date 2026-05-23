@@ -20,7 +20,7 @@ Visión de producto: [readme.md](../../readme.md) §2.5. **Rutas y contrato HTTP
 ## Autorización por roles
 
 - Roles de realm previstos: **`COLABORADOR`** y **`ADMIN`** (nombre exacto según realm).
-- Endpoints de **gestión de maestros** y operaciones administrativas: solo **`ADMIN`** salvo que el modelo de casos de uso indique lo contrario.
+- Endpoints de **gestión de maestros taxonómicos** (familia, género, especie; **HU-011**) y otras operaciones administrativas: solo **`ADMIN`** salvo que el modelo de casos de uso indique lo contrario. **Provincias:** solo lectura en MVP (catálogo por semillas Flyway).
 - **Registro y edición de árboles** del colaborador: **`COLABORADOR`** (o **`ADMIN`** actuando con las mismas reglas de propiedad que un colaborador, si se documenta).
 - Rutas **públicas** (`/api/catalog/public/...`, consulta sin login): **sin** requisito de JWT; seguir limitando datos a lo publicable según reglas de negocio ([data-model.md](../../docs/data-model/data-model.md)).
 

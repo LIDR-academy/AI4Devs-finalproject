@@ -17,10 +17,10 @@ import tools.jackson.databind.jsontype.PolymorphicTypeValidator;
 /**
  * Configuración mínima de caché Redis para el catálogo (maestros).
  *
- * <p>Se cachean lecturas de baja cardinalidad y alta frecuencia (provincias, especies sin
- * filtro) para reducir presión sobre Postgres. Las escrituras de catálogo no se invalidan
- * activamente en el MVP: el TTL gobierna la frescura; la invalidación activa con
- * {@code @CacheEvict} queda pendiente para futuras HU de administración de maestros.
+ * <p>Se cachean lecturas de baja cardinalidad y alta frecuencia (provincias, especies sin filtro)
+ * para reducir presión sobre Postgres. La caché {@value #CACHE_SPECIES_UNPAGED} se invalida con
+ * {@code @CacheEvict} en {@link com.mtl.catalog.application.TaxonomyAdminService} tras altas,
+ * modificaciones o bajas de especie; provincias y nombres públicos dependen del TTL en el MVP.
  *
  * <p>Los valores JSON incluyen metadatos de tipo (default typing) con validación por prefijos
  * de paquete: DTOs del catálogo más {@code java.lang} y {@code java.util} (listas, cadenas,

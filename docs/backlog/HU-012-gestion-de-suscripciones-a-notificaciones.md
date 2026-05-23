@@ -43,7 +43,7 @@ Como usuario con rol administrador, quiero consultar y gestionar los registros d
 - **Alta pública** de suscripción por correo sin autenticación (**UC-02**, **HU-004**): ya cubierta; esta historia no duplica el POST público.
 - **Notificación por correo** al crear ficha, consumo de **Kafka**, persistencia de **EVENTO_CATALOGO** y envíos (**UC-09**, **HU-007**): la gestión de suscriptores no implementa la cola ni el SMTP de avisos.
 - **Rate limiting, captcha u otro endurecimiento** del endpoint público de alta: riesgo aceptado en MVP según documentación de modelo de datos; no es objeto de esta historia.
-- **Maestros de catálogo** (**UC-07**, **HU-011**): no forman parte del dominio de suscripción.
+- **Maestros taxonómicos del catálogo** (**UC-07**, **HU-011**): no forman parte del dominio de suscripción.
 - **Eliminación física** de filas **SUSCRIPTOR**: explícitamente **fuera** del MVP; la baja operativa es solo **CANCELADA**. Políticas futuras de anonimización o archivo de históricos de envío quedan fuera de esta historia.
 
 ### Dependencias

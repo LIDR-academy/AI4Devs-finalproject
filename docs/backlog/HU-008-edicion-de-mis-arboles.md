@@ -59,7 +59,7 @@ Como colaborador autenticado, quiero modificar o eliminar únicamente los árbol
 - **Subida y borrado de fotografías** en la pantalla de edición: cubierto por **[TASK-HU-006-14](HU-006-ticket-breakdown.md)** (**HU-006** cerrada); esta HU entrega la pantalla de datos de ficha y la galería integrada en `/trees/:id/edit`.
 - **Consulta pública** ampliada de galerías (**HU-014**); la edición no implementa la experiencia completa del visitante.
 - **Identificación por IA** en edición (**HU-009**, extensión **UC-05** sobre **UC-04**) y **chat** (**HU-010**).
-- **Gestión de maestros** taxonómicos o geográficos (**HU-011**): la historia **consume** listas de especies/provincias ya expuestas, no las administra.
+- **Gestión de maestros taxonómicos** (**HU-011**): la historia **consume** listas de especies ya expuestas; **provincias** en solo lectura (semillas Flyway), sin administración en **HU-011**.
 - **Consulta pública** de listados o detalle (**HU-002**, **HU-003**), salvo el efecto lateral de cambiar `publicationState` / visibilidad en mapa o de **eliminar** una ficha publicada.
 - **Proyección o sincronización Mongo** en alta/edición: **[HU-015](HU-015-proyeccion-y-enriquecimiento-mongo.md)** (fuera del corte **HU-008** salvo el hook de borrado ya referenciado).
 
@@ -68,7 +68,7 @@ Como colaborador autenticado, quiero modificar o eliminar únicamente los árbol
 - **Autenticación OIDC/JWT** y rol de colaborador (**HU-001**).
 - **Alta de ficha** operativa (**HU-005**): existencia de árboles con `usuario_app_id` y contrato **`CreateTreeRequest`** como referencia de campos.
 - **Estructura de rutas y guardas** (**HU-013**): `/my-trees`, `/trees/:id/edit` con `requiresAuth`.
-- **Maestros** disponibles para selects (especie, provincia); gestión reservada a **HU-011**, consumo en formulario como en el alta.
+- **Maestros** en formulario: **especie** (mantenimiento **HU-011**) y **provincia** (solo lectura, catálogo sembrado); consumo en formulario como en el alta.
 - **API Gateway** enrutando `/api/catalog` con validación de JWT hacia **catalog-service**.
 - **HU-006** / **[TASK-HU-006-14](HU-006-ticket-breakdown.md):** **cerrada** — galería en `/trees/:id/edit`.
 - **HU-015** / **[TASK-HU-015-01](HU-015-ticket-breakdown.md):** borrado Mongo real pendiente; invocación desde baja de árbol con **stub** en este corte.

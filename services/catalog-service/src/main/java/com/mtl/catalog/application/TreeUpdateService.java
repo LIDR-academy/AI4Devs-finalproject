@@ -14,7 +14,7 @@ import com.mtl.catalog.domain.Arbol;
 import com.mtl.catalog.exception.CatalogForbiddenException;
 import com.mtl.catalog.exception.CatalogNotFoundException;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.ArbolRepository;
-import com.mtl.catalog.infrastructure.persistence.jpa.repository.EspecieReadRepository;
+import com.mtl.catalog.infrastructure.persistence.jpa.repository.EspecieRepository;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.ProvinciaReadRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,15 +23,15 @@ import org.springframework.transaction.annotation.Transactional;
 public class TreeUpdateService {
 
   private final ArbolRepository arbolRepository;
-  private final EspecieReadRepository especieReadRepository;
+  private final EspecieRepository especieRepository;
   private final ProvinciaReadRepository provinciaReadRepository;
 
   public TreeUpdateService(
       ArbolRepository arbolRepository,
-      EspecieReadRepository especieReadRepository,
+      EspecieRepository especieRepository,
       ProvinciaReadRepository provinciaReadRepository) {
     this.arbolRepository = arbolRepository;
-    this.especieReadRepository = especieReadRepository;
+    this.especieRepository = especieRepository;
     this.provinciaReadRepository = provinciaReadRepository;
   }
 
@@ -52,7 +52,7 @@ public class TreeUpdateService {
 
     validateCoordinates(command.latitud(), command.longitud());
     validateMasters(
-        command.especieId(), command.provinciaId(), especieReadRepository, provinciaReadRepository);
+        command.especieId(), command.provinciaId(), especieRepository, provinciaReadRepository);
 
     long especieIdPrev = arbol.getEspecieId();
     long provinciaIdPrev = arbol.getProvinciaId();

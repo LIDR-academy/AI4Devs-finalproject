@@ -205,8 +205,8 @@ function onDismissModal(): void {
 
       <p v-if="!hasRows" class="status-note">{{ t('adminSubscriptions.empty') }}</p>
 
-      <div v-else class="admin-subscriptions__table-wrap">
-        <table class="admin-subscriptions__table" :aria-label="t('adminSubscriptions.title')">
+      <div v-else class="mtl-admin-table-wrap">
+        <table class="mtl-admin-table" :aria-label="t('adminSubscriptions.title')">
           <thead>
             <tr>
               <th scope="col">{{ t('adminSubscriptions.fields.email') }}</th>
@@ -224,7 +224,7 @@ function onDismissModal(): void {
               <td>{{ formatDate(row.altaEn) }}</td>
               <td>{{ formatDate(row.confirmadoEn) }}</td>
               <td>{{ formatDate(row.bajaEn) }}</td>
-              <td class="admin-subscriptions__actions">
+              <td class="mtl-admin-table__actions">
                 <button
                   v-if="row.estadoSuscripcion === 'ACTIVA'"
                   type="button"
@@ -294,34 +294,5 @@ function onDismissModal(): void {
 /* Correo y estado: mitad del ancho disponible cada uno (sobrescribe la rejilla de 3 columnas del listado de árboles). */
 .trees-filter-grid.admin-subscriptions-filter-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.admin-subscriptions__table-wrap {
-  overflow-x: auto;
-  margin-top: var(--space-4, 1rem);
-  margin-bottom: var(--space-4, 1rem);
-}
-
-.admin-subscriptions__table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.92rem;
-}
-
-.admin-subscriptions__table th,
-.admin-subscriptions__table td {
-  border: 1px solid var(--border, #d0d5dd);
-  padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
-  text-align: left;
-  vertical-align: top;
-}
-
-.admin-subscriptions__table th {
-  background: var(--bg-soft, #f8fafc);
-  font-weight: 600;
-}
-
-.admin-subscriptions__actions {
-  white-space: nowrap;
 }
 </style>

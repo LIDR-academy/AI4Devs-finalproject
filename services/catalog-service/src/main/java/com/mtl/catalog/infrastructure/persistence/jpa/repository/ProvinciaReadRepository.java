@@ -13,7 +13,7 @@ import org.springframework.data.repository.query.Param;
 
 public interface ProvinciaReadRepository extends JpaRepository<Provincia, Long> {
 
-  int MAX_UNPAGED = EspecieReadRepository.MAX_UNPAGED;
+  int MAX_UNPAGED = EspecieRepository.MAX_UNPAGED;
 
   @Query(
       value = "SELECT p.nombre FROM catalog.provincia p ORDER BY p.nombre ASC",

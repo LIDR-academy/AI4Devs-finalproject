@@ -11,7 +11,7 @@ import com.mtl.catalog.exception.CatalogForbiddenException;
 import com.mtl.catalog.exception.CatalogNotFoundException;
 import com.mtl.catalog.exception.CatalogValidationException;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.ArbolRepository;
-import com.mtl.catalog.infrastructure.persistence.jpa.repository.EspecieReadRepository;
+import com.mtl.catalog.infrastructure.persistence.jpa.repository.EspecieRepository;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.ProvinciaReadRepository;
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -26,7 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class TreeUpdateServiceTest {
 
   @Mock private ArbolRepository arbolRepository;
-  @Mock private EspecieReadRepository especieReadRepository;
+  @Mock private EspecieRepository especieRepository;
   @Mock private ProvinciaReadRepository provinciaReadRepository;
   @InjectMocks private TreeUpdateService treeUpdateService;
 
@@ -34,7 +34,7 @@ class TreeUpdateServiceTest {
   void update_colaboradorPropietario_persisteSinCambiarCreador() {
     Arbol arbol = arbol(42L, 7L, 10L, 28L);
     when(arbolRepository.findById(42L)).thenReturn(Optional.of(arbol));
-    when(especieReadRepository.existsById(11L)).thenReturn(true);
+    when(especieRepository.existsById(11L)).thenReturn(true);
     when(provinciaReadRepository.existsById(29L)).thenReturn(true);
     when(arbolRepository.save(any(Arbol.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -64,7 +64,7 @@ class TreeUpdateServiceTest {
   void update_adminPuedeModificarAjeno() {
     Arbol arbol = arbol(42L, 99L, 10L, 28L);
     when(arbolRepository.findById(42L)).thenReturn(Optional.of(arbol));
-    when(especieReadRepository.existsById(11L)).thenReturn(true);
+    when(especieRepository.existsById(11L)).thenReturn(true);
     when(provinciaReadRepository.existsById(29L)).thenReturn(true);
     when(arbolRepository.save(any(Arbol.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -84,7 +84,7 @@ class TreeUpdateServiceTest {
   @Test
   void update_especieInexistente_devuelve400() {
     when(arbolRepository.findById(42L)).thenReturn(Optional.of(arbol(42L, 7L, 10L, 28L)));
-    when(especieReadRepository.existsById(999L)).thenReturn(false);
+    when(especieRepository.existsById(999L)).thenReturn(false);
 
     assertThatThrownBy(() -> treeUpdateService.update(42L, command(999L, 28L), 7L, false))
         .isInstanceOf(CatalogValidationException.class)

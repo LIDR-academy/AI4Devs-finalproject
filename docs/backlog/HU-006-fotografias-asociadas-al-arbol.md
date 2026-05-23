@@ -47,7 +47,7 @@ Como usuario autenticado, quiero asociar una o varias fotografías a los árbole
 
 #### Queda fuera de esta historia
 
-- Definición y gestión de **maestros** taxonómicos o geográficos (**HU-011**).
+- Definición y gestión de **maestros taxonómicos** (**HU-011**); provincias fuera del mantenimiento admin.
 - **Alta o edición** de la ficha de árbol sin la parte de fotos (**HU-005**, **HU-008**) más allá de la **dependencia** de que exista un árbol identificable para asociar la fotografía.
 - **Notificaciones** por correo o consumo de eventos Kafka de notificación (**HU-007**).
 - **Identificación por IA** a partir de la imagen (**HU-009**) y **chat** (**HU-010**).

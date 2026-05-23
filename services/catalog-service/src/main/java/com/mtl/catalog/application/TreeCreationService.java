@@ -14,7 +14,7 @@ import com.mtl.catalog.domain.Arbol;
 import com.mtl.catalog.domain.UsuarioApp;
 import com.mtl.catalog.exception.CatalogValidationException;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.ArbolRepository;
-import com.mtl.catalog.infrastructure.persistence.jpa.repository.EspecieReadRepository;
+import com.mtl.catalog.infrastructure.persistence.jpa.repository.EspecieRepository;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.ProvinciaReadRepository;
 import com.mtl.catalog.util.OidcUserProfileExtractor.OidcUserProfile;
 import org.springframework.stereotype.Service;
@@ -24,17 +24,17 @@ import org.springframework.transaction.annotation.Transactional;
 public class TreeCreationService {
 
   private final UsuarioAppMaterializationService usuarioAppMaterializationService;
-  private final EspecieReadRepository especieReadRepository;
+  private final EspecieRepository especieRepository;
   private final ProvinciaReadRepository provinciaReadRepository;
   private final ArbolRepository arbolRepository;
 
   public TreeCreationService(
       UsuarioAppMaterializationService usuarioAppMaterializationService,
-      EspecieReadRepository especieReadRepository,
+      EspecieRepository especieRepository,
       ProvinciaReadRepository provinciaReadRepository,
       ArbolRepository arbolRepository) {
     this.usuarioAppMaterializationService = usuarioAppMaterializationService;
-    this.especieReadRepository = especieReadRepository;
+    this.especieRepository = especieRepository;
     this.provinciaReadRepository = provinciaReadRepository;
     this.arbolRepository = arbolRepository;
   }
@@ -47,7 +47,7 @@ public class TreeCreationService {
     }
     validateCoordinates(command.latitud(), command.longitud());
     validateMasters(
-        command.especieId(), command.provinciaId(), especieReadRepository, provinciaReadRepository);
+        command.especieId(), command.provinciaId(), especieRepository, provinciaReadRepository);
 
     UsuarioApp creator =
         usuarioAppMaterializationService.materialize(

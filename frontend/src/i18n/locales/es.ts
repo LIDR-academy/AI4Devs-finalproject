@@ -45,7 +45,7 @@ export const es = {
       },
       masters: {
         title: 'Maestros',
-        desc: 'Mantener provincias, especies y demás datos de referencia del catálogo.',
+        desc: 'Mantener familias, géneros y especies del catálogo taxonómico.',
       },
       subscriptions: {
         title: 'Suscripciones',
@@ -175,6 +175,73 @@ export const es = {
         'El servicio de notificaciones no está disponible (502/503). Arranca notification-service o revisa el gateway.',
       serviceError: 'Error en el servicio (código {status}).',
       unexpected: 'Ha ocurrido un error inesperado.',
+    },
+  },
+  adminMasters: {
+    title: 'Administración de maestros',
+    loading: 'Cargando datos taxonómicos…',
+    listTitle: 'Especies registradas',
+    emptyList: 'No hay especies registradas todavía.',
+    resultsCount: '{count} resultado(s)',
+    loadingSpecies: 'Cargando especies…',
+    columns: {
+      species: 'Especie',
+      actions: 'Acciones',
+    },
+    form: {
+      createTitle: 'Alta de especie',
+      editTitle: 'Editar especie',
+      genus: 'Género',
+      family: 'Familia',
+      selectGenus: 'Selecciona un género',
+      selectFamily: 'Selecciona una familia',
+      scientificName: 'Nombre científico',
+      commonName: 'Nombre común (opcional)',
+      addGenus: 'Alta de género',
+      addFamily: 'Alta de familia',
+    },
+    modals: {
+      genusTitle: 'Alta de género',
+      familyTitle: 'Alta de familia',
+    },
+    modal: {
+      deleteTitle: 'Eliminar especie',
+      deleteMessage: '¿Eliminar la especie «{label}»? No se puede deshacer.',
+    },
+    actions: {
+      edit: 'Editar',
+      delete: 'Eliminar',
+      create: 'Crear',
+      save: 'Guardar',
+      back: 'Volver',
+      cancel: 'Cancelar',
+    },
+    pagination: {
+      navLabel: 'Paginación de especies',
+      previous: 'Anterior',
+      next: 'Siguiente',
+      pageStatus: 'Página {current} de {total}',
+    },
+    validation: {
+      required: 'Completa los campos obligatorios.',
+    },
+    messages: {
+      created: 'Especie creada correctamente.',
+      updated: 'Especie actualizada correctamente.',
+      deleted: 'Especie eliminada correctamente.',
+      genusCreated: 'Género creado; ya está seleccionado en el formulario.',
+      familyCreated: 'Familia creada; ya está seleccionada en el modal de género.',
+      network: 'No se pudo conectar con el servicio. Comprueba el API Gateway y catalog-service.',
+      badRequest: 'La petición no es válida.',
+      unauthorized: 'Tu sesión no es válida o ha caducado. Vuelve a iniciar sesión.',
+      forbidden: 'No tienes permisos para esta operación (se requiere rol administrador).',
+      notFound: 'No se encontró el recurso taxonómico solicitado.',
+      conflictDelete:
+        'No se puede eliminar la especie porque existen fichas de árbol que la referencian.',
+      badGateway:
+        'El catálogo no está disponible (502/503). Arranca catalog-service o revisa el gateway.',
+      serviceError: 'Error en el servicio (código {status}).',
+      unexpectedError: 'Ha ocurrido un error inesperado.',
     },
   },
   pendingViews: {

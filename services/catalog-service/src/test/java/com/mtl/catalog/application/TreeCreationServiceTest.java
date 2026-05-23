@@ -10,7 +10,7 @@ import com.mtl.catalog.domain.Arbol;
 import com.mtl.catalog.domain.UsuarioApp;
 import com.mtl.catalog.exception.CatalogValidationException;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.ArbolRepository;
-import com.mtl.catalog.infrastructure.persistence.jpa.repository.EspecieReadRepository;
+import com.mtl.catalog.infrastructure.persistence.jpa.repository.EspecieRepository;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.ProvinciaReadRepository;
 import com.mtl.catalog.util.OidcUserProfileExtractor.OidcUserProfile;
 import java.math.BigDecimal;
@@ -26,7 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class TreeCreationServiceTest {
 
   @Mock private UsuarioAppMaterializationService usuarioAppMaterializationService;
-  @Mock private EspecieReadRepository especieReadRepository;
+  @Mock private EspecieRepository especieRepository;
   @Mock private ProvinciaReadRepository provinciaReadRepository;
   @Mock private ArbolRepository arbolRepository;
 
@@ -34,7 +34,7 @@ class TreeCreationServiceTest {
 
   @Test
   void create_persisteArbolConCreadorYMaestrosValidos() {
-    when(especieReadRepository.existsById(10L)).thenReturn(true);
+    when(especieRepository.existsById(10L)).thenReturn(true);
     when(provinciaReadRepository.existsById(28L)).thenReturn(true);
     UsuarioApp user = usuario(5L, "kc-sub-1");
     when(usuarioAppMaterializationService.materialize(any(OidcUserProfile.class))).thenReturn(user);
@@ -84,7 +84,7 @@ class TreeCreationServiceTest {
 
   @Test
   void create_sinEspecie_rechaza() {
-    when(especieReadRepository.existsById(1L)).thenReturn(false);
+    when(especieRepository.existsById(1L)).thenReturn(false);
 
     assertThatThrownBy(() -> baseCommand().withEspecie(1L).buildAndCreate())
         .isInstanceOf(CatalogValidationException.class)
@@ -93,7 +93,7 @@ class TreeCreationServiceTest {
 
   @Test
   void create_sinProvincia_rechaza() {
-    when(especieReadRepository.existsById(10L)).thenReturn(true);
+    when(especieRepository.existsById(10L)).thenReturn(true);
     when(provinciaReadRepository.existsById(99L)).thenReturn(false);
 
     assertThatThrownBy(() -> baseCommand().withProvincia(99L).buildAndCreate())
@@ -103,7 +103,7 @@ class TreeCreationServiceTest {
 
   @Test
   void create_sinEmail_rechaza() {
-    when(especieReadRepository.existsById(10L)).thenReturn(true);
+    when(especieRepository.existsById(10L)).thenReturn(true);
     when(provinciaReadRepository.existsById(28L)).thenReturn(true);
     when(usuarioAppMaterializationService.materialize(any(OidcUserProfile.class)))
         .thenThrow(
@@ -176,7 +176,7 @@ class TreeCreationServiceTest {
 
   @Test
   void create_visibilidadMapaInvalida_rechaza() {
-    when(especieReadRepository.existsById(10L)).thenReturn(true);
+    when(especieRepository.existsById(10L)).thenReturn(true);
     when(provinciaReadRepository.existsById(28L)).thenReturn(true);
     when(usuarioAppMaterializationService.materialize(any(OidcUserProfile.class)))
         .thenReturn(usuario(5L, "sub"));
@@ -203,7 +203,7 @@ class TreeCreationServiceTest {
 
   @Test
   void create_estadoPublicacionInvalido_rechaza() {
-    when(especieReadRepository.existsById(10L)).thenReturn(true);
+    when(especieRepository.existsById(10L)).thenReturn(true);
     when(provinciaReadRepository.existsById(28L)).thenReturn(true);
     when(usuarioAppMaterializationService.materialize(any(OidcUserProfile.class)))
         .thenReturn(usuario(5L, "sub"));

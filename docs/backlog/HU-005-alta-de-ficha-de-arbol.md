@@ -45,13 +45,13 @@ Como colaborador autenticado, quiero registrar un árbol con datos descriptivos,
 - **Identificación asistida por IA** en el momento del alta (extensión **UC-05** sobre UC-03/04; **HU-009**).
 - **Edición posterior** de la ficha (**UC-04**, **HU-008**).
 - **Notificación por correo** a suscriptores (**[HU-007](backlog.md)**): aquí solo se garantiza la **publicación a Kafka** (`ARBOL_CREADO`); el consumo del topic, **EVENTO_CATALOGO** / idempotencia y **SMTP** son responsabilidad del **notification-service** (desglose en [HU-007-ticket-breakdown.md](HU-007-ticket-breakdown.md)).
-- **Gestión de maestros** taxonómicos y geográficos (**UC-07**, **HU-011**): la historia *consume* maestros, no los administra.
+- **Gestión de maestros taxonómicos** (**UC-07**, **HU-011**): la historia *consume* especies (y provincias en solo lectura); no administra maestros.
 - **Consulta pública** de la ficha (**HU-002**, **HU-003**): solo la posibilidad de marcar la ficha como publicable en alta según reglas; no la implementación completa del mapa o listados públicos.
 
 ### Dependencias
 
 - **Autenticación OIDC/JWT** y rol de colaborador (**HU-001**): toda creación exige usuario autenticado con permisos acordes.
-- **Existencia operativa de maestros** (especie, provincia u otros requeridos por el modelo físico de `ARBOL`) coherente con **R8**; el backlog documenta el riesgo de maestros vacíos frente al alta (orden de despliegue / datos iniciales no cerrados en fuentes).
+- **Existencia operativa de maestros** (especie y provincia en `ARBOL`) coherente con **R8**: especies mantenibles por **HU-011** o semillas; **provincias** por semillas Flyway en MVP; riesgo de catálogo vacío frente al alta si no hay despliegue de **V2**.
 - **API Gateway** enrutando `/api/catalog` con validación de JWT hacia **catalog-service**, según arquitectura del readme.
 - Contratos compartidos: **OpenAPI** (gateway), **ADR-0002** (PK numéricas en SQL), **kafka-events.md** para payload mínimo e idempotencia en cadena downstream.
 
@@ -66,7 +66,7 @@ Como colaborador autenticado, quiero registrar un árbol con datos descriptivos,
 
 - Detalle del **DTO de alta** (campos obligatorios, validaciones, códigos de error 400) y alineación explícita con columnas `ARBOL` del readme.
 - Criterio único para **ubicación** (solo lat/long, geometría PostGIS, o ambos) en la primera versión.
-- **Política de datos iniciales** o orden mínimo entre despliegue de maestros (**HU-011**) y primera alta (**HU-005**).
+- **Política de datos iniciales** o orden mínimo entre semillas Flyway / mantenimiento taxonómico (**HU-011**) y primera alta (**HU-005**).
 - Si la publicación Kafka debe ser **síncrona al commit** transaccional o mecanismo de compensación ante fallo downstream (solo documentado como práctica general de idempotencia en consumidor).
 
 ## 3. Criterios de aceptación (BDD)

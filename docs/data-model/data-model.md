@@ -12,7 +12,7 @@
 | R4 | **Fotografía – PUBLIC:** visible donde la ficha y el mapa lo permitan, incluido público no autenticado si la ficha es pública. |
 | R5 | **Fotografía – PRIVATE:** solo **ADMIN** y el **Colaborador** creador de la fotografía. |
 | R7 | **NOTIFICACION** a **SUSCRIPTOR** con suscripción válida (**ACTIVA**) tras la **alta** (creación) de una ficha de **ÁRBOL**; en el MVP **no** se envía notificación por **modificaciones** posteriores a la ficha (UC-09). Los valores de **`estado_suscripcion`** se definen en §2. |
-| R8 | **FAMILIA**, **GÉNERO**, **ESPECIE** y **PROVINCIA:** **gestión** solo **ADMIN**; consulta para edición de ficha por roles autenticados según matriz acordada. |
+| R8 | **FAMILIA**, **GÉNERO** y **ESPECIE:** **gestión** (alta/modificación) solo **ADMIN** (**UC-07**, **HU-011**). **PROVINCIA:** **consulta** para alta/edición de ficha por roles autenticados; en el MVP el catálogo de provincias se mantiene por **semillas/migraciones Flyway**, sin mantenimiento administrativo en aplicación (**HU-011** no incluye provincias). |
 | R9 | **Identificadores persistentes (SQL):** las claves primarias técnicas de las entidades en bases relacionales serán **numéricas autogeneradas** (por ejemplo `BIGINT` con secuencia o columna identidad); no se usará **UUID** como PK en el MVP. Contexto, alternativas y consecuencias: [ADR-0002](../adr/0002-claves-primarias-numericas-frente-a-uuid.md). |
 | R10 | En alta de **ÁRBOL**, `estado_publicacion` admite solo `BORRADOR` o `PUBLICADO`; `visibilidad_mapa_publico` admite solo `PRIVADO` o `PUBLICO`. |
 

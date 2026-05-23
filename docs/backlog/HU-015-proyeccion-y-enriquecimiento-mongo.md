@@ -42,7 +42,7 @@ Como responsable del catálogo, quiero mantener en MongoDB proyecciones y enriqu
 
 - Sustituir consultas públicas **HU-002** / **HU-003** por lectura solo Mongo (pueden seguir en SQL en MVP).
 - CRUD colaborador de ficha (**HU-005**, **HU-008**) salvo los **hooks** de proyección que esta HU defina.
-- Gestión de maestros (**HU-011**) más allá del efecto en invalidación de proyección.
+- Gestión de maestros taxonómicos (**HU-011**) más allá del efecto en invalidación de proyección.
 
 ### Dependencias
 

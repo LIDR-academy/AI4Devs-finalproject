@@ -235,7 +235,7 @@ La carpeta `[frontend/](frontend/)` es la SPA Vue 3 (Vite): OIDC, alta de ficha,
 
 #### Datos iniciales en catálogo
 
-Además del init de Postgres/Keycloak en Compose, **catalog-service** aplica semillas de maestros (familia, género, especie, provincia) mediante migraciones Flyway (`V2__seed_maestros_inicial.sql`, etc.); el esquema relacional está en `V1__baseline.sql`.
+Además del init de Postgres/Keycloak en Compose, **catalog-service** aplica semillas de maestros (familia, género, especie, provincia) mediante migraciones Flyway (`V2__seed_maestros_inicial.sql`, etc.); el esquema relacional está en `V1__baseline.sql`. El mantenimiento en aplicación por **ADMIN** (**HU-011**, UC-07) cubre solo la **taxonomía** (familia, género, especie); el catálogo de **provincias** permanece en semillas, sin pantalla de administración en el MVP.
 
 ---
 
@@ -1215,5 +1215,83 @@ Implementa la **HU-004**: alta de suscripción por correo sin cuenta de colabora
 - Commit: `a0ba685` — *Implementación HU-004 Alta suscripción*.
 
 **Pull Request 2**
+
+## Resumen
+
+Cierra **HU-008** (UC-04): el colaborador puede **listar y filtrar** sus fichas, **editarlas** (`PUT`) y **eliminarlas** (`DELETE`) con cascada en media; **ADMIN** opera sobre cualquier ficha. Incluye galería en edición (**HU-006-14**) y cierre documental de la historia.
+
+- Vertical completo: **catalog-service** + **media-service** + **frontend** (`/my-trees`, `/trees/:id/edit`).
+- Sin notificación ni Kafka en edición/baja (**R7**).
+
+## Alcance
+
+- [x] Frontend
+- [x] Backend
+- [ ] Infraestructura
+- [x] Documentación
+
+## Cambios realizados
+
+**Backend — catalog-service**
+- `GET /api/catalog/trees` (filtros, paginación, scope COLABORADOR/ADMIN).
+- `GET` / `PUT` / `DELETE` `/api/catalog/trees/{id}`.
+- Orquestación de baja: media → SQL → hook Mongo **stub** (`NoOpTreeEnrichmentDeletionPort`).
+- Cliente `RestMediaTreePhotosClient` (`mtl.media.base-url`).
+- Auditoría R3, `JwtRealmRoles`, materialización `usuario_app`.
+
+**Backend — media-service**
+- `DELETE /api/media/trees/{treeId}/photos` (borrado masivo).
+- `DELETE /api/media/photos/{photoId}` (galería en edición).
+
+**Frontend**
+- `MyTreesListView` (`/my-trees`) con filtros y peticiones cancelables.
+- `EditTreeView` + `useEditTreeForm` (`/trees/:id/edit`): PUT, DELETE con confirmación, galería añadir/borrar foto.
+- Servicios `collaboratorTreesService`, validación de archivos, `SpeciesAutocompleteInput`.
+
+**Contrato y docs**
+- [docs/api/openapi.yaml](docs/api/openapi.yaml) actualizado.
+- HU-008 **cerrada** en backlog, historia, tickets, UC-04, [readme.md](readme.md), [services/README.md](services/README.md), checklist E2E en [frontend/README.md](frontend/README.md).
+- **TASK-HU-008-11** (IT catalog↔media): **rechazado**; cobertura con tests unitarios/WebMvc + manual.
+
+## Evidencias (opcional)
+
+- _(Añadir capturas de Mis árboles, edición y diálogo de baja si el revisor lo pide.)_
+
+## Plan de pruebas
+
+- [ ] `frontend`: `npm run build`
+- [ ] `frontend`: `npm run test`
+- [ ] `services`: `mvn -f services/pom.xml -pl catalog-service,media-service test`
+- [ ] Prueba manual en local ([frontend/README.md](frontend/README.md) § HU-008): listado/filtros, PUT, galería, DELETE con/sin fotos, media caído → árbol no borrado
+
+## Checklist único de calidad (front/back)
+
+- [x] No se rompe lógica de negocio ni navegación existente
+- [x] Se mantienen nombres claros y responsabilidad única
+- [x] No se introduce duplicación innecesaria (roles JWT centralizados en `JwtRealmRoles`)
+- [x] Manejo básico de errores revisado (ProblemDetail, 403/404/502)
+- [x] Tests añadidos/actualizados según impacto del cambio
+- [x] Contratos y compatibilidad revisados (OpenAPI alineado)
+- [x] Seguridad revisada (JWT, propiedad de ficha, relay a media)
+- [x] **Frontend:** textos en `i18n`, flujos con confirmación en baja/borrado de foto
+- [x] **Backend:** validaciones R1/R2, auditoría, tests por capa
+
+## Riesgos / impacto
+
+- **Riesgo:** borrado distribuido sin **rollback compensatorio** si falla SQL tras borrar fotos en media.
+- **Mitigación:** documentado en HU-008 y `services/README.md`; aborto si falla media **antes** del SQL; mejora futura sin saga.
+
+- **Riesgo:** borrado Mongo solo **stub** hasta **HU-015**.
+- **Mitigación:** `NoOpTreeEnrichmentDeletionPort`; ticket **TASK-HU-015-01** pendiente.
+
+- **Riesgo:** requiere **catalog** (8081) y **media** (8082) en `dev` para DELETE con fotos.
+- **Mitigación:** `mtl.media.base-url` en `application-dev.properties`; checklist E2E documentada.
+
+## Notas para review
+
+- Revisar orden de cascada en `TreeDeletionService` (media → `commitPhysicalDelete`).
+- Confirmar que **PUT**/**DELETE** no publican en Kafka (solo alta).
+- **TASK-HU-008-11** rechazado a propósito; no esperar IT Failsafe catalog↔media en este PR.
+- Rama: `fecture/actualizacion` → `main`.
 
 **Pull Request 3**

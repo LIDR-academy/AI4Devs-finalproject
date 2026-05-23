@@ -43,7 +43,7 @@ Como visitante sin cuenta, quiero consultar el listado y el detalle de las ficha
 #### Queda fuera de esta historia
 
 - Alta y edición de fichas por colaborador (HU-005 y HU-008).
-- Gestión administrativa de maestros o suscripciones (HU-011 y HU-012).
+- Gestión administrativa de maestros taxonómicos o suscripciones (HU-011 y HU-012).
 - Notificaciones por correo y procesamiento de eventos (HU-007).
 - Integración de mapa en detalle como entregable principal de esta HU (se refina en HU-003 para evitar solape).
 - Capacidades de IA orientativa o chat (HU-009 y HU-010).

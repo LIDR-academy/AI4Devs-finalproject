@@ -10,6 +10,7 @@ vi.mock('@/services/auth/oidc', () => ({
   authService: mockedAuthService,
 }))
 
+vi.mock('@/views/AdminMastersView.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/views/AdminSubscriptionsView.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/views/AuthCallbackView.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/views/AuthGuardErrorView.vue', () => ({ default: { template: '<div />' } }))

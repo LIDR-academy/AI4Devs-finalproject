@@ -23,6 +23,9 @@ public class JwtDecoderConfigTest {
   /** Token con rol COLABORADOR (útil si se amplían pruebas de éxito). */
   public static final String TOKEN_COLABORADOR = "test-token-colaborador";
 
+  /** Token con rol ADMIN (lecturas/escrituras taxonómicas ADMIN). */
+  public static final String TOKEN_ADMIN = "test-token-admin";
+
   private static final String ISSUER = "http://localhost:8180/realms/mtl";
 
   @Bean
@@ -31,6 +34,9 @@ public class JwtDecoderConfigTest {
     return token -> {
       if (TOKEN_COLABORADOR.equals(token)) {
         return colaboradorJwt(token);
+      }
+      if (TOKEN_ADMIN.equals(token)) {
+        return adminJwt(token);
       }
       if (TOKEN_ROL_NO_AUTORIZADO.equals(token)) {
         return Jwt.withTokenValue(token)
@@ -56,6 +62,19 @@ public class JwtDecoderConfigTest {
         .claim("realm_access", Map.of("roles", List.of("COLABORADOR")))
         .claim("email", "colab-it@test.invalid")
         .claim("name", "Usuario IT Colaborador")
+        .build();
+  }
+
+  private static Jwt adminJwt(String tokenValue) {
+    return Jwt.withTokenValue(tokenValue)
+        .header("alg", "none")
+        .issuer(ISSUER)
+        .subject("it-subject-admin")
+        .issuedAt(Instant.now())
+        .expiresAt(Instant.now().plusSeconds(3600))
+        .claim("realm_access", Map.of("roles", List.of("ADMIN")))
+        .claim("email", "admin-it@test.invalid")
+        .claim("name", "Usuario IT Admin")
         .build();
   }
 }

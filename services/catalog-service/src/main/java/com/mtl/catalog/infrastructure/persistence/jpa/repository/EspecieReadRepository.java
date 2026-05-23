@@ -1,19 +1,19 @@
 package com.mtl.catalog.infrastructure.persistence.jpa.repository;
 
-import com.mtl.catalog.domain.Especie;
 import com.mtl.catalog.dto.SpeciesListItemDto;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.projection.EspecieListRow;
 import com.mtl.catalog.util.SpeciesLabelFormatter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface EspecieReadRepository extends JpaRepository<Especie, Long> {
-
-  /** Tope de filas cuando la API pide listado sin paginar (protección frente a respuestas enormes). */
-  int MAX_UNPAGED = 10_000;
+/**
+ * Consultas de listado de especies (SQL nativo con {@code unaccent} y {@code strpos}).
+ *
+ * <p>Operaciones CRUD por id: {@link EspecieRepository}.
+ */
+public interface EspecieReadRepository extends EspecieRepository {
 
   @Query(
       value =

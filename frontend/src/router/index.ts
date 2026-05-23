@@ -5,7 +5,7 @@ import CreateTreeView from '@/views/CreateTreeView.vue'
 import HomeView from '@/views/HomeView.vue'
 import LoginView from '@/views/LoginView.vue'
 import AdminSubscriptionsView from '@/views/AdminSubscriptionsView.vue'
-import PendingView from '@/views/PendingView.vue'
+import AdminMastersView from '@/views/AdminMastersView.vue'
 import SubscribeByEmailView from '@/views/SubscribeByEmailView.vue'
 import TreesDetailView from '@/views/TreesDetailView.vue'
 import EditTreeView from '@/views/EditTreeView.vue'
@@ -184,11 +184,11 @@ const router = createRouter({
     {
       path: '/admin/masters',
       name: 'admin-masters',
-      component: PendingView,
+      component: AdminMastersView,
       meta: {
         requiresAuth: true,
         requiredRoles: ['ADMIN'],
-        pageTitleKey: 'pendingViews.adminMasters.title',
+        pageTitleKey: 'adminMasters.title',
       },
     },
     {

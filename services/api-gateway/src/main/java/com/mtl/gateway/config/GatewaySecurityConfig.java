@@ -1,4 +1,4 @@
-
+package com.mtl.gateway.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

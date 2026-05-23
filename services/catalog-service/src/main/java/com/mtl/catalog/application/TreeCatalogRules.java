@@ -1,7 +1,7 @@
 package com.mtl.catalog.application;
 
 import com.mtl.catalog.exception.CatalogValidationException;
-import com.mtl.catalog.infrastructure.persistence.jpa.repository.EspecieReadRepository;
+import com.mtl.catalog.infrastructure.persistence.jpa.repository.EspecieRepository;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.ProvinciaReadRepository;
 import java.math.BigDecimal;
 import java.util.Locale;
@@ -39,7 +39,7 @@ final class TreeCatalogRules {
   static void validateMasters(
       Long especieId,
       Long provinciaId,
-      EspecieReadRepository especieReadRepository,
+      EspecieRepository especieRepository,
       ProvinciaReadRepository provinciaReadRepository) {
     if (especieId == null) {
       throw new CatalogValidationException("Se requiere especie_id.");
@@ -47,7 +47,7 @@ final class TreeCatalogRules {
     if (provinciaId == null) {
       throw new CatalogValidationException("Se requiere provincia_id.");
     }
-    if (!especieReadRepository.existsById(especieId)) {
+    if (!especieRepository.existsById(especieId)) {
       throw new CatalogValidationException("La especie indicada no existe en el catálogo.");
     }
     if (!provinciaReadRepository.existsById(provinciaId)) {
