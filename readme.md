@@ -1,13 +1,13 @@
 ## Índice
 
-1. [Ficha del proyecto](#0-ficha-del-proyecto)
-2. [Descripción general del producto](#1-descripción-general-del-producto)
-3. [Arquitectura del sistema](#2-arquitectura-del-sistema)
-4. [Modelo de datos](#3-modelo-de-datos)
-5. [Especificación de la API](#4-especificación-de-la-api)
-6. [Historias de usuario](#5-historias-de-usuario)
-7. [Tickets de trabajo](#6-tickets-de-trabajo)
-8. [Pull requests](#7-pull-requests)
+1. [Ficha del proyecto](#1-ficha-del-proyecto)
+2. [Descripción general del producto](#2-descripción-general-del-producto)
+3. [Arquitectura del sistema](#3-arquitectura-del-sistema)
+4. [Modelo de datos](#4-modelo-de-datos)
+5. [Especificación de la API](#5-especificación-de-la-api)
+6. [Historias de usuario](#6-historias-de-usuario)
+7. [Tickets de trabajo](#7-tickets-de-trabajo)
+8. [Pull requests](#8-pull-requests)
 
 ---
 
@@ -43,7 +43,7 @@ MyTreeLibrary es una solución digital para crear y gestionar tu colección pers
 
 Desarrollar una plataforma web que permita registrar, organizar y consultar fotografías, ubicaciones y datos relevantes de árboles de tu ciudad, facilitando al usuario la creación de una biblioteca personal digital y la posibilidad de compartir esa información de forma pública.
 
-Se ha seleccionado una arquitectura de mircroservicios en Java con Spring y Vue con un **proposito didactico**, con el fin de aprender estas tecnologías.
+**NOTA:** Se ha seleccionado una arquitectura de mircroservicios en Java con Spring y Vue con un **proposito didactico**, con el fin de aprender estas tecnologías.
 
 
 #### Valor aportado (qué soluciona)
@@ -62,9 +62,9 @@ La solución está dirigida a aficionados a la naturaleza en general y puede res
 
 El sistema permite registrar árboles mediante fichas con información relevante, fotografías y ubicación, posibilitando su publicación para consulta pública.
 
-#### Edición y baja de fichas (colaborador)
+#### Edición y baja de fichas
 
-El colaborador autenticado puede **listar y filtrar** sus fichas (**Mis árboles**), **editar** los datos de un ejemplar propio y **eliminarlo** con confirmación. La baja es **física** en catálogo y dispara borrado de fotografías en **media-service** antes del registro SQL; un usuario **ADMIN** puede operar sobre fichas de cualquier colaborador. Las modificaciones y bajas **no** envían correo a suscriptores (solo el alta, regla R7). Detalle: [HU-008](docs/backlog/HU-008-edicion-de-mis-arboles.md) (**Cerrada**); verificación manual: [frontend/README.md](frontend/README.md) (apartado HU-008).
+Los usuarios autenticados con perfil de colaborador pueden dar de alta nuevas fichas de ejemplares; así como la edición o eliminación de aquellos registros creados por ellos mismos. El sistema permite edición de todos los ejemplares a los usuarios con perfil de administrador.
 
 #### Consulta pública y visualización geográfica
 
@@ -243,7 +243,7 @@ Además del init de Postgres/Keycloak en Compose, **catalog-service** aplica sem
 
 ### **3.1. Diagrama de arquitectura:**
 
-La aplicación se desarrollará en microservicios con Spring en la parte de backend y Vue como tecnología frontend. Aunque es una **arquitectura sobredimensionada** para el alcance real del sistema, ya que sería suficiente con un back monolítico comunicándose con API REST y JWT con el front y un módulo especial para la comunicación IA, se ha seleccionado esta implementación **por motivos didácticos**, con el fin de adquirir experiencia en estas tecnologías.
+La aplicación está desarrollará en microservicios con Spring en la parte de backend y Vue como tecnología frontend. Aunque es una **arquitectura sobredimensionada** para el alcance real del sistema, se ha seleccionado esta implementación **por motivos didácticos**, con el fin de adquirir experiencia en estas tecnologías.
 
 #### Patrón y Stack tecnológico
 
@@ -1111,7 +1111,15 @@ A partir del Modelo de análisis (actores, casos de uso, diagrama PlantUML): [do
 
 La definición y refinamiento de cada una de las historias de usuario incluidas en el backlog, y sus correspondientes ticket de trabajo, se ha realizado mediante los siguientes prompts genéricos que se han guardado como skills de Cursor: `.cursor/skills/hu-refinement-mtl/SKILL.md` (generación/refinamiento de historias) y `.cursor/skills/hu-breakdown-mtl/SKILL.md` (desglose en tickets). Estos prompt generar el correspondiente archivo dentro de la carpeta backlog.
 
+El proceso seguido es:
+- 1.- Generación de la Historia de Usuario a partir del backlog con `hu-breakdown-mtl/SKILL.md`
+- 2.- Análisis de  documento generado
+- 3.- Aclaración, definición y/o corrección de los puntos detectados en los apratdos de Riesgos y Aclaraciones pendientes (refinamiento)
+- 4.- Generación de los ticket de trabajo con `hu-refinement-mtl/SKILL.md`
+
 Por operativa práctica, al comienzo de la historia se hacen unas comprobaciones iniciales que permiten detectar historias incompletas o mal formadas.   
+
+** Ejemplo del proceso
 
 **Historia de Usuario — HU-008** (Edición y baja de mis árboles) — **Estado: Cerrada**
 
@@ -1137,13 +1145,6 @@ Respecto al riesgo de Listado sin filtros vamos a añadir en la historia el filt
 
 1.- Path de borrado: DELETE /api/media/trees/{treeId}/photos 2.- Si un arbol tiene fotografías primero se invoca al servicio de borrado de todas lasa fotografías; si el servicio da error se para el proceso; si se han borrado todas las fotografías se elimina el arbol en PostgreSQL 3.- Fehcas en formato date a ser posible en UTC 4.- Para ADMIN se añade un filtro más para poder seleccionar los árboles dados de alta por un usuario determinado
 
-**Prompt 6:**
-
-vuelca los prompt que he usado en este hilo en la línea 113 de @readme.md , incluye sólo mi parte de los prompt NO incluyas la tuya; el objetivo es completar la memoria del trabajo con los prompt usados en una historia de usuario
-
-**Historia de Usuario 2**
-
-**Historia de Usuario 3**
 
 ---
 
@@ -1153,6 +1154,8 @@ Como se ha comentado en el punto anterior, para mantener formato homogéneo se u
 
 En la generación ed ticket de trabajo se incluye explicitamente una sección con las rules de Cursor que debe aplicar el agente de IA al implementarlos.
 
+
+** Ejemplo del proceso
 
 **Ticket 1 — HU-008**
 
@@ -1171,19 +1174,11 @@ Vamos con TASK-HU-008-01, Cierre OpenAPI catálogo y media (HU-008). Además de 
 así está bien, implementa en endpoint del Listado de TASK-HU-008-02, si tienes alguna duda preguntame antes; recuerda las reglas que se deben seguir ya indicadas en @docs/backlog/HU-008-ticket-breakdown.md para la parte back
 
 
-**Ticket 2**
-**Ticket 3 — HU-008** (TASK-HU-008-03 — Detalle de ficha para edición)
-
-Desglose: [docs/backlog/HU-008-ticket-breakdown.md](docs/backlog/HU-008-ticket-breakdown.md) · Refinamiento: [docs/backlog/HU-008-edicion-de-mis-arboles.md](docs/backlog/HU-008-edicion-de-mis-arboles.md)
-
-**Prompt 1:**
-
-vamos con el siguiente ticket
-
 ---
 
 ## 8. Pull requests
 
+Las Pull requests del proyecto se generan a partir del template `pull_request_template`
 > Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
 
 **Pull Request 1**

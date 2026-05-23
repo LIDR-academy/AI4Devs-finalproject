@@ -4,7 +4,7 @@
 
 **Normas de código (Cursor):** carpeta [`.cursor/rules/`](../.cursor/rules/) en la raíz del monorepo. **Checklist al trabajar en `services/`:** [backend-generation-standard.mdc](../.cursor/rules/backend-generation-standard.mdc) (enlaza al resto de reglas y a `docs/`).
 
-**Convención rápida de términos (roles):** en documentación funcional/técnica usar `COLABORADOR` y `ADMIN` cuando se hable de permisos o perfiles (alineado con Keycloak `mtl-realm.json`).
+**Convención rápida de términos (roles):** en documentación funcional/técnica usar `COLABORADOR` y `ADMIN` cuando se hable de permisos o perfiles; fuera de menciones a roles de seguridad se admite estilo narrativo en minúscula (alineado con Keycloak `mtl-realm.json`).
 
 | Carpeta | Contenido principal |
 |---------|----------------------|

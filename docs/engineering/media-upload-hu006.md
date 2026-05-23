@@ -9,7 +9,7 @@ Documento operativo para desarrollo y soporte: **flujo presign → PUT → confi
 
 ## Propiedades configurables (`media-service`)
 
-Definidas en `services/media-service/src/main/resources/application.properties` (perfil base). En **dev**, JDBC y JWT suelen venir de `application-dev.properties`; el catálogo para permisos puede sobreescribirse con `MTL_CATALOG_BASE_URL`.
+Definidas en `services/media-service/src/main/resources/application.properties` (perfil base). En **dev**, JDBC, JWT y credenciales MinIO vienen de `application-dev.properties` (variables `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD`, alineadas con [infra/compose/.env.example](../../infra/compose/.env.example)); el catálogo para permisos puede sobreescribirse con `MTL_CATALOG_BASE_URL`. No hay secretos en clases Java (`MediaStorageProperties`).
 
 | Propiedad | Rol |
 |-----------|-----|
@@ -18,7 +18,7 @@ Definidas en `services/media-service/src/main/resources/application.properties` 
 | `mtl.media.upload.allowed-mime-types` | Lista separada por comas; por defecto `image/jpeg`, `image/png`, `image/webp`. |
 | `mtl.media.storage.bucket` | Nombre del bucket (alineado con Compose: `mtl-photos`). |
 | `mtl.media.storage.endpoint` | Endpoint S3 (MinIO local: `http://localhost:9000`). |
-| `mtl.media.storage.access-key` / `secret-key` | Credenciales del servicio hacia MinIO; por defecto enlazadas a `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD`. |
+| `mtl.media.storage.access-key` / `secret-key` | Credenciales del servicio hacia MinIO; en local, perfil **dev** y `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` (Compose). |
 | `mtl.media.presign.expires-in` | Validez de la URL de subida (ISO-8601 duration, p. ej. `PT15M`). |
 | `mtl.catalog.base-url` | Base URL de **catalog-service** para comprobar permiso de subida sobre el `arbolId` (JWT). |
 

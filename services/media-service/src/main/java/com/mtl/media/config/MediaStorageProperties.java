@@ -11,10 +11,13 @@ public class MediaStorageProperties {
   @NotBlank private String bucket = "mtl-photos";
   @NotBlank private String endpoint = "http://localhost:9000";
 
-  /** Credenciales del almacén (p. ej. MINIO_ROOT_USER / MINIO_ROOT_PASSWORD en compose local). */
-  @NotBlank private String accessKey = "minio";
+  /**
+   * Credenciales del almacén S3/MinIO. Configurar en perfil {@code dev} o variables de entorno
+   * {@code MINIO_ROOT_USER} / {@code MINIO_ROOT_PASSWORD} (véase infra/compose/.env.example).
+   */
+  @NotBlank private String accessKey;
 
-  @NotBlank private String secretKey = "minio_dev_password";
+  @NotBlank private String secretKey;
 
   public String getBucket() {
     return bucket;
