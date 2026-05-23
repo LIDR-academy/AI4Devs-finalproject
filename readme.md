@@ -357,66 +357,6 @@ flowchart TB
     AIS --> SCH_I
 ```
 
-
-
-**Flujo de notificación tras evento `catalog.arbol.evento` (Kafka):**
-
-**Comunicaciones principales:** el usuario interactúa con la SPA; la SPA obtiene tokens en Keycloak y llama al API Gateway; el gateway enruta a los microservicios; **catalog-service** publica en Kafka eventos como `catalog.arbol.evento` al registrar un nuevo ejemplar; **notification-service** consume Kafka y envía correo vía SMTP externo; **ai-assistant-service** invoca al proveedor de IA externo.
-
-```mermaid
-sequenceDiagram
-  participant SPA as SPA_Vue3
-  participant KC as Keycloak
-  participant GW as api_gateway
-  participant CAT as catalog_service
-  participant K as Kafka
-  participant N as notification_service
-  participant Mail as SMTP
-  SPA->>KC: Registro_o_login_PKCE
-  SPA->>GW: Alta_arbol_REST_con_Bearer
-  GW->>CAT: Proxy_JWT
-  CAT->>K: Publica_catalog_arbol_evento
-  K->>N: Consume_evento
-  N->>Mail: Email_a_suscriptores
-```
-
-
-
-**Flujo de consulta IA (datos de especie vía catalog-service):**
-
-```mermaid
-sequenceDiagram
-  participant SPA as SPA_Vue3
-  participant KC as Keycloak
-  participant GW as api_gateway
-  participant AIS as ai_assistant_service
-  participant CAT as catalog_service
-  SPA->>KC: Registro_o_login_PKCE
-  SPA->>GW: Consulta_IA_o_datos_especie
-  GW->>AIS: Proxy_JWT
-  AIS->>CAT: Remitir_informacion
-```
-
-
-
-**Flujo de registro de árbol y subida de imagen:**
-
-```mermaid
-sequenceDiagram
-  participant SPA as SPA_Vue3
-  participant KC as Keycloak
-  participant GW as api_gateway
-  participant CAT as catalog_service
-  participant MED as media_service
-  SPA->>KC: Registro_o_login_PKCE
-  SPA->>GW: Registro_arbol
-  GW->>CAT: Proxy_JWT
-  SPA->>GW: Subida_imagen
-  GW->>MED: Proxy_JWT
-```
-
-
-
 ### 3.1.1 Autenticación en Front (Vue):
 
 Descripción genérica del flujo de autenticación para SPA en **Vue 3** con **OIDC Authorization Code + PKCE** (IdP: Keycloak).  
@@ -569,6 +509,28 @@ flowchart TB
 
 En tiempo de ejecución, `**TreeRegistrationService**` depende de la interfaz `**ArbolCreadoEventPublisher**`; Spring inyecta `**KafkaArbolCreadoEventPublisher**` si `mtl.catalog.kafka.enabled=true`, o `**NoOpArbolCreadoEventPublisher**` si está en `false` (por defecto o perfil `test`).
 
+
+**Flujo de notificación tras evento `catalog.arbol.evento` (Kafka):**
+
+**Comunicaciones principales:** el usuario interactúa con la SPA; la SPA obtiene tokens en Keycloak y llama al API Gateway; el gateway enruta a los microservicios; **catalog-service** publica en Kafka eventos como `catalog.arbol.evento` al registrar un nuevo ejemplar; **notification-service** consume Kafka y envía correo vía SMTP externo; **ai-assistant-service** invoca al proveedor de IA externo.
+
+```mermaid
+sequenceDiagram
+  participant SPA as SPA_Vue3
+  participant KC as Keycloak
+  participant GW as api_gateway
+  participant CAT as catalog_service
+  participant K as Kafka
+  participant N as notification_service
+  participant Mail as SMTP
+  SPA->>KC: Registro_o_login_PKCE
+  SPA->>GW: Alta_arbol_REST_con_Bearer
+  GW->>CAT: Proxy_JWT
+  CAT->>K: Publica_catalog_arbol_evento
+  K->>N: Consume_evento
+  N->>Mail: Email_a_suscriptores
+```
+
 #### C4 — Código y comportamiento: secuencia de publicación **ARBOL_CREADO**
 
 A nivel de **código**, el flujo relevante es: validación y persistencia del **ARBOL** y auditoría  dentro de una transacción; a continuación se registra una tarea `**afterCommit`** que, una vez confirmado el commit en PostgreSQL, obtiene `**evento_id**` con `nextval(catalog.seq_arbol_evento_id)`, serializa el cuerpo según [kafka-events.md](docs/events/kafka-events.md) y envía al topic `**catalog.arbol.evento**` con clave `**arbol_id**`. Si el envío a Kafka falla tras el **201**, el error se registra en logs (el consumidor **notification-service** debe ser idempotente ante reentregas). Detalle de clases: [services/README.md](services/README.md) (Kafka y **catalog-service**).
@@ -642,6 +604,42 @@ sequenceDiagram
     MS-->>SPA: 201_metadatos_persistidos
   end
 ```
+
+
+**Flujo de registro de árbol y subida de imagen:**
+
+```mermaid
+sequenceDiagram
+  participant SPA as SPA_Vue3
+  participant KC as Keycloak
+  participant GW as api_gateway
+  participant CAT as catalog_service
+  participant MED as media_service
+  SPA->>KC: Registro_o_login_PKCE
+  SPA->>GW: Registro_arbol
+  GW->>CAT: Proxy_JWT
+  SPA->>GW: Subida_imagen
+  GW->>MED: Proxy_JWT
+```
+
+### 3.1.4 Uso de IA para identificar ejemplares y obtener características de especies
+
+
+**Flujo de consulta IA (datos de especie vía catalog-service):**
+
+```mermaid
+sequenceDiagram
+  participant SPA as SPA_Vue3
+  participant KC as Keycloak
+  participant GW as api_gateway
+  participant AIS as ai_assistant_service
+  participant CAT as catalog_service
+  SPA->>KC: Registro_o_login_PKCE
+  SPA->>GW: Consulta_IA_o_datos_especie
+  GW->>AIS: Proxy_JWT
+  AIS->>CAT: Remitir_informacion
+```
+
 
 ### **3.2. Descripción de componentes principales:**
 
@@ -1119,11 +1117,9 @@ El proceso seguido es:
 
 Por operativa práctica, al comienzo de la historia se hacen unas comprobaciones iniciales que permiten detectar historias incompletas o mal formadas.   
 
-** Ejemplo del proceso
+**Ejemplo del proceso**
 
-**Historia de Usuario — HU-008** (Edición y baja de mis árboles) — **Estado: Cerrada**
-
-Refinamiento: [docs/backlog/HU-008-edicion-de-mis-arboles.md](docs/backlog/HU-008-edicion-de-mis-arboles.md) · Tickets: [docs/backlog/HU-008-ticket-breakdown.md](docs/backlog/HU-008-ticket-breakdown.md) (TASK-008-11 rechazado; verificación manual en [frontend/README.md](frontend/README.md) § HU-008)
+**Historia de Usuario — HU-008** (Edición y baja de mis árboles) 
 
 **Prompt 1:**
 
@@ -1155,11 +1151,9 @@ Como se ha comentado en el punto anterior, para mantener formato homogéneo se u
 En la generación ed ticket de trabajo se incluye explicitamente una sección con las rules de Cursor que debe aplicar el agente de IA al implementarlos.
 
 
-** Ejemplo del proceso
+**Ejemplo del proceso**
 
 **Ticket 1 — HU-008**
-
-Desglose: [docs/backlog/HU-008-ticket-breakdown.md](docs/backlog/HU-008-ticket-breakdown.md) · Refinamiento: [docs/backlog/HU-008-edicion-de-mis-arboles.md](docs/backlog/HU-008-edicion-de-mis-arboles.md)
 
 **Prompt 1:**
 
