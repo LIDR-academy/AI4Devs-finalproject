@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "skills": {
+    "ai-engineer": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ai-engineer/SKILL.md",
+      "computedHash": "52fb6090bd4270629dca0c3b5d9dfbc38aa7c928c5fc9892d07fe0359c63130b"
+    },
+    "create-readme": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/create-readme/SKILL.md",
+      "computedHash": "d0ece1b2164ce1376e4ab6e98d6ac079df3a2a94f5f02224362b6a1ce2516ae9"
+    },
+    "grill-me": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/productivity/grill-me/SKILL.md",
+      "computedHash": "daf64ca15f4fa081a6747766db538e2dbd1131725ed4fcdd3d538dc62c7035ba"
+    },
+    "product-owner": {
+      "source": "duc01226/easyplatform",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/product-owner/SKILL.md",
+      "computedHash": "7a0ef017550df6abfd47fb2afb3aceea5ccc6d131aad3412f3ae1e184988011a"
+    },
+    "senior-qa-engineer": {
+      "source": "javalenciacai/qaskills",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "7dcfd0f3a87714b091068318840a02237dc2f04240b8e75a9fba64c7de194f2c"
+    }
+  }
+}
