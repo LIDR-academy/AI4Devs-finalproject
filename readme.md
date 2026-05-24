@@ -29,7 +29,7 @@ MyTreeLibrary es una solución digital para crear y gestionar tu colección pers
 
 [https://github.com/ldefrutos1/AI4Devs-finalproject](https://github.com/ldefrutos1/AI4Devs-finalproject)
 
-### 1.5. URL o archivo comprimido del repositorio
+### **1.5. URL o archivo comprimido del repositorio**
 
 [https://github.com/ldefrutos1/AI4Devs-finalproject](https://github.com/ldefrutos1/AI4Devs-finalproject)
 
@@ -358,7 +358,7 @@ flowchart TB
     AIS --> SCH_I
 ```
 
-### 3.1.1 Autenticación en Front (Vue):
+### **3.1.1 Autenticación en Front (Vue):**
 
 Descripción genérica del flujo de autenticación para SPA en **Vue 3** con **OIDC Authorization Code + PKCE** (IdP: Keycloak).  
 Objetivo: mantener rutas protegidas con sesión válida, renovar token de forma transparente y centralizar el manejo de `401` en cliente HTTP.
@@ -463,7 +463,7 @@ sequenceDiagram
   end
 ```
 
-### 3.1.2 Kafka:
+### **3.1.2 Kafka:**
 
 #### C3 — Componentes (nivel 3): **catalog-service** y Kafka
 
@@ -570,7 +570,7 @@ sequenceDiagram
   Pub->>KB: send_catalog_arbol_evento_clave_arbol_id
 ```
 
-### 3.1.3 Almacenamiento de fotografías
+### **3.1.3 Almacenamiento de fotografías**
 
 Las fotografías se almacenan como **objetos** en un almacén **S3-compatible** (**MinIO**) y sus **metadatos** en PostgreSQL, esquema **`media`**, vía **media-service** detrás del **API Gateway**. La SPA obtiene primero una **URL prefirmada** (`POST /api/media/uploads/presign`) con JWT; el servicio valida reglas de negocio (MIME permitidos, tamaño máximo configurable y cupo de fotos por árbol) y devuelve la URL y la clave de objeto. El cliente sube el binario directamente al bucket y, a continuación, **confirma** la operación (`POST /api/media/photos/confirm`) para persistir metadatos: la **primera confirmación** por árbol queda como **foto principal**; el **orden** refleja la secuencia de confirmaciones (o el índice explícito enviado por la SPA si coincide con el esperado). La visibilidad efectiva de la imagen en consulta pública se **hereda de la ficha del árbol**; detalle funcional y criterios de aceptación: [HU-006](docs/backlog/HU-006-fotografias-asociadas-al-arbol.md); contrato HTTP: [docs/api/openapi.yaml](docs/api/openapi.yaml); guía técnica operativa (propiedades, secuencia, principal, EXIF): [docs/engineering/media-upload-hu006.md](docs/engineering/media-upload-hu006.md).
 
@@ -623,7 +623,7 @@ sequenceDiagram
   GW->>MED: Proxy_JWT
 ```
 
-### 3.1.4 Uso de IA para identificar ejemplares y obtener características de especies
+### **3.1.4 Uso de IA para identificar ejemplares y obtener características de especies**
 
 
 **Flujo de consulta IA (datos de especie vía catalog-service):**
@@ -775,75 +775,99 @@ Estrategia prevista: pruebas unitarias de dominio; **integración** con **Testco
 
 ### **4.1. Modelo lógico del sistema completo**
 
-A continuación se muestra el **Modelo lógico** del sistema; una vista unificada de entidades principales del sistema y sus relaciones; se incluyen todas las entidades lógicas del sistema, independientemente del modo y servicio en el que se realice su implementación física; los tipos indican el modelo físico previsto alineado con §3.2.
+Vista unificada de las entidades principales y sus relaciones, independientemente del almacén o microservicio (§4.2). Resume catálogo SQL, enriquecimiento Mongo, media, notificaciones e IA; los tipos son **genéricos** (no PostgreSQL).
+
+**Leyenda (modelo lógico):** `PK` / `FK` / `UK`; tipos `bigint`, `int`, `string`, `datetime`, `boolean`, … Las referencias entre dominios se expresan como FK lógicas aunque en implementación no haya FK entre esquemas.
 
 ```mermaid
 erDiagram
-    ARBOL {
-        bigint arbol_id PK
+    USUARIO_APP {
+        bigint usuario_app_id PK
+        string subject_oidc UK
+        string email
     }
-
     ESPECIE {
         bigint especie_id PK
     }
-    
+    ARBOL {
+        bigint arbol_id PK
+        bigint especie_id FK
+        bigint usuario_app_id FK
+    }
     ESPECIE_DETALLE {
-        string _id PK
-        bigint especie_id
+        int especie_pg_id PK
+        string nombre_cientifico
+        string nombre_comun
     }
-
     EJEMPLAR_DETALLE {
-        string _id PK
-        bigint arbol_id
+        int ejemplar_pg_id PK
+        int especie_pg_id FK
     }
-
     FOTOGRAFIA {
         bigint fotografia_id PK
-        bigint arbol_id
+        bigint arbol_id FK
     }
-
     EVENTO_CATALOGO {
         bigint evento_id PK
-        bigint arbol_id
+        bigint arbol_id FK
+        string tipo_evento
     }
-
     NOTIFICACION {
         bigint notificacion_id PK
         bigint evento_id FK
-        bigint arbol_id
+        bigint arbol_id FK
     }
-
     SUSCRIPTOR {
         bigint suscriptor_id PK
-        string email
+        string email UK
+        string estado_suscripcion
     }
-
     ENVIO_NOTIFICACION {
         bigint envio_id PK
         bigint notificacion_id FK
         bigint suscriptor_id FK
     }
-
+    AUDITORIA_CATALOGO {
+        bigint auditoria_id PK
+        bigint actor_usuario_app_id FK
+        string operacion
+        datetime ocurrido_en
+    }
     AUDITORIA_USO_IA {
         bigint auditoria_ia_id PK
-        bigint arbol_id
-        bigint fotografia_id
+        bigint usuario_app_id FK
+        string tipo_uso_ia
+        bigint arbol_id FK
+        bigint fotografia_id FK
+        string email_usuario
+        string prompt
+        string resultado_resumen
+        datetime consultado_en
     }
-
-    ARBOL ||--o{ FOTOGRAFIA : asociado_logicamente
-    ARBOL ||--o{ EVENTO_CATALOGO : origina
-    ARBOL ||--o{ AUDITORIA_USO_IA : usada_en_ia
-    EVENTO_CATALOGO ||--o{ NOTIFICACION : genera
-    ARBOL ||--o{ ENRIQUECIMIENTOS_ARBOL : documenta
-    ESPECIE ||--o{ ENRIQUECIMIENTOS_ESPECIE : documenta
     ESPECIE ||--o{ ARBOL : clasifica
+    USUARIO_APP ||--o{ ARBOL : registra
+    USUARIO_APP ||--o{ AUDITORIA_CATALOGO : actua
+    ESPECIE ||--o| ESPECIE_DETALLE : enriquece
+    ESPECIE_DETALLE ||--o{ EJEMPLAR_DETALLE : referencia
+    ARBOL ||--o| EJEMPLAR_DETALLE : enriquece
+    ARBOL ||--o{ FOTOGRAFIA : tiene
+    ARBOL ||--o{ EVENTO_CATALOGO : origina
+    ARBOL ||--o{ NOTIFICACION : referencia
+    EVENTO_CATALOGO ||--o{ NOTIFICACION : genera
     NOTIFICACION ||--o{ ENVIO_NOTIFICACION : produce
     SUSCRIPTOR ||--o{ ENVIO_NOTIFICACION : recibe
-
+    USUARIO_APP ||--o{ AUDITORIA_USO_IA : consulta
+    ARBOL ||--o{ AUDITORIA_USO_IA : contexto
+    FOTOGRAFIA ||--o{ AUDITORIA_USO_IA : usada_en_ia
 ```
 
 
 ### **4.2. Diagrama de persistencia (implementación)**
+
+**Leyenda:** 
+- `PK` = clave primaria; `FK` = clave foránea de negocio; `UK` = unicidad. 
+- `creado_por` / `modificado_por` = auditoría (sin sufijo `FK`). 
+- Tipos PostgreSQL (`bigint`, `varchar`, `text`, `timestamptz`, `numeric`, `integer`, …).
 
 #### **4.2.1 PostgreSQL: catalog_service:**
 
@@ -853,92 +877,86 @@ Esquema con los datos generales de cada árbol y auditoria del usuario que los r
 erDiagram
     USUARIO_APP {
         bigint usuario_app_id PK
-        string subject_oidc UK
-        string email
-        string rol
-        datetime creado_en
-        datetime modificado_en
+        varchar subject_oidc UK
+        varchar email
+        varchar nombre
+        timestamptz creado_en
+        timestamptz modificado_en
     }
-
     FAMILIA {
         bigint familia_id PK
-        string nombre_cientifico
-        string nombre_comun
-        datetime creado_en
+        varchar nombre_cientifico
+        varchar nombre_comun
+        timestamptz creado_en
         bigint creado_por
-        datetime modificado_en
+        timestamptz modificado_en
         bigint modificado_por
     }
-
     GENERO {
         bigint genero_id PK
         bigint familia_id FK
-        string nombre_cientifico
-        string nombre_comun
-        datetime creado_en
+        varchar nombre_cientifico
+        varchar nombre_comun
+        timestamptz creado_en
         bigint creado_por
-        datetime modificado_en
+        timestamptz modificado_en
         bigint modificado_por
     }
-
     ESPECIE {
         bigint especie_id PK
         bigint genero_id FK
-        string nombre_cientifico
-        string nombre_comun
-        datetime creado_en
+        varchar nombre_cientifico
+        varchar nombre_comun
+        timestamptz creado_en
         bigint creado_por
-        datetime modificado_en
+        timestamptz modificado_en
         bigint modificado_por
     }
-
     PROVINCIA {
         bigint provincia_id PK
-        string nombre
-        datetime creado_en
+        varchar codigo
+        varchar nombre
+        timestamptz creado_en
         bigint creado_por
-        datetime modificado_en
+        timestamptz modificado_en
         bigint modificado_por
     }
-
     ARBOL {
         bigint arbol_id PK
         bigint especie_id FK
         bigint provincia_id FK
         bigint usuario_app_id FK
-        string municipio
-        string descripcion
-        string visibilidad_mapa_publico
-        decimal latitud
-        decimal longitud
-        int altitud
-        string estado_publicacion
-        datetime creado_en
+        varchar municipio
+        text descripcion
+        varchar visibilidad_mapa_publico
+        numeric latitud
+        numeric longitud
+        integer altitud
+        varchar estado_publicacion
+        timestamptz creado_en
         bigint creado_por
-        datetime modificado_en
+        timestamptz modificado_en
         bigint modificado_por
     }
-
     AUDITORIA_CATALOGO {
         bigint auditoria_id PK
         bigint actor_usuario_app_id FK
-        string operacion
-        datetime ocurrido_en
-        string datos_previos_resumen
-        string datos_nuevos_resumen
+        varchar operacion
+        text datos_previos_resumen
+        text datos_nuevos_resumen
+        timestamptz ocurrido_en
     }
-
     FAMILIA ||--o{ GENERO : clasifica
     GENERO ||--o{ ESPECIE : clasifica
     ESPECIE ||--o{ ARBOL : clasifica
     PROVINCIA ||--o{ ARBOL : ubica
     USUARIO_APP ||--o{ ARBOL : registra
-    USUARIO_APP ||--o{ FAMILIA : registra
-    USUARIO_APP ||--o{ GENERO : registra
-    USUARIO_APP ||--o{ ESPECIE : registra
+    USUARIO_APP ||--o{ FAMILIA : audita
+    USUARIO_APP ||--o{ GENERO : audita
+    USUARIO_APP ||--o{ ESPECIE : audita
+    USUARIO_APP ||--o{ PROVINCIA : audita
     USUARIO_APP ||--o{ AUDITORIA_CATALOGO : actua
 ```
-
 
 Para el alta de árbol, los valores admitidos son:
 
@@ -985,35 +1003,33 @@ erDiagram
   EJEMPLAR_DETALLE ||--|{ OBSERVACION : "embebe"
 ```
 
-
 #### **4.2.3 PostgreSQL media_service:**
 
-Información de las fotografías de cada árbol almacenadas en el  sistema.
+Metadatos de fotografías en esquema `media`. `arbol_id` referencia lógicamente a `catalog.arbol` (sin FK entre esquemas).
 
 ```mermaid
 erDiagram
+    %% UK compuesta uq_fotografia_objeto (bucket_almacenamiento, clave_objeto)
     FOTOGRAFIA {
         bigint fotografia_id PK
         bigint arbol_id
-        string categoria_visibilidad
-        string bucket_almacenamiento
-        string clave_objeto
-        string nombre_fichero_original
-        string tipo_mime
+        varchar bucket_almacenamiento UK
+        varchar clave_objeto UK
+        varchar nombre_fichero_original
+        varchar tipo_mime
         bigint tamano_bytes
-        string checksum_sha256
-        int ancho_px
-        int alto_px
-        int orden
-        boolean activa_publicamente
-        datetime subida_en
+        varchar checksum_sha256
+        integer ancho_px
+        integer alto_px
+        integer orden
+        boolean es_principal
+        varchar categoria
+        timestamptz subida_en
         bigint subida_por
-        datetime eliminado_en
+        timestamptz eliminado_en
         bigint eliminada_por
     }
-
 ```
-
 
 #### **4.2.4 PostgreSQL notification_service:**
 
@@ -1021,70 +1037,65 @@ Avisos de de nuevas altas en el sistema a los suscriptores.
 
 ```mermaid
 erDiagram
+    %% UK email normalizado uq_suscriptor_email_normalizado lower(trim(email))
     SUSCRIPTOR {
         bigint suscriptor_id PK
-        string email
-        string estado_suscripcion
-        datetime alta_en
-        datetime confirmado_en
-        datetime baja_en
+        varchar email UK
+        varchar estado_suscripcion
+        timestamptz alta_en
+        timestamptz confirmado_en
+        timestamptz baja_en
     }
-
     EVENTO_CATALOGO {
         bigint evento_id PK
-        string tipo_evento
+        varchar tipo_evento
         bigint arbol_id
-        string carga_evento_json
-        string estado_procesamiento
-        datetime recibido_en
-        datetime procesado_en
+        text carga_evento_json
+        varchar estado_procesamiento
+        timestamptz recibido_en
+        timestamptz procesado_en
     }
-
     NOTIFICACION {
         bigint notificacion_id PK
         bigint evento_id FK
         bigint arbol_id
-        string tipo_evento_catalogo
-        string estado_generacion
-        datetime generada_en
+        varchar tipo_evento_catalogo
+        varchar estado_generacion
+        timestamptz generada_en
     }
-
+    %% UK compuesta uq_envio_notificacion_suscriptor (notificacion_id, suscriptor_id)
     ENVIO_NOTIFICACION {
         bigint envio_id PK
-        bigint notificacion_id FK
-        bigint suscriptor_id FK
-        string estado_envio
-        datetime generada_en
-        datetime enviada_en
-        string mensaje_error
+        bigint notificacion_id FK UK
+        bigint suscriptor_id FK UK
+        varchar estado_envio
+        varchar mensaje_error
+        timestamptz generada_en
+        timestamptz enviada_en
     }
-
     EVENTO_CATALOGO ||--o{ NOTIFICACION : genera
     NOTIFICACION ||--o{ ENVIO_NOTIFICACION : produce
     SUSCRIPTOR ||--o{ ENVIO_NOTIFICACION : recibe
 ```
 
-
-
 #### **4.2.5 PostgreSQL ai_assistant_service (esquema `ai`):**
 
-Audtoría de las consultas realizadas al asistnete de IA (ChatGPT).
+Modelo objetivo de **AUDITORIA_USO_IA** (esquema `ai` inicializado; tabla pendiente de migración Flyway). `usuario_app_id`, `arbol_id` y `fotografia_id` referencian lógicamente a `catalog` y `media` (sin FK entre esquemas). Coherente con §4.1 y trazabilidad R3.
 
 ```mermaid
 erDiagram
     AUDITORIA_USO_IA {
         bigint auditoria_ia_id PK
-        bigint usuario_app_id FK
-        string email_usuario
-        string tipo_uso_ia
+        bigint usuario_app_id
+        varchar tipo_uso_ia
         bigint arbol_id
         bigint fotografia_id
-        datetime consultado_en
-        string resultado_resumen
+        varchar email_usuario
+        text prompt
+        text resultado_resumen
+        timestamptz consultado_en
     }
 ```
-
-
 
 ### **4.3. Descripción de entidades principales (orientación física)**
 
