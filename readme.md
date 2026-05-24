@@ -781,9 +781,13 @@ Vista unificada de las entidades principales y sus relaciones, independientement
 
 ```mermaid
 erDiagram
+    USUARIO_KEYCLOAK {
+        string subject_oidc PK
+        string email
+    }
     USUARIO_APP {
         bigint usuario_app_id PK
-        string subject_oidc UK
+        string subject_oidc FK
         string email
     }
     ESPECIE {
@@ -829,22 +833,21 @@ erDiagram
     }
     AUDITORIA_CATALOGO {
         bigint auditoria_id PK
-        bigint actor_usuario_app_id FK
-        string operacion
-        datetime ocurrido_en
+        string actor_usuario_app_id FK
     }
     AUDITORIA_USO_IA {
         bigint auditoria_ia_id PK
-        bigint usuario_app_id FK
+        string subject_oidc FK
         string tipo_uso_ia
         bigint arbol_id FK
-        bigint fotografia_id FK
         string email_usuario
         string prompt
         string resultado_resumen
         datetime consultado_en
     }
     ESPECIE ||--o{ ARBOL : clasifica
+    USUARIO_KEYCLOAK ||--o{ USUARIO_APP : autentica
+    USUARIO_KEYCLOAK ||--o{ AUDITORIA_USO_IA : consulta
     USUARIO_APP ||--o{ ARBOL : registra
     USUARIO_APP ||--o{ AUDITORIA_CATALOGO : actua
     ESPECIE ||--o| ESPECIE_DETALLE : enriquece
@@ -856,7 +859,6 @@ erDiagram
     EVENTO_CATALOGO ||--o{ NOTIFICACION : genera
     NOTIFICACION ||--o{ ENVIO_NOTIFICACION : produce
     SUSCRIPTOR ||--o{ ENVIO_NOTIFICACION : recibe
-    USUARIO_APP ||--o{ AUDITORIA_USO_IA : consulta
     ARBOL ||--o{ AUDITORIA_USO_IA : contexto
     FOTOGRAFIA ||--o{ AUDITORIA_USO_IA : usada_en_ia
 ```
@@ -1063,11 +1065,10 @@ erDiagram
         varchar estado_generacion
         timestamptz generada_en
     }
-    %% UK compuesta uq_envio_notificacion_suscriptor (notificacion_id, suscriptor_id)
     ENVIO_NOTIFICACION {
         bigint envio_id PK
-        bigint notificacion_id FK UK
-        bigint suscriptor_id FK UK
+        bigint notificacion_id FK
+        bigint suscriptor_id FK
         varchar estado_envio
         varchar mensaje_error
         timestamptz generada_en
@@ -1086,11 +1087,9 @@ Modelo objetivo de **AUDITORIA_USO_IA** (esquema `ai` inicializado; tabla pendie
 erDiagram
     AUDITORIA_USO_IA {
         bigint auditoria_ia_id PK
-        bigint usuario_app_id
+        bigint consultado_por
         varchar tipo_uso_ia
         bigint arbol_id
-        bigint fotografia_id
-        varchar email_usuario
         text prompt
         text resultado_resumen
         timestamptz consultado_en
