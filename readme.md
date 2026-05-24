@@ -790,12 +790,22 @@ erDiagram
         string subject_oidc FK
         string email
     }
+    FAMILIA {
+        bigint familia_id PK
+    }
+    GENERO {
+        bigint genero_id PK
+    }
     ESPECIE {
         bigint especie_id PK
+    }
+    PROVINCIA {
+        bigint provincia_id PK
     }
     ARBOL {
         bigint arbol_id PK
         bigint especie_id FK
+        bigint provincia_id FK
         bigint usuario_app_id FK
     }
     ESPECIE_DETALLE {
@@ -833,19 +843,21 @@ erDiagram
     }
     AUDITORIA_CATALOGO {
         bigint auditoria_id PK
-        string actor_usuario_app_id FK
+        bigint  actor_usuario_app_id FK
     }
     AUDITORIA_USO_IA {
         bigint auditoria_ia_id PK
-        string subject_oidc FK
+        string subject_oidc
         string tipo_uso_ia
         bigint arbol_id FK
-        string email_usuario
         string prompt
         string resultado_resumen
         datetime consultado_en
     }
+    FAMILIA ||--o{ GENERO : clasifica
+    GENERO ||--o{ ESPECIE : clasifica
     ESPECIE ||--o{ ARBOL : clasifica
+    PROVINCIA ||--o{ ARBOL : ubica
     USUARIO_KEYCLOAK ||--o{ USUARIO_APP : autentica
     USUARIO_KEYCLOAK ||--o{ AUDITORIA_USO_IA : consulta
     USUARIO_APP ||--o{ ARBOL : registra
@@ -862,12 +874,11 @@ erDiagram
     ARBOL ||--o{ AUDITORIA_USO_IA : contexto
 ```
 
-
 ### **4.2. Diagrama de persistencia (implementación)**
 
 **Leyenda:** 
 - `PK` = clave primaria; `FK` = clave foránea de negocio; `UK` = unicidad. 
-- `creado_por` / `modificado_por` = auditoría (sin sufijo `FK`). 
+- `creado_por` / `modificado_por` = campos usados para auditoría (sin sufijo `FK`). 
 - Tipos PostgreSQL (`bigint`, `varchar`, `text`, `timestamptz`, `numeric`, `integer`, …).
 
 #### **4.2.1 PostgreSQL: catalog_service:**
@@ -1080,13 +1091,13 @@ erDiagram
 
 #### **4.2.5 PostgreSQL ai_assistant_service (esquema `ai`):**
 
-Modelo objetivo de **AUDITORIA_USO_IA** (esquema `ai` inicializado; tabla pendiente de migración Flyway). `usuario_app_id`, `arbol_id` y `fotografia_id` referencian lógicamente a `catalog` y `media` (sin FK entre esquemas). Coherente con §4.1 y trazabilidad R3.
+Modelo objetivo de **AUDITORIA_USO_IA** (esquema `ai` inicializado; tabla pendiente de migración Flyway). **`subject_oidc`** persiste el claim `sub` del JWT (Keycloak) en el momento de la consulta; **`arbol_id`** referencia lógicamente a `catalog.arbol`. Sin FK entre esquemas ni dependencia de `catalog.usuario_app`: la trazabilidad del actor se toma directamente del token. Coherente con §4.1 y R3.
 
 ```mermaid
 erDiagram
     AUDITORIA_USO_IA {
         bigint auditoria_ia_id PK
-        bigint consultado_por
+        varchar subject_oidc
         varchar tipo_uso_ia
         bigint arbol_id
         text prompt
