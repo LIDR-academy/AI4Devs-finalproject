@@ -860,7 +860,6 @@ erDiagram
     NOTIFICACION ||--o{ ENVIO_NOTIFICACION : produce
     SUSCRIPTOR ||--o{ ENVIO_NOTIFICACION : recibe
     ARBOL ||--o{ AUDITORIA_USO_IA : contexto
-    FOTOGRAFIA ||--o{ AUDITORIA_USO_IA : usada_en_ia
 ```
 
 
