@@ -1,0 +1,86 @@
+{
+  "name": "qa-skills",
+  "version": "1.0.0",
+  "description": "Comprehensive skill pack for Senior QA Engineers covering the entire software testing lifecycle",
+  "author": "javalenciacai",
+  "repository": "https://github.com/javalenciacai/QASkills",
+  "homepage": "https://github.com/javalenciacai/QASkills#readme",
+  "license": "MIT",
+  "keywords": [
+    "qa",
+    "testing",
+    "quality-assurance",
+    "test-automation",
+    "istqb",
+    "test-design",
+    "defect-management",
+    "ci-cd",
+    "continuous-testing",
+    "test-execution",
+    "browser-automation",
+    "selenium",
+    "test-strategy"
+  ],
+  "skills": [
+    {
+      "name": "user-story-verifier",
+      "path": ".agents/skills/user-story-verifier",
+      "description": "Validates user stories for quality, completeness, INVEST criteria, and ISTQB applicability",
+      "category": "Requirements & Planning"
+    },
+    {
+      "name": "test-design-istqb",
+      "path": ".agents/skills/test-design-istqb",
+      "description": "Apply ISTQB Foundation Level test design techniques including equivalence partitioning, boundary value analysis, decision tables, and state transition testing",
+      "category": "Test Design"
+    },
+    {
+      "name": "test-execution-manager",
+      "path": ".agents/skills/test-execution-manager",
+      "description": "Manage test execution lifecycle including test suite runs, defect logging, exploratory testing, and execution reporting",
+      "category": "Test Execution"
+    },
+    {
+      "name": "defect-lifecycle-manager",
+      "path": ".agents/skills/defect-lifecycle-manager",
+      "description": "Manage the complete defect lifecycle from discovery through closure, including logging, tracking, metrics analysis, and root cause analysis",
+      "category": "Defect Management"
+    },
+    {
+      "name": "cicd-testing-integration",
+      "path": ".agents/skills/cicd-testing-integration",
+      "description": "Integrate automated tests into CI/CD pipelines for continuous testing, including pipeline configuration and test automation strategies",
+      "category": "CI/CD & Automation"
+    },
+    {
+      "name": "browser-use",
+      "path": ".agents/skills/browser-use",
+      "description": "Automates browser interactions for web testing, form filling, screenshots, and data extraction",
+      "category": "Test Automation"
+    },
+    {
+      "name": "qa-process-improvement",
+      "path": ".agents/skills/qa-process-improvement",
+      "description": "Drive continuous improvement of QA processes through metrics analysis, retrospectives, and best practice adoption",
+      "category": "Continuous Improvement"
+    },
+    {
+      "name": "multi-agent-orchestration",
+      "path": ".agents/skills/multi-agent-orchestration",
+      "description": "Design and coordinate multi-agent systems where specialized agents work together to solve complex problems",
+      "category": "Orchestration"
+    },
+    {
+      "name": "skill-creator",
+      "path": ".agents/skills/skill-creator",
+      "description": "Guide for creating effective skills that extend agent capabilities with specialized knowledge and workflows",
+      "category": "Utility"
+    },
+    {
+      "name": "find-skills",
+      "path": ".agents/skills/find-skills",
+      "description": "Helps users discover and install agent skills when they ask questions or express interest in extending capabilities",
+      "category": "Utility"
+    }
+  ]
+}

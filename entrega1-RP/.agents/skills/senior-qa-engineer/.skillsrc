@@ -1,0 +1,16 @@
+{
+  "name": "QA Skills Pack",
+  "description": "A comprehensive skill-based system for Senior QA Engineers covering the entire software testing lifecycle",
+  "version": "1.0.0",
+  "author": "javalenciacai",
+  "skillsPath": ".agents/skills",
+  "tags": [
+    "qa",
+    "testing",
+    "automation",
+    "istqb",
+    "ci-cd",
+    "defect-management",
+    "test-design"
+  ]
+}
