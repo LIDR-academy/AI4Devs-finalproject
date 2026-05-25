@@ -1,7 +1,7 @@
 # Prompts Mapping Logs
 
 Status: Approved
-Last updated: 2026-05-24
+Last updated: 2026-05-25
 
 > This document is a replica of [`prompts-1.md`](https://github.com/icsanabriar/acualuz-c4/tree/feat/setup-cursor/docs/deliveries/prompts-1.md).
 > Source of truth: every fact in this document is taken from [`docs/prompts.md`](https://github.com/icsanabriar/acualuz-c4/tree/feat/setup-cursor/docs/prompts.md).
