@@ -1,0 +1,47 @@
+---
+title: SupportHub — identity schema
+---
+erDiagram
+    direction TB
+
+    %% ── Framework-managed (collapsed) ───────────────────────────────────
+    ASPNET_IDENTITY_FRAMEWORK {
+        string _note  "ASP.NET Identity — framework-managed"
+        string _tables "AspNetRoles · AspNetUserRoles · AspNetUserClaims"
+        string _tables2 "AspNetUserLogins · AspNetUserTokens · AspNetRoleClaims"
+    }
+
+    OPENIDDICT_FRAMEWORK {
+        string _note   "OpenIddict — framework-managed"
+        string _tables "OpenIddictApplications · OpenIddictAuthorizations"
+        string _tables2 "OpenIddictScopes · OpenIddictTokens (refresh tokens)"
+    }
+
+    %% ── Custom entities ──────────────────────────────────────────────────
+    ApplicationUser {
+        uuid           Id                PK "NOT NULL"
+        string         UserName          "NOT NULL"
+        string         Email             "NOT NULL"
+        string         PasswordHash      "nullable"
+        boolean        LockoutEnabled    "NOT NULL"
+        datetimeoffset LockoutEnd        "nullable"
+        string         Role              "NOT NULL — Admin | Client"
+        string5        PreferredLanguage "NOT NULL — default: es"
+    }
+
+    %% Auth event log — written by the identity service only
+    AuditLogs {
+        uuid        Id         PK "NOT NULL"
+        timestamptz Timestamp  "NOT NULL"
+        string      Operation  "NOT NULL — LOGIN | LOGIN_FAILED | PASSWORD_RESET | ACCOUNT_ACTIVATION"
+        string      EntityName "nullable"
+        string      EntityId   "nullable"
+        jsonb       OldData    "nullable"
+        jsonb       NewData    "nullable"
+        string      UserId     "nullable — null for anonymous events"
+        string      IpAddress  "nullable"
+    }
+
+    %% ── Relationships ────────────────────────────────────────────────────
+    ApplicationUser ||--o{ ASPNET_IDENTITY_FRAMEWORK : "managed by Identity"
+    ApplicationUser ||--o{ OPENIDDICT_FRAMEWORK       : "tokens via OpenIddict"
