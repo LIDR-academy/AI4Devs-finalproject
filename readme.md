@@ -1,9 +1,7 @@
 # Project Summary
 
 > This document is a replica of [`README-1.md`](https://github.com/icsanabriar/acualuz-c4/tree/feat/setup-cursor/docs/deliveries/README-1.md).
-
 > Source of truth: every fact in this document is taken from files under [`docs/`](https://github.com/icsanabriar/acualuz-c4/tree/feat/setup-cursor/docs).
-
 > Sections without supporting information in `@docs` are explicitly marked as `Not documented in @docs.`
 
 ## Index

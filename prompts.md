@@ -4,9 +4,7 @@ Status: Approved
 Last updated: 2026-05-24
 
 > This document is a replica of [`prompts-1.md`](https://github.com/icsanabriar/acualuz-c4/tree/feat/setup-cursor/docs/deliveries/prompts-1.md).
-
 > Source of truth: every fact in this document is taken from [`docs/prompts.md`](https://github.com/icsanabriar/acualuz-c4/tree/feat/setup-cursor/docs/prompts.md).
-
 > Sections without supporting information in `docs/prompts.md` are explicitly marked as `Not documented in docs/prompts.md.`
 
 ## Summary
@@ -15,7 +13,7 @@ Maps the three most relevant entries from [`docs/prompts.md`](https://github.com
 
 Each entry cites the prompt by its UTC heading in `docs/prompts.md` followed by a one-line summary of the desired outcome.
 
-## 1. Descripción general del producto
+## 1. Product Overview
 
 **Source artifacts:** 
 - [`prd.md`](https://github.com/icsanabriar/acualuz-c4/blob/feat/setup-cursor/docs/product/prd.md)
@@ -29,9 +27,9 @@ Each entry cites the prompt by its UTC heading in `docs/prompts.md` followed by 
 
 **Prompt 3:** `2026-05-23T12:00:00Z` — Replace the diagram in `lean-canvas.md` (lines 27–119) with the pre-generated image `docs/product/images/lean-canvas.png`.
 
-## 2. Arquitectura del Sistema
+## 2. System Architecture
 
-### 2.1. Diagrama de arquitectura
+### 2.1. Architecture Diagram
 
 **Source artifacts:** 
 - [`architecture.dsl`](https://github.com/icsanabriar/acualuz-c4/blob/feat/setup-cursor/docs/dsl/architecture.dsl)
@@ -44,7 +42,7 @@ Each entry cites the prompt by its UTC heading in `docs/prompts.md` followed by 
 
 **Prompt 3:** `2026-05-24T02:30:00Z` — Fix broken references to the removed root-level `images/` folder; repoint every C4 diagram PNG link to `docs/dsl/images/`.
 
-### 2.2. Descripción de componentes principales
+### 2.2. Description of Main Components
 
 **Source artifacts:** 
 - [`current-state.md`](https://github.com/icsanabriar/acualuz-c4/blob/feat/setup-cursor/docs/architecture/current-state.md)
@@ -58,7 +56,7 @@ Each entry cites the prompt by its UTC heading in `docs/prompts.md` followed by 
 
 **Prompt 3:** `2026-05-11T04:10:00Z` — `SpeciesLot` consolidation collapses per-species lot components and events into the unified tracing component set documented in iteration-3 outputs.
 
-### 2.3. Descripción de alto nivel del proyecto y estructura de ficheros
+### 2.3. High-Level Project Description and File Structure
 
 **Source artifacts:** 
 - [`repo-boundaries.md`](https://github.com/icsanabriar/acualuz-c4/blob/feat/setup-cursor/docs/architecture/repo-boundaries.md)
@@ -71,7 +69,7 @@ Each entry cites the prompt by its UTC heading in `docs/prompts.md` followed by 
 
 **Prompt 3:** `2026-05-11T04:10:00Z` — `SpeciesLot` refactor iteration updates repo-boundary contracts and the backend package references for the unified tracing entity.
 
-### 2.4. Infraestructura y despliegue
+### 2.4. Infrastructure & Deployment
 
 **Source artifacts:** 
 - [`aws-cost.md`](https://github.com/icsanabriar/acualuz-c4/blob/feat/setup-cursor/docs/architecture/aws-cost.md)
@@ -86,7 +84,7 @@ Each entry cites the prompt by its UTC heading in `docs/prompts.md` followed by 
 
 **Prompt 3:** `2026-05-11T04:10:00Z` — `SpeciesLot` iteration revises the cost estimate and backend environment variables for consolidated tracing storage (final approved baseline ≈ USD 5.87 / month).
 
-### 2.5. Seguridad
+### 2.5. Security
 
 **Source artifacts:** 
 - [`backend-design.md`](https://github.com/icsanabriar/acualuz-c4/blob/feat/setup-cursor/docs/architecture/backend-design.md)
@@ -101,7 +99,7 @@ Each entry cites the prompt by its UTC heading in `docs/prompts.md` followed by 
 
 **Prompt 3:** N/A — No prompt in `docs/prompts.md` targets security as a standalone deliverable; security content was authored implicitly inside the full-iteration prompts above.
 
-### 2.6. Tests
+### 2.6. Testing
 
 **Source artifacts:** 
 - [`testing-strategy.md`](https://github.com/icsanabriar/acualuz-c4/blob/feat/setup-cursor/docs/architecture/testing-strategy.md)
@@ -113,7 +111,7 @@ Each entry cites the prompt by its UTC heading in `docs/prompts.md` followed by 
 
 **Prompt 3:** `2026-05-25T01:30:00Z` — Quick-flow correction pass (`32-quick-flow.mdc`) to fix M1–M4 in `testing-strategy.md` (broken cross-refs, `validate-doc` CI scope, rule 90 artifact registration, complete E2E ticket matrix).
 
-## 3. Modelo de Datos
+## 3. Data Model
 
 **Source artifacts:** 
 - [`data-model.md`](https://github.com/icsanabriar/acualuz-c4/blob/feat/setup-cursor/docs/data/data-model.md)
@@ -126,7 +124,7 @@ Each entry cites the prompt by its UTC heading in `docs/prompts.md` followed by 
 
 **Prompt 3:** `2026-05-11T04:10:00Z` — `SpeciesLot` consolidation replacing three per-species entities with a unified `SpeciesLot` (`SK = <SPECIES_SLUG>#<lotId>`) plus consolidated tracing events (iteration 3 — see ADR-007).
 
-## 4. Especificación de la API
+## 4. API Specification
 
 **Source artifacts:** 
 - [`backend-design.md`](https://github.com/icsanabriar/acualuz-c4/blob/feat/setup-cursor/docs/architecture/backend-design.md)
@@ -137,7 +135,7 @@ Each entry cites the prompt by its UTC heading in `docs/prompts.md` followed by 
 
 **Prompt 3:** `2026-05-11T04:10:00Z` — `SpeciesLot` refactor updates tracing API contracts to the unified lot endpoints while preserving the species-specific request / response schemas.
 
-## 5. Historias de Usuario
+## 5. User Stories
 
 **Source artifacts:** 
 - [`mvp-use-cases.md`](https://github.com/icsanabriar/acualuz-c4/blob/feat/setup-cursor/docs/product/mvp-use-cases.md)
@@ -150,7 +148,7 @@ Each entry cites the prompt by its UTC heading in `docs/prompts.md` followed by 
 
 **Prompt 3:** `2026-05-23T21:05:00Z` — Replace the diagram in `prd.md` (lines 98–125) with `docs/product/images/lean-pillars.png`, refining the PRD's user-story / pillar visualization.
 
-## 6. Tickets de Trabajo
+## 6. Work Tickets
 
 **Source artifacts:** 
 - [`mvp-tickets.md`](https://github.com/icsanabriar/acualuz-c4/blob/feat/setup-cursor/docs/product/mvp-tickets.md)
