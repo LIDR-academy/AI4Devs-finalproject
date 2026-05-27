@@ -24,7 +24,7 @@ Sistema de gestión de aprendizaje (LMS) de código abierto construido con Larav
 
 **URL del proyecto:** `http://localhost:8080`(Docker)
 
-**Repositorio de código:** `https://github.com/Angel-31/codigofinal/tree/angel-burgos-r`
+**Repositorio de código:** `https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r`
 
 **Documentación de prompts:** [prompts.md](./prompts.md)
 
