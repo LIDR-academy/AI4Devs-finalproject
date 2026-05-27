@@ -125,7 +125,7 @@ graph TD
 
 ### 2.3. Estructura del proyecto
 
-```
+```text
 lms-cms-laravel12/
 ├── app/
 │   ├── Http/
@@ -263,12 +263,14 @@ erDiagram
 Rutas web en `routes/web.php` (no API REST separada).
 
 ### Rutas públicas / locale
+
 | Método | Ruta | Acción |
 |--------|------|--------|
 | GET | `/locale/{locale}` | Cambiar idioma (es/en) |
 | GET/POST | `/login`, `/register` | Autenticación |
 
 ### Rutas autenticadas (cualquier rol)
+
 | Método | Ruta | Acción |
 |--------|------|--------|
 | GET | `/dashboard` | Dashboard según rol |
@@ -278,6 +280,7 @@ Rutas web en `routes/web.php` (no API REST separada).
 | POST | `/logout` | Cerrar sesión |
 
 ### Rutas de profesor (`role:teacher`)
+
 | Método | Ruta | Acción |
 |--------|------|--------|
 | GET | `/calendar/events/create` | Formulario nuevo evento |
@@ -293,6 +296,7 @@ Rutas web en `routes/web.php` (no API REST separada).
 | GET/POST/PATCH/DELETE | `/plugins/*`, `/lessons/{lesson}/plugins/*` | Sistema de plugins |
 
 ### Rutas de estudiante (`role:student`)
+
 | Método | Ruta | Acción |
 |--------|------|--------|
 | GET | `/lessons/{lesson}` | Ver lección |

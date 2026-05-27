@@ -3,7 +3,7 @@
 
 **Repositorio de implementación:** `codigofinal/lms-cms-laravel12`
 
-**Conversación de referencia (calendario, i18n, sidebar):** [agent-transcripts/8ff11265-f2f9-4ac1-b458-5dd9a909c31f](8ff11265-f2f9-4ac1-b458-5dd9a909c31f)
+**Conversación de referencia (calendario, i18n, sidebar):** [agent-transcripts/8ff11265-f2f9-4ac1-b458-5dd9a909c31f.md](./agent-transcripts/8ff11265-f2f9-4ac1-b458-5dd9a909c31f.md)
 
 ---
 
@@ -200,18 +200,18 @@ Rutas relativas a `codigofinal/lms-cms-laravel12/`:
 | Área | Archivos |
 |------|----------|
 | **Rutas** | `routes/web.php` |
-| **Controladores** | `app/Http/Controllers/AuthController.php`, `CalendarController.php`, `CalendarEventController.php`, `CourseController.php`, `DashboardController.php`, `EnrollmentController.php`, `LessonController.php`, `LocaleController.php`, `PluginController.php`, `PluginInteractionController.php`, `ProfileController.php`, `QuizController.php` |
-| **Middleware** | `app/Http/Middleware/EnsureRole.php`, `SetLocale.php` |
+| **Controladores** | `app/Http/Controllers/AuthController.php`, `app/Http/Controllers/CalendarController.php`, `app/Http/Controllers/CalendarEventController.php`, `app/Http/Controllers/CourseController.php`, `app/Http/Controllers/DashboardController.php`, `app/Http/Controllers/EnrollmentController.php`, `app/Http/Controllers/LessonController.php`, `app/Http/Controllers/LocaleController.php`, `app/Http/Controllers/PluginController.php`, `app/Http/Controllers/PluginInteractionController.php`, `app/Http/Controllers/ProfileController.php`, `app/Http/Controllers/QuizController.php` |
+| **Middleware** | `app/Http/Middleware/EnsureRole.php`, `app/Http/Middleware/SetLocale.php` |
 | **Servicios** | `app/Services/CalendarService.php` |
-| **Modelos** | `app/Models/AcademicCalendarEvent.php`, `Course.php`, `CourseEnrollment.php`, `Lesson.php`, `User.php`, + modelos de plugins y quiz |
-| **Migraciones** | `database/migrations/2026_05_19_120000_create_academic_calendar_events_table.php`, `2026_05_19_000001_add_due_at_to_lessons_table.php`, + migraciones de cursos, lecciones, plugins y progreso |
-| **Seeders** | `database/seeders/DatabaseSeeder.php`, `LmsDemoSeeder.php`, `PluginDefinitionSeeder.php` |
-| **Vistas layout** | `resources/views/layouts/app.blade.php`, `stitch.blade.php`, `calendar-moodle.blade.php` |
-| **Partials** | `resources/views/layouts/partials/sidebar-nav.blade.php`, `language-switcher.blade.php`, `i18n-js.blade.php`, `calendar-moodle-topbar.blade.php` |
-| **Vistas calendario** | `resources/views/calendar/index.blade.php`, `teacher.blade.php`, `_body.blade.php`, `events/create.blade.php`, `events/edit.blade.php`, `events/_form.blade.php` |
+| **Modelos** | `app/Models/AcademicCalendarEvent.php`, `app/Models/Course.php`, `app/Models/CourseEnrollment.php`, `app/Models/Lesson.php`, `app/Models/User.php`, `app/Models/PluginDefinition.php`, `app/Models/PluginVersion.php`, `app/Models/LessonPluginInstance.php`, `app/Models/PluginAsset.php`, `app/Models/PluginInteraction.php`, `app/Models/PluginGrade.php`, `app/Models/LessonLayoutSnapshot.php`, `app/Models/Question.php`, `app/Models/QuizResult.php`, `app/Models/Progress.php` |
+| **Migraciones** | `database/migrations/2026_05_19_120000_create_academic_calendar_events_table.php`, `database/migrations/2026_05_19_000001_add_due_at_to_lessons_table.php`, + migraciones en `database/migrations/` (cursos, lecciones, plugins, progreso, matriculaciones) |
+| **Seeders** | `database/seeders/DatabaseSeeder.php`, `database/seeders/LmsDemoSeeder.php`, `database/seeders/PluginDefinitionSeeder.php` |
+| **Vistas layout** | `resources/views/layouts/app.blade.php`, `resources/views/layouts/stitch.blade.php`, `resources/views/layouts/calendar-moodle.blade.php` |
+| **Partials** | `resources/views/layouts/partials/sidebar-nav.blade.php`, `resources/views/layouts/partials/language-switcher.blade.php`, `resources/views/layouts/partials/i18n-js.blade.php`, `resources/views/layouts/partials/calendar-moodle-topbar.blade.php` |
+| **Vistas calendario** | `resources/views/calendar/index.blade.php`, `resources/views/calendar/teacher.blade.php`, `resources/views/calendar/_body.blade.php`, `resources/views/calendar/events/create.blade.php`, `resources/views/calendar/events/edit.blade.php`, `resources/views/calendar/events/_form.blade.php` |
 | **i18n** | `lang/es/lms.php`, `lang/en/lms.php` |
-| **Estilos** | `public/css/lms.css`, `calendar.css`, `calendar-teacher.css`, `calendar-event-form.css` |
+| **Estilos** | `public/css/lms.css`, `public/css/calendar.css`, `public/css/calendar-teacher.css`, `public/css/calendar-event-form.css` |
 | **JS** | `public/js/lms.js` |
-| **Tests** | `tests/Feature/LmsFlowTest.php`, `LocaleTest.php`, `CalendarTest.php`, `CalendarEventTest.php`, `tests/Unit/LessonCastTest.php` |
+| **Tests** | `tests/Feature/LmsFlowTest.php`, `tests/Feature/LocaleTest.php`, `tests/Feature/CalendarTest.php`, `tests/Feature/CalendarEventTest.php`, `tests/Unit/LessonCastTest.php` |
 | **Docker** | `docker-compose.yml`, `docker/nginx/default.conf`, `docker/php/uploads.ini` |
 | **Capturas (documentación)** | `AI4Devs-finalproject/docs/screenshots/*.png` — login, dashboard (teacher/student), cursos, calendario, crear evento |
