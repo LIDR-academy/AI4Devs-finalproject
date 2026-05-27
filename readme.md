@@ -22,7 +22,7 @@
 **Descripción breve:**
 Sistema de gestión de aprendizaje (LMS) de código abierto construido con Laravel 12. Permite a instituciones educativas, empresas y formadores crear, gestionar y distribuir cursos online con contenido interactivo mediante un sistema de plugins drag & drop, evaluaciones dinámicas, gestión de matriculaciones, calendario académico, perfil de usuario e interfaz bilingüe (ES/EN).
 
-**URL del proyecto:** `http://localhost:8080` 
+**URL del proyecto:** `http://localhost:8080`(Docker)
 
 **Repositorio de código:** `https://github.com/Angel-31/codigofinal/tree/angel-burgos-r`
 
@@ -65,7 +65,7 @@ Flujo principal:
 
 **Instalación con Docker:**
 ```bash
-git clone <repositorio>
+git clone https://github.com/Angel-31/codigofinal.git
 cd codigofinal/lms-cms-laravel12
 cp .env.example .env
 docker compose up -d
