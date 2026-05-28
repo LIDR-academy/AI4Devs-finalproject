@@ -54,7 +54,7 @@ Actúa como un Especialista en Ciberseguridad y Arquitectura de Bases de Datos m
 Describe el flujo paso a paso (desde que Keycloak emite el JWT, Spring Security extrae el Tenant ID de las claims, y Hibernate lo inyecta dinámicamente en el contexto a través de anotaciones tipo @TenantId). Proporciona ejemplos cortos de cómo se vería la entidad Java y cómo se indexan estas tablas transaccionales.
 ```
 
-*   **Nota de Ajuste Humano:** Corregimos la sugerencia inicial del LLM que proponía realizar el filtrado de inquilinos de manera manual escribiendo cláusulas `WHERE company_id = :tenantId` en todos los repositorios de Spring Data. En su lugar, decidimos automatizar esto a nivel de infraestructura utilizando el mecanismo nativo `@TenantId` de Hibernate 6+ para evitar el riesgo de olvido humano por parte de los desarrolladores.
+*   **Nota de Ajuste Humano:** En lugar de escribir cláusulas `WHERE company_id = :tenantId` en todos los repositorios de Spring Data, decidimos automatizar el filtrado de inquilinos mediante el mecanismo nativo `@TenantId` de Hibernate 6+ para evitar olvidos y fallos de seguridad humanos.
 
 ---
 
