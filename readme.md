@@ -541,55 +541,80 @@ Notas del diagrama C4 (no dibujadas): error al leer sesión en el guard → `/au
 
 ### **3.1.2 Kafka:**
 
-#### C3 — Componentes (nivel 3): **catalog-service** y Kafka
+En el **MVP**, Kafka separa el **alta de un árbol** del **correo a suscriptores** (regla **R7**): solo al crear una ficha con éxito; edición y baja no publican. Un topic (`catalog.arbol.evento`): **catalog-service** publica y **notification-service** consume. Contrato del mensaje: [docs/events/kafka-events.md](docs/events/kafka-events.md). Configuración local: [services/README.md](services/README.md) (Kafka).
 
-Vista de **componentes lógicos** dentro del contenedor **catalog-service** y su relación con **Kafka** y **PostgreSQL**. El productor de eventos de alta de árbol vive en **infraestructura** (`KafkaArbolCreadoEventPublisher`); el caso de uso solo conoce la interfaz `**ArbolCreadoEventPublisher`**. Con Kafka desactivado (`mtl.catalog.kafka.enabled=false`, p. ej. tests), Spring registra `**NoOpArbolCreadoEventPublisher**` en su lugar. Contrato del topic y del JSON: [docs/events/kafka-events.md](docs/events/kafka-events.md).
+#### C3 — Productor: **catalog-service**
+
+Componentes de **catalog-service** frente a PostgreSQL (esquema `catalog`) y **Kafka** (infra compartida, fuera del servicio). El alta depende de la interfaz `ArbolCreadoEventPublisher`; la publicación real es `KafkaArbolCreadoEventPublisher` (capa de infraestructura). Con `mtl.catalog.kafka.enabled=false` (por defecto o tests), `NoOpArbolCreadoEventPublisher` no envía mensajes.
 
 ```mermaid
 flowchart TB
-    %% --- Estilos Consistentes ---
     classDef service fill:#E1F5EE,stroke:#0F6E56,stroke-width:1px,color:#085041;
     classDef repo fill:#F5F5F5,stroke:#616161,stroke-width:1px,color:#424242;
     classDef infra fill:#FFF3E0,stroke:#EF6C00,stroke-width:1px,color:#BF360C;
 
+    KafkaBroker["⚡ Kafka"]:::infra
+
     subgraph catalogSvc [catalog_service]
         direction TB
-        %% Componentes Logicos
         TreesCtrl["🌐 TreesController"]:::service
         TreeReg["⚙️ TreeRegistrationService"]:::service
         TreeCre["🏗️ TreeCreationService"]:::service
         CatAud["📝 CatalogAuditService"]:::service
         AfterCommit["⏱️ AfterCommitRegistrar"]:::service
-        KafkaPub["📢 KafkaPublisher"]:::service
-        EventoSeq["🔢 ArbolEventoSequence"]:::service
-        
-        %% Componentes de Infraestructura / Datos
+        KafkaPub["📢 ArbolCreadoEventPublisher"]:::service
+        EventoSeq["🔢 Secuencia evento_id"]:::service
         JpaRepos["💾 Repositorios JPA"]:::repo
-        KafkaBroker["⚡ Kafka Cluster"]:::infra
 
-        %% Flujo de ejecución
         TreesCtrl --> TreeReg
         TreeReg --> TreeCre
         TreeReg --> CatAud
         TreeReg --> AfterCommit
         AfterCommit --> KafkaPub
         KafkaPub --> EventoSeq
-        KafkaPub --> KafkaBroker
-        
-        %% Flujo de persistencia
         TreeCre --> JpaRepos
         CatAud --> JpaRepos
         EventoSeq --> JpaRepos
     end
+
+    KafkaPub --> KafkaBroker
 ```
 
+#### C3 — Consumidor: **notification-service**
 
-En tiempo de ejecución, `**TreeRegistrationService**` depende de la interfaz `**ArbolCreadoEventPublisher**`; Spring inyecta `**KafkaArbolCreadoEventPublisher**` si `mtl.catalog.kafka.enabled=true`, o `**NoOpArbolCreadoEventPublisher**` si está en `false` (por defecto o perfil `test`).
+Componentes de **notification-service** frente a **Kafka** (externo) y PostgreSQL (esquema `notification`). El listener recibe el JSON; la ingestión valida y solo admite `ARBOL_CREADO`; el consumo guarda `evento_catalogo` por `evento_id` (una reentrega no repite el trabajo); el procesador crea notificaciones y envía correo SMTP a suscriptores **ACTIVA**. Con `mtl.notification.kafka.enabled=false` no se arranca el listener.
 
+```mermaid
+flowchart TB
+    classDef service fill:#E1F5EE,stroke:#0F6E56,stroke-width:1px,color:#085041;
+    classDef repo fill:#F5F5F5,stroke:#616161,stroke-width:1px,color:#424242;
+    classDef infra fill:#FFF3E0,stroke:#EF6C00,stroke-width:1px,color:#BF360C;
 
-**Flujo de notificación tras evento `catalog.arbol.evento` (Kafka):**
+    KafkaBroker["⚡ Kafka"]:::infra
 
-**Comunicaciones principales:** el usuario interactúa con la SPA; la SPA obtiene tokens en Keycloak y llama al API Gateway; el gateway enruta a los microservicios; **catalog-service** publica en Kafka eventos como `catalog.arbol.evento` al registrar un nuevo ejemplar; **notification-service** consume Kafka y envía correo vía SMTP externo; **ai-assistant-service** invoca al proveedor de IA externo.
+    subgraph notifSvc [notification_service]
+        direction TB
+        Listener["📥 KafkaListener"]:::service
+        Ingestion["🔍 IngestionService"]:::service
+        Consumo["🔁 ConsumoService"]:::service
+        Procesador["📧 ProcesadorCorreo"]:::service
+        MailSender["✉️ CorreoSMTP"]:::service
+        JpaRepos["💾 Repositorios JPA"]:::repo
+
+        Listener --> Ingestion
+        Ingestion --> Consumo
+        Consumo --> Procesador
+        Procesador --> MailSender
+        Consumo --> JpaRepos
+        Procesador --> JpaRepos
+    end
+
+    KafkaBroker --> Listener
+```
+
+#### Flujo de punta a punta (alta de árbol → correo)
+
+Tras login en Keycloak, la SPA da de alta el árbol por el API Gateway; **catalog-service** persiste la ficha y publica en Kafka; **notification-service** consume y envía correo (SMTP; Mailpit en desarrollo).
 
 ```mermaid
 sequenceDiagram
@@ -608,9 +633,9 @@ sequenceDiagram
   N->>Mail: Email_a_suscriptores
 ```
 
-#### C4 — Código y comportamiento: secuencia de publicación **ARBOL_CREADO**
+#### C4 — Secuencia de publicación (**ARBOL_CREADO**)
 
-A nivel de **código**, el flujo relevante es: validación y persistencia del **ARBOL** y auditoría  dentro de una transacción; a continuación se registra una tarea `**afterCommit`** que, una vez confirmado el commit en PostgreSQL, obtiene `**evento_id**` con `nextval(catalog.seq_arbol_evento_id)`, serializa el cuerpo según [kafka-events.md](docs/events/kafka-events.md) y envía al topic `**catalog.arbol.evento**` con clave `**arbol_id**`. Si el envío a Kafka falla tras el **201**, el error se registra en logs (el consumidor **notification-service** debe ser idempotente ante reentregas). Detalle de clases: [services/README.md](services/README.md) (Kafka y **catalog-service**).
+En una transacción se validan y guardan el árbol y la auditoría (**R3**); **tras el commit** se asigna `evento_id` y se publica en `catalog.arbol.evento` (formato en [kafka-events.md](docs/events/kafka-events.md)). La API responde **201** antes de Kafka; si la publicación falla, solo queda en logs — el consumidor debe ignorar mensajes duplicados (mismo `evento_id`).
 
 ```mermaid
 sequenceDiagram
@@ -643,7 +668,53 @@ sequenceDiagram
   Seq->>PG: SELECT_nextval
   PG-->>Seq: evento_id
   Seq-->>Pub: evento_id
-  Pub->>KB: send_catalog_arbol_evento_clave_arbol_id
+  Pub->>KB: send_topic_clave_arbol_id
+```
+
+#### C4 — Secuencia de consumo (**ARBOL_CREADO**)
+
+El listener pasa el JSON a la ingestión; solo sigue si `tipo_evento` es `ARBOL_CREADO` ([kafka-events.md](docs/events/kafka-events.md)). La primera vez se inserta `evento_catalogo` por `evento_id`; si ya existe, no se repite. El procesador guarda notificación y envíos en `notification`, manda correo a suscriptores **ACTIVA** y deja el evento en **PROCESADO**.
+
+```mermaid
+sequenceDiagram
+  participant KB as Kafka
+  participant Lst as CatalogArbolEventoKafkaListener
+  participant Ing as CatalogArbolEventoIngestionService
+  participant Parser as CatalogArbolEventoPayloadParser
+  participant Con as CatalogArbolEventoConsumoService
+  participant Proc as NotificacionCatalogArbolEventoProcesador
+  participant Mail as SmtpArbolCreadoCorreoAvisoSender
+  participant PG as PostgreSQL_notification
+
+  KB->>Lst: mensaje_JSON
+  Lst->>Ing: onKafkaValue
+  Ing->>Parser: parse
+  alt JSON_invalido_o_campos_faltantes
+    Parser-->>Ing: vacio
+    Ing-->>Lst: ignorar_log_warn
+  else tipo_evento_distinto_de_ARBOL_CREADO
+    Parser-->>Ing: payload
+    Ing-->>Lst: omitir_MVP
+  else ARBOL_CREADO_valido
+    Parser-->>Ing: payload
+    Ing->>Con: registrarYProcesarSiPrimero
+    Con->>PG: existsById_evento_id
+    alt primera_entrega
+      PG-->>Con: no_existe
+      Con->>PG: insert_evento_catalogo_RECIBIDO
+      Con->>Proc: procesarArbolCreado
+      Proc->>PG: notificacion_y_envios
+      loop por_suscriptor_ACTIVA
+        Proc->>Mail: intentarEnviar
+        Mail-->>Proc: ok_o_error
+        Proc->>PG: actualizar_estado_envio
+      end
+      Proc->>PG: evento_PROCESADO
+    else reentrega_mismo_evento_id
+      PG-->>Con: ya_existe
+      Con-->>Ing: no_op_idempotente
+    end
+  end
 ```
 
 ### **3.1.3 Almacenamiento de fotografías**
