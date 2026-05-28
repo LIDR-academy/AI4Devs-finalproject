@@ -23,7 +23,7 @@ MyTreeLibrary
 
 ### **1.3. Descripción breve del proyecto:**
 
-MyTreeLibrary es una solución digital para crear y gestionar tu colección personal de árboles singulares, almacenando fotografías, localización geográfica y datos relevantes de cada ejemplar. Diseñada para aficionados, permite compartir información públicamente y fomentar una comunidad colaborativa. La plataforma se complementa con el uso de la IA para la identificación de árboles a partir de imágenes.
+MyTreeLibrary es una solución digital para crear y gestionar tu colección personal de árboles singulares, almacenando fotografías, localización geográfica y datos relevantes de cada ejemplar. Diseñada para aficionados, permite compartir información públicamente y fomentar una comunidad colaborativa. En el MVP, la IA apoya la consulta de características de especie por administradores; la identificación por imagen y el chat se prevén en versiones posteriores.
 
 ### **1.4. URL del proyecto:**
 
@@ -43,14 +43,14 @@ MyTreeLibrary es una solución digital para crear y gestionar tu colección pers
 
 Desarrollar una plataforma web que permita registrar, organizar y consultar fotografías, ubicaciones y datos relevantes de árboles de tu ciudad, facilitando al usuario la creación de una biblioteca personal digital y la posibilidad de compartir esa información de forma pública.
 
-**NOTA:** Se ha seleccionado una arquitectura de mircroservicios en Java con Spring y Vue con un **proposito didactico**, con el fin de aprender estas tecnologías.
+**NOTA IMPORTANTE:** Se ha seleccionado una arquitectura de mircroservicios en Java con Spring y Vue con un **proposito didactico**, con el fin de aprender estas tecnologías.
 
 
 #### Valor aportado (qué soluciona)
 
 La solución combina la catalogación personal con la posibilidad de compartir y crear comunidad en torno a una afición compartida.
 
-Además, la plataforma incorpora el uso de inteligencia artificial como apoyo a la identificación de especies a partir de fotografías, lo que enriquece la experiencia de uso y facilita el aprendizaje.
+Además, la plataforma incorpora inteligencia artificial como apoyo a la consulta de características de especies (ADMIN en el MVP); en versiones posteriores se prevé la identificación orientativa a partir de fotografías y el chat asistido.
 
 #### Destinatarios de la solución
 
@@ -76,7 +76,7 @@ La solución ofrece un sistema de notificaciones para comunicar novedades a usua
 
 #### Integración con IA
 
-El producto se entegra con IA para obtener información de las características de cada especie y como apoyo a la identificación orientativa de la especie a partir de fotografías.
+El producto se entegra con IA para obtener información de las características de cada especie; en próximas versiones se implementará la identificación orientativa de la especie a partir de fotografías y la funciónalidad de chat.
 
 ### **2.2.1 Diagrama de contexto del sistema (C1)**
 
@@ -122,22 +122,57 @@ La aplicación implementa una navegación simple por roles con una **home de ent
 
 #### Jerarquía de páginas (MVP)
 
-- **Público (sin login):**
-  - `Inicio (Home)` (`/`)
-  - `Árboles (Listado de árboles` (`/trees`)
-    - `Detalle (Datos del árbol elegido` (`/trees/:id`)
-  - `Suscripción (Alta de suscriptor)` (`/subscriptions/new`)
-- **Colaborador (autenticado):**
-  - Todas las páginas públicas
-  - `Alta de árbol (Nueva ficha)` (`/trees/new`)
-    - `IA orientativa` (`/ai/identify`, `/ai/chat`) *(pendiente de producto)*
-  - `Mis árboles` (`/my-trees`) — listado con filtros
-    - `Edición de ficha` (`/trees/:id/edit`) — datos, galería y baja
-    - `IA orientativa` (`/ai/identify`, `/ai/chat`) *(pendiente de producto)*
-- **ADMIN (autenticado):**
-  - Todas las páginas de colaborador
-  - `Maestros (Administración de maestro de especies)` (`/admin/masters`)
-  - `Suscripciones (Gestión de suscripciones)` (`/admin/subscriptions`)
+# Navegación de la aplicación
+
+---
+
+## 🌐 Público &nbsp;·&nbsp; sin autenticación
+
+```
+🏠  Inicio                   /
+🌳  Árboles                  /trees
+    └─ Detalle               /trees/:id
+✉️  Suscripción              /subscriptions/new
+```
+
+---
+
+## 👤 Colaborador &nbsp;·&nbsp; usuario autenticado
+
+↳ *Incluye todas las páginas públicas*
+
+```
+➕  Alta de árbol            /trees/new
+📋  Mis árboles              /my-trees
+    └─ Edición de ficha      /trees/:id/edit
+```
+
+---
+
+## 🛡️ Admin &nbsp;·&nbsp; privilegios completos
+
+↳ *Incluye todas las páginas de colaborador*
+
+```
+🗄️  Maestros                 /admin/masters
+👥  Suscripciones            /admin/subscriptions
+```
+
+---
+
+### Resumen de permisos
+
+| Página | Público | Colaborador | Admin |
+|---|:---:|:---:|:---:|
+| Inicio `/` | ✅ | ✅ | ✅ |
+| Árboles `/trees` | ✅ | ✅ | ✅ |
+| Detalle `/trees/:id` | ✅ | ✅ | ✅ |
+| Suscripción `/subscriptions/new` | ✅ | ✅ | ✅ |
+| Alta de árbol `/trees/new` | — | ✅ | ✅ |
+| Mis árboles `/my-trees` | — | ✅ | ✅ |
+| Edición de ficha `/trees/:id/edit` | — | ✅ | ✅ |
+| Maestros `/admin/masters` | — | — | ✅ |
+| Suscripciones `/admin/subscriptions` | — | — | ✅ |
 
 
 ### **2.4. Instrucciones de instalación:**
@@ -261,7 +296,7 @@ La aplicación está desarrollará en microservicios con Spring en la parte de b
 - **Base de datos NoSQL:** MongoDB
 - **Caché:** Redis
 - **Almacenamiento de imágenes:** Compatible S3 (MinIO)
-- **Observabilidad (local):** Prometheus + Grafana (imágenes Docker en Compose); métricas vía Actuator/Micrometer en cada microservicio
+- **Observabilidad:** Prometheus + Grafana; métricas vía Actuator/Micrometer en cada microservicio
 
 
 
@@ -623,7 +658,7 @@ sequenceDiagram
   GW->>MED: Proxy_JWT
 ```
 
-### **3.1.4 Uso de IA para identificar ejemplares y obtener características de especies**
+### **3.1.4 Uso de IA: características de especie (MVP) e identificación/chat (futuro)**
 
 
 **Flujo de consulta IA (datos de especie vía catalog-service):**
@@ -775,9 +810,7 @@ Estrategia prevista: pruebas unitarias de dominio; **integración** con **Testco
 
 ### **4.1. Modelo lógico del sistema completo**
 
-Vista unificada de las entidades principales y sus relaciones, independientemente del almacén o microservicio (§4.2). Resume catálogo SQL, enriquecimiento Mongo, media, notificaciones e IA; los tipos son **genéricos** (no PostgreSQL).
-
-**Leyenda (modelo lógico):** `PK` / `FK` / `UK`; tipos `bigint`, `int`, `string`, `datetime`, `boolean`, … Las referencias entre dominios se expresan como FK lógicas aunque en implementación no haya FK entre esquemas.
+Vista unificada de las entidades principales del sistema y sus relaciones, independientemente del almacén o microservicio (§4.2). Las referencias entre dominios se expresan como **FK lógicas** sin una implementación de una restricción física real entre los distintos esquemas.
 
 ```mermaid
 erDiagram
@@ -1108,9 +1141,9 @@ erDiagram
 
 ### **4.3. Descripción de entidades principales (orientación física)**
 
-Las entidades físicas se reparten por servicio y almacén como se indica en §3.2: Un servidor **PostgreSQL** con cuatro esquemas `catalog`, `media`, `notification` y `ai`; Una Base e datos **MongoDB** usada pro  **catalog-service**.
+Las entidades físicas se reparten por servicio y almacén como se indica en §3.2: Un servidor **PostgreSQL** con cuatro esquemas `catalog`, `media`, `notification` y `ai`; Una Base e datos **MongoDB** usada por  **catalog-service**.
 
-**Usuario de aplicación:** La audditoría de la aplicación se implementa en torno a `USUARIO_APP` que usa **PK numérica** `usuario_app_id` (alineado con [ADR-0002](docs/adr/0002-claves-primarias-numericas-frente-a-uuid.md)); el identificador estable del proveedor OIDC (`sub`) se guarda en el campo `**subject_oidc`** con unicidad, no como clave primaria. Las FK en otros esquemas/servicios (`usuario_app_id`, `creador_usuario_app_id`, etc.) referencian a la clave primaria; No habrá FK cruzadas entre esquemas; cada microservicio tiene un esquema de Base de Datos independiente.
+**Usuario de aplicación:** La audditoría de la aplicación se implementa en torno a al usuario proporcionado por el token generado por keycloak como proveedor OIDC. Para evitar duplicidades los diversos esquemas almacenan el identificador estable del proveedor (`sub`) que se guarda en el campo `**subject_oidc`**. En el caso de catalog-service este campo se guarda en una tabla USUARIO_APP con unicidad, no como clave primaria; esto permite trazabilidad sin duplicar la información; las FK de los campos de auditoria creado_por y modificado_por referencian a la clave primaria de esta tabla.
 
 ---
 

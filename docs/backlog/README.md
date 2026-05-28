@@ -39,6 +39,7 @@ Ejemplos futuros: `HU-004-ticket-breakdown.md`, `HU-010-ticket-breakdown.md`.
 | HU-008 | [HU-008-edicion-de-mis-arboles.md](HU-008-edicion-de-mis-arboles.md) · [Tickets](HU-008-ticket-breakdown.md) (**Cerrada**; TASK-008-11 rechazado) |
 | HU-015 | [HU-015-proyeccion-y-enriquecimiento-mongo.md](HU-015-proyeccion-y-enriquecimiento-mongo.md) · [Tickets](HU-015-ticket-breakdown.md) (TASK-01 borrado cascada, pendiente) |
 | HU-011 | [HU-011-maestros-de-catalogo.md](HU-011-maestros-de-catalogo.md) · [Tickets](HU-011-ticket-breakdown.md) |
-| HU-009–HU-010 | Pendiente — al crear cada fichero, añadir aquí una fila (ver [backlog.md](backlog.md) §3). |
+| HU-016 | [HU-016-consulta-admin-caracteristicas-especie-ia.md](HU-016-consulta-admin-caracteristicas-especie-ia.md) (refinamiento; tickets pendientes) |
+| HU-009–HU-010 | **Próxima versión** — identificación por imagen y chat; ficheros de refinamiento/tickets pendientes de crear. |
 
 *(Añadir aquí una fila al crear cada nuevo `HU-*-ticket-breakdown.md`.)*

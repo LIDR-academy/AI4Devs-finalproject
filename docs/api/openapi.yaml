@@ -21,7 +21,7 @@ tags:
   - name: notifications
     description: Suscripciones y notificaciones (notification-service)
   - name: ai
-    description: Identificación orientativa y chat (ai-assistant-service)
+    description: Consulta de características de especie con IA (ai-assistant-service; contrato HU-016 pendiente)
   - name: media
     description: Metadatos de fotografías y subida a almacén objeto (media-service)
 
@@ -870,45 +870,6 @@ paths:
           $ref: "#/components/responses/ProblemForbidden"
         "404":
           $ref: "#/components/responses/ProblemNotFound"
-
-  /api/ai/species-identification:
-    post:
-      tags: [ai]
-      summary: Identificación orientativa de especie desde imagen
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-      responses:
-        "200":
-          description: Sugerencias orientativas
-        "401":
-          $ref: "#/components/responses/ProblemUnauthorized"
-
-  /api/ai/chat:
-    post:
-      tags: [ai]
-      summary: Chat asistido con IA
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                message:
-                  type: string
-      responses:
-        "200":
-          description: Respuesta del asistente
-        "401":
-          $ref: "#/components/responses/ProblemUnauthorized"
 
 components:
   securitySchemes:
