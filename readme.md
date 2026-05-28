@@ -241,7 +241,7 @@ graph LR
 ### **2.5. Seguridad:**
 La seguridad es un pilar fundamental en el diseño multi-tenant de la plataforma:
 * **Autenticación Delegada (OIDC/OAuth2):** Se utiliza **Keycloak**. Al acceder a la aplicación, el usuario realiza el logueo de forma externa en el servidor IAM de Keycloak, el cual emite un JSON Web Token (JWT) firmado criptográficamente.
-* **Aislamiento Multi-tenant Riguroso:** Toda tabla transaccional pesada (ej. `trip`, `deal`, `vehicle`) cuenta con la columna `company_id`. A través del framework de Hibernate, se inyecta dinámicamente un filtro utilizando la anotación `@TenantId` en las consultas de Spring Data. Esto garantiza que un usuario de la "Empresa A" tenga bloqueado de forma absoluta el acceso a ver, editar o eliminar registros de la "Empresa B", incluso si realiza inyecciones maliciosas o consultas directas a nivel de base de datos.
+* **Aislamiento Multi-tenant a Nivel de Aplicación:** Toda tabla transaccional pesada (ej. `trip`, `deal`, `vehicle`) cuenta con la columna `company_id`. A través de Hibernate, se inyecta dinámicamente un filtro utilizando la anotación `@TenantId` en las consultas de Spring Data. Esto proporciona protección a nivel de aplicación (ORM) para evitar que un usuario de la "Empresa A" acceda a los registros de la "Empresa B". *(Nota: Para garantizar una seguridad absoluta contra accesos o consultas directas a nivel de base de datos externas a la aplicación, se requeriría implementar Row Level Security (RLS) de PostgreSQL o usuarios de base de datos dedicados, mecanismos que actualmente no están contemplados en el alcance de este MVP).*
 * **Mapeo de Claves Naturales:** El monolito no almacena credenciales ni información sensible del perfil en su base de datos. La entidad `employee` se vincula al IAM de Keycloak únicamente mediante el atributo `iam_subject_id`, eliminando la redundancia y vulnerabilidades de robo de identidad.
 
 ---
@@ -299,7 +299,7 @@ erDiagram
         uuid driver_id FK
         varchar status "PENDING, IN_TRANSIT, COMPLETED, CANCELLED"
         numeric departure_odometer "KM salida"
-        date departure_date "Fecha partida"
+        timestamp departure_date "Fecha y hora de partida"
         varchar manifest "Manifiesto de Carga Legal"
         numeric agreed_unit_value "Valor acordado"
     }
@@ -354,7 +354,7 @@ erDiagram
   * `driver_id` (`UUID` FK, NOT NULL): Referencia al conductor responsable.
   * `status` (`VARCHAR(20)` NOT NULL): Estado de la máquina de estados.
   * `departure_odometer` (`NUMERIC(10,2)` NOT NULL): Kilometraje del camión al iniciar el viaje.
-  * `departure_date` (`DATE`): Fecha y hora de despacho.
+  * `departure_date` (`TIMESTAMP WITH TIME ZONE`): Fecha y hora de despacho.
   * `manifest` (`VARCHAR(50)` UNIQUE, NOT NULL): Código oficial del manifiesto gubernamental de carga.
   * `agreed_unit_value` (`NUMERIC(12,2)`): Tarifa de flete pactada con el cliente.
 
@@ -431,7 +431,7 @@ paths:
 components:
   schemas:
     CreateTripRequest:
-      type: OBJECT
+      type: object
       required:
         - vehicleId
         - driverId
@@ -439,56 +439,56 @@ components:
         - departureOdometer
       properties:
         vehicleId:
-          type: STRING
+          type: string
           format: uuid
           example: d3b07384-d113-49cd-a5d6-89d0f1a5e12f
         driverId:
-          type: STRING
+          type: string
           format: uuid
           example: 7a829288-e218-49cd-9fa2-82888cf3e199
         manifest:
-          type: STRING
+          type: string
           example: "MAN-2026-99881"
         departureOdometer:
-          type: NUMBER
+          type: number
           example: 120450.5
     TripDetail:
-      type: OBJECT
+      type: object
       properties:
         id:
-          type: STRING
+          type: string
           format: uuid
         status:
-          type: STRING
+          type: string
           enum: [PENDING, IN_TRANSIT, COMPLETED, CANCELLED]
           example: PENDING
         manifest:
-          type: STRING
+          type: string
           example: "MAN-2026-99881"
         departureOdometer:
-          type: NUMBER
+          type: number
           example: 120450.5
         departureDate:
-          type: STRING
-          format: date
-          example: "2026-05-28"
+          type: string
+          format: date-time
+          example: "2026-05-28T08:30:00Z"
     VehicleDetail:
-      type: OBJECT
+      type: object
       properties:
         id:
-          type: STRING
+          type: string
           format: uuid
         licensePlate:
-          type: STRING
+          type: string
           example: "SXS882"
         trademark:
-          type: STRING
+          type: string
           example: "Kenworth"
         ability:
-          type: NUMBER
+          type: number
           example: 32.5
         status:
-          type: STRING
+          type: string
           example: ACTIVO
 ```
 

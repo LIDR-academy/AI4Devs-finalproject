@@ -64,7 +64,7 @@ Describe el flujo paso a paso (desde que Keycloak emite el JWT, Spring Security 
 > **Rol e Instrucción:** Diseñar el modelo relacional de la base de datos PostgreSQL enfocada en el flujo prioritario.
 
 ```text
-Actúa como un Administrador de Bases de Datos (DBA) experto en PostgreSQL 16. Necesito diseñar el esquema relacional relacional enfocado en nuestro flujo priorizado: Compañías, Empleados, Conductores con licencias, Vehículos de la flota, Viajes (Trips) con odómetros y Transacciones financieras en ruta (Deals).
+Actúa como un Administrador de Bases de Datos (DBA) experto en PostgreSQL 16. Necesito diseñar el esquema relacional enfocado en nuestro flujo priorizado: Compañías, Empleados, Conductores con licencias, Vehículos de la flota, Viajes (Trips) con odómetros y Transacciones financieras en ruta (Deals).
 
 Por favor, genera:
 1. Un diagrama de Entidad-Relación en Mermaid (erDiagram) utilizando cardinalidades estándar (||--o{ para uno a muchos, etc.). Detalla las claves primarias (PK), foráneas (FK) y anotaciones de tipo de datos de cada campo crítico.

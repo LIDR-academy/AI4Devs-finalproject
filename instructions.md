@@ -1,5 +1,5 @@
 🧑🏻‍💻 Instrucciones Proyecto Final — 15 min
-Antonio Pérez
+{{nombre_estudiante}}
 ⏳ Tiempo estimado: 15 min
 
 1⃣ Explicación del Proyecto Final
@@ -160,6 +160,7 @@ Sube la URL de la rama final en el formulario:
 👉 <https://lidr.typeform.com/proyectoai4devs>
 
 Fechas de las entregas parciales
+> ⚠️ **Nota:** Estas fechas corresponden al calendario de la cohorte actual (2026). Si alguna fecha ya ha pasado o estás en una cohorte posterior, por favor verifica el cronograma de entregas vigente en tu plataforma de alumno o coordina con tu TA.
 
 Documentación técnica: Entrega de la idea, estructura y diseño del proyecto, con la mayor parte de la plantilla avanzada (producto, arquitectura, modelo de datos, historias).
 
@@ -198,7 +199,7 @@ Una cerca del cierre (para pulir detalles antes de la entrega final)
 
 💡 No son sesiones 1:1 (y no son obligatorias). Son espacios colaborativos donde aprenderás también de los casos y preguntas de otros alumnos.
 
-Se realizarán 3 sesiones de 1,5h en distintos horarios y días para facilitar la asistencia:
+Se realizarán 3 sesiones de 1,5h en distintos horarios y días para facilitar la asistencia (Nota: fechas correspondientes al calendario 2026 de esta cohorte):
 
 Miércoles 08 de Abril de 2026 | 17:30 - 19:00 CET
 
