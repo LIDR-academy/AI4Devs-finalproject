@@ -1,125 +1,62 @@
-> Detalla en esta sección los prompts principales utilizados durante la creación del proyecto, que justifiquen el uso de asistentes de código en todas las fases del ciclo de vida del desarrollo. Esperamos un máximo de 3 por sección, principalmente los de creación inicial o  los de corrección o adición de funcionalidades que consideres más relevantes.
-Puedes añadir adicionalmente la conversación completa como link o archivo adjunto si así lo consideras
+# Prompts History — project-vault
+# Used BMadMethod in which some prompts are actually interactive. Also, created a first very extensive document so the tool would part from the document details instead of using multiple prompts.
 
+## Phase 1 — Analysis (≈ 2026-04-07)
 
-## Índice
+### BMad Setup
+1. `setup bmad` *(initialized the BMad module in this repo)*
 
-1. [Descripción general del producto](#1-descripción-general-del-producto)
-2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
-3. [Modelo de datos](#3-modelo-de-datos)
-4. [Especificación de la API](#4-especificación-de-la-api)
-5. [Historias de usuario](#5-historias-de-usuario)
-6. [Tickets de trabajo](#6-tickets-de-trabajo)
-7. [Pull requests](#7-pull-requests)
+### Product Brief
+2. `lets create a product brief` — kicked off `bmad-product-brief` (CB) skill
+3. *(Multi-turn discovery conversation: self-hostable open-core secrets & project infrastructure platform, organized by project not environment)*
 
 ---
 
-## 1. Descripción general del producto
+## Phase 1 — Research (≈ 2026-04-08 to 2026-04-09)
 
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
----
-
-## 2. Arquitectura del Sistema
-
-### **2.1. Diagrama de arquitectura:**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
-### **2.2. Descripción de componentes principales:**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
-### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
-### **2.4. Infraestructura y despliegue**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
-### **2.5. Seguridad**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
-### **2.6. Tests**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
+4. `technical research` on **cryptographic architecture for a secrets vault**: `technical-cryptographic-architecture-secrets-vault-research-2026-04-08.md`
+5. `technical research` on **RBAC and permission architecture**: `technical-rbac-permission-architecture-research-2026-04-09.md`
+6. `technical research` on **rotation plugin architecture**: `technical-rotation-plugin-architecture-research-2026-04-09.md`
+7. `technical research` on **machine user authentication and offline caching**: `technical-machine-user-auth-offline-caching-research-2026-04-09.md`
+8. `technical research` on **service health monitoring architecture**: `technical-service-health-monitoring-architecture-research-2026-04-09.md`
+9. `technical research` on **multi-tenancy data model**: `technical-multi-tenancy-data-model-research-2026-04-09.md`
+10. `market research` on **secrets management tools competitive landscape**: `market-secrets-management-tools-research-2026-04-09.md`
 
 ---
 
-### 3. Modelo de Datos
+## Phase 2 — Planning: PRD Creation (≈ 2026-04-07)
 
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
+11. `lets create a product requirements document` — kicked off `bmad-create-prd` (CP) skill
+12. *(Multi-turn PRD discovery: problem, personas, functional requirements, NFRs, open-core boundary, multi-tenancy, plugin architecture, machine users as first-class citizens, MVP scope)*
+13. `distill documents` on the product brief — produced `product-brief-Project-Vault-distillate.md` via `bmad-distillator`
 
 ---
 
-### 4. Especificación de la API
+## Phase 2 — Planning: PRD Validation & Edit (2026-05-27 to 2026-05-28)
 
-**Prompt 1:**
+14. `validate this PRD` — kicked off `bmad-validate-prd` (VP) — full 12-step validation on `prd.md`, result: **5/5 Excellent, 0 critical issues**
 
-**Prompt 2:**
-
-**Prompt 3:**
-
----
-
-### 5. Historias de Usuario
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
----
-
-### 6. Tickets de Trabajo
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
+### Session 1 — 2026-05-28 (recorded)
+15. `/bmad-help help me find out in which phase of the planning of the project I am`
+16. *(skill activated: `bmad-validate-prd`)* — re-validation pass
+17. *(skill activated: `bmad-party-mode`)* — multi-agent PRD review
+18. `review and discuss the document` *(party mode: agents discuss the PRD)*
+19. `E` *(shortcut — enter Edit mode)*
+20. `for offline fallback, let's go with option B.` *(decision made during agent discussion)*
+21. `r` *(shortcut — resume)*
+22. `E` *(shortcut — enter Edit mode again)*
+23. *(skill activated: `bmad-edit-prd`)*
+24. `1. Move to executive summary` / `2. do all 7 changes` *(applied 7 post-validation improvements: FR31/FR37/FR71/FR73 threshold defaults, TLS split, MVP scope update, executive summary restructure)*
+25. `v` *(shortcut — validate)*
+26. *(skill activated: `bmad-validate-prd`)* — post-edit revalidation
+27. `x` *(shortcut — exit)*
 
 ---
 
-### 7. Pull Requests
+## Phase 2 — Planning: UX Design (2026-05-27)
 
-**Prompt 1:**
+28. `lets create UX design` — kicked off `bmad-create-ux-design` (CU) skill *(steps 1–2 completed, `ux-design-specification.md` created, in progress)*
 
-**Prompt 2:**
-
-**Prompt 3:**
+29. `bmad-create-architecture`
+    
+30. create a readme for the project, and include AGPL license. Ask me any questions
