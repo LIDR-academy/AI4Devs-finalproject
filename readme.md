@@ -719,55 +719,41 @@ sequenceDiagram
 
 ### **3.1.3 Almacenamiento de fotografías**
 
-Las fotografías se almacenan como **objetos** en un almacén **S3-compatible** (**MinIO**) y sus **metadatos** en PostgreSQL, esquema **`media`**, vía **media-service** detrás del **API Gateway**. La SPA obtiene primero una **URL prefirmada** (`POST /api/media/uploads/presign`) con JWT; el servicio valida reglas de negocio (MIME permitidos, tamaño máximo configurable y cupo de fotos por árbol) y devuelve la URL y la clave de objeto. El cliente sube el binario directamente al bucket y, a continuación, **confirma** la operación (`POST /api/media/photos/confirm`) para persistir metadatos: la **primera confirmación** por árbol queda como **foto principal**; el **orden** refleja la secuencia de confirmaciones (o el índice explícito enviado por la SPA si coincide con el esperado). La visibilidad efectiva de la imagen en consulta pública se **hereda de la ficha del árbol**; detalle funcional y criterios de aceptación: [HU-006](docs/backlog/HU-006-fotografias-asociadas-al-arbol.md); contrato HTTP: [docs/api/openapi.yaml](docs/api/openapi.yaml); guía técnica operativa (propiedades, secuencia, principal, EXIF): [docs/engineering/media-upload-hu006.md](docs/engineering/media-upload-hu006.md).
-
-Para **consulta pública mínima** ([HU-014](docs/backlog/HU-014-consulta-de-fotografias-del-arbol.md), existe `GET /api/media/public/trees/{treeId}/primary-photo` (**sin JWT** en gateway): media-service comprueba que el árbol sea visible vía catálogo público y devuelve el binario de la foto principal si existe en el bucket. La SPA lo usa para la **miniatura** del listado de árboles publicados.
+Los **binarios** viven en un almacén **S3-compatible** (**MinIO** en desarrollo, **S3** en producción); los **metadatos** (árbol, clave de objeto, orden, foto principal, etc.) en PostgreSQL, esquema **`media`**, gestionados por **media-service** tras el **API Gateway**. La SPA **nunca** recibe credenciales de bucket: tras crear la ficha del árbol en **catalog-service**, por cada imagen pide una **URL prefirmada** (`POST /api/media/uploads/presign`), sube el fichero con **PUT directo** al almacén y **confirma** (`POST /api/media/photos/confirm`) para registrar la fila en `media`; la primera confirmación del árbol queda como **foto principal**. La visibilidad de cada foto **hereda** la de la ficha. Contrato HTTP: [openapi.yaml](docs/api/openapi.yaml); historia y criterios: [HU-006](docs/backlog/HU-006-fotografias-asociadas-al-arbol.md); validaciones, propiedades, principal y EXIF en cliente: [media-upload-hu006.md](docs/engineering/media-upload-hu006.md).
 
 ```mermaid
 sequenceDiagram
   autonumber
   actor U as Usuario
-  participant SPA as SPA_alta_arbol
-  participant GW as API_Gateway
-  participant MS as media_service
-  participant M as MinIO_S3
-
-  rect rgba(240, 248, 255, 0.35)
-    Note over SPA: Cliente: hasta 10 imágenes (MIME/tamaño).<br/>1ª imagen: EXIF GPS puede actualizar lat_lon del formulario (HU-006).
-  end
-
-  loop Por_cada_fotografia_en_orden_de_confirmacion
-    SPA->>GW: POST_api_media_uploads_presign_Bearer_JWT
-    GW->>MS: reenvio_con_JWT
-    MS->>MS: validar_MIME_tamano_cupo_arbol
-    MS-->>SPA: uploadUrl_bucket_objectKey_expiresAt
-
-    SPA->>M: PUT_binario_a_uploadUrl
-    M-->>SPA: 200_OK
-
-    SPA->>GW: POST_api_media_photos_confirm_Bearer_JWT
-    GW->>MS: reenvio_con_JWT
-    MS->>MS: validar_bucket_configurado_orden_principal
-    MS->>MS: INSERT_media_fotografia
-    MS-->>SPA: 201_metadatos_persistidos
-  end
-```
-
-
-**Flujo de registro de árbol y subida de imagen:**
-
-```mermaid
-sequenceDiagram
-  participant SPA as SPA_Vue3
+  participant SPA as SPA
   participant KC as Keycloak
-  participant GW as api_gateway
+  participant GW as API_Gateway
   participant CAT as catalog_service
-  participant MED as media_service
-  SPA->>KC: Registro_o_login_PKCE
-  SPA->>GW: Registro_arbol
-  GW->>CAT: Proxy_JWT
-  SPA->>GW: Subida_imagen
-  GW->>MED: Proxy_JWT
+  participant MS as media_service
+  participant OBJ as MinIO_o_S3
+
+  U->>SPA: Alta de arbol con fotos
+  SPA->>KC: OIDC login PKCE
+  KC-->>SPA: JWT
+
+  SPA->>GW: POST /api/catalog/trees
+  GW->>CAT: proxy JWT
+  CAT-->>SPA: 201 arbolId
+
+  loop Por cada fotografia
+    SPA->>GW: POST /api/media/uploads/presign
+    GW->>MS: proxy JWT
+    MS->>MS: validar MIME tamano cupo permiso
+    MS-->>SPA: uploadUrl objectKey
+
+    SPA->>OBJ: PUT binario uploadUrl
+    OBJ-->>SPA: 2xx
+
+    SPA->>GW: POST /api/media/photos/confirm
+    GW->>MS: proxy JWT
+    MS->>MS: INSERT media.fotografia
+    MS-->>SPA: 201 metadatos
+  end
 ```
 
 ### **3.1.4 Uso de IA: características de especie (MVP) e identificación/chat (futuro)**
@@ -789,27 +775,46 @@ sequenceDiagram
 ```
 
 
-### **3.2. Descripción de componentes principales:**
+### **3.2. Descripción de componentes principales**
 
+Componentes del diagrama C2 (§3.1), desplegados o consumidos por la plataforma. No se listan dependencias solo del navegador (**OpenStreetMap** / **Leaflet**) ni el proveedor de IA externo (vía **ai-assistant-service** cuando exista el flujo).
 
-| Componente           | Tecnología                                                                                                                                                                                                        | Responsabilidad                                                                                                                                                                                                                                                                                                                                                                  |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SPA                  | Vue 3, Vite, TypeScript                                                                                                                                                                                           | UI: biblioteca, mapa, IA, flujos OIDC con Keycloak                                                                                                                                                                                                                                                                                                                               |
-| API Gateway          | Spring Cloud Gateway (**WebFlux**), **Spring Boot 4**                                                                                                                                                             | Enrutado `/api/catalog`, `/api/media`, `/api/notifications`, `/api/ai`; **validación JWT** (OAuth2 Resource Server, Keycloak); actuator; token relay hacia microservicios (MVP)                                                                                                                                                                                                  |
-| catalog-service      | **Spring Boot 4**, JPA, Flyway, PostgreSQL, Redis (Mongo según evolución); **productor Kafka** topic `catalog.arbol.evento` (`ARBOL_CREADO` tras alta; [TASK-HU-005-05](docs/backlog/HU-005-ticket-breakdown.md)) | Árboles, coordenadas numéricas (MVP sin geometría PostGIS en DDL); **PostgreSQL** (esquema **catalog**); publicación de eventos de dominio según [kafka-events.md](docs/events/kafka-events.md). **UC-04 / HU-008:** `GET`/`PUT`/`DELETE` en `/api/catalog/trees`, orquestación de baja hacia media ([services/README.md](services/README.md) § HU-008).                                                                                                                                                                                  |
-| media-service        | **Spring Boot 4**, JPA, Flyway, AWS SDK v2 (S3)                                                                                                                                                                   | Metadatos solo en esquema `**media`**; objetos en bucket MinIO/S3; URLs prefirmadas                                                                                                                                                                                                                                                                                              |
-| notification-service | **Spring Boot 4**, JPA, Flyway, Spring Kafka, JavaMail                                                                                                                                                            | Consume `catalog.arbol.evento`; datos solo en esquema `**notification`**; envío SMTP                                                                                                                                                                                                                                                                                             |
-| ai-assistant-service | **Spring Boot 4**, Spring WebClient (o equivalente), Spring Data JPA                                                                                                                                              | Orquestación hacia proveedor IA; datos de auditoria en esquema `**ai`** (p. ej. **AUDITORIA_USO_IA**); delegación de datos de catálogo en **catalog-service**                                                                                                                                                                                                                    |
-| Keycloak             | Keycloak 26                                                                                                                                                                                                       | Realm, clientes, roles, emisión de JWT                                                                                                                                                                                                                                                                                                                                           |
-| Kafka                | Apache Kafka (KRaft en dev)                                                                                                                                                                                       | Topics p. ej. `catalog.arbol.evento`                                                                                                                                                                                                                                                                                                                                             |
-| Mailpit              | Mailpit (imagen `axllent/mailpit`, Compose)                                                                                                                                                                       | SMTP de prueba en desarrollo local; bandeja en UI web; sin relay a dominios reales ([infra/compose/README.md](infra/compose/README.md))                                                                                                                                                                                                                                         |
-| Prometheus           | Prometheus (imagen `prom/prometheus:v3.2.1`, Compose)                                                                                                                                                             | Recolección de métricas desde `/actuator/prometheus` de los microservicios en el host; UI **http://localhost:9090** ([platform/observability/README.md](platform/observability/README.md))                                                                                                                                                                                      |
-| Grafana              | Grafana (imagen `grafana/grafana:11.5.2`, Compose)                                                                                                                                                                | Visualización; dashboard provisionado **MTL Microservices**; UI **http://localhost:3000** (credenciales `GRAFANA_ADMIN_*` en `.env`)                                                                                                                                                                                                                                            |
-| PostgreSQL           | 16                                                                                                                                                                                                                | **Un servidor**; **cuatro esquemas** (`catalog`, `media`, `notification`, `ai`). En **catalog**, el DDL actual   usa **latitud/longitud** `NUMERIC` (sin columna PostGIS); la extensión PostGIS está prevista en el contenedor para iteraciones posteriores ([V1__baseline.sql](services/catalog-service/src/main/resources/db/migration/V1__baseline.sql)). |
-| MongoDB              | 7                                                                                                                                                                                                                 | Colecciones de enriquecimiento y notas; proyección mínima para búsqueda sin SQL (véase [mongo.md](docs/data-model/mongo.md))                                                                                                                                                                                                                                                     |
-| Redis                | 7                                                                                                                                                                                                                 | Caché                                                                                                                                                                                                                                                                                                                                                                            |
-| MinIO                | S3 API                                                                                                                                                                                                            | Imágenes en desarrollo                                                                                                                                                                                                                                                                                                                                                           |
+#### Capa de aplicación y entrada
 
+| Componente | Tecnología | Responsabilidad |
+| --- | --- | --- |
+| **SPA** (`frontend/`) | Vue 3, Vite, TypeScript, Pinia, Vue Router, `oidc-client-ts`, Leaflet | Consulta pública, fichas, mapa, fotos y administración (maestros, suscripciones). OIDC (Authorization Code + PKCE) con Keycloak; peticiones a `/api/*` vía **API Gateway**. |
+| **API Gateway** (`api-gateway`) | Spring Cloud Gateway (WebFlux), Spring Boot 4 | Entrada HTTP (**8080**). Enruta `/api/catalog`, `/api/media`, `/api/notifications` y `/api/ai`. Valida JWT (Keycloak) y reenvía el token a los microservicios. Rutas públicas según [openapi.yaml](docs/api/openapi.yaml). Actuator: salud y métricas. |
+
+#### Microservicios de dominio
+
+| Componente | Tecnología | Responsabilidad |
+| --- | --- | --- |
+| **catalog-service** | Spring Boot 4, JPA, Flyway, PostgreSQL; Redis en perfil `dev`; productor Kafka | Esquema `catalog`: maestros, provincias (semillas) y fichas de árboles (coordenadas `NUMERIC`; sin PostGIS en el DDL del MVP). Consulta pública; operaciones de colaborador y **ADMIN**. Tras el alta, publica `ARBOL_CREADO` en `catalog.arbol.evento` ([kafka-events.md](docs/events/kafka-events.md)). La baja (HU-008) coordina **media-service**. Caché Redis de maestros en `dev`. Enriquecimiento Mongo previsto ([mongo.md](docs/data-model/mongo.md)), integración en curso. |
+| **media-service** | Spring Boot 4, JPA, Flyway, cliente MinIO (API S3) | Esquema `media` para metadatos; binarios en **MinIO** (dev) o **S3** (prod). Flujo: presign → subida → confirmación; foto principal y galería. Miniatura pública: `GET /api/media/public/trees/{treeId}/primary-photo`. |
+| **notification-service** | Spring Boot 4, JPA, Flyway, Spring Kafka, JavaMail | Esquema `notification`: suscripciones (alta pública; gestión **ADMIN**). Consume `catalog.arbol.evento` de forma idempotente y envía correo SMTP a suscriptores **ACTIVA** (Mailpit en dev). |
+| **ai-assistant-service** | Spring Boot 4 (en construcción) | Orquestación al proveedor de IA y trazas en esquema `ai` (auditoría de uso). **HU-016** en curso; maestros en **catalog-service**. Resultados de IA orientativos, no determinación científica. |
+
+#### Identidad, mensajería y almacenamiento
+
+| Componente | Tecnología | Responsabilidad |
+| --- | --- | --- |
+| **Keycloak** | Keycloak 26 (Compose) | IdP OIDC: realm `mtl`, clientes, roles `COLABORADOR` y `ADMIN`, emisión de JWT. |
+| **Kafka** | Apache Kafka (KRaft en dev) | Topic `catalog.arbol.evento`: enlaza el alta del árbol con el aviso por correo. |
+| **PostgreSQL** | 16 + PostGIS en contenedor | Un servidor; esquemas `catalog`, `media`, `notification` y `ai` (uno por servicio JDBC). Coordenadas en `catalog` como `NUMERIC` ([V1__baseline.sql](services/catalog-service/src/main/resources/db/migration/V1__baseline.sql)); uso espacial avanzado en iteraciones posteriores. |
+| **MongoDB** | 7 (Compose) | Enriquecimiento (especie, ejemplar, notas); ver [mongo.md](docs/data-model/mongo.md). Integración desde **catalog-service** en curso; no sustituye PostgreSQL. |
+| **Redis** | 7 (Compose) | Caché de maestros en **catalog-service** (perfil `dev`; desactivada en tests sin Docker). |
+| **MinIO** | API S3 | Imágenes en dev (bucket `mtl-photos`); en prod, S3 u otro compatible. |
+
+#### Observabilidad y herramientas de desarrollo local
+
+| Componente | Tecnología | Responsabilidad |
+| --- | --- | --- |
+| **Mailpit** | `axllent/mailpit` (Compose) | SMTP y bandeja web de prueba en local; no envía a dominios reales ([infra/compose/README.md](infra/compose/README.md)). |
+| **Prometheus** | `prom/prometheus:v3.2.1` (Compose) | Métricas vía `/actuator/prometheus` (host 8080–8084); UI **http://localhost:9090**. |
+| **Grafana** | `grafana/grafana:11.5.2` (Compose) | Dashboard **MTL Microservices**; UI **http://localhost:3000** (`GRAFANA_ADMIN_*` en `.env`). Ver [platform/observability/README.md](platform/observability/README.md). |
+
+*No listados aquí:* **`system-e2e-tests`** (pruebas E2E vía gateway, §3.6) y **Docker Compose** (infra local, §3.4).
 
 ### **3.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 

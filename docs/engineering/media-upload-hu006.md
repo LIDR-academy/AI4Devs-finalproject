@@ -83,5 +83,5 @@ La SPA puede enviar `esPrincipal: false` en todas las confirmaciones; el servido
 ## Enlaces relacionados
 
 - [services/README.md](../../services/README.md) — arranque Maven, puertos, gateway.
-- [readme.md](../../readme.md) — diagrama resumido §3.1.3.
+- [readme.md](../../readme.md) — visión de arquitectura (alta de árbol + subida) §3.1.3.
 - [docs/data-model/data-model.md](../data-model/data-model.md) — visibilidad R4–R5 (herencia desde la ficha).
