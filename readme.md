@@ -120,13 +120,11 @@ graph TD
 
 La aplicación implementa una navegación simple por roles con una **home de entrada** adaptada a cada perfil.
 
-#### Jerarquía de páginas (MVP)
-
-# Navegación de la aplicación
+### Navegación de la aplicación
 
 ---
 
-## 🌐 Público &nbsp;·&nbsp; sin autenticación
+#### 🌐 Público &nbsp;·&nbsp; sin autenticación
 
 ```
 🏠  Inicio                   /
@@ -137,7 +135,7 @@ La aplicación implementa una navegación simple por roles con una **home de ent
 
 ---
 
-## 👤 Colaborador &nbsp;·&nbsp; usuario autenticado
+#### 👤 Colaborador &nbsp;·&nbsp; usuario autenticado
 
 ↳ *Incluye todas las páginas públicas*
 
@@ -149,7 +147,7 @@ La aplicación implementa una navegación simple por roles con una **home de ent
 
 ---
 
-## 🛡️ Admin &nbsp;·&nbsp; privilegios completos
+#### 🛡️ Admin &nbsp;·&nbsp; privilegios completos
 
 ↳ *Incluye todas las páginas de colaborador*
 
@@ -198,6 +196,8 @@ En `[infra/compose/](infra/compose/)` hay un `docker-compose.yml` que levanta la
 
 > **Nota:** por defecto, Postgres del Compose se expone en el host en el **puerto `5433`**  
 > mediante la variable `POSTGRES_PORT` definida en `.env`, para evitar conflictos con un PostgreSQL local en `5432`.
+
+> **Redis y `catalog-service`:** con perfil **`dev`**, el catálogo usa caché Redis (`spring.cache.type=redis` en `application-dev.properties`). El contenedor **Redis** del Compose debe estar en marcha antes de arrancar **catalog-service** en `dev`.
 
 #### Pasos:
 
@@ -253,8 +253,20 @@ Puedes activarlo de cualquiera de estas formas:
 | Variable de entorno      | `SPRING_PROFILES_ACTIVE=dev`                                       |
 | Argumento de Spring Boot | `--spring.profiles.active=dev`                                     |
 | Maven                    | `-Dspring-boot.run.profiles=dev`                                   |
-| VS Code                  | Entradas `* (dev)` en `[.vscode/launch.json](.vscode/launch.json)` |
 
+#### Arranque mínimo por flujo
+
+Tras `docker compose up -d`, levanta **api-gateway** (8080) y, según lo que pruebes, los servicios en **`dev`**:
+
+| Flujo | Compose (además de Postgres/Keycloak) | Servicios en host |
+|-------|----------------------------------------|-------------------|
+| Consulta pública | — | catalog |
+| Alta / edición de árbol | Redis, Kafka | catalog (+ **media** si hay fotos) |
+| Fotos (subida) | MinIO | media |
+| Aviso por correo (alta de árbol) | Kafka, Mailpit | notification |
+| Admin (maestros / suscripciones) | — | catalog; notification (suscripciones) |
+
+Puertos y comandos: [services/README.md](services/README.md).
 
 #### Más información
 
@@ -267,7 +279,13 @@ Consulta `[services/README.md](services/README.md)` para ver:
 
 #### Frontend
 
-La carpeta `[frontend/](frontend/)` es la SPA Vue 3 (Vite): OIDC, alta de ficha, mapa OSM/Leaflet; detalle en `[frontend/README.md](frontend/README.md)`.
+La carpeta `[frontend/](frontend/)` es la SPA Vue 3 (Vite) con OIDC (Keycloak), consulta pública, catálogo colaborador y pantallas de administración.
+
+1. Copiar `frontend/.env.example` a `frontend/.env` (valores por defecto válidos para local).
+2. Tener en marcha la infra de Compose y, como mínimo, **api-gateway** en **8080** (y los microservicios que vayas a usar; ver [services/README.md](services/README.md)).
+3. Desde `frontend/`: `npm install` y `npm run dev` (UI en **http://localhost:5173**; el proxy de Vite reenvía `/api/*` al gateway).
+
+Más detalle (usuarios de prueba Keycloak, verificación manual E2E): [frontend/README.md](frontend/README.md).
 
 #### Datos iniciales en catálogo
 
@@ -395,7 +413,7 @@ flowchart TB
 
 ### **3.1.1 Autenticación en Front (Vue):**
 
-Descripción genérica del flujo de autenticación para SPA en **Vue 3** con **OIDC Authorization Code + PKCE** (IdP: Keycloak).  
+Descripción del flujo de autenticación para SPA en **Vue 3** con **OIDC Authorization Code + PKCE** (IdP: Keycloak).  
 Objetivo: mantener rutas protegidas con sesión válida, renovar token de forma transparente y centralizar el manejo de `401` en cliente HTTP.
 
 #### C3 — Componentes (nivel 3): autenticación en el contenedor SPA Vue
@@ -422,7 +440,6 @@ flowchart TB
         Views --> CatalogSvc
         CatalogSvc --> Http
         Http --> Oidc
-        Router --> AuthStore
         Router --> Oidc
         AuthStore --> Oidc
     end
@@ -442,61 +459,85 @@ flowchart TB
 
 Responsabilidades clave:
 
-- `**Router Guards**`: bloquean rutas protegidas cuando no hay sesión válida.
-- `**Auth Store / useAuth**`: estado reactivo de sesión (`currentUser`, `isAuthenticated`) y listeners de eventos OIDC.
-- `**oidc_service**`: login, callback, `signinSilent`, logout.
-- `**apiClient**`: inyecta Bearer, reintenta una vez tras `401` usando `signinSilent`; si falla, redirige a login con `returnPath`.
+- `**Router Guards**`: bloquean rutas con `requiresAuth` y comprueban `requiredRoles` (p. ej. `ADMIN` en `/admin/*`); consultan **directamente** el servicio OIDC (`getUser`, `signinSilent`, `login`), no el Auth Store.
+- `**Auth Store / useAuth**`: estado reactivo de sesión (`currentUser`, `isAuthenticated`, roles) y listeners de eventos OIDC; lo consumen vistas y shell de navegación, no el guard.
+- `**OIDC Service**` (`authService` en código): login, callback en `/auth/callback`, `signinSilent`, logout y renovación silenciosa automática (`automaticSilentRenew`).
+- `**Cliente HTTP**` (`apiFetch` / `apiFetchBlob` en código): inyecta Bearer en rutas autenticadas; reintenta una vez tras `401` con `signinSilent`; si falla, redirige a login con `returnPath`.
+
+Simplificaciones del diagrama C3 (no aparecen como cajas o flechas):
+
+- `**Catalog Service**` representa la capa `services/*` (catálogo, media, notificaciones, etc.); el patrón es el mismo en todos.
+- `**API Client Interceptor**` es la lógica de token y reintento en `apiFetch`, no un módulo aparte con ese nombre.
+- Rutas **públicas** del contrato OpenAPI usan `publicApiFetch` hacia el gateway **sin** Bearer ni OIDC; el diagrama solo modela el camino autenticado (`Http` → `Oidc`).
+- El intercambio de código tras el redirect de Keycloak lo ejecuta la vista `AuthCallbackView`, no el guard ni el store en el primer paso.
 
 #### C4 — Comportamiento (dinámico): secuencia de autenticación y acceso protegido
 
 ```mermaid
 sequenceDiagram
   participant U as Usuario
-  participant V as View_Protegida_Vue
   participant R as Router_Guard
-  participant A as Auth_Store_useAuth
-  participant O as OIDC_Service_UserManager
+  participant O as OIDC_Service
   participant K as Keycloak_IdP
-  participant H as apiClient
+  participant CB as AuthCallbackView
+  participant A as Auth_Store
+  participant V as View_Protegida
+  participant H as apiFetch
   participant G as API_Gateway
 
-  U->>V: Navega_a_ruta_protegida
-  V->>R: beforeEach_requiresAuth
-  R->>A: isAuthenticated
+  U->>R: navega_ruta_requiresAuth
+  R->>O: getUser()
 
-  alt Sesion_no_valida
-    R->>O: login(returnPath)
-    O->>K: authorize_Code+PKCE
-    K-->>O: callback_code
-    O->>K: token_endpoint_code_verifier
-    K-->>O: access_token_id_token
-    O-->>A: user_loaded_event
-    A-->>R: sesion_activa
-    R-->>V: allow_navigation
-  else Sesion_valida
-    R-->>V: allow_navigation
+  alt usuario_valido_no_expirado
+    alt sin_requiredRoles_o_tiene_rol
+      R-->>V: allow_navigation
+    else forbidden
+      R-->>U: redirect_auth_error_forbidden
+    end
+  else sin_sesion_o_expirada
+    R->>O: signinSilent_timeout_guard
+    O->>K: silent_authorize
+    K-->>O: nuevo_token_o_error
+    alt renovacion_guard_ok
+      O-->>A: user_loaded_event
+      R-->>V: allow_navigation
+    else login_interactivo
+      R->>O: login_returnPath
+      O->>K: authorize_Code+PKCE
+      K-->>U: pantalla_login
+      U->>K: autentica
+      K-->>CB: redirect_auth_callback
+      CB->>O: signinRedirectCallback
+      O->>K: token_endpoint_code_verifier
+      K-->>O: access_token_id_token
+      O-->>A: user_loaded_event
+      CB->>V: router_replace_returnPath
+    end
   end
 
-  V->>H: Request_API_protegida
-  H->>O: getAccessToken
-  O-->>H: token
-  H->>G: GET_POST_con_Bearer
+  V->>H: peticion_api_autenticada
+  H->>O: getUser_y_getAccessToken
+  O-->>H: access_token
+  H->>G: fetch_con_Bearer
 
-  alt 401_expirado
-    H->>O: signinSilent()
+  alt respuesta_401_sin_reintento_previo
+    H->>O: signinSilent
     O->>K: silent_authorize_iframe
     K-->>O: nuevo_token_o_error
-    alt Renovacion_ok
-      H->>G: Reintento_unico_con_nuevo_Bearer
-      G-->>H: 2xx_o_4xx_5xx
-    else Renovacion_falla
-      H->>O: login(returnPath_actual)
+    alt renovacion_ok
+      O-->>A: user_loaded_event
+      H->>G: reintento_unico_con_Bearer
+      G-->>H: respuesta
+    else renovacion_falla
+      H->>O: login_returnPath_actual
       O->>K: redirect_login
     end
-  else Respuesta_sin_401
-    G-->>H: 2xx_o_4xx_5xx
+  else sin_401
+    G-->>H: respuesta
   end
 ```
+
+Notas del diagrama C4 (no dibujadas): error al leer sesión en el guard → `/auth/error?reason=session`; renovación proactiva del token (`automaticSilentRenew`) mediante eventos OIDC hacia el Auth Store, además de los `signinSilent` bajo demanda del guard y de `apiFetch`.
 
 ### **3.1.2 Kafka:**
 
