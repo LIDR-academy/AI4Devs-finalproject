@@ -1,6 +1,12 @@
 # Project Summary
 
-> This document is a replica of [`README-1.md`](https://github.com/icsanabriar/acualuz-c4/tree/feat/setup-cursor/docs/deliveries/README-1.md).
+Status: Approved
+Last updated: 2026-05-28
+
+## Summary
+
+Consolidated project delivery summary derived entirely from `docs/` artifacts: product scope, C4/serverless architecture, data model, API surface, MVP use cases and tickets, and linked pull requests for course submission.
+
 > Source of truth: every fact in this document is taken from files under [`docs/`](https://github.com/icsanabriar/acualuz-c4/tree/feat/setup-cursor/docs).
 > Sections without supporting information in `@docs` are explicitly marked as `Not documented in @docs.`
 
@@ -436,16 +442,16 @@ Source:
 The PRD documents an entity-relationship view where every MVP entity is partitioned by `FARM#<farmId>`:
 
 ```mermaid
-erDiagram
-  FARM ||--o{ EnvironmentalReading : partitions
-  FARM ||--o{ ChemicalReading : partitions
-  FARM ||--o{ SpeciesLot : partitions
-  FARM ||--o{ OperationalEvent : partitions
-  FARM ||--o{ BpaRecord : partitions
-  FARM ||--o{ Product : partitions
-  FARM ||--o{ SalesOrder : partitions
-  FARM ||--o{ Visit : partitions
-  FARM ||--o{ MipeApplication : partitions
+classDiagram
+  FARM "1" --> "many" EnvironmentalReading : partitions
+  FARM "1" --> "many" ChemicalReading : partitions
+  FARM "1" --> "many" SpeciesLot : partitions
+  FARM "1" --> "many" OperationalEvent : partitions
+  FARM "1" --> "many" BpaRecord : partitions
+  FARM "1" --> "many" Product : partitions
+  FARM "1" --> "many" SalesOrder : partitions
+  FARM "1" --> "many" Visit : partitions
+  FARM "1" --> "many" MipeApplication : partitions
 ```
 
 Source: 

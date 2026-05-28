@@ -1,17 +1,16 @@
 # Prompts Mapping Logs
 
 Status: Approved
-Last updated: 2026-05-25
-
-> This document is a replica of [`prompts-1.md`](https://github.com/icsanabriar/acualuz-c4/tree/feat/setup-cursor/docs/deliveries/prompts-1.md).
-> Source of truth: every fact in this document is taken from [`docs/prompts.md`](https://github.com/icsanabriar/acualuz-c4/tree/feat/setup-cursor/docs/prompts.md).
-> Sections without supporting information in `docs/prompts.md` are explicitly marked as `Not documented in docs/prompts.md.`
+Last updated: 2026-05-28
 
 ## Summary
 
 Maps the three most relevant entries from [`docs/prompts.md`](https://github.com/icsanabriar/acualuz-c4/blob/feat/setup-cursor/docs/prompts.md) to each section of the project delivery summary. Prompts whose scope is limited to `.cursor/` framework files, prompt-log maintenance, BMAD cross-reference dry runs, or generation of the meta-deliverable `README-1.md` itself are excluded. Sections without any qualifying prompt are marked `N/A` per the user instruction.
 
 Each entry cites the prompt by its UTC heading in `docs/prompts.md` followed by a one-line summary of the desired outcome.
+
+> Source of truth: every fact in this document is taken from [`docs/prompts.md`](https://github.com/icsanabriar/acualuz-c4/tree/feat/setup-cursor/docs/prompts.md).
+> Sections without supporting information in `docs/prompts.md` are explicitly marked as `Not documented in docs/prompts.md.`
 
 ## 1. Product Overview
 
