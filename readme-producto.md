@@ -246,7 +246,7 @@ A continuación se describe cada pantalla principal, su funcionalidad y su relac
 
 #### Pantalla 1 — Home: catálogo con filtros
 
-![Home — Catálogo con filtros](docs/prototipo/01-home-catalogo.png)
+![Home — Catálogo con filtros](docs/prototypes/01-home-catalog.png)
 
 Pantalla de entrada al ecommerce. Muestra el catálogo completo de productos de running con un panel lateral de filtros por categoría, distancia, superficie, nivel y objetivo de entrenamiento. Los resultados se actualizan en tiempo real al aplicar filtros combinados.
 
@@ -256,7 +256,7 @@ Pantalla de entrada al ecommerce. Muestra el catálogo completo de productos de 
 
 #### Pantalla 2 — Ficha de producto
 
-![Ficha de producto](docs/prototipo/02-ficha-producto.png)
+![Ficha de producto](docs/prototypes/02-pdp.png)
 
 Vista detallada de un producto. Incluye galería de imágenes, descripción técnica, atributos running mostrados como etiquetas de color (nivel, distancia, superficie), selector de talla y color, stepper de cantidad y botón de añadir al carrito. Incorpora iconos de confianza: envío gratis, devolución y garantía.
 
@@ -266,7 +266,7 @@ Vista detallada de un producto. Incluye galería de imágenes, descripción téc
 
 #### Pantalla 3 — Carrito
 
-![Carrito de compra](docs/prototipo/03-carrito.png)
+![Carrito de compra](docs/prototypes/03-cart.png)
 
 Resumen de los productos seleccionados antes de iniciar el pago. Permite modificar cantidades y eliminar artículos. El panel lateral muestra subtotal, gastos de envío (gratuito a partir de 50€) y total, con acceso directo al checkout.
 
@@ -276,7 +276,7 @@ Resumen de los productos seleccionados antes de iniciar el pago. Permite modific
 
 #### Pantalla 4 — Checkout: datos de envío
 
-![Checkout — Datos de envío](docs/prototipo/04-checkout-envio.png)
+![Checkout — Datos de envío](docs/prototypes/04-checkout-send-data.png)
 
 Primer paso del proceso de compra. Formulario con nombre, email, teléfono, dirección, ciudad, código postal y país. Validación de campos obligatorios antes de avanzar al paso de pago. Indicador de progreso visible en la parte superior.
 
@@ -286,7 +286,7 @@ Primer paso del proceso de compra. Formulario con nombre, email, teléfono, dire
 
 #### Pantalla 5 — Checkout: método de pago
 
-![Checkout — Método de pago](docs/prototipo/05-checkout-pago.png)
+![Checkout — Método de pago](docs/prototypes/05-checkout-payment.png)
 
 Segundo paso del checkout. Formulario de tarjeta simulada con número, titular, fecha de vencimiento y CVV. El resumen del pedido permanece visible en el lateral. El proceso no realiza transacciones reales.
 
@@ -296,7 +296,7 @@ Segundo paso del checkout. Formulario de tarjeta simulada con número, titular, 
 
 #### Pantalla 6 — Confirmación de pedido
 
-![Confirmación de pedido](docs/prototipo/06-confirmacion-pedido.png)
+![Confirmación de pedido](docs/prototypes/06-order-confirmation.png)
 
 Pantalla de éxito tras completar la compra. Muestra el número de pedido generado y confirma el email de notificación. Ofrece dos acciones: ver el historial de pedidos o continuar comprando.
 
@@ -306,7 +306,7 @@ Pantalla de éxito tras completar la compra. Muestra el número de pedido genera
 
 #### Pantalla 7 — Gestión de pedidos
 
-![Mis pedidos](docs/prototipo/07-mis-pedidos.png)
+![Mis pedidos](docs/prototypes/07-my-orders.png)
 
 Historial de pedidos del usuario. Cada pedido muestra ID, estado (en proceso, enviado, entregado, cancelado), fecha, total y detalle de productos con enlace a la ficha para facilitar la recompra.
 
