@@ -6,7 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -36,8 +36,8 @@ public class UsuarioApp {
   private String nombre;
 
   @Column(name = "creado_en", nullable = false)
-  private Instant creadoEn;
+  private OffsetDateTime creadoEn;
 
   @Column(name = "modificado_en", nullable = false)
-  private Instant modificadoEn;
+  private OffsetDateTime modificadoEn;
 }

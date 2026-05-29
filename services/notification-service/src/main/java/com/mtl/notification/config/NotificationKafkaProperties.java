@@ -8,9 +8,9 @@ public class NotificationKafkaProperties {
   /** Si es falso, no se registra el listener (p. ej. tests sin broker). */
   private boolean enabled = false;
 
-  private String arbolEventoTopic = "catalog.arbol.evento";
+  private String ejemplarEventoTopic = "catalog.ejemplar.evento";
 
-  /** Grupo de consumo para {@code catalog.arbol.evento}. */
+  /** Grupo de consumo para {@code catalog.ejemplar.evento}. */
   private String consumerGroupId = "notification-service";
 
   public boolean isEnabled() {
@@ -21,12 +21,12 @@ public class NotificationKafkaProperties {
     this.enabled = enabled;
   }
 
-  public String getArbolEventoTopic() {
-    return arbolEventoTopic;
+  public String getEjemplarEventoTopic() {
+    return ejemplarEventoTopic;
   }
 
-  public void setArbolEventoTopic(String arbolEventoTopic) {
-    this.arbolEventoTopic = arbolEventoTopic;
+  public void setEjemplarEventoTopic(String ejemplarEventoTopic) {
+    this.ejemplarEventoTopic = ejemplarEventoTopic;
   }
 
   public String getConsumerGroupId() {

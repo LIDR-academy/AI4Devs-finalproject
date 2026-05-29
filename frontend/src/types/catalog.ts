@@ -17,7 +17,7 @@ export interface MasterDataPageResponse<TItem> {
   last: boolean
 }
 
-export interface CreateTreeRequest {
+export interface CreateEjemplarRequest {
   speciesId: number
   provinceId: number
   municipality?: string
@@ -29,12 +29,12 @@ export interface CreateTreeRequest {
   publicationState?: PublicationState
 }
 
-export interface CreatedTreeResponse {
-  treeId: number
+export interface CreatedEjemplarResponse {
+  ejemplarId: number
 }
 
-export interface PublicTreeListItem {
-  treeId: number
+export interface PublicEjemplarListItem {
+  ejemplarId: number
   nombreComun: string
   nombreCientifico: string
   provincia: string
@@ -43,16 +43,16 @@ export interface PublicTreeListItem {
   visibilidad: PublicMapVisibility
 }
 
-export interface PublicTreePageResponse {
-  content: PublicTreeListItem[]
+export interface PublicEjemplarPageResponse {
+  content: PublicEjemplarListItem[]
   totalResults: number
   page: number
   size: number
   sort: string
 }
 
-export interface PublicTreeDetail {
-  treeId: number
+export interface PublicEjemplarDetail {
+  ejemplarId: number
   nombreComun: string
   nombreCientifico: string
   provincia: string
@@ -70,9 +70,9 @@ export interface PublicProvinceNamesResponse {
   nombres: string[]
 }
 
-/** Ítem de `GET /api/catalog/trees` (listado colaborador, HU-008). */
-export interface CollaboratorTreeListItem {
-  treeId: number
+/** Ítem de `GET /api/catalog/ejemplares` (listado colaborador, HU-008). */
+export interface CollaboratorEjemplarListItem {
+  ejemplarId: number
   speciesId: number
   nombreComun: string
   nombreCientifico: string
@@ -85,17 +85,17 @@ export interface CollaboratorTreeListItem {
   createdByUserId?: number
 }
 
-export interface CollaboratorTreePageResponse {
-  content: CollaboratorTreeListItem[]
+export interface CollaboratorEjemplarPageResponse {
+  content: CollaboratorEjemplarListItem[]
   totalResults: number
   page: number
   size: number
   sort: string
 }
 
-/** Detalle de `GET` / `PUT` `/api/catalog/trees/{id}` (HU-008). */
-export interface CollaboratorTreeDetail {
-  treeId: number
+/** Detalle de `GET` / `PUT` `/api/catalog/ejemplares/{id}` (HU-008). */
+export interface CollaboratorEjemplarDetail {
+  ejemplarId: number
   speciesId: number
   provinceId: number
   latitude: number

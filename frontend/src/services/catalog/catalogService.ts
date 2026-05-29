@@ -1,12 +1,12 @@
 import { apiFetch } from '@/services/http/apiClient'
 import type {
-  CreateTreeRequest,
-  CreatedTreeResponse,
+  CreateEjemplarRequest,
+  CreatedEjemplarResponse,
   MasterDataPageResponse,
   MasterListItem,
-  PublicTreeDetail,
+  PublicEjemplarDetail,
   PublicProvinceNamesResponse,
-  PublicTreePageResponse,
+  PublicEjemplarPageResponse,
 } from '@/types/catalog'
 
 export async function fetchSpecies(signal?: AbortSignal): Promise<MasterListItem[]> {
@@ -39,14 +39,14 @@ export async function fetchPublicProvinceNames(signal?: AbortSignal): Promise<st
   return response.nombres ?? []
 }
 
-export async function createTree(payload: CreateTreeRequest): Promise<CreatedTreeResponse> {
-  return apiFetch<CreatedTreeResponse>('/api/catalog/trees', {
+export async function createEjemplar(payload: CreateEjemplarRequest): Promise<CreatedEjemplarResponse> {
+  return apiFetch<CreatedEjemplarResponse>('/api/catalog/ejemplares', {
     method: 'POST',
     body: JSON.stringify(payload),
   })
 }
 
-export interface FetchPublicTreesQuery {
+export interface FetchPublicEjemplaresQuery {
   page?: number
   size?: number
   sort?: string
@@ -57,8 +57,11 @@ export interface FetchPublicTreesQuery {
   visibilidad?: string
 }
 
-export async function fetchPublicTrees(query: FetchPublicTreesQuery, signal?: AbortSignal): Promise<PublicTreePageResponse> {
-  return apiFetch<PublicTreePageResponse>('/api/catalog/public/trees', {
+export async function fetchPublicEjemplares(
+  query: FetchPublicEjemplaresQuery,
+  signal?: AbortSignal,
+): Promise<PublicEjemplarPageResponse> {
+  return apiFetch<PublicEjemplarPageResponse>('/api/catalog/public/ejemplares', {
     query: {
       page: query.page ?? 0,
       size: query.size ?? 20,
@@ -73,11 +76,11 @@ export async function fetchPublicTrees(query: FetchPublicTreesQuery, signal?: Ab
   })
 }
 
-export async function fetchPublicTreeDetail(
-  treeId: number,
+export async function fetchPublicEjemplarDetail(
+  ejemplarId: number,
   signal?: AbortSignal,
-): Promise<PublicTreeDetail> {
-  return apiFetch<PublicTreeDetail>(`/api/catalog/public/trees/${treeId}`, {
+): Promise<PublicEjemplarDetail> {
+  return apiFetch<PublicEjemplarDetail>(`/api/catalog/public/ejemplares/${ejemplarId}`, {
     signal,
   })
 }

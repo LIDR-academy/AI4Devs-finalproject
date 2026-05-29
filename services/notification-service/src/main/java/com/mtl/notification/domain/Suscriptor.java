@@ -8,7 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import lombok.EqualsAndHashCode;
@@ -39,11 +39,11 @@ public class Suscriptor {
   private EstadoSuscripcion estadoSuscripcion;
 
   @Column(name = "alta_en", nullable = false)
-  private Instant altaEn;
+  private OffsetDateTime altaEn;
 
   @Column(name = "confirmado_en")
-  private Instant confirmadoEn;
+  private OffsetDateTime confirmadoEn;
 
   @Column(name = "baja_en")
-  private Instant bajaEn;
+  private OffsetDateTime bajaEn;
 }

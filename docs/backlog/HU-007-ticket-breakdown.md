@@ -10,7 +10,7 @@
 
 **Estado del ticket:** columna **Estado** en cada fila; valores recomendados **Pendiente**, **En curso**, **Hecho**.
 
-**Contexto:** el **productor** del mensaje de alta es **catalog-service** ([TASK-HU-005-05](HU-005-ticket-breakdown.md)): publica en **`catalog.arbol.evento`** con `tipo_evento` = **`ARBOL_CREADO`** y **no** inserta en **`EVENTO_CATALOGO`**. Esta historia cubre el **consumidor** y el envío a suscriptores.
+**Contexto:** el **productor** del mensaje de alta es **catalog-service** ([TASK-HU-005-05](HU-005-ticket-breakdown.md)): publica en **`catalog.ejemplar.evento`** con `tipo_evento` = **`EJEMPLAR_CREADO`** y **no** inserta en **`EVENTO_CATALOGO`**. Esta historia cubre el **consumidor** y el envío a suscriptores.
 
 **Referencias:** [kafka-events.md](../events/kafka-events.md), UC-09, R7; suscriptores en **HU-004**; modelo lógico `EVENTO_CATALOGO` / `NOTIFICACION` en [readme.md](../../readme.md).
 
@@ -36,10 +36,10 @@ flowchart LR
 | ID | Título | Descripción breve | Estado |
 |----|--------|-------------------|--------|
 | **TASK-HU-007-01** | Modelo persistencia en `notification-service` | Flyway (o equivalente) en esquema **notification**: tablas alineadas al modelo para **EVENTO_CATALOGO** (o nombre acordado), vínculo con **NOTIFICACION** y lectura de **SUSCRIPTOR** activos según fuentes del proyecto. | Hecho |
-| **TASK-HU-007-02** | Consumer `catalog.arbol.evento` | `notification-service`: Spring Kafka / listener, deserialización JSON, filtrado **`ARBOL_CREADO`** según [kafka-events.md](../events/kafka-events.md). Manejo de errores y logs sin PII masiva. | Hecho |
+| **TASK-HU-007-02** | Consumer `catalog.ejemplar.evento` | `notification-service`: Spring Kafka / listener, deserialización JSON, filtrado **`EJEMPLAR_CREADO`** según [kafka-events.md](../events/kafka-events.md). Manejo de errores y logs sin PII masiva. | Hecho |
 | **TASK-HU-007-03** | Idempotencia y registro de evento | Antes de enviar correo: deduplicar por **`evento_id`** (y/o clave acordada); persistir fila de evento consumido para reentregas Kafka. Si el mensaje ya fue procesado, **no-op** idempotente. | Hecho |
 | **TASK-HU-007-04** | Envío de correo a suscriptores | Para eventos válidos: resolver destinatarios **ACTIVA**, crear registros **NOTIFICACION** / **ENVIO_NOTIFICACION**, SMTP vía `spring-boot-starter-mail` (Mailpit en dev, `SmtpArbolCreadoCorreoAvisoSender`), cuerpo de texto fijo MVP; sin suscriptores **ACTIVA**: `notificacion` con `SIN_DESTINATARIOS_ACTIVOS` y evento a **PROCESADO**. | Hecho |
-| **TASK-HU-007-05** | Pruebas de integración | Testcontainers: Kafka + Postgres **notification**; publicar fixture `ARBOL_CREADO` y verificar una sola fila de evento y/o un envío simulado (p. ej. `JavaMailSender` mock). Convención [testing-java.md](../engineering/testing-java.md). | Hecho |
+| **TASK-HU-007-05** | Pruebas de integración | Testcontainers: Kafka + Postgres **notification**; publicar fixture `EJEMPLAR_CREADO` y verificar una sola fila de evento y/o un envío simulado (p. ej. `JavaMailSender` mock). Convención [testing-java.md](../engineering/testing-java.md). | Hecho |
 
 ---
 

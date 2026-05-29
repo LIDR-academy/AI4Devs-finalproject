@@ -93,7 +93,7 @@ class MediaUploadControllerWebMvcTest {
                     .content(
                         """
                         {
-                          "arbolId": 1,
+                          "ejemplarId": 1,
                           "nombreFicheroOriginal": "a.jpg",
                           "tipoMime": "image/jpeg",
                           "tamanoBytes": 0
@@ -118,7 +118,7 @@ class MediaUploadControllerWebMvcTest {
                     .content(
                         """
                         {
-                          "arbolId": 1,
+                          "ejemplarId": 1,
                           "nombreFicheroOriginal": "a.jpg",
                           "tipoMime": "image/jpeg",
                           "tamanoBytes": 1024
@@ -136,7 +136,7 @@ class MediaUploadControllerWebMvcTest {
   void presign_sinPermisoCatalogo_devuelve403ProblemJson() throws Exception {
     when(mediaUploadService.createPresignedUpload(any(), any()))
         .thenThrow(
-            new ResponseStatusException(HttpStatus.FORBIDDEN, "No tiene permiso para asociar fotografías a este árbol."));
+            new ResponseStatusException(HttpStatus.FORBIDDEN, "No tiene permiso para asociar fotografías a este ejemplar."));
 
     JwtAuthenticationToken authentication = collaboratorAuthentication();
 
@@ -148,7 +148,7 @@ class MediaUploadControllerWebMvcTest {
                     .content(
                         """
                         {
-                          "arbolId": 99,
+                          "ejemplarId": 99,
                           "nombreFicheroOriginal": "a.jpg",
                           "tipoMime": "image/jpeg",
                           "tamanoBytes": 1024
@@ -157,7 +157,7 @@ class MediaUploadControllerWebMvcTest {
                 authentication))
         .andExpect(status().isForbidden())
         .andExpect(jsonPath("$.status").value(403))
-        .andExpect(jsonPath("$.detail").value("No tiene permiso para asociar fotografías a este árbol."));
+        .andExpect(jsonPath("$.detail").value("No tiene permiso para asociar fotografías a este ejemplar."));
   }
 
   @Test
@@ -177,7 +177,7 @@ class MediaUploadControllerWebMvcTest {
                     .content(
                         """
                         {
-                          "arbolId": 1,
+                          "ejemplarId": 1,
                           "bucket": "otro",
                           "objectKey": "k",
                           "nombreFicheroOriginal": "a.jpg",
@@ -222,7 +222,7 @@ class MediaUploadControllerWebMvcTest {
     when(mediaUploadService.createPresignedUpload(any(), any()))
         .thenReturn(
             new PresignUploadResponse(
-                "http://minio/mtl/a.jpg?x=1", "mtl-photos", "trees/1/uuid-a.jpg", expires));
+                "http://minio/mtl/a.jpg?x=1", "mtl-photos", "ejemplares/1/uuid-a.jpg", expires));
 
     JwtAuthenticationToken authentication = collaboratorAuthentication();
 
@@ -234,7 +234,7 @@ class MediaUploadControllerWebMvcTest {
                     .content(
                         """
                         {
-                          "arbolId": 1,
+                          "ejemplarId": 1,
                           "nombreFicheroOriginal": "a.jpg",
                           "tipoMime": "image/jpeg",
                           "tamanoBytes": 1024
@@ -243,7 +243,7 @@ class MediaUploadControllerWebMvcTest {
                 authentication))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.bucket").value("mtl-photos"))
-        .andExpect(jsonPath("$.objectKey").value("trees/1/uuid-a.jpg"));
+        .andExpect(jsonPath("$.objectKey").value("ejemplares/1/uuid-a.jpg"));
   }
 
   @Test
@@ -254,7 +254,7 @@ class MediaUploadControllerWebMvcTest {
                 10L,
                 1L,
                 "mtl-photos",
-                "trees/1/k.jpg",
+                "ejemplares/1/k.jpg",
                 "k.jpg",
                 "image/jpeg",
                 500L,
@@ -274,9 +274,9 @@ class MediaUploadControllerWebMvcTest {
                     .content(
                         """
                         {
-                          "arbolId": 1,
+                          "ejemplarId": 1,
                           "bucket": "mtl-photos",
-                          "objectKey": "trees/1/k.jpg",
+                          "objectKey": "ejemplares/1/k.jpg",
                           "nombreFicheroOriginal": "k.jpg",
                           "tipoMime": "image/jpeg",
                           "tamanoBytes": 500

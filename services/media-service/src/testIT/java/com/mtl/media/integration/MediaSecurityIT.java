@@ -78,7 +78,7 @@ class MediaSecurityIT {
   @Test
   void primaryPhotoPublica_sinBearer_noExige401() throws Exception {
     mockMvc
-        .perform(get("/api/media/public/trees/999/primary-photo").accept(MediaType.APPLICATION_JSON))
+        .perform(get("/api/media/public/ejemplares/999/primary-photo").accept(MediaType.APPLICATION_JSON))
         .andExpect(
             result ->
                 assertNotEquals(
@@ -90,7 +90,7 @@ class MediaSecurityIT {
   @Test
   void galeriaPublicaDetalle_sinBearer_noExige401() throws Exception {
     mockMvc
-        .perform(get("/api/media/trees/999/photos").accept(MediaType.APPLICATION_JSON))
+        .perform(get("/api/media/ejemplares/999/photos").accept(MediaType.APPLICATION_JSON))
         .andExpect(
             result ->
                 assertNotEquals(

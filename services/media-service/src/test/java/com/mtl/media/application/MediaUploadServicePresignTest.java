@@ -59,10 +59,10 @@ class MediaUploadServicePresignTest {
     when(storageProperties.getBucket()).thenReturn("mtl-photos");
     when(storageProperties.getEndpoint()).thenReturn("http://localhost:9000");
     when(presignProperties.getExpiresIn()).thenReturn(Duration.ofMinutes(15));
-    when(catalogMediaPermissionClient.resolveActorUsuarioAppIdForTree(anyLong(), any()))
+    when(catalogMediaPermissionClient.resolveActorUsuarioAppIdForEjemplar(anyLong(), any()))
         .thenReturn(200L);
     when(objectStoragePresigner.presignedPutUrl(eq("mtl-photos"), anyString(), any()))
-        .thenReturn("http://localhost:9000/mtl-photos/trees/7/x?X-Amz-Algorithm=AWS4-HMAC-SHA256");
+        .thenReturn("http://localhost:9000/mtl-photos/ejemplares/7/x?X-Amz-Algorithm=AWS4-HMAC-SHA256");
     service =
         new MediaUploadService(
             fotografiaRepository,
@@ -74,8 +74,8 @@ class MediaUploadServicePresignTest {
   }
 
   @Test
-  void createPresignedUpload_whenTreeAlreadyHasMaxPhotos_throws() {
-    when(fotografiaRepository.countActiveForTree(7L)).thenReturn(10);
+  void createPresignedUpload_whenEjemplarAlreadyHasMaxPhotos_throws() {
+    when(fotografiaRepository.countActiveForEjemplar(7L)).thenReturn(10);
 
     PresignUploadRequest req = new PresignUploadRequest(7L, "a.jpg", "image/jpeg", 1024L);
 
@@ -84,21 +84,21 @@ class MediaUploadServicePresignTest {
 
   @Test
   void createPresignedUpload_whenNinePhotos_returnsPresignResponse() {
-    when(fotografiaRepository.countActiveForTree(7L)).thenReturn(9);
+    when(fotografiaRepository.countActiveForEjemplar(7L)).thenReturn(9);
 
     PresignUploadRequest req = new PresignUploadRequest(7L, "a.jpg", "image/jpeg", 1024L);
 
     PresignUploadResponse res = service.createPresignedUpload(req, TEST_JWT);
     assertThat(res.uploadUrl()).contains("X-Amz-Algorithm");
     assertThat(res.bucket()).isEqualTo("mtl-photos");
-    assertThat(res.objectKey()).startsWith("trees/7/");
+    assertThat(res.objectKey()).startsWith("ejemplares/7/");
     verify(objectStoragePresigner).presignedPutUrl(eq("mtl-photos"), eq(res.objectKey()), any());
-    verify(catalogMediaPermissionClient).resolveActorUsuarioAppIdForTree(7L, TEST_JWT);
+    verify(catalogMediaPermissionClient).resolveActorUsuarioAppIdForEjemplar(7L, TEST_JWT);
   }
 
   @Test
   void createPresignedUpload_rejectsDisallowedMime() {
-    when(fotografiaRepository.countActiveForTree(7L)).thenReturn(0);
+    when(fotografiaRepository.countActiveForEjemplar(7L)).thenReturn(0);
 
     PresignUploadRequest req = new PresignUploadRequest(7L, "x.pdf", "application/pdf", 1024L);
 
@@ -107,7 +107,7 @@ class MediaUploadServicePresignTest {
 
   @Test
   void createPresignedUpload_rejectsOversizedFile() {
-    when(fotografiaRepository.countActiveForTree(7L)).thenReturn(0);
+    when(fotografiaRepository.countActiveForEjemplar(7L)).thenReturn(0);
 
     long tooLarge = DataSize.ofMegabytes(21).toBytes();
     PresignUploadRequest req = new PresignUploadRequest(7L, "huge.jpg", "image/jpeg", tooLarge);

@@ -50,12 +50,12 @@ class MediaPhotoDeleteServiceTest {
     Jwt jwt = Jwt.withTokenValue("t").header("alg", "none").subject("sub").build();
     Fotografia photo = activePhoto(10L, 5L, false);
     when(fotografiaRepository.findActiveById(10L)).thenReturn(Optional.of(photo));
-    when(catalogMediaPermissionClient.resolveActorUsuarioAppIdForTree(5L, jwt)).thenReturn(7L);
-    when(fotografiaRepository.findActiveForTreeOrdered(5L)).thenReturn(List.of());
+    when(catalogMediaPermissionClient.resolveActorUsuarioAppIdForEjemplar(5L, jwt)).thenReturn(7L);
+    when(fotografiaRepository.findActiveForEjemplarOrdered(5L)).thenReturn(List.of());
 
     service.deletePhoto(10L, jwt);
 
-    verify(objectStorageRemover).removeObject("mtl-photos", "trees/5/a.jpg");
+    verify(objectStorageRemover).removeObject("mtl-photos", "ejemplares/5/a.jpg");
     verify(fotografiaRepository).delete(photo);
     verify(fotografiaRepository, never()).saveAll(any());
   }
@@ -65,10 +65,10 @@ class MediaPhotoDeleteServiceTest {
     Jwt jwt = Jwt.withTokenValue("t").header("alg", "none").subject("sub").build();
     Fotografia principal = activePhoto(10L, 5L, true);
     when(fotografiaRepository.findActiveById(10L)).thenReturn(Optional.of(principal));
-    when(catalogMediaPermissionClient.resolveActorUsuarioAppIdForTree(5L, jwt)).thenReturn(7L);
+    when(catalogMediaPermissionClient.resolveActorUsuarioAppIdForEjemplar(5L, jwt)).thenReturn(7L);
 
     Fotografia remaining = activePhoto(11L, 5L, false);
-    when(fotografiaRepository.findActiveForTreeOrdered(5L)).thenReturn(List.of(remaining));
+    when(fotografiaRepository.findActiveForEjemplarOrdered(5L)).thenReturn(List.of(remaining));
 
     service.deletePhoto(10L, jwt);
 
@@ -83,22 +83,22 @@ class MediaPhotoDeleteServiceTest {
     Jwt jwt = Jwt.withTokenValue("t").header("alg", "none").subject("sub").build();
     Fotografia photo = activePhoto(10L, 5L, false);
     when(fotografiaRepository.findActiveById(10L)).thenReturn(Optional.of(photo));
-    when(catalogMediaPermissionClient.resolveActorUsuarioAppIdForTree(5L, jwt)).thenReturn(7L);
+    when(catalogMediaPermissionClient.resolveActorUsuarioAppIdForEjemplar(5L, jwt)).thenReturn(7L);
     org.mockito.Mockito.doThrow(new IllegalStateException("minio down"))
         .when(objectStorageRemover)
-        .removeObject(eq("mtl-photos"), eq("trees/5/a.jpg"));
+        .removeObject(eq("mtl-photos"), eq("ejemplares/5/a.jpg"));
 
     assertThatThrownBy(() -> service.deletePhoto(10L, jwt)).isInstanceOf(MediaStorageException.class);
 
     verify(fotografiaRepository, never()).delete(any());
   }
 
-  private static Fotografia activePhoto(long id, long arbolId, boolean principal) {
+  private static Fotografia activePhoto(long id, long ejemplarId, boolean principal) {
     Fotografia photo = new Fotografia();
     photo.setFotografiaId(id);
-    photo.setArbolId(arbolId);
+    photo.setEjemplarId(ejemplarId);
     photo.setBucketAlmacenamiento("mtl-photos");
-    photo.setClaveObjeto("trees/5/a.jpg");
+    photo.setClaveObjeto("ejemplares/5/a.jpg");
     photo.setEsPrincipal(principal);
     return photo;
   }

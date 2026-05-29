@@ -59,7 +59,7 @@ frontend/src/
 
 ```ts
 import { apiFetch } from '@/services/http/apiClient'
-import type { CreateTreeRequest } from '@/types/catalog'
+import type { CreateEjemplarRequest } from '@/types/catalog'
 ```
 
 ---

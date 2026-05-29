@@ -31,7 +31,7 @@ describe('apiFetch', () => {
       ),
     )
 
-    const promise = apiFetch('/api/catalog/trees', { method: 'POST', body: JSON.stringify({}) })
+    const promise = apiFetch('/api/catalog/ejemplares', { method: 'POST', body: JSON.stringify({}) })
 
     await expect(promise).rejects.toBeInstanceOf(HttpError)
     await expect(promise).rejects.toMatchObject({
@@ -114,7 +114,7 @@ describe('apiFetchBlob', () => {
   it('devuelve null ante 404', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 404 }))
 
-    await expect(apiFetchBlob('/api/media/public/trees/1/primary-photo')).resolves.toBeNull()
+    await expect(apiFetchBlob('/api/media/public/ejemplares/1/primary-photo')).resolves.toBeNull()
   })
 
   it('devuelve Blob ante 200', async () => {
@@ -125,7 +125,7 @@ describe('apiFetchBlob', () => {
       }),
     )
 
-    const blob = await apiFetchBlob('/api/media/public/trees/1/primary-photo')
+    const blob = await apiFetchBlob('/api/media/public/ejemplares/1/primary-photo')
 
     expect(blob).not.toBeNull()
     expect(blob!.size).toBe(3)

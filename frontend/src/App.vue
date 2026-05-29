@@ -38,12 +38,12 @@ const canShowLogout = computed(() => navigationProfile.value.canShowLogout)
 
         <nav class="main-nav" :aria-label="t('navigation.ariaLabel')">
           <RouterLink class="nav-link" to="/">{{ t('navigation.home') }}</RouterLink>
-          <RouterLink class="nav-link" to="/trees">{{ t('navigation.trees') }}</RouterLink>
+          <RouterLink class="nav-link" to="/ejemplares">{{ t('navigation.trees') }}</RouterLink>
           <RouterLink class="nav-link" to="/subscriptions/new">{{ t('navigation.subscribe') }}</RouterLink>
 
           <template v-if="isCollaboratorOrAdmin">
-            <RouterLink class="nav-link" to="/trees/new">{{ t('navigation.createTree') }}</RouterLink>
-            <RouterLink class="nav-link" to="/my-trees">{{ t('navigation.myTrees') }}</RouterLink>
+            <RouterLink class="nav-link" to="/ejemplares/new">{{ t('navigation.createTree') }}</RouterLink>
+            <RouterLink class="nav-link" to="/mis-ejemplares">{{ t('navigation.myTrees') }}</RouterLink>
           </template>
 
           <template v-if="isAdmin">

@@ -9,7 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,15 +33,19 @@ public class Notificacion {
   @JoinColumn(name = "evento_id", nullable = false)
   private EventoCatalogo eventoCatalogo;
 
-  @Column(name = "arbol_id", nullable = false)
-  private Long arbolId;
-
-  @Column(name = "tipo_evento_catalogo", nullable = false, length = 64)
-  private String tipoEventoCatalogo;
-
   @Column(name = "estado_generacion", nullable = false, length = 32)
   private String estadoGeneracion;
 
   @Column(name = "generada_en", nullable = false)
-  private Instant generadaEn;
+  private OffsetDateTime generadaEn;
+
+  /** Derivado de {@link #eventoCatalogo}; no persistido (3FN). */
+  public Long getEjemplarId() {
+    return eventoCatalogo != null ? eventoCatalogo.getEjemplarId() : null;
+  }
+
+  /** Derivado de {@link #eventoCatalogo}; no persistido (3FN). */
+  public String getTipoEvento() {
+    return eventoCatalogo != null ? eventoCatalogo.getTipoEvento() : null;
+  }
 }

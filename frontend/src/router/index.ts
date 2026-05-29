@@ -1,18 +1,19 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import AuthCallbackView from '@/views/AuthCallbackView.vue'
 import AuthGuardErrorView from '@/views/AuthGuardErrorView.vue'
-import CreateTreeView from '@/views/CreateTreeView.vue'
+import CreateEjemplarView from '@/views/CreateEjemplarView.vue'
 import HomeView from '@/views/HomeView.vue'
 import LoginView from '@/views/LoginView.vue'
 import AdminSubscriptionsView from '@/views/AdminSubscriptionsView.vue'
 import AdminMastersView from '@/views/AdminMastersView.vue'
 import SubscribeByEmailView from '@/views/SubscribeByEmailView.vue'
-import TreesDetailView from '@/views/TreesDetailView.vue'
-import EditTreeView from '@/views/EditTreeView.vue'
-import MyTreesListView from '@/views/MyTreesListView.vue'
-import TreesListView from '@/views/TreesListView.vue'
+import EjemplaresDetailView from '@/views/EjemplaresDetailView.vue'
+import EditEjemplarView from '@/views/EditEjemplarView.vue'
+import MyEjemplaresListView from '@/views/MyEjemplaresListView.vue'
+import EjemplaresListView from '@/views/EjemplaresListView.vue'
 import { authService } from '@/services/auth/oidc'
 import type { AppRole } from '@/types/auth'
+import { userHasAnyAppRole } from '@/utils/jwtRoles'
 
 async function trySilentRefreshWithTimeout(timeoutMs = 800) {
   const timeoutPromise = new Promise<null>((resolve) => {
@@ -33,92 +34,6 @@ async function trySilentRefreshWithTimeout(timeoutMs = 800) {
   }
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null
-}
-
-function normalizeRole(role: string): string {
-  const normalized = role.trim().toUpperCase()
-  return normalized.startsWith('ROLE_') ? normalized.slice('ROLE_'.length) : normalized
-}
-
-function decodeJwtPayload(token: string | null | undefined): unknown {
-  if (!token) {
-    return null
-  }
-
-  const parts = token.split('.')
-  if (parts.length < 2) {
-    return null
-  }
-
-  try {
-    const base64 = parts[1].replaceAll('-', '+').replaceAll('_', '/')
-    const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=')
-    return JSON.parse(globalThis.atob(padded)) as unknown
-  } catch {
-    return null
-  }
-}
-
-function collectRolesFromClaims(claims: unknown, roles: Set<string>): void {
-  if (!isRecord(claims)) {
-    return
-  }
-
-  const realmAccess = claims.realm_access
-  if (isRecord(realmAccess) && Array.isArray(realmAccess.roles)) {
-    realmAccess.roles.forEach((role) => {
-      if (typeof role === 'string') {
-        roles.add(normalizeRole(role))
-      }
-    })
-  }
-
-  const resourceAccess = claims.resource_access
-  if (isRecord(resourceAccess)) {
-    Object.values(resourceAccess).forEach((resource) => {
-      if (!isRecord(resource) || !Array.isArray(resource.roles)) {
-        return
-      }
-      resource.roles.forEach((role) => {
-        if (typeof role === 'string') {
-          roles.add(normalizeRole(role))
-        }
-      })
-    })
-  }
-
-  const directRoles = claims.roles
-  if (Array.isArray(directRoles)) {
-    directRoles.forEach((role) => {
-      if (typeof role === 'string') {
-        roles.add(normalizeRole(role))
-      }
-    })
-  }
-
-}
-
-function extractTokenRoles(user: Awaited<ReturnType<typeof authService.getUser>>): Set<string> {
-  const roles = new Set<string>()
-  if (!user) {
-    return roles
-  }
-
-  collectRolesFromClaims(user.profile, roles)
-  collectRolesFromClaims(decodeJwtPayload(user.access_token), roles)
-  return roles
-}
-
-function hasRequiredRole(user: Awaited<ReturnType<typeof authService.getUser>>, requiredRoles: AppRole[]): boolean {
-  if (!user) {
-    return false
-  }
-  const userRoles = extractTokenRoles(user)
-  return requiredRoles.some((role) => userRoles.has(normalizeRole(role)))
-}
-
 function buildAuthErrorNavigation(redirect: string, reason: 'session' | 'forbidden') {
   return {
     name: 'auth-error',
@@ -134,17 +49,17 @@ const router = createRouter({
     { path: '/auth/callback', name: 'auth-callback', component: AuthCallbackView },
     { path: '/auth/error', name: 'auth-error', component: AuthGuardErrorView },
     {
-      path: '/trees',
-      name: 'trees-list',
-      component: TreesListView,
+      path: '/ejemplares',
+      name: 'ejemplares-list',
+      component: EjemplaresListView,
       meta: {
         pageTitleKey: 'pendingViews.treesList.title',
       },
     },
     {
-      path: '/trees/:id',
-      name: 'trees-detail',
-      component: TreesDetailView,
+      path: '/ejemplares/:id',
+      name: 'ejemplares-detail',
+      component: EjemplaresDetailView,
       meta: {
         pageTitleKey: 'pendingViews.treesDetail.title',
       },
@@ -158,24 +73,24 @@ const router = createRouter({
       },
     },
     {
-      path: '/trees/new',
-      name: 'trees-new',
-      component: CreateTreeView,
+      path: '/ejemplares/new',
+      name: 'ejemplares-new',
+      component: CreateEjemplarView,
       meta: { requiresAuth: true },
     },
     {
-      path: '/trees/:id/edit',
-      name: 'trees-edit',
-      component: EditTreeView,
+      path: '/ejemplares/:id/edit',
+      name: 'ejemplares-edit',
+      component: EditEjemplarView,
       meta: {
         requiresAuth: true,
         pageTitleKey: 'treeEdit.title',
       },
     },
     {
-      path: '/my-trees',
-      name: 'my-trees',
-      component: MyTreesListView,
+      path: '/mis-ejemplares',
+      name: 'mis-ejemplares',
+      component: MyEjemplaresListView,
       meta: {
         requiresAuth: true,
         pageTitleKey: 'myTrees.title',
@@ -218,7 +133,7 @@ router.beforeEach(async (to) => {
   }
 
   if (user && !user.expired) {
-    if (requiredRoles.length > 0 && !hasRequiredRole(user, requiredRoles)) {
+    if (requiredRoles.length > 0 && !userHasAnyAppRole(user, requiredRoles)) {
       return buildAuthErrorNavigation(to.fullPath, 'forbidden')
     }
     return true
@@ -226,7 +141,7 @@ router.beforeEach(async (to) => {
 
   const refreshedUser = await trySilentRefreshWithTimeout()
   if (refreshedUser) {
-    if (requiredRoles.length > 0 && !hasRequiredRole(refreshedUser, requiredRoles)) {
+    if (requiredRoles.length > 0 && !userHasAnyAppRole(refreshedUser, requiredRoles)) {
       return buildAuthErrorNavigation(to.fullPath, 'forbidden')
     }
     return true

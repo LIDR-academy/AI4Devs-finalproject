@@ -26,7 +26,7 @@
 
 - Frontend: `npm run build` y `npm run test`
 - Backend: `mvn -f services/pom.xml test` en módulos tocados (si no hay cambios backend, no aplica más allá de la verificación del equipo)
-- Verificar manualmente `/trees/:id` con coordenadas válidas (mapa + marcador) y caso sin coordenadas (mensaje, sin error)
+- Verificar manualmente `/ejemplares/:id` con coordenadas válidas (mapa + marcador) y caso sin coordenadas (mensaje, sin error)
 
 ---
 
@@ -76,4 +76,4 @@ flowchart LR
 
 ## Cierre sugerido (definición de “hecho” para el experimento)
 
-Usuario abre `/trees/:id` con ficha que tiene `latitud`/`longitud` válidas → ve mapa con marcador, sin poder fijar coordenadas por mapa (`readOnly`). Si las coordenadas faltan o son inválidas → mensaje claro y sin error 500 en cliente. `npm run test` y `npm run build` en verde.
+Usuario abre `/ejemplares/:id` con ficha que tiene `latitud`/`longitud` válidas → ve mapa con marcador, sin poder fijar coordenadas por mapa (`readOnly`). Si las coordenadas faltan o son inválidas → mensaje claro y sin error 500 en cliente. `npm run test` y `npm run build` en verde.

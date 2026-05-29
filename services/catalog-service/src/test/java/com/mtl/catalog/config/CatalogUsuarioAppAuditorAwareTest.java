@@ -40,10 +40,13 @@ class CatalogUsuarioAppAuditorAwareTest {
   @Test
   void getCurrentAuditor_returnsBoundIdWithoutQueryingRepository() {
     CatalogAuditorContext.bindUsuarioAppId(99L);
+    UsuarioApp ref = new UsuarioApp();
+    ref.setId(99L);
+    when(entityManager.getReference(UsuarioApp.class, 99L)).thenReturn(ref);
 
-    Optional<Long> auditor = auditorAware.getCurrentAuditor();
+    Optional<UsuarioApp> auditor = auditorAware.getCurrentAuditor();
 
-    assertThat(auditor).contains(99L);
+    assertThat(auditor).contains(ref);
     verify(usuarioAppRepository, never()).findBySubjectOidc(org.mockito.ArgumentMatchers.any());
   }
 
@@ -65,9 +68,9 @@ class CatalogUsuarioAppAuditorAwareTest {
             new JwtAuthenticationToken(
                 jwt, List.of(new SimpleGrantedAuthority("ROLE_COLABORADOR"))));
 
-    Optional<Long> auditor = auditorAware.getCurrentAuditor();
+    Optional<UsuarioApp> auditor = auditorAware.getCurrentAuditor();
 
-    assertThat(auditor).contains(7L);
+    assertThat(auditor).contains(usuario);
     verify(usuarioAppRepository).findBySubjectOidc("sub-1");
   }
 }

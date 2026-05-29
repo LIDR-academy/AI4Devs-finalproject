@@ -6,7 +6,8 @@ import com.mtl.notification.dto.SubscriptionAdminItemResponse;
 import com.mtl.notification.dto.SubscriptionAdminPageResponse;
 import com.mtl.notification.exception.NotificationException;
 import com.mtl.notification.infrastructure.persistence.jpa.repository.SuscriptorRepository;
-import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -72,7 +73,7 @@ public class SubscriptionAdminService {
     }
     if (requested == EstadoSuscripcion.CANCELADA) {
       row.setEstadoSuscripcion(EstadoSuscripcion.CANCELADA);
-      row.setBajaEn(Instant.now());
+      row.setBajaEn(OffsetDateTime.now(ZoneOffset.UTC));
     } else {
       row.setEstadoSuscripcion(EstadoSuscripcion.ACTIVA);
       row.setBajaEn(null);

@@ -8,7 +8,7 @@ public class CatalogKafkaProperties {
   /** Si es falso, no se publica a Kafka (p. ej. perfil test sin broker). */
   private boolean enabled = false;
 
-  private String arbolEventoTopic = "catalog.arbol.evento";
+  private String ejemplarEventoTopic = "catalog.ejemplar.evento";
 
   public boolean isEnabled() {
     return enabled;
@@ -18,11 +18,11 @@ public class CatalogKafkaProperties {
     this.enabled = enabled;
   }
 
-  public String getArbolEventoTopic() {
-    return arbolEventoTopic;
+  public String getEjemplarEventoTopic() {
+    return ejemplarEventoTopic;
   }
 
-  public void setArbolEventoTopic(String arbolEventoTopic) {
-    this.arbolEventoTopic = arbolEventoTopic;
+  public void setEjemplarEventoTopic(String ejemplarEventoTopic) {
+    this.ejemplarEventoTopic = ejemplarEventoTopic;
   }
 }

@@ -5,7 +5,8 @@ import com.mtl.catalog.domain.UsuarioApp;
 import com.mtl.catalog.exception.CatalogValidationException;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.UsuarioAppRepository;
 import com.mtl.catalog.util.OidcUserProfileExtractor.OidcUserProfile;
-import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Objects;
 import java.util.Optional;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -63,7 +64,7 @@ public class UsuarioAppMaterializationService {
     if (changed) {
       usuario.setEmail(newEmail);
       usuario.setNombre(newNombre);
-      usuario.setModificadoEn(Instant.now());
+      usuario.setModificadoEn(OffsetDateTime.now(ZoneOffset.UTC));
       usuarioAppRepository.save(usuario);
     }
   }
@@ -73,7 +74,7 @@ public class UsuarioAppMaterializationService {
     nuevo.setSubjectOidc(subjectOidc);
     nuevo.setEmail(email);
     nuevo.setNombre(nombre);
-    Instant now = Instant.now();
+    OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
     nuevo.setCreadoEn(now);
     nuevo.setModificadoEn(now);
     try {

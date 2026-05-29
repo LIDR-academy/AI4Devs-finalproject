@@ -54,7 +54,7 @@ flowchart LR
 
 | ID | Título | Descripción breve | Estado |
 |----|--------|-------------------|--------|
-| **TASK-HU-013-01** | Definir mapa de rutas MVP | Implementar/ajustar rutas base de navegación según `readme.md` §1.3: Home, consulta pública (`/trees`, `/trees/:id`), suscripción, alta/edición y administración, manteniendo enfoque de detalle con mapa integrado (sin ruta pública `/map` independiente). | Hecho |
+| **TASK-HU-013-01** | Definir mapa de rutas MVP | Implementar/ajustar rutas base de navegación según `readme.md` §1.3: Home, consulta pública (`/ejemplares`, `/ejemplares/:id`), suscripción, alta/edición y administración, manteniendo enfoque de detalle con mapa integrado (sin ruta pública `/map` independiente). | Hecho |
 | **TASK-HU-013-02** | Unificar roles en frontend | Centralizar constantes/tipos de rol para usar `COLABORADOR` y `ADMIN` de forma consistente (alineado con Keycloak y reglas de seguridad del proyecto). | Hecho |
 | **TASK-HU-013-03** | Guardas de router por autenticación y rol | Aplicar guardas de acceso para rutas protegidas (colaborador/admin), manteniendo rutas públicas accesibles sin sesión e integrando el flujo de auth/error ya definido en frontend. | Hecho |
 | **TASK-HU-013-04** | Placeholders de páginas no implementadas | Crear placeholders con título para vistas pendientes, con navegación operativa y **sin** lógica funcional ni llamadas reales a backend en esta HU. | Hecho |

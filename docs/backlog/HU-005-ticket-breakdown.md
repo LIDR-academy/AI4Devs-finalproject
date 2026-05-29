@@ -13,7 +13,7 @@
 
 **Contexto de equipo:** un ingeniero/a **full-stack** con HTML/CSS sólidos; el stack y diagramas están en [readme.md](../../readme.md). **HU-001** (sesión OIDC + Bearer hacia el gateway) se asume **en curso o cerrada**; sin eso no se puede cerrar el flujo de alta autenticada.
 
-**Objetivo de este desglose:** construir **lo suficiente** para demostrar UC-03 en vertical: colaborador autenticado crea ficha en **catalog-service**, datos en Postgres y API **POST** acorde a OpenAPI; mensaje **`ARBOL_CREADO`** en Kafka cuando **TASK-HU-005-05** esté cerrada; sin fotos (**HU-006** / **HU-014**) ni consumo/correo en **notification-service** (HU-007).
+**Objetivo de este desglose:** construir **lo suficiente** para demostrar UC-03 en vertical: colaborador autenticado crea ficha en **catalog-service**, datos en Postgres y API **POST** acorde a OpenAPI; mensaje **`EJEMPLAR_CREADO`** en Kafka cuando **TASK-HU-005-05** esté cerrada; sin fotos (**HU-006** / **HU-014**) ni consumo/correo en **notification-service** (HU-007).
 
 **Reglas aplicables por capa (referencia rápida):**
 
@@ -58,17 +58,17 @@ flowchart LR
 
 | ID | Título | Descripción breve | Estado |
 |----|--------|-------------------|--------|
-| **TASK-HU-005-01** | Modelo relacional mínimo para alta | Flyway `catalog`: tablas alineadas al readme (`USUARIO_APP` o mapeo de `subject` OIDC, `FAMILIA`/`GENERO`/`ESPECIE`, `PROVINCIA`, `ARBOL` con FK y **coordenadas**; tipos y PK numéricas según [ADR-0002](../adr/0002-claves-primarias-numericas-frente-a-uuid.md). Decisión explícita MVP: **latitud/longitud** decimales en `ARBOL` (PostGIS opcional en iteración 2 si el hueco del backlog lo exige). DDL: [`V1__baseline.sql`](../../services/catalog-service/src/main/resources/db/migration/V1__baseline.sql) (modelo relacional completo; el nombre de fichero conserva el histórico Flyway). | Hecho |
-| **TASK-HU-005-02** | Semillas de datos para desbloquear R1 | Migración [`V2__seed_maestros_inicial.sql`](../../services/catalog-service/src/main/resources/db/migration/V2__seed_maestros_inicial.sql): carga inicial de maestros (familia, género, especie, provincia). Cualquier cambio adicional de esquema o datos: **nueva** migración `V3__…`, `V4__…`, … (p. ej. [`V3__enable_unaccent_extension.sql`](../../services/catalog-service/src/main/resources/db/migration/V3__enable_unaccent_extension.sql), [`V4__usuario_app_nombre_drop_rol.sql`](../../services/catalog-service/src/main/resources/db/migration/V4__usuario_app_nombre_drop_rol.sql)); no editar `V2` en entornos ya migrados. | Hecho |
+| **TASK-HU-005-01** | Modelo relacional mínimo para alta | Flyway `catalog`: tablas alineadas al readme (`USUARIO_APP` o mapeo de `subject` OIDC, `FAMILIA`/`GENERO`/`ESPECIE`, `PROVINCIA`, **`EJEMPLAR`** con FK y **coordenadas**; tipos y PK numéricas según [ADR-0002](../adr/0002-claves-primarias-numericas-frente-a-uuid.md). Decisión explícita MVP: **latitud/longitud** decimales en **`ejemplar`** (PostGIS opcional en iteración 2 si el hueco del backlog lo exige). DDL: [`V1__baseline.sql`](../../services/catalog-service/src/main/resources/db/migration/V1__baseline.sql). | Hecho |
+| **TASK-HU-005-02** | Semillas de datos para desbloquear R1 | Migración [`V2__seed_maestros_inicial.sql`](../../services/catalog-service/src/main/resources/db/migration/V2__seed_maestros_inicial.sql): carga inicial de maestros (familia, género, especie, provincia). El DDL base (`unaccent`, `usuario_app`, CHECK/índice de `ejemplar`, `seq_ejemplar_evento_id`, tablas) está en [`V1__baseline.sql`](../../services/catalog-service/src/main/resources/db/migration/V1__baseline.sql). Cambios de esquema posteriores: **nueva** migración `V3__…` (no editar migraciones ya aplicadas en entornos compartidos). | Hecho |
 | **TASK-HU-005-03** | API de lectura de maestros para el formulario | `GET /api/catalog/species` y `GET /api/catalog/provinces` (JWT, roles `COLABORADOR`/`ADMIN`): paginación o `unpaged`, filtro `q` (sin acentos/mayúsculas en backend). Contrato en [openapi.yaml](../api/openapi.yaml). | Hecho |
 
 ### Dominio, integración y contrato
 
 | ID | Título | Descripción breve | Estado |
 |----|--------|-------------------|--------|
-| **TASK-HU-005-04** | Caso de uso “crear árbol” | Servicio de aplicación: validar **R1** (especie_id existente), **R2** (coordenadas presentes y en rango razonable), asociar **creador** desde identidad JWT/claim acordado con HU-001; mapeo a agregado/entidad **ARBOL**; transacción única. | Hecho |
-| **TASK-HU-005-05** | Publicación Kafka tras commit | Tras persistencia exitosa de **ARBOL** (misma transacción o inmediatamente después, según diseño): **solo** publicar JSON en `catalog.arbol.evento` con `tipo_evento` = **`ARBOL_CREADO`**, `arbol_id`, `evento_id` (único generado en catálogo, p. ej. secuencia dedicada **sin** tabla `EVENTO_CATALOGO`), `ocurrido_en` según [kafka-events.md](../events/kafka-events.md). **No** insertar en **EVENTO_CATALOGO** desde `catalog-service` (pertenece al bounded context de **notificaciones** / [HU-007](HU-007-ticket-breakdown.md)). Spring Kafka en `catalog-service`; topic alineado con Compose. | Hecho |
-| **TASK-HU-005-06** | `POST /api/catalog/trees` operativo | Controlador REST + DTO de alta cerrado (sustituir `object` genérico del contrato); respuestas **201** con identificador del árbol; **400** con `application/problem+json`; **401** si no hay Bearer. OAuth2 resource server alineado con gateway/JWT. **No** implementar fotos en esta ruta. | Hecho |
+| **TASK-HU-005-04** | Caso de uso “crear árbol” | Servicio de aplicación: validar **R1** (especie_id existente), **R2** (coordenadas presentes y en rango razonable), asociar **creador** desde identidad JWT/claim acordado con HU-001; mapeo a entidad **`ejemplar`**; transacción única. | Hecho |
+| **TASK-HU-005-05** | Publicación Kafka tras commit | Tras persistencia exitosa de **`ejemplar`** (misma transacción o inmediatamente después, según diseño): **solo** publicar JSON en **`catalog.ejemplar.evento`** con `tipo_evento` = **`EJEMPLAR_CREADO`**, `ejemplar_id`, `evento_id` (único generado en catálogo, p. ej. secuencia dedicada **sin** tabla `EVENTO_CATALOGO`), `ocurrido_en` según [kafka-events.md](../events/kafka-events.md). **No** insertar en **EVENTO_CATALOGO** desde `catalog-service` (pertenece al bounded context de **notificaciones** / [HU-007](HU-007-ticket-breakdown.md)). Spring Kafka en `catalog-service`; topic alineado con Compose. | Hecho |
+| **TASK-HU-005-06** | `POST /api/catalog/ejemplares` operativo | Controlador REST + DTO de alta cerrado (sustituir `object` genérico del contrato); respuestas **201** con identificador del ejemplar; **400** con `application/problem+json`; **401** si no hay Bearer. OAuth2 resource server alineado con gateway/JWT. **No** implementar fotos en esta ruta. | Hecho |
 | **TASK-HU-005-07** | Auditoría de catálogo en alta | Registrar operación relevante en **AUDITORIA_CATALOGO** (R3) con actor y resumen acorde al diseño del readme, sin volcar PII innecesario en logs. | Hecho |
 
 ### Calidad y documentación
@@ -76,7 +76,7 @@ flowchart LR
 | ID | Título | Descripción breve | Estado |
 |----|--------|-------------------|--------|
 | **TASK-HU-005-08** | Pruebas de integración | Testcontainers: Postgres (y Kafka si el entorno de test lo permite) para verificar creación + mensaje publicado al menos una vez con payload mínimo; convención [testing-java.md](../engineering/testing-java.md). | Hecho |
-| **TASK-HU-005-09** | OpenAPI y README | [openapi.yaml](../api/openapi.yaml): esquema **CreateTreeRequest** / **CreatedTreeResponse**, descripción JWT/`email` en **POST**, códigos 201/400/401/403. [services/README.md](../../services/README.md): arranque, Flyway, **Keycloak** `scope=openid profile email` y enlace a **ADR-0004**. Variables `SPRING_KAFKA_*` del **catalog-service**: documentar al implementar **TASK-05**. | Hecho |
+| **TASK-HU-005-09** | OpenAPI y README | [openapi.yaml](../api/openapi.yaml): esquema **CreateEjemplarRequest** / **CreatedEjemplarResponse**, descripción JWT/`email` en **POST**, códigos 201/400/401/403. [services/README.md](../../services/README.md): arranque, Flyway, **Keycloak** `scope=openid profile email` y enlace a **ADR-0004**. Variables `SPRING_KAFKA_*` del **catalog-service**: documentar al implementar **TASK-05**. | Hecho |
 
 ### Frontend (Vue 3 + HTML/CSS)
 
@@ -105,4 +105,4 @@ flowchart LR
 
 ## Cierre sugerido (definición de “hecho” para el experimento)
 
-Colaborador de prueba crea un árbol desde la SPA → **201** → registro en BD → (con **TASK-05** cerrada) evento visible en topic con `ARBOL_CREADO` → captura o test automático que lo prueba.
+Colaborador de prueba crea un árbol desde la SPA → **201** → registro en BD → (con **TASK-05** cerrada) evento visible en topic con **`EJEMPLAR_CREADO`** → captura o test automático que lo prueba.

@@ -3,10 +3,10 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import VueZoomable from 'vue-zoomable'
 import 'vue-zoomable/dist/style.css'
-import type { TreePhotoGalleryItem } from '@/types/media'
+import type { EjemplarPhotoGalleryItem } from '@/types/media'
 
 const props = defineProps<{
-  photos: TreePhotoGalleryItem[]
+  photos: EjemplarPhotoGalleryItem[]
   initialIndex?: number
   title: string
 }>()

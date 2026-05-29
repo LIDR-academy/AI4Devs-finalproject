@@ -60,7 +60,7 @@ Como usuario con rol administrador, quiero gestionar los datos de referencia tax
 | Tema | Decisión MVP |
 |------|----------------|
 | **Contrato OpenAPI** | Ticket **TASK-HU-011-01**: rutas, verbos, esquemas request/response y códigos de error. |
-| **Matriz CRUD** | **Familia** y **género:** solo **POST** (alta). **Especie:** **POST**, **PUT** (edición) y **DELETE**; **no** se permite **DELETE** de especie si existe **FK** desde `arbol.especie_id`. **Familia**/**género:** sin **PUT** ni **DELETE** en MVP. |
+| **Matriz CRUD** | **Familia** y **género:** solo **POST** (alta). **Especie:** **POST**, **PUT** (edición) y **DELETE**; **no** se permite **DELETE** de especie si existe **FK** desde `ejemplar.especie_id`. **Familia**/**género:** sin **PUT** ni **DELETE** en MVP. |
 | **Campos obligatorios** | Derivados de SQL: **familia** — `nombre_cientifico` (NOT NULL); **género** — `familia_id`, `nombre_cientifico`; **especie** — `genero_id`, `nombre_cientifico`. `nombre_comun` opcional en las tres tablas. |
 | **UI admin** | **Una pantalla** de listado + alta/edición de **especie**. Combo **género** con **+** → popup alta género (selector familia + campos); en ese popup, combo **familia** con **+** → popup alta familia. Tras alta exitosa, refrescar combo y seleccionar el nuevo ítem. Sin pantallas ni acciones de editar/borrar familia o género. |
 | **Caché Redis** | Ticket **TASK-HU-011-05**: `@CacheEvict` (o equivalente) en escrituras que afecten al listado unpaged de especies. |
@@ -90,7 +90,7 @@ Ninguna: cerradas en la tabla anterior y en [HU-011-ticket-breakdown.md](HU-011-
 
 ### Escenario 3 — Baja de especie bloqueada por fichas de árbol
 
-- **Dado que** existe una **especie** referenciada por al menos un registro en `arbol`  
+- **Dado que** existe una **especie** referenciada por al menos un registro en `ejemplar`  
 - **Cuando** un **ADMIN** solicita **DELETE** de esa especie  
 - **Entonces** la operación no elimina la fila y recibo error de cliente coherente con el contrato (p. ej. **409**), sin incoherencia respecto a **R1**.
 

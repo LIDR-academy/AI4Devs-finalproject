@@ -14,7 +14,7 @@ import com.mtl.notification.domain.EstadoSuscripcion;
 import com.mtl.notification.dto.SubscriptionAdminItemResponse;
 import com.mtl.notification.dto.SubscriptionAdminPageResponse;
 import com.mtl.notification.web.error.NotificationExceptionHandler;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,8 +49,8 @@ class NotificationAdminSubscriptionsControllerWebMvcTest {
                         1L,
                         "user@example.com",
                         EstadoSuscripcion.ACTIVA,
-                        Instant.parse("2024-01-01T00:00:00Z"),
-                        Instant.parse("2024-01-01T00:00:00Z"),
+                        OffsetDateTime.parse("2024-01-01T00:00:00Z"),
+                        OffsetDateTime.parse("2024-01-01T00:00:00Z"),
                         null)),
                 1,
                 1,
@@ -105,9 +105,9 @@ class NotificationAdminSubscriptionsControllerWebMvcTest {
                 5L,
                 "x@y.com",
                 EstadoSuscripcion.CANCELADA,
-                Instant.parse("2024-01-01T00:00:00Z"),
-                Instant.parse("2024-01-01T00:00:00Z"),
-                Instant.parse("2025-01-01T00:00:00Z")));
+                OffsetDateTime.parse("2024-01-01T00:00:00Z"),
+                OffsetDateTime.parse("2024-01-01T00:00:00Z"),
+                OffsetDateTime.parse("2025-01-01T00:00:00Z")));
 
     mockMvc
         .perform(

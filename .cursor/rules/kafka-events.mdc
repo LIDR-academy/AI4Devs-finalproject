@@ -13,6 +13,6 @@ Contrato y convenciones: **[docs/events/kafka-events.md](../../docs/events/kafka
 
 - **Nombre del topic** y **payload mínimo** deben coincidir con el documento de eventos; cualquier cambio **versiona** el contrato o el campo `schemaVersion` del payload.
 - **Productor** de eventos de catálogo: **catalog-service** salvo decisión explícita documentada.
-- **Notificación a suscriptores (MVP):** emitir hacia Kafka el evento que dispara el correo **solo** en la **alta** del árbol (`tipo_evento` **`ARBOL_CREADO`**, regla **R7**); las **modificaciones** no activan ese flujo hasta nueva documentación.
+- **Notificación a suscriptores (MVP):** emitir hacia Kafka el evento que dispara el correo **solo** en la **alta** del ejemplar (`tipo_evento` **`EJEMPLAR_CREADO`**, regla **R7**); las **modificaciones** no activan ese flujo hasta nueva documentación.
 - **Consumidores** deben ser **idempotentes** (reintentos de Kafka pueden duplicar entrega): usar clave de negocio o id de evento persistido para detectar reprocesamiento.
-- No incluir **PII innecesaria** en el valor del evento; referenciar identificadores técnicos (`arbol_id`, `evento_id`, etc.).
+- No incluir **PII innecesaria** en el valor del evento; referenciar identificadores técnicos (`ejemplar_id`, `evento_id`, etc.).

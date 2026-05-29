@@ -17,6 +17,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.server.ResponseStatusException;
+
 @Service
 public class MediaPublicPrimaryPhotoService {
 
@@ -34,16 +35,16 @@ public class MediaPublicPrimaryPhotoService {
   }
 
   /**
-   * Comprueba en catálogo que el árbol es visible en el mismo contexto que el listado/detalle público
+   * Comprueba en catálogo que el ejemplar es visible en el mismo contexto que el listado/detalle público
    * (JWT opcional para colaboradores que ven borradores). Luego devuelve bytes desde el almacén si hay
    * foto principal no eliminada.
    */
-  public ResponseEntity<byte[]> loadPrimaryPhotoBytes(long treeId, Jwt jwt) {
-    assertTreeVisibleInCatalog(treeId, jwt);
+  public ResponseEntity<byte[]> loadPrimaryPhotoBytes(long ejemplarId, Jwt jwt) {
+    assertEjemplarVisibleInCatalog(ejemplarId, jwt);
 
     Fotografia foto =
         fotografiaRepository
-            .findPrincipalForTree(treeId, CategoriaFotografia.PUBLIC)
+            .findPrincipalForEjemplar(ejemplarId, CategoriaFotografia.PUBLIC)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sin fotografía principal"));
 
     byte[] body;
@@ -70,11 +71,11 @@ public class MediaPublicPrimaryPhotoService {
     return ResponseEntity.ok().contentType(contentType).body(body);
   }
 
-  private void assertTreeVisibleInCatalog(long treeId, Jwt jwt) {
+  private void assertEjemplarVisibleInCatalog(long ejemplarId, Jwt jwt) {
     try {
       catalogRestClient
           .get()
-          .uri("/api/catalog/public/trees/{id}", treeId)
+          .uri("/api/catalog/public/ejemplares/{id}", ejemplarId)
           .headers(
               h -> {
                 if (jwt != null
@@ -87,14 +88,14 @@ public class MediaPublicPrimaryPhotoService {
           .toBodilessEntity();
     } catch (RestClientResponseException ex) {
       if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Árbol no disponible en consulta pública");
+        throw new ResponseStatusException(
+            HttpStatus.NOT_FOUND, "Ejemplar no disponible en consulta pública");
       }
       throw new ResponseStatusException(
-          HttpStatus.BAD_GATEWAY, "No se pudo validar la visibilidad del árbol en catálogo");
+          HttpStatus.BAD_GATEWAY, "No se pudo validar la visibilidad del ejemplar en catálogo");
     } catch (RestClientException ex) {
       throw new ResponseStatusException(
-          HttpStatus.BAD_GATEWAY, "No se pudo validar la visibilidad del árbol en catálogo");
+          HttpStatus.BAD_GATEWAY, "No se pudo validar la visibilidad del ejemplar en catálogo");
     }
   }
-
 }

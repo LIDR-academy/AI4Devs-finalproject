@@ -126,7 +126,7 @@ services:
         condition: service_healthy
     entrypoint: ["/bin/bash", "-lc"]
     command:
-      - /opt/bitnami/kafka/bin/kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --topic catalog.arbol.evento --replication-factor 1 --partitions 1
+      - /opt/bitnami/kafka/bin/kafka-topics.sh --create --if-not-exists --bootstrap-server kafka:9092 --topic catalog.ejemplar.evento --replication-factor 1 --partitions 1
     networks:
       - mtl
 

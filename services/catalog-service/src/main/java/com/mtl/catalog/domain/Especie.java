@@ -9,7 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -40,14 +40,24 @@ public class Especie {
   private String nombreComun;
 
   @Column(name = "creado_en", nullable = false)
-  private Instant creadoEn;
+  private OffsetDateTime creadoEn;
 
-  @Column(name = "creado_por")
-  private Long creadoPor;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "creado_por")
+  private UsuarioApp creadoPor;
 
   @Column(name = "modificado_en", nullable = false)
-  private Instant modificadoEn;
+  private OffsetDateTime modificadoEn;
 
-  @Column(name = "modificado_por")
-  private Long modificadoPor;
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "modificado_por")
+  private UsuarioApp modificadoPor;
+
+  public Long getCreadoPorId() {
+    return creadoPor != null ? creadoPor.getId() : null;
+  }
+
+  public Long getModificadoPorId() {
+    return modificadoPor != null ? modificadoPor.getId() : null;
+  }
 }

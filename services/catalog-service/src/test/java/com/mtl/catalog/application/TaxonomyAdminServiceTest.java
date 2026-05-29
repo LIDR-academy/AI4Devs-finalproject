@@ -25,7 +25,7 @@ import com.mtl.catalog.dto.UpdateTaxonomySpeciesRequest;
 import com.mtl.catalog.exception.CatalogConflictException;
 import com.mtl.catalog.exception.CatalogNotFoundException;
 import com.mtl.catalog.exception.CatalogValidationException;
-import com.mtl.catalog.infrastructure.persistence.jpa.repository.ArbolRepository;
+import com.mtl.catalog.infrastructure.persistence.jpa.repository.EjemplarRepository;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.EspecieRepository;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.FamiliaRepository;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.GeneroRepository;
@@ -45,7 +45,7 @@ class TaxonomyAdminServiceTest {
   @Mock private FamiliaRepository familiaRepository;
   @Mock private GeneroRepository generoRepository;
   @Mock private EspecieRepository especieRepository;
-  @Mock private ArbolRepository arbolRepository;
+  @Mock private EjemplarRepository ejemplarRepository;
   @Mock private UsuarioAppMaterializationService usuarioAppMaterializationService;
   @Mock private CatalogAuditService catalogAuditService;
 
@@ -81,7 +81,7 @@ class TaxonomyAdminServiceTest {
 
     ArgumentCaptor<Familia> captor = ArgumentCaptor.forClass(Familia.class);
     verify(familiaRepository).save(captor.capture());
-    assertThat(captor.getValue().getCreadoPor()).isEqualTo(1L);
+    assertThat(captor.getValue().getCreadoPorId()).isEqualTo(1L);
     verify(catalogAuditService)
         .recordFamilyCreated(eq(1L), startsWith("familia_id=11 nombre_cientifico=Pinaceae"));
   }
@@ -200,7 +200,7 @@ class TaxonomyAdminServiceTest {
   void deleteSpecies_sinArbolesReferenciados_eliminaYRegistraAuditoria() {
     Especie especie = species(9L, genus(2L, family(1L)));
     when(especieRepository.findById(9L)).thenReturn(Optional.of(especie));
-    when(arbolRepository.existsByEspecieId(9L)).thenReturn(false);
+    when(ejemplarRepository.existsByEspecieId(9L)).thenReturn(false);
 
     service.deleteSpecies(9L, jwt);
 
@@ -214,7 +214,7 @@ class TaxonomyAdminServiceTest {
   void deleteSpecies_conArbolReferenciado_lanzaConflict() {
     Especie especie = species(9L, genus(2L, family(1L)));
     when(especieRepository.findById(9L)).thenReturn(Optional.of(especie));
-    when(arbolRepository.existsByEspecieId(9L)).thenReturn(true);
+    when(ejemplarRepository.existsByEspecieId(9L)).thenReturn(true);
 
     assertThatThrownBy(() -> service.deleteSpecies(9L, jwt))
         .isInstanceOf(CatalogConflictException.class);

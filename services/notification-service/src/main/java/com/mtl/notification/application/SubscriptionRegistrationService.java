@@ -5,7 +5,8 @@ import com.mtl.notification.domain.Suscriptor;
 import com.mtl.notification.dto.SubscriptionCreatedResponse;
 import com.mtl.notification.exception.NotificationException;
 import com.mtl.notification.infrastructure.persistence.jpa.repository.SuscriptorRepository;
-import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Locale;
 import java.util.Optional;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -41,7 +42,7 @@ public class SubscriptionRegistrationService {
     Suscriptor created = new Suscriptor();
     created.setEmail(normalized);
     created.setEstadoSuscripcion(EstadoSuscripcion.ACTIVA);
-    Instant now = Instant.now();
+    OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
     created.setAltaEn(now);
     created.setConfirmadoEn(now);
     try {

@@ -4,7 +4,7 @@ import java.time.OffsetDateTime;
 
 public record PhotoMetadataResponse(
     Long fotografiaId,
-    Long arbolId,
+    Long ejemplarId,
     String bucket,
     String objectKey,
     String nombreFicheroOriginal,

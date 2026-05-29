@@ -29,10 +29,11 @@ El entorno de desarrollo usa proxy de Vite para evitar problemas CORS:
 
 - Archivos de propiedades en `src/i18n/locales/` (por ahora `es.ts`).
 - Evitar hardcodear textos nuevos en vistas/composables; usar claves `t('...')`.
+- Copy de producto puede decir «árbol/ficha»; identificadores técnicos y rutas usan *ejemplar* ([ADR-0006](../docs/adr/0006-ejemplar-nomenclature-contracts.md)).
 
 ## Flujo de autenticación
 
-- Ruta protegida: `/trees/new`
+- Ruta protegida: `/ejemplares/new`
 - Callback OIDC: `/auth/callback`
 - Login redirige a Keycloak con `scope=openid profile email`
 
@@ -70,12 +71,12 @@ async function loadItems() {
 
 1. Levantar infraestructura (`infra/compose`) y servicios backend (`api-gateway` + `catalog-service`) en perfil `dev`.
 2. En `frontend/`, ejecutar `npm run dev`.
-3. Abrir `http://localhost:5173/trees/new`; la app redirige a Keycloak.
+3. Abrir `http://localhost:5173/ejemplares/new`; la app redirige a Keycloak.
 4. Iniciar sesión con usuario de desarrollo:
    - usuario: `colaborador`
    - contraseña: `colaborador_dev`
 5. Verificar que cargan especies y provincias, que latitud y longitud empiezan vacías, que el mapa inicia centrado en 40,4063 / -3,65588 sin marcador, que un doble clic en el mapa rellena coordenadas y muestra el marcador, y completar el formulario y enviar.
-6. Resultado esperado: mensaje de éxito con `treeId` y respuesta `201` en la llamada `POST /api/catalog/trees`.
+6. Resultado esperado: mensaje de éxito con `ejemplarId` y respuesta `201` en la llamada `POST /api/catalog/ejemplares`.
 
 Notas:
 - Si el token caduca, ante `401` la pantalla redirige automáticamente al login.
@@ -87,10 +88,10 @@ Prerrequisitos: infra Compose (Postgres, Keycloak, MinIO), **api-gateway** **808
 
 Usuario de prueba (Keycloak): `colaborador` / `colaborador_dev` (rol **COLABORADOR**); para filtro por creador y edición ajena, usuario **ADMIN** si está configurado.
 
-1. **Listado y filtros (escenarios BDD 6–7):** abrir `http://localhost:5173/my-trees`. Comprobar paginación, filtro por especie y rango de fechas de creación. Como **COLABORADOR**, solo deben aparecer fichas propias. Como **ADMIN**, probar filtro por usuario creador si el selector está disponible.
-2. **Edición (escenarios 1–3):** desde el listado, abrir una ficha propia (`/trees/:id/edit`). Modificar campos válidos y **Guardar** → **PUT** `200` y datos coherentes al recargar. Intentar guardar sin especie/coordenadas válidas → **400** con Problem legible. Con otra ficha ajena (otro colaborador), **PUT** debe fallar con **403** (o no permitir abrir edición).
+1. **Listado y filtros (escenarios BDD 6–7):** abrir `http://localhost:5173/mis-ejemplares`. Comprobar paginación, filtro por especie y rango de fechas de creación. Como **COLABORADOR**, solo deben aparecer fichas propias. Como **ADMIN**, probar filtro por usuario creador si el selector está disponible.
+2. **Edición (escenarios 1–3):** desde el listado, abrir una ficha propia (`/ejemplares/:id/edit`). Modificar campos válidos y **Guardar** → **PUT** `200` y datos coherentes al recargar. Intentar guardar sin especie/coordenadas válidas → **400** con Problem legible. Con otra ficha ajena (otro colaborador), **PUT** debe fallar con **403** (o no permitir abrir edición).
 3. **Galería en edición (HU-006-14):** en la misma pantalla, añadir una foto (**+**) y eliminar una con confirmación; comprobar que la galería se actualiza sin errores.
-4. **Baja con fotos (escenarios 4–5):** en una ficha propia **con** fotos, **Eliminar árbol** → confirmar. Resultado: **204** en `DELETE /api/catalog/trees/{id}`; el árbol desaparece del listado; fotos ya no listables para ese `treeId`. Para comprobar aborto por media: parar **media-service** y repetir → el árbol debe **seguir** en listado y el cliente mostrar error (p. ej. **502**).
+4. **Baja con fotos (escenarios 4–5):** en una ficha propia **con** fotos, **Eliminar árbol** → confirmar. Resultado: **204** en `DELETE /api/catalog/ejemplares/{ejemplarId}`; el ejemplar desaparece del listado; fotos ya no listables para ese `ejemplarId`. Para comprobar aborto por media: parar **media-service** y repetir → el ejemplar debe **seguir** en listado y el cliente mostrar error (p. ej. **502**).
 5. **Baja sin fotos:** repetir en ficha sin fotografías → baja correcta sin depender de objetos en MinIO.
 6. **Sin notificación por edición/baja (R7):** tras **PUT** o **DELETE**, no debe generarse correo de “nuevo árbol” a suscriptores (solo el alta dispara **UC-09**).
 

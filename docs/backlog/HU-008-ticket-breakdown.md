@@ -12,7 +12,7 @@
 
 **Estado del ticket:** columna **Estado** en cada fila; valores recomendados **Pendiente** (por defecto), **En curso**, **Hecho**, **Rechazado** (descartado con motivo registrado en la fila o en *Qué puede quedar*). Actualízala al cerrar o arrancar trabajo.
 
-**Contexto de equipo:** un ingeniero/a **full-stack**; stack en [readme.md](../../readme.md). Se asume **HU-001** (OIDC/JWT), **HU-005** (alta de árbol y formulario de referencia), **HU-013** (rutas `/my-trees`, `/trees/:id/edit`) y **HU-006** **cerrada** (fotos individuales y galería en edición vía **TASK-HU-006-14**). **TASK-HU-015-01** (borrado Mongo real) sigue pendiente; en este corte se entrega hook **stub/no-op**.
+**Contexto de equipo:** un ingeniero/a **full-stack**; stack en [readme.md](../../readme.md). Se asume **HU-001** (OIDC/JWT), **HU-005** (alta de árbol y formulario de referencia), **HU-013** (rutas `/mis-ejemplares`, `/ejemplares/:id/edit`) y **HU-006** **cerrada** (fotos individuales y galería en edición vía **TASK-HU-006-14**). **TASK-HU-015-01** (borrado Mongo real) sigue pendiente; en este corte se entrega hook **stub/no-op**.
 
 **Objetivo de este desglose:** cerrar el vertical **UC-04**: listado colaborador con filtros, lectura y **PUT** de ficha propia (o cualquier ficha si **ADMIN**), **DELETE** físico con cascada (media → SQL → hook Mongo stub), sin Kafka ni notificación (**R7**).
 
@@ -62,39 +62,39 @@ flowchart LR
 
 | ID | Título | Descripción breve | Estado |
 |----|--------|-------------------|--------|
-| **TASK-HU-008-01** | Cierre OpenAPI catálogo y media (HU-008) | En [openapi.yaml](../api/openapi.yaml): `GET /api/catalog/trees` con filtros y paginación; `GET`/`PUT`/`DELETE` en `/api/catalog/trees/{id}` con **`UpdateTreeRequest`**, **`CollaboratorTreeDetailResponse`**, **`CollaboratorTreePageResponse`**; **`DELETE /api/media/trees/{treeId}/photos`** (todas las fotos); **`DELETE /api/media/photos/{photoId}`** (una foto, TASK-HU-006-14); **`GET /api/catalog/trees/{id}/media-submission-permission`**. Eliminado **`PATCH`** del contrato (MVP solo **PUT**). Códigos Problem 400/401/403/404/502 donde aplica. | Hecho |
+| **TASK-HU-008-01** | Cierre OpenAPI catálogo y media (HU-008) | En [openapi.yaml](../api/openapi.yaml): `GET /api/catalog/ejemplares` con filtros y paginación; `GET`/`PUT`/`DELETE` en `/api/catalog/ejemplares/{ejemplarId}` con **`UpdateEjemplarRequest`**, **`CollaboratorEjemplarDetailResponse`**, **`CollaboratorEjemplarPageResponse`**; **`DELETE /api/media/ejemplares/{ejemplarId}/photos`** (todas las fotos); **`DELETE /api/media/photos/{photoId}`** (una foto, TASK-HU-006-14); **`GET /api/catalog/ejemplares/{ejemplarId}/media-submission-permission`**. Eliminado **`PATCH`** del contrato (MVP solo **PUT**). Códigos Problem 400/401/403/404/502 donde aplica. | Hecho |
 
 ### Catalog-service (backend)
 
 | ID | Título | Descripción breve | Estado |
 |----|--------|-------------------|--------|
-| **TASK-HU-008-02** | Listado colaborador con filtros | `GET /api/catalog/trees`: scope por rol (**COLABORADOR** → `usuario_app_id` del actor; **ADMIN** → opcional `createdByUserId`); filtros `speciesId`, rango `creado_en` UTC; orden `modificado_en` desc; paginación. Validar `createdFrom` ≤ `createdTo`. | Hecho |
-| **TASK-HU-008-03** | Detalle de ficha para edición | `GET /api/catalog/trees/{id}`: DTO de lectura con campos editables del alta; **403**/**404** según propiedad y existencia; materializar `usuario_app` si aplica (ADR-0004). | Hecho |
-| **TASK-HU-008-04** | Actualización de ficha (`PUT`) | Caso de uso + `PUT /api/catalog/trees/{id}`: validaciones **R1**/**R2**; creador inmutable; sin publicación Kafka; **AUDITORIA_CATALOGO** operación de modificación (**R3**). | Hecho |
-| **TASK-HU-008-06** | Cliente HTTP hacia media-service | En **catalog-service**: `RestMediaTreePhotosClient` con relay JWT a `DELETE /api/media/trees/{treeId}/photos`; mapeo 403/404/502 a excepciones de dominio. El catálogo invoca siempre a media; **media-service** hace no-op si no hay filas de foto. | Hecho |
-| **TASK-HU-008-07** | Borrado de árbol con cascada | `DELETE /api/catalog/trees/{id}` vía `TreeDeletionService`: (1) **DELETE** media; error media → **abort**; (2) borrado físico `arbol` en PostgreSQL; (3) puerto `TreeEnrichmentDeletionPort` → **`NoOpTreeEnrichmentDeletionPort`** (stub **TASK-HU-015-01**). Auditoría de baja (**R3**). **Rollback compensatorio** tras fotos borradas: **no** implementado en MVP (deuda documentada). | Hecho |
+| **TASK-HU-008-02** | Listado colaborador con filtros | `GET /api/catalog/ejemplares`: scope por rol (**COLABORADOR** → `usuario_app_id` del actor; **ADMIN** → opcional `createdByUserId`); filtros `speciesId`, rango `creado_en` UTC; orden `modificado_en` desc; paginación. Validar `createdFrom` ≤ `createdTo`. | Hecho |
+| **TASK-HU-008-03** | Detalle de ficha para edición | `GET /api/catalog/ejemplares/{ejemplarId}`: DTO de lectura con campos editables del alta; **403**/**404** según propiedad y existencia; materializar `usuario_app` si aplica (ADR-0004). | Hecho |
+| **TASK-HU-008-04** | Actualización de ficha (`PUT`) | Caso de uso + `PUT /api/catalog/ejemplares/{ejemplarId}`: validaciones **R1**/**R2**; creador inmutable; sin publicación Kafka; **AUDITORIA_CATALOGO** operación de modificación (**R3**). | Hecho |
+| **TASK-HU-008-06** | Cliente HTTP hacia media-service | En **catalog-service**: `RestMediaEjemplarPhotosClient` con relay JWT a `DELETE /api/media/ejemplares/{ejemplarId}/photos`; mapeo 403/404/502 a excepciones de dominio. El catálogo invoca siempre a media; **media-service** hace no-op si no hay filas de foto. | Hecho |
+| **TASK-HU-008-07** | Borrado de árbol con cascada | `DELETE /api/catalog/ejemplares/{ejemplarId}` vía `EjemplarDeletionService`: (1) **DELETE** media; error media → **abort**; (2) borrado físico `ejemplar` en PostgreSQL; (3) puerto `EjemplarEnrichmentDeletionPort` → **`NoOpEjemplarEnrichmentDeletionPort`** (stub **TASK-HU-015-01**). Auditoría de baja (**R3**). **Rollback compensatorio** tras fotos borradas: **no** implementado en MVP (deuda documentada). | Hecho |
 
 ### Media-service (backend)
 
 | ID | Título | Descripción breve | Estado |
 |----|--------|-------------------|--------|
-| **TASK-HU-008-05** | Borrado masivo de fotos por árbol | `DELETE /api/media/trees/{treeId}/photos` (`MediaTreePhotosDeleteService`): metadatos + objetos en bucket; autorización vía permiso de catálogo (**HU-006**); no-op si no hay fotografías. | Hecho |
+| **TASK-HU-008-05** | Borrado masivo de fotos por árbol | `DELETE /api/media/ejemplares/{ejemplarId}/photos` (`MediaEjemplarPhotosDeleteService`): metadatos + objetos en bucket; autorización vía permiso de catálogo (**HU-006**); no-op si no hay fotografías. | Hecho |
 
 ### Calidad backend
 
 | ID | Título | Descripción breve | Estado |
 |----|--------|-------------------|--------|
-| **TASK-HU-008-09** | Pruebas catalog (listado, PUT, autorización) | Tests unitarios/WebMvc: `CollaboratorTreeQueryServiceTest`, `TreeModificationServiceTest`, `TreeUpdateServiceTest`, `TreeDeletionServiceTest`, `TreeDeleteServiceTest`, `CatalogTreesControllerWebMvcTest`, `RestMediaTreePhotosClientTest`, `JwtRealmRolesTest`, etc. | Hecho |
-| **TASK-HU-008-10** | Pruebas media (DELETE masivo) | `MediaTreePhotosDeleteServiceTest`, WebMvc en `MediaTreePhotoGalleryController`; borrado individual en **TASK-HU-006-14**. | Hecho |
-| **TASK-HU-008-11** | Integración cascada catalog ↔ media | IT Failsafe (`*IT`) catalog ↔ media con ambos servicios (o Testcontainers + WireMock). **Rechazado:** coste/desproporción para MVP; la cascada queda cubierta por tests unitarios/WebMvc (`TreeDeletionServiceTest`, `RestMediaTreePhotosClientTest`, `MediaTreePhotosDeleteServiceTest`) y verificación manual en **TASK-HU-008-16**. Escenario rollback (BDD 8) fuera de alcance hasta saga/compensación. | Rechazado |
+| **TASK-HU-008-09** | Pruebas catalog (listado, PUT, autorización) | Tests unitarios/WebMvc: `CollaboratorEjemplarQueryServiceTest`, `EjemplarModificationServiceTest`, `EjemplarUpdateServiceTest`, `EjemplarDeletionServiceTest`, `EjemplarDeleteServiceTest`, `CatalogEjemplaresControllerWebMvcTest`, `RestMediaEjemplarPhotosClientTest`, `JwtRealmRolesTest`, etc. | Hecho |
+| **TASK-HU-008-10** | Pruebas media (DELETE masivo) | `MediaEjemplarPhotosDeleteServiceTest`, WebMvc en `MediaEjemplarPhotoGalleryController`; borrado individual en **TASK-HU-006-14**. | Hecho |
+| **TASK-HU-008-11** | Integración cascada catalog ↔ media | IT Failsafe (`*IT`) catalog ↔ media con ambos servicios (o Testcontainers + WireMock). **Rechazado:** coste/desproporción para MVP; la cascada queda cubierta por tests unitarios/WebMvc (`EjemplarDeletionServiceTest`, `RestMediaEjemplarPhotosClientTest`, `MediaEjemplarPhotosDeleteServiceTest`) y verificación manual en **TASK-HU-008-16**. Escenario rollback (BDD 8) fuera de alcance hasta saga/compensación. | Rechazado |
 
 ### Frontend
 
 | ID | Título | Descripción breve | Estado |
 |----|--------|-------------------|--------|
-| **TASK-HU-008-12** | Cliente API catálogo (listado, detalle, PUT, DELETE) | `frontend/src/services/catalog/collaboratorTreesService.ts`: `GET` listado con filtros, `GET` por id, `PUT`, `DELETE`; `AbortSignal`; mapeo Problem. Tests en `collaboratorTreesService.test.ts`. | Hecho |
-| **TASK-HU-008-13** | Vista Mis árboles con filtros | `MyTreesListView.vue` en `/my-trees`: listado paginado, filtros especie y fechas (UTC); selector **usuario creador** solo **ADMIN**; `useAbortableRequest`; enlaces a edición. Tests: `MyTreesListView.test.ts`. | Hecho |
-| **TASK-HU-008-14** | Vista edición de árbol | `EditTreeView.vue` + `useEditTreeForm.ts` en `/trees/:id/edit`: formulario alineado a **HU-005** (mapa, validación, **PUT**); confirmación y **DELETE** con diálogo; galería añadir/borrar foto (**TASK-HU-006-14**). Tests: `EditTreeView.test.ts`, `useEditTreeForm.test.ts`. | Hecho |
+| **TASK-HU-008-12** | Cliente API catálogo (listado, detalle, PUT, DELETE) | `frontend/src/services/catalog/collaboratorEjemplaresService.ts`: `GET` listado con filtros, `GET` por id, `PUT`, `DELETE`; `AbortSignal`; mapeo Problem. Tests en `collaboratorEjemplaresService.test.ts`. | Hecho |
+| **TASK-HU-008-13** | Vista Mis árboles con filtros | `MyEjemplaresListView.vue` en `/mis-ejemplares`: listado paginado, filtros especie y fechas (UTC); selector **usuario creador** solo **ADMIN**; `useAbortableRequest`; enlaces a edición. Tests: `MyEjemplaresListView.test.ts`. | Hecho |
+| **TASK-HU-008-14** | Vista edición de árbol | `EditEjemplarView.vue` + `useEditEjemplarForm.ts` en `/ejemplares/:id/edit`: formulario alineado a **HU-005** (mapa, validación, **PUT**); confirmación y **DELETE** con diálogo; galería añadir/borrar foto (**TASK-HU-006-14**). Tests: `EditEjemplarView.test.ts`, `useEditEjemplarForm.test.ts`. | Hecho |
 | **TASK-HU-008-15** | Pruebas frontend HU-008 | Vitest: servicios de catálogo, vistas/composables críticos (filtros, PUT, DELETE con confirmación, galería en edición). | Hecho |
 
 ### Documentación
@@ -107,9 +107,9 @@ flowchart LR
 
 ## Qué puede quedar para después (sigue siendo MVP global, no este corte)
 
-- **`PATCH`** parcial en `/api/catalog/trees/{id}`.
+- **`PATCH`** parcial en `/api/catalog/ejemplares/{ejemplarId}`.
 - ~~Galería añadir/borrar foto en edición~~ — entregado en **[TASK-HU-006-14](HU-006-ticket-breakdown.md)** (HU-006 cerrada).
-- Borrado real en Mongo (**[TASK-HU-015-01](HU-015-ticket-breakdown.md)**) más allá del stub `NoOpTreeEnrichmentDeletionPort`.
+- Borrado real en Mongo (**[TASK-HU-015-01](HU-015-ticket-breakdown.md)**) más allá del stub `NoOpEjemplarEnrichmentDeletionPort`.
 - **Rollback compensatorio** si falla SQL (o Mongo real) tras borrar fotos en media (escenario BDD 8; sin saga en MVP).
 - Bloqueo optimista / ETag en edición concurrente.
 - Listado de usuarios creadores para filtro **ADMIN** (endpoint dedicado o maestro si no existe selector).
@@ -118,8 +118,8 @@ flowchart LR
 ## Dependencias externas a esta HU
 
 - **HU-001:** JWT y roles **COLABORADOR** / **ADMIN**.
-- **HU-005:** contrato **CreateTreeRequest**, maestros especie/provincia, formulario de referencia.
-- **HU-013:** rutas protegidas `/my-trees`, `/trees/:id/edit`.
+- **HU-005:** contrato **CreateEjemplarRequest**, maestros especie/provincia, formulario de referencia.
+- **HU-013:** rutas protegidas `/mis-ejemplares`, `/ejemplares/:id/edit`.
 - **HU-006:** **cerrada**; galería en edición (**TASK-HU-006-14**) entregada.
 - **HU-015:** **TASK-HU-015-01** (hook borrado Mongo; stub en este corte).
 - **API Gateway:** `/api/catalog` y `/api/media` operativos.

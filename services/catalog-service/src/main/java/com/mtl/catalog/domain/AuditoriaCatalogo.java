@@ -6,7 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,7 +33,7 @@ public class AuditoriaCatalogo {
   private String operacion;
 
   @Column(name = "ocurrido_en", nullable = false)
-  private Instant ocurridoEn;
+  private OffsetDateTime ocurridoEn;
 
   @Column(name = "datos_previos_resumen", columnDefinition = "TEXT")
   private String datosPreviosResumen;

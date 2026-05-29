@@ -34,7 +34,7 @@ public class MediaUploadPolicyValidator {
     }
   }
 
-  public void validateMaxPhotosPerTree(int currentPhotosCount, int photosToAddCount) {
+  public void validateMaxPhotosPerEjemplar(int currentPhotosCount, int photosToAddCount) {
     if (photosToAddCount <= 0) {
       throw new MediaUploadValidationException("Debe añadirse al menos una fotografía.");
     }
@@ -42,10 +42,10 @@ public class MediaUploadPolicyValidator {
       throw new MediaUploadValidationException("El número actual de fotografías no puede ser negativo.");
     }
     int total = currentPhotosCount + photosToAddCount;
-    if (total > properties.getMaxPhotosPerTree()) {
+    if (total > properties.getMaxPhotosPerEjemplar()) {
       throw new MediaUploadValidationException(
-          "El árbol supera el máximo de "
-              + properties.getMaxPhotosPerTree()
+          "El ejemplar supera el máximo de "
+              + properties.getMaxPhotosPerEjemplar()
               + " fotografías permitidas.");
     }
   }

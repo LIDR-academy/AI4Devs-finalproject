@@ -97,7 +97,7 @@ UC-02; regla R7 (**ACTIVA**, [data-model.md](../data-model/data-model.md)); read
 
 - **Dado que** el MVP reserva el **envío masivo / procesamiento del evento de catálogo** para la cadena **HU-007** (**UC-09**)  
 - **Cuando** se completa con éxito **solo** el alta del suscriptor definido en esta historia  
-- **Entonces** el sistema **no** debe dar por cumplido el envío de avisos por nuevas altas ni consumir **`catalog.arbol.evento`** en el marco únicamente de **HU-004** (eso queda exclusivamente para la historia correspondiente)
+- **Entonces** el sistema **no** debe dar por cumplido el envío de avisos por nuevas altas ni consumir **`catalog.ejemplar.evento`** en el marco únicamente de **HU-004** (eso queda exclusivamente para la historia correspondiente)
 
 ## 4. Evaluación INVEST (resumen)
 

@@ -4,6 +4,8 @@ Esta carpeta contiene el [backlog resumido](backlog.md) y, para cada historia de
 
 **Implementación backend:** convención de tests Java en [engineering/testing-java.md](../engineering/testing-java.md).
 
+**Nomenclatura técnica (*ejemplar*):** rutas REST, JSON (`ejemplarId`), Kafka y tablas SQL actuales según [ADR-0006](../adr/0006-ejemplar-nomenclature-contracts.md) y [openapi.yaml](../api/openapi.yaml). Los títulos de HU pueden seguir diciendo «árbol» en lenguaje de producto; en tickets y verificación manual usar `/ejemplares`, `/mis-ejemplares` y paths `/api/.../ejemplares/...`.
+
 ## Patrón de nombre de fichero
 
 **`HU-<id>-ticket-breakdown.md`**

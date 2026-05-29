@@ -62,7 +62,7 @@ Almacena la información ampliada de cada especie botánica. Sus datos se cargan
 | Campo | Tipo | Descripción |
 |---|---|---|
 | `_id` | int | Igual a `especie_pg_id`. Clave primaria del documento. |
-| `especie_pg_id` | int | FK hacia la tabla `especie` de PostgreSQL. |
+| `especie_pg_id` | int | FK lógica hacia `catalog.especie.especie_id` (especie del maestro en PostgreSQL). |
 | `nombre_cientifico` | string | Desnormalizado desde PostgreSQL. Usado en búsquedas de texto. |
 | `nombre_comun` | string | Desnormalizado desde PostgreSQL. Usado en búsquedas de texto. |
 | `sinonimos` | array\<string\> | Nombres alternativos, sinónimos taxonómicos o nombres vernáculos adicionales. |
@@ -77,7 +77,7 @@ Almacena la información ampliada de cada ejemplar concreto. La gestiona el usua
 | Campo | Tipo | Descripción |
 |---|---|---|
 | `_id` | int | Igual a `ejemplar_pg_id`. Clave primaria del documento. |
-| `ejemplar_pg_id` | int | FK hacia la tabla `ejemplar` de PostgreSQL. |
+| `ejemplar_pg_id` | int | FK hacia `catalog.ejemplar.ejemplar_id` (identificador canónico del ejemplar en PostgreSQL). |
 | `especie_pg_id` | int | FK hacia `especie_detalle` en MongoDB. |
 | `medidas` | object | Mediciones físicas: altura, diámetro de tronco, diámetro de copa, perímetro. |
 | `estado_sanitario` | object | Valoración general, plagas detectadas, lesiones y fecha de última revisión. |
@@ -265,9 +265,9 @@ db.ejemplar_detalle.createIndex(
 
 ### 6.1 Flujo de carga
 
-Cuando se registra una nueva especie en PostgreSQL, la aplicación lanza una consulta al LLM para generar el documento correspondiente en `especie_detalle`. El flujo es el siguiente:
+El administrador del sistema puede consultar al LLM para generar el documento correspondiente en `especie_detalle`. El flujo es el siguiente:
 
-1. El usuario registra la especie en PostgreSQL con `nombre_cientifico` y `nombre_comun`.
+1. El usuario solicita la información al LLM con `nombre_cientifico` y `nombre_comun`.
 2. La aplicación construye el prompt a partir de estos datos y el esquema de referencia.
 3. El LLM devuelve un documento JSON que la aplicación valida antes de persistir.
 4. Si la validación es correcta, el documento se inserta en MongoDB. Si no, se registra el error y se notifica al usuario para revisión manual.

@@ -9,7 +9,7 @@
 | **Estimación (S/M/L)** | **M** coherente para alcance MVP centrado en consumo de evento, idempotencia y envío de correo. |
 | **Prioridad** | **Alta** alineada con objetivo de notificación del MVP. |
 | **Inconsistencias detectadas** | No se detectan contradicciones con `backlog.md`; el desglose técnico define explícitamente el límite entre productor (`catalog-service`) y consumidor (`notification-service`). |
-| **Tamaño / división** | Tamaño adecuado para **M** si se mantiene el corte en “solo alta” (`ARBOL_CREADO`) y no se amplía a otros tipos de eventos o campañas. |
+| **Tamaño / división** | Tamaño adecuado para **M** si se mantiene el corte en “solo alta” (`EJEMPLAR_CREADO`) y no se amplía a otros tipos de eventos o campañas. |
 
 ---
 
@@ -27,14 +27,14 @@
 
 Como persona suscrita por correo, quiero recibir un aviso cuando exista el alta de una ficha de árbol, para enterarme de nuevos ejemplares sin consultar la web de forma continua.
 
-- **Entregable de la historia:** `notification-service` consume `catalog.arbol.evento`, procesa únicamente `ARBOL_CREADO`, aplica idempotencia por `evento_id`, y genera notificación por correo (o no-op documentado si no hay suscriptores), manteniendo persistencia y trazabilidad en el esquema `notification`.
+- **Entregable de la historia:** `notification-service` consume `catalog.ejemplar.evento`, procesa únicamente `EJEMPLAR_CREADO`, aplica idempotencia por `evento_id`, y genera notificación por correo (o no-op documentado si no hay suscriptores), manteniendo persistencia y trazabilidad en el esquema `notification`.
 
 ### Alcance
 
 #### Incluye
 
-- Consumo de eventos desde Kafka topic `catalog.arbol.evento` publicados por el alta de árbol.
-- Filtrado de `tipo_evento` para MVP: solo `ARBOL_CREADO` dispara flujo de notificación.
+- Consumo de eventos desde Kafka topic `catalog.ejemplar.evento` publicados por el alta de árbol.
+- Filtrado de `tipo_evento` para MVP: solo `EJEMPLAR_CREADO` dispara flujo de notificación.
 - Persistencia mínima en `notification-service` para registrar evento consumido e idempotencia.
 - Resolución de suscriptores **ACTIVA** y envío de correo con **texto fijo o cuerpo mínimo** (sin sistema de plantillas en el MVP).
 - Manejo de reentregas sin duplicar envíos (no-op idempotente si evento ya procesado).
@@ -50,7 +50,7 @@ Como persona suscrita por correo, quiero recibir un aviso cuando exista el alta 
 
 ### Dependencias
 
-- Publicación operativa de `ARBOL_CREADO` en `catalog.arbol.evento` desde HU-005.
+- Publicación operativa de `EJEMPLAR_CREADO` en `catalog.ejemplar.evento` desde HU-005.
 - Existencia de suscriptores registrados por HU-004 para validar destinatarios reales.
 - Infraestructura Kafka + Postgres `notification` disponible en entorno local/CI.
 - Contrato de evento alineado con `docs/events/kafka-events.md`.
@@ -78,7 +78,7 @@ Backlog `HU-007`, [HU-007-ticket-breakdown.md](HU-007-ticket-breakdown.md), [kaf
 ### Escenario 1 — Notificación tras alta de árbol
 
 - **Dado que** existe al menos un suscriptor activo  
-- **Cuando** `notification-service` consume un evento válido `ARBOL_CREADO` desde `catalog.arbol.evento`  
+- **Cuando** `notification-service` consume un evento válido `EJEMPLAR_CREADO` desde `catalog.ejemplar.evento`  
 - **Entonces** registra el procesamiento del evento y genera la notificación por correo correspondiente.
 
 ### Escenario 2 — Reentrega del mismo evento
@@ -89,7 +89,7 @@ Backlog `HU-007`, [HU-007-ticket-breakdown.md](HU-007-ticket-breakdown.md), [kaf
 
 ### Escenario 3 — Sin suscriptores activos
 
-- **Dado que** llega un evento `ARBOL_CREADO` válido y no hay destinatarios activos  
+- **Dado que** llega un evento `EJEMPLAR_CREADO` válido y no hay destinatarios activos  
 - **Cuando** se ejecuta el flujo de notificación  
 - **Entonces** el sistema completa un no-op controlado y deja traza suficiente sin error funcional.
 
@@ -101,7 +101,7 @@ Backlog `HU-007`, [HU-007-ticket-breakdown.md](HU-007-ticket-breakdown.md), [kaf
 | **Negociable** | Sí: formato de email, estrategia de retries y profundidad de estados pueden ajustarse. |
 | **Valiosa** | Sí: entrega valor directo a usuario suscrito y materializa la promesa de notificaciones del MVP. |
 | **Estimable** | Sí: el desglose técnico define componentes concretos (consumer, idempotencia, SMTP, tests). |
-| **Small** | Aceptable para **M** si se limita a `ARBOL_CREADO` y no se amplía a otros eventos. |
+| **Small** | Aceptable para **M** si se limita a `EJEMPLAR_CREADO` y no se amplía a otros eventos. |
 | **Testable** | Sí: verificable con pruebas de integración y escenarios de duplicado/no-op. |
 
 ## 5. Esfuerzo estimado de implementación

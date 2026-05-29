@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record ConfirmPhotoUploadRequest(
-    @NotNull Long arbolId,
+    @NotNull Long ejemplarId,
     @NotBlank String bucket,
     @NotBlank String objectKey,
     @NotBlank String nombreFicheroOriginal,

@@ -40,16 +40,16 @@ public class MediaPhotoDeleteService {
             .orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Fotografía no encontrada."));
 
-    catalogMediaPermissionClient.resolveActorUsuarioAppIdForTree(photo.getArbolId(), jwt);
+    catalogMediaPermissionClient.resolveActorUsuarioAppIdForEjemplar(photo.getEjemplarId(), jwt);
 
-    long arbolId = photo.getArbolId();
+    long ejemplarId = photo.getEjemplarId();
     deleteObjectQuietly(photo.getBucketAlmacenamiento(), photo.getClaveObjeto());
     fotografiaRepository.delete(photo);
-    ensurePrincipalAfterDeletion(arbolId);
+    ensurePrincipalAfterDeletion(ejemplarId);
   }
 
-  private void ensurePrincipalAfterDeletion(long arbolId) {
-    List<Fotografia> remaining = fotografiaRepository.findActiveForTreeOrdered(arbolId);
+  private void ensurePrincipalAfterDeletion(long ejemplarId) {
+    List<Fotografia> remaining = fotografiaRepository.findActiveForEjemplarOrdered(ejemplarId);
     if (remaining.isEmpty()) {
       return;
     }

@@ -61,27 +61,27 @@ class MediaUploadPolicyValidatorTest {
   }
 
   @Test
-  void validateMaxPhotosPerTree_acceptsMaximumAllowedCount() {
-    assertDoesNotThrow(() -> validator.validateMaxPhotosPerTree(9, 1));
+  void validateMaxPhotosPerEjemplar_acceptsMaximumAllowedCount() {
+    assertDoesNotThrow(() -> validator.validateMaxPhotosPerEjemplar(9, 1));
   }
 
   @Test
-  void validateMaxPhotosPerTree_rejectsCountOverLimit() {
-    assertThrows(MediaUploadValidationException.class, () -> validator.validateMaxPhotosPerTree(10, 1));
+  void validateMaxPhotosPerEjemplar_rejectsCountOverLimit() {
+    assertThrows(MediaUploadValidationException.class, () -> validator.validateMaxPhotosPerEjemplar(10, 1));
   }
 
   @Test
-  void validateMaxPhotosPerTree_acceptsExactlyMaxPhotosInOneBatch() {
-    assertDoesNotThrow(() -> validator.validateMaxPhotosPerTree(0, 10));
+  void validateMaxPhotosPerEjemplar_acceptsExactlyMaxPhotosInOneBatch() {
+    assertDoesNotThrow(() -> validator.validateMaxPhotosPerEjemplar(0, 10));
   }
 
   @Test
-  void validateMaxPhotosPerTree_rejectsNonPositivePhotosToAdd() {
-    assertThrows(MediaUploadValidationException.class, () -> validator.validateMaxPhotosPerTree(0, 0));
+  void validateMaxPhotosPerEjemplar_rejectsNonPositivePhotosToAdd() {
+    assertThrows(MediaUploadValidationException.class, () -> validator.validateMaxPhotosPerEjemplar(0, 0));
   }
 
   @Test
-  void validateMaxPhotosPerTree_rejectsNegativeCurrentCount() {
-    assertThrows(MediaUploadValidationException.class, () -> validator.validateMaxPhotosPerTree(-1, 1));
+  void validateMaxPhotosPerEjemplar_rejectsNegativeCurrentCount() {
+    assertThrows(MediaUploadValidationException.class, () -> validator.validateMaxPhotosPerEjemplar(-1, 1));
   }
 }

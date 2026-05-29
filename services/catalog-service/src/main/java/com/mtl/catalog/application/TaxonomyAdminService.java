@@ -15,13 +15,14 @@ import com.mtl.catalog.dto.UpdateTaxonomySpeciesRequest;
 import com.mtl.catalog.exception.CatalogConflictException;
 import com.mtl.catalog.exception.CatalogNotFoundException;
 import com.mtl.catalog.exception.CatalogValidationException;
-import com.mtl.catalog.infrastructure.persistence.jpa.repository.ArbolRepository;
+import com.mtl.catalog.infrastructure.persistence.jpa.repository.EjemplarRepository;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.EspecieRepository;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.FamiliaRepository;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.GeneroRepository;
 import com.mtl.catalog.util.OidcUserProfileExtractor;
 import com.mtl.catalog.util.SpeciesLabelFormatter;
-import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
@@ -33,7 +34,7 @@ public class TaxonomyAdminService {
   private final FamiliaRepository familiaRepository;
   private final GeneroRepository generoRepository;
   private final EspecieRepository especieRepository;
-  private final ArbolRepository arbolRepository;
+  private final EjemplarRepository ejemplarRepository;
   private final UsuarioAppMaterializationService usuarioAppMaterializationService;
   private final CatalogAuditService catalogAuditService;
 
@@ -41,13 +42,13 @@ public class TaxonomyAdminService {
       FamiliaRepository familiaRepository,
       GeneroRepository generoRepository,
       EspecieRepository especieRepository,
-      ArbolRepository arbolRepository,
+      EjemplarRepository ejemplarRepository,
       UsuarioAppMaterializationService usuarioAppMaterializationService,
       CatalogAuditService catalogAuditService) {
     this.familiaRepository = familiaRepository;
     this.generoRepository = generoRepository;
     this.especieRepository = especieRepository;
-    this.arbolRepository = arbolRepository;
+    this.ejemplarRepository = ejemplarRepository;
     this.usuarioAppMaterializationService = usuarioAppMaterializationService;
     this.catalogAuditService = catalogAuditService;
   }
@@ -64,14 +65,14 @@ public class TaxonomyAdminService {
   @Transactional
   public TaxonomyFamilyResponse createFamily(CreateTaxonomyFamilyRequest request, Jwt jwt) {
     UsuarioApp actor = resolveActor(jwt);
-    Instant now = Instant.now();
+    OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
     Familia familia = new Familia();
     familia.setNombreCientifico(normalizeRequired(request.scientificName()));
     familia.setNombreComun(normalizeOptional(request.commonName()));
     familia.setCreadoEn(now);
     familia.setModificadoEn(now);
-    familia.setCreadoPor(actor.getId());
-    familia.setModificadoPor(actor.getId());
+    familia.setCreadoPor(actor);
+    familia.setModificadoPor(actor);
     Familia saved = familiaRepository.save(familia);
     String resumen =
         "familia_id=%d nombre_cientifico=%s"
@@ -87,15 +88,15 @@ public class TaxonomyAdminService {
         familiaRepository
             .findById(request.familyId())
             .orElseThrow(() -> new CatalogNotFoundException("No existe la familia indicada."));
-    Instant now = Instant.now();
+    OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
     Genero genero = new Genero();
     genero.setFamilia(familia);
     genero.setNombreCientifico(normalizeRequired(request.scientificName()));
     genero.setNombreComun(normalizeOptional(request.commonName()));
     genero.setCreadoEn(now);
     genero.setModificadoEn(now);
-    genero.setCreadoPor(actor.getId());
-    genero.setModificadoPor(actor.getId());
+    genero.setCreadoPor(actor);
+    genero.setModificadoPor(actor);
     Genero saved = generoRepository.save(genero);
     String resumen =
         "genero_id=%d familia_id=%d nombre_cientifico=%s"
@@ -134,8 +135,8 @@ public class TaxonomyAdminService {
     especie.setGenero(genero);
     especie.setNombreCientifico(normalizeRequired(request.scientificName()));
     especie.setNombreComun(normalizeOptional(request.commonName()));
-    especie.setModificadoEn(Instant.now());
-    especie.setModificadoPor(actor.getId());
+    especie.setModificadoEn(OffsetDateTime.now(ZoneOffset.UTC));
+    especie.setModificadoPor(actor);
     Especie saved = especieRepository.save(especie);
     catalogAuditService.recordSpeciesModified(
         actor.getId(), previo, speciesAuditSummary(saved));
@@ -150,7 +151,7 @@ public class TaxonomyAdminService {
         especieRepository
             .findById(speciesId)
             .orElseThrow(() -> new CatalogNotFoundException("No existe la especie indicada."));
-    if (arbolRepository.existsByEspecieId(speciesId)) {
+    if (ejemplarRepository.existsByEspecieId(speciesId)) {
       throw new CatalogConflictException(
           "No se puede eliminar la especie porque existen fichas de árbol que la referencian.");
     }
@@ -161,15 +162,15 @@ public class TaxonomyAdminService {
 
   private Especie persistNewSpecies(
       CreateTaxonomySpeciesRequest request, Genero genero, UsuarioApp actor) {
-    Instant now = Instant.now();
+    OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
     Especie especie = new Especie();
     especie.setGenero(genero);
     especie.setNombreCientifico(normalizeRequired(request.scientificName()));
     especie.setNombreComun(normalizeOptional(request.commonName()));
     especie.setCreadoEn(now);
     especie.setModificadoEn(now);
-    especie.setCreadoPor(actor.getId());
-    especie.setModificadoPor(actor.getId());
+    especie.setCreadoPor(actor);
+    especie.setModificadoPor(actor);
     return especieRepository.save(especie);
   }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { fetchPublicTreeDetail } from '@/services/catalog/catalogService'
+import { fetchPublicEjemplarDetail } from '@/services/catalog/catalogService'
 
 const apiFetchMock = vi.hoisted(() => vi.fn())
 
@@ -8,12 +8,12 @@ vi.mock('@/services/http/apiClient', () => ({
 }))
 
 describe('catalogService', () => {
-  it('fetches public tree detail by id', async () => {
-    apiFetchMock.mockResolvedValueOnce({ treeId: 42 })
+  it('fetches public ejemplar detail by id', async () => {
+    apiFetchMock.mockResolvedValueOnce({ ejemplarId: 42 })
 
-    await fetchPublicTreeDetail(42)
+    await fetchPublicEjemplarDetail(42)
 
-    expect(apiFetchMock).toHaveBeenCalledWith('/api/catalog/public/trees/42', {
+    expect(apiFetchMock).toHaveBeenCalledWith('/api/catalog/public/ejemplares/42', {
       signal: undefined,
     })
   })

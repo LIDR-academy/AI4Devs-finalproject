@@ -128,8 +128,8 @@ La aplicación implementa una navegación simple por roles con una **home de ent
 
 ```
 🏠  Inicio                   /
-🌳  Árboles                  /trees
-    └─ Detalle               /trees/:id
+🌳  Árboles                  /ejemplares
+    └─ Detalle               /ejemplares/:id
 ✉️  Suscripción              /subscriptions/new
 ```
 
@@ -140,9 +140,9 @@ La aplicación implementa una navegación simple por roles con una **home de ent
 ↳ *Incluye todas las páginas públicas*
 
 ```
-➕  Alta de árbol            /trees/new
-📋  Mis árboles              /my-trees
-    └─ Edición de ficha      /trees/:id/edit
+➕  Alta de árbol            /ejemplares/new
+📋  Mis árboles              /mis-ejemplares
+    └─ Edición de ficha      /ejemplares/:id/edit
 ```
 
 ---
@@ -163,12 +163,12 @@ La aplicación implementa una navegación simple por roles con una **home de ent
 | Página | Público | Colaborador | Admin |
 |---|:---:|:---:|:---:|
 | Inicio `/` | ✅ | ✅ | ✅ |
-| Árboles `/trees` | ✅ | ✅ | ✅ |
-| Detalle `/trees/:id` | ✅ | ✅ | ✅ |
+| Árboles `/ejemplares` | ✅ | ✅ | ✅ |
+| Detalle `/ejemplares/:id` | ✅ | ✅ | ✅ |
 | Suscripción `/subscriptions/new` | ✅ | ✅ | ✅ |
-| Alta de árbol `/trees/new` | — | ✅ | ✅ |
-| Mis árboles `/my-trees` | — | ✅ | ✅ |
-| Edición de ficha `/trees/:id/edit` | — | ✅ | ✅ |
+| Alta de árbol `/ejemplares/new` | — | ✅ | ✅ |
+| Mis árboles `/mis-ejemplares` | — | ✅ | ✅ |
+| Edición de ficha `/ejemplares/:id/edit` | — | ✅ | ✅ |
 | Maestros `/admin/masters` | — | — | ✅ |
 | Suscripciones `/admin/subscriptions` | — | — | ✅ |
 
@@ -187,7 +187,7 @@ En `[infra/compose/](infra/compose/)` hay un `docker-compose.yml` que levanta la
 | MongoDB                 | Versión 7                                                       |
 | Redis                   | Versión 7                                                       |
 | MinIO                   | Almacenamiento de objetos                                       |
-| Kafka                   | Modo KRaft, con topic `catalog.arbol.evento`                    |
+| Kafka                   | Modo KRaft, con topic `catalog.ejemplar.evento`                    |
 | Keycloak                | Versión 26 en modo desarrollo                                   |
 | Mailpit                 | SMTP de prueba (captura correo; UI web); imagen `axllent/mailpit`; puertos en [infra/compose/README.md](infra/compose/README.md) |
 | Prometheus              | Métricas; imagen `prom/prometheus:v3.2.1`; scrape de microservicios en el host (`/actuator/prometheus`); UI en puerto **9090** |
@@ -541,11 +541,11 @@ Notas del diagrama C4 (no dibujadas): error al leer sesión en el guard → `/au
 
 ### **3.1.2 Kafka:**
 
-En el **MVP**, Kafka separa el **alta de un árbol** del **correo a suscriptores** (regla **R7**): solo al crear una ficha con éxito; edición y baja no publican. Un topic (`catalog.arbol.evento`): **catalog-service** publica y **notification-service** consume. Contrato del mensaje: [docs/events/kafka-events.md](docs/events/kafka-events.md). Configuración local: [services/README.md](services/README.md) (Kafka).
+En el **MVP**, Kafka separa el **alta de un árbol** del **correo a suscriptores** (regla **R7**): solo al crear una ficha con éxito; edición y baja no publican. Un topic (`catalog.ejemplar.evento`): **catalog-service** publica y **notification-service** consume. Contrato del mensaje: [docs/events/kafka-events.md](docs/events/kafka-events.md). Nomenclatura técnica: [ADR-0006](docs/adr/0006-ejemplar-nomenclature-contracts.md). Configuración local: [services/README.md](services/README.md) (Kafka).
 
 #### C3 — Productor: **catalog-service**
 
-Componentes de **catalog-service** frente a PostgreSQL (esquema `catalog`) y **Kafka** (infra compartida, fuera del servicio). El alta depende de la interfaz `ArbolCreadoEventPublisher`; la publicación real es `KafkaArbolCreadoEventPublisher` (capa de infraestructura). Con `mtl.catalog.kafka.enabled=false` (por defecto o tests), `NoOpArbolCreadoEventPublisher` no envía mensajes.
+Componentes de **catalog-service** frente a PostgreSQL (esquema `catalog`) y **Kafka** (infra compartida, fuera del servicio). El alta depende de la interfaz `EjemplarCreadoEventPublisher`; la publicación real es `KafkaEjemplarCreadoEventPublisher` (capa de infraestructura). Con `mtl.catalog.kafka.enabled=false` (por defecto o tests), `NoOpEjemplarCreadoEventPublisher` no envía mensajes.
 
 ```mermaid
 flowchart TB
@@ -557,22 +557,22 @@ flowchart TB
 
     subgraph catalogSvc [catalog_service]
         direction TB
-        TreesCtrl["🌐 TreesController"]:::service
-        TreeReg["⚙️ TreeRegistrationService"]:::service
-        TreeCre["🏗️ TreeCreationService"]:::service
+        EjemplaresCtrl["🌐 CatalogEjemplaresController"]:::service
+        EjemplarReg["⚙️ EjemplarRegistrationService"]:::service
+        EjemplarCre["🏗️ EjemplarCreationService"]:::service
         CatAud["📝 CatalogAuditService"]:::service
         AfterCommit["⏱️ AfterCommitRegistrar"]:::service
-        KafkaPub["📢 ArbolCreadoEventPublisher"]:::service
+        KafkaPub["📢 EjemplarCreadoEventPublisher"]:::service
         EventoSeq["🔢 Secuencia evento_id"]:::service
         JpaRepos["💾 Repositorios JPA"]:::repo
 
-        TreesCtrl --> TreeReg
-        TreeReg --> TreeCre
-        TreeReg --> CatAud
-        TreeReg --> AfterCommit
+        EjemplaresCtrl --> EjemplarReg
+        EjemplarReg --> EjemplarCre
+        EjemplarReg --> CatAud
+        EjemplarReg --> AfterCommit
         AfterCommit --> KafkaPub
         KafkaPub --> EventoSeq
-        TreeCre --> JpaRepos
+        EjemplarCre --> JpaRepos
         CatAud --> JpaRepos
         EventoSeq --> JpaRepos
     end
@@ -582,7 +582,7 @@ flowchart TB
 
 #### C3 — Consumidor: **notification-service**
 
-Componentes de **notification-service** frente a **Kafka** (externo) y PostgreSQL (esquema `notification`). El listener recibe el JSON; la ingestión valida y solo admite `ARBOL_CREADO`; el consumo guarda `evento_catalogo` por `evento_id` (una reentrega no repite el trabajo); el procesador crea notificaciones y envía correo SMTP a suscriptores **ACTIVA**. Con `mtl.notification.kafka.enabled=false` no se arranca el listener.
+Componentes de **notification-service** frente a **Kafka** (externo) y PostgreSQL (esquema `notification`). El listener recibe el JSON; la ingestión valida y solo admite `EJEMPLAR_CREADO`; el consumo guarda `evento_catalogo` por `evento_id` (una reentrega no repite el trabajo); el procesador crea notificaciones y envía correo SMTP a suscriptores **ACTIVA**. Con `mtl.notification.kafka.enabled=false` no se arranca el listener.
 
 ```mermaid
 flowchart TB
@@ -628,62 +628,62 @@ sequenceDiagram
   SPA->>KC: Registro_o_login_PKCE
   SPA->>GW: Alta_arbol_REST_con_Bearer
   GW->>CAT: Proxy_JWT
-  CAT->>K: Publica_catalog_arbol_evento
+  CAT->>K: Publica_catalog_ejemplar_evento
   K->>N: Consume_evento
   N->>Mail: Email_a_suscriptores
 ```
 
-#### C4 — Secuencia de publicación (**ARBOL_CREADO**)
+#### C4 — Secuencia de publicación (**EJEMPLAR_CREADO**)
 
-En una transacción se validan y guardan el árbol y la auditoría (**R3**); **tras el commit** se asigna `evento_id` y se publica en `catalog.arbol.evento` (formato en [kafka-events.md](docs/events/kafka-events.md)). La API responde **201** antes de Kafka; si la publicación falla, solo queda en logs — el consumidor debe ignorar mensajes duplicados (mismo `evento_id`).
+En una transacción se validan y guardan el ejemplar y la auditoría (**R3**); **tras el commit** se asigna `evento_id` y se publica en `catalog.ejemplar.evento` (formato en [kafka-events.md](docs/events/kafka-events.md)). La API responde **201** antes de Kafka; si la publicación falla, solo queda en logs — el consumidor debe ignorar mensajes duplicados (mismo `evento_id`).
 
 ```mermaid
 sequenceDiagram
   participant Client as Cliente_SPA_o_GW
-  participant Ctrl as CatalogTreesController
-  participant Reg as TreeRegistrationService
-  participant Cre as TreeCreationService
+  participant Ctrl as CatalogEjemplaresController
+  participant Reg as EjemplarRegistrationService
+  participant Cre as EjemplarCreationService
   participant Aud as CatalogAuditService
   participant Tx as AfterCommitTaskRegistrar
-  participant Pub as KafkaArbolCreadoEventPublisher
-  participant Seq as CatalogArbolEventoIdSequence
+  participant Pub as KafkaEjemplarCreadoEventPublisher
+  participant Seq as CatalogEjemplarEventoIdSequence
   participant PG as PostgreSQL_catalog
   participant KB as Kafka
 
-  Client->>Ctrl: POST_trees_Bearer_JWT
+  Client->>Ctrl: POST_ejemplares_Bearer_JWT
   Ctrl->>Reg: register
   Reg->>Cre: create
-  Cre->>PG: persistir_ARBOL_y_usuario
-  Cre-->>Reg: CreatedTreeResult
-  Reg->>Aud: recordTreeCreated_R3
+  Cre->>PG: persistir_EJEMPLAR_y_usuario
+  Cre-->>Reg: CreatedEjemplarResult
+  Reg->>Aud: recordEjemplarCreated_R3
   Aud->>PG: insertar_AUDITORIA_CATALOGO
   Reg->>Tx: runAfterCommit_publicar
   Tx-->>Reg: sincronizacion_registrada
-  Reg-->>Ctrl: CreatedTreeResult
-  Ctrl-->>Client: 201_CreatedTreeResponse
+  Reg-->>Ctrl: CreatedEjemplarResult
+  Ctrl-->>Client: 201_CreatedEjemplarResponse
 
   Note over Reg,PG: commit_transaccion
-  Tx->>Pub: publishArbolCreado
-  Pub->>Seq: nextval_seq_arbol_evento_id
+  Tx->>Pub: publishEjemplarCreado
+  Pub->>Seq: nextval_seq_ejemplar_evento_id
   Seq->>PG: SELECT_nextval
   PG-->>Seq: evento_id
   Seq-->>Pub: evento_id
-  Pub->>KB: send_topic_clave_arbol_id
+  Pub->>KB: send_topic_clave_ejemplar_id
 ```
 
-#### C4 — Secuencia de consumo (**ARBOL_CREADO**)
+#### C4 — Secuencia de consumo (**EJEMPLAR_CREADO**)
 
-El listener pasa el JSON a la ingestión; solo sigue si `tipo_evento` es `ARBOL_CREADO` ([kafka-events.md](docs/events/kafka-events.md)). La primera vez se inserta `evento_catalogo` por `evento_id`; si ya existe, no se repite. El procesador guarda notificación y envíos en `notification`, manda correo a suscriptores **ACTIVA** y deja el evento en **PROCESADO**.
+El listener pasa el JSON a la ingestión; solo sigue si `tipo_evento` es `EJEMPLAR_CREADO` ([kafka-events.md](docs/events/kafka-events.md)). La primera vez se inserta `evento_catalogo` por `evento_id`; si ya existe, no se repite. El procesador guarda notificación y envíos en `notification`, manda correo a suscriptores **ACTIVA** y deja el evento en **PROCESADO**.
 
 ```mermaid
 sequenceDiagram
   participant KB as Kafka
-  participant Lst as CatalogArbolEventoKafkaListener
-  participant Ing as CatalogArbolEventoIngestionService
-  participant Parser as CatalogArbolEventoPayloadParser
-  participant Con as CatalogArbolEventoConsumoService
-  participant Proc as NotificacionCatalogArbolEventoProcesador
-  participant Mail as SmtpArbolCreadoCorreoAvisoSender
+  participant Lst as CatalogEjemplarEventoKafkaListener
+  participant Ing as CatalogEjemplarEventoIngestionService
+  participant Parser as CatalogEjemplarEventoPayloadParser
+  participant Con as CatalogEjemplarEventoConsumoService
+  participant Proc as NotificacionCatalogEjemplarEventoProcesador
+  participant Mail as SmtpEjemplarCreadoCorreoAvisoSender
   participant PG as PostgreSQL_notification
 
   KB->>Lst: mensaje_JSON
@@ -692,17 +692,17 @@ sequenceDiagram
   alt JSON_invalido_o_campos_faltantes
     Parser-->>Ing: vacio
     Ing-->>Lst: ignorar_log_warn
-  else tipo_evento_distinto_de_ARBOL_CREADO
+  else tipo_evento_distinto_de_EJEMPLAR_CREADO
     Parser-->>Ing: payload
     Ing-->>Lst: omitir_MVP
-  else ARBOL_CREADO_valido
+  else EJEMPLAR_CREADO_valido
     Parser-->>Ing: payload
     Ing->>Con: registrarYProcesarSiPrimero
     Con->>PG: existsById_evento_id
     alt primera_entrega
       PG-->>Con: no_existe
       Con->>PG: insert_evento_catalogo_RECIBIDO
-      Con->>Proc: procesarArbolCreado
+      Con->>Proc: procesarEjemplarCreado
       Proc->>PG: notificacion_y_envios
       loop por_suscriptor_ACTIVA
         Proc->>Mail: intentarEnviar
@@ -736,9 +736,9 @@ sequenceDiagram
   SPA->>KC: OIDC login PKCE
   KC-->>SPA: JWT
 
-  SPA->>GW: POST /api/catalog/trees
+  SPA->>GW: POST /api/catalog/ejemplares
   GW->>CAT: proxy JWT
-  CAT-->>SPA: 201 arbolId
+  CAT-->>SPA: 201 ejemplarId
 
   loop Por cada fotografia
     SPA->>GW: POST /api/media/uploads/presign
@@ -758,8 +758,9 @@ sequenceDiagram
 
 ### **3.1.4 Uso de IA: características de especie (MVP) e identificación/chat (futuro)**
 
+En el MVP solo aplica la consulta de características de especie por **ADMIN** ([HU-016](docs/backlog/HU-016-consulta-admin-caracteristicas-especie-ia.md)); identificación por imagen y chat: [HU-009](docs/backlog/backlog.md) y [HU-010](docs/backlog/backlog.md) (próxima versión). Detalle de historias: [backlog](docs/backlog/backlog.md) §3.
 
-**Flujo de consulta IA (datos de especie vía catalog-service):**
+**Flujo de consulta IA (MVP; especie vía ai-assistant-service y catalog-service):**
 
 ```mermaid
 sequenceDiagram
@@ -790,17 +791,17 @@ Componentes del diagrama C2 (§3.1), desplegados o consumidos por la plataforma.
 
 | Componente | Tecnología | Responsabilidad |
 | --- | --- | --- |
-| **catalog-service** | Spring Boot 4, JPA, Flyway, PostgreSQL; Redis en perfil `dev`; productor Kafka | Esquema `catalog`: maestros, provincias (semillas) y fichas de árboles (coordenadas `NUMERIC`; sin PostGIS en el DDL del MVP). Consulta pública; operaciones de colaborador y **ADMIN**. Tras el alta, publica `ARBOL_CREADO` en `catalog.arbol.evento` ([kafka-events.md](docs/events/kafka-events.md)). La baja (HU-008) coordina **media-service**. Caché Redis de maestros en `dev`. Enriquecimiento Mongo previsto ([mongo.md](docs/data-model/mongo.md)), integración en curso. |
-| **media-service** | Spring Boot 4, JPA, Flyway, cliente MinIO (API S3) | Esquema `media` para metadatos; binarios en **MinIO** (dev) o **S3** (prod). Flujo: presign → subida → confirmación; foto principal y galería. Miniatura pública: `GET /api/media/public/trees/{treeId}/primary-photo`. |
-| **notification-service** | Spring Boot 4, JPA, Flyway, Spring Kafka, JavaMail | Esquema `notification`: suscripciones (alta pública; gestión **ADMIN**). Consume `catalog.arbol.evento` de forma idempotente y envía correo SMTP a suscriptores **ACTIVA** (Mailpit en dev). |
-| **ai-assistant-service** | Spring Boot 4 (en construcción) | Orquestación al proveedor de IA y trazas en esquema `ai` (auditoría de uso). **HU-016** en curso; maestros en **catalog-service**. Resultados de IA orientativos, no determinación científica. |
+| **catalog-service** | Spring Boot 4, JPA, Flyway, PostgreSQL; Redis en perfil `dev`; productor Kafka | Esquema `catalog`: maestros, provincias (semillas) y fichas (`ejemplar`; coordenadas `NUMERIC`, sin PostGIS en el DDL del MVP). Consulta pública; operaciones de colaborador y **ADMIN**. Tras el alta, publica `EJEMPLAR_CREADO` en `catalog.ejemplar.evento` ([kafka-events.md](docs/events/kafka-events.md)). La baja (HU-008) coordina **media-service**. Caché Redis de maestros en `dev`. Acceso Mongo previsto para proyección y `ejemplar_detalle` (**HU-015**; [mongo.md](docs/data-model/mongo.md)); integración en curso (borrado en stub). |
+| **media-service** | Spring Boot 4, JPA, Flyway, cliente MinIO (API S3) | Esquema `media` para metadatos; binarios en **MinIO** (dev) o **S3** (prod). Flujo: presign → subida → confirmación; foto principal y galería. Miniatura pública: `GET /api/media/public/ejemplares/{ejemplarId}/primary-photo`. |
+| **notification-service** | Spring Boot 4, JPA, Flyway, Spring Kafka, JavaMail | Esquema `notification`: suscripciones (alta pública; gestión **ADMIN**). Consume `catalog.ejemplar.evento` de forma idempotente y envía correo SMTP a suscriptores **ACTIVA** (Mailpit en dev). |
+| **ai-assistant-service** | Spring Boot 4 (en construcción) | Orquestación al proveedor de IA y trazas en esquema `ai` (auditoría de uso). **HU-016** pendiente; maestros en **catalog-service**. Resultados orientativos, no determinación científica. |
 
 #### Identidad, mensajería y almacenamiento
 
 | Componente | Tecnología | Responsabilidad |
 | --- | --- | --- |
 | **Keycloak** | Keycloak 26 (Compose) | IdP OIDC: realm `mtl`, clientes, roles `COLABORADOR` y `ADMIN`, emisión de JWT. |
-| **Kafka** | Apache Kafka (KRaft en dev) | Topic `catalog.arbol.evento`: enlaza el alta del árbol con el aviso por correo. |
+| **Kafka** | Apache Kafka (KRaft en dev) | Topic `catalog.ejemplar.evento`: enlaza el alta del ejemplar con el aviso por correo. |
 | **PostgreSQL** | 16 + PostGIS en contenedor | Un servidor; esquemas `catalog`, `media`, `notification` y `ai` (uno por servicio JDBC). Coordenadas en `catalog` como `NUMERIC` ([V1__baseline.sql](services/catalog-service/src/main/resources/db/migration/V1__baseline.sql)); uso espacial avanzado en iteraciones posteriores. |
 | **MongoDB** | 7 (Compose) | Enriquecimiento (especie, ejemplar, notas); ver [mongo.md](docs/data-model/mongo.md). Integración desde **catalog-service** en curso; no sustituye PostgreSQL. |
 | **Redis** | 7 (Compose) | Caché de maestros en **catalog-service** (perfil `dev`; desactivada en tests sin Docker). |
@@ -952,8 +953,8 @@ erDiagram
     PROVINCIA {
         bigint provincia_id PK
     }
-    ARBOL {
-        bigint arbol_id PK
+    EJEMPLAR {
+        bigint ejemplar_id PK
         bigint especie_id FK
         bigint provincia_id FK
         bigint usuario_app_id FK
@@ -969,17 +970,17 @@ erDiagram
     }
     FOTOGRAFIA {
         bigint fotografia_id PK
-        bigint arbol_id FK
+        bigint ejemplar_id FK
     }
     EVENTO_CATALOGO {
         bigint evento_id PK
-        bigint arbol_id FK
+        bigint ejemplar_id FK
         string tipo_evento
     }
     NOTIFICACION {
         bigint notificacion_id PK
         bigint evento_id FK
-        bigint arbol_id FK
+        bigint ejemplar_id FK
     }
     SUSCRIPTOR {
         bigint suscriptor_id PK
@@ -999,29 +1000,29 @@ erDiagram
         bigint auditoria_ia_id PK
         string subject_oidc
         string tipo_uso_ia
-        bigint arbol_id FK
+        bigint ejemplar_id FK
         string prompt
         string resultado_resumen
         datetime consultado_en
     }
     FAMILIA ||--o{ GENERO : clasifica
     GENERO ||--o{ ESPECIE : clasifica
-    ESPECIE ||--o{ ARBOL : clasifica
-    PROVINCIA ||--o{ ARBOL : ubica
+    ESPECIE ||--o{ EJEMPLAR : clasifica
+    PROVINCIA ||--o{ EJEMPLAR : ubica
     USUARIO_KEYCLOAK ||--o{ USUARIO_APP : autentica
     USUARIO_KEYCLOAK ||--o{ AUDITORIA_USO_IA : consulta
-    USUARIO_APP ||--o{ ARBOL : registra
+    USUARIO_APP ||--o{ EJEMPLAR : registra
     USUARIO_APP ||--o{ AUDITORIA_CATALOGO : actua
     ESPECIE ||--o| ESPECIE_DETALLE : enriquece
     ESPECIE_DETALLE ||--o{ EJEMPLAR_DETALLE : referencia
-    ARBOL ||--o| EJEMPLAR_DETALLE : enriquece
-    ARBOL ||--o{ FOTOGRAFIA : tiene
-    ARBOL ||--o{ EVENTO_CATALOGO : origina
-    ARBOL ||--o{ NOTIFICACION : referencia
+    EJEMPLAR ||--o| EJEMPLAR_DETALLE : enriquece
+    EJEMPLAR ||--o{ FOTOGRAFIA : tiene
+    EJEMPLAR ||--o{ EVENTO_CATALOGO : origina
+    EJEMPLAR ||--o{ NOTIFICACION : referencia
     EVENTO_CATALOGO ||--o{ NOTIFICACION : genera
     NOTIFICACION ||--o{ ENVIO_NOTIFICACION : produce
     SUSCRIPTOR ||--o{ ENVIO_NOTIFICACION : recibe
-    ARBOL ||--o{ AUDITORIA_USO_IA : contexto
+    EJEMPLAR ||--o{ AUDITORIA_USO_IA : contexto
 ```
 
 ### **4.2. Diagrama de persistencia (implementación)**
@@ -1083,8 +1084,8 @@ erDiagram
         timestamptz modificado_en
         bigint modificado_por
     }
-    ARBOL {
-        bigint arbol_id PK
+    EJEMPLAR {
+        bigint ejemplar_id PK
         bigint especie_id FK
         bigint provincia_id FK
         bigint usuario_app_id FK
@@ -1110,9 +1111,9 @@ erDiagram
     }
     FAMILIA ||--o{ GENERO : clasifica
     GENERO ||--o{ ESPECIE : clasifica
-    ESPECIE ||--o{ ARBOL : clasifica
-    PROVINCIA ||--o{ ARBOL : ubica
-    USUARIO_APP ||--o{ ARBOL : registra
+    ESPECIE ||--o{ EJEMPLAR : clasifica
+    PROVINCIA ||--o{ EJEMPLAR : ubica
+    USUARIO_APP ||--o{ EJEMPLAR : registra
     USUARIO_APP ||--o{ FAMILIA : audita
     USUARIO_APP ||--o{ GENERO : audita
     USUARIO_APP ||--o{ ESPECIE : audita
@@ -1125,11 +1126,9 @@ Para el alta de árbol, los valores admitidos son:
 - `estado_publicacion`: `BORRADOR` o `PUBLICADO`.
 - `visibilidad_mapa_publico`: `PRIVADO` o `PUBLICO`.
 
-#### **4.2.2 Mongo catalog_service:**
+#### **4.2.2 MongoDB (catalog-service; modelo en mongo.md)**
 
-Base de datos NoSQL que permite almacenar información no estructurada de cada árbol.
-
-*Tiene una proyección mínima de datos generales de  `ESPECIE` para facilitar búsquedas en Mongo por nombre de especie  sin join obligatorio con SQL; el maestro completo permanece en PostgreSQL.  [mongo.md](docs/data-model/mongo.md).*
+Almacén de **enriquecimiento** (*system of enrichment*): no sustituye a PostgreSQL. Dos colecciones principales — `especie_detalle` (datos ampliados de especie, p. ej. vía LLM en **HU-016**) y `ejemplar_detalle` (medidas, etiquetas y observaciones del ejemplar; `ejemplar_pg_id` = `catalog.ejemplar.ejemplar_id`). Desnormalización controlada de nombres de especie para búsqueda sin join obligatorio con SQL. Diseño, índices y validación: [mongo.md](docs/data-model/mongo.md). Implementación prevista en **catalog-service** (**HU-015**); en el MVP la integración sigue en curso.
 
 ```mermaid
 erDiagram
@@ -1167,14 +1166,14 @@ erDiagram
 
 #### **4.2.3 PostgreSQL media_service:**
 
-Metadatos de fotografías en esquema `media`. `arbol_id` referencia lógicamente a `catalog.arbol` (sin FK entre esquemas).
+Metadatos de fotografías en esquema `media`. `ejemplar_id` referencia lógicamente a `catalog.ejemplar` (sin FK entre esquemas).
 
 ```mermaid
 erDiagram
     %% UK compuesta uq_fotografia_objeto (bucket_almacenamiento, clave_objeto)
     FOTOGRAFIA {
         bigint fotografia_id PK
-        bigint arbol_id
+        bigint ejemplar_id
         varchar bucket_almacenamiento UK
         varchar clave_objeto UK
         varchar nombre_fichero_original
@@ -1188,8 +1187,6 @@ erDiagram
         varchar categoria
         timestamptz subida_en
         bigint subida_por
-        timestamptz eliminado_en
-        bigint eliminada_por
     }
 ```
 
@@ -1211,7 +1208,7 @@ erDiagram
     EVENTO_CATALOGO {
         bigint evento_id PK
         varchar tipo_evento
-        bigint arbol_id
+        bigint ejemplar_id
         text carga_evento_json
         varchar estado_procesamiento
         timestamptz recibido_en
@@ -1220,7 +1217,7 @@ erDiagram
     NOTIFICACION {
         bigint notificacion_id PK
         bigint evento_id FK
-        bigint arbol_id
+        bigint ejemplar_id
         varchar tipo_evento_catalogo
         varchar estado_generacion
         timestamptz generada_en
@@ -1241,7 +1238,7 @@ erDiagram
 
 #### **4.2.5 PostgreSQL ai_assistant_service (esquema `ai`):**
 
-Modelo objetivo de **AUDITORIA_USO_IA** (esquema `ai` inicializado; tabla pendiente de migración Flyway). **`subject_oidc`** persiste el claim `sub` del JWT (Keycloak) en el momento de la consulta; **`arbol_id`** referencia lógicamente a `catalog.arbol`. Sin FK entre esquemas ni dependencia de `catalog.usuario_app`: la trazabilidad del actor se toma directamente del token. Coherente con §4.1 y R3.
+Modelo objetivo de **AUDITORIA_USO_IA** (esquema `ai` inicializado; tabla pendiente de migración Flyway). **`subject_oidc`** persiste el claim `sub` del JWT (Keycloak) en el momento de la consulta; **`ejemplar_id`** referencia lógicamente a `catalog.ejemplar`. Sin FK entre esquemas ni dependencia de `catalog.usuario_app`: la trazabilidad del actor se toma directamente del token. Coherente con §4.1 y R3.
 
 ```mermaid
 erDiagram
@@ -1249,7 +1246,7 @@ erDiagram
         bigint auditoria_ia_id PK
         varchar subject_oidc
         varchar tipo_uso_ia
-        bigint arbol_id
+        bigint ejemplar_id
         text prompt
         text resultado_resumen
         timestamptz consultado_en
@@ -1258,7 +1255,7 @@ erDiagram
 
 ### **4.3. Descripción de entidades principales (orientación física)**
 
-Las entidades físicas se reparten por servicio y almacén como se indica en §3.2: Un servidor **PostgreSQL** con cuatro esquemas `catalog`, `media`, `notification` y `ai`; Una Base e datos **MongoDB** usada por  **catalog-service**.
+Las entidades físicas se reparten por servicio y almacén como se indica en §3.2: un servidor **PostgreSQL** con cuatro esquemas `catalog`, `media`, `notification` y `ai`; una base **MongoDB** de enriquecimiento (colecciones en [mongo.md](docs/data-model/mongo.md)), con acceso previsto desde **catalog-service** (**HU-015**). El flujo **HU-016** actualiza `especie_detalle` según §6 de `mongo.md` (orquestación en **ai-assistant-service**).
 
 **Usuario de aplicación:** La audditoría de la aplicación se implementa en torno a al usuario proporcionado por el token generado por keycloak como proveedor OIDC. Para evitar duplicidades los diversos esquemas almacenan el identificador estable del proveedor (`sub`) que se guarda en el campo `**subject_oidc`**. En el caso de catalog-service este campo se guarda en una tabla USUARIO_APP con unicidad, no como clave primaria; esto permite trazabilidad sin duplicar la información; las FK de los campos de auditoria creado_por y modificado_por referencian a la clave primaria de esta tabla.
 
@@ -1308,7 +1305,7 @@ Respecto al riesgo de Listado sin filtros vamos a añadir en la historia el filt
 
 **Prompt 5:**
 
-1.- Path de borrado: DELETE /api/media/trees/{treeId}/photos 2.- Si un arbol tiene fotografías primero se invoca al servicio de borrado de todas lasa fotografías; si el servicio da error se para el proceso; si se han borrado todas las fotografías se elimina el arbol en PostgreSQL 3.- Fehcas en formato date a ser posible en UTC 4.- Para ADMIN se añade un filtro más para poder seleccionar los árboles dados de alta por un usuario determinado
+1.- Path de borrado: `DELETE /api/media/ejemplares/{ejemplarId}/photos` 2.- Si un ejemplar tiene fotografías primero se invoca al servicio de borrado de todas las fotografías; si el servicio da error se para el proceso; si se han borrado todas las fotografías se elimina el ejemplar en PostgreSQL 3.- Fechas en formato date a ser posible en UTC 4.- Para ADMIN se añade un filtro más para poder seleccionar los ejemplares dados de alta por un usuario determinado
 
 
 ---
@@ -1349,7 +1346,7 @@ Implementa la **HU-004**: alta de suscripción por correo sin cuenta de colabora
 
 ## Cambios principales
 
-- **Backend (`notification-service`)**: registro de suscriptores, migración `V2__suscriptor.sql`, seguridad Keycloak, controlador REST de altas públicas, manejo de errores tipo Problem Details, tests (servicio + WebMvc).
+- **Backend (`notification-service`)**: registro de suscriptores, tabla `suscriptor` en Flyway `V1__baseline.sql`, seguridad Keycloak, controlador REST de altas públicas, manejo de errores tipo Problem Details, tests (servicio + WebMvc).
 - **Gateway**: filtro global ante errores de conexión a downstream y utilidades asociadas (con tests).
 - **Frontend**: vista `SubscribeByEmailView`, composable `usePublicSubscriptionForm`, servicio `publicSubscription`, ampliación de `apiClient` (p. ej. cuerpo sin JSON / conflictos), iconos y tiles del home, hero visitante con ilustración `tree_map_illustration_clean.svg`, estilos e i18n (`es.ts`), rutas y tests (Vitest).
 - **Contrato y configuración**: `docs/api/openapi.yaml`, `frontend/.env.example` y README donde aplique.
@@ -1376,7 +1373,7 @@ Implementa la **HU-004**: alta de suscripción por correo sin cuenta de colabora
 
 Cierra **HU-008** (UC-04): el colaborador puede **listar y filtrar** sus fichas, **editarlas** (`PUT`) y **eliminarlas** (`DELETE`) con cascada en media; **ADMIN** opera sobre cualquier ficha. Incluye galería en edición (**HU-006-14**) y cierre documental de la historia.
 
-- Vertical completo: **catalog-service** + **media-service** + **frontend** (`/my-trees`, `/trees/:id/edit`).
+- Vertical completo: **catalog-service** + **media-service** + **frontend** (`/mis-ejemplares`, `/ejemplares/:id/edit`). Rutas y API actualizadas según [ADR-0006](docs/adr/0006-ejemplar-nomenclature-contracts.md).
 - Sin notificación ni Kafka en edición/baja (**R7**).
 
 ## Alcance
@@ -1389,20 +1386,20 @@ Cierra **HU-008** (UC-04): el colaborador puede **listar y filtrar** sus fichas,
 ## Cambios realizados
 
 **Backend — catalog-service**
-- `GET /api/catalog/trees` (filtros, paginación, scope COLABORADOR/ADMIN).
-- `GET` / `PUT` / `DELETE` `/api/catalog/trees/{id}`.
-- Orquestación de baja: media → SQL → hook Mongo **stub** (`NoOpTreeEnrichmentDeletionPort`).
-- Cliente `RestMediaTreePhotosClient` (`mtl.media.base-url`).
+- `GET /api/catalog/ejemplares` (filtros, paginación, scope COLABORADOR/ADMIN).
+- `GET` / `PUT` / `DELETE` `/api/catalog/ejemplares/{ejemplarId}`.
+- Orquestación de baja: media → SQL → hook Mongo **stub** (`NoOpEjemplarEnrichmentDeletionPort`).
+- Cliente `RestMediaEjemplarPhotosClient` (`mtl.media.base-url`).
 - Auditoría R3, `JwtRealmRoles`, materialización `usuario_app`.
 
 **Backend — media-service**
-- `DELETE /api/media/trees/{treeId}/photos` (borrado masivo).
+- `DELETE /api/media/ejemplares/{ejemplarId}/photos` (borrado masivo).
 - `DELETE /api/media/photos/{photoId}` (galería en edición).
 
 **Frontend**
-- `MyTreesListView` (`/my-trees`) con filtros y peticiones cancelables.
-- `EditTreeView` + `useEditTreeForm` (`/trees/:id/edit`): PUT, DELETE con confirmación, galería añadir/borrar foto.
-- Servicios `collaboratorTreesService`, validación de archivos, `SpeciesAutocompleteInput`.
+- `MyEjemplaresListView` (`/mis-ejemplares`) con filtros y peticiones cancelables.
+- `EditEjemplarView` + `useEditEjemplarForm` (`/ejemplares/:id/edit`): PUT, DELETE con confirmación, galería añadir/borrar foto.
+- Servicios `collaboratorEjemplaresService`, validación de archivos, `SpeciesAutocompleteInput`.
 
 **Contrato y docs**
 - [docs/api/openapi.yaml](docs/api/openapi.yaml) actualizado.

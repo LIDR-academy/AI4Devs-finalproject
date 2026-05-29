@@ -62,7 +62,7 @@ flowchart LR
 
 | ID | Título | Descripción breve | Estado |
 |----|--------|-------------------|--------|
-| **TASK-HU-006-01** | Modelo relacional de fotografía en esquema `media` | Definir/ajustar migración Flyway para metadatos de foto asociados a `arbol_id` con campos mínimos: identificador, clave de objeto, MIME, tamaño bytes, orden, `es_principal`, autor y timestamps. Mantener PK numérica y convenciones de esquema del proyecto. | Hecho |
+| **TASK-HU-006-01** | Modelo relacional de fotografía en esquema `media` | Definir/ajustar migración Flyway para metadatos de foto asociados a `ejemplar_id` con campos mínimos: identificador, clave de objeto, MIME, tamaño bytes, orden, `es_principal`, autor y timestamps. Mantener PK numérica y convenciones de esquema del proyecto. | Hecho |
 | **TASK-HU-006-02** | Configuración de límites y validación de archivo | Añadir propiedades de aplicación en `media-service` para `max-file-size` (default 20 MB), MIME permitidos (`image/jpeg`, `image/png`, `image/webp`) y máximo 10 fotos por árbol. Validar en backend antes de confirmar registro de metadatos. | Hecho |
 | **TASK-HU-006-03** | Flujo API de presign + confirmación de metadatos | Implementar endpoints bajo `/api/media` para solicitar URL prefirmada de subida y confirmar/persistir metadatos tras subida. Error handling con `application/problem+json`, sin exponer detalles internos de MinIO/S3. | Hecho |
 | **TASK-HU-006-04** | Regla de foto principal y orden de selección | Persistir la primera foto seleccionada como principal. Asegurar consistencia para cargas múltiples en la misma operación (orden estable) y para operaciones posteriores sobre el mismo árbol (sin duplicar principales activas). | Hecho |
@@ -93,11 +93,11 @@ flowchart LR
 
 ### Ampliación — fotos en pantalla de edición (HU-008)
 
-Depende de que exista la pantalla de edición de ficha en **HU-008** (`/trees/:id/edit`, listado **Mis árboles**). Reutiliza el componente de subida de **TASK-HU-006-08** y el flujo presign → MinIO → confirmación de **TASK-HU-006-03**.
+Depende de que exista la pantalla de edición de ficha en **HU-008** (`/ejemplares/:id/edit`, listado **Mis árboles**). Reutiliza el componente de subida de **TASK-HU-006-08** y el flujo presign → MinIO → confirmación de **TASK-HU-006-03**.
 
 | ID | Título | Descripción breve | Estado |
 |----|--------|-------------------|--------|
-| **TASK-HU-006-14** | Alta y baja de fotografías desde la edición de Mis árboles | **Backend (`media-service`):** **`DELETE /api/media/photos/{photoId}`** (contrato **TASK-HU-008-01**), borrado metadatos + objeto, autorización **TASK-HU-006-05**; al borrar la principal, promover otra como `es_principal`. **Frontend:** galería en `/trees/:id/edit` con añadir (presign/confirmación, `startOrden`) y eliminar con diálogo de confirmación. **Pruebas:** `MediaPhotoDeleteServiceTest`, WebMvc delete, Vitest (`useEditTreeForm`, `EditTreeView`). | Hecho |
+| **TASK-HU-006-14** | Alta y baja de fotografías desde la edición de Mis árboles | **Backend (`media-service`):** **`DELETE /api/media/photos/{photoId}`** (contrato **TASK-HU-008-01**), borrado metadatos + objeto, autorización **TASK-HU-006-05**; al borrar la principal, promover otra como `es_principal`. **Frontend:** galería en `/ejemplares/:id/edit` con añadir (presign/confirmación, `startOrden`) y eliminar con diálogo de confirmación. **Pruebas:** `MediaPhotoDeleteServiceTest`, WebMvc delete, Vitest (`useEditEjemplarForm`, `EditEjemplarView`). | Hecho |
 
 ---
 
@@ -111,7 +111,7 @@ Depende de que exista la pantalla de edición de ficha en **HU-008** (`/trees/:i
 
 - **HU-001:** autenticación OIDC/JWT y roles operativos.
 - **HU-005:** flujo de alta de árbol disponible para asociar fotos y reutilizar mapa/coordenadas.
-- **HU-008:** **cerrada** — pantalla de edición (`/trees/:id/edit`) y listado **Mis árboles** operativos para **TASK-HU-006-14**.
+- **HU-008:** **cerrada** — pantalla de edición (`/ejemplares/:id/edit`) y listado **Mis árboles** operativos para **TASK-HU-006-14**.
 - **Infra Compose:** MinIO, Postgres y gateway operativos según [infra/compose/README.md](../../infra/compose/README.md).
 
 ## Cierre sugerido (definición de “hecho” para el corte)

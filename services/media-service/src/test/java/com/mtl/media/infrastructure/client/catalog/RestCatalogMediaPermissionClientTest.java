@@ -48,13 +48,13 @@ class RestCatalogMediaPermissionClientTest {
   void resolveActor_forbiddenFromCatalog_mapsTo403() {
     server
         .expect(
-            requestTo("http://catalog-service/api/catalog/trees/99/media-submission-permission"))
+            requestTo("http://catalog-service/api/catalog/ejemplares/99/media-submission-permission"))
         .andExpect(header("Authorization", "Bearer test-token"))
         .andRespond(withStatus(HttpStatus.FORBIDDEN).contentType(MediaType.APPLICATION_JSON).body("{}"));
 
     ResponseStatusException ex =
         assertThrows(
-            ResponseStatusException.class, () -> client.resolveActorUsuarioAppIdForTree(99L, JWT));
+            ResponseStatusException.class, () -> client.resolveActorUsuarioAppIdForEjemplar(99L, JWT));
 
     assertThat(ex.getStatusCode().value()).isEqualTo(403);
     assertThat(ex.getReason()).contains("permiso");
@@ -64,12 +64,12 @@ class RestCatalogMediaPermissionClientTest {
   void resolveActor_notFoundFromCatalog_mapsTo404() {
     server
         .expect(
-            requestTo("http://catalog-service/api/catalog/trees/1/media-submission-permission"))
+            requestTo("http://catalog-service/api/catalog/ejemplares/1/media-submission-permission"))
         .andExpect(header("Authorization", "Bearer test-token"))
         .andRespond(withStatus(HttpStatus.NOT_FOUND));
 
     ResponseStatusException ex =
-        assertThrows(ResponseStatusException.class, () -> client.resolveActorUsuarioAppIdForTree(1L, JWT));
+        assertThrows(ResponseStatusException.class, () -> client.resolveActorUsuarioAppIdForEjemplar(1L, JWT));
 
     assertThat(ex.getStatusCode().value()).isEqualTo(404);
   }
@@ -78,27 +78,52 @@ class RestCatalogMediaPermissionClientTest {
   void resolveActor_ok_returnsActorId() {
     server
         .expect(
-            requestTo("http://catalog-service/api/catalog/trees/5/media-submission-permission"))
+            requestTo("http://catalog-service/api/catalog/ejemplares/5/media-submission-permission"))
         .andExpect(header("Authorization", "Bearer test-token"))
         .andRespond(
             withStatus(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body("{\"treeId\":5,\"actorUsuarioAppId\":42}"));
+                .body("{\"ejemplarId\":5,\"actorUsuarioAppId\":42}"));
 
-    long id = client.resolveActorUsuarioAppIdForTree(5L, JWT);
+    long id = client.resolveActorUsuarioAppIdForEjemplar(5L, JWT);
 
     assertThat(id).isEqualTo(42L);
+  }
+
+  @Test
+  void hasPhotoManagementPermission_forbidden_returnsFalse() {
+    server
+        .expect(
+            requestTo("http://catalog-service/api/catalog/ejemplares/99/media-submission-permission"))
+        .andExpect(header("Authorization", "Bearer test-token"))
+        .andRespond(withStatus(HttpStatus.FORBIDDEN).contentType(MediaType.APPLICATION_JSON).body("{}"));
+
+    assertThat(client.hasPhotoManagementPermission(99L, JWT)).isFalse();
+  }
+
+  @Test
+  void hasPhotoManagementPermission_ok_returnsTrue() {
+    server
+        .expect(
+            requestTo("http://catalog-service/api/catalog/ejemplares/5/media-submission-permission"))
+        .andExpect(header("Authorization", "Bearer test-token"))
+        .andRespond(
+            withStatus(HttpStatus.OK)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("{\"ejemplarId\":5,\"actorUsuarioAppId\":42}"));
+
+    assertThat(client.hasPhotoManagementPermission(5L, JWT)).isTrue();
   }
 
   @Test
   void resolveActor_emptyBody_mapsTo502() {
     server
         .expect(
-            requestTo("http://catalog-service/api/catalog/trees/3/media-submission-permission"))
+            requestTo("http://catalog-service/api/catalog/ejemplares/3/media-submission-permission"))
         .andRespond(withStatus(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON).body("null"));
 
     ResponseStatusException ex =
-        assertThrows(ResponseStatusException.class, () -> client.resolveActorUsuarioAppIdForTree(3L, JWT));
+        assertThrows(ResponseStatusException.class, () -> client.resolveActorUsuarioAppIdForEjemplar(3L, JWT));
 
     assertThat(ex.getStatusCode().value()).isEqualTo(502);
   }

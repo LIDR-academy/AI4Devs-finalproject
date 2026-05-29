@@ -35,7 +35,7 @@ Como responsable del catálogo, quiero mantener en MongoDB proyecciones y enriqu
 
 - Modelo de documentos, índices y validación acordados en `mongo.md`.
 - Sincronización o proyección en **alta/edición** de árbol y en cambios de maestros que afecten a campos desnormalizados (criterio a cerrar en desglose).
-- Enlaces por PK numérica SQL (`especie_pg_id`, `ejemplar_pg_id` / `arbol_id`).
+- Enlaces por PK numérica SQL (`especie_pg_id`, `ejemplar_pg_id`).
 - Pruebas de integración con Testcontainers Mongo donde aporte valor.
 
 #### Queda fuera de esta historia

@@ -14,7 +14,7 @@ import com.mtl.notification.dto.SubscriptionAdminItemResponse;
 import com.mtl.notification.dto.SubscriptionAdminPageResponse;
 import com.mtl.notification.exception.NotificationException;
 import com.mtl.notification.infrastructure.persistence.jpa.repository.SuscriptorRepository;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -137,7 +137,7 @@ class SubscriptionAdminServiceTest {
   @Test
   void updateEstado_aActiva_limpiaBajaEn() {
     Suscriptor row = suscriptor(4L, EstadoSuscripcion.CANCELADA);
-    row.setBajaEn(Instant.parse("2020-01-01T00:00:00Z"));
+    row.setBajaEn(OffsetDateTime.parse("2020-01-01T00:00:00Z"));
     when(suscriptorRepository.findById(4L)).thenReturn(Optional.of(row));
     when(suscriptorRepository.save(any(Suscriptor.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -163,8 +163,8 @@ class SubscriptionAdminServiceTest {
     s.setId(id);
     s.setEmail("a@b.com");
     s.setEstadoSuscripcion(estado);
-    s.setAltaEn(Instant.parse("2024-06-01T12:00:00Z"));
-    s.setConfirmadoEn(Instant.parse("2024-06-01T12:00:00Z"));
+    s.setAltaEn(OffsetDateTime.parse("2024-06-01T12:00:00Z"));
+    s.setConfirmadoEn(OffsetDateTime.parse("2024-06-01T12:00:00Z"));
     return s;
   }
 }

@@ -1,6 +1,6 @@
 /** Cuerpo de `POST /api/media/uploads/presign` (alineado con media-service). */
 export interface PresignUploadRequest {
-  arbolId: number
+  ejemplarId: number
   nombreFicheroOriginal: string
   tipoMime: string
   tamanoBytes: number
@@ -15,7 +15,7 @@ export interface PresignUploadResponse {
 
 /** Cuerpo de `POST /api/media/photos/confirm`. */
 export interface ConfirmPhotoUploadRequest {
-  arbolId: number
+  ejemplarId: number
   bucket: string
   objectKey: string
   nombreFicheroOriginal: string
@@ -30,7 +30,7 @@ export interface ConfirmPhotoUploadRequest {
 
 export interface PhotoMetadataResponse {
   fotografiaId: number
-  arbolId: number
+  ejemplarId: number
   bucket: string
   objectKey: string
   nombreFicheroOriginal: string
@@ -45,8 +45,8 @@ export interface PhotoMetadataResponse {
 
 export type PhotoVisibilityCategory = 'PUBLIC' | 'PRIVATE'
 
-/** Respuesta de `GET /api/media/trees/{treeId}/photos`. */
-export interface TreePhotoGalleryItem {
+/** Respuesta de `GET /api/media/ejemplares/{ejemplarId}/photos`. */
+export interface EjemplarPhotoGalleryItem {
   id: number
   url: string
   esPrincipal: boolean

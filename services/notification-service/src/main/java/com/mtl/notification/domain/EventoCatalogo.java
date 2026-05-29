@@ -4,7 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,8 +26,8 @@ public class EventoCatalogo {
   @Column(name = "tipo_evento", nullable = false, length = 64)
   private String tipoEvento;
 
-  @Column(name = "arbol_id", nullable = false)
-  private Long arbolId;
+  @Column(name = "ejemplar_id", nullable = false)
+  private Long ejemplarId;
 
   @Column(name = "carga_evento_json", columnDefinition = "text")
   private String cargaEventoJson;
@@ -36,8 +36,8 @@ public class EventoCatalogo {
   private String estadoProcesamiento;
 
   @Column(name = "recibido_en", nullable = false)
-  private Instant recibidoEn;
+  private OffsetDateTime recibidoEn;
 
   @Column(name = "procesado_en")
-  private Instant procesadoEn;
+  private OffsetDateTime procesadoEn;
 }

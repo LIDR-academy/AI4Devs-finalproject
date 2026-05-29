@@ -11,7 +11,7 @@ import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "fotografia")
+@Table(name = "fotografia", schema = "media")
 public class Fotografia {
 
   @Id
@@ -19,8 +19,8 @@ public class Fotografia {
   @Column(name = "fotografia_id")
   private Long fotografiaId;
 
-  @Column(name = "arbol_id", nullable = false)
-  private Long arbolId;
+  @Column(name = "ejemplar_id", nullable = false)
+  private Long ejemplarId;
 
   @Column(name = "bucket_almacenamiento", nullable = false, length = 128)
   private String bucketAlmacenamiento;
@@ -62,12 +62,6 @@ public class Fotografia {
   @Column(name = "subida_por", nullable = false)
   private Long subidaPor;
 
-  @Column(name = "eliminado_en")
-  private OffsetDateTime eliminadoEn;
-
-  @Column(name = "eliminada_por")
-  private Long eliminadaPor;
-
   public Long getFotografiaId() {
     return fotografiaId;
   }
@@ -76,12 +70,12 @@ public class Fotografia {
     this.fotografiaId = fotografiaId;
   }
 
-  public Long getArbolId() {
-    return arbolId;
+  public Long getEjemplarId() {
+    return ejemplarId;
   }
 
-  public void setArbolId(Long arbolId) {
-    this.arbolId = arbolId;
+  public void setEjemplarId(Long ejemplarId) {
+    this.ejemplarId = ejemplarId;
   }
 
   public String getBucketAlmacenamiento() {
@@ -186,21 +180,5 @@ public class Fotografia {
 
   public void setSubidaPor(Long subidaPor) {
     this.subidaPor = subidaPor;
-  }
-
-  public OffsetDateTime getEliminadoEn() {
-    return eliminadoEn;
-  }
-
-  public void setEliminadoEn(OffsetDateTime eliminadoEn) {
-    this.eliminadoEn = eliminadoEn;
-  }
-
-  public Long getEliminadaPor() {
-    return eliminadaPor;
-  }
-
-  public void setEliminadaPor(Long eliminadaPor) {
-    this.eliminadaPor = eliminadaPor;
   }
 }

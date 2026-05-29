@@ -5,6 +5,8 @@
 - **Revisor**: Asistente IA (perfil: experto frontend Vue)
 - **Estado**: Borrador con seguimiento de implementación (tabla de estado de los 12 hallazgos más abajo)
 
+> **Nota (2026-05):** snapshot anterior a [ADR-0006](../adr/0006-ejemplar-nomenclature-contracts.md); rutas actuales de la SPA usan `/ejemplares`, `/mis-ejemplares`, etc.
+
 ## Resumen ejecutivo
 
 Hallazgos del primer corte del `frontend/`; el **estado frente al código** está en la tabla *Estado de los 12 hallazgos* (siguiente sección). Las secciones numeradas 1–12 conservan el análisis original y el plan de mejora propuesto.

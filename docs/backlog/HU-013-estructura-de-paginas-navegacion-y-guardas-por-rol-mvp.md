@@ -64,7 +64,7 @@ Como usuario público, colaborador o usuario con rol **ADMIN**, quiero disponer 
 
 ### Aclaraciones pendientes (refinamiento)
 
-- Convención final de nombres de rutas públicas y protegidas (incluyendo detalle de `/trees/:id/edit` y rutas administrativas).
+- Convención final de nombres de rutas públicas y protegidas (incluyendo detalle de `/ejemplares/:id/edit` y rutas administrativas).
 - Definición exacta de copy para placeholders (mensaje estándar y CTA de retorno).
 - Criterio final para visibilidad del menú por perfil cuando la sesión está en transición (carga/refresh silencioso).
 - Confirmación de mapeo único de roles en frontend para mostrar `ADMIN` de forma consistente en navegación, guardas y copy funcional.

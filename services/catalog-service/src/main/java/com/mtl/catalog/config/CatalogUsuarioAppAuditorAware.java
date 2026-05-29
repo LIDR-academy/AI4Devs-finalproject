@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
  * auditadas en la misma transacción (p. ej. tras {@code ensureUsuarioApp} en alta de árbol).
  */
 @Component("catalogUsuarioAppAuditorAware")
-public class CatalogUsuarioAppAuditorAware implements AuditorAware<Long> {
+public class CatalogUsuarioAppAuditorAware implements AuditorAware<UsuarioApp> {
 
   private final UsuarioAppRepository usuarioAppRepository;
   private final EntityManager entityManager;
@@ -30,10 +30,10 @@ public class CatalogUsuarioAppAuditorAware implements AuditorAware<Long> {
   }
 
   @Override
-  public Optional<Long> getCurrentAuditor() {
+  public Optional<UsuarioApp> getCurrentAuditor() {
     Optional<Long> bound = CatalogAuditorContext.currentUsuarioAppId();
     if (bound.isPresent()) {
-      return bound;
+      return Optional.of(entityManager.getReference(UsuarioApp.class, bound.get()));
     }
 
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -55,7 +55,7 @@ public class CatalogUsuarioAppAuditorAware implements AuditorAware<Long> {
     FlushModeType previousFlushMode = entityManager.getFlushMode();
     entityManager.setFlushMode(FlushModeType.COMMIT);
     try {
-      return usuarioAppRepository.findBySubjectOidc(trimmed).map(UsuarioApp::getId);
+      return usuarioAppRepository.findBySubjectOidc(trimmed);
     } finally {
       entityManager.setFlushMode(previousFlushMode);
     }

@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record PresignUploadRequest(
-    @NotNull Long arbolId,
+    @NotNull Long ejemplarId,
     @NotBlank String nombreFicheroOriginal,
     @NotBlank String tipoMime,
     @Min(1) long tamanoBytes) {}

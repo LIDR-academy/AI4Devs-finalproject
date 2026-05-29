@@ -18,7 +18,7 @@ public class MediaUploadProperties {
   private DataSize maxFileSize = DataSize.ofMegabytes(20);
 
   @Min(1)
-  private int maxPhotosPerTree = 10;
+  private int maxPhotosPerEjemplar = 10;
 
   @NotEmpty
   private Set<String> allowedMimeTypes =
@@ -32,12 +32,12 @@ public class MediaUploadProperties {
     this.maxFileSize = maxFileSize;
   }
 
-  public int getMaxPhotosPerTree() {
-    return maxPhotosPerTree;
+  public int getMaxPhotosPerEjemplar() {
+    return maxPhotosPerEjemplar;
   }
 
-  public void setMaxPhotosPerTree(int maxPhotosPerTree) {
-    this.maxPhotosPerTree = maxPhotosPerTree;
+  public void setMaxPhotosPerEjemplar(int maxPhotosPerEjemplar) {
+    this.maxPhotosPerEjemplar = maxPhotosPerEjemplar;
   }
 
   public Set<String> getAllowedMimeTypes() {

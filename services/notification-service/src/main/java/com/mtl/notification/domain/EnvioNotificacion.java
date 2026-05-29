@@ -10,7 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import java.time.Instant;
+import java.time.OffsetDateTime;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -48,10 +48,10 @@ public class EnvioNotificacion {
   private String estadoEnvio;
 
   @Column(name = "generada_en", nullable = false)
-  private Instant generadaEn;
+  private OffsetDateTime generadaEn;
 
   @Column(name = "enviada_en")
-  private Instant enviadaEn;
+  private OffsetDateTime enviadaEn;
 
   @Column(name = "mensaje_error", length = 2000)
   private String mensajeError;

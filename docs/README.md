@@ -8,7 +8,7 @@
 
 | Carpeta | Contenido principal |
 |---------|----------------------|
-| [adr/](adr/README.md) | Architecture Decision Records (índice en `adr/README.md`; p. ej. [0003](adr/0003-cursor-rules-refinement-and-canonical-map.md): registro del refinamiento de reglas Cursor y del mapa canónico) |
+| [adr/](adr/README.md) | Architecture Decision Records (índice en `adr/README.md`; p. ej. [0003](adr/0003-cursor-rules-refinement-and-canonical-map.md): registro del refinamiento de reglas Cursor y del mapa canónico; [0006](adr/0006-ejemplar-nomenclature-contracts.md): nomenclatura *ejemplar* en HTTP, Kafka y SPA) |
 | [api/](api/openapi.yaml) | Contrato HTTP (OpenAPI 3) del API Gateway |
 | [backlog/](backlog/README.md) | Backlog y desgloses `HU-*-ticket-breakdown.md` |
 | [data-model/](data-model/data-model.md) | Reglas de negocio y modelo relacional |

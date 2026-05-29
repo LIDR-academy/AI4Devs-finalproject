@@ -19,6 +19,7 @@ import com.mtl.notification.web.error.NotificationExceptionHandler;
 import com.mtl.notification.web.error.ProblemAccessDeniedHandler;
 import com.mtl.notification.web.error.ProblemAuthenticationEntryPoint;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -116,8 +117,8 @@ class NotificationAdminSubscriptionsSecurityWebMvcTest {
                         1L,
                         "user@example.com",
                         EstadoSuscripcion.ACTIVA,
-                        Instant.parse("2024-01-01T00:00:00Z"),
-                        Instant.parse("2024-01-01T00:00:00Z"),
+                        OffsetDateTime.parse("2024-01-01T00:00:00Z"),
+                        OffsetDateTime.parse("2024-01-01T00:00:00Z"),
                         null)),
                 1,
                 1,
@@ -159,8 +160,8 @@ class NotificationAdminSubscriptionsSecurityWebMvcTest {
                 7L,
                 "z@w.com",
                 EstadoSuscripcion.ACTIVA,
-                Instant.parse("2024-01-01T00:00:00Z"),
-                Instant.parse("2024-01-01T00:00:00Z"),
+                OffsetDateTime.parse("2024-01-01T00:00:00Z"),
+                OffsetDateTime.parse("2024-01-01T00:00:00Z"),
                 null));
 
     mockMvc

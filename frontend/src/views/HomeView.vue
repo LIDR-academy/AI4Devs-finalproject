@@ -136,7 +136,7 @@ const dashboardHeroIllustrationSrc = computed(() => {
           </h3>
           <div class="home-dashboard__grid">
             <HomeDashboardTile
-              :to="{ name: 'trees-new' }"
+              :to="{ name: 'ejemplares-new' }"
               variant="primary"
               :title="t('home.tiles.createTree.title')"
               :description="t('home.tiles.createTree.desc')"
@@ -146,7 +146,7 @@ const dashboardHeroIllustrationSrc = computed(() => {
               </template>
             </HomeDashboardTile>
             <HomeDashboardTile
-              :to="{ name: 'my-trees' }"
+              :to="{ name: 'mis-ejemplares' }"
               :title="t('home.tiles.myTrees.title')"
               :description="t('home.tiles.myTrees.desc')"
             >
@@ -191,7 +191,7 @@ const dashboardHeroIllustrationSrc = computed(() => {
           </h3>
           <div class="home-dashboard__grid">
             <HomeDashboardTile
-              :to="{ name: 'trees-new' }"
+              :to="{ name: 'ejemplares-new' }"
               variant="primary"
               :title="t('home.tiles.createTree.title')"
               :description="t('home.tiles.createTree.desc')"
@@ -201,7 +201,7 @@ const dashboardHeroIllustrationSrc = computed(() => {
               </template>
             </HomeDashboardTile>
             <HomeDashboardTile
-              :to="{ name: 'my-trees' }"
+              :to="{ name: 'mis-ejemplares' }"
               :title="t('home.tiles.myTrees.title')"
               :description="t('home.tiles.myTrees.desc')"
             >
@@ -218,7 +218,7 @@ const dashboardHeroIllustrationSrc = computed(() => {
       <section class="home-dashboard__section" aria-labelledby="home-visitor-heading">
         <div class="home-dashboard__grid home-dashboard__grid--public">
           <HomeDashboardTile
-            :to="{ name: 'trees-list' }"
+            :to="{ name: 'ejemplares-list' }"
             variant="primary"
             :title="t('home.publicTiles.trees.title')"
             :description="t('home.publicTiles.trees.desc')"

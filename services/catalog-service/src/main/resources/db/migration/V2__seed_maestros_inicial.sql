@@ -1,8 +1,7 @@
 SET search_path TO catalog;
 -- Script de inserción de 500 especies arbóreas frecuentes en España y/o usadas como ornamentales urbanas en Madrid.
 -- Generado con inserciones idempotentes mediante comprobación por nombre científico.
--- Asume tablas: familia(familia_id, nombre_cientifico, nombre_comun), genero(genero_id, familia_id, nombre_cientifico, nombre_comun), especie(especie_id, genero_id, nombre_cientifico, nombre_comun).
--- Recomendado: índices únicos en familia(nombre_cientifico), genero(familia_id,nombre_cientifico), especie(genero_id,nombre_cientifico).
+-- Asume tablas definidas en V1__baseline.sql (familia, genero, especie, provincia).
 -- (Sin BEGIN/COMMIT explícitos: Flyway envuelve cada migración en una transacción en PostgreSQL.)
 
 -- Familias

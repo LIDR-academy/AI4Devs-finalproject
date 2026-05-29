@@ -90,17 +90,17 @@ flowchart LR
 
 ### Evidencia de cierre HU-002 (MVP)
 
-- **Flujo visitante sin sesión operativo (`/trees -> /trees/:id`):**
+- **Flujo visitante sin sesión operativo (`/ejemplares` → `/ejemplares/:id`):**
   - Frontend: `TreesListView.vue` y `TreesDetailView.vue` en rutas públicas.
   - Router: guardas solo en rutas protegidas; `trees-list` y `trees-detail` accesibles sin autenticación.
 - **Contrato y endpoints públicos alineados:**
-  - `GET /api/catalog/public/trees`
-  - `GET /api/catalog/public/trees/{treeId}`
+  - `GET /api/catalog/public/ejemplares`
+  - `GET /api/catalog/public/ejemplares/{ejemplarId}`
   - `GET /api/catalog/public/provinces`
 - **Regla de exposición pública validada:** solo fichas `PUBLICADO` + `PUBLICO` para visitante anónimo; detalle no publicable/inexistente devuelve `404` según contrato.
 - **Tests y checks ejecutados para el cierre:**
   - Frontend: `npm run test` (incluye tests de vistas `TreesListView` y `TreesDetailView`) y `npm run build`.
-  - Backend: tests de catálogo para endpoints/servicio público (`PublicTreeQueryServiceTest`, `CatalogTreesControllerWebMvcTest`, `CatalogPublicMastersControllerWebMvcTest`).
+  - Backend: tests de catálogo para endpoints/servicio público (`PublicEjemplarQueryServiceTest`, `CatalogEjemplaresControllerWebMvcTest`, `CatalogPublicMastersControllerWebMvcTest`).
 
 ---
 
@@ -118,6 +118,6 @@ flowchart LR
 
 ## Cierre sugerido (definición de “hecho” para el experimento)
 
-Un visitante sin sesión abre `/trees`, visualiza listado de fichas publicadas, entra a `/trees/:id` y consulta el detalle sin autenticación; las fichas no publicadas no se exponen en flujo público, y los tests básicos de backend/frontend del flujo quedan en verde.
+Un visitante sin sesión abre `/ejemplares`, visualiza listado de fichas publicadas, entra a `/ejemplares/:id` y consulta el detalle sin autenticación; las fichas no publicadas no se exponen en flujo público, y los tests básicos de backend/frontend del flujo quedan en verde.
 
 **Decisión aplicada en TASK-HU-002-01:** contrato público cerrado con filtros (`especie`, `provincia`, `municipio`, `estado`, `visibilidad`), orden por defecto `especie,asc`, paginación por defecto `size=20`, `totalResults` para cliente y detalle con `descripcion`, `latitud`, `longitud` y `altura`, reutilizable por HU-003. Catálogo de provincias para el visitante: **`GET /api/catalog/public/provinces`** devuelve solo **`nombres`** (array ordenado); el maestro autenticado **`GET /api/catalog/provinces`** conserva `label` con **nombre (código)** para formularios de colaboración.

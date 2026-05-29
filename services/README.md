@@ -37,11 +37,11 @@ Los `application-dev.properties` de los servicios con JDBC usan `jdbc:postgresql
 
 ### Kafka y **catalog-service**
 
-- **Topic** (Compose / `kafka-init`): `catalog.arbol.evento`. Contrato del mensaje: [docs/events/kafka-events.md](../docs/events/kafka-events.md).
+- **Topic** (Compose / `kafka-init`): `catalog.ejemplar.evento`. Contrato del mensaje: [docs/events/kafka-events.md](../docs/events/kafka-events.md).
 - **Cliente en el host:** bootstrap `localhost:9094` (variable `KAFKA_PORT_HOST` en `infra/compose/.env.example`). Dentro de Docker los servicios usan `kafka:9092`.
-- **Propiedades útiles** (perfil `dev` ya fija valores por defecto en `catalog-service`):
-  - `mtl.catalog.kafka.enabled` — `true` en dev para publicar **`ARBOL_CREADO`** tras alta exitosa; `false` en el `application.properties` base y en tests.
-  - `mtl.catalog.kafka.arbol-evento-topic` — por defecto `catalog.arbol.evento`.
+- **Propiedades útiles** (perfil `dev` ya fija valores por defecto en `catalog-service`; renombre de claves en bloque C):
+  - `mtl.catalog.kafka.enabled` — `true` en dev para publicar **`EJEMPLAR_CREADO`** tras alta exitosa; `false` en el `application.properties` base y en tests.
+  - `mtl.catalog.kafka.arbol-evento-topic` — valor objetivo del contrato: `catalog.ejemplar.evento`.
   - `spring.kafka.bootstrap-servers` — equivalente estándar Spring; se puede sobreescribir con **`MTL_KAFKA_BOOTSTRAP_SERVERS`** (p. ej. otro host/puerto).
 
 ### Caché Redis y **catalog-service**
@@ -59,7 +59,7 @@ Los `application-dev.properties` de los servicios con JDBC usan `jdbc:postgresql
 
 1. **Infra de apoyo** (Postgres, Mongo, Redis, MinIO, Kafka, Keycloak, Mailpit, Prometheus, Grafana): [infra/compose/README.md](../infra/compose/README.md) — `docker compose up -d` desde `infra/compose/` con `.env` copiado de `.env.example`.
 2. **Microservicios** con perfil **`dev`** (no está fijado en `application.properties`; actívalo con `SPRING_PROFILES_ACTIVE=dev`, `--spring.profiles.active=dev` o Maven `-Dspring-boot.run.profiles=dev`): conexión a Postgres según el punto anterior; usuario/contraseña como en `.env` / `.env.example` (p. ej. `mtl` / `mtl_dev_password`).
-3. **Flyway** (servicios con SQL bajo `services/`): scripts **solo** en **`src/main/resources/db/migration/`** (convención `V1__….sql`, `V2__….sql`, …). No hay otra carpeta obligatoria bajo `db/` para el arranque. En **Spring Boot 4** hace falta **`spring-boot-starter-flyway`**. En **catalog-service**: DDL en `V1__baseline.sql`, datos iniciales de maestros en `V2__seed_maestros_inicial.sql`. Para más cambios de esquema o semillas en entornos donde ya se aplicó Flyway, añade migraciones **`V3__…`**, **`V4__…`**, **`V5__…`**, etc. (no reescribas migraciones ya desplegadas en compartido).
+3. **Flyway** (servicios con SQL bajo `services/`): scripts **solo** en **`src/main/resources/db/migration/`** (convención `V1__….sql`, `V2__….sql`, …). No hay otra carpeta obligatoria bajo `db/` para el arranque. En **Spring Boot 4** hace falta **`spring-boot-starter-flyway`**. En **catalog-service**: DDL único en `V1__baseline.sql` (tablas, `unaccent`, CHECK e índice parcial de `ejemplar`, secuencia Kafka); semillas en `V2__seed_maestros_inicial.sql`. En **media-service** y **notification-service**: DDL único en `V1__baseline.sql`. No reescribas migraciones ya desplegadas en compartido; añade siempre una versión nueva.
 
 **Si Flyway ya aplicó versiones antiguas y has cambiado `V1`/`V2`:** en desarrollo, reset de esquema o volumen — [docs/engineering/flyway-dev-reset.md](../docs/engineering/flyway-dev-reset.md).
 
@@ -107,15 +107,58 @@ Documentación: [platform/observability/README.md](../platform/observability/REA
 
 **Correo saliente en desarrollo (HU-007, Mailpit):** con perfil **`dev`**, **notification-service** usa `spring.mail.host` / `spring.mail.port` hacia **Mailpit** del Compose (por defecto `localhost:1025`; UI en [infra/compose/README.md](../infra/compose/README.md)). Variables opcionales: **`MTL_NOTIFICATION_MAIL_HOST`**, **`MTL_NOTIFICATION_MAIL_PORT`**, **`MTL_NOTIFICATION_MAIL_FROM`**. En perfil **`test`** no se define `spring.mail.host` (no hay `JavaMailSender` real; los tests de envío usan mock).
 
-**Verificación manual (TASK-HU-007-04, cierre):** Compose con **`mailpit`** arriba; Postgres, Kafka y **notification-service** en **`dev`** (`mtl.notification.kafka.enabled=true`). Al menos un **suscriptor** en **ACTIVA** (p. ej. vía `POST /api/notifications/subscriptions` por el gateway). Tras publicar **`ARBOL_CREADO`** (alta de árbol con **catalog-service** en dev o productor equivalente), comprobar en Mailpit **http://localhost:8025** los mensajes capturados y en BD esquema **`notification`** filas coherentes en **`evento_catalogo`** (**`PROCESADO`**), **`notificacion`** y **`envio_notificacion`** (**`ENVIADA`** o **`ERROR`** si SMTP falla).
+**Verificación manual (TASK-HU-007-04, cierre):** Compose con **`mailpit`** arriba; Postgres, Kafka y **notification-service** en **`dev`** (`mtl.notification.kafka.enabled=true`). Al menos un **suscriptor** en **ACTIVA** (p. ej. vía `POST /api/notifications/subscriptions` por el gateway). Tras publicar **`EJEMPLAR_CREADO`** (alta de ejemplar con **catalog-service** en dev o productor equivalente; contrato en [kafka-events.md](../docs/events/kafka-events.md)), comprobar en Mailpit **http://localhost:8025** los mensajes capturados y en BD esquema **`notification`** filas coherentes en **`evento_catalogo`** (**`PROCESADO`**), **`notificacion`** y **`envio_notificacion`** (**`ENVIADA`** o **`ERROR`** si SMTP falla).
 
 Desde **`services/`**: **`mvn verify`** o **`mvn -pl catalog-service spring-boot:run -Dspring-boot.run.profiles=dev`** (tras tener Postgres en marcha).
 
 ---
 
-## 2. Contrato HTTP
+## 2. Perfil `prod` y variables de entorno JDBC
 
-**Keycloak y `catalog-service` (alta de árbol):** el access token debe incluir claims **`email`** y perfil para **`nombre`** (`name` o `given_name`/`family_name`); en el flujo OIDC de la SPA usar `scope=openid profile email`. Detalle: [ADR-0004](../docs/adr/0004-catalog-rest-write-and-audit.md).
+Cuando exista un entorno de **producción** (o staging con credenciales reales), activar **`SPRING_PROFILES_ACTIVE=prod`** en cada microservicio con JDBC. Los ficheros `application-prod.properties` **no** incluyen URLs ni contraseñas por defecto: deben inyectarse desde el orquestador (Kubernetes, VM, PaaS, etc.).
+
+### Variables obligatorias por servicio (JDBC)
+
+| Servicio | Esquema Flyway / JPA | Variables requeridas |
+|----------|----------------------|----------------------|
+| **catalog-service** | `catalog` | `MTL_DATASOURCE_URL`, `MTL_DATASOURCE_USERNAME`, `MTL_DATASOURCE_PASSWORD` |
+| **media-service** | `media` | Idem |
+| **notification-service** | `notification` | Idem |
+| **ai-assistant-service** | `ai` | Idem |
+
+**Formato típico de URL** (una sola instancia PostgreSQL, varios esquemas):
+
+```text
+MTL_DATASOURCE_URL=jdbc:postgresql://<host>:5432/mtl
+MTL_DATASOURCE_USERNAME=<usuario_aplicacion>
+MTL_DATASOURCE_PASSWORD=<secreto>
+```
+
+En **catalog-service**, `application-prod.properties` fija además `spring.datasource.hikari.connection-init-sql=SET search_path TO catalog, public` para que Hibernate y consultas nativas resuelvan el esquema correcto.
+
+### Otras variables habituales en `prod`
+
+| Variable | Servicios | Uso |
+|----------|-----------|-----|
+| `MTL_JWT_ISSUER_URI` | Todos con OAuth2 resource server | Issuer Keycloak (sin default en prod) |
+| `MTL_KAFKA_BOOTSTRAP_SERVERS` | catalog, notification | Bootstrap Kafka |
+| `MTL_CATALOG_KAFKA_ENABLED` | catalog | Publicación de eventos (`true`/`false`) |
+| `MTL_NOTIFICATION_KAFKA_ENABLED` | notification | Consumo de eventos |
+| `MTL_REDIS_HOST`, `MTL_REDIS_PORT`, `MTL_CACHE_TYPE` | catalog | Caché Redis (por defecto `redis` en prod) |
+| `MTL_MEDIA_BASE_URL` | catalog | Cliente HTTP hacia media-service |
+| `MTL_CATALOG_BASE_URL` | media | Permiso de subida vía catálogo |
+| `MINIO_ROOT_USER`, `MINIO_ROOT_PASSWORD`, `MTL_MEDIA_STORAGE_ENDPOINT` | media | Almacenamiento S3/MinIO |
+| `MTL_NOTIFICATION_MAIL_*` | notification | SMTP saliente |
+
+**Flyway en prod:** `spring.flyway.clean-disabled=true` y `spring.flyway.create-schemas=false` (los esquemas los crea el DBA o el aprovisionamiento inicial). No usar `ddl-auto=update`; solo **`validate`**.
+
+**Local vs prod:** en **`dev`**, JDBC apunta a `localhost:5433` con credenciales del Compose (`.env.example`). En **`prod`**, las tres variables `MTL_DATASOURCE_*` sustituyen por completo esa configuración.
+
+---
+
+## 3. Contrato HTTP
+
+**Keycloak y `catalog-service` (alta de ejemplar):** el access token debe incluir claims **`email`** y perfil para **`nombre`** (`name` o `given_name`/`family_name`); en el flujo OIDC de la SPA usar `scope=openid profile email`. Detalle: [ADR-0004](../docs/adr/0004-catalog-rest-write-and-audit.md).
 
 
 - **Fuente de verdad:** [docs/api/openapi.yaml](../docs/api/openapi.yaml).
@@ -123,16 +166,16 @@ Desde **`services/`**: **`mvn verify`** o **`mvn -pl catalog-service spring-boot
 
 ---
 
-## 3. Gateway y seguridad JWT
+## 4. Gateway y seguridad JWT
 
 - **Arranque del módulo:** `mvn -pl api-gateway spring-boot:run -Dspring-boot.run.profiles=dev` (infra lista; Keycloak accesible si pruebas JWT reales).
-- **Microservicios aguas abajo:** si el gateway responde **502** con título *Servicio de destino no disponible*, el destino (p. ej. **catalog-service** en **8081**) no acepta conexión: arranca ese servicio o revisa `mtl.catalog.uri` / `MTL_*`. Sin **catalog-service**, rutas como **`/api/catalog/public/trees`** fallan (no es un fallo de **media-service**).
+- **Microservicios aguas abajo:** si el gateway responde **502** con título *Servicio de destino no disponible*, el destino (p. ej. **catalog-service** en **8081**) no acepta conexión: arranca ese servicio o revisa `mtl.catalog.uri` / `MTL_*`. Sin **catalog-service**, rutas como **`/api/catalog/public/ejemplares`** fallan (no es un fallo de **media-service**).
 - **Stack, rutas (`spring.cloud.gateway.server.webflux.*`), variables (`mtl.*.uri` / `MTL_*`), issuer, token relay, lista blanca, CORS y pendientes (correlación, timeouts):** [docs/security/jwt-gateway-strategy.md](../docs/security/jwt-gateway-strategy.md).
 - **Reglas para implementación:** `.cursor/rules/api-security.mdc`. Código: `services/api-gateway/`.
 
 ---
 
-## 4. Enfoque por historias de usuario
+## 5. Enfoque por historias de usuario
 
 Los puntos **5 en adelante** del roadmap (dominio, Kafka, media, IA, front, CI, etc.) se irán desarrollando **historia a historia**; este README puede ampliarse cuando cerréis el primer flujo extremo a extremo (JWT + catálogo + notificación, etc.).
 
@@ -140,10 +183,10 @@ Los puntos **5 en adelante** del roadmap (dominio, Kafka, media, IA, front, CI, 
 
 **Edición y baja de fichas (HU-008, UC-04):**
 
-- **API catálogo** (`catalog-service`, JWT **COLABORADOR** / **ADMIN**): `GET /api/catalog/trees` (listado con filtros y paginación), `GET|PUT|DELETE /api/catalog/trees/{id}`. **COLABORADOR:** solo fichas propias (`usuario_app_id` del actor). **ADMIN:** cualquier ficha; filtro opcional `createdByUserId` en listado. Validación de rango de fechas `createdFrom` ≤ `createdTo` (**400**). Actualización solo **`PUT`** (sin **`PATCH`** en MVP). **PUT**/**DELETE** no publican Kafka ni disparan notificación (**R7**); auditoría en **`AUDITORIA_CATALOGO`** (**R3**, [ADR-0004](../docs/adr/0004-catalog-rest-write-and-audit.md)).
-- **API media** (borrado en cascada y galería en edición): `DELETE /api/media/trees/{treeId}/photos` (todas las fotos del árbol: metadatos + objetos en bucket; no-op si no hay filas); `DELETE /api/media/photos/{photoId}` (una foto, **HU-006**). Media valida permiso llamando a catálogo (`GET …/media-submission-permission`).
-- **Orden de baja** (`TreeDeletionService` en **catalog-service**): (1) `DELETE` en **media-service** con relay del Bearer del cliente; si media responde error → **abort** (el árbol **no** se borra en PostgreSQL); (2) borrado físico de `arbol` en PostgreSQL; (3) puerto `TreeEnrichmentDeletionPort` → implementación **stub** `NoOpTreeEnrichmentDeletionPort` hasta **[TASK-HU-015-01](../docs/backlog/HU-015-ticket-breakdown.md)**. La llamada HTTP a media queda **fuera** de la transacción JPA del catálogo.
+- **API catálogo** (`catalog-service`, JWT **COLABORADOR** / **ADMIN**): `GET /api/catalog/ejemplares` (listado con filtros y paginación), `GET|PUT|DELETE /api/catalog/ejemplares/{ejemplarId}`. **COLABORADOR:** solo fichas propias (`usuario_app_id` del actor). **ADMIN:** cualquier ficha; filtro opcional `createdByUserId` en listado. Validación de rango de fechas `createdFrom` ≤ `createdTo` (**400**). Actualización solo **`PUT`** (sin **`PATCH`** en MVP). **PUT**/**DELETE** no publican Kafka ni disparan notificación (**R7**); auditoría en **`AUDITORIA_CATALOGO`** (**R3**, [ADR-0004](../docs/adr/0004-catalog-rest-write-and-audit.md)).
+- **API media** (borrado en cascada y galería en edición): `DELETE /api/media/ejemplares/{ejemplarId}/photos` (todas las fotos del ejemplar: metadatos + objetos en bucket; no-op si no hay filas); `DELETE /api/media/photos/{photoId}` (una foto, **HU-006**). Media valida permiso llamando a catálogo (`GET …/media-submission-permission`).
+- **Orden de baja** (`EjemplarDeletionService` en **catalog-service**): (1) `DELETE` en **media-service** con relay del Bearer del cliente; si media responde error → **abort** (el ejemplar **no** se borra en PostgreSQL); (2) borrado físico de `ejemplar` en PostgreSQL; (3) puerto `EjemplarEnrichmentDeletionPort` → implementación **stub** `NoOpEjemplarEnrichmentDeletionPort` hasta **[TASK-HU-015-01](../docs/backlog/HU-015-ticket-breakdown.md)**. La llamada HTTP a media queda **fuera** de la transacción JPA del catálogo.
 - **Límites MVP:** no hay **rollback compensatorio** si falla el paso SQL (o Mongo real) **después** de haber borrado fotos en media (escenario BDD 8 de [HU-008-edicion-de-mis-arboles.md](../docs/backlog/HU-008-edicion-de-mis-arboles.md)); no saga distribuida.
 - **Cliente catalog → media:** `mtl.media.base-url` (por defecto `http://localhost:8082` en `application.properties`; en **`dev`**: `${MTL_MEDIA_BASE_URL:http://localhost:8082}`). Sin **media-service** en marcha, `DELETE` de árbol con fotos devuelve **502** al cliente.
-- **Tests automáticos:** `mvn -pl catalog-service,media-service test` (unitarios/WebMvc; orden media→SQL: `TreeDeletionServiceTest`). **IT** catalog↔media en runtime (**TASK-HU-008-11**): **rechazado** en el desglose; verificación manual en [frontend/README.md](../frontend/README.md) (apartado HU-008).
+- **Tests automáticos:** `mvn -pl catalog-service,media-service test` (unitarios/WebMvc; orden media→SQL: `EjemplarDeletionServiceTest`). **IT** catalog↔media en runtime (**TASK-HU-008-11**): **rechazado** en el desglose; verificación manual en [frontend/README.md](../frontend/README.md) (apartado HU-008).
 - **Arranque local típico:** Compose + **catalog-service** **8081** + **media-service** **8082** + gateway **8080** (o llamadas directas a 8081/8082 en depuración). Contrato: [openapi.yaml](../docs/api/openapi.yaml).

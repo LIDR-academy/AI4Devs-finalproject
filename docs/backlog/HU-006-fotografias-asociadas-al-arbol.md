@@ -43,7 +43,7 @@ Como usuario autenticado, quiero asociar una o varias fotografías a los árbole
 - Autorización por **JWT** en las rutas de media que lo exijan, coherente con el gateway y con el hecho de que las fotografías enlazan con fichas de catálogo existentes.
 - Criterios de visibilidad de fotografías alineados a la **matriz** documentada en el modelo de datos (solo **PUBLIC** y **PRIVATE**, heredados de la ficha/árbol; no parametrizados por foto en esta HU).
 - Componente de **previsualización previa a subida a MinIO** en la pantalla de alta: al cargar la primera imagen, el cliente lee metadatos de imagen y, si existen latitud y longitud válidas, **sobrescribe** los campos de coordenadas de la pantalla y posiciona el marcador en el mapa.
-- **Alta y baja de fotos en edición** (`/trees/:id/edit`): presign → MinIO → confirmación para añadir; `DELETE` de una foto con confirmación UX y promoción de principal (**TASK-HU-006-14**).
+- **Alta y baja de fotos en edición** (`/ejemplares/:id/edit`): presign → MinIO → confirmación para añadir; `DELETE` de una foto con confirmación UX y promoción de principal (**TASK-HU-006-14**).
 
 #### Queda fuera de esta historia
 

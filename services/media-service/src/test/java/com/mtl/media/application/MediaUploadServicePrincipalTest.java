@@ -54,7 +54,7 @@ class MediaUploadServicePrincipalTest {
   @BeforeEach
   void setUp() {
     when(storageProperties.getBucket()).thenReturn("mtl-photos");
-    when(catalogMediaPermissionClient.resolveActorUsuarioAppIdForTree(anyLong(), any()))
+    when(catalogMediaPermissionClient.resolveActorUsuarioAppIdForEjemplar(anyLong(), any()))
         .thenReturn(200L);
     service =
         new MediaUploadService(
@@ -66,12 +66,12 @@ class MediaUploadServicePrincipalTest {
             objectStoragePresigner);
     doNothing().when(uploadPolicyValidator).validateMimeType(any());
     doNothing().when(uploadPolicyValidator).validateFileSize(anyLong());
-    doNothing().when(uploadPolicyValidator).validateMaxPhotosPerTree(anyInt(), anyInt());
+    doNothing().when(uploadPolicyValidator).validateMaxPhotosPerEjemplar(anyInt(), anyInt());
   }
 
   @Test
   void confirmUpload_firstPhoto_isAlwaysPrincipal() {
-    when(fotografiaRepository.countActiveForTree(1L)).thenReturn(0);
+    when(fotografiaRepository.countActiveForEjemplar(1L)).thenReturn(0);
     when(fotografiaRepository.save(any(Fotografia.class)))
         .thenAnswer(
             inv -> {
@@ -84,7 +84,7 @@ class MediaUploadServicePrincipalTest {
         new ConfirmPhotoUploadRequest(
             1L,
             "mtl-photos",
-            "trees/1/a.jpg",
+            "ejemplares/1/a.jpg",
             "a.jpg",
             "image/jpeg",
             1024L,
@@ -108,7 +108,7 @@ class MediaUploadServicePrincipalTest {
 
   @Test
   void confirmUpload_secondPhoto_isNotPrincipal() {
-    when(fotografiaRepository.countActiveForTree(1L)).thenReturn(1);
+    when(fotografiaRepository.countActiveForEjemplar(1L)).thenReturn(1);
     when(fotografiaRepository.save(any(Fotografia.class)))
         .thenAnswer(
             inv -> {
@@ -121,7 +121,7 @@ class MediaUploadServicePrincipalTest {
         new ConfirmPhotoUploadRequest(
             1L,
             "mtl-photos",
-            "trees/1/b.jpg",
+            "ejemplares/1/b.jpg",
             "b.jpg",
             "image/jpeg",
             2048L,
@@ -144,13 +144,13 @@ class MediaUploadServicePrincipalTest {
 
   @Test
   void confirmUpload_secondPhoto_withPrincipalFlag_rejected() {
-    when(fotografiaRepository.countActiveForTree(1L)).thenReturn(1);
+    when(fotografiaRepository.countActiveForEjemplar(1L)).thenReturn(1);
 
     ConfirmPhotoUploadRequest req =
         new ConfirmPhotoUploadRequest(
             1L,
             "mtl-photos",
-            "trees/1/b.jpg",
+            "ejemplares/1/b.jpg",
             "b.jpg",
             "image/jpeg",
             2048L,
@@ -165,13 +165,13 @@ class MediaUploadServicePrincipalTest {
 
   @Test
   void confirmUpload_explicitOrden_mustMatchNextIndex() {
-    when(fotografiaRepository.countActiveForTree(1L)).thenReturn(2);
+    when(fotografiaRepository.countActiveForEjemplar(1L)).thenReturn(2);
 
     ConfirmPhotoUploadRequest req =
         new ConfirmPhotoUploadRequest(
             1L,
             "mtl-photos",
-            "trees/1/c.jpg",
+            "ejemplares/1/c.jpg",
             "c.jpg",
             "image/jpeg",
             512L,
@@ -190,7 +190,7 @@ class MediaUploadServicePrincipalTest {
         new ConfirmPhotoUploadRequest(
             1L,
             "otro-bucket",
-            "trees/1/a.jpg",
+            "ejemplares/1/a.jpg",
             "a.jpg",
             "image/jpeg",
             1024L,

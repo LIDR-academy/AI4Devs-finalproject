@@ -15,7 +15,7 @@
 
 | ID | Título | Descripción breve | Estado |
 |----|--------|-------------------|--------|
-| **TASK-HU-015-01** | Borrado en cascada de enriquecimientos Mongo al eliminar árbol | Al confirmarse el **borrado físico** de un `arbol_id` en **catalog-service** (**HU-008**), eliminar en MongoDB los documentos de enriquecimiento del ejemplar (p. ej. colección `ejemplar_detalle` / notas vinculadas por `ejemplar_pg_id` según [mongo.md](../data-model/mongo.md)). Mientras no exista la capa Mongo en **catalog-service**, el hook puede ser **no-op** documentado o stub con test de contrato; el ticket permanece **Pendiente** hasta la implementación real. No sustituye el borrado SQL ni el de fotos (responsabilidad de **HU-008** + **media-service**). | Pendiente |
+| **TASK-HU-015-01** | Borrado en cascada de enriquecimientos Mongo al eliminar árbol | Al confirmarse el **borrado físico** de un `ejemplar_id` en **catalog-service** (**HU-008**), eliminar en MongoDB los documentos de enriquecimiento del ejemplar (p. ej. colección `ejemplar_detalle` / notas vinculadas por `ejemplar_pg_id` según [mongo.md](../data-model/mongo.md)). Mientras no exista la capa Mongo en **catalog-service**, el hook puede ser **no-op** documentado o stub con test de contrato; el ticket permanece **Pendiente** hasta la implementación real. No sustituye el borrado SQL ni el de fotos (responsabilidad de **HU-008** + **media-service**). | Pendiente |
 
 *(Añadir TASK-HU-015-02… cuando se refine el alcance completo de proyección y sincronización.)*
 

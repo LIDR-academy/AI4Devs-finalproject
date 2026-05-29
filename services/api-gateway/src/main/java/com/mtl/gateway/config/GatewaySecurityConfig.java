@@ -1,5 +1,7 @@
 package com.mtl.gateway.config;
 
+import com.mtl.gateway.web.error.ProblemServerAccessDeniedHandler;
+import com.mtl.gateway.web.error.ProblemServerAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -11,6 +13,16 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 @Configuration
 @EnableWebFluxSecurity
 public class GatewaySecurityConfig {
+
+  private final ProblemServerAuthenticationEntryPoint authenticationEntryPoint;
+  private final ProblemServerAccessDeniedHandler accessDeniedHandler;
+
+  public GatewaySecurityConfig(
+      ProblemServerAuthenticationEntryPoint authenticationEntryPoint,
+      ProblemServerAccessDeniedHandler accessDeniedHandler) {
+    this.authenticationEntryPoint = authenticationEntryPoint;
+    this.accessDeniedHandler = accessDeniedHandler;
+  }
 
   /**
    * Lista blanca alineada con {@code docs/api/openapi.yaml} y {@code docs/security/jwt-gateway-strategy.md}.
@@ -31,7 +43,7 @@ public class GatewaySecurityConfig {
                     .permitAll()
                     .pathMatchers(HttpMethod.GET, "/api/media/public/**")
                     .permitAll()
-                    .pathMatchers(HttpMethod.GET, "/api/media/trees/*/photos")
+                    .pathMatchers(HttpMethod.GET, "/api/media/ejemplares/*/photos")
                     .permitAll()
                     .pathMatchers(HttpMethod.POST, "/api/notifications/subscriptions")
                     .permitAll()
@@ -39,6 +51,10 @@ public class GatewaySecurityConfig {
                     .authenticated()
                     .anyExchange()
                     .denyAll())
+        .exceptionHandling(
+            ex ->
+                ex.authenticationEntryPoint(authenticationEntryPoint)
+                    .accessDeniedHandler(accessDeniedHandler))
         .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
         .build();
   }

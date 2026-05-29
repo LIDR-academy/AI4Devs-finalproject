@@ -8,7 +8,7 @@
 | **Formato “Como… quiero… para…”** | Correcto; el backlog enlaza **UC-04** y la restricción de propiedad (“únicamente los árboles que dí de alta yo”); la redacción refinada mantiene ese foco en el colaborador sin notas al pie en el cuerpo de la historia. |
 | **Estimación (S/M/L)** | **M** en backlog; el alcance entregado (filtros, cascada multi-servicio, **PUT**/**DELETE**) justificó esfuerzo **medio–alto** en implementación. |
 | **Prioridad** | **Alta** alineada con MVP y con la jerarquía de páginas del readme (§2.3). |
-| **Inconsistencias detectadas** | **Cerrado:** OpenAPI con `GET`/`PUT`/`DELETE` en `/api/catalog/trees` y borrado masivo en media; **ADMIN** sobre cualquier ficha; galería en edición vía **HU-006** (**TASK-HU-006-14**). **Deuda MVP documentada:** rollback compensatorio tras borrado de fotos (escenario BDD 8); borrado Mongo real (**TASK-HU-015-01**); **TASK-HU-008-11** (IT catalog↔media) **rechazado**. |
+| **Inconsistencias detectadas** | **Cerrado:** OpenAPI con `GET`/`PUT`/`DELETE` en `/api/catalog/ejemplares` y borrado masivo en media; **ADMIN** sobre cualquier ficha; galería en edición vía **HU-006** (**TASK-HU-006-14**). **Deuda MVP documentada:** rollback compensatorio tras borrado de fotos (escenario BDD 8); borrado Mongo real (**TASK-HU-015-01**); **TASK-HU-008-11** (IT catalog↔media) **rechazado**. |
 | **Estado** | **Cerrada** — tickets en [HU-008-ticket-breakdown.md](HU-008-ticket-breakdown.md); verificación manual en [frontend/README.md](../../frontend/README.md) (apartado HU-008). |
 | **Tamaño / división** | Entregado: edición, **baja** en cascada, **filtros** en listado, endpoints **catalog** + **media**, UI **Mis árboles** y edición; fotos en edición (**HU-006**); hook Mongo **stub**. |
 
@@ -29,21 +29,21 @@
 
 Como colaborador autenticado, quiero modificar o eliminar únicamente los árboles que di de alta yo, para mantener actualizada mi documentación sin afectar el trabajo de otros.
 
-- **Entregable de la historia:** Flujo vertical en **catalog-service**, **media-service** (borrado masivo de fotos por árbol) y **frontend** que permite al colaborador **listar y filtrar** sus fichas, **abrir una ficha en modo edición**, **persistir cambios** (**PUT**) y **eliminar físicamente** fichas propias (**DELETE** con cascada media → SQL → hook Mongo **stub**), respetando **R1**, **R2** y la **propiedad** (`usuario_app_id`; **ADMIN** sobre cualquier ficha). Si **media-service** falla al borrar fotos, el árbol **no** se elimina en PostgreSQL. **Rollback compensatorio** tras fotos borradas: **no** implementado en MVP (deuda documentada). **AUDITORIA_CATALOGO** (**R3**, [ADR-0004](../adr/0004-catalog-rest-write-and-audit.md)). Sin **`ARBOL_CREADO`** ni notificación en edición/baja (**R7**). Rutas: **`/my-trees`**, **`/trees/:id/edit`** (**HU-013**). Galería en edición: **[TASK-HU-006-14](HU-006-ticket-breakdown.md)** (**HU-006** cerrada). Desglose: **[HU-008-ticket-breakdown.md](HU-008-ticket-breakdown.md)**.
+- **Entregable de la historia:** Flujo vertical en **catalog-service**, **media-service** (borrado masivo de fotos por árbol) y **frontend** que permite al colaborador **listar y filtrar** sus fichas, **abrir una ficha en modo edición**, **persistir cambios** (**PUT**) y **eliminar físicamente** fichas propias (**DELETE** con cascada media → SQL → hook Mongo **stub**), respetando **R1**, **R2** y la **propiedad** (`usuario_app_id`; **ADMIN** sobre cualquier ficha). Si **media-service** falla al borrar fotos, el árbol **no** se elimina en PostgreSQL. **Rollback compensatorio** tras fotos borradas: **no** implementado en MVP (deuda documentada). **AUDITORIA_CATALOGO** (**R3**, [ADR-0004](../adr/0004-catalog-rest-write-and-audit.md)). Sin **`EJEMPLAR_CREADO`** ni notificación en edición/baja (**R7**). Rutas: **`/mis-ejemplares`**, **`/ejemplares/:id/edit`** (**HU-013**). Galería en edición: **[TASK-HU-006-14](HU-006-ticket-breakdown.md)** (**HU-006** cerrada). Desglose: **[HU-008-ticket-breakdown.md](HU-008-ticket-breakdown.md)**.
 
 ### Alcance
 
 #### Incluye
 
-- **Listado** vía `GET /api/catalog/trees` (paginación `page`/`size`):
+- **Listado** vía `GET /api/catalog/ejemplares` (paginación `page`/`size`):
   - **`COLABORADOR`:** solo fichas con **`usuario_app_id`** del actor.
   - **`ADMIN`:** puede listar fichas de **cualquier** colaborador; filtro adicional opcional por **usuario creador** (`createdByUserId` / `usuario_app_id` del autor de la ficha).
   - **Filtros opcionales** (colaborador y admin): por **especie** (`speciesId`); por **fecha de creación** — rango **desde** / **hasta** en formato **`date`** (ISO-8601, interpretación **UTC**); validar `desde` ≤ `hasta` (**400** si no).
 - **UI Mis árboles:** controles de filtro (especie, fechas de creación; para **ADMIN**, selector de usuario creador) con peticiones cancelables (**HU-007/HU-008**).
-- **Lectura de ficha** para edición: `GET /api/catalog/trees/{id}` con respuesta acorde a los campos editables del alta (**HU-005**): especie, provincia, coordenadas, municipio, descripción, altitud, estado de publicación y visibilidad en mapa público, en DTO de API (no entidad JPA expuesta).
-- **Actualización** de ficha existente mediante **`PUT`** en `/api/catalog/trees/{id}` (esquema **`UpdateTreeRequest`** simétrico a **`CreateTreeRequest`** en [openapi.yaml](../api/openapi.yaml)); validaciones **R1** (especie en maestros) y **R2** (coordenadas del ejemplar).
-- **Baja de ficha:** **`DELETE /api/catalog/trees/{id}`** con **borrado físico** de la fila `arbol` en PostgreSQL; misma regla de propiedad que la edición; confirmación en UI. **Orquestación en catalog-service** (sin saga en MVP):
-  1. Si el árbol **tiene fotografías**, invocar **`DELETE /api/media/trees/{treeId}/photos`**; si **media-service** responde con error → **detener** el proceso (no se borra el árbol en PostgreSQL).
+- **Lectura de ficha** para edición: `GET /api/catalog/ejemplares/{ejemplarId}` con respuesta acorde a los campos editables del alta (**HU-005**): especie, provincia, coordenadas, municipio, descripción, altitud, estado de publicación y visibilidad en mapa público, en DTO de API (no entidad JPA expuesta).
+- **Actualización** de ficha existente mediante **`PUT`** en `/api/catalog/ejemplares/{ejemplarId}` (esquema **`UpdateEjemplarRequest`** simétrico a **`CreateEjemplarRequest`** en [openapi.yaml](../api/openapi.yaml)); validaciones **R1** (especie en maestros) y **R2** (coordenadas del ejemplar).
+- **Baja de ficha:** **`DELETE /api/catalog/ejemplares/{ejemplarId}`** con **borrado físico** de la fila `ejemplar` en PostgreSQL; misma regla de propiedad que la edición; confirmación en UI. **Orquestación en catalog-service** (sin saga en MVP):
+  1. Si el árbol **tiene fotografías**, invocar **`DELETE /api/media/ejemplares/{ejemplarId}/photos`**; si **media-service** responde con error → **detener** el proceso (no se borra el árbol en PostgreSQL).
   2. Si no hay fotos, o tras borrado correcto de todas las fotos → **eliminar el árbol** en PostgreSQL (transacción catálogo).
   3. Invocar borrado Mongo — **[TASK-HU-015-01](HU-015-ticket-breakdown.md)** (entregado **stub/no-op** `NoOpTreeEnrichmentDeletionPort`; borrado real pendiente en **HU-015**).
   - Si falla el paso **2** o **3** tras haber borrado fotos en el paso **1** → en refinamiento se acordó **rollback**; en el **MVP entregado** no hay compensación automática (deuda; ver [services/README.md](../../services/README.md) apartado HU-008).
@@ -55,8 +55,8 @@ Como colaborador autenticado, quiero modificar o eliminar únicamente los árbol
 #### Queda fuera de esta historia
 
 - **Alta** de nueva ficha (**HU-005**, **UC-03**).
-- **Publicación a Kafka** y **notificación por correo** tras edición: en el MVP las modificaciones **no** activan **UC-09** ni **`ARBOL_CREADO`** ([kafka-events.md](../events/kafka-events.md), **R7**).
-- **Subida y borrado de fotografías** en la pantalla de edición: cubierto por **[TASK-HU-006-14](HU-006-ticket-breakdown.md)** (**HU-006** cerrada); esta HU entrega la pantalla de datos de ficha y la galería integrada en `/trees/:id/edit`.
+- **Publicación a Kafka** y **notificación por correo** tras edición: en el MVP las modificaciones **no** activan **UC-09** ni **`EJEMPLAR_CREADO`** ([kafka-events.md](../events/kafka-events.md), **R7**).
+- **Subida y borrado de fotografías** en la pantalla de edición: cubierto por **[TASK-HU-006-14](HU-006-ticket-breakdown.md)** (**HU-006** cerrada); esta HU entrega la pantalla de datos de ficha y la galería integrada en `/ejemplares/:id/edit`.
 - **Consulta pública** ampliada de galerías (**HU-014**); la edición no implementa la experiencia completa del visitante.
 - **Identificación por IA** en edición (**HU-009**, extensión **UC-05** sobre **UC-04**) y **chat** (**HU-010**).
 - **Gestión de maestros taxonómicos** (**HU-011**): la historia **consume** listas de especies ya expuestas; **provincias** en solo lectura (semillas Flyway), sin administración en **HU-011**.
@@ -66,11 +66,11 @@ Como colaborador autenticado, quiero modificar o eliminar únicamente los árbol
 ### Dependencias
 
 - **Autenticación OIDC/JWT** y rol de colaborador (**HU-001**).
-- **Alta de ficha** operativa (**HU-005**): existencia de árboles con `usuario_app_id` y contrato **`CreateTreeRequest`** como referencia de campos.
-- **Estructura de rutas y guardas** (**HU-013**): `/my-trees`, `/trees/:id/edit` con `requiresAuth`.
+- **Alta de ficha** operativa (**HU-005**): existencia de árboles con `usuario_app_id` y contrato **`CreateEjemplarRequest`** como referencia de campos.
+- **Estructura de rutas y guardas** (**HU-013**): `/mis-ejemplares`, `/ejemplares/:id/edit` con `requiresAuth`.
 - **Maestros** en formulario: **especie** (mantenimiento **HU-011**) y **provincia** (solo lectura, catálogo sembrado); consumo en formulario como en el alta.
 - **API Gateway** enrutando `/api/catalog` con validación de JWT hacia **catalog-service**.
-- **HU-006** / **[TASK-HU-006-14](HU-006-ticket-breakdown.md):** **cerrada** — galería en `/trees/:id/edit`.
+- **HU-006** / **[TASK-HU-006-14](HU-006-ticket-breakdown.md):** **cerrada** — galería en `/ejemplares/:id/edit`.
 - **HU-015** / **[TASK-HU-015-01](HU-015-ticket-breakdown.md):** borrado Mongo real pendiente; invocación desde baja de árbol con **stub** en este corte.
 
 ### Decisiones de refinamiento (registro)
@@ -78,15 +78,15 @@ Como colaborador autenticado, quiero modificar o eliminar únicamente los árbol
 | Tema | Decisión |
 |------|----------|
 | **Eliminación de ficha** | **Borrado físico** en PostgreSQL (`DELETE` del registro `arbol`). |
-| **Fotografías** | Path fijo: **`DELETE /api/media/trees/{treeId}/photos`**. Si hay fotos, se invoca **antes** del borrado SQL; error en media → **parar** (no borrar árbol). Sin fotos → paso omitido. |
+| **Fotografías** | Path fijo: **`DELETE /api/media/ejemplares/{ejemplarId}/photos`**. Si hay fotos, se invoca **antes** del borrado SQL; error en media → **parar** (no borrar árbol). Sin fotos → paso omitido. |
 | **Mongo** | Al borrar el árbol se deben eliminar los documentos de enriquecimiento del ejemplar; en este corte: **stub/no-op** (`NoOpTreeEnrichmentDeletionPort`); implementación real en **[TASK-HU-015-01](HU-015-ticket-breakdown.md)** (**HU-015** pendiente). |
 | **Rol ADMIN** | **`COLABORADOR`:** solo fichas propias (`usuario_app_id`). **`ADMIN`:** puede editar y eliminar **cualquier** ficha (alineado con permisos de fotos en **HU-006** y readme de alta/edición para administrador). La historia en formato “Como colaborador…” sigue describiendo el caso principal. |
-| **Verbo HTTP de actualización** | MVP: solo **`PUT`** (reemplazo completo del cuerpo, esquema **`UpdateTreeRequest`** simétrico a **`CreateTreeRequest`**). **`PATCH`** queda fuera del primer corte. |
+| **Verbo HTTP de actualización** | MVP: solo **`PUT`** (reemplazo completo del cuerpo, esquema **`UpdateEjemplarRequest`** simétrico a **`CreateEjemplarRequest`**). **`PATCH`** queda fuera del primer corte. |
 | **Campos inmutables** | **`usuario_app_id` / creador** no cambian en edición. Resto de campos del DTO de alta son editables, incluido `speciesId` y estado de publicación (sin bloqueo extra tras publicar en MVP). |
-| **Errores de autorización** | **`404`** si no existe el `treeId`; **`403`** si existe pero el actor no tiene permiso (no propietario y no **ADMIN**). |
-| **Listado colaborador** | `GET /api/catalog/trees`: paginación `page`/`size` (p. ej. `size=20`), orden **`modificado_en` desc**; filtros: **`speciesId`**, **`createdFrom`** / **`createdTo`** (`format: date`, **UTC**). |
+| **Errores de autorización** | **`404`** si no existe el `ejemplarId`; **`403`** si existe pero el actor no tiene permiso (no propietario y no **ADMIN**). |
+| **Listado colaborador** | `GET /api/catalog/ejemplares`: paginación `page`/`size` (p. ej. `size=20`), orden **`modificado_en` desc**; filtros: **`speciesId`**, **`createdFrom`** / **`createdTo`** (`format: date`, **UTC**). |
 | **Listado ADMIN** | Mismos filtros; además filtro opcional **`createdByUserId`** (`usuario_app_id` del colaborador que dio de alta la ficha). |
-| **Borrado de fotos por árbol** | **`DELETE /api/media/trees/{treeId}/photos`** en **media-service**, consumido por **catalog-service**; ticket previsto **catalog + media** — tabla siguiente. |
+| **Borrado de fotos por árbol** | **`DELETE /api/media/ejemplares/{ejemplarId}/photos`** en **media-service**, consumido por **catalog-service**; ticket previsto **catalog + media** — tabla siguiente. |
 | **Orden borrado en cascada** | (1) Fotos en media si existen → error media = **stop**; (2) árbol en PostgreSQL; (3) Mongo (**TASK-HU-015-01**). |
 | **Fallo parcial tras fotos borradas** | Acordado **rollback** en refinamiento; **no implementado** en MVP entregado (deuda). Aborto si falla media **antes** del SQL: **sí** (implementado). |
 
@@ -98,7 +98,7 @@ Ver [HU-008-ticket-breakdown.md](HU-008-ticket-breakdown.md) (`TASK-HU-008-01` �
 
 | Riesgo | Mitigación acordada |
 |--------|---------------------|
-| **Contrato HTTP abierto** en `PUT` (`type: object`) | Cerrar **`UpdateTreeRequest`** y **`DELETE`** en OpenAPI en el mismo corte que la implementación. |
+| **Contrato HTTP abierto** en `PUT` (`type: object`) | Cerrar **`UpdateEjemplarRequest`** y **`DELETE`** en OpenAPI en el mismo corte que la implementación. |
 | **Borrado distribuido** (media + SQL + Mongo stub) | Orquestación en **catalog-service**; aborto si falla media; tests unitarios/WebMvc; **TASK-HU-008-11** (IT catalog↔media) **rechazado**; verificación manual en [frontend/README.md](../../frontend/README.md). |
 | **TASK-HU-015-01 pendiente** | Stub/no-op y test de invocación al puerto Mongo; activar borrado real cuando exista capa Mongo. |
 | **Filtros de fechas** | Parámetros tipo **`date`** en **UTC**; validar `createdFrom` ≤ `createdTo` con **400**. |
@@ -113,13 +113,13 @@ Ver [HU-008-ticket-breakdown.md](HU-008-ticket-breakdown.md) (`TASK-HU-008-01` �
 
 ### Referencias
 
-**UC-04**; reglas **R1**, **R2**, **R3**, **R7**; [use-case-summary.md](../use-cases/use-case-summary.md) (ediciones y bajas sin **UC-09**); readme §2.3 (rutas `/my-trees`, `/trees/:id/edit`); OpenAPI `GET|PUT|DELETE` en `/api/catalog/trees` y `/api/catalog/trees/{id}`; [ADR-0004](../adr/0004-catalog-rest-write-and-audit.md); [TASK-HU-006-14](HU-006-ticket-breakdown.md); [TASK-HU-015-01](HU-015-ticket-breakdown.md); autoría de referencia en `TreeMediaSubmissionPermissionService`.
+**UC-04**; reglas **R1**, **R2**, **R3**, **R7**; [use-case-summary.md](../use-cases/use-case-summary.md) (ediciones y bajas sin **UC-09**); readme §2.3 (rutas `/mis-ejemplares`, `/ejemplares/:id/edit`); OpenAPI `GET|PUT|DELETE` en `/api/catalog/ejemplares` y `/api/catalog/ejemplares/{ejemplarId}`; [ADR-0004](../adr/0004-catalog-rest-write-and-audit.md); [TASK-HU-006-14](HU-006-ticket-breakdown.md); [TASK-HU-015-01](HU-015-ticket-breakdown.md); autoría de referencia en `EjemplarMediaSubmissionPermissionService`.
 
 ### Escenario 1 — Edición correcta por el creador
 
 - **Dado que** soy un colaborador autenticado y existe una ficha de árbol que creé yo (mi `usuario_app_id` coincide con el de la ficha)  
 - **Cuando** envío una actualización con **especie** y **provincia** válidas en maestros, **coordenadas** válidas y el resto de campos permitidos por el contrato cerrado  
-- **Entonces** recibo respuesta de éxito, los datos persistidos reflejan los cambios, queda traza de auditoría acorde a **R3** y **no** se publica en Kafka un mensaje **`ARBOL_CREADO`** ni se dispara notificación a suscriptores por esta operación (**R7**).
+- **Entonces** recibo respuesta de éxito, los datos persistidos reflejan los cambios, queda traza de auditoría acorde a **R3** y **no** se publica en Kafka un mensaje **`EJEMPLAR_CREADO`** ni se dispara notificación a suscriptores por esta operación (**R7**).
 
 ### Escenario 2 — Rechazo al intentar editar ficha ajena
 
@@ -137,7 +137,7 @@ Ver [HU-008-ticket-breakdown.md](HU-008-ticket-breakdown.md) (`TASK-HU-008-01` �
 
 - **Dado que** soy el colaborador creador de una ficha que tiene fotografías asociadas  
 - **Cuando** confirmo la eliminación de mi árbol  
-- **Entonces** primero se invoca **`DELETE /api/media/trees/{treeId}/photos`** con éxito, después se elimina físicamente la ficha en PostgreSQL y, cuando **[TASK-HU-015-01](HU-015-ticket-breakdown.md)** esté implementado, sus enriquecimientos en Mongo; queda auditoría de baja (**R3**) y **no** hay notificación a suscriptores (**R7**).
+- **Entonces** primero se invoca **`DELETE /api/media/ejemplares/{ejemplarId}/photos`** con éxito, después se elimina físicamente la ficha en PostgreSQL y, cuando **[TASK-HU-015-01](HU-015-ticket-breakdown.md)** esté implementado, sus enriquecimientos en Mongo; queda auditoría de baja (**R3**) y **no** hay notificación a suscriptores (**R7**).
 
 ### Escenario 5 — Abortar baja si falla media
 
