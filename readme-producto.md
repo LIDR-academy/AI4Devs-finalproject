@@ -27,47 +27,17 @@ El problema que resuelve es de orientación y relevancia: los ecommerce generali
 El siguiente diagrama sintetiza el modelo de negocio de RunMarket según el marco Lean Canvas. Cada bloque está justificado por las decisiones funcionales ya descritas y por los patrones de comportamiento del corredor como consumidor digital.
 
 ```mermaid
-mindmap
-  root((RunMarket\nLean Canvas))
-    PROBLEMA
-      Los corredores no encuentran productos adaptados a su perfil en ecommerce generalistas
-      Catálogos multideporte con exceso de ruido y filtros irrelevantes para running
-      Dificultad para tomar decisiones de compra sin orientación técnica específica
-    SEGMENTOS DE CLIENTES
-      Principiantes que inician en running y necesitan guía de equipamiento básico
-      Populares que corren 10K-Media maratón y buscan optimizar su material técnico
-      Avanzados que compiten en maratón o ultra y priorizan rendimiento y precisión
-    PROPUESTA DE VALOR ÚNICA
-      El único ecommerce donde el catálogo se adapta al corredor y no al revés
-      Filtrado multidimensional por distancia, superficie, nivel y objetivo de entrenamiento
-      Fichas de producto diseñadas para responder las preguntas clave antes de comprar
-    SOLUCIÓN
-      Búsqueda filtrada por atributos propios del running
-      Ficha de producto técnica orientada a la decisión de compra
-      Ciclo de compra completo validado desde el MVP
-    CANALES
-      SEO especializado en running y términos técnicos de la disciplina
-      Comunidades online de corredores y foros especializados
-      Colaboración con influencers y coaches de running
-      Redes sociales verticales del deporte
-    FLUJOS DE INGRESOS
-      Margen sobre venta directa de productos propios
-      Acuerdos de distribución con marcas especializadas como Asics, Brooks o On Running
-      Publicidad contextualizada en catálogo para marcas del sector
-    ESTRUCTURA DE COSTES
-      Plataforma tecnológica y hosting en la nube
-      Marketing de adquisición y posicionamiento SEO
-      Gestión y actualización del catálogo de productos
-      Logística y gestión de devoluciones
-    MÉTRICAS CLAVE
-      Tasa de conversión por segmento de corredor
-      Tiempo medio hasta la primera compra
-      Tasa de recurrencia de compra
-      NPS del comprador corredor
-    VENTAJA COMPETITIVA
-      Especialización vertical exclusiva en running sin competencia directa en el segmento
-      Taxonomía propia del dominio distance, surface, level y objective como activo diferencial
-      Confianza del corredor basada en relevancia y orientación técnica del contenido
+block-beta
+    columns 3
+    P["Problema\n- Los corredores no encuentran productos adaptados a su perfil en ecommerce generalistas\n- Catálogos multideporte con exceso de ruido y filtros irrelevantes para running\n- Dificultad para tomar decisiones de compra sin orientación técnica específica"]
+    S["Solución\n- Búsqueda filtrada por atributos propios del running\n- Ficha de producto técnica orientada a la decisión de compra\n- Ciclo de compra completo validado desde el MVP"]
+    KM["Métricas clave\n- Tasa de conversión por segmento de corredor\n- Tiempo medio hasta la primera compra\n- Tasa de recurrencia de compra\n- NPS del comprador corredor"]
+    UVP["Propuesta de valor única\n- El único ecommerce donde el catálogo se adapta al corredor y no al revés\n- Filtrado multidimensional por distancia, superficie, nivel y objetivo de entrenamiento\n- Fichas de producto diseñadas para responder las preguntas clave antes de comprar"]
+    UA["Ventaja competitiva\n- Especialización vertical exclusiva en running\n- Taxonomía propia del dominio: distance, surface, level y objective\n- Confianza del corredor basada en relevancia y orientación técnica"]
+    CH["Canales\n- SEO especializado en running y términos técnicos\n- Comunidades online de corredores y foros especializados\n- Colaboración con influencers y coaches de running\n- Redes sociales verticales del deporte"]
+    CS["Segmentos de clientes\n- Principiantes que inician en running y necesitan guía de equipamiento básico\n- Populares que corren 10K–media maratón y buscan optimizar su material técnico\n- Avanzados que compiten en maratón o ultra y priorizan rendimiento y precisión"]
+    CoS["Estructura de costes\n- Plataforma tecnológica y hosting en la nube\n- Marketing de adquisición y posicionamiento SEO\n- Gestión y actualización del catálogo de productos\n- Logística y gestión de devoluciones"]
+    RS["Flujos de ingresos\n- Margen sobre venta directa de productos propios\n- Acuerdos de distribución con marcas especializadas (Asics, Brooks, On Running)\n- Publicidad contextualizada en catálogo para marcas del sector"]
 ```
 
 ---
