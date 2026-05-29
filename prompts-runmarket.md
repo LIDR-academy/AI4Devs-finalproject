@@ -146,6 +146,8 @@ Para cada caso de uso:
 - Define el flujo principal paso a paso, incluyendo el diagrama de flujo de usuario en formato **Mermaid**
 - Describe escenarios alternativos o errores relevantes
 
+**Fuera del MVP:** RunMarket permite comprar sin registro. Los pedidos quedan asociados a la sesión actual y no se recuperan al cerrar el navegador.
+
 ## Resultado
 
 Amplía la sección `### 1.2. Características y funcionalidades principales` del fichero `readme-producto.md` añadiendo los tres casos de uso con sus diagramas.

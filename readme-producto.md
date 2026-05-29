@@ -85,7 +85,7 @@ Flujo de compra en tres pasos:
 2. **Método de pago:** selección simulada (tarjeta, transferencia) sin procesamiento real
 3. **Revisión del pedido:** resumen antes de confirmar
 
-El checkout es funcional a nivel de interfaz y flujo de usuario, pero no procesa pagos reales en la versión MVP.
+El checkout es funcional a nivel de interfaz y flujo de usuario, pero no procesa pagos reales en la versión MVP. Tampoco exige registro ni login: los datos de envío se recogen en el propio formulario.
 
 #### 6. Confirmación de pedido
 
@@ -94,6 +94,16 @@ Pantalla de éxito tras completar el checkout que muestra el número de pedido g
 #### 7. Gestión básica de pedidos
 
 Vista de historial de pedidos del usuario que permite consultar el estado de cada pedido (pendiente, procesando, enviado, entregado). Valida el ciclo completo de compra y establece la base para funcionalidades de postventa en versiones posteriores.
+
+#### Autenticación y acceso (MVP)
+
+En la primera versión de RunMarket **no se requiere registro ni login** para completar una compra. El catálogo, la ficha de producto, el carrito y el checkout están disponibles de forma anónima.
+
+- **Checkout:** el corredor introduce sus datos de envío y pago directamente en el formulario, sin crear cuenta ni autenticarse.
+- **Carrito e historial de pedidos:** quedan asociados a la **sesión actual del navegador**; al cerrar la sesión o el navegador, esa información no persiste en el MVP.
+- **Fuera de alcance en el MVP:** registro de usuarios, inicio de sesión, recuperación de contraseña y persistencia de pedidos entre sesiones.
+
+Esta decisión reduce la fricción del flujo de compra y permite validar el ciclo completo de descubrimiento y checkout antes de incorporar autenticación en versiones posteriores.
 
 ---
 
