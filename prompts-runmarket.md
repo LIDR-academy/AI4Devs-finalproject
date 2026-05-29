@@ -185,6 +185,8 @@ Documentar la experiencia de usuario de RunMarket a partir del diseño de Figma,
 Escribe el contenido en la sección `### 1.3. Diseño y experiencia de usuario` del fichero `readme-producto.md`. El contenido debe ser comprensible de forma autónoma, sin necesidad de haber leído las secciones anteriores.
 
 ---
+Prompt 3.5 Refactor Readme documentación producto
+Reorganiza la documentación del proyecto: mueve el contenido detallado de readme-producto.md a docs/PRD.md y reescribe las secciones 1.1, 1.2 y 1.3 de readme.md con versiones concisas que referencian el PRD para el detalle
 
 # Prompt 5: Modelo de datos que cubra entidades, atributos y relaciones
 

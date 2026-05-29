@@ -32,22 +32,95 @@
 
 ## 1. Descripción general del producto
 
-> Describe en detalle los siguientes aspectos del producto:
-
 ### **1.1. Objetivo:**
 
-> Propósito del producto. Qué valor aporta, qué soluciona, y para quién.
+**RunMarket** es un ecommerce especializado en productos deportivos para running. Permite a corredores principiantes, populares y avanzados encontrar zapatillas, ropa técnica y accesorios adaptados a su perfil mediante filtros propios de la disciplina: distancia objetivo, tipo de superficie, nivel del corredor y objetivo de entrenamiento.
+
+El problema que resuelve es de orientación y relevancia: los ecommerce generalistas no ofrecen filtros específicos de running, lo que obliga al corredor a navegar catálogos irrelevantes sin criterios técnicos. RunMarket reduce esa fricción colocando al corredor y su perfil en el centro del catálogo.
+
+**Propuesta de valor:** el único ecommerce donde el catálogo se adapta al corredor, no al revés.
+
+> Documentación completa de producto (Lean Canvas, casos de uso, decisiones de diseño): [docs/PRD.md](docs/PRD.md)
 
 ### **1.2. Características y funcionalidades principales:**
 
-> Enumera y describe las características y funcionalidades específicas que tiene el producto para satisfacer las necesidades identificadas.
+El MVP cubre el ciclo completo de descubrimiento y compra:
+
+1. **Catálogo de productos** — zapatillas, ropa técnica y accesorios para running
+2. **Búsqueda y filtrado multidimensional** — por categoría, distancia, superficie, nivel y objetivo de entrenamiento; filtros combinables con actualización dinámica
+3. **Ficha de producto** — descripción técnica, atributos running como etiquetas de color, selector de talla/color, stepper de cantidad y trust signals (envío, devolución, garantía)
+4. **Gestión de carrito** — añadir, modificar cantidad y eliminar; resumen con subtotal, envío y total; persiste en sesión
+5. **Checkout simulado** — flujo en 2 pasos (datos de envío + método de pago); sin procesamiento real de pagos ni autenticación requerida
+6. **Confirmación de pedido** — número de pedido generado y resumen de compra
+7. **Gestión básica de pedidos** — historial con estados: pendiente, procesando, enviado, entregado
+
+> Casos de uso detallados con diagramas de flujo: [docs/PRD.md#casos-de-uso-principales](docs/PRD.md)
 
 ### **1.3. Diseño y experiencia de usuario:**
 
-> Proporciona imágenes y/o videotutorial mostrando la experiencia del usuario desde que aterriza en la aplicación, pasando por todas las funcionalidades principales.
+Prototipo interactivo: [Ecommerce para productos deportivos — Figma Make](https://www.figma.com/make/0wtedXb5138odnAOgHlMiA/Ecommerce-para-productos-deportivos)
+
+Las capturas de pantalla se encuentran en [`docs/prototypes/`](docs/prototypes/).
+
+---
+
+**Home — Catálogo con filtros** · *Caso de uso 1*
+
+![Home — Catálogo con filtros](docs/prototypes/01-home-catalog.png)
+
+Catálogo con panel lateral de filtros running. Punto de entrada y diferencial principal del producto.
+
+---
+
+**Ficha de producto** · *Caso de uso 2*
+
+![Ficha de producto](docs/prototypes/02-pdp.png)
+
+Detalle técnico del producto con atributos running, selector de talla/color y botón de añadir al carrito.
+
+---
+
+**Carrito** · *Caso de uso 3*
+
+![Carrito de compra](docs/prototypes/03-cart.png)
+
+Resumen de selección con subtotal, envío y acceso al checkout.
+
+---
+
+**Checkout — Datos de envío** · *Caso de uso 3*
+
+![Checkout — Datos de envío](docs/prototypes/04-checkout-send-data.png)
+
+Formulario de envío, paso 1 del proceso de compra simulado.
+
+---
+
+**Checkout — Método de pago** · *Caso de uso 3*
+
+![Checkout — Método de pago](docs/prototypes/05-checkout-payment.png)
+
+Formulario de tarjeta simulada, paso 2 del proceso de compra.
+
+---
+
+**Confirmación de pedido** · *Caso de uso 3*
+
+![Confirmación de pedido](docs/prototypes/06-order-confirmation.png)
+
+Pantalla de éxito con número de pedido generado.
+
+---
+
+**Mis pedidos**
+
+![Mis pedidos](docs/prototypes/07-my-orders.png)
+
+Historial de pedidos con estado y detalle de productos.
 
 ### **1.4. Instrucciones de instalación:**
-> Documenta de manera precisa las instrucciones para instalar y poner en marcha el proyecto en local (librerías, backend, frontend, servidor, base de datos, migraciones y semillas de datos, etc.)
+
+> Pendiente de documentar.
 
 ---
 
