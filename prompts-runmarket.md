@@ -162,11 +162,9 @@ Actúa como UX Lead con amplia experiencia en ecommerce y diseño de experiencia
 
 Toma como base el fichero `#file:readme-producto.md` para entender la visión de producto y los casos de uso ya definidos de RunMarket.
 
-Accede al diseño creado con Figma Make a través del MCP de Figma (fileKey: `0wtedXb5138odnAOgHlMiA`):
+Accede al diseño creado con Figma Make a través del MCP de Figma (fileKey: 0wtedXb5138odnAOgHlMiA):
 
-[Ecommerce para productos deportivos](https://www.figma.com/make/0wtedXb5138odnAOgHlMiA/Ecommerce-para-productos-deportivos?t=eF2k70Y9pfxdTUqD-0)
-
-Si no tienes acceso al MCP de Figma, infiere la experiencia de usuario a partir del contexto y los casos de uso descritos en `readme-producto.md`.
+https://www.figma.com/make/0wtedXb5138odnAOgHlMiA/Ecommerce-para-productos-deportivos?t=IpZidqsmflTLTgQ9-1
 
 ## Objetivo
 
@@ -174,11 +172,11 @@ Documentar la experiencia de usuario de RunMarket a partir del diseño de Figma,
 
 ## Instrucciones
 
-- Accede al diseño de Figma mediante el MCP para obtener el contexto visual real
+- Accede al diseño de Figma para obtener el contexto visual real
 - Describe cada pantalla principal: home, catálogo con filtros, ficha de producto, carrito, checkout y confirmación de pedido
 - Para cada pantalla: explica qué funcionalidad cubre, qué componentes o patrones de diseño destacan y cómo contribuye al objetivo del usuario
 - Relaciona cada pantalla con el caso de uso correspondiente ya documentado
-- Incluye capturas o referencias visuales del diseño de Figma si el MCP las proporciona
+- Las capturas de pantalla las realizaré manualmente para evitar consumir exceso de tokens
 
 ## Resultado
 
