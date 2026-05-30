@@ -55,7 +55,9 @@ class EspecieReadRepositoryNativeQueryIT {
         .anyMatch(
             row ->
                 row.label().contains("Encina")
-                    && row.label().contains("Quercus ilex"));
+                    && row.label().contains("Quercus ilex")
+                    && row.genusId() > 0
+                    && row.genusLabel().contains("Quercus"));
   }
 
   @Test
@@ -64,6 +66,15 @@ class EspecieReadRepositoryNativeQueryIT {
         especieReadRepository.search("quercus", PageRequest.of(0, 5));
     assertThat(page.getContent()).isNotEmpty();
     assertThat(page.getContent().getFirst().label().toLowerCase()).contains("quercus");
+  }
+
+  @Test
+  void listadoSinFiltro_incluyeGenusIdYGenusLabelEnCadaFila() {
+    Page<SpeciesListItemDto> page =
+        especieReadRepository.search(null, PageRequest.of(0, EspecieRepository.MAX_UNPAGED));
+    assertThat(page.getContent()).isNotEmpty();
+    assertThat(page.getContent())
+        .allMatch(row -> row.genusId() > 0 && row.genusLabel() != null && !row.genusLabel().isBlank());
   }
 
   @Test
