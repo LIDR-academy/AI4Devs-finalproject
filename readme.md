@@ -315,13 +315,83 @@ erDiagram
 
 ## 5. Historias de Usuario
 
-> Documenta 3 de las historias de usuario principales utilizadas durante el desarrollo, teniendo en cuenta las buenas prácticas de producto al respecto.
+> Set completo de historias (13 US) con criterios de aceptación, estimación y prioridad organizadas por caso de uso: [docs/USER-STORIES.md](docs/USER-STORIES.md)
 
-**Historia de Usuario 1**
+### Backlog MVP — Secuencia de implementación recomendada
 
-**Historia de Usuario 2**
+| Orden | ID | Título | Caso de uso | Talla | Justificación de la posición |
+|---|---|---|---|---|---|
+| 1 | US-001 | Ver el catálogo de productos | CU1 | M | Base de toda la experiencia; sin catálogo no hay entrada al producto |
+| 2 | US-002 | Filtrar el catálogo por atributos de running | CU1 | M | Propuesta de valor diferencial; valida el núcleo del producto desde el inicio |
+| 3 | US-005 | Consultar la ficha técnica de un producto | CU2 | M | Destino de navegación desde el catálogo; principal punto de conversión |
+| 4 | US-006 | Seleccionar talla y color del producto | CU2 | S | Prerrequisito directo de US-007; sin variante válida no hay añadido al carrito |
+| 5 | US-007 | Añadir un producto al carrito | CU2 | M | Conecta el descubrimiento con la compra; primer paso transaccional |
+| 6 | US-008 | Revisar y modificar el carrito | CU3 | M | Punto de entrada al checkout; el corredor revisa y confirma su selección |
+| 7 | US-009 | Introducir datos de envío | CU3 | M | Paso 1 del checkout; sin dirección no hay pedido |
+| 8 | US-010 | Seleccionar método de pago simulado | CU3 | M | Paso 2 del checkout; completa los datos necesarios para generar el pedido |
+| 9 | US-011 | Revisar y confirmar el pedido | CU3 | S | Paso 3 del checkout; crea el pedido y vacía el carrito |
+| 10 | US-012 | Ver la confirmación del pedido | CU3 | S | Cierra el ciclo de compra; sin confirmación el corredor no sabe si la compra fue exitosa |
 
-**Historia de Usuario 3**
+---
+
+### Muestra de historias representativas
+
+---
+
+### US-002 — Filtrar productos por atributos de running
+
+**Caso de uso asociado:** CU1 — Búsqueda filtrada de productos para running
+
+**Historia de usuario:**
+Como corredor, quiero filtrar el catálogo por distancia, superficie, nivel y objetivo de entrenamiento, para encontrar únicamente los productos adaptados a mi perfil sin navegar un catálogo irrelevante.
+
+**Criterios de aceptación:**
+- [ ] El corredor selecciona uno o más valores en distancia, superficie, nivel u objetivo; el catálogo se actualiza mostrando solo los productos que cumplen todos los criterios activos (AND entre dimensiones, OR dentro de cada dimensión)
+- [ ] El contador de productos se actualiza en tiempo real al cambiar filtros
+- [ ] Si no hay resultados, se muestra "No se encontraron productos" con enlace a "Limpiar filtros"
+- [ ] Los filtros no bloquean combinaciones: si no hay resultados, la UI lo comunica sin estado de error técnico
+
+**Datos o entidades implicadas:** `Product.distance[]`, `Product.surface[]`, `Product.level[]`, `Product.objective[]` — arrays GIN-indexed en PostgreSQL, filtrado via `CatalogService.getProducts(filters)`
+
+**Estimación:** M · **Prioridad:** Imprescindible para el MVP
+
+---
+
+### US-005 — Consultar ficha técnica de un producto
+
+**Caso de uso asociado:** CU2 — Consulta de ficha de producto y decisión de compra
+
+**Historia de usuario:**
+Como corredor, quiero ver la ficha completa de un producto con sus atributos técnicos de running, para decidir si se adapta a mi perfil antes de añadirlo al carrito.
+
+**Criterios de aceptación:**
+- [ ] Se muestran imagen, nombre, marca, precio, descripción técnica, atributos running como etiquetas coloreadas (nivel azul, distancia verde, superficie ámbar) y lista de características con check verde
+- [ ] Si el producto está agotado (`stock === 0`), el botón "Añadir al carrito" se muestra deshabilitado con texto "Agotado"
+- [ ] Producto inexistente: mensaje "Producto no encontrado" con enlace al catálogo
+- [ ] La página se renderiza con SSR e incluye metadata `og:title` y `og:description` para SEO
+
+**Datos o entidades implicadas:** `Product`: name, brand, price, image, description, features[], distance[], surface[], level[], stock
+
+**Estimación:** M · **Prioridad:** Imprescindible para el MVP
+
+---
+
+### US-008 — Revisar y modificar el carrito de compra
+
+**Caso de uso asociado:** CU3 — Proceso de compra: carrito y checkout simulado
+
+**Historia de usuario:**
+Como corredor, quiero revisar los productos añadidos al carrito y modificar cantidades o eliminar artículos, para confirmar mi selección antes de proceder al pago.
+
+**Criterios de aceptación:**
+- [ ] Se muestran todos los productos con imagen, nombre, talla, color, precio unitario, stepper de cantidad y botón eliminar; el panel lateral muestra subtotal, envío y total en tiempo real
+- [ ] Envío gratuito a partir de 50€; por debajo, se muestra el coste (4,99€) con nudge "¡Añade X€ más para envío gratis!"
+- [ ] Carrito vacío: estado vacío con CTA "Ver catálogo"; botón de checkout deshabilitado
+- [ ] El carrito persiste durante la sesión del navegador
+
+**Datos o entidades implicadas:** `Cart.items[]`, `CartItem`: product, quantity, size, color — `CartService.updateItem()`, `CartService.removeItem()`
+
+**Estimación:** M · **Prioridad:** Imprescindible para el MVP
 
 ---
 

@@ -303,3 +303,44 @@ Si lo consideras necesario, accede al MCP de Figma y utiliza el diseño para ali
 ## Resultado
 
 Escribe el contenido en @docs/ARCHITECTURE.md.
+
+
+---
+
+# Prompt 8: Generación de Historias de Usuario de los principales casos de uso
+
+/generate-user-stories
+  
+  ## Contexto
+
+  Analiza:
+
+  - `docs/PRD.md`
+  - `docs/ARCHITECTURE.md` (solo si es necesario para validar coherencia funcional)
+  - Figma Make (fileKey: `0wtedXb5138odnAOgHlMiA`) si necesitas contexto visual de pantallas o flujos. https://www.figma.com/make/0wtedXb5138odnAOgHlMiA/Ecommerce-para-productos-deportivos?t=IpZidqsmflTLTgQ9-1
+
+  ## Objetivo
+
+  Generar las User Stories necesarias para soportar exclusivamente estos casos de uso del MVP:
+
+  1. Búsqueda filtrada de productos para running
+  2. Consulta de ficha de producto y decisión de compra
+  3. Proceso de compra: carrito y checkout simulado
+
+  ## Restricciones
+
+  No incluir funcionalidades fuera de alcance: autenticación, recomendaciones, reviews, wishlist ni pagos reales o cualquier otra funcionalidad no necesaria para los casos de uso definidos                                                           
+
+  ## Resultado
+
+  Escribe el fichero `docs/USER-STORIES.md` con las historias agrupadas por caso de uso.
+  
+
+---
+
+# Prompt 9: Generación backlog MVP
+
+Analiza las User Stories generadas en @docs/USER-STORIES.md y añade una sección donde:                                                                                                                
+  1. Explicas los criterios de priorización utilizados.                                                       
+  2. Genera una tabla con las historias clasificadas como "Imprescindible para el MVP", ordenadas según la secuencia recomendada de implementación.                                             
+  3. Genera una segunda tabla con el resto de historias, ordenadas por prioridad.
