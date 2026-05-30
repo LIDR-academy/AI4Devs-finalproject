@@ -5,11 +5,11 @@ import { useI18n } from 'vue-i18n'
 import TreeLocationMapPreview from '@/components/TreeLocationMapPreview.vue'
 import TreePhotoFullscreenViewer from '@/components/TreePhotoFullscreenViewer.vue'
 import { areLatLngInValidRange } from '@/composables/createTreeFormValidation'
-import { fetchPublicEjemplarDetail } from '@/services/catalog/catalogService'
-import { fetchEjemplarPhotoGallery } from '@/services/media/ejemplarGalleryService'
+import { fetchPublicTreeDetail } from '@/services/catalog/catalogService'
+import { fetchTreePhotoGallery } from '@/services/media/treeGalleryService'
 import { HttpError, NetworkError } from '@/services/http/apiClient'
-import type { PublicEjemplarDetail } from '@/types/catalog'
-import type { EjemplarPhotoGalleryItem } from '@/types/media'
+import type { PublicTreeDetail } from '@/types/catalog'
+import type { TreePhotoGalleryItem } from '@/types/media'
 
 const route = useRoute()
 const { t } = useI18n()
@@ -17,8 +17,8 @@ const { t } = useI18n()
 const isLoading = ref(false)
 const errorMessage = ref('')
 const notFound = ref(false)
-const tree = ref<PublicEjemplarDetail | null>(null)
-const galleryPhotos = ref<EjemplarPhotoGalleryItem[]>([])
+const tree = ref<PublicTreeDetail | null>(null)
+const galleryPhotos = ref<TreePhotoGalleryItem[]>([])
 const selectedPhotoIndex = ref(0)
 const isFullscreenOpen = ref(false)
 
@@ -36,7 +36,7 @@ function mapError(error: unknown): string {
   return t('treesDetail.messages.unexpectedError')
 }
 
-const ejemplarId = computed(() => {
+const treeId = computed(() => {
   const rawId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
   const parsedId = Number(rawId)
   if (!Number.isInteger(parsedId) || parsedId <= 0) {
@@ -49,8 +49,8 @@ const speciesTitle = computed(() => {
   if (!tree.value) {
     return ''
   }
-  const common = tree.value.nombreComun.trim()
-  const scientific = tree.value.nombreCientifico.trim()
+  const common = tree.value.commonName.trim()
+  const scientific = tree.value.scientificName.trim()
   if (common.length > 0) {
     return `${common} (${scientific})`
   }
@@ -58,8 +58,8 @@ const speciesTitle = computed(() => {
 })
 
 const mapLatLng = computed(() => ({
-  latitude: tree.value ? String(tree.value.latitud) : '',
-  longitude: tree.value ? String(tree.value.longitud) : '',
+  latitude: tree.value ? String(tree.value.latitude) : '',
+  longitude: tree.value ? String(tree.value.longitude) : '',
 }))
 
 const showMapMarker = computed(() => areLatLngInValidRange(mapLatLng.value))
@@ -78,7 +78,7 @@ const selectedPhotoPosition = computed(() =>
 )
 
 async function loadTreeDetail(): Promise<void> {
-  if (!ejemplarId.value) {
+  if (!treeId.value) {
     notFound.value = true
     errorMessage.value = t('treesDetail.messages.notFound')
     return
@@ -93,8 +93,8 @@ async function loadTreeDetail(): Promise<void> {
 
   try {
     const [treeDetail, photos] = await Promise.all([
-      fetchPublicEjemplarDetail(ejemplarId.value),
-      fetchEjemplarPhotoGallery(ejemplarId.value),
+      fetchPublicTreeDetail(treeId.value),
+      fetchTreePhotoGallery(treeId.value),
     ])
     tree.value = treeDetail
     galleryPhotos.value = photos
@@ -219,7 +219,7 @@ onMounted(async () => {
             id="tree-detail-province"
             class="form-control"
             type="text"
-            :value="tree.provincia || '-'"
+            :value="tree.province || '-'"
             readonly
           />
         </div>
@@ -230,7 +230,7 @@ onMounted(async () => {
             id="tree-detail-municipality"
             class="form-control"
             type="text"
-            :value="tree.municipio || '-'"
+            :value="tree.municipality || '-'"
             readonly
           />
         </div>
@@ -241,7 +241,7 @@ onMounted(async () => {
             id="tree-detail-description"
             class="form-control form-textarea"
             rows="2"
-            :value="tree.descripcion || '-'"
+            :value="tree.description || '-'"
             readonly
           />
         </div>
@@ -249,12 +249,12 @@ onMounted(async () => {
         <div class="field-full tree-geo-row">
           <div class="field">
             <label class="form-label" for="tree-detail-latitude">{{ t('treesDetail.fields.latitude') }}</label>
-            <input id="tree-detail-latitude" class="form-control" type="text" :value="tree.latitud" readonly />
+            <input id="tree-detail-latitude" class="form-control" type="text" :value="tree.latitude" readonly />
           </div>
 
           <div class="field">
             <label class="form-label" for="tree-detail-longitude">{{ t('treesDetail.fields.longitude') }}</label>
-            <input id="tree-detail-longitude" class="form-control" type="text" :value="tree.longitud" readonly />
+            <input id="tree-detail-longitude" class="form-control" type="text" :value="tree.longitude" readonly />
           </div>
 
           <div class="field">
@@ -263,7 +263,7 @@ onMounted(async () => {
               id="tree-detail-altitude"
               class="form-control"
               type="text"
-              :value="tree.altura ?? '-'"
+              :value="tree.altitude ?? '-'"
               readonly
             />
           </div>
@@ -271,19 +271,19 @@ onMounted(async () => {
 
         <div class="field">
           <label class="form-label" for="tree-detail-state">{{ t('treesDetail.fields.state') }}</label>
-          <input id="tree-detail-state" class="form-control" type="text" :value="tree.estado" readonly />
+          <input id="tree-detail-state" class="form-control" type="text" :value="tree.publicationState" readonly />
         </div>
 
         <div class="field">
           <label class="form-label" for="tree-detail-visibility">{{ t('treesDetail.fields.visibility') }}</label>
-          <input id="tree-detail-visibility" class="form-control" type="text" :value="tree.visibilidad" readonly />
+          <input id="tree-detail-visibility" class="form-control" type="text" :value="tree.publicMapVisibility" readonly />
         </div>
 
         <div class="field-full actions">
           <RouterLink class="btn btn-secondary" :to="{ name: 'ejemplares-list' }">
             {{ t('treesDetail.backToList') }}
           </RouterLink>
-          <span class="muted tree-detail-id">{{ t('treesDetail.ejemplarId', { id: tree.ejemplarId }) }}</span>
+          <span class="muted tree-detail-id">{{ t('treesDetail.treeId', { id: tree.treeId }) }}</span>
         </div>
       </form>
 

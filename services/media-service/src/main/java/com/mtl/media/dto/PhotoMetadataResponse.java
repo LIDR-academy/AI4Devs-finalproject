@@ -3,15 +3,15 @@ package com.mtl.media.dto;
 import java.time.OffsetDateTime;
 
 public record PhotoMetadataResponse(
-    Long fotografiaId,
-    Long ejemplarId,
+    Long photoId,
+    Long treeId,
     String bucket,
     String objectKey,
-    String nombreFicheroOriginal,
-    String tipoMime,
-    long tamanoBytes,
-    Integer anchoPx,
-    Integer altoPx,
-    int orden,
-    boolean esPrincipal,
-    OffsetDateTime subidaEn) {}
+    String originalFileName,
+    String mimeType,
+    long sizeBytes,
+    Integer widthPx,
+    Integer heightPx,
+    int order,
+    boolean isPrimary,
+    OffsetDateTime uploadedAt) {}

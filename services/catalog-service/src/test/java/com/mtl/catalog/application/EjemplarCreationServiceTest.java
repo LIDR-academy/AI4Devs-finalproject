@@ -67,12 +67,12 @@ class EjemplarCreationServiceTest {
                 "publico",
                 "publicado"));
 
-    assertThat(result.ejemplarId()).isEqualTo(100L);
+    assertThat(result.treeId()).isEqualTo(100L);
     assertThat(result.actorUsuarioAppId()).isEqualTo(5L);
     assertThat(result.ocurridoEn()).isNotNull();
-    ArgumentCaptor<Ejemplar> arbolCaptor = ArgumentCaptor.forClass(Ejemplar.class);
-    verify(ejemplarRepository).save(arbolCaptor.capture());
-    Ejemplar saved = arbolCaptor.getValue();
+    ArgumentCaptor<Ejemplar> ejemplarCaptor = ArgumentCaptor.forClass(Ejemplar.class);
+    verify(ejemplarRepository).save(ejemplarCaptor.capture());
+    Ejemplar saved = ejemplarCaptor.getValue();
     assertThat(result.ocurridoEn()).isEqualTo(saved.getCreadoEn());
     assertThat(saved.getEspecieId()).isEqualTo(10L);
     assertThat(saved.getProvinciaId()).isEqualTo(28L);

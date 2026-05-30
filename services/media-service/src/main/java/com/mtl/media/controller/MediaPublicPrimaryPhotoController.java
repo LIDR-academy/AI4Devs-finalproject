@@ -20,11 +20,11 @@ public class MediaPublicPrimaryPhotoController {
     this.primaryPhotoService = primaryPhotoService;
   }
 
-  @GetMapping("/ejemplares/{ejemplarId}/primary-photo")
+  @GetMapping("/trees/{treeId}/primary-photo")
   public ResponseEntity<byte[]> getPrimaryPhoto(
-      @PathVariable long ejemplarId, Authentication authentication) {
+      @PathVariable long treeId, Authentication authentication) {
     Jwt jwt = resolveJwt(authentication);
-    return primaryPhotoService.loadPrimaryPhotoBytes(ejemplarId, jwt);
+    return primaryPhotoService.loadPrimaryPhotoBytes(treeId, jwt);
   }
 
   private static Jwt resolveJwt(Authentication authentication) {

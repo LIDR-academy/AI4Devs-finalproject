@@ -84,7 +84,7 @@ class MediaUploadServicePrincipalTest {
         new ConfirmPhotoUploadRequest(
             1L,
             "mtl-photos",
-            "ejemplares/1/a.jpg",
+            "trees/1/a.jpg",
             "a.jpg",
             "image/jpeg",
             1024L,
@@ -95,8 +95,8 @@ class MediaUploadServicePrincipalTest {
             null);
 
     PhotoMetadataResponse res = service.confirmUpload(req, TEST_JWT);
-    assertThat(res.esPrincipal()).isTrue();
-    assertThat(res.orden()).isZero();
+    assertThat(res.isPrimary()).isTrue();
+    assertThat(res.order()).isZero();
 
     ArgumentCaptor<Fotografia> cap = ArgumentCaptor.forClass(Fotografia.class);
     verify(fotografiaRepository).save(cap.capture());
@@ -121,7 +121,7 @@ class MediaUploadServicePrincipalTest {
         new ConfirmPhotoUploadRequest(
             1L,
             "mtl-photos",
-            "ejemplares/1/b.jpg",
+            "trees/1/b.jpg",
             "b.jpg",
             "image/jpeg",
             2048L,
@@ -132,8 +132,8 @@ class MediaUploadServicePrincipalTest {
             null);
 
     PhotoMetadataResponse res = service.confirmUpload(req, TEST_JWT);
-    assertThat(res.esPrincipal()).isFalse();
-    assertThat(res.orden()).isEqualTo(1);
+    assertThat(res.isPrimary()).isFalse();
+    assertThat(res.order()).isEqualTo(1);
 
     ArgumentCaptor<Fotografia> cap = ArgumentCaptor.forClass(Fotografia.class);
     verify(fotografiaRepository).save(cap.capture());
@@ -150,7 +150,7 @@ class MediaUploadServicePrincipalTest {
         new ConfirmPhotoUploadRequest(
             1L,
             "mtl-photos",
-            "ejemplares/1/b.jpg",
+            "trees/1/b.jpg",
             "b.jpg",
             "image/jpeg",
             2048L,
@@ -171,7 +171,7 @@ class MediaUploadServicePrincipalTest {
         new ConfirmPhotoUploadRequest(
             1L,
             "mtl-photos",
-            "ejemplares/1/c.jpg",
+            "trees/1/c.jpg",
             "c.jpg",
             "image/jpeg",
             512L,
@@ -190,7 +190,7 @@ class MediaUploadServicePrincipalTest {
         new ConfirmPhotoUploadRequest(
             1L,
             "otro-bucket",
-            "ejemplares/1/a.jpg",
+            "trees/1/a.jpg",
             "a.jpg",
             "image/jpeg",
             1024L,

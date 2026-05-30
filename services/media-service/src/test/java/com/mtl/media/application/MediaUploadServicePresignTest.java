@@ -62,7 +62,7 @@ class MediaUploadServicePresignTest {
     when(catalogMediaPermissionClient.resolveActorUsuarioAppIdForEjemplar(anyLong(), any()))
         .thenReturn(200L);
     when(objectStoragePresigner.presignedPutUrl(eq("mtl-photos"), anyString(), any()))
-        .thenReturn("http://localhost:9000/mtl-photos/ejemplares/7/x?X-Amz-Algorithm=AWS4-HMAC-SHA256");
+        .thenReturn("http://localhost:9000/mtl-photos/trees/7/x?X-Amz-Algorithm=AWS4-HMAC-SHA256");
     service =
         new MediaUploadService(
             fotografiaRepository,
@@ -91,7 +91,7 @@ class MediaUploadServicePresignTest {
     PresignUploadResponse res = service.createPresignedUpload(req, TEST_JWT);
     assertThat(res.uploadUrl()).contains("X-Amz-Algorithm");
     assertThat(res.bucket()).isEqualTo("mtl-photos");
-    assertThat(res.objectKey()).startsWith("ejemplares/7/");
+    assertThat(res.objectKey()).startsWith("trees/7/");
     verify(objectStoragePresigner).presignedPutUrl(eq("mtl-photos"), eq(res.objectKey()), any());
     verify(catalogMediaPermissionClient).resolveActorUsuarioAppIdForEjemplar(7L, TEST_JWT);
   }

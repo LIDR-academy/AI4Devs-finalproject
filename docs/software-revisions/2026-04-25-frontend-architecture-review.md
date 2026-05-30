@@ -5,7 +5,7 @@
 - **Revisor**: Asistente IA (perfil: experto frontend Vue)
 - **Estado**: Borrador con seguimiento de implementación (tabla de estado de los 12 hallazgos más abajo)
 
-> **Nota (2026-05):** snapshot anterior a [ADR-0006](../adr/0006-ejemplar-nomenclature-contracts.md); rutas actuales de la SPA usan `/ejemplares`, `/mis-ejemplares`, etc.
+> **Archivo histórico:** no actualizar el cuerpo de este informe; refleja el estado del `frontend/` en la fecha indicada. **Referencia actual:** rutas SPA y contrato HTTP según [ADR-0006](../adr/0006-ejemplar-aggregate-http-kafka-naming.md) (`/ejemplares`, `/mis-ejemplares`, `treeId`, …); inglés técnico del frontend usa **Tree/Trees** para la ficha (`CreateTreeView`, `TreesListView`, `useCreateTreeForm`, …). Ver [naming-conventions.md](../engineering/naming-conventions.md) y auditorías `2026-05-30-*` en este directorio.
 
 ## Resumen ejecutivo
 

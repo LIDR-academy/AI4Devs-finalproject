@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 public record CollaboratorEjemplarDetailDto(
-    long ejemplarId,
+    long treeId,
     long speciesId,
     long provinceId,
     BigDecimal latitude,

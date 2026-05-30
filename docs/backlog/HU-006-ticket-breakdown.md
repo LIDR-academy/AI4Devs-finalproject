@@ -97,7 +97,7 @@ Depende de que exista la pantalla de edición de ficha en **HU-008** (`/ejemplar
 
 | ID | Título | Descripción breve | Estado |
 |----|--------|-------------------|--------|
-| **TASK-HU-006-14** | Alta y baja de fotografías desde la edición de Mis árboles | **Backend (`media-service`):** **`DELETE /api/media/photos/{photoId}`** (contrato **TASK-HU-008-01**), borrado metadatos + objeto, autorización **TASK-HU-006-05**; al borrar la principal, promover otra como `es_principal`. **Frontend:** galería en `/ejemplares/:id/edit` con añadir (presign/confirmación, `startOrden`) y eliminar con diálogo de confirmación. **Pruebas:** `MediaPhotoDeleteServiceTest`, WebMvc delete, Vitest (`useEditEjemplarForm`, `EditEjemplarView`). | Hecho |
+| **TASK-HU-006-14** | Alta y baja de fotografías desde la edición de Mis árboles | **Backend (`media-service`):** **`DELETE /api/media/photos/{photoId}`** (contrato **TASK-HU-008-01**), borrado metadatos + objeto, autorización **TASK-HU-006-05**; al borrar la principal, promover otra como `es_principal`. **Frontend:** galería en `/ejemplares/:id/edit` con añadir (presign/confirmación, `startOrden`) y eliminar con diálogo de confirmación. **Pruebas:** `MediaPhotoDeleteServiceTest`, WebMvc delete, Vitest (`useEditTreeForm.test.ts`). | Hecho |
 
 ---
 

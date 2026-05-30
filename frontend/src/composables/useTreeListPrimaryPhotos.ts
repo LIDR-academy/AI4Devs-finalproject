@@ -5,7 +5,7 @@ import { apiFetchBlob } from '@/services/http/apiClient'
  * Miniaturas de la foto principal por árbol (HU-014, listado público).
  * Usa URLs de objeto locales; revoca al sustituir o al desmontar.
  */
-export function useEjemplarListPrimaryPhotos() {
+export function useTreeListPrimaryPhotos() {
   const thumbUrls = ref<Record<number, string>>({})
 
   function revokeUrls(urls: Record<number, string>): void {
@@ -14,14 +14,14 @@ export function useEjemplarListPrimaryPhotos() {
     }
   }
 
-  async function loadForEjemplarIds(ejemplarIds: readonly number[], signal?: AbortSignal): Promise<void> {
+  async function loadForTreeIds(treeIds: readonly number[], signal?: AbortSignal): Promise<void> {
     revokeUrls(thumbUrls.value)
     thumbUrls.value = {}
     const next: Record<number, string> = {}
     await Promise.all(
-      ejemplarIds.map(async (id) => {
+      treeIds.map(async (id) => {
         try {
-          const blob = await apiFetchBlob(`/api/media/public/ejemplares/${id}/primary-photo`, { signal })
+          const blob = await apiFetchBlob(`/api/media/public/trees/${id}/primary-photo`, { signal })
           if (blob !== null && blob.size > 0) {
             next[id] = URL.createObjectURL(blob)
           }
@@ -42,5 +42,5 @@ export function useEjemplarListPrimaryPhotos() {
     thumbUrls.value = {}
   })
 
-  return { thumbUrls, loadForEjemplarIds }
+  return { thumbUrls, loadForTreeIds }
 }

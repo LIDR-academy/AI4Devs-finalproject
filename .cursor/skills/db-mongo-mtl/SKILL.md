@@ -4,7 +4,7 @@
 
 Úsala cuando el usuario trabaje en `catalog-service` y proporcione o mencione:
 - Entidades JPA de `especie` o `ejemplar`
-- Documentos o repositorios MongoDB (`enriquecimientos_especie`, `enriquecimientos_ejemplar`)
+- Documentos o repositorios MongoDB (`especie_detalle`, `ejemplar_detalle` según [mongo.md](../../docs/data-model/mongo.md))
 - Migraciones Flyway del catalog-service
 - Eventos de dominio que sincronizan SQL → Mongo
 - Dudas sobre dónde guardar un dato (¿PostgreSQL o MongoDB?)
@@ -32,8 +32,8 @@ La primera pregunta ante cualquier dato nuevo:
 | Datos maestros de especie y ejemplar | PostgreSQL |
 | Taxonomía, relaciones, integridad referencial | PostgreSQL |
 | Datos operativos transaccionales | PostgreSQL |
-| Enriquecimientos semiestructurados de especie | MongoDB (`enriquecimientos_especie`) |
-| Notas semiestructuradas de ejemplar | MongoDB (`enriquecimientos_ejemplar`) |
+| Enriquecimientos semiestructurados de especie | MongoDB (`especie_detalle`) |
+| Enriquecimientos y observaciones de ejemplar | MongoDB (`ejemplar_detalle`) |
 | Binarios, fotos | Almacenamiento externo (ni SQL ni Mongo) |
 
 ❌ **Error crítico**: datos maestros de especie/ejemplar modelados en Mongo como colección principal.
@@ -46,10 +46,10 @@ La primera pregunta ante cualquier dato nuevo:
 - Los documentos Mongo deben referenciar las PK numéricas de PostgreSQL mediante:
   - `especie_pg_id` → PK de la tabla `especie`
   - `ejemplar_pg_id` → PK de la tabla `ejemplar`
-- Convención de `_id` en Mongo:
-  - Especie: `esp_<especie_pg_id>` — documento **único** por especie
-  - Ejemplar: `eje_<ejemplar_pg_id>_<ULID>` — una nota = un documento; pueden existir varios por ejemplar
-- No usar `ObjectId` por defecto — el `_id` siempre es string con prefijo
+- Convención de `_id` en Mongo ([mongo.md](../../docs/data-model/mongo.md)):
+  - `especie_detalle`: `_id` entero **igual** a `especie_pg_id` — un documento por especie
+  - `ejemplar_detalle`: `_id` entero **igual** a `ejemplar_pg_id` — un documento por ejemplar; las observaciones van en el array embebido `observaciones`
+- No usar `ObjectId` por defecto en el MVP — PK numérica alineada con PostgreSQL
 - Verificar que tras renombrados o migraciones de PK en SQL, los `_id` de Mongo siguen siendo coherentes
 
 ⚠️ **Advertencia**: campos de referencia con nombres distintos a `especie_pg_id` / `ejemplar_pg_id`.
@@ -107,13 +107,12 @@ public void guardarEjemplar(Ejemplar ejemplar) {
 
 ### 5. Estructura de los documentos Mongo
 
-Verifica que los documentos de las colecciones `enriquecimientos_especie` y
-`enriquecimientos_ejemplar` cumplan:
+Verifica que los documentos de las colecciones `especie_detalle` y `ejemplar_detalle` cumplan:
 
-- `_id` sigue la convención `esp_<id>` o `eje_<id>_<ULID>`
-- Contienen `especie_pg_id` o `ejemplar_pg_id` como campo explícito (además del `_id`)
-- No duplican campos que son autoridad de SQL (nombre científico, coordenadas del ejemplar, etc.)
-  salvo denormalización justificada con estrategia de sync documentada
+- `_id` numérico igual a `especie_pg_id` o `ejemplar_pg_id` según colección
+- Contienen `especie_pg_id` / `ejemplar_pg_id` como enlaces explícitos a PostgreSQL
+- La desnormalización de `nombre_cientifico` y `nombre_comun` en `especie_detalle` está **permitida** y debe tener estrategia de actualización o invalidación (ver `mongo.md`)
+- No duplican otros datos maestros de SQL (coordenadas del ejemplar, estado de publicación, etc.) salvo que esté documentado y sincronizado
 - Los campos opcionales/semiestructurados están en Mongo, no añadidos como columnas en SQL
 
 ---

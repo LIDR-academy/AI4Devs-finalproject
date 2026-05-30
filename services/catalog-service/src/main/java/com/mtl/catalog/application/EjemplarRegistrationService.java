@@ -39,12 +39,12 @@ public class EjemplarRegistrationService {
     CreatedEjemplarResult created = treeCreationService.create(command);
     catalogAuditService.recordEjemplarCreated(
         created.actorUsuarioAppId(),
-        created.ejemplarId(),
+        created.treeId(),
         command.especieId(),
         command.provinciaId());
     afterCommitTaskRegistrar.runAfterCommit(
         () ->
-            ejemplarCreadoEventPublisher.publishEjemplarCreado(created.ejemplarId(), created.ocurridoEn()));
+            ejemplarCreadoEventPublisher.publishEjemplarCreado(created.treeId(), created.ocurridoEn()));
     return created;
   }
 }

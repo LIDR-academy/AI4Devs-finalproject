@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   ObjectStorageUploadError,
   putFileToObjectStorageUrl,
-  uploadPhotosForEjemplar,
-} from '@/services/media/ejemplarPhotoUploadSequence'
+  uploadPhotosForTree,
+} from '@/services/media/treePhotoUploadSequence'
 
 vi.mock('@/services/http/apiClient', () => ({
   apiFetch: vi.fn(),
@@ -17,7 +17,7 @@ vi.mock('@/services/http/apiClient', () => ({
 
 import { apiFetch } from '@/services/http/apiClient'
 
-describe('ejemplarPhotoUploadSequence', () => {
+describe('treePhotoUploadSequence', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.spyOn(globalThis, 'Image').mockImplementation(function MockImage(this: HTMLImageElement) {
@@ -30,7 +30,7 @@ describe('ejemplarPhotoUploadSequence', () => {
     } as unknown as typeof Image)
   })
 
-  it('uploadPhotosForEjemplar ejecuta presign, PUT y confirm por fichero', async () => {
+  it('uploadPhotosForTree ejecuta presign, PUT y confirm por fichero', async () => {
     vi.mocked(apiFetch)
       .mockResolvedValueOnce({
         uploadUrl: 'https://minio.test/upload',
@@ -42,14 +42,14 @@ describe('ejemplarPhotoUploadSequence', () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 200 }))
 
     const file = new File(['bytes'], 'a.jpg', { type: 'image/jpeg' })
-    await uploadPhotosForEjemplar(42, [file], { startOrden: 1 })
+    await uploadPhotosForTree(42, [file], { startOrden: 1 })
 
     expect(apiFetch).toHaveBeenNthCalledWith(
       1,
       '/api/media/uploads/presign',
       expect.objectContaining({
         method: 'POST',
-        body: expect.stringContaining('"ejemplarId":42'),
+        body: expect.stringContaining('"treeId":42'),
       }),
     )
     expect(fetchSpy).toHaveBeenCalledWith(
@@ -61,7 +61,7 @@ describe('ejemplarPhotoUploadSequence', () => {
       '/api/media/photos/confirm',
       expect.objectContaining({
         method: 'POST',
-        body: expect.stringContaining('"orden":1'),
+        body: expect.stringContaining('"order":1'),
       }),
     )
   })

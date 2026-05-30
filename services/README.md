@@ -41,7 +41,7 @@ Los `application-dev.properties` de los servicios con JDBC usan `jdbc:postgresql
 - **Cliente en el host:** bootstrap `localhost:9094` (variable `KAFKA_PORT_HOST` en `infra/compose/.env.example`). Dentro de Docker los servicios usan `kafka:9092`.
 - **Propiedades útiles** (perfil `dev` ya fija valores por defecto en `catalog-service`; renombre de claves en bloque C):
   - `mtl.catalog.kafka.enabled` — `true` en dev para publicar **`EJEMPLAR_CREADO`** tras alta exitosa; `false` en el `application.properties` base y en tests.
-  - `mtl.catalog.kafka.arbol-evento-topic` — valor objetivo del contrato: `catalog.ejemplar.evento`.
+  - `mtl.catalog.kafka.ejemplar-evento-topic` — topic: `catalog.ejemplar.evento` (ver [kafka-events.md](../docs/events/kafka-events.md) y ADR-0006).
   - `spring.kafka.bootstrap-servers` — equivalente estándar Spring; se puede sobreescribir con **`MTL_KAFKA_BOOTSTRAP_SERVERS`** (p. ej. otro host/puerto).
 
 ### Caché Redis y **catalog-service**

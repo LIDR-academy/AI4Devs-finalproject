@@ -63,7 +63,7 @@ flowchart LR
 
 | ID | Título | Descripción breve | Estado |
 |----|--------|-------------------|--------|
-| **TASK-HU-002-05** | Vista de listado público | `TreesListView.vue` + `catalogService` / `fetchPublicProvinceNames`: listado, paginación, filtros básicos, roles **COLABORADOR**/**ADMIN** con **Más filtros** / **Menos filtros** (estado/visibilidad) y barra de acciones alineada al criterio del proyecto (secundarios a la izquierda, **Aplicar filtros** a la derecha; ver reglas `frontend-ux` / `frontend-vue3`). Navegación a detalle por `RouterLink`. | Hecho |
+| **TASK-HU-002-05** | Vista de listado público | `TreesListView.vue` + `catalogService` / `fetchPublicProvinceNames`: listado, paginación, filtros (`species`, `publicationState`, …), roles **COLABORADOR**/**ADMIN** con **Más filtros** / **Menos filtros** y barra de acciones alineada al criterio del proyecto. Navegación a detalle por `RouterLink`. | Hecho |
 | **TASK-HU-002-06** | Vista de detalle público (sin mapa) | Implementar/ajustar detalle público base con información principal de ficha publicada y manejo de 404. La integración de mapa queda en HU-003, pero la estructura de detalle debe quedar lista para ambos trabajos en paralelo. | Hecho |
 | **TASK-HU-002-07** | Guardas y navegación pública | Verificar que `listado` y `detalle` sean accesibles sin autenticación y que no aparezcan bloqueos de sesión en este flujo público. | Hecho |
 
@@ -71,7 +71,7 @@ flowchart LR
 
 *(Convención de ID del desglose: **TASK-HU-002-05**; si en planning interno aparece **SK-HU-002-05**, es el mismo entregable de listado público.)*
 
-- **Código revisado:** `frontend/src/views/TreesListView.vue` — `type="button"` en Limpiar y Más/Menos (no envían el formulario); **Aplicar** es `type="submit"` con clase `trees-filter-btn-submit`. Estilos en `frontend/src/style.css` (`.trees-filter-actions`, `.trees-filter-btn-submit`; en viewport estrecho se anula `margin-left` del primario y `flex: 1` en botones). Filtros `estado`/`visibilidad` solo se envían al API con rol privilegiado y panel expandido (`loadTrees`).
+- **Código revisado:** `frontend/src/views/TreesListView.vue` — filtros enviados al API como `publicationState` / `publicMapVisibility` solo con rol privilegiado y panel expandido (`loadTrees`).
 - **Coherencia de botones con el alta:** `CreateTreeView.vue` — pie con `tree-form-submit` y `.tree-form .actions` (mismo criterio horizontal que el listado).
 - **Documentación normativa:** criterio de filas de acciones en [.cursor/rules/frontend-ux.mdc](../../.cursor/rules/frontend-ux.mdc) y [.cursor/rules/frontend-vue3.mdc](../../.cursor/rules/frontend-vue3.mdc) (sección Estilos en Vue 3).
 
@@ -94,8 +94,8 @@ flowchart LR
   - Frontend: `TreesListView.vue` y `TreesDetailView.vue` en rutas públicas.
   - Router: guardas solo en rutas protegidas; `trees-list` y `trees-detail` accesibles sin autenticación.
 - **Contrato y endpoints públicos alineados:**
-  - `GET /api/catalog/public/ejemplares`
-  - `GET /api/catalog/public/ejemplares/{ejemplarId}`
+  - `GET /api/catalog/public/trees`
+  - `GET /api/catalog/public/trees/{treeId}`
   - `GET /api/catalog/public/provinces`
 - **Regla de exposición pública validada:** solo fichas `PUBLICADO` + `PUBLICO` para visitante anónimo; detalle no publicable/inexistente devuelve `404` según contrato.
 - **Tests y checks ejecutados para el cierre:**
@@ -120,4 +120,4 @@ flowchart LR
 
 Un visitante sin sesión abre `/ejemplares`, visualiza listado de fichas publicadas, entra a `/ejemplares/:id` y consulta el detalle sin autenticación; las fichas no publicadas no se exponen en flujo público, y los tests básicos de backend/frontend del flujo quedan en verde.
 
-**Decisión aplicada en TASK-HU-002-01:** contrato público cerrado con filtros (`especie`, `provincia`, `municipio`, `estado`, `visibilidad`), orden por defecto `especie,asc`, paginación por defecto `size=20`, `totalResults` para cliente y detalle con `descripcion`, `latitud`, `longitud` y `altura`, reutilizable por HU-003. Catálogo de provincias para el visitante: **`GET /api/catalog/public/provinces`** devuelve solo **`nombres`** (array ordenado); el maestro autenticado **`GET /api/catalog/provinces`** conserva `label` con **nombre (código)** para formularios de colaboración.
+**Decisión aplicada en TASK-HU-002-01 (actualizada ADR-0007):** listado público con query `species`, `province`, `municipality`, `publicationState`, `publicMapVisibility`; `sort` por defecto `species,asc`; respuesta con `commonName`, `latitude`, `longitude`, `altitude`, `description`, `totalResults`. Provincias públicas: **`GET /api/catalog/public/provinces`** → `names`. Maestros autenticados: **`GET /api/catalog/provinces`** con `label`. Mapeo HTTP→persistencia en `PublicEjemplarQueryMapper` (no renombrar columnas SQL).

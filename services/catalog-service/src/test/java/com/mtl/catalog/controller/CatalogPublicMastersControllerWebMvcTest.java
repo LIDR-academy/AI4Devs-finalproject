@@ -37,7 +37,7 @@ class CatalogPublicMastersControllerWebMvcTest {
     mockMvc
         .perform(get("/api/catalog/public/provinces").accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.nombres[0]").value("A Coruña"))
-        .andExpect(jsonPath("$.nombres[1]").value("Álava"));
+        .andExpect(jsonPath("$.names[0]").value("A Coruña"))
+        .andExpect(jsonPath("$.names[1]").value("Álava"));
   }
 }

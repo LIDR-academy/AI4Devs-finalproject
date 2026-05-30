@@ -1,9 +1,9 @@
 /** Cuerpo de `POST /api/media/uploads/presign` (alineado con media-service). */
 export interface PresignUploadRequest {
-  ejemplarId: number
-  nombreFicheroOriginal: string
-  tipoMime: string
-  tamanoBytes: number
+  treeId: number
+  originalFileName: string
+  mimeType: string
+  sizeBytes: number
 }
 
 export interface PresignUploadResponse {
@@ -15,44 +15,44 @@ export interface PresignUploadResponse {
 
 /** Cuerpo de `POST /api/media/photos/confirm`. */
 export interface ConfirmPhotoUploadRequest {
-  ejemplarId: number
+  treeId: number
   bucket: string
   objectKey: string
-  nombreFicheroOriginal: string
-  tipoMime: string
-  tamanoBytes: number
-  anchoPx?: number | null
-  altoPx?: number | null
-  orden?: number | null
-  esPrincipal?: boolean | null
+  originalFileName: string
+  mimeType: string
+  sizeBytes: number
+  widthPx?: number | null
+  heightPx?: number | null
+  order?: number | null
+  isPrimary?: boolean | null
   checksumSha256?: string | null
 }
 
 export interface PhotoMetadataResponse {
-  fotografiaId: number
-  ejemplarId: number
+  photoId: number
+  treeId: number
   bucket: string
   objectKey: string
-  nombreFicheroOriginal: string
-  tipoMime: string
-  tamanoBytes: number
-  anchoPx: number | null
-  altoPx: number | null
-  orden: number
-  esPrincipal: boolean
-  subidaEn: string
+  originalFileName: string
+  mimeType: string
+  sizeBytes: number
+  widthPx: number | null
+  heightPx: number | null
+  order: number
+  isPrimary: boolean
+  uploadedAt: string
 }
 
 export type PhotoVisibilityCategory = 'PUBLIC' | 'PRIVATE'
 
-/** Respuesta de `GET /api/media/ejemplares/{ejemplarId}/photos`. */
-export interface EjemplarPhotoGalleryItem {
+/** Respuesta de `GET /api/media/trees/{treeId}/photos`. */
+export interface TreePhotoGalleryItem {
   id: number
   url: string
-  esPrincipal: boolean
-  orden: number
+  isPrimary: boolean
+  order: number
   mimeType: string
-  ancho: number | null
-  alto: number | null
-  categoria: PhotoVisibilityCategory
+  width: number | null
+  height: number | null
+  category: PhotoVisibilityCategory
 }

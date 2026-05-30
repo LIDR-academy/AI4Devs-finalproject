@@ -2,12 +2,12 @@ package com.mtl.catalog.application;
 
 import com.mtl.catalog.dto.PublicEjemplarDetailDto;
 import com.mtl.catalog.dto.PublicEjemplarListItemDto;
+import com.mtl.catalog.dto.PublicEjemplarListQuery;
 import com.mtl.catalog.dto.PublicEjemplarPageResponse;
 import com.mtl.catalog.exception.CatalogNotFoundException;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.PublicEjemplarReadRepository;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.projection.PublicEjemplarDetailRow;
 import com.mtl.catalog.util.LikePatternEscape;
-import java.util.Locale;
 import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,13 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class PublicEjemplarQueryService {
 
-  private static final String DEFAULT_SORT = "especie,asc";
   private static final Set<String> PRIVILEGED_ROLES = Set.of("COLABORADOR", "ADMIN");
   private static final String PUBLICADO = "PUBLICADO";
   private static final String PUBLICO = "PUBLICO";
-  private static final Set<String> SORT_FIELDS =
-      Set.of("especie", "provincia", "municipio", "estado", "visibilidad", "ejemplarId");
-  private static final Set<String> SORT_DIRECTIONS = Set.of("asc", "desc");
 
   private final PublicEjemplarReadRepository publicEjemplarReadRepository;
 
@@ -35,43 +31,36 @@ public class PublicEjemplarQueryService {
 
   @Transactional(readOnly = true)
   public PublicEjemplarPageResponse listPublishedEjemplares(
-      int page,
-      int size,
-      String sort,
-      PublicEjemplarFilters filters,
-      Jwt jwt) {
+      int page, int size, PublicEjemplarListQuery query, Jwt jwt) {
+    PublicEjemplarQueryCriteria criteria = PublicEjemplarQueryMapper.toCriteria(query);
     Pageable pageable = PageRequest.of(page, size);
-    SortCriteria effectiveSort = normalizeSort(sort);
-    AccessScope scope = resolveScope(jwt, filters.estado(), filters.visibilidad());
+    AccessScope scope = resolveScope(jwt, criteria.estadoPublicacion(), criteria.visibilidadMapa());
 
     Page<PublicEjemplarListItemDto> results =
         publicEjemplarReadRepository
             .findPublicEjemplarRows(
-                normalizeContainsFilter(filters.especie()),
-                normalizeContainsFilter(filters.provincia()),
-                normalizeContainsFilter(filters.municipio()),
+                normalizeContainsFilter(criteria.especieContains()),
+                normalizeContainsFilter(criteria.provinciaContains()),
+                normalizeContainsFilter(criteria.municipioContains()),
                 scope.estado(),
                 scope.visibilidad(),
-                effectiveSort.field(),
-                effectiveSort.direction(),
+                criteria.sortFieldPersistence(),
+                criteria.sortDirection(),
                 pageable)
             .map(
                 row ->
                     new PublicEjemplarListItemDto(
-                        row.getEjemplarId(),
-                        row.getNombreComun(),
-                        row.getNombreCientifico(),
-                        row.getProvincia(),
-                        row.getMunicipio(),
-                        row.getEstado(),
-                        row.getVisibilidad()));
+                        row.getTreeId(),
+                        row.getCommonName(),
+                        row.getScientificName(),
+                        row.getProvince(),
+                        row.getMunicipality(),
+                        row.getPublicationState(),
+                        row.getPublicMapVisibility()));
 
+    String sortEcho = criteria.sortFieldApi() + "," + criteria.sortDirection();
     return new PublicEjemplarPageResponse(
-        results.getContent(),
-        results.getTotalElements(),
-        page,
-        size,
-        effectiveSort.field() + "," + effectiveSort.direction());
+        results.getContent(), results.getTotalElements(), page, size, sortEcho);
   }
 
   @Transactional(readOnly = true)
@@ -86,37 +75,21 @@ public class PublicEjemplarQueryService {
                         "No se encontró el árbol público solicitado con id " + ejemplarId));
 
     return new PublicEjemplarDetailDto(
-        row.getEjemplarId(),
-        row.getNombreComun(),
-        row.getNombreCientifico(),
-        row.getProvincia(),
-        row.getMunicipio(),
-        row.getEstado(),
-        row.getVisibilidad(),
-        row.getDescripcion(),
-        row.getLatitud(),
-        row.getLongitud(),
-        row.getAltura());
+        row.getTreeId(),
+        row.getCommonName(),
+        row.getScientificName(),
+        row.getProvince(),
+        row.getMunicipality(),
+        row.getPublicationState(),
+        row.getPublicMapVisibility(),
+        row.getDescription(),
+        row.getLatitude(),
+        row.getLongitude(),
+        row.getAltitude());
   }
 
-  private static SortCriteria normalizeSort(String sort) {
-    if (sort == null || sort.isBlank()) {
-      return parseSort(DEFAULT_SORT);
-    }
-    return parseSort(sort.trim());
-  }
-
-  private static SortCriteria parseSort(String sort) {
-    String[] parts = sort.split(",", 2);
-    String field = parts[0].trim();
-    String direction = parts.length == 2 ? parts[1].trim().toLowerCase(Locale.ROOT) : "asc";
-    if (!SORT_FIELDS.contains(field) || !SORT_DIRECTIONS.contains(direction)) {
-      return parseSort(DEFAULT_SORT);
-    }
-    return new SortCriteria(field, direction);
-  }
-
-  private static AccessScope resolveScope(Jwt jwt, String requestedEstado, String requestedVisibilidad) {
+  private static AccessScope resolveScope(
+      Jwt jwt, String requestedEstado, String requestedVisibilidad) {
     if (!hasPrivilegedRole(jwt)) {
       return new AccessScope(PUBLICADO, PUBLICO);
     }
@@ -161,8 +134,4 @@ public class PublicEjemplarQueryService {
   }
 
   private record AccessScope(String estado, String visibilidad) {}
-  private record SortCriteria(String field, String direction) {}
-
-  public record PublicEjemplarFilters(
-      String especie, String provincia, String municipio, String estado, String visibilidad) {}
 }

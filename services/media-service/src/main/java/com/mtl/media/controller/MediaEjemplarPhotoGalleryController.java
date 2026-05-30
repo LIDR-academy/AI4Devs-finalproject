@@ -39,17 +39,17 @@ public class MediaEjemplarPhotoGalleryController {
     this.presignProperties = presignProperties;
   }
 
-  @GetMapping("/ejemplares/{ejemplarId}/photos")
+  @GetMapping("/trees/{treeId}/photos")
   public List<EjemplarPhotoGalleryItemResponse> findByEjemplarId(
-      @PathVariable long ejemplarId, Authentication authentication) {
+      @PathVariable long treeId, Authentication authentication) {
     Jwt jwt = resolveJwt(authentication);
-    return galleryService.findVisiblePhotos(ejemplarId, jwt).stream().map(this::toResponse).toList();
+    return galleryService.findVisiblePhotos(treeId, jwt).stream().map(this::toResponse).toList();
   }
 
-  @DeleteMapping("/ejemplares/{ejemplarId}/photos")
+  @DeleteMapping("/trees/{treeId}/photos")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void deleteAllForEjemplar(@PathVariable long ejemplarId, @AuthenticationPrincipal Jwt jwt) {
-    photosDeleteService.deleteAllPhotosForEjemplar(ejemplarId, jwt);
+  public void deleteAllForEjemplar(@PathVariable long treeId, @AuthenticationPrincipal Jwt jwt) {
+    photosDeleteService.deleteAllPhotosForEjemplar(treeId, jwt);
   }
 
   private EjemplarPhotoGalleryItemResponse toResponse(Fotografia photo) {

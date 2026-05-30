@@ -20,7 +20,7 @@ Definidas en `services/media-service/src/main/resources/application.properties` 
 | `mtl.media.storage.endpoint` | Endpoint S3 (MinIO local: `http://localhost:9000`). |
 | `mtl.media.storage.access-key` / `secret-key` | Credenciales del servicio hacia MinIO; en local, perfil **dev** y `MINIO_ROOT_USER` / `MINIO_ROOT_PASSWORD` (Compose). |
 | `mtl.media.presign.expires-in` | Validez de la URL de subida (ISO-8601 duration, p. ej. `PT15M`). |
-| `mtl.catalog.base-url` | Base URL de **catalog-service** para comprobar permiso de subida sobre el `ejemplarId` (JWT). |
+| `mtl.catalog.base-url` | Base URL de **catalog-service** para comprobar permiso de subida sobre el `treeId` (JWT). |
 
 Infra local (bucket, CORS para el origen de Vite): [infra/compose/README.md](../../infra/compose/README.md) (sección MinIO).
 
@@ -60,14 +60,14 @@ Errores al cliente: **RFC 9457** (`application/problem+json`); no exponer detall
 | Capa | Criterio |
 |------|-----------|
 | **Frontend** (`TreePhotoUploadPicker`) | La **primera imagen seleccionada** en el lote se muestra como “principal” en la previsualización; el usuario puede quitar la primera y la siguiente pasa a ser la primera en lista. |
-| **Backend** (`MediaUploadService.confirmUpload`) | La **primera fotografía confirmada** para ese `ejemplarId` recibe `es_principal = true` de forma **forzada** por el servidor (`currentPhotos == 0`). Las confirmaciones siguientes no pueden marcar `esPrincipal` en petición de forma que contradiga esa regla. El campo `orden` en BD refleja el orden de confirmación estable enviado por la SPA (debe coincidir con el conteo actual). |
+| **Backend** (`MediaUploadService.confirmUpload`) | La **primera fotografía confirmada** para ese `treeId` recibe `es_principal = true` de forma **forzada** por el servidor (`currentPhotos == 0`). Las confirmaciones siguientes no pueden marcar `isPrimary` en petición de forma que contradiga esa regla. El campo `orden` en BD refleja el orden de confirmación estable enviado por la SPA (`order` en JSON; debe coincidir con el conteo actual). |
 
-La SPA puede enviar `esPrincipal: false` en todas las confirmaciones; el servidor asigna la principal solo en la primera confirmación efectiva.
+La SPA puede enviar `isPrimary: false` en todas las confirmaciones; el servidor asigna la principal solo en la primera confirmación efectiva.
 
 ## EXIF y coordenadas en la pantalla de alta
 
 - Composable: `frontend/src/composables/imageExifGps.ts` (`readGpsFromImageFile`, librería `exifr`).
-- Al cambiar la lista de fotos, el picker lee GPS de la **primera** imagen del listado actual; si hay coordenadas válidas (WGS84), emite `first-photo-gps` y la vista de alta (`CreateEjemplarView`) aplica `applyCoordinatesAndAutofillAddress` (lat/lon del formulario + geocodificación inversa opcional).
+- Al cambiar la lista de fotos, el picker lee GPS de la **primera** imagen del listado actual; si hay coordenadas válidas (WGS84), emite `first-photo-gps` y la vista de alta (`CreateTreeView`) aplica `applyCoordinatesAndAutofillAddress` (lat/lon del formulario + geocodificación inversa opcional).
 - Si no hay EXIF o es inválido, **no** se bloquea la subida.
 
 ## Autenticación y enrutado
@@ -78,7 +78,7 @@ La SPA puede enviar `esPrincipal: false` en todas las confirmaciones; el servido
 ## Pruebas automatizadas (referencia rápida)
 
 - Backend: tests de validación, permisos y principal en `media-service` (Surefire / convención `*Test`). Ver [testing-java.md](testing-java.md).
-- Frontend: `TreePhotoUploadPicker` + cableado en `CreateEjemplarView` (Vitest); ver [testing-frontend.md](testing-frontend.md).
+- Frontend: `TreePhotoUploadPicker` + cableado en `CreateTreeView` (Vitest); ver [testing-frontend.md](testing-frontend.md).
 
 ## Enlaces relacionados
 

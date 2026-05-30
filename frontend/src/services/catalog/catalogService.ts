@@ -1,12 +1,12 @@
 import { apiFetch } from '@/services/http/apiClient'
 import type {
-  CreateEjemplarRequest,
-  CreatedEjemplarResponse,
+  CreateTreeRequest,
+  CreatedTreeResponse,
   MasterDataPageResponse,
   MasterListItem,
-  PublicEjemplarDetail,
+  PublicTreeDetail,
   PublicProvinceNamesResponse,
-  PublicEjemplarPageResponse,
+  PublicTreePageResponse,
 } from '@/types/catalog'
 
 export async function fetchSpecies(signal?: AbortSignal): Promise<MasterListItem[]> {
@@ -36,51 +36,51 @@ export async function fetchPublicProvinceNames(signal?: AbortSignal): Promise<st
   const response = await apiFetch<PublicProvinceNamesResponse>('/api/catalog/public/provinces', {
     signal,
   })
-  return response.nombres ?? []
+  return response.names ?? []
 }
 
-export async function createEjemplar(payload: CreateEjemplarRequest): Promise<CreatedEjemplarResponse> {
-  return apiFetch<CreatedEjemplarResponse>('/api/catalog/ejemplares', {
+export async function createTree(payload: CreateTreeRequest): Promise<CreatedTreeResponse> {
+  return apiFetch<CreatedTreeResponse>('/api/catalog/trees', {
     method: 'POST',
     body: JSON.stringify(payload),
   })
 }
 
-export interface FetchPublicEjemplaresQuery {
+export interface FetchPublicTreesQuery {
   page?: number
   size?: number
   sort?: string
-  especie?: string
-  provincia?: string
-  municipio?: string
-  estado?: string
-  visibilidad?: string
+  species?: string
+  province?: string
+  municipality?: string
+  publicationState?: string
+  publicMapVisibility?: string
 }
 
-export async function fetchPublicEjemplares(
-  query: FetchPublicEjemplaresQuery,
+export async function fetchPublicTrees(
+  query: FetchPublicTreesQuery,
   signal?: AbortSignal,
-): Promise<PublicEjemplarPageResponse> {
-  return apiFetch<PublicEjemplarPageResponse>('/api/catalog/public/ejemplares', {
+): Promise<PublicTreePageResponse> {
+  return apiFetch<PublicTreePageResponse>('/api/catalog/public/trees', {
     query: {
       page: query.page ?? 0,
       size: query.size ?? 20,
-      sort: query.sort ?? 'especie,asc',
-      especie: query.especie,
-      provincia: query.provincia,
-      municipio: query.municipio,
-      estado: query.estado,
-      visibilidad: query.visibilidad,
+      sort: query.sort ?? 'species,asc',
+      species: query.species,
+      province: query.province,
+      municipality: query.municipality,
+      publicationState: query.publicationState,
+      publicMapVisibility: query.publicMapVisibility,
     },
     signal,
   })
 }
 
-export async function fetchPublicEjemplarDetail(
-  ejemplarId: number,
+export async function fetchPublicTreeDetail(
+  treeId: number,
   signal?: AbortSignal,
-): Promise<PublicEjemplarDetail> {
-  return apiFetch<PublicEjemplarDetail>(`/api/catalog/public/ejemplares/${ejemplarId}`, {
+): Promise<PublicTreeDetail> {
+  return apiFetch<PublicTreeDetail>(`/api/catalog/public/trees/${treeId}`, {
     signal,
   })
 }

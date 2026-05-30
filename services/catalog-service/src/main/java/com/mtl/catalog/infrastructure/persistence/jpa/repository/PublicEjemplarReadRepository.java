@@ -17,13 +17,13 @@ public interface PublicEjemplarReadRepository extends JpaRepository<Ejemplar, Lo
       value =
           """
           SELECT
-            a.ejemplar_id AS ejemplarId,
-            coalesce(e.nombre_comun, '') AS nombreComun,
-            e.nombre_cientifico AS nombreCientifico,
-            p.nombre AS provincia,
-            coalesce(a.municipio, '') AS municipio,
-            a.estado_publicacion AS estado,
-            a.visibilidad_mapa_publico AS visibilidad
+            a.ejemplar_id AS treeId,
+            coalesce(e.nombre_comun, '') AS commonName,
+            e.nombre_cientifico AS scientificName,
+            p.nombre AS province,
+            coalesce(a.municipio, '') AS municipality,
+            a.estado_publicacion AS publicationState,
+            a.visibilidad_mapa_publico AS publicMapVisibility
           FROM catalog.ejemplar a
           JOIN catalog.especie e ON e.especie_id = a.especie_id
           JOIN catalog.provincia p ON p.provincia_id = a.provincia_id
@@ -46,8 +46,8 @@ public interface PublicEjemplarReadRepository extends JpaRepository<Ejemplar, Lo
             CASE WHEN :sortField = 'estado' AND :sortDir = 'desc' THEN a.estado_publicacion END DESC,
             CASE WHEN :sortField = 'visibilidad' AND :sortDir = 'asc' THEN a.visibilidad_mapa_publico END ASC,
             CASE WHEN :sortField = 'visibilidad' AND :sortDir = 'desc' THEN a.visibilidad_mapa_publico END DESC,
-            CASE WHEN :sortField = 'ejemplarId' AND :sortDir = 'asc' THEN a.ejemplar_id END ASC,
-            CASE WHEN :sortField = 'ejemplarId' AND :sortDir = 'desc' THEN a.ejemplar_id END DESC,
+            CASE WHEN :sortField = 'treeId' AND :sortDir = 'asc' THEN a.ejemplar_id END ASC,
+            CASE WHEN :sortField = 'treeId' AND :sortDir = 'desc' THEN a.ejemplar_id END DESC,
             a.ejemplar_id ASC
           """,
       countQuery =
@@ -80,17 +80,17 @@ public interface PublicEjemplarReadRepository extends JpaRepository<Ejemplar, Lo
       value =
           """
           SELECT
-            a.ejemplar_id AS ejemplarId,
-            coalesce(e.nombre_comun, '') AS nombreComun,
-            e.nombre_cientifico AS nombreCientifico,
-            p.nombre AS provincia,
-            coalesce(a.municipio, '') AS municipio,
-            a.estado_publicacion AS estado,
-            a.visibilidad_mapa_publico AS visibilidad,
-            coalesce(a.descripcion, '') AS descripcion,
-            a.latitud AS latitud,
-            a.longitud AS longitud,
-            a.altitud AS altura
+            a.ejemplar_id AS treeId,
+            coalesce(e.nombre_comun, '') AS commonName,
+            e.nombre_cientifico AS scientificName,
+            p.nombre AS province,
+            coalesce(a.municipio, '') AS municipality,
+            a.estado_publicacion AS publicationState,
+            a.visibilidad_mapa_publico AS publicMapVisibility,
+            coalesce(a.descripcion, '') AS description,
+            a.latitud AS latitude,
+            a.longitud AS longitude,
+            a.altitud AS altitude
           FROM catalog.ejemplar a
           JOIN catalog.especie e ON e.especie_id = a.especie_id
           JOIN catalog.provincia p ON p.provincia_id = a.provincia_id

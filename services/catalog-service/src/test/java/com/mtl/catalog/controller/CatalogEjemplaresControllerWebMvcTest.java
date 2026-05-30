@@ -113,7 +113,7 @@ class CatalogEjemplaresControllerWebMvcTest {
     mockMvc
         .perform(
             withJwtPrincipal(
-                post("/api/catalog/ejemplares")
+                post("/api/catalog/trees")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(
                         """
@@ -127,7 +127,7 @@ class CatalogEjemplaresControllerWebMvcTest {
                 authentication))
         .andExpect(status().isCreated())
         .andExpect(header().exists("Location"))
-        .andExpect(jsonPath("$.ejemplarId").value(42));
+        .andExpect(jsonPath("$.treeId").value(42));
   }
 
   @Test
@@ -150,7 +150,7 @@ class CatalogEjemplaresControllerWebMvcTest {
     mockMvc
         .perform(
             withJwtPrincipal(
-                post("/api/catalog/ejemplares")
+                post("/api/catalog/trees")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("{\"speciesId\":1}"),
                 authentication))
@@ -181,7 +181,7 @@ class CatalogEjemplaresControllerWebMvcTest {
     mockMvc
         .perform(
             withJwtPrincipal(
-                put("/api/catalog/ejemplares/{ejemplarId}", 42)
+                put("/api/catalog/trees/{treeId}", 42)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(
                         """
@@ -196,7 +196,7 @@ class CatalogEjemplaresControllerWebMvcTest {
                         """),
                 collaboratorAuthentication()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.ejemplarId").value(42))
+        .andExpect(jsonPath("$.treeId").value(42))
         .andExpect(jsonPath("$.speciesId").value(11))
         .andExpect(jsonPath("$.createdByUserId").value(7));
   }
@@ -225,9 +225,9 @@ class CatalogEjemplaresControllerWebMvcTest {
     mockMvc
         .perform(
             withJwtPrincipal(
-                get("/api/catalog/ejemplares/{ejemplarId}", 42), collaboratorAuthentication()))
+                get("/api/catalog/trees/{treeId}", 42), collaboratorAuthentication()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.ejemplarId").value(42))
+        .andExpect(jsonPath("$.treeId").value(42))
         .andExpect(jsonPath("$.speciesId").value(10))
         .andExpect(jsonPath("$.provinceId").value(28))
         .andExpect(jsonPath("$.speciesLabel").value("Encina (Quercus ilex)"))
@@ -266,7 +266,7 @@ class CatalogEjemplaresControllerWebMvcTest {
     mockMvc
         .perform(
             withJwtPrincipal(
-                get("/api/catalog/ejemplares")
+                get("/api/catalog/trees")
                     .param("page", "0")
                     .param("size", "20")
                     .param("speciesId", "10")
@@ -275,7 +275,7 @@ class CatalogEjemplaresControllerWebMvcTest {
                 collaboratorAuthentication()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.totalResults").value(1))
-        .andExpect(jsonPath("$.content[0].ejemplarId").value(42))
+        .andExpect(jsonPath("$.content[0].treeId").value(42))
         .andExpect(jsonPath("$.content[0].speciesId").value(10))
         .andExpect(jsonPath("$.content[0].publicationState").value("PUBLICADO"))
         .andExpect(jsonPath("$.content[0].createdByUserId").value(7));
@@ -287,8 +287,7 @@ class CatalogEjemplaresControllerWebMvcTest {
             publicEjemplarQueryService.listPublishedEjemplares(
                 anyInt(),
                 anyInt(),
-                anyString(),
-                any(PublicEjemplarQueryService.PublicEjemplarFilters.class),
+                any(com.mtl.catalog.dto.PublicEjemplarListQuery.class),
                 nullable(Jwt.class)))
         .thenReturn(
             new PublicEjemplarPageResponse(
@@ -304,21 +303,21 @@ class CatalogEjemplaresControllerWebMvcTest {
                 1L,
                 0,
                 20,
-                "especie,asc"));
+                "species,asc"));
 
     mockMvc
         .perform(
             withJwtPrincipal(
-                get("/api/catalog/public/ejemplares")
+                get("/api/catalog/public/trees")
                     .param("page", "0")
                     .param("size", "20")
-                    .param("especie", "Quercus"),
+                    .param("species", "Quercus"),
                 collaboratorAuthentication()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.totalResults").value(1))
-        .andExpect(jsonPath("$.content[0].ejemplarId").value(42))
-        .andExpect(jsonPath("$.content[0].estado").value("PUBLICADO"))
-        .andExpect(jsonPath("$.content[0].visibilidad").value("PUBLICO"));
+        .andExpect(jsonPath("$.content[0].treeId").value(42))
+        .andExpect(jsonPath("$.content[0].publicationState").value("PUBLICADO"))
+        .andExpect(jsonPath("$.content[0].publicMapVisibility").value("PUBLICO"));
   }
 
   @Test
@@ -341,13 +340,13 @@ class CatalogEjemplaresControllerWebMvcTest {
     mockMvc
         .perform(
             withJwtPrincipal(
-                get("/api/catalog/public/ejemplares/{ejemplarId}", 42), collaboratorAuthentication()))
+                get("/api/catalog/public/trees/{treeId}", 42), collaboratorAuthentication()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.ejemplarId").value(42))
-        .andExpect(jsonPath("$.descripcion").value("Encina singular"))
-        .andExpect(jsonPath("$.latitud").value(40.4168))
-        .andExpect(jsonPath("$.longitud").value(-3.7038))
-        .andExpect(jsonPath("$.altura").value(667));
+        .andExpect(jsonPath("$.treeId").value(42))
+        .andExpect(jsonPath("$.description").value("Encina singular"))
+        .andExpect(jsonPath("$.latitude").value(40.4168))
+        .andExpect(jsonPath("$.longitude").value(-3.7038))
+        .andExpect(jsonPath("$.altitude").value(667));
   }
 
   @Test
@@ -358,7 +357,7 @@ class CatalogEjemplaresControllerWebMvcTest {
     mockMvc
         .perform(
             withJwtPrincipal(
-                get("/api/catalog/public/ejemplares/{ejemplarId}", 999), collaboratorAuthentication()))
+                get("/api/catalog/public/trees/{treeId}", 999), collaboratorAuthentication()))
         .andExpect(status().isNotFound());
   }
 
@@ -367,7 +366,7 @@ class CatalogEjemplaresControllerWebMvcTest {
     mockMvc
         .perform(
             withJwtPrincipal(
-                delete("/api/catalog/ejemplares/{ejemplarId}", 42), collaboratorAuthentication()))
+                delete("/api/catalog/trees/{treeId}", 42), collaboratorAuthentication()))
         .andExpect(status().isNoContent());
 
     verify(ejemplarDeletionService).deleteEjemplar(eq(42L), any(Jwt.class));
@@ -381,10 +380,10 @@ class CatalogEjemplaresControllerWebMvcTest {
     mockMvc
         .perform(
             withJwtPrincipal(
-                get("/api/catalog/ejemplares/{ejemplarId}/media-submission-permission", 42),
+                get("/api/catalog/trees/{treeId}/media-submission-permission", 42),
                 collaboratorAuthentication()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.ejemplarId").value(42))
+        .andExpect(jsonPath("$.treeId").value(42))
         .andExpect(jsonPath("$.actorUsuarioAppId").value(7));
   }
 }

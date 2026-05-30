@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -7,13 +7,13 @@ import SpeciesAutocompleteInput from '@/components/SpeciesAutocompleteInput.vue'
 import TreeLocationMapPreview from '@/components/TreeLocationMapPreview.vue'
 import TreePhotoFullscreenViewer from '@/components/TreePhotoFullscreenViewer.vue'
 import { areLatLngInValidRange } from '@/composables/createTreeFormValidation'
-import { useEditEjemplarForm } from '@/composables/useEditEjemplarForm'
+import { useEditTreeForm } from '@/composables/useEditTreeForm'
 import { useTreeLocationAutofill } from '@/composables/useTreeLocationAutofill'
 
 const route = useRoute()
 const { t } = useI18n()
 
-const ejemplarId = computed(() => {
+const treeId = computed(() => {
   const rawId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
   const parsedId = Number(rawId)
   if (!Number.isInteger(parsedId) || parsedId <= 0) {
@@ -45,8 +45,8 @@ const {
   submit,
   addGalleryPhoto,
   removeGalleryPhoto,
-  removeEjemplar,
-} = useEditEjemplarForm(ejemplarId)
+  removeTree,
+} = useEditTreeForm(treeId)
 
 const showMapMarker = computed(() => areLatLngInValidRange(form))
 const deleteConfirmOpen = ref(false)
@@ -124,7 +124,7 @@ function openDeleteConfirm(): void {
 }
 
 async function onConfirmDelete(): Promise<void> {
-  await removeEjemplar()
+  await removeTree()
 }
 
 function openDeletePhotoConfirm(): void {
@@ -188,7 +188,7 @@ onMounted(async () => {
 
 <template>
   <section class="card form-card tree-edit-card">
-    <h2 v-if="ejemplarId">{{ t('treeEdit.title', { id: ejemplarId }) }}</h2>
+    <h2 v-if="treeId">{{ t('treeEdit.title', { id: treeId }) }}</h2>
     <h2 v-else>{{ t('treeEdit.titleInvalid') }}</h2>
 
     <p v-if="isLoading" class="status-note">{{ t('treeEdit.loading') }}</p>

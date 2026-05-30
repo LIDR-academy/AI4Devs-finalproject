@@ -3,15 +3,15 @@ import { createI18n } from 'vue-i18n'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { HttpError } from '@/services/http/apiClient'
 import { es } from '@/i18n/locales/es'
-import { useCreateEjemplarForm } from '@/composables/useCreateEjemplarForm'
+import { useCreateTreeForm } from '@/composables/useCreateTreeForm'
 
 vi.mock('@/services/catalog/catalogService', () => ({
   fetchSpecies: vi.fn(),
   fetchProvinces: vi.fn(),
-  createEjemplar: vi.fn(),
+  createTree: vi.fn(),
 }))
 
-vi.mock('@/services/media/ejemplarPhotoUploadSequence', () => ({
+vi.mock('@/services/media/treePhotoUploadSequence', () => ({
   ObjectStorageUploadError: class ObjectStorageUploadError extends Error {
     readonly status: number
     constructor(status: number, message: string) {
@@ -20,20 +20,20 @@ vi.mock('@/services/media/ejemplarPhotoUploadSequence', () => ({
       this.status = status
     }
   },
-  uploadPhotosForEjemplarAfterCreate: vi.fn(),
+  uploadPhotosForTreeAfterCreate: vi.fn(),
 }))
 
-import { createEjemplar, fetchProvinces, fetchSpecies } from '@/services/catalog/catalogService'
+import { createTree, fetchProvinces, fetchSpecies } from '@/services/catalog/catalogService'
 import {
   ObjectStorageUploadError,
-  uploadPhotosForEjemplarAfterCreate,
-} from '@/services/media/ejemplarPhotoUploadSequence'
+  uploadPhotosForTreeAfterCreate,
+} from '@/services/media/treePhotoUploadSequence'
 
 function mountForm() {
-  let api!: ReturnType<typeof useCreateEjemplarForm>
+  let api!: ReturnType<typeof useCreateTreeForm>
   const app = createApp({
     setup() {
-      api = useCreateEjemplarForm()
+      api = useCreateTreeForm()
       return () => null
     },
   })
@@ -48,7 +48,7 @@ function mountForm() {
   return api
 }
 
-function fillValidForm(form: ReturnType<typeof useCreateEjemplarForm>['form']): void {
+function fillValidForm(form: ReturnType<typeof useCreateTreeForm>['form']): void {
   form.speciesId = '1'
   form.provinceId = '2'
   form.latitude = '40.4'
@@ -56,13 +56,13 @@ function fillValidForm(form: ReturnType<typeof useCreateEjemplarForm>['form']): 
   form.description = 'Ejemplar de prueba'
 }
 
-describe('useCreateEjemplarForm', () => {
+describe('useCreateTreeForm', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(fetchSpecies).mockResolvedValue([{ id: 1, label: 'Roble (Quercus)' }])
     vi.mocked(fetchProvinces).mockResolvedValue([{ id: 2, label: 'Madrid' }])
-    vi.mocked(createEjemplar).mockResolvedValue({ ejemplarId: 100 })
-    vi.mocked(uploadPhotosForEjemplarAfterCreate).mockResolvedValue(undefined)
+    vi.mocked(createTree).mockResolvedValue({ treeId: 100 })
+    vi.mocked(uploadPhotosForTreeAfterCreate).mockResolvedValue(undefined)
   })
 
   it('loadMasters rellena especies y provincias', async () => {
@@ -86,12 +86,12 @@ describe('useCreateEjemplarForm', () => {
     expect(form.mastersError.value).toBe(es.treeForm.messages.mastersEmpty)
   })
 
-  it('submit sin campos obligatorios no llama a createEjemplar', async () => {
+  it('submit sin campos obligatorios no llama a createTree', async () => {
     const form = mountForm()
     await form.submit()
     await nextTick()
 
-    expect(createEjemplar).not.toHaveBeenCalled()
+    expect(createTree).not.toHaveBeenCalled()
     expect(Object.keys(form.fieldErrors.value).length).toBeGreaterThan(0)
   })
 
@@ -102,7 +102,7 @@ describe('useCreateEjemplarForm', () => {
     await form.submit()
     await nextTick()
 
-    expect(createEjemplar).toHaveBeenCalledWith(
+    expect(createTree).toHaveBeenCalledWith(
       expect.objectContaining({
         speciesId: 1,
         provinceId: 2,
@@ -122,13 +122,13 @@ describe('useCreateEjemplarForm', () => {
     await form.submit()
     await nextTick()
 
-    expect(uploadPhotosForEjemplarAfterCreate).toHaveBeenCalledWith(100, [file])
+    expect(uploadPhotosForTreeAfterCreate).toHaveBeenCalledWith(100, [file])
     expect(form.submitSuccess.value).toContain('100')
     expect(form.submitSuccess.value).toContain('fotografías')
   })
 
   it('fallo de almacenamiento de fotos deja éxito parcial y error de fotos', async () => {
-    vi.mocked(uploadPhotosForEjemplarAfterCreate).mockRejectedValue(
+    vi.mocked(uploadPhotosForTreeAfterCreate).mockRejectedValue(
       new ObjectStorageUploadError(502, 'STORAGE_UPLOAD_HTTP_502'),
     )
     const form = mountForm()
@@ -143,7 +143,7 @@ describe('useCreateEjemplarForm', () => {
   })
 
   it('error HttpError en submit muestra mensaje mapeado', async () => {
-    vi.mocked(createEjemplar).mockRejectedValue(
+    vi.mocked(createTree).mockRejectedValue(
       new HttpError(400, {
         title: 'Bad Request',
         status: 400,

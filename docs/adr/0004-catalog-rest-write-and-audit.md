@@ -2,11 +2,11 @@
 
 ## Estado
 
-Aceptada (nomenclatura HTTP/JPA actualizada según [ADR-0006](0006-ejemplar-nomenclature-contracts.md))
+Aceptada (nomenclatura HTTP/JPA actualizada según [ADR-0006](0006-ejemplar-aggregate-http-kafka-naming.md))
 
 ## Contexto
 
-La HU-005 exige que un colaborador autenticado pueda dar de alta una ficha de árbol (`POST /api/catalog/ejemplares`), con validaciones R1/R2, actor identificable en base de datos y traza en `AUDITORIA_CATALOGO` (R3). El **TASK-HU-005-04** ya implementó la persistencia del ejemplar y la resolución de `usuario_app` en capa de aplicación.
+La HU-005 exige que un colaborador autenticado pueda dar de alta una ficha de árbol (`POST /api/catalog/trees`), con validaciones R1/R2, actor identificable en base de datos y traza en `AUDITORIA_CATALOGO` (R3). El **TASK-HU-005-04** ya implementó la persistencia del ejemplar y la resolución de `usuario_app` en capa de aplicación.
 
 Se necesita:
 
@@ -28,10 +28,10 @@ Se necesita:
 
 ## Decisión
 
-- **REST:** `CatalogEjemplaresController` expone `POST /api/catalog/ejemplares` con cuerpo **`CreateEjemplarRequest`** (validación Jakarta en borde) y respuesta **201** + `Location` + **`CreatedEjemplarResponse`** (`ejemplarId`).
+- **REST:** `CatalogEjemplaresController` expone `POST /api/catalog/trees` con cuerpo **`CreateEjemplarRequest`** (validación Jakarta en borde) y respuesta **201** + `Location` + **`CreatedEjemplarResponse`** (`treeId`).
 - **Orquestación:** `EjemplarRegistrationService` (`@Transactional`) llama a `EjemplarCreationService.create` y después a `CatalogAuditService.recordEjemplarCreated` en la **misma transacción** que el insert de `ejemplar` y la fila de `usuario_app` si aplica, de modo que un fallo en auditoría **revierte** el alta.
 - **JWT — claims mínimos para alta de `usuario_app`:** el access token debe incluir **`email`** (scope `email` en el cliente OIDC). Para **`nombre`**: claim estándar **`name`**, o composición de **`given_name`** + **`family_name`** si `name` no está presente (véase [OidcUserProfileExtractor](../../services/catalog-service/src/main/java/com/mtl/catalog/util/OidcUserProfileExtractor.java)). Si falta `email` cuando hace falta materializar usuario → **400** Problem, mensaje seguro (sin listar claims internos).
-- **Seguridad HTTP:** `POST /api/catalog/ejemplares` exige roles de realm **`COLABORADOR`** o **`ADMIN`** además de Bearer válido (`CatalogSecurityConfig`).
+- **Seguridad HTTP:** `POST /api/catalog/trees` exige roles de realm **`COLABORADOR`** o **`ADMIN`** además de Bearer válido (`CatalogSecurityConfig`).
 - **Auditoría:** `operacion` = `EJEMPLAR_CREADO`; `datos_nuevos_resumen` solo con **ids técnicos** (`ejemplar_id`, `especie_id`, `provincia_id`), sin PII ni texto libre de usuario.
 - **Esquema SQL:** `usuario_app` sin columna `rol` y con `nombre` (nullable) en [`V1__baseline.sql`](../../services/catalog-service/src/main/resources/db/migration/V1__baseline.sql) (DDL único con CHECK e índice parcial de `ejemplar`).
 
@@ -44,7 +44,7 @@ Se necesita:
 
 ## Referencias
 
-- [ADR-0006](0006-ejemplar-nomenclature-contracts.md)
+- [ADR-0006](0006-ejemplar-aggregate-http-kafka-naming.md)
 - [HU-005-ticket-breakdown.md](../backlog/HU-005-ticket-breakdown.md)
 - [jwt-gateway-strategy.md](../security/jwt-gateway-strategy.md)
 - [openapi.yaml](../api/openapi.yaml)

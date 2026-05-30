@@ -124,18 +124,18 @@ class CatalogEjemplarPostKafkaIT {
     MvcResult result =
         mockMvc
             .perform(
-                post("/api/catalog/ejemplares")
+                post("/api/catalog/trees")
                     .contentType(MediaType.APPLICATION_JSON)
                     .header(HttpHeaders.AUTHORIZATION, "Bearer " + JwtDecoderConfigTest.TOKEN_COLABORADOR)
                     .content(body))
             .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.ejemplarId").exists())
+            .andExpect(jsonPath("$.treeId").exists())
             .andReturn();
 
     long ejemplarId =
         jsonMapper
             .readTree(result.getResponse().getContentAsString())
-            .path("ejemplarId")
+            .path("treeId")
             .longValue();
 
     String eventJson = pollUntilEjemplarCreado(ejemplarId);

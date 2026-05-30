@@ -32,7 +32,7 @@ class EjemplarMediaSubmissionPermissionServiceTest {
   @InjectMocks private EjemplarMediaSubmissionPermissionService service;
 
   @Test
-  void arbolInexistente_lanza404() {
+  void ejemplarInexistente_lanza404() {
     when(ejemplarRepository.findById(9L)).thenReturn(Optional.empty());
     Jwt jwt = jwt("sub-x", "COLABORADOR");
     assertThrows(CatalogNotFoundException.class, () -> service.resolve(9L, jwt));
@@ -60,7 +60,7 @@ class EjemplarMediaSubmissionPermissionServiceTest {
     Jwt jwt = jwt("admin-sub", "ADMIN");
 
     MediaSubmissionPermissionResponse res = service.resolve(2L, jwt);
-    assertThat(res.ejemplarId()).isEqualTo(2L);
+    assertThat(res.treeId()).isEqualTo(2L);
     assertThat(res.actorUsuarioAppId()).isEqualTo(7L);
   }
 

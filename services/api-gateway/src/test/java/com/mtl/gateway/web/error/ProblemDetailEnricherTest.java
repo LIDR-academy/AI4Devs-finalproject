@@ -13,7 +13,7 @@ class ProblemDetailEnricherTest {
   @Test
   void enrichWithCorrelationId_whenPresentInExchange_addsProperty() {
     MockServerWebExchange exchange =
-        MockServerWebExchange.from(MockServerHttpRequest.get("/api/catalog/ejemplares").build());
+        MockServerWebExchange.from(MockServerHttpRequest.get("/api/catalog/trees").build());
     exchange.getAttributes().put(CorrelationIdWebFilter.EXCHANGE_ATTR, "corr-123");
 
     ProblemDetail pd = ProblemDetail.forStatus(401);
@@ -25,7 +25,7 @@ class ProblemDetailEnricherTest {
   @Test
   void enrichWithCorrelationId_whenAbsent_doesNotAddProperty() {
     MockServerWebExchange exchange =
-        MockServerWebExchange.from(MockServerHttpRequest.get("/api/catalog/ejemplares").build());
+        MockServerWebExchange.from(MockServerHttpRequest.get("/api/catalog/trees").build());
 
     ProblemDetail pd = ProblemDetail.forStatus(401);
     ProblemDetailEnricher.enrichWithCorrelationId(exchange, pd);

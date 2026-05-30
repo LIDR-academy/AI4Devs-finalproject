@@ -138,12 +138,12 @@ public class CollaboratorEjemplarQueryService {
 
   private CollaboratorEjemplarListItemDto toListItem(CollaboratorEjemplarListRow row) {
     return new CollaboratorEjemplarListItemDto(
-        row.getEjemplarId(),
+        row.getTreeId(),
         row.getSpeciesId(),
-        row.getNombreComun(),
-        row.getNombreCientifico(),
-        row.getProvincia(),
-        row.getMunicipio(),
+        row.getCommonName(),
+        row.getScientificName(),
+        row.getProvince(),
+        row.getMunicipality(),
         row.getPublicationState(),
         row.getPublicMapVisibility(),
         ProjectionTimestamps.toOffsetDateTime(row.getCreatedAt()),

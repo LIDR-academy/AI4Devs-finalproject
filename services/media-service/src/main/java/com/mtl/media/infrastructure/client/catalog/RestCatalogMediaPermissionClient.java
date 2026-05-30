@@ -18,12 +18,12 @@ public class RestCatalogMediaPermissionClient implements CatalogMediaPermissionC
   }
 
   @Override
-  public long resolveActorUsuarioAppIdForEjemplar(long ejemplarId, Jwt jwt) {
+  public long resolveActorUsuarioAppIdForEjemplar(long treeId, Jwt jwt) {
     try {
       MediaSubmissionPermissionResponse body =
           catalogRestClient
               .get()
-              .uri("/api/catalog/ejemplares/{ejemplarId}/media-submission-permission", ejemplarId)
+              .uri("/api/catalog/trees/{treeId}/media-submission-permission", treeId)
               .headers(h -> h.setBearerAuth(jwt.getTokenValue()))
               .retrieve()
               .body(MediaSubmissionPermissionResponse.class);
@@ -50,9 +50,9 @@ public class RestCatalogMediaPermissionClient implements CatalogMediaPermissionC
   }
 
   @Override
-  public boolean hasPhotoManagementPermission(long ejemplarId, Jwt jwt) {
+  public boolean hasPhotoManagementPermission(long treeId, Jwt jwt) {
     try {
-      resolveActorUsuarioAppIdForEjemplar(ejemplarId, jwt);
+      resolveActorUsuarioAppIdForEjemplar(treeId, jwt);
       return true;
     } catch (ResponseStatusException ex) {
       if (ex.getStatusCode() == HttpStatus.FORBIDDEN) {

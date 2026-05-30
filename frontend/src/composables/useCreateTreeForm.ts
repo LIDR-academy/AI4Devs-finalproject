@@ -8,11 +8,11 @@ import {
   type CreateTreeFormModel,
   type CreateTreeValidationCode,
 } from '@/composables/createTreeFormValidation'
-import { createEjemplar, fetchProvinces, fetchSpecies } from '@/services/catalog/catalogService'
+import { createTree, fetchProvinces, fetchSpecies } from '@/services/catalog/catalogService'
 import {
   ObjectStorageUploadError,
-  uploadPhotosForEjemplarAfterCreate,
-} from '@/services/media/ejemplarPhotoUploadSequence'
+  uploadPhotosForTreeAfterCreate,
+} from '@/services/media/treePhotoUploadSequence'
 import type {
   MasterListItem,
   PublicationState,
@@ -26,7 +26,7 @@ interface SelectOption<TValue extends string> {
 
 type FieldErrors = Partial<Record<CreateTreeField, string>>
 
-export function useCreateEjemplarForm() {
+export function useCreateTreeForm() {
   const { t } = useI18n()
   const { toMessage } = useApiErrorMapper()
   const species = ref<MasterListItem[]>([])
@@ -122,7 +122,7 @@ export function useCreateEjemplarForm() {
       const altitudeTrimmed = form.altitude.trim()
       const altitudeParsed = altitudeTrimmed === '' ? Number.NaN : Number(altitudeTrimmed)
 
-      const response = await createEjemplar({
+      const response = await createTree({
         speciesId: Number(form.speciesId),
         provinceId: Number(form.provinceId),
         municipality: municipalityTrimmed === '' ? undefined : municipalityTrimmed,
@@ -133,15 +133,15 @@ export function useCreateEjemplarForm() {
         publicationState: form.publicationState,
         publicMapVisibility: form.publicMapVisibility,
       })
-      const ejemplarId = response.ejemplarId
+      const treeId = response.treeId
       const files = selectedPhotoFiles.value
       if (files.length > 0) {
         try {
-          await uploadPhotosForEjemplarAfterCreate(ejemplarId, files)
-          submitSuccess.value = t('treeForm.messages.createdWithPhotos', { ejemplarId })
+          await uploadPhotosForTreeAfterCreate(treeId, files)
+          submitSuccess.value = t('treeForm.messages.createdWithPhotos', { treeId: treeId })
           selectedPhotoFiles.value = []
         } catch (photoError: unknown) {
-          submitSuccess.value = t('treeForm.messages.created', { ejemplarId })
+          submitSuccess.value = t('treeForm.messages.created', { treeId: treeId })
           if (photoError instanceof ObjectStorageUploadError) {
             photosUploadError.value = t('treeForm.messages.photoStorageUploadFailed', {
               status: photoError.status,
@@ -151,7 +151,7 @@ export function useCreateEjemplarForm() {
           }
         }
       } else {
-        submitSuccess.value = t('treeForm.messages.created', { ejemplarId })
+        submitSuccess.value = t('treeForm.messages.created', { treeId: treeId })
       }
     } catch (error: unknown) {
       submitError.value = toMessage(error)

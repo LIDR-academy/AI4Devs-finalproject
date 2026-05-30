@@ -3,17 +3,17 @@ package com.mtl.catalog.infrastructure.persistence.jpa.repository.projection;
 import java.time.Instant;
 
 public interface CollaboratorEjemplarListRow {
-  Long getEjemplarId();
+  Long getTreeId();
 
   Long getSpeciesId();
 
-  String getNombreComun();
+  String getCommonName();
 
-  String getNombreCientifico();
+  String getScientificName();
 
-  String getProvincia();
+  String getProvince();
 
-  String getMunicipio();
+  String getMunicipality();
 
   String getPublicationState();
 

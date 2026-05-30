@@ -1,4 +1,4 @@
-import { computed, reactive, ref, type ComputedRef } from 'vue'
+﻿import { computed, reactive, ref, type ComputedRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useAbortableRequest } from '@/composables/useAbortableRequest'
@@ -10,28 +10,28 @@ import {
 } from '@/composables/createTreeFormValidation'
 import { useCollaboratorCatalogErrorMapper } from '@/composables/useCollaboratorCatalogErrorMapper'
 import {
-  deleteCollaboratorEjemplar,
-  fetchCollaboratorEjemplarDetail,
-  updateCollaboratorEjemplar,
-} from '@/services/catalog/collaboratorEjemplaresService'
+  deleteCollaboratorTree,
+  fetchCollaboratorTreeDetail,
+  updateCollaboratorTree,
+} from '@/services/catalog/collaboratorTreesService'
 import { fetchProvinces, fetchSpecies } from '@/services/catalog/catalogService'
 import {
   TREE_PHOTO_MAX_PER_TREE,
   treePhotoValidationMessage,
   validateTreePhotoFile,
 } from '@/composables/treePhotoFileValidation'
-import { deleteEjemplarPhoto, fetchEjemplarPhotoGallery } from '@/services/media/ejemplarGalleryService'
+import { deleteTreePhoto, fetchTreePhotoGallery } from '@/services/media/treeGalleryService'
 import {
   ObjectStorageUploadError,
-  uploadPhotosForEjemplar,
-} from '@/services/media/ejemplarPhotoUploadSequence'
+  uploadPhotosForTree,
+} from '@/services/media/treePhotoUploadSequence'
 import type {
-  CreateEjemplarRequest,
+  CreateTreeRequest,
   MasterListItem,
   PublicationState,
   PublicMapVisibility,
 } from '@/types/catalog'
-import type { EjemplarPhotoGalleryItem } from '@/types/media'
+import type { TreePhotoGalleryItem } from '@/types/media'
 
 interface SelectOption<TValue extends string> {
   value: TValue
@@ -49,7 +49,7 @@ function parseRequiredInt(value: unknown): number | undefined {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined
 }
 
-function buildPayload(form: CreateTreeFormModel): CreateEjemplarRequest | null {
+function buildPayload(form: CreateTreeFormModel): CreateTreeRequest | null {
   const speciesId = parseRequiredInt(form.speciesId)
   const provinceId = parseRequiredInt(form.provinceId)
   const latitude = Number(filterText(form.latitude))
@@ -75,7 +75,7 @@ function buildPayload(form: CreateTreeFormModel): CreateEjemplarRequest | null {
   }
 }
 
-export function useEditEjemplarForm(ejemplarId: ComputedRef<number | null>) {
+export function useEditTreeForm(treeId: ComputedRef<number | null>) {
   const { t } = useI18n()
   const router = useRouter()
   const { toMessage } = useCollaboratorCatalogErrorMapper()
@@ -83,7 +83,7 @@ export function useEditEjemplarForm(ejemplarId: ComputedRef<number | null>) {
 
   const species = ref<MasterListItem[]>([])
   const provinces = ref<MasterListItem[]>([])
-  const galleryPhotos = ref<EjemplarPhotoGalleryItem[]>([])
+  const galleryPhotos = ref<TreePhotoGalleryItem[]>([])
   const isLoading = ref(false)
   const loadError = ref('')
   const isSubmitting = ref(false)
@@ -156,7 +156,7 @@ export function useEditEjemplarForm(ejemplarId: ComputedRef<number | null>) {
   }
 
   function applyDetailToForm(
-    detail: Awaited<ReturnType<typeof fetchCollaboratorEjemplarDetail>>,
+    detail: Awaited<ReturnType<typeof fetchCollaboratorTreeDetail>>,
   ): void {
     form.speciesId = String(detail.speciesId)
     form.provinceId = String(detail.provinceId)
@@ -185,15 +185,15 @@ export function useEditEjemplarForm(ejemplarId: ComputedRef<number | null>) {
     }
   }
 
-  async function loadEjemplar(): Promise<string> {
-    const id = ejemplarId.value
+  async function loadTree(): Promise<string> {
+    const id = treeId.value
     if (!id) {
       loadError.value = t('treeEdit.messages.invalidId')
       return ''
     }
 
     const [detail, photos] = await runWithAbort((signal) =>
-      Promise.all([fetchCollaboratorEjemplarDetail(id, signal), fetchEjemplarPhotoGallery(id, signal)]),
+      Promise.all([fetchCollaboratorTreeDetail(id, signal), fetchTreePhotoGallery(id, signal)]),
     )
     applyDetailToForm(detail)
     galleryPhotos.value = photos
@@ -201,7 +201,7 @@ export function useEditEjemplarForm(ejemplarId: ComputedRef<number | null>) {
   }
 
   async function initialize(): Promise<string> {
-    const id = ejemplarId.value
+    const id = treeId.value
     if (!id) {
       loadError.value = t('treeEdit.messages.invalidId')
       return ''
@@ -213,7 +213,7 @@ export function useEditEjemplarForm(ejemplarId: ComputedRef<number | null>) {
 
     try {
       await loadMasters()
-      const speciesLabel = await loadEjemplar()
+      const speciesLabel = await loadTree()
       return speciesLabel
     } catch (error: unknown) {
       if (isRequestAbortError(error)) {
@@ -231,7 +231,7 @@ export function useEditEjemplarForm(ejemplarId: ComputedRef<number | null>) {
   }
 
   async function submit(): Promise<boolean> {
-    const id = ejemplarId.value
+    const id = treeId.value
     if (!id) {
       submitError.value = t('treeEdit.messages.invalidId')
       return false
@@ -252,7 +252,7 @@ export function useEditEjemplarForm(ejemplarId: ComputedRef<number | null>) {
 
     isSubmitting.value = true
     try {
-      await runWithAbort((signal) => updateCollaboratorEjemplar(id, payload, signal))
+      await runWithAbort((signal) => updateCollaboratorTree(id, payload, signal))
       await router.push({ name: 'mis-ejemplares' })
       return true
     } catch (error: unknown) {
@@ -267,7 +267,7 @@ export function useEditEjemplarForm(ejemplarId: ComputedRef<number | null>) {
   }
 
   async function addGalleryPhoto(file: File): Promise<boolean> {
-    const id = ejemplarId.value
+    const id = treeId.value
     if (!id) {
       galleryPhotoError.value = t('treeEdit.messages.invalidId')
       return false
@@ -287,11 +287,11 @@ export function useEditEjemplarForm(ejemplarId: ComputedRef<number | null>) {
     isUploadingPhoto.value = true
     try {
       await runWithAbort(async (signal) => {
-        await uploadPhotosForEjemplar(id, [file], {
+        await uploadPhotosForTree(id, [file], {
           startOrden: galleryPhotos.value.length,
           signal,
         })
-        galleryPhotos.value = await fetchEjemplarPhotoGallery(id, signal)
+        galleryPhotos.value = await fetchTreePhotoGallery(id, signal)
       })
       return true
     } catch (error: unknown) {
@@ -312,7 +312,7 @@ export function useEditEjemplarForm(ejemplarId: ComputedRef<number | null>) {
   }
 
   async function removeGalleryPhoto(photoId: number): Promise<boolean> {
-    const id = ejemplarId.value
+    const id = treeId.value
     if (!id) {
       galleryPhotoError.value = t('treeEdit.messages.invalidId')
       return false
@@ -322,8 +322,8 @@ export function useEditEjemplarForm(ejemplarId: ComputedRef<number | null>) {
     isDeletingPhoto.value = true
     try {
       await runWithAbort(async (signal) => {
-        await deleteEjemplarPhoto(photoId, signal)
-        galleryPhotos.value = await fetchEjemplarPhotoGallery(id, signal)
+        await deleteTreePhoto(photoId, signal)
+        galleryPhotos.value = await fetchTreePhotoGallery(id, signal)
       })
       return true
     } catch (error: unknown) {
@@ -337,8 +337,8 @@ export function useEditEjemplarForm(ejemplarId: ComputedRef<number | null>) {
     }
   }
 
-  async function removeEjemplar(): Promise<boolean> {
-    const id = ejemplarId.value
+  async function removeTree(): Promise<boolean> {
+    const id = treeId.value
     if (!id) {
       deleteError.value = t('treeEdit.messages.invalidId')
       return false
@@ -347,7 +347,7 @@ export function useEditEjemplarForm(ejemplarId: ComputedRef<number | null>) {
     deleteError.value = ''
     isDeleting.value = true
     try {
-      await runWithAbort((signal) => deleteCollaboratorEjemplar(id, signal))
+      await runWithAbort((signal) => deleteCollaboratorTree(id, signal))
       await router.push({ name: 'mis-ejemplares' })
       return true
     } catch (error: unknown) {
@@ -385,6 +385,6 @@ export function useEditEjemplarForm(ejemplarId: ComputedRef<number | null>) {
     submit,
     addGalleryPhoto,
     removeGalleryPhoto,
-    removeEjemplar,
+    removeTree,
   }
 }

@@ -77,8 +77,8 @@ public class MasterDataQueryService {
   @Transactional(readOnly = true)
   @Cacheable(cacheNames = CatalogCacheConfig.CACHE_PUBLIC_PROVINCE_NAMES, key = "'all'")
   public PublicProvinceNamesResponse listPublicProvinceNames() {
-    List<String> nombres = provinciaReadRepository.findAllProvinceNamesOrdered();
-    return new PublicProvinceNamesResponse(nombres);
+    List<String> names = provinciaReadRepository.findAllProvinceNamesOrdered();
+    return new PublicProvinceNamesResponse(names);
   }
 
   @Transactional(readOnly = true)

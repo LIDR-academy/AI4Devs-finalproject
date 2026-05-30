@@ -83,7 +83,7 @@ class MediaPublicPrimaryPhotoControllerWebMvcTest {
 
     mockMvc
         .perform(
-            withJwtPrincipal(get("/api/media/public/ejemplares/5/primary-photo"), authentication))
+            withJwtPrincipal(get("/api/media/public/trees/5/primary-photo"), authentication))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.IMAGE_JPEG))
         .andExpect(content().bytes(new byte[] {(byte) 0xff, (byte) 0xd8}));

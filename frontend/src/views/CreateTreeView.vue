@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
@@ -6,7 +6,7 @@ import TreePhotoUploadPicker from '@/components/TreePhotoUploadPicker.vue'
 import TreeLocationMapPreview from '@/components/TreeLocationMapPreview.vue'
 import { areLatLngInValidRange } from '@/composables/createTreeFormValidation'
 import { useTreeLocationAutofill } from '@/composables/useTreeLocationAutofill'
-import { useCreateEjemplarForm } from '@/composables/useCreateEjemplarForm'
+import { useCreateTreeForm } from '@/composables/useCreateTreeForm'
 import type { MasterListItem } from '@/types/catalog'
 
 const { t } = useI18n()
@@ -27,7 +27,7 @@ const {
   selectedPhotoFiles,
   loadMasters,
   submit,
-} = useCreateEjemplarForm()
+} = useCreateTreeForm()
 
 const showMapMarker = computed(() => areLatLngInValidRange(form))
 interface CoordinatesPayload {

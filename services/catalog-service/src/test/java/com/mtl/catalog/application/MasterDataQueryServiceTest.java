@@ -56,7 +56,7 @@ class MasterDataQueryServiceTest {
 
     PublicProvinceNamesResponse response = service.listPublicProvinceNames();
 
-    assertThat(response.nombres()).containsExactly("Burgos", "León");
+    assertThat(response.names()).containsExactly("Burgos", "León");
     verify(provinciaReadRepository).findAllProvinceNamesOrdered();
   }
 

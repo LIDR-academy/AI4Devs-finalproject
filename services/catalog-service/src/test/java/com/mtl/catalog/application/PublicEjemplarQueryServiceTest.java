@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.mtl.catalog.dto.PublicEjemplarListQuery;
 import com.mtl.catalog.exception.CatalogNotFoundException;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.PublicEjemplarReadRepository;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.projection.PublicEjemplarDetailRow;
@@ -38,14 +39,14 @@ class PublicEjemplarQueryServiceTest {
             any(), any(), any(), any(), any(), any(), any(), any(Pageable.class)))
         .thenReturn(page);
 
-    PublicEjemplarQueryService.PublicEjemplarFilters filters =
-        new PublicEjemplarQueryService.PublicEjemplarFilters(
-            "Quercus", "Madrid", "Madrid", "BORRADOR", "PRIVADO");
+    var query =
+        new PublicEjemplarListQuery("Quercus", "Madrid", "Madrid", "BORRADOR", "PRIVADO", "species,asc");
 
-    var response = publicEjemplarQueryService.listPublishedEjemplares(0, 20, "especie,asc", filters, null);
+    var response = publicEjemplarQueryService.listPublishedEjemplares(0, 20, query, null);
 
     ArgumentCaptor<String> estadoCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<String> visibilidadCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<String> sortFieldCaptor = ArgumentCaptor.forClass(String.class);
     verify(publicEjemplarReadRepository)
         .findPublicEjemplarRows(
             any(),
@@ -53,15 +54,17 @@ class PublicEjemplarQueryServiceTest {
             any(),
             estadoCaptor.capture(),
             visibilidadCaptor.capture(),
-            eq("especie"),
+            sortFieldCaptor.capture(),
             eq("asc"),
             any(Pageable.class));
 
     assertEquals("PUBLICADO", estadoCaptor.getValue());
     assertEquals("PUBLICO", visibilidadCaptor.getValue());
+    assertEquals("especie", sortFieldCaptor.getValue());
     assertEquals(1, response.content().size());
-    assertEquals("PUBLICADO", response.content().getFirst().estado());
-    assertEquals("PUBLICO", response.content().getFirst().visibilidad());
+    assertEquals("PUBLICADO", response.content().getFirst().publicationState());
+    assertEquals("PUBLICO", response.content().getFirst().publicMapVisibility());
+    assertEquals("species,asc", response.sort());
   }
 
   @Test
@@ -94,116 +97,116 @@ class PublicEjemplarQueryServiceTest {
 
     var detail = publicEjemplarQueryService.getPublishedEjemplarDetail(42L, null);
 
-    assertEquals(42L, detail.ejemplarId());
-    assertEquals("PUBLICADO", detail.estado());
-    assertEquals("PUBLICO", detail.visibilidad());
+    assertEquals(42L, detail.treeId());
+    assertEquals("PUBLICADO", detail.publicationState());
+    assertEquals("PUBLICO", detail.publicMapVisibility());
   }
 
   private record PublicEjemplarListRowStub(
-      Long ejemplarId, String nombreComun, String nombreCientifico, String provincia, String municipio)
+      Long treeId, String commonName, String scientificName, String province, String municipality)
       implements PublicEjemplarListRow {
     @Override
-    public String getEstado() {
+    public String getPublicationState() {
       return "PUBLICADO";
     }
 
     @Override
-    public String getVisibilidad() {
+    public String getPublicMapVisibility() {
       return "PUBLICO";
     }
 
     @Override
-    public Long getEjemplarId() {
-      return ejemplarId;
+    public Long getTreeId() {
+      return treeId;
     }
 
     @Override
-    public String getNombreComun() {
-      return nombreComun;
+    public String getCommonName() {
+      return commonName;
     }
 
     @Override
-    public String getNombreCientifico() {
-      return nombreCientifico;
+    public String getScientificName() {
+      return scientificName;
     }
 
     @Override
-    public String getProvincia() {
-      return provincia;
+    public String getProvince() {
+      return province;
     }
 
     @Override
-    public String getMunicipio() {
-      return municipio;
+    public String getMunicipality() {
+      return municipality;
     }
   }
 
   private record PublicEjemplarDetailRowStub(
-      Long ejemplarId,
-      String nombreComun,
-      String nombreCientifico,
-      String provincia,
-      String municipio,
-      String estado,
-      String visibilidad,
-      String descripcion,
-      BigDecimal latitud,
-      BigDecimal longitud,
-      Integer altura)
+      Long treeId,
+      String commonName,
+      String scientificName,
+      String province,
+      String municipality,
+      String publicationState,
+      String publicMapVisibility,
+      String description,
+      BigDecimal latitude,
+      BigDecimal longitude,
+      Integer altitude)
       implements PublicEjemplarDetailRow {
     @Override
-    public Long getEjemplarId() {
-      return ejemplarId;
+    public Long getTreeId() {
+      return treeId;
     }
 
     @Override
-    public String getNombreComun() {
-      return nombreComun;
+    public String getCommonName() {
+      return commonName;
     }
 
     @Override
-    public String getNombreCientifico() {
-      return nombreCientifico;
+    public String getScientificName() {
+      return scientificName;
     }
 
     @Override
-    public String getProvincia() {
-      return provincia;
+    public String getProvince() {
+      return province;
     }
 
     @Override
-    public String getMunicipio() {
-      return municipio;
+    public String getMunicipality() {
+      return municipality;
     }
 
     @Override
-    public String getEstado() {
-      return estado;
+    public String getPublicationState() {
+      return publicationState;
     }
 
     @Override
-    public String getVisibilidad() {
-      return visibilidad;
+    public String getPublicMapVisibility() {
+      return publicMapVisibility;
     }
 
     @Override
-    public String getDescripcion() {
-      return descripcion;
+    public String getDescription() {
+      return description;
     }
 
     @Override
-    public BigDecimal getLatitud() {
-      return latitud;
+    public BigDecimal getLatitude() {
+      return latitude;
     }
 
     @Override
-    public BigDecimal getLongitud() {
-      return longitud;
+    public BigDecimal getLongitude() {
+      return longitude;
     }
 
     @Override
-    public Integer getAltura() {
-      return altura;
+    public Integer getAltitude() {
+      return altitude;
     }
   }
 }

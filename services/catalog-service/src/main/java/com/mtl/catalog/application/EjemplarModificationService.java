@@ -49,7 +49,7 @@ public class EjemplarModificationService {
 
     catalogAuditService.recordEjemplarModified(
         actor.getId(),
-        updated.ejemplarId(),
+        updated.treeId(),
         updated.especieIdPrev(),
         updated.provinciaIdPrev(),
         updated.especieIdNew(),

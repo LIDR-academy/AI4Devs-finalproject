@@ -47,12 +47,12 @@ class MediaEjemplarPhotosDeleteServiceTest {
     Fotografia photo = new Fotografia();
     photo.setFotografiaId(1L);
     photo.setBucketAlmacenamiento("mtl-photos");
-    photo.setClaveObjeto("ejemplares/5/a.jpg");
+    photo.setClaveObjeto("trees/5/a.jpg");
     when(fotografiaRepository.findAllByEjemplarId(5L)).thenReturn(List.of(photo));
 
     service.deleteAllPhotosForEjemplar(5L, jwt);
 
-    verify(objectStorageRemover).removeObject("mtl-photos", "ejemplares/5/a.jpg");
+    verify(objectStorageRemover).removeObject("mtl-photos", "trees/5/a.jpg");
     verify(fotografiaRepository).deleteAll(List.of(photo));
   }
 
@@ -62,11 +62,11 @@ class MediaEjemplarPhotosDeleteServiceTest {
     when(catalogMediaPermissionClient.resolveActorUsuarioAppIdForEjemplar(5L, jwt)).thenReturn(42L);
     Fotografia photo = new Fotografia();
     photo.setBucketAlmacenamiento("mtl-photos");
-    photo.setClaveObjeto("ejemplares/5/a.jpg");
+    photo.setClaveObjeto("trees/5/a.jpg");
     when(fotografiaRepository.findAllByEjemplarId(5L)).thenReturn(List.of(photo));
     org.mockito.Mockito.doThrow(new IllegalStateException("minio down"))
         .when(objectStorageRemover)
-        .removeObject(eq("mtl-photos"), eq("ejemplares/5/a.jpg"));
+        .removeObject(eq("mtl-photos"), eq("trees/5/a.jpg"));
 
     assertThatThrownBy(() -> service.deleteAllPhotosForEjemplar(5L, jwt))
         .isInstanceOf(MediaStorageException.class);

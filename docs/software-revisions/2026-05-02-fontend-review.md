@@ -4,7 +4,7 @@
 - **Revisor**: Asistente IA (perfil: experto frontend Vue)
 - **Estado**: Borrador
 
-> **Nota (2026-05):** referencias a rutas o módulos `*Tree*` en este informe son anteriores a [ADR-0006](../adr/0006-ejemplar-nomenclature-contracts.md); el código actual usa *ejemplar* (`ejemplarPhotoUploadSequence`, `/ejemplares`, etc.).
+> **Archivo histórico:** no actualizar el cuerpo de este informe; los hallazgos y rutas de fichero citados son del corte 2026-05-02 (p. ej. mezcla `*Tree*` / `nombreComun` en tipos, rutas `/trees` si aparecen). **Referencia actual:** contrato y rutas SPA con *ejemplar* ([ADR-0006](../adr/0006-ejemplar-aggregate-http-kafka-naming.md), [ADR-0007](../adr/0007-english-http-spanish-persistence.md)); código Vue/TS en inglés técnico unificado en **Tree/Trees** (`CreateTreeView`, `treeGalleryService`, propiedad JSON `treeId`). Ver [2026-05-30-naming-conventions-rg-reaudit.md](./2026-05-30-naming-conventions-rg-reaudit.md).
 
 ## Resumen ejecutivo
 Tras el avance de los cortes anteriores, el frontend cumple ya la mayoría de reglas de [`frontend-vue3.mdc`](../../.cursor/rules/frontend-vue3.mdc) y [`frontend-security.mdc`](../../.cursor/rules/frontend-security.mdc): Pinia como estado de auth, capa HTTP tipada con `NetworkError` / `HttpError`, composables de validación puros, guard de router con silent refresh, alias `@/`, i18n centralizada y tests mínimos con Vitest. Quedan **una incidencia crítica** y **seis altas** de tipo arquitectural / seguridad / performance que deberían abordarse antes de añadir nuevas HU significativas.

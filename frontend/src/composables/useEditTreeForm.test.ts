@@ -3,7 +3,7 @@ import { createI18n } from 'vue-i18n'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { HttpError } from '@/services/http/apiClient'
 import { es } from '@/i18n/locales/es'
-import { useEditEjemplarForm } from '@/composables/useEditEjemplarForm'
+import { useEditTreeForm } from '@/composables/useEditTreeForm'
 
 const routerPush = vi.hoisted(() => vi.fn())
 
@@ -16,18 +16,18 @@ vi.mock('@/services/catalog/catalogService', () => ({
   fetchProvinces: vi.fn(),
 }))
 
-vi.mock('@/services/catalog/collaboratorEjemplaresService', () => ({
-  fetchCollaboratorEjemplarDetail: vi.fn(),
-  updateCollaboratorEjemplar: vi.fn(),
-  deleteCollaboratorEjemplar: vi.fn(),
+vi.mock('@/services/catalog/collaboratorTreesService', () => ({
+  fetchCollaboratorTreeDetail: vi.fn(),
+  updateCollaboratorTree: vi.fn(),
+  deleteCollaboratorTree: vi.fn(),
 }))
 
-vi.mock('@/services/media/ejemplarGalleryService', () => ({
-  fetchEjemplarPhotoGallery: vi.fn(),
-  deleteEjemplarPhoto: vi.fn(),
+vi.mock('@/services/media/treeGalleryService', () => ({
+  fetchTreePhotoGallery: vi.fn(),
+  deleteTreePhoto: vi.fn(),
 }))
 
-vi.mock('@/services/media/ejemplarPhotoUploadSequence', () => ({
+vi.mock('@/services/media/treePhotoUploadSequence', () => ({
   ObjectStorageUploadError: class ObjectStorageUploadError extends Error {
     readonly status: number
     constructor(status: number, message: string) {
@@ -36,19 +36,19 @@ vi.mock('@/services/media/ejemplarPhotoUploadSequence', () => ({
       this.status = status
     }
   },
-  uploadPhotosForEjemplar: vi.fn(),
+  uploadPhotosForTree: vi.fn(),
 }))
 
 import { fetchProvinces, fetchSpecies } from '@/services/catalog/catalogService'
 import {
-  deleteCollaboratorEjemplar,
-  fetchCollaboratorEjemplarDetail,
-  updateCollaboratorEjemplar,
-} from '@/services/catalog/collaboratorEjemplaresService'
-import { fetchEjemplarPhotoGallery } from '@/services/media/ejemplarGalleryService'
+  deleteCollaboratorTree,
+  fetchCollaboratorTreeDetail,
+  updateCollaboratorTree,
+} from '@/services/catalog/collaboratorTreesService'
+import { fetchTreePhotoGallery } from '@/services/media/treeGalleryService'
 
 const detailFixture = {
-  ejemplarId: 42,
+  treeId: 42,
   speciesId: 1,
   speciesLabel: 'Roble (Quercus robur)',
   provinceId: 2,
@@ -65,12 +65,12 @@ const detailFixture = {
   modifiedAt: '2024-01-02T00:00:00Z',
 }
 
-function mountForm(ejemplarId: number | null) {
-  let api!: ReturnType<typeof useEditEjemplarForm>
-  const idRef = computed(() => ejemplarId)
+function mountForm(treeId: number | null) {
+  let api!: ReturnType<typeof useEditTreeForm>
+  const idRef = computed(() => treeId)
   const app = createApp({
     setup() {
-      api = useEditEjemplarForm(idRef)
+      api = useEditTreeForm(idRef)
       return () => null
     },
   })
@@ -85,16 +85,16 @@ function mountForm(ejemplarId: number | null) {
   return api
 }
 
-describe('useEditEjemplarForm', () => {
+describe('useEditTreeForm', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     routerPush.mockReset()
     vi.mocked(fetchSpecies).mockResolvedValue([{ id: 1, label: 'Roble (Quercus robur)' }])
     vi.mocked(fetchProvinces).mockResolvedValue([{ id: 2, label: 'Madrid' }])
-    vi.mocked(fetchCollaboratorEjemplarDetail).mockResolvedValue(detailFixture)
-    vi.mocked(fetchEjemplarPhotoGallery).mockResolvedValue([])
-    vi.mocked(updateCollaboratorEjemplar).mockResolvedValue(detailFixture)
-    vi.mocked(deleteCollaboratorEjemplar).mockResolvedValue(undefined)
+    vi.mocked(fetchCollaboratorTreeDetail).mockResolvedValue(detailFixture)
+    vi.mocked(fetchTreePhotoGallery).mockResolvedValue([])
+    vi.mocked(updateCollaboratorTree).mockResolvedValue(detailFixture)
+    vi.mocked(deleteCollaboratorTree).mockResolvedValue(undefined)
   })
 
   it('initialize con id inválido expone loadError', async () => {
@@ -126,7 +126,7 @@ describe('useEditEjemplarForm', () => {
     await nextTick()
 
     expect(ok).toBe(true)
-    expect(updateCollaboratorEjemplar).toHaveBeenCalledWith(
+    expect(updateCollaboratorTree).toHaveBeenCalledWith(
       42,
       expect.objectContaining({ speciesId: 1, provinceId: 2 }),
       expect.any(AbortSignal),
@@ -144,24 +144,24 @@ describe('useEditEjemplarForm', () => {
     await nextTick()
 
     expect(ok).toBe(false)
-    expect(updateCollaboratorEjemplar).not.toHaveBeenCalled()
+    expect(updateCollaboratorTree).not.toHaveBeenCalled()
   })
 
-  it('removeEjemplar borra y navega a mis-ejemplares', async () => {
+  it('removeTree borra y navega a mis-ejemplares', async () => {
     const form = mountForm(42)
     await form.initialize()
     await nextTick()
 
-    const ok = await form.removeEjemplar()
+    const ok = await form.removeTree()
     await nextTick()
 
     expect(ok).toBe(true)
-    expect(deleteCollaboratorEjemplar).toHaveBeenCalledWith(42, expect.any(AbortSignal))
+    expect(deleteCollaboratorTree).toHaveBeenCalledWith(42, expect.any(AbortSignal))
     expect(routerPush).toHaveBeenCalledWith({ name: 'mis-ejemplares' })
   })
 
   it('submit con HttpError expone mensaje mapeado', async () => {
-    vi.mocked(updateCollaboratorEjemplar).mockRejectedValue(
+    vi.mocked(updateCollaboratorTree).mockRejectedValue(
       new HttpError(403, {
         title: 'Forbidden',
         status: 403,

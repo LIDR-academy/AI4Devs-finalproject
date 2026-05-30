@@ -22,7 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class EjemplarDeleteServiceTest {
+class TreeDeleteServiceTest {
 
   @Mock private EjemplarRepository ejemplarRepository;
   @Mock private EjemplarEnrichmentDeletionPort ejemplarEnrichmentDeletionPort;
@@ -30,18 +30,18 @@ class EjemplarDeleteServiceTest {
   @InjectMocks private EjemplarDeleteService ejemplarDeleteService;
 
   @Test
-  void authorize_colaboradorPropietario_devuelveContexto() {
+  void authorize_ownerCollaborator_returnsContext() {
     when(ejemplarRepository.findById(42L)).thenReturn(Optional.of(ejemplar(42L, 7L, 10L, 28L)));
 
     EjemplarDeleteAuthorization auth = ejemplarDeleteService.authorize(42L, 7L, false);
 
     verify(ejemplarRepository).findById(42L);
-    assertThat(auth.ejemplarId()).isEqualTo(42L);
+    assertThat(auth.treeId()).isEqualTo(42L);
     assertThat(auth.especieId()).isEqualTo(10L);
   }
 
   @Test
-  void authorize_colaboradorAjeno_devuelve403() {
+  void authorize_otherCollaborator_returns403() {
     when(ejemplarRepository.findById(42L)).thenReturn(Optional.of(ejemplar(42L, 99L, 10L, 28L)));
 
     assertThatThrownBy(() -> ejemplarDeleteService.authorize(42L, 7L, false))
@@ -49,7 +49,7 @@ class EjemplarDeleteServiceTest {
   }
 
   @Test
-  void commitPhysicalDelete_borraArbolRegistraAuditoriaYHookMongo() {
+  void commitPhysicalDelete_borrarTreeRegistraAuditoriaYHookMongo() {
     EjemplarDeleteAuthorization auth = new EjemplarDeleteAuthorization(42L, 10L, 28L);
     when(ejemplarRepository.existsById(42L)).thenReturn(true);
 
@@ -61,7 +61,7 @@ class EjemplarDeleteServiceTest {
   }
 
   @Test
-  void authorize_inexistente_devuelve404() {
+  void authorize_notFound_returns404() {
     when(ejemplarRepository.findById(999L)).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> ejemplarDeleteService.authorize(999L, 7L, false))

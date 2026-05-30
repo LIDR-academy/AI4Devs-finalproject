@@ -24,7 +24,7 @@ public class RestMediaEjemplarPhotosClient implements MediaEjemplarPhotosClient 
     try {
       mediaRestClient
           .delete()
-          .uri("/api/media/ejemplares/{ejemplarId}/photos", ejemplarId)
+          .uri("/api/media/trees/{treeId}/photos", ejemplarId)
           .headers(h -> h.setBearerAuth(jwt.getTokenValue()))
           .retrieve()
           .toBodilessEntity();

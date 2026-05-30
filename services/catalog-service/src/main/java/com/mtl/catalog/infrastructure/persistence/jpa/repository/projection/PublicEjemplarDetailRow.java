@@ -3,25 +3,25 @@ package com.mtl.catalog.infrastructure.persistence.jpa.repository.projection;
 import java.math.BigDecimal;
 
 public interface PublicEjemplarDetailRow {
-  Long getEjemplarId();
+  Long getTreeId();
 
-  String getNombreComun();
+  String getCommonName();
 
-  String getNombreCientifico();
+  String getScientificName();
 
-  String getProvincia();
+  String getProvince();
 
-  String getMunicipio();
+  String getMunicipality();
 
-  String getEstado();
+  String getPublicationState();
 
-  String getVisibilidad();
+  String getPublicMapVisibility();
 
-  String getDescripcion();
+  String getDescription();
 
-  BigDecimal getLatitud();
+  BigDecimal getLatitude();
 
-  BigDecimal getLongitud();
+  BigDecimal getLongitude();
 
-  Integer getAltura();
+  Integer getAltitude();
 }
