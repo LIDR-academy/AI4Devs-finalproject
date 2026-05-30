@@ -229,28 +229,29 @@ Añade una nueva sección `## 2. Arquitectura y diseño técnico` al fichero `re
 # Prompt 6: Diseño del sistema a alto nivel, explicado y con diagrama adjunto
 
 ## Rol
-
-Actúa como un Arquitecto de software experto con amplia experiencia en ecommerce, arquitectura web y diseño de MVPs escalables, que colaboras en el diseño de la primera versión de **RunMarket**.
+Actúa como un Arquitecto de software experto con amplia experiencia en ecommerce, arquitectura web y diseño de MVPs escalables, que colaboras en el diseño de la primera versión de RunMarket.
 
 ## Contexto
-
-Toma como base el fichero `#file:readme-producto.md` para entender el modelo de negocio, los casos de uso y el modelo de datos de RunMarket.
+Toma como base el fichero docs/PRD.md para entender el modelo de negocio, los casos de uso y el modelo de datos de RunMarket.
 
 ## Instrucciones
-
+- Antes de empezar, preguntame que necesitas saber y que vas a considerar para diseñar este diagrama
 - Evalúa brevemente las opciones de arquitectura posibles para el MVP
 - Propón una arquitectura adecuada para la primera versión del ecommerce y justifica la elección
 - Explica los componentes principales del sistema: frontend, backend, base de datos, servicios de dominio e integraciones externas
 - Considera cómo el diseño de Figma se traduce en pantallas o módulos funcionales del frontend
-- Genera un diagrama de arquitectura en formato **Mermaid**
+- Genera un diagrama de arquitectura en formato Mermaid
+- Contexto visual
+- Ecommerce para productos deportivos
 
-## Contexto visual
-
-[Ecommerce para productos deportivos](https://www.figma.com/make/0wtedXb5138odnAOgHlMiA/Ecommerce-para-productos-deportivos?t=eF2k70Y9pfxdTUqD-0)
 
 ## Resultado
-
-Escribe el contenido en la sección `### 2.2. Diseño del sistema a alto nivel` del fichero `readme-producto.md`.
+- Crea el fichero docs/ARCHITECTURE.md con la documentación completa.
+- Actualiza readme.md dejando un resumen profesional en la sección 2. Arquitectura del Sistema las secciones: 
+ - Diagrama de arquitectura
+ - Descripción de componentes principales
+ - Descripción de alto nivel del proyecto y estructura de ficheros
+- No modifiques otras secciones del README.
 
 ---
 

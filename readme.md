@@ -126,29 +126,98 @@ Historial de pedidos con estado y detalle de productos.
 
 ## 2. Arquitectura del Sistema
 
-### **2.1. Diagrama de arquitectura:**
-> Usa el formato que consideres más adecuado para representar los componentes principales de la aplicación y las tecnologías utilizadas. Explica si sigue algún patrón predefinido, justifica por qué se ha elegido esta arquitectura, y destaca los beneficios principales que aportan al proyecto y justifican su uso, así como sacrificios o déficits que implica.
+> Documentación completa de arquitectura: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
+### **2.1. Diagrama de arquitectura:**
+
+RunMarket sigue una arquitectura de **frontend SSR desacoplado + API REST + base de datos relacional**. La separación en tres capas independientes permite testing unitario aislado en cada nivel y escala natural en versiones posteriores.
+
+```mermaid
+graph TB
+    subgraph Browser["Cliente — Navegador"]
+        UI["React · componentes hidratados"]
+    end
+
+    subgraph FE["Frontend — Next.js 14 SSR · :3000"]
+        SC["Server Components · SSR + SEO"]
+        CC["Client Components · Interactividad"]
+        APICL["API Client · fetch tipado"]
+    end
+
+    subgraph BE["Backend — Express REST API · :4000"]
+        ROUTER["Routers · /api/products /api/orders /api/cart /api/checkout"]
+        SVC["Domain Services · CatalogService · CartService · CheckoutService · OrderService"]
+        REPO["Repositories · abstracción de datos"]
+    end
+
+    subgraph DATA["Datos"]
+        ORM["Prisma ORM"]
+        PG[("PostgreSQL · :5432")]
+    end
+
+    UI <-->|HTTPS| SC
+    SC --- CC
+    SC --> APICL
+    CC --> APICL
+    APICL <-->|"REST JSON"| ROUTER
+    ROUTER --> SVC
+    SVC --> REPO
+    REPO --> ORM
+    ORM --> PG
+```
+
+**Patrón:** arquitectura en capas en el backend (Router → Controller → Service → Repository). SSR selectivo en el frontend: solo catálogo y ficha de producto se renderizan en servidor (valor SEO); carrito, checkout y pedidos son Client Components.
 
 ### **2.2. Descripción de componentes principales:**
 
-> Describe los componentes más importantes, incluyendo la tecnología utilizada
+| Componente | Tecnología | Responsabilidad |
+|---|---|---|
+| **Frontend** | Next.js 14 · React 18 · TypeScript · Tailwind CSS · shadcn/ui | Renderizado SSR de catálogo y fichas de producto; interactividad client-side para carrito y checkout |
+| **Backend API** | Node.js 20 · Express 4 · TypeScript · Zod | API REST con lógica de negocio organizada en Services; validación de entrada con Zod |
+| **ORM** | Prisma 5 | Abstracción type-safe de acceso a PostgreSQL; gestión de migraciones y seeds |
+| **Base de datos** | PostgreSQL 16 | Persistencia relacional del catálogo, pedidos e ítems de pedido |
+| **Tests unitarios** | Vitest + RTL (FE) · Jest + Supertest (BE) | Cobertura de componentes, services y endpoints de forma aislada |
+| **Tests E2E** | Playwright | Validación de flujos completos: filtrado → ficha → carrito → checkout → confirmación |
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
-> Representa la estructura del proyecto y explica brevemente el propósito de las carpetas principales, así como si obedece a algún patrón o arquitectura específica.
+El proyecto se organiza como **monorepo con npm workspaces** en tres paquetes independientes:
+
+```
+runmarket/
+├── frontend/          ← Next.js 14 (SSR · puerto 3000)
+│   └── src/
+│       ├── app/       ← App Router: rutas SSR y Client pages
+│       ├── components/← Catálogo, Producto, Carrito, Checkout
+│       ├── lib/       ← API client tipado hacia el backend
+│       └── types/     ← Tipos compartidos (Product, Order, CartItem)
+│
+├── backend/           ← Express REST API (puerto 4000)
+│   ├── src/
+│   │   ├── routes/    ← Definición de endpoints REST
+│   │   ├── controllers/← Capa HTTP: validación y respuesta
+│   │   ├── services/  ← Lógica de negocio (CatalogService, OrderService…)
+│   │   ├── repositories/← Acceso a datos via Prisma
+│   │   └── middleware/← CORS, error handler, logger
+│   └── prisma/        ← Schema, migraciones y seed de datos
+│
+└── e2e/               ← Playwright E2E tests
+    └── tests/         ← catalog.spec · product.spec · purchase.spec
+```
+
+El backend sigue el patrón **Repository + Service Layer**: los Services contienen la lógica de negocio pura (sin dependencias HTTP ni de base de datos directas), lo que permite testearlos de forma aislada con mocks de Repository.
 
 ### **2.4. Infraestructura y despliegue**
 
-> Detalla la infraestructura del proyecto, incluyendo un diagrama en el formato que creas conveniente, y explica el proceso de despliegue que se sigue
+> Pendiente de documentar.
 
 ### **2.5. Seguridad**
 
-> Enumera y describe las prácticas de seguridad principales que se han implementado en el proyecto, añadiendo ejemplos si procede
+> Pendiente de documentar.
 
 ### **2.6. Tests**
 
-> Describe brevemente algunos de los tests realizados
+> Pendiente de documentar.
 
 ---
 
