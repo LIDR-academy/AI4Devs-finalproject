@@ -2,6 +2,7 @@ package com.mtl.media.application;
 
 import com.mtl.media.domain.CategoriaFotografia;
 import com.mtl.media.domain.Fotografia;
+import com.mtl.media.infrastructure.client.catalog.CatalogPublicTreeVisibilityGuard;
 import com.mtl.media.infrastructure.persistence.jpa.repository.FotografiaRepository;
 import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
@@ -13,24 +14,21 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class MediaPublicPrimaryPhotoService {
 
   private final FotografiaRepository fotografiaRepository;
-  private final RestClient catalogRestClient;
+  private final CatalogPublicTreeVisibilityGuard catalogPublicTreeVisibilityGuard;
   private final MinioClient mediaMinioClient;
 
   public MediaPublicPrimaryPhotoService(
       FotografiaRepository fotografiaRepository,
-      RestClient catalogRestClient,
+      CatalogPublicTreeVisibilityGuard catalogPublicTreeVisibilityGuard,
       MinioClient mediaMinioClient) {
     this.fotografiaRepository = fotografiaRepository;
-    this.catalogRestClient = catalogRestClient;
+    this.catalogPublicTreeVisibilityGuard = catalogPublicTreeVisibilityGuard;
     this.mediaMinioClient = mediaMinioClient;
   }
 
@@ -39,12 +37,12 @@ public class MediaPublicPrimaryPhotoService {
    * (JWT opcional para colaboradores que ven borradores). Luego devuelve bytes desde el almacén si hay
    * foto principal no eliminada.
    */
-  public ResponseEntity<byte[]> loadPrimaryPhotoBytes(long ejemplarId, Jwt jwt) {
-    assertEjemplarVisibleInCatalog(ejemplarId, jwt);
+  public ResponseEntity<byte[]> loadPrimaryPhotoBytes(long treeId, Jwt jwt) {
+    catalogPublicTreeVisibilityGuard.assertVisibleInPublicCatalog(treeId, jwt);
 
     Fotografia foto =
         fotografiaRepository
-            .findPrincipalForEjemplar(ejemplarId, CategoriaFotografia.PUBLIC)
+            .findPrincipalForEjemplar(treeId, CategoriaFotografia.PUBLIC)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sin fotografía principal"));
 
     byte[] body;
@@ -69,33 +67,5 @@ public class MediaPublicPrimaryPhotoService {
 
     MediaType contentType = MediaType.parseMediaType(foto.getTipoMime());
     return ResponseEntity.ok().contentType(contentType).body(body);
-  }
-
-  private void assertEjemplarVisibleInCatalog(long ejemplarId, Jwt jwt) {
-    try {
-      catalogRestClient
-          .get()
-          .uri("/api/catalog/public/trees/{id}", ejemplarId)
-          .headers(
-              h -> {
-                if (jwt != null
-                    && jwt.getTokenValue() != null
-                    && !jwt.getTokenValue().isBlank()) {
-                  h.setBearerAuth(jwt.getTokenValue());
-                }
-              })
-          .retrieve()
-          .toBodilessEntity();
-    } catch (RestClientResponseException ex) {
-      if (ex.getStatusCode() == HttpStatus.NOT_FOUND) {
-        throw new ResponseStatusException(
-            HttpStatus.NOT_FOUND, "Ejemplar no disponible en consulta pública");
-      }
-      throw new ResponseStatusException(
-          HttpStatus.BAD_GATEWAY, "No se pudo validar la visibilidad del ejemplar en catálogo");
-    } catch (RestClientException ex) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_GATEWAY, "No se pudo validar la visibilidad del ejemplar en catálogo");
-    }
   }
 }
