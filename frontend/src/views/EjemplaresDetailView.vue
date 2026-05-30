@@ -49,8 +49,8 @@ const speciesTitle = computed(() => {
   if (!tree.value) {
     return ''
   }
-  const common = tree.value.nombreComun.trim()
-  const scientific = tree.value.nombreCientifico.trim()
+  const common = tree.value.commonName.trim()
+  const scientific = tree.value.scientificName.trim()
   if (common.length > 0) {
     return `${common} (${scientific})`
   }
@@ -58,8 +58,8 @@ const speciesTitle = computed(() => {
 })
 
 const mapLatLng = computed(() => ({
-  latitude: tree.value ? String(tree.value.latitud) : '',
-  longitude: tree.value ? String(tree.value.longitud) : '',
+  latitude: tree.value ? String(tree.value.latitude) : '',
+  longitude: tree.value ? String(tree.value.longitude) : '',
 }))
 
 const showMapMarker = computed(() => areLatLngInValidRange(mapLatLng.value))
@@ -219,7 +219,7 @@ onMounted(async () => {
             id="tree-detail-province"
             class="form-control"
             type="text"
-            :value="tree.provincia || '-'"
+            :value="tree.province || '-'"
             readonly
           />
         </div>
@@ -230,7 +230,7 @@ onMounted(async () => {
             id="tree-detail-municipality"
             class="form-control"
             type="text"
-            :value="tree.municipio || '-'"
+            :value="tree.municipality || '-'"
             readonly
           />
         </div>
@@ -241,7 +241,7 @@ onMounted(async () => {
             id="tree-detail-description"
             class="form-control form-textarea"
             rows="2"
-            :value="tree.descripcion || '-'"
+            :value="tree.description || '-'"
             readonly
           />
         </div>
@@ -249,12 +249,12 @@ onMounted(async () => {
         <div class="field-full tree-geo-row">
           <div class="field">
             <label class="form-label" for="tree-detail-latitude">{{ t('treesDetail.fields.latitude') }}</label>
-            <input id="tree-detail-latitude" class="form-control" type="text" :value="tree.latitud" readonly />
+            <input id="tree-detail-latitude" class="form-control" type="text" :value="tree.latitude" readonly />
           </div>
 
           <div class="field">
             <label class="form-label" for="tree-detail-longitude">{{ t('treesDetail.fields.longitude') }}</label>
-            <input id="tree-detail-longitude" class="form-control" type="text" :value="tree.longitud" readonly />
+            <input id="tree-detail-longitude" class="form-control" type="text" :value="tree.longitude" readonly />
           </div>
 
           <div class="field">
@@ -263,7 +263,7 @@ onMounted(async () => {
               id="tree-detail-altitude"
               class="form-control"
               type="text"
-              :value="tree.altura ?? '-'"
+              :value="tree.altitude ?? '-'"
               readonly
             />
           </div>
@@ -271,12 +271,12 @@ onMounted(async () => {
 
         <div class="field">
           <label class="form-label" for="tree-detail-state">{{ t('treesDetail.fields.state') }}</label>
-          <input id="tree-detail-state" class="form-control" type="text" :value="tree.estado" readonly />
+          <input id="tree-detail-state" class="form-control" type="text" :value="tree.publicationState" readonly />
         </div>
 
         <div class="field">
           <label class="form-label" for="tree-detail-visibility">{{ t('treesDetail.fields.visibility') }}</label>
-          <input id="tree-detail-visibility" class="form-control" type="text" :value="tree.visibilidad" readonly />
+          <input id="tree-detail-visibility" class="form-control" type="text" :value="tree.publicMapVisibility" readonly />
         </div>
 
         <div class="field-full actions">

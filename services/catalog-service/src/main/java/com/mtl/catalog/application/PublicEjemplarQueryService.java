@@ -59,12 +59,12 @@ public class PublicEjemplarQueryService {
                 row ->
                     new PublicEjemplarListItemDto(
                         row.getEjemplarId(),
-                        row.getNombreComun(),
-                        row.getNombreCientifico(),
-                        row.getProvincia(),
-                        row.getMunicipio(),
-                        row.getEstado(),
-                        row.getVisibilidad()));
+                        row.getCommonName(),
+                        row.getScientificName(),
+                        row.getProvince(),
+                        row.getMunicipality(),
+                        row.getPublicationState(),
+                        row.getPublicMapVisibility()));
 
     return new PublicEjemplarPageResponse(
         results.getContent(),
@@ -87,16 +87,16 @@ public class PublicEjemplarQueryService {
 
     return new PublicEjemplarDetailDto(
         row.getEjemplarId(),
-        row.getNombreComun(),
-        row.getNombreCientifico(),
-        row.getProvincia(),
-        row.getMunicipio(),
-        row.getEstado(),
-        row.getVisibilidad(),
-        row.getDescripcion(),
-        row.getLatitud(),
-        row.getLongitud(),
-        row.getAltura());
+        row.getCommonName(),
+        row.getScientificName(),
+        row.getProvince(),
+        row.getMunicipality(),
+        row.getPublicationState(),
+        row.getPublicMapVisibility(),
+        row.getDescription(),
+        row.getLatitude(),
+        row.getLongitude(),
+        row.getAltitude());
   }
 
   private static SortCriteria normalizeSort(String sort) {

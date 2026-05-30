@@ -1220,7 +1220,7 @@ components:
     MediaPhotoMetadataResponse:
       type: object
       required:
-        - fotografiaId
+        - photoId
         - ejemplarId
         - bucket
         - objectKey
@@ -1231,7 +1231,7 @@ components:
         - esPrincipal
         - subidaEn
       properties:
-        fotografiaId:
+        photoId:
           type: integer
           format: int64
         ejemplarId:
@@ -1269,30 +1269,30 @@ components:
       type: object
       required:
         - ejemplarId
-        - nombreComun
-        - nombreCientifico
-        - provincia
-        - municipio
-        - estado
-        - visibilidad
+        - commonName
+        - scientificName
+        - province
+        - municipality
+        - publicationState
+        - publicMapVisibility
       properties:
         ejemplarId:
           type: integer
           format: int64
-        nombreComun:
+        commonName:
           type: string
           description: Nombre común de la especie (puede ser cadena vacía si no consta en maestros).
-        nombreCientifico:
+        scientificName:
           type: string
           description: Nombre científico de la especie.
-        provincia:
+        province:
           type: string
-        municipio:
+        municipality:
           type: string
-        estado:
+        publicationState:
           type: string
           enum: [BORRADOR, PUBLICADO]
-        visibilidad:
+        publicMapVisibility:
           type: string
           enum: [PRIVADO, PUBLICO]
     PublicEjemplarPageResponse:
@@ -1328,52 +1328,52 @@ components:
       type: object
       required:
         - ejemplarId
-        - nombreComun
-        - nombreCientifico
-        - provincia
-        - municipio
-        - estado
-        - visibilidad
-        - descripcion
-        - latitud
-        - longitud
+        - commonName
+        - scientificName
+        - province
+        - municipality
+        - publicationState
+        - publicMapVisibility
+        - description
+        - latitude
+        - longitude
       properties:
         ejemplarId:
           type: integer
           format: int64
-        nombreComun:
+        commonName:
           type: string
           description: Nombre común de la especie (puede ser cadena vacía si no consta en maestros).
-        nombreCientifico:
+        scientificName:
           type: string
           description: Nombre científico de la especie.
-        provincia:
+        province:
           type: string
-        municipio:
+        municipality:
           type: string
-        estado:
+        publicationState:
           type: string
           enum: [BORRADOR, PUBLICADO]
-        visibilidad:
+        publicMapVisibility:
           type: string
           enum: [PRIVADO, PUBLICO]
-        descripcion:
+        description:
           type: string
-        latitud:
+        latitude:
           type: number
           format: double
-        longitud:
+        longitude:
           type: number
           format: double
-        altura:
+        altitude:
           type: integer
           format: int32
           nullable: true
     PublicProvinceNamesResponse:
       type: object
-      required: [nombres]
+      required: [names]
       properties:
-        nombres:
+        names:
           type: array
           items:
             type: string
@@ -1452,10 +1452,10 @@ components:
       required:
         - ejemplarId
         - speciesId
-        - nombreComun
-        - nombreCientifico
-        - provincia
-        - municipio
+        - commonName
+        - scientificName
+        - province
+        - municipality
         - publicationState
         - publicMapVisibility
         - createdAt
@@ -1467,15 +1467,15 @@ components:
         speciesId:
           type: integer
           format: int64
-        nombreComun:
+        commonName:
           type: string
           description: Nombre común de la especie (puede ser vacío).
-        nombreCientifico:
+        scientificName:
           type: string
-        provincia:
+        province:
           type: string
           description: Nombre de provincia maestra.
-        municipio:
+        municipality:
           type: string
         publicationState:
           type: string

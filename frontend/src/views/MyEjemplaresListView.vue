@@ -12,8 +12,8 @@ import { fetchCollaboratorEjemplares } from '@/services/catalog/collaboratorEjem
 import type { CollaboratorEjemplarListItem, MasterListItem } from '@/types/catalog'
 
 function formatSpeciesTitle(tree: CollaboratorEjemplarListItem): string {
-  const common = tree.nombreComun.trim()
-  const scientific = tree.nombreCientifico.trim()
+  const common = tree.commonName.trim()
+  const scientific = tree.scientificName.trim()
   if (common.length > 0) {
     return `${common} (${scientific})`
   }
@@ -327,11 +327,11 @@ onMounted(async () => {
               <dl class="tree-card-meta">
                 <div>
                   <dt>{{ t('myTrees.fields.province') }}</dt>
-                  <dd>{{ tree.provincia || '-' }}</dd>
+                  <dd>{{ tree.province || '-' }}</dd>
                 </div>
                 <div>
                   <dt>{{ t('myTrees.fields.municipality') }}</dt>
-                  <dd>{{ tree.municipio || '-' }}</dd>
+                  <dd>{{ tree.municipality || '-' }}</dd>
                 </div>
                 <div>
                   <dt>{{ t('myTrees.fields.state') }}</dt>

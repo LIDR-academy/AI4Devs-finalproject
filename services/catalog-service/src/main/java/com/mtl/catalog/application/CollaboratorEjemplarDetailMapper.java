@@ -23,8 +23,8 @@ final class CollaboratorEjemplarDetailMapper {
         row.getPublicationState(),
         row.getPublicMapVisibility(),
         row.getCreatedByUserId(),
-        SpeciesLabelFormatter.format(row.getNombreComun(), row.getNombreCientifico()),
-        ProvinceLabelFormatter.format(row.getProvinciaNombre(), row.getProvinciaCodigo()),
+        SpeciesLabelFormatter.format(row.getCommonName(), row.getScientificName()),
+        ProvinceLabelFormatter.format(row.getProvinceName(), row.getProvinceCode()),
         ProjectionTimestamps.toOffsetDateTime(row.getCreatedAt()),
         ProjectionTimestamps.toOffsetDateTime(row.getModifiedAt()));
   }

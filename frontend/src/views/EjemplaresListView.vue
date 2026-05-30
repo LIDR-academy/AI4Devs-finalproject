@@ -9,8 +9,8 @@ import { HttpError, NetworkError } from '@/services/http/apiClient'
 import type { PublicEjemplarListItem } from '@/types/catalog'
 
 function formatSpeciesTitle(tree: PublicEjemplarListItem): string {
-  const common = tree.nombreComun.trim()
-  const scientific = tree.nombreCientifico.trim()
+  const common = tree.commonName.trim()
+  const scientific = tree.scientificName.trim()
   if (common.length > 0) {
     return `${common} (${scientific})`
   }
@@ -346,19 +346,19 @@ onMounted(async () => {
               <dl class="tree-card-meta">
                 <div>
                   <dt>{{ t('treesList.fields.province') }}</dt>
-                  <dd>{{ tree.provincia || '-' }}</dd>
+                  <dd>{{ tree.province || '-' }}</dd>
                 </div>
                 <div>
                   <dt>{{ t('treesList.fields.municipality') }}</dt>
-                  <dd>{{ tree.municipio || '-' }}</dd>
+                  <dd>{{ tree.municipality || '-' }}</dd>
                 </div>
                 <div>
                   <dt>{{ t('treesList.fields.state') }}</dt>
-                  <dd>{{ tree.estado }}</dd>
+                  <dd>{{ tree.publicationState }}</dd>
                 </div>
                 <div>
                   <dt>{{ t('treesList.fields.visibility') }}</dt>
-                  <dd>{{ tree.visibilidad }}</dd>
+                  <dd>{{ tree.publicMapVisibility }}</dd>
                 </div>
               </dl>
             </div>

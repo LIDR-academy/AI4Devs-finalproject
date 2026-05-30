@@ -3,15 +3,15 @@ package com.mtl.catalog.infrastructure.persistence.jpa.repository.projection;
 public interface PublicEjemplarListRow {
   Long getEjemplarId();
 
-  String getNombreComun();
+  String getCommonName();
 
-  String getNombreCientifico();
+  String getScientificName();
 
-  String getProvincia();
+  String getProvince();
 
-  String getMunicipio();
+  String getMunicipality();
 
-  String getEstado();
+  String getPublicationState();
 
-  String getVisibilidad();
+  String getPublicMapVisibility();
 }

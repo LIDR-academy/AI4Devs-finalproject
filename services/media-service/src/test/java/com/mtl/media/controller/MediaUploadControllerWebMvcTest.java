@@ -284,7 +284,7 @@ class MediaUploadControllerWebMvcTest {
                         """),
                 authentication))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.fotografiaId").value(10))
+        .andExpect(jsonPath("$.photoId").value(10))
         .andExpect(jsonPath("$.esPrincipal").value(true));
   }
 }

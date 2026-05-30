@@ -26,13 +26,13 @@ public interface CollaboratorEjemplarDetailRow {
 
   Long getCreatedByUserId();
 
-  String getNombreComun();
+  String getCommonName();
 
-  String getNombreCientifico();
+  String getScientificName();
 
-  String getProvinciaNombre();
+  String getProvinceName();
 
-  String getProvinciaCodigo();
+  String getProvinceCode();
 
   Instant getCreatedAt();
 

@@ -29,7 +29,7 @@ export interface ConfirmPhotoUploadRequest {
 }
 
 export interface PhotoMetadataResponse {
-  fotografiaId: number
+  photoId: number
   ejemplarId: number
   bucket: string
   objectKey: string

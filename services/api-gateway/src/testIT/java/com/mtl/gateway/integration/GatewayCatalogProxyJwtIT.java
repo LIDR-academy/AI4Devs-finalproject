@@ -132,7 +132,7 @@ class GatewayCatalogProxyJwtIT {
                 aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "application/json")
-                    .withBody("{\"fotografiaId\":1,\"ejemplarId\":42}")));
+                    .withBody("{\"photoId\":1,\"ejemplarId\":42}")));
 
     webTestClient
         .get()
@@ -142,7 +142,7 @@ class GatewayCatalogProxyJwtIT {
         .expectStatus()
         .isOk()
         .expectBody(String.class)
-        .isEqualTo("{\"fotografiaId\":1,\"ejemplarId\":42}");
+        .isEqualTo("{\"photoId\":1,\"ejemplarId\":42}");
 
     wireMock.verify(
         1,

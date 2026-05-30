@@ -60,8 +60,8 @@ class PublicEjemplarQueryServiceTest {
     assertEquals("PUBLICADO", estadoCaptor.getValue());
     assertEquals("PUBLICO", visibilidadCaptor.getValue());
     assertEquals(1, response.content().size());
-    assertEquals("PUBLICADO", response.content().getFirst().estado());
-    assertEquals("PUBLICO", response.content().getFirst().visibilidad());
+    assertEquals("PUBLICADO", response.content().getFirst().publicationState());
+    assertEquals("PUBLICO", response.content().getFirst().publicMapVisibility());
   }
 
   @Test
@@ -95,20 +95,20 @@ class PublicEjemplarQueryServiceTest {
     var detail = publicEjemplarQueryService.getPublishedEjemplarDetail(42L, null);
 
     assertEquals(42L, detail.ejemplarId());
-    assertEquals("PUBLICADO", detail.estado());
-    assertEquals("PUBLICO", detail.visibilidad());
+    assertEquals("PUBLICADO", detail.publicationState());
+    assertEquals("PUBLICO", detail.publicMapVisibility());
   }
 
   private record PublicEjemplarListRowStub(
-      Long ejemplarId, String nombreComun, String nombreCientifico, String provincia, String municipio)
+      Long ejemplarId, String commonName, String scientificName, String province, String municipality)
       implements PublicEjemplarListRow {
     @Override
-    public String getEstado() {
+    public String getPublicationState() {
       return "PUBLICADO";
     }
 
     @Override
-    public String getVisibilidad() {
+    public String getPublicMapVisibility() {
       return "PUBLICO";
     }
 
@@ -118,38 +118,38 @@ class PublicEjemplarQueryServiceTest {
     }
 
     @Override
-    public String getNombreComun() {
-      return nombreComun;
+    public String getCommonName() {
+      return commonName;
     }
 
     @Override
-    public String getNombreCientifico() {
-      return nombreCientifico;
+    public String getScientificName() {
+      return scientificName;
     }
 
     @Override
-    public String getProvincia() {
-      return provincia;
+    public String getProvince() {
+      return province;
     }
 
     @Override
-    public String getMunicipio() {
-      return municipio;
+    public String getMunicipality() {
+      return municipality;
     }
   }
 
   private record PublicEjemplarDetailRowStub(
       Long ejemplarId,
-      String nombreComun,
-      String nombreCientifico,
-      String provincia,
-      String municipio,
-      String estado,
-      String visibilidad,
-      String descripcion,
-      BigDecimal latitud,
-      BigDecimal longitud,
-      Integer altura)
+      String commonName,
+      String scientificName,
+      String province,
+      String municipality,
+      String publicationState,
+      String publicMapVisibility,
+      String description,
+      BigDecimal latitude,
+      BigDecimal longitude,
+      Integer altitude)
       implements PublicEjemplarDetailRow {
     @Override
     public Long getEjemplarId() {
@@ -157,53 +157,53 @@ class PublicEjemplarQueryServiceTest {
     }
 
     @Override
-    public String getNombreComun() {
-      return nombreComun;
+    public String getCommonName() {
+      return commonName;
     }
 
     @Override
-    public String getNombreCientifico() {
-      return nombreCientifico;
+    public String getScientificName() {
+      return scientificName;
     }
 
     @Override
-    public String getProvincia() {
-      return provincia;
+    public String getProvince() {
+      return province;
     }
 
     @Override
-    public String getMunicipio() {
-      return municipio;
+    public String getMunicipality() {
+      return municipality;
     }
 
     @Override
-    public String getEstado() {
-      return estado;
+    public String getPublicationState() {
+      return publicationState;
     }
 
     @Override
-    public String getVisibilidad() {
-      return visibilidad;
+    public String getPublicMapVisibility() {
+      return publicMapVisibility;
     }
 
     @Override
-    public String getDescripcion() {
-      return descripcion;
+    public String getDescription() {
+      return description;
     }
 
     @Override
-    public BigDecimal getLatitud() {
-      return latitud;
+    public BigDecimal getLatitude() {
+      return latitude;
     }
 
     @Override
-    public BigDecimal getLongitud() {
-      return longitud;
+    public BigDecimal getLongitude() {
+      return longitude;
     }
 
     @Override
-    public Integer getAltura() {
-      return altura;
+    public Integer getAltitude() {
+      return altitude;
     }
   }
 }

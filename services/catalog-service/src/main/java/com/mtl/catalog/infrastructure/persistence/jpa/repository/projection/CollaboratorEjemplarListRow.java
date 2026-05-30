@@ -7,13 +7,13 @@ public interface CollaboratorEjemplarListRow {
 
   Long getSpeciesId();
 
-  String getNombreComun();
+  String getCommonName();
 
-  String getNombreCientifico();
+  String getScientificName();
 
-  String getProvincia();
+  String getProvince();
 
-  String getMunicipio();
+  String getMunicipality();
 
   String getPublicationState();
 

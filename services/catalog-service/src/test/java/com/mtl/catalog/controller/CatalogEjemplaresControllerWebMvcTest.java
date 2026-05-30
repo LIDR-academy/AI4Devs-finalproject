@@ -317,8 +317,8 @@ class CatalogEjemplaresControllerWebMvcTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.totalResults").value(1))
         .andExpect(jsonPath("$.content[0].ejemplarId").value(42))
-        .andExpect(jsonPath("$.content[0].estado").value("PUBLICADO"))
-        .andExpect(jsonPath("$.content[0].visibilidad").value("PUBLICO"));
+        .andExpect(jsonPath("$.content[0].publicationState").value("PUBLICADO"))
+        .andExpect(jsonPath("$.content[0].publicMapVisibility").value("PUBLICO"));
   }
 
   @Test
@@ -344,10 +344,10 @@ class CatalogEjemplaresControllerWebMvcTest {
                 get("/api/catalog/public/ejemplares/{ejemplarId}", 42), collaboratorAuthentication()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.ejemplarId").value(42))
-        .andExpect(jsonPath("$.descripcion").value("Encina singular"))
-        .andExpect(jsonPath("$.latitud").value(40.4168))
-        .andExpect(jsonPath("$.longitud").value(-3.7038))
-        .andExpect(jsonPath("$.altura").value(667));
+        .andExpect(jsonPath("$.description").value("Encina singular"))
+        .andExpect(jsonPath("$.latitude").value(40.4168))
+        .andExpect(jsonPath("$.longitude").value(-3.7038))
+        .andExpect(jsonPath("$.altitude").value(667));
   }
 
   @Test

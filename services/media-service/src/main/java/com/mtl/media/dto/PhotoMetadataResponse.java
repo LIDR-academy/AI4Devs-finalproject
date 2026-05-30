@@ -3,7 +3,7 @@ package com.mtl.media.dto;
 import java.time.OffsetDateTime;
 
 public record PhotoMetadataResponse(
-    Long fotografiaId,
+    Long photoId,
     Long ejemplarId,
     String bucket,
     String objectKey,

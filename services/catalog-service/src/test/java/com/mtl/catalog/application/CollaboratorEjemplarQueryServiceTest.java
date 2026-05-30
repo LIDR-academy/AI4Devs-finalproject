@@ -295,22 +295,22 @@ class CollaboratorEjemplarQueryServiceTest {
       }
 
       @Override
-      public String getNombreComun() {
+      public String getCommonName() {
         return "Encina";
       }
 
       @Override
-      public String getNombreCientifico() {
+      public String getScientificName() {
         return "Quercus ilex";
       }
 
       @Override
-      public String getProvinciaNombre() {
+      public String getProvinceName() {
         return "Madrid";
       }
 
       @Override
-      public String getProvinciaCodigo() {
+      public String getProvinceCode() {
         return "28";
       }
 
@@ -339,22 +339,22 @@ class CollaboratorEjemplarQueryServiceTest {
       }
 
       @Override
-      public String getNombreComun() {
+      public String getCommonName() {
         return "Encina";
       }
 
       @Override
-      public String getNombreCientifico() {
+      public String getScientificName() {
         return "Quercus ilex";
       }
 
       @Override
-      public String getProvincia() {
+      public String getProvince() {
         return "Madrid";
       }
 
       @Override
-      public String getMunicipio() {
+      public String getMunicipality() {
         return "Madrid";
       }
 

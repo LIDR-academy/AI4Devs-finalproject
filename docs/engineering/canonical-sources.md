@@ -24,6 +24,8 @@ Al **encargar trabajo** suele bastar con la regla que hace de índice (p. ej. [b
 | Subida de fotos (presign, MinIO, confirm, principal, EXIF cliente, props `mtl.media.*`) | [docs/engineering/media-upload-hu006.md](media-upload-hu006.md) y [docs/api/openapi.yaml](../api/openapi.yaml) | [.cursor/rules/api-security.mdc](../../.cursor/rules/api-security.mdc) (JWT/objeto privado) |
 | Eventos Kafka (topics, payload, idempotencia) | [docs/events/kafka-events.md](../events/kafka-events.md) | [.cursor/rules/kafka-events.mdc](../../.cursor/rules/kafka-events.mdc) |
 | Nomenclatura *ejemplar* (rutas REST, `ejemplarId`, topic Kafka; sin compatibilidad `/trees`) | [docs/adr/0006-ejemplar-nomenclature-contracts.md](../adr/0006-ejemplar-nomenclature-contracts.md) | [openapi.yaml](../api/openapi.yaml), [mongo.md](../data-model/mongo.md) |
+| Contratos HTTP en inglés + persistencia español (mapeo DTO) | [docs/adr/0008-english-http-spanish-persistence.md](../adr/0008-english-http-spanish-persistence.md) | [api-design.mdc](../../.cursor/rules/api-design.mdc), [openapi.yaml](../api/openapi.yaml) |
+| Nomenclatura global (BD, API, código, docs, Git, checklist auditoría) | [naming-conventions.md](naming-conventions.md) | [AGENTS.md](../../AGENTS.md), ADR-0006, ADR-0008 |
 | Checklist al tocar `services/` | (índice) | [.cursor/rules/backend-generation-standard.mdc](../../.cursor/rules/backend-generation-standard.mdc) |
 | Frontend Vue 3 (`frontend/`) | (convenciones en regla; guías en `docs/` cuando existan) | [.cursor/rules/frontend-vue3.mdc](../../.cursor/rules/frontend-vue3.mdc) |
 

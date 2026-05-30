@@ -35,12 +35,12 @@ export interface CreatedEjemplarResponse {
 
 export interface PublicEjemplarListItem {
   ejemplarId: number
-  nombreComun: string
-  nombreCientifico: string
-  provincia: string
-  municipio: string
-  estado: PublicationState
-  visibilidad: PublicMapVisibility
+  commonName: string
+  scientificName: string
+  province: string
+  municipality: string
+  publicationState: PublicationState
+  publicMapVisibility: PublicMapVisibility
 }
 
 export interface PublicEjemplarPageResponse {
@@ -53,31 +53,31 @@ export interface PublicEjemplarPageResponse {
 
 export interface PublicEjemplarDetail {
   ejemplarId: number
-  nombreComun: string
-  nombreCientifico: string
-  provincia: string
-  municipio: string
-  estado: PublicationState
-  visibilidad: PublicMapVisibility
-  descripcion: string
-  latitud: number
-  longitud: number
-  altura: number | null
+  commonName: string
+  scientificName: string
+  province: string
+  municipality: string
+  publicationState: PublicationState
+  publicMapVisibility: PublicMapVisibility
+  description: string
+  latitude: number
+  longitude: number
+  altitude: number | null
 }
 
 /** Respuesta de `GET /api/catalog/public/provinces` (solo nombres, sin códigos). */
 export interface PublicProvinceNamesResponse {
-  nombres: string[]
+  names: string[]
 }
 
 /** Ítem de `GET /api/catalog/ejemplares` (listado colaborador, HU-008). */
 export interface CollaboratorEjemplarListItem {
   ejemplarId: number
   speciesId: number
-  nombreComun: string
-  nombreCientifico: string
-  provincia: string
-  municipio: string
+  commonName: string
+  scientificName: string
+  province: string
+  municipality: string
   publicationState: PublicationState
   publicMapVisibility: PublicMapVisibility
   createdAt: string

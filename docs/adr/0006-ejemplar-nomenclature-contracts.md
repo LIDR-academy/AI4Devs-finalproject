@@ -23,8 +23,13 @@ Se acepta **pérdida de datos locales** y **sin compatibilidad hacia atrás** en
 - MinIO: prefijo de objetos **`ejemplares/{ejemplarId}/...`** (objetos bajo `trees/` no se migran).
 - Títulos de historias de usuario pueden seguir diciendo «árbol» en lenguaje de producto; identificadores técnicos usan *ejemplar*.
 
+## Relación con otros ADR
+
+- Contrato HTTP en **inglés** con mapeo desde columnas en español: [ADR-0008](0008-english-http-spanish-persistence.md). Rutas y `ejemplarId` de este ADR se mantienen.
+
 ## Referencias
 
 - [openapi.yaml](../api/openapi.yaml)
 - [kafka-events.md](../events/kafka-events.md)
 - [mongo.md](../data-model/mongo.md)
+- [ADR-0008](0008-english-http-spanish-persistence.md)

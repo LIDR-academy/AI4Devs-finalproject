@@ -111,22 +111,22 @@ class EjemplarModificationServiceTest {
       }
 
       @Override
-      public String getNombreComun() {
+      public String getCommonName() {
         return "Encina";
       }
 
       @Override
-      public String getNombreCientifico() {
+      public String getScientificName() {
         return "Quercus ilex";
       }
 
       @Override
-      public String getProvinciaNombre() {
+      public String getProvinceName() {
         return "Madrid";
       }
 
       @Override
-      public String getProvinciaCodigo() {
+      public String getProvinceCode() {
         return "28";
       }
 

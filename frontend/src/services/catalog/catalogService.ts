@@ -36,7 +36,7 @@ export async function fetchPublicProvinceNames(signal?: AbortSignal): Promise<st
   const response = await apiFetch<PublicProvinceNamesResponse>('/api/catalog/public/provinces', {
     signal,
   })
-  return response.nombres ?? []
+  return response.names ?? []
 }
 
 export async function createEjemplar(payload: CreateEjemplarRequest): Promise<CreatedEjemplarResponse> {
