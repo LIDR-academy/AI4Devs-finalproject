@@ -28,7 +28,8 @@ public interface EspecieReadRepository extends EspecieRepository {
             )
             END
           )
-          ORDER BY e.nombre_cientifico ASC
+          ORDER BY lower(coalesce(nullif(trim(e.nombre_comun), ''), e.nombre_cientifico)) ASC,
+                   lower(e.nombre_cientifico) ASC
           """,
       countQuery =
           """

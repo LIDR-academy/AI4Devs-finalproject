@@ -3,6 +3,7 @@ import { computed, onMounted, ref, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import MtlConfirmDialog from '@/components/MtlConfirmDialog.vue'
+import PageBackLink from '@/components/layout/PageBackLink.vue'
 import { useAdminSubscriptionsList } from '@/composables/useAdminSubscriptionsList'
 import type { EstadoSuscripcion, SubscriptionAdminItem } from '@/services/notifications/adminSubscriptions'
 
@@ -86,7 +87,7 @@ function estadoLabel(code: EstadoSuscripcion | string): string {
 
 function formatDate(iso: string | null): string {
   if (!iso) {
-    return '—'
+    return t('common.emptyValue')
   }
   try {
     return new Date(iso).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })
@@ -133,38 +134,35 @@ function onDismissModal(): void {
 </script>
 
 <template>
-  <section class="card trees-list-card admin-subscriptions">
-    <div class="trees-list-header">
-      <div class="trees-list-heading">
-        <h2>{{ t(pageTitleKey) }}</h2>
-        <p class="muted">{{ t('adminSubscriptions.intro') }}</p>
-      </div>
+  <div class="catalog-page admin-subscriptions-page">
+    <header class="page-header">
+      <PageBackLink :to="{ name: 'home' }">{{ t('navigation.home') }}</PageBackLink>
+      <h1 class="page-header__title">{{ t(pageTitleKey) }}</h1>
+      <p class="page-header__description">{{ t('adminSubscriptions.description') }}</p>
+    </header>
 
-      <form class="trees-list-filters" @submit.prevent="applyFilter">
-        <div class="trees-filter-panel">
-          <div class="trees-filter-grid admin-subscriptions-filter-grid">
+    <section class="catalog-toolbar" :aria-label="t('adminSubscriptions.filters.apply')">
+      <form class="catalog-toolbar__form" @submit.prevent="applyFilter">
+        <div class="catalog-toolbar__panel">
+          <div class="catalog-toolbar__fields catalog-toolbar__fields--pair">
             <div class="filter-field">
-              <label class="form-label trees-filter-label" for="admin-sub-filter-email">{{
+              <label class="form-label" for="admin-sub-filter-email">{{
                 t('adminSubscriptions.filters.email.label')
               }}</label>
               <input
                 id="admin-sub-filter-email"
                 v-model="filterEmail"
-                class="form-control trees-filter-control"
+                class="form-control"
                 type="search"
                 autocomplete="off"
                 :placeholder="t('adminSubscriptions.filters.email.placeholder')"
               />
             </div>
             <div class="filter-field">
-              <label class="form-label trees-filter-label" for="admin-sub-filter-estado">{{
+              <label class="form-label" for="admin-sub-filter-estado">{{
                 t('adminSubscriptions.filters.estado.label')
               }}</label>
-              <select
-                id="admin-sub-filter-estado"
-                v-model="filterEstado"
-                class="form-control trees-filter-control"
-              >
+              <select id="admin-sub-filter-estado" v-model="filterEstado" class="form-control">
                 <option value="">{{ t('adminSubscriptions.filters.estado.all') }}</option>
                 <option value="ACTIVA">{{ t('adminSubscriptions.filters.estado.activa') }}</option>
                 <option value="CANCELADA">{{ t('adminSubscriptions.filters.estado.cancelada') }}</option>
@@ -172,10 +170,10 @@ function onDismissModal(): void {
             </div>
           </div>
 
-          <div class="trees-filter-actions">
+          <div class="catalog-toolbar__actions">
             <button
               type="button"
-              class="btn btn-secondary btn-sm trees-filter-btn"
+              class="btn btn-secondary btn-sm"
               :disabled="isLoading"
               @click="clearFilter"
             >
@@ -183,7 +181,7 @@ function onDismissModal(): void {
             </button>
             <button
               type="submit"
-              class="btn btn-primary btn-sm trees-filter-btn trees-filter-btn-submit"
+              class="btn btn-primary btn-sm catalog-toolbar__submit"
               :disabled="isLoading"
             >
               {{ t('adminSubscriptions.filters.apply') }}
@@ -191,74 +189,82 @@ function onDismissModal(): void {
           </div>
         </div>
       </form>
-    </div>
+    </section>
 
-    <output v-if="statusMessage" class="success field-full" aria-live="polite">{{ statusMessage }}</output>
+    <output v-if="statusMessage" class="success tree-form-page__flash" aria-live="polite">{{
+      statusMessage
+    }}</output>
 
     <p v-if="isLoading" class="status-note">{{ t('adminSubscriptions.loading') }}</p>
     <p v-else-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
 
     <template v-else-if="isListStateOk">
-      <p class="trees-list-results-count muted">
+      <p class="catalog-results-count muted">
         {{ t('adminSubscriptions.resultsCount', { count: totalElements }) }}
       </p>
 
       <p v-if="!hasRows" class="status-note">{{ t('adminSubscriptions.empty') }}</p>
 
-      <div v-else class="mtl-admin-table-wrap">
-        <table class="mtl-admin-table" :aria-label="t('adminSubscriptions.title')">
-          <thead>
-            <tr>
-              <th scope="col">{{ t('adminSubscriptions.fields.email') }}</th>
-              <th scope="col">{{ t('adminSubscriptions.fields.estado') }}</th>
-              <th scope="col">{{ t('adminSubscriptions.fields.altaEn') }}</th>
-              <th scope="col">{{ t('adminSubscriptions.fields.confirmadoEn') }}</th>
-              <th scope="col">{{ t('adminSubscriptions.fields.bajaEn') }}</th>
-              <th scope="col">{{ t('adminSubscriptions.fields.actions') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in items" :key="row.subscriptionId">
-              <td>{{ row.email }}</td>
-              <td>{{ estadoLabel(row.estadoSuscripcion) }}</td>
-              <td>{{ formatDate(row.altaEn) }}</td>
-              <td>{{ formatDate(row.confirmadoEn) }}</td>
-              <td>{{ formatDate(row.bajaEn) }}</td>
-              <td class="mtl-admin-table__actions">
-                <button
-                  v-if="row.estadoSuscripcion === 'ACTIVA'"
-                  type="button"
-                  class="btn btn-danger btn-sm trees-filter-btn"
-                  :disabled="patchingId !== null"
-                  @click="onCancel(row)"
-                >
-                  {{ t('adminSubscriptions.actions.cancel') }}
-                </button>
-                <button
-                  v-else
-                  type="button"
-                  class="btn btn-primary btn-sm trees-filter-btn"
-                  :disabled="patchingId !== null"
-                  @click="onReactivate(row)"
-                >
-                  {{ t('adminSubscriptions.actions.reactivate') }}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div v-else class="catalog-toolbar__panel admin-subscriptions-table-panel">
+        <div class="mtl-admin-table-wrap">
+          <table class="mtl-admin-table" :aria-label="t('adminSubscriptions.title')">
+            <thead>
+              <tr>
+                <th scope="col">{{ t('adminSubscriptions.fields.email') }}</th>
+                <th scope="col">{{ t('adminSubscriptions.fields.estado') }}</th>
+                <th scope="col">{{ t('adminSubscriptions.fields.altaEn') }}</th>
+                <th scope="col">{{ t('adminSubscriptions.fields.confirmadoEn') }}</th>
+                <th scope="col">{{ t('adminSubscriptions.fields.bajaEn') }}</th>
+                <th scope="col">{{ t('adminSubscriptions.fields.actions') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="row in items" :key="row.subscriptionId">
+                <td>{{ row.email }}</td>
+                <td>{{ estadoLabel(row.estadoSuscripcion) }}</td>
+                <td>{{ formatDate(row.altaEn) }}</td>
+                <td>{{ formatDate(row.confirmadoEn) }}</td>
+                <td>{{ formatDate(row.bajaEn) }}</td>
+                <td class="mtl-admin-table__actions">
+                  <button
+                    v-if="row.estadoSuscripcion === 'ACTIVA'"
+                    type="button"
+                    class="btn btn-danger btn-sm"
+                    :disabled="patchingId !== null"
+                    @click="onCancel(row)"
+                  >
+                    {{ t('adminSubscriptions.actions.cancel') }}
+                  </button>
+                  <button
+                    v-else
+                    type="button"
+                    class="btn btn-primary btn-sm"
+                    :disabled="patchingId !== null"
+                    @click="onReactivate(row)"
+                  >
+                    {{ t('adminSubscriptions.actions.reactivate') }}
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <nav v-if="hasRows" class="trees-pagination" :aria-label="t('adminSubscriptions.pagination.navLabel')">
+      <nav
+        v-if="hasRows"
+        class="catalog-pagination"
+        :aria-label="t('adminSubscriptions.pagination.navLabel')"
+      >
         <button
-          class="btn trees-pagination-btn trees-pagination-btn--prev"
+          class="btn btn-secondary btn-sm"
           type="button"
           :disabled="!hasPrevious || isLoading"
           @click="goPrevious()"
         >
           {{ t('adminSubscriptions.pagination.previous') }}
         </button>
-        <span class="trees-pagination-status">
+        <span class="catalog-pagination__status">
           {{
             t('adminSubscriptions.pagination.pageStatus', {
               current: displayCurrentPage,
@@ -267,7 +273,7 @@ function onDismissModal(): void {
           }}
         </span>
         <button
-          class="btn trees-pagination-btn trees-pagination-btn--next"
+          class="btn btn-secondary btn-sm"
           type="button"
           :disabled="!hasNext || isLoading"
           @click="goNext()"
@@ -287,12 +293,5 @@ function onDismissModal(): void {
       @confirm="onConfirmModal"
       @cancel="onDismissModal"
     />
-  </section>
+  </div>
 </template>
-
-<style scoped>
-/* Correo y estado: mitad del ancho disponible cada uno (sobrescribe la rejilla de 3 columnas del listado de árboles). */
-.trees-filter-grid.admin-subscriptions-filter-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-</style>

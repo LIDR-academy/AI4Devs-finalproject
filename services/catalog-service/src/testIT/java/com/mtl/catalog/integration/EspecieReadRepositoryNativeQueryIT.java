@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.mtl.catalog.dto.SpeciesListItemDto;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.EspecieReadRepository;
+import com.mtl.catalog.infrastructure.persistence.jpa.repository.EspecieRepository;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
@@ -63,5 +64,31 @@ class EspecieReadRepositoryNativeQueryIT {
         especieReadRepository.search("quercus", PageRequest.of(0, 5));
     assertThat(page.getContent()).isNotEmpty();
     assertThat(page.getContent().getFirst().label().toLowerCase()).contains("quercus");
+  }
+
+  @Test
+  void listadoSinFiltro_ordenadoPorNombreComun_antesQueCientifico() {
+    Page<SpeciesListItemDto> page =
+        especieReadRepository.search(null, PageRequest.of(0, EspecieRepository.MAX_UNPAGED));
+    var labels = page.getContent().stream().map(SpeciesListItemDto::label).toList();
+    int coscoja =
+        indexOfLabelContaining(labels, "Coscoja", "Quercus coccifera");
+    int encina = indexOfLabelContaining(labels, "Encina", "Quercus ilex");
+    assertThat(coscoja).isGreaterThanOrEqualTo(0);
+    assertThat(encina).isGreaterThanOrEqualTo(0);
+    assertThat(coscoja)
+        .as("Coscoja (común) debe ir antes que Encina; si no, el ORDER BY sigue siendo solo científico")
+        .isLessThan(encina);
+  }
+
+  private static int indexOfLabelContaining(
+      java.util.List<String> labels, String commonFragment, String scientificFragment) {
+    for (int i = 0; i < labels.size(); i++) {
+      String label = labels.get(i);
+      if (label.contains(commonFragment) && label.contains(scientificFragment)) {
+        return i;
+      }
+    }
+    return -1;
   }
 }

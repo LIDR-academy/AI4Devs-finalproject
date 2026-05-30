@@ -6,9 +6,9 @@ MyTreeLibrary: visión de producto, objetivos, stack y arquitectura en [readme.m
 
 ## Estructura del repositorio (monorepo)
 
-Carpetas principales: **`frontend/`**, **`services/`**, **`platform/observability/`**, **`infra/`**, **`docs/`**. Árbol y contexto: [readme.md](readme.md) (§2.3). Infra Docker: [infra/compose/README.md](infra/compose/README.md).
+Carpetas principales: **`frontend/`**, **`services/`**, **`platform/observability/`**, **`infra/`**, **`docs/`**, **`scripts/`** (atajos PowerShell locales). Árbol y contexto: [readme.md](readme.md) (§2.3). Infra Docker: [infra/compose/README.md](infra/compose/README.md).
 
-**Build, arranque local backend y puertos:** [services/README.md](services/README.md). **Tests Java (Surefire/Failsafe, `test` / `testIT`):** [docs/engineering/testing-java.md](docs/engineering/testing-java.md).
+**Build, arranque local backend y puertos:** [services/README.md](services/README.md). **Tests Java (Surefire/Failsafe, `test` / `testIT`):** [docs/engineering/testing-java.md](docs/engineering/testing-java.md). **Scripts dev (tests, puertos, rama):** [scripts/README.md](scripts/README.md).
 
 ## Encargos al agente (plantilla)
 

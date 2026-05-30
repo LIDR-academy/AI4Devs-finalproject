@@ -33,6 +33,8 @@ Si vienes de **otra rama con cambios sin commitear**, primero commit (o `git sta
 
 Comando Cursor (flujo guiado con confirmaciones): [.cursor/commands/git-new-branch.md](../../.cursor/commands/git-new-branch.md).
 
+Script local (working tree limpio o `-Stash`): `.\scripts\dev\git-new-branch.ps1 -Prefix fix -Name mi-tarea` — ver [scripts/README.md](../../scripts/README.md).
+
 ## Subir al remoto
 
 Primera subida y enlazar upstream (la rama se crea en `origin` si no existe):
@@ -49,10 +51,15 @@ git push
 
 ## Commit con resumen de cambios
 
-| Operación | Comando Cursor |
-|-----------|----------------|
-| Commit con resumen del diff | [git-commit.md](../../.cursor/commands/git-commit.md) |
-| Nueva rama desde `main` actualizado | [git-new-branch.md](../../.cursor/commands/git-new-branch.md) |
+| Operación | Comando Cursor | Script PowerShell (`scripts/dev/`) |
+|-----------|----------------|-----------------------------------|
+| Commit con resumen del diff | [git-commit.md](../../.cursor/commands/git-commit.md) | — |
+| Nueva rama desde `main` actualizado | [git-new-branch.md](../../.cursor/commands/git-new-branch.md) | `git-new-branch.ps1` |
+| Tests backend (`mvn verify`) | — | `test-backend.ps1` |
+| Tests frontend (`npm test`) | — | `test-frontend.ps1` |
+| Puertos en escucha (local) | — | `check-ports.ps1` |
+
+Índice de scripts: [scripts/README.md](../../scripts/README.md).
 
 ## Flujo resumido
 

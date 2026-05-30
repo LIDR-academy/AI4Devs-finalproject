@@ -3,15 +3,19 @@ import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import MtlConfirmDialog from '@/components/MtlConfirmDialog.vue'
+import PageBackLink from '@/components/layout/PageBackLink.vue'
 import SpeciesAutocompleteInput from '@/components/SpeciesAutocompleteInput.vue'
 import TreeLocationMapPreview from '@/components/TreeLocationMapPreview.vue'
 import TreePhotoFullscreenViewer from '@/components/TreePhotoFullscreenViewer.vue'
 import { areLatLngInValidRange } from '@/composables/createTreeFormValidation'
 import { useEditTreeForm } from '@/composables/useEditTreeForm'
+import { useTreeCreateFlashFromRoute } from '@/composables/useTreeCreateFlashFromRoute'
 import { useTreeLocationAutofill } from '@/composables/useTreeLocationAutofill'
 
 const route = useRoute()
 const { t } = useI18n()
+const { successMessage: createSuccessMessage, warningMessage: createWarningMessage, applyFromRoute } =
+  useTreeCreateFlashFromRoute()
 
 const treeId = computed(() => {
   const rawId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
@@ -82,6 +86,13 @@ const PHOTO_ACCEPT_MIME = 'image/jpeg,image/png,image/webp'
 const galleryAltText = computed(() => {
   const selected = species.value.find((item) => String(item.id) === form.speciesId)
   return selected?.label ?? t('treeEdit.galleryFallbackAlt')
+})
+
+const pageTitle = computed(() => {
+  if (treeId.value) {
+    return t('treeEdit.title', { id: treeId.value })
+  }
+  return t('treeEdit.titleInvalid')
 })
 
 interface CoordinatesPayload {
@@ -182,34 +193,47 @@ async function onSubmit(): Promise<void> {
 }
 
 onMounted(async () => {
+  applyFromRoute()
   await initialize()
 })
 </script>
 
 <template>
-  <section class="card form-card tree-edit-card">
-    <h2 v-if="treeId">{{ t('treeEdit.title', { id: treeId }) }}</h2>
-    <h2 v-else>{{ t('treeEdit.titleInvalid') }}</h2>
+  <div class="tree-form-page">
+    <header class="page-header tree-form-page__header">
+      <PageBackLink :to="{ name: 'mis-ejemplares' }">{{ t('treeEdit.backToList') }}</PageBackLink>
+      <h1 class="page-header__title">{{ pageTitle }}</h1>
+      <p class="page-header__description">{{ t('treeEdit.description') }}</p>
+    </header>
+
+    <output
+      v-if="createSuccessMessage"
+      class="success tree-form-page__flash"
+      aria-live="polite"
+    >{{ createSuccessMessage }}</output>
+    <p v-if="createWarningMessage" class="error tree-form-page__flash" role="alert">
+      {{ createWarningMessage }}
+    </p>
 
     <p v-if="isLoading" class="status-note">{{ t('treeEdit.loading') }}</p>
     <p v-else-if="loadError" class="error" role="alert">{{ loadError }}</p>
 
     <form v-else-if="isReady" class="tree-form" @submit.prevent="onSubmit">
-      <div class="field species-field">
-        <label class="form-label" for="edit-speciesId">{{ t('treeForm.fields.species.label') }}</label>
-        <SpeciesAutocompleteInput
-          ref="speciesAutocompleteRef"
-          input-id="edit-speciesId"
-          v-model="form.speciesId"
-          :species="species"
-          required
-          :aria-invalid="Boolean(fieldErrors.speciesId)"
-          :placeholder="t('treeForm.fields.species.placeholder')"
-        />
-        <small v-if="fieldErrors.speciesId" class="field-error">{{ fieldErrors.speciesId }}</small>
-      </div>
+      <div class="field-full tree-form-species-status-row">
+        <div class="field species-field">
+          <label class="form-label" for="edit-speciesId">{{ t('treeForm.fields.species.label') }}</label>
+          <SpeciesAutocompleteInput
+            ref="speciesAutocompleteRef"
+            input-id="edit-speciesId"
+            v-model="form.speciesId"
+            :species="species"
+            required
+            :aria-invalid="Boolean(fieldErrors.speciesId)"
+            :placeholder="t('treeForm.fields.species.placeholder')"
+          />
+          <small v-if="fieldErrors.speciesId" class="field-error">{{ fieldErrors.speciesId }}</small>
+        </div>
 
-      <div class="field state-visibility-inline">
         <div class="field">
           <label class="form-label" for="edit-publicationState">{{
             t('treeForm.fields.publicationState.label')
@@ -234,8 +258,10 @@ onMounted(async () => {
       </div>
 
       <div class="field-full tree-detail-visual-grid tree-edit-visual-grid">
-        <section class="tree-detail-gallery-block" aria-labelledby="tree-edit-gallery-heading">
-          <p id="tree-edit-gallery-heading" class="form-label">{{ t('treesDetail.gallery.title') }}</p>
+        <section class="tree-detail-panel" aria-labelledby="tree-edit-gallery-heading">
+          <h2 id="tree-edit-gallery-heading" class="tree-detail-panel__title">
+            {{ t('treesDetail.gallery.title') }}
+          </h2>
           <div class="tree-detail-gallery-frame">
             <button
               v-if="selectedPhoto"
@@ -353,8 +379,10 @@ onMounted(async () => {
           </p>
         </section>
 
-        <section class="tree-detail-map-block" aria-labelledby="tree-edit-map-heading">
-          <p id="tree-edit-map-heading" class="form-label">{{ t('treesDetail.map.title') }}</p>
+        <section class="tree-detail-panel" aria-labelledby="tree-edit-map-heading">
+          <h2 id="tree-edit-map-heading" class="tree-detail-panel__title">
+            {{ t('treesDetail.map.title') }}
+          </h2>
           <TreeLocationMapPreview
             :latitude="form.latitude"
             :longitude="form.longitude"
@@ -364,7 +392,7 @@ onMounted(async () => {
         </section>
       </div>
 
-      <div class="field-full tree-edit-location-row">
+      <div class="field-full tree-form-location-row">
         <div class="field">
           <label class="form-label" for="edit-provinceId">{{ t('treeForm.fields.province.label') }}</label>
           <select
@@ -395,7 +423,7 @@ onMounted(async () => {
         </div>
       </div>
 
-      <div class="field field-full">
+      <div class="field field-full tree-form-field-block">
         <label class="form-label" for="edit-description">{{ t('treeForm.fields.description.label') }}</label>
         <textarea
           id="edit-description"
@@ -457,21 +485,23 @@ onMounted(async () => {
         </div>
       </div>
 
-      <div class="field-full actions tree-edit-actions">
+      <p v-if="submitError" class="error field-full" role="alert">{{ submitError }}</p>
+
+      <div class="field-full actions page-actions-footer">
         <RouterLink class="btn btn-secondary" :to="{ name: 'mis-ejemplares' }">
           {{ t('treeEdit.backToList') }}
         </RouterLink>
-        <div class="tree-edit-primary-actions">
+        <div class="page-actions-footer__end">
           <button
             type="button"
-            class="btn btn-danger tree-edit-action-btn"
+            class="btn btn-danger"
             :disabled="isSubmitting || isDeleting"
             @click="openDeleteConfirm"
           >
             {{ isDeleting ? t('treeEdit.deleting') : t('treeEdit.delete') }}
           </button>
           <button
-            class="btn btn-primary tree-edit-action-btn"
+            class="btn btn-primary tree-form-submit"
             type="submit"
             :disabled="isSubmitting || isDeleting"
           >
@@ -480,8 +510,6 @@ onMounted(async () => {
         </div>
       </div>
     </form>
-
-    <p v-if="submitError" class="error" role="alert">{{ submitError }}</p>
     <p v-if="deleteError" class="error" role="alert">{{ deleteError }}</p>
 
     <TreePhotoFullscreenViewer
@@ -511,20 +539,10 @@ onMounted(async () => {
       :confirm-danger="true"
       @confirm="onConfirmDeletePhoto"
     />
-  </section>
+  </div>
 </template>
 
 <style scoped>
-.species-field {
-  grid-column: span 1;
-}
-
-.state-visibility-inline {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-4);
-}
-
 .tree-edit-visual-grid {
   width: 100%;
 }
@@ -532,61 +550,5 @@ onMounted(async () => {
 .tree-edit-visual-grid :deep(.tree-location-map-preview) {
   flex: 1;
   min-height: var(--tree-detail-media-h);
-}
-
-.tree-edit-location-row {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-4);
-}
-
-.tree-edit-actions {
-  justify-content: space-between;
-  align-items: center;
-}
-
-.tree-edit-actions .tree-form-submit {
-  margin-left: 0;
-}
-
-.tree-edit-primary-actions {
-  display: flex;
-  gap: var(--space-3);
-  margin-left: auto;
-}
-
-.tree-edit-action-btn {
-  min-width: 9.5rem;
-}
-
-@media (max-width: 720px) {
-  .species-field {
-    grid-column: 1 / -1;
-  }
-
-  .state-visibility-inline {
-    grid-template-columns: 1fr;
-    gap: var(--space-3);
-  }
-
-  .tree-edit-location-row {
-    grid-template-columns: 1fr;
-    gap: var(--space-3);
-  }
-
-  .tree-edit-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .tree-edit-primary-actions {
-    margin-left: 0;
-    width: 100%;
-  }
-
-  .tree-edit-primary-actions .tree-edit-action-btn {
-    flex: 1;
-    min-width: 0;
-  }
 }
 </style>

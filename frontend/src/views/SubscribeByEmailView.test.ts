@@ -30,7 +30,7 @@ describe('SubscribeByEmailView', () => {
       global: { plugins: [router, i18n] },
     })
 
-    expect(wrapper.get('h2').text()).toContain('Suscripción')
+    expect(wrapper.get('h1.page-header__title').text()).toContain('Suscripción')
     expect(wrapper.find('#subscription-email').exists()).toBe(true)
   })
 })

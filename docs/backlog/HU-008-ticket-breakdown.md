@@ -12,7 +12,7 @@
 
 **Estado del ticket:** columna **Estado** en cada fila; valores recomendados **Pendiente** (por defecto), **En curso**, **Hecho**, **Rechazado** (descartado con motivo registrado en la fila o en *Qué puede quedar*). Actualízala al cerrar o arrancar trabajo.
 
-**Contexto de equipo:** un ingeniero/a **full-stack**; stack en [readme.md](../../readme.md). Se asume **HU-001** (OIDC/JWT), **HU-005** (alta de árbol y formulario de referencia), **HU-013** (rutas `/mis-ejemplares`, `/ejemplares/:id/edit`) y **HU-006** **cerrada** (fotos individuales y galería en edición vía **TASK-HU-006-14**). **TASK-HU-015-01** (borrado Mongo real) sigue pendiente; en este corte se entrega hook **stub/no-op**.
+**Contexto de equipo:** un ingeniero/a **full-stack**; stack en [readme.md](../../readme.md). Se asume **HU-001** (OIDC/JWT), **HU-005** (Alta de ejemplar y formulario de referencia), **HU-013** (rutas `/mis-ejemplares`, `/ejemplares/:id/edit`) y **HU-006** **cerrada** (fotos individuales y galería en edición vía **TASK-HU-006-14**). **TASK-HU-015-01** (borrado Mongo real) sigue pendiente; en este corte se entrega hook **stub/no-op**.
 
 **Objetivo de este desglose:** cerrar el vertical **UC-04**: listado colaborador con filtros, lectura y **PUT** de ficha propia (o cualquier ficha si **ADMIN**), **DELETE** físico con cascada (media → SQL → hook Mongo stub), sin Kafka ni notificación (**R7**).
 

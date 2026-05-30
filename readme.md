@@ -140,7 +140,7 @@ La aplicación implementa una navegación simple por roles con una **home de ent
 ↳ *Incluye todas las páginas públicas*
 
 ```
-➕  Alta de árbol            /ejemplares/new
+➕  Alta de ejemplar            /ejemplares/new
 📋  Mis árboles              /mis-ejemplares
     └─ Edición de ficha      /ejemplares/:id/edit
 ```
@@ -166,7 +166,7 @@ La aplicación implementa una navegación simple por roles con una **home de ent
 | Árboles `/ejemplares` | ✅ | ✅ | ✅ |
 | Detalle `/ejemplares/:id` | ✅ | ✅ | ✅ |
 | Suscripción `/subscriptions/new` | ✅ | ✅ | ✅ |
-| Alta de árbol `/ejemplares/new` | — | ✅ | ✅ |
+| Alta de ejemplar `/ejemplares/new` | — | ✅ | ✅ |
 | Mis árboles `/mis-ejemplares` | — | ✅ | ✅ |
 | Edición de ficha `/ejemplares/:id/edit` | — | ✅ | ✅ |
 | Maestros `/admin/masters` | — | — | ✅ |
@@ -263,7 +263,7 @@ Tras `docker compose up -d`, levanta **api-gateway** (8080) y, según lo que pru
 | Consulta pública | — | catalog |
 | Alta / edición de árbol | Redis, Kafka | catalog (+ **media** si hay fotos) |
 | Fotos (subida) | MinIO | media |
-| Aviso por correo (alta de árbol) | Kafka, Mailpit | notification |
+| Aviso por correo (Alta de ejemplar) | Kafka, Mailpit | notification |
 | Admin (maestros / suscripciones) | — | catalog; notification (suscripciones) |
 
 Puertos y comandos: [services/README.md](services/README.md).
@@ -612,7 +612,7 @@ flowchart TB
     KafkaBroker --> Listener
 ```
 
-#### Flujo de punta a punta (alta de árbol → correo)
+#### Flujo de punta a punta (Alta de ejemplar → correo)
 
 Tras login en Keycloak, la SPA da de alta el árbol por el API Gateway; **catalog-service** persiste la ficha y publica en Kafka; **notification-service** consume y envía correo (SMTP; Mailpit en desarrollo).
 
@@ -1121,7 +1121,7 @@ erDiagram
     USUARIO_APP ||--o{ AUDITORIA_CATALOGO : actua
 ```
 
-Para el alta de árbol, los valores admitidos son:
+Para el Alta de ejemplar, los valores admitidos son:
 
 - `estado_publicacion`: `BORRADOR` o `PUBLICADO`.
 - `visibilidad_mapa_publico`: `PRIVADO` o `PUBLICO`.

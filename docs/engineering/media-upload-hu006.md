@@ -4,7 +4,7 @@ Documento operativo para desarrollo y soporte: **flujo presign → PUT → confi
 
 ## Alcance de este corte
 
-- Incluye: subida tras alta de árbol (JWT), validaciones de MIME/tamaño/cupo, persistencia de metadatos en esquema `media`, bucket privado con **URLs prefirmadas** (sin credenciales de bucket en el cliente).
+- Incluye: subida tras Alta de ejemplar (JWT), validaciones de MIME/tamaño/cupo, persistencia de metadatos en esquema `media`, bucket privado con **URLs prefirmadas** (sin credenciales de bucket en el cliente).
 - No sustituye: consulta/galería completa (**HU-014**), transformación de imágenes, cambio manual avanzado de principal tras el primer lote.
 
 ## Propiedades configurables (`media-service`)
@@ -83,5 +83,5 @@ La SPA puede enviar `isPrimary: false` en todas las confirmaciones; el servidor 
 ## Enlaces relacionados
 
 - [services/README.md](../../services/README.md) — arranque Maven, puertos, gateway.
-- [readme.md](../../readme.md) — visión de arquitectura (alta de árbol + subida) §3.1.3.
+- [readme.md](../../readme.md) — visión de arquitectura (Alta de ejemplar + subida) §3.1.3.
 - [docs/data-model/data-model.md](../data-model/data-model.md) — visibilidad R4–R5 (herencia desde la ficha).

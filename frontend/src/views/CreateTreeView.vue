@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
+import PageBackLink from '@/components/layout/PageBackLink.vue'
 import TreePhotoUploadPicker from '@/components/TreePhotoUploadPicker.vue'
 import TreeLocationMapPreview from '@/components/TreeLocationMapPreview.vue'
 import { areLatLngInValidRange } from '@/composables/createTreeFormValidation'
@@ -22,8 +23,6 @@ const {
   isSubmitting,
   fieldErrors,
   submitError,
-  submitSuccess,
-  photosUploadError,
   selectedPhotoFiles,
   loadMasters,
   submit,
@@ -165,8 +164,12 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section class="card form-card">
-    <h2>{{ t('treeForm.title') }}</h2>
+  <div class="tree-form-page">
+    <header class="page-header tree-form-page__header">
+      <PageBackLink :to="{ name: 'home' }">{{ t('navigation.home') }}</PageBackLink>
+      <h1 class="page-header__title">{{ t('treeForm.title') }}</h1>
+      <p class="page-header__description">{{ t('treeForm.description') }}</p>
+    </header>
 
     <p v-if="isLoadingMasters" class="status-note">{{ t('treeForm.loadingMasters') }}</p>
     <p v-if="mastersError" class="error" role="alert">{{ mastersError }}</p>
@@ -176,47 +179,47 @@ onMounted(async () => {
       class="tree-form"
       @submit.prevent="submit"
     >
-      <div class="field species-field">
-        <label class="form-label" for="speciesId">{{ t('treeForm.fields.species.label') }}</label>
-        <div class="species-autocomplete">
-          <input
-            id="speciesId"
-            :value="speciesAutocompleteText"
-            class="form-control"
-            type="text"
-            required
-            :placeholder="t('treeForm.fields.species.placeholder')"
-            :aria-invalid="Boolean(fieldErrors.speciesId)"
-            autocomplete="off"
-            @input="onSpeciesInput"
-            @keydown.down.prevent="highlightNextSpecies"
-            @keydown.up.prevent="highlightPreviousSpecies"
-            @keydown.page-down.prevent="highlightNextSpecies"
-            @keydown.page-up.prevent="highlightPreviousSpecies"
-            @keydown.enter.prevent="confirmHighlightedSpecies"
-            @keydown.esc.prevent="dismissSpeciesSuggestions"
-            @focus="onSpeciesFocus"
-            @blur="onSpeciesBlur"
-          />
-          <ul
-            v-if="showSpeciesSuggestions && filteredSpecies.length > 0"
-            class="species-autocomplete-list"
-          >
-            <li
-              v-for="(item, index) in filteredSpecies"
-              :key="item.id"
-              class="species-autocomplete-item"
-              :class="{ 'species-autocomplete-item-active': speciesHighlightIndex === index }"
-              @mousedown.prevent="selectSpecies(item)"
+      <div class="field-full tree-form-species-status-row">
+        <div class="field species-field">
+          <label class="form-label" for="speciesId">{{ t('treeForm.fields.species.label') }}</label>
+          <div class="species-autocomplete">
+            <input
+              id="speciesId"
+              :value="speciesAutocompleteText"
+              class="form-control"
+              type="text"
+              required
+              :placeholder="t('treeForm.fields.species.placeholder')"
+              :aria-invalid="Boolean(fieldErrors.speciesId)"
+              autocomplete="off"
+              @input="onSpeciesInput"
+              @keydown.down.prevent="highlightNextSpecies"
+              @keydown.up.prevent="highlightPreviousSpecies"
+              @keydown.page-down.prevent="highlightNextSpecies"
+              @keydown.page-up.prevent="highlightPreviousSpecies"
+              @keydown.enter.prevent="confirmHighlightedSpecies"
+              @keydown.esc.prevent="dismissSpeciesSuggestions"
+              @focus="onSpeciesFocus"
+              @blur="onSpeciesBlur"
+            />
+            <ul
+              v-if="showSpeciesSuggestions && filteredSpecies.length > 0"
+              class="species-autocomplete-list"
             >
-              {{ item.label }}
-            </li>
-          </ul>
+              <li
+                v-for="(item, index) in filteredSpecies"
+                :key="item.id"
+                class="species-autocomplete-item"
+                :class="{ 'species-autocomplete-item-active': speciesHighlightIndex === index }"
+                @mousedown.prevent="selectSpecies(item)"
+              >
+                {{ item.label }}
+              </li>
+            </ul>
+          </div>
+          <small v-if="fieldErrors.speciesId" class="field-error">{{ fieldErrors.speciesId }}</small>
         </div>
-        <small v-if="fieldErrors.speciesId" class="field-error">{{ fieldErrors.speciesId }}</small>
-      </div>
 
-      <div class="field state-visibility-inline">
         <div class="field">
           <label class="form-label" for="publicationState">{{
             t('treeForm.fields.publicationState.label')
@@ -253,36 +256,38 @@ onMounted(async () => {
         />
       </div>
 
-      <div class="field">
-        <label class="form-label" for="provinceId">{{ t('treeForm.fields.province.label') }}</label>
-        <select
-          id="provinceId"
-          v-model="form.provinceId"
-          class="form-control"
-          required
-          :aria-invalid="Boolean(fieldErrors.provinceId)"
-        >
-          <option disabled value="">{{ t('treeForm.fields.province.placeholder') }}</option>
-          <option v-for="item in provinces" :key="item.id" :value="String(item.id)">
-            {{ item.label }}
-          </option>
-        </select>
-        <small v-if="fieldErrors.provinceId" class="field-error">{{ fieldErrors.provinceId }}</small>
+      <div class="field-full tree-form-location-row">
+        <div class="field">
+          <label class="form-label" for="provinceId">{{ t('treeForm.fields.province.label') }}</label>
+          <select
+            id="provinceId"
+            v-model="form.provinceId"
+            class="form-control"
+            required
+            :aria-invalid="Boolean(fieldErrors.provinceId)"
+          >
+            <option disabled value="">{{ t('treeForm.fields.province.placeholder') }}</option>
+            <option v-for="item in provinces" :key="item.id" :value="String(item.id)">
+              {{ item.label }}
+            </option>
+          </select>
+          <small v-if="fieldErrors.provinceId" class="field-error">{{ fieldErrors.provinceId }}</small>
+        </div>
+
+        <div class="field">
+          <label class="form-label" for="municipality">{{ t('treeForm.fields.municipality.label') }}</label>
+          <input
+            id="municipality"
+            v-model="form.municipality"
+            class="form-control"
+            type="text"
+            maxlength="255"
+            :placeholder="t('treeForm.fields.municipality.placeholder')"
+          />
+        </div>
       </div>
 
-      <div class="field">
-        <label class="form-label" for="municipality">{{ t('treeForm.fields.municipality.label') }}</label>
-        <input
-          id="municipality"
-          v-model="form.municipality"
-          class="form-control"
-          type="text"
-          maxlength="255"
-          :placeholder="t('treeForm.fields.municipality.placeholder')"
-        />
-      </div>
-
-      <div class="field field-full">
+      <div class="field field-full tree-form-field-block">
         <label class="form-label" for="description">{{ t('treeForm.fields.description.label') }}</label>
         <textarea
           id="description"
@@ -344,20 +349,18 @@ onMounted(async () => {
         </div>
       </div>
 
-      <div class="field-full actions">
+      <p v-if="submitError" class="error field-full" role="alert">{{ submitError }}</p>
+
+      <div class="field-full actions page-actions-footer">
         <RouterLink class="btn btn-secondary" :to="{ name: 'home' }">
-          {{ t('treeForm.backHome') }}
+          {{ t('navigation.home') }}
         </RouterLink>
         <button class="btn btn-primary tree-form-submit" type="submit" :disabled="isSubmitting">
           {{ isSubmitting ? t('treeForm.submitting') : t('treeForm.submit') }}
         </button>
       </div>
     </form>
-
-    <p v-if="submitError" class="error" role="alert">{{ submitError }}</p>
-    <p v-if="photosUploadError" class="error" role="alert">{{ photosUploadError }}</p>
-    <output v-if="submitSuccess" class="success" aria-live="polite">{{ submitSuccess }}</output>
-  </section>
+  </div>
 </template>
 
 <style scoped>
@@ -400,24 +403,4 @@ onMounted(async () => {
   background: var(--bg-soft);
 }
 
-.species-field {
-  grid-column: span 1;
-}
-
-.state-visibility-inline {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-4);
-}
-
-@media (max-width: 720px) {
-  .species-field {
-    grid-column: 1 / -1;
-  }
-
-  .state-visibility-inline {
-    grid-template-columns: 1fr;
-    gap: var(--space-3);
-  }
-}
 </style>

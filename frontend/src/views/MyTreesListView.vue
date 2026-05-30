@@ -2,6 +2,7 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import PageBackLink from '@/components/layout/PageBackLink.vue'
 import { useAbortableRequest } from '@/composables/useAbortableRequest'
 import { useAuth } from '@/composables/useAuth'
 import { useCollaboratorCatalogErrorMapper } from '@/composables/useCollaboratorCatalogErrorMapper'
@@ -11,6 +12,8 @@ import { fetchSpecies } from '@/services/catalog/catalogService'
 import { fetchCollaboratorTrees } from '@/services/catalog/collaboratorTreesService'
 import type { CollaboratorTreeListItem, MasterListItem } from '@/types/catalog'
 
+const { t } = useI18n()
+
 function formatSpeciesTitle(tree: CollaboratorTreeListItem): string {
   const common = tree.commonName.trim()
   const scientific = tree.scientificName.trim()
@@ -18,6 +21,31 @@ function formatSpeciesTitle(tree: CollaboratorTreeListItem): string {
     return `${common} (${scientific})`
   }
   return scientific
+}
+
+function publicationStateLabel(state: string): string {
+  if (state === 'BORRADOR') {
+    return t('treesList.filters.state.borrador')
+  }
+  if (state === 'PUBLICADO') {
+    return t('treesList.filters.state.publicado')
+  }
+  return state
+}
+
+function mapVisibilityLabel(visibility: string): string {
+  if (visibility === 'PRIVADO') {
+    return t('treesList.filters.visibility.privado')
+  }
+  if (visibility === 'PUBLICO') {
+    return t('treesList.filters.visibility.publico')
+  }
+  return visibility
+}
+
+function locationLine(tree: CollaboratorTreeListItem): string {
+  const parts = [tree.municipality?.trim(), tree.province?.trim()].filter(Boolean)
+  return parts.length > 0 ? parts.join(' · ') : t('common.emptyValue')
 }
 
 function filterText(value: unknown): string {
@@ -33,10 +61,9 @@ function parseOptionalInt(value: unknown): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined
 }
 
-const DEFAULT_PAGE_SIZE = 20
+const DEFAULT_PAGE_SIZE = 4
 const DEFAULT_TREE_CARD_IMAGE = '/MyTreeLibrary.png'
 
-const { t } = useI18n()
 const { hasRole } = useAuth()
 const { toMessage } = useCollaboratorCatalogErrorMapper()
 const { runWithAbort, isAbortError } = useAbortableRequest()
@@ -74,6 +101,10 @@ const hasPrevious = computed(() => page.value > 0)
 const hasNext = computed(() => page.value + 1 < totalPages.value)
 const hasResults = computed(() => trees.value.length > 0)
 const isSuccess = computed(() => !isLoading.value && !errorMessage.value)
+
+function editRoute(treeId: number) {
+  return { name: 'ejemplares-edit' as const, params: { id: treeId } }
+}
 
 function getTreeCardImageSrc(treeId: number): string {
   return thumbUrls.value[treeId] ?? DEFAULT_TREE_CARD_IMAGE
@@ -184,17 +215,19 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section class="card trees-list-card">
-    <div class="trees-list-header">
-      <div class="trees-list-heading">
-        <h2>{{ t('myTrees.title') }}</h2>
-      </div>
+  <div class="catalog-page">
+    <header class="page-header">
+      <PageBackLink :to="{ name: 'home' }">{{ t('navigation.home') }}</PageBackLink>
+      <h1 class="page-header__title">{{ t('myTrees.title') }}</h1>
+      <p class="page-header__description">{{ t('myTrees.description') }}</p>
+    </header>
 
-      <form class="trees-list-filters" @submit.prevent="applyFilters">
-        <div class="trees-filter-panel">
-          <div class="trees-filter-grid">
+    <section class="catalog-toolbar" :aria-label="t('myTrees.filters.apply')">
+      <form class="catalog-toolbar__form" @submit.prevent="applyFilters">
+        <div class="catalog-toolbar__panel">
+          <div class="catalog-toolbar__fields">
             <div class="filter-field">
-              <label class="form-label trees-filter-label" for="my-trees-filter-species">{{
+              <label class="form-label" for="my-trees-filter-species">{{
                 t('myTrees.filters.species.label')
               }}</label>
               <SpeciesAutocompleteInput
@@ -202,31 +235,31 @@ onMounted(async () => {
                 input-id="my-trees-filter-species"
                 v-model="filters.speciesId"
                 :species="speciesOptions"
-                input-class="form-control trees-filter-control"
+                input-class="form-control"
                 :placeholder="t('myTrees.filters.species.placeholder')"
               />
             </div>
 
             <div class="filter-field">
-              <label class="form-label trees-filter-label" for="my-trees-filter-created-from">{{
+              <label class="form-label" for="my-trees-filter-created-from">{{
                 t('myTrees.filters.createdFrom.label')
               }}</label>
               <input
                 id="my-trees-filter-created-from"
                 v-model="filters.createdFrom"
-                class="form-control trees-filter-control"
+                class="form-control"
                 type="date"
               />
             </div>
 
             <div class="filter-field">
-              <label class="form-label trees-filter-label" for="my-trees-filter-created-to">{{
+              <label class="form-label" for="my-trees-filter-created-to">{{
                 t('myTrees.filters.createdTo.label')
               }}</label>
               <input
                 id="my-trees-filter-created-to"
                 v-model="filters.createdTo"
-                class="form-control trees-filter-control"
+                class="form-control"
                 type="date"
               />
             </div>
@@ -234,16 +267,16 @@ onMounted(async () => {
 
           <div
             v-show="isAdmin && adminFiltersExpanded"
-            class="trees-filter-grid trees-filter-grid--privileged"
+            class="catalog-toolbar__fields catalog-toolbar__fields--privileged"
           >
             <div class="filter-field">
-              <label class="form-label trees-filter-label" for="my-trees-filter-creator">{{
+              <label class="form-label" for="my-trees-filter-creator">{{
                 t('myTrees.filters.createdByUserId.label')
               }}</label>
               <input
                 id="my-trees-filter-creator"
                 v-model="filters.createdByUserId"
-                class="form-control trees-filter-control"
+                class="form-control"
                 type="number"
                 min="1"
                 step="1"
@@ -253,18 +286,13 @@ onMounted(async () => {
             </div>
           </div>
 
-          <div class="trees-filter-actions">
-            <button
-              class="btn btn-secondary btn-sm trees-filter-btn"
-              type="button"
-              :disabled="isLoading"
-              @click="clearFilters"
-            >
+          <div class="catalog-toolbar__actions">
+            <button class="btn btn-secondary btn-sm" type="button" :disabled="isLoading" @click="clearFilters">
               {{ t('myTrees.filters.clear') }}
             </button>
             <button
               v-if="isAdmin && !adminFiltersExpanded"
-              class="btn btn-secondary btn-sm trees-filter-btn"
+              class="btn btn-secondary btn-sm"
               type="button"
               :disabled="isLoading"
               @click="expandAdminFilters"
@@ -273,99 +301,77 @@ onMounted(async () => {
             </button>
             <button
               v-if="isAdmin && adminFiltersExpanded"
-              class="btn btn-secondary btn-sm trees-filter-btn"
+              class="btn btn-secondary btn-sm"
               type="button"
               :disabled="isLoading"
               @click="collapseAdminFilters"
             >
               {{ t('myTrees.filters.fewerFilters') }}
             </button>
-            <button
-              class="btn btn-primary btn-sm trees-filter-btn trees-filter-btn-submit"
-              type="submit"
-              :disabled="isLoading"
-            >
+            <button class="btn btn-primary btn-sm catalog-toolbar__submit" type="submit" :disabled="isLoading">
               {{ t('myTrees.filters.apply') }}
             </button>
           </div>
         </div>
       </form>
-    </div>
+    </section>
 
     <p v-if="isLoading" class="status-note">{{ t('myTrees.loading') }}</p>
     <p v-else-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
 
     <template v-else-if="isSuccess">
-      <p class="trees-list-results-count muted">
+      <p class="catalog-results-count muted">
         {{ t('myTrees.resultsCount', { count: totalResults }) }}
       </p>
 
       <p v-if="!hasResults" class="status-note">{{ t('myTrees.empty') }}</p>
 
-      <div v-else class="trees-grid">
-        <article v-for="tree in trees" :key="tree.treeId" class="tree-card">
-          <div class="tree-card-thumb">
-            <RouterLink
-              class="tree-card-thumb-link"
-              :to="{ name: 'ejemplares-edit', params: { id: tree.treeId } }"
-            >
-              <div class="tree-card-thumb-media">
-                <img
-                  class="tree-card-thumb-img"
-                  :src="getTreeCardImageSrc(tree.treeId)"
-                  :alt="formatSpeciesTitle(tree)"
-                  width="132"
-                  height="156"
-                  loading="lazy"
-                />
-              </div>
-            </RouterLink>
-          </div>
-          <div class="tree-card-main">
-            <div class="tree-card-body">
-              <h3 class="tree-card-title">{{ formatSpeciesTitle(tree) }}</h3>
-              <dl class="tree-card-meta">
-                <div>
-                  <dt>{{ t('myTrees.fields.province') }}</dt>
-                  <dd>{{ tree.province || '-' }}</dd>
-                </div>
-                <div>
-                  <dt>{{ t('myTrees.fields.municipality') }}</dt>
-                  <dd>{{ tree.municipality || '-' }}</dd>
-                </div>
-                <div>
-                  <dt>{{ t('myTrees.fields.state') }}</dt>
-                  <dd>{{ tree.publicationState || '-' }}</dd>
-                </div>
-                <div>
-                  <dt>{{ t('myTrees.fields.visibility') }}</dt>
-                  <dd>{{ tree.publicMapVisibility || '-' }}</dd>
-                </div>
-              </dl>
-            </div>
-            <div class="tree-card-footer">
-              <RouterLink class="btn btn-primary btn-sm" :to="{ name: 'ejemplares-edit', params: { id: tree.treeId } }">
-                {{ t('myTrees.edit') }}
+      <div v-else class="catalog-grid">
+        <article v-for="tree in trees" :key="tree.treeId" class="catalog-card">
+          <RouterLink class="catalog-card__thumb-link" :to="editRoute(tree.treeId)">
+            <img
+              class="catalog-card__thumb"
+              :src="getTreeCardImageSrc(tree.treeId)"
+              :alt="formatSpeciesTitle(tree)"
+              width="160"
+              height="140"
+              loading="lazy"
+            />
+          </RouterLink>
+          <div class="catalog-card__body">
+            <h2 class="catalog-card__title">
+              <RouterLink class="catalog-card__title-link" :to="editRoute(tree.treeId)">
+                {{ formatSpeciesTitle(tree) }}
               </RouterLink>
+            </h2>
+            <p class="catalog-card__location">{{ locationLine(tree) }}</p>
+            <div class="catalog-card__badges">
+              <span class="mtl-badge">{{ publicationStateLabel(tree.publicationState) }}</span>
+              <span class="mtl-badge mtl-badge--muted">{{
+                mapVisibilityLabel(tree.publicMapVisibility)
+              }}</span>
             </div>
+            <RouterLink class="catalog-card__detail-link" :to="editRoute(tree.treeId)">
+              {{ t('myTrees.edit') }}
+            </RouterLink>
           </div>
         </article>
       </div>
 
-      <nav class="trees-pagination" :aria-label="t('myTrees.pagination.navLabel')">
+      <nav class="catalog-pagination" :aria-label="t('myTrees.pagination.navLabel')">
         <button
-          class="btn trees-pagination-btn trees-pagination-btn--prev"
+          class="btn btn-secondary btn-sm"
           type="button"
           :disabled="!hasPrevious || isLoading"
           @click="goToPreviousPage"
         >
           {{ t('myTrees.pagination.previous') }}
         </button>
-        <span class="trees-pagination-status">
+        <span class="catalog-pagination__status">
           {{ t('myTrees.pagination.pageStatus', { current: page + 1, total: totalPages }) }}
         </span>
         <button
-          class="btn trees-pagination-btn trees-pagination-btn--next"
+          class="btn btn-secondary btn-sm"
           type="button"
           :disabled="!hasNext || isLoading"
           @click="goToNextPage"
@@ -374,5 +380,5 @@ onMounted(async () => {
         </button>
       </nav>
     </template>
-  </section>
+  </div>
 </template>

@@ -27,7 +27,8 @@ public interface FamiliaRepository extends JpaRepository<Familia, Long> {
             )
             END
           )
-          ORDER BY f.nombre_cientifico ASC
+          ORDER BY lower(coalesce(nullif(trim(f.nombre_comun), ''), f.nombre_cientifico)) ASC,
+                   lower(f.nombre_cientifico) ASC
           """,
       countQuery =
           """

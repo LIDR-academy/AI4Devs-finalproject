@@ -5,6 +5,12 @@ import { HttpError } from '@/services/http/apiClient'
 import { es } from '@/i18n/locales/es'
 import { useCreateTreeForm } from '@/composables/useCreateTreeForm'
 
+const routerPush = vi.hoisted(() => vi.fn())
+
+vi.mock('vue-router', () => ({
+  useRouter: () => ({ push: routerPush }),
+}))
+
 vi.mock('@/services/catalog/catalogService', () => ({
   fetchSpecies: vi.fn(),
   fetchProvinces: vi.fn(),
@@ -92,10 +98,11 @@ describe('useCreateTreeForm', () => {
     await nextTick()
 
     expect(createTree).not.toHaveBeenCalled()
+    expect(routerPush).not.toHaveBeenCalled()
     expect(Object.keys(form.fieldErrors.value).length).toBeGreaterThan(0)
   })
 
-  it('submit válido crea ejemplar y muestra éxito', async () => {
+  it('submit válido redirige a edición con flash ok', async () => {
     const form = mountForm()
     fillValidForm(form.form)
 
@@ -110,10 +117,14 @@ describe('useCreateTreeForm', () => {
         longitude: -3.7,
       }),
     )
-    expect(form.submitSuccess.value).toContain('100')
+    expect(routerPush).toHaveBeenCalledWith({
+      name: 'ejemplares-edit',
+      params: { id: '100' },
+      query: { fromCreate: 'ok' },
+    })
   })
 
-  it('submit con fotos sube archivos tras crear', async () => {
+  it('submit con fotos redirige con flash okPhotos', async () => {
     const form = mountForm()
     fillValidForm(form.form)
     const file = new File(['x'], 'foto.jpg', { type: 'image/jpeg' })
@@ -123,11 +134,15 @@ describe('useCreateTreeForm', () => {
     await nextTick()
 
     expect(uploadPhotosForTreeAfterCreate).toHaveBeenCalledWith(100, [file])
-    expect(form.submitSuccess.value).toContain('100')
-    expect(form.submitSuccess.value).toContain('fotografías')
+    expect(routerPush).toHaveBeenCalledWith({
+      name: 'ejemplares-edit',
+      params: { id: '100' },
+      query: { fromCreate: 'okPhotos' },
+    })
+    expect(form.selectedPhotoFiles.value).toHaveLength(0)
   })
 
-  it('fallo de almacenamiento de fotos deja éxito parcial y error de fotos', async () => {
+  it('fallo de fotos redirige con flash photosWarning', async () => {
     vi.mocked(uploadPhotosForTreeAfterCreate).mockRejectedValue(
       new ObjectStorageUploadError(502, 'STORAGE_UPLOAD_HTTP_502'),
     )
@@ -138,8 +153,11 @@ describe('useCreateTreeForm', () => {
     await form.submit()
     await nextTick()
 
-    expect(form.submitSuccess.value).toContain('100')
-    expect(form.photosUploadError.value).toContain('502')
+    expect(routerPush).toHaveBeenCalledWith({
+      name: 'ejemplares-edit',
+      params: { id: '100' },
+      query: { fromCreate: 'photosWarning' },
+    })
   })
 
   it('error HttpError en submit muestra mensaje mapeado', async () => {
@@ -157,5 +175,6 @@ describe('useCreateTreeForm', () => {
     await nextTick()
 
     expect(form.submitError.value).toBe('Coordenadas inválidas')
+    expect(routerPush).not.toHaveBeenCalled()
   })
 })
