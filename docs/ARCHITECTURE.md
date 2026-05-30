@@ -22,6 +22,32 @@ La arquitectura de **frontend SSR desacoplado + API REST independiente + base de
 **Por qué Next.js 14 y no React Router v7 (Remix) para SSR:**
 El prototipo de Figma Make usa React Router v7 en modo SPA. Para la implementación real, Next.js 14 con App Router es la elección más reconocida en la industria para SSR con React, con mejor soporte de Server Components, Image Optimization y Metadata API. La migración del código del prototipo es directa dado que ambos son ecosistemas React + TypeScript.
 
+### 1.2 Patrón de arquitectura del backend
+
+El backend sigue el patrón **Layered Architecture con Repository Pattern y Dependency Inversion**, que se evaluó frente a otras dos alternativas habituales en sistemas web:
+
+| Patrón | Complejidad | Adecuado para | Decisión |
+|---|---|---|---|
+| **Layered Architecture + Repository Pattern** | Baja-media | MVPs, dominios simples, equipos pequeños | **Seleccionado** |
+| **Hexagonal (Ports & Adapters)** | Media-alta | Dominios complejos, múltiples adaptadores de infraestructura | Descartado |
+| **Clean Architecture** | Alta | Sistemas grandes, reglas de negocio ricas, equipos grandes | Descartado |
+
+**Por qué no Hexagonal Architecture:**
+
+La arquitectura hexagonal (Ports & Adapters) exige separar explícitamente el dominio de la infraestructura: definir puertos de entrada (casos de uso) y salida (repositorios, servicios externos), e implementar adaptadores para cada uno. Este modelo aporta valor real cuando el dominio es complejo, cuando se necesita intercambiar adaptadores (cambiar PostgreSQL por MongoDB, añadir mensajería asíncrona, etc.) o cuando varios equipos trabajan en paralelo con fronteras claras.
+
+En RunMarket MVP ninguna de estas condiciones se cumple: la lógica de negocio es sencilla (filtrar productos, validar un formulario de checkout, crear un pedido), existe un único adaptador de datos (PostgreSQL via Prisma) que no va a cambiar, y el equipo de desarrollo es de una persona. Aplicar Hexagonal añadiría ficheros y abstracciones innecesarias sin beneficio observable en testabilidad ni mantenibilidad.
+
+**Por qué no Clean Architecture:**
+
+Clean Architecture impone una estructura de capas concéntricas (Entities → Use Cases → Interface Adapters → Frameworks & Drivers) con reglas de dependencia estrictas: las capas internas no pueden conocer las externas. Este nivel de rigor tiene sentido en sistemas con reglas de negocio complejas que deben protegerse de cambios en infraestructura o frameworks.
+
+RunMarket no tiene entidades de dominio ricas ni invariantes de negocio que justifiquen esa separación. El "dominio" del MVP es esencialmente CRUD con filtrado y una simulación de pago. Aplicar Clean Architecture sería añadir complejidad estructural para proteger reglas que no existen.
+
+**Qué sí toma prestado el patrón elegido:**
+
+Aunque no es Hexagonal ni Clean, la arquitectura propuesta incorpora **Dependency Inversion** de forma pragmática: los Services dependen de interfaces (`IProductRepository`, `IOrderRepository`...) y no de implementaciones concretas. Esto permite testear cada Service de forma aislada con mocks de repositorio sin levantar base de datos, que es el beneficio concreto que importa en este contexto.
+
 ---
 
 ## 2. Arquitectura propuesta
@@ -247,6 +273,8 @@ runmarket/
 
 | Decisión | Alternativa considerada | Justificación |
 |---|---|---|
+| **Layered Architecture + Repository Pattern** | Hexagonal, Clean Architecture | Dominio simple (CRUD + filtrado + checkout simulado), un solo adaptador de datos, equipo unipersonal. Hexagonal y Clean añaden complejidad estructural sin beneficio medible en este contexto. |
+| **Dependency Inversion en repositorios** | Acceso directo a Prisma desde Services | Permite unit testing de Services con mocks sin levantar base de datos, sin el coste de una arquitectura hexagonal completa. |
 | Next.js para SSR | React Router v7 framework mode | Mayor reconocimiento industrial, mejor Metadata API, Server Components maduros |
 | Prisma como ORM | TypeORM, Drizzle, queries raw | Type-safety nativo, migraciones integradas, compatibilidad perfecta con TypeScript |
 | Zod para validación | Joi, Yup, class-validator | Compatible con TypeScript inference, compartible entre frontend y backend |
