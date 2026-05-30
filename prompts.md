@@ -212,11 +212,15 @@ Escribe el contenido en `docs/ARCHITECTURE.md`.
 
 ### **2.2. Descripción de componentes principales:**
 
+---
+
 ### Prompt 1: Diseño del sistema a alto nivel, explicado y con diagrama adjunto
 
 Se ha utilizado el **Prompt 1** de la sección `2.1. Diagrama de arquitectura`, ya que este prompt solicita explícitamente explicar los componentes principales del sistema: frontend, backend, base de datos, servicios de dominio e integraciones externas.
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
+
+---
 
 ### Prompt 1: Diseño del sistema a alto nivel, explicado y con diagrama adjunto
 
