@@ -67,7 +67,7 @@ Como visitante o usuario autenticado quiero ver las fotografías almacenadas en 
 
 ### Aclaraciones pendientes (refinamiento)
 
-- **Listado de metadatos por árbol**: resuelto en `GET /api/media/ejemplares/{ejemplarId}/photos` (galería visible para el solicitante con orden principal+ascendente).
+- **Listado de metadatos por árbol**: resuelto en `GET /api/media/trees/{treeId}/photos` (galería visible para el solicitante con orden principal+ascendente).
 - Criterio de ausencia de fotos en API de galería: respuesta **200** con **lista vacía**.
 - Sin pendientes funcionales adicionales para pasar a cierre documental del corte.
 
@@ -116,8 +116,8 @@ Objetivo: dejar trazada en documentación lo ya construido frente a la HU comple
 
 | Pieza | Estado | Notas |
 |-------|--------|--------|
-| **Contrato galería** `GET /api/media/ejemplares/{ejemplarId}/photos` | Hecho | [docs/api/openapi.yaml](../api/openapi.yaml): `200` con lista (vacía cuando aplica), campos mínimos `id/url/esPrincipal/orden/mimeType/ancho/alto/categoria`, `categoria` literal `PUBLIC`/`PRIVATE`. |
-| **Contrato foto principal binaria** `GET /api/media/public/ejemplares/{ejemplarId}/primary-photo` | Hecho | Se mantiene para miniatura/listado público; respuestas binaria `image/*` y `404/502` según contrato. |
+| **Contrato galería** `GET /api/media/trees/{treeId}/photos` | Hecho | [docs/api/openapi.yaml](../api/openapi.yaml): `200` con lista (vacía cuando aplica), campos mínimos `id/url/esPrincipal/orden/mimeType/ancho/alto/categoria`, `categoria` literal `PUBLIC`/`PRIVATE`. |
+| **Contrato foto principal binaria** `GET /api/media/public/trees/{treeId}/primary-photo` | Hecho | Se mantiene para miniatura/listado público; respuestas binaria `image/*` y `404/502` según contrato. |
 | **Visibilidad por rol en backend** | Hecho | Público anónimo recibe solo `PUBLIC`; autenticado recibe `PUBLIC + PRIVATE` según permisos de negocio; orden estable principal+ascendente. |
 | **Lectura segura de objetos** | Hecho | URLs de galería emitidas como lectura firmada (evita acceso directo no autorizado al bucket privado). |
 | **UI listado (HU-002)** | Hecho | Tarjeta con fotografía principal o fallback; proporción contenida en bloque fijo del lado izquierdo; enlace a detalle desde imagen y botón. |

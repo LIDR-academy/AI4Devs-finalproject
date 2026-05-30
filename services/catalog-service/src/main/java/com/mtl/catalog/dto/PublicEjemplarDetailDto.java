@@ -3,7 +3,7 @@ package com.mtl.catalog.dto;
 import java.math.BigDecimal;
 
 public record PublicEjemplarDetailDto(
-    Long ejemplarId,
+    Long treeId,
     String commonName,
     String scientificName,
     String province,

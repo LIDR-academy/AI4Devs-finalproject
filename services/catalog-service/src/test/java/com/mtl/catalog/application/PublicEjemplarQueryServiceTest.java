@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.mtl.catalog.dto.PublicEjemplarListQuery;
 import com.mtl.catalog.exception.CatalogNotFoundException;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.PublicEjemplarReadRepository;
 import com.mtl.catalog.infrastructure.persistence.jpa.repository.projection.PublicEjemplarDetailRow;
@@ -38,14 +39,14 @@ class PublicEjemplarQueryServiceTest {
             any(), any(), any(), any(), any(), any(), any(), any(Pageable.class)))
         .thenReturn(page);
 
-    PublicEjemplarQueryService.PublicEjemplarFilters filters =
-        new PublicEjemplarQueryService.PublicEjemplarFilters(
-            "Quercus", "Madrid", "Madrid", "BORRADOR", "PRIVADO");
+    var query =
+        new PublicEjemplarListQuery("Quercus", "Madrid", "Madrid", "BORRADOR", "PRIVADO", "species,asc");
 
-    var response = publicEjemplarQueryService.listPublishedEjemplares(0, 20, "especie,asc", filters, null);
+    var response = publicEjemplarQueryService.listPublishedEjemplares(0, 20, query, null);
 
     ArgumentCaptor<String> estadoCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<String> visibilidadCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<String> sortFieldCaptor = ArgumentCaptor.forClass(String.class);
     verify(publicEjemplarReadRepository)
         .findPublicEjemplarRows(
             any(),
@@ -53,15 +54,17 @@ class PublicEjemplarQueryServiceTest {
             any(),
             estadoCaptor.capture(),
             visibilidadCaptor.capture(),
-            eq("especie"),
+            sortFieldCaptor.capture(),
             eq("asc"),
             any(Pageable.class));
 
     assertEquals("PUBLICADO", estadoCaptor.getValue());
     assertEquals("PUBLICO", visibilidadCaptor.getValue());
+    assertEquals("especie", sortFieldCaptor.getValue());
     assertEquals(1, response.content().size());
     assertEquals("PUBLICADO", response.content().getFirst().publicationState());
     assertEquals("PUBLICO", response.content().getFirst().publicMapVisibility());
+    assertEquals("species,asc", response.sort());
   }
 
   @Test
@@ -94,13 +97,13 @@ class PublicEjemplarQueryServiceTest {
 
     var detail = publicEjemplarQueryService.getPublishedEjemplarDetail(42L, null);
 
-    assertEquals(42L, detail.ejemplarId());
+    assertEquals(42L, detail.treeId());
     assertEquals("PUBLICADO", detail.publicationState());
     assertEquals("PUBLICO", detail.publicMapVisibility());
   }
 
   private record PublicEjemplarListRowStub(
-      Long ejemplarId, String commonName, String scientificName, String province, String municipality)
+      Long treeId, String commonName, String scientificName, String province, String municipality)
       implements PublicEjemplarListRow {
     @Override
     public String getPublicationState() {
@@ -113,8 +116,8 @@ class PublicEjemplarQueryServiceTest {
     }
 
     @Override
-    public Long getEjemplarId() {
-      return ejemplarId;
+    public Long getTreeId() {
+      return treeId;
     }
 
     @Override
@@ -139,7 +142,7 @@ class PublicEjemplarQueryServiceTest {
   }
 
   private record PublicEjemplarDetailRowStub(
-      Long ejemplarId,
+      Long treeId,
       String commonName,
       String scientificName,
       String province,
@@ -152,8 +155,8 @@ class PublicEjemplarQueryServiceTest {
       Integer altitude)
       implements PublicEjemplarDetailRow {
     @Override
-    public Long getEjemplarId() {
-      return ejemplarId;
+    public Long getTreeId() {
+      return treeId;
     }
 
     @Override

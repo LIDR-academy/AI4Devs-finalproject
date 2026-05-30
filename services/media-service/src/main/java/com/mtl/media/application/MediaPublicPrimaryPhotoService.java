@@ -75,7 +75,7 @@ public class MediaPublicPrimaryPhotoService {
     try {
       catalogRestClient
           .get()
-          .uri("/api/catalog/public/ejemplares/{id}", ejemplarId)
+          .uri("/api/catalog/public/trees/{id}", ejemplarId)
           .headers(
               h -> {
                 if (jwt != null

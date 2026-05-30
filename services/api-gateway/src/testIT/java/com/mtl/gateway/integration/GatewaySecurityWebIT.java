@@ -68,19 +68,19 @@ class GatewaySecurityWebIT {
   void setUp() {
     upstream.resetAll();
     upstream.stubFor(
-        get(urlPathEqualTo("/api/catalog/public/ejemplares"))
+        get(urlPathEqualTo("/api/catalog/public/trees"))
             .willReturn(
                 aResponse()
                     .withStatus(200)
                     .withHeader(HEADER_CONTENT_TYPE, APPLICATION_JSON)
                     .withBody("[]")));
     upstream.stubFor(
-        get(urlPathEqualTo("/api/catalog/public/ejemplares/42"))
+        get(urlPathEqualTo("/api/catalog/public/trees/42"))
             .willReturn(
                 aResponse()
                     .withStatus(200)
                     .withHeader(HEADER_CONTENT_TYPE, APPLICATION_JSON)
-                    .withBody("{\"ejemplarId\":42}")));
+                    .withBody("{\"treeId\":42}")));
     upstream.stubFor(
         post(urlPathEqualTo("/api/notifications/subscriptions"))
             .willReturn(
@@ -89,7 +89,7 @@ class GatewaySecurityWebIT {
                     .withHeader(HEADER_CONTENT_TYPE, APPLICATION_JSON)
                     .withBody("{}")));
     upstream.stubFor(
-        get(urlPathMatching("/api/media/ejemplares/[0-9]+/photos"))
+        get(urlPathMatching("/api/media/trees/[0-9]+/photos"))
             .willReturn(
                 aResponse()
                     .withStatus(200)
@@ -105,14 +105,14 @@ class GatewaySecurityWebIT {
 
   @Test
   void protectedCatalogRouteWithoutTokenReturnsUnauthorized() {
-    webTestClient.get().uri("/api/catalog/ejemplares").exchange().expectStatus().isEqualTo(UNAUTHORIZED);
+    webTestClient.get().uri("/api/catalog/trees").exchange().expectStatus().isEqualTo(UNAUTHORIZED);
   }
 
   @Test
   void protectedCatalogRouteWithoutToken_returnsProblemJsonWithCorrelationId() {
     webTestClient
         .get()
-        .uri("/api/catalog/ejemplares")
+        .uri("/api/catalog/trees")
         .header(CorrelationIdWebFilter.HEADER_NAME, "gw-it-corr-401")
         .exchange()
         .expectStatus()
@@ -129,7 +129,7 @@ class GatewaySecurityWebIT {
         .jsonPath("$.detail")
         .isEqualTo("Se requiere autenticación con un token Bearer válido")
         .jsonPath("$.instance")
-        .isEqualTo("/api/catalog/ejemplares")
+        .isEqualTo("/api/catalog/trees")
         .jsonPath("$.correlationId")
         .isEqualTo("gw-it-corr-401");
   }
@@ -157,7 +157,7 @@ class GatewaySecurityWebIT {
   void publicCatalogRouteWithoutTokenDoesNotReturnUnauthorized() {
     webTestClient
         .get()
-        .uri("/api/catalog/public/ejemplares")
+        .uri("/api/catalog/public/trees")
         .exchange()
         .expectStatus()
         .value(status -> assertNotEquals(UNAUTHORIZED.value(), status, "ruta pública no debe exigir JWT"));
@@ -167,7 +167,7 @@ class GatewaySecurityWebIT {
   void publicCatalogDetailRouteWithoutTokenDoesNotReturnUnauthorized() {
     webTestClient
         .get()
-        .uri("/api/catalog/public/ejemplares/42")
+        .uri("/api/catalog/public/trees/42")
         .exchange()
         .expectStatus()
         .value(
@@ -178,11 +178,11 @@ class GatewaySecurityWebIT {
   @Test
   void publicMediaPrimaryPhotoRouteWithoutTokenDoesNotReturnUnauthorized() {
     upstream.stubFor(
-        get(urlPathMatching("/api/media/public/ejemplares/[0-9]+/primary-photo"))
+        get(urlPathMatching("/api/media/public/trees/[0-9]+/primary-photo"))
             .willReturn(aResponse().withStatus(404)));
     webTestClient
         .get()
-        .uri("/api/media/public/ejemplares/1/primary-photo")
+        .uri("/api/media/public/trees/1/primary-photo")
         .exchange()
         .expectStatus()
         .value(
@@ -197,7 +197,7 @@ class GatewaySecurityWebIT {
   void publicMediaGalleryRouteWithoutTokenDoesNotReturnUnauthorized() {
     webTestClient
         .get()
-        .uri("/api/media/ejemplares/1/photos")
+        .uri("/api/media/trees/1/photos")
         .exchange()
         .expectStatus()
         .value(

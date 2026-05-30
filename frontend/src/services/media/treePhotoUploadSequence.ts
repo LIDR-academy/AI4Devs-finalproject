@@ -81,7 +81,7 @@ export async function putFileToObjectStorageUrl(uploadUrl: string, file: File): 
   }
 }
 
-export interface UploadPhotosForEjemplarOptions {
+export interface UploadPhotosForTreeOptions {
   startOrden?: number
   signal?: AbortSignal
 }
@@ -90,10 +90,10 @@ export interface UploadPhotosForEjemplarOptions {
  * presign → PUT binario → confirmar metadatos, en orden estable por fichero.
  * `orden` de cada confirmación = `startOrden + índice` (debe coincidir con fotos ya confirmadas en servidor).
  */
-export async function uploadPhotosForEjemplar(
-  ejemplarId: number,
+export async function uploadPhotosForTree(
+  treeId: number,
   files: readonly File[],
-  options: UploadPhotosForEjemplarOptions = {},
+  options: UploadPhotosForTreeOptions = {},
 ): Promise<void> {
   const startOrden = options.startOrden ?? 0
   const signal = options.signal
@@ -102,10 +102,10 @@ export async function uploadPhotosForEjemplar(
     const file = files[index]
     const orden = startOrden + index
     const presignBody: PresignUploadRequest = {
-      ejemplarId,
-      nombreFicheroOriginal: file.name,
-      tipoMime: file.type,
-      tamanoBytes: file.size,
+      treeId: treeId,
+      originalFileName: file.name,
+      mimeType: file.type,
+      sizeBytes: file.size,
     }
     const presign = await apiFetch<PresignUploadResponse>('/api/media/uploads/presign', {
       method: 'POST',
@@ -117,16 +117,16 @@ export async function uploadPhotosForEjemplar(
 
     const dims = await readImageDimensionsOptional(file)
     const confirmBody: ConfirmPhotoUploadRequest = {
-      ejemplarId,
+      treeId: treeId,
       bucket: presign.bucket,
       objectKey: presign.objectKey,
-      nombreFicheroOriginal: file.name,
-      tipoMime: file.type,
-      tamanoBytes: file.size,
-      anchoPx: dims.width ?? null,
-      altoPx: dims.height ?? null,
-      orden,
-      esPrincipal: false,
+      originalFileName: file.name,
+      mimeType: file.type,
+      sizeBytes: file.size,
+      widthPx: dims.width ?? null,
+      heightPx: dims.height ?? null,
+      order: orden,
+      isPrimary: false,
       checksumSha256: null,
     }
     await apiFetch<PhotoMetadataResponse>('/api/media/photos/confirm', {
@@ -138,9 +138,9 @@ export async function uploadPhotosForEjemplar(
 }
 
 /** Tras crear el árbol: sube desde orden 0. */
-export async function uploadPhotosForEjemplarAfterCreate(
-  ejemplarId: number,
+export async function uploadPhotosForTreeAfterCreate(
+  treeId: number,
   files: readonly File[],
 ): Promise<void> {
-  await uploadPhotosForEjemplar(ejemplarId, files, { startOrden: 0 })
+  await uploadPhotosForTree(treeId, files, { startOrden: 0 })
 }

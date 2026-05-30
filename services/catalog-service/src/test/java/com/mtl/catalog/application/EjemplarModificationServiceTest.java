@@ -48,7 +48,7 @@ class EjemplarModificationServiceTest {
 
     CollaboratorEjemplarDetailDto out = ejemplarModificationService.updateEjemplar(42L, request, collaboratorJwt());
 
-    assertThat(out.ejemplarId()).isEqualTo(42L);
+    assertThat(out.treeId()).isEqualTo(42L);
     verify(catalogAuditService)
         .recordEjemplarModified(eq(5L), eq(42L), eq(10L), eq(28L), eq(11L), eq(29L));
   }
@@ -56,7 +56,7 @@ class EjemplarModificationServiceTest {
   private static CollaboratorEjemplarDetailRow detailRow() {
     return new CollaboratorEjemplarDetailRow() {
       @Override
-      public Long getEjemplarId() {
+      public Long getTreeId() {
         return 42L;
       }
 

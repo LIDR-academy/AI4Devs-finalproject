@@ -3,12 +3,12 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuth } from '@/composables/useAuth'
-import { useEjemplarListPrimaryPhotos } from '@/composables/useEjemplarListPrimaryPhotos'
-import { fetchPublicProvinceNames, fetchPublicEjemplares } from '@/services/catalog/catalogService'
+import { useTreeListPrimaryPhotos } from '@/composables/useTreeListPrimaryPhotos'
+import { fetchPublicProvinceNames, fetchPublicTrees } from '@/services/catalog/catalogService'
 import { HttpError, NetworkError } from '@/services/http/apiClient'
-import type { PublicEjemplarListItem } from '@/types/catalog'
+import type { PublicTreeListItem } from '@/types/catalog'
 
-function formatSpeciesTitle(tree: PublicEjemplarListItem): string {
+function formatSpeciesTitle(tree: PublicTreeListItem): string {
   const common = tree.commonName.trim()
   const scientific = tree.scientificName.trim()
   if (common.length > 0) {
@@ -18,7 +18,7 @@ function formatSpeciesTitle(tree: PublicEjemplarListItem): string {
 }
 
 const DEFAULT_PAGE_SIZE = 20
-const DEFAULT_SORT = 'especie,asc'
+const DEFAULT_SORT = 'species,asc'
 const DEFAULT_TREE_CARD_IMAGE = '/MyTreeLibrary.png'
 
 const { t } = useI18n()
@@ -31,22 +31,22 @@ const privilegedFiltersExpanded = ref(false)
 
 const isLoading = ref(false)
 const errorMessage = ref('')
-const trees = ref<PublicEjemplarListItem[]>([])
+const trees = ref<PublicTreeListItem[]>([])
 const totalResults = ref(0)
 const page = ref(0)
 const size = ref(DEFAULT_PAGE_SIZE)
 
 const filters = reactive({
-  especie: '',
-  municipio: '',
-  provincia: '',
-  estado: '' as '' | 'BORRADOR' | 'PUBLICADO',
-  visibilidad: '' as '' | 'PRIVADO' | 'PUBLICO',
+  species: '',
+  municipality: '',
+  province: '',
+  publicationState: '' as '' | 'BORRADOR' | 'PUBLICADO',
+  publicMapVisibility: '' as '' | 'PRIVADO' | 'PUBLICO',
 })
 
 const provinceOptions = ref<string[]>([])
 
-const { thumbUrls, loadForEjemplarIds } = useEjemplarListPrimaryPhotos()
+const { thumbUrls, loadForTreeIds } = useTreeListPrimaryPhotos()
 const thumbLoadAbort = ref<AbortController | null>(null)
 
 const totalPages = computed(() => {
@@ -100,23 +100,25 @@ async function loadTrees(): Promise<void> {
   try {
     const sendPrivileged =
       canUsePrivilegedTreeFilters.value && privilegedFiltersExpanded.value
-    const response = await fetchPublicEjemplares({
+    const response = await fetchPublicTrees({
       page: page.value,
       size: size.value,
       sort: DEFAULT_SORT,
-      especie: filters.especie.trim() || undefined,
-      municipio: filters.municipio.trim() || undefined,
-      provincia: filters.provincia.trim() || undefined,
-      estado: sendPrivileged && filters.estado ? filters.estado : undefined,
-      visibilidad: sendPrivileged && filters.visibilidad ? filters.visibilidad : undefined,
+      species: filters.species.trim() || undefined,
+      municipality: filters.municipality.trim() || undefined,
+      province: filters.province.trim() || undefined,
+      publicationState:
+        sendPrivileged && filters.publicationState ? filters.publicationState : undefined,
+      publicMapVisibility:
+        sendPrivileged && filters.publicMapVisibility ? filters.publicMapVisibility : undefined,
     })
     trees.value = response.content
     totalResults.value = response.totalResults
     thumbLoadAbort.value?.abort()
     thumbLoadAbort.value = new AbortController()
-    const ids = response.content.map((t) => t.ejemplarId)
+    const ids = response.content.map((t) => t.treeId)
     if (ids.length > 0) {
-      void loadForEjemplarIds(ids, thumbLoadAbort.value.signal)
+      void loadForTreeIds(ids, thumbLoadAbort.value.signal)
     }
   } catch (error: unknown) {
     thumbLoadAbort.value?.abort()
@@ -134,11 +136,11 @@ async function applyFilters() {
 }
 
 async function clearFilters() {
-  filters.especie = ''
-  filters.municipio = ''
-  filters.provincia = ''
-  filters.estado = ''
-  filters.visibilidad = ''
+  filters.species = ''
+  filters.municipality = ''
+  filters.province = ''
+  filters.publicationState = ''
+  filters.publicMapVisibility = ''
   page.value = 0
   await loadTrees()
 }
@@ -149,8 +151,8 @@ function expandPrivilegedFilters(): void {
 
 async function collapsePrivilegedFilters(): Promise<void> {
   privilegedFiltersExpanded.value = false
-  filters.estado = ''
-  filters.visibilidad = ''
+  filters.publicationState = ''
+  filters.publicMapVisibility = ''
   page.value = 0
   await loadTrees()
 }
@@ -182,8 +184,8 @@ async function loadProvinceNames(): Promise<void> {
 watch(canUsePrivilegedTreeFilters, async (can) => {
   if (!can && privilegedFiltersExpanded.value) {
     privilegedFiltersExpanded.value = false
-    filters.estado = ''
-    filters.visibilidad = ''
+    filters.publicationState = ''
+    filters.publicMapVisibility = ''
     page.value = 0
     await loadTrees()
   }
@@ -210,7 +212,7 @@ onMounted(async () => {
               }}</label>
               <input
                 id="trees-filter-species"
-                v-model="filters.especie"
+                v-model="filters.species"
                 class="form-control trees-filter-control"
                 type="text"
                 autocomplete="off"
@@ -224,7 +226,7 @@ onMounted(async () => {
               }}</label>
               <input
                 id="trees-filter-municipality"
-                v-model="filters.municipio"
+                v-model="filters.municipality"
                 class="form-control trees-filter-control"
                 type="text"
                 autocomplete="off"
@@ -236,7 +238,7 @@ onMounted(async () => {
               <label class="form-label trees-filter-label" for="trees-filter-province">{{
                 t('treesList.filters.province.label')
               }}</label>
-              <select id="trees-filter-province" v-model="filters.provincia" class="form-control trees-filter-control">
+              <select id="trees-filter-province" v-model="filters.province" class="form-control trees-filter-control">
                 <option value="">{{ t('treesList.filters.province.all') }}</option>
                 <option v-for="province in provinceOptions" :key="province" :value="province">
                   {{ province }}
@@ -253,7 +255,7 @@ onMounted(async () => {
               <label class="form-label trees-filter-label" for="trees-filter-state">{{
                 t('treesList.filters.state.label')
               }}</label>
-              <select id="trees-filter-state" v-model="filters.estado" class="form-control trees-filter-control">
+              <select id="trees-filter-state" v-model="filters.publicationState" class="form-control trees-filter-control">
                 <option value="">{{ t('treesList.filters.state.all') }}</option>
                 <option value="BORRADOR">{{ t('treesList.filters.state.borrador') }}</option>
                 <option value="PUBLICADO">{{ t('treesList.filters.state.publicado') }}</option>
@@ -265,7 +267,7 @@ onMounted(async () => {
               }}</label>
               <select
                 id="trees-filter-visibility"
-                v-model="filters.visibilidad"
+                v-model="filters.publicMapVisibility"
                 class="form-control trees-filter-control"
               >
                 <option value="">{{ t('treesList.filters.visibility.all') }}</option>
@@ -325,13 +327,13 @@ onMounted(async () => {
       <p v-if="!hasResults" class="status-note">{{ t('treesList.empty') }}</p>
 
       <div v-else class="trees-grid">
-        <article v-for="tree in trees" :key="tree.ejemplarId" class="tree-card">
+        <article v-for="tree in trees" :key="tree.treeId" class="tree-card">
           <div class="tree-card-thumb">
-            <RouterLink class="tree-card-thumb-link" :to="`/ejemplares/${tree.ejemplarId}`">
+            <RouterLink class="tree-card-thumb-link" :to="`/ejemplares/${tree.treeId}`">
               <div class="tree-card-thumb-media">
                 <img
                   class="tree-card-thumb-img"
-                  :src="getTreeCardImageSrc(tree.ejemplarId)"
+                  :src="getTreeCardImageSrc(tree.treeId)"
                   :alt="formatSpeciesTitle(tree)"
                   width="132"
                   height="156"
@@ -363,7 +365,7 @@ onMounted(async () => {
               </dl>
             </div>
             <div class="tree-card-footer">
-              <RouterLink class="btn btn-secondary btn-sm" :to="`/ejemplares/${tree.ejemplarId}`">
+              <RouterLink class="btn btn-secondary btn-sm" :to="`/ejemplares/${tree.treeId}`">
                 {{ t('treesList.viewDetail') }}
               </RouterLink>
             </div>

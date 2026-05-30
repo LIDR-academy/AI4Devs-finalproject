@@ -6,7 +6,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 public interface MediaEjemplarPhotosClient {
 
   /**
-   * Invoca {@code DELETE /api/media/ejemplares/{ejemplarId}/photos} con relay del JWT del actor. Media
+   * Invoca {@code DELETE /api/media/trees/{treeId}/photos} con relay del JWT del actor. Media
    * responde 204 aunque no haya fotografías.
    */
   void deleteAllPhotosForEjemplar(long ejemplarId, Jwt jwt);

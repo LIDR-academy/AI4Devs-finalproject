@@ -41,14 +41,14 @@ public class EjemplarDeleteService {
 
   @Transactional
   public void commitPhysicalDelete(EjemplarDeleteAuthorization authorization, long actorUsuarioAppId) {
-    if (!ejemplarRepository.existsById(authorization.ejemplarId())) {
+    if (!ejemplarRepository.existsById(authorization.treeId())) {
       throw new CatalogNotFoundException("No se encontró un árbol con el identificador indicado.");
     }
-    ejemplarRepository.deleteById(authorization.ejemplarId());
-    ejemplarEnrichmentDeletionPort.deleteEnrichmentForEjemplar(authorization.ejemplarId());
+    ejemplarRepository.deleteById(authorization.treeId());
+    ejemplarEnrichmentDeletionPort.deleteEnrichmentForEjemplar(authorization.treeId());
     catalogAuditService.recordEjemplarDeleted(
         actorUsuarioAppId,
-        authorization.ejemplarId(),
+        authorization.treeId(),
         authorization.especieId(),
         authorization.provinciaId());
   }

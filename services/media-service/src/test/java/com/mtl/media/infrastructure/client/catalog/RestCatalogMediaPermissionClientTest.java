@@ -48,7 +48,7 @@ class RestCatalogMediaPermissionClientTest {
   void resolveActor_forbiddenFromCatalog_mapsTo403() {
     server
         .expect(
-            requestTo("http://catalog-service/api/catalog/ejemplares/99/media-submission-permission"))
+            requestTo("http://catalog-service/api/catalog/trees/99/media-submission-permission"))
         .andExpect(header("Authorization", "Bearer test-token"))
         .andRespond(withStatus(HttpStatus.FORBIDDEN).contentType(MediaType.APPLICATION_JSON).body("{}"));
 
@@ -64,7 +64,7 @@ class RestCatalogMediaPermissionClientTest {
   void resolveActor_notFoundFromCatalog_mapsTo404() {
     server
         .expect(
-            requestTo("http://catalog-service/api/catalog/ejemplares/1/media-submission-permission"))
+            requestTo("http://catalog-service/api/catalog/trees/1/media-submission-permission"))
         .andExpect(header("Authorization", "Bearer test-token"))
         .andRespond(withStatus(HttpStatus.NOT_FOUND));
 
@@ -78,12 +78,12 @@ class RestCatalogMediaPermissionClientTest {
   void resolveActor_ok_returnsActorId() {
     server
         .expect(
-            requestTo("http://catalog-service/api/catalog/ejemplares/5/media-submission-permission"))
+            requestTo("http://catalog-service/api/catalog/trees/5/media-submission-permission"))
         .andExpect(header("Authorization", "Bearer test-token"))
         .andRespond(
             withStatus(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body("{\"ejemplarId\":5,\"actorUsuarioAppId\":42}"));
+                .body("{\"treeId\":5,\"actorUsuarioAppId\":42}"));
 
     long id = client.resolveActorUsuarioAppIdForEjemplar(5L, JWT);
 
@@ -94,7 +94,7 @@ class RestCatalogMediaPermissionClientTest {
   void hasPhotoManagementPermission_forbidden_returnsFalse() {
     server
         .expect(
-            requestTo("http://catalog-service/api/catalog/ejemplares/99/media-submission-permission"))
+            requestTo("http://catalog-service/api/catalog/trees/99/media-submission-permission"))
         .andExpect(header("Authorization", "Bearer test-token"))
         .andRespond(withStatus(HttpStatus.FORBIDDEN).contentType(MediaType.APPLICATION_JSON).body("{}"));
 
@@ -105,12 +105,12 @@ class RestCatalogMediaPermissionClientTest {
   void hasPhotoManagementPermission_ok_returnsTrue() {
     server
         .expect(
-            requestTo("http://catalog-service/api/catalog/ejemplares/5/media-submission-permission"))
+            requestTo("http://catalog-service/api/catalog/trees/5/media-submission-permission"))
         .andExpect(header("Authorization", "Bearer test-token"))
         .andRespond(
             withStatus(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body("{\"ejemplarId\":5,\"actorUsuarioAppId\":42}"));
+                .body("{\"treeId\":5,\"actorUsuarioAppId\":42}"));
 
     assertThat(client.hasPhotoManagementPermission(5L, JWT)).isTrue();
   }
@@ -119,7 +119,7 @@ class RestCatalogMediaPermissionClientTest {
   void resolveActor_emptyBody_mapsTo502() {
     server
         .expect(
-            requestTo("http://catalog-service/api/catalog/ejemplares/3/media-submission-permission"))
+            requestTo("http://catalog-service/api/catalog/trees/3/media-submission-permission"))
         .andRespond(withStatus(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON).body("null"));
 
     ResponseStatusException ex =

@@ -59,7 +59,7 @@ class CollaboratorEjemplarQueryServiceTest {
             collaboratorJwt());
 
     assertEquals(1, response.content().size());
-    assertEquals(42L, response.content().getFirst().ejemplarId());
+    assertEquals(42L, response.content().getFirst().treeId());
     assertEquals("modificado_en,desc", response.sort());
   }
 
@@ -151,7 +151,7 @@ class CollaboratorEjemplarQueryServiceTest {
     var detail =
         collaboratorEjemplarQueryService.getCollaboratorEjemplarDetail(42L, collaboratorJwt());
 
-    assertEquals(42L, detail.ejemplarId());
+    assertEquals(42L, detail.treeId());
     assertEquals(10L, detail.speciesId());
     assertEquals("Encina (Quercus ilex)", detail.speciesLabel());
     assertEquals("Madrid (28)", detail.provinceLabel());
@@ -240,7 +240,7 @@ class CollaboratorEjemplarQueryServiceTest {
   private static CollaboratorEjemplarDetailRow detailRow(long createdByUserId) {
     return new CollaboratorEjemplarDetailRow() {
       @Override
-      public Long getEjemplarId() {
+      public Long getTreeId() {
         return 42L;
       }
 
@@ -329,7 +329,7 @@ class CollaboratorEjemplarQueryServiceTest {
   private static CollaboratorEjemplarListRow listRow() {
     return new CollaboratorEjemplarListRow() {
       @Override
-      public Long getEjemplarId() {
+      public Long getTreeId() {
         return 42L;
       }
 

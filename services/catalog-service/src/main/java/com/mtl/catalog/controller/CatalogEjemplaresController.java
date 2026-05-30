@@ -4,7 +4,6 @@ import com.mtl.catalog.application.CollaboratorEjemplarQueryService;
 import com.mtl.catalog.application.CollaboratorEjemplarQueryService.CollaboratorEjemplarFilters;
 import com.mtl.catalog.application.CreatedEjemplarResult;
 import com.mtl.catalog.application.PublicEjemplarQueryService;
-import com.mtl.catalog.application.PublicEjemplarQueryService.PublicEjemplarFilters;
 import com.mtl.catalog.application.EjemplarMediaSubmissionPermissionService;
 import com.mtl.catalog.application.EjemplarDeletionService;
 import com.mtl.catalog.application.EjemplarModificationService;
@@ -15,6 +14,7 @@ import com.mtl.catalog.dto.CreateEjemplarRequest;
 import com.mtl.catalog.dto.CreatedEjemplarResponse;
 import com.mtl.catalog.dto.MediaSubmissionPermissionResponse;
 import com.mtl.catalog.dto.PublicEjemplarDetailDto;
+import com.mtl.catalog.dto.PublicEjemplarListQuery;
 import com.mtl.catalog.dto.PublicEjemplarPageResponse;
 import java.time.LocalDate;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -65,7 +65,7 @@ public class CatalogEjemplaresController {
     this.ejemplarMediaSubmissionPermissionService = ejemplarMediaSubmissionPermissionService;
   }
 
-  @GetMapping("/ejemplares")
+  @GetMapping("/trees")
   public CollaboratorEjemplarPageResponse listCollaboratorEjemplares(
       @RequestParam(defaultValue = "0") @Min(0) int page,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
@@ -85,68 +85,68 @@ public class CatalogEjemplaresController {
         jwt);
   }
 
-  @GetMapping("/ejemplares/{ejemplarId}")
+  @GetMapping("/trees/{treeId}")
   public CollaboratorEjemplarDetailDto getCollaboratorEjemplarDetail(
-      @PathVariable long ejemplarId, @AuthenticationPrincipal Jwt jwt) {
-    return collaboratorEjemplarQueryService.getCollaboratorEjemplarDetail(ejemplarId, jwt);
+      @PathVariable long treeId, @AuthenticationPrincipal Jwt jwt) {
+    return collaboratorEjemplarQueryService.getCollaboratorEjemplarDetail(treeId, jwt);
   }
 
-  @PutMapping("/ejemplares/{ejemplarId}")
+  @PutMapping("/trees/{treeId}")
   public CollaboratorEjemplarDetailDto updateCollaboratorEjemplar(
-      @PathVariable long ejemplarId,
+      @PathVariable long treeId,
       @Valid @RequestBody CreateEjemplarRequest request,
       @AuthenticationPrincipal Jwt jwt) {
-    return ejemplarModificationService.updateEjemplar(ejemplarId, request, jwt);
+    return ejemplarModificationService.updateEjemplar(treeId, request, jwt);
   }
 
-  @DeleteMapping("/ejemplares/{ejemplarId}")
+  @DeleteMapping("/trees/{treeId}")
   public ResponseEntity<Void> deleteCollaboratorEjemplar(
-      @PathVariable long ejemplarId, @AuthenticationPrincipal Jwt jwt) {
-    ejemplarDeletionService.deleteEjemplar(ejemplarId, jwt);
+      @PathVariable long treeId, @AuthenticationPrincipal Jwt jwt) {
+    ejemplarDeletionService.deleteEjemplar(treeId, jwt);
     return ResponseEntity.noContent().build();
   }
 
-  @PostMapping("/ejemplares")
+  @PostMapping("/trees")
   public ResponseEntity<CreatedEjemplarResponse> createEjemplar(
       @Valid @RequestBody CreateEjemplarRequest request, @AuthenticationPrincipal Jwt jwt) {
     CreatedEjemplarResult result = ejemplarRegistrationService.register(request, jwt);
     URI location =
         ServletUriComponentsBuilder.fromCurrentContextPath()
-            .path("/api/catalog/ejemplares/{id}")
-            .buildAndExpand(result.ejemplarId())
+            .path("/api/catalog/trees/{id}")
+            .buildAndExpand(result.treeId())
             .toUri();
     return ResponseEntity.created(location)
-        .body(new CreatedEjemplarResponse(result.ejemplarId()));
+        .body(new CreatedEjemplarResponse(result.treeId()));
   }
 
-  @GetMapping("/ejemplares/{ejemplarId}/media-submission-permission")
+  @GetMapping("/trees/{treeId}/media-submission-permission")
   public MediaSubmissionPermissionResponse mediaSubmissionPermission(
-      @PathVariable long ejemplarId, @AuthenticationPrincipal Jwt jwt) {
-    return ejemplarMediaSubmissionPermissionService.resolve(ejemplarId, jwt);
+      @PathVariable long treeId, @AuthenticationPrincipal Jwt jwt) {
+    return ejemplarMediaSubmissionPermissionService.resolve(treeId, jwt);
   }
 
-  @GetMapping("/public/ejemplares")
+  @GetMapping("/public/trees")
   public PublicEjemplarPageResponse listPublicEjemplares(
       @RequestParam(defaultValue = "0") @Min(0) int page,
       @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
-      @RequestParam(defaultValue = "especie,asc") String sort,
-      @RequestParam(required = false) @Size(max = 200) String especie,
-      @RequestParam(required = false) @Size(max = 200) String provincia,
-      @RequestParam(required = false) @Size(max = 200) String municipio,
-      @RequestParam(required = false) @Size(max = 32) String estado,
-      @RequestParam(required = false) @Size(max = 32) String visibilidad,
+      @RequestParam(defaultValue = "species,asc") String sort,
+      @RequestParam(required = false) @Size(max = 200) String species,
+      @RequestParam(required = false) @Size(max = 200) String province,
+      @RequestParam(required = false) @Size(max = 200) String municipality,
+      @RequestParam(required = false) @Size(max = 32) String publicationState,
+      @RequestParam(required = false) @Size(max = 32) String publicMapVisibility,
       @AuthenticationPrincipal Jwt jwt) {
     return publicEjemplarQueryService.listPublishedEjemplares(
         page,
         size,
-        sort,
-        new PublicEjemplarFilters(especie, provincia, municipio, estado, visibilidad),
+        new PublicEjemplarListQuery(
+            species, province, municipality, publicationState, publicMapVisibility, sort),
         jwt);
   }
 
-  @GetMapping("/public/ejemplares/{ejemplarId}")
+  @GetMapping("/public/trees/{treeId}")
   public PublicEjemplarDetailDto getPublicEjemplarDetail(
-      @PathVariable long ejemplarId, @AuthenticationPrincipal Jwt jwt) {
-    return publicEjemplarQueryService.getPublishedEjemplarDetail(ejemplarId, jwt);
+      @PathVariable long treeId, @AuthenticationPrincipal Jwt jwt) {
+    return publicEjemplarQueryService.getPublishedEjemplarDetail(treeId, jwt);
   }
 }

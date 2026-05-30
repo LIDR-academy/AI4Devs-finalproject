@@ -3,7 +3,7 @@ package com.mtl.catalog.infrastructure.persistence.jpa.repository.projection;
 import java.math.BigDecimal;
 
 public interface PublicEjemplarDetailRow {
-  Long getEjemplarId();
+  Long getTreeId();
 
   String getCommonName();
 

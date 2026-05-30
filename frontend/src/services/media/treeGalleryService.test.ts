@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { deleteEjemplarPhoto, fetchEjemplarPhotoGallery } from '@/services/media/ejemplarGalleryService'
+import { deleteTreePhoto, fetchTreePhotoGallery } from '@/services/media/treeGalleryService'
 import { apiFetch } from '@/services/http/apiClient'
 
 vi.mock('@/services/http/apiClient', () => ({
@@ -8,25 +8,25 @@ vi.mock('@/services/http/apiClient', () => ({
 
 const apiFetchMock = vi.mocked(apiFetch)
 
-describe('ejemplarGalleryService', () => {
+describe('treeGalleryService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it('fetchEjemplarPhotoGallery llama GET de galería', async () => {
+  it('fetchTreePhotoGallery llama GET de galería', async () => {
     apiFetchMock.mockResolvedValue([])
 
-    await fetchEjemplarPhotoGallery(42)
+    await fetchTreePhotoGallery(42)
 
-    expect(apiFetchMock).toHaveBeenCalledWith('/api/media/ejemplares/42/photos', {
+    expect(apiFetchMock).toHaveBeenCalledWith('/api/media/trees/42/photos', {
       signal: undefined,
     })
   })
 
-  it('deleteEjemplarPhoto envía DELETE', async () => {
+  it('deleteTreePhoto envía DELETE', async () => {
     apiFetchMock.mockResolvedValue(undefined)
 
-    await deleteEjemplarPhoto(7)
+    await deleteTreePhoto(7)
 
     expect(apiFetchMock).toHaveBeenCalledWith('/api/media/photos/7', {
       method: 'DELETE',

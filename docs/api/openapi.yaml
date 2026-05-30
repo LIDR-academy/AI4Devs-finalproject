@@ -351,7 +351,7 @@ paths:
         "409":
           $ref: "#/components/responses/ProblemConflict"
 
-  /api/catalog/ejemplares:
+  /api/catalog/trees:
     get:
       tags: [catalog]
       summary: Listar árboles del colaborador (HU-008)
@@ -366,18 +366,18 @@ paths:
       parameters:
         - $ref: "#/components/parameters/Page"
         - $ref: "#/components/parameters/Size"
-        - $ref: "#/components/parameters/CollaboratorEjemplarSpeciesId"
-        - $ref: "#/components/parameters/CollaboratorEjemplarCreatedFrom"
-        - $ref: "#/components/parameters/CollaboratorEjemplarCreatedTo"
-        - $ref: "#/components/parameters/CollaboratorEjemplarCreatedByUserId"
-        - $ref: "#/components/parameters/CollaboratorEjemplarSort"
+        - $ref: "#/components/parameters/CollaboratorTreeSpeciesId"
+        - $ref: "#/components/parameters/CollaboratorTreeCreatedFrom"
+        - $ref: "#/components/parameters/CollaboratorTreeCreatedTo"
+        - $ref: "#/components/parameters/CollaboratorTreeCreatedByUserId"
+        - $ref: "#/components/parameters/CollaboratorTreeSort"
       responses:
         "200":
           description: Listado paginado
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CollaboratorEjemplarPageResponse"
+                $ref: "#/components/schemas/CollaboratorTreePageResponse"
         "400":
           $ref: "#/components/responses/ProblemBadRequest"
         "401":
@@ -398,7 +398,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateEjemplarRequest"
+              $ref: "#/components/schemas/CreateTreeRequest"
       responses:
         "201":
           description: Creado
@@ -410,7 +410,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CreatedEjemplarResponse"
+                $ref: "#/components/schemas/CreatedTreeResponse"
         "400":
           $ref: "#/components/responses/ProblemBadRequest"
         "401":
@@ -418,9 +418,9 @@ paths:
         "403":
           $ref: "#/components/responses/ProblemForbidden"
 
-  /api/catalog/ejemplares/{ejemplarId}:
+  /api/catalog/trees/{treeId}:
     parameters:
-      - $ref: "#/components/parameters/EjemplarId"
+      - $ref: "#/components/parameters/TreeId"
     get:
       tags: [catalog]
       summary: Obtener ficha de árbol para edición (HU-008)
@@ -435,7 +435,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CollaboratorEjemplarDetailResponse"
+                $ref: "#/components/schemas/CollaboratorTreeDetailResponse"
         "401":
           $ref: "#/components/responses/ProblemUnauthorized"
         "403":
@@ -455,14 +455,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateEjemplarRequest"
+              $ref: "#/components/schemas/UpdateTreeRequest"
       responses:
         "200":
           description: Ficha actualizada
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CollaboratorEjemplarDetailResponse"
+                $ref: "#/components/schemas/CollaboratorTreeDetailResponse"
         "400":
           $ref: "#/components/responses/ProblemBadRequest"
         "401":
@@ -476,7 +476,7 @@ paths:
       summary: Eliminar ficha de árbol (HU-008)
       description: >
         Borrado físico de la ficha. Orquestación: primero
-        `DELETE /api/media/ejemplares/{ejemplarId}/photos` (204 aunque no haya fotos); error en media aborta
+        `DELETE /api/media/trees/{treeId}/photos` (204 aunque no haya fotos); error en media aborta
         el proceso; tras éxito elimina el árbol en PostgreSQL; hook Mongo según TASK-HU-015-01. Sin
         notificación a suscriptores.
       security:
@@ -493,14 +493,14 @@ paths:
         "502":
           $ref: "#/components/responses/ProblemBadGateway"
 
-  /api/catalog/ejemplares/{ejemplarId}/media-submission-permission:
+  /api/catalog/trees/{treeId}/media-submission-permission:
     parameters:
-      - $ref: "#/components/parameters/EjemplarId"
+      - $ref: "#/components/parameters/TreeId"
     get:
       tags: [catalog]
       summary: Comprobar permiso de subida de fotografías (HU-006)
       description: >
-        Confirma que el actor autenticado puede asociar fotografías al árbol (`ejemplarId` en ruta) y
+        Confirma que el actor autenticado puede asociar fotografías al árbol (`treeId` en ruta) y
         devuelve el `usuario_app_id` materializado para auditoría en `media-service`. No sustituye a
         `POST /api/media/uploads/presign` ni a `POST /api/media/photos/confirm`.
       security:
@@ -519,48 +519,48 @@ paths:
         "404":
           $ref: "#/components/responses/ProblemNotFound"
 
-  /api/catalog/public/ejemplares:
+  /api/catalog/public/trees:
     get:
       tags: [catalog-public]
       summary: Listar árboles publicados (público)
       description: >
-        Filtros de texto (`especie`, `provincia`, `municipio`) son búsqueda por subcadena (insensible a
+        Filtros de texto (`species`, `province`, `municipality`) son búsqueda por subcadena (insensible a
         mayúsculas/acentos; `%` y `_` literales). Para poblar un desplegable de provincia con nombres
         canónicos del maestro, usar `GET /api/catalog/public/provinces` (`nombres`).
       security: []
       parameters:
         - $ref: "#/components/parameters/Page"
         - $ref: "#/components/parameters/Size"
-        - $ref: "#/components/parameters/PublicEjemplarSpecies"
-        - $ref: "#/components/parameters/PublicEjemplarProvince"
-        - $ref: "#/components/parameters/PublicEjemplarMunicipality"
-        - $ref: "#/components/parameters/PublicEjemplarState"
-        - $ref: "#/components/parameters/PublicEjemplarVisibility"
-        - $ref: "#/components/parameters/PublicEjemplarSort"
+        - $ref: "#/components/parameters/PublicTreeSpecies"
+        - $ref: "#/components/parameters/PublicTreeProvince"
+        - $ref: "#/components/parameters/PublicTreeMunicipality"
+        - $ref: "#/components/parameters/PublicTreeState"
+        - $ref: "#/components/parameters/PublicTreeVisibility"
+        - $ref: "#/components/parameters/PublicTreeSort"
       responses:
         "200":
           description: Listado público
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PublicEjemplarPageResponse"
+                $ref: "#/components/schemas/PublicTreePageResponse"
         "400":
           $ref: "#/components/responses/ProblemBadRequest"
 
-  /api/catalog/public/ejemplares/{ejemplarId}:
+  /api/catalog/public/trees/{treeId}:
     get:
       tags: [catalog-public]
       summary: Obtener detalle público de árbol publicado
       security: []
       parameters:
-        - $ref: "#/components/parameters/PublicEjemplarId"
+        - $ref: "#/components/parameters/PublicTreeId"
       responses:
         "200":
           description: Detalle público
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PublicEjemplarDetailResponse"
+                $ref: "#/components/schemas/PublicTreeDetailResponse"
         "404":
           $ref: "#/components/responses/ProblemNotFound"
 
@@ -587,7 +587,7 @@ paths:
       tags: [media]
       summary: Solicitar URL prefirmada para subida directa al bucket (S3/MinIO)
       description: >
-        Requiere rol `COLABORADOR` o `ADMIN` y permiso sobre el árbol (`ejemplarId`) según reglas
+        Requiere rol `COLABORADOR` o `ADMIN` y permiso sobre el árbol (`treeId`) según reglas
         de catálogo. Valida MIME/tamaño antes de emitir la URL prefirmada.
       security:
         - bearerAuth: []
@@ -613,15 +613,15 @@ paths:
         "404":
           $ref: "#/components/responses/ProblemNotFound"
 
-  /api/media/public/ejemplares/{ejemplarId}/primary-photo:
+  /api/media/public/trees/{treeId}/primary-photo:
     parameters:
-      - $ref: "#/components/parameters/PublicEjemplarId"
+      - $ref: "#/components/parameters/PublicTreeId"
     get:
       tags: [media]
       summary: Imagen principal del árbol (consulta pública, HU-014)
       description: >
         Devuelve el binario de la fotografía marcada como principal para el árbol, solo si el árbol
-        es visible vía `GET /api/catalog/public/ejemplares/{ejemplarId}` con el mismo contexto de JWT opcional.
+        es visible vía `GET /api/catalog/public/trees/{treeId}` con el mismo contexto de JWT opcional.
         Sin token solo árboles publicados y mapa público; con JWT de colaborador/admin se aplica el
         mismo alcance que el detalle público del catálogo. Requiere objeto existente en el almacén.
       security: []
@@ -646,9 +646,9 @@ paths:
         "502":
           $ref: "#/components/responses/ProblemBadGateway"
 
-  /api/media/ejemplares/{ejemplarId}/photos:
+  /api/media/trees/{treeId}/photos:
     parameters:
-      - $ref: "#/components/parameters/PublicEjemplarId"
+      - $ref: "#/components/parameters/PublicTreeId"
     get:
       tags: [media]
       summary: Listar galería de fotografías de un árbol (HU-014)
@@ -669,7 +669,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/MediaEjemplarPhotoGalleryItem"
+                  $ref: "#/components/schemas/MediaTreePhotoGalleryItem"
         "400":
           $ref: "#/components/responses/ProblemBadRequest"
         "401":
@@ -682,7 +682,7 @@ paths:
       tags: [media]
       summary: Eliminar todas las fotografías de un árbol (HU-008)
       description: >
-        Borra metadatos en esquema `media` y objetos en almacén S3/MinIO asociados al `ejemplarId`.
+        Borra metadatos en esquema `media` y objetos en almacén S3/MinIO asociados al `treeId`.
         Requiere rol `COLABORADOR` o `ADMIN` con permiso sobre el árbol (misma política que subida).
         Invocado por `catalog-service` en cascada al eliminar una ficha. Si no hay fotografías,
         responde **204**.
@@ -706,7 +706,7 @@ paths:
       summary: Confirmar subida y persistir metadatos de fotografía
       description: >
         Confirma la subida ya realizada al bucket y persiste metadatos en `media.fotografia`.
-        Requiere rol `COLABORADOR` o `ADMIN` y permiso sobre el árbol (`ejemplarId`).
+        Requiere rol `COLABORADOR` o `ADMIN` y permiso sobre el árbol (`treeId`).
       security:
         - bearerAuth: []
       requestBody:
@@ -890,8 +890,8 @@ components:
       description: >
         Identificador opcional de correlación para trazabilidad en logs. Si se omite, el servicio puede
         generar uno y devolverlo en respuestas Problem (`correlationId`).
-    EjemplarId:
-      name: ejemplarId
+    TreeId:
+      name: treeId
       in: path
       required: true
       schema:
@@ -955,16 +955,16 @@ components:
         maximum: 100
         default: 20
       description: Tamaño de página
-    PublicEjemplarId:
-      name: ejemplarId
+    PublicTreeId:
+      name: treeId
       in: path
       required: true
       schema:
         type: integer
         format: int64
       description: Identificador del árbol publicado.
-    PublicEjemplarSpecies:
-      name: especie
+    PublicTreeSpecies:
+      name: species
       in: query
       required: false
       schema:
@@ -972,8 +972,8 @@ components:
       description: >
         Filtro por subcadena en nombre común o nombre científico de la especie (un solo campo;
         insensible a mayúsculas y acentos; metacaracteres % y _ se tratan de forma literal).
-    PublicEjemplarProvince:
-      name: provincia
+    PublicTreeProvince:
+      name: province
       in: query
       required: false
       schema:
@@ -982,8 +982,8 @@ components:
         Filtro por subcadena en el nombre de provincia visible (insensible a mayúsculas y acentos;
         metacaracteres % y _ se tratan de forma literal). Valores alineados al maestro: lista ordenada
         de nombres en `GET /api/catalog/public/provinces` (propiedad `nombres`).
-    PublicEjemplarMunicipality:
-      name: municipio
+    PublicTreeMunicipality:
+      name: municipality
       in: query
       required: false
       schema:
@@ -991,44 +991,44 @@ components:
       description: >
         Filtro por subcadena en municipio (insensible a mayúsculas y acentos; metacaracteres % y _
         se tratan de forma literal).
-    PublicEjemplarState:
-      name: estado
+    PublicTreeState:
+      name: publicationState
       in: query
       required: false
       schema:
         type: string
         enum: [BORRADOR, PUBLICADO]
       description: Filtro por estado de publicación.
-    PublicEjemplarVisibility:
-      name: visibilidad
+    PublicTreeVisibility:
+      name: publicMapVisibility
       in: query
       required: false
       schema:
         type: string
         enum: [PRIVADO, PUBLICO]
       description: Filtro por visibilidad en mapa público.
-    PublicEjemplarSort:
+    PublicTreeSort:
       name: sort
       in: query
       required: false
       schema:
         type: string
-        default: especie,asc
+        default: species,asc
         enum:
-          - especie,asc
-          - especie,desc
-          - provincia,asc
-          - provincia,desc
-          - municipio,asc
-          - municipio,desc
-          - estado,asc
-          - estado,desc
-          - visibilidad,asc
-          - visibilidad,desc
-          - ejemplarId,asc
-          - ejemplarId,desc
-      description: Orden del listado. Valor por defecto `especie,asc`.
-    CollaboratorEjemplarSpeciesId:
+          - species,asc
+          - species,desc
+          - province,asc
+          - province,desc
+          - municipality,asc
+          - municipality,desc
+          - publicationState,asc
+          - publicationState,desc
+          - publicMapVisibility,asc
+          - publicMapVisibility,desc
+          - treeId,asc
+          - treeId,desc
+      description: Orden del listado. Valor por defecto `species,asc`.
+    CollaboratorTreeSpeciesId:
       name: speciesId
       in: query
       required: false
@@ -1036,7 +1036,7 @@ components:
         type: integer
         format: int64
       description: Filtro por identificador de especie maestra (`especie_id`).
-    CollaboratorEjemplarCreatedFrom:
+    CollaboratorTreeCreatedFrom:
       name: createdFrom
       in: query
       required: false
@@ -1046,7 +1046,7 @@ components:
       description: >
         Filtro inclusivo por fecha de creación (`creado_en`), límite inferior en **UTC**
         (solo componente fecha).
-    CollaboratorEjemplarCreatedTo:
+    CollaboratorTreeCreatedTo:
       name: createdTo
       in: query
       required: false
@@ -1056,7 +1056,7 @@ components:
       description: >
         Filtro inclusivo por fecha de creación (`creado_en`), límite superior en **UTC**
         (solo componente fecha).
-    CollaboratorEjemplarCreatedByUserId:
+    CollaboratorTreeCreatedByUserId:
       name: createdByUserId
       in: query
       required: false
@@ -1066,7 +1066,7 @@ components:
       description: >
         Filtro por colaborador creador (`usuario_app_id` del autor de la ficha). Solo tiene efecto
         para rol **ADMIN**; ignorado u opcionalmente **403** para **COLABORADOR** según implementación.
-    CollaboratorEjemplarSort:
+    CollaboratorTreeSort:
       name: sort
       in: query
       required: false
@@ -1081,17 +1081,17 @@ components:
       description: Orden del listado colaborador. Por defecto `modificado_en,desc`.
 
   schemas:
-    MediaEjemplarPhotoGalleryItem:
+    MediaTreePhotoGalleryItem:
       type: object
       required:
         - id
         - url
-        - esPrincipal
-        - orden
+        - isPrimary
+        - order
         - mimeType
-        - ancho
-        - alto
-        - categoria
+        - width
+        - height
+        - category
       properties:
         id:
           type: integer
@@ -1101,10 +1101,10 @@ components:
           type: string
           format: uri
           description: URL de lectura de la fotografía para visualización.
-        esPrincipal:
+        isPrimary:
           type: boolean
           description: Indica si la foto es la principal del árbol.
-        orden:
+        order:
           type: integer
           format: int32
           minimum: 0
@@ -1113,37 +1113,37 @@ components:
           type: string
           enum: [image/jpeg, image/png, image/webp]
           description: Tipo MIME de la imagen.
-        ancho:
+        width:
           type: integer
           format: int32
           minimum: 1
           description: Ancho de la imagen en píxeles.
-        alto:
+        height:
           type: integer
           format: int32
           minimum: 1
           description: Alto de la imagen en píxeles.
-        categoria:
+        category:
           type: string
           enum: [PUBLIC, PRIVATE]
           description: Categoría de visibilidad de negocio.
     MediaPresignUploadRequest:
       type: object
-      required: [ejemplarId, nombreFicheroOriginal, tipoMime, tamanoBytes]
+      required: [treeId, originalFileName, mimeType, sizeBytes]
       properties:
-        ejemplarId:
+        treeId:
           type: integer
           format: int64
           description: Identificador del árbol al que se asociará la foto.
-        nombreFicheroOriginal:
+        originalFileName:
           type: string
           minLength: 1
           description: Nombre original del fichero en cliente.
-        tipoMime:
+        mimeType:
           type: string
           enum: [image/jpeg, image/png, image/webp]
           description: Tipo MIME permitido por política del servicio.
-        tamanoBytes:
+        sizeBytes:
           type: integer
           format: int64
           minimum: 1
@@ -1164,16 +1164,16 @@ components:
           description: Bucket de destino.
         objectKey:
           type: string
-          description: Clave del objeto en almacenamiento (`ejemplares/{ejemplarId}/...`).
+          description: Clave del objeto en almacenamiento (`trees/{treeId}/...`).
         expiresAt:
           type: string
           format: date-time
           description: Momento de expiración de la URL prefirmada.
     MediaConfirmPhotoUploadRequest:
       type: object
-      required: [ejemplarId, bucket, objectKey, nombreFicheroOriginal, tipoMime, tamanoBytes]
+      required: [treeId, bucket, objectKey, originalFileName, mimeType, sizeBytes]
       properties:
-        ejemplarId:
+        treeId:
           type: integer
           format: int64
         bucket:
@@ -1182,34 +1182,34 @@ components:
         objectKey:
           type: string
           minLength: 1
-        nombreFicheroOriginal:
+        originalFileName:
           type: string
           minLength: 1
-        tipoMime:
+        mimeType:
           type: string
           enum: [image/jpeg, image/png, image/webp]
-        tamanoBytes:
+        sizeBytes:
           type: integer
           format: int64
           minimum: 1
           maximum: 20971520
           description: Límite por defecto 20MB por fotografía (configurable en servidor).
-        anchoPx:
+        widthPx:
           type: integer
           format: int32
           nullable: true
-        altoPx:
+        heightPx:
           type: integer
           format: int32
           nullable: true
-        orden:
+        order:
           type: integer
           format: int32
           nullable: true
           description: >
             Orden esperado en el árbol. Si se informa, debe coincidir con la siguiente posición
             disponible.
-        esPrincipal:
+        isPrimary:
           type: boolean
           nullable: true
           description: >
@@ -1221,54 +1221,54 @@ components:
       type: object
       required:
         - photoId
-        - ejemplarId
+        - treeId
         - bucket
         - objectKey
-        - nombreFicheroOriginal
-        - tipoMime
-        - tamanoBytes
-        - orden
-        - esPrincipal
-        - subidaEn
+        - originalFileName
+        - mimeType
+        - sizeBytes
+        - order
+        - isPrimary
+        - uploadedAt
       properties:
         photoId:
           type: integer
           format: int64
-        ejemplarId:
+        treeId:
           type: integer
           format: int64
         bucket:
           type: string
         objectKey:
           type: string
-        nombreFicheroOriginal:
+        originalFileName:
           type: string
-        tipoMime:
+        mimeType:
           type: string
           enum: [image/jpeg, image/png, image/webp]
-        tamanoBytes:
+        sizeBytes:
           type: integer
           format: int64
-        anchoPx:
+        widthPx:
           type: integer
           format: int32
           nullable: true
-        altoPx:
+        heightPx:
           type: integer
           format: int32
           nullable: true
-        orden:
+        order:
           type: integer
           format: int32
-        esPrincipal:
+        isPrimary:
           type: boolean
-        subidaEn:
+        uploadedAt:
           type: string
           format: date-time
-    PublicEjemplarListItem:
+    PublicTreeListItem:
       type: object
       required:
-        - ejemplarId
+        - treeId
         - commonName
         - scientificName
         - province
@@ -1276,7 +1276,7 @@ components:
         - publicationState
         - publicMapVisibility
       properties:
-        ejemplarId:
+        treeId:
           type: integer
           format: int64
         commonName:
@@ -1295,7 +1295,7 @@ components:
         publicMapVisibility:
           type: string
           enum: [PRIVADO, PUBLICO]
-    PublicEjemplarPageResponse:
+    PublicTreePageResponse:
       type: object
       required:
         - content
@@ -1307,7 +1307,7 @@ components:
         content:
           type: array
           items:
-            $ref: "#/components/schemas/PublicEjemplarListItem"
+            $ref: "#/components/schemas/PublicTreeListItem"
         totalResults:
           type: integer
           format: int64
@@ -1323,11 +1323,11 @@ components:
           default: 20
         sort:
           type: string
-          default: especie,asc
-    PublicEjemplarDetailResponse:
+          default: species,asc
+    PublicTreeDetailResponse:
       type: object
       required:
-        - ejemplarId
+        - treeId
         - commonName
         - scientificName
         - province
@@ -1338,7 +1338,7 @@ components:
         - latitude
         - longitude
       properties:
-        ejemplarId:
+        treeId:
           type: integer
           format: int64
         commonName:
@@ -1378,7 +1378,7 @@ components:
           items:
             type: string
           description: Nombres de provincia ordenados alfabéticamente (catálogo completo).
-    CreateEjemplarRequest:
+    CreateTreeRequest:
       type: object
       required:
         - speciesId
@@ -1420,19 +1420,19 @@ components:
           maxLength: 64
           enum: [BORRADOR, PUBLICADO]
           description: Estado de publicación de la ficha.
-    CreatedEjemplarResponse:
+    CreatedTreeResponse:
       type: object
-      required: [ejemplarId]
+      required: [treeId]
       properties:
-        ejemplarId:
+        treeId:
           type: integer
           format: int64
           description: Identificador del árbol creado (`ejemplar_id`)
     MediaSubmissionPermissionResponse:
       type: object
-      required: [ejemplarId, actorUsuarioAppId]
+      required: [treeId, actorUsuarioAppId]
       properties:
-        ejemplarId:
+        treeId:
           type: integer
           format: int64
           description: Identificador del árbol sobre el que se comprueba el permiso.
@@ -1442,15 +1442,15 @@ components:
           description: >
             Identificador `usuario_app` del actor (materializado desde JWT) para trazabilidad en
             operaciones de media.
-    UpdateEjemplarRequest:
+    UpdateTreeRequest:
       description: >
         Cuerpo de actualización completa (`PUT`); mismos campos y validaciones que el alta (HU-008).
       allOf:
-        - $ref: "#/components/schemas/CreateEjemplarRequest"
-    CollaboratorEjemplarListItem:
+        - $ref: "#/components/schemas/CreateTreeRequest"
+    CollaboratorTreeListItem:
       type: object
       required:
-        - ejemplarId
+        - treeId
         - speciesId
         - commonName
         - scientificName
@@ -1461,7 +1461,7 @@ components:
         - createdAt
         - modifiedAt
       properties:
-        ejemplarId:
+        treeId:
           type: integer
           format: int64
         speciesId:
@@ -1495,7 +1495,7 @@ components:
           type: integer
           format: int64
           description: `usuario_app_id` del colaborador que dio de alta la ficha (útil en listados ADMIN).
-    CollaboratorEjemplarPageResponse:
+    CollaboratorTreePageResponse:
       type: object
       required:
         - content
@@ -1507,7 +1507,7 @@ components:
         content:
           type: array
           items:
-            $ref: "#/components/schemas/CollaboratorEjemplarListItem"
+            $ref: "#/components/schemas/CollaboratorTreeListItem"
         totalResults:
           type: integer
           format: int64
@@ -1520,10 +1520,10 @@ components:
         sort:
           type: string
           default: modificado_en,desc
-    CollaboratorEjemplarDetailResponse:
+    CollaboratorTreeDetailResponse:
       type: object
       required:
-        - ejemplarId
+        - treeId
         - speciesId
         - provinceId
         - latitude
@@ -1532,7 +1532,7 @@ components:
         - publicMapVisibility
         - createdByUserId
       properties:
-        ejemplarId:
+        treeId:
           type: integer
           format: int64
         speciesId:

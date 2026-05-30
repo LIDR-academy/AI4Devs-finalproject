@@ -1,4 +1,4 @@
-> **Nota (2026-05):** rutas citadas (`/trees/new`, etc.) son anteriores a [ADR-0006](../adr/0006-ejemplar-nomenclature-contracts.md); la SPA actual usa `/ejemplares/new`.
+> **Archivo histórico:** no actualizar el cuerpo de este informe; las rutas citadas (`/trees/new`, `CreateTreeView` en contexto antiguo, etc.) corresponden al momento de la revisión. **Referencia actual:** [ADR-0006](../adr/0006-ejemplar-aggregate-http-kafka-naming.md) — SPA en `/ejemplares/new`, `/mis-ejemplares`, …; módulos en inglés técnico con prefijo **Tree** (`CreateTreeView`, `treePhotoUploadSequence`, …). Ver [naming-conventions.md](../engineering/naming-conventions.md).
 
 1. La store de Pinia se inicializa de forma perezosa → se pueden perder eventos OIDC
 En frontend/src/composables/useAuth.ts la suscripción a userLoaded/userUnloaded/accessTokenExpired/silentRenewError ocurre dentro de initAuthState(), y solo se ejecuta la primera vez que un componente hace useAuth().

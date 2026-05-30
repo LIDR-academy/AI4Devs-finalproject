@@ -18,7 +18,7 @@ public interface CollaboratorEjemplarReadRepository extends JpaRepository<Ejempl
       value =
           """
           SELECT
-            a.ejemplar_id AS ejemplarId,
+            a.ejemplar_id AS treeId,
             a.especie_id AS speciesId,
             coalesce(e.nombre_comun, '') AS commonName,
             e.nombre_cientifico AS scientificName,
@@ -76,7 +76,7 @@ public interface CollaboratorEjemplarReadRepository extends JpaRepository<Ejempl
       value =
           """
           SELECT
-            a.ejemplar_id AS ejemplarId,
+            a.ejemplar_id AS treeId,
             a.especie_id AS speciesId,
             a.provincia_id AS provinceId,
             a.latitud AS latitude,

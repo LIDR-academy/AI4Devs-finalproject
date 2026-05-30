@@ -53,4 +53,4 @@ Funcionalidades y backlog: [readme.md](readme.md) (§1.2) · [docs/backlog/backl
 - El idioma del proyecto es el español, la documentación se generará en este idioma
 - El nombre de los archivos de documentación generados será en INGLÉS, por coherencia con nomenclatura heredada (readme)
 - El nombre de las columnas en Base de datos será en español
-- **Nomenclatura (auditoría):** [docs/engineering/naming-conventions.md](docs/engineering/naming-conventions.md) — BD y docs en español (fuente de verdad de dominio); API en inglés con mapeo DTO ([ADR-0008](docs/adr/0008-english-http-spanish-persistence.md), justificación de la disparidad en ese ADR); *ejemplar* ([ADR-0006](docs/adr/0006-ejemplar-nomenclature-contracts.md))
+- **Nomenclatura (auditoría):** [docs/engineering/naming-conventions.md](docs/engineering/naming-conventions.md) — BD y docs en español (fuente de verdad de dominio); API en inglés con mapeo DTO ([ADR-0007](docs/adr/0007-english-http-spanish-persistence.md), justificación de la disparidad en ese ADR); *ejemplar* ([ADR-0006](docs/adr/0006-ejemplar-aggregate-http-kafka-naming.md))

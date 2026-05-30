@@ -83,26 +83,26 @@ class MediaEjemplarPhotoGalleryControllerWebMvcTest {
   @Test
   void findByEjemplarId_ok_returnsOrderedGallery() throws Exception {
     when(presignProperties.getExpiresIn()).thenReturn(Duration.ofMinutes(15));
-    when(objectStoragePresigner.presignedGetUrl("mtl-photos", "ejemplares/5/p1.jpg", Duration.ofMinutes(15)))
-        .thenReturn("http://localhost:9000/mtl-photos/ejemplares/5/p1.jpg?X-Amz-SignedHeaders=host");
-    when(objectStoragePresigner.presignedGetUrl("mtl-photos", "ejemplares/5/p2.jpg", Duration.ofMinutes(15)))
-        .thenReturn("http://localhost:9000/mtl-photos/ejemplares/5/p2.jpg?X-Amz-SignedHeaders=host");
+    when(objectStoragePresigner.presignedGetUrl("mtl-photos", "trees/5/p1.jpg", Duration.ofMinutes(15)))
+        .thenReturn("http://localhost:9000/mtl-photos/trees/5/p1.jpg?X-Amz-SignedHeaders=host");
+    when(objectStoragePresigner.presignedGetUrl("mtl-photos", "trees/5/p2.jpg", Duration.ofMinutes(15)))
+        .thenReturn("http://localhost:9000/mtl-photos/trees/5/p2.jpg?X-Amz-SignedHeaders=host");
     when(galleryService.findVisiblePhotos(eq(5L), org.mockito.ArgumentMatchers.any()))
         .thenReturn(List.of(buildPhoto(10L, true, 0), buildPhoto(11L, false, 1)));
 
     JwtAuthenticationToken authentication = collaboratorAuthentication();
 
     mockMvc
-        .perform(withJwtPrincipal(get("/api/media/ejemplares/5/photos"), authentication))
+        .perform(withJwtPrincipal(get("/api/media/trees/5/photos"), authentication))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].id").value(10))
         .andExpect(
             jsonPath("$[0].url")
-                .value("http://localhost:9000/mtl-photos/ejemplares/5/p1.jpg?X-Amz-SignedHeaders=host"))
-        .andExpect(jsonPath("$[0].esPrincipal").value(true))
-        .andExpect(jsonPath("$[0].categoria").value("PUBLIC"))
+                .value("http://localhost:9000/mtl-photos/trees/5/p1.jpg?X-Amz-SignedHeaders=host"))
+        .andExpect(jsonPath("$[0].isPrimary").value(true))
+        .andExpect(jsonPath("$[0].category").value("PUBLIC"))
         .andExpect(jsonPath("$[1].id").value(11))
-        .andExpect(jsonPath("$[1].orden").value(1));
+        .andExpect(jsonPath("$[1].order").value(1));
   }
 
   @Test
@@ -110,7 +110,7 @@ class MediaEjemplarPhotoGalleryControllerWebMvcTest {
     JwtAuthenticationToken authentication = collaboratorAuthentication();
 
     mockMvc
-        .perform(withJwtPrincipal(delete("/api/media/ejemplares/5/photos"), authentication))
+        .perform(withJwtPrincipal(delete("/api/media/trees/5/photos"), authentication))
         .andExpect(status().isNoContent());
 
     verify(photosDeleteService).deleteAllPhotosForEjemplar(eq(5L), org.mockito.ArgumentMatchers.any());
@@ -124,7 +124,7 @@ class MediaEjemplarPhotoGalleryControllerWebMvcTest {
     JwtAuthenticationToken authentication = collaboratorAuthentication();
 
     mockMvc
-        .perform(withJwtPrincipal(get("/api/media/ejemplares/7/photos"), authentication))
+        .perform(withJwtPrincipal(get("/api/media/trees/7/photos"), authentication))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$").isArray())
         .andExpect(jsonPath("$.length()").value(0));
@@ -134,7 +134,7 @@ class MediaEjemplarPhotoGalleryControllerWebMvcTest {
     Fotografia photo = new Fotografia();
     photo.setFotografiaId(id);
     photo.setBucketAlmacenamiento("mtl-photos");
-    photo.setClaveObjeto("ejemplares/5/p" + (orden + 1) + ".jpg");
+    photo.setClaveObjeto("trees/5/p" + (orden + 1) + ".jpg");
     photo.setEsPrincipal(principal);
     photo.setOrden(orden);
     photo.setTipoMime("image/jpeg");

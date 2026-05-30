@@ -370,7 +370,7 @@ export const es = {
     title: 'Detalle de árbol publicado',
     backToList: 'Volver al listado',
     loading: 'Cargando detalle del árbol...',
-    ejemplarId: 'Ficha #{id}',
+    treeId: 'Ficha #{id}',
     fields: {
       species: 'Especie',
       province: 'Provincia',
@@ -538,8 +538,8 @@ export const es = {
     },
     messages: {
       mastersEmpty: 'No hay datos maestros disponibles para completar el formulario.',
-      created: 'Ficha creada correctamente con id {ejemplarId}.',
-      createdWithPhotos: 'Ficha creada con id {ejemplarId}. Las fotografías se han asociado correctamente.',
+      created: 'Ficha creada correctamente con id {treeId}.',
+      createdWithPhotos: 'Ficha creada con id {treeId}. Las fotografías se han asociado correctamente.',
       photoStorageUploadFailed:
         'La ficha se creó, pero la subida al almacén de objetos falló (código {status}). Comprueba MinIO/CORS o inténtalo de nuevo.',
       forbidden: 'No tiene permiso para realizar esta operación.',

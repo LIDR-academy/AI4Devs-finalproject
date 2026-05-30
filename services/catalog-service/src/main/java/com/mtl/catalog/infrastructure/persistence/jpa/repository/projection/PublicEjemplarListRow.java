@@ -1,7 +1,7 @@
 package com.mtl.catalog.infrastructure.persistence.jpa.repository.projection;
 
 public interface PublicEjemplarListRow {
-  Long getEjemplarId();
+  Long getTreeId();
 
   String getCommonName();
 

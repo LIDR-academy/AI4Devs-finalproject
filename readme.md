@@ -541,7 +541,7 @@ Notas del diagrama C4 (no dibujadas): error al leer sesión en el guard → `/au
 
 ### **3.1.2 Kafka:**
 
-En el **MVP**, Kafka separa el **alta de un árbol** del **correo a suscriptores** (regla **R7**): solo al crear una ficha con éxito; edición y baja no publican. Un topic (`catalog.ejemplar.evento`): **catalog-service** publica y **notification-service** consume. Contrato del mensaje: [docs/events/kafka-events.md](docs/events/kafka-events.md). Nomenclatura técnica: [ADR-0006](docs/adr/0006-ejemplar-nomenclature-contracts.md). Configuración local: [services/README.md](services/README.md) (Kafka).
+En el **MVP**, Kafka separa el **alta de un árbol** del **correo a suscriptores** (regla **R7**): solo al crear una ficha con éxito; edición y baja no publican. Un topic (`catalog.ejemplar.evento`): **catalog-service** publica y **notification-service** consume. Contrato del mensaje: [docs/events/kafka-events.md](docs/events/kafka-events.md). Nomenclatura técnica: [ADR-0006](docs/adr/0006-ejemplar-aggregate-http-kafka-naming.md). Configuración local: [services/README.md](services/README.md) (Kafka).
 
 #### C3 — Productor: **catalog-service**
 
@@ -1267,6 +1267,8 @@ Las entidades físicas se reparten por servicio y almacén como se indica en §3
 
 **Convenciones de diseño:** de cara a homogeneizar el desarrollo. se han definido las siguientes reglas de Cursor `.cursor/rules/api-contract.mdc`, `.cursor/rules/api-design.mdc` y `.cursor/rules/api-security.mdc`.
 
+**Nomenclatura (BD, API, código, docs):** guía auditable y checklist en [docs/engineering/naming-conventions.md](docs/engineering/naming-conventions.md); decisión HTTP en inglés + persistencia en español en [ADR-0007](docs/adr/0007-english-http-spanish-persistence.md); término `ejemplar` en [ADR-0006](docs/adr/0006-ejemplar-aggregate-http-kafka-naming.md).
+
 **Eventos asíncronos** notificaciones asíncronas asociadas al alte de un ejemplar: [docs/events/kafka-events.md](docs/events/kafka-events.md).
 
 ---
@@ -1373,7 +1375,7 @@ Implementa la **HU-004**: alta de suscripción por correo sin cuenta de colabora
 
 Cierra **HU-008** (UC-04): el colaborador puede **listar y filtrar** sus fichas, **editarlas** (`PUT`) y **eliminarlas** (`DELETE`) con cascada en media; **ADMIN** opera sobre cualquier ficha. Incluye galería en edición (**HU-006-14**) y cierre documental de la historia.
 
-- Vertical completo: **catalog-service** + **media-service** + **frontend** (`/mis-ejemplares`, `/ejemplares/:id/edit`). Rutas y API actualizadas según [ADR-0006](docs/adr/0006-ejemplar-nomenclature-contracts.md).
+- Vertical completo: **catalog-service** + **media-service** + **frontend** (`/mis-ejemplares`, `/ejemplares/:id/edit`). Rutas y API actualizadas según [ADR-0006](docs/adr/0006-ejemplar-aggregate-http-kafka-naming.md).
 - Sin notificación ni Kafka en edición/baja (**R7**).
 
 ## Alcance
@@ -1435,7 +1437,7 @@ Cierra **HU-008** (UC-04): el colaborador puede **listar y filtrar** sus fichas,
 - **Mitigación:** documentado en HU-008 y `services/README.md`; aborto si falla media **antes** del SQL; mejora futura sin saga.
 
 - **Riesgo:** borrado Mongo solo **stub** hasta **HU-015**.
-- **Mitigación:** `NoOpTreeEnrichmentDeletionPort`; ticket **TASK-HU-015-01** pendiente.
+- **Mitigación:** `NoOpEjemplarEnrichmentDeletionPort`; ticket **TASK-HU-015-01** pendiente.
 
 - **Riesgo:** requiere **catalog** (8081) y **media** (8082) en `dev` para DELETE con fotos.
 - **Mitigación:** `mtl.media.base-url` en `application-dev.properties`; checklist E2E documentada.

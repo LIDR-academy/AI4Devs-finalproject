@@ -93,10 +93,10 @@ class MediaUploadControllerWebMvcTest {
                     .content(
                         """
                         {
-                          "ejemplarId": 1,
-                          "nombreFicheroOriginal": "a.jpg",
-                          "tipoMime": "image/jpeg",
-                          "tamanoBytes": 0
+                          "treeId": 1,
+                          "originalFileName": "a.jpg",
+                          "mimeType": "image/jpeg",
+                          "sizeBytes": 0
                         }
                         """),
                 authentication))
@@ -118,10 +118,10 @@ class MediaUploadControllerWebMvcTest {
                     .content(
                         """
                         {
-                          "ejemplarId": 1,
-                          "nombreFicheroOriginal": "a.jpg",
-                          "tipoMime": "image/jpeg",
-                          "tamanoBytes": 1024
+                          "treeId": 1,
+                          "originalFileName": "a.jpg",
+                          "mimeType": "image/jpeg",
+                          "sizeBytes": 1024
                         }
                         """),
                 authentication))
@@ -148,10 +148,10 @@ class MediaUploadControllerWebMvcTest {
                     .content(
                         """
                         {
-                          "ejemplarId": 99,
-                          "nombreFicheroOriginal": "a.jpg",
-                          "tipoMime": "image/jpeg",
-                          "tamanoBytes": 1024
+                          "treeId": 99,
+                          "originalFileName": "a.jpg",
+                          "mimeType": "image/jpeg",
+                          "sizeBytes": 1024
                         }
                         """),
                 authentication))
@@ -177,12 +177,12 @@ class MediaUploadControllerWebMvcTest {
                     .content(
                         """
                         {
-                          "ejemplarId": 1,
+                          "treeId": 1,
                           "bucket": "otro",
                           "objectKey": "k",
-                          "nombreFicheroOriginal": "a.jpg",
-                          "tipoMime": "image/jpeg",
-                          "tamanoBytes": 100
+                          "originalFileName": "a.jpg",
+                          "mimeType": "image/jpeg",
+                          "sizeBytes": 100
                         }
                         """),
                 authentication))
@@ -222,7 +222,7 @@ class MediaUploadControllerWebMvcTest {
     when(mediaUploadService.createPresignedUpload(any(), any()))
         .thenReturn(
             new PresignUploadResponse(
-                "http://minio/mtl/a.jpg?x=1", "mtl-photos", "ejemplares/1/uuid-a.jpg", expires));
+                "http://minio/mtl/a.jpg?x=1", "mtl-photos", "trees/1/uuid-a.jpg", expires));
 
     JwtAuthenticationToken authentication = collaboratorAuthentication();
 
@@ -234,16 +234,16 @@ class MediaUploadControllerWebMvcTest {
                     .content(
                         """
                         {
-                          "ejemplarId": 1,
-                          "nombreFicheroOriginal": "a.jpg",
-                          "tipoMime": "image/jpeg",
-                          "tamanoBytes": 1024
+                          "treeId": 1,
+                          "originalFileName": "a.jpg",
+                          "mimeType": "image/jpeg",
+                          "sizeBytes": 1024
                         }
                         """),
                 authentication))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.bucket").value("mtl-photos"))
-        .andExpect(jsonPath("$.objectKey").value("ejemplares/1/uuid-a.jpg"));
+        .andExpect(jsonPath("$.objectKey").value("trees/1/uuid-a.jpg"));
   }
 
   @Test
@@ -254,7 +254,7 @@ class MediaUploadControllerWebMvcTest {
                 10L,
                 1L,
                 "mtl-photos",
-                "ejemplares/1/k.jpg",
+                "trees/1/k.jpg",
                 "k.jpg",
                 "image/jpeg",
                 500L,
@@ -274,17 +274,17 @@ class MediaUploadControllerWebMvcTest {
                     .content(
                         """
                         {
-                          "ejemplarId": 1,
+                          "treeId": 1,
                           "bucket": "mtl-photos",
-                          "objectKey": "ejemplares/1/k.jpg",
-                          "nombreFicheroOriginal": "k.jpg",
-                          "tipoMime": "image/jpeg",
-                          "tamanoBytes": 500
+                          "objectKey": "trees/1/k.jpg",
+                          "originalFileName": "k.jpg",
+                          "mimeType": "image/jpeg",
+                          "sizeBytes": 500
                         }
                         """),
                 authentication))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.photoId").value(10))
-        .andExpect(jsonPath("$.esPrincipal").value(true));
+        .andExpect(jsonPath("$.isPrimary").value(true));
   }
 }

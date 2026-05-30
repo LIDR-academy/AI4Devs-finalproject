@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 
 /**
- * Cuerpo JSON de {@code POST /api/catalog/ejemplares} (contrato OpenAPI). Nombres en inglés; mapeo a
+ * Cuerpo JSON de {@code POST /api/catalog/trees} (contrato OpenAPI). Nombres en inglés; mapeo a
  * columnas SQL en capa de aplicación.
  */
 public record CreateEjemplarRequest(

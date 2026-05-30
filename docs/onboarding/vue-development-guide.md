@@ -59,8 +59,10 @@ frontend/src/
 
 ```ts
 import { apiFetch } from '@/services/http/apiClient'
-import type { CreateEjemplarRequest } from '@/types/catalog'
+import type { CreateTreeRequest } from '@/types/catalog'
 ```
+
+**Nomenclatura:** matriz de capas e idioma en [naming-conventions.md](../engineering/naming-conventions.md) (§ «Matriz de capas»). Resumen: código Vue/TS en inglés con **`Tree`/`Trees`**; wire y rutas SPA con **`treeId`** y `/ejemplares` según contrato.
 
 ---
 

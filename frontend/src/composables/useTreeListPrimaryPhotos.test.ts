@@ -1,6 +1,6 @@
-import { createApp, nextTick } from 'vue'
+﻿import { createApp, nextTick } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { useEjemplarListPrimaryPhotos } from '@/composables/useEjemplarListPrimaryPhotos'
+import { useTreeListPrimaryPhotos } from '@/composables/useTreeListPrimaryPhotos'
 
 vi.mock('@/services/http/apiClient', () => ({
   apiFetchBlob: vi.fn(),
@@ -8,14 +8,14 @@ vi.mock('@/services/http/apiClient', () => ({
 
 import { apiFetchBlob } from '@/services/http/apiClient'
 
-describe('useEjemplarListPrimaryPhotos', () => {
+describe('useTreeListPrimaryPhotos', () => {
   let revokeSpy: ReturnType<typeof vi.spyOn>
 
   beforeEach(() => {
     vi.clearAllMocks()
     revokeSpy = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
     vi.mocked(apiFetchBlob).mockImplementation(async (path: string) => {
-      if (path.includes('/ejemplares/2/')) {
+      if (path.includes('/trees/2/')) {
         return new Blob([new Uint8Array([1, 2])], { type: 'image/jpeg' })
       }
       return null
@@ -27,10 +27,10 @@ describe('useEjemplarListPrimaryPhotos', () => {
   })
 
   function mountComposable() {
-    let api!: ReturnType<typeof useEjemplarListPrimaryPhotos>
+    let api!: ReturnType<typeof useTreeListPrimaryPhotos>
     const app = createApp({
       setup() {
-        api = useEjemplarListPrimaryPhotos()
+        api = useTreeListPrimaryPhotos()
         return () => null
       },
     })
@@ -39,11 +39,11 @@ describe('useEjemplarListPrimaryPhotos', () => {
     return { api, app, el }
   }
 
-  it('loadForEjemplarIds crea object URLs solo para blobs disponibles', async () => {
+  it('loadForTreeIds crea object URLs solo para blobs disponibles', async () => {
     const createObjectUrlSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:thumb-2')
     const { api } = mountComposable()
 
-    await api.loadForEjemplarIds([1, 2])
+    await api.loadForTreeIds([1, 2])
     await nextTick()
 
     expect(api.thumbUrls.value[2]).toBe('blob:thumb-2')
@@ -58,8 +58,8 @@ describe('useEjemplarListPrimaryPhotos', () => {
       .mockReturnValueOnce('blob:second')
     const { api } = mountComposable()
 
-    await api.loadForEjemplarIds([2])
-    await api.loadForEjemplarIds([2])
+    await api.loadForTreeIds([2])
+    await api.loadForTreeIds([2])
     await nextTick()
 
     expect(revokeSpy).toHaveBeenCalledWith('blob:first')
@@ -78,7 +78,7 @@ describe('useEjemplarListPrimaryPhotos', () => {
     const createObjectUrlSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:late')
     const { api } = mountComposable()
 
-    const pending = api.loadForEjemplarIds([2], controller.signal)
+    const pending = api.loadForTreeIds([2], controller.signal)
     controller.abort()
     await pending
     await nextTick()
@@ -91,7 +91,7 @@ describe('useEjemplarListPrimaryPhotos', () => {
     const createObjectUrlSpy = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:live')
     const { api, app, el } = mountComposable()
 
-    await api.loadForEjemplarIds([2])
+    await api.loadForTreeIds([2])
     app.unmount()
     el.remove()
 

@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 public interface CollaboratorEjemplarDetailRow {
-  Long getEjemplarId();
+  Long getTreeId();
 
   Long getSpeciesId();
 

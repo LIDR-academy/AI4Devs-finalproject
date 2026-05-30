@@ -5,13 +5,13 @@ import { useI18n } from 'vue-i18n'
 import { useAbortableRequest } from '@/composables/useAbortableRequest'
 import { useAuth } from '@/composables/useAuth'
 import { useCollaboratorCatalogErrorMapper } from '@/composables/useCollaboratorCatalogErrorMapper'
-import { useEjemplarListPrimaryPhotos } from '@/composables/useEjemplarListPrimaryPhotos'
+import { useTreeListPrimaryPhotos } from '@/composables/useTreeListPrimaryPhotos'
 import SpeciesAutocompleteInput from '@/components/SpeciesAutocompleteInput.vue'
 import { fetchSpecies } from '@/services/catalog/catalogService'
-import { fetchCollaboratorEjemplares } from '@/services/catalog/collaboratorEjemplaresService'
-import type { CollaboratorEjemplarListItem, MasterListItem } from '@/types/catalog'
+import { fetchCollaboratorTrees } from '@/services/catalog/collaboratorTreesService'
+import type { CollaboratorTreeListItem, MasterListItem } from '@/types/catalog'
 
-function formatSpeciesTitle(tree: CollaboratorEjemplarListItem): string {
+function formatSpeciesTitle(tree: CollaboratorTreeListItem): string {
   const common = tree.commonName.trim()
   const scientific = tree.scientificName.trim()
   if (common.length > 0) {
@@ -46,7 +46,7 @@ const adminFiltersExpanded = ref(false)
 
 const isLoading = ref(false)
 const errorMessage = ref('')
-const trees = ref<CollaboratorEjemplarListItem[]>([])
+const trees = ref<CollaboratorTreeListItem[]>([])
 const totalResults = ref(0)
 const page = ref(0)
 const size = ref(DEFAULT_PAGE_SIZE)
@@ -60,7 +60,7 @@ const filters = reactive({
   createdByUserId: '',
 })
 
-const { thumbUrls, loadForEjemplarIds } = useEjemplarListPrimaryPhotos()
+const { thumbUrls, loadForTreeIds } = useTreeListPrimaryPhotos()
 let thumbLoadAbort: AbortController | null = null
 
 const totalPages = computed(() => {
@@ -99,15 +99,15 @@ async function loadTrees(): Promise<void> {
 
   try {
     await runWithAbort(async (signal) => {
-      const response = await fetchCollaboratorEjemplares(buildListQuery(), signal)
+      const response = await fetchCollaboratorTrees(buildListQuery(), signal)
       trees.value = response.content
       totalResults.value = response.totalResults
 
       thumbLoadAbort?.abort()
       thumbLoadAbort = new AbortController()
-      const ids = response.content.map((item) => item.ejemplarId)
+      const ids = response.content.map((item) => item.treeId)
       if (ids.length > 0) {
-        void loadForEjemplarIds(ids, thumbLoadAbort.signal)
+        void loadForTreeIds(ids, thumbLoadAbort.signal)
       } else {
         thumbLoadAbort = null
       }
@@ -303,16 +303,16 @@ onMounted(async () => {
       <p v-if="!hasResults" class="status-note">{{ t('myTrees.empty') }}</p>
 
       <div v-else class="trees-grid">
-        <article v-for="tree in trees" :key="tree.ejemplarId" class="tree-card">
+        <article v-for="tree in trees" :key="tree.treeId" class="tree-card">
           <div class="tree-card-thumb">
             <RouterLink
               class="tree-card-thumb-link"
-              :to="{ name: 'ejemplares-edit', params: { id: tree.ejemplarId } }"
+              :to="{ name: 'ejemplares-edit', params: { id: tree.treeId } }"
             >
               <div class="tree-card-thumb-media">
                 <img
                   class="tree-card-thumb-img"
-                  :src="getTreeCardImageSrc(tree.ejemplarId)"
+                  :src="getTreeCardImageSrc(tree.treeId)"
                   :alt="formatSpeciesTitle(tree)"
                   width="132"
                   height="156"
@@ -344,7 +344,7 @@ onMounted(async () => {
               </dl>
             </div>
             <div class="tree-card-footer">
-              <RouterLink class="btn btn-primary btn-sm" :to="{ name: 'ejemplares-edit', params: { id: tree.ejemplarId } }">
+              <RouterLink class="btn btn-primary btn-sm" :to="{ name: 'ejemplares-edit', params: { id: tree.treeId } }">
                 {{ t('myTrees.edit') }}
               </RouterLink>
             </div>

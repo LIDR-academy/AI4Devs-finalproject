@@ -12,7 +12,7 @@ final class CollaboratorEjemplarDetailMapper {
 
   static CollaboratorEjemplarDetailDto toDetailDto(CollaboratorEjemplarDetailRow row) {
     return new CollaboratorEjemplarDetailDto(
-        row.getEjemplarId(),
+        row.getTreeId(),
         row.getSpeciesId(),
         row.getProvinceId(),
         row.getLatitude(),

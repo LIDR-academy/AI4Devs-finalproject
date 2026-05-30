@@ -46,13 +46,13 @@ public class MediaUploadService {
   }
 
   public PresignUploadResponse createPresignedUpload(PresignUploadRequest request, Jwt jwt) {
-    catalogMediaPermissionClient.resolveActorUsuarioAppIdForEjemplar(request.ejemplarId(), jwt);
-    uploadPolicyValidator.validateMimeType(request.tipoMime());
-    uploadPolicyValidator.validateFileSize(request.tamanoBytes());
-    int currentPhotos = fotografiaRepository.countActiveForEjemplar(request.ejemplarId());
+    catalogMediaPermissionClient.resolveActorUsuarioAppIdForEjemplar(request.treeId(), jwt);
+    uploadPolicyValidator.validateMimeType(request.mimeType());
+    uploadPolicyValidator.validateFileSize(request.sizeBytes());
+    int currentPhotos = fotografiaRepository.countActiveForEjemplar(request.treeId());
     uploadPolicyValidator.validateMaxPhotosPerEjemplar(currentPhotos, 1);
 
-    String objectKey = generateObjectKey(request.ejemplarId(), request.nombreFicheroOriginal());
+    String objectKey = generateObjectKey(request.treeId(), request.originalFileName());
     OffsetDateTime expiresAt = OffsetDateTime.now().plus(presignProperties.getExpiresIn());
     String uploadUrl =
         objectStoragePresigner.presignedPutUrl(
@@ -63,41 +63,41 @@ public class MediaUploadService {
   @Transactional
   public PhotoMetadataResponse confirmUpload(ConfirmPhotoUploadRequest request, Jwt jwt) {
     long actorUsuarioAppId =
-        catalogMediaPermissionClient.resolveActorUsuarioAppIdForEjemplar(request.ejemplarId(), jwt);
-    uploadPolicyValidator.validateMimeType(request.tipoMime());
-    uploadPolicyValidator.validateFileSize(request.tamanoBytes());
+        catalogMediaPermissionClient.resolveActorUsuarioAppIdForEjemplar(request.treeId(), jwt);
+    uploadPolicyValidator.validateMimeType(request.mimeType());
+    uploadPolicyValidator.validateFileSize(request.sizeBytes());
     if (!storageProperties.getBucket().equals(request.bucket())) {
       throw new MediaUploadValidationException(
           "El bucket indicado no coincide con el bucket configurado del servicio.");
     }
-    int currentPhotos = fotografiaRepository.countActiveForEjemplar(request.ejemplarId());
+    int currentPhotos = fotografiaRepository.countActiveForEjemplar(request.treeId());
     uploadPolicyValidator.validateMaxPhotosPerEjemplar(currentPhotos, 1);
 
-    if (request.orden() != null && !request.orden().equals(currentPhotos)) {
+    if (request.order() != null && !request.order().equals(currentPhotos)) {
       throw new MediaUploadValidationException(
           "El orden de la fotografía debe ser "
               + currentPhotos
               + " (siguiente posición esperada según fotos ya confirmadas para el ejemplar).");
     }
-    int orden = request.orden() != null ? request.orden() : currentPhotos;
+    int orden = request.order() != null ? request.order() : currentPhotos;
 
     // Primera foto confirmada del ejemplar: siempre principal (HU-006); el cliente no puede sustituir esa regla.
     boolean isFirstConfirmedPhoto = currentPhotos == 0;
-    if (!isFirstConfirmedPhoto && Boolean.TRUE.equals(request.esPrincipal())) {
+    if (!isFirstConfirmedPhoto && Boolean.TRUE.equals(request.isPrimary())) {
       throw new MediaUploadValidationException(
           "Solo la primera fotografía confirmada para el ejemplar puede ser principal.");
     }
 
     Fotografia fotografia = new Fotografia();
-    fotografia.setEjemplarId(request.ejemplarId());
+    fotografia.setEjemplarId(request.treeId());
     fotografia.setBucketAlmacenamiento(request.bucket());
     fotografia.setClaveObjeto(request.objectKey());
-    fotografia.setNombreFicheroOriginal(request.nombreFicheroOriginal());
-    fotografia.setTipoMime(request.tipoMime());
-    fotografia.setTamanoBytes(request.tamanoBytes());
+    fotografia.setNombreFicheroOriginal(request.originalFileName());
+    fotografia.setTipoMime(request.mimeType());
+    fotografia.setTamanoBytes(request.sizeBytes());
     fotografia.setChecksumSha256(request.checksumSha256());
-    fotografia.setAnchoPx(request.anchoPx());
-    fotografia.setAltoPx(request.altoPx());
+    fotografia.setAnchoPx(request.widthPx());
+    fotografia.setAltoPx(request.heightPx());
     fotografia.setOrden(orden);
     fotografia.setEsPrincipal(isFirstConfirmedPhoto);
     fotografia.setCategoria(CategoriaFotografia.PUBLIC);
@@ -136,6 +136,6 @@ public class MediaUploadService {
 
   private String generateObjectKey(Long ejemplarId, String originalFilename) {
     String cleanName = originalFilename.replaceAll("[^a-zA-Z0-9._-]", "_");
-    return "ejemplares/" + ejemplarId + "/" + UUID.randomUUID() + "-" + cleanName;
+    return "trees/" + ejemplarId + "/" + UUID.randomUUID() + "-" + cleanName;
   }
 }

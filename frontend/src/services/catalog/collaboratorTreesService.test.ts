@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
-  deleteCollaboratorEjemplar,
-  fetchCollaboratorEjemplarDetail,
-  fetchCollaboratorEjemplares,
-  updateCollaboratorEjemplar,
-} from '@/services/catalog/collaboratorEjemplaresService'
+  deleteCollaboratorTree,
+  fetchCollaboratorTreeDetail,
+  fetchCollaboratorTrees,
+  updateCollaboratorTree,
+} from '@/services/catalog/collaboratorTreesService'
 import { apiFetch } from '@/services/http/apiClient'
 
 vi.mock('@/services/http/apiClient', () => ({
@@ -13,22 +13,22 @@ vi.mock('@/services/http/apiClient', () => ({
 
 const apiFetchMock = vi.mocked(apiFetch)
 
-describe('collaboratorEjemplaresService', () => {
+describe('collaboratorTreesService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  it('fetchCollaboratorEjemplares envía filtros y paginación por defecto', async () => {
+  it('fetchCollaboratorTrees envía filtros y paginación por defecto', async () => {
     apiFetchMock.mockResolvedValue({ content: [], totalResults: 0, page: 0, size: 20, sort: '' })
 
-    await fetchCollaboratorEjemplares({
+    await fetchCollaboratorTrees({
       speciesId: 3,
       createdFrom: '2024-01-01',
       createdTo: '2024-12-31',
       createdByUserId: 9,
     })
 
-    expect(apiFetchMock).toHaveBeenCalledWith('/api/catalog/ejemplares', {
+    expect(apiFetchMock).toHaveBeenCalledWith('/api/catalog/trees', {
       query: {
         page: 0,
         size: 20,
@@ -42,29 +42,29 @@ describe('collaboratorEjemplaresService', () => {
     })
   })
 
-  it('fetchCollaboratorEjemplares propaga AbortSignal', async () => {
+  it('fetchCollaboratorTrees propaga AbortSignal', async () => {
     const controller = new AbortController()
     apiFetchMock.mockResolvedValue({ content: [], totalResults: 0, page: 1, size: 10, sort: '' })
 
-    await fetchCollaboratorEjemplares({ page: 1, size: 10, sort: 'creado_en,asc' }, controller.signal)
+    await fetchCollaboratorTrees({ page: 1, size: 10, sort: 'creado_en,asc' }, controller.signal)
 
-    expect(apiFetchMock).toHaveBeenCalledWith('/api/catalog/ejemplares', {
+    expect(apiFetchMock).toHaveBeenCalledWith('/api/catalog/trees', {
       query: expect.objectContaining({ page: 1, size: 10, sort: 'creado_en,asc' }),
       signal: controller.signal,
     })
   })
 
-  it('fetchCollaboratorEjemplarDetail consulta por id', async () => {
-    apiFetchMock.mockResolvedValueOnce({ ejemplarId: 42 })
+  it('fetchCollaboratorTreeDetail consulta por id', async () => {
+    apiFetchMock.mockResolvedValueOnce({ treeId: 42 })
 
-    await fetchCollaboratorEjemplarDetail(42)
+    await fetchCollaboratorTreeDetail(42)
 
-    expect(apiFetchMock).toHaveBeenCalledWith('/api/catalog/ejemplares/42', {
+    expect(apiFetchMock).toHaveBeenCalledWith('/api/catalog/trees/42', {
       signal: undefined,
     })
   })
 
-  it('updateCollaboratorEjemplar envía PUT con cuerpo JSON', async () => {
+  it('updateCollaboratorTree envía PUT con cuerpo JSON', async () => {
     const payload = {
       speciesId: 1,
       provinceId: 28,
@@ -73,23 +73,23 @@ describe('collaboratorEjemplaresService', () => {
       publicationState: 'BORRADOR' as const,
       publicMapVisibility: 'PRIVADO' as const,
     }
-    apiFetchMock.mockResolvedValueOnce({ ejemplarId: 42, ...payload, createdByUserId: 5 })
+    apiFetchMock.mockResolvedValueOnce({ treeId: 42, ...payload, createdByUserId: 5 })
 
-    await updateCollaboratorEjemplar(42, payload)
+    await updateCollaboratorTree(42, payload)
 
-    expect(apiFetchMock).toHaveBeenCalledWith('/api/catalog/ejemplares/42', {
+    expect(apiFetchMock).toHaveBeenCalledWith('/api/catalog/trees/42', {
       method: 'PUT',
       body: JSON.stringify(payload),
       signal: undefined,
     })
   })
 
-  it('deleteCollaboratorEjemplar envía DELETE', async () => {
+  it('deleteCollaboratorTree envía DELETE', async () => {
     apiFetchMock.mockResolvedValue(undefined)
 
-    await deleteCollaboratorEjemplar(99)
+    await deleteCollaboratorTree(99)
 
-    expect(apiFetchMock).toHaveBeenCalledWith('/api/catalog/ejemplares/99', {
+    expect(apiFetchMock).toHaveBeenCalledWith('/api/catalog/trees/99', {
       method: 'DELETE',
       signal: undefined,
     })

@@ -88,7 +88,7 @@ class EjemplarRegistrationServiceTest {
 
     CreatedEjemplarResult out = service.register(req, jwt);
 
-    org.assertj.core.api.Assertions.assertThat(out.ejemplarId()).isEqualTo(100L);
+    org.assertj.core.api.Assertions.assertThat(out.treeId()).isEqualTo(100L);
     verify(catalogAuditService).recordEjemplarCreated(eq(5L), eq(100L), eq(10L), eq(28L));
     verify(ejemplarCreadoEventPublisher).publishEjemplarCreado(eq(100L), eq(ocurrido));
   }

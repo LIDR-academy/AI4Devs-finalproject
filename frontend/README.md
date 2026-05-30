@@ -29,7 +29,7 @@ El entorno de desarrollo usa proxy de Vite para evitar problemas CORS:
 
 - Archivos de propiedades en `src/i18n/locales/` (por ahora `es.ts`).
 - Evitar hardcodear textos nuevos en vistas/composables; usar claves `t('...')`.
-- Copy de producto puede decir «árbol/ficha»; identificadores técnicos y rutas usan *ejemplar* ([ADR-0006](../docs/adr/0006-ejemplar-nomenclature-contracts.md)).
+- Copy de producto puede decir «árbol/ficha»; identificadores técnicos y rutas usan *ejemplar* ([ADR-0006](../docs/adr/0006-ejemplar-aggregate-http-kafka-naming.md)).
 
 ## Flujo de autenticación
 

@@ -5,14 +5,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record ConfirmPhotoUploadRequest(
-    @NotNull Long ejemplarId,
+    @NotNull Long treeId,
     @NotBlank String bucket,
     @NotBlank String objectKey,
-    @NotBlank String nombreFicheroOriginal,
-    @NotBlank String tipoMime,
-    @Min(1) long tamanoBytes,
-    Integer anchoPx,
-    Integer altoPx,
-    Integer orden,
-    Boolean esPrincipal,
+    @NotBlank String originalFileName,
+    @NotBlank String mimeType,
+    @Min(1) long sizeBytes,
+    Integer widthPx,
+    Integer heightPx,
+    Integer order,
+    Boolean isPrimary,
     String checksumSha256) {}

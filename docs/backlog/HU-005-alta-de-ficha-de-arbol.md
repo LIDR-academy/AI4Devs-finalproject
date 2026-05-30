@@ -8,7 +8,7 @@
 | **Formato “Como… quiero… para…”** | Correcto; el backlog añade explícitamente coordenadas (R2), maestros (R1, R8) y UC-03; la redacción refinada unifica todo en una frase sin notas al pie en el cuerpo de la historia. |
 | **Estimación (S/M/L)** | **L** coherente con alcance técnico (persistencia, validaciones, auditoría, Kafka). |
 | **Prioridad** | **Alta** alineada con MVP. |
-| **Inconsistencias detectadas** | ~~OpenAPI `object` genérico~~ **cerrado:** [openapi.yaml](../api/openapi.yaml) define **CreateEjemplarRequest** / **CreatedEjemplarResponse**. Listado colaborador y edición: **HU-008** (`GET /api/catalog/ejemplares`). |
+| **Inconsistencias detectadas** | ~~OpenAPI `object` genérico~~ **cerrado:** [openapi.yaml](../api/openapi.yaml) define **CreateEjemplarRequest** / **CreatedEjemplarResponse**. Listado colaborador y edición: **HU-008** (`GET /api/catalog/trees`). |
 | **Tamaño / división** | Historia grande pero acotada por “Queda fuera”: fotos —subida **HU-006**, consulta **HU-014**—, IA (HU-009), edición (HU-008). Si el equipo difería Kafka en un segundo despliegue, convendría explicitar entregables parciales (riesgo para R7/cadena de notificaciones). |
 
 ---
@@ -33,7 +33,7 @@ Como colaborador autenticado, quiero registrar un árbol con datos descriptivos,
 
 #### Incluye
 
-- Creación de ficha mediante el flujo previsto para **colaboradores autenticados** (caso de uso de registrar árbol): datos descriptivos y de ubicación, referencia a **especie** y **provincia** desde datos maestros, control de publicación para consulta pública según lo descrito en el modelo y el contrato HTTP (`POST /api/catalog/ejemplares` con cuerpo JSON, detalle cerrable en implementación sin contradecir el contrato publicado).
+- Creación de ficha mediante el flujo previsto para **colaboradores autenticados** (caso de uso de registrar árbol): datos descriptivos y de ubicación, referencia a **especie** y **provincia** desde datos maestros, control de publicación para consulta pública según lo descrito en el modelo y el contrato HTTP (`POST /api/catalog/trees` con cuerpo JSON, detalle cerrable en implementación sin contradecir el contrato publicado).
 - Cumplimiento de **R1** (toda ficha referencia exactamente una especie desde maestros) y **R2** (cada árbol lleva coordenadas del ejemplar).
 - Registro del **creador** de la ficha (vinculación a usuario aplicación / subject OIDC según modelo `USUARIO_APP` / responsabilidades del servicio).
 - **Auditoría de catálogo** para operaciones relevantes (**R3**, entidad **AUDITORIA_CATALOGO** en el diseño documentado).
@@ -73,7 +73,7 @@ Como colaborador autenticado, quiero registrar un árbol con datos descriptivos,
 
 ### Referencias
 
-UC-03; reglas R1, R2, R3, R7, R8, R9; readme (registro de árbol, modelo lógico de `ejemplar`, diagramas de arquitectura); `docs/events/kafka-events.md` (`catalog.ejemplar.evento`, `EJEMPLAR_CREADO`); OpenAPI `POST /api/catalog/ejemplares`.
+UC-03; reglas R1, R2, R3, R7, R8, R9; readme (registro de árbol, modelo lógico de `ejemplar`, diagramas de arquitectura); `docs/events/kafka-events.md` (`catalog.ejemplar.evento`, `EJEMPLAR_CREADO`); OpenAPI `POST /api/catalog/trees`.
 
 ### Escenario 1 — Alta correcta con especie y coordenadas
 

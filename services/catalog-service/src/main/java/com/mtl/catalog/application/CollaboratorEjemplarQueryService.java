@@ -138,7 +138,7 @@ public class CollaboratorEjemplarQueryService {
 
   private CollaboratorEjemplarListItemDto toListItem(CollaboratorEjemplarListRow row) {
     return new CollaboratorEjemplarListItemDto(
-        row.getEjemplarId(),
+        row.getTreeId(),
         row.getSpeciesId(),
         row.getCommonName(),
         row.getScientificName(),

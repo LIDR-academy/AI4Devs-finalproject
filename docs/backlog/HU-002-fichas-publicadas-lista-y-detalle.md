@@ -34,7 +34,7 @@ Como visitante sin cuenta, quiero consultar el listado y el detalle de las ficha
 #### Incluye
 
 - Consulta pública sin autenticación de fichas de árboles publicadas, mediante rutas de listado y detalle en frontend.
-- Listado público con **filtros básicos** acordados en contrato (`especie`, `provincia`, `municipio`, y —solo para roles privilegiados en backend— `estado` / `visibilidad`); catálogo de **nombres de provincia** para la UI vía `GET /api/catalog/public/provinces` (sin exponer código de provincia al visitante anónimo).
+- Listado público con **filtros básicos** en contrato HTTP ([ADR-0007](../adr/0007-english-http-spanish-persistence.md)): `species`, `province`, `municipality`, y —solo para roles privilegiados— `publicationState` / `publicMapVisibility`; provincias vía `GET /api/catalog/public/provinces` (propiedad `names`).
 - Lectura de información principal de la ficha publicada en detalle (datos descriptivos y metadatos de publicación según contrato disponible).
 - Integración de frontend con endpoints públicos del gateway para catálogo en modo lectura.
 - Manejo de estados básicos de UX en consulta pública (carga, vacío y error controlado).
@@ -60,7 +60,7 @@ Como visitante sin cuenta, quiero consultar el listado y el detalle de las ficha
 - Solape funcional entre HU-002 y HU-003 si no se mantiene separación explícita lista/detalle frente a mapa.
 - Falta de datos publicados en entorno de pruebas que impida validar valor real de la consulta pública.
 - Diferencias entre contrato OpenAPI y payload real en endpoints de lectura pública durante iteraciones.
-- Deriva de alcance hacia **filtros avanzados** o búsqueda compleja no requeridos en este corte MVP (los filtros simples del listado público y el endpoint de nombres de provincia **sí** forman parte del contrato cerrado).
+- Deriva de alcance hacia **filtros avanzados** o búsqueda compleja no requeridos en este corte MVP (los filtros simples del listado público y `GET /api/catalog/public/provinces` (`names`) **sí** forman parte del contrato cerrado).
 
 ### Aclaraciones y refinamiento
 

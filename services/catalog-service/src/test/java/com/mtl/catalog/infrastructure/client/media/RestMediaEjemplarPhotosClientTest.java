@@ -51,7 +51,7 @@ class RestMediaEjemplarPhotosClientTest {
   @Test
   void deleteAllPhotosForEjemplar_ok_invocaDeleteConBearer() {
     server
-        .expect(requestTo("http://media-service/api/media/ejemplares/5/photos"))
+        .expect(requestTo("http://media-service/api/media/trees/5/photos"))
         .andExpect(method(HttpMethod.DELETE))
         .andExpect(header("Authorization", "Bearer test-token"))
         .andRespond(withStatus(HttpStatus.NO_CONTENT));
@@ -62,7 +62,7 @@ class RestMediaEjemplarPhotosClientTest {
   @Test
   void deleteAllPhotosForEjemplar_forbidden_mapsTo403() {
     server
-        .expect(requestTo("http://media-service/api/media/ejemplares/9/photos"))
+        .expect(requestTo("http://media-service/api/media/trees/9/photos"))
         .andRespond(withStatus(HttpStatus.FORBIDDEN));
 
     assertThatThrownBy(() -> client.deleteAllPhotosForEjemplar(9L, JWT))
@@ -72,7 +72,7 @@ class RestMediaEjemplarPhotosClientTest {
   @Test
   void deleteAllPhotosForEjemplar_notFound_mapsTo404() {
     server
-        .expect(requestTo("http://media-service/api/media/ejemplares/1/photos"))
+        .expect(requestTo("http://media-service/api/media/trees/1/photos"))
         .andRespond(withStatus(HttpStatus.NOT_FOUND));
 
     assertThatThrownBy(() -> client.deleteAllPhotosForEjemplar(1L, JWT))
@@ -82,7 +82,7 @@ class RestMediaEjemplarPhotosClientTest {
   @Test
   void deleteAllPhotosForEjemplar_badGateway_mapsTo502() {
     server
-        .expect(requestTo("http://media-service/api/media/ejemplares/3/photos"))
+        .expect(requestTo("http://media-service/api/media/trees/3/photos"))
         .andRespond(withStatus(HttpStatus.BAD_GATEWAY));
 
     CatalogBadGatewayException ex =

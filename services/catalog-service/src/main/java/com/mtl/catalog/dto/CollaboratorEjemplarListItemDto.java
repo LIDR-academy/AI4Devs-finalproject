@@ -3,7 +3,7 @@ package com.mtl.catalog.dto;
 import java.time.OffsetDateTime;
 
 public record CollaboratorEjemplarListItemDto(
-    long ejemplarId,
+    long treeId,
     long speciesId,
     String commonName,
     String scientificName,

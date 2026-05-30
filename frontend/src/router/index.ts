@@ -1,16 +1,16 @@
-import { createRouter, createWebHistory } from 'vue-router'
+﻿import { createRouter, createWebHistory } from 'vue-router'
 import AuthCallbackView from '@/views/AuthCallbackView.vue'
 import AuthGuardErrorView from '@/views/AuthGuardErrorView.vue'
-import CreateEjemplarView from '@/views/CreateEjemplarView.vue'
+import CreateTreeView from '@/views/CreateTreeView.vue'
 import HomeView from '@/views/HomeView.vue'
 import LoginView from '@/views/LoginView.vue'
 import AdminSubscriptionsView from '@/views/AdminSubscriptionsView.vue'
 import AdminMastersView from '@/views/AdminMastersView.vue'
 import SubscribeByEmailView from '@/views/SubscribeByEmailView.vue'
-import EjemplaresDetailView from '@/views/EjemplaresDetailView.vue'
-import EditEjemplarView from '@/views/EditEjemplarView.vue'
-import MyEjemplaresListView from '@/views/MyEjemplaresListView.vue'
-import EjemplaresListView from '@/views/EjemplaresListView.vue'
+import TreeDetailView from '@/views/TreeDetailView.vue'
+import EditTreeView from '@/views/EditTreeView.vue'
+import MyTreesListView from '@/views/MyTreesListView.vue'
+import TreesListView from '@/views/TreesListView.vue'
 import { authService } from '@/services/auth/oidc'
 import type { AppRole } from '@/types/auth'
 import { userHasAnyAppRole } from '@/utils/jwtRoles'
@@ -51,7 +51,7 @@ const router = createRouter({
     {
       path: '/ejemplares',
       name: 'ejemplares-list',
-      component: EjemplaresListView,
+      component: TreesListView,
       meta: {
         pageTitleKey: 'pendingViews.treesList.title',
       },
@@ -59,7 +59,7 @@ const router = createRouter({
     {
       path: '/ejemplares/:id',
       name: 'ejemplares-detail',
-      component: EjemplaresDetailView,
+      component: TreeDetailView,
       meta: {
         pageTitleKey: 'pendingViews.treesDetail.title',
       },
@@ -75,13 +75,13 @@ const router = createRouter({
     {
       path: '/ejemplares/new',
       name: 'ejemplares-new',
-      component: CreateEjemplarView,
+      component: CreateTreeView,
       meta: { requiresAuth: true },
     },
     {
       path: '/ejemplares/:id/edit',
       name: 'ejemplares-edit',
-      component: EditEjemplarView,
+      component: EditTreeView,
       meta: {
         requiresAuth: true,
         pageTitleKey: 'treeEdit.title',
@@ -90,7 +90,7 @@ const router = createRouter({
     {
       path: '/mis-ejemplares',
       name: 'mis-ejemplares',
-      component: MyEjemplaresListView,
+      component: MyTreesListView,
       meta: {
         requiresAuth: true,
         pageTitleKey: 'myTrees.title',

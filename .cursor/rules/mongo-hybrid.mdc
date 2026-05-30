@@ -18,5 +18,5 @@ La disposición de paquetes (**`domain`**, **`infrastructure.persistence.jpa.rep
 - **PostgreSQL** es la **autoridad** para **ejemplar**, **especie**, taxonomía y datos operativos del catálogo que deban ser transaccionales y consultables con integridad relacional (tabla `catalog.ejemplar`).
 - **MongoDB** almacena **enriquecimientos** y notas semiestructuradas (`especie_detalle`, `ejemplar_detalle`); **no** sustituye al maestro SQL.
 - Toda **denormalización** en documentos Mongo (nombres de especie, etc.) debe tener estrategia de **actualización o invalidación** cuando cambien los datos maestros en SQL.
-- Los campos `especie_pg_id` / `ejemplar_pg_id` en Mongo enlazan con las PK numéricas SQL; mantener **coherencia** tras migraciones o cambios de modelo ([ADR-0006](../../docs/adr/0006-ejemplar-nomenclature-contracts.md)).
+- Los campos `especie_pg_id` / `ejemplar_pg_id` en Mongo enlazan con las PK numéricas SQL; mantener **coherencia** tras migraciones o cambios de modelo ([ADR-0006](../../docs/adr/0006-ejemplar-aggregate-http-kafka-naming.md)).
 - **`_id` en Mongo:** entero igual a `especie_pg_id` o `ejemplar_pg_id` (convención del diseño en [mongo.md](../../docs/data-model/mongo.md)); no usar `ObjectId` por defecto como convención del MVP.

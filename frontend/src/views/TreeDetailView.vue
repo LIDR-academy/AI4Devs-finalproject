@@ -5,11 +5,11 @@ import { useI18n } from 'vue-i18n'
 import TreeLocationMapPreview from '@/components/TreeLocationMapPreview.vue'
 import TreePhotoFullscreenViewer from '@/components/TreePhotoFullscreenViewer.vue'
 import { areLatLngInValidRange } from '@/composables/createTreeFormValidation'
-import { fetchPublicEjemplarDetail } from '@/services/catalog/catalogService'
-import { fetchEjemplarPhotoGallery } from '@/services/media/ejemplarGalleryService'
+import { fetchPublicTreeDetail } from '@/services/catalog/catalogService'
+import { fetchTreePhotoGallery } from '@/services/media/treeGalleryService'
 import { HttpError, NetworkError } from '@/services/http/apiClient'
-import type { PublicEjemplarDetail } from '@/types/catalog'
-import type { EjemplarPhotoGalleryItem } from '@/types/media'
+import type { PublicTreeDetail } from '@/types/catalog'
+import type { TreePhotoGalleryItem } from '@/types/media'
 
 const route = useRoute()
 const { t } = useI18n()
@@ -17,8 +17,8 @@ const { t } = useI18n()
 const isLoading = ref(false)
 const errorMessage = ref('')
 const notFound = ref(false)
-const tree = ref<PublicEjemplarDetail | null>(null)
-const galleryPhotos = ref<EjemplarPhotoGalleryItem[]>([])
+const tree = ref<PublicTreeDetail | null>(null)
+const galleryPhotos = ref<TreePhotoGalleryItem[]>([])
 const selectedPhotoIndex = ref(0)
 const isFullscreenOpen = ref(false)
 
@@ -36,7 +36,7 @@ function mapError(error: unknown): string {
   return t('treesDetail.messages.unexpectedError')
 }
 
-const ejemplarId = computed(() => {
+const treeId = computed(() => {
   const rawId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
   const parsedId = Number(rawId)
   if (!Number.isInteger(parsedId) || parsedId <= 0) {
@@ -78,7 +78,7 @@ const selectedPhotoPosition = computed(() =>
 )
 
 async function loadTreeDetail(): Promise<void> {
-  if (!ejemplarId.value) {
+  if (!treeId.value) {
     notFound.value = true
     errorMessage.value = t('treesDetail.messages.notFound')
     return
@@ -93,8 +93,8 @@ async function loadTreeDetail(): Promise<void> {
 
   try {
     const [treeDetail, photos] = await Promise.all([
-      fetchPublicEjemplarDetail(ejemplarId.value),
-      fetchEjemplarPhotoGallery(ejemplarId.value),
+      fetchPublicTreeDetail(treeId.value),
+      fetchTreePhotoGallery(treeId.value),
     ])
     tree.value = treeDetail
     galleryPhotos.value = photos
@@ -283,7 +283,7 @@ onMounted(async () => {
           <RouterLink class="btn btn-secondary" :to="{ name: 'ejemplares-list' }">
             {{ t('treesDetail.backToList') }}
           </RouterLink>
-          <span class="muted tree-detail-id">{{ t('treesDetail.ejemplarId', { id: tree.ejemplarId }) }}</span>
+          <span class="muted tree-detail-id">{{ t('treesDetail.treeId', { id: tree.treeId }) }}</span>
         </div>
       </form>
 

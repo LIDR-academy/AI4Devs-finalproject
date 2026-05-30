@@ -66,7 +66,7 @@ class GatewayCatalogProxyJwtIT {
 
   @Test
   void protectedCatalogRoute_withoutBearer_returnsUnauthorized() {
-    webTestClient.get().uri("/api/catalog/ejemplares").exchange().expectStatus().isEqualTo(UNAUTHORIZED);
+    webTestClient.get().uri("/api/catalog/trees").exchange().expectStatus().isEqualTo(UNAUTHORIZED);
   }
 
   @Test
@@ -100,7 +100,7 @@ class GatewayCatalogProxyJwtIT {
   void protectedCatalogRoute_withBearer_forwardsTokenAndReturnsUpstreamBody() {
     String token = JwtTestTokens.accessTokenWithRealmRoles("it-user", List.of("COLABORADOR"));
     wireMock.stubFor(
-        get(urlPathEqualTo("/api/catalog/ejemplares"))
+        get(urlPathEqualTo("/api/catalog/trees"))
             .willReturn(
                 aResponse()
                     .withStatus(200)
@@ -109,7 +109,7 @@ class GatewayCatalogProxyJwtIT {
 
     webTestClient
         .get()
-        .uri("/api/catalog/ejemplares")
+        .uri("/api/catalog/trees")
         .headers(h -> h.setBearerAuth(token))
         .exchange()
         .expectStatus()
@@ -119,7 +119,7 @@ class GatewayCatalogProxyJwtIT {
 
     wireMock.verify(
         1,
-        getRequestedFor(urlPathEqualTo("/api/catalog/ejemplares"))
+        getRequestedFor(urlPathEqualTo("/api/catalog/trees"))
             .withHeader(AUTHORIZATION, equalTo("Bearer " + token)));
   }
 
@@ -132,7 +132,7 @@ class GatewayCatalogProxyJwtIT {
                 aResponse()
                     .withStatus(200)
                     .withHeader("Content-Type", "application/json")
-                    .withBody("{\"photoId\":1,\"ejemplarId\":42}")));
+                    .withBody("{\"photoId\":1,\"treeId\":42}")));
 
     webTestClient
         .get()
@@ -142,7 +142,7 @@ class GatewayCatalogProxyJwtIT {
         .expectStatus()
         .isOk()
         .expectBody(String.class)
-        .isEqualTo("{\"photoId\":1,\"ejemplarId\":42}");
+        .isEqualTo("{\"photoId\":1,\"treeId\":42}");
 
     wireMock.verify(
         1,

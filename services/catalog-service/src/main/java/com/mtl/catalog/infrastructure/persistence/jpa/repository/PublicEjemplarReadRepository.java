@@ -17,7 +17,7 @@ public interface PublicEjemplarReadRepository extends JpaRepository<Ejemplar, Lo
       value =
           """
           SELECT
-            a.ejemplar_id AS ejemplarId,
+            a.ejemplar_id AS treeId,
             coalesce(e.nombre_comun, '') AS commonName,
             e.nombre_cientifico AS scientificName,
             p.nombre AS province,
@@ -46,8 +46,8 @@ public interface PublicEjemplarReadRepository extends JpaRepository<Ejemplar, Lo
             CASE WHEN :sortField = 'estado' AND :sortDir = 'desc' THEN a.estado_publicacion END DESC,
             CASE WHEN :sortField = 'visibilidad' AND :sortDir = 'asc' THEN a.visibilidad_mapa_publico END ASC,
             CASE WHEN :sortField = 'visibilidad' AND :sortDir = 'desc' THEN a.visibilidad_mapa_publico END DESC,
-            CASE WHEN :sortField = 'ejemplarId' AND :sortDir = 'asc' THEN a.ejemplar_id END ASC,
-            CASE WHEN :sortField = 'ejemplarId' AND :sortDir = 'desc' THEN a.ejemplar_id END DESC,
+            CASE WHEN :sortField = 'treeId' AND :sortDir = 'asc' THEN a.ejemplar_id END ASC,
+            CASE WHEN :sortField = 'treeId' AND :sortDir = 'desc' THEN a.ejemplar_id END DESC,
             a.ejemplar_id ASC
           """,
       countQuery =
@@ -80,7 +80,7 @@ public interface PublicEjemplarReadRepository extends JpaRepository<Ejemplar, Lo
       value =
           """
           SELECT
-            a.ejemplar_id AS ejemplarId,
+            a.ejemplar_id AS treeId,
             coalesce(e.nombre_comun, '') AS commonName,
             e.nombre_cientifico AS scientificName,
             p.nombre AS province,
