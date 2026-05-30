@@ -281,3 +281,28 @@ model OrderItem {
   product Product @relation(fields: [productId], references: [id])
 }
 ```
+
+---
+
+## 7. Semilla de datos inicial
+
+El fichero `backend/prisma/seed.ts` carga los datos iniciales necesarios para arrancar el MVP y ejecutar los tests E2E sin necesidad de introducir datos manualmente.
+
+**Fuente de datos:** los 12 productos definidos en `src/app/data/products.ts` del prototipo de Figma Make. Son datos reales y coherentes — nombres de marca, precios, atributos running correctos, tallas y colores — por lo que sirven directamente como dataset de demostración.
+
+**Ficheros implicados:**
+
+| Fichero | Propósito |
+|---|---|
+| `backend/prisma/seed.ts` | Script que importa los 12 productos y los inserta via Prisma (`upsert` para idempotencia) |
+| `backend/prisma/schema.prisma` | Añadir bloque `prisma.seed` apuntando al script |
+| `backend/package.json` | Script `"seed": "ts-node prisma/seed.ts"` |
+
+**Ejecución:**
+
+```bash
+npx prisma migrate dev   # aplica el esquema
+npx prisma db seed       # carga los 12 productos
+```
+
+El seed usa `upsert` (no `create`) para ser idempotente: ejecutarlo múltiples veces no duplica datos, lo que lo hace seguro para entornos de desarrollo y CI.
