@@ -1,0 +1,1970 @@
+openapi: 3.0.3
+info:
+  title: MyTreeLibrary API
+  description: >
+    Contrato HTTP expuesto al cliente a través del API Gateway (prefijos `/api/catalog`,
+    `/api/media`, `/api/notifications`, `/api/ai`). Las respuestas de error siguen RFC 9457
+    (`application/problem+json`). Reglas de diseño y convención de rutas en `.cursor/rules/api-design.mdc`.
+    Los clientes pueden enviar la cabecera opcional `X-Correlation-Id` en peticiones; el servidor puede
+    devolver el mismo identificador en la propiedad `correlationId` del cuerpo Problem.
+  version: 0.1.0
+
+servers:
+  - url: /
+    description: Origen del API Gateway (rutas absolutas desde la raíz del host publicado)
+
+tags:
+  - name: catalog
+    description: Catálogo de árboles (catalog-service)
+  - name: catalog-public
+    description: Consulta pública sin autenticación
+  - name: notifications
+    description: Suscripciones y notificaciones (notification-service)
+  - name: ai
+    description: Consulta de características de especie con IA (ai-assistant-service; contrato HU-016 pendiente)
+  - name: media
+    description: Metadatos de fotografías y subida a almacén objeto (media-service)
+
+paths:
+  /api/catalog/species:
+    get:
+      tags: [catalog]
+      summary: Listar especies (maestros) para formularios
+      description: >
+        Listado paginado o sin paginar (`unpaged=true`, con tope en servidor) para formularios de colaboración
+        y administración. Requiere JWT con rol de realm **COLABORADOR** o **ADMIN**. Filtro opcional `q`:
+        subcadena insensible a mayúsculas y acentos (PostgreSQL `unaccent`) sobre nombre común y nombre científico.
+        Campo `label` recomendado para `<option>`: `nombre común (nombre científico)` (p. ej. `Encina (Quercus ilex)`).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 200
+          description: Filtro por subcadena en nombre común o nombre científico.
+        - name: unpaged
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: Si es true, devuelve hasta el tope máximo del servicio (sin paginar por página).
+      responses:
+        "200":
+          description: Listado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MasterSpeciesPage"
+        "400":
+          $ref: "#/components/responses/ProblemBadRequest"
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+    post:
+      tags: [catalog]
+      summary: Alta de especie taxonómica (solo ADMIN, HU-011)
+      description: >
+        Crea una **especie** vinculada a `genusId` existente. Requiere rol **ADMIN**. Obligatorios:
+        `genusId`, `scientificName`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTaxonomySpeciesRequest"
+      responses:
+        "201":
+          description: Especie creada
+          headers:
+            Location:
+              description: URI del detalle admin de la especie creada
+              schema:
+                type: string
+                example: /api/catalog/species/42
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaxonomySpeciesResponse"
+        "400":
+          $ref: "#/components/responses/ProblemBadRequest"
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+        "404":
+          $ref: "#/components/responses/ProblemNotFound"
+
+  /api/catalog/provinces:
+    get:
+      tags: [catalog]
+      summary: Listar provincias (maestros) para formularios
+      description: >
+        Misma semántica de paginación y filtro `q` que en especies; `q` busca en nombre y código de provincia.
+        `label` sugerido `nombre (código)`. Requiere JWT con rol de realm **COLABORADOR** o **ADMIN** (solo lectura en MVP).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 200
+        - name: unpaged
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: Listado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MasterProvincePage"
+        "400":
+          $ref: "#/components/responses/ProblemBadRequest"
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+
+  /api/catalog/families:
+    get:
+      tags: [catalog]
+      summary: Listar familias taxonómicas (ADMIN, UI maestros)
+      description: >
+        Listado paginado o sin paginar para desplegables de administración (**UC-07**, **HU-011**).
+        Requiere JWT con rol de realm **ADMIN**. Filtro opcional `q` sobre nombre común y científico
+        (insensible a mayúsculas y acentos).
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 200
+        - name: unpaged
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: Listado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MasterFamilyPage"
+        "400":
+          $ref: "#/components/responses/ProblemBadRequest"
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+    post:
+      tags: [catalog]
+      summary: Alta de familia taxonómica (solo ADMIN)
+      description: >
+        Crea una **familia** (**HU-011**). Solo **POST** en MVP (sin edición ni baja). Campos obligatorios
+        alineados a SQL: `scientificName` (`nombre_cientifico` NOT NULL). En MVP no hay `GET` por identificador;
+        la respuesta **201** incluye el cuerpo con `familyId` (sin cabecera `Location`).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTaxonomyFamilyRequest"
+      responses:
+        "201":
+          description: Familia creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaxonomyFamilyResponse"
+        "400":
+          $ref: "#/components/responses/ProblemBadRequest"
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+
+  /api/catalog/genera:
+    get:
+      tags: [catalog]
+      summary: Listar géneros taxonómicos (ADMIN, UI maestros)
+      description: >
+        Listado paginado o sin paginar. Filtro opcional `familyId` acota por familia. Filtro `q` sobre
+        nombres común y científico. Requiere rol **ADMIN**.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+        - name: familyId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+          description: Filtra géneros de la familia indicada (`familia_id`).
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 200
+        - name: unpaged
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: Listado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MasterGenusPage"
+        "400":
+          $ref: "#/components/responses/ProblemBadRequest"
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+    post:
+      tags: [catalog]
+      summary: Alta de género taxonómico (solo ADMIN)
+      description: >
+        Crea un **género** vinculado a `familyId` existente. Solo **POST** en MVP. Obligatorios:
+        `familyId`, `scientificName`. En MVP no hay `GET` por identificador; la respuesta **201** incluye el
+        cuerpo con `genusId` (sin cabecera `Location`).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTaxonomyGenusRequest"
+      responses:
+        "201":
+          description: Género creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaxonomyGenusResponse"
+        "400":
+          $ref: "#/components/responses/ProblemBadRequest"
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+        "404":
+          $ref: "#/components/responses/ProblemNotFound"
+
+  /api/catalog/species/{speciesId}:
+    parameters:
+      - $ref: "#/components/parameters/TaxonomySpeciesId"
+    get:
+      tags: [catalog]
+      summary: Detalle de especie para edición admin (HU-011)
+      description: Devuelve campos editables de la especie. Requiere rol **ADMIN**.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Detalle
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaxonomySpeciesResponse"
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+        "404":
+          $ref: "#/components/responses/ProblemNotFound"
+    put:
+      tags: [catalog]
+      summary: Editar especie taxonómica (solo ADMIN)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTaxonomySpeciesRequest"
+      responses:
+        "200":
+          description: Especie actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaxonomySpeciesResponse"
+        "400":
+          $ref: "#/components/responses/ProblemBadRequest"
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+        "404":
+          $ref: "#/components/responses/ProblemNotFound"
+    delete:
+      tags: [catalog]
+      summary: Eliminar especie taxonómica (solo ADMIN)
+      description: >
+        Elimina la especie si **no** existe ningún ejemplar referenciando `especie_id`. Si hay fichas
+        asociadas, responde **409** sin borrar.
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Especie eliminada
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+        "404":
+          $ref: "#/components/responses/ProblemNotFound"
+        "409":
+          $ref: "#/components/responses/ProblemConflict"
+
+  /api/catalog/trees:
+    get:
+      tags: [catalog]
+      summary: Listar árboles del colaborador (HU-008)
+      description: >
+        Listado paginado de fichas visibles para el actor. **COLABORADOR:** solo árboles con
+        `usuario_app_id` del JWT. **ADMIN:** puede listar cualquier ficha; filtro opcional
+        `createdByUserId` para acotar por colaborador creador. Orden por defecto: `modificado_en`
+        descendente. Filtro de fechas: `createdFrom`/`createdTo` en **UTC** (formato `date`);
+        debe cumplirse `createdFrom` ≤ `createdTo`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+        - $ref: "#/components/parameters/CollaboratorTreeSpeciesId"
+        - $ref: "#/components/parameters/CollaboratorTreeCreatedFrom"
+        - $ref: "#/components/parameters/CollaboratorTreeCreatedTo"
+        - $ref: "#/components/parameters/CollaboratorTreeCreatedByUserId"
+        - $ref: "#/components/parameters/CollaboratorTreeSort"
+      responses:
+        "200":
+          description: Listado paginado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollaboratorTreePageResponse"
+        "400":
+          $ref: "#/components/responses/ProblemBadRequest"
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+    post:
+      tags: [catalog]
+      summary: Crear árbol
+      description: >
+        Requiere JWT con roles COLABORADOR o ADMIN. El access token debe incluir claim `email`
+        (y conviene `profile` para nombre: `name` o `given_name`/`family_name`) para materializar
+        o actualizar `usuario_app`; ver ADR-0004.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTreeRequest"
+      responses:
+        "201":
+          description: Creado
+          headers:
+            Location:
+              description: URI de la ficha creada
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatedTreeResponse"
+        "400":
+          $ref: "#/components/responses/ProblemBadRequest"
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+
+  /api/catalog/trees/{treeId}:
+    parameters:
+      - $ref: "#/components/parameters/TreeId"
+    get:
+      tags: [catalog]
+      summary: Obtener ficha de árbol para edición (HU-008)
+      description: >
+        Detalle con identificadores de maestros y campos editables. **COLABORADOR:** solo fichas
+        propias. **ADMIN:** cualquier ficha.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Ficha para edición
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollaboratorTreeDetailResponse"
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+        "404":
+          $ref: "#/components/responses/ProblemNotFound"
+    put:
+      tags: [catalog]
+      summary: Reemplazar ficha de árbol (HU-008)
+      description: >
+        Actualización completa (`PUT`); cuerpo simétrico al alta. No publica evento Kafka ni
+        notificación a suscriptores.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTreeRequest"
+      responses:
+        "200":
+          description: Ficha actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CollaboratorTreeDetailResponse"
+        "400":
+          $ref: "#/components/responses/ProblemBadRequest"
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+        "404":
+          $ref: "#/components/responses/ProblemNotFound"
+    delete:
+      tags: [catalog]
+      summary: Eliminar ficha de árbol (HU-008)
+      description: >
+        Borrado físico de la ficha. Orquestación: primero
+        `DELETE /api/media/trees/{treeId}/photos` (204 aunque no haya fotos); error en media aborta
+        el proceso; tras éxito elimina el árbol en PostgreSQL; hook Mongo según TASK-HU-015-01. Sin
+        notificación a suscriptores.
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Ficha eliminada
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+        "404":
+          $ref: "#/components/responses/ProblemNotFound"
+        "502":
+          $ref: "#/components/responses/ProblemBadGateway"
+
+  /api/catalog/trees/{treeId}/media-submission-permission:
+    parameters:
+      - $ref: "#/components/parameters/TreeId"
+    get:
+      tags: [catalog]
+      summary: Comprobar permiso de subida de fotografías (HU-006)
+      description: >
+        Confirma que el actor autenticado puede asociar fotografías al árbol (`treeId` en ruta) y
+        devuelve el `usuario_app_id` materializado para auditoría en `media-service`. No sustituye a
+        `POST /api/media/uploads/presign` ni a `POST /api/media/photos/confirm`.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Permiso concedido para el árbol indicado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MediaSubmissionPermissionResponse"
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+        "404":
+          $ref: "#/components/responses/ProblemNotFound"
+
+  /api/catalog/public/trees:
+    get:
+      tags: [catalog-public]
+      summary: Listar árboles publicados (público)
+      description: >
+        Filtros de texto (`species`, `province`, `municipality`) son búsqueda por subcadena (insensible a
+        mayúsculas/acentos; `%` y `_` literales). Para poblar un desplegable de provincia con nombres
+        canónicos del maestro, usar `GET /api/catalog/public/provinces` (`nombres`).
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+        - $ref: "#/components/parameters/PublicTreeSpecies"
+        - $ref: "#/components/parameters/PublicTreeProvince"
+        - $ref: "#/components/parameters/PublicTreeMunicipality"
+        - $ref: "#/components/parameters/PublicTreeState"
+        - $ref: "#/components/parameters/PublicTreeVisibility"
+        - $ref: "#/components/parameters/PublicTreeSort"
+      responses:
+        "200":
+          description: Listado público
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicTreePageResponse"
+        "400":
+          $ref: "#/components/responses/ProblemBadRequest"
+
+  /api/catalog/public/trees/{treeId}:
+    get:
+      tags: [catalog-public]
+      summary: Obtener detalle público de árbol publicado
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/PublicTreeId"
+      responses:
+        "200":
+          description: Detalle público
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicTreeDetailResponse"
+        "404":
+          $ref: "#/components/responses/ProblemNotFound"
+
+  /api/catalog/public/provinces:
+    get:
+      tags: [catalog-public]
+      summary: Listar nombres de provincias (público)
+      description: >
+        Lista completa de nombres de provincia ordenados alfabéticamente, para filtros de la consulta
+        pública (p. ej. listado de árboles). Sin paginación ni código de provincia. El endpoint
+        autenticado `GET /api/catalog/provinces` conserva paginación, filtro `q` y etiquetas
+        `nombre (código)` para formularios de colaboración.
+      security: []
+      responses:
+        "200":
+          description: Nombres de provincia
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicProvinceNamesResponse"
+
+  /api/media/uploads/presign:
+    post:
+      tags: [media]
+      summary: Solicitar URL prefirmada para subida directa al bucket (S3/MinIO)
+      description: >
+        Requiere rol `COLABORADOR` o `ADMIN` y permiso sobre el árbol (`treeId`) según reglas
+        de catálogo. Valida MIME/tamaño antes de emitir la URL prefirmada.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MediaPresignUploadRequest"
+      responses:
+        "200":
+          description: URL prefirmada emitida
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MediaPresignUploadResponse"
+        "400":
+          $ref: "#/components/responses/ProblemBadRequest"
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+        "404":
+          $ref: "#/components/responses/ProblemNotFound"
+
+  /api/media/public/trees/{treeId}/primary-photo:
+    parameters:
+      - $ref: "#/components/parameters/PublicTreeId"
+    get:
+      tags: [media]
+      summary: Imagen principal del árbol (consulta pública, HU-014)
+      description: >
+        Devuelve el binario de la fotografía marcada como principal para el árbol, solo si el árbol
+        es visible vía `GET /api/catalog/public/trees/{treeId}` con el mismo contexto de JWT opcional.
+        Sin token solo árboles publicados y mapa público; con JWT de colaborador/admin se aplica el
+        mismo alcance que el detalle público del catálogo. Requiere objeto existente en el almacén.
+      security: []
+      responses:
+        "200":
+          description: Cuerpo binario (Content-Type según MIME registrado, p. ej. image/jpeg)
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/webp:
+              schema:
+                type: string
+                format: binary
+        "404":
+          $ref: "#/components/responses/ProblemNotFound"
+        "502":
+          $ref: "#/components/responses/ProblemBadGateway"
+
+  /api/media/trees/{treeId}/photos:
+    parameters:
+      - $ref: "#/components/parameters/PublicTreeId"
+    get:
+      tags: [media]
+      summary: Listar galería de fotografías de un árbol (HU-014)
+      description: >
+        Devuelve la galería de fotografías visible para el contexto del solicitante.
+        Sin token, solo categorías `PUBLIC`; con JWT se amplía a `PUBLIC` + `PRIVATE`
+        según permisos de negocio. El orden de la respuesta es estable:
+        fotografía principal primero y resto en orden ascendente. Si no hay fotografías
+        visibles, responde **200** con lista vacía.
+      security:
+        - {}
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Galería visible para el solicitante (vacía cuando no hay fotos visibles)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MediaTreePhotoGalleryItem"
+        "400":
+          $ref: "#/components/responses/ProblemBadRequest"
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+        "404":
+          $ref: "#/components/responses/ProblemNotFound"
+    delete:
+      tags: [media]
+      summary: Eliminar todas las fotografías de un árbol (HU-008)
+      description: >
+        Borra metadatos en esquema `media` y objetos en almacén S3/MinIO asociados al `treeId`.
+        Requiere rol `COLABORADOR` o `ADMIN` con permiso sobre el árbol (misma política que subida).
+        Invocado por `catalog-service` en cascada al eliminar una ficha. Si no hay fotografías,
+        responde **204**.
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Todas las fotografías del árbol eliminadas (o ninguna existía)
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+        "404":
+          $ref: "#/components/responses/ProblemNotFound"
+        "502":
+          $ref: "#/components/responses/ProblemBadGateway"
+
+  /api/media/photos/confirm:
+    post:
+      tags: [media]
+      summary: Confirmar subida y persistir metadatos de fotografía
+      description: >
+        Confirma la subida ya realizada al bucket y persiste metadatos en `media.fotografia`.
+        Requiere rol `COLABORADOR` o `ADMIN` y permiso sobre el árbol (`treeId`).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MediaConfirmPhotoUploadRequest"
+      responses:
+        "201":
+          description: Metadatos persistidos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MediaPhotoMetadataResponse"
+        "400":
+          $ref: "#/components/responses/ProblemBadRequest"
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+        "404":
+          $ref: "#/components/responses/ProblemNotFound"
+
+  /api/media/photos/{photoId}:
+    parameters:
+      - $ref: "#/components/parameters/PhotoId"
+    get:
+      tags: [media]
+      summary: Obtener metadatos de una fotografía
+      description: >
+        Devuelve metadatos de la fotografía. Requiere rol `COLABORADOR` o `ADMIN` y permiso sobre
+        el árbol propietario de la foto.
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Metadatos de fotografía
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MediaPhotoMetadataResponse"
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+        "404":
+          $ref: "#/components/responses/ProblemNotFound"
+    delete:
+      tags: [media]
+      summary: Eliminar una fotografía (HU-006 / HU-008)
+      description: >
+        Borrado físico de metadatos y objeto en almacén de una fotografía. Requiere rol
+        `COLABORADOR` o `ADMIN` con permiso sobre el árbol propietario. Si se elimina la foto
+        principal y quedan otras, el servicio promueve otra como principal (TASK-HU-006-14).
+      security:
+        - bearerAuth: []
+      responses:
+        "204":
+          description: Fotografía eliminada
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+        "404":
+          $ref: "#/components/responses/ProblemNotFound"
+        "502":
+          $ref: "#/components/responses/ProblemBadGateway"
+
+  /api/notifications/subscriptions:
+    get:
+      tags: [notifications]
+      summary: Listar suscripciones (solo rol ADMIN)
+      description: >
+        Listado paginado para gestión **ADMIN** (**UC-08**, **HU-012**). Requiere JWT con rol de realm **ADMIN**.
+        En el MVP las suscripciones no se eliminan físicamente; la administración opera solo sobre **estado_suscripcion**
+        (**ACTIVA** / **CANCELADA**). Orden por defecto del servidor: **altaEn** descendente (más recientes primero).
+        Ver docs/data-model/data-model.md §2.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+        - $ref: "#/components/parameters/NotificationSubscriptionEstadoFilter"
+        - $ref: "#/components/parameters/NotificationSubscriptionEmailFilter"
+      responses:
+        "200":
+          description: Listado paginado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationSubscriptionAdminPage"
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+    post:
+      tags: [notifications]
+      summary: Alta de suscripción por correo (público, estado ACTIVA en el MVP)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        "201":
+          description: Suscripción creada en estado ACTIVA (MVP sin confirmación por correo; ver docs/data-model/data-model.md §2)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [email]
+                properties:
+                  email:
+                    type: string
+                    format: email
+                    description: Correo registrado tal como en la solicitud (sin exponer identificadores internos)
+        "400":
+          $ref: "#/components/responses/ProblemBadRequest"
+        "409":
+          $ref: "#/components/responses/ProblemConflict"
+
+  /api/notifications/subscriptions/{subscriptionId}:
+    parameters:
+      - $ref: "#/components/parameters/SubscriptionId"
+    patch:
+      tags: [notifications]
+      summary: Actualizar estado de suscripción (solo rol ADMIN)
+      description: >
+        Cambia **estado_suscripcion** entre **ACTIVA** y **CANCELADA** (**UC-08**, **HU-012**). Sin borrado de fila.
+        **Idempotencia:** si el estado solicitado coincide con el persistido, la respuesta es **200** con el ítem actual
+        (no se considera error). Al pasar a **CANCELADA** el servidor registra **baja_en**; al volver a **ACTIVA**
+        limpia **baja_en** según implementación alineada al modelo §2.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationSubscriptionStateUpdateRequest"
+      responses:
+        "200":
+          description: Estado actualizado o ya era el solicitado (idempotente)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationSubscriptionAdminItem"
+        "400":
+          $ref: "#/components/responses/ProblemBadRequest"
+        "401":
+          $ref: "#/components/responses/ProblemUnauthorized"
+        "403":
+          $ref: "#/components/responses/ProblemForbidden"
+        "404":
+          $ref: "#/components/responses/ProblemNotFound"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT emitido por Keycloak (realm de la aplicación)
+
+  parameters:
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema:
+        type: string
+        maxLength: 128
+      description: >
+        Identificador opcional de correlación para trazabilidad en logs. Si se omite, el servicio puede
+        generar uno y devolverlo en respuestas Problem (`correlationId`).
+    TreeId:
+      name: treeId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    PhotoId:
+      name: photoId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+      description: Identificador de FOTOGRAFIA (`fotografia_id`) en esquema media
+    SubscriptionId:
+      name: subscriptionId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+      description: Identificador de SUSCRIPTOR (`suscriptor_id`, esquema notification).
+    TaxonomySpeciesId:
+      name: speciesId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+      description: Identificador de especie maestra (`especie_id`).
+    NotificationSubscriptionEstadoFilter:
+      name: estadoSuscripcion
+      in: query
+      required: false
+      schema:
+        $ref: "#/components/schemas/NotificationSubscriptionEstadoEnum"
+      description: Filtro opcional por estado de suscripción.
+    NotificationSubscriptionEmailFilter:
+      name: email
+      in: query
+      required: false
+      schema:
+        type: string
+        maxLength: 320
+      description: >
+        Filtro opcional por texto del correo (coincidencia parcial, sin distinguir mayúsculas/minúsculas).
+        Cadena vacía o solo espacios se ignora.
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+      description: Índice de página (0-based)
+    Size:
+      name: size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      description: Tamaño de página
+    PublicTreeId:
+      name: treeId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+      description: Identificador del árbol publicado.
+    PublicTreeSpecies:
+      name: species
+      in: query
+      required: false
+      schema:
+        type: string
+      description: >
+        Filtro por subcadena en nombre común o nombre científico de la especie (un solo campo;
+        insensible a mayúsculas y acentos; metacaracteres % y _ se tratan de forma literal).
+    PublicTreeProvince:
+      name: province
+      in: query
+      required: false
+      schema:
+        type: string
+      description: >
+        Filtro por subcadena en el nombre de provincia visible (insensible a mayúsculas y acentos;
+        metacaracteres % y _ se tratan de forma literal). Valores alineados al maestro: lista ordenada
+        de nombres en `GET /api/catalog/public/provinces` (propiedad `nombres`).
+    PublicTreeMunicipality:
+      name: municipality
+      in: query
+      required: false
+      schema:
+        type: string
+      description: >
+        Filtro por subcadena en municipio (insensible a mayúsculas y acentos; metacaracteres % y _
+        se tratan de forma literal).
+    PublicTreeState:
+      name: publicationState
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [BORRADOR, PUBLICADO]
+      description: Filtro por estado de publicación.
+    PublicTreeVisibility:
+      name: publicMapVisibility
+      in: query
+      required: false
+      schema:
+        type: string
+        enum: [PRIVADO, PUBLICO]
+      description: Filtro por visibilidad en mapa público.
+    PublicTreeSort:
+      name: sort
+      in: query
+      required: false
+      schema:
+        type: string
+        default: species,asc
+        enum:
+          - species,asc
+          - species,desc
+          - province,asc
+          - province,desc
+          - municipality,asc
+          - municipality,desc
+          - publicationState,asc
+          - publicationState,desc
+          - publicMapVisibility,asc
+          - publicMapVisibility,desc
+          - treeId,asc
+          - treeId,desc
+      description: Orden del listado. Valor por defecto `species,asc`.
+    CollaboratorTreeSpeciesId:
+      name: speciesId
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int64
+      description: Filtro por identificador de especie maestra (`especie_id`).
+    CollaboratorTreeCreatedFrom:
+      name: createdFrom
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+      description: >
+        Filtro inclusivo por fecha de creación (`creado_en`), límite inferior en **UTC**
+        (solo componente fecha).
+    CollaboratorTreeCreatedTo:
+      name: createdTo
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+      description: >
+        Filtro inclusivo por fecha de creación (`creado_en`), límite superior en **UTC**
+        (solo componente fecha).
+    CollaboratorTreeCreatedByUserId:
+      name: createdByUserId
+      in: query
+      required: false
+      schema:
+        type: integer
+        format: int64
+      description: >
+        Filtro por colaborador creador (`usuario_app_id` del autor de la ficha). Solo tiene efecto
+        para rol **ADMIN**; ignorado u opcionalmente **403** para **COLABORADOR** según implementación.
+    CollaboratorTreeSort:
+      name: sort
+      in: query
+      required: false
+      schema:
+        type: string
+        default: modificado_en,desc
+        enum:
+          - modificado_en,asc
+          - modificado_en,desc
+          - creado_en,asc
+          - creado_en,desc
+      description: Orden del listado colaborador. Por defecto `modificado_en,desc`.
+
+  schemas:
+    MediaTreePhotoGalleryItem:
+      type: object
+      required:
+        - id
+        - url
+        - isPrimary
+        - order
+        - mimeType
+        - width
+        - height
+        - category
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Identificador único de la fotografía.
+        url:
+          type: string
+          format: uri
+          description: URL de lectura de la fotografía para visualización.
+        isPrimary:
+          type: boolean
+          description: Indica si la foto es la principal del árbol.
+        order:
+          type: integer
+          format: int32
+          minimum: 0
+          description: Posición de orden en la galería.
+        mimeType:
+          type: string
+          enum: [image/jpeg, image/png, image/webp]
+          description: Tipo MIME de la imagen.
+        width:
+          type: integer
+          format: int32
+          minimum: 1
+          description: Ancho de la imagen en píxeles.
+        height:
+          type: integer
+          format: int32
+          minimum: 1
+          description: Alto de la imagen en píxeles.
+        category:
+          type: string
+          enum: [PUBLIC, PRIVATE]
+          description: Categoría de visibilidad de negocio.
+    MediaPresignUploadRequest:
+      type: object
+      required: [treeId, originalFileName, mimeType, sizeBytes]
+      properties:
+        treeId:
+          type: integer
+          format: int64
+          description: Identificador del árbol al que se asociará la foto.
+        originalFileName:
+          type: string
+          minLength: 1
+          description: Nombre original del fichero en cliente.
+        mimeType:
+          type: string
+          enum: [image/jpeg, image/png, image/webp]
+          description: Tipo MIME permitido por política del servicio.
+        sizeBytes:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 20971520
+          description: >
+            Tamaño declarado del archivo en bytes. Límite por defecto 20MB (configurable en
+            servidor).
+    MediaPresignUploadResponse:
+      type: object
+      required: [uploadUrl, bucket, objectKey, expiresAt]
+      properties:
+        uploadUrl:
+          type: string
+          format: uri
+          description: URL prefirmada para subida directa al almacenamiento objeto.
+        bucket:
+          type: string
+          description: Bucket de destino.
+        objectKey:
+          type: string
+          description: Clave del objeto en almacenamiento (`trees/{treeId}/...`).
+        expiresAt:
+          type: string
+          format: date-time
+          description: Momento de expiración de la URL prefirmada.
+    MediaConfirmPhotoUploadRequest:
+      type: object
+      required: [treeId, bucket, objectKey, originalFileName, mimeType, sizeBytes]
+      properties:
+        treeId:
+          type: integer
+          format: int64
+        bucket:
+          type: string
+          minLength: 1
+        objectKey:
+          type: string
+          minLength: 1
+        originalFileName:
+          type: string
+          minLength: 1
+        mimeType:
+          type: string
+          enum: [image/jpeg, image/png, image/webp]
+        sizeBytes:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 20971520
+          description: Límite por defecto 20MB por fotografía (configurable en servidor).
+        widthPx:
+          type: integer
+          format: int32
+          nullable: true
+        heightPx:
+          type: integer
+          format: int32
+          nullable: true
+        order:
+          type: integer
+          format: int32
+          nullable: true
+          description: >
+            Orden esperado en el árbol. Si se informa, debe coincidir con la siguiente posición
+            disponible.
+        isPrimary:
+          type: boolean
+          nullable: true
+          description: >
+            Solo puede ser `true` en la primera foto confirmada del árbol; en el resto se rechaza.
+        checksumSha256:
+          type: string
+          nullable: true
+    MediaPhotoMetadataResponse:
+      type: object
+      required:
+        - photoId
+        - treeId
+        - bucket
+        - objectKey
+        - originalFileName
+        - mimeType
+        - sizeBytes
+        - order
+        - isPrimary
+        - uploadedAt
+      properties:
+        photoId:
+          type: integer
+          format: int64
+        treeId:
+          type: integer
+          format: int64
+        bucket:
+          type: string
+        objectKey:
+          type: string
+        originalFileName:
+          type: string
+        mimeType:
+          type: string
+          enum: [image/jpeg, image/png, image/webp]
+        sizeBytes:
+          type: integer
+          format: int64
+        widthPx:
+          type: integer
+          format: int32
+          nullable: true
+        heightPx:
+          type: integer
+          format: int32
+          nullable: true
+        order:
+          type: integer
+          format: int32
+        isPrimary:
+          type: boolean
+        uploadedAt:
+          type: string
+          format: date-time
+    PublicTreeListItem:
+      type: object
+      required:
+        - treeId
+        - commonName
+        - scientificName
+        - province
+        - municipality
+        - publicationState
+        - publicMapVisibility
+      properties:
+        treeId:
+          type: integer
+          format: int64
+        commonName:
+          type: string
+          description: Nombre común de la especie (puede ser cadena vacía si no consta en maestros).
+        scientificName:
+          type: string
+          description: Nombre científico de la especie.
+        province:
+          type: string
+        municipality:
+          type: string
+        publicationState:
+          type: string
+          enum: [BORRADOR, PUBLICADO]
+        publicMapVisibility:
+          type: string
+          enum: [PRIVADO, PUBLICO]
+    PublicTreePageResponse:
+      type: object
+      required:
+        - content
+        - totalResults
+        - page
+        - size
+        - sort
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicTreeListItem"
+        totalResults:
+          type: integer
+          format: int64
+          description: Total de resultados de la consulta para paginación en cliente.
+        page:
+          type: integer
+          minimum: 0
+          default: 0
+        size:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 20
+        sort:
+          type: string
+          default: species,asc
+    PublicTreeDetailResponse:
+      type: object
+      required:
+        - treeId
+        - commonName
+        - scientificName
+        - province
+        - municipality
+        - publicationState
+        - publicMapVisibility
+        - description
+        - latitude
+        - longitude
+      properties:
+        treeId:
+          type: integer
+          format: int64
+        commonName:
+          type: string
+          description: Nombre común de la especie (puede ser cadena vacía si no consta en maestros).
+        scientificName:
+          type: string
+          description: Nombre científico de la especie.
+        province:
+          type: string
+        municipality:
+          type: string
+        publicationState:
+          type: string
+          enum: [BORRADOR, PUBLICADO]
+        publicMapVisibility:
+          type: string
+          enum: [PRIVADO, PUBLICO]
+        description:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        altitude:
+          type: integer
+          format: int32
+          nullable: true
+    PublicProvinceNamesResponse:
+      type: object
+      required: [names]
+      properties:
+        names:
+          type: array
+          items:
+            type: string
+          description: Nombres de provincia ordenados alfabéticamente (catálogo completo).
+    CreateTreeRequest:
+      type: object
+      required:
+        - speciesId
+        - provinceId
+        - latitude
+        - longitude
+      properties:
+        speciesId:
+          type: integer
+          format: int64
+          description: Identificador de especie maestra (`especie_id`)
+        provinceId:
+          type: integer
+          format: int64
+          description: Identificador de provincia maestra (`provincia_id`)
+        latitude:
+          type: number
+          format: double
+          description: Latitud WGS84 del ejemplar
+        longitude:
+          type: number
+          format: double
+          description: Longitud WGS84 del ejemplar
+        municipality:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        altitude:
+          type: integer
+          format: int32
+        publicMapVisibility:
+          type: string
+          maxLength: 64
+          enum: [PRIVADO, PUBLICO]
+          description: Visibilidad de la ubicación en mapa público.
+        publicationState:
+          type: string
+          maxLength: 64
+          enum: [BORRADOR, PUBLICADO]
+          description: Estado de publicación de la ficha.
+    CreatedTreeResponse:
+      type: object
+      required: [treeId]
+      properties:
+        treeId:
+          type: integer
+          format: int64
+          description: Identificador del árbol creado (`ejemplar_id`)
+    MediaSubmissionPermissionResponse:
+      type: object
+      required: [treeId, actorUsuarioAppId]
+      properties:
+        treeId:
+          type: integer
+          format: int64
+          description: Identificador del árbol sobre el que se comprueba el permiso.
+        actorUsuarioAppId:
+          type: integer
+          format: int64
+          description: >
+            Identificador `usuario_app` del actor (materializado desde JWT) para trazabilidad en
+            operaciones de media.
+    UpdateTreeRequest:
+      description: >
+        Cuerpo de actualización completa (`PUT`); mismos campos y validaciones que el alta (HU-008).
+      allOf:
+        - $ref: "#/components/schemas/CreateTreeRequest"
+    CollaboratorTreeListItem:
+      type: object
+      required:
+        - treeId
+        - speciesId
+        - commonName
+        - scientificName
+        - province
+        - municipality
+        - publicationState
+        - publicMapVisibility
+        - createdAt
+        - modifiedAt
+      properties:
+        treeId:
+          type: integer
+          format: int64
+        speciesId:
+          type: integer
+          format: int64
+        commonName:
+          type: string
+          description: Nombre común de la especie (puede ser vacío).
+        scientificName:
+          type: string
+        province:
+          type: string
+          description: Nombre de provincia maestra.
+        municipality:
+          type: string
+        publicationState:
+          type: string
+          enum: [BORRADOR, PUBLICADO]
+        publicMapVisibility:
+          type: string
+          enum: [PRIVADO, PUBLICO]
+        createdAt:
+          type: string
+          format: date-time
+          description: Instantánea de `creado_en` (UTC en API).
+        modifiedAt:
+          type: string
+          format: date-time
+          description: Instantánea de `modificado_en` (UTC en API).
+        createdByUserId:
+          type: integer
+          format: int64
+          description: `usuario_app_id` del colaborador que dio de alta la ficha (útil en listados ADMIN).
+    CollaboratorTreePageResponse:
+      type: object
+      required:
+        - content
+        - totalResults
+        - page
+        - size
+        - sort
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/CollaboratorTreeListItem"
+        totalResults:
+          type: integer
+          format: int64
+        page:
+          type: integer
+          minimum: 0
+        size:
+          type: integer
+          minimum: 1
+        sort:
+          type: string
+          default: modificado_en,desc
+    CollaboratorTreeDetailResponse:
+      type: object
+      required:
+        - treeId
+        - speciesId
+        - provinceId
+        - latitude
+        - longitude
+        - publicationState
+        - publicMapVisibility
+        - createdByUserId
+      properties:
+        treeId:
+          type: integer
+          format: int64
+        speciesId:
+          type: integer
+          format: int64
+        provinceId:
+          type: integer
+          format: int64
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        municipality:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        altitude:
+          type: integer
+          format: int32
+          nullable: true
+        publicationState:
+          type: string
+          enum: [BORRADOR, PUBLICADO]
+        publicMapVisibility:
+          type: string
+          enum: [PRIVADO, PUBLICO]
+        createdByUserId:
+          type: integer
+          format: int64
+          description: Colaborador creador; no modificable en `PUT`.
+        speciesLabel:
+          type: string
+          description: Etiqueta de especie para UI (p. ej. `Encina (Quercus ilex)`).
+        provinceLabel:
+          type: string
+          description: Etiqueta de provincia para UI (p. ej. `Madrid (28)`).
+        createdAt:
+          type: string
+          format: date-time
+        modifiedAt:
+          type: string
+          format: date-time
+    SpeciesListItem:
+      type: object
+      required: [id, label]
+      properties:
+        id:
+          type: integer
+          format: int64
+        label:
+          type: string
+          example: Encina (Quercus ilex)
+    TaxonomyMasterListItem:
+      type: object
+      required: [id, label]
+      properties:
+        id:
+          type: integer
+          format: int64
+        label:
+          type: string
+          example: Fagaceae
+    TaxonomyGenusListItem:
+      type: object
+      required: [id, label, familyId]
+      properties:
+        id:
+          type: integer
+          format: int64
+        label:
+          type: string
+          example: Quercus
+        familyId:
+          type: integer
+          format: int64
+          description: Identificador de familia (`familia_id`).
+    MasterFamilyPage:
+      type: object
+      required:
+        - content
+        - totalElements
+        - totalPages
+        - page
+        - size
+        - unpaged
+        - first
+        - last
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/TaxonomyMasterListItem"
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+        page:
+          type: integer
+        size:
+          type: integer
+        unpaged:
+          type: boolean
+        first:
+          type: boolean
+        last:
+          type: boolean
+    MasterGenusPage:
+      type: object
+      required:
+        - content
+        - totalElements
+        - totalPages
+        - page
+        - size
+        - unpaged
+        - first
+        - last
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/TaxonomyGenusListItem"
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+        page:
+          type: integer
+        size:
+          type: integer
+        unpaged:
+          type: boolean
+        first:
+          type: boolean
+        last:
+          type: boolean
+    CreateTaxonomyFamilyRequest:
+      type: object
+      required: [scientificName]
+      properties:
+        scientificName:
+          type: string
+          maxLength: 255
+          description: Nombre científico (`nombre_cientifico`, NOT NULL en SQL).
+        commonName:
+          type: string
+          maxLength: 255
+          description: Nombre común opcional (`nombre_comun`).
+    CreateTaxonomyGenusRequest:
+      type: object
+      required: [familyId, scientificName]
+      properties:
+        familyId:
+          type: integer
+          format: int64
+        scientificName:
+          type: string
+          maxLength: 255
+        commonName:
+          type: string
+          maxLength: 255
+    CreateTaxonomySpeciesRequest:
+      type: object
+      required: [genusId, scientificName]
+      properties:
+        genusId:
+          type: integer
+          format: int64
+        scientificName:
+          type: string
+          maxLength: 255
+        commonName:
+          type: string
+          maxLength: 255
+    UpdateTaxonomySpeciesRequest:
+      description: Cuerpo simétrico al alta de especie.
+      allOf:
+        - $ref: "#/components/schemas/CreateTaxonomySpeciesRequest"
+    TaxonomyFamilyResponse:
+      type: object
+      required: [familyId, scientificName, label]
+      properties:
+        familyId:
+          type: integer
+          format: int64
+        scientificName:
+          type: string
+        commonName:
+          type: string
+          nullable: true
+        label:
+          type: string
+    TaxonomyGenusResponse:
+      type: object
+      required: [genusId, familyId, scientificName, label]
+      properties:
+        genusId:
+          type: integer
+          format: int64
+        familyId:
+          type: integer
+          format: int64
+        scientificName:
+          type: string
+        commonName:
+          type: string
+          nullable: true
+        label:
+          type: string
+    TaxonomySpeciesResponse:
+      type: object
+      required: [speciesId, genusId, scientificName, label]
+      properties:
+        speciesId:
+          type: integer
+          format: int64
+        genusId:
+          type: integer
+          format: int64
+        scientificName:
+          type: string
+        commonName:
+          type: string
+          nullable: true
+        label:
+          type: string
+    ProvinceListItem:
+      type: object
+      required: [id, label]
+      properties:
+        id:
+          type: integer
+          format: int64
+        label:
+          type: string
+          example: Madrid (28)
+    MasterSpeciesPage:
+      type: object
+      required:
+        - content
+        - totalElements
+        - totalPages
+        - page
+        - size
+        - unpaged
+        - first
+        - last
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/SpeciesListItem"
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+        page:
+          type: integer
+        size:
+          type: integer
+        unpaged:
+          type: boolean
+        first:
+          type: boolean
+        last:
+          type: boolean
+    MasterProvincePage:
+      type: object
+      required:
+        - content
+        - totalElements
+        - totalPages
+        - page
+        - size
+        - unpaged
+        - first
+        - last
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProvinceListItem"
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+        page:
+          type: integer
+        size:
+          type: integer
+        unpaged:
+          type: boolean
+        first:
+          type: boolean
+        last:
+          type: boolean
+    NotificationSubscriptionEstadoEnum:
+      type: string
+      enum: [ACTIVA, CANCELADA]
+      description: Valores de estado_suscripcion (MVP, data-model §2).
+    NotificationSubscriptionAdminItem:
+      type: object
+      required:
+        - subscriptionId
+        - email
+        - estadoSuscripcion
+        - altaEn
+      properties:
+        subscriptionId:
+          type: integer
+          format: int64
+          description: Identificador interno del suscriptor (suscriptor_id).
+        email:
+          type: string
+          format: email
+        estadoSuscripcion:
+          $ref: "#/components/schemas/NotificationSubscriptionEstadoEnum"
+        altaEn:
+          type: string
+          format: date-time
+        confirmadoEn:
+          type: string
+          format: date-time
+          nullable: true
+        bajaEn:
+          type: string
+          format: date-time
+          nullable: true
+    NotificationSubscriptionAdminPage:
+      type: object
+      required:
+        - content
+        - totalElements
+        - totalPages
+        - page
+        - size
+        - unpaged
+        - first
+        - last
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/NotificationSubscriptionAdminItem"
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+        page:
+          type: integer
+        size:
+          type: integer
+        unpaged:
+          type: boolean
+        first:
+          type: boolean
+        last:
+          type: boolean
+    NotificationSubscriptionStateUpdateRequest:
+      type: object
+      required: [estadoSuscripcion]
+      properties:
+        estadoSuscripcion:
+          $ref: "#/components/schemas/NotificationSubscriptionEstadoEnum"
+    Problem:
+      type: object
+      description: >
+        Problem Details (RFC 9457). La propiedad `correlationId` es opcional y refleja el valor de
+        `X-Correlation-Id` de la petición cuando el servicio lo propaga.
+      properties:
+        type:
+          type: string
+          format: uri-reference
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        correlationId:
+          type: string
+          description: Identificador de correlación para soporte y trazabilidad en logs.
+      required:
+        - title
+        - status
+
+  responses:
+    ProblemBadRequest:
+      description: Solicitud incorrecta
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    ProblemUnauthorized:
+      description: No autenticado
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    ProblemForbidden:
+      description: Prohibido
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    ProblemConflict:
+      description: >
+        Conflicto de reglas de negocio (p. ej. correo ya suscrito, especie referenciada por fichas de árbol).
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    ProblemNotFound:
+      description: Recurso no encontrado
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    ProblemBadGateway:
+      description: Error al contactar con un servicio aguas arriba
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"

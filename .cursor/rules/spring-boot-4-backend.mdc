@@ -1,0 +1,108 @@
+---
+description: Reglas backend para Spring Boot 4
+globs:
+  - "services/**/*.java"
+alwaysApply: false
+---
+
+# Spring Boot 4 rules
+
+## Proyecto y paquetes (`com.mtl`)
+- **GroupId Maven:** `com.mtl`; **artifactId** alineado con la carpeta del servicio (p. ej. `catalog-service`).
+- **Paquete base** por servicio: `com.mtl.<contexto>` — ver tabla siguiente. La clase **`@SpringBootApplication`** solo en ese paquete base.
+- **Lista blanca — paquetes de primer nivel bajo `com.mtl.<contexto>` en `src/main/java` (REST/MVC):** `config`, `controller`, `application`, `domain`, `dto`, `exception`, `web`, `infrastructure`, `util`. **No** crear otros de primer nivel **en producción** (p. ej. `api`, `integration`, `storage`). Clientes HTTP, almacenamiento, Kafka, etc. van **bajo `infrastructure`** (`…infrastructure.client`, `…infrastructure.storage`, `…infrastructure.messaging`, …). JPA/Mongo: solo bajo **`…infrastructure.persistence.jpa`** / **`…infrastructure.persistence.mongo`** (véase **Persistencia**).
+- **Fuera de lista blanca (`src/main/java`):** antes de añadir un paquete de primer nivel nuevo en producción o una capa equivalente, **parar** y **pedir confirmación explícita al usuario** (motivo, alternativas dentro de `infrastructure` / `application`, y si aplica decisión en `docs/adr/`).
+- **Paquete `config`:** `@Configuration` (seguridad, WebMvc/WebFlux, beans de integración, `JpaAuditing`, etc.) en **`com.mtl.<contexto>.config`**, no en la raíz del contexto.
+
+### Módulo Maven ↔ paquete Java raíz
+
+| Carpeta / módulo (`services/…`) | Paquete raíz `com.mtl.…` |
+|----------------------------------|---------------------------|
+| `api-gateway` | `gateway` |
+| `catalog-service` | `catalog` |
+| `media-service` | `media` |
+| `notification-service` | `notification` |
+| `ai-assistant-service` | `ai` |
+
+Al generar código nuevo, **no** mezclar contextos (p. ej. clases de `catalog` dentro de `media`).
+
+### Plantilla de capas (misma lista blanca; `catalog` como ejemplo de nombres)
+
+1. **`…controller`** — `@RestController`, **Jakarta Validation** en borde, delegación a `application`; rutas según [api-design.mdc](api-design.mdc).
+2. **`…application`** — `@Service`, `@Transactional`, orquestación, repositorios/clientes.
+3. **`…domain`** — `@Entity`, enums/value objects de persistencia; **no** en REST.
+4. **`…dto`** — request/response / paginación API.
+5. **`…exception`** — errores de negocio → `ProblemDetail`.
+6. **`…web`** / **`…web.error`** — filtros (p. ej. MDC), `@RestControllerAdvice`, Problem según [api-contract.mdc](api-contract.mdc).
+7. **`…infrastructure.persistence.jpa…`** / **`…mongo…`** — ver **Persistencia** y [mongo-hybrid.mdc](mongo-hybrid.mdc) si aplica.
+8. **`…util`** — helpers sin estado; no sustituir `application`.
+
+**catalog — alta de árbol y auditoría R3:** [ADR-0004](../../docs/adr/0004-catalog-rest-write-and-audit.md).
+
+Tests: **`src/test/java`** (`*Test`, Surefire), **`src/testIT/java`** (`*IT`, Failsafe) según el padre Maven en `services/pom.xml` y [docs/engineering/testing-java.md](../../docs/engineering/testing-java.md). Los IT suelen vivir bajo **`com.mtl.<contexto>.integration`** (y `…integration.support`): esa convención **no** forma parte de la lista blanca de `src/main/java` y **no** debe usarse para código de producción (`src/main/java`).
+
+### API Gateway (`api-gateway`, WebFlux)
+
+- **`com.mtl.gateway`:** misma **lista blanca** de primer nivel en **`src/main/java`**; en la práctica casi todo en **`config`**. **No** JPA/Mongo salvo decisión explícita (ADR).
+- Misma disciplina de **no loguear secretos**, **correlación** y **contrato HTTP** hacia clientes donde el gateway emita respuestas propias; el detalle de rutas y JWT está en [api-security.mdc](api-security.mdc) y [jwt-gateway-strategy.md](../../docs/security/jwt-gateway-strategy.md).
+
+## Build (padre Maven)
+- POM padre: **`services/pom.xml`** (`mtl-parent`): Spring Boot **4.0.x**, Java **21**, procesadores **Lombok + MapStruct** en `maven-compiler-plugin`.
+- **MapStruct** para mapeos DTO ↔ entidad/dominio; interfaces `@Mapper` en capa `application` o `infrastructure` según el caso.
+- **Flyway:** scripts en `src/main/resources/db/migration/`, convención `V{version}__{descripcion}.sql`, un **esquema PostgreSQL por servicio** (`catalog`, `media`, `notification`, `ai`) alineado con [infra compose](../../infra/compose/).
+- **Perfiles:** `dev` → PostgreSQL local (Compose); tests con `@ActiveProfiles("test")` y **H2 en memoria** (`application-test.properties`), Flyway desactivado en test salvo pruebas de migración dedicadas.
+
+### `application` frente a `util`
+
+- **`application`:** servicios de aplicación y casos de uso (orquestación, `@Transactional`, coordinación con repositorios y DTOs de salida). Aquí viven los `@Service` / componentes que representan un **flujo** o **operación** del servicio.
+- **`util`:** utilidades **sin estado** y sin ciclo de vida propio en Spring (p. ej. formateo de textos para respuestas API, constantes de armado de etiquetas). No mezclar estas clases con servicios de aplicación para mantener clara la responsabilidad del paquete `application`.
+- Si una regla de formato pasa a ser **invariante de dominio** explícita, valorar ubicarla en **`domain`** o en un servicio dedicado en `application`, en lugar de un util genérico.
+
+## Errores HTTP y correlación
+
+- **Contrato de error al cliente** (cuerpo, códigos, `ProblemDetail`): [api-contract.mdc](api-contract.mdc) y OpenAPI; no repetir aquí el detalle de RFC 9457 / 9110.
+- **Negocio:** excepciones en **`com.mtl.<contexto>.exception`** (base mapeable a `ProblemDetail`); mapeo HTTP en **`web.error`** (`@RestControllerAdvice` + helpers).
+- **401/403:** `AuthenticationEntryPoint` y `AccessDeniedHandler` con el **mismo** formato Problem que el advice (nada HTML/JSON ad hoc fuera de contrato).
+- **Correlación:** `X-Correlation-Id` en MDC ([logging.mdc](logging.mdc), [api-security.mdc](api-security.mdc)); opcional `correlationId` en `properties` del Problem.
+- **500:** mensaje genérico al cliente; causa y stack solo en logs (ERROR), sin PII ni tokens.
+
+## Persistencia
+
+### Contratos y capa relacional (JPA)
+
+- **Interfaces** de acceso a datos **SQL** (Spring Data JPA: `JpaRepository`, `@Query`, proyecciones de lectura) en **`com.mtl.<contexto>.infrastructure.persistence.jpa.repository`**. Proyecciones tipo fila SQL (`*ListRow`, interfaces de proyección nativa): en subpaquete **`…jpa.repository.projection`**.
+- **Implementaciones** concretas que no resuelva solo Spring Data (p. ej. `@Repository` con `EntityManager`, SQL muy dinámico, clases `*Impl` que implementan fragmentos custom) en **`com.mtl.<contexto>.infrastructure.persistence.jpa.repository.imp`**.
+- **Sin `JdbcTemplate` si ya hay JPA:** mismo acceso relacional vía repositorios / `EntityManager.createNativeQuery` en `…repository.imp` (p. ej. `nextval` escalar). JDBC explícito solo sin JPA en ese datasource o con excepción documentada (ADR / `docs/`).
+- **Entidades** `@Entity` del maestro relacional en **`com.mtl.<contexto>.domain`** (no exponerlas en la API REST).
+- **Beans JPA/Hibernate** muy específicos de infraestructura (convertidores, tuning) que no encajen en `…config` global del servicio: **`com.mtl.<contexto>.infrastructure.persistence.jpa.config`** (opcional).
+
+### MongoDB (solo servicios donde el modelo lo defina, p. ej. catalog)
+
+- **Documentos** `@Document` en **`…infrastructure.persistence.mongo.document`**.
+- **Acceso** (`MongoRepository`, `MongoTemplate`, etc.) en **`…infrastructure.persistence.mongo.repository`**.
+- **Configuración** Mongo (`@EnableMongoRepositories`, cliente): **`…infrastructure.persistence.mongo.config`**.
+- **No** duplicar el maestro relacional en documentos; enlaces y convenciones de negocio: [mongo-hybrid.mdc](mongo-hybrid.mdc) y [docs/data-model/mongo.md](../../docs/data-model/mongo.md).
+
+### Orquestación y prácticas
+
+- **Orquestar** más de un almacenamiento (JPA + Mongo, JPA + cliente HTTP, etc.) desde **`application`**, no desde controllers ni mezclando accesos ad hoc en `@Document`.
+- Usar **Spring Data JPA** de forma explícita y simple; declarar **transacciones** en capa de servicio.
+- Filtros dinámicos sobre el modelo JPA: **Specifications**.
+- Lecturas parciales hacia la API: **DTOs** o **proyecciones** (no entidades en respuestas).
+
+## Lombok
+- Usar **Lombok** para reducir ruido en **DTOs**, **entidades JPA** y clases de configuración cuando aporte valor (`@Getter`, `@Setter`, `@Builder`, `@RequiredArgsConstructor`, etc.).
+- En **entidades** con asociaciones, evitar `@Data` ingenuo; para `equals`/`hashCode` acotar al **identificador** o usar `@EqualsAndHashCode(onlyExplicitlyIncluded = true)` para no romper semántica con relaciones LAZY.
+
+## Auditoría JPA (`AuditorAware`)
+- Activar auditoría con `@EnableJpaAuditing` (clase principal o `@Configuration` por servicio).
+- Definir un bean **`AuditorAware<T>`** por microservicio que necesite `@CreatedBy` / `@LastModifiedBy` (el tipo `T` suele ser `String` con el **subject OIDC** o un id interno, según modelo).
+- Resolver el usuario actual desde el **contexto de seguridad** cuando exista JWT válido (coherente con [api-security.mdc](api-security.mdc)); para trabajo sin usuario (batch, migraciones), devolver un valor acordado (p. ej. `"system"`).
+- Entidades: anotar con `@CreatedDate`, `@LastModifiedDate`, `@CreatedBy`, `@LastModifiedBy` según [data-model](../../docs/data-model/data-model.md) y tablas reales.
+- En MVP: una clase de configuración por servicio (p. ej. `…config/JpaAuditingConfig`) es preferible a un módulo compartido hasta que haya repetición clara.
+
+## Calidad operativa (resumen)
+
+- Propiedades externas tipadas; integraciones en **clientes dedicados**; evitar constantes mágicas dispersas.
+- **Health/readiness**; logs operativos según [logging.mdc](logging.mdc); métricas básicas cuando el despliegue lo permita.
+- Código modular y métodos cortos: ver [quality-and-testing.mdc](quality-and-testing.mdc) y [microservices-patterns.mdc](microservices-patterns.mdc).

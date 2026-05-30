@@ -1,0 +1,58 @@
+---
+description: Reglas frontend para Vue 3 (arquitectura, componentes y estilos)
+globs:
+  - "frontend/src/**/*.vue"
+  - "frontend/src/**/*.ts"
+  - "frontend/src/**/*.js"
+alwaysApply: false
+---
+
+# Vue 3 rules
+
+- Usar Vue 3 con Composition API y `<script setup>`.
+- Preferir TypeScript en código nuevo; sin `any` salvo justificación explícita.
+- Crear componentes pequeños y cohesivos; extraer lógica reutilizable a composables.
+- Separar vista, estado y acceso a API.
+- Usar alias `@/` (`src/`) en lugar de imports relativos largos (`../../...`).
+- No dejar restos de scaffolding (`HelloWorld.vue`, assets de Vite, CSS heredado) en código nuevo.
+
+> Auth, capa HTTP, seguridad y testing viven en [frontend-security.mdc](frontend-security.mdc).
+
+## Componentes
+- Declarar `defineProps` y `defineEmits` explícitamente y tipados.
+- Nombrar componentes y eventos de forma clara y consistente.
+- Evitar lógica compleja en plantilla; mover a `computed` o composables.
+- Para formularios, extraer componentes reutilizables (`<TextField>`, `<SelectField>`, `<FormActions>`).
+- Toda llamada HTTP sale por `services/` o composables; nunca `fetch` directo desde un componente.
+- No hardcodear URLs; usar `appConfig` y variables `VITE_*`.
+
+## Composables
+- Una responsabilidad por composable. Separar:
+  - validación pura (sin i18n ni HTTP)
+  - mapeo de errores HTTP a copy (i18n)
+  - orquestación de la vista
+- No disparar `redirects` de auth desde un composable de vista; eso lo hace el interceptor HTTP o un guard.
+- Devolver siempre estados explícitos (`isLoading`, `error`, `data`) en lugar de booleanos ad hoc.
+
+## UX mínima
+- Gestionar estados de `loading`, `vacío` y `error` en cada vista con API.
+- Errores HTTP: `401` pedir login, `400` mostrar `detail` legible, `5xx` mensaje neutro.
+- Accesibilidad básica: `label` por campo, `alt` en imágenes informativas, foco visible, navegación por teclado y HTML semántico.
+- Internacionalización por defecto: textos en `frontend/src/i18n/locales/*` con `vue-i18n`; nunca hardcodear copy en `.vue` o composables.
+- Producto e IA en copy/UI: cumplir [product-context.mdc](product-context.mdc) (IA orientativa, sin veredictos definitivos).
+
+## Estilos
+- Filas de acciones de formulario o listado: **secundarios a la izquierda**, **CTA primario a la derecha** del contenedor (misma convención que en [frontend-ux.mdc](frontend-ux.mdc)); p. ej. clase `tree-form-submit` o `trees-filter-btn-submit` + `margin-left: auto` en el primario.
+- Usar tokens CSS (`--mtl-*`) y clases utilitarias o de componente.
+- Evitar reglas globales sobre elementos (`input`, `select`, `label`); preferir clases o componentes encapsulados.
+- Sin estilos inline; nada de `!important`.
+
+## Estructura sugerida
+- `components/` componentes reutilizables (incluidos campos de formulario)
+- `views/` vistas asociadas a rutas
+- `composables/` lógica reutilizable
+- `services/` acceso a API y a sistemas externos (OIDC, mapas…)
+- `stores/` Pinia
+- `router/`
+- `types/`
+- `i18n/locales/`

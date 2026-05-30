@@ -1,0 +1,55 @@
+﻿{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "api-gateway (dev)",
+      "request": "launch",
+      "mainClass": "com.mtl.gateway.ApiGatewayApplication",
+      "projectName": "api-gateway",
+      "env": {
+        "SPRING_PROFILES_ACTIVE": "dev"
+      }
+    },
+    {
+      "type": "java",
+      "name": "catalog-service (dev)",
+      "request": "launch",
+      "mainClass": "com.mtl.catalog.CatalogServiceApplication",
+      "projectName": "catalog-service",
+      "env": {
+        "SPRING_PROFILES_ACTIVE": "dev"
+      }
+    },
+    {
+      "type": "java",
+      "name": "media-service (dev)",
+      "request": "launch",
+      "mainClass": "com.mtl.media.MediaServiceApplication",
+      "projectName": "media-service",
+      "env": {
+        "SPRING_PROFILES_ACTIVE": "dev"
+      }
+    },
+    {
+      "type": "java",
+      "name": "notification-service (dev)",
+      "request": "launch",
+      "mainClass": "com.mtl.notification.NotificationServiceApplication",
+      "projectName": "notification-service",
+      "env": {
+        "SPRING_PROFILES_ACTIVE": "dev"
+      }
+    },
+    {
+      "type": "java",
+      "name": "ai-assistant-service (dev)",
+      "request": "launch",
+      "mainClass": "com.mtl.ai.AiAssistantServiceApplication",
+      "projectName": "ai-assistant-service",
+      "env": {
+        "SPRING_PROFILES_ACTIVE": "dev"
+      }
+    }
+  ]
+}
