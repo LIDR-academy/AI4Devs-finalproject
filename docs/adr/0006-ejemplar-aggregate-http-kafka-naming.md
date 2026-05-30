@@ -13,7 +13,7 @@ El agregado de ficha singular se denomina **ejemplar** en dominio y en persisten
 | PostgreSQL | Tabla `catalog.ejemplar`; columnas y FK en castellano (`ejemplar_id`, `nombre_comun`, `estado_publicacion`, …). |
 | MongoDB | Colección `ejemplar_detalle`; enlace `ejemplar_pg_id` ([mongo.md](../data-model/mongo.md)). |
 
-**No** hay tablas, columnas ni colecciones `arbol` en el esquema actual. Identificadores retirados del MVP (`arbol`, `/api/catalog/trees`, `treeId` en JSON, topic `catalog.arbol.evento`, prefijo MinIO `ejemplares/`) solo sirven como referencia histórica; no deben reaparecer en código productivo.
+**No** hay tablas, columnas ni colecciones `arbol` en el esquema actual. Identificadores retirados del MVP (`arbol`, rutas HTTP `/api/.../ejemplares`, `ejemplarId` en JSON, topic `catalog.arbol.evento`, prefijo MinIO `ejemplares/`) solo sirven como referencia histórica; no deben reaparecer en código productivo.
 
 El contrato HTTP y los eventos Kafka deben reflejar ese modelo y [ADR-0007](0007-english-http-spanish-persistence.md): rutas y propiedades JSON en **inglés**; persistencia y payload Kafka interno en **español**.
 
@@ -56,7 +56,7 @@ En el MVP se aceptó **pérdida de datos locales** y **sin compatibilidad hacia 
 
 ## Consecuencias
 
-- Clientes, scripts E2E y documentación que usen `/ejemplares`, `treeId` en JSON o `catalog.arbol.evento` no son válidos.
+- Clientes, scripts E2E y documentación que usen rutas API `/api/.../ejemplares`, `ejemplarId` en JSON o `catalog.arbol.evento` no son válidos (las rutas SPA `/ejemplares` y el wire `treeId` sí están alineadas con este ADR).
 - Los títulos de historias de usuario pueden decir «árbol» en lenguaje de producto; identificadores técnicos en **BD y Kafka** usan **`ejemplar`**; el **contrato HTTP** usa **`tree`/`treeId`** en inglés.
 
 ## Relación con otros ADR

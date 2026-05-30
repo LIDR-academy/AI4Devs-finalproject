@@ -128,7 +128,7 @@ La aplicación implementa una navegación simple por roles con una **home de ent
 
 ```
 🏠  Inicio                   /
-🌳  Árboles                  /ejemplares
+🌳  Catálogo                 /ejemplares
     └─ Detalle               /ejemplares/:id
 ✉️  Suscripción              /subscriptions/new
 ```
@@ -650,7 +650,7 @@ sequenceDiagram
   participant PG as PostgreSQL_catalog
   participant KB as Kafka
 
-  Client->>Ctrl: POST_ejemplares_Bearer_JWT
+  Client->>Ctrl: POST_trees_Bearer_JWT
   Ctrl->>Reg: register
   Reg->>Cre: create
   Cre->>PG: persistir_EJEMPLAR_y_usuario
@@ -736,9 +736,9 @@ sequenceDiagram
   SPA->>KC: OIDC login PKCE
   KC-->>SPA: JWT
 
-  SPA->>GW: POST /api/catalog/ejemplares
+  SPA->>GW: POST /api/catalog/trees
   GW->>CAT: proxy JWT
-  CAT-->>SPA: 201 ejemplarId
+  CAT-->>SPA: 201 treeId
 
   loop Por cada fotografia
     SPA->>GW: POST /api/media/uploads/presign
@@ -792,7 +792,7 @@ Componentes del diagrama C2 (§3.1), desplegados o consumidos por la plataforma.
 | Componente | Tecnología | Responsabilidad |
 | --- | --- | --- |
 | **catalog-service** | Spring Boot 4, JPA, Flyway, PostgreSQL; Redis en perfil `dev`; productor Kafka | Esquema `catalog`: maestros, provincias (semillas) y fichas (`ejemplar`; coordenadas `NUMERIC`, sin PostGIS en el DDL del MVP). Consulta pública; operaciones de colaborador y **ADMIN**. Tras el alta, publica `EJEMPLAR_CREADO` en `catalog.ejemplar.evento` ([kafka-events.md](docs/events/kafka-events.md)). La baja (HU-008) coordina **media-service**. Caché Redis de maestros en `dev`. Acceso Mongo previsto para proyección y `ejemplar_detalle` (**HU-015**; [mongo.md](docs/data-model/mongo.md)); integración en curso (borrado en stub). |
-| **media-service** | Spring Boot 4, JPA, Flyway, cliente MinIO (API S3) | Esquema `media` para metadatos; binarios en **MinIO** (dev) o **S3** (prod). Flujo: presign → subida → confirmación; foto principal y galería. Miniatura pública: `GET /api/media/public/ejemplares/{ejemplarId}/primary-photo`. |
+| **media-service** | Spring Boot 4, JPA, Flyway, cliente MinIO (API S3) | Esquema `media` para metadatos; binarios en **MinIO** (dev) o **S3** (prod). Flujo: presign → subida → confirmación; foto principal y galería. Miniatura pública: `GET /api/media/public/trees/{treeId}/primary-photo`. |
 | **notification-service** | Spring Boot 4, JPA, Flyway, Spring Kafka, JavaMail | Esquema `notification`: suscripciones (alta pública; gestión **ADMIN**). Consume `catalog.ejemplar.evento` de forma idempotente y envía correo SMTP a suscriptores **ACTIVA** (Mailpit en dev). |
 | **ai-assistant-service** | Spring Boot 4 (en construcción) | Orquestación al proveedor de IA y trazas en esquema `ai` (auditoría de uso). **HU-016** pendiente; maestros en **catalog-service**. Resultados orientativos, no determinación científica. |
 
@@ -1307,7 +1307,7 @@ Respecto al riesgo de Listado sin filtros vamos a añadir en la historia el filt
 
 **Prompt 5:**
 
-1.- Path de borrado: `DELETE /api/media/ejemplares/{ejemplarId}/photos` 2.- Si un ejemplar tiene fotografías primero se invoca al servicio de borrado de todas las fotografías; si el servicio da error se para el proceso; si se han borrado todas las fotografías se elimina el ejemplar en PostgreSQL 3.- Fechas en formato date a ser posible en UTC 4.- Para ADMIN se añade un filtro más para poder seleccionar los ejemplares dados de alta por un usuario determinado
+1.- Path de borrado: `DELETE /api/media/trees/{treeId}/photos` 2.- Si un ejemplar tiene fotografías primero se invoca al servicio de borrado de todas las fotografías; si el servicio da error se para el proceso; si se han borrado todas las fotografías se elimina el ejemplar en PostgreSQL 3.- Fechas en formato date a ser posible en UTC 4.- Para ADMIN se añade un filtro más para poder seleccionar los ejemplares dados de alta por un usuario determinado
 
 
 ---
@@ -1391,20 +1391,20 @@ Cierra **HU-008** (UC-04): el colaborador puede **listar y filtrar** sus fichas,
 ## Cambios realizados
 
 **Backend — catalog-service**
-- `GET /api/catalog/ejemplares` (filtros, paginación, scope COLABORADOR/ADMIN).
-- `GET` / `PUT` / `DELETE` `/api/catalog/ejemplares/{ejemplarId}`.
+- `GET /api/catalog/trees` (filtros, paginación, scope COLABORADOR/ADMIN).
+- `GET` / `PUT` / `DELETE` `/api/catalog/trees/{treeId}`.
 - Orquestación de baja: media → SQL → hook Mongo **stub** (`NoOpEjemplarEnrichmentDeletionPort`).
 - Cliente `RestMediaEjemplarPhotosClient` (`mtl.media.base-url`).
 - Auditoría R3, `JwtRealmRoles`, materialización `usuario_app`.
 
 **Backend — media-service**
-- `DELETE /api/media/ejemplares/{ejemplarId}/photos` (borrado masivo).
+- `DELETE /api/media/trees/{treeId}/photos` (borrado masivo).
 - `DELETE /api/media/photos/{photoId}` (galería en edición).
 
 **Frontend**
-- `MyEjemplaresListView` (`/mis-ejemplares`) con filtros y peticiones cancelables.
-- `EditEjemplarView` + `useEditEjemplarForm` (`/ejemplares/:id/edit`): PUT, DELETE con confirmación, galería añadir/borrar foto.
-- Servicios `collaboratorEjemplaresService`, validación de archivos, `SpeciesAutocompleteInput`.
+- `MyTreesListView` (`/mis-ejemplares`) con filtros y peticiones cancelables.
+- `EditTreeView` + `useEditTreeForm` (`/ejemplares/:id/edit`): PUT, DELETE con confirmación, galería añadir/borrar foto.
+- Servicios `collaboratorTreesService`, validación de archivos, `SpeciesAutocompleteInput`.
 
 **Contrato y docs**
 - [docs/api/openapi.yaml](docs/api/openapi.yaml) actualizado.

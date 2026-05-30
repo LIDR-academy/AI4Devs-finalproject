@@ -110,7 +110,7 @@ onMounted(() => {
           <div class="mtl-admin-list-toolbar__actions">
             <button
               type="button"
-              class="btn btn-primary btn-sm"
+              class="btn btn-primary-soft btn-sm"
               @click="openCreateSpecies"
             >
               {{ t('adminMasters.actions.create') }}
@@ -126,16 +126,18 @@ onMounted(() => {
               <thead>
                 <tr>
                   <th scope="col">{{ t('adminMasters.columns.species') }}</th>
+                  <th scope="col">{{ t('adminMasters.columns.genus') }}</th>
                   <th scope="col">{{ t('adminMasters.columns.actions') }}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="item in speciesList" :key="item.id">
                   <td>{{ item.label }}</td>
+                  <td>{{ item.genusLabel }}</td>
                   <td class="mtl-admin-table__actions">
                     <button
                       type="button"
-                      class="btn btn-primary btn-sm"
+                      class="btn btn-outline-primary btn-sm"
                       :disabled="editingSpeciesIdLoading === item.id || isDeleting"
                       @click="startEdit(item)"
                     >
@@ -143,7 +145,7 @@ onMounted(() => {
                     </button>
                     <button
                       type="button"
-                      class="btn btn-danger btn-sm"
+                      class="btn btn-outline-danger btn-sm"
                       :disabled="isDeleting"
                       @click="askDelete(item)"
                     >

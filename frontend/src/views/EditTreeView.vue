@@ -306,7 +306,7 @@ onMounted(async () => {
               <div class="tree-detail-gallery-actions">
                 <button
                   type="button"
-                  class="btn btn-secondary btn-sm tree-gallery-icon-btn"
+                  class="btn btn-outline-danger btn-sm tree-gallery-icon-btn"
                   :aria-label="t('treeEdit.gallery.deletePhoto')"
                   :disabled="!selectedPhoto || isDeletingPhoto || isUploadingPhoto"
                   @click="openDeletePhotoConfirm"
@@ -331,7 +331,7 @@ onMounted(async () => {
                 </button>
                 <button
                   type="button"
-                  class="btn btn-secondary btn-sm tree-gallery-icon-btn"
+                  class="btn btn-outline-primary btn-sm tree-gallery-icon-btn"
                   :aria-label="t('treeEdit.gallery.addPhoto')"
                   :disabled="!canAddGalleryPhoto"
                   @click="openPhotoFilePicker"
@@ -494,7 +494,7 @@ onMounted(async () => {
         <div class="page-actions-footer__end">
           <button
             type="button"
-            class="btn btn-danger"
+            class="btn btn-outline-danger"
             :disabled="isSubmitting || isDeleting"
             @click="openDeleteConfirm"
           >

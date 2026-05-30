@@ -181,7 +181,7 @@ function onDismissModal(): void {
             </button>
             <button
               type="submit"
-              class="btn btn-primary btn-sm catalog-toolbar__submit"
+              class="btn btn-primary-soft btn-sm catalog-toolbar__submit"
               :disabled="isLoading"
             >
               {{ t('adminSubscriptions.filters.apply') }}
@@ -229,7 +229,7 @@ function onDismissModal(): void {
                   <button
                     v-if="row.estadoSuscripcion === 'ACTIVA'"
                     type="button"
-                    class="btn btn-danger btn-sm"
+                    class="btn btn-outline-danger btn-sm"
                     :disabled="patchingId !== null"
                     @click="onCancel(row)"
                   >
@@ -238,7 +238,7 @@ function onDismissModal(): void {
                   <button
                     v-else
                     type="button"
-                    class="btn btn-primary btn-sm"
+                    class="btn btn-outline-primary btn-sm"
                     :disabled="patchingId !== null"
                     @click="onReactivate(row)"
                   >

@@ -26,7 +26,7 @@ Infra local (bucket, CORS para el origen de Vite): [infra/compose/README.md](../
 
 ## Secuencia: presign → subida de objeto → confirmación
 
-Orquestación en cliente: `frontend/src/services/media/ejemplarPhotoUploadSequence.ts` (`uploadPhotosForEjemplarAfterCreate`), invocado tras crear el ejemplar cuando hay ficheros seleccionados.
+Orquestación en cliente: `frontend/src/services/media/treePhotoUploadSequence.ts` (`uploadPhotosForTreeAfterCreate`), invocado tras crear el ejemplar cuando hay ficheros seleccionados.
 
 ```mermaid
 sequenceDiagram

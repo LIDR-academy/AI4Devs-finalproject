@@ -79,7 +79,7 @@ describe('AdminMastersView', () => {
     vi.clearAllMocks()
     fetchAdminSpeciesListMock.mockResolvedValue({
       ...emptyPage,
-      content: [{ id: 1, label: 'Encina (Quercus ilex)' }],
+      content: [{ id: 1, label: 'Encina (Quercus ilex)', genusId: 10, genusLabel: 'Robles (Quercus)' }],
     })
     fetchAdminGeneraMock.mockResolvedValue({
       ...emptyPage,
@@ -98,6 +98,7 @@ describe('AdminMastersView', () => {
     await flushPromises()
 
     expect(wrapper.text()).toContain('Encina (Quercus ilex)')
+    expect(wrapper.text()).toContain('Robles (Quercus)')
     expect(fetchAdminSpeciesListMock).toHaveBeenCalled()
   })
 
@@ -334,7 +335,7 @@ describe('AdminMastersView', () => {
   it('muestra paginación cuando hay más de una página', async () => {
     fetchAdminSpeciesListMock.mockResolvedValue({
       ...emptyPage,
-      content: [{ id: 1, label: 'Encina (Quercus ilex)' }],
+      content: [{ id: 1, label: 'Encina (Quercus ilex)', genusId: 10, genusLabel: 'Robles (Quercus)' }],
       totalElements: 25,
       totalPages: 2,
       last: false,

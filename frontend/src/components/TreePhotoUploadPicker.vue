@@ -230,7 +230,7 @@ function onFilesSelected(event: Event): void {
             {{ t('treeForm.photos.mainBadge') }}
           </span>
         </div>
-        <button class="btn btn-secondary btn-sm" type="button" @click="removePhotoById(photo.id)">
+        <button class="btn btn-outline-danger btn-sm" type="button" @click="removePhotoById(photo.id)">
           {{ t('treeForm.photos.remove') }}
         </button>
       </li>

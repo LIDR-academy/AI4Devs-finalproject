@@ -87,7 +87,7 @@ describe('useAdminTaxonomyMasters', () => {
     vi.clearAllMocks()
     fetchAdminSpeciesListMock.mockResolvedValue({
       ...emptyPage,
-      content: [{ id: 1, label: 'Encina (Quercus ilex)' }],
+      content: [{ id: 1, label: 'Encina (Quercus ilex)', genusId: 10, genusLabel: 'Robles (Quercus)' }],
     })
     fetchAdminGeneraMock.mockResolvedValue({
       ...emptyPage,
@@ -162,7 +162,12 @@ describe('useAdminTaxonomyMasters', () => {
   it('confirmDelete con 409 muestra conflicto', async () => {
     deleteAdminSpeciesMock.mockRejectedValueOnce(new HttpError(409, { title: 'Conflicto', status: 409 }))
     const masters = mountMasters()
-    masters.deleteTarget.value = { id: 1, label: 'Encina' }
+    masters.deleteTarget.value = {
+      id: 1,
+      label: 'Encina',
+      genusId: 10,
+      genusLabel: 'Robles (Quercus)',
+    }
     await masters.confirmDelete()
     await nextTick()
     expect(masters.errorMessage.value).toContain('fichas de árbol')
@@ -172,7 +177,7 @@ describe('useAdminTaxonomyMasters', () => {
     fetchAdminSpeciesListMock
       .mockResolvedValueOnce({
         ...emptyPage,
-        content: [{ id: 1, label: 'Encina (Quercus ilex)' }],
+        content: [{ id: 1, label: 'Encina (Quercus ilex)', genusId: 10, genusLabel: 'Robles (Quercus)' }],
         totalElements: 25,
         totalPages: 2,
         last: false,
@@ -180,7 +185,7 @@ describe('useAdminTaxonomyMasters', () => {
       .mockResolvedValueOnce({
         ...emptyPage,
         page: 1,
-        content: [{ id: 2, label: 'Roble (Quercus robur)' }],
+        content: [{ id: 2, label: 'Roble (Quercus robur)', genusId: 10, genusLabel: 'Robles (Quercus)' }],
         totalElements: 25,
         totalPages: 2,
         first: false,
@@ -242,7 +247,7 @@ describe('useAdminTaxonomyMasters', () => {
     fetchAdminSpeciesListMock
       .mockResolvedValueOnce({
         ...emptyPage,
-        content: [{ id: 1, label: 'Encina (Quercus ilex)' }],
+        content: [{ id: 1, label: 'Encina (Quercus ilex)', genusId: 10, genusLabel: 'Robles (Quercus)' }],
         totalElements: 25,
         totalPages: 2,
         last: false,
@@ -250,7 +255,7 @@ describe('useAdminTaxonomyMasters', () => {
       .mockResolvedValueOnce({
         ...emptyPage,
         page: 1,
-        content: [{ id: 2, label: 'Roble (Quercus robur)' }],
+        content: [{ id: 2, label: 'Roble (Quercus robur)', genusId: 10, genusLabel: 'Robles (Quercus)' }],
         totalElements: 25,
         totalPages: 2,
         first: false,
@@ -258,7 +263,7 @@ describe('useAdminTaxonomyMasters', () => {
       })
       .mockResolvedValueOnce({
         ...emptyPage,
-        content: [{ id: 1, label: 'Encina (Quercus ilex)' }],
+        content: [{ id: 1, label: 'Encina (Quercus ilex)', genusId: 10, genusLabel: 'Robles (Quercus)' }],
         totalElements: 25,
         totalPages: 2,
         first: true,

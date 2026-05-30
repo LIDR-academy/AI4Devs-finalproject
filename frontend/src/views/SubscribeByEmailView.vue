@@ -39,7 +39,7 @@ function onEmailInput(): void {
           <RouterLink class="btn btn-secondary" :to="{ name: 'home' }">
             {{ t('navigation.home') }}
           </RouterLink>
-          <button type="button" class="btn btn-primary tree-form-submit" @click="resetForm">
+          <button type="button" class="btn btn-primary-soft tree-form-submit" @click="resetForm">
             {{ t('subscriptionNew.subscribeAnother') }}
           </button>
         </div>

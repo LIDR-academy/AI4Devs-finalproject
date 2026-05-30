@@ -196,6 +196,7 @@ export const es = {
     loadingSpecies: 'Cargando especies…',
     columns: {
       species: 'Especie',
+      genus: 'Género',
       actions: 'Acciones',
     },
     form: {

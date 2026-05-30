@@ -324,7 +324,7 @@ onMounted(async () => {
             >
               {{ t('treesList.filters.fewerFilters') }}
             </button>
-            <button class="btn btn-primary btn-sm catalog-toolbar__submit" type="submit" :disabled="isLoading">
+            <button class="btn btn-primary-soft btn-sm catalog-toolbar__submit" type="submit" :disabled="isLoading">
               {{ t('treesList.filters.apply') }}
             </button>
           </div>

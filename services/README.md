@@ -49,7 +49,7 @@ Los `application-dev.properties` de los servicios con JDBC usan `jdbc:postgresql
 - **Por defecto desactivada** (`spring.cache.type=none` en `application.properties`): tests y builds sin Docker no requieren Redis.
 - **Perfil `dev`** la activa a Redis (`spring.cache.type=redis`) apuntando al contenedor del Compose en `localhost:6379` (variables opcionales: **`MTL_REDIS_HOST`**, **`MTL_REDIS_PORT`**).
 - **Qué se cachea** (lecturas de maestros de baja cardinalidad y alta frecuencia, definido en `CatalogCacheConfig`):
-  - `catalog.publicProvinceNames` — `GET /api/catalog/public/provinces/names`, TTL 10 min.
+  - `catalog.publicProvinceNames` — `GET /api/catalog/public/provinces` (propiedad `names`), TTL 10 min.
   - `catalog.provincesUnpaged` — `GET /api/catalog/provinces` cuando `unpaged=true` y sin `q`, TTL 5 min.
   - `catalog.speciesUnpaged` — `GET /api/catalog/species` cuando `unpaged=true` y sin `q`, TTL 5 min.
 - **Invalidación:** solo por TTL en el MVP (no hay `@CacheEvict`). Para forzar refresco en dev: `docker compose -f infra/compose/docker-compose.yml exec redis redis-cli FLUSHDB`.
@@ -169,7 +169,7 @@ En **catalog-service**, `application-prod.properties` fija además `spring.datas
 ## 4. Gateway y seguridad JWT
 
 - **Arranque del módulo:** `mvn -pl api-gateway spring-boot:run -Dspring-boot.run.profiles=dev` (infra lista; Keycloak accesible si pruebas JWT reales).
-- **Microservicios aguas abajo:** si el gateway responde **502** con título *Servicio de destino no disponible*, el destino (p. ej. **catalog-service** en **8081**) no acepta conexión: arranca ese servicio o revisa `mtl.catalog.uri` / `MTL_*`. Sin **catalog-service**, rutas como **`/api/catalog/public/ejemplares`** fallan (no es un fallo de **media-service**).
+- **Microservicios aguas abajo:** si el gateway responde **502** con título *Servicio de destino no disponible*, el destino (p. ej. **catalog-service** en **8081**) no acepta conexión: arranca ese servicio o revisa `mtl.catalog.uri` / `MTL_*`. Sin **catalog-service**, rutas como **`/api/catalog/public/trees`** fallan (no es un fallo de **media-service**).
 - **Stack, rutas (`spring.cloud.gateway.server.webflux.*`), variables (`mtl.*.uri` / `MTL_*`), issuer, token relay, lista blanca, CORS y pendientes (correlación, timeouts):** [docs/security/jwt-gateway-strategy.md](../docs/security/jwt-gateway-strategy.md).
 - **Reglas para implementación:** `.cursor/rules/api-security.mdc`. Código: `services/api-gateway/`.
 
@@ -183,8 +183,8 @@ Los puntos **5 en adelante** del roadmap (dominio, Kafka, media, IA, front, CI, 
 
 **Edición y baja de fichas (HU-008, UC-04):**
 
-- **API catálogo** (`catalog-service`, JWT **COLABORADOR** / **ADMIN**): `GET /api/catalog/ejemplares` (listado con filtros y paginación), `GET|PUT|DELETE /api/catalog/ejemplares/{ejemplarId}`. **COLABORADOR:** solo fichas propias (`usuario_app_id` del actor). **ADMIN:** cualquier ficha; filtro opcional `createdByUserId` en listado. Validación de rango de fechas `createdFrom` ≤ `createdTo` (**400**). Actualización solo **`PUT`** (sin **`PATCH`** en MVP). **PUT**/**DELETE** no publican Kafka ni disparan notificación (**R7**); auditoría en **`AUDITORIA_CATALOGO`** (**R3**, [ADR-0004](../docs/adr/0004-catalog-rest-write-and-audit.md)).
-- **API media** (borrado en cascada y galería en edición): `DELETE /api/media/ejemplares/{ejemplarId}/photos` (todas las fotos del ejemplar: metadatos + objetos en bucket; no-op si no hay filas); `DELETE /api/media/photos/{photoId}` (una foto, **HU-006**). Media valida permiso llamando a catálogo (`GET …/media-submission-permission`).
+- **API catálogo** (`catalog-service`, JWT **COLABORADOR** / **ADMIN**): `GET /api/catalog/trees` (listado con filtros y paginación), `GET|PUT|DELETE /api/catalog/trees/{treeId}`. **COLABORADOR:** solo fichas propias (`usuario_app_id` del actor). **ADMIN:** cualquier ficha; filtro opcional `createdByUserId` en listado. Validación de rango de fechas `createdFrom` ≤ `createdTo` (**400**). Actualización solo **`PUT`** (sin **`PATCH`** en MVP). **PUT**/**DELETE** no publican Kafka ni disparan notificación (**R7**); auditoría en **`AUDITORIA_CATALOGO`** (**R3**, [ADR-0004](../docs/adr/0004-catalog-rest-write-and-audit.md)).
+- **API media** (borrado en cascada y galería en edición): `DELETE /api/media/trees/{treeId}/photos` (todas las fotos del ejemplar: metadatos + objetos en bucket; no-op si no hay filas); `DELETE /api/media/photos/{photoId}` (una foto, **HU-006**). Media valida permiso llamando a catálogo (`GET /api/catalog/trees/{treeId}/media-submission-permission`).
 - **Orden de baja** (`EjemplarDeletionService` en **catalog-service**): (1) `DELETE` en **media-service** con relay del Bearer del cliente; si media responde error → **abort** (el ejemplar **no** se borra en PostgreSQL); (2) borrado físico de `ejemplar` en PostgreSQL; (3) puerto `EjemplarEnrichmentDeletionPort` → implementación **stub** `NoOpEjemplarEnrichmentDeletionPort` hasta **[TASK-HU-015-01](../docs/backlog/HU-015-ticket-breakdown.md)**. La llamada HTTP a media queda **fuera** de la transacción JPA del catálogo.
 - **Límites MVP:** no hay **rollback compensatorio** si falla el paso SQL (o Mongo real) **después** de haber borrado fotos en media (escenario BDD 8 de [HU-008-edicion-de-mis-arboles.md](../docs/backlog/HU-008-edicion-de-mis-arboles.md)); no saga distribuida.
 - **Cliente catalog → media:** `mtl.media.base-url` (por defecto `http://localhost:8082` en `application.properties`; en **`dev`**: `${MTL_MEDIA_BASE_URL:http://localhost:8082}`). Sin **media-service** en marcha, `DELETE` de árbol con fotos devuelve **502** al cliente.
