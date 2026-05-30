@@ -223,14 +223,81 @@ El backend sigue el patrón **Repository + Service Layer**: los Services contien
 
 ## 3. Modelo de Datos
 
+> Documentación completa del modelo de datos, decisiones de diseño y esquema Prisma: [docs/DATA-MODEL.md](docs/DATA-MODEL.md)
+
 ### **3.1. Diagrama del modelo de datos:**
 
-> Recomendamos usar mermaid para el modelo de datos, y utilizar todos los parámetros que permite la sintaxis para dar el máximo detalle, por ejemplo las claves primarias y foráneas.
+El modelo cubre las cinco entidades del MVP: catálogo de productos, carrito de sesión y ciclo de pedido. Los atributos de filtrado running (`distance`, `surface`, `level`, `objective`) se modelan como **arrays nativos de PostgreSQL** indexados con GIN, evitando cuatro tablas de junction innecesarias para un conjunto de valores pequeño y cerrado.
 
+```mermaid
+erDiagram
+    PRODUCT {
+        string   id          PK
+        string   name
+        string   brand
+        decimal  price
+        string   category       "shoes | clothing | accessories"
+        string[] distance       "Array GIN-indexed"
+        string[] surface        "Array GIN-indexed"
+        string[] level          "Array GIN-indexed"
+        string[] objective      "Array GIN-indexed"
+        string[] sizes
+        string[] colors
+        int      stock
+    }
+
+    CART {
+        string   id          PK
+        string   sessionId   UK
+        datetime createdAt
+    }
+
+    CART_ITEM {
+        string   id          PK
+        string   cartId      FK
+        string   productId   FK
+        int      quantity
+        string   size
+        string   color
+    }
+
+    ORDER {
+        string   id          PK  "ORD-timestamp"
+        string   sessionId
+        string   status          "processing | shipped | delivered | cancelled"
+        decimal  total
+        string   shippingName
+        string   shippingAddress
+        string   shippingCity
+        datetime createdAt
+    }
+
+    ORDER_ITEM {
+        string   id           PK
+        string   orderId      FK
+        string   productId    FK
+        string   productName     "Snapshot precio de compra"
+        decimal  productPrice    "Snapshot precio de compra"
+        int      quantity
+        string   size
+        string   color
+    }
+
+    CART        ||--o{ CART_ITEM  : "contiene"
+    PRODUCT     ||--o{ CART_ITEM  : "referenciado en"
+    ORDER       ||--|{ ORDER_ITEM : "contiene"
+    PRODUCT     ||--o{ ORDER_ITEM : "origen del snapshot"
+```
 
 ### **3.2. Descripción de entidades principales:**
 
-> Recuerda incluir el máximo detalle de cada entidad, como el nombre y tipo de cada atributo, descripción breve si procede, claves primarias y foráneas, relaciones y tipo de relación, restricciones (unique, not null…), etc.
+| Entidad | Rol | Restricciones clave |
+|---|---|---|
+| **PRODUCT** | Catálogo de productos de running. Atributos de filtrado como arrays GIN-indexed para consultas eficientes. | `price` como `Decimal` (no Float); `stock ≥ 0`; `category` enum cerrado |
+| **CART** | Carrito activo de una sesión de navegador. Se vacía al completar el checkout. | `sessionId` unique — un carrito por sesión |
+| **CART_ITEM** | Línea de ítem del carrito. Usa precio actual del producto (no snapshot). | Unique constraint por `(cartId, productId, size, color)` |
+| **ORDER** | Pedido generado tras checkout. Almacena dirección de envío como campos planos (sin entidad ADDRESS en MVP). | `subtotal + shipping = total`; `id` formato `ORD-{timestamp}` |
+| **ORDER_ITEM** | Línea de ítem del pedido con **snapshot** de nombre, marca y precio del producto en el momento de compra. Garantiza inmutabilidad del historial. | `productPrice` fijado en checkout; no se actualiza si cambia el producto |
 
 ---
 

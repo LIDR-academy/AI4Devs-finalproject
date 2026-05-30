@@ -196,7 +196,7 @@ Actúa como un Arquitecto de software experto con amplia experiencia en ecommerc
 
 ## Contexto
 
-Toma como base el fichero `#file:readme-producto.md` para entender el modelo de negocio y los casos de uso principales de RunMarket.
+Toma como base el fichero @docs/PRD.md para entender el modelo de negocio, los casos de uso y el modelo de datos de RunMarket y la definición de arquitectura definida en .2docs/ARCHITECTURE.md.
 
 La primera versión del sistema se centra en catálogo, búsqueda filtrada, ficha de producto, carrito, checkout simulado y gestión básica de pedidos.
 
@@ -206,12 +206,10 @@ Generar el modelo de datos de las principales entidades para el sistema RunMarke
 
 ## Entidades de partida
 
-Lee los ficheros del diseño de Figma mediante el MCP (fileKey: `0wtedXb5138odnAOgHlMiA`) y extrae las entidades y sus atributos de:
+Lee los ficheros del diseño de Figma https://www.figma.com/make/0wtedXb5138odnAOgHlMiA/Ecommerce-para-productos-deportivos?t=IpZidqsmflTLTgQ9-1 mediante el MCP (fileKey: `0wtedXb5138odnAOgHlMiA`) y extrae las entidades y sus atributos de:
 
 - `src/app/types/product.ts` — tipos `Product`, `CartItem` y `Order`
 - `src/app/data/products.ts` — ejemplos reales de productos con sus atributos de filtrado running
-
-Si no tienes acceso al MCP de Figma, infiere las entidades a partir de los casos de uso descritos en `readme-producto.md`.
 
 ## Instrucciones
 
@@ -222,7 +220,10 @@ Si no tienes acceso al MCP de Figma, infiere las entidades a partir de los casos
 
 ## Resultado
 
-Añade una nueva sección `## 2. Arquitectura y diseño técnico` al fichero `readme-producto.md` si no existe, y escribe el contenido en `### 2.1. Modelo de datos`.
+Resultado
+- Crea el fichero docs/DATA-MODEL.md con la documentación completa.
+- Actualiza readme.md dejando un resumen profesional en la sección 3. Modelo de Datos las secciones
+- No modifiques otras secciones del README.
 
 ---
 
