@@ -263,12 +263,13 @@ Actúa como un Arquitecto de software experto con amplia experiencia en ecommerc
 
 ## Contexto
 
-Toma como base el fichero `#file:readme-producto.md` para entender el modelo de negocio, los casos de uso, el modelo de datos y el diseño de arquitectura del sistema RunMarket.
+Toma como base el fichero docs/PRD.md para entender el modelo de negocio, los casos de uso y el modelo de datos de RunMarket y la definición de arquitectura definida en docs/ARCHITECTURE.md.
+
 
 ## Instrucciones
 
 Genera los diagramas C4 del sistema RunMarket con los siguientes niveles: Context, Containers, Components.  
-Llega a nivel Code sólo en uno de los componentes principales. Selecciona el más representativo del MVP entre los siguientes y justifica brevemente la elección:
+Llega a nivel Code a los componentes principales:
 
 - `ProductCatalogService`
 - `CartService`
@@ -277,10 +278,11 @@ Llega a nivel Code sólo en uno de los componentes principales. Selecciona el m�
 
 ## Contexto visual
 
-Si tienes acceso al MCP de Figma, utiliza el diseño para alinear los contenedores y componentes técnicos con las pantallas y flujos principales del ecommerce:
+Si lo consideras necesario, accede al MCP de Figma y utiliza el diseño para alinear los contenedores y componentes técnicos con las pantallas y flujos principales del ecommerce:
 
 [Ecommerce para productos deportivos](https://www.figma.com/make/0wtedXb5138odnAOgHlMiA/Ecommerce-para-productos-deportivos?t=eF2k70Y9pfxdTUqD-0)
 
 ## Resultado
 
-Escribe el contenido en la sección `### 2.3. Diagrama C4` del fichero `readme-producto.md`.
+Escribe el contenido en @docs/ARCHITECTURE.md.
+

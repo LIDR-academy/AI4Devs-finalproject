@@ -252,3 +252,366 @@ runmarket/
 | Zod para validación | Joi, Yup, class-validator | Compatible con TypeScript inference, compartible entre frontend y backend |
 | Monorepo npm workspaces | Turborepo, Nx | Suficiente para el alcance del MVP sin overhead de herramientas |
 | SSR selectivo (no universal) | SSR completo / CSR completo | Solo las páginas con valor SEO usan Server Components; simplifica estado en checkout |
+
+---
+
+## 7. Diagramas C4
+
+### 7.1 Nivel 1 — Context
+
+Muestra RunMarket como caja negra en su contexto: quién lo usa y con qué sistemas externos interactúa. En el MVP no hay integraciones externas reales (el pago es simulado), lo que simplifica el contexto al sistema y sus usuarios.
+
+```mermaid
+C4Context
+    title Diagrama de Contexto — RunMarket
+
+    Person(runner, "Corredor", "Usuario que busca y compra\nproductos deportivos para running.\nPuede ser principiante, popular o avanzado.")
+
+    System(runmarket, "RunMarket", "Ecommerce especializado en running.\nPermite explorar el catálogo con filtros propios\nde la disciplina y completar el ciclo de compra.")
+
+    Rel(runner, runmarket, "Busca productos, filtra por perfil running,\nañade al carrito y completa la compra", "HTTPS")
+```
+
+---
+
+### 7.2 Nivel 2 — Containers
+
+Descompone RunMarket en sus tres contenedores: frontend SSR, API REST y base de datos relacional. Cada contenedor es un proceso desplegable de forma independiente.
+
+```mermaid
+C4Container
+    title Diagrama de Contenedores — RunMarket
+
+    Person(runner, "Corredor", "Usuario del ecommerce")
+
+    Container(fe, "Frontend Web", "Next.js 14 · React 18 · TypeScript · Tailwind · :3000", "Renderiza catálogo y fichas en servidor (SSR/SEO).\nGestiona carrito y checkout en cliente.\nSe comunica con la API para datos dinámicos.")
+
+    Container(api, "REST API", "Node.js 20 · Express 4 · TypeScript · :4000", "Expone endpoints REST para catálogo, carrito,\ncheckout y pedidos. Contiene la lógica de negocio\norganizada en Services y Repositories.")
+
+    ContainerDb(db, "Base de datos", "PostgreSQL 16 · :5432", "Almacena el catálogo de productos,\npedidos e ítems de pedido.\nAccedida exclusivamente vía Prisma ORM.")
+
+    Rel(runner, fe, "Navega el ecommerce", "HTTPS")
+    Rel(fe, api, "Consulta productos, envía carrito y checkout", "REST / JSON · HTTP")
+    Rel(api, db, "Lee y escribe datos de negocio", "Prisma ORM / SQL")
+```
+
+---
+
+### 7.3 Nivel 3 — Components
+
+#### Backend — Express REST API
+
+Muestra los componentes internos del contenedor API organizados según el patrón Router → Controller → Service → Repository.
+
+```mermaid
+C4Component
+    title Componentes — Backend Express REST API
+
+    Container(fe, "Frontend", "Next.js")
+    ContainerDb(db, "PostgreSQL")
+
+    Component(productRouter, "ProductRouter", "Express Router", "GET /api/products\nGET /api/products/:id")
+    Component(cartRouter, "CartRouter", "Express Router", "POST · PUT · DELETE /api/cart")
+    Component(checkoutRouter, "CheckoutRouter", "Express Router", "POST /api/checkout")
+    Component(orderRouter, "OrderRouter", "Express Router", "GET /api/orders\nGET /api/orders/:id")
+
+    Component(catalogSvc, "CatalogService", "TypeScript Service", "Filtrado multidimensional del catálogo por\ndistance · surface · level · objective")
+    Component(cartSvc, "CartService", "TypeScript Service", "Gestión del ciclo de vida del carrito:\nañadir · actualizar · eliminar · vaciar")
+    Component(checkoutSvc, "CheckoutService", "TypeScript Service", "Validación de datos de envío y pago.\nCreación del pedido (checkout simulado).")
+    Component(orderSvc, "OrderService", "TypeScript Service", "Consulta y actualización del historial\nde pedidos del corredor.")
+
+    Component(productRepo, "ProductRepository", "Prisma Repository", "Queries de producto con filtros\nSQL dinámicos sobre PostgreSQL.")
+    Component(orderRepo, "OrderRepository", "Prisma Repository", "Queries de Order y OrderItem\ncon joins y transacciones.")
+
+    Rel(fe, productRouter, "GET /api/products", "JSON")
+    Rel(fe, cartRouter, "POST/PUT/DELETE /api/cart", "JSON")
+    Rel(fe, checkoutRouter, "POST /api/checkout", "JSON")
+    Rel(fe, orderRouter, "GET /api/orders", "JSON")
+
+    Rel(productRouter, catalogSvc, "delega lógica")
+    Rel(cartRouter, cartSvc, "delega lógica")
+    Rel(checkoutRouter, checkoutSvc, "delega lógica")
+    Rel(orderRouter, orderSvc, "delega lógica")
+
+    Rel(catalogSvc, productRepo, "usa")
+    Rel(cartSvc, orderRepo, "usa")
+    Rel(checkoutSvc, orderRepo, "usa")
+    Rel(checkoutSvc, cartSvc, "vacía carrito tras checkout")
+    Rel(orderSvc, orderRepo, "usa")
+
+    Rel(productRepo, db, "SQL via Prisma")
+    Rel(orderRepo, db, "SQL via Prisma")
+```
+
+#### Frontend — Next.js 14 App Router
+
+Muestra los componentes internos del contenedor frontend, distinguiendo entre Server Components (SSR) y Client Components.
+
+```mermaid
+C4Component
+    title Componentes — Frontend Next.js 14
+
+    Person(runner, "Corredor")
+    Container(api, "REST API", "Express")
+
+    Component(catalogPage, "CatalogPage", "Server Component · /", "Renderiza el catálogo con SSR.\nGenera metadata SEO de categorías.")
+    Component(productPage, "ProductDetailPage", "Server Component · /product/[id]", "Renderiza ficha de producto con SSR.\nMetadata dinámica og:title · og:image.")
+    Component(cartPage, "CartPage", "Client Component · /cart", "Gestión del carrito en cliente.\nLee y escribe CartContext.")
+    Component(checkoutPage, "CheckoutPage", "Client Component · /checkout", "Formulario multi-paso: envío + pago.\nEnvía checkout a la API.")
+    Component(ordersPage, "OrdersPage", "Client Component · /orders", "Historial de pedidos cargado\ndesde la API al montar el componente.")
+    Component(filterPanel, "FilterPanel", "Client Component", "Panel de filtros interactivo.\nActualiza parámetros de búsqueda.")
+    Component(cartCtx, "CartContext", "React Context + localStorage", "Estado global del carrito.\nPersistencia en localStorage.")
+    Component(apiClient, "ApiClient", "TypeScript fetch wrapper", "Centraliza llamadas REST al backend.\nManeja errores y tipado de respuestas.")
+
+    Rel(runner, catalogPage, "/ navega catálogo", "HTTPS")
+    Rel(runner, productPage, "/product/:id ve ficha", "HTTPS")
+    Rel(runner, cartPage, "/cart revisa carrito", "HTTPS")
+    Rel(runner, checkoutPage, "/checkout compra", "HTTPS")
+    Rel(runner, ordersPage, "/orders mis pedidos", "HTTPS")
+
+    Rel(catalogPage, apiClient, "fetchProducts(filters)")
+    Rel(catalogPage, filterPanel, "recibe filtros activos")
+    Rel(productPage, apiClient, "fetchProduct(id)")
+    Rel(cartPage, cartCtx, "lee y modifica carrito")
+    Rel(checkoutPage, apiClient, "submitCheckout(data)")
+    Rel(checkoutPage, cartCtx, "vacía carrito tras confirmación")
+    Rel(ordersPage, apiClient, "fetchOrders()")
+
+    Rel(apiClient, api, "REST / JSON")
+```
+
+---
+
+### 7.4 Nivel 4 — Code
+
+Diagramas de clases de los cuatro servicios principales del backend. Cada servicio se diseña contra interfaces (Dependency Inversion) para permitir testing unitario con mocks de repositorio.
+
+#### CatalogService
+
+Servicio central del diferencial de RunMarket: implementa el filtrado multidimensional por atributos propios del running.
+
+```mermaid
+classDiagram
+    class ProductFilters {
+        +category?: string
+        +distance?: DistanceType[]
+        +surface?: SurfaceType[]
+        +level?: LevelType[]
+        +objective?: ObjectiveType[]
+        +priceMin?: number
+        +priceMax?: number
+        +sortBy?: SortOption
+    }
+
+    class ICatalogService {
+        <<interface>>
+        +getProducts(filters: ProductFilters) Promise~Product[]~
+        +getProductById(id: string) Promise~Product | null~
+    }
+
+    class CatalogService {
+        -productRepository: IProductRepository
+        +constructor(repo: IProductRepository)
+        +getProducts(filters: ProductFilters) Promise~Product[]~
+        +getProductById(id: string) Promise~Product | null~
+        -buildWhereClause(filters: ProductFilters) PrismaWhereInput
+        -applySorting(products: Product[], sortBy: SortOption) Product[]
+    }
+
+    class IProductRepository {
+        <<interface>>
+        +findAll(where: PrismaWhereInput) Promise~Product[]~
+        +findById(id: string) Promise~Product | null~
+    }
+
+    class ProductRepository {
+        -prisma: PrismaClient
+        +findAll(where: PrismaWhereInput) Promise~Product[]~
+        +findById(id: string) Promise~Product | null~
+    }
+
+    ICatalogService <|.. CatalogService : implements
+    CatalogService --> IProductRepository : depends on
+    IProductRepository <|.. ProductRepository : implements
+    CatalogService ..> ProductFilters : uses
+```
+
+#### CartService
+
+Gestiona el ciclo de vida del carrito asociado a una sesión de navegador. Valida stock antes de añadir o actualizar ítems.
+
+```mermaid
+classDiagram
+    class CartItemInput {
+        +productId: string
+        +quantity: number
+        +size?: string
+        +color?: string
+    }
+
+    class CartItem {
+        +productId: string
+        +product: Product
+        +quantity: number
+        +size?: string
+        +color?: string
+    }
+
+    class Cart {
+        +sessionId: string
+        +items: CartItem[]
+        +subtotal: number
+        +shipping: number
+        +total: number
+    }
+
+    class ICartService {
+        <<interface>>
+        +getCart(sessionId: string) Promise~Cart~
+        +addItem(sessionId: string, item: CartItemInput) Promise~Cart~
+        +updateItem(sessionId: string, productId: string, quantity: number) Promise~Cart~
+        +removeItem(sessionId: string, productId: string) Promise~Cart~
+        +clearCart(sessionId: string) Promise~void~
+    }
+
+    class CartService {
+        -cartRepository: ICartRepository
+        -productRepository: IProductRepository
+        +getCart(sessionId: string) Promise~Cart~
+        +addItem(sessionId: string, item: CartItemInput) Promise~Cart~
+        +updateItem(sessionId: string, productId: string, quantity: number) Promise~Cart~
+        +removeItem(sessionId: string, productId: string) Promise~Cart~
+        +clearCart(sessionId: string) Promise~void~
+        -validateStock(productId: string, qty: number) Promise~void~
+        -calculateTotals(items: CartItem[]) CartTotals
+    }
+
+    ICartService <|.. CartService : implements
+    CartService --> ICartRepository : depends on
+    CartService --> IProductRepository : depends on (stock check)
+    CartService ..> CartItemInput : uses
+    CartService ..> Cart : returns
+```
+
+#### CheckoutService
+
+Orquesta el proceso de compra: valida datos de envío y pago, crea el pedido y vacía el carrito. El pago es simulado: no hay integración con pasarela real en el MVP.
+
+```mermaid
+classDiagram
+    class ShippingData {
+        +name: string
+        +email: string
+        +phone?: string
+        +address: string
+        +city: string
+        +postalCode: string
+        +country: string
+    }
+
+    class PaymentData {
+        +cardNumber: string
+        +cardName: string
+        +cardExpiry: string
+        +cardCVV: string
+    }
+
+    class CheckoutData {
+        +sessionId: string
+        +shipping: ShippingData
+        +payment: PaymentData
+    }
+
+    class ValidationResult {
+        +valid: boolean
+        +errors: Record~string, string~
+    }
+
+    class ICheckoutService {
+        <<interface>>
+        +validateShipping(data: ShippingData) ValidationResult
+        +validatePayment(data: PaymentData) ValidationResult
+        +processCheckout(data: CheckoutData) Promise~Order~
+    }
+
+    class CheckoutService {
+        -cartService: ICartService
+        -orderRepository: IOrderRepository
+        +validateShipping(data: ShippingData) ValidationResult
+        +validatePayment(data: PaymentData) ValidationResult
+        +processCheckout(data: CheckoutData) Promise~Order~
+        -generateOrderId() string
+        -simulatePaymentProcessing(data: PaymentData) boolean
+        -buildOrderFromCart(cart: Cart, data: CheckoutData) CreateOrderInput
+    }
+
+    ICheckoutService <|.. CheckoutService : implements
+    CheckoutService --> ICartService : vacía carrito tras éxito
+    CheckoutService --> IOrderRepository : crea pedido
+    CheckoutService ..> CheckoutData : uses
+    CheckoutService ..> ValidationResult : returns
+```
+
+#### OrderService
+
+Gestiona la consulta y actualización de pedidos. En el MVP los pedidos se asocian a `sessionId`; sin autenticación, el corredor accede a sus pedidos de la sesión activa.
+
+```mermaid
+classDiagram
+    class OrderStatus {
+        <<enumeration>>
+        PROCESSING
+        SHIPPED
+        DELIVERED
+        CANCELLED
+    }
+
+    class Order {
+        +id: string
+        +sessionId: string
+        +date: Date
+        +status: OrderStatus
+        +items: OrderItem[]
+        +subtotal: number
+        +shipping: number
+        +total: number
+        +shippingAddress: ShippingAddress
+    }
+
+    class IOrderService {
+        <<interface>>
+        +getOrders(sessionId: string) Promise~Order[]~
+        +getOrderById(orderId: string) Promise~Order | null~
+        +updateOrderStatus(orderId: string, status: OrderStatus) Promise~Order~
+    }
+
+    class OrderService {
+        -orderRepository: IOrderRepository
+        +getOrders(sessionId: string) Promise~Order[]~
+        +getOrderById(orderId: string) Promise~Order | null~
+        +updateOrderStatus(orderId: string, status: OrderStatus) Promise~Order~
+        -validateTransition(current: OrderStatus, next: OrderStatus) void
+    }
+
+    class IOrderRepository {
+        <<interface>>
+        +findBySession(sessionId: string) Promise~Order[]~
+        +findById(orderId: string) Promise~Order | null~
+        +create(data: CreateOrderInput) Promise~Order~
+        +updateStatus(orderId: string, status: OrderStatus) Promise~Order~
+    }
+
+    class OrderRepository {
+        -prisma: PrismaClient
+        +findBySession(sessionId: string) Promise~Order[]~
+        +findById(orderId: string) Promise~Order | null~
+        +create(data: CreateOrderInput) Promise~Order~
+        +updateStatus(orderId: string, status: OrderStatus) Promise~Order~
+    }
+
+    IOrderService <|.. OrderService : implements
+    OrderService --> IOrderRepository : depends on
+    IOrderRepository <|.. OrderRepository : implements
+    OrderService ..> OrderStatus : validates transitions
+    OrderRepository ..> Order : maps Prisma → domain
+```
