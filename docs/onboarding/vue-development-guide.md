@@ -342,6 +342,8 @@ Proxy local: rutas **`/api/*`** → gateway (ver `frontend/README.md`).
 
 ## 16. Checklist antes de abrir PR (frontend)
 
+Flujo global (rama, plantilla GitHub, `mvn verify`): [github-branching.md](github-branching.md).
+
 - [ ] Sin `fetch` directo en componentes para API del producto.
 - [ ] Textos nuevos en **`i18n/locales`**, no hardcodeados.
 - [ ] Imports con **`@/`**.

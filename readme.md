@@ -1338,8 +1338,11 @@ así está bien, implementa en endpoint del Listado de TASK-HU-008-02, si tienes
 
 ## 8. Pull requests
 
-Las Pull requests del proyecto se generan a partir del template `pull_request_template`
-> Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
+**Procedimiento (ramas, plantilla `.github`, pruebas):** [docs/onboarding/github-branching.md](docs/onboarding/github-branching.md).
+
+Las pull requests usan la plantilla [`.github/pull_request_template.md`](.github/pull_request_template.md) (GitHub la inserta al crear el PR).
+
+> Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto (ejemplos históricos debajo).
 
 **Pull Request 1**
 ## Resumen
