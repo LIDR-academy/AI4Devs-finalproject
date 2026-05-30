@@ -57,7 +57,7 @@ Modelo de **tres capas** con mapeo explícito y **mínima ruptura**:
 
 - Rutas: `/api/catalog/trees`, `/api/catalog/public/trees`, `/api/media/trees/...`
 - Propiedad JSON y path param: **`treeId`** / `{treeId}` ([ADR-0006](0006-ejemplar-aggregate-http-kafka-naming.md)).
-- No reintroducir legacy API: `arbol`, `/ejemplares`, `treeId` en JSON, `catalog.arbol.evento`.
+- No reintroducir legacy API: `arbol`, rutas `/api/.../ejemplares`, `ejemplarId` en JSON, `catalog.arbol.evento`.
 
 ### Tabla de mapeo BD → JSON (referencia)
 

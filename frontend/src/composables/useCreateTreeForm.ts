@@ -1,5 +1,10 @@
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
+import {
+  treeEditRouteAfterCreate,
+  type TreeCreateFlashValue,
+} from '@/composables/treeCreateRedirect'
 import { useApiErrorMapper } from '@/composables/useApiErrorMapper'
 import { isAbortError, useAbortableRequest } from '@/composables/useAbortableRequest'
 import {
@@ -9,10 +14,7 @@ import {
   type CreateTreeValidationCode,
 } from '@/composables/createTreeFormValidation'
 import { createTree, fetchProvinces, fetchSpecies } from '@/services/catalog/catalogService'
-import {
-  ObjectStorageUploadError,
-  uploadPhotosForTreeAfterCreate,
-} from '@/services/media/treePhotoUploadSequence'
+import { uploadPhotosForTreeAfterCreate } from '@/services/media/treePhotoUploadSequence'
 import type {
   MasterListItem,
   PublicationState,
@@ -28,6 +30,7 @@ type FieldErrors = Partial<Record<CreateTreeField, string>>
 
 export function useCreateTreeForm() {
   const { t } = useI18n()
+  const router = useRouter()
   const { toMessage } = useApiErrorMapper()
   const species = ref<MasterListItem[]>([])
   const provinces = ref<MasterListItem[]>([])
@@ -36,8 +39,6 @@ export function useCreateTreeForm() {
 
   const isSubmitting = ref(false)
   const submitError = ref('')
-  const submitSuccess = ref('')
-  const photosUploadError = ref('')
   const selectedPhotoFiles = ref<File[]>([])
   const fieldErrors = ref<FieldErrors>({})
   const { runWithAbort } = useAbortableRequest()
@@ -107,8 +108,6 @@ export function useCreateTreeForm() {
 
   async function submit(): Promise<void> {
     submitError.value = ''
-    submitSuccess.value = ''
-    photosUploadError.value = ''
     fieldErrors.value = {}
 
     if (!validateForm()) {
@@ -135,24 +134,17 @@ export function useCreateTreeForm() {
       })
       const treeId = response.treeId
       const files = selectedPhotoFiles.value
+      let flash: TreeCreateFlashValue = 'ok'
       if (files.length > 0) {
         try {
           await uploadPhotosForTreeAfterCreate(treeId, files)
-          submitSuccess.value = t('treeForm.messages.createdWithPhotos', { treeId: treeId })
+          flash = 'okPhotos'
           selectedPhotoFiles.value = []
-        } catch (photoError: unknown) {
-          submitSuccess.value = t('treeForm.messages.created', { treeId: treeId })
-          if (photoError instanceof ObjectStorageUploadError) {
-            photosUploadError.value = t('treeForm.messages.photoStorageUploadFailed', {
-              status: photoError.status,
-            })
-          } else {
-            photosUploadError.value = toMessage(photoError)
-          }
+        } catch {
+          flash = 'photosWarning'
         }
-      } else {
-        submitSuccess.value = t('treeForm.messages.created', { treeId: treeId })
       }
+      await router.push(treeEditRouteAfterCreate(treeId, flash))
     } catch (error: unknown) {
       submitError.value = toMessage(error)
     } finally {
@@ -172,8 +164,6 @@ export function useCreateTreeForm() {
     isSubmitting,
     fieldErrors,
     submitError,
-    submitSuccess,
-    photosUploadError,
     selectedPhotoFiles,
     loadMasters,
     submit,

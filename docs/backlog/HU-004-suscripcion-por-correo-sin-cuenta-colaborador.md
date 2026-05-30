@@ -27,7 +27,7 @@
 
 Como visitante sin cuenta en la plataforma, quiero registrarme con mi correo electrónico para suscribirme a avisos sobre nuevas altas de fichas de árbol en el catálogo, para enterarme de novedades sin tener que consultar la web de forma continua.
 
-- **Entregable de la historia:** Flujo de **alta de suscriptor** usable por un **público no autenticado**: interfaz en **`/subscriptions/new`**, **`POST /api/notifications/subscriptions`** vía **API Gateway** (mismo patrón de entrada que el resto de microservicios; **sin** JWT en este `POST`) y persistencia **SUSCRIPTOR** en el microservicio **`notification-service`** con **`estado_suscripcion` = ACTIVA** al crear (correo válido y sin fila previa conflictiva). Quedan **fuera** el envío de correos tras alta de árbol, Kafka y **NOTIFICACION** / **ENVIO_NOTIFICACION** (**[HU-007](HU-007-aviso-por-correo-al-crear-una-ficha.md)**), el paso a **CANCELADA** y la **reactivación** desde **CANCELADA** (**[HU-012](backlog.md)** / **UC-08**).
+- **Entregable de la historia:** Flujo de **alta de suscriptor** usable por un **público no autenticado**: interfaz en **`/subscriptions/new`**, **`POST /api/notifications/subscriptions`** vía **API Gateway** (mismo patrón de entrada que el resto de microservicios; **sin** JWT en este `POST`) y persistencia **SUSCRIPTOR** en el microservicio **`notification-service`** con **`estado_suscripcion` = ACTIVA** al crear (correo válido y sin fila previa conflictiva). Quedan **fuera** el envío de correos tras Alta de ejemplar, Kafka y **NOTIFICACION** / **ENVIO_NOTIFICACION** (**[HU-007](HU-007-aviso-por-correo-al-crear-una-ficha.md)**), el paso a **CANCELADA** y la **reactivación** desde **CANCELADA** (**[HU-012](backlog.md)** / **UC-08**).
 
 ### Alcance
 
@@ -103,7 +103,7 @@ UC-02; regla R7 (**ACTIVA**, [data-model.md](../data-model/data-model.md)); read
 
 | Criterio | Comentario |
 |----------|------------|
-| **Independiente** | Parcialmente: requiere servicio y esquema de notificaciones y gateway; no depende de login ni de alta de árbol, pero sí de línea base infra/contrato. |
+| **Independiente** | Parcialmente: requiere servicio y esquema de notificaciones y gateway; no depende de login ni de Alta de ejemplar, pero sí de línea base infra/contrato. |
 | **Negociable** | Acotado: **409** + mensaje (**ACTIVA** duplicada o **CANCELADA** existente), **`201`** (**`{email}`**), alta **ACTIVA** inmediata si no hay conflicto. |
 | **Valiosa** | Sí: habilita el canal de audiencia amplia sin cuenta, alineado al mensaje de producto del readme. |
 | **Estimable** | Sí: estimación **M** del backlog; sin opt-in de correo el alcance es acotado. |

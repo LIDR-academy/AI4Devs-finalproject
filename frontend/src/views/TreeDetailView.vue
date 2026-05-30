@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import PageBackLink from '@/components/layout/PageBackLink.vue'
 import TreeLocationMapPreview from '@/components/TreeLocationMapPreview.vue'
 import TreePhotoFullscreenViewer from '@/components/TreePhotoFullscreenViewer.vue'
 import { areLatLngInValidRange } from '@/composables/createTreeFormValidation'
@@ -36,6 +37,36 @@ function mapError(error: unknown): string {
   return t('treesDetail.messages.unexpectedError')
 }
 
+function publicationStateLabel(state: string): string {
+  if (state === 'BORRADOR') {
+    return t('treesList.filters.state.borrador')
+  }
+  if (state === 'PUBLICADO') {
+    return t('treesList.filters.state.publicado')
+  }
+  return state
+}
+
+function mapVisibilityLabel(visibility: string): string {
+  if (visibility === 'PRIVADO') {
+    return t('treesList.filters.visibility.privado')
+  }
+  if (visibility === 'PUBLICO') {
+    return t('treesList.filters.visibility.publico')
+  }
+  return visibility
+}
+
+function locationLine(detail: PublicTreeDetail): string {
+  const parts = [detail.municipality?.trim(), detail.province?.trim()].filter(Boolean)
+  return parts.length > 0 ? parts.join(' · ') : t('common.emptyValue')
+}
+
+function displayText(value: string | null | undefined): string {
+  const trimmed = value?.trim() ?? ''
+  return trimmed.length > 0 ? trimmed : t('common.emptyValue')
+}
+
 const treeId = computed(() => {
   const rawId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
   const parsedId = Number(rawId)
@@ -57,10 +88,37 @@ const speciesTitle = computed(() => {
   return scientific
 })
 
+const pageTitle = computed(() => {
+  if (tree.value) {
+    return speciesTitle.value
+  }
+  return t('treesDetail.title')
+})
+
+const pageDescription = computed(() => {
+  if (tree.value) {
+    return locationLine(tree.value)
+  }
+  return t('treesDetail.description')
+})
+
 const mapLatLng = computed(() => ({
   latitude: tree.value ? String(tree.value.latitude) : '',
   longitude: tree.value ? String(tree.value.longitude) : '',
 }))
+
+const coordinatesLine = computed(() => {
+  if (!tree.value) {
+    return ''
+  }
+  const lat = String(tree.value.latitude)
+  const lng = String(tree.value.longitude)
+  const alt =
+    tree.value.altitude !== null && tree.value.altitude !== undefined
+      ? t('treesDetail.coordinatesWithAltitude', { lat, lng, altitude: tree.value.altitude })
+      : t('treesDetail.coordinatesPair', { lat, lng })
+  return alt
+})
 
 const showMapMarker = computed(() => areLatLngInValidRange(mapLatLng.value))
 const hasGalleryPhotos = computed(() => galleryPhotos.value.length > 0)
@@ -137,21 +195,29 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section class="card tree-detail-card">
-    <div class="tree-detail-top-actions">
-      <RouterLink class="btn btn-secondary btn-sm" :to="{ name: 'ejemplares-list' }">
-        {{ t('treesDetail.backToList') }}
-      </RouterLink>
-    </div>
-    <h2>{{ tree ? speciesTitle : t('treesDetail.title') }}</h2>
+  <div class="tree-detail-page">
+    <header class="page-header tree-detail-page__header">
+      <PageBackLink :to="{ name: 'ejemplares-list' }">{{ t('treesDetail.backToList') }}</PageBackLink>
+      <h1 class="page-header__title">{{ pageTitle }}</h1>
+      <p class="page-header__description">{{ pageDescription }}</p>
+      <div v-if="tree" class="tree-detail-page__badges">
+        <span class="mtl-badge">{{ publicationStateLabel(tree.publicationState) }}</span>
+        <span class="mtl-badge mtl-badge--muted">{{
+          mapVisibilityLabel(tree.publicMapVisibility)
+        }}</span>
+        <span class="mtl-badge mtl-badge--muted">{{ t('treesDetail.treeId', { id: tree.treeId }) }}</span>
+      </div>
+    </header>
 
     <p v-if="isLoading" class="status-note">{{ t('treesDetail.loading') }}</p>
     <p v-else-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
 
     <template v-else-if="isSuccess && tree">
       <div class="tree-detail-visual-grid">
-        <section class="tree-detail-gallery-block" aria-labelledby="tree-detail-gallery-heading">
-          <p id="tree-detail-gallery-heading" class="form-label">{{ t('treesDetail.gallery.title') }}</p>
+        <section class="tree-detail-panel" aria-labelledby="tree-detail-gallery-heading">
+          <h2 id="tree-detail-gallery-heading" class="tree-detail-panel__title">
+            {{ t('treesDetail.gallery.title') }}
+          </h2>
           <div class="tree-detail-gallery-frame">
             <button
               v-if="selectedPhoto"
@@ -175,30 +241,25 @@ onMounted(async () => {
             }}</output>
           </div>
           <div v-if="hasMultipleGalleryPhotos" class="tree-detail-gallery-controls">
-            <button
-              type="button"
-              class="btn btn-secondary btn-sm"
-              @click="showPreviousPhoto"
-            >
+            <button type="button" class="btn btn-secondary btn-sm" @click="showPreviousPhoto">
               {{ t('treesDetail.gallery.previous') }}
             </button>
-            <span class="muted">{{
+            <span class="muted tree-detail-gallery-position">{{
               t('treesDetail.gallery.position', {
                 current: selectedPhotoPosition,
                 total: galleryPhotos.length,
               })
             }}</span>
-            <button
-              type="button"
-              class="btn btn-secondary btn-sm"
-              @click="showNextPhoto"
-            >
+            <button type="button" class="btn btn-secondary btn-sm" @click="showNextPhoto">
               {{ t('treesDetail.gallery.next') }}
             </button>
           </div>
         </section>
-        <section class="tree-detail-map-block" aria-labelledby="tree-detail-map-heading">
-          <p id="tree-detail-map-heading" class="form-label">{{ t('treesDetail.map.title') }}</p>
+
+        <section class="tree-detail-panel" aria-labelledby="tree-detail-map-heading">
+          <h2 id="tree-detail-map-heading" class="tree-detail-panel__title">
+            {{ t('treesDetail.map.title') }}
+          </h2>
           <TreeLocationMapPreview
             v-if="showMapMarker"
             :latitude="mapLatLng.latitude"
@@ -212,80 +273,35 @@ onMounted(async () => {
         </section>
       </div>
 
-      <form class="tree-form tree-detail-form" @submit.prevent>
-        <div class="field">
-          <label class="form-label" for="tree-detail-province">{{ t('treesDetail.fields.province') }}</label>
-          <input
-            id="tree-detail-province"
-            class="form-control"
-            type="text"
-            :value="tree.province || '-'"
-            readonly
-          />
-        </div>
-
-        <div class="field">
-          <label class="form-label" for="tree-detail-municipality">{{ t('treesDetail.fields.municipality') }}</label>
-          <input
-            id="tree-detail-municipality"
-            class="form-control"
-            type="text"
-            :value="tree.municipality || '-'"
-            readonly
-          />
-        </div>
-
-        <div class="field field-full">
-          <label class="form-label" for="tree-detail-description">{{ t('treesDetail.fields.description') }}</label>
-          <textarea
-            id="tree-detail-description"
-            class="form-control form-textarea"
-            rows="2"
-            :value="tree.description || '-'"
-            readonly
-          />
-        </div>
-
-        <div class="field-full tree-geo-row">
-          <div class="field">
-            <label class="form-label" for="tree-detail-latitude">{{ t('treesDetail.fields.latitude') }}</label>
-            <input id="tree-detail-latitude" class="form-control" type="text" :value="tree.latitude" readonly />
+      <section class="tree-detail-facts" :aria-labelledby="'tree-detail-facts-heading'">
+        <h2 id="tree-detail-facts-heading" class="tree-detail-panel__title">
+          {{ t('treesDetail.sections.facts') }}
+        </h2>
+        <dl class="tree-detail-facts__grid">
+          <div class="tree-detail-facts__item">
+            <dt>{{ t('treesDetail.fields.province') }}</dt>
+            <dd>{{ displayText(tree.province) }}</dd>
           </div>
-
-          <div class="field">
-            <label class="form-label" for="tree-detail-longitude">{{ t('treesDetail.fields.longitude') }}</label>
-            <input id="tree-detail-longitude" class="form-control" type="text" :value="tree.longitude" readonly />
+          <div class="tree-detail-facts__item">
+            <dt>{{ t('treesDetail.fields.municipality') }}</dt>
+            <dd>{{ displayText(tree.municipality) }}</dd>
           </div>
-
-          <div class="field">
-            <label class="form-label" for="tree-detail-altitude">{{ t('treesDetail.fields.altitude') }}</label>
-            <input
-              id="tree-detail-altitude"
-              class="form-control"
-              type="text"
-              :value="tree.altitude ?? '-'"
-              readonly
-            />
+          <div class="tree-detail-facts__item tree-detail-facts__item--full">
+            <dt>{{ t('treesDetail.fields.description') }}</dt>
+            <dd class="tree-detail-facts__description">{{ displayText(tree.description) }}</dd>
           </div>
-        </div>
+          <div class="tree-detail-facts__item tree-detail-facts__item--full">
+            <dt>{{ t('treesDetail.fields.coordinates') }}</dt>
+            <dd>{{ coordinatesLine }}</dd>
+          </div>
+        </dl>
+      </section>
 
-        <div class="field">
-          <label class="form-label" for="tree-detail-state">{{ t('treesDetail.fields.state') }}</label>
-          <input id="tree-detail-state" class="form-control" type="text" :value="tree.publicationState" readonly />
-        </div>
-
-        <div class="field">
-          <label class="form-label" for="tree-detail-visibility">{{ t('treesDetail.fields.visibility') }}</label>
-          <input id="tree-detail-visibility" class="form-control" type="text" :value="tree.publicMapVisibility" readonly />
-        </div>
-
-        <div class="field-full actions">
-          <RouterLink class="btn btn-secondary" :to="{ name: 'ejemplares-list' }">
-            {{ t('treesDetail.backToList') }}
-          </RouterLink>
-          <span class="muted tree-detail-id">{{ t('treesDetail.treeId', { id: tree.treeId }) }}</span>
-        </div>
-      </form>
+      <footer class="actions page-actions-footer tree-detail-page__footer">
+        <RouterLink class="btn btn-secondary" :to="{ name: 'ejemplares-list' }">
+          {{ t('treesDetail.backToList') }}
+        </RouterLink>
+      </footer>
 
       <TreePhotoFullscreenViewer
         v-if="isFullscreenOpen && hasGalleryPhotos"
@@ -296,8 +312,8 @@ onMounted(async () => {
       />
     </template>
 
-    <p v-if="notFound" class="status-note">
+    <p v-if="notFound && !isLoading" class="status-note">
       {{ t('treesDetail.notFoundHint') }}
     </p>
-  </section>
+  </div>
 </template>

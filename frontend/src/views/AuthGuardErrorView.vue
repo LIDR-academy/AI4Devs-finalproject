@@ -33,19 +33,26 @@ async function retryLogin(): Promise<void> {
 </script>
 
 <template>
-  <section class="card">
-    <h2>{{ t('authGuardError.title') }}</h2>
-    <p class="muted">{{ t(descriptionKey) }}</p>
+  <div class="auth-flow-page">
+    <header class="page-header auth-flow-page__header">
+      <h1 class="page-header__title">{{ t('authGuardError.title') }}</h1>
+      <p class="page-header__description">{{ t(descriptionKey) }}</p>
+    </header>
 
-    <div class="actions">
-      <button v-if="canRetryLogin" class="btn btn-primary" type="button" @click="retryLogin">
-        {{ t('authGuardError.retryCta') }}
-      </button>
-      <RouterLink class="btn btn-secondary" to="/">
+    <div class="page-actions-footer auth-flow-page__actions">
+      <RouterLink class="btn btn-secondary" :to="{ name: 'home' }">
         {{ t('authGuardError.backHomeCta') }}
       </RouterLink>
+      <button
+        v-if="canRetryLogin"
+        class="btn btn-primary tree-form-submit"
+        type="button"
+        @click="retryLogin"
+      >
+        {{ t('authGuardError.retryCta') }}
+      </button>
     </div>
 
     <p v-if="retryError" class="error" role="alert">{{ retryError }}</p>
-  </section>
+  </div>
 </template>

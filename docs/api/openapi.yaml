@@ -1580,7 +1580,7 @@ components:
           format: date-time
     SpeciesListItem:
       type: object
-      required: [id, label]
+      required: [id, label, genusId, genusLabel]
       properties:
         id:
           type: integer
@@ -1588,6 +1588,13 @@ components:
         label:
           type: string
           example: Encina (Quercus ilex)
+        genusId:
+          type: integer
+          format: int64
+          description: Identificador de género (`genero_id`).
+        genusLabel:
+          type: string
+          example: Robles (Quercus)
     TaxonomyMasterListItem:
       type: object
       required: [id, label]

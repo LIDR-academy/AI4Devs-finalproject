@@ -78,7 +78,7 @@ Regla transversal: **un solo idioma por frontera** (no mezclar español e inglé
 | P3 | **Un concepto, un nombre por frontera;** sin mezcla inglés/español en el mismo schema JSON ni en la misma fila SQL. |
 | P4 | Valores de enumeración: códigos de dominio (`BORRADOR`, `PUBLICADO`, …), sin traducir. |
 | P5 | **Frontend (código TS/Vue):** agregado **`Tree`/`Trees`**; API con **`treeId`** y `/api/.../trees`. Rutas SPA `/ejemplares` por UX. **Backend:** dominio `Ejemplar`, DTO con **`treeId`**. |
-| P6 | **Legacy prohibido en producto:** `arbol`, `/ejemplares` y `treeId` en contrato HTTP, `catalog.arbol.evento`, prefijo MinIO `ejemplares/`. |
+| P6 | **Legacy prohibido en producto:** `arbol`, rutas API `/api/.../ejemplares`, `ejemplarId` en contrato HTTP, `catalog.arbol.evento`, prefijo MinIO `ejemplares/`. |
 
 ---
 
@@ -131,7 +131,7 @@ Regla transversal: **un solo idioma por frontera** (no mezclar español e inglé
 
 Lista completa (catálogo + media): ADR-0007.
 
-**Prohibido en contrato:** `nombreComun` y `speciesId` en el mismo schema; **`treeId`** en JSON; rutas **`/ejemplares`**.
+**Prohibido en contrato:** `nombreComun` y `speciesId` en el mismo schema; **`ejemplarId`** en JSON; rutas API **`/api/.../ejemplares`**.
 
 **Permitido en frontend:** variable local `treeId`, tipos `PublicTreeListItem` con campo **`treeId`** del wire; rutas SPA `/ejemplares` (no son contrato HTTP).
 
@@ -210,7 +210,7 @@ Lista completa (catálogo + media): ADR-0007.
 ### API y código
 - [ ] **C2** DTO JSON inglés homogéneo.
 - [ ] **C3** Mapeo DTO ↔ entidad documentado o evidente en assembler.
-- [ ] **D1** Paths `/species`, `/ejemplares`, … según ADR-0007.
+- [ ] **D1** Paths API `/species`, `/trees`, … según ADR-0007 y [openapi.yaml](../api/openapi.yaml).
 - [ ] **E1** Tipos frontend: props = OpenAPI; nombres de interfaz TS pueden usar prefijo `Tree` (§8.2).
 
 ### Documentación y Git
@@ -223,7 +223,7 @@ Lista completa (catálogo + media): ADR-0007.
 
 1. Columna SQL nueva en inglés.
 2. Mismo schema con `nombreComun` y `commonName`, o `speciesId` y `especieId`.
-3. `treeId` o `/trees` en **contrato**; `arbol` en BD o Kafka; `catalog.arbol.evento`.
+3. `ejemplarId` o rutas `/api/.../ejemplares` en **contrato**; `arbol` en BD o Kafka; `catalog.arbol.evento`.
 4. Mezclar `Tree*` y `Ejemplar*` en el **mismo** módulo frontend (elegir convención §8).
 5. Traducir columnas SQL al inglés “porque el código es en inglés”.
 6. Secreto en `VITE_*`.

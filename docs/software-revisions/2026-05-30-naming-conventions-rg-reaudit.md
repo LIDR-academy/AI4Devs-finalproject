@@ -54,19 +54,19 @@ rg -n "treeId|/trees/|catalog\.arbol|arbolId" --glob "*.{java,ts,vue,yaml,proper
 
 ---
 
-## 2. Legacy prohibido (`treeId`, `/trees/`, `catalog.arbol`, `arbolId`)
+## 2. Legacy prohibido (`ejemplarId`, `/api/.../ejemplares`, `catalog.arbol`, `arbolId`)
 
 | Patrón | Código productivo | Notas |
 |--------|-------------------|--------|
 | `catalog.arbol` / `arbolId` | **0** en `services/**`, `frontend/src/**`, `*.properties` | Kafka: `catalog.ejemplar.evento`, `ejemplar-evento-topic` |
-| `/trees/` en rutas API o router | **0** | Rutas `/ejemplares`, `/api/catalog/trees`, media `/ejemplares/{treeId}` |
-| `treeId` en contrato | **0** en tipos/OpenAPI/DTO | |
+| `/api/.../ejemplares` en rutas API | **0** | Rutas SPA `/ejemplares`, `/api/catalog/trees`, media `/api/media/trees/{treeId}/...` |
+| `ejemplarId` en contrato HTTP | **0** en tipos/OpenAPI/DTO | Wire **`treeId`** según OpenAPI |
 
 ### Hallazgos no bloqueantes (capa técnica / UI)
 
 | ID | Severidad | Ubicación | Descripción |
 |----|-----------|-----------|-------------|
-| RG-1 | Aceptable | `frontend/src/views/TreesListView.vue`, `MyTreesListView.vue` | Función interna `getTreeCardImageSrc(treeId)`; el valor pasado es `tree.ejemplarId` |
+| RG-1 | Aceptable | `frontend/src/views/TreesListView.vue`, `MyTreesListView.vue` | Función interna `getTreeCardImageSrc(treeId)`; el valor pasado es `tree.treeId` |
 | RG-2 | Aceptable | Componentes `TreePhoto*`, `TreeLocation*`, composables `createTreeFormValidation`, `treePhotoFileValidation` | Nombres de capa UI en inglés; sin impacto en contrato |
 | RG-3 | Cerrado | `TreeDeleteServiceTest` (métodos en inglés; sin `arbol`) | Renombrado |
 | RG-4 | Doc | `readme.md`, `HU-008` | Cita obsoleta `NoOpTreeEnrichmentDeletionPort` → corregido a `NoOpEjemplarEnrichmentDeletionPort` |

@@ -8,4 +8,10 @@ public interface EspecieListRow {
   String getNombreComun();
 
   String getNombreCientifico();
+
+  Long getGeneroId();
+
+  String getGeneroNombreComun();
+
+  String getGeneroNombreCientifico();
 }

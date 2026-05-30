@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import MtlConfirmDialog from '@/components/MtlConfirmDialog.vue'
 import MtlFormDialog from '@/components/MtlFormDialog.vue'
+import PageBackLink from '@/components/layout/PageBackLink.vue'
 import { useAdminTaxonomyMasters } from '@/composables/useAdminTaxonomyMasters'
 
 const route = useRoute()
@@ -83,27 +84,33 @@ onMounted(() => {
 </script>
 
 <template>
-  <section class="card admin-masters">
-    <h2>{{ t(pageTitleKey) }}</h2>
+  <div class="catalog-page admin-masters-page">
+    <header class="page-header">
+      <PageBackLink :to="{ name: 'home' }">{{ t('navigation.home') }}</PageBackLink>
+      <h1 class="page-header__title">{{ t(pageTitleKey) }}</h1>
+      <p class="page-header__description">{{ t('adminMasters.description') }}</p>
+    </header>
 
-    <p v-if="isLoading" class="muted">{{ t('adminMasters.loading') }}</p>
+    <p v-if="isLoading" class="status-note">{{ t('adminMasters.loading') }}</p>
     <p v-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
-    <output v-if="statusMessage" class="success field-full" aria-live="polite">{{ statusMessage }}</output>
+    <output v-if="statusMessage" class="success tree-form-page__flash" aria-live="polite">{{
+      statusMessage
+    }}</output>
 
     <div v-if="!isLoading" class="admin-masters-layout">
-      <p class="admin-masters-section-title">{{ t('adminMasters.listTitle') }}</p>
+      <h2 class="tree-detail-panel__title admin-masters-section-title">{{ t('adminMasters.listTitle') }}</h2>
 
       <p v-if="isSpeciesListLoading" class="status-note">{{ t('adminMasters.loadingSpecies') }}</p>
 
       <template v-else-if="isSpeciesListReady">
         <div class="mtl-admin-list-toolbar">
-          <p class="trees-list-results-count muted">
+          <p class="catalog-results-count muted">
             {{ t('adminMasters.resultsCount', { count: speciesTotalElements }) }}
           </p>
           <div class="mtl-admin-list-toolbar__actions">
             <button
               type="button"
-              class="btn btn-primary btn-sm trees-filter-btn"
+              class="btn btn-primary-soft btn-sm"
               @click="openCreateSpecies"
             >
               {{ t('adminMasters.actions.create') }}
@@ -113,50 +120,58 @@ onMounted(() => {
 
         <p v-if="!hasSpeciesRows && !errorMessage" class="status-note">{{ t('adminMasters.emptyList') }}</p>
 
-        <div v-else-if="hasSpeciesRows" class="mtl-admin-table-wrap">
-          <table class="mtl-admin-table" :aria-label="t('adminMasters.listTitle')">
-            <thead>
-              <tr>
-                <th scope="col">{{ t('adminMasters.columns.species') }}</th>
-                <th scope="col">{{ t('adminMasters.columns.actions') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="item in speciesList" :key="item.id">
-                <td>{{ item.label }}</td>
-                <td class="mtl-admin-table__actions">
-                  <button
-                    type="button"
-                    class="btn btn-primary btn-sm trees-filter-btn"
-                    :disabled="editingSpeciesIdLoading === item.id || isDeleting"
-                    @click="startEdit(item)"
-                  >
-                    {{ t('adminMasters.actions.edit') }}
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-danger btn-sm trees-filter-btn"
-                    :disabled="isDeleting"
-                    @click="askDelete(item)"
-                  >
-                    {{ t('adminMasters.actions.delete') }}
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div v-else-if="hasSpeciesRows" class="catalog-toolbar__panel admin-masters-table-panel">
+          <div class="mtl-admin-table-wrap">
+            <table class="mtl-admin-table" :aria-label="t('adminMasters.listTitle')">
+              <thead>
+                <tr>
+                  <th scope="col">{{ t('adminMasters.columns.species') }}</th>
+                  <th scope="col">{{ t('adminMasters.columns.genus') }}</th>
+                  <th scope="col">{{ t('adminMasters.columns.actions') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="item in speciesList" :key="item.id">
+                  <td>{{ item.label }}</td>
+                  <td>{{ item.genusLabel }}</td>
+                  <td class="mtl-admin-table__actions">
+                    <button
+                      type="button"
+                      class="btn btn-outline-primary btn-sm"
+                      :disabled="editingSpeciesIdLoading === item.id || isDeleting"
+                      @click="startEdit(item)"
+                    >
+                      {{ t('adminMasters.actions.edit') }}
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-outline-danger btn-sm"
+                      :disabled="isDeleting"
+                      @click="askDelete(item)"
+                    >
+                      {{ t('adminMasters.actions.delete') }}
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <nav v-if="hasSpeciesRows" class="trees-pagination" :aria-label="t('adminMasters.pagination.navLabel')">
+        <nav
+          v-if="hasSpeciesRows"
+          class="catalog-pagination"
+          :aria-label="t('adminMasters.pagination.navLabel')"
+        >
           <button
-            class="btn trees-pagination-btn trees-pagination-btn--prev"
+            class="btn btn-secondary btn-sm"
             type="button"
             :disabled="!hasSpeciesPrevious || isSpeciesListLoading"
             @click="goPreviousSpeciesPage()"
           >
             {{ t('adminMasters.pagination.previous') }}
           </button>
-          <span class="trees-pagination-status">
+          <span class="catalog-pagination__status">
             {{
               t('adminMasters.pagination.pageStatus', {
                 current: displayCurrentPage,
@@ -165,7 +180,7 @@ onMounted(() => {
             }}
           </span>
           <button
-            class="btn trees-pagination-btn trees-pagination-btn--next"
+            class="btn btn-secondary btn-sm"
             type="button"
             :disabled="!hasSpeciesNext || isSpeciesListLoading"
             @click="goNextSpeciesPage()"
@@ -353,18 +368,5 @@ onMounted(() => {
       :confirm-danger="true"
       @confirm="confirmDelete"
     />
-  </section>
+  </div>
 </template>
-
-<style scoped>
-.admin-masters-layout {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.admin-masters-section-title {
-  font-weight: 600;
-  margin: 0;
-}
-</style>

@@ -12,7 +12,7 @@
 
 **Estado del ticket:** columna **Estado** en cada fila; valores recomendados **Pendiente** (por defecto), **En curso**, **Hecho**. Actualízala al cerrar o arrancar trabajo.
 
-**Contexto de equipo:** un ingeniero/a **full-stack** con HTML/CSS sólidos; stack y arquitectura en [readme.md](../../readme.md). Se asume **HU-001** (auth OIDC/JWT) y **HU-005** (alta de árbol con coordenadas y mapa en frontend) en estado utilizable para poder cerrar este flujo.
+**Contexto de equipo:** un ingeniero/a **full-stack** con HTML/CSS sólidos; stack y arquitectura en [readme.md](../../readme.md). Se asume **HU-001** (auth OIDC/JWT) y **HU-005** (Alta de ejemplar con coordenadas y mapa en frontend) en estado utilizable para poder cerrar este flujo.
 
 **Objetivo de este desglose:** cerrar un vertical de **subida y gestión** de fotografías (no consulta completa; lectura en **HU-014**) con `media-service` + MinIO + gateway: subida múltiple (máx. 10), validaciones MIME/tamaño (20 MB por defecto por foto), marca de foto principal (primera seleccionada), previsualización con EXIF en alta (**HU-005**) y **alta/baja** en edición de ficha (**HU-008**, **TASK-HU-006-14**).
 
@@ -81,7 +81,7 @@ flowchart LR
 |----|--------|-------------------|--------|
 | **TASK-HU-006-08** | Componente de selección y previsualización antes de subida | Crear/completar componente UI en frontend para seleccionar múltiples imágenes (máx. 10), mostrar previsualización local y orden de selección; la primera se marca visualmente como principal. Validaciones cliente para MIME y tamaño. | Hecho |
 | **TASK-HU-006-09** | Lectura EXIF y sobrescritura de coordenadas | Al cargar la primera imagen, leer EXIF en cliente; si lat/lon son válidas, sobrescribir los campos de coordenadas de la pantalla de alta y actualizar marcador en mapa. Manejar casos sin EXIF o EXIF inválido sin bloquear subida. | Hecho |
-| **TASK-HU-006-10** | Integración de subida con flujo de alta de árbol | Integrar el componente en la pantalla de alta (HU-005): solicitar presign, subir a MinIO y confirmar metadatos en `media-service` para el árbol correspondiente, con mensajes UX claros de éxito/error/reintento. | Hecho |
+| **TASK-HU-006-10** | Integración de subida con flujo de Alta de ejemplar | Integrar el componente en la pantalla de alta (HU-005): solicitar presign, subir a MinIO y confirmar metadatos en `media-service` para el árbol correspondiente, con mensajes UX claros de éxito/error/reintento. | Hecho |
 
 ### Calidad y documentación
 
@@ -110,7 +110,7 @@ Depende de que exista la pantalla de edición de ficha en **HU-008** (`/ejemplar
 ## Dependencias externas a esta HU
 
 - **HU-001:** autenticación OIDC/JWT y roles operativos.
-- **HU-005:** flujo de alta de árbol disponible para asociar fotos y reutilizar mapa/coordenadas.
+- **HU-005:** flujo de Alta de ejemplar disponible para asociar fotos y reutilizar mapa/coordenadas.
 - **HU-008:** **cerrada** — pantalla de edición (`/ejemplares/:id/edit`) y listado **Mis árboles** operativos para **TASK-HU-006-14**.
 - **Infra Compose:** MinIO, Postgres y gateway operativos según [infra/compose/README.md](../../infra/compose/README.md).
 

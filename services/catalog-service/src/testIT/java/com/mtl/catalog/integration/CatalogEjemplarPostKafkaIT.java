@@ -40,7 +40,7 @@ import org.testcontainers.utility.DockerImageName;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Postgres + Kafka (Docker). POST alta de árbol y un mensaje {@code EJEMPLAR_CREADO} en
+ * Postgres + Kafka (Docker). POST Alta de ejemplar y un mensaje {@code EJEMPLAR_CREADO} en
  * {@code catalog.ejemplar.evento}.
  */
 @Tag("integration")

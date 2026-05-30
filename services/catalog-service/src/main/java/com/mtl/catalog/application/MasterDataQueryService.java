@@ -42,7 +42,7 @@ public class MasterDataQueryService {
   @Transactional(readOnly = true)
   @Cacheable(
       cacheNames = CatalogCacheConfig.CACHE_SPECIES_UNPAGED,
-      key = "'all'",
+      key = "'by-common-label'",
       condition = "#unpaged && (#q == null || #q.isBlank())")
   public MasterDataPageResponse<SpeciesListItemDto> listSpecies(
       int page, int size, String q, boolean unpaged) {

@@ -20,7 +20,7 @@ const navProfile = computed(() =>
 )
 const canShowLogin = computed(() => navProfile.value.canShowLogin)
 
-const headingText = computed(() => {
+const pageTitle = computed(() => {
   if (isAuthenticated.value) {
     return homeTitle.value
   }
@@ -30,110 +30,30 @@ const headingText = computed(() => {
   return t('appShell.brand')
 })
 
-const headingDesc = computed(() => {
+const pageDescription = computed(() => {
   if (isAuthenticated.value) {
     return homeDescription.value
   }
   if (auth.isReady.value) {
-    return t('appShell.tagline')
+    return t('home.visitorHeroDescription')
   }
   return t('home.authInitializing')
 })
-
-const mastheadVariant = computed(() => {
-  if (!auth.isReady.value) {
-    return 'loading' as const
-  }
-  if (isAuthenticated.value && isAdmin.value) {
-    return 'admin' as const
-  }
-  if (isAuthenticated.value) {
-    return 'collaborator' as const
-  }
-  return 'public' as const
-})
-
-/** Ilustraciones en /public: mapa árbol (visitante), unDraw adaptados (colaborador/admin) */
-const dashboardHeroIllustrationSrc = computed(() => {
-  const base = import.meta.env.BASE_URL
-  if (mastheadVariant.value === 'public') {
-    return `${base}illustrations/tree_map_illustration_clean.svg`
-  }
-  if (mastheadVariant.value === 'collaborator') {
-    return `${base}illustrations/undraw-among-nature.svg`
-  }
-  if (mastheadVariant.value === 'admin') {
-    return `${base}illustrations/undraw-server.svg`
-  }
-  return ''
-})
-
 </script>
 
 <template>
-  <section class="card home-card home-dashboard">
-    <header
-      v-if="mastheadVariant === 'loading'"
-      class="home-dashboard__masthead home-dashboard__masthead--loading"
-    >
-      <div class="home-dashboard__masthead-text">
-        <h2 id="home-heading-loading" class="home-title">{{ headingText }}</h2>
-        <p class="muted home-description">{{ headingDesc }}</p>
-      </div>
-    </header>
-
-    <header
-      v-else-if="mastheadVariant === 'public'"
-      class="home-dashboard-hero home-dashboard-hero--public"
-    >
-      <div class="home-dashboard-hero__copy">
-        <h2 id="home-visitor-heading" class="home-title">{{ t('home.publicSectionTitle') }}</h2>
-        <p class="muted home-description">{{ t('home.visitorHeroDescription') }}</p>
-      </div>
-      <figure class="home-dashboard-hero__figure">
-        <img
-          class="home-dashboard-hero__img"
-          :src="dashboardHeroIllustrationSrc"
-          width="220"
-          height="162"
-          :alt="t('home.dashboardHeroIllustrationAlt')"
-          decoding="async"
-          fetchpriority="low"
-        />
-      </figure>
-    </header>
-
-    <header
-      v-else
-      class="home-dashboard-hero"
-      :class="{
-        'home-dashboard-hero--collaborator': mastheadVariant === 'collaborator',
-        'home-dashboard-hero--admin': mastheadVariant === 'admin',
-      }"
-    >
-      <div class="home-dashboard-hero__copy">
-        <h2 id="home-heading-panel" class="home-title">{{ headingText }}</h2>
-        <p class="muted home-description">{{ headingDesc }}</p>
-      </div>
-      <figure class="home-dashboard-hero__figure">
-        <img
-          class="home-dashboard-hero__img"
-          :src="dashboardHeroIllustrationSrc"
-          width="220"
-          height="162"
-          :alt="t('home.dashboardHeroIllustrationAlt')"
-          decoding="async"
-          fetchpriority="low"
-        />
-      </figure>
+  <div class="home-page">
+    <header class="page-header">
+      <h1 class="page-header__title">{{ pageTitle }}</h1>
+      <p class="page-header__description">{{ pageDescription }}</p>
     </header>
 
     <nav v-if="isAuthenticated" class="home-dashboard__body" :aria-label="t('home.panelNavAria')">
       <template v-if="isAdmin">
         <section class="home-dashboard__section" :aria-labelledby="'home-collab-heading'">
-          <h3 id="home-collab-heading" class="home-dashboard__section-title">
+          <h2 id="home-collab-heading" class="home-dashboard__section-title">
             {{ t('home.collaboratorSectionTitle') }}
-          </h3>
+          </h2>
           <div class="home-dashboard__grid">
             <HomeDashboardTile
               :to="{ name: 'ejemplares-new' }"
@@ -157,10 +77,13 @@ const dashboardHeroIllustrationSrc = computed(() => {
           </div>
         </section>
 
-        <section class="home-dashboard__section home-dashboard__section--follow" :aria-labelledby="'home-admin-heading'">
-          <h3 id="home-admin-heading" class="home-dashboard__section-title">
+        <section
+          class="home-dashboard__section home-dashboard__section--follow"
+          :aria-labelledby="'home-admin-heading'"
+        >
+          <h2 id="home-admin-heading" class="home-dashboard__section-title">
             {{ t('home.adminSectionTitle') }}
-          </h3>
+          </h2>
           <div class="home-dashboard__grid">
             <HomeDashboardTile
               :to="{ name: 'admin-masters' }"
@@ -186,9 +109,9 @@ const dashboardHeroIllustrationSrc = computed(() => {
 
       <template v-else>
         <section class="home-dashboard__section" :aria-labelledby="'home-collab-only-heading'">
-          <h3 id="home-collab-only-heading" class="home-dashboard__section-title">
+          <h2 id="home-collab-only-heading" class="home-dashboard__section-title">
             {{ t('home.collaboratorSectionTitle') }}
-          </h3>
+          </h2>
           <div class="home-dashboard__grid">
             <HomeDashboardTile
               :to="{ name: 'ejemplares-new' }"
@@ -215,7 +138,10 @@ const dashboardHeroIllustrationSrc = computed(() => {
     </nav>
 
     <nav v-else-if="auth.isReady" class="home-dashboard__body" :aria-label="t('home.panelNavAria')">
-      <section class="home-dashboard__section" aria-labelledby="home-visitor-heading">
+      <section class="home-dashboard__section" aria-labelledby="home-visitor-actions-heading">
+        <h2 id="home-visitor-actions-heading" class="home-dashboard__section-title">
+          {{ t('home.publicSectionTitle') }}
+        </h2>
         <div class="home-dashboard__grid home-dashboard__grid--public">
           <HomeDashboardTile
             :to="{ name: 'ejemplares-list' }"
@@ -264,5 +190,5 @@ const dashboardHeroIllustrationSrc = computed(() => {
         </div>
       </section>
     </nav>
-  </section>
+  </div>
 </template>

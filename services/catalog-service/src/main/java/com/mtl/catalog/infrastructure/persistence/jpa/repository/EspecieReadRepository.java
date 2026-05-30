@@ -18,8 +18,11 @@ public interface EspecieReadRepository extends EspecieRepository {
   @Query(
       value =
           """
-          SELECT e.especie_id AS id, e.nombre_comun AS nombreComun, e.nombre_cientifico AS nombreCientifico
+          SELECT e.especie_id AS id, e.nombre_comun AS nombreComun, e.nombre_cientifico AS nombreCientifico,
+                 e.genero_id AS generoId,
+                 g.nombre_comun AS generoNombreComun, g.nombre_cientifico AS generoNombreCientifico
           FROM catalog.especie e
+          INNER JOIN catalog.genero g ON g.genero_id = e.genero_id
           WHERE (
             CASE WHEN :filter = false THEN true
             ELSE (
@@ -28,7 +31,8 @@ public interface EspecieReadRepository extends EspecieRepository {
             )
             END
           )
-          ORDER BY e.nombre_cientifico ASC
+          ORDER BY lower(coalesce(nullif(trim(e.nombre_comun), ''), e.nombre_cientifico)) ASC,
+                   lower(e.nombre_cientifico) ASC
           """,
       countQuery =
           """
@@ -54,6 +58,9 @@ public interface EspecieReadRepository extends EspecieRepository {
         row ->
             new SpeciesListItemDto(
                 row.getId(),
-                SpeciesLabelFormatter.format(row.getNombreComun(), row.getNombreCientifico())));
+                SpeciesLabelFormatter.format(row.getNombreComun(), row.getNombreCientifico()),
+                row.getGeneroId(),
+                SpeciesLabelFormatter.format(
+                    row.getGeneroNombreComun(), row.getGeneroNombreCientifico())));
   }
 }

@@ -179,7 +179,7 @@ function onFilesSelected(event: Event): void {
 
 <template>
   <section class="photo-upload-block">
-    <h3 class="photo-upload-title">{{ t('treeForm.photos.title') }}</h3>
+    <h2 class="tree-detail-panel__title photo-upload-title">{{ t('treeForm.photos.title') }}</h2>
     <p class="photo-upload-help">
       {{
         t('treeForm.photos.help', {
@@ -200,7 +200,7 @@ function onFilesSelected(event: Event): void {
         :aria-label="t('treeForm.photos.inputAriaLabel')"
         @change="onFilesSelected"
       />
-      <label class="btn btn-secondary photo-file-choose-label" :for="fileInputId">
+      <label class="btn btn-secondary btn-sm photo-file-choose-label" :for="fileInputId">
         {{ t('treeForm.photos.chooseFiles') }}
       </label>
       <span v-if="selectedCount > 0" class="photo-file-summary" aria-live="polite">
@@ -230,7 +230,7 @@ function onFilesSelected(event: Event): void {
             {{ t('treeForm.photos.mainBadge') }}
           </span>
         </div>
-        <button class="btn btn-secondary" type="button" @click="removePhotoById(photo.id)">
+        <button class="btn btn-outline-danger btn-sm" type="button" @click="removePhotoById(photo.id)">
           {{ t('treeForm.photos.remove') }}
         </button>
       </li>
@@ -246,12 +246,12 @@ function onFilesSelected(event: Event): void {
 }
 
 .photo-upload-title {
-  margin: 0 0 0.35rem;
+  margin: 0 0 var(--space-2);
 }
 
 .photo-upload-help {
   margin: 0 0 0.65rem;
-  font-size: 0.92rem;
+  font-size: 0.9rem;
 }
 
 .photo-file-toolbar {
@@ -279,10 +279,11 @@ function onFilesSelected(event: Event): void {
 .photo-file-choose-label {
   margin: 0;
   cursor: pointer;
+  font-size: 0.9rem;
 }
 
 .photo-file-summary {
-  font-size: 0.92rem;
+  font-size: 0.9rem;
   color: var(--muted, #5c667a);
 }
 

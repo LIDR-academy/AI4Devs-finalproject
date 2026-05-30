@@ -31,7 +31,8 @@ public interface GeneroRepository extends JpaRepository<Genero, Long> {
             )
             END
           )
-          ORDER BY g.nombre_cientifico ASC
+          ORDER BY lower(coalesce(nullif(trim(g.nombre_comun), ''), g.nombre_cientifico)) ASC,
+                   lower(g.nombre_cientifico) ASC
           """,
       countQuery =
           """

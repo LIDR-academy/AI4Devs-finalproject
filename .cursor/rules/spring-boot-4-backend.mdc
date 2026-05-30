@@ -37,7 +37,7 @@ Al generar código nuevo, **no** mezclar contextos (p. ej. clases de `catalog` d
 7. **`…infrastructure.persistence.jpa…`** / **`…mongo…`** — ver **Persistencia** y [mongo-hybrid.mdc](mongo-hybrid.mdc) si aplica.
 8. **`…util`** — helpers sin estado; no sustituir `application`.
 
-**catalog — alta de árbol y auditoría R3:** [ADR-0004](../../docs/adr/0004-catalog-rest-write-and-audit.md).
+**catalog — Alta de ejemplar y auditoría R3:** [ADR-0004](../../docs/adr/0004-catalog-rest-write-and-audit.md).
 
 Tests: **`src/test/java`** (`*Test`, Surefire), **`src/testIT/java`** (`*IT`, Failsafe) según el padre Maven en `services/pom.xml` y [docs/engineering/testing-java.md](../../docs/engineering/testing-java.md). Los IT suelen vivir bajo **`com.mtl.<contexto>.integration`** (y `…integration.support`): esa convención **no** forma parte de la lista blanca de `src/main/java` y **no** debe usarse para código de producción (`src/main/java`).
 

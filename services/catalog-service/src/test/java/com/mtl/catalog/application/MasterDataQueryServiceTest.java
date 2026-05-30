@@ -36,7 +36,9 @@ class MasterDataQueryServiceTest {
   @Test
   void listSpecies_unpaged_usaTotalElementsCoherenteConContenidoDevuelto() {
     List<SpeciesListItemDto> content =
-        List.of(new SpeciesListItemDto(1L, "Encina"), new SpeciesListItemDto(2L, "Olivo"));
+        List.of(
+            new SpeciesListItemDto(1L, "Encina", 10L, "Robles (Quercus)"),
+            new SpeciesListItemDto(2L, "Olivo", 20L, "Olivo (Olea)"));
     when(especieReadRepository.search("a", PageRequest.of(0, EspecieRepository.MAX_UNPAGED)))
         .thenReturn(new PageImpl<>(content, PageRequest.of(0, 2), 10_000));
 

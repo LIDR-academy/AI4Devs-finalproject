@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 /**
  * Auditoría JPA: {@code creado_por} / {@code modificado_por} como {@code usuario_app_id} del JWT
  * actual (subject OIDC → fila {@code usuario_app}). Debe existir fila antes de persistir entidades
- * auditadas en la misma transacción (p. ej. tras {@code ensureUsuarioApp} en alta de árbol).
+ * auditadas en la misma transacción (p. ej. tras {@code ensureUsuarioApp} en Alta de ejemplar).
  */
 @Component("catalogUsuarioAppAuditorAware")
 public class CatalogUsuarioAppAuditorAware implements AuditorAware<UsuarioApp> {

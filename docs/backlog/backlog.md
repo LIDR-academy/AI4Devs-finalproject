@@ -24,7 +24,7 @@ MyTreeLibrary es una plataforma web para aficionados a la naturaleza que permite
 | **Administración**          | Maestros taxonómicos (**familia**, **género**, **especie**) con mantenimiento solo rol **ADMIN** (UC-07, R8, **HU-011**); catálogo de **provincias** por semillas Flyway (consulta en fichas, sin CRUD admin en MVP); gestión de suscripciones (UC-08). |
 
 
-**Dependencia típica de alto nivel:** maestros **taxonómicos** mantenibles por administración (**HU-011**) y semillas iniciales (incl. **provincias** en Flyway) necesarios para cumplir R1/R8 en alta de árbol (Catálogo); suscripción (Notificaciones) y consulta pública pueden avanzar en paralelo con el catálogo una vez exista el contrato OpenAPI y el modelo compartido.
+**Dependencia típica de alto nivel:** maestros **taxonómicos** mantenibles por administración (**HU-011**) y semillas iniciales (incl. **provincias** en Flyway) necesarios para cumplir R1/R8 en Alta de ejemplar (Catálogo); suscripción (Notificaciones) y consulta pública pueden avanzar en paralelo con el catálogo una vez exista el contrato OpenAPI y el modelo compartido.
 
 ---
 

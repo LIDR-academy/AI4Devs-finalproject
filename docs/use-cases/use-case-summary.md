@@ -39,7 +39,7 @@ Para visualizarlo: extensión PlantUML en el IDE, [plantuml.com](https://www.pla
 |----------|------------------|
 | **Generalización de actores** | Colaborador → Público; ADMIN → Colaborador (el especializado hereda el comportamiento del general). |
 | **«extend»** | UC-05 extiende UC-03 y UC-04 en puntos de extensión donde el usuario aporta o revisa imagen para identificación asistida. |
-| **«include»** | UC-03 incluye UC-09: tras el alta de árbol se dispara el proceso de notificación (puede ser no-op si no hay destinatarios). UC-04 **no** incluye UC-09 en el MVP (las modificaciones no generan correo a suscriptores). |
+| **«include»** | UC-03 incluye UC-09: tras el Alta de ejemplar se dispara el proceso de notificación (puede ser no-op si no hay destinatarios). UC-04 **no** incluye UC-09 en el MVP (las modificaciones no generan correo a suscriptores). |
 
 ## Reglas y supuestos explícitos
 

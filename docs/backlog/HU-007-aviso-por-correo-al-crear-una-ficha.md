@@ -33,7 +33,7 @@ Como persona suscrita por correo, quiero recibir un aviso cuando exista el alta 
 
 #### Incluye
 
-- Consumo de eventos desde Kafka topic `catalog.ejemplar.evento` publicados por el alta de árbol.
+- Consumo de eventos desde Kafka topic `catalog.ejemplar.evento` publicados por el Alta de ejemplar.
 - Filtrado de `tipo_evento` para MVP: solo `EJEMPLAR_CREADO` dispara flujo de notificación.
 - Persistencia mínima en `notification-service` para registrar evento consumido e idempotencia.
 - Resolución de suscriptores **ACTIVA** y envío de correo con **texto fijo o cuerpo mínimo** (sin sistema de plantillas en el MVP).
@@ -75,7 +75,7 @@ Como persona suscrita por correo, quiero recibir un aviso cuando exista el alta 
 
 Backlog `HU-007`, [HU-007-ticket-breakdown.md](HU-007-ticket-breakdown.md), [kafka-events.md](../events/kafka-events.md), reglas R7 y UC-09; «suscriptor activo» = **`estado_suscripcion` = ACTIVA** ([data-model.md](../data-model/data-model.md) §2).
 
-### Escenario 1 — Notificación tras alta de árbol
+### Escenario 1 — Notificación tras Alta de ejemplar
 
 - **Dado que** existe al menos un suscriptor activo  
 - **Cuando** `notification-service` consume un evento válido `EJEMPLAR_CREADO` desde `catalog.ejemplar.evento`  

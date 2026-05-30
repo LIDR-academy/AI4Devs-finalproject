@@ -5,6 +5,13 @@ export interface TaxonomyMasterListItem {
   label: string
 }
 
+export interface TaxonomySpeciesListItem {
+  id: number
+  label: string
+  genusId: number
+  genusLabel: string
+}
+
 export interface TaxonomyGenusListItem {
   id: number
   label: string
@@ -92,7 +99,7 @@ export async function fetchAdminGenera(
 
 export async function fetchAdminSpeciesList(
   options: { page?: number; size?: number; unpaged?: boolean; signal?: AbortSignal } = {},
-): Promise<TaxonomyMasterPage<TaxonomyMasterListItem>> {
+): Promise<TaxonomyMasterPage<TaxonomySpeciesListItem>> {
   const { page = 0, size = 20, unpaged = false, signal } = options
   return apiFetch(`${CATALOG}/species`, {
     query: { unpaged, page, size },

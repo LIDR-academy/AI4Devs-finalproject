@@ -92,7 +92,7 @@ class CatalogSpeciesControllerWebMvcTest {
     when(masterDataQueryService.listSpecies(eq(0), eq(20), eq("cina"), eq(false)))
         .thenReturn(
             MasterDataPageResponse.of(
-                List.of(new SpeciesListItemDto(1L, "Encina (Quercus ilex)")),
+                List.of(new SpeciesListItemDto(1L, "Encina (Quercus ilex)", 10L, "Robles (Quercus)")),
                 1,
                 0,
                 20,
@@ -107,6 +107,8 @@ class CatalogSpeciesControllerWebMvcTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.content[0].id").value(1))
         .andExpect(jsonPath("$.content[0].label").value("Encina (Quercus ilex)"))
+        .andExpect(jsonPath("$.content[0].genusId").value(10))
+        .andExpect(jsonPath("$.content[0].genusLabel").value("Robles (Quercus)"))
         .andExpect(jsonPath("$.unpaged").value(false));
   }
 

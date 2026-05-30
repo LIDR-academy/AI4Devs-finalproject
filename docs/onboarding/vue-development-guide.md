@@ -135,7 +135,7 @@ Un **composable** es una función `useAlgo()` que encapsula estado y comportamie
 
 ### 5.1 Patrón que seguimos en el proyecto
 
-Separa en **tres piezas** cuando una pantalla crece (como el alta de árbol):
+Separa en **tres piezas** cuando una pantalla crece (como el Alta de ejemplar):
 
 | Pieza | Qué hace | Ejemplo en repo |
 |-------|----------|------------------|

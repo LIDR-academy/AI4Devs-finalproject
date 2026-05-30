@@ -13,6 +13,7 @@ import {
   type TaxonomyGenusListItem,
   type TaxonomyMasterListItem,
   type TaxonomyMasterPage,
+  type TaxonomySpeciesListItem,
 } from '@/services/catalog/adminTaxonomy'
 import { HttpError, NetworkError } from '@/services/http/apiClient'
 import {
@@ -59,7 +60,7 @@ export function useAdminTaxonomyMasters() {
   const errorMessage = ref('')
   const statusMessage = ref('')
 
-  const speciesList = ref<TaxonomyMasterListItem[]>([])
+  const speciesList = ref<TaxonomySpeciesListItem[]>([])
   const generaList = ref<TaxonomyGenusListItem[]>([])
   const familiesList = ref<TaxonomyMasterListItem[]>([])
 
@@ -92,7 +93,7 @@ export function useAdminTaxonomyMasters() {
   const familyModalCommon = ref('')
 
   const confirmDeleteOpen = ref(false)
-  const deleteTarget = ref<TaxonomyMasterListItem | null>(null)
+  const deleteTarget = ref<TaxonomySpeciesListItem | null>(null)
   const isSavingSpecies = ref(false)
   const isSavingGenus = ref(false)
   const isSavingFamily = ref(false)
@@ -111,7 +112,7 @@ export function useAdminTaxonomyMasters() {
     return mapAdminTaxonomyError(error, t)
   }
 
-  function applySpeciesPageResponse(res: TaxonomyMasterPage<TaxonomyMasterListItem>): void {
+  function applySpeciesPageResponse(res: TaxonomyMasterPage<TaxonomySpeciesListItem>): void {
     speciesList.value = res.content
     speciesTotalElements.value = Number(res.totalElements)
     speciesTotalPages.value = Math.max(0, res.totalPages)
@@ -221,7 +222,7 @@ export function useAdminTaxonomyMasters() {
     formCommonName.value = ''
   }
 
-  async function startEdit(item: TaxonomyMasterListItem): Promise<void> {
+  async function startEdit(item: TaxonomySpeciesListItem): Promise<void> {
     if (editingSpeciesIdLoading.value != null) {
       return
     }
@@ -276,7 +277,7 @@ export function useAdminTaxonomyMasters() {
     }
   }
 
-  function askDelete(item: TaxonomyMasterListItem): void {
+  function askDelete(item: TaxonomySpeciesListItem): void {
     deleteTarget.value = item
     confirmDeleteOpen.value = true
   }

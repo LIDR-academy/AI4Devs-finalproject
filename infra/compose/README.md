@@ -119,7 +119,7 @@ El comando **`start-dev`** de Keycloak está pensado para **entorno local**: con
 | Web origins | `http://localhost:5173`, `http://127.0.0.1:5173`, `https://oauth.pstmn.io` |
 | Roles de realm | `COLABORADOR`, `ADMIN` (asignar a usuarios desde la consola de administración) |
 | Scopes OIDC (`mtl-spa`) | `fullScopeAllowed: true` en dev: el realm importado hereda los *default client scopes* estándar de Keycloak (incluye **`roles`** → `realm_access.roles` en el access token, y **`profile`** / **`email`**) |
-| Uso con **catalog-service** (`POST /api/catalog/ejemplares`) | El access token debe traer al menos **`email`** y datos de perfil para `nombre` (`name` o `given_name`/`family_name`). En la SPA OIDC, pedir explícitamente `scope=openid profile email` al obtener el token (véase [ADR-0004](../../docs/adr/0004-catalog-rest-write-and-audit.md)). |
+| Uso con **catalog-service** (`POST /api/catalog/trees`) | El access token debe traer al menos **`email`** y datos de perfil para `nombre` (`name` o `given_name`/`family_name`). En la SPA OIDC, pedir explícitamente `scope=openid profile email` al obtener el token (véase [ADR-0004](../../docs/adr/0004-catalog-rest-write-and-audit.md)). |
 | PKCE | Obligatorio **S256** (`pkce.code.challenge.method` en el cliente) |
 | Post-logout redirect | Mismos orígenes Vite que redirect URIs (`post.logout.redirect.uris` en el cliente) |
 

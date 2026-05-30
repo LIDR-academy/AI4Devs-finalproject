@@ -24,6 +24,6 @@ Antes de implementar o al revisar un cambio en **`services/`**, aplicar **en con
 
 **Excepciones de dominio:** lanzar desde **application** / **domain**; controller delega; mapeo HTTP en **`web.error`** (véase punto **1** / **2** y [spring-boot-4-backend.mdc](spring-boot-4-backend.mdc)).
 
-**catalog-service — `POST /api/catalog/ejemplares` y auditoría R3:** seguir [ADR-0004](../../docs/adr/0004-catalog-rest-write-and-audit.md) (JWT/`usuario_app`, claims, transacción con `AUDITORIA_CATALOGO`).
+**catalog-service — `POST /api/catalog/trees` y auditoría R3:** seguir [ADR-0004](../../docs/adr/0004-catalog-rest-write-and-audit.md) (JWT/`usuario_app`, claims, transacción con `AUDITORIA_CATALOGO`).
 
 Si una decisión no está cubierta por las reglas anteriores, preferir la opción **más simple** compatible con el MVP ([AGENTS.md](../../AGENTS.md)).

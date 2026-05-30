@@ -15,8 +15,11 @@ onMounted(async () => {
 </script>
 
 <template>
-  <section class="card">
-    <h2>{{ t('login.title') }}</h2>
-    <p class="muted">{{ t('login.description') }}</p>
-  </section>
+  <div class="auth-flow-page">
+    <header class="page-header auth-flow-page__header">
+      <h1 class="page-header__title">{{ t('login.title') }}</h1>
+      <p class="page-header__description">{{ t('login.description') }}</p>
+    </header>
+    <p class="status-note" role="status">{{ t('login.redirecting') }}</p>
+  </div>
 </template>

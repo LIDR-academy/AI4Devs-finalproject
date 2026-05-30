@@ -1,6 +1,7 @@
 export const es = {
   common: {
     cancel: 'Cancelar',
+    emptyValue: '—',
   },
   appShell: {
     brand: 'MyTreeLibrary',
@@ -8,10 +9,16 @@ export const es = {
   },
   navigation: {
     ariaLabel: 'Navegación principal',
+    pageBackNavAria: 'Volver a la pantalla anterior',
+    exploreSection: 'Explorar',
+    workspaceSection: 'Mi espacio',
+    adminSection: 'Administración',
+    openMenu: 'Abrir menú',
+    closeMenu: 'Cerrar menú',
     home: 'Inicio',
-    trees: 'Árboles',
+    trees: 'Catálogo',
     subscribe: 'Suscripción',
-    createTree: 'Alta de árbol',
+    createTree: 'Alta de ejemplar',
     myTrees: 'Mis árboles',
     adminMasters: 'Maestros',
     adminSubscriptions: 'Suscripciones',
@@ -70,10 +77,12 @@ export const es = {
   login: {
     title: 'Redirigiendo a Keycloak...',
     description: 'Te estamos enviando al inicio de sesión seguro.',
+    redirecting: 'Redirigiendo…',
   },
   authCallback: {
     title: 'Completando autenticación...',
     validating: 'Estamos validando tu sesión.',
+    processing: 'Procesando la respuesta del proveedor de identidad…',
     error: 'No se pudo completar el inicio de sesión.',
   },
   authGuardError: {
@@ -81,7 +90,7 @@ export const es = {
     descriptionSession: 'No hemos podido contactar con el proveedor de identidad o renovar tu sesión.',
     descriptionForbidden: 'Tu usuario no tiene permisos para acceder a esta pantalla.',
     retryCta: 'Reintentar autenticación',
-    backHomeCta: 'Volver al inicio',
+    backHomeCta: 'Inicio',
     retryError: 'No se pudo iniciar la autenticación. Inténtalo de nuevo en unos segundos.',
   },
   subscriptionNew: {
@@ -97,7 +106,6 @@ export const es = {
     },
     submit: 'Suscribirme',
     submitting: 'Enviando…',
-    cancel: 'Volver al inicio',
     success: 'Te has suscrito correctamente con {email}.',
     subscribeAnother: 'Suscribir otro correo',
     errors: {
@@ -114,7 +122,7 @@ export const es = {
   },
   adminSubscriptions: {
     title: 'Gestión de suscripciones',
-    intro:
+    description:
       'Listado de correos suscritos a avisos del catálogo. Puedes pasar cada suscripción a cancelada o reactivarla; no se borran filas (MVP).',
     loading: 'Cargando suscripciones…',
     empty: 'No hay suscripciones que mostrar con el filtro actual.',
@@ -179,6 +187,8 @@ export const es = {
   },
   adminMasters: {
     title: 'Administración de maestros',
+    description:
+      'Consulta y mantén las especies del catálogo taxonómico. Desde aquí puedes crear, editar o eliminar fichas de especie.',
     loading: 'Cargando datos taxonómicos…',
     listTitle: 'Especies registradas',
     emptyList: 'No hay especies registradas todavía.',
@@ -186,6 +196,7 @@ export const es = {
     loadingSpecies: 'Cargando especies…',
     columns: {
       species: 'Especie',
+      genus: 'Género',
       actions: 'Acciones',
     },
     form: {
@@ -248,7 +259,7 @@ export const es = {
     default: {
       title: 'Pantalla pendiente',
       description: 'Esta sección está preparada como placeholder y se completará en su historia funcional.',
-      backHome: 'Volver al inicio',
+      backHome: 'Inicio',
     },
     treesList: {
       title: 'Listado de árboles publicados',
@@ -270,8 +281,9 @@ export const es = {
     },
   },
   treesList: {
-    title: 'Árboles de MyTreeLibrary',
-    loading: 'Cargando árboles publicados...',
+    title: 'Ejemplares de MyTreeLibrary',
+    description: 'Explora fichas publicadas y filtra por especie, municipio o provincia.',
+    loading: 'Cargando ejemplares publicados...',
     empty: 'No hay resultados para los filtros seleccionados.',
     imageUnavailable: 'Imagen no disponible',
     viewDetail: 'Ver detalle',
@@ -329,6 +341,7 @@ export const es = {
   },
   myTrees: {
     title: 'Mis árboles',
+    description: 'Gestiona tus fichas registradas y accede a la edición con los filtros habituales.',
     loading: 'Cargando tus fichas...',
     empty: 'No hay resultados para los filtros seleccionados.',
     edit: 'Editar',
@@ -368,9 +381,15 @@ export const es = {
   },
   treesDetail: {
     title: 'Detalle de árbol publicado',
+    description: 'Fotografías, mapa y datos publicados de la ficha.',
     backToList: 'Volver al listado',
     loading: 'Cargando detalle del árbol...',
     treeId: 'Ficha #{id}',
+    coordinatesPair: '{lat}, {lng}',
+    coordinatesWithAltitude: '{lat}, {lng} · {altitude} m',
+    sections: {
+      facts: 'Datos de la ficha',
+    },
     fields: {
       species: 'Especie',
       province: 'Provincia',
@@ -381,6 +400,7 @@ export const es = {
       longitude: 'Longitud',
       altitude: 'Altitud (m)',
       description: 'Descripción',
+      coordinates: 'Coordenadas',
     },
     map: {
       title: 'Ubicación en mapa',
@@ -424,8 +444,9 @@ export const es = {
   treeEdit: {
     title: 'Edición Id {id}',
     titleInvalid: 'Edición de árbol',
+    description: 'Modifica los datos de la ficha, la galería fotográfica y la ubicación en mapa.',
     loading: 'Cargando ficha para edición...',
-    backToList: 'Volver al listado',
+    backToList: 'Volver a mis árboles',
     save: 'Guardar',
     saving: 'Guardando...',
     delete: 'Eliminar ficha',
@@ -452,13 +473,17 @@ export const es = {
     },
     messages: {
       invalidId: 'Identificador de ficha no válido.',
+      createdFromForm: 'Ficha creada correctamente. Revisa los datos y guarda si haces cambios.',
+      createdFromFormWithPhotos:
+        'Ficha creada y fotografías asociadas. Revisa los datos y guarda si haces cambios.',
+      createdFromFormPhotosWarning:
+        'La ficha se creó correctamente, pero no se pudieron subir todas las fotografías. Puedes añadirlas aquí.',
     },
   },
   treeForm: {
-    title: 'Alta de árbol',
+    title: 'Alta de ejemplar',
     description: 'Completa los campos obligatorios para registrar una nueva ficha en el catálogo.',
     loadingMasters: 'Cargando especies y provincias...',
-    backHome: 'Volver al inicio',
     submit: 'Crear ficha',
     submitting: 'Guardando...',
     fields: {
@@ -491,14 +516,14 @@ export const es = {
         placeholder: 'Opcional. Ej.: 650',
       },
       publicationState: {
-        label: 'Estado de publicación',
+        label: 'Estado',
         options: {
           BORRADOR: 'Borrador',
           PUBLICADO: 'Publicado',
         },
       },
       publicMapVisibility: {
-        label: 'Visibilidad en mapa',
+        label: 'Visibilidad',
         options: {
           PRIVADO: 'Privado (no visible en mapa público)',
           PUBLICO: 'Público (visible en mapa público)',
