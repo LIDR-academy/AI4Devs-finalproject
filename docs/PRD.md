@@ -6,7 +6,7 @@
 
 **RunMarket** es una plataforma de comercio electrónico especializada en productos deportivos para running. Su propósito es facilitar a corredores de todos los niveles —principiantes, populares y avanzados— la identificación y compra de zapatillas, ropa técnica y accesorios adecuados a su perfil real de entrenamiento.
 
-El problema que resuelve es de orientación y relevancia: los ecommerce generalistas obligan al usuario a filtrar entre cientos de productos sin criterios específicos del running. RunMarket introduce un modelo de búsqueda filtrada por atributos propios de la disciplina —distancia objetivo, tipo de superficie, nivel del corredor y objetivo de entrenamiento— lo que reduce la fricción de decisión y aumenta la confianza de compra.
+El problema que resuelve es de orientación y relevancia: los eCommerce generalistas obligan al usuario a filtrar entre cientos de productos sin criterios específicos del running. RunMarket introduce un modelo de búsqueda filtrada por atributos propios de la disciplina —distancia objetivo, tipo de superficie, nivel del corredor y objetivo de entrenamiento— lo que reduce la fricción de decisión y aumenta la confianza de compra.
 
 #### Valor añadido
 
@@ -20,7 +20,7 @@ El problema que resuelve es de orientación y relevancia: los ecommerce generali
 #### Ventajas competitivas
 
 1. **Vertical puro de running:** a diferencia de plataformas multideporte, RunMarket elimina el ruido de otras disciplinas y optimiza la experiencia para el corredor.
-2. **Filtros propios del dominio:** los atributos `distance`, `surface`, `level` y `objective` no existen en ecommerce generalistas; son el núcleo diferencial del producto.
+2. **Filtros propios del dominio:** los atributos `distance`, `surface`, `level` y `objective` no existen en eCommerce generalistas; son el núcleo diferencial del producto.
 3. **Experiencia de compra simplificada:** el MVP prioriza la velocidad de decisión sobre la amplitud de funcionalidades, adecuado para un corredor con necesidades claras.
 4. **Escalabilidad hacia personalización:** la arquitectura de filtros permite, en versiones posteriores, evolucionar hacia recomendaciones basadas en historial o perfil de usuario sin rediseñar el modelo de datos.
 
@@ -31,10 +31,10 @@ El siguiente diagrama sintetiza el modelo de negocio de RunMarket según el marc
 ```mermaid
 block-beta
     columns 3
-    P["Problema\n- Los corredores no encuentran productos adaptados a su perfil en ecommerce generalistas\n- Catálogos multideporte con exceso de ruido y filtros irrelevantes para running\n- Dificultad para tomar decisiones de compra sin orientación técnica específica"]
+    P["Problema\n- Los corredores no encuentran productos adaptados a su perfil en eCommerce generalistas\n- Catálogos multideporte con exceso de ruido y filtros irrelevantes para running\n- Dificultad para tomar decisiones de compra sin orientación técnica específica"]
     S["Solución\n- Búsqueda filtrada por atributos propios del running\n- Ficha de producto técnica orientada a la decisión de compra\n- Ciclo de compra completo validado desde el MVP"]
     KM["Métricas clave\n- Tasa de conversión por segmento de corredor\n- Tiempo medio hasta la primera compra\n- Tasa de recurrencia de compra\n- NPS del comprador corredor"]
-    UVP["Propuesta de valor única\n- El único ecommerce donde el catálogo se adapta al corredor y no al revés\n- Filtrado multidimensional por distancia, superficie, nivel y objetivo de entrenamiento\n- Fichas de producto diseñadas para responder las preguntas clave antes de comprar"]
+    UVP["Propuesta de valor única\n- El único eCommerce donde el catálogo se adapta al corredor y no al revés\n- Filtrado multidimensional por distancia, superficie, nivel y objetivo de entrenamiento\n- Fichas de producto diseñadas para responder las preguntas clave antes de comprar"]
     UA["Ventaja competitiva\n- Especialización vertical exclusiva en running\n- Taxonomía propia del dominio: distance, surface, level y objective\n- Confianza del corredor basada en relevancia y orientación técnica"]
     CH["Canales\n- SEO especializado en running y términos técnicos\n- Comunidades online de corredores y foros especializados\n- Colaboración con influencers y coaches de running\n- Redes sociales verticales del deporte"]
     CS["Segmentos de clientes\n- Principiantes que inician en running y necesitan guía de equipamiento básico\n- Populares que corren 10K–media maratón y buscan optimizar su material técnico\n- Avanzados que compiten en maratón o ultra y priorizan rendimiento y precisión"]
@@ -117,7 +117,7 @@ Esta decisión reduce la fricción del flujo de compra y permite validar el cicl
 
 **Descripción**
 
-El corredor llega a RunMarket con un perfil de entrenamiento definido —o lo descubre durante la navegación— y necesita acotar el catálogo hasta encontrar los productos relevantes para su situación. Este caso de uso es el punto de entrada más frecuente y el diferencial principal del producto respecto a ecommerce generalistas.
+El corredor llega a RunMarket con un perfil de entrenamiento definido —o lo descubre durante la navegación— y necesita acotar el catálogo hasta encontrar los productos relevantes para su situación. Este caso de uso es el punto de entrada más frecuente y el diferencial principal del producto respecto a eCommerce generalistas.
 
 **Actores principales**
 
@@ -250,7 +250,7 @@ flowchart TD
 ### **1.3. Diseño y experiencia de usuario:**
 
 El prototipo interactivo completo está disponible en Figma Make:
-[Ecommerce para productos deportivos](https://www.figma.com/make/0wtedXb5138odnAOgHlMiA/Ecommerce-para-productos-deportivos)
+[eCommerce para productos deportivos](https://www.figma.com/make/0wtedXb5138odnAOgHlMiA/Ecommerce-para-productos-deportivos)
 
 A continuación se describe cada pantalla principal, su funcionalidad y su relación con los casos de uso del producto.
 
@@ -260,7 +260,7 @@ A continuación se describe cada pantalla principal, su funcionalidad y su relac
 
 ![Home — Catálogo con filtros](docs/prototypes/01-home-catalog.png)
 
-Pantalla de entrada al ecommerce. Muestra el catálogo completo de productos de running con un panel lateral de filtros por categoría, distancia, superficie, nivel y objetivo de entrenamiento. Los resultados se actualizan en tiempo real al aplicar filtros combinados.
+Pantalla de entrada al eCommerce. Muestra el catálogo completo de productos de running con un panel lateral de filtros por categoría, distancia, superficie, nivel y objetivo de entrenamiento. Los resultados se actualizan en tiempo real al aplicar filtros combinados.
 
 **Funcionalidad:** Catálogo de productos · Búsqueda y filtrado avanzado (Caso de uso 1)
 

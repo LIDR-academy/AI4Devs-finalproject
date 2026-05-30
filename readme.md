@@ -23,7 +23,7 @@ RunMarket
 
 ### **0.3. Descripción breve del proyecto:**
 
-Ecommerce especializado en productos deportivos para running. Permite a corredores principiantes, populares y avanzados encontrar zapatillas, ropa técnica y accesorios adaptados a su perfil mediante filtros propios de la disciplina: distancia objetivo, tipo de superficie, nivel del corredor y objetivo de entrenamiento.
+eCommerce especializado en productos deportivos para running. Permite a corredores principiantes, populares y avanzados encontrar zapatillas, ropa técnica y accesorios adaptados a su perfil mediante filtros propios de la disciplina: distancia objetivo, tipo de superficie, nivel del corredor y objetivo de entrenamiento.
 
 ### **0.4. URL del proyecto:**
 
@@ -40,11 +40,11 @@ Ecommerce especializado en productos deportivos para running. Permite a corredor
 
 ### **1.1. Objetivo:**
 
-**RunMarket** es un ecommerce especializado en productos deportivos para running. Permite a corredores principiantes, populares y avanzados encontrar zapatillas, ropa técnica y accesorios adaptados a su perfil mediante filtros propios de la disciplina: distancia objetivo, tipo de superficie, nivel del corredor y objetivo de entrenamiento.
+**RunMarket** es un eCommerce especializado en productos deportivos para running. Permite a corredores principiantes, populares y avanzados encontrar zapatillas, ropa técnica y accesorios adaptados a su perfil mediante filtros propios de la disciplina: distancia objetivo, tipo de superficie, nivel del corredor y objetivo de entrenamiento.
 
-El problema que resuelve es de orientación y relevancia: los ecommerce generalistas no ofrecen filtros específicos de running, lo que obliga al corredor a navegar catálogos irrelevantes sin criterios técnicos. RunMarket reduce esa fricción colocando al corredor y su perfil en el centro del catálogo.
+El problema que resuelve es de orientación y relevancia: los eCommerce generalistas no ofrecen filtros específicos de running, lo que obliga al corredor a navegar catálogos irrelevantes sin criterios técnicos. RunMarket reduce esa fricción colocando al corredor y su perfil en el centro del catálogo.
 
-**Propuesta de valor:** el único ecommerce donde el catálogo se adapta al corredor, no al revés.
+**Propuesta de valor:** el único eCommerce donde el catálogo se adapta al corredor, no al revés.
 
 > Documentación completa de producto (Lean Canvas, casos de uso, decisiones de diseño): [docs/PRD.md](docs/PRD.md)
 
@@ -64,7 +64,7 @@ El MVP cubre el ciclo completo de descubrimiento y compra:
 
 ### **1.3. Diseño y experiencia de usuario:**
 
-Prototipo interactivo: [Ecommerce para productos deportivos — Figma Make](https://www.figma.com/make/0wtedXb5138odnAOgHlMiA/Ecommerce-para-productos-deportivos)
+Prototipo interactivo: [eCommerce para productos deportivos — Figma Make](https://www.figma.com/make/0wtedXb5138odnAOgHlMiA/Ecommerce-para-productos-deportivos)
 
 Las capturas de pantalla se encuentran en [`docs/prototypes/`](docs/prototypes/).
 

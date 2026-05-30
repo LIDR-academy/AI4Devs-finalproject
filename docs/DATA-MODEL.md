@@ -147,7 +147,7 @@ Pedido generado tras un checkout completado. Almacena la dirección de envío co
 
 Línea de ítem de un pedido. Almacena un **snapshot** de los atributos del producto en el momento de la compra (`productName`, `productBrand`, `productPrice`). Esto garantiza que el historial de pedidos sea inmutable aunque el producto cambie de nombre, precio o sea eliminado del catálogo.
 
-**Justificación del snapshot:** es una práctica estándar en ecommerce transaccional. Sin snapshot, un cambio de precio en `PRODUCT` alteraría retroactivamente el total visible en pedidos pasados.
+**Justificación del snapshot:** es una práctica estándar en eCommerce transaccional. Sin snapshot, un cambio de precio en `PRODUCT` alteraría retroactivamente el total visible en pedidos pasados.
 
 ---
 

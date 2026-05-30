@@ -344,3 +344,9 @@ Analiza las User Stories generadas en @docs/USER-STORIES.md y añade una secció
   1. Explicas los criterios de priorización utilizados.                                                       
   2. Genera una tabla con las historias clasificadas como "Imprescindible para el MVP", ordenadas según la secuencia recomendada de implementación.                                             
   3. Genera una segunda tabla con el resto de historias, ordenadas por prioridad.
+
+---
+
+# Prompt 10: Actualiza el readme con el backlog del MVP
+
+Lleva la tabla "Backlog MVP - Historias imprescindibles — Secuencia de implementación recomendada" contenida en @docs/USER-STORIES.md a la sección "5. Historias de Usuario" de @readme.md, además añade referencia al fichero @docs/USER-STORIES.md 

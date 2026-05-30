@@ -33,7 +33,7 @@ Una historia es imprescindible si su ausencia impide al corredor completar el fl
 Las historias fundacionales —catálogo, ficha de producto, carrito— deben existir antes que las que dependen de ellas —filtros, variantes, checkout—. La secuencia de implementación respeta este orden de construcción para poder entregar incrementos funcionales verificables en cada paso.
 
 **3. Validación de la propuesta de valor diferencial**
-Los filtros por atributos de running (US-002) son el diferencial central de RunMarket frente a ecommerce generalistas. Aunque técnicamente no bloquean el ciclo de compra, su implementación temprana permite validar la propuesta de valor del producto desde las primeras iteraciones. Por eso se clasifican como imprescindibles y se ubican en las primeras posiciones de la secuencia.
+Los filtros por atributos de running (US-002) son el diferencial central de RunMarket frente a eCommerce generalistas. Aunque técnicamente no bloquean el ciclo de compra, su implementación temprana permite validar la propuesta de valor del producto desde las primeras iteraciones. Por eso se clasifican como imprescindibles y se ubican en las primeras posiciones de la secuencia.
 
 ---
 
@@ -76,7 +76,7 @@ Los filtros por atributos de running (US-002) son el diferencial central de RunM
 Como corredor, quiero ver el catálogo completo de productos de running al acceder a RunMarket, para explorar la oferta disponible y descubrir opciones antes de acotar por mis criterios.
 
 **Descripción:**
-Pantalla principal del ecommerce. Muestra el listado de productos (zapatillas, ropa técnica y accesorios) con imagen, nombre, marca, precio y etiquetas de nivel. Es el punto de entrada a la experiencia de compra y el primer estímulo de descubrimiento para el corredor.
+Pantalla principal del eCommerce. Muestra el listado de productos (zapatillas, ropa técnica y accesorios) con imagen, nombre, marca, precio y etiquetas de nivel. Es el punto de entrada a la experiencia de compra y el primer estímulo de descubrimiento para el corredor.
 
 **Criterios de aceptación:**
 - [ ] Escenario principal: al acceder a `/`, se muestra el listado de todos los productos disponibles en rejilla responsiva (3 columnas en desktop, 2 en tablet, 1 en móvil)
@@ -184,7 +184,7 @@ Mecanismo de retroalimentación y control del estado de filtrado. Informa al cor
 Como corredor, quiero acceder a la ficha completa de un producto con sus atributos técnicos de running, para evaluar si se ajusta a mi perfil de entrenamiento antes de decidir comprarlo.
 
 **Descripción:**
-Página de detalle de producto. Principal punto de conversión del ecommerce. Expone la galería de imágenes, descripción técnica, atributos running como etiquetas de color (nivel, distancia, superficie, objetivo), lista de características técnicas, precio y señales de confianza (envío gratis, devolución, garantía).
+Página de detalle de producto. Principal punto de conversión del eCommerce. Expone la galería de imágenes, descripción técnica, atributos running como etiquetas de color (nivel, distancia, superficie, objetivo), lista de características técnicas, precio y señales de confianza (envío gratis, devolución, garantía).
 
 **Criterios de aceptación:**
 - [ ] Escenario principal: el corredor accede a `/product/:id`; la página muestra imagen del producto, nombre, marca, precio, descripción técnica, atributos running como etiquetas coloreadas, lista de características y señales de confianza de compra

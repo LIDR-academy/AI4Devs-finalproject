@@ -15,9 +15,9 @@ Para el MVP de RunMarket se evaluaron tres opciones:
 
 La arquitectura de **frontend SSR desacoplado + API REST independiente + base de datos relacional** es la más adecuada para el MVP por tres razones:
 
-1. **SEO real**: Next.js 14 con App Router renderiza en servidor las páginas de catálogo y ficha de producto, que son las páginas de mayor impacto SEO en un ecommerce. Los metadatos (`title`, `description`, `og:*`) se generan server-side con la Metadata API de Next.js.
+1. **SEO real**: Next.js 14 con App Router renderiza en servidor las páginas de catálogo y ficha de producto, que son las páginas de mayor impacto SEO en un eCommerce. Los metadatos (`title`, `description`, `og:*`) se generan server-side con la Metadata API de Next.js.
 2. **Separación de responsabilidades testable**: el backend Express puede probarse de forma completamente independiente del frontend mediante Jest + Supertest. El frontend se prueba con Vitest + React Testing Library. Los E2E con Playwright ejercitan el sistema completo.
-3. **Evolución natural**: el backend Express puede crecer hacia microservicios en versiones posteriores sin tocar el frontend. La base de datos relacional (PostgreSQL) es la elección correcta para datos transaccionales de ecommerce (pedidos, stock).
+3. **Evolución natural**: el backend Express puede crecer hacia microservicios en versiones posteriores sin tocar el frontend. La base de datos relacional (PostgreSQL) es la elección correcta para datos transaccionales de eCommerce (pedidos, stock).
 
 **Por qué Next.js 14 y no React Router v7 (Remix) para SSR:**
 El prototipo de Figma Make usa React Router v7 en modo SPA. Para la implementación real, Next.js 14 con App Router es la elección más reconocida en la industria para SSR con React, con mejor soporte de Server Components, Image Optimization y Metadata API. La migración del código del prototipo es directa dado que ambos son ecosistemas React + TypeScript.
@@ -118,7 +118,7 @@ graph TB
 
 **Tecnología:** Next.js 14 · React 18 · TypeScript · Tailwind CSS v4 · shadcn/ui · Lucide React
 
-**Responsabilidad:** renderizado SSR de las páginas públicas del ecommerce, hidratación en cliente para interactividad (carrito, filtros, formularios).
+**Responsabilidad:** renderizado SSR de las páginas públicas del eCommerce, hidratación en cliente para interactividad (carrito, filtros, formularios).
 
 | Módulo | Ruta | Tipo | Descripción |
 |---|---|---|---|
@@ -193,7 +193,7 @@ Request → Router → Middleware → Controller → Service → Repository → 
 | Backend framework | Express | 4 | Minimalista, conocido, amplio ecosistema |
 | Runtime backend | Node.js | 20 LTS | LTS estable, mismo lenguaje que frontend |
 | ORM | Prisma | 5 | Type-safe, migraciones, compatibilidad PostgreSQL |
-| Base de datos | PostgreSQL | 16 | Relacional, ACID, estándar ecommerce |
+| Base de datos | PostgreSQL | 16 | Relacional, ACID, estándar eCommerce |
 | Validación | Zod | 3 | Schema validation tipado, compartible frontend/backend |
 | Test unitario FE | Vitest + RTL | latest | Nativo Vite/Next.js, API compatible Jest |
 | Test unitario BE | Jest + Supertest | latest | Estándar Node.js, integración Express |
@@ -295,7 +295,7 @@ C4Context
 
     Person(runner, "Corredor", "Usuario que busca y compra\nproductos deportivos para running.\nPuede ser principiante, popular o avanzado.")
 
-    System(runmarket, "RunMarket", "Ecommerce especializado en running.\nPermite explorar el catálogo con filtros propios\nde la disciplina y completar el ciclo de compra.")
+    System(runmarket, "RunMarket", "eCommerce especializado en running.\nPermite explorar el catálogo con filtros propios\nde la disciplina y completar el ciclo de compra.")
 
     Rel(runner, runmarket, "Busca productos, filtra por perfil running,\nañade al carrito y completa la compra", "HTTPS")
 ```
@@ -310,7 +310,7 @@ Descompone RunMarket en sus tres contenedores: frontend SSR, API REST y base de 
 C4Container
     title Diagrama de Contenedores — RunMarket
 
-    Person(runner, "Corredor", "Usuario del ecommerce")
+    Person(runner, "Corredor", "Usuario del eCommerce")
 
     Container(fe, "Frontend Web", "Next.js 14 · React 18 · TypeScript · Tailwind · :3000", "Renderiza catálogo y fichas en servidor (SSR/SEO).\nGestiona carrito y checkout en cliente.\nSe comunica con la API para datos dinámicos.")
 
@@ -318,7 +318,7 @@ C4Container
 
     ContainerDb(db, "Base de datos", "PostgreSQL 16 · :5432", "Almacena el catálogo de productos,\npedidos e ítems de pedido.\nAccedida exclusivamente vía Prisma ORM.")
 
-    Rel(runner, fe, "Navega el ecommerce", "HTTPS")
+    Rel(runner, fe, "Navega el eCommerce", "HTTPS")
     Rel(fe, api, "Consulta productos, envía carrito y checkout", "REST / JSON · HTTP")
     Rel(api, db, "Lee y escribe datos de negocio", "Prisma ORM / SQL")
 ```
