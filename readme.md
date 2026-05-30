@@ -273,6 +273,8 @@ erDiagram
         string   status          "processing | shipped | delivered | cancelled"
         decimal  total
         string   shippingName
+        string   shippingEmail
+        string   shippingPhone
         string   shippingAddress
         string   shippingCity
         datetime createdAt

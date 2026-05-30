@@ -79,6 +79,8 @@ erDiagram
         decimal     shipping
         decimal     total
         string      shippingName
+        string      shippingEmail       "Email del destinatario"
+        string      shippingPhone       "Teléfono del destinatario (opcional)"
         string      shippingAddress
         string      shippingCity
         string      shippingPostalCode
@@ -255,6 +257,8 @@ model Order {
   shipping           Decimal     @db.Decimal(10, 2)
   total              Decimal     @db.Decimal(10, 2)
   shippingName       String
+  shippingEmail      String
+  shippingPhone      String?
   shippingAddress    String
   shippingCity       String
   shippingPostalCode String
