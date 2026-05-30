@@ -29,6 +29,10 @@ git pull origin main
 git checkout -b feature/mi-tarea
 ```
 
+Si vienes de **otra rama con cambios sin commitear**, primero commit (o `git stash`), luego los comandos de arriba. **No** merges la rama de trabajo en `main` local antes de abrir la nueva: el merge a `main` es vía **PR** en GitHub; la rama anterior puede seguir existiendo para ese PR.
+
+Comando Cursor (flujo guiado con confirmaciones): [.cursor/commands/git-new-branch.md](../../.cursor/commands/git-new-branch.md).
+
 ## Subir al remoto
 
 Primera subida y enlazar upstream (la rama se crea en `origin` si no existe):
@@ -42,6 +46,13 @@ Subidas siguientes en la misma rama:
 ```bash
 git push
 ```
+
+## Commit con resumen de cambios
+
+| Operación | Comando Cursor |
+|-----------|----------------|
+| Commit con resumen del diff | [git-commit.md](../../.cursor/commands/git-commit.md) |
+| Nueva rama desde `main` actualizado | [git-new-branch.md](../../.cursor/commands/git-new-branch.md) |
 
 ## Flujo resumido
 
