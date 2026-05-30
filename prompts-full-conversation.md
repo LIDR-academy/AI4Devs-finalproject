@@ -27,6 +27,7 @@ La primera versión se centra en: catálogo, búsqueda filtrada, ficha de produc
 
 | Prompt | Contenido | Sección `readme-producto.md` |
 |--------|-----------|------------------------------|
+| 0 | Diseño inicial en Figma Make | Diseño de referencia para producto y UX |
 | 1 | Contexto general y visión de producto | `1.1 Objetivo` + `1.2 Características` |
 | 2 | Lean Canvas — modelo de negocio y valor añadido | Amplía `1.1 Objetivo` |
 | 3 | Casos de uso principales | Amplía `1.2 Características` |
@@ -34,6 +35,22 @@ La primera versión se centra en: catálogo, búsqueda filtrada, ficha de produc
 | 5 | Modelo de datos | `2.1 Modelo de datos` |
 | 6 | Diseño del sistema a alto nivel | `2.2 Diseño del sistema a alto nivel` |
 | 7 | Diagrama C4 | `2.3 Diagrama C4` |
+
+---
+
+# Prompt 0: Diseño inicial en Figma Make
+
+## Herramienta
+
+Figma Make
+
+## Prompt
+
+RunMarket es un ecommerce especializado en productos deportivos para running. Permite a corredores principiantes, populares y avanzados encontrar zapatillas, ropa técnica y accesorios según distancia, superficie, nivel, objetivo de entrenamiento y preferencias personales. La primera versión se centra en catálogo, búsqueda filtrada, ficha de producto, carrito, checkout simulado y gestión básica de pedidos.
+
+## Resultado
+
+Genera un diseño inicial del ecommerce que sirva como referencia visual para documentar el producto, sus flujos principales y la experiencia de usuario.
 
 ---
 
@@ -286,4 +303,3 @@ Si lo consideras necesario, accede al MCP de Figma y utiliza el diseño para ali
 ## Resultado
 
 Escribe el contenido en @docs/ARCHITECTURE.md.
-
