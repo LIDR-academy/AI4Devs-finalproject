@@ -1,0 +1,46 @@
+---
+description: Patrones de microservicios MVP (contexto, sync/async, idempotencia)
+globs:
+  - "services/**/*.java"
+  - "services/**/pom.xml"
+alwaysApply: false
+---
+
+# Patrones de microservicios (MVP)
+
+Priorizar **simplicidad** compatible con el alcance. Capas, paquetes y persistencia: [spring-boot-4-backend.mdc](spring-boot-4-backend.mdc). Índice **tema → fuente canónica:** [docs/engineering/canonical-sources.md](../../docs/engineering/canonical-sources.md).
+
+## Homogeneidad entre servicios (generación de código)
+
+- Los microservicios **Spring MVC + REST** (`catalog`, `media`, `notification`, `ai`) siguen la misma **plantilla de paquetes**, **Persistencia** y disciplina REST que [spring-boot-4-backend.mdc](spring-boot-4-backend.mdc) (subsecciones homónimas), para no divergir por módulo.
+- **api-gateway** es la excepción prevista: WebFlux, enrutamiento y seguridad en `com.mtl.gateway.config` (sin árbol JPA/Mongo salvo decisión documentada).
+- Checklist rápido al añadir un servicio: [backend-generation-standard.mdc](backend-generation-standard.mdc).
+
+## Contexto y datos
+
+- Cada carpeta bajo **`services/`** representa un **contexto acotado**: modelo y persistencia **propios**; no compartir tablas o esquemas de aplicación entre servicios (en Postgres, un servidor con **esquemas distintos** por servicio está alineado con esto).
+- **Una fuente de verdad** por agregado; el híbrido SQL + Mongo en catálogo sigue [mongo.md](../../docs/data-model/mongo.md) y [mongo-hybrid.mdc](mongo-hybrid.mdc).
+
+## Contrato y exposición
+
+- HTTP hacia clientes: [openapi.yaml](../../docs/api/openapi.yaml) + [api-contract.mdc](api-contract.mdc) + [api-design.mdc](api-design.mdc); mapa **tema → canónico:** [canonical-sources.md](../../docs/engineering/canonical-sources.md).
+
+## Comunicación síncrona y asíncrona
+
+- **REST vía API Gateway** para flujos que atiende la UI: evitar cadenas largas de llamadas síncronas entre muchos servicios en una sola petición; si la orquestación se complica, valorar un único punto de agregación antes de repartir complejidad.
+- **Kafka** para hechos de dominio y desacople (p. ej. notificaciones); contrato y nombres en [kafka-events.md](../../docs/events/kafka-events.md) y [kafka-events.mdc](kafka-events.mdc).
+
+## Resiliencia e idempotencia
+
+- Clientes HTTP entre servicios: **timeouts** explícitos; **reintentos** solo en operaciones idempotentes o con semántica segura ante duplicados.
+- **Consumidores Kafka**: asumir **reentrega**; diseñar idempotencia o claves de deduplicación cuando el efecto secundario no sea repetible a ciegas.
+
+## Seguridad y observabilidad
+
+- Autenticación/autorización y correlación: [api-security.mdc](api-security.mdc).
+- Logs operativos: [logging.mdc](logging.mdc); health/readiness con starters; métricas/trazas más ricas cuando el despliegue lo justifique ([platform/observability](../../platform/observability/)).
+
+## Fuera de alcance del MVP (no imponer por defecto)
+
+- Sagas distribuidas complejas, CQRS o event sourcing como norma base.
+- BFF dedicado, service mesh o políticas avanzadas antes de necesidad demostrada.

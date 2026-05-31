@@ -1,0 +1,319 @@
+<script setup lang="ts">
+import { computed, onMounted, ref } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import PageBackLink from '@/components/layout/PageBackLink.vue'
+import TreeLocationMapPreview from '@/components/TreeLocationMapPreview.vue'
+import TreePhotoFullscreenViewer from '@/components/TreePhotoFullscreenViewer.vue'
+import { areLatLngInValidRange } from '@/composables/createTreeFormValidation'
+import { fetchPublicTreeDetail } from '@/services/catalog/catalogService'
+import { fetchTreePhotoGallery } from '@/services/media/treeGalleryService'
+import { HttpError, NetworkError } from '@/services/http/apiClient'
+import type { PublicTreeDetail } from '@/types/catalog'
+import type { TreePhotoGalleryItem } from '@/types/media'
+
+const route = useRoute()
+const { t } = useI18n()
+
+const isLoading = ref(false)
+const errorMessage = ref('')
+const notFound = ref(false)
+const tree = ref<PublicTreeDetail | null>(null)
+const galleryPhotos = ref<TreePhotoGalleryItem[]>([])
+const selectedPhotoIndex = ref(0)
+const isFullscreenOpen = ref(false)
+
+function mapError(error: unknown): string {
+  if (error instanceof NetworkError) {
+    return t('treesDetail.messages.networkError')
+  }
+  if (error instanceof HttpError) {
+    if (error.status === 404) {
+      notFound.value = true
+      return t('treesDetail.messages.notFound')
+    }
+    return t('treesDetail.messages.serviceError', { status: error.status })
+  }
+  return t('treesDetail.messages.unexpectedError')
+}
+
+function publicationStateLabel(state: string): string {
+  if (state === 'BORRADOR') {
+    return t('treesList.filters.state.borrador')
+  }
+  if (state === 'PUBLICADO') {
+    return t('treesList.filters.state.publicado')
+  }
+  return state
+}
+
+function mapVisibilityLabel(visibility: string): string {
+  if (visibility === 'PRIVADO') {
+    return t('treesList.filters.visibility.privado')
+  }
+  if (visibility === 'PUBLICO') {
+    return t('treesList.filters.visibility.publico')
+  }
+  return visibility
+}
+
+function locationLine(detail: PublicTreeDetail): string {
+  const parts = [detail.municipality?.trim(), detail.province?.trim()].filter(Boolean)
+  return parts.length > 0 ? parts.join(' · ') : t('common.emptyValue')
+}
+
+function displayText(value: string | null | undefined): string {
+  const trimmed = value?.trim() ?? ''
+  return trimmed.length > 0 ? trimmed : t('common.emptyValue')
+}
+
+const treeId = computed(() => {
+  const rawId = Array.isArray(route.params.id) ? route.params.id[0] : route.params.id
+  const parsedId = Number(rawId)
+  if (!Number.isInteger(parsedId) || parsedId <= 0) {
+    return null
+  }
+  return parsedId
+})
+
+const speciesTitle = computed(() => {
+  if (!tree.value) {
+    return ''
+  }
+  const common = tree.value.commonName.trim()
+  const scientific = tree.value.scientificName.trim()
+  if (common.length > 0) {
+    return `${common} (${scientific})`
+  }
+  return scientific
+})
+
+const pageTitle = computed(() => {
+  if (tree.value) {
+    return speciesTitle.value
+  }
+  return t('treesDetail.title')
+})
+
+const pageDescription = computed(() => {
+  if (tree.value) {
+    return locationLine(tree.value)
+  }
+  return t('treesDetail.description')
+})
+
+const mapLatLng = computed(() => ({
+  latitude: tree.value ? String(tree.value.latitude) : '',
+  longitude: tree.value ? String(tree.value.longitude) : '',
+}))
+
+const coordinatesLine = computed(() => {
+  if (!tree.value) {
+    return ''
+  }
+  const lat = String(tree.value.latitude)
+  const lng = String(tree.value.longitude)
+  const alt =
+    tree.value.altitude !== null && tree.value.altitude !== undefined
+      ? t('treesDetail.coordinatesWithAltitude', { lat, lng, altitude: tree.value.altitude })
+      : t('treesDetail.coordinatesPair', { lat, lng })
+  return alt
+})
+
+const showMapMarker = computed(() => areLatLngInValidRange(mapLatLng.value))
+const hasGalleryPhotos = computed(() => galleryPhotos.value.length > 0)
+const hasMultipleGalleryPhotos = computed(() => galleryPhotos.value.length > 1)
+const isSuccess = computed(() => !isLoading.value && !errorMessage.value && tree.value !== null)
+const selectedPhoto = computed(() => {
+  if (!galleryPhotos.value.length) {
+    return null
+  }
+  const index = Math.min(Math.max(selectedPhotoIndex.value, 0), galleryPhotos.value.length - 1)
+  return galleryPhotos.value[index] ?? null
+})
+const selectedPhotoPosition = computed(() =>
+  selectedPhoto.value ? selectedPhotoIndex.value + 1 : 0,
+)
+
+async function loadTreeDetail(): Promise<void> {
+  if (!treeId.value) {
+    notFound.value = true
+    errorMessage.value = t('treesDetail.messages.notFound')
+    return
+  }
+
+  isLoading.value = true
+  errorMessage.value = ''
+  notFound.value = false
+  tree.value = null
+  galleryPhotos.value = []
+  selectedPhotoIndex.value = 0
+
+  try {
+    const [treeDetail, photos] = await Promise.all([
+      fetchPublicTreeDetail(treeId.value),
+      fetchTreePhotoGallery(treeId.value),
+    ])
+    tree.value = treeDetail
+    galleryPhotos.value = photos
+  } catch (error: unknown) {
+    errorMessage.value = mapError(error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+function showPreviousPhoto(): void {
+  if (!hasMultipleGalleryPhotos.value) {
+    return
+  }
+  selectedPhotoIndex.value =
+    (selectedPhotoIndex.value - 1 + galleryPhotos.value.length) % galleryPhotos.value.length
+}
+
+function showNextPhoto(): void {
+  if (!hasMultipleGalleryPhotos.value) {
+    return
+  }
+  selectedPhotoIndex.value = (selectedPhotoIndex.value + 1) % galleryPhotos.value.length
+}
+
+function openFullscreen(): void {
+  if (!hasGalleryPhotos.value) {
+    return
+  }
+  isFullscreenOpen.value = true
+}
+
+function closeFullscreen(): void {
+  isFullscreenOpen.value = false
+}
+
+onMounted(async () => {
+  await loadTreeDetail()
+})
+</script>
+
+<template>
+  <div class="tree-detail-page">
+    <header class="page-header tree-detail-page__header">
+      <PageBackLink :to="{ name: 'ejemplares-list' }">{{ t('treesDetail.backToList') }}</PageBackLink>
+      <h1 class="page-header__title">{{ pageTitle }}</h1>
+      <p class="page-header__description">{{ pageDescription }}</p>
+      <div v-if="tree" class="tree-detail-page__badges">
+        <span class="mtl-badge">{{ publicationStateLabel(tree.publicationState) }}</span>
+        <span class="mtl-badge mtl-badge--muted">{{
+          mapVisibilityLabel(tree.publicMapVisibility)
+        }}</span>
+        <span class="mtl-badge mtl-badge--muted">{{ t('treesDetail.treeId', { id: tree.treeId }) }}</span>
+      </div>
+    </header>
+
+    <p v-if="isLoading" class="status-note">{{ t('treesDetail.loading') }}</p>
+    <p v-else-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
+
+    <template v-else-if="isSuccess && tree">
+      <div class="tree-detail-visual-grid">
+        <section class="tree-detail-panel" aria-labelledby="tree-detail-gallery-heading">
+          <h2 id="tree-detail-gallery-heading" class="tree-detail-panel__title">
+            {{ t('treesDetail.gallery.title') }}
+          </h2>
+          <div class="tree-detail-gallery-frame">
+            <button
+              v-if="selectedPhoto"
+              type="button"
+              class="tree-detail-gallery-open-btn"
+              :aria-label="t('treesDetail.gallery.openViewer')"
+              @click="openFullscreen"
+              @keydown.enter.prevent="openFullscreen"
+              @keydown.space.prevent="openFullscreen"
+            >
+              <img
+                class="tree-detail-gallery-image"
+                :src="selectedPhoto.url"
+                :alt="speciesTitle"
+                draggable="false"
+                @dblclick="openFullscreen"
+              />
+            </button>
+            <output v-else class="muted tree-detail-gallery-empty">{{
+              t('treesDetail.gallery.noPhotos')
+            }}</output>
+          </div>
+          <div v-if="hasMultipleGalleryPhotos" class="tree-detail-gallery-controls">
+            <button type="button" class="btn btn-secondary btn-sm" @click="showPreviousPhoto">
+              {{ t('treesDetail.gallery.previous') }}
+            </button>
+            <span class="muted tree-detail-gallery-position">{{
+              t('treesDetail.gallery.position', {
+                current: selectedPhotoPosition,
+                total: galleryPhotos.length,
+              })
+            }}</span>
+            <button type="button" class="btn btn-secondary btn-sm" @click="showNextPhoto">
+              {{ t('treesDetail.gallery.next') }}
+            </button>
+          </div>
+        </section>
+
+        <section class="tree-detail-panel" aria-labelledby="tree-detail-map-heading">
+          <h2 id="tree-detail-map-heading" class="tree-detail-panel__title">
+            {{ t('treesDetail.map.title') }}
+          </h2>
+          <TreeLocationMapPreview
+            v-if="showMapMarker"
+            :latitude="mapLatLng.latitude"
+            :longitude="mapLatLng.longitude"
+            :show-marker="true"
+            :read-only="true"
+          />
+          <output v-else class="muted tree-detail-map-unavailable">{{
+            t('treesDetail.map.noLocation')
+          }}</output>
+        </section>
+      </div>
+
+      <section class="tree-detail-facts" :aria-labelledby="'tree-detail-facts-heading'">
+        <h2 id="tree-detail-facts-heading" class="tree-detail-panel__title">
+          {{ t('treesDetail.sections.facts') }}
+        </h2>
+        <dl class="tree-detail-facts__grid">
+          <div class="tree-detail-facts__item">
+            <dt>{{ t('treesDetail.fields.province') }}</dt>
+            <dd>{{ displayText(tree.province) }}</dd>
+          </div>
+          <div class="tree-detail-facts__item">
+            <dt>{{ t('treesDetail.fields.municipality') }}</dt>
+            <dd>{{ displayText(tree.municipality) }}</dd>
+          </div>
+          <div class="tree-detail-facts__item tree-detail-facts__item--full">
+            <dt>{{ t('treesDetail.fields.description') }}</dt>
+            <dd class="tree-detail-facts__description">{{ displayText(tree.description) }}</dd>
+          </div>
+          <div class="tree-detail-facts__item tree-detail-facts__item--full">
+            <dt>{{ t('treesDetail.fields.coordinates') }}</dt>
+            <dd>{{ coordinatesLine }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <footer class="actions page-actions-footer tree-detail-page__footer">
+        <RouterLink class="btn btn-secondary" :to="{ name: 'ejemplares-list' }">
+          {{ t('treesDetail.backToList') }}
+        </RouterLink>
+      </footer>
+
+      <TreePhotoFullscreenViewer
+        v-if="isFullscreenOpen && hasGalleryPhotos"
+        :photos="galleryPhotos"
+        :initial-index="selectedPhotoIndex"
+        :title="speciesTitle"
+        @close="closeFullscreen"
+      />
+    </template>
+
+    <p v-if="notFound && !isLoading" class="status-note">
+      {{ t('treesDetail.notFoundHint') }}
+    </p>
+  </div>
+</template>
