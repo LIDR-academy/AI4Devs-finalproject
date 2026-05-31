@@ -1,0 +1,90 @@
+# RunMarket — Contexto del proyecto
+
+## Qué es
+
+**RunMarket** es un ecommerce especializado en productos deportivos para running (zapatillas, ropa técnica, accesorios). Su diferencial es el filtrado multidimensional por atributos propios del running: `distance`, `surface`, `level` y `objective`.
+
+El MVP cubre: catálogo, búsqueda filtrada, ficha de producto, carrito, checkout simulado y gestión básica de pedidos. No requiere autenticación.
+
+## Stack técnico
+
+- **Frontend:** React 18 + TypeScript + Vite + Tailwind CSS v4 + shadcn/ui + React Router v7
+- **Estado:** Context API (`CartContext`) + localStorage para persistencia de sesión
+- **Iconos:** Lucide React
+- **Notificaciones:** Sonner (toasts)
+- **Prototipo de referencia:** Figma Make (`fileKey: 0wtedXb5138odnAOgHlMiA`)
+
+## Documentación
+
+| Documento | Contenido | Cuándo leerlo |
+|---|---|---|
+| [`docs/PRD.md`](docs/PRD.md) | Lean Canvas, casos de uso detallados con diagramas UML y decisiones de diseño UX | Trabajo en producto, nuevas features o casos de uso |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Evaluación de opciones de arquitectura, diagramas C4 (Context → Code), stack tecnológico, estructura de ficheros y decisiones de diseño | Cambios estructurales, nuevos componentes, decisiones de infraestructura |
+| [`docs/DATA-MODEL.md`](docs/DATA-MODEL.md) | Diagrama ER, decisiones de modelado (arrays GIN vs junction tables), esquema Prisma y restricciones de integridad | Cambios en entidades, nuevas queries, migraciones |
+| [`docs/USER-STORIES.md`](docs/USER-STORIES.md) | 13 historias de usuario con criterios de aceptación, estimación y prioridad organizadas por caso de uso | Siempre que se mencione una US (p.ej. "implementa US-007"): leer la historia completa y sus criterios de aceptación antes de escribir código |
+
+## Rutas principales de la aplicación
+
+| Ruta | Componente | Funcionalidad |
+|---|---|---|
+| `/` | `Home` | Catálogo con filtros |
+| `/product/:id` | `ProductDetail` | Ficha de producto |
+| `/cart` | `Cart` | Carrito de compra |
+| `/checkout` | `Checkout` | Checkout simulado (2 pasos) |
+| `/orders` | `Orders` | Historial de pedidos |
+
+## Entidades de datos clave
+
+- `Product` — id, name, brand, price, category, distance[], surface[], level[], objective[], sizes[], colors[], stock
+- `CartItem` — product, quantity, size?, color?
+- `Order` — id, date, items[], total, status, shippingAddress
+
+## Convenciones
+
+- Diagramas siempre en formato **Mermaid**
+- Tono académico y profesional en documentación
+- Todas las decisiones técnicas deben estar justificadas
+
+## Seguridad — reglas no negociables
+
+Estas reglas aplican siempre durante la implementación. Son específicas al stack y complementan OWASP Top 10.
+
+### Backend (Express + Prisma + Zod)
+
+**Nunca confiar en datos de precio o total del cliente**
+El precio de cada ítem se lee siempre de la base de datos (`ProductRepository`) en el momento de crear el pedido. El campo `price` que pueda llegar en el body del request se ignora. `ORDER_ITEM.productPrice` se toma del `Product` devuelto por Prisma, nunca del payload.
+
+**Zod en modo estricto en los boundaries de la API**
+Todos los schemas Zod usados en controllers deben usar `.strict()` (o `.strip()` como mínimo). Nunca `.passthrough()` en schemas de entrada expuestos a la red. Esto evita que campos no declarados pasen silenciosamente a la capa de negocio.
+
+**Prisma raw queries solo con template literals parametrizados**
+Si en algún caso es necesario usar `$queryRaw`, usar obligatoriamente la sintaxis de tagged template literal de Prisma (`$queryRaw\`SELECT ... WHERE id = ${id}\``), que parametriza automáticamente. Nunca construir el string SQL con concatenación o interpolación manual.
+
+**CORS sin wildcard fuera de desarrollo**
+El middleware `cors.ts` debe leer el origen permitido de una variable de entorno (`FRONTEND_URL`). El valor `origin: '*'` solo es aceptable en entorno local de desarrollo y debe bloquearse en staging y producción.
+
+**sessionId generado con `crypto.randomUUID()`**
+El `sessionId` que identifica carrito y pedidos de una sesión debe generarse server-side con `crypto.randomUUID()` (módulo nativo de Node.js 19+). Nunca usar `Math.random()`, timestamps ni IDs predecibles.
+
+**Respuestas de error sin detalles internos**
+El `errorHandler.ts` global debe mapear errores de Prisma (`PrismaClientKnownRequestError`, etc.) y errores internos de Express a respuestas genéricas `{ error: string }` antes de enviarlas al cliente. Stack traces y códigos de error de Prisma solo van al logger del servidor, nunca al body de la respuesta.
+
+**Validación de stock también en CheckoutService**
+`CartService.validateStock()` protege al añadir ítems, pero entre ese momento y el checkout puede haber pasado tiempo. `CheckoutService.processCheckout()` debe re-validar stock de todos los ítems del carrito antes de crear el `ORDER`, dentro de una transacción Prisma.
+
+**Rate limiting obligatorio en endpoints de mutación**
+Los endpoints `POST /api/checkout`, `POST /api/cart` y `PUT /api/cart` deben tener rate limiting más restrictivo que el catálogo. Límite recomendado: 20 req/min por IP en checkout. Usar `express-rate-limit`.
+
+**No loggear PII**
+El logger (Morgan + logger propio) no debe registrar campos de PII: `email`, `phone`, `shippingAddress`, `cardNumber`, `cardCVV`. Configurar Morgan con un formato custom que excluya el body de las peticiones a `/api/checkout`.
+
+### Frontend (Next.js / React)
+
+**Nunca almacenar datos de tarjeta en estado o localStorage**
+El `CartContext` y cualquier otro estado de React o localStorage solo puede contener `sessionId`, ítems de carrito y resumen de pedido. Los datos de `PaymentData` solo viven en el estado local del componente `CheckoutPage` durante el flujo y se descartan al completar o abandonar.
+
+**Sanitizar parámetros de URL antes de usarlos como filtros**
+Los valores de query string que alimentan los filtros del catálogo (`?distance=marathon&surface=trail`) deben validarse contra los enums cerrados del dominio antes de enviarse a la API. Un valor desconocido se descarta silenciosamente, no se reenvía.
+
+**`dangerouslySetInnerHTML` prohibido**
+No usar `dangerouslySetInnerHTML` en ningún componente. Cualquier contenido dinámico (descripciones de producto, nombres) se renderiza como texto plano a través de JSX, que escapa automáticamente.
