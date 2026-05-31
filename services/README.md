@@ -2,7 +2,7 @@
 
 **Maven:** `services/pom.xml` (`com.mtl:mtl-parent`, Spring Boot 4.0.x, Java 21). **Normas de código:** `.cursor/rules/spring-boot-4-backend.mdc` (tabla módulo ↔ paquete y **plantilla de paquetes** para nuevos microservicios), `backend-generation-standard.mdc`, `microservices-patterns.mdc`, `api-contract.mdc`, `api-security.mdc`.
 
-**E2E (gateway + servicios reales):** módulo `system-e2e-tests` — [system-e2e-tests/README.md](system-e2e-tests/README.md); guía general en [docs/engineering/testing-java.md](../docs/engineering/testing-java.md) §2.1.
+**E2E (gateway + servicios reales):** `system-e2e-tests` — [README](system-e2e-tests/README.md) (HU-001 esc. 2–4, maestros catálogo); estrategia [testing-java.md](../docs/engineering/testing-java.md) §2.1.
 
 ## 1. Arranque local coherente
 
@@ -170,7 +170,7 @@ En **catalog-service**, `application-prod.properties` fija además `spring.datas
 
 - **Arranque del módulo:** `mvn -pl api-gateway spring-boot:run -Dspring-boot.run.profiles=dev` (infra lista; Keycloak accesible si pruebas JWT reales).
 - **Microservicios aguas abajo:** si el gateway responde **502** con título *Servicio de destino no disponible*, el destino (p. ej. **catalog-service** en **8081**) no acepta conexión: arranca ese servicio o revisa `mtl.catalog.uri` / `MTL_*`. Sin **catalog-service**, rutas como **`/api/catalog/public/trees`** fallan (no es un fallo de **media-service**).
-- **Stack, rutas (`spring.cloud.gateway.server.webflux.*`), variables (`mtl.*.uri` / `MTL_*`), issuer, token relay, lista blanca, CORS y pendientes (correlación, timeouts):** [docs/security/jwt-gateway-strategy.md](../docs/security/jwt-gateway-strategy.md).
+- **Stack, rutas (`spring.cloud.gateway.server.webflux.*`), variables (`mtl.*.uri` / `MTL_*`), issuer, token relay, lista blanca, CORS, correlación `X-Correlation-Id` y pendientes (timeouts):** [docs/security/jwt-gateway-strategy.md](../docs/security/jwt-gateway-strategy.md).
 - **Reglas para implementación:** `.cursor/rules/api-security.mdc`. Código: `services/api-gateway/`.
 
 ---

@@ -97,12 +97,27 @@ export async function fetchAdminGenera(
   })
 }
 
+export interface FetchAdminSpeciesListOptions {
+  page?: number
+  size?: number
+  unpaged?: boolean
+  genusId?: number
+  speciesId?: number
+  signal?: AbortSignal
+}
+
 export async function fetchAdminSpeciesList(
-  options: { page?: number; size?: number; unpaged?: boolean; signal?: AbortSignal } = {},
+  options: FetchAdminSpeciesListOptions = {},
 ): Promise<TaxonomyMasterPage<TaxonomySpeciesListItem>> {
-  const { page = 0, size = 20, unpaged = false, signal } = options
+  const { page = 0, size = 20, unpaged = false, genusId, speciesId, signal } = options
   return apiFetch(`${CATALOG}/species`, {
-    query: { unpaged, page, size },
+    query: {
+      unpaged,
+      page,
+      size,
+      genusId: genusId ?? undefined,
+      speciesId: speciesId ?? undefined,
+    },
     signal,
   })
 }

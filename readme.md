@@ -285,7 +285,7 @@ La carpeta `[frontend/](frontend/)` es la SPA Vue 3 (Vite) con OIDC (Keycloak), 
 2. Tener en marcha la infra de Compose y, como mínimo, **api-gateway** en **8080** (y los microservicios que vayas a usar; ver [services/README.md](services/README.md)).
 3. Desde `frontend/`: `npm install` y `npm run dev` (UI en **http://localhost:5173**; el proxy de Vite reenvía `/api/*` al gateway).
 
-Más detalle (usuarios de prueba Keycloak, verificación manual E2E): [frontend/README.md](frontend/README.md).
+Más detalle (usuarios de prueba Keycloak, flujo OIDC): [frontend/README.md](frontend/README.md). Checklist E2E HU-001: [HU-001-ticket-breakdown.md](docs/backlog/HU-001-ticket-breakdown.md) (**TASK-HU-001-14**).
 
 #### Datos iniciales en catálogo
 
@@ -903,7 +903,7 @@ flowchart LR
 | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Autenticación OIDC        | Keycloak como IdP; SPA con **Authorization Code + PKCE**; JWT firmados; `issuer-uri` alineado con el realm                                                                              |
 | Autorización              | Roles de realm `COLABORADOR` y `ADMIN`; políticas en recursos sensibles                                                                                                                 |
-| Gateway                   | Validación de JWT en el gateway (`spring-boot-starter-oauth2-resource-server`); rutas públicas según OpenAPI; **cabeceras de correlación** en roadmap (propagación gateway → servicios) |
+| Gateway                   | Validación de JWT en el gateway (`spring-boot-starter-oauth2-resource-server`); rutas públicas según OpenAPI; **correlación** `X-Correlation-Id` (gateway → microservicios, Problem y MDC) |
 | Almacenamiento de objetos | Buckets privados; **URLs prefirmadas** de corta duración; sin credenciales en el cliente                                                                                                |
 | Suscripciones y privacidad | En el **MVP** solo se solicita **correo electrónico** para el aviso por alta de ficha; **no** se piden otros datos personales (nombre, teléfono, documento, etc.). La baja operativa es por estado (**ACTIVA** / **CANCELADA**) gestionada por **ADMIN**; minimización de datos en logs y APIs según contrato y modelo. |
 | Transporte                | TLS en producción; CORS restringido al origen del SPA                                                                                                                                   |
@@ -916,9 +916,7 @@ flowchart LR
 
 Estrategia prevista: pruebas unitarias de dominio; **integración** con **Testcontainers** (PostgreSQL con PostGIS, MongoDB, Kafka) donde aporte valor; **contrato de API** en [docs/api/openapi.yaml](docs/api/openapi.yaml) como referencia para pruebas de contrato y revisiones; tests de capa web y de aceptación sobre flujos críticos (catalogo, notificaciones, IA).
 
-**Backend Java (`services/`):** convención `src/test/java` vs `src/testIT/java`, Surefire/Failsafe, checklist (p. ej. Gateway 5.x) e IDE — [docs/engineering/testing-java.md](docs/engineering/testing-java.md).
-
-**End-to-end backend Java (`services/system-e2e-test`):** convención `src/test/java` vs `src/testIT/java`, Surefire/Failsafe, proyecto con test end to end del back; testea la capa completa de microservicios java.
+**Backend Java (`services/`):** convención `src/test/java` vs `src/testIT/java`, Surefire/Failsafe, IT por capa y E2E de sistema — [docs/engineering/testing-java.md](docs/engineering/testing-java.md) (§2.1; módulo [system-e2e-tests](services/system-e2e-tests/README.md), épica Acceso e identidad HU-001 esc. 2–4).
 
 ---
 

@@ -1,6 +1,7 @@
 package com.mtl.media.integration;
 
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -73,6 +74,15 @@ class MediaSecurityIT {
         .andExpect(status().isForbidden())
         .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
         .andExpect(jsonPath("$.title").value("Prohibido"));
+  }
+
+  @Test
+  void deletePhotos_sinBearer_devuelve401() throws Exception {
+    mockMvc
+        .perform(delete("/api/media/trees/1/photos").accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isUnauthorized())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.title").value("No autenticado"));
   }
 
   @Test

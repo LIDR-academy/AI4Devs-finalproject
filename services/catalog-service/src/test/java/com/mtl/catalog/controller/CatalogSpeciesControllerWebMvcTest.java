@@ -89,7 +89,7 @@ class CatalogSpeciesControllerWebMvcTest {
   @Test
   void listSpecies_devuelveJsonPaginado() throws Exception {
     when(jwtDecoder.decode(any())).thenReturn(jwtWithRealmRoles("colab-list", List.of("COLABORADOR")));
-    when(masterDataQueryService.listSpecies(eq(0), eq(20), eq("cina"), eq(false)))
+    when(masterDataQueryService.listSpecies(eq(0), eq(20), eq("cina"), isNull(), isNull(), eq(false)))
         .thenReturn(
             MasterDataPageResponse.of(
                 List.of(new SpeciesListItemDto(1L, "Encina (Quercus ilex)", 10L, "Robles (Quercus)")),
@@ -129,7 +129,7 @@ class CatalogSpeciesControllerWebMvcTest {
   @Test
   void listSpecies_unpaged_llamaServicio() throws Exception {
     when(jwtDecoder.decode(any())).thenReturn(jwtWithRealmRoles("admin-unpaged", List.of("ADMIN")));
-    when(masterDataQueryService.listSpecies(eq(0), eq(20), isNull(), eq(true)))
+    when(masterDataQueryService.listSpecies(eq(0), eq(20), isNull(), isNull(), isNull(), eq(true)))
         .thenReturn(MasterDataPageResponse.of(List.of(), 0, 0, 0, true));
 
     mockMvc
@@ -137,6 +137,21 @@ class CatalogSpeciesControllerWebMvcTest {
             get("/api/catalog/species")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer admin-unpaged-token")
                 .param("unpaged", "true"))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void listSpecies_conGenusIdYSpeciesId_llamaServicio() throws Exception {
+    when(jwtDecoder.decode(any())).thenReturn(jwtWithRealmRoles("admin-filter", List.of("ADMIN")));
+    when(masterDataQueryService.listSpecies(eq(0), eq(20), isNull(), eq(10L), eq(42L), eq(false)))
+        .thenReturn(MasterDataPageResponse.of(List.of(), 0, 0, 20, false));
+
+    mockMvc
+        .perform(
+            get("/api/catalog/species")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer admin-filter-token")
+                .param("genusId", "10")
+                .param("speciesId", "42"))
         .andExpect(status().isOk());
   }
 

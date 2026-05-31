@@ -33,9 +33,46 @@ No hay **umbral de cobertura %** obligatorio en CI; sí estas reglas **baratas d
 ### 2.1. Pruebas E2E (gateway + microservicios reales)
 
 - Módulo Maven **`services/system-e2e-tests`**: HTTP contra el **API Gateway** con **JWT real** de Keycloak; requiere gateway, catálogo (y demás infra según el caso) en marcha. Instrucciones y variables: [services/system-e2e-tests/README.md](../../services/system-e2e-tests/README.md).
-- Sin `MTL_E2E_ACCESS_TOKEN`, los `*IT` E2E quedan **desactivados** (`@EnabledIfEnvironmentVariable`) para que `mvn verify` no falle en entornos sin stack ni token.
+- Sin token ni flags de habilitación (`MTL_E2E_AUTO_KEYCLOAK_TOKEN`, `MTL_E2E_RUN_SECURITY`), los `*GatewayE2EIT` quedan **desactivados** (`@EnabledIf`); `mvn verify` no exige stack.
 - Los casos actuales de maestros asumen **semilla Flyway** (`V2__…`) y comprueban **`content` no vacío**; incluyen búsqueda con **`q`** para ejercitar SQL con **`unaccent`** (PostgreSQL). Detalle de rutas: README del módulo.
 - Complementan, no sustituyen, los IT del **api-gateway** con **WireMock** (autocontenidos).
+
+#### 2.1.1. Reparto de pruebas — back aislado del front (referencia HU-001)
+
+**Objetivo:** cubrir la **cadena back real** (Keycloak → gateway → microservicio → BD) con el mínimo de **Cypress/Playwright**; el UI E2E solo donde el contrato es del navegador (OIDC, router, UX de sesión).
+
+| Escenario (aceptación) | Responsabilidad principal | Herramienta | Cypress / UI E2E (solo si aplica) |
+|------------------------|---------------------------|-------------|-------------------------------------|
+| **1** Login OIDC, callback, silent renew, logout | Flujo SPA y almacenamiento de sesión | Vitest (router/guards) + **1** flujo UI E2E | Sí: PKCE, redirect, renovación |
+| **2** API protegida con JWT y rol permitido | Cadena HTTP auténtica vía gateway | **`system-e2e-tests`** (`Hu001Scenario02…`) | No repetir listados API en navegador |
+| **3** Sin token / token inválido → **401** | Contrato API sin Bearer | **`system-e2e-tests`** (`Hu001Scenario03…`) + `CatalogSecurityIT` / gateway IT | Solo redirect/`/auth/error?reason=session` |
+| **4** COLABORADOR → recurso **ADMIN** → **403** | Autorización API por rol | **`system-e2e-tests`** (`Hu001Scenario04…`) + `CatalogSecurityIT` | Solo guardas router (`reason=forbidden`) |
+| **HU-013** Navegación y guardas SPA (esc. 1–3) | Router, menú, placeholders **sin** API en esta HU | **Vitest** (`frontend/src/router/index.test.ts`) + **Cypress** mínimo | No duplicar en `system-e2e-tests`; contrato API ya en HU-001 esc. 2–4 |
+
+**Qué demuestra cada capa (evitar duplicar el mismo assert):**
+
+| Capa | Demuestra | No sustituye |
+|------|-----------|--------------|
+| **`*Test` / `WebMvcTest`** | Reglas y ramas locales | Issuer Keycloak real ni proxy completo |
+| **`CatalogSecurityIT`**, gateway IT + **WireMock** | Seguridad y rutas **autocontenidas**, Problem HTTP | `iss` real, relay multi-salto, datos Flyway |
+| **`system-e2e-tests`** | **JWT real**, gateway :8080, upstream y BD sembrada | Login PKCE ni CORS del navegador |
+| **Contrato OpenAPI** (cuando exista en CI) | Forma de request/response | Comportamiento con Keycloak vivo |
+| **Cypress / Playwright** | OIDC y UX de sesión en SPA | 401/403 de API ni paginación de catálogo |
+
+**CI (MVP):** `mvn verify` en servicios **no exige** E2E de sistema; un job opcional (`e2e-back`) puede ejecutar `system-e2e-tests` con stack + token (ver README del módulo). Trazabilidad de clases: tags `hu001-s0N` y prefijo `Hu001Scenario0N…`.
+
+#### 2.1.2. Diseño del módulo `system-e2e-tests`
+
+| Paquete / clase | Rol |
+|-----------------|-----|
+| `…support.E2eGatewayHttpClient` + `E2eGatewayConfig` | HTTP único contra el gateway (Bearer opcional, `X-Correlation-Id`) |
+| `…support.E2eTokens` + `E2eCollaboratorTokenLifecycle` | Variables de entorno unificadas; token automático Keycloak (solo dev) |
+| `…support.E2ePagedJsonAssertions`, `E2eProblemAssertions`, `E2eCorrelationAssertions` | Aserciones compartidas (paginación, Problem, `X-Correlation-Id`) |
+| `…integration.CatalogMastersGatewayE2EIT` | Datos de maestros (especies/provincias, `q` / `unaccent`) |
+| `…integration.hu001.Hu001Scenario0N…` | Escenarios de aceptación HU-001 |
+| `…support.E2eCollaboratorTokenSupport` | `@BeforeAll` / `@AfterAll` compartidos para token Keycloak |
+
+Habilitación: `E2eTokens#canRunGatewayE2eTests` (JWT) o `#canRunGatewaySecurityE2eTests` (esc. 3). Token preferido: `MTL_E2E_TOKEN_COLABORADOR`. Paralelismo JUnit desactivado (`src/test/resources/junit-platform.properties`); Failsafe `forkCount=1`.
 
 ## 3. Orientación antes de implementar
 

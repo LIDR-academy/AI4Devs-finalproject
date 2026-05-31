@@ -39,16 +39,27 @@ class MasterDataQueryServiceTest {
         List.of(
             new SpeciesListItemDto(1L, "Encina", 10L, "Robles (Quercus)"),
             new SpeciesListItemDto(2L, "Olivo", 20L, "Olivo (Olea)"));
-    when(especieReadRepository.search("a", PageRequest.of(0, EspecieRepository.MAX_UNPAGED)))
+    when(especieReadRepository.search("a", null, null, PageRequest.of(0, EspecieRepository.MAX_UNPAGED)))
         .thenReturn(new PageImpl<>(content, PageRequest.of(0, 2), 10_000));
 
-    MasterDataPageResponse<SpeciesListItemDto> response = service.listSpecies(0, 20, "a", true);
+    MasterDataPageResponse<SpeciesListItemDto> response = service.listSpecies(0, 20, "a", null, null, true);
 
     assertThat(response.unpaged()).isTrue();
     assertThat(response.content()).hasSize(2);
     assertThat(response.totalElements()).isEqualTo(2);
     assertThat(response.size()).isEqualTo(2);
-    verify(especieReadRepository).search("a", PageRequest.of(0, EspecieRepository.MAX_UNPAGED));
+    verify(especieReadRepository).search("a", null, null, PageRequest.of(0, EspecieRepository.MAX_UNPAGED));
+  }
+
+  @Test
+  void listSpecies_conGenusId_delegaEnRepositorio() {
+    when(especieReadRepository.search(null, 10L, null, PageRequest.of(0, 20)))
+        .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 20), 0));
+
+    MasterDataPageResponse<SpeciesListItemDto> response = service.listSpecies(0, 20, null, 10L, null, false);
+
+    assertThat(response.unpaged()).isFalse();
+    verify(especieReadRepository).search(null, 10L, null, PageRequest.of(0, 20));
   }
 
   @Test

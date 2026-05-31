@@ -13,6 +13,7 @@ const createAdminGenusMock = vi.hoisted(() => vi.fn())
 const createAdminFamilyMock = vi.hoisted(() => vi.fn())
 const createAdminSpeciesMock = vi.hoisted(() => vi.fn())
 const deleteAdminSpeciesMock = vi.hoisted(() => vi.fn())
+const fetchSpeciesMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/services/catalog/adminTaxonomy', () => ({
   fetchAdminSpeciesList: fetchAdminSpeciesListMock,
@@ -24,6 +25,10 @@ vi.mock('@/services/catalog/adminTaxonomy', () => ({
   createAdminGenus: createAdminGenusMock,
   createAdminFamily: createAdminFamilyMock,
   deleteAdminSpecies: deleteAdminSpeciesMock,
+}))
+
+vi.mock('@/services/catalog/catalogService', () => ({
+  fetchSpecies: fetchSpeciesMock,
 }))
 
 function createTestI18n() {
@@ -85,6 +90,7 @@ describe('mapAdminTaxonomyError', () => {
 describe('useAdminTaxonomyMasters', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    fetchSpeciesMock.mockResolvedValue([{ id: 1, label: 'Encina (Quercus ilex)' }])
     fetchAdminSpeciesListMock.mockResolvedValue({
       ...emptyPage,
       content: [{ id: 1, label: 'Encina (Quercus ilex)', genusId: 10, genusLabel: 'Robles (Quercus)' }],
@@ -279,5 +285,73 @@ describe('useAdminTaxonomyMasters', () => {
     await masters.goPreviousSpeciesPage()
     await nextTick()
     expect(masters.speciesPage.value).toBe(0)
+  })
+
+  it('applySpeciesFilter reinicia página y reenvía filtros al API', async () => {
+    const masters = mountMasters()
+    await masters.reloadAll()
+    masters.filterGenusId.value = '10'
+    masters.filterSpeciesId.value = '1'
+    await masters.applySpeciesFilter()
+    await nextTick()
+
+    expect(masters.speciesPage.value).toBe(0)
+    expect(fetchAdminSpeciesListMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ page: 0, size: 20, unpaged: false, genusId: 10, speciesId: 1 }),
+    )
+  })
+
+  it('clearSpeciesFilter limpia criterios y recarga sin filtros', async () => {
+    const masters = mountMasters()
+    await masters.reloadAll()
+    masters.filterGenusId.value = '10'
+    masters.filterSpeciesId.value = '1'
+    await masters.applySpeciesFilter()
+    await masters.clearSpeciesFilter()
+    await nextTick()
+
+    expect(masters.filterGenusId.value).toBe('')
+    expect(masters.filterSpeciesId.value).toBe('')
+    expect(fetchAdminSpeciesListMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ page: 0, size: 20, unpaged: false, genusId: undefined, speciesId: undefined }),
+    )
+  })
+
+  it('goNextSpeciesPage conserva filtros activos', async () => {
+    fetchAdminSpeciesListMock
+      .mockResolvedValueOnce({
+        ...emptyPage,
+        content: [{ id: 1, label: 'Encina (Quercus ilex)', genusId: 10, genusLabel: 'Robles (Quercus)' }],
+        totalElements: 25,
+        totalPages: 2,
+        last: false,
+      })
+      .mockResolvedValueOnce({
+        ...emptyPage,
+        content: [{ id: 1, label: 'Encina (Quercus ilex)', genusId: 10, genusLabel: 'Robles (Quercus)' }],
+        totalElements: 25,
+        totalPages: 2,
+        last: false,
+      })
+      .mockResolvedValueOnce({
+        ...emptyPage,
+        page: 1,
+        content: [{ id: 2, label: 'Roble (Quercus robur)', genusId: 10, genusLabel: 'Robles (Quercus)' }],
+        totalElements: 25,
+        totalPages: 2,
+        first: false,
+        last: true,
+      })
+
+    const masters = mountMasters()
+    await masters.reloadAll()
+    masters.filterGenusId.value = '10'
+    await masters.applySpeciesFilter()
+    await masters.goNextSpeciesPage()
+    await nextTick()
+
+    expect(fetchAdminSpeciesListMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ page: 1, genusId: 10 }),
+    )
   })
 })

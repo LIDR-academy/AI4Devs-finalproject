@@ -12,6 +12,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.mtl.gateway.integration.support.JwtTestTokens;
 import com.mtl.gateway.integration.support.LocalRsaReactiveJwtDecoderConfig;
+import com.mtl.gateway.web.CorrelationIdWebFilter;
 import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -148,5 +149,68 @@ class GatewayCatalogProxyJwtIT {
         1,
         getRequestedFor(urlPathEqualTo("/api/media/photos/1"))
             .withHeader(AUTHORIZATION, equalTo("Bearer " + token)));
+  }
+
+  @Test
+  void protectedCatalogRoute_withBearer_forwardsClientCorrelationIdToUpstream() {
+    String token = JwtTestTokens.accessTokenWithRealmRoles("it-user", List.of("COLABORADOR"));
+    String correlationId = "gw-proxy-corr-1";
+    wireMock.stubFor(
+        get(urlPathEqualTo("/api/catalog/species"))
+            .willReturn(
+                aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody("{\"content\":[],\"totalElements\":0,\"unpaged\":false}")));
+
+    webTestClient
+        .get()
+        .uri("/api/catalog/species")
+        .headers(
+            h -> {
+              h.setBearerAuth(token);
+              h.set(CorrelationIdWebFilter.HEADER_NAME, correlationId);
+            })
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .expectHeader()
+        .valueEquals(CorrelationIdWebFilter.HEADER_NAME, correlationId);
+
+    wireMock.verify(
+        1,
+        getRequestedFor(urlPathEqualTo("/api/catalog/species"))
+            .withHeader(CorrelationIdWebFilter.HEADER_NAME, equalTo(correlationId)));
+  }
+
+  @Test
+  void protectedCatalogRoute_withBearer_forwardsGeneratedCorrelationIdWhenClientOmitsHeader() {
+    String token = JwtTestTokens.accessTokenWithRealmRoles("it-user", List.of("COLABORADOR"));
+    wireMock.stubFor(
+        get(urlPathEqualTo("/api/catalog/species"))
+            .willReturn(
+                aResponse()
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody("{\"content\":[],\"totalElements\":0,\"unpaged\":false}")));
+
+    String responseCorrelationId =
+        webTestClient
+            .get()
+            .uri("/api/catalog/species")
+            .headers(h -> h.setBearerAuth(token))
+            .exchange()
+            .expectStatus()
+            .isOk()
+            .expectHeader()
+            .exists(CorrelationIdWebFilter.HEADER_NAME)
+            .returnResult(String.class)
+            .getResponseHeaders()
+            .getFirst(CorrelationIdWebFilter.HEADER_NAME);
+
+    wireMock.verify(
+        1,
+        getRequestedFor(urlPathEqualTo("/api/catalog/species"))
+            .withHeader(CorrelationIdWebFilter.HEADER_NAME, equalTo(responseCorrelationId)));
   }
 }

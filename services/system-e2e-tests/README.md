@@ -1,40 +1,55 @@
 # system-e2e-tests
 
-Pruebas de sistema contra el **API Gateway** y microservicios reales (sin WireMock).
+HTTP contra el **API Gateway** y microservicios reales (JWT Keycloak, sin WireMock).
+
+- **Estrategia back vs UI:** [testing-java.md](../../docs/engineering/testing-java.md) §2.1.1  
+- **Diseño del módulo:** [testing-java.md](../../docs/engineering/testing-java.md) §2.1.2  
 
 ## Requisitos
 
-1. Infra y servicios según [services/README.md](../README.md): al menos **Keycloak**, **PostgreSQL** con migraciones Flyway del catálogo aplicadas (**semilla de maestros**, p. ej. `V2__seed_maestros_inicial`), **catalog-service** (8081) y **api-gateway** (8080) con perfil `dev`.
-2. Un **access token** JWT de Keycloak (realm `mtl`) con rol **COLABORADOR** o **ADMIN**, válido para el `issuer-uri` configurado en gateway y catálogo.
+Stack según [services/README.md](../README.md): Keycloak, PostgreSQL (Flyway catálogo, semilla maestros), **catalog-service** (8081), **api-gateway** (8080), perfil `dev`.
+
+El `iss` del token debe coincidir con `MTL_JWT_ISSUER_URI` (por defecto `http://localhost:8180/realms/mtl`); no mezclar `localhost` y `127.0.0.1` al obtener el token.
+
+## Variables de entorno
+
+| Variable | Uso |
+|----------|-----|
+| `MTL_E2E_TOKEN_COLABORADOR` | Token manual (preferido) |
+| `MTL_E2E_ACCESS_TOKEN` | Legacy (misma prioridad que colaborador si falta el anterior) |
+| `MTL_E2E_AUTO_KEYCLOAK_TOKEN=true` | Token automático vía Admin API; activa `directAccessGrants` en `mtl-spa` solo durante el IT (dev) |
+| `MTL_E2E_RUN_SECURITY=true` | Habilita esc. 3 sin token en env (stack arriba) |
+| `MTL_E2E_GATEWAY_BASE_URL` | Default `http://127.0.0.1:8080` |
+| `MTL_KEYCLOAK_BASE_URL` | Default derivado de `MTL_JWT_ISSUER_URI` |
+| `KEYCLOAK_ADMIN` / `KEYCLOAK_ADMIN_PASSWORD` | Para modo automático (compose: `admin` / `admin_dev_password`) |
+
+Sin token ni `MTL_E2E_AUTO_KEYCLOAK_TOKEN`, los `*GatewayE2EIT` quedan deshabilitados (`@EnabledIf`); `mvn verify` sigue en verde (smoke unitario).
 
 ## Ejecución
 
-Desde la carpeta `services/`:
+Desde `services/`:
 
 ```powershell
-$env:MTL_E2E_ACCESS_TOKEN = "<access_token>"
-$env:MTL_E2E_GATEWAY_BASE_URL = "http://127.0.0.1:8080"  # opcional; por defecto igual
-mvn -pl system-e2e-tests verify
+$env:MTL_E2E_AUTO_KEYCLOAK_TOKEN = "true"
+mvn -pl system-e2e-tests "-Dit.test=Hu001Scenario*" verify          # HU-001 esc. 2–4
+mvn -pl system-e2e-tests verify                                      # + maestros (CatalogMasters…)
 ```
-
-En bash:
 
 ```bash
-export MTL_E2E_ACCESS_TOKEN="<access_token>"
-export MTL_E2E_GATEWAY_BASE_URL="http://127.0.0.1:8080"  # opcional
+export MTL_E2E_TOKEN_COLABORADOR="<token>"
 mvn -pl system-e2e-tests verify
 ```
 
-Si **no** defines `MTL_E2E_ACCESS_TOKEN`, la clase `CatalogMastersGatewayE2EIT` queda deshabilitada y Failsafe no ejecuta esos tests (el módulo sigue pasando `verify` gracias al smoke unitario).
+## Clases y escenarios
 
-## Qué comprueba
+| Clase | Comprueba |
+|-------|-----------|
+| `Hu001Scenario02…` | Esc. 2: COLABORADOR → species **200**; eco `X-Correlation-Id` |
+| `Hu001Scenario03…` | Esc. 3: sin Bearer / Bearer inválido → **401** Problem + correlación |
+| `Hu001Scenario04…` | Esc. 4: COLABORADOR → `families`, `species/1` → **403** (id `1` en semilla) |
+| `CatalogMastersGatewayE2EIT` | Maestros species/provinces, búsqueda `q` / `unaccent` |
 
-- `GET {gateway}/api/catalog/species?page=0&size=5` → 200, paginación coherente y **`content` con al menos un elemento** (asume semilla Flyway de maestros).
-- `GET {gateway}/api/catalog/species?page=0&size=5&q=cina` → lo mismo y ejercita búsqueda con **`unaccent`** en PostgreSQL.
-- `GET {gateway}/api/catalog/provinces?page=0&size=5` → igual que especies sin filtro.
-- `GET {gateway}/api/catalog/provinces?page=0&size=5&q=01` → búsqueda por código de provincia en semilla (`01` / Álava) con `unaccent`.
-
-Convención documentada: [docs/engineering/testing-java.md](../../docs/engineering/testing-java.md).
+Tags: `hu001`, `hu001-s0N`. Convención Maven/IT: [testing-java.md](../../docs/engineering/testing-java.md).
 
 ## Postman (gateway + maestros catálogo)
 

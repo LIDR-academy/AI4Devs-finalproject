@@ -31,6 +31,8 @@ public interface EspecieReadRepository extends EspecieRepository {
             )
             END
           )
+          AND (:genusId IS NULL OR e.genero_id = :genusId)
+          AND (:speciesId IS NULL OR e.especie_id = :speciesId)
           ORDER BY lower(coalesce(nullif(trim(e.nombre_comun), ''), e.nombre_cientifico)) ASC,
                    lower(e.nombre_cientifico) ASC
           """,
@@ -45,15 +47,21 @@ public interface EspecieReadRepository extends EspecieRepository {
             )
             END
           )
+          AND (:genusId IS NULL OR e.genero_id = :genusId)
+          AND (:speciesId IS NULL OR e.especie_id = :speciesId)
           """,
       nativeQuery = true)
   Page<EspecieListRow> searchSpeciesRows(
-      @Param("filter") boolean filter, @Param("q") String q, Pageable pageable);
+      @Param("filter") boolean filter,
+      @Param("q") String q,
+      @Param("genusId") Long genusId,
+      @Param("speciesId") Long speciesId,
+      Pageable pageable);
 
-  default Page<SpeciesListItemDto> search(String q, Pageable pageable) {
+  default Page<SpeciesListItemDto> search(String q, Long genusId, Long speciesId, Pageable pageable) {
     boolean filter = q != null && !q.isBlank();
     String qParam = filter ? q.trim() : "";
-    Page<EspecieListRow> page = searchSpeciesRows(filter, qParam, pageable);
+    Page<EspecieListRow> page = searchSpeciesRows(filter, qParam, genusId, speciesId, pageable);
     return page.map(
         row ->
             new SpeciesListItemDto(

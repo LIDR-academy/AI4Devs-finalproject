@@ -36,6 +36,10 @@ Ese conjunto **asume el papel** que en el ecosistema Spring Cloud cubrirían Eur
 - **Positivas:** menos componentes en el diagrama de despliegue, menos acoplamiento a Netflix/Spring Cloud Config, alineación con prácticas habituales en K8s (12-factor, GitOps).  
 - **Negativas:** no hay registro de instancias con heartbeat en el estilo Eureka; el escalado y el routing dependen del **Service** del orquestador o de actualizar definiciones de despliegue. La configuración centralizada con historial Git unificado para *todas* las props queda en manos del **repositorio de manifiestos/Helm** o del pipeline, no de un Config Server dedicado.
 
+## Producción (sin Eureka)
+
+En **producción** no se prevé un registro tipo Eureka: el **descubrimiento y el balanceo** los aporta el **orquestador** (p. ej. **Kubernetes** con `Service` + DNS interno `http://<nombre-servicio>:<puerto>`, o equivalente en la plataforma elegida). El gateway y los clientes deben recibir esas URIs vía **variables de entorno**, **ConfigMaps/Secrets** o manifiestos/Helm, no mediante registro dinámico en la aplicación. Escalar réplicas no exige reconfigurar Eureka; sí exige que las rutas del gateway apunten al **Service** estable del clúster (o a un Ingress interno acordado).
+
 ## Nota
 
-Si en el futuro se exigiera **configuración central con auditoría fuerte** o **descubrimiento fuera de un orquestador**, se podría reabrir el debate y añadir Consul, Vault, Spring Cloud Config, etc., como ADR nueva.
+Si en el futuro se exigiera **configuración central con auditoría fuerte** o **descubrimiento fuera de un orquestador** (p. ej. VMs sin K8s), se podría reabrir el debate y añadir Consul, Vault, Spring Cloud Config, etc., como ADR nueva.

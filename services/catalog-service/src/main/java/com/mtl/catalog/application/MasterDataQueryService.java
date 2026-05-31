@@ -43,14 +43,15 @@ public class MasterDataQueryService {
   @Cacheable(
       cacheNames = CatalogCacheConfig.CACHE_SPECIES_UNPAGED,
       key = "'by-common-label'",
-      condition = "#unpaged && (#q == null || #q.isBlank())")
+      condition =
+          "#unpaged && (#q == null || #q.isBlank()) && #genusId == null && #speciesId == null")
   public MasterDataPageResponse<SpeciesListItemDto> listSpecies(
-      int page, int size, String q, boolean unpaged) {
+      int page, int size, String q, Long genusId, Long speciesId, boolean unpaged) {
     Pageable pageable =
         unpaged
             ? PageRequest.of(0, EspecieRepository.MAX_UNPAGED)
             : PageRequest.of(page, size);
-    Page<SpeciesListItemDto> result = especieReadRepository.search(q, pageable);
+    Page<SpeciesListItemDto> result = especieReadRepository.search(q, genusId, speciesId, pageable);
     return toResponse(result, page, size, unpaged);
   }
 

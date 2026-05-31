@@ -15,7 +15,9 @@ import {
   type TaxonomyMasterPage,
   type TaxonomySpeciesListItem,
 } from '@/services/catalog/adminTaxonomy'
+import { fetchSpecies } from '@/services/catalog/catalogService'
 import { HttpError, NetworkError } from '@/services/http/apiClient'
+import type { MasterListItem } from '@/types/catalog'
 import {
   taxonomyValidationMessageKey,
   validateFamilyForm,
@@ -24,6 +26,18 @@ import {
 } from '@/composables/adminTaxonomyValidation'
 
 const SPECIES_PAGE_SIZE = 20
+
+function parseOptionalFilterId(value: string): number | undefined {
+  const trimmed = value.trim()
+  if (trimmed === '') {
+    return undefined
+  }
+  const parsed = Number(trimmed)
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return undefined
+  }
+  return parsed
+}
 
 export function mapAdminTaxonomyError(error: unknown, t: (key: string, params?: Record<string, unknown>) => string): string {
   if (error instanceof NetworkError) {
@@ -70,6 +84,12 @@ export function useAdminTaxonomyMasters() {
   const speciesFirst = ref(true)
   const speciesLast = ref(true)
   const isSpeciesListLoading = ref(false)
+
+  /** Id de especie seleccionado en autocompletado (cadena vacía = sin filtro). */
+  const filterSpeciesId = ref('')
+  /** Id de género del `<select>` (cadena vacía = todos). */
+  const filterGenusId = ref('')
+  const speciesFilterOptions = ref<MasterListItem[]>([])
 
   const hasSpeciesPrevious = computed(() => !speciesFirst.value)
   const hasSpeciesNext = computed(() => !speciesLast.value)
@@ -128,6 +148,21 @@ export function useAdminTaxonomyMasters() {
     speciesLast.value = true
   }
 
+  function speciesListQueryFilters(): { genusId?: number; speciesId?: number } {
+    return {
+      genusId: parseOptionalFilterId(filterGenusId.value),
+      speciesId: parseOptionalFilterId(filterSpeciesId.value),
+    }
+  }
+
+  async function loadSpeciesFilterOptions(signal?: AbortSignal): Promise<void> {
+    try {
+      speciesFilterOptions.value = await fetchSpecies(signal)
+    } catch {
+      speciesFilterOptions.value = []
+    }
+  }
+
   async function loadSpeciesList(): Promise<void> {
     const signal = nextSignal()
     isSpeciesListLoading.value = true
@@ -137,6 +172,7 @@ export function useAdminTaxonomyMasters() {
         page: speciesPage.value,
         size: SPECIES_PAGE_SIZE,
         unpaged: false,
+        ...speciesListQueryFilters(),
         signal,
       })
       applySpeciesPageResponse(res)
@@ -161,6 +197,20 @@ export function useAdminTaxonomyMasters() {
       return
     }
     speciesPage.value += 1
+    await loadSpeciesList()
+  }
+
+  async function applySpeciesFilter(): Promise<void> {
+    statusMessage.value = ''
+    speciesPage.value = 0
+    await loadSpeciesList()
+  }
+
+  async function clearSpeciesFilter(): Promise<void> {
+    filterSpeciesId.value = ''
+    filterGenusId.value = ''
+    statusMessage.value = ''
+    speciesPage.value = 0
     await loadSpeciesList()
   }
 
@@ -409,6 +459,9 @@ export function useAdminTaxonomyMasters() {
     hasSpeciesPrevious,
     hasSpeciesNext,
     hasSpeciesRows,
+    filterSpeciesId,
+    filterGenusId,
+    speciesFilterOptions,
     editingSpeciesId,
     editingSpeciesIdLoading,
     formGenusId,
@@ -432,7 +485,10 @@ export function useAdminTaxonomyMasters() {
     isSavingFamily,
     isDeleting,
     reloadAll,
+    loadSpeciesFilterOptions,
     loadSpeciesList,
+    applySpeciesFilter,
+    clearSpeciesFilter,
     goPreviousSpeciesPage,
     goNextSpeciesPage,
     resetForm,

@@ -3,6 +3,7 @@ package com.mtl.gateway.web;
 import java.util.UUID;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
@@ -10,8 +11,9 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 /**
- * Propaga {@value #HEADER_NAME} en peticiones al gateway (OpenAPI / api-security). El valor queda en
- * atributos del exchange para respuestas Problem y en la cabecera de respuesta.
+ * Normaliza {@value #HEADER_NAME} en peticiones al gateway (OpenAPI / api-security). El valor queda en
+ * atributos del exchange, en la cabecera de respuesta, en respuestas Problem y en la petición reenviada
+ * al upstream (proxy).
  */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -28,6 +30,7 @@ public class CorrelationIdWebFilter implements WebFilter {
     }
     exchange.getAttributes().put(EXCHANGE_ATTR, id);
     exchange.getResponse().getHeaders().set(HEADER_NAME, id);
-    return chain.filter(exchange);
+    ServerHttpRequest mutated = exchange.getRequest().mutate().header(HEADER_NAME, id).build();
+    return chain.filter(exchange.mutate().request(mutated).build());
   }
 }

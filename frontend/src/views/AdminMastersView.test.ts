@@ -12,6 +12,7 @@ const fetchAdminSpeciesDetailMock = vi.hoisted(() => vi.fn())
 const createAdminSpeciesMock = vi.hoisted(() => vi.fn())
 const createAdminGenusMock = vi.hoisted(() => vi.fn())
 const deleteAdminSpeciesMock = vi.hoisted(() => vi.fn())
+const fetchSpeciesMock = vi.hoisted(() => vi.fn())
 
 vi.mock('@/services/catalog/adminTaxonomy', () => ({
   fetchAdminSpeciesList: fetchAdminSpeciesListMock,
@@ -23,6 +24,10 @@ vi.mock('@/services/catalog/adminTaxonomy', () => ({
   deleteAdminSpecies: deleteAdminSpeciesMock,
   createAdminGenus: createAdminGenusMock,
   createAdminFamily: vi.fn(),
+}))
+
+vi.mock('@/services/catalog/catalogService', () => ({
+  fetchSpecies: fetchSpeciesMock,
 }))
 
 vi.mock('vue-router', async (importOriginal) => {
@@ -77,6 +82,7 @@ const emptyPage = {
 describe('AdminMastersView', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    fetchSpeciesMock.mockResolvedValue([{ id: 1, label: 'Encina (Quercus ilex)' }])
     fetchAdminSpeciesListMock.mockResolvedValue({
       ...emptyPage,
       content: [{ id: 1, label: 'Encina (Quercus ilex)', genusId: 10, genusLabel: 'Robles (Quercus)' }],
@@ -353,5 +359,47 @@ describe('AdminMastersView', () => {
     const nextButton = wrapper.findAll('button').find((b) => b.text() === 'Siguiente')
     expect(nextButton).toBeDefined()
     expect((nextButton!.element as HTMLButtonElement).disabled).toBe(false)
+  })
+
+  it('aplica filtro de género y reenvía genusId al listado', async () => {
+    const wrapper = mount(AdminMastersView, {
+      global: {
+        plugins: [createTestI18n()],
+        stubs: { MtlConfirmDialog: true },
+      },
+    })
+    await flushPromises()
+
+    await wrapper.get('#admin-masters-filter-genus').setValue('10')
+    await wrapper.get('.catalog-toolbar__form').trigger('submit.prevent')
+    await flushPromises()
+
+    expect(fetchAdminSpeciesListMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ page: 0, genusId: 10 }),
+    )
+  })
+
+  it('limpia filtros al pulsar Limpiar', async () => {
+    const wrapper = mount(AdminMastersView, {
+      global: {
+        plugins: [createTestI18n()],
+        stubs: { MtlConfirmDialog: true },
+      },
+    })
+    await flushPromises()
+
+    await wrapper.get('#admin-masters-filter-genus').setValue('10')
+    await wrapper.get('.catalog-toolbar__form').trigger('submit.prevent')
+    await flushPromises()
+
+    const clearButton = wrapper.findAll('button').find((b) => b.text() === 'Limpiar')
+    expect(clearButton).toBeDefined()
+    await clearButton!.trigger('click')
+    await flushPromises()
+
+    expect((wrapper.get('#admin-masters-filter-genus').element as HTMLSelectElement).value).toBe('')
+    expect(fetchAdminSpeciesListMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ page: 0, genusId: undefined, speciesId: undefined }),
+    )
   })
 })

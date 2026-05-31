@@ -103,7 +103,7 @@ Backlog `HU-013`; `readme.md` §1.2 (consulta pública), §1.3 (jerarquía de p�
 | **Valiosa** | Sí: habilita recorrido completo del MVP por perfil y reduce fricción de validación funcional temprana. |
 | **Estimable** | Sí: alcance técnico claro y acotado a routing, guardas, navegación y scaffolding de vistas. |
 | **Small** | Aceptable para M si se respeta límite de placeholders; deja de ser pequeña si se intenta completar lógica funcional de cada página. |
-| **Testable** | Sí: verificable con pruebas de navegación y control de acceso por perfil (público, colaborador, `ADMIN`). |
+| **Testable** | Sí: **Vitest** (router/guardas, **TASK-HU-013-10**). Recorrido UI según [testing-java.md](../engineering/testing-java.md) §2.1.1 (fila HU-013). API por rol: **HU-001** / `system-e2e-tests`. |
 
 ## 5. Esfuerzo estimado de implementación
 

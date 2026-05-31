@@ -19,7 +19,7 @@ Documento operativo alineado con [readme.md](../../readme.md) §2.5, [infra/comp
 - Stack: **Spring Boot 4**, **Spring Cloud Gateway** en modo servidor **WebFlux**; dependencia Maven **`spring-cloud-starter-gateway-server-webflux`** (train Spring Cloud **2025.1.x** / Gateway **5.x**; el artefacto histórico `spring-cloud-starter-gateway` ya no aplica en ese train).
 - Rutas proxy: definidas en **`spring.cloud.gateway.server.webflux.routes`**. URIs de destino en YAML como **`mtl.catalog.uri`**, **`mtl.media.uri`**, **`mtl.notification.uri`**, **`mtl.ai.uri`** (por defecto `http://localhost:8081` … `8084`); en despliegue suelen mapearse desde **`MTL_CATALOG_URI`**, **`MTL_MEDIA_URI`**, etc., vía *relaxed binding* de Spring Boot. Prefijos `/api/catalog/**`, `/api/media/**`, `/api/notifications/**`, `/api/ai/**`.
 - Tras validar el JWT, el cliente HTTP del gateway **reenvía** `Authorization: Bearer` al upstream (**token relay**); los microservicios deben configurar su propio resource server con el mismo criterio de `issuer-uri` cuando expongan API.
-- **Roadmap técnico del módulo gateway** (no bloquean la descripción anterior): timeouts y resiliencia del proxy hacia upstreams; documentación de despliegue en contenedor/red Docker. **CORS** explícito y **correlación** (`X-Correlation-Id` u otra acordada): ver §5–6.
+- **Roadmap técnico del módulo gateway** (no bloquean la descripción anterior): timeouts y resiliencia del proxy hacia upstreams; documentación de despliegue en contenedor/red Docker. **CORS** explícito y **correlación** `X-Correlation-Id` (normalización, reenvío al upstream y Problem): **implementados** — ver §5–6.
 
 ## 3. Propagación hacia microservicios (decisión MVP)
 
@@ -53,4 +53,6 @@ El código del gateway sigue el **modo token relay** por defecto; cualquier camb
 
 ## 6. Correlación y logs
 
-- Propagar `X-Correlation-Id` (o nombre acordado) desde el gateway a los microservicios; no registrar tokens ni PII en logs ([logging.mdc](../../.cursor/rules/logging.mdc)).
+- **`CorrelationIdWebFilter`** en el gateway: lee o genera `X-Correlation-Id`, lo fija en la petición reenviada al upstream (proxy), en la cabecera de respuesta y en atributos del exchange para respuestas Problem (`correlationId`).
+- Los microservicios MVC (`catalog-service`, `media-service`, `notification-service`) leen la misma cabecera en **`CorrelationIdFilter`** (MDC `correlationId` para logs y Problem).
+- No registrar tokens ni PII en logs ([logging.mdc](../../.cursor/rules/logging.mdc)).

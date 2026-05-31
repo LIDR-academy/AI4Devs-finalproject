@@ -194,6 +194,18 @@ export const es = {
     emptyList: 'No hay especies registradas todavía.',
     resultsCount: '{count} resultado(s)',
     loadingSpecies: 'Cargando especies…',
+    filters: {
+      species: {
+        label: 'Especie',
+        placeholder: 'Ej.: Encina o Quercus ilex',
+      },
+      genus: {
+        label: 'Género',
+        all: 'Todos los géneros',
+      },
+      apply: 'Aplicar filtro',
+      clear: 'Limpiar',
+    },
     columns: {
       species: 'Especie',
       genus: 'Género',

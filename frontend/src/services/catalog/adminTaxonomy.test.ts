@@ -64,6 +64,17 @@ describe('adminTaxonomy', () => {
     })
   })
 
+  it('fetchAdminSpeciesList reenvía genusId y speciesId cuando se indican', async () => {
+    apiFetchMock.mockResolvedValueOnce({ content: [] })
+
+    await fetchAdminSpeciesList({ genusId: 10, speciesId: 3, signal: undefined })
+
+    expect(apiFetchMock).toHaveBeenCalledWith('/api/catalog/species', {
+      query: { unpaged: false, page: 0, size: 20, genusId: 10, speciesId: 3 },
+      signal: undefined,
+    })
+  })
+
   it('fetchAdminSpeciesDetail usa speciesId en la ruta', async () => {
     const item = {
       speciesId: 2,

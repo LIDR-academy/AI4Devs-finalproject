@@ -32,8 +32,8 @@ paths:
       summary: Listar especies (maestros) para formularios
       description: >
         Listado paginado o sin paginar (`unpaged=true`, con tope en servidor) para formularios de colaboración
-        y administración. Requiere JWT con rol de realm **COLABORADOR** o **ADMIN**. Filtro opcional `q`:
-        subcadena insensible a mayúsculas y acentos (PostgreSQL `unaccent`) sobre nombre común y nombre científico.
+        y administración. Requiere JWT con rol de realm **COLABORADOR** o **ADMIN**. Filtros opcionales: `q`
+        (subcadena en nombre común o científico), `genusId` y `speciesId` (exactos); combinables con paginación.
         Campo `label` recomendado para `<option>`: `nombre común (nombre científico)` (p. ej. `Encina (Quercus ilex)`).
       security:
         - bearerAuth: []
@@ -47,6 +47,22 @@ paths:
             type: string
             maxLength: 200
           description: Filtro por subcadena en nombre común o nombre científico.
+        - name: genusId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+          description: Filtro exacto por identificador de género taxonómico (`genero_id`).
+        - name: speciesId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+          description: Filtro exacto por identificador de especie (`especie_id`).
         - name: unpaged
           in: query
           required: false

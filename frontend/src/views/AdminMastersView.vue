@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import MtlConfirmDialog from '@/components/MtlConfirmDialog.vue'
 import MtlFormDialog from '@/components/MtlFormDialog.vue'
 import PageBackLink from '@/components/layout/PageBackLink.vue'
+import SpeciesAutocompleteInput from '@/components/SpeciesAutocompleteInput.vue'
 import { useAdminTaxonomyMasters } from '@/composables/useAdminTaxonomyMasters'
 
 const route = useRoute()
@@ -51,7 +52,13 @@ const {
   isSavingFamily,
   isDeleting,
   speciesPage,
+  filterSpeciesId,
+  filterGenusId,
+  speciesFilterOptions,
   reloadAll,
+  loadSpeciesFilterOptions,
+  applySpeciesFilter,
+  clearSpeciesFilter,
   goPreviousSpeciesPage,
   goNextSpeciesPage,
   openCreateSpecies,
@@ -78,8 +85,19 @@ const speciesModalTitle = computed(() =>
     : t('adminMasters.form.createTitle'),
 )
 
-onMounted(() => {
-  void reloadAll()
+const speciesAutocompleteRef = ref<InstanceType<typeof SpeciesAutocompleteInput> | null>(null)
+
+async function onApplySpeciesFilter(): Promise<void> {
+  speciesAutocompleteRef.value?.commitSpeciesFromText()
+  await applySpeciesFilter()
+}
+
+async function onClearSpeciesFilter(): Promise<void> {
+  await clearSpeciesFilter()
+}
+
+onMounted(async () => {
+  await Promise.all([reloadAll(), loadSpeciesFilterOptions()])
 })
 </script>
 
@@ -98,6 +116,55 @@ onMounted(() => {
     }}</output>
 
     <div v-if="!isLoading" class="admin-masters-layout">
+      <section class="catalog-toolbar" :aria-label="t('adminMasters.filters.apply')">
+        <form class="catalog-toolbar__form" @submit.prevent="onApplySpeciesFilter">
+          <div class="catalog-toolbar__panel">
+            <div class="catalog-toolbar__fields catalog-toolbar__fields--pair">
+              <div class="filter-field">
+                <label class="form-label" for="admin-masters-filter-species">{{
+                  t('adminMasters.filters.species.label')
+                }}</label>
+                <SpeciesAutocompleteInput
+                  ref="speciesAutocompleteRef"
+                  input-id="admin-masters-filter-species"
+                  v-model="filterSpeciesId"
+                  :species="speciesFilterOptions"
+                  input-class="form-control"
+                  :placeholder="t('adminMasters.filters.species.placeholder')"
+                />
+              </div>
+              <div class="filter-field">
+                <label class="form-label" for="admin-masters-filter-genus">{{
+                  t('adminMasters.filters.genus.label')
+                }}</label>
+                <select id="admin-masters-filter-genus" v-model="filterGenusId" class="form-control">
+                  <option value="">{{ t('adminMasters.filters.genus.all') }}</option>
+                  <option v-for="g in generaList" :key="g.id" :value="String(g.id)">{{ g.label }}</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="catalog-toolbar__actions">
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                :disabled="isSpeciesListLoading"
+                @click="onClearSpeciesFilter"
+              >
+                {{ t('adminMasters.filters.clear') }}
+              </button>
+              <button
+                type="submit"
+                class="btn btn-primary-soft btn-sm catalog-toolbar__submit"
+                :disabled="isSpeciesListLoading"
+              >
+                {{ t('adminMasters.filters.apply') }}
+              </button>
+            </div>
+          </div>
+        </form>
+      </section>
+
       <h2 class="tree-detail-panel__title admin-masters-section-title">{{ t('adminMasters.listTitle') }}</h2>
 
       <p v-if="isSpeciesListLoading" class="status-note">{{ t('adminMasters.loadingSpecies') }}</p>

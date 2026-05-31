@@ -50,7 +50,7 @@ class EspecieReadRepositoryNativeQueryIT {
   @Test
   void busquedaPorPatronComun_sinAcentos_encuentraEncina() {
     Page<SpeciesListItemDto> page =
-        especieReadRepository.search("cina", PageRequest.of(0, 20));
+        especieReadRepository.search("cina", null, null, PageRequest.of(0, 20));
     assertThat(page.getContent())
         .anyMatch(
             row ->
@@ -63,7 +63,7 @@ class EspecieReadRepositoryNativeQueryIT {
   @Test
   void busquedaPorPatronCientifico_caseInsensitive_encuentraQuercus() {
     Page<SpeciesListItemDto> page =
-        especieReadRepository.search("quercus", PageRequest.of(0, 5));
+        especieReadRepository.search("quercus", null, null, PageRequest.of(0, 5));
     assertThat(page.getContent()).isNotEmpty();
     assertThat(page.getContent().getFirst().label().toLowerCase()).contains("quercus");
   }
@@ -71,16 +71,47 @@ class EspecieReadRepositoryNativeQueryIT {
   @Test
   void listadoSinFiltro_incluyeGenusIdYGenusLabelEnCadaFila() {
     Page<SpeciesListItemDto> page =
-        especieReadRepository.search(null, PageRequest.of(0, EspecieRepository.MAX_UNPAGED));
+        especieReadRepository.search(null, null, null, PageRequest.of(0, EspecieRepository.MAX_UNPAGED));
     assertThat(page.getContent()).isNotEmpty();
     assertThat(page.getContent())
         .allMatch(row -> row.genusId() > 0 && row.genusLabel() != null && !row.genusLabel().isBlank());
   }
 
   @Test
+  void filtroPorSpeciesId_devuelveSoloEsaEspecie() {
+    SpeciesListItemDto encina =
+        especieReadRepository.search("cina", null, null, PageRequest.of(0, 20)).getContent().stream()
+            .filter(row -> row.label().contains("Encina"))
+            .findFirst()
+            .orElseThrow();
+
+    Page<SpeciesListItemDto> filtered =
+        especieReadRepository.search(null, null, encina.id(), PageRequest.of(0, 20));
+
+    assertThat(filtered.getTotalElements()).isEqualTo(1);
+    assertThat(filtered.getContent().getFirst().id()).isEqualTo(encina.id());
+  }
+
+  @Test
+  void filtroPorGenusId_devuelveSoloEspeciesDelGenero() {
+    SpeciesListItemDto encina =
+        especieReadRepository.search("cina", null, null, PageRequest.of(0, 20)).getContent().stream()
+            .filter(row -> row.label().contains("Encina"))
+            .findFirst()
+            .orElseThrow();
+
+    Page<SpeciesListItemDto> filtered =
+        especieReadRepository.search(null, encina.genusId(), null, PageRequest.of(0, 50));
+
+    assertThat(filtered.getContent()).isNotEmpty();
+    assertThat(filtered.getContent()).allMatch(row -> row.genusId() == encina.genusId());
+    assertThat(filtered.getContent()).anyMatch(row -> row.id() == encina.id());
+  }
+
+  @Test
   void listadoSinFiltro_ordenadoPorNombreComun_antesQueCientifico() {
     Page<SpeciesListItemDto> page =
-        especieReadRepository.search(null, PageRequest.of(0, EspecieRepository.MAX_UNPAGED));
+        especieReadRepository.search(null, null, null, PageRequest.of(0, EspecieRepository.MAX_UNPAGED));
     var labels = page.getContent().stream().map(SpeciesListItemDto::label).toList();
     int coscoja =
         indexOfLabelContaining(labels, "Coscoja", "Quercus coccifera");

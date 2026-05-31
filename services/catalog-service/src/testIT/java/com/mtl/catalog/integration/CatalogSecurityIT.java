@@ -3,6 +3,7 @@ package com.mtl.catalog.integration;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -23,7 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * Verifica 401/403 con cuerpo RFC 9457 y el mismo {@link JwtDecoder} + conversor de roles que en
  * tiempo de ejecución (salvo el decoder sustituido en {@link JwtDecoderConfigTest}).
  *
- * <p>Incluye rutas taxonómicas ADMIN (HU-011): familias, géneros y CRUD de especies.
+ * <p>Incluye rutas taxonómicas ADMIN (HU-011 esc. 2): familias, géneros y CRUD de especies.
  */
 @Tag("integration")
 @SpringBootTest
@@ -146,6 +147,34 @@ class CatalogSecurityIT {
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + JwtDecoderConfigTest.TOKEN_COLABORADOR)
                 .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.status").value(403));
+  }
+
+  @Test
+  void postGenera_colaborador_devuelve403ProblemJson() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/catalog/genera")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + JwtDecoderConfigTest.TOKEN_COLABORADOR)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"familyId\":1,\"scientificName\":\"Pinus\"}")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.title").value("Prohibido"))
+        .andExpect(jsonPath("$.status").value(403));
+  }
+
+  @Test
+  void putSpecies_colaborador_devuelve403ProblemJson() throws Exception {
+    mockMvc
+        .perform(
+            put("/api/catalog/species/1")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + JwtDecoderConfigTest.TOKEN_COLABORADOR)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"genusId\":1,\"scientificName\":\"Quercus ilex\"}")
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.title").value("Prohibido"))
         .andExpect(jsonPath("$.status").value(403));
   }
 }
