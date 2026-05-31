@@ -236,7 +236,9 @@ Se ha utilizado el **Prompt 1** de la sección `2.1. Diagrama de arquitectura`, 
 
 ### **2.5. Seguridad**
 
-**Prompt 1:**
+**Prompt 1: Primera versión prácticas de seguridad y OWASP**
+
+Analiza @docs/ARCHITECTURE.md y @docs/DATA-MODEL.md y enumera las prácticas de seguridad principales a tener en cuenta durante la implementación del proyecto, considerando OWASP Top 10 como referencia. Añádelas como una nueva sección en @CLAUDE.md
 
 **Prompt 2:**
 

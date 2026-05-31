@@ -350,3 +350,10 @@ Analiza las User Stories generadas en @docs/USER-STORIES.md y añade una secció
 # Prompt 10: Actualiza el readme con el backlog del MVP
 
 Lleva la tabla "Backlog MVP - Historias imprescindibles — Secuencia de implementación recomendada" contenida en @docs/USER-STORIES.md a la sección "5. Historias de Usuario" de @readme.md, además añade referencia al fichero @docs/USER-STORIES.md 
+
+
+---
+
+# Prompt 11: Primera versión prácticas de seguridad y OWASP
+
+Analiza @docs/ARCHITECTURE.md y @docs/DATA-MODEL.md y enumera las prácticas de seguridad principales a tener en cuenta durante la implementación del proyecto, considerando OWASP Top 10 como referencia. Añádelas como una nueva sección en @CLAUDE.md
