@@ -1,0 +1,502 @@
+openapi: 3.0.0
+info:
+  title: API ConRutina
+  description: |
+    API REST de ConRutina, aplicación de seguimiento de hábitos con sistema de recompensas.
+    
+    Sigue principios de Clean Architecture y una arquitectura por capas para gestionar hábitos de forma escalable.
+    
+    ## Funcionalidades
+    - Gestión del perfil de usuario
+    - Seguimiento de hábitos con estado diario de completitud
+    - Gestión y canje de recompensas
+    - Vistas de calendario semanal
+    - Sistema de puntos y penalizaciones
+    
+  version: 0.0.1
+  contact:
+    name: Equipo de desarrollo ConRutina
+  license:
+    name: ISC
+    
+servers:
+  - url: http://localhost:3001
+    description: Servidor API de desarrollo (Node/Express)
+  - url: http://localhost:5173
+    description: Servidor frontend de desarrollo (Vite con proxy)
+
+paths:
+  /health:
+    get:
+      summary: Health check del API
+      description: Indica que el proceso del servidor Express está disponible
+      tags:
+        - Sistema
+      responses:
+        '200':
+          description: Servidor disponible
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - timestamp
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2026-05-30T12:00:00.000Z"
+
+  /api/profile:
+    get:
+      summary: Obtener perfil de usuario
+      description: Devuelve la información del perfil (actualmente fijado al usuario con id=1)
+      tags:
+        - Usuario
+      responses:
+        '200':
+          description: Perfil obtenido correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+              example:
+                id: 1
+                name: "María García"
+                email: "maria@ejemplo.com"
+        '404':
+          description: Usuario no encontrado (formato legacy hasta T-06-01)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LegacyErrorResponse'
+              example:
+                error: "Usuario con id 1 no encontrado"
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                code: "INTERNAL_ERROR"
+                message: "Error interno del servidor"
+
+  # Endpoints futuros (planificados):
+  
+  /api/habits:
+    get:
+      summary: Listar hábitos (PLANIFICADO)
+      description: Obtiene todos los hábitos del usuario autenticado
+      tags:
+        - Hábitos
+      responses:
+        '200':
+          description: Lista de hábitos obtenida correctamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Habit'
+        '500':
+          description: Error interno del servidor
+    
+    post:
+      summary: Crear hábito (PLANIFICADO)
+      description: Crea un nuevo hábito para seguimiento
+      tags:
+        - Hábitos
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateHabitRequest'
+      responses:
+        '201':
+          description: Hábito creado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Habit'
+        '400':
+          description: Error de validación
+        '500':
+          description: Error interno del servidor
+
+  /api/habits/{id}:
+    put:
+      summary: Actualizar hábito (PLANIFICADO)
+      description: Actualiza un hábito existente
+      tags:
+        - Hábitos
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Identificador del hábito
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateHabitRequest'
+      responses:
+        '200':
+          description: Hábito actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Habit'
+        '404':
+          description: Hábito no encontrado
+        '500':
+          description: Error interno del servidor
+    
+    delete:
+      summary: Eliminar hábito (PLANIFICADO)
+      description: Elimina un hábito
+      tags:
+        - Hábitos
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Identificador del hábito
+      responses:
+        '204':
+          description: Hábito eliminado correctamente
+        '404':
+          description: Hábito no encontrado
+        '500':
+          description: Error interno del servidor
+
+  /api/habits/{id}/toggle/{dayIndex}:
+    post:
+      summary: Alternar completitud del hábito (PLANIFICADO)
+      description: Cambia el estado de completitud de un día concreto
+      tags:
+        - Hábitos
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Identificador del hábito
+        - in: path
+          name: dayIndex
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 6
+          description: Índice del día (0-6, domingo a sábado)
+      responses:
+        '200':
+          description: Estado del hábito actualizado correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Habit'
+        '404':
+          description: Hábito no encontrado
+        '500':
+          description: Error interno del servidor
+
+  /api/rewards:
+    get:
+      summary: Listar recompensas (PLANIFICADO)
+      description: Obtiene todas las recompensas del usuario autenticado
+      tags:
+        - Recompensas
+      responses:
+        '200':
+          description: Lista de recompensas obtenida correctamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Reward'
+        '500':
+          description: Error interno del servidor
+    
+    post:
+      summary: Crear recompensa (PLANIFICADO)
+      description: Crea una nueva recompensa
+      tags:
+        - Recompensas
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRewardRequest'
+      responses:
+        '201':
+          description: Recompensa creada correctamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reward'
+        '400':
+          description: Error de validación
+        '500':
+          description: Error interno del servidor
+
+  /api/rewards/{id}:
+    delete:
+      summary: Eliminar recompensa (PLANIFICADO)
+      description: Elimina una recompensa
+      tags:
+        - Recompensas
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Identificador de la recompensa
+      responses:
+        '204':
+          description: Recompensa eliminada correctamente
+        '404':
+          description: Recompensa no encontrada
+        '500':
+          description: Error interno del servidor
+
+  /api/rewards/{id}/redeem:
+    post:
+      summary: Canjear recompensa (PLANIFICADO)
+      description: Canjea una recompensa usando los puntos acumulados
+      tags:
+        - Recompensas
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: Identificador de la recompensa
+      responses:
+        '200':
+          description: Recompensa canjeada correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Recompensa canjeada correctamente"
+                  remainingPoints:
+                    type: integer
+                    description: Puntos restantes tras el canje
+        '400':
+          description: Puntos insuficientes
+        '404':
+          description: Recompensa no encontrada
+        '500':
+          description: Error interno del servidor
+
+components:
+  schemas:
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Identificador único del usuario
+        name:
+          type: string
+          nullable: true
+          description: Nombre completo del usuario
+        email:
+          type: string
+          format: email
+          description: Correo electrónico del usuario
+      required:
+        - id
+        - email
+
+    Habit:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Identificador único del hábito
+        emoji:
+          type: string
+          description: Emoji que representa el hábito
+        name:
+          type: string
+          description: Nombre del hábito
+        pointsPerDay:
+          type: integer
+          description: Puntos al completar el hábito
+        penalty:
+          type: integer
+          description: Puntos descontados si falla el hábito
+        streak:
+          type: integer
+          description: Racha actual de días consecutivos completados
+        completionStatus:
+          type: array
+          items:
+            type: string
+            enum: [completed, failed, pending]
+          description: Array de 7 estados (uno por día de la semana)
+      required:
+        - id
+        - emoji
+        - name
+        - pointsPerDay
+        - penalty
+        - streak
+        - completionStatus
+
+    CreateHabitRequest:
+      type: object
+      properties:
+        emoji:
+          type: string
+          description: Emoji que representa el hábito
+        name:
+          type: string
+          description: Nombre del hábito
+        pointsPerDay:
+          type: integer
+          minimum: 1
+          description: Puntos al completar el hábito
+        penalty:
+          type: integer
+          minimum: 0
+          description: Puntos descontados si falla el hábito
+      required:
+        - emoji
+        - name
+        - pointsPerDay
+        - penalty
+
+    UpdateHabitRequest:
+      type: object
+      properties:
+        emoji:
+          type: string
+          description: Emoji que representa el hábito
+        name:
+          type: string
+          description: Nombre del hábito
+        pointsPerDay:
+          type: integer
+          minimum: 1
+          description: Puntos al completar el hábito
+        penalty:
+          type: integer
+          minimum: 0
+          description: Puntos descontados si falla el hábito
+
+    Reward:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Identificador único de la recompensa
+        emoji:
+          type: string
+          description: Emoji que representa la recompensa
+        name:
+          type: string
+          description: Nombre de la recompensa
+        description:
+          type: string
+          description: Descripción de la recompensa
+        cost:
+          type: integer
+          description: Puntos necesarios para canjear
+      required:
+        - id
+        - emoji
+        - name
+        - description
+        - cost
+
+    CreateRewardRequest:
+      type: object
+      properties:
+        emoji:
+          type: string
+          description: Emoji que representa la recompensa
+        name:
+          type: string
+          description: Nombre de la recompensa
+        description:
+          type: string
+          description: Descripción de la recompensa
+        cost:
+          type: integer
+          minimum: 1
+          description: Puntos necesarios para canjear
+      required:
+        - emoji
+        - name
+        - description
+        - cost
+
+    ApiErrorResponse:
+      type: object
+      description: Respuesta de error estándar del middleware errorHandler
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Código de error estable en inglés (p. ej. VALIDATION_ERROR, INTERNAL_ERROR)
+        message:
+          type: string
+          description: Mensaje legible para el usuario en español
+        details:
+          description: Detalles opcionales (array de campos de validación u objeto)
+        stack:
+          type: string
+          description: Stack trace; solo presente cuando NODE_ENV !== production
+
+    LegacyErrorResponse:
+      type: object
+      description: Formato legacy de error (pendiente migración en T-06-01)
+      properties:
+        error:
+          type: string
+          description: Mensaje de error (en español para el usuario)
+      required:
+        - error
+
+    ErrorResponse:
+      type: object
+      deprecated: true
+      description: Alias legacy; preferir ApiErrorResponse
+      properties:
+        error:
+          type: string
+          description: Mensaje de error (en español para el usuario)
+      required:
+        - error
+
+tags:
+  - name: Usuario
+    description: Operaciones de perfil de usuario
+  - name: Hábitos
+    description: Seguimiento y gestión de hábitos
+  - name: Recompensas
+    description: Gestión y canje de recompensas

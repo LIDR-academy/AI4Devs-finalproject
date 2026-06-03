@@ -1,0 +1,58 @@
+schema: spec-driven
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+context: |
+  Single source of truth: follow docs/base-standards.md for all project rules, workflow, and quality expectations. Do not treat other rule sources as authoritative if they conflict with base-standards.
+
+  Product and backlog (read for every change tied to a ticket):
+  - docs/product-backlog.md — tickets T-XX-YY, sprints, DoD, happy path, edge cases; User Stories US-XX with Gherkin AC in section 1
+  - docs/prd.md — product vision, domain model, system design
+
+  Standards and references (read as needed for the work):
+  - docs/openspec-tasks-mandatory-steps.md — mandatory steps for openspec tasks.md and apply/archive workflow
+  - docs/base-standards.md — primary rulebook; links to detailed standards below
+  - docs/backend-standards.md — backend conventions (API, Clean Architecture, Prisma, PostgreSQL)
+  - docs/frontend-standards.md — frontend conventions (React, Vite, Tailwind v4, layers)
+  - docs/documentation-standards.md — documentation structure and maintenance
+  - docs/development_guide.md — local setup, scripts, environment
+  - docs/api-spec.yml — API contract and behavior
+  - docs/data-model.md — domain entities, relationships, evolution
+
+  OpenSpec workflow conventions:
+  - One change per development ticket (T-XX-YY), processed in sprint order from product-backlog.md
+  - Change name: t-[US]-[SEQ]-[short-kebab-name] (e.g. t-13-01-habit-domain-types)
+  - Git branch: feature/[TICKET-ID]-[short-kebab-name] (e.g. feature/T-13-01-habit-domain-types)
+  - Git commits: NO commits during /opsx:apply; single commit with bullet-point message only when user accepts and /opsx:archive runs (then push feature branch to remote, then merge to develop)
+  - On /opsx:archive (last step after mv to archive/): attempt `npm run openspec:mark-ticket -- --change <name>` to set **Estado en código** to ✅ Implementado in docs/product-backlog.md section 4; if it fails, archive is still complete — fix backlog manually later
+  - Documentation language: Spanish; code identifiers: English
+  - The backlog may describe greenfield; always inspect existing code and reflect actual repo state in artifacts
+
+# Per-artifact rules (optional)
+rules:
+  proposal:
+    - Always reference Ticket ID (T-XX-YY) and User Story (US-XX) in the header
+    - Include a "Non-goals" section scoped strictly to the ticket
+    - Do not expand scope beyond the ticket DoD in product-backlog.md
+    - Link acceptance criteria to Gherkin scenarios from the parent US
+    - Write in Spanish
+  specs:
+    - Translate ticket DoD and parent US Gherkin AC into verifiable scenarios
+    - One capability folder per logical feature area affected by the ticket
+    - Use WHEN/THEN/AND structure aligned with BDD from the backlog
+    - Do not invent requirements absent from backlog, PRD, or api-spec/data-model
+  design:
+    - Read existing code before proposing new structure; prefer extending over duplicating
+    - Backend tickets: follow Clean Architecture layers in backend-standards.md
+    - Frontend tickets: follow presentation/application/domain/infrastructure layers in frontend-standards.md
+    - Infra/tooling tickets: align with development_guide.md and current package.json scripts
+    - Call out dependencies on prior tickets/sprints when relevant
+    - Write in Spanish; code paths and identifiers in English
+  tasks:
+    - Follow docs/openspec-tasks-mandatory-steps.md exactly (Paso 0 branch, tests, reports, docs, push feature, merge)
+    - Paso 0 MUST be first: branch feature/[ticket-id]-[ticket-name] from develop
+    - Do NOT include git commit subtasks in implementation sections; commit is only in the final archive/closure step after user acceptance
+    - Include concrete project commands (npm run dev, npm run dev:api, docker compose, prisma, curl examples)
+    - Map each implementation subtask to a checklist item from the ticket DoD
+    - Mark mandatory steps with (OBLIGATORIO)
+    - Write in Spanish

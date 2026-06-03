@@ -1,0 +1,109 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CompletionStatus {
+  pending
+  completed
+  failed
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  weeks     Week[]
+  habits    Habit[]
+  rewards   Reward[]
+}
+
+model Week {
+  id                Int      @id @default(autoincrement())
+  userId            Int
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startDate         DateTime
+  endDate           DateTime
+  isLocked          Boolean  @default(false)
+  totalPointsEarned Int      @default(0)
+  totalPenalties    Int      @default(0)
+  createdAt         DateTime @default(now())
+  weekHabits        WeekHabit[]
+  rewardRedemptions RewardRedemption[]
+
+  @@index([userId, startDate])
+}
+
+model Habit {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emoji        String
+  name         String
+  pointsPerDay Int
+  penalty      Int
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  weekHabits   WeekHabit[]
+}
+
+model WeekHabit {
+  id              Int         @id @default(autoincrement())
+  weekId          Int
+  week            Week        @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  habitId         Int
+  habit           Habit       @relation(fields: [habitId], references: [id], onDelete: Restrict)
+  order           Int
+  snapshotName    String
+  snapshotPoints  Int
+  snapshotPenalty Int
+  habitEntries    HabitEntry[]
+
+  @@unique([weekId, habitId])
+  @@index([weekId])
+}
+
+model HabitEntry {
+  id          Int              @id @default(autoincrement())
+  weekHabitId Int
+  weekHabit   WeekHabit        @relation(fields: [weekHabitId], references: [id], onDelete: Cascade)
+  dayIndex    Int
+  status      CompletionStatus @default(pending)
+  updatedAt   DateTime         @updatedAt
+
+  @@index([weekHabitId])
+}
+
+model Reward {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emoji       String
+  name        String
+  description String
+  cost        Int
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  redemptions RewardRedemption[]
+}
+
+model RewardRedemption {
+  id          Int      @id @default(autoincrement())
+  weekId      Int
+  week        Week     @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  rewardId    Int
+  reward      Reward   @relation(fields: [rewardId], references: [id], onDelete: Restrict)
+  pointsSpent Int
+  redeemedAt  DateTime @default(now())
+
+  @@index([weekId])
+}
