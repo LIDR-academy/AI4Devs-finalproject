@@ -215,7 +215,27 @@ El backend sigue el patrón **Repository + Service Layer**: los Services contien
 
 ### **2.4. Infraestructura y despliegue**
 
-> Pendiente de documentar.
+El despliegue del MVP academico se plantea con una infraestructura de coste 0 EUR/mes, suficiente para que los profesores puedan consultar la aplicacion completa durante la evaluacion:
+
+| Capa | Servicio | Plan | Responsabilidad |
+|---|---|---|---|
+| Frontend | Vercel | Hobby | Publica la aplicacion Next.js 14 con SSR y assets estaticos |
+| Backend | Render | Free Web Service | Publica la API REST Express |
+| Base de datos | Supabase | Free PostgreSQL | Aloja PostgreSQL para catalogo, carrito y pedidos |
+| Repositorio | GitHub | Free | Fuente de codigo y disparador de despliegues automaticos |
+
+La pipeline del MVP es deliberadamente sencilla: al vincular el repositorio, Vercel despliega automaticamente el frontend y Render despliega automaticamente el backend en cada push. Supabase no despliega codigo; la base de datos se prepara de forma puntual con Prisma:
+
+```bash
+cd backend
+npx prisma migrate deploy
+npx prisma db seed
+```
+
+Esta decision evita sobreingenieria para la entrega y mantiene la arquitectura desacoplada definida en el sistema: frontend SSR, API REST independiente y PostgreSQL gestionado. La principal limitacion es que Render Free puede dormirse tras inactividad y Supabase Free puede pausarse si no se usa durante un periodo prolongado.
+
+> Propuesta completa de infraestructura: [docs/INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md)  
+> Pipeline de despliegue del MVP: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 
 ### **2.5. Seguridad**
 
