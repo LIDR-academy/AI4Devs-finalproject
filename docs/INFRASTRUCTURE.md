@@ -238,6 +238,8 @@ Para una primera version profesional con cientos o miles de usuarios, se recomie
 
 Coste inicial orientativo: **80-250 EUR/mes**, dependiendo de tamano de RDS, numero de tareas Fargate, transferencia, observabilidad y backups.
 
+> **Nota sobre la eleccion de AWS:** La recomendacion de AWS como plataforma cloud para la infraestructura profesional responde a dos factores que conviene hacer explicitos. El primero es tecnico: los servicios gestionados de AWS (ECS Fargate, RDS, ElastiCache, Secrets Manager, CloudWatch) son maduros, estan ampliamente documentados y tienen una integracion nativa entre si que simplifica la operacion a largo plazo. El segundo es una decision personal basada en experiencia de uso amplia con la plataforma: operar infraestructura en solitario sobre una plataforma conocida reduce el riesgo operativo de forma significativa respecto a aprender una nueva. Alternativas equivalentes como **GCP Cloud Run + Cloud SQL** o **Azure Container Apps + Azure Database for PostgreSQL** cubririan los mismos requisitos funcionales con modelos de pricing comparables; la eleccion de AWS sobre ellas no es de superioridad tecnica sino de familiaridad y reduccion de friccion operativa.
+
 ### 4.2 Diagrama de infraestructura profesional
 
 ```mermaid
