@@ -210,7 +210,7 @@ Si lo consideras necesario, accede al MCP de Figma y utiliza el diseño para ali
 
 Escribe el contenido en `docs/ARCHITECTURE.md`.
 
-### **2.2. Descripción de componentes principales:**
+### 2.2. Descripción de componentes principales:
 
 ---
 
@@ -218,7 +218,7 @@ Escribe el contenido en `docs/ARCHITECTURE.md`.
 
 Se ha utilizado el **Prompt 1** de la sección `2.1. Diagrama de arquitectura`, ya que este prompt solicita explícitamente explicar los componentes principales del sistema: frontend, backend, base de datos, servicios de dominio e integraciones externas.
 
-### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
+### 2.3. Descripción de alto nivel del proyecto y estructura de ficheros
 
 ---
 
@@ -226,15 +226,113 @@ Se ha utilizado el **Prompt 1** de la sección `2.1. Diagrama de arquitectura`, 
 
 Se ha utilizado el **Prompt 1** de la sección `2.1. Diagrama de arquitectura`, ya que este prompt genera la documentación completa de `docs/ARCHITECTURE.md` y actualiza el resumen de arquitectura en `readme.md`, incluyendo la descripción de alto nivel y la estructura del proyecto.
 
-### **2.4. Infraestructura y despliegue**
+### 2.4. Infraestructura y despliegue
 
-**Prompt 1:**
+#### Prompt 1: Definicón infraestructura y despliegue para MVP y propuesta para extender a sistema productivo
 
-**Prompt 2:**
+Actúa como arquitecto cloud senior y especialista en infraestructura para MVPs SaaS/eCommerce.
 
-**Prompt 3:**
+Quiero que me propongas la infraestructura de despliegue para el MVP de **RunMarket**, tomando como base el archivo `docs/ARCHITECTURE.md`.
 
-### **2.5. Seguridad**
+Contexto técnico del proyecto:
+- Aplicación eCommerce especializada en running.
+- Monorepo con npm workspaces.
+- Frontend: Next.js 14, React 18, TypeScript, App Router, SSR selectivo para catálogo y ficha de producto.
+- Backend: Express 4, Node.js 20 LTS, TypeScript, API REST independiente.
+- Base de datos: PostgreSQL 16 con Prisma ORM 5.
+- Testing: Vitest/RTL, Jest/Supertest y Playwright.
+- Arquitectura: frontend SSR desacoplado + backend REST independiente + PostgreSQL.
+- Objetivo actual: entregar el Trabajo Final para que los profesores puedan consultar la aplicación desplegada.
+- Objetivo futuro: poder evolucionar hacia una infraestructura profesional para cientos o miles de usuarios, con camino claro para escalar a millones.
+
+Necesito que propongas **dos opciones de infraestructura**:
+
+## Opción 1: Infraestructura básica para entrega académica
+
+Debe cumplir:
+- Coste 0 €, idealmente usando free tiers.
+- Como máximo 10 €/mes si justificas que merece la pena.
+- Suficiente para que los profesores puedan acceder a la app, probar catálogo, ficha de producto, carrito, checkout simulado y pedidos.
+- Debe ser sencilla de mantener por una sola persona.
+- Debe evitar sobreingeniería.
+- Debe indicar dónde desplegar:
+  - Frontend Next.js
+  - Backend Express
+  - PostgreSQL
+  - Variables de entorno
+  - Seed/migraciones de Prisma
+- Debe incluir pros, contras, riesgos y limitaciones.
+- Debe explicar si conviene usar Vercel, Render, Railway, Supabase, Neon, Fly.io u otras alternativas.
+- Debe incluir una estimación de coste mensual.
+- Debe incluir una recomendación final concreta, no solo opciones.
+
+## Opción 2: Infraestructura profesional futura
+
+Debe cumplir:
+- Pensada para cientos o miles de usuarios inicialmente.
+- Debe poder escalar progresivamente a muchos más usuarios, incluso millones, sin rehacer toda la arquitectura desde cero.
+- Debe respetar la arquitectura actual: Next.js SSR + Express API + PostgreSQL.
+- Debe contemplar:
+  - Hosting frontend
+  - Hosting backend
+  - Base de datos PostgreSQL gestionada
+  - CDN
+  - Observabilidad/logs/métricas
+  - Backups
+  - CI/CD
+  - Seguridad básica
+  - Gestión de secretos
+  - Escalado horizontal
+  - Cache si aplica
+  - Separación de entornos: dev, staging, production
+- Debe indicar cuándo tendría sentido introducir:
+  - Redis
+  - Cola de mensajes
+  - Object storage
+  - Kubernetes
+  - Microservicios
+  - Read replicas
+  - WAF
+- Debe evitar recomendar Kubernetes o microservicios demasiado pronto.
+- Debe explicar un camino evolutivo por fases:
+  1. MVP académico
+  2. Primeros usuarios reales
+  3. Cientos/miles de usuarios
+  4. Escala alta
+  5. Escala masiva
+
+Formato de respuesta esperado:
+
+1. Resumen ejecutivo.
+2. Tabla comparativa entre opción básica y opción profesional.
+3. Diagrama textual o Mermaid de cada infraestructura.
+4. Descripción de componentes por capa:
+   - Frontend
+   - Backend
+   - Base de datos
+   - CI/CD
+   - Observabilidad
+   - Seguridad
+5. Coste estimado mensual de cada opción.
+6. Pros y contras de cada opción.
+7. Riesgos técnicos.
+8. Recomendación final para el Trabajo Final.
+9. Recomendación final para evolución profesional.
+10. Checklist de pasos concretos para desplegar la opción básica.
+
+Quiero que seas muy concreto y práctico. No me des una respuesta genérica de cloud. Justifica cada decisión según la arquitectura de RunMarket descrita en `ARCHITECTURE.md`.
+
+Puedes proponer para cada caso varias opciones y proveedores, pero siempre justifica la decisión.
+
+Además, redacta la propuesta con tono técnico-académico, como si fuera una sección añadida a la documentación del Trabajo Final, pero manteniendo claridad práctica para poder implementarla.
+
+no revises el fichero existente @INFRATRUCTURE.md. Quiero ver tu propuesta sin esa opinión.
+
+ Genera el resultado en un documento markdown INFRASTRUCTURE_CLAUDE.md en la carpeta docs
+
+
+
+### 2.5. Seguridad
 
 **Prompt 1: Primera versión prácticas de seguridad y OWASP**
 
