@@ -38,7 +38,7 @@ erDiagram
         string      name
         string      brand
         decimal     price
-        string      image               "URL de imagen"
+        string      image               "Ruta/clave relativa de imagen"
         string      category            "shoes | clothing | accessories"
         string      subcategory
         string      description
@@ -115,9 +115,19 @@ erDiagram
 
 Entidad central del catálogo. Representa un producto deportivo de running con todos sus atributos técnicos y de filtrado. Los atributos multi-valor (`distance`, `surface`, `level`, `objective`, `features`, `sizes`, `colors`) se almacenan como arrays nativos de PostgreSQL.
 
+El campo `image` almacena una ruta relativa del asset, no la imagen en binario ni una URL absoluta. Ejemplo: `products/nike-pegasus-41.jpg`.
+
+La URL publica se construye en la aplicacion usando `ASSETS_BASE_URL`:
+
+- MVP academico: `/images` + `products/nike-pegasus-41.jpg` -> `/images/products/nike-pegasus-41.jpg`
+- Produccion: `https://cdn.runmarket.com` + `products/nike-pegasus-41.jpg` -> `https://cdn.runmarket.com/products/nike-pegasus-41.jpg`
+
+En el MVP, las imagenes viven en `frontend/public/images/products/...`; Next.js las sirve como `/images/products/...`. Esto permite migrar despues a S3 + CloudFront cambiando solo `ASSETS_BASE_URL`, sin actualizar la tabla `Product`.
+
 **Restricciones relevantes:**
 - `id`: UUID generado por Prisma (`@default(uuid())`)
 - `price`: `Decimal` con 2 decimales (no `Float` para evitar errores de punto flotante en cálculos de totales)
+- `image`: ruta relativa del asset; se resuelve mediante `ASSETS_BASE_URL`
 - `stock`: mínimo 0; la aplicación previene añadir al carrito si `stock === 0`
 - `category`: enum cerrado (`shoes | clothing | accessories`)
 
@@ -201,7 +211,7 @@ model Product {
   name        String
   brand       String
   price       Decimal  @db.Decimal(10, 2)
-  image       String
+  image       String   // Ruta/clave relativa del asset, no URL absoluta
   category    Category
   subcategory String
   description String
