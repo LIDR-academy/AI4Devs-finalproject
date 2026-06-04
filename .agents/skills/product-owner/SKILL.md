@@ -1,10 +1,10 @@
 ---
 name: product-owner
-description: "Trigger: PRD, product owner, requisitos, user stories, épicas, documentación de negocio, criterios de aceptación. Genera documentación de negocio mediante entrevista dinámica con aprobación por sección."
+description: "Trigger: product owner, requisitos, documentación de negocio, backlog preliminar. Coordina la fase de entrevista de negocio y delega la creación del PRD y backlog técnico en sus respectivas skills."
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "1.0"
+  version: "1.1"
 ---
 
 ```sudolang
@@ -35,63 +35,34 @@ ProductOwner {
     persist: mem_save(context, topic: "po/{project}/context", type: "architecture")
   }
 
-  Pipeline = [PRD, Épicas, Stories, AC, MVP_MLP, KPIs] |> forEach(artifact) {
-    load_template("assets/{artifact}-template.md")
-    generate(artifact, from: interview_context + previous_approved_artifacts)
-    validate(artifact) // see references/validation-rules.md
-    present(artifact, section_by_section)
+  Pipeline {
+    // 1. Delegar generación del PRD
+    brief = compile(interview_context)
+    save_file(".ia/docs/prd/brief.md", brief)
+    show_instruction_to_user("Entrevista completada. Por favor, ejecuta la skill `prd-generator` con el brief generado en `.ia/docs/prd/brief.md` para obtener el PRD detallado.")
 
-    await_feedback {
-      ✅ approve => save + next_artifact
-      ✏️  modify(feedback) => incorporate_feedback => re_present_section
-      ❌ reject => re_interview_relevant_section
-    }
-
-    save_file(outputDir/{artifact}.md)
-    save_knowledge(knowledgeDir/{project}/{artifact}.md)
-    mem_save(summary, topic: "po/{project}/{artifact}", type: "architecture")
-  }
-  |> finally {
-    generate_index(all_artifacts) => save(outputDir/README.md)
-    mem_save(full_artifact_map, topic: "po/{project}/state", type: "architecture")
-    log: "Documentación completa generada en {outputDir} y {knowledgeDir}"
-  }
-
-  Validate {
-    INVEST(stories)                // references/validation-rules.md
-    AC_required(every_story, format: Given/When/Then)
-    traceability(épica → feature → story → AC, bidirectional_links)
-    dependencies(identify, classify: bloqueante | preferente | informativa)
-    prioritization(suggest: MoSCoW | RICE, document_rationale)
-    effort_estimation(every_story) {
-      talla: XS | S | M | L | XL
-      tiempo: range(min_days, max_days) // see references/validation-rules.md
-      validate: talla ↔ tiempo coherence
-      aggregate: per_epic + per_mvp totals
-    }
+    // 2. Delegar generación del Backlog
+    show_instruction_to_user("Una vez que el PRD esté generado y aprobado, ejecuta la skill `backlog-generator` para desglosar el backlog técnico.")
   }
 
   Persist {
-    engram_keys {
-      "po/{project}/context"      => business_context + decisions
-      "po/{project}/state"        => artifact_locations + generation_status
-      "po/{project}/{artifact}"   => each_artifact_summary
+    engram {
+      "po/{project}/context" => business_context + decisions
+      "po/{project}/state"   => generation_status
     }
     files {
-      outputDir   => generated_artifacts(.md) + README_index
-      knowledgeDir => business_knowledge_snapshots
+      outputDir => "brief.md"
     }
   }
 
   Update {
-    trigger: user says "actualiza|añade|modifica" + artifact_reference
-    flow:
-      mem_search("po/{project}") => recover_state
-      => read_existing_artifact_files
-      => apply_changes(preserve_existing_content)
-      => re_validate(modified_artifacts)
-      => re_persist(engram + files)
-      => update_index(outputDir/README.md)
+    trigger = user_says("actualiza|añade|modifica") + interview_reference
+    flow = [
+      mem_search("po/{project}") => recover_state,
+      update_interview_context,
+      compile(new_context) => save_file(".ia/docs/prd/brief.md"),
+      show_instruction_to_user("Brief actualizado. Re-ejecuta `prd-generator` y `backlog-generator` para propagar los cambios.")
+    ]
   }
 }
 ```
