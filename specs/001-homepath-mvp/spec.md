@@ -8,6 +8,16 @@
 
 **Input**: AI-powered financial companion for Spanish first-time home buyers. Three pillars: listing transparency (Listing Lens), mortgage education (Mortgage Compass), and progress tracking (Dashboard). PWA mobile-first, no auth, educational tool.
 
+## Clarifications
+
+### Session 2026-06-04
+
+- Q: Data persistence boundary — localStorage/IndexedDB client-side vs PostgreSQL server-side? → A: Full stack from day 1 — all data in PostgreSQL via API, including checklist progress and dashboard state.
+- Q: LLM provider for listing analysis? → A: OpenRouter — single API key, provider-agnostic, model switching, cheaper for development.
+- Q: Rate limit enforcement mechanism without auth? → A: Server-issued session UUID stored in browser, sent with every request. Rate limit per UUID.
+- Q: Mortgage Compass educational narratives — LLM-generated vs template-based? → A: Hardcoded educational templates mapped to persona × scenario combos. Predictable, no LLM cost, always educational.
+- Q: HTML parsing strategy for listing URL fetch? → A: Cheerio — lightweight server-side HTML parsing. `.m.` mobile subdomain fallback for JS-rendered pages. No headless browser.
+
 ## User Scenarios & Testing
 
 ### User Story 1 - Listing Lens: Analyze a Property Listing (P1)
@@ -106,18 +116,19 @@ A user tracks which documents they have and which they still need for each stage
 
 ### Functional Requirements
 
-- **FR-001**: System MUST accept a listing URL, fetch content server-side, and return a transparency analysis within 10 seconds.
-- **FR-002**: System MUST use an LLM with a structured system prompt as the primary analysis engine, with `@avena/score` as a fallback.
+- **FR-001**: System MUST accept a listing URL, fetch content server-side using Cheerio for HTML parsing, and return a transparency analysis within 10 seconds. Mobile subdomain (`.m.`) fallback for JS-rendered pages.
+- **FR-002**: System MUST use OpenRouter as LLM gateway for listing analysis. Primary model uses a structured system prompt to detect manipulative language, omissions, and red flags. Fallback to `@avena/score` numeric scoring if LLM unavailable.
 - **FR-003**: System MUST cross-reference estimated listing location with Cadastro API data when available.
 - **FR-004**: System MUST calculate hidden purchase costs (ITP/IVA, notaría, registro, gestoría, tasación) based on property price and region.
 - **FR-005**: System MUST present mortgage amortization scenarios (baseline, light, moderate, aggressive) for a 30-year term with voluntary early payments.
 - **FR-006**: System MUST display an investing alternative alongside amortization scenarios with estimated long-term returns.
-- **FR-007**: System MUST persist all user data per anonymous session UUID without requiring authentication.
+- **FR-007**: System MUST persist all user data (analyzed listings, financial profiles, checklist progress) in PostgreSQL via the backend API, keyed by anonymous session UUID without requiring authentication.
 - **FR-008**: System MUST support re-analysis of previously analyzed listings with snapshot diff detection.
 - **FR-009**: System MUST be installable as a PWA on mobile devices.
-- **FR-010**: System MUST enforce a rate limit of 20 analyses per day per user session.
+- **FR-010**: System MUST enforce a rate limit of 20 analyses per day per session UUID. UUID is server-generated on first visit, stored browser-side, sent with every API request.
 - **FR-011**: System MUST NOT store any third-party content (listing HTML, scraped text). Only analysis results persisted.
 - **FR-012**: System MUST use the User-Agent header `HomePath/1.0 (analizador educativo)` on all outbound requests.
+- **FR-013**: System MUST NOT provide financial advice. All mortgage and investment outputs are educational narratives generated from hardcoded templates keyed to persona and scenario combinations. No LLM used for narrative generation in Mortgage Compass.
 
 ### Key Entities
 
@@ -142,10 +153,10 @@ A user tracks which documents they have and which they still need for each stage
 - Users have stable internet connectivity for listing analysis (server-side fetch required).
 - Spanish listing sites (Idealista, Fotocasa, etc.) do not aggressively block our User-Agent.
 - The Cadastro API (Sede Electrónica del Catastro) is publicly accessible and returns structured data.
-- The LLM provider (OpenAI, Anthropic, or similar) is available and returns structured JSON for the system prompt.
+- OpenRouter API is available with a valid API key. The chosen model supports structured JSON output mode.
 - Users understand basic Spanish financial concepts (ITP, IVA, Euribor) or the UI provides inline explanations.
 - `@avena/score` package is available and compatible with the chosen Node.js version.
 - Euribor average rate is used as default mortgage rate and can be overridden by the user.
 - Mobile-first design targets screen widths of 375px and above.
-- Anonymous session data is stored in localStorage/IndexedDB on the client and PostgreSQL on the server.
+- Anonymous session data is persisted in PostgreSQL via the backend API. Client-side cache only for offline resilience.
 - No cross-device sync is expected in MVP (no auth).
