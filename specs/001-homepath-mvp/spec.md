@@ -1,162 +1,162 @@
-# Feature Specification: HomePath MVP
+# Especificación de Funcionalidad: Realista MVP
 
-**Feature Branch**: `001-homepath-mvp`
+**Rama**: `001-realista-mvp`
 
-**Created**: 2026-06-04
+**Creado**: 2026-06-04
 
-**Status**: Draft
+**Estado**: Borrador
 
-**Input**: AI-powered financial companion for Spanish first-time home buyers. Three pillars: listing transparency (Listing Lens), mortgage education (Mortgage Compass), and progress tracking (Dashboard). PWA mobile-first, no auth, educational tool.
+**Descripción**: Asistente financiero con IA para compradores primerizos de vivienda en España. Tres pilares: transparencia de anuncios (Listing Lens), educación hipotecaria (Mortgage Compass) y seguimiento del proceso (Dashboard). PWA mobile-first, sin autenticación, herramienta educativa.
 
-## Clarifications
+## Aclaraciones
 
-### Session 2026-06-04
+### Sesión 2026-06-04
 
-- Q: Data persistence boundary — localStorage/IndexedDB client-side vs PostgreSQL server-side? → A: Full stack from day 1 — all data in PostgreSQL via API, including checklist progress and dashboard state.
-- Q: LLM provider for listing analysis? → A: OpenRouter — single API key, provider-agnostic, model switching, cheaper for development.
-- Q: Rate limit enforcement mechanism without auth? → A: Server-issued session UUID stored in browser, sent with every request. Rate limit per UUID.
-- Q: Mortgage Compass educational narratives — LLM-generated vs template-based? → A: Hardcoded educational templates mapped to persona × scenario combos. Predictable, no LLM cost, always educational.
-- Q: HTML parsing strategy for listing URL fetch? → A: Cheerio — lightweight server-side HTML parsing. `.m.` mobile subdomain fallback for JS-rendered pages. No headless browser.
+- P: ¿Frontera de persistencia de datos — localStorage/IndexedDB en cliente vs PostgreSQL en servidor? → R: Full stack desde el día 1 — todos los datos en PostgreSQL vía API, incluyendo progreso del checklist y estado del dashboard.
+- P: ¿Proveedor LLM para análisis de anuncios? → R: OpenRouter — única API key, agnóstico de proveedor, cambio de modelo, más barato para desarrollo.
+- P: ¿Mecanismo de rate limiting sin autenticación? → R: UUID de sesión generado por el servidor, almacenado en el navegador, enviado con cada petición. Límite por UUID.
+- P: ¿Narrativas educativas del Mortgage Compass — generadas por LLM o basadas en plantillas? → R: Plantillas educativas predefinidas asociadas a combinaciones persona × escenario. Predecibles, sin coste de LLM, siempre educativas.
+- P: ¿Estrategia de parseo HTML para la URL del anuncio? → R: Cheerio — parseo HTML ligero en servidor. Fallback a subdominio móvil `.m.` para páginas renderizadas con JS. Sin navegador headless.
 
-## User Scenarios & Testing
+## Historias de Usuario y Pruebas
 
-### User Story 1 - Listing Lens: Analyze a Property Listing (P1)
+### Historia 1 - Listing Lens: Analizar un Anuncio Inmobiliario (P1)
 
-A user pastes an Idealista or similar listing URL. The system fetches the listing content server-side, runs an LLM-powered analysis to detect manipulative language, missing information, and red flags. It cross-references the estimated location against cadastral data to verify claimed vs actual square meters and construction year. The result is a transparency score and a detailed report of what the listing reveals — and what it hides.
+El usuario pega una URL de Idealista o similar. El sistema obtiene el contenido del anuncio en el servidor, ejecuta un análisis con IA (LLM) para detectar lenguaje manipulador, información omitida y banderas rojas. Cruza la ubicación estimada con datos catastrales para verificar los metros cuadrados declarados frente a los oficiales y el año de construcción. El resultado es una puntuación de transparencia y un informe detallado de lo que el anuncio revela — y lo que oculta.
 
-**Why this priority**: The entry point. Hooks users with immediate value. Demonstrates AI engineering (LLM prompt design, structured output parsing, external API integration). Each user story is independently deployable, but this one provides the strongest "wow" moment for first-time visitors.
+**Por qué esta prioridad**: El punto de entrada. Engancha al usuario con valor inmediato. Demuestra ingeniería de IA (diseño de prompts, parsing de salida estructurada, integración con APIs externas). Cada historia es independiente, pero esta proporciona el mayor impacto para quien llega por primera vez.
 
-**Independent Test**: Paste a known listing URL → verify score, red flags, and cadastral comparison are returned. Can be fully tested with a mocked listing endpoint.
+**Prueba independiente**: Pegar una URL de anuncio conocida → verificar que se devuelve puntuación, banderas rojas y comparativa catastral. Se puede probar completamente con un endpoint de anuncio simulado.
 
-**Acceptance Scenarios**:
+**Criterios de aceptación**:
 
-1. **Given** a valid listing URL, **When** the user submits it, **Then** a transparency score (0-100) and red flags list are displayed within 10 seconds.
-2. **Given** an invalid or unreachable URL, **When** the user submits it, **Then** an error message is shown with a prompt to paste listing text manually.
-3. **Given** a listing with location clues, **When** analysis completes, **Then** a confidence percentage for estimated location and a MiraTuZona link are shown.
-4. **Given** cadastral data is available for the estimated location, **When** analysis completes, **Then** a comparison of claimed m² vs cadastral m² and construction year is displayed.
-5. **Given** a listing with no energy certificate mentioned, **When** analysis completes, **Then** "missing energy certificate" appears as a red flag.
-
----
-
-### User Story 2 - Mortgage Compass: Understand Real Costs & Options (P1)
-
-A user enters property price, savings, monthly income, and existing debts. The system calculates the hidden costs of buying (ITP/IVA, notaría, registro, gestoría, tasación) and reveals the real cash needed — often 10-12% above the listing price. The user then answers 2-3 risk-tolerance questions to build a persona. Based on the persona and real numbers, the system shows 30-year mortgage scenarios with voluntary amortization paths (none, light, moderate, aggressive) and compares them against an investing alternative. All outputs are educational narratives, never financial advice.
-
-**Why this priority**: The core differentiator. No existing tool shows Spanish buyers the amortization-vs-investing tradeoff alongside hidden costs in a persona-driven experience. This is the feature that makes the project memorable.
-
-**Independent Test**: Enter property price + savings + income → verify hidden costs breakdown, persona questions, and strategy comparison table are generated. No external dependencies beyond basic math.
-
-**Acceptance Scenarios**:
-
-1. **Given** property price €200,000, savings €45,000, and income €3,500/month, **When** the user submits, **Then** hidden costs (ITP/IVA, notaría, registro, gestoría, tasación) are itemized and the total cash needed (~€58,200) is shown with a gap indicator.
-2. **Given** the user has completed the financial profile, **When** they answer persona questions, **Then** a recommended mortgage duration (30, 25, or 20 years) is suggested based on affordability.
-3. **Given** a 30-year mortgage at 3.5% for €160,000, **When** the strategy playground loads, **Then** four scenarios are shown: baseline (no amortization), light (€100/mo), moderate (€300/mo), aggressive (€500/mo) — each with years shortened and interest saved.
-4. **Given** all scenarios are displayed, **When** the investing alternative is shown, **Then** the estimated portfolio value at 30 years (5-7% annual return) is displayed alongside the amortization scenarios.
-5. **Given** a conservative persona, **When** the narrative is generated, **Then** the educational takeaway emphasizes guaranteed savings through amortization.
+1. **Dado** una URL de anuncio válida, **Cuando** el usuario la envía, **Entonces** se muestra una puntuación de transparencia (0-100) y una lista de banderas rojas en menos de 10 segundos.
+2. **Dado** una URL inválida o inaccesible, **Cuando** el usuario la envía, **Entonces** se muestra un mensaje de error con la opción de pegar el texto del anuncio manualmente.
+3. **Dado** un anuncio con pistas de ubicación, **Cuando** el análisis termina, **Entonces** se muestra un porcentaje de confianza de ubicación estimada y un enlace a MiraTuZona.
+4. **Dado** que hay datos catastrales disponibles para la ubicación estimada, **Cuando** el análisis termina, **Entonces** se muestra una comparativa de m² declarados vs catastrales y año de construcción.
+5. **Dado** un anuncio sin certificado energético mencionado, **Cuando** el análisis termina, **Entonces** aparece "sin certificado energético" como bandera roja.
 
 ---
 
-### User Story 3 - Dashboard: Track Your Journey (P2)
+### Historia 2 - Mortgage Compass: Comprender Costes Reales y Opciones (P1)
 
-A user sees a dashboard summarizing their analyzed listings, financial profile snapshot, and quick access to all tools. The dashboard persists data per anonymous session (UUID) with no login required. Users can re-analyze previously viewed listings to see what changed (snapshot diff).
+El usuario introduce precio de la vivienda, ahorros, ingresos mensuales y deudas existentes. El sistema calcula los gastos ocultos de compra (ITP/IVA, notaría, registro, gestoría, tasación) y revela el dinero real necesario — normalmente un 10-12% adicional sobre el precio del anuncio. Después, el usuario responde 2-3 preguntas sobre tolerancia al riesgo para construir un perfil. Basándose en el perfil y los números reales, el sistema muestra escenarios de hipoteca a 30 años con distintos ritmos de amortización voluntaria (sin amortización, ligera, moderada, agresiva) y los compara con una alternativa de inversión. Todos los resultados son narrativas educativas, nunca consejo financiero.
 
-**Why this priority**: Retention and navigation hub. Ties the two P1 features together into a coherent experience. Demonstrates data persistence and state management.
+**Por qué esta prioridad**: El diferenciador principal. Ninguna herramienta existente muestra al comprador español la comparativa amortización-vs-inversión junto con los gastos ocultos en una experiencia basada en su perfil personal. Es la funcionalidad que hace memorable el proyecto.
 
-**Independent Test**: Analyze a listing, complete a financial profile, then reload the dashboard → verify all data persists and is displayed correctly.
+**Prueba independiente**: Introducir precio + ahorros + ingresos → verificar que se generan el desglose de gastos ocultos, las preguntas de perfil y la tabla comparativa de estrategias. Sin dependencias externas más allá de cálculos matemáticos.
 
-**Acceptance Scenarios**:
+**Criterios de aceptación**:
 
-1. **Given** a user has analyzed 3 listings, **When** they visit the dashboard, **Then** all 3 listings are shown with scores, dates, and quick re-analyze buttons.
-2. **Given** a user has completed the financial profile, **When** they visit the dashboard, **Then** a snapshot of affordability and hidden costs is displayed.
-3. **Given** a previously analyzed listing, **When** the user clicks "re-analyze", **Then** a new analysis is run and any differences from the previous snapshot are highlighted (e.g., "Price changed: -€10,000 since last analysis").
-4. **Given** a fresh session with no data, **When** the user visits the dashboard, **Then** an empty state with CTAs to try Listing Lens and Mortgage Compass is shown.
-
----
-
-### User Story 4 - Interactive Timeline: Know What's Next (P3)
-
-A user views a visual 60-90 day timeline of the home buying process from arras (deposit) to escritura (deed signing). Each milestone shows what happens, what documents are needed, and typical duration.
-
-**Why this priority**: Contextual help that reduces anxiety. Spanish buyers often don't know the sequence of events. Independently valuable but enhances the overall experience.
-
-**Independent Test**: Open the timeline page → verify all milestones are displayed with descriptions and durations.
-
-**Acceptance Scenarios**:
-
-1. **Given** the timeline page, **When** a user opens it, **Then** a visual timeline with milestones from arras to escritura is displayed with estimated durations.
-2. **Given** the timeline, **When** a user taps a milestone, **Then** detailed information about that stage (documents needed, typical duration, tips) is shown.
+1. **Dado** precio de vivienda 200.000€, ahorros 45.000€ e ingresos 3.500€/mes, **Cuando** el usuario envía los datos, **Entonces** se desglosan los gastos ocultos (ITP/IVA, notaría, registro, gestoría, tasación) y se muestra el total necesario (~58.200€) con indicador de diferencia respecto a los ahorros.
+2. **Dado** que el usuario ha completado el perfil financiero, **Cuando** responde a las preguntas de perfil, **Entonces** se sugiere una duración de hipoteca recomendada (30, 25 o 20 años) según su capacidad de pago.
+3. **Dada** una hipoteca a 30 años al 3,5% para 160.000€, **Cuando** se carga el simulador de estrategias, **Entonces** se muestran cuatro escenarios: base (sin amortizar), ligero (100€/mes), moderado (300€/mes), agresivo (500€/mes) — cada uno con años acortados e intereses ahorrados.
+4. **Dados** todos los escenarios, **Cuando** se muestra la alternativa de inversión, **Entonces** se muestra el valor estimado de la cartera a 30 años (rentabilidad anual 5-7%) junto a los escenarios de amortización.
+5. **Dado** un perfil conservador, **Cuando** se genera la narrativa, **Entonces** el mensaje educativo enfatiza el ahorro garantizado mediante amortización.
 
 ---
 
-### User Story 5 - Document Checklist: Don't Miss Anything (P3)
+### Historia 3 - Dashboard: Seguimiento del Proceso (P2)
 
-A user tracks which documents they have and which they still need for each stage of the buying process. Checklist items are organized by milestone (pre-arras, post-arras, pre-escritura, post-escritura).
+El usuario ve un panel resumiendo sus anuncios analizados, una instantánea de su perfil financiero y acceso rápido a todas las herramientas. El dashboard persiste los datos por sesión anónima (UUID) sin necesidad de registro. El usuario puede re-analizar anuncios ya vistos para ver qué ha cambiado (detección de diferencias con snapshot).
 
-**Why this priority**: Practical tool for the bureaucratic maze. Simple to implement but highly useful for Spanish buyers who face a complex document trail.
+**Por qué esta prioridad**: Centro de retención y navegación. Une las dos historias P1 en una experiencia coherente. Demuestra persistencia de datos y gestión de estado.
 
-**Independent Test**: Open the checklist → toggle items → verify progress persists on reload.
+**Prueba independiente**: Analizar un anuncio, completar un perfil financiero y recargar el dashboard → verificar que todos los datos persisten y se muestran correctamente.
 
-**Acceptance Scenarios**:
+**Criterios de aceptación**:
 
-1. **Given** the checklist page, **When** a user opens it, **Then** items are grouped by stage with a progress percentage per stage.
-2. **Given** a checklist item, **When** the user toggles it complete, **Then** the progress percentage updates and the state persists across sessions.
+1. **Dado** que un usuario ha analizado 3 anuncios, **Cuando** visita el dashboard, **Entonces** se muestran los 3 anuncios con puntuaciones, fechas y botones de re-análisis rápido.
+2. **Dado** que un usuario ha completado el perfil financiero, **Cuando** visita el dashboard, **Entonces** se muestra una instantánea de capacidad de compra y gastos ocultos.
+3. **Dado** un anuncio previamente analizado, **Cuando** el usuario pulsa "re-analizar", **Entonces** se ejecuta un nuevo análisis y se destacan las diferencias respecto a la instantánea anterior (ej: "Precio: -10.000€ desde el último análisis").
+4. **Dada** una sesión nueva sin datos, **Cuando** el usuario visita el dashboard, **Entonces** se muestra un estado vacío con llamadas a la acción para probar Listing Lens y Mortgage Compass.
 
 ---
 
-### Edge Cases
+### Historia 4 - Cronograma Interactivo: Saber Qué Viene Después (P3)
 
-- What happens when the LLM returns malformed JSON for listing analysis? Fallback to `@avena/score` numeric scoring.
-- What happens when the Cadastro API is unreachable? Show a message that cadastral verification is unavailable, still display the LLM-based analysis.
-- What happens when a URL returns a 403 or requires JavaScript? Attempt `.m.` mobile subdomain, then offer manual text paste fallback.
-- What happens when the user has no savings entered in Mortgage Compass? Flag the gap clearly and suggest adjusting the property price.
-- What happens when the dashboard session UUID is lost (cleared localStorage)? Data is unrecoverable per design — no auth means no cross-device sync.
-- What happens when rate limit (20/day) is exceeded? Show a friendly message suggesting the user return tomorrow.
+El usuario visualiza una línea temporal de 60-90 días del proceso de compra de vivienda, desde las arras hasta la escritura. Cada hito muestra qué sucede, qué documentos se necesitan y la duración típica.
 
-## Requirements
+**Por qué esta prioridad**: Ayuda contextual que reduce la ansiedad. Los compradores españoles a menudo desconocen la secuencia de eventos. Valiosa por sí sola pero enriquece la experiencia global.
 
-### Functional Requirements
+**Prueba independiente**: Abrir la página del cronograma → verificar que se muestran todos los hitos con descripciones y duraciones.
 
-- **FR-001**: System MUST accept a listing URL, fetch content server-side using Cheerio for HTML parsing, and return a transparency analysis within 10 seconds. Mobile subdomain (`.m.`) fallback for JS-rendered pages.
-- **FR-002**: System MUST use OpenRouter as LLM gateway for listing analysis. Primary model uses a structured system prompt to detect manipulative language, omissions, and red flags. Fallback to `@avena/score` numeric scoring if LLM unavailable.
-- **FR-003**: System MUST cross-reference estimated listing location with Cadastro API data when available.
-- **FR-004**: System MUST calculate hidden purchase costs (ITP/IVA, notaría, registro, gestoría, tasación) based on property price and region.
-- **FR-005**: System MUST present mortgage amortization scenarios (baseline, light, moderate, aggressive) for a 30-year term with voluntary early payments.
-- **FR-006**: System MUST display an investing alternative alongside amortization scenarios with estimated long-term returns.
-- **FR-007**: System MUST persist all user data (analyzed listings, financial profiles, checklist progress) in PostgreSQL via the backend API, keyed by anonymous session UUID without requiring authentication.
-- **FR-008**: System MUST support re-analysis of previously analyzed listings with snapshot diff detection.
-- **FR-009**: System MUST be installable as a PWA on mobile devices.
-- **FR-010**: System MUST enforce a rate limit of 20 analyses per day per session UUID. UUID is server-generated on first visit, stored browser-side, sent with every API request.
-- **FR-011**: System MUST NOT store any third-party content (listing HTML, scraped text). Only analysis results persisted.
-- **FR-012**: System MUST use the User-Agent header `HomePath/1.0 (analizador educativo)` on all outbound requests.
-- **FR-013**: System MUST NOT provide financial advice. All mortgage and investment outputs are educational narratives generated from hardcoded templates keyed to persona and scenario combinations. No LLM used for narrative generation in Mortgage Compass.
+**Criterios de aceptación**:
 
-### Key Entities
+1. **Dada** la página del cronograma, **Cuando** el usuario la abre, **Entonces** se muestra una línea temporal visual con hitos desde las arras hasta la escritura, con duraciones estimadas.
+2. **Dado** el cronograma, **Cuando** el usuario pulsa un hito, **Entonces** se muestra información detallada de esa etapa (documentos necesarios, duración típica, consejos).
 
-- **User**: Anonymous session identified by UUID. No email, password, or personal data. `userId` field nullable for future auth.
-- **PurchaseProcess**: Tracks the user's home buying journey. Contains financial profile as JSON value object.
-- **AnalyzedListing**: Result of a Listing Lens analysis. Contains score, red flags, location confidence, cadastral comparison, snapshot hash, and timestamp.
-- **Checklist**: Document checklist organized by bureaucratic stage. Contains items with completion status.
+---
 
-## Success Criteria
+### Historia 5 - Checklist Documental: Que No Se Te Escape Nada (P3)
 
-### Measurable Outcomes
+El usuario hace seguimiento de qué documentos tiene y cuáles le faltan para cada etapa del proceso de compra. Los ítems del checklist se organizan por hito (pre-arras, post-arras, pre-escritura, post-escritura).
 
-- **SC-001**: A listing URL analysis completes and displays results in under 10 seconds.
-- **SC-002**: The Mortgage Compass generates personalized strategy comparisons based on real financial inputs.
-- **SC-003**: The complete E2E flow (paste URL → analysis → financial profile → mortgage strategy → dashboard) can be completed in under 5 minutes by a first-time user.
-- **SC-004**: All 5 user stories have independent test coverage (unit + integration + at least 1 E2E test for the full flow).
-- **SC-005**: The PWA installs and runs on iOS Safari and Android Chrome.
-- **SC-006**: CI/CD pipeline passes (lint → typecheck → unit tests → integration tests → build → E2E) on every push to main.
+**Por qué esta prioridad**: Herramienta práctica para el laberinto burocrático. Simple de implementar pero muy útil para compradores españoles que se enfrentan a un rastro documental complejo.
 
-## Assumptions
+**Prueba independiente**: Abrir el checklist → marcar/desmarcar ítems → verificar que el progreso persiste al recargar.
 
-- Users have stable internet connectivity for listing analysis (server-side fetch required).
-- Spanish listing sites (Idealista, Fotocasa, etc.) do not aggressively block our User-Agent.
-- The Cadastro API (Sede Electrónica del Catastro) is publicly accessible and returns structured data.
-- OpenRouter API is available with a valid API key. The chosen model supports structured JSON output mode.
-- Users understand basic Spanish financial concepts (ITP, IVA, Euribor) or the UI provides inline explanations.
-- `@avena/score` package is available and compatible with the chosen Node.js version.
-- Euribor average rate is used as default mortgage rate and can be overridden by the user.
-- Mobile-first design targets screen widths of 375px and above.
-- Anonymous session data is persisted in PostgreSQL via the backend API. Client-side cache only for offline resilience.
-- No cross-device sync is expected in MVP (no auth).
+**Criterios de aceptación**:
+
+1. **Dada** la página del checklist, **Cuando** el usuario la abre, **Entonces** los ítems se agrupan por etapa con un porcentaje de progreso por etapa.
+2. **Dado** un ítem del checklist, **Cuando** el usuario lo marca como completado, **Entonces** el porcentaje de progreso se actualiza y el estado persiste entre sesiones.
+
+---
+
+### Casos Límite
+
+- ¿Qué pasa cuando el LLM devuelve JSON malformado en el análisis? Fallback al scoring numérico de `@avena/score`.
+- ¿Qué pasa cuando la API del Catastro no responde? Se muestra un mensaje indicando que la verificación catastral no está disponible; se muestra igualmente el análisis del LLM.
+- ¿Qué pasa cuando una URL devuelve 403 o requiere JavaScript? Se intenta el subdominio móvil `.m.`; si falla, se ofrece pegar el texto manualmente.
+- ¿Qué pasa cuando el usuario no introduce ahorros en el Mortgage Compass? Se señala claramente la diferencia y se sugiere ajustar el precio de la vivienda.
+- ¿Qué pasa cuando se pierde el UUID de sesión del dashboard (borrado de localStorage)? Los datos no son recuperables por diseño — sin autenticación no hay sincronización entre dispositivos.
+- ¿Qué pasa cuando se supera el límite de 20 análisis/día? Se muestra un mensaje amigable sugiriendo volver mañana.
+
+## Requisitos
+
+### Requisitos Funcionales
+
+- **FR-001**: El sistema DEBE aceptar una URL de anuncio, obtener el contenido en servidor usando Cheerio para parseo HTML, y devolver un análisis de transparencia en menos de 10 segundos. Fallback a subdominio móvil (`.m.`) para páginas con renderizado JS.
+- **FR-002**: El sistema DEBE usar OpenRouter como puerta de enlace LLM para el análisis de anuncios. El modelo principal utiliza un system prompt estructurado para detectar lenguaje manipulador, omisiones y banderas rojas. Fallback a scoring numérico `@avena/score` si el LLM no está disponible.
+- **FR-003**: El sistema DEBE cruzar la ubicación estimada del anuncio con datos de la API del Catastro cuando estén disponibles.
+- **FR-004**: El sistema DEBE calcular los gastos ocultos de compra (ITP/IVA, notaría, registro, gestoría, tasación) basándose en el precio de la vivienda y la comunidad autónoma.
+- **FR-005**: El sistema DEBE presentar escenarios de amortización hipotecaria (base, ligera, moderada, agresiva) para un plazo de 30 años con amortizaciones anticipadas voluntarias.
+- **FR-006**: El sistema DEBE mostrar una alternativa de inversión junto a los escenarios de amortización, con estimaciones de rentabilidad a largo plazo.
+- **FR-007**: El sistema DEBE persistir todos los datos del usuario (anuncios analizados, perfiles financieros, progreso del checklist) en PostgreSQL vía API del backend, identificados por UUID de sesión anónima sin requerir autenticación.
+- **FR-008**: El sistema DEBE permitir el re-análisis de anuncios previamente analizados con detección de diferencias respecto a la instantánea anterior.
+- **FR-009**: El sistema DEBE ser instalable como PWA en dispositivos móviles.
+- **FR-010**: El sistema DEBE aplicar un límite de 20 análisis por día por UUID de sesión. El UUID es generado por el servidor en la primera visita, almacenado en el navegador y enviado con cada petición a la API.
+- **FR-011**: El sistema NO DEBE almacenar contenido de terceros (HTML de anuncios, texto extraído). Solo se persisten los resultados del análisis.
+- **FR-012**: El sistema DEBE usar la cabecera User-Agent `Realista/1.0 (analizador educativo)` en todas las peticiones salientes.
+- **FR-013**: El sistema NO DEBE proporcionar consejo financiero. Todos los resultados hipotecarios y de inversión son narrativas educativas generadas a partir de plantillas predefinidas asociadas a combinaciones de perfil y escenario. No se usa LLM para la generación de narrativas en el Mortgage Compass.
+
+### Entidades Clave
+
+- **User**: Sesión anónima identificada por UUID. Sin email, contraseña ni datos personales. Campo `userId` nullable para futura autenticación.
+- **PurchaseProcess**: Representa el proceso de compra de vivienda del usuario. Contiene el perfil financiero como value object JSON.
+- **AnalyzedListing**: Resultado de un análisis de Listing Lens. Contiene puntuación, banderas rojas, confianza de ubicación, comparativa catastral, hash de instantánea y timestamp.
+- **Checklist**: Checklist documental organizado por etapa burocrática. Contiene ítems con estado de completado.
+
+## Criterios de Éxito
+
+### Resultados Medibles
+
+- **SC-001**: El análisis de una URL de anuncio se completa y muestra resultados en menos de 10 segundos.
+- **SC-002**: El Mortgage Compass genera comparativas de estrategia personalizadas basadas en datos financieros reales.
+- **SC-003**: El flujo E2E completo (pegar URL → análisis → perfil financiero → estrategia hipotecaria → dashboard) puede completarse en menos de 5 minutos por un usuario nuevo.
+- **SC-004**: Las 5 historias de usuario tienen cobertura de pruebas independiente (unitarias + integración + al menos 1 test E2E del flujo principal).
+- **SC-005**: La PWA se instala y funciona en iOS Safari y Android Chrome.
+- **SC-006**: El pipeline CI/CD pasa (lint → typecheck → tests unitarios → tests de integración → build → E2E) en cada push a main.
+
+## Suposiciones
+
+- Los usuarios tienen conectividad a internet estable para el análisis de anuncios (requiere fetch en servidor).
+- Los portales inmobiliarios españoles (Idealista, Fotocasa, etc.) no bloquean agresivamente nuestro User-Agent.
+- La API del Catastro (Sede Electrónica del Catastro) es accesible públicamente y devuelve datos estructurados.
+- La API de OpenRouter está disponible con una clave válida. El modelo elegido soporta modo de salida JSON estructurada.
+- Los usuarios comprenden conceptos financieros básicos españoles (ITP, IVA, Euríbor) o la interfaz proporciona explicaciones contextuales.
+- El paquete `@avena/score` está disponible y es compatible con la versión de Node.js elegida.
+- Se usa la media del Euríbor como tipo de interés hipotecario por defecto, modificable por el usuario.
+- El diseño mobile-first apunta a anchos de pantalla de 375px en adelante.
+- Los datos de sesión anónima se persisten en PostgreSQL vía la API del backend. La caché del cliente solo para resiliencia offline.
+- No se espera sincronización entre dispositivos en el MVP (sin autenticación).

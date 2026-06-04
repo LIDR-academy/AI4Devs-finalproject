@@ -1,4 +1,4 @@
-# HomePath — Agent Guidance
+# Realista — Agent Guidance
 
 ## Project Status
 Greenfield project. Specification phase. See `specs/001-homepath-mvp/spec.md`.
@@ -36,7 +36,7 @@ Hexagonal + DDD tactical. Domain has zero framework dependencies.
 
 ## Key Conventions
 - **No storage of third-party content** — only analysis results stored
-- **User-Agent:** `HomePath/1.0 (analizador educativo)`
+- **User-Agent:** `Realista/1.0 (analizador educativo)`
 - **Rate limiting:** max 20 analyses/day per user
 - **No auth for MVP** — anonymous session UUID. `userId` nullable for future.
 - MIT license; include NOTICE.md credits for `@avena/score`
