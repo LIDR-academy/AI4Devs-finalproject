@@ -36,13 +36,12 @@ ProductOwner {
   }
 
   Pipeline {
-    // 1. Delegar generación del PRD
     brief = compile(interview_context)
     save_file(".ia/docs/prd/brief.md", brief)
-    show_instruction_to_user("Entrevista completada. Por favor, ejecuta la skill `prd-generator` con el brief generado en `.ia/docs/prd/brief.md` para obtener el PRD detallado.")
-
-    // 2. Delegar generación del Backlog
-    show_instruction_to_user("Una vez que el PRD esté generado y aprobado, ejecuta la skill `backlog-generator` para desglosar el backlog técnico.")
+    show_instruction_to_user("Entrevista completada. Se ha guardado el brief.md en `.ia/docs/prd/brief.md`.")
+    invoke_skill("prd-generator", input: brief, outputDir: ".ia/docs/prd/")
+    show_instruction_to_user("Una vez que el PRD esté generado y aprobado, se ejecutará el `backlog-generator` para desglosar el backlog técnico.")
+    invoke_skill("backlog-generator", inputDir: ".ia/", outputDir: ".ia/backlog/")
   }
 
   Persist {
