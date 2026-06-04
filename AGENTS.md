@@ -1,7 +1,7 @@
 # Realista — Agent Guidance
 
 ## Project Status
-Greenfield project. Specification phase. See `specs/001-homepath-mvp/spec.md`.
+Greenfield project. Specification phase. See `specs/001-realista-mvp/spec.md`.
 
 ## Stack
 - **Frontend:** SvelteKit + Vite + PWA (mobile-first SPA)
@@ -50,7 +50,7 @@ Hexagonal + DDD tactical. Domain has zero framework dependencies.
 ├── scripts/                   # SDD workflow scripts
 └── extensions/                # Installed extensions
 specs/
-└── 001-homepath-mvp/
+└── 001-realista-mvp/
     ├── spec.md                # Feature specification
     ├── plan.md                # Implementation plan
     ├── data-model.md          # Prisma models
@@ -68,5 +68,5 @@ docs/
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan at:
-`specs/001-homepath-mvp/plan.md`
+`specs/001-realista-mvp/plan.md`
 <!-- SPECKIT END -->
