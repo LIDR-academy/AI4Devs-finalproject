@@ -64,3 +64,9 @@ docs/
     ├── 002-avena-score.md
     └── 003-no-scraping.md
 ```
+
+<!-- SPECKIT START -->
+For additional context about technologies to be used, project structure,
+shell commands, and other important information, read the current plan at:
+`specs/001-homepath-mvp/plan.md`
+<!-- SPECKIT END -->
