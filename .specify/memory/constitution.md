@@ -1,4 +1,4 @@
-# HomePath Constitution
+# Realista Constitution
 
 ## Core Principles
 
@@ -9,10 +9,10 @@ Domain logic must have zero framework dependencies. Ports define interfaces; ada
 TDD mandatory: tests written → tests fail → implement → green → refactor. Feature-slice TDD: each feature slice (Listing Lens, Mortgage Compass, Dashboard) follows the full red-green-refactor cycle. Coverage target: 80%+ for domain layer. Tests co-located with source files (`*.test.ts` next to `*.ts`).
 
 ### III. Educational, Not Commercial
-HomePath is an educational tool for Spanish first-time home buyers. It never provides financial advice, broker recommendations, or commercial referrals. All outputs are educational narratives — never prescriptive. The user decides; we illuminate options.
+Realista is an educational tool for Spanish first-time home buyers. It never provides financial advice, broker recommendations, or commercial referrals. All outputs are educational narratives — never prescriptive. The user decides; we illuminate options.
 
 ### IV. Privacy & Legal Compliance
-No storage of third-party content (listing HTML, scraped text). Only analysis results persisted. User-Agent: `HomePath/1.0 (analizador educativo)`. Rate limiting: max 20 analyses/day per user. MIT license with NOTICE.md attribution for `@avena/score`.
+No storage of third-party content (listing HTML, scraped text). Only analysis results persisted. User-Agent: `Realista/1.0 (analizador educativo)`. Rate limiting: max 20 analyses/day per user. MIT license with NOTICE.md attribution for `@avena/score`.
 
 ### V. Mobile-First PWA
 SvelteKit PWA, installable, responsive. Target: mobile (primary), desktop (secondary). Zero app store friction. Service worker for offline capability where possible.
