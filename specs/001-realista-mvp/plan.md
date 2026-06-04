@@ -2,7 +2,7 @@
 
 **Branch**: `001-realista-mvp` | **Date**: 2026-06-04 | **Spec**: [spec.md](./spec.md)
 
-**Input**: Feature specification from `/specs/001-homepath-mvp/spec.md`
+**Input**: Feature specification from `/specs/001-realista-mvp/spec.md`
 
 ## Summary
 
@@ -46,7 +46,7 @@ PWA mobile-first para compradores primerizos de vivienda en España. Tres funcio
 ### Documentation (this feature)
 
 ```text
-specs/001-homepath-mvp/
+specs/001-realista-mvp/
 ├── plan.md              # This file
 ├── research.md          # Phase 0 output
 ├── data-model.md        # Phase 1 output
