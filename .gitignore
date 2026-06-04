@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+.output/
+
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Agent folder (may store credentials in future updates)
+.opencode/
+
+# Spec-kit generated config (regenerated on specify init)
+.specify/integration.json
+.specify/init-options.json
+
+# Python (spec-kit CLI)
+__pycache__/
+*.pyc
+.venv/
+
+# Prisma
+prisma/migrations/*/migration_lock.toml
+
+# Testing
+coverage/
