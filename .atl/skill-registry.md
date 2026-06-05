@@ -30,6 +30,7 @@
 | tech-lead | Trigger: tech lead, plan técnico, tareas técnicas, ejecución, orquestación técnica. Traduce requerimientos de negocio a tareas técnicas detalladas, orquesta su ejecución paralela/secuencial y gestiona el estado del plan. | project | `.agents/skills/tech-lead/SKILL.md` |
 | unit-testing | Trigger: unit testing, tests unitarios, TDD, test generation, cobertura, gap analysis, mocks, stubs, fixtures, mutation testing, tests de mutación. Genera tests unitarios en modo TDD por defecto, analiza gaps de cobertura, ejecuta el ciclo Red-Green-Refactor y evalúa la robustez mediante pruebas de mutación. | project | `.agents/skills/unit-testing/SKILL.md` |
 | wireframe-designer | Trigger: wireframe, mockup, prototipo, UI prototype, navigable design, interactivo, autocontenido. Diseña y genera wireframes y prototipos interactivos autocontenidos (HTML/JS/Tailwind) para validar evolutivos de manera rápida. | project | `.agents/skills/wireframe-designer/SKILL.md` |
+| github-sync | Trigger: github, sync, sincronizar, issues, github issues, backlog sync. Sincroniza bidireccionalmente las issues de GitHub con las historias de usuario locales en Markdown usando la CLI gh. | project | `.agents/skills/github-sync/SKILL.md` |
 | work-unit-commits | Plan commits as reviewable work units. Trigger: implementation, commit splitting, chained PRs, or keeping tests and docs with code. | global | `.gemini/config/skills/work-unit-commits/SKILL.md` |
 
 ## Convention Files

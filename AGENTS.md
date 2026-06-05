@@ -19,6 +19,7 @@
 | judgment-day | judgment day, dual review, adversarial review, juzgar, confrontar | `.agents/skills/judgment-day/SKILL.md` |
 | db-architect | db architect, base de datos, database schema, migration, diagramas ER | `.agents/skills/db-architect/SKILL.md` |
 | wireframe-designer | wireframe, mockup, prototipo, UI prototype, navigable design, interactivo, autocontenido | `.agents/skills/wireframe-designer/SKILL.md` |
+| github-sync | github, sync, sincronizar, issues, github issues, backlog sync | `.agents/skills/github-sync/SKILL.md` |
 
 
 
