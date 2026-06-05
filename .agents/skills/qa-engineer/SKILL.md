@@ -15,7 +15,7 @@ Load this skill when a QA strategy, quality assurance checks, test plans, CI pip
 
 - **Orchestration Only:** This skill delegates actual code writing to subordinating skills (`unit-testing`, `e2e-testing`, `a11y-testing`).
 - **Unified QA Plan:** Require a QA plan to be validated by the user or defined in `.ia/` before starting implementation.
-- **Strict Dod Verification:** Enforce all criteria in the Definition of Done (coverage targets, no critical a11y violations, green critical paths).
+- **Strict Dod Verification:** Enforce all criteria in the Definition of Done (coverage targets, mutation score targets >= 70%, no critical a11y violations, green critical paths).
 - **Domain-Specific Templates:** Reference pipeline templates from modular domains.
 
 ## Decision Gates
@@ -49,7 +49,7 @@ QAEngineer {
   }
 
   QAPlan {
-    // Strategy targets: coverage percentages, critical user flows, target platforms
+    // Strategy targets: coverage percentages, mutation score (>= 70%), critical user flows, target platforms
     // Persist plan after user confirmation
     persist: mem_save(qa_plan, topic: "qa-engineer/{project}/qa-plan", type: "architecture")
   }
@@ -61,14 +61,14 @@ QAEngineer {
 
   TestingPhases {
     // Sub-delegation logic:
-    // 1. Invokes "unit-testing" with coverage targets
+    // 1. Invokes "unit-testing" with coverage and mutation targets
     // 2. Invokes "e2e-testing" with critical business scenarios
     // 3. Invokes "a11y-testing" with WCAG target compliance
   }
 
   ConsolidatedReport {
     // Merge results from sub-testing phases into a high-level executive summary
-    // Fails gate if any sub-phase release gate is blocked
+    // Fails gate if any sub-phase release gate is blocked (including mutation score < 70%)
     persist: mem_save(report, topic: "qa-engineer/{project}/report", type: "architecture", capture_prompt: false)
   }
 }
@@ -83,7 +83,7 @@ QAEngineer {
 
 Return a unified quality scorecard including:
 - Overall release status: `PASS` or `BLOCKED`.
-- Table detailing test counts and coverage per category (Unit, E2E, A11y).
+- Table detailing test counts, coverage, and mutation score (mutants killed vs. survived) per category (Unit, E2E, A11y).
 - Outstanding risks, critical failures, and immediate actions to unblock release.
 
 ## References

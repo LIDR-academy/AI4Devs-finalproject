@@ -11,14 +11,22 @@ stages:
   - deploy
 
 cache:
+  key:
+    files:
+      - pnpm-lock.yaml
   paths:
-    - node_modules/
+    - .pnpm-store/
+
+before_script:
+  - corepack enable
+  - corepack prepare pnpm@latest-11 --activate
+  - pnpm config set store-dir .pnpm-store
 
 install_dependencies:
   stage: install
-  image: node:20-alpine
+  image: node:22-alpine
   script:
-    - npm ci
+    - pnpm install --frozen-lockfile
   artifacts:
     paths:
       - node_modules/
@@ -26,15 +34,27 @@ install_dependencies:
 
 run_unit_tests:
   stage: test
-  image: node:20-alpine
+  image: node:22-alpine
   dependencies:
     - install_dependencies
   script:
-    - npm run test:coverage
+    - pnpm run test:coverage
   coverage: '/All files\s*\|\s*([\d\.]+)/'
   artifacts:
     paths:
       - coverage/
+    expire_in: 7 days
+
+run_mutation_tests:
+  stage: test
+  image: node:22-alpine
+  dependencies:
+    - install_dependencies
+  script:
+    - pnpm run test:mutation
+  artifacts:
+    paths:
+      - reports/mutation/
     expire_in: 7 days
 
 run_e2e_tests:
@@ -43,7 +63,8 @@ run_e2e_tests:
   dependencies:
     - install_dependencies
   script:
-    - npm run test:e2e
+    - pnpm exec playwright install --with-deps
+    - pnpm run test:e2e
   artifacts:
     when: always
     paths:
@@ -52,9 +73,9 @@ run_e2e_tests:
 
 run_a11y_tests:
   stage: test
-  image: node:20-alpine
+  image: node:22-alpine
   dependencies:
     - install_dependencies
   script:
-    - npm run test:a11y
+    - pnpm run test:a11y
 ```

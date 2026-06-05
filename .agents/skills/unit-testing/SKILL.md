@@ -1,28 +1,30 @@
 ---
 name: unit-testing
-description: "Trigger: unit testing, tests unitarios, TDD, test generation, cobertura, gap analysis, mocks, stubs, fixtures. Genera tests unitarios en modo TDD por defecto, analiza gaps de cobertura y ejecuta el ciclo Red-Green-Refactor."
+description: "Trigger: unit testing, tests unitarios, TDD, test generation, cobertura, gap analysis, mocks, stubs, fixtures, mutation testing, tests de mutación. Genera tests unitarios en modo TDD por defecto, analiza gaps de cobertura, ejecuta el ciclo Red-Green-Refactor y evalúa la robustez mediante pruebas de mutación."
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "2.0"
+  version: "2.1"
 ---
 
 ## Activation Contract
 
-Load this skill when unit testing, code coverage checks, TDD implementation cycles, mock data generations, or testing gaps audits are requested. Triggers: `unit testing`, `tests unitarios`, `TDD`, `test generation`, `cobertura`, `gap analysis`, `mocks`, `stubs`, `fixtures`.
+Load this skill when unit testing, code coverage checks, TDD implementation cycles, mock data generations, testing gaps audits, or mutation testing evaluations are requested. Triggers: `unit testing`, `tests unitarios`, `TDD`, `test generation`, `cobertura`, `gap analysis`, `mocks`, `stubs`, `fixtures`, `mutation testing`, `tests de mutación`, `stryker`, `mutmut`, `go-mutesting`.
 
 ## Hard Rules
 
 - **TDD Cycle (Red-Green-Refactor):** The default execution path requires writing the test structure and confirming it fails (RED) before implementing the minimal code needed to pass (GREEN).
 - **Isolation:** Unit tests must execute in isolation. External service dependencies must be mocked or stubbed.
 - **Coverage Goal:** Strive for at least 80% coverage on new code or modified modules.
+- **Mutation Testing (Mutation Score >= 70%):** Proactively run mutation tests on new or modified logic. Any survived mutants must be evaluated and eliminated by adding missing assertions or edge-case test cases.
 
 ## Decision Gates
 
-| Cycle Mode | Action | Reference File |
+| Cycle Mode / Scope | Action | Reference File |
 |---|---|---|
 | Test-Driven Development (TDD) | Run sequential Red-Green-Refactor loop | `references/tdd-cycle.md` |
 | Mocking & fixtures setup | Resolve data stubs / mocking policies | `references/mocking-rules.md` |
+| Mutation Testing | Validate test suite strength using Stryker/Mutmut/Go-mutesting | `references/mutation-testing.md` |
 
 ## Execution Steps
 
@@ -58,6 +60,12 @@ UnitTesting {
     when mode == on_demand => RunOnDemandCycle
   }
 
+  MutationTesting {
+    // Inject mutants to verify that tests fail when logic changes
+    // Refer to references/mutation-testing.md for runner setup and execution
+    persist: mem_save(mutation_report, topic: "unit-testing/{project}/mutation", type: "architecture", capture_prompt: false)
+  }
+
   CollectResults {
     instruct_run => parse_coverage_file => summarize
     persist: mem_save(results, topic: "unit-testing/{project}/results", type: "architecture", capture_prompt: false)
@@ -69,15 +77,17 @@ UnitTesting {
 2. **Cycle Initiation**: Determine TDD vs. On-Demand testing targets.
 3. **Mocks generation**: Generate mocks for external networks or database callers.
 4. **Execution & Coverage**: Execute tests and compile coverage statistics.
+5. **Mutation Analysis**: Execute mutation testing runner and verify mutation score >= 70%.
 
 ## Output Contract
 
 Return:
 - Paths to generated unit test files.
-- Command line instruction to execute test coverage reports.
-- Summary detailing coverage percentages and pass/fail counts.
+- Command line instruction to execute test coverage and mutation testing reports.
+- Summary detailing coverage percentages, mutation score (mutants killed vs. survived), and pass/fail counts.
 
 ## References
 
 - [tdd-cycle.md](references/tdd-cycle.md) — Red-Green-Refactor loop and step verification guide.
 - [mocking-rules.md](references/mocking-rules.md) — Mocking standards, stubs setup, and test data fixtures.
+- [mutation-testing.md](references/mutation-testing.md) — Setup, execution and interpretation guide for mutation testing.
