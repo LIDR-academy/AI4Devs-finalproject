@@ -12,3 +12,6 @@
 | unit-testing | unit testing, tests unitarios, TDD, test generation, cobertura, gap analysis, mocks, stubs, fixtures | `.agents/skills/unit-testing/SKILL.md` |
 | e2e-testing | e2e, end-to-end, tests E2E, flujos de usuario, acceptance testing, Playwright, Cypress, escenarios | `.agents/skills/e2e-testing/SKILL.md` |
 | a11y-testing | accesibilidad, a11y, WCAG, accessibility testing, contraste, ARIA, teclado, lector de pantalla, auditoría accesibilidad | `.agents/skills/a11y-testing/SKILL.md` |
+| qa-engineer | QA, quality assurance, tester, plan de QA, cobertura de tests, estrategia de testing, CI testing, mejora de tests | `.agents/skills/qa-engineer/SKILL.md` |
+| frontend-architect | frontend architect, implementar frontend, arquitectura frontend, UI implementation | `.agents/skills/frontend-architect/SKILL.md` |
+
