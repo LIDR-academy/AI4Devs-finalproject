@@ -1,72 +1,60 @@
 ---
 name: diagram-generator
-description: "Trigger: diagrama, diagram, mermaid, casos de uso, secuencia, clases, flujo, ER, arquitectura, C4, mindmap, gitGraph. Genera diagramas Mermaid detallados a partir de documentación del proyecto o contexto proporcionado."
+description: "Diagrama, Diagram, Mermaid, Casos De Uso, Secuencia, Clases, Flujo, Er, Arquitectura, C4, Mindmap, Gitgraph. Genera diagramas Mermaid detallados a partir de documentación del proyecto o contexto proporcionado."
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "2.0"
+  version: "1.1"
+---
+[ACTIVATION]
+
+Esta skill se activa cuando la tarea o el contexto del usuario requiere realizar acciones sobre diagram-generator o incluye las siguientes palabras clave/desencadenadores:
+**Triggers:** diagrama, diagram, mermaid, casos de uso, secuencia, clases, flujo, ER, arquitectura, C4, mindmap, gitGraph
+
 ---
 
-## Activation Contract
+[RULES]
 
-Load this skill when visual diagrams, architecture charts, user flow mapping, C4 container topologies, or database ER schemas are requested. Triggers: `diagrama`, `diagram`, `mermaid`, `casos de uso`, `secuencia`, `clases`, `flujo`, `ER`, `arquitectura`, `C4`, `mindmap`, `gitGraph`.
+1. **Syntax Validation:** Prohibido incluir etiquetas HTML o caracteres especiales sin escapar dentro de los diagramas Mermaid.
+2. **Single-responsibility diagrams:** Cada diagrama debe representar una vista única y clara de la arquitectura.
 
-## Hard Rules
+---
 
-- **Strict Syntax Verification:** Mermaid syntax must be validated for correctness before output. Avoid HTML tags or unquoted parentheses inside labels.
-- **Maximum Detail:** Include all actors, data flows, and labeled edges. No placeholder lines.
-- **Output Routing:** Support file serialization and direct SudoLang payload return to calling agents.
+[GATES]
 
-## Decision Gates
+| Condición | Acción | Destino / Fase |
+| :--- | :--- | :--- |
+| Error de sintaxis Mermaid detectado | Corregir inmediatamente usando la guía de sintaxis | Corrección Automática |
+| Se solicita diagrama de arquitectura | Generar diagrama C4 o flujo de secuencia | Salida |
 
-| Invocation Mode | Action | Output Model |
-|---|---|---|
-| Inter-Agent (Delegation) | Verify required diagram types are passed, bypass config questionnaire | `return_to_caller` |
-| Direct User Request | Run context gathering and step approvals | `file` or as configured |
 
-## Execution Steps
+---
 
-```sudolang
-DiagramGenerator {
-  Config {
-    lang             = detect_from_user_input |> default "es"
-    sourceDir        = "docs/"
-    supportedTypes   = ["usecase", "sequence", "class", "flowchart", "er", "C4Context", "C4Container"]
-    approval         = param_or_default("per_diagram")
-    outputMode       = ask_user
-    outputDir        = ask_user |> default "docs/diagrams/"
-  }
+[STEPS]
 
-  OnActivate {
-    mode = detect_invocation_mode()
-    when mode == "inter_agent" => HandleAgentInvocation
-    when mode == "user" => HandleUserInvocation
-  }
+### Solo Mode (Interactivo / Usuario)
+1. Leer los requisitos del usuario o el PRD en `docs/prd/PRD.md`.
+2. Identificar el tipo de diagrama más adecuado para la solicitud (Secuencia, ER, Flujo, C4).
+3. Generar el bloque de código Mermaid siguiendo estrictamente las reglas de sintaxis de referencias.
+4. Guardar los diagramas generados en `docs/design/diagrams/` y reportar éxito.
 
-  Execute {
-    // 1. Analyze text context to extract actors, boundaries, and flows
-    // 2. Generate target Mermaid code following strict structure rules
-    // 3. Prompt validation or batch confirmations
-  }
+### Orchestrated Mode (Coordinado / SDD Pipeline)
+1. Leer las especificaciones técnicas del diseño.
+2. Generar los diagramas embebidos necesarios para el documento `docs/design/DESIGN.md`.
+3. Actualizar el contrato de estado.
 
-  Deliver {
-    // Save to outputDir or return structured JSON depending on outputMode
-    persist: mem_save(summary, topic: "diagram/{project}/state", type: "architecture", capture_prompt: false)
-  }
-}
-```
+---
 
-1. **Context Parsing**: Scans `docs/` and extracts structural data models.
-2. **Mermaid Generation**: Render diagram templates matching requested types.
-3. **Syntax Verification**: Test outputs against Mermaid parser constraints.
-4. **Delivery**: Output to files or return payload.
+[OUTPUT]
 
-## Output Contract
+Al completar su ejecución, la skill debe:
+1. Generar los artefactos y archivos resultantes especificados en su modo de ejecución.
+2. Escribir/Actualizar un contrato de estado en el archivo de estado de la skill (especificado por la configuración de la tarea o en Engram). El formato del contrato debe cumplir con el esquema definido en:
+   - [contract.d.ts](references/contract.d.ts)
 
-Return:
-- Labeled code blocks wrapped in standard markdown ` ```mermaid ` fences.
-- Overview list of diagram types generated and their purpose.
+---
 
-## References
+[REFERENCES]
 
-- `docs/` — Text specifications, API structures, or stories.
+- [contract.d.ts](references/contract.d.ts) — Interfaz TypeScript del contrato de datos de la skill.
+- [mermaid-rules.md](references/mermaid-rules.md) — Estándares y formatos válidos de sintaxis Mermaid.

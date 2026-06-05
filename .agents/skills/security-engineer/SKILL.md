@@ -1,145 +1,60 @@
 ---
 name: security-engineer
-description: "Trigger: seguridad, security, auditoría de seguridad, SAST, DAST, secretos, dependencias vulnerables, OWASP. Planifica, audita, remedia y valida la seguridad del código del proyecto."
+description: "Seguridad, Security, Auditoría De Seguridad, Sast, Dast, Secretos, Dependencias Vulnerables, Owasp. Planifica, audita, remedia y valida la seguridad del código del proyecto."
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "3.2"
+  version: "3.3"
+---
+[ACTIVATION]
+
+Esta skill se activa cuando la tarea o el contexto del usuario requiere realizar acciones sobre security-engineer o incluye las siguientes palabras clave/desencadenadores:
+**Triggers:** seguridad, security, auditoría de seguridad, SAST, DAST, secretos, dependencias vulnerables, OWASP
+
 ---
 
-```sudolang
-/**
- * @skill security-engineer
- * @description Evalúa, audita y mitiga amenazas de seguridad sobre código y diseño en flujos SDD.
- */
-SecurityEngineer {
-  Config {
-    lang = "es"
-    outputDir = "docs/security/"
-    stateFile = "docs/state/security_contract.json"
-    tone = "instructive-concise"
-  }
+[RULES]
 
-  // Activation Contract
-  onTrigger: ["seguridad", "security", "auditoría de seguridad", "SAST", "DAST", "secretos", "dependencias vulnerables", "OWASP"]
+1. **Secrets Sanitization:** Nunca subir credenciales, tokens o llaves al repositorio. Rotar de inmediato si se detecta.
+2. **Vulnerability Baseline:** Clasificar vulnerabilidades según CVSS. Rechazar builds con High/Critical.
+3. Si una solución o diseño propuesto por el usuario es inseguro o carece de especificaciones, challengearlo y dar soluciones correctas.
 
-  // Hard Rules
-  constraints: [
-    "Secrets Sanitization: Nunca subir credenciales, tokens o llaves al repositorio. Rotar de inmediato si se detecta.",
-    "Vulnerability Baseline: Clasificar vulnerabilidades según CVSS. Rechazar builds con High/Critical.",
-    "Si una solución o diseño propuesto por el usuario es inseguro o carece de especificaciones, challengearlo y dar soluciones correctas."
-  ]
+---
 
-  // Decision Gates
-  resolveAction(context) {
-    if (not(matchesTrigger(context.task))) {
-      candidate = findCandidateSkill(context.task)
-      if (candidate) {
-        log("Redirigiendo tarea fuera de ámbito a la skill candidata: " + candidate)
-        return invokeSkill(candidate, {
-          caller: "security-engineer",
-          executionMode: context.executionMode,
-          task: context.task,
-          payload: { sourceContractPath: Config.stateFile }
-        })
-      } else {
-        log("La tarea no corresponde a security-engineer y no se encontró una skill candidata adecuada.")
-        return challengeOutofScope(context)
-      }
-    }
-    if (context.isVagueSecurityRequest) {
-      return ChallengeOrDeepenSecurity(context)
-    }
-    if (context.executionMode == "orchestrated") {
-      return RunSecurityAudits(context)
-    }
-    return PresentInteractiveAudit(context)
-  }
+[GATES]
 
-  // Execution Steps
-  execute(contract) {
-    context = resolveDataContext(contract)
-    resolveAction(context)
+| Condición | Acción | Destino / Fase |
+| :--- | :--- | :--- |
+| Solicitud de seguridad vaga o incompleta | Ejecutar ChallengeOrDeepenSecurity | Interactivo |
+| Modo orquestado de auditoría | Ejecutar auditoría estática y generar reporte | Reporte de Seguridad |
 
-    if (context.executionMode == "solo") {
-      executeSoloMode(context)
-    } else {
-      executeOrchestratedMode(context)
-    }
-  }
 
-  executeSoloMode(context) {
-    log("Acompañando al usuario en el análisis de seguridad de manera concisa.")
+---
 
-    if (isVague(context.securitySpec)) {
-      ChallengeOrDeepenSecurity(context.securitySpec)
-      return
-    }
+[STEPS]
 
-    options = proposeMitigations(context.securitySpec)
-    presentOptions(options)
+### Solo Mode (Interactivo / Usuario)
+1. Revisar el diseño del sistema o código fuente del usuario en busca de vulnerabilidades.
+2. Generar mitigaciones recomendadas para amenazas comunes de OWASP (ej. inyección SQL, XSS).
+3. Guardar el reporte de modelo de amenazas en `docs/security/threat_model.md` y sincronizar el contrato.
 
-    edgeCases = findSecurityEdgeCases(context.securitySpec)
-    presentEdgeCases(edgeCases)
+### Orchestrated Mode (Coordinado / SDD Pipeline)
+1. Auditar de forma estática el diseño y código usando el archivo de referencia `docs/design/DESIGN.md`.
+2. Guardar los hallazgos en `docs/security/threat_model.md`.
+3. Actualizar el contrato de estado.
 
-    threatModel = designThreatModel(context)
-    saveFile(Config.outputDir + "threat_model.md", threatModel)
-    writeStandardContract(context, "success")
-  }
+---
 
-  executeOrchestratedMode(context) {
-    // Paso por referencia: Leer el diseño desde la ruta
-    designRef = { designPath: "docs/design/DESIGN.md" }
-    threatModel = auditDesignAndCode(designRef)
-    saveFile("docs/security/threat_model.md", threatModel)
-    
-    writeStandardContract(context, "success")
-  }
+[OUTPUT]
 
-  ChallengeOrDeepenSecurity(idea) {
-    log("Validando seguridad del flujo...")
-    if (isInsecureDesign(idea)) {
-      log("La implementación sugerida introduce vectores de ataque o fallos de seguridad críticos.")
-      log("Justificación: [Explicación de seguridad concisa]")
-      log("Mitigación recomendada: ✨ [Patrón de diseño seguro o control sugerido]")
-    } else {
-      log("La especificación de seguridad es viable pero vaga. Indique contexto de autenticación o cifrado.")
-    }
-  }
+Al completar su ejecución, la skill debe:
+1. Generar los artefactos y archivos resultantes especificados en su modo de ejecución.
+2. Escribir/Actualizar un contrato de estado en el archivo de estado de la skill (especificado por la configuración de la tarea o en Engram). El formato del contrato debe cumplir con el esquema definido en:
+   - [contract.d.ts](references/contract.d.ts)
 
-  findCandidateSkill(task) {
-    registry = readRegistryMetadata()
-    return matchTaskToTriggersLightweight(task, registry)
-  }
+---
 
-  resolveDataContext(contract) {
-    if (hasEngram()) {
-      return mem_search("security-engineer/{project}/state")
-    } else {
-      return readFile(Config.stateFile) |> defaultContract
-    }
-  }
+[REFERENCES]
 
-  writeStandardContract(context, status) {
-    output = {
-      caller: context.caller |> default "user",
-      executionMode: context.executionMode |> default "solo",
-      sddPhase: "verify",
-      status: status,
-      payload: { auditPath: Config.outputDir + "threat_model.md" },
-      artifacts: [Config.outputDir + "threat_model.md"],
-      ambiguities: context.pendingThreats,
-      edgeCases: context.discoveredEdgeCases
-    }
-    if (hasEngram()) {
-      mem_save(output, topic: "security-engineer/{project}/state", type: "architecture", capture_prompt: false)
-    }
-    saveFile(Config.stateFile, toJson(output))
-  }
-}
-```
-
-## References
-
-- `docs/` — Document context sources (PRDs, wireframes, architectures).
-- `.agents/skills/qa-engineer/SKILL.md` — Quality assurance coordinate target.
+- [contract.d.ts](references/contract.d.ts) — Interfaz TypeScript del contrato de datos de la skill.
+- [qa-engineer](file:///Users/develop/Workspace/Courses/LidrCo/AI4Devs/AI4Devs-finalproject/.agents/skills/qa-engineer/SKILL.md) — Coordinador de calidad.

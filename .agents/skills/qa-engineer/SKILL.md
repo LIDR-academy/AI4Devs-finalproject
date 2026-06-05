@@ -1,150 +1,63 @@
 ---
 name: qa-engineer
-description: "Trigger: QA, quality assurance, tester, plan de QA, cobertura de tests, estrategia de testing, CI testing, mejora de tests. Orquesta unit-testing, e2e-testing y a11y-testing, genera plan de QA, configura CI/CD y produce reportes consolidados de calidad."
+description: "Qa, Quality Assurance, Tester, Plan De Qa, Cobertura De Tests, Estrategia De Testing, Ci Testing, Mejora De Tests, Mutation Testing. Orquesta unit-testing, e2e-testing y a11y-testing, genera plan de QA, configura CI/CD y produce reportes consolidados de calidad."
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "3.2"
+  version: "3.3"
+---
+[ACTIVATION]
+
+Esta skill se activa cuando la tarea o el contexto del usuario requiere realizar acciones sobre qa-engineer o incluye las siguientes palabras clave/desencadenadores:
+**Triggers:** QA, quality assurance, tester, plan de QA, cobertura de tests, estrategia de testing, CI testing, mejora de tests, mutation testing
+
 ---
 
-```sudolang
-/**
- * @skill qa-engineer
- * @description Orquesta unit-testing, e2e-testing y a11y-testing, definiendo la estrategia y validando el DoD en el flujo SDD.
- */
-QAEngineer {
-  Config {
-    lang = "es"
-    outputDir = "docs/qa/"
-    stateFile = "docs/state/qa_engineer_contract.json"
-    tone = "instructive-concise"
-  }
+[RULES]
 
-  // Activation Contract
-  onTrigger: ["QA", "quality assurance", "tester", "plan de QA", "cobertura de tests", "estrategia de testing", "CI testing", "mejora de tests"]
+1. **Test coverage goals:** Exigir al menos 80% de cobertura en código crítico.
+2. **CI/CD Integration:** Todos los tests deben ejecutarse automáticamente en cada Pull Request.
 
-  // Hard Rules
-  constraints: [
-    "Orchestration Only: delegar la escritura del código de pruebas a unit-testing, e2e-testing y a11y-testing.",
-    "Strict DoD Verification: Validar coberturas y objetivos de mutación (>= 70%), sin fallos críticos de accesibilidad.",
-    "Si la estrategia o plan del usuario es vaga o inviable, guiar la definición o refutar el enfoque con argumentos profesionales."
-  ]
+---
 
-  // Decision Gates
-  resolveAction(context) {
-    if (not(matchesTrigger(context.task))) {
-      candidate = findCandidateSkill(context.task)
-      if (candidate) {
-        log("Redirigiendo tarea fuera de ámbito a la skill candidata: " + candidate)
-        return invokeSkill(candidate, {
-          caller: "qa-engineer",
-          executionMode: context.executionMode,
-          task: context.task,
-          payload: { sourceContractPath: Config.stateFile }
-        })
-      } else {
-        log("La tarea no corresponde a qa-engineer y no se encontró una skill candidata adecuada.")
-        return challengeOutofScope(context)
-      }
-    }
-    if (context.isVagueStrategy) {
-      return ChallengeOrDeepenQaStrategy(context)
-    }
-    if (context.executionMode == "orchestrated") {
-      return OrchestrateTestingPhases(context)
-    }
-    return PresentInteractivePlan(context)
-  }
+[GATES]
 
-  // Execution Steps
-  execute(contract) {
-    context = resolveDataContext(contract)
-    resolveAction(context)
+| Condición | Acción | Destino / Fase |
+| :--- | :--- | :--- |
+| Cobertura por debajo del umbral mínimo | Reportar fallo de cobertura y listar tests faltantes | Plan de Mejora |
+| Se requiere estrategia de pruebas | Generar plan de QA y configurar scripts de test runner | Estrategia |
 
-    if (context.executionMode == "solo") {
-      executeSoloMode(context)
-    } else {
-      executeOrchestratedMode(context)
-    }
-  }
 
-  executeSoloMode(context) {
-    log("Acompañando al usuario en el diseño del plan de QA de manera concisa.")
+---
 
-    if (isVague(context.strategyIdea)) {
-      ChallengeOrDeepenQaStrategy(context.strategyIdea)
-      return
-    }
+[STEPS]
 
-    strategies = proposeQaStrategies(context.strategyIdea)
-    presentStrategies(strategies)
+### Solo Mode (Interactivo / Usuario)
+1. Evaluar el código actual y los tests existentes para mapear la cobertura.
+2. Crear o actualizar la estrategia de QA en `docs/qa/test_plan.md`.
+3. Configurar el archivo de workflow de CI/CD para GitHub Actions o similar.
+4. Guardar los cambios y sincronizar el contrato.
 
-    edgeCases = findQaEdgeCases(context.strategyIdea)
-    presentEdgeCases(edgeCases)
+### Orchestrated Mode (Coordinado / SDD Pipeline)
+1. Ejecutar los scripts de prueba a través de los subagentes unit-testing y e2e-testing.
+2. Compilar los resultados en el reporte consolidado de calidad en `docs/qa/qa_report.md`.
+3. Actualizar el contrato con el estado de los tests.
 
-    plan = buildQaPlan(context)
-    saveFile(Config.outputDir + "qa_plan.md", plan)
-    writeStandardContract(context, "success")
-  }
+---
 
-  executeOrchestratedMode(context) {
-    // Paso por referencia: Evita inyecciones masivas de backlog de tareas
-    backlogRef = { backlogPath: "docs/tech-lead/backlog.md" }
-    
-    invokeSkill("unit-testing", { payload: backlogRef })
-    invokeSkill("e2e-testing", { payload: backlogRef })
-    invokeSkill("a11y-testing", { payload: backlogRef })
-    
-    report = generateConsolidatedReport()
-    saveFile("docs/qa/consolidated_report.md", report)
-    
-    writeStandardContract(context, "success")
-  }
+[OUTPUT]
 
-  ChallengeOrDeepenQaStrategy(idea) {
-    log("Validando estrategia de pruebas...")
-    if (isInvalidStrategy(idea)) {
-      log("La estrategia propuesta no garantizará la calidad requerida o sobrecarga el desarrollo innecesariamente.")
-      log("Justificación: [Explicación de QA concisa]")
-      log("Estrategia recomendada: ✨ [Estrategia de testing balanceada y viable]")
-    } else {
-      log("La idea de testing es viable pero vaga. Especifique frameworks preferidos o niveles de cobertura mínimos.")
-    }
-  }
+Al completar su ejecución, la skill debe:
+1. Generar los artefactos y archivos resultantes especificados en su modo de ejecución.
+2. Escribir/Actualizar un contrato de estado en el archivo de estado de la skill (especificado por la configuración de la tarea o en Engram). El formato del contrato debe cumplir con el esquema definido en:
+   - [contract.d.ts](references/contract.d.ts)
 
-  findCandidateSkill(task) {
-    registry = readRegistryMetadata()
-    return matchTaskToTriggersLightweight(task, registry)
-  }
+---
 
-  resolveDataContext(contract) {
-    if (hasEngram()) {
-      return mem_search("qa-engineer/{project}/state")
-    } else {
-      return readFile(Config.stateFile) |> defaultContract
-    }
-  }
+[REFERENCES]
 
-  writeStandardContract(context, status) {
-    output = {
-      caller: context.caller |> default "user",
-      executionMode: context.executionMode |> default "solo",
-      sddPhase: "verify",
-      status: status,
-      payload: { reportPath: Config.outputDir + "consolidated_report.md" },
-      artifacts: [Config.outputDir + "consolidated_report.md"],
-      ambiguities: context.pendingDecisions,
-      edgeCases: context.discoveredEdgeCases
-    }
-    if (hasEngram()) {
-      mem_save(output, topic: "qa-engineer/{project}/state", type: "architecture", capture_prompt: false)
-    }
-    saveFile(Config.stateFile, toJson(output))
-  }
-}
-```
-
-## References
-
-- [ci-github-actions.md](references/ci-github-actions.md) — GitHub Actions CI templates.
-- [ci-gitlab-ci.md](references/ci-gitlab-ci.md) — GitLab CI/CD configuration templates.
+- [contract.d.ts](references/contract.d.ts) — Interfaz TypeScript del contrato de datos de la skill.
+- [ci-github-actions.md](references/ci-github-actions.md) — Configuración para CI en GitHub Actions.
+- [ci-gitlab-ci.md](references/ci-gitlab-ci.md) — Configuración para CI en GitLab CI.
+- [unit-testing](file:///Users/develop/Workspace/Courses/LidrCo/AI4Devs/AI4Devs-finalproject/.agents/skills/unit-testing/SKILL.md) — Agente de pruebas unitarias.
+- [e2e-testing](file:///Users/develop/Workspace/Courses/LidrCo/AI4Devs/AI4Devs-finalproject/.agents/skills/e2e-testing/SKILL.md) — Agente de pruebas E2E.

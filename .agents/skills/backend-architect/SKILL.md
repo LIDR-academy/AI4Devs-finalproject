@@ -1,147 +1,60 @@
 ---
 name: backend-architect
-description: "Trigger: backend architect, implementar backend, arquitectura backend, backend implementation. Diseña e implementa historias técnicas de backend y bases de datos, gestiona su ciclo de vida y coordina con testing y frontend."
+description: "Backend Architect, Implementar Backend, Arquitectura Backend, Backend Implementation. Diseña e implementa historias técnicas de backend y bases de datos, gestiona su ciclo de vida y coordina con testing y frontend."
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "3.2"
+  version: "3.3"
+---
+[ACTIVATION]
+
+Esta skill se activa cuando la tarea o el contexto del usuario requiere realizar acciones sobre backend-architect o incluye las siguientes palabras clave/desencadenadores:
+**Triggers:** backend architect, implementar backend, arquitectura backend, backend implementation
+
 ---
 
-```sudolang
-/**
- * @skill backend-architect
- * @description Diseña e implementa componentes y lógica de backend bajo TDD en la fase apply de SDD.
- */
-BackendArchitect {
-  Config {
-    lang = "es"
-    outputDir = "docs/backend-architect/"
-    stateFile = "docs/state/backend_architect_contract.json"
-    tone = "instructive-concise"
-  }
+[RULES]
 
-  // Activation Contract
-  onTrigger: ["backend architect", "implementar backend", "arquitectura backend", "backend implementation"]
+1. **Strict Clean Architecture:** Separar la capa de dominio, aplicación e infraestructura.
+2. **REST API Best Practices:** Usar códigos de estado HTTP correctos, nombres de recursos en plural y validación estricta de payloads.
 
-  // Hard Rules
-  constraints: [
-    "Database Non-Regression: Validar impactos de base de datos proactivamente.",
-    "TDD Integration: Delegación obligatoria a unit-testing en modo TDD para nuevos componentes.",
-    "Si la dirección de backend o stack sugerido es vaga o ineficiente, profundizar o justificar alternativas adecuadas."
-  ]
+---
 
-  // Decision Gates
-  resolveAction(context) {
-    if (not(matchesTrigger(context.task))) {
-      candidate = findCandidateSkill(context.task)
-      if (candidate) {
-        log("Redirigiendo tarea fuera de ámbito a la skill candidata: " + candidate)
-        return invokeSkill(candidate, {
-          caller: "backend-architect",
-          executionMode: context.executionMode,
-          task: context.task,
-          payload: { sourceContractPath: Config.stateFile }
-        })
-      } else {
-        log("La tarea no corresponde a backend-architect y no se encontró una skill candidata adecuada.")
-        return challengeOutofScope(context)
-      }
-    }
-    if (context.isVagueRequirement) {
-      return ChallengeOrDeepenRequirements(context)
-    }
-    if (context.executionMode == "orchestrated") {
-      return ExecuteBackendImplementation(context)
-    }
-    return PresentInteractiveDesign(context)
-  }
+[GATES]
 
-  // Execution Steps
-  execute(contract) {
-    context = resolveDataContext(contract)
-    resolveAction(context)
+| Condición | Acción | Destino / Fase |
+| :--- | :--- | :--- |
+| Falta de validación de entrada en endpoints | Implementar middleware de validación | Middleware |
+| Integración de backend solicitada | Escribir lógica de servicios y endpoints de API | Código |
 
-    if (context.executionMode == "solo") {
-      executeSoloMode(context)
-    } else {
-      executeOrchestratedMode(context)
-    }
-  }
 
-  executeSoloMode(context) {
-    log("Acompañando al usuario en el diseño y codificación del backend de manera concisa.")
+---
 
-    if (isVague(context.backendSpec)) {
-      ChallengeOrDeepenRequirements(context.backendSpec)
-      return
-    }
+[STEPS]
 
-    patterns = proposeDesignPatterns(context.backendSpec)
-    presentPatterns(patterns)
+### Solo Mode (Interactivo / Usuario)
+1. Revisar el backlog técnico y el esquema de base de datos.
+2. Escribir los controladores, casos de uso y adaptadores de infraestructura para los endpoints requeridos.
+3. Proteger las rutas con controles de autenticación y autorización y registrar en el contrato.
 
-    edgeCases = findBackendEdgeCases(context.backendSpec)
-    presentEdgeCases(edgeCases)
+### Orchestrated Mode (Coordinado / SDD Pipeline)
+1. Implementar los endpoints definidos en el contrato de API.
+2. Actualizar el código fuente en `src/backend/` y validar su consistencia.
+3. Escribir los cambios y actualizar el contrato.
 
-    architecture = designBackendArchitecture(context)
-    saveFile(Config.outputDir + "architecture.md", architecture)
-    writeStandardContract(context, "success")
-  }
+---
 
-  executeOrchestratedMode(context) {
-    // Paso por referencia: Leer el backlog desde el path en vez de pasar strings
-    backlogRef = { backlogPath: "docs/tech-lead/backlog.md" }
-    generatedFiles = writeBackendComponents(backlogRef)
-    
-    // Delegar a unit-testing pasando la lista de referencias
-    invokeSkill("unit-testing", { payload: { codePaths: generatedFiles } })
-    
-    writeStandardContract(context, "success")
-  }
+[OUTPUT]
 
-  ChallengeOrDeepenRequirements(idea) {
-    log("Validando requerimientos de backend...")
-    if (isInefficientOrFlawed(idea)) {
-      log("La propuesta de backend presenta problemas críticos de rendimiento o diseño de API.")
-      log("Justificación: [Explicación técnica concisa]")
-      log("Alternativa propuesta: ✨ [Estructura de backend o patrón recomendado]")
-    } else {
-      log("La especificación de backend es viable pero vaga. Indique contratos de API o modelos de datos requeridos.")
-    }
-  }
+Al completar su ejecución, la skill debe:
+1. Generar los artefactos y archivos resultantes especificados en su modo de ejecución.
+2. Escribir/Actualizar un contrato de estado en el archivo de estado de la skill (especificado por la configuración de la tarea o en Engram). El formato del contrato debe cumplir con el esquema definido en:
+   - [contract.d.ts](references/contract.d.ts)
 
-  findCandidateSkill(task) {
-    registry = readRegistryMetadata()
-    return matchTaskToTriggersLightweight(task, registry)
-  }
+---
 
-  resolveDataContext(contract) {
-    if (hasEngram()) {
-      return mem_search("backend-architect/{project}/state")
-    } else {
-      return readFile(Config.stateFile) |> defaultContract
-    }
-  }
+[REFERENCES]
 
-  writeStandardContract(context, status) {
-    output = {
-      caller: context.caller |> default "user",
-      executionMode: context.executionMode |> default "solo",
-      sddPhase: "apply",
-      status: status,
-      payload: { codePaths: context.generatedFiles },
-      artifacts: context.generatedFiles,
-      ambiguities: context.pendingDecisions,
-      edgeCases: context.discoveredEdgeCases
-    }
-    if (hasEngram()) {
-      mem_save(output, topic: "backend-architect/{project}/state", type: "architecture", capture_prompt: false)
-    }
-    saveFile(Config.stateFile, toJson(output))
-  }
-}
-```
-
-## References
-
-- `.agents/skills/tech-lead/SKILL.md` — Technical backlog tracker source.
-- `.agents/skills/unit-testing/SKILL.md` — Mandatory subordinating testing executor.
+- [contract.d.ts](references/contract.d.ts) — Interfaz TypeScript del contrato de datos de la skill.
+- [db-architect](file:///Users/develop/Workspace/Courses/LidrCo/AI4Devs/AI4Devs-finalproject/.agents/skills/db-architect/SKILL.md) — Proveedor del esquema de datos.
+- [api-spec.md](references/api-spec.md) — Estándares y especificaciones de endpoints.

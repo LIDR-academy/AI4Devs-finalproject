@@ -1,150 +1,66 @@
 ---
 name: product-owner
-description: "Trigger: product owner, requisitos, documentación de negocio, backlog preliminar. Coordina la fase de entrevista de negocio y delega la creación del PRD y backlog técnico en sus respectivas skills."
+description: "Product Owner, Requisitos, Documentación De Negocio, Backlog Preliminar. Coordina la fase de entrevista de negocio y delega la creación del PRD y backlog técnico en sus respectivas skills."
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "3.2"
+  version: "3.3"
+---
+[ACTIVATION]
+
+Esta skill se activa cuando la tarea o el contexto del usuario requiere realizar acciones sobre product-owner o incluye las siguientes palabras clave/desencadenadores:
+**Triggers:** product owner, requisitos, documentación de negocio, backlog preliminar
+
 ---
 
-```sudolang
-/**
- * @skill product-owner
- * @description Coordina la fase de descubrimiento y definición de requerimientos de negocio, integrándose con el flujo SDD.
- */
-ProductOwner {
-  Config {
-    lang = "es"
-    outputDir = "docs/prd/"
-    stateFile = "docs/state/product_owner_contract.json"
-    tone = "instructive-concise"
-  }
+[RULES]
 
-  // Activation Contract
-  onTrigger: ["product owner", "requisitos", "documentación de negocio", "backlog preliminar"]
+1. **Strict Separation of Concerns:** delegar la compilación del PRD a prd-generator y las tareas a backlog-generator.
+2. **User Verification:** requerir la confirmación explícita del brief del producto antes de invocar subfases.
+3. Si el usuario da una idea vaga o ambigua, profundizar en ella o rechazarla con criterios de negocio justificables.
 
-  // Hard Rules
-  constraints: [
-    "Strict Separation of Concerns: delegar la compilación del PRD a prd-generator y las tareas a backlog-generator.",
-    "User Verification: requerir la confirmación explícita del brief del producto antes de invocar subfases.",
-    "Si el usuario da una idea vaga o ambigua, profundizar en ella o rechazarla con criterios de negocio justificables."
-  ]
+---
 
-  // Decision Gates
-  resolveAction(context) {
-    if (not(matchesTrigger(context.task))) {
-      candidate = findCandidateSkill(context.task)
-      if (candidate) {
-        log("Redirigiendo tarea fuera de ámbito a la skill candidata: " + candidate)
-        return invokeSkill(candidate, {
-          caller: "product-owner",
-          executionMode: context.executionMode,
-          task: context.task,
-          payload: { sourceContractPath: Config.stateFile } // Paso por referencia
-        })
-      } else {
-        log("La tarea no corresponde a product-owner y no se encontró una skill candidata adecuada.")
-        return challengeOutofScope(context)
-      }
-    }
-    if (context.isVagueIdea) {
-      return ChallengeOrDeepenIdea(context)
-    }
-    if (context.interviewInProgress) {
-      return ContinueInterview(context)
-    }
-    if (context.briefApproved && context.executionMode == "orchestrated") {
-      return RunGeneratorPipeline(context)
-    }
-    return PresentDiscoveryOptions(context)
-  }
+[GATES]
 
-  // Execution Steps
-  execute(contract) {
-    resolvedContext = resolveDataContext(contract)
-    resolveAction(resolvedContext)
+| Condición | Acción | Destino / Fase |
+| :--- | :--- | :--- |
+| La tarea no corresponde a product-owner | Redirigir a skill candidata usando el registro | Orquestador / Registro |
+| La propuesta o idea del usuario es vaga o ambigua | Ejecutar ChallengeOrDeepenIdea para profundizar | Interactivo / Usuario |
+| Entrevista de descubrimiento en curso | Continuar con el proceso de entrevista | Interactivo / Usuario |
+| Brief aprobado y modo es orquestado | Ejecutar pipeline de generación (PRD/Backlog) | Orquestado |
 
-    if (resolvedContext.executionMode == "solo") {
-      executeSoloMode(resolvedContext)
-    } else {
-      executeOrchestratedMode(resolvedContext)
-    }
-  }
 
-  executeSoloMode(context) {
-    log("Acompañando al usuario en el proceso de descubrimiento con tono conciso.")
-    
-    if (isVague(context.userInput)) {
-      ChallengeOrDeepenIdea(context.userInput)
-      return
-    }
+---
 
-    options = generateProductDirections(context.userInput)
-    presentOptionsToUser(options)
+[STEPS]
 
-    edgeCases = findBusinessEdgeCases(context.userInput)
-    presentEdgeCases(edgeCases)
+### Solo Mode (Interactivo / Usuario)
+1. Acompañar al usuario en el proceso de descubrimiento con tono conciso.
+2. Si la entrada es vaga, desafiar o profundizar la idea pidiendo detalles (ej. usuarios objetivos, problema clave).
+3. Generar direcciones de producto, identificar casos de negocio y compilar el brief a `docs/prd/brief.md`.
+4. Guardar el resultado en el contrato de estado correspondiente.
 
-    userBrief = compileBrief(context)
-    saveFile(Config.outputDir + "brief.md", userBrief)
-    
-    writeStandardContract(context, "success")
-  }
+### Orchestrated Mode (Coordinado / SDD Pipeline)
+1. Pasar las referencias de archivos en lugar de inyectar texto completo.
+2. Invocar prd-generator pasando el path del brief: `docs/prd/brief.md`.
+3. Invocar backlog-generator pasando el path del brief: `docs/prd/brief.md`.
+4. Guardar el contrato en el estado con estado exitoso.
 
-  executeOrchestratedMode(context) {
-    // Optimización de tokens: Pasar referencias de archivos en lugar de inyectar strings en memoria
-    briefRef = { briefPath: Config.outputDir + "brief.md" }
-    invokeSkill("prd-generator", { payload: briefRef })
-    invokeSkill("backlog-generator", { payload: briefRef })
-    writeStandardContract(context, "success")
-  }
+---
 
-  ChallengeOrDeepenIdea(idea) {
-    log("Analizando viabilidad de la idea...")
-    if (isTechnicallyOrBusinessUnfeasible(idea)) {
-      log("La idea propuesta presenta riesgos críticos de viabilidad de negocio o técnicos.")
-      log("Justificación: [Explicación concisa de por qué no es el camino adecuado]")
-      log("Alternativa propuesta: ✨ [Propuesta de alternativa viable]")
-    } else {
-      log("La idea es interesante pero ambigua. Vamos a profundizar:")
-      askUser("¿Cuál es el usuario objetivo principal y el problema clave que resolvemos?")
-    }
-  }
+[OUTPUT]
 
-  findCandidateSkill(task) {
-    // Matching ligero: Lee los metadatos y triggers sin cargar los archivos completos
-    registry = readRegistryMetadata() 
-    return matchTaskToTriggersLightweight(task, registry)
-  }
+Al completar su ejecución, la skill debe:
+1. Generar los artefactos y archivos resultantes especificados en su modo de ejecución.
+2. Escribir/Actualizar un contrato de estado en el archivo de estado de la skill (especificado por la configuración de la tarea o en Engram). El formato del contrato debe cumplir con el esquema definido en:
+   - [contract.d.ts](references/contract.d.ts)
 
-  resolveDataContext(contract) {
-    if (hasEngram()) {
-      return mem_search("po/{project}/state")
-    } else {
-      return readFile(Config.stateFile) |> defaultContract
-    }
-  }
+---
 
-  writeStandardContract(context, status) {
-    output = {
-      caller: context.caller |> default "user",
-      executionMode: context.executionMode |> default "solo",
-      sddPhase: "proposal",
-      status: status,
-      payload: { briefPath: Config.outputDir + "brief.md" },
-      artifacts: [Config.outputDir + "brief.md"],
-      ambiguities: context.pendingDecisions,
-      edgeCases: context.discoveredEdgeCases
-    }
-    if (hasEngram()) {
-      mem_save(output, topic: "po/{project}/state", type: "architecture", capture_prompt: false)
-    }
-    saveFile(Config.stateFile, toJson(output))
-  }
-}
-```
+[REFERENCES]
 
-## References
-
-- `.agents/skills/prd-generator/SKILL.md` — Subordinating PRD compiler.
-- `.agents/skills/backlog-generator/SKILL.md` — Subordinating Backlog breakdown manager.
+- [contract.d.ts](references/contract.d.ts) — Interfaz TypeScript del contrato de datos de la skill.
+- [validation-rules.md](references/validation-rules.md) — Reglas de validación de negocio.
+- [prd-generator](file:///Users/develop/Workspace/Courses/LidrCo/AI4Devs/AI4Devs-finalproject/.agents/skills/prd-generator/SKILL.md) — Compilador subordinado de PRD.
+- [backlog-generator](file:///Users/develop/Workspace/Courses/LidrCo/AI4Devs/AI4Devs-finalproject/.agents/skills/backlog-generator/SKILL.md) — Gestor subordinado del backlog.

@@ -1,78 +1,64 @@
 ---
 name: backlog-generator
-description: "Trigger: backlog, user stories, epics, tasks, subtasks, story mapping, story breakdown. Generates a structured backlog (epics, stories, subtasks, DoD) from existing documentation with 3-level approval."
+description: "Backlog, User Stories, Epics, Tasks, Subtasks, Story Mapping, Story Breakdown. Generates a structured backlog (epics, stories, subtasks, DoD) from existing documentation with 3-level approval."
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "2.0"
+  version: "1.1"
+---
+[ACTIVATION]
+
+Esta skill se activa cuando la tarea o el contexto del usuario requiere realizar acciones sobre backlog-generator o incluye las siguientes palabras clave/desencadenadores:
+**Triggers:** backlog, user stories, epics, tasks, subtasks, story mapping, story breakdown
+
 ---
 
-## Activation Contract
+[RULES]
 
-Load this skill when requirements breakdown, epic definitions, user stories mapping, acceptance criteria generation, or subtask decomposition are requested. Triggers: `backlog`, `user stories`, `epics`, `tasks`, `subtasks`, `story mapping`, `story breakdown`.
+1. **SMART User Stories:** Historias de usuario con formato Como/Quiero/Para y DoD claro.
+2. **3-Level Approval:** Aprobación obligatoria a nivel de épica, historia y subtarea.
+3. **Traceability:** Mapear cada historia directamente a una sección aprobada del PRD.
 
-## Hard Rules
+---
 
-- **Traceability:** Maintain bidirectional links between requirements (PRD), epics, user stories, and technical subtasks.
-- **INVEST Standards:** Enforce that all generated user stories comply with the INVEST framework.
-- **Acceptance Criteria:** Every user story must contain at least 2 acceptance scenarios written in Given-When-Then format.
-- **Approvals Gate:** Require explicit user sign-off at each pipeline stage (Epics -> Stories -> Subtasks).
+[GATES]
 
-## Decision Gates
+| Condición | Acción | Destino / Fase |
+| :--- | :--- | :--- |
+| Nueva épica o historia propuesta | Validar trazabilidad con el PRD y pausar para aprobación | Interactivo |
+| Backlog aprobado | Guardar archivo final y sincronizar contrato | Salida |
 
-| Pipeline Level | Action |
-|---|---|
-| Level 1: Epic Map | Present epics and dependency map, wait for OK |
-| Level 2: Stories per Epic | Present stories and INVEST validation, wait for OK |
-| Level 3: Subtasks per Story | Present tasks grouped by category, wait for OK |
 
-## Execution Steps
+---
 
-```sudolang
-BacklogGenerator {
-  Config {
-    lang = detect_from_user_input |> default "en"
-    inputDir = "docs/"
-    outputDir = ask_user |> default "docs/backlog/"
-    diagrams = mermaid
-    approval = three_level(epics_map, stories_per_epic, subtasks_per_story)
-  }
+[STEPS]
 
-  OnActivate {
-    mem_search("backlog/{project}/state")
-    found => present_summary => ask: continue | update | start_fresh
-    not_found => begin SourceDiscovery
-  }
+### Solo Mode (Interactivo / Usuario)
+1. Cargar el PRD desde `docs/prd/PRD.md`.
+2. Desglosar los requisitos del PRD en Épicas organizadas.
+3. Crear Historias de Usuario detalladas con criterios de aceptación e inglés técnico para títulos/DoD.
+4. Presentar y refinar secuencialmente con el usuario en tres niveles (Épica -> Historias -> Subtareas).
+5. Guardar el backlog jerárquico final en `docs/tech-lead/backlog.md`.
 
-  SourceDiscovery {
-    scan(inputDir) => find([PRDs, diagrams, ADRs])
-    persist: mem_save(sources, topic: "backlog/{project}/sources", type: "architecture")
-  }
+### Orchestrated Mode (Coordinado / SDD Pipeline)
+1. Procesar el PRD de forma automatizada leyendo la referencia del archivo.
+2. Generar el backlog completo estructurado según las especificaciones del PRD.
+3. Escribir directamente en `docs/tech-lead/backlog.md` y reportar éxito.
 
-  StackDetection {
-    analyze(sources) => infer(project_type, tech_stack, architecturePattern)
-    persist: mem_save(stack, topic: "backlog/{project}/stack", type: "architecture")
-  }
+---
 
-  Pipeline = [EpicsMap, StoriesPerEpic, SubtasksPerStory] |> sequential {
-    // 1. Generate Epic Map with priorities and dependencies
-    // 2. Generate User Stories matching template layouts
-    // 3. Generate role-assigned subtasks matching technical DoD
-  }
-}
-```
+[OUTPUT]
 
-1. **Source Discovery & Stack Detection**: Parse documentation files and infer architecture details.
-2. **Epics Mapping**: Layout epic categories, mapping dependencies.
-3. **Stories & Subtasks Breakdown**: Detail stories, validating against INVEST, then assign subtask tickets.
-4. **Summary & Export**: Build backlog indices and optionally format to CSV/JSON.
+Al completar su ejecución, la skill debe:
+1. Generar los artefactos y archivos resultantes especificados en su modo de ejecución.
+2. Escribir/Actualizar un contrato de estado en el archivo de estado de la skill (especificado por la configuración de la tarea o en Engram). El formato del contrato debe cumplir con el esquema definido en:
+   - [contract.d.ts](references/contract.d.ts)
 
-## Output Contract
+---
 
-Return:
-- An executive backlog index listing total epics, stories, and task aggregates.
-- Path coordinates to generated markdown task files inside `docs/backlog/`.
+[REFERENCES]
 
-## References
-
-- `docs/` — Document context sources (PRDs, wireframes, architectures).
+- [contract.d.ts](references/contract.d.ts) — Interfaz TypeScript del contrato de datos de la skill.
+- [prd-generator](file:///Users/develop/Workspace/Courses/LidrCo/AI4Devs/AI4Devs-finalproject/.agents/skills/prd-generator/SKILL.md) — Proveedor del PRD de origen.
+- [backlog-rules.md](references/backlog-rules.md) — Guía de estilo y calidad de historias de usuario.
+- [validation-rules.md](references/validation-rules.md) — Reglas adicionales de validación.

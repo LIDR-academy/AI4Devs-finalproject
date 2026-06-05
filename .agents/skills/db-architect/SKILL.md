@@ -1,149 +1,61 @@
 ---
 name: db-architect
-description: "Trigger: db architect, base de datos, database schema, migration, diagramas ER. Planea, implementa y valida esquemas y migraciones de base de datos."
+description: "Db Architect, Base De Datos, Database Schema, Migration, Diagramas Er. Planea, implementa y valida esquemas y migraciones de base de datos."
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "3.2"
+  version: "3.3"
+---
+[ACTIVATION]
+
+Esta skill se activa cuando la tarea o el contexto del usuario requiere realizar acciones sobre db-architect o incluye las siguientes palabras clave/desencadenadores:
+**Triggers:** db architect, base de datos, database schema, migration, diagramas ER
+
 ---
 
-```sudolang
-/**
- * @skill db-architect
- * @description Diseña e implementa esquemas de base de datos, DDLs, migraciones y diagramas ER en los flujos SDD.
- */
-DatabaseArchitect {
-  Config {
-    lang = "es"
-    outputDir = "docs/db-architect/"
-    stateFile = "docs/state/db_architect_contract.json"
-    tone = "instructive-concise"
-  }
+[RULES]
 
-  // Activation Contract
-  onTrigger: ["db-architect", "db architect", "base de datos", "database schema", "migration", "diagramas ER"]
+1. **Naming Conventions:** Nombres en minúscula, snake_case, plural para tablas, singular para claves foráneas.
+2. **No migrations rollback risk:** Validar que los scripts SQL sean idempotentes y no destruyan datos de producción.
+3. **Index optimization:** Todo query frecuente debe contar con un índice correspondiente.
 
-  // Hard Rules
-  constraints: [
-    "Always scan the docs/ directory and configuration files to discover stack before proceeding.",
-    "Never run standalone database tests. Always delegate schema/migration testing and validation to unit-testing.",
-    "Si el esquema o propuesta de persistencia del usuario es vaga o técnicamente inadecuada, argumentar en contra u ofrecer alternativas válidas."
-  ]
+---
 
-  // Decision Gates
-  resolveAction(context) {
-    if (not(matchesTrigger(context.task))) {
-      candidate = findCandidateSkill(context.task)
-      if (candidate) {
-        log("Redirigiendo tarea fuera de ámbito a la skill candidata: " + candidate)
-        return invokeSkill(candidate, {
-          caller: "db-architect",
-          executionMode: context.executionMode,
-          task: context.task,
-          payload: { sourceContractPath: Config.stateFile }
-        })
-      } else {
-        log("La tarea no corresponde a db-architect y no se encontró una skill candidata adecuada.")
-        return challengeOutofScope(context)
-      }
-    }
-    if (context.isVagueDatabaseSpec) {
-      return ChallengeOrDeepenPersistence(context)
-    }
-    if (context.executionMode == "orchestrated") {
-      return ImplementDatabaseChanges(context)
-    }
-    return PresentInteractiveDatabaseDesign(context)
-  }
+[GATES]
 
-  // Execution Steps
-  execute(contract) {
-    context = resolveDataContext(contract)
-    resolveAction(context)
+| Condición | Acción | Destino / Fase |
+| :--- | :--- | :--- |
+| Esquema no normalizado (menos de 3NF) | Advertir y proponer normalización | Diseño |
+| Script de migración no idempotente | Corregir añadiendo sentencias IF NOT EXISTS o equivalentes | Código |
 
-    if (context.executionMode == "solo") {
-      executeSoloMode(context)
-    } else {
-      executeOrchestratedMode(context)
-    }
-  }
 
-  executeSoloMode(context) {
-    log("Acompañando al usuario en el diseño de persistencia y base de datos de manera concisa.")
+---
 
-    if (isVague(context.dbSpec)) {
-      ChallengeOrDeepenPersistence(context.dbSpec)
-      return
-    }
+[STEPS]
 
-    models = proposeSchemaDesigns(context.dbSpec)
-    presentModels(models)
+### Solo Mode (Interactivo / Usuario)
+1. Leer los requisitos del backlog o diseño del usuario.
+2. Diseñar el esquema de base de datos detallando tablas, relaciones y tipos de datos.
+3. Escribir scripts de migración SQL limpios y guardarlos en `docs/db/migrations/`.
+4. Guardar el contrato de estado correspondiente.
 
-    edgeCases = findDatabaseEdgeCases(context.dbSpec)
-    presentEdgeCases(edgeCases)
+### Orchestrated Mode (Coordinado / SDD Pipeline)
+1. Analizar de forma autónoma el diseño de datos del proyecto.
+2. Generar los scripts SQL y diagramas ER en `docs/db/schema.md`.
+3. Actualizar el contrato indicando éxito.
 
-    schema = designDatabaseSchema(context)
-    saveFile(Config.outputDir + "schema_spec.md", schema)
-    writeStandardContract(context, "success")
-  }
+---
 
-  executeOrchestratedMode(context) {
-    // Paso por referencia: Leer diseño de ruta en vez de cargar strings
-    designRef = { designPath: "docs/design/DESIGN.md" }
-    files = generateDatabaseScripts(designRef)
-    
-    // Delegar validación y diagramas por ruta
-    invokeSkill("diagram-generator", { payload: { codePaths: files } })
-    invokeSkill("unit-testing", { payload: { codePaths: files } })
-    
-    writeStandardContract(context, "success")
-  }
+[OUTPUT]
 
-  ChallengeOrDeepenPersistence(idea) {
-    log("Validando modelo de persistencia...")
-    if (isFlawedPersistence(idea)) {
-      log("La estructura de base de datos o persistencia propuesta presenta riesgos de integridad o performance.")
-      log("Justificación: [Explicación técnica concisa]")
-      log("Modelo recomendado: ✨ [Esquema o modelo sugerido]")
-    } else {
-      log("La especificación de base de datos es viable pero vaga. Indique tablas principales o volúmenes esperados.")
-    }
-  }
+Al completar su ejecución, la skill debe:
+1. Generar los artefactos y archivos resultantes especificados en su modo de ejecución.
+2. Escribir/Actualizar un contrato de estado en el archivo de estado de la skill (especificado por la configuración de la tarea o en Engram). El formato del contrato debe cumplir con el esquema definido en:
+   - [contract.d.ts](references/contract.d.ts)
 
-  findCandidateSkill(task) {
-    registry = readRegistryMetadata()
-    return matchTaskToTriggersLightweight(task, registry)
-  }
+---
 
-  resolveDataContext(contract) {
-    if (hasEngram()) {
-      return mem_search("db-architect/{project}/state")
-    } else {
-      return readFile(Config.stateFile) |> defaultContract
-    }
-  }
+[REFERENCES]
 
-  writeStandardContract(context, status) {
-    output = {
-      caller: context.caller |> default "user",
-      executionMode: context.executionMode |> default "solo",
-      sddPhase: "design",
-      status: status,
-      payload: { schemaPath: Config.outputDir + "schema_spec.md" },
-      artifacts: [Config.outputDir + "schema_spec.md"],
-      ambiguities: context.pendingIssues,
-      edgeCases: context.discoveredEdgeCases
-    }
-    if (hasEngram()) {
-      mem_save(output, topic: "db-architect/{project}/state", type: "architecture", capture_prompt: false)
-    }
-    saveFile(Config.stateFile, toJson(output))
-  }
-}
-```
-
-## References
-
-- `.agents/skills/diagram-generator/SKILL.md` — Delegated E/R diagram creator.
-- `.agents/skills/unit-testing/SKILL.md` — Subordinate unit test runner.
-- `.agents/skills/qa-engineer/SKILL.md` — Quality assurance validator.
+- [contract.d.ts](references/contract.d.ts) — Interfaz TypeScript del contrato de datos de la skill.
+- [naming-rules.md](references/naming-rules.md) — Reglas estándar de nomenclatura de base de datos.

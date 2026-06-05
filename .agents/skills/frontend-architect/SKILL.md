@@ -1,147 +1,60 @@
 ---
 name: frontend-architect
-description: "Trigger: frontend architect, implementar frontend, arquitectura frontend, UI implementation. Diseña e implementa historias técnicas de frontend, gestiona su ciclo de vida y coordina con testing y backend skills."
+description: "Frontend Architect, Implementar Frontend, Arquitectura Frontend, Ui Implementation. Diseña e implementa historias técnicas de frontend, gestiona su ciclo de vida y coordina con testing y backend skills."
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "3.2"
+  version: "3.3"
+---
+[ACTIVATION]
+
+Esta skill se activa cuando la tarea o el contexto del usuario requiere realizar acciones sobre frontend-architect o incluye las siguientes palabras clave/desencadenadores:
+**Triggers:** frontend architect, implementar frontend, arquitectura frontend, UI implementation
+
 ---
 
-```sudolang
-/**
- * @skill frontend-architect
- * @description Diseña e implementa componentes y vistas de frontend integrando mocks y TDD en la fase apply de SDD.
- */
-FrontendArchitect {
-  Config {
-    lang = "es"
-    outputDir = "docs/frontend-architect/"
-    stateFile = "docs/state/frontend_architect_contract.json"
-    tone = "instructive-concise"
-  }
+[RULES]
 
-  // Activation Contract
-  onTrigger: ["frontend architect", "implementar frontend", "arquitectura frontend", "UI implementation"]
+1. **Component isolation:** Todo componente UI debe ser reutilizable y libre de lógica de negocio pesada.
+2. **Accessibility (a11y):** Cumplir con WCAG 2.1 AA en contraste, tags ARIA y navegación por teclado.
 
-  // Hard Rules
-  constraints: [
-    "Autonomy Gates: Pausar y pedir confirmación antes de escribir componentes salvo autonomía alta.",
-    "API Coordination: Validar contratos con endpoints activos; escribir mocks/stubs si no están listos.",
-    "Si las directrices de interfaz o experiencia propuestas son vagas o inviables, challengear o proponer alternativas sólidas."
-  ]
+---
 
-  // Decision Gates
-  resolveAction(context) {
-    if (not(matchesTrigger(context.task))) {
-      candidate = findCandidateSkill(context.task)
-      if (candidate) {
-        log("Redirigiendo tarea fuera de ámbito a la skill candidata: " + candidate)
-        return invokeSkill(candidate, {
-          caller: "frontend-architect",
-          executionMode: context.executionMode,
-          task: context.task,
-          payload: { sourceContractPath: Config.stateFile }
-        })
-      } else {
-        log("La tarea no corresponde a frontend-architect y no se encontró una skill candidata adecuada.")
-        return challengeOutofScope(context)
-      }
-    }
-    if (context.isVagueRequirement) {
-      return ChallengeOrDeepenRequirements(context)
-    }
-    if (context.executionMode == "orchestrated") {
-      return ExecuteFrontendImplementation(context)
-    }
-    return PresentInteractiveDesign(context)
-  }
+[GATES]
 
-  // Execution Steps
-  execute(contract) {
-    context = resolveDataContext(contract)
-    resolveAction(context)
+| Condición | Acción | Destino / Fase |
+| :--- | :--- | :--- |
+| Falta accesibilidad en componentes de UI | Agregar etiquetas ARIA y estados de foco | Refactor UI |
+| Implementación de UI requerida | Generar código de frontend basado en el diseño | Implementación |
 
-    if (context.executionMode == "solo") {
-      executeSoloMode(context)
-    } else {
-      executeOrchestratedMode(context)
-    }
-  }
 
-  executeSoloMode(context) {
-    log("Acompañando al usuario en el diseño de interfaz y componentes frontend de manera concisa.")
+---
 
-    if (isVague(context.frontendSpec)) {
-      ChallengeOrDeepenRequirements(context.frontendSpec)
-      return
-    }
+[STEPS]
 
-    options = proposeFrontendSolutions(context.frontendSpec)
-    presentOptions(options)
+### Solo Mode (Interactivo / Usuario)
+1. Cargar y comprender los wireframes y especificaciones del PRD.
+2. Generar la estructura de componentes de UI respetando los lineamientos de diseño de la aplicación.
+3. Escribir el código en la carpeta correspondiente del framework (ej. React/Vite) y reportar en el contrato.
 
-    edgeCases = findFrontendEdgeCases(context.frontendSpec)
-    presentEdgeCases(edgeCases)
+### Orchestrated Mode (Coordinado / SDD Pipeline)
+1. Leer referencias del diseño e implementar los componentes frontend requeridos.
+2. Generar código en `src/components/` y validar su correcta carga y compilación.
+3. Actualizar el contrato de estado.
 
-    structure = designComponentTree(context)
-    saveFile(Config.outputDir + "components_spec.md", structure)
-    writeStandardContract(context, "success")
-  }
+---
 
-  executeOrchestratedMode(context) {
-    // Paso por referencia: Leer el backlog desde el path
-    backlogRef = { backlogPath: "docs/tech-lead/backlog.md" }
-    generatedFiles = writeFrontendComponents(backlogRef)
-    
-    // Delegar validaciones pasando referencias
-    invokeSkill("unit-testing", { payload: { codePaths: generatedFiles } })
-    
-    writeStandardContract(context, "success")
-  }
+[OUTPUT]
 
-  ChallengeOrDeepenRequirements(idea) {
-    log("Validando requerimientos de interfaz...")
-    if (isPoorLayoutOrDesign(idea)) {
-      log("La interfaz propuesta presenta problemas de usabilidad, accesibilidad o acoplamiento excesivo.")
-      log("Justificación: [Explicación técnica/UX concisa]")
-      log("Solución propuesta: ✨ [Estructura de componentes o maquetación recomendada]")
-    } else {
-      log("La propuesta de frontend es viable pero vaga. Especifique paleta, layout o interacciones clave.")
-    }
-  }
+Al completar su ejecución, la skill debe:
+1. Generar los artefactos y archivos resultantes especificados en su modo de ejecución.
+2. Escribir/Actualizar un contrato de estado en el archivo de estado de la skill (especificado por la configuración de la tarea o en Engram). El formato del contrato debe cumplir con el esquema definido en:
+   - [contract.d.ts](references/contract.d.ts)
 
-  findCandidateSkill(task) {
-    registry = readRegistryMetadata()
-    return matchTaskToTriggersLightweight(task, registry)
-  }
+---
 
-  resolveDataContext(contract) {
-    if (hasEngram()) {
-      return mem_search("frontend-architect/{project}/state")
-    } else {
-      return readFile(Config.stateFile) |> defaultContract
-    }
-  }
+[REFERENCES]
 
-  writeStandardContract(context, status) {
-    output = {
-      caller: context.caller |> default "user",
-      executionMode: context.executionMode |> default "solo",
-      sddPhase: "apply",
-      status: status,
-      payload: { uiComponents: context.generatedFiles },
-      artifacts: context.generatedFiles,
-      ambiguities: context.pendingDecisions,
-      edgeCases: context.discoveredEdgeCases
-    }
-    if (hasEngram()) {
-      mem_save(output, topic: "frontend-architect/{project}/state", type: "architecture", capture_prompt: false)
-    }
-    saveFile(Config.stateFile, toJson(output))
-  }
-}
-```
-
-## References
-
-- `.agents/skills/tech-lead/SKILL.md` — Technical backlog tracker source.
-- `.agents/skills/unit-testing/SKILL.md` — Mandatory subordinating testing executor.
+- [contract.d.ts](references/contract.d.ts) — Interfaz TypeScript del contrato de datos de la skill.
+- [a11y-testing](file:///Users/develop/Workspace/Courses/LidrCo/AI4Devs/AI4Devs-finalproject/.agents/skills/a11y-testing/SKILL.md) — Verificador de accesibilidad.
+- [ui-guidelines.md](references/ui-guidelines.md) — Guía de estilo visual y componentes.

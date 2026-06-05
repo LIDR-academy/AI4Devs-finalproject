@@ -1,86 +1,64 @@
 ---
 name: prd-generator
-description: "Trigger: PRD, product requirements, product definition, requisitos de producto, definición de producto. Generates a PRD from a user brief with section-by-section approval."
+description: "Prd, Product Requirements, Product Definition, Requisitos De Producto, Definición De Producto. Generates a PRD from a user brief with section-by-section approval."
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "2.0"
+  version: "2.1"
+---
+[ACTIVATION]
+
+Esta skill se activa cuando la tarea o el contexto del usuario requiere realizar acciones sobre prd-generator o incluye las siguientes palabras clave/desencadenadores:
+**Triggers:** PRD, product requirements, product definition, requisitos de producto, definición de producto
+
 ---
 
-## Activation Contract
+[RULES]
 
-Load this skill when generating product requirements documents, writing detailed specifications, defining scopes, or mapping competitive context from a user brief. Triggers: `PRD`, `product requirements`, `product definition`, `requisitos de producto`, `definición de producto`.
+1. **SMART Metrics:** Enforce that all business requirements are defined in SMART formats.
+2. **Traceability:** Establish explicit maps between target user personas and core features.
+3. **Section-by-Section Approval:** Pause and await user verification before assembling the final PRD.
 
-## Hard Rules
+---
 
-- **SMART Metrics:** Enforce that all business requirements (objectives and KPIs) are defined in SMART (Specific, Measurable, Actionable, Relevant, Time-bound) formats.
-- **Traceability:** Establish explicit maps between target user personas and core features.
-- **Section-by-Section Approval:** The generation flow must pause and await user verification before assembling the final PRD.
+[GATES]
 
-## Decision Gates
+| Condición | Acción | Destino / Fase |
+| :--- | :--- | :--- |
+| Se genera o actualiza una sección | Pausar y esperar feedback del usuario | Interactivo |
+| Se solicita actualización de documento | Editar, re-validar e incrementar versión | Modo Edición |
 
-| Phase / Condition | Target Mode |
-|---|---|
-| Section generated and validated | Await user feedback (approve / modify / reject) |
-| Document update requested | Identify scope, edit, re-validate, and increment version |
 
-## Execution Steps
+---
 
-```sudolang
-PRDGenerator {
-  Config {
-    outputLang = detect_from_user_input |> default "es"
-    outputDir = ask_user |> must_be_within "docs/" |> default "docs/prd/"
-    diagrams = mermaid
-    approval = detailed_per_section
-  }
+[STEPS]
 
-  OnActivate {
-    mem_search("prd/{project}/state")
-    found => present_summary => ask: continue | update | start_fresh
-    not_found => ask_output_dir => begin Generate
-  }
+### Solo Mode (Interactivo / Usuario)
+1. Leer el brief del usuario y validar longitud/contenido.
+2. Iterar sobre cada sección del PRD (Vision, TargetUsers, ProductScope, BusinessRequirements, CompetitiveContext, Constraints).
+3. Cargar el template `assets/prd-template.md` para cada sección.
+4. Validar cada sección usando las reglas en `references/validation-rules.md`.
+5. Presentar la sección al usuario en su idioma y esperar aprobación/modificación/rechazo.
+6. Una vez aprobadas todas las secciones, ensamblar el PRD final en `docs/prd/PRD.md`.
 
-  Generate {
-    input = user_brief (text description of the product or feature)
-    require: input.length > 0 || error("Provide a product/feature brief to generate the PRD")
+### Orchestrated Mode (Coordinado / SDD Pipeline)
+1. Leer el path de referencia del brief desde el contrato.
+2. Generar el documento completo de PRD aplicando las reglas de validación sin pausas si está pre-aprobado.
+3. Guardar el archivo PRD final en `docs/prd/PRD.md` y actualizar el contrato.
 
-    sections = [Vision, TargetUsers, ProductScope, BusinessRequirements, CompetitiveContext, Constraints]
+---
 
-    forEach(section in sections) {
-      load_template("assets/prd-template.md", section)
-      generate(section, from: user_brief + previous_approved_sections)
-      validate(section) // see references/validation-rules.md
-      present(section, in: outputLang)
+[OUTPUT]
 
-      await_feedback {
-        ✅ approve => next_section
-        ✏️  modify(feedback) => incorporate_feedback => re_present
-        ❌ reject => regenerate_from_scratch(section, user_brief)
-      }
-    }
+Al completar su ejecución, la skill debe:
+1. Generar los artefactos y archivos resultantes especificados en su modo de ejecución.
+2. Escribir/Actualizar un contrato de estado en el archivo de estado de la skill (especificado por la configuración de la tarea o en Engram). El formato del contrato debe cumplir con el esquema definido en:
+   - [contract.d.ts](references/contract.d.ts)
 
-    assemble(all_approved_sections) => prd_document
-    add_metadata(version: "1.0", date: now(), status: "Draft")
-    save_file(outputDir/PRD.md)
-    mem_save(prd_summary, topic: "prd/{project}/state", type: "architecture")
-    log: "PRD saved to {outputDir}/PRD.md"
-  }
-}
-```
+---
 
-1. **Brief Discovery**: Read user brief and confirm it has sufficient length.
-2. **Drafting Iteration**: Sequence through PRD sections (Vision, Users, Scope, Objectives, Competitors, Constraints).
-3. **Validating & Modifying**: Run validations against criteria templates, integrating user feedback.
-4. **Assembly**: Collect sections, assign metadata tags, write the final file.
+[REFERENCES]
 
-## Output Contract
-
-Return:
-- Fully assembled `PRD.md` file saved to `docs/prd/`.
-- Summary of approved segments and overall status.
-
-## References
-
-- `references/validation-rules.md` — Quality checks, compliance criteria.
-- `assets/prd-template.md` — Section templates for PRD documents.
+- [contract.d.ts](references/contract.d.ts) — Interfaz TypeScript del contrato de datos de la skill.
+- [validation-rules.md](references/validation-rules.md) — Reglas de validación y criterios de aceptación.
+- [prd-template.md](assets/prd-template.md) — Plantilla base para las secciones del PRD.
