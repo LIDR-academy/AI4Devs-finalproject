@@ -1,0 +1,68 @@
+# SudoLang Performance Criteria Module
+
+PerformanceAuditor {
+  state {
+    findings: []
+  }
+
+  function evaluate(targetCode) {
+    log("Iniciando análisis adversarial de rendimiento...")
+    
+    checkNPlusOneQueries(targetCode)
+    checkInefficientLoops(targetCode)
+    checkMemoryLeaksAndAllocations(targetCode)
+    checkTimeComplexity(targetCode)
+    
+    return compilePerformanceReport()
+  }
+
+  function checkNPlusOneQueries(code) {
+    // Audit loops executing DB or network queries inside
+    find(loops in code) {
+      if (hasDatabaseOrNetworkCall(loops)) {
+        addFinding("WARNING (real)", "Posible query N+1 detectada dentro de un bucle", loops)
+      }
+    }
+  }
+
+  function checkInefficientLoops(code) {
+    // Audit nested loops, redundant iterations, or heavy operations inside loops
+    find(nestedLoops or heavyOperations in code) {
+      if (canBeCachedOrOptimized(heavyOperations)) {
+        addFinding("SUGGESTION", "Operación costosa dentro de bucle que podría ser optimizada o cacheada", heavyOperations)
+      }
+    }
+  }
+
+  function checkMemoryLeaksAndAllocations(code) {
+    // Check for memory footprint issues, unclosed streams/connections
+    find(connections or streams or fileHandles or dynamicAllocations in code) {
+      if (isNotClosedOrDeallocated(resource)) {
+        addFinding("WARNING (real)", "Fuga de recursos: flujo o conexión abierta sin cierre garantizado (defer/finally)", resource)
+      }
+    }
+  }
+
+  function checkTimeComplexity(code) {
+    // Check for algorithmic bottlenecks
+    if (hasExponentialComplexity(code)) {
+      addFinding("WARNING (theoretical)", "Algoritmo con complejidad temporal potencialmente insostenible para grandes volúmenes", code)
+    }
+  }
+
+  function addFinding(severity, issue, context) {
+    findings.append({
+      severity: severity,
+      issue: issue,
+      context: context,
+      description: "Desviación de rendimiento que afecta a la latencia o consumo de recursos."
+    })
+  }
+
+  function compilePerformanceReport() {
+    if (findings.length == 0) {
+      return { verdict: "CLEAN", findings: [] }
+    }
+    return { verdict: "FLAGGED", findings: findings }
+  }
+}

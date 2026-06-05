@@ -1,0 +1,70 @@
+# SudoLang Testing & QA Criteria Module
+
+TestingAuditor {
+  state {
+    findings: []
+  }
+
+  function evaluate(targetCodeOrTests) {
+    log("Iniciando validación adversarial de la estrategia de pruebas y calidad...")
+    
+    checkTestCoverageGaps(targetCodeOrTests)
+    checkTestIsolation(targetCodeOrTests)
+    checkE2EFlows(targetCodeOrTests)
+    checkAccessibilityStandards(targetCodeOrTests)
+    
+    return compileTestingReport()
+  }
+
+  function checkTestCoverageGaps(codeAndTests) {
+    // Detect code paths without corresponding test assertions, missing edge cases/errors
+    find(errorPaths or edgeCases in codeAndTests) {
+      if (notCoveredByTest(errorPaths)) {
+        addFinding("WARNING (real)", "Ruta de control de errores o caso límite sin cobertura de pruebas unitarias", errorPaths)
+      }
+    }
+  }
+
+  function checkTestIsolation(tests) {
+    // Ensure tests are isolated and don't rely on external states, databases, or APIs without mocking
+    find(networkCalls or directDbCalls in tests) {
+      if (notMocked(networkCalls)) {
+        addFinding("WARNING (real)", "Prueba unitaria depende de red/base de datos externa sin usar mocks/stubs", networkCalls)
+      }
+    }
+  }
+
+  function checkE2EFlows(e2eTests) {
+    // Check if user flows map properly, wait for elements safely
+    find(actions in e2eTests) {
+      if (usesHardcodedWaits(actions)) {
+        addFinding("SUGGESTION", "Uso de esperas fijas (sleep/wait) en pruebas E2E en lugar de esperas dinámicas basadas en selector", actions)
+      }
+    }
+  }
+
+  function checkAccessibilityStandards(code) {
+    // Check basic WCAG rules (image alt tags, form labels, ARIA roles, contrasts)
+    find(elements in code) {
+      if (violatesA11y(elements)) {
+        addFinding("WARNING (real)", "Falta de accesibilidad (a11y) básica o etiquetas ARIA faltantes en componente UI", elements)
+      }
+    }
+  }
+
+  function addFinding(severity, issue, context) {
+    findings.append({
+      severity: severity,
+      issue: issue,
+      context: context,
+      description: "Deficiencia en la cobertura, aislamiento de pruebas o accesibilidad."
+    })
+  }
+
+  function compileTestingReport() {
+    if (findings.length == 0) {
+      return { verdict: "CLEAN", findings: [] }
+    }
+    return { verdict: "FLAGGED", findings: findings }
+  }
+}

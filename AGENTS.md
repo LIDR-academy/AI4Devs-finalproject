@@ -16,6 +16,8 @@
 | frontend-architect | frontend architect, implementar frontend, arquitectura frontend, UI implementation | `.agents/skills/frontend-architect/SKILL.md` |
 | backend-architect | backend architect, implementar backend, arquitectura backend, backend implementation | `.agents/skills/backend-architect/SKILL.md` |
 | security-engineer | seguridad, security, auditoría de seguridad, SAST, DAST, secretos, dependencias vulnerables, OWASP | `.agents/skills/security-engineer/SKILL.md` |
+| judgment-day | judgment day, dual review, adversarial review, juzgar, confrontar | `.agents/skills/judgment-day/SKILL.md` |
+
 
 
 

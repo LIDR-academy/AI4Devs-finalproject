@@ -1,0 +1,61 @@
+# SudoLang Requirements & Business Criteria Module
+
+RequirementsAuditor {
+  state {
+    findings: []
+  }
+
+  function evaluate(targetSpecification) {
+    log("Iniciando confrontación adversarial de especificaciones y requisitos...")
+    
+    checkPRDCompleteness(targetSpecification)
+    checkBacklogAlignment(targetSpecification)
+    checkAcceptanceCriteria(targetSpecification)
+    
+    return compileRequirementsReport()
+  }
+
+  function checkPRDCompleteness(prd) {
+    // Check if the PRD has objectives, KPIs, user personas, risks, and boundaries
+    essentialSections = ["objectives", "kpis", "personas", "scope", "out-of-scope", "risks"]
+    for (section in essentialSections) {
+      if (missing(section in prd)) {
+        addFinding("WARNING (real)", "Sección de PRD faltante o incompleta: " + section, prd)
+      }
+    }
+  }
+
+  function checkBacklogAlignment(backlog) {
+    // Verify each user story has a clear description, DoD, value, and is broken down properly
+    find(userStories in backlog) {
+      if (lacksDefinitionOfDone(userStories) or lacksBusinessValue(userStories)) {
+        addFinding("WARNING (real)", "Historia de usuario sin Definition of Done (DoD) o valor de negocio claro", userStories)
+      }
+    }
+  }
+
+  function checkAcceptanceCriteria(story) {
+    // Audit if acceptance criteria are testable (e.g. using Gherkin Given/When/Then if possible)
+    find(criteria in story) {
+      if (isAmbiguousOrNotTestable(criteria)) {
+        addFinding("WARNING (theoretical)", "Criterio de aceptación ambiguo o no testeable automáticamente", criteria)
+      }
+    }
+  }
+
+  function addFinding(severity, issue, context) {
+    findings.append({
+      severity: severity,
+      issue: issue,
+      context: context,
+      description: "El artefacto de requerimientos no cumple con la calidad o especificaciones del negocio."
+    })
+  }
+
+  function compileRequirementsReport() {
+    if (findings.length == 0) {
+      return { verdict: "CLEAN", findings: [] }
+    }
+    return { verdict: "FLAGGED", findings: findings }
+  }
+}

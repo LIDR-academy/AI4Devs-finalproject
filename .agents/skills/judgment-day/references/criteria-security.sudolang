@@ -1,0 +1,72 @@
+# SudoLang Security Criteria Module
+
+SecurityAuditor {
+  state {
+    threatLevel: "None" | "Low" | "Medium" | "High" | "Critical"
+    vulnerabilities: []
+  }
+
+  // Main evaluation function
+  function evaluate(targetCode) {
+    log("Iniciando auditoría de seguridad adversarial...")
+    
+    checkInputSanitization(targetCode)
+    checkSecretsExposure(targetCode)
+    checkAuthorizationBoundaries(targetCode)
+    checkInjectionVulnerabilities(targetCode)
+    
+    return compileSecurityReport()
+  }
+
+  function checkInputSanitization(code) {
+    // Verify user inputs are validated, typed, and sanitized before use
+    find(untrustedInputs in code) {
+      if (notSanitized(untrustedInputs)) {
+        addFinding("CRITICAL", "Falta de sanitización/validación en inputs de usuario", untrustedInputs)
+      }
+    }
+  }
+
+  function checkSecretsExposure(code) {
+    // Detect hardcoded API keys, tokens, passwords, credentials
+    find(patternsMatching(["api_key", "password", "token", "secret", "private_key"]) in code) {
+      if (isHardcoded(value)) {
+        addFinding("CRITICAL", "Secreto o clave privada hardcodeada en el código", value)
+      }
+    }
+  }
+
+  function checkAuthorizationBoundaries(code) {
+    // Validate that operations check permissions/roles
+    find(sensitiveOperations in code) {
+      if (lacksAccessControl(sensitiveOperations)) {
+        addFinding("WARNING (real)", "Operación sensible sin comprobación de roles o permisos", sensitiveOperations)
+      }
+    }
+  }
+
+  function checkInjectionVulnerabilities(code) {
+    // Check for SQL injection, Command injection, Path traversal, and XSS
+    find(dynamicQueries or commandExecutions or fileAccesses in code) {
+      if (isConcatenatedWithInput(query)) {
+        addFinding("CRITICAL", "Vulnerabilidad potencial de inyección de comandos/código", query)
+      }
+    }
+  }
+
+  function addFinding(severity, issue, context) {
+    vulnerabilities.append({
+      severity: severity,
+      issue: issue,
+      context: context,
+      description: "Fallo de seguridad detectado bajo estándares OWASP Top 10."
+    })
+  }
+
+  function compileSecurityReport() {
+    if (vulnerabilities.length == 0) {
+      return { verdict: "CLEAN", findings: [] }
+    }
+    return { verdict: "FLAGGED", findings: vulnerabilities }
+  }
+}
