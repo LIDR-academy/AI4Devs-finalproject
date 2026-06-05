@@ -4,7 +4,7 @@ description: "Trigger: product owner, requisitos, documentación de negocio, bac
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "3.1"
+  version: "3.2"
 ---
 
 ```sudolang
@@ -36,7 +36,12 @@ ProductOwner {
       candidate = findCandidateSkill(context.task)
       if (candidate) {
         log("Redirigiendo tarea fuera de ámbito a la skill candidata: " + candidate)
-        return invokeSkill(candidate, context)
+        return invokeSkill(candidate, {
+          caller: "product-owner",
+          executionMode: context.executionMode,
+          task: context.task,
+          payload: { sourceContractPath: Config.stateFile } // Paso por referencia
+        })
       } else {
         log("La tarea no corresponde a product-owner y no se encontró una skill candidata adecuada.")
         return challengeOutofScope(context)
@@ -87,9 +92,10 @@ ProductOwner {
   }
 
   executeOrchestratedMode(context) {
-    brief = readSddArtifact("docs/prd/brief.md")
-    invokeSkill("prd-generator", { payload: brief })
-    invokeSkill("backlog-generator", { payload: brief })
+    // Optimización de tokens: Pasar referencias de archivos en lugar de inyectar strings en memoria
+    briefRef = { briefPath: Config.outputDir + "brief.md" }
+    invokeSkill("prd-generator", { payload: briefRef })
+    invokeSkill("backlog-generator", { payload: briefRef })
     writeStandardContract(context, "success")
   }
 
@@ -106,9 +112,9 @@ ProductOwner {
   }
 
   findCandidateSkill(task) {
-    // Escanea la lista de skills en AGENTS.md / registry para buscar triggers compatibles
-    registry = readRegistry()
-    return matchTaskToSkillTriggers(task, registry)
+    // Matching ligero: Lee los metadatos y triggers sin cargar los archivos completos
+    registry = readRegistryMetadata() 
+    return matchTaskToTriggersLightweight(task, registry)
   }
 
   resolveDataContext(contract) {

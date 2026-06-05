@@ -4,7 +4,7 @@ description: "Trigger: db architect, base de datos, database schema, migration, 
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "3.1"
+  version: "3.2"
 ---
 
 ```sudolang
@@ -36,7 +36,12 @@ DatabaseArchitect {
       candidate = findCandidateSkill(context.task)
       if (candidate) {
         log("Redirigiendo tarea fuera de ámbito a la skill candidata: " + candidate)
-        return invokeSkill(candidate, context)
+        return invokeSkill(candidate, {
+          caller: "db-architect",
+          executionMode: context.executionMode,
+          task: context.task,
+          payload: { sourceContractPath: Config.stateFile }
+        })
       } else {
         log("La tarea no corresponde a db-architect y no se encontró una skill candidata adecuada.")
         return challengeOutofScope(context)
@@ -83,12 +88,13 @@ DatabaseArchitect {
   }
 
   executeOrchestratedMode(context) {
-    design = readSddArtifact("docs/design/DESIGN.md")
+    // Paso por referencia: Leer diseño de ruta en vez de cargar strings
+    designRef = { designPath: "docs/design/DESIGN.md" }
+    files = generateDatabaseScripts(designRef)
     
-    files = generateDatabaseScripts(design)
-    
-    invokeSkill("diagram-generator", { payload: files })
-    invokeSkill("unit-testing", { payload: files })
+    // Delegar validación y diagramas por ruta
+    invokeSkill("diagram-generator", { payload: { codePaths: files } })
+    invokeSkill("unit-testing", { payload: { codePaths: files } })
     
     writeStandardContract(context, "success")
   }
@@ -105,8 +111,8 @@ DatabaseArchitect {
   }
 
   findCandidateSkill(task) {
-    registry = readRegistry()
-    return matchTaskToSkillTriggers(task, registry)
+    registry = readRegistryMetadata()
+    return matchTaskToTriggersLightweight(task, registry)
   }
 
   resolveDataContext(contract) {

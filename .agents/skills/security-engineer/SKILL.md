@@ -4,7 +4,7 @@ description: "Trigger: seguridad, security, auditoría de seguridad, SAST, DAST,
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "3.1"
+  version: "3.2"
 ---
 
 ```sudolang
@@ -36,7 +36,12 @@ SecurityEngineer {
       candidate = findCandidateSkill(context.task)
       if (candidate) {
         log("Redirigiendo tarea fuera de ámbito a la skill candidata: " + candidate)
-        return invokeSkill(candidate, context)
+        return invokeSkill(candidate, {
+          caller: "security-engineer",
+          executionMode: context.executionMode,
+          task: context.task,
+          payload: { sourceContractPath: Config.stateFile }
+        })
       } else {
         log("La tarea no corresponde a security-engineer y no se encontró una skill candidata adecuada.")
         return challengeOutofScope(context)
@@ -83,9 +88,9 @@ SecurityEngineer {
   }
 
   executeOrchestratedMode(context) {
-    design = readSddArtifact("docs/design/DESIGN.md")
-    
-    threatModel = auditDesignAndCode(design)
+    // Paso por referencia: Leer el diseño desde la ruta
+    designRef = { designPath: "docs/design/DESIGN.md" }
+    threatModel = auditDesignAndCode(designRef)
     saveFile("docs/security/threat_model.md", threatModel)
     
     writeStandardContract(context, "success")
@@ -103,8 +108,8 @@ SecurityEngineer {
   }
 
   findCandidateSkill(task) {
-    registry = readRegistry()
-    return matchTaskToSkillTriggers(task, registry)
+    registry = readRegistryMetadata()
+    return matchTaskToTriggersLightweight(task, registry)
   }
 
   resolveDataContext(contract) {

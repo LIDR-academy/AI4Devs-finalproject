@@ -4,7 +4,7 @@ description: "Trigger: tech lead, plan técnico, tareas técnicas, ejecución, o
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "3.1"
+  version: "3.2"
 ---
 
 ```sudolang
@@ -36,7 +36,12 @@ TechLead {
       candidate = findCandidateSkill(context.task)
       if (candidate) {
         log("Redirigiendo tarea fuera de ámbito a la skill candidata: " + candidate)
-        return invokeSkill(candidate, context)
+        return invokeSkill(candidate, {
+          caller: "tech-lead",
+          executionMode: context.executionMode,
+          task: context.task,
+          payload: { sourceContractPath: Config.stateFile }
+        })
       } else {
         log("La tarea no corresponde a tech-lead y no se encontró una skill candidata adecuada.")
         return challengeOutofScope(context)
@@ -83,10 +88,11 @@ TechLead {
   }
 
   executeOrchestratedMode(context) {
-    prd = readSddArtifact("docs/prd/PRD.md")
-    designDoc = readSddArtifact("docs/design/DESIGN.md")
+    // Paso por referencia para no cargar archivos en memoria
+    prdRef = { prdPath: "docs/prd/PRD.md" }
+    designRef = { designPath: "docs/design/DESIGN.md" }
     
-    backlog = generateSddBacklog(prd, designDoc)
+    backlog = generateSddBacklog(prdRef, designRef)
     saveFile("docs/tech-lead/backlog.md", backlog)
     
     writeStandardContract(context, "success")
@@ -104,8 +110,8 @@ TechLead {
   }
 
   findCandidateSkill(task) {
-    registry = readRegistry()
-    return matchTaskToSkillTriggers(task, registry)
+    registry = readRegistryMetadata()
+    return matchTaskToTriggersLightweight(task, registry)
   }
 
   resolveDataContext(contract) {

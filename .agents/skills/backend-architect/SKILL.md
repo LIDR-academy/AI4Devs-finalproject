@@ -4,7 +4,7 @@ description: "Trigger: backend architect, implementar backend, arquitectura back
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "3.1"
+  version: "3.2"
 ---
 
 ```sudolang
@@ -36,7 +36,12 @@ BackendArchitect {
       candidate = findCandidateSkill(context.task)
       if (candidate) {
         log("Redirigiendo tarea fuera de ámbito a la skill candidata: " + candidate)
-        return invokeSkill(candidate, context)
+        return invokeSkill(candidate, {
+          caller: "backend-architect",
+          executionMode: context.executionMode,
+          task: context.task,
+          payload: { sourceContractPath: Config.stateFile }
+        })
       } else {
         log("La tarea no corresponde a backend-architect y no se encontró una skill candidata adecuada.")
         return challengeOutofScope(context)
@@ -83,11 +88,12 @@ BackendArchitect {
   }
 
   executeOrchestratedMode(context) {
-    task = readSddArtifact("docs/tech-lead/backlog.md")
+    // Paso por referencia: Leer el backlog desde el path en vez de pasar strings
+    backlogRef = { backlogPath: "docs/tech-lead/backlog.md" }
+    generatedFiles = writeBackendComponents(backlogRef)
     
-    generatedFiles = writeBackendComponents(task)
-    
-    invokeSkill("unit-testing", { payload: generatedFiles })
+    // Delegar a unit-testing pasando la lista de referencias
+    invokeSkill("unit-testing", { payload: { codePaths: generatedFiles } })
     
     writeStandardContract(context, "success")
   }
@@ -104,8 +110,8 @@ BackendArchitect {
   }
 
   findCandidateSkill(task) {
-    registry = readRegistry()
-    return matchTaskToSkillTriggers(task, registry)
+    registry = readRegistryMetadata()
+    return matchTaskToTriggersLightweight(task, registry)
   }
 
   resolveDataContext(contract) {

@@ -4,7 +4,7 @@ description: "Trigger: QA, quality assurance, tester, plan de QA, cobertura de t
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "3.1"
+  version: "3.2"
 ---
 
 ```sudolang
@@ -36,7 +36,12 @@ QAEngineer {
       candidate = findCandidateSkill(context.task)
       if (candidate) {
         log("Redirigiendo tarea fuera de ámbito a la skill candidata: " + candidate)
-        return invokeSkill(candidate, context)
+        return invokeSkill(candidate, {
+          caller: "qa-engineer",
+          executionMode: context.executionMode,
+          task: context.task,
+          payload: { sourceContractPath: Config.stateFile }
+        })
       } else {
         log("La tarea no corresponde a qa-engineer y no se encontró una skill candidata adecuada.")
         return challengeOutofScope(context)
@@ -83,11 +88,12 @@ QAEngineer {
   }
 
   executeOrchestratedMode(context) {
-    tasks = readSddArtifact("docs/tech-lead/backlog.md")
+    // Paso por referencia: Evita inyecciones masivas de backlog de tareas
+    backlogRef = { backlogPath: "docs/tech-lead/backlog.md" }
     
-    invokeSkill("unit-testing", { payload: tasks })
-    invokeSkill("e2e-testing", { payload: tasks })
-    invokeSkill("a11y-testing", { payload: tasks })
+    invokeSkill("unit-testing", { payload: backlogRef })
+    invokeSkill("e2e-testing", { payload: backlogRef })
+    invokeSkill("a11y-testing", { payload: backlogRef })
     
     report = generateConsolidatedReport()
     saveFile("docs/qa/consolidated_report.md", report)
@@ -107,8 +113,8 @@ QAEngineer {
   }
 
   findCandidateSkill(task) {
-    registry = readRegistry()
-    return matchTaskToSkillTriggers(task, registry)
+    registry = readRegistryMetadata()
+    return matchTaskToTriggersLightweight(task, registry)
   }
 
   resolveDataContext(contract) {

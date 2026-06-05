@@ -4,7 +4,7 @@ description: "Trigger: wireframe, mockup, prototipo, UI prototype, navigable des
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "3.1"
+  version: "3.2"
 ---
 
 ```sudolang
@@ -42,7 +42,12 @@ WireframeDesigner {
       candidate = findCandidateSkill(context.task)
       if (candidate) {
         log("Redirigiendo tarea fuera de ámbito a la skill candidata: " + candidate)
-        return invokeSkill(candidate, context)
+        return invokeSkill(candidate, {
+          caller: "wireframe-designer",
+          executionMode: context.executionMode,
+          task: context.task,
+          payload: { sourceContractPath: Config.stateFile }
+        })
       } else {
         log("La tarea no corresponde a wireframe-designer y no se encontró una skill candidata adecuada.")
         return challengeOutofScope(context)
@@ -90,9 +95,10 @@ WireframeDesigner {
   }
 
   executeOrchestratedMode(context) {
-    specs = readSddArtifact("docs/prd/brief.md")
+    // Paso por referencia: Leer especificación por ruta
+    specsRef = { briefPath: "docs/prd/brief.md" }
     
-    mockup = generateHtmlWireframeFromSpecs(specs)
+    mockup = generateHtmlWireframeFromSpecs(specsRef)
     path = Config.outputDir + "index.html"
     saveFile(path, mockup)
     
@@ -111,8 +117,8 @@ WireframeDesigner {
   }
 
   findCandidateSkill(task) {
-    registry = readRegistry()
-    return matchTaskToSkillTriggers(task, registry)
+    registry = readRegistryMetadata()
+    return matchTaskToTriggersLightweight(task, registry)
   }
 
   resolveDataContext(contract) {
