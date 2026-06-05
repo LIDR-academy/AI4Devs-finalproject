@@ -4,175 +4,137 @@ description: "Trigger: db architect, base de datos, database schema, migration, 
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "1.0"
+  version: "3.1"
 ---
 
-## Activation Contract
-
 ```sudolang
-ActivationContract {
-  conditions = [
-    "planning database schemas or migrations",
-    "designing database tables or Entity-Relationship metadata",
-    "implementing schema files, DDLs, migrations, or seeds",
-    "validating or testing database persistence layers",
-    "optimizing queries or indexes"
-  ]
-  triggers = [
-    "db architect",
-    "base de datos",
-    "database schema",
-    "migration",
-    "diagramas ER"
-  ]
-  on_trigger => load_skill(db-architect)
-}
-```
-
-## Hard Rules
-
-```sudolang
-HardRules {
-  * "Always scan the `docs/` directory and project root configuration files (e.g. `schema.prisma`, `package.json`) to discover stack before proceeding."
-  * "Default to PostgreSQL with Prisma/Sequelize in JavaScript/TypeScript. Ask the user for confirmation if stack cannot be inferred."
-  * "Always produce detailed structured table and relation descriptions to facilitate Entity-Relationship (E/R) diagram generation."
-  * "Never run standalone database tests. Always delegate schema/migration testing and validation to `qa-engineer` or `unit-testing` skills."
-}
-```
-
-## Decision Gates
-
-```sudolang
-DecisionGates {
-  when (context.database == null || context.orm == null) => AskUser("Especificar detalles del stack de base de datos")
-  when (prompt.requiresER || plan.schemaChanged) => {
-    GenerateERMetadata()
-    delegate("diagram-generator", "Generar diagrama E/R")
-  }
-  when (code.generated == true) => delegate("unit-testing" | "qa-engineer", "Validar y testear cambios de BD")
-}
-```
-
-## Execution Steps
-
-```sudolang
+/**
+ * @skill db-architect
+ * @description Diseña e implementa esquemas de base de datos, DDLs, migraciones y diagramas ER en los flujos SDD.
+ */
 DatabaseArchitect {
   Config {
-    lang = detect_from_input |> default "es"
+    lang = "es"
     outputDir = "docs/db-architect/"
-    defaultStack {
-      database = "PostgreSQL"
-      orms = ["Prisma", "Sequelize"]
-      environment = "JavaScript/TypeScript"
-    }
+    stateFile = "docs/state/db_architect_contract.json"
+    tone = "instructive-concise"
   }
 
-  OnActivate(prompt) {
-    context = ContextDiscovery()
-    if (context.database == null || context.orm == null) {
-      context = AskUser("Por favor, especifica la base de datos, ORM y lenguaje a utilizar:")
-    }
-    ExecuteWorkflow(prompt, context)
-  }
+  // Activation Contract
+  onTrigger: ["db-architect", "db architect", "base de datos", "database schema", "migration", "diagramas ER"]
 
-  ContextDiscovery() {
-    aiSpecs = scan_directory("docs/")
-    projectFiles = list_files()
-    
-    db = infer_database(aiSpecs, projectFiles)
-    orm = infer_orm(aiSpecs, projectFiles)
-    language = infer_language(aiSpecs, projectFiles)
-    
-    return {
-      database: db,
-      orm: orm,
-      language: language,
-      specs: aiSpecs
-    }
-  }
+  // Hard Rules
+  constraints: [
+    "Always scan the docs/ directory and configuration files to discover stack before proceeding.",
+    "Never run standalone database tests. Always delegate schema/migration testing and validation to unit-testing.",
+    "Si el esquema o propuesta de persistencia del usuario es vaga o técnicamente inadecuada, argumentar en contra u ofrecer alternativas válidas."
+  ]
 
-  ExecuteWorkflow(prompt, context) {
-    plan = PlanDatabaseChanges(prompt, context)
-    
-    if (prompt.requiresER || plan.schemaChanged) {
-      erDoc = DocumentSchemaAndER(plan, context)
-      delegate("diagram-generator", {
-        task: "Generar diagrama de Entidad-Relación (E/R)",
-        metadata: erDoc
-      })
-    }
-    
-    code = ImplementDatabaseCode(plan, context)
-    ValidateAndTest(code, context)
-  }
-
-  PlanDatabaseChanges(prompt, context) {
-    changes = []
-    if (prompt.contains("migration") || prompt.contains("esquema")) {
-      changes.push(DefineMigrationPlan(prompt, context))
-    }
-    if (prompt.contains("seed") || prompt.contains("semilla")) {
-      changes.push(DefineSeedPlan(prompt, context))
-    }
-    if (prompt.contains("optimize") || prompt.contains("optimizar")) {
-      changes.push(DefineOptimizationPlan(prompt, context))
-    }
-    
-    plan = {
-      changes: changes,
-      schemaChanged: changes.any(c => c.type == "schema_modification")
-    }
-    
-    return RequestUserApproval(plan)
-  }
-
-  DocumentSchemaAndER(plan, context) {
-    tables = plan.targetTables.map(t => DescribeTableSchema(t))
-    relationships = plan.targetRelationships.map(r => DescribeRelationship(r))
-    return {
-      title: "Metadata de Modelo E/R",
-      tables: tables,
-      relationships: relationships
-    }
-  }
-
-  ImplementDatabaseCode(plan, context) {
-    generatedFiles = []
-    for (change in plan.changes) {
-      if (change.type == "schema_modification") {
-        generatedFiles.push(GenerateSchemaOrMigration(change, context))
-      }
-      if (change.type == "seed") {
-        generatedFiles.push(GenerateSeedScript(change, context))
-      }
-      if (change.type == "query_optimization") {
-        generatedFiles.push(GenerateOptimizedQueryOrIndex(change, context))
+  // Decision Gates
+  resolveAction(context) {
+    if (not(matchesTrigger(context.task))) {
+      candidate = findCandidateSkill(context.task)
+      if (candidate) {
+        log("Redirigiendo tarea fuera de ámbito a la skill candidata: " + candidate)
+        return invokeSkill(candidate, context)
+      } else {
+        log("La tarea no corresponde a db-architect y no se encontró una skill candidata adecuada.")
+        return challengeOutofScope(context)
       }
     }
-    return generatedFiles
+    if (context.isVagueDatabaseSpec) {
+      return ChallengeOrDeepenPersistence(context)
+    }
+    if (context.executionMode == "orchestrated") {
+      return ImplementDatabaseChanges(context)
+    }
+    return PresentInteractiveDatabaseDesign(context)
   }
 
-  ValidateAndTest(code, context) {
-    // Validar sintaxis y ejecutar validaciones locales
-    RunMigrationDryRun(code, context)
+  // Execution Steps
+  execute(contract) {
+    context = resolveDataContext(contract)
+    resolveAction(context)
+
+    if (context.executionMode == "solo") {
+      executeSoloMode(context)
+    } else {
+      executeOrchestratedMode(context)
+    }
+  }
+
+  executeSoloMode(context) {
+    log("Acompañando al usuario en el diseño de persistencia y base de datos de manera concisa.")
+
+    if (isVague(context.dbSpec)) {
+      ChallengeOrDeepenPersistence(context.dbSpec)
+      return
+    }
+
+    models = proposeSchemaDesigns(context.dbSpec)
+    presentModels(models)
+
+    edgeCases = findDatabaseEdgeCases(context.dbSpec)
+    presentEdgeCases(edgeCases)
+
+    schema = designDatabaseSchema(context)
+    saveFile(Config.outputDir + "schema_spec.md", schema)
+    writeStandardContract(context, "success")
+  }
+
+  executeOrchestratedMode(context) {
+    design = readSddArtifact("docs/design/DESIGN.md")
     
-    // Delegar pruebas a la skill de QA
-    delegate("unit-testing", {
-      task: "Validar persistencia de base de datos e integridad del esquema",
-      files: code,
-      context: context
-    })
+    files = generateDatabaseScripts(design)
+    
+    invokeSkill("diagram-generator", { payload: files })
+    invokeSkill("unit-testing", { payload: files })
+    
+    writeStandardContract(context, "success")
+  }
+
+  ChallengeOrDeepenPersistence(idea) {
+    log("Validando modelo de persistencia...")
+    if (isFlawedPersistence(idea)) {
+      log("La estructura de base de datos o persistencia propuesta presenta riesgos de integridad o performance.")
+      log("Justificación: [Explicación técnica concisa]")
+      log("Modelo recomendado: ✨ [Esquema o modelo sugerido]")
+    } else {
+      log("La especificación de base de datos es viable pero vaga. Indique tablas principales o volúmenes esperados.")
+    }
+  }
+
+  findCandidateSkill(task) {
+    registry = readRegistry()
+    return matchTaskToSkillTriggers(task, registry)
+  }
+
+  resolveDataContext(contract) {
+    if (hasEngram()) {
+      return mem_search("db-architect/{project}/state")
+    } else {
+      return readFile(Config.stateFile) |> defaultContract
+    }
+  }
+
+  writeStandardContract(context, status) {
+    output = {
+      caller: context.caller |> default "user",
+      executionMode: context.executionMode |> default "solo",
+      sddPhase: "design",
+      status: status,
+      payload: { schemaPath: Config.outputDir + "schema_spec.md" },
+      artifacts: [Config.outputDir + "schema_spec.md"],
+      ambiguities: context.pendingIssues,
+      edgeCases: context.discoveredEdgeCases
+    }
+    if (hasEngram()) {
+      mem_save(output, topic: "db-architect/{project}/state", type: "architecture", capture_prompt: false)
+    }
+    saveFile(Config.stateFile, toJson(output))
   }
 }
 ```
-
-## Output Contract
-
-Return:
-- Discovered/inferred database stack configuration.
-- Detailed migration plans and database schema code files created or modified.
-- Structured table/relation documentation for E/R diagrams.
-- Validation and testing reports delegated to QA/Testing skills.
 
 ## References
 

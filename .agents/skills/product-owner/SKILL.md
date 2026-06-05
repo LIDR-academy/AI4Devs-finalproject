@@ -4,71 +4,139 @@ description: "Trigger: product owner, requisitos, documentación de negocio, bac
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "2.0"
+  version: "3.1"
 ---
 
-## Activation Contract
-
-Load this skill when initiating business interviews, gathering user requirements, defining visions, or planning preliminary documentation pipelines. Triggers: `product owner`, `requisitos`, `documentación de negocio`, `backlog preliminar`.
-
-## Hard Rules
-
-- **Strict Separation of Concerns:** Product Owner coordinates interviews and structures preliminary visions, delegating the generation of the PRD to `prd-generator` and task breakdowns to `backlog-generator`.
-- **User Verification:** Require explicit sign-offs on the compiled product brief before spawning generator sub-phases.
-
-## Decision Gates
-
-| Pipeline Level | Action |
-|---|---|
-| Interview in progress | Iterate through dynamic question blocks using the ask_question tool |
-| Interview complete | Compile brief and invoke `prd-generator` |
-| PRD approved | Invoke `backlog-generator` to detail epics and tasks |
-
-## Execution Steps
-
 ```sudolang
+/**
+ * @skill product-owner
+ * @description Coordina la fase de descubrimiento y definición de requerimientos de negocio, integrándose con el flujo SDD.
+ */
 ProductOwner {
   Config {
     lang = "es"
-    outputDir = ask_user |> default "docs/"
-    knowledgeDir = ask_user |> default "knowledge/"
-    diagrams = mermaid
-    approval = detailed_per_section
+    outputDir = "docs/prd/"
+    stateFile = "docs/state/product_owner_contract.json"
+    tone = "instructive-concise"
   }
 
-  OnActivate {
-    mem_search("po/{project}/state")
-    found => present_summary => ask: continue | start_fresh
-    not_found => ask_config_preferences => begin Interview
+  // Activation Contract
+  onTrigger: ["product owner", "requisitos", "documentación de negocio", "backlog preliminar"]
+
+  // Hard Rules
+  constraints: [
+    "Strict Separation of Concerns: delegar la compilación del PRD a prd-generator y las tareas a backlog-generator.",
+    "User Verification: requerir la confirmación explícita del brief del producto antes de invocar subfases.",
+    "Si el usuario da una idea vaga o ambigua, profundizar en ella o rechazarla con criterios de negocio justificables."
+  ]
+
+  // Decision Gates
+  resolveAction(context) {
+    if (not(matchesTrigger(context.task))) {
+      candidate = findCandidateSkill(context.task)
+      if (candidate) {
+        log("Redirigiendo tarea fuera de ámbito a la skill candidata: " + candidate)
+        return invokeSkill(candidate, context)
+      } else {
+        log("La tarea no corresponde a product-owner y no se encontró una skill candidata adecuada.")
+        return challengeOutofScope(context)
+      }
+    }
+    if (context.isVagueIdea) {
+      return ChallengeOrDeepenIdea(context)
+    }
+    if (context.interviewInProgress) {
+      return ContinueInterview(context)
+    }
+    if (context.briefApproved && context.executionMode == "orchestrated") {
+      return RunGeneratorPipeline(context)
+    }
+    return PresentDiscoveryOptions(context)
   }
 
-  Interview {
-    strategy = dynamic(ask_question tool, multi-question blocks)
-    Phase1_core: [visión, problema, usuarios, valor, negocio, competidores, restricciones]
-    Phase2_deepen: on(unclear | complex_domain) => follow_up_contextually
-    complete: when context.sufficient_for_PRD_generation
-    persist: mem_save(context, topic: "po/{project}/context", type: "architecture")
+  // Execution Steps
+  execute(contract) {
+    resolvedContext = resolveDataContext(contract)
+    resolveAction(resolvedContext)
+
+    if (resolvedContext.executionMode == "solo") {
+      executeSoloMode(resolvedContext)
+    } else {
+      executeOrchestratedMode(resolvedContext)
+    }
   }
 
-  Pipeline {
-    brief = compile(interview_context)
-    save_file("docs/prd/brief.md", brief)
-    invoke_skill("prd-generator", input: brief, outputDir: "docs/prd/")
-    invoke_skill("backlog-generator", inputDir: "docs/", outputDir: "docs/backlog/")
+  executeSoloMode(context) {
+    log("Acompañando al usuario en el proceso de descubrimiento con tono conciso.")
+    
+    if (isVague(context.userInput)) {
+      ChallengeOrDeepenIdea(context.userInput)
+      return
+    }
+
+    options = generateProductDirections(context.userInput)
+    presentOptionsToUser(options)
+
+    edgeCases = findBusinessEdgeCases(context.userInput)
+    presentEdgeCases(edgeCases)
+
+    userBrief = compileBrief(context)
+    saveFile(Config.outputDir + "brief.md", userBrief)
+    
+    writeStandardContract(context, "success")
+  }
+
+  executeOrchestratedMode(context) {
+    brief = readSddArtifact("docs/prd/brief.md")
+    invokeSkill("prd-generator", { payload: brief })
+    invokeSkill("backlog-generator", { payload: brief })
+    writeStandardContract(context, "success")
+  }
+
+  ChallengeOrDeepenIdea(idea) {
+    log("Analizando viabilidad de la idea...")
+    if (isTechnicallyOrBusinessUnfeasible(idea)) {
+      log("La idea propuesta presenta riesgos críticos de viabilidad de negocio o técnicos.")
+      log("Justificación: [Explicación concisa de por qué no es el camino adecuado]")
+      log("Alternativa propuesta: ✨ [Propuesta de alternativa viable]")
+    } else {
+      log("La idea es interesante pero ambigua. Vamos a profundizar:")
+      askUser("¿Cuál es el usuario objetivo principal y el problema clave que resolvemos?")
+    }
+  }
+
+  findCandidateSkill(task) {
+    // Escanea la lista de skills en AGENTS.md / registry para buscar triggers compatibles
+    registry = readRegistry()
+    return matchTaskToSkillTriggers(task, registry)
+  }
+
+  resolveDataContext(contract) {
+    if (hasEngram()) {
+      return mem_search("po/{project}/state")
+    } else {
+      return readFile(Config.stateFile) |> defaultContract
+    }
+  }
+
+  writeStandardContract(context, status) {
+    output = {
+      caller: context.caller |> default "user",
+      executionMode: context.executionMode |> default "solo",
+      sddPhase: "proposal",
+      status: status,
+      payload: { briefPath: Config.outputDir + "brief.md" },
+      artifacts: [Config.outputDir + "brief.md"],
+      ambiguities: context.pendingDecisions,
+      edgeCases: context.discoveredEdgeCases
+    }
+    if (hasEngram()) {
+      mem_save(output, topic: "po/{project}/state", type: "architecture", capture_prompt: false)
+    }
+    saveFile(Config.stateFile, toJson(output))
   }
 }
 ```
-
-1. **Questioning Interview**: Conduct a structured requirements interview.
-2. **Brief Assembly**: Consolidate responses into a coherent vision statement.
-3. **PRD Handoff**: Spawns `prd-generator` and validates output.
-4. **Backlog Breakdown**: Triggers `backlog-generator` to compile developer tasks.
-
-## Output Contract
-
-Return:
-- A compiled product brief saved to `docs/prd/brief.md`.
-- Active pipeline status reporting on PRD and Backlog creation progress.
 
 ## References
 

@@ -4,87 +4,139 @@ description: "Trigger: QA, quality assurance, tester, plan de QA, cobertura de t
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "2.0"
+  version: "3.1"
 ---
 
-## Activation Contract
-
-Load this skill when a QA strategy, quality assurance checks, test plans, CI pipeline configuration, or test metrics analysis are requested. Triggers: `QA`, `quality assurance`, `tester`, `plan de QA`, `cobertura de tests`, `estrategia de testing`, `CI testing`, `mejora de tests`.
-
-## Hard Rules
-
-- **Orchestration Only:** This skill delegates actual code writing to subordinating skills (`unit-testing`, `e2e-testing`, `a11y-testing`).
-- **Unified QA Plan:** Require a QA plan to be validated by the user or defined in `docs/` before starting implementation.
-- **Strict Dod Verification:** Enforce all criteria in the Definition of Done (coverage targets, mutation score targets >= 70%, no critical a11y violations, green critical paths).
-- **Domain-Specific Templates:** Reference pipeline templates from modular domains.
-
-## Decision Gates
-
-| Pipeline Platform | Action | Template File |
-|---|---|---|
-| GitHub Actions | Load GitHub Actions workflow template | `references/ci-github-actions.md` |
-| GitLab CI/CD | Load GitLab CI pipeline configuration template | `references/ci-gitlab-ci.md` |
-
-## Execution Steps
-
 ```sudolang
+/**
+ * @skill qa-engineer
+ * @description Orquesta unit-testing, e2e-testing y a11y-testing, definiendo la estrategia y validando el DoD en el flujo SDD.
+ */
 QAEngineer {
   Config {
-    lang = detect_from_input |> default "es"
-    inputSources = ["docs/", caller_context, natural_language_description]
-    skillsRegistry = scan(".agents/skills/") + scan("~/.gemini/config/skills/")
-    ciPlatform = detect_from_project |> ask_user
+    lang = "es"
+    outputDir = "docs/qa/"
+    stateFile = "docs/state/qa_engineer_contract.json"
+    tone = "instructive-concise"
   }
 
-  OnActivate {
-    mem_search("qa-engineer/{project}/state")
-    found => present_pipeline_dashboard(state) => ask: continue | restart_phase | start_fresh
-    not_found => begin ContextDiscovery
+  // Activation Contract
+  onTrigger: ["QA", "quality assurance", "tester", "plan de QA", "cobertura de tests", "estrategia de testing", "CI testing", "mejora de tests"]
+
+  // Hard Rules
+  constraints: [
+    "Orchestration Only: delegar la escritura del código de pruebas a unit-testing, e2e-testing y a11y-testing.",
+    "Strict DoD Verification: Validar coberturas y objetivos de mutación (>= 70%), sin fallos críticos de accesibilidad.",
+    "Si la estrategia o plan del usuario es vaga o inviable, guiar la definición o refutar el enfoque con argumentos profesionales."
+  ]
+
+  // Decision Gates
+  resolveAction(context) {
+    if (not(matchesTrigger(context.task))) {
+      candidate = findCandidateSkill(context.task)
+      if (candidate) {
+        log("Redirigiendo tarea fuera de ámbito a la skill candidata: " + candidate)
+        return invokeSkill(candidate, context)
+      } else {
+        log("La tarea no corresponde a qa-engineer y no se encontró una skill candidata adecuada.")
+        return challengeOutofScope(context)
+      }
+    }
+    if (context.isVagueStrategy) {
+      return ChallengeOrDeepenQaStrategy(context)
+    }
+    if (context.executionMode == "orchestrated") {
+      return OrchestrateTestingPhases(context)
+    }
+    return PresentInteractivePlan(context)
   }
 
-  ContextDiscovery {
-    // Detect stack, devDependencies, CI platform, and existing documentation
-    // Injects context parameters to local memory
-    persist: mem_save(context, topic: "qa-engineer/{project}/context", type: "architecture")
+  // Execution Steps
+  execute(contract) {
+    context = resolveDataContext(contract)
+    resolveAction(context)
+
+    if (context.executionMode == "solo") {
+      executeSoloMode(context)
+    } else {
+      executeOrchestratedMode(context)
+    }
   }
 
-  QAPlan {
-    // Strategy targets: coverage percentages, mutation score (>= 70%), critical user flows, target platforms
-    // Persist plan after user confirmation
-    persist: mem_save(qa_plan, topic: "qa-engineer/{project}/qa-plan", type: "architecture")
+  executeSoloMode(context) {
+    log("Acompañando al usuario en el diseño del plan de QA de manera concisa.")
+
+    if (isVague(context.strategyIdea)) {
+      ChallengeOrDeepenQaStrategy(context.strategyIdea)
+      return
+    }
+
+    strategies = proposeQaStrategies(context.strategyIdea)
+    presentStrategies(strategies)
+
+    edgeCases = findQaEdgeCases(context.strategyIdea)
+    presentEdgeCases(edgeCases)
+
+    plan = buildQaPlan(context)
+    saveFile(Config.outputDir + "qa_plan.md", plan)
+    writeStandardContract(context, "success")
   }
 
-  EnvSetup {
-    // Generate package.json scripts, recommended dev dependencies
-    // Delegates CI workflow generation to templates depending on ciPlatform
+  executeOrchestratedMode(context) {
+    tasks = readSddArtifact("docs/tech-lead/backlog.md")
+    
+    invokeSkill("unit-testing", { payload: tasks })
+    invokeSkill("e2e-testing", { payload: tasks })
+    invokeSkill("a11y-testing", { payload: tasks })
+    
+    report = generateConsolidatedReport()
+    saveFile("docs/qa/consolidated_report.md", report)
+    
+    writeStandardContract(context, "success")
   }
 
-  TestingPhases {
-    // Sub-delegation logic:
-    // 1. Invokes "unit-testing" with coverage and mutation targets
-    // 2. Invokes "e2e-testing" with critical business scenarios
-    // 3. Invokes "a11y-testing" with WCAG target compliance
+  ChallengeOrDeepenQaStrategy(idea) {
+    log("Validando estrategia de pruebas...")
+    if (isInvalidStrategy(idea)) {
+      log("La estrategia propuesta no garantizará la calidad requerida o sobrecarga el desarrollo innecesariamente.")
+      log("Justificación: [Explicación de QA concisa]")
+      log("Estrategia recomendada: ✨ [Estrategia de testing balanceada y viable]")
+    } else {
+      log("La idea de testing es viable pero vaga. Especifique frameworks preferidos o niveles de cobertura mínimos.")
+    }
   }
 
-  ConsolidatedReport {
-    // Merge results from sub-testing phases into a high-level executive summary
-    // Fails gate if any sub-phase release gate is blocked (including mutation score < 70%)
-    persist: mem_save(report, topic: "qa-engineer/{project}/report", type: "architecture", capture_prompt: false)
+  findCandidateSkill(task) {
+    registry = readRegistry()
+    return matchTaskToSkillTriggers(task, registry)
+  }
+
+  resolveDataContext(contract) {
+    if (hasEngram()) {
+      return mem_search("qa-engineer/{project}/state")
+    } else {
+      return readFile(Config.stateFile) |> defaultContract
+    }
+  }
+
+  writeStandardContract(context, status) {
+    output = {
+      caller: context.caller |> default "user",
+      executionMode: context.executionMode |> default "solo",
+      sddPhase: "verify",
+      status: status,
+      payload: { reportPath: Config.outputDir + "consolidated_report.md" },
+      artifacts: [Config.outputDir + "consolidated_report.md"],
+      ambiguities: context.pendingDecisions,
+      edgeCases: context.discoveredEdgeCases
+    }
+    if (hasEngram()) {
+      mem_save(output, topic: "qa-engineer/{project}/state", type: "architecture", capture_prompt: false)
+    }
+    saveFile(Config.stateFile, toJson(output))
   }
 }
 ```
-
-1. **Context & Skill Discovery**: Search for environment data and testing capabilities.
-2. **QA Strategy Planning**: Create a scorecard representing the project's testing goals.
-3. **Setup CI/CD Pipelines**: Write template configurations for target platforms.
-4. **Execution & Report Consolidation**: Coordinate testing agents and build the final report.
-
-## Output Contract
-
-Return a unified quality scorecard including:
-- Overall release status: `PASS` or `BLOCKED`.
-- Table detailing test counts, coverage, and mutation score (mutants killed vs. survived) per category (Unit, E2E, A11y).
-- Outstanding risks, critical failures, and immediate actions to unblock release.
 
 ## References
 

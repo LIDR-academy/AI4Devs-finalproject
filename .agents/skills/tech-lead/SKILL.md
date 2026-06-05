@@ -4,90 +4,136 @@ description: "Trigger: tech lead, plan técnico, tareas técnicas, ejecución, o
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "2.0"
+  version: "3.1"
 ---
 
-## Activation Contract
-
-Load this skill when requirements decomposition, project tasks breakdown, technology version resolution, dependency mappings, or architectural orchestration plans are requested. Triggers: `tech lead`, `plan técnico`, `tareas técnicas`, `ejecución`, `orquestación técnica`.
-
-## Hard Rules
-
-- **Strict Dependency Mapping:** All technical tasks must explicitly map to business requirements (PRD features) and list blocking/informational dependencies. No cycles allowed.
-- **CVE Checking:** Scan and verify that all recommended package and technology versions are free of Critical or High vulnerabilities.
-- **Autonomy Control:** Pause and request approval of technical plans at level gates unless autonomy level is explicitly set to `high`.
-
-## Decision Gates
-
-| Operation Mode | Action | Reference Contract |
-|---|---|---|
-| Concurrent Multi-Agent Execution | Coordinate agents peer-to-peer via board | `references/agent-contract.md` |
-| Orchestrated Run | Direct sequencing handled by TechLead | Inlined sequential groups |
-| Vulnerability lookup / version scan | Resolve package CVE metadata | `references/cve-databases.md` |
-
-## Execution Steps
-
 ```sudolang
+/**
+ * @skill tech-lead
+ * @description Orquesta y descompone requerimientos en tareas técnicas detalladas, controlando dependencias y seguridad.
+ */
 TechLead {
   Config {
-    lang = detect_from_input |> default "es"
+    lang = "es"
     outputDir = "docs/tech-lead/"
-    inputSources = ["docs/", any_business_doc, natural_language_description]
-    skillsRegistry = scan(".agents/skills/") + scan("~/.gemini/config/skills/")
-    approvalMode = three_level(epics_plan, tasks_high_level, subtasks_technical)
-    executionMode = hybrid(plan_always, execute_on_explicit_user_approval)
-    executionArchitecture = ask_user_before_run |> default "orchestrator"
+    stateFile = "docs/state/tech_lead_contract.json"
+    tone = "instructive-concise"
   }
 
-  OnActivate {
-    mem_search("tech-lead/{project}/state")
-    found => present_summary => ask: continue | update | start_fresh
-    not_found => begin SourceDiscovery
+  // Activation Contract
+  onTrigger: ["tech lead", "plan técnico", "tareas técnicas", "ejecución", "orquestación técnica"]
+
+  // Hard Rules
+  constraints: [
+    "Strict Dependency Mapping: Todas las tareas deben enlazarse a requerimientos de negocio sin ciclos.",
+    "CVE Checking: Escanear y verificar que las dependencias recomendadas no tengan vulnerabilidades críticas/altas.",
+    "Si el plan o propuesta del usuario es técnicamente inviable o vaga, argumentar en contra o guiar en la especificación."
+  ]
+
+  // Decision Gates
+  resolveAction(context) {
+    if (not(matchesTrigger(context.task))) {
+      candidate = findCandidateSkill(context.task)
+      if (candidate) {
+        log("Redirigiendo tarea fuera de ámbito a la skill candidata: " + candidate)
+        return invokeSkill(candidate, context)
+      } else {
+        log("La tarea no corresponde a tech-lead y no se encontró una skill candidata adecuada.")
+        return challengeOutofScope(context)
+      }
+    }
+    if (context.isVagueProposal) {
+      return ChallengeOrDeepenTechnicalPath(context)
+    }
+    if (context.executionMode == "orchestrated") {
+      return RunSddOrchestration(context)
+    }
+    return PresentInteractivePlanning(context)
   }
 
-  SourceDiscovery {
-    scan(inputSources) => find([PRDs, backlogs, ADRs, API_specs, diagrams])
-    persist: mem_save(sources, topic: "tech-lead/{project}/sources", type: "architecture")
+  // Execution Steps
+  execute(contract) {
+    context = resolveDataContext(contract)
+    resolveAction(context)
+
+    if (context.executionMode == "solo") {
+      executeSoloMode(context)
+    } else {
+      executeOrchestratedMode(context)
+    }
   }
 
-  GapResolution {
-    // Escalate missing information to product-owner or user
+  executeSoloMode(context) {
+    log("Acompañando al usuario en el diseño técnico de manera concisa.")
+
+    if (isVague(context.technicalIdea)) {
+      ChallengeOrDeepenTechnicalPath(context.technicalIdea)
+      return
+    }
+
+    architectures = designTechnicalSolutions(context.technicalIdea)
+    presentSolutions(architectures)
+
+    edgeCases = findTechnicalEdgeCases(context.technicalIdea)
+    presentEdgeCases(edgeCases)
+
+    plan = buildTechnicalBacklog(context)
+    saveFile(Config.outputDir + "technical_plan.md", plan)
+    writeStandardContract(context, "success")
   }
 
-  StackAnalysis {
-    // Analyzes stack and calls CVE checks in references/cve-databases.md
-    persist: mem_save(stack, topic: "tech-lead/{project}/stack", type: "architecture")
+  executeOrchestratedMode(context) {
+    prd = readSddArtifact("docs/prd/PRD.md")
+    designDoc = readSddArtifact("docs/design/DESIGN.md")
+    
+    backlog = generateSddBacklog(prd, designDoc)
+    saveFile("docs/tech-lead/backlog.md", backlog)
+    
+    writeStandardContract(context, "success")
   }
 
-  SkillDiscovery {
-    scan(skillsRegistry) => match_skills_to_task_types
-    persist: mem_save(skill_index, topic: "tech-lead/{project}/skills", type: "architecture")
+  ChallengeOrDeepenTechnicalPath(idea) {
+    log("Validando viabilidad técnica...")
+    if (isTechnicallyFlawed(idea)) {
+      log("La dirección técnica propuesta no es adecuada debido a problemas de escalabilidad, rendimiento o seguridad.")
+      log("Justificación: [Explicación técnica concisa]")
+      log("Alternativa propuesta: ✨ [Alternativa técnica viable]")
+    } else {
+      log("La propuesta técnica es viable pero vaga. Indique detalles del stack o requerimientos no funcionales.")
+    }
   }
 
-  Pipeline = [EpicsPlan, TasksHighLevel, SubtasksTechnical] |> sequential {
-    // 1. Decompose business goals to Epics map
-    // 2. Break down Epics into high level stories (INVEST, traceability)
-    // 3. Decompose stories into technical tasks assigned to developer roles
+  findCandidateSkill(task) {
+    registry = readRegistry()
+    return matchTaskToSkillTriggers(task, registry)
   }
 
-  ExecutionEngine {
-    when architecture == "orchestrator" => RunOrchestrator
-    when architecture == "multi-agent" => RunMultiAgentCoordinator (see references/agent-contract.md)
+  resolveDataContext(contract) {
+    if (hasEngram()) {
+      return mem_search("tech-lead/{project}/state")
+    } else {
+      return readFile(Config.stateFile) |> defaultContract
+    }
+  }
+
+  writeStandardContract(context, status) {
+    output = {
+      caller: context.caller |> default "user",
+      executionMode: context.executionMode |> default "solo",
+      sddPhase: "tasks",
+      status: status,
+      payload: { backlogPath: Config.outputDir + "backlog.md" },
+      artifacts: [Config.outputDir + "backlog.md"],
+      ambiguities: context.pendingIssues,
+      edgeCases: context.discoveredEdgeCases
+    }
+    if (hasEngram()) {
+      mem_save(output, topic: "tech-lead/{project}/state", type: "architecture", capture_prompt: false)
+    }
+    saveFile(Config.stateFile, toJson(output))
   }
 }
 ```
-
-1. **Context Analysis & Gap Detection**: Evaluate input specifications, verifying completeness.
-2. **Security & Tech Resolution**: Infer stacks and resolve non-vulnerable versions.
-3. **Task & Pipeline Planning**: Map dependencies, building a DAG roadmap for sprints.
-4. **Handoff / Multi-Agent Launch**: Deploy subagents, tracking execution progress in real-time.
-
-## Output Contract
-
-Return:
-- A dependency DAG visualized in Mermaid.
-- A technical backlog summary (sprints, tasks, effort, roles).
-- Path locations of generated task files inside `docs/tech-lead/`.
 
 ## References
 

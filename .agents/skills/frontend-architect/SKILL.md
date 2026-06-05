@@ -4,77 +4,136 @@ description: "Trigger: frontend architect, implementar frontend, arquitectura fr
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "2.0"
+  version: "3.1"
 ---
 
-## Activation Contract
-
-Load this skill when building or implementing frontend UI modules, state managers, component trees (Atomic Design / Feature-Sliced Design), form schemas, or routing hooks. Triggers: `frontend architect`, `implementar frontend`, `arquitectura frontend`, `UI implementation`.
-
-## Hard Rules
-
-- **Autonomy Gates:** Pause and request approval of component file-writing plans at the specified checkpoints unless `autonomyLevel` is set to `high`.
-- **API Coordination:** Cross-reference active endpoints and contracts with backend architectures; write stub mocks where APIs are not yet ready.
-- **TDD Integration:** Mandatory delegation to `unit-testing` using TDD mode for all newly created component specs.
-
-## Decision Gates
-
-| Phase / Condition | Target Mode |
-|---|---|
-| API endpoint not ready | Generate local stubs / mocks |
-| Granular Autonomy Level | Ask validation after writing each component |
-| Story Autonomy Level | Ask validation on the files plan, then implement batch |
-
-## Execution Steps
-
 ```sudolang
+/**
+ * @skill frontend-architect
+ * @description Diseña e implementa componentes y vistas de frontend integrando mocks y TDD en la fase apply de SDD.
+ */
 FrontendArchitect {
   Config {
-    lang = detect_from_input |> default "es"
+    lang = "es"
     outputDir = "docs/frontend-architect/"
-    skillsRegistry = scan(".agents/skills/") + scan("~/.gemini/config/skills/")
-    defaultStack {
-      framework = "React"
-      builder = "Vite"
-      language = "TypeScript"
-      css = "Tailwind"
-      stateManagement = "Zustand"
+    stateFile = "docs/state/frontend_architect_contract.json"
+    tone = "instructive-concise"
+  }
+
+  // Activation Contract
+  onTrigger: ["frontend architect", "implementar frontend", "arquitectura frontend", "UI implementation"]
+
+  // Hard Rules
+  constraints: [
+    "Autonomy Gates: Pausar y pedir confirmación antes de escribir componentes salvo autonomía alta.",
+    "API Coordination: Validar contratos con endpoints activos; escribir mocks/stubs si no están listos.",
+    "Si las directrices de interfaz o experiencia propuestas son vagas o inviables, challengear o proponer alternativas sólidas."
+  ]
+
+  // Decision Gates
+  resolveAction(context) {
+    if (not(matchesTrigger(context.task))) {
+      candidate = findCandidateSkill(context.task)
+      if (candidate) {
+        log("Redirigiendo tarea fuera de ámbito a la skill candidata: " + candidate)
+        return invokeSkill(candidate, context)
+      } else {
+        log("La tarea no corresponde a frontend-architect y no se encontró una skill candidata adecuada.")
+        return challengeOutofScope(context)
+      }
+    }
+    if (context.isVagueRequirement) {
+      return ChallengeOrDeepenRequirements(context)
+    }
+    if (context.executionMode == "orchestrated") {
+      return ExecuteFrontendImplementation(context)
+    }
+    return PresentInteractiveDesign(context)
+  }
+
+  // Execution Steps
+  execute(contract) {
+    context = resolveDataContext(contract)
+    resolveAction(context)
+
+    if (context.executionMode == "solo") {
+      executeSoloMode(context)
+    } else {
+      executeOrchestratedMode(context)
     }
   }
 
-  OnActivate {
-    mem_search("frontend-architect/{project}/state")
-    found => present_dashboard(state) => ask: continue_from_next | update_state | start_fresh
-    not_found => begin ContextDiscovery
+  executeSoloMode(context) {
+    log("Acompañando al usuario en el diseño de interfaz y componentes frontend de manera concisa.")
+
+    if (isVague(context.frontendSpec)) {
+      ChallengeOrDeepenRequirements(context.frontendSpec)
+      return
+    }
+
+    options = proposeFrontendSolutions(context.frontendSpec)
+    presentOptions(options)
+
+    edgeCases = findFrontendEdgeCases(context.frontendSpec)
+    presentEdgeCases(edgeCases)
+
+    structure = designComponentTree(context)
+    saveFile(Config.outputDir + "components_spec.md", structure)
+    writeStandardContract(context, "success")
   }
 
-  ContextDiscovery {
-    // Scan project files (package.json, tailwind.config, tsconfig, src/)
-    // Infer tech stack, bundlers, and CSS frameworks
-    persist: mem_save(discovered_context, topic: "frontend-architect/{project}/context", type: "config")
+  executeOrchestratedMode(context) {
+    task = readSddArtifact("docs/tech-lead/backlog.md")
+    
+    generatedFiles = writeFrontendComponents(task)
+    
+    invokeSkill("unit-testing", { payload: generatedFiles })
+    
+    writeStandardContract(context, "success")
   }
 
-  ImplementStory {
-    // 1. Plan components structure (pages, organisms, atoms)
-    // 2. Fetch or mock API contracts
-    // 3. Write UI files and JSDoc/TSDoc documentations
-    // 4. Delegate component testing to unit-testing skill
-    // 5. Generate Storybook stories under request options
+  ChallengeOrDeepenRequirements(idea) {
+    log("Validando requerimientos de interfaz...")
+    if (isPoorLayoutOrDesign(idea)) {
+      log("La interfaz propuesta presenta problemas de usabilidad, accesibilidad o acoplamiento excesivo.")
+      log("Justificación: [Explicación técnica/UX concisa]")
+      log("Solución propuesta: ✨ [Estructura de componentes o maquetación recomendada]")
+    } else {
+      log("La propuesta de frontend es viable pero vaga. Especifique paleta, layout o interacciones clave.")
+    }
+  }
+
+  findCandidateSkill(task) {
+    registry = readRegistry()
+    return matchTaskToSkillTriggers(task, registry)
+  }
+
+  resolveDataContext(contract) {
+    if (hasEngram()) {
+      return mem_search("frontend-architect/{project}/state")
+    } else {
+      return readFile(Config.stateFile) |> defaultContract
+    }
+  }
+
+  writeStandardContract(context, status) {
+    output = {
+      caller: context.caller |> default "user",
+      executionMode: context.executionMode |> default "solo",
+      sddPhase: "apply",
+      status: status,
+      payload: { uiComponents: context.generatedFiles },
+      artifacts: context.generatedFiles,
+      ambiguities: context.pendingDecisions,
+      edgeCases: context.discoveredEdgeCases
+    }
+    if (hasEngram()) {
+      mem_save(output, topic: "frontend-architect/{project}/state", type: "architecture", capture_prompt: false)
+    }
+    saveFile(Config.stateFile, toJson(output))
   }
 }
 ```
-
-1. **Context Discovery**: Auto-detect frontend bundlers, CSS modules, and package managers.
-2. **Backlog Synchronization**: Sync with the Tech Lead's board to identify assigned UI tasks.
-3. **Execution Plan**: Create the component tree and modification list, requesting approvals if required.
-4. **Writing & Testing**: Generate components and trigger unit tests under TDD parameters.
-
-## Output Contract
-
-Return:
-- List of written or modified file paths.
-- Path to generated Storybook story specs (if requested).
-- Status of unit tests executed against the written components.
 
 ## References
 

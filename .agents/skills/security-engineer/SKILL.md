@@ -4,78 +4,135 @@ description: "Trigger: seguridad, security, auditoría de seguridad, SAST, DAST,
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "2.0"
+  version: "3.1"
 ---
 
-## Activation Contract
-
-Load this skill when security models, threat mappings, static code audits, package vulnerabilities scans, or secrets management rules are requested. Triggers: `seguridad`, `security`, `auditoría de seguridad`, `SAST`, `DAST`, `secretos`, `dependencias vulnerables`, `OWASP`.
-
-## Hard Rules
-
-- **Secrets Sanitization:** Never commit credentials, tokens, or private keys to the repository. Guide immediate rotation if found.
-- **Vulnerability Baseline:** Classify issues strictly against CVSS standards. Reject builds containing High or Critical threats.
-- **Verification Non-Regression:** Any security patch must pass prior functional unit tests and a re-run of the security audit.
-
-## Decision Gates
-
-| Target Scenario | Operation Mode |
-|---|---|
-| New system architecture or epic | Threat Modeling (STRIDE) |
-| Code audit / SCA package scan | Security Audit (SAST/SCA) |
-| Fix security bugs | Remediate |
-| CI merge checkpoint | CICD Gate (Evaluates threshold) |
-
-## Execution Steps
-
 ```sudolang
+/**
+ * @skill security-engineer
+ * @description Evalúa, audita y mitiga amenazas de seguridad sobre código y diseño en flujos SDD.
+ */
 SecurityEngineer {
   Config {
-    lang = detect_from_input |> default "es"
-    inputSources = ["docs/", caller_context, source_code]
-    persistRoot = "docs/security/"
-    standards = ["OWASP Top 10", "STRIDE", "SANS CWE"]
+    lang = "es"
+    outputDir = "docs/security/"
+    stateFile = "docs/state/security_contract.json"
+    tone = "instructive-concise"
   }
 
-  OnActivate {
-    mem_search("security-engineer/{project}/state")
-    found => present_security_dashboard(state) => ask: continue | run_new_audit | plan_security
-    not_found => run_context_discovery
+  // Activation Contract
+  onTrigger: ["seguridad", "security", "auditoría de seguridad", "SAST", "DAST", "secretos", "dependencias vulnerables", "OWASP"]
+
+  // Hard Rules
+  constraints: [
+    "Secrets Sanitization: Nunca subir credenciales, tokens o llaves al repositorio. Rotar de inmediato si se detecta.",
+    "Vulnerability Baseline: Clasificar vulnerabilidades según CVSS. Rechazar builds con High/Critical.",
+    "Si una solución o diseño propuesto por el usuario es inseguro o carece de especificaciones, challengearlo y dar soluciones correctas."
+  ]
+
+  // Decision Gates
+  resolveAction(context) {
+    if (not(matchesTrigger(context.task))) {
+      candidate = findCandidateSkill(context.task)
+      if (candidate) {
+        log("Redirigiendo tarea fuera de ámbito a la skill candidata: " + candidate)
+        return invokeSkill(candidate, context)
+      } else {
+        log("La tarea no corresponde a security-engineer y no se encontró una skill candidata adecuada.")
+        return challengeOutofScope(context)
+      }
+    }
+    if (context.isVagueSecurityRequest) {
+      return ChallengeOrDeepenSecurity(context)
+    }
+    if (context.executionMode == "orchestrated") {
+      return RunSecurityAudits(context)
+    }
+    return PresentInteractiveAudit(context)
   }
 
-  ThreatModeling {
-    // Analyze components -> Enumerate STRIDE threats -> Mitigate
-    persist: {
-      mem_save(threat_model, topic: "security-engineer/{project}/threat-model", type: "architecture", capture_prompt: false)
-      write_file("{persistRoot}/threat_model.md", format_markdown(threat_model))
+  // Execution Steps
+  execute(contract) {
+    context = resolveDataContext(contract)
+    resolveAction(context)
+
+    if (context.executionMode == "solo") {
+      executeSoloMode(context)
+    } else {
+      executeOrchestratedMode(context)
     }
   }
 
-  SecurityAudit {
-    // Scan secrets, packages, and code patterns
-    persist: {
-      mem_save(vuln_list, topic: "security-engineer/{project}/vulnerabilities", type: "bugfix", capture_prompt: false)
-      write_file("{persistRoot}/audit_report.md", format_markdown(audit_report))
+  executeSoloMode(context) {
+    log("Acompañando al usuario en el análisis de seguridad de manera concisa.")
+
+    if (isVague(context.securitySpec)) {
+      ChallengeOrDeepenSecurity(context.securitySpec)
+      return
+    }
+
+    options = proposeMitigations(context.securitySpec)
+    presentOptions(options)
+
+    edgeCases = findSecurityEdgeCases(context.securitySpec)
+    presentEdgeCases(edgeCases)
+
+    threatModel = designThreatModel(context)
+    saveFile(Config.outputDir + "threat_model.md", threatModel)
+    writeStandardContract(context, "success")
+  }
+
+  executeOrchestratedMode(context) {
+    design = readSddArtifact("docs/design/DESIGN.md")
+    
+    threatModel = auditDesignAndCode(design)
+    saveFile("docs/security/threat_model.md", threatModel)
+    
+    writeStandardContract(context, "success")
+  }
+
+  ChallengeOrDeepenSecurity(idea) {
+    log("Validando seguridad del flujo...")
+    if (isInsecureDesign(idea)) {
+      log("La implementación sugerida introduce vectores de ataque o fallos de seguridad críticos.")
+      log("Justificación: [Explicación de seguridad concisa]")
+      log("Mitigación recomendada: ✨ [Patrón de diseño seguro o control sugerido]")
+    } else {
+      log("La especificación de seguridad es viable pero vaga. Indique contexto de autenticación o cifrado.")
     }
   }
 
-  VerifySecurity {
-    // Confirm mitigations and access rules (e.g. Firestore rules, OAuth flows)
+  findCandidateSkill(task) {
+    registry = readRegistry()
+    return matchTaskToSkillTriggers(task, registry)
+  }
+
+  resolveDataContext(contract) {
+    if (hasEngram()) {
+      return mem_search("security-engineer/{project}/state")
+    } else {
+      return readFile(Config.stateFile) |> defaultContract
+    }
+  }
+
+  writeStandardContract(context, status) {
+    output = {
+      caller: context.caller |> default "user",
+      executionMode: context.executionMode |> default "solo",
+      sddPhase: "verify",
+      status: status,
+      payload: { auditPath: Config.outputDir + "threat_model.md" },
+      artifacts: [Config.outputDir + "threat_model.md"],
+      ambiguities: context.pendingThreats,
+      edgeCases: context.discoveredEdgeCases
+    }
+    if (hasEngram()) {
+      mem_save(output, topic: "security-engineer/{project}/state", type: "architecture", capture_prompt: false)
+    }
+    saveFile(Config.stateFile, toJson(output))
   }
 }
 ```
-
-1. **Information Discovery**: Check dependency locks and directory environments.
-2. **Modeling / Scanning**: Run code matching, dependency trees, and threat indices.
-3. **Remediation & Testing**: Develop patches and run regressions.
-4. **CI Evaluation**: Evaluate whether safety thresholds are satisfied.
-
-## Output Contract
-
-Return:
-- List of vulnerabilities with ID, title, severity, and files impacted.
-- CI gate verdict: `PASS`, `WARN`, or `BLOCK`.
-- Path locations of generated vulnerability audit reports.
 
 ## References
 
