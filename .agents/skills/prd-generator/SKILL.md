@@ -4,8 +4,27 @@ description: "Trigger: PRD, product requirements, product definition, requisitos
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "1.0"
+  version: "2.0"
 ---
+
+## Activation Contract
+
+Load this skill when generating product requirements documents, writing detailed specifications, defining scopes, or mapping competitive context from a user brief. Triggers: `PRD`, `product requirements`, `product definition`, `requisitos de producto`, `definición de producto`.
+
+## Hard Rules
+
+- **SMART Metrics:** Enforce that all business requirements (objectives and KPIs) are defined in SMART (Specific, Measurable, Actionable, Relevant, Time-bound) formats.
+- **Traceability:** Establish explicit maps between target user personas and core features.
+- **Section-by-Section Approval:** The generation flow must pause and await user verification before assembling the final PRD.
+
+## Decision Gates
+
+| Phase / Condition | Target Mode |
+|---|---|
+| Section generated and validated | Await user feedback (approve / modify / reject) |
+| Document update requested | Identify scope, edit, re-validate, and increment version |
+
+## Execution Steps
 
 ```sudolang
 PRDGenerator {
@@ -47,58 +66,21 @@ PRDGenerator {
     mem_save(prd_summary, topic: "prd/{project}/state", type: "architecture")
     log: "PRD saved to {outputDir}/PRD.md"
   }
-
-  Sections {
-    Vision {
-      Purpose:          one_paragraph, concrete what_and_why, no_buzzwords
-      Problem:          real_user_pain_points, evidence_or_hypothesis
-      ValueProposition: unique_differentiator, measurable_benefit_statement
-    }
-    TargetUsers {
-      Personas:       table(name, role, description, key_needs, primary_pain), min 2
-      MarketSegments: primary + secondary, quantify_size_when_possible
-    }
-    ProductScope {
-      CoreFeatures: prioritized_list, max 10, each must map to a persona need
-      OutOfScope:   explicit_exclusions, justify why excluded
-      Assumptions:  documented, falsifiable, testable
-    }
-    BusinessRequirements {
-      Objectives:    table(objective, metric, target, timeframe), SMART format
-      KPIs:          quantifiable, 5-7 max, each linked to an objective
-      BusinessModel: revenue_mechanism or value_mechanism, concrete
-    }
-    CompetitiveContext {
-      Competitors:     table(name, strengths, weaknesses, our_differentiator), min 2
-      Differentiators: unique_selling_points, defensible, not_generic
-    }
-    Constraints {
-      Technical:   platform, integrations, tech_stack, performance_requirements
-      Business:    budget_range, timeline, team_size, resource_limits
-      Regulatory:  compliance, legal, data_privacy, accessibility
-    }
-  }
-
-  Persist {
-    engram {
-      "prd/{project}/context" => business_context + user_brief
-      "prd/{project}/state"   => file_path + generation_status + version
-    }
-    files {
-      outputDir => PRD.md (always within .ia/)
-    }
-  }
-
-  Update {
-    trigger: user says "update|add|modify|actualiza|añade|modifica" + PRD reference
-    flow:
-      mem_search("prd/{project}") => recover_state
-      => read_existing_prd_file
-      => identify_sections_to_change
-      => apply_changes(preserve_untouched_sections)
-      => re_validate(modified_sections) // references/validation-rules.md
-      => increment_version
-      => re_persist(engram + file)
-  }
 }
 ```
+
+1. **Brief Discovery**: Read user brief and confirm it has sufficient length.
+2. **Drafting Iteration**: Sequence through PRD sections (Vision, Users, Scope, Objectives, Competitors, Constraints).
+3. **Validating & Modifying**: Run validations against criteria templates, integrating user feedback.
+4. **Assembly**: Collect sections, assign metadata tags, write the final file.
+
+## Output Contract
+
+Return:
+- Fully assembled `PRD.md` file saved to `.ia/docs/prd/`.
+- Summary of approved segments and overall status.
+
+## References
+
+- `references/validation-rules.md` — Quality checks, compliance criteria.
+- `assets/prd-template.md` — Section templates for PRD documents.
