@@ -4,7 +4,7 @@ description: "Trigger: tech lead, plan técnico, tareas técnicas, ejecución, o
 license: Apache-2.0
 metadata:
   author: bytelovers
-  version: "1.1"
+  version: "1.2"
 ---
 
 ```sudolang
@@ -16,6 +16,10 @@ TechLead {
     skillsRegistry = scan(".agents/skills/") + scan("~/.gemini/config/skills/")
     approvalMode = three_level(epics_plan, tasks_high_level, subtasks_technical)
     executionMode = hybrid(plan_always, execute_on_explicit_user_approval)
+    // Execution architecture — ask user after plan approval:
+    //   "orchestrator"   → TechLead media cada invocación (defecto)
+    //   "multi-agent"    → Agentes autónomos coordinados via Engram board
+    executionArchitecture = ask_user_before_run |> default "orchestrator"
   }
 
   TaskStatus = enum {
@@ -42,6 +46,7 @@ TechLead {
     informedBy: [task_id]       // informational dependencies
     skill: skill_name | null    // which skill executes this task
     executionMode: sequential | parallel
+    agentMode: orchestrated | autonomous  // orchestrated=TechLead invoca; autonomous=agente se auto-lanza
   }
 
   OnActivate {
@@ -126,6 +131,49 @@ TechLead {
     persist: mem_save(skill_index, topic: "tech-lead/{project}/skills", type: "architecture")
   }
 
+  // Contrato que cada agente autónomo DEBE implementar en modo multi-agent
+  AgentContract {
+    // Al iniciarse: el agente lee su contexto del board compartido
+    OnStart {
+      mem_search("tech-lead/{project}/board") => load(board)
+      my_tasks = board.tasks.filter(task => task.skill == self.skill_name)
+      check_dependencies(my_tasks) => {
+        all_done(task.dependsOn) => status: ready
+        any_pending             => status: waiting
+        any_blocked             => escalate_to_monitor
+      }
+    }
+
+    // Durante ejecución: el agente actualiza el board en tiempo real
+    OnProgress(task) {
+      board.update(task.id, status: in_progress)
+      mem_save(board, topic: "tech-lead/{project}/board", type: "architecture", capture_prompt: false)
+    }
+
+    // Al terminar: el agente publica su resultado para que dependientes reaccionen
+    OnComplete(task, result) {
+      board.update(task.id, status: verified, result: result, completed_at: now())
+      mem_save(board, topic: "tech-lead/{project}/board", type: "architecture", capture_prompt: false)
+      notify_dependents(task.id) // dependientes hacen polling al board o reaccionan al evento
+    }
+
+    // En error: el agente lo reporta al monitor sin bloquear a otros
+    OnError(task, reason) {
+      board.update(task.id, status: blocked, error: reason)
+      mem_save(board, topic: "tech-lead/{project}/board", type: "architecture", capture_prompt: false)
+      notify_monitor(task.id, reason)
+    }
+
+    // Polling de dependencias: el agente espera activamente si tiene deps pendientes
+    WaitForDependencies(task) {
+      poll(board, interval: "check before each attempt") {
+        all(task.dependsOn, status: done | verified) => proceed
+        any(task.dependsOn, status: blocked)         => escalate(blocked_reason)
+        timeout(max_wait)                            => escalate("dependency timeout")
+      }
+    }
+  }
+
   Pipeline = [EpicsPlan, TasksHighLevel, SubtasksTechnical] |> sequential {
 
     // === LEVEL 1: Epics Plan ===
@@ -203,7 +251,15 @@ TechLead {
     }
     save_files(outputDir/README.md, outputDir/execution-plan.md, outputDir/gaps.md)
     mem_save(full_state, topic: "tech-lead/{project}/state", type: "architecture")
-    ask_user: authorize_execution | review_only
+    ask_user {
+      option: authorize_execution  => ask_architecture_mode
+      option: review_only          => stop
+    }
+    ask_architecture_mode {
+      message: "¿Cómo quieres ejecutar el plan?"
+      option: "orchestrator"  => ExecutionOrchestrator   // TechLead media cada paso
+      option: "multi-agent"   => MultiAgentCoordinator   // Agentes autónomos via board
+    }
   }
 
   ExecutionOrchestrator {
@@ -230,6 +286,100 @@ TechLead {
       => generate_execution_report
       => save_files(outputDir/execution-report.md)
       => mem_save(execution_state, topic: "tech-lead/{project}/execution", type: "architecture")
+  }
+
+  MultiAgentCoordinator {
+    // Modo autónomo: los agentes se coordinan peer-to-peer via Engram board
+    // TechLead publica el plan y pasa a rol de monitor pasivo
+
+    trigger: user_selects("multi-agent")
+
+    Bootstrap {
+      // 1. Publicar el board compartido en Engram con todas las tareas aprobadas
+      board = build_shared_board(all_approved_tasks) => {
+        forEach(task in all_approved_tasks) {
+          board.task(task.id) = {
+            ...TaskMetadata,
+            agentMode: autonomous,
+            status: todo,
+            result: null,
+            agent_log: []
+          }
+        }
+      }
+      mem_save(board, topic: "tech-lead/{project}/board", type: "architecture", capture_prompt: false)
+      save_files(outputDir/board.md)  // snapshot legible del board
+
+      // 2. Identificar agentes que pueden arrancar ya (sin dependencias pendientes)
+      ready_agents = board.tasks.filter(task => task.dependsOn.isEmpty())
+
+      // 3. Lanzar agentes autónomos concurrentemente
+      launch_concurrent(ready_agents) => forEach(task in ready_agents) {
+        invoke_skill(
+          task.skill,
+          input: task,
+          context: {
+            stack: stack,
+            plan: execution_plan,
+            board_key: "tech-lead/{project}/board",  // agente lee/escribe aquí
+            contract: AgentContract,                 // protocolo que debe seguir
+            mode: "autonomous"
+          }
+        )
+      }
+    }
+
+    Monitor {
+      // TechLead en modo pasivo: observa el board, no media invocaciones
+      role: passive_monitor
+
+      poll_board {
+        // Detectar tareas que se desbloquearon (sus deps pasaron a done/verified)
+        newly_ready = board.tasks.filter(
+          task => task.status == todo
+            && all(task.dependsOn, status: done | verified)
+        )
+        when newly_ready.notEmpty() => launch_concurrent(newly_ready)
+
+        // Detectar bloqueos para escalarlos
+        blocked_tasks = board.tasks.filter(task => task.status == blocked)
+        when blocked_tasks.notEmpty() => MonitorEscalation
+      }
+
+      // Mostrar progreso en tiempo real al usuario
+      display_live_board {
+        table(task.id, task.title, task.skill, task.status, task.assignedRole)
+        progress_bar(done_count / total_count)
+        highlight: blocked | in_review
+      }
+    }
+
+    MonitorEscalation {
+      // El monitor actúa solo cuando hay bloqueos que los agentes no pudieron resolver
+      forEach(blocked_task in blocked_tasks) {
+        try: GapResolution(blocked_task.error)
+        => resolved => board.update(blocked_task.id, status: todo)  // reintentar
+                    => notify_agent(blocked_task.skill)
+        => unresolved => ask_user(
+             message: "Agente {blocked_task.skill} bloqueado en '{blocked_task.title}'",
+             context: { error: blocked_task.error, options: [retry, skip, manual_resolve] }
+           )
+      }
+    }
+
+    Completion {
+      // Cuando todos los agentes terminan
+      when all(board.tasks, status: done | verified | skipped) {
+        generate_multiagent_report(board) => {
+          summary_table(task, agent, duration, status, result_path)
+          parallel_timeline(mermaid_gantt: agent, start, end, status)
+          gap_resolution_log(gaps_resolved, gaps_escalated)
+        }
+        save_files(outputDir/execution-report.md, outputDir/board.md)
+        mem_save(board, topic: "tech-lead/{project}/board", type: "architecture", capture_prompt: false)
+        mem_save(full_state, topic: "tech-lead/{project}/state", type: "architecture")
+      }
+    }
   }
 
   StatusBoard {
@@ -262,6 +412,7 @@ TechLead {
       "tech-lead/{project}/epic-{id}/tasks"   => high_level_tasks
       "tech-lead/{project}/task-{id}/subtasks" => technical_subtasks
       "tech-lead/{project}/execution"         => execution_state + task_statuses
+      "tech-lead/{project}/board"             => shared_agent_board (multi-agent mode only)
       "tech-lead/{project}/state"             => generation_status + file_locations
     }
     files {
@@ -269,6 +420,7 @@ TechLead {
       outputDir/execution-plan.md      => dag + sprint_roadmap + effort_summary
       outputDir/gaps.md                => unresolved_gaps + blocked_tasks
       outputDir/execution-report.md    => execution_results (post-run)
+      outputDir/board.md               => shared board snapshot (multi-agent mode only)
       outputDir/{epic-id}/tasks.md     => high_level_tasks per epic
       outputDir/{epic-id}/{story-id}/tasks.md => technical_subtasks per story
     }
