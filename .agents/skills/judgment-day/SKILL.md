@@ -30,6 +30,18 @@ Esta skill se activa cuando la tarea o el contexto del usuario requiere realizar
 
 ---
 
+[HARNESS]
+
+1. **Restricción de Objetividad:** No emitir un veredicto de "Aprobado" (Pass) si existen riesgos de seguridad o rendimiento sin mitigar en los criterios correspondientes.
+2. **Aserción de Perspectivas:** El reporte resultante debe separar explícitamente las anotaciones de Juez A (perspectiva de producto/negocio) y Juez B (perspectiva de código/arquitectura) para contrastar puntos de vista.
+3. **Procedimiento de Autoverificación:**
+   - [ ] Validar que se hayan evaluado todos los archivos de criterios definidos en `[REFERENCES]`.
+   - [ ] Verificar que cada vulnerabilidad técnica encontrada tiene asociada una propuesta de mitigación.
+   - [ ] Asegurar que los veredictos no son ambiguos o "parciales".
+4. **Límite de Seguridad:** Máximo 3 intentos de autoverificación y auto-corrección. Si el validador o las reglas no se cumplen tras la tercera iteración, detener ejecución, reportar la anomalía y delegar revisión al usuario.
+
+---
+
 [STEPS]
 
 ### Solo Mode (Interactivo / Usuario)

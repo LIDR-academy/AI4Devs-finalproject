@@ -31,6 +31,18 @@ Esta skill se activa cuando la tarea o el contexto del usuario requiere realizar
 
 ---
 
+[HARNESS]
+
+1. **Restricción de Nomenclatura:** Toda tabla nueva debe ser nombrada en minúsculas, plural y snake_case. Las claves primarias deben ser `id` y las claves foráneas deben ser `singular_table_name_id`.
+2. **Aserción de Idempotencia:** Todo script de base de datos generado debe contar con cláusulas que prevengan fallos en ejecuciones repetidas (ej. `CREATE TABLE IF NOT EXISTS`).
+3. **Procedimiento de Autoverificación:**
+   - [ ] Validar que los nombres propuestos cumplen con [naming-rules.md](references/naming-rules.md).
+   - [ ] Confirmar que las migraciones son no destructivas para datos existentes.
+   - [ ] Comprobar que no hay sentencias `DROP` sin la debida justificación arquitectónica.
+4. **Límite de Seguridad:** Máximo 3 intentos de autoverificación y auto-corrección. Si el validador o las reglas no se cumplen tras la tercera iteración, detener ejecución, reportar la anomalía y delegar revisión al usuario.
+
+---
+
 [STEPS]
 
 ### Solo Mode (Interactivo / Usuario)

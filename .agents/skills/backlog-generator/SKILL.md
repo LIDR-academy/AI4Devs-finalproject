@@ -31,6 +31,18 @@ Esta skill se activa cuando la tarea o el contexto del usuario requiere realizar
 
 ---
 
+[HARNESS]
+
+1. **Restricción de Trazabilidad:** Ninguna historia de usuario puede crearse si no está directamente mapeada a una sección aprobada del PRD.
+2. **Aserción de Criterios:** Toda historia de usuario debe especificar al menos dos criterios de aceptación bajo el formato estándar "Dado que... / Cuando... / Entonces...".
+3. **Procedimiento de Autoverificación:**
+   - [ ] Confirmar que el DoD de cada historia incluye pruebas unitarias y comprobación de accesibilidad.
+   - [ ] Comprobar que los IDs de las historias siguen una estructura lógica indexada con el PRD.
+   - [ ] Verificar que cada subtarea tiene una DoD independiente y clara.
+4. **Límite de Seguridad:** Máximo 3 intentos de autoverificación y auto-corrección. Si el validador o las reglas no se cumplen tras la tercera iteración, detener ejecución, reportar la anomalía y delegar revisión al usuario.
+
+---
+
 [STEPS]
 
 ### Solo Mode (Interactivo / Usuario)

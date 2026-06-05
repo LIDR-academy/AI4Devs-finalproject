@@ -30,6 +30,18 @@ Esta skill se activa cuando la tarea o el contexto del usuario requiere realizar
 
 ---
 
+[HARNESS]
+
+1. **Restricción de Aislamiento:** Todo test unitario debe aislarse completamente de dependencias externas (bases de datos, APIs de red). Las llamadas externas deben mockearse/stubearse obligatoriamente.
+2. **Aserción de Cobertura:** Cada nueva suite de pruebas generada debe asegurar una cobertura mínima del 80% en líneas y ramas lógicas relevantes de la función/componente bajo prueba.
+3. **Procedimiento de Autoverificación:**
+   - [ ] Confirmar que no hay llamadas a red reales ni a la base de datos dentro del código del test.
+   - [ ] Validar que se cubren caminos felices, caminos de error/excepciones, y límites (edge cases).
+   - [ ] Comprobar que los mocks están tipados e imitan el contrato real según [mocking-rules.md](references/mocking-rules.md).
+4. **Límite de Seguridad:** Máximo 3 intentos de autoverificación y auto-corrección. Si el validador o las reglas no se cumplen tras la tercera iteración, detener ejecución, reportar la anomalía y delegar revisión al usuario.
+
+---
+
 [STEPS]
 
 ### Solo Mode (Interactivo / Usuario)

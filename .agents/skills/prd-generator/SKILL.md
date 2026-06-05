@@ -31,6 +31,18 @@ Esta skill se activa cuando la tarea o el contexto del usuario requiere realizar
 
 ---
 
+[HARNESS]
+
+1. **Restricción de Completitud:** Queda estrictamente prohibido entregar el PRD con texto de ejemplo, plantillas genéricas o secciones vacías.
+2. **Aserción de Métricas:** Todos los requisitos de negocio deben expresarse con métricas medibles y cuantificables (objetivos SMART).
+3. **Procedimiento de Autoverificación:**
+   - [ ] Inspeccionar el documento buscando marcadores de posición como "TBD", "completar aquí" o texto en latín.
+   - [ ] Validar que cada característica propuesta está vinculada a un User Persona específico.
+   - [ ] Comprobar que los requisitos de negocio tienen indicadores clave de rendimiento (KPIs) definidos.
+4. **Límite de Seguridad:** Máximo 3 intentos de autoverificación y auto-corrección. Si el validador o las reglas no se cumplen tras la tercera iteración, detener ejecución, reportar la anomalía y delegar revisión al usuario.
+
+---
+
 [STEPS]
 
 ### Solo Mode (Interactivo / Usuario)
