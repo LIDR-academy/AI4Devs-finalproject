@@ -11,3 +11,4 @@
 | tech-lead | tech lead, plan técnico, tareas técnicas, ejecución, orquestación técnica, sprint planning | `.agents/skills/tech-lead/SKILL.md` |
 | unit-testing | unit testing, tests unitarios, TDD, test generation, cobertura, gap analysis, mocks, stubs, fixtures | `.agents/skills/unit-testing/SKILL.md` |
 | e2e-testing | e2e, end-to-end, tests E2E, flujos de usuario, acceptance testing, Playwright, Cypress, escenarios | `.agents/skills/e2e-testing/SKILL.md` |
+| a11y-testing | accesibilidad, a11y, WCAG, accessibility testing, contraste, ARIA, teclado, lector de pantalla, auditoría accesibilidad | `.agents/skills/a11y-testing/SKILL.md` |
