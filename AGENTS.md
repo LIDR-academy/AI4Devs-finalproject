@@ -14,4 +14,6 @@
 | a11y-testing | accesibilidad, a11y, WCAG, accessibility testing, contraste, ARIA, teclado, lector de pantalla, auditoría accesibilidad | `.agents/skills/a11y-testing/SKILL.md` |
 | qa-engineer | QA, quality assurance, tester, plan de QA, cobertura de tests, estrategia de testing, CI testing, mejora de tests | `.agents/skills/qa-engineer/SKILL.md` |
 | frontend-architect | frontend architect, implementar frontend, arquitectura frontend, UI implementation | `.agents/skills/frontend-architect/SKILL.md` |
+| backend-architect | backend architect, implementar backend, arquitectura backend, backend implementation | `.agents/skills/backend-architect/SKILL.md` |
+
 
