@@ -8,3 +8,4 @@
 | prd-generator | PRD, product requirements, product definition, requisitos de producto, definición de producto | `.agents/skills/prd-generator/SKILL.md` |
 | backlog-generator | backlog, user stories, epics, tasks, subtasks, story mapping, story breakdown | `.agents/skills/backlog-generator/SKILL.md` |
 | diagram-generator | diagrama, diagram, mermaid, casos de uso, secuencia, clases, flujo, ER, arquitectura, C4, mindmap, gitGraph | `.agents/skills/diagram-generator/SKILL.md` |
+| tech-lead | tech lead, plan técnico, tareas técnicas, ejecución, orquestación técnica, sprint planning | `.agents/skills/tech-lead/SKILL.md` |
