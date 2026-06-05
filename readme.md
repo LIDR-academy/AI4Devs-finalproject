@@ -130,6 +130,13 @@ This is
 
 **Pull Request 1**
 
+### feat(agents): add AI agent system for Aura Planning [PSRP-1]
+- **URL:** https://github.com/pedrosrp/AI4Devs-finalproject/pull/2
+- **Ticket:** #1 - AI Agent System for Aura Planning
+- **Date:** 2026-06-06
+- **Summary:** Implement multi-agent AI system using opencode with 6 specialized agents (po-assistant, tech-design, project-scaffolder, feature-dev, doc-writer, doc-reviewer)
+- **Files Changed:** 11 files, 1895 insertions
+
 **Pull Request 2**
 
 **Pull Request 3**
