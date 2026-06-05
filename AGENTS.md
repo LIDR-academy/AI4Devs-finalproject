@@ -9,3 +9,4 @@
 | backlog-generator | backlog, user stories, epics, tasks, subtasks, story mapping, story breakdown | `.agents/skills/backlog-generator/SKILL.md` |
 | diagram-generator | diagrama, diagram, mermaid, casos de uso, secuencia, clases, flujo, ER, arquitectura, C4, mindmap, gitGraph | `.agents/skills/diagram-generator/SKILL.md` |
 | tech-lead | tech lead, plan técnico, tareas técnicas, ejecución, orquestación técnica, sprint planning | `.agents/skills/tech-lead/SKILL.md` |
+| unit-testing | unit testing, tests unitarios, TDD, test generation, cobertura, gap analysis, mocks, stubs, fixtures | `.agents/skills/unit-testing/SKILL.md` |
