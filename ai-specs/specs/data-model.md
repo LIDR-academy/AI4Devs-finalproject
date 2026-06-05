@@ -1,372 +1,293 @@
-# Data Model Documentation
+# Modelo de datos — La Pocha (Firestore)
 
-This document describes the data model for the LTI (Learning Tracking Initiative) application, including entity descriptions, field definitions, relationships, and an entity-relationship diagram.
+> **Estado:** borrador orientativo. Los campos marcados como *(TBD)* se definirán cuando el modelo de negocio esté cerrado.  
+> **Acceso:** app Flutter vía Firebase SDK (Auth + Firestore). Ver [`firebase-data-access.yml`](./firebase-data-access.yml).  
+> **Obsoleto:** `api-spec.yml` (REST). Identificadores de colecciones y campos en **inglés** en código y Firestore.
 
-## Model Descriptions
+## 1. Convenciones Firestore
 
-### 1. Candidate
-Represents a job candidate who can apply for positions within the system.
+| Concepto SQL/Prisma | Equivalente Firestore |
+|---------------------|------------------------|
+| Tabla | **Colección** de primer nivel (`games`, `users`) |
+| Fila | **Documento** (`games/{gameId}`) |
+| Clave primaria autoincremental | **ID de documento** (auto-generado o igual al `uid` de Auth en perfiles) |
+| Clave foránea | **Referencia** (`DocumentReference`) o **ID denormalizado** (`string userId`) |
+| Tabla hija 1:N | **Subcolección** (`games/{gameId}/players/{playerId}`) |
+| JOIN | Lecturas múltiples, referencias o **datos denormalizados** para lecturas frecuentes |
+| `created_at` / `updated_at` | `Timestamp` (`createdAt`, `updatedAt`; usar `FieldValue.serverTimestamp()` en escrituras) |
+| Transacción SQL | **`runTransaction`** o **`WriteBatch`** de Firestore |
+| Unicidad global (p. ej. email) | Validación en **reglas de seguridad** + comprobación en use case; no hay `UNIQUE` nativo |
 
-**Fields:**
-- `id`: Unique identifier for the candidate (Primary Key)
-- `firstName`: Candidate's first name (max 100 characters)
-- `lastName`: Candidate's last name (max 100 characters)
-- `email`: Candidate's unique email address (max 255 characters)
-- `phone`: Candidate's phone number (optional, max 15 characters)
-- `address`: Candidate's address (optional, max 100 characters)
+### Rutas de colección (resumen)
 
-**Validation Rules:**
-- First name and last name are required, 2-100 characters, letters only
-- Email is required, must be unique, and follow valid email format
-- Phone is optional but must follow Spanish format (6|7|9)XXXXXXXX if provided
-- Address is optional but cannot exceed 100 characters
-- Maximum of 3 education records per candidate
+```text
+users/{userId}
+games/{gameId}
+games/{gameId}/players/{playerId}
+games/{gameId}/rounds/{roundId}
+```
 
-**Relationships:**
-- `educations`: One-to-many relationship with Education model
-- `workExperiences`: One-to-many relationship with WorkExperience model
-- `resumes`: One-to-many relationship with Resume model
-- `applications`: One-to-many relationship with Application model
+### Tipos habituales en documentos
 
-### 2. Education
-Represents educational background information for candidates.
+- `string`, `number`, `boolean`, `timestamp`, `array`, `map`
+- `DocumentReference` cuando se necesite navegación tipada (p. ej. `hostRef` → `users/{uid}`)
+- Enums de dominio como `string` con valores acordados (`status: "lobby" | "in_progress" | "finished"`)
 
-**Fields:**
-- `id`: Unique identifier for the education record (Primary Key)
-- `institution`: Name of the educational institution (max 100 characters)
-- `title`: Degree or certification title obtained (max 250 characters)
-- `startDate`: Start date of the education period
-- `endDate`: End date of the education period (optional, null if ongoing)
-- `candidateId`: Foreign key referencing the Candidate
+---
 
-**Validation Rules:**
-- Institution is required and cannot exceed 100 characters
-- Title is required and cannot exceed 250 characters
-- Start date is required and must be in valid date format
-- End date is optional but must be valid if provided
-- Maximum of 3 education records per candidate
+## 2. Visión del dominio
 
-**Relationships:**
-- `candidate`: Many-to-one relationship with Candidate model
+**La Pocha** es una app para gestionar partidas del juego de cartas: usuarios autenticados crean o se unen a **partidas** (`games`), participan como **jugadores** (`players`) y registran el progreso por **rondas** (`rounds`).
 
-### 3. WorkExperience
-Represents work history and professional experience for candidates.
+```mermaid
+flowchart TB
+    subgraph auth [Firebase Auth]
+        AU[uid]
+    end
 
-**Fields:**
-- `id`: Unique identifier for the work experience record (Primary Key)
-- `company`: Name of the company or organization (max 100 characters)
-- `position`: Job title or position held (max 100 characters)
-- `description`: Description of responsibilities and achievements (optional, max 200 characters)
-- `startDate`: Start date of the work experience
-- `endDate`: End date of the work experience (optional, null if current)
-- `candidateId`: Foreign key referencing the Candidate
+    subgraph users_col [Colección users]
+        U[users / userId]
+    end
 
-**Validation Rules:**
-- Company name is required and cannot exceed 100 characters
-- Position is required and cannot exceed 100 characters
-- Description is optional but cannot exceed 200 characters if provided
-- Start date is required and must be in valid date format
-- End date is optional but must be valid if provided
+    subgraph games_col [Colección games]
+        G[games / gameId]
+        P[subcolección players]
+        R[subcolección rounds]
+    end
 
-**Relationships:**
-- `candidate`: Many-to-one relationship with Candidate model
+    AU --> U
+    U -->|hostId / userId| G
+    G --> P
+    G --> R
+    P -->|userId| U
+```
 
-### 4. Resume
-Represents uploaded resume files associated with candidates.
+---
 
-**Fields:**
-- `id`: Unique identifier for the resume record (Primary Key)
-- `filePath`: File system path to the uploaded resume (max 500 characters)
-- `fileType`: MIME type or file extension of the resume (max 50 characters)
-- `uploadDate`: Date and time when the resume was uploaded
-- `candidateId`: Foreign key referencing the Candidate
+## 3. Colección `users`
 
-**Validation Rules:**
-- File path is required and cannot exceed 500 characters
-- File type is required and cannot exceed 50 characters
-- Upload date is automatically set when file is uploaded
-- Supported file types: PDF and DOCX (max 10MB)
+Perfil de aplicación vinculado a **Firebase Authentication**. Se recomienda `userId == Auth.uid`.
 
-**Relationships:**
-- `candidate`: Many-to-one relationship with Candidate model
+**Ruta:** `users/{userId}`
 
-### 5. Company
-Represents companies that post job positions and employ staff.
+| Campo | Tipo | Obligatorio | Descripción |
+|-------|------|-------------|-------------|
+| `displayName` | string | sí *(TBD longitud)* | Nombre visible en partidas |
+| `email` | string | sí | Copia o reflejo del email de Auth *(solo lectura desde Auth si se prefiere)* |
+| `photoUrl` | string | no | URL de avatar |
+| `createdAt` | timestamp | sí | Alta del perfil |
+| `updatedAt` | timestamp | sí | Última modificación |
+| `lastSeenAt` | timestamp | no | Presencia / actividad *(TBD)* |
 
-**Fields:**
-- `id`: Unique identifier for the company (Primary Key)
-- `name`: Unique company name
+**Relaciones:**
 
-**Relationships:**
-- `employees`: One-to-many relationship with Employee model
-- `positions`: One-to-many relationship with Position model
+- Un documento por usuario autenticado.
+- Referenciado desde `games.hostId`, `games/{gameId}/players.userId` (ID o `DocumentReference` a `users/{userId}`).
 
-### 6. Employee
-Represents employees within companies who can conduct interviews.
+**Reglas de negocio *(borrador)*:**
 
-**Fields:**
-- `id`: Unique identifier for the employee (Primary Key)
-- `name`: Employee's full name
-- `email`: Employee's unique email address
-- `role`: Employee's role or job title
-- `isActive`: Boolean indicating if the employee is currently active
-- `companyId`: Foreign key referencing the Company
+- Solo el propio `userId` puede crear/actualizar su perfil (salvo admin *(TBD)*).
+- `displayName` no vacío.
 
-**Relationships:**
-- `company`: Many-to-one relationship with Company model
-- `interviews`: One-to-many relationship with Interview model
+---
 
-### 7. InterviewType
-Defines different types of interviews that can be conducted.
+## 4. Colección `games`
 
-**Fields:**
-- `id`: Unique identifier for the interview type (Primary Key)
-- `name`: Name of the interview type (e.g., "Technical", "HR", "Behavioral")
-- `description`: Detailed description of the interview type (optional)
+Representa una **partida** (sesión de juego): lobby, en curso o finalizada.
 
-**Relationships:**
-- `interviewSteps`: One-to-many relationship with InterviewStep model
+**Ruta:** `games/{gameId}`
 
-### 8. InterviewFlow
-Represents a sequence of interview steps that define the hiring process.
+| Campo | Tipo | Obligatorio | Descripción |
+|-------|------|-------------|-------------|
+| `title` | string | no | Nombre opcional de la partida *(TBD)* |
+| `hostId` | string | sí | `userId` del creador / anfitrión |
+| `status` | string | sí | `lobby`, `in_progress`, `finished` *(valores finales TBD)* |
+| `maxPlayers` | number | no | Límite de jugadores *(TBD, p. ej. 4–8)* |
+| `playerCount` | number | no | Contador denormalizado para listados |
+| `currentRoundNumber` | number | no | Última ronda activa o total de rondas jugadas *(TBD)* |
+| `settings` | map | no | Reglas variante, puntuación, etc. *(TBD)* |
+| `createdAt` | timestamp | sí | Creación |
+| `updatedAt` | timestamp | sí | Último cambio |
+| `startedAt` | timestamp | no | Inicio de partida |
+| `finishedAt` | timestamp | no | Cierre |
 
-**Fields:**
-- `id`: Unique identifier for the interview flow (Primary Key)
-- `description`: Description of the interview flow process (optional)
+**Relaciones:**
 
-**Relationships:**
-- `interviewSteps`: One-to-many relationship with InterviewStep model
-- `positions`: One-to-many relationship with Position model
+- **1:N** → subcolección `players` (participantes en esta partida).
+- **1:N** → subcolección `rounds` (manos / rondas de la partida).
+- **N:1** → `users` vía `hostId` (y cada `players.userId`).
 
-### 9. InterviewStep
-Represents individual steps within an interview flow.
+**Reglas de negocio *(borrador)*:**
 
-**Fields:**
-- `id`: Unique identifier for the interview step (Primary Key)
-- `name`: Name of the interview step
-- `orderIndex`: Numeric order of this step within the flow
-- `interviewFlowId`: Foreign key referencing the InterviewFlow
-- `interviewTypeId`: Foreign key referencing the InterviewType
+- Solo el `hostId` (o reglas acordadas) puede pasar `status` de `lobby` a `in_progress` *(TBD)*.
+- Borrado: preferir **soft delete** con `status: "cancelled"` *(TBD)* en lugar de borrar documentos con historial.
 
-**Relationships:**
-- `interviewFlow`: Many-to-one relationship with InterviewFlow model
-- `interviewType`: Many-to-one relationship with InterviewType model
-- `applications`: One-to-many relationship with Application model
-- `interviews`: One-to-many relationship with Interview model
+---
 
-### 10. Position
-Represents job positions available for application.
+## 5. Subcolección `players`
 
-**Fields:**
-- `id`: Unique identifier for the position (Primary Key)
-- `companyId`: Foreign key referencing the Company (required)
-- `interviewFlowId`: Foreign key referencing the InterviewFlow (required)
-- `title`: Job title (required, max 100 characters)
-- `description`: Brief description of the position (required)
-- `status`: Current status of the position (default: "Draft", valid values: Open, Contratado, Cerrado, Borrador)
-- `isVisible`: Boolean indicating if the position is publicly visible (default: false)
-- `location`: Job location (required)
-- `jobDescription`: Detailed job description (required)
-- `requirements`: Job requirements and qualifications (optional)
-- `responsibilities`: Job responsibilities (optional)
-- `salaryMin`: Minimum salary range (optional, must be >= 0)
-- `salaryMax`: Maximum salary range (optional, must be >= 0 and >= salaryMin)
-- `employmentType`: Type of employment (e.g., "Full-time", "Part-time", "Contract") (optional)
-- `benefits`: Job benefits description (optional)
-- `companyDescription`: Description of the hiring company (optional)
-- `applicationDeadline`: Deadline for applications (optional, must be a future date)
-- `contactInfo`: Contact information for inquiries (optional)
+Jugador **dentro de una partida concreta**. Puede ser el mismo usuario en varias partidas con documentos distintos.
 
-**Validation Rules:**
-- Title is required and cannot exceed 100 characters
-- Description, location, and jobDescription are required fields
-- Status must be one of: Open, Contratado, Cerrado, Borrador
-- Company and interview flow references must exist in the database
-- Salary values must be non-negative numbers
-- Application deadline must be a future date if provided
+**Ruta:** `games/{gameId}/players/{playerId}`
 
-**Relationships:**
-- `company`: Many-to-one relationship with Company model
-- `interviewFlow`: Many-to-one relationship with InterviewFlow model
-- `applications`: One-to-many relationship with Application model
+| Campo | Tipo | Obligatorio | Descripción |
+|-------|------|-------------|-------------|
+| `userId` | string | sí | Referencia lógica a `users/{userId}` |
+| `displayName` | string | no | Copia denormalizada para UI sin leer `users` |
+| `seatOrder` | number | no | Orden en mesa *(TBD)* |
+| `totalScore` | number | no | Puntuación acumulada en la partida |
+| `isHost` | boolean | no | Si coincide con `games.hostId` |
+| `joinedAt` | timestamp | sí | Alta en la partida |
+| `leftAt` | timestamp | no | Abandono anticipado *(TBD)* |
+| `status` | string | no | `active`, `left` *(TBD)* |
 
-### 11. Application
-Represents a candidate's application to a specific position.
+**Relaciones:**
 
-**Fields:**
-- `id`: Unique identifier for the application (Primary Key)
-- `applicationDate`: Date when the application was submitted
-- `currentInterviewStep`: Current step in the interview process
-- `notes`: Additional notes about the application (optional)
-- `positionId`: Foreign key referencing the Position
-- `candidateId`: Foreign key referencing the Candidate
-- `interviewStepId`: Foreign key referencing the current InterviewStep
+- **N:1** → documento padre `games/{gameId}`.
+- **N:1** → `users/{userId}` vía campo `userId`.
 
-**Relationships:**
-- `position`: Many-to-one relationship with Position model
-- `candidate`: Many-to-one relationship with Candidate model
-- `interviewStep`: Many-to-one relationship with InterviewStep model
-- `interviews`: One-to-many relationship with Interview model
+**Alternativa de modelado *(TBD)*:** lista embebida `playerIds` en `games` para partidas muy pequeñas; las subcolecciones escalan mejor para puntuaciones y permisos por jugador.
 
-### 12. Interview
-Represents individual interview sessions conducted as part of an application.
+**Reglas de negocio *(borrador)*:**
 
-**Fields:**
-- `id`: Unique identifier for the interview (Primary Key)
-- `interviewDate`: Date and time of the interview
-- `result`: Interview result or outcome (optional)
-- `score`: Numeric score or rating from the interview (optional)
-- `notes`: Interview notes and feedback (optional)
-- `applicationId`: Foreign key referencing the Application
-- `interviewStepId`: Foreign key referencing the InterviewStep
-- `employeeId`: Foreign key referencing the conducting Employee
+- Un mismo `userId` no debería aparecer dos veces en la misma partida (validar en use case + reglas).
+- Máximo de jugadores según `games.maxPlayers` *(TBD)*.
 
-**Relationships:**
-- `application`: Many-to-one relationship with Application model
-- `interviewStep`: Many-to-one relationship with InterviewStep model
-- `employee`: Many-to-one relationship with Employee model
+---
 
-## Entity Relationship Diagram
+## 6. Subcolección `rounds`
+
+Una **ronda** (mano) dentro de la partida: apuestas, bazas, puntuación parcial, etc. Detalle de reglas del juego *(TBD)*.
+
+**Ruta:** `games/{gameId}/rounds/{roundId}`
+
+| Campo | Tipo | Obligatorio | Descripción |
+|-------|------|-------------|-------------|
+| `roundNumber` | number | sí | Orden secuencial (1, 2, 3…) |
+| `dealerPlayerId` | string | no | `playerId` del mano / repartidor *(TBD)* |
+| `status` | string | sí | `open`, `scoring`, `closed` *(TBD)* |
+| `bid` | map / number | no | Apuesta de la ronda *(estructura TBD)* |
+| `tricks` | map / array | no | Bazas por jugador *(TBD)* |
+| `scoresDelta` | map | no | Puntos de la ronda por `playerId` |
+| `createdAt` | timestamp | sí | Apertura de ronda |
+| `closedAt` | timestamp | no | Cierre y reparto de puntos |
+
+**Ejemplo de `scoresDelta` (map):**
+
+```json
+{
+  "playerId_abc": 2,
+  "playerId_def": -1
+}
+```
+
+**Relaciones:**
+
+- **N:1** → `games/{gameId}`.
+- Referencias opcionales a documentos en `players` mediante `playerId` en mapas (no FK automática).
+
+**Reglas de negocio *(borrador)*:**
+
+- `roundNumber` único por partida (transacción al crear la siguiente ronda).
+- No modificar rondas `closed` salvo corrección admin *(TBD)*.
+
+---
+
+## 7. Diagrama de colecciones (Firestore)
 
 ```mermaid
 erDiagram
-    Candidate {
-        Int id PK
-        String firstName
-        String lastName
-        String email UK
-        String phone
-        String address
-    }
-    Education {
-        Int id PK
-        String institution
-        String title
-        DateTime startDate
-        DateTime endDate
-        Int candidateId FK
-    }
-    WorkExperience {
-        Int id PK
-        String company
-        String position
-        String description
-        DateTime startDate
-        DateTime endDate
-        Int candidateId FK
-    }
-    Resume {
-        Int id PK
-        String filePath
-        String fileType
-        DateTime uploadDate
-        Int candidateId FK
-    }
-    Company {
-        Int id PK
-        String name UK
-    }
-    Employee {
-        Int id PK
-        String name
-        String email UK
-        String role
-        Boolean isActive
-        Int companyId FK
-    }
-    InterviewType {
-        Int id PK
-        String name
-        String description
-    }
-    InterviewFlow {
-        Int id PK
-        String description
-    }
-    InterviewStep {
-        Int id PK
-        String name
-        Int orderIndex
-        Int interviewFlowId FK
-        Int interviewTypeId FK
-    }
-    Position {
-        Int id PK
-        String title
-        String description
-        String status
-        Boolean isVisible
-        String location
-        String jobDescription
-        String requirements
-        String responsibilities
-        Float salaryMin
-        Float salaryMax
-        String employmentType
-        String benefits
-        String companyDescription
-        DateTime applicationDeadline
-        String contactInfo
-        Int companyId FK
-        Int interviewFlowId FK
-    }
-    Application {
-        Int id PK
-        DateTime applicationDate
-        Int currentInterviewStep
-        String notes
-        Int positionId FK
-        Int candidateId FK
-        Int interviewStepId FK
-    }
-    Interview {
-        Int id PK
-        DateTime interviewDate
-        String result
-        Int score
-        String notes
-        Int applicationId FK
-        Int interviewStepId FK
-        Int employeeId FK
+    USERS ||--o{ GAMES : "hosts"
+    USERS ||--o{ PLAYERS : "plays_as"
+    GAMES ||--o{ PLAYERS : "contains"
+    GAMES ||--o{ ROUNDS : "contains"
+
+    USERS {
+        string userId PK
+        string displayName
+        string email
+        timestamp createdAt
+        timestamp updatedAt
     }
 
-    Candidate ||--o{ Education : "has"
-    Candidate ||--o{ WorkExperience : "has"
-    Candidate ||--o{ Resume : "has"
-    Candidate ||--o{ Application : "submits"
-    
-    Company ||--o{ Employee : "employs"
-    Company ||--o{ Position : "offers"
-    
-    InterviewType ||--o{ InterviewStep : "defines"
-    InterviewFlow ||--o{ InterviewStep : "includes"
-    InterviewFlow ||--o{ Position : "guides"
-    
-    Position ||--o{ Application : "receives"
-    Application ||--o{ Interview : "includes"
-    
-    InterviewStep ||--o{ Application : "current_step"
-    InterviewStep ||--o{ Interview : "conducted_at"
-    
-    Employee ||--o{ Interview : "conducts"
+    GAMES {
+        string gameId PK
+        string hostId
+        string status
+        number playerCount
+        timestamp createdAt
+        timestamp updatedAt
+    }
+
+    PLAYERS {
+        string playerId PK
+        string userId
+        number seatOrder
+        number totalScore
+        timestamp joinedAt
+    }
+
+    ROUNDS {
+        string roundId PK
+        number roundNumber
+        string status
+        map scoresDelta
+        timestamp createdAt
+    }
 ```
 
-## Key Design Principles
+> En Firestore, `PK` = ID del documento. Las líneas indican relación lógica, no integridad referencial automática.
 
-1. **Referential Integrity**: All foreign key relationships ensure data consistency across the system.
+---
 
-2. **Flexibility**: The interview flow system allows for customizable hiring processes per position.
+## 8. Índices compuestos *(borrador)*
 
-3. **Audit Trail**: Application and interview dates provide a complete timeline of the hiring process.
+Definir en `firestore.indexes.json` según consultas reales. Candidatos:
 
-4. **Extensibility**: The modular design allows for easy addition of new features and data points.
+| Colección | Campos | Uso |
+|-----------|--------|-----|
+| `games` | `hostId` + `createdAt` desc | Partidas creadas por un usuario |
+| `games` | `status` + `updatedAt` desc | Listar partidas activas |
+| `games/{gameId}/rounds` | `roundNumber` asc | Ordenar rondas |
+| `games/{gameId}/players` | `userId` | Buscar si un usuario ya está en la partida |
 
-5. **Data Normalization**: The model follows database normalization principles to minimize redundancy and ensure data integrity.
+---
 
-## Notes
+## 9. Seguridad *(borrador)*
 
-- All `id` fields serve as primary keys with auto-increment functionality
-- Foreign key relationships maintain referential integrity
-- Optional fields allow for flexible data entry while maintaining required core information
-- The interview system supports multi-step hiring processes with different types of interviews
-- Email fields have unique constraints to prevent duplicate accounts 
+Alinear `firestore.rules` con:
+
+- `users/{userId}`: lectura autenticada; escritura solo si `request.auth.uid == userId`.
+- `games/{gameId}`: lectura para participantes *(TBD: claim o membership en `players`)*; escritura según `hostId` y `status`.
+- `players`, `rounds`: acceso limitado a miembros de la misma `gameId`.
+
+Detalle de reglas en implementación; este documento solo fija intención.
+
+---
+
+## 10. Principios de diseño
+
+1. **IDs estables:** Auth `uid` para perfiles; IDs auto-generados para `gameId`, `playerId`, `roundId` salvo decisión contraria.
+2. **Subcolecciones para datos acotados a una partida** (`players`, `rounds`) y reglas por ruta.
+3. **Denormalización controlada:** `displayName` en `players`, `playerCount` en `games` para listados; actualizar en transacción cuando cambie el origen.
+4. **Tiempo real:** `snapshots()` en partida activa para lobby y ronda en curso.
+5. **Evolución:** nuevos campos con valores por defecto; evitar renombrar colecciones en producción sin migración.
+
+---
+
+## 11. Checklist al cerrar el modelo definitivo
+
+- [ ] Confirmar valores de `status` en `games`, `players`, `rounds`
+- [ ] Definir estructura de `settings`, `bid`, `tricks`
+- [ ] Decidir `DocumentReference` vs `string` para enlaces a `users`
+- [ ] Actualizar `firebase-data-access.yml` y `firestore.rules`
+- [ ] Añadir índices medidos en consola Firebase
+- [ ] Reflejar entidades en capa `domain/` de la app (`User`, `Game`, `Player`, `Round`)
+
+---
+
+## 12. Historial
+
+| Fecha | Cambio |
+|-------|--------|
+| 2026-06-03 | Reescritura: dominio La Pocha (users, games, players, rounds) en terminología Firestore; eliminado modelo LTI/relacional |

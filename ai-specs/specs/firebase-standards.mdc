@@ -1,0 +1,52 @@
+---
+description: Firebase standards for Firestore, Authentication, datasources, Security Rules, and repository patterns — no REST API.
+globs: ["lib/**/data/**/*.dart", "firestore.rules", "firestore.indexes.json", "firebase.json", ".firebaserc", "lib/firebase_options.dart"]
+alwaysApply: true
+---
+
+# Firebase Standards
+
+## Stack
+
+- **Cloud Firestore** for persistence
+- **Firebase Authentication** for sign-in (email/password, OAuth, or as specified by the project)
+- **Official FlutterFire plugins** (`firebase_core`, `cloud_firestore`, `firebase_auth`, etc.)
+- **No REST API**: do not add `http`/`dio` layers for app data; all remote I/O goes through Firebase SDKs or callable Cloud Functions only if explicitly required by the product
+
+## Data layer
+
+- **Datasource**: thin classes wrapping Firestore/Auth SDK calls (`*FirestoreDatasource`, `*AuthDatasource`)
+- **Repository**: implements domain interfaces; maps Firestore documents ↔ domain entities; handles errors and maps to domain failures
+- **DTOs/models** in `data/models/`; mapping in dedicated mapper classes or factory methods
+- Use `Stream`/`Future` types consistent with domain contracts; document stream subscription lifecycle in BLoC `close()`
+
+## Firestore practices
+
+- Collection and field names in English, stable and documented in `data-model.md`
+- Prefer shallow documents; avoid unbounded arrays; use subcollections for one-to-many when needed
+- Queries must match defined indexes (`firestore.indexes.json`)
+- Use transactions/batches for multi-document writes that must stay consistent
+- Handle offline: expose loading/error states in BLoC; do not assume immediate server confirmation
+
+## Security
+
+- **Security Rules** are the source of truth for client-side access; never rely on UI-only checks
+- Update `firestore.rules` with every schema or permission change; test with the Rules emulator
+- Do not commit service account keys or production secrets; use `flutterfire configure` / env-specific options
+
+## Authentication
+
+- Auth state drives routing/guards in presentation (e.g. `Bloc` listening to `authStateChanges`)
+- Domain use cases depend on `AuthRepository` abstraction, not `FirebaseAuth` directly
+- Sign-out and token refresh edge cases must be handled in repository/datasource layer
+
+## Testing
+
+- Mock datasources in unit tests; use `fake_cloud_firestore` or emulator-backed tests when integration is required
+- Run Firebase Emulator Suite for local integration tests when feasible
+- Do not hit production Firebase from automated tests
+
+## Documentation
+
+- Document collection shapes and rule intent in Spanish in `data-model.md` (field names stay English in code and Firestore)
+- Align new operations with `firebase-data-access.yml`; do not extend `api-spec.yml` (deprecated)

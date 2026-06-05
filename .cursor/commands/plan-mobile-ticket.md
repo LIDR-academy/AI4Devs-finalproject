@@ -1,0 +1,1 @@
+../../ai-specs/.commands/plan-mobile-ticket.md

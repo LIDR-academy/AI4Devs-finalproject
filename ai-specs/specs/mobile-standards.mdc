@@ -1,0 +1,81 @@
+---
+description: Flutter mobile development standards — Clean Architecture presentation/domain, BLoC (flutter_bloc), widgets, Android/iOS, and testing.
+globs: ["lib/**/*.dart", "test/**/*.dart", "integration_test/**/*.dart", "pubspec.yaml", "analysis_options.yaml"]
+alwaysApply: true
+---
+
+# Mobile (Flutter) Standards
+
+## Stack
+
+- **Flutter** (Dart) for Android and iOS
+- **State management**: BLoC pattern via `flutter_bloc` and `equatable` for states/events
+- **Architecture**: Clean Architecture — `presentation` (widgets + BLoC), `domain` (entities, use cases, repository interfaces), `data` (repository implementations, Firebase datasources; see [Firebase Standards](./firebase-standards.mdc))
+
+## Layer rules
+
+| Layer | Contains | May depend on |
+|-------|----------|---------------|
+| `presentation` | Pages, widgets, `*Bloc`, `*Event`, `*State` | `domain`, Flutter SDK |
+| `domain` | Entities, use cases, abstract repositories | Nothing from Flutter/Firebase |
+| `data` | Repository impls, mappers, Firebase datasources | `domain`, Firebase SDK |
+
+- Data models / Firestore mappers: use **`flutter-implement-json-serialization`** for `fromJson` / `toJson` on `Map<String, dynamic>` (not HTTP APIs).
+- Inject dependencies via constructor or `get_it` / `Provider` at the app root; BLoCs receive use cases, not datasources directly.
+- One feature ≈ one folder under `lib/features/<feature>/` with `presentation/`, `domain/`, `data/` subfolders.
+
+## Project skills (mandatory)
+
+Installed skills live in **[`.agents/skills/`](../../.agents/skills/)**. Before starting a related task, **read the matching `SKILL.md` in full** and follow its workflow. Adapt skill output to this project: **BLoC** (not ViewModel/`ChangeNotifier`), **Clean Architecture** layers, and **Firebase SDK** (no HTTP client for app data).
+
+| Task | Skill | Path |
+|------|-------|------|
+| Feature structure, layers, refactoring for scale | `flutter-apply-architecture-best-practices` | [`.agents/skills/flutter-apply-architecture-best-practices/SKILL.md`](../../.agents/skills/flutter-apply-architecture-best-practices/SKILL.md) |
+| Unit tests (use cases, mappers, pure Dart) | `dart-add-unit-test` | [`.agents/skills/dart-add-unit-test/SKILL.md`](../../.agents/skills/dart-add-unit-test/SKILL.md) |
+| Integration / E2E tests | `flutter-add-integration-test` | [`.agents/skills/flutter-add-integration-test/SKILL.md`](../../.agents/skills/flutter-add-integration-test/SKILL.md) |
+| Mocks for repositories, datasources, use cases | `dart-generate-test-mocks` | [`.agents/skills/dart-generate-test-mocks/SKILL.md`](../../.agents/skills/dart-generate-test-mocks/SKILL.md) |
+| JSON / map serialization on data models | `flutter-implement-json-serialization` | [`.agents/skills/flutter-implement-json-serialization/SKILL.md`](../../.agents/skills/flutter-implement-json-serialization/SKILL.md) |
+| Declarative routing and deep links | `flutter-setup-declarative-routing` | [`.agents/skills/flutter-setup-declarative-routing/SKILL.md`](../../.agents/skills/flutter-setup-declarative-routing/SKILL.md) |
+
+**When to invoke each skill**
+
+- **Architecture** — new feature folders, layer boundaries, refactoring `lib/` layout.
+- **Unit tests** — any new domain logic, mappers, or repository behavior (TDD: failing test first).
+- **Integration tests** — user flows spanning screens; prefer Firebase Emulator Suite for Firestore/Auth.
+- **Test mocks** — whenever a test doubles a repository interface or Firebase datasource; use with `bloc_test` for BLoC tests.
+- **JSON serialization** — `fromJson` / `toJson` (or Firestore `Map<String, dynamic>` mappers) on models in `data/models/`; not for REST endpoints.
+- **Declarative routing** — adding routes, `go_router`, deep links, or nested navigation shells.
+
+Other skills under `.agents/skills/` may be used when relevant; the six above are **required** for their matching task types.
+
+
+- File naming: `<feature>_bloc.dart`, `<feature>_event.dart`, `<feature>_state.dart`
+- Events and states are immutable (`equatable` or `freezed`)
+- Side effects (navigation, snackbars) via `BlocListener`; UI rebuilds via `BlocBuilder` / `BlocSelector`
+- Test with `bloc_test`: `when` → `expect` sequences; mock use cases/repositories, not Firebase
+
+## UI and platform
+
+- Navigation: use **`flutter-setup-declarative-routing`** when adding or changing routes (`go_router`, deep links)
+- Prefer `Material` or `Cupertino` per platform guidelines; support light/dark where required
+- Use `Theme.of(context)` and responsive layouts; avoid hard-coded magic sizes when design tokens exist
+- Accessibility: semantic labels, sufficient contrast, focus order for forms
+- Platform channels only when Firebase/plugins do not cover the need
+
+## Testing
+
+- **Unit**: use cases, mappers, repository logic (mocked datasources) — follow **`dart-add-unit-test`**; mocks via **`dart-generate-test-mocks`**
+- **BLoC**: `bloc_test` + mocked use cases — generate mocks with **`dart-generate-test-mocks`**
+- **Widget**: `flutter_test` + `pumpWidget` with `MaterialApp` and test doubles
+- **Integration**: **`flutter-add-integration-test`**; run against Firebase Emulator Suite when testing E2E flows with Firestore/Auth
+
+## Code quality
+
+- Run `dart format .` and `flutter analyze` before considering a task done
+- Follow `analysis_options.yaml` lints; fix new warnings in touched files
+- English identifiers and comments in code (see `base-standards.mdc`)
+
+## Workflow
+
+- Commits and PR descriptions in Spanish; code in English
+- Small, reviewable PRs aligned with one feature or layer at a time

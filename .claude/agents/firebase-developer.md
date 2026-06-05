@@ -1,0 +1,1 @@
+../../ai-specs/.agents/firebase-developer.md

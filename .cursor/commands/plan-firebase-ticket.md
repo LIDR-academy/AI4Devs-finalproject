@@ -1,0 +1,1 @@
+../../ai-specs/.commands/plan-firebase-ticket.md
