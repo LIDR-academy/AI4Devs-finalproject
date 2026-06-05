@@ -31,7 +31,7 @@ Load this skill when building or implementing frontend UI modules, state manager
 FrontendArchitect {
   Config {
     lang = detect_from_input |> default "es"
-    outputDir = ".ia/frontend-architect/"
+    outputDir = "docs/frontend-architect/"
     skillsRegistry = scan(".agents/skills/") + scan("~/.gemini/config/skills/")
     defaultStack {
       framework = "React"

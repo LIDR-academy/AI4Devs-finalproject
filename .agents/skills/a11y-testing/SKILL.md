@@ -33,7 +33,7 @@ Load this skill when accessibility testing, audits, WCAG criteria reviews, contr
 A11yTesting {
   Config {
     lang = detect_from_input |> default "es"
-    inputSources = [".ia/", caller_context, natural_language_description]
+    inputSources = ["docs/", caller_context, natural_language_description]
     standards = [WCAG_2_1_AA, WCAG_2_1_AAA, WCAG_2_2_AA]
     toolInfo = caller_provided | infer_from_stack | ask_user
     reportLevel = caller_provided |> default "violations+warnings"

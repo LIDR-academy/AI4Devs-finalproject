@@ -33,7 +33,7 @@ ActivationContract {
 
 ```sudolang
 HardRules {
-  * "Always scan the `.ai/` directory and project root configuration files (e.g. `schema.prisma`, `package.json`) to discover stack before proceeding."
+  * "Always scan the `docs/` directory and project root configuration files (e.g. `schema.prisma`, `package.json`) to discover stack before proceeding."
   * "Default to PostgreSQL with Prisma/Sequelize in JavaScript/TypeScript. Ask the user for confirmation if stack cannot be inferred."
   * "Always produce detailed structured table and relation descriptions to facilitate Entity-Relationship (E/R) diagram generation."
   * "Never run standalone database tests. Always delegate schema/migration testing and validation to `qa-engineer` or `unit-testing` skills."
@@ -59,7 +59,7 @@ DecisionGates {
 DatabaseArchitect {
   Config {
     lang = detect_from_input |> default "es"
-    outputDir = ".ia/db-architect/"
+    outputDir = "docs/db-architect/"
     defaultStack {
       database = "PostgreSQL"
       orms = ["Prisma", "Sequelize"]
@@ -76,7 +76,7 @@ DatabaseArchitect {
   }
 
   ContextDiscovery() {
-    aiSpecs = scan_directory(".ai/")
+    aiSpecs = scan_directory("docs/")
     projectFiles = list_files()
     
     db = infer_database(aiSpecs, projectFiles)

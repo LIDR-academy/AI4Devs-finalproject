@@ -14,7 +14,7 @@ Load this skill when a QA strategy, quality assurance checks, test plans, CI pip
 ## Hard Rules
 
 - **Orchestration Only:** This skill delegates actual code writing to subordinating skills (`unit-testing`, `e2e-testing`, `a11y-testing`).
-- **Unified QA Plan:** Require a QA plan to be validated by the user or defined in `.ia/` before starting implementation.
+- **Unified QA Plan:** Require a QA plan to be validated by the user or defined in `docs/` before starting implementation.
 - **Strict Dod Verification:** Enforce all criteria in the Definition of Done (coverage targets, mutation score targets >= 70%, no critical a11y violations, green critical paths).
 - **Domain-Specific Templates:** Reference pipeline templates from modular domains.
 
@@ -31,7 +31,7 @@ Load this skill when a QA strategy, quality assurance checks, test plans, CI pip
 QAEngineer {
   Config {
     lang = detect_from_input |> default "es"
-    inputSources = [".ia/", caller_context, natural_language_description]
+    inputSources = ["docs/", caller_context, natural_language_description]
     skillsRegistry = scan(".agents/skills/") + scan("~/.gemini/config/skills/")
     ciPlatform = detect_from_project |> ask_user
   }

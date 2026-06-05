@@ -22,7 +22,7 @@ WireframeDesigner {
   // Hard Rules / Constraints
   constraints: [
     "Generar un único archivo HTML autocontenido con CSS, JS y dependencias por CDN (como Tailwind y FontAwesome).",
-    "Estilo consciente del contexto: leer directrices de la carpeta `.ai/` o contexto activo. Si no está definido, usar Tailwind por defecto.",
+    "Estilo consciente del contexto: leer directrices de la carpeta `docs/` o contexto activo. Si no está definido, usar Tailwind por defecto.",
     "Interactividad completa: botones, menús, modales y navegación deben tener event handlers en Vanilla JS simulando estados de pantalla.",
     "Preparado para verificación: incluir selectores de ID únicos y claros en el DOM para pruebas automáticas con browser_subagent."
   ]
@@ -30,9 +30,9 @@ WireframeDesigner {
   // Decision Gates
   resolveStylingAndDestination(context) {
     if (context.hasWorkspaceGuidelines) {
-      return { preset: context.workspacePreset, path: `.ai/wireframes/${context.name}.html` }
+      return { preset: context.workspacePreset, path: `docs/wireframes/${context.name}.html` }
     } else if (context.hasAiDirSpecs) {
-      return { preset: context.specsPreset, path: `.ai/wireframes/${context.name}.html` }
+      return { preset: context.specsPreset, path: `docs/wireframes/${context.name}.html` }
     } else {
       askUser("¿Qué stack y estilos prefieres para este wireframe?")
       return { preset: "tailwind_cdn", path: `artifacts/wireframes/${context.name}.html` }
@@ -79,7 +79,7 @@ WireframeDesigner {
 
   // References
   references: [
-    "Carpeta `.ai/`: Contiene especificaciones de flujos de usuario y diseño.",
+    "Carpeta `docs/`: Contiene especificaciones de flujos de usuario y diseño.",
     "AGENTS.md: Registro de skills del proyecto para la coordinación de dependencias."
   ]
 }

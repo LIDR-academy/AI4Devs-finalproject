@@ -30,8 +30,8 @@ Load this skill when user story flows, business acceptance criteria audits, end-
 E2ETesting {
   Config {
     lang = detect_from_input |> default "es"
-    inputSources = [".ia/", caller_context, natural_language_description]
-    frameworkInfo = caller_provided | infer_from(".ia/") | ask_user
+    inputSources = ["docs/", caller_context, natural_language_description]
+    frameworkInfo = caller_provided | infer_from("docs/") | ask_user
     targetEnv = local | staging | ask_user
     mockSources = caller_provided | scan_project_for_mocks | ask_user
   }

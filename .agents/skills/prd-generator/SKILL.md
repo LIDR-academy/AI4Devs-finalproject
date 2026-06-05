@@ -30,7 +30,7 @@ Load this skill when generating product requirements documents, writing detailed
 PRDGenerator {
   Config {
     outputLang = detect_from_user_input |> default "es"
-    outputDir = ask_user |> must_be_within ".ia/" |> default ".ia/docs/prd/"
+    outputDir = ask_user |> must_be_within "docs/" |> default "docs/prd/"
     diagrams = mermaid
     approval = detailed_per_section
   }
@@ -77,7 +77,7 @@ PRDGenerator {
 ## Output Contract
 
 Return:
-- Fully assembled `PRD.md` file saved to `.ia/docs/prd/`.
+- Fully assembled `PRD.md` file saved to `docs/prd/`.
 - Summary of approved segments and overall status.
 
 ## References

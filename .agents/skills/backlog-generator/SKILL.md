@@ -32,8 +32,8 @@ Load this skill when requirements breakdown, epic definitions, user stories mapp
 BacklogGenerator {
   Config {
     lang = detect_from_user_input |> default "en"
-    inputDir = ".ia/"
-    outputDir = ask_user |> default ".ia/backlog/"
+    inputDir = "docs/"
+    outputDir = ask_user |> default "docs/backlog/"
     diagrams = mermaid
     approval = three_level(epics_map, stories_per_epic, subtasks_per_story)
   }
@@ -71,8 +71,8 @@ BacklogGenerator {
 
 Return:
 - An executive backlog index listing total epics, stories, and task aggregates.
-- Path coordinates to generated markdown task files inside `.ia/backlog/`.
+- Path coordinates to generated markdown task files inside `docs/backlog/`.
 
 ## References
 
-- `.ia/` — Document context sources (PRDs, wireframes, architectures).
+- `docs/` — Document context sources (PRDs, wireframes, architectures).

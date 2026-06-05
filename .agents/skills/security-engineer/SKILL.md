@@ -32,8 +32,8 @@ Load this skill when security models, threat mappings, static code audits, packa
 SecurityEngineer {
   Config {
     lang = detect_from_input |> default "es"
-    inputSources = [".ia/", caller_context, source_code]
-    persistRoot = ".ia/security/"
+    inputSources = ["docs/", caller_context, source_code]
+    persistRoot = "docs/security/"
     standards = ["OWASP Top 10", "STRIDE", "SANS CWE"]
   }
 
@@ -79,5 +79,5 @@ Return:
 
 ## References
 
-- `.ia/` — Document context sources (PRDs, wireframes, architectures).
+- `docs/` — Document context sources (PRDs, wireframes, architectures).
 - `.agents/skills/qa-engineer/SKILL.md` — Quality assurance coordinate target.

@@ -30,11 +30,11 @@ Load this skill when visual diagrams, architecture charts, user flow mapping, C4
 DiagramGenerator {
   Config {
     lang             = detect_from_user_input |> default "es"
-    sourceDir        = ".ia/"
+    sourceDir        = "docs/"
     supportedTypes   = ["usecase", "sequence", "class", "flowchart", "er", "C4Context", "C4Container"]
     approval         = param_or_default("per_diagram")
     outputMode       = ask_user
-    outputDir        = ask_user |> default ".ia/docs/diagrams/"
+    outputDir        = ask_user |> default "docs/diagrams/"
   }
 
   OnActivate {
@@ -56,7 +56,7 @@ DiagramGenerator {
 }
 ```
 
-1. **Context Parsing**: Scans `.ia/` and extracts structural data models.
+1. **Context Parsing**: Scans `docs/` and extracts structural data models.
 2. **Mermaid Generation**: Render diagram templates matching requested types.
 3. **Syntax Verification**: Test outputs against Mermaid parser constraints.
 4. **Delivery**: Output to files or return payload.
@@ -69,4 +69,4 @@ Return:
 
 ## References
 
-- `.ia/` — Text specifications, API structures, or stories.
+- `docs/` — Text specifications, API structures, or stories.

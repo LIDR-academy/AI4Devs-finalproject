@@ -52,9 +52,9 @@ ProductOwner {
 
   Pipeline {
     brief = compile(interview_context)
-    save_file(".ia/docs/prd/brief.md", brief)
-    invoke_skill("prd-generator", input: brief, outputDir: ".ia/docs/prd/")
-    invoke_skill("backlog-generator", inputDir: ".ia/", outputDir: ".ia/backlog/")
+    save_file("docs/prd/brief.md", brief)
+    invoke_skill("prd-generator", input: brief, outputDir: "docs/prd/")
+    invoke_skill("backlog-generator", inputDir: "docs/", outputDir: "docs/backlog/")
   }
 }
 ```
@@ -67,7 +67,7 @@ ProductOwner {
 ## Output Contract
 
 Return:
-- A compiled product brief saved to `.ia/docs/prd/brief.md`.
+- A compiled product brief saved to `docs/prd/brief.md`.
 - Active pipeline status reporting on PRD and Backlog creation progress.
 
 ## References

@@ -32,10 +32,10 @@ Load this skill when unit testing, code coverage checks, TDD implementation cycl
 UnitTesting {
   Config {
     lang = detect_from_input |> default "es"
-    outputDir = ".ia/unit-testing/"
-    inputSources = [".ia/", caller_context, natural_language_description]
+    outputDir = "docs/unit-testing/"
+    inputSources = ["docs/", caller_context, natural_language_description]
     mode = tdd | on_demand
-    stackInfo = caller_provided | infer_from(".ia/") | ask_user
+    stackInfo = caller_provided | infer_from("docs/") | ask_user
   }
 
   OnActivate {

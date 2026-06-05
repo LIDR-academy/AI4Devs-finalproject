@@ -31,8 +31,8 @@ Load this skill when requirements decomposition, project tasks breakdown, techno
 TechLead {
   Config {
     lang = detect_from_input |> default "es"
-    outputDir = ".ia/tech-lead/"
-    inputSources = [".ia/", any_business_doc, natural_language_description]
+    outputDir = "docs/tech-lead/"
+    inputSources = ["docs/", any_business_doc, natural_language_description]
     skillsRegistry = scan(".agents/skills/") + scan("~/.gemini/config/skills/")
     approvalMode = three_level(epics_plan, tasks_high_level, subtasks_technical)
     executionMode = hybrid(plan_always, execute_on_explicit_user_approval)
@@ -87,7 +87,7 @@ TechLead {
 Return:
 - A dependency DAG visualized in Mermaid.
 - A technical backlog summary (sprints, tasks, effort, roles).
-- Path locations of generated task files inside `.ia/tech-lead/`.
+- Path locations of generated task files inside `docs/tech-lead/`.
 
 ## References
 

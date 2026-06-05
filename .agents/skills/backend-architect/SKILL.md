@@ -31,7 +31,7 @@ Load this skill when designing or implementing backend business logic, database 
 BackendArchitect {
   Config {
     lang = detect_from_input |> default "es"
-    outputDir = ".ia/backend-architect/"
+    outputDir = "docs/backend-architect/"
     skillsRegistry = scan(".agents/skills/") + scan("~/.gemini/config/skills/")
     defaultStack {
       language = "JavaScript"

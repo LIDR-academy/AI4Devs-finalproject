@@ -1,7 +1,7 @@
 # Backlog Overview: {project-name}
 
 > Generated: {date}
-> Source Documents: {n} files from `.ia/`
+> Source Documents: {n} files from `docs/`
 > Status: Draft | Approved
 
 ---
