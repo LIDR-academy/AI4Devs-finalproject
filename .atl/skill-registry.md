@@ -29,6 +29,7 @@
 | skill-improver | Trigger: improve skills, audit skills, refactor skills, skill quality. Audit and upgrade existing LLM-first skills. | global | `.gemini/config/skills/skill-improver/SKILL.md` |
 | tech-lead | Trigger: tech lead, plan técnico, tareas técnicas, ejecución, orquestación técnica. Traduce requerimientos de negocio a tareas técnicas detalladas, orquesta su ejecución paralela/secuencial y gestiona el estado del plan. | project | `.agents/skills/tech-lead/SKILL.md` |
 | unit-testing | Trigger: unit testing, tests unitarios, TDD, test generation, cobertura, gap analysis, mocks, stubs, fixtures. Genera tests unitarios en modo TDD por defecto, analiza gaps de cobertura y ejecuta el ciclo Red-Green-Refactor. | project | `.agents/skills/unit-testing/SKILL.md` |
+| wireframe-designer | Trigger: wireframe, mockup, prototipo, UI prototype, navigable design, interactivo, autocontenido. Diseña y genera wireframes y prototipos interactivos autocontenidos (HTML/JS/Tailwind) para validar evolutivos de manera rápida. | project | `.agents/skills/wireframe-designer/SKILL.md` |
 | work-unit-commits | Plan commits as reviewable work units. Trigger: implementation, commit splitting, chained PRs, or keeping tests and docs with code. | global | `.gemini/config/skills/work-unit-commits/SKILL.md` |
 
 ## Convention Files
