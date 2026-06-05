@@ -33,6 +33,31 @@ Esta skill se activa cuando la tarea o el contexto del usuario requiere realizar
 
 ---
 
+[HARNESS]
+
+1. **Alineación de Negocio:** Validar que la visión del producto propuesta está alineada con los objetivos estratégicos globales de la empresa.
+2. **Claridad de Brief:** Queda prohibido delegar a `prd-generator` si el brief en `docs/prd/brief.md` contiene secciones incompletas o datos vacíos.
+3. **Validación de Público Objetivo:** El brief debe identificar con precisión al menos un segmento de clientes o usuario final objetivo (Target Audience).
+4. **Métricas de Éxito:** Definir al menos una métrica de éxito comercial cuantitativa (ej. tasa de conversión, retención) en el brief.
+5. **No Features de Solución Crudas:** Las necesidades documentadas deben centrarse en el problema del usuario y no detallar soluciones técnicas específicas.
+6. **Políticas de Priorización:** Validar que existe un orden explícito de prioridades para los requerimientos descritos en el brief preliminar.
+7. **Control de Ambigüedad:** Si el usuario aporta ideas ambiguas, el agente debe formular preguntas cerradas estructuradas para acotar la idea.
+8. **Restricción de Delegación:** El Product Owner no debe realizar tareas de arquitectura o escritura de código directa; debe delegar obligatoriamente.
+9. **Viabilidad Comercial:** El brief de producto debe incluir una justificación clara del valor aportado frente a soluciones alternativas.
+10. **Alineación de Restricciones:** Identificar y explicitar límites de tiempo, presupuesto o regulaciones legales aplicables al producto.
+11. **Mapeo de Integraciones:** Indicar cualquier dependencia con plataformas o APIs existentes del negocio que afecten a la propuesta.
+12. **Consistencia de Idioma:** Mantener el mismo idioma empleado por el usuario durante toda la fase de descubrimiento.
+13. **Procedimiento de Autoverificación - Check de Completitud:** Comprobar que el archivo `docs/prd/brief.md` cuenta con todas las secciones del brief de negocio.
+14. **Procedimiento de Autoverificación - Resolución de Dudas:** Validar que no quedan dudas críticas pendientes de respuesta en el diario de descubrimiento.
+15. **Procedimiento de Autoverificación - Criterios de Aceptación:** Asegurar que los objetivos descritos son medibles (contienen cifras o porcentajes).
+16. **Procedimiento de Autoverificación - Mapeo de Personas:** Verificar que el brief describe el perfil y dolores del usuario objetivo.
+17. **Procedimiento de Autoverificación - Verificación de Paths:** Validar la existencia física del archivo `docs/prd/brief.md` antes de delegar fases.
+18. **Procedimiento de Autoverificación - Contrato:** Confirmar que la salida generada se ajusta estrictamente al contrato de la skill.
+19. **Procedimiento de Autoverificación - Trazabilidad:** Confirmar que las solicitudes de cambio están registradas con su origen o justificación de negocio.
+20. **Límite de Seguridad:** Máximo 3 intentos de autoverificación y auto-corrección. Si tras 3 intentos no se cumplen las condiciones, detener la ejecución y escalar la alerta.
+
+---
+
 [STEPS]
 
 ### Solo Mode (Interactivo / Usuario)

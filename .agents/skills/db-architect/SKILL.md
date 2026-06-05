@@ -33,13 +33,26 @@ Esta skill se activa cuando la tarea o el contexto del usuario requiere realizar
 
 [HARNESS]
 
-1. **Restricción de Nomenclatura:** Toda tabla nueva debe ser nombrada en minúsculas, plural y snake_case. Las claves primarias deben ser `id` y las claves foráneas deben ser `singular_table_name_id`.
-2. **Aserción de Idempotencia:** Todo script de base de datos generado debe contar con cláusulas que prevengan fallos en ejecuciones repetidas (ej. `CREATE TABLE IF NOT EXISTS`).
-3. **Procedimiento de Autoverificación:**
-   - [ ] Validar que los nombres propuestos cumplen con [naming-rules.md](references/naming-rules.md).
-   - [ ] Confirmar que las migraciones son no destructivas para datos existentes.
-   - [ ] Comprobar que no hay sentencias `DROP` sin la debida justificación arquitectónica.
-4. **Límite de Seguridad:** Máximo 3 intentos de autoverificación y auto-corrección. Si el validador o las reglas no se cumplen tras la tercera iteración, detener ejecución, reportar la anomalía y delegar revisión al usuario.
+1. **Restricción de Nomenclatura:** Toda tabla nueva debe ser nombrada en minúsculas, plural y snake_case.
+2. **Claves Primarias y Foráneas:** Las claves primarias deben ser `id` y las claves foráneas deben ser `singular_table_name_id`.
+3. **No-Destructive Changes:** Jamás generar una migración de base de datos que borre (DROP) tablas o columnas existentes sin un plan de transición documentado.
+4. **Tipos de Datos Consistentes:** Utilizar tipos de datos estándar y consistentes para las claves foráneas que coincidan exactamente con la clave primaria referenciada.
+5. **No Credenciales:** Queda estrictamente prohibido incluir contraseñas, tokens o secretos en texto plano en cualquier script SQL.
+6. **Políticas de Cascade:** Toda clave foránea debe definir explícitamente su comportamiento ante borrados (`ON DELETE RESTRICT` o `ON DELETE CASCADE`).
+7. **Idempotencia Completa:** Todo script de migración debe poder ejecutarse múltiples veces sin lanzar errores (uso de `IF NOT EXISTS` / `IF EXISTS`).
+8. **Índices en Claves Foráneas:** Cada clave foránea declarada debe poseer un índice explícito asociado para optimizar las operaciones de JOIN.
+9. **Campos de Auditoría:** Todas las tablas de negocio deben incluir columnas `created_at` y `updated_at` con tipos de zona horaria adecuados (UTC).
+10. **Límites de Tamaño:** Todos los campos de texto variable (`VARCHAR`/`TEXT`) deben poseer un límite máximo explícito definido y justificado.
+11. **Valores por Defecto:** Los valores por defecto no deben invocar funciones dinámicas no estándar que comprometan la portabilidad del motor de BD.
+12. **Restricciones de Unicidad:** Toda restricción de unicidad (`UNIQUE`) debe incluir un índice único nombrado de manera explícita con el prefijo `uq_`.
+13. **Procedimiento de Autoverificación - Nombres:** Verificar mediante expresión regular que todas las tablas y columnas cumplen con snake_case.
+14. **Procedimiento de Autoverificación - Idempotencia:** Validar sintácticamente que no hay declaraciones `CREATE` o `ALTER` sin su correspondiente guardia condicional.
+15. **Procedimiento de Autoverificación - Plan de Regresión:** Comprobar que existe un script de rollback para cada migración propuesta.
+16. **Procedimiento de Autoverificación - Normalización:** Confirmar que no hay dependencias transitivas redundantes (cumplimiento de 3NF).
+17. **Procedimiento de Autoverificación - Seguridad:** Escanear los scripts SQL buscando credenciales hardcodeadas o patrones de inyección SQL.
+18. **Procedimiento de Autoverificación - Índices:** Revisar el plan de ejecución teórico para asegurar que los queries frecuentes usan índices.
+19. **Procedimiento de Autoverificación - Documentación:** Asegurar que el diagrama ER (`docs/db/schema.md`) está sincronizado con el código SQL.
+20. **Límite de Seguridad:** Máximo 3 intentos de autoverificación y auto-corrección. Si tras 3 intentos no se cumplen las condiciones, detener la ejecución y escalar la alerta.
 
 ---
 

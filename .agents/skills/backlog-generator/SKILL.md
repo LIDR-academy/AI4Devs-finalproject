@@ -34,12 +34,25 @@ Esta skill se activa cuando la tarea o el contexto del usuario requiere realizar
 [HARNESS]
 
 1. **Restricción de Trazabilidad:** Ninguna historia de usuario puede crearse si no está directamente mapeada a una sección aprobada del PRD.
-2. **Aserción de Criterios:** Toda historia de usuario debe especificar al menos dos criterios de aceptación bajo el formato estándar "Dado que... / Cuando... / Entonces...".
-3. **Procedimiento de Autoverificación:**
-   - [ ] Confirmar que el DoD de cada historia incluye pruebas unitarias y comprobación de accesibilidad.
-   - [ ] Comprobar que los IDs de las historias siguen una estructura lógica indexada con el PRD.
-   - [ ] Verificar que cada subtarea tiene una DoD independiente y clara.
-4. **Límite de Seguridad:** Máximo 3 intentos de autoverificación y auto-corrección. Si el validador o las reglas no se cumplen tras la tercera iteración, detener ejecución, reportar la anomalía y delegar revisión al usuario.
+2. **Formato SMART:** Cada historia de usuario debe ser independiente, negociable, valorable, estimable, pequeña y testeable (INVEST).
+3. **Estructura Estándar:** Cada historia de usuario debe usar estrictamente el formato: "Como [rol], quiero [acción], para [beneficio]".
+4. **Criterios de Aceptación Gherkin:** Toda historia debe tener al menos tres escenarios de aceptación formateados en Gherkin (Dado que... / Cuando... / Entonces...).
+5. **Definition of Done (DoD) Global:** Toda historia de usuario debe incluir unit tests, tests de integración y revisión de accesibilidad en su DoD.
+6. **Definition of Ready (DoR):** Una historia no puede pasar a "lista para desarrollo" si no tiene estimación de complejidad y dependencias mapeadas.
+7. **Sin Duplicidad:** No se permite que dos historias de usuario representen la misma funcionalidad de negocio o solapen de forma significativa.
+8. **Tamaño de Historias:** Cualquier historia que requiera más de 5 subtareas técnicas debe desglosarse obligatoriamente en historias más pequeñas.
+9. **Roles del Negocio:** Los roles de las historias de usuario deben corresponderse exactamente con las personas de usuario definidas en el PRD.
+10. **Idioma Consistente:** Los títulos de las historias, descripciones y subtareas deben estar redactados de manera coherente en el idioma definido en el proyecto.
+11. **Prioridad MoSCoW:** Cada historia debe tener asignada una prioridad explícita utilizando la metodología MoSCoW (Must, Should, Could, Won't).
+12. **Id Único Histórico:** Cada historia debe tener un identificador alfanumérico único e inmutable (por ejemplo, US-001).
+13. **Procedimiento de Autoverificación - Mapeo PRD:** Validar que el ID del PRD de origen está documentado al inicio de cada historia de usuario.
+14. **Procedimiento de Autoverificación - Completitud Gherkin:** Verificar que todos los bloques Gherkin tienen las tres cláusulas (Dado, Cuando, Entonces).
+15. **Procedimiento de Autoverificación - DoD:** Confirmar que no hay historias sin una sección explícita de DoD (Definition of Done).
+16. **Procedimiento de Autoverificación - Dependencias:** Comprobar que no hay ciclos de dependencia en el grafo de historias de usuario.
+17. **Procedimiento de Autoverificación - Estimaciones:** Asegurar que cada historia tiene un placeholder o valor asignado de complejidad/puntos.
+18. **Procedimiento de Autoverificación - Sincronización:** Validar que el archivo `docs/tech-lead/backlog.md` compila a markdown válido.
+19. **Procedimiento de Autoverificación - Roles:** Verificar que no se inventan roles de usuario no definidos previamente en la fase de descubrimiento.
+20. **Límite de Seguridad:** Máximo 3 intentos de autoverificación y auto-corrección. Si tras 3 intentos no se cumplen las condiciones, detener la ejecución y escalar la alerta.
 
 ---
 

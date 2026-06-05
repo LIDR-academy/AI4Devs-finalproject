@@ -34,12 +34,25 @@ Esta skill se activa cuando la tarea o el contexto del usuario requiere realizar
 [HARNESS]
 
 1. **Restricción de Completitud:** Queda estrictamente prohibido entregar el PRD con texto de ejemplo, plantillas genéricas o secciones vacías.
-2. **Aserción de Métricas:** Todos los requisitos de negocio deben expresarse con métricas medibles y cuantificables (objetivos SMART).
-3. **Procedimiento de Autoverificación:**
-   - [ ] Inspeccionar el documento buscando marcadores de posición como "TBD", "completar aquí" o texto en latín.
-   - [ ] Validar que cada característica propuesta está vinculada a un User Persona específico.
-   - [ ] Comprobar que los requisitos de negocio tienen indicadores clave de rendimiento (KPIs) definidos.
-4. **Límite de Seguridad:** Máximo 3 intentos de autoverificación y auto-corrección. Si el validador o las reglas no se cumplen tras la tercera iteración, detener ejecución, reportar la anomalía y delegar revisión al usuario.
+2. **Métricas SMART:** Todos los requisitos de negocio y KPIs deben expresarse con métricas medibles, alcanzables y con plazos de tiempo definidos.
+3. **Trazabilidad de Personas:** Toda característica propuesta en el alcance del producto debe estar explícitamente vinculada a al menos un User Persona definido.
+4. **No Placeholders:** Queda prohibido el uso de términos como "TBD", "por definir", "Lorem Ipsum" o equivalentes en el documento final.
+5. **Requisitos de Rendimiento:** Definir al menos tres requisitos no funcionales (rendimiento, seguridad, escalabilidad) con límites cuantitativos concretos.
+6. **Sección de Riesgos:** El PRD debe incluir obligatoriamente una sección de análisis de riesgos y sus planes de mitigación correspondientes.
+7. **Control de Versiones:** El encabezado del PRD debe incluir una tabla de control de cambios con fecha, autor y resumen de modificaciones.
+8. **Alcance Excluido:** Definir de manera explícita qué características quedan fuera del alcance (Out of Scope) para evitar la corrupción del alcance.
+9. **Criterios de Aceptación de Alto Nivel:** Cada funcionalidad clave descrita debe contar con al menos un criterio de éxito medible para el negocio.
+10. **Alineación de Objetivos:** Los objetivos del producto deben mapear y justificar el beneficio de negocio o retorno de inversión esperado.
+11. **Glosario Obligatorio:** Si el dominio del proyecto tiene términos específicos, incluir un glosario explicativo al inicio del documento.
+12. **Dependencias del Sistema:** Listar las dependencias tecnológicas o integraciones de terceros requeridas para la viabilidad técnica.
+13. **Procedimiento de Autoverificación - Check de Placeholders:** Buscar cadenas de texto del tipo "TBD", "completar" o texto genérico en todo el archivo.
+14. **Procedimiento de Autoverificación - Verificación SMART:** Asegurar que cada KPI tiene un número/porcentaje y una ventana temporal de medición.
+15. **Procedimiento de Autoverificación - Trazabilidad Personas:** Confirmar que no hay funcionalidades sin un usuario de destino claro.
+16. **Procedimiento de Autoverificación - Mapeo de Referencias:** Validar que los enlaces internos de documentación en `docs/` apuntan a archivos existentes.
+17. **Procedimiento de Autoverificación - Estilo Markdown:** Asegurar que no hay errores sintácticos de marcado que rompan el parseo de encabezados.
+18. **Procedimiento de Autoverificación - Sección de Exclusiones:** Comprobar la presencia de la lista de características fuera de alcance.
+19. **Procedimiento de Autoverificación - Plantilla:** Verificar que el documento final hereda correctamente todas las secciones de `prd-template.md`.
+20. **Límite de Seguridad:** Máximo 3 intentos de autoverificación y auto-corrección. Si tras 3 intentos no se cumplen las condiciones, detener la ejecución y escalar la alerta.
 
 ---
 

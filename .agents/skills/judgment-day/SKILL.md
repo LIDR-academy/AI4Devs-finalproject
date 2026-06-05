@@ -33,12 +33,25 @@ Esta skill se activa cuando la tarea o el contexto del usuario requiere realizar
 [HARNESS]
 
 1. **Restricción de Objetividad:** No emitir un veredicto de "Aprobado" (Pass) si existen riesgos de seguridad o rendimiento sin mitigar en los criterios correspondientes.
-2. **Aserción de Perspectivas:** El reporte resultante debe separar explícitamente las anotaciones de Juez A (perspectiva de producto/negocio) y Juez B (perspectiva de código/arquitectura) para contrastar puntos de vista.
-3. **Procedimiento de Autoverificación:**
-   - [ ] Validar que se hayan evaluado todos los archivos de criterios definidos en `[REFERENCES]`.
-   - [ ] Verificar que cada vulnerabilidad técnica encontrada tiene asociada una propuesta de mitigación.
-   - [ ] Asegurar que los veredictos no son ambiguos o "parciales".
-4. **Límite de Seguridad:** Máximo 3 intentos de autoverificación y auto-corrección. Si el validador o las reglas no se cumplen tras la tercera iteración, detener ejecución, reportar la anomalía y delegar revisión al usuario.
+2. **Evaluación Ciego:** Juez A y Juez B no deben compartir variables ni contexto intermedio durante la fase de análisis inicial.
+3. **No Verdicts Ambiguos:** Queda estrictamente prohibido usar términos vagos como "casi listo" o "correcto con matices" en el veredicto final.
+4. **Veredicto Explícito:** El reporte final debe concluir explícitamente con uno de estos dos veredictos: APROBADO (PASS) o RECHAZADO (FAIL).
+5. **Mitigaciones Obligatorias:** Cada punto fallado o marcado como vulnerabilidad técnica debe incluir una propuesta de mitigación aplicable.
+6. **Mapeo de Criterios:** Toda observación en el reporte de juicio debe enlazar directamente a uno de los criterios definidos en `references/`.
+7. **Trazabilidad de Código:** Las observaciones técnicas de Juez B deben incluir enlaces a líneas de código específicas del archivo auditado.
+8. **Validación de Negocio:** Juez A debe confrontar que cada funcionalidad auditada cumple con la propuesta de valor del PRD original.
+9. **Sin Sesgo de Confirmación:** Juez B no debe validar el código usando las mismas pruebas creadas por el desarrollador original.
+10. **Impacto de Rendimiento:** Analizar y estimar el impacto en CPU/memoria de la arquitectura propuesta antes de emitir aprobación.
+11. **Análisis de Regresión:** Evaluar el riesgo de que el cambio propuesto introduzca regresiones en componentes adyacentes no modificados.
+12. **Chequeo de Accesibilidad:** Juez A debe auditar que las modificaciones visuales cumplen estrictamente el estándar de accesibilidad del proyecto.
+13. **Procedimiento de Autoverificación - Cobertura Criterios:** Validar que se han evaluado todos los archivos de criterios definidos en `[REFERENCES]`.
+14. **Procedimiento de Autoverificación - Vulnerabilidades:** Verificar que cada vulnerabilidad técnica reportada tiene asociada una solución sugerida.
+15. **Procedimiento de Autoverificación - Consistencia:** Comprobar que no hay contradicciones lógicas sin resolver en las conclusiones de Juez A y Juez B.
+16. **Procedimiento de Autoverificación - Enlaces:** Comprobar que todos los enlaces a archivos y líneas de código son válidos y accesibles.
+17. **Procedimiento de Autoverificación - Markdown:** Asegurar que el reporte de juicio generado compila a Markdown sintácticamente limpio.
+18. **Procedimiento de Autoverificación - Firmas:** Confirmar la presencia de la firma o identificador de ambos jueces en el documento final.
+19. **Procedimiento de Autoverificación - Contratos:** Validar que el formato de salida cumple con la especificación `contract.d.ts`.
+20. **Límite de Seguridad:** Máximo 3 intentos de autoverificación y auto-corrección. Si tras 3 intentos no se cumplen las condiciones, detener la ejecución y escalar la alerta.
 
 ---
 

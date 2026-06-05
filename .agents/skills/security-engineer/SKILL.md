@@ -31,6 +31,31 @@ Esta skill se activa cuando la tarea o el contexto del usuario requiere realizar
 
 ---
 
+[HARNESS]
+
+1. **Sanitización de Secretos:** Queda terminantemente prohibido incluir tokens de API, contraseñas, certificados o claves privadas en el código o configuración del repositorio.
+2. **Uso de Variables de Entorno:** Toda credencial requerida en tiempo de ejecución debe leerse exclusivamente de variables de entorno seguras.
+3. **Escaneo de Secretos:** Configurar herramientas de escaneo de secretos (ej. GitGuardian, Trufflehog) en los pre-commits y pipelines de CI.
+4. **Rotación ante Exposición:** Si se detecta un secreto expuesto en el historial de git, invalidar y rotar el secreto inmediatamente de forma obligatoria.
+5. **Baseline de Vulnerabilidades:** Clasificar vulnerabilidades usando el estándar CVSSv3. Detener la pipeline ante fallos críticos o altos (CVSS >= 7.0).
+6. **OWASP Top 10:** Validar que los diseños e implementaciones mitigan de manera explícita vulnerabilidades comunes como inyección SQL y XSS.
+7. **Principio de Mínimo Privilegio:** Comprobar que los roles de bases de datos y accesos de red conceden únicamente los permisos mínimos indispensables.
+8. **Sanitización de Entradas:** Toda entrada proveniente del cliente debe pasar por un middleware de escape y sanitización antes de procesarse.
+9. **Cifrado de Datos en Tránsito:** Validar que todas las conexiones externas y servicios HTTP requieren el protocolo HTTPS (TLS 1.2 o superior).
+10. **Cifrado de Datos en Reposo:** Asegurar que los datos sensibles (contraseñas, datos personales) se encriptan con algoritmos seguros (ej. bcrypt, AES-256).
+11. **Manejo de Sesiones Seguras:** Comprobar que las cookies de sesión poseen las flags `HttpOnly`, `Secure` y `SameSite=Strict` o `Lax`.
+12. **Actualización de Dependencias:** Validar que no se importan librerías con vulnerabilidades de seguridad conocidas mediante escaneos automáticos (`npm audit`).
+13. **Procedimiento de Autoverificación - Escaneo de Código:** Ejecutar una herramienta de análisis estático (SAST) buscando fallos de seguridad comunes.
+14. **Procedimiento de Autoverificación - Secret Check:** Escanear la base de código actual para descartar credenciales hardcodeadas.
+15. **Procedimiento de Autoverificación - Check de Dependencias:** Analizar el árbol de dependencias buscando paquetes vulnerables.
+16. **Procedimiento de Autoverificación - Validación de Entradas:** Comprobar que no hay uso de funciones peligrosas (ej. `eval()` o interpolación directa en SQL).
+17. **Procedimiento de Autoverificación - CORS:** Verificar que las políticas de CORS no permiten el acceso indiscriminado.
+18. **Procedimiento de Autoverificación - Control de Errores:** Validar que los errores expuestos externamente no filtran información sensible del sistema.
+19. **Procedimiento de Autoverificación - Reporte:** Confirmar la generación física del reporte de amenazas en `docs/security/threat_model.md`.
+20. **Límite de Seguridad:** Máximo 3 intentos de autoverificación y auto-corrección. Si tras 3 intentos no se cumplen las condiciones, detener la ejecución y escalar la alerta.
+
+---
+
 [STEPS]
 
 ### Solo Mode (Interactivo / Usuario)
