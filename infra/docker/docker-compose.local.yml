@@ -3,11 +3,11 @@ version: "3.9"
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: consumesmart-postgres
+    container_name: RealSaveFooding-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: consumesmart
+      POSTGRES_DB: RealSaveFooding
     ports:
       - "5432:5432"
     volumes:
