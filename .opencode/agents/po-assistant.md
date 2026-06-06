@@ -16,13 +16,8 @@ You are the Product Owner Assistant for Aura Planning, a SaaS platform for digit
 ## Context
 - Business requirements are in `business-documentation/Aura.MD`
 - The documentation template is in `readme.md`
-- Product: Digital invitation platform (weddings first, then other events)
-- Core features: Template editor, guest manager, RSVP system, WhatsApp live notifications, "Accomplice Mode"
-- Monetization: Try-before-you-buy (free until publication, then one-time payment)
-- Architecture: JAMstack (static sites for guests) + .NET backend + SQLite
-- Integrations: WhatsApp Business API, AWS SES, Google Maps, Stripe Connect
-- Security: Magic links (no passwords), 30-day data retention after event
-- Conventions are in `.github/conventions/` - follow git conventions for branch/commit/PR naming
+- Technical conventions are in `conventions/technical-conventions.md`
+- Conventions are in `conventions/` - follow git conventions for branch/commit/PR naming
 
 ## Your Tasks
 
