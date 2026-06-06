@@ -406,3 +406,32 @@ Haz un Checklist del flujo de despliegue del MVP académico y generalo en `docs/
 # Prompt 14: Coding Standards
 
 Qué estandars deberíamos tener dado @docs/ARCHITECTURE.md  tanto en el backend como en el frontend incluido coding estandares
+
+---
+
+# Prompt 15: US técnica de infraestructura local (base de datos)
+
+Añade una historia de usuario técnica en @docs/USER-STORIES.md que cubra la configuración del entorno de base de datos local como tarea previa a cualquier US de negocio.
+
+La historia debe documentar:
+- Levantamiento de PostgreSQL 16 mediante Docker Compose
+- Configuración de Prisma ORM: `schema.prisma` con el modelo de datos completo según @docs/DATA-MODEL.md
+- Ejecución de la migración inicial (`prisma migrate dev --name init`)
+- Seed de datos de prueba (`prisma db seed`) con productos representativos del catálogo running
+- Antes de generar cualquier fichero, preguntar al desarrollador por los valores de las variables de entorno necesarias:
+  - `POSTGRES_USER` — usuario de la base de datos
+  - `POSTGRES_PASSWORD` — contraseña
+  - `POSTGRES_DB` — nombre de la base de datos
+  - `POSTGRES_PORT` — puerto local (por defecto 5432, preguntar si quiere cambiarlo)
+  - `BACKEND_PORT` — puerto del servidor Express (por defecto 4000)
+  - `FRONTEND_URL` — origen permitido en CORS (por defecto http://localhost:3000)
+- Con las respuestas, escribir el fichero `backend/.env` con todos los valores y construir `DATABASE_URL` automáticamente
+- Añadir `backend/.env` a `.gitignore`; commitear solo `backend/.env.example` con las claves sin valores como referencia
+
+Criterios de aceptación:
+- Un solo comando (`docker compose up -d`) levanta PostgreSQL
+- `npx prisma migrate dev` aplica el esquema sin errores
+- `npx prisma db seed` inserta datos de prueba verificables
+- El resto de USs pueden ejecutarse sobre esta base sin configuración adicional
+
+Colócala antes de las historias de negocio existentes, etiquétala como US técnica (no de negocio) y añade la dependencia correspondiente en las USs que requieran base de datos.
