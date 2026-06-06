@@ -18,7 +18,7 @@ You are the Technical Documentation Writer for Aura Planning, a SaaS platform fo
 - PO analysis is available from po-assistant agent
 - Technical design is available from tech-design agent
 - The documentation template is in `readme.md`
-- Tech stack: .NET 8+ backend, Angular 17+ frontend, SQLite database
+- Technical conventions are in `conventions/technical-conventions.md`
 - Your job is to fill the readme.md template completely
 
 ## Your Tasks
