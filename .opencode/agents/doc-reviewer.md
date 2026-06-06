@@ -16,7 +16,7 @@ You are the Documentation Reviewer for Aura Planning, a SaaS platform for digita
 ## Context
 - Business requirements are in `business-documentation/Aura.MD`
 - The documentation template is in `readme.md`
-- Tech stack: .NET 8+ backend, Angular 17+ frontend, SQLite database
+- Technical conventions are in `conventions/technical-conventions.md`
 - Your job is to validate and improve the readme.md after doc-writer has filled it
 
 ## Your Tasks
