@@ -5,7 +5,7 @@ Frontend Architecture
 
 ```plantuml
 @startuml
-title ConsumeSmart - Frontend Architecture
+title RealSaveFooding - Frontend Architecture
 
 package "Mobile Application" {
 
@@ -44,7 +44,7 @@ ApiClient --> [NestJS Backend API]
 Backend Architecture (AWS-based)
 ```plantuml
 @startuml
-title ConsumeSmart - Backend Architecture (AWS)
+title RealSaveFooding - Backend Architecture (AWS)
 
 package "NestJS Backend" {
 
@@ -89,7 +89,7 @@ storage "Amazon S3" as S3
 Full System Architecture (AWS)
 ```plantuml
 @startuml
-title ConsumeSmart - Full System Architecture (AWS)
+title RealSaveFooding - Full System Architecture (AWS)
 
 actor User
 
@@ -153,7 +153,7 @@ This is what I would actually implement.
 
 ```plantuml
 @startuml
-title ConsumeSmart - MVP Architecture
+title RealSaveFooding - MVP Architecture
 
 actor User
 
@@ -195,11 +195,11 @@ User --> [Mobile App]
 ```
 Future Architecture (Non-MVP)
 
-If you want to show how ConsumeSmart could evolve:
+If you want to show how RealSaveFooding could evolve:
 
 ```plantuml
 @startuml
-title ConsumeSmart - Future Architecture
+title RealSaveFooding - Future Architecture
 
 actor User
 
@@ -292,7 +292,7 @@ User --> [Web Portal]
 MVP-first repository structure implemented in this repository:
 
 ```text
-ConsumeSmart/
+RealSaveFooding/
 ├── front/
 │   ├── src/
 │   │   ├── app/                           # New MVP composition entrypoints
@@ -400,7 +400,7 @@ MVP infrastructure diagram:
 
 ```plantuml
 @startuml
-title ConsumeSmart MVP - Infrastructure and Deployment
+title RealSaveFooding MVP - Infrastructure and Deployment
 
 actor Developer
 actor User

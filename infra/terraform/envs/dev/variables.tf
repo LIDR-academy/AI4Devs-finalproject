@@ -7,5 +7,5 @@ variable "aws_region" {
 variable "project_name" {
   description = "Project slug"
   type        = string
-  default     = "consumesmart"
+  default     = "RealSaveFooding"
 }

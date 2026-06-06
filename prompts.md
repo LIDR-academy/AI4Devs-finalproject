@@ -69,7 +69,7 @@ The final results can be seen in docs/design
 ### **2.1. Diagrama de arquitectura:**
 ### Using ChatGPT
 #### Prompt 1: 
-I want to build ConsumeSmart is a pantry + consumption management mobile app concept focused on reducing food waste and saving money by helping people track what they buy, monitor expiration dates, and get recipe suggestions. A key capability is AI assistance—notably analyzing receipts to automatically infer items and suggest estimated expiration dates, reducing manual entry and improving automation. For Frontend (app) I chose Lovalbe (Radix-UI, React, TailWind, Vite, Typescript, Nitro) but for Backend I'd like to use NodeJS. Give me an architecture for this. Split between MVP and non-MVP as it's an academic project
+I want to build RealSaveFooding is a pantry + consumption management mobile app concept focused on reducing food waste and saving money by helping people track what they buy, monitor expiration dates, and get recipe suggestions. A key capability is AI assistance—notably analyzing receipts to automatically infer items and suggest estimated expiration dates, reducing manual entry and improving automation. For Frontend (app) I chose Lovalbe (Radix-UI, React, TailWind, Vite, Typescript, Nitro) but for Backend I'd like to use NodeJS. Give me an architecture for this. Split between MVP and non-MVP as it's an academic project
 
 #### Prompt 2: Switching to PlantUML
 Create an Architecture diagram for Frontend and Backend and Full. Use PlantUML

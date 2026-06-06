@@ -20,7 +20,7 @@ Jesús Ramírez Guerrero
 RealSaveFooding - Stop Wasting Food & Money
 
 ### **0.3. Brief project description:**
-ConsumeSmart is a pantry + consumption management mobile app concept focused on reducing food waste and saving money by helping people track what they buy, monitor expiration dates, and get recipe suggestions. A key capability is AI assistance—notably analyzing receipts to automatically infer items and suggest estimated expiration dates, reducing manual entry and improving automation.
+RealSaveFooding is a pantry + consumption management mobile app concept focused on reducing food waste and saving money by helping people track what they buy, monitor expiration dates, and get recipe suggestions. A key capability is AI assistance—notably analyzing receipts to automatically infer items and suggest estimated expiration dates, reducing manual entry and improving automation.
 
 ### **0.4. Project URL:**
 @ToDo JRG Missing - Not yet deployed
