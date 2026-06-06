@@ -33,16 +33,16 @@ Removed extra idas and put them into Non-MVP page. (Adding boundaries)
 - Consumption automation (consider food consumed if it is well past its expiration date).
 - Potential collaboration with supermarkets (add a QR code that adds purchases to the app along with their exact expiration dates. This can provide added value for supermarkets).
 ---
-[Idea-to-Product](docs/product/1_idea-to-product.md)
+[Idea-to-Product](docs/product/1_Idea-to-product.md)
 
 #### Prompt 2: market research
 Perform a market research on apps/software similar to ConsumeSmart, emphasizing AI assistance + automation, and a pros/cons comparison focused on my app RealSaveFooding feature set (receipt/scan → inventory → expiry → recipes → waste analytics → sharing)
 
-[Market-Research](docs/product/2_market_research.md)
+[Market-Research](docs/product/2_Market-research.md)
 
 Prompt 3: based on the content, generate a full detailed PRD that will be useful for the Product Owner for a further ticket split and Lead Engineer to start productisation
 
-[Initial-PRD](docs/product/3_initial_PRD.md)
+[Initial-PRD](docs/product/3_PRD.md)
 
 ### Lovable
 #### Prompt 4: Mockups
