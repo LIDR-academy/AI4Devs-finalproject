@@ -398,5 +398,11 @@ Sé concreto, práctico y justifica cada decisión según `docs/ARCHITECTURE.md`
 
 Redacta con tono técnico-académico y genera el resultado en `docs/INFRASTRUCTURE.md`.
 
-# Prompt 13: Despliuege
+# Prompt 13: Despliegue
 Haz un Checklist del flujo de despliegue del MVP académico y generalo en `docs/DEPLOYMENT.md`
+
+
+
+# Prompt 14: Coding Standards
+
+Qué estandars deberíamos tener dado @docs/ARCHITECTURE.md  tanto en el backend como en el frontend incluido coding estandares

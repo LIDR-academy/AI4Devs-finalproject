@@ -22,6 +22,7 @@ El MVP cubre: catálogo, búsqueda filtrada, ficha de producto, carrito, checkou
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Evaluación de opciones de arquitectura, diagramas C4 (Context → Code), stack tecnológico, estructura de ficheros y decisiones de diseño | Cambios estructurales, nuevos componentes, decisiones de infraestructura |
 | [`docs/DATA-MODEL.md`](docs/DATA-MODEL.md) | Diagrama ER, decisiones de modelado (arrays GIN vs junction tables), esquema Prisma y restricciones de integridad | Cambios en entidades, nuevas queries, migraciones |
 | [`docs/USER-STORIES.md`](docs/USER-STORIES.md) | 13 historias de usuario con criterios de aceptación, estimación y prioridad organizadas por caso de uso | Siempre que se mencione una US (p.ej. "implementa US-007"): leer la historia completa y sus criterios de aceptación antes de escribir código |
+| [`docs/CODING-STANDARDS.md`](docs/CODING-STANDARDS.md) | Estándares de código: TypeScript, estructura de capas, naming, testing y commits | Antes de escribir código nuevo, revisar una PR o incorporar una nueva funcionalidad |
 
 ## Rutas principales de la aplicación
 
@@ -44,6 +45,20 @@ El MVP cubre: catálogo, búsqueda filtrada, ficha de producto, carrito, checkou
 - Diagramas siempre en formato **Mermaid**
 - Tono académico y profesional en documentación
 - Todas las decisiones técnicas deben estar justificadas
+
+### Código — reglas críticas (ver detalle en `docs/CODING-STANDARDS.md`)
+
+**TypeScript strict siempre.** `"strict": true` en ambos `tsconfig.json`. Prohibido `any`.
+
+**Las capas no se saltan.** Controllers no importan Prisma. Services no importan Express ni Prisma. Repositories son el único punto de contacto con Prisma. Romper esta jerarquía hace los tests unitarios imposibles.
+
+**Repositories mapean a tipos de dominio.** Las capas superiores nunca ven tipos generados por Prisma. El mapeo ocurre dentro del repository.
+
+**`'use client'` solo cuando sea necesario.** Empezar como Server Component; bajar a Client Component solo cuando el componente use estado, efectos o event handlers.
+
+**Un fichero por recurso por capa, en kebab-case.** `catalog.service.ts`, `product.repository.ts`, `products.controller.ts`.
+
+**Tests unitarios de Services: mocks de repositorio, nunca base de datos real.**
 
 ## Seguridad — reglas no negociables
 
