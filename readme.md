@@ -1,83 +1,41 @@
 ## Índice
 
 0. [Ficha del proyecto](#0-ficha-del-proyecto)
-1. [Descripción general del producto](#1-descripción-general-del-producto)
+1. [Descripción general del producto](#1-product-overview)
 2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
 3. [Modelo de datos](#3-modelo-de-datos)
 4. [Especificación de la API](#4-especificación-de-la-api)
 5. [Historias de usuario](#5-historias-de-usuario)
 6. [Tickets de trabajo](#6-tickets-de-trabajo)
 7. [Pull requests](#7-pull-requests)
+8. [AI Usage)](8.AI-Usage.md)
 
 ---
+## 0. Project sheet
 
-## 0. Ficha del proyecto
+### **0.1. Full name:**
+Jesús Ramírez Guerrero
 
-### **0.1. Tu nombre completo:**
+### **0.2. Project name:**
+RealSaveFooding - Stop Wasting Food & Money
 
-### **0.2. Nombre del proyecto:**
+### **0.3. Brief project description:**
+ConsumeSmart is a pantry + consumption management mobile app concept focused on reducing food waste and saving money by helping people track what they buy, monitor expiration dates, and get recipe suggestions. A key capability is AI assistance—notably analyzing receipts to automatically infer items and suggest estimated expiration dates, reducing manual entry and improving automation.
 
-### **0.3. Descripción breve del proyecto:**
-
-### **0.4. URL del proyecto:**
-
+### **0.4. Project URL:**
+@ToDo JRG Missing - Not yet deployed
 > Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/).
 
 ### 0.5. URL o archivo comprimido del repositorio
-
-> Puedes tenerlo alojado en público o en privado, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/). También puedes compartir por correo un archivo zip con el contenido
-
+https://github.com/jesramgue/JRG-AI4Devs-finalproject.git
 
 ---
 
-## 1. Descripción general del producto
+## 1. Product overview
+[Product overview](docs/product/product.md)
 
-> Describe en detalle los siguientes aspectos del producto:
-
-### **1.1. Objetivo:**
-
-> Propósito del producto. Qué valor aporta, qué soluciona, y para quién.
-
-### **1.2. Características y funcionalidades principales:**
-
-> Enumera y describe las características y funcionalidades específicas que tiene el producto para satisfacer las necesidades identificadas.
-
-### **1.3. Diseño y experiencia de usuario:**
-
-> Proporciona imágenes y/o videotutorial mostrando la experiencia del usuario desde que aterriza en la aplicación, pasando por todas las funcionalidades principales.
-
-### **1.4. Instrucciones de instalación:**
-> Documenta de manera precisa las instrucciones para instalar y poner en marcha el proyecto en local (librerías, backend, frontend, servidor, base de datos, migraciones y semillas de datos, etc.)
-
----
-
-## 2. Arquitectura del Sistema
-
-### **2.1. Diagrama de arquitectura:**
-> Usa el formato que consideres más adecuado para representar los componentes principales de la aplicación y las tecnologías utilizadas. Explica si sigue algún patrón predefinido, justifica por qué se ha elegido esta arquitectura, y destaca los beneficios principales que aportan al proyecto y justifican su uso, así como sacrificios o déficits que implica.
-
-
-### **2.2. Descripción de componentes principales:**
-
-> Describe los componentes más importantes, incluyendo la tecnología utilizada
-
-### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
-
-> Representa la estructura del proyecto y explica brevemente el propósito de las carpetas principales, así como si obedece a algún patrón o arquitectura específica.
-
-### **2.4. Infraestructura y despliegue**
-
-> Detalla la infraestructura del proyecto, incluyendo un diagrama en el formato que creas conveniente, y explica el proceso de despliegue que se sigue
-
-### **2.5. Seguridad**
-
-> Enumera y describe las prácticas de seguridad principales que se han implementado en el proyecto, añadiendo ejemplos si procede
-
-### **2.6. Tests**
-
-> Describe brevemente algunos de los tests realizados
-
----
+## 2 System architecture
+[System architecture](docs/architecture/architecture.md)
 
 ## 3. Modelo de Datos
 
@@ -131,4 +89,8 @@
 **Pull Request 2**
 
 **Pull Request 3**
+
+## 8. Prompts - AI usage
+[Prompts and AI usage](prompts.md)
+
 
