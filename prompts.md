@@ -44,6 +44,9 @@ Prompt 3: based on the content, generate a full detailed PRD that will be useful
 
 [Initial-PRD](docs/product/3_PRD.md)
 
+Prompt 4: PRD refinement
+Based on the new skill for prd generation, take the 3_PRD.md where it's described the first version of it and refine it. Ask me for doubts (check skill at .github/skills/prd/SKILL.md)
+
 ### Lovable
 #### Prompt 4: Mockups
 I used Lovable to produce the mockups for the application. Using the same seed as before. I also connected it to Github to produce the first mockups with Vue + Vite from where I extracted the Screenshots with the designs. Mockups available in front folder (First Delivery)
