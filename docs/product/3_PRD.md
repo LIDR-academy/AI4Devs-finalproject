@@ -1,633 +1,195 @@
-
-# PRD — RealSaveFooding (v1)
-
-## 1. Overview
-
-### 1.1 Product name
-
-RealSaveFooding — Stop Wasting Food & Money
-
-### 1.2 One-line summary
-
-A smart, shared pantry app that uses AI to ingest grocery receipts, infer and learn expiration windows (localized for Spain), recommend what to consume/recipes next, and quantify food + money waste.
-
-### 1.3 Problem statement
-
-Households and individuals waste food because they lack (1) an accurate view of what they have, (2) dependable expiration tracking without manual effort, and (3) actionable guidance on what to consume next. Waste is also largely invisible, so behavior doesn’t change.
-
-### 1.4 Goals
-
-- Reduce food waste by improving visibility and timely action.
-- Reduce grocery spend by avoiding duplicates and preventing spoilage.
-- Minimize manual input via AI + automation.
-- Enable shared pantry coordination (multi-user) with clear event visibility.
-
-### 1.5 Non-goals (for v1 unless explicitly scoped)
-
-- Full meal-plan substitution (weekly meal planning as a primary product).
-- B2B restaurant inventory workflows.
-- Guaranteed “true” expiry dates for all products (we will provide estimates with confidence + confirmation flows).
-
----
-
-## 2. Target users & personas
-
-### 2.1 Primary personas
-
-1) **Busy household manager (couple/family)**
-
-- Needs shared pantry to avoid duplicates
-- Wants “what expires next” and notifications
-- Low tolerance for manual entry
-
-2) **Budget-conscious individual**
-
-- Wants money-saved story, price comparisons/alternatives
-- Wants simple workflows and clear analytics
-
-3) **Sustainability-motivated user**
-
-- Wants measurable waste reduction and behavioral feedback loops
-
-### 2.2 Key jobs-to-be-done
-
-- “After shopping, I want my groceries added quickly so I can track them without typing.”
-- “Before cooking, I want to know what to use first to avoid spoilage.”
-- “In a shared household, I want to know what’s been consumed and what’s left.”
-- “I want to understand how much I waste and why, so I can improve.”
-
----
-
-## 3. Value proposition
-
-### 3.1 Core value
-
-- **Automation**: receipt → items → (estimated) expiry suggestions.
-- **Localization (Spain)**: expiry windows aligned to Spanish supermarket norms.
-- **Learning loop**: user-corrected expiries become future default suggestions.
-- **Shared pantry coordination**: consumption visibility + notifications.
-- **Waste analytics**: food + money wasted, at-risk inventory, top-wasted items.
-
----
-
-## 4. Scope & milestones (productisation-ready)
-
-### 4.1 MVP (recommended)
-
-MVP should prove the end-to-end loop:
-
-1) Create account → pantry created
-
-2) Add items (receipt + manual) → expiry tracked
-
-3) Expiry notifications + “use next” prioritization
-
-4) Basic waste tracking (wasted vs consumed)
-
-5) Shared pantry (2 users) + “consumed” events + notifications
-
-### 4.2 Post-MVP (from your Non-MVP list + inferred)
-
-- Gamification (points, streaks, achievements)
-- Auto-consumption assumptions (e.g., if well past expiry, suggest “discarded” with confirmation)
-- Supermarket partnerships (QR ingestion with exact expiry)
-- Expanded price intelligence (true supermarket comparisons)
-- Benchmarking vs other users (privacy-preserving, opt-in)
-
----
-
-## 5. Functional requirements (detailed)
-
-### 5.1 Authentication & accounts
-
-**FR-ACC-01** Sign up
-
-- Support email + password.
-- Optional: username.
-
-**FR-ACC-02** Login
-
-- Email/username + password.
-
-**FR-ACC-03** Password recovery
-
-- Recovery via email.
-
-**FR-ACC-04** Account settings
-
-- Update profile: Name, Family Name, Age, Email, Address fields (City, Postal Code, Region, Country).
-- Privacy & Security:
-    - Change password
-    - Delete account
-    - Ad privacy preferences (store consent and preferences)
-
-Acceptance criteria
-
-- User can create account, login, recover password.
-- Sensitive operations require re-authentication (optional but recommended).
-
-### 5.2 Pantry model (inventory)
-
-**FR-PAN-01** Pantry views
-
-- List items with key fields: name, quantity, expiry date (or estimate), status (fresh/expiring soon/expired), storage location (optional: pantry/fridge/freezer).
-
-**FR-PAN-02** Item details
-
-- Show purchase date, inferred/confirmed expiry, confidence label, edit history.
-
-**FR-PAN-03** Manual add/edit
-
-- Add an item manually with at minimum: name, quantity, purchase date, expiry (optional).
-- Edit: quantity, expiry, notes.
-
-**FR-PAN-04** Consumption logging
-
-- Mark item (or quantity) as consumed.
-- In shared pantry: attribute consumption event to a user.
-
-Acceptance criteria
-
-- Items can be created, edited, consumed, and viewed consistently across devices.
-
-### 5.3 Receipt ingestion + AI
-
-**FR-RCP-01** Receipt capture flow
-
-- Camera capture + upload.
-- Post-scan review: user can confirm/edit extracted items.
-
-**FR-RCP-02** Item extraction
-
-- Extract line items: product name, quantity (if inferable), price (if present), purchase date (from receipt or capture time).
-
-**FR-RCP-03** Expiration inference (Spain norms)
-
-- Suggest expiry windows/dates using a Spain-oriented ruleset/model.
-
-**FR-RCP-04** Confidence + uncertainty UX contract
-
-- If confidence is low:
-    - Mark expiry as **Estimate**
-    - Prompt user to confirm or set the expiry.
-
-**FR-RCP-05** Learning default expiration window
-
-- When user changes an expiry date:
-    - Persist an updated “default shelf-life” for the canonical product (or product pattern).
-- On next purchase of same product:
-    - Suggest the learned window.
-
-Acceptance criteria
-
-- Receipt scan produces editable list of items.
-- Low-confidence expiry is never silently asserted as “certain.”
-
-### 5.4 Expiry tracking & notifications
-
-**FR-EXP-01** Expiry status computation
-
-- Compute: Fresh / Expiring soon / Expired.
-- Configurable thresholds (e.g., “expiring soon” = within N days).
-
-**FR-EXP-02** Notifications
-
-- Configurable toggles:
-    - Food expiration alerts
-    - Food consumed alerts (shared pantry)
-    - Price drop alerts (may be stubbed in MVP if no data source)
-
-**FR-EXP-03** Alerts content
-
-- Notification includes item name and time to expiry.
-
-Acceptance criteria
-
-- Notifications can be enabled/disabled.
-- Users receive expiration alerts based on thresholds.
-
-### 5.5 Recipes & “use next” recommendations
-
-**FR-REC-01** What to consume next
-
-- A prioritized list of items to use soon, driven by expiry.
-
-**FR-REC-02** Recipe suggestions
-
-- Suggest recipes based on available items, prioritizing expiring soon.
-
-Notes
-
-- Recipe source can be: external API, curated dataset, or “minimal starter set.”
-
-Acceptance criteria
-
-- User can view recipe suggestions for at least a subset of common ingredients.
-
-### 5.6 Price comparison & alternatives (phased)
-
-**FR-PRC-01** Compare prices action
-
-- Long-press menu includes “Compare prices.”
-- MVP option: placeholder UX + manual entry OR limited dataset.
-
-**FR-PRC-02** Alternatives
-
-- Show alternatives/substitutes (could be taxonomy-based initially).
-
-Acceptance criteria
-
-- Long-press menu exists and actions route to screens.
-
-### 5.7 Long-press contextual actions
-
-**FR-CTX-01** Long-press menu on pantry item
-
-- Compare prices
-- Alternatives
-- Change expiration date (this instance)
-- Change default expiration date (product)
-
-Acceptance criteria
-
-- Menu appears reliably and triggers correct flows.
-
-### 5.8 Sharing / household pantry
-
-**FR-SHR-01** Invite user
-
-- Invite by email.
-
-**FR-SHR-02** Accept invite
-
-- Link account to household pantry.
-
-**FR-SHR-03** Shared activity visibility
-
-- See who consumed what and when.
-
-**FR-SHR-04** Shared notifications
-
-- Optional: notify when another user consumes an item.
-
-Acceptance criteria
-
-- Two users see consistent shared pantry.
-- Consumption events show actor and timestamp.
-
-### 5.9 Waste analytics
-
-**Definitions**
-
-- **Consumed**: user-marked consumption
-- **Wasted**: user-marked wasted/discarded; (optional post-MVP: inferred waste)
-- **At risk**: expiring soon or predicted to be wasted
-
-**FR-ANA-01** Dashboard
-
-- Total food wasted (count/quantity)
-- Total money wasted (estimated)
-- At-risk items count
-
-**FR-ANA-02** Drilldowns
-
-- Group by time: day/week/month
-- Group by food: category/product/item
-
-**FR-ANA-03** Top 10 most-wasted foods
-
-- For current user
-
-**FR-ANA-04** Compare vs other users (post-MVP unless privacy model is ready)
-
-- Requires opt-in, aggregation thresholds, anonymization.
-
-Acceptance criteria
-
-- User can see totals and at least one drilldown dimension.
-
-### 5.10 Settings
-
-**FR-SET-01** Notifications settings
-
-- Toggle: expiry, price drop, consumed
-
-**FR-SET-02** Cloud sync
-
-- Abstract setting for “Cloud sync provider” (implementation detail).
-
-**FR-SET-03** Appearance
-
-- Dark / Light / Device
-
-**FR-SET-04** App info
-
-- Version
-- “Contact by email” action
-
-Acceptance criteria
-
-- Settings persist and take effect.
-
----
-
-## 6. User journeys (end-to-end)
-
-### 6.1 New user onboarding
-
-1) Install app
-
-2) Create account
-
-3) (Optional) accept invite to household
-
-4) Add first groceries via receipt scan
-
-5) Confirm uncertain expiries
-
-6) See pantry list + expiring soon section
-
-### 6.2 Weekly usage loop
-
-1) Shop → scan receipt
-
-2) Pantry updates
-
-3) Daily: check “use next”
-
-4) Cook/consume → log consumption
-
-5) Get alerts for expiring soon
-
-6) Occasionally review waste analytics
-
-### 6.3 Shared pantry loop
-
-1) User A scans receipt
-
-2) User B sees items
-
-3) User B consumes item → event logged
-
-4) User A gets (optional) notification “Consumed by …”
-
----
-
-## 7. UX / UI requirements
-
-### 7.1 Design principles
-
-- Apple-like: clean, minimal, intuitive.
-- Reduce cognitive load: surface “next best action.”
-- Trust-building: clearly label estimates and allow quick correction.
-
-### 7.2 Key screens
-
-- Auth: signup/login/forgot password
-- Pantry list (with expiring soon filter)
-- Item detail
-- Receipt scan + review
-- What to use next
-- Recipes list + recipe detail
-- Analytics dashboard + drilldown
-- Settings
-- Sharing/invitations
-
-### 7.3 Error and edge-case UX
-
-- Receipt scan fails: allow manual add or retry.
-- Low-confidence expiry: explicit confirmation required.
-- Shared conflicts: show reconciliation prompt (last-write-wins is acceptable for MVP if logged).
-
----
-
-## 8. Data & domain model (engineer-facing)
-
-### 8.1 Core entities
-
-- User
-- Household (shared pantry)
-- PantryItem (instance)
-- CanonicalProduct (normalized product)
-- Purchase (receipt + items)
-- Receipt (image + extracted lines)
-- ExpiryModelSuggestion (date/window + confidence + rationale)
-- DefaultShelfLifeRule (per product, per household or per user)
-- ConsumptionEvent (consumed/wasted, quantity, actor, timestamp)
-- NotificationPreference
-
-### 8.2 Key relationships
-
-- Household has many Users
-- Household has many PantryItems
-- PantryItem references CanonicalProduct (if matched)
-- PantryItem has many Events (edits, consumption)
-
-### 8.3 Auditability
-
-- Keep an event log for:
-    - expiry edits
-    - default shelf-life changes
-    - consumption events
-
----
-
-## 9. AI/ML requirements (practical and shippable)
-
-### 9.1 Receipt extraction pipeline
-
-- OCR (on-device or server)
-- Parsing and itemization
-- Normalization (map to CanonicalProduct)
-
-### 9.2 Expiration inference
-
-- Spain-oriented baseline model:
-    - ruleset by category (e.g., dairy/meat/produce) + product-specific overrides
-    - incorporate storage location where possible
-- Confidence scoring
-- Human-in-the-loop confirmation
-
-### 9.3 Learning loop
-
-- When user edits expiry:
-    - update DefaultShelfLifeRule for that canonical product
-    - store whether it’s household-wide default or user-specific (recommend household-wide with per-user override as future enhancement)
-
-### 9.4 Guardrails
-
-- Never present low-confidence outputs as facts.
-- Avoid hallucinated product matches: show candidate match list when uncertain.
-
----
-
-## 10. Privacy, security, compliance
-
-### 10.1 Data categories
-
-- PII: email, name, address fields
-- Household membership
-- Shopping behavior: receipts, purchases
-
-### 10.2 Requirements
-
-- Encryption at rest and in transit.
-- Role-based access control within household (MVP can be “all members are editors”; add roles later).
-- Data deletion on account delete (and household data handling rules).
-- Consent management for ad privacy.
-
-### 10.3 Benchmarking vs other users
-
-- Only aggregate, anonymize, and thresholded.
-- Explicit opt-in recommended.
-
----
-
-## 11. Analytics & metrics (product KPIs)
-
-### 11.1 North-star metric
-
-- Reduction in wasted value (€) per active household over time.
-
-### 11.2 Activation metrics
-
-- First receipt scan completed
-- % items with confirmed expiry
-- Notifications enabled
-- First consumption event logged
-
-### 11.3 Engagement metrics
-
-- Weekly active users/households
-- Pantry check frequency
-- “Use next” interactions
-- Recipe views started from expiring items
-
-### 11.4 Quality metrics (AI)
-
-- Receipt extraction precision/recall (validated by user edits)
-- Expiry suggestion acceptance rate
-- Average confidence vs edit rate
-
----
-
-## 12. Technical requirements (Lead Engineer starter)
-
-### 12.1 Architecture overview
-
-- Mobile apps (iOS/Android)
-- Backend API + database
-- AI services: receipt OCR/parsing, expiry inference
-- Notification service
-
-### 12.2 API surface (high-level)
-
-- Auth: signup/login/reset
-- Household: invite/accept/list members
-- Pantry: CRUD items, list with filters
-- Receipt: upload, parse, confirm items
-- Events: consumption/waste events
-- Defaults: per-product shelf-life rules
-- Analytics: aggregates + drilldowns
-- Settings: notification prefs, appearance (client-side), ad privacy
-
-### 12.3 Sync & concurrency
-
-- Shared pantry requires:
-    - server as source of truth
-    - optimistic UI with server reconciliation
-    - event log to explain changes
-
-### 12.4 Observability
-
-- Structured logs, tracing, error reporting
-- Model pipeline monitoring (receipt failures, inference low-confidence distribution)
-
----
-
-## 13. Ticket-splitting guide (PO-ready epics)
-
-### Epic A — Foundations
-
-- A1 Auth (signup/login/reset)
-- A2 User profile + account settings
-- A3 Core data model + API scaffolding
-
-### Epic B — Pantry core
-
-- B1 Pantry list + item detail
-- B2 Manual add/edit
-- B3 Consumption events
-- B4 Shared pantry invite/accept + shared views
-
-### Epic C — Receipt ingestion
-
-- C1 Receipt capture UI
-- C2 Upload + storage
-- C3 OCR + parsing
-- C4 Review/confirmation UX
-- C5 Canonical product matching
-
-### Epic D — Expiry intelligence
-
-- D1 Spain-oriented inference baseline
-- D2 Confidence scoring + estimate labeling
-- D3 Confirmation flow
-- D4 Learning defaults + apply on next purchase
-
-### Epic E — Notifications
-
-- E1 Preference center
-- E2 Expiry jobs + push notifications
-- E3 Shared consumption notifications
-
-### Epic F — Recipes & use-next
-
-- F1 “Use next” prioritization
-- F2 Recipes integration + UI
-
-### Epic G — Analytics
-
-- G1 Waste + at-risk dashboard
-- G2 Drilldowns (time + category)
-- G3 Top 10 most wasted
-
-### Epic H — Price comparison (phased)
-
-- H1 UI entry points + long-press menu
-- H2 Data source strategy + MVP implementation
-
----
-
-## 14. Open questions / decisions needed
-
-1) **Receipt ingestion**: on-device OCR vs server OCR? Cost/latency/privacy tradeoff.
-
-2) **Canonical product strategy**: barcode support? Use external product DB?
-
-3) **Spain norms**: define initial shelf-life tables by category/product.
-
-4) **Shared pantry permissions**: all editors in MVP vs roles.
-
-5) **Waste definition**: require explicit “wasted” action in MVP?
-
-6) **Price comparison**: data acquisition approach (partnership vs scraping vs user-entered).
-
-7) **Recipe source**: API selection/licensing.
-
----
-
-## 15. Risks & mitigations
-
-- **AI accuracy risk** (receipt + expiry): mitigate with confirmation UX, confidence display, learning loop.
-- **Price data availability**: keep as phased; avoid blocking MVP.
-- **Privacy concerns**: minimize PII, make benchmarking opt-in.
-- **Shared sync complexity**: start with server-source-of-truth + event log.
-
----
-
-## 16. Appendix
-
-- Competitive landscape: see companion page “Market research — competitors comparison (AI pantry + expiry + recipes + price)”.
-- Frontend/back-end split reference: see “Split by Frontend/Backend”.
-- Non-MVP ideas: see “Non-MVP”.
+# PRD: RealSaveFooding MVP (Refined)
+
+## 1. Introduction / Overview
+RealSaveFooding helps households reduce food waste and save money by combining pantry tracking, receipt ingestion, expiration intelligence, and actionable guidance.
+
+The MVP solves three concrete problems:
+- Users do not know what they currently have at home.
+- Users do not maintain expiration dates manually.
+- Users do not get clear next actions to consume food before spoilage.
+
+### Problem statement
+Users lose money and waste food because inventory visibility is low, expiry tracking is inconsistent, and shared households are poorly coordinated.
+
+## 2. Goals
+- Reduce avoidable food waste for active households in the first month of use.
+- Reduce duplicate purchases caused by missing pantry visibility.
+- Minimize manual data entry through receipt scan + OCR + assisted expiry defaults.
+- Provide clear daily prioritization for what to consume next.
+- Enable two-user shared pantry coordination for MVP.
+
+## 3. User Stories
+
+### US-001: Register and access account
+**Description:** As a new user, I want to create an account and log in so that my pantry data is private and persistent.
+
+**Acceptance Criteria:**
+- [ ] User can sign up with email and password.
+- [ ] User can log in with valid credentials.
+- [ ] Invalid credentials return a clear error message.
+- [ ] JWT-based session is required for protected API routes.
+- [ ] Typecheck/lint passes.
+- [ ] Verify in browser using dev-browser skill.
+
+### US-002: Add pantry item manually
+**Description:** As a user, I want to add food items manually so that I can track products when no receipt is available.
+
+**Acceptance Criteria:**
+- [ ] User can create an item with name, quantity, and optional expiry date.
+- [ ] New item appears in pantry list immediately after save.
+- [ ] Required field validation is shown in the form.
+- [ ] Typecheck/lint passes.
+- [ ] Verify in browser using dev-browser skill.
+
+### US-003: Upload receipt and extract products
+**Description:** As a user, I want to upload a receipt so that products are detected automatically.
+
+**Acceptance Criteria:**
+- [ ] User can upload a receipt image successfully.
+- [ ] Backend stores receipt file in S3.
+- [ ] OCR pipeline returns at least one extracted item when text is readable.
+- [ ] User can review extracted items before final confirmation.
+- [ ] Typecheck/lint passes.
+- [ ] Verify in browser using dev-browser skill.
+
+### US-004: Suggest expiration dates with confidence
+**Description:** As a user, I want estimated expiry suggestions so that I can track freshness with less manual effort.
+
+**Acceptance Criteria:**
+- [ ] System generates expiry estimate for extracted or manual items.
+- [ ] Each estimate includes a confidence level.
+- [ ] Low-confidence values are labeled as estimate and require user confirmation.
+- [ ] User can edit expiry date before saving.
+- [ ] Expiry learning is not persisted in MVP (no automatic default-learning loop).
+- [ ] Typecheck/lint passes.
+- [ ] Verify in browser using dev-browser skill.
+
+### US-005: Receive expiring-soon notifications
+**Description:** As a user, I want expiration alerts so that I can consume food before it goes bad.
+
+**Acceptance Criteria:**
+- [ ] Expiring-soon threshold is fixed to 3 days in MVP.
+- [ ] Notification event is generated for items within threshold.
+- [ ] User can enable or disable expiration notifications.
+- [ ] Typecheck/lint passes.
+
+### US-006: Compare prices with limited MVP dataset
+**Description:** As a user, I want a simple price comparison view so that I can make basic purchasing decisions.
+
+**Acceptance Criteria:**
+- [ ] Long-press action opens Compare prices view.
+- [ ] View shows comparison values from a limited predefined dataset.
+- [ ] If no dataset entry exists, UI shows a clear "data unavailable" state.
+- [ ] Typecheck/lint passes.
+- [ ] Verify in browser using dev-browser skill.
+
+### US-007: View dashboard with active and expiring items
+**Description:** As a user, I want a dashboard summary so that I can quickly decide what to use next.
+
+**Acceptance Criteria:**
+- [ ] Dashboard shows active pantry item count.
+- [ ] Dashboard shows expiring-soon item count.
+- [ ] Dashboard lists prioritized items to consume first.
+- [ ] Dashboard does not require recipe integration in MVP.
+- [ ] Typecheck/lint passes.
+- [ ] Verify in browser using dev-browser skill.
+
+### US-008: Share pantry with one household member
+**Description:** As a user, I want to share my pantry with another account so that both users see the same inventory.
+
+**Acceptance Criteria:**
+- [ ] User can invite another user by email.
+- [ ] Invited user can accept invitation.
+- [ ] Both users see synchronized pantry data.
+- [ ] Consumption events show actor and timestamp.
+- [ ] Typecheck/lint passes.
+
+### US-009: Track waste in quantity and estimated value
+**Description:** As a user, I want to track wasted items so that I can understand financial and food impact.
+
+**Acceptance Criteria:**
+- [ ] User can mark item as consumed or wasted.
+- [ ] System can suggest waste for far-past-expiry items and requires explicit user confirmation.
+- [ ] Waste metrics include count and estimated monetary value.
+- [ ] Dashboard updates after event registration.
+- [ ] Typecheck/lint passes.
+- [ ] Verify in browser using dev-browser skill.
+
+### US-010: Use-next prioritization without recipe engine
+**Description:** As a user, I want to see what to consume first so that I can reduce spoilage.
+
+**Acceptance Criteria:**
+- [ ] System prioritizes items by expiry risk and shows ordered list.
+- [ ] List is available from pantry and dashboard context.
+- [ ] No recipe generation or external recipe integration is required in MVP.
+- [ ] Typecheck/lint passes.
+- [ ] Verify in browser using dev-browser skill.
+
+## 4. Functional Requirements
+- FR-1: The system must support account registration, login, and JWT authorization.
+- FR-2: The system must provide pantry CRUD operations for authenticated users.
+- FR-3: The system must support receipt image upload and metadata persistence.
+- FR-4: The system must extract purchasable items from receipts using OCR.
+- FR-5: The system must generate rules-based expiration estimates localized to Spain.
+- FR-6: The system must mark low-confidence expiration outputs as estimates requiring confirmation.
+- FR-7: The system must allow users to edit expiry values, but must not persist learned default expiry behavior in MVP.
+- FR-8: The system must compute item freshness states: fresh, expiring soon, expired.
+- FR-9: The system must use a fixed 3-day threshold for expiring-soon state in MVP.
+- FR-10: The system must trigger expiring-soon notifications via SNS-compatible flow.
+- FR-11: The system must provide a dashboard with active items and prioritized expiring items.
+- FR-12: The system must provide a price comparison screen backed by a limited predefined dataset.
+- FR-13: The system must support basic two-user pantry sharing with invite/accept flow.
+- FR-14: The system must record consumption and waste events with timestamp and actor.
+- FR-15: The system must provide waste analytics in quantity and estimated monetary value.
+- FR-16: The system must support suggested waste classification for far-past-expiry items requiring explicit confirmation.
+- FR-17: The system must provide "use next" prioritization without recipe engine integration in MVP.
+
+## 5. Non-Goals (Out of Scope)
+- Full weekly meal planning engine.
+- Advanced price comparison with live supermarket integrations beyond a limited predefined dataset.
+- Guaranteed exact expiry prediction for every product.
+- Multi-role household permissions beyond basic shared access.
+- Benchmarking against other users (cross-user analytics).
+- Production-grade multi-environment deployment hardening.
+- Recipe recommendation engine or external recipe API integration.
+- Automatic expiry learning loop from user edits.
+
+## 6. Design Considerations
+- Design language: clean, minimal, mobile-first, low cognitive load.
+- Pantry list must make expiring-soon items visually obvious.
+- Receipt confirmation flow must clearly separate extracted values from user-confirmed values.
+- Use-next UI must be present as a simple prioritized list, not as recipe cards.
+- Long-press item actions should include:
+  - Compare prices (MVP: limited predefined dataset)
+  - Alternatives
+  - Change expiration date
+  - Change default expiration window (visible but learning behavior out of MVP)
+
+## 7. Technical Considerations
+- Frontend stack: React + TypeScript + Tailwind + Radix in front.
+- Backend stack: NestJS + Prisma + PostgreSQL in back.
+- OCR and integrations: AWS Textract, S3, SNS.
+- Data model must include entities for user, pantry item, receipt, consumption event, and expiry metadata.
+- Price comparison source for MVP is a controlled limited dataset (not live market integration).
+- Expiration learning model updates are deferred to post-MVP.
+- For MVP, keep architecture as modular monolith with clear domain modules.
+- Keep infrastructure scope to dev environment and reproducible setup.
+
+## 8. Success Metrics
+- At least 70% of onboarding users complete first pantry item creation within first session.
+- At least 50% of active users upload at least one receipt in first week.
+- At least 40% of expiring-soon notifications lead to a consume/waste event within 48 hours.
+- Reduction trend in wasted estimated value for returning users over 4 weeks.
+- At least 80% of OCR-derived entries are accepted with minor or no user edits.
+- At least 60% of far-past-expiry suggestions receive explicit user confirmation (consume or waste).
+
+## 9. Open Questions
+1. Should OCR run server-side only in MVP, or should we keep the architecture open for future on-device fallback?
+2. For the limited price dataset, what categories must be included in MVP (for example dairy, produce, meat, pantry staples)?
+3. What rule should define "far-past-expiry" for waste suggestion (for example 3 days, 7 days, or category-based)?
+
+## Appendix: Delivery Slices (MVP)
+- Slice A: Auth + pantry CRUD
+- Slice B: Receipt upload + OCR + confirmation
+- Slice C: Expiry estimation + notification trigger
+- Slice D: Dashboard + waste events + basic sharing
