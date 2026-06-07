@@ -75,15 +75,13 @@ Design Notes:
 
 ---
 
-## 5. Historias de Usuario
+## 5. User Stories
 
-> Documenta 3 de las historias de usuario principales utilizadas durante el desarrollo, teniendo en cuenta las buenas prácticas de producto al respecto.
+The main MVP user stories, written with product best practices (clear persona-goal-value format, testable acceptance criteria, and traceability to FR/data model), are documented in:
 
-**Historia de Usuario 1**
+- [MVP Main User Stories](docs/product/4_User-stories.md)
 
-**Historia de Usuario 2**
-
-**Historia de Usuario 3**
+Covered scope includes identity, pantry management, receipt OCR flow, expiration intelligence, notifications, price comparison, sharing, waste tracking, and use-next prioritization.
 
 ---
 

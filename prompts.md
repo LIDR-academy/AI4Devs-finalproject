@@ -367,9 +367,20 @@ It is based on the `docs/product/3_PRD.md` file to understand the business mod
 
 ### 5. Historias de Usuario
 
-**Prompt 1:**
+## Prompt 1:
+```markdown
+# Role
+You are a **Expert Product Manager** specializing  mobile applications with backend applications.
 
-**Prompt 2:**
+# Context
+It is based on the `docs/product/3_PRD.md` file to understand the business model, use cases and data model of RealSaveFooding and the architecture definition defined in `docs/architecture/architecture.md`. `docs/db/database-model.md)`for Database model.
+
+# Instructions
+- Add into docs/product/4_User-stories` all of the main user stories used during MPV development, taking into account good product practices in this regard.
+- Update `readme.md` document, header 5 to include the references to the main user stories
+```
+## Prompt 2: Using the new skill for user story generation
+Please use the specific user-story skill and rewrite them in the format defined in the skill, making sure to include clear persona-goal-value format, testable acceptance criteria, and traceability to functional requirements and data model. If any story is too vague or large, break it down into smaller, more focused stories that can be implemented in a single session. Make sure to include "Verify in browser using dev-browser skill" as acceptance criteria for any story with UI changes.
 
 **Prompt 3:**
 
