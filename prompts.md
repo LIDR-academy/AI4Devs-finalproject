@@ -405,12 +405,83 @@ Write the updatred user stories in the same .md file
 
 ### 6. Tickets de Trabajo
 
-**Prompt 1:**
+#### Prompt 1: 
+```markdown
+# Role
+You are a **Expert Product Manager** specializing mobile applications with backend applications.
 
-**Prompt 2:**
+# Context
+It is based on the `docs/product/3_PRD.md` file to understand the business model, use cases and data model of RealSaveFooding and the architecture definition defined in `docs/architecture/architecture.md`. `docs/db/database-model.md)`for Database model. The User stories from where you need to extract the tickets resides in `docs/product/4_User-stories.md`
 
-**Prompt 3:**
+# Instructions
 
+- Add into docs/tickets/` the development work tickets.  Provides all the detail required to develop the task from start to finish, taking into account good practices in this regard (Front, Back, DB...).
+- Update `readme.md` document, header 6 to include the references to 3 of main tickets. At least it should contain, one backend, one frontend, and one database ticket.
+```
+
+#### Prompt 2: Correction of the tickets generated
+No, you should create ALL tickets from the user stories in /docs/tickets folder BUT only reference 3 main tickets (1 frontend, 1 backend, 1 DB) into readme.md
+
+Prompt 3: Meta-Prompt for ticket ammendment
+```markdown
+Write this better for a prompt "Now I have 4 different sets of tickets: TKT-BE-{000}, TKT-DB-{000}, TKT-FE-{000} and TKT-US-{000}, it's not normalised, could you fix it?. Consider: As the Sofware Engineer that's going to work is a full-stack should we split by technology? If so, split by technology, If not, use the same pattern and correct the refernces into readme.md"
+```
+
+Prompt 4: Prompt from Meta-Prompt for ticket ammendment execution
+```markdown
+Review the current ticketing strategy used in the project. At present, there are four independent ticket sequences:
+
+* `TKT-BE-{000}` (Backend)
+* `TKT-DB-{000}` (Database)
+* `TKT-FE-{000}` (Frontend)
+* `TKT-US-{000}` (User Stories)
+
+This approach does not appear to be normalized or consistently aligned with the project's delivery model.
+
+Please perform the following tasks:
+
+1. Evaluate whether organizing tickets by **technology layer** (Frontend, Backend, Database, etc.) is appropriate for this project, considering that the work will primarily be carried out by a **single full-stack software engineer**.
+
+2. Recommend the most suitable ticketing strategy based on software engineering best practices for a small team or solo developer:
+
+   * **Option A:** Maintain separate ticket sequences by technology.
+   * **Option B:** Use a single, unified ticket sequence independent of technology.
+   * If another approach is more appropriate, propose and justify it.
+
+3. Explain the **advantages and disadvantages** of each approach in the context of:
+
+   * Traceability,
+   * Maintainability,
+   * Ease of prioritization,
+   * Alignment with Agile practices,
+   * Academic project simplicity.
+
+4. If you recommend changing the current approach:
+
+   * Define the proposed ticket naming convention.
+   * Provide examples of how the existing tickets should be migrated to the new format.
+   * Ensure that relationships between user stories, tasks, and technical work remain clear.
+
+5. Review the existing project documentation and identify any references to the old ticket identifiers.
+
+   * Update all references so they align with the proposed convention.
+   * Specify which sections of the `README.md` need to be modified.
+
+6. Provide a final recommendation for the **RealSaveFooding** project, taking into account that:
+
+   * The project is an academic MVP,
+   * The implementation is being developed by a full-stack engineer,
+   * Simplicity and clarity should be prioritized over enterprise-scale processes.
+
+The output should include:
+
+* The recommended ticketing strategy,
+* The rationale behind the decision,
+* The proposed naming convention,
+* Examples of the updated ticket structure,
+* A list of required updates to the `README.md`.
+* Any additional documentation updates needed to reflect the new ticketing strategy.
+```
 ---
 
 ### 7. Pull Requests
