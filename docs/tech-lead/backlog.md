@@ -1,5 +1,44 @@
 # Product Backlog: SplitEat
 
+Este backlog contiene las historias de usuario y criterios de aceptación del producto. Las tareas técnicas de desarrollo específicas se encuentran detalladas en archivos independientes dentro de la documentación de historias de usuario:
+
+### [Épica 1: Core & Offline](../user-stories/epic-1-core/)
+* **TSK-1.1:** [Inicialización del Proyecto y CSS](../user-stories/epic-1-core/TSK-1.1.md)
+* **TSK-1.2:** [Inicialización de Dexie.js (IndexedDB) y Repository](../user-stories/epic-1-core/TSK-1.2.md)
+* **TSK-1.3:** [Servicio de OCR Offline (Tesseract.js)](../user-stories/epic-1-core/TSK-1.3.md)
+* **TSK-1.4:** [Motor de Expresiones Regulares (Regex)](../user-stories/epic-1-core/TSK-1.4.md)
+* **TSK-1.5:** [Componente UI de Captura de Ticket (OCR View)](../user-stories/epic-1-core/TSK-1.5.md)
+* **TSK-1.6:** [React Hook de Estado Global (useTicketState)](../user-stories/epic-1-core/TSK-1.6.md)
+* **TSK-1.7:** [Pantalla de Edición y Corrección Manual](../user-stories/epic-1-core/TSK-1.7.md)
+* **TSK-1.8:** [Mesa de Asignación Interactiva (Split Board)](../user-stories/epic-1-core/TSK-1.8.md)
+
+### [Épica 2: Advanced & Gamification](../user-stories/epic-2-advanced/)
+* **TSK-2.1:** [Algoritmo de Ajuste de Céntimos (Penny Adjustment)](../user-stories/epic-2-advanced/TSK-2.1.md)
+* **TSK-2.2:** [Reparto Rápido de Entrantes](../user-stories/epic-2-advanced/TSK-2.2.md)
+* **TSK-2.3:** [Barra de Estado de Cuadre y Alertas](../user-stories/epic-2-advanced/TSK-2.3.md)
+* **TSK-2.4:** [Redondeo Individual y Propina Común](../user-stories/epic-2-advanced/TSK-2.4.md)
+* **TSK-2.5:** [Componente de Ruleta de Sorteo](../user-stories/epic-2-advanced/TSK-2.5.md)
+* **TSK-2.6:** [Vista de Dictado al Camarero](../user-stories/epic-2-advanced/TSK-2.6.md)
+* **TSK-2.7:** [Recuperación de Sesión y Borrado local](../user-stories/epic-2-advanced/TSK-2.7.md)
+
+### [Épica 3: Cloud & Sync](../user-stories/epic-3-cloud/)
+* **TSK-3.1:** [Configuración del SDK de Firebase y Env](../user-stories/epic-3-cloud/TSK-3.1.md)
+* **TSK-3.2:** [Flujo de Autenticación Opcional](../user-stories/epic-3-cloud/TSK-3.2.md)
+* **TSK-3.3:** [Sincronización Cloud de Contactos](../user-stories/epic-3-cloud/TSK-3.3.md)
+* **TSK-3.4:** [Sync Manager (IndexedDB -> Firestore)](../user-stories/epic-3-cloud/TSK-3.4.md)
+* **TSK-3.5:** [Cloud Function de OCR Nube (Vision API)](../user-stories/epic-3-cloud/TSK-3.5.md)
+* **TSK-3.6:** [Generador QR Bizum y Plantillas WhatsApp](../user-stories/epic-3-cloud/TSK-3.6.md)
+* **TSK-3.7:** [Reglas de Seguridad y Despliegue](../user-stories/epic-3-cloud/TSK-3.7.md)
+
+### [Épica 4: Analytics & Exports](../user-stories/epic-4-analytics/)
+* **TSK-4.1:** [Exportación a PDF Corporativo](../user-stories/epic-4-analytics/TSK-4.1.md)
+* **TSK-4.2:** [Exportador a Excel (.xlsx)](../user-stories/epic-4-analytics/TSK-4.2.md)
+* **TSK-4.3:** [Filtro de Geolocalización EXIF (Privacidad)](../user-stories/epic-4-analytics/TSK-4.3.md)
+* **TSK-4.4:** [Vista de Mapa Interactivo de Restaurantes](../user-stories/epic-4-analytics/TSK-4.4.md)
+* **TSK-4.5:** [Panel de Analíticas y Gráficos](../user-stories/epic-4-analytics/TSK-4.5.md)
+
+---
+
 ## Epic 1: Core Digitalization & Basic Assignment Flow (Offline & No Registration)
 
 ### US-01: Intelligent OCR Scanning of Tickets
