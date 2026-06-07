@@ -397,6 +397,8 @@ RealSaveFooding/
 │       └── docker-compose.local.yml
 │
 ├── docs/
+│   ├── db/
+│   │   └── database-model.md
 │   ├── architecture/
 │   │   ├── context-diagram.md
 │   │   ├── container-diagram.md
@@ -587,3 +589,6 @@ Reference:
 - Detailed strategy: [docs/testing/test-strategy.md](../testing/test-strategy.md)
 
 ---
+
+## 3. Database model
+- [Database Model](../db/database-model.md)
