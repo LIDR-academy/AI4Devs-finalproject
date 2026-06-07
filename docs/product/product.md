@@ -118,16 +118,9 @@ Secondary / later segments:
     - Appearance (dark/light/system)
     - App info + contact by email
 
-## **1.3. Design and UX:**
-![design_01_Main](/docs/design/01_Main.png) 
-![design_02_Login](/docs/design/02_Login.png) 
-![design_03_Create_account](/docs/design/03_Create_account.png) 
-![design_04_Pantry](/docs/design/04_Pantry.png) 
-![design_05_Recipes](/docs/design/05_Recipes.png) 
-![design_06_Add_items](/docs/design/06_Add_items.png) 
-![design_07_Insights](/docs/design/07_Insights.png) 
-![design_08_Shared_pantry](/docs/design/08_Shared_pantry.png) 
-![design_09_Settings](/docs/design/09_Settings.png)
+## **1.3. Design and UX**
+
+See the detailed wireframes and screenshots in the design folder: [Design and UX](../design/readme.md).
 
 
 ## **1.4. Installation instructions:**
