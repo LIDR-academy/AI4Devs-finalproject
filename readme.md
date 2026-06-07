@@ -372,31 +372,40 @@ Evolución futura:
 
 ### **2.5. Seguridad**
 
-Prácticas consideradas:
+La estrategia de seguridad de RoboDock AI se divide en dos niveles:
 
-1. **Variables de entorno**  
-   Credenciales de BD, puerto serial y modos de operación se configuran por `.env`.
+1. **Prácticas comprometidas para las siguientes entregas del curso**, aplicables al MVP local.
+2. **Prácticas consideradas para una evolución futura del producto**, cuando RoboDock AI opere como plataforma cloud/multiusuario.
 
-2. **Separación modo real/simulado**  
-   `ROBOT_MODE=simulated` evita movimientos físicos accidentales.
+#### Seguridad comprometida para el MVP académico
 
-3. **Validación de entrada**  
-   DTOs y validaciones en backend para evitar payloads inválidos.
+| Práctica | Implementación comprometida |
+|---|---|
+| Separación modo real/simulado | El sistema debe soportar `ROBOT_MODE=simulated` y `ROBOT_MODE=real`. El modo simulado será usado para pruebas y respaldo de demo, evitando movimientos físicos accidentales del MaxArm. |
+| Configuración segura | Variables como `DATABASE_URL`, puerto serial del MaxArm, modo de cámara y modo robot se gestionarán mediante `.env`. El archivo `.env` no se subirá al repositorio; se incluirá `.env.example`. |
+| Validación de entrada | El Backend Core validará los payloads principales antes de crear sesiones, registrar eventos, registrar cubos o registrar acciones robot. |
+| Prevención de SQL Injection | El acceso a la base de datos se realizará mediante Prisma Client. Cualquier uso futuro de SQL raw deberá ser parametrizado. |
+| Integridad relacional | PostgreSQL y Prisma aplicarán claves primarias UUID, claves foráneas, restricciones `unique`, índices y relaciones explícitas entre `Site`, `EdgeNode`, `CameraDevice`, `RobotArm`, calibraciones, sesiones, cubos, acciones y eventos. |
+| Consistencia operacional por EdgeNode | El backend deberá validar que cámara, robot, calibraciones, zonas de descarga y sesiones pertenezcan al mismo `EdgeNode`, evitando mezclar configuraciones de distintos muelles o laptops. |
+| Control de estados | Las sesiones usarán estados controlados como `CREATED`, `DETECTING`, `UNLOADING`, `COMPLETED`, `FAILED` y `CANCELLED`, evitando transiciones inválidas. |
+| Seguridad de movimiento robótico | Antes de mover el MaxArm, el Edge Service deberá validar poses requeridas, usar coordenadas enteras, aplicar `safeZ`, pasar por `reset` y ejecutar secuencias controladas. |
+| Manejo de errores del robot | Si falla un paso del robot, la acción debe quedar en estado `ERROR`, registrar `errorMessage` y detener la secuencia o intentar volver a una posición segura con `suck=0`. |
+| Prevención de sobreposición en descarga | La asignación de `DropPosition` debe evitar que dos cubos del mismo color usen la misma posición física. Para ello se usará `DropPosition.occupied` y validación transaccional al asignar posiciones. |
+| Trazabilidad operacional | Las entidades `Event`, `SystemLog`, `RobotAction` y `RobotActionStep` registrarán detecciones, comandos enviados al MaxArm, respuestas, errores y cambios de estado. |
+| Datos sensibles | El MVP no almacenará pagos, tarjetas, credenciales de usuarios finales ni datos personales sensibles. Los datos registrados serán operacionales y de demostración. |
 
-4. **Control de estados**  
-   La sesión solo puede avanzar por estados válidos: `CREATED`, `DETECTING`, `UNLOADING`, `COMPLETED`, `FAILED`, `CANCELLED`.
+#### Seguridad considerada para evolución futura
 
-5. **Trazabilidad**  
-   `Event`, `SystemLog`, `RobotAction` y `RobotActionStep` registran actividad operacional y técnica.
-
-6. **Protección del robot**  
-   El edge service debe usar `safeZ`, posición `reset` y comandos enteros antes de mover el brazo.
-
-7. **Validación de pertenencia a EdgeNode**  
-   El backend debe validar que cámara, robot, calibraciones y sesión pertenezcan al mismo edge.
-
-8. **No exponer secretos en repositorio**  
-   `.env` debe quedar excluido en `.gitignore`.
+| Práctica | Evolución propuesta |
+|---|---|
+| Autenticación | En una versión cloud o multiusuario se deberá incorporar autenticación mediante JWT, OAuth2, proveedor externo o mecanismo equivalente. |
+| RBAC | Se consideran roles como `operator`, `supervisor` y `admin`, con permisos diferenciados para operación, consulta histórica y configuración de cámaras, robots, calibraciones y zonas. |
+| Rate limiting | Si la API queda expuesta fuera del entorno local, se deberá aplicar rate limiting en endpoints públicos, endpoints de eventos y endpoints de dashboard. |
+| HTTPS | En despliegues cloud o accesos remotos, todo tráfico deberá usar HTTPS. |
+| Auditoría avanzada | En una versión productiva se podría agregar auditoría de usuario, IP, dispositivo, cambios de configuración y operaciones críticas. |
+| Gestión de secretos | Para cloud se deberá usar un secret manager o mecanismo equivalente, evitando gestionar secretos manualmente en archivos locales. |
+| Privacidad y retención de datos | Si se incorporan usuarios reales o datos personales, se deberán definir políticas de retención, anonimización y eliminación de datos. |
+| Multi-tenant SaaS | Si RoboDock AI evoluciona a producto SaaS, se deberá agregar aislamiento formal por organización/cliente, más allá del modelo actual basado en `Site` y `EdgeNode`. |
 
 ### **2.6. Tests**
 
