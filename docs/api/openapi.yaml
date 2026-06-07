@@ -1,0 +1,11 @@
+openapi: 3.0.3
+info:
+  title: RealSaveFooding API
+  version: 0.1.0
+paths:
+  /api/health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: API is healthy

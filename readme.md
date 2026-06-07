@@ -1,124 +1,111 @@
 ## Índice
 
-0. [Ficha del proyecto](#0-ficha-del-proyecto)
-1. [Descripción general del producto](#1-descripción-general-del-producto)
-2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
-3. [Modelo de datos](#3-modelo-de-datos)
-4. [Especificación de la API](#4-especificación-de-la-api)
-5. [Historias de usuario](#5-historias-de-usuario)
-6. [Tickets de trabajo](#6-tickets-de-trabajo)
-7. [Pull requests](#7-pull-requests)
+- [0. Project sheet](#0-project-sheet)
+	- [0.1. Full name](#01-full-name)
+	- [0.2. Project name](#02-project-name)
+	- [0.3. Brief project description](#03-brief-project-description)
+	- [0.4. Project URL](#04-project-url)
+	- [0.5. URL o archivo comprimido del repositorio](#05-url-o-archivo-comprimido-del-repositorio)
+- [1. Product overview](#1-product-overview)
+- [2. System architecture](#2-system-architecture)
+- [3. Data Model](#3-data-model)
+	- [3.1. Data model diagram](#31-data-model-diagram)
+	- [3.2. Description of main entities](#32-description-of-main-entities)
+- [4. API Specification](#4-api-specification)
+- [5. User Stories](#5-user-stories)
+- [6. Development Tickets](#6-development-tickets)
+- [7. Pull Requests](#7-pull-requests)
+- [8. Prompts - AI usage](prompts.md)
 
 ---
+## 0. Project sheet
 
-## 0. Ficha del proyecto
+### **0.1. Full name:**
+Jesús Ramírez Guerrero
 
-### **0.1. Tu nombre completo:**
+### **0.2. Project name:**
+RealSaveFooding - Stop Wasting Food & Money
 
-### **0.2. Nombre del proyecto:**
+### **0.3. Brief project description:**
+RealSaveFooding is a pantry + consumption management mobile app concept focused on reducing food waste and saving money by helping people track what they buy, monitor expiration dates, and get recipe suggestions. A key capability is AI assistance—notably analyzing receipts to automatically infer items and suggest estimated expiration dates, reducing manual entry and improving automation.
 
-### **0.3. Descripción breve del proyecto:**
-
-### **0.4. URL del proyecto:**
-
+### **0.4. Project URL:**
+@ToDo JRG Missing - Not yet deployed
 > Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/).
 
 ### 0.5. URL o archivo comprimido del repositorio
-
-> Puedes tenerlo alojado en público o en privado, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/). También puedes compartir por correo un archivo zip con el contenido
-
+https://github.com/jesramgue/JRG-AI4Devs-finalproject.git
 
 ---
 
-## 1. Descripción general del producto
+## 1. Product overview
+[Product overview](docs/product/product.md)
 
-> Describe en detalle los siguientes aspectos del producto:
+## 2 System architecture
+[System architecture](docs/architecture/architecture.md)
 
-### **1.1. Objetivo:**
-
-> Propósito del producto. Qué valor aporta, qué soluciona, y para quién.
-
-### **1.2. Características y funcionalidades principales:**
-
-> Enumera y describe las características y funcionalidades específicas que tiene el producto para satisfacer las necesidades identificadas.
-
-### **1.3. Diseño y experiencia de usuario:**
-
-> Proporciona imágenes y/o videotutorial mostrando la experiencia del usuario desde que aterriza en la aplicación, pasando por todas las funcionalidades principales.
-
-### **1.4. Instrucciones de instalación:**
-> Documenta de manera precisa las instrucciones para instalar y poner en marcha el proyecto en local (librerías, backend, frontend, servidor, base de datos, migraciones y semillas de datos, etc.)
-
----
-
-## 2. Arquitectura del Sistema
-
-### **2.1. Diagrama de arquitectura:**
-> Usa el formato que consideres más adecuado para representar los componentes principales de la aplicación y las tecnologías utilizadas. Explica si sigue algún patrón predefinido, justifica por qué se ha elegido esta arquitectura, y destaca los beneficios principales que aportan al proyecto y justifican su uso, así como sacrificios o déficits que implica.
+Implementation guides:
+- [Frontend README](front/README.md)
+- [Backend README](back/README.md)
 
 
-### **2.2. Descripción de componentes principales:**
+## 3. Data Model
 
-> Describe los componentes más importantes, incluyendo la tecnología utilizada
+### **3.1. Data model diagram:**
+- [Database Model (conceptual + ER)](docs/db/database-model.md)
 
-### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
+### **3.2. Description of main entities:**
+The main entities of the MVP and their technical detail (typed attributes, PK/FK, relationships and constraints) are documented in:
 
-> Representa la estructura del proyecto y explica brevemente el propósito de las carpetas principales, así como si obedece a algún patrón o arquitectura específica.
+- [Main Entities Specification](docs/db/main-entities.md)
 
-### **2.4. Infraestructura y despliegue**
+Summary of core entities for implementation:
 
-> Detalla la infraestructura del proyecto, incluyendo un diagrama en el formato que creas conveniente, y explica el proceso de despliegue que se sigue
+- USER: identity, authentication and account life cycle (soft delete).
+- HOUSEHOLD: shared inventory collaboration and membership limit.
+- HOUSEHOLD_MEMBER: user-household relationship with role and status.
+- HOUSEHOLD_INVITATION: flow of invitations and acceptance statuses.
+- PANTRY_ITEM: inventory unit with status, quantity and expiration.
+- RECEIPT / RECEIPT_ITEM: OCR ingestion (header and lines) with optional mapping to inventory.
+- EXPIRATION_ASSESSMENT: Suggested expiration traceability and confidence.
+- CONSUMPTION_EVENT: consumption/waste events for analytics and auditing.
+- NOTIFICATION_PREFERENCE: alert preferences per user.
+- PRICE_CATALOG_ITEM: price reference dataset for comparison in MVP.
 
-### **2.5. Seguridad**
+Design Notes:
 
-> Enumera y describe las prácticas de seguridad principales que se han implementado en el proyecto, añadiendo ejemplos si procede
-
-### **2.6. Tests**
-
-> Describe brevemente algunos de los tests realizados
+- Normalized relational approach (3NF) to avoid duplicity and anomalies.
+- Referential integrity through explicit foreign keys and domain constraints.
+- Recommended PostgreSQL types: UUID, TIMESTAMPTZ, DATE and NUMERIC for monetary precision.
 
 ---
 
-## 3. Modelo de Datos
-
-### **3.1. Diagrama del modelo de datos:**
-
-> Recomendamos usar mermaid para el modelo de datos, y utilizar todos los parámetros que permite la sintaxis para dar el máximo detalle, por ejemplo las claves primarias y foráneas.
-
-
-### **3.2. Descripción de entidades principales:**
-
-> Recuerda incluir el máximo detalle de cada entidad, como el nombre y tipo de cada atributo, descripción breve si procede, claves primarias y foráneas, relaciones y tipo de relación, restricciones (unique, not null…), etc.
-
----
-
-## 4. Especificación de la API
+## 4. API Specification
 
 > Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad
 
 ---
 
-## 5. Historias de Usuario
+## 5. User Stories
 
-> Documenta 3 de las historias de usuario principales utilizadas durante el desarrollo, teniendo en cuenta las buenas prácticas de producto al respecto.
+The main MVP user stories, written with product best practices (clear persona-goal-value format, testable acceptance criteria, and traceability to FR/data model), are documented in:
 
-**Historia de Usuario 1**
+- [MVP Main User Stories](docs/product/4_User-stories.md)
 
-**Historia de Usuario 2**
-
-**Historia de Usuario 3**
+Covered scope includes identity, pantry management, receipt OCR flow, expiration intelligence, notifications, price comparison, sharing, waste tracking, and use-next prioritization.
 
 ---
 
-## 6. Tickets de Trabajo
+## 6. Development Tickets
 
-> Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
+The main MVP development tickets, with full end-to-end implementation technical detail, are documented in:
 
-**Ticket 1**
+- [Tickets Index](docs/tickets/README.md)
 
-**Ticket 2**
-
-**Ticket 3**
+Selection of 3 main tickets (backend, frontend, database):
+1. Backend - [TKT-011 - Backend Receipt Upload and OCR Pipeline](docs/tickets/TKT-011-backend-receipt-ocr-pipeline.md)
+2. Frontend - [TKT-012 - Frontend Pantry Add Item Flow](docs/tickets/TKT-012-frontend-pantry-add-item-flow.md)
+3. Database - [TKT-013 - Database Core Schema for Household, Pantry and Events](docs/tickets/TKT-013-database-core-schema-household-pantry-events.md)
 
 ---
 
@@ -131,4 +118,8 @@
 **Pull Request 2**
 
 **Pull Request 3**
+
+## 8. Prompts - AI usage
+[Prompts and AI usage](prompts.md)
+
 
