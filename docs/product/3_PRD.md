@@ -143,6 +143,15 @@ Users lose money and waste food because inventory visibility is low, expiry trac
 - FR-15: The system must provide waste analytics in quantity and estimated monetary value.
 - FR-16: The system must support suggested waste classification for far-past-expiry items requiring explicit confirmation.
 - FR-17: The system must provide "use next" prioritization without recipe engine integration in MVP.
+- FR-18: The system must persist household membership as an explicit relational structure (user-household association), not as denormalized JSON fields.
+- FR-19: The system must persist invitation lifecycle states (pending, accepted, revoked, expired) with timestamps.
+- FR-20: The system must persist receipt metadata separately from receipt line items.
+- FR-21: The system must persist consumption and waste actions as timestamped events, not only as final item states.
+- FR-22: The system must store expiry estimation metadata (confidence and method) separately from pantry item core attributes.
+- FR-23: The system must support nullable mapping between OCR receipt lines and pantry items until user confirmation.
+- FR-24: The system must support case-insensitive uniqueness for user email identities.
+- FR-25: The system must support soft-delete behavior for user accounts to preserve audit and analytics consistency in MVP.
+- FR-26: The system must support a controlled MVP price catalog dataset with effective date tracking.
 
 ## 5. Non-Goals (Out of Scope)
 - Full weekly meal planning engine.
@@ -174,6 +183,31 @@ Users lose money and waste food because inventory visibility is low, expiry trac
 - Expiration learning model updates are deferred to post-MVP.
 - For MVP, keep architecture as modular monolith with clear domain modules.
 - Keep infrastructure scope to dev environment and reproducible setup.
+
+## 7.1 Non-Functional Requirements (Data Model and Persistence)
+
+### 7.1.1 Integrity and consistency
+- NFR-DM-1: All core entities must have stable primary keys and explicit foreign keys.
+- NFR-DM-2: Referential integrity must be enforced for pantry, household, receipt, and event data.
+- NFR-DM-3: Domain states with constrained values must be enforced through enums/check constraints.
+- NFR-DM-4: Monetary and quantity fields must use precise decimal types (no floating-point storage for money).
+- NFR-DM-5: Timestamps must be timezone-aware for all auditable events.
+
+### 7.1.2 Performance and scalability
+- NFR-DM-6: Foreign key columns must be indexed to protect join performance and mutation safety.
+- NFR-DM-7: Pantry listing and expiring-item queries must be covered by composite indexes.
+- NFR-DM-8: Event tables must support time-ordered retrieval for analytics and audit traces.
+
+### 7.1.3 Evolvability and migration safety
+- NFR-DM-9: MVP schema changes must be backward-compatible whenever possible, avoiding destructive table rewrites.
+- NFR-DM-10: New features (barcode, recipes, ML prediction) must be additive via new tables/nullable FKs.
+- NFR-DM-11: Shared pantry authorization changes must be implementable through membership/policy tables without breaking existing data contracts.
+
+### 7.1.4 Operational requirements for developers before implementation
+- NFR-DM-12: Migration order must follow dependency sequence (identity -> household -> pantry -> receipts -> events).
+- NFR-DM-13: Seed data must include realistic household-sharing and receipt scenarios for local testing.
+- NFR-DM-14: Data retention and deletion rules must be explicitly defined for users, receipts, and events before production deployment.
+- NFR-DM-15: Database constraints, indexes, and Prisma schema must stay synchronized in each migration cycle.
 
 ## 8. Success Metrics
 - At least 70% of onboarding users complete first pantry item creation within first session.

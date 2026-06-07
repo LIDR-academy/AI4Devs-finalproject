@@ -321,10 +321,21 @@ The solution should:
 - Prioritize maintainability and data integrity.
 
 Think step by step before generating the final model, and challenge assumptions that could lead to poor normalization or future scalability issues.
-
 ```
 
-**Prompt 2:**
+## Prompt 2: PRD update considering DB data model
+```markdown
+# Role
+You are a **Senior Solution Architect and Database Architect** specializing in PostgreSQL, Prisma ORM, AWS architectures, and mobile applications.
+
+# Context
+It is based on the `docs/product/3_PRD.md` file to understand the business model, use cases and data model of RealSaveFooding and the architecture definition defined in `docs/architecture/architecture.md`.
+
+# Instructions
+- Update PRD document to include functional and non-functional requirements around data model and aspects that the developers would need to consider before implementing.
+- Update any related documentation in /docs/* accordingly
+
+```
 
 **Prompt 3:**
 
