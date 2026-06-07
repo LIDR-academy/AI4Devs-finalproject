@@ -2,7 +2,7 @@
 
 **RealSaveFooding - Stop Wasting Food & Money**
 
-As a Business Analyst with extensive experience in mobile applications, we are considering developing an application called "RealSaveFooding - Stop Wasting Food & Money" to manage consumption, track expiration dates, suggest recipes, compare prices across supermarkets or brands, and more.
+As a Business Analyst with extensive experience in mobile-first products, we are considering developing a web application called "RealSaveFooding - Stop Wasting Food & Money" to manage consumption, track expiration dates, suggest recipes, compare prices across supermarkets or brands, and more.
 
 Main Idea: I want to create an app similar to ConsumeSmart (check all features on the web), but with improvements:
 
@@ -12,7 +12,7 @@ Main Idea: I want to create an app similar to ConsumeSmart (check all features o
 - The option to share the pantry with another account (e.g., to share with my wife).
 - The app will show how much food and money has been wasted, and what is at risk of going to waste soon.
 - The app will show a detailed list of wasted food and money, grouped by different dimensions: time (day, week, month), food (type or entry), etc.
-- The app will show the top 10 most-wasted foods for the current user and compare them with the rest of users.
+- The app will show the top 10 most-wasted foods for the current user.
 - When a food entry is long-pressed, the app will show a submenu with the following options:
     - Compare prices (show different prices across brands or supermarkets).
     - Alternatives
@@ -23,7 +23,7 @@ Main Idea: I want to create an app similar to ConsumeSmart (check all features o
         - Food expiration
         - Price drop
         - Food consumed (in case another person used the food from your pantry)
-    - Cloud Sync (Google Cloud for Android / iCloud for Apple)
+    - Cloud Sync is not defined in the current MVP documentation; the provider choice is left for future iterations.
     - Customize Profile
         - Name
         - Family Name
@@ -44,4 +44,4 @@ Conduct thorough and in-depth market research on software with similar features 
 
 [Market research](2_Market-research.md)
 
-[Non-MVP](3_Non-MVP.md)
+[Non-MVP](Non-MVP.md)

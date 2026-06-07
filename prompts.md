@@ -40,27 +40,28 @@ Perform a market research on apps/software similar to ConsumeSmart, emphasizing 
 
 [Market-Research](docs/product/2_Market-research.md)
 
-Prompt 3: based on the content, generate a full detailed PRD that will be useful for the Product Owner for a further ticket split and Lead Engineer to start productisation
+#### Prompt 3: PRD Generation
+Based on the content, generate a full detailed PRD that will be useful for the Product Owner for a further ticket split and Lead Engineer to start productisation
 
 [Initial-PRD](docs/product/3_PRD.md)
 
-Prompt 4: PRD refinement
+#### Prompt 4: PRD refinement
 Based on the new skill for prd generation, take the 3_PRD.md where it's described the first version of it and refine it. Ask me for doubts (check skill at .github/skills/prd/SKILL.md)
 
 ### Lovable
-#### Prompt 4: Mockups
+#### Prompt 5: Mockups
 I used Lovable to produce the mockups for the application. Using the same seed as before. I also connected it to Github to produce the first mockups with Vue + Vite from where I extracted the Screenshots with the designs. Mockups available in front folder (First Delivery)
-#### Prompt 5: Mockups v1
+#### Prompt 6: Mockups v1
 I want you to design a IOS app using web technologies (multi-platform) taking this as an input: docs/product/1_idea-to-product.md. The prototype must not be functional, provide the mockups with basic navigation. The style should be IOS (iPhone-like) with blue-grey colours and clean. Gestures (long-press, slide, etc) must be available for a great UX.
 
 ---
 **Human interaction 1: ** - The design didn't contain Recipes
-#### Prompt 5: 
+#### Prompt 7: 
 Enable Recipes, considering the current pantry add another button in the dock that will land into a Recipe window designed to show recipes with the current pantry. Add other filters that you may consider but remember that the application should have clean interface.
 
 ---
 **Human interaction 2: ** - Mockups were not including sharing options
-#### Prompt 6: 
+#### Prompt 8: 
 Enable sharing the pantry with other members. It should display the current shares, and the type (Editor / Viewer). It should display the sharing options (via code, send email, etc). 
 The list of shares should allow to remove lines of sharing
 
@@ -403,3 +404,8 @@ Please use the specific user-story skill and rewrite them in the format defined 
 **Prompt 2:**
 
 **Prompt 3:**
+
+### 8. Documentation Update after User Stories generation
+#### Prompt 1: 
+Check the documentation against the repository layout first, then pin down any drift that needs correction rather than guessing from the surface.
+

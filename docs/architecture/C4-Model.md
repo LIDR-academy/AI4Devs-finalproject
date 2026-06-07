@@ -58,7 +58,7 @@ title C4 Level 2 - Container Diagram (RealSaveFooding MVP)
 actor "End User" as User
 
 node "Client Device" {
-  component "Web App Container\nReact + TypeScript + Vite\n(front)" as Front
+  component "Web App Container\nTanStack Start + React + TypeScript + Vite\n(front)" as Front
 }
 
 node "Backend Container\nNestJS Modular Monolith\n(back)" as Back
