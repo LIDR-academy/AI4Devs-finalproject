@@ -84,8 +84,6 @@ I manually modified 2 diagrams (easy fix) to do not consume tokens.
 #### Prompt 3: OpenAI to AWS
 Instead of using OpenAI cloud I have an AWS, please switch to it in all the solution points.
 
-### **2.2. Descripción de componentes principales:**
-
 #### Prompt 1: Meta-Prompt (ChatGPT)
 Writte a prompt for this "Given the MVP principals project components suggest the folder structure in the project. For the Frontend part I have already a folder called "front" for the rest I have nothing. After that for each main folder write the purpose and the framework / pattern architecture specific approach"
 
@@ -187,7 +185,27 @@ Consider MVP only; lets build the folder structure and add the dependencies to t
 
 **Prompt 3:**
 
-### **2.5. Seguridad**
+### **2.5. C4-Model**
+#### Prompt 1: Requesting C4 Models for main components
+```markdown
+Role
+Acts as an expert Software Architect with extensive experience in mobile app and backend services, create C4 documentation and technical modeling of web systems, collaborating in the design of the first version of RealSaveFooding
+
+Context
+It is based on the docs/product/3_PRD.md file to understand the business model, use cases and data model of RealSaveFooding and the architecture definition defined in docs/architecture/architecture.md.
+
+Instructions
+Generates C4 diagrams of the RealSaveFooding system with the following levels: Context, Containers, Components.
+Reaches the main components.
+
+Visual context
+If you consider it necessary, use the design at docs/design to align the containers and technical components with the main screens and flows:
+
+Output
+Write the content to docs/architecture/C4-Model.md and add a reference in architecture.md in a new h2 header 2.5. C4 Model
+```
+
+### **2.6. Seguridad**
 
 **Prompt 1:**
 
@@ -195,7 +213,7 @@ Consider MVP only; lets build the folder structure and add the dependencies to t
 
 **Prompt 3:**
 
-### **2.6. Tests**
+### **2.7. Tests**
 
 **Prompt 1:**
 
