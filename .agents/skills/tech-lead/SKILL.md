@@ -18,6 +18,7 @@ Esta skill se activa cuando la tarea o el contexto del usuario requiere realizar
 1. **Strict Dependency Mapping:** Todas las tareas deben enlazarse a requerimientos de negocio sin ciclos.
 2. **CVE Checking:** Escanear y verificar que las dependencias recomendadas no tengan vulnerabilidades críticas/altas.
 3. Si el plan o propuesta del usuario es técnicamente inviable o vaga, argumentar en contra o guiar en la especificación.
+4. **Relative Path Portability:** Todas las referencias a diseños, esquemas, APIs o contratos deben enlazarse de manera relativa para garantizar la portabilidad en diferentes entornos de desarrollo (e.g., evitar `file:///Users/...`).
 
 ---
 

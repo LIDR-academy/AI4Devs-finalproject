@@ -18,6 +18,7 @@ Esta skill se activa cuando la tarea o el contexto del usuario requiere realizar
 1. **Strict Separation of Concerns:** delegar la compilación del PRD a prd-generator y las tareas a backlog-generator.
 2. **User Verification:** requerir la confirmación explícita del brief del producto antes de invocar subfases.
 3. Si el usuario da una idea vaga o ambigua, profundizar en ella o rechazarla con criterios de negocio justificables.
+4. **Relative Path Portability:** Todos los enlaces y referencias a archivos del proyecto en la documentación deben usar rutas relativas en lugar de absolutas (e.g., evitar `file:///Users/...`).
 
 ---
 
