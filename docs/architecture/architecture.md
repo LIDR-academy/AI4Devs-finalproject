@@ -269,23 +269,62 @@ User --> [Web Portal]
 
 ## **2.2. Descripción de componentes principales:**
 
-**MVP**
-- Frontend -> Lovable + React + TypeScript
-- Backend -> NestJS
-- ORM -> Prisma
-- Database -> Amazon RDS PostgreSQL
-- Receipt storage -> Amazon S3
-- OCR -> AWS Textract
-- Authentication -> JWT
-- Notifications -> Amazon SNS
+```text
+MVP
+|
+├──Frontend
+|  └─── Lovable / React
+|
+├──Backend
+|  └─-- NestJS + Prisma
+|
+├──Database
+|  └──-- Local: Docker PostgreSQL
+|  └──-- AWS: Amazon RDS PostgreSQL
+|       (Aurora PostgreSQL Serverless as future evolution)
+|
+├──Storage
+|  └─-- Amazon S3
+|
+├──OCR
+|  └─-- AWS Textract
+|
+├──Notifications
+   └─ Amazon SNS
+```
 
-**Future Work (design only)**
-- Recipe generation -> Amazon Bedrock
-- Smart expiration prediction -> Bedrock + SageMaker
-- Event-driven processing -> Amazon SQS
-- Analytics dashboard -> ElastiCache
-- Barcode enrichment -> Open Food Facts API
-- Household collaboration -> Additional backend modules
+```text
+Future Work (design only)
+│
+├── AI Features
+│   ├── Recipe Generation
+│   │   └── Amazon Bedrock
+│   │
+│   └── Smart Expiration Prediction
+│       ├── Amazon Bedrock
+│       └── Amazon SageMaker
+│
+├── Scalability & Architecture
+│   └── Event-Driven Processing
+│       └── Amazon SQS
+│
+├── Performance & Analytics
+│   └── Analytics Dashboard
+│       └── Amazon ElastiCache
+│
+├── External Integrations
+│   └── Barcode Enrichment
+│       └── Open Food Facts API
+│
+└── Collaboration Features
+    └── Household Collaboration
+        └── Additional Backend Modules
+            ├── Household Module
+            ├── Household Members Module
+            ├── Shared Pantry Module
+            └── Role & Permissions Management
+```
+
 
 ## **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
