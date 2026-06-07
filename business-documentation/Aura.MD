@@ -1,94 +1,117 @@
-# 📑 Documento de Visión y Estrategia: Aura Planning
+# 📑 Vision and Strategy Document: Aura Planning
 
-## 1. Resumen de Proyecto
-**Aura Planning** es una plataforma SaaS (Software as a Service) diseñada para la gestión de invitaciones digitales y la narrativa en tiempo real de eventos. Aunque el mercado inicial son las bodas, la marca está construida para escalar a cualquier celebración (cumpleaños, eventos corporativos, bautizos).
+## 1. Project Summary
+**Aura Planning** is a SaaS (Software as a Service) platform designed for managing digital invitations and real-time event storytelling. While the initial market is weddings, the brand is built to scale to any celebration (birthdays, corporate events, baptisms).
 
-* **Nombre:** Aura Planning.
-* **Eslogan:** *"Diseña la narrativa de tu evento, gestiona la logística sin esfuerzo."*
-* **Propósito:** Sustituir la invitación de papel por un ecosistema digital interactivo que elimine el estrés logístico y genere expectativa (hype) en los invitados.
+* **Name:** Aura Planning.
 
----
-
-## 2. Funcionalidades del Producto (MVP)
-
-### A. Panel de Gestión (Anfitrión)
-* **Editor de Plantillas:** Herramienta visual para personalizar colores, tipografía y fotos.
-* **Gestor de Invitados:** Importación masiva (CSV/Excel) y segmentación por categorías (familia, amigos, etc.).
-* **Dashboard de Control:** Seguimiento de confirmaciones (RSVP), inasistencias y gestión de alérgenos o necesidades de transporte.
-
-### B. Micrositio del Invitado (Experiencia Mobile-First)
-* **Sitios Estáticos:** Navegación ultra-rápida y ligera desde el navegador del móvil (sin descarga de apps).
-* **Formulario RSVP Inteligente:** Captura de datos críticos (dietas, asistencia a autobús).
-* **Logística Dinámica:** Mapas integrados (Google Maps/Waze) y sincronización con calendarios personales.
-
-### C. Sistema de Comunicación
-* **Invitaciones Multicanal:** Envío mediante Email diseñado o enlace directo de WhatsApp.
-* **Recordatorios:** Automatización de avisos para invitados que aún no han confirmado.
-* **Agradecimientos Post-Evento:** Automatización para enviar tarjetas de "Gracias" digitales (vía Email o WhatsApp) a los asistentes, con opción de incluir enlaces a galerías de fotos externas (Drive, Pixieset) ya que la plataforma no aloja imágenes en esta fase. Sirve como punto de contacto final y refuerzo de marca.
+* **Slogan:** "Design your event's narrative, manage the logistics effortlessly."
+* **Purpose:** To replace paper invitations with an interactive digital ecosystem that eliminates logistical stress and generates anticipation (hype) among guests.
 
 ---
 
-## 3. La "Killer Feature": Live Guest Journey
-Experiencia narrativa en directo mediante notificaciones durante el día del evento.
+## 2. Product Features (MVP)
 
-* **Canal Principal:** WhatsApp (vía API oficial).
-* **El "Modo Cómplice":** Acceso seguro mediante **Magic Link** (sin contraseña) para una persona de confianza (padrino o dama de honor).
-* **Panel de Control Remoto:** Interfaz simplificada con botones pre-configurados que requieren un **"Swipe" (deslizar)** para evitar envíos accidentales.
-* **Mensajes en Vivo:** "La novia ya sale del hotel", "¡Han dicho que sí!", "¡Empieza el baile!".
+### A. Management Panel (Host)
+* **Template Editor:** A visual tool for customizing colors, typography, and photos.
 
-> **💡 Justificación Estratégica:** Esta funcionalidad nos diferencia de los gigantes (Zankyou, Bodas.net) al enfocarnos en el **hype** y la inmediatez que demanda el público joven (Millennials/Gen Z). El uso de un "cómplice" asegura que los novios disfruten su día sin distracciones técnicas.
+* * **Guest Manager:** Bulk import (CSV/Excel) and segmentation by category (family, friends, etc.).
 
----
+* **Control Dashboard:** Track RSVPs, no-shows, and manage allergens or transportation needs.
 
-## 4. Estrategia de Negocio y Monetización
+### B. Guest Microsite (Mobile-First Experience)
+* **Static Sites:** Ultra-fast and lightweight navigation from the mobile browser (no app download required).
 
-### Modelo: "Try-Before-You-Buy" (Efecto IKEA)
-El usuario tiene acceso total a la herramienta de diseño de forma gratuita, pero el evento permanece en **"Modo Borrador"**.
+* **Smart RSVP Form:** Capture of critical data (dietary requirements, bus attendance).
 
-* **Muro de Pago (Publishing Paywall):** Se debe realizar un pago único para obtener la URL pública y activar el sistema de recepción de confirmaciones (RSVP).
-* **Limitación Técnica:** El modo gratuito permite añadir hasta 5 invitados para pruebas internas.
+* **Dynamic Logistics:** Integrated maps (Google Maps/Waze) and synchronization with personal calendars.
 
-> **💡 Justificación Estratégica:** Al permitir que el usuario configure todos los detalles de su boda gratis, generamos una **fricción de cambio** altísima. Una vez invertido el tiempo en nuestra plataforma, el usuario preferirá pagar que empezar de cero en otra. Además, eliminamos el coste de dar servicio gratuito a usuarios que no tienen intención de convertir.
+### C. Communication System
+* **Multichannel Invitations:** Sending via custom email or direct WhatsApp link.
 
-### Propuesta en Evaluación: Lista de Regalos / Fondo en Efectivo (Fintech)
-*Actualmente bajo consideración para añadir una nueva vía de ingresos.*
-Permitir a los invitados enviar regalos en efectivo directamente desde el formulario RSVP.
-* **Modelo Operativo:** Integración con **Stripe Connect** para que el dinero vaya directamente del invitado a la cuenta bancaria del anfitrión (los novios). 
-* **Ventaja Legal:** Aura **nunca** retiene ni toca los fondos principales, evitando convertirse legalmente en un banco o transmisor de dinero, eliminando responsabilidades de cumplimiento (KYC/AML) complejas para la plataforma.
-* **Monetización Adicional:** Aura cobra una pequeña "tarifa de plataforma" (ej. 1.5% - 2%) por cada transacción, deducida automáticamente por Stripe antes de enviar el dinero al anfitrión.
-* **Costes de Infraestructura:** Stripe cobra una tarifa mensual por "cuenta conectada activa" (el anfitrión), que se cubre fácilmente con la comisión retenida por la plataforma.
+* **Reminders:** Automated notifications for guests who have not yet RSVP'd.
+
+* **Post-Event Thank Yous:** Automated digital thank you cards (via email or WhatsApp) for attendees, with the option to include links to external photo galleries (Drive, Pixieset) since the platform does not host images at this stage. This serves as a final point of contact and reinforces branding.
 
 ---
 
-## 5. Arquitectura Técnica y Optimización de Costes
+## 3. The "Killer Feature": Live Guest Journey
+Live narrative experience through notifications throughout the day of the event.
 
-* **Generación de Sitios Estáticos (JAMstack):** El sitio del invitado no consume recursos de base de datos en cada visita; es un recurso estático (HTML/JS/CSS) servido vía CDN.
-* **Backend Transaccional:** El servidor solo trabaja para el panel de administración y el envío/recepción de datos.
-* **Exclusión de Álbum de Fotos (V1):** No se permite la subida de fotos por parte de los invitados en esta fase.
+* **Main Channel:** WhatsApp (via official API).
 
-> **💡 Justificación Estratégica:** Esta arquitectura reduce drásticamente los costes de ancho de banda y almacenamiento. Al no permitir fotos en la V1, evitamos el gasto más crítico (Egress de datos y storage) y simplificamos el cumplimiento legal (RGPD).
+* **The "Accomplice Mode":** Secure access via **Magic Link** (no password required) for a trusted person (best man or bridesmaid).
+
+* **Remote Control Panel:** Simplified interface with pre-configured buttons that require a **swipe** to prevent accidental sending.
+
+* * **Live Messages:** "The bride is leaving the hotel," "They said yes!", "Let the dancing begin!"
+
+> **💡 Strategic Justification:** This feature differentiates us from the giants (Zankyou, Bodas.net) by focusing on the **hype** and immediacy demanded by young audiences (Millennials/Gen Z). Using a "partner" ensures that the couple can enjoy their day without technical distractions.
 
 ---
 
-## 6. Estructura de Gastos Previstos
+## 4. Business Strategy and Monetization
 
-| Categoría | Concepto | Impacto en Coste |
+### Model: "Try-Before-You-Buy" (IKEA Effect)
+The user has full access to the design tool for free, but the event remains in **"Draft Mode"**.
+
+* **Publishing Paywall:** A one-time payment is required to obtain the public URL and activate the RSVP system.
+
+* **Technical Limitation:** The free mode allows you to add up to 5 guests for internal testing.
+
+> **💡 Strategic Justification:** By allowing users to configure all their wedding details for free, we generate very high **switching friction**. Once they've invested time on our platform, users will prefer to pay rather than start from scratch on another. Furthermore, we eliminate the cost of providing free service to users who have no intention of converting.
+
+### Proposal Under Evaluation: Gift Registry / Cash Fund (Fintech)
+*Currently under consideration to add a new revenue stream.*
+Allow guests to send cash gifts directly from the RSVP form.
+
+* **Operating Model:** Integration with **Stripe Connect** so that the money goes directly from the guest to the host's (the couple's) bank account. * **Legal Advantage:** Aura **never** retains or touches the main funds, legally avoiding becoming a bank or money transmitter, thus eliminating complex compliance (KYC/AML) responsibilities for the platform.
+
+* **Additional Monetization:** Aura charges a small "platform fee" (e.g., 1.5%–2%) per transaction, automatically deducted by Stripe before sending the money to the host.
+
+* **Infrastructure Costs:** Stripe charges a monthly fee per "active connected account" (the host), which is easily covered by the commission retained by the platform.
+
+---
+
+## 5. Technical Architecture and Cost Optimization
+
+* **Static Site Generation (JAMstack):** The guest site does not consume database resources on each visit; it is a static resource (HTML/JS/CSS) served via CDN.
+
+* **Transactional Backend:** The server only handles the administration panel and sending/receiving data.
+
+* **Photo Album Exclusion (V1):** Guests are not allowed to upload photos in this phase.
+
+> **💡 Strategic Justification:** This architecture drastically reduces bandwidth and storage costs. By not allowing photos in V1, we avoid the most critical expense (data egress and storage) and simplify legal compliance (GDPR).
+
+---
+
+## 6. Projected Cost Structure
+
+| Category | Concept | Cost Impact |
+
 | :--- | :--- | :--- |
-| **Infraestructura** | Hosting para Admin y Base de Datos (PostgreSQL/Node). | Bajo/Medio |
-| **APIs de Envío** | WhatsApp Business API (pago por conversación) y Email (AWS SES). | Variable (según volumen) |
-| **Financiero** | Comisiones de Pasarela de Pago (Stripe/PayPal ~3%). | Proporcional a ventas |
-| **Mapas** | Google Maps API (cargas de mapas). | Bajo (con cuota gratuita) |
-| **Operaciones** | Soporte al cliente y mantenimiento de certificados SSL. | Medio (Tiempo humano) |
+| **Infrastructure** | Hosting for Admin and Database (PostgreSQL/Node). | Low/Medium |
+
+| **Sending APIs** | WhatsApp Business API (pay per conversation) and Email (AWS SES). | Variable (depending on volume) |
+
+| **Financial** | Payment Gateway Fees (Stripe/PayPal ~3%). | Proportional to sales |
+
+| **Maps** | Google Maps API (map uploads). | Low (with free quota) |
+
+| **Operations** | Customer support and SSL certificate maintenance. | Medium (Human time) |
 
 ---
 
-## 7. Roadmap de Crecimiento
-1.  **V1 (MVP):** Foco en bodas, pago por publicación, notificaciones básicas de RSVP.
-2.  **V2 (Live):** Integración de WhatsApp API y despliegue del "Modo Cómplice".
-3.  **V3 (Diversificación):** Apertura a eventos corporativos, cumpleaños y bautizos bajo la marca "Aura".
+## 7. Growth Roadmap
+1. **V1 (MVP):** Focus on weddings, pay per post, basic RSVP notifications.
+
+2. **V2 (Live):** WhatsApp API integration and deployment of "Partner Mode".
+
+3. **V3 (Diversification):** Opening up to corporate events, birthdays, and baptisms under the "Aura" brand.
 
 ---
 
-**Notas Adicionales:**
-* **Borrado de Datos:** Para optimizar costes y cumplir con privacidad, todos los datos sensibles se eliminarán automáticamente 30 días después de la fecha del evento.
-* **Diseño:** La interfaz debe ser minimalista, elegante y transmitir la paz que sugiere el nombre "Aura".
+**Additional Notes:**
+* **Data Deletion:** To optimize costs and comply with privacy regulations, all sensitive data will be automatically deleted 30 days after the event date.
+
+* **Design:** The interface should be minimalist, elegant, and convey the peace suggested by the name "Aura."
