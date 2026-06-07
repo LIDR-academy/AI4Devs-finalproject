@@ -44,6 +44,10 @@ https://github.com/jesramgue/JRG-AI4Devs-finalproject.git
 ## 2 System architecture
 [System architecture](docs/architecture/architecture.md)
 
+Implementation guides:
+- [Frontend README](front/README.md)
+- [Backend README](back/README.md)
+
 
 ## 3. Data Model
 
