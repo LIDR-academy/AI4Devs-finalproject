@@ -1,14 +1,21 @@
 ## Índice
 
-0. [Ficha del proyecto](#0-ficha-del-proyecto)
-1. [Descripción general del producto](#1-product-overview)
-2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
-3. [Modelo de datos](#3-modelo-de-datos)
-4. [Especificación de la API](#4-especificación-de-la-api)
-5. [Historias de usuario](#5-historias-de-usuario)
-6. [Tickets de trabajo](#6-tickets-de-trabajo)
-7. [Pull requests](#7-pull-requests)
-8. [Prompts and AI usage](prompts.md)
+- [0. Project sheet](#0-project-sheet)
+	- [0.1. Full name](#01-full-name)
+	- [0.2. Project name](#02-project-name)
+	- [0.3. Brief project description](#03-brief-project-description)
+	- [0.4. Project URL](#04-project-url)
+	- [0.5. URL o archivo comprimido del repositorio](#05-url-o-archivo-comprimido-del-repositorio)
+- [1. Product overview](#1-product-overview)
+- [2. System architecture](#2-system-architecture)
+- [3. Data Model](#3-data-model)
+	- [3.1. Data model diagram](#31-data-model-diagram)
+	- [3.2. Description of main entities](#32-description-of-main-entities)
+- [4. API Specification](#4-api-specification)
+- [5. User Stories](#5-user-stories)
+- [6. Development Tickets](#6-development-tickets)
+- [7. Pull Requests](#7-pull-requests)
+- [8. Prompts - AI usage](prompts.md)
 
 ---
 ## 0. Project sheet
@@ -69,7 +76,7 @@ Design Notes:
 
 ---
 
-## 4. Especificación de la API
+## 4. API Specification
 
 > Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad
 
@@ -85,15 +92,16 @@ Covered scope includes identity, pantry management, receipt OCR flow, expiration
 
 ---
 
-## 6. Tickets de Trabajo
+## 6. Development Tickets
 
-> Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
+The main MVP development tickets, with full end-to-end implementation technical detail, are documented in:
 
-**Ticket 1**
+- [Tickets Index](docs/tickets/README.md)
 
-**Ticket 2**
-
-**Ticket 3**
+Selection of 3 main tickets (backend, frontend, database):
+1. Backend - [TKT-011 - Backend Receipt Upload and OCR Pipeline](docs/tickets/TKT-011-backend-receipt-ocr-pipeline.md)
+2. Frontend - [TKT-012 - Frontend Pantry Add Item Flow](docs/tickets/TKT-012-frontend-pantry-add-item-flow.md)
+3. Database - [TKT-013 - Database Core Schema for Household, Pantry and Events](docs/tickets/TKT-013-database-core-schema-household-pantry-events.md)
 
 ---
 
