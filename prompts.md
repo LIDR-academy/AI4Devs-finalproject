@@ -27,7 +27,7 @@ I have used Notion so that, from an idea or seed, I develop a market study, comp
 - Sharing pantry with another family member (Editor, viewer).
 
 ---
-Human interaction - Adding boundaries
+**Human interaction:** Adding boundaries
 Removed extra idas and put them into Non-MVP page. (Adding boundaries)
 - Gamification. Points for food saved on time
 - Consumption automation (consider food consumed if it is well past its expiration date).
@@ -54,12 +54,12 @@ I used Lovable to produce the mockups for the application. Using the same seed a
 I want you to design a IOS app using web technologies (multi-platform) taking this as an input: docs/product/1_idea-to-product.md. The prototype must not be functional, provide the mockups with basic navigation. The style should be IOS (iPhone-like) with blue-grey colours and clean. Gestures (long-press, slide, etc) must be available for a great UX.
 
 ---
-Human interaction 1 - The design didn't contain Recipes
+**Human interaction 1: ** - The design didn't contain Recipes
 #### Prompt 5: 
 Enable Recipes, considering the current pantry add another button in the dock that will land into a Recipe window designed to show recipes with the current pantry. Add other filters that you may consider but remember that the application should have clean interface.
 
 ---
-Human interaction 2 - Mockups were not including sharing options
+**Human interaction 2: ** - Mockups were not including sharing options
 #### Prompt 6: 
 Enable sharing the pantry with other members. It should display the current shares, and the type (Editor / Viewer). It should display the sharing options (via code, send email, etc). 
 The list of shares should allow to remove lines of sharing
@@ -78,7 +78,7 @@ I want to build RealSaveFooding is a pantry + consumption management mobile app 
 Create an Architecture diagram for Frontend and Backend and Full. Use PlantUML
 
 ---
-Human Interaction: PlantUML failing
+**Human Interaction:** PlantUML failing
 I manually modified 2 diagrams (easy fix) to do not consume tokens.
 
 #### Prompt 3: OpenAI to AWS
@@ -349,8 +349,9 @@ It is based on the `docs/product/3_PRD.md` file to understand the business mod
 - Update `readme.md` document, header 3.2 to include the main entities. Remember to include the maximum detail of each entity, such as the name and type of each attribute, brief description if applicable, primary and foreign keys, relationships and type of relationship, restrictions (unique, not null...), etc.
 - Consider reuse or point out to refernces into `docs/db/database-model.md)`for Database model to not duplicate information.
 - If the content is too extensive consider create another .md into docs/db and point in 'readme.md` (header 3.2) to the new document.
-
 ```
+---
+**Human Interaction:** After checking the result, updating refences into readme.md  documentation, I moved part of the content to `docs/db/main-entities.md` to avoid duplication and keep better organization.
 
 ---
 
