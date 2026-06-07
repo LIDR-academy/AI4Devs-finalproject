@@ -179,11 +179,16 @@ Consider MVP only; lets build the folder structure and add the dependencies to t
 
 ### **2.4. Infraestructura y despliegue**
 
-**Prompt 1:**
+#### Prompt 1
+As a Expert Technical Architect detail the project infrastructure, including a diagram in the format you deem appropriate, and explain the deployment process that is followed. Keep it Simple and be tight to the MVP.
 
-**Prompt 2:**
+Output the content in docs/architecture/infrastructure.md and add a reference in architecture.md in a new h2 header 2.4. Infrastructure and Deployment
 
-**Prompt 3:**
+#### Prompt 2: Apply folder structure
+Consider MVP only; Update the related documentation folder /docs/* and add any reference. Ask me before reorganise the documentation. Don't touch readme.md until I ask you to do so.
+
+---
+**Human Interaction**: After checking the result, updating refences into readme.md  documentation to match the new references and content.
 
 ### **2.5. C4-Model**
 #### Prompt 1: Requesting C4 Models for main components
@@ -207,9 +212,20 @@ Write the content to docs/architecture/C4-Model.md and add a reference in archit
 
 ### **2.6. Seguridad**
 
-**Prompt 1:**
+#### Prompt 1: Apply security documentation
+# Role
+As an expert in security with expertise on the  in mobile app and backend services with the existing tech.stack.
 
-**Prompt 2:**
+# Context
+It is based on the `docs/product/3_PRD.md` file to understand the business model, use cases and data model of RealSaveFooding and the architecture definition defined in `docs/architecture/architecture.md`.
+
+# Instructions
+- Update PRD document to include non-functional requirements around security and aspects that the developers would need to consider before implementing.
+- Highlight any potential risk based on the current architecture. Do not fix, document it.
+- Update any related documentation in /docs/* accordingly
+
+#### Prompt 2: Security considerations
+As a Security Expert, analyze the security implications of the RealSaveFooding architecture and implementation. Consider authentication, authorization, data protection, and potential attack vectors. Provide recommendations for securing the application, including best practices for handling user data, securing API endpoints, and protecting against common vulnerabilities.
 
 **Prompt 3:**
 
