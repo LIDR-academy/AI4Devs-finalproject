@@ -37,16 +37,35 @@ https://github.com/jesramgue/JRG-AI4Devs-finalproject.git
 ## 2 System architecture
 [System architecture](docs/architecture/architecture.md)
 
-## 3. Modelo de Datos
 
-### **3.1. Diagrama del modelo de datos:**
+## 3. Data Model
 
-> Recomendamos usar mermaid para el modelo de datos, y utilizar todos los parámetros que permite la sintaxis para dar el máximo detalle, por ejemplo las claves primarias y foráneas.
+### **3.1. Data model diagram:**
+- [Database Model (conceptual + ER)](docs/db/database-model.md)
 
+### **3.2. Description of main entities:**
+The main entities of the MVP and their technical detail (typed attributes, PK/FK, relationships and constraints) are documented in:
 
-### **3.2. Descripción de entidades principales:**
+- [Main Entities Specification](docs/db/main-entities.md)
 
-> Recuerda incluir el máximo detalle de cada entidad, como el nombre y tipo de cada atributo, descripción breve si procede, claves primarias y foráneas, relaciones y tipo de relación, restricciones (unique, not null…), etc.
+Summary of core entities for implementation:
+
+- USER: identity, authentication and account life cycle (soft delete).
+- HOUSEHOLD: shared inventory collaboration and membership limit.
+- HOUSEHOLD_MEMBER: user-household relationship with role and status.
+- HOUSEHOLD_INVITATION: flow of invitations and acceptance statuses.
+- PANTRY_ITEM: inventory unit with status, quantity and expiration.
+- RECEIPT / RECEIPT_ITEM: OCR ingestion (header and lines) with optional mapping to inventory.
+- EXPIRATION_ASSESSMENT: Suggested expiration traceability and confidence.
+- CONSUMPTION_EVENT: consumption/waste events for analytics and auditing.
+- NOTIFICATION_PREFERENCE: alert preferences per user.
+- PRICE_CATALOG_ITEM: price reference dataset for comparison in MVP.
+
+Design Notes:
+
+- Normalized relational approach (3NF) to avoid duplicity and anomalies.
+- Referential integrity through explicit foreign keys and domain constraints.
+- Recommended PostgreSQL types: UUID, TIMESTAMPTZ, DATE and NUMERIC for monetary precision.
 
 ---
 
