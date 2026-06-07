@@ -337,7 +337,20 @@ It is based on the `docs/product/3_PRD.md` file to understand the business mod
 
 ```
 
-**Prompt 3:**
+## Prompt 3: Main entities documentation
+```markdown
+# Role
+You are a **Senior Solution Architect and Database Architect** specializing in PostgreSQL, Prisma ORM, AWS architectures, and mobile applications.
+
+# Context
+It is based on the `docs/product/3_PRD.md` file to understand the business model, use cases and data model of RealSaveFooding and the architecture definition defined in `docs/architecture/architecture.md`.  `docs/db/database-model.md)`for Database model.
+
+# Instructions
+- Update `readme.md` document, header 3.2 to include the main entities. Remember to include the maximum detail of each entity, such as the name and type of each attribute, brief description if applicable, primary and foreign keys, relationships and type of relationship, restrictions (unique, not null...), etc.
+- Consider reuse or point out to refernces into `docs/db/database-model.md)`for Database model to not duplicate information.
+- If the content is too extensive consider create another .md into docs/db and point in 'readme.md` (header 3.2) to the new document.
+
+```
 
 ---
 
