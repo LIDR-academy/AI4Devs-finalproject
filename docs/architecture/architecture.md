@@ -522,11 +522,15 @@ MVP notes:
 - Only one cloud environment (`dev`) is required for the academic scope.
 - `prod` and advanced release strategies (blue/green, canary) are intentionally left for future iterations.
 
-## **2.5. Seguridad**
+## **2.5. C4 Model**
+
+[C4 Model](C4-Model.md)
+
+## **2.6. Seguridad**
 
 > Enumera y describe las prácticas de seguridad principales que se han implementado en el proyecto, añadiendo ejemplos si procede
 
-## **2.6. Tests**
+## **2.7. Tests**
 
 > Describe brevemente algunos de los tests realizados
 
