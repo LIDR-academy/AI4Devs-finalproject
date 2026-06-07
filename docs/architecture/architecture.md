@@ -592,3 +592,7 @@ Reference:
 
 ## 3. Database model
 - [Database Model](../db/database-model.md)
+- [PRD Data Model Requirements](../product/3_PRD.md)
+
+Implementation note:
+- Database design and migrations must follow the functional and non-functional data model requirements defined in PRD section 4 (FR-18 to FR-26) and section 7.1 (NFR-DM-1 to NFR-DM-15).

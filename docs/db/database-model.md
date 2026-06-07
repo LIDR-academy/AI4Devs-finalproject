@@ -489,3 +489,30 @@ For business states expected to grow often, use lookup tables instead of hard en
 - Add HOUSEHOLD and HOUSEHOLD_MEMBER early, since sharing is in MVP scope.
 - Add RECEIPT and RECEIPT_ITEM in the same migration batch as OCR processing.
 - Add EXPIRATION_ASSESSMENT and CONSUMPTION_EVENT before dashboard analytics.
+
+## 8. Implementation Requirements Alignment (PRD Data Model)
+
+This section maps the database design to PRD data-model requirements that developers should verify before implementation.
+
+### Functional alignment checklist
+- Household membership is relational (USER + HOUSEHOLD + HOUSEHOLD_MEMBER).
+- Invitation lifecycle is explicit (HOUSEHOLD_INVITATION with status and timestamps).
+- Receipt header and receipt lines are split (RECEIPT and RECEIPT_ITEM).
+- Consumption/waste is event-based (CONSUMPTION_EVENT).
+- Expiry estimation metadata is separated from item core data (EXPIRATION_ASSESSMENT).
+- OCR lines can exist before pantry mapping confirmation (nullable pantry_item_id in RECEIPT_ITEM).
+- User identity supports case-insensitive uniqueness on email.
+- Price comparison uses controlled dataset table (PRICE_CATALOG_ITEM).
+
+### Non-functional alignment checklist
+- Precision: money/quantity use NUMERIC/DECIMAL semantics.
+- Auditability: timestamped events and timezone-aware fields.
+- Integrity: explicit FKs + constraints + constrained statuses.
+- Performance: FK indexes + query-path composite indexes + partial expiring index.
+- Evolvability: additive schema evolution strategy documented for barcodes, recipes, analytics, and ML prediction.
+
+### Developer pre-implementation notes
+- Keep Prisma schema, SQL migrations, and documented constraints synchronized in each iteration.
+- Apply migration ordering by dependency graph, not by feature preference.
+- Validate that soft-delete policy for USER does not break household, receipt, and event analytics.
+- Validate retention and deletion policy for receipt metadata and object storage references before production deployment.
