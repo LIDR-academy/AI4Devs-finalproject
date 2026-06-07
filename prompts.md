@@ -227,7 +227,7 @@ It is based on the `docs/product/3_PRD.md` file to understand the business mod
 #### Prompt 2: Security considerations
 As a Security Expert, analyze the security implications of the RealSaveFooding architecture and implementation. Consider authentication, authorization, data protection, and potential attack vectors. Provide recommendations for securing the application, including best practices for handling user data, securing API endpoints, and protecting against common vulnerabilities.
 
-**Prompt 3:**
+**Prompt 3:** Not needed.
 
 ### **2.7. Tests**
 
@@ -241,7 +241,88 @@ As a Security Expert, analyze the security implications of the RealSaveFooding a
 
 ### 3. Modelo de Datos
 
-**Prompt 1:**
+### Prompt 1:
+```markdown
+# Role
+You are a **Senior Solution Architect and Database Architect** specializing in PostgreSQL, Prisma ORM, AWS architectures, and mobile applications.
+
+# Task
+Design the **database model** for **RealSaveFooding**
+
+# Context
+It is based on the `docs/product/3_PRD.md` file to understand the business model, use cases and data model of RealSaveFooding and the architecture definition defined in `docs/architecture/architecture.md`.
+**Keep tight to MVP**
+
+# Deliverables
+Provide the output in docs/db folder for the following sections:
+
+## 1. Domain Analysis
+List the identified business entities and explain their responsibilities.
+
+## 2. Mermaid ER Diagram
+Generate a complete **Mermaid ER diagram** using `erDiagram` syntax. 
+
+Include:
+- entities,
+- attributes,
+- PK indicators,
+- FK indicators,
+- cardinalities.
+
+The Mermaid output must be directly usable in Markdown.
+
+## 3. Entity Definitions
+For each entity provide:
+
+- purpose,
+- attributes,
+- PK,
+- FKs,
+- constraints,
+- relationships.
+
+### 4. Normalization Review
+Demonstrate that the design satisfies:
+- 1NF,
+- 2NF,
+- 3NF.
+
+Explain any trade-offs.
+
+## 5. Index Strategy
+Provide SQL recommendations for indexes and justify them.
+
+## 6. Prisma Considerations
+Explain how the model maps naturally to Prisma ORM, including:
+- one-to-many relationships,
+- many-to-many relationships,
+- enum recommendations,
+- cascade considerations.
+
+## 7. Future Evolution
+Describe how the schema could evolve to support:
+- households,
+- barcode integration,
+- recipe recommendations,
+- advanced analytics,
+- machine-learning-based expiration prediction,
+
+while minimizing breaking changes.
+
+---
+
+# Quality Requirements
+The solution should:
+
+- Reflect production-grade database design practices.
+- Be realistic for an academic MVP.
+- Balance simplicity with extensibility.
+- Avoid unnecessary complexity.
+- Prioritize maintainability and data integrity.
+
+Think step by step before generating the final model, and challenge assumptions that could lead to poor normalization or future scalability issues.
+
+```
 
 **Prompt 2:**
 
