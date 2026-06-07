@@ -1,10 +1,10 @@
 # RealSaveFooding MVP - User Stories (Engineering Refined)
 
 Source alignment:
-- Product requirements: [3_PRD.md](3_PRD.md)
-- System architecture: [../architecture/architecture.md](../architecture/architecture.md)
-- Database model: [../db/database-model.md](../db/database-model.md)
-- UX references: [../design/02_Login.png](../design/02_Login.png), [../design/03_Create_account.png](../design/03_Create_account.png), [../design/04_Pantry.png](../design/04_Pantry.png), [../design/06_Add_items.png](../design/06_Add_items.png), [../design/07_Insights.png](../design/07_Insights.png), [../design/08_Shared_pantry.png](../design/08_Shared_pantry.png), [../design/09_Settings.png](../design/09_Settings.png)
+- Product requirements: [3_PRD.md](./3_PRD.md)
+- System architecture: [../architecture/architecture.md](./../architecture/architecture.md)
+- Database model: [../db/database-model.md](./../db/database-model.md)
+- UX references: [../design/02_Login.png](./../design/02_Login.png), [../design/03_Create_account.png](./../design/03_Create_account.png), [../design/04_Pantry.png](./../design/04_Pantry.png), [../design/06_Add_items.png](./../design/06_Add_items.png), [../design/07_Insights.png](./../design/07_Insights.png), [../design/08_Shared_pantry.png](./../design/08_Shared_pantry.png), [../design/09_Settings.png](./../design/09_Settings.png)
 
 ## Scope and assumptions
 

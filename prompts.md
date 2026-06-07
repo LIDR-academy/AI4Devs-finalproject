@@ -492,7 +492,14 @@ The output should include:
 
 **Prompt 3:**
 
-### 8. Documentation Update after User Stories generation
+### 8. Documentation Alignment
 #### Prompt 1: 
 Check the documentation against the repository layout first, then pin down any drift that needs correction rather than guessing from the surface.
+
+#### Prompt 2:
+- Fix the index readme.md and extend it to all header levels.
+- Verify the correct navigation in all links between different md files (consider that the navigation should work in Github)
+Add missing readme.md in /docs/design move the content from docs/product.md header 1.3 to the readme and reference it back. Add description for each screenshot in the readme.md file.
+
+Finally: For all .md files internal links across all files in /docs folder should be in the format [link text](./relative-path-to-file.md) and should work when navigating in Github. Please check all links and fix them if they are not in the correct format or if they are broken.
 
