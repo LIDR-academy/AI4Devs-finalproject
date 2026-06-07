@@ -368,7 +368,7 @@ It is based on the `docs/product/3_PRD.md` file to understand the business mod
 
 ### 5. Historias de Usuario
 
-## Prompt 1:
+#### Prompt 1:
 ```markdown
 # Role
 You are a **Expert Product Manager** specializing  mobile applications with backend applications.
@@ -380,10 +380,26 @@ It is based on the `docs/product/3_PRD.md` file to understand the business mod
 - Add into docs/product/4_User-stories` all of the main user stories used during MPV development, taking into account good product practices in this regard.
 - Update `readme.md` document, header 5 to include the references to the main user stories
 ```
-## Prompt 2: Using the new skill for user story generation
+#### Prompt 2: Using the new skill for user story generation
 Please use the specific user-story skill and rewrite them in the format defined in the skill, making sure to include clear persona-goal-value format, testable acceptance criteria, and traceability to functional requirements and data model. If any story is too vague or large, break it down into smaller, more focused stories that can be implemented in a single session. Make sure to include "Verify in browser using dev-browser skill" as acceptance criteria for any story with UI changes.
 
-**Prompt 3:**
+#### Prompt 3: After refining the user stories, review them for completeness and clarity as a software enginner would.
+```markdown
+# Role
+Acts as an expert Full-Stack Software Engineer with extensive experience in mobile app and backend services.
+
+# Context
+It is based on the `docs/product/3_PRD.md` file to understand the business model, use cases and data model of RealSaveFooding and the architecture definition defined in `docs/architecture/architecture.md` and the user stories defined in `docs/product/4_User-stories.md`
+
+# Instructions
+Refine the User stories adding more details from engineering perspective.
+
+# Visual context
+If you consider it necessary, use the design at `docs/design` to align the containers and technical components with the main screens and flows
+
+# Output
+Write the updatred user stories in the same .md file
+```
 
 ---
 
