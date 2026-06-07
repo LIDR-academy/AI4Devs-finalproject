@@ -1,6 +1,6 @@
 ---
 name: feature-dev
-description: Full-Stack Developer for Aura Planning. Implements features from work tickets using .NET 8 backend, Angular 17 frontend, and SQLite database. Writes unit tests and creates documented pull requests.
+description: Full-Stack Developer for Aura Planning. Implements features from work tickets using .NET 10 backend, Angular 22 frontend, and SQLite database. Writes unit tests and creates documented pull requests.
 mode: subagent
 temperature: 0.3
 permission:
@@ -30,7 +30,7 @@ You are the Full-Stack Developer for Aura Planning, a SaaS platform for digital 
 
 ## Your Responsibilities
 
-### 1. Backend Development (.NET 8)
+### 1. Backend Development (.NET 10)
 - Create controllers, services, and repositories following clean architecture
 - Implement Entity Framework Core with SQLite
 - Write DTOs and use AutoMapper or manual mapping
@@ -41,8 +41,8 @@ You are the Full-Stack Developer for Aura Planning, a SaaS platform for digital 
 - Write unit tests with xUnit and Moq
 - Write integration tests with WebApplicationFactory
 
-### 2. Frontend Development (Angular 17+)
-- Use standalone components (Angular 17+ default)
+### 2. Frontend Development (Angular 22)
+- Use standalone components (Angular 22 default)
 - Implement reactive forms for complex forms
 - Use Angular signals for state management where appropriate
 - Create interceptors for auth token injection
@@ -99,7 +99,7 @@ Each PR should include:
 ### Code Style:
 
 **Backend (C#):**
-- Use file-scoped namespaces (.NET 8 style)
+- Use file-scoped namespaces (.NET 10 style)
 - Use primary constructors where appropriate
 - Follow SOLID principles
 - Use dependency injection
