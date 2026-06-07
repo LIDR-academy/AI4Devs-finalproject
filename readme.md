@@ -14,111 +14,161 @@
 ## 0. Ficha del proyecto
 
 ### **0.1. Tu nombre completo:**
+(Desarrollador)
 
 ### **0.2. Nombre del proyecto:**
+SplitEat
 
 ### **0.3. Descripción breve del proyecto:**
+SplitEat es una aplicación web para la digitalización de tickets de restaurantes y el reparto equitativo de cuentas, con soporte offline (IndexedDB), sincronización en la nube (Firebase/Firestore) y lectura OCR.
 
 ### **0.4. URL del proyecto:**
 
 > Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/).
 
 ### 0.5. URL o archivo comprimido del repositorio
-
-> Puedes tenerlo alojado en público o en privado, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/). También puedes compartir por correo un archivo zip con el contenido
-
+[Repositorio Local]
 
 ---
 
 ## 1. Descripción general del producto
 
-> Describe en detalle los siguientes aspectos del producto:
-
 ### **1.1. Objetivo:**
-
-> Propósito del producto. Qué valor aporta, qué soluciona, y para quién.
+Facilitar el reparto equitativo de los gastos en restaurantes, permitiendo a los usuarios escanear los tickets físicos, asignar cada ítem a personas o familias, y visualizar los totales individuales de forma rápida y sencilla, incluso sin conexión a internet.
 
 ### **1.2. Características y funcionalidades principales:**
-
-> Enumera y describe las características y funcionalidades específicas que tiene el producto para satisfacer las necesidades identificadas.
+- **Escaneo OCR Híbrido**: Procesamiento local mediante Tesseract.js (WASM) en modo offline, con fallback a Google Cloud Vision en la nube cuando hay red.
+- **Sincronización Offline-First**: Almacenamiento local mediante IndexedDB (vía Dexie.js) con sincronización transparente a la nube a través de Firebase/Firestore.
+- **Reparto avanzado**: Asignación de ítems por individuos, soporte para propinas, redondeo y dinámicas de gamificación ("quién paga la ronda").
+- **Exportación**: Generación de informes de saldos para compartir en formato PDF o por mensajería.
 
 ### **1.3. Diseño y experiencia de usuario:**
-
-> Proporciona imágenes y/o videotutorial mostrando la experiencia del usuario desde que aterriza en la aplicación, pasando por todas las funcionalidades principales.
+Aplicación diseñada con foco en la movilidad (PWA), desarrollada en Vite. Cuenta con flujos claros paso a paso: Subida/Captura de imagen -> Revisión de Ítems detectados por el OCR -> Asignación de participantes a cada producto -> Visualización de resúmenes.
 
 ### **1.4. Instrucciones de instalación:**
-> Documenta de manera precisa las instrucciones para instalar y poner en marcha el proyecto en local (librerías, backend, frontend, servidor, base de datos, migraciones y semillas de datos, etc.)
+1. Clonar el repositorio.
+2. Ejecutar `npm install` para instalar dependencias.
+3. Configurar variables de entorno basándose en `.env.example`, incluyendo las credenciales de Firebase en `VITE_FIREBASE_*`.
+4. Ejecutar el entorno de desarrollo mediante `npm run dev`.
+5. Compilar a producción mediante `npm run build`.
 
 ---
 
 ## 2. Arquitectura del Sistema
 
 ### **2.1. Diagrama de arquitectura:**
-> Usa el formato que consideres más adecuado para representar los componentes principales de la aplicación y las tecnologías utilizadas. Explica si sigue algún patrón predefinido, justifica por qué se ha elegido esta arquitectura, y destaca los beneficios principales que aportan al proyecto y justifican su uso, así como sacrificios o déficits que implica.
-
+```mermaid
+graph TD
+    UI[Frontend Vite PWA] -->|IndexedDB| Local[Dexie.js Offline Storage]
+    UI -->|API| Sync[SyncManager]
+    Sync -->|Sincronización| FB[Firebase / Firestore]
+    UI -->|OCR Local| Tess[Tesseract.js WASM]
+    UI -->|OCR Cloud| GCV[Google Cloud Vision]
+```
+La arquitectura **Offline-First** elegida usa IndexedDB para la persistencia de datos inmediata. Dado que la app se utilizará en interiores de restaurantes donde la conexión móvil suele fallar, esta arquitectura garantiza que la aplicación no bloquee al usuario. Firebase Firestore se usa como backend cloud para respaldar la información de forma segura.
 
 ### **2.2. Descripción de componentes principales:**
-
-> Describe los componentes más importantes, incluyendo la tecnología utilizada
+- **Frontend App**: PWA construida con Vite, gestionando la interacción.
+- **SyncManager**: Servicio de sincronización en segundo plano encargado de coordinar datos entre Dexie.js (local) y Firestore (remoto).
+- **Módulo OCR**: Módulo adaptativo que selecciona el motor Tesseract o Cloud Vision según el contexto y red.
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
-
-> Representa la estructura del proyecto y explica brevemente el propósito de las carpetas principales, así como si obedece a algún patrón o arquitectura específica.
+- `/frontend`: Código fuente de la aplicación PWA (Vite, UI, componentes, lógica de presentación).
+- `/backend`: Funciones serverless, servicios de la nube, sincronización remota y lógica de negocio.
+- `/db`: Scripts de configuración local (IndexedDB), reglas de Firestore y esquemas de datos.
+- `/docs/user-stories`: Documentación ágil de la fase de producto con Historias de Usuario y Tareas Técnicas integradas.
 
 ### **2.4. Infraestructura y despliegue**
-
-> Detalla la infraestructura del proyecto, incluyendo un diagrama en el formato que creas conveniente, y explica el proceso de despliegue que se sigue
+El despliegue está planificado para **Firebase Hosting**, integrando CI/CD básico con GitHub Actions para el build y deploy del empaquetado final generado por Vite.
 
 ### **2.5. Seguridad**
-
-> Enumera y describe las prácticas de seguridad principales que se han implementado en el proyecto, añadiendo ejemplos si procede
+- **Reglas de Seguridad de Firestore**: Definidas en `firestore.rules`. El acceso se filtra por UID, garantizando que un usuario (autenticado anónimamente o por email) sólo lea/escriba sus propios tickets (ej. `request.auth.uid == resource.data.uid`).
+- **Variables de Entorno**: Secretos del cliente excluidos del control de versiones.
 
 ### **2.6. Tests**
-
-> Describe brevemente algunos de los tests realizados
+- Pruebas unitarias de las utilidades matemáticas de reparto y redondeo (asegurar que las sumas coincidan con el subtotal).
+- Test de lógica del SyncManager.
 
 ---
 
 ## 3. Modelo de Datos
 
 ### **3.1. Diagrama del modelo de datos:**
-
-> Recomendamos usar mermaid para el modelo de datos, y utilizar todos los parámetros que permite la sintaxis para dar el máximo detalle, por ejemplo las claves primarias y foráneas.
-
+```mermaid
+erDiagram
+    USER ||--o{ TICKET : owns
+    TICKET ||--|{ TICKET_ITEM : has
+    TICKET {
+        string id PK
+        string userId FK
+        string restaurantName
+        datetime timestamp
+        float totalAmount
+        string status
+    }
+    TICKET_ITEM {
+        string id PK
+        string ticketId FK
+        string name
+        float price
+        int quantity
+    }
+    PARTICIPANT ||--o{ ALLOCATION : "pays for"
+    TICKET_ITEM ||--o{ ALLOCATION : split_among
+    PARTICIPANT {
+        string id PK
+        string ticketId FK
+        string name
+    }
+    ALLOCATION {
+        string id PK
+        string itemId FK
+        string participantId FK
+        float fraction
+    }
+```
 
 ### **3.2. Descripción de entidades principales:**
-
-> Recuerda incluir el máximo detalle de cada entidad, como el nombre y tipo de cada atributo, descripción breve si procede, claves primarias y foráneas, relaciones y tipo de relación, restricciones (unique, not null…), etc.
+- **Ticket**: Documento maestro del gasto. Contiene metadatos (restaurante, fecha, monto total validado).
+- **Ticket_Item**: Elemento extraído por el OCR (ej. "Refresco"). Tiene precio y cantidad.
+- **Participant**: Cada comensal en la mesa.
+- **Allocation**: Entidad pivote que representa qué porcentaje de un ítem paga determinado participante.
 
 ---
 
 ## 4. Especificación de la API
 
-> Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad
+La aplicación al ser BaaS interactúa directamente mediante Firebase Client SDK. 
+Una función Serverless (Firebase Cloud Functions) se expone para el procesamiento OCR de alta fidelidad:
+- **`processOcr` (Callable Function)**
+  - Request: `{ base64Image: string }`
+  - Response: `{ items: [{ name: string, price: number, qty: number }] }`
 
 ---
 
 ## 5. Historias de Usuario
 
-> Documenta 3 de las historias de usuario principales utilizadas durante el desarrollo, teniendo en cuenta las buenas prácticas de producto al respecto.
+**Historia de Usuario 1 (US-01): Captura de Ticket**
+Como comensal, quiero tomar una foto del ticket de la cena para que la aplicación extraiga automáticamente los conceptos y precios sin tener que teclearlos.
 
-**Historia de Usuario 1**
+**Historia de Usuario 2 (US-02): Soporte Offline**
+Como comensal en un local con mala cobertura, quiero poder hacer el reparto y guardar el ticket localmente para que se sincronice en la nube cuando recupere la conexión.
 
-**Historia de Usuario 2**
-
-**Historia de Usuario 3**
+**Historia de Usuario 3 (US-03): Asignación Fraccionada**
+Como comensal, quiero asignar un mismo plato a varias personas indicando que lo hemos compartido, para que el sistema divida su coste automáticamente de manera equitativa.
 
 ---
 
 ## 6. Tickets de Trabajo
 
-> Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
+**Ticket 1 (Frontend): TSK-1.1 - Interfaz de captura de imagen**
+Crear vista en Vite/React que habilite el uso de la cámara nativa vía MediaDevices API o subida de archivo. Debe incluir compresión y previsualización.
 
-**Ticket 1**
+**Ticket 2 (Base de Datos): TSK-3.7 - Reglas de seguridad de Firestore**
+Desarrollar y probar `firestore.rules` limitando operaciones (read/write) en la colección `tickets` a `auth != null && auth.uid == resource.data.uid`.
 
-**Ticket 2**
-
-**Ticket 3**
+**Ticket 3 (Backend): TSK-2.1 - Implementación del SyncManager**
+Configurar `Dexie.js` y acoplar observadores a la colección local. Detectar eventos `online/offline` del navegador y ejecutar rutinas de subida a Firestore de las entradas marcadas como pendientes de sincronización.
 
 ---
 

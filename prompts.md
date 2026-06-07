@@ -1,7 +1,3 @@
-> Detalla en esta sección los prompts principales utilizados durante la creación del proyecto, que justifiquen el uso de asistentes de código en todas las fases del ciclo de vida del desarrollo. Esperamos un máximo de 3 por sección, principalmente los de creación inicial o  los de corrección o adición de funcionalidades que consideres más relevantes.
-Puedes añadir adicionalmente la conversación completa como link o archivo adjunto si así lo consideras
-
-
 ## Índice
 
 1. [Descripción general del producto](#1-descripción-general-del-producto)
@@ -17,10 +13,7 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 ## 1. Descripción general del producto
 
 **Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
+> "de la ayuda de /product-owner y /tech-lead valorar la posibilidad de que el MVP pueda realizarse con una base de datos en el navegador para hacer las primeras pruebas y luego que sea migrable / escalable a una base de datos en la nube (firebase)"
 
 ---
 
@@ -29,97 +22,46 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 ### **2.1. Diagrama de arquitectura:**
 
 **Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
+> "una vez aterrizado las historias de usuario y el stack, /tech-lead revisa el stack actual, crea un listado y despues  pregunta, siempieza a crear las historias o tareas técnicas y como"
 
 ### **2.2. Descripción de componentes principales:**
 
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
 
 ### **2.4. Infraestructura y despliegue**
 
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
 ### **2.5. Seguridad**
 
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
 ### **2.6. Tests**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
 
 ---
 
 ### 3. Modelo de Datos
 
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
 ---
 
 ### 4. Especificación de la API
 
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
 ---
 
 ### 5. Historias de Usuario
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
 
 ---
 
 ### 6. Tickets de Trabajo
 
 **Prompt 1:**
+> "generemos un backlog, separado por carpetas si es necesario con las tareas técnicas que deberemos abordar. Sé lo más detallado posible para que la skill que lo tenga que hacer no tenga ambigüedades."
 
 **Prompt 2:**
+> "las tareas deben ir con las historias de usuario en la documentación, no deben ir en la carpeta de tech-lead porque las puede  interpretar otra skill"
 
 **Prompt 3:**
+> "Las tareas técnicas no deben pertenecer a las historias de usuario, deben ir en ficheros independientes dentro de las historias de usuario"
+
+**Prompt 4:**
+> "He borrado la carpeta de tasks de tech-lead, modifica las rutas de las tareas técnicas a donde se encuentran actualmente"
 
 ---
 
 ### 7. Pull Requests
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
