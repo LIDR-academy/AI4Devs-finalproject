@@ -188,7 +188,75 @@ Users lose money and waste food because inventory visibility is low, expiry trac
 2. For the limited price dataset, what categories must be included in MVP (for example dairy, produce, meat, pantry staples)?
 3. What rule should define "far-past-expiry" for waste suggestion (for example 3 days, 7 days, or category-based)?
 
-## Appendix: Delivery Slices (MVP)
+## 10. Non-Functional Requirements (Security)
+
+### 10.1 Authentication and Authorization
+- NFR-SEC-1: All protected API endpoints must require a valid JWT.
+- NFR-SEC-2: JWT secret must not be hardcoded in source code and must be provided via environment configuration.
+- NFR-SEC-3: Authorization checks must enforce pantry ownership/household membership before read/write operations.
+- NFR-SEC-4: Sensitive account operations (password change, account deletion) must require recent authentication.
+
+### 10.2 Data Protection
+- NFR-SEC-5: All client to API communication must use HTTPS in deployed environments.
+- NFR-SEC-6: Receipt images in object storage must not be public by default.
+- NFR-SEC-7: Personally identifiable information (email, profile, household links) must be stored with least-access principles.
+- NFR-SEC-8: Credentials, cloud keys, and tokens must be managed through environment secrets, never in repository files.
+
+### 10.3 Input and API Security
+- NFR-SEC-9: Backend input validation must be applied to all external payloads (auth, pantry, receipt, sharing flows).
+- NFR-SEC-10: File upload endpoint must validate file type and size before processing.
+- NFR-SEC-11: API must reject malformed or unauthorized requests with consistent error handling that does not leak internal details.
+
+### 10.4 Auditability and Abuse Protection
+- NFR-SEC-12: Consumption/waste events and critical account actions must include actor and timestamp for traceability.
+- NFR-SEC-13: System should log authentication failures and suspicious access attempts.
+- NFR-SEC-14: API should support baseline abuse controls (rate-limit strategy and request throttling policy), even if minimal in MVP.
+
+### 10.5 Third-Party and Integration Security
+- NFR-SEC-15: Integrations with Textract, S3, and SNS must use scoped IAM permissions (least privilege).
+- NFR-SEC-16: OCR output must be treated as untrusted input and validated before persistence.
+- NFR-SEC-17: Notification payloads must avoid exposing unnecessary personal data.
+
+## 11. Security Risks Identified in Current MVP Architecture (Documented, Not Fixed)
+
+1. Single environment concentration risk
+- Current architecture is centered on one cloud environment (`dev`) for MVP.
+- Risk: accidental mixing of development data and production-like usage.
+
+2. JWT session risk without explicit token lifecycle policy
+- Current docs state JWT usage but do not define rotation, revocation, or short-lived access policy.
+- Risk: longer exposure window if tokens are leaked.
+
+3. Receipt data sensitivity risk
+- Receipt images can contain personal and financial data.
+- Risk: exposure if bucket policy, object ACLs, or retention policies are misconfigured.
+
+4. Shared pantry authorization risk
+- Household sharing is core MVP behavior but fine-grained authorization rules are not fully specified.
+- Risk: horizontal privilege issues (user accessing another household's items).
+
+5. External service dependency risk
+- Textract and SNS are critical-path dependencies.
+- Risk: degraded feature behavior, queueing failures, or silent drop in notifications when integration errors occur.
+
+6. Abuse and brute-force risk
+- Current architecture docs do not define authentication throttling controls.
+- Risk: credential stuffing or brute-force attempts against auth endpoints.
+
+7. Logging and privacy balance risk
+- Need operational logs for troubleshooting and auditing.
+- Risk: accidental logging of sensitive payloads unless log redaction policy is enforced.
+
+## 12. Security Readiness Checklist Before Implementation
+- Define role and ownership matrix for all pantry and sharing operations.
+- Define JWT expiration and refresh/re-authentication policy.
+- Define secure upload constraints (mime types, size limits, retention window).
+- Define S3 bucket policy baseline (private objects, server-side encryption, scoped IAM).
+- Define minimum auth protection controls (rate limiting policy and lockout thresholds).
+- Define incident logging and redaction policy for PII and receipt content.
+- Define data deletion behavior for account deletion and shared household membership changes.
+
+## 13. Appendix: Delivery Slices (MVP)
 - Slice A: Auth + pantry CRUD
 - Slice B: Receipt upload + OCR + confirmation
 - Slice C: Expiry estimation + notification trigger

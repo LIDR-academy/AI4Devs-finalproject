@@ -140,6 +140,28 @@ Auth --> Users : Identity and account ownership checks
 - Alerts: Expiration + Notifications + SNS adapter
 - Dashboard and use-next list: Dashboard + Expiration + Pantry modules
 
+## Security View (Cross-Cutting)
+
+### Security controls expected per level
+- Context level:
+  - End users authenticate before accessing household data.
+  - External providers (Textract/SNS) are accessed through backend-only trust boundary.
+- Container level:
+  - Frontend to backend traffic requires HTTPS and JWT-based access control.
+  - S3 object access should remain private and scoped via backend integration layer.
+  - RDS access should be limited to backend service identity.
+- Component level:
+  - Auth module and common guards enforce identity and authorization boundaries.
+  - Receipts module validates uploaded file metadata and OCR output before persistence.
+  - Notifications module publishes minimal data payloads.
+
+### Architecture risks documented (not fixed here)
+- JWT lifecycle policy is not yet fully specified (refresh/revocation behavior pending).
+- Shared pantry access boundaries may be under-specified for multi-household edge cases.
+- No explicit throttling strategy is represented in the current C4 container interactions.
+- Receipt data privacy depends on strict S3 policy and retention configuration outside this model.
+- Operational concentration in a single MVP environment increases accidental exposure risk.
+
 ## Out of Scope (Post-MVP)
 - Recipe recommendation engine and external recipe APIs
 - Dynamic live supermarket price integrations

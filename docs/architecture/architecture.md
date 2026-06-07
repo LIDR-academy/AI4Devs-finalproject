@@ -528,10 +528,62 @@ MVP notes:
 
 ## **2.6. Seguridad**
 
-> Enumera y describe las prácticas de seguridad principales que se han implementado en el proyecto, añadiendo ejemplos si procede
+Security baseline for MVP architecture:
+
+1. Authentication and access control
+- JWT-based protection for private API endpoints.
+- Ownership checks required for pantry, receipt, and shared-household operations.
+- Sensitive account actions should require recent authentication.
+
+2. Data protection
+- HTTPS is required in deployed environments.
+- Receipt files in S3 must be private by default.
+- Environment secrets (JWT secret, AWS credentials, database URL) must remain outside source code.
+
+3. API and input hardening
+- DTO validation for all external payloads.
+- File upload constraints (type and size validation).
+- Error handling must avoid internal detail leakage.
+
+4. Integration security
+- Least-privilege IAM for Textract, S3, and SNS adapters.
+- OCR output is treated as untrusted input until validated.
+- Notification payloads should contain minimal personal data.
+
+5. Audit and monitoring expectations
+- Traceability for critical actions (actor + timestamp).
+- Logging for failed authentication and integration failures.
+- Log redaction policy for PII and receipt content.
+
+Documented risks from the current architecture (not fixed in this section):
+
+- Single-environment concentration (`dev`) increases operational and data-mixing risk.
+- JWT lifecycle controls are not yet fully specified (rotation/revocation policy pending).
+- Shared pantry authorization rules need explicit boundary definitions to avoid horizontal access issues.
+- Missing explicit throttling policy leaves auth flows exposed to brute-force attempts.
+- Sensitive receipt data handling depends on correct bucket policy and retention configuration.
+
+Reference details:
+- Security NFR and readiness checklist are defined in [docs/product/3_PRD.md](../product/3_PRD.md).
+- C4 security mapping is documented in [docs/architecture/C4-Model.md](C4-Model.md).
 
 ## **2.7. Tests**
 
-> Describe brevemente algunos de los tests realizados
+MVP test strategy covers three levels:
+
+- Frontend component tests for critical screens and UX flows.
+- Backend unit and integration tests for domain modules and API behavior.
+- End-to-end validation for the critical flow: login -> pantry -> receipt upload -> OCR path.
+
+Security-oriented coverage documented for MVP includes:
+
+- Authentication and authorization checks (invalid/missing JWT, ownership boundaries).
+- Input and upload validation checks (payload validation, file constraints).
+- Integration safety checks (OCR output validation, notification payload minimization).
+- Abuse-resistance baseline checks (throttling behavior once enabled, failed-auth audit events).
+- Data protection checks (no secret leakage in fixtures/logs).
+
+Reference:
+- Detailed strategy: [docs/testing/test-strategy.md](../testing/test-strategy.md)
 
 ---
