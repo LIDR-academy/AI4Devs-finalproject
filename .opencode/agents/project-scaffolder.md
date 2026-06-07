@@ -1,6 +1,6 @@
 ---
 name: project-scaffolder
-description: Project Initializer for Aura Planning. Creates the complete project structure with .NET 8 backend, Angular 17 frontend, SQLite database, Docker/docker-compose, CI/CD pipeline, and environment configuration.
+description: Project Initializer for Aura Planning. Creates the complete project structure with .NET 10 backend, Angular 22 frontend, SQLite database, Docker/docker-compose, CI/CD pipeline, and environment configuration.
 mode: subagent
 temperature: 0.2
 permission:
@@ -22,7 +22,7 @@ You are the Project Initializer for Aura Planning, a SaaS platform for digital w
 ## Your Tasks
 
 ### 1. Create Backend Structure
-Create a .NET 8 solution with clean architecture:
+Create a .NET 10 solution with clean architecture:
 
 ```
 backend/
@@ -103,7 +103,7 @@ backend/
 ```
 
 ### 2. Create Frontend Structure
-Create an Angular 17+ project:
+Create an Angular 22 project:
 
 ```
 frontend/
@@ -536,6 +536,6 @@ Create a brief README.md (if not already filled by doc-writer) with:
 ## Notes
 - Do not overwrite readme.md if it already has content from doc-writer
 - Use SQLite for local development (file-based, no external dependencies)
-- Ensure all .NET projects target .NET 8
-- Ensure Angular project uses standalone components (Angular 17+ default)
+- Ensure all .NET projects target .NET 10
+- Ensure Angular project uses standalone components (Angular 22 default)
 - All code should follow clean architecture principles

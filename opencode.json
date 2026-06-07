@@ -2,5 +2,12 @@
   "$schema": "https://opencode.ai/config.json",
   "instructions": [
     "conventions/**/*.md"
-  ]
+  ],
+  "mcp": {
+    "pencil": {
+      "type": "local",
+      "command": ["C:\\Users\\Pedro\\AppData\\Local\\Programs\\Pencil\\resources\\app.asar.unpacked\\out\\mcp-server-windows-x64.exe", "--app", "desktop"],
+      "enabled": true
+    }
+  }
 }

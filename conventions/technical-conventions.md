@@ -4,8 +4,8 @@
 
 | Component | Technology |
 |-----------|------------|
-| Backend | .NET 8+ (ASP.NET Core Web API) |
-| Frontend | Angular 17+ (Standalone components) |
+| Backend | .NET 10 (ASP.NET Core Web API) |
+| Frontend | Angular 22 (Standalone components) |
 | Database | SQLite with Entity Framework Core |
 | Authentication | Magic links with JWT tokens |
 | Email | AWS SES |
@@ -30,7 +30,7 @@ graph TB
     end
 
     subgraph Backend
-        E[.NET 8 API - ASP.NET Core]
+        E[.NET 10 API - ASP.NET Core]
         F[Static Site Generator Service]
         G[Email Service - AWS SES]
         H[WhatsApp Service - Meta API]
@@ -183,7 +183,7 @@ sequenceDiagram
 
 ## Project Structure
 
-### Backend (.NET 8)
+### Backend (.NET 10)
 ```
 backend/
 ├── src/
@@ -208,7 +208,7 @@ backend/
 └── AuraPlanning.sln
 ```
 
-### Frontend (Angular 17+)
+### Frontend (Angular 22)
 ```
 frontend/
 ├── src/
@@ -237,16 +237,19 @@ frontend/
 ## Code Style
 
 ### Backend (C#)
-- File-scoped namespaces (.NET 8 style)
-- Primary constructors where appropriate
+- File-scoped namespaces (.NET 10 style)
+- Primary constructors (C# 12+)
+- Collection expressions (C# 12+)
 - SOLID principles
 - Async/await all the way
 - Records for DTOs
 - Nullable reference types
+- Minimal APIs where appropriate
 
 ### Frontend (TypeScript/Angular)
 - Strict mode
-- Standalone components
+- Standalone components (default)
+- New control flow (@if, @for, @switch)
 - Angular signals for reactive state
 - Typed forms
 - inject() function for DI

@@ -61,8 +61,8 @@ Complete with:
 Provide step-by-step instructions:
 ```
 # Prerequisites
-- .NET 8 SDK
-- Node.js 20+ and Angular CLI
+- .NET 10 SDK
+- Node.js 22+ and Angular CLI
 - SQLite (bundled, no separate installation needed)
 
 # Clone and setup
@@ -94,8 +94,8 @@ ng serve
 - Explain trade-offs: static generation means delayed updates, but RSVP is handled via API
 
 **2.2. Components:**
-- Frontend: Angular 17+ SPA (host dashboard + accomplice panel)
-- Backend: .NET 8 with ASP.NET Core Web API
+- Frontend: Angular 22 SPA (host dashboard + accomplice panel)
+- Backend: .NET 10 with ASP.NET Core Web API
 - Database: SQLite (local dev, can migrate to PostgreSQL for production)
 - Background Services: .NET IHostedService for email queues, data retention
 - CDN: CloudFront or Azure CDN (static site delivery)
