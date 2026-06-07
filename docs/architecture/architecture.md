@@ -529,7 +529,7 @@ MVP notes:
 
 ## **2.5. C4 Model**
 
-[C4 Model](C4-Model.md)
+[C4 Model](./C4-Model.md)
 
 ## **2.6. Seguridad**
 
@@ -569,8 +569,8 @@ Documented risks from the current architecture (not fixed in this section):
 - Sensitive receipt data handling depends on correct bucket policy and retention configuration.
 
 Reference details:
-- Security NFR and readiness checklist are defined in [docs/product/3_PRD.md](../product/3_PRD.md).
-- C4 security mapping is documented in [docs/architecture/C4-Model.md](C4-Model.md).
+- Security NFR and readiness checklist are defined in [docs/product/3_PRD.md](./../product/3_PRD.md).
+- C4 security mapping is documented in [docs/architecture/C4-Model.md](./C4-Model.md).
 
 ## **2.7. Tests**
 
@@ -589,13 +589,13 @@ Security-oriented coverage documented for MVP includes:
 - Data protection checks (no secret leakage in fixtures/logs).
 
 Reference:
-- Detailed strategy: [docs/testing/test-strategy.md](../testing/test-strategy.md)
+- Detailed strategy: [docs/testing/test-strategy.md](./../testing/test-strategy.md)
 
 ---
 
 ## 3. Database model
-- [Database Model](../db/database-model.md)
-- [PRD Data Model Requirements](../product/3_PRD.md)
+- [Database Model](./../db/database-model.md)
+- [PRD Data Model Requirements](./../product/3_PRD.md)
 
 Implementation note:
 - Database design and migrations must follow the functional and non-functional data model requirements defined in PRD section 4 (FR-18 to FR-26) and section 7.1 (NFR-DM-1 to NFR-DM-15).

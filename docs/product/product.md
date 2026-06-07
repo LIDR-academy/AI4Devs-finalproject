@@ -120,7 +120,7 @@ Secondary / later segments:
 
 ## **1.3. Design and UX**
 
-See the detailed wireframes and screenshots in the design folder: [Design and UX](../design/readme.md).
+See the detailed wireframes and screenshots in the design folder: [Design and UX](./../design/readme.md).
 
 
 ## **1.4. Installation instructions:**

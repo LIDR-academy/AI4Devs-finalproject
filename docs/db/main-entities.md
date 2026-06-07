@@ -1,6 +1,6 @@
 # Main Entities Specification (MVP)
 
-This document complements the conceptual model in [database-model.md](database-model.md) with implementation-oriented detail for primary entities, including attribute types, keys, constraints, and relationships.
+This document complements the conceptual model in [database-model.md](./database-model.md) with implementation-oriented detail for primary entities, including attribute types, keys, constraints, and relationships.
 
 Type notation is aligned with PostgreSQL and Prisma usage in this project.
 
@@ -303,6 +303,6 @@ Purpose: Controlled MVP reference prices for comparison insights.
 
 ## References
 
-- Conceptual and ER model: [database-model.md](database-model.md)
-- Architecture context: [../architecture/architecture.md](../architecture/architecture.md)
-- Product requirements: [../product/3_PRD.md](../product/3_PRD.md)
+- Conceptual and ER model: [database-model.md](./database-model.md)
+- Architecture context: [../architecture/architecture.md](./../architecture/architecture.md)
+- Product requirements: [../product/3_PRD.md](./../product/3_PRD.md)

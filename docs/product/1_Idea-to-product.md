@@ -42,6 +42,6 @@ Main Idea: I want to create an app similar to ConsumeSmart (check all features o
 
 Conduct thorough and in-depth market research on software with similar features and create a table comparing the pros and cons of each. Consider the importance of AI assistance and automation to improve and accelerate any new functionality.
 
-[Market research](2_Market-research.md)
+[Market research](./2_Market-research.md)
 
-[Non-MVP](Non-MVP.md)
+[Non-MVP](./Non-MVP.md)
