@@ -8,7 +8,7 @@
 5. [Historias de usuario](#5-historias-de-usuario)
 6. [Tickets de trabajo](#6-tickets-de-trabajo)
 7. [Pull requests](#7-pull-requests)
-8. [AI Usage)](8.AI-Usage.md)
+8. [Prompts and AI usage](prompts.md)
 
 ---
 ## 0. Project sheet

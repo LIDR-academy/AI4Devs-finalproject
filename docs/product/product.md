@@ -53,7 +53,7 @@ Secondary / later segments:
 - **Insight-driven**: analytics that quantify waste in both **food units** and **€**.
 - **Notification-centric**: proactive reminders and alerts (expiry, price drops, consumed-by-others).
 - **Apple-like UX**: clean, simple, “iOS design language” style UI.
-- **Cross-device sync**: cloud sync (Google Cloud for Android / iCloud for Apple).
+- **Cross-device sync**: not part of the current MVP documentation; keep the provider choice open for future iterations.
 - **Privacy & security controls**: account, password, ad-privacy preferences, delete account.
 
 ---
@@ -103,7 +103,7 @@ Secondary / later segments:
 - Detailed breakdowns grouped by:
     - Time (day/week/month)
     - Food type / specific entries
-- “Top 10 most wasted foods” for the user + comparison vs other users (benchmarking).
+- “Top 10 most wasted foods” for the user.
 
 #### 7) Accounts, sharing, and settings
 

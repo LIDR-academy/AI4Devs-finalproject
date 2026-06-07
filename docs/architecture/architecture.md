@@ -7,7 +7,7 @@ Frontend Architecture
 @startuml
 title RealSaveFooding - Frontend Architecture
 
-package "Mobile Application" {
+package "Frontend Application" {
 
     [Screens] as Screens
     [Reusable UI Components] as Components
@@ -18,13 +18,14 @@ package "Mobile Application" {
     [Notification Handler] as Notifications
 
     package "Technology Stack" {
-        [Lovable]
+        [TanStack Start]
         [React]
         [TypeScript]
+        [TanStack Router]
+        [TanStack React Query]
         [TailwindCSS]
         [Radix UI]
         [Vite]
-        [Nitro]
     }
 
     Screens --> Components
@@ -95,11 +96,13 @@ actor User
 
 package "Frontend Layer" {
 
-    node "Mobile Application" {
+    node "Frontend Application" {
 
-        component "Lovable"
+        component "TanStack Start"
         component "React"
         component "TypeScript"
+        component "TanStack Router"
+        component "TanStack React Query"
         component "TailwindCSS"
         component "Radix UI"
 
@@ -129,9 +132,9 @@ cloud "AWS Textract" as Textract
 
 cloud "Amazon SNS" as SNS
 
-User --> "Mobile Application"
+User --> "Frontend Application"
 
-"Mobile Application" --> "NestJS API" : HTTPS + JWT
+"Frontend Application" --> "NestJS API" : HTTPS + JWT
 
 "Auth Module" --> RDS
 
@@ -158,7 +161,7 @@ title RealSaveFooding - MVP Architecture
 actor User
 
 rectangle "Frontend" {
-    [Mobile App]
+    [Frontend App]
 }
 
 rectangle "Backend" {
@@ -175,9 +178,9 @@ cloud "AWS Textract"
 
 cloud "Amazon SNS"
 
-User --> [Mobile App]
+User --> [Frontend App]
 
-[Mobile App] --> [NestJS API]
+[Frontend App] --> [NestJS API]
 
 [NestJS API] --> "Amazon RDS"
 
@@ -204,7 +207,7 @@ title RealSaveFooding - Future Architecture
 actor User
 
 node "Frontend" {
-    [Mobile App]
+    [Frontend App]
     [Web Portal]
 }
 
@@ -238,10 +241,10 @@ cloud "AWS Textract"
 
 cloud "Open Food Facts API"
 
-User --> [Mobile App]
+User --> [Frontend App]
 User --> [Web Portal]
 
-[Mobile App] --> [API Gateway]
+[Frontend App] --> [API Gateway]
 [Web Portal] --> [API Gateway]
 
 [API Gateway] --> [Auth Service]
@@ -273,7 +276,7 @@ User --> [Web Portal]
 MVP
 |
 ├──Frontend
-|  └─── Lovable / React
+|  └─── TanStack Start / React
 |
 ├──Backend
 |  └─-- NestJS + Prisma
@@ -334,7 +337,7 @@ MVP-first repository structure implemented in this repository:
 RealSaveFooding/
 ├── front/
 │   ├── src/
-│   │   ├── app/                           # New MVP composition entrypoints
+        [Frontend App]
 │   │   ├── features/                      # New feature-oriented MVP folders
 │   │   │   ├── auth/
 │   │   │   ├── pantry/
@@ -358,7 +361,7 @@ RealSaveFooding/
 │   │   └── styles.css
 │   └── tests/
 │
-├── back/
+    [Frontend App] --> [API Gateway]
 │   ├── src/
 │   │   ├── main.ts
 │   │   ├── app.module.ts
@@ -428,7 +431,7 @@ Can be introduced later:
 
 MVP infrastructure (AWS-focused):
 
-- Frontend: React app in `front/` built with Vite/Nitro.
+- Frontend: TanStack Start app in `front/` built with Vite.
 - Backend API: NestJS service in `back/` (containerized for deployment).
 - Database: Amazon RDS PostgreSQL.
 - Receipt image storage: Amazon S3.
@@ -461,7 +464,7 @@ cloud "AWS Account (dev)" {
 }
 
 node "User Device" as DEVICE {
-  component "Frontend (React/Vite)\n(front)" as FRONT
+    component "Frontend (TanStack Start/React)\n(front)" as FRONT
 }
 
 Developer --> GH : push / PR
