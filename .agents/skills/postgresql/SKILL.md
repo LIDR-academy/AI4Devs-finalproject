@@ -13,6 +13,23 @@ description: Use this skill when designing or reviewing a PostgreSQL-specific sc
 - Create **indexes for access paths you actually query**: PK/unique (auto), **FK columns (manual!)**, frequent filters/sorts, and join keys.
 - Prefer **TIMESTAMPTZ** for event time; **NUMERIC** for money; **TEXT** for strings; **BIGINT** for integer values, **DOUBLE PRECISION** for floats (or `NUMERIC` for exact decimal arithmetic).
 
+## Naming Conventions
+- Use consistent snake_case naming.
+- Use singular entity names.
+- Follow PostgreSQL best practices.
+
+## Normalization
+- Achieve Third Normal Form (3NF).
+- Avoid data duplication whenever practical.
+- Justify any intentional denormalization.
+
+## Keys
+- Define Primary Keys (PK) for all entities.
+- Use UUIDs where appropriate.
+- Define all Foreign Keys (FK) explicitly.
+- Specify ON DELETE and ON UPDATE behaviors.
+- Identify candidate keys when relevant.
+
 ## PostgreSQL “Gotchas”
 
 - **Identifiers**: unquoted → lowercased. Avoid quoted/mixed-case names. Convention: use `snake_case` for table/column names.
@@ -69,6 +86,10 @@ Enable with `ALTER TABLE tbl ENABLE ROW LEVEL SECURITY`. Create policies: `CREAT
 - **UNIQUE**: creates a B-tree index; allows multiple NULLs unless `NULLS NOT DISTINCT` (PG15+). Standard behavior: `(1, NULL)` and `(1, NULL)` are allowed. With `NULLS NOT DISTINCT`: only one `(1, NULL)` allowed. Prefer `NULLS NOT DISTINCT` unless you specifically need duplicate NULLs.
 - **CHECK**: row-local constraints; NULL values pass the check (three-valued logic). Example: `CHECK (price > 0)` allows NULL prices. Combine with `NOT NULL` to enforce: `price NUMERIC NOT NULL CHECK (price > 0)`.
 - **EXCLUDE**: prevents overlapping values using operators. `EXCLUDE USING gist (room_id WITH =, booking_period WITH &&)` prevents double-booking rooms. Requires appropriate index type (often GiST).
+- Use NOT NULL appropriately.
+- Define UNIQUE constraints.
+- Use CHECK constraints where applicable.
+- Define sensible default values.
 
 ## Indexing
 
