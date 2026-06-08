@@ -137,8 +137,120 @@ Tone: Precise, unambiguous, team-ready. Use tables, mermaid diagrams for flows. 
 
 **Prompt 3:**
 
-write the PRD file in the @business-documentation folder ( make use of different files with navigation links in case the file is too big)
-The root file should be "PRD.md"
+As a UI/UX design expert, generate the complete brand identity and platform UI for "Aura Events" (Aura Planning) in this .pen file.
+
+CONTEXT:
+Aura Events is a SaaS platform for digital event invitations and real-time event storytelling. Initial market: weddings, scalable to any celebration. Slogan: "Design your event's narrative, manage the logistics effortlessly." The interface must be minimalist, elegant, and convey peace.
+
+IMPORTANT: Design the Aura company platform itself (where users land, sign up, and manage events), NOT the guest-facing wedding microsites.
+
+---
+
+PART 1: BRAND STYLES & DESIGN TOKENS
+
+Update the document variables with a cohesive design system:
+
+Colors:
+- Primary: elegant sage/warm tone reflecting "Aura" serenity
+- Accent: refined gold for CTAs and premium feel
+- Backgrounds: warm cream/ivory surfaces
+- Text hierarchy: dark charcoal (primary), warm gray (secondary), muted (tertiary)
+- Semantic colors: success (green), warning (amber), error (rose), info (blue) - all muted/elegant
+- Borders and dividers: subtle warm tones
+
+Typography:
+- Headings: Playfair Display (serif, elegant)
+- Body: Inter (sans-serif, clean, readable)
+
+Spacing scale: 4px base unit (4, 8, 12, 16, 24, 32, 40, 48, 64)
+Border radius: sm=8, md=12, lg=16, full=999
+Shadows: subtle, warm-toned (sm, md, lg)
+
+---
+
+PART 2: LOGO
+
+Create an "Aura Events" logo as a reusable component:
+- Minimalist wordmark or icon + wordmark
+- Should evoke: elegance, warmth, celebration, light/aura
+- Two variants: full logo (icon + text) and icon-only (for nav/favicons)
+- Use the brand color palette
+
+---
+
+PART 3: REUSABLE COMPONENTS
+
+Build these as reusable components:
+- Button (Primary, Secondary, Ghost, Danger)
+- Input field with label and error state
+- Card container
+- Navigation bar (with logo, nav links, user avatar)
+- Badge (Pending, Confirmed, Cancelled)
+- Event card (with image placeholder, title, date, status, guest count)
+- Stats/metric card
+- Empty state illustration + text
+- Avatar component
+
+---
+
+PART 4: SCREENS
+
+Design these screens as top-level frames:
+
+A) LANDING PAGE (what users see after searching Google)
+- Hero section: headline "Design your event's narrative, manage the logistics effortlessly" + CTA "Start designing — it's free"
+- Value proposition section (3 columns: Template Editor, Guest Manager, Live Updates)
+- Social proof / trust indicators
+- Feature highlights with visuals
+- Pricing teaser ("Free to design, pay to publish")
+- Footer with links
+
+B) SIGN UP / MAGIC LINK REQUEST
+- Clean, centered card
+- Aura logo
+- "Create your account" heading
+- Email input field
+- "Continue with Magic Link" button
+- Link to sign in
+- Minimal, distraction-free
+
+C) SIGN IN (Magic Link)
+- Similar to sign up
+- "Welcome back" heading
+- Email input
+- "Send magic link" button
+- Link to sign up
+
+D) HOST DASHBOARD (after authentication)
+- Navigation bar with logo, nav items (Dashboard, Events, Guests, Settings), user menu
+- Welcome section with user name
+- Stats row: Total Events, Active Guests, Pending RSVPs, Published Events
+- "Create New Event" CTA button
+- Events list/table with: Event name, date, status (draft/published), guest count, RSVP rate, actions
+- Empty state if no events exist
+- Sidebar or top nav for navigation
+
+E) EVENT CONFIGURATION SCREEN
+- Event details form: Name, Date, Venue, Template selector
+- Color and typography customization preview
+- Guest import section (CSV upload area)
+- Publish button (with paywall indicator)
+- Progress indicator showing setup completion
+
+---
+
+DESIGN PRINCIPLES:
+- Minimalist and elegant — convey the peace suggested by "Aura"
+- Mobile-first thinking but design desktop views
+- Use the existing color palette in the .pen file as a starting point
+- Warm, inviting, premium feel
+- Clear visual hierarchy
+- Generous whitespace
+- No excessive shadows, gradients, or decorations
+- Conversion-focused on landing page
+- Functional and clear on dashboard
+
+Generate all screens with placeholder content where needed. Use the existing variables in the .pen file and extend them as necessary.
 
 ---
 

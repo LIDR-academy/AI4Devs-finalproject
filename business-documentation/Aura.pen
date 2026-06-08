@@ -1,0 +1,4498 @@
+{
+  "version": "2.13",
+  "children": [
+    {
+      "type": "frame",
+      "id": "Jz6hO",
+      "x": 0,
+      "y": 0,
+      "name": "Logo/Full",
+      "reusable": true,
+      "gap": 12,
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "z6DV04",
+          "name": "Icon Mark",
+          "width": 40,
+          "height": 40,
+          "layout": "none",
+          "children": [
+            {
+              "type": "path",
+              "id": "wqFaC",
+              "x": 0,
+              "y": 0,
+              "name": "Arc Outer",
+              "geometry": "M4 28a16 16 0 0 1 32 0",
+              "fill": "#00000000",
+              "width": 40,
+              "height": 40,
+              "stroke": "$primary",
+              "strokeWidth": 2.5,
+              "strokeLinecap": "round"
+            },
+            {
+              "type": "path",
+              "id": "vv71l",
+              "x": 6,
+              "y": 6,
+              "name": "Arc Middle",
+              "geometry": "M6 22a10 10 0 0 1 16 0",
+              "fill": "#00000000",
+              "width": 28,
+              "height": 28,
+              "stroke": "$accent",
+              "strokeWidth": 2,
+              "strokeLinecap": "round"
+            },
+            {
+              "type": "ellipse",
+              "id": "jsjwS",
+              "x": 16,
+              "y": 26,
+              "name": "Center Dot",
+              "fill": "$primary",
+              "width": 8,
+              "height": 8
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "U1bPV",
+          "name": "Wordmark",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "text",
+              "id": "zJRiZ",
+              "name": "Aura",
+              "fill": "$text-primary",
+              "content": "Aura",
+              "fontFamily": "$font-heading",
+              "fontSize": 24
+            },
+            {
+              "type": "text",
+              "id": "Q9WO2",
+              "name": "Events",
+              "fill": "$text-secondary",
+              "content": "EVENTS",
+              "fontFamily": "$font-body",
+              "fontSize": 10,
+              "letterSpacing": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "FVfkD",
+      "x": 520,
+      "y": 30,
+      "name": "Logo/Icon",
+      "reusable": true,
+      "width": 40,
+      "height": 40,
+      "layout": "none",
+      "children": [
+        {
+          "type": "path",
+          "id": "yhf59",
+          "x": 0,
+          "y": 0,
+          "name": "Arc Outer",
+          "geometry": "M4 28a16 16 0 0 1 32 0",
+          "fill": "#00000000",
+          "width": 40,
+          "height": 40,
+          "stroke": "$primary",
+          "strokeWidth": 2.5,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "path",
+          "id": "lPkj1",
+          "x": 6,
+          "y": 6,
+          "name": "Arc Middle",
+          "geometry": "M6 22a10 10 0 0 1 16 0",
+          "fill": "#00000000",
+          "width": 28,
+          "height": 28,
+          "stroke": "$accent",
+          "strokeWidth": 2,
+          "strokeLinecap": "round"
+        },
+        {
+          "type": "ellipse",
+          "id": "c8lpY",
+          "x": 16,
+          "y": 26,
+          "name": "Center Dot",
+          "fill": "$primary",
+          "width": 8,
+          "height": 8
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "BePnB",
+      "x": 640,
+      "y": 0,
+      "name": "Button/Primary",
+      "reusable": true,
+      "fill": "$primary",
+      "cornerRadius": "$radius-md",
+      "gap": 8,
+      "padding": [
+        12,
+        24
+      ],
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "nWgC4",
+          "name": "Label",
+          "fill": "#FFFFFF",
+          "content": "Button",
+          "fontFamily": "$font-body",
+          "fontSize": 14,
+          "fontWeight": "500"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "qcaBL",
+      "x": 800,
+      "y": 0,
+      "name": "Button/Secondary",
+      "reusable": true,
+      "fill": "#00000000",
+      "cornerRadius": "$radius-md",
+      "stroke": "$border",
+      "strokeWidth": 1,
+      "gap": 8,
+      "padding": [
+        12,
+        24
+      ],
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "e3eni",
+          "name": "Label",
+          "fill": "$text-primary",
+          "content": "Button",
+          "fontFamily": "$font-body",
+          "fontSize": 14,
+          "fontWeight": "500"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "ptYXA",
+      "x": 960,
+      "y": 0,
+      "name": "Button/Ghost",
+      "reusable": true,
+      "fill": "#00000000",
+      "cornerRadius": "$radius-md",
+      "gap": 8,
+      "padding": [
+        12,
+        24
+      ],
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "ATaXn",
+          "name": "Label",
+          "fill": "$text-primary",
+          "content": "Button",
+          "fontFamily": "$font-body",
+          "fontSize": 14,
+          "fontWeight": "500"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "V94uL4",
+      "x": 1120,
+      "y": 0,
+      "name": "Button/Danger",
+      "reusable": true,
+      "fill": "$color-error",
+      "cornerRadius": "$radius-md",
+      "gap": 8,
+      "padding": [
+        12,
+        24
+      ],
+      "justifyContent": "center",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "xVt4E",
+          "name": "Label",
+          "fill": "#FFFFFF",
+          "content": "Button",
+          "fontFamily": "$font-body",
+          "fontSize": 14,
+          "fontWeight": "500"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "SlkR2",
+      "x": 0,
+      "y": 150,
+      "name": "Input/Field",
+      "reusable": true,
+      "width": 320,
+      "layout": "vertical",
+      "gap": 8,
+      "children": [
+        {
+          "type": "text",
+          "id": "j5sipF",
+          "name": "Label",
+          "fill": "$text-primary",
+          "content": "Label",
+          "fontFamily": "$font-body",
+          "fontSize": 13,
+          "fontWeight": "500"
+        },
+        {
+          "type": "frame",
+          "id": "iEtam",
+          "name": "Input Container",
+          "width": "fill_container",
+          "fill": "$card-bg",
+          "cornerRadius": "$radius-md",
+          "stroke": "$border",
+          "strokeWidth": 1,
+          "padding": [
+            12,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "AUMvj",
+              "name": "Placeholder",
+              "fill": "$text-muted",
+              "content": "Enter text...",
+              "fontFamily": "$font-body",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "E4gTNY",
+          "name": "Error",
+          "fill": "$color-error",
+          "content": "Error message",
+          "fontFamily": "$font-body",
+          "fontSize": 12,
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "V3y6r",
+      "x": 400,
+      "y": 150,
+      "name": "Badge/Pending",
+      "reusable": true,
+      "fill": "$color-warning-bg",
+      "cornerRadius": "$radius-full",
+      "padding": [
+        6,
+        12
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "m0LPfv",
+          "name": "Label",
+          "fill": "$color-warning",
+          "content": "Pending",
+          "fontFamily": "$font-body",
+          "fontSize": 12,
+          "fontWeight": "500"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "gUI7T",
+      "x": 520,
+      "y": 150,
+      "name": "Badge/Confirmed",
+      "reusable": true,
+      "fill": "$color-success-bg",
+      "cornerRadius": "$radius-full",
+      "padding": [
+        6,
+        12
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "uoobw",
+          "name": "Label",
+          "fill": "$color-success",
+          "content": "Confirmed",
+          "fontFamily": "$font-body",
+          "fontSize": 12,
+          "fontWeight": "500"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "uBc67",
+      "x": 640,
+      "y": 150,
+      "name": "Badge/Cancelled",
+      "reusable": true,
+      "fill": "$color-error-bg",
+      "cornerRadius": "$radius-full",
+      "padding": [
+        6,
+        12
+      ],
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "text",
+          "id": "zvaZJ",
+          "name": "Label",
+          "fill": "$color-error",
+          "content": "Cancelled",
+          "fontFamily": "$font-body",
+          "fontSize": 12,
+          "fontWeight": "500"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "n7jaTA",
+      "x": 400,
+      "y": 230,
+      "name": "Avatar",
+      "reusable": true,
+      "width": 40,
+      "height": 40,
+      "fill": "$bg-surface",
+      "cornerRadius": "$radius-full",
+      "layout": "none",
+      "children": [
+        {
+          "type": "text",
+          "id": "hjlBZ",
+          "x": 0,
+          "y": 0,
+          "name": "Initials",
+          "fill": "$text-secondary",
+          "content": "JD",
+          "fontFamily": "$font-body",
+          "fontSize": 14,
+          "fontWeight": "500"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "kAicO",
+      "x": 0,
+      "y": 350,
+      "name": "Card",
+      "reusable": true,
+      "width": 300,
+      "fill": "$card-bg",
+      "cornerRadius": "$radius-lg",
+      "stroke": "$border-light",
+      "strokeWidth": 1,
+      "layout": "vertical",
+      "gap": 16,
+      "padding": 24,
+      "children": [
+        {
+          "type": "text",
+          "id": "ccs5t",
+          "name": "Title",
+          "fill": "$text-primary",
+          "content": "Card Title",
+          "fontFamily": "$font-heading",
+          "fontSize": 18
+        },
+        {
+          "type": "text",
+          "id": "AoxAV",
+          "name": "Description",
+          "fill": "$text-secondary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "Card description text goes here. This is a reusable card container component.",
+          "fontFamily": "$font-body",
+          "fontSize": 14,
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "vgzTh",
+      "x": 340,
+      "y": 350,
+      "name": "Stats/Metric",
+      "reusable": true,
+      "width": 200,
+      "fill": "$card-bg",
+      "cornerRadius": "$radius-lg",
+      "stroke": "$border-light",
+      "strokeWidth": 1,
+      "layout": "vertical",
+      "gap": 8,
+      "padding": 24,
+      "children": [
+        {
+          "type": "text",
+          "id": "h69WT",
+          "name": "Label",
+          "fill": "$text-secondary",
+          "content": "Total Events",
+          "fontFamily": "$font-body",
+          "fontSize": 13,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "text",
+          "id": "wKsqF",
+          "name": "Value",
+          "fill": "$text-primary",
+          "content": "12",
+          "fontFamily": "$font-heading",
+          "fontSize": 32
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "WRpET",
+      "x": 580,
+      "y": 350,
+      "name": "Event Card",
+      "reusable": true,
+      "clip": true,
+      "width": 280,
+      "fill": "$card-bg",
+      "cornerRadius": "$radius-lg",
+      "stroke": "$border-light",
+      "strokeWidth": 1,
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "rectangle",
+          "id": "I4sDZ",
+          "name": "Image Placeholder",
+          "fill": "$bg-surface",
+          "width": "fill_container",
+          "height": 160
+        },
+        {
+          "type": "frame",
+          "id": "lwul7",
+          "name": "Content",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 8,
+          "padding": 16,
+          "children": [
+            {
+              "type": "text",
+              "id": "kENXq",
+              "name": "Event Title",
+              "fill": "$text-primary",
+              "content": "Sarah & James Wedding",
+              "fontFamily": "$font-heading",
+              "fontSize": 16
+            },
+            {
+              "type": "frame",
+              "id": "H65dTJ",
+              "name": "Meta",
+              "width": "fill_container",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "zTQaT",
+                  "name": "Date",
+                  "fill": "$text-secondary",
+                  "content": "Jun 15, 2026",
+                  "fontFamily": "$font-body",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "dBjr0",
+                  "name": "Guests",
+                  "fill": "$text-secondary",
+                  "content": "120 guests",
+                  "fontFamily": "$font-body",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "jrOPa",
+      "x": 0,
+      "y": 667,
+      "name": "Navbar",
+      "reusable": true,
+      "width": 1200,
+      "height": 64,
+      "fill": "$card-bg",
+      "stroke": "$border-light",
+      "strokeWidth": {
+        "bottom": 1
+      },
+      "padding": [
+        0,
+        32
+      ],
+      "justifyContent": "space_between",
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "K8DtN",
+          "name": "Logo Area",
+          "gap": 12,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "cyrkO",
+              "name": "Nav Icon",
+              "width": 32,
+              "height": 32,
+              "layout": "none",
+              "children": [
+                {
+                  "type": "path",
+                  "id": "OZZmO",
+                  "x": 0,
+                  "y": 0,
+                  "name": "Arc",
+                  "geometry": "M3 22a13 13 0 0 1 26 0",
+                  "fill": "#00000000",
+                  "width": 32,
+                  "height": 32,
+                  "stroke": "$primary",
+                  "strokeWidth": 2,
+                  "strokeLinecap": "round"
+                },
+                {
+                  "type": "ellipse",
+                  "id": "nGk1W",
+                  "x": 12,
+                  "y": 20,
+                  "name": "Dot",
+                  "fill": "$primary",
+                  "width": 8,
+                  "height": 8
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "qHosA",
+              "name": "Brand",
+              "fill": "$text-primary",
+              "content": "Aura",
+              "fontFamily": "$font-heading",
+              "fontSize": 20
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "LtD5G",
+          "name": "Nav Links",
+          "gap": 32,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "OEkes",
+              "name": "Dashboard",
+              "fill": "$text-secondary",
+              "content": "Dashboard",
+              "fontFamily": "$font-body",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "text",
+              "id": "FJGLn",
+              "name": "Events",
+              "fill": "$text-secondary",
+              "content": "Events",
+              "fontFamily": "$font-body",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "text",
+              "id": "gxbKf",
+              "name": "Guests",
+              "fill": "$text-secondary",
+              "content": "Guests",
+              "fontFamily": "$font-body",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "text",
+              "id": "bDTQz",
+              "name": "Settings",
+              "fill": "$text-secondary",
+              "content": "Settings",
+              "fontFamily": "$font-body",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "C2uUP",
+          "name": "User Menu",
+          "gap": 12,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "Iddkp",
+              "name": "Avatar",
+              "width": 36,
+              "height": 36,
+              "fill": "$bg-surface",
+              "cornerRadius": "$radius-full",
+              "layout": "none",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "nNMZo",
+                  "x": 0,
+                  "y": 0,
+                  "name": "Initials",
+                  "fill": "$text-secondary",
+                  "content": "JD",
+                  "fontFamily": "$font-body",
+                  "fontSize": 12,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "f83JkH",
+      "x": 0,
+      "y": 787,
+      "name": "Empty State",
+      "reusable": true,
+      "width": 400,
+      "layout": "vertical",
+      "gap": 16,
+      "padding": 48,
+      "alignItems": "center",
+      "children": [
+        {
+          "type": "frame",
+          "id": "DGAEm",
+          "name": "Icon Container",
+          "width": 80,
+          "height": 80,
+          "fill": "$bg-surface",
+          "cornerRadius": "$radius-full",
+          "layout": "none",
+          "children": [
+            {
+              "type": "path",
+              "id": "QAyk6",
+              "x": 20,
+              "y": 20,
+              "name": "Icon",
+              "geometry": "M8 28a12 12 0 0 1 24 0m-18-6a6 6 0 0 1 12 0",
+              "fill": "#00000000",
+              "width": 40,
+              "height": 40,
+              "stroke": "$text-muted",
+              "strokeWidth": 2,
+              "strokeLinecap": "round"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "g20nN",
+          "name": "Title",
+          "fill": "$text-primary",
+          "content": "No events yet",
+          "fontFamily": "$font-heading",
+          "fontSize": 20
+        },
+        {
+          "type": "text",
+          "id": "pk3fk",
+          "name": "Description",
+          "fill": "$text-secondary",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "Create your first event to start designing beautiful invitations and managing your guest list.",
+          "textAlign": "center",
+          "fontFamily": "$font-body",
+          "fontSize": 14,
+          "fontWeight": "normal"
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "hilYP",
+      "x": 0,
+      "y": 1153,
+      "name": "Landing Page",
+      "clip": true,
+      "width": 1200,
+      "fill": "$bg-cream",
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "sEyRa",
+          "type": "ref",
+          "ref": "jrOPa",
+          "name": "Navbar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "kpkzJ",
+          "name": "Hero",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 32,
+          "padding": [
+            80,
+            32
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "UBuCw",
+              "name": "Headline",
+              "fill": "$text-primary",
+              "textGrowth": "fixed-width",
+              "width": 700,
+              "content": "Design your event's narrative, manage the logistics effortlessly",
+              "textAlign": "center",
+              "fontFamily": "$font-heading",
+              "fontSize": 56
+            },
+            {
+              "type": "text",
+              "id": "OlpNl",
+              "name": "Subheadline",
+              "fill": "$text-secondary",
+              "textGrowth": "fixed-width",
+              "width": 500,
+              "content": "Create beautiful digital invitations, manage your guest list, and share real-time updates — all in one elegant platform.",
+              "textAlign": "center",
+              "fontFamily": "$font-body",
+              "fontSize": 18,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "uWpca",
+              "name": "CTA",
+              "gap": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "id": "b3x5Kp",
+                  "type": "ref",
+                  "ref": "BePnB",
+                  "name": "Primary CTA",
+                  "descendants": {
+                    "nWgC4": {
+                      "content": "Start designing — it's free"
+                    }
+                  }
+                },
+                {
+                  "id": "tCgN2",
+                  "type": "ref",
+                  "ref": "ptYXA",
+                  "name": "Secondary CTA",
+                  "descendants": {
+                    "ATaXn": {
+                      "content": "View examples"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "l6bjlF",
+          "name": "Value Props",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 48,
+          "padding": [
+            64,
+            32
+          ],
+          "children": [
+            {
+              "type": "text",
+              "id": "lvjFk",
+              "name": "Section Title",
+              "fill": "$text-primary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Everything you need for your perfect event",
+              "textAlign": "center",
+              "fontFamily": "$font-heading",
+              "fontSize": 36
+            },
+            {
+              "type": "frame",
+              "id": "TWTzn",
+              "name": "Value Grid",
+              "width": "fill_container",
+              "gap": 32,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "mwwuv",
+                  "name": "Value Card 1",
+                  "width": "fill_container",
+                  "fill": "$card-bg",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border-light",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": 16,
+                  "padding": 32,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "I0Adf",
+                      "name": "Icon",
+                      "width": 48,
+                      "height": 48,
+                      "fill": "$color-success-bg",
+                      "cornerRadius": "$radius-md",
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "GKtyS",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Icon Text",
+                          "fill": "$color-success",
+                          "fontFamily": "$font-body",
+                          "fontSize": 24,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "UdusT",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "content": "Template Editor",
+                      "fontFamily": "$font-heading",
+                      "fontSize": 20
+                    },
+                    {
+                      "type": "text",
+                      "id": "nluFm",
+                      "name": "Description",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Choose from beautifully designed templates and customize every detail to match your vision.",
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "wAt0Q",
+                  "name": "Value Card 2",
+                  "width": "fill_container",
+                  "fill": "$card-bg",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border-light",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": 16,
+                  "padding": 32,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "JsXcY",
+                      "name": "Icon",
+                      "width": 48,
+                      "height": 48,
+                      "fill": "$color-info-bg",
+                      "cornerRadius": "$radius-md",
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "oBGZd",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Icon Text",
+                          "fill": "$color-info",
+                          "content": "◈",
+                          "fontFamily": "$font-body",
+                          "fontSize": 24,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "hE5sO",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "content": "Guest Manager",
+                      "fontFamily": "$font-heading",
+                      "fontSize": 20
+                    },
+                    {
+                      "type": "text",
+                      "id": "u4T7Bb",
+                      "name": "Description",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Import guests, track RSVPs, and manage dietary preferences — all in one organized dashboard.",
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "yOwuF",
+                  "name": "Value Card 3",
+                  "width": "fill_container",
+                  "fill": "$card-bg",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border-light",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": 16,
+                  "padding": 32,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "y3lyrg",
+                      "name": "Icon",
+                      "width": 48,
+                      "height": 48,
+                      "fill": "$color-warning-bg",
+                      "cornerRadius": "$radius-md",
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "k5zRr",
+                          "x": 0,
+                          "y": 0,
+                          "name": "Icon Text",
+                          "fill": "$color-warning",
+                          "content": "◉",
+                          "fontFamily": "$font-body",
+                          "fontSize": 24,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "dEUmZ",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "content": "Live Updates",
+                      "fontFamily": "$font-heading",
+                      "fontSize": 20
+                    },
+                    {
+                      "type": "text",
+                      "id": "W9XCY",
+                      "name": "Description",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Share real-time moments with your guests through WhatsApp — the exclusive Live Guest Journey.",
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "gfm2o",
+          "name": "Social Proof",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 32,
+          "padding": [
+            48,
+            32
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "T2xmg",
+              "name": "Trust Label",
+              "fill": "$text-muted",
+              "content": "TRUSTED BY HAPPY COUPLES",
+              "fontFamily": "$font-body",
+              "fontSize": 12,
+              "fontWeight": "500",
+              "letterSpacing": 2
+            },
+            {
+              "type": "frame",
+              "id": "xxrHN",
+              "name": "Trust Logos",
+              "gap": 48,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "jDIdJ",
+                  "name": "Vogue Weddings",
+                  "fill": "$text-muted",
+                  "content": "Vogue Weddings",
+                  "fontFamily": "$font-heading",
+                  "fontSize": 16
+                },
+                {
+                  "type": "text",
+                  "id": "CGeCu",
+                  "name": "Brides Magazine",
+                  "fill": "$text-muted",
+                  "content": "Brides Magazine",
+                  "fontFamily": "$font-heading",
+                  "fontSize": 16
+                },
+                {
+                  "type": "text",
+                  "id": "nEkfx",
+                  "name": "The Knot",
+                  "fill": "$text-muted",
+                  "content": "The Knot",
+                  "fontFamily": "$font-heading",
+                  "fontSize": 16
+                },
+                {
+                  "type": "text",
+                  "id": "d1rcG",
+                  "name": "WeddingWire",
+                  "fill": "$text-muted",
+                  "content": "WeddingWire",
+                  "fontFamily": "$font-heading",
+                  "fontSize": 16
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "iyQ5P",
+          "name": "Features",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 48,
+          "padding": [
+            64,
+            32
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "pxxnL",
+              "name": "Feature 1",
+              "width": "fill_container",
+              "gap": 64,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "QxGxV",
+                  "name": "Content",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "eHTJr",
+                      "name": "Label",
+                      "fill": "$primary",
+                      "content": "BEAUTIFUL TEMPLATES",
+                      "fontFamily": "$font-body",
+                      "fontSize": 12,
+                      "fontWeight": "500",
+                      "letterSpacing": 2
+                    },
+                    {
+                      "type": "text",
+                      "id": "hkpkM",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "content": "Design that tells your story",
+                      "fontFamily": "$font-heading",
+                      "fontSize": 32
+                    },
+                    {
+                      "type": "text",
+                      "id": "XQ4b9",
+                      "name": "Description",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Every template is crafted by professional designers. Customize colors, fonts, and layouts to create an invitation that's uniquely yours.",
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "SqDYo",
+                  "name": "Visual",
+                  "width": 400,
+                  "height": 280,
+                  "fill": "$bg-surface",
+                  "cornerRadius": "$radius-lg",
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "jFhij",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Visual Label",
+                      "fill": "$text-muted",
+                      "content": "Template Preview",
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ObZpm",
+              "name": "Feature 2",
+              "width": "fill_container",
+              "gap": 64,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Ov2Qm",
+                  "name": "Visual",
+                  "width": 400,
+                  "height": 280,
+                  "fill": "$bg-surface",
+                  "cornerRadius": "$radius-lg",
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "l5Rmpr",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Visual Label",
+                      "fill": "$text-muted",
+                      "content": "Dashboard Preview",
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "H3i4M7",
+                  "name": "Content",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "y7XDO",
+                      "name": "Label",
+                      "fill": "$primary",
+                      "content": "SMART MANAGEMENT",
+                      "fontFamily": "$font-body",
+                      "fontSize": 12,
+                      "fontWeight": "500",
+                      "letterSpacing": 2
+                    },
+                    {
+                      "type": "text",
+                      "id": "F58ClC",
+                      "name": "Title",
+                      "fill": "$text-primary",
+                      "content": "Guest logistics, simplified",
+                      "fontFamily": "$font-heading",
+                      "fontSize": 32
+                    },
+                    {
+                      "type": "text",
+                      "id": "ZuWYX",
+                      "name": "Description",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Import your guest list, track RSVPs in real-time, and manage all the details from one elegant dashboard.",
+                      "fontFamily": "$font-body",
+                      "fontSize": 16,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "TyYpo",
+          "name": "Pricing",
+          "width": "fill_container",
+          "fill": "$bg-surface",
+          "layout": "vertical",
+          "gap": 32,
+          "padding": [
+            64,
+            32
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "SbZqq",
+              "name": "Title",
+              "fill": "$text-primary",
+              "content": "Free to design, pay to publish",
+              "fontFamily": "$font-heading",
+              "fontSize": 36
+            },
+            {
+              "type": "text",
+              "id": "qBcdq",
+              "name": "Subtitle",
+              "fill": "$text-secondary",
+              "textGrowth": "fixed-width",
+              "width": 500,
+              "content": "Design your event at no cost. Only pay when you're ready to publish and send invitations.",
+              "textAlign": "center",
+              "fontFamily": "$font-body",
+              "fontSize": 16,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "Rqb8J",
+              "name": "Pricing Cards",
+              "width": "fill_container",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "QsvLQ",
+                  "name": "Free Plan",
+                  "width": "fill_container",
+                  "fill": "$card-bg",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border-light",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": 16,
+                  "padding": 32,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "AJa7s",
+                      "name": "Plan Name",
+                      "fill": "$text-primary",
+                      "content": "Draft",
+                      "fontFamily": "$font-heading",
+                      "fontSize": 20
+                    },
+                    {
+                      "type": "text",
+                      "id": "TucJT",
+                      "name": "Price",
+                      "fill": "$text-primary",
+                      "content": "€0",
+                      "fontFamily": "$font-heading",
+                      "fontSize": 48
+                    },
+                    {
+                      "type": "text",
+                      "id": "cl4n2",
+                      "name": "Period",
+                      "fill": "$text-secondary",
+                      "content": "Forever free",
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "lRtcb",
+                      "name": "Features",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "PoGL3",
+                          "name": "Full design access",
+                          "fill": "$text-secondary",
+                          "content": "✓  Full design access",
+                          "fontFamily": "$font-body",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "QQTZI",
+                          "name": "Up to 5 guests",
+                          "fill": "$text-secondary",
+                          "content": "✓  Up to 5 guests",
+                          "fontFamily": "$font-body",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "HVTyf",
+                          "name": "Preview mode",
+                          "fill": "$text-secondary",
+                          "content": "✓  Preview mode",
+                          "fontFamily": "$font-body",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "Pujhg",
+                  "name": "Standard Plan",
+                  "width": "fill_container",
+                  "fill": "$card-bg",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$primary",
+                  "strokeWidth": 2,
+                  "layout": "vertical",
+                  "gap": 16,
+                  "padding": 32,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "KxJur",
+                      "name": "Plan Name",
+                      "fill": "$text-primary",
+                      "content": "Standard",
+                      "fontFamily": "$font-heading",
+                      "fontSize": 20
+                    },
+                    {
+                      "type": "text",
+                      "id": "WEM7X",
+                      "name": "Price",
+                      "fill": "$text-primary",
+                      "content": "€19",
+                      "fontFamily": "$font-heading",
+                      "fontSize": 48
+                    },
+                    {
+                      "type": "text",
+                      "id": "kfnQ2",
+                      "name": "Period",
+                      "fill": "$text-secondary",
+                      "content": "One-time payment",
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "xpFPb",
+                      "name": "Features",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "lkrcI",
+                          "name": "Unlimited guests",
+                          "fill": "$text-secondary",
+                          "content": "✓  Unlimited guests",
+                          "fontFamily": "$font-body",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ksA7i",
+                          "name": "Static microsite",
+                          "fill": "$text-secondary",
+                          "content": "✓  Static microsite",
+                          "fontFamily": "$font-body",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "tEk55",
+                          "name": "Email invitations",
+                          "fill": "$text-secondary",
+                          "content": "✓  Email invitations",
+                          "fontFamily": "$font-body",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "C84KGv",
+                          "name": "RSVP tracking",
+                          "fill": "$text-secondary",
+                          "content": "✓  RSVP tracking",
+                          "fontFamily": "$font-body",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "W2BAY",
+                      "type": "ref",
+                      "ref": "BePnB",
+                      "name": "CTA",
+                      "descendants": {
+                        "nWgC4": {
+                          "content": "Choose Standard"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "AJxNZ",
+                  "name": "Premium Plan",
+                  "width": "fill_container",
+                  "fill": "$card-bg",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border-light",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": 16,
+                  "padding": 32,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "RoVSt",
+                      "name": "Plan Name",
+                      "fill": "$text-primary",
+                      "content": "Premium",
+                      "fontFamily": "$font-heading",
+                      "fontSize": 20
+                    },
+                    {
+                      "type": "text",
+                      "id": "eeiUW",
+                      "name": "Price",
+                      "fill": "$text-primary",
+                      "content": "€29",
+                      "fontFamily": "$font-heading",
+                      "fontSize": 48
+                    },
+                    {
+                      "type": "text",
+                      "id": "yGX7X",
+                      "name": "Period",
+                      "fill": "$text-secondary",
+                      "content": "One-time payment",
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "m8Eqlp",
+                      "name": "Features",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "M4j7L",
+                          "name": "Everything in Standard",
+                          "fill": "$text-secondary",
+                          "content": "✓  Everything in Standard",
+                          "fontFamily": "$font-body",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "k3XBvW",
+                          "name": "WhatsApp invitations",
+                          "fill": "$text-secondary",
+                          "content": "✓  WhatsApp invitations",
+                          "fontFamily": "$font-body",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "GFmku",
+                          "name": "Live Guest Journey",
+                          "fill": "$text-secondary",
+                          "content": "✓  Live Guest Journey",
+                          "fontFamily": "$font-body",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Ms13H",
+                          "name": "Calendar sync",
+                          "fill": "$text-secondary",
+                          "content": "✓  Calendar sync",
+                          "fontFamily": "$font-body",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "u4IsH",
+          "name": "Footer",
+          "width": "fill_container",
+          "fill": "$bg-dark",
+          "layout": "vertical",
+          "gap": 32,
+          "padding": [
+            48,
+            32
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "q4ijtc",
+              "name": "Footer Top",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "oI2D6",
+                  "name": "Brand",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "hKwXJ",
+                      "name": "Brand Name",
+                      "fill": "$text-inverse",
+                      "content": "Aura Events",
+                      "fontFamily": "$font-heading",
+                      "fontSize": 24
+                    },
+                    {
+                      "type": "text",
+                      "id": "MsOnw",
+                      "name": "Tagline",
+                      "fill": "$text-muted",
+                      "content": "Design your event's narrative",
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "L746p",
+                  "name": "Links",
+                  "gap": 48,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "aCC9n",
+                      "name": "Product",
+                      "layout": "vertical",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "d1QpeA",
+                          "name": "Section Title",
+                          "fill": "$text-inverse",
+                          "content": "Product",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "text",
+                          "id": "bUYG2",
+                          "name": "Features",
+                          "fill": "$text-muted",
+                          "content": "Features",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "AGDnK",
+                          "name": "Pricing",
+                          "fill": "$text-muted",
+                          "content": "Pricing",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "sMWSI",
+                          "name": "Templates",
+                          "fill": "$text-muted",
+                          "content": "Templates",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "KVF4e",
+                      "name": "Company",
+                      "layout": "vertical",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "JfvFp",
+                          "name": "Section Title",
+                          "fill": "$text-inverse",
+                          "content": "Company",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "text",
+                          "id": "EArJj",
+                          "name": "About",
+                          "fill": "$text-muted",
+                          "content": "About",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "b1uwGf",
+                          "name": "Blog",
+                          "fill": "$text-muted",
+                          "content": "Blog",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "YueKk",
+                          "name": "Careers",
+                          "fill": "$text-muted",
+                          "content": "Careers",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "WpLGe",
+                      "name": "Support",
+                      "layout": "vertical",
+                      "gap": 12,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "FKqlA",
+                          "name": "Section Title",
+                          "fill": "$text-inverse",
+                          "content": "Support",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "text",
+                          "id": "fLRtY",
+                          "name": "Help Center",
+                          "fill": "$text-muted",
+                          "content": "Help Center",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "o0pl7",
+                          "name": "Contact",
+                          "fill": "$text-muted",
+                          "content": "Contact",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ZOWrQ",
+                          "name": "Privacy",
+                          "fill": "$text-muted",
+                          "content": "Privacy",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "VNI5o",
+              "name": "Copyright",
+              "fill": "$text-muted",
+              "content": "© 2026 Aura Events. All rights reserved.",
+              "fontFamily": "$font-body",
+              "fontSize": 13,
+              "fontWeight": "normal"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "NreSy",
+      "x": 0,
+      "y": 4068,
+      "name": "Sign Up",
+      "clip": true,
+      "width": 1200,
+      "height": 800,
+      "fill": "$bg-cream",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "sgk0V",
+          "name": "Background",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "UWNNR",
+          "name": "Card",
+          "width": 440,
+          "fill": "$card-bg",
+          "cornerRadius": "$radius-lg",
+          "stroke": "$border-light",
+          "strokeWidth": 1,
+          "layout": "vertical",
+          "gap": 32,
+          "padding": 48,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "N9cd72",
+              "name": "Logo",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "qec7W",
+                  "name": "Icon",
+                  "width": 40,
+                  "height": 40,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "path",
+                      "id": "PNHft",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Arc",
+                      "geometry": "M4 28a16 16 0 0 1 32 0",
+                      "fill": "#00000000",
+                      "width": 40,
+                      "height": 40,
+                      "stroke": "$primary",
+                      "strokeWidth": 2.5,
+                      "strokeLinecap": "round"
+                    },
+                    {
+                      "type": "path",
+                      "id": "r7oCUF",
+                      "x": 6,
+                      "y": 6,
+                      "name": "Arc2",
+                      "geometry": "M6 22a10 10 0 0 1 16 0",
+                      "fill": "#00000000",
+                      "width": 28,
+                      "height": 28,
+                      "stroke": "$accent",
+                      "strokeWidth": 2,
+                      "strokeLinecap": "round"
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "f7a82Q",
+                      "x": 16,
+                      "y": 26,
+                      "name": "Dot",
+                      "fill": "$primary",
+                      "width": 8,
+                      "height": 8
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "pGD0R",
+                  "name": "Brand",
+                  "fill": "$text-primary",
+                  "content": "Aura",
+                  "fontFamily": "$font-heading",
+                  "fontSize": 24
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "dQfMx",
+              "name": "Heading",
+              "fill": "$text-primary",
+              "content": "Create your account",
+              "fontFamily": "$font-heading",
+              "fontSize": 28
+            },
+            {
+              "type": "text",
+              "id": "Hq9y8",
+              "name": "Subheading",
+              "fill": "$text-secondary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Enter your email to receive a magic link and get started.",
+              "textAlign": "center",
+              "fontFamily": "$font-body",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "hk8mP",
+              "name": "Form",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "dsKbV",
+                  "name": "Input",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "iu48O",
+                      "name": "Label",
+                      "fill": "$text-primary",
+                      "content": "Email address",
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "wg4UR",
+                      "name": "Container",
+                      "width": "fill_container",
+                      "fill": "$bg-cream",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$border",
+                      "strokeWidth": 1,
+                      "padding": [
+                        12,
+                        16
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "yw5dM",
+                          "name": "Placeholder",
+                          "fill": "$text-muted",
+                          "content": "you@example.com",
+                          "fontFamily": "$font-body",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "stK6f",
+                  "type": "ref",
+                  "ref": "BePnB",
+                  "name": "Submit Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "nWgC4": {
+                      "content": "Continue with Magic Link"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "LBDgc",
+              "name": "Divider",
+              "width": "fill_container",
+              "gap": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "M9cBZ",
+                  "name": "Line",
+                  "fill": "$border-light",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "text",
+                  "id": "ubgZb",
+                  "name": "Or",
+                  "fill": "$text-muted",
+                  "content": "or",
+                  "fontFamily": "$font-body",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "rectangle",
+                  "id": "Nh7ge",
+                  "name": "Line2",
+                  "fill": "$border-light",
+                  "width": "fill_container",
+                  "height": 1
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Hr9Ta",
+              "name": "Footer",
+              "gap": 4,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "hJX2g",
+                  "name": "Footer Text",
+                  "fill": "$text-secondary",
+                  "content": "Already have an account?",
+                  "fontFamily": "$font-body",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "y0URwc",
+                  "name": "Sign In Link",
+                  "fill": "$primary",
+                  "content": "Sign in",
+                  "fontFamily": "$font-body",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "jqB6A",
+      "x": 1292,
+      "y": 0,
+      "name": "Sign In",
+      "clip": true,
+      "width": 1200,
+      "height": 800,
+      "fill": "$bg-cream",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "LxIdj",
+          "name": "Background",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "none"
+        },
+        {
+          "type": "frame",
+          "id": "YYvnc",
+          "name": "Card",
+          "width": 440,
+          "fill": "$card-bg",
+          "cornerRadius": "$radius-lg",
+          "stroke": "$border-light",
+          "strokeWidth": 1,
+          "layout": "vertical",
+          "gap": 32,
+          "padding": 48,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "Jb7FP",
+              "name": "Logo",
+              "gap": 12,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "l51XAK",
+                  "name": "Icon",
+                  "width": 40,
+                  "height": 40,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "path",
+                      "id": "mf63d",
+                      "x": 0,
+                      "y": 0,
+                      "name": "Arc",
+                      "geometry": "M4 28a16 16 0 0 1 32 0",
+                      "fill": "#00000000",
+                      "width": 40,
+                      "height": 40,
+                      "stroke": "$primary",
+                      "strokeWidth": 2.5,
+                      "strokeLinecap": "round"
+                    },
+                    {
+                      "type": "path",
+                      "id": "nJ7cC",
+                      "x": 6,
+                      "y": 6,
+                      "name": "Arc2",
+                      "geometry": "M6 22a10 10 0 0 1 16 0",
+                      "fill": "#00000000",
+                      "width": 28,
+                      "height": 28,
+                      "stroke": "$accent",
+                      "strokeWidth": 2,
+                      "strokeLinecap": "round"
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "BZQEW",
+                      "x": 16,
+                      "y": 26,
+                      "name": "Dot",
+                      "fill": "$primary",
+                      "width": 8,
+                      "height": 8
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "d8WDej",
+                  "name": "Brand",
+                  "fill": "$text-primary",
+                  "content": "Aura",
+                  "fontFamily": "$font-heading",
+                  "fontSize": 24
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "E4v1LB",
+              "name": "Heading",
+              "fill": "$text-primary",
+              "content": "Welcome back",
+              "fontFamily": "$font-heading",
+              "fontSize": 28
+            },
+            {
+              "type": "text",
+              "id": "SNACA",
+              "name": "Subheading",
+              "fill": "$text-secondary",
+              "textGrowth": "fixed-width",
+              "width": "fill_container",
+              "content": "Enter your email to receive a magic link and sign in.",
+              "textAlign": "center",
+              "fontFamily": "$font-body",
+              "fontSize": 14,
+              "fontWeight": "normal"
+            },
+            {
+              "type": "frame",
+              "id": "Csl84",
+              "name": "Form",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "jHEdo",
+                  "name": "Input",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "XaGqt",
+                      "name": "Label",
+                      "fill": "$text-primary",
+                      "content": "Email address",
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "jjYnn",
+                      "name": "Container",
+                      "width": "fill_container",
+                      "fill": "$bg-cream",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$border",
+                      "strokeWidth": 1,
+                      "padding": [
+                        12,
+                        16
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "U69ao",
+                          "name": "Placeholder",
+                          "fill": "$text-muted",
+                          "content": "you@example.com",
+                          "fontFamily": "$font-body",
+                          "fontSize": 14,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "UaIoc",
+                  "type": "ref",
+                  "ref": "BePnB",
+                  "name": "Submit Button",
+                  "width": "fill_container",
+                  "descendants": {
+                    "nWgC4": {
+                      "content": "Send magic link"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "J4GPx",
+              "name": "Divider",
+              "width": "fill_container",
+              "gap": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "rectangle",
+                  "id": "NHRrf",
+                  "name": "Line",
+                  "fill": "$border-light",
+                  "width": "fill_container",
+                  "height": 1
+                },
+                {
+                  "type": "text",
+                  "id": "JNt2b",
+                  "name": "Or",
+                  "fill": "$text-muted",
+                  "content": "or",
+                  "fontFamily": "$font-body",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "rectangle",
+                  "id": "uO04T",
+                  "name": "Line2",
+                  "fill": "$border-light",
+                  "width": "fill_container",
+                  "height": 1
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "e0oO4W",
+              "name": "Footer",
+              "gap": 4,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "q1Umum",
+                  "name": "Footer Text",
+                  "fill": "$text-secondary",
+                  "content": "Don't have an account?",
+                  "fontFamily": "$font-body",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "JbW1s",
+                  "name": "Sign Up Link",
+                  "fill": "$primary",
+                  "content": "Sign up",
+                  "fontFamily": "$font-body",
+                  "fontSize": 14,
+                  "fontWeight": "500"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "T46UR",
+      "x": 0,
+      "y": 4948,
+      "name": "Dashboard",
+      "clip": true,
+      "width": 1200,
+      "fill": "$bg-cream",
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "UnFKX",
+          "type": "ref",
+          "ref": "jrOPa",
+          "name": "Navbar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "hHx5f",
+          "name": "Content",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 32,
+          "padding": 32,
+          "children": [
+            {
+              "type": "frame",
+              "id": "zdKUQ",
+              "name": "Welcome",
+              "width": "fill_container",
+              "justifyContent": "space_between",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "zhgDA",
+                  "name": "Text",
+                  "layout": "vertical",
+                  "gap": 4,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "YFw6w",
+                      "name": "Greeting",
+                      "fill": "$text-primary",
+                      "content": "Good morning, Jessica",
+                      "fontFamily": "$font-heading",
+                      "fontSize": 28
+                    },
+                    {
+                      "type": "text",
+                      "id": "ldgUn",
+                      "name": "Subtext",
+                      "fill": "$text-secondary",
+                      "content": "Here's what's happening with your events today.",
+                      "fontFamily": "$font-body",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "id": "F1HOz",
+                  "type": "ref",
+                  "ref": "BePnB",
+                  "name": "Create Event Button",
+                  "descendants": {
+                    "nWgC4": {
+                      "content": "+ Create New Event"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Z0VhNf",
+              "name": "Stats Row",
+              "width": "fill_container",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "cJyLU",
+                  "name": "Total Events",
+                  "width": "fill_container",
+                  "fill": "$card-bg",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border-light",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": 8,
+                  "padding": 24,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "Jkrkj",
+                      "name": "Label",
+                      "fill": "$text-secondary",
+                      "content": "Total Events",
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "XuifG",
+                      "name": "Value",
+                      "fill": "$text-primary",
+                      "content": "12",
+                      "fontFamily": "$font-heading",
+                      "fontSize": 32
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "o66WH2",
+                  "name": "Active Guests",
+                  "width": "fill_container",
+                  "fill": "$card-bg",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border-light",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": 8,
+                  "padding": 24,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "xhsK8",
+                      "name": "Label",
+                      "fill": "$text-secondary",
+                      "content": "Active Guests",
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "kuWEa",
+                      "name": "Value",
+                      "fill": "$text-primary",
+                      "content": "1,284",
+                      "fontFamily": "$font-heading",
+                      "fontSize": 32
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "L3YCb",
+                  "name": "Pending RSVPs",
+                  "width": "fill_container",
+                  "fill": "$card-bg",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border-light",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": 8,
+                  "padding": 24,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "oQHVf",
+                      "name": "Label",
+                      "fill": "$text-secondary",
+                      "content": "Pending RSVPs",
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "QhhiD",
+                      "name": "Value",
+                      "fill": "$text-primary",
+                      "content": "47",
+                      "fontFamily": "$font-heading",
+                      "fontSize": 32
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "xqiBC",
+                  "name": "Published",
+                  "width": "fill_container",
+                  "fill": "$card-bg",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border-light",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": 8,
+                  "padding": 24,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "KyrDy",
+                      "name": "Label",
+                      "fill": "$text-secondary",
+                      "content": "Published",
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "BEmrw",
+                      "name": "Value",
+                      "fill": "$text-primary",
+                      "content": "8",
+                      "fontFamily": "$font-heading",
+                      "fontSize": 32
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "uhfZF",
+              "name": "Events Section",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "inJaL",
+                  "name": "Section Title",
+                  "fill": "$text-primary",
+                  "content": "Your Events",
+                  "fontFamily": "$font-heading",
+                  "fontSize": 20
+                },
+                {
+                  "type": "frame",
+                  "id": "gJlWG",
+                  "name": "Events Table",
+                  "width": "fill_container",
+                  "fill": "$card-bg",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border-light",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "n0CT3r",
+                      "name": "Header Row",
+                      "width": "fill_container",
+                      "stroke": "$border-light",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "padding": [
+                        16,
+                        24
+                      ],
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "fGFJ0",
+                          "name": "Event Cell",
+                          "width": "fill_container",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "p2l8v",
+                              "name": "Event",
+                              "fill": "$text-muted",
+                              "content": "EVENT",
+                              "fontFamily": "$font-body",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "T9Lree",
+                          "name": "Date Cell",
+                          "width": 120,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "AFJ8P",
+                              "name": "Date",
+                              "fill": "$text-muted",
+                              "content": "DATE",
+                              "fontFamily": "$font-body",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "q5Blj",
+                          "name": "Status Cell",
+                          "width": 100,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "SE4fp",
+                              "name": "Status",
+                              "fill": "$text-muted",
+                              "content": "STATUS",
+                              "fontFamily": "$font-body",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "tdjE6",
+                          "name": "Guests Cell",
+                          "width": 80,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "i0CRE9",
+                              "name": "Guests",
+                              "fill": "$text-muted",
+                              "content": "GUESTS",
+                              "fontFamily": "$font-body",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Vzy9X",
+                          "name": "RSVP Rate Cell",
+                          "width": 100,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "yhAuk",
+                              "name": "RSVP Rate",
+                              "fill": "$text-muted",
+                              "content": "RSVP RATE",
+                              "fontFamily": "$font-body",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "JBytp",
+                          "name": "Actions Cell",
+                          "width": 80,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "E5CM4w",
+                              "name": "Actions",
+                              "fill": "$text-muted",
+                              "content": "ACTIONS",
+                              "fontFamily": "$font-body",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "NaaUL",
+                      "name": "Sarah & James Wedding Row",
+                      "width": "fill_container",
+                      "stroke": "$border-light",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "padding": [
+                        16,
+                        24
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Y9mTm",
+                          "name": "Name Cell",
+                          "width": "fill_container",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ILoLg",
+                              "name": "Event Name",
+                              "fill": "$text-primary",
+                              "content": "Sarah & James Wedding",
+                              "fontFamily": "$font-body",
+                              "fontSize": 14,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "FYXCZ",
+                          "name": "Date Cell",
+                          "width": 120,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "X6Zjd",
+                              "name": "Date",
+                              "fill": "$text-secondary",
+                              "content": "Jun 15, 2026",
+                              "fontFamily": "$font-body",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "bvJsr",
+                          "name": "Status Cell",
+                          "width": 100,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "xk6vK",
+                              "name": "Badge",
+                              "fill": "$color-success-bg",
+                              "cornerRadius": "$radius-full",
+                              "padding": [
+                                4,
+                                12
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "MMMn1",
+                                  "name": "Status",
+                                  "fill": "$color-success",
+                                  "content": "Published",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "LXKoK",
+                          "name": "Guests Cell",
+                          "width": 80,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "kD0wu",
+                              "name": "Guests",
+                              "fill": "$text-secondary",
+                              "content": "120",
+                              "fontFamily": "$font-body",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "v7xMj",
+                          "name": "RSVP Cell",
+                          "width": 100,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "zrYSA",
+                              "name": "RSVP",
+                              "fill": "$text-secondary",
+                              "content": "87%",
+                              "fontFamily": "$font-body",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "rhmDw",
+                          "name": "Actions Cell",
+                          "width": 80,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ZCBKV",
+                              "name": "Edit",
+                              "fill": "$primary",
+                              "content": "Edit",
+                              "fontFamily": "$font-body",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "fAKtq",
+                      "name": "Emma's 30th Birthday Row",
+                      "width": "fill_container",
+                      "stroke": "$border-light",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "padding": [
+                        16,
+                        24
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "pVPK3",
+                          "name": "Name Cell",
+                          "width": "fill_container",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "xm64P",
+                              "name": "Event Name",
+                              "fill": "$text-primary",
+                              "content": "Emma's 30th Birthday",
+                              "fontFamily": "$font-body",
+                              "fontSize": 14,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "RxzKY",
+                          "name": "Date Cell",
+                          "width": 120,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "TNrvx",
+                              "name": "Date",
+                              "fill": "$text-secondary",
+                              "content": "Jul 22, 2026",
+                              "fontFamily": "$font-body",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Geh6U",
+                          "name": "Status Cell",
+                          "width": 100,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "LKA5Y",
+                              "name": "Badge",
+                              "fill": "$bg-surface",
+                              "cornerRadius": "$radius-full",
+                              "padding": [
+                                4,
+                                12
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "lBgNO",
+                                  "name": "Status",
+                                  "fill": "$text-muted",
+                                  "content": "Draft",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "JBzLx",
+                          "name": "Guests Cell",
+                          "width": 80,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "QKh5C",
+                              "name": "Guests",
+                              "fill": "$text-secondary",
+                              "content": "45",
+                              "fontFamily": "$font-body",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "iL7ge",
+                          "name": "RSVP Cell",
+                          "width": 100,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "ayRwi",
+                              "name": "RSVP",
+                              "fill": "$text-secondary",
+                              "content": "—",
+                              "fontFamily": "$font-body",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "bPtpC",
+                          "name": "Actions Cell",
+                          "width": 80,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "YuSw4",
+                              "name": "Edit",
+                              "fill": "$primary",
+                              "content": "Edit",
+                              "fontFamily": "$font-body",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ws0f7",
+                      "name": "Michael & Lisa Anniversary Row",
+                      "width": "fill_container",
+                      "stroke": "$border-light",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "padding": [
+                        16,
+                        24
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "P0dWZ",
+                          "name": "Name Cell",
+                          "width": "fill_container",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "WVIsv",
+                              "name": "Event Name",
+                              "fill": "$text-primary",
+                              "content": "Michael & Lisa Anniversary",
+                              "fontFamily": "$font-body",
+                              "fontSize": 14,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "x3WaG",
+                          "name": "Date Cell",
+                          "width": 120,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "g6m3Q",
+                              "name": "Date",
+                              "fill": "$text-secondary",
+                              "content": "Aug 10, 2026",
+                              "fontFamily": "$font-body",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "GCyYx",
+                          "name": "Status Cell",
+                          "width": 100,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "l8UJe",
+                              "name": "Badge",
+                              "fill": "$color-success-bg",
+                              "cornerRadius": "$radius-full",
+                              "padding": [
+                                4,
+                                12
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "lfiNr",
+                                  "name": "Status",
+                                  "fill": "$color-success",
+                                  "content": "Published",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "vvUgH",
+                          "name": "Guests Cell",
+                          "width": 80,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "DXzTa",
+                              "name": "Guests",
+                              "fill": "$text-secondary",
+                              "content": "80",
+                              "fontFamily": "$font-body",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "A8n5N",
+                          "name": "RSVP Cell",
+                          "width": 100,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "IfvNy",
+                              "name": "RSVP",
+                              "fill": "$text-secondary",
+                              "content": "92%",
+                              "fontFamily": "$font-body",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "m70aMN",
+                          "name": "Actions Cell",
+                          "width": 80,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "PD6Wy",
+                              "name": "Edit",
+                              "fill": "$primary",
+                              "content": "Edit",
+                              "fontFamily": "$font-body",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "xfH20",
+                      "name": "David's Retirement Party Row",
+                      "width": "fill_container",
+                      "stroke": "$border-light",
+                      "strokeWidth": {
+                        "bottom": 1
+                      },
+                      "padding": [
+                        16,
+                        24
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "lu4LJ",
+                          "name": "Name Cell",
+                          "width": "fill_container",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "s7be8O",
+                              "name": "Event Name",
+                              "fill": "$text-primary",
+                              "content": "David's Retirement Party",
+                              "fontFamily": "$font-body",
+                              "fontSize": 14,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "i3hya",
+                          "name": "Date Cell",
+                          "width": 120,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "y3Eob",
+                              "name": "Date",
+                              "fill": "$text-secondary",
+                              "content": "Sep 5, 2026",
+                              "fontFamily": "$font-body",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "eQ7H2",
+                          "name": "Status Cell",
+                          "width": 100,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "L7yN9S",
+                              "name": "Badge",
+                              "fill": "$bg-surface",
+                              "cornerRadius": "$radius-full",
+                              "padding": [
+                                4,
+                                12
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "g3VQh",
+                                  "name": "Status",
+                                  "fill": "$text-muted",
+                                  "content": "Draft",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "t5vSf",
+                          "name": "Guests Cell",
+                          "width": 80,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "P3oRg",
+                              "name": "Guests",
+                              "fill": "$text-secondary",
+                              "content": "60",
+                              "fontFamily": "$font-body",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "r06dW",
+                          "name": "RSVP Cell",
+                          "width": 100,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "W6Pden",
+                              "name": "RSVP",
+                              "fill": "$text-secondary",
+                              "content": "—",
+                              "fontFamily": "$font-body",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "yQloM",
+                          "name": "Actions Cell",
+                          "width": 80,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "w6FXn",
+                              "name": "Edit",
+                              "fill": "$primary",
+                              "content": "Edit",
+                              "fontFamily": "$font-body",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "KwZ6E",
+      "x": 0,
+      "y": 5711,
+      "name": "Event Configuration",
+      "clip": true,
+      "width": 1200,
+      "fill": "$bg-cream",
+      "layout": "vertical",
+      "children": [
+        {
+          "id": "i9wgr",
+          "type": "ref",
+          "ref": "jrOPa",
+          "name": "Navbar",
+          "width": "fill_container"
+        },
+        {
+          "type": "frame",
+          "id": "DCjMY",
+          "name": "Content",
+          "width": "fill_container",
+          "gap": 32,
+          "padding": 32,
+          "children": [
+            {
+              "type": "frame",
+              "id": "jr2P0",
+              "name": "Main Column",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 32,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "H0t7Gr",
+                  "name": "Progress",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 16,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "My7D7",
+                      "name": "Progress Label",
+                      "fill": "$text-secondary",
+                      "content": "Setup Progress",
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "500"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "JGv6e",
+                      "name": "Bar Container",
+                      "width": "fill_container",
+                      "height": 8,
+                      "fill": "$bg-surface",
+                      "cornerRadius": "$radius-full",
+                      "children": [
+                        {
+                          "type": "rectangle",
+                          "cornerRadius": "$radius-full",
+                          "id": "ZrrOq",
+                          "name": "Bar Fill",
+                          "fill": "$primary",
+                          "width": "fill_container",
+                          "height": 8
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "k73Z62",
+                      "name": "Steps",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "k8d2J",
+                          "name": "Details",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "shQIS",
+                              "name": "Dot",
+                              "width": 24,
+                              "height": 24,
+                              "fill": "$primary",
+                              "cornerRadius": "$radius-full",
+                              "stroke": "$primary",
+                              "strokeWidth": 1,
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "XxvE7",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Check",
+                                  "fill": "#FFFFFF",
+                                  "content": "✓",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "SjqfP",
+                              "name": "Step Label",
+                              "fill": "$text-primary",
+                              "content": "Details",
+                              "fontFamily": "$font-body",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "dGRAt",
+                          "name": "Design",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "aRVuT",
+                              "name": "Dot",
+                              "width": 24,
+                              "height": 24,
+                              "fill": "$primary",
+                              "cornerRadius": "$radius-full",
+                              "stroke": "$primary",
+                              "strokeWidth": 1,
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "uaWKu",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "Check",
+                                  "fill": "#FFFFFF",
+                                  "content": "✓",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 12,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "text",
+                              "id": "WMATT",
+                              "name": "Step Label",
+                              "fill": "$text-primary",
+                              "content": "Design",
+                              "fontFamily": "$font-body",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "a9sXed",
+                          "name": "Guests",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "UOCdM",
+                              "name": "Dot",
+                              "width": 24,
+                              "height": 24,
+                              "fill": "$bg-surface",
+                              "cornerRadius": "$radius-full",
+                              "stroke": "$border",
+                              "strokeWidth": 1,
+                              "layout": "none"
+                            },
+                            {
+                              "type": "text",
+                              "id": "OLHjs",
+                              "name": "Step Label",
+                              "fill": "$text-muted",
+                              "content": "Guests",
+                              "fontFamily": "$font-body",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "yHMmP",
+                          "name": "Publish",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "OXVjA",
+                              "name": "Dot",
+                              "width": 24,
+                              "height": 24,
+                              "fill": "$bg-surface",
+                              "cornerRadius": "$radius-full",
+                              "stroke": "$border",
+                              "strokeWidth": 1,
+                              "layout": "none"
+                            },
+                            {
+                              "type": "text",
+                              "id": "TSb0S",
+                              "name": "Step Label",
+                              "fill": "$text-muted",
+                              "content": "Publish",
+                              "fontFamily": "$font-body",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "VThMU",
+                  "name": "Details Card",
+                  "width": "fill_container",
+                  "fill": "$card-bg",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border-light",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": 24,
+                  "padding": 32,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "UM16e",
+                      "name": "Card Title",
+                      "fill": "$text-primary",
+                      "content": "Event Details",
+                      "fontFamily": "$font-heading",
+                      "fontSize": 20
+                    },
+                    {
+                      "type": "frame",
+                      "id": "z6ZTd",
+                      "name": "Form Row 1",
+                      "width": "fill_container",
+                      "gap": 24,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "n46Wh",
+                          "name": "Event Name",
+                          "width": "fill_container",
+                          "layout": "vertical",
+                          "gap": 8,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "psoSr",
+                              "name": "Label",
+                              "fill": "$text-primary",
+                              "content": "Event Name",
+                              "fontFamily": "$font-body",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "Yohkc",
+                              "name": "Container",
+                              "width": "fill_container",
+                              "fill": "$bg-cream",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$border",
+                              "strokeWidth": 1,
+                              "padding": [
+                                12,
+                                16
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "utvoM",
+                                  "name": "Value",
+                                  "fill": "$text-primary",
+                                  "content": "Sarah & James Wedding",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 14,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "cuRR1",
+                          "name": "Event Date",
+                          "width": 200,
+                          "layout": "vertical",
+                          "gap": 8,
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "nKoWb",
+                              "name": "Label",
+                              "fill": "$text-primary",
+                              "content": "Event Date",
+                              "fontFamily": "$font-body",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "kGOVt",
+                              "name": "Container",
+                              "width": "fill_container",
+                              "fill": "$bg-cream",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$border",
+                              "strokeWidth": 1,
+                              "padding": [
+                                12,
+                                16
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "Jvd3M",
+                                  "name": "Value",
+                                  "fill": "$text-primary",
+                                  "content": "Jun 15, 2026",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 14,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Sts7Y",
+                      "name": "Venue",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "X3Ryj",
+                          "name": "Label",
+                          "fill": "$text-primary",
+                          "content": "Venue",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "uAkIe",
+                          "name": "Container",
+                          "width": "fill_container",
+                          "fill": "$bg-cream",
+                          "cornerRadius": "$radius-md",
+                          "stroke": "$border",
+                          "strokeWidth": 1,
+                          "padding": [
+                            12,
+                            16
+                          ],
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "wqUSl",
+                              "name": "Value",
+                              "fill": "$text-primary",
+                              "content": "Hacienda San José, Seville, Spain",
+                              "fontFamily": "$font-body",
+                              "fontSize": 14,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "j93lZs",
+                      "name": "Template",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 16,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "q5PNb",
+                          "name": "Label",
+                          "fill": "$text-primary",
+                          "content": "Template",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "IqJxs",
+                          "name": "Templates",
+                          "width": "fill_container",
+                          "gap": 16,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "B311Zw",
+                              "name": "Classic",
+                              "width": "fill_container",
+                              "fill": "$bg-cream",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$primary",
+                              "strokeWidth": 2,
+                              "layout": "vertical",
+                              "gap": 8,
+                              "padding": 16,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": "$radius-sm",
+                                  "id": "DhEo5",
+                                  "name": "Preview",
+                                  "fill": "$bg-surface",
+                                  "width": "fill_container",
+                                  "height": 80
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "ktLSG",
+                                  "name": "Name",
+                                  "fill": "$primary",
+                                  "content": "Classic",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "P7fvlS",
+                              "name": "Modern",
+                              "width": "fill_container",
+                              "fill": "$bg-cream",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$border",
+                              "strokeWidth": 1,
+                              "layout": "vertical",
+                              "gap": 8,
+                              "padding": 16,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": "$radius-sm",
+                                  "id": "DQtWJ",
+                                  "name": "Preview",
+                                  "fill": "$bg-surface",
+                                  "width": "fill_container",
+                                  "height": 80
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "I68OJ",
+                                  "name": "Name",
+                                  "fill": "$text-secondary",
+                                  "content": "Modern",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 13
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "CnkA7",
+                              "name": "Minimal",
+                              "width": "fill_container",
+                              "fill": "$bg-cream",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$border",
+                              "strokeWidth": 1,
+                              "layout": "vertical",
+                              "gap": 8,
+                              "padding": 16,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "rectangle",
+                                  "cornerRadius": "$radius-sm",
+                                  "id": "trh8k",
+                                  "name": "Preview",
+                                  "fill": "$bg-surface",
+                                  "width": "fill_container",
+                                  "height": 80
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "Vp52O",
+                                  "name": "Name",
+                                  "fill": "$text-secondary",
+                                  "content": "Minimal",
+                                  "fontFamily": "$font-body",
+                                  "fontSize": 13
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "iQor3",
+                  "name": "Customization Card",
+                  "width": "fill_container",
+                  "fill": "$card-bg",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border-light",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": 24,
+                  "padding": 32,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "SqkVU",
+                      "name": "Card Title",
+                      "fill": "$text-primary",
+                      "content": "Customization",
+                      "fontFamily": "$font-heading",
+                      "fontSize": 20
+                    },
+                    {
+                      "type": "frame",
+                      "id": "F4G9M9",
+                      "name": "Colors",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 16,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ZVyH7",
+                          "name": "Label",
+                          "fill": "$text-primary",
+                          "content": "Color Palette",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "Oi75O",
+                          "name": "Swatches",
+                          "gap": 12,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "u3wRDS",
+                              "name": "Swatch",
+                              "width": 40,
+                              "height": 40,
+                              "fill": "$primary",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$border-light",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "z5Q1ck",
+                              "name": "Swatch",
+                              "width": 40,
+                              "height": 40,
+                              "fill": "$accent",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$border-light",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "sPbqX",
+                              "name": "Swatch",
+                              "width": 40,
+                              "height": 40,
+                              "fill": "$secondary",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$border-light",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "SFFf7",
+                              "name": "Swatch",
+                              "width": 40,
+                              "height": 40,
+                              "fill": "$text-primary",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$border-light",
+                              "strokeWidth": 1
+                            },
+                            {
+                              "type": "frame",
+                              "id": "qRieH",
+                              "name": "Swatch",
+                              "width": 40,
+                              "height": 40,
+                              "fill": "$bg-surface",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$border-light",
+                              "strokeWidth": 1
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "nllMo",
+                      "name": "Fonts",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 16,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "s2ZypF",
+                          "name": "Label",
+                          "fill": "$text-primary",
+                          "content": "Typography",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "frame",
+                          "id": "vsS8p",
+                          "name": "Font Options",
+                          "gap": 12,
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "Q2Fui",
+                              "name": "Playfair Display",
+                              "fill": "$primary",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$primary",
+                              "strokeWidth": 1,
+                              "padding": [
+                                10,
+                                20
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "S2sDr",
+                                  "name": "Font Name",
+                                  "fill": "#FFFFFF",
+                                  "content": "Playfair Display",
+                                  "fontFamily": "Playfair Display",
+                                  "fontSize": 14,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "HNSrC",
+                              "name": "Inter",
+                              "fill": "$bg-cream",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$border",
+                              "strokeWidth": 1,
+                              "padding": [
+                                10,
+                                20
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "ZbJu1",
+                                  "name": "Font Name",
+                                  "fill": "$text-secondary",
+                                  "content": "Inter",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 14,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "CEr9g",
+                              "name": "Newsreader",
+                              "fill": "$bg-cream",
+                              "cornerRadius": "$radius-md",
+                              "stroke": "$border",
+                              "strokeWidth": 1,
+                              "padding": [
+                                10,
+                                20
+                              ],
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "xTCI8",
+                                  "name": "Font Name",
+                                  "fill": "$text-secondary",
+                                  "content": "Newsreader",
+                                  "fontFamily": "Newsreader",
+                                  "fontSize": 14,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "nmmKE",
+              "name": "Side Column",
+              "width": 360,
+              "layout": "vertical",
+              "gap": 24,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "V2SUx",
+                  "name": "Preview Card",
+                  "clip": true,
+                  "width": "fill_container",
+                  "fill": "$card-bg",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border-light",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "children": [
+                    {
+                      "type": "rectangle",
+                      "id": "j06LJo",
+                      "name": "Preview Image",
+                      "fill": "$bg-surface",
+                      "width": "fill_container",
+                      "height": 200
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Xyew0",
+                      "name": "Preview Content",
+                      "width": "fill_container",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": 20,
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "gSqsF",
+                          "name": "Preview Title",
+                          "fill": "$text-primary",
+                          "content": "Sarah & James",
+                          "fontFamily": "$font-heading",
+                          "fontSize": 18
+                        },
+                        {
+                          "type": "text",
+                          "id": "wyAyy",
+                          "name": "Preview Date",
+                          "fill": "$text-secondary",
+                          "content": "June 15, 2026",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "hsQjL",
+                          "name": "Preview Venue",
+                          "fill": "$text-secondary",
+                          "content": "Hacienda San José",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "dDAJi",
+                  "name": "Guest Import",
+                  "width": "fill_container",
+                  "fill": "$card-bg",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$border-light",
+                  "strokeWidth": 1,
+                  "layout": "vertical",
+                  "gap": 16,
+                  "padding": 24,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "vgEq1",
+                      "name": "Card Title",
+                      "fill": "$text-primary",
+                      "content": "Import Guests",
+                      "fontFamily": "$font-heading",
+                      "fontSize": 18
+                    },
+                    {
+                      "type": "text",
+                      "id": "dJZI2",
+                      "name": "Description",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Upload a CSV file with your guest list to get started.",
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Kg66m",
+                      "name": "Upload Area",
+                      "width": "fill_container",
+                      "fill": "$bg-cream",
+                      "cornerRadius": "$radius-md",
+                      "stroke": "$border",
+                      "strokeWidth": 1,
+                      "strokeAlignment": "inner",
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": 32,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "sQqFG",
+                          "name": "Upload Icon",
+                          "fill": "$text-muted",
+                          "content": "↑",
+                          "fontFamily": "$font-body",
+                          "fontSize": 24,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "q2Cxuw",
+                          "name": "Upload Text",
+                          "fill": "$text-secondary",
+                          "content": "Drop CSV file or click to browse",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "RgGXS",
+                  "name": "Publish Card",
+                  "width": "fill_container",
+                  "fill": "$card-bg",
+                  "cornerRadius": "$radius-lg",
+                  "stroke": "$accent",
+                  "strokeWidth": 2,
+                  "layout": "vertical",
+                  "gap": 16,
+                  "padding": 24,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "FEtM0",
+                      "name": "Card Title",
+                      "fill": "$text-primary",
+                      "content": "Ready to publish?",
+                      "fontFamily": "$font-heading",
+                      "fontSize": 18
+                    },
+                    {
+                      "type": "text",
+                      "id": "S5UaxL",
+                      "name": "Description",
+                      "fill": "$text-secondary",
+                      "textGrowth": "fixed-width",
+                      "width": "fill_container",
+                      "content": "Publish your event to start sending invitations. One-time payment.",
+                      "fontFamily": "$font-body",
+                      "fontSize": 13,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "XauMN",
+                      "name": "Price",
+                      "gap": 4,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "s2GnH",
+                          "name": "Amount",
+                          "fill": "$text-primary",
+                          "content": "€19",
+                          "fontFamily": "$font-heading",
+                          "fontSize": 32
+                        },
+                        {
+                          "type": "text",
+                          "id": "V2WhBR",
+                          "name": "Period",
+                          "fill": "$text-secondary",
+                          "content": "one-time",
+                          "fontFamily": "$font-body",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "TMzZa",
+                      "type": "ref",
+                      "ref": "BePnB",
+                      "name": "Publish Button",
+                      "width": "fill_container",
+                      "descendants": {
+                        "nWgC4": {
+                          "content": "Publish Event — €19"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variables": {
+    "accent": {
+      "type": "color",
+      "value": "#C9A96E"
+    },
+    "accent-light": {
+      "type": "color",
+      "value": "#E0C992"
+    },
+    "bg-cream": {
+      "type": "color",
+      "value": "#FDFBF7"
+    },
+    "bg-surface": {
+      "type": "color",
+      "value": "#F5F0E8"
+    },
+    "border": {
+      "type": "color",
+      "value": "#E8E0D4"
+    },
+    "card-bg": {
+      "type": "color",
+      "value": "#FFFFFF"
+    },
+    "color-error": {
+      "type": "color",
+      "value": "#C47070"
+    },
+    "color-error-bg": {
+      "type": "color",
+      "value": "#FDF0EF"
+    },
+    "color-info": {
+      "type": "color",
+      "value": "#7A9EB5"
+    },
+    "color-info-bg": {
+      "type": "color",
+      "value": "#EEF5F9"
+    },
+    "color-success": {
+      "type": "color",
+      "value": "#7C9A72"
+    },
+    "color-success-bg": {
+      "type": "color",
+      "value": "#F0F5EE"
+    },
+    "color-warning": {
+      "type": "color",
+      "value": "#D4A054"
+    },
+    "color-warning-bg": {
+      "type": "color",
+      "value": "#FDF6EC"
+    },
+    "font-body": {
+      "type": "string",
+      "value": "Inter"
+    },
+    "font-heading": {
+      "type": "string",
+      "value": "Playfair Display"
+    },
+    "primary": {
+      "type": "color",
+      "value": "#7C9A72"
+    },
+    "primary-dark": {
+      "type": "color",
+      "value": "#5C7A52"
+    },
+    "primary-light": {
+      "type": "color",
+      "value": "#A8C5A0"
+    },
+    "radius-full": {
+      "type": "number",
+      "value": 999
+    },
+    "radius-lg": {
+      "type": "number",
+      "value": 16
+    },
+    "radius-md": {
+      "type": "number",
+      "value": 12
+    },
+    "radius-sm": {
+      "type": "number",
+      "value": 8
+    },
+    "secondary": {
+      "type": "color",
+      "value": "#C4918E"
+    },
+    "secondary-light": {
+      "type": "color",
+      "value": "#DDB5B2"
+    },
+    "shadow-lg": {
+      "type": "color",
+      "value": "#00000012"
+    },
+    "shadow-md": {
+      "type": "color",
+      "value": "#0000000D"
+    },
+    "shadow-sm": {
+      "type": "color",
+      "value": "#00000008"
+    },
+    "spacing-1": {
+      "type": "number",
+      "value": 4
+    },
+    "spacing-10": {
+      "type": "number",
+      "value": 40
+    },
+    "spacing-12": {
+      "type": "number",
+      "value": 48
+    },
+    "spacing-16": {
+      "type": "number",
+      "value": 64
+    },
+    "spacing-2": {
+      "type": "number",
+      "value": 8
+    },
+    "spacing-3": {
+      "type": "number",
+      "value": 12
+    },
+    "spacing-4": {
+      "type": "number",
+      "value": 16
+    },
+    "spacing-6": {
+      "type": "number",
+      "value": 24
+    },
+    "spacing-8": {
+      "type": "number",
+      "value": 32
+    },
+    "text-muted": {
+      "type": "color",
+      "value": "#9B9590"
+    },
+    "text-primary": {
+      "type": "color",
+      "value": "#2D2A26"
+    },
+    "text-secondary": {
+      "type": "color",
+      "value": "#6B6560"
+    },
+    "bg-dark": {
+      "type": "color",
+      "value": "#2D2A26"
+    },
+    "border-light": {
+      "type": "color",
+      "value": "#F0EBE3"
+    },
+    "font-caption": {
+      "type": "string",
+      "value": "Inter"
+    },
+    "text-inverse": {
+      "type": "color",
+      "value": "#FDFBF7"
+    }
+  }
+}
