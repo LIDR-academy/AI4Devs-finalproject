@@ -398,10 +398,115 @@ Criterios de aceptación:
 
 ## 6. Tickets de Trabajo
 
-> Pendiente de implementación. Se generarán mediante `/speckit.tasks` y se cumplimentarán con el detalle requerido.
+> Los 91 tickets detallados están en `specs/001-realista-mvp/tasks.md` (con IDs T001–T091, fases, dependencias y criterios TDD). A continuación, los 3 más representativos: uno de backend, uno de frontend y uno de base de datos.
+
+**Ticket 1 — Backend (T037): Implementar AnalyzeListingUseCase**
+
+**Descripción:** Crear el caso de uso principal del Listing Lens que orquesta la cadena de adaptadores para analizar un anuncio. Recibe una URL, la pasa al CheerioAdapter para extraer el HTML limpio, luego al OpenRouterAdapter (LLM con system prompt estructurado) para análisis semántico, en paralelo al CatastroAdapter para cruce de m² declarados vs oficiales, y al MiraTuZonaAdapter para generar el enlace contextual. Devuelve un `TransparencyReport` con score, banderas rojas, confianza de ubicación y comparativa catastral.
+
+**Historia de usuario:** US1 — Listing Lens: Analizar un Anuncio Inmobiliario (P1)
+
+**Criterios de aceptación:**
+- Dado un HTML limpio, cuando se invoca el caso de uso, entonces se llama al LLM y al Catastro en paralelo
+- Dado que el LLM devuelve JSON, cuando se parsea, entonces se construye el `TransparencyReport` con score 0-100
+- Si el Catastro falla, el caso de uso continúa y devuelve el análisis sin datos catastrales
+- Si el LLM falla, se invoca automáticamente AvenaScoreAdapter como fallback
+
+**Archivos:**
+- `backend/src/domain/services/AnalyzeListingUseCase.ts` (creación)
+- `backend/tests/unit/domain/services/AnalyzeListingUseCase.test.ts` (test unitario previo — TDD)
+- `backend/tests/integration/api/listings.test.ts` (test integración previo — TDD)
+
+**Estimación:** 4-6 horas
+
+---
+
+**Ticket 2 — Frontend (T061): Crear página Mortgage Compass con flujo de 3 pasos**
+
+**Descripción:** Implementar la página SvelteKit `/mortgage-compass` con un formulario multi-paso: (1) entrada de datos financieros (precio, ahorros, ingresos, deudas), (2) revelación de gastos ocultos calculados (ITP/IVA por comunidad autónoma, notaría, registro, gestoría, tasación), (3) playground de estrategias con 4 escenarios de amortización (sin amortizar, ligera €100/mes, moderada €300/mes, agresiva €500/mes) comparados con una alternativa de inversión. Diseño mobile-first, sin wizard forzado — cada paso navegable independientemente.
+
+**Historia de usuario:** US2 — Mortgage Compass: Comprender Costes Reales y Opciones (P1)
+
+**Criterios de aceptación:**
+- Cuando el usuario introduce precio + ahorros + ingresos, entonces se calculan y muestran los gastos ocultos con un desglose visual
+- Cuando responde 2-3 preguntas de tolerancia al riesgo, entonces se asigna un perfil (conservador/moderado/crecimiento)
+- Cuando se carga el playground, entonces se muestran los 4 escenarios de amortización con años acortados, intereses ahorrados y comparativa con cartera de inversión
+- La narrativa educativa se genera desde plantillas hardcoded según perfil × escenario (nunca LLM, nunca consejo prescriptivo)
+
+**Archivos:**
+- `frontend/src/routes/mortgage-compass/+page.svelte` (creación)
+- `frontend/src/routes/mortgage-compass/+page.server.ts` (loader server-side que proxy al backend)
+- `frontend/src/lib/stores/financialProfile.ts` (store de Svelte para el perfil)
+
+**Estimación:** 6-8 horas
+
+---
+
+**Ticket 3 — Base de datos (T010): Configurar schema Prisma con 4 modelos**
+
+**Descripción:** Definir el schema de Prisma con los 4 agregados del dominio: `User` (sesión anónima con UUID), `PurchaseProcess` (proceso de compra con perfil financiero JSON), `AnalyzedListing` (resultado del Listing Lens con score, banderas rojas, hash de snapshot) y `Checklist` (checklist documental por etapa). Configurar relaciones 1:N (User → PurchaseProcess → AnalyzedListing) y 1:1 (PurchaseProcess → Checklist), índices y claves foráneas. Generar la migración inicial con `prisma migrate dev --name init`.
+
+**Criterios de aceptación:**
+- Los 4 modelos compilan sin errores y se generan los tipos TypeScript
+- Las relaciones están bien definidas: `User.id` UUID PK, `PurchaseProcess.userId` nullable FK a User, etc.
+- El campo `userId` es nullable en PurchaseProcess para soportar sesiones anónimas ahora y autenticación futura
+- El campo `financialProfile` es JSON en PurchaseProcess (no tabla separada en MVP)
+- La migración inicial se aplica correctamente a PostgreSQL
+
+**Archivos:**
+- `backend/src/infrastructure/prisma/schema.prisma` (creación)
+- `backend/src/infrastructure/prisma/client.ts` (singleton del PrismaClient — T012)
+
+**Estimación:** 2-3 horas
 
 ---
 
 ## 7. Pull Requests
 
-> Pendiente de implementación. Se documentarán las PRs realizadas durante el desarrollo.
+> Documentación de las PRs realizadas durante el desarrollo. Los hashes de commit y mensajes corresponden a la rama `001-realista-mvp` (a renombrar a `feature-entrega1-DMM` antes de abrir la PR contra `main`).
+
+**Pull Request 1 — Plan de implementación + investigación + modelo de datos + contratos**
+
+**Título:** `plan: implementation plan + research + data model + contracts + quickstart`
+
+**Hash de commit:** `e6fe3c5`
+
+**Descripción:** Esta PR añade todos los artefactos de la fase de planificación de Realista: el plan de implementación con la arquitectura hexagonal + DDD y stack SvelteKit/Express/Prisma; el documento de investigación con 7 decisiones técnicas justificadas (OpenRouter, Cadastro API, @avena/score, Cheerio, PWA, sesiones, etc.); el modelo de datos con el schema Prisma y value objects del dominio; los contratos de la API REST; y una guía de quickstart para setup y validación. Verifica el cumplimiento de los 6 principios de la constitución del proyecto.
+
+**Relación con historias de usuario:** Soporta las 5 historias (US1–US5) sentando las bases arquitectónicas, de datos y de API.
+
+**Impacto:** Solo se añaden archivos nuevos — no hay cambios en código de producción. La constitución de 6 principios se valida contra el diseño propuesto.
+
+**Cambios:** 6 archivos creados (782 líneas)
+
+---
+
+**Pull Request 2 — Desglose de tareas: 91 tareas con TDD por historia de usuario**
+
+**Título:** `tasks: 91 tasks across 8 phases, TDD per user story`
+
+**Hash de commit:** `a8fd5d7`
+
+**Descripción:** Esta PR genera el desglose completo de tareas (`specs/001-realista-mvp/tasks.md`) con 91 tareas distribuidas en 8 fases: Setup, Foundational, US1 Listing Lens, US2 Mortgage Compass, US3 Dashboard, US4 Timeline, US5 Checklist y Polish. Cada historia de usuario incluye sus tests primero (TDD, 17 tareas de test), seguidos de la implementación. Las tareas están etiquetadas con `[P]` para paralelización y `[US1]`–`[US5]` para trazabilidad con las historias.
+
+**Relación con historias de usuario:** Trazabilidad directa — cada tarea está mapeada a una historia específica.
+
+**Impacto:** Archivo único que sirve como roadmap ejecutable para la fase de implementación. Define claramente la dependencia entre fases y las oportunidades de paralelización.
+
+**Cambios:** 1 archivo creado (328 líneas)
+
+---
+
+**Pull Request 3 — Documentación completa del cohort: LICENSE, NOTICE, ADRs, eventos de dominio, prompts**
+
+**Título:** `docs: complete cohort documentation artifacts`
+
+**Hash de commit:** `bd10778`
+
+**Descripción:** Esta PR añade los artefactos de documentación requeridos por la plantilla del cohort: LICENSE MIT, NOTICE.md con atribución a @avena/score, 3 Architecture Decision Records (hexagonal + DDD, @avena/score como fallback, scraping educativo vs comercial), un catálogo de 16 eventos de dominio identificados, y la documentación completa de `prompts.md` con 25 prompts organizados en las 7 secciones de la plantilla (producto, arquitectura, modelo de datos, API, historias, tickets, PRs).
+
+**Relación con historias de usuario:** No ligada a una historia específica — completa los entregables de documentación del proyecto.
+
+**Impacto:** Cubre los requisitos de la Entrega 1 (Documentación técnica) más allá de la plantilla. Establece la base de gobernanza técnica para futuros colaboradores.
+
+**Cambios:** 7 archivos creados o modificados (649 líneas, 14 eliminadas)
