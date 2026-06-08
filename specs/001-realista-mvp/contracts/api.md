@@ -19,7 +19,7 @@ Production: TBD (Railway/Render)
 
 ### POST /api/listings/analyze
 
-Analyze a property listing URL.
+Analyze a property listing URL. Auto-attaches to the active PurchaseProcess (creates one if none exists).
 
 **Request:**
 ```json
@@ -42,9 +42,19 @@ Analyze a property listing URL.
   "claimedM2": 85,
   "constructionYear": 1972,
   "snapshotHash": "sha256:a1b2c3d4...",
-  "createdAt": "2026-06-04T12:00:00Z"
+  "createdAt": "2026-06-04T12:00:00Z",
+  "processSummary": {
+    "processId": "uuid",
+    "status": "active",
+    "propertyPrice": 200000,
+    "sourceListingId": "uuid"
+  }
 }
 ```
+
+El campo `processSummary` siempre está presente:
+- Si la sesión no tenía proceso activo, se crea uno con `propertyPrice` extraído del listing (`sourceListingId` apunta al listing recién creado)
+- Si ya había proceso activo, el listing se adjunta al existente y `processSummary` refleja el estado actual del proceso
 
 **Response (400 - invalid URL):**
 ```json
@@ -112,9 +122,9 @@ Get a single analyzed listing.
 
 ### POST /api/purchase-processes
 
-Create a new purchase process for the session.
+Create a new purchase process for the session. Optionally pre-fills the financial profile from a previously analyzed listing.
 
-**Request:**
+**Request (sin listing previo):**
 ```json
 {
   "financialProfile": {
@@ -129,11 +139,31 @@ Create a new purchase process for the session.
 }
 ```
 
+**Request (con listing previo — pre-rellena propertyPrice):**
+```json
+{
+  "analyzedListingId": "uuid",
+  "financialProfile": {
+    "savings": 45000,
+    "monthlyIncome": 3500,
+    "existingDebts": 0,
+    "region": "madrid"
+  }
+}
+```
+
+Cuando se pasa `analyzedListingId`:
+- `propertyPrice` se toma del listing y se vincula (`sourceListingId` se rellena automáticamente)
+- El usuario NO puede sobrescribirlo en la creación — debe usar PATCH si quiere cambiarlo
+- Esto evita la fricción de "rellena otra vez 200.000€" cuando Mortgage Compass viene después del Listing Lens
+
 **Response (201):**
 ```json
 {
   "id": "uuid",
   "status": "active",
+  "propertyPrice": 200000,
+  "sourceListingId": "uuid",
   "financialProfile": { "..." },
   "createdAt": "2026-06-04T12:00:00Z"
 }
@@ -143,28 +173,69 @@ Create a new purchase process for the session.
 
 ### GET /api/purchase-processes/:id
 
-Get purchase process with listings and checklist.
+Get purchase process with listings and checklist. Endpoint principal del dashboard.
 
 **Response (200):**
 ```json
 {
   "id": "uuid",
   "status": "active",
+  "propertyPrice": 200000,
+  "sourceListingId": "uuid",
   "financialProfile": { "..." },
-  "analyzedListings": [ { "..." } ],
-  "checklist": { "id": "uuid", "items": [ "..." ] },
+  "computed": {
+    "totalCash": 58200,
+    "gap": -13200,
+    "monthlyPayment30yr": 720,
+    "amortizationScenarios": [
+      { "label": "baseline", "extraMonthly": 0, "finalDuration": 30, "totalInterest": 99000, "interestSaved": 0 },
+      { "label": "light", "extraMonthly": 100, "finalDuration": 25, "totalInterest": 73000, "interestSaved": 26000 }
+    ],
+    "investmentAlternative": {
+      "monthlyContribution": 300,
+      "estimatedValue30yr": 340000
+    }
+  },
+  "analyzedListings": [
+    {
+      "id": "uuid",
+      "url": "...",
+      "numericScore": 42,
+      "createdAt": "..."
+    }
+  ],
+  "checklist": {
+    "id": "uuid",
+    "items": [
+      {
+        "id": "item-uuid",
+        "stage": "pre_arras",
+        "title": "Nota simple del registro",
+        "completed": false
+      }
+    ]
+  },
   "createdAt": "...",
   "updatedAt": "..."
 }
 ```
 
+El campo `computed` agrega el resultado del Mortgage Compass para una sola llamada en el dashboard, evitando N+1 problemas.
+
 ---
 
 ### PATCH /api/purchase-processes/:id
 
-Update purchase process (status, financial profile).
+Update purchase process (status, financial profile, propertyPrice).
 
-**Request:**
+**Request (sobrescribir propertyPrice del listing):**
+```json
+{
+  "propertyPrice": 195000
+}
+```
+
+**Request (actualizar perfil financiero):**
 ```json
 {
   "financialProfile": {
@@ -179,6 +250,8 @@ Update purchase process (status, financial profile).
 {
   "id": "uuid",
   "status": "active",
+  "propertyPrice": 200000,
+  "sourceListingId": "uuid",
   "financialProfile": { "..." },
   "updatedAt": "2026-06-04T13:00:00Z"
 }

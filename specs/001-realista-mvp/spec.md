@@ -17,59 +17,73 @@
 - P: ¿Mecanismo de rate limiting sin autenticación? → R: UUID de sesión generado por el servidor, almacenado en el navegador, enviado con cada petición. Límite por UUID.
 - P: ¿Narrativas educativas del Mortgage Compass — generadas por LLM o basadas en plantillas? → R: Plantillas educativas predefinidas asociadas a combinaciones persona × escenario. Predecibles, sin coste de LLM, siempre educativas.
 - P: ¿Estrategia de parseo HTML para la URL del anuncio? → R: Cheerio — parseo HTML ligero en servidor. Fallback a subdominio móvil `.m.` para páginas renderizadas con JS. Sin navegador headless.
+- P: ¿Cómo se asocia un análisis de listing con un proceso de compra? → R: Auto-attach — cada sesión tiene como máximo una PurchaseProcess activa. Analizar un listing sin proceso crea uno con `propertyPrice` del listing. Analizar con proceso existente lo adjunta al mismo.
+- P: ¿Mortgage Compass conoce el listing que se está analizando? → R: Sí — `PurchaseProcess.propertyPrice` se rellena desde el listing analizado y se bloquea con enlace al listing origen. El usuario solo rellena savings/income/debts.
+- P: ¿Cómo se estima la ubicación para el cruce catastral? → R: Cadena de responsabilidad con 3 adaptadores: (1) `DeclaredLocationAdapter` parsea la dirección/barrio declarado del HTML, (2) `GeocodingAdapter` usa Nominatim (OSM, gratis) para convertir a coordenadas, (3) `LLMVisionLocationAdapter` (OpenRouter multimodal, fallback) analiza fotos para anuncios sin dirección clara. Solo después de tener coordenadas se hace el cruce con Catastro.
 
 ## Historias de Usuario y Pruebas
 
 ### Historia 1 - Listing Lens: Analizar un Anuncio Inmobiliario (P1)
 
-El usuario pega una URL de Idealista o similar. El sistema obtiene el contenido del anuncio en el servidor, ejecuta un análisis con IA (LLM) para detectar lenguaje manipulador, información omitida y banderas rojas. Cruza la ubicación estimada con datos catastrales para verificar los metros cuadrados declarados frente a los oficiales y el año de construcción. El resultado es una puntuación de transparencia y un informe detallado de lo que el anuncio revela — y lo que oculta.
+El usuario pega una URL de Idealista o similar. El sistema obtiene el contenido del anuncio en el servidor, ejecuta un análisis con IA (LLM) para detectar lenguaje manipulador, información omitida y banderas rojas. Resuelve la ubicación del anuncio mediante una cadena de adaptadores (dirección declarada → geocoding Nominatim → visión multimodal como fallback) y cruza las coordenadas resultantes con datos catastrales para verificar los metros cuadrados declarados frente a los oficiales y el año de construcción. El resultado es una puntuación de transparencia y un informe detallado de lo que el anuncio revela — y lo que oculta.
+
+Si la sesión no tiene un `PurchaseProcess` activo, el sistema crea uno con `propertyPrice` extraído del listing. Si ya existe un proceso activo, el listing se adjunta automáticamente. La respuesta del endpoint incluye un `processSummary` con el `processId` y el estado actual del proceso, permitiendo que el dashboard refleje inmediatamente el nuevo análisis.
 
 **Por qué esta prioridad**: El punto de entrada. Engancha al usuario con valor inmediato. Demuestra ingeniería de IA (diseño de prompts, parsing de salida estructurada, integración con APIs externas). Cada historia es independiente, pero esta proporciona el mayor impacto para quien llega por primera vez.
 
-**Prueba independiente**: Pegar una URL de anuncio conocida → verificar que se devuelve puntuación, banderas rojas y comparativa catastral. Se puede probar completamente con un endpoint de anuncio simulado.
+**Prueba independiente**: Pegar una URL de anuncio conocida → verificar que se devuelve puntuación, banderas rojas, comparativa catastral y `processSummary` con el proceso asociado. Se puede probar completamente con un endpoint de anuncio simulado.
 
 **Criterios de aceptación**:
 
-1. **Dado** una URL de anuncio válida, **Cuando** el usuario la envía, **Entonces** se muestra una puntuación de transparencia (0-100) y una lista de banderas rojas en menos de 10 segundos.
-2. **Dado** una URL inválida o inaccesible, **Cuando** el usuario la envía, **Entonces** se muestra un mensaje de error con la opción de pegar el texto del anuncio manualmente.
-3. **Dado** un anuncio con pistas de ubicación, **Cuando** el análisis termina, **Entonces** se muestra un porcentaje de confianza de ubicación estimada y un enlace a MiraTuZona.
-4. **Dado** que hay datos catastrales disponibles para la ubicación estimada, **Cuando** el análisis termina, **Entonces** se muestra una comparativa de m² declarados vs catastrales y año de construcción.
-5. **Dado** un anuncio sin certificado energético mencionado, **Cuando** el análisis termina, **Entonces** aparece "sin certificado energético" como bandera roja.
+1. **Dado** una URL de anuncio válida y sin proceso activo, **Cuando** el usuario la envía, **Entonces** se muestra una puntuación de transparencia (0-100), una lista de banderas rojas y un `processSummary` con el nuevo `processId` y `propertyPrice` del listing.
+2. **Dado** una URL válida y un proceso activo, **Cuando** el usuario la envía, **Entonces** el listing se adjunta al proceso existente y el `processSummary` refleja la asociación.
+3. **Dado** una URL inválida o inaccesible, **Cuando** el usuario la envía, **Entonces** se muestra un mensaje de error con la opción de pegar el texto del anuncio manualmente.
+4. **Dado** un anuncio con dirección declarada, **Cuando** se ejecuta el `DeclaredLocationAdapter`, **Entonces** se extrae la dirección del HTML y el `GeocodingAdapter` la convierte a coordenadas. Se omite el análisis de visión.
+5. **Dado** un anuncio sin dirección clara, **Cuando** falla el `GeocodingAdapter`, **Entonces** se invoca el `LLMVisionLocationAdapter` con las fotos del anuncio para estimar la ubicación.
+6. **Dado** coordenadas GPS válidas, **Cuando** se consulta el Catastro, **Entonces** se muestra una comparativa de m² declarados vs catastrales y año de construcción.
+7. **Dado** un anuncio sin certificado energético mencionado, **Cuando** el análisis termina, **Entonces** aparece "sin certificado energético" como bandera roja.
+8. **Durante** el análisis, **Cuando** el usuario espera la respuesta, **Entonces** la UI muestra un estado de carga claro (spinner o skeleton) con un tiempo estimado de 5-12 segundos.
 
 ---
 
 ### Historia 2 - Mortgage Compass: Comprender Costes Reales y Opciones (P1)
 
-El usuario introduce precio de la vivienda, ahorros, ingresos mensuales y deudas existentes. El sistema calcula los gastos ocultos de compra (ITP/IVA, notaría, registro, gestoría, tasación) y revela el dinero real necesario — normalmente un 10-12% adicional sobre el precio del anuncio. Después, el usuario responde 2-3 preguntas sobre tolerancia al riesgo para construir un perfil. Basándose en el perfil y los números reales, el sistema muestra escenarios de hipoteca a 30 años con distintos ritmos de amortización voluntaria (sin amortización, ligera, moderada, agresiva) y los compara con una alternativa de inversión. Todos los resultados son narrativas educativas, nunca consejo financiero.
+El proceso de compra ya tiene un `propertyPrice` pre-rellenado desde el listing analizado (ver FR-015). El usuario solo tiene que completar `savings` (ahorros disponibles), `monthlyIncome` (ingresos netos mensuales), `existingDebts` (deudas existentes) y `region` (comunidad autónoma, para el cálculo correcto del ITP). El sistema calcula los gastos ocultos de compra (ITP/IVA, notaría, registro, gestoría, tasación) y revela el dinero real necesario — normalmente un 10-12% adicional sobre el precio del anuncio. El usuario responde 2-3 preguntas sobre tolerancia al riesgo para construir un perfil. Basándose en el perfil y los números reales, el sistema muestra escenarios de hipoteca a 30 años con distintos ritmos de amortización voluntaria (sin amortización, ligera, moderada, agresiva) y los compara con una alternativa de inversión. Todos los resultados son narrativas educativas, nunca consejo financiero.
+
+Si el usuario navega directamente a Mortgage Compass sin haber analizado un listing, el sistema crea un `PurchaseProcess` con `propertyPrice = 0` y le pide que introduzca el precio manualmente. En ese caso, el perfil no tiene un listing origen asociado y la UX debe indicarlo.
 
 **Por qué esta prioridad**: El diferenciador principal. Ninguna herramienta existente muestra al comprador español la comparativa amortización-vs-inversión junto con los gastos ocultos en una experiencia basada en su perfil personal. Es la funcionalidad que hace memorable el proyecto.
 
-**Prueba independiente**: Introducir precio + ahorros + ingresos → verificar que se generan el desglose de gastos ocultos, las preguntas de perfil y la tabla comparativa de estrategias. Sin dependencias externas más allá de cálculos matemáticos.
+**Prueba independiente**: Analizar primero un listing con un precio conocido, navegar a Mortgage Compass, completar `savings` + `monthlyIncome` + `existingDebts` → verificar que `propertyPrice` viene pre-rellenado con el listing y que se generan el desglose de gastos ocultos, las preguntas de perfil y la tabla comparativa de estrategias.
 
 **Criterios de aceptación**:
 
-1. **Dado** precio de vivienda 200.000€, ahorros 45.000€ e ingresos 3.500€/mes, **Cuando** el usuario envía los datos, **Entonces** se desglosan los gastos ocultos (ITP/IVA, notaría, registro, gestoría, tasación) y se muestra el total necesario (~58.200€) con indicador de diferencia respecto a los ahorros.
-2. **Dado** que el usuario ha completado el perfil financiero, **Cuando** responde a las preguntas de perfil, **Entonces** se sugiere una duración de hipoteca recomendada (30, 25 o 20 años) según su capacidad de pago.
-3. **Dada** una hipoteca a 30 años al 3,5% para 160.000€, **Cuando** se carga el simulador de estrategias, **Entonces** se muestran cuatro escenarios: base (sin amortizar), ligero (100€/mes), moderado (300€/mes), agresivo (500€/mes) — cada uno con años acortados e intereses ahorrados.
-4. **Dados** todos los escenarios, **Cuando** se muestra la alternativa de inversión, **Entonces** se muestra el valor estimado de la cartera a 30 años (rentabilidad anual 5-7%) junto a los escenarios de amortización.
-5. **Dado** un perfil conservador, **Cuando** se genera la narrativa, **Entonces** el mensaje educativo enfatiza el ahorro garantizado mediante amortización.
+1. **Dado** un proceso con `propertyPrice` pre-rellenado del listing, **Cuando** el usuario introduce `savings` 45.000€, `monthlyIncome` 3.500€ y `existingDebts` 0, **Entonces** se desglosan los gastos ocultos (ITP/IVA, notaría, registro, gestoría, tasación) y se muestra el total necesario (~58.200€) con indicador de diferencia respecto a los ahorros.
+2. **Dado** un proceso con listing asociado, **Cuando** Mortgage Compass carga, **Entonces** se muestra un enlace al listing origen del `propertyPrice` con opción de sobrescribir.
+3. **Dado** el usuario no ha analizado ningún listing y navega directamente a Mortgage Compass, **Cuando** carga la página, **Entonces** se le pide introducir manualmente el `propertyPrice` y se crea un `PurchaseProcess` sin listing origen.
+4. **Dado** que el usuario ha completado el perfil financiero, **Cuando** responde a las preguntas de perfil, **Entonces** se sugiere una duración de hipoteca recomendada (30, 25 o 20 años) según su capacidad de pago.
+5. **Dada** una hipoteca a 30 años al 3,5% para 160.000€, **Cuando** se carga el simulador de estrategias, **Entonces** se muestran cuatro escenarios: base (sin amortizar), ligero (100€/mes), moderado (300€/mes), agresivo (500€/mes) — cada uno con años acortados e intereses ahorrados.
+6. **Dados** todos los escenarios, **Cuando** se muestra la alternativa de inversión, **Entonces** se muestra el valor estimado de la cartera a 30 años (rentabilidad anual 5-7%) junto a los escenarios de amortización.
+7. **Dado** un perfil conservador, **Cuando** se genera la narrativa, **Entonces** el mensaje educativo enfatiza el ahorro garantizado mediante amortización.
 
 ---
 
 ### Historia 3 - Dashboard: Seguimiento del Proceso (P2)
 
-El usuario ve un panel resumiendo sus anuncios analizados, una instantánea de su perfil financiero y acceso rápido a todas las herramientas. El dashboard persiste los datos por sesión anónima (UUID) sin necesidad de registro. El usuario puede re-analizar anuncios ya vistos para ver qué ha cambiado (detección de diferencias con snapshot).
+El usuario ve un panel que resume el `PurchaseProcess` activo: el listing más recientemente analizado con su puntuación de transparencia, el perfil financiero (propertyPrice pre-rellenado, savings, monthlyIncome, debts, persona), el desglose de gastos ocultos calculado, el estado del checklist documental, y un acceso rápido a todas las herramientas. El dashboard persiste los datos por sesión anónima (UUID) sin necesidad de registro. El usuario puede re-analizar el listing actual para ver qué ha cambiado (detección de diferencias con snapshot).
+
+Si la sesión no tiene ningún `PurchaseProcess` activo, el dashboard muestra un estado vacío con llamadas a la acción: "Analiza tu primer anuncio" o "Configura tu perfil financiero manualmente".
 
 **Por qué esta prioridad**: Centro de retención y navegación. Une las dos historias P1 en una experiencia coherente. Demuestra persistencia de datos y gestión de estado.
 
-**Prueba independiente**: Analizar un anuncio, completar un perfil financiero y recargar el dashboard → verificar que todos los datos persisten y se muestran correctamente.
+**Prueba independiente**: Analizar un listing (crea proceso), completar el perfil financiero, recargar el dashboard → verificar que todo el estado del proceso persiste, se muestra correctamente, y los cambios del listing son visibles al re-analizar.
 
 **Criterios de aceptación**:
 
-1. **Dado** que un usuario ha analizado 3 anuncios, **Cuando** visita el dashboard, **Entonces** se muestran los 3 anuncios con puntuaciones, fechas y botones de re-análisis rápido.
-2. **Dado** que un usuario ha completado el perfil financiero, **Cuando** visita el dashboard, **Entonces** se muestra una instantánea de capacidad de compra y gastos ocultos.
-3. **Dado** un anuncio previamente analizado, **Cuando** el usuario pulsa "re-analizar", **Entonces** se ejecuta un nuevo análisis y se destacan las diferencias respecto a la instantánea anterior (ej: "Precio: -10.000€ desde el último análisis").
-4. **Dada** una sesión nueva sin datos, **Cuando** el usuario visita el dashboard, **Entonces** se muestra un estado vacío con llamadas a la acción para probar Listing Lens y Mortgage Compass.
+1. **Dado** una sesión con proceso activo y 1 listing analizado, **Cuando** el usuario visita el dashboard, **Entonces** se muestra el listing con su puntuación y fecha, el propertyPrice bloqueado desde el listing, y un resumen del perfil financiero.
+2. **Dado** un proceso activo, **Cuando** el usuario visita el dashboard, **Entonces** se muestra una instantánea de capacidad de compra, gastos ocultos totales y progreso del checklist.
+3. **Dado** un listing previamente analizado en el mismo proceso, **Cuando** el usuario pulsa "re-analizar", **Entonces** se ejecuta un nuevo análisis, se crea un nuevo `AnalyzedListing`, y el dashboard destaca las diferencias respecto al snapshot anterior (ej: "Precio: -10.000€ desde el último análisis").
+4. **Dada** una sesión nueva sin proceso activo, **Cuando** el usuario visita el dashboard, **Entonces** se muestra un estado vacío con dos CTAs: "Analizar un anuncio" y "Configurar perfil manualmente".
 
 ---
 
@@ -129,6 +143,11 @@ El usuario hace seguimiento de qué documentos tiene y cuáles le faltan para ca
 - **FR-011**: El sistema NO DEBE almacenar contenido de terceros (HTML de anuncios, texto extraído). Solo se persisten los resultados del análisis.
 - **FR-012**: El sistema DEBE usar la cabecera User-Agent `Realista/1.0 (analizador educativo)` en todas las peticiones salientes.
 - **FR-013**: El sistema NO DEBE proporcionar consejo financiero. Todos los resultados hipotecarios y de inversión son narrativas educativas generadas a partir de plantillas predefinidas asociadas a combinaciones de perfil y escenario. No se usa LLM para la generación de narrativas en el Mortgage Compass.
+- **FR-014**: El sistema DEBE mantener como máximo una `PurchaseProcess` activa por sesión. Si el usuario analiza un listing y no hay proceso activo, el sistema DEBE crear uno con `propertyPrice` extraído del listing. Si ya existe un proceso activo, el nuevo listing DEBE adjuntarse al mismo proceso.
+- **FR-015**: El sistema DEBE pre-rellenar `propertyPrice` en el perfil financiero desde el listing analizado. Mortgage Compass DEBE mostrar el precio con un enlace al listing origen y permitir al usuario sobrescribirlo si lo desea.
+- **FR-016**: El sistema DEBE resolver la ubicación del anuncio mediante una cadena de responsabilidad: primero extrayendo la dirección declarada del HTML (Cheerio), luego geocodificándola con Nominatim (OSM), y solo como fallback usando análisis multimodal de fotos vía LLM (OpenRouter con capacidad de visión). El cruce con Catastro SOLO se ejecuta cuando se han obtenido coordenadas GPS válidas.
+- **FR-017**: El sistema DEBE incluir un disclaimer visible en la UI indicando que el análisis de transparencia es generado por IA y debe verificarse con fuentes oficiales antes de tomar decisiones de compra.
+- **FR-018**: La UI DEBE mostrar un estado de carga claro durante el análisis del listing (skeleton/spinner con tiempo estimado) ya que el endpoint puede tardar entre 5 y 12 segundos en completarse.
 
 ### Entidades Clave
 

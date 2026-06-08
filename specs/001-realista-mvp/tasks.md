@@ -79,28 +79,40 @@
 - [ ] T025 [P] [US1] Unit test AnalyzeListingUseCase with mocked ports in `backend/tests/unit/domain/services/AnalyzeListingUseCase.test.ts`
 - [ ] T026 [P] [US1] Integration test POST /api/listings/analyze with mocked Cheerio + LLM in `backend/tests/integration/api/listings.test.ts`
 - [ ] T027 [P] [US1] Contract test for analyze endpoint matching contracts/api.md in `backend/tests/contract/test_listings_analyze.test.ts`
+- [ ] T023a [P] [US1] Unit test LocationResolverPort chain (Declared → Geocoding → Vision) in `backend/tests/unit/domain/ports/LocationResolverPort.test.ts`
+- [ ] T023b [P] [US1] Unit test auto-attach logic: creates PurchaseProcess when none active, attaches to existing one in `backend/tests/unit/domain/services/AutoAttachService.test.ts`
+- [ ] T023c [P] [US1] Integration test analyze endpoint returning `processSummary` in `backend/tests/integration/api/listings.test.ts`
 
 ### Implementation for User Story 1
 
 - [ ] T028 [US1] Create TransparencyScore value object with score 0-100, label, breakdown in `backend/src/domain/value-objects/TransparencyScore.ts`
 - [ ] T029 [P] [US1] Create RedFlags value object with flag types and Spanish labels in `backend/src/domain/value-objects/RedFlags.ts`
 - [ ] T030 [US1] Create ListingAnalyzerPort interface in `backend/src/domain/ports/ListingAnalyzerPort.ts`
+- [ ] T030a [US1] Create LocationResolverPort interface with `resolveLocation(parsedListing): Promise<Coordinates | null>` in `backend/src/domain/ports/LocationResolverPort.ts`
+- [ ] T030b [P] [US1] Create Coordinates value object `{ lat: number, lng: number, source: 'declared' | 'geocoded' | 'vision', confidence: number }` in `backend/src/domain/value-objects/Coordinates.ts`
 - [ ] T031 [P] [US1] Create CadastroPort interface in `backend/src/domain/ports/CadastroPort.ts`
 - [ ] T032 [US1] Implement CheerioAdapter (HTML parsing, text extraction) in `backend/src/adapters/cheerio/CheerioAdapter.ts`
+- [ ] T032a [US1] Implement DeclaredLocationAdapter (extracts declared address/neighborhood from HTML via Cheerio selectors) in `backend/src/adapters/location/DeclaredLocationAdapter.ts`
+- [ ] T032b [US1] Implement GeocodingAdapter (Nominatim OSM, free, no API key) in `backend/src/adapters/location/GeocodingAdapter.ts`
+- [ ] T032c [US1] Implement LLMVisionLocationAdapter (OpenRouter multimodal, photo analysis fallback) in `backend/src/adapters/location/LLMVisionLocationAdapter.ts`
+- [ ] T032d [US1] Implement LocationResolverService that chains the 3 adapters in order in `backend/src/domain/services/LocationResolverService.ts`
 - [ ] T033 [US1] Implement OpenRouterAdapter (LLM system prompt, structured JSON output) in `backend/src/adapters/openrouter/OpenRouterAdapter.ts`
 - [ ] T034 [US1] Implement AvenaScoreAdapter (@avena/score fallback) in `backend/src/adapters/avena-score/AvenaScoreAdapter.ts`
-- [ ] T035 [US1] Implement CatastroAdapter (API cross-reference, coordinate query) in `backend/src/adapters/catastro/CatastroAdapter.ts`
+- [ ] T035 [US1] Implement CatastroAdapter (API cross-reference, coordinate query — now consumes Coordinates from LocationResolverService) in `backend/src/adapters/catastro/CatastroAdapter.ts`
 - [ ] T036 [US1] Implement MiraTuZonaAdapter (location link generation) in `backend/src/adapters/miratuzona/MiraTuZonaAdapter.ts`
-- [ ] T037 [US1] Implement AnalyzeListingUseCase orchestrating adapters (LLM → cadastral cross-ref → MiraTuZona) in `backend/src/domain/services/AnalyzeListingUseCase.ts`
+- [ ] T037 [US1] Implement AnalyzeListingUseCase orchestrating adapters (LLM → location resolver → cadastral cross-ref → MiraTuZona) in `backend/src/domain/services/AnalyzeListingUseCase.ts`
+- [ ] T037a [US1] Implement AutoAttachService: if no active PurchaseProcess, create one with `propertyPrice` from listing; else attach to existing in `backend/src/domain/services/AutoAttachService.ts`
+- [ ] T037b [US1] Update AnalyzeListingUseCase to return `processSummary` in the analyze response in `backend/src/domain/services/AnalyzeListingUseCase.ts`
 - [ ] T038 [US1] Create AnalyzedListing domain aggregate (matches data-model.md) in `backend/src/domain/aggregates/AnalyzedListing.ts`
-- [ ] T039 [US1] Implement analyze listing route POST /api/listings/analyze in `backend/src/api/routes/listings.ts`
+- [ ] T039 [US1] Implement analyze listing route POST /api/listings/analyze (now returns processSummary) in `backend/src/api/routes/listings.ts`
 - [ ] T040 [US1] Create listings controller handling request validation and use case dispatch in `backend/src/api/controllers/listingsController.ts`
 - [ ] T041 [US1] Add URL validation helper (validates format, checks reachability) in `backend/src/infrastructure/utils/urlValidator.ts`
-- [ ] T042 [US1] Create Listing Lens page UI with URL input, loading state, results card in `frontend/src/routes/listing-lens/+page.svelte`
+- [ ] T042 [US1] Create Listing Lens page UI with URL input, **loading state with 5-12s estimated time** (FR-018), results card in `frontend/src/routes/listing-lens/+page.svelte`
+- [ ] T042a [US1] Create AI disclaimer component shown on listing analysis results (FR-017) in `frontend/src/lib/components/AIDisclaimer.svelte`
 - [ ] T043 [US1] Create server-side loader proxying analyze request to backend API in `frontend/src/routes/listing-lens/+page.server.ts`
 - [ ] T044 [US1] Create listings store (Svelte writable) for analyzed listing history in `frontend/src/lib/stores/listings.ts`
 
-**Checkpoint**: Listing Lens fully functional — paste URL, get score + red flags + cadastral comparison. TDD cycle complete.
+**Checkpoint**: Listing Lens fully functional — paste URL, get score + red flags + cadastral comparison + auto-attached to PurchaseProcess with `processSummary`. TDD cycle complete.
 
 ---
 
@@ -120,6 +132,8 @@
 - [ ] T048 [P] [US2] Unit test InvestmentAlternative calculator (compound returns) in `backend/tests/unit/domain/services/InvestmentCalculator.test.ts`
 - [ ] T049 [P] [US2] Unit test educational narrative templates (persona ↔ template mapping) in `backend/tests/unit/domain/services/NarrativeGenerator.test.ts`
 - [ ] T050 [P] [US2] Integration test POST /api/purchase-processes with full profile in `backend/tests/integration/api/purchaseProcesses.test.ts`
+- [ ] T050a [P] [US2] Integration test POST /api/purchase-processes with `analyzedListingId` pre-filling `propertyPrice` in `backend/tests/integration/api/purchaseProcesses.test.ts`
+- [ ] T050b [P] [US2] Integration test GET /api/purchase-processes/:id returning `computed` field with amortization scenarios in `backend/tests/integration/api/purchaseProcesses.test.ts`
 
 ### Implementation for User Story 2
 
@@ -129,15 +143,17 @@
 - [ ] T054 [US2] Implement amortization calculator: 30yr base, 4 scenarios (baseline, light €100/mo, moderate €300/mo, aggressive €500/mo) in `backend/src/domain/services/AmortizationCalculator.ts`
 - [ ] T055 [US2] Implement investment alternative calculator: compound 5-7% over 30 years in `backend/src/domain/services/InvestmentCalculator.ts`
 - [ ] T056 [US2] Implement narrative generator: hardcoded educational templates keyed to persona × scenario combos in `backend/src/domain/services/NarrativeGenerator.ts`
-- [ ] T057 [US2] Implement purchase process route POST /api/purchase-processes in `backend/src/api/routes/purchaseProcesses.ts`
-- [ ] T058 [US2] Implement purchase process route GET /api/purchase-processes/:id in `backend/src/api/routes/purchaseProcesses.ts`
-- [ ] T059 [US2] Implement purchase process route PATCH /api/purchase-processes/:id in `backend/src/api/routes/purchaseProcesses.ts`
+- [ ] T057 [US2] Implement purchase process route POST /api/purchase-processes (now accepts `analyzedListingId` and pre-fills `propertyPrice`) in `backend/src/api/routes/purchaseProcesses.ts`
+- [ ] T057a [US2] Implement pre-fill logic in PurchaseProcessUseCase: if `analyzedListingId` provided, copy `propertyPrice` from listing and set `sourceListingId` in `backend/src/domain/services/PurchaseProcessUseCase.ts`
+- [ ] T058 [US2] Implement purchase process route GET /api/purchase-processes/:id (now returns `computed` field with amortization scenarios and investment alternative) in `backend/src/api/routes/purchaseProcesses.ts`
+- [ ] T058a [US2] Implement computed-field aggregator that runs amortization + investment calculators and returns the result in `backend/src/domain/services/PurchaseProcessAggregator.ts`
+- [ ] T059 [US2] Implement purchase process route PATCH /api/purchase-processes/:id (now supports direct `propertyPrice` update to allow override) in `backend/src/api/routes/purchaseProcesses.ts`
 - [ ] T060 [US2] Create purchase process controller in `backend/src/api/controllers/purchaseProcessController.ts`
-- [ ] T061 [US2] Create Mortgage Compass page UI: multi-step form (profile → hidden costs → persona → strategy playground) in `frontend/src/routes/mortgage-compass/+page.svelte`
+- [ ] T061 [US2] Create Mortgage Compass page UI: multi-step form (profile → hidden costs → persona → strategy playground). **propertyPrice pre-filled from listing with link to source. Show AI disclaimer** in `frontend/src/routes/mortgage-compass/+page.svelte`
 - [ ] T062 [US2] Create server-side loader proxying purchase process to backend in `frontend/src/routes/mortgage-compass/+page.server.ts`
 - [ ] T063 [US2] Create financial profile store in `frontend/src/lib/stores/financialProfile.ts`
 
-**Checkpoint**: Mortgage Compass fully functional — enter data, see hidden costs, get strategy comparison. TDD cycle complete.
+**Checkpoint**: Mortgage Compass fully functional — `propertyPrice` pre-filled from listing, see hidden costs, get strategy comparison. TDD cycle complete.
 
 ---
 
