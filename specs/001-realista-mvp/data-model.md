@@ -41,6 +41,8 @@ model PurchaseProcess {
   userId            String?
   user              User?             @relation(fields: [userId], references: [id])
   status            String            @default("active") // active | completed | archived
+  propertyPrice     Int?              // 0 si se crea sin listing origen
+  sourceListingId   String?           // FK lógica al AnalyzedListing que inició el proceso
   financialProfile  Json?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
