@@ -28,7 +28,7 @@ graph LR
 | 2 | User clicks "Continue" | `POST /api/auth/magic-link` with email |
 | 3 | System checks if user exists | If new: creates User (status=pending). If existing: updates LastLogin |
 | 4 | System generates magic link token | 15-minute expiry, stored hashed in DB |
-| 5 | System sends email via AWS SES | Personalized email with magic link button |
+| 5 | System sends email via Gmail SMTP | Personalized email with magic link button |
 | 6 | Frontend shows confirmation | "Check your email for your access link" |
 
 **Rate Limiting:** 3 magic link requests per email per hour (429 response on exceed)

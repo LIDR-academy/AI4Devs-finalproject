@@ -55,8 +55,8 @@
 | D-03 | Static site build pipeline | Razor templates vs. string interpolation | Open | Backend | Week 3 |
 | D-04 | WhatsApp API provider | Direct Meta API vs. BSP (Twilio) | Open | Backend | Week 2 |
 | D-05 | Encryption at rest | SQLCipher vs. application-level AES-256 | Open | Backend | Week 3 |
-| D-06 | CDN provider | CloudFront vs. Cloudflare | Open | DevOps | Week 3 |
-| D-07 | Hosting provider | Azure App Service vs. AWS vs. Railway | Open | DevOps | Week 3 |
+| D-06 | CDN provider | Cloudflare selected | Resolved | DevOps | Week 3 |
+| D-07 | Hosting provider | Kubernetes (Rancher Desktop local, TBD production) | Resolved | DevOps | Week 3 |
 | D-08 | Publishing price | EUR 19 vs. EUR 29 vs. tiered | Open | Product | Week 2 |
 | D-09 | Number of launch templates | 3 vs. 5 | Open | Design | Week 2 |
 | D-10 | RSVP form fields | Minimum (attendance) vs. comprehensive (all fields) | Open | UX | Week 2 |
@@ -77,13 +77,16 @@
 | **Host Dashboard** | Angular 22 (Standalone components) | Enterprise-grade SPA, signals for reactive state, strict typing |
 | **Guest Microsites** | Static HTML/JS/CSS (JAMstack) | Zero server cost per visit, CDN-cached, ultra-fast |
 | **Accomplice Panel** | Angular 22 (embedded in dashboard) | Reuses host SPA infrastructure, token-based access |
-| **Database** | SQLite + EF Core | Zero-ops, file-based, sufficient for MVP scale (<10K events) |
+| **Database** | PostgreSQL 16 + EF Core | Multi-pod support, concurrent writes, production-ready |
 | **Authentication** | Magic links + JWT | Passwordless UX, reduced attack surface |
-| **Email** | AWS SES | Cost-effective ($0.10/1K emails), high deliverability |
+| **Email** | Gmail SMTP (IEmailService) | Free for MVP, abstracted for future swap to Mailgun/Brevo |
 | **WhatsApp** | Meta Cloud API | Official channel, template messages, delivery receipts |
 | **Payments** | Stripe | PCI-compliant, webhooks, one-time payments |
 | **Maps** | Google Maps API | Embeds, geocoding, directions - generous free tier |
-| **CDN** | CloudFront / Cloudflare | Static site distribution, HTTPS, edge caching |
+| **Queue/Cache** | DragonflyDB | Redis-compatible, 25x faster, lower memory than Redis |
+| **Object Storage** | MinIO | S3-compatible, self-hosted, for static sites and backups |
+| **CDN** | Cloudflare | Static site distribution from MinIO origin, HTTPS, edge caching |
+| **Hosting** | Kubernetes | Rancher Desktop local, portable to any cloud provider |
 
 ## 11.5 Document History
 

@@ -46,7 +46,7 @@
 | Payment webhook (Stripe, idempotent processing) | DECISION NEEDED: Webhook retry - Stripe built-in or custom queue |
 | Background jobs (30-day deletion, reminders, email/WhatsApp dispatch) | DECISION NEEDED: Background service - single BackgroundService or distributed queue |
 
-## 7.5 Database (SQLite/EF Core)
+## 7.5 Database (PostgreSQL/EF Core)
 
 | Key Workstreams | Open Questions |
 |----------------|----------------|
@@ -62,7 +62,7 @@
 | Key Workstreams | Open Questions |
 |----------------|----------------|
 | WhatsApp Business API (templates, webhooks, rate limits, retry logic) | DECISION NEEDED: Direct Meta API vs. BSP (Twilio/MessageBird) |
-| AWS SES (templates, bounce handling via SNS, sandbox->production) | DECISION NEEDED: SES region - eu-west-1 for EU data residency |
+| Gmail SMTP (templates, 500/day limit, no bounce webhooks) | DECISION NEEDED: IEmailService abstraction for future swap |
 | Stripe Connect (publish payment, webhook, future gift registry) | DECISION NEEDED: Stripe Connect vs. standard Stripe for MVP |
 | Google Maps (embed, geocoding, directions deep links) | DECISION NEEDED: Maps API key security - referrer vs. IP restriction |
 | WhatsApp API approval | DECISION NEEDED: Pre-submit templates 1 week before launch |
@@ -71,8 +71,8 @@
 
 | Key Workstreams | Open Questions |
 |----------------|----------------|
-| CDN for static sites (CloudFront/Cloudflare, cache invalidation) | DECISION NEEDED: CDN provider - CloudFront vs. Cloudflare |
-| CI/CD pipeline (GitHub Actions, build, test, deploy) | DECISION NEEDED: Hosting provider - Azure App Service vs. AWS vs. Railway |
+| CDN for static sites (Cloudflare, MinIO origin, cache invalidation) | Resolved: Cloudflare |
+| CI/CD pipeline (GitHub Actions, Docker build, GHCR, kubectl apply) | Resolved: Kustomize + kubectl |
 | Environments (local, staging, production) | DECISION NEEDED: Staging environment - shared or per-PR |
 | Observability (Serilog, OpenTelemetry, Sentry) | DECISION NEEDED: Error tracking - Sentry vs. Application Insights |
 | Secrets management (environment variables, key rotation) | DECISION NEEDED: Secrets storage - GitHub Secrets vs. Azure Key Vault |

@@ -322,7 +322,7 @@ This metric captures the essence of our differentiation: real-time event storyte
 - Static site generation for guest microsites (JAMstack)
 - Publishing paywall (Stripe one-time payment)
 - Free mode with 5-guest limit for testing
-- Email invitations via AWS SES
+- Email invitations via Gmail SMTP
 - WhatsApp invitations via Meta Cloud API
 - Automated reminders for non-responders
 - Google Maps integration (embed + directions)
@@ -391,7 +391,7 @@ graph LR
 | 2 | User clicks "Continue" | `POST /api/auth/magic-link` with email |
 | 3 | System checks if user exists | If new: creates User record (status=pending). If existing: updates LastLogin |
 | 4 | System generates magic link token | 15-minute expiry, stored hashed in DB |
-| 5 | System sends email via AWS SES | Personalized email with magic link button |
+| 5 | System sends email via Gmail SMTP | Personalized email with magic link button |
 | 6 | Frontend shows confirmation | "Check your email for your access link" |
 
 **Rate Limiting:** 3 magic link requests per email per hour (429 response on exceed)
@@ -652,7 +652,7 @@ graph TD
 
 **Scope (MVP):**
 - Static HTML/CSS/JS generated per published event
-- Served via CDN (CloudFront/Cloudflare)
+- Served via CDN (Cloudflare)
 - Mobile-first responsive design
 - Load time < 2 seconds on mobile 3G
 - Lighthouse performance score > 90
@@ -742,7 +742,7 @@ graph TD
 
 #### 6.3.1 Email + WhatsApp Invitations
 
-**Description:** Multi-channel invitation sending via AWS SES (email) and Meta WhatsApp Business API.
+**Description:** Multi-channel invitation sending via Gmail SMTP (email) and Meta WhatsApp Business API.
 
 **Scope (MVP):**
 - Email invitations: personalized template with RSVP link
@@ -764,7 +764,7 @@ graph TD
 
 | # | Scenario | Given | When | Then |
 |---|----------|-------|------|------|
-| AC-COM-01 | Send email invitation | Host has guests with email addresses | Host clicks "Send Email Invitations" | Emails are sent via AWS SES; delivery status updated to "sent" |
+| AC-COM-01 | Send email invitation | Host has guests with email addresses | Host clicks "Send Email Invitations" | Emails are sent via Gmail SMTP; delivery status updated to "sent" |
 | AC-COM-02 | Send WhatsApp invitation | Host has guests with phone numbers | Host clicks "Send WhatsApp Invitations" | WhatsApp messages are sent via Meta API; delivery status updated |
 | AC-COM-03 | WhatsApp delivery failure | WhatsApp message fails to deliver | System retries after 5 minutes, then 30 minutes | After 2 failed attempts, invitation is sent via email as fallback |
 | AC-COM-04 | Email bounce | Email bounces (hard bounce) | SNS webhook notifies the system | Invitation status updated to "failed"; guest flagged; no retry |
@@ -773,7 +773,7 @@ graph TD
 **Edge Cases:**
 - Guest has neither email nor phone -> invitation marked as "cannot send"; host notified
 - WhatsApp template not yet approved by Meta -> fallback to email only
-- AWS SES sandbox mode (development) -> emails only sent to verified addresses
+- Gmail SMTP daily limit (500/day) -> monitor quota, plan Mailgun/Brevo migration
 - Rate limit exceeded (WhatsApp 1K/hr) -> queue remaining messages for next window
 
 ---
@@ -978,7 +978,7 @@ graph TD
 | Payment webhook (Stripe, idempotent processing) | DECISION NEEDED: Webhook retry - Stripe built-in or custom queue |
 | Background jobs (30-day deletion, reminders, email/WhatsApp dispatch) | DECISION NEEDED: Background service - single BackgroundService or distributed queue |
 
-### 7.5 Database (SQLite/EF Core)
+### 7.5 Database (PostgreSQL/EF Core)
 
 | Key Workstreams | Open Questions |
 |----------------|----------------|
@@ -994,7 +994,7 @@ graph TD
 | Key Workstreams | Open Questions |
 |----------------|----------------|
 | WhatsApp Business API (templates, webhooks, rate limits, retry logic) | DECISION NEEDED: Direct Meta API vs. BSP (Twilio/MessageBird) |
-| AWS SES (templates, bounce handling via SNS, sandbox->production) | DECISION NEEDED: SES region - eu-west-1 for EU data residency |
+| Gmail SMTP (templates, 500/day limit, no bounce webhooks) | DECISION NEEDED: IEmailService abstraction for future swap |
 | Stripe Connect (publish payment, webhook, future gift registry) | DECISION NEEDED: Stripe Connect vs. standard Stripe for MVP |
 | Google Maps (embed, geocoding, directions deep links) | DECISION NEEDED: Maps API key security - referrer vs. IP restriction |
 | DECISION NEEDED: WhatsApp API approval timeline - pre-submit templates 1 week before launch |
@@ -1003,8 +1003,8 @@ graph TD
 
 | Key Workstreams | Open Questions |
 |----------------|----------------|
-| CDN for static sites (CloudFront/Cloudflare, cache invalidation) | DECISION NEEDED: CDN provider - CloudFront vs. Cloudflare |
-| CI/CD pipeline (GitHub Actions, build, test, deploy) | DECISION NEEDED: Hosting provider - Azure App Service vs. AWS vs. Railway |
+| CDN for static sites (Cloudflare, MinIO origin, cache invalidation) | Resolved: Cloudflare |
+| CI/CD pipeline (GitHub Actions, Docker build, GHCR, kubectl apply) | Resolved: Kustomize + kubectl |
 | Environments (local, staging, production) | DECISION NEEDED: Staging environment - shared or per-PR |
 | Observability (Serilog, OpenTelemetry, Sentry) | DECISION NEEDED: Error tracking - Sentry vs. Application Insights |
 | Secrets management (environment variables, key rotation) | DECISION NEEDED: Secrets storage - GitHub Secrets vs. Azure Key Vault |
@@ -1080,11 +1080,11 @@ graph TD
 | Risk | Likelihood | Impact | Mitigation | Owner |
 |------|-----------|--------|------------|-------|
 | WhatsApp API approval delays | Medium | High | Pre-submit templates 1 week before launch; email-only fallback for V1 | Backend |
-| SQLite performance bottleneck at scale | Low | Medium | Monitor query performance; plan PostgreSQL migration at 10K MAU | Backend |
+| PostgreSQL connection pool exhaustion at scale | Low | Medium | Monitor connection pool; add PgBouncer; scale API pods | Backend |
 | Static site regeneration slow for large events | Low | Medium | Full regeneration for MVP (fast enough for <200 guests); optimize later | Frontend |
 | Stripe webhook failures | Low | High | Idempotent webhook handlers; retry logic; manual reconciliation dashboard | Backend |
 | CDN cache not invalidating properly | Medium | Medium | File-based cache busting (timestamp in filename); manual invalidation endpoint | DevOps |
-| Magic link email delivery failures | Medium | Medium | AWS SES bounce handling; retry with alternative email if available | Backend |
+| Magic link email delivery failures (Gmail limit) | Medium | Medium | Gmail SMTP 500/day limit; plan swap to Mailgun/Brevo for production | Backend |
 
 ### 9.2 Business Risks
 
@@ -1101,7 +1101,7 @@ graph TD
 | Risk | Likelihood | Impact | Mitigation | Owner |
 |------|-----------|--------|------------|-------|
 | GDPR non-compliance | Low | Critical | Engage legal counsel early; implement data protection by design; DPA with vendors | Legal |
-| AWS SES sandbox limits during testing | High | Low | Request production access early; use Mailtrap for development | DevOps |
+| Gmail SMTP daily limit (500 emails) during testing | High | Low | Use Mailtrap for development; monitor daily quota; plan Mailgun/Brevo migration | DevOps |
 | WhatsApp template rejection by Meta | Medium | High | Submit templates early; have fallback email templates; follow Meta guidelines | Product |
 | Data breach (PII exposure) | Low | Critical | Application-level encryption; least-privilege access; regular security audits | Security |
 | Key personnel dependency | Medium | Medium | Documentation; code reviews; knowledge sharing; cross-training | Engineering |
@@ -1114,7 +1114,7 @@ graph TD
 | A2 | Guests will RSVP via a mobile web form (no app) | Usability testing with 10 guests; measure completion rate |
 | A3 | WhatsApp is the preferred communication channel for Spanish weddings | Market research; survey target audience |
 | A4 | Accomplices (best man/bridesmaid) will actively use the live panel | Interviews with 10 recent wedding party members |
-| A5 | SQLite is sufficient for <10K events | Load testing; monitor query performance; set migration trigger |
+| A5 | PostgreSQL on Kubernetes is sufficient for MVP scale | Load testing; monitor query performance; set scaling triggers |
 | A6 | 30-day data deletion is acceptable to users | Include in Terms of Service; survey user acceptance |
 | A7 | Static sites load in <2s on mobile 3G | Lighthouse testing; RUM monitoring post-launch |
 
@@ -1123,10 +1123,10 @@ graph TD
 | Dependency | Provider | Status | Impact if Unavailable |
 |-----------|----------|--------|----------------------|
 | WhatsApp Business API | Meta | Approval needed | Cannot send WhatsApp invitations or live messages |
-| AWS SES | Amazon | Sandbox -> Production request needed | Cannot send emails (magic links, invitations) |
+| Email SMTP | Gmail (free) | 500 emails/day limit | Cannot send emails beyond daily quota (magic links, invitations) |
 | Stripe | Stripe | Account setup needed | Cannot process payments (publishing paywall) |
 | Google Maps API | Google | API key needed | Cannot embed maps or provide directions |
-| CDN | CloudFront/Cloudflare | Setup needed | Static sites served from origin (slower) |
+| CDN | Cloudflare | Setup needed | Static sites served from origin (slower) |
 | Domain & SSL | Registrar | DNS configuration needed | Cannot serve sites over HTTPS |
 
 ---
@@ -1251,8 +1251,8 @@ graph TD
 | D-03 | Static site build pipeline | Razor templates vs. string interpolation | Open | Backend | Week 3 |
 | D-04 | WhatsApp API provider | Direct Meta API vs. BSP (Twilio) | Open | Backend | Week 2 |
 | D-05 | Encryption at rest | SQLCipher vs. application-level AES-256 | Open | Backend | Week 3 |
-| D-06 | CDN provider | CloudFront vs. Cloudflare | Open | DevOps | Week 3 |
-| D-07 | Hosting provider | Azure App Service vs. AWS vs. Railway | Open | DevOps | Week 3 |
+| D-06 | CDN provider | Cloudflare selected | Resolved | DevOps | Week 3 |
+| D-07 | Hosting provider | Kubernetes (Rancher Desktop local, TBD production) | Resolved | DevOps | Week 3 |
 | D-08 | Publishing price | EUR 19 vs. EUR 29 vs. tiered | Open | Product | Week 2 |
 | D-09 | Number of launch templates | 3 vs. 5 | Open | Design | Week 2 |
 | D-10 | RSVP form fields | Minimum (attendance) vs. comprehensive (all fields) | Open | UX | Week 2 |
@@ -1273,13 +1273,16 @@ graph TD
 | **Host Dashboard** | Angular 22 (Standalone components) | Enterprise-grade SPA, signals for reactive state, strict typing |
 | **Guest Microsites** | Static HTML/JS/CSS (JAMstack) | Zero server cost per visit, CDN-cached, ultra-fast |
 | **Accomplice Panel** | Angular 22 (embedded in dashboard) | Reuses host SPA infrastructure, token-based access |
-| **Database** | SQLite + EF Core | Zero-ops, file-based, sufficient for MVP scale (<10K events) |
+| **Database** | PostgreSQL 16 + EF Core | Multi-pod support, concurrent writes, production-ready |
 | **Authentication** | Magic links + JWT | Passwordless UX, reduced attack surface |
-| **Email** | AWS SES | Cost-effective ($0.10/1K emails), high deliverability |
+| **Email** | Gmail SMTP (IEmailService) | Free for MVP, abstracted for future swap to Mailgun/Brevo |
 | **WhatsApp** | Meta Cloud API | Official channel, template messages, delivery receipts |
 | **Payments** | Stripe | PCI-compliant, webhooks, one-time payments |
 | **Maps** | Google Maps API | Embeds, geocoding, directions - generous free tier |
-| **CDN** | CloudFront / Cloudflare | Static site distribution, HTTPS, edge caching |
+| **Queue/Cache** | DragonflyDB | Redis-compatible, 25x faster, lower memory than Redis |
+| **Object Storage** | MinIO | S3-compatible, self-hosted, for static sites and backups |
+| **CDN** | Cloudflare | Static site distribution from MinIO origin, HTTPS, edge caching |
+| **Hosting** | Kubernetes | Rancher Desktop local, portable to any cloud provider |
 
 ### 11.5 Document History
 

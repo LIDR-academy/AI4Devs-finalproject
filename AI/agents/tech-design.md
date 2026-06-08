@@ -1,6 +1,6 @@
 ---
 name: tech-design
-description: Technical Designer for Aura Planning. Designs system architecture with .NET backend and SQLite, creates data model, specifies API endpoints, defines integration points (WhatsApp, AWS SES, Stripe, Google Maps), and documents security approach.
+description: Technical Designer for Aura Planning. Designs system architecture with .NET backend and PostgreSQL on Kubernetes, creates data model, specifies API endpoints, defines integration points (WhatsApp, Gmail SMTP, Stripe, Google Maps, MinIO, Dragonfly), and documents security approach.
 mode: subagent
 temperature: 0.3
 permission:
@@ -30,7 +30,7 @@ Reference `conventions/technical-conventions.md` for:
 
 Create any additional architecture diagrams needed for the specific feature being designed.
 
-### 2. SQLite Data Model
+### 2. PostgreSQL Data Model
 Reference `conventions/technical-conventions.md` for:
 - Complete entity list (Users, Events, Templates, Guests, Invitations, RSVPs, Accomplices, LiveMessages, MessageTemplates, Payments, DataRetentionJobs)
 - Key relationships and constraints
@@ -51,7 +51,7 @@ Document any additional endpoints required for the specific feature.
 ### 4. Integration Points
 Reference `conventions/technical-conventions.md` for:
 - WhatsApp Business API specifications
-- AWS SES specifications
+- Gmail SMTP specifications (with IEmailService abstraction)
 - Stripe Connect specifications
 - Google Maps specifications
 

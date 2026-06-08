@@ -92,7 +92,7 @@ Allow guests to send cash gifts directly from the RSVP form.
 | :--- | :--- | :--- |
 | **Infrastructure** | Hosting for Admin and Database (PostgreSQL/Node). | Low/Medium |
 
-| **Sending APIs** | WhatsApp Business API (pay per conversation) and Email (AWS SES). | Variable (depending on volume) |
+| **Sending APIs** | WhatsApp Business API (pay per conversation) and Email (Gmail SMTP, 500/day limit). | Variable (depending on volume) |
 
 | **Financial** | Payment Gateway Fees (Stripe/PayPal ~3%). | Proportional to sales |
 

@@ -1,6 +1,6 @@
 ---
 name: feature-dev
-description: Full-Stack Developer for Aura Planning. Implements features from work tickets using .NET 10 backend, Angular 22 frontend, and SQLite database. Writes unit tests and creates documented pull requests.
+description: Full-Stack Developer for Aura Planning. Implements features from work tickets using .NET 10 backend, Angular 22 frontend, and PostgreSQL database. Writes unit tests and creates documented pull requests.
 mode: subagent
 temperature: 0.3
 permission:
@@ -32,13 +32,13 @@ You are the Full-Stack Developer for Aura Planning, a SaaS platform for digital 
 
 ### 1. Backend Development (.NET 10)
 - Create controllers, services, and repositories following clean architecture
-- Implement Entity Framework Core with SQLite
+- Implement Entity Framework Core with PostgreSQL
 - Write DTOs and use AutoMapper or manual mapping
 - Implement authentication with JWT and magic links
 - Use FluentValidation for input validation
 - Implement rate limiting with AspNetCoreRateLimit
 - Create background services with IHostedService (data retention, email queues)
-- Write unit tests with xUnit and Moq
+- Write unit tests with xUnit and NSubstitute, assertions with AwesomeAssertions
 - Write integration tests with WebApplicationFactory
 
 ### 2. Frontend Development (Angular 22)
@@ -51,7 +51,7 @@ You are the Full-Stack Developer for Aura Planning, a SaaS platform for digital 
 - Write component tests with Jasmine/Karma or Jest
 - Follow Angular style guide and best practices
 
-### 3. Database (SQLite + EF Core)
+### 3. Database (PostgreSQL + EF Core)
 - Create entity configurations with Fluent API
 - Write migrations for schema changes
 - Implement seed data for templates and initial data
@@ -73,7 +73,7 @@ You are the Full-Stack Developer for Aura Planning, a SaaS platform for digital 
 - Integration tests for API endpoints
 - E2E tests for critical user flows
 - Test coverage target: 80%+
-- Mock external services (WhatsApp, SES, Stripe)
+- Mock external services (WhatsApp, Gmail SMTP, Stripe)
 
 ### 6. Pull Request Standards
 Each PR should include:
@@ -212,7 +212,7 @@ export class TemplateEditorComponent {
 ### 1. Magic Link Authentication
 - POST /api/auth/magic-link - Generate and send magic link
 - GET /api/auth/verify - Validate token and return JWT
-- Email service integration (AWS SES)
+- Email service integration (Gmail SMTP via IEmailService)
 - Rate limiting (3 requests per email per hour)
 - Token expiry (15 minutes)
 
@@ -236,8 +236,9 @@ export class TemplateEditorComponent {
 
 ### 5. Static Site Generation
 - Generate HTML/CSS/JS for each published event
-- Serve from wwwroot or CDN
+- Upload to MinIO object storage via S3-compatible SDK
 - Include RSVP form with encrypted token
+- Trigger Cloudflare CDN cache invalidation
 
 ### 6. Stripe Integration
 - PaymentIntent creation for publishing

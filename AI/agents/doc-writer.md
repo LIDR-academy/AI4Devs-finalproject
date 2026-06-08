@@ -34,7 +34,7 @@ Before writing, read:
 Complete with:
 - 0.1. Full name: Pedro San Roman Pacheco
 - 0.2. Project name: Aura Planning
-- 0.3. Brief description: SaaS platform for digital wedding invitations and event management with real-time notifications, built with .NET, Angular, and SQLite
+- 0.3. Brief description: SaaS platform for digital wedding invitations and event management with real-time notifications, built with .NET, Angular, PostgreSQL, and Kubernetes
 - 0.4. Project URL: (leave blank or TBD)
 - 0.5. Repository URL: (leave blank or TBD)
 
@@ -63,7 +63,7 @@ Provide step-by-step instructions:
 # Prerequisites
 - .NET 10 SDK
 - Node.js 22+ and Angular CLI
-- SQLite (bundled, no separate installation needed)
+- Docker (for PostgreSQL, Dragonfly, MinIO via Testcontainers)
 
 # Clone and setup
 git clone <repo-url>
@@ -73,7 +73,7 @@ cd aura-planning
 cd backend
 dotnet restore
 cp appsettings.example.json appsettings.Development.json
-# Fill in: ConnectionStrings:DefaultConnection, WhatsApp:ApiKey, Aws:AccessKey, Aws:SecretKey, Stripe:SecretKey, GoogleMaps:ApiKey
+# Fill in: ConnectionStrings:DefaultConnection, WhatsApp:ApiKey, Smtp:Username, Smtp:Password, Stripe:SecretKey, GoogleMaps:ApiKey, Minio:AccessKey, Minio:SecretKey, Dragonfly:ConnectionString
 dotnet run
 
 # Frontend
@@ -84,7 +84,7 @@ ng serve
 # Access
 # Frontend: http://localhost:4200
 # Backend API: http://localhost:5000
-# SQLite database: created automatically at Data/aura.db
+# PostgreSQL database: connection string in appsettings.json
 ```
 
 ### 4. Fill Section 2: System Architecture
@@ -96,10 +96,13 @@ ng serve
 **2.2. Components:**
 - Frontend: Angular 22 SPA (host dashboard + accomplice panel)
 - Backend: .NET 10 with ASP.NET Core Web API
-- Database: SQLite (local dev, can migrate to PostgreSQL for production)
-- Background Services: .NET IHostedService for email queues, data retention
-- CDN: CloudFront or Azure CDN (static site delivery)
-- External: WhatsApp API, AWS SES, Stripe, Google Maps
+- Database: PostgreSQL 16 (K8s StatefulSet)
+- Queue/Cache: DragonflyDB (Redis-compatible, K8s StatefulSet)
+- Object Storage: MinIO (S3-compatible, K8s StatefulSet)
+- Background Services: Separate K8s Deployments for email, WhatsApp, SSG workers
+- CronJobs: Data retention and reminder scheduler
+- CDN: Cloudflare (static site delivery from MinIO origin)
+- External: WhatsApp API, Gmail SMTP, Stripe, Google Maps
 
 **2.3. Project Structure:**
 ```
@@ -141,8 +144,8 @@ aura-planning/
 ```
 
 **2.4. Infrastructure and Deployment:**
-- Hosting: Azure App Service or Railway (.NET backend), Vercel/Netlify (Angular frontend)
-- Database: SQLite for dev, PostgreSQL or Azure SQL for production
+- Hosting: Kubernetes (Rancher Desktop local, TBD production: GKE/EKS/DOKS)
+- Database: PostgreSQL 16 (StatefulSet with PVC)
 - CI/CD: GitHub Actions (build, test, deploy)
 - Environment: staging + production
 - Include deployment mermaid diagram
@@ -206,7 +209,7 @@ Create 3 detailed tickets:
 **Ticket 1 (Backend): Magic Link Authentication System**
 - Title: Implement magic link authentication with JWT in .NET
 - Description: Create endpoint to request and verify magic links
-- Technical details: email service integration (AWS SES), JWT generation, token validation, rate limiting
+- Technical details: email service integration (Gmail SMTP via IEmailService), JWT generation, token validation, rate limiting
 - Acceptance criteria
 - Estimated effort: 3 story points
 
@@ -218,7 +221,7 @@ Create 3 detailed tickets:
 - Estimated effort: 5 story points
 
 **Ticket 3 (Database): Data Model and Migrations**
-- Title: Create SQLite schema and Entity Framework migrations
+- Title: Create PostgreSQL schema and Entity Framework migrations
 - Description: Implement all tables, relationships, indexes, and constraints using EF Core
 - Technical details: DbContext configuration, entity configurations, seed data, migration scripts
 - Acceptance criteria

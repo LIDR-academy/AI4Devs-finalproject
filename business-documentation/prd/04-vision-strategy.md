@@ -26,7 +26,7 @@ This metric captures the essence of our differentiation: real-time event storyte
 - Static site generation for guest microsites (JAMstack)
 - Publishing paywall (Stripe one-time payment)
 - Free mode with 5-guest limit for testing
-- Email invitations via AWS SES
+- Email invitations via Gmail SMTP
 - WhatsApp invitations via Meta Cloud API
 - Automated reminders for non-responders
 - Google Maps integration (embed + directions)

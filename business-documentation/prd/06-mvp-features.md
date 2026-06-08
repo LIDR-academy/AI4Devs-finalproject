@@ -137,7 +137,7 @@
 
 **Scope (MVP):**
 - Static HTML/CSS/JS generated per published event
-- Served via CDN (CloudFront/Cloudflare)
+- Served via CDN (Cloudflare)
 - Mobile-first responsive design
 - Load time < 2 seconds on mobile 3G
 - Lighthouse performance score > 90
@@ -227,7 +227,7 @@
 
 ### 6.3.1 Email + WhatsApp Invitations
 
-**Description:** Multi-channel invitation sending via AWS SES (email) and Meta WhatsApp Business API.
+**Description:** Multi-channel invitation sending via Gmail SMTP (email) and Meta WhatsApp Business API.
 
 **Scope (MVP):**
 - Email invitations: personalized template with RSVP link
@@ -249,7 +249,7 @@
 
 | # | Scenario | Given | When | Then |
 |---|----------|-------|------|------|
-| AC-COM-01 | Send email invitation | Host has guests with email addresses | Host clicks "Send Email Invitations" | Emails are sent via AWS SES; delivery status updated to "sent" |
+| AC-COM-01 | Send email invitation | Host has guests with email addresses | Host clicks "Send Email Invitations" | Emails are sent via Gmail SMTP; delivery status updated to "sent" |
 | AC-COM-02 | Send WhatsApp invitation | Host has guests with phone numbers | Host clicks "Send WhatsApp Invitations" | WhatsApp messages are sent via Meta API; delivery status updated |
 | AC-COM-03 | WhatsApp delivery failure | WhatsApp message fails to deliver | System retries after 5 minutes, then 30 minutes | After 2 failed attempts, invitation is sent via email as fallback |
 | AC-COM-04 | Email bounce | Email bounces (hard bounce) | SNS webhook notifies the system | Invitation status updated to "failed"; guest flagged; no retry |
@@ -258,7 +258,7 @@
 **Edge Cases:**
 - Guest has neither email nor phone -> invitation marked as "cannot send"; host notified
 - WhatsApp template not yet approved by Meta -> fallback to email only
-- AWS SES sandbox mode (development) -> emails only sent to verified addresses
+- Gmail SMTP daily limit (500/day) -> monitor quota, plan Mailgun/Brevo migration
 - Rate limit exceeded (WhatsApp 1K/hr) -> queue remaining messages for next window
 
 ---
