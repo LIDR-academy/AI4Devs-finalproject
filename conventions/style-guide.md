@@ -1,82 +1,82 @@
-# Aura Planning Style Guide
+# Guía de Estilo de Aura Planning
 
-> Design system documentation extracted from `business-documentation/Aura.pen`
-
----
-
-## Design Principles
-
-1. **Warm & Elegant** — Use cream backgrounds with earthy tones to create a sophisticated, inviting feel
-2. **Organic Shapes** — Prefer generous corner radii (12-16px) over sharp corners
-3. **Subtle Depth** — Use soft shadows and light borders for layering without heavy contrast
-4. **Typography Hierarchy** — Playfair Display for headings (elegant serif), Inter for body (clean sans-serif)
-5. **Consistent Spacing** — Follow 4px base unit with multiples: 4, 8, 12, 16, 24, 32, 40, 48, 64
+> Documentación del sistema de diseño extraída de `business-documentation/Aura.pen`
 
 ---
 
-## Color Palette
+## Principios de Diseño
 
-### Brand Colors
+1. **Cálido y Elegante** — Usar fondos crema con tonos tierra para crear una sensación sofisticada e invitadora
+2. **Formas Orgánicas** — Preferir radios de esquina generosos (12-16px) sobre esquinas afiladas
+3. **Profundidad Sutil** — Usar sombras suaves y bordes claros para capas sin contraste pesado
+4. **Jerarquía Tipográfica** — Playfair Display para encabezados (serif elegante), Inter para cuerpo (sans-serif limpio)
+5. **Espaciado Consistente** — Seguir unidad base de 4px con múltiplos: 4, 8, 12, 16, 24, 32, 40, 48, 64
 
-| Token | Hex | Usage |
+---
+
+## Paleta de Colores
+
+### Colores de Marca
+
+| Token | Hex | Uso |
 |-------|-----|-------|
-| `primary` | `#7C9A72` | Primary actions, success states, logo arc |
-| `primary-dark` | `#5C7A52` | Hover states for primary |
-| `primary-light` | `#A8C5A0` | Light backgrounds, subtle accents |
-| `accent` | `#C9A96E` | Secondary accent, logo middle arc, highlights |
-| `accent-light` | `#E0C992` | Hover states for accent elements |
-| `secondary` | `#C4918E` | Complementary accent |
-| `secondary-light` | `#DDB5B2` | Light secondary backgrounds |
+| `primary` | `#7C9A72` | Acciones principales, estados de éxito, arco del logo |
+| `primary-dark` | `#5C7A52` | Estados hover para primario |
+| `primary-light` | `#A8C5A0` | Fondos claros, acentos sutiles |
+| `accent` | `#C9A96E` | Acento secundario, arco medio del logo, highlights |
+| `accent-light` | `#E0C992` | Estados hover para elementos de acento |
+| `secondary` | `#C4918E` | Acento complementario |
+| `secondary-light` | `#DDB5B2` | Fondos secundarios claros |
 
-### Backgrounds
+### Fondos
 
-| Token | Hex | Usage |
+| Token | Hex | Uso |
 |-------|-----|-------|
-| `bg-cream` | `#FDFBF7` | Page background (default) |
-| `bg-surface` | `#F5F0E8` | Card backgrounds on cream, input backgrounds |
-| `bg-dark` | `#2D2A26` | Footer, dark sections |
-| `card-bg` | `#FFFFFF` | Elevated cards |
+| `bg-cream` | `#FDFBF7` | Fondo de página (por defecto) |
+| `bg-surface` | `#F5F0E8` | Fondos de tarjeta sobre crema, fondos de input |
+| `bg-dark` | `#2D2A26` | Footer, secciones oscuras |
+| `card-bg` | `#FFFFFF` | Tarjetas elevadas |
 
-### Text
+### Texto
 
-| Token | Hex | Usage |
+| Token | Hex | Uso |
 |-------|-----|-------|
-| `text-primary` | `#2D2A26` | Headings, primary content |
-| `text-secondary` | `#6B6560` | Body text, descriptions |
-| `text-muted` | `#9B9590` | Captions, placeholders, muted labels |
-| `text-inverse` | `#FDFBF7` | Text on dark backgrounds |
+| `text-primary` | `#2D2A26` | Encabezados, contenido principal |
+| `text-secondary` | `#6B6560` | Texto de cuerpo, descripciones |
+| `text-muted` | `#9B9590` | Subtítulos, placeholders, labels apagados |
+| `text-inverse` | `#FDFBF7` | Texto sobre fondos oscuros |
 
-### Borders
+### Bordes
 
-| Token | Hex | Usage |
+| Token | Hex | Uso |
 |-------|-----|-------|
-| `border` | `#E8E0D4` | Default borders on light backgrounds |
-| `border-light` | `#F0EBE3` | Subtle card borders |
+| `border` | `#E8E0D4` | Bordes por defecto sobre fondos claros |
+| `border-light` | `#F0EBE3` | Bordes sutiles de tarjeta |
 
-### Semantic Colors
+### Colores Semánticos
 
-| Token | Hex | Background | Usage |
+| Token | Hex | Fondo | Uso |
 |-------|-----|-----------|-------|
-| `color-success` | `#7C9A72` | `color-success-bg` (`#F0F5EE`) | Confirmed states |
-| `color-warning` | `#D4A054` | `color-warning-bg` (`#FDF6EC`) | Pending states |
-| `color-error` | `#C47070` | `color-error-bg` (`#FDF0EF`) | Error, cancelled states |
-| `color-info` | `#7A9EB5` | `color-info-bg` (`#EEF5F9`) | Informational states |
+| `color-success` | `#7C9A72` | `color-success-bg` (`#F0F5EE`) | Estados confirmados |
+| `color-warning` | `#D4A054` | `color-warning-bg` (`#FDF6EC`) | Estados pendientes |
+| `color-error` | `#C47070` | `color-error-bg` (`#FDF0EF`) | Estados de error, cancelado |
+| `color-info` | `#7A9EB5` | `color-info-bg` (`#EEF5F9`) | Estados informativos |
 
 ---
 
-## Typography
+## Tipografía
 
-### Font Families
+### Familias de Fuentes
 
-| Token | Value | Usage |
+| Token | Valor | Uso |
 |-------|-------|-------|
-| `font-heading` | `Playfair Display` | Headlines, titles, brand name |
-| `font-body` | `Inter` | Body text, labels, UI elements |
-| `font-caption` | `Inter` | Small captions, metadata |
+| `font-heading` | `Playfair Display` | Encabezados, títulos, nombre de marca |
+| `font-body` | `Inter` | Texto de cuerpo, labels, elementos UI |
+| `font-caption` | `Inter` | Subtítulos pequeños, metadatos |
 
-### Type Scale
+### Escala de Tipos
 
-| Element | Font | Size | Weight | Line Height |
+| Elemento | Fuente | Tamaño | Weight | Line Height |
 |---------|------|------|--------|-------------|
 | Display | Playfair Display | 56px | Normal (400) | 1.2 |
 | H1 | Playfair Display | 36px | Normal (400) | 1.2 |
@@ -93,230 +93,230 @@
 
 ---
 
-## Spacing System
+## Sistema de Espaciado
 
-Base unit: **4px**
+Unidad base: **4px**
 
-| Token | Value | Usage |
+| Token | Valor | Uso |
 |-------|-------|-------|
-| `spacing-1` | 4px | Tight spacing, icon gaps |
-| `spacing-2` | 8px | Small gaps between related elements |
-| `spacing-3` | 12px | Medium-small spacing |
-| `spacing-4` | 16px | Default spacing between elements |
-| `spacing-6` | 24px | Section gaps, padding |
-| `spacing-8` | 32px | Large gaps between sections |
-| `spacing-10` | 40px | XL spacing |
-| `spacing-12` | 48px | XXL spacing |
-| `spacing-16` | 64px | Section dividers |
+| `spacing-1` | 4px | Espaciado ajustado, gaps de iconos |
+| `spacing-2` | 8px | Gaps pequeños entre elementos relacionados |
+| `spacing-3` | 12px | Espaciado medio-pequeño |
+| `spacing-4` | 16px | Espaciado por defecto entre elementos |
+| `spacing-6` | 24px | Gaps de sección, padding |
+| `spacing-8` | 32px | Gaps grandes entre secciones |
+| `spacing-10` | 40px | Espaciado XL |
+| `spacing-12` | 48px | Espaciado XXL |
+| `spacing-16` | 64px | Divisores de sección |
 
 ---
 
-## Border Radius
+## Radio de Borde
 
-| Token | Value | Usage |
+| Token | Valor | Uso |
 |-------|-------|-------|
-| `radius-sm` | 8px | Small elements, badges |
-| `radius-md` | 12px | Buttons, inputs, medium cards |
-| `radius-lg` | 16px | Large cards, modals |
-| `radius-full` | 999px | Pills, avatars, fully rounded |
+| `radius-sm` | 8px | Elementos pequeños, badges |
+| `radius-md` | 12px | Botones, inputs, tarjetas medianas |
+| `radius-lg` | 16px | Tarjetas grandes, modales |
+| `radius-full` | 999px | Pills, avatares, completamente redondeado |
 
 ---
 
-## Shadows
+## Sombras
 
-| Token | Value | Usage |
+| Token | Valor | Uso |
 |-------|-------|-------|
-| `shadow-sm` | `#00000008` (8% opacity) | Subtle elevation, hover states |
-| `shadow-md` | `#0000000D` (13% opacity) | Cards, dropdowns |
-| `shadow-lg` | `#00000012` (18% opacity) | Modals, elevated panels |
+| `shadow-sm` | `#00000008` (8% opacity) | Elevación sutil, estados hover |
+| `shadow-md` | `#0000000D` (13% opacity) | Tarjetas, dropdowns |
+| `shadow-lg` | `#00000012` (18% opacity) | Modales, paneles elevados |
 
 ---
 
-## Components
+## Componentes
 
-### Buttons
+### Botones
 
-**Primary Button**
-- Background: `primary` (`#7C9A72`)
-- Text: White (`#FFFFFF`)
-- Font: Inter 14px Medium
+**Botón Primario**
+- Fondo: `primary` (`#7C9A72`)
+- Texto: Blanco (`#FFFFFF`)
+- Fuente: Inter 14px Medium
 - Padding: 12px vertical, 24px horizontal
-- Corner radius: `radius-md` (12px)
-- States: Hover darkens to `primary-dark`
+- Radio de esquina: `radius-md` (12px)
+- Estados: Hover oscurece a `primary-dark`
 
-**Secondary Button**
-- Background: Transparent
-- Text: `text-primary`
-- Border: 1px `border`
+**Botón Secundario**
+- Fondo: Transparente
+- Texto: `text-primary`
+- Borde: 1px `border`
 - Padding: 12px vertical, 24px horizontal
-- Corner radius: `radius-md` (12px)
+- Radio de esquina: `radius-md` (12px)
 
-**Ghost Button**
-- Background: Transparent
-- Text: `text-primary`
-- No border
+**Botón Ghost**
+- Fondo: Transparente
+- Texto: `text-primary`
+- Sin borde
 - Padding: 12px vertical, 24px horizontal
-- Corner radius: `radius-md` (12px)
+- Radio de esquina: `radius-md` (12px)
 
-**Danger Button**
-- Background: `color-error` (`#C47070`)
-- Text: White
-- Font: Inter 14px Medium
+**Botón de Peligro**
+- Fondo: `color-error` (`#C47070`)
+- Texto: Blanco
+- Fuente: Inter 14px Medium
 - Padding: 12px vertical, 24px horizontal
-- Corner radius: `radius-md` (12px)
+- Radio de esquina: `radius-md` (12px)
 
-### Form Inputs
+### Inputs de Formulario
 
-**Text Input Field**
+**Campo de Texto**
 - Label: Inter 13px Medium, `text-primary`
-- Input container: `card-bg` with 1px `border`
+- Contenedor de input: `card-bg` con 1px `border`
 - Placeholder: Inter 14px, `text-muted`
-- Error message: Inter 12px, `color-error`
-- Corner radius: `radius-md` (12px)
+- Mensaje de error: Inter 12px, `color-error`
+- Radio de esquina: `radius-md` (12px)
 - Padding: 12px vertical, 16px horizontal
 
-### Badges / Status Pills
+### Badges / Pills de Estado
 
-**Structure**
+**Estructura**
 - Padding: 6px vertical, 12px horizontal
-- Corner radius: `radius-full` (999px)
-- Font: Inter 12px Medium
+- Radio de esquina: `radius-full` (999px)
+- Fuente: Inter 12px Medium
 
-**Variants**
+**Variantes**
 
-| State | Background | Text Color |
+| Estado | Fondo | Color de Texto |
 |-------|------------|------------|
-| Pending | `color-warning-bg` (`#FDF6EC`) | `color-warning` (`#D4A054`) |
-| Confirmed | `color-success-bg` (`#F0F5EE`) | `color-success` (`#7C9A72`) |
-| Cancelled | `color-error-bg` (`#FDF0EF`) | `color-error` (`#C47070`) |
+| Pendiente | `color-warning-bg` (`#FDF6EC`) | `color-warning` (`#D4A054`) |
+| Confirmado | `color-success-bg` (`#F0F5EE`) | `color-success` (`#7C9A72`) |
+| Cancelado | `color-error-bg` (`#FDF0EF`) | `color-error` (`#C47070`) |
 
-### Cards
+### Tarjetas
 
-**Standard Card**
-- Background: `card-bg` (`#FFFFFF`)
-- Border: 1px `border-light`
-- Corner radius: `radius-lg` (16px)
+**Tarjeta Estándar**
+- Fondo: `card-bg` (`#FFFFFF`)
+- Borde: 1px `border-light`
+- Radio de esquina: `radius-lg` (16px)
 - Padding: 24px
-- Shadow: `shadow-md`
+- Sombra: `shadow-md`
 
-**Event Card**
-- Image placeholder: `bg-surface`, 160px height
-- Content padding: 16px
-- Corner radius: `radius-lg` (16px)
-- Border: 1px `border-light`
+**Tarjeta de Evento**
+- Placeholder de imagen: `bg-surface`, 160px altura
+- Padding de contenido: 16px
+- Radio de esquina: `radius-lg` (16px)
+- Borde: 1px `border-light`
 
 ### Avatar
 
-- Shape: Circle (`radius-full`)
-- Size: 40px diameter (default)
-- Background: `bg-surface`
-- Text: Inter 14px Medium, `text-secondary`
-- Content: Initials (2 characters)
+- Forma: Círculo (`radius-full`)
+- Tamaño: 40px diámetro (por defecto)
+- Fondo: `bg-surface`
+- Texto: Inter 14px Medium, `text-secondary`
+- Contenido: Iniciales (2 caracteres)
 
-### Navigation Bar
+### Barra de Navegación
 
-- Height: 64px
-- Background: `card-bg`
-- Border bottom: 1px `border-light`
-- Horizontal padding: 32px
+- Altura: 64px
+- Fondo: `card-bg`
+- Borde inferior: 1px `border-light`
+- Padding horizontal: 32px
 - Logo: Playfair Display 20px
-- Nav links: Inter 14px, `text-secondary`, 32px gap
-- User menu gap: 12px
+- Links de navegación: Inter 14px, `text-secondary`, gap de 32px
+- Gap del menú de usuario: 12px
 
-### Empty State
+### Estado Vacío
 
-- Icon container: 80px circle, `bg-surface`, centered icon stroke `text-muted`
-- Title: Playfair Display 20px, `text-primary`
-- Description: Inter 14px, `text-secondary`, max-width for text wrapping
+- Contenedor de icono: 80px círculo, `bg-surface`, trazo de icono centrado `text-muted`
+- Título: Playfair Display 20px, `text-primary`
+- Descripción: Inter 14px, `text-secondary`, max-width para ajuste de texto
 - Padding: 48px
-- Gap between elements: 16px
+- Gap entre elementos: 16px
 
-### Stats/Metric Card
+### Tarjeta de Estadísticas/Métricas
 
-- Background: `card-bg`
-- Border: 1px `border-light`
-- Corner radius: `radius-lg` (16px)
+- Fondo: `card-bg`
+- Borde: 1px `border-light`
+- Radio de esquina: `radius-lg` (16px)
 - Padding: 24px
 - Label: Inter 13px, `text-secondary`
-- Value: Playfair Display 32px, `text-primary`
+- Valor: Playfair Display 32px, `text-primary`
 
 ---
 
-## Layout Guidelines
+## Directrices de Layout
 
-### Page Structure
+### Estructura de Página
 
-- Default page background: `bg-cream`
-- Content max-width: 1200px
-- Section padding: 32px horizontal (mobile: 16px)
-- Vertical rhythm: 32px between major sections
+- Fondo de página por defecto: `bg-cream`
+- Ancho máximo de contenido: 1200px
+- Padding de sección: 32px horizontal (mobile: 16px)
+- Ritmo vertical: 32px entre secciones mayores
 
-### Card Layout
+### Layout de Tarjetas
 
-- Card gap: 24px
-- Card width: 280-320px typical
-- Grid: Auto-fit with min 280px columns
+- Gap de tarjeta: 24px
+- Ancho de tarjeta: 280-320px típico
+- Grid: Auto-fit con columnas min 280px
 
-### Button Groups
+### Grupos de Botones
 
-- Button gap: 16px
-- CTA buttons: 16px gap
-
----
-
-## Accessibility
-
-- Minimum contrast ratio: 4.5:1 for normal text, 3:1 for large text
-- Focus states: Visible outline using brand colors
-- Interactive elements: Minimum 44px touch target
-- Text sizing: Use relative units where possible for scaling
+- Gap de botón: 16px
+- Botones CTA: gap de 16px
 
 ---
 
-## Icon Guidelines
+## Accesibilidad
 
-- Library: Lucide (default), Feather (alternative)
-- Stroke width: 2px
-- Stroke cap: Round
-- Default size: 20-24px for inline, 40px for standalone
+- Ratio de contraste mínimo: 4.5:1 para texto normal, 3:1 para texto grande
+- Estados de focus: Outline visible usando colores de marca
+- Elementos interactivos: Target táctil mínimo de 44px
+- Tamaño de texto: Usar unidades relativas donde sea posible para escalado
 
 ---
 
-## Logo Specifications
+## Directrices de Iconos
 
-### Full Logo
-- Icon mark: 40x40px
-- Arc outer: 2.5px stroke, `primary` color
-- Arc middle: 2px stroke, `accent` color
-- Center dot: 8px, filled `primary`
+- Librería: Lucide (por defecto), Feather (alternativa)
+- Ancho de trazo: 2px
+- Tope de trazo: Round
+- Tamaño por defecto: 20-24px para inline, 40px para standalone
+
+---
+
+## Especificaciones de Logo
+
+### Logo Completo
+- Marca de icono: 40x40px
+- Arco exterior: 2.5px stroke, color `primary`
+- Arco medio: 2px stroke, color `accent`
+- Punto central: 8px, filled `primary`
 - Wordmark: "Aura" (Playfair Display 24px) + "EVENTS" (Inter 10px, 3px letter-spacing)
 
-### Icon Only
-- Same as full logo icon mark
-- Size: 40x40px
+### Solo Icono
+- Igual que marca de icono del logo completo
+- Tamaño: 40x40px
 
 ---
 
-## Responsive Breakpoints
+## Puntos de Rotura Responsive
 
-| Breakpoint | Width | Usage |
+| Punto de Rotura | Ancho | Uso |
 |------------|-------|-------|
-| Mobile | < 640px | Single column, reduced padding |
-| Tablet | 640px - 1024px | 2-column grids |
-| Desktop | > 1024px | Full layout, multi-column |
+| Mobile | < 640px | Columna única, padding reducido |
+| Tablet | 640px - 1024px | Grids de 2 columnas |
+| Desktop | > 1024px | Layout completo, multi-columna |
 
 ---
 
-## Animation Guidelines
+## Directrices de Animación
 
-- Duration: 150-300ms for micro-interactions
-- Easing: ease-out for entrances, ease-in for exits
-- Hover transitions: 150ms
-- Page transitions: 300ms
+- Duración: 150-300ms para micro-interacciones
+- Easing: ease-out para entradas, ease-in para salidas
+- Transiciones hover: 150ms
+- Transiciones de página: 300ms
 
 ---
 
-## Appendix: CSS Custom Properties Reference
+## Anexo: Referencia de Propiedades CSS Personalizadas
 
 ```css
 :root {

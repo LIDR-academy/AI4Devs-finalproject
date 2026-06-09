@@ -1,93 +1,93 @@
-# 7. Work Breakdown by Discipline
+# 7. Desglose de Trabajo por Disciplina
 
-> [Back to PRD Index](../PRD.md) | [Previous: MVP Features](06-mvp-features.md) | [Next: Success Metrics](08-success-metrics.md)
+> [Volver al Índice PRD](../PRD.md) | [Anterior: Funcionalidades MVP](06-mvp-features.md) | [Siguiente: Métricas de Éxito](08-success-metrics.md)
 
 ---
 
 ## 7.1 UX
 
-| Key Workstreams | Open Questions |
+| Flujos de Trabajo Clave | Preguntas Abiertas |
 |----------------|----------------|
-| User flows for 4 personas (Couple, Guest, Accomplice, Planner) | DECISION NEEDED: Accomplice onboarding flow - account vs. link-only access |
-| RSVP form optimization (mobile-first, <60s completion) | DECISION NEEDED: RSVP form depth - minimum fields vs. comprehensive |
-| Accomplice panel simplicity (swipe-to-send, mobile-first) | DECISION NEEDED: Number of default message templates (5 vs. 8) |
-| Mobile-first guest journey (microsite, maps, calendar) | DECISION NEEDED: Calendar sync priority - Google Calendar only or Apple/Outlook too |
-| Registration/onboarding flows (2-step wizard) | DECISION NEEDED: Onboarding wizard steps - mandatory vs. skippable |
+| Flujos de usuario para 4 personas (Pareja, Invitado, Accomplice, Planner) | DECISIÓN NECESARIA: Flujo de onboarding de accomplice - cuenta vs. acceso solo con enlace |
+| Optimización del formulario RSVP (mobile-first, <60s para completar) | DECISIÓN NECESARIA: Profundidad del formulario RSVP - campos mínimos vs. completos |
+| Simplicidad del panel accomplice (swipe-to-send, mobile-first) | DECISIÓN NECESARIA: Número de plantillas de mensaje por defecto (5 vs. 8) |
+| Journey de invitado mobile-first (micrositio, maps, calendario) | DECISIÓN NECESARIA: Prioridad de sincronización de calendario - solo Google Calendar o también Apple/Outlook |
+| Flujos de registro/onboarding (wizard de 2 pasos) | DECISIÓN NECESARIA: Pasos del wizard de onboarding - obligatorios vs. omitibles |
 
 ## 7.2 UI
 
-| Key Workstreams | Open Questions |
+| Flujos de Trabajo Clave | Preguntas Abiertas |
 |----------------|----------------|
-| Design system (tokens, components, typography, colors) | DECISION NEEDED: Template customization depth - colors/fonts only or layout too |
-| Template editor builder (real-time preview, auto-save) | DECISION NEEDED: Number of templates at launch (3 vs. 5) |
-| Responsive breakpoints (mobile-first, tablet, desktop) | DECISION NEEDED: Desktop support for accomplice panel (click-drag vs. swipe) |
-| Accessibility (WCAG 2.1 AA compliance) | DECISION NEEDED: Accessibility scope for V1 - full AA or partial |
-| Onboarding wizard screens (template selection, event basics) | DECISION NEEDED: Onboarding visual style - step-by-step vs. single-page |
+| Sistema de diseño (tokens, componentes, tipografía, colores) | DECISIÓN NECESARIA: Profundidad de personalización de plantilla - solo colores/fuentes o también layout |
+| Constructor del editor de plantillas (preview en tiempo real, auto-guardado) | DECISIÓN NECESARIA: Número de plantillas en lanzamiento (3 vs. 5) |
+| Puntos de rotura responsive (mobile-first, tablet, desktop) | DECISIÓN NECESARIA: Soporte desktop para panel accomplice (click-drag vs. swipe) |
+| Accesibilidad (cumplimiento WCAG 2.1 AA) | DECISIÓN NECESARIA: Alcance de accesibilidad para V1 - AA completo o parcial |
+| Pantallas del wizard de onboarding (selección de plantilla, datos del evento) | DECISIÓN NECESARIA: Estilo visual del onboarding - paso a paso vs. página única |
 
 ## 7.3 Frontend (Angular 22)
 
-| Key Workstreams | Open Questions |
+| Flujos de Trabajo Clave | Preguntas Abiertas |
 |----------------|----------------|
-| Host dashboard SPA (Angular 22, standalone components, signals) | DECISION NEEDED: State management - signals only or NgRx for complex state |
-| Accomplice panel SPA (touch gestures, JWT auth) | DECISION NEEDED: Gesture library - Angular CDK or Hammer.js |
-| Static site generator for guest microsites (Razor templates) | DECISION NEEDED: Static site build pipeline - Razor vs. string interpolation |
-| Typed forms (registration, RSVP, guest import) | DECISION NEEDED: Form validation - reactive forms vs. template-driven |
-| Auth/registration forms (magic link flow) | DECISION NEEDED: Session storage - httpOnly cookie vs. localStorage |
-| Template editor (color picker, font selector, image upload) | DECISION NEEDED: Image upload handling - direct to API or presigned URL |
+| SPA del dashboard del host (Angular 22, standalone components, signals) | DECISIÓN NECESARIA: Gestión de estado - solo signals o NgRx para estado complejo |
+| SPA del panel accomplice (gestos táctiles, auth JWT) | DECISIÓN NECESARIA: Biblioteca de gestos - Angular CDK o Hammer.js |
+| Generador de sitio estático para micrositios de invitados (plantillas Razor) | DECISIÓN NECESARIA: Pipeline de build del sitio estático - Razor vs. interpolación de strings |
+| Formularios tipados (registro, RSVP, importación de invitados) | DECISIÓN NECESARIA: Validación de formularios - formularios reactivos vs. template-driven |
+| Formularios de auth/registro (flujo magic link) | DECISIÓN NECESARIA: Almacenamiento de sesión - httpOnly cookie vs. localStorage |
+| Editor de plantilla (color picker, selector de fuente, subida de imagen) | DECISIÓN NECESARIA: Manejo de subida de imágenes - directo a API o URL pre-firmada |
 
 ## 7.4 Backend (.NET 10)
 
-| Key Workstreams | Open Questions |
+| Flujos de Trabajo Clave | Preguntas Abiertas |
 |----------------|----------------|
-| Auth (magic links + JWT, rate limiting, session management) | DECISION NEEDED: JWT storage - httpOnly cookie vs. Bearer token |
-| Registration endpoint, profile management, terms acceptance | DECISION NEEDED: Terms versioning strategy - enforce re-acceptance on update |
-| Events/Guests/Invitations/RSVPs CRUD | DECISION NEEDED: Slug generation algorithm - deterministic vs. random |
-| CSV import (validation, deduplication, error handling) | DECISION NEEDED: CSV encoding - UTF-8 only or auto-detect |
-| Payment webhook (Stripe, idempotent processing) | DECISION NEEDED: Webhook retry - Stripe built-in or custom queue |
-| Background jobs (30-day deletion, reminders, email/WhatsApp dispatch) | DECISION NEEDED: Background service - single BackgroundService or distributed queue |
+| Auth (magic links + JWT, rate limiting, gestión de sesiones) | DECISIÓN NECESARIA: Almacenamiento JWT - httpOnly cookie vs. Bearer token |
+| Endpoint de registro, gestión de perfil, aceptación de términos | DECISIÓN NECESARIA: Estrategia de versionado de términos - forzar re-aceptación en actualización |
+| CRUD de Events/Guests/Invitations/RSVPs | DECISIÓN NECESARIA: Algoritmo de generación de slug - determinístico vs. aleatorio |
+| Importación CSV (validación, deduplicación, manejo de errores) | DECISIÓN NECESARIA: Codificación CSV - solo UTF-8 o auto-detectar |
+| Webhook de pago (Stripe, procesamiento idempotente) | DECISIÓN NECESARIA: Reintento de webhook - integrado de Stripe o cola personalizada |
+| Trabajos en background (eliminación a 30 días, recordatorios, dispatch email/WhatsApp) | DECISIÓN NECESARIA: Servicio en background - BackgroundService único o cola distribuida |
 
-## 7.5 Database (PostgreSQL/EF Core)
+## 7.5 Base de Datos (PostgreSQL/EF Core)
 
-| Key Workstreams | Open Questions |
+| Flujos de Trabajo Clave | Preguntas Abiertas |
 |----------------|----------------|
-| Schema for all entities (11 entities, relationships, constraints) | DECISION NEEDED: Primary key type - ULID vs. GUID vs. integer |
-| Users table with profile fields (name, terms, timezone, locale) | DECISION NEEDED: User profile extensibility - JSON blob or dedicated columns |
-| Soft deletes (IsDeleted flag, global query filters) | DECISION NEEDED: Soft delete cascade - automatic or manual per entity |
-| Indexes for query patterns (16 indexes mapped to queries) | DECISION NEEDED: Composite indexes - which combinations for common queries |
-| Migrations (EF Core, versioned, reversible) | DECISION NEEDED: Migration strategy - automatic or manual review |
-| Encryption at rest | DECISION NEEDED: SQLCipher vs. application-level AES-256 |
+| Schema para todas las entidades (11 entidades, relaciones, constraints) | DECISIÓN NECESARIA: Tipo de clave primaria - ULID vs. GUID vs. entero |
+| Tabla Users con campos de perfil (name, terms, timezone, locale) | DECISIÓN NECESARIA: Extensibilidad del perfil de usuario - blob JSON o columnas dedicadas |
+| Soft deletes (flag IsDeleted, global query filters) | DECISIÓN NECESARIA: Cascada de soft delete - automática o manual por entidad |
+| Índices para patrones de consulta (16 índices mapeados a consultas) | DECISIÓN NECESARIA: Índices compuestos - qué combinaciones para consultas comunes |
+| Migraciones (EF Core, versionadas, reversibles) | DECISIÓN NECESARIA: Estrategia de migración - automática o revisión manual |
+| Encriptación en reposo | DECISIÓN NECESARIA: SQLCipher vs. encriptación AES-256 a nivel de aplicación |
 
-## 7.6 Integrations
+## 7.6 Integraciones
 
-| Key Workstreams | Open Questions |
+| Flujos de Trabajo Clave | Preguntas Abiertas |
 |----------------|----------------|
-| WhatsApp Business API (templates, webhooks, rate limits, retry logic) | DECISION NEEDED: Direct Meta API vs. BSP (Twilio/MessageBird) |
-| Gmail SMTP (templates, 500/day limit, no bounce webhooks) | DECISION NEEDED: IEmailService abstraction for future swap |
-| Stripe Connect (publish payment, webhook, future gift registry) | DECISION NEEDED: Stripe Connect vs. standard Stripe for MVP |
-| Google Maps (embed, geocoding, directions deep links) | DECISION NEEDED: Maps API key security - referrer vs. IP restriction |
-| WhatsApp API approval | DECISION NEEDED: Pre-submit templates 1 week before launch |
+| WhatsApp Business API (plantillas, webhooks, rate limits, lógica de reintento) | DECISIÓN NECESARIA: API Meta directa vs. BSP (Twilio/MessageBird) |
+| Gmail SMTP (plantillas, límite 500/día, sin webhooks de bounce) | DECISIÓN NECESARIA: Abstracción IEmailService para swap futuro |
+| Stripe Connect (pago de publicación, webhook, registro de regalos futuro) | DECISIÓN NECESARIA: Stripe Connect vs. Stripe estándar para MVP |
+| Google Maps (embed, geocodificación, deep links de direcciones) | DECISIÓN NECESARIA: Seguridad de clave API de Maps - restricción por referrer vs. IP |
+| Aprobación de API de WhatsApp | DECISIÓN NECESARIA: Pre-enviar plantillas 1 semana antes del lanzamiento |
 
-## 7.7 Infrastructure/DevOps
+## 7.7 Infraestructura/DevOps
 
-| Key Workstreams | Open Questions |
+| Flujos de Trabajo Clave | Preguntas Abiertas |
 |----------------|----------------|
-| CDN for static sites (Cloudflare, MinIO origin, cache invalidation) | Resolved: Cloudflare |
-| CI/CD pipeline (GitHub Actions, Docker build, GHCR, kubectl apply) | Resolved: Kustomize + kubectl |
-| Environments (local, staging, production) | DECISION NEEDED: Staging environment - shared or per-PR |
-| Observability (Serilog, OpenTelemetry, Sentry) | DECISION NEEDED: Error tracking - Sentry vs. Application Insights |
-| Secrets management (environment variables, key rotation) | DECISION NEEDED: Secrets storage - GitHub Secrets vs. Azure Key Vault |
+| CDN para sitios estáticos (Cloudflare, origin MinIO, invalidación de caché) | Resuelto: Cloudflare |
+| Pipeline CI/CD (GitHub Actions, Docker build, GHCR, kubectl apply) | Resuelto: Kustomize + kubectl |
+| Entornos (local, staging, producción) | DECISIÓN NECESARIA: Entorno staging - compartido o por PR |
+| Observabilidad (Serilog, OpenTelemetry, Sentry) | DECISIÓN NECESARIA: Seguimiento de errores - Sentry vs. Application Insights |
+| Gestión de secretos (variables de entorno, rotación de claves) | DECISIÓN NECESARIA: Almacenamiento de secretos - GitHub Secrets vs. Azure Key Vault |
 
-## 7.8 Security/Compliance
+## 7.8 Seguridad/Cumplimiento
 
-| Key Workstreams | Open Questions |
+| Flujos de Trabajo Clave | Preguntas Abiertas |
 |----------------|----------------|
-| AuthZ policies (EventOwner, AccompliceScoped, PublishedEvent, DraftGuestLimit) | DECISION NEEDED: Policy granularity - coarse (role-based) or fine (resource-based) |
-| Rate limiting (5 endpoint categories, 429 responses) | DECISION NEEDED: Rate limit storage - in-memory vs. distributed (Redis) |
-| PII handling (application-level AES-256 encryption) | DECISION NEEDED: SQLCipher vs. app-level encryption for MVP |
-| 30-day auto-delete job (BackgroundService, transactional) | DECISION NEEDED: Deletion failure handling - alert vs. auto-retry |
-| GDPR rights endpoints (access, rectify, erase, portability) | DECISION NEEDED: GDPR data export format - CSV vs. JSON vs. both |
-| Consent tracking (terms version, timestamp, marketing opt-in) | DECISION NEEDED: Cookie consent banner - required or not (no third-party cookies) |
+| Políticas AuthZ (EventOwner, AccompliceScoped, PublishedEvent, DraftGuestLimit) | DECISIÓN NECESARIA: Granularidad de políticas - coarse (role-based) o fine (resource-based) |
+| Rate limiting (5 categorías de endpoints, respuestas 429) | DECISIÓN NECESARIA: Almacenamiento de rate limit - en memoria vs. distribuido (Redis) |
+| Manejo de PII (encriptación AES-256 a nivel de aplicación) | DECISIÓN NECESARIA: SQLCipher vs. encriptación a nivel de app para MVP |
+| Trabajo de auto-eliminación a 30 días (BackgroundService, transaccional) | DECISIÓN NECESARIA: Manejo de fallo de eliminación - alertar vs. auto-reintentar |
+| Endpoints de derechos GDPR (acceso, rectificar, borrar, portabilidad) | DECISIÓN NECESARIA: Formato de exportación de datos GDPR - CSV vs. JSON vs. ambos |
+| Seguimiento de consentimiento (versión de términos, timestamp, opt-in marketing) | DECISIÓN NECESARIA: Banner de consentimiento de cookies - necesario o no (sin cookies de terceros) |
 
 ---
 
-> [Back to PRD Index](../PRD.md) | [Previous: MVP Features](06-mvp-features.md) | [Next: Success Metrics](08-success-metrics.md)
+> [Volver al Índice PRD](../PRD.md) | [Anterior: Funcionalidades MVP](06-mvp-features.md) | [Siguiente: Métricas de Éxito](08-success-metrics.md)

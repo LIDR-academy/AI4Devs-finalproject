@@ -7,7 +7,7 @@
 **Dependencies:** PSRP-016, PSRP-017
 
 ## Feature Summary
-Implement the accomplice panel frontend: a mobile-first, touch-optimized interface for sending live event updates via swipe-to-send gestures. Includes magic link access flow, message template buttons with swipe gesture (80% threshold), delivery status tracking, sent message history, RSVP summary view (if permitted), and desktop fallback (click-and-drag). This is the killer feature UI that brings the Live Guest Journey to life.
+Implementar el frontend del panel de accomplice: una interfaz optimizada para móvil y táctil para enviar actualizaciones del evento en vivo mediante gestos de swipe-to-send. Incluye flujo de acceso por magic link, botones de plantilla de mensajes con gesto de swipe (threshold 80%), seguimiento de estado de entrega, historial de mensajes enviados, vista de resumen RSVP (si está permitido), y fallback para desktop (click-and-drag). Esta es la interfaz de la funcionalidad clave que da vida al Recorrido del Invitado en Vivo.
 
 ## Requirements
 - [ ] Implement accomplice access flow: read token from URL `/accomplice/:token`, call verify endpoint, store JWT, redirect to panel
@@ -66,3 +66,5 @@ Blocked by: PSRP-016, PSRP-017
 
 ## Branch Name
 `feature/PSRP-018-accomplice-panel-ui`
+
+(End of file - total 68 lines)

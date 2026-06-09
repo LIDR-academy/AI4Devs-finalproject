@@ -1,55 +1,55 @@
-# 1. Executive Summary
+# 1. Resumen Ejecutivo
 
-> [Back to PRD Index](../PRD.md) | [Next: Problem Statement](02-problem-opportunity.md)
+> [Volver al Índice PRD](../PRD.md) | [Siguiente: Declaración del Problema](02-problem-opportunity.md)
 
 ---
 
-## 1.1 What We're Building
+## 1.1 Qué Estamos Construyendo
 
-**Aura Planning** is a SaaS platform that replaces paper wedding invitations with an interactive digital ecosystem. It combines three core capabilities:
+**Aura Planning** es una plataforma SaaS que reemplaza las invitaciones de boda en papel con un ecosistema digital interactivo. Combina tres capacidades principales:
 
-1. **Design** — Beautiful, customizable invitation templates requiring no design skills
-2. **Logistics** — Centralized guest management, RSVP tracking, dietary/transport coordination
-3. **Communication** — Multi-channel invitations (email + WhatsApp) with automated reminders and a **Live Guest Journey** — real-time event-day storytelling managed by a trusted "accomplice"
+1. **Diseño** — Plantillas de invitación hermosas y personalizables que no requieren habilidades de diseño
+2. **Logística** — Gestión centralizada de invitados, seguimiento de RSVP, coordinación de dietary/transporte
+3. **Comunicación** — Invitaciones multicanal (email + WhatsApp) con recordatorios automatizados y un **Live Guest Journey** — narración de eventos en tiempo real gestionada por un "accomplice" de confianza
 
-**Slogan:** *"Design your event's narrative, manage the logistics effortlessly."*
+**Eslogan:** *"Diseña la narrativa de tu evento, gestiona la logística sin esfuerzo."*
 
-## 1.2 Why It Matters
+## 1.2 Por Qué Es Importante
 
-| Problem | Current State | Aura's Solution |
-|---------|--------------|-----------------|
-| Paper invitations cost EUR 800-1,200 for 120 guests | Design + print + postage | One-time EUR 29.99 payment — 97% cost savings |
-| RSVP tracking via WhatsApp/phone is chaotic | Spreadsheets, lost messages | Real-time dashboard with dietary/transport tracking |
-| Guests lack real-time event updates | Missed moments, constant questions | Live narrative via WhatsApp managed by an accomplice |
-| Couples manage logistics on their wedding day | Stress, distraction from celebration | Accomplice handles all guest communication |
+| Problema | Estado Actual | Solución de Aura |
+|---------|--------------|------------------|
+| Las invitaciones en papel cuestan EUR 800-1,200 para 120 invitados | Diseño + impresión + franqueo | Pago único de EUR 29.99 — ahorro del 97% |
+| El seguimiento de RSVP vía WhatsApp/teléfono es caótico | Hojas de cálculo, mensajes perdidos | Dashboard en tiempo real con seguimiento dietary/transporte |
+| Los invitados carecen de actualizaciones en tiempo real del evento | Momentos perdidos, preguntas constantes | Narrativa en vivo vía WhatsApp gestionada por un accomplice |
+| Las parejas gestionan la logística el día de su boda | Estrés, distracción de la celebración | El accomplice gestiona toda la comunicación con invitados |
 
-## 1.3 Key Differentiator
+## 1.3 Diferenciador Clave
 
-The **Live Guest Journey** — a WhatsApp-powered real-time storytelling feature — is our killer feature. No competitor (Zankyou, Bodas.net, WithJoy, Joy) offers this. It targets the hype and immediacy demanded by Millennials and Gen Z, while ensuring the couple can enjoy their day without technical distractions.
+El **Live Guest Journey** — una funcionalidad de narración de eventos en tiempo real vía WhatsApp — es nuestra funcionalidad estrella. Ningún competidor (Zankyou, Bodas.net, WithJoy, Joy) ofrece esto. Apunta a la emoción e inmediatez que demandan los Millennials y Gen Z, mientras asegura que la pareja pueda disfrutar de su día sin distracciones técnicas.
 
-## 1.4 Business Model
+## 1.4 Modelo de Negocio
 
-| Tier | Price | Features |
+| Nivel | Precio | Funcionalidades |
 |------|-------|----------|
-| **Free (Draft)** | EUR 0 | Full design access, 5 guests, no publishing |
-| **Standard Publish** | EUR 19 | Unlimited guests, static site, email invitations, RSVP tracking |
-| **Premium Publish** | EUR 29 | Standard + WhatsApp invitations + Live Guest Journey + Calendar sync |
-| **Gift Registry** (V3) | 2% platform fee | Cash gifts via Stripe Connect |
+| **Gratis (Borrador)** | EUR 0 | Acceso completo al diseño, 5 invitados, sin publicación |
+| **Publicación Estándar** | EUR 19 | Invitados ilimitados, sitio estático, invitaciones por email, seguimiento RSVP |
+| **Publicación Premium** | EUR 29 | Estándar + invitaciones WhatsApp + Live Guest Journey + Sincronización de calendario |
+| **Registro de Regalos** (V3) | 2% comisión plataforma | Regalos en efectivo vía Stripe Connect |
 
-**Strategy:** "Try-before-you-buy" (IKEA Effect). Users invest time configuring their event for free, creating high switching friction. Once invested, they prefer to pay rather than start elsewhere.
+**Estrategia:** "Prueba antes de comprar" (Efecto IKEA). Los usuarios invierten tiempo configurando su evento gratis, creando alta fricción de cambio. Una vez invertidos, prefieren pagar en lugar de empezar en otro lugar.
 
-## 1.5 MVP Scope
+## 1.5 Alcance del MVP
 
-The MVP delivers a complete digital invitation lifecycle:
+El MVP entrega un ciclo de vida completo de invitación digital:
 
 ```
-Register -> Create Event -> Design -> Add Guests -> Pay -> Publish -> Guests RSVP -> Track
+Registrar -> Crear Evento -> Diseñar -> Añadir Invitados -> Pagar -> Publicar -> Invitados RSVP -> Seguir
 ```
 
-**Target launch:** 8-week development timeline  
-**Initial market:** Spain (Spanish language), weddings only  
-**Future:** LATAM expansion, English language, other celebration types (V3)
+**Lanzamiento objetivo:** Timeline de desarrollo de 8 semanas  
+**Mercado inicial:** España (idioma español), solo bodas  
+**Futuro:** Expansión LATAM, idioma inglés, otros tipos de celebración (V3)
 
 ---
 
-> [Back to PRD Index](../PRD.md) | [Next: Problem Statement](02-problem-opportunity.md)
+> [Volver al Índice PRD](../PRD.md) | [Siguiente: Declaración del Problema](02-problem-opportunity.md)

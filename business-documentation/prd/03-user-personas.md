@@ -1,166 +1,166 @@
-# 3. User Personas
+# 3. Personas de Usuario
 
-> [Back to PRD Index](../PRD.md) | [Previous: Problem Statement](02-problem-opportunity.md) | [Next: Vision & Strategy](04-vision-strategy.md)
+> [Volver al Índice PRD](../PRD.md) | [Anterior: Declaración del Problema](02-problem-opportunity.md) | [Siguiente: Visión y Estrategia](04-vision-strategy.md)
 
 ---
 
-## 3.1 Persona 1: Maria & Juan — The Couple (Host)
+## 3.1 Persona 1: María y Juan — La Pareja (Host)
 
-| Attribute | Detail |
+| Atributo | Detalle |
 |-----------|--------|
-| **Age** | 29 & 31 |
-| **Location** | Madrid, Spain |
-| **Occupation** | Maria: Marketing Manager; Juan: Software Engineer |
-| **Tech Savviness** | High — both use smartphones daily, comfortable with SaaS |
-| **Wedding Budget** | EUR 28,000 |
-| **Guest Count** | 120 |
+| **Edad** | 29 y 31 |
+| **Ubicación** | Madrid, España |
+| **Ocupación** | María: Marketing Manager; Juan: Software Engineer |
+| **Habilidad Tecnológica** | Alta — ambos usan smartphones diariamente, cómodos con SaaS |
+| **Presupuesto de Boda** | 28.000 EUR |
+| **Número de Invitados** | 120 |
 
-### Jobs-to-be-Done
-1. *"Help us create beautiful invitations without hiring a designer"*
-2. *"Let us track who's coming so we can plan seating and catering"*
-3. *"Keep our guests informed on the wedding day without us having to manage it"*
-4. *"Save money compared to paper invitations"*
+### Trabajos a Realizar (Jobs-to-be-Done)
+1. *"Ayúdanos a crear invitaciones hermosas sin contratar a un diseñador"*
+2. *"Permítenos hacer seguimiento de quién viene para poder organizar los asientos y el catering"*
+3. *"Mantén a nuestros invitados informados el día de la boda sin que nosotros tengamos que gestionarlo"*
+4. *"Ahorrar dinero en comparación con las invitaciones de papel"*
 
-### Pain Points
-- Paper invitations cost EUR 800-1,200 for 120 guests (design + print + postage)
-- Tracking RSVPs via WhatsApp/phone is chaotic and error-prone
-- Guests constantly ask for venue directions and schedule details
-- Couple wants to enjoy their day, not manage logistics
+### Puntos de Dolor (Pain Points)
+- Las invitaciones de papel cuestan 800-1.200 EUR para 120 invitados (diseño + impresión + franqueo)
+- El seguimiento de RSVPs vía WhatsApp/teléfono es caótico y propenso a errores
+- Los invitados preguntan constantemente por las indicaciones del lugar y los detalles del horario
+- La pareja quiere disfrutar de su día, no gestionar la logística
 
-### Success Criteria
-- Invitations designed and sent in under 2 hours
-- All RSVPs tracked in one dashboard
-- Zero guest questions about logistics on the wedding day
-- Total cost under EUR 50 (vs. EUR 1,000+ for paper)
-- Guests feel excited and informed throughout the experience
+### Criterios de Éxito
+- Invitaciones diseñadas y enviadas en menos de 2 horas
+- Todos los RSVPs rastreados en un solo dashboard
+- Cero preguntas de los invitados sobre logística el día de la boda
+- Coste total por debajo de 50 EUR (frente a 1.000+ EUR por papel)
+- Los invitados se sienten emocionados e informados durante toda la experiencia
 
-### User Stories
+### Historias de Usuario
 
-| ID | Story | Priority |
+| ID | Historia | Prioridad |
 |----|-------|----------|
-| US-H-01 | As a host, I want to select and customize an invitation template so that I can create a beautiful invitation without design skills | Must |
-| US-H-02 | As a host, I want to import guests from a CSV file so that I can quickly add my guest list | Must |
-| US-H-03 | As a host, I want to see real-time RSVP statistics so that I can plan catering and seating | Must |
-| US-H-04 | As a host, I want to send invitations via email and WhatsApp so that guests receive them on their preferred channel | Should |
-| US-H-05 | As a host, I want to designate an accomplice who can send live updates on the wedding day so that I can enjoy my day | Should |
-| US-H-06 | As a host, I want to see which guests have dietary restrictions so that I can coordinate with the caterer | Must |
-| US-H-07 | As a host, I want to send automated reminders to guests who haven't RSVP'd so that I don't have to follow up manually | Should |
+| US-H-01 | Como anfitrión, quiero seleccionar y personalizar una plantilla de invitación para poder crear una invitación hermosa sin habilidades de diseño | Must |
+| US-H-02 | Como anfitrión, quiero importar invitados desde un archivo CSV para poder añadir mi lista de invitados rápidamente | Must |
+| US-H-03 | Como anfitrión, quiero ver estadísticas de RSVP en tiempo real para poder planificar el catering y los asientos | Must |
+| US-H-04 | Como anfitrión, quiero enviar invitaciones por email y WhatsApp para que los invitados las reciban en su canal preferido | Should |
+| US-H-05 | Como anfitrión, quiero designar a un cómplice que pueda enviar actualizaciones en vivo el día de la boda para poder disfrutar de mi día | Should |
+| US-H-06 | Como anfitrión, quiero ver qué invitados tienen restricciones dietéticas para poder coordinar con el servicio de catering | Must |
+| US-H-07 | Como anfitrión, quiero enviar recordatorios automatizados a los invitados que no han hecho RSVP para no tener que hacer seguimiento manualmente | Should |
 
 ---
 
-## 3.2 Persona 2: Carlos — The Guest
+## 3.2 Persona 2: Carlos — El Invitado
 
-| Attribute | Detail |
+| Atributo | Detalle |
 |-----------|--------|
-| **Age** | 30 |
-| **Location** | Barcelona, Spain |
-| **Occupation** | Architect |
-| **Tech Savviness** | Medium-High — uses WhatsApp daily, comfortable with web forms |
-| **Relationship to Couple** | College friend of Juan |
+| **Edad** | 30 |
+| **Ubicación** | Barcelona, España |
+| **Ocupación** | Arquitecto |
+| **Habilidad Tecnológica** | Media-Alta — usa WhatsApp diariamente, cómodo con formularios web |
+| **Relación con la Pareja** | Amigo de universidad de Juan |
 
-### Jobs-to-be-Done
-1. *"Let me quickly RSVP without creating an account"*
-2. *"Show me the venue location and how to get there"*
-3. *"Let me add the event to my calendar with one click"*
-4. *"Keep me updated on the wedding day so I don't miss anything"*
+### Trabajos a Realizar (Jobs-to-be-Done)
+1. *"Déjame hacer RSVP rápidamente sin crear una cuenta"*
+2. *"Muéstrame la ubicación del evento y cómo llegar allí"*
+3. *"Déjame añadir el evento a mi calendario con un clic"*
+4. *"Mantenme actualizado el día de la boda para no perderme nada"*
 
-### Pain Points
-- Hates creating accounts for one-time interactions
-- Often forgets event details after RSVPing
-- Misses real-time updates (e.g., "ceremony starting now")
-- Doesn't want to download an app for a single event
+### Puntos de Dolor (Pain Points)
+- Odia crear cuentas para interacciones de una sola vez
+- A menudo olvida los detalles del evento después de hacer RSVP
+- Se pierde actualizaciones en tiempo real (ej., "la ceremonia empieza ahora")
+- No quiere descargar una aplicación para un solo evento
 
-### Success Criteria
-- RSVP completed in under 60 seconds on mobile
-- Venue directions accessible with one tap
-- Event added to calendar automatically
-- Receives timely WhatsApp updates on the day
-- No app download required
+### Criterios de Éxito
+- RSVP completado en menos de 60 segundos en el móvil
+- Indicaciones del lugar accesibles con un solo toque
+- Evento añadido al calendario automáticamente
+- Recibe actualizaciones puntuales por WhatsApp el día del evento
+- No se requiere descargar ninguna aplicación
 
-### User Stories
+### Historias de Usuario
 
-| ID | Story | Priority |
+| ID | Historia | Prioridad |
 |----|-------|----------|
-| US-G-01 | As a guest, I want to RSVP via a mobile-friendly form without creating an account so that I can respond quickly | Must |
-| US-G-02 | As a guest, I want to see the venue on a map with directions so that I know how to get there | Must |
-| US-G-03 | As a guest, I want to add the event to my calendar with one click so that I don't forget | Should |
-| US-G-04 | As a guest, I want to receive live updates via WhatsApp on the event day so that I don't miss key moments | Should |
-| US-G-05 | As a guest, I want to indicate my dietary restrictions so that the hosts can accommodate me | Must |
-| US-G-06 | As a guest, I want to indicate if I need transportation so that the hosts can arrange it | Must |
+| US-G-01 | Como invitado, quiero hacer RSVP a través de un formulario adaptado a móviles sin crear una cuenta para poder responder rápidamente | Must |
+| US-G-02 | Como invitado, quiero ver el lugar en un mapa con indicaciones para saber cómo llegar | Must |
+| US-G-03 | Como invitado, quiero añadir el evento a mi calendario con un clic para no olvidarlo | Should |
+| US-G-04 | Como invitado, quiero recibir actualizaciones en vivo por WhatsApp el día del evento para no perderme momentos clave | Should |
+| US-G-05 | Como invitado, quiero indicar mis restricciones dietéticas para que los anfitriones puedan acomodarme | Must |
+| US-G-06 | Como invitado, quiero indicar si necesito transporte para que los anfitriones puedan organizarlo | Must |
 
 ---
 
-## 3.3 Persona 3: Laura — The Accomplice
+## 3.3 Persona 3: Laura — El Cómplice (Accomplice)
 
-| Attribute | Detail |
+| Atributo | Detalle |
 |-----------|--------|
-| **Age** | 28 |
-| **Location** | Madrid, Spain |
-| **Occupation** | Graphic Designer |
-| **Tech Savviness** | High — early adopter, comfortable with new tools |
-| **Relationship to Couple** | Maria's maid of honor |
+| **Edad** | 28 |
+| **Ubicación** | Madrid, España |
+| **Ocupación** | Diseñadora Gráfica |
+| **Habilidad Tecnológica** | Alta — usuaria pionera, cómoda con nuevas herramientas |
+| **Relación con la Pareja** | Dama de honor de María |
 
-### Jobs-to-be-Done
-1. *"Let me send live updates to guests on behalf of the couple"*
-2. *"Make it impossible to accidentally send the wrong message"*
-3. *"Give me a simple interface I can use while at the wedding"*
-4. *"Let me access everything without remembering a password"*
+### Trabajos a Realizar (Jobs-to-be-Done)
+1. *"Déjame enviar actualizaciones en vivo a los invitados en nombre de la pareja"*
+2. *"Haz que sea imposible enviar accidentalmente el mensaje equivocado"*
+3. *"Dame una interfaz sencilla que pueda usar mientras estoy en la boda"*
+4. *"Déjame acceder a todo sin recordar una contraseña"*
 
-### Pain Points
-- Couple is busy; guests keep asking Laura for updates
-- Accidentally sending wrong messages would be embarrassing
-- Needs to work on mobile while moving around the venue
-- Doesn't want to manage another password
+### Puntos de Dolor (Pain Points)
+- La pareja está ocupada; los invitados no paran de pedirle actualizaciones a Laura
+- Enviar accidentalmente mensajes equivocados sería vergonzoso
+- Necesita que funcione en el móvil mientras se mueve por el lugar
+- No quiere gestionar otra contraseña
 
-### Success Criteria
-- Access accomplice panel via magic link (no password)
-- Send pre-configured messages with one swipe
-- Zero accidental sends
-- Works perfectly on mobile in any lighting condition
-- Can see which messages have been delivered
+### Criterios de Éxito
+- Accede al panel de cómplice vía enlace mágico (sin contraseña)
+- Envía mensajes preconfigurados con un solo deslizamiento (swipe)
+- Cero envíos accidentales
+- Funciona perfectamente en el móvil en cualquier condición de iluminación
+- Puede ver qué mensajes han sido entregados
 
-### User Stories
+### Historias de Usuario
 
-| ID | Story | Priority |
+| ID | Historia | Prioridad |
 |----|-------|----------|
-| US-A-01 | As an accomplice, I want to access my panel via a magic link so that I don't need to create a password | Must |
-| US-A-02 | As an accomplice, I want to send pre-configured live messages with a swipe gesture so that I can't accidentally send them | Must |
-| US-A-03 | As an accomplice, I want to see which messages have been delivered so that I know guests received updates | Should |
-| US-A-04 | As an accomplice, I want to view the RSVP summary so that I can answer guest questions | Should |
+| US-A-01 | Como cómplice, quiero acceder a mi panel mediante un enlace mágico para no necesitar crear una contraseña | Must |
+| US-A-02 | Como cómplice, quiero enviar mensajes en vivo preconfigurados con un gesto de deslizamiento para no poder enviarlos accidentalmente | Must |
+| US-A-03 | Como cómplice, quiero ver qué mensajes han sido entregados para saber si los invitados recibieron las actualizaciones | Should |
+| US-A-04 | Como cómplice, quiero ver el resumen de RSVP para poder responder a las preguntas de los invitados | Should |
 
 ---
 
-## 3.4 Persona 4: Elena — The Wedding Planner (Future V3)
+## 3.4 Persona 4: Elena — La Wedding Planner (Futuro V3)
 
-| Attribute | Detail |
+| Atributo | Detalle |
 |-----------|--------|
-| **Age** | 35 |
-| **Location** | Valencia, Spain |
-| **Occupation** | Independent Wedding Planner |
-| **Tech Savviness** | Medium — uses planning software but prefers simplicity |
-| **Client Load** | 15-20 weddings per year |
+| **Edad** | 35 |
+| **Ubicación** | Valencia, España |
+| **Ocupación** | Wedding Planner Independiente |
+| **Habilidad Tecnológica** | Media — usa software de planificación pero prefiere la simplicidad |
+| **Carga de Clientes** | 15-20 bodas por año |
 
-### Jobs-to-be-Done
-1. *"Let me manage multiple couples' invitations from one dashboard"*
-2. *"Give my clients a professional-looking invitation without me designing it"*
-3. *"Track RSVPs across all my events in one place"*
-4. *"Charge my clients for the invitation service as part of my package"*
+### Trabajos a Realizar (Jobs-to-be-Done)
+1. *"Déjame gestionar las invitaciones de múltiples parejas desde un solo dashboard"*
+2. *"Dale a mis clientes una invitación de aspecto profesional sin que yo tenga que diseñarla"*
+3. *"Rastrea los RSVPs de todos mis eventos en un solo lugar"*
+4. *"Cobrar a mis clientes por el servicio de invitación como parte de mi paquete"*
 
-### Pain Points
-- Currently uses different tools for each couple
-- Spends 5-10 hours per couple on invitation logistics
-- Clients expect digital solutions but she lacks the tools
-- No unified view of all her events
+### Puntos de Dolor (Pain Points)
+- Actualmente usa herramientas diferentes para cada pareja
+- Pasa 5-10 horas por pareja en logística de invitaciones
+- Los clientes esperan soluciones digitales pero ella carece de las herramientas
+- Sin vista unificada de todos sus eventos
 
-### Success Criteria (V3)
-- Multi-event dashboard
-- White-label option (planner's branding)
-- Bulk operations across events
-- Client billing integration
-- Time savings: 50% reduction in invitation management time
+### Criterios de Éxito (V3)
+- Dashboard multi-evento
+- Opción de marca blanca (branding del planner)
+- Operaciones en lote entre eventos
+- Integración de facturación a clientes
+- Ahorro de tiempo: 50% de reducción en el tiempo de gestión de invitaciones
 
-> **Note:** This persona is out of scope for MVP. Architecture should be designed to support multi-event management in the future.
+> **Nota:** Esta persona está fuera del alcance para el MVP. La arquitectura debe diseñarse para soportar la gestión de múltiples eventos en el futuro.
 
 ---
 
-> [Back to PRD Index](../PRD.md) | [Previous: Problem Statement](02-problem-opportunity.md) | [Next: Vision & Strategy](04-vision-strategy.md)
+> [Volver al Índice PRD](../PRD.md) | [Anterior: Declaración del Problema](02-problem-opportunity.md) | [Siguiente: Visión y Estrategia](04-vision-strategy.md)

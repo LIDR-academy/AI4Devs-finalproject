@@ -7,7 +7,7 @@
 **Dependencies:** PSRP-006
 
 ## Feature Summary
-Implement the Stripe payment flow for event publishing: create payment intents, handle Stripe webhooks (payment_intent.succeeded/failed), transition event status from 'draft' to 'published' on successful payment, and create the publish dialog UI. Includes tier pricing (Standard EUR 19, Premium EUR 29), idempotent webhook processing, and the publish flow that triggers static site generation.
+Implementar el flujo de pago con Stripe para la publicación de eventos: crear payment intents, manejar webhooks de Stripe (payment_intent.succeeded/failed), transicionar el estado del evento de 'draft' a 'published' con pago exitoso, y crear la interfaz del diálogo de publicación. Incluye precios por nivel (Standard EUR 19, Premium EUR 29), procesamiento idempotente de webhooks, y el flujo de publicación que dispara la generación del sitio estático.
 
 ## Requirements
 - [ ] Implement `IPaymentService` interface in Aura.Core/Interfaces/Services/ with methods: CreatePaymentIntentAsync(eventId, tier), HandleWebhookAsync(payload, signature), GetPaymentByEventAsync(eventId)
@@ -63,3 +63,5 @@ Blocked by: PSRP-006
 
 ## Branch Name
 `feature/PSRP-013-stripe-payment-and-event-publishing`
+
+(End of file - total 65 lines)

@@ -7,7 +7,7 @@
 **Dependencies:** PSRP-008, PSRP-010
 
 ## Feature Summary
-Implement the email invitation sending flow: generate unique invitation tokens per guest, create Invitation records, enqueue invitation emails to the Dragonfly `email:queue` for async processing by the Email Dispatcher, and provide a dashboard UI to trigger sending. This includes invitation token generation (SHA-256 hashed), personalized email template rendering with RSVP link, and delivery status tracking visible in the guest manager.
+Implementar el flujo de envío de invitaciones por email: generar tokens de invitación únicos por invitado, crear registros de Invitation, encolar emails de invitación a la cola Dragonfly `email:queue` para procesamiento asíncrono por el Email Dispatcher, y proporcionar una interfaz de dashboard para触发 el envío. Esto incluye la generación de tokens de invitación (hash SHA-256), renderizado de plantillas de email personalizadas con enlace RSVP, y seguimiento del estado de entrega visible en el gestor de invitados.
 
 ## Requirements
 - [ ] Implement invitation token generation: 256-bit cryptographically secure random string, hashed with SHA-256 before storage in Invitation.TokenHash
@@ -59,3 +59,5 @@ Blocked by: PSRP-008, PSRP-010
 
 ## Branch Name
 `feature/PSRP-011-email-invitations`
+
+(End of file - total 61 lines)

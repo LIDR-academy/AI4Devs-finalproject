@@ -6,25 +6,25 @@
 **Sprint Week:** W1
 **Dependencies:** None
 
-## Feature Summary
-Set up the complete project skeleton including .NET 10 solution structure, Angular 22 workspace, Dockerfiles for all services, Kubernetes base manifests with Kustomize, and GitHub Actions CI/CD pipeline. This is the foundation that all other tickets depend on.
+## Resumen de Funcionalidad
+Configurar el esqueleto completo del proyecto incluyendo estructura de solución .NET 10, workspace Angular 22, Dockerfiles para todos los servicios, manifiestos base de Kubernetes con Kustomize, y pipeline CI/CD de GitHub Actions. Esta es la foundation en la que se basan todos los demás tickets.
 
-## Requirements
-- [ ] Create .NET 10 solution with projects: Aura.Api, Aura.Core, Aura.Infrastructure, Aura.Workers.Email, Aura.Workers.WhatsApp, Aura.Workers.SSG
-- [ ] Create Angular 22 workspace with standalone components, signals, and strict mode enabled
-- [ ] Create Dockerfiles for all 5 .NET projects (multi-stage builds) and Angular frontend (nginx)
-- [ ] Create Kubernetes base manifests: namespace, API deployment, 3 worker deployments, PostgreSQL StatefulSet, Dragonfly StatefulSet, MinIO StatefulSet, frontend deployment
-- [ ] Create Kustomize overlays for local (Rancher Desktop) and production environments
-- [ ] Create GitHub Actions workflow for build, test, Docker image push to GHCR, and kubectl apply
-- [ ] Configure environment variables and appsettings.json structure for all services
-- [ ] Set up .editorconfig, .gitignore, and code formatting rules
+## Requisitos
+- [ ] Crear solución .NET 10 con proyectos: Aura.Api, Aura.Core, Aura.Infrastructure, Aura.Workers.Email, Aura.Workers.WhatsApp, Aura.Workers.SSG
+- [ ] Crear workspace Angular 22 con standalone components, signals, y strict mode habilitado
+- [ ] Crear Dockerfiles para los 5 proyectos .NET (multi-stage builds) y Angular frontend (nginx)
+- [ ] Crear manifiestos base de Kubernetes: namespace, API deployment, 3 worker deployments, PostgreSQL StatefulSet, Dragonfly StatefulSet, MinIO StatefulSet, frontend deployment
+- [ ] Crear overlays Kustomize para local (Rancher Desktop) y producción environments
+- [ ] Crear workflow de GitHub Actions para build, test, Docker image push a GHCR, y kubectl apply
+- [ ] Configurar environment variables y estructura de appsettings.json para todos los servicios
+- [ ] Configurar .editorconfig, .gitignore, y reglas de formateo de código
 
-## Technical Notes
-- **Backend:** Solution file at `backend/AuraPlanning.sln`. Projects follow Clean Architecture: Api (presentation), Core (domain/application), Infrastructure (data access, external services), Workers (separate entry points)
-- **Frontend:** Angular workspace at `frontend/` with `src/app/core/`, `src/app/features/`, `src/app/shared/`
-- **Database:** PostgreSQL 16 StatefulSet with PVC, connection string in K8s Secret
-- **Integrations:** Dragonfly (Redis-compatible) for queue/cache, MinIO for object storage
-- **Key files:** 
+## Notas Técnicas
+- **Backend:** Solution file en `backend/AuraPlanning.sln`. Los proyectos siguen Clean Architecture: Api (presentation), Core (domain/application), Infrastructure (data access, external services), Workers (separate entry points)
+- **Frontend:** Angular workspace en `frontend/` con `src/app/core/`, `src/app/features/`, `src/app/shared/`
+- **Database:** PostgreSQL 16 StatefulSet con PVC, connection string en K8s Secret
+- **Integrations:** Dragonfly (Redis-compatible) para queue/cache, MinIO para object storage
+- **Key files:**
   - `backend/AuraPlanning.sln`
   - `backend/src/Aura.Api/Program.cs`
   - `backend/src/Aura.Core/Aura.Core.csproj`
@@ -36,22 +36,22 @@ Set up the complete project skeleton including .NET 10 solution structure, Angul
   - `k8s/overlays/local/kustomization.yaml`
   - `k8s/overlays/production/kustomization.yaml`
   - `.github/workflows/build-and-test.yml`
-  - `Dockerfile` files in each project root
+  - `Dockerfile` files en cada project root
 
-## Acceptance Criteria
-- [ ] AC1: Given the repository is cloned, when `dotnet build backend/AuraPlanning.sln` is run, then all 5 .NET projects build successfully with no errors
-- [ ] AC2: Given the frontend directory, when `npm install && npm run build` is run, then Angular builds successfully with no errors
-- [ ] AC3: Given Docker is installed, when `docker build` is run for each service, then all 6 Docker images (5 .NET + 1 Angular) build successfully
-- [ ] AC4: Given Kubernetes cluster is running, when `kubectl apply -k k8s/overlays/local` is run, then all pods start and reach Ready state
-- [ ] AC5: Given a push to main branch, when GitHub Actions workflow runs, then build, test, and Docker push steps complete successfully
+## Criterios de Aceptación
+- [ ] AC1: Dado que el repositorio está clonado, cuando se ejecuta `dotnet build backend/AuraPlanning.sln`, entonces todos los 5 proyectos .NET se construyen exitosamente sin errores
+- [ ] AC2: Dado el directorio frontend, cuando se ejecuta `npm install && npm run build`, entonces Angular se construye exitosamente sin errores
+- [ ] AC3: Dado que Docker está instalado, cuando se ejecuta `docker build` para cada servicio, entonces todas las 6 imágenes Docker (5 .NET + 1 Angular) se construyen exitosamente
+- [ ] AC4: Dado que el cluster de Kubernetes está corriendo, cuando se ejecuta `kubectl apply -k k8s/overlays/local`, entonces todos los pods inician y alcanzan estado Ready
+- [ ] AC5: Dado un push a la rama main, cuando el workflow de GitHub Actions corre, entonces los pasos de build, test, y Docker push completan exitosamente
 
-## Related Items
+## Elementos Relacionados
 - **PRD section:** 07-work-breakdown.md (Infrastructure/DevOps)
 - **Architecture:** 03-project-structure.md, 04-infrastructure-deployment.md
-- **Data model:** N/A (no entities yet)
+- **Data model:** N/A (no entities aún)
 
-## Blockers
-None
+## Bloqueadores
+Ninguno
 
 ## Branch Name
 `feature/PSRP-001-project-scaffolding`

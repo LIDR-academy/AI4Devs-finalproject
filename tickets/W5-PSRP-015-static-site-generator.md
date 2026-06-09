@@ -7,7 +7,7 @@
 **Dependencies:** PSRP-010, PSRP-013
 
 ## Feature Summary
-Implement the Static Site Generator (SSG) worker that generates mobile-first, ultra-fast HTML/CSS/JS invitation microsites for published events. Triggered when an event is published (or updated), the SSG dequeues from `ssg:queue`, renders Razor templates with event data (couple names, date, venue, hero image, custom colors/fonts), uploads to MinIO `static-sites` bucket, and invalidates CDN cache. The microsite includes Google Maps embed, RSVP link, add-to-calendar buttons, and directions deep links.
+Implementar el worker del Generador de Sitios Estáticos (SSG) que genera micrositios de invitación HTML/CSS/JS optimizados para móvil y ultra-rápidos para eventos publicados. Cuando un evento es publicado (o actualizado), el SSG desencola desde `ssg:queue`, renderiza plantillas Razor con datos del evento (nombres de la pareja, fecha, venue, imagen hero, colores/fuentes personalizados), sube a MinIO bucket `static-sites`, e invalida la caché del CDN. El micrositio incluye embed de Google Maps, enlace RSVP, botones de añadir al calendario, y deep links a direcciones.
 
 ## Requirements
 - [ ] Create `Aura.Workers.SSG` project with `Program.cs` (HostBuilder for background worker)
@@ -71,3 +71,5 @@ Blocked by: PSRP-010, PSRP-013
 
 ## Branch Name
 `feature/PSRP-015-static-site-generator`
+
+(End of file - total 73 lines)

@@ -7,7 +7,7 @@
 **Dependencies:** PSRP-010
 
 ## Feature Summary
-Implement the WhatsApp service abstraction (`IWhatsAppService`) and the WhatsApp Dispatcher worker that dequeues messages from the Dragonfly `whatsapp:queue`, sends via Meta WhatsApp Business Cloud API, handles retry logic (2 retries with 5min/30min delays), and falls back to email after 2 failures. Includes webhook handler for delivery receipts and the Kubernetes deployment for the worker.
+Implementar la abstracción del servicio de WhatsApp (`IWhatsAppService`) y el worker WhatsApp Dispatcher que desencola mensajes desde la cola Dragonfly `whatsapp:queue`, envía vía Meta WhatsApp Business Cloud API, maneja lógica de reintento (2 reintentos con delays de 5min/30min), y hace fallback a email después de 2 fallos. Incluye el handler de webhook para recibos de entrega y el deployment en Kubernetes para el worker.
 
 ## Requirements
 - [ ] Implement `IWhatsAppService` interface in Aura.Core/Interfaces/Services/ with methods: SendTemplateMessageAsync(to, templateName, variables), SendTextMessageAsync(to, message), GetDeliveryStatusAsync(messageId)
@@ -60,3 +60,5 @@ Blocked by: PSRP-010
 
 ## Branch Name
 `feature/PSRP-012-whatsapp-service-and-dispatcher`
+
+(End of file - total 62 lines)

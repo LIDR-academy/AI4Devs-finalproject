@@ -7,7 +7,7 @@
 **Dependencies:** PSRP-004, PSRP-006
 
 ## Feature Summary
-Implement the host-side accomplice management system: grant accomplice access via email (magic link), manage permissions (send_messages, view_rsvps), revoke access, resend magic link, and view accomplice list. Backend generates accomplice tokens (SHA-256 hashed), sends magic link emails, and provides CRUD endpoints. Frontend adds an accomplice management section to the event dashboard with invite form, accomplice list with status, and revoke/resend actions.
+Implementar el sistema de gestión de accomplices del lado del host: otorgar acceso a accomplice vía email (magic link), gestionar permisos (send_messages, view_rsvps), revocar acceso, reenviar magic link, y ver lista de accomplices. El backend genera tokens de accomplice (SHA-256 hashed), envía emails de magic link, y proporciona endpoints CRUD. El frontend añade una sección de gestión de accomplices al dashboard del evento con formulario de invitación, lista de accomplices con estado, y acciones de revocar/reenviar.
 
 ## Requirements
 - [ ] Implement `IAccompliceService` and `AccompliceService` with methods: GrantAccessAsync(eventSlug, email, permissions), RevokeAccessAsync(accompliceId), ResendMagicLinkAsync(accompliceId), GetAccomplicesByEventAsync(eventSlug)
@@ -62,3 +62,5 @@ Blocked by: PSRP-004, PSRP-006
 
 ## Branch Name
 `feature/PSRP-017-accomplice-management`
+
+(End of file - total 64 lines)

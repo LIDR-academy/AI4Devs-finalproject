@@ -7,7 +7,7 @@
 **Dependencies:** PSRP-001, PSRP-004
 
 ## Feature Summary
-Set up the Angular 22 frontend with the complete design system (shared components following the Aura style guide), authentication UI (login page with magic link form, verification page, profile setup modal), auth guard for protected routes, auth HTTP interceptor for JWT cookie handling, and the application shell (navbar, layout). This establishes the frontend foundation and completes the auth flow end-to-end.
+Configurar el frontend Angular 22 con el sistema de diseño completo (componentes compartidos siguiendo la guía de estilo de Aura), interfaz de autenticación (página de login con formulario de magic link, página de verificación, modal de configuración de perfil), guard de autenticación para rutas protegidas, interceptor HTTP de autenticación para manejo de JWT en cookies, y el shell de la aplicación (navbar, layout). Esto establece la base del frontend y completa el flujo de autenticación de extremo a extremo.
 
 ## Requirements
 - [ ] Create shared UI components following style guide: ButtonComponent (primary, secondary, ghost, danger variants), InputComponent (label, error state), CardComponent, BadgeComponent (pending, confirmed, cancelled), EmptyStateComponent, NavbarComponent
@@ -69,3 +69,5 @@ Blocked by: PSRP-001, PSRP-004
 
 ## Branch Name
 `feature/PSRP-005-angular-scaffolding-and-auth-ui`
+
+(End of file - total 71 lines)

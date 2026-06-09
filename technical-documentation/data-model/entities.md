@@ -1,188 +1,188 @@
-# Entity Specifications
+# Especificaciones de Entidades
 
-Detailed column-level specifications, business rules, lifecycle states, and GDPR handling for each entity in the Aura Planning data model.
+Especificaciones detalladas a nivel de columna, reglas de negocio, estados del ciclo de vida y manejo GDPR para cada entidad en el modelo de datos de Aura Planning.
 
 ---
 
 ## Users
 
-Host accounts — the primary users who create and manage events.
+Cuentas de hosts — los usuarios principales que crean y gestionan eventos.
 
-### Columns
+### Columnas
 
-| Column | Type | Nullable | Default | Constraints | Business Rule |
+| Columna | Tipo | Nullable | Por Defecto | Restricciones | Regla de Negocio |
 |--------|------|----------|---------|-------------|---------------|
-| Id | uuid | No | gen_random_uuid() | PK | ULID-compatible format for URL safety |
-| Email | varchar(320) | No | — | UNIQUE, case-insensitive collation | Validated per RFC 5322; normalized to lowercase before storage |
-| Name | varchar(200) | No | — | Min 2 chars, max 200 | Set during first-login profile setup |
-| HashedMagicLinkToken | varchar(256) | Yes | NULL | — | SHA-256 hash of plaintext token; cleared after use |
-| TokenExpiresAt | timestamptz | Yes | NULL | — | 15 minutes from token generation |
-| CreatedAt | timestamptz | No | NOW() | — | Set on account creation |
-| LastLoginAt | timestamptz | Yes | NULL | — | Updated on each successful login |
-| Status | varchar(20) | No | 'pending' | CHECK IN ('pending','active','suspended','anonymized') | 'pending' until first login, 'active' after profile setup |
-| Timezone | varchar(64) | No | 'Europe/Madrid' | Valid IANA timezone | Auto-detected from browser, editable in profile |
-| Locale | varchar(10) | No | 'es-ES' | BCP 47 format | Determines date/time formatting, language |
-| IsAnonymized | boolean | No | false | — | Set to true on GDPR erasure |
-| AnonymizedAt | timestamptz | Yes | NULL | — | Timestamp of anonymization |
+| Id | uuid | No | gen_random_uuid() | PK | Formato compatible ULID para seguridad en URL |
+| Email | varchar(320) | No | — | UNIQUE, comparación case-insensitive | Validado per RFC 5322; normalizado a minúsculas antes de almacenamiento |
+| Name | varchar(200) | No | — | Min 2 chars, max 200 | Establecido durante configuración de perfil en primer login |
+| HashedMagicLinkToken | varchar(256) | Yes | NULL | — | Hash SHA-256 del token en texto plano; limpiado después de uso |
+| TokenExpiresAt | timestamptz | Yes | NULL | — | 15 minutos desde generación del token |
+| CreatedAt | timestamptz | No | NOW() | — | Establecido en creación de cuenta |
+| LastLoginAt | timestamptz | Yes | NULL | — | Actualizado en cada login exitoso |
+| Status | varchar(20) | No | 'pending' | CHECK IN ('pending','active','suspended','anonymized') | 'pending' hasta primer login, 'active' después de configuración de perfil |
+| Timezone | varchar(64) | No | 'Europe/Madrid' | Timezone IANA válido | Auto-detectado del navegador, editable en perfil |
+| Locale | varchar(10) | No | 'es-ES' | Formato BCP 47 | Determina formato de fecha/hora, idioma |
+| IsAnonymized | boolean | No | false | — | Establecido a true en borrado GDPR |
+| AnonymizedAt | timestamptz | Yes | NULL | — | Timestamp de anonimización |
 
-### Lifecycle States
+### Estados del Ciclo de Vida
 
 ```
 pending → active → (suspended) → anonymized
 ```
 
-| State | Trigger | Effect |
+| Estado | Disparador | Efecto |
 |-------|---------|--------|
-| `pending` | User requests magic link | Cannot create events; must verify email |
-| `active` | User completes profile setup on first login | Full access to all features |
-| `suspended` | Admin action or abuse detection | Login blocked; events still accessible to guests |
-| `anonymized` | GDPR erasure request processed | PII removed; audit data retained |
+| `pending` | Usuario solicita magic link | No puede crear eventos; debe verificar email |
+| `active` | Usuario completa configuración de perfil en primer login | Acceso completo a todas las funcionalidades |
+| `suspended` | Acción de admin o detección de abuso | Login bloqueado; eventos aún accesibles para invitados |
+| `anonymized` | Solicitud de borrado GDPR procesada | PII eliminada; datos de auditoría retenidos |
 
-### Business Rules
+### Reglas de Negocio
 
-1. Email uniqueness is case-insensitive (`LOWER(Email)` comparison)
-2. Magic link token is one-time use — cleared after successful verification
-3. Rate limit: 3 magic link requests per email per hour (tracked in Dragonfly)
-4. Same response for new and existing users (anti-enumeration)
-5. Old tokens invalidated when new magic link is requested
-6. Single active session per user — new login invalidates previous JWT
+1. La unicidad de email es case-insensitive (`LOWER(Email)` comparison)
+2. El token magic link es de un solo uso — limpiado después de verificación exitosa
+3. Rate limit: 3 solicitudes de magic link por email por hora (rastreado en Dragonfly)
+4. Misma respuesta para usuarios nuevos y existentes (anti-enumeración)
+5. Tokens antiguos invalidados cuando se solicita nuevo magic link
+6. Sesión única activa por usuario — nuevo login invalida JWT anterior
 
-### GDPR Handling
+### Manejo GDPR
 
-| Field | On Erasure Request |
+| Campo | En Solicitud de Borrado |
 |-------|-------------------|
-| Email | Replaced with `deleted-{uuid}@anonymous.invalid` |
-| Name | Replaced with `[Deleted User]` |
-| HashedMagicLinkToken | Set to NULL |
-| TokenExpiresAt | Set to NULL |
-| Status | Changed to `anonymized` |
-| IsAnonymized | Set to `true` |
-| AnonymizedAt | Set to `NOW()` |
-| CreatedAt, LastLoginAt, Timezone, Locale | Retained (no PII) |
+| Email | Reemplazado con `deleted-{uuid}@anonymous.invalid` |
+| Name | Reemplazado con `[Deleted User]` |
+| HashedMagicLinkToken | Establecido a NULL |
+| TokenExpiresAt | Establecido a NULL |
+| Status | Cambiado a `anonymized` |
+| IsAnonymized | Establecido a `true` |
+| AnonymizedAt | Establecido a `NOW()` |
+| CreatedAt, LastLoginAt, Timezone, Locale | Retenidos (sin PII) |
 
 ---
 
 ## UserConsents
 
-Tracks user consent for terms of service, marketing, and data processing. Required for GDPR compliance.
+Rastreo del consentimiento del usuario para términos de servicio, marketing y procesamiento de datos. Requerido para cumplimiento GDPR.
 
-### Columns
+### Columnas
 
-| Column | Type | Nullable | Default | Constraints | Business Rule |
+| Columna | Tipo | Nullable | Por Defecto | Restricciones | Regla de Negocio |
 |--------|------|----------|---------|-------------|---------------|
 | Id | uuid | No | gen_random_uuid() | PK | — |
-| UserId | uuid | No | — | FK → Users(Id), indexed | References the consenting user |
-| ConsentType | varchar(50) | No | — | CHECK IN ('terms','marketing','data_processing') | Type of consent given |
-| TermsVersion | varchar(20) | No | — | Semantic versioning (e.g., '1.0.0') | Tracks which version was accepted |
-| IsAccepted | boolean | No | false | — | True if consent was given |
-| AcceptedAt | timestamptz | No | NOW() | — | Timestamp of consent |
-| WithdrawnAt | timestamptz | Yes | NULL | — | Set when consent is withdrawn |
+| UserId | uuid | No | — | FK → Users(Id), indexed | Referencia al usuario que consiente |
+| ConsentType | varchar(50) | No | — | CHECK IN ('terms','marketing','data_processing') | Tipo de consentimiento dado |
+| TermsVersion | varchar(20) | No | — | Versionado semántico (ej. '1.0.0') | Rastrea qué versión fue aceptada |
+| IsAccepted | boolean | No | false | — | True si el consentimiento fue dado |
+| AcceptedAt | timestamptz | No | NOW() | — | Timestamp del consentimiento |
+| WithdrawnAt | timestamptz | Yes | NULL | — | Establecido cuando el consentimiento es retirado |
 
-### Business Rules
+### Reglas de Negocio
 
-1. Users must accept `terms` and `data_processing` before creating events
-2. `marketing` consent is optional (opt-in)
-3. When terms are updated, users must re-accept before continuing
-4. Withdrawing `data_processing` consent triggers account anonymization
-5. Consent records are never deleted — only `WithdrawnAt` is set
+1. Usuarios deben aceptar `terms` y `data_processing` antes de crear eventos
+2. Consentimiento `marketing` es opcional (opt-in)
+3. Cuando los términos son actualizados, usuarios deben re-aceptar antes de continuar
+4. Retirar consentimiento `data_processing`_trigger account anonymization
+5. Registros de consentimiento nunca se borran — solo `WithdrawnAt` se establece
 
-### GDPR Handling
+### Manejo GDPR
 
-- Consent records are **never deleted** — they serve as legal proof of consent
-- When consent is withdrawn, `WithdrawnAt` is set to `NOW()`
-- `IsAccepted` is NOT changed to false — historical accuracy must be preserved
+- Los registros de consentimiento **nunca se borran** — sirven como prueba legal de consentimiento
+- Cuando el consentimiento es retirado, `WithdrawnAt` se establece a `NOW()`
+- `IsAccepted` NO se cambia a false — la precisión histórica debe preservarse
 
 ---
 
 ## Events
 
-Wedding/event details — the central entity that all other data is scoped to.
+Detalles de boda/evento — la entidad central a la que se relacionan todos los demás datos.
 
-### Columns
+### Columnas
 
-| Column | Type | Nullable | Default | Constraints | Business Rule |
+| Columna | Tipo | Nullable | Por Defecto | Restricciones | Regla de Negocio |
 |--------|------|----------|---------|-------------|---------------|
 | Id | uuid | No | gen_random_uuid() | PK | — |
-| UserId | uuid | No | — | FK → Users(Id), indexed | Owner of the event |
-| Name | varchar(200) | No | — | Min 2 chars, max 200 | Display name for the event |
-| Slug | varchar(200) | No | — | UNIQUE, URL-safe characters | Auto-generated from Name + date; e.g., `maria-y-juan-2026` |
-| TemplateId | uuid | Yes | NULL | FK → Templates(Id) | Selected invitation template |
-| PrimaryColor | varchar(7) | No | '#4F46E5' | Hex color format | Primary theme color |
-| SecondaryColor | varchar(7) | No | '#7C3AED' | Hex color format | Secondary theme color |
-| FontFamily | varchar(100) | No | 'Inter' | From allowed font list | Heading font family |
-| HeroImageUrl | varchar(500) | Yes | NULL | Valid URL or MinIO path | Cover image for invitation |
-| CoupleNames | varchar(200) | No | — | Min 2 chars, max 200 | Names displayed on invitation |
-| EventDate | timestamptz | No | — | Must be in the future at creation | Date and time of the event |
-| VenueName | varchar(200) | No | — | Min 2 chars, max 200 | Venue display name |
-| VenueAddress | varchar(500) | No | — | Min 5 chars, max 500 | Full venue address |
-| VenueLat | decimal(9,6) | Yes | NULL | Range: -90 to 90 | Latitude from Google Maps geocoding |
-| VenueLng | decimal(9,6) | Yes | NULL | Range: -180 to 180 | Longitude from Google Maps geocoding |
-| Status | varchar(20) | No | 'draft' | CHECK IN ('draft','published','completed','archived') | Event lifecycle state |
-| PublishedAt | timestamptz | Yes | NULL | — | Set when payment succeeds |
-| CreatedAt | timestamptz | No | NOW() | — | Event creation timestamp |
-| UpdatedAt | timestamptz | No | NOW() | — | Updated on every change |
-| EventEndDate | timestamptz | No | EventDate + 1 day | Generated column | Used for 30-day retention calculation |
+| UserId | uuid | No | — | FK → Users(Id), indexed | Owner del evento |
+| Name | varchar(200) | No | — | Min 2 chars, max 200 | Nombre de visualización del evento |
+| Slug | varchar(200) | No | — | UNIQUE, caracteres URL-safe | Auto-generado desde Name + date; ej. `maria-y-juan-2026` |
+| TemplateId | uuid | Yes | NULL | FK → Templates(Id) | Plantilla de invitación seleccionada |
+| PrimaryColor | varchar(7) | No | '#4F46E5' | Formato hex color | Color primario del tema |
+| SecondaryColor | varchar(7) | No | '#7C3AED' | Formato hex color | Color secundario del tema |
+| FontFamily | varchar(100) | No | 'Inter' | De lista de fuentes permitidas | Familia de fuente de encabezados |
+| HeroImageUrl | varchar(500) | Yes | NULL | URL válida o path MinIO | Imagen de portada para la invitación |
+| CoupleNames | varchar(200) | No | — | Min 2 chars, max 200 | Nombres mostrados en la invitación |
+| EventDate | timestamptz | No | — | Debe estar en el futuro al crear | Fecha y hora del evento |
+| VenueName | varchar(200) | No | — | Min 2 chars, max 200 | Nombre de visualización del venue |
+| VenueAddress | varchar(500) | No | — | Min 5 chars, max 500 | Dirección completa del venue |
+| VenueLat | decimal(9,6) | Yes | NULL | Rango: -90 a 90 | Latitud desde geocodificación de Google Maps |
+| VenueLng | decimal(9,6) | Yes | NULL | Rango: -180 a 180 | Longitud desde geocodificación de Google Maps |
+| Status | varchar(20) | No | 'draft' | CHECK IN ('draft','published','completed','archived') | Estado del ciclo de vida del evento |
+| PublishedAt | timestamptz | Yes | NULL | — | Establecido cuando el pago succeed |
+| CreatedAt | timestamptz | No | NOW() | — | Timestamp de creación del evento |
+| UpdatedAt | timestamptz | No | NOW() | — | Actualizado en cada cambio |
+| EventEndDate | timestamptz | No | EventDate + 1 day | Columna generada | Usado para cálculo de retención a 30 días |
 
-### Lifecycle States
+### Estados del Ciclo de Vida
 
 ```
 draft → published → completed → archived
 ```
 
-| State | Trigger | Effect |
+| Estado | Disparador | Efecto |
 |-------|---------|--------|
-| `draft` | Event created | Free mode: max 5 guests; no public microsite |
-| `published` | Payment succeeds via Stripe | Unlimited guests; microsite generated and CDN-published |
-| `completed` | EventDate has passed | Read-only; thank you cards sent; accomplice access expired |
-| `archived` | 30 days after EventEndDate | Scheduled for hard deletion by DataRetentionJob |
+| `draft` | Evento creado | Modo gratis: máximo 5 invitados; sin micrositio público |
+| `published` | Pago succeed vía Stripe | Invitados ilimitados; micrositio generado y publicado en CDN |
+| `completed` | EventDate ha pasado | Solo lectura; tarjetas de agradecimiento enviadas; acceso accomplice expirado |
+| `archived` | 30 días después de EventEndDate | Programado para borrado hard por DataRetentionJob |
 
-### Business Rules
+### Reglas de Negocio
 
-1. **Slug generation**: Lowercase, replace spaces with hyphens, remove special chars, append year. If duplicate, append `-2`, `-3`, etc.
-2. **Free mode limit**: Draft events can have max 5 guests (enforced at API level)
-3. **Publishing requires payment**: Status transitions to `published` only after Stripe `payment_intent.succeeded`
-4. **Venue geocoding**: Address sent to Google Maps Geocoding API; lat/lng stored if successful
-5. **Auto-save**: Template changes auto-save with 2-second debounce
-6. **Static site regeneration**: On event update after publishing, SSG regenerates and invalidates CDN cache
-7. **EventEndDate**: Computed as `EventDate + 1 day`; drives retention schedule
+1. **Generación de slug**: Minúsculas, reemplazar espacios con guiones, remover caracteres especiales, añadir año. Si duplicado, añadir `-2`, `-3`, etc.
+2. **Límite de modo gratis**: Eventos en draft pueden tener máximo 5 invitados (enforced a nivel de API)
+3. **Publicación requiere pago**: Transiciones de status a `published` solo después de Stripe `payment_intent.succeeded`
+4. **Geocodificación de venue**: Dirección enviada a Google Maps Geocoding API; lat/lng almacenados si exitoso
+5. **Auto-guardado**: Cambios de plantilla auto-guardan con debounce de 2 segundos
+6. **Regeneración de sitio estático**: En actualización de evento después de publicar, SSG regenera e invalida caché de CDN
+7. **EventEndDate**: Computado como `EventDate + 1 day`; drive retention schedule
 
-### GDPR Handling
+### Manejo GDPR
 
-| Field | On Erasure Request |
+| Campo | En Solicitud de Borrado |
 |-------|-------------------|
-| Name | Replaced with `[Deleted Event]` |
-| CoupleNames | Replaced with `[Redacted]` |
-| VenueName | Replaced with `[Redacted]` |
-| VenueAddress | Replaced with `[Redacted]` |
-| HeroImageUrl | Set to NULL |
-| Slug | Retained (URL stability for guests) |
-| All other fields | Retained (no PII) |
+| Name | Reemplazado con `[Deleted Event]` |
+| CoupleNames | Reemplazado con `[Redacted]` |
+| VenueName | Reemplazado con `[Redacted]` |
+| VenueAddress | Reemplazado con `[Redacted]` |
+| HeroImageUrl | Establecido a NULL |
+| Slug | Retenido (estabilidad de URL para invitados) |
+| Todos los demás campos | Retenidos (sin PII) |
 
 ---
 
 ## Templates
 
-Pre-designed invitation templates available for hosts to select and customize.
+Plantillas de invitación pre-diseñadas disponibles para que los hosts seleccionen y personalicen.
 
-### Columns
+### Columnas
 
-| Column | Type | Nullable | Default | Constraints | Business Rule |
+| Columna | Tipo | Nullable | Por Defecto | Restricciones | Regla de Negocio |
 |--------|------|----------|---------|-------------|---------------|
 | Id | uuid | No | gen_random_uuid() | PK | — |
-| Name | varchar(100) | No | — | Min 2 chars, max 100 | Template display name |
-| Description | text | Yes | NULL | Max 500 chars | Template description |
-| PreviewUrl | varchar(500) | No | — | Valid URL or MinIO path | Preview image path |
-| Category | varchar(50) | No | 'wedding' | indexed | Template category |
-| IsPremium | boolean | No | false | — | Requires premium tier |
-| LayoutJson | jsonb | No | '{}' | Valid JSON | Template layout configuration |
-| CreatedAt | timestamptz | No | NOW() | — | Template creation timestamp |
+| Name | varchar(100) | No | — | Min 2 chars, max 100 | Nombre de visualización de la plantilla |
+| Description | text | Yes | NULL | Max 500 chars | Descripción de la plantilla |
+| PreviewUrl | varchar(500) | No | — | URL válida o path MinIO | Path de imagen de preview |
+| Category | varchar(50) | No | 'wedding' | indexed | Categoría de la plantilla |
+| IsPremium | boolean | No | false | — | Requiere nivel premium |
+| LayoutJson | jsonb | No | '{}' | JSON válido | Configuración del layout de la plantilla |
+| CreatedAt | timestamptz | No | NOW() | — | Timestamp de creación de la plantilla |
 
-### Business Rules
+### Reglas de Negocio
 
-1. MVP ships with 3 preset wedding templates (seeded data)
-2. `LayoutJson` defines sections, default colors, font pairings, and asset references
-3. Templates are system-managed — users cannot create custom templates in MVP
-4. `IsPremium` templates only available for Premium Publish tier (V2+)
+1. MVP shipping con 3 plantillas de boda preestablecidas (datos seedeados)
+2. `LayoutJson` define secciones, colores por defecto, pares de fuentes y referencias de assets
+3. Plantillas son gestionadas por el sistema — usuarios no pueden crear plantillas custom en MVP
+4. Plantillas `IsPremium` solo disponibles para nivel de Publicación Premium (V2+)
 
 ### LayoutJson Schema
 
@@ -204,166 +204,166 @@ Pre-designed invitation templates available for hosts to select and customize.
 }
 ```
 
-### GDPR Handling
+### Manejo GDPR
 
-- No PII stored — templates are system content
-- No anonymization needed
+- No se almacena PII — plantillas son contenido del sistema
+- No se necesita anonimización
 
 ---
 
 ## Guests
 
-Event attendees — imported via CSV or added manually by the host.
+Asistentes al evento — importados vía CSV o añadidos manualmente por el host.
 
-### Columns
+### Columnas
 
-| Column | Type | Nullable | Default | Constraints | Business Rule |
+| Columna | Tipo | Nullable | Por Defecto | Restricciones | Regla de Negocio |
 |--------|------|----------|---------|-------------|---------------|
 | Id | uuid | No | gen_random_uuid() | PK | — |
-| EventId | uuid | No | — | FK → Events(Id), indexed | Parent event |
-| Name | varchar(200) | No | — | Min 1 char, max 200 | Guest display name |
-| Email | varchar(320) | Yes | NULL | Valid email format | Normalized to lowercase |
-| Phone | varchar(30) | Yes | NULL | E.164 format preferred | For WhatsApp invitations |
-| Category | varchar(30) | No | 'other' | CHECK IN ('family','friends','colleagues','other') | Guest segmentation |
-| InviteStatus | varchar(20) | No | 'pending' | CHECK IN ('pending','sent','delivered','opened','failed','bounced') | Invitation delivery state |
-| IsDeleted | boolean | No | false | — | Soft delete flag |
-| DeletedAt | timestamptz | Yes | NULL | — | Soft delete timestamp |
-| IsAnonymized | boolean | No | false | — | GDPR anonymization flag |
-| AnonymizedAt | timestamptz | Yes | NULL | — | Anonymization timestamp |
-| CreatedAt | timestamptz | No | NOW() | — | Guest creation timestamp |
+| EventId | uuid | No | — | FK → Events(Id), indexed | Evento padre |
+| Name | varchar(200) | No | — | Min 1 char, max 200 | Nombre de visualización del invitado |
+| Email | varchar(320) | Yes | NULL | Formato email válido | Normalizado a minúsculas |
+| Phone | varchar(30) | Yes | NULL | Formato E.164 preferido | Para invitaciones WhatsApp |
+| Category | varchar(30) | No | 'other' | CHECK IN ('family','friends','colleagues','other') | Segmentación de invitados |
+| InviteStatus | varchar(20) | No | 'pending' | CHECK IN ('pending','sent','delivered','opened','failed','bounced') | Estado de entrega de invitación |
+| IsDeleted | boolean | No | false | — | Flag de soft delete |
+| DeletedAt | timestamptz | Yes | NULL | — | Timestamp de soft delete |
+| IsAnonymized | boolean | No | false | — | Flag de anonimización GDPR |
+| AnonymizedAt | timestamptz | Yes | NULL | — | Timestamp de anonimización |
+| CreatedAt | timestamptz | No | NOW() | — | Timestamp de creación del invitado |
 
-### Business Rules
+### Reglas de Negocio
 
-1. **Duplicate detection**: Email uniqueness per event — `WHERE EventId = @eventId AND Email = @email AND IsDeleted = false`
-2. **CSV import validation**: Name required; email/phone optional but at least one contact method required
-3. **Category default**: Defaults to 'other' if not specified in CSV
-4. **Free mode limit**: Max 5 guests for draft events (enforced at service layer)
-5. **Soft delete cascade**: When a guest is soft-deleted, their invitations are also soft-deleted
-6. **Email normalization**: All emails stored lowercase for consistent lookups
-7. **Phone format**: Stored in E.164 format (+34612345678) for WhatsApp API compatibility
+1. **Detección de duplicados**: Email único por evento — `WHERE EventId = @eventId AND Email = @email AND IsDeleted = false`
+2. **Validación de importación CSV**: Nombre requerido; email/teléfono opcional pero al menos un método de contacto requerido
+3. **Categoría por defecto**: Por defecto 'other' si no se especifica en CSV
+4. **Límite de modo gratis**: Máximo 5 invitados para eventos en draft (enforced a nivel de servicio)
+5. **Cascada de soft delete**: Cuando un invitado es soft-deleted, sus invitaciones también se soft-deletean
+6. **Normalización de email**: Todos los emails almacenados en minúsculas para lookups consistentes
+7. **Formato de teléfono**: Almacenado en formato E.164 (+34612345678) para compatibilidad con API de WhatsApp
 
-### GDPR Handling
+### Manejo GDPR
 
-| Field | On Erasure Request |
+| Campo | En Solicitud de Borrado |
 |-------|-------------------|
-| Name | Replaced with `[Deleted Guest]` |
-| Email | Replaced with `deleted-{uuid}@anonymous.invalid` |
-| Phone | Set to NULL |
-| IsAnonymized | Set to `true` |
-| AnonymizedAt | Set to `NOW()` |
-| Category, InviteStatus, CreatedAt | Retained (no PII) |
+| Name | Reemplazado con `[Deleted Guest]` |
+| Email | Reemplazado con `deleted-{uuid}@anonymous.invalid` |
+| Phone | Establecido a NULL |
+| IsAnonymized | Establecido a `true` |
+| AnonymizedAt | Establecido a `NOW()` |
+| Category, InviteStatus, CreatedAt | Retenidos (sin PII) |
 
 ---
 
 ## Invitations
 
-Per-guest invitation records — tracks delivery status and provides RSVP access via token.
+Registros de invitación por invitado — rastrea estado de entrega y proporciona acceso RSVP vía token.
 
-### Columns
+### Columnas
 
-| Column | Type | Nullable | Default | Constraints | Business Rule |
+| Columna | Tipo | Nullable | Por Defecto | Restricciones | Regla de Negocio |
 |--------|------|----------|---------|-------------|---------------|
 | Id | uuid | No | gen_random_uuid() | PK | — |
-| GuestId | uuid | No | — | FK → Guests(Id), indexed | Target guest |
-| EventId | uuid | No | — | FK → Events(Id), indexed | Parent event (denormalized for query performance) |
-| TokenHash | varchar(256) | No | — | UNIQUE, indexed | SHA-256 hash of invitation token |
-| SentVia | varchar(20) | Yes | NULL | CHECK IN ('email','whatsapp','both') | Channel used to send |
-| SentAt | timestamptz | Yes | NULL | — | First send timestamp |
-| DeliveryStatus | varchar(20) | No | 'pending' | CHECK IN ('pending','sent','delivered','failed','bounced') | Current delivery state |
-| RetryCount | int | No | 0 | DEFAULT 0, max 2 | Number of retry attempts |
-| IsDeleted | boolean | No | false | — | Soft delete flag |
-| DeletedAt | timestamptz | Yes | NULL | — | Soft delete timestamp |
-| CreatedAt | timestamptz | No | NOW() | — | Invitation creation timestamp |
+| GuestId | uuid | No | — | FK → Guests(Id), indexed | Invitado objetivo |
+| EventId | uuid | No | — | FK → Events(Id), indexed | Evento padre (denormalizado para rendimiento de queries) |
+| TokenHash | varchar(256) | No | — | UNIQUE, indexed | Hash SHA-256 del token de invitación |
+| SentVia | varchar(20) | Yes | NULL | CHECK IN ('email','whatsapp','both') | Canal usado para enviar |
+| SentAt | timestamptz | Yes | NULL | — | Timestamp del primer envío |
+| DeliveryStatus | varchar(20) | No | 'pending' | CHECK IN ('pending','sent','delivered','failed','bounced') | Estado de entrega actual |
+| RetryCount | int | No | 0 | DEFAULT 0, max 2 | Número de intentos de reintento |
+| IsDeleted | boolean | No | false | — | Flag de soft delete |
+| DeletedAt | timestamptz | Yes | NULL | — | Timestamp de soft delete |
+| CreatedAt | timestamptz | No | NOW() | — | Timestamp de creación de la invitación |
 
-### Business Rules
+### Reglas de Negocio
 
-1. **Token generation**: 256-bit random string, hashed with SHA-256 before storage
-2. **One invitation per guest**: Enforced at service layer; guest can have only one active invitation
-3. **Delivery tracking**: Status updated via webhooks (WhatsApp) or tracking pixels (email)
-4. **Retry logic**: Max 2 retries for WhatsApp failures before falling back to email
-5. **Bounce handling**: Hard bounces set status to 'bounced' and flag guest email as suspended
-6. **Token expiry**: Invitation tokens expire at RSVP deadline (7 days before EventDate)
-7. **Denormalized EventId**: Stored for efficient queries without joining through Guests
+1. **Generación de token**: String aleatorio de 256-bit, hasheado con SHA-256 antes de almacenamiento
+2. **Una invitación por invitado**: Enforced a nivel de servicio; invitado solo puede tener una invitación activa
+3. **Seguimiento de entrega**: Status actualizado vía webhooks (WhatsApp) o pixels de tracking (email)
+4. **Lógica de reintento**: Máximo 2 reintentos para fallos de WhatsApp antes de fallback a email
+5. **Manejo de bounce**: Bounces hard establecen status a 'bounced' y marcan email del invitado como suspendido
+6. **Expiración de token**: Tokens de invitación expiran en deadline de RSVP (7 días antes de EventDate)
+7. **EventId denormalizado**: Almacenado para queries eficientes sin joins a través de Guests
 
-### GDPR Handling
+### Manejo GDPR
 
-| Field | On Erasure Request |
+| Campo | En Solicitud de Borrado |
 |-------|-------------------|
-| TokenHash | Re-hashed with random salt (invalidates the link) |
-| SentVia, SentAt, DeliveryStatus, RetryCount | Retained (audit data) |
-| IsDeleted, DeletedAt | Retained (reference data) |
+| TokenHash | Re-hasheado con salt aleatorio (invalida el enlace) |
+| SentVia, SentAt, DeliveryStatus, RetryCount | Retenidos (datos de auditoría) |
+| IsDeleted, DeletedAt | Retenidos (datos de referencia) |
 
 ---
 
 ## RSVPs
 
-Guest responses to invitations — attendance, dietary needs, transport, and personal messages.
+Respuestas de invitados a invitaciones — asistencia, necesidades dietéticas, transporte y mensajes personales.
 
-### Columns
+### Columnas
 
-| Column | Type | Nullable | Default | Constraints | Business Rule |
+| Columna | Tipo | Nullable | Por Defecto | Restricciones | Regla de Negocio |
 |--------|------|----------|---------|-------------|---------------|
 | Id | uuid | No | gen_random_uuid() | PK | — |
-| InvitationId | uuid | No | — | FK → Invitations(Id), UNIQUE | One RSVP per invitation |
-| GuestId | uuid | No | — | FK → Guests(Id), indexed | Responding guest |
-| EventId | uuid | No | — | FK → Events(Id), indexed | Parent event (denormalized) |
-| Attendance | varchar(10) | No | — | CHECK IN ('yes','no','maybe') | Guest attendance decision |
-| DietaryRestrictions | text | Yes | NULL | Max 500 chars | Free-text dietary info |
-| NeedsTransport | boolean | No | false | — | Transport requirement flag |
-| PlusOne | boolean | No | false | — | Plus-one attendance flag |
-| Message | text | Yes | NULL | Max 1000 chars | Personal message to hosts |
-| SubmittedAt | timestamptz | No | NOW() | — | First submission timestamp |
-| UpdatedAt | timestamptz | No | NOW() | — | Last update timestamp |
+| InvitationId | uuid | No | — | FK → Invitations(Id), UNIQUE | Un RSVP por invitación |
+| GuestId | uuid | No | — | FK → Guests(Id), indexed | Invitado que responde |
+| EventId | uuid | No | — | FK → Events(Id), indexed | Evento padre (denormalizado) |
+| Attendance | varchar(10) | No | — | CHECK IN ('yes','no','maybe') | Decisión de asistencia del invitado |
+| DietaryRestrictions | text | Yes | NULL | Max 500 chars | Info dietética en texto libre |
+| NeedsTransport | boolean | No | false | — | Flag de necesidad de transporte |
+| PlusOne | boolean | No | false | — | Flag de asistencia con acompañante |
+| Message | text | Yes | NULL | Max 1000 chars | Mensaje personal a los hosts |
+| SubmittedAt | timestamptz | No | NOW() | — | Timestamp del primer envío |
+| UpdatedAt | timestamptz | No | NOW() | — | Timestamp de última actualización |
 
-### Business Rules
+### Reglas de Negocio
 
-1. **One RSVP per invitation**: UNIQUE constraint on InvitationId
-2. **RSVP deadline**: Cannot submit or update RSVP less than 7 days before EventDate
-3. **Update allowed**: Guests can modify their RSVP before the deadline
-4. **Idempotent submission**: Double-click or network retry results in single RSVP
-5. **Real-time dashboard**: Host dashboard updates within 5 seconds of RSVP submission (via polling or WebSocket)
-6. **Denormalized GuestId and EventId**: Stored for efficient dashboard queries without joins
+1. **Un RSVP por invitación**: Restricción UNIQUE en InvitationId
+2. **Deadline de RSVP**: No se puede enviar o actualizar RSVP menos de 7 días antes de EventDate
+3. **Actualización permitida**: Invitados pueden modificar su RSVP antes del deadline
+4. **Envío idempotente**: Doble-click o reintento de red resulta en un solo RSVP
+5. **Dashboard en tiempo real**: Dashboard del host se actualiza dentro de 5 segundos del envío de RSVP (vía polling o WebSocket)
+6. **GuestId y EventId denormalizados**: Almacenados para queries eficientes de dashboard sin joins
 
-### GDPR Handling
+### Manejo GDPR
 
-| Field | On Erasure Request |
+| Campo | En Solicitud de Borrado |
 |-------|-------------------|
-| DietaryRestrictions | Replaced with `[Redacted]` |
-| Message | Replaced with `[Redacted]` |
-| Attendance, NeedsTransport, PlusOne | Retained (audit data — needed for host planning) |
-| SubmittedAt, UpdatedAt | Retained (audit timestamps) |
+| DietaryRestrictions | Reemplazado con `[Redacted]` |
+| Message | Reemplazado con `[Redacted]` |
+| Attendance, NeedsTransport, PlusOne | Retenidos (datos de auditoría — necesarios para planificación del host) |
+| SubmittedAt, UpdatedAt | Retenidos (timestamps de auditoría) |
 
 ---
 
 ## Accomplices
 
-Trusted persons with magic link access to send live event updates.
+Personas de confianza con acceso vía magic link para enviar actualizaciones de evento en vivo.
 
-### Columns
+### Columnas
 
-| Column | Type | Nullable | Default | Constraints | Business Rule |
+| Columna | Tipo | Nullable | Por Defecto | Restricciones | Regla de Negocio |
 |--------|------|----------|---------|-------------|---------------|
 | Id | uuid | No | gen_random_uuid() | PK | — |
-| EventId | uuid | No | — | FK → Events(Id), indexed | Associated event |
-| Email | varchar(320) | No | — | Valid email format | Accomplice contact email |
-| TokenHash | varchar(256) | No | — | UNIQUE, indexed | SHA-256 hash of magic link token |
-| Permissions | jsonb | No | '["send_messages","view_rsvps"]' | Valid JSON array | Scoped permissions |
-| GrantedAt | timestamptz | No | NOW() | — | Access granted timestamp |
-| ExpiresAt | timestamptz | No | — | Default: EventDate + 1 day | Access expiry |
-| LastAccessedAt | timestamptz | Yes | NULL | — | Last panel access |
-| IsRevoked | boolean | No | false | — | Revocation flag |
-| IsAnonymized | boolean | No | false | — | GDPR anonymization flag |
-| AnonymizedAt | timestamptz | Yes | NULL | — | Anonymization timestamp |
+| EventId | uuid | No | — | FK → Events(Id), indexed | Evento asociado |
+| Email | varchar(320) | No | — | Formato email válido | Email de contacto del accomplice |
+| TokenHash | varchar(256) | No | — | UNIQUE, indexed | Hash SHA-256 del token magic link |
+| Permissions | jsonb | No | '["send_messages","view_rsvps"]' | Array JSON válido | Permisos scoped |
+| GrantedAt | timestamptz | No | NOW() | — | Timestamp de otorgamiento de acceso |
+| ExpiresAt | timestamptz | No | — | Por defecto: EventDate + 1 day | Expiración de acceso |
+| LastAccessedAt | timestamptz | Yes | NULL | — | Último acceso al panel |
+| IsRevoked | boolean | No | false | — | Flag de revocación |
+| IsAnonymized | boolean | No | false | — | Flag de anonimización GDPR |
+| AnonymizedAt | timestamptz | Yes | NULL | — | Timestamp de anonimización |
 
-### Business Rules
+### Reglas de Negocio
 
-1. **Magic link access**: No password required — single-use token for initial access, then JWT session
-2. **Permissions**: JSON array of allowed actions (`send_messages`, `view_rsvps`)
-3. **Auto-expiry**: Access expires EventDate + 1 day (configurable by host)
-4. **Revocation**: Host can revoke access from dashboard at any time
-5. **Resend**: Host can resend magic link if accomplice loses the email (generates new token, invalidates old)
-6. **Multiple accomplices**: Supported — each has independent access and token
-7. **No account required**: Accomplices access panel directly via magic link (MVP decision)
+1. **Acceso vía magic link**: Sin contraseña requerida — token de un solo uso para acceso inicial, luego sesión JWT
+2. **Permisos**: Array JSON de acciones permitidas (`send_messages`, `view_rsvps`)
+3. **Expiración automática**: Acceso expira EventDate + 1 día (configurable por host)
+4. **Revocación**: Host puede revocar acceso desde dashboard en cualquier momento
+5. **Reenvío**: Host puede reenviar magic link si accomplice pierde el email (genera nuevo token, invalida anterior)
+6. **Múltiples accomplices**: Soportado — cada uno tiene acceso y token independiente
+7. **Sin cuenta requerida**: Accomplices acceden al panel directamente vía magic link (decisión MVP)
 
 ### Permissions Schema
 
@@ -371,40 +371,40 @@ Trusted persons with magic link access to send live event updates.
 ["send_messages", "view_rsvps"]
 ```
 
-| Permission | Description |
+| Permiso | Descripción |
 |------------|-------------|
-| `send_messages` | Can send live notifications via swipe-to-send |
-| `view_rsvps` | Can view RSVP summary on the panel |
+| `send_messages` | Puede enviar notificaciones en vivo vía swipe-to-send |
+| `view_rsvps` | Puede ver resumen de RSVP en el panel |
 
-### GDPR Handling
+### Manejo GDPR
 
-| Field | On Erasure Request |
+| Campo | En Solicitud de Borrado |
 |-------|-------------------|
-| Email | Replaced with `deleted-{uuid}@anonymous.invalid` |
-| TokenHash | Re-hashed with random salt |
-| IsAnonymized | Set to `true` |
-| AnonymizedAt | Set to `NOW()` |
-| Permissions, GrantedAt, ExpiresAt, LastAccessedAt | Retained (audit data) |
+| Email | Reemplazado con `deleted-{uuid}@anonymous.invalid` |
+| TokenHash | Re-hasheado con salt aleatorio |
+| IsAnonymized | Establecido a `true` |
+| AnonymizedAt | Establecido a `NOW()` |
+| Permissions, GrantedAt, ExpiresAt, LastAccessedAt | Retenidos (datos de auditoría) |
 
 ---
 
 ## MessageTemplates
 
-Pre-configured live message templates for the accomplice panel.
+Plantillas de mensaje pre-configuradas para el panel de accomplice.
 
-### Columns
+### Columnas
 
-| Column | Type | Nullable | Default | Constraints | Business Rule |
+| Columna | Tipo | Nullable | Por Defecto | Restricciones | Regla de Negocio |
 |--------|------|----------|---------|-------------|---------------|
 | Id | uuid | No | gen_random_uuid() | PK | — |
-| EventId | uuid | No | — | FK → Events(Id), indexed | Associated event |
-| Label | varchar(100) | No | — | Min 1 char, max 100 | Button display label |
-| DefaultMessage | text | No | — | Min 1 char, max 500 | Message text sent to guests |
-| Icon | varchar(50) | No | — | From allowed icon set | Button icon identifier |
-| RequiresSwipe | boolean | No | true | — | Whether swipe gesture is required |
-| IsDeleted | boolean | No | false | — | Soft delete flag |
+| EventId | uuid | No | — | FK → Events(Id), indexed | Evento asociado |
+| Label | varchar(100) | No | — | Min 1 char, max 100 | Label del botón de visualización |
+| DefaultMessage | text | No | — | Min 1 char, max 500 | Texto del mensaje enviado a invitados |
+| Icon | varchar(50) | No | — | De conjunto de iconos permitidos | Identificador de icono del botón |
+| RequiresSwipe | boolean | No | true | — | Si se requiere gesto de swipe |
+| IsDeleted | boolean | No | false | — | Flag de soft delete |
 
-### Default Templates (MVP)
+### Plantillas Por Defecto (MVP)
 
 | Label | DefaultMessage | Icon |
 |-------|---------------|------|
@@ -417,119 +417,119 @@ Pre-configured live message templates for the accomplice panel.
 | Cake Cutting | "Time for the cake!" | Cake |
 | Party Time | "Let the dancing begin!" | Music |
 
-### Business Rules
+### Reglas de Negocio
 
-1. **Host customization**: Host can edit labels and messages before the event
-2. **Soft delete**: Hosts can remove templates; sent LiveMessages retain reference
-3. **Icon set**: Limited to predefined icon set (no custom uploads in MVP)
-4. **Default set**: 8 templates created automatically when event is published
+1. **Personalización por host**: Host puede editar labels y mensajes antes del evento
+2. **Soft delete**: Hosts pueden remover plantillas; LiveMessages enviadas retienen referencia
+3. **Conjunto de iconos**: Limitado a conjunto predefinido (sin uploads custom en MVP)
+4. **Conjunto por defecto**: 8 plantillas creadas automáticamente cuando el evento se publica
 
-### GDPR Handling
+### Manejo GDPR
 
-| Field | On Erasure Request |
+| Campo | En Solicitud de Borrado |
 |-------|-------------------|
-| DefaultMessage | Replaced with `[Redacted]` |
-| Label, Icon, RequiresSwipe | Retained (no PII) |
+| DefaultMessage | Reemplazado con `[Redacted]` |
+| Label, Icon, RequiresSwipe | Retenidos (sin PII) |
 
 ---
 
 ## LiveMessages
 
-Sent live notifications — tracks delivery of accomplice messages to guests.
+Notificaciones en vivo enviadas — rastrea entrega de mensajes de accomplice a invitados.
 
-### Columns
+### Columnas
 
-| Column | Type | Nullable | Default | Constraints | Business Rule |
+| Columna | Tipo | Nullable | Por Defecto | Restricciones | Regla de Negocio |
 |--------|------|----------|---------|-------------|---------------|
 | Id | uuid | No | gen_random_uuid() | PK | — |
-| EventId | uuid | No | — | FK → Events(Id), indexed | Associated event |
-| AccompliceId | uuid | No | — | FK → Accomplices(Id), indexed | Sending accomplice |
-| MessageTemplateId | uuid | No | — | FK → MessageTemplates(Id) | Source template |
-| CustomMessage | text | Yes | NULL | Max 500 chars | Customized message text |
-| SentVia | varchar(20) | No | 'whatsapp' | CHECK IN ('email','whatsapp','both') | Delivery channel |
-| SentAt | timestamptz | No | NOW() | — | Message send timestamp |
-| DeliveryStatus | varchar(20) | No | 'pending' | CHECK IN ('pending','queued','sent','delivered','failed') | Current delivery state |
-| RetryCount | int | No | 0 | DEFAULT 0, max 2 | Retry attempt count |
+| EventId | uuid | No | — | FK → Events(Id), indexed | Evento asociado |
+| AccompliceId | uuid | No | — | FK → Accomplices(Id), indexed | Accomplice remitente |
+| MessageTemplateId | uuid | No | — | FK → MessageTemplates(Id) | Plantilla origen |
+| CustomMessage | text | Yes | NULL | Max 500 chars | Texto de mensaje personalizado |
+| SentVia | varchar(20) | No | 'whatsapp' | CHECK IN ('email','whatsapp','both') | Canal de entrega |
+| SentAt | timestamptz | No | NOW() | — | Timestamp de envío del mensaje |
+| DeliveryStatus | varchar(20) | No | 'pending' | CHECK IN ('pending','queued','sent','delivered','failed') | Estado de entrega actual |
+| RetryCount | int | No | 0 | DEFAULT 0, max 2 | Número de intentos de reintento |
 
-### Business Rules
+### Reglas de Negocio
 
-1. **Swipe-to-send**: Messages require swipe gesture (80% threshold) to prevent accidental sends
-2. **Queue-based**: Messages enqueued in Dragonfly for async processing by WhatsApp Dispatcher
-3. **Rate limiting**: Max messages per accomplice per hour (prevent spam)
-4. **Delivery tracking**: Status updated via WhatsApp webhook callbacks
-5. **Custom messages**: Accomplice can customize template message before sending (V2+)
+1. **Swipe-to-send**: Mensajes requieren gesto de swipe (threshold 80%) para prevenir envíos accidentales
+2. **Basado en cola**: Mensajes encolados en Dragonfly para procesamiento async por WhatsApp Dispatcher
+3. **Rate limiting**: Máximo mensajes por accomplice por hora (prevenir spam)
+4. **Seguimiento de entrega**: Status actualizado vía callbacks de webhook de WhatsApp
+5. **Mensajes custom**: Accomplice puede personalizar mensaje de plantilla antes de enviar (V2+)
 
-### GDPR Handling
+### Manejo GDPR
 
-| Field | On Erasure Request |
+| Campo | En Solicitud de Borrado |
 |-------|-------------------|
-| CustomMessage | Replaced with `[Redacted]` |
-| SentVia, SentAt, DeliveryStatus, RetryCount | Retained (audit data) |
+| CustomMessage | Reemplazado con `[Redacted]` |
+| SentVia, SentAt, DeliveryStatus, RetryCount | Retenidos (datos de auditoría) |
 
 ---
 
 ## Payments
 
-Stripe payment records for event publishing.
+Registros de pago de Stripe para publicación de eventos.
 
-### Columns
+### Columnas
 
-| Column | Type | Nullable | Default | Constraints | Business Rule |
+| Columna | Tipo | Nullable | Por Defecto | Restricciones | Regla de Negocio |
 |--------|------|----------|---------|-------------|---------------|
 | Id | uuid | No | gen_random_uuid() | PK | — |
-| EventId | uuid | No | — | FK → Events(Id), UNIQUE | One payment per event |
-| StripePaymentIntentId | varchar(255) | Yes | NULL | UNIQUE | Stripe Payment Intent ID |
-| StripeCustomerId | varchar(255) | Yes | NULL | — | Stripe Customer ID |
-| Amount | decimal(10,2) | No | — | CHECK > 0 | Payment amount in EUR |
-| Currency | varchar(3) | No | 'EUR' | ISO 4217 | Always EUR for MVP |
-| Status | varchar(20) | No | 'pending' | CHECK IN ('pending','succeeded','failed','refunded') | Payment state |
-| Tier | varchar(20) | No | — | CHECK IN ('standard','premium') | Publishing tier |
-| CreatedAt | timestamptz | No | NOW() | — | Payment initiation timestamp |
-| CompletedAt | timestamptz | Yes | NULL | — | Payment completion timestamp |
+| EventId | uuid | No | — | FK → Events(Id), UNIQUE | Un pago por evento |
+| StripePaymentIntentId | varchar(255) | Yes | NULL | UNIQUE | ID de Payment Intent de Stripe |
+| StripeCustomerId | varchar(255) | Yes | NULL | — | ID de Customer de Stripe |
+| Amount | decimal(10,2) | No | — | CHECK > 0 | Monto del pago en EUR |
+| Currency | varchar(3) | No | 'EUR' | ISO 4217 | Siempre EUR para MVP |
+| Status | varchar(20) | No | 'pending' | CHECK IN ('pending','succeeded','failed','refunded') | Estado del pago |
+| Tier | varchar(20) | No | — | CHECK IN ('standard','premium') | Nivel de publicación |
+| CreatedAt | timestamptz | No | NOW() | — | Timestamp de inicio del pago |
+| CompletedAt | timestamptz | Yes | NULL | — | Timestamp de completación del pago |
 
-### Business Rules
+### Reglas de Negocio
 
-1. **One payment per event**: UNIQUE constraint on EventId
-2. **Tier pricing**: Standard = EUR 19, Premium = EUR 29 (configurable)
-3. **Webhook-driven**: Status updated via Stripe `payment_intent.succeeded` / `payment_intent.failed` webhooks
-4. **Idempotent webhook**: Same webhook event processed multiple times produces same result
-5. **No card data**: PCI compliance — no card numbers stored (Stripe Elements handles card input)
-6. **Publishing trigger**: Event status changes to `published` only after payment succeeds
+1. **Un pago por evento**: Restricción UNIQUE en EventId
+2. **Precios por nivel**: Standard = EUR 19, Premium = EUR 29 (configurable)
+3. **Drive por webhook**: Status actualizado vía Stripe `payment_intent.succeeded` / `payment_intent.failed` webhooks
+4. **Webhook idempotente**: Mismo evento de webhook procesado múltiples veces produce el mismo resultado
+5. **Sin datos de tarjeta**: Cumplimiento PCI — sin números de tarjeta almacenados (Stripe Elements maneja entrada de tarjeta)
+6. **Trigger de publicación**: Status del evento cambia a `published` solo después de que el pago succeed
 
-### GDPR Handling
+### Manejo GDPR
 
-- No PII stored — Stripe IDs are opaque references, not personal data
-- Payment records retained indefinitely for financial audit and tax compliance
-- No anonymization needed
+- No se almacena PII — Stripe IDs son referencias opacas, no datos personales
+- Registros de pago retenidos indefinidamente para auditoría financiera y cumplimiento fiscal
+- No se necesita anonimización
 
 ---
 
 ## DataRetentionJobs
 
-Scheduled data deletion jobs — triggers hard deletion 30 days after EventEndDate.
+Trabajos de eliminación de datos programados — trigger borrado hard 30 días después de EventEndDate.
 
-### Columns
+### Columnas
 
-| Column | Type | Nullable | Default | Constraints | Business Rule |
+| Columna | Tipo | Nullable | Por Defecto | Restricciones | Regla de Negocio |
 |--------|------|----------|---------|-------------|---------------|
 | Id | uuid | No | gen_random_uuid() | PK | — |
-| EventId | uuid | No | — | FK → Events(Id), UNIQUE | Associated event |
-| ScheduledDeleteAt | timestamptz | No | — | — | EventEndDate + 30 days |
-| Status | varchar(20) | No | 'scheduled' | CHECK IN ('scheduled','running','completed','failed') | Job state |
-| ExecutedAt | timestamptz | Yes | NULL | — | Actual execution timestamp |
-| FailureReason | text | Yes | NULL | Max 1000 chars | Error message if failed |
-| CreatedAt | timestamptz | No | NOW() | — | Job creation timestamp |
+| EventId | uuid | No | — | FK → Events(Id), UNIQUE | Evento asociado |
+| ScheduledDeleteAt | timestamptz | No | — | — | EventEndDate + 30 días |
+| Status | varchar(20) | No | 'scheduled' | CHECK IN ('scheduled','running','completed','failed') | Estado del trabajo |
+| ExecutedAt | timestamptz | Yes | NULL | — | Timestamp de ejecución real |
+| FailureReason | text | Yes | NULL | Max 1000 chars | Mensaje de error si falló |
+| CreatedAt | timestamptz | No | NOW() | — | Timestamp de creación del trabajo |
 
-### Business Rules
+### Reglas de Negocio
 
-1. **Auto-created**: Job created when event is created, with `ScheduledDeleteAt = EventDate + 30 days`
-2. **Daily execution**: CronJob runs at 02:00 UTC, queries `WHERE ScheduledDeleteAt <= NOW() AND Status = 'scheduled'`
-3. **Atomic deletion**: All-or-nothing per event within a transaction
-4. **FK-safe order**: Deletes in dependency order (RSVPs → LiveMessages → ... → Events)
-5. **Retry on failure**: Failed jobs retried next day; max 3 retries before alerting
-6. **Concurrency**: Single pod execution (`concurrencyPolicy: Forbid`)
+1. **Auto-creado**: Trabajo creado cuando el evento es creado, con `ScheduledDeleteAt = EventDate + 30 días`
+2. **Ejecución diaria**: CronJob runs at 02:00 UTC, queries `WHERE ScheduledDeleteAt <= NOW() AND Status = 'scheduled'`
+3. **Eliminación atómica**: Todo o nada por evento dentro de una transacción
+4. **Orden FK-safe**: Elimina en orden de dependencia (RSVPs → LiveMessages → ... → Events)
+5. **Reintento en fallo**: Trabajos fallidos reintentados al día siguiente; max 3 reintentos antes de alertar
+6. **Concurrencia**: Ejecución de pod único (`concurrencyPolicy: Forbid`)
 
-### Deletion Order
+### Orden de Eliminación
 
 ```
 1. RSVPs
@@ -542,49 +542,49 @@ Scheduled data deletion jobs — triggers hard deletion 30 days after EventEndDa
 8. DataRetentionJobs (self)
 ```
 
-**Not deleted**: Payments, DeliveryLogs (no PII, retained for audit)
+**No eliminados**: Payments, DeliveryLogs (sin PII, retenidos para auditoría)
 
-### GDPR Handling
+### Manejo GDPR
 
-- No PII stored — all fields are reference/audit
-- No anonymization needed
+- No se almacena PII — todos los campos son referencia/auditoría
+- No se necesita anonimización
 
 ---
 
 ## DeliveryLogs
 
-Audit trail for all message deliveries (email, WhatsApp, magic links, reminders, thank you cards).
+Trail de auditoría para todas las entregas de mensajes (email, WhatsApp, magic links, recordatorios, tarjetas de agradecimiento).
 
-### Columns
+### Columnas
 
-| Column | Type | Nullable | Default | Constraints | Business Rule |
+| Columna | Tipo | Nullable | Por Defecto | Restricciones | Regla de Negocio |
 |--------|------|----------|---------|-------------|---------------|
 | Id | uuid | No | gen_random_uuid() | PK | — |
-| EventId | uuid | No | — | FK → Events(Id), indexed | Associated event |
-| EntityType | varchar(30) | No | — | CHECK IN ('invitation','live_message','reminder','thank_you','magic_link') | Type of entity being delivered |
-| EntityId | uuid | No | — | — | ID of the entity |
-| Channel | varchar(20) | No | — | CHECK IN ('email','whatsapp') | Delivery channel |
-| MessageType | varchar(50) | No | — | — | Specific message type |
-| DeliveryStatus | varchar(20) | No | 'pending' | CHECK IN ('pending','sent','delivered','opened','failed','bounced') | Current delivery state |
-| ProviderMessageId | varchar(255) | Yes | NULL | — | WhatsApp message ID or email message ID |
-| SentAt | timestamptz | Yes | NULL | — | Message sent timestamp |
-| DeliveredAt | timestamptz | Yes | NULL | — | Message delivered timestamp |
-| FailedAt | timestamptz | Yes | NULL | — | Message failure timestamp |
-| RetryCount | int | No | 0 | DEFAULT 0 | Number of retries |
-| FailureReason | text | Yes | NULL | Max 500 chars | Error description |
+| EventId | uuid | No | — | FK → Events(Id), indexed | Evento asociado |
+| EntityType | varchar(30) | No | — | CHECK IN ('invitation','live_message','reminder','thank_you','magic_link') | Tipo de entidad siendo entregada |
+| EntityId | uuid | No | — | — | ID de la entidad |
+| Channel | varchar(20) | No | — | CHECK IN ('email','whatsapp') | Canal de entrega |
+| MessageType | varchar(50) | No | — | — | Tipo específico de mensaje |
+| DeliveryStatus | varchar(20) | No | 'pending' | CHECK IN ('pending','sent','delivered','opened','failed','bounced') | Estado de entrega actual |
+| ProviderMessageId | varchar(255) | Yes | NULL | — | ID de mensaje de WhatsApp o email |
+| SentAt | timestamptz | Yes | NULL | — | Timestamp de envío del mensaje |
+| DeliveredAt | timestamptz | Yes | NULL | — | Timestamp de entrega del mensaje |
+| FailedAt | timestamptz | Yes | NULL | — | Timestamp de fallo del mensaje |
+| RetryCount | int | No | 0 | DEFAULT 0 | Número de reintentos |
+| FailureReason | text | Yes | NULL | Max 500 chars | Descripción del error |
 
-### Business Rules
+### Reglas de Negocio
 
-1. **Created for every send**: Every email, WhatsApp message, magic link, reminder, and thank you card creates a DeliveryLog
-2. **Status transitions**: `pending → sent → delivered` or `pending → sent → failed`
-3. **Webhook updates**: WhatsApp webhooks update `DeliveryStatus` and `DeliveredAt`/`FailedAt`
-4. **No PII**: DeliveryLogs reference entities by ID only — no personal data stored
-5. **Retention**: Never deleted — serves as operational audit trail
-6. **Metrics source**: Dashboard delivery rates, channel performance, and failure analysis queries this table
+1. **Creado para cada envío**: Cada email, mensaje WhatsApp, magic link, recordatorio y tarjeta de agradecimiento crea un DeliveryLog
+2. **Transiciones de estado**: `pending → sent → delivered` o `pending → sent → failed`
+3. **Actualizaciones por webhook**: Webhooks de WhatsApp actualizan `DeliveryStatus` y `DeliveredAt`/`FailedAt`
+4. **Sin PII**: DeliveryLogs referencian entidades solo por ID — sin datos personales almacenados
+5. **Retención**: Nunca eliminados — sirve como trail de auditoría operacional
+6. **Fuente de métricas**: Tasas de entrega del dashboard, rendimiento de canal y análisis de fallos consultan esta tabla
 
-### Message Types
+### Tipos de Mensaje
 
-| EntityType | MessageType Values |
+| EntityType | Valores de MessageType |
 |------------|-------------------|
 | `invitation` | `invitation_email`, `invitation_whatsapp` |
 | `live_message` | `live_update` |
@@ -592,8 +592,8 @@ Audit trail for all message deliveries (email, WhatsApp, magic links, reminders,
 | `thank_you` | `thank_you_email`, `thank_you_whatsapp` |
 | `magic_link` | `login_magic_link`, `accomplice_magic_link` |
 
-### GDPR Handling
+### Manejo GDPR
 
-- No PII stored — all fields are reference/audit
-- No anonymization needed
-- Retained indefinitely for operational audit
+- No se almacena PII — todos los campos son referencia/auditoría
+- No se necesita anonimización
+- Retenido indefinidamente para auditoría operacional

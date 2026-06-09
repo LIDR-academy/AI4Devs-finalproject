@@ -7,7 +7,7 @@
 **Dependencies:** PSRP-006
 
 ## Feature Summary
-Implement the complete guest management system: backend CRUD with manual entry, CSV import with validation/deduplication/error preview, categorization (family/friends/colleagues/other), search/filter, pagination, and soft delete. Frontend guest manager page with guest table, add/edit form, CSV upload with error preview, category filter tabs, search bar, and free mode limit enforcement (max 5 guests for draft events).
+Implementar el sistema completo de gestión de invitados: CRUD en backend con entrada manual, importación CSV con validación/deduplicación/vista previa de errores, categorización (family/friends/colleagues/other), búsqueda/filtro, paginación y soft delete. Página de gestión de invitados en frontend con tabla de invitados, formulario de añadir/editar, subida CSV con vista previa de errores, pestañas de filtro por categoría, barra de búsqueda, y aplicación del límite de modo gratuito (máx 5 invitados para eventos en draft).
 
 ## Requirements
 - [ ] Implement `IGuestService` and `GuestService` in Aura.Core/Services/ with methods: AddGuestAsync, ImportGuestsFromCsvAsync, GetGuestsByEventAsync (with filter/search/pagination), SoftDeleteGuestAsync, GetGuestCountAsync
@@ -69,3 +69,5 @@ Blocked by: PSRP-006
 
 ## Branch Name
 `feature/PSRP-008-guest-management`
+
+(End of file - total 71 lines)

@@ -7,7 +7,7 @@
 **Dependencies:** PSRP-006, PSRP-012
 
 ## Feature Summary
-Implement the live messages backend system that enables accomplices to send real-time WhatsApp updates to guests during the event. Includes MessageTemplate CRUD (8 default templates created on event publish), LiveMessage creation and queueing via Dragonfly `whatsapp:queue`, delivery status tracking, rate limiting per accomplice, and the API endpoints that the accomplice panel (PSRP-018) will consume.
+Implementar el backend del sistema de mensajes en vivo que permite a los accomplices enviar actualizaciones de WhatsApp en tiempo real a los invitados durante el evento. Incluye CRUD de MessageTemplate (8 plantillas por defecto creadas al publicar el evento), creación y encolado de LiveMessage vía Dragonfly `whatsapp:queue`, seguimiento de estado de entrega, rate limiting por accomplice, y los endpoints de API que el panel de accomplice (PSRP-018) consumirá.
 
 ## Requirements
 - [ ] Implement `IMessageTemplateService` and `MessageTemplateService` with methods: CreateDefaultTemplatesAsync(eventId), GetTemplatesByEventAsync, UpdateTemplateAsync, SoftDeleteTemplateAsync
@@ -64,3 +64,5 @@ Blocked by: PSRP-006, PSRP-012
 
 ## Branch Name
 `feature/PSRP-016-live-messages-backend`
+
+(End of file - total 66 lines)

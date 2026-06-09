@@ -7,7 +7,7 @@
 **Dependencies:** PSRP-006
 
 ## Feature Summary
-Implement the visual template editor that allows hosts to customize their invitation: select from 3 preset templates, customize primary/secondary colors via color picker, change font family, upload a hero image to MinIO (max 5MB, JPG/PNG), and see changes in real-time via an embedded preview iframe. Auto-save with 2-second debounce saves changes to the database. This covers the template editor feature from the PRD.
+Implementar el editor visual de plantillas que permite a los hosts personalizar su invitación: seleccionar entre 3 plantillas predefinidas, personalizar los colores primarios/secundarios mediante selector de color, cambiar la familia de fuentes, subir una imagen hero a MinIO (máx 5MB, JPG/PNG), y ver los cambios en tiempo real mediante un iframe de preview embebido. El auto-guardado con debounce de 2 segundos guarda los cambios en la base de datos. Esto cubre la funcionalidad del editor de plantillas del PRD.
 
 ## Requirements
 - [ ] Implement hero image upload endpoint: `POST /api/events/{slug}/upload-hero-image` — accepts multipart form, validates file type (JPG/PNG) and size (max 5MB), uploads to MinIO bucket, returns public URL
@@ -59,3 +59,5 @@ Blocked by: PSRP-006
 
 ## Branch Name
 `feature/PSRP-007-template-editor`
+
+(End of file - total 61 lines)

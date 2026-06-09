@@ -1,56 +1,56 @@
-# 8. Success Metrics & KPIs
+# 8. Métricas de Éxito y KPIs
 
-> [Back to PRD Index](../PRD.md) | [Previous: Work Breakdown](07-work-breakdown.md) | [Next: Risks & Assumptions](09-risks-assumptions.md)
-
----
-
-## 8.1 Activation Metrics
-
-| Metric | Definition | Target | Measurement |
-|--------|-----------|--------|-------------|
-| **Registration Completion Rate** | % of users who enter email and verify via magic link | > 70% | Analytics funnel |
-| **Event Creation Rate** | % of registered users who create at least one event | > 60% | Analytics funnel |
-| **Onboarding Completion Rate** | % of users who complete the onboarding wizard | > 50% | Analytics funnel |
-| **Time-to-First-Event** | Median time from registration to first event creation | < 10 minutes | Analytics |
-
-## 8.2 Conversion Metrics
-
-| Metric | Definition | Target | Measurement |
-|--------|-----------|--------|-------------|
-| **Draft to Publish Conversion** | % of draft events that are published (paid) | > 25% | Analytics + Stripe |
-| **Average Guests per Event** | Mean number of guests per published event | > 80 | Database query |
-| **Publish Revenue per Event** | Average revenue per published event | EUR 25-29 | Stripe data |
-| **Time-to-Publish** | Median time from event creation to publishing | < 30 minutes | Analytics |
-
-## 8.3 Engagement Metrics
-
-| Metric | Definition | Target | Measurement |
-|--------|-----------|--------|-------------|
-| **RSVP Response Rate** | % of invited guests who submit an RSVP | > 70% | Database query |
-| **RSVP Completion Time** | Median time from invitation to RSVP submission | < 48 hours | Database query |
-| **WhatsApp Delivery Rate** | % of WhatsApp messages successfully delivered | > 95% | WhatsApp webhook data |
-| **Email Open Rate** | % of emails opened (via tracking pixel) | > 60% | SES tracking |
-| **Live Messages per Event** | Average number of live messages sent per event | > 5 | Database query |
-
-## 8.4 Quality Metrics
-
-| Metric | Definition | Target | Measurement |
-|--------|-----------|--------|-------------|
-| **Microsite Load Time** | 95th percentile load time on mobile 3G | < 2 seconds | Lighthouse / RUM |
-| **API Error Rate** | % of API requests returning 5xx errors | < 1% | Monitoring |
-| **RSVP Form Error Rate** | % of RSVP submissions that fail validation | < 5% | Analytics |
-| **NPS Score** | Net Promoter Score from post-event survey | > 50 | Survey tool |
-
-## 8.5 Business Metrics
-
-| Metric | Definition | Target | Measurement |
-|--------|-----------|--------|-------------|
-| **Monthly Active Hosts** | Unique hosts who logged in this month | 500 (Month 3) | Analytics |
-| **Monthly Published Events** | Events published per month | 150 (Month 3) | Database query |
-| **Monthly Recurring Revenue** | Revenue from publishing fees | EUR 4,500 (Month 3) | Stripe data |
-| **Customer Acquisition Cost** | Marketing spend / new registered users | < EUR 5 | Marketing analytics |
-| **Churn Rate** | % of hosts who don't create a second event (N/A for weddings) | N/A (single-use) | - |
+> [Volver al Índice PRD](../PRD.md) | [Anterior: Desglose de Trabajo](07-work-breakdown.md) | [Siguiente: Riesgos y Suposiciones](09-risks-assumptions.md)
 
 ---
 
-> [Back to PRD Index](../PRD.md) | [Previous: Work Breakdown](07-work-breakdown.md) | [Next: Risks & Assumptions](09-risks-assumptions.md)
+## 8.1 Métricas de Activación
+
+| Métrica | Definición | Objetivo | Medición |
+|--------|-----------|--------|-------------|
+| **Tasa de Completación de Registro** | % de usuarios que introducen email y verifican vía magic link | > 70% | Embudo de analytics |
+| **Tasa de Creación de Eventos** | % de usuarios registrados que crean al menos un evento | > 60% | Embudo de analytics |
+| **Tasa de Completación de Onboarding** | % de usuarios que completan el wizard de onboarding | > 50% | Embudo de analytics |
+| **Tiempo hasta el Primer Evento** | Tiempo medio desde el registro hasta la creación del primer evento | < 10 minutos | Analytics |
+
+## 8.2 Métricas de Conversión
+
+| Métrica | Definición | Objetivo | Medición |
+|--------|-----------|--------|-------------|
+| **Conversión de Borrador a Publicado** | % de eventos en borrador que son publicados (pagados) | > 25% | Analytics + Stripe |
+| **Promedio de Invitados por Evento** | Número medio de invitados por evento publicado | > 80 | Consulta a base de datos |
+| **Ingreso por Publicación de Evento** | Ingreso promedio por evento publicado | EUR 25-29 | Datos de Stripe |
+| **Tiempo hasta Publicación** | Tiempo medio desde la creación del evento hasta la publicación | < 30 minutos | Analytics |
+
+## 8.3 Métricas de Engagement
+
+| Métrica | Definición | Objetivo | Medición |
+|--------|-----------|--------|-------------|
+| **Tasa de Respuesta RSVP** | % de invitados que envían un RSVP | > 70% | Consulta a base de datos |
+| **Tiempo de Completación de RSVP** | Tiempo medio desde la invitación hasta el envío de RSVP | < 48 horas | Consulta a base de datos |
+| **Tasa de Entrega de WhatsApp** | % de mensajes de WhatsApp entregados exitosamente | > 95% | Datos de webhook de WhatsApp |
+| **Tasa de Apertura de Email** | % de emails abiertos (vía pixel de tracking) | > 60% | Tracking de SES |
+| **Mensajes en Vivo por Evento** | Número promedio de mensajes en vivo enviados por evento | > 5 | Consulta a base de datos |
+
+## 8.4 Métricas de Calidad
+
+| Métrica | Definición | Objetivo | Medición |
+|--------|-----------|--------|-------------|
+| **Tiempo de Carga del Micrositio** | Percentil 95 de tiempo de carga en mobile 3G | < 2 segundos | Lighthouse / RUM |
+| **Tasa de Error de API** | % de requests de API que devuelven errores 5xx | < 1% | Monitoring |
+| **Tasa de Error del Formulario RSVP** | % de envíos de RSVP que fallan validación | < 5% | Analytics |
+| **Puntuación NPS** | Net Promoter Score de encuesta post-evento | > 50 | Herramienta de encuesta |
+
+## 8.5 Métricas de Negocio
+
+| Métrica | Definición | Objetivo | Medición |
+|--------|-----------|--------|-------------|
+| **Hosts Activos Mensuales** | Hosts únicos que iniciaron sesión este mes | 500 (Mes 3) | Analytics |
+| **Eventos Publicados Mensualmente** | Eventos publicados por mes | 150 (Mes 3) | Consulta a base de datos |
+| **Ingreso Recurrente Mensual** | Ingreso por tasas de publicación | EUR 4,500 (Mes 3) | Datos de Stripe |
+| **Costo de Adquisición de Cliente** | Gasto de marketing / nuevos usuarios registrados | < EUR 5 | Analytics de marketing |
+| **Tasa de Churn** | % de hosts que no crean un segundo evento (N/A para bodas) | N/A (uso único) | - |
+
+---
+
+> [Volver al Índice PRD](../PRD.md) | [Anterior: Desglose de Trabajo](07-work-breakdown.md) | [Siguiente: Riesgos y Suposiciones](09-risks-assumptions.md)

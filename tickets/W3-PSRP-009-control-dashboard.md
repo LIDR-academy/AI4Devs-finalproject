@@ -7,7 +7,7 @@
 **Dependencies:** PSRP-006, PSRP-008
 
 ## Feature Summary
-Implement the host control dashboard with real-time RSVP statistics, dietary restrictions list, transportation needs count, plus-one count, guest list with RSVP status, filtering by RSVP status, and CSV export. Backend provides aggregated statistics endpoints and the frontend renders the dashboard with stats cards, charts, and a filterable guest table.
+Implementar el dashboard de control del host con estadísticas de RSVP en tiempo real, lista de restricciones dietéticas, conteo de necesidades de transporte, conteo de acompañantes, lista de invitados con estado de RSVP, filtrado por estado de RSVP, y exportación CSV. El backend proporciona endpoints de estadísticas agregadas y el frontend renderiza el dashboard con tarjetas de estadísticas, gráficos y tabla de invitados filtrable.
 
 ## Requirements
 - [ ] Implement dashboard statistics endpoint: `GET /api/events/{slug}/dashboard` — returns: totalInvited, confirmed, declined, pending, maybe, dietaryRestrictions (list of {guestName, restrictions}), transportNeedsCount, plusOneCount
@@ -65,3 +65,5 @@ Blocked by: PSRP-006, PSRP-008
 
 ## Branch Name
 `feature/PSRP-009-control-dashboard`
+
+(End of file - total 67 lines)

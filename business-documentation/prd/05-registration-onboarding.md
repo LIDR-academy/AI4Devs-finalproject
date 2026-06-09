@@ -1,157 +1,157 @@
-# 5. Registration & Onboarding
+# 5. Registro y Onboarding
 
-> [Back to PRD Index](../PRD.md) | [Previous: Vision & Strategy](04-vision-strategy.md) | [Next: MVP Features](06-mvp-features.md)
+> [Volver al Índice PRD](../PRD.md) | [Anterior: Visión y Estrategia](04-vision-strategy.md) | [Siguiente: Funcionalidades MVP](06-mvp-features.md)
 
 ---
 
-## 5.1 Overview
+## 5.1 Visión General
 
-Aura uses a **two-step flow**: Register Account -> Create Event. This minimizes friction by separating authentication from event creation, allowing users to focus on one task at a time.
+Aura utiliza un **flujo de dos pasos**: Registrar Cuenta -> Crear Evento. Esto minimiza la fricción separando la autenticación de la creación de eventos, permitiendo a los usuarios enfocarse en una tarea a la vez.
 
 ```mermaid
 graph LR
-    A[Landing Page] --> B[Step 1: Register Account]
-    B --> C[Email Verification]
-    C --> D[Step 2: Create Event]
-    D --> E[Onboarding Wizard]
+    A[Página de Destino] --> B[Paso 1: Registrar Cuenta]
+    B --> C[Verificación de Email]
+    C --> D[Paso 2: Crear Evento]
+    D --> E[Wizard de Onboarding]
     E --> F[Dashboard]
-    F --> G[Publish Event]
+    F --> G[Publicar Evento]
 ```
 
-## 5.2 Registration Flow
+## 5.2 Flujo de Registro
 
-### 5.2.1 Step 1: Email Capture & Magic Link
+### 5.2.1 Paso 1: Captura de Email y Magic Link
 
-| Step | Action | System Response |
-|------|--------|-----------------|
-| 1 | User enters email on landing page | Frontend validates email format |
-| 2 | User clicks "Continue" | `POST /api/auth/magic-link` with email |
-| 3 | System checks if user exists | If new: creates User (status=pending). If existing: updates LastLogin |
-| 4 | System generates magic link token | 15-minute expiry, stored hashed in DB |
-| 5 | System sends email via Gmail SMTP | Personalized email with magic link button |
-| 6 | Frontend shows confirmation | "Check your email for your access link" |
+| Paso | Acción | Respuesta del Sistema |
+|------|--------|----------------------|
+| 1 | Usuario introduce email en la página de destino | Frontend valida formato de email |
+| 2 | Usuario hace clic en "Continuar" | `POST /api/auth/magic-link` con email |
+| 3 | Sistema verifica si el usuario existe | Si nuevo: crea User (status=pending). Si existente: actualiza LastLogin |
+| 4 | Sistema genera token magic link | Expiración 15 minutos, almacenado hasheado en DB |
+| 5 | Sistema envía email vía Gmail SMTP | Email personalizado con botón de magic link |
+| 6 | Frontend muestra confirmación | "Revisa tu email para el enlace de acceso" |
 
-**Rate Limiting:** 3 magic link requests per email per hour (429 response on exceed)
+**Rate Limiting:** 3 solicitudes de magic link por email por hora (respuesta 429 al exceder)
 
-**Security:** Same response for new and existing users (prevents email enumeration)
+**Seguridad:** Misma respuesta para usuarios nuevos y existentes (previene enumeración de emails)
 
-### 5.2.2 Step 2: Email Verification & Profile Setup
+### 5.2.2 Paso 2: Verificación de Email y Configuración de Perfil
 
-| Step | Action | System Response |
-|------|--------|-----------------|
-| 1 | User clicks magic link in email | Browser opens verification URL |
-| 2 | Frontend calls `GET /api/auth/verify?token={token}` | System validates token, checks expiry |
-| 3 | Token valid | System updates User to active, generates 24h JWT, returns `isFirstLogin: true` |
-| 4 | Token expired/invalid | System returns 401 with "Link expired", offers resend |
-| 5 | First login detected | Frontend shows profile setup modal |
-| 6 | User enters name, accepts terms, opts into marketing | `POST /api/auth/profile` saves profile |
-| 7 | Profile saved | User redirected to onboarding wizard |
+| Paso | Acción | Respuesta del Sistema |
+|------|--------|----------------------|
+| 1 | Usuario hace clic en el magic link del email | Navegador abre URL de verificación |
+| 2 | Frontend llama `GET /api/auth/verify?token={token}` | Sistema valida token, verifica expiración |
+| 3 | Token válido | Sistema actualiza User a active, genera JWT de 24h, devuelve `isFirstLogin: true` |
+| 4 | Token expirado/inválido | Sistema devuelve 401 con "Enlace expirado", ofrece reenvío |
+| 5 | Primer login detectado | Frontend muestra modal de configuración de perfil |
+| 6 | Usuario introduce nombre, acepta términos, opts por marketing | `POST /api/auth/profile` guarda perfil |
+| 7 | Perfil guardado | Usuario redirigido al wizard de onboarding |
 
-**Profile Setup Fields:**
+**Campos de Configuración de Perfil:**
 
-| Field | Required | Validation |
+| Campo | Requerido | Validación |
 |-------|----------|-----------|
-| Name | Yes | 2-100 characters |
-| Terms acceptance | Yes | Checkbox, version tracked |
-| Marketing consent | No | Opt-in checkbox |
-| Timezone | Yes | Auto-detected, editable |
-| Locale | Yes | Default: es-ES |
+| Nombre | Sí | 2-100 caracteres |
+| Aceptación de términos | Sí | Checkbox, versión rastreada |
+| Consentimiento de marketing | No | Checkbox opt-in |
+| Zona horaria | Sí | Auto-detectada, editable |
+| Locale | Sí | Por defecto: es-ES |
 
-### 5.2.3 Account Recovery
+### 5.2.3 Recuperación de Cuenta
 
-The account recovery flow is identical to registration — the user enters their email and receives a new magic link. Key differences:
+El flujo de recuperación de cuenta es idéntico al registro — el usuario introduce su email y recibe un nuevo magic link. Diferencias clave:
 
-- Old tokens are invalidated when a new one is requested
-- Session JWT is invalidated on new login (single session per user)
-- Same rate limiting applies (3 requests/hour)
-- Same anti-enumeration response (no indication of whether email exists)
+- Tokens antiguos se invalidan cuando se solicita uno nuevo
+- Session JWT se invalida en nuevo login (sesión única por usuario)
+- Mismo rate limiting aplica (3 solicitudes/hora)
+- Misma respuesta anti-enumeración (sin indicación de si el email existe)
 
-**Resend Magic Link:** Available on the verification page with a 60-second cooldown timer.
+**Reenviar Magic Link:** Disponible en la página de verificación con un temporizador de enfriamiento de 60 segundos.
 
-## 5.3 Onboarding Wizard
+## 5.3 Wizard de Onboarding
 
-After profile setup, first-time users enter a guided onboarding wizard:
+Después de la configuración del perfil, los usuarios de primer ingreso acceden a un wizard de onboarding guiado:
 
 ```mermaid
 graph TD
-    A[Welcome Screen] --> B[Template Selection]
-    B --> C[Event Basics]
-    C --> D[Guest Import]
+    A[Pantalla de Bienvenida] --> B[Selección de Plantilla]
+    B --> C[Datos del Evento]
+    C --> D[Importar Invitados]
     D --> E[Dashboard]
 
-    B --> B1[Browse templates]
-    B1 --> B2[Preview template]
-    B2 --> B3[Select template]
+    B --> B1[Explorar plantillas]
+    B1 --> B2[Previsualizar plantilla]
+    B2 --> B3[Seleccionar plantilla]
 
-    C --> C1[Event name]
-    C1 --> C2[Event date & time]
-    C2 --> C3[Venue name & address]
-    C3 --> C4[Auto-geocode venue]
-    C4 --> C5[Couple names]
-    C5 --> C6[Color scheme]
+    C --> C1[Nombre del evento]
+    C1 --> C2[Fecha y hora del evento]
+    C2 --> C3[Nombre y dirección del venue]
+    C3 --> C4[Auto-geocodificar venue]
+    C4 --> C5[Nombres de la pareja]
+    C5 --> C6[Esquema de colores]
 
-    D --> D1[Manual add guests]
-    D --> D2[CSV import]
-    D2 --> D3[Validate & confirm]
+    D --> D1[Añadir invitados manualmente]
+    D --> D2[Importación CSV]
+    D2 --> D3[Validar y confirmar]
 ```
 
-### Wizard Step Details
+### Detalles de Pasos del Wizard
 
-**Step 1: Template Selection**
-- Fetch templates: `GET /api/templates?category=wedding&isPremium=false`
-- Display template grid with live previews
-- User selects one of 3 preset templates
-- Selection stored in session
+**Paso 1: Selección de Plantilla**
+- Obtener plantillas: `GET /api/templates?category=wedding&isPremium=false`
+- Mostrar cuadrícula de plantillas con previsualizaciones en vivo
+- Usuario selecciona una de las 3 plantillas preestablecidas
+- Selección almacenada en sesión
 
-**Step 2: Event Basics**
-- Create event: `POST /api/events` with name, date, venue, template, colors
-- System auto-generates URL-safe slug (e.g., `maria-y-juan-2026`)
-- System auto-geocodes venue address via Google Maps API
-- System creates `DataRetentionJob` (EventDate + 30 days)
-- Event created with status `draft`
+**Paso 2: Datos del Evento**
+- Crear evento: `POST /api/events` con name, date, venue, template, colors
+- Sistema auto-genera slug URL-safe (ej. `maria-y-juan-2026`)
+- Sistema auto-geocodifica dirección del venue vía Google Maps API
+- Sistema crea `DataRetentionJob` (EventDate + 30 días)
+- Evento creado con status `draft`
 
-**Step 3: Guest Import (Optional)**
-- User can skip this step and add guests later
-- Manual add: name, email, phone, category
-- CSV import: validate, preview, confirm
-- Draft mode: max 5 guests enforced
+**Paso 3: Importar Invitados (Opcional)**
+- Usuario puede omitir este paso y añadir invitados después
+- Añadir manualmente: nombre, email, teléfono, categoría
+- Importación CSV: validar, previsualizar, confirmar
+- Modo draft: máximo 5 invitados enforced
 
-**Completion:** User is redirected to the event dashboard with a success message and guided tour.
+**Finalización:** Usuario es redirigido al dashboard del evento con mensaje de éxito y tour guiado.
 
-## 5.4 User Stories & Acceptance Criteria
+## 5.4 Historias de Usuario y Criterios de Aceptación
 
-| ID | User Story | Acceptance Criteria (Given/When/Then) |
-|----|-----------|--------------------------------------|
-| US-R-01 | As a new user, I want to register with just my email so that I can start using Aura without creating a password | **Given** I am on the landing page, **When** I enter a valid email and click "Continue", **Then** I see "Check your email" and receive a magic link within 30 seconds |
-| US-R-02 | As a user, I want my magic link to expire after 15 minutes so that my account stays secure | **Given** I received a magic link, **When** I click it after 16 minutes, **Then** I see "Link expired" with an option to request a new one |
-| US-R-03 | As a user, I want to set up my profile on first login so that my account is personalized | **Given** I clicked a valid magic link for the first time, **When** I enter my name and accept terms, **Then** my profile is saved and I'm redirected to the onboarding wizard |
-| US-R-04 | As a user, I want to resend a magic link if I didn't receive it so that I can complete registration | **Given** I requested a magic link, **When** I click "Resend" after 60 seconds, **Then** a new magic link is sent and the old one is invalidated |
-| US-R-05 | As a returning user, I want to log in with the same email so that I can access my existing events | **Given** I have an existing account, **When** I enter my email and click "Continue", **Then** I receive a magic link and can access my dashboard |
+| ID | Historia de Usuario | Criterios de Aceptación (Given/When/Then) |
+|----|---------------------|------------------------------------------|
+| US-R-01 | Como nuevo usuario, quiero registrarme solo con mi email para poder empezar a usar Aura sin crear una contraseña | **Dado** que estoy en la página de destino, **Cuando** introduzco un email válido y hago clic en "Continuar", **Entonces** veo "Revisa tu email" y recibo un magic link en 30 segundos |
+| US-R-02 | Como usuario, quiero que mi magic link expire después de 15 minutos para que mi cuenta permanezca segura | **Dado** que recibí un magic link, **Cuando** hago clic en él después de 16 minutos, **Entonces** veo "Enlace expirado" con opción de solicitar uno nuevo |
+| US-R-03 | Como usuario, quiero configurar mi perfil en el primer login para que mi cuenta esté personalizada | **Dado** que hice clic en un magic link válido por primera vez, **Cuando** introduzco mi nombre y acepto los términos, **Entonces** mi perfil se guarda y soy redirigido al wizard de onboarding |
+| US-R-04 | Como usuario, quiero reenviar un magic link si no lo recibí para poder completar el registro | **Dado** que solicité un magic link, **Cuando** hago clic en "Reenviar" después de 60 segundos, **Entonces** se envía un nuevo magic link y el anterior se invalida |
+| US-R-05 | Como usuario recurrente, quiero iniciar sesión con el mismo email para poder acceder a mis eventos existentes | **Dado** que tengo una cuenta existente, **Cuando** introduzco mi email y hago clic en "Continuar", **Entonces** recibo un magic link y puedo acceder a mi dashboard |
 
-## 5.5 Edge Cases
+## 5.5 Casos Extremos
 
-| Scenario | Handling |
-|----------|----------|
-| User enters invalid email format | Inline validation prevents submission |
-| User requests 4th magic link within 1 hour | 429 response with "Please wait 20 minutes" message |
-| Magic link email goes to spam | "Check spam folder" hint; resend option after 60s |
-| User closes browser before clicking magic link | Link remains valid for 15 minutes; user can request new one |
-| User tries to register with existing email | Same flow as login (no differentiation in response) |
-| User skips onboarding wizard | Can access wizard later from dashboard; event remains in draft |
-| User creates event without selecting template | Default template applied; can change later |
-| Venue address cannot be geocoded | Event created without coordinates; user can update manually |
+| Escenario | Manejo |
+|-----------|--------|
+| Usuario introduce formato de email inválido | Validación inline previene envío |
+| Usuario solicita 4to magic link dentro de 1 hora | Respuesta 429 con mensaje "Por favor espera 20 minutos" |
+| Email de magic link va a spam | Hint "Revisa carpeta de spam"; opción de reenvío después de 60s |
+| Usuario cierra navegador antes de hacer clic en magic link | Enlace permanece válido por 15 minutos; usuario puede solicitar nuevo |
+| Usuario intenta registrarse con email existente | Mismo flujo que login (sin diferenciación en respuesta) |
+| Usuario omite wizard de onboarding | Puede acceder al wizard después desde dashboard; evento permanece en draft |
+| Usuario crea evento sin seleccionar plantilla | Plantilla por defecto aplicada; puede cambiar después |
+| Dirección del venue no puede ser geocodificada | Evento creado sin coordenadas; usuario puede actualizar manualmente |
 
-## 5.6 DECISION NEEDED: Accomplice Onboarding Flow
+## 5.6 DECISIÓN NECESARIA: Flujo de Onboarding de Accomplice
 
-**Question:** How does an accomplice get onboarded? Do they need to create a full Aura account, or is their access purely event-scoped via magic link?
+**Pregunta:** ¿Cómo se onboa un accomplice? ¿Necesita crear una cuenta completa de Aura, o su acceso es puramente scoped a un evento vía magic link?
 
-**Options:**
-- **A.** Accomplice receives magic link -> accesses panel directly (no account needed)
-- **B.** Accomplice receives magic link -> prompted to create account -> accesses panel
-- **C.** Accomplice receives magic link -> creates lightweight profile (name only) -> accesses panel
+**Opciones:**
+- **A.** Accomplice recibe magic link -> accede al panel directamente (sin cuenta necesaria)
+- **B.** Accomplice recibe magic link -> se le pide crear cuenta -> accede al panel
+- **C.** Accomplice recibe magic link -> crea perfil ligero (solo nombre) -> accede al panel
 
-**Recommendation:** Option A for MVP. Accomplices are one-time users tied to a single event. Forcing account creation adds friction. Option B/C can be evaluated for V2 if accomplices become repeat users.
+**Recomendación:** Opción A para MVP. Los accomplices son usuarios de un solo uso tied a un único evento. Forzar creación de cuenta añade fricción. Opción B/C puede evaluarse para V2 si los accomplices se convierten en usuarios recurrentes.
 
 ---
 
-> [Back to PRD Index](../PRD.md) | [Previous: Vision & Strategy](04-vision-strategy.md) | [Next: MVP Features](06-mvp-features.md)
+> [Volver al Índice PRD](../PRD.md) | [Anterior: Visión y Estrategia](04-vision-strategy.md) | [Siguiente: Funcionalidades MVP](06-mvp-features.md)

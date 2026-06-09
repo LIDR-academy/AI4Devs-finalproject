@@ -1,422 +1,422 @@
-# 6. MVP Feature Specification
+# 6. Especificación de Funcionalidades del MVP
 
-> [Back to PRD Index](../PRD.md) | [Previous: Registration & Onboarding](05-registration-onboarding.md) | [Next: Work Breakdown](07-work-breakdown.md)
-
----
-
-## 6.1 Host Management Panel
-
-### 6.1.1 Template Editor
-
-**Description:** A visual tool for customizing invitation templates. Users select from 3 preset templates and customize colors, typography, and hero images.
-
-**Scope (MVP):**
-- 3 preset wedding templates
-- Customization: primary color, secondary color, font family, hero image upload
-- Real-time preview
-- Auto-save (2-second debounce)
-- No drag-and-drop, no custom HTML/CSS
-
-**User Stories:**
-
-| ID | Story | Priority |
-|----|-------|----------|
-| US-T-01 | As a host, I want to select from preset templates so that I can start designing quickly | Must |
-| US-T-02 | As a host, I want to customize colors so that the invitation matches my wedding theme | Must |
-| US-T-03 | As a host, I want to change the font so that the invitation reflects my style | Must |
-| US-T-04 | As a host, I want to upload a hero image so that the invitation is personal | Must |
-| US-T-05 | As a host, I want to see changes in real-time so that I know how the invitation will look | Must |
-
-**Acceptance Criteria:**
-
-| # | Scenario | Given | When | Then |
-|---|----------|-------|------|------|
-| AC-T-01 | Select template | User is in the template editor | User selects one of 3 preset templates | Preview updates immediately; template is applied to the event |
-| AC-T-02 | Customize colors | User has a template selected | User changes the primary color using a color picker | Preview updates in real-time; color is auto-saved |
-| AC-T-03 | Customize typography | User has a template selected | User selects a different font family from the dropdown | Preview updates; font is auto-saved |
-| AC-T-04 | Upload hero image | User has a template selected | User uploads an image file (JPG/PNG, max 5MB) | Image is uploaded, cropped to fit template, and displayed in preview |
-| AC-T-05 | Auto-save | User makes any customization | User waits 2 seconds without further changes | Changes are saved to the database; UI shows "Saved" indicator |
-
-**Edge Cases:**
-- Image upload exceeds 5MB -> error message with size limit
-- Image format not supported (e.g., .bmp) -> error with supported formats list
-- Color picker returns invalid hex -> fallback to last valid color
-- Network interruption during auto-save -> retry with offline indicator
-- User navigates away before auto-save triggers -> force save on navigation
+> [Volver al Índice PRD](../PRD.md) | [Anterior: Registro y Onboarding](05-registration-onboarding.md) | [Siguiente: Desglose de Trabajo](07-work-breakdown.md)
 
 ---
 
-### 6.1.2 Guest Manager
+## 6.1 Panel de Gestión del Anfitrión (Host Management Panel)
 
-**Description:** Bulk import (CSV) and manual entry of guests with segmentation by category (family, friends, colleagues, other).
+### 6.1.1 Editor de Plantillas (Template Editor)
 
-**Scope (MVP):**
-- Manual guest entry: name, email, phone, category
-- CSV import with validation and error preview
-- Guest categorization (family, friends, colleagues, other)
-- Guest list with search, filter, and pagination
-- Free mode: max 5 guests (draft events)
-- Published mode: unlimited guests
+**Descripción:** Una herramienta visual para personalizar las plantillas de invitación. Los usuarios seleccionan entre 3 plantillas preestablecidas y personalizan los colores, la tipografía y las imágenes principales (hero images).
 
-**User Stories:**
+**Alcance (MVP):**
+- 3 plantillas de boda preestablecidas
+- Personalización: color primario, color secundario, familia de fuentes, subida de hero image
+- Vista previa en tiempo real
+- Autoguardado (debounce de 2 segundos)
+- Sin drag-and-drop, sin HTML/CSS personalizado
 
-| ID | Story | Priority |
+**Historias de Usuario:**
+
+| ID | Historia | Prioridad |
 |----|-------|----------|
-| US-GM-01 | As a host, I want to add guests manually so that I can build my guest list | Must |
-| US-GM-02 | As a host, I want to import guests from a CSV file so that I can add many guests at once | Must |
-| US-GM-03 | As a host, I want to categorize guests so that I can organize my list | Must |
-| US-GM-04 | As a host, I want to see validation errors before importing so that I can fix them | Must |
-| US-GM-05 | As a host, I want to search and filter my guest list so that I can find specific guests | Should |
-| US-GM-06 | As a host, I want to delete guests so that I can correct mistakes | Must |
+| US-T-01 | Como anfitrión, quiero seleccionar entre plantillas preestablecidas para poder empezar a diseñar rápidamente | Must |
+| US-T-02 | Como anfitrión, quiero personalizar los colores para que la invitación combine con la temática de mi boda | Must |
+| US-T-03 | Como anfitrión, quiero cambiar la fuente para que la invitación refleje mi estilo | Must |
+| US-T-04 | Como anfitrión, quiero subir una hero image para que la invitación sea personal | Must |
+| US-T-05 | Como anfitrión, quiero ver los cambios en tiempo real para saber cómo se verá la invitación | Must |
 
-**Acceptance Criteria:**
+**Criterios de Aceptación:**
 
-| # | Scenario | Given | When | Then |
+| # | Escenario | Dado que (Given) | Cuando (When) | Entonces (Then) |
 |---|----------|-------|------|------|
-| AC-GM-01 | Add guest manually | User is on the guest manager page | User fills in name, email, phone, category and clicks "Add" | Guest is added to the list; appears in the guest table |
-| AC-GM-02 | Import valid CSV | User has a CSV with columns: name, email, phone, category | User uploads the CSV | System validates all rows; shows preview with guest count; user confirms import; guests are added |
-| AC-GM-03 | Import CSV with errors | User has a CSV with some invalid emails and missing names | User uploads the CSV | System highlights error rows; shows error messages; user can fix and re-upload or skip invalid rows |
-| AC-GM-04 | Free mode limit | User is in free (unpublished) mode with 5 guests | User tries to add a 6th guest | System blocks the action; shows upgrade prompt: "Publish your event to add unlimited guests" |
-| AC-GM-05 | Categorize guests | User has guests in the list | User filters by category (family/friends/work) | Only guests in that category are displayed |
-| AC-GM-06 | Delete guest | User has a guest in the list | User clicks "Delete" and confirms | Guest is soft-deleted; removed from the list |
+| AC-T-01 | Seleccionar plantilla | El usuario está en el editor de plantillas | El usuario selecciona una de las 3 plantillas preestablecidas | La vista previa se actualiza inmediatamente; la plantilla se aplica al evento |
+| AC-T-02 | Personalizar colores | El usuario tiene una plantilla seleccionada | El usuario cambia el color primario usando un selector de color | La vista previa se actualiza en tiempo real; el color se autoguarda |
+| AC-T-03 | Personalizar tipografía | El usuario tiene una plantilla seleccionada | El usuario selecciona una familia de fuentes diferente en el menú desplegable | La vista previa se actualiza; la fuente se autoguarda |
+| AC-T-04 | Subir hero image | El usuario tiene una plantilla seleccionada | El usuario sube un archivo de imagen (JPG/PNG, máx 5MB) | La imagen se sube, se recorta para ajustarse a la plantilla y se muestra en la vista previa |
+| AC-T-05 | Autoguardado | El usuario hace cualquier personalización | El usuario espera 2 segundos sin hacer más cambios | Los cambios se guardan en la base de datos; la UI muestra un indicador de "Guardado" |
 
-**Edge Cases:**
-- CSV with duplicate emails -> deduplicated, warning shown
-- CSV with missing required columns -> error with expected format
-- Guest email already exists in event -> duplicate warning, option to skip or update
-- Free mode limit reached during CSV import -> import blocked with upgrade prompt
-- Large CSV (1000+ rows) -> progress indicator, background processing
+**Casos Extremos (Edge Cases):**
+- Subida de imagen supera los 5MB -> mensaje de error con el límite de tamaño
+- Formato de imagen no soportado (ej., .bmp) -> error con la lista de formatos soportados
+- El selector de color devuelve un hex inválido -> se vuelve al último color válido
+- Interrupción de red durante el autoguardado -> reintento con indicador offline
+- El usuario navega a otra página antes de que se active el autoguardado -> se fuerza el guardado al navegar
 
 ---
 
-### 6.1.3 Control Dashboard
+### 6.1.2 Gestor de Invitados (Guest Manager)
 
-**Description:** Real-time tracking of RSVPs, no-shows, dietary restrictions, allergens, and transportation needs.
+**Descripción:** Importación masiva (CSV) y entrada manual de invitados con segmentación por categoría (familia, amigos, colegas, otros).
 
-**Scope (MVP):**
-- RSVP statistics: total invited, confirmed, declined, pending, maybe
-- Dietary restrictions list (aggregated from RSVPs)
-- Transportation needs count
-- Plus-one count
-- Guest list with RSVP status
-- Export guest list as CSV
+**Alcance (MVP):**
+- Entrada manual de invitados: nombre, email, teléfono, categoría
+- Importación CSV con validación y vista previa de errores
+- Categorización de invitados (familia, amigos, colegas, otros)
+- Lista de invitados con búsqueda, filtro y paginación
+- Modo gratuito: máx 5 invitados (eventos en borrador)
+- Modo publicado: invitados ilimitados
 
-**User Stories:**
+**Historias de Usuario:**
 
-| ID | Story | Priority |
+| ID | Historia | Prioridad |
 |----|-------|----------|
-| US-CD-01 | As a host, I want to see real-time RSVP statistics so that I can track responses | Must |
-| US-CD-02 | As a host, I want to see which guests have dietary restrictions so that I can coordinate with the caterer | Must |
-| US-CD-03 | As a host, I want to see who needs transportation so that I can arrange it | Must |
-| US-CD-04 | As a host, I want to export my guest list so that I can share it with vendors | Should |
-| US-CD-05 | As a host, I want to see who hasn't responded so that I can follow up | Must |
+| US-GM-01 | Como anfitrión, quiero añadir invitados manualmente para poder construir mi lista de invitados | Must |
+| US-GM-02 | Como anfitrión, quiero importar invitados desde un archivo CSV para poder añadir muchos invitados a la vez | Must |
+| US-GM-03 | Como anfitrión, quiero categorizar a los invitados para poder organizar mi lista | Must |
+| US-GM-04 | Como anfitrión, quiero ver los errores de validación antes de importar para poder corregirlos | Must |
+| US-GM-05 | Como anfitrión, quiero buscar y filtrar mi lista de invitados para poder encontrar a personas específicas | Should |
+| US-GM-06 | Como anfitrión, quiero eliminar invitados para poder corregir errores | Must |
 
-**Acceptance Criteria:**
+**Criterios de Aceptación:**
 
-| # | Scenario | Given | When | Then |
+| # | Escenario | Dado que (Given) | Cuando (When) | Entonces (Then) |
 |---|----------|-------|------|------|
-| AC-CD-01 | View RSVP stats | Host is on the event dashboard | Host views the RSVP section | Dashboard shows: total invited, confirmed, declined, pending, dietary restrictions list, transport needs count |
-| AC-CD-02 | Real-time update | A guest submits an RSVP | Host is viewing the dashboard | Dashboard stats update within 5 seconds (no manual refresh) |
-| AC-CD-03 | View dietary restrictions | Host clicks "Dietary Restrictions" | System displays the list | List shows guest name and their dietary restrictions |
-| AC-CD-04 | Export guest list | Host clicks "Export CSV" | System generates and downloads a CSV file | CSV contains: name, email, phone, category, RSVP status, dietary restrictions, transport needs |
-| AC-CD-05 | Filter by RSVP status | Host filters by "Pending" | System updates the guest list | Only guests who haven't responded are displayed |
+| AC-GM-01 | Añadir invitado manualmente | El usuario está en la página del gestor de invitados | El usuario rellena nombre, email, teléfono, categoría y hace clic en "Añadir" | El invitado se añade a la lista; aparece en la tabla de invitados |
+| AC-GM-02 | Importar CSV válido | El usuario tiene un CSV con columnas: nombre, email, teléfono, categoría | El usuario sube el CSV | El sistema valida todas las filas; muestra una vista previa con el total de invitados; el usuario confirma la importación; se añaden los invitados |
+| AC-GM-03 | Importar CSV con errores | El usuario tiene un CSV con algunos correos inválidos y nombres faltantes | El usuario sube el CSV | El sistema resalta las filas con errores; muestra mensajes de error; el usuario puede corregir y volver a subir o ignorar las filas inválidas |
+| AC-GM-04 | Límite del modo gratuito | El usuario está en el modo gratuito (no publicado) con 5 invitados | El usuario intenta añadir un sexto invitado | El sistema bloquea la acción; muestra una solicitud de actualización: "Publica tu evento para añadir invitados ilimitados" |
+| AC-GM-05 | Categorizar invitados | El usuario tiene invitados en la lista | El usuario filtra por categoría (familia/amigos/trabajo) | Solo se muestran los invitados de esa categoría |
+| AC-GM-06 | Eliminar invitado | El usuario tiene un invitado en la lista | El usuario hace clic en "Eliminar" y confirma | El invitado se elimina de forma lógica (soft-delete); desaparece de la lista |
 
-**Edge Cases:**
-- No guests added yet -> empty state with "Add guests to get started"
-- No RSVPs received yet -> stats show all zeros with "Waiting for responses"
-- Guest updates RSVP -> stats update, previous response replaced
-- RSVP submitted after event date -> accepted but flagged as "late"
+**Casos Extremos (Edge Cases):**
+- CSV con emails duplicados -> se deduplican, se muestra una advertencia
+- CSV con columnas requeridas faltantes -> error con el formato esperado
+- El email del invitado ya existe en el evento -> advertencia de duplicado, opción de omitir o actualizar
+- Límite del modo gratuito alcanzado durante la importación CSV -> importación bloqueada con solicitud de actualización
+- CSV grande (1000+ filas) -> indicador de progreso, procesamiento en background
 
 ---
 
-## 6.2 Guest Microsite
+### 6.1.3 Panel de Control (Control Dashboard)
 
-### 6.2.1 Static JAMstack Site
+**Descripción:** Seguimiento en tiempo real de RSVPs, ausencias, restricciones dietéticas, alérgenos y necesidades de transporte.
 
-**Description:** Ultra-fast, mobile-first invitation page served via CDN. No app download required.
+**Alcance (MVP):**
+- Estadísticas de RSVP: total de invitados, confirmados, rechazados, pendientes, tal vez
+- Lista de restricciones dietéticas (agregadas a partir de RSVPs)
+- Recuento de necesidades de transporte
+- Recuento de acompañantes (plus-one)
+- Lista de invitados con el estado de RSVP
+- Exportar lista de invitados como CSV
 
-**Scope (MVP):**
-- Static HTML/CSS/JS generated per published event
-- Served via CDN (Cloudflare)
-- Mobile-first responsive design
-- Load time < 2 seconds on mobile 3G
-- Lighthouse performance score > 90
-- Event details: couple names, date, venue, schedule
-- Embedded Google Maps venue
-- RSVP link (token-based)
-- Add-to-calendar buttons (Google Calendar, Apple Calendar)
-- Directions links (Google Maps / Waze deep links)
+**Historias de Usuario:**
 
-**User Stories:**
-
-| ID | Story | Priority |
+| ID | Historia | Prioridad |
 |----|-------|----------|
-| US-MS-01 | As a guest, I want to view the invitation on my mobile browser so that I don't need to download an app | Must |
-| US-MS-02 | As a guest, I want the page to load quickly so that I can see the details immediately | Must |
-| US-MS-03 | As a guest, I want to see the venue on a map so that I know where to go | Must |
-| US-MS-04 | As a guest, I want to get directions with one tap so that I can navigate easily | Must |
-| US-MS-05 | As a guest, I want to add the event to my calendar so that I don't forget | Should |
+| US-CD-01 | Como anfitrión, quiero ver estadísticas de RSVP en tiempo real para hacer un seguimiento de las respuestas | Must |
+| US-CD-02 | Como anfitrión, quiero ver qué invitados tienen restricciones dietéticas para poder coordinar con el servicio de catering | Must |
+| US-CD-03 | Como anfitrión, quiero ver quién necesita transporte para poder organizarlo | Must |
+| US-CD-04 | Como anfitrión, quiero exportar mi lista de invitados para poder compartirla con los proveedores | Should |
+| US-CD-05 | Como anfitrión, quiero ver quién no ha respondido para hacer un seguimiento | Must |
 
-**Acceptance Criteria:**
+**Criterios de Aceptación:**
 
-| # | Scenario | Given | When | Then |
+| # | Escenario | Dado que (Given) | Cuando (When) | Entonces (Then) |
 |---|----------|-------|------|------|
-| AC-MS-01 | Load microsite | Event is published | Guest navigates to `aura.planning/e/{slug}` | Static site loads with event details, venue map, RSVP link |
-| AC-MS-02 | Mobile responsiveness | Guest accesses the microsite on a mobile device | Guest views the page | Site is fully responsive; all elements are readable and tappable |
-| AC-MS-03 | Performance | Guest accesses the microsite on mobile 3G | Page loads | Total load time is under 2 seconds; Lighthouse performance score > 90 |
-| AC-MS-04 | Venue map | Guest views the microsite | Guest scrolls to the venue section | Google Maps embed shows the venue location |
-| AC-MS-05 | Directions link | Guest clicks "Get Directions" | Browser opens | Google Maps or Waze app opens with the venue as destination |
-| AC-MS-06 | Calendar sync | Guest clicks "Add to Calendar" | System generates | .ics file downloads or Google Calendar link opens with event details pre-filled |
-| AC-MS-07 | Update after edit | Host updates event details after publishing | Host saves changes | Static site is regenerated; CDN cache is invalidated; new content is visible within 1 hour |
+| AC-CD-01 | Ver estadísticas de RSVP | El anfitrión está en el dashboard del evento | El anfitrión ve la sección de RSVP | El dashboard muestra: total invitados, confirmados, rechazados, pendientes, lista de restricciones dietéticas, recuento de necesidades de transporte |
+| AC-CD-02 | Actualización en tiempo real | Un invitado envía un RSVP | El anfitrión está viendo el dashboard | Las estadísticas del dashboard se actualizan en menos de 5 segundos (sin recarga manual) |
+| AC-CD-03 | Ver restricciones dietéticas | El anfitrión hace clic en "Restricciones Dietéticas" | El sistema muestra la lista | La lista muestra el nombre del invitado y sus restricciones dietéticas |
+| AC-CD-04 | Exportar lista de invitados | El anfitrión hace clic en "Exportar CSV" | El sistema genera y descarga un archivo CSV | El CSV contiene: nombre, email, teléfono, categoría, estado de RSVP, restricciones dietéticas, necesidades de transporte |
+| AC-CD-05 | Filtrar por estado RSVP | El anfitrión filtra por "Pendiente" | El sistema actualiza la lista de invitados | Solo se muestran los invitados que no han respondido |
 
-**Edge Cases:**
-- Event not published -> 404 page with "This event is not yet available"
-- Event deleted -> 404 page with "This event is no longer available"
-- Invalid slug -> 404 page
-- CDN cache miss during regeneration -> fallback to previous version or loading state
-- Google Maps API quota exceeded -> static map image fallback
+**Casos Extremos (Edge Cases):**
+- Aún no se han añadido invitados -> estado vacío con "Añade invitados para comenzar"
+- Aún no se han recibido RSVPs -> las estadísticas muestran ceros con "Esperando respuestas"
+- Un invitado actualiza su RSVP -> las estadísticas se actualizan, la respuesta anterior es reemplazada
+- RSVP enviado después de la fecha del evento -> se acepta pero se marca como "tarde"
 
 ---
 
-### 6.2.2 Smart RSVP Form
+## 6.2 Micrositio de Invitados (Guest Microsite)
 
-**Description:** Mobile-optimized form for guests to respond to invitations. No account required.
+### 6.2.1 Sitio JAMstack Estático (Static JAMstack Site)
 
-**Scope (MVP):**
-- Token-based access (unique per guest)
-- Attendance: Yes / No / Maybe
-- Dietary restrictions (free text)
-- Transportation needs (checkbox)
-- Plus-one (checkbox)
-- Personal message to hosts (optional, free text)
-- RSVP deadline (7 days before event)
-- Confirmation page after submission
-- Ability to update RSVP before deadline
+**Descripción:** Página de invitación ultrarrápida, optimizada para móviles y servida a través de CDN. No requiere descarga de app.
 
-**User Stories:**
+**Alcance (MVP):**
+- HTML/CSS/JS estático generado por evento publicado
+- Servido mediante CDN (Cloudflare)
+- Diseño responsivo mobile-first
+- Tiempo de carga < 2 segundos en móvil 3G
+- Puntuación de rendimiento en Lighthouse > 90
+- Detalles del evento: nombres de la pareja, fecha, lugar, horario
+- Mapa del lugar integrado con Google Maps
+- Enlace de RSVP (basado en token)
+- Botones para añadir al calendario (Google Calendar, Apple Calendar)
+- Enlaces para obtener indicaciones (deep links a Google Maps / Waze)
 
-| ID | Story | Priority |
+**Historias de Usuario:**
+
+| ID | Historia | Prioridad |
 |----|-------|----------|
-| US-RSVP-01 | As a guest, I want to RSVP without creating an account so that I can respond quickly | Must |
-| US-RSVP-02 | As a guest, I want to indicate my dietary restrictions so that the hosts can accommodate me | Must |
-| US-RSVP-03 | As a guest, I want to indicate if I need transportation so that the hosts can arrange it | Must |
-| US-RSVP-04 | As a guest, I want to update my RSVP before the deadline so that I can change my plans | Must |
-| US-RSVP-05 | As a guest, I want to see a confirmation after submitting so that I know my response was received | Must |
+| US-MS-01 | Como invitado, quiero ver la invitación en mi navegador móvil para no tener que descargar una app | Must |
+| US-MS-02 | Como invitado, quiero que la página cargue rápidamente para poder ver los detalles inmediatamente | Must |
+| US-MS-03 | Como invitado, quiero ver el lugar en un mapa para saber a dónde ir | Must |
+| US-MS-04 | Como invitado, quiero obtener indicaciones con un solo toque para poder navegar fácilmente | Must |
+| US-MS-05 | Como invitado, quiero añadir el evento a mi calendario para no olvidarlo | Should |
 
-**Acceptance Criteria:**
+**Criterios de Aceptación:**
 
-| # | Scenario | Given | When | Then |
+| # | Escenario | Dado que (Given) | Cuando (When) | Entonces (Then) |
 |---|----------|-------|------|------|
-| AC-RSVP-01 | Guest accesses RSVP | Guest receives an invitation link | Guest clicks the link | System displays the event details and RSVP form with guest name pre-filled |
-| AC-RSVP-02 | Submit RSVP (attending) | Guest is on the RSVP form | Guest selects "Yes, I'll attend", fills dietary restrictions, and submits | RSVP is saved; guest sees confirmation message; host dashboard updates in real-time |
-| AC-RSVP-03 | Submit RSVP (not attending) | Guest is on the RSVP form | Guest selects "No, I can't attend" and submits | RSVP is saved; guest sees thank you message; host dashboard shows declined count incremented |
-| AC-RSVP-04 | Update RSVP | Guest previously submitted an RSVP | Guest clicks their invitation link again (more than 7 days before event) | Guest can modify their response; changes are saved |
-| AC-RSVP-05 | RSVP deadline | Guest tries to update RSVP less than 7 days before event | Guest submits changes | System rejects the update; shows "RSVP deadline has passed" message |
-| AC-RSVP-06 | Invalid token | Guest accesses an invalid or expired invitation link | System validates the token | System shows "This invitation link is not valid" with a contact link |
+| AC-MS-01 | Cargar micrositio | El evento está publicado | El invitado navega a `aura.planning/e/{slug}` | El sitio estático se carga con los detalles del evento, el mapa del lugar y el enlace de RSVP |
+| AC-MS-02 | Responsividad móvil | El invitado accede al micrositio en un dispositivo móvil | El invitado ve la página | El sitio es completamente responsivo; todos los elementos son legibles y tocables |
+| AC-MS-03 | Rendimiento | El invitado accede al micrositio en móvil 3G | La página carga | El tiempo total de carga es inferior a 2 segundos; puntuación en Lighthouse > 90 |
+| AC-MS-04 | Mapa del lugar | El invitado ve el micrositio | El invitado hace scroll hasta la sección del lugar | El embed de Google Maps muestra la ubicación del lugar |
+| AC-MS-05 | Enlace de indicaciones | El invitado hace clic en "Obtener Indicaciones" | El navegador se abre | La app de Google Maps o Waze se abre con el lugar como destino |
+| AC-MS-06 | Sincronización de calendario | El invitado hace clic en "Añadir al Calendario" | El sistema genera la acción | Se descarga un archivo .ics o se abre el enlace de Google Calendar con los detalles del evento pre-rellenados |
+| AC-MS-07 | Actualización tras editar | El anfitrión actualiza los detalles del evento después de publicarlo | El anfitrión guarda los cambios | El sitio estático se regenera; se invalida la caché de CDN; el nuevo contenido es visible en un plazo de 1 hora |
 
-**Edge Cases:**
-- Guest submits RSVP without selecting attendance -> validation error
-- Guest submits RSVP after deadline -> rejected with message
-- Guest shares their link with someone else -> RSVP is tied to the original guest name
-- Network interruption during submission -> retry with saved form data
-- Duplicate submission (double-click) -> idempotent handling, single RSVP recorded
+**Casos Extremos (Edge Cases):**
+- El evento no está publicado -> Página 404 con "Este evento aún no está disponible"
+- Evento eliminado -> Página 404 con "Este evento ya no está disponible"
+- Slug inválido -> Página 404
+- Miss de caché en CDN durante la regeneración -> fallback a la versión anterior o a un estado de carga
+- Cuota de la API de Google Maps superada -> fallback a imagen estática del mapa
 
 ---
 
-## 6.3 Communication System
+### 6.2.2 Formulario RSVP Inteligente (Smart RSVP Form)
 
-### 6.3.1 Email + WhatsApp Invitations
+**Descripción:** Formulario optimizado para móviles para que los invitados respondan a las invitaciones. No se requiere cuenta.
 
-**Description:** Multi-channel invitation sending via Gmail SMTP (email) and Meta WhatsApp Business API.
+**Alcance (MVP):**
+- Acceso basado en token (único por invitado)
+- Asistencia: Sí / No / Tal vez
+- Restricciones dietéticas (texto libre)
+- Necesidades de transporte (checkbox)
+- Acompañante / Plus-one (checkbox)
+- Mensaje personal para los anfitriones (opcional, texto libre)
+- Fecha límite para RSVP (7 días antes del evento)
+- Página de confirmación tras el envío
+- Posibilidad de actualizar el RSVP antes de la fecha límite
 
-**Scope (MVP):**
-- Email invitations: personalized template with RSVP link
-- WhatsApp invitations: template message with RSVP link
-- Delivery status tracking (sent, delivered, opened)
-- Fallback: email if WhatsApp delivery fails after 2 retries
-- Bounce/complaint handling for email (via SNS webhooks)
+**Historias de Usuario:**
 
-**User Stories:**
-
-| ID | Story | Priority |
+| ID | Historia | Prioridad |
 |----|-------|----------|
-| US-COM-01 | As a host, I want to send invitations via email so that all guests receive them | Must |
-| US-COM-02 | As a host, I want to send invitations via WhatsApp so that guests receive them on their preferred channel | Should |
-| US-COM-03 | As a host, I want to see which invitations have been delivered so that I can follow up with non-receivers | Should |
-| US-COM-04 | As a host, I want invitations to fall back to email if WhatsApp fails so that no guest is missed | Should |
+| US-RSVP-01 | Como invitado, quiero hacer RSVP sin crear una cuenta para poder responder rápidamente | Must |
+| US-RSVP-02 | Como invitado, quiero indicar mis restricciones dietéticas para que los anfitriones puedan acomodarme | Must |
+| US-RSVP-03 | Como invitado, quiero indicar si necesito transporte para que los anfitriones puedan organizarlo | Must |
+| US-RSVP-04 | Como invitado, quiero actualizar mi RSVP antes de la fecha límite por si cambian mis planes | Must |
+| US-RSVP-05 | Como invitado, quiero ver una confirmación después de enviar para saber que mi respuesta fue recibida | Must |
 
-**Acceptance Criteria:**
+**Criterios de Aceptación:**
 
-| # | Scenario | Given | When | Then |
+| # | Escenario | Dado que (Given) | Cuando (When) | Entonces (Then) |
 |---|----------|-------|------|------|
-| AC-COM-01 | Send email invitation | Host has guests with email addresses | Host clicks "Send Email Invitations" | Emails are sent via Gmail SMTP; delivery status updated to "sent" |
-| AC-COM-02 | Send WhatsApp invitation | Host has guests with phone numbers | Host clicks "Send WhatsApp Invitations" | WhatsApp messages are sent via Meta API; delivery status updated |
-| AC-COM-03 | WhatsApp delivery failure | WhatsApp message fails to deliver | System retries after 5 minutes, then 30 minutes | After 2 failed attempts, invitation is sent via email as fallback |
-| AC-COM-04 | Email bounce | Email bounces (hard bounce) | SNS webhook notifies the system | Invitation status updated to "failed"; guest flagged; no retry |
-| AC-COM-05 | Email complaint | Recipient marks email as spam | SNS webhook notifies the system | Email address suspended; no further emails sent to this address |
+| AC-RSVP-01 | Acceder al RSVP | El invitado recibe un enlace de invitación | El invitado hace clic en el enlace | El sistema muestra los detalles del evento y el formulario RSVP con el nombre del invitado pre-rellenado |
+| AC-RSVP-02 | Enviar RSVP (asistirá) | El invitado está en el formulario RSVP | El invitado selecciona "Sí, asistiré", rellena las restricciones dietéticas y envía | Se guarda el RSVP; el invitado ve un mensaje de confirmación; el dashboard del anfitrión se actualiza en tiempo real |
+| AC-RSVP-03 | Enviar RSVP (no asistirá) | El invitado está en el formulario RSVP | El invitado selecciona "No, no podré asistir" y envía | Se guarda el RSVP; el invitado ve un mensaje de agradecimiento; el dashboard del anfitrión incrementa la cuenta de rechazados |
+| AC-RSVP-04 | Actualizar RSVP | El invitado ya envió un RSVP | El invitado hace clic nuevamente en su enlace (más de 7 días antes del evento) | El invitado puede modificar su respuesta; los cambios se guardan |
+| AC-RSVP-05 | Fecha límite superada | El invitado intenta actualizar el RSVP a menos de 7 días del evento | El invitado envía los cambios | El sistema rechaza la actualización; muestra el mensaje "La fecha límite de RSVP ha pasado" |
+| AC-RSVP-06 | Token inválido | El invitado accede a un enlace inválido o expirado | El sistema valida el token | El sistema muestra "Este enlace de invitación no es válido" junto con un enlace de contacto |
 
-**Edge Cases:**
-- Guest has neither email nor phone -> invitation marked as "cannot send"; host notified
-- WhatsApp template not yet approved by Meta -> fallback to email only
-- Gmail SMTP daily limit (500/day) -> monitor quota, plan Mailgun/Brevo migration
-- Rate limit exceeded (WhatsApp 1K/hr) -> queue remaining messages for next window
+**Casos Extremos (Edge Cases):**
+- El invitado envía RSVP sin seleccionar si asiste o no -> error de validación
+- El invitado envía RSVP pasada la fecha límite -> rechazado con mensaje
+- El invitado comparte su enlace con alguien más -> el RSVP está vinculado al nombre del invitado original
+- Interrupción de red durante el envío -> reintento con los datos guardados en el formulario
+- Envío duplicado (doble clic) -> manejo idempotente, se registra un solo RSVP
 
 ---
 
-### 6.3.2 Automated Reminders
+## 6.3 Sistema de Comunicación (Communication System)
 
-**Description:** Automated RSVP reminders for guests who haven't responded.
+### 6.3.1 Invitaciones por Email y WhatsApp
 
-**Scope (MVP):**
-- Configurable reminder schedule (default: 7 days before RSVP deadline)
-- Reminder sent via same channel as original invitation (email or WhatsApp)
-- Host can manually trigger reminders
-- Reminder respects guest preferences (no reminders if guest opted out)
+**Descripción:** Envío de invitaciones multicanal a través de Gmail SMTP (email) y Meta WhatsApp Business API.
 
-**User Stories:**
+**Alcance (MVP):**
+- Invitaciones por email: plantilla personalizada con enlace RSVP
+- Invitaciones por WhatsApp: mensaje de plantilla con enlace RSVP
+- Seguimiento del estado de entrega (enviado, entregado, abierto)
+- Fallback: se usa email si el envío por WhatsApp falla tras 2 reintentos
+- Gestión de rebotes/quejas en email (mediante webhooks SNS)
 
-| ID | Story | Priority |
+**Historias de Usuario:**
+
+| ID | Historia | Prioridad |
 |----|-------|----------|
-| US-REM-01 | As a host, I want automated reminders sent to non-responders so that I don't have to follow up manually | Should |
-| US-REM-02 | As a host, I want to manually trigger reminders so that I can send them on my own schedule | Should |
+| US-COM-01 | Como anfitrión, quiero enviar invitaciones por email para que todos los invitados las reciban | Must |
+| US-COM-02 | Como anfitrión, quiero enviar invitaciones por WhatsApp para que los invitados las reciban en su canal preferido | Should |
+| US-COM-03 | Como anfitrión, quiero ver qué invitaciones se han entregado para hacer seguimiento a quienes no las recibieron | Should |
+| US-COM-04 | Como anfitrión, quiero que la invitación se envíe por email como respaldo si WhatsApp falla, para que ningún invitado se quede sin ella | Should |
 
-**Acceptance Criteria:**
+**Criterios de Aceptación:**
 
-| # | Scenario | Given | When | Then |
+| # | Escenario | Dado que (Given) | Cuando (When) | Entonces (Then) |
 |---|----------|-------|------|------|
-| AC-REM-01 | Automated reminder | Event has guests who haven't RSVP'd | RSVP deadline approaches (configurable days before) | Reminder is sent to non-responders via their original channel |
-| AC-REM-02 | Manual reminder | Host is on the guest manager | Host selects pending guests and clicks "Send Reminder" | Reminder is sent immediately to selected guests |
-| AC-REM-03 | Guest responds before reminder | Guest submits RSVP | Reminder is scheduled | Reminder is canceled for that guest |
+| AC-COM-01 | Enviar invitación email | El anfitrión tiene invitados con direcciones de email | El anfitrión hace clic en "Enviar Invitaciones por Email" | Los emails se envían vía Gmail SMTP; el estado se actualiza a "enviado" |
+| AC-COM-02 | Enviar invitación WhatsApp | El anfitrión tiene invitados con números de teléfono | El anfitrión hace clic en "Enviar Invitaciones por WhatsApp" | Los mensajes se envían vía Meta API; el estado se actualiza |
+| AC-COM-03 | Fallo en WhatsApp | Falla la entrega por WhatsApp | El sistema reintenta a los 5 min, luego a los 30 min | Tras 2 intentos fallidos, se envía la invitación por email como respaldo (fallback) |
+| AC-COM-04 | Rebote de email | El email rebota (hard bounce) | Un webhook de SNS notifica al sistema | El estado de la invitación cambia a "fallido"; el invitado se marca; no hay más reintentos |
+| AC-COM-05 | Queja de email | El destinatario marca el email como spam | Un webhook de SNS notifica al sistema | Se suspende la dirección de email; no se enviarán más correos a esa dirección |
 
-**Edge Cases:**
-- Guest already responded -> reminder not sent
-- Guest email bounced -> reminder not sent via email; try WhatsApp if available
-- Reminder sent but guest still doesn't respond -> second reminder (configurable)
-- Event date changed -> reminder schedule recalculated
+**Casos Extremos (Edge Cases):**
+- El invitado no tiene email ni teléfono -> la invitación se marca como "no se puede enviar"; se notifica al anfitrión
+- La plantilla de WhatsApp no está aprobada por Meta -> solo funciona el envío por email
+- Límite diario de Gmail SMTP (500/día) -> se monitoriza la cuota, plan para migrar a Mailgun/Brevo
+- Se supera el límite de velocidad de la API (WhatsApp 1K/hr) -> los mensajes restantes se encolan para la próxima ventana
 
 ---
 
-### 6.3.3 Post-Event Thank You Cards
+### 6.3.2 Recordatorios Automáticos (Automated Reminders)
 
-**Description:** Automated digital thank you cards sent to attendees after the event.
+**Descripción:** Recordatorios automáticos de RSVP para invitados que no han respondido.
 
-**Scope (MVP):**
-- Sent 1 day after event date
-- Via email or WhatsApp (same channel as invitation)
-- Personalized with guest name and event name
-- Optional: link to external photo gallery (Drive, Pixieset)
-- Host can customize the thank you message
+**Alcance (MVP):**
+- Horario de recordatorio configurable (por defecto: 7 días antes del límite de RSVP)
+- Se envía por el mismo canal que la invitación original (email o WhatsApp)
+- El anfitrión puede lanzar los recordatorios manualmente
+- El recordatorio respeta las preferencias del invitado (no se envían si optó por no recibirlos)
 
-**User Stories:**
+**Historias de Usuario:**
 
-| ID | Story | Priority |
+| ID | Historia | Prioridad |
 |----|-------|----------|
-| US-TY-01 | As a host, I want automated thank you cards sent to attendees so that I can thank them without manual effort | Could |
-| US-TY-02 | As a host, I want to include a link to my photo gallery so that guests can see the photos | Could |
+| US-REM-01 | Como anfitrión, quiero que se envíen recordatorios automáticos a quienes no han respondido para no tener que hacerlo manualmente | Should |
+| US-REM-02 | Como anfitrión, quiero lanzar los recordatorios manualmente para enviarlos cuando yo prefiera | Should |
 
-**Acceptance Criteria:**
+**Criterios de Aceptación:**
 
-| # | Scenario | Given | When | Then |
+| # | Escenario | Dado que (Given) | Cuando (When) | Entonces (Then) |
 |---|----------|-------|------|------|
-| AC-TY-01 | Automated thank you | Event date has passed | 1 day after event | Thank you cards are sent to all attendees via their original channel |
-| AC-TY-02 | Custom message | Host has customized the thank you message | Thank you cards are sent | Custom message is used instead of default |
-| AC-TY-03 | Photo gallery link | Host has added a photo gallery URL | Thank you cards are sent | Link is included in the thank you message |
+| AC-REM-01 | Recordatorio automático | El evento tiene invitados sin RSVP | Se acerca el límite (días configurados) | Se envía recordatorio a quienes no han respondido usando su canal original |
+| AC-REM-02 | Recordatorio manual | El anfitrión está en el gestor de invitados | El anfitrión selecciona invitados pendientes y clica en "Enviar Recordatorio" | El recordatorio se envía de inmediato a los seleccionados |
+| AC-REM-03 | Invitado responde antes | El invitado envía el RSVP | El recordatorio estaba programado | Se cancela el recordatorio para ese invitado |
 
-**Edge Cases:**
-- Event has no attendees -> no thank you cards sent
-- Guest email bounced -> thank you not sent via email; try WhatsApp if available
-- Host hasn't added photo gallery link -> thank you sent without link
+**Casos Extremos (Edge Cases):**
+- El invitado ya respondió -> no se envía recordatorio
+- El email del invitado rebotó -> no se envía recordatorio por email; se intenta WhatsApp si está disponible
+- Se envió el recordatorio pero sigue sin responder -> segundo recordatorio (configurable)
+- Se cambia la fecha del evento -> se recalcula el horario de los recordatorios
+
+---
+
+### 6.3.3 Tarjetas de Agradecimiento Post-Evento (Post-Event Thank You Cards)
+
+**Descripción:** Tarjetas digitales automáticas enviadas a los asistentes después del evento.
+
+**Alcance (MVP):**
+- Se envían 1 día después de la fecha del evento
+- Vía email o WhatsApp (mismo canal de la invitación)
+- Personalizadas con el nombre del invitado y del evento
+- Opcional: enlace a una galería de fotos externa (Drive, Pixieset)
+- El anfitrión puede personalizar el mensaje de agradecimiento
+
+**Historias de Usuario:**
+
+| ID | Historia | Prioridad |
+|----|-------|----------|
+| US-TY-01 | Como anfitrión, quiero que se envíen tarjetas automáticas a los asistentes para agradecerles sin esfuerzo manual | Could |
+| US-TY-02 | Como anfitrión, quiero incluir un enlace a mi galería de fotos para que los invitados puedan verlas | Could |
+
+**Criterios de Aceptación:**
+
+| # | Escenario | Dado que (Given) | Cuando (When) | Entonces (Then) |
+|---|----------|-------|------|------|
+| AC-TY-01 | Agradecimiento automático | Pasó la fecha del evento | 1 día después del evento | Se envían las tarjetas a los asistentes por su canal original |
+| AC-TY-02 | Mensaje personalizado | El anfitrión personalizó el texto | Se envían las tarjetas | Se usa el mensaje personalizado en lugar del que viene por defecto |
+| AC-TY-03 | Enlace a la galería | El anfitrión añadió la URL de la galería | Se envían las tarjetas | El enlace se incluye en el mensaje |
+
+**Casos Extremos (Edge Cases):**
+- El evento no tiene asistentes -> no se envían tarjetas
+- El email rebotó -> no se envía por email; se intenta por WhatsApp si está disponible
+- El anfitrión no incluyó la URL -> se envía la tarjeta sin el enlace
 
 ---
 
 ## 6.4 Live Guest Journey (Killer Feature)
 
-### 6.4.1 Accomplice Magic-Link Panel
+### 6.4.1 Panel de Cómplice por Enlace Mágico (Accomplice Magic-Link Panel)
 
-**Description:** Secure access via magic link for a trusted person (best man, bridesmaid) to send live event updates.
+**Descripción:** Acceso seguro mediante magic link para una persona de confianza (padrino, dama de honor) para enviar actualizaciones del evento en vivo.
 
-**Scope (MVP):**
-- Host grants accomplice access via email
-- Accomplice receives magic link (no password required)
-- Accomplice panel: simplified mobile-first interface
-- Pre-configured message templates (e.g., "The bride is leaving the hotel!")
-- Swipe-to-send gesture to prevent accidental sends
-- Delivery status tracking
-- Accomplice access expires EventDate + 1 day
-- Permissions: send messages, view RSVPs (configurable)
+**Alcance (MVP):**
+- El anfitrión otorga acceso por email
+- El cómplice recibe un enlace mágico (sin contraseña)
+- Panel del cómplice: interfaz simple orientada a móviles
+- Plantillas de mensajes preconfiguradas (ej. "¡La novia está saliendo del hotel!")
+- Gesto "swipe-to-send" para evitar envíos por error
+- Seguimiento del estado de entrega
+- El acceso expira el Día del Evento + 1
+- Permisos: enviar mensajes, ver RSVPs (configurable)
 
-**User Stories:**
+**Historias de Usuario:**
 
-| ID | Story | Priority |
+| ID | Historia | Prioridad |
 |----|-------|----------|
-| US-LGJ-01 | As a host, I want to grant accomplice access to a trusted person so that they can send live updates | Must |
-| US-LGJ-02 | As an accomplice, I want to access my panel via magic link so that I don't need a password | Must |
-| US-LGJ-03 | As an accomplice, I want to send pre-configured messages with a swipe gesture so that I can't accidentally send them | Must |
-| US-LGJ-04 | As an accomplice, I want to see which messages have been delivered so that I know guests received updates | Should |
-| US-LGJ-05 | As a host, I want to configure the message templates so that the accomplice sends the right messages | Must |
+| US-LGJ-01 | Como anfitrión, quiero otorgar acceso a una persona de confianza para que envíe actualizaciones en vivo | Must |
+| US-LGJ-02 | Como cómplice, quiero acceder a mi panel mediante enlace mágico para no necesitar contraseñas | Must |
+| US-LGJ-03 | Como cómplice, quiero enviar mensajes preconfigurados usando un gesto (swipe) para no equivocarme | Must |
+| US-LGJ-04 | Como cómplice, quiero ver qué mensajes han sido entregados para saber si los invitados están informados | Should |
+| US-LGJ-05 | Como anfitrión, quiero configurar las plantillas para que el cómplice mande los mensajes adecuados | Must |
 
-**Acceptance Criteria:**
+**Criterios de Aceptación:**
 
-| # | Scenario | Given | When | Then |
+| # | Escenario | Dado que (Given) | Cuando (When) | Entonces (Then) |
 |---|----------|-------|------|------|
-| AC-LGJ-01 | Grant accomplice access | Host is on the event dashboard | Host enters accomplice email and selects permissions | Accomplice receives magic link email; access granted |
-| AC-LGJ-02 | Accomplice access | Accomplice clicks magic link | System validates token | Accomplice panel opens with message templates and RSVP summary |
-| AC-LGJ-03 | Send live message | Accomplice is on the panel | Accomplice swipes a message button | Message is queued for WhatsApp delivery; accomplice sees "Sending..." |
-| AC-LGJ-04 | Accidental prevention | Accomplice is on the panel | Accomplice taps (not swipes) a message button | Message is NOT sent; hint shows "Swipe to send" |
-| AC-LGJ-05 | Delivery confirmation | Message was sent | WhatsApp delivers the message | Accomplice panel shows "Delivered" status |
-| AC-LGJ-06 | Access expiry | Accomplice tries to access panel after EventDate + 1 day | System validates token | System shows "Access has expired"; panel is unavailable |
+| AC-LGJ-01 | Otorgar acceso | El anfitrión está en su panel | Introduce el email del cómplice y selecciona los permisos | El cómplice recibe el magic link; se concede el acceso |
+| AC-LGJ-02 | Acceso del cómplice | El cómplice hace clic en el enlace | El sistema valida el token | Se abre el panel con los mensajes y el resumen de RSVPs |
+| AC-LGJ-03 | Enviar mensaje | El cómplice está en el panel | El cómplice desliza un botón de mensaje | El mensaje se encola para enviarse por WhatsApp; el cómplice ve "Enviando..." |
+| AC-LGJ-04 | Prevención de error | El cómplice está en el panel | Toca el botón en lugar de deslizarlo | El mensaje NO se envía; aparece una indicación "Desliza para enviar" |
+| AC-LGJ-05 | Confirmación entrega | El mensaje fue enviado | WhatsApp entrega el mensaje | El panel muestra el estado "Entregado" |
+| AC-LGJ-06 | Expiración | El cómplice intenta acceder un día después del evento | El sistema valida el token | Se muestra "El acceso ha expirado"; el panel ya no está disponible |
 
-**Edge Cases:**
-- Accomplice loses magic link email -> host can resend from dashboard
-- Accomplice token compromised -> host can revoke access from dashboard
-- WhatsApp API unavailable during event -> message queued, sent when available
-- Accomplice sends too many messages (rate limit) -> 429 response, cooldown message
-- Multiple accomplices for same event -> supported; each has independent access
-- Accomplice tries to send message before event date -> allowed (host may want pre-event updates)
+**Casos Extremos (Edge Cases):**
+- El cómplice pierde el email -> el anfitrión puede reenviarlo desde su panel
+- Token del cómplice comprometido -> el anfitrión puede revocar el acceso
+- API de WhatsApp no disponible -> el mensaje se encola y se envía cuando esté disponible
+- El cómplice envía muchos mensajes (rate limit) -> respuesta HTTP 429, mensaje de pausa
+- Múltiples cómplices en el mismo evento -> está soportado; cada uno tiene acceso independiente
+- El cómplice intenta enviar un mensaje antes de la fecha del evento -> está permitido (el anfitrión podría querer actualizaciones previas al evento)
 
 ---
 
-### 6.4.2 Pre-Configured Swipe-to-Send Buttons
+### 6.4.2 Botones Pre-Configurados Deslizar-para-Enviar (Swipe-to-Send)
 
-**Description:** Simplified interface with pre-configured narrative buttons that require a swipe gesture to send.
+**Descripción:** Interfaz simplificada con botones narrativos preconfigurados que requieren un gesto de deslizamiento (swipe) para ser enviados.
 
-**Scope (MVP):**
-- 5-8 default message templates per event
-- Customizable labels and messages by host
-- Swipe gesture (left-to-right) to confirm send
-- Visual feedback during swipe (progress indicator)
-- Haptic feedback on mobile (if supported)
-- Cannot be sent by tap alone
+**Alcance (MVP):**
+- 5-8 plantillas de mensaje por defecto
+- Etiquetas y textos personalizables por el anfitrión
+- Gesto de deslizamiento (de izquierda a derecha) para confirmar
+- Retroalimentación visual durante el swipe (indicador de progreso)
+- Respuesta háptica en móviles (si está soportado)
+- No se pueden enviar simplemente tocando la pantalla
 
-**Default Message Templates:**
+**Plantillas por Defecto:**
 
-| Label | Default Message | Icon |
+| Etiqueta | Mensaje por Defecto | Icono |
 |-------|----------------|------|
-| Bride Leaving | "The bride is leaving the hotel!" | Bride |
-| Ceremony Starting | "The ceremony is about to begin!" | Church |
-| They Said Yes | "They said YES!" | Ring |
-| Cocktail Hour | "Cocktail hour is starting!" | Champagne |
-| Dinner Time | "Dinner is served!" | Plate |
-| First Dance | "The first dance is starting!" | Dance |
-| Cake Cutting | "Time for the cake!" | Cake |
-| Party Time | "Let the dancing begin!" | Music |
+| Bride Leaving | "¡La novia está saliendo del hotel!" | Novia (Bride) |
+| Ceremony Starting | "¡La ceremonia está a punto de empezar!" | Iglesia (Church) |
+| They Said Yes | "¡Han dicho que SÍ!" | Anillo (Ring) |
+| Cocktail Hour | "¡El cóctel está empezando!" | Champán (Champagne) |
+| Dinner Time | "¡La cena está servida!" | Plato (Plate) |
+| First Dance | "¡El primer baile va a comenzar!" | Baile (Dance) |
+| Cake Cutting | "¡Hora de cortar la tarta!" | Tarta (Cake) |
+| Party Time | "¡Que empiece la fiesta!" | Música (Music) |
 
-**Acceptance Criteria:**
+**Criterios de Aceptación:**
 
-| # | Scenario | Given | When | Then |
+| # | Escenario | Dado que (Given) | Cuando (When) | Entonces (Then) |
 |---|----------|-------|------|------|
-| AC-SS-01 | Swipe to send | Accomplice is on the panel | Accomplice swipes a message button left-to-right | Message is sent; button shows "Sent" confirmation |
-| AC-SS-02 | Tap prevention | Accomplice is on the panel | Accomplice taps (not swipes) a message button | Nothing happens; hint shows "Swipe to send" |
-| AC-SS-03 | Partial swipe | Accomplice starts swiping but releases before completion | Accomplice releases finger before 80% swipe | Button returns to original position; message not sent |
-| AC-SS-04 | Custom message | Host has customized a message template | Accomplice views the panel | Custom message is displayed instead of default |
-| AC-SS-05 | Send history | Accomplice has sent messages | Accomplice scrolls down | Sent messages are listed with timestamps and delivery status |
+| AC-SS-01 | Deslizar para enviar | El cómplice está en el panel | Desliza el botón de izq. a der. | Se envía el mensaje; el botón confirma el "Enviado" |
+| AC-SS-02 | Evitar toques | El cómplice está en el panel | Toca el botón en vez de deslizarlo | No ocurre nada; se muestra un tip "Desliza para enviar" |
+| AC-SS-03 | Deslizamiento parcial | El cómplice empieza a deslizar | Suelta el dedo antes de completar el 80% | El botón vuelve a su posición; el mensaje no se envía |
+| AC-SS-04 | Mensaje custom | El anfitrión editó una plantilla | El cómplice ve el panel | Se muestra el mensaje modificado en lugar del original |
+| AC-SS-05 | Historial de envíos | El cómplice ha enviado mensajes | Hace scroll hacia abajo | Se muestran los mensajes enviados con fecha, hora y estado de entrega |
 
-**Edge Cases:**
-- Accomplice on desktop (no touch) -> click-and-drag alternative for swipe
-- Very slow swipe -> still registers if direction is correct
-- Accidental swipe during phone movement -> 80% threshold + confirmation animation prevents most accidents
-- Message template deleted by host while accomplice is viewing -> template removed from panel with notification
+**Casos Extremos (Edge Cases):**
+- El cómplice está en ordenador (sin touch) -> se habilita hacer clic y arrastrar (click-and-drag)
+- Deslizamiento muy lento -> se registra igual si la dirección es correcta
+- Deslizamiento por error al mover el móvil -> se evita gracias al límite del 80% y a la animación
+- El anfitrión borra una plantilla mientras el cómplice ve el panel -> la plantilla desaparece y sale una notificación
 
 ---
 
-> [Back to PRD Index](../PRD.md) | [Previous: Registration & Onboarding](05-registration-onboarding.md) | [Next: Work Breakdown](07-work-breakdown.md)
+> [Volver al Índice PRD](../PRD.md) | [Anterior: Registro y Onboarding](05-registration-onboarding.md) | [Siguiente: Desglose de Trabajo](07-work-breakdown.md)

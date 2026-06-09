@@ -7,7 +7,7 @@
 **Dependencies:** PSRP-010, PSRP-012, PSRP-014
 
 ## Feature Summary
-Implement the automated RSVP reminder system: a CronJob that runs daily at 03:00 UTC, queries for guests who haven't RSVP'd as the RSVP deadline approaches, and enqueues reminder messages via the same channel as the original invitation (email or WhatsApp). Includes configurable reminder schedule (default: 7 days before RSVP deadline), manual trigger from the guest manager, and cancellation when a guest responds.
+Implementar el sistema automatizado de recordatorios RSVP: un CronJob que se ejecuta diariamente a las 03:00 UTC, consulta invitados que no han respondido RSVP a medida que se acerca el deadline de RSVP, y encola mensajes de recordatorio vía el mismo canal que la invitación original (email o WhatsApp). Incluye programación de recordatorios configurable (por defecto: 7 días antes del deadline de RSVP), trigger manual desde el gestor de invitados, y cancelación cuando un invitado responde.
 
 ## Requirements
 - [ ] Implement `ReminderSchedulerWorker` as a CronJob (Kubernetes CronJob, `schedule: "0 3 * * *"`) or BackgroundService with timer
@@ -60,3 +60,5 @@ Blocked by: PSRP-010, PSRP-012, PSRP-014
 
 ## Branch Name
 `feature/PSRP-019-automated-reminders`
+
+(End of file - total 62 lines)

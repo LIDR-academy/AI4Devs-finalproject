@@ -7,7 +7,7 @@
 **Dependencies:** PSRP-002
 
 ## Feature Summary
-Implement the automated data retention CronJob that hard-deletes all event data 30 days after EventEndDate for GDPR compliance. The job runs daily at 02:00 UTC, queries DataRetentionJobs where ScheduledDeleteAt <= NOW and Status = 'scheduled', and performs atomic, FK-safe deletion in the correct order: RSVPs → LiveMessages → MessageTemplates → Accomplices → Invitations → Guests → Events → DataRetentionJobs. Payments and DeliveryLogs are retained (no PII, audit requirement).
+Implementar el CronJob de retención de datos automatizado que elimina físicamente todos los datos del evento 30 días después del EventEndDate para cumplimiento GDPR. El job se ejecuta diariamente a las 02:00 UTC, consulta DataRetentionJobs donde ScheduledDeleteAt <= NOW y Status = 'scheduled', y realiza eliminación atómica y segura para FK en el orden correcto: RSVPs → LiveMessages → MessageTemplates → Accomplices → Invitations → Guests → Events → DataRetentionJobs. Payments y DeliveryLogs se retienen (sin PII, requisito de auditoría).
 
 ## Requirements
 - [ ] Implement `DataRetentionWorker` as a CronJob (Kubernetes CronJob, `schedule: "0 2 * * *"`, `concurrencyPolicy: Forbid`)
@@ -59,3 +59,5 @@ Blocked by: PSRP-002
 
 ## Branch Name
 `feature/PSRP-021-data-retention-job`
+
+(End of file - total 61 lines)

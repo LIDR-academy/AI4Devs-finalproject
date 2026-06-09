@@ -7,7 +7,7 @@
 **Dependencies:** PSRP-006, PSRP-008
 
 ## Feature Summary
-Implement the public RSVP form that guests access via their unique invitation token link. Backend provides token-based endpoints to retrieve event/guest info and submit/update RSVP responses. Frontend is a mobile-optimized, standalone HTML page (not part of the Angular SPA) with attendance selection (Yes/No/Maybe), dietary restrictions, transport needs, plus-one, personal message, deadline enforcement, and confirmation page. The RSVP form is embedded in the guest microsite but communicates directly with the API.
+Implementar el formulario público de RSVP al que los invitados acceden mediante su enlace único con token de invitación. El backend proporciona endpoints basados en tokens para obtener información del evento/invitado y enviar/actualizar respuestas RSVP. El frontend es una página standalone optimizada para móvil (no parte del Angular SPA) con selección de asistencia (Sí/No/Maybe), restricciones dietéticas, necesidades de transporte, acompañante, mensaje personal, aplicación del deadline, y página de confirmación. El formulario RSVP está embebido en el micrositio del invitado pero se comunica directamente con la API.
 
 ## Requirements
 - [ ] Implement `IRsvpService` and `RsvpService` in Aura.Core/Services/ with methods: GetRsvpInfoAsync(tokenHash), SubmitRsvpAsync(tokenHash, rsvpData), UpdateRsvpAsync(tokenHash, rsvpData)
@@ -67,3 +67,5 @@ Blocked by: PSRP-006, PSRP-008
 
 ## Branch Name
 `feature/PSRP-014-rsvp-public-form`
+
+(End of file - total 69 lines)

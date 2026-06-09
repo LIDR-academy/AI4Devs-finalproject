@@ -7,7 +7,7 @@
 **Dependencies:** PSRP-004, PSRP-005
 
 ## Feature Summary
-Implement the complete Event CRUD backend (create, read, update, delete with slug generation, Google Maps geocoding, DataRetentionJob auto-creation) and the Angular onboarding wizard frontend (template selection, event basics form, guest import step). This is the core entity that all other features (guests, invitations, RSVPs, accomplices) depend on.
+Implementar el CRUD completo de Event en el backend (crear, leer, actualizar, eliminar con generación de slug, geocodificación de Google Maps, auto-creación de DataRetentionJob) y el frontend del asistente de onboarding en Angular (selección de plantilla, formulario de datos básicos del evento, paso de importación de invitados). Esta es la entidad central de la que dependen todas las demás funcionalidades (invitados, invitaciones, RSVPs, accomplices).
 
 ## Requirements
 - [ ] Implement `IEventService` and `EventService` in Aura.Core/Services/ with methods: CreateEventAsync, GetEventBySlugAsync, GetEventsByUserAsync, UpdateEventAsync, DeleteEventAsync
@@ -71,3 +71,5 @@ Blocked by: PSRP-004, PSRP-005
 
 ## Branch Name
 `feature/PSRP-006-event-crud-and-onboarding-wizard`
+
+(End of file - total 73 lines)

@@ -6,28 +6,28 @@
 **Sprint Week:** W1
 **Dependencies:** PSRP-001
 
-## Feature Summary
-Implement all 13 domain entities as EF Core models with full entity type configurations, create the initial PostgreSQL migration, and seed the 3 preset wedding templates. This covers the complete data model as specified in the data model documentation, including all columns, constraints, indexes, foreign keys, soft delete filters, computed columns, and PII encryption via Value Converters.
+## Resumen de Funcionalidad
+Implementar las 13 entidades de dominio como modelos EF Core con configuraciones completas de tipo entidad, crear la migración inicial de PostgreSQL, y seedear las 3 plantillas preestablecidas de boda. Esto cubre el modelo de datos completo según la documentación, incluyendo todas las columnas, constraints, índices, foreign keys, soft delete filters, computed columns, y encriptación PII vía Value Converters.
 
-## Requirements
-- [ ] Create all 13 domain entity models in Aura.Core/Models/: User, UserConsent, Event, Template, Guest, Invitation, Rsvp, Accomplice, MessageTemplate, LiveMessage, Payment, DataRetentionJob, DeliveryLog
-- [ ] Create EF Core EntityTypeConfigurations for all entities in Aura.Infrastructure/Data/Configurations/
-- [ ] Configure all columns, types, constraints (CHECK, UNIQUE, NOT NULL), and defaults per data model specification
-- [ ] Configure all foreign key relationships and cascade rules per data model specification
-- [ ] Configure all 32+ indexes per indexing strategy in data model
-- [ ] Configure soft delete global query filters for Guest, Invitation, MessageTemplate
-- [ ] Configure computed column for Event.EventEndDate (EventDate + 1 day)
-- [ ] Configure PII encryption via EF Core Value Converters for: Guest.Email, Guest.Phone, Rsvp.DietaryRestrictions, Rsvp.Message, Accomplice.Email
-- [ ] Seed 3 preset wedding templates (Classic Elegance, Modern Minimal, Rustic Charm) with LayoutJson
-- [ ] Create ApplicationDbContext with all DbSets and OnModelCreating configurations
-- [ ] Generate initial EF Core migration `InitialSchema`
-- [ ] Create repository interfaces in Aura.Core/Interfaces/Repositories/ for all entities
-- [ ] Create repository implementations in Aura.Infrastructure/Repositories/ for all entities
+## Requisitos
+- [ ] Crear los 13 modelos de entidad de dominio en Aura.Core/Models/: User, UserConsent, Event, Template, Guest, Invitation, Rsvp, Accomplice, MessageTemplate, LiveMessage, Payment, DataRetentionJob, DeliveryLog
+- [ ] Crear EntityTypeConfigurations de EF Core para todas las entidades en Aura.Infrastructure/Data/Configurations/
+- [ ] Configurar todas las columnas, tipos, constraints (CHECK, UNIQUE, NOT NULL), y defaults según especificación del modelo de datos
+- [ ] Configurar todas las relaciones de foreign key y reglas de cascade según especificación del modelo de datos
+- [ ] Configurar los más de 32 índices según estrategia de indexación en modelo de datos
+- [ ] Configurar global query filters para soft delete en Guest, Invitation, MessageTemplate
+- [ ] Configurar columna calculada para Event.EventEndDate (EventDate + 1 day)
+- [ ] Configurar encriptación PII vía EF Core Value Converters para: Guest.Email, Guest.Phone, Rsvp.DietaryRestrictions, Rsvp.Message, Accomplice.Email
+- [ ] Seedear 3 plantillas preestablecidas de boda (Classic Elegance, Modern Minimal, Rustic Charm) con LayoutJson
+- [ ] Crear ApplicationDbContext con todos los DbSets y configuraciones de OnModelCreating
+- [ ] Generar migración inicial de EF Core `InitialSchema`
+- [ ] Crear interfaces de repositorio en Aura.Core/Interfaces/Repositories/ para todas las entidades
+- [ ] Crear implementaciones de repositorio en Aura.Infrastructure/Repositories/ para todas las entidades
 
-## Technical Notes
-- **Backend:** All entity models use `Guid` for Id (PostgreSQL uuid). File-scoped namespaces, primary constructors, collection expressions (C# 12+)
+## Notas Técnicas
+- **Backend:** Todos los modelos de entidad usan `Guid` para Id (PostgreSQL uuid). File-scoped namespaces, primary constructors, collection expressions (C# 12+)
 - **Frontend:** N/A
-- **Database:** PostgreSQL 16 with `uuid-ossp` extension, `timestamptz` for all timestamps, `jsonb` for Permissions and LayoutJson, `decimal(10,2)` for payments, `decimal(9,6)` for coordinates
+- **Database:** PostgreSQL 16 con extensión `uuid-ossp`, `timestamptz` para todos los timestamps, `jsonb` para Permissions y LayoutJson, `decimal(10,2)` para payments, `decimal(9,6)` para coordinates
 - **Integrations:** N/A
 - **Key files:**
   - `backend/src/Aura.Core/Models/User.cs`
@@ -49,21 +49,21 @@ Implement all 13 domain entities as EF Core models with full entity type configu
   - `backend/src/Aura.Core/Interfaces/Repositories/I*Repository.cs`
   - `backend/src/Aura.Infrastructure/Repositories/*Repository.cs`
 
-## Acceptance Criteria
-- [ ] AC1: Given the solution builds, when `dotnet ef migrations add InitialSchema` is run, then the migration is generated with all 13 tables, all indexes, all foreign keys, and all CHECK constraints
-- [ ] AC2: Given the migration is applied to PostgreSQL, when `dotnet ef database update` is run, then all tables are created and 3 template seed rows are inserted
-- [ ] AC3: Given the application is running, when a new Guest is created and then soft-deleted (IsDeleted = true), then `context.Guests.ToListAsync()` does not return the deleted guest (global query filter works)
-- [ ] AC4: Given a Guest with Email "test@example.com", when the entity is saved and re-read from the database, then the stored column value is encrypted (not plaintext) but the entity property returns "test@example.com" (Value Converter works)
-- [ ] AC5: Given an Event is created with EventDate, when the entity is read from the database, then EventEndDate equals EventDate + 1 day (computed column works)
-- [ ] AC6: Given the migration has run, when `SELECT * FROM "Templates"` is executed, then 3 rows exist with Name "Classic Elegance", "Modern Minimal", "Rustic Charm"
+## Criterios de Aceptación
+- [ ] AC1: Dado que la solución construye, cuando se ejecuta `dotnet ef migrations add InitialSchema`, entonces la migración se genera con las 13 tablas, todos los índices, todas las foreign keys, y todos los CHECK constraints
+- [ ] AC2: Dado que la migración está aplicada a PostgreSQL, cuando se ejecuta `dotnet ef database update`, entonces todas las tablas se crean y 3 filas de seed de plantillas se insertan
+- [ ] AC3: Dado que la aplicación está corriendo, cuando un nuevo Guest es creado y luego soft-deleted (IsDeleted = true), entonces `context.Guests.ToListAsync()` no devuelve el guest eliminado (global query filter works)
+- [ ] AC4: Dado un Guest con Email "test@example.com", cuando la entidad se guarda y se vuelve a leer de la base de datos, entonces el valor almacenado en la columna está encriptado (no plaintext) pero la propiedad de la entidad devuelve "test@example.com" (Value Converter works)
+- [ ] AC5: Dado un Event se crea con EventDate, cuando la entidad se lee de la base de datos, entonces EventEndDate equals EventDate + 1 day (computed column works)
+- [ ] AC6: Dado que la migración ha corrido, cuando se ejecuta `SELECT * FROM "Templates"`, entonces existen 3 filas con Name "Classic Elegance", "Modern Minimal", "Rustic Charm"
 
-## Related Items
-- **PRD section:** 06-mvp-features.md (all features reference these entities)
+## Elementos Relacionados
+- **PRD section:** 06-mvp-features.md (todas las funcionalidades referencian estas entidades)
 - **Architecture:** 03-project-structure.md (Aura.Core/Models, Aura.Infrastructure/Data)
-- **Data model:** README.md (ER diagram, entity definitions, indexing strategy, GDPR strategy, soft delete pattern, token security), entities.md (all 13 entity specifications)
+- **Data model:** README.md (ER diagram, entity definitions, indexing strategy, GDPR strategy, soft delete pattern, token security), entities.md (todas las especificaciones de las 13 entidades)
 
-## Blockers
-Blocked by: PSRP-001
+## Bloqueadores
+Bloqueado por: PSRP-001
 
 ## Branch Name
 `feature/PSRP-002-database-schema-and-ef-core-migrations`

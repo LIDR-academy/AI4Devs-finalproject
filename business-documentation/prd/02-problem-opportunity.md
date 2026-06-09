@@ -1,70 +1,70 @@
-# 2. Problem Statement & Opportunity
+# 2. Declaración del Problema y Oportunidad
 
-> [Back to PRD Index](../PRD.md) | [Previous: Executive Summary](01-executive-summary.md) | [Next: User Personas](03-user-personas.md)
+> [Volver al Índice PRD](../PRD.md) | [Anterior: Resumen Ejecutivo](01-executive-summary.md) | [Siguiente: Personas de Usuario](03-user-personas.md)
 
 ---
 
-## 2.1 Core Problem
+## 2.1 Problema Principal
 
-**For Couples (Hosts):**
-Planning a wedding involves massive logistical overhead. Invitations alone require design decisions, printing costs, postage, address collection, and RSVP tracking — all while couples are already stressed with venue, catering, and vendor coordination. Paper invitations are expensive (EUR 800-1,200 for 120 guests), environmentally wasteful, and provide zero real-time tracking. On the wedding day itself, couples are bombarded with guest questions about venue directions, schedule changes, and logistics — distracting them from their own celebration.
+**Para las Parejas (Hosts):**
+Planificar una boda implica una enorme sobrecarga logística. Las invitaciones por sí solas requieren decisiones de diseño, costes de impresión, franqueo, recopilación de direcciones y seguimiento de RSVP — todo mientras las parejas ya están estresadas con la coordinación del venue, catering y proveedores. Las invitaciones en papel son caras (EUR 800-1,200 para 120 invitados), medioambientalmente wastefully, y proporcionan cero seguimiento en tiempo real. El día de la boda, las parejas son bombardeadas con preguntas de invitados sobre direcciones del venue, cambios de horario y logística — distrayéndolas de su propia celebración.
 
-**For Guests:**
-Receiving paper invitations means manually entering event details into calendars, searching for venue directions, and figuring out how to RSVP (call? text? email?). On the event day, guests miss key moments because they don't know when things are happening ("Is the ceremony starting?" "Where should I go next?").
+**Para los Invitados:**
+Recibir invitaciones en papel significa introducir manualmente los detalles del evento en calendarios, buscar direcciones del venue, y figuring out cómo RSVP (¿llamar? ¿mensaje? ¿email?). El día del evento, los invitados se pierden momentos clave porque no saben cuándo están sucediendo las cosas ("¿Está empezando la ceremonia?" "¿Dónde voy ahora?").
 
-## 2.2 Why Now?
+## 2.2 Por Qué Ahora?
 
-| Trend | Evidence | Impact |
-|-------|----------|--------|
-| **Digital-first weddings** | 73% of couples under 35 prefer digital invitations (WeddingWire 2025) | Market ready for disruption |
-| **WhatsApp dominance** | 93% of Spanish adults use WhatsApp daily | Perfect channel for live updates |
-| **Eco-consciousness** | 68% of Millennials consider environmental impact in wedding planning | Digital = sustainable advantage |
-| **Post-pandemic expectations** | Guests expect real-time communication and mobile-first experiences | Paper feels outdated |
-| **SaaS adoption** | Couples already use digital tools for venue booking, registries, seating charts | Low friction to adopt new tool |
+| Tendencia | Evidencia | Impacto |
+|-----------|----------|---------|
+| **Bodas digitales primero** | 73% de parejas menores de 35 prefieren invitaciones digitales (WeddingWire 2025) | Mercado listo para disrupción |
+| **Dominio de WhatsApp** | 93% de adultos españoles usan WhatsApp diariamente | Canal perfecto para actualizaciones en vivo |
+| **Conciencia ecológica** | 68% de Millennials consideran el impacto ambiental en la planificación de bodas | Digital = ventaja sostenible |
+| **Expectativas post-pandemia** | Los invitados esperan comunicación en tiempo real y experiencias mobile-first | El papel se siente anticuado |
+| **Adopción SaaS** | Las parejas ya usan herramientas digitales para reserva de venues, registros, planos de asientos | Baja fricción para adoptar nueva herramienta |
 
-## 2.3 Market Size
+## 2.3 Tamaño del Mercado
 
-| Metric | Definition | Estimate |
-|--------|-----------|----------|
-| **TAM** (Total Addressable Market) | Global wedding tech market (invitations, planning, registry) | **$18.5B** by 2028 (CAGR 6.2%) |
-| **SAM** (Serviceable Addressable Market) | Digital wedding invitation market in Spanish-speaking countries (Spain + LATAM) | **$420M** (~1.2M weddings/year x $350 avg digital invitation spend) |
-| **SOM** (Serviceable Obtainable Market) | Realistic Year 1-3 capture in Spain (primary market) | **$2.1M** Year 3 (~60K weddings/year x 3.5% penetration x EUR 10 avg revenue) |
+| Métrica | Definición | Estimación |
+|---------|-----------|------------|
+| **TAM** (Total Addressable Market) | Mercado global de tecnología para bodas (invitaciones, planificación, registro) | **$18.5B** para 2028 (CAGR 6.2%) |
+| **SAM** (Serviceable Addressable Market) | Mercado de invitaciones digitales de boda en países hispanohablantes (España + LATAM) | **$420M** (~1.2M bodas/año x $350 gasto medio en invitación digital) |
+| **SOM** (Serviceable Obtainable Market) | Captura realista Año 1-3 en España (mercado primario) | **$2.1M** Año 3 (~60K bodas/año x 3.5% penetración x EUR 10 ingreso medio) |
 
-**Spain Wedding Market Context:**
-- ~60,000 weddings per year (INE data)
-- Average wedding budget: EUR 25,000-35,000
-- Invitation budget: 3-5% of total = EUR 750-1,750 (paper)
-- Digital alternative at EUR 19-29 = 97% cost savings
+**Contexto del Mercado de Bodas en España:**
+- ~60,000 bodas por año (datos INE)
+- Presupuesto medio de boda: EUR 25,000-35,000
+- Presupuesto de invitaciones: 3-5% del total = EUR 750-1,750 (papel)
+- Alternativa digital a EUR 19-29 = ahorro del 97%
 
-## 2.4 Competitive Landscape
+## 2.4 Panorama Competitivo
 
-| Competitor | Strengths | Weaknesses | Aura's Advantage |
+| Competidor | Fortalezas | Debilidades | Ventaja de Aura |
 |-----------|-----------|------------|------------------|
-| **Zankyou** (Spain/LATAM) | Market leader in Spain; full wedding suite; vendor marketplace | Bloated UI; slow; no real-time communication; subscription model | Simpler, faster, WhatsApp-native, one-time payment |
-| **Bodas.net** (Spain) | Strong SEO; vendor directory; large user base | Outdated UX; no live features; paper-invitation mindset | Modern UX; Live Guest Journey; mobile-first |
-| **WithJoy / Joy** (US/Global) | Beautiful templates; free tier; registry integration | English-only; no WhatsApp; no live event features | Spanish-first; WhatsApp integration; real-time storytelling |
-| **Paperless Post** (US) | Premium designs; brand partnerships | Expensive per-invitation; no event management; no RSVP tracking | All-in-one platform; logistics + design + communication |
-| **Greenvelope** (US) | Eco-friendly positioning; good templates | No WhatsApp; no live features; subscription model | One-time payment; WhatsApp-native; Live Guest Journey |
+| **Zankyou** (España/LATAM) | Líder de mercado en España; suite completa de boda; marketplace de proveedores | UI inflada; lento; sin comunicación en tiempo real; modelo de suscripción | Más simple, más rápido, WhatsApp-native, pago único |
+| **Bodas.net** (España) | SEO fuerte; directorio de proveedores; gran base de usuarios | UX anticuada; sin funcionalidades en vivo; mentalidad de invitación en papel | UX moderna; Live Guest Journey; mobile-first |
+| **WithJoy / Joy** (US/Global) | Plantillas hermosas; tier gratis; integración de registro | Solo inglés; sin WhatsApp; sin funcionalidades de evento en vivo | Español primero; integración WhatsApp; narración en tiempo real |
+| **Paperless Post** (US) | Diseños premium; alianzas de marca | Caro por invitación; sin gestión de eventos; sin seguimiento RSVP | Plataforma todo-en-uno; logística + diseño + comunicación |
+| **Greenvelope** (US) | Posicionamiento eco-friendly; buenas plantillas | Sin WhatsApp; sin funcionalidades en vivo; modelo de suscripción | Pago único; WhatsApp-native; Live Guest Journey |
 
-## 2.5 Competitive Positioning
+## 2.5 Posicionamiento Competitivo
 
 ```
-                    High Logistics
-                         |
-              Zankyou    |    Aura Planning
-              Bodas.net  |    (Live + WhatsApp)
-                         |
-    ---------------------+---------------------
-                         |
-              Paperless  |    WithJoy
-              Post       |    Joy
-                         |
-                    Low Logistics
-         <--- Design Focus ---+--- Experience Focus --->
+                     Alta Logística
+                          |
+               Zankyou    |    Aura Planning
+               Bodas.net  |    (Live + WhatsApp)
+                          |
+     ---------------------+---------------------
+                          |
+               Paperless  |    WithJoy
+               Post       |    Joy
+                          |
+                     Baja Logística
+          <--- Enfoque Diseño ---+--- Enfoque Experiencia --->
 ```
 
-**Aura's White Space:** High logistics + high experience (real-time communication). No competitor currently owns this space.
+**Espacio en Blanco de Aura:** Alta logística + alta experiencia (comunicación en tiempo real). Ningún competidor posee actualmente este espacio.
 
 ---
 
-> [Back to PRD Index](../PRD.md) | [Previous: Executive Summary](01-executive-summary.md) | [Next: User Personas](03-user-personas.md)
+> [Volver al Índice PRD](../PRD.md) | [Anterior: Resumen Ejecutivo](01-executive-summary.md) | [Siguiente: Personas de Usuario](03-user-personas.md)

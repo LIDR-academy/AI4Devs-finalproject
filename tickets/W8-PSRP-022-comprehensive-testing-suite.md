@@ -7,7 +7,7 @@
 **Dependencies:** PSRP-004, PSRP-006, PSRP-008, PSRP-010, PSRP-014
 
 ## Feature Summary
-Implement a comprehensive testing suite covering unit tests for all Core services, integration tests with Testcontainers for PostgreSQL repositories and Dragonfly queue operations, API integration tests with WebApplicationFactory, and end-to-end tests for critical user flows (registration, RSVP, payment). Target: >80% code coverage for Core, >60% for Infrastructure, >50% for Api.
+Implementar una suite de testing completa que cubra tests unitarios para todos los servicios Core, tests de integración con Testcontainers para repositorios PostgreSQL y operaciones de cola Dragonfly, tests de integración de API con WebApplicationFactory, y tests end-to-end para flujos críticos de usuario (registro, RSVP, pago). Objetivo: >80% cobertura de código para Core, >60% para Infrastructure, >50% para Api.
 
 ## Requirements
 - [ ] Set up test projects: `Aura.Core.Tests` (unit tests), `Aura.Infrastructure.Tests` (integration tests), `Aura.Api.Tests` (API integration tests)
@@ -71,3 +71,5 @@ Blocked by: PSRP-004, PSRP-006, PSRP-008, PSRP-010, PSRP-014
 
 ## Branch Name
 `feature/PSRP-022-comprehensive-testing-suite`
+
+(End of file - total 73 lines)

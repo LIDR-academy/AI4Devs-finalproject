@@ -1,72 +1,72 @@
-# 10. Rollout Plan
+# 10. Plan de Lanzamiento
 
-> [Back to PRD Index](../PRD.md) | [Previous: Risks & Assumptions](09-risks-assumptions.md) | [Next: Appendix](11-appendix.md)
+> [Volver al Índice PRD](../PRD.md) | [Anterior: Riesgos y Suposiciones](09-risks-assumptions.md) | [Siguiente: Anexo](11-appendix.md)
 
 ---
 
-## 10.1 Phased Rollout
+## 10.1 Lanzamiento por Fases
 
-| Phase | Timeline | Users | Goals | Success Criteria |
+| Fase | Timeline | Usuarios | Objetivos | Criterios de Éxito |
 |-------|----------|-------|-------|-----------------|
-| **Alpha** | Week 1-3 | Internal team (5-10) | Validate core flows, identify critical bugs | Zero P0/P1 bugs; all user stories pass |
-| **Beta** | Week 4-7 | 50 engaged couples | Validate conversion funnel, gather NPS feedback | > 20% conversion; NPS > 40; < 5% error rate |
-| **GA** | Week 8+ | Public (Spain) | Achieve 500 MAH by Month 3 | > 25% conversion; NPS > 50; EUR 4,500 MRR |
+| **Alfa** | Semana 1-3 | Equipo interno (5-10) | Validar flujos core, identificar bugs críticos | Zero bugs P0/P1; todas las historias de usuario pasan |
+| **Beta** | Semana 4-7 | 50 parejas comprometidas | Validar embudo de conversión, recopilar feedback NPS | > 20% conversión; NPS > 40; < 5% tasa de error |
+| **GA** | Semana 8+ | Público (España) | Alcanzar 500 MAH en Mes 3 | > 25% conversión; NPS > 50; EUR 4,500 MRR |
 
-## 10.2 Alpha (Internal Testing)
+## 10.2 Alfa (Testing Interno)
 
-| Aspect | Detail |
+| Aspecto | Detalle |
 |--------|--------|
-| **Duration** | 2 weeks |
-| **Users** | Internal team (5-10 people) |
-| **Scope** | Full MVP feature set |
-| **Goals** | Validate core flows, identify critical bugs, test performance |
-| **Success Criteria** | Zero P0/P1 bugs; all user stories pass acceptance criteria |
-| **Rollback Criteria** | Any data loss, security vulnerability, or critical flow broken |
+| **Duración** | 2 semanas |
+| **Usuarios** | Equipo interno (5-10 personas) |
+| **Alcance** | Conjunto completo de funcionalidades MVP |
+| **Objetivos** | Validar flujos core, identificar bugs críticos, testear rendimiento |
+| **Criterios de Éxito** | Zero bugs P0/P1; todas las historias de usuario pasan criterios de aceptación |
+| **Criterios de Rollback** | Cualquier pérdida de datos, vulnerabilidad de seguridad, o flujo crítico roto |
 
-## 10.3 Beta (Closed Beta)
+## 10.3 Beta (Beta Cerrada)
 
-| Aspect | Detail |
+| Aspecto | Detalle |
 |--------|--------|
-| **Duration** | 3 weeks |
-| **Users** | 50 engaged couples (recruited via social media, wedding forums) |
-| **Scope** | Full MVP + analytics tracking |
-| **Goals** | Validate conversion funnel, gather NPS feedback, test at scale |
-| **Success Criteria** | > 20% draft-to-publish conversion; NPS > 40; < 5% API error rate |
-| **Rollback Criteria** | Conversion < 10%; NPS < 20; critical user complaints |
-| **Feature Flags** | Live Guest Journey (on/off); WhatsApp invitations (on/off) |
+| **Duración** | 3 semanas |
+| **Usuarios** | 50 parejas comprometidas (reclutadas vía redes sociales, foros de bodas) |
+| **Alcance** | MVP completo + tracking de analytics |
+| **Objetivos** | Validar embudo de conversión,搜集 feedback NPS, testear a escala |
+| **Criterios de Éxito** | > 20% conversión de borrador a publicado; NPS > 40; < 5% tasa de error de API |
+| **Criterios de Rollback** | Conversión < 10%; NPS < 20; quejas críticas de usuarios |
+| **Feature Flags** | Live Guest Journey (on/off); Invitaciones WhatsApp (on/off) |
 
-## 10.4 General Availability (GA)
+## 10.4 Disponibilidad General (GA)
 
-| Aspect | Detail |
+| Aspecto | Detalle |
 |--------|--------|
-| **Duration** | Ongoing |
-| **Users** | Public (Spain, Spanish language) |
-| **Scope** | Full MVP + marketing campaign |
-| **Goals** | Achieve 500 MAH (Monthly Active Hosts) by Month 3 |
-| **Success Criteria** | > 25% draft-to-publish conversion; NPS > 50; EUR 4,500 MRR by Month 3 |
-| **Rollback Criteria** | Revenue < EUR 1,000 by Month 2; critical security issue |
+| **Duración** | Continuo |
+| **Usuarios** | Público (España, idioma español) |
+| **Alcance** | MVP completo + campaña de marketing |
+| **Objetivos** | Alcanzar 500 MAH (Monthly Active Hosts) en Mes 3 |
+| **Criterios de Éxito** | > 25% conversión de borrador a publicado; NPS > 50; EUR 4,500 MRR en Mes 3 |
+| **Criterios de Rollback** | Ingresos < EUR 1,000 en Mes 2; problema de seguridad crítico |
 
 ## 10.5 Feature Flags
 
-| Feature | Flag | Default | Rollout Strategy |
+| Funcionalidad | Flag | Por Defecto | Estrategia de Lanzamiento |
 |---------|------|---------|-----------------|
-| Live Guest Journey | `feature.live-journey` | Off (Alpha) -> On (Beta) | Gradual rollout to 50% of beta users |
-| WhatsApp Invitations | `feature.whatsapp` | Off (Alpha) -> On (Beta) | Requires WhatsApp API approval |
-| Gift Registry | `feature.gift-registry` | Off | V3 feature; not enabled in MVP |
-| Photo Upload | `feature.photo-upload` | Off | V3 feature; not enabled in MVP |
-| Calendar Sync | `feature.calendar-sync` | On | Enabled at launch |
+| Live Guest Journey | `feature.live-journey` | Off (Alfa) -> On (Beta) | Lanzamiento gradual al 50% de usuarios beta |
+| Invitaciones WhatsApp | `feature.whatsapp` | Off (Alfa) -> On (Beta) | Requiere aprobación de API de WhatsApp |
+| Gift Registry | `feature.gift-registry` | Off | Funcionalidad V3; no habilitada en MVP |
+| Subida de Fotos | `feature.photo-upload` | Off | Funcionalidad V3; no habilitada en MVP |
+| Sincronización de Calendario | `feature.calendar-sync` | On | Habilitada desde el lanzamiento |
 
-## 10.6 Rollback Criteria
+## 10.6 Criterios de Rollback
 
-| Trigger | Action |
+| Disparador | Acción |
 |---------|--------|
-| Data loss or corruption | Immediate rollback to last known good state; notify affected users |
-| Security vulnerability | Hotfix within 24 hours; rollback if fix not ready |
-| API error rate > 10% for 30 minutes | Investigate; rollback if root cause is recent deployment |
-| WhatsApp delivery rate < 80% | Disable WhatsApp feature; fall back to email only |
-| Payment processing failures > 5% | Investigate Stripe integration; rollback if code issue |
-| NPS < 20 during beta | Pause launch; investigate user feedback; iterate |
+| Pérdida o corrupción de datos | Rollback inmediato al último estado conocido bueno; notificar a usuarios afectados |
+| Vulnerabilidad de seguridad | Hotfix dentro de 24 horas; rollback si fix no está listo |
+| Tasa de error de API > 10% por 30 minutos | Investigar; rollback si la causa raíz es un despliegue reciente |
+| Tasa de entrega de WhatsApp < 80% | Deshabilitar funcionalidad WhatsApp; fallback a solo email |
+| Fallos de procesamiento de pagos > 5% | Investigar integración de Stripe; rollback si es un problema de código |
+| NPS < 20 durante beta | Pausar lanzamiento; investigar feedback de usuarios; iterar |
 
 ---
 
-> [Back to PRD Index](../PRD.md) | [Previous: Risks & Assumptions](09-risks-assumptions.md) | [Next: Appendix](11-appendix.md)
+> [Volver al Índice PRD](../PRD.md) | [Anterior: Riesgos y Suposiciones](09-risks-assumptions.md) | [Siguiente: Anexo](11-appendix.md)

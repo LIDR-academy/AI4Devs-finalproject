@@ -7,7 +7,7 @@
 **Dependencies:** PSRP-003, PSRP-004
 
 ## Feature Summary
-Implement the Dragonfly-based queue infrastructure (IQueueService abstraction, DragonflyQueueService using StackExchange.Redis) and the Email Dispatcher worker service. The queue service provides LPUSH/BRPOP operations for distributed message queues. The Email Dispatcher worker dequeues email messages from the `email:queue`, renders HTML templates with personalization tokens, sends via Gmail SMTP, and updates delivery status in the database. This establishes the async messaging backbone for all future features (invitations, reminders, live messages, thank you cards).
+Implementar la infraestructura de colas basada en Dragonfly (abstracción IQueueService, DragonflyQueueService usando StackExchange.Redis) y el worker del Email Dispatcher. El servicio de cola proporciona operaciones LPUSH/BRPOP para colas de mensajes distribuidas. El worker Email Dispatcher desencola mensajes de email desde `email:queue`, renderiza plantillas HTML con tokens de personalización, envía vía Gmail SMTP, y actualiza el estado de entrega en la base de datos. Esto establece el backbone de mensajería asíncrona para todas las funcionalidades futuras (invitaciones, recordatorios, mensajes en vivo, tarjetas de agradecimiento).
 
 ## Requirements
 - [ ] Implement `IQueueService` interface in Aura.Core/Interfaces/Services/ with methods: EnqueueAsync(string queueName, string message), DequeueAsync(string queueName), GetQueueLengthAsync(string queueName)
@@ -66,3 +66,5 @@ Blocked by: PSRP-003, PSRP-004
 
 ## Branch Name
 `feature/PSRP-010-queue-infrastructure-and-email-dispatcher`
+
+(End of file - total 68 lines)

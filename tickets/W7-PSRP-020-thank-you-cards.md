@@ -7,7 +7,7 @@
 **Dependencies:** PSRP-010, PSRP-012
 
 ## Feature Summary
-Implement automated post-event thank you cards: a CronJob or scheduled task that runs 1 day after the event date, queries all guests who attended (RSVP attendance='yes'), and sends personalized thank you messages via the same channel as the original invitation. Includes customizable thank you message and optional photo gallery link.
+Implementar tarjetas de agradecimiento automatizadas post-evento: un CronJob o tarea programada que se ejecuta 1 día después de la fecha del evento, consulta todos los invitados que asistieron (RSVP attendance='yes'), y envía mensajes de agradecimiento personalizados vía el mismo canal que la invitación original. Incluye mensaje de agradecimiento personalizable y enlace opcional a galería de fotos.
 
 ## Requirements
 - [ ] Implement `ThankYouCardWorker` as a CronJob (Kubernetes CronJob, `schedule: "0 4 * * *"`) or BackgroundService with timer
@@ -59,3 +59,5 @@ Blocked by: PSRP-010, PSRP-012
 
 ## Branch Name
 `feature/PSRP-020-thank-you-cards`
+
+(End of file - total 61 lines)
