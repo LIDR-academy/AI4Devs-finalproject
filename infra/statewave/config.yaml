@@ -1,0 +1,4 @@
+# Placeholder Statewave configuration for local development.
+# Adjust according to the selected Statewave deployment mode.
+project: auditcare-timeline
+environment: development

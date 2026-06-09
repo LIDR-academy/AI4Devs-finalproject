@@ -1,0 +1,13 @@
+Extract a patient clinical timeline from the encounter note.
+
+Return only valid JSON.
+Each event must include:
+- eventDate if available
+- category: diagnosis | medication | lab | procedure | symptom | allergy | other
+- title
+- description
+- sourceQuote
+- confidence from 0 to 1
+
+Do not infer unsupported facts.
+Mark uncertain dates as null.

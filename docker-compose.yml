@@ -1,0 +1,26 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: auditcare-postgres
+    environment:
+      POSTGRES_USER: auditcare
+      POSTGRES_PASSWORD: auditcare
+      POSTGRES_DB: auditcare
+    ports:
+      - "5432:5432"
+    volumes:
+      - auditcare_postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  statewave:
+    image: statewave/statewave:latest
+    container_name: auditcare-statewave
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./infra/statewave/config.yaml:/app/config.yaml
+    environment:
+      STATEWAVE_CONFIG_PATH: /app/config.yaml
+
+volumes:
+  auditcare_postgres_data:
