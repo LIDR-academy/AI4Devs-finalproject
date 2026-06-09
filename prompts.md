@@ -17,6 +17,17 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 ## 1. Descripción general del producto
 
 **Prompt 1:**
+Dado este PRD: @docs/PRD.com
+
+Genera la sección "Descripción general del producto" para el @readme.md
+del proyecto. Debe incluir:
+
+- Qué es el producto y qué problema resuelve (3-4 líneas)
+- Propuesta de valor principal (bullet points)
+- Funcionalidades principales del MVP (bullet points)
+- Flujo E2E prioritario resumido (3-4 líneas)
+
+Formato markdown. Tono técnico pero accesible. Máximo una página.
 
 **Prompt 2:**
 

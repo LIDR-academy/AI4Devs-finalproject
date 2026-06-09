@@ -32,15 +32,31 @@
 
 ## 1. Descripción general del producto
 
-> Describe en detalle los siguientes aspectos del producto:
+**La Pocha** es una aplicación móvil (Flutter, Android e iOS) que digitaliza el marcador del juego de cartas español homónimo. Sustituye el papel y el lápiz por un flujo guiado que calcula puntos automáticamente, valida la restricción del repartidor y conserva un historial consultable. El problema que aborda es doble: llevar la puntuación a mano es lento y propenso a errores de cálculo, y al terminar la partida no queda un registro fiable de cómo evolucionó. La app mantiene la agilidad del juego físico mientras centraliza el estado de la partida en un único dispositivo.
 
-### **1.1. Objetivo:**
+### Propuesta de valor principal
 
-> Propósito del producto. Qué valor aporta, qué soluciona, y para quién.
+- **Para el organizador:** elimina el cálculo manual de puntos y valida la restricción del repartidor en tiempo real, reduciendo conflictos y errores.
+- **Para todos los jugadores:** el estado de la partida (apuestas, bazas disponibles, ranking) es visible y legible sin interpretar un papel lleno de tachones.
+- **Para jugadores registrados:** historial de partidas compartido automáticamente en la nube entre participantes, sin pasos adicionales al finalizar.
 
-### **1.2. Características y funcionalidades principales:**
+### **1.1. Objetivo**
 
-> Enumera y describe las características y funcionalidades específicas que tiene el producto para satisfacer las necesidades identificadas.
+Digitalizar la experiencia de marcador de La Pocha para grupos de 3 a 8 jugadores que se reúnen de forma habitual u ocasional. El MVP prioriza velocidad de uso durante la partida (offline en el dispositivo host), corrección de errores en la ronda actual y sincronización opcional vía Firebase al cerrar la partida.
+
+### **1.2. Características y funcionalidades principales (MVP)**
+
+- Creación y configuración de partida (3–8 jugadores, cartas y secuencia de rondas automáticas).
+- Flujo completo de ronda: apuestas rotativas → juego → bazas reales → cálculo de puntos y ranking.
+- Validación en tiempo real de la restricción del repartidor; bloqueo si las apuestas son inválidas.
+- Corrección de datos en la ronda actual y opción de repetir ronda completa.
+- Jugadores por nombre libre, búsqueda de usuarios registrados y lista de favoritos local.
+- Historial unificado (local y nube) con detalle ronda a ronda y función «repetir partida».
+- Registro opcional (email/contraseña); subida automática al finalizar y distribución a participantes registrados.
+
+### Flujo E2E prioritario
+
+El organizador crea una partida nueva, define jugadores (nombre libre y/o usuarios registrados) y designa el primer repartidor. La app genera la secuencia de rondas; en cada una recoge apuestas en orden (repartidor al final), muestra bazas disponibles y número prohibido, y tras el juego físico registra las bazas reales para calcular el resultado. Al terminar la última ronda se muestra el ranking final; si el organizador tiene cuenta, la partida se sube a la nube y los jugadores registrados la ven en su historial sin acción adicional.
 
 ### **1.3. Diseño y experiencia de usuario:**
 
