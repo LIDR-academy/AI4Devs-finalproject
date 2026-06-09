@@ -51,9 +51,17 @@ AI4Devs-finalproject.zip
 
 ## 1.1. Objetivo
 
-Ayudar a profesionales sanitarios a reconstruir rápidamente la historia clínica de un paciente mediante una línea temporal generada por IA y validada por humanos.
+AuditCare Timeline es una aplicación web orientada a profesionales sanitarios que permite reconstruir y visualizar la evolución clínica de un paciente mediante una línea temporal generada con Inteligencia Artificial.
 
-El sistema busca reducir el tiempo de revisión documental y mejorar la trazabilidad de la información clínica.
+El objetivo principal es reducir el tiempo necesario para revisar historiales clínicos extensos y facilitar la identificación de eventos relevantes, manteniendo al mismo tiempo un alto nivel de trazabilidad y transparencia sobre la información utilizada.
+
+Para ello, el sistema combina:
+
+* Inteligencia Artificial para extraer eventos clínicos desde texto libre.
+* Revisión humana para validar la información generada.
+* Statewave como capa de memoria contextual y trazabilidad.
+
+Statewave permite mantener una representación longitudinal del paciente a través de múltiples encuentros clínicos, preservando el contexto histórico utilizado por la IA y facilitando la construcción de timelines clínicos auditables.
 
 ---
 
@@ -61,37 +69,126 @@ El sistema busca reducir el tiempo de revisión documental y mejorar la trazabil
 
 ### MVP
 
-* Registro de pacientes.
-* Gestión de encuentros clínicos.
-* Ingesta de notas médicas.
-* Extracción automática de eventos clínicos mediante IA.
-* Almacenamiento de contexto longitudinal mediante Statewave.
-* Visualización básica del timeline clínico.
+#### Gestión de pacientes
+
+* Registro de pacientes sintéticos.
+* Consulta de información básica del paciente.
+* Asociación de encuentros clínicos.
+
+#### Gestión de encuentros clínicos
+
+* Registro de consultas médicas.
+* Almacenamiento de notas clínicas en texto libre.
+* Relación entre encuentros y paciente.
+
+#### Extracción de eventos mediante IA
+
+* Procesamiento automático de notas clínicas.
+* Identificación de diagnósticos.
+* Identificación de síntomas.
+* Identificación de procedimientos.
+* Identificación de medicación.
+* Identificación de resultados clínicos relevantes.
+
+#### Memoria contextual mediante Statewave
+
+* Almacenamiento del contexto longitudinal del paciente.
+* Persistencia del historial clínico relevante.
+* Recuperación de contexto para enriquecer futuras extracciones.
+* Gestión de información contextual entre encuentros clínicos.
+
+#### Trazabilidad y provenance
+
+* Conservación de la fuente original de cada evento.
+* Registro del texto clínico utilizado por la IA.
+* Almacenamiento del nivel de confianza generado por el modelo.
+* Preparación para futuras revisiones humanas.
+
+#### Timeline clínico
+
+* Visualización cronológica de eventos clínicos.
+* Agrupación por fecha y encuentro.
+* Navegación simplificada por la historia clínica del paciente.
+
+---
 
 ### Funcionalidades futuras
 
-* Revisión humana de eventos.
-* Exportación PDF y JSON.
-* Filtros avanzados.
+#### Revisión humana
+
+* Aprobación de eventos generados por IA.
+* Corrección manual de información.
+* Rechazo de eventos incorrectos.
+
+#### Auditoría avanzada
+
+* Historial completo de modificaciones.
+* Registro de usuarios revisores.
+* Comparación entre versión IA y versión validada.
+
+#### Exportación
+
+* PDF clínico.
+* JSON estructurado.
+* Compartición de timelines.
+
+#### Interoperabilidad
+
 * Integración FHIR.
+* Integración con sistemas EHR.
+* Importación de documentos clínicos.
+
+#### Gestión avanzada
+
 * Multiusuario.
-* Historial completo de auditoría.
+* Gestión de roles.
+* Control de acceso.
+
+---
+
+## 1.2.1. Uso de Statewave
+
+Statewave constituye uno de los componentes centrales de la arquitectura del sistema.
+
+Su función principal es proporcionar una capa de memoria contextual para aplicaciones basadas en IA.
+
+En AuditCare Timeline, Statewave se utiliza para:
+
+* Mantener contexto longitudinal del paciente.
+* Relacionar múltiples encuentros clínicos.
+* Preservar la información relevante entre sesiones.
+* Facilitar la trazabilidad de la información utilizada por la IA.
+* Permitir la generación de timelines clínicos consistentes y auditables.
+
+A diferencia de una base de datos tradicional, Statewave aporta capacidades específicas para la gestión de memoria contextual orientada a sistemas inteligentes, mejorando la coherencia de los resultados generados por los modelos de lenguaje.
 
 ---
 
 ## 1.3. Diseño y experiencia de usuario
 
-Flujo principal:
+### Flujo principal MVP
 
 1. Crear paciente.
 2. Registrar encuentro clínico.
 3. Introducir nota médica.
 4. Procesar nota mediante IA.
-5. Generar eventos clínicos.
-6. Guardar contexto en Statewave.
-7. Mostrar timeline cronológico.
+5. Extraer eventos clínicos estructurados.
+6. Actualizar memoria contextual del paciente en Statewave.
+7. Recuperar contexto histórico relevante.
+8. Generar timeline clínico.
+9. Mostrar timeline cronológico auditado.
 
-Las capturas de pantalla, wireframes y vídeo demostrativo se incorporarán en las siguientes entregas.
+### Experiencia de usuario
+
+El diseño del sistema prioriza:
+
+* Simplicidad de uso.
+* Visualización rápida de información clínica.
+* Reducción de carga cognitiva.
+* Transparencia sobre los resultados generados por IA.
+* Navegación eficiente por historiales extensos.
+
+Las capturas de pantalla, wireframes y vídeo demostrativo se incorporarán en las siguientes entregas del proyecto.
 
 ---
 
@@ -103,29 +200,21 @@ Las capturas de pantalla, wireframes y vídeo demostrativo se incorporarán en l
 * Python 3.12+
 * PostgreSQL 16+
 * Docker y Docker Compose
-* Cuenta OpenAI (opcional)
+* Cuenta OpenAI (opcional para pruebas con IA)
 
----
+### Servicios necesarios
 
-### Clonar repositorio
+El sistema requiere:
 
-```bash
-git clone https://github.com/MiriamDiazH/AI4Devs-finalproject.git
-
-cd AI4Devs-finalproject
-```
-
----
+* Frontend Next.js
+* Backend FastAPI
+* PostgreSQL
+* Statewave
+* OpenAI API (opcional)
 
 ### Variables de entorno
 
-Crear archivo `.env`
-
-```bash
-cp .env.example .env
-```
-
-Configurar:
+Crear archivo `.env`:
 
 ```env
 DATABASE_URL=postgresql://auditcare:auditcare@localhost:5432/auditcare
@@ -135,25 +224,13 @@ OPENAI_API_KEY=your_openai_api_key
 STATEWAVE_URL=http://localhost:8100
 ```
 
----
-
 ### PostgreSQL
 
 ```bash
 docker compose up postgres -d
 ```
 
-Verificar:
-
-```bash
-docker ps
-```
-
----
-
 ### Statewave
-
-AuditCare Timeline utiliza Statewave como capa de memoria contextual y trazabilidad.
 
 Documentación oficial:
 
@@ -163,7 +240,7 @@ Repositorio oficial:
 
 https://github.com/smaramwbc/statewave
 
-#### Instalación local
+Instalación:
 
 ```bash
 git clone https://github.com/smaramwbc/statewave.git
@@ -175,27 +252,19 @@ cp .env.example .env
 docker compose up -d
 ```
 
-#### Verificación
-
-Health:
+Verificación:
 
 ```bash
 curl http://localhost:8100/healthz
-```
 
-Ready:
-
-```bash
 curl http://localhost:8100/readyz
 ```
 
-#### Consola administrativa
+Panel administrativo:
 
 ```text
 http://localhost:8080
 ```
-
----
 
 ### Backend
 
@@ -211,23 +280,11 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-Verificar:
+Verificación:
 
 ```bash
 curl http://localhost:8000/health
 ```
-
-Respuesta esperada:
-
-```json
-{
-  "status": "ok",
-  "service": "auditcare-timeline-api",
-  "version": "0.1.0"
-}
-```
-
----
 
 ### Frontend
 
@@ -239,13 +296,11 @@ npm install
 npm run dev
 ```
 
-Abrir:
+Aplicación:
 
 ```text
 http://localhost:3000
 ```
-
----
 
 ### Verificación completa
 
@@ -274,6 +329,7 @@ http://localhost:8080
 ```
 
 Si todos los servicios responden correctamente, el entorno está preparado para ejecutar el MVP.
+
 
 ---
 
