@@ -1158,18 +1158,20 @@ Crear el schema Prisma inicial con las entidades principales del modelo de datos
 
 **Rama:** `feature-entrega1-ASP`
 
+**URL:**  
+https://github.com/LIDR-academy/AI4Devs-finalproject/pull/180
+
 #### Contenido
 
-- `readme.md` con ficha, arquitectura, modelo de datos, API, historias, tickets y PRs.
-- `prompts.md` con prompts principales usados.
-- Diagramas Mermaid.
-- Definición del modelo de datos.
-- Plan por entregas.
-- Resumen de spikes técnicos.
+- `readme.md` con ficha del proyecto, descripción general, arquitectura, modelo de datos, API, historias de usuario, tickets y pull requests.
+- `prompts.md` con prompts principales utilizados durante la ideación, diseño y planificación del proyecto.
+- Diagramas Mermaid para arquitectura y modelo de datos.
+- Documentación del modelo de datos con `Site`, `EdgeNode`, `CameraDevice`, `RobotArm`, calibraciones, `DropZone`, `DropPosition`, sesiones, cubos, acciones y eventos.
+- Evidencias visuales en `docs/images`.
 
 #### Estado
 
-Planificado para Entrega 1.
+Creado para Entrega 1.
 
 ---
 
