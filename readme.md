@@ -594,22 +594,86 @@ Test unitario Health Check.
 
 # 7. Pull Requests
 
-### PR-001
+## PR-001 Setup inicial proyecto
 
-Setup inicial proyecto.
+Objetivo:
+Crear la estructura base del proyecto.
 
-### PR-002
+Incluye:
 
-Persistencia pacientes y encuentros.
+- FastAPI bootstrap
+- Next.js bootstrap
+- PostgreSQL
+- Docker Compose
+- GitHub Actions
+- Health Check
+- Documentación inicial
 
-### PR-003
+Estado:
+✅ Completado
 
-Integración OpenAI y extracción de eventos.
+---
 
-### PR-004
+## PR-002 Persistencia de pacientes y encuentros
 
-Integración Statewave.
+Objetivo:
+Implementar almacenamiento de pacientes y encuentros clínicos.
 
-### PR-005
+Incluye:
 
-Timeline clínico MVP.
+- Modelo Patient
+- Modelo Encounter
+- Migraciones PostgreSQL
+- API CRUD
+
+Estado:
+🔄 Planificado
+
+---
+
+## PR-003 Extracción de eventos mediante IA
+
+Objetivo:
+Extraer eventos clínicos desde notas médicas.
+
+Incluye:
+
+- Integración OpenAI
+- Prompt engineering
+- Parsing estructurado
+- Tests unitarios
+
+Estado:
+🔄 Planificado
+
+---
+
+## PR-004 Integración Statewave
+
+Objetivo:
+Gestionar memoria contextual longitudinal del paciente.
+
+Incluye:
+
+- Statewave Client
+- Persistencia contextual
+- Recuperación de contexto
+
+Estado:
+🔄 Planificado
+
+---
+
+## PR-005 Timeline clínico MVP
+
+Objetivo:
+Visualizar la evolución clínica del paciente.
+
+Incluye:
+
+- Timeline UI
+- Filtros básicos
+- Integración backend
+
+Estado:
+🔄 Planificado
