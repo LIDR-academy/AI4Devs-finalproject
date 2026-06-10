@@ -179,7 +179,7 @@ sequenceDiagram
     S->>F: Solicita cobro depósito
     F-->>S: Pago confirmado
     S-->>C: Confirmación de reserva
-    S-->>Note over S: Notifica al artista
+    Note over S: Notifica al artista
 ```
 
 ### 2.2 CU-02: Tatuador Configura su Perfil y Agenda
@@ -272,7 +272,7 @@ sequenceDiagram
     C->>R: Confirma publicación
     R->>PA: Actualiza rating agregado
     R-->>C: Reseña publicada con badge "✅ Reseña Completa"
-    PA-->>Note over PA: Artista puede responder
+    Note over PA: Artista puede responder
 ```
 
 ---
