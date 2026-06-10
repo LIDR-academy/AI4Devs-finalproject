@@ -96,4 +96,35 @@ Todos los prompts que usamos en esta sesion grabalos en el archivo prompts/00-al
 
 ---
 
-*INK·LINK © 2026 · Historial de sesión: cambio de stack tecnológico*
+## 09 — Generación de documentación técnica (meta-prompt)
+
+```
+Genera un prompt especializado para IA (meta prompt) en base al archivo initial.md y guarda este
+prompt en un archivo llamado master-prompt-docs.md dentro de la carpeta prompts de la raiz del proyecto
+```
+
+*(Genera prompts/master-prompt-docs.md con rol, contexto, misión y restricciones para producir docs/documentacion.md)*
+
+---
+
+## 10 — Plan de ejecución para documentación
+
+```
+Genera un plan detallado para master-prompt.md y grabalo en master-prompt-docs-plan.md para revisarlo
+```
+
+*(Genera prompts/master-prompt-docs-plan.md con checklist verificable, entidades, decisiones y validaciones cruzadas)*
+
+---
+
+## 11 — Ejecución del plan
+
+```
+ejecuta el plan de master-prompt-docs-plan.md
+```
+
+*(Genera docs/documentacion.md completo: descripción, Lean Canvas, 3 casos de uso, modelo de datos ER, arquitectura y diagramas C4)*
+
+---
+
+*INK·LINK © 2026 · Historial de sesión: cambio de stack tecnológico + documentación técnica v1*
