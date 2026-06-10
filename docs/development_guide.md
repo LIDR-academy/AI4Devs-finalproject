@@ -1,6 +1,6 @@
-# Development Guide
+<!-- # Development Guide
 
-This guide provides step-by-step instructions for setting up the development environment and running tests for the LTI ATS system.
+This guide provides step-by-step instructions for setting up the development environment and running tests for the INK-LINK.
 
 ## 🚀 Setup Instructions
 
@@ -150,4 +150,4 @@ npm run cypress:run
 # Open Cypress Test Runner
 npm run cypress:open
 ```
-
+ -->

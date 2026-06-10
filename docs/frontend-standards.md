@@ -1,6 +1,6 @@
 ---
-description: Frontend development standards, best practices, and conventions for the LTI React application including component patterns, state management, UI/UX guidelines, and testing practices
-globs: ["frontend/src/**/*.{js,jsx,ts,tsx}", "frontend/cypress/**/*.{ts,js}", "frontend/tsconfig.json", "frontend/cypress.config.ts", "frontend/package.json"]
+description: Frontend development standards, best practices, and conventions for the INK-LINK Angular 20 application including component patterns, state management, UI/UX guidelines, and testing practices
+globs: ["frontend/src/**/*.{ts,html,css}", "frontend/cypress/**/*.{ts,js}", "frontend/tsconfig.json", "frontend/cypress.config.ts", "frontend/angular.json", "frontend/package.json"]
 alwaysApply: true
 ---
 
@@ -8,152 +8,157 @@ alwaysApply: true
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Technology Stack](#technology-stack)
-  - [Core Technologies](#core-technologies)
-  - [UI Framework](#ui-framework)
-  - [State Management & Data Flow](#state-management--data-flow)
-  - [Testing Framework](#testing-framework)
-  - [Development Tools](#development-tools)
-- [Project Structure](#project-structure)
-- [Coding Standards](#coding-standards)
-  - [Language and Naming Conventions](#language-and-naming-conventions)
-  - [Component Conventions](#component-conventions)
-  - [State Management](#state-management)
-  - [Service Layer Architecture](#service-layer-architecture)
-- [UI/UX Standards](#uiux-standards)
-  - [Bootstrap Integration](#bootstrap-integration)
-  - [Form Handling](#form-handling)
-  - [Navigation Patterns](#navigation-patterns)
-  - [Accessibility](#accessibility)
-- [Testing Standards](#testing-standards)
-  - [End-to-End Testing with Cypress](#end-to-end-testing-with-cypress)
-  - [Test Organization](#test-organization)
-- [Configuration Standards](#configuration-standards)
-  - [TypeScript Configuration](#typescript-configuration)
-  - [ESLint Configuration](#eslint-configuration)
-  - [Environment Configuration](#environment-configuration)
-- [Performance Best Practices](#performance-best-practices)
-  - [Component Optimization](#component-optimization)
-  - [Bundle Optimization](#bundle-optimization)
-  - [API Efficiency](#api-efficiency)
-- [Development Workflow](#development-workflow)
-  - [Git Workflow](#git-workflow)
-  - [Development Scripts](#development-scripts)
-  - [Code Quality](#code-quality)
-- [Migration Strategy](#migration-strategy)
-  - [TypeScript Migration](#typescript-migration)
-  - [Component Modernization](#component-modernization)
+- [Frontend Project Configuration and Best Practices](#frontend-project-configuration-and-best-practices)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Technology Stack](#technology-stack)
+    - [Core Technologies](#core-technologies)
+    - [UI Framework](#ui-framework)
+    - [State Management \& Data Flow](#state-management--data-flow)
+    - [Testing Framework](#testing-framework)
+    - [Development Tools](#development-tools)
+  - [Project Structure](#project-structure)
+  - [Coding Standards](#coding-standards)
+    - [Naming Conventions](#naming-conventions)
+    - [Component Conventions](#component-conventions)
+      - [Standalone Components](#standalone-components)
+      - [Component Inputs and Outputs](#component-inputs-and-outputs)
+    - [State Management](#state-management)
+      - [Local State with Signals](#local-state-with-signals)
+      - [Loading and Error States](#loading-and-error-states)
+    - [Service Layer Architecture](#service-layer-architecture)
+      - [API Services](#api-services)
+  - [UI/UX Standards](#uiux-standards)
+    - [Angular Material Integration](#angular-material-integration)
+    - [Form Handling](#form-handling)
+    - [Navigation Patterns](#navigation-patterns)
+    - [Accessibility](#accessibility)
+  - [Testing Standards](#testing-standards)
+    - [End-to-End Testing with Cypress](#end-to-end-testing-with-cypress)
+    - [Test Organization](#test-organization)
+  - [Configuration Standards](#configuration-standards)
+    - [TypeScript Configuration](#typescript-configuration)
+    - [ESLint Configuration](#eslint-configuration)
+    - [Environment Configuration](#environment-configuration)
+  - [Performance Best Practices](#performance-best-practices)
+    - [Component Optimization](#component-optimization)
+    - [Bundle Optimization](#bundle-optimization)
+    - [API Efficiency](#api-efficiency)
+  - [Development Workflow](#development-workflow)
+    - [Git Workflow](#git-workflow)
+    - [Development Scripts](#development-scripts)
+    - [Code Quality](#code-quality)
+  - [Angular Version Upgrade Strategy](#angular-version-upgrade-strategy)
+    - [Standalone Components](#standalone-components-1)
+    - [Component Modernization](#component-modernization)
 
 ---
 
 ## Overview
 
-This document outlines the best practices, conventions, and standards used in the LTI frontend application. These practices ensure code consistency, maintainability, and optimal development experience.
+This document outlines the best practices, conventions, and standards used in the INK-LINK frontend application. These practices ensure code consistency, maintainability, and optimal development experience.
 
 ## Technology Stack
 
 ### Core Technologies
-- **React 18.3.1**: Modern React with functional components and hooks
-- **TypeScript 4.9.5**: For type safety and better development experience
-- **Create React App 5.0.1**: Build tooling and development server
-- **React Router DOM 6.23.1**: Client-side routing and navigation
+- **Angular 20**: Modern Angular with standalone components and signals
+- **TypeScript**: For type safety and better development experience
+- **Angular CLI**: Build tooling and development server
+- **Angular Router**: Client-side routing and navigation
 
 ### UI Framework
-- **Bootstrap 5.3.3**: CSS framework for responsive design
-- **React Bootstrap 2.10.2**: Bootstrap components for React
-- **React Bootstrap Icons 1.11.4**: Icon library
-- **React DatePicker 6.9.0**: Date input components
+- **Angular Material**: Component library for consistent UI and styling
+- **Angular CDK**: Headless utilities including drag and drop functionality
+- **Angular Material Icons**: Icon library
 
 ### State Management & Data Flow
-- **React Hooks**: useState, useEffect for local state management
-- **React Beautiful DND 13.1.1**: Drag and drop functionality
-- **Axios**: HTTP client for API communication
+- **Angular Signals**: `signal()`, `computed()`, `effect()` for reactive local state
+- **RxJS**: Observables for async data streams from services
+- **Angular HttpClient**: HTTP client for API communication
 
 ### Testing Framework
 - **Cypress 14.4.1**: End-to-end testing
-- **Jest**: Unit testing (via Create React App)
-- **React Testing Library**: Component testing utilities
+- **Jest**: Unit testing
+- **Angular Testing Library**: Component testing utilities
 
 ### Development Tools
-- **ESLint**: Code linting with React-specific rules
+- **ESLint**: Code linting with Angular-specific rules
 - **TypeScript**: Static type checking
-- **Web Vitals**: Performance monitoring
+- **Angular DevTools**: Performance monitoring and debugging
 
 ## Project Structure
 
 ```
 frontend/
-├── public/                 # Static assets
 ├── src/
-│   ├── components/        # Reusable UI components
-│   ├── services/         # API service layer
-│   ├── pages/           # Page components (future organization)
-│   ├── assets/          # Images, fonts, static resources
-│   ├── App.js           # Main application component
-│   ├── index.tsx        # Application entry point
-│   └── index.css        # Global styles
+│   ├── app/
+│   │   ├── components/       # Reusable UI components
+│   │   ├── services/         # API service layer
+│   │   ├── models/           # TypeScript interfaces and types
+│   │   ├── pages/            # Page-level components
+│   │   ├── app.component.ts  # Root component
+│   │   ├── app.component.html
+│   │   ├── app.routes.ts     # Route definitions
+│   │   └── app.config.ts     # Application providers configuration
+│   ├── environments/
+│   │   ├── environment.ts        # Development environment
+│   │   └── environment.prod.ts   # Production environment
+│   ├── assets/               # Images, fonts, static resources
+│   ├── styles.css            # Global styles
+│   └── main.ts               # Application entry point
 ├── cypress/
-│   └── e2e/            # End-to-end test files
-├── package.json         # Dependencies and scripts
-├── tsconfig.json       # TypeScript configuration
-└── cypress.config.ts   # Cypress configuration
+│   └── e2e/                  # End-to-end test files
+├── package.json              # Dependencies and scripts
+├── tsconfig.json             # TypeScript configuration
+├── angular.json              # Angular CLI configuration
+└── cypress.config.ts         # Cypress configuration
 ```
 
 ## Coding Standards
 
 ### Naming Conventions
 
-- **Component Naming**: Use PascalCase for React components (e.g., `CandidateCard`, `PositionDetails`, `RecruiterDashboard`)
+- **Component Naming**: Use PascalCase for Angular component classes (e.g., `CandidateCardComponent`, `PositionDetailsComponent`)
 - **Variable Naming**: Use camelCase for variables and functions (e.g., `candidateId`, `handleSubmit`, `fetchPositions`)
-- **Constants Naming**: Use UPPER_SNAKE_CASE for constants (e.g., `MAX_CANDIDATES_PER_PAGE`, `API_BASE_URL`)
+- **Constants Naming**: Use UPPER_SNAKE_CASE for constants (e.g., `MAX_CANDIDATES_PER_PAGE`)
 - **Type/Interface Naming**: Use PascalCase for types and interfaces (e.g., `CandidateData`, `PositionProps`, `ICandidateService`)
-- **File Naming**: Use PascalCase for component files (e.g., `CandidateCard.tsx`, `PositionDetails.tsx`) and camelCase for utility files (e.g., `candidateService.js`, `apiUtils.ts`)
+- **File Naming**: Use kebab-case for all files (e.g., `candidate-card.component.ts`, `position-details.component.html`, `candidate.service.ts`)
 - **CSS Class Naming**: Use kebab-case for CSS classes (e.g., `candidate-card`, `position-details`)
-- **Hook Naming**: Use camelCase starting with "use" prefix (e.g., `useCandidate`, `usePositionData`, `useFormValidation`)
+- **Selector Naming**: Use kebab-case with app prefix (e.g., `app-candidate-card`, `app-position-details`)
 
 **Examples:**
 
 ```typescript
 // Good: All in English
-import React, { useState, useEffect } from 'react';
+import { Component, input, output } from '@angular/core';
 
 type CandidateCardProps = {
-    candidate: Candidate;
-    index: number;
-    onClick: (candidate: Candidate) => void;
+  candidate: Candidate;
+  index: number;
 };
 
-const CandidateCard: React.FC<CandidateCardProps> = ({ candidate, index, onClick }) => {
-    const [isLoading, setIsLoading] = useState(false);
-    
-    // Handle candidate card click event
-    const handleCardClick = () => {
-        onClick(candidate);
-    };
-    
-    return (
-        <div className="candidate-card" onClick={handleCardClick}>
-            {/* Component JSX */}
-        </div>
-    );
-};
+@Component({
+  selector: 'app-candidate-card',
+  standalone: true,
+  templateUrl: './candidate-card.component.html',
+})
+export class CandidateCardComponent {
+  candidate = input.required<Candidate>();
+  index = input.required<number>();
+  cardClick = output<Candidate>();
+
+  handleCardClick(): void {
+    this.cardClick.emit(this.candidate());
+  }
+}
 
 // Avoid: Non-English comments or names
-const TarjetaCandidato: React.FC<PropsTarjetaCandidato> = ({ candidato, indice, alHacerClic }) => {
-    const [estaCargando, setEstaCargando] = useState(false);
-    
-    // Manejar evento de clic en la tarjeta de candidato
-    const manejarClicTarjeta = () => {
-        alHacerClic(candidato);
-    };
-    
-    return (
-        <div className="tarjeta-candidato" onClick={manejarClicTarjeta}>
-            {/* JSX del componente */}
-        </div>
-    );
-};
+@Component({ selector: 'app-tarjeta-candidato' })
+export class TarjetaCandidatoComponent {
+  candidato = input.required<Candidato>();
+  // Manejar clic en la tarjeta
+  manejarClicTarjeta(): void { }
+}
 ```
 
 **Error Messages and Console Logs:**
@@ -162,13 +167,13 @@ const TarjetaCandidato: React.FC<PropsTarjetaCandidato> = ({ candidato, indice, 
 // Good: English error messages
 catch (error) {
     console.error('Failed to fetch candidates:', error);
-    setError('Unable to load candidates. Please try again later.');
+    this.error.set('Unable to load candidates. Please try again later.');
 }
 
 // Avoid: Non-English messages
 catch (error) {
     console.error('Error al obtener candidatos:', error);
-    setError('No se pudieron cargar los candidatos. Por favor, inténtelo de nuevo más tarde.');
+    this.error.set('No se pudieron cargar los candidatos. Por favor, inténtelo de nuevo más tarde.');
 }
 ```
 
@@ -176,114 +181,146 @@ catch (error) {
 
 ```typescript
 // Good: English naming in services
-export const candidateService = {
-    getAllCandidates: async () => {
-        try {
-            const response = await axios.get(`${API_BASE_URL}/candidates`);
-            return response.data;
-        } catch (error) {
-            console.error('Error fetching candidates:', error);
-            throw error;
-        }
-    }
-};
+@Injectable({ providedIn: 'root' })
+export class CandidateService {
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = `${environment.apiUrl}/candidates`;
+
+  getAllCandidates(): Observable<Candidate[]> {
+    return this.http.get<Candidate[]>(this.apiUrl).pipe(
+      catchError(error => {
+        console.error('Error fetching candidates:', error);
+        throw error;
+      })
+    );
+  }
+}
 
 // Avoid: Non-English naming
-export const servicioCandidatos = {
-    obtenerTodosLosCandidatos: async () => {
-        try {
-            const respuesta = await axios.get(`${API_BASE_URL}/candidates`);
-            return respuesta.data;
-        } catch (error) {
-            console.error('Error al obtener candidatos:', error);
-            throw error;
-        }
-    }
-};
+@Injectable({ providedIn: 'root' })
+export class ServicioCandidatos {
+  obtenerTodosLosCandidatos(): Observable<Candidato[]> {
+    return this.http.get<Candidato[]>(this.apiUrl);
+  }
+}
 ```
 
 ### Component Conventions
 
-#### Functional Components
-- **Always use functional components** with hooks instead of class components
-- Use **TypeScript for new components** when possible
-- Keep **JavaScript for legacy components** until migration
+#### Standalone Components
+- **Always use standalone components** — do not use NgModules for new components
+- **Use TypeScript** for all components (`.ts` + `.html` + `.css`)
+- **Use signals** for reactive local state
 
 ```typescript
-// Preferred - TypeScript functional component
-import React, { useState, useEffect } from 'react';
+// Preferred - Standalone Angular component with signals
+import { Component, signal, OnInit, inject } from '@angular/core';
+import { MatCardModule } from '@angular/material/card';
+import { PositionService } from '../services/position.service';
 
 type Position = {
-    id: number;
-    title: string;
-    status: 'Open' | 'Contratado' | 'Cerrado' | 'Borrador';
+  id: number;
+  title: string;
+  status: 'Open' | 'Hired' | 'Closed' | 'Draft';
 };
 
-const Positions: React.FC = () => {
-    const [positions, setPositions] = useState<Position[]>([]);
-    // Component logic
-};
+@Component({
+  selector: 'app-positions',
+  standalone: true,
+  imports: [MatCardModule],
+  templateUrl: './positions.component.html',
+})
+export class PositionsComponent implements OnInit {
+  private positionService = inject(PositionService);
+  positions = signal<Position[]>([]);
+
+  ngOnInit(): void {
+    this.loadPositions();
+  }
+
+  private loadPositions(): void {
+    this.positionService.getAllPositions().subscribe({
+      next: (positions) => this.positions.set(positions),
+    });
+  }
+}
 ```
 
-#### Component Props
-- **Define TypeScript interfaces** for component props when using TypeScript
-- Use **destructuring** for props
+#### Component Inputs and Outputs
+- **Use signal-based inputs** (`input()`, `input.required()`) for component props
+- **Use `output()`** for component events
 - Include **default values** where appropriate
 
 ```typescript
-type CandidateCardProps = {
-    candidate: Candidate;
-    index: number;
-    onClick: (candidate: Candidate) => void;
-};
+import { Component, input, output } from '@angular/core';
 
-const CandidateCard: React.FC<CandidateCardProps> = ({ candidate, index, onClick }) => {
-    // Component implementation
-};
+@Component({
+  selector: 'app-candidate-card',
+  standalone: true,
+  templateUrl: './candidate-card.component.html',
+})
+export class CandidateCardComponent {
+  candidate = input.required<Candidate>();
+  index = input.required<number>();
+  cardClick = output<Candidate>();
+
+  handleClick(): void {
+    this.cardClick.emit(this.candidate());
+  }
+}
 ```
 
 ### State Management
 
-#### Local State with Hooks
-- Use **useState** for component-level state
-- Use **useEffect** for side effects and data fetching
-- **Extract custom hooks** for reusable stateful logic
+#### Local State with Signals
+- Use **`signal()`** for component-level reactive state
+- Use **`computed()`** for derived state
+- Use **`effect()`** for side effects
+- Use **`ngOnInit`** for data fetching on initialization
 
-```javascript
-const [formData, setFormData] = useState({
+```typescript
+export class PositionFormComponent implements OnInit {
+  private positionService = inject(PositionService);
+
+  formData = signal({
     title: '',
     description: '',
-    status: 'Borrador'
-});
+    status: 'Draft' as const,
+  });
 
-const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-        ...prev,
-        [name]: value
-    }));
-};
+  isSaving = signal(false);
+
+  handleInputChange(field: string, value: string): void {
+    this.formData.update(prev => ({ ...prev, [field]: value }));
+  }
+}
 ```
 
 #### Loading and Error States
 - **Always handle loading states** for async operations
 - **Implement error handling** with user-friendly messages
-- **Use React Bootstrap Alert** components for feedback
+- **Use Angular Material Snackbar or inline messages** for feedback
 
-```javascript
-const [loading, setLoading] = useState(true);
-const [error, setError] = useState('');
-const [success, setSuccess] = useState('');
+```typescript
+export class CandidatesComponent implements OnInit {
+  private candidateService = inject(CandidateService);
+  private snackBar = inject(MatSnackBar);
 
-// In async function
-try {
-    setLoading(true);
-    const data = await apiCall();
-    setSuccess('Operation completed successfully');
-} catch (error) {
-    setError('Error message: ' + error.message);
-} finally {
-    setLoading(false);
+  loading = signal(true);
+  error = signal('');
+  candidates = signal<Candidate[]>([]);
+
+  ngOnInit(): void {
+    this.candidateService.getAllCandidates().pipe(
+      finalize(() => this.loading.set(false))
+    ).subscribe({
+      next: (data) => this.candidates.set(data),
+      error: (err) => {
+        this.error.set('Error loading candidates: ' + err.message);
+        this.snackBar.open('Failed to load candidates', 'Close', { duration: 3000 });
+      }
+    });
+  }
 }
 ```
 
@@ -291,87 +328,127 @@ try {
 
 #### API Services
 - **Centralize API calls** in service files
-- Use **axios** for HTTP requests
-- **Export service objects** with grouped methods
-- **Handle errors at service level** when appropriate
+- Use **Angular `HttpClient`** for HTTP requests
+- **Inject services** using `inject()` or constructor injection
+- **Handle errors** with RxJS `catchError` operator
 
-```javascript
-import axios from 'axios';
+```typescript
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, catchError } from 'rxjs';
+import { environment } from '../../environments/environment';
 
-const API_BASE_URL = 'http://localhost:3010';
+@Injectable({ providedIn: 'root' })
+export class PositionService {
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = `${environment.apiUrl}/positions`;
 
-export const positionService = {
-    getAllPositions: async () => {
-        try {
-            const response = await axios.get(`${API_BASE_URL}/positions`);
-            return response.data;
-        } catch (error) {
-            console.error('Error fetching positions:', error);
-            throw error;
-        }
-    },
-    
-    updatePosition: async (id, positionData) => {
-        try {
-            const response = await axios.put(`${API_BASE_URL}/positions/${id}`, positionData);
-            return response.data;
-        } catch (error) {
-            console.error('Error updating position:', error);
-            throw error;
-        }
-    }
-};
+  getAllPositions(): Observable<Position[]> {
+    return this.http.get<Position[]>(this.apiUrl).pipe(
+      catchError(error => {
+        console.error('Error fetching positions:', error);
+        throw error;
+      })
+    );
+  }
+
+  updatePosition(id: number, positionData: Partial<Position>): Observable<Position> {
+    return this.http.put<Position>(`${this.apiUrl}/${id}`, positionData).pipe(
+      catchError(error => {
+        console.error('Error updating position:', error);
+        throw error;
+      })
+    );
+  }
+}
 ```
 
 ## UI/UX Standards
 
-### Bootstrap Integration
-- Use **React Bootstrap components** instead of plain Bootstrap
-- **Import Bootstrap CSS** in the main App component
-- Follow **Bootstrap responsive grid system** (Container, Row, Col)
+### Angular Material Integration
+- Use **Angular Material components** for all UI elements
+- **Import only the modules needed** per component
+- Follow **Material Design** responsive layout principles
 
-```javascript
-import { Container, Row, Col, Card, Button, Form, Alert } from 'react-bootstrap';
+```typescript
+import {
+  MatCardModule,
+  MatButtonModule,
+  MatFormFieldModule,
+  MatInputModule,
+  MatSelectModule,
+  MatProgressSpinnerModule,
+} from '@angular/material';
 ```
 
 ### Form Handling
-- Use **controlled components** for form inputs
+- Use **Reactive Forms** (`FormGroup`, `FormControl`) for complex forms
+- Use **Template-driven forms** for simple forms
 - Implement **real-time validation** where appropriate
 - **Disable submit buttons** during form submission
-- **Clear form state** after successful submission
 
-```javascript
-<Form onSubmit={handleSubmit}>
-    <Form.Group className="mb-3">
-        <Form.Label>Title *</Form.Label>
-        <Form.Control
-            type="text"
-            name="title"
-            value={formData.title}
-            onChange={handleInputChange}
-            required
-        />
-    </Form.Group>
-    <Button type="submit" disabled={saving}>
-        {saving ? 'Saving...' : 'Save'}
-    </Button>
-</Form>
+```typescript
+export class PositionFormComponent {
+  private fb = inject(FormBuilder);
+
+  form = this.fb.group({
+    title: ['', [Validators.required, Validators.maxLength(200)]],
+    description: [''],
+    status: ['Draft', Validators.required],
+  });
+
+  saving = signal(false);
+
+  onSubmit(): void {
+    if (this.form.invalid) return;
+    this.saving.set(true);
+    // submit logic
+  }
+}
+```
+
+```html
+<!-- position-form.component.html -->
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <mat-form-field>
+    <mat-label>Title *</mat-label>
+    <input matInput formControlName="title" />
+    <mat-error>Title is required</mat-error>
+  </mat-form-field>
+  <button mat-raised-button color="primary" type="submit" [disabled]="saving()">
+    {{ saving() ? 'Saving...' : 'Save' }}
+  </button>
+</form>
 ```
 
 ### Navigation Patterns
-- Use **React Router** for all navigation
+- Use **Angular Router** for all navigation
 - **Implement breadcrumbs** with back navigation
-- Use **programmatic navigation** with useNavigate hook
+- Use **programmatic navigation** with `Router` service
 
-```javascript
-import { useNavigate } from 'react-router-dom';
+```typescript
+import { Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
 
-const navigate = useNavigate();
+@Component({ /* ... */ })
+export class SomeComponent {
+  private router = inject(Router);
 
-// Navigation examples
-<Button variant="link" onClick={() => navigate('/')}>
-    ← Back to Dashboard
-</Button>
+  navigateBack(): void {
+    this.router.navigate(['/']);
+  }
+
+  navigateToCandidate(id: number): void {
+    this.router.navigate(['/candidates', id]);
+  }
+}
+```
+
+```html
+<!-- Template navigation -->
+<button mat-button (click)="navigateBack()">
+  ← Back to Dashboard
+</button>
 ```
 
 ### Accessibility
@@ -380,12 +457,11 @@ const navigate = useNavigate();
 - Ensure **keyboard navigation** support
 - Provide **alternative text** for images
 
-```javascript
-<Form.Control 
-    type="text" 
-    placeholder="Search by title" 
-    aria-label="Search positions by title"
-/>
+```html
+<mat-form-field>
+  <mat-label>Search positions by title</mat-label>
+  <input matInput placeholder="Search by title" aria-label="Search positions by title" />
+</mat-form-field>
 ```
 
 ## Testing Standards
@@ -433,38 +509,54 @@ describe('Positions API - Update', () => {
 ### TypeScript Configuration
 - Enable **strict mode** for type checking
 - Use **path mapping** with "@/*" for cleaner imports
-- Include **both Cypress and Node types**
-- Configure **ES5 target** for broader compatibility
+- Include **Angular-specific compiler options**
+- Configure **ES2022 or later target**
 
 ```json
 {
     "compilerOptions": {
         "strict": true,
+        "target": "ES2022",
+        "useDefineForClassFields": false,
+        "experimentalDecorators": true,
         "baseUrl": ".",
         "paths": {
             "@/*": ["src/*"]
-        },
-        "types": ["cypress", "node"]
+        }
     }
 }
 ```
 
 ### ESLint Configuration
-- Extend **React App** configuration
-- Include **Jest rules** for testing
+- Extend **Angular ESLint** configuration
+- Include **TypeScript ESLint** rules
 - **Automatic code formatting** and error detection
 - **Consistent code style** across the project
 
 ### Environment Configuration
-- Use **environment variables** for API URLs
+- Use **`environment.ts`** files for API URLs and feature flags
 - **Separate configurations** for development and production
 - **Configure Cypress** with environment-specific settings
 
-```javascript
+```typescript
+// src/environments/environment.ts
+export const environment = {
+  production: false,
+  apiUrl: 'http://localhost:3010'
+};
+
+// src/environments/environment.prod.ts
+export const environment = {
+  production: true,
+  apiUrl: 'https://api.production.com'
+};
+```
+
+```typescript
 // cypress.config.ts
 export default defineConfig({
     e2e: {
-        baseUrl: 'http://localhost:3000',
+        baseUrl: 'http://localhost:4200',
         env: {
             API_URL: 'http://localhost:3010'
         }
@@ -475,25 +567,62 @@ export default defineConfig({
 ## Performance Best Practices
 
 ### Component Optimization
-- **Lazy load** components when appropriate
-- **Memoize expensive calculations** with useMemo
-- **Avoid unnecessary re-renders** with useCallback
-- **Extract reusable logic** into custom hooks
+- Use **`@defer`** blocks for lazy-loading heavy components
+- Use **`OnPush`** change detection strategy when appropriate
+- Use **`trackBy`** (or `track` in the new `@for` syntax) to minimize DOM re-renders
+- **Extract reusable logic** into services or custom pipes
+
+```html
+<!-- New Angular control flow with track -->
+@for (candidate of candidates(); track candidate.id) {
+  <app-candidate-card [candidate]="candidate" />
+}
+
+<!-- Defer heavy components -->
+@defer (on viewport) {
+  <app-heavy-chart [data]="data()" />
+}
+```
 
 ### Bundle Optimization
-- **Tree shaking** enabled through Create React App
+- **Lazy load** feature routes with `loadComponent`
+- **Tree shaking** enabled via Angular CLI
 - **Code splitting** at route level
 - **Optimize images** and static assets
-- **Monitor bundle size** with build tools
+
+```typescript
+// app.routes.ts - lazy load routes
+export const routes: Routes = [
+  { path: '', component: DashboardComponent },
+  {
+    path: 'candidates',
+    loadComponent: () =>
+      import('./pages/candidates/candidates.component').then(m => m.CandidatesComponent)
+  },
+];
+```
 
 ### API Efficiency
 - **Implement proper error handling** for network requests
-- **Cache API responses** where appropriate
+- **Cache API responses** using RxJS `shareReplay` where appropriate
 - **Use loading states** to improve perceived performance
-- **Batch API calls** when possible
+- **Cancel requests** on component destroy using `takeUntilDestroyed`
+
+```typescript
+export class CandidatesComponent implements OnInit {
+  private destroyRef = inject(DestroyRef);
+
+  ngOnInit(): void {
+    this.candidateService.getAllCandidates().pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(/* ... */);
+  }
+}
+```
 
 ## Development Workflow
 
+### Git Workflow
 - **Feature Branches**: Develop features in separate branches, adding descriptive suffix "-frontend" to allow working in parallel and avoid conflicts or collisions
 - **Descriptive Commits**: Write descriptive commit messages in English
 - **Code Review**: Code review before merging
@@ -501,31 +630,35 @@ export default defineConfig({
 
 ### Development Scripts
 ```bash
-npm start          # Development server
-npm test           # Run unit tests
-npm run build      # Production build
-npm run cypress:open    # Open Cypress test runner
-npm run cypress:run     # Run Cypress tests headlessly
+ng serve                    # Development server (port 4200)
+ng test                     # Run unit tests
+ng build                    # Production build
+ng build --configuration production  # Optimized production build
+ng generate component path/name      # Generate a new component
+ng generate service path/name        # Generate a new service
+npm run cypress:open        # Open Cypress test runner
+npm run cypress:run         # Run Cypress tests headlessly
 ```
 
 ### Code Quality
 - **ESLint validation** before commits
 - **TypeScript compilation** without errors
 - **All tests passing** before deployment
-- **Performance monitoring** with Web Vitals
+- **Angular DevTools** for performance profiling
 
-## Migration Strategy
+## Angular Version Upgrade Strategy
 
-### TypeScript Migration
-- **Gradual migration** from JavaScript to TypeScript
-- **New components in TypeScript** by default
-- **Maintain existing JavaScript** components until planned refactor
-- **Add types incrementally** to existing code
+### Standalone Components
+- **All new components** must be standalone (no NgModule)
+- Use `inject()` for dependency injection over constructor injection for new code
+- Use **signal-based inputs/outputs** (`input()`, `output()`) for new components
+- Migrate legacy module-based components to standalone incrementally
 
 ### Component Modernization
-- **Functional components** over class components
-- **Hooks** instead of lifecycle methods
-- **React Bootstrap** components for consistency
+- **Standalone components** over module-based components
+- **Signals** instead of manual change detection
+- **Angular Material** components for consistency
 - **Responsive design** principles throughout
+- Use **new control flow syntax** (`@if`, `@for`, `@switch`) instead of structural directives
 
-This document serves as the foundation for maintaining code quality and consistency across the LTI frontend application. All team members should follow these practices to ensure a maintainable and scalable codebase.
+This document serves as the foundation for maintaining code quality and consistency across the INK-LINK frontend application. All team members should follow these practices to ensure a maintainable and scalable codebase.

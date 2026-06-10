@@ -14,15 +14,16 @@ alwaysApply: true
 - **Pattern Detection**: Detect and highlight repeated code patterns.
 
 ## 2. Language Standards
-- **English Only**: All technical artifacts must always use English, including:
-    - Code (variables, functions, classes, comments, error messages, log messages)
+- **Spanish Only**: All this artifacts must always use Spanish, including:
     - Documentation (README, guides, API docs)
     - Jira tickets (titles, descriptions, comments)
+    - Git commit messages
+## 2.1 Language Standards
+- **English Only**: All technical artifacts must always use English, including:
+    - Code (variables, functions, classes, comments, error messages, log messages)
     - Data schemas and database names
     - Configuration files and scripts
-    - Git commit messages
     - Test names and descriptions
-
 ## 3. Specific standards
 
 For detailed standards and guidelines specific to different areas of the project, refer to:

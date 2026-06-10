@@ -1,6 +1,6 @@
-# Data Model Documentation
+<!-- # Data Model Documentation
 
-This document describes the data model for the LTI (Learning Tracking Initiative) application, including entity descriptions, field definitions, relationships, and an entity-relationship diagram.
+This document describes the data model for the INK-LINK application, including entity descriptions, field definitions, relationships, and an entity-relationship diagram.
 
 ## Model Descriptions
 
@@ -369,4 +369,4 @@ erDiagram
 - Foreign key relationships maintain referential integrity
 - Optional fields allow for flexible data entry while maintaining required core information
 - The interview system supports multi-step hiring processes with different types of interviews
-- Email fields have unique constraints to prevent duplicate accounts 
+- Email fields have unique constraints to prevent duplicate accounts  -->
