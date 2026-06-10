@@ -16,6 +16,11 @@ security remediations; every US passes OWASP review before closing.
 - **Always pauses between phases** to ask before continuing to the next one.
 - **Always checkpoints before each task** in phases 2-3 (see below). No task is
   implemented without explicit user confirmation.
+- **Branch per US (automatic).** Before implementation, create and switch to
+  `us/<US-ID>-<slug>` (lowercase; `<slug>` = short accent-free kebab of the US title)
+  from the current branch via `git switch -c`. Record the originating branch for
+  integration. Branch creation needs **no** confirmation; if resuming and the branch
+  exists, just switch to it.
 
 ---
 
@@ -80,8 +85,15 @@ findings, fix HIGH/CRITICAL with TDD, re-review until zero open HIGH/CRITICAL, m
 - [ ] Sin alcance fuera de la US
 ```
 
-When every box is checked, mark Phase 6 done. Then suggest:
-`/archive-user-story US-XXX` to move the backlog to `docs/backlog/archive/`.
+When every box is checked, mark Phase 6 done. Then propose the **branch integration**
+and, on confirmation, execute it:
+
+1. `git switch <originating-branch>` (the branch the US branch was created from).
+2. `git merge --no-ff us/<US-ID>-<slug>` — the merge commit marks the US boundary.
+3. `git branch -d us/<US-ID>-<slug>` — delete the merged branch.
+
+No PR (solo fork, no merge to `main`); merge and delete require confirmation. Finally
+suggest `/archive-user-story US-XXX` to move the backlog to `docs/backlog/archive/`.
 
 ---
 

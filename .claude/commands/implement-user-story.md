@@ -28,6 +28,27 @@ Do not proceed further.
 - **Always pauses between phases** to ask for confirmation before continuing.
 - **Always checkpoints before each task** in phases 2-3, regardless of any argument.
 
+## Branch per US (automatic)
+
+Before any implementation, **automatically** create and switch to a dedicated branch for
+the US, from whatever branch is currently checked out (the delivery branch, e.g.
+`feature-entrega2-XVB`). Record that originating branch for later integration.
+
+- **Naming:** `us/<US-ID>-<slug>` — lowercase; `<slug>` is a short, accent-free kebab of
+  the US title in `docs/USER-STORIES.md` (e.g. `us/US-007-anadir-al-carrito`).
+- Create with `git switch -c us/<US-ID>-<slug>` from `HEAD`. If the branch already exists
+  (resuming), switch to it. **Branch creation is automatic — no confirmation.**
+- All US work (backlog generated here + every implementation commit) lives on this branch.
+
+On **Phase 6 close**, propose and — on confirmation — execute the integration:
+
+1. `git switch <originating-branch>`
+2. `git merge --no-ff us/<US-ID>-<slug>` (the merge commit marks the US boundary)
+3. `git branch -d us/<US-ID>-<slug>`
+
+No PR (solo fork, no merge to `main`). The **merge and delete require confirmation**;
+branch creation does not.
+
 ## Steps
 
 Run `.claude/skills/implement-user-story/SKILL.md` for `$1`. Phases and roles:

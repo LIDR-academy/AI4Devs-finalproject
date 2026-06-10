@@ -27,6 +27,16 @@ Both always apply `.claude/skills/tdd-implementation/SKILL.md`.
 
 ---
 
+## Branch (automatic)
+
+Ensure you are on the US branch `us/<US-ID>-<slug>` (lowercase; `<slug>` = short
+accent-free kebab of the US title): create it from the current branch with
+`git switch -c` if absent, or switch to it if it exists. No confirmation. When invoked
+inside `/implement-user-story` you are already on it (no-op). A standalone task does
+**not** merge or delete the branch — integration happens at US close or manually.
+
+---
+
 ## Checkpoint (always, before implementing)
 
 ```markdown
