@@ -361,6 +361,7 @@ erDiagram
         uuid contact_id FK
         uuid service_id FK
         uuid province_id FK
+        uuid work_typology_id FK
         uuid lead_magnet_id FK
         string reference_number
         string lead_type
@@ -371,12 +372,18 @@ erDiagram
         decimal map_lat
         decimal map_lng
         string expediente_ref
+        decimal estimated_value
         string utm_source
+        string utm_medium
         string utm_campaign
         string ga_client_id
         boolean gdpr_consent
+        string landing_url
         datetime created_at
+        datetime updated_at
         datetime deleted_at
+        uuid created_by_id
+        uuid updated_by_id
     }
     projects {
         uuid id PK
@@ -386,12 +393,18 @@ erDiagram
         uuid assigned_technician_id FK
         uuid service_id FK
         uuid province_id FK
+        uuid work_typology_id FK
         string title
         boolean is_qualified
         decimal estimated_value
+        string expediente_ref
         datetime first_response_at
         datetime closed_at
+        datetime created_at
+        datetime updated_at
         datetime deleted_at
+        uuid created_by_id
+        uuid updated_by_id
     }
     project_states {
         uuid id PK

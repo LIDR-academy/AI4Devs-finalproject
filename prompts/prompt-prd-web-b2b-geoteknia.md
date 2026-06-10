@@ -13,7 +13,7 @@ Eres un Product Manager senior con más de 10 años de experiencia en productos 
 Genera un **PRD completo y accionable** para la web corporativa B2B de captación de una empresa de ingeniería de servicios geotécnicos en España. La web tiene como único objetivo de negocio la **generación de leads cualificados**: solicitudes de presupuesto, contactos técnicos y oportunidades de licitación.
 
 Basa **todo el contenido del PRD** en el documento de referencia adjunto:
-@docs/MVP_Web_Geotecnia_B2B.md
+@docs/mvp-web-b2b-geoteknia.md
 
 Ese documento es la fuente de verdad sobre funcionalidades priorizadas, arquitectura web, errores comunes y estrategia de captación. Extrae de él los datos, las funcionalidades y la lógica de negocio. No inventes funcionalidades que no estén allí; si necesitas completar algo que el documento no cubre explícitamente, indícalo como asunción.
 
