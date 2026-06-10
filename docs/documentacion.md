@@ -122,7 +122,7 @@ block-beta
 
 ---
 
-## 2. Casos de Uso Principales
+## 2. Casos de Uso (Must-Have y Should-Have)
 
 ### 2.1 CU-01: Cliente Cotiza y Reserva un Tatuaje
 
@@ -273,6 +273,260 @@ sequenceDiagram
     R->>PA: Actualiza rating agregado
     R-->>C: Reseña publicada con badge "✅ Reseña Completa"
     Note over PA: Artista puede responder
+```
+
+### 2.4 CU-04: Cliente Descubre Artistas en la Vitrina con Filtros (Must-Have)
+
+**Actores:** Cliente (sin login obligatorio)
+
+**Precondiciones:**
+- Existen artistas con perfil publicado en la plataforma
+
+**Postcondiciones:**
+- El cliente visualiza una lista filtrada de artistas/tatuajes que coinciden con sus criterios
+- Puede acceder al perfil de cualquier artista desde los resultados
+
+**Flujo Principal:**
+1. El cliente abre INK·LINK (sin login)
+2. Ve la vitrina con secciones: "Cerca de ti", "Mejor calificados", "Estilos populares", "Artistas premiados"
+3. Aplica filtros: estilo, rango de precio, calificación mínima, certificación sanitaria, disponibilidad, tipo (estudio/independiente)
+4. Opcionalmente busca por texto (nombre artista, estilo, comuna)
+5. Ve resultados actualizados en tiempo real
+6. Selecciona un artista para ver su perfil completo
+
+**Flujos Alternativos:**
+- 3a. No hay resultados con los filtros aplicados → sugiere ampliar criterios
+- 2a. El navegador no permite geolocalización → muestra resultados de toda la ciudad
+
+```mermaid
+sequenceDiagram
+    actor C as Cliente
+    participant V as Vitrina
+    participant F as Motor de Filtros
+    participant DB as Base de Datos
+
+    C->>V: Abre INK·LINK (sin login)
+    V->>DB: Solicita artistas destacados + geolocalización
+    DB-->>V: Resultados por sección
+    V-->>C: Muestra vitrina personalizada
+    C->>F: Aplica filtros (estilo, precio, rating...)
+    F->>DB: Query con filtros combinados
+    DB-->>F: Resultados filtrados
+    F-->>C: Actualiza vista en tiempo real
+    C->>V: Selecciona artista
+    V-->>C: Muestra perfil completo
+```
+
+### 2.5 CU-05: Cliente Explora Artistas en Mapa Interactivo (Should-Have)
+
+**Actores:** Cliente
+
+**Precondiciones:**
+- El navegador permite geolocalización (o el cliente selecciona ubicación manual)
+- Existen artistas con coordenadas registradas
+
+**Postcondiciones:**
+- El cliente visualiza artistas geolocalizados y puede acceder a sus perfiles
+
+**Flujo Principal:**
+1. El cliente accede a la vista de mapa
+2. El sistema solicita permiso de geolocalización
+3. El mapa se centra en la ubicación del cliente
+4. Se muestran marcadores de artistas/estudios con clustering automático
+5. El cliente ajusta radio de búsqueda (1km, 5km, 10km, toda la ciudad)
+6. Toca un marcador y ve preview card (foto portafolio, nombre, rating, estilo)
+7. Desde el preview, accede a "Ver perfil" o "Cotizar"
+
+**Flujos Alternativos:**
+- 2a. El cliente rechaza geolocalización → muestra mapa centrado en Santiago con selector de comuna
+- 5a. Cambia a vista lista como alternativa al mapa
+
+```mermaid
+sequenceDiagram
+    actor C as Cliente
+    participant M as Mapa Interactivo
+    participant GEO as Servicio Geolocalización
+    participant DB as Base de Datos
+
+    C->>M: Accede a vista mapa
+    M->>GEO: Solicita ubicación del cliente
+    GEO-->>M: Coordenadas del cliente
+    M->>DB: Busca artistas en radio default (5km)
+    DB-->>M: Lista de artistas con coordenadas
+    M-->>C: Muestra marcadores con clustering
+    C->>M: Ajusta radio de búsqueda
+    M->>DB: Re-query con nuevo radio
+    DB-->>M: Resultados actualizados
+    M-->>C: Actualiza marcadores
+    C->>M: Toca marcador
+    M-->>C: Preview card (foto, nombre, rating)
+    C->>M: Click "Ver perfil"
+    M-->>C: Navega al perfil del artista
+```
+
+### 2.6 CU-06: Cliente Cotiza un Tatuaje con Chatbot (Should-Have)
+
+**Actores:** Cliente, Sistema (Chatbot Cotizador)
+
+**Precondiciones:**
+- El artista tiene tarifas publicadas (precio mínimo + precio por hora)
+- El cliente está en el perfil de un artista o accede desde la vitrina
+
+**Postcondiciones:**
+- El cliente obtiene un rango de precio estimado para su tatuaje
+- Los requisitos quedan registrados para la eventual reserva
+
+**Flujo Principal:**
+1. El cliente inicia conversación con el chatbot desde el perfil del artista
+2. Chatbot pregunta: "¿En qué zona del cuerpo?" → cliente selecciona en silueta interactiva
+3. Chatbot pregunta: "¿Qué tamaño aproximado?" → cliente elige referencia visual (moneda→palma→mano→brazo)
+4. Chatbot pregunta: "¿Qué estilo te interesa?" → cliente selecciona de galería
+5. Chatbot pregunta: "¿Tienes imágenes de referencia?" → cliente sube 1-3 fotos (opcional)
+6. Chatbot pregunta: "¿Color o B&N? ¿Es cover-up?" → cliente responde
+7. El chatbot calcula rango de precio usando tarifas del artista + factores de complejidad
+8. Muestra estimación: "Precio estimado: $80.000 – $150.000 CLP"
+9. Ofrece CTA: "¿Quieres reservar?" → flujo directo a selección de slot
+
+**Flujos Alternativos:**
+- 5a. El cliente no tiene imágenes → el chatbot continúa sin referencias
+- 8a. El cliente quiere ajustar parámetros → vuelve a paso relevante
+- 9a. El cliente no quiere reservar ahora → se guarda la cotización para después
+
+```mermaid
+sequenceDiagram
+    actor C as Cliente
+    participant CB as Chatbot Cotizador
+    participant PS as Pricing Service
+    participant DB as Base de Datos
+
+    C->>CB: Inicia cotización desde perfil artista
+    CB-->>C: "¿En qué zona del cuerpo?"
+    C->>CB: Selecciona zona (silueta)
+    CB-->>C: "¿Qué tamaño?"
+    C->>CB: Elige referencia visual
+    CB-->>C: "¿Qué estilo?"
+    C->>CB: Selecciona estilo
+    CB-->>C: "¿Imágenes de referencia?"
+    C->>CB: Sube fotos (opcional)
+    CB-->>C: "¿Color o B&N? ¿Cover-up?"
+    C->>CB: Responde
+    CB->>PS: Calcula precio con parámetros
+    PS->>DB: Obtiene tarifas del artista
+    DB-->>PS: Tarifas (min sesión, precio/hora)
+    PS-->>CB: Rango estimado
+    CB-->>C: "Precio estimado: $80.000 – $150.000 CLP"
+    CB-->>C: CTA "¿Quieres reservar?"
+```
+
+### 2.7 CU-07: Sistema Gestiona Cancelación y Protección Anti No-Show (Should-Have)
+
+**Actores:** Cliente, Tatuador, Sistema
+
+**Precondiciones:**
+- Existe un booking confirmado con depósito pagado
+- La política de cancelación del artista está definida (24h, 48h o 72h)
+
+**Postcondiciones:**
+- Depósito redistribuido según política: al artista (no-show cliente) o reembolsado (cancelación artista)
+- Booking marcado con estado correspondiente
+- Ambas partes notificadas
+
+**Flujo Principal (Cliente no se presenta):**
+1. Llega la fecha/hora del booking
+2. El artista marca al cliente como "no presentado" en su panel
+3. El sistema aplica política anti no-show
+4. El depósito se transfiere al artista como compensación
+5. El booking se marca como "no_show"
+6. Ambas partes reciben notificación del resultado
+
+**Flujo Alternativo A (Cliente cancela dentro de plazo):**
+1. El cliente solicita cancelar el booking
+2. El sistema verifica si está dentro del plazo de cancelación gratuita
+3. Está dentro del plazo → reembolso completo del depósito
+4. Slot se libera en la agenda del artista
+
+**Flujo Alternativo B (Cliente cancela fuera de plazo):**
+1. El cliente solicita cancelar
+2. Está fuera del plazo → depósito no reembolsable (va al artista)
+3. Booking marcado como "cancelled_client"
+
+**Flujo Alternativo C (Artista cancela):**
+1. El artista cancela el booking desde su panel
+2. Reembolso completo al cliente (sin importar plazo)
+3. Booking marcado como "cancelled_artist"
+
+```mermaid
+sequenceDiagram
+    actor C as Cliente
+    actor T as Tatuador
+    participant S as Sistema
+    participant F as Flow (Pagos)
+
+    alt Cliente no se presenta
+        T->>S: Marca "no presentado"
+        S->>F: Transfiere depósito al artista
+        F-->>S: Transferencia confirmada
+        S-->>T: Notificación: depósito recibido
+        S-->>C: Notificación: depósito perdido por no-show
+    else Cliente cancela dentro de plazo
+        C->>S: Solicita cancelación
+        S->>S: Verifica plazo de cancelación
+        S->>F: Reembolso completo
+        F-->>S: Reembolso confirmado
+        S-->>C: Notificación: reembolso procesado
+        S-->>T: Notificación: slot liberado
+    else Artista cancela
+        T->>S: Cancela booking
+        S->>F: Reembolso completo al cliente
+        F-->>S: Reembolso confirmado
+        S-->>C: Notificación: reembolso por cancelación del artista
+    end
+```
+
+### 2.8 CU-08: Cliente Compara Artistas por Certificaciones y Premios (Must-Have)
+
+**Actores:** Cliente
+
+**Precondiciones:**
+- Existen artistas con datos seed de certificaciones, premios y/o auspicios
+
+**Postcondiciones:**
+- El cliente puede tomar una decisión informada basada en credenciales verificadas
+
+**Flujo Principal:**
+1. El cliente navega la vitrina o resultados de búsqueda
+2. Ve badges de certificación sanitaria (✅) y premios (🏆) en cada tarjeta de artista
+3. Filtra exclusivamente por artistas con certificación sanitaria vigente
+4. Filtra por artistas con reconocimientos/premios
+5. Accede al perfil de un artista
+6. Ve sección de reconocimientos (evento, categoría, año) con badges verificados
+7. Ve certificación sanitaria (tipo, emisor, vigencia)
+8. Ve auspicios de marcas ("Auspiciado por [Marca]" con logo)
+9. Compara con otro artista abriendo perfil en nueva pestaña
+
+**Flujos Alternativos:**
+- 3a. No hay artistas certificados en su zona → se amplia radio automáticamente
+- 6a. El artista no tiene premios → sección no se muestra
+
+```mermaid
+sequenceDiagram
+    actor C as Cliente
+    participant V as Vitrina/Búsqueda
+    participant P as Perfil Artista
+    participant DB as Base de Datos
+
+    C->>V: Navega vitrina
+    V-->>C: Muestra tarjetas con badges (✅ 🏆)
+    C->>V: Filtra por certificación sanitaria
+    V->>DB: Query: certificación vigente = true
+    DB-->>V: Artistas certificados
+    V-->>C: Resultados filtrados con badge ✅
+    C->>P: Abre perfil del artista
+    P->>DB: Obtiene certificaciones + premios + auspicios
+    DB-->>P: Datos de credenciales
+    P-->>C: Muestra sección reconocimientos y certificación
+    C->>P: Revisa auspicios de marcas
+    P-->>C: "Auspiciado por [Marca]" con logo
 ```
 
 ---
