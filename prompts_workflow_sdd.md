@@ -1,6 +1,6 @@
 # Prompt — Bootstrap workflow SDD (desde cero)
 
-Documento para **generar desde cero** el sistema AI-assisted de implementación de user stories en RunMarket: carpeta `.claude/`, skills, agents, reglas TDD/OWASP, workflows, comandos y backlog técnico.
+Documento para **generar desde cero** el sistema AI-assisted de implementación de user stories en RunMarket: carpeta `.claude/`, skills, agents, reglas TDD/OWASP, comandos y backlog técnico.
 
 **Premisa:** no existe la carpeta `.claude/` ni `CLAUDE.md`. El agente debe crearlo todo.
 
@@ -61,7 +61,7 @@ Diseñar un workflow reproducible con **TDD obligatorio en implementación** y *
   2. Código mínimo que pase.
   3. Refactor con tests verdes.
 - Cada tarea del backlog debe incluir **tests explícitos** en su definición de done.
-- Skills y rules de TDD deben ser referenciados por backend-developer, frontend-developer e implement-task.
+- La skill `tdd-implementation` debe ser referenciada por los agents backend-developer y frontend-developer y por la skill implement-task.
 - Si TDD no es viable en un caso concreto, documentar el motivo en el backlog.
 
 ### Seguridad OWASP
@@ -76,83 +76,73 @@ Diseñar un workflow reproducible con **TDD obligatorio en implementación** y *
 
 ## Estructura `.claude/` a crear (fuente de verdad)
 
-Crea esta estructura completa con **contenido real** en cada fichero (no wrappers que apunten a otra carpeta). Contenido en **inglés**. Skills con frontmatter YAML (`name`, `description`) cuando aplique.
+Crea **solo** las primitivas que Claude Code reconoce de forma nativa: `agents/`, `skills/`, `commands/` y `CLAUDE.md` en la raíz. **No** crees `context/`, `rules/`, `workflows/` ni `checklists/`.
+
+Motivo: Claude Code no tiene primitiva `rules` (es convención de otras herramientas); `context/` duplicaría `CLAUDE.md` + `docs/`; y los workflows/checklists usados por una sola skill no justifican un fichero aparte. Ese contenido vive **inline** en la skill/agent que lo usa o en `CLAUDE.md`.
+
+Contenido en **inglés**, real en cada fichero (no wrappers que apunten a otra carpeta). Skills con frontmatter YAML (`name`, `description`).
 
 ```text
 .claude/
-├── context/
-│   ├── project.md          ← RunMarket, MVP, entidades, rutas
-│   ├── architecture.md     ← resumen de docs/ARCHITECTURE.md
-│   ├── tech-stack.md       ← stack + frameworks de test
-│   └── product.md          ← resumen de docs/PRD.md / visión
 ├── agents/
 │   ├── product-owner.md
 │   ├── backend-developer.md
 │   ├── frontend-developer.md
 │   └── security.md
-├── rules/
-│   ├── universal.md
-│   ├── tdd.md              ← ciclo red-green-refactor, tipos de test
-│   ├── owasp.md            ← Top 10 + prácticas obligatorias
-│   ├── clean-architecture.md
-│   ├── backend.md
-│   └── frontend.md
 ├── skills/
-│   ├── product-discovery/SKILL.md
-│   ├── generate-user-stories/SKILL.md
-│   ├── generate-user-stories/us-template.md
-│   ├── breakdown-user-story/SKILL.md
-│   ├── breakdown-user-story/task-template.md
-│   ├── implement-user-story/SKILL.md
-│   ├── implement-task/SKILL.md
-│   ├── archive-user-story/SKILL.md        ← mover US a backlog/archive/
-│   ├── tdd-implementation/SKILL.md      ← TDD en features y fixes
-│   ├── backend-feature/SKILL.md           ← referencia tdd + owasp + backend rules
-│   ├── frontend-feature/SKILL.md
-│   ├── owasp-security-review/SKILL.md     ← revisión + registro en backlog
-│   ├── clean-architecture-review/SKILL.md
-│   └── code-review/SKILL.md
-├── workflows/
-│   ├── refine-user-story.md
-│   ├── implement-user-story.md
-│   ├── security-review.md
-│   ├── archive-user-story.md
-│   └── feature-development.md
-├── checklists/
-│   ├── backend-review.md
-│   ├── frontend-review.md
-│   ├── security-review.md
-│   ├── test-quality.md
-│   └── user-story-implementation.md
+│   ├── breakdown-user-story/
+│   │   ├── SKILL.md         ← Part A refinar US · Part B tareas · Part C checkpoint
+│   │   └── task-template.md
+│   ├── implement-user-story/SKILL.md   ← 6 fases · modos · checklist de cierre (fase 6) inline
+│   ├── implement-task/SKILL.md         ← una tarea · TDD · rol según columna Capa
+│   ├── archive-user-story/SKILL.md     ← mover US a docs/backlog/archive/
+│   ├── tdd-implementation/SKILL.md     ← red-green-refactor · unit/integration/E2E · test-quality
+│   ├── backend-feature/SKILL.md        ← clean-architecture + backend rules + TDD + OWASP backend
+│   ├── frontend-feature/SKILL.md       ← UX states + frontend rules + TDD RTL + sin secretos cliente
+│   ├── owasp-security-review/SKILL.md  ← Top 10 + checklist seguridad + registro backlog + bucle
+│   └── code-review/SKILL.md            ← clean-architecture review + checklists backend/frontend
 └── commands/
     ├── refine-user-story.md
-    ├── breakdown-user-story.md    ← alias de refine-user-story
     ├── implement-user-story.md
     ├── implement-task.md
-    ├── archive-user-story.md
-    ├── implement-tdd.md
-    ├── security-review.md
-    ├── product-discovery.md
-    └── generate-user-stories.md
+    └── archive-user-story.md
 ```
+
+### Dónde vive el contenido de las carpetas eliminadas
+
+| Antes (carpeta) | Ahora vive en |
+|---|---|
+| `context/*` | `CLAUDE.md` (índice) + `docs/` (PRD, ARCHITECTURE, DATA-MODEL) |
+| `rules/universal.md` | `CLAUDE.md` |
+| `rules/tdd.md` · checklist `test-quality` | `skills/tdd-implementation/SKILL.md` |
+| `rules/owasp.md` · checklist `security-review` | `skills/owasp-security-review/SKILL.md` |
+| `rules/backend.md` · `rules/clean-architecture.md` | `skills/backend-feature/SKILL.md` |
+| `rules/frontend.md` | `skills/frontend-feature/SKILL.md` |
+| checklists `backend-review` · `frontend-review` · review clean-architecture | `skills/code-review/SKILL.md` |
+| checklist `user-story-implementation` | `skills/implement-user-story/SKILL.md` (cierre, fase 6) |
+| `workflows/*` | la `SKILL.md` correspondiente (los pasos del workflow son el cuerpo de la skill) |
+
+> **Fuera de scope:** `product-discovery` y `generate-user-stories`. Las US ya existen en `docs/USER-STORIES.md`; este sistema solo las **refina** y las **baja a tareas** (`breakdown-user-story`).
 
 ### Raíz del repo
 
-- `CLAUDE.md` — índice del proyecto: qué leer según tipo de tarea (product, implement, frontend, backend, security). Todas las rutas apuntan a `.claude/`.
+- `CLAUDE.md` — índice del proyecto + **reglas universales**: qué leer según tipo de tarea (product, implement, frontend, backend, security). Las rutas apuntan a `.claude/` y `docs/`.
 
 ### Contenido mínimo exigido por skill clave
 
-**`tdd-implementation/SKILL.md`:** ciclo TDD, cuándo unit vs integration vs E2E, output con tests añadidos y verificación ejecutada.
+**`tdd-implementation/SKILL.md`:** ciclo TDD, cuándo unit vs integration vs E2E, criterios de calidad de test, output con tests añadidos y verificación ejecutada.
 
-**`owasp-security-review/SKILL.md`:** trust boundaries, auth (N/A MVP), injection, XSS, CSRF, secrets, logs, dependencies; severidad; remediación; integración con backlog; bucle hasta sin HIGH/CRITICAL.
+**`owasp-security-review/SKILL.md`:** trust boundaries, auth (N/A MVP), injection, XSS, CSRF, secrets, logs, dependencies; severidad; remediación; checklist de seguridad inline; integración con backlog; bucle hasta sin HIGH/CRITICAL.
 
-**`backend-feature/SKILL.md`:** use case → capas → TDD → validación input → owasp rules → tests Supertest/Jest.
+**`backend-feature/SKILL.md`:** use case → capas (clean architecture) → TDD → validación input → owasp backend → tests Supertest/Jest.
 
 **`frontend-feature/SKILL.md`:** journey → componentes → estados UX → TDD RTL → sin secretos en cliente.
 
+**`code-review/SKILL.md`:** revisión de clean architecture + checklists de backend y frontend inline.
+
 **`breakdown-user-story/SKILL.md`:** Part A refinar US, Part B generar tareas, Part C checkpoint. Output: `docs/backlog/<US-ID>.md`.
 
-**`implement-user-story/SKILL.md`:** 6 fases, modos interactive/auto/continue, checkpoint por fase y **por tarea en fases 2–3**.
+**`implement-user-story/SKILL.md`:** 6 fases; siempre pausa entre fases y checkpoint por tarea en fases 2–3; lee el estado del backlog para retomar donde se dejó; checklist de cierre (fase 6) inline.
 
 **`implement-task/SKILL.md`:** una tarea; TDD; rol según columna Capa.
 
@@ -160,14 +150,13 @@ Crea esta estructura completa con **contenido real** en cada fichero (no wrapper
 
 ### Comandos (`.claude/commands/`)
 
-Cada comando debe incluir instrucciones completas y referencias a rutas bajo `.claude/` (agents, skills, workflows). Ejemplo de referencias en `/refine-user-story`:
+Cada comando debe incluir instrucciones completas y referencias a rutas bajo `.claude/` (agents, skills). Ejemplo de referencias en `/refine-user-story`:
 
 - `.claude/agents/product-owner.md`
 - `.claude/skills/breakdown-user-story/SKILL.md`
 - `.claude/skills/breakdown-user-story/task-template.md`
-- `.claude/workflows/refine-user-story.md`
 
-Los agents (`backend-developer`, `frontend-developer`, `security`) deben contener el rol completo y referenciar skills/rules bajo `.claude/`, no otra carpeta.
+Los agents (`backend-developer`, `frontend-developer`, `security`) deben contener el rol completo y referenciar skills bajo `.claude/`, no otra carpeta.
 
 ---
 
@@ -222,7 +211,7 @@ Skill: `.claude/skills/archive-user-story/SKILL.md`
 | 3 Frontend | frontend-developer | **obligatorio** | XSS, no secretos en cliente |
 | 4 Verificación | backend-developer + frontend-developer | ejecutar tests | — |
 | 5 Seguridad | security · owasp-security-review | tests de regresión post-fix | **obligatorio** |
-| 6 Cierre | checklist user-story-implementation | — | — |
+| 6 Cierre | checklist de cierre en implement-user-story | — | — |
 | — Archivar | `/archive-user-story` · product-owner | — | — |
 
 Tras fase 6, opcionalmente `/archive-user-story US-001` mueve el fichero a `docs/backlog/archive/`.
@@ -231,17 +220,8 @@ Tras fase 6, opcionalmente `/archive-user-story US-001` mueve el fichero a `docs
 
 ```text
 /refine-user-story US-001     → docs/backlog/US-001.md (parar, preguntar)
-/implement-user-story US-001 continue
+/implement-user-story US-001  → implementa fase a fase, siempre pausa entre fases y antes de cada tarea
 ```
-
-### Modos
-
-| Modo | Comportamiento |
-|---|---|
-| `interactive` (default) | Pausa entre fases 1, 4, 5, 6 |
-| `auto` | Sin pausas de fase; **fases 2–3 siguen pidiendo confirmación por tarea** |
-| `continue` | Retoma siguiente fase/tarea pendiente en backlog |
-| `/implement-task` | Una sola tarea con TDD |
 
 ### Checkpoint por tarea (fases 2–3, siempre)
 
@@ -269,14 +249,14 @@ Tras `sí`: TDD → marcar `- [x] Implementado` → siguiente tarea.
 
 ## Scope modifiers
 
-- `breakdown-only` · `backend-only` · `frontend-only` · `security-only`
+- `backend-only` · `frontend-only` · `security-only`
 
 ---
 
 ## Reglas generales
 
-- `.claude/` = única fuente de verdad para agentes, skills, rules y workflows.
-- `CLAUDE.md` = índice de entrada; apunta solo a rutas bajo `.claude/`.
+- `.claude/` = única fuente de verdad para agents, skills y commands.
+- `CLAUDE.md` = índice de entrada + reglas universales; apunta a rutas bajo `.claude/` y `docs/`.
 - Backlog en **español**; `.claude/` en **inglés**.
 - No expandir scope fuera de la US solicitada.
 - Si no hay scaffold de código, documentar bloqueos en backlog (no inventar estructura arbitraria).
@@ -289,12 +269,11 @@ Tras `sí`: TDD → marcar `- [x] Implementado` → siguiente tarea.
 
 Genera **todos** los ficheros listados. Orden sugerido:
 
-1. `.claude/context/` y `.claude/rules/` (incl. **tdd.md** y **owasp.md**).
-2. `.claude/agents/` y `.claude/skills/` (incl. TDD y OWASP skills).
-3. `.claude/workflows/` y `.claude/checklists/`.
+1. `CLAUDE.md` (índice + reglas universales).
+2. `.claude/agents/`.
+3. `.claude/skills/` (TDD, OWASP, backend/frontend-feature, code-review — con reglas y checklists inline).
 4. `.claude/commands/`.
-5. `CLAUDE.md`.
-6. `docs/backlog/README.md` y `docs/backlog/archive/README.md`.
+5. `docs/backlog/README.md` y `docs/backlog/archive/README.md`.
 
 Al terminar, escribe en la respuesta (no en un fichero extra) una sección **"Cómo usar"** con:
 
@@ -315,13 +294,12 @@ Al terminar, escribe en la respuesta (no en un fichero extra) una sección **"C�
 | Comando | Acción |
 |---|---|
 | `/refine-user-story US-XXX` | Refinar US → `docs/backlog/US-XXX.md` |
-| `/implement-user-story US-XXX continue` | Implementar desde backlog |
-| `/implement-user-story US-XXX` | Refine + implement (interactive) |
-| `/implement-user-story US-XXX auto` | Sin pausas de fase; confirma por tarea |
-| `/implement-task US-XXX US-XXX-TASK-NN` | Una tarea (TDD) |
+| `/implement-user-story US-XXX` | Implementar desde backlog (pausa entre fases y por tarea) |
+| `/implement-user-story US-XXX <scope>` | Solo una fase: `backend-only`, `frontend-only`, `security-only` |
+| `/implement-task US-XXX US-XXX-TASK-NN` | Una tarea concreta (TDD) |
 | `/archive-user-story US-XXX` | Mover backlog → `docs/backlog/archive/` |
-| `/implement-tdd` | Implementación guiada por TDD |
-| `/security-review` | Revisión OWASP + backlog |
+
+
 
 ### Ejemplo backlog US-001
 
@@ -335,7 +313,7 @@ Al terminar, escribe en la respuesta (no en un fichero extra) una sección **"C�
 ### Mapa resultante
 
 ```text
-.claude/                ← crear desde cero (TDD + OWASP en rules/skills)
+.claude/                ← crear desde cero (TDD + OWASP en skills)
 docs/backlog/           ← US activa (implementación en curso)
 docs/backlog/archive/   ← US archivadas (/archive-user-story)
 CLAUDE.md               ← índice del proyecto

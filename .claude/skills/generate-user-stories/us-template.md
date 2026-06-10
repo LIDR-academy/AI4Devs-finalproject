@@ -1,21 +1,21 @@
-### US-XXX — Título
+### US-XXX — Title
 
-**Caso de uso asociado:** CU-X — Nombre del caso de uso
+**Related use case:** UC-X — Use case name
 
-**Historia de usuario:**
-Como [tipo de usuario], quiero [acción], para [beneficio].
+**User story:**
+As a [type of user], I want [action], so that [benefit].
 
-**Descripción:**
-Breve explicación funcional de la historia y su alcance dentro del MVP.
+**Description:**
+Brief functional explanation of the story and its scope within the MVP.
 
-**Criterios de aceptación:**
-- [ ] Escenario principal: ...
-- [ ] Escenario alternativo: ...
-- [ ] Error/validación: ...
+**Acceptance criteria:**
+- [ ] Main scenario: ...
+- [ ] Alternative scenario: ...
+- [ ] Error/validation: ...
 
-**Datos o entidades implicadas:**
+**Related data or entities:**
 - ...
 
-**Estimación:** S | M | L 
+**Estimate:** S | M | L 
 
-**Prioridad:** Imprescindible para el MVP | Importante | Nice to have
+**Priority:** Required for the MVP | Important | Nice to have

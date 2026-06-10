@@ -23,6 +23,41 @@ El MVP cubre: catálogo, búsqueda filtrada, ficha de producto, carrito, checkou
 | [`docs/DATA-MODEL.md`](docs/DATA-MODEL.md) | Diagrama ER, decisiones de modelado (arrays GIN vs junction tables), esquema Prisma y restricciones de integridad | Cambios en entidades, nuevas queries, migraciones |
 | [`docs/USER-STORIES.md`](docs/USER-STORIES.md) | 13 historias de usuario con criterios de aceptación, estimación y prioridad organizadas por caso de uso | Siempre que se mencione una US (p.ej. "implementa US-007"): leer la historia completa y sus criterios de aceptación antes de escribir código |
 | [`docs/CODING-STANDARDS.md`](docs/CODING-STANDARDS.md) | Estándares de código: TypeScript, estructura de capas, naming, testing y commits | Antes de escribir código nuevo, revisar una PR o incorporar una nueva funcionalidad |
+| [`docs/SDD-WORKFLOW.md`](docs/SDD-WORKFLOW.md) | Workflow SDD completo: qué comandos ejecutas tú y qué pasos son automáticos, modos, mapa de agentes/skills | Antes de usar el sistema AI por primera vez o para resolver dudas sobre el flujo |
+
+## Sistema de workflow SDD (`.claude/`)
+
+`.claude/` es la **única fuente de verdad** para agents, skills y commands del
+workflow Specification-Driven Development. El backlog técnico vive en `docs/backlog/`
+(US activas) y `docs/backlog/archive/` (US cerradas). Flujo: refinar US → implementar
+backend/frontend con **TDD obligatorio** → verificar → **revisión OWASP con bucle de
+remediación** → cierre.
+
+| Tipo de tarea | Leer primero |
+|---|---|
+| **Producto / refinar US** | [`.claude/agents/product-owner.md`](.claude/agents/product-owner.md) · [`.claude/skills/breakdown-user-story/SKILL.md`](.claude/skills/breakdown-user-story/SKILL.md) · `docs/USER-STORIES.md` |
+| **Implementar US (workflow)** | [`.claude/skills/implement-user-story/SKILL.md`](.claude/skills/implement-user-story/SKILL.md) · [`.claude/skills/implement-task/SKILL.md`](.claude/skills/implement-task/SKILL.md) |
+| **Backend** | [`.claude/agents/backend-developer.md`](.claude/agents/backend-developer.md) · [`.claude/skills/backend-feature/SKILL.md`](.claude/skills/backend-feature/SKILL.md) · [`.claude/skills/tdd-implementation/SKILL.md`](.claude/skills/tdd-implementation/SKILL.md) |
+| **Frontend** | [`.claude/agents/frontend-developer.md`](.claude/agents/frontend-developer.md) · [`.claude/skills/frontend-feature/SKILL.md`](.claude/skills/frontend-feature/SKILL.md) · [`.claude/skills/tdd-implementation/SKILL.md`](.claude/skills/tdd-implementation/SKILL.md) |
+| **Seguridad** | [`.claude/agents/security.md`](.claude/agents/security.md) · [`.claude/skills/owasp-security-review/SKILL.md`](.claude/skills/owasp-security-review/SKILL.md) |
+| **Revisión de código** | [`.claude/skills/code-review/SKILL.md`](.claude/skills/code-review/SKILL.md) |
+
+Comandos: `/refine-user-story` · `/implement-user-story` ·
+`/implement-task` · `/archive-user-story`.
+
+**Reglas universales del workflow:**
+
+- TDD obligatorio en implementación (fases 2-3 y fixes de seguridad): test que falla →
+  código mínimo → refactor en verde. Si no es viable, documentar el motivo en el backlog.
+- Toda US pasa revisión OWASP antes de cerrarse; HIGH/CRITICAL se corrigen y se
+  re-revisa hasta quedar limpio.
+- Backlog en **español**; `.claude/` en **inglés**.
+- Cada tarea mapea ≥1 criterio de aceptación de la US. No expandir scope fuera de la US.
+- Las reglas de seguridad de este documento (más abajo) son verificaciones concretas
+  del workflow, no recomendaciones.
+- **Todo commit sigue Conventional Commits** (inglés, imperativo, conciso). Leer
+  [`.claude/skills/conventional-commit/SKILL.md`](.claude/skills/conventional-commit/SKILL.md)
+  antes de hacer cualquier `git commit`.
 
 ## Rutas principales de la aplicación
 
