@@ -73,7 +73,8 @@ Todas las historias de usuario DEBEN incluir priorización MoSCoW alineada con l
 
 Referencia de prioridades ya definidas en el proyecto:
 - Must-Have: Vitrina de tatuajes, Filtros avanzados, Perfil profesional con tarifas, Reconocimientos/Certificación (seed), Reserva directa, Pago depósito
-- Should-Have: Mapa interactivo, Chatbot cotizador, Auspicios (seed), Reseñas 4 dimensiones, Foto curación 90 días, Protección anti no-show
+- Should-Have: Mapa interactivo, Chatbot cotizador, Auspicios (seed), Reseñas 4 dimensiones, Foto curación 90 días
+- Won't-Have (MVP): Protección anti no-show, Videos cortos, Pares antes/después, Notificaciones programadas
 
 ## Casos de Uso de Referencia
 
@@ -86,9 +87,11 @@ Las historias de usuario deben alinearse con los 8 casos de uso documentados en 
 4. **CU-08**: Cliente Compara Artistas por Certificaciones y Premios
 
 ### Should-Have
-5. **CU-03**: Cliente Califica con Foto de Curación (reseña post-sesión a 90 días)
+5. **CU-03**: Cliente Califica con Foto de Curación (reseña voluntaria + foto curación a 90 días)
 6. **CU-05**: Cliente Explora Artistas en Mapa Interactivo
 7. **CU-06**: Cliente Cotiza un Tatuaje con Chatbot
+
+### Won't-Have (MVP)
 8. **CU-07**: Sistema Gestiona Cancelación y Protección Anti No-Show
 
 Cada US debe indicar a qué caso(s) de uso contribuye.

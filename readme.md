@@ -179,7 +179,7 @@ Buscan un canal de publicidad dirigido a la comunidad activa de tatuaje y auspic
 <tr>
 <td><img src="https://img.shields.io/badge/2.1-1D6FA4?style=flat-square"/></td>
 <td>🎨 <strong>Perfil profesional (Must-Have)</strong></td>
-<td>Cada artista tiene un perfil público con URL compartible (<code>inklink.cl/artista/nombre</code>). Incluye portafolio de fotos HD (hasta 100), videos cortos (30s), pares antes/después y foto destacada. Bio, estilos que maneja, años de experiencia, ubicación en mapa y calendario de disponibilidad embebido. Distinción visible: <em>"Estudio Consolidado"</em> vs <em>"Tatuador Independiente"</em>. <strong>Tarifas publicadas</strong> (precio mínimo por sesión + precio por hora) que alimentan directamente al chatbot cotizador.</td>
+<td>Cada artista tiene un perfil público con URL compartible (<code>inklink.cl/artista/nombre</code>). Incluye portafolio de fotos HD (hasta 100) y foto destacada. Bio, estilos que maneja, años de experiencia, ubicación en mapa y calendario de disponibilidad embebido. Distinción visible: <em>"Estudio Consolidado"</em> vs <em>"Tatuador Independiente"</em>. <strong>Tarifas publicadas</strong> (precio mínimo por sesión + precio por hora) que alimentan directamente al chatbot cotizador. <em>📌 Videos cortos (30s) y pares antes/después son <strong>Won't-Have</strong> en el MVP.</em></td>
 </tr>
 <tr>
 <td><img src="https://img.shields.io/badge/2.2-1D6FA4?style=flat-square"/></td>
@@ -263,8 +263,8 @@ Un chatbot conversacional que **reemplaza las preguntas repetitivas por DM**. El
 </tr>
 <tr>
 <td><img src="https://img.shields.io/badge/4.3-E8521A?style=flat-square"/></td>
-<td>🛡️ <strong>Protección anti no-show (Should-Have)</strong></td>
-<td>Cliente no se presenta → depósito se transfiere al artista. Artista cancela → reembolso completo al cliente. Principal argumento de adopción para artistas: por primera vez tienen garantía económica ante cancelaciones, algo que las redes sociales nunca ofrecen.📌 Funcionalidad no considerada para el MVP.</td>
+<td>🛡️ <strong>Protección anti no-show (Won't-Have)</strong></td>
+<td>Cliente no se presenta → depósito se transfiere al artista. Artista cancela → reembolso completo al cliente. Principal argumento de adopción para artistas: por primera vez tienen garantía económica ante cancelaciones, algo que las redes sociales nunca ofrecen. 📌 <strong>Won't-Have MVP</strong> — funcionalidad documentada para versiones futuras.</td>
 </tr>
 </table>
 

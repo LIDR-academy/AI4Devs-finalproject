@@ -230,48 +230,46 @@ sequenceDiagram
 
 ### 2.3 CU-03: Cliente Califica con Foto de Curación
 
-**Actores:** Cliente, Sistema (Notificaciones)
+**Actores:** Cliente
 
 **Precondiciones:**
 - El cliente tiene un booking completado (sesión realizada)
-- Han transcurrido 90 días desde la sesión
 
 **Postcondiciones:**
 - Reseña publicada con calificación en 4 dimensiones
-- Foto de curación asociada a la reseña
+- Foto de curación asociada a la reseña (si han pasado 90+ días)
 - Rating del artista actualizado
-- Reseña marcada con badge "✅ Reseña Completa"
+- Reseña marcada con badge "✅ Reseña Completa" si incluye foto de curación
 
 **Flujo Principal:**
-1. El sistema detecta que pasaron 90 días desde la sesión
-2. Envía notificación al cliente: "¿Cómo quedó tu tatuaje?"
-3. El cliente abre el formulario de reseña
-4. Califica en 4 dimensiones (1-5 estrellas): Higiene, Manejo del dolor, Trato, Resultado
-5. Escribe texto opcional de reseña
-6. Sube foto del tatuaje curado
-7. Confirma y publica
-8. La reseña aparece en el perfil del artista con badge "✅ Reseña Completa"
+1. El cliente accede a su historial de bookings completados
+2. Selecciona un booking y abre el formulario de reseña
+3. Califica en 4 dimensiones (1-5 estrellas): Higiene, Manejo del dolor, Trato, Resultado
+4. Escribe texto opcional de reseña
+5. Si han pasado 90+ días, puede subir foto de curación
+6. Confirma y publica
+7. La reseña aparece en el perfil del artista
 
 **Flujos Alternativos:**
-- 3a. El cliente ignora la notificación → se envía recordatorio a los 7 días
-- 6a. El cliente no sube foto → la reseña se publica sin badge de "Reseña Completa"
-- 8a. El artista responde la reseña públicamente
+- 5a. No han pasado 90 días → la reseña se publica sin foto de curación, el cliente puede volver después a agregar la foto
+- 6a. El artista responde la reseña públicamente
 
 ```mermaid
 sequenceDiagram
     actor C as Cliente
-    participant N as Sistema Notificaciones
+    participant H as Historial Bookings
     participant R as Módulo Reseñas
     participant PA as Perfil Artista
 
-    N->>C: Notificación a 90 días: "¿Cómo quedó tu tatuaje?"
+    C->>H: Accede a historial de bookings
+    H-->>C: Muestra bookings completados
     C->>R: Abre formulario de reseña
     C->>R: Califica 4 dimensiones (1-5 ⭐)
     C->>R: Escribe texto (opcional)
-    C->>R: Sube foto de curación
+    C->>R: Sube foto de curación (si 90+ días)
     C->>R: Confirma publicación
     R->>PA: Actualiza rating agregado
-    R-->>C: Reseña publicada con badge "✅ Reseña Completa"
+    R-->>C: Reseña publicada
     Note over PA: Artista puede responder
 ```
 
@@ -418,7 +416,9 @@ sequenceDiagram
     CB-->>C: CTA "¿Quieres reservar?"
 ```
 
-### 2.7 CU-07: Sistema Gestiona Cancelación y Protección Anti No-Show (Should-Have)
+### 2.7 CU-07: Sistema Gestiona Cancelación y Protección Anti No-Show (Won't-Have)
+
+> ⚠️ **Won't-Have MVP** — Este caso de uso queda documentado como referencia para versiones futuras. No se implementa en la primera entrega.
 
 **Actores:** Cliente, Tatuador, Sistema
 
@@ -646,6 +646,7 @@ sequenceDiagram
 | reference_images | JSON | URLs de imágenes referencia |
 | notes | TEXT | Notas adicionales |
 | created_at | TIMESTAMP | Fecha de creación |
+| cancelled_at | TIMESTAMP | Fecha de solicitud de cancelación (nullable) |
 
 #### Payment
 
@@ -859,9 +860,9 @@ INK·LINK adopta una arquitectura de **monolito modular** apropiada para la etap
 
 1. **Capa de Presentación** — Angular SPA responsive que consume la API REST. Incluye el chatbot cotizador como componente embebido.
 2. **Capa de API** — .NET Web API que expone endpoints RESTful con autenticación JWT.
-3. **Capa de Dominio** — Servicios de negocio organizados por módulo: Artists, Bookings, Pricing, Reviews, Notifications.
+3. **Capa de Dominio** — Servicios de negocio organizados por módulo: Artists, Bookings, Pricing, Reviews.
 4. **Capa de Persistencia** — PostgreSQL como base de datos principal. Entity Framework Core como ORM.
-5. **Integraciones Externas** — Flow (pagos), Object Storage (imágenes), servicio de email/notificaciones.
+5. **Integraciones Externas** — Flow (pagos), Object Storage (imágenes).
 
 ### 4.2 Decisiones Arquitectónicas
 
@@ -872,7 +873,6 @@ INK·LINK adopta una arquitectura de **monolito modular** apropiada para la etap
 | JWT para autenticación | Stateless, escalable, estándar de la industria |
 | PostgreSQL | Soporte nativo para JSON, geoespacial (PostGIS), robustez |
 | Object Storage externo | Imágenes de portafolio pesadas, no en DB |
-| Cola de mensajes (background jobs) | Notificaciones a 90 días, emails asíncronos |
 | Flow como pasarela | Principal pasarela de pagos en Chile, WebPay alternativa |
 
 ### 4.3 Diagrama de Arquitectura
@@ -890,7 +890,6 @@ flowchart TB
             BS[Booking Service]
             PS[Pricing Service<br/>Chatbot Logic]
             RS[Review Service]
-            NS[Notification Service]
         end
         ORM[Entity Framework Core]
     end
@@ -902,7 +901,6 @@ flowchart TB
 
     subgraph Externos
         FLOW[Flow<br/>Pasarela Pagos]
-        EMAIL[Servicio Email<br/>SendGrid/SES]
     end
 
     SPA -->|HTTPS/REST| API
@@ -910,7 +908,6 @@ flowchart TB
     API --> BS
     API --> PS
     API --> RS
-    API --> NS
     AS --> ORM
     BS --> ORM
     PS --> ORM
@@ -919,7 +916,6 @@ flowchart TB
     AS -->|Upload/Download| STORAGE
     RS -->|Upload fotos| STORAGE
     BS -->|Cobro depósito| FLOW
-    NS -->|Envío emails| EMAIL
 ```
 
 ---
@@ -936,13 +932,11 @@ flowchart TB
     INKLINK[🖋️ INK·LINK<br/>Marketplace de tatuajes<br/>Angular + .NET + PostgreSQL]
     
     FLOW_EXT[💳 Flow<br/>Pasarela de pagos Chile]
-    EMAIL_EXT[📧 Servicio Email<br/>Notificaciones transaccionales]
     MAPS_EXT[🗺️ Mapas<br/>Geolocalización]
 
     CLIENT -->|Descubre, cotiza, reserva, califica| INKLINK
     ARTIST -->|Configura perfil, agenda y tarifas| INKLINK
     INKLINK -->|Procesa pagos| FLOW_EXT
-    INKLINK -->|Envía notificaciones| EMAIL_EXT
     INKLINK -->|Muestra mapa artistas| MAPS_EXT
 ```
 
@@ -955,14 +949,12 @@ flowchart TB
 
     subgraph INKLINK["INK·LINK System"]
         SPA[📱 Angular SPA<br/>Aplicación web responsive<br/>TypeScript/Angular]
-        API[⚙️ .NET Web API<br/>Backend REST<br/>C#/.NET 8]
+        API[⚙️ .NET Web API<br/>Backend REST<br/>C#/.NET Core 10]
         DB[(🗄️ PostgreSQL<br/>Base de datos relacional<br/>+ PostGIS)]
         STORAGE[📦 Object Storage<br/>Imágenes portafolio<br/>y reseñas]
-        JOBS[⏰ Background Jobs<br/>Hangfire/.NET<br/>Notificaciones programadas]
     end
 
     FLOW_EXT[💳 Flow API]
-    EMAIL_EXT[📧 Email Service]
 
     CLIENT -->|HTTPS| SPA
     ARTIST -->|HTTPS| SPA
@@ -970,8 +962,6 @@ flowchart TB
     API -->|EF Core| DB
     API -->|HTTP| STORAGE
     API -->|HTTP| FLOW_EXT
-    JOBS -->|Queries| DB
-    JOBS -->|HTTP| EMAIL_EXT
 ```
 
 ### 5.3 Nivel 3 — Componentes del Contenedor ".NET Web API"
@@ -992,12 +982,10 @@ flowchart TB
         
         PRICING_SVC[📊 PricingService<br/>Lógica de estimación<br/>basada en tarifas]
         PAYMENT_SVC[💳 PaymentService<br/>Integración con Flow]
-        NOTIF_SVC[🔔 NotificationService<br/>Emails + push]
     end
 
     DB[(PostgreSQL)]
     FLOW[Flow API]
-    EMAIL[Email Service]
     STORAGE[Object Storage]
 
     SPA -->|REST| AUTH
@@ -1009,8 +997,6 @@ flowchart TB
 
     PRICING_C --> PRICING_SVC
     BOOKING_C --> PAYMENT_SVC
-    BOOKING_C --> NOTIF_SVC
-    REVIEW_C --> NOTIF_SVC
 
     AUTH --> DB
     ARTIST_C --> DB
@@ -1022,7 +1008,6 @@ flowchart TB
     SEARCH_C --> DB
 
     PAYMENT_SVC --> FLOW
-    NOTIF_SVC --> EMAIL
 ```
 
 ---
@@ -1031,13 +1016,11 @@ flowchart TB
 
 | Capa | Tecnología |
 |---|---|
-| Frontend | Angular 17+, TypeScript, Tailwind CSS |
-| Backend | .NET 8, C#, ASP.NET Core Web API |
+| Frontend | Angular 20, TypeScript, Tailwind CSS |
+| Backend | .NET Core 10, C#, ASP.NET Core Web API |
 | Base de datos | PostgreSQL 16 + PostGIS |
 | ORM | Entity Framework Core |
 | Autenticación | JWT (Bearer tokens) |
 | Pagos | Flow Chile API |
 | Storage | S3-compatible (MinIO/AWS) |
-| Background Jobs | Hangfire |
-| Email | SendGrid o AWS SES |
 | Mapas | Leaflet + OpenStreetMap |

@@ -191,6 +191,7 @@ Represents a confirmed tattoo appointment between a client and an artist.
 - `reference_images`: JSON array of reference image URLs (optional)
 - `notes`: Additional notes from the client (TEXT, optional)
 - `created_at`: Timestamp when the booking was created
+- `cancelled_at`: Timestamp when cancellation was requested (nullable)
 
 **Validation Rules:**
 - Client must exist and have role 'client'
@@ -423,6 +424,7 @@ erDiagram
         JSON reference_images
         TEXT notes
         TIMESTAMP created_at
+        TIMESTAMP cancelled_at
     }
     Payment {
         UUID id PK
