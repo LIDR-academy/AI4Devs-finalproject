@@ -14,18 +14,18 @@
 ## 0. Ficha del proyecto
 
 ### **0.1. Tu nombre completo:**
-
+Rodrigo Antonio Chamy Cruz
 ### **0.2. Nombre del proyecto:**
 
 ### **0.3. Descripción breve del proyecto:**
 
 ### **0.4. URL del proyecto:**
 
-> Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/).
+> https://github.com/rchamycruz/AI4Devs-finalproject
 
 ### 0.5. URL o archivo comprimido del repositorio
 
-> Puedes tenerlo alojado en público o en privado, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/). También puedes compartir por correo un archivo zip con el contenido
+> https://github.com/rchamycruz/AI4Devs-finalproject
 
 
 ---
