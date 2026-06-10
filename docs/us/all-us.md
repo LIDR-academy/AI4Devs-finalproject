@@ -57,7 +57,11 @@ Transversal
 - Story Points: 3
 
 ## Dependencias
-- Seed de datos con usuarios de rol "client" precargados # US0002 — Inicio de sesión de artista
+- Seed de datos con usuarios de rol "client" precargados
+
+---
+
+# US0002 — Inicio de sesión de artista
 
 ## Descripción
 **Como** artista registrado (seed)
@@ -91,7 +95,11 @@ Transversal
 
 ## Dependencias
 - US0001 (comparte infraestructura de autenticación)
-- Seed de datos con usuarios de rol "artist" + ArtistProfile completo # US0003 — Ver vitrina principal de tatuajes sin login
+- Seed de datos con usuarios de rol "artist" + ArtistProfile completo
+
+---
+
+# US0003 — Ver vitrina principal de tatuajes sin login
 
 ## Descripción
 **Como** visitante (sin cuenta ni login)
@@ -127,7 +135,11 @@ CU-04
 - Story Points: 8
 
 ## Dependencias
-- Seed de datos con artistas publicados, portafolios con imágenes y coordenadas # US0004 — Filtrar artistas por estilo, precio, rating y certificación
+- Seed de datos con artistas publicados, portafolios con imágenes y coordenadas
+
+---
+
+# US0004 — Filtrar artistas por estilo, precio, rating y certificación
 
 ## Descripción
 **Como** visitante o cliente
@@ -167,7 +179,11 @@ CU-04
 
 ## Dependencias
 - US0003 (vitrina donde se aplican los filtros)
-- Seed con variedad de artistas (diferentes estilos, precios, ratings, certificaciones) # US0005 — Buscar artistas por texto
+- Seed con variedad de artistas (diferentes estilos, precios, ratings, certificaciones)
+
+---
+
+# US0005 — Buscar artistas por texto
 
 ## Descripción
 **Como** visitante o cliente
@@ -201,7 +217,11 @@ CU-04
 
 ## Dependencias
 - US0003 (vitrina)
-- US0004 (integración con filtros) # US0006 — Ver perfil de artista con portafolio, tarifas y certificaciones
+- US0004 (integración con filtros)
+
+---
+
+# US0006 — Ver perfil de artista con portafolio, tarifas y certificaciones
 
 ## Descripción
 **Como** visitante o cliente
@@ -241,7 +261,11 @@ CU-08
 
 ## Dependencias
 - US0003 (navegación desde vitrina)
-- Seed completo: artistas con portafolio, certificaciones, premios, disponibilidad # US0007 — Filtrar artistas por certificación sanitaria
+- Seed completo: artistas con portafolio, certificaciones, premios, disponibilidad
+
+---
+
+# US0007 — Filtrar artistas por certificación sanitaria
 
 ## Descripción
 **Como** visitante o cliente preocupado por la higiene
@@ -274,7 +298,6 @@ CU-08
 ## Dependencias
 - US0004 (panel de filtros)
 - Seed con artistas que tengan certificaciones (y otros que no, para contrastar)
----
 
 ---
 
@@ -316,7 +339,11 @@ CU-01
 ## Dependencias
 - US0001 (autenticación requerida para reservar)
 - US0006 (perfil del artista con calendario)
-- Seed con artistas que tengan agenda configurada y slots disponibles # US0009 — Pagar depósito vía Flow y confirmar reserva
+- Seed con artistas que tengan agenda configurada y slots disponibles
+
+---
+
+# US0009 — Pagar depósito vía Flow y confirmar reserva
 
 ## Descripción
 **Como** cliente autenticado con un slot seleccionado
@@ -356,7 +383,11 @@ CU-01
 
 ## Dependencias
 - US0008 (slot seleccionado y resumen)
-- Cuenta de comercio en Flow (sandbox para dev, producción para release) # US0010 — Ver historial de reservas del cliente
+- Cuenta de comercio en Flow (sandbox para dev, producción para release)
+
+---
+
+# US0010 — Ver historial de reservas del cliente
 
 ## Descripción
 **Como** cliente autenticado
@@ -391,7 +422,11 @@ Transversal
 
 ## Dependencias
 - US0001 (autenticación)
-- US0009 (booking confirmado previamente) # US0011 — Cotizar tatuaje con chatbot conversacional
+- US0009 (booking confirmado previamente)
+
+---
+
+# US0011 — Cotizar tatuaje con chatbot conversacional
 
 ## Descripción
 **Como** visitante o cliente
@@ -434,7 +469,11 @@ CU-06
 
 ## Dependencias
 - US0006 (perfil del artista con tarifas)
-- US0008 (flujo de reserva al que conecta) # US0012 — Explorar artistas en mapa interactivo
+- US0008 (flujo de reserva al que conecta)
+
+---
+
+# US0012 — Explorar artistas en mapa interactivo
 
 ## Descripción
 **Como** visitante o cliente
@@ -473,7 +512,11 @@ CU-05
 ## Dependencias
 - US0003 (como vista alternativa a la vitrina)
 - US0004 (filtros compartidos)
-- Seed con artistas que tengan coordenadas reales de Santiago # US0013 — Calificar artista post-sesión
+- Seed con artistas que tengan coordenadas reales de Santiago
+
+---
+
+# US0013 — Calificar artista post-sesión
 
 ## Descripción
 **Como** cliente autenticado con un booking completado
@@ -517,7 +560,11 @@ CU-03
 ## Dependencias
 - US0010 (historial donde aparece CTA)
 - US0009 (booking completado)
-- US0006 (perfil donde se muestran reviews) # US0014 — Mostrar auspicios de marcas en perfil de artista
+- US0006 (perfil donde se muestran reviews)
+
+---
+
+# US0014 — Mostrar auspicios de marcas en perfil de artista
 
 ## Descripción
 **Como** visitante o cliente
@@ -552,4 +599,3 @@ CU-08
 ## Dependencias
 - US0006 (perfil del artista donde se muestra)
 - Seed con datos de marcas y relaciones
-
