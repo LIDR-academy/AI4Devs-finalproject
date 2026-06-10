@@ -38,6 +38,8 @@ Run `.claude/skills/implement-user-story/SKILL.md` for `$1`. Phases and roles:
   `.claude/skills/backend-feature/SKILL.md`
 - Phase 3 Frontend → `.claude/agents/frontend-developer.md` +
   `.claude/skills/frontend-feature/SKILL.md`
+- Phase 4 Verification → run the full backend/frontend suites (Playwright if the US
+  has E2E tasks); no dedicated agent.
 - Phase 5 Security → `.claude/agents/security.md` +
   `.claude/skills/owasp-security-review/SKILL.md`
 - Every implementation task uses `.claude/skills/implement-task/SKILL.md` +

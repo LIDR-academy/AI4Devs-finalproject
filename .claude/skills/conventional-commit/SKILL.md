@@ -12,7 +12,7 @@ Apply this skill every time you create a git commit in this repository.
 ## Format
 
 ```
-type(scope): short description
+type(scope)[!]: short description
 
 [optional body]
 
@@ -22,15 +22,20 @@ type(scope): short description
 ### Rules
 
 - **type**: lowercase, one of the types listed below. Required.
-- **scope**: lowercase noun, in parentheses, optional but recommended. Names the
-  module, layer or feature area affected.
+- **scope**: lowercase noun, in parentheses, naming the module, layer or feature area.
+  The Conventional Commits spec marks scope optional, but RunMarket's `commit-msg`
+  hook **requires** it — always include a scope.
 - **`: `**: exactly one colon and one space.
+- **breaking change**: append `!` before the colon (`feat(checkout)!: ...`) and/or add
+  a `BREAKING CHANGE:` footer.
 - **short description**: imperative mood (`add`, `fix`, `remove` — not `added` /
-  `fixes` / `removed`); lowercase; no period at the end; max 72 characters total
-  for the subject line.
-- **body**: optional; explains *why*, not *what*; wrapped at 72 characters; separated
+  `fixes` / `removed`); lowercase; no period at the end. **Aim for ≤50 characters —
+  sacrifice grammar to fit.** Hard ceiling is 72 (the hook warns above 72). Add an
+  issue/ticket reference if applicable.
+- **body**: optional; explains *why*, not *what*; **wrap at 72 characters**; separated
   from subject by a blank line.
-- **footer**: optional; `BREAKING CHANGE: <description>` or `Closes #<issue>`.
+- **footer**: optional; `BREAKING CHANGE: <description>` or issue references
+  (`Closes #<issue>`).
 
 ---
 
@@ -56,7 +61,7 @@ type(scope): short description
 Use the area of the codebase or domain affected:
 
 `catalog` · `product` · `cart` · `checkout` · `orders` · `filters` ·
-`api` · `db` · `auth` · `ui` · `config` · `deps` · `docs` · `infra`
+`api` · `db` · `ui` · `config` · `deps` · `docs` · `infra`
 
 ---
 
@@ -90,10 +95,3 @@ chore(deps): upgrade Prisma to 5.14
 
 ---
 
-## Co-author footer
-
-Always append the co-author line when Claude generates the commit:
-
-```
-Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
-```
