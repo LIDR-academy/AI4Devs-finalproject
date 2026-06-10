@@ -16,7 +16,7 @@ Implementar el CRUD completo de Event en el backend (crear, leer, actualizar, el
 - [ ] Implement `TemplatesController` with endpoint: `GET /api/templates?category=wedding&isPremium=false` (list available templates)
 - [ ] Implement Google Maps geocoding: when venue address is provided, call Geocoding API to get lat/lng and store on Event
 - [ ] Auto-create DataRetentionJob on event creation (ScheduledDeleteAt = EventDate + 30 days)
-- [ ] Enforce EventOwner authorization policy on all event endpoints
+- [ ] Enforce EventOwner authorization policy on all event endpoints (requires valid JWT in `aura_session` cookie + CSRF token for state-changing requests)
 - [ ] Implement FluentValidation for CreateEventRequest and UpdateEventRequest (name: 2-200 chars, EventDate: future date, venue: required fields)
 - [ ] Implement onboarding wizard page (`features/onboarding/pages/onboarding-wizard.page.ts`) with 3 steps: template selection, event basics, guest import (optional/skippable)
 - [ ] Implement template selection step: fetch templates, display grid with previews, select one

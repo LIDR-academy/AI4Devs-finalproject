@@ -10,8 +10,8 @@
 Implementar el dashboard de control del host con estadísticas de RSVP en tiempo real, lista de restricciones dietéticas, conteo de necesidades de transporte, conteo de acompañantes, lista de invitados con estado de RSVP, filtrado por estado de RSVP, y exportación CSV. El backend proporciona endpoints de estadísticas agregadas y el frontend renderiza el dashboard con tarjetas de estadísticas, gráficos y tabla de invitados filtrable.
 
 ## Requirements
-- [ ] Implement dashboard statistics endpoint: `GET /api/events/{slug}/dashboard` — returns: totalInvited, confirmed, declined, pending, maybe, dietaryRestrictions (list of {guestName, restrictions}), transportNeedsCount, plusOneCount
-- [ ] Implement CSV export endpoint: `GET /api/events/{slug}/guests/export` — returns CSV file with columns: name, email, phone, category, rsvpStatus, dietaryRestrictions, transportNeeds
+- [ ] Implement dashboard statistics endpoint: `GET /api/events/{slug}/dashboard` — returns: totalInvited, confirmed, declined, pending, maybe, dietaryRestrictions (list of {guestName, restrictions}), transportNeedsCount, plusOneCount. Requires EventOwner policy (JWT in `aura_session` cookie).
+- [ ] Implement CSV export endpoint: `GET /api/events/{slug}/guests/export` — returns CSV file with columns: name, email, phone, category, rsvpStatus, dietaryRestrictions, transportNeeds. Requires EventOwner policy.
 - [ ] Implement real-time update mechanism: polling every 5 seconds or SignalR WebSocket for dashboard stats
 - [ ] Implement dashboard page (`features/dashboard/pages/dashboard.page.ts`) with: stats cards (total invited, confirmed, declined, pending), dietary restrictions panel, transport needs panel, guest list with RSVP status badges
 - [ ] Implement `StatsCardComponent` (label, value, icon, color) following style guide

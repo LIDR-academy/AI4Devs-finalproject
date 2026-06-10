@@ -17,7 +17,7 @@ Implementar el sistema de gestión de accomplices del lado del host: otorgar acc
 - [ ] Implement `POST /api/accomplices/{eventSlug}/resend` endpoint — generates new token, invalidates old, sends new magic link email
 - [ ] Implement `GET /api/accomplices/{eventSlug}` endpoint — returns accomplice list with email, permissions, grantedAt, lastAccessedAt, isRevoked
 - [ ] Implement accomplice magic link verification: `GET /api/accomplices/verify?token={token}` — hash token, lookup Accomplice, check not revoked, check not expired, generate JWT with role='accomplice', claims include eventId, permissions array
-- [ ] Implement accomplice JWT: 24-hour expiry, claims: sub (AccompliceId), email, role='accomplice', eventId, permissions (JSON array)
+- [ ] Implement accomplice JWT: 24-hour expiry, claims: sub (AccompliceId), email, role='accomplice', eventId, permissions (JSON array). Set in `aura_session` cookie with `aura_csrf` cookie for CSRF protection.
 - [ ] Implement accomplice management UI section in event dashboard: invite form (email input, permission checkboxes), accomplice list with status badges, revoke/resend action buttons
 - [ ] Implement permission checkboxes: "Send Messages" (send_messages), "View RSVPs" (view_rsvps). Default: both checked
 - [ ] Write unit tests for AccompliceService (token generation, permission validation, revoke logic)
@@ -25,9 +25,10 @@ Implementar el sistema de gestión de accomplices del lado del host: otorgar acc
 ## Technical Notes
 - **Backend:**
   - `POST /api/accomplices/{eventSlug}/grant` — validate email, check not duplicate, create Accomplice (ExpiresAt = Event.EventDate + 1 day), generate token, enqueue magic link email. Email template includes panel URL: `{frontendBaseUrl}/accomplice/{plaintextToken}`
-  - `GET /api/accomplices/verify?token={token}` — hash token, lookup by TokenHash, verify IsRevoked=false, ExpiresAt > now, update LastAccessedAt, generate JWT
+  - `GET /api/accomplices/verify?token={token}` — hash token, lookup by TokenHash, verify IsRevoked=false, ExpiresAt > now, update LastAccessedAt, generate JWT, set `aura_session` cookie (accomplice JWT) + `aura_csrf` cookie
   - Accomplice JWT claims: `{ sub: accompliceId, email, role: "accomplice", eventId, permissions: ["send_messages", "view_rsvps"] }`
   - Permissions stored as JSON array in Accomplice.Permissions (jsonb column)
+  - Live message send endpoint (`POST /api/live/{slug}/send`) requires both JWT auth (AccompliceScoped policy) AND CSRF token validation
 - **Frontend:**
   - Accomplice section in event dashboard page (tab or accordion)
   - Invite form: email input, permission checkboxes, "Invite" button

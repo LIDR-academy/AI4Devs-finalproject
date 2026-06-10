@@ -66,6 +66,374 @@ graph LR
 | **Single Session** | Nuevo login invalida sesión anterior (blacklist en Dragonfly) |
 | **Inactive Timeout** | 30 minutos de inactividad requiere re-auth |
 
+## Configuración de Autenticación JWT (Program.cs)
+
+### JWT Bearer Authentication con Cookie Extraction
+
+ASP.NET Core se configura para leer el JWT desde la cookie `aura_session` en lugar del header `Authorization`:
+
+```csharp
+// Program.cs
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
+            ClockSkew = TimeSpan.Zero
+        };
+
+        // Extraer JWT de la cookie httpOnly en lugar del header Authorization
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var token = context.Request.Cookies["aura_session"];
+                if (!string.IsNullOrEmpty(token))
+                {
+                    context.Token = token;
+                }
+                return Task.CompletedTask;
+            },
+            OnTokenValidated = async context =>
+            {
+                // Verificar que el token no está en la blacklist (logout/revocación)
+                var jwtString = context.SecurityToken as JwtSecurityToken;
+                if (jwtString != null)
+                {
+                    var rawToken = context.Request.Cookies["aura_session"];
+                    var tokenHash = Convert.ToBase64String(
+                        SHA256.HashData(Encoding.UTF8.GetBytes(rawToken)));
+                    var redis = context.HttpContext.RequestServices.GetRequiredService<IDatabase>();
+                    if (await redis.KeyExistsAsync($"auth:blacklist:{tokenHash}"))
+                    {
+                        context.Fail("Token has been revoked");
+                    }
+                }
+            }
+        };
+    });
+
+builder.Services.AddAuthorization();
+```
+
+### Configuración de Cookies
+
+**En AuthController después de generar JWT:**
+
+```csharp
+// Session cookie (httpOnly — no accesible por JavaScript)
+var cookieOptions = new CookieOptions
+{
+    HttpOnly = true,
+    Secure = !env.IsDevelopment(),
+    SameSite = SameSiteMode.Strict,
+    Expires = jwtExpiry,
+    Path = "/"
+};
+response.Cookies.Append("aura_session", jwtToken, cookieOptions);
+
+// CSRF token cookie (legible por JavaScript para Angular interceptor)
+var csrfToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+var csrfCookieOptions = new CookieOptions
+{
+    HttpOnly = false,
+    Secure = !env.IsDevelopment(),
+    SameSite = SameSiteMode.Strict,
+    Expires = jwtExpiry,
+    Path = "/"
+};
+response.Cookies.Append("aura_csrf", csrfToken, csrfCookieOptions);
+```
+
+## Protección CSRF (Double-Submit Cookie Pattern)
+
+### Flujo Completo
+
+```mermaid
+sequenceDiagram
+    participant Browser
+    participant API
+    participant Dragonfly
+
+    Note over Browser,Dragonfly: Login Flow
+    Browser->>API: POST /api/auth/magic-link
+    API->>Browser: 200 (email sent)
+    Browser->>API: GET /api/auth/verify?token=xxx
+    API->>API: Generate JWT + CSRF token
+    API->>Browser: Set-Cookie: aura_session=JWT (httpOnly)<br/>Set-Cookie: aura_csrf=random (readable)
+    
+    Note over Browser,Dragonfly: Authenticated Request
+    Browser->>Browser: Angular reads aura_csrf cookie
+    Browser->>API: POST /api/events<br/>Cookie: aura_session + aura_csrf<br/>Header: X-CSRF-Token
+    API->>API: CsrfValidationMiddleware:<br/>Compare cookie vs header
+    API->>API: JWT validation
+    API->>Browser: 201 Created
+```
+
+### CsrfValidationMiddleware
+
+```csharp
+public class CsrfValidationMiddleware(RequestDelegate next)
+{
+    private static readonly HashSet<string> SafeMethods = ["GET", "HEAD", "OPTIONS"];
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        if (!SafeMethods.Contains(context.Request.Method))
+        {
+            var cookieToken = context.Request.Cookies["aura_csrf"];
+            var headerToken = context.Request.Headers["X-CSRF-Token"].ToString();
+
+            if (string.IsNullOrEmpty(cookieToken) ||
+                string.IsNullOrEmpty(headerToken) ||
+                !CryptographicOperations.FixedTimeEquals(
+                    Encoding.UTF8.GetBytes(cookieToken),
+                    Encoding.UTF8.GetBytes(headerToken)))
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                await context.Response.WriteAsJsonAsync(
+                    new { error = "CSRF validation failed", code = "CSRF_INVALID" });
+                return;
+            }
+        }
+        await next(context);
+    }
+}
+```
+
+### Angular CSRF Interceptor
+
+```typescript
+// frontend/src/app/core/interceptors/csrf.interceptor.ts
+import { HttpInterceptorFn } from '@angular/common/http';
+
+const SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS'];
+
+function getCookie(name: string): string | null {
+  const match = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
+  return match?.[2] ?? null;
+}
+
+export const csrfInterceptor: HttpInterceptorFn = (req, next) => {
+  if (!SAFE_METHODS.includes(req.method)) {
+    const csrfToken = getCookie('aura_csrf');
+    if (csrfToken) {
+      req = req.clone({ setHeaders: { 'X-CSRF-Token': csrfToken } });
+    }
+  }
+  return next(req);
+};
+```
+
+## Orden del Middleware Pipeline
+
+El orden es crítico. Cada middleware se ejecuta en secuencia:
+
+```csharp
+// Program.cs — orden exacto requerido
+var app = builder.Build();
+
+// 1. Exception Handling (primero para capturar todo)
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+// 2. Security Headers (HSTS, CSP, X-Frame-Options)
+app.UseMiddleware<SecurityHeadersMiddleware>();
+
+// 3. Rate Limiting (Dragonfly-based, antes de CORS)
+app.UseMiddleware<RateLimitingMiddleware>();
+
+// 4. CORS (ASP.NET Core built-in)
+app.UseCors("DefaultPolicy");
+
+// 5. CSRF Validation (solo para métodos state-changing)
+app.UseMiddleware<CsrfValidationMiddleware>();
+
+// 6. Authentication (JWT from cookie)
+app.UseAuthentication();
+
+// 7. Authorization (policy-based)
+app.UseAuthorization();
+
+// 8. Routing
+app.MapControllers();
+
+app.Run();
+```
+
+| Orden | Middleware | Propósito | ¿Afecta públicos? |
+|-------|-----------|-----------|-------------------|
+| 1 | ExceptionHandling | Captura excepciones, mapea a HTTP status | Sí |
+| 2 | SecurityHeaders | HSTS, CSP, X-Frame-Options | Sí |
+| 3 | RateLimiting | 100 req/min por IP, 3 magic links/email/hora | Sí |
+| 4 | CORS | Whitelist de orígenes permitidos | Sí (preflight) |
+| 5 | CSRF Validation | Valida X-CSRF-Token en POST/PUT/PATCH/DELETE | No |
+| 6 | Authentication | Extrae JWT de cookie, valida firma + expiración | No |
+| 7 | Authorization | Evalúa políticas (EventOwner, etc.) | No |
+| 8 | Routing | Dispatch al controller/endpoint | Sí |
+
+## Silent Refresh Flow
+
+### Endpoint: `POST /api/auth/refresh`
+
+**Propósito:** Renovar el JWT antes de que expire sin requerir re-autenticación.
+
+**Flujo:**
+1. Frontend decodifica el JWT y extrae el `exp` claim
+2. Al alcanzar el 50% del lifetime (12 horas), llama `POST /api/auth/refresh`
+3. Backend valida que el JWT actual es válido (no expirado, no blacklisteado)
+4. Backend genera nuevo JWT con fresh 24h expiry
+5. Nuevo JWT + nuevo CSRF token se setean en cookies
+6. Frontend continúa sin interrupción
+
+**Implementación:**
+
+```csharp
+// AuthController.cs
+[HttpPost("refresh")]
+[Authorize]
+public async Task<IActionResult> Refresh()
+{
+    var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+    var email = User.FindFirstValue(ClaimTypes.Email)!;
+    var role = User.FindFirstValue("role")!;
+
+    var newJwt = await _authService.GenerateJwtAsync(userId, email, role);
+    var newCsrf = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+
+    SetSessionCookie(newJwt);
+    SetCsrfCookie(newCsrf);
+
+    return Ok(new { refreshed = true });
+}
+```
+
+## Token Blacklist (Logout / Revocación)
+
+### Storage: Dragonfly (Redis-compatible)
+
+**Key format:** `auth:blacklist:{jwt_hash}`
+**TTL:** Tiempo restante hasta expiración natural del JWT (auto-cleanup)
+
+| Operación | Comando Dragonfly | Descripción |
+|-----------|-------------------|-------------|
+| Blacklist on logout | `SET auth:blacklist:{hash} "1" EX {remaining_seconds}` | Marca token como revocado |
+| Check on request | `EXISTS auth:blacklist:{hash}` | Verifica si token está revocado |
+| Cleanup | Auto-expire via TTL | Entries se eliminan automáticamente |
+
+**Implementación logout:**
+
+```csharp
+[HttpPost("logout")]
+[Authorize]
+public async Task<IActionResult> Logout()
+{
+    var token = HttpContext.Request.Cookies["aura_session"];
+    if (!string.IsNullOrEmpty(token))
+    {
+        var tokenHash = Convert.ToBase64String(
+            SHA256.HashData(Encoding.UTF8.GetBytes(token)));
+        
+        var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
+        var remaining = jwt.ValidTo - DateTime.UtcNow;
+        if (remaining > TimeSpan.Zero)
+        {
+            await _db.StringSetAsync(
+                $"auth:blacklist:{tokenHash}",
+                "1",
+                remaining);
+        }
+    }
+
+    Response.Cookies.Delete("aura_session");
+    Response.Cookies.Delete("aura_csrf");
+
+    return Ok(new { loggedOut = true });
+}
+```
+
+## Configuración de JWT Key
+
+### appsettings.json
+
+```json
+{
+  "Jwt": {
+    "Key": "<256-bit base64 string, min 32 chars>",
+    "Issuer": "aura.planning",
+    "Audience": "aura.planning",
+    "ExpiryMinutes": 1440
+  }
+}
+```
+
+### K8s override (environment variables)
+
+```yaml
+env:
+  - name: Jwt__Key
+    valueFrom:
+      secretKeyRef:
+        name: aura-secrets
+        key: jwt-key
+  - name: Jwt__Issuer
+    value: "aura.planning"
+  - name: Jwt__Audience
+    value: "aura.planning"
+  - name: Jwt__ExpiryMinutes
+    value: "1440"
+```
+
+### Generación de JWT Key (producción)
+
+```bash
+openssl rand -base64 32
+```
+
+## Matriz Completa de Autenticación por Endpoint
+
+| Endpoint Group | Path | Method | Auth | Policy | CSRF | Notes |
+|---------------|------|--------|------|--------|------|-------|
+| **Auth** | `/api/auth/magic-link` | POST | No | — | No | Anti-enumeración |
+| **Auth** | `/api/auth/verify` | GET | No | — | No | Token en query param |
+| **Auth** | `/api/auth/profile` | POST | Yes | JWT (any) | Yes | First-login only |
+| **Auth** | `/api/auth/refresh` | POST | Yes | JWT (any) | Yes | Silent refresh |
+| **Auth** | `/api/auth/logout` | POST | Yes | JWT (any) | Yes | Blacklists JWT |
+| **Auth** | `/api/auth/me` | GET | Yes | JWT (any) | No | Current user info |
+| **Events** | `POST /api/events` | POST | Yes | JWT (host) | Yes | Creates event |
+| **Events** | `GET /api/events` | GET | Yes | JWT (host) | No | Lists user's events |
+| **Events** | `GET /api/events/{slug}` | GET | Yes | EventOwner | No | Returns stats |
+| **Events** | `PUT /api/events/{slug}` | PUT | Yes | EventOwner | Yes | Updates event |
+| **Events** | `DELETE /api/events/{slug}` | DELETE | Yes | EventOwner | Yes | Soft delete |
+| **Events** | `POST /api/events/{slug}/publish` | POST | Yes | EventOwner | Yes | Stripe checkout |
+| **Events** | `GET /api/events/{slug}/dashboard` | GET | Yes | EventOwner | No | Real-time stats |
+| **Events** | `GET /api/events/{slug}/guests/export` | GET | Yes | EventOwner | No | CSV download |
+| **Events** | `POST /api/events/{slug}/guests/import` | POST | Yes | EventOwner | Yes | CSV import |
+| **Events** | `GET /api/events/{slug}/guests` | GET | Yes | EventOwner | No | Guest list |
+| **Templates** | `GET /api/templates` | GET | No | — | No | Public listing |
+| **Accomplices** | `POST /api/accomplices/{slug}/grant` | POST | Yes | EventOwner | Yes | Grant access |
+| **Accomplices** | `POST /api/accomplices/{slug}/revoke` | POST | Yes | EventOwner | Yes | Revoke access |
+| **Accomplices** | `POST /api/accomplices/{slug}/resend` | POST | Yes | EventOwner | Yes | Resend magic link |
+| **Accomplices** | `GET /api/accomplices/{slug}` | GET | Yes | EventOwner | No | List accomplices |
+| **Accomplices** | `GET /api/accomplices/verify` | GET | No | — | No | Token en query param |
+| **Accomplices** | `POST /api/accomplices/profile` | POST | Yes | JWT (accomplice) | Yes | First-login profile |
+| **Live Messages** | `POST /api/live/{slug}/send` | POST | Yes | AccompliceScoped | Yes | Swipe-to-send |
+| **Live Messages** | `GET /api/live/{slug}/history` | GET | Yes | AccompliceScoped | No | Message history |
+| **RSVP** | `GET /api/rsvp/{token}` | GET | No | — | No | Token en path |
+| **RSVP** | `POST /api/rsvp/{token}` | POST | No | — | No | Token en path, rate limited |
+| **Payments** | `POST /api/payments/{slug}/create` | POST | Yes | EventOwner | Yes | Stripe checkout |
+| **Payments** | `POST /api/payments/webhook` | POST | No | — | No | Stripe signature verification |
+| **Webhooks** | `POST /api/webhooks/whatsapp` | POST | No | — | No | Meta signature verification |
+| **Health** | `GET /health/live` | GET | No | — | No | K8s liveness probe |
+| **Health** | `GET /health/ready` | GET | No | — | No | K8s readiness probe |
+
 ## Políticas de Autorización
 
 | Política | Regla | Aplicado A |
@@ -84,11 +452,32 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("EventOwner", policy =>
         policy.RequireAssertion(context =>
-            context.User.HasClaim(c => c.Type == "role" && c.Value == "host")));
+        {
+            var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var role = context.User.FindFirstValue("role");
+            return role == "host";
+        }));
     
     options.AddPolicy("AccompliceScoped", policy =>
         policy.RequireAssertion(context =>
-            context.User.HasClaim(c => c.Type == "role" && c.Value == "accomplice")));
+        {
+            var role = context.User.FindFirstValue("role");
+            var eventId = context.User.FindFirstValue("eventId");
+            return role == "accomplice" && !string.IsNullOrEmpty(eventId);
+        }));
+    
+    options.AddPolicy("PublishedEvent", policy =>
+        policy.RequireAssertion(context => true)); // Verified at service layer
+    
+    options.AddPolicy("DraftGuestLimit", policy =>
+        policy.RequireAssertion(context => true)); // Verified at service layer
+    
+    options.AddPolicy("ActiveAccomplice", policy =>
+        policy.RequireAssertion(context =>
+        {
+            var role = context.User.FindFirstValue("role");
+            return role == "accomplice";
+        }));
 });
 ```
 

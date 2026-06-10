@@ -16,21 +16,29 @@ Implementar la capa de infraestructura base de la API incluyendo endpoints de he
 - [ ] Implementar middleware de rate limiting respaldado por Dragonfly: 100 req/min por IP globalmente, 3 magic link requests por email por hora
 - [ ] Implementar middleware de security headers: X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Content-Security-Policy, Strict-Transport-Security
 - [ ] Configurar pipeline behavior de FluentValidation para validación automática de DTOs en todos los endpoints POST/PUT
-- [ ] Configurar Swagger/OpenAPI con soporte de JWT bearer auth
+- [ ] Configurar Swagger/OpenAPI con soporte de cookie-based auth (cookieAuth + csrfAuth security schemes)
 - [ ] Registrar todos los servicios en contenedor DI: DbContext, repositories, Dragonfly connection, MinIO client
 - [ ] Configurar Serilog para logging JSON estructurado con correlation IDs
 - [ ] Implementar políticas de autorización: EventOwner, AccompliceScoped, PublishedEvent, DraftGuestLimit, ActiveAccomplice
+- [ ] Configurar JWT Bearer authentication con cookie extraction: `OnMessageReceived` lee JWT de cookie `aura_session` en lugar de header Authorization
+- [ ] Configurar `OnTokenValidated` para verificar JWT contra blacklist en Dragonfly (`auth:blacklist:{hash}`)
+- [ ] Implementar `CsrfValidationMiddleware` que valida header `X-CSRF-Token` contra cookie `aura_csrf` para métodos state-changing (POST, PUT, PATCH, DELETE) usando `CryptographicOperations.FixedTimeEquals`
+- [ ] Registrar middleware en orden exacto: ExceptionHandling → SecurityHeaders → RateLimiting → CORS → CSRF → Authentication → Authorization → Routing
 
 ## Notas Técnicas
-- **Backend:** ASP.NET Core minimal API or controllers. Program.cs es el composition root. El orden del middleware importa: ExceptionHandling → SecurityHeaders → RateLimiting → CORS → Auth → Routing
+- **Backend:** ASP.NET Core minimal API or controllers. Program.cs es el composition root. El orden del middleware importa: ExceptionHandling → SecurityHeaders → RateLimiting → CORS → CSRF → Authentication → Authorization → Routing
+- **JWT Config:** TokenValidationParameters con Issuer, Audience, SigningKey de `Configuration["Jwt:Key"]` (K8s Secret via env var `Jwt__Key`), ClockSkew=TimeSpan.Zero
+- **Cookie Settings:** `aura_session` (httpOnly=true, Secure=!IsDevelopment, SameSite=Strict, Path=/), `aura_csrf` (httpOnly=false, mismos otros settings)
+- **CSRF Middleware:** Usa `CryptographicOperations.FixedTimeEquals` para comparación timing-safe. Solo aplica a POST/PUT/PATCH/DELETE.
 - **Frontend:** N/A
 - **Database:** Health checks consultan PostgreSQL, Dragonfly, MinIO connectivity
-- **Integrations:** Dragonfly para distributed rate limiting (patrón INCR + EXPIRE)
+- **Integrations:** Dragonfly para distributed rate limiting (patrón INCR + EXPIRE) y token blacklist (`auth:blacklist:{hash}`)
 - **Key files:**
   - `backend/src/Aura.Api/Program.cs`
   - `backend/src/Aura.Api/Middleware/ExceptionHandlingMiddleware.cs`
   - `backend/src/Aura.Api/Middleware/RateLimitingMiddleware.cs`
   - `backend/src/Aura.Api/Middleware/SecurityHeadersMiddleware.cs`
+  - `backend/src/Aura.Api/Middleware/CsrfValidationMiddleware.cs`
   - `backend/src/Aura.Api/Health/HealthChecksSetup.cs`
   - `backend/src/Aura.Api/Filters/ValidationFilter.cs`
   - `backend/src/Aura.Api/appsettings.json`
@@ -43,6 +51,10 @@ Implementar la capa de infraestructura base de la API incluyendo endpoints de he
 - [ ] AC4: Dado que se envían 101 requests dentro de 1 minuto desde la misma IP, entonces la request 101 devuelve 429 con header Retry-After
 - [ ] AC5: Dado un POST request con DTO inválido (campo requerido faltante), entonces se devuelve 400 con detalles de error de FluentValidation
 - [ ] AC6: Dado cualquier respuesta de API, entonces la respuesta incluye headers: X-Content-Type-Options: nosniff, X-Frame-Options: DENY, Strict-Transport-Security
+- [ ] AC7: Dado un request con JWT válido en cookie `aura_session`, cuando llega a un endpoint con `[Authorize]`, entonces el usuario está autenticado
+- [ ] AC8: Dado un POST request con JWT válido pero sin header `X-CSRF-Token`, cuando llega al middleware CSRF, entonces se devuelve 403 Forbidden
+- [ ] AC9: Dado un POST request con JWT válido pero header `X-CSRF-Token` que no coincide con cookie `aura_csrf`, entonces se devuelve 403 Forbidden
+- [ ] AC10: Dado un JWT blacklisteado en Dragonfly, cuando se usa en un request, entonces `OnTokenValidated` rechaza el token con 401
 
 ## Elementos Relacionados
 - **PRD section:** 07-work-breakdown.md (Security/Compliance)

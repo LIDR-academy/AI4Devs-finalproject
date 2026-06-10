@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Aura Planning API",
-    "description": "REST API for Aura Planning - Digital Wedding Management SaaS Platform.\n\n## Authentication\n- Magic links: `POST /api/auth/magic-link` → sends email with login link\n- Verification: `GET /api/auth/verify?token={token}` → returns JWT (24h expiry)\n\n## Rate Limits\n- Magic link: 3 per email/hour\n- RSVP: 5 per token/hour\n- Live messages: 20 per accomplice/hour\n- Global: 100 per IP/minute",
+    "description": "REST API for Aura Planning - Digital Wedding Management SaaS Platform.\n\n## Authentication\nAura Planning uses passwordless authentication via magic links with JWT tokens stored in httpOnly cookies.\n\n### Flow\n1. **Request Magic Link**: `POST /api/auth/magic-link` → sends email with login link\n2. **Verify Token**: `GET /api/auth/verify?token={token}` → sets session JWT in `aura_session` cookie + CSRF token in `aura_csrf` cookie\n3. **Authenticated Requests**: All protected endpoints require the `aura_session` cookie\n4. **CSRF Protection**: State-changing requests (POST, PUT, PATCH, DELETE) require `X-CSRF-Token` header matching the `aura_csrf` cookie value\n5. **Session Refresh**: `POST /api/auth/refresh` renews JWT at 50% of lifetime\n6. **Logout**: `POST /api/auth/logout` blacklists current JWT and clears cookies\n\n### Cookie Details\n- `aura_session`: httpOnly, Secure, SameSite=Strict, 24h expiry\n- `aura_csrf`: readable by JavaScript, Secure, SameSite=Strict, 24h expiry\n\n## Rate Limits\n- Magic link: 3 per email/hour\n- RSVP: 5 per token/hour\n- Live messages: 20 per accomplice/hour\n- Global: 100 per IP/minute",
     "version": "1.0.0",
     "contact": {
       "name": "Aura Planning Support"
@@ -21,7 +21,9 @@
   "paths": {
     "/api/auth/magic-link": {
       "post": {
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "summary": "Request magic link for login",
         "description": "Sends email with magic link (15 min expiry). Rate limited to 3 per email/hour.",
         "requestBody": {
@@ -60,7 +62,9 @@
     },
     "/api/auth/verify": {
       "get": {
-        "tags": ["Auth"],
+        "tags": [
+          "Auth"
+        ],
         "summary": "Verify magic token and return JWT",
         "parameters": [
           {
@@ -97,41 +101,32 @@
       }
     },
     "/api/events": {
-      "post": {
-        "tags": ["Events"],
-        "summary": "Create new event",
+      "get": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "List current user events",
+        "description": "Returns all events owned by the authenticated user.",
         "security": [
           {
-            "bearerAuth": []
+            "cookieAuth": []
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateEventRequest"
-              }
-            }
-          }
-        },
         "responses": {
-          "201": {
-            "description": "Event created",
+          "200": {
+            "description": "List of events",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EventResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request data",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                  "type": "object",
+                  "properties": {
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/EventResponse"
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -141,11 +136,13 @@
     },
     "/api/events/{slug}": {
       "get": {
-        "tags": ["Events"],
+        "tags": [
+          "Events"
+        ],
         "summary": "Get event details with statistics",
         "security": [
           {
-            "bearerAuth": []
+            "cookieAuth": []
           }
         ],
         "parameters": [
@@ -180,15 +177,138 @@
             }
           }
         }
+      },
+      "put": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Update event",
+        "description": "Updates event fields. Re-geocodes venue if address changed.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEventRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Event updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Delete event",
+        "description": "Soft deletes event and all associated data.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Event deleted"
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/events/{slug}/guests/import": {
       "post": {
-        "tags": ["Events"],
+        "tags": [
+          "Events"
+        ],
         "summary": "Import guests from CSV",
         "security": [
           {
-            "bearerAuth": []
+            "cookieAuth": []
           }
         ],
         "parameters": [
@@ -244,11 +364,13 @@
     },
     "/api/events/{slug}/publish": {
       "post": {
-        "tags": ["Events"],
+        "tags": [
+          "Events"
+        ],
         "summary": "Initiate event publishing (creates Stripe PaymentIntent)",
         "security": [
           {
-            "bearerAuth": []
+            "cookieAuth": []
           }
         ],
         "parameters": [
@@ -297,11 +419,13 @@
     },
     "/api/events/{slug}/message-templates": {
       "get": {
-        "tags": ["Events"],
+        "tags": [
+          "Events"
+        ],
         "summary": "List message templates for event",
         "security": [
           {
-            "bearerAuth": []
+            "cookieAuth": []
           }
         ],
         "parameters": [
@@ -330,11 +454,13 @@
     },
     "/api/events/{slug}/message-templates/{id}": {
       "put": {
-        "tags": ["Events"],
+        "tags": [
+          "Events"
+        ],
         "summary": "Update message template",
         "security": [
           {
-            "bearerAuth": []
+            "cookieAuth": []
           }
         ],
         "parameters": [
@@ -382,11 +508,13 @@
     },
     "/api/events/{slug}/live-messages": {
       "get": {
-        "tags": ["Events"],
+        "tags": [
+          "Events"
+        ],
         "summary": "Get live message history for event",
         "security": [
           {
-            "bearerAuth": []
+            "cookieAuth": []
           }
         ],
         "parameters": [
@@ -415,7 +543,9 @@
     },
     "/api/rsvp/{token}": {
       "get": {
-        "tags": ["RSVP"],
+        "tags": [
+          "RSVP"
+        ],
         "summary": "Get event/guest info for RSVP form",
         "description": "Public endpoint - no authentication required. Token is the plaintext invitation token.",
         "parameters": [
@@ -452,7 +582,9 @@
         }
       },
       "post": {
-        "tags": ["RSVP"],
+        "tags": [
+          "RSVP"
+        ],
         "summary": "Submit or update RSVP response",
         "description": "Public endpoint - no authentication required. Rate limited to 5 submissions per token/hour. Cannot submit if less than 7 days before event.",
         "parameters": [
@@ -511,11 +643,13 @@
     },
     "/api/accomplices/{eventSlug}/grant": {
       "post": {
-        "tags": ["Accomplices"],
+        "tags": [
+          "Accomplices"
+        ],
         "summary": "Grant accomplice access",
         "security": [
           {
-            "bearerAuth": []
+            "cookieAuth": []
           }
         ],
         "parameters": [
@@ -564,11 +698,13 @@
     },
     "/api/accomplices/{eventSlug}": {
       "get": {
-        "tags": ["Accomplices"],
+        "tags": [
+          "Accomplices"
+        ],
         "summary": "List event accomplices",
         "security": [
           {
-            "bearerAuth": []
+            "cookieAuth": []
           }
         ],
         "parameters": [
@@ -597,11 +733,13 @@
     },
     "/api/accomplices/{eventSlug}/revoke": {
       "post": {
-        "tags": ["Accomplices"],
+        "tags": [
+          "Accomplices"
+        ],
         "summary": "Revoke accomplice access",
         "security": [
           {
-            "bearerAuth": []
+            "cookieAuth": []
           }
         ],
         "parameters": [
@@ -620,7 +758,9 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["accompliceId"],
+                "required": [
+                  "accompliceId"
+                ],
                 "properties": {
                   "accompliceId": {
                     "type": "string",
@@ -652,11 +792,13 @@
     },
     "/api/accomplices/{eventSlug}/resend": {
       "post": {
-        "tags": ["Accomplices"],
+        "tags": [
+          "Accomplices"
+        ],
         "summary": "Resend magic link to accomplice",
         "security": [
           {
-            "bearerAuth": []
+            "cookieAuth": []
           }
         ],
         "parameters": [
@@ -675,7 +817,9 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "required": ["accompliceId"],
+                "required": [
+                  "accompliceId"
+                ],
                 "properties": {
                   "accompliceId": {
                     "type": "string",
@@ -710,7 +854,9 @@
     },
     "/api/accomplices/verify": {
       "get": {
-        "tags": ["Accomplices"],
+        "tags": [
+          "Accomplices"
+        ],
         "summary": "Verify accomplice token and return JWT",
         "parameters": [
           {
@@ -748,17 +894,20 @@
     },
     "/api/live/{accompliceToken}/send": {
       "post": {
-        "tags": ["Live Messages"],
+        "tags": [
+          "Live Messages"
+        ],
         "summary": "Send live message via WhatsApp",
-        "description": "Accomplice must have \"send_messages\" permission. Rate limited to 20 messages per accomplice per hour.",
+        "description": "Accomplice must have send_messages permission. Requires valid JWT in aura_session cookie + X-CSRF-Token header. Rate limited to 20 messages per accomplice per hour.",
         "parameters": [
           {
-            "name": "accompliceToken",
+            "name": "slug",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string"
-            }
+            },
+            "description": "Event slug"
           }
         ],
         "requestBody": {
@@ -802,12 +951,19 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
       }
     },
     "/api/payments/webhook": {
       "post": {
-        "tags": ["Payments"],
+        "tags": [
+          "Payments"
+        ],
         "summary": "Stripe payment webhook",
         "description": "Handles payment_intent.succeeded and payment_intent.failed events",
         "requestBody": {
@@ -851,7 +1007,9 @@
     },
     "/health/live": {
       "get": {
-        "tags": ["Health"],
+        "tags": [
+          "Health"
+        ],
         "summary": "Kubernetes liveness probe",
         "description": "Returns 200 if API is running",
         "responses": {
@@ -876,7 +1034,9 @@
     },
     "/health/ready": {
       "get": {
-        "tags": ["Health"],
+        "tags": [
+          "Health"
+        ],
         "summary": "Kubernetes readiness probe with dependency status",
         "description": "Checks PostgreSQL, Dragonfly, and MinIO connectivity",
         "responses": {
@@ -902,20 +1062,510 @@
           }
         }
       }
+    },
+    "/api/auth/profile": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Complete first-login profile setup",
+        "description": "Sets user name, accepts terms, creates UserConsent records. Requires valid JWT from verify step.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileSetupRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile setup complete"
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Silent JWT refresh",
+        "description": "Renews JWT with fresh 24h expiry. Generates new CSRF token. Called automatically at 50% of JWT lifetime.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JWT refreshed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "refreshed": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Logout and revoke session",
+        "description": "Blacklists current JWT in Dragonfly and clears aura_session + aura_csrf cookies.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Logged out",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "loggedOut": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Get current authenticated user info",
+        "description": "Returns user details from JWT claims. Used to check authentication status on app init.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current user info",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/templates": {
+      "get": {
+        "tags": [
+          "Templates"
+        ],
+        "summary": "List available templates",
+        "description": "Public endpoint. Returns all non-premium templates by default.",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "wedding"
+            }
+          },
+          {
+            "name": "isPremium",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of templates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplatesListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events/{slug}/dashboard": {
+      "get": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Get dashboard statistics",
+        "description": "Returns RSVP stats, dietary restrictions, transport needs for event dashboard.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dashboard stats",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardStatsResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events/{slug}/guests": {
+      "get": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "List event guests",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "family",
+                "friends",
+                "colleagues",
+                "other"
+              ]
+            }
+          },
+          {
+            "name": "inviteStatus",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Guest list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuestsListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events/{slug}/guests/export": {
+      "get": {
+        "tags": [
+          "Events"
+        ],
+        "summary": "Export guests as CSV",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CSV file",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/accomplices/profile": {
+      "post": {
+        "tags": [
+          "Accomplices"
+        ],
+        "summary": "Accomplice first-login profile setup",
+        "description": "Sets accomplice name and accepts terms. Requires valid accomplice JWT.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileSetupRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile setup complete"
+          },
+          "401": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/live/{slug}/history": {
+      "get": {
+        "tags": [
+          "Live Messages"
+        ],
+        "summary": "Get live message history",
+        "description": "Returns sent live messages for the event. Requires accomplice JWT.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Message history",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveMessagesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payments/{slug}/create": {
+      "post": {
+        "tags": [
+          "Payments"
+        ],
+        "summary": "Create Stripe PaymentIntent",
+        "description": "Initiates payment for event publishing. Returns client secret for Stripe Elements.",
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "PaymentIntent created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/webhooks/whatsapp": {
+      "post": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "WhatsApp webhook handler",
+        "description": "Handles delivery status callbacks from Meta WhatsApp API. Verified via signature.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook processed"
+          },
+          "400": {
+            "description": "Invalid signature"
+          }
+        }
+      }
     }
   },
   "components": {
     "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT"
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "aura_session",
+        "description": "Session JWT stored in httpOnly cookie. Set automatically on login/verify."
+      },
+      "csrfAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-CSRF-Token",
+        "description": "CSRF token. Read from aura_csrf cookie and sent as header on state-changing requests (POST, PUT, PATCH, DELETE)."
       }
     },
     "schemas": {
       "MagicLinkRequest": {
         "type": "object",
-        "required": ["email"],
+        "required": [
+          "email"
+        ],
         "properties": {
           "email": {
             "type": "string",
@@ -931,19 +1581,13 @@
           "message": {
             "type": "string",
             "example": "Magic link sent. Check your email."
-          },
-          "isNewUser": {
-            "type": "boolean"
           }
-        }
+        },
+        "description": "Same response for new and existing users (anti-enumeration)."
       },
       "VerifyResponse": {
         "type": "object",
         "properties": {
-          "token": {
-            "type": "string",
-            "description": "Session JWT"
-          },
           "user": {
             "type": "object",
             "properties": {
@@ -956,14 +1600,24 @@
               },
               "name": {
                 "type": "string"
+              },
+              "isFirstLogin": {
+                "type": "boolean"
               }
             }
           }
-        }
+        },
+        "description": "JWT is set in aura_session cookie (httpOnly). CSRF token set in aura_csrf cookie."
       },
       "CreateEventRequest": {
         "type": "object",
-        "required": ["name", "coupleNames", "eventDate", "venueName", "venueAddress"],
+        "required": [
+          "name",
+          "coupleNames",
+          "eventDate",
+          "venueName",
+          "venueAddress"
+        ],
         "properties": {
           "name": {
             "type": "string",
@@ -1021,7 +1675,12 @@
           },
           "status": {
             "type": "string",
-            "enum": ["draft", "published", "completed", "archived"]
+            "enum": [
+              "draft",
+              "published",
+              "completed",
+              "archived"
+            ]
           },
           "createdAt": {
             "type": "string",
@@ -1093,11 +1752,16 @@
       },
       "PublishRequest": {
         "type": "object",
-        "required": ["tier"],
+        "required": [
+          "tier"
+        ],
         "properties": {
           "tier": {
             "type": "string",
-            "enum": ["standard", "premium"],
+            "enum": [
+              "standard",
+              "premium"
+            ],
             "default": "standard",
             "description": "Pricing tier: standard (EUR 19) or premium (EUR 29)"
           }
@@ -1208,7 +1872,11 @@
                 },
                 "sentVia": {
                   "type": "string",
-                  "enum": ["email", "whatsapp", "both"]
+                  "enum": [
+                    "email",
+                    "whatsapp",
+                    "both"
+                  ]
                 },
                 "sentAt": {
                   "type": "string",
@@ -1216,7 +1884,13 @@
                 },
                 "deliveryStatus": {
                   "type": "string",
-                  "enum": ["pending", "queued", "sent", "delivered", "failed"]
+                  "enum": [
+                    "pending",
+                    "queued",
+                    "sent",
+                    "delivered",
+                    "failed"
+                  ]
                 }
               }
             }
@@ -1254,7 +1928,11 @@
             "properties": {
               "attendance": {
                 "type": "string",
-                "enum": ["yes", "no", "maybe"]
+                "enum": [
+                  "yes",
+                  "no",
+                  "maybe"
+                ]
               },
               "dietaryRestrictions": {
                 "type": "string",
@@ -1276,11 +1954,17 @@
       },
       "SubmitRsvpRequest": {
         "type": "object",
-        "required": ["attendance"],
+        "required": [
+          "attendance"
+        ],
         "properties": {
           "attendance": {
             "type": "string",
-            "enum": ["yes", "no", "maybe"]
+            "enum": [
+              "yes",
+              "no",
+              "maybe"
+            ]
           },
           "dietaryRestrictions": {
             "type": "string",
@@ -1317,7 +2001,11 @@
           },
           "attendance": {
             "type": "string",
-            "enum": ["yes", "no", "maybe"]
+            "enum": [
+              "yes",
+              "no",
+              "maybe"
+            ]
           },
           "message": {
             "type": "string",
@@ -1327,7 +2015,10 @@
       },
       "GrantAccessRequest": {
         "type": "object",
-        "required": ["email", "permissions"],
+        "required": [
+          "email",
+          "permissions"
+        ],
         "properties": {
           "email": {
             "type": "string",
@@ -1338,7 +2029,10 @@
             "type": "array",
             "items": {
               "type": "string",
-              "enum": ["send_messages", "view_rsvps"]
+              "enum": [
+                "send_messages",
+                "view_rsvps"
+              ]
             },
             "minItems": 1
           }
@@ -1441,7 +2135,9 @@
       },
       "SendLiveMessageRequest": {
         "type": "object",
-        "required": ["messageTemplateId"],
+        "required": [
+          "messageTemplateId"
+        ],
         "properties": {
           "messageTemplateId": {
             "type": "string",
@@ -1476,22 +2172,34 @@
         "properties": {
           "status": {
             "type": "string",
-            "enum": ["healthy", "unhealthy"]
+            "enum": [
+              "healthy",
+              "unhealthy"
+            ]
           },
           "dependencies": {
             "type": "object",
             "properties": {
               "postgresql": {
                 "type": "string",
-                "enum": ["healthy", "unhealthy"]
+                "enum": [
+                  "healthy",
+                  "unhealthy"
+                ]
               },
               "dragonfly": {
                 "type": "string",
-                "enum": ["healthy", "unhealthy"]
+                "enum": [
+                  "healthy",
+                  "unhealthy"
+                ]
               },
               "minio": {
                 "type": "string",
-                "enum": ["healthy", "unhealthy"]
+                "enum": [
+                  "healthy",
+                  "unhealthy"
+                ]
               }
             }
           }
@@ -1524,6 +2232,230 @@
                 },
                 "message": {
                   "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ProfileSetupRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "acceptTerms"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 200,
+            "example": "Maria Garcia"
+          },
+          "timezone": {
+            "type": "string",
+            "default": "Europe/Madrid",
+            "example": "Europe/Madrid"
+          },
+          "locale": {
+            "type": "string",
+            "default": "es-ES",
+            "example": "es-ES"
+          },
+          "acceptTerms": {
+            "type": "boolean"
+          },
+          "acceptMarketing": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "MeResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "host",
+              "accomplice"
+            ]
+          },
+          "status": {
+            "type": "string"
+          },
+          "isFirstLogin": {
+            "type": "boolean"
+          },
+          "eventId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "Present for accomplice role"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Present for accomplice role"
+          }
+        }
+      },
+      "UpdateEventRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "templateId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "coupleNames": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "eventDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "venueName": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "venueAddress": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "primaryColor": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$"
+          },
+          "secondaryColor": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$"
+          },
+          "heroImageUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "DashboardStatsResponse": {
+        "type": "object",
+        "properties": {
+          "totalInvited": {
+            "type": "integer"
+          },
+          "confirmed": {
+            "type": "integer"
+          },
+          "declined": {
+            "type": "integer"
+          },
+          "pending": {
+            "type": "integer"
+          },
+          "maybe": {
+            "type": "integer"
+          },
+          "dietaryRestrictions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "guestName": {
+                  "type": "string"
+                },
+                "restrictions": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "transportNeedsCount": {
+            "type": "integer"
+          },
+          "plusOneCount": {
+            "type": "integer"
+          }
+        }
+      },
+      "GuestsListResponse": {
+        "type": "object",
+        "properties": {
+          "guests": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "phone": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "category": {
+                  "type": "string"
+                },
+                "inviteStatus": {
+                  "type": "string"
+                },
+                "rsvpStatus": {
+                  "type": "string",
+                  "nullable": true
+                }
+              }
+            }
+          }
+        }
+      },
+      "TemplatesListResponse": {
+        "type": "object",
+        "properties": {
+          "templates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "previewUrl": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "isPremium": {
+                  "type": "boolean"
                 }
               }
             }
