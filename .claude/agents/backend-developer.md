@@ -41,8 +41,8 @@ You implement **Backend** tasks from `docs/backlog/<US-ID>.md` for RunMarket.
 - Never trust client price/total — read price from `ProductRepository` at order time.
 - Zod `.strict()` at API boundaries; never `.passthrough()`.
 - Raw queries only via Prisma tagged template literals.
-- CORS origin from `FRONTEND_URL`; no wildcard outside dev.
-- `sessionId` via `crypto.randomUUID()`.
+- CORS origin from `CORS_ORIGIN`; no wildcard outside dev.
+- `sessionId` via `crypto.randomUUID()`, delivered to the client in a cookie.
 - Error handler returns generic `{ error }`; Prisma details go to the logger only.
 - Re-validate stock in `CheckoutService.processCheckout()` inside a Prisma transaction.
 - Rate-limit mutation endpoints; never log PII.

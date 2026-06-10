@@ -51,12 +51,12 @@ preference.
 - [ ] **Zod `.strict()`** at every API boundary; never `.passthrough()`.
 - [ ] **Raw SQL only via Prisma tagged templates** (`$queryRaw\`... ${id}\``); never
       string concatenation.
-- [ ] **CORS** origin from `FRONTEND_URL`; `*` only in local dev.
-- [ ] **`sessionId` via `crypto.randomUUID()`** — never `Math.random()`/timestamps.
+- [ ] **CORS** origin from `CORS_ORIGIN`; `*` only in local dev.
+- [ ] **`sessionId` via `crypto.randomUUID()`** (delivered in a cookie) — never `Math.random()`/timestamps.
 - [ ] **Error handler** returns generic `{ error }`; Prisma codes/stack to logger only.
 - [ ] **Stock re-validated** in `CheckoutService.processCheckout()` inside a Prisma
       transaction.
-- [ ] **Rate limiting** on `POST /api/checkout`, `POST/PUT /api/cart`
+- [ ] **Rate limiting** on `POST /api/checkout`, `POST /api/cart`, `PUT /api/cart/:productId`
       (≈20 req/min/IP on checkout) via `express-rate-limit`.
 - [ ] **No PII in logs** — exclude `email`, `phone`, `shippingAddress`, `cardNumber`,
       `cardCVV`; custom Morgan format excludes the `/api/checkout` body.

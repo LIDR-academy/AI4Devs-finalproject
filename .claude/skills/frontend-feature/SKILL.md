@@ -5,9 +5,10 @@ description: Implement a RunMarket frontend feature with React + TypeScript, cov
 
 # Frontend Feature
 
-Build a frontend capability for RunMarket: React 18 + TypeScript (strict) + Vite +
-Tailwind v4 + shadcn/ui + React Router v7, state via Context API + localStorage,
-tested with Vitest + React Testing Library (and Playwright for journeys).
+Build a frontend capability for RunMarket: Next.js 14 (App Router) + React 18 +
+TypeScript (strict) + Tailwind v4 + shadcn/ui, state via Context API (`sessionId` in
+a server cookie, cart cached in localStorage), tested with Vitest + React Testing
+Library (and Playwright for journeys).
 
 Always combine with `.claude/skills/tdd-implementation/SKILL.md` (TDD is obligatory).
 
@@ -33,8 +34,8 @@ Always combine with `.claude/skills/tdd-implementation/SKILL.md` (TDD is obligat
 
 - [ ] **No card data in state/localStorage** — `PaymentData` lives only in the local
       state of the checkout component; discarded on completion/abandon.
-- [ ] **Only** `sessionId`, cart items and order summary may live in
-      `CartContext`/localStorage.
+- [ ] **Only** cart items and order summary may live in `CartContext`/localStorage;
+      the `sessionId` lives in a server cookie, never in localStorage.
 - [ ] **Sanitize URL query params** against the closed domain enums (`distance`,
       `surface`, `level`, `objective`) before using them as filters; drop unknown
       values silently — never forward them to the API.

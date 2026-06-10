@@ -57,10 +57,10 @@ Listado paginado de productos que incluye zapatillas, ropa técnica y accesorios
 Sistema de filtrado múltiple que permite al usuario acotar el catálogo mediante los siguientes criterios:
 
 - **Categoría:** zapatillas, ropa, accesorios
-- **Distancia objetivo:** 5K, 10K, media maratón, maratón
-- **Superficie:** asfalto, trail, pista
+- **Distancia objetivo:** 5K, 10K, media maratón, maratón, ultra
+- **Superficie:** asfalto, trail, pista, mixto
 - **Nivel del corredor:** principiante, popular, avanzado
-- **Objetivo de entrenamiento:** velocidad, resistencia, recuperación, competición
+- **Objetivo de entrenamiento:** entrenamiento, competición, recuperación, uso diario
 
 Los filtros son combinables y los resultados se actualizan de forma dinámica, sin recargas de página.
 
@@ -77,14 +77,14 @@ Vista detallada orientada a la decisión de compra que incluye:
 
 #### 4. Gestión de carrito
 
-El usuario puede añadir, modificar la cantidad y eliminar productos del carrito. El resumen muestra el desglose de productos, subtotal, IVA estimado y total. El carrito persiste durante la sesión.
+El usuario puede añadir, modificar la cantidad y eliminar productos del carrito. El resumen muestra el desglose de productos, subtotal, gastos de envío y total. El carrito persiste durante la sesión.
 
 #### 5. Checkout simulado
 
 Flujo de compra en tres pasos:
 
 1. **Datos de envío:** nombre, dirección y localidad
-2. **Método de pago:** selección simulada (tarjeta, transferencia) sin procesamiento real
+2. **Datos de pago:** tarjeta de crédito simulada (número, titular, vencimiento, CVV), sin procesamiento real ni otros métodos en el MVP
 3. **Revisión del pedido:** resumen antes de confirmar
 
 El checkout es funcional a nivel de interfaz y flujo de usuario, pero no procesa pagos reales en la versión MVP. Tampoco exige registro ni login: los datos de envío se recogen en el propio formulario.
@@ -203,7 +203,7 @@ flowchart TD
 
 **Descripción**
 
-El corredor ha seleccionado uno o más productos y procede al proceso de compra. Este caso de uso cubre desde la revisión del carrito hasta la confirmación del pedido, validando el ciclo completo de compra del MVP. El checkout es simulado: recoge los datos de envío y método de pago sin procesar transacciones reales.
+El corredor ha seleccionado uno o más productos y procede al proceso de compra. Este caso de uso cubre desde la revisión del carrito hasta la confirmación del pedido, validando el ciclo completo de compra del MVP. El checkout es simulado: recoge los datos de envío y de pago con tarjeta sin procesar transacciones reales.
 
 **Actores principales**
 
@@ -214,7 +214,7 @@ El corredor ha seleccionado uno o más productos y procede al proceso de compra.
 
 ```mermaid
 flowchart TD
-    A([Corredor accede al carrito]) --> B[Sistema muestra:\nlistado de productos, cantidades,\nsubtotal, IVA y total]
+    A([Corredor accede al carrito]) --> B[Sistema muestra:\nlistado de productos, cantidades,\nsubtotal, envío y total]
     B --> C{¿Desea modificar el carrito?}
     C -- Sí --> D[Modifica cantidad o elimina producto]
     D --> B
@@ -225,7 +225,7 @@ flowchart TD
     H --> I{¿Datos de envío válidos?}
     I -- No --> J[Sistema muestra errores de validación inline]
     J --> H
-    I -- Sí --> K[Paso 2: Selecciona método de pago simulado\ntarjeta o transferencia]
+    I -- Sí --> K[Paso 2: Introduce datos de pago\ncon tarjeta de crédito simulada]
     K --> L[Paso 3: Revisa el resumen del pedido\nproductos, envío, total]
     L --> M{¿Corredor confirma la compra?}
     M -- No --> N[Corredor vuelve a modificar\ncarro o datos de envío]

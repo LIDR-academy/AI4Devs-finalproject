@@ -31,7 +31,7 @@ direct dependencies.
    string-built SQL; Zod `.strict()` rejects unexpected fields.
 3. **XSS** — no `dangerouslySetInnerHTML`; dynamic content rendered as escaped JSX;
    URL filter params validated against domain enums.
-4. **CSRF** — state-changing endpoints; same-site/cors posture; `FRONTEND_URL` origin.
+4. **CSRF** — state-changing endpoints; same-site/cors posture; `CORS_ORIGIN` origin.
 5. **Security misconfiguration** — CORS not wildcard outside dev; rate limiting on
    mutation endpoints; safe error responses (no Prisma codes/stack to client).
 6. **Secrets exposure** — no secrets in client bundle/localStorage; no card data
@@ -63,8 +63,8 @@ direct dependencies.
 - [ ] Zod `.strict()` on every input boundary.
 - [ ] No raw SQL string building; tagged templates only.
 - [ ] No `dangerouslySetInnerHTML`; filter params validated against enums.
-- [ ] CORS origin from `FRONTEND_URL`; no wildcard in staging/prod.
-- [ ] Rate limiting on `POST /api/checkout`, `POST/PUT /api/cart`.
+- [ ] CORS origin from `CORS_ORIGIN`; no wildcard in staging/prod.
+- [ ] Rate limiting on `POST /api/checkout`, `POST /api/cart`, `PUT /api/cart/:productId`.
 - [ ] Error responses generic; Prisma details only in logs.
 - [ ] No PII in logs; checkout body excluded.
 - [ ] No secrets/card data in client state or localStorage.

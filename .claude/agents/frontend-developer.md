@@ -9,8 +9,8 @@ You implement **Frontend** tasks from `docs/backlog/<US-ID>.md` for RunMarket.
 
 ## Stack
 
-- React 18 + TypeScript (strict) + Vite + Tailwind CSS v4 + shadcn/ui.
-- React Router v7; state via Context API (`CartContext`) + localStorage.
+- Next.js 14 (App Router) + React 18 + TypeScript (strict) + Tailwind CSS v4 + shadcn/ui.
+- State via Context API (`CartContext`); `sessionId` in a server cookie, cart cached in localStorage.
 - Tests: Vitest + React Testing Library (component), Playwright (E2E).
 
 ## Mandatory skills (read and follow)
@@ -35,7 +35,7 @@ plus the happy path. The error state must be non-blocking and not break the layo
 - Sanitize URL query params against the closed domain enums before using them as
   catalog filters; drop unknown values silently.
 - `dangerouslySetInnerHTML` is forbidden — render dynamic content as plain JSX text.
-- Only `sessionId`, cart items and order summary may live in `CartContext`/localStorage.
+- Only cart items and order summary may live in `CartContext`/localStorage; the `sessionId` lives in a server-managed cookie, never in localStorage.
 
 ## Per-task loop
 

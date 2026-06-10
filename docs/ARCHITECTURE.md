@@ -157,7 +157,7 @@ Request → Router → Middleware → Controller → Service → Repository → 
 | Servicio | Endpoints | Responsabilidad |
 |---|---|---|
 | `CatalogService` | `GET /api/products`, `GET /api/products/:id` | Filtrado multidimensional por `distance`, `surface`, `level`, `objective` |
-| `CartService` | `POST/PUT/DELETE /api/cart` | Gestión de ítems del carrito (sesión server-side en MVP) |
+| `CartService` | `POST /api/cart`, `PUT/DELETE /api/cart/:productId` | Gestión de ítems del carrito (sesión server-side en MVP) |
 | `CheckoutService` | `POST /api/checkout` | Validación de datos de envío/pago y creación de Order |
 | `OrderService` | `GET /api/orders`, `GET /api/orders/:id` | Consulta del historial de pedidos |
 
@@ -218,7 +218,7 @@ runmarket/
 │   │   ├── app/                  ← App Router
 │   │   │   ├── page.tsx          ← / Catálogo (SSR)
 │   │   │   ├── product/[id]/
-│   │   │   │   └── page.tsx      ← /product/:id Ficha (SSR)
+│   │   │   │   └── page.tsx      ← /product/[id] Ficha (SSR)
 │   │   │   ├── cart/
 │   │   │   │   └── page.tsx      ← /cart Carrito (Client)
 │   │   │   ├── checkout/
@@ -248,9 +248,10 @@ runmarket/
 │   │   ├── routes/               ← products.routes.ts, orders.routes.ts...
 │   │   ├── controllers/          ← products.controller.ts...
 │   │   ├── services/             ← catalog.service.ts, order.service.ts...
-│   │   ├── repositories/         ← product.repository.ts...
-│   │   ├── middleware/           ← errorHandler.ts, cors.ts, logger.ts
+│   │   ├── repositories/         ← product.repository.ts, cart.repository.ts, order.repository.ts
+│   │   ├── middleware/           ← error-handler.ts, cors.ts, logger.ts, rate-limit.ts
 │   │   ├── schemas/              ← Zod schemas de validación
+│   │   ├── types/                ← domain.ts, errors.ts (tipos de dominio + errores)
 │   │   └── index.ts              ← bootstrap Express
 │   ├── prisma/
 │   │   ├── schema.prisma         ← definición del modelo de datos
@@ -339,7 +340,7 @@ C4Component
     ContainerDb(db, "PostgreSQL")
 
     Component(productRouter, "ProductRouter", "Express Router", "GET /api/products\nGET /api/products/:id")
-    Component(cartRouter, "CartRouter", "Express Router", "POST · PUT · DELETE /api/cart")
+    Component(cartRouter, "CartRouter", "Express Router", "POST /api/cart\nPUT · DELETE /api/cart/:productId")
     Component(checkoutRouter, "CheckoutRouter", "Express Router", "POST /api/checkout")
     Component(orderRouter, "OrderRouter", "Express Router", "GET /api/orders\nGET /api/orders/:id")
 
@@ -349,10 +350,11 @@ C4Component
     Component(orderSvc, "OrderService", "TypeScript Service", "Consulta y actualización del historial\nde pedidos del corredor.")
 
     Component(productRepo, "ProductRepository", "Prisma Repository", "Queries de producto con filtros\nSQL dinámicos sobre PostgreSQL.")
+    Component(cartRepo, "CartRepository", "Prisma Repository", "Queries de Cart y CartItem\nasociados a sessionId.")
     Component(orderRepo, "OrderRepository", "Prisma Repository", "Queries de Order y OrderItem\ncon joins y transacciones.")
 
     Rel(fe, productRouter, "GET /api/products", "JSON")
-    Rel(fe, cartRouter, "POST/PUT/DELETE /api/cart", "JSON")
+    Rel(fe, cartRouter, "POST /api/cart · PUT/DELETE /api/cart/:productId", "JSON")
     Rel(fe, checkoutRouter, "POST /api/checkout", "JSON")
     Rel(fe, orderRouter, "GET /api/orders", "JSON")
 
@@ -362,12 +364,14 @@ C4Component
     Rel(orderRouter, orderSvc, "delega lógica")
 
     Rel(catalogSvc, productRepo, "usa")
-    Rel(cartSvc, orderRepo, "usa")
+    Rel(cartSvc, cartRepo, "usa")
+    Rel(cartSvc, productRepo, "valida stock")
     Rel(checkoutSvc, orderRepo, "usa")
     Rel(checkoutSvc, cartSvc, "vacía carrito tras checkout")
     Rel(orderSvc, orderRepo, "usa")
 
     Rel(productRepo, db, "SQL via Prisma")
+    Rel(cartRepo, db, "SQL via Prisma")
     Rel(orderRepo, db, "SQL via Prisma")
 ```
 
@@ -385,14 +389,14 @@ C4Component
     Component(catalogPage, "CatalogPage", "Server Component · /", "Renderiza el catálogo con SSR.\nGenera metadata SEO de categorías.")
     Component(productPage, "ProductDetailPage", "Server Component · /product/[id]", "Renderiza ficha de producto con SSR.\nMetadata dinámica og:title · og:image.")
     Component(cartPage, "CartPage", "Client Component · /cart", "Gestión del carrito en cliente.\nLee y escribe CartContext.")
-    Component(checkoutPage, "CheckoutPage", "Client Component · /checkout", "Formulario multi-paso: envío + pago.\nEnvía checkout a la API.")
+    Component(checkoutPage, "CheckoutPage", "Client Component · /checkout", "Formulario de 3 pasos: envío + pago + revisión.\nEnvía checkout a la API.")
     Component(ordersPage, "OrdersPage", "Client Component · /orders", "Historial de pedidos cargado\ndesde la API al montar el componente.")
     Component(filterPanel, "FilterPanel", "Client Component", "Panel de filtros interactivo.\nActualiza parámetros de búsqueda.")
-    Component(cartCtx, "CartContext", "React Context + localStorage", "Estado global del carrito.\nPersistencia en localStorage.")
+    Component(cartCtx, "CartContext", "React Context + localStorage", "Estado global del carrito.\nCaché en localStorage; sessionId en cookie.")
     Component(apiClient, "ApiClient", "TypeScript fetch wrapper", "Centraliza llamadas REST al backend.\nManeja errores y tipado de respuestas.")
 
     Rel(runner, catalogPage, "/ navega catálogo", "HTTPS")
-    Rel(runner, productPage, "/product/:id ve ficha", "HTTPS")
+    Rel(runner, productPage, "/product/[id] ve ficha", "HTTPS")
     Rel(runner, cartPage, "/cart revisa carrito", "HTTPS")
     Rel(runner, checkoutPage, "/checkout compra", "HTTPS")
     Rel(runner, ordersPage, "/orders mis pedidos", "HTTPS")

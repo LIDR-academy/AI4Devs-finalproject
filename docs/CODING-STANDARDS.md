@@ -155,7 +155,7 @@ El `errorHandler` global mapea cada tipo a su HTTP status. Nunca devolver stack 
 - `CartContext` es el único estado global. No crear contextos adicionales en el MVP.
 - Estado de formularios: `useState` local en el componente. No llevar al contexto.
 - No duplicar en contexto datos que ya vienen de la API. Fetch en Server Component → prop → render.
-- `localStorage` solo para persistir `sessionId` y carrito entre recargas. Nunca datos de pago.
+- `localStorage` solo como caché del carrito entre recargas; el `sessionId` se gestiona en una cookie (servidor), no en localStorage. Nunca datos de pago.
 
 ### 3.3 Naming de ficheros y componentes
 

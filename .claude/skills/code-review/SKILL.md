@@ -28,8 +28,8 @@ clean architecture compliance + backend/frontend checklists + the security rules
 - [ ] Zod `.strict()` on every input boundary; no `.passthrough()`.
 - [ ] Price/total read server-side; client `price` ignored.
 - [ ] Raw SQL only via Prisma tagged templates.
-- [ ] CORS origin from `FRONTEND_URL`; no wildcard outside dev.
-- [ ] `sessionId` via `crypto.randomUUID()`.
+- [ ] CORS origin from `CORS_ORIGIN`; no wildcard outside dev.
+- [ ] `sessionId` via `crypto.randomUUID()`, delivered in a cookie.
 - [ ] Errors mapped to generic `{ error }`; Prisma details to logger only.
 - [ ] Stock re-validated in checkout transaction.
 - [ ] Rate limiting on mutation endpoints; no PII logged.
@@ -41,7 +41,7 @@ clean architecture compliance + backend/frontend checklists + the security rules
 ## Frontend review checklist
 
 - [ ] loading / empty / error states handled; error is non-blocking.
-- [ ] No card data in state/localStorage; only `sessionId`, cart, order summary.
+- [ ] No card data in state/localStorage; only cart and order summary (`sessionId` in cookie, not localStorage).
 - [ ] URL filter params validated against domain enums; unknowns dropped.
 - [ ] No `dangerouslySetInnerHTML`.
 - [ ] `'use client'`/client state only where genuinely needed.

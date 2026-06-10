@@ -13,7 +13,7 @@
 | US-007 | Añadir un producto al carrito | CU2 | M | Imprescindible |
 | US-008 | Revisar y modificar el carrito | CU3 | M | Imprescindible |
 | US-009 | Introducir datos de envío | CU3 | M | Imprescindible |
-| US-010 | Seleccionar método de pago simulado | CU3 | M | Imprescindible |
+| US-010 | Introducir los datos de pago simulado | CU3 | M | Imprescindible |
 | US-011 | Revisar y confirmar el pedido | CU3 | S | Imprescindible |
 | US-012 | Ver la confirmación del pedido | CU3 | S | Imprescindible |
 | US-013 | Consultar el historial de pedidos | CU3 | S | Importante |
@@ -48,7 +48,7 @@ Los filtros por atributos de running (US-002) son el diferencial central de RunM
 | 5 | US-007 | Añadir un producto al carrito | CU2 | M | Conecta el descubrimiento con la compra; primer paso transaccional |
 | 6 | US-008 | Revisar y modificar el carrito | CU3 | M | Punto de entrada al checkout; el corredor revisa y confirma su selección |
 | 7 | US-009 | Introducir datos de envío | CU3 | M | Paso 1 del checkout; sin dirección no hay pedido |
-| 8 | US-010 | Seleccionar método de pago simulado | CU3 | M | Paso 2 del checkout; completa los datos necesarios para generar el pedido |
+| 8 | US-010 | Introducir los datos de pago simulado | CU3 | M | Paso 2 del checkout; completa los datos necesarios para generar el pedido |
 | 9 | US-011 | Revisar y confirmar el pedido | CU3 | S | Paso 3 del checkout; crea el pedido y vacía el carrito |
 | 10 | US-012 | Ver la confirmación del pedido | CU3 | S | Cierra el ciclo de compra; sin confirmación el corredor no sabe si la compra fue exitosa |
 
@@ -105,7 +105,7 @@ Como corredor, quiero filtrar el catálogo por distancia objetivo, tipo de super
 Funcionalidad diferencial de RunMarket. El panel lateral de filtros expone las cuatro dimensiones propias del running. Los filtros son combinables: dentro de una dimensión se aplica lógica OR (un producto puede cubrir varias distancias), entre dimensiones se aplica AND. Los resultados se actualizan de forma dinámica sin recarga de página.
 
 **Criterios de aceptación:**
-- [ ] Escenario principal: el corredor selecciona uno o más valores en distancia (5K, 10K, media maratón, maratón), superficie (asfalto, trail, pista), nivel (principiante, popular, avanzado) u objetivo (velocidad, resistencia, recuperación, competición); el catálogo se actualiza mostrando únicamente los productos que satisfacen todos los criterios activos
+- [ ] Escenario principal: el corredor selecciona uno o más valores en distancia (5K, 10K, media maratón, maratón, ultra), superficie (asfalto, trail, pista, mixto), nivel (principiante, popular, avanzado) u objetivo (entrenamiento, competición, recuperación, uso diario); el catálogo se actualiza mostrando únicamente los productos que satisfacen todos los criterios activos
 - [ ] Los filtros activos se reflejan visualmente en el panel (checkbox marcado); el contador de resultados se actualiza en tiempo real
 - [ ] La lógica de filtrado es AND entre dimensiones y OR dentro de cada dimensión
 - [ ] Escenario alternativo: el corredor selecciona una combinación de filtros sin resultados; se muestra el mensaje «No se encontraron productos para esta combinación» con la opción de eliminar algún filtro
@@ -296,7 +296,7 @@ Vista de carrito en `/cart`. Muestra el listado de artículos con imagen, nombre
 Como corredor, quiero introducir mi dirección de envío en el primer paso del checkout, para que mi pedido llegue a la dirección correcta sin necesitar crear una cuenta.
 
 **Descripción:**
-Paso 1 del checkout de dos pasos. Recoge los datos necesarios para el envío: nombre completo, email, teléfono (opcional), dirección, ciudad, código postal y país. No se requiere autenticación: el corredor compra de forma completamente anónima. Un indicador de progreso muestra el avance dentro del flujo de checkout.
+Paso 1 del checkout de tres pasos. Recoge los datos necesarios para el envío: nombre completo, email, teléfono (opcional), dirección, ciudad, código postal y país. No se requiere autenticación: el corredor compra de forma completamente anónima. Un indicador de progreso muestra el avance dentro del flujo de checkout.
 
 **Criterios de aceptación:**
 - [ ] Escenario principal: el corredor rellena todos los campos obligatorios y pulsa «Continuar al pago»; el sistema avanza al paso 2 y el indicador de progreso se actualiza
@@ -314,7 +314,7 @@ Paso 1 del checkout de dos pasos. Recoge los datos necesarios para el envío: no
 
 ---
 
-### US-010 — Seleccionar método de pago simulado
+### US-010 — Introducir los datos de pago simulado
 
 **Caso de uso asociado:** CU3 — Proceso de compra: carrito y checkout simulado
 
@@ -322,18 +322,17 @@ Paso 1 del checkout de dos pasos. Recoge los datos necesarios para el envío: no
 Como corredor, quiero introducir los datos de pago en el segundo paso del checkout, para completar formalmente la compra aunque el procesamiento sea simulado.
 
 **Descripción:**
-Paso 2 del checkout. Recoge el método de pago (tarjeta de crédito o transferencia) y los datos del medio seleccionado. En caso de tarjeta: número, titular, fecha de vencimiento y CVV. El pago no se procesa con ninguna pasarela real. El corredor puede volver al paso anterior sin perder los datos de envío. El resumen del pedido permanece visible en el lateral.
+Paso 2 del checkout. Recoge los datos de la tarjeta de crédito: número, titular, fecha de vencimiento y CVV. La tarjeta es el único método de pago del MVP; no hay selector de método. El pago no se procesa con ninguna pasarela real. El corredor puede volver al paso anterior sin perder los datos de envío. El resumen del pedido permanece visible en el lateral.
 
 **Criterios de aceptación:**
-- [ ] Escenario principal: el corredor selecciona un método de pago, rellena los datos y pulsa «Confirmar pedido»; el sistema avanza al paso de revisión y confirmación
+- [ ] Escenario principal: el corredor rellena los datos de la tarjeta y pulsa «Confirmar pedido»; el sistema avanza al paso de revisión y confirmación
 - [ ] El indicador de progreso muestra el paso 2 activo
 - [ ] El botón «Volver» regresa al paso 1 con los datos de envío ya introducidos intactos
 - [ ] El resumen del pedido (productos, subtotal y total) permanece visible en el lateral
-- [ ] Escenario alternativo: el corredor selecciona «Tarjeta» pero deja campos vacíos y pulsa «Confirmar»; aparece un aviso de validación; no se avanza ni se crea ningún pedido
+- [ ] Escenario alternativo: el corredor deja campos de la tarjeta vacíos y pulsa «Confirmar»; aparece un aviso de validación; no se avanza ni se crea ningún pedido
 - [ ] Error/validación: el sistema acepta cualquier número de tarjeta de 16 dígitos con fecha MM/AA válida y CVV de 3 dígitos; no se realiza ninguna verificación con pasarelas externas
 
 **Datos o entidades implicadas:**
-- `Order`: paymentMethod
 - Datos de tarjeta: solo a nivel de interfaz (no se almacenan en el MVP)
 
 **Estimación:** M
@@ -350,16 +349,16 @@ Paso 2 del checkout. Recoge el método de pago (tarjeta de crédito o transferen
 Como corredor, quiero revisar el resumen completo de mi pedido antes de confirmarlo, para verificar que los productos, la dirección de envío y el total son correctos.
 
 **Descripción:**
-Paso 3 (revisión final) del checkout. Muestra el desglose completo del pedido: artículos con variante y precio, dirección de envío introducida, método de pago seleccionado y total definitivo. El corredor puede volver a pasos anteriores para hacer correcciones o confirmar el pedido. Al confirmar, el sistema genera el pedido y vacía el carrito.
+Paso 3 (revisión final) del checkout. Muestra el desglose completo del pedido: artículos con variante y precio, dirección de envío introducida y total definitivo. El corredor puede volver a pasos anteriores para hacer correcciones o confirmar el pedido. Al confirmar, el sistema genera el pedido y vacía el carrito.
 
 **Criterios de aceptación:**
-- [ ] Escenario principal: la pantalla de revisión muestra todos los artículos del carrito con sus variantes, la dirección de envío confirmada, el método de pago y el total; el corredor pulsa «Confirmar pedido»; el sistema crea el pedido con estado `processing` y vacía el carrito
+- [ ] Escenario principal: la pantalla de revisión muestra todos los artículos del carrito con sus variantes, la dirección de envío confirmada y el total; el corredor pulsa «Confirmar pedido»; el sistema crea el pedido con estado `processing` y vacía el carrito
 - [ ] El corredor puede navegar de vuelta al paso 2 (pago) o al paso 1 (envío) para corregir datos sin perder la información ya introducida
 - [ ] Escenario alternativo: el corredor decide modificar la dirección; pulsa «Volver» hasta el paso 1, la modifica y avanza de nuevo; el resumen refleja la dirección actualizada
 - [ ] Error/validación: si se produce un error al generar el pedido, se muestra un mensaje de error con opción de reintentar; el carrito no se vacía hasta que el pedido se crea con éxito
 
 **Datos o entidades implicadas:**
-- `Order`: id (ORD-timestamp), status: processing, total, items[], shippingAddress, paymentMethod
+- `Order`: id (ORD-timestamp), status: processing, total, items[], shippingAddress
 - `CartItem`: product, quantity, size, color
 
 **Estimación:** S
