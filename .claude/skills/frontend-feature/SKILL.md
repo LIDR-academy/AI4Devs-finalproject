@@ -12,6 +12,9 @@ Library (and Playwright for journeys).
 
 Always combine with `.claude/skills/tdd-implementation/SKILL.md` (TDD is obligatory).
 
+**Read first:** `docs/ARCHITECTURE.md` (components, Server/Client split) and
+`docs/CODING-STANDARDS.md` (component/file naming, state, Tailwind, api-client).
+
 ---
 
 ## Flow
@@ -41,6 +44,20 @@ Always combine with `.claude/skills/tdd-implementation/SKILL.md` (TDD is obligat
       values silently — never forward them to the API.
 - [ ] **`dangerouslySetInnerHTML` is forbidden** — render dynamic text via JSX, which
       escapes automatically.
+
+---
+
+## Naming & conventions (inline — from CODING-STANDARDS.md)
+
+- [ ] Components **PascalCase** (`ProductCard.tsx`); hooks `useX` **camelCase**
+      (`useCart.ts`); directories **kebab-case** (`catalog/`, `product/`).
+- [ ] **Named exports**; explicit `interface Props` directly above the component; no
+      `React.FC`. `default export` only for the page components Next.js requires.
+- [ ] All backend calls go through `lib/api-client.ts` — **never `fetch()` directly**
+      in a component; the client throws typed errors on non-2xx.
+- [ ] Tailwind utility classes only; conditional variants via `cva` (no complex ternary
+      class strings); no inline `style` except non-build-time dynamic values.
+- [ ] `CartContext` is the only global state; form state stays local (`useState`).
 
 ---
 

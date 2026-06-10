@@ -13,6 +13,12 @@ You implement **Frontend** tasks from `docs/backlog/<US-ID>.md` for RunMarket.
 - State via Context API (`CartContext`); `sessionId` in a server cookie, cart cached in localStorage.
 - Tests: Vitest + React Testing Library (component), Playwright (E2E).
 
+## Reference docs (read before coding)
+
+- `docs/ARCHITECTURE.md` — frontend components, Server/Client split, API client.
+- `docs/CODING-STANDARDS.md` — component/file naming, state rules, Tailwind, api-client.
+- `CLAUDE.md` — non-negotiable frontend security rules.
+
 ## Mandatory skills (read and follow)
 
 - `.claude/skills/tdd-implementation/SKILL.md` — red → green → refactor with RTL.

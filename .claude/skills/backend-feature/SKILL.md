@@ -10,6 +10,9 @@ over PostgreSQL 16, validated with Zod, tested with Jest + Supertest.
 
 Always combine with `.claude/skills/tdd-implementation/SKILL.md` (TDD is obligatory).
 
+**Read first:** `docs/ARCHITECTURE.md` (layers, domain services, contracts) and
+`docs/CODING-STANDARDS.md` (file/layer rules, naming, Zod, domain errors).
+
 ---
 
 ## Flow
@@ -41,6 +44,21 @@ Controller → Service → Repository → Prisma → PostgreSQL
 
 Breaking this hierarchy makes unit tests impossible — it is a blocker, not a style
 preference.
+
+---
+
+## Naming & conventions (inline — from CODING-STANDARDS.md)
+
+- [ ] **Endpoint ↔ method naming** (§2.7): `GET /api/products` → `list()`/`getProducts()`;
+      `/:id` → `getById()`/`getProductById()`; `POST /api/cart` → `addItem()`;
+      `PUT|DELETE /api/cart/:productId` → `updateItem()`/`removeItem()`;
+      `POST /api/checkout` → `process()`/`processCheckout()`.
+- [ ] **Repository interface** co-located with its impl and `I`-prefixed
+      (`export interface IProductRepository` + `export class ProductRepository`).
+- [ ] **Zod schemas** in `schemas/` (never inline); derive the type with `z.infer`.
+- [ ] **Domain errors** (`NotFoundError`, `StockError`, `ValidationError`) in
+      `types/errors.ts`, thrown by the service, mapped to HTTP by the error handler.
+- [ ] **Named exports**; no `any`; repository returns domain types only.
 
 ---
 

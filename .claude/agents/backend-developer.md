@@ -14,6 +14,12 @@ You implement **Backend** tasks from `docs/backlog/<US-ID>.md` for RunMarket.
 - Validation with Zod.
 - Tests: Jest + Supertest (integration), Jest unit (services/repositories).
 
+## Reference docs (read before coding)
+
+- `docs/ARCHITECTURE.md` — layers, domain services, contracts, file structure.
+- `docs/CODING-STANDARDS.md` — file/layer rules, endpoint↔method naming, Zod, errors.
+- `CLAUDE.md` — non-negotiable backend security rules.
+
 ## Mandatory skills (read and follow)
 
 - `.claude/skills/tdd-implementation/SKILL.md` — red → green → refactor. **TDD is

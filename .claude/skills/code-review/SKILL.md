@@ -33,6 +33,8 @@ clean architecture compliance + backend/frontend checklists + the security rules
 - [ ] Errors mapped to generic `{ error }`; Prisma details to logger only.
 - [ ] Stock re-validated in checkout transaction.
 - [ ] Rate limiting on mutation endpoints; no PII logged.
+- [ ] Naming per CODING-STANDARDS §2.7 (endpoint↔method); repo interface `I`-prefixed
+      and co-located; Zod schemas in `schemas/`; domain errors in `types/errors.ts`.
 - [ ] Supertest + Jest tests present, named, and green; service unit-tested with
       mocked repository.
 
@@ -45,6 +47,8 @@ clean architecture compliance + backend/frontend checklists + the security rules
 - [ ] URL filter params validated against domain enums; unknowns dropped.
 - [ ] No `dangerouslySetInnerHTML`.
 - [ ] `'use client'`/client state only where genuinely needed.
+- [ ] Naming per CODING-STANDARDS: PascalCase components, `useX` hooks, kebab-case
+      dirs; `interface Props` (no `React.FC`); named exports; calls via `lib/api-client.ts`.
 - [ ] RTL tests present, named, and green; UX states tested where applicable.
 
 ---
