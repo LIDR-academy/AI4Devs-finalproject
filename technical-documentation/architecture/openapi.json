@@ -1,0 +1,1535 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Aura Planning API",
+    "description": "REST API for Aura Planning - Digital Wedding Management SaaS Platform.\n\n## Authentication\n- Magic links: `POST /api/auth/magic-link` → sends email with login link\n- Verification: `GET /api/auth/verify?token={token}` → returns JWT (24h expiry)\n\n## Rate Limits\n- Magic link: 3 per email/hour\n- RSVP: 5 per token/hour\n- Live messages: 20 per accomplice/hour\n- Global: 100 per IP/minute",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Aura Planning Support"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.aura.planning",
+      "description": "Production"
+    },
+    {
+      "url": "http://localhost:5001",
+      "description": "Local development"
+    }
+  ],
+  "paths": {
+    "/api/auth/magic-link": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Request magic link for login",
+        "description": "Sends email with magic link (15 min expiry). Rate limited to 3 per email/hour.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MagicLinkRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Magic link sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MagicLinkResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/verify": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Verify magic token and return JWT",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Valid token - returns session JWT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events": {
+      "post": {
+        "tags": ["Events"],
+        "summary": "Create new event",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEventRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Event created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events/{slug}": {
+      "get": {
+        "tags": ["Events"],
+        "summary": "Get event details with statistics",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Event details with RSVP stats",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventDetailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Event not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events/{slug}/guests/import": {
+      "post": {
+        "tags": ["Events"],
+        "summary": "Import guests from CSV",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "CSV file with guests"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Import completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Guest limit exceeded for draft events",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events/{slug}/publish": {
+      "post": {
+        "tags": ["Events"],
+        "summary": "Initiate event publishing (creates Stripe PaymentIntent)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "PaymentIntent created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Event not valid for publishing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events/{slug}/message-templates": {
+      "get": {
+        "tags": ["Events"],
+        "summary": "List message templates for event",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of message templates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageTemplatesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events/{slug}/message-templates/{id}": {
+      "put": {
+        "tags": ["Events"],
+        "summary": "Update message template",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMessageTemplateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Template updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageTemplateResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/events/{slug}/live-messages": {
+      "get": {
+        "tags": ["Events"],
+        "summary": "Get live message history for event",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Live message history",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveMessagesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rsvp/{token}": {
+      "get": {
+        "tags": ["RSVP"],
+        "summary": "Get event/guest info for RSVP form",
+        "description": "Public endpoint - no authentication required. Token is the plaintext invitation token.",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Event info and existing RSVP if any",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RsvpInfoResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Invalid invitation token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["RSVP"],
+        "summary": "Submit or update RSVP response",
+        "description": "Public endpoint - no authentication required. Rate limited to 5 submissions per token/hour. Cannot submit if less than 7 days before event.",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitRsvpRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "RSVP saved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RsvpConfirmationResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "RSVP deadline has passed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/accomplices/{eventSlug}/grant": {
+      "post": {
+        "tags": ["Accomplices"],
+        "summary": "Grant accomplice access",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "eventSlug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GrantAccessRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Accomplice created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccompliceResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Email already exists as accomplice",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/accomplices/{eventSlug}": {
+      "get": {
+        "tags": ["Accomplices"],
+        "summary": "List event accomplices",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "eventSlug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of accomplices",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccomplicesListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/accomplices/{eventSlug}/revoke": {
+      "post": {
+        "tags": ["Accomplices"],
+        "summary": "Revoke accomplice access",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "eventSlug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["accompliceId"],
+                "properties": {
+                  "accompliceId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Access revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/accomplices/{eventSlug}/resend": {
+      "post": {
+        "tags": ["Accomplices"],
+        "summary": "Resend magic link to accomplice",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "eventSlug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["accompliceId"],
+                "properties": {
+                  "accompliceId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Magic link resent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/accomplices/verify": {
+      "get": {
+        "tags": ["Accomplices"],
+        "summary": "Verify accomplice token and return JWT",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Valid token - returns accomplice JWT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccompliceVerifyResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token invalid, expired, or revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/live/{accompliceToken}/send": {
+      "post": {
+        "tags": ["Live Messages"],
+        "summary": "Send live message via WhatsApp",
+        "description": "Accomplice must have \"send_messages\" permission. Rate limited to 20 messages per accomplice per hour.",
+        "parameters": [
+          {
+            "name": "accompliceToken",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendLiveMessageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Message queued for delivery",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveMessageSentResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Missing permissions or invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded (20 msg/hour)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/payments/webhook": {
+      "post": {
+        "tags": ["Payments"],
+        "summary": "Stripe payment webhook",
+        "description": "Handles payment_intent.succeeded and payment_intent.failed events",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook processed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "received": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid signature",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/live": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Kubernetes liveness probe",
+        "description": "Returns 200 if API is running",
+        "responses": {
+          "200": {
+            "description": "API healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "healthy"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Kubernetes readiness probe with dependency status",
+        "description": "Checks PostgreSQL, Dragonfly, and MinIO connectivity",
+        "responses": {
+          "200": {
+            "description": "API ready with healthy dependencies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthReadyResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Dependencies unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthReadyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "MagicLinkRequest": {
+        "type": "object",
+        "required": ["email"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 320,
+            "example": "user@example.com"
+          }
+        }
+      },
+      "MagicLinkResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Magic link sent. Check your email."
+          },
+          "isNewUser": {
+            "type": "boolean"
+          }
+        }
+      },
+      "VerifyResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Session JWT"
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "email": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "CreateEventRequest": {
+        "type": "object",
+        "required": ["name", "coupleNames", "eventDate", "venueName", "venueAddress"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "example": "Maria and Miguel Wedding"
+          },
+          "templateId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "coupleNames": {
+            "type": "string",
+            "maxLength": 200,
+            "example": "Maria & Miguel"
+          },
+          "eventDate": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-09-15T17:00:00Z"
+          },
+          "venueName": {
+            "type": "string",
+            "maxLength": 200,
+            "example": "Hacienda El Roble"
+          },
+          "venueAddress": {
+            "type": "string",
+            "maxLength": 500,
+            "example": "Camino Real 123, Madrid"
+          },
+          "primaryColor": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$",
+            "example": "#7C9A72"
+          },
+          "secondaryColor": {
+            "type": "string",
+            "pattern": "^#[0-9A-Fa-f]{6}$",
+            "example": "#C9A96E"
+          }
+        }
+      },
+      "EventResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["draft", "published", "completed", "archived"]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "EventDetailResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "coupleNames": {
+            "type": "string"
+          },
+          "eventDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "venueName": {
+            "type": "string"
+          },
+          "venueAddress": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "stats": {
+            "type": "object",
+            "properties": {
+              "totalGuests": {
+                "type": "integer"
+              },
+              "confirmed": {
+                "type": "integer"
+              },
+              "declined": {
+                "type": "integer"
+              },
+              "pending": {
+                "type": "integer"
+              },
+              "dietaryRestrictions": {
+                "type": "integer"
+              },
+              "needsTransport": {
+                "type": "integer"
+              },
+              "plusOnes": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "PublishRequest": {
+        "type": "object",
+        "required": ["tier"],
+        "properties": {
+          "tier": {
+            "type": "string",
+            "enum": ["standard", "premium"],
+            "default": "standard",
+            "description": "Pricing tier: standard (EUR 19) or premium (EUR 29)"
+          }
+        }
+      },
+      "PublishResponse": {
+        "type": "object",
+        "properties": {
+          "clientSecret": {
+            "type": "string",
+            "description": "Stripe PaymentIntent client secret"
+          },
+          "paymentIntentId": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "format": "decimal"
+          },
+          "currency": {
+            "type": "string",
+            "example": "EUR"
+          }
+        }
+      },
+      "ImportResponse": {
+        "type": "object",
+        "properties": {
+          "imported": {
+            "type": "integer"
+          },
+          "duplicates": {
+            "type": "integer"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "MessageTemplatesResponse": {
+        "type": "object",
+        "properties": {
+          "templates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MessageTemplateResponse"
+            }
+          }
+        }
+      },
+      "MessageTemplateResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string",
+            "example": "Bride Leaving"
+          },
+          "defaultMessage": {
+            "type": "string",
+            "example": "The bride is leaving the hotel!"
+          },
+          "icon": {
+            "type": "string",
+            "example": "bride"
+          },
+          "requiresSwipe": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpdateMessageTemplateRequest": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "defaultMessage": {
+            "type": "string",
+            "maxLength": 500
+          }
+        }
+      },
+      "LiveMessagesResponse": {
+        "type": "object",
+        "properties": {
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "templateLabel": {
+                  "type": "string"
+                },
+                "customMessage": {
+                  "type": "string"
+                },
+                "sentVia": {
+                  "type": "string",
+                  "enum": ["email", "whatsapp", "both"]
+                },
+                "sentAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "deliveryStatus": {
+                  "type": "string",
+                  "enum": ["pending", "queued", "sent", "delivered", "failed"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "RsvpInfoResponse": {
+        "type": "object",
+        "properties": {
+          "guestName": {
+            "type": "string"
+          },
+          "eventName": {
+            "type": "string"
+          },
+          "coupleNames": {
+            "type": "string"
+          },
+          "eventDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "venueName": {
+            "type": "string"
+          },
+          "venueAddress": {
+            "type": "string"
+          },
+          "deadlinePassed": {
+            "type": "boolean"
+          },
+          "existingRsvp": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "attendance": {
+                "type": "string",
+                "enum": ["yes", "no", "maybe"]
+              },
+              "dietaryRestrictions": {
+                "type": "string",
+                "nullable": true
+              },
+              "needsTransport": {
+                "type": "boolean"
+              },
+              "plusOne": {
+                "type": "boolean"
+              },
+              "message": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        }
+      },
+      "SubmitRsvpRequest": {
+        "type": "object",
+        "required": ["attendance"],
+        "properties": {
+          "attendance": {
+            "type": "string",
+            "enum": ["yes", "no", "maybe"]
+          },
+          "dietaryRestrictions": {
+            "type": "string",
+            "maxLength": 500,
+            "nullable": true
+          },
+          "needsTransport": {
+            "type": "boolean",
+            "default": false
+          },
+          "plusOne": {
+            "type": "boolean",
+            "default": false
+          },
+          "message": {
+            "type": "string",
+            "maxLength": 1000,
+            "nullable": true
+          }
+        }
+      },
+      "RsvpConfirmationResponse": {
+        "type": "object",
+        "properties": {
+          "confirmationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "guestName": {
+            "type": "string"
+          },
+          "eventName": {
+            "type": "string"
+          },
+          "attendance": {
+            "type": "string",
+            "enum": ["yes", "no", "maybe"]
+          },
+          "message": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "GrantAccessRequest": {
+        "type": "object",
+        "required": ["email", "permissions"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 320
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["send_messages", "view_rsvps"]
+            },
+            "minItems": 1
+          }
+        }
+      },
+      "AccompliceResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "grantedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AccomplicesListResponse": {
+        "type": "object",
+        "properties": {
+          "accomplices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "email": {
+                  "type": "string"
+                },
+                "permissions": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "grantedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "lastAccessedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
+                "isRevoked": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      },
+      "AccompliceVerifyResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Session JWT for accomplice"
+          },
+          "accomplice": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "email": {
+                "type": "string"
+              },
+              "eventId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "permissions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "SendLiveMessageRequest": {
+        "type": "object",
+        "required": ["messageTemplateId"],
+        "properties": {
+          "messageTemplateId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "customMessage": {
+            "type": "string",
+            "maxLength": 500,
+            "nullable": true
+          }
+        }
+      },
+      "LiveMessageSentResponse": {
+        "type": "object",
+        "properties": {
+          "messageId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "example": "pending"
+          },
+          "sentAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "HealthReadyResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["healthy", "unhealthy"]
+          },
+          "dependencies": {
+            "type": "object",
+            "properties": {
+              "postgresql": {
+                "type": "string",
+                "enum": ["healthy", "unhealthy"]
+              },
+              "dragonfly": {
+                "type": "string",
+                "enum": ["healthy", "unhealthy"]
+              },
+              "minio": {
+                "type": "string",
+                "enum": ["healthy", "unhealthy"]
+              }
+            }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message"
+          },
+          "code": {
+            "type": "string",
+            "description": "Internal error code",
+            "nullable": true
+          }
+        }
+      },
+      "ValidationErrorResponse": {
+        "type": "object",
+        "properties": {
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "property": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -335,18 +335,39 @@ k8s/                           # Manifiestos de Kubernetes (Kustomize)
 
 ### **3.1. Diagrama del modelo de datos:**
 
-> Recomendamos usar mermaid para el modelo de datos, y utilizar todos los parámetros que permite la sintaxis para dar el máximo detalle, por ejemplo las claves primarias y foráneas.
+[Diagrama del modelo de datos](technical-documentation/data-model/README.md)
 
 
 ### **3.2. Descripción de entidades principales:**
 
-> Recuerda incluir el máximo detalle de cada entidad, como el nombre y tipo de cada atributo, descripción breve si procede, claves primarias y foráneas, relaciones y tipo de relación, restricciones (unique, not null…), etc.
+- **Users**: Cuentas de hosts — los usuarios principales que crean y gestionan eventos.
+- **Events**: Detalles de boda/evento — la entidad central a la que se relacionan todos los demás datos.
+- **Guests**: Asistentes al evento — importados vía CSV o añadidos manualmente por el host.
 
 ---
 
 ## 4. Especificación de la API
 
-> Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad
+La especificación completa de la API se encuentra en [openapi.json](technical-documentation/architecture/openapi.json).
+
+### Lista de endpoints:
+- `POST /api/auth/magic-link`
+- `GET /api/auth/verify`
+- `POST /api/events`
+- `GET /api/events/{slug}`
+- `POST /api/events/{slug}/guests/import`
+- `POST /api/events/{slug}/publish`
+- `GET /api/events/{slug}/message-templates`
+- `PUT /api/events/{slug}/message-templates/{id}`
+- `GET /api/events/{slug}/live-messages`
+- `GET /api/rsvp/{token}`
+- `POST /api/rsvp/{token}`
+- `POST /api/accomplices/{eventSlug}/grant`
+- `GET /api/accomplices/{eventSlug}`
+- `POST /api/accomplices/{eventSlug}/revoke`
+- `POST /api/accomplices/{eventSlug}/resend`
+- `GET /api/accomplices/verify`
+- `POST /api/live/{accompliceToken}/send`
 
 ---
 
@@ -364,13 +385,7 @@ k8s/                           # Manifiestos de Kubernetes (Kustomize)
 
 ## 6. Tickets de Trabajo
 
-> Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
-
-**Ticket 1**
-
-**Ticket 2**
-
-**Ticket 3**
+La lista completa de ticket generados están en la carpeta [tickets](tickets). Estos tickets se creatan en el proyecto de github al inicio del mismo. I se borrarán del repositorio. Esto se ha hecho así para simplificar el trabajo con la IA mientras se definia el trabajo.
 
 ---
 
