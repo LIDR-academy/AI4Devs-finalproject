@@ -1,1 +1,1 @@
-C:/repos/AI4Devs-finalproject/AI/agents/doc-writer.md
+../../AI/agents/doc-writer.md

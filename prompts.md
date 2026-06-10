@@ -124,7 +124,7 @@ UX	User flows for 4 personas, RSVP form optimization, accomplice panel simplicit
 UI	Design system (tokens, components), template editor builder, responsive breakpoints, accessibility (WCAG 2.1 AA), onboarding wizard screens	⚠️ Template customization depth
 Frontend (Angular 22)	Host dashboard SPA, accomplice panel SPA, static site generator for guest microsites, typed forms, signals state, auth/registration forms	⚠️ Static site build pipeline
 Backend (.NET 10)	Auth (magic links + JWT), Registration endpoint, profile management, Events/Guests/Invitations/RSVPs CRUD, CSV import, payment webhook, background jobs (30-day deletion)	⚠️ WhatsApp template management
-Database (SQLite/EF Core)	Schema for all entities, Users table with profile fields, soft deletes, indexes for query patterns, migrations	⚠️ Encryption at rest approach
+Database (PostgreSQL/EF Core)	Schema for all entities, Users table with profile fields, soft deletes, indexes for query patterns, migrations	⚠️ Encryption at rest approach
 Integrations	WhatsApp Business API (templates, webhooks, rate limits), AWS SES (templates, bounce handling), Stripe Connect (publish payment, future gift registry), Google Maps (embed, geocoding, directions)	⚠️ WhatsApp API approval timeline
 Infrastructure/DevOps	CDN for static sites, CI/CD, environments, observability (logs/metrics/traces), secrets management	⚠️ Hosting provider decision
 Security/Compliance	AuthZ policies, rate limiting, PII handling, 30-day auto-delete job, GDPR rights endpoints, consent tracking	⚠️ SQLCipher vs app-level encryption
@@ -624,45 +624,6 @@ Create the tickets/ directory at the project root
 Write one .md file per ticket, named W{week}-PSRP-{number}-{short-description}.md, flat inside tickets/
 At the end, produce a summary table in the console output with columns: PSRP#, Title, Type, Priority, Effort, Week, Dependencies, File Name
 Add a risk notes section flagging tickets with external dependencies (WhatsApp API approval, Stripe webhook setup, Google Maps API key, Gmail SMTP app password) that need early action
-
-**Prompt 3:**
-
----
-
-### 6. Tickets de Trabajo
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
----
-
-### 7. Pull Requests
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
----
-
-### 4. Especificación de la API
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
----
-
-### 5. Historias de Usuario
-
-**Prompt 1:**
-
-**Prompt 2:**
 
 **Prompt 3:**
 

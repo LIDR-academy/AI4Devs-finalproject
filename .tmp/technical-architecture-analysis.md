@@ -27,7 +27,7 @@
 | **Host Dashboard** | Angular 22 (Standalone components) | Enterprise-grade SPA framework, signals for reactive state, strict typing |
 | **Guest Microsites** | Static HTML/JS/CSS (JAMstack) | Zero server cost per visit, CDN-cached, ultra-fast mobile load |
 | **Accomplice Panel** | Angular 22 (embedded in dashboard) | Reuses host SPA infrastructure, token-based access |
-| **Database** | SQLite + EF Core | Zero-ops, file-based, sufficient for MVP scale (<10K events), easy backups |
+| **Database** | PostgreSQL + EF Core | Robust relational database, supports multi-pod concurrency, JSONB support |
 | **Authentication** | Magic links + JWT | Passwordless UX, reduced attack surface, email-verified identity |
 | **Email** | AWS SES | Cost-effective ($0.10/1K emails), high deliverability, template support |
 | **WhatsApp** | Meta Cloud API | Official channel, template messages, delivery receipts |
@@ -65,7 +65,7 @@ graph TB
         end
 
         subgraph Data_Tier["Data Layer"]
-            SQLite[("SQLite<br/>Database")]
+            PostgreSQL[("PostgreSQL<br/>Database")]
             Queue["BackgroundService<br/>Message Queue"]
         end
     end
@@ -89,7 +89,7 @@ graph TB
     API --> EmailSvc
     API --> WhatsAppSvc
     API --> PaymentSvc
-    API --> SQLite
+    API --> PostgreSQL
     API --> Queue
 
     SSG --> CloudFront
@@ -134,7 +134,7 @@ graph LR
     end
 
     subgraph Storage
-        Q[(SQLite DB)]
+        Q[(PostgreSQL DB)]
         R[(Static Sites FS)]
     end
 
@@ -1505,7 +1505,7 @@ Accomplice JWT:
 | Payment data | Not stored (Stripe only) | N/A | N/A |
 
 #### Encryption Approach
-- **Option A:** SQLCipher (SQLite encryption at rest)
+- **Option A:** SQLCipher (PostgreSQL encryption at rest)
 - **Option B:** Application-level encryption (EF Core value converters)
 - **Recommendation:** Option B for MVP (simpler, no native dependency)
 
@@ -1667,9 +1667,9 @@ graph LR
 
 | Environment | Purpose | Database | External Services |
 |-------------|---------|----------|-------------------|
-| **Local** | Development | SQLite file | Mock SES, Mock Stripe, Mock WhatsApp |
-| **Staging** | QA / UAT | SQLite file (separate) | Sandbox SES, Stripe test mode, WhatsApp sandbox |
-| **Production** | Live users | SQLite file (backed up) | Production SES, Stripe live, WhatsApp production |
+| **Local** | Development | PostgreSQL file | Mock SES, Mock Stripe, Mock WhatsApp |
+| **Staging** | QA / UAT | PostgreSQL file (separate) | Sandbox SES, Stripe test mode, WhatsApp sandbox |
+| **Production** | Live users | PostgreSQL file (backed up) | Production SES, Stripe live, WhatsApp production |
 
 #### Environment Variables
 ```
@@ -1723,7 +1723,7 @@ FeatureFlags__PhotoUpload=false
 
 | Component | Frequency | Retention | Method |
 |-----------|-----------|-----------|--------|
-| SQLite database | Daily at 03:00 UTC | 30 days | File copy to S3/Blob |
+| PostgreSQL database | Daily at 03:00 UTC | 30 days | File copy to S3/Blob |
 | Static sites | On publish | Until event deletion | CDN origin backup |
 | Configuration | On change | Unlimited | Git version control |
 
@@ -1741,9 +1741,9 @@ FeatureFlags__PhotoUpload=false
 ### 7.2 Database
 | # | Question | Options | Recommendation | Impact |
 |---|----------|---------|----------------|--------|
-| Q4 | SQLite vs PostgreSQL for production? | SQLite: simple, zero-ops. PostgreSQL: scalable, concurrent | **SQLite for MVP** (<10K events), plan PostgreSQL migration at scale | High — affects architecture |
+| Q4 | PostgreSQL vs PostgreSQL for production? | PostgreSQL: simple, zero-ops. PostgreSQL: scalable, concurrent | **PostgreSQL for MVP** (<10K events), plan PostgreSQL migration at scale | High — affects architecture |
 | Q5 | SQLCipher vs application-level encryption? | SQLCipher: transparent. App-level: more control | **Application-level** (EF Core value converters) for MVP | Medium — affects PII security |
-| Q6 | Database size limit for SQLite? | 140TB theoretical, practical ~10GB | Monitor at 500MB, plan migration | Low — long-term concern |
+| Q6 | Database size limit for PostgreSQL? | 140TB theoretical, practical ~10GB | Monitor at 500MB, plan migration | Low — long-term concern |
 
 ### 7.3 Static Site Generation
 | # | Question | Options | Recommendation | Impact |

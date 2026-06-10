@@ -1,1 +1,1 @@
-C:/repos/AI4Devs-finalproject/AI/skills/generate-aura-docs.md
+../../AI/skills/generate-aura-docs.md

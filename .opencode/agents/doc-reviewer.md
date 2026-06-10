@@ -1,1 +1,1 @@
-C:/repos/AI4Devs-finalproject/AI/agents/doc-reviewer.md
+../../AI/agents/doc-reviewer.md

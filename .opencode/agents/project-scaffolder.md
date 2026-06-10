@@ -1,1 +1,1 @@
-C:/repos/AI4Devs-finalproject/AI/agents/project-scaffolder.md
+../../AI/agents/project-scaffolder.md

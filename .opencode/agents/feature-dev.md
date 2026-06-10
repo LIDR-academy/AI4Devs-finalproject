@@ -1,1 +1,1 @@
-C:/repos/AI4Devs-finalproject/AI/agents/feature-dev.md
+../../AI/agents/feature-dev.md

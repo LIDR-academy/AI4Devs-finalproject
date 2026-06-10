@@ -277,7 +277,6 @@ Aura Planning combina dos patrones arquitectónicos:
 |------------|---------|------------|
 | **Complejidad operativa de K8s** | Mayor curva de aprendizaje que PaaS | Rancher Desktop para local; Kustomize simplifica despliegue |
 | **Gmail SMTP limitado** | 500 emails/día, sin bounce webhooks | Adecuado para MVP; IEmailService permite swap a Mailgun/Brevo |
-| **PostgreSQL vs SQLite** | Mayor overhead de infraestructura | Necesario para multi-pod; Helm chart simplifica instalación |
 | **Sin HA multi-región** | Single cluster para MVP | K8s facilita migración a multi-cluster futuro |
 | **Dragonfly madurez** | Proyecto relativamente nuevo vs Redis | API-compatible con Redis; mismo cliente StackExchange.Redis |
 

@@ -1,1 +1,1 @@
-C:/repos/AI4Devs-finalproject/AI/agents/po-assistant.md
+../../AI/agents/po-assistant.md

@@ -1,1 +1,1 @@
-C:/repos/AI4Devs-finalproject/AI/agents/tech-design.md
+../../AI/agents/tech-design.md
