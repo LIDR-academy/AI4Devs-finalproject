@@ -34,7 +34,11 @@ Analyze a property listing URL. Auto-attaches to the active PurchaseProcess (cre
   "id": "uuid",
   "url": "https://www.idealista.com/inmueble/12345678/",
   "numericScore": 42,
-  "redFlags": ["imprecise_location", "no_energy_certificate", "inflated_square_meters"],
+  "redFlags": [
+    { "flag": "imprecise_location", "reasoning": "El anuncio solo menciona 'zona Centro' sin dirección específica." },
+    { "flag": "no_energy_certificate", "reasoning": "No aparece CEE en los datos scrapeados." },
+    { "flag": "inflated_square_meters", "reasoning": "Declara 85m² pero catastral muestra 78m² — diferencia de 7m² (8%)." }
+  ],
   "locationConfidence": 0.78,
   "miraTuZonaLink": "https://miratuzona.com/zone/madrid-centro",
   "cadastralRef": "9876543VK4797N",
@@ -130,7 +134,9 @@ Get a single analyzed listing. El campo `diff` está presente solo si hay un `pr
   "id": "uuid",
   "url": "...",
   "numericScore": 38,
-  "redFlags": ["no_energy_certificate"],
+  "redFlags": [
+    { "flag": "no_energy_certificate", "reasoning": "..." }
+  ],
   "locationConfidence": 0.82,
   "miraTuZonaLink": "...",
   "cadastralRef": "...",
@@ -143,12 +149,64 @@ Get a single analyzed listing. El campo `diff` está presente solo si hay un `pr
     "price": { "from": 200000, "to": 190000, "delta": -10000 },
     "claimedM2": { "from": 85, "to": 85, "delta": 0 },
     "constructionYear": { "from": 1972, "to": 1972, "delta": 0 },
-    "redFlagsRemoved": ["imprecise_location", "inflated_square_meters"],
+    "redFlagsRemoved": [
+      { "flag": "imprecise_location", "reasoning": "..." },
+      { "flag": "inflated_square_meters", "reasoning": "..." }
+    ],
     "redFlagsAdded": []
   },
   "createdAt": "..."
 }
 ```
+
+> **Nota (FR-025)**: cada red flag en `redFlags`, `redFlagsRemoved` y `redFlagsAdded` es un objeto `{ flag, reasoning }` (no string suelto). `reasoning` es la frase del anuncio que disparó el flag + la inferencia del LLM. Mostrado al usuario en la UI como AI Reasoning Transparency.
+
+---
+
+### GET /api/listings/:id/negotiation-points
+
+Genera 5-8 preguntas concretas que el usuario puede hacer al inmobiliario. Basado en las red flags detectadas en el AnalyzedListing y datos del listing. Generación template-based (NO LLM, ver FR-026).
+
+**Response (200):**
+```json
+{
+  "listingId": "uuid",
+  "points": [
+    {
+      "text": "El anuncio usa 'acogedor' para el salón — ¿cuáles son los metros útiles reales de la sala de estar?",
+      "triggeredBy": "euphemistic_language",
+      "reasoning": "El anuncio describe el salón como 'acogedor' pero el LLM detectó un salón de 11m² — probable falta de espacio real",
+      "priority": "high"
+    },
+    {
+      "text": "Los metros catastrales son 78m² pero declaran 85m² — ¿la diferencia es de zonas comunes o del cálculo de la vivienda?",
+      "triggeredBy": "inflated_square_meters",
+      "reasoning": "Catastro muestra 78m² para esta referencia, 7m² (8%) menos de los declarados",
+      "priority": "high"
+    },
+    {
+      "text": "El certificado energético no aparece mencionado — ¿lo tienen disponible? Si es clase E o F, la hipoteca podría no ser favorable.",
+      "triggeredBy": "no_energy_certificate",
+      "reasoning": "No se encontró CEE en el HTML del anuncio",
+      "priority": "medium"
+    },
+    {
+      "text": "¿Han bajado el precio en los últimos 6 meses? Si sí, ¿cuál fue el motivo?",
+      "triggeredBy": null,
+      "reasoning": "Pregunta preventiva general — útil en cualquier visita",
+      "priority": "low"
+    },
+    {
+      "text": "¿Qué gastos de comunidad mensuales tiene la vivienda?",
+      "triggeredBy": null,
+      "reasoning": "Pregunta preventiva general — gastos de comunidad impactan directamente la cuota de hipoteca efectiva",
+      "priority": "low"
+    }
+  ]
+}
+```
+
+> Puntos con `triggeredBy: null` son **preventivos generales** que se añaden cuando hay menos de 5 puntos específicos. Cada `reasoning` referencia explícitamente la red flag o el contexto general que motivó la pregunta.
 
 ---
 

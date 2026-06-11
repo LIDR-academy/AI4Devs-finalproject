@@ -92,7 +92,32 @@ Si la sesión no tiene ningún `PurchaseProcess` activo, el dashboard muestra un
 
 ---
 
-### Historia 4 - Cronograma Interactivo: Saber Qué Viene Después (P3)
+### Historia 4 - Negotiation Assistant: Preguntas Concretas para tu Visita (P2, Should-Have)
+
+Tras un análisis de Listing Lens, el usuario quiere **saber qué preguntar al inmobiliario** cuando vaya a ver la casa. El sistema genera 5-8 preguntas concretas basadas en las red flags detectadas y los datos del listing. La generación se hace desde **plantillas hardcoded** indexadas por combinación de (redFlag, listingSituation) — NO con LLM (mantiene consistencia educativa, evita riesgo de advice personalizado).
+
+**Ejemplo de puntos generados para un listing con `euphemistic_language` + `inflated_square_meters`:**
+- "El anuncio usa 'acogedor' para el salón — ¿cuáles son los metros útiles reales de la sala de estar?"
+- "Los metros catastrales son 78m² pero declaran 85m² — ¿la diferencia es de zonas comunes o del cálculo de la vivienda?"
+- "El certificado energético no aparece mencionado — ¿lo tienen disponible? Si es clase E o F, la hipoteca podría no ser favorable."
+- "¿Han bajado el precio en los últimos 6 meses? Si sí, ¿cuál fue el motivo?"
+- "¿Qué gastos de comunidad mensuales tiene la vivienda?"
+
+**Por qué esta prioridad**: Diferenciador real del proyecto. El Listing Lens te dice "qué falla" pero no te empodera para la negociación. Este feature te da el siguiente paso concreto. Implementación simple (plantillas, sin LLM) pero con valor narrativo alto en la demo.
+
+**Prueba independiente**: Analizar un listing con red flags específicas → verificar que se devuelven 5-8 puntos relevantes a esas red flags (no genéricos). Se puede probar completamente con un mock de un listing.
+
+**Criterios de aceptación**:
+
+1. **Dado** un AnalyzedListing con red flags detectadas, **Cuando** el usuario pulsa "Generar puntos de negociación", **Entonces** se devuelven entre 5 y 8 preguntas específicas a esas red flags (no genéricas, no advice personalizado).
+2. **Dado** un AnalyzedListing sin red flags (puntuación excelente), **Cuando** el usuario pulsa el botón, **Entonces** se devuelven 3-5 puntos generales preventivos (ej: "verifica la cédula de habitabilidad", "pide la última factura de IBI").
+3. **Dado** un listing con `stale_listing` (>6 meses sin actualizar), **Cuando** se generan los puntos, **Entonces** se incluye una variante de la pregunta "¿sigue disponible? He visto que no se actualiza desde hace tiempo".
+4. **Dado** que el LLM devolvió `reasoning` por cada red flag, **Cuando** se generan los puntos, **Entonces** el `reasoning` se incluye en la justificación del punto (no oculto al usuario).
+5. **En la UI**, **Cuando** se muestran los puntos, **Entonces** se ve claramente qué red flag disparó cada pregunta (color/etiqueta de la categoría) para que el usuario entienda el por qué.
+
+---
+
+### Historia 5 - Cronograma Interactivo: Saber Qué Viene Después (P3)
 
 El usuario visualiza una línea temporal de 60-90 días del proceso de compra de vivienda, desde las arras hasta la escritura. Cada hito muestra qué sucede, qué documentos se necesitan y la duración típica.
 
@@ -150,7 +175,7 @@ El usuario hace seguimiento de qué documentos tiene y cuáles le faltan para ca
 - **FR-013**: El sistema NO DEBE proporcionar consejo financiero. Todos los resultados hipotecarios y de inversión son narrativas educativas generadas a partir de plantillas predefinidas asociadas a combinaciones de perfil y escenario. No se usa LLM para la generación de narrativas en el Mortgage Compass.
 - **FR-014**: El sistema DEBE mantener como máximo una `PurchaseProcess` activa por sesión. Si el usuario analiza un listing y no hay proceso activo, el sistema DEBE crear uno con `propertyPrice` extraído del listing. Si ya existe un proceso activo, el nuevo listing DEBE adjuntarse al mismo proceso.
 - **FR-015**: El sistema DEBE pre-rellenar `propertyPrice` en el perfil financiero desde el listing analizado. Mortgage Compass DEBE mostrar el precio con un enlace al listing origen y permitir al usuario sobrescribirlo si lo desea.
-- **FR-016**: El sistema DEBE resolver la ubicación del anuncio mediante una cadena de responsabilidad: primero extrayendo la dirección declarada del HTML (Cheerio), luego geocodificándola con Nominatim (OSM), y solo como fallback usando análisis multimodal de fotos vía LLM (OpenRouter con capacidad de visión). El cruce con Catastro SOLO se ejecuta cuando se han obtenido coordenadas GPS válidas.
+- **FR-016**: El sistema DEBE resolver la ubicación del anuncio extrayendo la dirección declarada del HTML (Cheerio + regex) y, cuando esté presente, geocodificándola con Nominatim (OSM, gratis, sin API key). **Si no hay dirección declarada, NO se intenta alternativa** (ni LLM visión, ni heurísticas) — el sistema marca la verificación catastral como no disponible y el análisis del listing sigue siendo válido con el resto de red flags. El cruce con Catastro se ejecuta por **dirección de texto** (no por coordenadas) usando el endpoint público de la Sede Electrónica del Catastro. **Justificación**: las fotos de anuncios de apartamentos no contienen señal GPS visual (son interiores); ni LLM ni ML pueden adivinar la calle desde un baño o cocina. El Location Resolver se reduce a lo único que funciona en la práctica: dirección declarada → geocoding → consulta catastral.
 - **FR-017**: El sistema DEBE incluir un disclaimer visible en la UI indicando que el análisis de transparencia es generado por IA y debe verificarse con fuentes oficiales antes de tomar decisiones de compra.
 - **FR-018**: La UI DEBE mostrar un estado de carga claro durante el análisis del listing (skeleton/spinner con progress events) durante un tiempo estimado de **8-15 segundos**. El SLA de respuesta es **15 segundos** (ver SC-001).
 - **FR-019**: El dashboard DEBE funcionar en estado vacío con dos CTAs claros ("Analizar un anuncio" y "Configurar perfil manualmente") cuando la sesión no tiene un `PurchaseProcess` activo. Este estado es la prueba independiente de US3.
@@ -159,6 +184,8 @@ El usuario hace seguimiento de qué documentos tiene y cuáles le faltan para ca
 - **FR-022**: El sistema DEBE computar el `diff` (diferencias de precio, m², año de construcción, etc.) entre un nuevo análisis y el `previousHash` y almacenarlo en el nuevo `AnalyzedListing` como campo `diff: Json`. El frontend NO debe computar diffs — los recibe de la API.
 - **FR-023**: El sistema DEBE exponer un endpoint `GET /api/dashboard` que devuelva en una sola llamada la vista agregada del proceso activo (process + latestListing + computed + checklist + stats + currentStage) sin requerir `processId` conocido.
 - **FR-024**: El `Checklist` se crea automáticamente como parte del `PurchaseProcess` (mismo flujo de auto-attach en FR-014), poblado desde la plantilla seed (T082) con los ítems documentales por etapa. No requiere acción explícita del usuario para instanciarse.
+- **FR-025**: El LLM (OpenRouterAdapter) DEBE devolver en su JSON de respuesta, por cada red flag detectada, un campo `reasoning: string` con la **frase exacta del anuncio** que disparó el flag + la inferencia. Ejemplo: `{ flag: 'euphemistic_language', reasoning: "El anuncio usa 'acogedor' para describir un salón de 11m² — probable falta de espacio" }`. La UI DEBE mostrar este reasoning al usuario en cada red flag (AI Reasoning Transparency).
+- **FR-026**: El sistema DEBE exponer un endpoint `GET /api/listings/:id/negotiation-points` que devuelva una lista de 5-8 puntos de negociación (preguntas concretas para hacer al inmobiliario) generados desde las red flags detectadas + datos del listing. La generación se hace desde **plantillas hardcoded** indexadas por combinación (redFlag, listingSituation), NO con LLM (mantiene consistencia educativa, no riesgo de advice).
 
 ### Entidades Clave
 

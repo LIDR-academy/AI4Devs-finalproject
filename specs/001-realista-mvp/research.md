@@ -142,21 +142,44 @@
 
 ---
 
-## 8. Location Resolver Chain (añadido tras revisión crítica)
+## 8. Location Resolver — Decisión Final Minimalista (revisada tras brainstorming con el autor)
 
-**Decisión**: Cadena de responsabilidad con 3 adaptadores para resolver coordenadas GPS del anuncio.
+**Decisión**: El Location Resolver se reduce a **2 adaptadores** (DeclaredLocation + Geocoding). **Se elimina el `LLMVisionLocationAdapter`** por inviabilidad técnica.
 
 **Justificación**:
-- Un LLM solo de texto NO puede generar coordenadas GPS precisas
-- Necesitamos un método multi-fallback para robustez
-- El método más fiable es la dirección declarada en el HTML (gratis, determinista)
-- Si falla, Nominatim OSM es gratis, sin API key, sin rate limiting estricto
-- Como último recurso, visión multimodal del LLM (más caro, más lento)
+- El autor tenía experiencia personal con un algoritmo manual de triangulación que funcionaba porque **incorporaba conocimiento de dominio humano** (saber qué plataformas esconden direcciones en qué campos, cómo interpretar fotos, contraste de barrios).
+- Ese conocimiento **no es replicable con ML/LLM genérico**. Un apartamento es una foto de un baño o cocina — sin señal GPS visual.
+- Las herramientas de geolocalización con visión (CLIP, GeoGuessr-style) funcionan con paisajes, no con interiores de pisos.
+- Lo único que funciona: **dirección declarada en texto** → Nominatim → coords.
+- Si no hay dirección → no se intenta alternativa. El sistema es honesto con el failure mode.
 
-**Alternativas consideradas**:
-- Solo LLM visión desde el principio: caro, innecesario en mayoría de casos
-- Solo Nominatim: falla cuando el anuncio no tiene dirección declarada
-- Google Geocoding API: requiere API key, no free
-- Mapbox Geocoding: requiere API key, free tier limitado
+**Alternativas consideradas y rechazadas**:
+- **CLIP / geolocalización con visión**: requiere dataset de interiores españoles etiquetados, meses de trabajo, accuracy del ~50% incluso así.
+- **ML sobre texto del anuncio**: redundante con Cheerio regex. No añade información.
+- **Google Geocoding API**: funciona si hay dirección, igual que Nominatim pero con API key.
+- **Cross-reference con DB propia de edificios**: no existe, construirla es meses.
 
-**Implementación**: `LocationResolverService` orquesta 3 adaptadores (`DeclaredLocationAdapter`, `GeocodingAdapter`, `LLMVisionLocationAdapter`) en orden. Cada uno implementa `LocationResolverPort` con un método `resolveLocation(parsedListing)`. El primero que devuelve coordenadas válidas las propaga. El `CatastroAdapter` solo se invoca cuando hay coordenadas válidas (FR-016).
+**Implementación**: `DeclaredLocationAdapter` (Cheerio regex) + `GeocodingAdapter` (Nominatim OSM) en orden. Si no hay dirección declarada, el sistema marca la verificación catastral como no disponible y el análisis del listing sigue siendo válido con el resto de red flags. `CatastroAdapter` query por dirección de texto (no coordenadas) usando el endpoint público de la Sede Electrónica.
+
+**Tiempo ahorrado vs cadena de 3 adaptadores**: ~4-6h. Invertido en Negotiation Assistant (ver §9).
+
+---
+
+## 9. Negotiation Assistant — Nuevo Diferenciador
+
+**Decisión**: Añadir como **US-04 (P2, Should-Have)**. Generación template-based de 5-8 preguntas concretas para hacer al inmobiliario, basadas en las red flags detectadas en el AnalyzedListing.
+
+**Justificación**:
+- El Listing Lens te dice **qué falla** pero no te empodera para la negociación. El siguiente paso natural es: "y ahora qué pregunto al inmobiliario?"
+- Es un **diferenciador real**: ninguna herramienta existente en España hace esto para anuncios de compra de vivienda.
+- Implementación simple (plantillas hardcoded por (redFlag, listingSituation)), sin LLM en la generación → mantiene consistencia educativa, sin riesgo de advice personalizado.
+- **Punch en la demo**: el usuario ve "esto es lo que tienes que preguntar al inmobiliario cuando vayas" — el insight es memorable.
+
+**Alternativas consideradas y rechazadas**:
+- **Generar puntos con LLM**: riesgo de advice personalizado, tono inconsistente, alucinaciones en preguntas.
+- **Mostrar solo la lista de red flags**: ya lo hace Listing Lens. Aporta poco.
+- **Generar PDF/email para enviar al agente**: scope creep, no aporta al E2E de demo.
+
+**Implementación**: `NegotiationTemplateRepository` (mapa hardcoded, 3+ templates por cada red flag) + `NegotiationAssistantService` (selecciona templates relevantes según red flags presentes, añade el `reasoning` del LLM, completa con 3-5 puntos preventivos generales si hay menos de 5 específicos). Endpoint: `GET /api/listings/:id/negotiation-points`. UI: sección expandible en Listing Lens con accordion por punto, color/etiqueta de la red flag asociada.
+
+**Tiempo estimado**: ~4-6h (1 servicio + 1 repositorio + 1 endpoint + 1 componente + tests).

@@ -53,11 +53,12 @@ Acompañar al comprador primerizo de vivienda en España con tres herramientas q
 
 | Funcionalidad | Descripción | Prioridad |
 |---------------|-------------|-----------|
-| Listing Lens | Pegar URL de anuncio → análisis LLM + cruce catastral → puntuación de transparencia + banderas rojas | 🥇 Must-Have |
-| Mortgage Compass | Perfil financiero → gastos ocultos → simulador de amortización vs inversión → narrativa educativa | 🥇 Must-Have |
-| Dashboard | Historial de análisis, perfil financiero, acceso a herramientas | 🥇 Must-Have |
-| Cronograma interactivo | Línea temporal 60-90 días del proceso de compra (arras → escritura) | 🔶 Should-Have |
-| Checklist documental | Documentos necesarios por etapa, seguimiento de progreso | 🔶 Should-Have |
+| Listing Lens | Pegar URL de anuncio → análisis LLM + cruce catastral → puntuación + banderas rojas + **razonamiento por cada flag** (AI Reasoning Transparency) | 🥇 Must-Have |
+| Mortgage Compass | Perfil financiero → gastos ocultos → simulador de amortización vs inversión → narrativa educativa + **gráfico visual** comparativo | 🥇 Must-Have |
+| Dashboard | Historial de análisis, perfil financiero, **vista agregada en 1 llamada**, **diff de re-análisis**, acceso a herramientas | 🥇 Must-Have |
+| **Negotiation Assistant** | Tras el análisis, genera **5-8 preguntas concretas** para hacer al inmobiliario, basadas en las red flags detectadas | 🔶 Should-Have |
+| Cronograma interactivo | Línea temporal 60-90 días del proceso de compra (arras → escritura), filtrada por `currentStage` | 🔶 Should-Have |
+| Checklist documental | Documentos por etapa, progreso, **sugerencia de avance de etapa** al completar | 🔶 Should-Have |
 
 ### **1.3. Diseño y experiencia de usuario:**
 
@@ -396,7 +397,19 @@ Criterios de aceptación:
 
 ---
 
-**Historia de Usuario 4 — Cronograma Interactivo: Saber Qué Viene Después (P3, Should-Have)**
+**Historia de Usuario 4 — Negotiation Assistant: Preguntas Concretas para tu Visita (P2, Should-Have)**
+
+Como comprador primerizo, tras analizar un anuncio, quiero ver preguntas concretas que hacer al inmobiliario para no llegar a la visita sin saber qué preguntar.
+
+Criterios de aceptación:
+1. Tras un análisis, cuando pulso "Generar puntos de negociación", entonces veo 5-8 preguntas específicas basadas en las red flags detectadas (no genéricas)
+2. Cuando un análisis no tiene red flags, entonces veo 3-5 preguntas preventivas generales (cédula de habitabilidad, IBI, etc.)
+3. Cuando un listing lleva >6 meses sin actualizar, entonces la pregunta "¿sigue disponible?" aparece en la lista
+4. La razón de cada pregunta (qué red flag la disparó) se muestra al usuario, no se oculta
+
+---
+
+**Historia de Usuario 5 — Cronograma Interactivo: Saber Qué Viene Después (P3, Should-Have)**
 
 Como comprador primerizo, quiero ver una línea temporal del proceso de compra para entender qué pasa en cada etapa y cuándo.
 
@@ -406,7 +419,7 @@ Criterios de aceptación:
 
 ---
 
-**Historia de Usuario 5 — Checklist Documental: Que No Se Te Escape Nada (P3, Should-Have)**
+**Historia de Usuario 6 — Checklist Documental: Que No Se Te Escape Nada (P3, Should-Have)**
 
 Como comprador primerizo, quiero hacer seguimiento de qué documentos tengo y qué me falta para cada etapa del proceso.
 
@@ -419,7 +432,7 @@ Criterios de aceptación:
 
 ## 6. Tickets de Trabajo
 
-> Los 127 tickets detallados están en `specs/001-realista-mvp/tasks.md` (con IDs T001–T091b, fases, dependencias y criterios TDD). A continuación, los 3 más representativos: uno de backend, uno de frontend y uno de base de datos.
+> Los 139 tickets detallados están en `specs/001-realista-mvp/tasks.md` (con IDs T001–T091b, fases, dependencias y criterios TDD). A continuación, los 3 más representativos: uno de backend, uno de frontend y uno de base de datos.
 
 **Ticket 1 — Backend (T037): Implementar AnalyzeListingUseCase**
 
@@ -502,13 +515,13 @@ Criterios de aceptación:
 
 ---
 
-**Pull Request 2 — Desglose de tareas: 127 tareas con TDD por historia de usuario**
+**Pull Request 2 — Desglose de tareas: 139 tareas con TDD por historia de usuario**
 
 **Título:** `tasks: 91 tasks across 8 phases, TDD per user story`
 
-**Hash de commit:** `a8fd5d7` (versión original de 91 tareas, ampliada a 127 en commits posteriores con T023a-f, T030a-b, T032a-d, T037a-f, T042a, T050a-e, T057a, T058a, T070a-f, T087a, T091a, T091b para cubrir críticos, importantes y menores de la revisión del E2E)
+**Hash de commit:** `a8fd5d7` (versión original de 91 tareas, ampliada a 139 en commits posteriores con T023a-f, T030a-b, T032a-d → T032a-b (Vision eliminado), T037a-f, T042a, T050a-e, T057a, T058a, T066a-i (Negotiation Assistant), T033a (AI Reasoning), T062a-c (UX polish), T070a-f, T087a, T091a, T091b para cubrir críticos, importantes, menores del review y el nuevo US-04)
 
-**Descripción:** Esta PR genera el desglose completo de tareas (`specs/001-realista-mvp/tasks.md`) con 127 tareas distribuidas en 8 fases: Setup, Foundational, US1 Listing Lens, US2 Mortgage Compass, US3 Dashboard, US4 Timeline, US5 Checklist y Polish. Cada historia de usuario incluye sus tests primero (TDD, ~25 tareas de test tras las ampliaciones), seguidos de la implementación. Las tareas están etiquetadas con `[P]` para paralelización y `[US1]`–`[US5]` para trazabilidad con las historias.
+**Descripción:** Esta PR genera el desglose completo de tareas (`specs/001-realista-mvp/tasks.md`) con 139 tareas distribuidas en 9 fases: Setup, Foundational, US1 Listing Lens, US2 Mortgage Compass, US3 Dashboard, US4 Negotiation Assistant, US5 Timeline, US6 Checklist y Polish. Cada historia de usuario incluye sus tests primero (TDD, ~25 tareas de test tras las ampliaciones), seguidos de la implementación. Las tareas están etiquetadas con `[P]` para paralelización y `[US1]`–`[US6]` para trazabilidad con las historias.
 
 **Relación con historias de usuario:** Trazabilidad directa — cada tarea está mapeada a una historia específica.
 
