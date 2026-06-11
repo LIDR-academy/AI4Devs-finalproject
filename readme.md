@@ -910,23 +910,326 @@ Solo el propio usuario puede crear o actualizar su perfil; cualquier usuario aut
 
 > Documenta 3 de las historias de usuario principales utilizadas durante el desarrollo, teniendo en cuenta las buenas prácticas de producto al respecto.
 
-**Historia de Usuario 1**
+### Historia de Usuario 1 — LPT-5: Crear partida
 
-**Historia de Usuario 2**
+**Historia**
 
-**Historia de Usuario 3**
+Como organizador, quiero crear una nueva partida seleccionando el número de jugadores, para que la app genere automáticamente la secuencia de rondas y el número de cartas.
+
+**Criterios de aceptación**
+
+1. El organizador puede seleccionar un número de jugadores entre **3 y 8** (inclusive).
+2. Al cambiar el número, la UI muestra en tiempo real: **cartas totales**, **máximo de cartas por jugador por ronda** y **número total de rondas**.
+3. La secuencia de rondas sigue el patrón ascendente-plateau-descendente: 1, 2, …, M (repetido N veces, siendo N el número de jugadores), M-1, …, 2, 1. Ejemplo con 4 jugadores (M=10): 1,2,3,4,5,6,7,8,9,10,10,10,10,9,8,7,6,5,4,3,2,1 = 22 rondas.
+4. Al confirmar, se crea un borrador de partida en estado `lobby` persistido **localmente** (offline-first) con: `playerCount`, `totalCards`, `maxCardsPerRound`, `roundSequence[]` (`roundNumber`, `cardsPerPlayer`).
+5. Tras confirmar, navega a la pantalla de configuración de jugadores (LPT-6) pasando el `gameId` del borrador.
+6. Si el usuario cancela o vuelve atrás sin confirmar, no se persiste ningún borrador.
+7. La operación funciona **sin conexión** y sin requerir cuenta.
+
+**Tabla de configuración (PRD §6)**
+
+| Jugadores | Cartas totales | Máx. por ronda (M) | Rondas |
+|-----------|----------------|--------------------|--------|
+| 3 | 30 | 10 | 21 |
+| 4 | 40 | 10 | 22 |
+| 5 | 40 | 8 | 19 |
+| 6 | 48 | 8 | 21 |
+| 7 | 49 (+ comodín) | 7 | 19 |
+| 8 | 48 | 6 | 18 |
+
+---
+
+### Historia de Usuario 2 — LPT-9: Apuestas con restricción del repartidor
+
+**Historia**
+
+Como organizador, quiero introducir las apuestas de cada jugador en orden (repartidor al final) con validación de la restricción en tiempo real, para cerrar la fase de apuestas sin errores.
+
+**Criterios de aceptación**
+
+1. Las apuestas se introducen en orden de `seatOrder`, comenzando por el jugador siguiente al repartidor; el **repartidor apuesta el último**.
+2. Cada apuesta es un entero entre **0** y `cardsPerPlayer` de la ronda actual (inclusive).
+3. Durante la introducción se muestra en tiempo real:
+   - Bazas ya apostadas (suma parcial).
+   - Bazas restantes disponibles (`cardsPerPlayer - suma parcial`).
+   - Para el repartidor: **número prohibido** = bazas restantes al llegar su turno.
+4. **Restricción del repartidor:** la suma total de apuestas **no puede igualar** `cardsPerPlayer`. Si el repartidor intenta apostar el valor prohibido, se bloquea la confirmación con mensaje explicativo.
+5. Botón "Cerrar apuestas" habilitado solo cuando todas las apuestas están registradas y la restricción se cumple.
+6. Al cerrar: `round.status` pasa a `playing`; navega a pantalla de juego (LPT-10).
+7. Funciona offline.
+
+---
+
+### Historia de Usuario 3 — LPT-11: Bazas reales y puntuación automática
+
+**Historia**
+
+Como organizador, quiero introducir las bazas reales obtenidas y que la app calcule los puntos automáticamente, para eliminar errores de cálculo.
+
+**Criterios de aceptación**
+
+1. El organizador introduce las bazas reales (0–`cardsPerPlayer`) para cada jugador.
+2. **Validación:** la suma de bazas reales debe igualar `cardsPerPlayer`; no se puede confirmar si no cuadra.
+3. **Cálculo de puntos por jugador:**
+   - Si `bazas == apuesta`: `puntos = 10 + (5 × bazas)`
+   - Si `bazas != apuesta`: `puntos = -5 × |apuesta - bazas|`
+4. Se actualiza `Player.totalScore` += puntos de la ronda.
+5. Se persiste en la ronda: `tricks` (map por playerId), `scoresDelta` (map por playerId), `status: closed`, `closedAt`.
+6. Al confirmar, navega a pantalla de resultado (LPT-14).
+7. Si no es la última ronda, LPT-14 ofrecerá avanzar a la siguiente (creando ronda con repartidor rotado).
+8. Funciona offline.
 
 ---
 
 ## 6. Tickets de Trabajo
 
-> Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
+> Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto.
 
-**Ticket 1**
+### Ticket 1 — LPT-7: Orden de jugadores y primer repartidor (capa domain)
 
-**Ticket 2**
+**Historia**
 
-**Ticket 3**
+Como organizador, quiero reordenar los jugadores y elegir el primer repartidor (o asignarlo aleatoriamente), para respetar el orden físico de la mesa.
+
+**Contexto y alcance**
+
+Tercer paso del flujo de creación de partida (épica **Gestión de partida**), tras LPT-6. El organizador define el orden en mesa y el primer repartidor antes de iniciar la partida.
+
+**Incluye:** reordenación drag-and-drop (o botones subir/bajar), selección manual del primer repartidor, botón "Repartidor aleatorio", persistencia de `seatOrder` y `firstDealerPlayerId`, botón "Empezar partida".
+
+**Excluye:** flujo de rondas (LPT-9+), edición de orden una vez iniciada la partida.
+
+**Criterios de aceptación**
+
+1. El organizador puede reordenar la lista de jugadores mientras `status == lobby`.
+2. Cada jugador muestra su posición (`seatOrder` 1-based) actualizada en tiempo real al reordenar.
+3. El primer repartidor por defecto es el jugador en posición 1; el organizador puede seleccionar otro tocando su fila.
+4. Botón **"Repartidor aleatorio"** asigna aleatoriamente el primer repartidor entre los jugadores del roster.
+5. Al pulsar **"Empezar partida"**: persiste `seatOrder` y `firstDealerPlayerId`, cambia `status` a `in_progress`, crea la primera ronda con `dealerPlayerId == firstDealerPlayerId`, navega a fase de apuestas (LPT-9).
+6. No se puede empezar sin exactamente `playerCount` jugadores.
+7. Funciona sin conexión y sin cuenta.
+
+**Impacto en modelo de datos**
+
+**Actualización local del borrador `Game`:**
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `status` | string | `lobby` → `in_progress` al empezar |
+| `firstDealerPlayerId` | string | `playerId` del primer repartidor |
+| `startedAt` | timestamp | Inicio de partida |
+| `currentRoundNumber` | number | `1` al empezar |
+
+**Actualización `Player`:**
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `seatOrder` | number | Posición en mesa (1-based) |
+
+**Primera ronda (`Round`):**
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `roundNumber` | number | `1` |
+| `cardsPerPlayer` | number | De `roundSequence[0]` |
+| `dealerPlayerId` | string | Primer repartidor |
+| `status` | string | `bidding` |
+
+**Rotación de repartidor (dominio):** en rondas siguientes, `dealerPlayerId` rota según `seatOrder` (repartidor = jugador anterior en orden circular).
+
+**Impacto en Security Rules**
+
+Ninguno en este ticket (solo local). Documentar: transición `lobby` → `in_progress` en Firestore requerirá permisos de `hostId`.
+
+**Arquitectura y ficheros (`lib/features/game_setup/`)**
+
+```
+lib/features/game_setup/
+  domain/
+    usecases/reorder_players_usecase.dart
+    usecases/set_first_dealer_usecase.dart
+    usecases/randomize_first_dealer_usecase.dart
+    usecases/start_game_usecase.dart
+    services/dealer_rotation_service.dart
+  presentation/
+    bloc/game_setup_bloc.dart
+    pages/game_setup_page.dart
+    widgets/reorderable_player_list.dart
+    widgets/dealer_selector.dart
+    widgets/random_dealer_button.dart
+```
+
+**Routing:** `/games/{gameId}/setup` → `GameSetupPage`; al empezar → `/games/{gameId}/rounds/1/bids`.
+
+**Definición de hecho**
+
+- [ ] Tests unitarios (`dealer_rotation_service_test.dart`): rotación circular correcta.
+- [ ] Tests unitarios (`start_game_usecase_test.dart`): crea ronda 1, actualiza status.
+- [ ] Tests BLoC: reordenar, aleatorio, empezar partida.
+- [ ] `flutter analyze` sin errores.
+
+---
+
+### Ticket 2 — LPT-10: Pantalla de juego (capa presentation)
+
+**Historia**
+
+Como organizador, quiero ver durante el juego las apuestas, puntuación acumulada y balance de bazas de cada jugador, para que todos puedan seguir el estado de la partida.
+
+**Contexto y alcance**
+
+Pantalla de juego durante la fase física (épica **Flujo de ronda**), tras cerrar apuestas (LPT-9). Vista de solo lectura del estado de la ronda y partida para consulta en mesa.
+
+**Incluye:** listado de jugadores con apuesta de la ronda, puntuación acumulada total, balance de bazas (suma apostada vs `cardsPerPlayer`), indicador de repartidor, botón para pasar a introducir bazas reales (LPT-11).
+
+**Excluye:** edición de apuestas (LPT-12), cálculo de puntos de ronda (LPT-11).
+
+**Criterios de aceptación**
+
+1. Tras cerrar apuestas, se muestra pantalla de juego con todos los jugadores ordenados por `seatOrder`.
+2. Por cada jugador se muestra: nombre, apuesta de la ronda actual, puntuación acumulada (`totalScore`), indicador si es repartidor.
+3. Cabecera o panel resumen muestra: número de ronda, cartas por jugador, **balance de bazas** (`suma apuestas / cardsPerPlayer`), confirmación visual de restricción cumplida.
+4. La pantalla es de **solo lectura** (no se editan datos en esta vista).
+5. Botón **"Introducir bazas"** navega a LPT-11.
+6. Opción de volver a corregir apuestas (atajo a LPT-12) visible pero secundaria.
+7. Funciona offline; diseño legible a distancia (tipografía grande, contraste alto — persona Carlos del PRD).
+
+**Impacto en modelo de datos**
+
+**Lectura desde:**
+
+- `Round.bids`, `Round.cardsPerPlayer`, `Round.dealerPlayerId`, `Round.roundNumber`
+- `Player.displayName`, `Player.totalScore`, `Player.seatOrder`
+
+Sin escrituras en esta pantalla.
+
+**Impacto en Security Rules**
+
+Ninguno (solo lectura local).
+
+**Arquitectura y ficheros (`lib/features/round/`)**
+
+```
+lib/features/round/
+  domain/
+    usecases/get_round_play_state_usecase.dart
+  presentation/
+    bloc/play_state_bloc.dart
+    pages/play_page.dart
+    widgets/player_play_card.dart
+    widgets/tricks_balance_banner.dart
+    widgets/round_header.dart
+```
+
+**Routing:** `/games/{gameId}/rounds/{roundNumber}/play`.
+
+**Definición de hecho**
+
+- [ ] Widget test: renderiza apuestas y scores correctos con datos mock.
+- [ ] Tests BLoC: carga estado de ronda en `playing`.
+- [ ] `flutter analyze` sin errores.
+
+---
+
+### Ticket 3 — LPT-20: Sincronización automática al finalizar (capa data / Firebase)
+
+**Historia**
+
+Como jugador registrado, quiero que mis partidas se suban automáticamente al finalizarlas, para tener mi historial disponible en la nube sin ninguna acción adicional.
+
+**Contexto y alcance**
+
+Épica **Cuenta y sincronización**. Tras finalizar una partida (LPT-14 `finish_game`), si el organizador tiene sesión activa y hay conectividad, la partida se sube automáticamente a Firestore sin acción manual.
+
+**Incluye:** trigger post-finalización, escritura atómica/batch de `games`, `players` y `rounds`, vinculación `cloudGameId` en partida local, reintentos ante fallo de red, feedback UI discreto (éxito/error).
+
+**Excluye:** subida manual de partidas locales anteriores al registro (post-MVP), sincronización durante la partida, subida si no hay sesión.
+
+**Criterios de aceptación**
+
+1. Al finalizar partida (`game.status == finished`), si el usuario está autenticado y hay red, se inicia subida automática en background.
+2. Se crea `games/{gameId}` con `hostId == Auth.uid`, `status: finished`, metadatos y timestamps (`finishedAt`, `createdAt`, `updatedAt`).
+3. Se escriben subcolecciones `players` y `rounds` con datos completos (apuestas, bazas, `scoresDelta`, `totalScore`).
+4. La partida local se actualiza con `cloudGameId` y `syncStatus: synced` para deduplicación en LPT-15.
+5. Si **no hay sesión** o **no hay red**: la partida queda solo local; no se muestra error bloqueante; opcional badge "pendiente de sincronizar".
+6. Si la subida falla: `syncStatus: pending`, reintento al recuperar conectividad o al abrir historial.
+7. **No** se suben partidas finalizadas antes del registro de forma retroactiva (PRD post-MVP).
+8. El organizador no necesita pulsar ningún botón adicional.
+
+**Impacto en modelo de datos**
+
+**Escritura Firestore:**
+
+| Ruta | Contenido |
+|------|-----------|
+| `games/{gameId}` | `hostId`, `status`, `playerCount`, `finishedAt`, `settings` *(roundSequence, etc.)* |
+| `games/{gameId}/players/{playerId}` | `userId`, `displayName`, `seatOrder`, `totalScore` |
+| `games/{gameId}/rounds/{roundId}` | `roundNumber`, `dealerPlayerId`, `bids`, `tricks`, `scoresDelta`, `status: closed` |
+
+**Actualización partida local:**
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `cloudGameId` | string | ID del documento en Firestore |
+| `syncStatus` | string | `local`, `pending`, `synced`, `failed` |
+
+**Impacto en Security Rules**
+
+```javascript
+match /games/{gameId} {
+  allow create: if request.auth != null
+    && request.resource.data.hostId == request.auth.uid;
+  allow update: if request.auth != null
+    && resource.data.hostId == request.auth.uid;
+  allow read: if request.auth != null && (
+    resource.data.hostId == request.auth.uid
+    || exists(/databases/$(database)/documents/games/$(gameId)/players/$(request.auth.uid))
+  );
+}
+match /games/{gameId}/players/{playerId} { /* host write; participants read */ }
+match /games/{gameId}/rounds/{roundId} { /* host write; participants read */ }
+```
+
+*(Ajustar membership check según modelado final de `players`.)*
+
+**Firebase Auth**
+
+Requiere sesión activa (`Auth.uid` como `hostId`). Sin Auth: no-op silencioso.
+
+**Arquitectura y ficheros**
+
+```
+lib/features/sync/
+  domain/
+    entities/sync_status.dart
+    repositories/game_sync_repository.dart
+    usecases/upload_finished_game_usecase.dart
+    usecases/retry_pending_uploads_usecase.dart
+  data/
+    datasources/game_firestore_datasource.dart
+    datasources/game_local_datasource.dart   # extensión syncStatus/cloudGameId
+    repositories/game_sync_repository_impl.dart
+  presentation/
+    bloc/game_sync_bloc.dart                 # opcional: estado global sync
+    widgets/sync_status_snackbar.dart
+
+lib/features/round/
+  domain/usecases/finish_game_usecase.dart   # disparar upload tras finish
+```
+
+**Flujo:**
+
+```
+finish_game → if (authenticated && online) → UploadFinishedGameUseCase
+           → WriteBatch Firestore → update local cloudGameId
+```
+
+**Definición de hecho**
+
+- [ ] Tests unitarios: mapeo local → Firestore, no-op sin sesión.
+- [ ] Tests unitarios: `retry_pending_uploads` con partidas `pending`.
+- [ ] Tests de integración con Firestore Emulator: escritura completa de partida 4 jugadores.
+- [ ] `flutter analyze` sin errores.
 
 ---
 

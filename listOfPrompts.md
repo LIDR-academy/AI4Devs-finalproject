@@ -500,3 +500,37 @@ For each operation include:
 - Security rule that applies
 
 Write in Spanish. Do not modify any other section of readme.md.
+
+------------
+
+Read the Jira tickets descriptions stored in .tmp/jira-descriptions/
+and the readme.md structure.
+
+Fill sections 5 and 6 of readme.md:
+
+## 5. Historias de Usuario
+
+Select the 3 most representative Must-Have user stories from
+the available tickets. Good candidates:
+
+- LPT-5 (create game - core flow)
+- LPT-9 (bets with dealer restriction - most complex)
+- LPT-11 (real tricks and scoring - core logic)
+
+For each story include the full enhanced content from Jira:
+original story + acceptance criteria.
+Do not include technical implementation details here.
+
+## 6. Tickets de Trabajo
+
+Select 3 tickets that represent different layers:
+
+- One focused on domain logic (scoring, round sequence)
+- One focused on UI/presentation (a screen or BLoC)
+- One focused on Firebase/data layer (sync or auth)
+
+For each ticket include the full enhanced content from Jira
+including: context, acceptance criteria, data model impact,
+architecture files, and definition of done.
+
+Write in Spanish. Do not modify any other section of readme.md.
