@@ -82,6 +82,12 @@
 - [ ] T023a [P] [US1] Test unitario LocationResolverPort chain (Declared → Geocoding → Vision) en `backend/tests/unit/domain/ports/LocationResolverPort.test.ts`
 - [ ] T023b [P] [US1] Test unitario lógica de auto-attach: crea PurchaseProcess cuando no hay activa, adjunta a la existente en `backend/tests/unit/domain/services/AutoAttachService.test.ts`
 - [ ] T023c [P] [US1] Test de integración endpoint analyze devolviendo `processSummary` en `backend/tests/integration/api/listings.test.ts`
+- [ ] T023d [P] [US1] Test unitario SnapshotHash computación canónica (input normalizado → SHA-256) en `backend/tests/unit/domain/value-objects/SnapshotHash.test.ts`
+- [ ] T023e [P] [US1] Test unitario DiffService computando diferencias entre snapshots (precio, m², año, redFlags añadidas/quitadas) en `backend/tests/unit/domain/services/DiffService.test.ts`
+- [ ] T023f [P] [US1] Test unitario progress events emitidos por AnalyzeListingUseCase en orden (fetching → resolving → analyzing → cross_referencing) en `backend/tests/unit/domain/services/ProgressEvents.test.ts`
+- [ ] T050c [P] [US3] Test unitario DashboardAggregator computando stats, currentStage progress, investment scenarios en `backend/tests/unit/domain/services/DashboardAggregator.test.ts`
+- [ ] T050d [P] [US3] Test de integración GET /api/dashboard con proceso activo y sin proceso activo (empty state) en `backend/tests/integration/api/dashboard.test.ts`
+- [ ] T050e [P] [US3] Test de integración PATCH /api/purchase-processes/:id con currentStage en `backend/tests/integration/api/purchaseProcesses.test.ts`
 
 ### Implementación para Historia 1
 
@@ -103,6 +109,10 @@
 - [ ] T037 [US1] Implementar AnalyzeListingUseCase orquestando adaptadores (LLM → location resolver → cruce catastral → MiraTuZona) en `backend/src/domain/services/AnalyzeListingUseCase.ts`
 - [ ] T037a [US1] Implementar AutoAttachService: si no hay PurchaseProcess activa, crear una con `propertyPrice` del listing; si existe, adjuntar en `backend/src/domain/services/AutoAttachService.ts`
 - [ ] T037b [US1] Actualizar AnalyzeListingUseCase para devolver `processSummary` en la respuesta de analyze en `backend/src/domain/services/AnalyzeListingUseCase.ts`
+- [ ] T037c [US1] Implementar SnapshotHash value object con `computeSnapshotHash(input)` (canonical SHA-256, ver data-model.md) en `backend/src/domain/value-objects/SnapshotHash.ts`
+- [ ] T037d [US1] Implementar DiffService: dado un nuevo análisis + previousHash snapshot, computar `diff: Json` con deltas (precio, m², año, redFlags añadidas/quitadas) en `backend/src/domain/services/DiffService.ts`
+- [ ] T037e [US1] Refactorizar AnalyzeListingUseCase para emitir **progress events** en orden (fetching_html → resolving_location → analyzing → cross_referencing_cadastro) vía callback o EventEmitter en `backend/src/domain/services/AnalyzeListingUseCase.ts`
+- [ ] T037f [US1] Paralelizar Cheerio fetch + LocationResolver en `AnalyzeListingUseCase` (Promise.all) para reducir el SLA a 15s en `backend/src/domain/services/AnalyzeListingUseCase.ts`
 - [ ] T038 [US1] Crear agregado de dominio AnalyzedListing (según data-model.md) en `backend/src/domain/aggregates/AnalyzedListing.ts`
 - [ ] T039 [US1] Implementar ruta analyze listing POST /api/listings/analyze (ahora devuelve processSummary) en `backend/src/api/routes/listings.ts`
 - [ ] T040 [US1] Crear controlador de listings gestionando validación de request y dispatch de use case en `backend/src/api/controllers/listingsController.ts`
@@ -141,13 +151,13 @@
 - [ ] T052 [P] [US2] Crear HiddenCosts value object con tasas ITP/IVA regionales, costes fijos en `backend/src/domain/value-objects/HiddenCosts.ts`
 - [ ] T053 [US2] Implementar calculador de gastos ocultos por comunidad autónoma en `backend/src/domain/services/HiddenCostsCalculator.ts`
 - [ ] T054 [US2] Implementar calculador de amortización: 30yr base, 4 escenarios (baseline, ligero €100/mes, moderado €300/mes, agresivo €500/mes) en `backend/src/domain/services/AmortizationCalculator.ts`
-- [ ] T055 [US2] Implementar calculador de alternativa de inversión: compuesto 5-7% a 30 años en `backend/src/domain/services/InvestmentCalculator.ts`
-- [ ] T056 [US2] Implementar generador de narrativas: plantillas educativas hardcoded mapeadas a combos persona × escenario en `backend/src/domain/services/NarrativeGenerator.ts`
+- [ ] T055 [US2] Implementar calculador de alternativa de inversión: **3 escenarios** (conservador 4%, moderado 6%, agresivo 8%) con columna "valor real" ajustada por inflación (2% anual) y disclaimer fiscal en `backend/src/domain/services/InvestmentCalculator.ts`
+- [ ] T056 [US2] Implementar generador de narrativas: plantillas educativas hardcoded mapeadas a combos persona × escenario, incluyendo el disclaimer fiscal cuando se muestra la alternativa de inversión en `backend/src/domain/services/NarrativeGenerator.ts`
 - [ ] T057 [US2] Implementar ruta POST /api/purchase-processes (ahora acepta `analyzedListingId` y pre-rellena `propertyPrice`) en `backend/src/api/routes/purchaseProcesses.ts`
 - [ ] T057a [US2] Implementar lógica de pre-relleno en PurchaseProcessUseCase: si `analyzedListingId` se pasa, copiar `propertyPrice` del listing y setear `sourceListingId` en `backend/src/domain/services/PurchaseProcessUseCase.ts`
 - [ ] T058 [US2] Implementar ruta GET /api/purchase-processes/:id (ahora devuelve campo `computed` con escenarios de amortización y alternativa de inversión) en `backend/src/api/routes/purchaseProcesses.ts`
 - [ ] T058a [US2] Implementar agregador de campos computed que ejecuta calculadores de amortización e inversión y devuelve el resultado en `backend/src/domain/services/PurchaseProcessAggregator.ts`
-- [ ] T059 [US2] Implementar ruta PATCH /api/purchase-processes/:id (ahora soporta update directo de `propertyPrice` para permitir override) en `backend/src/api/routes/purchaseProcesses.ts`
+- [ ] T059 [US2] Implementar ruta PATCH /api/purchase-processes/:id (ahora soporta update directo de `propertyPrice` y `currentStage` para permitir override/avance de etapa) en `backend/src/api/routes/purchaseProcesses.ts`
 - [ ] T060 [US2] Crear controlador de purchase process en `backend/src/api/controllers/purchaseProcessController.ts`
 - [ ] T061 [US2] Crear UI de página Mortgage Compass: formulario multi-paso (perfil → gastos ocultos → persona → playground de estrategias). **propertyPrice pre-rellenado del listing con link a la fuente. Mostrar AI disclaimer** en `frontend/src/routes/mortgage-compass/+page.svelte`
 - [ ] T062 [US2] Crear server-side loader que proxy el purchase process al backend en `frontend/src/routes/mortgage-compass/+page.server.ts`
@@ -177,6 +187,12 @@
 - [ ] T068 [US3] Implementar ruta GET /api/listings/:id devolviendo detalle de un listing con diff vs snapshot anterior en `backend/src/api/routes/listings.ts`
 - [ ] T069 [US3] Implementar servicio de comparación de snapshots (SHA-256 diff detection) para re-análisis en `backend/src/domain/services/SnapshotService.ts`
 - [ ] T070 [US3] Implementar ruta GET /api/session devolviendo/creando UUID de sesión en `backend/src/api/routes/session.ts`
+- [ ] T070a [US3] Implementar ruta GET /api/dashboard devolviendo vista agregada (process + latestListing + computed + checklist + stats) en `backend/src/api/routes/dashboard.ts`
+- [ ] T070b [US3] Implementar DashboardAggregator: combina purchaseProcess + latestAnalyzedListing + computed fields + checklist progress + stats en un solo objeto en `backend/src/domain/services/DashboardAggregator.ts`
+- [ ] T070c [US3] Implementar StageAdvancementService: lógica para auto-sugerir avance de `currentStage` cuando todos los ítems de la etapa actual del checklist están completos en `backend/src/domain/services/StageAdvancementService.ts`
+- [ ] T070d [US3] Crear UI de página Dashboard con estado vacío (cuando `process: null`) y CTAs (FR-019) en `frontend/src/routes/+page.svelte`
+- [ ] T070e [US3] Crear UI selectora de etapa del proceso (botón "He firmado las arras" → PATCH currentStage) en `frontend/src/lib/components/StageAdvancer.svelte`
+- [ ] T070f [US3] Crear server-side loader que llama a GET /api/dashboard en `frontend/src/routes/+page.server.ts`
 - [ ] T071 [US3] Crear UI de página Dashboard: tarjetas de listing, instantánea financiera, CTAs, estado vacío (sin proceso activo) en `frontend/src/routes/+page.svelte` (sobreescribe el home por defecto)
 - [ ] T072 [US3] Crear server-side loader que obtiene el purchase process activo con `computed` para el dashboard en `frontend/src/routes/+page.server.ts`
 - [ ] T073 [US3] Implementar flujo de re-análisis: botón dispara nuevo análisis, muestra highlight del diff en `frontend/src/lib/stores/listings.ts`
@@ -234,6 +250,8 @@
 - [ ] T085 [P] Generar iconos PWA (192px, 512px) desde SVG base en `frontend/static/`
 - [ ] T086 [P] Añadir skeletons de carga y estados de error a todas las páginas (Listing Lens, Mortgage Compass, Dashboard)
 - [ ] T087 [P] Añadir mensajes de error y etiquetas de UI en español consistentes en todas las páginas
+- [ ] T087a [P] Implementar componente `<ProgressChecklist>` que muestra los progress events del análisis (fetching → resolving → analyzing → cross_referencing) en `frontend/src/lib/components/ProgressChecklist.svelte`
+- [ ] T091a [P] Añadir banner global de AI disclaimer **persistente** en el layout principal (`+layout.svelte`) explicando que el análisis es generado por IA. Se muestra SIEMPRE que haya contenido IA visible (no solo en primera visita) en `frontend/src/routes/+layout.svelte`
 - [ ] T088 Crear test E2E: flujo completo (pegar URL → score → perfil financiero → gastos ocultos → estrategia → dashboard) en `e2e/flows/full-flow.spec.ts`
 - [ ] T089 Ejecutar validación de quickstart.md: verificar que todos los comandos de setup y test funcionan desde cero
 - [ ] T090 TypeScript typecheck + lint pass final en todos los paquetes
@@ -275,8 +293,8 @@
 
 - T002, T003, T004, T005, T006 en Setup pueden correr en paralelo
 - T014, T015, T016, T017 en Foundational pueden correr en paralelo
-- T023-T027 y T023a-T023c (tests US1) pueden correr en paralelo
-- T045-T050 y T050a-T050b (tests US2) pueden correr en paralelo
+- T023-T027, T023a-T023f (tests US1) pueden correr en paralelo
+- T045-T050, T050a-T050e (tests US2) pueden correr en paralelo
 - T028-T029, T031, T030a, T030b (modelos/puertos US1) pueden correr en paralelo
 - T032-T036, T032a-T032c (adaptadores US1) son independientes y pueden correr en paralelo
 - T051-T052 (modelos US2) pueden correr en paralelo

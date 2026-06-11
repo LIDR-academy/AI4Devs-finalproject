@@ -42,7 +42,7 @@ Si la sesión no tiene un `PurchaseProcess` activo, el sistema crea uno con `pro
 5. **Dado** un anuncio sin dirección clara, **Cuando** falla el `GeocodingAdapter`, **Entonces** se invoca el `LLMVisionLocationAdapter` con las fotos del anuncio para estimar la ubicación.
 6. **Dado** coordenadas GPS válidas, **Cuando** se consulta el Catastro, **Entonces** se muestra una comparativa de m² declarados vs catastrales y año de construcción.
 7. **Dado** un anuncio sin certificado energético mencionado, **Cuando** el análisis termina, **Entonces** aparece "sin certificado energético" como bandera roja.
-8. **Durante** el análisis, **Cuando** el usuario espera la respuesta, **Entonces** la UI muestra un estado de carga claro (spinner o skeleton) con un tiempo estimado de 5-12 segundos.
+8. **Durante** el análisis, **Cuando** el usuario espera la respuesta, **Entonces** la UI muestra un estado de carga con **progress events** (checklist de pasos: "Obteniendo HTML" → "Resolviendo ubicación" → "Analizando con IA" → "Cruzando con Catastro") y un SLA realista de **15 segundos** (FR-018).
 
 ---
 
@@ -63,27 +63,30 @@ Si el usuario navega directamente a Mortgage Compass sin haber analizado un list
 3. **Dado** el usuario no ha analizado ningún listing y navega directamente a Mortgage Compass, **Cuando** carga la página, **Entonces** se le pide introducir manualmente el `propertyPrice` y se crea un `PurchaseProcess` sin listing origen.
 4. **Dado** que el usuario ha completado el perfil financiero, **Cuando** responde a las preguntas de perfil, **Entonces** se sugiere una duración de hipoteca recomendada (30, 25 o 20 años) según su capacidad de pago.
 5. **Dada** una hipoteca a 30 años al 3,5% para 160.000€, **Cuando** se carga el simulador de estrategias, **Entonces** se muestran cuatro escenarios: base (sin amortizar), ligero (100€/mes), moderado (300€/mes), agresivo (500€/mes) — cada uno con años acortados e intereses ahorrados.
-6. **Dados** todos los escenarios, **Cuando** se muestra la alternativa de inversión, **Entonces** se muestra el valor estimado de la cartera a 30 años (rentabilidad anual 5-7%) junto a los escenarios de amortización.
+6. **Dados** todos los escenarios, **Cuando** se muestra la alternativa de inversión, **Entonces** se muestra una tabla con **tres escenarios de rentabilidad** (conservador 4%, moderado 6%, agresivo 8%) cada uno con columna "valor real" ajustada por inflación (2% anual), junto a los escenarios de amortización (FR-021).
 7. **Dado** un perfil conservador, **Cuando** se genera la narrativa, **Entonces** el mensaje educativo enfatiza el ahorro garantizado mediante amortización.
+8. **Cuando** se muestra cualquier estimación de inversión, **Entonces** la UI incluye un disclaimer: "Las rentabilidades pasadas no garantizan futuras. Los beneficios están sujetos a tributación (~19-26% en España para ganancias patrimoniales)."
 
 ---
 
-### Historia 3 - Dashboard: Seguimiento del Proceso (P2)
+### Historia 3 - Dashboard: Capa de Integración (P2)
 
-El usuario ve un panel que resume el `PurchaseProcess` activo: el listing más recientemente analizado con su puntuación de transparencia, el perfil financiero (propertyPrice pre-rellenado, savings, monthlyIncome, debts, persona), el desglose de gastos ocultos calculado, el estado del checklist documental, y un acceso rápido a todas las herramientas. El dashboard persiste los datos por sesión anónima (UUID) sin necesidad de registro. El usuario puede re-analizar el listing actual para ver qué ha cambiado (detección de diferencias con snapshot).
+> **Nota arquitectónica**: US3 es una **capa de integración** que compone datos de US1 (Listing Lens) y US2 (Mortgage Compass), no una historia de usuario independiente. Se incluye como historia P2 porque la cohorte lo valora como experiencia completa, pero su prueba independiente es el **estado vacío con CTAs** (no requiere datos de otras historias para ser testeable).
+
+El usuario ve un panel que resume el `PurchaseProcess` activo: el listing más recientemente analizado con su puntuación de transparencia, el perfil financiero (propertyPrice pre-rellenado, savings, monthlyIncome, debts, persona), el desglose de gastos ocultos calculado, el estado del checklist documental, y un acceso rápido a todas las herramientas. El dashboard persiste los datos por sesión anónima (UUID) sin necesidad de registro. El usuario puede re-analizar el listing actual para ver qué ha cambiado — el backend computa el `diff` entre el nuevo snapshot y el `previousHash` y lo devuelve en la respuesta (ver FR-022).
 
 Si la sesión no tiene ningún `PurchaseProcess` activo, el dashboard muestra un estado vacío con llamadas a la acción: "Analiza tu primer anuncio" o "Configura tu perfil financiero manualmente".
 
-**Por qué esta prioridad**: Centro de retención y navegación. Une las dos historias P1 en una experiencia coherente. Demuestra persistencia de datos y gestión de estado.
+**Por qué esta prioridad**: Centro de retención y navegación. Une las dos historias P1 en una experiencia coherente. Demuestra persistencia de datos, agregación de datos en una sola llamada (FR-023) y gestión de estado.
 
-**Prueba independiente**: Analizar un listing (crea proceso), completar el perfil financiero, recargar el dashboard → verificar que todo el estado del proceso persiste, se muestra correctamente, y los cambios del listing son visibles al re-analizar.
+**Prueba independiente**: Visitar el dashboard sin haber analizado nada → verificar que muestra el estado vacío con CTAs claros. NO requiere datos de US1/US2 para validar este path. Para validar la vista con datos, basta con analizar un listing + completar el perfil (test de integración, no de historia aislada).
 
 **Criterios de aceptación**:
 
-1. **Dado** una sesión con proceso activo y 1 listing analizado, **Cuando** el usuario visita el dashboard, **Entonces** se muestra el listing con su puntuación y fecha, el propertyPrice bloqueado desde el listing, y un resumen del perfil financiero.
-2. **Dado** un proceso activo, **Cuando** el usuario visita el dashboard, **Entonces** se muestra una instantánea de capacidad de compra, gastos ocultos totales y progreso del checklist.
-3. **Dado** un listing previamente analizado en el mismo proceso, **Cuando** el usuario pulsa "re-analizar", **Entonces** se ejecuta un nuevo análisis, se crea un nuevo `AnalyzedListing`, y el dashboard destaca las diferencias respecto al snapshot anterior (ej: "Precio: -10.000€ desde el último análisis").
-4. **Dada** una sesión nueva sin proceso activo, **Cuando** el usuario visita el dashboard, **Entonces** se muestra un estado vacío con dos CTAs: "Analizar un anuncio" y "Configurar perfil manualmente".
+1. **Dado** una sesión sin proceso activo, **Cuando** el usuario visita el dashboard, **Entonces** se muestra el estado vacío con dos CTAs: "Analizar un anuncio" y "Configurar perfil manualmente" (FR-019).
+2. **Dado** una sesión con proceso activo y 1 listing analizado, **Cuando** el usuario visita el dashboard, **Entonces** se muestra el listing con su puntuación y fecha, el propertyPrice bloqueado desde el listing, y un resumen del perfil financiero.
+3. **Dado** un proceso activo, **Cuando** el usuario visita el dashboard, **Entonces** se muestra una instantánea de capacidad de compra, gastos ocultos totales, progreso del checklist, y la etapa actual del proceso (`currentStage`).
+4. **Dado** un listing previamente analizado en el mismo proceso, **Cuando** el usuario pulsa "re-analizar", **Entonces** se ejecuta un nuevo análisis, el backend computa el `diff` contra el `previousHash` y lo almacena en el nuevo `AnalyzedListing`, y el dashboard destaca los cambios (ej: "Precio: -10.000€ desde el último análisis") desde la respuesta de la API — sin computación adicional en frontend.
 
 ---
 
@@ -148,6 +151,11 @@ El usuario hace seguimiento de qué documentos tiene y cuáles le faltan para ca
 - **FR-016**: El sistema DEBE resolver la ubicación del anuncio mediante una cadena de responsabilidad: primero extrayendo la dirección declarada del HTML (Cheerio), luego geocodificándola con Nominatim (OSM), y solo como fallback usando análisis multimodal de fotos vía LLM (OpenRouter con capacidad de visión). El cruce con Catastro SOLO se ejecuta cuando se han obtenido coordenadas GPS válidas.
 - **FR-017**: El sistema DEBE incluir un disclaimer visible en la UI indicando que el análisis de transparencia es generado por IA y debe verificarse con fuentes oficiales antes de tomar decisiones de compra.
 - **FR-018**: La UI DEBE mostrar un estado de carga claro durante el análisis del listing (skeleton/spinner con tiempo estimado) ya que el endpoint puede tardar entre 5 y 12 segundos en completarse.
+- **FR-019**: El dashboard DEBE funcionar en estado vacío con dos CTAs claros ("Analizar un anuncio" y "Configurar perfil manualmente") cuando la sesión no tiene un `PurchaseProcess` activo. Este estado es la prueba independiente de US3.
+- **FR-020**: El sistema DEBE aplicar un límite de 20 análisis por día por UUID de sesión. UUID es server-generated, almacenado en localStorage, enviado en cada request. **Limitación conocida**: borrar el localStorage resetea el límite. Esto es aceptable para POC educativa (el "abuso" no es un objetivo). Para producción se requiere auth + sesiones server-side.
+- **FR-021**: El sistema DEBE mostrar **tres escenarios de rentabilidad** en la comparativa de inversión: conservador (4% anual), moderado (6% anual), agresivo (8% anual). Cada uno DEBE incluir una columna "valor real" ajustada por inflación (2% anual) y un disclaimer sobre tributación (~19-26% en España para ganancias patrimoniales) y ausencia de garantía de rentabilidades futuras.
+- **FR-022**: El sistema DEBE computar el `diff` (diferencias de precio, m², año de construcción, etc.) entre un nuevo análisis y el `previousHash` y almacenarlo en el nuevo `AnalyzedListing` como campo `diff: Json`. El frontend NO debe computar diffs — los recibe de la API.
+- **FR-023**: El sistema DEBE exponer un endpoint `GET /api/dashboard` que devuelva en una sola llamada la vista agregada del proceso activo (process + latestListing + computed + checklist + stats + currentStage) sin requerir `processId` conocido.
 
 ### Entidades Clave
 
@@ -160,7 +168,7 @@ El usuario hace seguimiento de qué documentos tiene y cuáles le faltan para ca
 
 ### Resultados Medibles
 
-- **SC-001**: El análisis de una URL de anuncio se completa y muestra resultados en menos de 10 segundos.
+- **SC-001**: El análisis de una URL de anuncio se completa y muestra resultados en menos de 15 segundos (SLA realista que incluye fetch + LLM + Catastro paralelizados, ver FR-018).
 - **SC-002**: El Mortgage Compass genera comparativas de estrategia personalizadas basadas en datos financieros reales.
 - **SC-003**: El flujo E2E completo (pegar URL → análisis → perfil financiero → estrategia hipotecaria → dashboard) puede completarse en menos de 5 minutos por un usuario nuevo.
 - **SC-004**: Las 5 historias de usuario tienen cobertura de pruebas independiente (unitarias + integración + al menos 1 test E2E del flujo principal).
