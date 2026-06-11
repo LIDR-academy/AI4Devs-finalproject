@@ -534,3 +534,25 @@ including: context, acceptance criteria, data model impact,
 architecture files, and definition of done.
 
 Write in Spanish. Do not modify any other section of readme.md.
+
+-----------
+
+Read the file listOfPrompts.md and the prompts.md template
+in the repository root.
+
+Fill prompts.md with the most relevant prompts from
+listOfPrompts.md, mapping them to the correct sections:
+
+- Section 1 (Descripción general): PRD generation prompt
+- Section 2 (Arquitectura): architecture section prompt
+- Section 3 (Modelo de datos): data model prompt
+- Section 4 (API): API specification prompt
+- Section 5 (Historias de usuario): user stories generation prompt
+- Section 6 (Tickets de trabajo): /enrich-us + multitask prompt
+
+Maximum 3 prompts per section. Include only the prompt text,
+the tool used, and a one-line note on what human adjustment
+was needed.
+
+Do not modify listOfPrompts.md.
+Write in Spanish.
