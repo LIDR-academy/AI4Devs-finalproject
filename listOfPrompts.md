@@ -338,3 +338,62 @@ Keep markdown formatting clean. Write in Spanish.
 Do not modify any other existing content in readme.md.
 
 ----------------
+
+### Seguridad — Eliminación de secretos expuestos
+**Tipo:** Corrección humana
+**Problema:** firebase_options.dart subido accidentalmente al repo público
+**Solución:** git rm --cached, rotación de API key en Firebase, 
+GitHub Secret configurado
+**Lección:** Configurar .gitignore antes del primer commit, 
+no después
+
+-------
+
+Read the PRD at docs/PRD.md and the standards at .cursor/rules/.
+Generate the architecture section for readme.md in Spanish, filling 
+these subsections:
+
+## 2.1 Diagrama de arquitectura
+Generate a Mermaid diagram showing the main components:
+- Flutter app (presentation/domain/data layers)
+- Local storage (device)
+- Firebase Authentication
+- Firebase Firestore
+Show the data flow for both offline and online scenarios.
+Justify the Clean Architecture choice and BLoC pattern.
+
+## 2.2 Descripción de componentes principales
+Describe each component with the technology used.
+
+## 2.3 Estructura de ficheros
+Show the folder structure under lib/ following Clean Architecture 
+with BLoC. Include a brief description of each main folder.
+
+## 2.4 Infraestructura y despliegue
+Describe Firebase infrastructure and the deployment process 
+for the Flutter app (APK/TestFlight).
+
+## 2.5 Seguridad
+Describe security practices: Firebase Auth, Firestore Security Rules, 
+local data, secrets management.
+
+## 2.6 Tests
+Describe the testing strategy: unit tests (domain logic), 
+integration tests (BLoC + repository), E2E test (main flow).
+
+Do not modify any other section of readme.md.
+Write in Spanish. Use Mermaid for diagrams.
+
+------------
+
+In readme.md, apply these two corrections to section 2:
+
+1. Section 2.3: Replace any reference to SQLite or drift with
+"local storage (technology to be confirmed in Entrega 2)"
+
+2. Section 2.4: Replace Play Store and TestFlight deployment
+with GitHub Releases APK download. The deployment process is:
+GitHub Actions builds release APK on merge to main,
+uploaded as GitHub Release artifact with a public download URL.
+
+----------
