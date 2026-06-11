@@ -166,3 +166,175 @@ del proyecto. Debe incluir:
 - Flujo E2E prioritario resumido (3-4 líneas)
 
 Formato markdown. Tono técnico pero accesible. Máximo una página.
+
+-----------
+
+### Historias de usuario — Generación inicial
+**Herramienta:** Claude (chat conversacional)
+**Proceso:** Sesión de metaprompting para afinar el producto antes de 
+generar las historias. Se definieron reglas del juego, flujos de UX, 
+modelo de sincronización local/nube y casos edge antes de producir 
+las historias.
+**Resultado:** 15 historias organizadas en 4 épicas (Gestión de partida, 
+Flujo de ronda, Historial, Cuenta y sincronización)
+**Ajuste humano:** 
+  ***Decisión:*** Se detectó la ausencia de funcionalidad de borrado de 
+partidas y gestión de favoritos. Se añadieron dos historias Must-Have 
+y se actualizó el PRD.
+  ***Motivo:*** La IA no contempló la gestión del ciclo de vida de los datos. 
+Revisión humana necesaria.
+**Conversación completa:** [enlace a esta conversación si la exportas]
+
+
+--------------
+
+
+Create the following user stories as Jira tickets in project LA-POCHA. 
+For each ticket set status "To refine", add the corresponding epic, 
+priority (High for Must-Have, Medium for Should-Have), and estimate (S/M/L).
+
+EPIC: Gestión de partida
+1. Como organizador, quiero crear una nueva partida seleccionando el número 
+   de jugadores, para que la app genere automáticamente la secuencia de 
+   rondas y el número de cartas. Priority: High. Size: M.
+2. Como organizador, quiero añadir jugadores por nombre libre, buscando 
+   usuarios registrados o seleccionando de mis favoritos, para configurar 
+   la partida rápidamente. Priority: High. Size: M.
+3. Como organizador, quiero reordenar los jugadores y elegir el primer 
+   repartidor (o asignarlo aleatoriamente), para respetar el orden físico 
+   de la mesa. Priority: High. Size: S.
+4. Como organizador, quiero repetir una partida desde el historial, para 
+   recrear la misma configuración sin introducir los datos de nuevo. 
+   Priority: High. Size: S.
+
+EPIC: Flujo de ronda
+5. Como organizador, quiero introducir las apuestas de cada jugador en 
+   orden (repartidor al final) con validación de la restricción en tiempo 
+   real, para cerrar la fase de apuestas sin errores. Priority: High. Size: L.
+6. Como organizador, quiero ver durante el juego las apuestas, puntuación 
+   acumulada y balance de bazas de cada jugador, para que todos puedan 
+   seguir el estado de la partida. Priority: High. Size: M.
+7. Como organizador, quiero introducir las bazas reales obtenidas y que 
+   la app calcule los puntos automáticamente, para eliminar errores de 
+   cálculo. Priority: High. Size: M.
+8. Como organizador, quiero poder corregir apuestas o bazas en la ronda 
+   actual, para subsanar errores de introducción. Priority: High. Size: M.
+9. Como organizador, quiero poder repetir una ronda completa, para 
+   gestionar situaciones excepcionales durante el juego. 
+   Priority: High. Size: S.
+10. Como organizador, quiero ver el resultado de cada ronda con ranking 
+    y puntuación acumulada, para que todos los jugadores conozcan su 
+    posición. Priority: High. Size: S.
+
+EPIC: Historial
+11. Como jugador, quiero ver un listado de todas mis partidas jugadas 
+    (locales y en nube), para consultar mi historial de juego. 
+    Priority: High. Size: M.
+12. Como jugador, quiero ver el detalle de una partida pasada ronda a 
+    ronda, para recordar cómo se desarrolló. Priority: High. Size: M.
+13. Como jugador, quiero eliminar partidas de mi historial, para mantener 
+    solo las que me interesa conservar. Priority: High. Size: S.
+14. Como jugador, quiero gestionar mi lista de favoritos (añadir y 
+    eliminar), para mantenerla actualizada. Priority: High. Size: S.
+
+EPIC: Cuenta y sincronización
+15. Como jugador, quiero registrarme y hacer login con email y contraseña, 
+    para poder sincronizar mis partidas en la nube. 
+    Priority: Medium. Size: M.
+16. Como jugador registrado, quiero que mis partidas se suban 
+    automáticamente al finalizarlas, para tener mi historial disponible 
+    en la nube sin ninguna acción adicional. Priority: Medium. Size: M.
+17. Como jugador registrado, quiero recibir automáticamente en mi historial 
+    las partidas en las que participé aunque no fuera yo quien llevara el 
+    marcador, para ver todas mis partidas desde mi cuenta. 
+    Priority: Medium. Size: M.
+
+
+-----------------
+
+Use /multitask to process the following Jira tickets in parallel.
+Use Atlassian  CLI (acli) to read and update Jira tickets.
+
+For each ticket:
+
+1. Read the current ticket description using acli
+2. Run /enrich-us with the ticket content and the PRD at docs/PRD.md
+   as context
+3. Update the ticket in Jira with the enhanced content using acli,
+   keeping the [original] section and adding the [enhanced] section
+
+Tickets to process in parallel:
+LPT-6, LPT-7, LPT-8, LPT-9, LPT-10, LPT-11, LPT-12, LPT-13,
+LPT-14, LPT-15, LPT-16, LPT-17, LPT-18
+
+---------------
+Use /multitask to process the following Jira tickets in parallel.
+The Atlassian MCP is not available, use acli (C:\Users\juanm\acli.exe)
+to read and update Jira tickets instead.
+
+For each ticket:
+
+1. Read the current ticket description using acli
+2. Run /enrich-us with the ticket content and the PRD at docs/PRD.md
+   as context
+3. Update the ticket in Jira with the enhanced content using acli,
+   keeping the [original] section and adding the [enhanced] section
+
+Tickets to process in parallel:
+LPT-19, LPT-20, LPT-21
+
+-------------------
+
+Using acli (C:\Users\juanm\acli.exe), update the Jira ticket LPT-5.
+
+Read the current description of LPT-5 and apply ONLY these two changes:
+
+1. In the acceptance criteria, replace criterion 3 with:
+"La secuencia de rondas sigue el patrón ascendente-plateau-descendente:
+1, 2, …, M (repetido N veces, siendo N el número de jugadores), M-1, …, 2, 1.
+Ejemplo con 4 jugadores (M=10): 1,2,3,4,5,6,7,8,9,10,10,10,10,9,8,7,6,5,4,3,2,1 = 22 rondas."
+
+2. In the configuration table, replace the "Rondas (2M−1)" column
+with "Rondas (2M−1+N)" and update values:
+| Jugadores | Cartas totales | Máx. por ronda (M) | Rondas |
+|-----------|----------------|--------------------|--------|
+| 3         | 30             | 10                 | 21     |
+| 4         | 40             | 10                 | 22     |
+| 5         | 40             | 8                  | 19     |
+| 6         | 48             | 8                  | 21     |
+| 7         | 49 (+ comodín) | 7                  | 19     |
+| 8         | 48             | 6                  | 18     |
+
+Do not modify any other content. Preserve all existing formatting.
+
+------------
+
+Read the PRD at docs/PRD.md and update the readme.md in the repository
+root with the following two sections:
+
+## Ficha del proyecto
+
+Generate a project card with these fields:
+
+- Nombre: La Pocha
+- Descripción corta: one sentence
+- Stack: Flutter + Firebase (Firestore + Authentication)
+- State management: BLoC
+- Plataforma: Android / iOS
+- Autor: [leave blank for the user to fill]
+- Repositorio: [leave blank for the user to fill]
+
+## Descripción general del producto
+
+Based on PRD sections 1, 2, 3 and 5, write a concise product description
+in Spanish including:
+
+- What it is and what problem it solves (3-4 lines)
+- Target users (the 3 personas from the PRD, summarized)
+- Main value proposition (bullet points)
+- MVP E2E flow summarized (3-4 lines)
+
+Keep markdown formatting clean. Write in Spanish.
+Do not modify any other existing content in readme.md.
+
+----------------

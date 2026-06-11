@@ -109,11 +109,21 @@ Formato markdown. Tono técnico pero accesible. Máximo una página.
 
 ### 5. Historias de Usuario
 
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
+### Historias de usuario — Generación inicial
+**Herramienta:** Claude (chat conversacional)
+**Proceso:** Sesión de metaprompting para afinar el producto antes de 
+generar las historias. Se definieron reglas del juego, flujos de UX, 
+modelo de sincronización local/nube y casos edge antes de producir 
+las historias.
+**Resultado:** 15 historias organizadas en 4 épicas (Gestión de partida, 
+Flujo de ronda, Historial, Cuenta y sincronización)
+**Ajuste humano:** 
+  ***Decisión:*** Se detectó la ausencia de funcionalidad de borrado de 
+partidas y gestión de favoritos. Se añadieron dos historias Must-Have 
+y se actualizó el PRD.
+  ***Motivo:*** La IA no contempló la gestión del ciclo de vida de los datos. 
+Revisión humana necesaria.
+**Conversación completa:** [enlace a esta conversación si la exportas]
 
 ---
 
