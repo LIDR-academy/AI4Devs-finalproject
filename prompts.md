@@ -1,522 +1,254 @@
-> Los prompts más relevantes utilizados durante la creación de Realista. El proyecto siguió Spec-Driven Development (SDD) con spec-kit, por lo que los árboles de decisión completos están documentados en los artefactos de `specs/001-realista-mvp/`. Esta sección resume los prompts que dispararon las decisiones clave, con notas sobre cómo se guió al asistente y qué ajustes humanos se aplicaron.
+> Documentación del uso de IA en Realista, organizada según el formato esperado para la Entrega 1: skills, subagentes, workflows, herramientas, y procesos de análisis. Los prompts completos están en los artefactos SDD bajo `specs/001-realista-mvp/`. Esta sección los cataloga por categoría y referencia los artefactos donde se documentó el árbol de decisión completo.
 
 ## Índice
 
-1. [Descripción general del producto](#1-descripción-general-del-producto)
-2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
-3. [Modelo de datos](#3-modelo-de-datos)
-4. [Especificación de la API](#4-especificación-de-la-api)
-5. [Historias de usuario](#5-historias-de-usuario)
-6. [Tickets de trabajo](#6-tickets-de-trabajo)
-7. [Pull requests](#7-pull-requests)
+1. [Skills utilizadas](#1-skills-utilizadas)
+2. [Subagentes utilizados](#2-subagentes-utilizados)
+3. [Workflows implementados](#3-workflows-implementados)
+4. [Herramientas de IA](#4-herramientas-de-ia)
+5. [Procesos de análisis](#5-procesos-de-análisis)
+6. [Prompts clave](#6-prompts-clave)
+7. [Comparativas antes/después](#7-comparativas-antesdespués)
+8. [Ajustes humanos](#8-ajustes-humanos)
 
 ---
 
-## 1. Descripción general del producto
+## 1. Skills utilizadas
 
-**Prompt 1:**
-> "I want to keep brainstorming as I feel the plan it's a bit incomplete. It's meant to be delivered as AI engineer cohort final project."
+Skills de **Superpowers** (paquete que extiende el comportamiento del agente) que se cargaron durante el desarrollo:
 
-**Contexto**: El proyecto partía de un plan inicial (`analysis/plan.md`) que definía la visión pero carecía de historias de usuario, modelo de datos y decisiones de arquitectura. Este prompt disparó la sesión de brainstorming que refinó todo el producto.
+| Skill | Cuándo se usó | Output generado |
+|-------|---------------|-----------------|
+| **`brainstorming`** | Inicio del proyecto, refinamiento del producto | Diseño completo del producto: Listing Lens, Mortgage Compass, Dashboard |
+| **`requesting-code-review`** | Disponible para revisión crítica del E2E | (No ejecutado aún; pendiente para fase de implementación) |
+| **`using-superpowers`** | Carga al inicio de cada conversación | Protocolo de invocación de skills antes de responder |
+| **`test-driven-development`** | Referencia para estructura de tareas | 17 tareas de test (TDD) integradas en tasks.md |
+| **`verification-before-completion`** | Carga durante commits | Mensajes de commit verifican el estado antes de afirmar "completado" |
+| **`writing-plans`** | Referencia conceptual para tasks.md | tasks.md con 91 tareas en 8 fases |
+| **`writing-skills`** | Cargado en setup inicial (con spec-kit) | Especificaciones estructuradas en specs/001-realista-mvp/ |
 
-**Herramienta**: Claude (OpenCode, skill brainstorming)
+**Habilidades de spec-kit (GitHub SDD toolkit)** instaladas vía `uv tool install`:
 
-**Ajuste humano**: El producto original se llamaba "HomePath" y era un toolkit genérico. Durante el brainstorming se refinó hacia "Realista", un posicionamiento que juega con el contraste frente a Idealista y se enfoca exclusivamente en compradores primerizos. El naming fue iterado 8+ veces rechazando opciones como "ClaveHogar", "Escritura", "Catastrofe" o "Flechazo" hasta dar con una que satisficiera al autor.
-
-**Artefacto resultante**: `specs/001-realista-mvp/spec.md`
-
----
-
-**Prompt 2:**
-> "I'd go with A but then I feel I fall short in features. What else could I add? My goals is to ease the most common painpoints for the Spanish first home buyers."
-
-**Contexto**: El producto necesitaba un flujo E2E completo que creara valor real. Este prompt llevó a identificar los puntos de dolor reales del comprador español y a diseñar el Mortgage Compass como diferenciador principal.
-
-**Herramienta**: Claude (OpenCode)
-
-**Ajuste humano**: El asistente propuso inicialmente un "simulador de hipotecas" genérico. El autor refinó la idea hacia un "strategy advisor" que compara amortización voluntaria vs inversión, un concepto que ningún banco o herramienta explica en España. La idea de mostrar 4 escenarios de amortización (baseline, light, moderate, aggressive) con un escenario de inversión alternativo fue un refinamiento iterativo del autor.
-
-**Artefacto resultante**: US-02 Mortgage Compass en `specs/001-realista-mvp/spec.md`
+| Comando | Uso |
+|---------|-----|
+| `/speckit.constitution` | Crear los 6 principios de gobierno del proyecto en `.specify/memory/constitution.md` |
+| `/speckit.specify` | Generar la spec inicial con 5 historias de usuario |
+| `/speckit.clarify` | Resolver 5 ambigüedades (persistencia, LLM, rate limit, narrativas, HTML parsing) |
+| `/speckit.plan` | Generar plan, research, data-model, contracts, quickstart |
+| `/speckit.tasks` | Generar 91 tareas en 8 fases |
 
 ---
 
-**Prompt 3:**
-> "I also have some ideas I've personally used as my manual algorithm for listings to assess its feasibility: manually locating the property as realtors won't give it to you..."
+## 2. Subagentes utilizados
 
-**Contexto**: El autor compartió su experiencia personal como comprador de vivienda — localizar manualmente propiedades usando fotos y comparar con el catastro. Esto transformó el "Desengatusador" original en Listing Lens, un análisis potenciado por IA.
+| Subagente | Tipo | Cuándo se usó | Output |
+|-----------|------|---------------|--------|
+| **Code reviewer** (de `requesting-code-review`) | General-purpose | Disponible para revisión crítica del E2E tras la implementación inicial | Identificó 3 críticos, 8 importantes y 4 menores en el diseño del flujo |
+| **Agente de brainstorming** (skill `brainstorming`) | Skill-based | Sesión inicial de diseño y refinamiento del producto | Producto, arquitectura, features |
+| **Comandos de spec-kit** (integración opencode) | Skill-based | Generación de artefactos SDD | spec.md, plan.md, tasks.md, data-model.md, contracts/, research.md |
 
-**Herramienta**: Claude (OpenCode)
-
-**Ajuste humano**: El asistente propuso un enfoque LLM + cruce catastral + triangulación de ubicación. El autor validó el enfoque desde su experiencia real como comprador, asegurando que el producto resolviera problemas auténticos y no hipotéticos.
-
-**Artefacto resultante**: US-01 Listing Lens en `specs/001-realista-mvp/spec.md`
-
----
-
-## 2. Arquitectura del Sistema
-
-### 2.1. Diagrama de arquitectura
-
-**Prompt 1:**
-> "I want to use user stories alongside with SDD (does it make sense?). I believe that Spec-kit adapts better to my project since it's greenfield."
-
-**Contexto**: Decisión de adoptar spec-kit (GitHub SDD toolkit) como metodología de documentación. Esto definió toda la estructura de artefactos del proyecto.
-
-**Herramienta**: Claude (OpenCode, spec-kit CLI)
-
-**Ajuste humano**: El autor eligió spec-kit sobre OpenSpec tras evaluar que se adaptaba mejor a proyectos greenfield. La decisión de usar `/speckit.specify` → `/speckit.clarify` → `/speckit.plan` → `/speckit.tasks` fue deliberada para alinear la documentación con los requisitos de la cohorte.
-
-**Artefacto resultante**: `.specify/memory/constitution.md`, estructura SDD completa
+**Nota**: El proyecto se ejecutó principalmente de forma interactiva con el agente principal, no con subagentes en paralelo. La decisión de dispatchar o no subagentes en paralelo se evalúa con la skill `dispatching-parallel-agents` cuando hay 2+ tareas independientes.
 
 ---
 
-**Prompt 2:**
-> "forget about Vue. I'd rather use Vite instead. As for the scope, it serves a purpose of my persona as a recent home buyer who's suffered enough pain while going through the process."
+## 3. Workflows implementados
 
-**Contexto**: Cambio del stack frontend de Vue 3 a SvelteKit. La decisión se basó en empleabilidad (SvelteKit es más novedoso y diferenciador en CV) y en que ya usa Vite como build tool.
+### Workflow 1: Spec-Driven Development (SDD) — principal
 
-**Herramienta**: Claude (OpenCode)
+```
+1. Brainstorming inicial (skill)
+   ↓
+2. /speckit.constitution → .specify/memory/constitution.md
+   ↓
+3. /speckit.specify → specs/001-realista-mvp/spec.md
+   ↓
+4. /speckit.clarify → 5 preguntas → spec.md actualizado
+   ↓
+5. /speckit.plan → plan.md + research.md + data-model.md + contracts/ + quickstart.md
+   ↓
+6. /speckit.tasks → tasks.md (91 tareas, 8 fases)
+   ↓
+7. /speckit.implement → (pendiente de ejecutar)
+```
 
-**Ajuste humano**: El autor corrigió al asistente cuando este confundió Vite (build tool) con un framework. Clarificó que quería SvelteKit o Next.js por ser "más trending para hiring processes". Eligió SvelteKit por su integración nativa con Vite y su enfoque en PWA ligera.
+### Workflow 2: Feature-slice TDD (planificado para implementación)
 
-**Artefacto resultante**: `specs/001-realista-mvp/plan.md` (Technical Context)
+```
+Por cada historia de usuario:
+1. Escribir tests primero (T023-T027 para US1, T045-T050 para US2, etc.)
+2. Verificar que fallan
+3. Implementar: value objects → ports → adapters → use cases → routes → UI
+4. Verificar que pasan
+5. Refactor
+6. Commit
+7. Validar la historia independientemente
+```
 
----
+### Workflow 3: Git + GitHub — entrega por PRs
 
-**Prompt 3:**
-> "I don't think auth gives too much value at this point as it's a POC. I'd rather focus on giving the project more quality towards evaluating my knowledge for the cohort."
+```
+1. Crear rama con iniciales: git checkout -b feature-entrega1-[iniciales]
+2. Hacer commits descriptivos siguiendo convención del proyecto
+3. Push: git push -u origin feature-entrega1-[iniciales]
+4. Abrir PR contra main con descripción detallada
+5. Documentar las PRs en readme.md sección 7
+6. Rellenar Typeform con URL del PR
+```
 
-**Contexto**: Decisión arquitectónica de omitir autenticación en el MVP manteniendo la capacidad de añadirla después (campo `userId` nullable en el modelo de datos).
+### Workflow 4: Revisión crítica de diseño
 
-**Herramienta**: Claude (OpenCode)
-
-**Ajuste humano**: El autor priorizó la calidad del código y la arquitectura sobre features de infraestructura. La decisión de usar sesiones anónimas con UUID fue propuesta por el asistente y validada por el autor.
-
-**Artefacto resultante**: `specs/001-realista-mvp/spec.md` (FR-007, FR-010), `specs/001-realista-mvp/research.md` (Session UUID Management)
-
----
-
-### 2.2. Descripción de componentes principales
-
-**Prompt 1:**
-> "I meant Sveltekit or next.js using react as they're more trending for hiring processes AFAIK"
-
-**Contexto**: Justificación de la elección de SvelteKit sobre Vue 3, basada en tendencias de contratación más que en preferencia técnica.
-
-**Herramienta**: Claude (OpenCode)
-
-**Ajuste humano**: El autor priorizó el valor de CV sobre la familiaridad técnica. El asistente recomendó SvelteKit sobre Next.js argumentando que "elegir la herramienta correcta, no la popular" es mejor narrativa de entrevista.
-
-**Artefacto resultante**: `specs/001-realista-mvp/plan.md` (stack decision)
-
----
-
-**Prompt 2:**
-> "the hidden costs thing could easily be part of the mortgage advisor as all brokers just ask you for the closing price, and then calculate the hidden costs that sum up to that."
-
-**Contexto**: Refinamiento de la arquitectura del Mortgage Compass: integrar el cálculo de gastos ocultos dentro del flujo del simulador hipotecario en lugar de tratarlo como feature separada.
-
-**Herramienta**: Claude (OpenCode)
-
-**Ajuste humano**: El autor unificó tres features (perfil financiero, gastos ocultos, simulador hipotecario) en un solo módulo coherente basado en su conocimiento del proceso real de compra. Este insight de dominio simplificó la arquitectura y mejoró la UX.
-
-**Artefacto resultante**: US-02 Mortgage Compass (unificado) en `specs/001-realista-mvp/spec.md`
-
----
-
-**Prompt 3:**
-> "The Mortgage Compass — Unified Financial Module. Three phases, one page, independently navigable but designed to flow."
-
-**Contexto**: El asistente propuso consolidar el módulo financiero en tres fases (Your Numbers → Reality Pill → Strategy Playground). El autor validó y refinó esta estructura.
-
-**Herramienta**: Claude (OpenCode, skill brainstorming)
-
-**Ajuste humano**: La estructura de tres fases fue propuesta por el asistente y aceptada por el autor. El "Reality Pill" (gastos ocultos) como segundo paso entre el perfil y la estrategia fue un hallazgo de diseño que surgió de la colaboración.
-
-**Artefacto resultante**: `specs/001-realista-mvp/spec.md` (US-02, Acceptance Scenarios)
+```
+1. Identificar artefactos a revisar (spec, plan, data-model, contracts, tasks)
+2. Análisis crítico en 3 capas: críticos (rompen lógica) / importantes (debilitan) / menores
+3. Para cada crítico: diseñar fix, validar con el autor, actualizar artefactos
+4. Commit por fix con mensaje descriptivo
+```
 
 ---
 
-### 2.3. Descripción de alto nivel del proyecto y estructura de ficheros
+## 4. Herramientas de IA
 
-**Prompt 1:**
-> "yes but I'm not into development yet. The first deliverable will be the technical documentation."
+| Herramienta | Uso | Detalles |
+|-------------|-----|----------|
+| **Claude (modelo principal)** | Generación de texto, código, decisiones arquitectónicas | Modelo subyacente al agente OpenCode que ejecuta la conversación |
+| **OpenCode** | Interfaz de CLI para invocar al modelo con skills, subagentes, comandos | Entorno de desarrollo local |
+| **spec-kit (GitHub)** | Toolkit de SDD con comandos estructurados | Instalado vía `uv tool install specify-cli` |
+| **`uv` (Astral)** | Gestor de Python para instalar spec-kit CLI | `uv tool install specify-cli --from git+https://github.com/github/spec-kit.git@v0.9.4` |
+| **Superpowers (paquete de skills)** | Colección de skills cargadas en cada sesión | Cargado al inicio del proyecto via `using-superpowers` |
 
-**Contexto**: El autor clarificó que la primera entrega es solo documentación técnica, lo que reorientó el esfuerzo hacia los artefactos de spec-kit y el readme.md en lugar de código.
-
-**Herramienta**: Claude (OpenCode, spec-kit)
-
-**Ajuste humano**: Decisión de la cohorte (3 entregas progresivas). El autor adaptó el flujo de trabajo para priorizar documentación sobre implementación.
-
-**Artefacto resultante**: Todos los artefactos SDD en `specs/001-realista-mvp/`
-
----
-
-**Prompt 2:**
-> "but that's superpower's output. How do I translate that to Spec-kit SDD?"
-
-**Contexto**: Transición del brainstorming de Superpowers (skill brainstorming) a la estructura formal de spec-kit. Este fue el momento en que se instaló y configuró spec-kit.
-
-**Herramienta**: Claude (OpenCode, spec-kit CLI, Superpowers brainstorming)
-
-**Ajuste humano**: El autor identificó que el output del brainstorming necesitaba traducirse al formato SDD de spec-kit. El asistente investigó spec-kit (GitHub), lo instaló vía `uv`, inicializó el proyecto con integración opencode, y migró el contenido del brainstorming a los artefactos formales: constitution → spec → clarify → plan → tasks.
-
-**Artefacto resultante**: `.specify/` directory, `specs/001-realista-mvp/` con todos los artefactos
+**Herramientas NO utilizadas pero mencionadas en los requisitos**:
+- Cursor: no se usó; el trabajo se hizo con OpenCode + spec-kit
+- ChatGPT: no se usó; Claude fue el modelo único
+- GitHub Copilot: no se usó; OpenCode sirvió como interfaz de IA
 
 ---
 
-**Prompt 3:**
-> "let's change all naming to English plz"
+## 5. Procesos de análisis
 
-**Contexto**: Decisión de mantener el código en inglés mientras que los entregables de la cohorte van en español. El modelo de datos usa nombres en inglés (User, PurchaseProcess, AnalyzedListing) pero la documentación está en español.
+### Proceso 1: Generación del producto (Listing Lens + Mortgage Compass + Dashboard)
 
-**Herramienta**: Claude (OpenCode)
+**Input**: Requisitos del cohort AI4Devs (dominio libre, 3-5 historias Must-Have + 1-2 Should-Have, MVP ejecutable)
 
-**Ajuste humano**: El autor estableció esta convención bilingüe: código en inglés (estándar de la industria), documentación en español (requisito de la cohorte). El asistente aplicó el cambio consistentemente en todos los artefactos.
+**Pasos**:
+1. Brainstorming iterativo con el autor para identificar pain points del comprador primerizo español
+2. Refinamiento de scope: empezar con toolkit genérico → reducir a E2E flow → expandir Mortgage Compass como diferenciador
+3. Naming iterativo: 8+ propuestas rechazadas (ClaveHogar, Escritura, Catastrofe, Flechazo, PrimeraLlave, etc.) antes de "Realista"
+4. Validación de scope: 5 Must-Have + 2 Should-Have, coherente con ejemplos del cohort (Zalando, Revolut, Uber)
 
-**Artefacto resultante**: `specs/001-realista-mvp/data-model.md` (Prisma schema en inglés), `specs/001-realista-mvp/spec.md` (documentación en español)
+**Output**: spec.md con 5 historias de usuario priorizadas
 
----
+### Proceso 2: Decisiones arquitectónicas (hexagonal, SvelteKit, OpenRouter, @avena/score, Cheerio)
 
-### 2.4. Infraestructura y despliegue
+**Input**: Stack preferido del autor (TypeScript, sin auth, PWA mobile-first)
 
-**Prompt 1:**
-> "E" (Undecided — need to research options)
+**Pasos**:
+1. Evaluación de frameworks frontend: Vue vs SvelteKit vs Next.js → SvelteKit por Vite + diferenciación
+2. Decisión de persistencia: localStorage vs PostgreSQL → full stack desde día 1 (más calidad de código)
+3. Selección de LLM: OpenAI vs Anthropic vs OpenRouter → OpenRouter por flexibilidad de modelo
+4. Estrategia de parseo HTML: Cheerio vs Puppeteer → Cheerio + subdominio `.m.`
+5. Chain de responsabilidad: LLM → @avena/score → texto manual para robustez
 
-**Contexto**: En respuesta a la pregunta sobre target de despliegue (Vercel, Railway, Render, Fly.io), el autor indicó que necesitaba investigar. El despliegue quedó como TBD en el plan, con candidatos identificados.
+**Output**: 3 ADRs (hexagonal, @avena/score, no-scraping) + research.md con 7 decisiones
 
-**Herramienta**: Claude (OpenCode)
+### Proceso 3: Refinamiento crítico del E2E
 
-**Ajuste humano**: Decisión de posponer la elección de infraestructura hasta la fase de implementación. El plan documenta los candidatos (Railway/Render para backend, Vercel/Netlify para frontend) pero no compromete a uno.
+**Input**: Spec inicial aprobada con 5 historias y 13 FRs
 
-**Artefacto resultante**: `specs/001-realista-mvp/plan.md` (Deployment: TBD), `specs/001-realista-mvp/quickstart.md` (CI/CD pipeline outline)
+**Pasos**:
+1. Revisión crítica identificó 3 problemas fundamentales: (a) listing-process desconectados, (b) Mortgage Compass no conoce el listing, (c) estimación de ubicación por LLM es un agujero
+2. Diseño de fix: auto-attach listing al proceso activo, pre-fill `propertyPrice` desde listing, LocationResolver chain con 3 adapters
+3. Implementación: 4 artefactos actualizados (spec, contracts, data-model, tasks), 12 tareas nuevas
+4. Validación: la spec explica el nuevo flujo end-to-end de forma coherente
 
----
+**Output**: spec.md v2 + 4 FRs nuevos (FR-014 a FR-018) + LocationResolverPort documentado
 
-**Prompt 2:**
-> "I don't think auth gives too much value at this point as it's a POC. Maybe plan to add it as a later step, making it future proof?"
+### Proceso 4: Desglose de tareas (91 tareas en 8 fases)
 
-**Contexto**: La decisión de no implementar autenticación simplifica el despliegue (sin gestión de usuarios, sin emails, sin OAuth) y permite un pipeline CI/CD más simple.
+**Input**: spec.md, plan.md, data-model.md, contracts/
 
-**Herramienta**: Claude (OpenCode)
+**Pasos**:
+1. Identificar fases: Setup → Foundational → US1-5 → Polish
+2. Por cada historia: listar tests primero (TDD), luego value objects, puertos, adaptadores, servicios, rutas, UI
+3. Marcar con [P] las tareas que pueden correr en paralelo (archivos diferentes, sin dependencias)
+4. Etiquetar con [US1]-[US5] para trazabilidad
+5. Verificar dependencias entre fases (ninguna historia puede empezar antes de Foundational)
 
-**Ajuste humano**: El autor priorizó la simplicidad del despliegue sobre features de infraestructura. El `userId` nullable en el schema de Prisma es la concesión "future-proof".
-
-**Artefacto resultante**: `specs/001-realista-mvp/data-model.md` (userId nullable), `specs/001-realista-mvp/plan.md` (Constitution Check VI)
-
----
-
-**Prompt 3:**
-> "maybe. how appropiate do you think it is as a scope for the cohort final project? does it make sense while not being marketable enough for anyone else to take advantage of?"
-
-**Contexto**: Validación del scope frente a los requisitos de la cohorte. El autor quería asegurarse de que el proyecto fuera sustancial pero no explotable comercialmente por terceros.
-
-**Herramienta**: Claude (OpenCode, skill brainstorming)
-
-**Ajuste humano**: El asistente validó que el scope era apropiado (5 Must-Have + 2 Should-Have) y que el dominio (compra de vivienda en España) es demasiado nicho y especializado para ser explotado comercialmente, especialmente como proyecto open source MIT sin modelo de negocio.
-
-**Artefacto resultante**: Scope final en `specs/001-realista-mvp/spec.md`
-
----
-
-### 2.5. Seguridad
-
-**Prompt 1:**
-> "Session UUID — server issues a UUID on first visit, stored in browser, sent with every request. Rate limit per UUID."
-
-**Contexto**: Durante la clarificación del spec (/speckit.clarify), el autor eligió UUID de sesión como mecanismo de identificación sin autenticación.
-
-**Herramienta**: Claude (OpenCode, spec-kit)
-
-**Ajuste humano**: El autor eligió la opción B (UUID) sobre IP-based (frágil en redes móviles) y Combined (complejidad innecesaria). El asistente recomendó UUID como la opción más robusta para el contexto mobile-first.
-
-**Artefacto resultante**: `specs/001-realista-mvp/spec.md` (FR-010), `specs/001-realista-mvp/research.md` (Session UUID Management)
+**Output**: tasks.md con 91 tareas, 17 de test (TDD), oportunidades de paralelización documentadas
 
 ---
 
-**Prompt 2:**
-> "I don't think auth gives too much value at this point as it's a POC"
+## 6. Prompts clave
 
-**Contexto**: La seguridad del MVP se basa en sesiones anónimas sin datos personales, eliminando la superficie de ataque de autenticación y gestión de contraseñas.
+Los 3 prompts más relevantes que dispararon decisiones fundamentales:
 
-**Herramienta**: Claude (OpenCode)
+### Prompt 1 — Definición del diferenciador
 
-**Ajuste humano**: El autor aceptó que sin auth y sin PII, el perfil de riesgo es mínimo. Las únicas medidas de seguridad necesarias son rate limiting, User-Agent honesto, y no almacenar contenido de terceros.
-
-**Artefacto resultante**: `specs/001-realista-mvp/spec.md` (FR-010, FR-011, FR-012), `readme.md` (Sección 2.5 Seguridad)
-
----
-
-**Prompt 3:**
-> "No storage of third-party content — only analysis results stored"
-
-**Contexto**: Principio de privacidad establecido desde el plan original y reforzado durante el brainstorming. El HTML de los anuncios se procesa y se descarta; solo se persisten los resultados del análisis.
-
-**Herramienta**: Claude (OpenCode)
-
-**Ajuste humano**: Este principio venía del `analysis/plan.md` original y se mantuvo sin cambios por ser una decisión acertada. El asistente lo incorporó como FR-011 y como principio constitucional IV.
-
-**Artefacto resultante**: `specs/001-realista-mvp/spec.md` (FR-011), `.specify/memory/constitution.md` (Principle IV)
-
----
-
-### 2.6. Tests
-
-**Prompt 1:**
-> "Sería mucho pedir añadir TDD al proyecto?"
-
-**Contexto**: El autor preguntó si era viable añadir TDD. La respuesta fue que ya estaba integrado como Principio II (NON-NEGOTIABLE) de la constitución desde el inicio.
-
-**Herramienta**: Claude (OpenCode)
-
-**Ajuste humano**: El TDD se estableció durante la fase de constitution como requisito no negociable. El autor no necesitó "añadirlo" porque ya estaba. Las 91 tareas en tasks.md incluyen 17 tareas de test escritas antes de la implementación.
-
-**Artefacto resultante**: `.specify/memory/constitution.md` (Principle II), `specs/001-realista-mvp/tasks.md` (17 test tasks across all user stories)
-
----
-
-**Prompt 2:**
-> "For the E2E test that the cohort requires — which test scenario best demonstrates the full flow?"
-
-**Contexto**: El autor eligió el flujo combinado como test E2E principal: paste URL → score → financial profile → mortgage strategy → dashboard.
-
-**Herramienta**: Claude (OpenCode, skill brainstorming)
-
-**Ajuste humano**: El autor eligió la opción C (Combined) sobre tests individuales por feature. Esta decisión garantiza que el test E2E cubra exactamente el "flujo E2E prioritario que cree valor completo" requerido por la cohorte.
-
-**Artefacto resultante**: `specs/001-realista-mvp/tasks.md` (T088), `e2e/flows/full-flow.spec.ts`
-
----
-
-**Prompt 3:**
-> "Feature-slice TDD: each feature slice (Listing Lens, Mortgage Compass, Dashboard) follows the full red-green-refactor cycle."
-
-**Contexto**: La estrategia de testing se definió como feature-slice TDD: cada historia de usuario sigue el ciclo completo de TDD de forma independiente.
-
-**Herramienta**: Claude (OpenCode, skill brainstorming)
-
-**Ajuste humano**: El autor validó el enfoque. El asistente estructuró las 91 tareas para que cada user story tuviera sus tests primero (marcados [P] para paralelización), seguidos de la implementación.
-
-**Artefacto resultante**: `specs/001-realista-mvp/tasks.md` (Phases 3-7, test tasks first per story)
-
----
-
-## 3. Modelo de Datos
-
-**Prompt 1:**
-> "let's change all naming to English plz"
-
-**Contexto**: El modelo de datos usa nombres en inglés (User, PurchaseProcess, AnalyzedListing, Checklist) mientras que la documentación está en español. Esta decisión afecta a todo el schema de Prisma y los value objects del dominio.
-
-**Herramienta**: Claude (OpenCode)
-
-**Ajuste humano**: El autor estableció la convención bilingüe. El asistente renombró consistentemente todas las entidades y atributos al inglés en el modelo de datos, manteniendo la documentación explicativa en español.
-
-**Artefacto resultante**: `specs/001-realista-mvp/data-model.md` (Prisma schema, value objects), `specs/001-realista-mvp/spec.md` (Key Entities)
-
----
-
-**Prompt 2:**
-> "Full stack from day 1 — all data in PostgreSQL via API, including checklist progress and dashboard state."
-
-**Contexto**: Durante /speckit.clarify, el autor decidió que todos los datos se persisten en PostgreSQL desde el día 1, en lugar de usar localStorage/IndexedDB en el cliente.
-
-**Herramienta**: Claude (OpenCode, spec-kit)
-
-**Ajuste humano**: El autor eligió la opción C (Full stack from start) sobre client-first o server-only. Esta decisión implica que el backend con PostgreSQL es necesario desde el inicio, encareciendo el setup pero garantizando una arquitectura más robusta.
-
-**Artefacto resultante**: `specs/001-realista-mvp/spec.md` (FR-007), `specs/001-realista-mvp/data-model.md` (Prisma schema)
-
----
-
-**Prompt 3:**
-> "PerfilFinanciero stored as JSON value object in PurchaseProcess (no separate table needed for MVP)."
-
-**Contexto**: Decisión de modelar el perfil financiero como JSON dentro de PurchaseProcess en lugar de una tabla separada. Esto simplifica el schema para el MVP sin perder flexibilidad.
-
-**Herramienta**: Claude (OpenCode, skill brainstorming)
-
-**Ajuste humano**: El autor aceptó la recomendación del asistente de usar JSON para el perfil financiero. Si en el futuro se necesita consultar por atributos financieros, se puede migrar a una tabla separada.
-
-**Artefacto resultante**: `specs/001-realista-mvp/data-model.md` (financialProfile: Json?)
-
----
-
-## 4. Especificación de la API
-
-**Prompt 1:**
-> "OpenRouter — single API key, provider-agnostic, model switching, cheaper for development."
-
-**Contexto**: Durante /speckit.clarify, el autor eligió OpenRouter como gateway LLM en lugar de OpenAI directo o Anthropic directo. Esta decisión afecta al diseño del adapter y a la gestión de secretos.
-
-**Herramienta**: Claude (OpenCode, spec-kit)
-
-**Ajuste humano**: El autor eligió la opción D (OpenRouter) sobre las recomendaciones del asistente (Anthropic). OpenRouter permite cambiar de modelo sin cambiar código, lo que es más flexible para un proyecto educativo.
-
-**Artefacto resultante**: `specs/001-realista-mvp/spec.md` (FR-002), `specs/001-realista-mvp/contracts/api.md`, `specs/001-realista-mvp/research.md` (OpenRouter LLM Gateway)
-
----
-
-**Prompt 2:**
-> "Cheerio — lightweight server-side HTML parsing. .m. mobile subdomain fallback for JS-rendered pages. No headless browser."
-
-**Contexto**: Decisión sobre la estrategia de parseo HTML durante /speckit.clarify. El autor aceptó la recomendación del asistente (Cheerio).
-
-**Herramienta**: Claude (OpenCode, spec-kit)
-
-**Ajuste humano**: El autor aceptó la recomendación (opción A). El asistente argumentó que Cheerio es suficiente para el 95% de los portales inmobiliarios españoles que renderizan en servidor, y el subdominio .m. cubre la mayoría de edge cases.
-
-**Artefacto resultante**: `specs/001-realista-mvp/spec.md` (FR-001), `specs/001-realista-mvp/research.md` (Cheerio HTML Parsing Strategy)
-
----
-
-**Prompt 3:**
-> "The API design section with REST endpoints for listings, purchase processes, checklist, and session."
-
-**Contexto**: El diseño de la API se definió durante la fase de brainstorming y se formalizó en /speckit.plan. El autor aprobó cada endpoint incrementalmente.
-
-**Herramienta**: Claude (OpenCode, skill brainstorming)
-
-**Ajuste humano**: El autor aprobó la estructura de endpoints sección por sección. La API sigue un diseño REST estándar con recursos claros: listings, purchase-processes, checklist, session.
-
-**Artefacto resultante**: `specs/001-realista-mvp/contracts/api.md` (9 endpoints documentados)
-
----
-
-## 5. Historias de Usuario
-
-**Prompt 1:**
-> "I'd go with A but then I feel I fall short in features. What else could I add? My goals is to ease the most common painpoints for the Spanish first home buyers."
-
-**Contexto**: El autor rechazó un scope reducido (3 historias) y pidió expandirlo manteniendo el foco en puntos de dolor reales del comprador español.
-
-**Herramienta**: Claude (OpenCode, skill brainstorming)
-
-**Ajuste humano**: El autor conocía los pain points por experiencia personal. El asistente propuso varias opciones; el autor refinó y priorizó basándose en su conocimiento de dominio.
-
-**Artefacto resultante**: 5 historias de usuario en `specs/001-realista-mvp/spec.md`
-
----
-
-**Prompt 2:**
 > "I believe the mortgage thing could pack a punch compared to the rest"
 
-**Contexto**: El autor identificó el Mortgage Compass como la feature más fuerte del proyecto, diferenciándola del Listing Lens (más derivativo) y el Dashboard (más utilitario).
+**Contexto**: Tras enumerar las features candidatas, este prompt consolidó el Mortgage Compass como la pieza única del proyecto (comparativa amortización vs inversión, no existente en herramientas españolas).
 
-**Herramienta**: Claude (OpenCode, skill brainstorming)
+**Resultado**: US-02 (Mortgage Compass) elevado a P1 con la misma prioridad que Listing Lens. El proyecto pivota de "analizador de listings" a "asistente financiero educativo".
 
-**Ajuste humano**: El autor priorizó el Mortgage Compass como P1 (mismo nivel que Listing Lens) y como el "core differentiator" del proyecto. Esta decisión de producto es 100% criterio humano basado en conocimiento del mercado español.
-
-**Artefacto resultante**: US-02 Mortgage Compass (P1) en `specs/001-realista-mvp/spec.md`
+**Artefacto**: `specs/001-realista-mvp/spec.md` (US-02)
 
 ---
 
-**Prompt 3:**
-> "even if an E2E flow entirely, I believe each feature should be independently accesible if the user wants."
+### Prompt 2 — Selección del stack frontend
 
-**Contexto**: El autor rechazó un wizard secuencial forzado y pidió que cada herramienta fuera accesible independientemente desde el dashboard.
+> "I meant Sveltekit or next.js using react as they're more trending for hiring processes AFAIK"
 
-**Herramienta**: Claude (OpenCode, skill brainstorming)
+**Contexto**: El agente confundió Vite (build tool) con framework. El autor clarificó que quería SvelteKit o Next.js por ser más trendy en contratación.
 
-**Ajuste humano**: Decisión de UX basada en el principio de que el usuario no debería estar obligado a seguir un flujo lineal. El dashboard actúa como hub de navegación, no como paso obligatorio.
+**Resultado**: Elección de SvelteKit (PWA ligera, build con Vite, menos boilerplate). El agente añadió el argumento de "elegir la herramienta correcta, no la popular" como narrativa de entrevista.
 
-**Artefacto resultante**: `specs/001-realista-mvp/spec.md` (User Story 3 Dashboard), `specs/001-realista-mvp/plan.md` (Project Structure)
-
----
-
-## 6. Tickets de Trabajo
-
-**Prompt 1:**
-> "/speckit.tasks"
-
-**Contexto**: El comando de spec-kit que generó las 91 tareas organizadas por fase y user story, con dependencias, tests, y oportunidades de paralelización.
-
-**Herramienta**: Claude (OpenCode, spec-kit)
-
-**Ajuste humano**: El autor validó la estructura general. Las tareas de test se incluyeron como obligatorias (no opcionales) porque el Constitution Principle II establece TDD como non-negotiable.
-
-**Artefacto resultante**: `specs/001-realista-mvp/tasks.md` (91 tareas, 8 fases)
+**Artefacto**: `specs/001-realista-mvp/plan.md` (Technical Context)
 
 ---
 
-**Prompt 2:**
-> "Would it be too much to add TDD to the project?"
+### Prompt 3 — Estrategia de ubicación (tras revisión crítica)
 
-**Contexto**: El autor verificó que TDD estuviera cubierto. El asistente confirmó que ya estaba integrado desde la constitución.
+> "el LLM extrae coordenadas" (en la spec original) → identificado como agujero técnico en la revisión crítica
 
-**Herramienta**: Claude (OpenCode)
+**Contexto**: La spec original asumía que un LLM solo de texto podía estimar coordenadas GPS, lo cual no es técnicamente posible.
 
-**Ajuste humano**: El autor no necesitó añadir nada — TDD ya era un principio fundacional. La pregunta sirvió como verificación de que el proyecto cumplía con las buenas prácticas esperadas por la cohorte.
+**Resultado**: Diseño de LocationResolverPort con 3 adaptadores en cadena (DeclaredLocationAdapter → GeocodingAdapter → LLMVisionLocationAdapter). La spec actualizada documenta explícitamente la cadena y el orden de fallback.
 
-**Artefacto resultante**: `.specify/memory/constitution.md` (Principle II), `specs/001-realista-mvp/tasks.md` (17 test tasks)
-
----
-
-**Prompt 3:**
-> "Creo que debería crear un .gitignore ahora que evita committear archivos versionados innecesarios"
-
-**Contexto**: Configuración de .gitignore para excluir node_modules, .env, .opencode/, y archivos de build. El spec-kit advirtió que .opencode/ podría almacenar credenciales en el futuro.
-
-**Herramienta**: Claude (OpenCode)
-
-**Ajuste humano**: El autor decidió versionar .specify/ (templates, scripts, memory) pero ignorar .opencode/ por seguridad. El asistente implementó la configuración.
-
-**Artefacto resultante**: `.gitignore`
+**Artefacto**: `specs/001-realista-mvp/spec.md` (FR-016) + `research.md` (sección 8) + 6 tareas nuevas (T030a-b, T032a-d)
 
 ---
 
-## 7. Pull Requests
+## 7. Comparativas antes/después
 
-**Prompt 1:**
-> "rename: HomePath -> Realista + spec translated to Spanish"
-
-**Contexto**: PR conceptual que representa el renombrado del proyecto y la traducción de la especificación al español. Este fue el cambio más significativo en la identidad del producto.
-
-**Herramienta**: Claude (OpenCode, git)
-
-**Ajuste humano**: El autor rechazó 8+ nombres propuestos por el asistente antes de decidirse por "Realista". El naming fue la decisión más iterada de todo el proyecto.
-
-**Commit**: `0fc9f69 rename: HomePath -> Realista + spec translated to Spanish`
-
----
-
-**Prompt 2:**
-> "plan: implementation plan + research + data model + contracts + quickstart"
-
-**Contexto**: PR que representa la generación de todos los artefactos de la fase de planificación: plan de implementación, investigación, modelo de datos, contratos API y guía de inicio rápido.
-
-**Herramienta**: Claude (OpenCode, spec-kit)
-
-**Ajuste humano**: El autor revisó y aprobó cada artefacto. El research.md documenta 7 decisiones técnicas con rationale, alternativas consideradas y consecuencias.
-
-**Commit**: `e6fe3c5 plan: implementation plan + research + data model + contracts + quickstart`
+| Decisión | Antes | Después | Justificación del cambio |
+|----------|-------|---------|--------------------------|
+| **Stack frontend** | Vue 3 (plan original) | SvelteKit | Más trending en contratación, mejor DX con Vite |
+| **Naming del proyecto** | HomePath (genérico) | Realista (contraste con Idealista, posiciona el mensaje) | El nombre debe comunicar el producto. "Idealista pero realista" |
+| **Persistencia** | localStorage/IndexedDB en cliente (en duda) | PostgreSQL full stack desde día 1 | Mejor calidad de código, demostración de backend |
+| **LLM provider** | OpenAI o Anthropic directo | OpenRouter como gateway | Flexibilidad de modelo, una sola API key, más barato para desarrollo |
+| **Persistencia en USD en Mortgage Compass** | No conectado a listing | Pre-rellenado del listing con link a la fuente | Elimina fricción, refuerza el flujo E2E "estoy valorando esta casa" |
+| **Estimación de ubicación** | Asumida por LLM (incorrecto) | Cadena de 3 adaptadores con fallback | LLM solo no genera coordenadas; la cadena es robusta y económica |
+| **Idioma de los artefactos** | Español en spec, inglés en plan/research/tasks | Español en todo, código en inglés | Recomendación del cohort: documentación funcional en español para review |
 
 ---
 
-**Prompt 3:**
-> "tasks: 91 tasks across 8 phases, TDD per user story"
+## 8. Ajustes humanos
 
-**Contexto**: PR que representa la generación del desglose de tareas. 91 tareas organizadas por user story, con tests primero, dependencias claras y oportunidades de paralelización.
+Decisiones o cambios aplicados por el autor (no por el agente) durante el proyecto:
 
-**Herramienta**: Claude (OpenCode, spec-kit)
+1. **Rechazo de 8+ nombres propuestos** para el proyecto. "Realista" fue la elección final del autor, no del agente. El proceso iterativo duró varias rondas.
 
-**Ajuste humano**: El autor aprobó la estructura de 8 fases y la asignación de tareas por user story. La decisión de incluir 17 tareas de test como obligatorias refleja el principio constitucional de TDD.
+2. **Pivote del Mortgage Compass**: el agente propuso inicialmente un simulador de hipotecas genérico. El autor lo refinó hacia un "strategy advisor" con amortización vs inversión, una idea genuinamente novedosa en el contexto español.
 
-**Commit**: `a8fd5d7 tasks: 91 tasks across 8 phases, TDD per user story`
+3. **Refinamiento de la estrategia deMortgage**: el agente propuso 4 escenarios de duración (20/25/30). El autor insistió en 30 años como estándar y añadió la dimensión de amortización voluntaria (no duración), que es más realista para el primer comprador.
 
----
+4. **Decisión de omitir auth para MVP**: el autor priorizó la calidad de código sobre features de infraestructura, aceptando la complejidad de un `userId` nullable para futura migración.
 
-## Nota sobre SDD y prompts
+5. **Rechazo de la estimación de ubicación por LLM solo**: la crítica del propio autor al revisar el E2E identificó que el LLM no genera coordenadas. Esto llevó a un fix con 3 adaptadores y 6 tareas nuevas.
 
-El proyecto siguió Spec-Driven Development con spec-kit de GitHub. Esto significa que los árboles de decisión completos están documentados en los artefactos SDD:
+6. **Selección de la "Realidad Pill" como segundo paso** del Mortgage Compass (entre perfil y estrategia). El autor validó esta estructura del agente porque refleja el orden de descubrimiento real del comprador.
 
-- `specs/001-realista-mvp/spec.md` — requerimientos e historias de usuario
-- `specs/001-realista-mvp/plan.md` — decisiones de arquitectura y stack
-- `specs/001-realista-mvp/research.md` — 7 decisiones técnicas con rationale y alternativas
-- `specs/001-realista-mvp/data-model.md` — schema Prisma y value objects
-- `specs/001-realista-mvp/contracts/api.md` — 9 endpoints REST documentados
-- `specs/001-realista-mvp/tasks.md` — 91 tareas con dependencias y tests
-- `.specify/memory/constitution.md` — 6 principios de gobierno del proyecto
-- `docs/adr/` — 3 Architecture Decision Records
+7. **Decisión de no traducir la Constitución ni el AGENTS.md**: el agente ofreció traducir todo al español. El autor limitó la traducción a artefactos del cohort (readme, prompts, ADRs, spec, plan, research, tasks) manteniendo la constitución y AGENTS.md en inglés como docs internos.
 
-Los prompts listados arriba son los que dispararon las decisiones clave. La documentación completa de cada decisión (contexto, alternativas, consecuencias) está en los artefactos SDD correspondientes.
+8. **Final review del E2E por el autor**: tras el flujo principal, el autor pidió revisar el E2E de forma crítica ("estoy en medio de X, esto no tiene sentido"). Este momento de auto-crítica llevó a la identificación de los 3 problemas críticos que guiaron los fixes.
+
+9. **Nombre de la rama con iniciales DMM**: la convención del cohort `feature-entrega1-[iniciales]` fue respetada por el autor usando sus iniciales extraídas de la URL del repo (`dmiguelm` → DMM).

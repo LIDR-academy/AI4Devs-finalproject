@@ -1,63 +1,63 @@
-# Implementation Plan: Realista MVP
+# Plan de Implementación: Realista MVP
 
-**Branch**: `001-realista-mvp` | **Date**: 2026-06-04 | **Spec**: [spec.md](./spec.md)
+**Rama**: `001-realista-mvp` | **Fecha**: 2026-06-04 | **Spec**: [spec.md](./spec.md)
 
-**Input**: Feature specification from `/specs/001-realista-mvp/spec.md`
+**Input**: Especificación de funcionalidad desde `/specs/001-realista-mvp/spec.md`
 
-## Summary
+## Resumen
 
-PWA mobile-first para compradores primerizos de vivienda en España. Tres funcionalidades principales: Listing Lens (análisis de anuncios con IA vía OpenRouter + cruce catastral), Mortgage Compass (perfil financiero + gastos ocultos + simulador de amortización vs inversión), y Dashboard (seguimiento del proceso). Arquitectura hexagonal + DDD táctico. SvelteKit en frontend, Node.js/Express en backend, PostgreSQL + Prisma ORM como capa de datos.
+PWA mobile-first para compradores primerizos de vivienda en España. Tres funcionalidades principales: **Listing Lens** (análisis de anuncios con IA vía OpenRouter + cruce catastral), **Mortgage Compass** (perfil financiero + gastos ocultos + simulador de amortización vs inversión), y **Dashboard** (seguimiento del proceso). Arquitectura hexagonal + DDD táctico. SvelteKit en frontend, Node.js/Express en backend, PostgreSQL + Prisma ORM como capa de datos.
 
-## Technical Context
+## Contexto Técnico
 
-**Language/Version**: TypeScript 5.x
+**Lenguaje/Version**: TypeScript 5.x
 
-**Primary Dependencies**: SvelteKit (frontend), Express + node-fetch + cheerio (backend), Prisma ORM, @avena/score (scoring numérico), OpenRouter SDK (LLM gateway)
+**Dependencias principales**: SvelteKit (frontend), Express + node-fetch + cheerio (backend), Prisma ORM, @avena/score (scoring numérico), OpenRouter SDK (LLM gateway)
 
-**Storage**: PostgreSQL 16 + Prisma ORM
+**Almacenamiento**: PostgreSQL 16 + Prisma ORM
 
 **Testing**: Vitest (unitarios + integración), Playwright (E2E)
 
-**Target Platform**: Web mobile-first (PWA instalable), iOS Safari + Android Chrome
+**Plataforma objetivo**: Web mobile-first (PWA instalable), iOS Safari + Android Chrome
 
-**Project Type**: Web application (monorepo: frontend SvelteKit + backend Express)
+**Tipo de proyecto**: Web application (monorepo: frontend SvelteKit + backend Express)
 
-**Performance Goals**: Análisis de anuncio <10s, respuesta de API <500ms p95, carga inicial de PWA <3s
+**Objetivos de rendimiento**: Análisis de anuncio <10s, respuesta de API <500ms p95, carga inicial de PWA <3s
 
-**Constraints**: Rate limit 20 análisis/día/sesión, sin almacenar contenido de terceros, sin autenticación (MVP)
+**Restricciones**: Rate limit 20 análisis/día/sesión, sin almacenar contenido de terceros, sin autenticación (MVP)
 
-**Scale/Scope**: POC educativa, ~5 pantallas, 3 features principales
+**Escala/Alcance**: POC educativa, ~5 pantallas, 3 features principales
 
-## Constitution Check
+## Verificación de la Constitución
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+*PUERTA: Debe pasar antes de la investigación de Fase 0. Re-verificar tras el diseño de Fase 1.*
 
-| Principle | Status | Evidence |
-|-----------|--------|----------|
-| I. Hexagonal Architecture | ✅ PASS | Domain layer planned with ports/adapters. Zero framework deps in domain |
-| II. Test-First | ✅ PASS | Vitest + Playwright in stack. Feature-slice TDD planned per user story |
-| III. Educational, Not Commercial | ✅ PASS | FR-013 prohibits financial advice. Templates not LLM for narratives. Disclaimers planned |
-| IV. Privacy & Legal Compliance | ✅ PASS | FR-011: no third-party content storage. FR-012: honest User-Agent. FR-010: rate limiting |
-| V. Mobile-First PWA | ✅ PASS | SvelteKit + @vite-pwa/sveltekit. Target: 375px+ |
-| VI. YAGNI & Future-Proof | ✅ PASS | No auth for MVP, nullable userId in schema. Only 3 core features. No speculative work |
+| Principio | Estado | Evidencia |
+|-----------|--------|-----------|
+| I. Arquitectura Hexagonal | ✅ PASA | Capa de dominio planificada con puertos/adaptadores. Cero dependencias de frameworks en el dominio |
+| II. Test-First | ✅ PASA | Vitest + Playwright en stack. TDD feature-slice planificado por historia de usuario |
+| III. Educativo, No Comercial | ✅ PASA | FR-013 prohíbe consejo financiero. Plantillas no LLM para narrativas. Disclaimers planificados |
+| IV. Privacidad y Cumplimiento Legal | ✅ PASA | FR-011: sin almacenamiento de contenido de terceros. FR-012: User-Agent honesto. FR-010: rate limiting |
+| V. PWA Mobile-First | ✅ PASA | SvelteKit + @vite-pwa/sveltekit. Target: 375px+ |
+| VI. YAGNI & Future-Proof | ✅ PASA | Sin auth para MVP, userId nullable en schema. Solo 3 features principales. Sin trabajo especulativo |
 
-## Project Structure
+## Estructura del Proyecto
 
-### Documentation (this feature)
+### Documentación (esta feature)
 
 ```text
 specs/001-realista-mvp/
-├── plan.md              # This file
-├── research.md          # Phase 0 output
-├── data-model.md        # Phase 1 output
-├── quickstart.md        # Phase 1 output
-├── contracts/           # Phase 1 output (API contracts)
-└── tasks.md             # Phase 2 output (/speckit.tasks)
+├── plan.md              # Este archivo
+├── research.md          # Output de Fase 0
+├── data-model.md        # Output de Fase 1
+├── quickstart.md        # Output de Fase 1
+├── contracts/           # Output de Fase 1 (contratos API)
+└── tasks.md             # Output de Fase 2 (/speckit.tasks)
 ```
 
-### Source Code (repository root)
+### Código Fuente (raíz del repositorio)
 
-Frontend + backend co-located for monorepo simplicity:
+Frontend + backend co-localizados para simplicidad del monorepo:
 
 ```text
 backend/
@@ -71,6 +71,7 @@ backend/
 │   │   ├── openrouter/         # OpenRouterAdapter (LLM analysis)
 │   │   ├── avena-score/        # AvenaScoreAdapter (fallback)
 │   │   ├── cheerio/            # CheerioAdapter (HTML parsing)
+│   │   ├── location/           # DeclaredLocationAdapter, GeocodingAdapter, LLMVisionLocationAdapter
 │   │   ├── catastro/           # CatastroAdapter (cadastral API)
 │   │   └── miratuzona/         # MiraTuZonaAdapter (location link)
 │   ├── api/
@@ -103,6 +104,7 @@ frontend/
 │   ├── lib/
 │   │   ├── stores/             # Svelte stores (session, listings, profile)
 │   │   ├── api/                # Backend API client
+│   │   ├── components/         # Shared components (AIDisclaimer, LoadingState)
 │   │   └── utils/              # Shared helpers
 │   └── app.css                 # Global styles
 ├── static/                     # PWA icons, manifest
@@ -115,8 +117,8 @@ e2e/                            # Playwright tests at root level
     └── full-flow.spec.ts       # Listing Lens → Mortgage Compass → Dashboard
 ```
 
-**Structure Decision**: Monorepo with separate `backend/` and `frontend/` directories. Backend uses hexagonal architecture with domain/adapters/api/infrastructure layers. Frontend uses SvelteKit file-based routing. E2E tests at root for cross-stack integration.
+**Decisión de estructura**: Monorepo con directorios separados `backend/` y `frontend/`. El backend usa arquitectura hexagonal con capas domain/adapters/api/infrastructure. El frontend usa routing basado en archivos de SvelteKit. Tests E2E en raíz para integración cross-stack.
 
-## Complexity Tracking
+## Tracking de Complejidad
 
-> No violations detected. All constitutional principles pass.
+> No se detectan violaciones. Todos los principios constitucionales pasan.

@@ -1,344 +1,347 @@
-# Tasks: Realista MVP
+# Tareas: Realista MVP
 
-**Input**: Design documents from `/specs/001-realista-mvp/`
+**Input**: Documentos de diseño desde `/specs/001-realista-mvp/`
 
 **Prerequisites**: plan.md ✅, spec.md ✅, research.md ✅, data-model.md ✅, contracts/ ✅
 
-**Tests**: Tests are MANDATORY (Constitution Principle II: Test-First). TDD cycle: write tests → fail → implement → green → refactor. 80%+ domain coverage target.
+**Tests**: Tests OBLIGATORIOS (Principio II de la Constitución: Test-First). Ciclo TDD: escribir tests → fallar → implementar → verde → refactorizar. Objetivo: 80%+ cobertura en dominio.
 
-**Organization**: Tasks grouped by user story for independent implementation and testing.
+**Organización**: Tareas agrupadas por historia de usuario para implementación y testing independiente.
 
-## Format: `[ID] [P?] [Story] Description`
+## Formato: `[ID] [P?] [Historia] Descripción`
 
-- **[P]**: Can run in parallel (different files, no dependencies)
-- **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
-- Include exact file paths in descriptions
+- **[P]**: Puede ejecutarse en paralelo (archivos diferentes, sin dependencias)
+- **[Historia]**: A qué historia de usuario pertenece (ej: US1, US2, US3)
+- Incluir rutas exactas de archivos en las descripciones
 
-## Path Conventions
+## Convenciones de Path
 
 - **Web app**: `backend/src/`, `frontend/src/`
 - **Tests**: `backend/tests/`, `frontend/tests/`, `e2e/`
-- Based on plan.md monorepo structure
+- Basado en la estructura monorepo de plan.md
 
 ---
 
-## Phase 1: Setup (Shared Infrastructure)
+## Fase 1: Setup (Infraestructura compartida)
 
-**Purpose**: Project initialization, tooling, and CI skeleton
+**Propósito**: Inicialización del proyecto, herramientas y CI skeleton
 
-- [ ] T001 Create monorepo structure with `backend/`, `frontend/`, `e2e/` directories per plan.md
-- [ ] T002 [P] Initialize backend package.json with TypeScript + Express dependencies in `backend/package.json`
-- [ ] T003 [P] Initialize frontend SvelteKit project with Vite in `frontend/` via `npm create svelte@latest`
-- [ ] T004 [P] Configure TypeScript strict mode in `backend/tsconfig.json` and `frontend/tsconfig.json`
-- [ ] T005 [P] Configure ESLint + Prettier with shared config in `.eslintrc.json` and `.prettierrc`
-- [ ] T006 [P] Create `.env.example` with DATABASE_URL, OPENROUTER_API_KEY, PORT, FRONTEND_URL in project root
-- [ ] T007 Create CI skeleton GitHub Action in `.github/workflows/ci.yml` (lint → typecheck → test)
-- [ ] T008 Install Vitest in both backend and frontend with config files `backend/vitest.config.ts` and `frontend/vitest.config.ts`
-- [ ] T009 Install Playwright for E2E in `e2e/playwright.config.ts`
+- [ ] T001 Crear estructura de monorepo con `backend/`, `frontend/`, `e2e/` según plan.md
+- [ ] T002 [P] Inicializar backend package.json con TypeScript + Express en `backend/package.json`
+- [ ] T003 [P] Inicializar proyecto SvelteKit con Vite en `frontend/` mediante `npm create svelte@latest`
+- [ ] T004 [P] Configurar TypeScript strict mode en `backend/tsconfig.json` y `frontend/tsconfig.json`
+- [ ] T005 [P] Configurar ESLint + Prettier con config compartida en `.eslintrc.json` y `.prettierrc`
+- [ ] T006 [P] Crear `.env.example` con DATABASE_URL, OPENROUTER_API_KEY, PORT, FRONTEND_URL en raíz del proyecto
+- [ ] T007 Crear skeleton de GitHub Action en `.github/workflows/ci.yml` (lint → typecheck → test)
+- [ ] T008 Instalar Vitest en backend y frontend con archivos de config en `backend/vitest.config.ts` y `frontend/vitest.config.ts`
+- [ ] T009 Instalar Playwright para E2E en `e2e/playwright.config.ts`
 
-**Checkpoint**: Project builds, lints, and test runner executes (even with no tests yet)
-
----
-
-## Phase 2: Foundational (Blocking Prerequisites)
-
-**Purpose**: Core infrastructure that MUST be complete before ANY user story can be implemented
-
-**⚠️ CRITICAL**: No user story work can begin until this phase is complete
-
-- [ ] T010 Setup Prisma schema in `backend/src/infrastructure/prisma/schema.prisma` with models: User, PurchaseProcess, AnalyzedListing, Checklist (per data-model.md)
-- [ ] T011 Generate Prisma client and create initial migration with `npx prisma migrate dev --name init`
-- [ ] T012 Create base PrismaClient singleton in `backend/src/infrastructure/prisma/client.ts`
-- [ ] T013 Setup Express server entry point in `backend/src/index.ts` with CORS, JSON body parser, health endpoint
-- [ ] T014 [P] Implement session middleware: generate/validate UUID v4, store in `X-Session-Id` header in `backend/src/api/middleware/session.ts`
-- [ ] T015 [P] Implement rate limit middleware: 20 req/day per session UUID in `backend/src/api/middleware/rateLimiter.ts`
-- [ ] T016 [P] Create environment config loader with validation in `backend/src/infrastructure/config/env.ts`
-- [ ] T017 [P] Create error handling middleware (domain errors → HTTP status codes) in `backend/src/api/middleware/errorHandler.ts`
-- [ ] T018 Create User domain aggregate with UUID id, optional userId, createdAt in `backend/src/domain/aggregates/User.ts`
-- [ ] T019 [P] Create PurchaseProcess domain aggregate with status, financialProfile JSON in `backend/src/domain/aggregates/PurchaseProcess.ts`
-- [ ] T020 [P] Setup SvelteKit layout shell with mobile-first nav tabs in `frontend/src/routes/+layout.svelte`
-- [ ] T021 [P] Create base API client with fetch wrapper handling X-Session-Id header in `frontend/src/lib/api/client.ts`
-- [ ] T022 Create session store (Svelte writable) managing session UUID lifecycle in `frontend/src/lib/stores/session.ts`
-
-**Checkpoint**: Backend starts, migrations run, middleware chain works, frontend loads with layout
+**Checkpoint**: El proyecto compila, lint y test runner ejecutan (incluso sin tests aún)
 
 ---
 
-## Phase 3: User Story 1 - Listing Lens (Priority: P1) 🎯 MVP
+## Fase 2: Foundational (Prerequisitos bloqueantes)
 
-**Goal**: User pastes listing URL → LLM analysis + cadastral cross-reference → transparency score + red flags report
+**Propósito**: Infraestructura central que DEBE estar completa antes de implementar cualquier historia de usuario
 
-**Independent Test**: POST mocked listing URL to `/api/listings/analyze` → verify 200 with score, redFlags, cadastral comparison
+**⚠️ CRÍTICO**: Ningún trabajo de historia de usuario puede empezar hasta que esta fase esté completa
 
-### Tests for User Story 1
+- [ ] T010 Definir schema Prisma en `backend/src/infrastructure/prisma/schema.prisma` con los modelos: User, PurchaseProcess, AnalyzedListing, Checklist (según data-model.md)
+- [ ] T011 Generar Prisma client y crear migración inicial con `npx prisma migrate dev --name init`
+- [ ] T012 Crear singleton del PrismaClient en `backend/src/infrastructure/prisma/client.ts`
+- [ ] T013 Configurar entry point de Express en `backend/src/index.ts` con CORS, JSON body parser, endpoint health
+- [ ] T014 [P] Implementar middleware de sesión: generar/validar UUID v4, guardar en header `X-Session-Id` en `backend/src/api/middleware/session.ts`
+- [ ] T015 [P] Implementar middleware de rate limit: 20 req/día por UUID de sesión en `backend/src/api/middleware/rateLimiter.ts`
+- [ ] T016 [P] Crear loader de configuración de entorno con validación en `backend/src/infrastructure/config/env.ts`
+- [ ] T017 [P] Crear middleware de manejo de errores (errores de dominio → códigos HTTP) en `backend/src/api/middleware/errorHandler.ts`
+- [ ] T018 Crear agregado de dominio User con UUID id, userId opcional, createdAt en `backend/src/domain/aggregates/User.ts`
+- [ ] T019 [P] Crear agregado de dominio PurchaseProcess con status, propertyPrice, sourceListingId, financialProfile JSON en `backend/src/domain/aggregates/PurchaseProcess.ts`
+- [ ] T020 [P] Configurar layout shell de SvelteKit con nav tabs mobile-first en `frontend/src/routes/+layout.svelte`
+- [ ] T021 [P] Crear cliente API base con wrapper fetch gestionando header X-Session-Id en `frontend/src/lib/api/client.ts`
+- [ ] T022 Crear store de sesión (Svelte writable) gestionando ciclo de vida del UUID de sesión en `frontend/src/lib/stores/session.ts`
 
-> Write these FIRST, ensure they FAIL before implementation
-
-- [ ] T023 [P] [US1] Unit test TransparencyScore value object in `backend/tests/unit/domain/value-objects/TransparencyScore.test.ts`
-- [ ] T024 [P] [US1] Unit test RedFlags value object in `backend/tests/unit/domain/value-objects/RedFlags.test.ts`
-- [ ] T025 [P] [US1] Unit test AnalyzeListingUseCase with mocked ports in `backend/tests/unit/domain/services/AnalyzeListingUseCase.test.ts`
-- [ ] T026 [P] [US1] Integration test POST /api/listings/analyze with mocked Cheerio + LLM in `backend/tests/integration/api/listings.test.ts`
-- [ ] T027 [P] [US1] Contract test for analyze endpoint matching contracts/api.md in `backend/tests/contract/test_listings_analyze.test.ts`
-- [ ] T023a [P] [US1] Unit test LocationResolverPort chain (Declared → Geocoding → Vision) in `backend/tests/unit/domain/ports/LocationResolverPort.test.ts`
-- [ ] T023b [P] [US1] Unit test auto-attach logic: creates PurchaseProcess when none active, attaches to existing one in `backend/tests/unit/domain/services/AutoAttachService.test.ts`
-- [ ] T023c [P] [US1] Integration test analyze endpoint returning `processSummary` in `backend/tests/integration/api/listings.test.ts`
-
-### Implementation for User Story 1
-
-- [ ] T028 [US1] Create TransparencyScore value object with score 0-100, label, breakdown in `backend/src/domain/value-objects/TransparencyScore.ts`
-- [ ] T029 [P] [US1] Create RedFlags value object with flag types and Spanish labels in `backend/src/domain/value-objects/RedFlags.ts`
-- [ ] T030 [US1] Create ListingAnalyzerPort interface in `backend/src/domain/ports/ListingAnalyzerPort.ts`
-- [ ] T030a [US1] Create LocationResolverPort interface with `resolveLocation(parsedListing): Promise<Coordinates | null>` in `backend/src/domain/ports/LocationResolverPort.ts`
-- [ ] T030b [P] [US1] Create Coordinates value object `{ lat: number, lng: number, source: 'declared' | 'geocoded' | 'vision', confidence: number }` in `backend/src/domain/value-objects/Coordinates.ts`
-- [ ] T031 [P] [US1] Create CadastroPort interface in `backend/src/domain/ports/CadastroPort.ts`
-- [ ] T032 [US1] Implement CheerioAdapter (HTML parsing, text extraction) in `backend/src/adapters/cheerio/CheerioAdapter.ts`
-- [ ] T032a [US1] Implement DeclaredLocationAdapter (extracts declared address/neighborhood from HTML via Cheerio selectors) in `backend/src/adapters/location/DeclaredLocationAdapter.ts`
-- [ ] T032b [US1] Implement GeocodingAdapter (Nominatim OSM, free, no API key) in `backend/src/adapters/location/GeocodingAdapter.ts`
-- [ ] T032c [US1] Implement LLMVisionLocationAdapter (OpenRouter multimodal, photo analysis fallback) in `backend/src/adapters/location/LLMVisionLocationAdapter.ts`
-- [ ] T032d [US1] Implement LocationResolverService that chains the 3 adapters in order in `backend/src/domain/services/LocationResolverService.ts`
-- [ ] T033 [US1] Implement OpenRouterAdapter (LLM system prompt, structured JSON output) in `backend/src/adapters/openrouter/OpenRouterAdapter.ts`
-- [ ] T034 [US1] Implement AvenaScoreAdapter (@avena/score fallback) in `backend/src/adapters/avena-score/AvenaScoreAdapter.ts`
-- [ ] T035 [US1] Implement CatastroAdapter (API cross-reference, coordinate query — now consumes Coordinates from LocationResolverService) in `backend/src/adapters/catastro/CatastroAdapter.ts`
-- [ ] T036 [US1] Implement MiraTuZonaAdapter (location link generation) in `backend/src/adapters/miratuzona/MiraTuZonaAdapter.ts`
-- [ ] T037 [US1] Implement AnalyzeListingUseCase orchestrating adapters (LLM → location resolver → cadastral cross-ref → MiraTuZona) in `backend/src/domain/services/AnalyzeListingUseCase.ts`
-- [ ] T037a [US1] Implement AutoAttachService: if no active PurchaseProcess, create one with `propertyPrice` from listing; else attach to existing in `backend/src/domain/services/AutoAttachService.ts`
-- [ ] T037b [US1] Update AnalyzeListingUseCase to return `processSummary` in the analyze response in `backend/src/domain/services/AnalyzeListingUseCase.ts`
-- [ ] T038 [US1] Create AnalyzedListing domain aggregate (matches data-model.md) in `backend/src/domain/aggregates/AnalyzedListing.ts`
-- [ ] T039 [US1] Implement analyze listing route POST /api/listings/analyze (now returns processSummary) in `backend/src/api/routes/listings.ts`
-- [ ] T040 [US1] Create listings controller handling request validation and use case dispatch in `backend/src/api/controllers/listingsController.ts`
-- [ ] T041 [US1] Add URL validation helper (validates format, checks reachability) in `backend/src/infrastructure/utils/urlValidator.ts`
-- [ ] T042 [US1] Create Listing Lens page UI with URL input, **loading state with 5-12s estimated time** (FR-018), results card in `frontend/src/routes/listing-lens/+page.svelte`
-- [ ] T042a [US1] Create AI disclaimer component shown on listing analysis results (FR-017) in `frontend/src/lib/components/AIDisclaimer.svelte`
-- [ ] T043 [US1] Create server-side loader proxying analyze request to backend API in `frontend/src/routes/listing-lens/+page.server.ts`
-- [ ] T044 [US1] Create listings store (Svelte writable) for analyzed listing history in `frontend/src/lib/stores/listings.ts`
-
-**Checkpoint**: Listing Lens fully functional — paste URL, get score + red flags + cadastral comparison + auto-attached to PurchaseProcess with `processSummary`. TDD cycle complete.
+**Checkpoint**: El backend arranca, las migraciones corren, la cadena de middleware funciona, el frontend carga con layout
 
 ---
 
-## Phase 4: User Story 2 - Mortgage Compass (Priority: P1) 🎯 MVP
+## Fase 3: Historia de Usuario 1 - Listing Lens (Prioridad: P1) 🎯 MVP
 
-**Goal**: User enters financial data → hidden costs revealed → persona questions → strategy comparison (amortization vs investing) → educational narrative
+**Objetivo**: Usuario pega URL del anuncio → análisis LLM + cruce catastral → puntuación de transparencia + informe de banderas rojas
 
-**Independent Test**: POST financial profile to `/api/purchase-processes` → verify hidden costs calculation, strategy scenarios, and template-based narrative
+**Prueba independiente**: POST URL de anuncio simulado a `/api/listings/analyze` → verificar 200 con score, redFlags, comparativa catastral y `processSummary` con el proceso asociado
 
-### Tests for User Story 2
+### Tests para Historia 1
 
-> Write these FIRST, ensure they FAIL before implementation
+> Escribir estos PRIMERO, asegurar que FALLAN antes de la implementación
 
-- [ ] T045 [P] [US2] Unit test FinancialProfile value object with validation in `backend/tests/unit/domain/value-objects/FinancialProfile.test.ts`
-- [ ] T046 [P] [US2] Unit test HiddenCosts calculator (ITP/IVA by region, notary, registry) in `backend/tests/unit/domain/value-objects/HiddenCosts.test.ts`
-- [ ] T047 [P] [US2] Unit test AmortizationScenario calculator (30yr, voluntary extra payments) in `backend/tests/unit/domain/services/AmortizationCalculator.test.ts`
-- [ ] T048 [P] [US2] Unit test InvestmentAlternative calculator (compound returns) in `backend/tests/unit/domain/services/InvestmentCalculator.test.ts`
-- [ ] T049 [P] [US2] Unit test educational narrative templates (persona ↔ template mapping) in `backend/tests/unit/domain/services/NarrativeGenerator.test.ts`
-- [ ] T050 [P] [US2] Integration test POST /api/purchase-processes with full profile in `backend/tests/integration/api/purchaseProcesses.test.ts`
-- [ ] T050a [P] [US2] Integration test POST /api/purchase-processes with `analyzedListingId` pre-filling `propertyPrice` in `backend/tests/integration/api/purchaseProcesses.test.ts`
-- [ ] T050b [P] [US2] Integration test GET /api/purchase-processes/:id returning `computed` field with amortization scenarios in `backend/tests/integration/api/purchaseProcesses.test.ts`
+- [ ] T023 [P] [US1] Test unitario TransparencyScore value object en `backend/tests/unit/domain/value-objects/TransparencyScore.test.ts`
+- [ ] T024 [P] [US1] Test unitario RedFlags value object en `backend/tests/unit/domain/value-objects/RedFlags.test.ts`
+- [ ] T025 [P] [US1] Test unitario AnalyzeListingUseCase con ports mockeados en `backend/tests/unit/domain/services/AnalyzeListingUseCase.test.ts`
+- [ ] T026 [P] [US1] Test de integración POST /api/listings/analyze con Cheerio + LLM mockeados en `backend/tests/integration/api/listings.test.ts`
+- [ ] T027 [P] [US1] Test de contrato para endpoint analyze según contracts/api.md en `backend/tests/contract/test_listings_analyze.test.ts`
+- [ ] T023a [P] [US1] Test unitario LocationResolverPort chain (Declared → Geocoding → Vision) en `backend/tests/unit/domain/ports/LocationResolverPort.test.ts`
+- [ ] T023b [P] [US1] Test unitario lógica de auto-attach: crea PurchaseProcess cuando no hay activa, adjunta a la existente en `backend/tests/unit/domain/services/AutoAttachService.test.ts`
+- [ ] T023c [P] [US1] Test de integración endpoint analyze devolviendo `processSummary` en `backend/tests/integration/api/listings.test.ts`
 
-### Implementation for User Story 2
+### Implementación para Historia 1
 
-- [ ] T051 [US2] Create FinancialProfile value object with validation (price, savings, income, debts, region, persona) in `backend/src/domain/value-objects/FinancialProfile.ts`
-- [ ] T052 [P] [US2] Create HiddenCosts value object with regional ITP/IVA rates, fixed costs in `backend/src/domain/value-objects/HiddenCosts.ts`
-- [ ] T053 [US2] Implement hidden costs calculator by autonomous community in `backend/src/domain/services/HiddenCostsCalculator.ts`
-- [ ] T054 [US2] Implement amortization calculator: 30yr base, 4 scenarios (baseline, light €100/mo, moderate €300/mo, aggressive €500/mo) in `backend/src/domain/services/AmortizationCalculator.ts`
-- [ ] T055 [US2] Implement investment alternative calculator: compound 5-7% over 30 years in `backend/src/domain/services/InvestmentCalculator.ts`
-- [ ] T056 [US2] Implement narrative generator: hardcoded educational templates keyed to persona × scenario combos in `backend/src/domain/services/NarrativeGenerator.ts`
-- [ ] T057 [US2] Implement purchase process route POST /api/purchase-processes (now accepts `analyzedListingId` and pre-fills `propertyPrice`) in `backend/src/api/routes/purchaseProcesses.ts`
-- [ ] T057a [US2] Implement pre-fill logic in PurchaseProcessUseCase: if `analyzedListingId` provided, copy `propertyPrice` from listing and set `sourceListingId` in `backend/src/domain/services/PurchaseProcessUseCase.ts`
-- [ ] T058 [US2] Implement purchase process route GET /api/purchase-processes/:id (now returns `computed` field with amortization scenarios and investment alternative) in `backend/src/api/routes/purchaseProcesses.ts`
-- [ ] T058a [US2] Implement computed-field aggregator that runs amortization + investment calculators and returns the result in `backend/src/domain/services/PurchaseProcessAggregator.ts`
-- [ ] T059 [US2] Implement purchase process route PATCH /api/purchase-processes/:id (now supports direct `propertyPrice` update to allow override) in `backend/src/api/routes/purchaseProcesses.ts`
-- [ ] T060 [US2] Create purchase process controller in `backend/src/api/controllers/purchaseProcessController.ts`
-- [ ] T061 [US2] Create Mortgage Compass page UI: multi-step form (profile → hidden costs → persona → strategy playground). **propertyPrice pre-filled from listing with link to source. Show AI disclaimer** in `frontend/src/routes/mortgage-compass/+page.svelte`
-- [ ] T062 [US2] Create server-side loader proxying purchase process to backend in `frontend/src/routes/mortgage-compass/+page.server.ts`
-- [ ] T063 [US2] Create financial profile store in `frontend/src/lib/stores/financialProfile.ts`
+- [ ] T028 [US1] Crear TransparencyScore value object con score 0-100, label, breakdown en `backend/src/domain/value-objects/TransparencyScore.ts`
+- [ ] T029 [P] [US1] Crear RedFlags value object con tipos de flags y etiquetas en español en `backend/src/domain/value-objects/RedFlags.ts`
+- [ ] T030 [US1] Crear interfaz ListingAnalyzerPort en `backend/src/domain/ports/ListingAnalyzerPort.ts`
+- [ ] T030a [US1] Crear interfaz LocationResolverPort con `resolveLocation(parsedListing): Promise<Coordinates | null>` en `backend/src/domain/ports/LocationResolverPort.ts`
+- [ ] T030b [P] [US1] Crear Coordinates value object `{ lat: number, lng: number, source: 'declared' | 'geocoded' | 'vision', confidence: number }` en `backend/src/domain/value-objects/Coordinates.ts`
+- [ ] T031 [P] [US1] Crear interfaz CadastroPort en `backend/src/domain/ports/CadastroPort.ts`
+- [ ] T032 [US1] Implementar CheerioAdapter (parseo HTML, extracción de texto) en `backend/src/adapters/cheerio/CheerioAdapter.ts`
+- [ ] T032a [US1] Implementar DeclaredLocationAdapter (extrae dirección/barrio declarado del HTML con selectores Cheerio) en `backend/src/adapters/location/DeclaredLocationAdapter.ts`
+- [ ] T032b [US1] Implementar GeocodingAdapter (Nominatim OSM, gratis, sin API key) en `backend/src/adapters/location/GeocodingAdapter.ts`
+- [ ] T032c [US1] Implementar LLMVisionLocationAdapter (OpenRouter multimodal, fallback con análisis de fotos) en `backend/src/adapters/location/LLMVisionLocationAdapter.ts`
+- [ ] T032d [US1] Implementar LocationResolverService que encadena los 3 adaptadores en orden en `backend/src/domain/services/LocationResolverService.ts`
+- [ ] T033 [US1] Implementar OpenRouterAdapter (LLM system prompt, salida JSON estructurada) en `backend/src/adapters/openrouter/OpenRouterAdapter.ts`
+- [ ] T034 [US1] Implementar AvenaScoreAdapter (@avena/score fallback) en `backend/src/adapters/avena-score/AvenaScoreAdapter.ts`
+- [ ] T035 [US1] Implementar CatastroAdapter (cross-reference API, consulta por coordenadas — ahora consume Coordinates de LocationResolverService) en `backend/src/adapters/catastro/CatastroAdapter.ts`
+- [ ] T036 [US1] Implementar MiraTuZonaAdapter (generación de enlace de ubicación) en `backend/src/adapters/miratuzona/MiraTuZonaAdapter.ts`
+- [ ] T037 [US1] Implementar AnalyzeListingUseCase orquestando adaptadores (LLM → location resolver → cruce catastral → MiraTuZona) en `backend/src/domain/services/AnalyzeListingUseCase.ts`
+- [ ] T037a [US1] Implementar AutoAttachService: si no hay PurchaseProcess activa, crear una con `propertyPrice` del listing; si existe, adjuntar en `backend/src/domain/services/AutoAttachService.ts`
+- [ ] T037b [US1] Actualizar AnalyzeListingUseCase para devolver `processSummary` en la respuesta de analyze en `backend/src/domain/services/AnalyzeListingUseCase.ts`
+- [ ] T038 [US1] Crear agregado de dominio AnalyzedListing (según data-model.md) en `backend/src/domain/aggregates/AnalyzedListing.ts`
+- [ ] T039 [US1] Implementar ruta analyze listing POST /api/listings/analyze (ahora devuelve processSummary) en `backend/src/api/routes/listings.ts`
+- [ ] T040 [US1] Crear controlador de listings gestionando validación de request y dispatch de use case en `backend/src/api/controllers/listingsController.ts`
+- [ ] T041 [US1] Añadir helper de validación de URL (valida formato, comprueba accesibilidad) en `backend/src/infrastructure/utils/urlValidator.ts`
+- [ ] T042 [US1] Crear UI de página Listing Lens con input URL, **estado de carga con tiempo estimado 5-12s** (FR-018), tarjeta de resultados en `frontend/src/routes/listing-lens/+page.svelte`
+- [ ] T042a [US1] Crear componente AI disclaimer mostrado en resultados de análisis (FR-017) en `frontend/src/lib/components/AIDisclaimer.svelte`
+- [ ] T043 [US1] Crear server-side loader que proxy la petición analyze al backend en `frontend/src/routes/listing-lens/+page.server.ts`
+- [ ] T044 [US1] Crear store de listings (Svelte writable) para historial de listings analizados en `frontend/src/lib/stores/listings.ts`
 
-**Checkpoint**: Mortgage Compass fully functional — `propertyPrice` pre-filled from listing, see hidden costs, get strategy comparison. TDD cycle complete.
-
----
-
-## Phase 5: User Story 3 - Dashboard (Priority: P2)
-
-**Goal**: User sees dashboard with listing history, financial snapshot, re-analysis diff, empty state for new sessions
-
-**Independent Test**: Analyze a listing + complete profile → reload dashboard → verify data persists and displays correctly
-
-### Tests for User Story 3
-
-> Write these FIRST, ensure they FAIL before implementation
-
-- [ ] T064 [P] [US3] Integration test GET /api/listings returning session history in `backend/tests/integration/api/listings.test.ts`
-- [ ] T065 [P] [US3] Integration test re-analysis diff detection in `backend/tests/integration/api/listings.test.ts`
-- [ ] T066 [P] [US3] Component test Dashboard page rendering analyzed listings in `frontend/tests/unit/routes/Dashboard.test.ts`
-
-### Implementation for User Story 3
-
-- [ ] T067 [US3] Implement GET /api/listings route returning all listings for session in `backend/src/api/routes/listings.ts`
-- [ ] T068 [US3] Implement GET /api/listings/:id route returning single listing detail in `backend/src/api/routes/listings.ts`
-- [ ] T069 [US3] Implement snapshot hash comparison (SHA-256 diff detection) for re-analysis in `backend/src/domain/services/SnapshotService.ts`
-- [ ] T070 [US3] Implement GET /api/session route returning/creating session UUID in `backend/src/api/routes/session.ts`
-- [ ] T071 [US3] Create Dashboard page UI: listing cards, financial snapshot, CTAs, empty state in `frontend/src/routes/+page.svelte` (overwrites default home)
-- [ ] T072 [US3] Create server-side loader fetching listings + purchase process for dashboard in `frontend/src/routes/+page.server.ts`
-- [ ] T073 [US3] Implement re-analyze flow: button triggers new analysis, shows diff highlight in `frontend/src/lib/stores/listings.ts`
-
-**Checkpoint**: Dashboard fully functional — history, snapshot, re-analysis diff. All P1+P2 stories independently working.
+**Checkpoint**: Listing Lens totalmente funcional — pegar URL, obtener score + red flags + comparativa catastral + auto-attach al PurchaseProcess con `processSummary`. Ciclo TDD completo.
 
 ---
 
-## Phase 6: User Story 4 - Interactive Timeline (Priority: P3)
+## Fase 4: Historia de Usuario 2 - Mortgage Compass (Prioridad: P1) 🎯 MVP
 
-**Goal**: User views a visual 60-90 day timeline from arras to escritura with milestone details
+**Objetivo**: Usuario introduce datos financieros → gastos ocultos revelados → preguntas de perfil → comparativa de estrategias (amortización vs inversión) → narrativa educativa
 
-**Independent Test**: Open timeline page → verify all milestones displayed with descriptions and durations
+**Prueba independiente**: POST perfil financiero a `/api/purchase-processes` con `analyzedListingId` → verificar que `propertyPrice` se pre-rellena del listing, y se devuelven gastos ocultos, escenarios de estrategia y narrativa basada en plantillas
 
-### Implementation for User Story 4
+### Tests para Historia 2
 
-- [ ] T074 [US4] Create BureaucraticMilestone value object with stages, durations, document requirements in `backend/src/domain/value-objects/BureaucraticMilestone.ts`
-- [ ] T075 [US4] Create static timeline data: arras → legal check → tasación → hipoteca → notaría → registro → escritura in `frontend/src/lib/data/timelineData.ts`
-- [ ] T076 [US4] Create Timeline page UI with vertical timeline, expandable milestones in `frontend/src/routes/timeline/+page.svelte`
+> Escribir estos PRIMERO, asegurar que FALLAN antes de la implementación
 
-**Checkpoint**: Timeline fully functional — visual, interactive, all milestones detailed
+- [ ] T045 [P] [US2] Test unitario FinancialProfile value object con validación en `backend/tests/unit/domain/value-objects/FinancialProfile.test.ts`
+- [ ] T046 [P] [US2] Test unitario calculador HiddenCosts (ITP/IVA por región, notaría, registro) en `backend/tests/unit/domain/value-objects/HiddenCosts.test.ts`
+- [ ] T047 [P] [US2] Test unitario calculador AmortizationScenario (30yr, amortización anticipada voluntaria) en `backend/tests/unit/domain/services/AmortizationCalculator.test.ts`
+- [ ] T048 [P] [US2] Test unitario calculador InvestmentAlternative (interés compuesto) en `backend/tests/unit/domain/services/InvestmentCalculator.test.ts`
+- [ ] T049 [P] [US2] Test unitario plantillas narrativas educativas (mapeo persona ↔ plantilla) en `backend/tests/unit/domain/services/NarrativeGenerator.test.ts`
+- [ ] T050 [P] [US2] Test de integración POST /api/purchase-processes con perfil completo en `backend/tests/integration/api/purchaseProcesses.test.ts`
+- [ ] T050a [P] [US2] Test de integración POST /api/purchase-processes con `analyzedListingId` pre-rellenando `propertyPrice` en `backend/tests/integration/api/purchaseProcesses.test.ts`
+- [ ] T050b [P] [US2] Test de integración GET /api/purchase-processes/:id devolviendo campo `computed` con escenarios de amortización en `backend/tests/integration/api/purchaseProcesses.test.ts`
 
----
+### Implementación para Historia 2
 
-## Phase 7: User Story 5 - Document Checklist (Priority: P3)
+- [ ] T051 [US2] Crear FinancialProfile value object con validación (price, savings, income, debts, region, persona) en `backend/src/domain/value-objects/FinancialProfile.ts`
+- [ ] T052 [P] [US2] Crear HiddenCosts value object con tasas ITP/IVA regionales, costes fijos en `backend/src/domain/value-objects/HiddenCosts.ts`
+- [ ] T053 [US2] Implementar calculador de gastos ocultos por comunidad autónoma en `backend/src/domain/services/HiddenCostsCalculator.ts`
+- [ ] T054 [US2] Implementar calculador de amortización: 30yr base, 4 escenarios (baseline, ligero €100/mes, moderado €300/mes, agresivo €500/mes) en `backend/src/domain/services/AmortizationCalculator.ts`
+- [ ] T055 [US2] Implementar calculador de alternativa de inversión: compuesto 5-7% a 30 años en `backend/src/domain/services/InvestmentCalculator.ts`
+- [ ] T056 [US2] Implementar generador de narrativas: plantillas educativas hardcoded mapeadas a combos persona × escenario en `backend/src/domain/services/NarrativeGenerator.ts`
+- [ ] T057 [US2] Implementar ruta POST /api/purchase-processes (ahora acepta `analyzedListingId` y pre-rellena `propertyPrice`) en `backend/src/api/routes/purchaseProcesses.ts`
+- [ ] T057a [US2] Implementar lógica de pre-relleno en PurchaseProcessUseCase: si `analyzedListingId` se pasa, copiar `propertyPrice` del listing y setear `sourceListingId` en `backend/src/domain/services/PurchaseProcessUseCase.ts`
+- [ ] T058 [US2] Implementar ruta GET /api/purchase-processes/:id (ahora devuelve campo `computed` con escenarios de amortización y alternativa de inversión) en `backend/src/api/routes/purchaseProcesses.ts`
+- [ ] T058a [US2] Implementar agregador de campos computed que ejecuta calculadores de amortización e inversión y devuelve el resultado en `backend/src/domain/services/PurchaseProcessAggregator.ts`
+- [ ] T059 [US2] Implementar ruta PATCH /api/purchase-processes/:id (ahora soporta update directo de `propertyPrice` para permitir override) en `backend/src/api/routes/purchaseProcesses.ts`
+- [ ] T060 [US2] Crear controlador de purchase process en `backend/src/api/controllers/purchaseProcessController.ts`
+- [ ] T061 [US2] Crear UI de página Mortgage Compass: formulario multi-paso (perfil → gastos ocultos → persona → playground de estrategias). **propertyPrice pre-rellenado del listing con link a la fuente. Mostrar AI disclaimer** en `frontend/src/routes/mortgage-compass/+page.svelte`
+- [ ] T062 [US2] Crear server-side loader que proxy el purchase process al backend en `frontend/src/routes/mortgage-compass/+page.server.ts`
+- [ ] T063 [US2] Crear store de perfil financiero en `frontend/src/lib/stores/financialProfile.ts`
 
-**Goal**: User tracks which documents they have/need per stage. Progress persists.
-
-**Independent Test**: Open checklist → toggle items → reload → verify progress persisted
-
-### Tests for User Story 5
-
-> Write these FIRST, ensure they FAIL before implementation
-
-- [ ] T077 [P] [US5] Integration test PATCH /api/checklist/:processId/items/:itemId toggling completion in `backend/tests/integration/api/checklist.test.ts`
-
-### Implementation for User Story 5
-
-- [ ] T078 [US5] Create Checklist domain aggregate (matches data-model.md) in `backend/src/domain/aggregates/Checklist.ts`
-- [ ] T079 [US5] Implement GET /api/checklist/:processId route in `backend/src/api/routes/checklist.ts`
-- [ ] T080 [US5] Implement PATCH /api/checklist/:processId/items/:itemId route for toggling in `backend/src/api/routes/checklist.ts`
-- [ ] T081 [US5] Create checklist controller in `backend/src/api/controllers/checklistController.ts`
-- [ ] T082 [US5] Create static checklist seed data (documents by stage: pre-arras, post-arras, pre-escritura, post-escritura) in `backend/src/infrastructure/prisma/seed.ts`
-- [ ] T083 [US5] Create Checklist page UI: items grouped by stage, progress bars, toggle interaction in `frontend/src/routes/checklist/+page.svelte`
-
-**Checkpoint**: Checklist fully functional — grouped by stage, toggle persists, progress tracked
-
----
-
-## Phase 8: Polish & Cross-Cutting Concerns
-
-**Purpose**: PWA, E2E, final validation
-
-- [ ] T084 Configure PWA with `@vite-pwa/sveltekit`: service worker, manifest, icons in `frontend/vite.config.ts`
-- [ ] T085 [P] Generate PWA icons (192px, 512px) from SVG base in `frontend/static/`
-- [ ] T086 [P] Add loading skeletons and error states to all pages (Listing Lens, Mortgage Compass, Dashboard)
-- [ ] T087 [P] Add Spanish locale error messages and UI labels consistent across all pages
-- [ ] T088 Create E2E test: full flow (paste URL → score → financial profile → hidden costs → strategy → dashboard) in `e2e/flows/full-flow.spec.ts`
-- [ ] T089 Run quickstart.md validation: verify all setup and test commands work from scratch
-- [ ] T090 Final TypeScript typecheck + lint pass across all packages
-- [ ] T091 Add Prisma seed script with sample checklist data and Euribor default value
+**Checkpoint**: Mortgage Compass totalmente funcional — `propertyPrice` pre-rellenado del listing, ver gastos ocultos, obtener comparativa de estrategias. Ciclo TDD completo.
 
 ---
 
-## Dependencies & Execution Order
+## Fase 5: Historia de Usuario 3 - Dashboard (Prioridad: P2)
 
-### Phase Dependencies
+**Objetivo**: Usuario ve dashboard con el `PurchaseProcess` activo — listing más reciente, perfil financiero, gastos ocultos, estado del checklist, acceso a herramientas. Soporta re-análisis con detección de diff.
 
-- **Setup (Phase 1)**: No dependencies — start immediately
-- **Foundational (Phase 2)**: Depends on Setup completion — BLOCKS all user stories
-- **US1 Listing Lens (Phase 3)**: Depends on Foundational
-- **US2 Mortgage Compass (Phase 4)**: Depends on Foundational. Independent from US1 (different domain services, routes, pages)
-- **US3 Dashboard (Phase 5)**: Depends on Foundational. Needs US1 + US2 routes for display, but independently testable via API
-- **US4 Timeline (Phase 6)**: Depends on Foundational. Static content, no backend needed. Independent
-- **US5 Checklist (Phase 7)**: Depends on Foundational. Independent from other stories
-- **Polish (Phase 8)**: Depends on all desired user stories being complete
+**Prueba independiente**: Analizar un listing (crea proceso), completar perfil financiero, recargar dashboard → verificar que el estado completo del proceso persiste y se muestra correctamente.
 
-### User Story Dependencies
+### Tests para Historia 3
 
-- **US1 (P1)**: No dependencies on other stories. Start after Phase 2
-- **US2 (P1)**: No dependencies on other stories. Can run in parallel with US1
-- **US3 (P2)**: Ideally after US1+US2 for full data display, but API is independently testable
-- **US4 (P3)**: Static, no API dependencies. Can run any time after Phase 2
-- **US5 (P3)**: No dependencies on other stories. Can run any time after Phase 2
+> Escribir estos PRIMERO, asegurar que FALLAN antes de la implementación
 
-### Within Each User Story
+- [ ] T064 [P] [US3] Test de integración GET /api/purchase-processes/:id devolviendo `computed` con escenarios de amortización y listings en `backend/tests/integration/api/purchaseProcesses.test.ts`
+- [ ] T065 [P] [US3] Test de integración de detección de diff en re-análisis (snapshot anterior vs nuevo) en `backend/tests/integration/api/listings.test.ts`
+- [ ] T066 [P] [US3] Test de componente Dashboard renderizando proceso activo, listings y checklist en `frontend/tests/unit/routes/Dashboard.test.ts`
 
-- Tests MUST be written FIRST and FAIL before implementation
-- Domain value objects → domain services → adapters → API routes → controllers
-- Backend complete before frontend pages for that story
-- Story complete and independently tested before moving to next priority
+### Implementación para Historia 3
 
-### Parallel Opportunities
+- [ ] T067 [US3] Implementar ruta GET /api/listings devolviendo todos los listings del proceso activo en `backend/src/api/routes/listings.ts`
+- [ ] T068 [US3] Implementar ruta GET /api/listings/:id devolviendo detalle de un listing con diff vs snapshot anterior en `backend/src/api/routes/listings.ts`
+- [ ] T069 [US3] Implementar servicio de comparación de snapshots (SHA-256 diff detection) para re-análisis en `backend/src/domain/services/SnapshotService.ts`
+- [ ] T070 [US3] Implementar ruta GET /api/session devolviendo/creando UUID de sesión en `backend/src/api/routes/session.ts`
+- [ ] T071 [US3] Crear UI de página Dashboard: tarjetas de listing, instantánea financiera, CTAs, estado vacío (sin proceso activo) en `frontend/src/routes/+page.svelte` (sobreescribe el home por defecto)
+- [ ] T072 [US3] Crear server-side loader que obtiene el purchase process activo con `computed` para el dashboard en `frontend/src/routes/+page.server.ts`
+- [ ] T073 [US3] Implementar flujo de re-análisis: botón dispara nuevo análisis, muestra highlight del diff en `frontend/src/lib/stores/listings.ts`
 
-- T002, T003, T004, T005, T006 in Setup can all run in parallel
-- T014, T015, T016, T017 in Foundational can run in parallel
-- T023-T027 (US1 tests) can all run in parallel
-- T045-T050 (US2 tests) can all run in parallel
-- T028-T029, T031 (US1 models/ports) can run in parallel
-- T032-T036 (US1 adapters) are independent and can run in parallel
-- T051-T052 (US2 models) can run in parallel
-- US1 (Phase 3) and US2 (Phase 4) can run in parallel after Foundational
-- US4 (Phase 6) and US5 (Phase 7) can run in parallel
+**Checkpoint**: Dashboard totalmente funcional — estado del proceso, instantánea financiera, re-análisis con diff. Las historias P1+P2 funcionando independientemente.
 
 ---
 
-## Parallel Example: User Story 1 Tests + Models
+## Fase 6: Historia de Usuario 4 - Cronograma Interactivo (Prioridad: P3)
+
+**Objetivo**: Usuario visualiza línea temporal de 60-90 días desde arras hasta escritura con detalles de hitos
+
+**Prueba independiente**: Abrir página del cronograma → verificar todos los hitos mostrados con descripciones y duraciones
+
+### Implementación para Historia 4
+
+- [ ] T074 [US4] Crear BureaucraticMilestone value object con etapas, duraciones, requisitos documentales en `backend/src/domain/value-objects/BureaucraticMilestone.ts`
+- [ ] T075 [US4] Crear datos estáticos del cronograma: arras → verificación legal → tasación → hipoteca → notaría → registro → escritura en `frontend/src/lib/data/timelineData.ts`
+- [ ] T076 [US4] Crear UI de página Timeline con línea temporal vertical, hitos expandibles en `frontend/src/routes/timeline/+page.svelte`
+
+**Checkpoint**: Timeline totalmente funcional — visual, interactivo, todos los hitos detallados
+
+---
+
+## Fase 7: Historia de Usuario 5 - Checklist Documental (Prioridad: P3)
+
+**Objetivo**: Usuario hace seguimiento de qué documentos tiene/qué necesita por etapa. El progreso persiste.
+
+**Prueba independiente**: Abrir checklist → marcar ítems → recargar → verificar progreso persistido
+
+### Tests para Historia 5
+
+> Escribir estos PRIMERO, asegurar que FALLAN antes de la implementación
+
+- [ ] T077 [P] [US5] Test de integración PATCH /api/checklist/:processId/items/:itemId toggle de completado en `backend/tests/integration/api/checklist.test.ts`
+
+### Implementación para Historia 5
+
+- [ ] T078 [US5] Crear agregado de dominio Checklist (según data-model.md) en `backend/src/domain/aggregates/Checklist.ts`
+- [ ] T079 [US5] Implementar ruta GET /api/checklist/:processId en `backend/src/api/routes/checklist.ts`
+- [ ] T080 [US5] Implementar ruta PATCH /api/checklist/:processId/items/:itemId para toggle en `backend/src/api/routes/checklist.ts`
+- [ ] T081 [US5] Crear controlador de checklist en `backend/src/api/controllers/checklistController.ts`
+- [ ] T082 [US5] Crear datos seed de checklist estático (documentos por etapa: pre-arras, post-arras, pre-escritura, post-escritura) en `backend/src/infrastructure/prisma/seed.ts`
+- [ ] T083 [US5] Crear UI de página Checklist: ítems agrupados por etapa, barras de progreso, interacción de toggle en `frontend/src/routes/checklist/+page.svelte`
+
+**Checkpoint**: Checklist totalmente funcional — agrupado por etapa, toggle persiste, progreso tracked
+
+---
+
+## Fase 8: Polish & Cross-Cutting Concerns
+
+**Propósito**: PWA, E2E, validación final, AI disclaimers globales
+
+- [ ] T084 Configurar PWA con `@vite-pwa/sveltekit`: service worker, manifest, iconos en `frontend/vite.config.ts`
+- [ ] T085 [P] Generar iconos PWA (192px, 512px) desde SVG base en `frontend/static/`
+- [ ] T086 [P] Añadir skeletons de carga y estados de error a todas las páginas (Listing Lens, Mortgage Compass, Dashboard)
+- [ ] T087 [P] Añadir mensajes de error y etiquetas de UI en español consistentes en todas las páginas
+- [ ] T088 Crear test E2E: flujo completo (pegar URL → score → perfil financiero → gastos ocultos → estrategia → dashboard) en `e2e/flows/full-flow.spec.ts`
+- [ ] T089 Ejecutar validación de quickstart.md: verificar que todos los comandos de setup y test funcionan desde cero
+- [ ] T090 TypeScript typecheck + lint pass final en todos los paquetes
+- [ ] T091 Añadir script de seed de Prisma con datos de checklist de muestra y valor por defecto del Euríbor
+- [ ] T091a [P] Añadir banner global de AI disclaimer en el layout principal (`+layout.svelte`) explicando que el análisis es generado por IA en `frontend/src/routes/+layout.svelte`
+- [ ] T091b [P] Añadir página estática `/aviso-legal` con disclaimer completo de IA y no-consejo-financiero en `frontend/src/routes/aviso-legal/+page.svelte`
+
+---
+
+## Dependencias y Orden de Ejecución
+
+### Dependencias entre Fases
+
+- **Setup (Fase 1)**: Sin dependencias — empezar inmediatamente
+- **Foundational (Fase 2)**: Depende de Setup completo — BLOQUEA todas las historias
+- **US1 Listing Lens (Fase 3)**: Depende de Foundational
+- **US2 Mortgage Compass (Fase 4)**: Depende de Foundational. Independiente de US1 (diferentes servicios de dominio, rutas, páginas). El pre-fill por listing es una integración posterior.
+- **US3 Dashboard (Fase 5)**: Depende de Foundational. Necesita rutas de US1+US2 para visualización, pero independientemente testeable vía API
+- **US4 Timeline (Fase 6)**: Depende de Foundational. Contenido estático, no necesita backend. Independiente
+- **US5 Checklist (Fase 7)**: Depende de Foundational. Independiente de otras historias
+- **Polish (Fase 8)**: Depende de todas las historias deseadas completas
+
+### Dependencias entre Historias de Usuario
+
+- **US1 (P1)**: Sin dependencias de otras historias. Empezar tras Fase 2
+- **US2 (P1)**: Sin dependencias en código. Puede correr en paralelo con US1
+- **US3 (P2)**: Idealmente tras US1+US2 para visualización completa de datos, pero la API es independientemente testeable
+- **US4 (P3)**: Estática, sin dependencias de API. Puede correr en cualquier momento tras Fase 2
+- **US5 (P3)**: Sin dependencias de otras historias. Puede correr en cualquier momento tras Fase 2
+
+### Dentro de cada Historia de Usuario
+
+- Los tests DEBEN escribirse PRIMERO y FALLAR antes de la implementación
+- Value objects de dominio → servicios de dominio → adaptadores → rutas API → controladores
+- Backend completo antes de las páginas frontend de esa historia
+- Historia completa e independientemente testeada antes de pasar a la siguiente prioridad
+
+### Oportunidades de Paralelización
+
+- T002, T003, T004, T005, T006 en Setup pueden correr en paralelo
+- T014, T015, T016, T017 en Foundational pueden correr en paralelo
+- T023-T027 y T023a-T023c (tests US1) pueden correr en paralelo
+- T045-T050 y T050a-T050b (tests US2) pueden correr en paralelo
+- T028-T029, T031, T030a, T030b (modelos/puertos US1) pueden correr en paralelo
+- T032-T036, T032a-T032c (adaptadores US1) son independientes y pueden correr en paralelo
+- T051-T052 (modelos US2) pueden correr en paralelo
+- US1 (Fase 3) y US2 (Fase 4) pueden correr en paralelo tras Foundational
+- US4 (Fase 6) y US5 (Fase 7) pueden correr en paralelo
+
+---
+
+## Ejemplo Paralelo: Tests + Modelos de Historia 1
 
 ```bash
-# Launch all US1 tests in parallel:
-Task: "T023: Unit test TransparencyScore in backend/tests/unit/domain/value-objects/TransparencyScore.test.ts"
-Task: "T024: Unit test RedFlags in backend/tests/unit/domain/value-objects/RedFlags.test.ts"
-Task: "T025: Unit test AnalyzeListingUseCase in backend/tests/unit/domain/services/AnalyzeListingUseCase.test.ts"
-Task: "T026: Integration test analyze endpoint in backend/tests/integration/api/listings.test.ts"
+# Lanzar todos los tests de US1 en paralelo:
+Task: "T023: Test unitario TransparencyScore en backend/tests/unit/domain/value-objects/TransparencyScore.test.ts"
+Task: "T024: Test unitario RedFlags en backend/tests/unit/domain/value-objects/RedFlags.test.ts"
+Task: "T025: Test unitario AnalyzeListingUseCase en backend/tests/unit/domain/services/AnalyzeListingUseCase.test.ts"
+Task: "T026: Test de integración endpoint analyze en backend/tests/integration/api/listings.test.ts"
 
-# Launch all US1 adapters in parallel:
-Task: "T032: Implement CheerioAdapter in backend/src/adapters/cheerio/CheerioAdapter.ts"
-Task: "T033: Implement OpenRouterAdapter in backend/src/adapters/openrouter/OpenRouterAdapter.ts"
-Task: "T034: Implement AvenaScoreAdapter in backend/src/adapters/avena-score/AvenaScoreAdapter.ts"
-Task: "T035: Implement CatastroAdapter in backend/src/adapters/catastro/CatastroAdapter.ts"
+# Lanzar todos los adaptadores de US1 en paralelo:
+Task: "T032: Implementar CheerioAdapter en backend/src/adapters/cheerio/CheerioAdapter.ts"
+Task: "T032a: Implementar DeclaredLocationAdapter en backend/src/adapters/location/DeclaredLocationAdapter.ts"
+Task: "T032b: Implementar GeocodingAdapter en backend/src/adapters/location/GeocodingAdapter.ts"
+Task: "T033: Implementar OpenRouterAdapter en backend/src/adapters/openrouter/OpenRouterAdapter.ts"
+Task: "T034: Implementar AvenaScoreAdapter en backend/src/adapters/avena-score/AvenaScoreAdapter.ts"
 ```
 
 ---
 
-## Implementation Strategy
+## Estrategia de Implementación
 
-### MVP First (User Stories 1 + 2)
+### MVP Primero (Historias 1 + 2)
 
-1. Complete Phase 1: Setup
-2. Complete Phase 2: Foundational (CRITICAL — blocks all stories)
-3. Complete Phase 3: User Story 1 (Listing Lens) + Phase 4: User Story 2 (Mortgage Compass) in parallel
-4. **STOP and VALIDATE**: Test both independently via API + frontend
-5. Deploy/demo — this IS a viable MVP with the two core features
+1. Completar Fase 1: Setup
+2. Completar Fase 2: Foundational (CRÍTICO — bloquea todas las historias)
+3. Completar Fase 3: Historia 1 (Listing Lens) + Fase 4: Historia 2 (Mortgage Compass) en paralelo
+4. **PARAR y VALIDAR**: Probar ambas independientemente vía API + frontend
+5. Desplegar/demo — esto ES un MVP viable con las dos features principales
 
-### Incremental Delivery
+### Entrega Incremental
 
 1. Setup + Foundational → Foundation ready
-2. US1 Listing Lens → Test independently → Demo
-3. US2 Mortgage Compass → Test independently → Demo
-4. US3 Dashboard → ties US1+US2 → Demo full experience
-5. US4 Timeline → Demo with context
-6. US5 Checklist → Demo practical tool
-7. Polish + E2E → Final deliverable
+2. US1 Listing Lens → Test independiente → Demo
+3. US2 Mortgage Compass → Test independiente → Demo
+4. US3 Dashboard → une US1+US2 → Demo experiencia completa
+5. US4 Timeline → Demo con contexto
+6. US5 Checklist → Demo herramienta práctica
+7. Polish + E2E → Entrega final
 
-### Parallel Strategy
+### Estrategia Paralela
 
-With the two P1 stories (US1, US2) having zero code dependencies on each other:
-- After Foundational, implement US1 and US2 in parallel
-- US1: domain (listings, scoring, cadastral) → adapters → API → frontend
-- US2: domain (finance, mortgage, templates) → API → frontend
-- US3 (Dashboard) integrates both when ready
+Con las dos historias P1 (US1, US2) sin dependencias de código entre sí:
+- Tras Foundational, implementar US1 y US2 en paralelo
+- US1: dominio (listings, scoring, catastral) → adaptadores → API → frontend
+- US2: dominio (finance, mortgage, plantillas) → API → frontend
+- US3 (Dashboard) integra ambos cuando estén listos
 
 ---
 
-## Notes
+## Notas
 
-- [P] tasks = different files, no dependencies
-- [Story] label maps task to specific user story for traceability (cohort requirement)
-- Each user story is independently completable and testable
-- Tests MUST be written and FAIL before implementation (TDD per constitution)
-- Commit after each task or logical group
-- Stop at any checkpoint to validate story independently
-- Backend uses hexagonal architecture: domain/ → adapters/ → api/
-- Frontend uses SvelteKit file-based routing with `+page.server.ts` loaders
-- All task IDs are sequential (T001–T091) for cross-reference with cohort tickets
+- Las tareas [P] = archivos diferentes, sin dependencias
+- La etiqueta [Historia] mapea la tarea a la historia de usuario específica (requisito de trazabilidad del cohort)
+- Cada historia de usuario es independientemente completable y testeable
+- Los tests DEBEN escribirse y FALLAR antes de la implementación (TDD según constitución)
+- Commit tras cada tarea o grupo lógico
+- Parar en cualquier checkpoint para validar la historia independientemente
+- El backend usa arquitectura hexagonal: domain/ → adapters/ → api/
+- El frontend usa routing basado en archivos de SvelteKit con loaders `+page.server.ts`
+- Todos los IDs de tarea son secuenciales (T001–T091b) para referencia cruzada con tickets del cohort
