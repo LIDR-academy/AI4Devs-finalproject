@@ -397,3 +397,56 @@ GitHub Actions builds release APK on merge to main,
 uploaded as GitHub Release artifact with a public download URL.
 
 ----------
+
+Read the PRD at docs/PRD.md and the architecture already defined
+in readme.md section 2.
+
+Generate the data model section for readme.md in Spanish,
+filling these subsections:
+
+## 3.1 Diagrama del modelo de datos
+
+Generate a Mermaid entity-relationship diagram for the Firestore
+data model. Include these collections based on the PRD:
+
+- users: registered user profiles
+- games: game sessions (local and cloud)
+- games/{gameId}/rounds: round detail subcollection
+- favorites: local player favorites (document per user)
+
+For each collection show all fields with types.
+Mark which fields are used for queries (history by user,
+game detail).
+Note: local storage model mirrors the Firestore model
+but persists on device.
+
+## 3.2 Descripción de entidades principales
+
+For each collection/entity describe:
+
+- All fields with type and description
+- Relationships between entities
+- Key constraints and validation rules
+- Which fields are indexed for queries
+
+Important constraints from PRD:
+
+- games.hostId: user who created the game
+- games.participantIds: array of registered user IDs
+  (for history queries)
+- rounds are a subcollection of games (not embedded array)
+- deletion is per-user only (soft delete or filtered query)
+- offline-first: all data exists locally before any
+  Firestore sync
+
+Write in Spanish. Use Mermaid for the diagram.
+Do not modify any other section of readme.md.
+
+------------
+
+In readme.md sections 2 and 3, make players consistently
+embedded in the games document (not a subcollection).
+Update any reference to a players subcollection in section 2
+to reflect that players are an embedded array in games.
+Do not modify anything else.
+
