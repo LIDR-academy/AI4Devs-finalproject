@@ -262,10 +262,17 @@ Fase 5 completada. 0 HIGH/CRITICAL abiertos. Revisión de seguridad aprobada.
 
 Si algún ítem falla, el agente lo reporta y bloquea el cierre hasta resolverlo.
 
-Cuando todos los ítems están marcados, el agente sugiere:
+Cuando todos los ítems están marcados, el agente propone crear la **Pull Request** y, tras confirmación, ejecuta:
+
+1. `git push -u origin us/<US-ID>-<slug>` — sube la rama al remoto.
+2. `gh pr create` con `--base <rama-origen>`, título `<US-ID>: <título US>` y el backlog completo como cuerpo.
+3. Registra la URL de la PR en el backlog bajo una sección `## Pull Request`.
+
+La rama **no se fusiona ni se elimina** — la PR documenta el límite de la US para el ejercicio.
 
 ```
-US-XXX cerrada. Para archivar: /archive-user-story US-XXX
+US-XXX cerrada. PR abierta: <URL>
+Para archivar: /archive-user-story US-XXX
 ```
 
 ---
@@ -339,7 +346,9 @@ sequenceDiagram
 
     A-->>Dev: [pausa] Inicio Fase 6 — ¿ejecutar cierre?
     A->>B: [auto] Checklist de cierre
-    A-->>Dev: [pausa] US cerrada — sugiere /archive-user-story
+    A-->>Dev: [pausa] ¿Crear PR? (rama no se fusiona ni elimina)
+    A->>B: [auto] gh pr create → registra URL en backlog
+    A-->>Dev: [pausa] US cerrada — PR abierta — sugiere /archive-user-story
 
     Dev->>A: /archive-user-story US-XXX
     A->>B: [auto] Mueve a archive/ con fecha

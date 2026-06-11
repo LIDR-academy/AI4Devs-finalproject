@@ -85,15 +85,18 @@ findings, fix HIGH/CRITICAL with TDD, re-review until zero open HIGH/CRITICAL, m
 - [ ] Sin alcance fuera de la US
 ```
 
-When every box is checked, mark Phase 6 done. Then propose the **branch integration**
+When every box is checked, mark Phase 6 done. Then propose creating the **Pull Request**
 and, on confirmation, execute it:
 
-1. `git switch <originating-branch>` (the branch the US branch was created from).
-2. `git merge --no-ff us/<US-ID>-<slug>` — the merge commit marks the US boundary.
-3. `git branch -d us/<US-ID>-<slug>` — delete the merged branch.
+1. `git push -u origin us/<US-ID>-<slug>` — push the US branch to remote.
+2. `gh pr create --base <originating-branch> --head us/<US-ID>-<slug> \
+     --title "<US-ID>: <US title>" \
+     --body "$(cat docs/backlog/<US-ID>.md)"` — open the PR with the full backlog as body.
+3. Record the PR URL in the backlog under a `## Pull Request` section.
 
-No PR (solo fork, no merge to `main`); merge and delete require confirmation. Finally
-suggest `/archive-user-story US-XXX` to move the backlog to `docs/backlog/archive/`.
+Do **not** merge or delete the branch — the PR documents the US boundary for the exercise.
+PR creation requires confirmation. Finally suggest `/archive-user-story US-XXX` to move
+the backlog to `docs/backlog/archive/`.
 
 ---
 
