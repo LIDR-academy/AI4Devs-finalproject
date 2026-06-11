@@ -4,6 +4,7 @@
 
 | ID | Título | Caso de uso | Talla | Prioridad |
 |---|---|---|---|---|
+| US-000 | Setup técnico del proyecto | Infraestructura | L | Imprescindible |
 | US-001 | Ver el catálogo de productos | CU1 | M | Imprescindible |
 | US-002 | Filtrar el catálogo por atributos de running | CU1 | M | Imprescindible |
 | US-003 | Filtrar por categoría y precio | CU1 | S | Importante |
@@ -41,6 +42,7 @@ Los filtros por atributos de running (US-002) son el diferencial central de RunM
 
 | Orden | ID | Título | Caso de uso | Talla | Justificación de la posición |
 |---|---|---|---|---|---|
+| 0 | US-000 | Setup técnico del proyecto | Infraestructura | L | Prerequisito absoluto: sin scaffolding, Docker, BD y seed no es posible implementar ninguna otra US |
 | 1 | US-001 | Ver el catálogo de productos | CU1 | M | Base de toda la experiencia; sin catálogo no hay entrada al producto |
 | 2 | US-002 | Filtrar el catálogo por atributos de running | CU1 | M | Propuesta de valor diferencial; valida el núcleo del producto desde el inicio |
 | 3 | US-005 | Consultar la ficha técnica de un producto | CU2 | M | Destino de navegación desde el catálogo; principal punto de conversión |
@@ -61,6 +63,81 @@ Los filtros por atributos de running (US-002) son el diferencial central de RunM
 | US-003 | Filtrar por categoría y precio | CU1 | S | Importante | Complementa los filtros running sin ser parte del diferencial; implementable en un segundo ciclo |
 | US-004 | Limpiar filtros activos | CU1 | S | Importante | Mejora la usabilidad del panel de filtros; depende de que US-002 y US-003 estén implementados |
 | US-013 | Consultar el historial de pedidos | CU3 | S | Importante | Depende de que existan pedidos creados (US-011); aporta valor pero no bloquea el ciclo de compra |
+
+---
+
+## Infraestructura
+
+---
+
+### US-000 — Setup técnico del proyecto
+
+**Caso de uso asociado:** Infraestructura — prerequisito de todas las US
+
+**Historia de usuario:**
+Como equipo de desarrollo, queremos tener el proyecto completamente scaffoldeado con base de datos PostgreSQL en Docker, esquema Prisma migrado y datos de seed cargados, para poder implementar cualquier user story funcional sobre una base técnica lista y verificable.
+
+**Descripción:**
+Historia de infraestructura que no mapea a funcionalidad visible por el usuario pero es el prerequisito absoluto del resto del backlog. Cubre: estructura de monorepo, scaffolding de frontend (Next.js) y backend (Express), configuración de Docker Compose con PostgreSQL, esquema Prisma con todas las entidades del modelo de datos, primera migración, script de seed con los 12 productos del prototipo, ESLint configurado en ambos proyectos y variables de entorno documentadas.
+
+**Criterios de aceptación:**
+- [ ] `docker compose up -d` levanta PostgreSQL en el puerto 5432 sin errores
+- [ ] `npx prisma migrate dev` aplica la migración inicial sobre la base de datos dockerizada y genera el cliente Prisma sin errores
+- [ ] `npx prisma db seed` carga los 12 productos del prototipo (con atributos de filtrado running completos) y verifica que se han insertado correctamente
+- [ ] `cd backend && npm run dev` arranca el servidor Express en el puerto 3001 y responde `200` en `GET /api/health`
+- [ ] `cd frontend && npm run dev` arranca Next.js en el puerto 3000 y sirve la página raíz sin errores de compilación
+- [ ] `npm run lint` pasa sin errores en frontend (ESLint extendido sobre `eslint-config-next`) y en backend (ESLint con `@typescript-eslint`)
+- [ ] `npm run build` completa sin errores de TypeScript en ambos proyectos (`tsc --noEmit`)
+- [ ] El fichero `.env.example` documenta todas las variables requeridas: `DATABASE_URL`, `CORS_ORIGIN`, `SESSION_SECRET`, `ASSETS_BASE_URL`
+
+**Datos o entidades implicadas:**
+- Todas las entidades del modelo: `Product`, `Cart`, `CartItem`, `Order`, `OrderItem`
+- Esquema Prisma completo según `docs/DATA-MODEL.md`
+
+**Estructura de ficheros resultante:**
+```
+runmarket/
+├── docker-compose.yml          # PostgreSQL + volumen persistente
+├── frontend/
+│   ├── package.json            # Next.js 14, React 18, Tailwind v4, shadcn/ui, Lucide, Sonner
+│   ├── tsconfig.json           # strict: true
+│   ├── eslint.config.mjs       # eslint-config-next extendido
+│   └── src/
+│       ├── app/                # App Router
+│       ├── components/
+│       ├── lib/
+│       │   └── api-client.ts
+│       └── types/
+│           └── index.ts        # fuente de verdad de tipos de dominio
+└── backend/
+    ├── package.json            # Express, Prisma, Zod, cors, morgan, express-rate-limit
+    ├── tsconfig.json           # strict: true
+    ├── eslint.config.mjs       # @typescript-eslint/recommended
+    ├── prisma/
+    │   ├── schema.prisma       # modelo completo según DATA-MODEL.md
+    │   ├── migrations/         # migración inicial
+    │   └── seed.ts             # 12 productos del prototipo
+    └── src/
+        ├── app.ts
+        ├── server.ts
+        ├── routes/
+        ├── controllers/
+        ├── services/
+        ├── repositories/
+        ├── schemas/
+        ├── middleware/
+        │   ├── error-handler.ts
+        │   ├── cors.ts
+        │   ├── logger.ts
+        │   └── rate-limit.ts
+        └── types/
+            ├── domain.ts
+            └── errors.ts
+```
+
+**Estimación:** L
+
+**Prioridad:** Imprescindible para el MVP
 
 ---
 
