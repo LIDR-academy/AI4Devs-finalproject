@@ -92,14 +92,15 @@
 - [ ] T029 [P] [US1] Crear RedFlags value object con tipos de flags y etiquetas en español en `backend/src/domain/value-objects/RedFlags.ts`
 - [ ] T030 [US1] Crear interfaz ListingAnalyzerPort en `backend/src/domain/ports/ListingAnalyzerPort.ts`
 - [ ] T030a [US1] Crear interfaz LocationResolverPort con `resolveLocation(parsedListing): Promise<Coordinates | null>` en `backend/src/domain/ports/LocationResolverPort.ts`
-- [ ] T030b [P] [US1] Crear Coordinates value object `{ lat: number, lng: number, source: 'declared' | 'geocoded' | 'vision', confidence: number }` en `backend/src/domain/value-objects/Coordinates.ts`
+- [ ] T030b [P] [US1] Crear Coordinates value object `{ lat: number, lng: number, source: 'declared' | 'geocoded', confidence: number }` en `backend/src/domain/value-objects/Coordinates.ts` (sin source 'vision' — ver FR-016 actualizado)
 - [ ] T031 [P] [US1] Crear interfaz CatastroPort en `backend/src/domain/ports/CatastroPort.ts`
 - [ ] T032 [US1] Implementar CheerioAdapter (parseo HTML, extracción de texto) en `backend/src/adapters/cheerio/CheerioAdapter.ts`
 - [ ] T032a [US1] Implementar DeclaredLocationAdapter (extrae dirección/barrio declarado del HTML con selectores Cheerio) en `backend/src/adapters/location/DeclaredLocationAdapter.ts`
 - [ ] T032b [US1] Implementar GeocodingAdapter (Nominatim OSM, gratis, sin API key) en `backend/src/adapters/location/GeocodingAdapter.ts`
-- [ ] T032c [US1] Implementar LLMVisionLocationAdapter (OpenRouter multimodal, fallback con análisis de fotos) en `backend/src/adapters/location/LLMVisionLocationAdapter.ts`
-- [ ] T032d [US1] Implementar LocationResolverService que encadena los 3 adaptadores en orden en `backend/src/domain/services/LocationResolverService.ts`
-- [ ] T033 [US1] Implementar OpenRouterAdapter (LLM system prompt, salida JSON estructurada) en `backend/src/adapters/openrouter/OpenRouterAdapter.ts`
+- [ ] T032c [US1] (Eliminado — LLMVisionLocationAdapter no viable, ver FR-016 actualizado)
+- [ ] T032d [US1] (Eliminado — LocationResolverService ya no encadena 3 adaptadores; flujo simplificado)
+- [ ] T033 [US1] Implementar OpenRouterAdapter (LLM system prompt, salida JSON estructurada con `reasoning: string` por cada red flag, ver FR-025) en `backend/src/adapters/openrouter/OpenRouterAdapter.ts`
+- [ ] T033a [P] [US1] Actualizar ListingLens UI: mostrar `reasoning` (frase del anuncio + inferencia) bajo cada red flag detectada con icono/expandible, sin ocultar al usuario (AI Reasoning Transparency, FR-025) en `frontend/src/routes/listing-lens/+page.svelte`
 - [ ] T034 [US1] Implementar AvenaScoreAdapter (@avena/score fallback) en `backend/src/adapters/avena-score/AvenaScoreAdapter.ts`
 - [ ] T035 [US1] Implementar CatastroAdapter (cross-reference API, consulta por coordenadas — ahora consume Coordinates de LocationResolverService) en `backend/src/adapters/catastro/CatastroAdapter.ts`
 - [ ] T036 [US1] Implementar MiraTuZonaAdapter (generación de enlace de ubicación) en `backend/src/adapters/miratuzona/MiraTuZonaAdapter.ts`
@@ -158,13 +159,45 @@
 - [ ] T060 [US2] Crear controlador de purchase process en `backend/src/api/controllers/purchaseProcessController.ts`
 - [ ] T061 [US2] Crear UI de página Mortgage Compass: formulario multi-paso (perfil → gastos ocultos → persona → playground de estrategias). **propertyPrice pre-rellenado del listing con link a la fuente. Mostrar AI disclaimer** en `frontend/src/routes/mortgage-compass/+page.svelte`
 - [ ] T062 [US2] Crear server-side loader que proxy el purchase process al backend en `frontend/src/routes/mortgage-compass/+page.server.ts`
+- [ ] T062a [P] [US2] Crear `<AmortizationVsInvestmentChart>` componente: gráfico de barras side-by-side comparando los 4 escenarios de amortización (totalInterest) vs los 3 escenarios de inversión (valor nominal a 30 años) en `frontend/src/lib/components/AmortizationVsInvestmentChart.svelte`
+- [ ] T062b [P] [US2] Añadir insight destacado en Mortgage Compass: caja visual que resume "Si amortizas €300/mes ahorras €48K y reduces 8 años vs si inviertes esa cantidad, acumulas ~€245K en 30 años" en `frontend/src/routes/mortgage-compass/+page.svelte`
+- [ ] T062c [P] [US2] Añadir toggle "Mostrar valor real (ajustado por inflación)" en la sección de inversión en `frontend/src/routes/mortgage-compass/+page.svelte`
 - [ ] T063 [US2] Crear store de perfil financiero en `frontend/src/lib/stores/financialProfile.ts`
 
 **Checkpoint**: Mortgage Compass totalmente funcional — `propertyPrice` pre-rellenado del listing, ver gastos ocultos, obtener comparativa de estrategias. Ciclo TDD completo.
 
 ---
 
-## Fase 5: Historia de Usuario 3 - Dashboard (Prioridad: P2)
+## Fase 5: Historia de Usuario 4 - Negotiation Assistant (Prioridad: P2, Should-Have)
+
+> Renumeración: Negotiation Assistant es US-04 (P2). El resto de historias (Dashboard, Timeline, Checklist) conservan su numeración original en `spec.md` pero comparten este bloque de fase.
+
+**Objetivo**: Tras el análisis de Listing Lens, generar 5-8 preguntas concretas que el usuario puede hacer al inmobiliario cuando vaya a ver la casa. Educativo, no advice, basado en plantillas indexadas por (redFlag, listingSituation).
+
+**Prueba independiente**: Analizar un listing con red flags → GET /api/listings/:id/negotiation-points → verificar que se devuelven 5-8 puntos específicos a las red flags.
+
+### Tests para Historia 4
+
+> Escribir estos PRIMERO, asegurar que FALLAN antes de la implementación
+
+- [ ] T066a [P] [US4] Test unitario NegotiationTemplateRepository: lookup de plantillas por (redFlag, listingSituation) en `backend/tests/unit/domain/services/NegotiationTemplateRepository.test.ts`
+- [ ] T066b [P] [US4] Test unitario NegotiationAssistantService: dado un AnalyzedListing con red flags, devuelve 5-8 puntos relevantes en `backend/tests/unit/domain/services/NegotiationAssistantService.test.ts`
+- [ ] T066c [P] [US4] Test de integración GET /api/listings/:id/negotiation-points devolviendo 5-8 puntos con reasoning incluido en `backend/tests/integration/api/negotiation.test.ts`
+
+### Implementación para Historia 4
+
+- [ ] T066d [P] [US4] Crear NegotiationPoint value object `{ text: string, triggeredBy: RedFlagType, reasoning: string, priority: 'high' | 'medium' | 'low' }` en `backend/src/domain/value-objects/NegotiationPoint.ts`
+- [ ] T066e [US4] Crear NegotiationTemplateRepository: mapa hardcoded (redFlag → array de templates de pregunta) con al menos 3 templates por cada red flag del enum en `backend/src/domain/services/NegotiationTemplateRepository.ts`
+- [ ] T066f [US4] Implementar NegotiationAssistantService: dado un AnalyzedListing, selecciona los templates relevantes (basado en red flags presentes), añade reasoning del LLM, prioriza según severidad de red flag, completa con 3-5 puntos generales preventivos si hay menos de 5 puntos específicos en `backend/src/domain/services/NegotiationAssistantService.ts`
+- [ ] T066g [US4] Implementar ruta GET /api/listings/:id/negotiation-points en `backend/src/api/routes/negotiation.ts`
+- [ ] T066h [US4] Crear UI: sección "Puntos de negociación" en Listing Lens con accordion por punto, color/etiqueta de red flag asociada, botón "Generar" si no se han cargado en `frontend/src/routes/listing-lens/+page.svelte`
+- [ ] T066i [US4] Crear store de negotiation points (Svelte writable) en `frontend/src/lib/stores/negotiation.ts`
+
+**Checkpoint**: Negotiation Assistant totalmente funcional — el usuario ve preguntas concretas accionables después del análisis. TDD completo.
+
+---
+
+## Fase 6: Historia de Usuario 3 - Dashboard (Prioridad: P2)
 
 **Objetivo**: Usuario ve dashboard con el `PurchaseProcess` activo — listing más reciente, perfil financiero, gastos ocultos, estado del checklist, acceso a herramientas. Soporta re-análisis con detección de diff.
 
@@ -201,7 +234,7 @@
 
 ---
 
-## Fase 6: Historia de Usuario 4 - Cronograma Interactivo (Prioridad: P3)
+## Fase 7: Historia de Usuario 5 - Cronograma Interactivo (Prioridad: P3)
 
 **Objetivo**: Usuario visualiza línea temporal de 60-90 días desde arras hasta escritura con detalles de hitos
 
@@ -217,7 +250,7 @@
 
 ---
 
-## Fase 7: Historia de Usuario 5 - Checklist Documental (Prioridad: P3)
+## Fase 8: Historia de Usuario 6 - Checklist Documental (Prioridad: P3)
 
 **Objetivo**: Usuario hace seguimiento de qué documentos tiene/qué necesita por etapa. El progreso persiste.
 
@@ -242,7 +275,7 @@
 
 ---
 
-## Fase 8: Polish & Cross-Cutting Concerns
+## Fase 9: Polish & Cross-Cutting Concerns
 
 **Propósito**: PWA, E2E, validación final, AI disclaimers globales
 
@@ -292,10 +325,10 @@
 
 - T002, T003, T004, T005, T006 en Setup pueden correr en paralelo
 - T014, T015, T016, T017 en Foundational pueden correr en paralelo
-- T023-T027, T023a-T023f (tests US1) pueden correr en paralelo
+- T023-T027, T023a-T023e (tests US1) pueden correr en paralelo
 - T045-T050, T050a-T050b (tests US2) pueden correr en paralelo
 - T028-T029, T031, T030a, T030b (modelos/puertos US1) pueden correr en paralelo
-- T032-T036, T032a-T032c (adaptadores US1) son independientes y pueden correr en paralelo
+- T032-T036, T032a-T032b (adaptadores US1) son independientes y pueden correr en paralelo
 - T051-T052 (modelos US2) pueden correr en paralelo
 - US1 (Fase 3) y US2 (Fase 4) pueden correr en paralelo tras Foundational
 - US4 (Fase 6) y US5 (Fase 7) pueden correr en paralelo

@@ -57,8 +57,8 @@ model AnalyzedListing {
   process           PurchaseProcess @relation(fields: [processId], references: [id])
   url               String
   numericScore      Int               // 0-100
-  redFlags          Json              // string[]
-  locationConfidence Float?           // 0.0-1.0
+  redFlags          Json              // Array<{ flag: RedFlagType, reasoning: string }> (ver FR-025)
+  locationConfidence Float?           // 0.0-1.0 (basado en 'declared' o 'geocoded', sin vision)
   miraTuZonaLink    String?
   cadastralRef      String?
   cadastralM2       Float?
