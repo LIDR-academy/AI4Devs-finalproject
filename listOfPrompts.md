@@ -450,3 +450,53 @@ Update any reference to a players subcollection in section 2
 to reflect that players are an embedded array in games.
 Do not modify anything else.
 
+-----------
+
+Read the PRD at docs/PRD.md and the data model already defined
+in readme.md section 3.
+
+Generate the API section for readme.md in Spanish, filling
+section 4:
+
+## 4. Especificación de la API
+
+This project does not use a REST API. All data access is through
+Firebase SDK. Document the 3 most important Firestore operations
+as if they were API endpoints, using a similar format to OpenAPI
+but adapted to Firestore:
+
+Operation 1: Create and sync a finished game
+
+- Firestore path: games/{gameId} + subcollection rounds/{roundNumber}
+- Operation type: batch write
+- Required fields from data model
+- Security rule that applies
+- Offline behaviour (written locally first)
+
+Operation 2: Get user game history
+
+- Firestore path: games (collection query)
+- Operation type: query
+- Filters: participantIds array-contains userId,
+  status == finished, hiddenInHistory != true for this user
+- Ordered by finishedAt descending
+- Security rule that applies
+
+Operation 3: Firebase Authentication - register and login
+
+- Operations: createUserWithEmailAndPassword,
+  signInWithEmailAndPassword
+- Fields: email, password, displayName
+- Error cases: email already in use, wrong password,
+  user not found
+- Effect on Firestore: creates users/{uid} document on register
+
+For each operation include:
+
+- Description
+- Parameters / fields
+- Success response
+- Error cases
+- Security rule that applies
+
+Write in Spanish. Do not modify any other section of readme.md.

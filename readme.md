@@ -561,7 +561,348 @@ Un **documento por usuario** (o por identidad de dispositivo si no hay cuenta). 
 
 ## 4. Especificación de la API
 
-> Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad
+Este proyecto **no expone una API REST**. Todo el acceso a datos remotos se realiza mediante el **Firebase SDK** (`firebase_auth`, `cloud_firestore`) desde la capa `data` de la app Flutter. A continuación se documentan las **tres operaciones principales** del contrato de datos, en un formato inspirado en OpenAPI pero adaptado a Firestore y Firebase Authentication.
+
+**Convenciones**
+
+| Concepto OpenAPI | Equivalente Firebase |
+|------------------|----------------------|
+| Endpoint | Ruta de colección/documento o método del SDK |
+| POST / PUT | `set()`, `update()`, `WriteBatch.commit()` |
+| GET (lista) | `collection().where().orderBy().get()` |
+| GET (detalle) | `doc().get()` o `snapshots()` |
+| 401 / 403 | `FirebaseException` (`permission-denied`, `unauthenticated`) |
+| 404 | `not-found` |
+
+**Fuente de verdad ampliada:** [`ai-specs/specs/firebase-data-access.yml`](ai-specs/specs/firebase-data-access.yml) · **Reglas de seguridad:** `firestore.rules` (desplegadas con Firebase CLI).
+
+---
+
+### Operación 1 — Crear y sincronizar una partida finalizada
+
+| Atributo | Valor |
+|----------|-------|
+| **Identificador** | `syncFinishedGame` |
+| **SDK** | `FirebaseFirestore.batch()` → `batch.set()` / `batch.commit()` |
+| **Tipo** | Escritura por lotes (*batch write*) |
+| **Rutas** | `games/{gameId}` + subcolección `games/{gameId}/rounds/{roundNumber}` |
+| **Disparador** | Al cerrar la última ronda (`status == finished`) si el organizador tiene sesión activa y conectividad |
+
+#### Descripción
+
+Persiste en Firestore una copia completa de la partida ya jugada en local. El organizador autenticado sube el documento padre `games/{gameId}` (con el roster `players[]` embebido) y un documento por ronda en la subcolección `rounds`. La operación es **atómica**: o se escriben todos los documentos del lote o ninguno. Los jugadores registrados vinculados en `players[].userId` quedan incluidos en `participantIds` para que puedan consultar la partida en su historial (Operación 2).
+
+**Comportamiento offline:** la partida se persiste **primero en el almacenamiento local** del dispositivo durante todo el juego. La escritura en Firestore es diferida hasta el cierre de la partida. Si no hay red o la subida falla, el documento local conserva `syncStatus: pending` y `cloudGameId` vacío; se reintenta al recuperar conectividad. La UI no bloquea el resultado final.
+
+#### Parámetros / campos
+
+**Cabecera implícita:** `request.auth.uid` debe coincidir con `hostId`.
+
+**Documento `games/{gameId}` (obligatorios en nube):**
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `hostId` | string | `Auth.uid` del organizador |
+| `participantIds` | array\<string\> | `userId` de cada jugador registrado en `players[]` (sin duplicados) |
+| `status` | string | `"finished"` |
+| `playerCount` | number | 3–8 |
+| `deckSize` | number | Tamaño del mazo según jugadores |
+| `maxCardsPerRound` | number | Máximo de cartas por ronda (M) |
+| `totalRounds` | number | Longitud de la secuencia |
+| `roundSequence` | array\<number\> | Secuencia precalculada de cartas por ronda |
+| `players` | array\<map\> | Roster embebido: `id`, `displayName`, `userId?`, `isGuest`, `seatOrder`, `totalScore`, `joinedAt` |
+| `firstDealerPlayerId` | string | `playerId` del primer repartidor |
+| `currentRoundNumber` | number | Última ronda jugada |
+| `createdAt` | timestamp | Creación de la partida |
+| `updatedAt` | timestamp | Última modificación |
+| `finishedAt` | timestamp | Cierre de la última ronda |
+
+**Documento `games/{gameId}/rounds/{roundNumber}` (uno por ronda, obligatorios):**
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `roundNumber` | number | Orden 1…`totalRounds` (también ID de documento) |
+| `cardsInRound` | number | Valor de `roundSequence[roundNumber - 1]` |
+| `dealerPlayerId` | string | Repartidor de la ronda |
+| `status` | string | `"closed"` |
+| `bids` | map\<string, number\> | `playerId` → apuesta |
+| `tricks` | map\<string, number\> | `playerId` → bazas reales |
+| `scoresDelta` | map\<string, number\> | `playerId` → puntos de la ronda |
+| `createdAt` | timestamp | Apertura de la ronda |
+| `closedAt` | timestamp | Cierre tras calcular puntuación |
+
+**Ejemplo de invocación (Dart):**
+
+```dart
+final batch = firestore.batch();
+final gameRef = firestore.collection('games').doc(gameId);
+
+batch.set(gameRef, {
+  'hostId': uid,
+  'participantIds': participantIds,
+  'status': 'finished',
+  'playerCount': 4,
+  'deckSize': 40,
+  'maxCardsPerRound': 10,
+  'totalRounds': 22,
+  'roundSequence': [1, 2, /* … */ 1],
+  'players': [ /* roster embebido */ ],
+  'firstDealerPlayerId': 'player-uuid-1',
+  'currentRoundNumber': 22,
+  'createdAt': Timestamp.fromDate(createdAt),
+  'updatedAt': FieldValue.serverTimestamp(),
+  'finishedAt': Timestamp.fromDate(finishedAt),
+});
+
+for (final round in rounds) {
+  batch.set(
+    gameRef.collection('rounds').doc('${round.roundNumber}'),
+    round.toFirestoreMap(),
+  );
+}
+
+await batch.commit();
+```
+
+#### Respuesta de éxito
+
+| Campo | Valor |
+|-------|-------|
+| **Código SDK** | Sin excepción; `WriteBatch.commit()` resuelve |
+| **Efecto remoto** | Documentos creados en `games/{gameId}` y `rounds/*` |
+| **Efecto local** | `cloudGameId == gameId`, `syncStatus: synced`, `source: cloud` |
+
+#### Casos de error
+
+| Código / causa | Descripción | Acción en app |
+|----------------|-------------|---------------|
+| `permission-denied` | Reglas rechazan la escritura (`hostId` ≠ `Auth.uid` o usuario no autenticado) | `syncStatus: failed`; mensaje discreto; reintento manual o automático |
+| `unauthenticated` | Sesión expirada o cerrada | No subir; partida permanece solo local |
+| `unavailable` / red | Sin conectividad o timeout | `syncStatus: pending`; reintento al recuperar red |
+| `invalid-argument` | Datos incompletos o tipos incorrectos | Corregir mapeo en datasource; log de desarrollo |
+| Lote > 500 operaciones | Límite de Firestore por batch | Partir en varios lotes (no aplica al MVP: máx. ~22 rondas) |
+
+#### Regla de seguridad que aplica
+
+```javascript
+match /games/{gameId} {
+  allow create: if request.auth != null
+    && request.resource.data.hostId == request.auth.uid
+    && request.resource.data.status == 'finished';
+
+  allow update: if request.auth != null
+    && resource.data.hostId == request.auth.uid;
+}
+
+match /games/{gameId}/rounds/{roundNumber} {
+  allow create, update: if request.auth != null
+    && get(/databases/$(database)/documents/games/$(gameId)).data.hostId
+       == request.auth.uid;
+
+  allow read: if request.auth != null && (
+    get(/databases/$(database)/documents/games/$(gameId)).data.hostId
+      == request.auth.uid
+    || request.auth.uid in get(/databases/$(database)/documents/games/$(gameId))
+         .data.participantIds
+  );
+}
+```
+
+---
+
+### Operación 2 — Obtener historial de partidas del usuario
+
+| Atributo | Valor |
+|----------|-------|
+| **Identificador** | `listUserGameHistory` |
+| **SDK** | `FirebaseFirestore.collection('games').where(...).orderBy(...).get()` |
+| **Tipo** | Consulta (*query*) |
+| **Ruta** | Colección `games` |
+| **Requisito** | Usuario autenticado (`Auth.uid`) |
+
+#### Descripción
+
+Devuelve las partidas **finalizadas** en las que el usuario participó como organizador o como jugador registrado. La consulta en Firestore usa `participantIds` (denormalizado al subir en la Operación 1). El repositorio **fusiona** el resultado con el historial local y aplica el filtro `hiddenInHistory != true` en el dispositivo, ya que el borrado del historial propio es **solo local** y no elimina el documento en nube para otros participantes (PRD).
+
+Para el organizador también se puede ejecutar una consulta complementaria con `hostId == uid`; el listado unificado deduplica por `cloudGameId`.
+
+#### Parámetros / campos
+
+| Parámetro | Origen | Descripción |
+|-----------|--------|-------------|
+| `userId` | `FirebaseAuth.instance.currentUser!.uid` | Usuario autenticado |
+| `participantIds` | Filtro Firestore | `array-contains: userId` |
+| `status` | Filtro Firestore | `isEqualTo: 'finished'` |
+| `hiddenInHistory` | Filtro **local** | Excluir partidas con `hiddenInHistory == true` en almacenamiento del dispositivo |
+| `orderBy` | Firestore | `finishedAt` descendente |
+| `limit` | Opcional | Paginación con `startAfterDocument` |
+
+**Ejemplo de invocación (Dart):**
+
+```dart
+final snapshot = await firestore
+    .collection('games')
+    .where('participantIds', arrayContains: uid)
+    .where('status', isEqualTo: 'finished')
+    .orderBy('finishedAt', descending: true)
+    .limit(20)
+    .get();
+
+// En el repositorio: merge con partidas locales y filtrar hiddenInHistory
+```
+
+**Índice compuesto requerido** (`firestore.indexes.json`): `participantIds` (ARRAY) + `status` (ASC) + `finishedAt` (DESC).
+
+#### Respuesta de éxito
+
+| Campo | Descripción |
+|-------|-------------|
+| **Tipo** | `QuerySnapshot<Map<String, dynamic>>` |
+| **Documentos** | Lista de `games/{gameId}` con resumen: `gameId`, `hostId`, `finishedAt`, `playerCount`, `players[]` (nombres y `totalScore`), `participantIds` |
+| **UI** | Listado unificado local/nube con icono diferenciador (`source`) |
+
+**Ejemplo de documento en la respuesta (resumido):**
+
+```json
+{
+  "gameId": "a1b2c3d4-...",
+  "hostId": "uid-organizador",
+  "participantIds": ["uid-a", "uid-b"],
+  "status": "finished",
+  "playerCount": 4,
+  "finishedAt": "2026-06-10T22:15:00Z",
+  "players": [
+    { "id": "p1", "displayName": "Juan", "userId": "uid-a", "totalScore": 12 },
+    { "id": "p2", "displayName": "María", "userId": "uid-b", "totalScore": 8 }
+  ]
+}
+```
+
+#### Casos de error
+
+| Código / causa | Descripción | Acción en app |
+|----------------|-------------|---------------|
+| `permission-denied` | El usuario no es `hostId` ni está en `participantIds` del documento | No mostrar esa partida; error de reglas en desarrollo |
+| `unauthenticated` | Sin sesión | Mostrar solo historial local |
+| `failed-precondition` | Falta índice compuesto | Desplegar `firestore.indexes.json` |
+| `unavailable` / red | Sin conectividad | Mostrar historial local en caché; reintentar al reconectar |
+| `not-found` | Colección vacía para el usuario | Lista vacía (no es error de dominio) |
+
+#### Regla de seguridad que aplica
+
+```javascript
+match /games/{gameId} {
+  allow read: if request.auth != null && (
+    resource.data.hostId == request.auth.uid
+    || request.auth.uid in resource.data.participantIds
+  );
+}
+```
+
+Solo lectura para participantes registrados; no pueden modificar ni borrar la partida del organizador.
+
+---
+
+### Operación 3 — Registro e inicio de sesión (Firebase Authentication)
+
+| Atributo | Valor |
+|----------|-------|
+| **Identificador** | `signUp` / `signIn` |
+| **SDK** | `FirebaseAuth.createUserWithEmailAndPassword`, `FirebaseAuth.signInWithEmailAndPassword` |
+| **Tipo** | Autenticación (no Firestore directamente) |
+| **Efecto en Firestore** | Tras registro exitoso, creación o fusión de `users/{uid}` |
+
+#### Descripción
+
+Permite el **registro opcional** con email y contraseña para habilitar la sincronización automática del historial (Operación 1) y la consulta compartida (Operación 2). El login restablece la sesión sin recrear el perfil. Tras `createUserWithEmailAndPassword`, la capa `data` escribe el documento de perfil en Firestore con `set(..., SetOptions(merge: true))`.
+
+#### Parámetros / campos
+
+**Registro (`signUp`)**
+
+| Campo | Tipo | Obligatorio | Descripción |
+|-------|------|-------------|-------------|
+| `email` | string | sí | Email válido; único en Firebase Auth |
+| `password` | string | sí | Contraseña del proveedor (mínimo 6 caracteres en Firebase) |
+| `displayName` | string | sí | Nombre visible al buscar jugadores; se persiste en `users/{uid}` |
+
+**Inicio de sesión (`signIn`)**
+
+| Campo | Tipo | Obligatorio | Descripción |
+|-------|------|-------------|-------------|
+| `email` | string | sí | Email de la cuenta |
+| `password` | string | sí | Contraseña |
+
+**Documento Firestore creado en registro — `users/{uid}`:**
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `displayName` | string | Nombre del usuario |
+| `email` | string | Reflejo del email de Auth |
+| `photoUrl` | string? | Opcional |
+| `createdAt` | timestamp | Alta del perfil |
+| `updatedAt` | timestamp | Última actualización |
+
+**Ejemplo de invocación (Dart):**
+
+```dart
+// Registro
+final credential = await FirebaseAuth.instance
+    .createUserWithEmailAndPassword(email: email, password: password);
+
+await FirebaseFirestore.instance
+    .doc('users/${credential.user!.uid}')
+    .set({
+      'displayName': displayName,
+      'email': email,
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+// Login
+await FirebaseAuth.instance
+    .signInWithEmailAndPassword(email: email, password: password);
+```
+
+#### Respuesta de éxito
+
+| Operación | Respuesta SDK | Efecto |
+|-----------|---------------|--------|
+| **Registro** | `UserCredential` con `user.uid`, `user.email` | Cuenta Auth creada; documento `users/{uid}` en Firestore; `authStateChanges` emite usuario |
+| **Login** | `UserCredential` con sesión activa | Token refrescado; navegación a flujos con subida/historial en nube |
+
+#### Casos de error
+
+| Código Firebase Auth | Operación | Descripción | Mensaje orientativo (UI) |
+|----------------------|-----------|-------------|--------------------------|
+| `email-already-in-use` | Registro | El email ya está registrado | «Este email ya tiene cuenta. Inicia sesión.» |
+| `invalid-email` | Ambas | Formato de email inválido | «Introduce un email válido.» |
+| `weak-password` | Registro | Contraseña demasiado débil | «La contraseña debe tener al menos 6 caracteres.» |
+| `user-not-found` | Login | No existe cuenta con ese email | «No hay cuenta con este email.» |
+| `wrong-password` | Login | Contraseña incorrecta | «Contraseña incorrecta.» |
+| `invalid-credential` | Login | Credenciales inválidas (SDK unificado) | «Email o contraseña incorrectos.» |
+| `user-disabled` | Ambas | Cuenta deshabilitada en consola | «Esta cuenta no está disponible.» |
+| `network-request-failed` | Ambas | Sin conectividad | «Comprueba tu conexión e inténtalo de nuevo.» |
+| `permission-denied` | Registro (Firestore) | Fallo al crear `users/{uid}` | «No se pudo crear el perfil. Inténtalo de nuevo.» |
+
+#### Regla de seguridad que aplica
+
+**Firebase Authentication:** el proveedor email/contraseña debe estar habilitado en la consola del proyecto `la-pocha-9d070`.
+
+**Firestore (`users/{userId}`):**
+
+```javascript
+match /users/{userId} {
+  allow read: if request.auth != null;
+
+  allow create, update: if request.auth != null
+    && request.auth.uid == userId
+    && request.resource.data.displayName is string
+    && request.resource.data.displayName.size() > 0;
+}
+```
+
+Solo el propio usuario puede crear o actualizar su perfil; cualquier usuario autenticado puede leer perfiles (búsqueda de jugadores registrados al crear partida).
 
 ---
 
