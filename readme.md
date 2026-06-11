@@ -92,7 +92,7 @@ npm run dev              # Backend (3001) + Frontend (5173)
 │             Checklist                                        │
 │                                                              │
 │  Puertos: ListingAnalyzerPort, MortgageCalculatorPort,      │
-│           CadastroPort, NotificationPort                     │
+│           CatastroPort, NotificationPort                     │
 │                                                              │
 │  Value Objects: TransparencyScore, FinancialProfile,        │
 │                 RedFlags, BureaucraticMilestone              │
@@ -150,7 +150,7 @@ backend/
 │   ├── domain/           # Lógica de dominio pura (sin dependencias externas)
 │   │   ├── aggregates/   # User, PurchaseProcess, AnalyzedListing, Checklist
 │   │   ├── value-objects/# TransparencyScore, FinancialProfile, RedFlags...
-│   │   ├── ports/        # Interfaces (ListingAnalyzerPort, CadastroPort...)
+│   │   ├── ports/        # Interfaces (ListingAnalyzerPort, CatastroPort...)
 │   │   └── services/     # Casos de uso (AnalyzeListingUseCase...)
 │   ├── adapters/         # Implementaciones de puertos
 │   │   ├── openrouter/   # OpenRouterAdapter (análisis LLM)
@@ -370,7 +370,7 @@ erDiagram
 Como comprador primerizo, quiero pegar la URL de un anuncio y obtener un análisis de transparencia para saber qué me está ocultando el anuncio.
 
 Criterios de aceptación:
-1. Dada una URL de anuncio válida, cuando la envío, entonces veo una puntuación (0-100) y banderas rojas en <10s
+1. Dada una URL de anuncio válida, cuando la envío, entonces veo una puntuación (0-100) y banderas rojas dentro del SLA de 15s (FR-018)
 2. Dado un anuncio con pistas de ubicación, cuando el análisis termina, entonces se muestra una estimación de ubicación y enlace a MiraTuZona
 3. Dado que hay datos catastrales, cuando el análisis termina, entonces se comparan m² declarados vs oficiales
 4. Dada una URL inaccesible, cuando la envío, entonces se ofrece pegar el texto del anuncio manualmente
@@ -390,15 +390,36 @@ Criterios de aceptación:
 Como comprador primerizo, quiero ver un resumen de mis análisis y mi situación financiera en un solo sitio para no perderme.
 
 Criterios de aceptación:
-1. Dado que he analizado 3 anuncios, cuando visito el dashboard, entonces los veo todos con puntuaciones y fechas
-2. Dado un anuncio previamente analizado, cuando pulso "re-analizar", entonces se destacan las diferencias con la instantánea anterior
-3. Dada una sesión nueva sin datos, cuando visito el dashboard, entonces veo un estado vacío con llamadas a probar las herramientas
+1. Dada una sesión sin proceso activo, cuando visito el dashboard, entonces se muestra el estado vacío con dos CTAs ("Analizar un anuncio" y "Configurar perfil manualmente")
+2. Dado que he analizado 3 anuncios, cuando visito el dashboard, entonces los veo todos con puntuaciones y fechas
+3. Dado un anuncio previamente analizado, cuando pulso "re-analizar", entonces se destacan las diferencias con la instantánea anterior (diff backend-computed)
+
+---
+
+**Historia de Usuario 4 — Cronograma Interactivo: Saber Qué Viene Después (P3, Should-Have)**
+
+Como comprador primerizo, quiero ver una línea temporal del proceso de compra para entender qué pasa en cada etapa y cuándo.
+
+Criterios de aceptación:
+1. Cuando abro la página del cronograma, entonces veo una línea temporal visual con hitos desde arras hasta escritura, con duraciones estimadas
+2. Cuando pulso un hito, entonces veo información detallada (qué pasa, documentos necesarios, duración típica)
+
+---
+
+**Historia de Usuario 5 — Checklist Documental: Que No Se Te Escape Nada (P3, Should-Have)**
+
+Como comprador primerizo, quiero hacer seguimiento de qué documentos tengo y qué me falta para cada etapa del proceso.
+
+Criterios de aceptación:
+1. Cuando abro el checklist, los ítems se agrupan por etapa con un porcentaje de progreso por etapa
+2. Cuando marco un ítem como completado, el porcentaje se actualiza y el estado persiste entre sesiones
+3. Cuando completo todos los ítems de una etapa, la UI sugiere avanzar a la siguiente etapa del proceso
 
 ---
 
 ## 6. Tickets de Trabajo
 
-> Los 91 tickets detallados están en `specs/001-realista-mvp/tasks.md` (con IDs T001–T091, fases, dependencias y criterios TDD). A continuación, los 3 más representativos: uno de backend, uno de frontend y uno de base de datos.
+> Los 127 tickets detallados están en `specs/001-realista-mvp/tasks.md` (con IDs T001–T091b, fases, dependencias y criterios TDD). A continuación, los 3 más representativos: uno de backend, uno de frontend y uno de base de datos.
 
 **Ticket 1 — Backend (T037): Implementar AnalyzeListingUseCase**
 
@@ -463,7 +484,7 @@ Criterios de aceptación:
 
 ## 7. Pull Requests
 
-> Documentación de las PRs realizadas durante el desarrollo. Los hashes de commit y mensajes corresponden a la rama `001-realista-mvp` (a renombrar a `feature-entrega1-DMM` antes de abrir la PR contra `main`).
+> Documentación de las PRs realizadas durante el desarrollo. Los hashes de commit y mensajes corresponden a la rama `feature-entrega1-DMM` (con las iniciales DMM del autor, según la convención del cohort).
 
 **Pull Request 1 — Plan de implementación + investigación + modelo de datos + contratos**
 
@@ -481,13 +502,13 @@ Criterios de aceptación:
 
 ---
 
-**Pull Request 2 — Desglose de tareas: 91 tareas con TDD por historia de usuario**
+**Pull Request 2 — Desglose de tareas: 127 tareas con TDD por historia de usuario**
 
 **Título:** `tasks: 91 tasks across 8 phases, TDD per user story`
 
-**Hash de commit:** `a8fd5d7`
+**Hash de commit:** `a8fd5d7` (versión original de 91 tareas, ampliada a 127 en commits posteriores con T023a-f, T030a-b, T032a-d, T037a-f, T042a, T050a-e, T057a, T058a, T070a-f, T087a, T091a, T091b para cubrir críticos, importantes y menores de la revisión del E2E)
 
-**Descripción:** Esta PR genera el desglose completo de tareas (`specs/001-realista-mvp/tasks.md`) con 91 tareas distribuidas en 8 fases: Setup, Foundational, US1 Listing Lens, US2 Mortgage Compass, US3 Dashboard, US4 Timeline, US5 Checklist y Polish. Cada historia de usuario incluye sus tests primero (TDD, 17 tareas de test), seguidos de la implementación. Las tareas están etiquetadas con `[P]` para paralelización y `[US1]`–`[US5]` para trazabilidad con las historias.
+**Descripción:** Esta PR genera el desglose completo de tareas (`specs/001-realista-mvp/tasks.md`) con 127 tareas distribuidas en 8 fases: Setup, Foundational, US1 Listing Lens, US2 Mortgage Compass, US3 Dashboard, US4 Timeline, US5 Checklist y Polish. Cada historia de usuario incluye sus tests primero (TDD, ~25 tareas de test tras las ampliaciones), seguidos de la implementación. Las tareas están etiquetadas con `[P]` para paralelización y `[US1]`–`[US5]` para trazabilidad con las historias.
 
 **Relación con historias de usuario:** Trazabilidad directa — cada tarea está mapeada a una historia específica.
 

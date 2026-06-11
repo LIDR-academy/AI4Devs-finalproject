@@ -87,15 +87,13 @@ model Checklist {
 
 ```typescript
 interface TransparencyScore {
-  value: number        // 0-100
-  label: 'excellent' | 'good' | 'fair' | 'poor' | 'suspicious'
-  breakdown: {
-    completeness: number
-    accuracy: number
-    clarity: number
-  }
+  value: number        // 0-100, persistido en DB como `numericScore`
+  label: 'excellent' | 'good' | 'fair' | 'poor' | 'suspicious' // derivado de `value` (no persistido)
+  breakdown: { completeness: number; accuracy: number; clarity: number } // derivado de `value` (no persistido)
 }
 ```
+
+**Persistencia**: solo `value` (campo `numericScore: Int` en `AnalyzedListing`). `label` y `breakdown` se computan a partir de `value` mediante una función pura `deriveTransparencyScore(value: number): TransparencyScore`. Sirven para estructurar el system prompt del LLM y dar contexto semántico al usuario, no se persisten. El response de la API solo expone `numericScore` (mapea a `value`).
 
 ### SnapshotHash (definido en `domain/value-objects/SnapshotHash.ts`)
 
