@@ -14,10 +14,15 @@
 ## 0. Ficha del proyecto
 
 ### **0.1. Tu nombre completo:**
+  Juan Miguel Grau Sánchez
 
 ### **0.2. Nombre del proyecto:**
+La Pocha Tracker
 
 ### **0.3. Descripción breve del proyecto:**
+App móvil Flutter para llevar el marcador del juego de cartas español La Pocha. 
+Gestiona la secuencia de rondas, calcula puntos automáticamente y valida la restricción del repartidor. 
+Funciona offline y permite sincronizar el historial de partidas en la nube entre jugadores registrados.
 
 ### **0.4. URL del proyecto:**
 
@@ -25,7 +30,7 @@
 
 ### 0.5. URL o archivo comprimido del repositorio
 
-> Puedes tenerlo alojado en público o en privado, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/). También puedes compartir por correo un archivo zip con el contenido
+<https://github.com/juanmigrau/AI4Devs-finalproject/tree/finalproject-entrega1-JMGS>
 
 
 ---
