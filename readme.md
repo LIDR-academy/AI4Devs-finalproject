@@ -15,7 +15,7 @@
 
 ### **0.1. Tu nombre completo:**
 
-Daniel G.
+Daniel Miguel
 
 ### **0.2. Nombre del proyecto:**
 
@@ -31,7 +31,7 @@ Asistente educativo con IA para compradores primerizos de vivienda en España. A
 
 ### 0.5. URL o archivo comprimido del repositorio
 
-> TBD
+`https://github.com/dmiguelm/AI4Devs-finalproject-DMM` (rama `feature-entrega1-DMM` para Entrega 1, `finalproject-DMM` para Entrega final)
 
 ---
 
@@ -524,10 +524,10 @@ Criterios de aceptación:
 
 **Hash de commit:** `bd10778`
 
-**Descripción:** Esta PR añade los artefactos de documentación requeridos por la plantilla del cohort: LICENSE MIT, NOTICE.md con atribución a @avena/score, 3 Architecture Decision Records (hexagonal + DDD, @avena/score como fallback, scraping educativo vs comercial), un catálogo de 16 eventos de dominio identificados, y la documentación completa de `prompts.md` con 25 prompts organizados en las 7 secciones de la plantilla (producto, arquitectura, modelo de datos, API, historias, tickets, PRs).
+**Descripción:** Esta PR añade los artefactos de documentación requeridos por la plantilla del cohort: LICENSE MIT, NOTICE.md con atribución a @avena/score, 3 Architecture Decision Records (hexagonal + DDD, @avena/score como fallback, scraping educativo vs comercial), un catálogo de eventos de dominio identificados (20 actuales + 4 futuros post-MVP = 24 en total; ver `docs/domain-events.md`), y la documentación completa de `prompts.md` organizada en 8 secciones según el nuevo formato (Skills, Subagentes, Workflows, Tools, Procesos, Prompts clave, Comparativas, Ajustes humanos).
 
 **Relación con historias de usuario:** No ligada a una historia específica — completa los entregables de documentación del proyecto.
 
 **Impacto:** Cubre los requisitos de la Entrega 1 (Documentación técnica) más allá de la plantilla. Establece la base de gobernanza técnica para futuros colaboradores.
 
-**Cambios:** 7 archivos creados o modificados (649 líneas, 14 eliminadas)
+**Cambios:** 7 archivos creados o modificados (649 líneas, 14 eliminadas) en su versión original. Ampliada en commits posteriores (`f1b432c` + `42cc631` + `78de70c` + `b42fd93`) con la traducción completa al español, los 3 fixes críticos del E2E, los 9 fixes importantes+menores, y la corrección del code review (`f1b432c` con 3 critical + 8 important).

@@ -85,9 +85,6 @@
 - [ ] T023d [P] [US1] Test unitario SnapshotHash computación canónica (input normalizado → SHA-256) en `backend/tests/unit/domain/value-objects/SnapshotHash.test.ts`
 - [ ] T023e [P] [US1] Test unitario DiffService computando diferencias entre snapshots (precio, m², año, redFlags añadidas/quitadas) en `backend/tests/unit/domain/services/DiffService.test.ts`
 - [ ] T023f [P] [US1] Test unitario progress events emitidos por AnalyzeListingUseCase en orden (fetching → resolving → analyzing → cross_referencing) en `backend/tests/unit/domain/services/ProgressEvents.test.ts`
-- [ ] T050c [P] [US3] Test unitario DashboardAggregator computando stats, currentStage progress, investment scenarios en `backend/tests/unit/domain/services/DashboardAggregator.test.ts`
-- [ ] T050d [P] [US3] Test de integración GET /api/dashboard con proceso activo y sin proceso activo (empty state) en `backend/tests/integration/api/dashboard.test.ts`
-- [ ] T050e [P] [US3] Test de integración PATCH /api/purchase-processes/:id con currentStage en `backend/tests/integration/api/purchaseProcesses.test.ts`
 
 ### Implementación para Historia 1
 
@@ -180,6 +177,9 @@
 - [ ] T064 [P] [US3] Test de integración GET /api/purchase-processes/:id devolviendo `computed` con escenarios de amortización y listings en `backend/tests/integration/api/purchaseProcesses.test.ts`
 - [ ] T065 [P] [US3] Test de integración de detección de diff en re-análisis (snapshot anterior vs nuevo) en `backend/tests/integration/api/listings.test.ts`
 - [ ] T066 [P] [US3] Test de componente Dashboard renderizando proceso activo, listings y checklist en `frontend/tests/unit/routes/Dashboard.test.ts`
+- [ ] T050c [P] [US3] Test unitario DashboardAggregator computando stats, currentStage progress, investment scenarios en `backend/tests/unit/domain/services/DashboardAggregator.test.ts`
+- [ ] T050d [P] [US3] Test de integración GET /api/dashboard con proceso activo y sin proceso activo (empty state) en `backend/tests/integration/api/dashboard.test.ts`
+- [ ] T050e [P] [US3] Test de integración PATCH /api/purchase-processes/:id con currentStage en `backend/tests/integration/api/purchaseProcesses.test.ts`
 
 ### Implementación para Historia 3
 
@@ -293,7 +293,7 @@
 - T002, T003, T004, T005, T006 en Setup pueden correr en paralelo
 - T014, T015, T016, T017 en Foundational pueden correr en paralelo
 - T023-T027, T023a-T023f (tests US1) pueden correr en paralelo
-- T045-T050, T050a-T050e (tests US2) pueden correr en paralelo
+- T045-T050, T050a-T050b (tests US2) pueden correr en paralelo
 - T028-T029, T031, T030a, T030b (modelos/puertos US1) pueden correr en paralelo
 - T032-T036, T032a-T032c (adaptadores US1) son independientes y pueden correr en paralelo
 - T051-T052 (modelos US2) pueden correr en paralelo

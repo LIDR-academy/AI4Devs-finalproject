@@ -176,18 +176,22 @@ interface InvestmentAlternative {
 ### RedFlags (`domain/value-objects/RedFlags.ts`)
 
 ```typescript
+// Enum cerrado: solo estos valores son válidos en `redFlags`.
+// Un AnalyzedListing nunca puede contener un string arbitrario.
 type RedFlag =
-  | 'imprecise_location'
-  | 'no_energy_certificate'
-  | 'inflated_square_meters'
-  | 'vague_description'
-  | 'missing_floor_info'
-  | 'stale_listing'
-  | 'common_area_photos'
-  | 'no_orientation'
-  | 'euphemistic_language'
-  | 'price_inconsistency'
+  | 'imprecise_location'         // ubicación sin dirección específica
+  | 'no_energy_certificate'     // no menciona certificado energético
+  | 'inflated_square_meters'    // m² catastrales < m² declarados
+  | 'vague_description'         // descripción genérica sin detalles
+  | 'missing_floor_info'        // no indica planta
+  | 'stale_listing'             // sin actualizar en >6 meses (heurística)
+  | 'common_area_photos'        // fotos de zonas comunes, no de la unidad
+  | 'no_orientation'            // no indica orientación
+  | 'euphemistic_language'      // "acogedor", "con potencial" detectado por el LLM
+  | 'price_inconsistency'       // precio/m² fuera de rango del barrio (heurística + LLM)
 ```
+
+El LLM (en `OpenRouterAdapter`) está instruido a devolver **solo** valores de este enum en el campo `redFlags` de su respuesta JSON. El validador en `AnalyzedListing` agrega rechaza cualquier string fuera del enum.
 
 ### BureaucraticMilestone (`domain/value-objects/BureaucraticMilestone.ts`)
 

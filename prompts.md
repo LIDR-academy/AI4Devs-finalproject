@@ -20,7 +20,7 @@ Skills de **Superpowers** (paquete que extiende el comportamiento del agente) qu
 | Skill | Cuándo se usó | Output generado |
 |-------|---------------|-----------------|
 | **`brainstorming`** | Inicio del proyecto, refinamiento del producto | Diseño completo del producto: Listing Lens, Mortgage Compass, Dashboard |
-| **`requesting-code-review`** | Disponible para revisión crítica del E2E | (No ejecutado aún; pendiente para fase de implementación) |
+| **`requesting-code-review`** | Revisión crítica del E2E antes de declarar Entrega 1 lista | Veredicto "With fixes" — 3 críticos + 8 importantes identificados y corregidos en commit `f1b432c` |
 | **`using-superpowers`** | Carga al inicio de cada conversación | Protocolo de invocación de skills antes de responder |
 | **`test-driven-development`** | Referencia para estructura de tareas | 17 tareas de test (TDD) integradas en tasks.md |
 | **`verification-before-completion`** | Carga durante commits | Mensajes de commit verifican el estado antes de afirmar "completado" |
@@ -225,7 +225,7 @@ Los 3 prompts más relevantes que dispararon decisiones fundamentales:
 | **Naming del proyecto** | HomePath (genérico) | Realista (contraste con Idealista, posiciona el mensaje) | El nombre debe comunicar el producto. "Idealista pero realista" |
 | **Persistencia** | localStorage/IndexedDB en cliente (en duda) | PostgreSQL full stack desde día 1 | Mejor calidad de código, demostración de backend |
 | **LLM provider** | OpenAI o Anthropic directo | OpenRouter como gateway | Flexibilidad de modelo, una sola API key, más barato para desarrollo |
-| **Persistencia en USD en Mortgage Compass** | No conectado a listing | Pre-rellenado del listing con link a la fuente | Elimina fricción, refuerza el flujo E2E "estoy valorando esta casa" |
+| **Pre-rellenado de `propertyPrice` en Mortgage Compass** | No conectado a listing | Pre-rellenado del listing con link a la fuente | Elimina fricción, refuerza el flujo E2E "estoy valorando esta casa" |
 | **Estimación de ubicación** | Asumida por LLM (incorrecto) | Cadena de 3 adaptadores con fallback | LLM solo no genera coordenadas; la cadena es robusta y económica |
 | **Idioma de los artefactos** | Español en spec, inglés en plan/research/tasks | Español en todo, código en inglés | Recomendación del cohort: documentación funcional en español para review |
 
@@ -239,7 +239,7 @@ Decisiones o cambios aplicados por el autor (no por el agente) durante el proyec
 
 2. **Pivote del Mortgage Compass**: el agente propuso inicialmente un simulador de hipotecas genérico. El autor lo refinó hacia un "strategy advisor" con amortización vs inversión, una idea genuinamente novedosa en el contexto español.
 
-3. **Refinamiento de la estrategia deMortgage**: el agente propuso 4 escenarios de duración (20/25/30). El autor insistió en 30 años como estándar y añadió la dimensión de amortización voluntaria (no duración), que es más realista para el primer comprador.
+3. **Refinamiento de la estrategia de hipoteca**: el agente propuso 4 escenarios de duración (20/25/30). El autor insistió en 30 años como estándar y añadió la dimensión de amortización voluntaria (no duración), que es más realista para el primer comprador.
 
 4. **Decisión de omitir auth para MVP**: el autor priorizó la calidad de código sobre features de infraestructura, aceptando la complejidad de un `userId` nullable para futura migración.
 
