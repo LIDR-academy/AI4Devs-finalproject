@@ -1,6 +1,6 @@
 # Plan de Implementación: Realista MVP
 
-**Rama**: `001-realista-mvp` | **Fecha**: 2026-06-04 | **Spec**: [spec.md](./spec.md)
+**Rama**: `feature-entrega1-DMM` | **Fecha**: 2026-06-04 | **Spec**: [spec.md](./spec.md)
 
 **Input**: Especificación de funcionalidad desde `/specs/001-realista-mvp/spec.md`
 
@@ -22,7 +22,7 @@ PWA mobile-first para compradores primerizos de vivienda en España. Tres funcio
 
 **Tipo de proyecto**: Web application (monorepo: frontend SvelteKit + backend Express)
 
-**Objetivos de rendimiento**: Análisis de anuncio <10s, respuesta de API <500ms p95, carga inicial de PWA <3s
+**Objetivos de rendimiento**: Análisis de anuncio <15s (SLA, ver FR-018 y SC-001), respuesta de API <500ms p95 (excluye el endpoint de analyze), carga inicial de PWA <3s
 
 **Restricciones**: Rate limit 20 análisis/día/sesión, sin almacenar contenido de terceros, sin autenticación (MVP)
 
@@ -65,7 +65,7 @@ backend/
 │   ├── domain/
 │   │   ├── aggregates/         # User, PurchaseProcess, AnalyzedListing, Checklist
 │   │   ├── value-objects/      # TransparencyScore, FinancialProfile, RedFlags, BureaucraticMilestone
-│   │   ├── ports/              # ListingAnalyzerPort, CadastroPort, MortgageCalculatorPort
+│   │   ├── ports/              # ListingAnalyzerPort, CatastroPort, MortgageCalculatorPort
 │   │   └── services/           # AnalyzeListingUseCase, CalculateAffordabilityUseCase
 │   ├── adapters/
 │   │   ├── openrouter/         # OpenRouterAdapter (LLM analysis)

@@ -96,7 +96,7 @@
 - [ ] T030 [US1] Crear interfaz ListingAnalyzerPort en `backend/src/domain/ports/ListingAnalyzerPort.ts`
 - [ ] T030a [US1] Crear interfaz LocationResolverPort con `resolveLocation(parsedListing): Promise<Coordinates | null>` en `backend/src/domain/ports/LocationResolverPort.ts`
 - [ ] T030b [P] [US1] Crear Coordinates value object `{ lat: number, lng: number, source: 'declared' | 'geocoded' | 'vision', confidence: number }` en `backend/src/domain/value-objects/Coordinates.ts`
-- [ ] T031 [P] [US1] Crear interfaz CadastroPort en `backend/src/domain/ports/CadastroPort.ts`
+- [ ] T031 [P] [US1] Crear interfaz CatastroPort en `backend/src/domain/ports/CatastroPort.ts`
 - [ ] T032 [US1] Implementar CheerioAdapter (parseo HTML, extracción de texto) en `backend/src/adapters/cheerio/CheerioAdapter.ts`
 - [ ] T032a [US1] Implementar DeclaredLocationAdapter (extrae dirección/barrio declarado del HTML con selectores Cheerio) en `backend/src/adapters/location/DeclaredLocationAdapter.ts`
 - [ ] T032b [US1] Implementar GeocodingAdapter (Nominatim OSM, gratis, sin API key) en `backend/src/adapters/location/GeocodingAdapter.ts`
@@ -117,7 +117,7 @@
 - [ ] T039 [US1] Implementar ruta analyze listing POST /api/listings/analyze (ahora devuelve processSummary) en `backend/src/api/routes/listings.ts`
 - [ ] T040 [US1] Crear controlador de listings gestionando validación de request y dispatch de use case en `backend/src/api/controllers/listingsController.ts`
 - [ ] T041 [US1] Añadir helper de validación de URL (valida formato, comprueba accesibilidad) en `backend/src/infrastructure/utils/urlValidator.ts`
-- [ ] T042 [US1] Crear UI de página Listing Lens con input URL, **estado de carga con tiempo estimado 5-12s** (FR-018), tarjeta de resultados en `frontend/src/routes/listing-lens/+page.svelte`
+- [ ] T042 [US1] Crear UI de página Listing Lens con input URL, **estado de carga con progress events de 8-15s** (FR-018), tarjeta de resultados en `frontend/src/routes/listing-lens/+page.svelte`
 - [ ] T042a [US1] Crear componente AI disclaimer mostrado en resultados de análisis (FR-017) en `frontend/src/lib/components/AIDisclaimer.svelte`
 - [ ] T043 [US1] Crear server-side loader que proxy la petición analyze al backend en `frontend/src/routes/listing-lens/+page.server.ts`
 - [ ] T044 [US1] Crear store de listings (Svelte writable) para historial de listings analizados en `frontend/src/lib/stores/listings.ts`
@@ -256,7 +256,6 @@
 - [ ] T089 Ejecutar validación de quickstart.md: verificar que todos los comandos de setup y test funcionan desde cero
 - [ ] T090 TypeScript typecheck + lint pass final en todos los paquetes
 - [ ] T091 Añadir script de seed de Prisma con datos de checklist de muestra y valor por defecto del Euríbor
-- [ ] T091a [P] Añadir banner global de AI disclaimer en el layout principal (`+layout.svelte`) explicando que el análisis es generado por IA en `frontend/src/routes/+layout.svelte`
 - [ ] T091b [P] Añadir página estática `/aviso-legal` con disclaimer completo de IA y no-consejo-financiero en `frontend/src/routes/aviso-legal/+page.svelte`
 
 ---

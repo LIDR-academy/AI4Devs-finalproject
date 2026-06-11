@@ -1,6 +1,6 @@
 # Especificación de Funcionalidad: Realista MVP
 
-**Rama**: `001-realista-mvp`
+**Rama**: `feature-entrega1-DMM`
 
 **Creado**: 2026-06-04
 
@@ -42,7 +42,7 @@ Si la sesión no tiene un `PurchaseProcess` activo, el sistema crea uno con `pro
 5. **Dado** un anuncio sin dirección clara, **Cuando** falla el `GeocodingAdapter`, **Entonces** se invoca el `LLMVisionLocationAdapter` con las fotos del anuncio para estimar la ubicación.
 6. **Dado** coordenadas GPS válidas, **Cuando** se consulta el Catastro, **Entonces** se muestra una comparativa de m² declarados vs catastrales y año de construcción.
 7. **Dado** un anuncio sin certificado energético mencionado, **Cuando** el análisis termina, **Entonces** aparece "sin certificado energético" como bandera roja.
-8. **Durante** el análisis, **Cuando** el usuario espera la respuesta, **Entonces** la UI muestra un estado de carga con **progress events** (checklist de pasos: "Obteniendo HTML" → "Resolviendo ubicación" → "Analizando con IA" → "Cruzando con Catastro") y un SLA realista de **15 segundos** (FR-018).
+8. **Durante** el análisis, **Cuando** el usuario espera la respuesta, **Entonces** la UI muestra un estado de carga con **progress events** (checklist de pasos: "Obteniendo HTML" → "Resolviendo ubicación" → "Analizando con IA" → "Cruzando con Catastro") y un tiempo estimado de **8-15 segundos** (FR-018).
 
 ---
 
@@ -87,6 +87,8 @@ Si la sesión no tiene ningún `PurchaseProcess` activo, el dashboard muestra un
 2. **Dado** una sesión con proceso activo y 1 listing analizado, **Cuando** el usuario visita el dashboard, **Entonces** se muestra el listing con su puntuación y fecha, el propertyPrice bloqueado desde el listing, y un resumen del perfil financiero.
 3. **Dado** un proceso activo, **Cuando** el usuario visita el dashboard, **Entonces** se muestra una instantánea de capacidad de compra, gastos ocultos totales, progreso del checklist, y la etapa actual del proceso (`currentStage`).
 4. **Dado** un listing previamente analizado en el mismo proceso, **Cuando** el usuario pulsa "re-analizar", **Entonces** se ejecuta un nuevo análisis, el backend computa el `diff` contra el `previousHash` y lo almacena en el nuevo `AnalyzedListing`, y el dashboard destaca los cambios (ej: "Precio: -10.000€ desde el último análisis") desde la respuesta de la API — sin computación adicional en frontend.
+5. **Dado** un proceso activo con todos los ítems del checklist de la etapa actual completados, **Cuando** el usuario visita el dashboard, **Entonces** la UI sugiere avanzar a la siguiente etapa mediante PATCH /api/purchase-processes/:id con `{ currentStage: <siguiente> }` (manual override permitido para casos donde el usuario ya firmó arras, etc.).
+6. **Dado** un proceso activo en `currentStage = 'arras'`, **Cuando** el usuario pulsa manualmente el botón "He firmado las arras", **Entonces** el sistema hace PATCH con `currentStage: 'due_diligence'` y la UI refleja el avance inmediatamente.
 
 ---
 
@@ -133,7 +135,7 @@ El usuario hace seguimiento de qué documentos tiene y cuáles le faltan para ca
 
 ### Requisitos Funcionales
 
-- **FR-001**: El sistema DEBE aceptar una URL de anuncio, obtener el contenido en servidor usando Cheerio para parseo HTML, y devolver un análisis de transparencia en menos de 10 segundos. Fallback a subdominio móvil (`.m.`) para páginas con renderizado JS.
+- **FR-001**: El sistema DEBE aceptar una URL de anuncio, obtener el contenido en servidor usando Cheerio para parseo HTML, y devolver un análisis de transparencia dentro del SLA definido en FR-018 (15s). Fallback a subdominio móvil (`.m.`) para páginas con renderizado JS.
 - **FR-002**: El sistema DEBE usar OpenRouter como puerta de enlace LLM para el análisis de anuncios. El modelo principal utiliza un system prompt estructurado para detectar lenguaje manipulador, omisiones y banderas rojas. Fallback a scoring numérico `@avena/score` si el LLM no está disponible.
 - **FR-003**: El sistema DEBE cruzar la ubicación estimada del anuncio con datos de la API del Catastro cuando estén disponibles.
 - **FR-004**: El sistema DEBE calcular los gastos ocultos de compra (ITP/IVA, notaría, registro, gestoría, tasación) basándose en el precio de la vivienda y la comunidad autónoma.
@@ -150,12 +152,13 @@ El usuario hace seguimiento de qué documentos tiene y cuáles le faltan para ca
 - **FR-015**: El sistema DEBE pre-rellenar `propertyPrice` en el perfil financiero desde el listing analizado. Mortgage Compass DEBE mostrar el precio con un enlace al listing origen y permitir al usuario sobrescribirlo si lo desea.
 - **FR-016**: El sistema DEBE resolver la ubicación del anuncio mediante una cadena de responsabilidad: primero extrayendo la dirección declarada del HTML (Cheerio), luego geocodificándola con Nominatim (OSM), y solo como fallback usando análisis multimodal de fotos vía LLM (OpenRouter con capacidad de visión). El cruce con Catastro SOLO se ejecuta cuando se han obtenido coordenadas GPS válidas.
 - **FR-017**: El sistema DEBE incluir un disclaimer visible en la UI indicando que el análisis de transparencia es generado por IA y debe verificarse con fuentes oficiales antes de tomar decisiones de compra.
-- **FR-018**: La UI DEBE mostrar un estado de carga claro durante el análisis del listing (skeleton/spinner con tiempo estimado) ya que el endpoint puede tardar entre 5 y 12 segundos en completarse.
+- **FR-018**: La UI DEBE mostrar un estado de carga claro durante el análisis del listing (skeleton/spinner con progress events) durante un tiempo estimado de **8-15 segundos**. El SLA de respuesta es **15 segundos** (ver SC-001).
 - **FR-019**: El dashboard DEBE funcionar en estado vacío con dos CTAs claros ("Analizar un anuncio" y "Configurar perfil manualmente") cuando la sesión no tiene un `PurchaseProcess` activo. Este estado es la prueba independiente de US3.
 - **FR-020**: El sistema DEBE aplicar un límite de 20 análisis por día por UUID de sesión. UUID es server-generated, almacenado en localStorage, enviado en cada request. **Limitación conocida**: borrar el localStorage resetea el límite. Esto es aceptable para POC educativa (el "abuso" no es un objetivo). Para producción se requiere auth + sesiones server-side.
 - **FR-021**: El sistema DEBE mostrar **tres escenarios de rentabilidad** en la comparativa de inversión: conservador (4% anual), moderado (6% anual), agresivo (8% anual). Cada uno DEBE incluir una columna "valor real" ajustada por inflación (2% anual) y un disclaimer sobre tributación (~19-26% en España para ganancias patrimoniales) y ausencia de garantía de rentabilidades futuras.
 - **FR-022**: El sistema DEBE computar el `diff` (diferencias de precio, m², año de construcción, etc.) entre un nuevo análisis y el `previousHash` y almacenarlo en el nuevo `AnalyzedListing` como campo `diff: Json`. El frontend NO debe computar diffs — los recibe de la API.
 - **FR-023**: El sistema DEBE exponer un endpoint `GET /api/dashboard` que devuelva en una sola llamada la vista agregada del proceso activo (process + latestListing + computed + checklist + stats + currentStage) sin requerir `processId` conocido.
+- **FR-024**: El `Checklist` se crea automáticamente como parte del `PurchaseProcess` (mismo flujo de auto-attach en FR-014), poblado desde la plantilla seed (T082) con los ítems documentales por etapa. No requiere acción explícita del usuario para instanciarse.
 
 ### Entidades Clave
 

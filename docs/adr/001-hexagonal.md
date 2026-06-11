@@ -17,7 +17,7 @@ Realista necesita una arquitectura que permita:
 Arquitectura Hexagonal (Puertos y Adaptadores) combinada con Domain-Driven Design táctico.
 
 - **Dominio**: contiene agregados (`User`, `PurchaseProcess`, `AnalyzedListing`, `Checklist`), value objects (`TransparencyScore`, `FinancialProfile`, `RedFlags`, `BureaucraticMilestone`) y servicios de dominio (`AnalyzeListingUseCase`). Cero dependencias de frameworks.
-- **Puertos**: interfaces que definen contratos (`ListingAnalyzerPort`, `CadastroPort`, `MortgageCalculatorPort`).
+- **Puertos**: interfaces que definen contratos (`ListingAnalyzerPort`, `CatastroPort`, `MortgageCalculatorPort`).
 - **Adaptadores**: implementaciones concretas de los puertos (`OpenRouterAdapter`, `CheerioAdapter`, `CatastroAdapter`, `PrismaUserRepository`).
 
 ## Alternativas consideradas

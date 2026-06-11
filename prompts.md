@@ -24,7 +24,7 @@ Skills de **Superpowers** (paquete que extiende el comportamiento del agente) qu
 | **`using-superpowers`** | Carga al inicio de cada conversación | Protocolo de invocación de skills antes de responder |
 | **`test-driven-development`** | Referencia para estructura de tareas | 17 tareas de test (TDD) integradas en tasks.md |
 | **`verification-before-completion`** | Carga durante commits | Mensajes de commit verifican el estado antes de afirmar "completado" |
-| **`writing-plans`** | Referencia conceptual para tasks.md | tasks.md con 91 tareas en 8 fases |
+| **`writing-plans`** | Referencia conceptual para tasks.md | tasks.md con 127 tareas en 8 fases |
 | **`writing-skills`** | Cargado en setup inicial (con spec-kit) | Especificaciones estructuradas en specs/001-realista-mvp/ |
 
 **Habilidades de spec-kit (GitHub SDD toolkit)** instaladas vía `uv tool install`:
@@ -35,7 +35,7 @@ Skills de **Superpowers** (paquete que extiende el comportamiento del agente) qu
 | `/speckit.specify` | Generar la spec inicial con 5 historias de usuario |
 | `/speckit.clarify` | Resolver 5 ambigüedades (persistencia, LLM, rate limit, narrativas, HTML parsing) |
 | `/speckit.plan` | Generar plan, research, data-model, contracts, quickstart |
-| `/speckit.tasks` | Generar 91 tareas en 8 fases |
+| `/speckit.tasks` | Generar 127 tareas en 8 fases |
 
 ---
 
@@ -66,7 +66,7 @@ Skills de **Superpowers** (paquete que extiende el comportamiento del agente) qu
    ↓
 5. /speckit.plan → plan.md + research.md + data-model.md + contracts/ + quickstart.md
    ↓
-6. /speckit.tasks → tasks.md (91 tareas, 8 fases)
+6. /speckit.tasks → tasks.md (127 tareas, 8 fases)
    ↓
 7. /speckit.implement → (pendiente de ejecutar)
 ```
@@ -162,7 +162,7 @@ Por cada historia de usuario:
 
 **Output**: spec.md v2 + 4 FRs nuevos (FR-014 a FR-018) + LocationResolverPort documentado
 
-### Proceso 4: Desglose de tareas (91 tareas en 8 fases)
+### Proceso 4: Desglose de tareas (127 tareas en 8 fases)
 
 **Input**: spec.md, plan.md, data-model.md, contracts/
 
@@ -173,7 +173,7 @@ Por cada historia de usuario:
 4. Etiquetar con [US1]-[US5] para trazabilidad
 5. Verificar dependencias entre fases (ninguna historia puede empezar antes de Foundational)
 
-**Output**: tasks.md con 91 tareas, 17 de test (TDD), oportunidades de paralelización documentadas
+**Output**: tasks.md con 127 tareas, 17 de test (TDD), oportunidades de paralelización documentadas
 
 ---
 

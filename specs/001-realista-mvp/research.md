@@ -15,7 +15,7 @@
 - Web scraping de la sede electrónica: frágil, cambios en el HTML rompen el adaptador
 - Idealista Maps API: datos de propiedad privada, no oficiales
 
-**Implementación**: `CatastroAdapter` implementa `CadastroPort`. Endpoint: `https://ovc.catastro.meh.es/ovcservweb/ovcswlocalizacionrc/ovccallejero.asmx`. Parseo XML a JSON estructurado. Solo se invoca cuando `LocationResolverService` ha devuelto coordenadas GPS válidas.
+**Implementación**: `CatastroAdapter` implementa `CatastroPort`. Endpoint: `https://ovc.catastro.meh.es/ovcservweb/ovcswlocalizacionrc/ovccallejero.asmx`. Parseo XML a JSON estructurado. Solo se invoca cuando `LocationResolverService` ha devuelto coordenadas GPS válidas.
 
 ---
 
