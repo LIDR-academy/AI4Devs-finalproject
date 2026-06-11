@@ -249,11 +249,7 @@ Represents a client's review of a completed tattoo session.
 - `rating_result`: Rating for tattoo quality/result (1-5 stars)
 - `comment`: Optional text review (TEXT)
 - `tattoo_photo_url`: URL to photo of the fresh tattoo (max 500 characters)
-- `healing_photo_url`: URL to photo of healed tattoo at 90 days (max 500 characters, optional)
-- `has_healing_photo`: Whether a healing photo has been uploaded
-- `artist_response`: Optional public response from the artist (TEXT)
 - `created_at`: Timestamp when the review was submitted
-- `healing_photo_at`: Timestamp when healing photo was uploaded (optional)
 
 **Validation Rules:**
 - Booking must exist and have status 'completed'
@@ -261,8 +257,6 @@ Represents a client's review of a completed tattoo session.
 - Client must match the booking's client
 - All 4 rating dimensions are required, each must be 1-5
 - Comment is optional but cannot exceed 2000 characters
-- Healing photo can only be uploaded after 90 days from booking_date
-- Artist response cannot exceed 1000 characters
 - Anti-fraud: rate limiting of 1 review per booking, no edits after 48h
 
 **Relationships:**
@@ -322,6 +316,7 @@ Represents brand sponsorships/endorsements for artists.
 - `artist_profile_id`: Foreign key referencing ArtistProfile
 - `brand_name`: Name of the sponsoring brand (max 200 characters)
 - `brand_logo_url`: URL to the brand's logo (max 500 characters)
+- `relationship_type`: Type of sponsorship relationship (ENUM: 'ambassador', 'sponsored', 'certified')
 - `is_active`: Whether the sponsorship is currently active
 
 **Validation Rules:**
@@ -447,11 +442,7 @@ erDiagram
         INT rating_result
         TEXT comment
         VARCHAR tattoo_photo_url
-        VARCHAR healing_photo_url
-        BOOLEAN has_healing_photo
-        TEXT artist_response
         TIMESTAMP created_at
-        TIMESTAMP healing_photo_at
     }
     Certification {
         UUID id PK
@@ -476,6 +467,7 @@ erDiagram
         UUID artist_profile_id FK
         VARCHAR brand_name
         VARCHAR brand_logo_url
+        ENUM relationship_type
         BOOLEAN is_active
     }
 

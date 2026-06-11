@@ -3,17 +3,868 @@ info:
   title: INK-LINK API
   description: |
     REST API for the INK-LINK tattoo marketplace platform.
-    TODO: Define endpoints based on documented use cases.
-  version: 0.0.1
+    Marketplace connecting clients with tattoo artists in Chile.
+  version: 1.0.0
   contact:
     name: INK-LINK Development Team
 
 servers:
-  - url: http://localhost:5000
-    description: Development server
-
-paths: {}
+  - url: http://localhost:5000/api
+    description: Local development server
 
 components:
-  schemas: {}
-  securitySchemes: {}
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/UserSummary'
+
+    UserSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        role:
+          type: string
+          enum: [client, artist, admin]
+
+    ArtistCard:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        artistName:
+          type: string
+        slug:
+          type: string
+        profilePhotoUrl:
+          type: string
+        bio:
+          type: string
+        styles:
+          type: array
+          items:
+            type: string
+        city:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        minPrice:
+          type: integer
+        maxPrice:
+          type: integer
+        isCertified:
+          type: boolean
+        averageRating:
+          type: number
+        reviewCount:
+          type: integer
+
+    ArtistDetail:
+      allOf:
+        - $ref: '#/components/schemas/ArtistCard'
+        - type: object
+          properties:
+            yearsExperience:
+              type: integer
+            instagramUrl:
+              type: string
+            portfolioImages:
+              type: array
+              items:
+                $ref: '#/components/schemas/PortfolioImage'
+            certifications:
+              type: array
+              items:
+                $ref: '#/components/schemas/Certification'
+            awards:
+              type: array
+              items:
+                $ref: '#/components/schemas/Award'
+            sponsorships:
+              type: array
+              items:
+                $ref: '#/components/schemas/Sponsorship'
+            availableSlots:
+              type: array
+              items:
+                $ref: '#/components/schemas/AvailabilitySlot'
+
+    PortfolioImage:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        imageUrl:
+          type: string
+        style:
+          type: string
+        description:
+          type: string
+
+    Certification:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        issuingAuthority:
+          type: string
+        isActive:
+          type: boolean
+
+    Award:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        event:
+          type: string
+        year:
+          type: integer
+        position:
+          type: string
+
+    Sponsorship:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        brandName:
+          type: string
+        brandLogoUrl:
+          type: string
+        relationshipType:
+          type: string
+          enum: [ambassador, sponsored, certified]
+
+    AvailabilitySlot:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        dayOfWeek:
+          type: integer
+        startTime:
+          type: string
+          format: time
+        endTime:
+          type: string
+          format: time
+
+    BookingRequest:
+      type: object
+      required: [artistProfileId, bookingDate, description]
+      properties:
+        artistProfileId:
+          type: string
+          format: uuid
+        bookingDate:
+          type: string
+          format: date-time
+        description:
+          type: string
+        bodyPlacement:
+          type: string
+        referenceImageUrls:
+          type: array
+          items:
+            type: string
+        estimatedDurationMinutes:
+          type: integer
+
+    Booking:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        clientId:
+          type: string
+          format: uuid
+        artistProfileId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending_quote, quoted, confirmed, completed, cancelled]
+        bookingDate:
+          type: string
+          format: date-time
+        description:
+          type: string
+        bodyPlacement:
+          type: string
+        estimatedDurationMinutes:
+          type: integer
+        quotedPrice:
+          type: integer
+        depositAmount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    QuoteRequest:
+      type: object
+      required: [price, estimatedDurationMinutes]
+      properties:
+        price:
+          type: integer
+        estimatedDurationMinutes:
+          type: integer
+        notes:
+          type: string
+
+    ReviewRequest:
+      type: object
+      required: [ratingHygiene, ratingPainManagement, ratingCustomerService, ratingResult]
+      properties:
+        ratingHygiene:
+          type: integer
+          minimum: 1
+          maximum: 5
+        ratingPainManagement:
+          type: integer
+          minimum: 1
+          maximum: 5
+        ratingCustomerService:
+          type: integer
+          minimum: 1
+          maximum: 5
+        ratingResult:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+          maxLength: 2000
+        tattooPhotoUrl:
+          type: string
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        bookingId:
+          type: string
+          format: uuid
+        clientName:
+          type: string
+        ratingHygiene:
+          type: integer
+        ratingPainManagement:
+          type: integer
+        ratingCustomerService:
+          type: integer
+        ratingResult:
+          type: integer
+        averageRating:
+          type: number
+        comment:
+          type: string
+        tattooPhotoUrl:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    PaymentInitRequest:
+      type: object
+      required: [bookingId]
+      properties:
+        bookingId:
+          type: string
+          format: uuid
+
+    PaymentInitResponse:
+      type: object
+      properties:
+        paymentUrl:
+          type: string
+          description: Flow Chile redirect URL
+        token:
+          type: string
+
+    PaginatedResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items: {}
+        total:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login with email and password
+      description: "US0001 — Authenticates a seeded user and returns a JWT token (24h expiry)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Get current user info
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSummary'
+
+  /artists:
+    get:
+      tags: [Artists]
+      summary: List artists with filters
+      description: "US0002, US0003, US0004 — Vitrina publica con filtros por estilo, ciudad, precio, rating, certificacion"
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 12
+        - name: style
+          in: query
+          description: Filter by tattoo style
+          schema:
+            type: string
+        - name: city
+          in: query
+          description: Filter by city
+          schema:
+            type: string
+        - name: minPrice
+          in: query
+          schema:
+            type: integer
+        - name: maxPrice
+          in: query
+          schema:
+            type: integer
+        - name: certified
+          in: query
+          description: "US0007 — Only certified artists"
+          schema:
+            type: boolean
+        - name: minRating
+          in: query
+          schema:
+            type: number
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [rating, price_asc, price_desc, distance]
+        - name: lat
+          in: query
+          description: "US0005 — User latitude for geo sorting"
+          schema:
+            type: number
+        - name: lng
+          in: query
+          description: "US0005 — User longitude for geo sorting"
+          schema:
+            type: number
+        - name: radius
+          in: query
+          description: "US0005 — Radius in km"
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Paginated artist list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ArtistCard'
+
+  /artists/{slug}:
+    get:
+      tags: [Artists]
+      summary: Get artist detail by slug
+      description: "US0003 — Perfil publico del artista"
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Artist detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArtistDetail'
+        '404':
+          description: Artist not found
+
+  /artists/{artistProfileId}/reviews:
+    get:
+      tags: [Reviews]
+      summary: Get reviews for an artist
+      description: "US0006 — Visualizar resenas de un artista"
+      parameters:
+        - name: artistProfileId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Paginated reviews
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Review'
+
+  /bookings:
+    post:
+      tags: [Bookings]
+      summary: Create a booking request
+      description: "US0008 — Solicitar cita con artista"
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingRequest'
+      responses:
+        '201':
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '401':
+          description: Unauthorized
+        '422':
+          description: Validation error
+
+    get:
+      tags: [Bookings]
+      summary: List user's bookings
+      description: "US0010 — Ver historial de reservas del cliente"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending_quote, quoted, confirmed, completed, cancelled]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: Paginated bookings
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Booking'
+
+  /bookings/{bookingId}:
+    get:
+      tags: [Bookings]
+      summary: Get booking detail
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Booking detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '404':
+          description: Not found
+
+  /bookings/{bookingId}/quote:
+    post:
+      tags: [Bookings]
+      summary: Artist sends quote for a booking
+      description: "US0009 — Artista envia cotizacion"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteRequest'
+      responses:
+        '200':
+          description: Quote submitted, booking status updated to 'quoted'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '403':
+          description: Not the assigned artist
+        '409':
+          description: Booking not in pending_quote status
+
+  /bookings/{bookingId}/confirm:
+    post:
+      tags: [Bookings]
+      summary: Client confirms a quoted booking
+      description: "US0009 — Cliente acepta cotizacion"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Booking confirmed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '409':
+          description: Booking not in quoted status
+
+  /bookings/{bookingId}/cancel:
+    post:
+      tags: [Bookings]
+      summary: Cancel a booking
+      description: "US0010 — Cancelar reserva"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Booking cancelled
+        '409':
+          description: Booking cannot be cancelled in current status
+
+  /bookings/{bookingId}/complete:
+    post:
+      tags: [Bookings]
+      summary: Mark booking as completed
+      description: "US0010 — Marcar reserva como completada (artist action)"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Booking marked complete
+        '403':
+          description: Not the assigned artist
+
+  /bookings/{bookingId}/review:
+    post:
+      tags: [Reviews]
+      summary: Submit a review for a completed booking
+      description: "US0011 — Dejar resena post-servicio"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewRequest'
+      responses:
+        '201':
+          description: Review created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+        '409':
+          description: Review already exists or booking not completed
+
+  /payments/init:
+    post:
+      tags: [Payments]
+      summary: Initialize payment via Flow Chile
+      description: "US0012 — Pagar deposito via Flow"
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentInitRequest'
+      responses:
+        '200':
+          description: Payment URL to redirect client
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentInitResponse'
+        '409':
+          description: Booking not in confirmed status
+
+  /payments/callback:
+    post:
+      tags: [Payments]
+      summary: Flow payment webhook callback
+      description: "US0012 — Webhook de confirmacion de pago desde Flow"
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+      responses:
+        '200':
+          description: Payment processed
+
+  /payments/return:
+    get:
+      tags: [Payments]
+      summary: Payment return URL (client redirect after payment)
+      description: "US0012 — Pagina de retorno post-pago"
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect to booking detail
+
+  /geo/communes:
+    get:
+      tags: [Geo]
+      summary: List available communes/cities
+      description: "US0005 — Obtener comunas disponibles para filtro geografico"
+      responses:
+        '200':
+          description: List of communes with coordinates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    latitude:
+                      type: number
+                    longitude:
+                      type: number
+
+  /admin/dashboard:
+    get:
+      tags: [Admin]
+      summary: Admin dashboard metrics
+      description: "US0013 — Panel de administracion con metricas"
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Dashboard metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalBookings:
+                    type: integer
+                  totalRevenue:
+                    type: integer
+                  activeArtists:
+                    type: integer
+                  pendingBookings:
+                    type: integer
+                  recentBookings:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Booking'
+        '403':
+          description: Admin role required
+
+  /admin/bookings:
+    get:
+      tags: [Admin]
+      summary: Admin view of all bookings
+      description: "US0014 — Gestion de reservas por admin"
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: All bookings paginated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PaginatedResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Booking'
+        '403':
+          description: Admin role required
