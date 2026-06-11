@@ -68,16 +68,15 @@ Principios UX: mobile-first (375px+), PWA instalable, navegación por pestañas,
 
 ### **1.4. Instrucciones de instalación:**
 
-```bash
-# Requisitos: Node.js 20+, PostgreSQL 16+, OpenRouter API key
-
-git clone <repo-url>
-cd realista
-npm install
-cp .env.example .env   # Configurar DATABASE_URL y OPENROUTER_API_KEY
-npx prisma migrate dev
-npm run dev              # Backend (3001) + Frontend (5173)
-```
+> **Estado actual (Entrega 1 — documentación):** no hay código implementado todavía. La Entrega 1 es solo documentación técnica.
+>
+> Las instrucciones de setup (`npm install`, `npx prisma migrate dev`, `npm run dev`) se publicarán en la Entrega 2 (10 julio) cuando exista código ejecutable. El **stack planificado** está documentado en:
+>
+> - `specs/001-realista-mvp/plan.md` → contexto técnico y arquitectura
+> - `specs/001-realista-mvp/tasks.md` → 139 tareas con criterios de aceptación
+> - `specs/001-realista-mvp/quickstart.md` → guía de setup para cuando exista código
+>
+> Resumen del stack: SvelteKit (PWA) + Node.js/Express + TypeScript + PostgreSQL + Prisma + OpenRouter (LLM) + Nominatim (geocoding) + API Catastro + Vitest + Playwright.
 
 ---
 
@@ -244,7 +243,7 @@ erDiagram
         string processId FK
         string url
         int numericScore "0-100"
-        json redFlags "string[]"
+        json redFlags "Array<{flag, reasoning}> (FR-025)"
         float locationConfidence "0.0-1.0, nullable"
         string miraTuZonaLink "nullable"
         string cadastralRef "nullable"
@@ -253,6 +252,7 @@ erDiagram
         int constructionYear "nullable"
         string snapshotHash "SHA-256"
         string previousHash "nullable, chain link"
+        json diff "nullable, computed by backend"
         datetime createdAt "auto"
     }
 
@@ -283,10 +283,11 @@ erDiagram
 - `id`: UUID v4, clave primaria
 - `processId`: FK a PurchaseProcess
 - `numericScore`: Int 0-100, puntuación de transparencia del anuncio
-- `redFlags`: JSON array de strings (categorías de banderas rojas)
+- `redFlags`: JSON array de `{flag, reasoning}` (FR-025 — el LLM devuelve la frase del anuncio que disparó cada flag + la inferencia)
 - `cadastralM2` / `claimedM2`: comparativa de superficie declarada vs oficial
 - `snapshotHash`: SHA-256 del contenido del análisis para detección de cambios
 - `previousHash`: enlace al hash del snapshot anterior (cadena de trazabilidad)
+- `diff`: JSON con deltas vs snapshot anterior, computado por el backend en re-análisis (FR-022)
 
 **Checklist**
 - `id`: UUID v4, clave primaria
@@ -507,7 +508,7 @@ Criterios de aceptación:
 
 **Descripción:** Esta PR añade todos los artefactos de la fase de planificación de Realista: el plan de implementación con la arquitectura hexagonal + DDD y stack SvelteKit/Express/Prisma; el documento de investigación con 7 decisiones técnicas justificadas (OpenRouter, Cadastro API, @avena/score, Cheerio, PWA, sesiones, etc.); el modelo de datos con el schema Prisma y value objects del dominio; los contratos de la API REST; y una guía de quickstart para setup y validación. Verifica el cumplimiento de los 6 principios de la constitución del proyecto.
 
-**Relación con historias de usuario:** Soporta las 5 historias (US1–US5) sentando las bases arquitectónicas, de datos y de API.
+**Relación con historias de usuario:** Soporta las 6 historias (US1–US6) sentando las bases arquitectónicas, de datos y de API.
 
 **Impacto:** Solo se añaden archivos nuevos — no hay cambios en código de producción. La constitución de 6 principios se valida contra el diseño propuesto.
 
