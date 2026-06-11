@@ -42,13 +42,38 @@ Analyze a property listing URL. Auto-attaches to the active PurchaseProcess (cre
   "claimedM2": 85,
   "constructionYear": 1972,
   "snapshotHash": "sha256:a1b2c3d4...",
+  "previousHash": null,
+  "diff": null,
   "createdAt": "2026-06-04T12:00:00Z",
   "processSummary": {
     "processId": "uuid",
     "status": "active",
     "propertyPrice": 200000,
-    "sourceListingId": "uuid"
+    "sourceListingId": "uuid",
+    "currentStage": "pre_arras"
   }
+}
+```
+
+**SLA**: 15 segundos (SLA realista — ver FR-018). UI debe mostrar progress events durante la espera.
+
+**Response (200) — re-análisis con diff:**
+```json
+{
+  "id": "uuid-nuevo",
+  "url": "https://www.idealista.com/inmueble/12345678/",
+  "numericScore": 38,
+  "redFlags": ["no_energy_certificate"],
+  "snapshotHash": "sha256:ff9933...",
+  "previousHash": "sha256:a1b2c3d4...",
+  "diff": {
+    "price": { "from": 200000, "to": 190000, "delta": -10000 },
+    "claimedM2": { "from": 85, "to": 85, "delta": 0 },
+    "constructionYear": { "from": 1972, "to": 1972, "delta": 0 },
+    "redFlagsRemoved": ["imprecise_location", "inflated_square_meters"],
+    "redFlagsAdded": []
+  },
+  "processSummary": { "...": "..." }
 }
 ```
 
@@ -97,23 +122,30 @@ List all analyzed listings for the current session.
 
 ### GET /api/listings/:id
 
-Get a single analyzed listing.
+Get a single analyzed listing. El campo `diff` está presente solo si hay un `previousHash` (re-análisis).
 
 **Response (200):**
 ```json
 {
   "id": "uuid",
   "url": "...",
-  "numericScore": 42,
-  "redFlags": ["..."],
-  "locationConfidence": 0.78,
+  "numericScore": 38,
+  "redFlags": ["no_energy_certificate"],
+  "locationConfidence": 0.82,
   "miraTuZonaLink": "...",
   "cadastralRef": "...",
   "cadastralM2": 78,
   "claimedM2": 85,
   "constructionYear": 1972,
-  "snapshotHash": "...",
-  "previousHash": "...",
+  "snapshotHash": "sha256:ff9933...",
+  "previousHash": "sha256:a1b2c3d4...",
+  "diff": {
+    "price": { "from": 200000, "to": 190000, "delta": -10000 },
+    "claimedM2": { "from": 85, "to": 85, "delta": 0 },
+    "constructionYear": { "from": 1972, "to": 1972, "delta": 0 },
+    "redFlagsRemoved": ["imprecise_location", "inflated_square_meters"],
+    "redFlagsAdded": []
+  },
   "createdAt": "..."
 }
 ```
@@ -171,18 +203,36 @@ Cuando se pasa `analyzedListingId`:
 
 ---
 
-### GET /api/purchase-processes/:id
+### GET /api/dashboard
 
-Get purchase process with listings and checklist. Endpoint principal del dashboard.
+Devuelve la vista agregada del dashboard en una sola llamada. No requiere `processId` — el backend lo resuelve por sesión activa. Si no hay proceso activo, devuelve `process: null` y la UI muestra el estado vacío (FR-019).
 
-**Response (200):**
+**Response (200) — con proceso activo:**
 ```json
 {
-  "id": "uuid",
-  "status": "active",
-  "propertyPrice": 200000,
-  "sourceListingId": "uuid",
-  "financialProfile": { "..." },
+  "process": {
+    "id": "uuid",
+    "status": "active",
+    "propertyPrice": 200000,
+    "sourceListingId": "uuid",
+    "currentStage": "arras",
+    "financialProfile": {
+      "savings": 45000,
+      "monthlyIncome": 3500,
+      "existingDebts": 0,
+      "region": "madrid",
+      "interestRate": 3.5,
+      "persona": "moderate"
+    }
+  },
+  "latestListing": {
+    "id": "uuid",
+    "url": "...",
+    "numericScore": 38,
+    "previousScore": 42,
+    "diff": { "...": "..." },
+    "createdAt": "..."
+  },
   "computed": {
     "totalCash": 58200,
     "gap": -13200,
@@ -193,40 +243,175 @@ Get purchase process with listings and checklist. Endpoint principal del dashboa
     ],
     "investmentAlternative": {
       "monthlyContribution": 300,
-      "estimatedValue30yr": 340000
+      "years": 30,
+      "scenarios": {
+        "conservative": { "nominalReturn": 145000, "realReturn": 81000 },
+        "moderate":     { "nominalReturn": 245000, "realReturn": 137000 },
+        "aggressive":   { "nominalReturn": 412000, "realReturn": 230000 }
+      },
+      "disclaimer": "Las rentabilidades pasadas no garantizan futuras. Los beneficios están sujetos a tributación (~19-26% en España para ganancias patrimoniales)."
     }
   },
+  "checklist": {
+    "id": "uuid",
+    "progressByStage": {
+      "pre_arras": 1.0,
+      "arras": 0.0,
+      "due_diligence": 0.0,
+      "mortgage": 0.0,
+      "notary": 0.0
+    },
+    "itemsByStage": { "...": "..." }
+  },
+  "stats": {
+    "totalListingsAnalyzed": 1,
+    "daysSinceFirstAnalysis": 5,
+    "checklistCompletion": 0.2
+  }
+}
+```
+
+**Response (200) — sin proceso activo (estado vacío):**
+```json
+{
+  "process": null,
+  "latestListing": null,
+  "computed": null,
+  "checklist": null,
+  "stats": null,
+  "emptyState": {
+    "title": "Empieza tu análisis",
+    "ctas": [
+      { "label": "Analizar un anuncio", "href": "/listing-lens" },
+      { "label": "Configurar perfil manualmente", "href": "/mortgage-compass" }
+    ]
+  }
+}
+```
+
+---
+
+### GET /api/purchase-processes/:id
+
+Get purchase process by ID. Útil cuando el frontend ya conoce el `processId` (ej: tras crearlo).
+
+**Response (200):**
+```json
+{
+  "id": "uuid",
+  "status": "active",
+  "propertyPrice": 200000,
+  "sourceListingId": "uuid",
+  "currentStage": "arras",
+  "financialProfile": { "..." },
   "analyzedListings": [
     {
       "id": "uuid",
       "url": "...",
-      "numericScore": 42,
+      "numericScore": 38,
       "createdAt": "..."
     }
   ],
-  "checklist": {
-    "id": "uuid",
-    "items": [
-      {
-        "id": "item-uuid",
-        "stage": "pre_arras",
-        "title": "Nota simple del registro",
-        "completed": false
-      }
-    ]
-  },
+  "checklist": { "id": "uuid", "items": [ "..." ] },
   "createdAt": "...",
   "updatedAt": "..."
 }
 ```
 
-El campo `computed` agrega el resultado del Mortgage Compass para una sola llamada en el dashboard, evitando N+1 problemas.
+**Response (200) — con proceso activo:**
+```json
+{
+  "process": {
+    "id": "uuid",
+    "status": "active",
+    "propertyPrice": 200000,
+    "sourceListingId": "uuid",
+    "currentStage": "arras",
+    "financialProfile": {
+      "savings": 45000,
+      "monthlyIncome": 3500,
+      "existingDebts": 0,
+      "region": "madrid",
+      "interestRate": 3.5,
+      "persona": "moderate"
+    }
+  },
+  "latestListing": {
+    "id": "uuid",
+    "url": "...",
+    "numericScore": 38,
+    "previousScore": 42,
+    "diff": { "...": "..." },
+    "createdAt": "..."
+  },
+  "computed": {
+    "totalCash": 58200,
+    "gap": -13200,
+    "monthlyPayment30yr": 720,
+    "amortizationScenarios": [
+      { "label": "baseline", "extraMonthly": 0, "finalDuration": 30, "totalInterest": 99000, "interestSaved": 0 },
+      { "label": "light", "extraMonthly": 100, "finalDuration": 25, "totalInterest": 73000, "interestSaved": 26000 }
+    ],
+    "investmentAlternative": {
+      "monthlyContribution": 300,
+      "years": 30,
+      "scenarios": {
+        "conservative": { "nominalReturn": 145000, "realReturn": 81000 },
+        "moderate":     { "nominalReturn": 245000, "realReturn": 137000 },
+        "aggressive":   { "nominalReturn": 412000, "realReturn": 230000 }
+      },
+      "disclaimer": "Las rentabilidades pasadas no garantizan futuras. Los beneficios están sujetos a tributación (~19-26% en España para ganancias patrimoniales)."
+    }
+  },
+  "checklist": {
+    "id": "uuid",
+    "progressByStage": {
+      "pre_arras": 1.0,
+      "arras": 0.0,
+      "due_diligence": 0.0,
+      "mortgage": 0.0,
+      "notary": 0.0
+    },
+    "itemsByStage": { "...": "..." }
+  },
+  "stats": {
+    "totalListingsAnalyzed": 1,
+    "daysSinceFirstAnalysis": 5,
+    "checklistCompletion": 0.2
+  }
+}
+```
+
+**Response (200) — sin proceso activo (estado vacío):**
+```json
+{
+  "process": null,
+  "latestListing": null,
+  "computed": null,
+  "checklist": null,
+  "stats": null,
+  "emptyState": {
+    "title": "Empieza tu análisis",
+    "ctas": [
+      { "label": "Analizar un anuncio", "href": "/listing-lens" },
+      { "label": "Configurar perfil manualmente", "href": "/mortgage-compass" }
+    ]
+  }
+}
+```
 
 ---
 
 ### PATCH /api/purchase-processes/:id
 
-Update purchase process (status, financial profile, propertyPrice).
+Update purchase process (status, financial profile, propertyPrice, currentStage).
+
+**Request (avanzar etapa del proceso):**
+```json
+{
+  "currentStage": "arras"
+}
+```
 
 **Request (sobrescribir propertyPrice del listing):**
 ```json
@@ -252,6 +437,7 @@ Update purchase process (status, financial profile, propertyPrice).
   "status": "active",
   "propertyPrice": 200000,
   "sourceListingId": "uuid",
+  "currentStage": "arras",
   "financialProfile": { "..." },
   "updatedAt": "2026-06-04T13:00:00Z"
 }

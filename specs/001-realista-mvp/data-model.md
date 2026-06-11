@@ -43,6 +43,7 @@ model PurchaseProcess {
   status            String            @default("active") // active | completed | archived
   propertyPrice     Int?              // 0 si se crea sin listing origen
   sourceListingId   String?           // FK lógica al AnalyzedListing que inició el proceso
+  currentStage      String            @default("pre_arras") // pre_arras | arras | due_diligence | mortgage | notary | completed
   financialProfile  Json?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
@@ -51,9 +52,9 @@ model PurchaseProcess {
 }
 
 model AnalyzedListing {
-  id                String            @id @default(uuid())
+  id                String   @id @default(uuid())
   processId         String
-  process           PurchaseProcess   @relation(fields: [processId], references: [id])
+  process           PurchaseProcess @relation(fields: [processId], references: [id])
   url               String
   numericScore      Int               // 0-100
   redFlags          Json              // string[]
@@ -63,8 +64,9 @@ model AnalyzedListing {
   cadastralM2       Float?
   claimedM2         Float?
   constructionYear  Int?
-  snapshotHash      String            // SHA-256
+  snapshotHash      String            // SHA-256 del contenido canónico (ver SnapshotHash definition)
   previousHash      String?           // link to previous snapshot for diff
+  diff              Json?             // Diferencias vs previousHash (precio, m², año, etc.)
   createdAt         DateTime          @default(now())
 
   @@index([processId])
@@ -93,6 +95,37 @@ interface TransparencyScore {
     clarity: number
   }
 }
+```
+
+### SnapshotHash (definido en `domain/value-objects/SnapshotHash.ts`)
+
+```typescript
+// SHA-256 calculado sobre el CONTENIDO CANÓNICO NORMALIZADO del listing.
+// NO se hashea el HTML original (cumple FR-011: no almacenar contenido de terceros).
+//
+// Input del hash (concatenado con `|` como separador):
+//   - title (string, trimmed, lowercase)
+//   - description (string, trimmed, lowercase, whitespace collapsed)
+//   - price (number)
+//   - features (sorted array de strings)
+//   - claimedM2 (number, redondeado a 2 decimales)
+//   - declaredLocation (string, trimmed, lowercase)
+//   - photoUrls (sorted array de strings)
+//
+// El campo `previousHash` apunta al `snapshotHash` del AnalyzedListing
+// anterior del mismo processId, formando una cadena de trazabilidad.
+interface SnapshotHashInput {
+  title: string
+  description: string
+  price: number
+  features: string[]
+  claimedM2: number
+  declaredLocation: string
+  photoUrls: string[]
+}
+
+function computeSnapshotHash(input: SnapshotHashInput): string
+// Returns: 'sha256:<hex64>'
 ```
 
 ### FinancialProfile (`domain/value-objects/FinancialProfile.ts`)
@@ -130,9 +163,15 @@ interface AmortizationScenario {
 
 interface InvestmentAlternative {
   monthlyContribution: number
-  estimatedReturn5pct: number
-  estimatedReturn7pct: number
   years: number
+  // Tres escenarios de rentabilidad (FR-021) con ajuste por inflación (2% anual)
+  scenarios: {
+    conservative: { nominalReturn: number, realReturn: number } // 4% nominal
+    moderate:     { nominalReturn: number, realReturn: number } // 6% nominal
+    aggressive:   { nominalReturn: number, realReturn: number } // 8% nominal
+  }
+  // Disclaimer obligatorio en la UI
+  disclaimer: 'Las rentabilidades pasadas no garantizan futuras. Los beneficios están sujetos a tributación (~19-26% en España para ganancias patrimoniales).'
 }
 ```
 
