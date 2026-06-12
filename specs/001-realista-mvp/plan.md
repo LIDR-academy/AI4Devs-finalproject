@@ -12,7 +12,7 @@ PWA mobile-first para compradores primerizos de vivienda en España. Tres funcio
 
 **Lenguaje/Version**: TypeScript 5.x
 
-**Dependencias principales**: SvelteKit (frontend), Express + node-fetch + cheerio (backend), Prisma ORM, @avena/score (scoring numérico), OpenRouter SDK (LLM gateway)
+**Dependencias principales**: SvelteKit (frontend), Express + node-fetch + cheerio (backend), Prisma ORM, OpenRouter SDK (LLM gateway)
 
 **Almacenamiento**: PostgreSQL 16 + Prisma ORM
 
@@ -69,7 +69,6 @@ backend/
 │   │   └── services/           # AnalyzeListingUseCase, CalculateAffordabilityUseCase
 │   ├── adapters/
 │   │   ├── openrouter/         # OpenRouterAdapter (LLM analysis)
-│   │   ├── avena-score/        # AvenaScoreAdapter (fallback)
 │   │   ├── cheerio/            # CheerioAdapter (HTML parsing)
 │   │   ├── location/           # DeclaredLocationAdapter, GeocodingAdapter, LLMVisionLocationAdapter
 │   │   ├── catastro/           # CatastroAdapter (cadastral API)

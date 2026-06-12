@@ -65,5 +65,5 @@ specs/       → Spec-driven development artifacts
 
 See `docs/adr/` for:
 - 001-hexagonal.md — Why hexagonal + DDD
-- 002-avena-score.md — Why @avena/score as fallback
+- 002-avena-score.md — (deprecated) Why @avena/score was originally chosen as fallback
 - 003-no-scraping.md — Why educational scraping vs commercial

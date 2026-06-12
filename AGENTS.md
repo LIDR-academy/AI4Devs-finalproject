@@ -7,7 +7,7 @@ Greenfield project. Specification phase. See `specs/001-realista-mvp/spec.md`.
 - **Frontend:** SvelteKit + Vite + PWA (mobile-first SPA)
 - **Backend:** Node.js + Express, TypeScript
 - **Database:** PostgreSQL + Prisma ORM
-- **Analysis:** LLM system prompt (primary, via OpenRouter) → `@avena/score` (fallback) → manual text paste
+- **Analysis:** LLM system prompt (primary, via OpenRouter) → manual text paste (fallback)
 - **Testing:** Vitest (unit + integration), Playwright (E2E)
 - **Deployment:** TBD (Vercel/Railway candidates)
 
@@ -48,7 +48,7 @@ Hexagonal + DDD tactical. Domain has zero framework dependencies.
 - **Anonymous UUID only** — no cookies, no PII. Stored browser-side.
 - **SLA:** Listing analysis <15s with progress events
 - **AI disclaimer** persistent in any view with AI-generated content
-- MIT license; include NOTICE.md credits for `@avena/score`
+- MIT license
 - Test-first: TDD per feature slice, 80%+ domain coverage target
 
 ## Glossary (Canonical Names)
@@ -84,8 +84,8 @@ docs/
 ├── domain-events.md           # 16 domain events identified
 └── adr/                       # Architecture Decision Records
     ├── 001-hexagonal.md
-    ├── 002-avena-score.md
-    └── 003-no-scraping.md
+    ├── 002-avena-score.md          # (deprecated — see ADR-004)
+    ├── 003-no-scraping.md
 ```
 
 <!-- SPECKIT START -->
