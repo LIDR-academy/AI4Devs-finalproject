@@ -137,7 +137,7 @@ Por cada historia de usuario:
 
 **Output**: spec.md con 5 historias de usuario priorizadas
 
-### Proceso 2: Decisiones arquitectónicas (hexagonal, SvelteKit, OpenRouter, @avena/score, Cheerio)
+### Proceso 2: Decisiones arquitectónicas (hexagonal, SvelteKit, OpenRouter, Cheerio)
 
 **Input**: Stack preferido del autor (TypeScript, sin auth, PWA mobile-first)
 
@@ -146,9 +146,9 @@ Por cada historia de usuario:
 2. Decisión de persistencia: localStorage vs PostgreSQL → full stack desde día 1 (más calidad de código)
 3. Selección de LLM: OpenAI vs Anthropic vs OpenRouter → OpenRouter por flexibilidad de modelo
 4. Estrategia de parseo HTML: Cheerio vs Puppeteer → Cheerio + subdominio `.m.`
-5. Chain de responsabilidad: LLM → @avena/score → texto manual para robustez
+5. Estrategia de fallback: si el LLM falla tras reintentos, el usuario pega el texto manualmente
 
-**Output**: 3 ADRs (hexagonal, @avena/score, no-scraping) + research.md con 7 decisiones
+**Output**: 3 ADRs (hexagonal, fallback de análisis, no-scraping) + research.md con 7 decisiones
 
 ### Proceso 3: Refinamiento crítico del E2E
 
@@ -211,7 +211,7 @@ Los 3 prompts más relevantes que dispararon decisiones fundamentales:
 
 **Contexto**: La spec original asumía que un LLM solo de texto podía estimar coordenadas GPS, lo cual no es técnicamente posible.
 
-**Resultado**: Diseño de LocationResolverPort con 3 adaptadores en cadena (DeclaredLocationAdapter → GeocodingAdapter → LLMVisionLocationAdapter). La spec actualizada documenta explícitamente la cadena y el orden de fallback.
+**Resultado**: Diseño de LocationResolverPort con 2 adaptadores en cadena (DeclaredLocationAdapter → GeocodingAdapter). El LLMVisionLocationAdapter se eliminó por inviabilidad técnica (ver FR-016 y research.md sección 8). La spec actualizada documenta explícitamente la cadena simplificada y el fallback honesto: sin dirección → sin verificación catastral.
 
 **Artefacto**: `specs/001-realista-mvp/spec.md` (FR-016) + `research.md` (sección 8) + 6 tareas nuevas (T030a-b, T032a-d)
 
