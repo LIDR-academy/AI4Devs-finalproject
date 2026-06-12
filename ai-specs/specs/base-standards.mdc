@@ -1,0 +1,40 @@
+---
+description: Development rules and guidelines for this Flutter + Firebase mobile project, applicable to all AI agents (Claude, Cursor, Codex, Gemini, etc.) working in Cursor.
+alwaysApply: true
+---
+
+## 1. Core Principles
+
+- **Small tasks, one at a time**: Always work in baby steps, one at a time. Never go forward more than one step.
+- **Test-Driven Development**: Start with failing tests for any new functionality (TDD), according to the task details. Prefer `flutter test` for unit/widget tests, `bloc_test` for BLoC logic, and `mocktail`/`mockito` for repository and datasource mocks.
+- **Type Safety**: All Dart code must use strong typing; avoid `dynamic` unless strictly necessary and documented.
+- **Clear Naming**: Use clear, descriptive names for all variables, functions, classes, files, and layers (`*_bloc.dart`, `*_repository.dart`, `*_use_case.dart`).
+- **Incremental Changes**: Prefer incremental, focused changes over large, complex modifications.
+- **Question Assumptions**: Always question assumptions and inferences.
+- **Pattern Detection**: Detect and highlight repeated code patterns.
+- **Clean Architecture**: Respect layer boundaries — presentation must not import Firebase SDKs; domain must not depend on Flutter or Firebase; data implements domain contracts via repositories and Firebase datasources.
+- **No REST layer**: Do not introduce HTTP clients, OpenAPI specs, or custom backend APIs unless explicitly requested. All remote persistence and auth go through the official Firebase SDK for Flutter.
+
+## 2. Language Standards
+
+- **English (code and in-app technical text)**: Use English for:
+    - Dart source code (identifiers, classes, enums, extensions)
+    - Comments and doc comments (`///`) in code
+    - User-visible error/log strings intended for developers
+    - Firestore field names, collection IDs, and Security Rules identifiers
+    - Test names and test descriptions in code
+    - Configuration keys in `pubspec.yaml`, `analysis_options.yaml`, and Firebase config files
+- **Spanish (project communication and prose docs)**: Use Spanish for:
+    - README, guides, ADRs, and technical markdown in the repo
+    - Jira tickets (titles, descriptions, comments) when the team uses Spanish
+    - Git commit messages
+    - Pull request titles and descriptions
+- **Consistency**: Never mix languages inside the same commit message or PR body; keep code English and prose Spanish unless the user explicitly requests otherwise.
+
+## 3. Specific standards
+
+For detailed standards and guidelines specific to different areas of the project, refer to:
+
+- [Mobile Standards](./mobile-standards.mdc) — Flutter UI, BLoC (`flutter_bloc`), Clean Architecture presentation/domain layers, widgets, navigation, platform (Android/iOS), and mobile testing
+- [Firebase Standards](./firebase-standards.mdc) — Firestore, Firebase Authentication, repository and datasource patterns, Security Rules, offline behavior, and Firebase-focused testing (no REST API)
+- [Documentation Standards](./documentation-standards.mdc) — Technical documentation structure, formatting, maintenance guidelines, and AI spec update process (prose in Spanish)

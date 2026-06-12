@@ -1,0 +1,115 @@
+# Contrato de acceso a datos — La Pocha (Flutter + Firebase)
+# Sustituye a api-spec.yml (OpenAPI REST). Toda la app consume datos vía Firebase SDK.
+# Identificadores de colecciones y campos en inglés; documentación en español en data-model.md.
+
+specVersion: "1.0.0"
+title: La Pocha Data Access (Firebase)
+description: |
+  Operaciones de datos para la app Flutter (la_pocha).
+  Modelo de colecciones en data-model.md.
+  Implementar en capa data (datasources + repositories) según firebase-standards.mdc.
+
+replaces: api-spec.yml
+
+sdk:
+  packages:
+    - firebase_core
+    - cloud_firestore
+    - firebase_auth
+  platforms:
+    - android
+    - ios
+
+authentication:
+  provider: firebase_auth
+  flows:
+    signInWithEmailPassword:
+      sdk: FirebaseAuth.signInWithEmailAndPassword
+    signUpWithEmailPassword:
+      sdk: FirebaseAuth.createUserWithEmailAndPassword
+    signOut:
+      sdk: FirebaseAuth.signOut
+    authStateChanges:
+      sdk: FirebaseAuth.authStateChanges
+      usage: BLoC de sesión / navegación condicional
+  profileSync:
+    description: Tras registro/login, crear o actualizar users/{uid}
+    sdk: FirebaseFirestore.doc('users/${uid}').set(..., SetOptions(merge: true))
+
+firestore:
+  conventions:
+    documentId: string
+    timestamps: Timestamp
+    pagination: startAfterDocument + limit
+    references: DocumentReference o string userId según data-model.md
+
+  collections:
+    users:
+      path: users/{userId}
+      mapsFromModel: User
+      documentIdNote: Preferir userId == Auth.uid
+      operations:
+        getProfile:
+          sdk: doc('users/{userId}').get()
+        upsertProfile:
+          sdk: doc('users/{userId}').set(data, merge: true)
+        watchProfile:
+          sdk: doc('users/{userId}').snapshots()
+
+    games:
+      path: games/{gameId}
+      mapsFromModel: Game
+      operations:
+        listByHost:
+          sdk: collection('games').where('hostId', isEqualTo: uid).orderBy('createdAt', descending: true)
+        listActive:
+          sdk: collection('games').where('status', isEqualTo: 'in_progress')  # índice requerido
+        getById:
+          sdk: doc('games/{gameId}').get()
+        create:
+          sdk: collection('games').add({ hostId, status: 'lobby', createdAt: serverTimestamp, ... })
+        update:
+          sdk: doc('games/{gameId}').update(...)
+        watchGame:
+          sdk: doc('games/{gameId}').snapshots()
+      subcollections:
+        players:
+          path: games/{gameId}/players/{playerId}
+          mapsFromModel: Player
+          operations:
+            list:
+              sdk: collection('games/{gameId}/players').orderBy('seatOrder')
+            add:
+              sdk: collection('games/{gameId}/players').add({ userId, joinedAt: serverTimestamp, ... })
+            updateScore:
+              sdk: doc('.../players/{playerId}').update({ totalScore: ... })
+        rounds:
+          path: games/{gameId}/rounds/{roundId}
+          mapsFromModel: Round
+          operations:
+            list:
+              sdk: collection('games/{gameId}/rounds').orderBy('roundNumber')
+            create:
+              sdk: collection('games/{gameId}/rounds').add({ roundNumber, status: 'open', ... })
+            close:
+              sdk: doc('.../rounds/{roundId}').update({ status: 'closed', closedAt: serverTimestamp, scoresDelta: ... })
+
+errors:
+  mapping:
+    firebase_auth/user-not-found: DomainAuthFailure
+    cloud_firestore/permission-denied: DomainForbiddenFailure
+    cloud_firestore/not-found: DomainNotFoundFailure
+  pattern: FirebaseException en datasource → Failure en dominio → State en BLoC
+
+realtime:
+  recommended:
+    - games/{gameId} durante partida activa
+    - games/{gameId}/rounds última ronda abierta
+
+security:
+  sourceOfTruth: firestore.rules
+  mustAlignWith: data-model.md sección 9
+
+deprecatedREST:
+  file: api-spec.yml
+  status: obsolete

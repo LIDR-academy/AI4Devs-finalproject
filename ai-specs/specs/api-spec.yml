@@ -1,0 +1,30 @@
+# =============================================================================
+# OBSOLETO — NO USAR PARA IMPLEMENTACIÓN
+# =============================================================================
+#
+# Este archivo describía una API REST OpenAPI (Node/Express) que ya no forma
+# parte del stack del proyecto.
+#
+# Sustitutos autorizados:
+#   - ai-specs/specs/firebase-data-access.yml  → operaciones Firebase SDK
+#   - ai-specs/specs/data-model.md             → entidades y reglas de negocio
+#   - ai-specs/specs/firebase-standards.mdc    → patrones de capa data
+#
+# La especificación OpenAPI completa del stack web se eliminó del repositorio;
+# puede recuperarse del historial de Git si se necesita como referencia histórica.
+#
+# =============================================================================
+
+deprecated: true
+deprecatedSince: "2026-06-03"
+reason: "Proyecto migrado a Flutter + Firebase; sin API REST propia."
+replacement: firebase-data-access.yml
+openapi: 3.0.0
+info:
+  title: "(DEPRECATED) LTI REST API"
+  description: |
+    OBSOLETO. No implementar endpoints HTTP para datos de negocio.
+    Usar firebase-data-access.yml y el Firebase SDK desde la app Flutter.
+  version: 0.0.0.000-deprecated
+
+paths: {}

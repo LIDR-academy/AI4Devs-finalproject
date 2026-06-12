@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "969753324327",
+    "project_id": "la-pocha-9d070",
+    "storage_bucket": "la-pocha-9d070.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:969753324327:android:14be895d0f45b9acb81702",
+        "android_client_info": {
+          "package_name": "com.degreeapps.la_pocha"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCjePWOjztZ8q1RqWck9hRWS23c7xP4s1s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

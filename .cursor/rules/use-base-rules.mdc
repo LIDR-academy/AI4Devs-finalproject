@@ -1,0 +1,38 @@
+---
+description: Directs all AI agents to use the consolidated rules in base-standards.mdc
+globs: 
+alwaysApply: true
+---
+
+# Use Base Development Rules
+
+All AI agents working on this project must follow the comprehensive development rules and guidelines defined in:
+
+**📋 [ai-specs/specs/base-standards.mdc](ai-specs/specs/base-standards.mdc)**
+
+## Key Directive
+
+- **Single Source of Truth**: All development rules, coding standards, testing practices, and workflow requirements are maintained in `base-standards.mdc`
+- **No Rule Duplication**: Do not reference or follow other rule files as authoritative when they conflict with `base-standards.mdc` — `base-standards.mdc` is the entry point; detailed rules live in the linked standards files below
+- **Always Current**: `base-standards.mdc` is the actively maintained configuration — other rule files may be outdated until aligned with the Flutter/Firebase stack
+
+## What's Included in base-standards.mdc
+
+- **Core Principles**: Small tasks one at a time, Test-Driven Development (TDD), Dart type safety, clear naming, incremental changes, Clean Architecture layer boundaries, Firebase-only data access
+- **Language Standards**: English for code and comments; Spanish for documentation, commits, and PR descriptions
+- **Specific Standards**: Links to detailed standards for:
+  - Mobile development (Flutter, BLoC, presentation/domain Clean Architecture)
+  - Firebase backend (Firestore, Authentication, datasources, Security Rules)
+  - Documentation (structure, formatting, maintenance)
+
+## Compliance
+
+Before starting any development work, agents must:
+
+1. Read and understand all rules in `base-standards.mdc`
+2. Follow the TDD process and core principles defined there
+3. Use the specified tools and testing frameworks (`flutter test`, `bloc_test`, Firebase emulators when applicable)
+4. Maintain the required code quality and Dart analysis standards (`flutter analyze`)
+5. Refer to the linked standards documents (`mobile-standards.mdc`, `firebase-standards.mdc`, `documentation-standards.mdc`) for detailed guidelines
+
+**Remember**: `base-standards.mdc` is the complete development rulebook entry point for this project.
