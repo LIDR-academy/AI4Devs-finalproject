@@ -1,0 +1,18 @@
+.DS_Store
+
+# Python
+backend/venv/
+backend/.venv/
+backend/__pycache__/
+backend/.pytest_cache/
+backend/.ruff_cache/
+backend/.coverage
+
+# Next.js / Node.js
+frontend/node_modules/
+frontend/.next/
+
+# Local environment files
+.env
+.env.*
+!.env.example
