@@ -357,6 +357,28 @@ Resultado esperado:
 - `extract-events` devuelve un numero mayor que 0.
 - `timeline.events` devuelve el mismo numero de eventos o superior.
 
+### Evidencia de despliegue local (Entrega 1)
+
+Ejecucion de referencia para validar entorno funcional con Docker Compose:
+
+```bash
+docker compose up -d backend frontend
+curl -sS http://localhost:8000/health
+```
+
+Salida esperada del healthcheck:
+
+```json
+{"status":"ok","service":"auditcare-timeline-api","version":"0.1.0"}
+```
+
+URLs verificadas en entorno local:
+
+- Frontend: http://localhost:3000
+- Backend docs: http://localhost:8000/docs
+- Statewave API (stack externa): http://localhost:8100/healthz
+- Statewave Admin (stack externa): http://localhost:8081
+
 
 ---
 
