@@ -132,7 +132,7 @@ El usuario visualiza una línea temporal de 60-90 días del proceso de compra de
 
 ---
 
-### Historia 5 - Checklist Documental: Que No Se Te Escape Nada (P3)
+### Historia 6 - Checklist Documental: Que No Se Te Escape Nada (P3)
 
 El usuario hace seguimiento de qué documentos tiene y cuáles le faltan para cada etapa del proceso de compra. Los ítems del checklist se organizan por hito (pre-arras, post-arras, pre-escritura, post-escritura).
 
@@ -149,7 +149,7 @@ El usuario hace seguimiento de qué documentos tiene y cuáles le faltan para ca
 
 ### Casos Límite
 
-- ¿Qué pasa cuando el LLM devuelve JSON malformado en el análisis? Fallback al scoring numérico de `@avena/score`.
+- ¿Qué pasa cuando el LLM devuelve JSON malformado en el análisis? Se reintenta el análisis con el LLM (hasta 2 reintentos); si persiste el error, se ofrece al usuario pegar el texto del anuncio manualmente para que el LLM lo procese sin el fetch del HTML.
 - ¿Qué pasa cuando la API del Catastro no responde? Se muestra un mensaje indicando que la verificación catastral no está disponible; se muestra igualmente el análisis del LLM.
 - ¿Qué pasa cuando una URL devuelve 403 o requiere JavaScript? Se intenta el subdominio móvil `.m.`; si falla, se ofrece pegar el texto manualmente.
 - ¿Qué pasa cuando el usuario no introduce ahorros en el Mortgage Compass? Se señala claramente la diferencia y se sugiere ajustar el precio de la vivienda.
@@ -161,7 +161,7 @@ El usuario hace seguimiento de qué documentos tiene y cuáles le faltan para ca
 ### Requisitos Funcionales
 
 - **FR-001**: El sistema DEBE aceptar una URL de anuncio, obtener el contenido en servidor usando Cheerio para parseo HTML, y devolver un análisis de transparencia dentro del SLA definido en FR-018 (15s). Fallback a subdominio móvil (`.m.`) para páginas con renderizado JS.
-- **FR-002**: El sistema DEBE usar OpenRouter como puerta de enlace LLM para el análisis de anuncios. El modelo principal utiliza un system prompt estructurado para detectar lenguaje manipulador, omisiones y banderas rojas. Fallback a scoring numérico `@avena/score` si el LLM no está disponible.
+- **FR-002**: El sistema DEBE usar OpenRouter como puerta de enlace LLM para el análisis de anuncios. El modelo principal utiliza un system prompt estructurado para detectar lenguaje manipulador, omisiones y banderas rojas. Si el LLM no está disponible o devuelve JSON malformado tras 2 reintentos, se ofrece al usuario pegar el texto manualmente para un tercer intento con LLM.
 - **FR-003**: El sistema DEBE cruzar la ubicación estimada del anuncio con datos de la API del Catastro cuando estén disponibles.
 - **FR-004**: El sistema DEBE calcular los gastos ocultos de compra (ITP/IVA, notaría, registro, gestoría, tasación) basándose en el precio de la vivienda y la comunidad autónoma.
 - **FR-005**: El sistema DEBE presentar escenarios de amortización hipotecaria (base, ligera, moderada, agresiva) para un plazo de 30 años con amortizaciones anticipadas voluntarias.
@@ -186,13 +186,27 @@ El usuario hace seguimiento de qué documentos tiene y cuáles le faltan para ca
 - **FR-024**: El `Checklist` se crea automáticamente como parte del `PurchaseProcess` (mismo flujo de auto-attach en FR-014), poblado desde la plantilla seed (T082) con los ítems documentales por etapa. No requiere acción explícita del usuario para instanciarse.
 - **FR-025**: El LLM (OpenRouterAdapter) DEBE devolver en su JSON de respuesta, por cada red flag detectada, un campo `reasoning: string` con la **frase exacta del anuncio** que disparó el flag + la inferencia. Ejemplo: `{ flag: 'euphemistic_language', reasoning: "El anuncio usa 'acogedor' para describir un salón de 11m² — probable falta de espacio" }`. La UI DEBE mostrar este reasoning al usuario en cada red flag (AI Reasoning Transparency).
 - **FR-026**: El sistema DEBE exponer un endpoint `GET /api/listings/:id/negotiation-points` que devuelva una lista de 5-8 puntos de negociación (preguntas concretas para hacer al inmobiliario) generados desde las red flags detectadas + datos del listing. La generación se hace desde **plantillas hardcoded** indexadas por combinación (redFlag, listingSituation), NO con LLM (mantiene consistencia educativa, no riesgo de advice).
+- **FR-027** (Monitorización Proactiva de Portales): El sistema DEBE trackear el estado de cada portal inmobiliario (`PortalHealthCheck`: ok, throttled, blocked, unknown) y **actuar proactivamente** cuando un portal empieza a bloquear:
+  - **Tracking**: cada request a un portal (Idealista, Fotocasa, etc.) actualiza su `successRate` (ventana móvil de últimos 100 requests) y `consecutiveFailures`.
+  - **Detección**: cuando `consecutiveFailures >= 3` o `successRate < 0.7` en una ventana de 1h, se marca `status = 'throttled'` o `'blocked'` y se setea `alertTriggeredAt`.
+  - **Acción reactiva (sin esperar al usuario)**:
+    - `blocked` → el `CheerioAdapter` automáticamente intenta `.m.` (subdominio móvil) en el siguiente request
+    - `throttled` → el `CheerioAdapter` aplica backoff exponencial (1s, 2s, 4s, 8s, max 30s)
+    - Si `.m.` también bloqueado → marca `status = 'confirmed_blocked'` y muestra mensaje claro al usuario sugiriendo pegar el texto manualmente
+  - **Acción proactiva**: una tarea programada (cron cada 30min) re-intenta con `.m.` para portales `blocked` y los marca `ok` si vuelven a funcionar. **El sistema no espera a que los usuarios reporten el bloqueo.**
+  - **Logging**: cada cambio de `status` se loggea con nivel WARN para revisión manual.
+  - **Endpoint**: `GET /api/admin/portal-health` (sin auth en MVP, marcado para auth en producción) devuelve el estado actual de todos los portales.
+- **FR-028** (Migración RedFlag a tabla propia): Cada `RedFlag` detectada se persiste en la tabla `RedFlag` (FK a `AnalyzedListing`), NO como JSON en `AnalyzedListing.redFlags`. Esto permite queries SQL agregadas (`SELECT flag, COUNT(*) GROUP BY flag`) y análisis de producto futuro. La API expone `redFlags` como array (join automático en el repository).
 
 ### Entidades Clave
 
 - **User**: Sesión anónima identificada por UUID. Sin email, contraseña ni datos personales. Campo `userId` nullable para futura autenticación.
-- **PurchaseProcess**: Representa el proceso de compra de vivienda del usuario. Contiene el perfil financiero como value object JSON.
-- **AnalyzedListing**: Resultado de un análisis de Listing Lens. Contiene puntuación, banderas rojas, confianza de ubicación, comparativa catastral, hash de instantánea y timestamp.
-- **Checklist**: Checklist documental organizado por etapa burocrática. Contiene ítems con estado de completado.
+- **PurchaseProcess**: Representa el proceso de compra de vivienda del usuario. Contiene el perfil financiero como value object JSON (semi-estructurado, justificado — ver justificación de normalización en data-model.md).
+- **AnalyzedListing**: Resultado de un análisis de Listing Lens. Contiene puntuación, banderas rojas (referencia 1:N a tabla `RedFlag`), confianza de ubicación, comparativa catastral, hash de instantánea y timestamp.
+- **RedFlag**: Tabla propia (normalizada, FR-028) con `flag: RedFlagType` (enum cerrado) y `reasoning: string` (frase del anuncio + inferencia del LLM, FR-025). Relación N:1 con `AnalyzedListing`. Permite queries agregadas para análisis de producto.
+- **Checklist**: Checklist documental organizado por etapa burocrática. Referencia 1:N a tabla `ChecklistItem`.
+- **ChecklistItem**: Tabla propia (normalizada) con `stage`, `title`, `description`, `documentsNeeded[]`, `estimatedDays`, `completed`, `completedAt`, `sortOrder`. Permite toggle individual eficiente.
+- **PortalHealthCheck**: Estado de salud de cada portal inmobiliario. Soporte para FR-027 (monitorización proactiva). `successRate` rolling window, `consecutiveFailures`, `status` (ok/throttled/blocked/unknown), `lastCheckedAt`, `alertTriggeredAt`.
 
 ## Criterios de Éxito
 
@@ -212,7 +226,6 @@ El usuario hace seguimiento de qué documentos tiene y cuáles le faltan para ca
 - La API del Catastro (Sede Electrónica del Catastro) es accesible públicamente y devuelve datos estructurados.
 - La API de OpenRouter está disponible con una clave válida. El modelo elegido soporta modo de salida JSON estructurada.
 - Los usuarios comprenden conceptos financieros básicos españoles (ITP, IVA, Euríbor) o la interfaz proporciona explicaciones contextuales.
-- El paquete `@avena/score` está disponible y es compatible con la versión de Node.js elegida.
 - Se usa la media del Euríbor como tipo de interés hipotecario por defecto, modificable por el usuario.
 - El diseño mobile-first apunta a anchos de pantalla de 375px en adelante.
 - Los datos de sesión anónima se persisten en PostgreSQL vía la API del backend. La caché del cliente solo para resiliencia offline.
