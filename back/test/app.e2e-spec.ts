@@ -1,4 +1,4 @@
-import { INestApplication } from "@nestjs/common";
+import { INestApplication, ValidationPipe } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import { randomUUID } from "node:crypto";
 import { AppModule } from "../src/app.module";
@@ -13,10 +13,22 @@ interface UserRecord {
   updatedAt: Date;
 }
 
+interface PantryRecord {
+  id: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  expirationDate: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;
+}
+
 describe("Auth (e2e)", () => {
   let app: INestApplication;
   const usersById = new Map<string, UserRecord>();
   const usersByEmail = new Map<string, UserRecord>();
+  const pantryItemsById = new Map<string, PantryRecord>();
 
   const prismaMock = {
     $connect: jest.fn().mockResolvedValue(undefined),
@@ -54,6 +66,42 @@ describe("Auth (e2e)", () => {
         },
       ),
     },
+    pantryItem: {
+      create: jest.fn(
+        async ({
+          data,
+        }: {
+          data: {
+            userId: string;
+            name: string;
+            quantity: number;
+            unit: string;
+            expirationDate: Date | null;
+          };
+        }): Promise<PantryRecord> => {
+          const now = new Date();
+          const createdItem: PantryRecord = {
+            id: randomUUID(),
+            userId: data.userId,
+            name: data.name,
+            quantity: data.quantity,
+            unit: data.unit,
+            expirationDate: data.expirationDate,
+            createdAt: now,
+            updatedAt: now,
+          };
+          pantryItemsById.set(createdItem.id, createdItem);
+          return createdItem;
+        },
+      ),
+      findMany: jest.fn(
+        async ({ where }: { where: { userId: string } }): Promise<PantryRecord[]> => {
+          return [...pantryItemsById.values()]
+            .filter((item) => item.userId === where.userId)
+            .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+        },
+      ),
+    },
   };
 
   beforeAll(async () => {
@@ -69,12 +117,20 @@ describe("Auth (e2e)", () => {
 
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix("api");
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        transform: true,
+        forbidNonWhitelisted: true,
+      }),
+    );
     await app.init();
   });
 
   beforeEach(() => {
     usersById.clear();
     usersByEmail.clear();
+    pantryItemsById.clear();
   });
 
   afterAll(async () => {
@@ -132,5 +188,64 @@ describe("Auth (e2e)", () => {
 
   it("returns 401 when token is missing", async () => {
     await request(app.getHttpServer()).get("/api/auth/me").expect(401);
+  });
+
+  it("creates pantry item and returns it in list", async () => {
+    const registerResponse = await request(app.getHttpServer())
+      .post("/api/auth/register")
+      .send({ email: "pantry@example.com", password: "password123" })
+      .expect(201);
+
+    const token = registerResponse.body.accessToken as string;
+
+    await request(app.getHttpServer())
+      .post("/api/pantry/items")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        name: "Greek Yogurt",
+        quantity: 2,
+        unit: "unit",
+        expirationDate: "2026-12-30",
+      })
+      .expect(201);
+
+    const listResponse = await request(app.getHttpServer())
+      .get("/api/pantry/items")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(200);
+
+    expect(listResponse.body).toHaveLength(1);
+    expect(listResponse.body[0].name).toBe("Greek Yogurt");
+    expect(listResponse.body[0].quantity).toBe(2);
+    expect(listResponse.body[0].unit).toBe("unit");
+  });
+
+  it("returns 400 for invalid pantry payload", async () => {
+    const registerResponse = await request(app.getHttpServer())
+      .post("/api/auth/register")
+      .send({ email: "invalid-pantry@example.com", password: "password123" })
+      .expect(201);
+
+    await request(app.getHttpServer())
+      .post("/api/pantry/items")
+      .set("Authorization", `Bearer ${registerResponse.body.accessToken as string}`)
+      .send({ name: "", quantity: 0, unit: "" })
+      .expect(400);
+
+    await request(app.getHttpServer())
+      .post("/api/pantry/items")
+      .set("Authorization", `Bearer ${registerResponse.body.accessToken as string}`)
+      .send({ name: "Milk", quantity: 1, unit: "invalid-unit" })
+      .expect(400);
+  });
+
+  it("returns 401 for pantry routes when token is missing", async () => {
+    await request(app.getHttpServer()).post("/api/pantry/items").send({
+      name: "Milk",
+      quantity: 1,
+      unit: "l",
+    }).expect(401);
+
+    await request(app.getHttpServer()).get("/api/pantry/items").expect(401);
   });
 });

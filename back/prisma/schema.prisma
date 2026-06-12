@@ -20,6 +20,7 @@ model PantryItem {
   id             String   @id @default(uuid())
   name           String
   quantity       Int      @default(1)
+  unit           String   @default("unit")
   expirationDate DateTime?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt

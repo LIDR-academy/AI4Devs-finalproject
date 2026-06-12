@@ -1,10 +1,12 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
-import { ChevronLeft, Tag, Repeat, CalendarClock, Settings2, Sparkles } from "lucide-react";
-import { pantryItems, priceComparison, daysUntil } from "@/lib/mock-data";
+import { useEffect, useState } from "react";
+import { ChevronLeft, Tag, Repeat, CalendarClock, Settings2 } from "lucide-react";
+import { priceComparison, daysUntil } from "@/lib/mock-data";
 import {
   requireAuthBeforeLoad,
   useRequireAuthRedirect,
 } from "@/features/auth/route-guard";
+import { listPantryItems, type PantryApiItem } from "@/features/pantry/pantry.api";
 
 export const Route = createFileRoute("/item/$id")({
   beforeLoad: requireAuthBeforeLoad,
@@ -19,8 +21,33 @@ function ItemDetail() {
   }
 
   const { id } = useParams({ from: "/item/$id" });
-  const item = pantryItems.find((i) => i.id === id) ?? pantryItems[0];
-  const d = daysUntil(item.expiresAt);
+  const [item, setItem] = useState<PantryApiItem | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadItem() {
+      const items = await listPantryItems();
+      if (isMounted) {
+        setItem(items.find((i) => i.id === id) ?? null);
+      }
+    }
+    void loadItem();
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
+
+  if (!item) {
+    return (
+      <div className="min-h-screen bg-background p-6 text-center text-muted-foreground">
+        Loading item...
+      </div>
+    );
+  }
+
+  const displayQuantity = `${item.quantity} ${item.unit}`;
+  const expiresAt = item.expirationDate ?? new Date("2100-01-01").toISOString();
+  const d = daysUntil(expiresAt);
 
   return (
     <div className="min-h-screen bg-background">
@@ -35,30 +62,19 @@ function ItemDetail() {
 
         <div className="px-5 pt-8 text-center">
           <div className="mx-auto grid size-24 place-items-center rounded-3xl bg-secondary text-5xl shadow-ios">
-            {item.emoji}
+            🍽️
           </div>
           <h1 className="mt-5 text-2xl font-bold tracking-tight">{item.name}</h1>
           <p className="mt-1 text-[14px] text-muted-foreground">
-            {item.quantity} · {item.category} · {item.location}
+            {displayQuantity} · Pantry · Pantry
           </p>
         </div>
 
         <div className="mt-6 grid grid-cols-3 gap-3 px-5">
           <Stat label="Expires in" value={d < 0 ? `${Math.abs(d)}d ago` : `${d}d`} tone={d <= 2 ? "warn" : "ok"} />
-          <Stat label="Paid" value={`€${item.pricePaid.toFixed(2)}`} />
-          <Stat label="Added" value={new Date(item.addedAt).toLocaleDateString(undefined, { day: "numeric", month: "short" })} />
+          <Stat label="Paid" value="€0.00" />
+          <Stat label="Added" value={new Date(item.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short" })} />
         </div>
-
-        {item.estimated && (
-          <div className="mx-5 mt-5 flex items-start gap-3 rounded-2xl border border-warning/40 bg-warning/10 p-4">
-            <Sparkles className="size-5 text-warning shrink-0" />
-            <div className="text-[13.5px]">
-              <p className="font-semibold">Estimated date</p>
-              <p className="text-muted-foreground">AI guessed this from typical Spanish supermarket timelines. Set a real date to improve future suggestions.</p>
-              <button className="mt-2 rounded-full bg-warning px-3 py-1 text-[12.5px] font-semibold text-warning-foreground">Set real date</button>
-            </div>
-          </div>
-        )}
 
         <section className="mt-7 px-5">
           <h2 className="px-2 mb-2 text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">Actions</h2>
