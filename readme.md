@@ -408,40 +408,52 @@ A continuación se detallan los tres endpoints neurálgicos del backend document
 
 ## 5. Historias de Usuario
 
-#### **Historia de Usuario 1: Registro Automático por Notas de Voz**
+A continuación se detallan las 5 historias de usuario que componen el alcance del MVP, clasificadas bajo la metodología MoSCoW para asegurar el cumplimiento del flujo prioritario de extremo a extremo (E2E).
 
+### **Historia de Usuario 1 (Must-Have)**
 * **ID:** `US-01`
-* **Título:** Ingesta y Estructuración de Hitos Clínicos mediante Dictado por Voz
+* **Título:** Ingesta y Estructuración de Hitos Clínicos mediante Dictado por Voz.
 * **Enunciado:** Como Paciente de AEnEA, quiero dictar de viva voz un síntoma, intervención o antecedente médico en mi aplicación móvil, para que el sistema extraiga la información clínica relevante de forma estructurada y cronológica sin tener que rellenar formularios manuales complejos.
-* **Criterios de Aceptación (BDD):**
-* **Dado** que el usuario presiona el botón flotante de micrófono en la pantalla principal de la App móvil:
-* **Cuando** habla y suelta el botón para finalizar la grabación de audio,
-* **Entonces** el sistema debe capturar el archivo nativo local, enviarlo mediante `FormData` al endpoint de FastAPI, procesar la transcripción exacta con la API de Whisper de OpenAI y añadir el suceso estructurado en JSON de forma visual en la línea de tiempo del teléfono de forma automática.
+* **Criterios de Aceptación:**
+  * **Dado** que el usuario presiona el botón flotante de micrófono en la pantalla principal de la App móvil:
+  * **Cuando** habla y suelta el botón para finalizar la grabación de audio,
+  * **Entonces** el sistema debe capturar el archivo nativo local, enviarlo mediante `FormData` al endpoint de FastAPI, procesar la transcripción exacta con la API de Whisper de OpenAI y añadir el suceso estructurado en la base de datos de forma automática.
 
-
-
-#### **Historia de Usuario 2: Procesamiento Inteligente de Informes por Imagen**
-
+### **Historia de Usuario 2 (Must-Have)**
 * **ID:** `US-02`
-* **Título:** Extracción de Entidades Médicas mediante Fotografías de Documentos Físicos
+* **Título:** Extracción de Entidades Médicas mediante Fotografías de Documentos Físicos.
 * **Enunciado:** Como Paciente de AEnEA, quiero tomar una foto o cargar una imagen de un informe de alta médica, analítica o receta en papel, para que la IA extraiga los metadatos clínicos estructurados de manera automatizada.
-* **Criterios de Aceptación (BDD):**
-* **Dado** que el usuario selecciona la opción 'Subir informe' y habilita los permisos de la cámara:
-* **Cuando** toma una foto nítida de un informe médico firmado,
-* **Entonces** el backend debe procesar la imagen mediante el modelo multimodal `gpt-4o-mini`, aislar los encabezados administrativos innecesarios, extraer el diagnóstico principal, el centro médico y los doctores firmantes, guardándolos en base de datos e informando al usuario en qué sección se ha guardado.
+* **Criterios de Aceptación:**
+  * **Dado** que el usuario selecciona la opción 'Subir informe' y habilita los permisos de la cámara:
+  * **Cuando** toma una foto nítida de un informe médico firmado,
+  * **Entonces** el backend debe procesar la imagen mediante el modelo multimodal `gpt-4o-mini`, aislar los encabezados administrativos innecesarios, extraer el diagnóstico principal, el centro médico y los doctores firmantes, guardándolos en base de datos.
 
+### **Historia de Usuario 3 (Must-Have)**
+* **ID:** `US-03`
+* **Título:** Clasificación y Enrutamiento Inteligente del Perfil Clínico.
+* **Enunciado:** Como Paciente de AEnEA, quiero que la IA discrimine automáticamente si mi información médica pertenece a mi línea base crónica o a un evento temporal aislado, para mantener mi historial perfectamente organizado sin intervención manual.
+* **Criterios de Aceptación:**
+  * **Dado** que la IA recibe un texto procesado (por voz o imagen):
+  * **Cuando** el contenido describa una patología de fondo, rasgo genético o medicación permanente (ej: Talasemia, ERGE, Lansoprazol), **Entonces** debe registrarlo en la tabla `clinical_baseline` y actualizar los chips de la cabecera.
+  * **Cuando** el contenido describa un hecho puntual en el tiempo (ej: visita a Urgencias o Cirugía), **Entonces** debe registrarlo en la tabla `medical_events` y renderizarlo en el eje cronológico.
 
-
-#### **Historia de Usuario 3: Exportación Ejecutiva del Pasaporte Clínico de Emergencia**
-
+### **Historia de Usuario 4 (Must-Have)**
 * **ID:** `US-04`
-* **Título:** Generación de Documento de Emergencia PDF Compartible en Un Solo Toque
+* **Título:** Exportación de Pasaporte Clínico de Emergencia a formato PDF.
 * **Enunciado:** Como Paciente en una situación de urgencia o en un centro hospitalario extranjero, quiero exportar mi historial consolidado a un archivo PDF maquetado profesionalmente con un solo toque, para facilitar mi contexto vital completo a un médico de urgencias de forma inmediata.
-* **Criterios de Aceptación (BDD):**
-* **Dado** que el usuario se encuentra en la pantalla principal de la aplicación móvil:
-* **Cuando** presiona el botón 'Exportar Pasaporte',
-* **Entonces** la aplicación debe invocar las librerías nativas `expo-print` y `expo-sharing`, maquetar de forma estructurada la cabecera con el perfil crónico activo, desplegar cronológicamente los episodios clínicos y abrir la hoja nativa para permitir imprimir o compartir el documento PDF generado instantáneamente.
+* **Criterios de Aceptación:**
+  * **Dado** que el usuario se encuentra en la pantalla principal de la aplicación móvil:
+  * **Cuando** presiona el botón 'Exportar Pasaporte',
+  * **Entonces** la aplicación debe invocar las librerías nativas `expo-print` y `expo-sharing`, maquetar la cabecera fija y los episodios cronológicos en un diseño HTML de alta fidelidad, y abrir la hoja nativa del sistema operativo para guardar o enviar el PDF de forma inmediata.
 
+### **Historia de Usuario 5 (Should-Have - Opcional)**
+* **ID:** `US-05`
+* **Título:** Sistema de Alertas por Banderas Rojas Clínicas Cruzadas (Longitudinal Flags).
+* **Enunciado:** Como Paciente preventivo, quiero que el sistema me alerte visualmente si un síntoma actual agudo se cruza peligrosamente con un antecedente crítico de mi historial pasado, para prevenir sesgos de diagnóstico comunes.
+* **Criterios de Aceptación:**
+  * **Dado** que un paciente tiene registrado en su historial un antecedente de alto riesgo (ej: cirugía por colesteatoma):
+  * **Cuando** registre un nuevo evento clínico de tipo síntoma con entradas como 'cefalea intensa' o 'fiebre',
+  * **Entonces** la IA del backend debe activar el estado `bandera_roja: true` en el JSON y la aplicación móvil debe pintar un banner de advertencia crítico de color rojo en la interfaz y en la cabecera del PDF exportado.
 
 
 ---
