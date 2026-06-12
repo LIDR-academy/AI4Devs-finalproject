@@ -2,8 +2,13 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { ChevronLeft, Check } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
+import {
+  requireAuthBeforeLoad,
+  useRequireAuthRedirect,
+} from "@/features/auth/route-guard";
 
 export const Route = createFileRoute("/add/manual")({
+  beforeLoad: requireAuthBeforeLoad,
   component: ManualEntryPage,
 });
 
@@ -12,6 +17,12 @@ const LOCATIONS = ["Fridge", "Pantry", "Freezer"] as const;
 const EMOJI_SUGGEST = ["🍎", "🥛", "🍞", "🥩", "🐟", "🥦", "🥚", "🧀", "🍝", "🥑", "🍌", "🍅"];
 
 function ManualEntryPage() {
+  const authed = useRequireAuthRedirect();
+
+  if (!authed) {
+    return null;
+  }
+
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [emoji, setEmoji] = useState("🍎");

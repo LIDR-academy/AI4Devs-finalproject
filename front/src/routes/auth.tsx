@@ -1,6 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Leaf } from "lucide-react";
+import { login, register } from "@/features/auth/auth.api";
+import { saveSession } from "@/features/auth/session";
 
 export const Route = createFileRoute("/auth")({
   component: Auth,
@@ -8,7 +10,61 @@ export const Route = createFileRoute("/auth")({
 
 function Auth() {
   const [mode, setMode] = useState<"login" | "signup" | "recover">("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+
+  const submitLabel =
+    mode === "login"
+      ? "Sign in"
+      : mode === "signup"
+        ? "Create account"
+        : "Send recovery link";
+
+  const isAuthMode = mode === "login" || mode === "signup";
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+
+    if (mode === "recover") {
+      setError("Password recovery is not available in MVP yet.");
+      return;
+    }
+
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !password) {
+      setError("Email and password are required.");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response =
+        mode === "login"
+          ? await login({ email: trimmedEmail, password })
+          : await register({ email: trimmedEmail, password });
+
+      saveSession(response);
+      navigate({ to: "/pantry" });
+    } catch (apiError) {
+      const fallbackMessage =
+        mode === "signup"
+          ? "Could not create account. Please try again."
+          : "Invalid email or password.";
+      setError(apiError instanceof Error ? apiError.message : fallbackMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-md px-6 pt-14 pb-10">
@@ -25,15 +81,39 @@ function Auth() {
         </p>
 
         <form
-          onSubmit={(e) => { e.preventDefault(); navigate({ to: "/pantry" }); }}
+          onSubmit={handleSubmit}
           className="mt-8 space-y-3"
         >
-          {mode === "signup" && <Field label="Name" type="text" placeholder="Alex" />}
-          <Field label={mode === "recover" ? "Email or username" : "Email or username"} type="text" placeholder="you@example.com" />
-          {mode !== "recover" && <Field label="Password" type="password" placeholder="••••••••" />}
+          <Field
+            label={mode === "recover" ? "Email or username" : "Email"}
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+          />
+          {mode !== "recover" && (
+            <Field
+              label="Password"
+              type="password"
+              placeholder="********"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
+            />
+          )}
 
-          <button className="mt-2 flex w-full items-center justify-center rounded-2xl bg-primary px-5 py-4 text-[17px] font-semibold text-primary-foreground shadow-ios active:scale-[0.98] transition">
-            {mode === "login" ? "Sign in" : mode === "signup" ? "Create account" : "Send recovery link"}
+          {error && (
+            <p className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-[13px] text-destructive">
+              {error}
+            </p>
+          )}
+
+          <button
+            disabled={isSubmitting}
+            className="mt-2 flex w-full items-center justify-center rounded-2xl bg-primary px-5 py-4 text-[17px] font-semibold text-primary-foreground shadow-ios active:scale-[0.98] transition disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {isSubmitting && isAuthMode ? "Please wait..." : submitLabel}
           </button>
         </form>
 

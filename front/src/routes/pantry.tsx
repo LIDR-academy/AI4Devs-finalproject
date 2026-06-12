@@ -4,8 +4,13 @@ import { Search, Users, AlertTriangle } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { pantryItems, daysUntil, type PantryItem } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
+import {
+  requireAuthBeforeLoad,
+  useRequireAuthRedirect,
+} from "@/features/auth/route-guard";
 
 export const Route = createFileRoute("/pantry")({
+  beforeLoad: requireAuthBeforeLoad,
   head: () => ({ meta: [{ title: "Pantry — RealSaveFooding" }] }),
   component: PantryPage,
 });
@@ -13,6 +18,12 @@ export const Route = createFileRoute("/pantry")({
 const filters = ["All", "Expiring", "Fridge", "Pantry", "Freezer"] as const;
 
 function PantryPage() {
+  const authed = useRequireAuthRedirect();
+
+  if (!authed) {
+    return null;
+  }
+
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<(typeof filters)[number]>("All");
 

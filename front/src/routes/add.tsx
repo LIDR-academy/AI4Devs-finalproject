@@ -1,12 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ScanLine, Camera, PencilLine, Mic } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
+import {
+  requireAuthBeforeLoad,
+  useRequireAuthRedirect,
+} from "@/features/auth/route-guard";
 
 export const Route = createFileRoute("/add")({
+  beforeLoad: requireAuthBeforeLoad,
   component: AddPage,
 });
 
 function AddPage() {
+  const authed = useRequireAuthRedirect();
+
+  if (!authed) {
+    return null;
+  }
+
   return (
     <AppShell title="Add">
       <p className="text-[15px] text-muted-foreground mb-5">Pick a way to add items to your pantry.</p>
