@@ -18,6 +18,7 @@
 | US-011 | Revisar y confirmar el pedido | CU3 | S | Imprescindible |
 | US-012 | Ver la confirmación del pedido | CU3 | S | Imprescindible |
 | US-013 | Consultar el historial de pedidos | CU3 | S | Importante |
+| US-014 | Tests E2E con Playwright | Calidad | M | Importante |
 
 ---
 
@@ -63,6 +64,7 @@ Los filtros por atributos de running (US-002) son el diferencial central de RunM
 | US-003 | Filtrar por categoría y precio | CU1 | S | Importante | Complementa los filtros running sin ser parte del diferencial; implementable en un segundo ciclo |
 | US-004 | Limpiar filtros activos | CU1 | S | Importante | Mejora la usabilidad del panel de filtros; depende de que US-002 y US-003 estén implementados |
 | US-013 | Consultar el historial de pedidos | CU3 | S | Importante | Depende de que existan pedidos creados (US-011); aporta valor pero no bloquea el ciclo de compra |
+| US-014 | Tests E2E con Playwright | Calidad | M | Importante | Debe ir la última: necesita el sistema completo funcionando para ejercitar los tres flujos principales de extremo a extremo |
 
 ---
 
@@ -492,5 +494,40 @@ Vista de historial de pedidos en `/orders`. Muestra los pedidos de la sesión ac
 - `OrderItem`: productName, productPrice, quantity, size, color
 
 **Estimación:** S
+
+**Prioridad:** Importante
+
+---
+
+## Calidad
+
+---
+
+### US-014 — Tests E2E con Playwright
+
+**Caso de uso asociado:** Calidad — cubre los flujos CU1, CU2 y CU3 de extremo a extremo
+
+**Historia de usuario:**
+Como equipo de desarrollo, queremos tener una suite de tests E2E con Playwright que ejercite los tres flujos principales de RunMarket sobre el sistema completo levantado en local, para detectar regresiones de integración que los tests unitarios no pueden capturar.
+
+**Descripción:**
+Suite de tests E2E que cubre los flujos de mayor riesgo de regresión: búsqueda filtrada del catálogo, consulta de ficha de producto y el ciclo completo de compra (carrito → checkout → confirmación de pedido). Requiere que todas las US funcionales estén implementadas. La suite se ejecuta contra el sistema completo levantado en local (frontend Next.js + backend Express + PostgreSQL en Docker). La carpeta `e2e/` con `playwright.config.ts` y los tres specs se crea en esta US tal como describe `docs/ARCHITECTURE.md`.
+
+**Criterios de aceptación:**
+- [ ] `catalog.spec.ts`: el corredor accede al catálogo, ve productos, activa un filtro de distancia y verifica que los resultados cambian; verifica el estado vacío al combinar filtros sin resultados
+- [ ] `product.spec.ts`: el corredor navega desde el catálogo a la ficha de un producto; verifica que se muestran nombre, precio y atributos running; verifica el botón de volver al catálogo; verifica el estado 404 al acceder a un id inexistente
+- [ ] `purchase.spec.ts`: el corredor selecciona un producto, lo añade al carrito, completa el checkout (envío + pago simulado + revisión), confirma el pedido y verifica la pantalla de confirmación con número de pedido; verifica que el carrito queda vacío
+- [ ] Los tres specs pasan en modo headless (`npx playwright test`) sin errores
+- [ ] `playwright.config.ts` define base URL configurable via variable de entorno, timeout razonable y un único proyecto (Chromium) para el MVP
+- [ ] El comando `npx playwright test` se documenta en el `readme.md` en la sección de testing
+
+**Datos o entidades implicadas:**
+- Flujo completo: `Product`, `Cart`, `CartItem`, `Order`, `OrderItem`
+
+**Dependencias:**
+- Todas las US funcionales implementadas: US-001 a US-013
+- Sistema levantado: `docker compose up -d` + backend en `:4000` + frontend en `:3000`
+
+**Estimación:** M
 
 **Prioridad:** Importante
