@@ -14,6 +14,7 @@ model User {
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
   pantryItems PantryItem[]
+  receipts   Receipt[]
 }
 
 model PantryItem {
@@ -25,6 +26,52 @@ model PantryItem {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   userId         String
+  receiptItems   ReceiptItem[]
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum ReceiptProcessingStatus {
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model Receipt {
+  id               String                  @id @default(uuid())
+  originalFilename String
+  mimeType         String
+  sizeBytes        Int
+  storageBucket    String
+  storageKey       String
+  ocrStatus        ReceiptProcessingStatus @default(PROCESSING)
+  ocrError         String?
+  processedAt      DateTime?
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  userId           String
+  items            ReceiptItem[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([ocrStatus])
+}
+
+model ReceiptItem {
+  id            String     @id @default(uuid())
+  rawName       String
+  quantity      Int?
+  unit          String?
+  unitPriceEur  Decimal?   @db.Decimal(10, 2)
+  lineTotalEur  Decimal?   @db.Decimal(10, 2)
+  userConfirmed Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  receiptId     String
+  pantryItemId  String?
+  receipt       Receipt    @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  pantryItem    PantryItem? @relation(fields: [pantryItemId], references: [id], onDelete: SetNull)
+
+  @@index([receiptId])
+  @@index([pantryItemId])
 }
