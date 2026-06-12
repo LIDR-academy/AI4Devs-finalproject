@@ -1,3 +1,5 @@
+import { ProductsResponse } from '../types';
+
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 
@@ -12,6 +14,10 @@ async function handleResponse<T>(res: Response): Promise<T> {
 export async function apiGet<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`);
   return handleResponse<T>(res);
+}
+
+export async function fetchProducts(): Promise<ProductsResponse> {
+  return apiGet<ProductsResponse>('/products');
 }
 
 export async function apiPost<T>(path: string, body: unknown): Promise<T> {

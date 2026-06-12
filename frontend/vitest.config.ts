@@ -15,6 +15,8 @@ export default defineConfig({
       // next/font is not available in jsdom — mock it so layout.tsx imports safely
       'next/font/google': path.resolve(__dirname, './src/test/mocks/next-font.ts'),
       'next/font/local': path.resolve(__dirname, './src/test/mocks/next-font.ts'),
+      'next/image': path.resolve(__dirname, './src/test/mocks/next-image.tsx'),
+      'next/link': path.resolve(__dirname, './src/test/mocks/next-link.tsx'),
     },
   },
 });

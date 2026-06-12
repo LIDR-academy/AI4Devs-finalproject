@@ -1,14 +1,24 @@
 import { render, screen } from '@testing-library/react';
+import { vi } from 'vitest';
+
+vi.mock('../lib/api-client', () => ({
+  fetchProducts: vi.fn().mockResolvedValue({ products: [], total: 0 }),
+}));
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
+
 import Page from '../app/page';
 import RootLayout from '../app/layout';
 
 describe('US-000-TASK-07: Root page', () => {
-  it('renders without errors', () => {
-    expect(() => render(<Page />)).not.toThrow();
+  it('renders without errors', async () => {
+    await expect(async () => render(await Page())).not.toThrow();
   });
 
-  it('renders a main element', () => {
-    render(<Page />);
+  it('renders a main element', async () => {
+    render(await Page());
     expect(screen.getByRole('main')).toBeInTheDocument();
   });
 });

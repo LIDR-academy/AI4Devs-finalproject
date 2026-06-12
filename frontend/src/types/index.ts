@@ -67,6 +67,11 @@ export interface Order {
   items: OrderItem[];
 }
 
+export interface ProductsResponse {
+  products: Product[];
+  total: number;
+}
+
 export interface ProductFilters {
   category?: Category;
   distance?: string;
