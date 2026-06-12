@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { fetchProduct, ApiError } from '../../../lib/api-client';
 import { ProductAttributes } from '../../../components/product/product-attributes';
 import { TrustSignals } from '../../../components/product/trust-signals';
+import { BackButton } from '../../../components/product/back-button';
 
 interface Props {
   params: { id: string };
@@ -53,6 +54,9 @@ export default async function ProductDetailPage({ params }: Props) {
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mb-6">
+        <BackButton />
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Imagen */}
         <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative">
