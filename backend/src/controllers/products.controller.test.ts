@@ -131,10 +131,22 @@ describe('GET /api/products/:id', () => {
     expect(res.body.error).toBeDefined();
   });
 
-  it('responds 400 when id is not a valid UUID', async () => {
-    const service = makeCatalogService();
+  it('responds 404 when id has valid format but no matching product', async () => {
+    const service = makeCatalogService({
+      getProductById: jest.fn().mockResolvedValue(null),
+    });
 
-    const res = await request(buildApp(service)).get('/api/products/not-a-uuid');
+    const res = await request(buildApp(service)).get('/api/products/prod-not-found');
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBeDefined();
+  });
+
+  it('responds 400 when id exceeds maximum length', async () => {
+    const service = makeCatalogService();
+    const longId = 'a'.repeat(201);
+
+    const res = await request(buildApp(service)).get(`/api/products/${longId}`);
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBeDefined();

@@ -26,6 +26,6 @@ export const productFilterSchema = z
 
 export type ProductFilterQuery = z.infer<typeof productFilterSchema>;
 
-export const productIdSchema = z.object({ id: z.string().uuid() }).strict();
+export const productIdSchema = z.object({ id: z.string().min(1).max(200) }).strict();
 
 export type ProductIdParam = z.infer<typeof productIdSchema>;
