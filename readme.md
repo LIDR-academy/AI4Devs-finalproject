@@ -200,7 +200,6 @@ Las capturas de pantalla, wireframes y vídeo demostrativo se incorporarán en l
 * Python 3.12+
 * PostgreSQL 16+
 * Docker y Docker Compose
-* Cuenta OpenAI (opcional para pruebas con IA)
 
 ### Servicios necesarios
 
@@ -210,17 +209,13 @@ El sistema requiere:
 * Backend FastAPI
 * PostgreSQL
 * Statewave
-* OpenAI API (opcional)
 
 ### Variables de entorno
 
 Crear archivo `.env`:
 
 ```env
-DATABASE_URL=postgresql://auditcare:auditcare@localhost:5432/auditcare
-
-OPENAI_API_KEY=your_openai_api_key
-
+DATABASE_URL=postgresql://auditcare:auditcare@localhost:5433/auditcare
 STATEWAVE_URL=http://localhost:8100
 ```
 
@@ -347,10 +342,7 @@ B --> C[(PostgreSQL)]
 
 B --> D[Statewave API :8100]
 
-B --> E[OpenAI]
-
 D --> B
-E --> B
 ```
 
 Arquitectura por capas con separación entre:
@@ -387,7 +379,7 @@ Arquitectura por capas con separación entre:
 
 ### Inteligencia Artificial
 
-* OpenAI GPT
+* Statewave LLM (LiteLLM)
 
 ---
 
@@ -564,7 +556,7 @@ Modelo Encounter.
 
 ### BE-004
 
-Integración OpenAI.
+Integración de extracción IA vía Statewave LLM.
 
 ### BE-005
 
@@ -638,7 +630,7 @@ Extraer eventos clínicos desde notas médicas.
 
 Incluye:
 
-- Integración OpenAI
+- Integración Statewave LLM
 - Prompt engineering
 - Parsing estructurado
 - Tests unitarios
