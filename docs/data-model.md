@@ -179,7 +179,7 @@ Represents a confirmed tattoo appointment between a client and an artist.
 - `booking_date`: Date of the appointment (DATE)
 - `start_time`: Start time of the appointment (TIME)
 - `end_time`: End time of the appointment (TIME)
-- `status`: Current booking status ('confirmed', 'completed', 'cancelled_client', 'cancelled_artist', 'no_show')
+- `status`: Current booking status ('pending_payment', 'confirmed', 'completed', 'cancelled')
 - `estimated_price_min`: Minimum estimated price in CLP
 - `estimated_price_max`: Maximum estimated price in CLP
 - `deposit_amount`: Amount paid as deposit in CLP
@@ -192,6 +192,7 @@ Represents a confirmed tattoo appointment between a client and an artist.
 - `notes`: Additional notes from the client (TEXT, optional)
 - `created_at`: Timestamp when the booking was created
 - `cancelled_at`: Timestamp when cancellation was requested (nullable)
+- `expires_at`: Timestamp when the pending_payment hold expires (nullable, TTL 5 min)
 
 **Validation Rules:**
 - Client must exist and have role 'client'
@@ -201,7 +202,7 @@ Represents a confirmed tattoo appointment between a client and an artist.
 - No overlapping bookings for the same artist at the same time
 - Estimated prices must be positive integers with min <= max
 - Deposit amount = (estimated_price_min * artist.deposit_percentage / 100)
-- Status transitions: confirmed → completed | cancelled_client | cancelled_artist | no_show
+- Status transitions: pending_payment → confirmed (pago OK) → completed (cliente confirma asistencia) | cancelled (cliente cancela)
 - Reference images: maximum 3 URLs in JSON array
 
 **Relationships:**

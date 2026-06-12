@@ -1,50 +1,63 @@
 # Backlog de Historias de Usuario — INK·LINK MVP
 
-> 14 historias de usuario · 81 Story Points · 10 Must-Have (53 SP) + 4 Should-Have (28 SP)
+> 13 historias de usuario · 80 Story Points · 9 Must-Have (52 SP) + 4 Should-Have (28 SP)
+> Flujo 100% centrado en el cliente. El artista es solo datos seed en esta versión.
 
 ## Índice
 
 | # | Historia | MoSCoW | CU | SP |
 |---|----------|--------|----|----|
-| US0001 | Inicio de sesión de cliente | Must-Have | Transversal | 3 |
-| US0002 | Inicio de sesión de artista | Must-Have | Transversal | 3 |
+| US0001 | Inicio de sesión de usuarios | Must-Have | Transversal | 3 |
 | US0003 | Ver vitrina principal de tatuajes | Must-Have | CU-04 | 8 |
 | US0004 | Filtrar artistas por estilo, precio, rating | Must-Have | CU-04 | 8 |
 | US0005 | Buscar artistas por texto | Must-Have | CU-04 | 3 |
 | US0006 | Ver perfil de artista completo | Must-Have | CU-08 | 5 |
-| US0007 | Filtrar por certificación sanitaria | Must-Have | CU-08 | 2 |
+| US0007 | Badge de certificación sanitaria | Must-Have | CU-08 | 2 |
 | US0008 | Seleccionar slot y ver resumen | Must-Have | CU-01 | 5 |
 | US0009 | Pagar depósito vía Flow | Must-Have | CU-01 | 13 |
-| US0010 | Ver historial de reservas | Must-Have | Transversal | 3 |
+| US0010 | Ver historial + confirmar asistencia | Must-Have | Transversal | 5 |
 | US0011 | Cotizar con chatbot conversacional | Should-Have | CU-06 | 13 |
 | US0012 | Explorar artistas en mapa | Should-Have | CU-05 | 8 |
 | US0013 | Calificar artista post-sesión | Should-Have | CU-03 | 5 |
 | US0014 | Mostrar auspicios de marcas | Should-Have | CU-08 | 2 |
 
+## Orden de Implementación
+
+```
+Capa 0 — Auth:           US0001
+Capa 1 — Vitrina:        US0003, US0004, US0005, US0007
+Capa 2 — Detalle:        US0006
+Capa 3 — Reserva:        US0008, US0009
+Capa 4 — Post-venta:     US0010, US0013
+Capa 5 — Extras:         US0011, US0012, US0014
+```
+
 ---
 
-# US0001 — Inicio de sesión de cliente
+# US0001 — Inicio de sesión de usuarios
 
 ## Descripción
-**Como** cliente registrado (seed)
+**Como** usuario registrado (seed) con rol cliente
 **Quiero** iniciar sesión en la plataforma con mis credenciales
-**Para** acceder a funcionalidades que requieren autenticación (reservar, calificar)
+**Para** acceder a funcionalidades que requieren autenticación (reservar, confirmar asistencia, calificar)
 
 ## Criterios de Aceptación
 
-- [ ] CA1: El cliente puede iniciar sesión con email y contraseña válidos (datos seed)
-- [ ] CA2: Al autenticarse exitosamente, recibe un JWT válido con rol "client"
+- [ ] CA1: El usuario puede iniciar sesión con email y contraseña válidos (datos seed)
+- [ ] CA2: Al autenticarse exitosamente, recibe un JWT válido con el rol correspondiente (client o artist)
 - [ ] CA3: Si las credenciales son inválidas, se muestra mensaje de error genérico ("Credenciales inválidas") sin revelar si el email existe
 - [ ] CA4: El token JWT expira en 24 horas y contiene: user_id, email, role, first_name
-- [ ] CA5: El cliente puede cerrar sesión (invalidar token en frontend)
-- [ ] CA6: Las rutas protegidas redirigen a login si no hay sesión activa
+- [ ] CA5: Si el usuario tiene rol "artist", el JWT incluye además artist_profile_id
+- [ ] CA6: El usuario puede cerrar sesión (invalidar token en frontend)
+- [ ] CA7: Las rutas protegidas redirigen a login si no hay sesión activa
 
 ## Notas Técnicas
-- No hay flujo de registro — los usuarios vienen precargados (seed)
+- No hay flujo de registro — todos los usuarios vienen precargados (seed)
 - Backend: endpoint POST /api/auth/login que valida credenciales y retorna JWT
 - Frontend: formulario de login, guard de rutas, interceptor para adjuntar token
 - Contraseñas almacenadas como hash bcrypt en la BD
 - No implementar "Olvidé mi contraseña" en esta versión
+- En el MVP solo el rol "client" tiene UI funcional; el login de artista existe a nivel de endpoint pero no tiene vistas exclusivas (preparado para futuro)
 
 ## Prioridad MoSCoW
 Must-Have
@@ -57,45 +70,7 @@ Transversal
 - Story Points: 3
 
 ## Dependencias
-- Seed de datos con usuarios de rol "client" precargados
-
----
-
-# US0002 — Inicio de sesión de artista
-
-## Descripción
-**Como** artista registrado (seed)
-**Quiero** iniciar sesión en la plataforma con mis credenciales
-**Para** que el sistema pueda identificarme como propietario de un perfil de artista
-
-## Criterios de Aceptación
-
-- [ ] CA1: El artista puede iniciar sesión con email y contraseña válidos (datos seed)
-- [ ] CA2: Al autenticarse exitosamente, recibe un JWT válido con rol "artist"
-- [ ] CA3: Si las credenciales son inválidas, se muestra mensaje de error genérico
-- [ ] CA4: El token JWT contiene: user_id, email, role, first_name, artist_profile_id
-- [ ] CA5: El artista puede cerrar sesión
-- [ ] CA6: No existe panel de gestión de artista en esta versión — el login de artista es funcional pero sin vistas exclusivas
-
-## Notas Técnicas
-- Comparte el mismo endpoint de login que el cliente (POST /api/auth/login)
-- La diferencia es el campo "role" en el JWT y la inclusión del artist_profile_id
-- Los perfiles de artista vienen completamente configurados vía seed (perfil, portafolio, tarifas, agenda)
-- En el MVP el artista no tiene panel propio — su login sirve para futuras funcionalidades
-
-## Prioridad MoSCoW
-Must-Have
-
-## Caso de Uso
-Transversal
-
-## Estimación
-- Complejidad: Baja
-- Story Points: 3
-
-## Dependencias
-- US0001 (comparte infraestructura de autenticación)
-- Seed de datos con usuarios de rol "artist" + ArtistProfile completo
+- Seed de datos con usuarios precargados (roles client y artist)
 
 ---
 
@@ -265,25 +240,25 @@ CU-08
 
 ---
 
-# US0007 — Filtrar artistas por certificación sanitaria
+# US0007 — Badge de certificación sanitaria
 
 ## Descripción
-**Como** visitante o cliente preocupado por la higiene
-**Quiero** filtrar exclusivamente artistas que tengan certificación sanitaria vigente
-**Para** asegurarme de que el artista cumple con estándares de bioseguridad verificados
+**Como** visitante o cliente
+**Quiero** ver un badge visual claro que identifique a los artistas con certificación sanitaria vigente
+**Para** identificar rápidamente artistas que cumplen estándares de bioseguridad verificados
 
 ## Criterios de Aceptación
 
-- [ ] CA1: En el panel de filtros existe un toggle "Solo artistas certificados"
-- [ ] CA2: Al activar el toggle, solo se muestran artistas que tienen al menos una certificación activa (is_active = true)
-- [ ] CA3: Los artistas certificados muestran badge "Certificado" visible en su card de la vitrina
-- [ ] CA4: El badge también aparece en los resultados de búsqueda y en el perfil del artista
-- [ ] CA5: El filtro se combina correctamente con los demás filtros (US0004)
+- [ ] CA1: Los artistas con al menos una certificación activa (is_active = true) muestran badge "Certificado" en su card de la vitrina
+- [ ] CA2: El badge aparece consistentemente en: cards de vitrina, resultados de búsqueda y perfil del artista
+- [ ] CA3: El badge es un componente reutilizable con diseño reconocible (ícono + texto)
+- [ ] CA4: Si el artista no tiene certificación activa, no se muestra badge (sin espacio vacío)
 
 ## Notas Técnicas
-- Backend: parámetro certified=true en GET /api/artists que filtra por existencia de Certification con is_active=true
+- El toggle de filtrado por certificación se implementa en US0004.CA5 — esta US solo cubre el componente visual
+- Backend: el campo `isCertified` ya viene en la respuesta de GET /api/artists
+- Frontend: componente `CertificationBadge` reutilizable, usado en ArtistCard y ArtistProfile
 - En el MVP las certificaciones son datos seed — no hay flujo de carga
-- El badge se renderiza como componente reutilizable (usado en cards y perfil)
 
 ## Prioridad MoSCoW
 Must-Have
@@ -296,7 +271,8 @@ CU-08
 - Story Points: 2
 
 ## Dependencias
-- US0004 (panel de filtros)
+- US0003 (vitrina donde se muestran las cards)
+- US0006 (perfil donde también aparece el badge)
 - Seed con artistas que tengan certificaciones (y otros que no, para contrastar)
 
 ---
@@ -310,7 +286,7 @@ CU-08
 
 ## Criterios de Aceptación
 
-- [ ] CA1: Desde el perfil del artista (o después del chatbot), el cliente ve el calendario con slots disponibles
+- [ ] CA1: Desde el perfil del artista, el cliente ve el calendario con slots disponibles
 - [ ] CA2: El calendario muestra vista semanal con navegación a semanas siguientes
 - [ ] CA3: Los slots disponibles se muestran como botones seleccionables; los ocupados/bloqueados aparecen deshabilitados
 - [ ] CA4: Al seleccionar un slot, se muestra el resumen de reserva con: nombre del artista, fecha, hora, duración estimada, rango de precio estimado, monto del depósito (calculado: precio_min x deposit_percentage)
@@ -324,7 +300,7 @@ CU-08
 - El cálculo de slots disponibles debe excluir: bookings confirmados, blocked_dates, y horarios fuera de Availability
 - POST /api/bookings/hold para reservar temporalmente el slot (TTL 5 min con campo expires_at)
 - Frontend: componente de calendario semanal interactivo
-- El rango de precio en el resumen viene del chatbot (si se usó) o de las tarifas base del artista
+- El rango de precio en el resumen viene de las tarifas base del artista (min_session_price, deposit_percentage)
 
 ## Prioridad MoSCoW
 Must-Have
@@ -403,9 +379,12 @@ CU-01
 - [ ] CA5: Al hacer click en una reserva, se ve el detalle completo: artista, fecha, hora, estilo, zona corporal, precio estimado, depósito pagado, notas
 - [ ] CA6: Las reservas con status "completed" muestran CTA "Calificar" si no tienen reseña asociada (US0013)
 - [ ] CA7: Se muestra estado vacío ("No tienes reservas aún") si el cliente no tiene bookings
+- [ ] CA8: Las reservas con status "confirmed" cuya fecha ya pasó muestran botón "Confirmar asistencia"
+- [ ] CA9: Al presionar "Confirmar asistencia", el booking pasa a status "completed" y aparece el CTA "Calificar"
 
 ## Notas Técnicas
 - Backend: GET /api/bookings/me (autenticado, filtra por client_id del JWT)
+- Backend: POST /api/bookings/{id}/complete (solo si booking pertenece al cliente y fecha < ahora y status = confirmed)
 - Incluir datos del artista (nombre, avatar, slug) para navegación
 - Incluir flag has_review para saber si mostrar CTA de calificación
 - Paginación si el historial es largo (page + limit)
@@ -417,8 +396,8 @@ Must-Have
 Transversal
 
 ## Estimación
-- Complejidad: Baja
-- Story Points: 3
+- Complejidad: Media
+- Story Points: 5
 
 ## Dependencias
 - US0001 (autenticación)
@@ -558,8 +537,7 @@ CU-03
 - Story Points: 5
 
 ## Dependencias
-- US0010 (historial donde aparece CTA)
-- US0009 (booking completado)
+- US0010 (historial donde aparece CTA + confirmar asistencia que habilita status completed)
 - US0006 (perfil donde se muestran reviews)
 
 ---

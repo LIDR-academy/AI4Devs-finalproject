@@ -227,7 +227,7 @@ components:
           format: uuid
         status:
           type: string
-          enum: [pending_quote, quoted, confirmed, completed, cancelled]
+          enum: [pending_payment, confirmed, completed, cancelled]
         bookingDate:
           type: string
           format: date-time
@@ -237,24 +237,11 @@ components:
           type: string
         estimatedDurationMinutes:
           type: integer
-        quotedPrice:
-          type: integer
         depositAmount:
           type: integer
         createdAt:
           type: string
           format: date-time
-
-    QuoteRequest:
-      type: object
-      required: [price, estimatedDurationMinutes]
-      properties:
-        price:
-          type: integer
-        estimatedDurationMinutes:
-          type: integer
-        notes:
-          type: string
 
     ReviewRequest:
       type: object
@@ -557,7 +544,7 @@ paths:
           in: query
           schema:
             type: string
-            enum: [pending_quote, quoted, confirmed, completed, cancelled]
+            enum: [pending_payment, confirmed, completed, cancelled]
         - name: page
           in: query
           schema:
@@ -601,62 +588,6 @@ paths:
         '404':
           description: Not found
 
-  /bookings/{bookingId}/quote:
-    post:
-      tags: [Bookings]
-      summary: Artist sends quote for a booking
-      description: "US0009 — Artista envia cotizacion"
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: bookingId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/QuoteRequest'
-      responses:
-        '200':
-          description: Quote submitted, booking status updated to 'quoted'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Booking'
-        '403':
-          description: Not the assigned artist
-        '409':
-          description: Booking not in pending_quote status
-
-  /bookings/{bookingId}/confirm:
-    post:
-      tags: [Bookings]
-      summary: Client confirms a quoted booking
-      description: "US0009 — Cliente acepta cotizacion"
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: bookingId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Booking confirmed
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Booking'
-        '409':
-          description: Booking not in quoted status
-
   /bookings/{bookingId}/cancel:
     post:
       tags: [Bookings]
@@ -680,8 +611,8 @@ paths:
   /bookings/{bookingId}/complete:
     post:
       tags: [Bookings]
-      summary: Mark booking as completed
-      description: "US0010 — Marcar reserva como completada (artist action)"
+      summary: Client confirms attendance (marks booking as completed)
+      description: "US0010 — Cliente confirma asistencia post-sesion (solo si fecha ya paso y status es confirmed)"
       security:
         - BearerAuth: []
       parameters:
@@ -695,7 +626,9 @@ paths:
         '200':
           description: Booking marked complete
         '403':
-          description: Not the assigned artist
+          description: Not the booking owner
+        '409':
+          description: Booking date has not passed yet or status is not confirmed
 
   /bookings/{bookingId}/review:
     post:
@@ -804,67 +737,3 @@ paths:
                       type: number
                     longitude:
                       type: number
-
-  /admin/dashboard:
-    get:
-      tags: [Admin]
-      summary: Admin dashboard metrics
-      description: "US0013 — Panel de administracion con metricas"
-      security:
-        - BearerAuth: []
-      responses:
-        '200':
-          description: Dashboard metrics
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  totalBookings:
-                    type: integer
-                  totalRevenue:
-                    type: integer
-                  activeArtists:
-                    type: integer
-                  pendingBookings:
-                    type: integer
-                  recentBookings:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Booking'
-        '403':
-          description: Admin role required
-
-  /admin/bookings:
-    get:
-      tags: [Admin]
-      summary: Admin view of all bookings
-      description: "US0014 — Gestion de reservas por admin"
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: status
-          in: query
-          schema:
-            type: string
-        - name: page
-          in: query
-          schema:
-            type: integer
-            default: 1
-      responses:
-        '200':
-          description: All bookings paginated
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/PaginatedResponse'
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/Booking'
-        '403':
-          description: Admin role required
