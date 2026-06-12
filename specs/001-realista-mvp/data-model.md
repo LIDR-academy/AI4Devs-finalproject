@@ -9,22 +9,44 @@
 │ id (UUID)│       │ id (UUID)        │       │ id (UUID)        │
 │          │       │ userId (?)       │       │ processId        │
 │          │       │ status           │       │ url              │
-│          │       │ financialProfile │       │ numericScore     │
-│          │       │ createdAt        │       │ redFlags         │
-│          │       │ updatedAt        │       │ locationConf     │
-│          │       │                  │       │ miraTuZonaLink   │
-│          │       │                  │       │ cadastralRef     │
-│          │       │                  │       │ snapshotHash     │
+│          │       │ propertyPrice    │       │ numericScore     │
+│          │       │ sourceListingId  │       │ locationConf     │
+│          │       │ currentStage     │       │ miraTuZonaLink   │
+│          │       │ financialProfile │       │ cadastralRef     │
+│          │       │ (JSON)           │       │ snapshotHash     │
+│          │       │ createdAt        │       │ previousHash     │
+│          │       │ updatedAt        │       │ diff (JSON)      │
 │          │       │                  │       │ createdAt        │
-│          │       │                  │       │                  │
 │          │       │ 1───1            │       │                  │
-│          │       │ Checklist        │       │                  │
+│          │       │ Checklist        │       │ 1───N            │
 │          │       │                  │       │                  │
-│          │       │ id (UUID)        │       │                  │
-│          │       │ processId        │       │                  │
-│          │       │ items (JSON)     │       │                  │
-│          │       │ updatedAt        │       │                  │
-└──────────┘       └──────────────────┘       └──────────────────┘
+│          │       │ id (UUID)        │  ┌────┴──────────┐       │
+│          │       │ processId        │  │  RedFlag     │       │
+│          │       │ updatedAt        │  │              │       │
+│          │       │                  │  │ flag (enum)  │       │
+│          │       │ 1───N            │  │ reasoning    │       │
+│          │       │                  │  │ createdAt    │       │
+│          │       │ ChecklistItem    │  └──────────────┘       │
+│          │       │                  │                          │
+│          │       │ id (UUID)        │                          │
+│          │       │ stage            │                          │
+│          │       │ title            │                          │
+│          │       │ description      │                          │
+│          │       │ documentsNeeded  │                          │
+│          │       │ (JSON array)     │                          │
+│          │       │ estimatedDays    │                          │
+│          │       │ completed        │                          │
+│          │       │ completedAt      │                          │
+│          │       │ sortOrder        │                          │
+│          │       └──────────────────┘                          │
+└──────────┘                                                       │
+                                                                  │
+┌─────────────────────────────────────────────────────────────────┐
+│              PortalHealthCheck (monitorización proactiva)       │
+│                                                                 │
+│  id, portal, status, successRate, lastCheckedAt, lastSuccessAt,  │
+│  consecutiveFailures, alertTriggeredAt                          │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ## Prisma Schema
@@ -44,7 +66,7 @@ model PurchaseProcess {
   propertyPrice     Int?              // 0 si se crea sin listing origen
   sourceListingId   String?           // FK lógica al AnalyzedListing que inició el proceso
   currentStage      String            @default("pre_arras") // pre_arras | arras | due_diligence | mortgage | notary | completed
-  financialProfile  Json?
+  financialProfile  Json?             // semi-estructurado (input de usuario), justificado como JSON
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
   analyzedListings  AnalyzedListing[]
@@ -57,7 +79,6 @@ model AnalyzedListing {
   process           PurchaseProcess @relation(fields: [processId], references: [id])
   url               String
   numericScore      Int               // 0-100
-  redFlags          Json              // Array<{ flag: RedFlagType, reasoning: string }> (ver FR-025)
   locationConfidence Float?           // 0.0-1.0 (basado en 'declared' o 'geocoded', sin vision)
   miraTuZonaLink    String?
   cadastralRef      String?
@@ -66,22 +87,77 @@ model AnalyzedListing {
   constructionYear  Int?
   snapshotHash      String            // SHA-256 del contenido canónico (ver SnapshotHash definition)
   previousHash      String?           // link to previous snapshot for diff
-  diff              Json?             // Diferencias vs previousHash (precio, m², año, etc.)
+  diff              Json?             // Diferencias vs previousHash (precio, m², año, etc.) — computado por backend
   createdAt         DateTime          @default(now())
 
+  redFlags          RedFlag[]         // normalizado a tabla (ver FR-025)
+
   @@index([processId])
+}
+
+model RedFlag {
+  id                String   @id @default(uuid())
+  listingId         String
+  listing           AnalyzedListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  flag              String    // valor del enum RedFlagType (ver value object)
+  reasoning         String    // frase del anuncio + inferencia del LLM (FR-025)
+  createdAt         DateTime  @default(now())
+
+  @@index([listingId])
+  @@index([flag])
 }
 
 model Checklist {
   id                String            @id @default(uuid())
   processId         String            @unique
   process           PurchaseProcess   @relation(fields: [processId], references: [id])
-  items             Json              // BureaucraticMilestone[]
   updatedAt         DateTime          @updatedAt
+  items             ChecklistItem[]
+}
+
+model ChecklistItem {
+  id                String    @id @default(uuid())
+  checklistId       String
+  checklist         Checklist  @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  stage             String    // pre_arras | post_arras | pre_escritura | post_escritura
+  title             String
+  description       String
+  documentsNeeded   String[]  // array de strings (Postgres native)
+  estimatedDays     Int
+  completed         Boolean   @default(false)
+  completedAt       DateTime?
+  sortOrder         Int        @default(0)
+  createdAt         DateTime  @default(now())
+
+  @@index([checklistId])
+  @@index([stage])
+}
+
+model PortalHealthCheck {
+  id                    String    @id @default(uuid())
+  portal                String    @unique  // 'idealista' | 'fotocasa' | 'habitaclia' | etc.
+  status                String    @default("unknown") // ok | blocked | throttled | unknown
+  successRate           Float     @default(1.0)        // 0.0-1.0 sobre los últimos 100 requests
+  totalRequests         Int       @default(0)
+  consecutiveFailures   Int       @default(0)
+  lastCheckedAt         DateTime?
+  lastSuccessAt         DateTime?
+  alertTriggeredAt      DateTime?
+  notes                 String?   // ej: "blocked since 2026-06-15, retry every 30min"
+
+  @@index([portal])
 }
 ```
 
-## Value Objects (domain layer, not in DB)
+### Decisión de normalización: lo que se queda como JSON y por qué
+
+| Campo | Storage | Justificación |
+|-------|---------|---------------|
+| `PurchaseProcess.financialProfile` | `Json?` | **Semi-estructurado, input del usuario**. El usuario introduce sus datos financieros y los editamos. Normalizar a tablas separadas (FinancialProfile, FinancialDebt, etc.) sería over-engineering para datos que raramente se consultan por campos individuales. El value object `FinancialProfile` valida en el dominio. |
+| `AnalyzedListing.diff` | `Json?` | **Resultado computado, no datos de negocio**. El diff entre dos snapshots es un artefacto transitorio que se muestra en el dashboard pero no se querya por campos. Mejor computar y almacenar como JSON. |
+| `ChecklistItem.documentsNeeded` | `String[]` (Postgres native) | **Array simple de strings, sin estructura relacional**. Postgres soporta arrays nativos, evita la creación de una tabla `Document` separada para algo que es solo una lista de etiquetas. |
+
+## Value Objects (domain layer, encapsulan las entidades DB)
 
 ### TransparencyScore (`domain/value-objects/TransparencyScore.ts`)
 
@@ -93,25 +169,29 @@ interface TransparencyScore {
 }
 ```
 
-**Persistencia**: solo `value` (campo `numericScore: Int` en `AnalyzedListing`). `label` y `breakdown` se computan a partir de `value` mediante una función pura `deriveTransparencyScore(value: number): TransparencyScore`. Sirven para estructurar el system prompt del LLM y dar contexto semántico al usuario, no se persisten. El response de la API solo expone `numericScore` (mapea a `value`).
-
-### SnapshotHash (definido en `domain/value-objects/SnapshotHash.ts`)
+### RedFlagType (enum cerrado, usado en `RedFlag.flag`)
 
 ```typescript
-// SHA-256 calculado sobre el CONTENIDO CANÓNICO NORMALIZADO del listing.
-// NO se hashea el HTML original (cumple FR-011: no almacenar contenido de terceros).
-//
-// Input del hash (concatenado con `|` como separador):
-//   - title (string, trimmed, lowercase)
-//   - description (string, trimmed, lowercase, whitespace collapsed)
-//   - price (number)
-//   - features (sorted array de strings)
-//   - claimedM2 (number, redondeado a 2 decimales)
-//   - declaredLocation (string, trimmed, lowercase)
-//   - photoUrls (sorted array de strings)
-//
-// El campo `previousHash` apunta al `snapshotHash` del AnalyzedListing
-// anterior del mismo processId, formando una cadena de trazabilidad.
+// Enum cerrado: solo estos valores son válidos en `RedFlag.flag`.
+// Constraint en DB via check constraint o validación en el agregado AnalyzedListing.
+type RedFlagType =
+  | 'imprecise_location'
+  | 'no_energy_certificate'
+  | 'inflated_square_meters'
+  | 'vague_description'
+  | 'missing_floor_info'
+  | 'stale_listing'
+  | 'common_area_photos'
+  | 'no_orientation'
+  | 'euphemistic_language'
+  | 'price_inconsistency'
+```
+
+El LLM está instruido a devolver **solo** valores de este enum. El validador en `AnalyzedListing` agrega rechaza cualquier string fuera del enum. El constraint de la columna en DB es `String` (no enum nativo de Prisma) para permitir evolución sin migraciones, pero el dominio impone el enum.
+
+### SnapshotHash
+
+```typescript
 interface SnapshotHashInput {
   title: string
   description: string
@@ -121,12 +201,11 @@ interface SnapshotHashInput {
   declaredLocation: string
   photoUrls: string[]
 }
-
 function computeSnapshotHash(input: SnapshotHashInput): string
 // Returns: 'sha256:<hex64>'
 ```
 
-### FinancialProfile (`domain/value-objects/FinancialProfile.ts`)
+### FinancialProfile (semi-estructurado, vive en `PurchaseProcess.financialProfile` JSON)
 
 ```typescript
 interface FinancialProfile {
@@ -134,66 +213,17 @@ interface FinancialProfile {
   savings: number
   monthlyIncome: number
   existingDebts: number
-  region: string          // autonomous community (affects ITP %)
-  interestRate?: number   // override Euribor default
-  persona?: FinancialPersona
+  region: string
+  interestRate?: number
+  persona?: 'conservative' | 'moderate' | 'growth'
 }
 
-type FinancialPersona = 'conservative' | 'moderate' | 'growth'
-
-interface HiddenCosts {
-  itpIva: number          // 6-10% of property price
-  notaria: number         // ~600€
-  registro: number        // ~400€
-  gestoria: number        // ~300€
-  tasacion: number        // ~300€
-  total: number
-}
-
-interface AmortizationScenario {
-  label: string           // "Baseline" | "Light" | "Moderate" | "Aggressive"
-  extraMonthly: number
-  yearsShortened: number
-  finalDuration: number
-  totalInterest: number
-  interestSaved: number
-}
-
-interface InvestmentAlternative {
-  monthlyContribution: number
-  years: number
-  // Tres escenarios de rentabilidad (FR-021) con ajuste por inflación (2% anual)
-  scenarios: {
-    conservative: { nominalReturn: number, realReturn: number } // 4% nominal
-    moderate:     { nominalReturn: number, realReturn: number } // 6% nominal
-    aggressive:   { nominalReturn: number, realReturn: number } // 8% nominal
-  }
-  // Disclaimer obligatorio en la UI
-  disclaimer: 'Las rentabilidades pasadas no garantizan futuras. Los beneficios están sujetos a tributación (~19-26% en España para ganancias patrimoniales).'
-}
+interface HiddenCosts { /* ITP, notaría, registro, gestoría, tasación */ }
+interface AmortizationScenario { /* baseline, light, moderate, aggressive */ }
+interface InvestmentAlternative { /* 3 escenarios con valor real */ }
 ```
 
-### RedFlags (`domain/value-objects/RedFlags.ts`)
-
-```typescript
-// Enum cerrado: solo estos valores son válidos en `redFlags`.
-// Un AnalyzedListing nunca puede contener un string arbitrario.
-type RedFlag =
-  | 'imprecise_location'         // ubicación sin dirección específica
-  | 'no_energy_certificate'     // no menciona certificado energético
-  | 'inflated_square_meters'    // m² catastrales < m² declarados
-  | 'vague_description'         // descripción genérica sin detalles
-  | 'missing_floor_info'        // no indica planta
-  | 'stale_listing'             // sin actualizar en >6 meses (heurística)
-  | 'common_area_photos'        // fotos de zonas comunes, no de la unidad
-  | 'no_orientation'            // no indica orientación
-  | 'euphemistic_language'      // "acogedor", "con potencial" detectado por el LLM
-  | 'price_inconsistency'       // precio/m² fuera de rango del barrio (heurística + LLM)
-```
-
-El LLM (en `OpenRouterAdapter`) está instruido a devolver **solo** valores de este enum en el campo `redFlags` de su respuesta JSON. El validador en `AnalyzedListing` agrega rechaza cualquier string fuera del enum.
-
-### BureaucraticMilestone (`domain/value-objects/BureaucraticMilestone.ts`)
+### BureaucraticMilestone (encapsula un `ChecklistItem` con metadata adicional)
 
 ```typescript
 interface BureaucraticMilestone {
@@ -216,7 +246,12 @@ active ──→ completed
   └──→ archived
 ```
 
-### Checklist Item
+### RedFlag
+```
+detected ──→ persisted (no transition needed, stateless)
+```
+
+### ChecklistItem
 ```
 pending ──→ completed ──→ pending (toggle)
 ```
@@ -225,3 +260,17 @@ pending ──→ completed ──→ pending (toggle)
 ```
 created ──→ reanalyzed (new snapshot created, old one linked via previousHash)
 ```
+
+### PortalHealthCheck
+```
+unknown ──→ ok (después de N requests exitosos)
+ok ──→ throttled (después de N 429s consecutivos)
+ok/throttled ──→ blocked (después de N 403s consecutivos)
+blocked ──→ ok (auto-recovery vía retry logic tras timeout)
+```
+
+## Notas
+
+- **RedFlag normalizado** permite queries SQL directas: `SELECT flag, COUNT(*) FROM "RedFlag" GROUP BY flag` para análisis agregado de red flags más comunes (insight de producto futuro).
+- **ChecklistItem normalizado** permite toggle individual eficiente (UPDATE por ID en lugar de parsear/modificar JSON).
+- **PortalHealthCheck** es la tabla de soporte para FR-027 (monitorización proactiva de portales). Permite query eficiente del estado de cada portal y trigger de alertas/alertas.
