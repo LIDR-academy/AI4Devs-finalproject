@@ -4,8 +4,13 @@ import { ChefHat, Clock, Flame, Sparkles, Filter } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { pantryItems, daysUntil } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
+import {
+  requireAuthBeforeLoad,
+  useRequireAuthRedirect,
+} from "@/features/auth/route-guard";
 
 export const Route = createFileRoute("/recipes")({
+  beforeLoad: requireAuthBeforeLoad,
   head: () => ({ meta: [{ title: "Recipes — RealSaveFooding" }] }),
   component: RecipesPage,
 });
@@ -94,6 +99,12 @@ const RECIPES: Recipe[] = [
 const filters = ["Best match", "Use expiring", "Quick (≤15m)", "Vegetarian"] as const;
 
 function RecipesPage() {
+  const authed = useRequireAuthRedirect();
+
+  if (!authed) {
+    return null;
+  }
+
   const [filter, setFilter] = useState<(typeof filters)[number]>("Best match");
 
   const { ranked, expiringNames } = useMemo(() => {

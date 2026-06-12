@@ -1,16 +1,36 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Bell, Cloud, User, Shield, Palette, Info, ChevronRight, LogOut, Users } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { useState } from "react";
+import { clearSession, getSessionUser } from "@/features/auth/session";
+import {
+  requireAuthBeforeLoad,
+  useRequireAuthRedirect,
+} from "@/features/auth/route-guard";
 
 export const Route = createFileRoute("/settings")({
+  beforeLoad: requireAuthBeforeLoad,
   component: SettingsPage,
 });
 
 function SettingsPage() {
+  const authed = useRequireAuthRedirect();
+
+  if (!authed) {
+    return null;
+  }
+
+  const navigate = useNavigate();
+  const currentUser = getSessionUser();
+
+  function handleSignOut() {
+    clearSession();
+    navigate({ to: "/auth" });
+  }
+
   return (
     <AppShell title="Settings">
-      <ProfileCard />
+      <ProfileCard email={currentUser?.email} />
 
       <Group title="Shared Pantry" icon={<Users className="size-4" />}>
         <Link to="/sharing" className="flex items-center justify-between px-4 py-3.5">
@@ -56,20 +76,23 @@ function SettingsPage() {
         <Row label="Contact developer" value="Email" />
       </Group>
 
-      <button className="mt-6 w-full rounded-2xl bg-destructive/10 text-destructive py-4 font-semibold text-[15px] flex items-center justify-center gap-2">
+      <button
+        onClick={handleSignOut}
+        className="mt-6 w-full rounded-2xl bg-destructive/10 text-destructive py-4 font-semibold text-[15px] flex items-center justify-center gap-2"
+      >
         <LogOut className="size-4" /> Sign out
       </button>
     </AppShell>
   );
 }
 
-function ProfileCard() {
+function ProfileCard({ email }: { email?: string }) {
   return (
     <div className="ios-card flex items-center gap-4 p-4 mb-5">
       <div className="grid size-14 place-items-center rounded-full bg-primary text-primary-foreground text-xl font-semibold">A</div>
       <div className="flex-1">
         <p className="font-semibold text-[16px]">Alex Garcia</p>
-        <p className="text-[12.5px] text-muted-foreground">alex@example.com</p>
+        <p className="text-[12.5px] text-muted-foreground">{email ?? "alex@example.com"}</p>
       </div>
       <ChevronRight className="size-4 text-muted-foreground" />
     </div>

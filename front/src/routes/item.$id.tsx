@@ -1,12 +1,23 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { ChevronLeft, Tag, Repeat, CalendarClock, Settings2, Sparkles } from "lucide-react";
 import { pantryItems, priceComparison, daysUntil } from "@/lib/mock-data";
+import {
+  requireAuthBeforeLoad,
+  useRequireAuthRedirect,
+} from "@/features/auth/route-guard";
 
 export const Route = createFileRoute("/item/$id")({
+  beforeLoad: requireAuthBeforeLoad,
   component: ItemDetail,
 });
 
 function ItemDetail() {
+  const authed = useRequireAuthRedirect();
+
+  if (!authed) {
+    return null;
+  }
+
   const { id } = useParams({ from: "/item/$id" });
   const item = pantryItems.find((i) => i.id === id) ?? pantryItems[0];
   const d = daysUntil(item.expiresAt);

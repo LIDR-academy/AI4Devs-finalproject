@@ -2,12 +2,23 @@ import { createFileRoute } from "@tanstack/react-router";
 import { TrendingDown, TrendingUp } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { wastedThisMonth, wasteByWeek, topWastedFoods } from "@/lib/mock-data";
+import {
+  requireAuthBeforeLoad,
+  useRequireAuthRedirect,
+} from "@/features/auth/route-guard";
 
 export const Route = createFileRoute("/insights")({
+  beforeLoad: requireAuthBeforeLoad,
   component: InsightsPage,
 });
 
 function InsightsPage() {
+  const authed = useRequireAuthRedirect();
+
+  if (!authed) {
+    return null;
+  }
+
   const max = Math.max(...wasteByWeek.map((w) => w.value));
   const improving = wastedThisMonth.vsLastMonth < 0;
 

@@ -3,8 +3,13 @@ import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Users, Mail, Link2, Copy, Check, Crown, Eye, Pencil, Trash2, X, UserPlus, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  requireAuthBeforeLoad,
+  useRequireAuthRedirect,
+} from "@/features/auth/route-guard";
 
 export const Route = createFileRoute("/sharing")({
+  beforeLoad: requireAuthBeforeLoad,
   head: () => ({ meta: [{ title: "Shared Pantry — RealSaveFooding" }] }),
   component: SharingPage,
 });
@@ -24,6 +29,12 @@ const initialInvites: Invite[] = [
 ];
 
 function SharingPage() {
+  const authed = useRequireAuthRedirect();
+
+  if (!authed) {
+    return null;
+  }
+
   const [members, setMembers] = useState<Member[]>(initialMembers);
   const [invites, setInvites] = useState<Invite[]>(initialInvites);
   const [email, setEmail] = useState("");
