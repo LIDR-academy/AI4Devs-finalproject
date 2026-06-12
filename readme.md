@@ -73,7 +73,7 @@ Principios UX: mobile-first (375px+), PWA instalable, navegación por pestañas,
 > Las instrucciones de setup (`npm install`, `npx prisma migrate dev`, `npm run dev`) se publicarán en la Entrega 2 (10 julio) cuando exista código ejecutable. El **stack planificado** está documentado en:
 >
 > - `specs/001-realista-mvp/plan.md` → contexto técnico y arquitectura
-> - `specs/001-realista-mvp/tasks.md` → 139 tareas con criterios de aceptación
+> - `specs/001-realista-mvp/tasks.md` → 127 tareas con criterios de aceptación
 > - `specs/001-realista-mvp/quickstart.md` → guía de setup para cuando exista código
 >
 > Resumen del stack: SvelteKit (PWA) + Node.js/Express + TypeScript + PostgreSQL + Prisma + OpenRouter (LLM) + Nominatim (geocoding) + API Catastro + Vitest + Playwright.
@@ -89,23 +89,27 @@ Principios UX: mobile-first (375px+), PWA instalable, navegación por pestañas,
 │                     DOMINIO (sin dependencias)               │
 │                                                              │
 │  Agregados: User, PurchaseProcess, AnalyzedListing,         │
-│             Checklist                                        │
+│             Checklist, RedFlag, ChecklistItem                │
 │                                                              │
-│  Puertos: ListingAnalyzerPort, MortgageCalculatorPort,      │
-│           CatastroPort, NotificationPort                     │
+│  Puertos: ListingAnalyzerPort, LocationResolverPort,        │
+│           CatastroPort, MortgageCalculatorPort,              │
+│           NotificationPort                                   │
 │                                                              │
 │  Value Objects: TransparencyScore, FinancialProfile,        │
-│                 RedFlags, BureaucraticMilestone              │
+│                 RedFlags, BureaucraticMilestone,             │
+│                 Coordinates, SnapshotHash, HiddenCosts,      │
+│                 NegotiationPoint                             │
 └─────────────────────────────────────────────────────────────┘
                              │
 ┌────────────────────────────┼────────────────────────────────┐
 │                 INFRAESTRUCTURA (adaptadores)                │
 │                                                              │
-│  OpenRouterAdapter  → LLM gateway (detección de manipulación)│
-│  AvenaScoreAdapter  → @avena/score (fallback numérico)      │
-│  CheerioAdapter     → HTML parsing server-side               │
-│  CatastroAdapter    → API Sede Electrónica del Catastro      │
-│  MiraTuZonaAdapter  → Enlace contextual por barrio           │
+│  OpenRouterAdapter        → LLM gateway (análisis semántico) │
+│  CheerioAdapter           → HTML parsing server-side         │
+│  DeclaredLocationAdapter  → Extracción de dirección del HTML │
+│  GeocodingAdapter         → Nominatim OSM (coordenadas GPS)  │
+│  CatastroAdapter          → API Sede Electrónica del Catastro│
+│  MiraTuZonaAdapter        → Enlace contextual por barrio     │
 └─────────────────────────────────────────────────────────────┘
 
 ┌──────────┐     ┌──────────────────┐     ┌──────────────────┐
@@ -113,12 +117,12 @@ Principios UX: mobile-first (375px+), PWA instalable, navegación por pestañas,
 │  (móvil)  │     │  (SvelteKit+PWA)  │     │  (Node.js/Express)│
 └──────────┘     └──────────────────┘     └────────┬─────────┘
                                                     │
-                    ┌───────────────────────────────┼──────────┐
-                    │                               │          │
-              ┌─────▼─────┐  ┌──────────▼──────┐  ┌─▼────────┐
-              │ PostgreSQL │  │ OpenRouter (LLM) │  │ Catastro  │
-              │ (datos)    │  │ @avena/score     │  │ (oficial)  │
-              └───────────┘  └─────────────────┘  └──────────┘
+               ┌──────────────────────┼──────────┐
+               │                      │          │
+          ┌────▼─────┐         ┌──────▼───────┐
+          │ PostgreSQL │         │ OpenRouter   │
+          │ (datos)    │         │ (LLM)        │
+          └───────────┘         └──────────────┘
 ```
 
 **Patrón:** Arquitectura Hexagonal (Puertos y Adaptadores) + DDD táctico.
@@ -136,8 +140,7 @@ Principios UX: mobile-first (375px+), PWA instalable, navegación por pestañas,
 | Frontend | SvelteKit + Vite + @vite-pwa/sveltekit | SPA mobile-first instalable. Server-side loaders proxy al backend |
 | Backend | Node.js + Express + TypeScript | API REST con arquitectura hexagonal. Dominio sin dependencias |
 | Base de datos | PostgreSQL + Prisma ORM | Persistencia relacional. Migraciones gestionadas por Prisma |
-| Análisis IA | OpenRouter (LLM gateway) | System prompt estructurado para detectar banderas rojas en anuncios |
-| Fallback scoring | @avena/score (MIT) | Motor de scoring numérico cuando el LLM no está disponible |
+| Análisis IA | OpenRouter (LLM gateway) | System prompt estructurado para detectar banderas rojas en anuncios. Sin fallback numérico — si el LLM falla, se ofrece pegar texto manual |
 | HTML parsing | Cheerio | Extracción server-side del texto del anuncio. Fallback a subdominio `.m.` |
 | Catastro | API Sede Electrónica del Catastro | Cruce de m² declarados vs oficiales, año de construcción |
 | Testing | Vitest + Playwright | Unitarios + integración + E2E del flujo principal |
@@ -154,8 +157,8 @@ backend/
 │   │   └── services/     # Casos de uso (AnalyzeListingUseCase...)
 │   ├── adapters/         # Implementaciones de puertos
 │   │   ├── openrouter/   # OpenRouterAdapter (análisis LLM)
-│   │   ├── avena-score/  # AvenaScoreAdapter (fallback)
 │   │   ├── cheerio/      # CheerioAdapter (parseo HTML)
+│   │   ├── location/     # DeclaredLocationAdapter, GeocodingAdapter
 │   │   ├── catastro/     # CatastroAdapter (API catastral)
 │   │   └── miratuzona/   # MiraTuZonaAdapter (enlace contextual)
 │   ├── api/              # Express routes, controllers, middleware
@@ -223,6 +226,8 @@ erDiagram
     User ||--o{ PurchaseProcess : has
     PurchaseProcess ||--o{ AnalyzedListing : contains
     PurchaseProcess ||--|| Checklist : has
+    AnalyzedListing ||--o{ RedFlag : has
+    Checklist ||--o{ ChecklistItem : has
 
     User {
         string id PK "UUID v4"
@@ -233,6 +238,9 @@ erDiagram
         string id PK "UUID v4"
         string userId FK "nullable, future auth"
         string status "active|completed|archived"
+        int propertyPrice "nullable, from listing"
+        string sourceListingId "nullable, FK lógica"
+        string currentStage "pre_arras|arras|due_diligence|mortgage|notary|completed"
         json financialProfile "income, savings, persona..."
         datetime createdAt "auto"
         datetime updatedAt "auto"
@@ -243,7 +251,6 @@ erDiagram
         string processId FK
         string url
         int numericScore "0-100"
-        json redFlags "Array<{flag, reasoning}> (FR-025)"
         float locationConfidence "0.0-1.0, nullable"
         string miraTuZonaLink "nullable"
         string cadastralRef "nullable"
@@ -256,11 +263,41 @@ erDiagram
         datetime createdAt "auto"
     }
 
+    RedFlag {
+        string id PK "UUID v4"
+        string listingId FK
+        string flag "RedFlagType enum"
+        string reasoning "frase del anuncio + inferencia (FR-025)"
+        datetime createdAt "auto"
+    }
+
     Checklist {
         string id PK "UUID v4"
         string processId FK "unique"
-        json items "BureaucraticMilestone[]"
         datetime updatedAt "auto"
+    }
+
+    ChecklistItem {
+        string id PK "UUID v4"
+        string checklistId FK
+        string stage "pre_arras|post_arras|pre_escritura|post_escritura"
+        string title
+        string description
+        string[] documentsNeeded
+        int estimatedDays
+        boolean completed
+        datetime completedAt "nullable"
+        int sortOrder
+    }
+
+    PortalHealthCheck {
+        string id PK "UUID v4"
+        string portal "unique: idealista|fotocasa|..."
+        string status "ok|throttled|blocked|unknown"
+        float successRate "0.0-1.0"
+        int consecutiveFailures
+        datetime lastCheckedAt "nullable"
+        datetime alertTriggeredAt "nullable"
     }
 ```
 
@@ -276,6 +313,9 @@ erDiagram
 - `id`: UUID v4, clave primaria
 - `userId`: FK a User, nullable para soportar sesiones anónimas ahora y auth después
 - `status`: String, valores: `active`, `completed`, `archived`
+- `propertyPrice`: Int nullable, pre-rellenado desde el listing analizado (FR-015)
+- `sourceListingId`: FK lógica al AnalyzedListing que inició el proceso
+- `currentStage`: String, etapa actual del proceso (`pre_arras`, `arras`, `due_diligence`, `mortgage`, `notary`, `completed`)
 - `financialProfile`: JSON (propertyPrice, savings, monthlyIncome, existingDebts, region, interestRate, persona)
 - Relación 1:N con AnalyzedListing, 1:1 con Checklist
 
@@ -283,16 +323,42 @@ erDiagram
 - `id`: UUID v4, clave primaria
 - `processId`: FK a PurchaseProcess
 - `numericScore`: Int 0-100, puntuación de transparencia del anuncio
-- `redFlags`: JSON array de `{flag, reasoning}` (FR-025 — el LLM devuelve la frase del anuncio que disparó cada flag + la inferencia)
 - `cadastralM2` / `claimedM2`: comparativa de superficie declarada vs oficial
 - `snapshotHash`: SHA-256 del contenido del análisis para detección de cambios
 - `previousHash`: enlace al hash del snapshot anterior (cadena de trazabilidad)
 - `diff`: JSON con deltas vs snapshot anterior, computado por el backend en re-análisis (FR-022)
+- Relación 1:N con RedFlag
+
+**RedFlag** (normalizado, FR-028)
+- `id`: UUID v4, clave primaria
+- `listingId`: FK a AnalyzedListing
+- `flag`: String (enum cerrado `RedFlagType`: `imprecise_location`, `no_energy_certificate`, `inflated_square_meters`, etc.)
+- `reasoning`: String — frase del anuncio que disparó el flag + inferencia del LLM (FR-025)
+- Permite queries SQL agregadas para análisis de producto futuro
 
 **Checklist**
 - `id`: UUID v4, clave primaria
 - `processId`: FK única a PurchaseProcess
-- `items`: JSON array de `BureaucraticMilestone` (stage, title, description, documentsNeeded, estimatedDays, completed)
+- Relación 1:N con ChecklistItem
+
+**ChecklistItem** (normalizado)
+- `id`: UUID v4, clave primaria
+- `checklistId`: FK a Checklist
+- `stage`: String (`pre_arras`, `post_arras`, `pre_escritura`, `post_escritura`)
+- `title`, `description`: texto del hito documental
+- `documentsNeeded`: Array de strings (documentos requeridos)
+- `estimatedDays`: Int, duración estimada
+- `completed`: Boolean, toggle individual
+- `completedAt`: DateTime nullable
+- `sortOrder`: Int, orden dentro de la etapa
+
+**PortalHealthCheck** (FR-027)
+- `id`: UUID v4, clave primaria
+- `portal`: String único (`idealista`, `fotocasa`, `habitaclia`, etc.)
+- `status`: String (`ok`, `throttled`, `blocked`, `unknown`)
+- `successRate`: Float 0.0-1.0, ventana móvil de últimos 100 requests
+- `consecutiveFailures`: Int, contador de fallos consecutivos
+- Soporte para monitorización proactiva de portales inmobiliarios
 
 ---
 
@@ -300,7 +366,7 @@ erDiagram
 
 ### Endpoints principales
 
-**POST /api/listings/analyze** — Analiza la URL de un anuncio inmobiliario.
+**POST /api/listings/analyze** — Analiza la URL de un anuncio inmobiliario. Auto-attach al PurchaseProcess activo (crea uno si no existe, FR-014).
 
 ```json
 // Request
@@ -309,20 +375,35 @@ erDiagram
 // Response 200
 {
   "id": "uuid",
+  "url": "https://www.idealista.com/inmueble/12345678/",
   "numericScore": 42,
-  "redFlags": ["imprecise_location", "no_energy_certificate"],
+  "redFlags": [
+    { "flag": "imprecise_location", "reasoning": "El anuncio solo menciona 'zona Centro' sin dirección específica." },
+    { "flag": "no_energy_certificate", "reasoning": "No aparece CEE en los datos del anuncio." }
+  ],
   "locationConfidence": 0.78,
-  "miraTuZonaLink": "https://miratuzona.com/zone/...",
+  "miraTuZonaLink": "https://miratuzona.com/zone/madrid-centro",
   "cadastralRef": "9876543VK4797N",
   "cadastralM2": 78,
   "claimedM2": 85,
   "constructionYear": 1972,
-  "snapshotHash": "sha256:...",
-  "createdAt": "2026-06-04T12:00:00Z"
+  "snapshotHash": "sha256:a1b2c3d4...",
+  "previousHash": null,
+  "diff": null,
+  "createdAt": "2026-06-04T12:00:00Z",
+  "processSummary": {
+    "processId": "uuid",
+    "status": "active",
+    "propertyPrice": 200000,
+    "sourceListingId": "uuid",
+    "currentStage": "pre_arras"
+  }
 }
 ```
 
-**POST /api/purchase-processes** — Crea un proceso de compra con perfil financiero.
+> **Nota (FR-025)**: cada red flag es un objeto `{ flag, reasoning }` — `reasoning` contiene la frase del anuncio que disparó el flag + la inferencia del LLM (AI Reasoning Transparency). El campo `processSummary` siempre está presente: si no hay proceso activo, se crea uno automáticamente.
+
+**POST /api/purchase-processes** — Crea un proceso de compra con perfil financiero. Acepta `analyzedListingId` para pre-rellenar `propertyPrice` del listing (FR-015).
 
 ```json
 // Request
@@ -338,7 +419,66 @@ erDiagram
 }
 
 // Response 201
-{ "id": "uuid", "status": "active", "createdAt": "..." }
+{
+  "id": "uuid",
+  "status": "active",
+  "propertyPrice": 200000,
+  "sourceListingId": "uuid",
+  "financialProfile": { "..." },
+  "createdAt": "..."
+}
+```
+
+**GET /api/dashboard** — Vista agregada del proceso activo en una sola llamada (FR-023). No requiere `processId`.
+
+```json
+// Response 200 (con proceso activo)
+{
+  "process": { "id": "uuid", "status": "active", "propertyPrice": 200000, "currentStage": "arras", "..." : "..." },
+  "latestListing": { "id": "uuid", "numericScore": 38, "diff": { "..." : "..." }, "..." : "..." },
+  "computed": {
+    "totalCash": 58200,
+    "gap": -13200,
+    "monthlyPayment30yr": 720,
+    "amortizationScenarios": [ "..." ],
+    "investmentAlternative": { "..." : "..." }
+  },
+  "checklist": { "id": "uuid", "progressByStage": { "..." : "..." }, "..." : "..." },
+  "stats": { "totalListingsAnalyzed": 1, "daysSinceFirstAnalysis": 5, "checklistCompletion": 0.2 }
+}
+
+// Response 200 (sin proceso activo — estado vacío, FR-019)
+{
+  "process": null,
+  "latestListing": null,
+  "computed": null,
+  "checklist": null,
+  "stats": null,
+  "emptyState": {
+    "title": "Empieza tu análisis",
+    "ctas": [
+      { "label": "Analizar un anuncio", "href": "/listing-lens" },
+      { "label": "Configurar perfil manualmente", "href": "/mortgage-compass" }
+    ]
+  }
+}
+```
+
+**GET /api/listings/:id/negotiation-points** — Genera 5-8 preguntas concretas para hacer al inmobiliario (FR-026, plantillas hardcoded, NO LLM).
+
+```json
+// Response 200
+{
+  "listingId": "uuid",
+  "points": [
+    {
+      "text": "El anuncio usa 'acogedor' para el salón — ¿cuáles son los metros útiles reales?",
+      "triggeredBy": "euphemistic_language",
+      "reasoning": "El anuncio describe el salón como 'acogedor' pero el LLM detectó un salón de 11m²",
+      "priority": "high"
+    }
+  ]
+}
 ```
 
 **GET /api/checklist/:processId** — Obtiene el checklist documental por etapa.
@@ -353,15 +493,30 @@ erDiagram
       "stage": "pre_arras",
       "title": "Nota simple del registro",
       "description": "Solicitar en el Registro de la Propiedad",
-      "documentsNeeded": [],
+      "documentsNeeded": ["DNI", "escritura_anterior"],
       "estimatedDays": 3,
-      "completed": false
+      "completed": false,
+      "completedAt": null,
+      "sortOrder": 1
     }
   ]
 }
 ```
 
-> Para la especificación completa, ver `specs/001-realista-mvp/contracts/api.md`
+### Otros endpoints
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/listings` | Lista todos los listings analizados de la sesión |
+| GET | `/api/listings/:id` | Detalle de un listing con diff vs snapshot anterior |
+| PATCH | `/api/purchase-processes/:id` | Actualiza proceso (status, financialProfile, currentStage, propertyPrice) |
+| GET | `/api/purchase-processes/:id` | Detalle del proceso con listings y checklist |
+| PATCH | `/api/checklist/:processId/items/:itemId` | Toggle completado de un ítem del checklist |
+| GET | `/api/admin/portal-health` | Estado de salud de portales inmobiliarios (FR-027) |
+| GET | `/api/session` | Obtener/crear UUID de sesión |
+| GET | `/api/health` | Health check para CI/CD |
+
+> Para la especificación completa con todos los payloads, ver `specs/001-realista-mvp/contracts/api.md`
 
 ---
 
@@ -433,7 +588,7 @@ Criterios de aceptación:
 
 ## 6. Tickets de Trabajo
 
-> Los 139 tickets detallados están en `specs/001-realista-mvp/tasks.md` (con IDs T001–T091b, fases, dependencias y criterios TDD). A continuación, los 3 más representativos: uno de backend, uno de frontend y uno de base de datos.
+> Los 127 tickets detallados están en `specs/001-realista-mvp/tasks.md` (con IDs T001–T091b, fases, dependencias y criterios TDD). A continuación, los 3 más representativos: uno de backend, uno de frontend y uno de base de datos.
 
 **Ticket 1 — Backend (T037): Implementar AnalyzeListingUseCase**
 
@@ -445,7 +600,7 @@ Criterios de aceptación:
 - Dado un HTML limpio, cuando se invoca el caso de uso, entonces se llama al LLM y al Catastro en paralelo
 - Dado que el LLM devuelve JSON, cuando se parsea, entonces se construye el `TransparencyReport` con score 0-100
 - Si el Catastro falla, el caso de uso continúa y devuelve el análisis sin datos catastrales
-- Si el LLM falla, se invoca automáticamente AvenaScoreAdapter como fallback
+- Si el LLM falla, se ofrece al usuario pegar el texto del anuncio manualmente
 
 **Archivos:**
 - `backend/src/domain/services/AnalyzeListingUseCase.ts` (creación)
@@ -506,7 +661,7 @@ Criterios de aceptación:
 
 **Hash de commit:** `e6fe3c5`
 
-**Descripción:** Esta PR añade todos los artefactos de la fase de planificación de Realista: el plan de implementación con la arquitectura hexagonal + DDD y stack SvelteKit/Express/Prisma; el documento de investigación con 7 decisiones técnicas justificadas (OpenRouter, Cadastro API, @avena/score, Cheerio, PWA, sesiones, etc.); el modelo de datos con el schema Prisma y value objects del dominio; los contratos de la API REST; y una guía de quickstart para setup y validación. Verifica el cumplimiento de los 6 principios de la constitución del proyecto.
+**Descripción:** Esta PR añade todos los artefactos de la fase de planificación de Realista: el plan de implementación con la arquitectura hexagonal + DDD y stack SvelteKit/Express/Prisma; el documento de investigación con 7 decisiones técnicas justificadas (OpenRouter, Cheerio, PWA, sesiones, etc.); el modelo de datos con el schema Prisma y value objects del dominio; los contratos de la API REST; y una guía de quickstart para setup y validación. Verifica el cumplimiento de los 6 principios de la constitución del proyecto.
 
 **Relación con historias de usuario:** Soporta las 6 historias (US1–US6) sentando las bases arquitectónicas, de datos y de API.
 
@@ -516,13 +671,13 @@ Criterios de aceptación:
 
 ---
 
-**Pull Request 2 — Desglose de tareas: 139 tareas con TDD por historia de usuario**
+**Pull Request 2 — Desglose de tareas: 127 tareas con TDD por historia de usuario**
 
 **Título:** `tasks: 91 tasks across 8 phases, TDD per user story`
 
-**Hash de commit:** `a8fd5d7` (versión original de 91 tareas, ampliada a 139 en commits posteriores con T023a-f, T030a-b, T032a-d → T032a-b (Vision eliminado), T037a-f, T042a, T050a-e, T057a, T058a, T066a-i (Negotiation Assistant), T033a (AI Reasoning), T062a-c (UX polish), T070a-f, T087a, T091a, T091b para cubrir críticos, importantes, menores del review y el nuevo US-04)
+**Hash de commit:** `a8fd5d7` (versión original de 91 tareas, ampliada a 127 en commits posteriores con T023a-f, T030a-b, T032a-d → T032a-b (Vision eliminado), T037a-f, T042a, T050a-e, T057a, T058a, T066a-i (Negotiation Assistant), T033a (AI Reasoning), T062a-c (UX polish), T070a-f, T087a, T091a, T091b para cubrir críticos, importantes, menores del review y el nuevo US-04)
 
-**Descripción:** Esta PR genera el desglose completo de tareas (`specs/001-realista-mvp/tasks.md`) con 139 tareas distribuidas en 9 fases: Setup, Foundational, US1 Listing Lens, US2 Mortgage Compass, US3 Dashboard, US4 Negotiation Assistant, US5 Timeline, US6 Checklist y Polish. Cada historia de usuario incluye sus tests primero (TDD, ~25 tareas de test tras las ampliaciones), seguidos de la implementación. Las tareas están etiquetadas con `[P]` para paralelización y `[US1]`–`[US6]` para trazabilidad con las historias.
+**Descripción:** Esta PR genera el desglose completo de tareas (`specs/001-realista-mvp/tasks.md`) con 127 tareas distribuidas en 9 fases: Setup, Foundational, US1 Listing Lens, US2 Mortgage Compass, US3 Dashboard, US4 Negotiation Assistant, US5 Timeline, US6 Checklist y Polish. Cada historia de usuario incluye sus tests primero (TDD, ~25 tareas de test tras las ampliaciones), seguidos de la implementación. Las tareas están etiquetadas con `[P]` para paralelización y `[US1]`–`[US6]` para trazabilidad con las historias.
 
 **Relación con historias de usuario:** Trazabilidad directa — cada tarea está mapeada a una historia específica.
 
@@ -538,7 +693,7 @@ Criterios de aceptación:
 
 **Hash de commit:** `bd10778`
 
-**Descripción:** Esta PR añade los artefactos de documentación requeridos por la plantilla del cohort: LICENSE MIT, NOTICE.md con atribución a @avena/score, 3 Architecture Decision Records (hexagonal + DDD, @avena/score como fallback, scraping educativo vs comercial), un catálogo de eventos de dominio identificados (20 actuales + 4 futuros post-MVP = 24 en total; ver `docs/domain-events.md`), y la documentación completa de `prompts.md` organizada en 8 secciones según el nuevo formato (Skills, Subagentes, Workflows, Tools, Procesos, Prompts clave, Comparativas, Ajustes humanos).
+**Descripción:** Esta PR añade los artefactos de documentación requeridos por la plantilla del cohort: LICENSE MIT, NOTICE.md, 3 Architecture Decision Records (hexagonal + DDD, fallback de análisis, scraping educativo vs comercial), un catálogo de eventos de dominio identificados (20 actuales + 4 futuros post-MVP = 24 en total; ver `docs/domain-events.md`), y la documentación completa de `prompts.md` organizada en 8 secciones según el nuevo formato (Skills, Subagentes, Workflows, Tools, Procesos, Prompts clave, Comparativas, Ajustes humanos).
 
 **Relación con historias de usuario:** No ligada a una historia específica — completa los entregables de documentación del proyecto.
 
