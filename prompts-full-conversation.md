@@ -435,3 +435,12 @@ Criterios de aceptación:
 - El resto de USs pueden ejecutarse sobre esta base sin configuración adicional
 
 Colócala antes de las historias de negocio existentes, etiquétala como US técnica (no de negocio) y añade la dependencia correspondiente en las USs que requieran base de datos.
+
+# Prompt 15: Design System
+
+Extrae el design system del prototipo actual en Figma Make y documenta los tokens principales.
+
+- Genera el archivo docs/DESIGN-SYSTEM.md incluyendo: colores, tipografía, grid, spacing,...
+- revisa tailwind.config.ts y extiéndelo con los tokens extraídos del prototipo cuando tenga sentido.
+
+Mantén los nombres de tokens claros, reutilizables y alineados con el diseño existente. No rompas la configuración actual de Tailwind; solo añade o mejora los tokens necesarios.

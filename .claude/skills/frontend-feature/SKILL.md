@@ -12,8 +12,12 @@ Library (and Playwright for journeys).
 
 Always combine with `.claude/skills/tdd-implementation/SKILL.md` (TDD is obligatory).
 
-**Read first:** `docs/ARCHITECTURE.md` (components, Server/Client split) and
-`docs/CODING-STANDARDS.md` (component/file naming, state, Tailwind, api-client).
+**Read first (obligatorio, en este orden):**
+1. `docs/DESIGN-SYSTEM.md` — tokens de color `bg-rm-*`/`text-rm-*`, tipografía, layout,
+   anatomía de componentes y mapeos dominio→etiqueta. Sin leerlo, los componentes
+   divergirán visualmente del prototipo Figma Make.
+2. `docs/ARCHITECTURE.md` — Server/Client Component split, estructura de directorios.
+3. `docs/CODING-STANDARDS.md` — naming, Tailwind, api-client, convenciones de test.
 
 ---
 

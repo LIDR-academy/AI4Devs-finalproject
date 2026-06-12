@@ -383,7 +383,23 @@ Analiza las User Stories generadas en @docs/USER-STORIES.md y añade una secció
 
 ## 6. Tickets de Trabajo
 
-**Prompt 1:**
+**Prompt 1 — Extracción de design system desde Figma Make:**
+
+```
+Extrae el design system del prototipo Figma Make (fileKey: <FILE_KEY>).
+
+Lee con ReadMcpResourceTool: `src/styles/theme.css`, `default_shadcn_theme.css`,
+el componente principal y la página de catálogo.
+
+Produce:
+1. `docs/DESIGN-SYSTEM.md` — colores, tipografía, grid, spacing, anatomía de
+   componentes clave y mapeos dominio→etiqueta UI
+2. Actualiza `frontend/src/app/globals.css` con los tokens del prototipo
+   (`:root`, `@theme inline` para clases Tailwind `bg-<prefix>-*`)
+3. `frontend/src/lib/<prefix>-utils.ts` con las constantes de mapeo reutilizables
+
+Verifica con `npm run build`. Un solo commit.
+```
 
 **Prompt 2:**
 
