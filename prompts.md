@@ -89,28 +89,20 @@ A partir de un nivel de refinamiento más avanzado empecé a iterar sobre LogSen
 
 ### 5. Historias de Usuario
 
-**Prompt 1:**
+**Prompt 1:** Revisa el PRD y en caso de ser necesario cambia o aumenta detalle en su contenido.
 
-**Prompt 2:**
+**Prompt 2:** Actúa como un Product Owner Senior. Elabora las historias de usuario, aplicando el criteiro INVEST, en base al contenido del PRD. Refina el contenido de cada historia con alto nivel del detalle técnico.
 
-**Prompt 3:**
+**Prompt 3:** 
 
+> Nota: Para lograr un refinamiento óptimo, hice un ejercicio de revisión crusado con claude donde iteré varias veces hasta que determiné que el resultado de Claude era el que tenía más coherencia. 
 ---
 
 ### 6. Tickets de Trabajo
 
-**Prompt 1:**
+**Prompt 1:** Ahora analiza cada historia en profundidad y, por cada una, elabora los tickets considerando, además de las tareas de backend y frontend, todas las que sean necesarias para poder completar la historia. Por ejemplo, si es necesario generar información sintética de logs y/o runbooks, mocks, stubs o aprovisionar algún artefacto de configuración necesario para el deployment. Ten en cuenta que aún no se ha implementado nada del proyecto. 
 
-**Prompt 2:**
-
-**Prompt 3:**
+> Nota: Para lograr un refinamiento óptimo, hice un ejercicio de revisión crusado con claude nuevamante. Pero adiferencia de las User Stories como Calude no tenía todo el contexto documental, solo consideré algunas observaciones para corregir criterios de testing. 
 
 ---
 
-### 7. Pull Requests
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**

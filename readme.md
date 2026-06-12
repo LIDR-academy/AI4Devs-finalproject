@@ -4,7 +4,7 @@
 1. [Descripción general del producto](#1-descripción-general-del-producto.md)
 2. [Arquitectura del sistema](#2-arquitectura-del-sistema.md)
 3. [Modelo de datos](#3-modelo-de-datos.md)
-4. [Especificación de la API](#4-especificación-de-la-api.md)
+4. [Especificación de la API](#4-especificación-de-la-api)
 5. [Historias de usuario](#5-historias-de-usuario)
 6. [Tickets de trabajo](#6-tickets-de-trabajo)
 7. [Pull requests](#7-pull-requests)
