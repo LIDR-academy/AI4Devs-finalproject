@@ -1,6 +1,6 @@
 import { CatalogService } from './catalog.service';
 import { IProductRepository } from '../repositories/product.repository';
-import { Product } from '../types/domain';
+import { Product, ProductFilters } from '../types/domain';
 
 const buildProduct = (overrides: Partial<Product> = {}): Product => ({
   id: 'uuid-1',
@@ -68,6 +68,48 @@ describe('CatalogService', () => {
       await service.getProducts();
 
       expect(repo.findAll).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('getProducts() with filters', () => {
+    it('passes filters to repository findAll', async () => {
+      const filters: ProductFilters = { distance: ['5K', 'marathon'] };
+      const repo = makeRepo();
+      const service = new CatalogService(repo);
+
+      await service.getProducts(filters);
+
+      expect(repo.findAll).toHaveBeenCalledWith(filters);
+    });
+
+    it('passes undefined to findAll when called without filters', async () => {
+      const repo = makeRepo();
+      const service = new CatalogService(repo);
+
+      await service.getProducts();
+
+      expect(repo.findAll).toHaveBeenCalledWith(undefined);
+    });
+
+    it('returns total equal to filtered products length', async () => {
+      const filteredProducts = [buildProduct({ id: 'uuid-1' }), buildProduct({ id: 'uuid-2' })];
+      const repo = makeRepo({ findAll: jest.fn().mockResolvedValue(filteredProducts) });
+      const service = new CatalogService(repo);
+
+      const result = await service.getProducts({ distance: ['marathon'] });
+
+      expect(result.total).toBe(2);
+      expect(result.products).toEqual(filteredProducts);
+    });
+
+    it('passes multi-dimension filters to repository', async () => {
+      const filters: ProductFilters = { distance: ['5K'], surface: ['road'], level: ['beginner'] };
+      const repo = makeRepo();
+      const service = new CatalogService(repo);
+
+      await service.getProducts(filters);
+
+      expect(repo.findAll).toHaveBeenCalledWith(filters);
     });
   });
 

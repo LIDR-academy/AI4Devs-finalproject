@@ -1,3 +1,8 @@
+export const VALID_DISTANCES = ['5K', '10K', 'half-marathon', 'marathon', 'ultra'] as const;
+export const VALID_SURFACES = ['road', 'trail', 'track', 'mixed'] as const;
+export const VALID_LEVELS = ['beginner', 'intermediate', 'advanced'] as const;
+export const VALID_OBJECTIVES = ['training', 'competition', 'recovery', 'daily'] as const;
+
 export const LEVEL_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
   beginner: {
     label: 'Principiante',

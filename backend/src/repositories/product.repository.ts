@@ -1,8 +1,8 @@
-import { PrismaClient } from '@prisma/client';
-import { Product } from '../types/domain';
+import { PrismaClient, Prisma } from '@prisma/client';
+import { Product, ProductFilters } from '../types/domain';
 
 export interface IProductRepository {
-  findAll(): Promise<Product[]>;
+  findAll(filters?: ProductFilters): Promise<Product[]>;
   findById(id: string): Promise<Product | null>;
 }
 
@@ -49,8 +49,21 @@ function mapToProduct(row: PrismaProductRow): Product {
 export class ProductRepository implements IProductRepository {
   constructor(private prisma: PrismaClient) {}
 
-  async findAll(): Promise<Product[]> {
-    const rows = await this.prisma.product.findMany();
+  private buildWhere(filters?: ProductFilters): Prisma.ProductWhereInput {
+    const where: Prisma.ProductWhereInput = {};
+    if (filters?.distance?.length)  where.distance  = { hasSome: filters.distance };
+    if (filters?.surface?.length)   where.surface   = { hasSome: filters.surface };
+    if (filters?.level?.length)     where.level     = { hasSome: filters.level };
+    if (filters?.objective?.length) where.objective = { hasSome: filters.objective };
+    return where;
+  }
+
+  async findAll(filters?: ProductFilters): Promise<Product[]> {
+    const where = this.buildWhere(filters);
+    const hasFilters = Object.keys(where).length > 0;
+    const rows = await (hasFilters
+      ? this.prisma.product.findMany({ where })
+      : this.prisma.product.findMany());
     return rows.map(mapToProduct);
   }
 

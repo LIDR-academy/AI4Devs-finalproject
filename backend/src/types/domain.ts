@@ -1,5 +1,12 @@
 export type OrderStatus = 'processing' | 'shipped' | 'delivered' | 'cancelled';
 
+export interface ProductFilters {
+  distance?: string[];
+  surface?: string[];
+  level?: string[];
+  objective?: string[];
+}
+
 export interface Product {
   id: string;
   name: string;

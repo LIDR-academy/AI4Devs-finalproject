@@ -100,3 +100,63 @@ describe('GET /api/products', () => {
     expect(JSON.stringify(res.body)).not.toContain('stack');
   });
 });
+
+describe('GET /api/products with running attribute filters', () => {
+  it('passes parsed single distance filter to the service', async () => {
+    const service = makeCatalogService();
+
+    await request(buildApp(service)).get('/api/products?distance=5K');
+
+    expect(service.getProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ distance: ['5K'] }),
+    );
+  });
+
+  it('passes multiple distance values as array (OR within dimension)', async () => {
+    const service = makeCatalogService();
+
+    await request(buildApp(service)).get('/api/products?distance=5K&distance=marathon');
+
+    expect(service.getProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ distance: ['5K', 'marathon'] }),
+    );
+  });
+
+  it('passes multi-dimension filters to service (AND between dimensions)', async () => {
+    const service = makeCatalogService();
+
+    await request(buildApp(service)).get('/api/products?distance=marathon&surface=road');
+
+    expect(service.getProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ distance: ['marathon'], surface: ['road'] }),
+    );
+  });
+
+  it('discards invalid enum values and responds 200', async () => {
+    const service = makeCatalogService({
+      getProducts: jest.fn().mockResolvedValue({ products: [], total: 0 }),
+    });
+
+    const res = await request(buildApp(service)).get('/api/products?distance=INVALIDO');
+
+    expect(res.status).toBe(200);
+    expect(service.getProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ distance: [] }),
+    );
+  });
+
+  it('passes empty filters when called without query params', async () => {
+    const service = makeCatalogService();
+
+    await request(buildApp(service)).get('/api/products');
+
+    expect(service.getProducts).toHaveBeenCalledWith(
+      expect.objectContaining({
+        distance: [],
+        surface: [],
+        level: [],
+        objective: [],
+      }),
+    );
+  });
+});

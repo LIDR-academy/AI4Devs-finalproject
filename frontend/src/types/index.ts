@@ -73,10 +73,8 @@ export interface ProductsResponse {
 }
 
 export interface ProductFilters {
-  category?: Category;
-  distance?: string;
-  surface?: string;
-  level?: string;
-  objective?: string;
-  search?: string;
+  distance?: string[];
+  surface?: string[];
+  level?: string[];
+  objective?: string[];
 }
