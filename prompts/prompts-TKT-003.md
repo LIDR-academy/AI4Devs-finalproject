@@ -1,21 +1,8 @@
-## PROMPT 1: ChatGPT -> Meta-prompt
-Refine a better prompt for this:
-```text
-As Full-Stack Engineer for RealSaveFooding project you need to implement the first ticket added to this context
-
-For Architecture context get it from docs/architecture folder
-For Product (functional) knowledge get it from docs/product folder
-
-Folow the design already provided in /front
-
-Ask me for additional details or uncertainty
-```
-
-## PROMPT 2: Prompt execution (TKT-001)
+## PROMPT 1: Prompt execution (TKT-003)
 ~~~markdown
 You are acting as a **Senior Full-Stack Software Engineer** working on the **RealSaveFooding** project.
 
-Your task is to **implement the first ticket provided in the current context**.
+Your task is to **implement the third ticket provided in the current context**.
 
 ## Project Context
 
@@ -126,14 +113,23 @@ Instead:
 The goal is to implement the ticket as an experienced engineer working within an established codebase, balancing delivery speed with sound engineering practices.
 ~~~
 
-## PROMPT 3: Validation and Testing 
-Run one final full backend plus frontend validation pass before you push.
+## PROMPT 2: Fix DATABASE_URL and validate Prisma
+I want you to fix the issue withDATABASE_URL, remember that is in Docker Compose and it should point to the correct database service. After fixing that, validate that Prisma can connect to the database and run migrations successfully. Provide the updated Docker Compose configuration and any relevant logs from the Prisma validation process.
 
-## PROMPT 4: Edge Cases and Manual Validation
-Run backend and frontend test all edge cases and error handling paths. Keep it running for me to manual validate the implemented feature works as expected. 
+## PROMPT 3: After Manual validation, I want to switch from local adapters to S3/TextExtract
+After successfully validating the Prisma connection and running migrations, the next step is to switch from local file storage adapters while preserving the same ports and endpoints to using S3 for file storage and TextExtract for OCR processing. This involves updating the backend services to integrate with S3 for storing files and TextExtract for OCR processing. Please provide the updated code snippets for the backend services, any necessary configuration changes, and instructions on how to test the new integrations to ensure they are working correctly. 
 
-## PROMPT 5: Fixing Issues Found in Manual Testing
-After manual Test:
-When I open http://localhost:8080/pantry directly without being logged in (after sign out) → should redirect to /auth
+## MANUAL: Creating IAM user and S3 bucket for RealSaveFooding
+Region: eu-west-1
+Bucket: realsavefooding-s3-test-202982075698-eu-west-1-an
 
-Is not compliant, I can navigate without a valid login or after sign out. Please fix this and make sure to test all edge cases for protected routes.
+## PROMPT 4: Guide for Safe IAM User Creation
+When creating an IAM user for S3 access, it is crucial to follow best practices to ensure security. Here are the steps to create a minimal IAM user with upload permissions only.
+
+## MANUAL: IAM User Creation Steps
+ACCESS_KEY: AKIA........UTNAQ2
+Secret: aweT6EZ................4iSxjHEM
+
+## PROMPT 4: Validating S3 and TextExtract Integration
+After updating the backend services to integrate with S3 and TextExtract, it is essential to validate the integration by testing the full flow of uploading a receipt, storing it in S3, and processing it with TextExtract. Please provide a step-by-step guide on how to perform this validation, including any necessary API calls, expected responses, and how to verify that the receipt is correctly stored in S3 and that TextExtract is processing it as expected. Additionally, include any relevant logs or outputs that should be monitored during this validation process to ensure that the integration is functioning correctly.
+Use ticket located at: tests/e2e/Test-Ticket.png and keep the system running for manual validation.

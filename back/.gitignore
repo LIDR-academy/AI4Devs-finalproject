@@ -11,6 +11,10 @@ node_modules
 dist
 dist-ssr
 .output
+.tmp
+.env
+.env.*
+!.env.example
 
 
 # Editor directories and files

@@ -1,4 +1,5 @@
 # PROMPT 1: Prompt execution (TKT-002)
+~~markdown
 You are acting as a **Senior Full-Stack Software Engineer** working on the **RealSaveFooding** project.
 
 Your task is to **implement the second ticket provided in the current context**.
@@ -112,10 +113,10 @@ Instead:
 The goal is to implement the ticket as an experienced engineer working within an established codebase, balancing delivery speed with sound engineering practices.
 ~~~
 
-PROMPT 2: Edge Cases and Manual Validation
+## PROMPT 2: Edge Cases and Manual Validation
 Run backend and frontend test all edge cases and error handling paths. Keep it running for me to manual validate the implemented feature works as expected. 
 
-PROMPT 3: Fixing Issues Found in Manual Testing
+## PROMPT 3: Fixing Issues Found in Manual Testing
 After manual Test:
 The Manual entry button is not working so Add-item form is not being shown.
 I got this error
