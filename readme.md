@@ -425,7 +425,24 @@ Como corredor, quiero revisar los productos añadidos al carrito y modificar can
 
 **Ticket 2**
 
-**Ticket 3**
+**Ticket 3 — Base de datos: US-000-TASK-03 — Esquema Prisma**
+
+| Campo | Detalle |
+|---|---|
+| **ID** | US-000-TASK-03 |
+| **Capa** | Backend |
+| **Depende de** | US-000-TASK-02 (scaffolding del proyecto backend) |
+| **Criterio cubierto** | Prerequisito de CA-2 — define el esquema que hace posible la migración |
+
+**Descripción**
+
+Definición del esquema Prisma completo con todas las entidades del modelo de datos según `docs/DATA-MODEL.md`. Ficheros producidos:
+
+- `backend/prisma/schema.prisma` con datasource apuntando a `env("DATABASE_URL")` y generator `prisma-client-js`.
+- Enums `Category { shoes clothing accessories }` y `OrderStatus { processing shipped delivered cancelled }`.
+- Modelos `Product`, `Cart`, `CartItem`, `Order`, `OrderItem` con todos los campos, relaciones e **índices GIN** para los arrays de filtrado running (`distance`, `surface`, `level`, `objective`).
+
+Los atributos multivaluados de filtrado running se modelan como **arrays nativos de PostgreSQL** indexados con GIN, evitando cuatro tablas de junction innecesarias para un conjunto de valores pequeño y cerrado. El campo `price` usa `Decimal @db.Decimal(10, 2)` en lugar de `Float` para evitar errores de redondeo en cálculos monetarios.
 
 ---
 
@@ -433,7 +450,10 @@ Como corredor, quiero revisar los productos añadidos al carrito y modificar can
 
 > Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
 
-**Pull Request 1**
+**Pull Request 1 — [US-000: Technical Setup](https://github.com/xavierventeo/AI4Devs-finalproject/pull/1)**
+https://github.com/xavierventeo/AI4Devs-finalproject/pull/1
+
+Scaffolding completo del monorepo: workspace npm con `frontend/` (Next.js 15 + TypeScript + Tailwind v4 + shadcn/ui + Vitest) y `backend/` (Express 4 + Prisma 5 + Zod + Jest + Supertest). Incluye Docker Compose para PostgreSQL 16, esquema Prisma con 5 entidades e índices GIN, seed de 12 productos, middlewares de seguridad (CORS, rate-limit, error handler) y health endpoint. Revisión OWASP superada (3 CVEs HIGH corregidos actualizando Next.js a 15.5.19).
 
 **Pull Request 2**
 
