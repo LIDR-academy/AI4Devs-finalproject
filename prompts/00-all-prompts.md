@@ -544,8 +544,146 @@ actualiza 00-all-prompts.md
 | CU-06 | Cliente Cotiza con Chatbot | US0011 |
 | CU-07 | Cancelación / Anti No-Show | (Won't-Have — sin US) |
 | CU-08 | Comparar por Certificaciones | US0006, US0007, US0014 |
-| Transversal | — | US0001, US0002, US0010 |
+| Transversal | — | US0001, US0010 |
 
 ---
 
-*INK·LINK © 2026 · Registro de prompts · 3 sesiones · 35 prompts documentados*
+# Sesión 4 — Coherencia de dependencias, eliminación US0002 y tickets de trabajo
+
+> 📅 2026-06-10 a 2026-06-12 · VS Code · Copilot Agent Mode · Claude Opus 4.6 (Anthropic) · Thinking: Medium
+
+---
+
+## 36 — Ejecutar fixes de issue-002
+
+> 📋 2026-06-10T22:30:00Z · VS Code · Claude Opus 4.6 · Medium · ~155K tokens · rodri
+
+```
+(continuación de sesión anterior — ejecución de fixs/issue-002.md pasos 1-5)
+```
+
+*(Reescribe development_guide.md, limpia data-model.md de Won't-Have fields, agrega relationship_type a Sponsorship, nota en US0007, genera api-spec.yml completo)*
+
+---
+
+## 37 — Análisis de dependencias entre US
+
+> 📋 2026-06-10T23:00:00Z · VS Code · Claude Opus 4.6 · Medium · ~160K tokens · rodri
+
+```
+revisa si las historias de usuario tienen dependencias entre ellas y si éstas están bien estructuradas y ordenadas para después crear los tickets de trabajo
+```
+
+*(Genera grafo de dependencias, detecta 4 gaps: booking→completed sin transición, US0002 sin consumidor, US0007 redundante, US0011↔US0008 acoplado)*
+
+---
+
+## 38 — Crear issue-003 con decisiones pendientes
+
+> 📋 2026-06-10T23:15:00Z · VS Code · Claude Opus 4.6 · Medium · ~165K tokens · rodri
+
+```
+deja el plan como issue y lo reviso punto por punto, dame la sugerencia por cada uno para tomar la decisión. Si se deben volver a crear las US para re ordenar, consideralo.
+```
+
+*(Crea fixs/issue-003.md con 4 decisiones pendientes + opciones + sugerencias + plan de ejecución)*
+
+---
+
+## 39 — Consulta sobre dependencia login artista
+
+> 📋 2026-06-12T10:00:00Z · VS Code · Claude Opus 4.6 · Medium · ~170K tokens · rodri
+
+```
+revisa el fix del issue-003.md, si en las decisiones pendientes 1 elijo la opción B, necesariamente en la decisión 2 necesito que el artista haga login..esto es así?
+```
+
+*(Análisis: técnicamente no requiere US separada — mismo endpoint. Diferencia es organizativa, no técnica.)*
+
+---
+
+## 40 — Reflexión sobre mínimo flujo viable
+
+> 📋 2026-06-12T10:15:00Z · VS Code · Claude Opus 4.6 · Medium · ~175K tokens · rodri
+
+```
+en realidad la duda que me surge es que:
+Quiero que se realice el minimo flujo indispensable para cumplir con las 5 funcionalidades más importantes del sistema, pero enfocado siempre en el cliente. Si la participación del artista en este flujo es obligatoria, va a extender el minimo flujo posible...
+```
+
+*(Propone opción D: cliente confirma asistencia — elimina toda participación del artista. Flujo 100% cliente.)*
+
+---
+
+## 41 — Decisión opción D + coherencia completa
+
+> 📋 2026-06-12T10:30:00Z · VS Code · Claude Opus 4.6 · Medium · ~180K tokens · rodri
+
+```
+Me interesa la opción D, deja esa como decisión para este MVP. Además, vuelve a revisar la coherencia y consistencia y actualiza el fix-003 luego de tu análisis para ver si aún quedan brechas que cubrir
+```
+
+*(Actualiza issue-003: decisiones 1D+2A+3B+4A. Detecta 4 gaps menores restantes. Nuevo backlog: 13 US, 80 SP.)*
+
+---
+
+## 42 — Ejecutar resolución issue-003
+
+> 📋 2026-06-12T10:45:00Z · VS Code · Claude Opus 4.6 · Medium · ~185K tokens · rodri
+
+```
+Resuelve los issues encontrados en issue-003 y deja coherente el proceso completo sin intervención directa del artista. El artista será solo datos seed por ahora, en un futuro tendrá las funcionalidades para iniciar sesión, subir su booking, etc, por ahora solo serán datos seed que debes considerar en el modelo de base de datos para dar soporte a las otras funcionalidades.
+```
+
+*(Ejecuta: reescribe US0001 genérico, elimina US0002, reescribe US0007 badge-only, edita US0008/US0010/US0013, actualiza api-spec.yml y data-model.md con status machine cliente-only, regenera all-us.md con 13 US)*
+
+---
+
+## 43 — Crear tickets de trabajo para todas las US
+
+> 📋 2026-06-12T11:00:00Z · VS Code · Claude Opus 4.6 · Medium · ~190K tokens · rodri
+
+```
+analiza la carpeta US y luego crea los tickets de trabajo necesarios para completarlas junto sus criterios de aceptación. Incluye que sea TDD, buenas practicas de desarrollo, etc y la logica de negocio correspondiente que se cumpla. Considera también el modelo de datos y el contexto de negocio en readme.md. Al finalizar actualiza all-prompts.md con lo que he escrito hoy en el chat.
+```
+
+*(Genera 23 task files distribuidos en 13 US: backend+frontend por cada. TDD obligatorio, validaciones de negocio, tests unitarios e integración.)*
+
+---
+
+## Resumen de archivos modificados (sesión 4)
+
+| Archivo | Acción |
+|---|---|
+| `fixs/issue-002.md` | Resuelto — 5 fixes ejecutados |
+| `fixs/issue-003.md` | Creado y resuelto — 4 decisiones de dependencias |
+| `docs/development_guide.md` | Reescrito — INK·LINK stack |
+| `docs/data-model.md` | Actualizado — status machine cliente-only, expires_at |
+| `docs/api-spec.yml` | Regenerado — sin endpoints de artista/admin/quote |
+| `docs/us/us0001/us0001.md` | Reescrito — login genérico |
+| `docs/us/us0002/` | **Eliminado** |
+| `docs/us/us0007/us0007.md` | Reescrito — solo badge visual |
+| `docs/us/us0008/us0008.md` | Editado — sin referencia a chatbot |
+| `docs/us/us0010/us0010.md` | Ampliado — confirmar asistencia CA8/CA9 |
+| `docs/us/us0013/us0013.md` | Editado — dependencia corregida |
+| `docs/us/all-us.md` | Regenerado — 13 US, 80 SP |
+| `docs/us/us*/task*.md` (×23) | Creados — tickets de trabajo completos |
+| `prompts/00-all-prompts.md` | Actualizado — sesión 4 completa |
+
+---
+
+## Mapeo final CU ↔ US (actualizado sesión 4)
+
+| CU | Descripción | US asignadas |
+|---|---|---|
+| CU-01 | Cliente Cotiza y Reserva | US0008, US0009 |
+| CU-03 | Cliente Califica | US0013 |
+| CU-04 | Cliente Descubre en Vitrina | US0003, US0004, US0005 |
+| CU-05 | Cliente Explora en Mapa | US0012 |
+| CU-06 | Cliente Cotiza con Chatbot | US0011 |
+| CU-08 | Comparar por Certificaciones | US0006, US0007, US0014 |
+| Transversal | — | US0001, US0010 |
+
+---
+
+*INK·LINK © 2026 · Registro de prompts · 4 sesiones · 43 prompts documentados*
