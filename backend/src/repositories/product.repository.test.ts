@@ -95,6 +95,82 @@ describe('ProductRepository', () => {
     });
   });
 
+  describe('findAll() with running attribute filters', () => {
+    it('passes no where clause when called without filters', async () => {
+      const prisma = makePrisma();
+      const repo = new ProductRepository(prisma as unknown as import('@prisma/client').PrismaClient);
+
+      await repo.findAll();
+
+      const call = prisma.product.findMany.mock.calls[0][0] as Record<string, unknown> | undefined;
+      expect(call?.where).toBeUndefined();
+    });
+
+    it('builds hasSome for a single-dimension distance filter', async () => {
+      const prisma = makePrisma();
+      const repo = new ProductRepository(prisma as unknown as import('@prisma/client').PrismaClient);
+
+      await repo.findAll({ distance: ['5K'] });
+
+      const call = prisma.product.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
+      expect(call.where).toEqual({ distance: { hasSome: ['5K'] } });
+    });
+
+    it('builds hasSome for multiple values within a dimension (OR within dimension)', async () => {
+      const prisma = makePrisma();
+      const repo = new ProductRepository(prisma as unknown as import('@prisma/client').PrismaClient);
+
+      await repo.findAll({ distance: ['5K', 'marathon'] });
+
+      const call = prisma.product.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
+      expect(call.where).toEqual({ distance: { hasSome: ['5K', 'marathon'] } });
+    });
+
+    it('applies AND between dimensions when multiple filters are provided', async () => {
+      const prisma = makePrisma();
+      const repo = new ProductRepository(prisma as unknown as import('@prisma/client').PrismaClient);
+
+      await repo.findAll({ distance: ['5K'], surface: ['road'] });
+
+      const call = prisma.product.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
+      expect(call.where).toEqual({
+        distance: { hasSome: ['5K'] },
+        surface: { hasSome: ['road'] },
+      });
+    });
+
+    it('does not add a condition for an empty array dimension', async () => {
+      const prisma = makePrisma();
+      const repo = new ProductRepository(prisma as unknown as import('@prisma/client').PrismaClient);
+
+      await repo.findAll({ distance: [], surface: ['road'] });
+
+      const call = prisma.product.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
+      expect(call.where).not.toHaveProperty('distance');
+      expect(call.where).toEqual({ surface: { hasSome: ['road'] } });
+    });
+
+    it('builds hasSome for all four running dimensions (full AND)', async () => {
+      const prisma = makePrisma();
+      const repo = new ProductRepository(prisma as unknown as import('@prisma/client').PrismaClient);
+
+      await repo.findAll({
+        distance: ['marathon'],
+        surface: ['road'],
+        level: ['advanced'],
+        objective: ['competition'],
+      });
+
+      const call = prisma.product.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
+      expect(call.where).toEqual({
+        distance: { hasSome: ['marathon'] },
+        surface: { hasSome: ['road'] },
+        level: { hasSome: ['advanced'] },
+        objective: { hasSome: ['competition'] },
+      });
+    });
+  });
+
   describe('findById()', () => {
     it('returns null when the product does not exist', async () => {
       const prisma = makePrisma({ findUnique: jest.fn().mockResolvedValue(null) });

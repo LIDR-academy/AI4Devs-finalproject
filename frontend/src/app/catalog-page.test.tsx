@@ -7,9 +7,10 @@ vi.mock('../lib/api-client', () => ({
   fetchProducts: vi.fn(),
 }));
 
-// Mock next/navigation for CatalogErrorState's useRouter
+// Mock next/navigation for CatalogErrorState, FilterEmptyState, and FilterPanel
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ refresh: vi.fn() }),
+  useRouter: () => ({ refresh: vi.fn(), replace: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 import { fetchProducts } from '../lib/api-client';
@@ -39,6 +40,8 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
+const noSearchParams = Promise.resolve({});
+
 describe('CatalogPage', () => {
   it('renders a ProductCard for each product returned', async () => {
     const products = [
@@ -48,7 +51,7 @@ describe('CatalogPage', () => {
     ];
     vi.mocked(fetchProducts).mockResolvedValue({ products, total: 3 });
 
-    render(await CatalogPage());
+    render(await CatalogPage({ searchParams: noSearchParams }));
 
     expect(screen.getByText('Nike Pegasus 41')).toBeInTheDocument();
     expect(screen.getByText('Asics Gel-Nimbus 26')).toBeInTheDocument();
@@ -59,15 +62,15 @@ describe('CatalogPage', () => {
     const products = [buildProduct(), buildProduct({ id: '2' })];
     vi.mocked(fetchProducts).mockResolvedValue({ products, total: 2 });
 
-    render(await CatalogPage());
+    render(await CatalogPage({ searchParams: noSearchParams }));
 
     expect(screen.getByText(/2 productos encontrados/i)).toBeInTheDocument();
   });
 
-  it('renders empty state when catalog has no products', async () => {
+  it('renders catalog empty state when no filters active and no products', async () => {
     vi.mocked(fetchProducts).mockResolvedValue({ products: [], total: 0 });
 
-    render(await CatalogPage());
+    render(await CatalogPage({ searchParams: noSearchParams }));
 
     expect(screen.getByTestId('catalog-empty-state')).toBeInTheDocument();
     expect(screen.queryByRole('article')).not.toBeInTheDocument();
@@ -76,7 +79,7 @@ describe('CatalogPage', () => {
   it('renders error state with retry button when fetchProducts throws', async () => {
     vi.mocked(fetchProducts).mockRejectedValue(new Error('Network error'));
 
-    render(await CatalogPage());
+    render(await CatalogPage({ searchParams: noSearchParams }));
 
     expect(screen.getByTestId('catalog-error-state')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /reintentar/i })).toBeInTheDocument();
@@ -85,14 +88,84 @@ describe('CatalogPage', () => {
   it('does not crash the page layout when fetch fails', async () => {
     vi.mocked(fetchProducts).mockRejectedValue(new Error('Network error'));
 
-    expect(async () => render(await CatalogPage())).not.toThrow();
+    expect(async () => render(await CatalogPage({ searchParams: noSearchParams }))).not.toThrow();
   });
 
   it('renders the page title', async () => {
     vi.mocked(fetchProducts).mockResolvedValue({ products: [], total: 0 });
 
-    render(await CatalogPage());
+    render(await CatalogPage({ searchParams: noSearchParams }));
 
     expect(screen.getByRole('heading', { name: /productos para running/i })).toBeInTheDocument();
+  });
+
+  it('renders the FilterPanel alongside the product grid', async () => {
+    vi.mocked(fetchProducts).mockResolvedValue({ products: [buildProduct()], total: 1 });
+
+    render(await CatalogPage({ searchParams: noSearchParams }));
+
+    expect(screen.getByRole('heading', { name: /filtros/i })).toBeInTheDocument();
+  });
+});
+
+describe('CatalogPage — filter params', () => {
+  it('calls fetchProducts with distance filter from searchParams', async () => {
+    vi.mocked(fetchProducts).mockResolvedValue({ products: [], total: 0 });
+
+    await CatalogPage({ searchParams: Promise.resolve({ distance: '5K' }) });
+
+    expect(fetchProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ distance: ['5K'] }),
+    );
+  });
+
+  it('calls fetchProducts with multiple distance values as array', async () => {
+    vi.mocked(fetchProducts).mockResolvedValue({ products: [], total: 0 });
+
+    await CatalogPage({ searchParams: Promise.resolve({ distance: ['5K', 'marathon'] }) });
+
+    expect(fetchProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ distance: ['5K', 'marathon'] }),
+    );
+  });
+
+  it('discards invalid enum values from searchParams before calling fetchProducts', async () => {
+    vi.mocked(fetchProducts).mockResolvedValue({ products: [], total: 0 });
+
+    await CatalogPage({ searchParams: Promise.resolve({ distance: 'INVALIDO' }) });
+
+    expect(fetchProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ distance: [] }),
+    );
+  });
+
+  it('calls fetchProducts with empty filters when no searchParams', async () => {
+    vi.mocked(fetchProducts).mockResolvedValue({ products: [], total: 0 });
+
+    await CatalogPage({ searchParams: noSearchParams });
+
+    expect(fetchProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ distance: [], surface: [], level: [], objective: [] }),
+    );
+  });
+
+  it('shows FilterEmptyState when filters are active and no products match', async () => {
+    vi.mocked(fetchProducts).mockResolvedValue({ products: [], total: 0 });
+
+    render(
+      await CatalogPage({ searchParams: Promise.resolve({ distance: 'marathon' }) }),
+    );
+
+    expect(screen.getByTestId('filter-empty-state')).toBeInTheDocument();
+    expect(screen.queryByTestId('catalog-empty-state')).not.toBeInTheDocument();
+  });
+
+  it('shows CatalogEmptyState (not FilterEmptyState) when no filters and no products', async () => {
+    vi.mocked(fetchProducts).mockResolvedValue({ products: [], total: 0 });
+
+    render(await CatalogPage({ searchParams: noSearchParams }));
+
+    expect(screen.getByTestId('catalog-empty-state')).toBeInTheDocument();
+    expect(screen.queryByTestId('filter-empty-state')).not.toBeInTheDocument();
   });
 });

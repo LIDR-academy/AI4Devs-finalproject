@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { fetchProducts } from './api-client';
-import { Product } from '../types';
+import { Product, ProductFilters } from '../types';
 
 // Unified fetch mock: reset and re-stub before each test, restore after.
 const mockFetch = vi.fn();
@@ -86,6 +86,79 @@ describe('fetchProducts()', () => {
 
     expect(result.products).toEqual([]);
     expect(result.total).toBe(0);
+  });
+});
+
+// ── fetchProducts with filters ────────────────────────────────────────────────
+
+describe('fetchProducts() with filters', () => {
+  it('calls /products without query string when no filters provided', async () => {
+    stubFetch(200, { products: [], total: 0 });
+
+    await fetchProducts();
+
+    const url = mockFetch.mock.calls[0][0] as string;
+    expect(url).not.toContain('?');
+  });
+
+  it('serializes single distance value as query param', async () => {
+    stubFetch(200, { products: [], total: 0 });
+    const filters: ProductFilters = { distance: ['5K'] };
+
+    await fetchProducts(filters);
+
+    const url = mockFetch.mock.calls[0][0] as string;
+    expect(url).toContain('distance=5K');
+  });
+
+  it('serializes multiple distance values as repeated params (OR within dimension)', async () => {
+    stubFetch(200, { products: [], total: 0 });
+    const filters: ProductFilters = { distance: ['5K', 'marathon'] };
+
+    await fetchProducts(filters);
+
+    const url = mockFetch.mock.calls[0][0] as string;
+    expect(url).toContain('distance=5K');
+    expect(url).toContain('distance=marathon');
+  });
+
+  it('serializes multiple dimensions as combined query string (AND between dimensions)', async () => {
+    stubFetch(200, { products: [], total: 0 });
+    const filters: ProductFilters = { distance: ['marathon'], surface: ['road'] };
+
+    await fetchProducts(filters);
+
+    const url = mockFetch.mock.calls[0][0] as string;
+    expect(url).toContain('distance=marathon');
+    expect(url).toContain('surface=road');
+  });
+
+  it('does not add query params for empty arrays', async () => {
+    stubFetch(200, { products: [], total: 0 });
+    const filters: ProductFilters = { distance: [], surface: [] };
+
+    await fetchProducts(filters);
+
+    const url = mockFetch.mock.calls[0][0] as string;
+    expect(url).not.toContain('?');
+  });
+
+  it('serializes all four running dimensions', async () => {
+    stubFetch(200, { products: [], total: 0 });
+    const filters: ProductFilters = {
+      distance: ['marathon'],
+      surface: ['road'],
+      level: ['advanced'],
+      objective: ['competition'],
+    };
+
+    await fetchProducts(filters);
+
+    const url = mockFetch.mock.calls[0][0] as string;
+    expect(url).toContain('distance=marathon');
+    expect(url).toContain('surface=road');
+    expect(url).toContain('level=advanced');
+    expect(url).toContain('objective=competition');
   });
 });
 
