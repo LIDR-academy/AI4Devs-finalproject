@@ -12,7 +12,7 @@ TDD mandatory: tests written → tests fail → implement → green → refactor
 Realista is an educational tool for Spanish first-time home buyers. It never provides financial advice, broker recommendations, or commercial referrals. All outputs are educational narratives — never prescriptive. The user decides; we illuminate options.
 
 ### IV. Privacy & Legal Compliance
-No storage of third-party content (listing HTML, scraped text). Only analysis results persisted. User-Agent: `Realista/1.0 (analizador educativo)`. Rate limiting: max 20 analyses/day per user. MIT license with NOTICE.md attribution for `@avena/score`.
+No storage of third-party content (listing HTML, scraped text). Only analysis results persisted. User-Agent: `Realista/1.0 (analizador educativo)`. Rate limiting: max 20 analyses/day per user. MIT license.
 
 ### V. Mobile-First PWA
 SvelteKit PWA, installable, responsive. Target: mobile (primary), desktop (secondary). Zero app store friction. Service worker for offline capability where possible.
@@ -26,7 +26,7 @@ No auth for MVP — anonymous sessions with UUID. Data model includes nullable `
 - **Testing:** Vitest (unit + integration), Playwright (E2E)
 - **CI/CD:** Lint → typecheck → unit tests → integration tests → build → E2E → deploy
 - **Secrets:** Environment variables via GitHub Actions secrets. No secrets in code.
-- **AI:** LLM-driven listing analysis via system prompt. Fallback chain: LLM → `@avena/score` → manual text paste.
+- **AI:** LLM-driven listing analysis via system prompt. Fallback chain: LLM → manual text paste.
 
 ## Development Workflow
 
