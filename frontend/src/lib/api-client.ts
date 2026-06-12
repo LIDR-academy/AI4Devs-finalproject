@@ -34,7 +34,7 @@ export async function fetchProducts(filters?: ProductFilters): Promise<ProductsR
 }
 
 export async function fetchProduct(id: string): Promise<import('../types').Product> {
-  return apiGet(`/products/${id}`);
+  return apiGet(`/products/${encodeURIComponent(id)}`);
 }
 
 export async function apiPost<T>(path: string, body: unknown): Promise<T> {
