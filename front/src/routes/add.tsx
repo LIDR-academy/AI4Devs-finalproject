@@ -1,4 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Outlet,
+  useLocation,
+  useNavigate,
+} from "@tanstack/react-router";
 import { ScanLine, Camera, PencilLine, Mic } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import {
@@ -13,9 +18,16 @@ export const Route = createFileRoute("/add")({
 
 function AddPage() {
   const authed = useRequireAuthRedirect();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   if (!authed) {
     return null;
+  }
+
+  // /add.manual.tsx is a child route of /add; render children explicitly.
+  if (pathname.startsWith("/add/manual")) {
+    return <Outlet />;
   }
 
   return (
@@ -25,7 +37,13 @@ function AddPage() {
       <div className="grid grid-cols-2 gap-3">
         <BigOption icon={<ScanLine className="size-7" />} title="Scan receipt" body="AI extracts items & expirations" primary />
         <BigOption icon={<Camera className="size-7" />} title="Photo of product" body="Identify a single item" />
-        <BigOption icon={<PencilLine className="size-7" />} title="Manual entry" body="Type it yourself" to="/add/manual" />
+        <BigOption
+          icon={<PencilLine className="size-7" />}
+          title="Manual entry"
+          body="Type it yourself"
+          to="/add/manual"
+          onNavigate={(to) => navigate({ to })}
+        />
         <BigOption icon={<Mic className="size-7" />} title="Voice add" body="Say what you bought" />
       </div>
 
@@ -44,7 +62,21 @@ function AddPage() {
   );
 }
 
-function BigOption({ icon, title, body, primary, to }: { icon: React.ReactNode; title: string; body: string; primary?: boolean; to?: string }) {
+function BigOption({
+  icon,
+  title,
+  body,
+  primary,
+  to,
+  onNavigate,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  body: string;
+  primary?: boolean;
+  to?: string;
+  onNavigate?: (to: "/add/manual") => void;
+}) {
   const className = `ios-card flex flex-col items-start gap-2 p-5 text-left active:scale-[0.98] transition ${primary ? "bg-primary text-primary-foreground" : ""}`;
   const inner = (
     <>
@@ -57,10 +89,18 @@ function BigOption({ icon, title, body, primary, to }: { icon: React.ReactNode; 
   );
   if (to) {
     return (
-      <Link to={to} className={className}>
+      <button
+        type="button"
+        className={className}
+        onClick={() => {
+          if (onNavigate) {
+            onNavigate(to as "/add/manual");
+          }
+        }}
+      >
         {inner}
-      </Link>
+      </button>
     );
   }
-  return <button className={className}>{inner}</button>;
+  return <button type="button" className={className}>{inner}</button>;
 }

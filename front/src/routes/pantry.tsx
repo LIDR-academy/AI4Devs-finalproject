@@ -1,13 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Search, Users, AlertTriangle } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
-import { pantryItems, daysUntil, type PantryItem } from "@/lib/mock-data";
+import { daysUntil, type PantryItem } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import {
   requireAuthBeforeLoad,
   useRequireAuthRedirect,
 } from "@/features/auth/route-guard";
+import { listPantryItems, type PantryApiItem } from "@/features/pantry/pantry.api";
 
 export const Route = createFileRoute("/pantry")({
   beforeLoad: requireAuthBeforeLoad,
@@ -26,9 +27,57 @@ function PantryPage() {
 
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<(typeof filters)[number]>("All");
+  const [items, setItems] = useState<PantryApiItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadItems() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const result = await listPantryItems();
+        if (isMounted) {
+          setItems(result);
+        }
+      } catch (apiError) {
+        if (isMounted) {
+          setError(apiError instanceof Error ? apiError.message : "Could not load pantry items.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadItems();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const mappedItems: PantryItem[] = useMemo(
+    () =>
+      items.map((item) => ({
+        id: item.id,
+        name: item.name,
+        emoji: "🍽️",
+        category: "Pantry",
+        quantity: `${item.quantity} ${item.unit}`,
+        addedAt: item.createdAt,
+        expiresAt: item.expirationDate ?? new Date("2100-01-01").toISOString(),
+        estimated: false,
+        pricePaid: 0,
+        location: "Pantry",
+      })),
+    [items],
+  );
 
   const filtered = useMemo(() => {
-    return pantryItems
+    return mappedItems
       .filter((i) => i.name.toLowerCase().includes(q.toLowerCase()))
       .filter((i) =>
         filter === "All" ? true :
@@ -36,9 +85,9 @@ function PantryPage() {
         i.location === filter
       )
       .sort((a, b) => daysUntil(a.expiresAt) - daysUntil(b.expiresAt));
-  }, [q, filter]);
+  }, [mappedItems, q, filter]);
 
-  const expiringSoon = pantryItems.filter((i) => daysUntil(i.expiresAt) <= 2).length;
+  const expiringSoon = mappedItems.filter((i) => daysUntil(i.expiresAt) <= 2).length;
 
   return (
     <AppShell
@@ -84,6 +133,12 @@ function PantryPage() {
       </div>
 
       <ul className="space-y-2">
+        {isLoading && (
+          <p className="py-12 text-center text-muted-foreground">Loading pantry...</p>
+        )}
+        {error && !isLoading && (
+          <p className="py-12 text-center text-destructive">{error}</p>
+        )}
         {filtered.map((i) => (
           <li key={i.id}>
             <Link to="/item/$id" params={{ id: i.id }} className="block">
@@ -91,7 +146,7 @@ function PantryPage() {
             </Link>
           </li>
         ))}
-        {filtered.length === 0 && (
+        {!isLoading && !error && filtered.length === 0 && (
           <p className="py-12 text-center text-muted-foreground">No items found.</p>
         )}
       </ul>

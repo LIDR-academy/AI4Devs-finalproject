@@ -12,13 +12,14 @@ export function requireAuthBeforeLoad() {
 
 export function useRequireAuthRedirect(): boolean {
   const navigate = useNavigate();
-  const authed = isAuthenticated();
 
   useEffect(() => {
-    if (!authed) {
+    if (!isAuthenticated()) {
       void navigate({ to: AUTH_ROUTE, replace: true });
     }
-  }, [authed, navigate]);
+  }, [navigate]);
 
-  return authed;
+  // Always return true to avoid SSR/client conditional rendering mismatch.
+  // Redirect side-effect above handles unauthenticated users on the client.
+  return true;
 }

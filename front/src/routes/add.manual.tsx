@@ -6,6 +6,7 @@ import {
   requireAuthBeforeLoad,
   useRequireAuthRedirect,
 } from "@/features/auth/route-guard";
+import { createPantryItem } from "@/features/pantry/pantry.api";
 
 export const Route = createFileRoute("/add/manual")({
   beforeLoad: requireAuthBeforeLoad,
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/add/manual")({
 
 const CATEGORIES = ["Produce", "Dairy", "Meat", "Seafood", "Bakery", "Pantry", "Frozen", "Beverages", "Other"];
 const LOCATIONS = ["Fridge", "Pantry", "Freezer"] as const;
+const UNITS = ["unit", "g", "kg", "ml", "l", "pack"] as const;
 const EMOJI_SUGGEST = ["🍎", "🥛", "🍞", "🥩", "🐟", "🥦", "🥚", "🧀", "🍝", "🥑", "🍌", "🍅"];
 
 function ManualEntryPage() {
@@ -27,20 +29,53 @@ function ManualEntryPage() {
   const [name, setName] = useState("");
   const [emoji, setEmoji] = useState("🍎");
   const [category, setCategory] = useState(CATEGORIES[0]);
-  const [quantity, setQuantity] = useState("");
+  const [quantity, setQuantity] = useState("1");
+  const [unit, setUnit] = useState<(typeof UNITS)[number]>("unit");
   const [location, setLocation] = useState<(typeof LOCATIONS)[number]>("Fridge");
   const [expiresAt, setExpiresAt] = useState("");
   const [price, setPrice] = useState("");
   const [notes, setNotes] = useState("");
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const canSave = name.trim().length > 0 && expiresAt.length > 0;
+  const canSave = name.trim().length > 0 && Number(quantity) >= 1;
 
-  function handleSave(e: React.FormEvent) {
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    if (!canSave) return;
-    setSaved(true);
-    setTimeout(() => navigate({ to: "/pantry" }), 700);
+    setError(null);
+
+    if (!canSave) {
+      setError("Name and quantity are required.");
+      return;
+    }
+
+    const parsedQuantity = Number(quantity);
+    if (!Number.isInteger(parsedQuantity) || parsedQuantity <= 0) {
+      setError("Quantity must be a whole number greater than 0.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await createPantryItem({
+        name,
+        quantity: parsedQuantity,
+        unit,
+        expirationDate: expiresAt || undefined,
+      });
+
+      setSaved(true);
+      setTimeout(() => navigate({ to: "/pantry" }), 700);
+    } catch (apiError) {
+      setError(
+        apiError instanceof Error
+          ? apiError.message
+          : "Could not save item. Please try again.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -102,7 +137,24 @@ function ManualEntryPage() {
             </select>
           </Field>
           <Field label="Quantity">
-            <input value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="500g" className="input-ios" />
+            <input
+              type="number"
+              min={1}
+              step={1}
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              placeholder="1"
+              className="input-ios"
+            />
+          </Field>
+          <Field label="Unit">
+            <select value={unit} onChange={(e) => setUnit(e.target.value as (typeof UNITS)[number])} className="input-ios">
+              {UNITS.map((u) => (
+                <option key={u} value={u}>
+                  {u}
+                </option>
+              ))}
+            </select>
           </Field>
           <Field label="Location">
             <select value={location} onChange={(e) => setLocation(e.target.value as (typeof LOCATIONS)[number])} className="input-ios">
@@ -130,6 +182,12 @@ function ManualEntryPage() {
           </Field>
         </section>
 
+        {error && (
+          <p className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-[13px] text-destructive">
+            {error}
+          </p>
+        )}
+
         <section className="ios-card p-4">
           <Label>Notes</Label>
           <textarea
@@ -143,10 +201,12 @@ function ManualEntryPage() {
 
         <button
           type="submit"
-          disabled={!canSave || saved}
+          disabled={!canSave || saved || isSubmitting}
           className="w-full h-14 rounded-2xl bg-primary text-primary-foreground text-[16px] font-semibold disabled:opacity-50 active:scale-[0.99] transition flex items-center justify-center gap-2"
         >
-          {saved ? (
+          {isSubmitting ? (
+            "Saving..."
+          ) : saved ? (
             <>
               <Check className="size-5" /> Added to pantry
             </>
