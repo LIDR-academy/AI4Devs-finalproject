@@ -16,11 +16,39 @@ services:
     image: statewave/statewave:latest
     container_name: auditcare-statewave
     ports:
-      - "8080:8080"
+      - "8100:8100"  # API
+      - "8080:8080"  # Admin panel
     volumes:
       - ./infra/statewave/config.yaml:/app/config.yaml
     environment:
       STATEWAVE_CONFIG_PATH: /app/config.yaml
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: auditcare-backend
+    depends_on:
+      - postgres
+      - statewave
+    environment:
+      DATABASE_URL: postgresql://auditcare:auditcare@postgres:5432/auditcare
+      STATEWAVE_URL: http://statewave:8100
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: auditcare-frontend
+    depends_on:
+      - backend
+    environment:
+      PORT: 3000
+    ports:
+      - "3000:3000"
 
 volumes:
   auditcare_postgres_data:
