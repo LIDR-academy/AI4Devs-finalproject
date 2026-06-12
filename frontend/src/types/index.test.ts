@@ -1,9 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import type { Product, Order, OrderStatus } from '../types/index';
+import type { Product, Order, OrderStatus } from './index';
 
 describe('US-000-TASK-08: Domain types', () => {
   it('Product type has required running filter fields', () => {
-    // Compile-time check via a typed object
     const product: Product = {
       id: 'test',
       name: 'Test shoe',

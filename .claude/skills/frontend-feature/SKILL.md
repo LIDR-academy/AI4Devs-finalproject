@@ -56,12 +56,17 @@ Always combine with `.claude/skills/tdd-implementation/SKILL.md` (TDD is obligat
 - [ ] Components **PascalCase** (`ProductCard.tsx`); hooks `useX` **camelCase**
       (`useCart.ts`); directories **kebab-case** (`catalog/`, `product/`).
 - [ ] **Named exports**; explicit `interface Props` directly above the component; no
-      `React.FC`. `default export` only for the page components Next.js requires.
+      `React.FC`. `default export` only for the page/layout files Next.js requires
+      (`page.tsx`, `layout.tsx`).
 - [ ] All backend calls go through `lib/api-client.ts` — **never `fetch()` directly**
       in a component; the client throws typed errors on non-2xx.
 - [ ] Tailwind utility classes only; conditional variants via `cva` (no complex ternary
       class strings); no inline `style` except non-build-time dynamic values.
 - [ ] `CartContext` is the only global state; form state stays local (`useState`).
+- [ ] **Test files co-located** with the source they test (`product-card.tsx` →
+      `product-card.test.tsx` in the same directory). Never put tests in a separate
+      `__tests__/` folder. The `src/test/` directory is reserved for test
+      infrastructure only (`setup.ts`, `mocks/`).
 
 ---
 
