@@ -75,17 +75,14 @@ A partir de un nivel de refinamiento más avanzado empecé a iterar sobre LogSen
 
 ### 3. Modelo de Datos
 
-**Prompt 1:**
+**Prompt 1:** Elabora un detalle del modelo de datos completo de Logsentinel incluyendo un DER y un detalle explicando las estrucura. Revisa el modelo con honestidad brutal para identificar posibilidades mejora y aplícalas indicandolas también en el detalle documental.  
 
-**Prompt 2:**
-
-**Prompt 3:**
 
 ---
 
 ### 4. Especificación de la API
 
-**Prompt 1:**
+**Prompt 1:** Considerando la estructura del modelo y de datos y la del backend JAVA dame el contrato de la API REST de LogSentinel en el fomato estandar openapi.
 
 **Prompt 2:**
 
