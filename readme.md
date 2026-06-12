@@ -181,7 +181,8 @@ frontend/
 
 e2e/                      # Playwright end-to-end tests
 specs/                    # Documentación SDD (spec-kit)
-.specify/                 # Configuración spec-kit
+docs/                     # Constitución, ADRs y eventos de dominio
+.specify/                 # Toolkit spec-kit (regenerable con 'specify init')
 ```
 
 **Patrón:** Arquitectura Hexagonal + DDD táctico. Separación backend/frontend con E2E cross-stack.

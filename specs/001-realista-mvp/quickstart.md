@@ -58,7 +58,8 @@ backend/     → Node.js + Express (hexagonal architecture)
 frontend/    → SvelteKit + PWA (mobile-first)
 e2e/         → Playwright end-to-end tests
 specs/       → Spec-driven development artifacts
-.specify/    → Spec-kit configuration and templates
+docs/        → Constitución, ADRs, eventos de dominio
+.specify/    → Spec-kit toolkit (regenerable con 'specify init')
 ```
 
 ## Architecture Decision Records

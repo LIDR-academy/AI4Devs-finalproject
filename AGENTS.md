@@ -67,8 +67,12 @@ Always use these English names in code and docs:
 
 ## File Layout
 ```
-.specify/
-├── memory/constitution.md     # Project principles
+docs/
+├── constitution.md            # Project principles (constitución)
+├── adr/                       # Architecture Decision Records
+└── domain-events.md           # Catálogo de eventos de dominio
+
+.specify/                      # Toolkit spec-kit (regenerable con 'specify init')
 ├── templates/                 # Spec/plan/tasks templates
 ├── scripts/                   # SDD workflow scripts
 └── extensions/                # Installed extensions

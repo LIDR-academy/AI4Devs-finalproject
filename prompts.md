@@ -31,7 +31,7 @@ Skills de **Superpowers** (paquete que extiende el comportamiento del agente) qu
 
 | Comando | Uso |
 |---------|-----|
-| `/speckit.constitution` | Crear los 6 principios de gobierno del proyecto en `.specify/memory/constitution.md` |
+| `/speckit.constitution` | Crear los 6 principios de gobierno del proyecto en `docs/constitution.md` |
 | `/speckit.specify` | Generar la spec inicial con 5 historias de usuario |
 | `/speckit.clarify` | Resolver 5 ambigüedades (persistencia, LLM, rate limit, narrativas, HTML parsing) |
 | `/speckit.plan` | Generar plan, research, data-model, contracts, quickstart |
@@ -58,7 +58,7 @@ Skills de **Superpowers** (paquete que extiende el comportamiento del agente) qu
 ```
 1. Brainstorming inicial (skill)
    ↓
-2. /speckit.constitution → .specify/memory/constitution.md
+2. /speckit.constitution → docs/constitution.md
    ↓
 3. /speckit.specify → specs/001-realista-mvp/spec.md
    ↓

@@ -38,6 +38,6 @@ No auth for MVP — anonymous sessions with UUID. Data model includes nullable `
 
 ## Governance
 
-This constitution supersedes all other development practices. Amendments require documentation in `.specify/memory/` and a migration plan for affected code. All PRs must verify compliance with Core Principles I-VI. Complexity must be justified against the YAGNI principle.
+This constitution supersedes all other development practices. Amendments require documentation in `docs/constitution.md` itself, version bumping, and a migration plan for affected code. All PRs must verify compliance with Core Principles I-VI. Complexity must be justified against the YAGNI principle.
 
-**Version**: 1.0.0 | **Ratified**: 2026-06-04 | **Last Amended**: 2026-06-04
+**Version**: 1.0.1 | **Ratified**: 2026-06-04 | **Last Amended**: 2026-06-12 (moved from `.specify/memory/` to `docs/`)
