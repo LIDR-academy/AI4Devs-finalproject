@@ -4,7 +4,7 @@ import { corsMiddleware } from './middleware/cors';
 import { requestLoggerMiddleware } from './middleware/logger';
 import { generalLimiter } from './middleware/rate-limit';
 import { errorHandler, notFoundHandler } from './middleware/error-handler';
-import healthRouter from './routes/health.routes';
+import { healthRouter } from './routes/health.routes';
 import { createProductsRouter } from './routes/products.routes';
 import { ProductRepository } from './repositories/product.repository';
 import { CatalogService } from './services/catalog.service';
@@ -28,4 +28,4 @@ app.use('/api/products', createProductsRouter(catalogService));
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-export default app;
+export { app };

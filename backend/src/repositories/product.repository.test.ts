@@ -1,4 +1,4 @@
-import { ProductRepository } from '../repositories/product.repository';
+import { ProductRepository } from './product.repository';
 
 const mockDecimal = (value: number) => ({ toNumber: () => value });
 

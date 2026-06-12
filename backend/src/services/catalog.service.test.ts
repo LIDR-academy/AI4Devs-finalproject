@@ -1,4 +1,4 @@
-import { CatalogService } from '../services/catalog.service';
+import { CatalogService } from './catalog.service';
 import { IProductRepository } from '../repositories/product.repository';
 import { Product } from '../types/domain';
 

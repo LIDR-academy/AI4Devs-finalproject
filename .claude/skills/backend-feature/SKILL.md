@@ -58,7 +58,12 @@ preference.
 - [ ] **Zod schemas** in `schemas/` (never inline); derive the type with `z.infer`.
 - [ ] **Domain errors** (`NotFoundError`, `StockError`, `ValidationError`) in
       `types/errors.ts`, thrown by the service, mapped to HTTP by the error handler.
-- [ ] **Named exports**; no `any`; repository returns domain types only.
+- [ ] **Named exports everywhere** (`export { app }`, `export { healthRouter }`, etc.);
+      `export default` only in Next.js page/layout files. No `any`. Repository returns
+      domain types only.
+- [ ] **Test files co-located** with the source they test: `catalog.service.test.ts`
+      next to `catalog.service.ts`, `product.repository.test.ts` next to
+      `product.repository.ts`, etc. Never put tests in a separate `__tests__/` folder.
 
 ---
 

@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { getHealth } from '../controllers/health.controller';
 
-const router = Router();
+const healthRouter = Router();
 
-router.get('/health', getHealth);
+healthRouter.get('/health', getHealth);
 
-export default router;
+export { healthRouter };

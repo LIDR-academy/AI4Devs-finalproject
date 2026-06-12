@@ -4,6 +4,7 @@ module.exports = {
   testEnvironment: 'node',
   testMatch: [
     '<rootDir>/src/**/*.test.ts',
+    '<rootDir>/prisma/**/*.test.ts',
   ],
-  roots: ['<rootDir>/src'],
+  roots: ['<rootDir>/src', '<rootDir>/prisma'],
 };

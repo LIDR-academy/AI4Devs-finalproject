@@ -11,9 +11,8 @@ describeIfDb('US-000-TASK-04: Seed integration tests', () => {
   const prisma = new PrismaClient();
 
   beforeAll(async () => {
-    // Run seed before tests
     execSync('ts-node prisma/seed.ts', {
-      cwd: path.join(__dirname, '../..'),
+      cwd: path.join(__dirname, '..'),
       env: { ...process.env },
       stdio: 'pipe',
     });
@@ -30,7 +29,7 @@ describeIfDb('US-000-TASK-04: Seed integration tests', () => {
 
   it('seed is idempotent — running twice does not duplicate', async () => {
     execSync('ts-node prisma/seed.ts', {
-      cwd: path.join(__dirname, '../..'),
+      cwd: path.join(__dirname, '..'),
       env: { ...process.env },
       stdio: 'pipe',
     });

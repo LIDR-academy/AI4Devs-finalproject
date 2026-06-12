@@ -20,6 +20,13 @@ clean architecture compliance + backend/frontend checklists + the security rules
       no Prisma-generated types leak upward.
 - [ ] One file per resource per layer, kebab-case naming.
 - [ ] TypeScript strict; **no `any`**.
+- [ ] **Named exports everywhere** — `export default` only in Next.js page/layout files
+      (`page.tsx`, `layout.tsx`). Express `app`, routers, middleware, services,
+      repositories, controllers all use named exports (`export { app }`, `export { healthRouter }`).
+- [ ] **Test files co-located** with the source they test (`catalog.service.ts` →
+      `catalog.service.test.ts` in the same directory). The only exceptions are E2E
+      tests (`e2e/tests/*.spec.ts`) and integration tests for files outside `src/`
+      (e.g., `prisma/seed.test.ts` next to `prisma/seed.ts`).
 
 ---
 

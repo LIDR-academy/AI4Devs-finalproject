@@ -1,6 +1,6 @@
 import request from 'supertest';
 import express from 'express';
-import app from '../app';
+import { app } from '../app';
 
 describe('US-000-TASK-05: Middleware stack', () => {
   describe('error handler', () => {
@@ -29,10 +29,8 @@ describe('US-000-TASK-05: Middleware stack', () => {
 
   describe('rate limiter', () => {
     it('returns 429 after exceeding mutation limit', async () => {
-      // Create a test app with mutationLimiter applied to a test route
-      // We test rate limiting behaviour by making 21 rapid requests
       const testApp = express();
-      const { mutationLimiter } = await import('../middleware/rate-limit');
+      const { mutationLimiter } = await import('./rate-limit');
       testApp.use(mutationLimiter);
       testApp.post('/test', (_req, res) => res.json({ ok: true }));
 

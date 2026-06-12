@@ -1,5 +1,5 @@
 import request from 'supertest';
-import app from '../app';
+import { app } from '../app';
 
 describe('US-000-TASK-06: GET /api/health', () => {
   it('returns 200 with ok status', async () => {
@@ -26,7 +26,7 @@ describe('US-000-TASK-06: GET /api/health', () => {
 describe('health controller unit', () => {
   it('calls res.status(200).json with correct shape', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { getHealth } = require('../controllers/health.controller');
+    const { getHealth } = require('./health.controller');
     const req = {} as ReturnType<typeof request>;
     const jsonMock = jest.fn();
     const statusMock = jest.fn().mockReturnValue({ json: jsonMock });
