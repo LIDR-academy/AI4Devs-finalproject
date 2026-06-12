@@ -67,14 +67,19 @@ Analyze a property listing URL. Auto-attaches to the active PurchaseProcess (cre
   "id": "uuid-nuevo",
   "url": "https://www.idealista.com/inmueble/12345678/",
   "numericScore": 38,
-  "redFlags": ["no_energy_certificate"],
+  "redFlags": [
+    { "flag": "no_energy_certificate", "reasoning": "..." }
+  ],
   "snapshotHash": "sha256:ff9933...",
   "previousHash": "sha256:a1b2c3d4...",
   "diff": {
     "price": { "from": 200000, "to": 190000, "delta": -10000 },
     "claimedM2": { "from": 85, "to": 85, "delta": 0 },
     "constructionYear": { "from": 1972, "to": 1972, "delta": 0 },
-    "redFlagsRemoved": ["imprecise_location", "inflated_square_meters"],
+    "redFlagsRemoved": [
+      { "flag": "imprecise_location", "reasoning": "..." },
+      { "flag": "inflated_square_meters", "reasoning": "..." }
+    ],
     "redFlagsAdded": []
   },
   "processSummary": { "...": "..." }
@@ -423,6 +428,56 @@ Update purchase process (status, financial profile, propertyPrice, currentStage)
 
 ---
 
+### GET /api/admin/portal-health
+
+Estado actual de todos los portales inmobiliarios monitorizados (FR-027). Útil para diagnóstico proactivo y dashboard de ops. Sin auth en MVP (marcado para proteger en producción).
+
+**Response (200):**
+```json
+{
+  "portals": [
+    {
+      "portal": "idealista",
+      "status": "blocked",
+      "successRate": 0.32,
+      "totalRequests": 247,
+      "consecutiveFailures": 8,
+      "lastCheckedAt": "2026-06-15T10:23:00Z",
+      "lastSuccessAt": "2026-06-15T08:45:00Z",
+      "alertTriggeredAt": "2026-06-15T09:12:00Z",
+      "notes": "auto-recovery every 30min via .m. subdomain"
+    },
+    {
+      "portal": "fotocasa",
+      "status": "ok",
+      "successRate": 0.98,
+      "totalRequests": 89,
+      "consecutiveFailures": 0,
+      "lastCheckedAt": "2026-06-15T10:23:00Z",
+      "lastSuccessAt": "2026-06-15T10:22:30Z",
+      "alertTriggeredAt": null,
+      "notes": null
+    },
+    {
+      "portal": "habitaclia",
+      "status": "throttled",
+      "successRate": 0.72,
+      "totalRequests": 56,
+      "consecutiveFailures": 2,
+      "lastCheckedAt": "2026-06-15T10:23:00Z",
+      "lastSuccessAt": "2026-06-15T10:15:00Z",
+      "alertTriggeredAt": null,
+      "notes": "backoff exponencial activado"
+    }
+  ],
+  "lastCronRun": "2026-06-15T10:20:00Z"
+}
+```
+
+**Estados posibles**: `ok` | `throttled` | `blocked` | `unknown`. Las transiciones se documentan en `data-model.md` §State Transitions.
+
+---
+
 ### GET /api/checklist/:processId
 
 Get checklist items ordered by stage.
@@ -438,9 +493,11 @@ Get checklist items ordered by stage.
       "stage": "pre_arras",
       "title": "Nota simple del registro",
       "description": "Solicitar nota simple en el Registro de la Propiedad",
-      "documentsNeeded": [],
+      "documentsNeeded": ["DNI", "escritura_anterior"],
       "estimatedDays": 3,
-      "completed": false
+      "completed": false,
+      "completedAt": null,
+      "sortOrder": 1
     }
   ],
   "updatedAt": "2026-06-04T12:00:00Z"
