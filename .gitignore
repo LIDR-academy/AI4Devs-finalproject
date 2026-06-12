@@ -24,9 +24,8 @@ Thumbs.db
 # Agent folder (may store credentials in future updates)
 .opencode/
 
-# Spec-kit generated config (regenerated on specify init)
-.specify/integration.json
-.specify/init-options.json
+# Spec-kit toolkit (regenerable con 'specify init'; no versionado en proyectos no colaborativos)
+.specify/
 
 # Python (spec-kit CLI)
 __pycache__/
