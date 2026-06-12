@@ -265,7 +265,7 @@ curl http://localhost:8100/readyz
 Administrative Console:
 
 ```text
-http://localhost:8080
+http://localhost:8081
 ```
 
 ### Backend
@@ -327,10 +327,42 @@ http://localhost:8100/healthz
 Statewave Admin:
 
 ```text
-http://localhost:8080
+http://localhost:8081
 ```
 
 If all services respond correctly, the environment is ready to run the MVP.
+
+### Quick Checklist (Statewave-only)
+
+Run these 3 commands to validate that AI extraction is fully routed through Statewave:
+
+```bash
+curl -sS http://localhost:8000/health && echo
+curl -sS http://localhost:8100/healthz && echo
+```
+
+```bash
+PATIENT_JSON=$(curl -sS -X POST http://localhost:8000/patients \
+   -H 'Content-Type: application/json' \
+   -d '{"name":"Statewave Checklist","birth_date":"1990-01-01","sex":"F"}')
+PID=$(echo "$PATIENT_JSON" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
+
+ENCOUNTER_JSON=$(curl -sS -X POST http://localhost:8000/encounters \
+   -H 'Content-Type: application/json' \
+   -d '{"patient_id":"'"$PID"'","date":"2026-06-12","type":"consultation","note_text":"Patient reports headache, nausea and photophobia. Analgesia is prescribed and follow-up in 48 hours is requested."}')
+EID=$(echo "$ENCOUNTER_JSON" | sed -n 's/.*"id":"\([^"]*\)".*/\1/p')
+
+curl -sS -X POST "http://localhost:8000/encounters/$EID/extract-events" | jq 'length'
+```
+
+```bash
+curl -sS "http://localhost:8000/patients/$PID/timeline" | jq '.events | length'
+```
+
+Expected result:
+
+- `extract-events` returns a number greater than 0.
+- `timeline.events` returns the same number of events or more.
 
 ---
 
