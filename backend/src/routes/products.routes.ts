@@ -7,6 +7,7 @@ export function createProductsRouter(catalogService: ICatalogService): Router {
   const controller = new ProductsController(catalogService);
 
   router.get('/', controller.getProducts);
+  router.get('/:id', controller.getProductById);
 
   return router;
 }
