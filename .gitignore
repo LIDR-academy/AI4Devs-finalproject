@@ -30,6 +30,7 @@ build/
 .next/
 out/
 coverage/
+*.tsbuildinfo
 
 # Prisma compiled artifacts
 backend/prisma/*.js
