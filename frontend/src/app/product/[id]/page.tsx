@@ -24,17 +24,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     const product = await fetchProduct(params.id);
     const imageUrl = buildImageUrl(product.image);
+    const title = `${product.name} | ${product.brand}`;
     return {
-      title: product.name,
+      title,
       description: product.description,
       openGraph: {
-        title: product.name,
+        title,
+        description: product.description,
+        images: [{ url: imageUrl, alt: product.name }],
+        type: 'website',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title,
         description: product.description,
         images: [imageUrl],
       },
     };
   } catch {
-    return { title: 'RunMarket — Producto' };
+    return { title: 'Producto no encontrado' };
   }
 }
 

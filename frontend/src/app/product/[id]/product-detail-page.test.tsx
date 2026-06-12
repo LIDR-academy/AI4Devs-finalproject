@@ -105,12 +105,12 @@ describe('ProductDetailPage', () => {
 });
 
 describe('generateMetadata', () => {
-  it('returns title with product name', async () => {
-    vi.mocked(fetchProduct).mockResolvedValue(buildProduct({ name: 'Brooks Ghost 16' }));
+  it('returns title with product name and brand', async () => {
+    vi.mocked(fetchProduct).mockResolvedValue(buildProduct({ name: 'Brooks Ghost 16', brand: 'Brooks' }));
 
     const metadata = await generateMetadata({ params: { id: 'uuid-1' } });
 
-    expect(metadata.title).toBe('Brooks Ghost 16');
+    expect(metadata.title).toBe('Brooks Ghost 16 | Brooks');
   });
 
   it('returns description with product description', async () => {
