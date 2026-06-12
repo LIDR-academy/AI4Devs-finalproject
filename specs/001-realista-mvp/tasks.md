@@ -100,8 +100,7 @@
 - [ ] T032c [US1] (Eliminado — LLMVisionLocationAdapter no viable, ver FR-016 actualizado)
 - [ ] T032d [US1] (Eliminado — LocationResolverService ya no encadena 3 adaptadores; flujo simplificado)
 - [ ] T033 [US1] Implementar OpenRouterAdapter (LLM system prompt, salida JSON estructurada con `reasoning: string` por cada red flag, ver FR-025) en `backend/src/adapters/openrouter/OpenRouterAdapter.ts`
-- [ ] T033a [P] [US1] Actualizar ListingLens UI: mostrar `reasoning` (frase del anuncio + inferencia) bajo cada red flag detectada con icono/expandible, sin ocultar al usuario (AI Reasoning Transparency, FR-025) en `frontend/src/routes/listing-lens/+page.svelte`
-- [ ] T034 [US1] Implementar AvenaScoreAdapter (@avena/score fallback) en `backend/src/adapters/avena-score/AvenaScoreAdapter.ts`
+- [ ] T034 [US1] (Eliminado — @avena/score ya no existe como paquete npm. El proyecto Avena Terminal pivotó a infraestructura de datos institucional. El fallback ahora es: LLM → texto manual pegado por el usuario. Ver ADR-004.)
 - [ ] T035 [US1] Implementar CatastroAdapter (cross-reference API, consulta por coordenadas — ahora consume Coordinates de LocationResolverService) en `backend/src/adapters/catastro/CatastroAdapter.ts`
 - [ ] T036 [US1] Implementar MiraTuZonaAdapter (generación de enlace de ubicación) en `backend/src/adapters/miratuzona/MiraTuZonaAdapter.ts`
 - [ ] T037 [US1] Implementar AnalyzeListingUseCase orquestando adaptadores (LLM → location resolver → cruce catastral → MiraTuZona) en `backend/src/domain/services/AnalyzeListingUseCase.ts`
@@ -115,8 +114,7 @@
 - [ ] T039 [US1] Implementar ruta analyze listing POST /api/listings/analyze (ahora devuelve processSummary) en `backend/src/api/routes/listings.ts`
 - [ ] T040 [US1] Crear controlador de listings gestionando validación de request y dispatch de use case en `backend/src/api/controllers/listingsController.ts`
 - [ ] T041 [US1] Añadir helper de validación de URL (valida formato, comprueba accesibilidad) en `backend/src/infrastructure/utils/urlValidator.ts`
-- [ ] T042 [US1] Crear UI de página Listing Lens con input URL, **estado de carga con progress events de 8-15s** (FR-018), tarjeta de resultados en `frontend/src/routes/listing-lens/+page.svelte`
-- [ ] T042a [US1] Crear componente AI disclaimer mostrado en resultados de análisis (FR-017) en `frontend/src/lib/components/AIDisclaimer.svelte`
+- [ ] T042 [US1] Crear UI de página Listing Lens con input URL, **estado de carga con progress events de 8-15s** (FR-018), tarjeta de resultados con **AI Reasoning por red flag** (FR-025), y **AI disclaimer** persistente (FR-017, en `frontend/src/lib/components/AIDisclaimer.svelte`) en `frontend/src/routes/listing-lens/+page.svelte`
 - [ ] T043 [US1] Crear server-side loader que proxy la petición analyze al backend en `frontend/src/routes/listing-lens/+page.server.ts`
 - [ ] T044 [US1] Crear store de listings (Svelte writable) para historial de listings analizados en `frontend/src/lib/stores/listings.ts`
 
@@ -157,7 +155,7 @@
 - [ ] T058a [US2] Implementar agregador de campos computed que ejecuta calculadores de amortización e inversión y devuelve el resultado en `backend/src/domain/services/PurchaseProcessAggregator.ts`
 - [ ] T059 [US2] Implementar ruta PATCH /api/purchase-processes/:id (ahora soporta update directo de `propertyPrice` y `currentStage` para permitir override/avance de etapa) en `backend/src/api/routes/purchaseProcesses.ts`
 - [ ] T060 [US2] Crear controlador de purchase process en `backend/src/api/controllers/purchaseProcessController.ts`
-- [ ] T061 [US2] Crear UI de página Mortgage Compass: formulario multi-paso (perfil → gastos ocultos → persona → playground de estrategias). **propertyPrice pre-rellenado del listing con link a la fuente. Mostrar AI disclaimer** en `frontend/src/routes/mortgage-compass/+page.svelte`
+- [ ] T061 [US2] Crear UI de página Mortgage Compass: formulario multi-paso (perfil → gastos ocultos → persona → playground de estrategias) con **gráfico side-by-side** amortización vs inversión, **insight destacado** y **toggle valor real** (FR-021). **propertyPrice pre-rellenado del listing con link a la fuente. Mostrar AI disclaimer** en `frontend/src/routes/mortgage-compass/+page.svelte`
 - [ ] T062 [US2] Crear server-side loader que proxy el purchase process al backend en `frontend/src/routes/mortgage-compass/+page.server.ts`
 - [ ] T062a [P] [US2] Crear `<AmortizationVsInvestmentChart>` componente: gráfico de barras side-by-side comparando los 4 escenarios de amortización (totalInterest) vs los 3 escenarios de inversión (valor nominal a 30 años) en `frontend/src/lib/components/AmortizationVsInvestmentChart.svelte`
 - [ ] T062b [P] [US2] Añadir insight destacado en Mortgage Compass: caja visual que resume "Si amortizas €300/mes ahorras €48K y reduces 8 años vs si inviertes esa cantidad, acumulas ~€245K en 30 años" en `frontend/src/routes/mortgage-compass/+page.svelte`
@@ -220,14 +218,8 @@
 - [ ] T068 [US3] Implementar ruta GET /api/listings/:id devolviendo detalle de un listing con diff vs snapshot anterior en `backend/src/api/routes/listings.ts`
 - [ ] T069 [US3] Implementar servicio de comparación de snapshots (SHA-256 diff detection) para re-análisis en `backend/src/domain/services/SnapshotService.ts`
 - [ ] T070 [US3] Implementar ruta GET /api/session devolviendo/creando UUID de sesión en `backend/src/api/routes/session.ts`
-- [ ] T070a [US3] Implementar ruta GET /api/dashboard devolviendo vista agregada (process + latestListing + computed + checklist + stats) en `backend/src/api/routes/dashboard.ts`
-- [ ] T070b [US3] Implementar DashboardAggregator: combina purchaseProcess + latestAnalyzedListing + computed fields + checklist progress + stats en un solo objeto en `backend/src/domain/services/DashboardAggregator.ts`
-- [ ] T070c [US3] Implementar StageAdvancementService: lógica para auto-sugerir avance de `currentStage` cuando todos los ítems de la etapa actual del checklist están completos en `backend/src/domain/services/StageAdvancementService.ts`
-- [ ] T070d [US3] Crear UI de página Dashboard con estado vacío (cuando `process: null`) y CTAs (FR-019) en `frontend/src/routes/+page.svelte`
-- [ ] T070e [US3] Crear UI selectora de etapa del proceso (botón "He firmado las arras" → PATCH currentStage) en `frontend/src/lib/components/StageAdvancer.svelte`
-- [ ] T070f [US3] Crear server-side loader que llama a GET /api/dashboard en `frontend/src/routes/+page.server.ts`
-- [ ] T071 [US3] Crear UI de página Dashboard: tarjetas de listing, instantánea financiera, CTAs, estado vacío (sin proceso activo) en `frontend/src/routes/+page.svelte` (sobreescribe el home por defecto)
-- [ ] T072 [US3] Crear server-side loader que obtiene el purchase process activo con `computed` para el dashboard en `frontend/src/routes/+page.server.ts`
+- [ ] T070a [US3] Implementar DashboardAggregator + ruta GET /api/dashboard en `backend/src/api/routes/dashboard.ts` (vista agregada con process + latestListing + computed + checklist + stats + currentStage + auto-suggest de avance de etapa)
+- [ ] T070b [US3] Crear UI de página Dashboard con estado vacío (FR-019), tarjetas de listing, instantánea financiera, **botón "He firmado las arras"** para PATCH currentStage en `frontend/src/routes/+page.svelte` (sobreescribe el home por defecto)
 - [ ] T073 [US3] Implementar flujo de re-análisis: botón dispara nuevo análisis, muestra highlight del diff en `frontend/src/lib/stores/listings.ts`
 
 **Checkpoint**: Dashboard totalmente funcional — estado del proceso, instantánea financiera, re-análisis con diff. Las historias P1+P2 funcionando independientemente.
@@ -240,11 +232,11 @@
 
 **Prueba independiente**: Abrir página del cronograma → verificar todos los hitos mostrados con descripciones y duraciones
 
-### Implementación para Historia 4
+### Implementación para Historia 5
 
-- [ ] T074 [US4] Crear BureaucraticMilestone value object con etapas, duraciones, requisitos documentales en `backend/src/domain/value-objects/BureaucraticMilestone.ts`
-- [ ] T075 [US4] Crear datos estáticos del cronograma: arras → verificación legal → tasación → hipoteca → notaría → registro → escritura en `frontend/src/lib/data/timelineData.ts`
-- [ ] T076 [US4] Crear UI de página Timeline con línea temporal vertical, hitos expandibles en `frontend/src/routes/timeline/+page.svelte`
+- [ ] T074 [US5] Crear BureaucraticMilestone value object con etapas, duraciones, requisitos documentales en `backend/src/domain/value-objects/BureaucraticMilestone.ts`
+- [ ] T075 [US5] Crear datos estáticos del cronograma: arras → verificación legal → tasación → hipoteca → notaría → registro → escritura en `frontend/src/lib/data/timelineData.ts`
+- [ ] T076 [US5] Crear UI de página Timeline con línea temporal vertical, hitos expandibles en `frontend/src/routes/timeline/+page.svelte`
 
 **Checkpoint**: Timeline totalmente funcional — visual, interactivo, todos los hitos detallados
 
@@ -256,20 +248,20 @@
 
 **Prueba independiente**: Abrir checklist → marcar ítems → recargar → verificar progreso persistido
 
-### Tests para Historia 5
+### Tests para Historia 6
 
 > Escribir estos PRIMERO, asegurar que FALLAN antes de la implementación
 
-- [ ] T077 [P] [US5] Test de integración PATCH /api/checklist/:processId/items/:itemId toggle de completado en `backend/tests/integration/api/checklist.test.ts`
+- [ ] T077 [P] [US6] Test de integración PATCH /api/checklist/:processId/items/:itemId toggle de completado en `backend/tests/integration/api/checklist.test.ts`
 
-### Implementación para Historia 5
+### Implementación para Historia 6
 
-- [ ] T078 [US5] Crear agregado de dominio Checklist (según data-model.md) en `backend/src/domain/aggregates/Checklist.ts`
-- [ ] T079 [US5] Implementar ruta GET /api/checklist/:processId en `backend/src/api/routes/checklist.ts`
-- [ ] T080 [US5] Implementar ruta PATCH /api/checklist/:processId/items/:itemId para toggle en `backend/src/api/routes/checklist.ts`
-- [ ] T081 [US5] Crear controlador de checklist en `backend/src/api/controllers/checklistController.ts`
-- [ ] T082 [US5] Crear datos seed de checklist estático (documentos por etapa: pre-arras, post-arras, pre-escritura, post-escritura) en `backend/src/infrastructure/prisma/seed.ts`
-- [ ] T083 [US5] Crear UI de página Checklist: ítems agrupados por etapa, barras de progreso, interacción de toggle en `frontend/src/routes/checklist/+page.svelte`
+- [ ] T078 [US6] Crear agregado de dominio Checklist (según data-model.md) en `backend/src/domain/aggregates/Checklist.ts`
+- [ ] T079 [US6] Implementar ruta GET /api/checklist/:processId en `backend/src/api/routes/checklist.ts`
+- [ ] T080 [US6] Implementar ruta PATCH /api/checklist/:processId/items/:itemId para toggle en `backend/src/api/routes/checklist.ts`
+- [ ] T081 [US6] Crear controlador de checklist en `backend/src/api/controllers/checklistController.ts`
+- [ ] T082 [US6] Crear datos seed de checklist estático (documentos por etapa: pre-arras, post-arras, pre-escritura, post-escritura) en `backend/src/infrastructure/prisma/seed.ts`
+- [ ] T083 [US6] Crear UI de página Checklist: ítems agrupados por etapa, barras de progreso, interacción de toggle en `frontend/src/routes/checklist/+page.svelte`
 
 **Checkpoint**: Checklist totalmente funcional — agrupado por etapa, toggle persiste, progreso tracked
 
@@ -283,7 +275,6 @@
 - [ ] T085 [P] Generar iconos PWA (192px, 512px) desde SVG base en `frontend/static/`
 - [ ] T086 [P] Añadir skeletons de carga y estados de error a todas las páginas (Listing Lens, Mortgage Compass, Dashboard)
 - [ ] T087 [P] Añadir mensajes de error y etiquetas de UI en español consistentes en todas las páginas
-- [ ] T087a [P] Implementar componente `<ProgressChecklist>` que muestra los progress events del análisis (fetching → resolving → analyzing → cross_referencing) en `frontend/src/lib/components/ProgressChecklist.svelte`
 - [ ] T091a [P] Añadir banner global de AI disclaimer **persistente** en el layout principal (`+layout.svelte`) explicando que el análisis es generado por IA. Se muestra SIEMPRE que haya contenido IA visible (no solo en primera visita) en `frontend/src/routes/+layout.svelte`
 - [ ] T088 Crear test E2E: flujo completo (pegar URL → score → perfil financiero → gastos ocultos → estrategia → dashboard) en `e2e/flows/full-flow.spec.ts`
 - [ ] T089 Ejecutar validación de quickstart.md: verificar que todos los comandos de setup y test funcionan desde cero
@@ -349,7 +340,6 @@ Task: "T032: Implementar CheerioAdapter en backend/src/adapters/cheerio/CheerioA
 Task: "T032a: Implementar DeclaredLocationAdapter en backend/src/adapters/location/DeclaredLocationAdapter.ts"
 Task: "T032b: Implementar GeocodingAdapter en backend/src/adapters/location/GeocodingAdapter.ts"
 Task: "T033: Implementar OpenRouterAdapter en backend/src/adapters/openrouter/OpenRouterAdapter.ts"
-Task: "T034: Implementar AvenaScoreAdapter en backend/src/adapters/avena-score/AvenaScoreAdapter.ts"
 ```
 
 ---

@@ -32,7 +32,7 @@
 
 **Estrategia de selección de modelo**:
 - Primario: Claude 3.5 Sonnet (mejor análisis de subtexto y manipulación lingüística en español)
-- Multimodal fallback: Claude 3.5 Sonnet con capacidad de visión (para `LLMVisionLocationAdapter`)
+- Multimodal: descartado — `LLMVisionLocationAdapter` eliminado por inviabilidad técnica (ver sección 8)
 - Alternativo: GPT-4o (mejor structured JSON output)
 - Configurable vía `OPENROUTER_MODEL` env var
 
@@ -61,25 +61,6 @@
 - Bankinter/Evo API: requieren ser cliente, no públicas
 
 **Implementación**: Valor por defecto en constante `DEFAULT_EURIBOR_RATE`. Campo `interestRate` en el perfil financiero permite sobrescritura.
-
----
-
-## 4. Integración de @avena/score
-
-**Decisión**: Usar `@avena/score` como fallback cuando el LLM no está disponible o devuelve JSON malformado.
-
-**Justificación**:
-- Paquete MIT, ligero, validado matemáticamente
-- Scoring numérico objetivo (0-100) basado en presencia/ausencia de datos en el anuncio
-- Sin dependencia de red (funciona offline en el servidor)
-- Crédito en NOTICE.md requerido por la licencia MIT
-
-**Alternativas consideradas**:
-- Sistema de scoring propio: reinventar la rueda, sin validación externa
-- Solo LLM: punto único de fallo, sin fallback si la API no responde
-- Idealista Trust Shield: proyecto MIT pero requiere scraping complejo
-
-**Implementación**: `AvenaScoreAdapter` implementa `ListingAnalyzerPort`. Se invoca automáticamente cuando `OpenRouterAdapter` falla. Devuelve score numérico pero no banderas rojas cualitativas.
 
 ---
 
