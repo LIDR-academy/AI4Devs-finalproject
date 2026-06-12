@@ -101,6 +101,73 @@ describe('GET /api/products', () => {
   });
 });
 
+describe('GET /api/products/:id', () => {
+  it('responds 200 with the product when it exists', async () => {
+    const product = buildProduct({ id: '550e8400-e29b-41d4-a716-446655440000' });
+    const service = makeCatalogService({
+      getProductById: jest.fn().mockResolvedValue(product),
+    });
+
+    const res = await request(buildApp(service)).get(
+      '/api/products/550e8400-e29b-41d4-a716-446655440000',
+    );
+
+    expect(res.status).toBe(200);
+    expect(res.body.id).toBe('550e8400-e29b-41d4-a716-446655440000');
+    expect(res.body.name).toBe('Nike Pegasus 41');
+    expect(res.body.price).toBe(129.99);
+  });
+
+  it('responds 404 when product does not exist', async () => {
+    const service = makeCatalogService({
+      getProductById: jest.fn().mockResolvedValue(null),
+    });
+
+    const res = await request(buildApp(service)).get(
+      '/api/products/550e8400-e29b-41d4-a716-000000000000',
+    );
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBeDefined();
+  });
+
+  it('responds 404 when id has valid format but no matching product', async () => {
+    const service = makeCatalogService({
+      getProductById: jest.fn().mockResolvedValue(null),
+    });
+
+    const res = await request(buildApp(service)).get('/api/products/prod-not-found');
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBeDefined();
+  });
+
+  it('responds 400 when id exceeds maximum length', async () => {
+    const service = makeCatalogService();
+    const longId = 'a'.repeat(201);
+
+    const res = await request(buildApp(service)).get(`/api/products/${longId}`);
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBeDefined();
+    expect(service.getProductById).not.toHaveBeenCalled();
+  });
+
+  it('does not expose internal stack traces on service error', async () => {
+    const service = makeCatalogService({
+      getProductById: jest.fn().mockRejectedValue(new Error('DB failure')),
+    });
+
+    const res = await request(buildApp(service)).get(
+      '/api/products/550e8400-e29b-41d4-a716-446655440000',
+    );
+
+    expect(res.status).toBe(500);
+    expect(JSON.stringify(res.body)).not.toContain('DB failure');
+    expect(JSON.stringify(res.body)).not.toContain('stack');
+  });
+});
+
 describe('GET /api/products with running attribute filters', () => {
   it('passes parsed single distance filter to the service', async () => {
     const service = makeCatalogService();

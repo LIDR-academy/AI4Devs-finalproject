@@ -3,10 +3,17 @@ import { ProductFilters, ProductsResponse } from '../types';
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 
+export class ApiError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
 async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: 'Unknown error' }));
-    throw new Error(body.error ?? `HTTP ${res.status}`);
+    throw new ApiError(res.status, body.error ?? `HTTP ${res.status}`);
   }
   return res.json() as Promise<T>;
 }
@@ -24,6 +31,10 @@ export async function fetchProducts(filters?: ProductFilters): Promise<ProductsR
   if (filters?.objective) filters.objective.forEach(v => params.append('objective', v));
   const qs = params.toString();
   return apiGet<ProductsResponse>(`/products${qs ? `?${qs}` : ''}`);
+}
+
+export async function fetchProduct(id: string): Promise<import('../types').Product> {
+  return apiGet(`/products/${encodeURIComponent(id)}`);
 }
 
 export async function apiPost<T>(path: string, body: unknown): Promise<T> {
