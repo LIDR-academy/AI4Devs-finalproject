@@ -18,6 +18,27 @@ export interface CreatePantryItemPayload {
   expirationDate?: string;
 }
 
+export interface ExpirationEstimateResponse {
+  pantryItemId: string;
+  itemName: string;
+  suggestedExpirationDate: string;
+  confidence: number;
+  method: "RULE_BASED_SPAIN" | "MANUAL_OVERRIDE";
+  lowConfidence: boolean;
+  category: string;
+}
+
+export interface ExpirationOverrideResponse {
+  pantryItemId: string;
+  expirationDate: string;
+  assessment: {
+    suggestedExpirationDate: string;
+    confidence: number;
+    method: "RULE_BASED_SPAIN" | "MANUAL_OVERRIDE";
+    userConfirmed: boolean;
+  };
+}
+
 interface ApiErrorBody {
   message?: string | string[];
 }
@@ -67,4 +88,28 @@ export function createPantryItem(
     method: "POST",
     body: JSON.stringify(payload),
   });
+}
+
+export function estimateExpiration(
+  pantryItemId: string,
+): Promise<ExpirationEstimateResponse> {
+  return requestJson<ExpirationEstimateResponse>(
+    `/pantry/items/${pantryItemId}/estimate-expiration`,
+    {
+      method: "POST",
+    },
+  );
+}
+
+export function overrideExpiration(
+  pantryItemId: string,
+  expirationDate: string,
+): Promise<ExpirationOverrideResponse> {
+  return requestJson<ExpirationOverrideResponse>(
+    `/pantry/items/${pantryItemId}/expiration`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ expirationDate }),
+    },
+  );
 }

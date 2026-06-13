@@ -85,6 +85,66 @@ paths:
         '403':
           description: No pantry access for current user
 
+  /api/pantry/items/{id}/estimate-expiration:
+    post:
+      summary: Generate expiration estimate and confidence for a pantry item
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '201':
+          description: Expiration estimate generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpirationEstimate'
+        '401':
+          description: Missing or invalid token
+        '403':
+          description: No access to pantry item
+        '404':
+          description: Pantry item not found
+
+  /api/pantry/items/{id}/expiration:
+    patch:
+      summary: Override pantry item expiration date with manual confirmation
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OverrideExpirationRequest'
+      responses:
+        '200':
+          description: Expiration date overridden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OverrideExpirationResponse'
+        '400':
+          description: Validation error
+        '401':
+          description: Missing or invalid token
+        '403':
+          description: No access to pantry item
+        '404':
+          description: Pantry item not found
+
   /api/receipts/upload:
     post:
       summary: Upload and process a receipt with OCR
@@ -454,3 +514,77 @@ components:
         addToPantry:
           type: boolean
           default: false
+
+    ExpirationEstimate:
+      type: object
+      required:
+        - pantryItemId
+        - itemName
+        - suggestedExpirationDate
+        - confidence
+        - method
+        - lowConfidence
+        - category
+      properties:
+        pantryItemId:
+          type: string
+          format: uuid
+        itemName:
+          type: string
+        suggestedExpirationDate:
+          type: string
+          format: date-time
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        method:
+          type: string
+          enum: [RULE_BASED_SPAIN, MANUAL_OVERRIDE]
+        lowConfidence:
+          type: boolean
+        category:
+          type: string
+
+    OverrideExpirationRequest:
+      type: object
+      required:
+        - expirationDate
+      properties:
+        expirationDate:
+          type: string
+          format: date-time
+
+    OverrideExpirationResponse:
+      type: object
+      required:
+        - pantryItemId
+        - expirationDate
+        - assessment
+      properties:
+        pantryItemId:
+          type: string
+          format: uuid
+        expirationDate:
+          type: string
+          format: date-time
+        assessment:
+          type: object
+          required:
+            - suggestedExpirationDate
+            - confidence
+            - method
+            - userConfirmed
+          properties:
+            suggestedExpirationDate:
+              type: string
+              format: date-time
+            confidence:
+              type: number
+              format: float
+            method:
+              type: string
+              enum: [RULE_BASED_SPAIN, MANUAL_OVERRIDE]
+            userConfirmed:
+              type: boolean
