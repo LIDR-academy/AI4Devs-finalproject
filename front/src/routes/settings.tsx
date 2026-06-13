@@ -1,12 +1,16 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Bell, Cloud, User, Shield, Palette, Info, ChevronRight, LogOut, Users } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { clearSession, getSessionUser } from "@/features/auth/session";
 import {
   requireAuthBeforeLoad,
   useRequireAuthRedirect,
 } from "@/features/auth/route-guard";
+import {
+  getNotificationPreferences,
+  updateNotificationPreferences,
+} from "@/features/notifications/notifications.api";
 
 export const Route = createFileRoute("/settings")({
   beforeLoad: requireAuthBeforeLoad,
@@ -22,6 +26,78 @@ function SettingsPage() {
 
   const navigate = useNavigate();
   const currentUser = getSessionUser();
+  const [notificationPreferences, setNotificationPreferences] = useState({
+    expirationEnabled: true,
+    priceDropEnabled: true,
+    foodConsumedByOthersEnabled: true,
+  });
+  const [loadingPreference, setLoadingPreference] = useState(true);
+  const [savingPreference, setSavingPreference] = useState(false);
+  const [preferenceMessage, setPreferenceMessage] = useState<string | null>(null);
+  const [preferenceError, setPreferenceError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadPreferences() {
+      setLoadingPreference(true);
+      setPreferenceError(null);
+      try {
+        const prefs = await getNotificationPreferences();
+        if (mounted) {
+          setNotificationPreferences(prefs);
+        }
+      } catch (apiError) {
+        if (mounted) {
+          setPreferenceError(
+            apiError instanceof Error
+              ? apiError.message
+              : "Could not load notification preferences.",
+          );
+        }
+      } finally {
+        if (mounted) {
+          setLoadingPreference(false);
+        }
+      }
+    }
+
+    void loadPreferences();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  async function handleTogglePreference(
+    key: keyof typeof notificationPreferences,
+  ) {
+    if (loadingPreference || savingPreference) {
+      return;
+    }
+
+    const nextPreferences = {
+      ...notificationPreferences,
+      [key]: !notificationPreferences[key],
+    };
+
+    setSavingPreference(true);
+    setPreferenceError(null);
+    setPreferenceMessage(null);
+
+    try {
+      const updated = await updateNotificationPreferences(nextPreferences);
+      setNotificationPreferences(updated);
+      setPreferenceMessage("Notification preferences saved.");
+    } catch (apiError) {
+      setPreferenceError(
+        apiError instanceof Error
+          ? apiError.message
+          : "Could not save notification preferences.",
+      );
+    } finally {
+      setSavingPreference(false);
+    }
+  }
 
   function handleSignOut() {
     clearSession();
@@ -43,10 +119,58 @@ function SettingsPage() {
       </Group>
 
       <Group title="Notifications" icon={<Bell className="size-4" />}>
-        <Toggle label="Food expiration" defaultChecked />
-        <Toggle label="Price drop" defaultChecked />
-        <Toggle label="Food consumed by others" />
+        <Link
+          to="/notifications"
+          className="flex items-center justify-between px-4 py-3.5"
+        >
+          <p className="text-[14.5px] font-medium">Notification center</p>
+          <ChevronRight className="size-4 text-muted-foreground" />
+        </Link>
+        <Toggle
+          label="Food expiration"
+          on={notificationPreferences.expirationEnabled}
+          onToggle={() => {
+            void handleTogglePreference("expirationEnabled");
+          }}
+          disabled={loadingPreference || savingPreference}
+          testId="notification-expiration-toggle"
+        />
+        <Toggle
+          label="Price drop"
+          on={notificationPreferences.priceDropEnabled}
+          onToggle={() => {
+            void handleTogglePreference("priceDropEnabled");
+          }}
+          disabled={loadingPreference || savingPreference}
+          testId="notification-price-drop-toggle"
+        />
+        <Toggle
+          label="Food consumed by others"
+          on={notificationPreferences.foodConsumedByOthersEnabled}
+          onToggle={() => {
+            void handleTogglePreference("foodConsumedByOthersEnabled");
+          }}
+          disabled={loadingPreference || savingPreference}
+          testId="notification-food-consumed-toggle"
+        />
       </Group>
+
+      {preferenceMessage && (
+        <p
+          data-testid="notification-preference-message"
+          className="mb-4 rounded-xl border border-success/20 bg-success/10 px-3 py-2 text-[12px] text-success"
+        >
+          {preferenceMessage}
+        </p>
+      )}
+      {preferenceError && (
+        <p
+          data-testid="notification-preference-error"
+          className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-[12px] text-destructive"
+        >
+          {preferenceError}
+        </p>
+      )}
 
       <Group title="Cloud Sync" icon={<Cloud className="size-4" />}>
         <Row label="Sync provider" value="iCloud" />
@@ -122,17 +246,49 @@ function Row({ label, value, danger }: { label: string; value?: string; danger?:
   );
 }
 
-function Toggle({ label, defaultChecked }: { label: string; defaultChecked?: boolean }) {
-  const [on, setOn] = useState(!!defaultChecked);
+function Toggle({
+  label,
+  defaultChecked,
+  on,
+  onToggle,
+  disabled,
+  testId,
+}: {
+  label: string;
+  defaultChecked?: boolean;
+  on?: boolean;
+  onToggle?: () => void;
+  disabled?: boolean;
+  testId?: string;
+}) {
+  const [internalOn, setInternalOn] = useState(!!defaultChecked);
+  const resolvedOn = typeof on === "boolean" ? on : internalOn;
+
+  function handleClick() {
+    if (disabled) {
+      return;
+    }
+
+    if (onToggle) {
+      onToggle();
+      return;
+    }
+
+    setInternalOn(!resolvedOn);
+  }
+
   return (
     <div className="flex items-center justify-between px-4 py-3.5">
       <span className="text-[14.5px]">{label}</span>
       <button
-        onClick={() => setOn(!on)}
-        className={`relative h-7 w-11 rounded-full transition ${on ? "bg-primary" : "bg-muted"}`}
-        aria-pressed={on}
+        data-testid={testId}
+        onClick={handleClick}
+        className={`relative h-7 w-11 rounded-full transition ${resolvedOn ? "bg-primary" : "bg-muted"} ${disabled ? "opacity-60" : ""}`}
+        aria-pressed={resolvedOn}
+        aria-label={label}
+        disabled={disabled}
       >
-        <span className={`absolute top-0.5 size-6 rounded-full bg-white shadow-ios transition-all ${on ? "left-[18px]" : "left-0.5"}`} />
+        <span className={`absolute top-0.5 size-6 rounded-full bg-white shadow-ios transition-all ${resolvedOn ? "left-[18px]" : "left-0.5"}`} />
       </button>
     </div>
   );

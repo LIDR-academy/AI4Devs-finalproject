@@ -60,6 +60,72 @@ paths:
         '401':
           description: Missing or invalid token
 
+  /api/settings/notifications:
+    get:
+      summary: Retrieve notification preference settings for authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Notification preferences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPreferences'
+        '401':
+          description: Missing or invalid token
+    patch:
+      summary: Update notification preference settings for authenticated user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateNotificationPreferencesRequest'
+      responses:
+        '200':
+          description: Notification preferences updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPreferences'
+        '400':
+          description: Validation error
+        '401':
+          description: Missing or invalid token
+
+  /api/notifications/evaluate-expiring:
+    post:
+      summary: Trigger expiring-threshold evaluation job for current state
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Evaluation metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationEvaluationMetrics'
+        '401':
+          description: Missing or invalid token
+
+  /api/notifications/events:
+    get:
+      summary: List emitted notification events for authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Notification event list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationEventList'
+        '401':
+          description: Missing or invalid token
+
   /api/pantry/items:
     post:
       summary: Create a manual pantry item for the authenticated user
@@ -588,3 +654,80 @@ components:
               enum: [RULE_BASED_SPAIN, MANUAL_OVERRIDE]
             userConfirmed:
               type: boolean
+
+    NotificationPreferences:
+      type: object
+      required:
+        - expirationEnabled
+      properties:
+        expirationEnabled:
+          type: boolean
+
+    UpdateNotificationPreferencesRequest:
+      type: object
+      required:
+        - expirationEnabled
+      properties:
+        expirationEnabled:
+          type: boolean
+
+    NotificationEvaluationMetrics:
+      type: object
+      required:
+        - scanned
+        - generated
+        - suppressedByPreference
+        - suppressedByDuplicate
+        - errors
+      properties:
+        scanned:
+          type: integer
+        generated:
+          type: integer
+        suppressedByPreference:
+          type: integer
+        suppressedByDuplicate:
+          type: integer
+        errors:
+          type: integer
+
+    NotificationEvent:
+      type: object
+      required:
+        - type
+        - userId
+        - pantryItemId
+        - itemName
+        - expirationDate
+        - daysUntilExpiration
+        - emittedAt
+      properties:
+        type:
+          type: string
+          enum: [EXPIRING_SOON]
+        userId:
+          type: string
+          format: uuid
+        pantryItemId:
+          type: string
+          format: uuid
+        itemName:
+          type: string
+        expirationDate:
+          type: string
+          format: date-time
+        daysUntilExpiration:
+          type: integer
+        emittedAt:
+          type: string
+          format: date-time
+
+    NotificationEventList:
+      type: object
+      required:
+        - events
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationEvent'

@@ -16,6 +16,7 @@ model User {
   pantryItems PantryItem[]
   receipts   Receipt[]
   confirmedExpirationAssessments ExpirationAssessment[]
+  notificationPreference NotificationPreference?
 }
 
 model PantryItem {
@@ -24,11 +25,27 @@ model PantryItem {
   quantity       Int      @default(1)
   unit           String   @default("unit")
   expirationDate DateTime?
+  lastExpirationAlertAt DateTime?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   userId         String
   receiptItems   ReceiptItem[]
   expirationAssessment ExpirationAssessment?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expirationDate])
+  @@index([userId, lastExpirationAlertAt])
+}
+
+model NotificationPreference {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  expirationEnabled Boolean  @default(true)
+  priceDropEnabled  Boolean  @default(true)
+  foodConsumedByOthersEnabled Boolean @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
