@@ -13,6 +13,7 @@ import { Route as SharingRouteImport } from './routes/sharing'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RecipesRouteImport } from './routes/recipes'
 import { Route as PantryRouteImport } from './routes/pantry'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as InsightsRouteImport } from './routes/insights'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AddRouteImport } from './routes/add'
@@ -38,6 +39,11 @@ const RecipesRoute = RecipesRouteImport.update({
 const PantryRoute = PantryRouteImport.update({
   id: '/pantry',
   path: '/pantry',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InsightsRoute = InsightsRouteImport.update({
@@ -76,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/add': typeof AddRouteWithChildren
   '/auth': typeof AuthRoute
   '/insights': typeof InsightsRoute
+  '/notifications': typeof NotificationsRoute
   '/pantry': typeof PantryRoute
   '/recipes': typeof RecipesRoute
   '/settings': typeof SettingsRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/add': typeof AddRouteWithChildren
   '/auth': typeof AuthRoute
   '/insights': typeof InsightsRoute
+  '/notifications': typeof NotificationsRoute
   '/pantry': typeof PantryRoute
   '/recipes': typeof RecipesRoute
   '/settings': typeof SettingsRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/add': typeof AddRouteWithChildren
   '/auth': typeof AuthRoute
   '/insights': typeof InsightsRoute
+  '/notifications': typeof NotificationsRoute
   '/pantry': typeof PantryRoute
   '/recipes': typeof RecipesRoute
   '/settings': typeof SettingsRoute
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/add'
     | '/auth'
     | '/insights'
+    | '/notifications'
     | '/pantry'
     | '/recipes'
     | '/settings'
@@ -127,6 +137,7 @@ export interface FileRouteTypes {
     | '/add'
     | '/auth'
     | '/insights'
+    | '/notifications'
     | '/pantry'
     | '/recipes'
     | '/settings'
@@ -139,6 +150,7 @@ export interface FileRouteTypes {
     | '/add'
     | '/auth'
     | '/insights'
+    | '/notifications'
     | '/pantry'
     | '/recipes'
     | '/settings'
@@ -152,6 +164,7 @@ export interface RootRouteChildren {
   AddRoute: typeof AddRouteWithChildren
   AuthRoute: typeof AuthRoute
   InsightsRoute: typeof InsightsRoute
+  NotificationsRoute: typeof NotificationsRoute
   PantryRoute: typeof PantryRoute
   RecipesRoute: typeof RecipesRoute
   SettingsRoute: typeof SettingsRoute
@@ -187,6 +200,13 @@ declare module '@tanstack/react-router' {
       path: '/pantry'
       fullPath: '/pantry'
       preLoaderRoute: typeof PantryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/insights': {
@@ -249,6 +269,7 @@ const rootRouteChildren: RootRouteChildren = {
   AddRoute: AddRouteWithChildren,
   AuthRoute: AuthRoute,
   InsightsRoute: InsightsRoute,
+  NotificationsRoute: NotificationsRoute,
   PantryRoute: PantryRoute,
   RecipesRoute: RecipesRoute,
   SettingsRoute: SettingsRoute,

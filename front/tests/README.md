@@ -24,3 +24,14 @@ Prerequisites:
 Run:
 - `npm run test:e2e:ui`
 - `npm run test:e2e:ui:headed`
+
+## Playwright E2E (TKT-005 Notifications)
+
+Suites:
+- `tests/e2e/notifications/preferences.spec.ts`
+- `tests/e2e/notifications/expiring-items.spec.ts`
+- `tests/e2e/notifications/boundary-cases.spec.ts`
+
+Run:
+- `npm run test:e2e:notifications`
+- `npm run test:e2e:notifications:headed`
