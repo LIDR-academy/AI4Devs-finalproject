@@ -37,6 +37,15 @@ export async function createPantryItem(
   name: string,
   daysToExpire: number,
 ): Promise<void> {
+  await createAndGetPantryItem(request, token, name, daysToExpire);
+}
+
+export async function createAndGetPantryItem(
+  request: APIRequestContext,
+  token: string,
+  name: string,
+  daysToExpire: number,
+): Promise<{ id: string; name: string }> {
   const expirationDate = new Date();
   expirationDate.setUTCHours(12, 0, 0, 0);
   expirationDate.setUTCDate(expirationDate.getUTCDate() + daysToExpire);
@@ -54,6 +63,7 @@ export async function createPantryItem(
   });
 
   expect(response.status()).toBe(201);
+  return (await response.json()) as { id: string; name: string };
 }
 
 export async function seedSession(page: Page, auth: AuthResponse): Promise<void> {

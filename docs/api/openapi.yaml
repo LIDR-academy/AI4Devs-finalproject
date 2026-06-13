@@ -126,6 +126,29 @@ paths:
         '401':
           description: Missing or invalid token
 
+  /api/insights/price-comparison:
+    get:
+      summary: Compare pantry item name against internal MVP reference prices
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: normalizedName
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Comparison result for matched or unmatched reference data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PriceComparisonResponse'
+        '400':
+          description: Validation error
+        '401':
+          description: Missing or invalid token
+
   /api/pantry/items:
     post:
       summary: Create a manual pantry item for the authenticated user
@@ -659,17 +682,91 @@ components:
       type: object
       required:
         - expirationEnabled
+        - priceDropEnabled
+        - foodConsumedByOthersEnabled
       properties:
         expirationEnabled:
+          type: boolean
+        priceDropEnabled:
+          type: boolean
+        foodConsumedByOthersEnabled:
           type: boolean
 
     UpdateNotificationPreferencesRequest:
       type: object
       required:
         - expirationEnabled
+        - priceDropEnabled
+        - foodConsumedByOthersEnabled
       properties:
         expirationEnabled:
           type: boolean
+        priceDropEnabled:
+          type: boolean
+        foodConsumedByOthersEnabled:
+          type: boolean
+
+    PriceComparisonReference:
+      type: object
+      required:
+        - normalizedName
+        - referencePriceEur
+        - currencyCode
+        - effectiveDate
+      properties:
+        normalizedName:
+          type: string
+        category:
+          type: string
+          nullable: true
+        sourceLabel:
+          type: string
+          nullable: true
+        referencePriceEur:
+          type: string
+        currencyCode:
+          type: string
+        effectiveDate:
+          type: string
+          format: date-time
+
+    PriceComparisonReceiptContext:
+      type: object
+      required:
+        - latestUnitPriceEur
+        - latestObservedAt
+      properties:
+        latestUnitPriceEur:
+          type: string
+          nullable: true
+        latestObservedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    PriceComparisonResponse:
+      type: object
+      required:
+        - normalizedName
+        - found
+        - reference
+        - receiptContext
+        - unavailableReason
+      properties:
+        normalizedName:
+          type: string
+        found:
+          type: boolean
+        reference:
+          allOf:
+            - $ref: '#/components/schemas/PriceComparisonReference'
+          nullable: true
+        receiptContext:
+          $ref: '#/components/schemas/PriceComparisonReceiptContext'
+        unavailableReason:
+          type: string
+          enum: [NO_REFERENCE_DATA]
+          nullable: true
 
     NotificationEvaluationMetrics:
       type: object

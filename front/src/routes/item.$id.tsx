@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, Tag, Repeat, CalendarClock, Settings2 } from "lucide-react";
-import { priceComparison, daysUntil } from "@/lib/mock-data";
+import { ChevronLeft, Tag, Repeat, Settings2 } from "lucide-react";
+import { daysUntil } from "@/lib/mock-data";
 import {
   requireAuthBeforeLoad,
   useRequireAuthRedirect,
@@ -10,6 +10,8 @@ import {
   estimateExpiration,
   listPantryItems,
   overrideExpiration,
+  updatePantryItem,
+  PANTRY_UNITS,
   type ExpirationEstimateResponse,
   type PantryApiItem,
 } from "@/features/pantry/pantry.api";
@@ -35,6 +37,13 @@ function ItemDetail() {
   const [expirationMessage, setExpirationMessage] = useState<string | null>(null);
   const [expirationError, setExpirationError] = useState<string | null>(null);
 
+  const [quantityInput, setQuantityInput] = useState("");
+  const [unitInput, setUnitInput] = useState("unit");
+  const [pricePaidInput, setPricePaidInput] = useState("");
+  const [isSavingDetails, setIsSavingDetails] = useState(false);
+  const [detailsMessage, setDetailsMessage] = useState<string | null>(null);
+  const [detailsError, setDetailsError] = useState<string | null>(null);
+
   useEffect(() => {
     let isMounted = true;
     async function loadItem() {
@@ -43,6 +52,9 @@ function ItemDetail() {
         const found = items.find((i) => i.id === id) ?? null;
         setItem(found);
         setExpirationInput(found?.expirationDate?.slice(0, 10) ?? "");
+        setQuantityInput(String(found?.quantity ?? 1));
+        setUnitInput(found?.unit ?? "unit");
+        setPricePaidInput(found?.pricePaid ? Number(found.pricePaid).toFixed(2) : "");
       }
     }
     void loadItem();
@@ -88,8 +100,39 @@ function ItemDetail() {
     }
   }
 
-  async function handleOverrideSave() {
-    if (!expirationInput) {
+  async function handleDetailsSave() {
+    const qty = parseInt(quantityInput, 10);
+    const price = pricePaidInput !== "" ? parseFloat(pricePaidInput) : undefined;
+
+    if (!quantityInput || isNaN(qty) || qty < 1) {
+      setDetailsError("Quantity must be a positive number.");
+      return;
+    }
+    if (price !== undefined && (isNaN(price) || price < 0)) {
+      setDetailsError("Price must be a positive number.");
+      return;
+    }
+
+    setDetailsError(null);
+    setDetailsMessage(null);
+    setIsSavingDetails(true);
+
+    try {
+      const updated = await updatePantryItem(item.id, {
+        quantity: qty,
+        unit: unitInput,
+        ...(price !== undefined && { pricePaid: price }),
+      });
+      setItem((current) => (current ? { ...current, ...updated } : current));
+      setDetailsMessage("Details saved.");
+    } catch (apiError) {
+      setDetailsError(apiError instanceof Error ? apiError.message : "Could not save details.");
+    } finally {
+      setIsSavingDetails(false);
+    }
+  }
+
+  async function handleOverrideSave() {    if (!expirationInput) {
       setExpirationError("Please select an expiration date.");
       return;
     }
@@ -156,16 +199,87 @@ function ItemDetail() {
 
         <div className="mt-6 grid grid-cols-3 gap-3 px-5">
           <Stat label="Expires in" value={d < 0 ? `${Math.abs(d)}d ago` : `${d}d`} tone={d <= 2 ? "warn" : "ok"} />
-          <Stat label="Paid" value="€0.00" />
+          <Stat label="Paid" value={item.pricePaid ? `€${Number(item.pricePaid).toFixed(2)}` : "—"} />
           <Stat label="Added" value={new Date(item.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short" })} />
         </div>
 
         <section className="mt-7 px-5">
-          <h2 className="px-2 mb-2 text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">Actions</h2>
-          <ul className="ios-card divide-y divide-border overflow-hidden">
-            <ActionRow icon={<Tag className="size-4.5" />} label="Compare prices" sublabel={`From €${Math.min(...priceComparison.map(p=>p.price)).toFixed(2)} at ${priceComparison.find(p=>p.price===Math.min(...priceComparison.map(x=>x.price)))?.store}`} />
+          <h2 className="px-2 mb-2 text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">Item details</h2>
+          <div className="ios-card p-4 space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">
+                  Quantity
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  value={quantityInput}
+                  onChange={(e) => setQuantityInput(e.target.value)}
+                  data-testid="item-quantity-input"
+                  className="w-full h-11 rounded-xl bg-secondary px-3 text-[14px] outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">
+                  Unit
+                </label>
+                <select
+                  value={unitInput}
+                  onChange={(e) => setUnitInput(e.target.value)}
+                  data-testid="item-unit-select"
+                  className="w-full h-11 rounded-xl bg-secondary px-3 text-[14px] outline-none focus:ring-2 focus:ring-primary/30"
+                >
+                  {PANTRY_UNITS.map((u) => (
+                    <option key={u} value={u}>{u}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">
+                Price paid (€)
+              </label>
+              <input
+                type="number"
+                min={0}
+                step={0.01}
+                placeholder="0.00"
+                value={pricePaidInput}
+                onChange={(e) => setPricePaidInput(e.target.value)}
+                data-testid="item-price-input"
+                className="w-full h-11 rounded-xl bg-secondary px-3 text-[14px] outline-none focus:ring-2 focus:ring-primary/30"
+              />
+            </div>
+            <button
+              type="button"
+              className="w-full rounded-xl bg-primary text-primary-foreground py-2.5 text-[14px] font-semibold disabled:opacity-60"
+              onClick={() => { void handleDetailsSave(); }}
+              disabled={isSavingDetails}
+              data-testid="item-details-save"
+            >
+              {isSavingDetails ? "Saving..." : "Save details"}
+            </button>
+            {detailsMessage && (
+              <p className="text-[12px] text-success" data-testid="item-details-message">{detailsMessage}</p>
+            )}
+            {detailsError && (
+              <p className="text-[12px] text-destructive" data-testid="item-details-error">{detailsError}</p>
+            )}
+          </div>
+        </section>
+
+        <section className="mt-6 px-5">
+          <h2 className="px-2 mb-2 text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">Actions</h2>          <ul className="ios-card divide-y divide-border overflow-hidden">
+            <ActionLinkRow
+              icon={<Tag className="size-4.5" />}
+              label="Compare prices"
+              sublabel="View internal MVP reference price"
+              to="/compare-price/$id"
+              params={{ id: item.id }}
+              testId="compare-price-action"
+            />
             <ActionRow icon={<Repeat className="size-4.5" />} label="Alternatives" sublabel="Plant-based, lower price, longer shelf life" />
-            <ActionRow icon={<CalendarClock className="size-4.5" />} label="Change expiration date" />
             <ActionRow icon={<Settings2 className="size-4.5" />} label="Change default for this food" />
           </ul>
         </section>
@@ -173,6 +287,9 @@ function ItemDetail() {
         <section className="mt-6 px-5">
           <h2 className="px-2 mb-2 text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">Expiration intelligence</h2>
           <div className="ios-card p-4 space-y-3">
+            <p className="text-[12px] text-muted-foreground" data-testid="expiration-intelligence-guidance">
+              Use this section to estimate and update expiration dates for this item.
+            </p>
             <button
               type="button"
               className="w-full rounded-xl bg-primary text-primary-foreground py-2.5 text-[14px] font-semibold disabled:opacity-60"
@@ -236,24 +353,6 @@ function ItemDetail() {
           </div>
         </section>
 
-        <section className="mt-6 px-5">
-          <h2 className="px-2 mb-2 text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">Price across stores</h2>
-          <div className="ios-card divide-y divide-border overflow-hidden">
-            {priceComparison.sort((a,b)=>a.price-b.price).map((p, idx) => (
-              <div key={p.brand} className="flex items-center justify-between px-4 py-3.5">
-                <div>
-                  <p className="text-[14.5px] font-medium">{p.brand}</p>
-                  <p className="text-[12px] text-muted-foreground">{p.store}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {idx === 0 && <span className="rounded-full bg-success/20 px-2 py-0.5 text-[11px] font-semibold text-success">Best</span>}
-                  <span className="text-[15px] font-semibold">€{p.price.toFixed(2)}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
         <div className="px-5 mt-8">
           <button className="w-full rounded-2xl bg-destructive/10 text-destructive py-4 font-semibold text-[15px]">
             Mark as consumed
@@ -282,6 +381,40 @@ function ActionRow({ icon, label, sublabel }: { icon: React.ReactNode; label: st
         {sublabel && <p className="text-[12px] text-muted-foreground truncate">{sublabel}</p>}
       </div>
       <ChevronLeft className="size-4 rotate-180 text-muted-foreground" />
+    </li>
+  );
+}
+
+function ActionLinkRow({
+  icon,
+  label,
+  sublabel,
+  to,
+  params,
+  testId,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  sublabel?: string;
+  to: "/compare-price/$id";
+  params: { id: string };
+  testId?: string;
+}) {
+  return (
+    <li>
+      <Link
+        className="flex items-center gap-3 px-4 py-3.5 active:bg-secondary/50"
+        to={to}
+        params={params}
+        data-testid={testId}
+      >
+        <div className="grid size-8 place-items-center rounded-lg bg-secondary text-primary">{icon}</div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[14.5px] font-medium">{label}</p>
+          {sublabel && <p className="text-[12px] text-muted-foreground truncate">{sublabel}</p>}
+        </div>
+        <ChevronLeft className="size-4 rotate-180 text-muted-foreground" />
+      </Link>
     </li>
   );
 }
