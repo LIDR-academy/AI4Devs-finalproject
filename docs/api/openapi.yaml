@@ -149,6 +149,36 @@ paths:
         '401':
           description: Missing or invalid token
 
+  /api/dashboard/summary:
+    get:
+      summary: Retrieve dashboard summary counters for authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dashboard summary counters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardSummary'
+        '401':
+          description: Missing or invalid token
+
+  /api/dashboard/use-next:
+    get:
+      summary: Retrieve prioritized active pantry items to use next
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Prioritized pantry items
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardUseNextResponse'
+        '401':
+          description: Missing or invalid token
+
   /api/pantry/items:
     post:
       summary: Create a manual pantry item for the authenticated user
@@ -231,6 +261,38 @@ paths:
           description: Missing or invalid token
         '403':
           description: No access to pantry item
+        '404':
+          description: Pantry item not found
+
+  /api/pantry/items/{id}/events:
+    post:
+      summary: Register a consume or waste event for a pantry item
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterConsumptionEventRequest'
+      responses:
+        '201':
+          description: Consumption event registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterConsumptionEventResponse'
+        '400':
+          description: Validation error
+        '401':
+          description: Missing or invalid token
         '404':
           description: Pantry item not found
 
@@ -767,6 +829,86 @@ components:
           type: string
           enum: [NO_REFERENCE_DATA]
           nullable: true
+
+    DashboardSummary:
+      type: object
+      required:
+        - activeItems
+        - expiringSoonItems
+        - generatedAt
+      properties:
+        activeItems:
+          type: integer
+        expiringSoonItems:
+          type: integer
+        generatedAt:
+          type: string
+          format: date-time
+
+    DashboardUseNextItem:
+      type: object
+      required:
+        - pantryItemId
+        - name
+        - quantity
+        - unit
+        - daysUntilExpiration
+        - riskLevel
+      properties:
+        pantryItemId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        quantity:
+          type: integer
+        unit:
+          type: string
+        pricePaid:
+          type: string
+          nullable: true
+        expirationDate:
+          type: string
+          format: date-time
+          nullable: true
+        daysUntilExpiration:
+          type: integer
+          nullable: true
+        riskLevel:
+          type: string
+          enum: [HIGH, MEDIUM, LOW]
+
+    DashboardUseNextResponse:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DashboardUseNextItem'
+
+    RegisterConsumptionEventRequest:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [CONSUMED, WASTED]
+        quantity:
+          type: integer
+          minimum: 1
+          nullable: true
+
+    RegisterConsumptionEventResponse:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          format: uuid
 
     NotificationEvaluationMetrics:
       type: object

@@ -10,6 +10,7 @@ import {
 } from "@nestjs/common";
 import { ReceiptProcessingStatus } from "@prisma/client";
 import { PrismaService } from "../../database/prisma.service";
+import { ExpirationRulesService } from "../expiration/expiration-rules.service";
 import { UsersService } from "../users/users.service";
 import { ConfirmReceiptItemsDto } from "./dto/confirm-receipt-items.dto";
 import { mapExtractedLineToCreateInput } from "./mappers/receipt-extraction.mapper";
@@ -45,6 +46,7 @@ export class ReceiptsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
+    private readonly expirationRulesService: ExpirationRulesService,
     @Inject(RECEIPT_STORAGE_PORT)
     private readonly storage: ReceiptStoragePort,
     @Inject(RECEIPT_OCR_PORT)
@@ -141,7 +143,7 @@ export class ReceiptsService {
       throw new NotFoundException("Receipt not found");
     }
 
-    return receipt;
+    return this.withDefaultExpirations(receipt);
   }
 
   async getStatus(userId: string, id: string) {
@@ -177,6 +179,16 @@ export class ReceiptsService {
 
     const addToPantry = dto.addToPantry ?? false;
     const defaultUnit = this.normalizeUnit(dto.pantryDefaultUnit);
+    const overridesByItemId = new Map(
+      (dto.itemOverrides ?? []).map((override) => [override.itemId, override]),
+    );
+
+    const invalidOverrideId = [...overridesByItemId.keys()].find(
+      (itemId) => !allowedItemIds.has(itemId),
+    );
+    if (invalidOverrideId) {
+      throw new BadRequestException("One or more item overrides do not belong to receipt");
+    }
 
     await this.prisma.$transaction(async (tx) => {
       await tx.receiptItem.updateMany({
@@ -199,12 +211,26 @@ export class ReceiptsService {
           continue;
         }
 
+        const itemOverride = overridesByItemId.get(itemId);
+        const expirationDate = this.resolveExpirationDate(
+          matchedItem.rawName,
+          itemOverride?.expirationDate,
+        );
+        const pricePaid = this.resolvePricePaid(
+          itemOverride?.pricePaid,
+          matchedItem.quantity,
+          matchedItem.unitPriceEur,
+          matchedItem.lineTotalEur,
+        );
+
         const pantryItem = await tx.pantryItem.create({
           data: {
             userId,
             name: matchedItem.rawName.trim(),
             quantity: matchedItem.quantity ?? 1,
             unit: this.normalizeUnit(matchedItem.unit) ?? defaultUnit,
+            expirationDate,
+            ...(pricePaid !== undefined && { pricePaid }),
           },
         });
 
@@ -283,6 +309,68 @@ export class ReceiptsService {
     }
 
     return "unit";
+  }
+
+  private resolveExpirationDate(
+    rawName: string,
+    overrideExpirationDate: string | undefined,
+  ): Date {
+    if (overrideExpirationDate) {
+      return new Date(overrideExpirationDate);
+    }
+
+    return this.expirationRulesService.buildEstimate(rawName).suggestedExpirationDate;
+  }
+
+  private resolvePricePaid(
+    overridePricePaid: number | undefined,
+    quantity: number | null,
+    unitPriceEur: unknown,
+    lineTotalEur: unknown,
+  ): string | undefined {
+    if (overridePricePaid !== undefined) {
+      return overridePricePaid.toFixed(2);
+    }
+
+    const lineTotal = this.asPositiveNumber(lineTotalEur);
+    if (lineTotal !== undefined) {
+      return lineTotal.toFixed(2);
+    }
+
+    const unitPrice = this.asPositiveNumber(unitPriceEur);
+    if (unitPrice !== undefined && quantity && quantity > 0) {
+      return (unitPrice * quantity).toFixed(2);
+    }
+
+    return undefined;
+  }
+
+  private asPositiveNumber(value: unknown): number | undefined {
+    if (typeof value === "number") {
+      return Number.isFinite(value) && value >= 0 ? value : undefined;
+    }
+
+    if (typeof value === "string") {
+      const parsed = Number.parseFloat(value);
+      return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
+    }
+
+    return undefined;
+  }
+
+  private withDefaultExpirations<T extends { items: Array<{ rawName: string }> }>(receipt: T): T & {
+    items: Array<T["items"][number] & { defaultExpirationDate: string }>;
+  } {
+    return {
+      ...receipt,
+      items: receipt.items.map((item) => ({
+        ...item,
+        defaultExpirationDate: this.expirationRulesService
+          .buildEstimate(item.rawName)
+          .suggestedExpirationDate
+          .toISOString(),
+      })),
+    };
   }
 
   private async assertUserCanAccessReceipts(userId: string): Promise<void> {

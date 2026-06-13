@@ -65,6 +65,8 @@ export class AwsTextractReceiptOcrService implements ReceiptOcrPort {
           let rawName: string | null = null;
           let quantity: number | undefined;
           let unit: string | undefined;
+          let unitPriceEur: number | undefined;
+          let lineTotalEur: number | undefined;
 
           item.LineItemExpenseFields?.forEach((field) => {
             const fieldType = field.Type?.Text?.toUpperCase() ?? "";
@@ -87,10 +89,24 @@ export class AwsTextractReceiptOcrService implements ReceiptOcrPort {
               quantity = parsed.quantity;
               unit = parsed.unit;
             }
+
+            if (fieldType.includes("PRICE") || fieldType.includes("UNIT_PRICE")) {
+              unitPriceEur = this.parseMoneyValue(valueText);
+            }
+
+            if (fieldType.includes("TOTAL") || fieldType.includes("AMOUNT")) {
+              lineTotalEur = this.parseMoneyValue(valueText);
+            }
           });
 
           if (rawName) {
-            extracted.push({ rawName, quantity, unit });
+            extracted.push({
+              rawName,
+              quantity,
+              unit,
+              unitPriceEur,
+              lineTotalEur,
+            });
           }
         });
       });
@@ -141,6 +157,21 @@ export class AwsTextractReceiptOcrService implements ReceiptOcrPort {
       quantity: parsedQuantity,
       unit: normalizedUnit,
     };
+  }
+
+  private parseMoneyValue(value: string): number | undefined {
+    const normalized = value
+      .replace(/\s+/g, "")
+      .replace(/€|eur/gi, "")
+      .replace(/,/g, ".")
+      .replace(/[^0-9.]/g, "");
+
+    const parsed = Number.parseFloat(normalized);
+    if (!Number.isFinite(parsed) || parsed < 0) {
+      return undefined;
+    }
+
+    return Number(parsed.toFixed(2));
   }
 
   private isTimeoutError(error: unknown): boolean {

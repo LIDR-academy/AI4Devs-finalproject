@@ -3,6 +3,7 @@ import type { PantryItem } from "@prisma/client";
 import { PrismaService } from "../../database/prisma.service";
 import { UsersService } from "../users/users.service";
 import { CreatePantryItemDto } from "./dto/create-pantry-item.dto";
+import { RegisterConsumptionEventDto } from "./dto/register-consumption-event.dto";
 import { UpdatePantryItemDto } from "./dto/update-pantry-item.dto";
 
 @Injectable()
@@ -22,6 +23,7 @@ export class PantryService {
         quantity: dto.quantity,
         unit: dto.unit.trim(),
         expirationDate: dto.expirationDate ? new Date(dto.expirationDate) : null,
+        ...(dto.pricePaid !== undefined && { pricePaid: dto.pricePaid }),
       },
     });
   }
@@ -51,6 +53,31 @@ export class PantryService {
         ...(dto.pricePaid !== undefined && { pricePaid: dto.pricePaid }),
       },
     });
+  }
+
+  async registerEvent(
+    userId: string,
+    itemId: string,
+    dto: RegisterConsumptionEventDto,
+  ): Promise<{ id: string }> {
+    await this.assertUserCanAccessPantry(userId);
+
+    const item = await this.prisma.pantryItem.findUnique({ where: { id: itemId } });
+    if (!item || item.userId !== userId) {
+      throw new NotFoundException("Pantry item not found");
+    }
+
+    const event = await this.prisma.consumptionEvent.create({
+      data: {
+        pantryItemId: itemId,
+        userId,
+        type: dto.type,
+        quantity: dto.quantity ?? item.quantity,
+      },
+      select: { id: true },
+    });
+
+    return event;
   }
 
   private async assertUserCanAccessPantry(userId: string): Promise<void> {

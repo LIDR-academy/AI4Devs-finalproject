@@ -1,6 +1,10 @@
 import { getAccessToken } from "@/features/auth/session";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000/api";
+const DEFAULT_API_BASE_URL =
+  typeof window !== "undefined"
+    ? `http://${window.location.hostname}:3000/api`
+    : "http://localhost:3000/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? DEFAULT_API_BASE_URL;
 
 export const PANTRY_UNITS = ["unit", "g", "kg", "ml", "l", "pack"] as const;
 export type PantryUnit = (typeof PANTRY_UNITS)[number];
@@ -21,11 +25,14 @@ export interface UpdatePantryItemPayload {
   pricePaid?: number;
 }
 
+export type PantryEventType = "CONSUMED" | "WASTED";
+
 export interface CreatePantryItemPayload {
   name: string;
   quantity: number;
   unit: string;
   expirationDate?: string;
+  pricePaid?: number;
 }
 
 export interface ExpirationEstimateResponse {
@@ -65,14 +72,21 @@ function getAuthHeaders(): Record<string, string> {
 }
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...getAuthHeaders(),
-      ...(init?.headers ?? {}),
-    },
-    ...init,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+        ...(init?.headers ?? {}),
+      },
+      ...init,
+    });
+  } catch {
+    throw new Error(
+      `Cannot connect to API at ${API_BASE_URL}. Ensure backend is running (cd back && npm run start:dev).`,
+    );
+  }
 
   if (!response.ok) {
     const errorBody = (await response.json().catch(() => ({}))) as ApiErrorBody;
@@ -131,5 +145,15 @@ export function updatePantryItem(
   return requestJson<PantryApiItem>(`/pantry/items/${pantryItemId}`, {
     method: "PATCH",
     body: JSON.stringify(payload),
+  });
+}
+
+export function registerPantryItemEvent(
+  pantryItemId: string,
+  type: PantryEventType,
+): Promise<{ id: string }> {
+  return requestJson<{ id: string }>(`/pantry/items/${pantryItemId}/events`, {
+    method: "POST",
+    body: JSON.stringify({ type }),
   });
 }

@@ -1,12 +1,19 @@
 import { getAccessToken } from "@/features/auth/session";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000/api";
+const DEFAULT_API_BASE_URL =
+  typeof window !== "undefined"
+    ? `http://${window.location.hostname}:3000/api`
+    : "http://localhost:3000/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? DEFAULT_API_BASE_URL;
 
 export interface ReceiptApiItem {
   id: string;
   rawName: string;
   quantity: number | null;
   unit: string | null;
+  unitPriceEur: string | null;
+  lineTotalEur: string | null;
+  defaultExpirationDate: string;
   userConfirmed: boolean;
   pantryItemId: string | null;
 }
@@ -53,13 +60,20 @@ export async function uploadReceipt(file: File): Promise<ReceiptApiModel> {
   const body = new FormData();
   body.append("file", file);
 
-  const response = await fetch(`${API_BASE_URL}/receipts/upload`, {
-    method: "POST",
-    headers: {
-      ...getAuthHeaders(),
-    },
-    body,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}/receipts/upload`, {
+      method: "POST",
+      headers: {
+        ...getAuthHeaders(),
+      },
+      body,
+    });
+  } catch {
+    throw new Error(
+      `Cannot connect to API at ${API_BASE_URL}. Ensure backend is running (cd back && npm run start:dev).`,
+    );
+  }
 
   if (!response.ok) {
     const errorBody = (await response.json().catch(() => ({}))) as ApiErrorBody;
@@ -76,13 +90,20 @@ export async function getReceiptStatus(receiptId: string): Promise<{
   processedAt: string | null;
   updatedAt: string;
 }> {
-  const response = await fetch(`${API_BASE_URL}/receipts/${receiptId}/status`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      ...getAuthHeaders(),
-    },
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}/receipts/${receiptId}/status`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+    });
+  } catch {
+    throw new Error(
+      `Cannot connect to API at ${API_BASE_URL}. Ensure backend is running (cd back && npm run start:dev).`,
+    );
+  }
 
   if (!response.ok) {
     const errorBody = (await response.json().catch(() => ({}))) as ApiErrorBody;
@@ -99,13 +120,20 @@ export async function getReceiptStatus(receiptId: string): Promise<{
 }
 
 export async function getReceipt(receiptId: string): Promise<ReceiptApiModel> {
-  const response = await fetch(`${API_BASE_URL}/receipts/${receiptId}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      ...getAuthHeaders(),
-    },
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}/receipts/${receiptId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthHeaders(),
+      },
+    });
+  } catch {
+    throw new Error(
+      `Cannot connect to API at ${API_BASE_URL}. Ensure backend is running (cd back && npm run start:dev).`,
+    );
+  }
 
   if (!response.ok) {
     const errorBody = (await response.json().catch(() => ({}))) as ApiErrorBody;
@@ -119,21 +147,34 @@ export async function confirmReceiptItems(params: {
   receiptId: string;
   itemIds: string[];
   addToPantry: boolean;
+  itemOverrides?: Array<{
+    itemId: string;
+    expirationDate?: string;
+    pricePaid?: number;
+  }>;
 }): Promise<ReceiptApiModel> {
-  const response = await fetch(
-    `${API_BASE_URL}/receipts/${params.receiptId}/confirm-items`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...getAuthHeaders(),
+  let response: Response;
+  try {
+    response = await fetch(
+      `${API_BASE_URL}/receipts/${params.receiptId}/confirm-items`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify({
+          itemIds: params.itemIds,
+          addToPantry: params.addToPantry,
+          itemOverrides: params.itemOverrides,
+        }),
       },
-      body: JSON.stringify({
-        itemIds: params.itemIds,
-        addToPantry: params.addToPantry,
-      }),
-    },
-  );
+    );
+  } catch {
+    throw new Error(
+      `Cannot connect to API at ${API_BASE_URL}. Ensure backend is running (cd back && npm run start:dev).`,
+    );
+  }
 
   if (!response.ok) {
     const errorBody = (await response.json().catch(() => ({}))) as ApiErrorBody;

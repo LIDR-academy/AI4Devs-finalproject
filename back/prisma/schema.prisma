@@ -14,6 +14,7 @@ model User {
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
   pantryItems PantryItem[]
+  consumptionEvents ConsumptionEvent[]
   receipts   Receipt[]
   confirmedExpirationAssessments ExpirationAssessment[]
   notificationPreference NotificationPreference?
@@ -30,6 +31,7 @@ model PantryItem {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   userId         String
+  consumptionEvents ConsumptionEvent[]
   receiptItems   ReceiptItem[]
   expirationAssessment ExpirationAssessment?
 
@@ -37,6 +39,27 @@ model PantryItem {
 
   @@index([expirationDate])
   @@index([userId, lastExpirationAlertAt])
+}
+
+enum ConsumptionEventType {
+  CONSUMED
+  WASTED
+}
+
+model ConsumptionEvent {
+  id          String               @id @default(uuid())
+  pantryItemId String
+  userId      String
+  type        ConsumptionEventType
+  quantity    Int
+  occurredAt  DateTime             @default(now())
+  createdAt   DateTime             @default(now())
+
+  pantryItem PantryItem @relation(fields: [pantryItemId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, occurredAt])
+  @@index([pantryItemId, occurredAt])
 }
 
 model NotificationPreference {

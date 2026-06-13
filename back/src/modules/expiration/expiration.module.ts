@@ -6,5 +6,6 @@ import { ExpirationService } from "./expiration.service";
 @Module({
 	controllers: [ExpirationController],
 	providers: [ExpirationService, ExpirationRulesService],
+	exports: [ExpirationRulesService],
 })
 export class ExpirationModule {}

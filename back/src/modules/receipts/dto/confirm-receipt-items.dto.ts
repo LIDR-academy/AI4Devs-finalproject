@@ -1,12 +1,31 @@
 import { Type } from "class-transformer";
 import {
   ArrayNotEmpty,
+  IsDateString,
   IsArray,
   IsBoolean,
+  IsNumber,
   IsOptional,
+  Min,
+  ValidateNested,
   IsString,
   IsUUID,
 } from "class-validator";
+
+class ConfirmReceiptItemOverrideDto {
+  @IsUUID("4")
+  itemId!: string;
+
+  @IsOptional()
+  @IsDateString()
+  expirationDate?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  pricePaid?: number;
+}
 
 export class ConfirmReceiptItemsDto {
   @IsArray()
@@ -22,4 +41,10 @@ export class ConfirmReceiptItemsDto {
   @IsOptional()
   @IsString()
   pantryDefaultUnit?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ConfirmReceiptItemOverrideDto)
+  itemOverrides?: ConfirmReceiptItemOverrideDto[];
 }
