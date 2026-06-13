@@ -43,6 +43,19 @@ export const OBJECTIVE_LABELS: Record<string, string> = {
   daily: 'Uso diario',
 };
 
+export const COLOR_LABELS: Record<string, string> = {
+  black: 'Negro',
+  white: 'Blanco',
+  blue: 'Azul',
+  red: 'Rojo',
+  grey: 'Gris',
+  green: 'Verde',
+  pink: 'Rosa',
+  navy: 'Marino',
+  orange: 'Naranja',
+  glacier: 'Glaciar',
+};
+
 export const CATEGORY_LABELS: Record<string, string> = {
   shoes: 'Zapatillas',
   clothing: 'Ropa',
