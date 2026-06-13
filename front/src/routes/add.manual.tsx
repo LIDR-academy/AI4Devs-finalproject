@@ -56,6 +56,15 @@ function ManualEntryPage() {
       return;
     }
 
+    const parsedPrice = price.trim() === "" ? undefined : Number(price);
+    if (
+      parsedPrice !== undefined &&
+      (!Number.isFinite(parsedPrice) || parsedPrice < 0)
+    ) {
+      setError("Price must be a non-negative number.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await createPantryItem({
@@ -63,6 +72,9 @@ function ManualEntryPage() {
         quantity: parsedQuantity,
         unit,
         expirationDate: expiresAt || undefined,
+        ...(parsedPrice !== undefined && {
+          pricePaid: Number(parsedPrice.toFixed(2)),
+        }),
       });
 
       setSaved(true);

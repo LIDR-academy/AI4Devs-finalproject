@@ -3,6 +3,7 @@ import {
   IsIn,
   IsDateString,
   IsInt,
+  IsNumber,
   IsOptional,
   IsString,
   MaxLength,
@@ -30,4 +31,10 @@ export class CreatePantryItemDto {
   @IsOptional()
   @IsDateString()
   expirationDate?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  pricePaid?: number;
 }

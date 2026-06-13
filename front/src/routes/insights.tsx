@@ -1,7 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { TrendingDown, TrendingUp } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { wastedThisMonth, wasteByWeek, topWastedFoods } from "@/lib/mock-data";
+import {
+  getDashboardSummary,
+  getDashboardUseNext,
+  type DashboardSummaryResponse,
+  type DashboardUseNextItem,
+} from "@/features/dashboard/dashboard.api";
+import {
+  registerPantryItemEvent,
+  type PantryEventType,
+} from "@/features/pantry/pantry.api";
 import {
   requireAuthBeforeLoad,
   useRequireAuthRedirect,
@@ -19,78 +28,195 @@ function InsightsPage() {
     return null;
   }
 
-  const max = Math.max(...wasteByWeek.map((w) => w.value));
-  const improving = wastedThisMonth.vsLastMonth < 0;
+  const [summary, setSummary] = useState<DashboardSummaryResponse | null>(null);
+  const [useNext, setUseNext] = useState<DashboardUseNextItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadDashboard = useCallback(async (refresh = false) => {
+    if (refresh) {
+      setIsRefreshing(true);
+    } else {
+      setIsLoading(true);
+    }
+    setError(null);
+
+    try {
+      const [summaryData, useNextData] = await Promise.all([
+        getDashboardSummary(),
+        getDashboardUseNext(),
+      ]);
+      setSummary(summaryData);
+      setUseNext(useNextData.items);
+    } catch (apiError) {
+      setError(apiError instanceof Error ? apiError.message : "Could not load dashboard.");
+    } finally {
+      if (refresh) {
+        setIsRefreshing(false);
+      } else {
+        setIsLoading(false);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadDashboard();
+  }, [loadDashboard]);
+
+  async function handleRegisterEvent(itemId: string, type: PantryEventType) {
+    try {
+      await registerPantryItemEvent(itemId, type);
+      await loadDashboard(true);
+    } catch (apiError) {
+      setError(apiError instanceof Error ? apiError.message : "Could not register item event.");
+    }
+  }
 
   return (
-    <AppShell title="Insights">
-      <div className="ios-card p-5">
-        <p className="text-[12.5px] uppercase tracking-wider text-muted-foreground font-semibold">Wasted this month</p>
-        <div className="mt-2 flex items-end justify-between">
-          <p className="text-[40px] font-bold tracking-tight leading-none">€{wastedThisMonth.moneyLost.toFixed(2)}</p>
-          <div className={`flex items-center gap-1 text-[13px] font-semibold ${improving ? "text-success" : "text-destructive"}`}>
-            {improving ? <TrendingDown className="size-4" /> : <TrendingUp className="size-4" />}
-            {Math.abs(wastedThisMonth.vsLastMonth)}%
-          </div>
-        </div>
-        <p className="mt-1 text-[13px] text-muted-foreground">
-          {wastedThisMonth.itemsLost} items · {wastedThisMonth.weightKg}kg
-        </p>
-
-        <div className="mt-6 flex items-end gap-2 h-32">
-          {wasteByWeek.map((w) => (
-            <div key={w.label} className="flex-1 flex flex-col items-center gap-1.5">
-              <div
-                className="w-full rounded-t-lg bg-primary/80"
-                style={{ height: `${(w.value / max) * 100}%` }}
-              />
-              <span className="text-[11px] text-muted-foreground">{w.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <section className="mt-6">
-        <h2 className="px-2 mb-2 text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">Top wasted foods</h2>
-        <p className="px-2 mb-3 text-[12px] text-muted-foreground">You vs. community average</p>
-        <div className="ios-card overflow-hidden">
-          {topWastedFoods.map((f, idx) => {
-            const maxRow = Math.max(f.you, f.avg);
-            return (
-              <div key={f.name} className={`px-4 py-3 ${idx > 0 ? "border-t border-border" : ""}`}>
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{f.emoji}</span>
-                    <span className="text-[14px] font-medium">{f.name}</span>
-                  </div>
-                  <span className="text-[12px] text-muted-foreground">{f.you} / {f.avg}</span>
-                </div>
-                <div className="flex gap-2 items-center">
-                  <div className="flex-1 h-1.5 rounded-full bg-secondary overflow-hidden">
-                    <div className="h-full bg-primary" style={{ width: `${(f.you / maxRow) * 100}%` }} />
-                  </div>
-                  <div className="flex-1 h-1.5 rounded-full bg-secondary overflow-hidden">
-                    <div className="h-full bg-muted-foreground/50" style={{ width: `${(f.avg / maxRow) * 100}%` }} />
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        <div className="mt-2 flex gap-4 px-2 text-[11.5px] text-muted-foreground">
-          <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-primary" /> You</span>
-          <span className="flex items-center gap-1.5"><span className="size-2 rounded-full bg-muted-foreground/50" /> Community avg</span>
-        </div>
+    <AppShell title="Dashboard">
+      <section className="grid grid-cols-2 gap-3" data-testid="dashboard-summary-cards">
+        <SummaryCard
+          label="Active items"
+          value={summary?.activeItems ?? 0}
+          testId="dashboard-active-items"
+          loading={isLoading}
+        />
+        <SummaryCard
+          label="Expiring soon"
+          value={summary?.expiringSoonItems ?? 0}
+          testId="dashboard-expiring-items"
+          loading={isLoading}
+        />
       </section>
 
-      <section className="mt-6">
-        <h2 className="px-2 mb-2 text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">Group by</h2>
-        <div className="grid grid-cols-3 gap-2">
-          {["Day", "Week", "Month"].map((g) => (
-            <button key={g} className="ios-card py-3 text-[13.5px] font-medium">{g}</button>
-          ))}
+      <section className="mt-6" data-testid="dashboard-use-next-section">
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="px-1 text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">
+            Use next
+          </h2>
+          <button
+            type="button"
+            className="rounded-lg bg-secondary px-3 py-1.5 text-[12px] font-medium"
+            onClick={() => {
+              void loadDashboard(true);
+            }}
+            disabled={isRefreshing}
+            data-testid="dashboard-refresh-button"
+          >
+            {isRefreshing ? "Refreshing..." : "Refresh"}
+          </button>
         </div>
+
+        {error && (
+          <p className="mb-3 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-[12px] text-destructive" data-testid="dashboard-error">
+            {error}
+          </p>
+        )}
+
+        {isLoading && (
+          <p className="py-8 text-center text-muted-foreground" data-testid="dashboard-loading">
+            Loading dashboard...
+          </p>
+        )}
+
+        {!isLoading && useNext.length === 0 && (
+          <p className="py-8 text-center text-muted-foreground" data-testid="dashboard-use-next-empty">
+            No active items to prioritize.
+          </p>
+        )}
+
+        {!isLoading && useNext.length > 0 && (
+          <ul className="space-y-2" data-testid="dashboard-use-next-list">
+            {useNext.map((item, index) => (
+              <li key={item.pantryItemId} className="ios-card p-3" data-testid={`dashboard-use-next-item-${index}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[14px] font-semibold" data-testid={`dashboard-item-name-${item.pantryItemId}`}>
+                      {item.name}
+                    </p>
+                    <p className="text-[12px] text-muted-foreground">
+                      {item.quantity} {item.unit}
+                      {item.pricePaid ? ` · €${Number(item.pricePaid).toFixed(2)}` : ""}
+                    </p>
+                  </div>
+                  <RiskBadge risk={item.riskLevel} />
+                </div>
+
+                <p className="mt-2 text-[12px] text-muted-foreground" data-testid={`dashboard-item-days-${item.pantryItemId}`}>
+                  {formatDays(item.daysUntilExpiration)}
+                </p>
+
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    className="rounded-lg bg-secondary px-3 py-1.5 text-[12px] font-medium"
+                    onClick={() => {
+                      void handleRegisterEvent(item.pantryItemId, "CONSUMED");
+                    }}
+                    data-testid={`dashboard-consume-${item.pantryItemId}`}
+                  >
+                    Mark consumed
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-lg bg-destructive/10 px-3 py-1.5 text-[12px] font-medium text-destructive"
+                    onClick={() => {
+                      void handleRegisterEvent(item.pantryItemId, "WASTED");
+                    }}
+                    data-testid={`dashboard-waste-${item.pantryItemId}`}
+                  >
+                    Mark wasted
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </AppShell>
   );
+}
+
+function SummaryCard({
+  label,
+  value,
+  testId,
+  loading,
+}: {
+  label: string;
+  value: number;
+  testId: string;
+  loading: boolean;
+}) {
+  return (
+    <div className="ios-card p-4" data-testid={testId}>
+      <p className="text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</p>
+      <p className="mt-2 text-[30px] font-bold leading-none">{loading ? "…" : value}</p>
+    </div>
+  );
+}
+
+function RiskBadge({ risk }: { risk: "HIGH" | "MEDIUM" | "LOW" }) {
+  const classes =
+    risk === "HIGH"
+      ? "bg-destructive/10 text-destructive"
+      : risk === "MEDIUM"
+        ? "bg-warning/20 text-warning-foreground"
+        : "bg-secondary text-muted-foreground";
+
+  return <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${classes}`}>{risk}</span>;
+}
+
+function formatDays(days: number | null): string {
+  if (days === null) {
+    return "No expiration date";
+  }
+  if (days < 0) {
+    return `Expired ${Math.abs(days)} day(s) ago`;
+  }
+  if (days === 0) {
+    return "Expires today";
+  }
+  return `Expires in ${days} day(s)`;
 }

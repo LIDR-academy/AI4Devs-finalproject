@@ -15,6 +15,7 @@ import {
   confirmReceiptItems,
   getReceipt,
   getReceiptStatus,
+  type ReceiptApiItem,
   type ReceiptApiModel,
   uploadReceipt,
 } from "@/features/receipts/receipts.api";
@@ -34,6 +35,9 @@ function AddPage() {
   const [isConfirming, setIsConfirming] = useState(false);
   const [receipt, setReceipt] = useState<ReceiptApiModel | null>(null);
   const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
+  const [itemEdits, setItemEdits] = useState<
+    Record<string, { expirationDate: string; pricePaid: string }>
+  >({});
   const [confirmationMessage, setConfirmationMessage] = useState<string | null>(null);
 
   if (!authed) {
@@ -55,6 +59,7 @@ function AddPage() {
     setReceipt(fullReceipt);
     if (fullReceipt.items.length > 0) {
       setSelectedItemIds(fullReceipt.items.map((item) => item.id));
+      setItemEdits(buildInitialItemEdits(fullReceipt.items));
     }
   }
 
@@ -72,6 +77,7 @@ function AddPage() {
     setConfirmationMessage(null);
     setReceipt(null);
     setSelectedItemIds([]);
+    setItemEdits({});
     setIsUploading(true);
 
     try {
@@ -82,6 +88,7 @@ function AddPage() {
         await refreshReceiptIfNeeded(uploadedReceipt.id);
       } else {
         setSelectedItemIds(uploadedReceipt.items.map((item) => item.id));
+        setItemEdits(buildInitialItemEdits(uploadedReceipt.items));
       }
     } catch (error) {
       setUploadError(
@@ -105,6 +112,23 @@ function AddPage() {
         receiptId: receipt.id,
         itemIds: selectedItemIds,
         addToPantry: true,
+        itemOverrides: selectedItemIds.map((itemId) => {
+          const edit = itemEdits[itemId];
+          const pricePaid =
+            edit?.pricePaid && edit.pricePaid.trim() !== ""
+              ? Number.parseFloat(edit.pricePaid)
+              : undefined;
+
+          return {
+            itemId,
+            expirationDate: edit?.expirationDate
+              ? new Date(`${edit.expirationDate}T00:00:00.000Z`).toISOString()
+              : undefined,
+            ...(pricePaid !== undefined && Number.isFinite(pricePaid)
+              ? { pricePaid: Number(pricePaid.toFixed(2)) }
+              : {}),
+          };
+        }),
       });
       setReceipt(confirmed);
       setConfirmationMessage("Items confirmed and added to pantry.");
@@ -126,6 +150,21 @@ function AddPage() {
         ? current.filter((itemId) => itemId !== id)
         : [...current, id],
     );
+  }
+
+  function updateItemEdit(
+    itemId: string,
+    key: "expirationDate" | "pricePaid",
+    value: string,
+  ) {
+    setItemEdits((current) => ({
+      ...current,
+      [itemId]: {
+        expirationDate: current[itemId]?.expirationDate ?? "",
+        pricePaid: current[itemId]?.pricePaid ?? "",
+        [key]: value,
+      },
+    }));
   }
 
   return (
@@ -188,17 +227,42 @@ function AddPage() {
               {receipt.items.map((item) => (
                 <label
                   key={item.id}
-                  className="flex cursor-pointer items-center gap-3 bg-background px-3 py-2.5"
+                  className="block cursor-pointer bg-background px-3 py-2.5"
                 >
-                  <input
-                    type="checkbox"
-                    checked={selectedItemIds.includes(item.id)}
-                    onChange={() => toggleItem(item.id)}
-                  />
-                  <span className="text-[14px]">
-                    {item.rawName}
-                    {item.quantity ? ` (${item.quantity}${item.unit ?? ""})` : ""}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedItemIds.includes(item.id)}
+                      onChange={() => toggleItem(item.id)}
+                    />
+                    <span className="text-[14px]">
+                      {item.rawName}
+                      {item.quantity ? ` (${item.quantity}${item.unit ?? ""})` : ""}
+                    </span>
+                  </div>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    <input
+                      type="date"
+                      value={itemEdits[item.id]?.expirationDate ?? ""}
+                      onChange={(event) => {
+                        updateItemEdit(item.id, "expirationDate", event.target.value);
+                      }}
+                      className="h-10 rounded-xl border border-border bg-secondary px-3 text-[13px]"
+                      data-testid={`receipt-expiration-${item.id}`}
+                    />
+                    <input
+                      type="number"
+                      min={0}
+                      step={0.01}
+                      value={itemEdits[item.id]?.pricePaid ?? ""}
+                      onChange={(event) => {
+                        updateItemEdit(item.id, "pricePaid", event.target.value);
+                      }}
+                      placeholder="Price (€)"
+                      className="h-10 rounded-xl border border-border bg-secondary px-3 text-[13px]"
+                      data-testid={`receipt-price-${item.id}`}
+                    />
+                  </div>
                 </label>
               ))}
             </div>
@@ -238,6 +302,26 @@ function AddPage() {
       </section>
     </AppShell>
   );
+}
+
+function buildInitialItemEdits(items: ReceiptApiItem[]) {
+  return Object.fromEntries(
+    items.map((item) => {
+      const defaultPrice =
+        item.lineTotalEur ??
+        (item.unitPriceEur && item.quantity
+          ? (Number(item.unitPriceEur) * item.quantity).toFixed(2)
+          : null);
+
+      return [
+        item.id,
+        {
+          expirationDate: (item.defaultExpirationDate ?? new Date().toISOString()).slice(0, 10),
+          pricePaid: defaultPrice ? Number(defaultPrice).toFixed(2) : "",
+        },
+      ];
+    }),
+  ) as Record<string, { expirationDate: string; pricePaid: string }>;
 }
 
 function BigOption({

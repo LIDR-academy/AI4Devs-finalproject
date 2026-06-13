@@ -70,7 +70,7 @@ function PantryPage() {
         addedAt: item.createdAt,
         expiresAt: item.expirationDate ?? new Date("2100-01-01").toISOString(),
         estimated: false,
-        pricePaid: 0,
+        pricePaid: item.pricePaid ? Number(item.pricePaid) : 0,
         location: "Pantry",
       })),
     [items],

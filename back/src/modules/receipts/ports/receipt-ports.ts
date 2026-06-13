@@ -7,6 +7,8 @@ export interface OcrExtractedLine {
   rawName: string;
   quantity?: number;
   unit?: string;
+  unitPriceEur?: number;
+  lineTotalEur?: number;
 }
 
 export interface ReceiptStoragePort {

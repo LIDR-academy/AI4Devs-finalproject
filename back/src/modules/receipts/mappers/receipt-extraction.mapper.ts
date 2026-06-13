@@ -41,5 +41,7 @@ export function mapExtractedLineToCreateInput(
     rawName,
     quantity: line.quantity ?? inferred.quantity ?? null,
     unit: line.unit ?? inferred.unit ?? null,
+    unitPriceEur: line.unitPriceEur ?? null,
+    lineTotalEur: line.lineTotalEur ?? null,
   };
 }

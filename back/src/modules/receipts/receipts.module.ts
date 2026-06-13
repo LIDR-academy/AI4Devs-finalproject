@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { AwsS3ReceiptStorageService } from "../../integrations/aws-s3/aws-s3-receipt-storage.service";
 import { AwsTextractReceiptOcrService } from "../../integrations/aws-textract/aws-textract-receipt-ocr.service";
+import { ExpirationModule } from "../expiration/expiration.module";
 import { UsersModule } from "../users/users.module";
 import {
 	RECEIPT_OCR_PORT,
@@ -10,7 +11,7 @@ import { ReceiptsController } from "./receipts.controller";
 import { ReceiptsService } from "./receipts.service";
 
 @Module({
-	imports: [UsersModule],
+	imports: [UsersModule, ExpirationModule],
 	controllers: [ReceiptsController],
 	providers: [
 		ReceiptsService,

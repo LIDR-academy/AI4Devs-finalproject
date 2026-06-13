@@ -16,6 +16,7 @@ Run:
 ## Playwright E2E (UI-level, visible browser)
 
 TKT-004 UI coverage lives in `tests/e2e/expiration-confidence-flow.ui.spec.ts`.
+Manual add and receipt review coverage lives in `tests/e2e/add/manual-and-receipt-flow.ui.spec.ts`.
 
 Prerequisites:
 - Frontend app running at `http://localhost:5173` (or set `E2E_FRONT_BASE_URL`).
