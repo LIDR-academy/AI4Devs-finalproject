@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { fetchProduct, ApiError } from '../../../lib/api-client';
 import { ProductAttributes } from '../../../components/product/product-attributes';
+import { ProductVariantSelector } from '../../../components/product/product-variant-selector';
 import { TrustSignals } from '../../../components/product/trust-signals';
 import { BackButton } from '../../../components/product/back-button';
 
@@ -58,8 +59,6 @@ export default async function ProductDetailPage({ params }: Props) {
     throw err;
   }
 
-  const outOfStock = product.stock === 0;
-
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6">
@@ -97,16 +96,11 @@ export default async function ProductDetailPage({ params }: Props) {
             </ul>
           )}
 
-          <button
-            disabled={outOfStock}
-            className={`w-full py-3 px-6 rounded-lg font-medium transition ${
-              outOfStock
-                ? 'bg-gray-200 text-gray-400 cursor-not-allowed opacity-50'
-                : 'bg-rm-cta text-white hover:bg-rm-cta-hover'
-            }`}
-          >
-            {outOfStock ? 'Agotado' : 'Añadir al carrito'}
-          </button>
+          <ProductVariantSelector
+            sizes={product.sizes}
+            colors={product.colors}
+            stock={product.stock}
+          />
 
           <TrustSignals />
         </div>
