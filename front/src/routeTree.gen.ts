@@ -19,6 +19,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AddRouteImport } from './routes/add'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ItemIdRouteImport } from './routes/item.$id'
+import { Route as ComparePriceIdRouteImport } from './routes/compare-price.$id'
 import { Route as AddManualRouteImport } from './routes/add.manual'
 
 const SharingRoute = SharingRouteImport.update({
@@ -71,6 +72,11 @@ const ItemIdRoute = ItemIdRouteImport.update({
   path: '/item/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ComparePriceIdRoute = ComparePriceIdRouteImport.update({
+  id: '/compare-price/$id',
+  path: '/compare-price/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AddManualRoute = AddManualRouteImport.update({
   id: '/manual',
   path: '/manual',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/sharing': typeof SharingRoute
   '/add/manual': typeof AddManualRoute
+  '/compare-price/$id': typeof ComparePriceIdRoute
   '/item/$id': typeof ItemIdRoute
 }
 export interface FileRoutesByTo {
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/sharing': typeof SharingRoute
   '/add/manual': typeof AddManualRoute
+  '/compare-price/$id': typeof ComparePriceIdRoute
   '/item/$id': typeof ItemIdRoute
 }
 export interface FileRoutesById {
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/sharing': typeof SharingRoute
   '/add/manual': typeof AddManualRoute
+  '/compare-price/$id': typeof ComparePriceIdRoute
   '/item/$id': typeof ItemIdRoute
 }
 export interface FileRouteTypes {
@@ -130,6 +139,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/sharing'
     | '/add/manual'
+    | '/compare-price/$id'
     | '/item/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -143,6 +153,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/sharing'
     | '/add/manual'
+    | '/compare-price/$id'
     | '/item/$id'
   id:
     | '__root__'
@@ -156,6 +167,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/sharing'
     | '/add/manual'
+    | '/compare-price/$id'
     | '/item/$id'
   fileRoutesById: FileRoutesById
 }
@@ -169,6 +181,7 @@ export interface RootRouteChildren {
   RecipesRoute: typeof RecipesRoute
   SettingsRoute: typeof SettingsRoute
   SharingRoute: typeof SharingRoute
+  ComparePriceIdRoute: typeof ComparePriceIdRoute
   ItemIdRoute: typeof ItemIdRoute
 }
 
@@ -244,6 +257,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ItemIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/compare-price/$id': {
+      id: '/compare-price/$id'
+      path: '/compare-price/$id'
+      fullPath: '/compare-price/$id'
+      preLoaderRoute: typeof ComparePriceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/add/manual': {
       id: '/add/manual'
       path: '/manual'
@@ -274,6 +294,7 @@ const rootRouteChildren: RootRouteChildren = {
   RecipesRoute: RecipesRoute,
   SettingsRoute: SettingsRoute,
   SharingRoute: SharingRoute,
+  ComparePriceIdRoute: ComparePriceIdRoute,
   ItemIdRoute: ItemIdRoute,
 }
 export const routeTree = rootRouteImport

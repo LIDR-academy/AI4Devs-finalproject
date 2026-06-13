@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Post, Request, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post, Request, UseGuards } from "@nestjs/common";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { CreatePantryItemDto } from "./dto/create-pantry-item.dto";
+import { UpdatePantryItemDto } from "./dto/update-pantry-item.dto";
 import { PantryService } from "./pantry.service";
 
 interface RequestWithUser {
@@ -23,5 +24,14 @@ export class PantryController {
   @Get()
   list(@Request() req: RequestWithUser) {
     return this.pantryService.list(req.user.id);
+  }
+
+  @Patch(":id")
+  update(
+    @Request() req: RequestWithUser,
+    @Param("id") itemId: string,
+    @Body() body: UpdatePantryItemDto,
+  ) {
+    return this.pantryService.update(req.user.id, itemId, body);
   }
 }

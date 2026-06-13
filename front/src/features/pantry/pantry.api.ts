@@ -2,13 +2,23 @@ import { getAccessToken } from "@/features/auth/session";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000/api";
 
+export const PANTRY_UNITS = ["unit", "g", "kg", "ml", "l", "pack"] as const;
+export type PantryUnit = (typeof PANTRY_UNITS)[number];
+
 export interface PantryApiItem {
   id: string;
   name: string;
   quantity: number;
   unit: string;
+  pricePaid: string | null;
   expirationDate: string | null;
   createdAt: string;
+}
+
+export interface UpdatePantryItemPayload {
+  quantity?: number;
+  unit?: string;
+  pricePaid?: number;
 }
 
 export interface CreatePantryItemPayload {
@@ -112,4 +122,14 @@ export function overrideExpiration(
       body: JSON.stringify({ expirationDate }),
     },
   );
+}
+
+export function updatePantryItem(
+  pantryItemId: string,
+  payload: UpdatePantryItemPayload,
+): Promise<PantryApiItem> {
+  return requestJson<PantryApiItem>(`/pantry/items/${pantryItemId}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
 }
