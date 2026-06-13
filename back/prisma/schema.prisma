@@ -15,6 +15,7 @@ model User {
   updatedAt  DateTime    @updatedAt
   pantryItems PantryItem[]
   receipts   Receipt[]
+  confirmedExpirationAssessments ExpirationAssessment[]
 }
 
 model PantryItem {
@@ -27,8 +28,30 @@ model PantryItem {
   updatedAt      DateTime @updatedAt
   userId         String
   receiptItems   ReceiptItem[]
+  expirationAssessment ExpirationAssessment?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum ExpirationMethod {
+  RULE_BASED_SPAIN
+  MANUAL_OVERRIDE
+}
+
+model ExpirationAssessment {
+  id                      String           @id @default(uuid())
+  pantryItemId            String           @unique
+  suggestedExpirationDate DateTime
+  confidence              Decimal          @db.Decimal(3, 2)
+  method                  ExpirationMethod
+  userConfirmed           Boolean          @default(false)
+  confirmedByUserId       String?
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+  pantryItem              PantryItem       @relation(fields: [pantryItemId], references: [id], onDelete: Cascade)
+  confirmedByUser         User?            @relation(fields: [confirmedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([confirmedByUserId])
 }
 
 enum ReceiptProcessingStatus {
