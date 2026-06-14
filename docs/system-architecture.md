@@ -359,3 +359,132 @@ The following are deliberately excluded from the v1 security baseline. They shou
 - **Formal GDPR Data Processing Agreement (DPA)** — Required if using a sub-processor (Render). Render offers a DPA on request — this should be signed before onboarding the first user outside the development team.
 - **SOC2 / ISO 27001 compliance** — Out of scope for a Master's project. If the product is commercialised, these would require a dedicated compliance effort (6–12 months).
 - **Secrets rotation policy** — Secrets are set manually in Render and GitHub. Automated rotation (e.g., HashiCorp Vault) is not needed until the team grows beyond two people.
+
+---
+
+## 8. Data Structure
+
+### Overview
+
+The data model follows a **relational schema** with five entities, reflecting the PRD's inherently structured domain: users belong to challenges, log weekly weights, and are ranked on computed aggregates. PostgreSQL enforces referential integrity, unique invite codes, and prevents duplicate weigh-ins — rules that are simpler to enforce declaratively at the schema level than in application code. Prisma maps this schema into a fully typed TypeScript client.
+
+### Entity-Relationship Diagram
+
+```mermaid
+erDiagram
+  User {
+    uuid     id                PK
+    string   name
+    string   email             UK          "Unique login identifier"
+    string   hashed_password               "bcrypt hash, never plaintext"
+    int      height_cm                     "Centimetres, 50-250 range"
+    float    start_weight_kg               "Kg, set at registration, immutable"
+    float    current_weight_kg             "Kg, updated on each weigh-in"
+    float    desired_weight_kg             "Kg, target goal"
+    date     aim_date                      "Target date for goal"
+    enum     role              "Admin | Gordi"
+    datetime created_at
+    datetime updated_at
+  }
+
+  Challenge {
+    uuid     id                PK
+    string   name
+    date     start_date
+    date     end_date                      "start_date + at least 7 days"
+    string   prize_description             "Optional bragging rights text"
+    string   invite_code       UK          "6-8 char random, unique per challenge"
+    uuid     created_by        FK          "References User.id"
+    datetime created_at
+  }
+
+  Participation {
+    uuid     id                PK
+    uuid     user_id           FK          "References User.id"
+    uuid     challenge_id      FK          "References Challenge.id"
+    datetime joined_at
+  }
+
+  WeightEntry {
+    uuid     id                PK
+    uuid     user_id           FK          "References User.id"
+    uuid     challenge_id      FK          "References Challenge.id"
+    date     date                          "Must be a Monday"
+    float    weight_kg                     "Kg, 1-500 range"
+    datetime created_at
+  }
+
+  RefreshToken {
+    uuid     id                PK
+    uuid     user_id           FK          "References User.id"
+    string   token_hash                    "SHA-256 hash of the opaque token"
+    datetime expires_at                    "7 days after issuance"
+    datetime created_at
+    datetime revoked_at                    "Set on rotation or logout"
+  }
+
+  User ||--o{ Challenge : "creates"
+  User ||--o{ Participation : "participates in"
+  Challenge ||--o{ Participation : "includes"
+  User ||--o{ WeightEntry : "logs"
+  Challenge ||--o{ WeightEntry : "contains"
+  User ||--o{ RefreshToken : "possesses"
+```
+
+### Entity Descriptions
+
+#### User
+
+- **Purpose**: Represents a registered person. Every user is either an `Admin` (can create challenges) or a `Gordi` (join-only). Stores static registration data alongside a `current_weight_kg` field that is updated when a new weight entry is logged (denormalised for fast profile reads).
+- **Key attributes**:
+  - `email` — unique login identifier, also used for password-reset flows.
+  - `hashed_password` — bcrypt hash; the raw password is never stored or logged.
+  - `start_weight_kg` — set once at registration and never updated; the reference point for all "total lost" calculations.
+  - `current_weight_kg` — the most recent logged weight across any challenge; updated by the `WeightService` after each weigh-in.
+  - `height_cm` — combined with weight entries to compute BMI at any point in time.
+  - `role` — enum: `Admin` or `Gordi`. Determines whether the user can create challenges.
+- **Relationships**: A user can create many challenges (as Admin), participate in many challenges, log many weight entries, and possess multiple refresh tokens (active + rotated/invalidated tokens).
+
+#### Challenge
+
+- **Purpose**: A weight-loss competition with a fixed start and end date, created by an Admin. Each challenge generates a unique invite code so that Gordi users can join without a direct invitation system.
+- **Key attributes**:
+  - `start_date` / `end_date` — define the competition window; validated so duration is >= 7 days.
+  - `invite_code` — a random 6–8 character string, unique across all challenges. Used as the sole join mechanism.
+  - `prize_description` — optional free-text field describing what the winner gets (e.g., "dinner paid by the rest").
+  - `created_by` — FK to the User who created the challenge. Only Admin users can populate this.
+- **Relationships**: A challenge is created by exactly one User (Admin), includes many participants (via Participation), and contains many weight entries.
+
+#### Participation
+
+- **Purpose**: Join table linking users to challenges. A user's membership in a challenge is recorded here, and the `joined_at` timestamp is used to determine which weigh-ins count (entries before joining are excluded from ranking).
+- **Key attributes**:
+  - `user_id` + `challenge_id` — jointly unique (via a composite unique constraint). A user cannot join the same challenge twice.
+- **Relationships**: Belongs to exactly one User and exactly one Challenge.
+
+#### WeightEntry
+
+- **Purpose**: A single weekly weigh-in logged by a user within a specific challenge. Each entry is tied to a Monday (calendar week) and is the atomic unit from which all progress charts, rankings, and trend predictions are derived.
+- **Key attributes**:
+  - `date` — the Monday this entry represents. The application restricts input to Monday dates only.
+  - `weight_kg` — the user's weight for that week, validated to a plausible range (1–500 kg).
+  - `user_id` + `challenge_id` + `date` — jointly unique (composite unique constraint). A user cannot log two entries for the same week in the same challenge.
+- **Relationships**: Belongs to exactly one User and exactly one Challenge.
+
+#### RefreshToken
+
+- **Purpose**: Supports the stateless JWT authentication flow. Opaque refresh tokens are stored as a SHA-256 hash (never the raw token) so that even a database leak does not expose active sessions. Tokens are rotated on each refresh and can be revoked (e.g., on logout or password change).
+- **Key attributes**:
+  - `token_hash` — SHA-256 hash of the raw opaque token. Used to look up and validate refresh requests.
+  - `expires_at` — hard expiry of 7 days from issuance. Expired tokens are pruned periodically.
+  - `revoked_at` — set when a token is rotated (the old token is invalidated) or when the user logs out. `NULL` means the token is still active.
+- **Relationships**: Belongs to exactly one User. A user may have multiple refresh tokens active simultaneously (e.g., logged in on multiple devices).
+
+### Relationship Rules
+
+- **A user can create zero or more challenges**, but only if their role is `Admin`. Non-admin users have `created_by` set to `NULL` implicitly via the application-layer role guard.
+- **A user can join zero or more challenges**, but each (user, challenge) pair must be unique — a user cannot join the same challenge twice. Re-joining after leaving is handled by a new `Participation` row with an updated `joined_at`.
+- **A user can log zero or more weight entries in a challenge**, but at most one per Monday (enforced by a composite unique constraint on `user_id` + `challenge_id` + `date`). Only Mondays are accepted.
+- **A challenge must have at least one participant** (the creating Admin is automatically added as a participant on creation). There is no upper limit in v1.
+- **A weight entry always belongs to a challenge**, even if the user is part of multiple challenges. The same Monday weight cannot be reused across challenges — the user must log separately for each.
+- **Refresh tokens cascade on user deletion**: if a user deletes their account (`DELETE /v1/account`), all associated `RefreshToken`, `Participation`, and `WeightEntry` rows are removed. The `Challenge` itself is preserved so other participants' data is not orphaned.
