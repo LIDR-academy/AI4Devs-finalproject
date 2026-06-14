@@ -1,4 +1,4 @@
-## PROMPT 1: Prompt execution (TKT-006)
+## PROMPT 1: Prompt execution (TKT-007)
 ~~~markdown
 Here's a cleaner version that assumes **the ticket file has already been provided as context** and therefore doesn't need to be referenced explicitly by path or name repeatedly.
 
