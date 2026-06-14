@@ -236,3 +236,126 @@ gordi-challenge/
     └── workflows/
         └── ci.yml           # Lint → typecheck → test → build → deploy
 ```
+
+---
+
+## 7. Security
+
+### Overview
+
+Gordi Challenge handles personal data (name, email, height) and health-adjacent data (weight, BMI), making it subject to GDPR and requiring a defence-in-depth posture. The security model is built around stateless JWT authentication, server-side validation as the sole enforcement point, and a minimal attack surface — no third-party OAuth, no file uploads, no user-generated content rendered as HTML. Every decision below is scoped to a small team shipping a v1 web app on a managed cloud platform.
+
+### Authentication & Authorization
+
+| Mechanism | Implementation |
+|-----------|---------------|
+| **Password storage** | `bcrypt` with cost factor 12. The hash, never the plaintext, touches the database. |
+| **Token format** | Signed JWT (RS256 or HS256) with three claims: `sub` (user UUID), `role` (Admin/Gordi), `iat`. No personal data or weight data in the payload. |
+| **Token expiry** | Access token: 15 minutes. Refresh token (opaque, stored hashed in DB): 7 days. Refresh tokens are rotated and old ones invalidated on use. |
+| **Transport** | JWT sent as `Authorization: Bearer <token>` header only — never in URL parameters or cookies (avoids CSRF and leakage in server logs). |
+| **RBAC** | Two roles: `Admin` (can create challenges) and `Gordi` (join-only). Enforced in the `AuthMiddleware` via the JWT `role` claim. Route declarations specify required roles — e.g., `router.post('/challenges', requireRole('Admin'), controller.create)`. |
+| **Rate limiting on auth** | `express-rate-limit` on `/auth/login` and `/auth/register`: 5 attempts per IP per 15 minutes. Reduces brute-force risk. |
+
+Design decision: no OAuth2 or passkeys in v1. The user base is small friend-groups, and the added complexity of federated auth is not justified at this stage. If the product scales, passkeys (WebAuthn) should be added as a passwordless option.
+
+### Input Validation & Sanitisation
+
+| Threat | Mitigation |
+|--------|-----------|
+| **Malformed payloads** | Every controller validates request bodies with **Zod** schemas before the data reaches a service. Schemas enforce types, ranges (e.g., `weight_kg` must be a positive float ≤ 500), string lengths, and email format. Invalid requests return a 400 with a structured error before any business logic runs. |
+| **SQL injection** | **Prisma** generates parameterised queries for every `findMany`, `create`, `update` — raw SQL is never used. This eliminates SQL injection entirely at the ORM layer. |
+| **XSS (reflected / stored)** | Challenge names, prize descriptions, and any user-supplied text are rendered as plain text in React — no `dangerouslySetInnerHTML`. React's JSX escaping handles the rest. On the API side, Zod rejects HTML tags in string fields via a `.refine()` check (optional — defence-in-depth, not strictly needed). |
+| **Command injection** | Node.js `child_process` is not used anywhere in this application. No OS command is constructed from user input. |
+| **Numeric ranges** | Weight (1–500 kg), height (50–250 cm), dates (not in the past before 1970, not beyond 10 years in the future). Enforced in Zod schemas and re-checked in domain services. |
+
+### API Security
+
+| Measure | What & How |
+|---------|------------|
+| **Auth on all endpoints** | Every route except `/auth/login`, `/auth/register`, and `GET /health` is protected by the `AuthMiddleware`. Missing or expired tokens return 401; invalid role returns 403. |
+| **Rate limiting** | `express-rate-limit` applied globally: 100 requests per minute per IP. Auth endpoints have a stricter limit (see above). |
+| **CORS** | Express `cors` middleware configured to allow only the production frontend origin (and `localhost` in dev). Wildcard origins are never used. |
+| **Sensitive data in responses** | The `User` controller never returns `hashed_password`. Prisma's `select`/`omit` strips it at the query level. JWT payloads contain only `sub` and `role` — no email, name, or weight data. |
+| **API versioning** | All routes are prefixed with `/v1/` (e.g., `/v1/challenges`). When breaking changes are needed, a `/v2/` tree is added alongside — no version in the URL means no guarantee of backward compatibility. |
+| **Error responses** | The `ErrorMiddleware` returns standardised JSON: `{ "error": { "code": "VALIDATION_ERROR", "message": "...", "details": [...] } }`. Stack traces are never leaked to the client. In development, a `X-Debug-Info` header with the error ID is appended for debugging. |
+
+### Data Protection
+
+| Layer | Measure |
+|-------|---------|
+| **In transit** | TLS 1.3 enforced at the Render load balancer. All API and frontend traffic is HTTPS. HTTP requests are automatically redirected to HTTPS. |
+| **At rest (database)** | Render's managed PostgreSQL provides encryption at rest using AES-256. No application-level encryption is applied to weight data — the database is accessed only by the API service within the same private network. If compliance requirements tighten, sensitive columns (`email`, `weight_kg`) can be encrypted with `pgcrypto` at the column level. |
+| **Secrets** | Database URLs, JWT secrets, and bcrypt salts are stored in Render's environment variables (not in `.env` files committed to git). For local dev, a `.env.example` file documents required vars; the actual `.env` is in `.gitignore`. GitHub Actions secrets hold credentials for the staging deployment. |
+| **PII minimisation** | The application stores only what is required by the PRD: email (unique identifier), name, height, weight entries. No IP addresses are logged persistently. No cookies are used for tracking. |
+| **GDPR readiness** | A `DELETE /v1/account` endpoint allows users to request full data deletion (cascades to `WeightEntry`, `Participation`). The `User` model includes `created_at` and `updated_at` timestamps for audit. |
+
+### Dependency & Supply Chain Security
+
+| Measure | Tool / Process |
+|---------|---------------|
+| **Vulnerability scanning** | GitHub **Dependabot** enabled on the repository — scans `package.json` (frontend + backend) and ` Dockerfile` for known vulnerabilities. Creates PRs for patches. |
+| **Lockfiles** | Both `package-lock.json` files are committed. Biome's `biome ci` command is configured to fail if any dependency audit flags a critical or high severity. |
+| **Supply chain** | Dependencies with a history of supply-chain attacks (e.g., `faker`, `colors`) are explicitly avoided. Pin major versions (`^18.0.0`), review the diff of Dependabot PRs before merging, and audit occasionally with `npm audit`. |
+| **Biome security linting** | Biome's `lint` ruleset includes security-related checks (no `eval`, no `innerHTML`, no dangerous function calls). These run in CI on every push. |
+
+### Infrastructure & Deployment Security
+
+| Aspect | Implementation |
+|--------|---------------|
+| **Container hardening** | The `api` Docker image uses `node:22-alpine` as a base (minimal surface area). The container runs as `USER node` (non-root). |
+| **Network isolation** | On Render, the PostgreSQL database is exposed only to the API service via an internal network — no public database endpoint. In Docker Compose dev, the `db` container has no published ports (only accessed by `api` over the internal Docker network). |
+| **Principle of least privilege** | The Render API service runs with a dedicated deploy-only user. Database credentials have read/write access only to the `gordi_challenge` database — no `CREATE ROLE` or `DROP DATABASE` privileges. |
+| **Environment variables** | All secrets are injected at runtime via the platform (Render dashboard / GitHub Actions secrets). No secrets are baked into Docker images. |
+| **Health endpoint** | `GET /v1/health` returns `{ "status": "ok", "timestamp": "..." }`. Unauthenticated, minimal — used by Render's uptime monitoring. |
+
+### Security Headers
+
+The Express server sets the following HTTP security headers on every response via the `helmet` middleware:
+
+| Header | Value | Purpose |
+|--------|-------|---------|
+| `Strict-Transport-Security` | `max-age=63072000; includeSubDomains` | Enforces HTTPS for 2 years. |
+| `X-Content-Type-Options` | `nosniff` | Prevents MIME type sniffing. |
+| `X-Frame-Options` | `DENY` | Prevents clickjacking (no iframe embedding). |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | Leaks minimal referrer info. |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | Disables unused browser features. |
+| `Content-Security-Policy` | `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://api.gordichallenge.com;` | Blocks inline scripts, restricts API calls to the backend origin, allows Tailwind-generated inline styles. The CSP is tightened further before production: `style-src 'self'` once Tailwind's JIT output is stable, and a nonce-based policy for any legitimate inline scripts. |
+
+On the frontend, Vite sets `X-Content-Type-Options: nosniff` on the dev server and the production build serves all assets with strong `Cache-Control` headers. The SPA handles its own CSP via the `<meta>` tag as a fallback.
+
+### Logging & Monitoring
+
+| Concern | Approach |
+|---------|----------|
+| **Security events** | The following events are logged with a structured JSON format (via `pino`): failed login attempts, token refresh failures, 403 responses (authorisation denied), challenge creation, account deletion requests. Logs include timestamp, request ID (`X-Request-Id` header), and user UUID (when authenticated). No passwords or tokens are logged. |
+| **Application logging** | All requests are logged with method, path, status code, and duration. `pino` is configured with `redact: ['req.headers.authorization', 'body.password']` to strip sensitive fields. |
+| **Error tracking** | 500 errors are logged with full context. In production, a Sentry SDK (or equivalent) is added to capture unhandled exceptions — but this is **out of scope for v1** if the team is small and errors are caught by the Playwright E2E suite. |
+| **Anomaly detection** | Not automated in v1. For a friend-group app, manual review of the rate-limit hit logs is sufficient. If the app grows, a simple webhook to Linear (create a bug when rate limits are exceeded by the same IP repeatedly) would be a lightweight addition. |
+
+### OWASP Top 10 Coverage
+
+The following OWASP Top 10 (2025 edition) risks are most relevant to Gordi Challenge, along with the specific mitigation applied:
+
+| Risk | Relevance | Mitigation |
+|------|-----------|------------|
+| **A01: Broken Access Control** | High — two roles with different permissions | JWT `role` claim enforced in middleware; route-level `requireRole()` guards. |
+| **A02: Cryptographic Failures** | Medium — password storage, token signing | `bcrypt` cost 12; JWTs signed with strong secret; TLS 1.3 in transit. |
+| **A03: Injection** | Medium — SQL injection in queries | Prisma parameterised queries eliminate SQLi; Zod validates all input shapes. |
+| **A04: Insecure Design** | Low — simple CRUD with one domain | Clean Architecture separates concerns; threat model is reviewed per feature spec. |
+| **A05: Security Misconfiguration** | Medium — misconfigured CORS, debug endpoints | Helmet headers; CORS whitelist; no debug routes in production; Biome lint catches common misconfigs. |
+| **A06: Vulnerable & Outdated Components** | Medium — npm dependencies | Dependabot + `npm audit` in CI; pin major versions; Biome audit checks. |
+| **A07: Identification & Authentication Failures** | High — weak passwords, token theft | Rate limiting on login; short-lived access tokens; secure httpOnly refresh flow; bcrypt. |
+| **A08: Software & Data Integrity Failures** | Low — no CI/CD pipeline without review | All PRs require review before merge; Dependabot PRs reviewed manually. |
+| **A09: Security Logging & Monitoring Failures** | Medium — insufficient logging | Pino structured logging of auth events; request IDs for traceability. |
+| **A10: Server-Side Request Forgery** | Low — no external fetch calls in v1 | No `fetch` or `axios` calls from the API to arbitrary URLs. If added later, SSRF would be mitigated via URL allowlisting. |
+
+### Out of Current Scope
+
+The following are deliberately excluded from the v1 security baseline. They should be revisited as the product gains users or handles more sensitive data:
+
+- **Web Application Firewall (WAF)** — Not needed at this scale. Render's edge network provides basic DDoS protection.
+- **Penetration testing** — Overkill for a v1 friend-group app. A security review should be scheduled before handling 1,000+ users.
+- **Bug bounty program** — Not justified until the app reaches production with real users and a clear revenue model.
+- **Formal GDPR Data Processing Agreement (DPA)** — Required if using a sub-processor (Render). Render offers a DPA on request — this should be signed before onboarding the first user outside the development team.
+- **SOC2 / ISO 27001 compliance** — Out of scope for a Master's project. If the product is commercialised, these would require a dedicated compliance effort (6–12 months).
+- **Secrets rotation policy** — Secrets are set manually in Render and GitHub. Automated rotation (e.g., HashiCorp Vault) is not needed until the team grows beyond two people.
