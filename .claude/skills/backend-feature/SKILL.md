@@ -1,6 +1,6 @@
 ---
 name: backend-feature
-description: Implement a RunMarket backend feature with clean architecture (Controller→Service→Repository→Prisma), TDD, Zod input validation, and backend OWASP rules. Tests with Jest + Supertest. Used by backend-developer.
+description: Implement a RunMarket backend feature with layered architecture + repository pattern (Controller→Service→Repository→Prisma), TDD, Zod input validation, and backend OWASP rules. Tests with Jest + Supertest. Used by backend-developer.
 ---
 
 # Backend Feature
@@ -31,7 +31,7 @@ Always combine with `.claude/skills/tdd-implementation/SKILL.md` (TDD is obligat
 
 ---
 
-## Clean architecture (never skip a layer)
+## Layered architecture (never skip a layer)
 
 ```
 Controller → Service → Repository → Prisma → PostgreSQL
