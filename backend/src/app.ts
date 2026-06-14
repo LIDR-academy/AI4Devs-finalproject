@@ -8,6 +8,7 @@ import { errorHandler, notFoundHandler } from './middleware/error-handler';
 import { healthRouter } from './routes/health.routes';
 import { createProductsRouter } from './routes/products.routes';
 import { createCartRouter } from './routes/cart.routes';
+import { docsRouter } from './routes/docs.routes';
 import { ProductRepository } from './repositories/product.repository';
 import { CartRepository } from './repositories/cart.repository';
 import { CatalogService } from './services/catalog.service';
@@ -31,6 +32,7 @@ app.use(express.json());
 app.use('/api', healthRouter);
 app.use('/api/products', createProductsRouter(catalogService));
 app.use('/api/cart', createCartRouter(cartService));
+app.use('/api', docsRouter);
 
 // 404 and error handlers (must be last)
 app.use(notFoundHandler);
