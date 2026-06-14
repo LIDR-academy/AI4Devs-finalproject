@@ -1,8 +1,8 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useTransition } from 'react';
-import { Filter } from 'lucide-react';
+import { useState, useTransition } from 'react';
+import { ChevronDown, Filter } from 'lucide-react';
 import { ProductFilters } from '../../types';
 import {
   DISTANCE_LABELS,
@@ -53,16 +53,13 @@ export function FilterPanel({ activeFilters }: FilterPanelProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
-
-  // Read from live URL (client-side) so the checkbox state is always in sync.
-  // On first SSR render, useSearchParams() reflects the request URL, which matches
-  // activeFilters — so there is no mismatch at hydration.
   const distance  = searchParams.getAll('distance');
   const surface   = searchParams.getAll('surface');
   const level     = searchParams.getAll('level');
   const objective = searchParams.getAll('objective');
 
   const activeCount = distance.length + surface.length + level.length + objective.length;
+  const [isOpen, setIsOpen] = useState(activeCount > 0);
 
   const handleToggle = (dimension: keyof ProductFilters, value: string, checked: boolean) => {
     const current = searchParams.getAll(dimension);
@@ -83,47 +80,66 @@ export function FilterPanel({ activeFilters }: FilterPanelProps) {
   };
 
   return (
-    <aside className="lg:w-64 bg-white rounded-lg shadow-sm p-6 sticky top-20 self-start">
-      <div className="flex items-center gap-2 mb-6">
-        <Filter size={18} />
-        <h2 className="font-bold">Filtros</h2>
-        {activeCount > 0 && (
-          <span
-            data-testid="filter-badge"
-            className="bg-blue-600 text-white text-xs rounded-full px-2 py-1"
-          >
-            {activeCount}
-          </span>
-        )}
+    <aside className="w-full lg:w-64 shrink-0 bg-white rounded-lg shadow-sm p-4 lg:p-6 lg:sticky lg:top-20 self-start">
+      <button
+        type="button"
+        className="flex w-full items-center justify-between gap-2 lg:mb-6 lg:pointer-events-none"
+        aria-expanded={isOpen}
+        aria-controls="filter-sections"
+        onClick={() => setIsOpen((open) => !open)}
+      >
+        <span className="flex items-center gap-2">
+          <Filter size={18} aria-hidden="true" />
+          <span className="font-bold">Filtros</span>
+          {activeCount > 0 && (
+            <span
+              data-testid="filter-badge"
+              className="bg-blue-600 text-white text-xs rounded-full px-2 py-1"
+            >
+              {activeCount}
+            </span>
+          )}
+        </span>
+        <ChevronDown
+          size={18}
+          aria-hidden="true"
+          className={`text-gray-500 transition-transform lg:hidden ${isOpen ? 'rotate-180' : ''}`}
+        />
+      </button>
+      <div
+        id="filter-sections"
+        data-testid="filter-sections"
+        className={`${isOpen ? 'block' : 'hidden'} lg:block mt-4 lg:mt-0`}
+      >
+        <FilterSection
+          title="Distancia"
+          dimension="distance"
+          options={DISTANCE_LABELS}
+          activeValues={distance}
+          onToggle={handleToggle}
+        />
+        <FilterSection
+          title="Superficie"
+          dimension="surface"
+          options={SURFACE_LABELS}
+          activeValues={surface}
+          onToggle={handleToggle}
+        />
+        <FilterSection
+          title="Nivel"
+          dimension="level"
+          options={LEVEL_LABELS}
+          activeValues={level}
+          onToggle={handleToggle}
+        />
+        <FilterSection
+          title="Objetivo"
+          dimension="objective"
+          options={OBJECTIVE_LABELS}
+          activeValues={objective}
+          onToggle={handleToggle}
+        />
       </div>
-      <FilterSection
-        title="Distancia"
-        dimension="distance"
-        options={DISTANCE_LABELS}
-        activeValues={distance}
-        onToggle={handleToggle}
-      />
-      <FilterSection
-        title="Superficie"
-        dimension="surface"
-        options={SURFACE_LABELS}
-        activeValues={surface}
-        onToggle={handleToggle}
-      />
-      <FilterSection
-        title="Nivel"
-        dimension="level"
-        options={LEVEL_LABELS}
-        activeValues={level}
-        onToggle={handleToggle}
-      />
-      <FilterSection
-        title="Objetivo"
-        dimension="objective"
-        options={OBJECTIVE_LABELS}
-        activeValues={objective}
-        onToggle={handleToggle}
-      />
     </aside>
   );
 }

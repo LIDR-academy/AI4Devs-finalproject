@@ -56,21 +56,21 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps = {
     data = await fetchProducts(filters);
   } catch {
     return (
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold mb-6">Productos para Running</h1>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">Productos para Running</h1>
         <CatalogErrorState />
       </main>
     );
   }
 
   return (
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-3xl font-bold mb-6">Productos para Running</h1>
-      <div className="flex flex-col lg:flex-row gap-8">
-        <Suspense fallback={<div className="lg:w-64" />}>
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">Productos para Running</h1>
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
+        <Suspense fallback={<div className="w-full lg:w-64 shrink-0" />}>
           <FilterPanel activeFilters={filters} />
         </Suspense>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <ResultsCounter total={data.total} />
           {data.products.length === 0 ? (
             hasActiveFilters ? <FilterEmptyState /> : <CatalogEmptyState />

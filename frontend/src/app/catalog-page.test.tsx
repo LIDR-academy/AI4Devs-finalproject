@@ -104,7 +104,7 @@ describe('CatalogPage', () => {
 
     render(await CatalogPage({ searchParams: noSearchParams }));
 
-    expect(screen.getByRole('heading', { name: /filtros/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /filtros/i })).toBeInTheDocument();
   });
 });
 
