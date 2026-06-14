@@ -7,6 +7,7 @@ export interface CartItemResponse {
   productPrice: number;
   image: string;
   quantity: number;
+  stock: number;
   size?: string;
   color?: string;
 }

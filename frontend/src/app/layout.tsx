@@ -26,11 +26,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es">
-      <body>
+    <html lang="es" className="bg-rm-page-bg">
+      <body className="min-h-screen bg-rm-page-bg">
         <Providers>
           <Header />
-          {children}
+          <div className="min-h-[calc(100vh-4rem)] bg-rm-page-bg">{children}</div>
         </Providers>
       </body>
     </html>

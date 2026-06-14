@@ -1,7 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { ShoppingCart } from 'lucide-react';
 import { Product } from '../../types';
-import { LEVEL_CONFIG } from '../../lib/product-utils';
+import { LEVEL_CONFIG, buildImageUrl } from '../../lib/product-utils';
 
 interface ProductCardProps {
   product: Pick<Product, 'id' | 'name' | 'brand' | 'price' | 'image' | 'level' | 'stock'>;
@@ -9,11 +10,6 @@ interface ProductCardProps {
 
 function formatPrice(price: number): string {
   return price.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' });
-}
-
-function buildImageUrl(image: string): string {
-  const base = process.env.NEXT_PUBLIC_ASSETS_BASE_URL ?? '/images';
-  return `${base}/${image}`;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
@@ -53,6 +49,12 @@ export function ProductCard({ product }: ProductCardProps) {
               className="text-xl font-bold text-gray-900"
             >
               {formatPrice(price)}
+            </span>
+            <span
+              aria-label={`Añadir ${name} al carrito`}
+              className="p-2 rounded-full bg-rm-cta text-rm-cta-fg hover:bg-rm-cta-hover transition-colors"
+            >
+              <ShoppingCart size={18} />
             </span>
           </div>
           {stock === 0 && (

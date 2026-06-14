@@ -22,6 +22,8 @@ describe('CartBadge', () => {
       shipping: 0,
       total: 0,
       addItem: vi.fn(),
+      updateItem: vi.fn(),
+      removeItem: vi.fn(),
       isLoading: false,
       error: null,
     });
@@ -41,6 +43,8 @@ describe('CartBadge', () => {
       shipping: 0,
       total: 0,
       addItem: vi.fn(),
+      updateItem: vi.fn(),
+      removeItem: vi.fn(),
       isLoading: false,
       error: null,
     });
@@ -58,6 +62,8 @@ describe('CartBadge', () => {
       shipping: 0,
       total: 0,
       addItem: vi.fn(),
+      updateItem: vi.fn(),
+      removeItem: vi.fn(),
       isLoading: false,
       error: null,
     });
@@ -72,6 +78,8 @@ describe('CartBadge', () => {
       shipping: 0,
       total: 0,
       addItem: vi.fn(),
+      updateItem: vi.fn(),
+      removeItem: vi.fn(),
       isLoading: false,
       error: null,
     });

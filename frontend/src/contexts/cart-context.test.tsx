@@ -7,6 +7,8 @@ import type { CartResponse } from '../types/cart';
 // Mock apiPost from api-client
 vi.mock('../lib/api-client', () => ({
   apiPost: vi.fn(),
+  apiPut: vi.fn(),
+  apiDelete: vi.fn(),
   ApiError: class ApiError extends Error {
     status: number;
     constructor(status: number, message: string) {
@@ -17,8 +19,10 @@ vi.mock('../lib/api-client', () => ({
   },
 }));
 
-import { apiPost } from '../lib/api-client';
+import { apiPost, apiPut, apiDelete } from '../lib/api-client';
 const mockApiPost = vi.mocked(apiPost);
+const mockApiPut = vi.mocked(apiPut);
+const mockApiDelete = vi.mocked(apiDelete);
 
 // Helper: a component that exposes cart context values via data-testid
 function CartConsumer() {
@@ -30,15 +34,30 @@ function CartConsumer() {
       <span data-testid="total">{cart.total}</span>
       <span data-testid="isLoading">{String(cart.isLoading)}</span>
       <span data-testid="error">{cart.error ?? 'null'}</span>
+      <span data-testid="stock0">{cart.items[0]?.stock ?? 'none'}</span>
       <button
         data-testid="addBtn"
         onClick={() => {
-          cart.addItem('prod-1', 1, 'M', 'red').catch(() => {
-            // Intentionally swallowed in tests — callers handle via toast
-          });
+          cart.addItem('prod-1', 1, 'M', 'red').catch(() => {});
         }}
       >
         Add
+      </button>
+      <button
+        data-testid="updateBtn"
+        onClick={() => {
+          cart.updateItem('prod-1', 3, 'M', 'red').catch(() => {});
+        }}
+      >
+        Update
+      </button>
+      <button
+        data-testid="removeBtn"
+        onClick={() => {
+          cart.removeItem('prod-1', 'M', 'red').catch(() => {});
+        }}
+      >
+        Remove
       </button>
     </div>
   );
@@ -47,6 +66,19 @@ function CartConsumer() {
 function renderWithCart(ui: React.ReactNode = <CartConsumer />) {
   return render(<CartProvider>{ui}</CartProvider>);
 }
+
+const mockCartItem = (overrides: Partial<CartResponse['items'][number]> = {}): CartResponse['items'][number] => ({
+  productId: 'prod-1',
+  productName: 'Shoe A',
+  productBrand: 'Brand A',
+  productPrice: 100,
+  image: '/a.jpg',
+  stock: 10,
+  quantity: 1,
+  size: 'M',
+  color: 'red',
+  ...overrides,
+});
 
 const mockCartResponse = (items: CartResponse['items']): CartResponse => ({
   sessionId: 'srv-session-uuid',
@@ -75,6 +107,7 @@ describe('CartContext', () => {
         productBrand: 'Brand A',
         productPrice: 100,
         image: '/a.jpg',
+        stock: 10,
         quantity: 2,
         size: 'M',
         color: 'red',
@@ -85,6 +118,7 @@ describe('CartContext', () => {
         productBrand: 'Brand B',
         productPrice: 50,
         image: '/b.jpg',
+        stock: 5,
         quantity: 3,
         size: 'L',
         color: 'blue',
@@ -129,6 +163,7 @@ describe('CartContext', () => {
         productBrand: 'Brand A',
         productPrice: 120,
         image: '/a.jpg',
+        stock: 10,
         quantity: 1,
         size: 'M',
         color: 'red',
@@ -210,5 +245,147 @@ describe('CartContext', () => {
 
     expect(localStorage.getItem('sessionId')).toBeNull();
     expect(localStorage.getItem('runmarket_session')).toBeNull();
+  });
+
+  it('la respuesta de addItem incluye stock en cada ítem', async () => {
+    const items = [mockCartItem({ productId: 'prod-1', stock: 8, quantity: 1 })];
+    mockApiPost.mockResolvedValueOnce(mockCartResponse(items));
+
+    renderWithCart();
+
+    await act(async () => { screen.getByTestId('addBtn').click(); });
+
+    await waitFor(() =>
+      expect(screen.getByTestId('stock0').textContent).toBe('8'),
+    );
+  });
+
+  // ─── updateItem ────────────────────────────────────────────────────────────
+
+  it('updateItem llama a apiPut con productId, quantity, size y color', async () => {
+    const items = [mockCartItem({ quantity: 3 })];
+    mockApiPut.mockResolvedValueOnce(mockCartResponse(items));
+
+    renderWithCart();
+
+    await act(async () => { screen.getByTestId('updateBtn').click(); });
+
+    await waitFor(() => expect(mockApiPut).toHaveBeenCalledTimes(1));
+    expect(mockApiPut).toHaveBeenCalledWith('/cart/prod-1', { quantity: 3, size: 'M', color: 'red' });
+  });
+
+  it('updateItem actualiza items y totales con la respuesta del servidor', async () => {
+    const items = [mockCartItem({ quantity: 3, productPrice: 50 })];
+    mockApiPut.mockResolvedValueOnce({
+      ...mockCartResponse(items),
+      subtotal: 150,
+      total: 150,
+    });
+
+    renderWithCart();
+
+    await act(async () => { screen.getByTestId('updateBtn').click(); });
+
+    await waitFor(() =>
+      expect(screen.getByTestId('itemCount').textContent).toBe('3'),
+    );
+    expect(screen.getByTestId('subtotal').textContent).toBe('150');
+  });
+
+  it('updateItem rellena error cuando el servidor devuelve error', async () => {
+    const { ApiError } = await import('../lib/api-client');
+    mockApiPut.mockRejectedValueOnce(new ApiError(409, 'Stock insuficiente'));
+
+    renderWithCart();
+
+    await act(async () => { screen.getByTestId('updateBtn').click(); });
+
+    await waitFor(() =>
+      expect(screen.getByTestId('error').textContent).toBe('Stock insuficiente'),
+    );
+  });
+
+  it('isLoading es true durante updateItem y false al terminar', async () => {
+    let resolve!: (v: CartResponse) => void;
+    const deferred = new Promise<CartResponse>((r) => { resolve = r; });
+    mockApiPut.mockReturnValueOnce(deferred);
+
+    renderWithCart();
+
+    act(() => { screen.getByTestId('updateBtn').click(); });
+
+    await waitFor(() =>
+      expect(screen.getByTestId('isLoading').textContent).toBe('true'),
+    );
+
+    await act(async () => { resolve(mockCartResponse([])); });
+
+    await waitFor(() =>
+      expect(screen.getByTestId('isLoading').textContent).toBe('false'),
+    );
+  });
+
+  // ─── removeItem ────────────────────────────────────────────────────────────
+
+  it('removeItem llama a apiDelete con productId, size y color en query string', async () => {
+    mockApiDelete.mockResolvedValueOnce(mockCartResponse([]));
+
+    renderWithCart();
+
+    await act(async () => { screen.getByTestId('removeBtn').click(); });
+
+    await waitFor(() => expect(mockApiDelete).toHaveBeenCalledTimes(1));
+    expect(mockApiDelete).toHaveBeenCalledWith('/cart/prod-1?size=M&color=red');
+  });
+
+  it('removeItem actualiza items con la respuesta del servidor', async () => {
+    mockApiDelete.mockResolvedValueOnce(mockCartResponse([]));
+
+    renderWithCart();
+
+    await act(async () => { screen.getByTestId('removeBtn').click(); });
+
+    await waitFor(() =>
+      expect(screen.getByTestId('itemCount').textContent).toBe('0'),
+    );
+  });
+
+  it('removeItem rellena error cuando el servidor devuelve error', async () => {
+    const { ApiError } = await import('../lib/api-client');
+    mockApiDelete.mockRejectedValueOnce(new ApiError(404, 'Ítem no encontrado en el carrito'));
+
+    renderWithCart();
+
+    await act(async () => { screen.getByTestId('removeBtn').click(); });
+
+    await waitFor(() =>
+      expect(screen.getByTestId('error').textContent).toBe('Ítem no encontrado en el carrito'),
+    );
+  });
+
+  it('updateItem actualiza la caché de localStorage', async () => {
+    const items = [mockCartItem({ quantity: 2 })];
+    mockApiPut.mockResolvedValueOnce(mockCartResponse(items));
+
+    renderWithCart();
+
+    await act(async () => { screen.getByTestId('updateBtn').click(); });
+
+    await waitFor(() => expect(mockApiPut).toHaveBeenCalledTimes(1));
+
+    const cached = JSON.parse(localStorage.getItem('runmarket_cart') ?? '[]') as unknown[];
+    expect(cached).toHaveLength(1);
+  });
+
+  it('sessionId no se persiste en localStorage tras updateItem', async () => {
+    mockApiPut.mockResolvedValueOnce(mockCartResponse([]));
+
+    renderWithCart();
+
+    await act(async () => { screen.getByTestId('updateBtn').click(); });
+
+    await waitFor(() => expect(mockApiPut).toHaveBeenCalledTimes(1));
+
+    expect(localStorage.getItem('sessionId')).toBeNull();
   });
 });

@@ -24,6 +24,7 @@ const buildCartResponse = (overrides: Partial<CartResponse> = {}): CartResponse 
       productBrand: 'Nike',
       productPrice: 129.99,
       image: 'products/nike-pegasus.jpg',
+      stock: 10,
       quantity: 1,
       size: '42',
       color: 'black',
@@ -36,7 +37,10 @@ const buildCartResponse = (overrides: Partial<CartResponse> = {}): CartResponse 
 });
 
 const makeCartService = (overrides: Partial<ICartService> = {}): ICartService => ({
+  getCart: jest.fn().mockResolvedValue(buildCartResponse()),
   addItem: jest.fn().mockResolvedValue(buildCartResponse()),
+  updateItem: jest.fn().mockResolvedValue(buildCartResponse()),
+  removeItem: jest.fn().mockResolvedValue(buildCartResponse()),
   ...overrides,
 });
 
@@ -171,5 +175,221 @@ describe('POST /api/cart', () => {
     expect(res.status).toBe(500);
     expect(JSON.stringify(res.body)).not.toContain('stack');
     expect(JSON.stringify(res.body)).not.toContain('Prisma');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/cart
+// ---------------------------------------------------------------------------
+
+describe('GET /api/cart', () => {
+  it('devuelve 200 con carrito vacío', async () => {
+    const emptyCart: CartResponse = {
+      sessionId: VALID_UUID,
+      items: [],
+      subtotal: 0,
+      shipping: 4.99,
+      total: 4.99,
+    };
+    const service = makeCartService({
+      getCart: jest.fn().mockResolvedValue(emptyCart),
+    });
+
+    const res = await request(buildApp(service))
+      .get('/api/cart')
+      .set('Cookie', [`sessionId=${VALID_UUID}`]);
+
+    expect(res.status).toBe(200);
+    expect(res.body.items).toEqual([]);
+    expect(res.body.subtotal).toBe(0);
+  });
+
+  it('devuelve 200 con ítems y stock incluido', async () => {
+    const service = makeCartService({
+      getCart: jest.fn().mockResolvedValue(buildCartResponse()),
+    });
+
+    const res = await request(buildApp(service))
+      .get('/api/cart')
+      .set('Cookie', [`sessionId=${VALID_UUID}`]);
+
+    expect(res.status).toBe(200);
+    expect(res.body.items[0].stock).toBe(10);
+    expect(res.body.items[0].productName).toBe('Nike Pegasus 41');
+  });
+
+  it('no expone stack traces en errores 500', async () => {
+    const service = makeCartService({
+      getCart: jest.fn().mockRejectedValue(new Error('Prisma error internal')),
+    });
+
+    const res = await request(buildApp(service))
+      .get('/api/cart')
+      .set('Cookie', [`sessionId=${VALID_UUID}`]);
+
+    expect(res.status).toBe(500);
+    expect(JSON.stringify(res.body)).not.toContain('Prisma');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// PUT /api/cart/:productId
+// ---------------------------------------------------------------------------
+
+describe('PUT /api/cart/:productId', () => {
+  it('devuelve 200 con carrito actualizado', async () => {
+    const service = makeCartService({
+      updateItem: jest.fn().mockResolvedValue(buildCartResponse()),
+    });
+
+    const res = await request(buildApp(service))
+      .put(`/api/cart/${VALID_UUID}`)
+      .set('Cookie', [`sessionId=${VALID_UUID}`])
+      .send({ quantity: 3 });
+
+    expect(res.status).toBe(200);
+    expect(res.body.items).toBeDefined();
+    expect(res.body.total).toBeDefined();
+  });
+
+  it('devuelve 400 con body inválido (quantity 0)', async () => {
+    const service = makeCartService();
+
+    const res = await request(buildApp(service))
+      .put(`/api/cart/${VALID_UUID}`)
+      .set('Cookie', [`sessionId=${VALID_UUID}`])
+      .send({ quantity: 0 });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBeDefined();
+  });
+
+  it('devuelve 400 con campo extra (strict)', async () => {
+    const service = makeCartService();
+
+    const res = await request(buildApp(service))
+      .put(`/api/cart/${VALID_UUID}`)
+      .set('Cookie', [`sessionId=${VALID_UUID}`])
+      .send({ quantity: 1, price: 9.99 });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBeDefined();
+  });
+
+  it('devuelve 404 cuando el ítem no existe en el carrito', async () => {
+    const service = makeCartService({
+      updateItem: jest.fn().mockRejectedValue(new NotFoundError('Cart item not found')),
+    });
+
+    const res = await request(buildApp(service))
+      .put(`/api/cart/${VALID_UUID}`)
+      .set('Cookie', [`sessionId=${VALID_UUID}`])
+      .send({ quantity: 2 });
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBeDefined();
+  });
+
+  it('devuelve 409 cuando quantity supera el stock', async () => {
+    const service = makeCartService({
+      updateItem: jest.fn().mockRejectedValue(new StockError(3)),
+    });
+
+    const res = await request(buildApp(service))
+      .put(`/api/cart/${VALID_UUID}`)
+      .set('Cookie', [`sessionId=${VALID_UUID}`])
+      .send({ quantity: 10 });
+
+    expect(res.status).toBe(409);
+    expect(res.body.available).toBe(3);
+  });
+
+  it('pasa size y color al servicio desde el body', async () => {
+    const updateItem = jest.fn().mockResolvedValue(buildCartResponse());
+    const service = makeCartService({ updateItem });
+
+    await request(buildApp(service))
+      .put(`/api/cart/${VALID_UUID}`)
+      .set('Cookie', [`sessionId=${VALID_UUID}`])
+      .send({ quantity: 2, size: '42', color: 'negro' });
+
+    expect(updateItem).toHaveBeenCalledWith(
+      expect.any(String),
+      VALID_UUID,
+      2,
+      '42',
+      'negro',
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DELETE /api/cart/:productId
+// ---------------------------------------------------------------------------
+
+describe('DELETE /api/cart/:productId', () => {
+  it('devuelve 200 con carrito actualizado', async () => {
+    const emptyCart: CartResponse = {
+      sessionId: VALID_UUID,
+      items: [],
+      subtotal: 0,
+      shipping: 4.99,
+      total: 4.99,
+    };
+    const service = makeCartService({
+      removeItem: jest.fn().mockResolvedValue(emptyCart),
+    });
+
+    const res = await request(buildApp(service))
+      .delete(`/api/cart/${VALID_UUID}`)
+      .set('Cookie', [`sessionId=${VALID_UUID}`]);
+
+    expect(res.status).toBe(200);
+    expect(res.body.items).toEqual([]);
+  });
+
+  it('devuelve 404 cuando el ítem no existe', async () => {
+    const service = makeCartService({
+      removeItem: jest.fn().mockRejectedValue(new NotFoundError('Cart item not found')),
+    });
+
+    const res = await request(buildApp(service))
+      .delete(`/api/cart/${VALID_UUID}`)
+      .set('Cookie', [`sessionId=${VALID_UUID}`]);
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBeDefined();
+  });
+
+  it('pasa size y color al servicio desde query string', async () => {
+    const removeItem = jest.fn().mockResolvedValue(buildCartResponse());
+    const service = makeCartService({ removeItem });
+
+    await request(buildApp(service))
+      .delete(`/api/cart/${VALID_UUID}?size=42&color=negro`)
+      .set('Cookie', [`sessionId=${VALID_UUID}`]);
+
+    expect(removeItem).toHaveBeenCalledWith(
+      expect.any(String),
+      VALID_UUID,
+      '42',
+      'negro',
+    );
+  });
+
+  it('pasa undefined cuando no hay size ni color en query string', async () => {
+    const removeItem = jest.fn().mockResolvedValue(buildCartResponse());
+    const service = makeCartService({ removeItem });
+
+    await request(buildApp(service))
+      .delete(`/api/cart/${VALID_UUID}`)
+      .set('Cookie', [`sessionId=${VALID_UUID}`]);
+
+    expect(removeItem).toHaveBeenCalledWith(
+      expect.any(String),
+      VALID_UUID,
+      undefined,
+      undefined,
+    );
   });
 });

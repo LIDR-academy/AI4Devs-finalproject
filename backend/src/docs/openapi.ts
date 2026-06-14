@@ -61,11 +61,23 @@ const CartItemResponseSchema = registry.register(
       productBrand: z.string().openapi({ example: 'Nike' }),
       productPrice: z.number().openapi({ example: 129.99 }),
       image: z.string().openapi({ example: '/images/pegasus-41.jpg' }),
+      stock: z.number().int().openapi({ example: 10, description: 'Stock disponible del producto (límite del stepper)' }),
       quantity: z.number().int().openapi({ example: 2 }),
       size: z.string().optional().openapi({ example: '42' }),
       color: z.string().optional().openapi({ example: 'negro' }),
     })
     .openapi('CartItemResponse'),
+);
+
+const UpdateCartItemInputSchema = registry.register(
+  'UpdateCartItemInput',
+  z
+    .object({
+      quantity: z.number().int().min(1).openapi({ example: 3 }),
+      size: z.string().optional().openapi({ example: '42' }),
+      color: z.string().optional().openapi({ example: 'negro' }),
+    })
+    .openapi('UpdateCartItemInput'),
 );
 
 const CartResponseSchema = registry.register(
@@ -172,6 +184,20 @@ registry.registerPath({
 });
 
 registry.registerPath({
+  method: 'get',
+  path: '/api/cart',
+  tags: ['Carrito'],
+  summary: 'Obtener el carrito de la sesión activa',
+  description: 'Devuelve el carrito asociado al `sessionId` de la cookie. Si no existe sesión, devuelve un carrito vacío.',
+  responses: {
+    200: {
+      description: 'Carrito de la sesión (puede estar vacío)',
+      content: { 'application/json': { schema: CartResponseSchema } },
+    },
+  },
+});
+
+registry.registerPath({
   method: 'post',
   path: '/api/cart',
   tags: ['Carrito'],
@@ -209,6 +235,76 @@ registry.registerPath({
     },
     429: {
       description: 'Demasiadas peticiones',
+      content: { 'application/json': { schema: ErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'put',
+  path: '/api/cart/{productId}',
+  tags: ['Carrito'],
+  summary: 'Actualizar la cantidad de un ítem del carrito',
+  request: {
+    params: z.object({
+      productId: z.string().min(1).openapi({ example: 'clx1z2a3b4c5d6e7f8g9h0' }),
+    }),
+    body: {
+      content: { 'application/json': { schema: UpdateCartItemInputSchema } },
+      required: true,
+    },
+  },
+  responses: {
+    200: {
+      description: 'Carrito actualizado',
+      content: { 'application/json': { schema: CartResponseSchema } },
+    },
+    400: {
+      description: 'Datos de entrada inválidos',
+      content: { 'application/json': { schema: ErrorSchema } },
+    },
+    404: {
+      description: 'Ítem no encontrado en el carrito',
+      content: { 'application/json': { schema: ErrorSchema } },
+    },
+    409: {
+      description: 'Stock insuficiente',
+      content: {
+        'application/json': {
+          schema: z
+            .object({ error: z.string(), available: z.number().int() })
+            .openapi({ example: { error: 'Stock insuficiente', available: 3 } }),
+        },
+      },
+    },
+    429: {
+      description: 'Demasiadas peticiones',
+      content: { 'application/json': { schema: ErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'delete',
+  path: '/api/cart/{productId}',
+  tags: ['Carrito'],
+  summary: 'Eliminar un ítem del carrito',
+  request: {
+    params: z.object({
+      productId: z.string().min(1).openapi({ example: 'clx1z2a3b4c5d6e7f8g9h0' }),
+    }),
+    query: z.object({
+      size: z.string().optional().openapi({ example: '42', description: 'Talla del ítem a eliminar' }),
+      color: z.string().optional().openapi({ example: 'negro', description: 'Color del ítem a eliminar' }),
+    }),
+  },
+  responses: {
+    200: {
+      description: 'Carrito actualizado tras eliminar el ítem',
+      content: { 'application/json': { schema: CartResponseSchema } },
+    },
+    404: {
+      description: 'Ítem no encontrado en el carrito',
       content: { 'application/json': { schema: ErrorSchema } },
     },
   },

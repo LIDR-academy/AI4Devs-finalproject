@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { Cart, CartItem, CartItemInput, CartWithItems } from '../types/domain';
+import { NotFoundError } from '../types/errors';
 
 // ---------------------------------------------------------------------------
 // Interface
@@ -11,6 +12,13 @@ export interface ICartRepository {
   getCartWithItems(sessionId: string): Promise<CartWithItems | null>;
   removeItem(cartId: string, productId: string, size?: string, color?: string): Promise<void>;
   clearCart(cartId: string): Promise<void>;
+  updateItemQuantity(
+    cartId: string,
+    productId: string,
+    quantity: number,
+    size?: string,
+    color?: string,
+  ): Promise<void>;
 }
 
 // ---------------------------------------------------------------------------
@@ -163,5 +171,26 @@ export class CartRepository implements ICartRepository {
 
   async clearCart(cartId: string): Promise<void> {
     await this.prisma.cartItem.deleteMany({ where: { cartId } });
+  }
+
+  async updateItemQuantity(
+    cartId: string,
+    productId: string,
+    quantity: number,
+    size?: string,
+    color?: string,
+  ): Promise<void> {
+    const result = await this.prisma.cartItem.updateMany({
+      where: {
+        cartId,
+        productId,
+        size: size !== undefined ? size : null,
+        color: color !== undefined ? color : null,
+      },
+      data: { quantity },
+    });
+    if (result.count === 0) {
+      throw new NotFoundError('Cart item not found');
+    }
   }
 }
