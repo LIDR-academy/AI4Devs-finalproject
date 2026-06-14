@@ -160,6 +160,7 @@ Request → Router → Middleware → Controller → Service → Repository → 
 | `CartService` | `POST /api/cart`, `PUT/DELETE /api/cart/:productId` | Gestión de ítems del carrito (sesión server-side en MVP) |
 | `CheckoutService` | `POST /api/checkout` | Validación de datos de envío/pago y creación de Order |
 | `OrderService` | `GET /api/orders`, `GET /api/orders/:id` | Consulta del historial de pedidos |
+| — (docs) | `GET /api/docs`, `GET /api/docs.json` | Swagger UI interactiva y spec OpenAPI 3.0 generada desde schemas Zod |
 
 ### 3.3 Base de datos — PostgreSQL + Prisma
 
@@ -195,6 +196,7 @@ Request → Router → Middleware → Controller → Service → Repository → 
 | ORM | Prisma | 5 | Type-safe, migraciones, compatibilidad PostgreSQL |
 | Base de datos | PostgreSQL | 16 | Relacional, ACID, estándar eCommerce |
 | Validación | Zod | 3 | Schema validation tipado, compartible frontend/backend |
+| Documentación API | @asteasolutions/zod-to-openapi + swagger-ui-express | 7 / 5 | Genera la spec OpenAPI 3.0 desde los schemas Zod; sirve Swagger UI en `/api/docs` |
 | Test unitario FE | Vitest + RTL | latest | Nativo Vite/Next.js, API compatible Jest |
 | Test unitario BE | Jest + Supertest | latest | Estándar Node.js, integración Express |
 | Test E2E | Playwright | 1.60 | Multi-browser, disponible en el entorno |
@@ -245,14 +247,15 @@ runmarket/
 │
 ├── backend/                      ← Express REST API
 │   ├── src/
-│   │   ├── routes/               ← products.routes.ts, orders.routes.ts...
-│   │   ├── controllers/          ← products.controller.ts...
-│   │   ├── services/             ← catalog.service.ts, order.service.ts...
-│   │   ├── repositories/         ← product.repository.ts, cart.repository.ts, order.repository.ts
-│   │   ├── middleware/           ← error-handler.ts, cors.ts, logger.ts, rate-limit.ts
-│   │   ├── schemas/              ← Zod schemas de validación
+│   │   ├── routes/               ← products.routes.ts, cart.routes.ts, health.routes.ts, docs.routes.ts
+│   │   ├── controllers/          ← products.controller.ts, cart.controller.ts, health.controller.ts
+│   │   ├── services/             ← catalog.service.ts, cart.service.ts
+│   │   ├── repositories/         ← product.repository.ts, cart.repository.ts
+│   │   ├── middleware/           ← error-handler.ts, cors.ts, logger.ts, rate-limit.ts, session.ts
+│   │   ├── schemas/              ← Zod schemas de validación (product-filter.schema.ts, cart.schema.ts)
+│   │   ├── docs/                 ← openapi.ts (spec OpenAPI 3.0 generada desde Zod)
 │   │   ├── types/                ← domain.ts, errors.ts (tipos de dominio + errores)
-│   │   └── index.ts              ← bootstrap Express
+│   │   └── app.ts                ← bootstrap Express
 │   ├── prisma/
 │   │   ├── schema.prisma         ← definición del modelo de datos
 │   │   └── seed.ts               ← datos de prueba
