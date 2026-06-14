@@ -1,3 +1,8 @@
+export function buildImageUrl(image: string): string {
+  const base = process.env.NEXT_PUBLIC_ASSETS_BASE_URL ?? '/images';
+  return `${base}/${image}`;
+}
+
 export const VALID_DISTANCES = ['5K', '10K', 'half-marathon', 'marathon', 'ultra'] as const;
 export const VALID_SURFACES = ['road', 'trail', 'track', 'mixed'] as const;
 export const VALID_LEVELS = ['beginner', 'intermediate', 'advanced'] as const;

@@ -7,7 +7,7 @@ import React, {
   useEffect,
   useState,
 } from 'react';
-import { apiPost } from '../lib/api-client';
+import { apiPost, apiPut, apiDelete } from '../lib/api-client';
 import type { CartContextValue, CartItemUI, CartResponse } from '../types/cart';
 
 const CART_STORAGE_KEY = 'runmarket_cart';
@@ -73,6 +73,68 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  const updateItem = useCallback(
+    async (
+      productId: string,
+      quantity: number,
+      size?: string,
+      color?: string,
+    ): Promise<void> => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await apiPut<CartResponse>(`/cart/${encodeURIComponent(productId)}`, {
+          quantity,
+          size,
+          color,
+        });
+        setItems(response.items);
+        setSubtotal(response.subtotal);
+        setShipping(response.shipping);
+        setTotal(response.total);
+        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(response.items));
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Error desconocido';
+        setError(message);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [],
+  );
+
+  const removeItem = useCallback(
+    async (
+      productId: string,
+      size?: string,
+      color?: string,
+    ): Promise<void> => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const params = new URLSearchParams();
+        if (size) params.set('size', size);
+        if (color) params.set('color', color);
+        const qs = params.toString();
+        const path = `/cart/${encodeURIComponent(productId)}${qs ? `?${qs}` : ''}`;
+        const response = await apiDelete<CartResponse>(path);
+        setItems(response.items);
+        setSubtotal(response.subtotal);
+        setShipping(response.shipping);
+        setTotal(response.total);
+        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(response.items));
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Error desconocido';
+        setError(message);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [],
+  );
+
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   const value: CartContextValue = {
@@ -82,6 +144,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     shipping,
     total,
     addItem,
+    updateItem,
+    removeItem,
     isLoading,
     error,
   };
