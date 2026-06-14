@@ -28,7 +28,7 @@ export function CartSummary({
   const remaining = freeShippingThreshold - subtotal;
 
   return (
-    <div className="rounded-xl border border-border p-6 flex flex-col gap-4 bg-card">
+    <div className="rounded-lg shadow-sm border border-border p-6 flex flex-col gap-4 bg-white">
       <h2 className="text-lg font-semibold">Resumen del pedido</h2>
 
       <div className="flex flex-col gap-2 text-sm">

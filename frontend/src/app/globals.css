@@ -70,6 +70,9 @@
   --rm-status-cancelled-bg: #fee2e2;     /* red-100   */
   --rm-status-cancelled-text: #b91c1c;   /* red-700   */
 
+  /* Page canvas — light gray behind white cards (Figma Make prototype) */
+  --rm-page-bg: #f7f8fa;
+
   /* CTA / accent blue (matching prototype's blue-600 usage) */
   --rm-cta: #2563eb;        /* blue-600 */
   --rm-cta-hover: #1d4ed8;  /* blue-700 */
@@ -160,6 +163,7 @@
   --color-rm-status-delivered-text: var(--rm-status-delivered-text);
   --color-rm-status-cancelled-bg: var(--rm-status-cancelled-bg);
   --color-rm-status-cancelled-text: var(--rm-status-cancelled-text);
+  --color-rm-page-bg: var(--rm-page-bg);
   --color-rm-cta: var(--rm-cta);
   --color-rm-cta-hover: var(--rm-cta-hover);
   --color-rm-cta-fg: var(--rm-cta-fg);
@@ -172,7 +176,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-rm-page-bg text-foreground;
   }
   html {
     font-size: var(--font-size);

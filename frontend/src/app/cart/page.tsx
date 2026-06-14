@@ -61,7 +61,7 @@ export default function CartPage() {
       <h1 className="text-2xl font-bold mb-8">Mi carrito</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_20rem] gap-8 items-start">
-        <section>
+        <section className="bg-white rounded-lg shadow-sm p-6">
           {items.map((item) => (
             <CartItemRow
               key={`${item.productId}-${item.size ?? ''}-${item.color ?? ''}`}
