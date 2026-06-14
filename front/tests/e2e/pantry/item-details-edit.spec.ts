@@ -4,6 +4,11 @@ import {
   registerUser,
   seedSession,
 } from "../notifications/_helpers";
+import {
+  acceptInvitation,
+  createHousehold,
+  sendInvitation,
+} from "../sharing/_helpers";
 
 const FRONT_BASE_URL = process.env.E2E_FRONT_BASE_URL ?? "http://localhost:5173";
 const API_BASE_URL = process.env.E2E_API_BASE_URL ?? "http://localhost:3000/api";
@@ -76,6 +81,75 @@ test.describe("Item details edit — quantity, unit, price", () => {
     expect(saved!.quantity).toBe(3);
     expect(saved!.unit).toBe("kg");
     expect(saved!.pricePaid).toBe("4.99");
+  });
+
+  test("Mark as consumed removes item from pantry and redirects", async ({
+    page,
+    request,
+  }) => {
+    const ts = Date.now();
+    const auth = await registerUser(
+      request,
+      `pw.item-consume.${ts}@pantry-e2e.example.com`,
+    );
+
+    const item = await createAndGetPantryItem(request, auth.accessToken, "Yogurt", 2);
+
+    await seedSession(page, auth);
+    await page.goto(`${FRONT_BASE_URL}/item/${item.id}`);
+
+    // Button is enabled
+    const consumeBtn = page.getByTestId("item-consume-button");
+    await expect(consumeBtn).toBeVisible();
+    await expect(consumeBtn).toBeEnabled();
+
+    // Click it
+    await consumeBtn.click();
+
+    // Should redirect to pantry
+    await page.waitForURL(`${FRONT_BASE_URL}/pantry`);
+
+    // Item no longer appears in the pantry list
+    await expect(page.getByText("Yogurt")).not.toBeVisible();
+
+    // Confirm via API: item is gone (deleted on consume)
+    const listRes = await request.get(`${API_BASE_URL}/pantry/items`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+    });
+    expect(listRes.ok()).toBeTruthy();
+    const items = (await listRes.json()) as Array<{ id: string }>;
+    expect(items.find((i) => i.id === item.id)).toBeUndefined();
+  });
+
+  test("household member can mark a shared item as consumed", async ({
+    page,
+    request,
+  }) => {
+    const ts = Date.now();
+    const userA = await registerUser(request, `pw.consume-hh-a.${ts}@pantry-e2e.example.com`);
+    const userB = await registerUser(request, `pw.consume-hh-b.${ts}@pantry-e2e.example.com`);
+
+    // User A creates a household and an item
+    const hh = await createHousehold(request, userA.accessToken, "Consume HH");
+    const item = await createAndGetPantryItem(request, userA.accessToken, "Shared Cheese", 3);
+
+    // User B joins the household
+    const inv = await sendInvitation(request, userA.accessToken, hh.id, userB.user.email);
+    await acceptInvitation(request, userB.accessToken, inv.id);
+
+    // User B navigates to User A's item
+    await seedSession(page, userB);
+    await page.goto(`${FRONT_BASE_URL}/item/${item.id}`);
+
+    const consumeBtn = page.getByTestId("item-consume-button");
+    await expect(consumeBtn).toBeVisible();
+    await expect(consumeBtn).toBeEnabled();
+
+    await consumeBtn.click();
+
+    // Redirects to pantry — shared item gone from B's view
+    await page.waitForURL(`${FRONT_BASE_URL}/pantry`);
+    await expect(page.getByText("Shared Cheese")).not.toBeVisible();
   });
 
   test("shows validation error for invalid quantity", async ({ page, request }) => {

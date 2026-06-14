@@ -5,6 +5,7 @@ import { DashboardModule } from "./modules/dashboard/dashboard.module";
 import { DatabaseModule } from "./database/database.module";
 import { ExpirationModule } from "./modules/expiration/expiration.module";
 import { HealthModule } from "./health/health.module";
+import { HouseholdsModule } from "./modules/households/households.module";
 import { InsightsModule } from "./modules/insights/insights.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
 import { PantryModule } from "./modules/pantry/pantry.module";
@@ -18,6 +19,7 @@ import { UsersModule } from "./modules/users/users.module";
     HealthModule,
     AuthModule,
     UsersModule,
+    HouseholdsModule,
     PantryModule,
     ReceiptsModule,
     ExpirationModule,

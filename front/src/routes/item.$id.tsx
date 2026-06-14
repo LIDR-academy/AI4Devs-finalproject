@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ChevronLeft, Tag, Repeat, Settings2 } from "lucide-react";
 import { daysUntil } from "@/lib/mock-data";
@@ -10,6 +10,7 @@ import {
   estimateExpiration,
   listPantryItems,
   overrideExpiration,
+  registerPantryItemEvent,
   updatePantryItem,
   PANTRY_UNITS,
   type ExpirationEstimateResponse,
@@ -29,6 +30,7 @@ function ItemDetail() {
   }
 
   const { id } = useParams({ from: "/item/$id" });
+  const navigate = useNavigate();
   const [item, setItem] = useState<PantryApiItem | null>(null);
   const [estimate, setEstimate] = useState<ExpirationEstimateResponse | null>(null);
   const [isEstimating, setIsEstimating] = useState(false);
@@ -43,6 +45,9 @@ function ItemDetail() {
   const [isSavingDetails, setIsSavingDetails] = useState(false);
   const [detailsMessage, setDetailsMessage] = useState<string | null>(null);
   const [detailsError, setDetailsError] = useState<string | null>(null);
+
+  const [isConsuming, setIsConsuming] = useState(false);
+  const [consumeError, setConsumeError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -173,6 +178,20 @@ function ItemDetail() {
       );
     } finally {
       setIsSavingOverride(false);
+    }
+  }
+
+  async function handleMarkConsumed() {
+    if (!item) return;
+    setIsConsuming(true);
+    setConsumeError(null);
+    try {
+      await registerPantryItemEvent(item.id, "CONSUMED");
+      await navigate({ to: "/pantry" });
+    } catch (apiError) {
+      setConsumeError(apiError instanceof Error ? apiError.message : "Could not mark as consumed.");
+    } finally {
+      setIsConsuming(false);
     }
   }
 
@@ -353,10 +372,20 @@ function ItemDetail() {
           </div>
         </section>
 
-        <div className="px-5 mt-8">
-          <button className="w-full rounded-2xl bg-destructive/10 text-destructive py-4 font-semibold text-[15px]">
-            Mark as consumed
+        <div className="px-5 mt-8 space-y-2">
+          <button
+            data-testid="item-consume-button"
+            onClick={() => { void handleMarkConsumed(); }}
+            disabled={isConsuming}
+            className="w-full rounded-2xl bg-destructive/10 text-destructive py-4 font-semibold text-[15px] disabled:opacity-60"
+          >
+            {isConsuming ? "Marking…" : "Mark as consumed"}
           </button>
+          {consumeError && (
+            <p className="text-[12px] text-destructive text-center" data-testid="item-consume-error">
+              {consumeError}
+            </p>
+          )}
         </div>
       </div>
     </div>
