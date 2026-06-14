@@ -128,21 +128,33 @@ registry.registerPath({
   request: {
     query: z.object({
       distance: z
-        .enum(['5K', '10K', 'half-marathon', 'marathon', 'ultra'])
+        .array(z.enum(['5K', '10K', 'half-marathon', 'marathon', 'ultra']))
         .optional()
-        .openapi({ description: 'Filtrar por distancia objetivo (admite múltiples valores)' }),
+        .openapi({
+          description: 'Filtrar por distancia objetivo. Admite múltiples valores (?distance=5K&distance=marathon).',
+          param: { style: 'form', explode: true },
+        }),
       surface: z
-        .enum(['road', 'trail', 'track', 'mixed'])
+        .array(z.enum(['road', 'trail', 'track', 'mixed']))
         .optional()
-        .openapi({ description: 'Filtrar por tipo de superficie' }),
+        .openapi({
+          description: 'Filtrar por tipo de superficie. Admite múltiples valores.',
+          param: { style: 'form', explode: true },
+        }),
       level: z
-        .enum(['beginner', 'intermediate', 'advanced'])
+        .array(z.enum(['beginner', 'intermediate', 'advanced']))
         .optional()
-        .openapi({ description: 'Filtrar por nivel del corredor' }),
+        .openapi({
+          description: 'Filtrar por nivel del corredor. Admite múltiples valores.',
+          param: { style: 'form', explode: true },
+        }),
       objective: z
-        .enum(['training', 'competition', 'recovery', 'daily'])
+        .array(z.enum(['training', 'competition', 'recovery', 'daily']))
         .optional()
-        .openapi({ description: 'Filtrar por objetivo de entrenamiento' }),
+        .openapi({
+          description: 'Filtrar por objetivo de entrenamiento. Admite múltiples valores.',
+          param: { style: 'form', explode: true },
+        }),
     }),
   },
   responses: {
@@ -203,7 +215,8 @@ registry.registerPath({
   tags: ['Carrito'],
   summary: 'Añadir un producto al carrito',
   description:
-    'El `sessionId` se gestiona mediante cookie HTTP-only. Si no existe sesión activa se crea automáticamente.',
+    'El `sessionId` se gestiona mediante cookie HTTP-only (`sessionId=…; HttpOnly; SameSite=Strict`). ' +
+    'Si no existe sesión activa se crea automáticamente y la cookie se emite en la respuesta (`Set-Cookie`).',
   request: {
     body: {
       content: { 'application/json': { schema: AddToCartInputSchema } },
@@ -307,6 +320,10 @@ registry.registerPath({
       description: 'Ítem no encontrado en el carrito',
       content: { 'application/json': { schema: ErrorSchema } },
     },
+    429: {
+      description: 'Demasiadas peticiones',
+      content: { 'application/json': { schema: ErrorSchema } },
+    },
   },
 });
 
@@ -322,6 +339,6 @@ export function buildOpenApiDocument() {
       description:
         'API REST del ecommerce RunMarket. Gestiona catálogo de productos deportivos y carrito de compra con sesión anónima.',
     },
-    servers: [{ url: 'http://localhost:3001', description: 'Desarrollo local' }],
+    servers: [{ url: 'http://localhost:4000', description: 'Desarrollo local' }],
   });
 }
