@@ -100,6 +100,11 @@ export default async function ProductDetailPage({ params }: Props) {
             sizes={product.sizes}
             colors={product.colors}
             stock={product.stock}
+            productId={product.id}
+            productName={product.name}
+            productBrand={product.brand}
+            productPrice={product.price}
+            image={product.image}
           />
 
           <TrustSignals />
