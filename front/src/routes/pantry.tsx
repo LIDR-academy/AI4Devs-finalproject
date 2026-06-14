@@ -8,7 +8,13 @@ import {
   requireAuthBeforeLoad,
   useRequireAuthRedirect,
 } from "@/features/auth/route-guard";
-import { listPantryItems, type PantryApiItem } from "@/features/pantry/pantry.api";
+import {
+  createPantryItem,
+  listConsumptionEvents,
+  listPantryItems,
+  type ConsumptionEventRecord,
+  type PantryApiItem,
+} from "@/features/pantry/pantry.api";
 
 export const Route = createFileRoute("/pantry")({
   beforeLoad: requireAuthBeforeLoad,
@@ -16,7 +22,7 @@ export const Route = createFileRoute("/pantry")({
   component: PantryPage,
 });
 
-const filters = ["All", "Expiring", "Fridge", "Pantry", "Freezer"] as const;
+const filters = ["All", "Expiring", "Fridge", "Pantry", "Freezer", "Consumed", "Wasted"] as const;
 
 function PantryPage() {
   const authed = useRequireAuthRedirect();
@@ -28,8 +34,20 @@ function PantryPage() {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<(typeof filters)[number]>("All");
   const [items, setItems] = useState<PantryApiItem[]>([]);
+  const [events, setEvents] = useState<ConsumptionEventRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reAddMessage, setReAddMessage] = useState<string | null>(null);
+  const [itemEmojis, setItemEmojis] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("rsf_item_emojis") ?? "{}") as Record<string, string>;
+      setItemEmojis(stored);
+    } catch {
+      // localStorage unavailable
+    }
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -59,12 +77,55 @@ function PantryPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (filter !== "Consumed" && filter !== "Wasted") return;
+    let isMounted = true;
+    setIsLoading(true);
+    setError(null);
+    setEvents([]);
+
+    listConsumptionEvents(filter === "Consumed" ? "CONSUMED" : "WASTED")
+      .then((result) => {
+        if (isMounted) setEvents(result);
+      })
+      .catch((apiError) => {
+        if (isMounted)
+          setError(apiError instanceof Error ? apiError.message : "Could not load history.");
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [filter]);
+
+  async function handleReAdd(event: ConsumptionEventRecord) {
+    try {
+      await createPantryItem({
+        name: event.itemName ?? "Unknown item",
+        quantity: event.quantity,
+        unit: event.itemUnit ?? "unit",
+      });
+      // Remove from the consumed/wasted list immediately
+      setEvents((current) => current.filter((e) => e.id !== event.id));
+      // Refresh pantry items so All/Expiring/location filters show the re-added item
+      const fresh = await listPantryItems();
+      setItems(fresh);
+      setReAddMessage(`"${event.itemName ?? "Item"}" added back to pantry.`);
+      setTimeout(() => setReAddMessage(null), 3000);
+    } catch (apiError) {
+      setError(apiError instanceof Error ? apiError.message : "Could not re-add item.");
+    }
+  }
+
   const mappedItems: PantryItem[] = useMemo(
     () =>
       items.map((item) => ({
         id: item.id,
         name: item.name,
-        emoji: "🍽️",
+        emoji: itemEmojis[item.id] ?? "🍽️",
         category: "Pantry",
         quantity: `${item.quantity} ${item.unit}`,
         addedAt: item.createdAt,
@@ -73,7 +134,7 @@ function PantryPage() {
         pricePaid: item.pricePaid ? Number(item.pricePaid) : 0,
         location: "Pantry",
       })),
-    [items],
+    [items, itemEmojis],
   );
 
   const filtered = useMemo(() => {
@@ -132,24 +193,74 @@ function PantryPage() {
         ))}
       </div>
 
-      <ul className="space-y-2">
-        {isLoading && (
-          <p className="py-12 text-center text-muted-foreground">Loading pantry...</p>
-        )}
-        {error && !isLoading && (
-          <p className="py-12 text-center text-destructive">{error}</p>
-        )}
-        {filtered.map((i) => (
-          <li key={i.id}>
-            <Link to="/item/$id" params={{ id: i.id }} className="block">
-              <ItemRow item={i} />
-            </Link>
-          </li>
-        ))}
-        {!isLoading && !error && filtered.length === 0 && (
-          <p className="py-12 text-center text-muted-foreground">No items found.</p>
-        )}
-      </ul>
+      {reAddMessage && (
+        <div className="mb-3 rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-[13px] text-emerald-700" data-testid="re-add-success">
+          {reAddMessage}
+        </div>
+      )}
+
+      {filter === "Consumed" || filter === "Wasted" ? (
+        <ul className="space-y-2" data-testid="pantry-events-list">
+          {isLoading && (
+            <p className="py-12 text-center text-muted-foreground">Loading history...</p>
+          )}
+          {error && !isLoading && (
+            <p className="py-12 text-center text-destructive">{error}</p>
+          )}
+          {!isLoading && !error && events.length === 0 && (
+            <p className="py-12 text-center text-muted-foreground">No {filter.toLowerCase()} items found.</p>
+          )}
+          {events
+            .filter((e) => (q ? (e.itemName ?? "").toLowerCase().includes(q.toLowerCase()) : true))
+            .map((e) => (
+              <li key={e.id} className="ios-card flex items-center gap-4 p-3.5" data-testid={`event-row-${e.id}`}>
+                <div className="grid size-12 place-items-center rounded-xl bg-secondary text-2xl">
+                  {filter === "Consumed" ? "✅" : "🗑️"}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="truncate font-semibold text-[15px]" data-testid={`event-name-${e.id}`}>
+                    {e.itemName ?? "Unknown item"}
+                  </p>
+                  <p className="text-[12.5px] text-muted-foreground">
+                    {e.quantity} {e.itemUnit ?? "unit"} · {new Date(e.occurredAt).toLocaleDateString()}
+                  </p>
+                  {e.estimatedValueEur && (
+                    <p className="text-[12px] text-muted-foreground">
+                      €{Number(e.estimatedValueEur).toFixed(2)} value
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="shrink-0 rounded-xl bg-primary/10 px-3 py-1.5 text-[12px] font-medium text-primary"
+                  onClick={() => { void handleReAdd(e); }}
+                  data-testid={`event-readd-${e.id}`}
+                >
+                  Re-add
+                </button>
+              </li>
+            ))}
+        </ul>
+      ) : (
+        <ul className="space-y-2">
+          {isLoading && (
+            <p className="py-12 text-center text-muted-foreground">Loading pantry...</p>
+          )}
+          {error && !isLoading && (
+            <p className="py-12 text-center text-destructive">{error}</p>
+          )}
+          {filtered.map((i) => (
+            <li key={i.id}>
+              <Link to="/item/$id" params={{ id: i.id }} className="block">
+                <ItemRow item={i} />
+              </Link>
+            </li>
+          ))}
+          {!isLoading && !error && filtered.length === 0 && (
+            <p className="py-12 text-center text-muted-foreground">No items found.</p>
+          )}
+        </ul>
+      )}
     </AppShell>
   );
 }

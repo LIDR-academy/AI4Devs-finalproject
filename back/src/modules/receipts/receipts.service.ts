@@ -227,7 +227,7 @@ export class ReceiptsService {
           data: {
             userId,
             name: matchedItem.rawName.trim(),
-            quantity: matchedItem.quantity ?? 1,
+            quantity: itemOverride?.quantity ?? matchedItem.quantity ?? 1,
             unit: this.normalizeUnit(matchedItem.unit) ?? defaultUnit,
             expirationDate,
             ...(pricePaid !== undefined && { pricePaid }),

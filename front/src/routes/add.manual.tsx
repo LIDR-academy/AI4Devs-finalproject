@@ -6,7 +6,7 @@ import {
   requireAuthBeforeLoad,
   useRequireAuthRedirect,
 } from "@/features/auth/route-guard";
-import { createPantryItem } from "@/features/pantry/pantry.api";
+import { createPantryItem, estimateExpirationByName, type QuickExpirationEstimate } from "@/features/pantry/pantry.api";
 
 export const Route = createFileRoute("/add/manual")({
   beforeLoad: requireAuthBeforeLoad,
@@ -38,8 +38,28 @@ function ManualEntryPage() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEstimating, setIsEstimating] = useState(false);
+  const [expirationEstimate, setExpirationEstimate] = useState<QuickExpirationEstimate | null>(null);
+  const [estimateError, setEstimateError] = useState<string | null>(null);
 
   const canSave = name.trim().length > 0 && Number(quantity) >= 1;
+  const canEstimate = name.trim().length > 0;
+
+  async function handleEstimateExpiration() {
+    setEstimateError(null);
+    setIsEstimating(true);
+    try {
+      const result = await estimateExpirationByName(name.trim());
+      setExpirationEstimate(result);
+      setExpiresAt(result.suggestedExpirationDate.slice(0, 10));
+    } catch (apiError) {
+      setEstimateError(
+        apiError instanceof Error ? apiError.message : "Could not estimate expiration.",
+      );
+    } finally {
+      setIsEstimating(false);
+    }
+  }
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -67,7 +87,7 @@ function ManualEntryPage() {
 
     setIsSubmitting(true);
     try {
-      await createPantryItem({
+      const created = await createPantryItem({
         name,
         quantity: parsedQuantity,
         unit,
@@ -76,6 +96,15 @@ function ManualEntryPage() {
           pricePaid: Number(parsedPrice.toFixed(2)),
         }),
       });
+
+      // Persist emoji selection so /add recently-added list can display it
+      try {
+        const stored = JSON.parse(localStorage.getItem("rsf_item_emojis") ?? "{}") as Record<string, string>;
+        stored[created.id] = emoji;
+        localStorage.setItem("rsf_item_emojis", JSON.stringify(stored));
+      } catch {
+        // localStorage unavailable — silently skip
+      }
 
       setSaved(true);
       setTimeout(() => navigate({ to: "/pantry" }), 700);
@@ -185,12 +214,40 @@ function ManualEntryPage() {
             />
           </Field>
           <Field label="Expires on" full>
-            <input
-              type="date"
-              value={expiresAt}
-              onChange={(e) => setExpiresAt(e.target.value)}
-              className="input-ios"
-            />
+            <div className="space-y-2">
+              <input
+                type="date"
+                value={expiresAt}
+                onChange={(e) => setExpiresAt(e.target.value)}
+                className="input-ios"
+                data-testid="manual-expiration-input"
+              />
+              <button
+                type="button"
+                onClick={() => { void handleEstimateExpiration(); }}
+                disabled={!canEstimate || isEstimating}
+                className="w-full h-10 rounded-xl border border-border bg-secondary text-[13px] font-medium disabled:opacity-50"
+                data-testid="manual-estimate-expiration-btn"
+              >
+                {isEstimating ? "Estimating…" : "Estimate expiration"}
+              </button>
+              {expirationEstimate && (
+                <div className="rounded-xl border border-border bg-secondary/40 p-3 text-[12px]" data-testid="manual-estimate-result">
+                  <p className="font-medium">
+                    Suggested: {new Date(expirationEstimate.suggestedExpirationDate).toLocaleDateString()}
+                  </p>
+                  <p className="text-muted-foreground mt-0.5">
+                    Category: {expirationEstimate.category} ·{" "}
+                    {expirationEstimate.lowConfidence ? "Low confidence" : "Good confidence"}
+                  </p>
+                </div>
+              )}
+              {estimateError && (
+                <p className="text-[12px] text-destructive" data-testid="manual-estimate-error">
+                  {estimateError}
+                </p>
+              )}
+            </div>
           </Field>
         </section>
 

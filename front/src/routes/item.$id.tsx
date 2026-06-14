@@ -1,6 +1,8 @@
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ChevronLeft, Tag, Repeat, Settings2 } from "lucide-react";
+
+const ITEM_EMOJIS = ["🍎", "🥛", "🍞", "🥩", "🐟", "🥦", "🥚", "🧀", "🍝", "🥑", "🍌", "🍅", "🛒", "🥫", "🧃", "🧁", "🍽️"];
 import { daysUntil } from "@/lib/mock-data";
 import {
   requireAuthBeforeLoad,
@@ -12,6 +14,7 @@ import {
   overrideExpiration,
   registerPantryItemEvent,
   updatePantryItem,
+  WasteConfirmationRequiredError,
   PANTRY_UNITS,
   type ExpirationEstimateResponse,
   type PantryApiItem,
@@ -49,6 +52,16 @@ function ItemDetail() {
   const [isConsuming, setIsConsuming] = useState(false);
   const [consumeError, setConsumeError] = useState<string | null>(null);
 
+  const [emoji, setEmoji] = useState("🍽️");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  const [isWasting, setIsWasting] = useState(false);
+  const [wasteError, setWasteError] = useState<string | null>(null);
+  const [wasteConfirmation, setWasteConfirmation] = useState<{
+    itemName: string;
+    daysPastExpiry: number;
+  } | null>(null);
+
   useEffect(() => {
     let isMounted = true;
     async function loadItem() {
@@ -63,10 +76,30 @@ function ItemDetail() {
       }
     }
     void loadItem();
+
+    try {
+      const stored = JSON.parse(localStorage.getItem("rsf_item_emojis") ?? "{}") as Record<string, string>;
+      if (stored[id]) setEmoji(stored[id]);
+    } catch {
+      // localStorage unavailable
+    }
+
     return () => {
       isMounted = false;
     };
   }, [id]);
+
+  function updateEmoji(next: string) {
+    setEmoji(next);
+    setShowEmojiPicker(false);
+    try {
+      const stored = JSON.parse(localStorage.getItem("rsf_item_emojis") ?? "{}") as Record<string, string>;
+      stored[id] = next;
+      localStorage.setItem("rsf_item_emojis", JSON.stringify(stored));
+    } catch {
+      // localStorage unavailable
+    }
+  }
 
   if (!item) {
     return (
@@ -195,6 +228,28 @@ function ItemDetail() {
     }
   }
 
+  async function handleMarkWasted(confirmed = false) {
+    if (!item) return;
+    setIsWasting(true);
+    setWasteError(null);
+    try {
+      await registerPantryItemEvent(item.id, "WASTED", { confirmed });
+      setWasteConfirmation(null);
+      await navigate({ to: "/pantry" });
+    } catch (apiError) {
+      if (apiError instanceof WasteConfirmationRequiredError) {
+        setWasteConfirmation({
+          itemName: apiError.itemName,
+          daysPastExpiry: apiError.daysPastExpiry,
+        });
+      } else {
+        setWasteError(apiError instanceof Error ? apiError.message : "Could not mark as wasted.");
+      }
+    } finally {
+      setIsWasting(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-md md:max-w-2xl pb-16">
@@ -207,9 +262,33 @@ function ItemDetail() {
         </header>
 
         <div className="px-5 pt-8 text-center">
-          <div className="mx-auto grid size-24 place-items-center rounded-3xl bg-secondary text-5xl shadow-ios">
-            🍽️
-          </div>
+          <button
+            type="button"
+            className="mx-auto grid size-24 place-items-center rounded-3xl bg-secondary text-5xl shadow-ios active:scale-95 transition"
+            onClick={() => setShowEmojiPicker((v) => !v)}
+            aria-label="Change icon"
+            data-testid="item-emoji-btn"
+          >
+            {emoji}
+          </button>
+          {showEmojiPicker && (
+            <div className="mt-3 flex flex-wrap justify-center gap-1.5" data-testid="item-emoji-picker">
+              {ITEM_EMOJIS.map((e) => (
+                <button
+                  key={e}
+                  type="button"
+                  onClick={() => updateEmoji(e)}
+                  className={`size-10 rounded-xl text-2xl transition ${
+                    emoji === e ? "bg-primary/15 ring-2 ring-primary/50" : "bg-secondary"
+                  }`}
+                  aria-label={e}
+                  data-testid={`item-emoji-pick-${e}`}
+                >
+                  {e}
+                </button>
+              ))}
+            </div>
+          )}
           <h1 className="mt-5 text-2xl font-bold tracking-tight">{item.name}</h1>
           <p className="mt-1 text-[14px] text-muted-foreground">
             {displayQuantity} · Pantry · Pantry
@@ -377,7 +456,7 @@ function ItemDetail() {
             data-testid="item-consume-button"
             onClick={() => { void handleMarkConsumed(); }}
             disabled={isConsuming}
-            className="w-full rounded-2xl bg-destructive/10 text-destructive py-4 font-semibold text-[15px] disabled:opacity-60"
+            className="w-full rounded-2xl bg-emerald-500/10 text-emerald-700 py-4 font-semibold text-[15px] disabled:opacity-60"
           >
             {isConsuming ? "Marking…" : "Mark as consumed"}
           </button>
@@ -386,7 +465,55 @@ function ItemDetail() {
               {consumeError}
             </p>
           )}
+
+          <button
+            data-testid="item-waste-button"
+            onClick={() => { void handleMarkWasted(); }}
+            disabled={isWasting}
+            className="w-full rounded-2xl bg-destructive/20 text-destructive py-4 font-semibold text-[15px] disabled:opacity-60"
+          >
+            {isWasting ? "Marking…" : "Mark as wasted"}
+          </button>
+          {wasteError && (
+            <p className="text-[12px] text-destructive text-center" data-testid="item-waste-error">
+              {wasteError}
+            </p>
+          )}
         </div>
+
+        {wasteConfirmation && (
+          <div
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 pb-8"
+            data-testid="waste-confirmation-overlay"
+          >
+            <div className="mx-4 w-full max-w-sm rounded-2xl bg-background p-6 shadow-2xl" data-testid="waste-confirmation-modal">
+              <h3 className="text-[17px] font-bold">Confirm waste</h3>
+              <p className="mt-2 text-[14px] text-muted-foreground">
+                <strong>{wasteConfirmation.itemName}</strong> expired{" "}
+                <strong>{wasteConfirmation.daysPastExpiry} day(s) ago</strong>. Are you sure you want
+                to mark it as wasted?
+              </p>
+              <div className="mt-5 flex gap-3">
+                <button
+                  type="button"
+                  className="flex-1 rounded-xl border border-border py-3 text-[14px] font-semibold"
+                  onClick={() => setWasteConfirmation(null)}
+                  data-testid="waste-confirmation-cancel"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="flex-1 rounded-xl bg-destructive text-destructive-foreground py-3 text-[14px] font-semibold"
+                  onClick={() => { void handleMarkWasted(true); }}
+                  data-testid="waste-confirmation-confirm"
+                >
+                  Yes, mark wasted
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

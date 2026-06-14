@@ -58,6 +58,19 @@ export interface ExpirationOverrideResponse {
 
 interface ApiErrorBody {
   message?: string | string[];
+  code?: string;
+  itemName?: string;
+  daysPastExpiry?: number;
+}
+
+export class WasteConfirmationRequiredError extends Error {
+  readonly code = "WASTE_CONFIRMATION_REQUIRED" as const;
+  constructor(
+    public readonly itemName: string,
+    public readonly daysPastExpiry: number,
+  ) {
+    super("Waste confirmation required");
+  }
 }
 
 function getAuthHeaders(): Record<string, string> {
@@ -138,6 +151,43 @@ export function overrideExpiration(
   );
 }
 
+export interface ConsumptionEventRecord {
+  id: string;
+  type: "CONSUMED" | "WASTED";
+  quantity: number;
+  itemName: string | null;
+  itemUnit: string | null;
+  estimatedValueEur: string | null;
+  occurredAt: string;
+}
+
+export function listConsumptionEvents(
+  type?: "CONSUMED" | "WASTED",
+): Promise<ConsumptionEventRecord[]> {
+  const query = type ? `?type=${type}` : "";
+  return requestJson<ConsumptionEventRecord[]>(`/pantry/items/events${query}`, {
+    method: "GET",
+  });
+}
+
+export interface QuickExpirationEstimate {
+  suggestedExpirationDate: string;
+  confidence: number;
+  method: "RULE_BASED_SPAIN";
+  lowConfidence: boolean;
+  category: string;
+}
+
+export function estimateExpirationByName(
+  name: string,
+): Promise<QuickExpirationEstimate> {
+  const query = new URLSearchParams({ name });
+  return requestJson<QuickExpirationEstimate>(
+    `/pantry/items/estimate-by-name?${query.toString()}`,
+    { method: "GET" },
+  );
+}
+
 export function updatePantryItem(
   pantryItemId: string,
   payload: UpdatePantryItemPayload,
@@ -148,12 +198,46 @@ export function updatePantryItem(
   });
 }
 
-export function registerPantryItemEvent(
+export async function registerPantryItemEvent(
   pantryItemId: string,
   type: PantryEventType,
+  options: { confirmed?: boolean; quantity?: number } = {},
 ): Promise<{ id: string }> {
-  return requestJson<{ id: string }>(`/pantry/items/${pantryItemId}/events`, {
-    method: "POST",
-    body: JSON.stringify({ type }),
-  });
+  const token = getAccessToken();
+  if (!token) {
+    throw new Error("No session found");
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}/pantry/items/${pantryItemId}/events`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ type, ...options }),
+    });
+  } catch {
+    throw new Error(
+      `Cannot connect to API at ${API_BASE_URL}. Ensure backend is running (cd back && npm run start:dev).`,
+    );
+  }
+
+  if (response.status === 409) {
+    const body = (await response.json().catch(() => ({}))) as ApiErrorBody;
+    if (body.code === "WASTE_CONFIRMATION_REQUIRED") {
+      throw new WasteConfirmationRequiredError(body.itemName ?? "Item", body.daysPastExpiry ?? 0);
+    }
+  }
+
+  if (!response.ok) {
+    const errorBody = (await response.json().catch(() => ({}))) as ApiErrorBody;
+    const message = Array.isArray(errorBody.message)
+      ? errorBody.message.join(", ")
+      : (errorBody.message ?? "Request failed");
+    throw new Error(message);
+  }
+
+  return (await response.json()) as { id: string };
 }

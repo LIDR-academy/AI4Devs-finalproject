@@ -62,3 +62,13 @@ export function getPriceComparison(normalizedName: string): Promise<PriceCompari
     method: "GET",
   });
 }
+
+export interface WasteMetricsResponse {
+  totalWastedQuantity: number;
+  totalWastedValueEur: string;
+  eventCount: number;
+}
+
+export function getWasteMetrics(): Promise<WasteMetricsResponse> {
+  return requestJson<WasteMetricsResponse>("/insights/waste", { method: "GET" });
+}

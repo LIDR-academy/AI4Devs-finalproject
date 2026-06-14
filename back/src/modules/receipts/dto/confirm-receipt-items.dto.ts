@@ -4,6 +4,7 @@ import {
   IsDateString,
   IsArray,
   IsBoolean,
+  IsInt,
   IsNumber,
   IsOptional,
   Min,
@@ -25,6 +26,12 @@ class ConfirmReceiptItemOverrideDto {
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   pricePaid?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  quantity?: number;
 }
 
 export class ConfirmReceiptItemsDto {

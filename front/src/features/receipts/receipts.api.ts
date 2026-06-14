@@ -151,6 +151,7 @@ export async function confirmReceiptItems(params: {
     itemId: string;
     expirationDate?: string;
     pricePaid?: number;
+    quantity?: number;
   }>;
 }): Promise<ReceiptApiModel> {
   let response: Response;

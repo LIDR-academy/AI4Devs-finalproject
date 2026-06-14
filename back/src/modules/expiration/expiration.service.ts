@@ -18,6 +18,17 @@ export class ExpirationService {
     private readonly expirationRulesService: ExpirationRulesService,
   ) {}
 
+  estimateByName(name: string) {
+    const estimate = this.expirationRulesService.buildEstimate(name);
+    return {
+      suggestedExpirationDate: estimate.suggestedExpirationDate.toISOString(),
+      confidence: estimate.confidence,
+      method: "RULE_BASED_SPAIN" as const,
+      lowConfidence: estimate.lowConfidence,
+      category: estimate.category,
+    };
+  }
+
   async estimateForItem(userId: string, itemId: string) {
     const pantryItem = await this.getPantryItemOrThrow(userId, itemId);
     const estimate = this.expirationRulesService.buildEstimate(pantryItem.name);

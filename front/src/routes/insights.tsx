@@ -8,6 +8,10 @@ import {
   type DashboardUseNextItem,
 } from "@/features/dashboard/dashboard.api";
 import {
+  getWasteMetrics,
+  type WasteMetricsResponse,
+} from "@/features/insights/insights.api";
+import {
   registerPantryItemEvent,
   type PantryEventType,
 } from "@/features/pantry/pantry.api";
@@ -30,6 +34,7 @@ function InsightsPage() {
 
   const [summary, setSummary] = useState<DashboardSummaryResponse | null>(null);
   const [useNext, setUseNext] = useState<DashboardUseNextItem[]>([]);
+  const [wasteMetrics, setWasteMetrics] = useState<WasteMetricsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,12 +48,14 @@ function InsightsPage() {
     setError(null);
 
     try {
-      const [summaryData, useNextData] = await Promise.all([
+      const [summaryData, useNextData, wasteData] = await Promise.all([
         getDashboardSummary(),
         getDashboardUseNext(),
+        getWasteMetrics(),
       ]);
       setSummary(summaryData);
       setUseNext(useNextData.items);
+      setWasteMetrics(wasteData);
     } catch (apiError) {
       setError(apiError instanceof Error ? apiError.message : "Could not load dashboard.");
     } finally {
@@ -88,6 +95,32 @@ function InsightsPage() {
           testId="dashboard-expiring-items"
           loading={isLoading}
         />
+      </section>
+
+      <section className="mt-5" data-testid="waste-metrics-section">
+        <h2 className="px-1 mb-2 text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">
+          Waste metrics
+        </h2>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="ios-card p-4" data-testid="waste-event-count">
+            <p className="text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">Events</p>
+            <p className="mt-2 text-[26px] font-bold leading-none">
+              {isLoading ? "…" : (wasteMetrics?.eventCount ?? 0)}
+            </p>
+          </div>
+          <div className="ios-card p-4" data-testid="waste-total-quantity">
+            <p className="text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">Quantity</p>
+            <p className="mt-2 text-[26px] font-bold leading-none">
+              {isLoading ? "…" : (wasteMetrics?.totalWastedQuantity ?? 0)}
+            </p>
+          </div>
+          <div className="ios-card p-4" data-testid="waste-total-value">
+            <p className="text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">Value lost</p>
+            <p className="mt-2 text-[26px] font-bold leading-none">
+              {isLoading ? "…" : `€${Number(wasteMetrics?.totalWastedValueEur ?? "0").toFixed(2)}`}
+            </p>
+          </div>
+        </div>
       </section>
 
       <section className="mt-6" data-testid="dashboard-use-next-section">
@@ -150,7 +183,7 @@ function InsightsPage() {
                 <div className="mt-3 flex gap-2">
                   <button
                     type="button"
-                    className="rounded-lg bg-secondary px-3 py-1.5 text-[12px] font-medium"
+                    className="rounded-lg bg-emerald-500/10 px-3 py-1.5 text-[12px] font-medium text-emerald-700"
                     onClick={() => {
                       void handleRegisterEvent(item.pantryItemId, "CONSUMED");
                     }}
