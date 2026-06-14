@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Request, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post, Query, Request, UseGuards } from "@nestjs/common";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { CreatePantryItemDto } from "./dto/create-pantry-item.dto";
 import { RegisterConsumptionEventDto } from "./dto/register-consumption-event.dto";
@@ -25,6 +25,14 @@ export class PantryController {
   @Get()
   list(@Request() req: RequestWithUser) {
     return this.pantryService.list(req.user.id);
+  }
+
+  @Get("events")
+  listEvents(
+    @Request() req: RequestWithUser,
+    @Query("type") type?: "CONSUMED" | "WASTED",
+  ) {
+    return this.pantryService.listEvents(req.user.id, type);
   }
 
   @Patch(":id")

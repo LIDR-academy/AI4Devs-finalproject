@@ -22,4 +22,9 @@ export class InsightsController {
   ) {
     return this.insightsService.getPriceComparison(req.user.id, query.normalizedName);
   }
+
+  @Get("waste")
+  getWasteMetrics(@Request() req: RequestWithUser) {
+    return this.insightsService.getWasteMetrics(req.user.id);
+  }
 }

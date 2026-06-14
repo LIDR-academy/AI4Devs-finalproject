@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { IsEnum, IsInt, IsOptional, Min } from "class-validator";
+import { IsBoolean, IsEnum, IsInt, IsOptional, Min } from "class-validator";
 
 export enum PantryConsumptionEventType {
   CONSUMED = "CONSUMED",
@@ -15,4 +15,8 @@ export class RegisterConsumptionEventDto {
   @IsInt()
   @Min(1)
   quantity?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  confirmed?: boolean;
 }

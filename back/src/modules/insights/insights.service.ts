@@ -3,6 +3,12 @@ import { PrismaService } from "../../database/prisma.service";
 import { UsersService } from "../users/users.service";
 import { normalizePriceComparisonName } from "./price-comparison-normalizer";
 
+export interface WasteMetricsResponse {
+  totalWastedQuantity: number;
+  totalWastedValueEur: string;
+  eventCount: number;
+}
+
 export interface PriceComparisonReference {
   normalizedName: string;
   category: string | null;
@@ -108,6 +114,22 @@ export class InsightsService {
         return normalizePriceComparisonName(item.rawName) === normalizedName;
       }) ?? null
     );
+  }
+
+  async getWasteMetrics(userId: string): Promise<WasteMetricsResponse> {
+    await this.assertUserCanAccessInsights(userId);
+
+    const agg = await this.prisma.consumptionEvent.aggregate({
+      where: { userId, type: "WASTED" },
+      _sum: { quantity: true, estimatedValueEur: true },
+      _count: { id: true },
+    });
+
+    return {
+      totalWastedQuantity: agg._sum.quantity ?? 0,
+      totalWastedValueEur: agg._sum.estimatedValueEur?.toFixed(2) ?? "0.00",
+      eventCount: agg._count.id,
+    };
   }
 
   private async assertUserCanAccessInsights(userId: string): Promise<void> {

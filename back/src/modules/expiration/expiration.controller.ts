@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Get,
   Param,
   Patch,
   Post,
+  Query,
   Request,
   UseGuards,
 } from "@nestjs/common";
@@ -22,6 +24,11 @@ interface RequestWithUser {
 @UseGuards(JwtAuthGuard)
 export class ExpirationController {
   constructor(private readonly expirationService: ExpirationService) {}
+
+  @Get("estimate-by-name")
+  estimateByName(@Query("name") name: string) {
+    return this.expirationService.estimateByName(name ?? "");
+  }
 
   @Post(":id/estimate-expiration")
   estimate(@Request() req: RequestWithUser, @Param("id") itemId: string) {
