@@ -24,6 +24,10 @@ Always combine with `.claude/skills/tdd-implementation/SKILL.md` (TDD is obligat
 4. **Input validation** — Zod schema at the controller boundary.
 5. **Backend OWASP** — apply the rules below.
 6. **Tests** — Supertest for the endpoint, Jest unit for the service (mocked repo).
+7. **OpenAPI** — add or update the endpoint entry in `src/docs/openapi.ts`: new
+   endpoints use `registry.registerPath`; changes to an existing one (new query
+   params, new response codes, schema fields) update the existing `registerPath`
+   block. Always keep schemas in `registry.register` in sync with domain types.
 
 ---
 
@@ -91,4 +95,5 @@ preference.
 - Named Supertest/Jest tests green; full suite green (paste output).
 - All applicable OWASP checks above satisfied.
 - Layer boundaries respected; repository returns domain types.
+- `src/docs/openapi.ts` updated with the new endpoint and schemas.
 - Backlog task marked `- [x] Implementado`.
