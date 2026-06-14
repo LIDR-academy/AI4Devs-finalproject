@@ -1,4 +1,4 @@
-> Detalla en esta sección los prompts principales utilizados durante la creación del proyecto, que justifiquen el uso de asistentes de código en todas las fases del ciclo de vida del desarrollo. Esperamos un máximo de 3 por sección, principalmente los de creación inicial o los de corrección o adición de funcionalidades que consideres más relevantes. Puedes añadir adicionalmente la conversación completa como link o archivo adjunto si así lo consideras
+b> Detalla en esta sección los prompts principales utilizados durante la creación del proyecto, que justifiquen el uso de asistentes de código en todas las fases del ciclo de vida del desarrollo. Esperamos un máximo de 3 por sección, principalmente los de creación inicial o los de corrección o adición de funcionalidades que consideres más relevantes. Puedes añadir adicionalmente la conversación completa como link o archivo adjunto si así lo consideras
 
 ## Índice
 
@@ -36,6 +36,8 @@ Asume que estoy analizando, diseñando o mejorando un producto Service Desk, por
 
 A partir de este momento responderás como consultor experto en negocio Service Desk. Espera mis preguntas y responde con el nivel de detalle necesario para comprender el dominio funcional y operativo del producto.
 
+</br>
+
 **Prompt 2:**
 
 Agent: Chat GPT‑5.5 de OpenAI
@@ -50,7 +52,26 @@ Generado documento SKILL.md que se ha guardado en la ruta: '.claude/skills/servi
 
 Esta versión está escrita con terminología que encontrarás en productos como ServiceNow, Jira Service Management, BMC Helix ITSM o ManageEngine ServiceDesk Plus, y está orientada a que Claude responda como un Product Architect/Business Consultant especializado en Service Desk empresarial.
 
+</br>
+
 **Prompt 3:**
+
+Agent: Claude Code - Sonnet 4.6
+
+### Request:
+
+@.claude/skills/service-desk-expert/ guarda en tu skill que tienes que escribir todo en inglés técnico del sector de Service Desk.
+
+Además, necesito que rellenes para un producto Service Desk y, en el documento 'readme.md' que se encuentra en la raíz del proyecto, los siguientes campos:
+
+- 1. Descripción general del producto/1.1. Objetivo
+- 1. Descripción general del producto/1.2. Características y funcionalidades principales
+
+### Response:
+
+Añadido en el readme.md: '1.1. Objetivo' y '1.2. Características y funcionalidades principales'.
+
+</br>
 
 ---
 

@@ -38,9 +38,78 @@
 
 > Propósito del producto. Qué valor aporta, qué soluciona, y para quién.
 
+**Product purpose**
+
+The product is an **enterprise Service Desk platform** that acts as the **Single Point of Contact (SPOC)** between end users and the IT organization. It centralizes the capture, triage, fulfillment, and resolution of all support interactions — Incidents, Service Requests, Problems, and Changes — within a single ITSM workflow engine governed by Service Level Agreements (SLAs).
+
+**Problem it solves**
+
+Support organizations frequently operate with fragmented channels (email, phone, chat, walk-ups), no consistent ticket lifecycle, manual routing, and no measurable SLA accountability. This leads to lost requests, slow response and resolution times, low First Contact Resolution (FCR), and limited visibility for management. The platform replaces these ad-hoc operations with a **standardized, auditable, and metric-driven service operation model** aligned with ITIL-based practices.
+
+**Value delivered**
+
+- **Operational consistency:** every interaction follows a controlled lifecycle (logging → categorization → prioritization → assignment → resolution → closure).
+- **Accountability:** SLA timers, escalation rules, and audit trails make response and resolution commitments measurable and enforceable.
+- **Efficiency:** automated categorization, assignment, and self-service deflection reduce manual effort and Mean Time to Resolution (MTTR).
+- **Experience:** a Self-Service Portal and omnichannel intake give end users transparency over their requests and status.
+- **Decision support:** real-time KPIs and dashboards (FCR, MTTR, SLA Compliance, CSAT, backlog) drive continual service improvement.
+
+**Target audience (personas)**
+
+- **End Users / Requesters:** employees or customers who report Incidents and submit Service Requests.
+- **Service Desk Agents (L1):** first-line operators who log, triage, and resolve or route tickets.
+- **Support Analysts / Resolver Groups (L2/L3):** specialist teams that handle escalated work.
+- **Service Owners / Process Owners:** accountable for service quality and process compliance.
+- **Service Managers:** monitor performance, SLAs, and operational KPIs.
+- **System Administrators:** configure catalog, workflows, SLAs, and access control.
+
 ### **1.2. Características y funcionalidades principales:**
 
 > Enumera y describe las características y funcionalidades específicas que tiene el producto para satisfacer las necesidades identificadas.
+
+The platform delivers the following core capabilities:
+
+**1. Ticket Management (Incident & Service Request)**
+End-to-end ticket lifecycle management with categorization, prioritization (Impact × Urgency → Priority matrix), status tracking, work notes, and closure codes. Supports Incident Management and Service Request fulfillment as distinct but unified workflows.
+
+**2. Omnichannel Intake**
+Capture of tickets from multiple channels — Self-Service Portal, email-to-ticket, chat, and phone-logged entries — normalized into a single ticket model with a unique reference number.
+
+**3. Self-Service Portal & Knowledge Base**
+End-user portal for submitting requests, tracking status, and searching Knowledge Articles. Knowledge-centered deflection reduces ticket volume and improves First Contact Resolution (FCR).
+
+**4. Service Catalog Management**
+A structured catalog of Service Offerings with request forms, eligibility rules, and predefined fulfillment workflows, enabling standardized and repeatable Service Request handling.
+
+**5. Workflow & Automation Engine**
+Configurable business rules for automated categorization, routing, and assignment to the correct Resolver Group or Assignment Queue, including round-robin/skill-based assignment and task orchestration.
+
+**6. SLA Management & Escalation**
+Definition of SLA/OLA targets (response and resolution) per service, priority, and customer. Automated SLA timers, breach warnings, and tiered escalation (functional and hierarchical) enforce service commitments.
+
+**7. Assignment & Queue Management**
+Support groups, queues, and workload distribution that route tickets to the appropriate team and provide agents with prioritized work lists.
+
+**8. Problem Management**
+Linking of recurring Incidents to a Problem record, Root Cause Analysis (RCA), Known Error tracking, and Workaround publication to reduce repeat Incidents.
+
+**9. Change Enablement**
+Logging and approval of Changes through an Approval Engine (including CAB-style approval flows), with risk categorization and linkage to affected services and Configuration Items (CIs).
+
+**10. Notification Framework**
+Event-driven email/portal notifications to requesters and agents on status changes, assignments, approvals, and SLA breaches.
+
+**11. Approval Engine**
+Configurable multi-level approval workflows for Service Requests and Changes, with delegation and audit trails.
+
+**12. Reporting, Dashboards & Analytics**
+Operational and management dashboards exposing key KPIs — FCR, MTTR, MTTA, SLA Compliance Rate, Reopen Rate, Backlog Volume, CSAT, and Agent Productivity — to support continual service improvement.
+
+**13. Identity & Access Management (RBAC)**
+Role-based access control for End Users, Agents, Resolver Groups, and Administrators, ensuring least-privilege access and auditability.
+
+**14. Audit Trail & Activity History**
+Immutable history of all ticket transitions, field changes, and user actions to guarantee traceability and compliance.
 
 ### **1.3. Diseño y experiencia de usuario:**
 
