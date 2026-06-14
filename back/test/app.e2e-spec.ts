@@ -66,6 +66,10 @@ describe("Auth (e2e)", () => {
         },
       ),
     },
+    // No users in this mock have a household — always return null
+    householdMember: {
+      findFirst: jest.fn().mockResolvedValue(null),
+    },
     pantryItem: {
       create: jest.fn(
         async ({
@@ -95,9 +99,15 @@ describe("Auth (e2e)", () => {
         },
       ),
       findMany: jest.fn(
-        async ({ where }: { where: { userId: string } }): Promise<PantryRecord[]> => {
+        async ({
+          where,
+        }: {
+          where: { userId: string | { in: string[] } };
+        }): Promise<PantryRecord[]> => {
+          const ids =
+            typeof where.userId === "string" ? [where.userId] : where.userId.in;
           return [...pantryItemsById.values()]
-            .filter((item) => item.userId === where.userId)
+            .filter((item) => ids.includes(item.userId))
             .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
         },
       ),

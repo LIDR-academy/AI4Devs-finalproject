@@ -7,6 +7,72 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum HouseholdMemberRole {
+  OWNER
+  MEMBER
+}
+
+enum HouseholdMemberStatus {
+  ACTIVE
+  LEFT
+  REMOVED
+}
+
+enum HouseholdInvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
+}
+
+model Household {
+  id              String               @id @default(uuid())
+  name            String
+  createdByUserId String
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  createdBy   User                  @relation("HouseholdCreatedBy", fields: [createdByUserId], references: [id])
+  members     HouseholdMember[]
+  invitations HouseholdInvitation[]
+
+  @@index([createdByUserId])
+}
+
+model HouseholdMember {
+  id          String                @id @default(uuid())
+  householdId String
+  userId      String
+  role        HouseholdMemberRole
+  status      HouseholdMemberStatus @default(ACTIVE)
+  joinedAt    DateTime              @default(now())
+  leftAt      DateTime?
+
+  household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([householdId, userId])
+  @@index([userId])
+  @@index([householdId])
+}
+
+model HouseholdInvitation {
+  id              String                    @id @default(uuid())
+  householdId     String
+  invitedByUserId String
+  inviteeEmail    String
+  status          HouseholdInvitationStatus @default(PENDING)
+  expiresAt       DateTime
+  respondedAt     DateTime?
+  createdAt       DateTime                  @default(now())
+
+  household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  invitedBy User      @relation("HouseholdInvitationInvitedBy", fields: [invitedByUserId], references: [id])
+
+  @@index([householdId, status])
+  @@index([inviteeEmail, status])
+}
+
 model User {
   id         String      @id @default(uuid())
   email      String      @unique
@@ -18,6 +84,9 @@ model User {
   receipts   Receipt[]
   confirmedExpirationAssessments ExpirationAssessment[]
   notificationPreference NotificationPreference?
+  householdsCreated    Household[]          @relation("HouseholdCreatedBy")
+  householdMemberships HouseholdMember[]
+  sentInvitations      HouseholdInvitation[] @relation("HouseholdInvitationInvitedBy")
 }
 
 model PantryItem {
