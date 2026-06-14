@@ -1,5 +1,51 @@
 export type OrderStatus = 'processing' | 'shipped' | 'delivered' | 'cancelled';
 
+export interface CartItemResponse {
+  productId: string;
+  productName: string;
+  productBrand: string;
+  productPrice: number;
+  image: string;
+  quantity: number;
+  size?: string;
+  color?: string;
+}
+
+export interface CartResponse {
+  sessionId: string;
+  items: CartItemResponse[];
+  subtotal: number;
+  shipping: number;
+  total: number;
+}
+
+export interface Cart {
+  id: string;
+  sessionId: string;
+}
+
+export interface CartItemInput {
+  productId: string;
+  quantity: number;
+  size?: string;
+  color?: string;
+}
+
+export interface CartItem {
+  id: string;
+  cartId: string;
+  productId: string;
+  quantity: number;
+  size?: string;
+  color?: string;
+}
+
+export interface CartWithItems {
+  id: string;
+  sessionId: string;
+  items: CartItem[];
+}
+
 export interface ProductFilters {
   distance?: string[];
   surface?: string[];

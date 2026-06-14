@@ -6,7 +6,10 @@ export class NotFoundError extends Error {
 }
 
 export class StockError extends Error {
-  constructor(message = 'Insufficient stock') {
+  constructor(
+    public available: number,
+    message = 'Insufficient stock',
+  ) {
     super(message);
     this.name = 'StockError';
   }

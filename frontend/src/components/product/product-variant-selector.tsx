@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { COLOR_LABELS } from '../../lib/product-utils';
+import { useCart } from '../../contexts/cart-context';
 import { SizeSelector } from './size-selector';
 import { ColorSelector } from './color-selector';
 import { QuantityStepper } from './quantity-stepper';
@@ -10,9 +12,21 @@ interface ProductVariantSelectorProps {
   sizes: string[];
   colors: string[];
   stock: number;
+  productId: string;
+  productName: string;
+  productBrand: string;
+  productPrice: number;
+  image: string;
 }
 
-export function ProductVariantSelector({ sizes, colors, stock }: ProductVariantSelectorProps) {
+export function ProductVariantSelector({
+  sizes,
+  colors,
+  stock,
+  productId,
+}: ProductVariantSelectorProps) {
+  const { addItem, isLoading } = useCart();
+
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -32,7 +46,7 @@ export function ProductVariantSelector({ sizes, colors, stock }: ProductVariantS
     setColorError(false);
   }
 
-  function handleAddToCart() {
+  async function handleAddToCart() {
     if (sizes.length > 0 && !selectedSize) {
       setSizeError(true);
       return;
@@ -43,7 +57,17 @@ export function ProductVariantSelector({ sizes, colors, stock }: ProductVariantS
     }
     setSizeError(false);
     setColorError(false);
-    // US-007 implementará la llamada real a la API del carrito
+    try {
+      await addItem(
+        productId,
+        quantity,
+        selectedSize ?? undefined,
+        selectedColor ?? undefined,
+      );
+      toast.success('Producto añadido al carrito');
+    } catch {
+      toast.error('No se pudo añadir al carrito. Inténtalo de nuevo.');
+    }
   }
 
   return (
@@ -75,10 +99,10 @@ export function ProductVariantSelector({ sizes, colors, stock }: ProductVariantS
 
       <button
         type="button"
-        disabled={outOfStock}
+        disabled={outOfStock || isLoading}
         onClick={handleAddToCart}
         className={`w-full py-3 px-6 rounded-lg font-medium transition ${
-          outOfStock
+          outOfStock || isLoading
             ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
             : 'bg-rm-cta text-white hover:bg-rm-cta-hover'
         }`}

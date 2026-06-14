@@ -8,6 +8,25 @@ vi.mock('../../../lib/api-client', async (importOriginal) => {
   return { ...mod, fetchProduct: vi.fn() };
 });
 
+// Mock sonner — ProductVariantSelector imports toast
+vi.mock('sonner', () => ({
+  toast: { success: vi.fn(), error: vi.fn() },
+}));
+
+// Mock CartContext — ProductVariantSelector calls useCart but we don't want real API calls here
+vi.mock('../../../contexts/cart-context', () => ({
+  useCart: () => ({
+    addItem: vi.fn(),
+    isLoading: false,
+    error: null,
+    items: [],
+    itemCount: 0,
+    subtotal: 0,
+    shipping: 0,
+    total: 0,
+  }),
+}));
+
 // vi.hoisted ensures mockNotFound is available when vi.mock factory executes
 const { mockNotFound } = vi.hoisted(() => ({
   mockNotFound: vi.fn(() => {
