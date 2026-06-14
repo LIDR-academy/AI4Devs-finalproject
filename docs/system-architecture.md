@@ -139,3 +139,100 @@ This pattern divides the backend into four concentric layers — **Controllers**
 - **React Context + useReducer over a state-management library** — This avoids the dependency weight of Redux or Zustand but may become unwieldy if the profile and challenge detail pages share deeply nested state. **Mitigation: keep UI state local to pages; React Query handles all server state.**
 - **PostgreSQL + Prisma for a small dataset** — A lighter option (SQLite) would simplify local setup, but the PRD explicitly requires relational integrity (foreign keys, unique codes, GDPR compliance). Prisma's migration tooling and type generation offset the operational overhead.
 - **No infrastructure-as-code for deployment** — Docker Compose covers local dev, but production provisioning is manual (Render/Railway dashboard). For a solo academic project this is pragmatic; a team project should adopt Terraform or Pulumi before the first production deployment.
+
+---
+
+## 6. Tech Stack
+
+### Frontend
+
+| Category | Choice | Rationale |
+|----------|--------|-----------|
+| **Framework** | React 18+ with TypeScript | Mature ecosystem, strong typing, broad hiring pool for a frontender. |
+| **Build tool** | Vite | Fast HMR, native TypeScript/JSX, minimal config. |
+| **Routing** | React Router v6 | Standard for React SPAs; nested layouts match the screen hierarchy (Home → Challenge Detail). |
+| **Server state** | TanStack React Query v5 | Caching, background refetch, optimistic updates for weight entries — eliminates most boilerplate. |
+| **UI state** | React Context + `useReducer` | Kept local per page; no global store needed at this scale. |
+| **Charts** | Recharts | Composable React charting that covers all needed types (line, multiline, bar, area). Built on D3. |
+| **Styling** | TailwindCSS v4 | Utility-first, colocated styles, responsive design without separate CSS files. |
+| **Linting & formatting** | **Biomejs** | Replaces ESLint + Prettier in a single tool. Faster, fewer config files, native TypeScript support. |
+| **Unit / integration tests** | Vitest + React Testing Library | Compatible with Vite's ecosystem; same runner can be shared with the backend. |
+| **E2E tests** | **Playwright** | Reliable cross-browser automation, built-in test runner and assertions, parallel execution. Ideal for E2E coverage of the weigh-in and ranking flows. |
+
+### Backend
+
+| Category | Choice | Rationale |
+|----------|--------|-----------|
+| **Runtime** | Node.js 22 LTS with TypeScript | Full-stack TypeScript reduces context-switching. LTS ensures stability for production. |
+| **HTTP framework** | Express | Minimal, well-understood, huge ecosystem. A frontender can pick it up quickly. (NestJS would add too much ceremony for this scope.) |
+| **Validation** | Zod | Schema-based validation that generates TypeScript types automatically — used in controllers and reusable DTOs. |
+| **ORM** | Prisma | Declarative schema → auto-generated TypeScript client and migrations. Maps 1:1 to the PRD's four entities. |
+| **Auth** | `jsonwebtoken` + `bcrypt` | Stateless JWT tokens; password hashing meets the PRD's security requirement. |
+| **Linting & formatting** | **Biomejs** | Same tool as frontend — single `biome.json` at the repo root. |
+| **Tests** | Vitest | Same runner as frontend for consistency; Supertest for controller integration tests. |
+
+### Database
+
+| Category | Choice | Rationale |
+|----------|--------|-----------|
+| **Database** | PostgreSQL 16 | Relational integrity (FKs, unique invite codes), JSONB support if needed later, production-grade. |
+| **Hosting** | Managed PostgreSQL (Render / Neon / Supabase) | Reduces operations overhead — automated backups, SSL, point-in-time recovery. |
+
+### API Documentation
+
+| Category | Choice | Rationale |
+|----------|--------|-----------|
+| **Spec format** | OpenAPI 3.1 (YAML) | Industry standard; describes every endpoint, request body, response schema, and error code. |
+| **Doc platform** | **Mintlify** | Consumes OpenAPI specs and renders a searchable, developer-friendly reference. Supports markdown pages for guides (getting started, auth flow, challenge lifecycle). |
+| **CI publish** | GitHub Action → Mintlify | Auto-deploys docs on merge to `main` so they're always in sync with the API. |
+
+### Project Management & Methodology
+
+| Category | Choice | Rationale |
+|----------|--------|-----------|
+| **Issue tracking** | **Linear** | Fast, keyboard-first, integrates with GitHub. Use it to track epics, stories, and bugs mapped to the PRD's screens and flows. |
+| **Methodology** | **SDD (Specification-Driven Development)** with **Speckit** | Every feature starts as a structured spec (`.spec.md`) that defines acceptance criteria, scenarios (Given/When/Then), and edge cases. AI LLMs consume these specs to generate initial code and tests, then the developer refines. This fits a small team where a single person writes specs and a frontender implements. |
+| **AI assistance** | LLMs (Claude / GPT-4) via Speckit and direct prompting | Specs are the source of truth — AI generates the first pass of implementation and tests, but all changes go through version control and manual review. |
+
+### Infrastructure & DevOps
+
+| Category | Choice | Rationale |
+|----------|--------|-----------|
+| **Containerisation** | Docker + Docker Compose | Two services: `api` (Node.js) and `db` (PostgreSQL). Eliminates "works on my machine" issues. |
+| **CI/CD** | GitHub Actions | Lint (`biome check`), typecheck (`tsc --noEmit`), test (`vitest run`), build, and deploy on every PR and push to `main`. |
+| **Production host** | **Render** (recommended) | Unified platform: deploy the Node.js API as a Web Service, PostgreSQL as a managed DB, and serve the Vite build as a Static Site or behind the same service. Free tier for staging, paid for production. Alternative: **Railway** for simpler config; **Fly.io** for global edge regions. |
+| **E2E in CI** | Playwright on GitHub Actions | Runs against a preview deployment or a Docker Compose environment. Blocks merge on failure. |
+| **Production considerations** | Environment variables via Render dashboard or `.env` (never committed). Secrets managed with GitHub Actions secrets + Render environment. Health check endpoint (`GET /health`). Rate limiting via `express-rate-limit`. CORS configured for the production frontend domain. |
+
+### Recommended Project Structure
+
+```
+gordi-challenge/
+├── spec/                    # SDD specs (Speckit .spec.md files)
+├── docs/                    # Mintlify content + OpenAPI spec
+├── frontend/                # React SPA (Vite + TypeScript)
+│   ├── src/
+│   │   ├── pages/           # One file per screen
+│   │   ├── components/      # Shared UI (charts, tables, forms)
+│   │   ├── api/             # React Query hooks + Axios client
+│   │   ├── context/         # React Context providers
+│   │   └── types/           # Shared TypeScript types
+│   └── e2e/                 # Playwright tests
+├── backend/                 # Express API (TypeScript)
+│   ├── src/
+│   │   ├── controllers/     # HTTP adapters
+│   │   ├── services/        # Application services
+│   │   ├── domain/          # Pure business logic
+│   │   ├── repositories/    # Prisma-backed data access
+│   │   ├── middleware/      # Auth, validation, error handling
+│   │   └── routes/          # Route definitions
+│   └── prisma/
+│       ├── schema.prisma    # Data model
+│       └── migrations/      # Auto-generated
+├── docker-compose.yml       # api + db for local dev
+├── biome.json               # Single lint/format config
+├── vitest.workspace.ts      # Shared test config
+└── .github/
+    └── workflows/
+        └── ci.yml           # Lint → typecheck → test → build → deploy
+```
