@@ -63,6 +63,8 @@ const buildProduct = (overrides: Partial<Product> = {}): Product => ({
   ...overrides,
 });
 
+const buildParams = (id: string) => Promise.resolve({ id });
+
 beforeEach(() => {
   vi.clearAllMocks();
 });
@@ -71,7 +73,7 @@ describe('ProductDetailPage', () => {
   it('renders product name, brand and price', async () => {
     vi.mocked(fetchProduct).mockResolvedValue(buildProduct());
 
-    render(await ProductDetailPage({ params: { id: 'uuid-1' } }));
+    render(await ProductDetailPage({ params: buildParams('uuid-1') }));
 
     expect(screen.getByRole('heading', { name: /nike pegasus 41/i })).toBeInTheDocument();
     expect(screen.getByText('Nike')).toBeInTheDocument();
@@ -81,7 +83,7 @@ describe('ProductDetailPage', () => {
   it('renders add-to-cart button enabled when stock > 0', async () => {
     vi.mocked(fetchProduct).mockResolvedValue(buildProduct({ stock: 5 }));
 
-    render(await ProductDetailPage({ params: { id: 'uuid-1' } }));
+    render(await ProductDetailPage({ params: buildParams('uuid-1') }));
 
     const button = screen.getByRole('button', { name: /añadir al carrito/i });
     expect(button).not.toBeDisabled();
@@ -90,7 +92,7 @@ describe('ProductDetailPage', () => {
   it('renders button disabled with text "Agotado" when stock === 0', async () => {
     vi.mocked(fetchProduct).mockResolvedValue(buildProduct({ stock: 0 }));
 
-    render(await ProductDetailPage({ params: { id: 'uuid-1' } }));
+    render(await ProductDetailPage({ params: buildParams('uuid-1') }));
 
     const button = screen.getByRole('button', { name: /agotado/i });
     expect(button).toBeDisabled();
@@ -100,7 +102,7 @@ describe('ProductDetailPage', () => {
     vi.mocked(fetchProduct).mockRejectedValue(new ApiError(404, 'Producto no encontrado'));
 
     await expect(
-      ProductDetailPage({ params: { id: 'non-existent' } }),
+      ProductDetailPage({ params: buildParams('non-existent') }),
     ).rejects.toThrow('NEXT_NOT_FOUND');
     expect(mockNotFound).toHaveBeenCalled();
   });
@@ -109,7 +111,7 @@ describe('ProductDetailPage', () => {
     vi.mocked(fetchProduct).mockRejectedValue(new ApiError(500, 'Server error'));
 
     await expect(
-      ProductDetailPage({ params: { id: 'uuid-1' } }),
+      ProductDetailPage({ params: buildParams('uuid-1') }),
     ).rejects.toThrow('Server error');
     expect(mockNotFound).not.toHaveBeenCalled();
   });
@@ -117,7 +119,7 @@ describe('ProductDetailPage', () => {
   it('renders product description', async () => {
     vi.mocked(fetchProduct).mockResolvedValue(buildProduct());
 
-    render(await ProductDetailPage({ params: { id: 'uuid-1' } }));
+    render(await ProductDetailPage({ params: buildParams('uuid-1') }));
 
     expect(screen.getByText('Gran zapatilla para running')).toBeInTheDocument();
   });
@@ -127,7 +129,7 @@ describe('generateMetadata', () => {
   it('returns title with product name and brand', async () => {
     vi.mocked(fetchProduct).mockResolvedValue(buildProduct({ name: 'Brooks Ghost 16', brand: 'Brooks' }));
 
-    const metadata = await generateMetadata({ params: { id: 'uuid-1' } });
+    const metadata = await generateMetadata({ params: buildParams('uuid-1') });
 
     expect(metadata.title).toBe('Brooks Ghost 16 | Brooks');
   });
@@ -135,7 +137,7 @@ describe('generateMetadata', () => {
   it('returns description with product description', async () => {
     vi.mocked(fetchProduct).mockResolvedValue(buildProduct({ description: 'Desc del producto' }));
 
-    const metadata = await generateMetadata({ params: { id: 'uuid-1' } });
+    const metadata = await generateMetadata({ params: buildParams('uuid-1') });
 
     expect(metadata.description).toBe('Desc del producto');
   });
@@ -143,7 +145,7 @@ describe('generateMetadata', () => {
   it('returns fallback title when fetchProduct throws', async () => {
     vi.mocked(fetchProduct).mockRejectedValue(new Error('Network error'));
 
-    const metadata = await generateMetadata({ params: { id: 'non-existent' } });
+    const metadata = await generateMetadata({ params: buildParams('non-existent') });
 
     expect(typeof metadata.title).toBe('string');
     expect(metadata.title).toBeTruthy();

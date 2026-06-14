@@ -8,7 +8,7 @@ import { TrustSignals } from '../../../components/product/trust-signals';
 import { BackButton } from '../../../components/product/back-button';
 
 interface Props {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 const ASSETS_BASE_URL = process.env.NEXT_PUBLIC_ASSETS_BASE_URL ?? '/images';
@@ -22,8 +22,9 @@ function formatPrice(price: number): string {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
   try {
-    const product = await fetchProduct(params.id);
+    const product = await fetchProduct(id);
     const imageUrl = buildImageUrl(product.image);
     const title = `${product.name} | ${product.brand}`;
     return {
@@ -48,10 +49,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ProductDetailPage({ params }: Props) {
+  const { id } = await params;
   let product: Awaited<ReturnType<typeof fetchProduct>>;
 
   try {
-    product = await fetchProduct(params.id);
+    product = await fetchProduct(id);
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) {
       notFound();
