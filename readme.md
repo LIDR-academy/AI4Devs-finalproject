@@ -14,10 +14,13 @@
 ## 0. Ficha del proyecto
 
 ### **0.1. Tu nombre completo:**
+Sara Vicente Jimenez
 
 ### **0.2. Nombre del proyecto:**
+Gordi challange (temporal)
 
 ### **0.3. Descripción breve del proyecto:**
+Una plataforma para hacer un reto entre amigos y asi ayudarse mútuamente a perder peso. 
 
 ### **0.4. URL del proyecto:**
 
