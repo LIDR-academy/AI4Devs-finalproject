@@ -9,6 +9,7 @@ const mockCartCreate = jest.fn();
 const mockCartItemFindUnique = jest.fn();
 const mockCartItemCreate = jest.fn();
 const mockCartItemUpdate = jest.fn();
+const mockCartItemUpdateMany = jest.fn();
 const mockCartItemDeleteMany = jest.fn();
 const mockCartFindUniqueWithItems = jest.fn();
 
@@ -21,6 +22,7 @@ const mockPrisma = {
     findUnique: mockCartItemFindUnique,
     create: mockCartItemCreate,
     update: mockCartItemUpdate,
+    updateMany: mockCartItemUpdateMany,
     deleteMany: mockCartItemDeleteMany,
   },
 } as unknown as import('@prisma/client').PrismaClient;
@@ -234,6 +236,52 @@ describe('CartRepository', () => {
       expect(mockCartItemDeleteMany).toHaveBeenCalledWith({
         where: { cartId: 'cart-1' },
       });
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // updateItemQuantity (US-008)
+  // -------------------------------------------------------------------------
+
+  describe('updateItemQuantity', () => {
+    it('establece la cantidad exacta cuando el ítem existe', async () => {
+      mockCartItemUpdateMany.mockResolvedValueOnce({ count: 1 });
+
+      await repo.updateItemQuantity('cart-1', 'prod-1', 3, 'M', 'red');
+
+      expect(mockCartItemUpdateMany).toHaveBeenCalledWith({
+        where: {
+          cartId: 'cart-1',
+          productId: 'prod-1',
+          size: 'M',
+          color: 'red',
+        },
+        data: { quantity: 3 },
+      });
+    });
+
+    it('establece cantidad exacta sin talla ni color', async () => {
+      mockCartItemUpdateMany.mockResolvedValueOnce({ count: 1 });
+
+      await repo.updateItemQuantity('cart-1', 'prod-1', 2);
+
+      expect(mockCartItemUpdateMany).toHaveBeenCalledWith({
+        where: {
+          cartId: 'cart-1',
+          productId: 'prod-1',
+          size: null,
+          color: null,
+        },
+        data: { quantity: 2 },
+      });
+    });
+
+    it('lanza NotFoundError si el ítem no existe', async () => {
+      mockCartItemUpdateMany.mockResolvedValueOnce({ count: 0 });
+
+      await expect(
+        repo.updateItemQuantity('cart-1', 'prod-99', 1),
+      ).rejects.toMatchObject({ name: 'NotFoundError' });
     });
   });
 });
