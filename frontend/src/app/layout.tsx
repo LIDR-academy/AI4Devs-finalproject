@@ -26,13 +26,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" style={{ backgroundColor: '#f7f8fa' }}>
-      <body className="min-h-screen" style={{ backgroundColor: '#f7f8fa' }}>
+    <html lang="es" className="bg-rm-page-bg">
+      <body className="min-h-screen bg-rm-page-bg">
         <Providers>
           <Header />
-          <div className="min-h-[calc(100vh-4rem)]" style={{ backgroundColor: '#f7f8fa' }}>
-            {children}
-          </div>
+          <div className="min-h-[calc(100vh-4rem)] bg-rm-page-bg">{children}</div>
         </Providers>
       </body>
     </html>
