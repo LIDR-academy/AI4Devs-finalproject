@@ -57,6 +57,9 @@ Pantallas
 * Reto
  
  
- Very important to also take into account all the info and designs of the image attached.  In case of doubt ask anythingn you need to in order to get the best PRD and most accurate possible
+ Very important to also take into account all the info and designs of the image attached.  In case of doubt ask anything you need to in order to get the best PRD and most accurate possible
 
 Expected output: a prompt to generate a PRD
+
+
+*Image attached: [draft-designs-v0](/prompts/images/draft-designs-v0.png)

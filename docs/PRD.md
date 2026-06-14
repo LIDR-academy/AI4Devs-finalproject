@@ -93,6 +93,11 @@ Traditional weight-loss efforts often lack motivation and peer accountability, l
   * Remaining kg/% to goal
   * **Progress bar** for challenge overall status (% elapsed, % to goal)
   * **Weight-over-time line chart** (API returns weight history series)
+* **Weight progress graphic** — A cartesian line chart with three overlaid series:
+  * **Actual progress (solid line):** Plots the user's logged weight entries over time (x-axis = date, y-axis = weight in kg). Also has dots to mark every weight input from the user.
+  * **Trend prediction (dotted line):** Extends beyond the last logged entry to the aim date, computed via linear regression (or exponential smoothing) on the user's actual entries, showing the projected trajectory if current momentum continues.
+  * **Linear goal target (dotted line, distinct style):** A straight line from start weight on the start date to target weight on the aim date, representing the exact linear pace required to reach the goal on time.
+  * The chart includes a horizontal dashed line marking the target weight, and shaded regions or annotations for start/target weights. A legend distinguishes the three series.
 * List of joined challenges
 
 ### Screen 3 — Challenge Detail

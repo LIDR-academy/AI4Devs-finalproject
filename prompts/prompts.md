@@ -6,14 +6,13 @@
 
 ---
 
-# 2 - chatgpt.com - Free version
+# 2 - OpenCode - DeepSeek V4 Flash Free
 
-I have a PRD and I want to use a platform like JIRA but for free in order to ask an AI to break my PRD into User Stories and tasks.
+In the file docs/PRD.md we have a PRd defined for a project. In the Profile screen of that project we want to have a graphic that shows:
+- the current progress of the user's weight. (normal line)
+- the prediction of the progress that is going to happen based on real progress done until now. (dotted line)
+- the linear prediction progress that should be followed to reach the target set within the time set. (dotted line)
+Please consider the image in prompts/images/weight-graphic.png
 
-Things to consider:
+To do: update the PRD accordingly so that this graphic is clear
 
-- it would b great if it has an MCP I can connect to. 
-
-- I'd like for it to be something quite visual, like Trello's boards.
-
-- easy to learn and move around. Intuitive.
