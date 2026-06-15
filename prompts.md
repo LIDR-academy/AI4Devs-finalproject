@@ -91,7 +91,7 @@ Opción B — La operación de la competición modelada como gestión de servici
 
 </br>
 
-**Prompt 4:**
+**Prompt 5:**
 
 Agent: Claude Code - Sonnet 4.6
 
@@ -102,6 +102,22 @@ Quiero la Opción A
 ### Response:
 
 Claude ha añadido al skill @.claude/skills/service-desk-expert/, varios apartados en los que concreta su Alcance y Contexto concreto dentro de la aplicación de Gestión de Ligas y Torneos.
+
+</br>
+
+**Prompt 6:**
+
+Agent: Claude Code - Sonnet 4.6
+
+### Request:
+
+@.claude/skills/service-desk-expert/ con los nuevos parámetros que tienes configurados, vuelve a revisar el readme.md: '1.1. Objetivo' y '1.2. Características y funcionalidades principales'.
+
+### Response:
+
+Mejorado en el readme.md: '1.1. Objetivo' y '1.2. Características y funcionalidades principales'.
+
+</br>
 
 ---
 

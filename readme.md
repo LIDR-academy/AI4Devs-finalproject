@@ -40,73 +40,78 @@
 
 **Product purpose**
 
-The product is an **enterprise Service Desk platform** that acts as the **Single Point of Contact (SPOC)** between end users and the IT organization. It centralizes the capture, triage, fulfillment, and resolution of all support interactions — Incidents, Service Requests, Problems, and Changes — within a single ITSM workflow engine governed by Service Level Agreements (SLAs).
+The product is a **Service Desk platform that provides end-user support for a competition management application** (tournaments, leagues, and group/division formats). It acts as the **Single Point of Contact (SPOC)** between the platform's users — players, team managers, tournament organizers, and match officials — and the support and engineering organization that operates the application. It centralizes the capture, triage, and resolution of all platform-related support interactions — **Incidents** (something is broken in the application) and **Service Requests** (an entitled platform service) — within a single ITSM workflow engine governed by Service Level Agreements (SLAs).
+
+> **Scope:** the Service Desk supports the *platform*, not the sporting operation itself. Competition decisions (reschedules, roster changes, result disputes) are made by organizers and officials **inside** the application; they reach the Service Desk only when they surface as a platform defect or an entitled service request. Competition entities (Tournament, Match, Standings…) are therefore the **affected subject** of a ticket, never tickets in their own right.
 
 **Problem it solves**
 
-Support organizations frequently operate with fragmented channels (email, phone, chat, walk-ups), no consistent ticket lifecycle, manual routing, and no measurable SLA accountability. This leads to lost requests, slow response and resolution times, low First Contact Resolution (FCR), and limited visibility for management. The platform replaces these ad-hoc operations with a **standardized, auditable, and metric-driven service operation model** aligned with ITIL-based practices.
+Competition platforms concentrate user demand into critical live windows — registration deadlines, match days, and finals — when any application failure (standings not updating, brackets not rendering, scores not saving, payments not processed) directly disrupts an event in progress. Without a structured support function, these issues arrive through fragmented channels with no consistent ticket lifecycle, no prioritization of competition-impacting failures, and no measurable SLA accountability. The Service Desk replaces this with a **standardized, auditable, and metric-driven support operation** that protects service availability when it matters most, aligned with ITIL-based practices.
 
 **Value delivered**
 
-- **Operational consistency:** every interaction follows a controlled lifecycle (logging → categorization → prioritization → assignment → resolution → closure).
+- **Operational consistency:** every support interaction follows a controlled lifecycle (logging → categorization → prioritization → assignment → resolution → closure).
+- **Event protection:** Major Incident handling and tiered escalation prioritize failures during live competition windows (match days / finals) to minimize time-to-restore.
 - **Accountability:** SLA timers, escalation rules, and audit trails make response and resolution commitments measurable and enforceable.
-- **Efficiency:** automated categorization, assignment, and self-service deflection reduce manual effort and Mean Time to Resolution (MTTR).
-- **Experience:** a Self-Service Portal and omnichannel intake give end users transparency over their requests and status.
+- **Efficiency:** automated categorization, assignment, and Knowledge-Base self-service deflection reduce manual effort and Mean Time to Resolution (MTTR).
+- **Experience:** a Self-Service Portal gives players, organizers, and officials transparency over their tickets and status.
 - **Decision support:** real-time KPIs and dashboards (FCR, MTTR, SLA Compliance, CSAT, backlog) drive continual service improvement.
 
 **Target audience (personas)**
 
-- **End Users / Requesters:** employees or customers who report Incidents and submit Service Requests.
-- **Service Desk Agents (L1):** first-line operators who log, triage, and resolve or route tickets.
-- **Support Analysts / Resolver Groups (L2/L3):** specialist teams that handle escalated work.
-- **Service Owners / Process Owners:** accountable for service quality and process compliance.
-- **Service Managers:** monitor performance, SLAs, and operational KPIs.
-- **System Administrators:** configure catalog, workflows, SLAs, and access control.
+- **Player / Competitor:** end user reporting application issues or requesting account services.
+- **Team Manager / Captain:** raises team-level support for a team's participation.
+- **Tournament Organizer / Admin:** power user configuring competitions; higher entitlement tier.
+- **Referee / Match Official:** reports scoring and result-entry issues.
+- **League Administrator:** oversees multiple competitions; acts as escalation contact.
+- **Service Desk Agent (L1):** first-line operator who logs, triages, and resolves or routes tickets.
+- **Application Support Analyst (L2/L3):** platform specialists / engineering resolver group handling escalated work.
+- **System Administrator:** configures catalog, workflows, SLAs, and access control.
 
 ### **1.2. Características y funcionalidades principales:**
 
 > Enumera y describe las características y funcionalidades específicas que tiene el producto para satisfacer las necesidades identificadas.
 
-The platform delivers the following core capabilities:
+The Service Desk delivers the following core capabilities, all scoped to supporting the competition platform:
 
 **1. Ticket Management (Incident & Service Request)**
-End-to-end ticket lifecycle management with categorization, prioritization (Impact × Urgency → Priority matrix), status tracking, work notes, and closure codes. Supports Incident Management and Service Request fulfillment as distinct but unified workflows.
+End-to-end ticket lifecycle management with categorization, prioritization (Impact × Urgency → Priority matrix), status tracking, work notes, and closure codes. Handles **Incidents** (platform defects — e.g., standings not updating, bracket not rendering, scores not saving) and **Service Request** fulfillment as distinct but unified workflows. Each ticket records the **affected competition subject** (Tournament, League, Group, Bracket, Fixture, Standings, Registration, Roster, Team, Player Account) without treating it as the ticket itself.
 
 **2. Omnichannel Intake**
-Capture of tickets from multiple channels — Self-Service Portal, email-to-ticket, chat, and phone-logged entries — normalized into a single ticket model with a unique reference number.
+Capture of tickets from multiple channels — Self-Service Portal, email-to-ticket, in-app help, and phone-logged entries — normalized into a single ticket model with a unique reference number.
 
 **3. Self-Service Portal & Knowledge Base**
-End-user portal for submitting requests, tracking status, and searching Knowledge Articles. Knowledge-centered deflection reduces ticket volume and improves First Contact Resolution (FCR).
+End-user portal for players, organizers, and officials to submit tickets, track status, and search Knowledge Articles (how-tos, known issues, workarounds). Knowledge-centered deflection reduces ticket volume and improves First Contact Resolution (FCR).
 
 **4. Service Catalog Management**
-A structured catalog of Service Offerings with request forms, eligibility rules, and predefined fulfillment workflows, enabling standardized and repeatable Service Request handling.
+A structured catalog of platform-support Service Offerings with request forms, eligibility rules, and predefined fulfillment workflows — e.g., account creation, role/entitlement and organizer-access provisioning, password reset / account recovery, data export (fixtures, standings, rosters, results), and billing/registration-payment support.
 
 **5. Workflow & Automation Engine**
-Configurable business rules for automated categorization, routing, and assignment to the correct Resolver Group or Assignment Queue, including round-robin/skill-based assignment and task orchestration.
+Configurable business rules for automated categorization, routing, and assignment to the correct Resolver Group or Assignment Queue, including skill-based and round-robin assignment and task orchestration.
 
 **6. SLA Management & Escalation**
-Definition of SLA/OLA targets (response and resolution) per service, priority, and customer. Automated SLA timers, breach warnings, and tiered escalation (functional and hierarchical) enforce service commitments.
+Definition of SLA/OLA targets (response and resolution) per service and priority, with **event-aware policies** that tighten targets during live competition windows (match days / finals). Automated SLA timers, breach warnings, and tiered (functional and hierarchical) escalation enforce service commitments.
 
-**7. Assignment & Queue Management**
+**7. Major Incident Management**
+Dedicated handling for high-impact failures that disrupt an event in progress (e.g., a scoring outage on finals day), with accelerated escalation, coordinated resolver engagement, and stakeholder communication to minimize time-to-restore.
+
+**8. Assignment & Queue Management**
 Support groups, queues, and workload distribution that route tickets to the appropriate team and provide agents with prioritized work lists.
 
-**8. Problem Management**
-Linking of recurring Incidents to a Problem record, Root Cause Analysis (RCA), Known Error tracking, and Workaround publication to reduce repeat Incidents.
-
-**9. Change Enablement**
-Logging and approval of Changes through an Approval Engine (including CAB-style approval flows), with risk categorization and linkage to affected services and Configuration Items (CIs).
+**9. Problem Management**
+Linking of recurring Incidents to a Problem record, Root Cause Analysis (RCA), Known Error (KEDB) tracking, and Workaround publication to reduce repeat platform Incidents.
 
 **10. Notification Framework**
-Event-driven email/portal notifications to requesters and agents on status changes, assignments, approvals, and SLA breaches.
+Event-driven notifications (email, push, in-app) to requesters and agents on status changes, assignments, and SLA breaches, integrated with the platform's participant notification channels.
 
 **11. Approval Engine**
-Configurable multi-level approval workflows for Service Requests and Changes, with delegation and audit trails.
+Configurable multi-level approval workflows for entitled Service Requests (e.g., organizer-access or elevated-role provisioning), with delegation and audit trails.
 
 **12. Reporting, Dashboards & Analytics**
-Operational and management dashboards exposing key KPIs — FCR, MTTR, MTTA, SLA Compliance Rate, Reopen Rate, Backlog Volume, CSAT, and Agent Productivity — to support continual service improvement.
+Operational and management dashboards exposing key KPIs — FCR, MTTR, MTTA, SLA Compliance Rate, Reopen Rate, Backlog Volume, CSAT, Agent Productivity — plus domain metrics such as time-to-restore for competition-impacting Incidents and Major Incident rate during live windows.
 
 **13. Identity & Access Management (RBAC)**
-Role-based access control for End Users, Agents, Resolver Groups, and Administrators, ensuring least-privilege access and auditability.
+Role-based access control aligned with platform personas (Player, Team Manager, Organizer, Official, Agent, Analyst, Administrator), integrated with the platform's identity provider / SSO and enforcing least-privilege access.
 
 **14. Audit Trail & Activity History**
 Immutable history of all ticket transitions, field changes, and user actions to guarantee traceability and compliance.
