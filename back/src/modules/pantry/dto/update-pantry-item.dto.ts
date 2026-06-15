@@ -9,7 +9,7 @@ import {
   Min,
   MinLength,
 } from "class-validator";
-import { PANTRY_UNITS } from "./create-pantry-item.dto";
+import { PANTRY_UNITS, STORAGE_LOCATIONS } from "./create-pantry-item.dto";
 
 export class UpdatePantryItemDto {
   @IsOptional()
@@ -22,6 +22,11 @@ export class UpdatePantryItemDto {
   @IsString()
   @IsIn(PANTRY_UNITS)
   unit?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(STORAGE_LOCATIONS)
+  storageLocation?: string;
 
   @IsOptional()
   @Type(() => Number)

@@ -110,4 +110,39 @@ test.describe("Pantry — Consumed history filter", () => {
 
     await expect(page.getByText("No consumed items found.")).toBeVisible();
   });
+
+  test("Re-added item preserves emoji set on the original item", async ({ page, request }) => {
+    const ts = Date.now();
+    const auth = await registerUser(request, `pw.history.emoji.${ts}@pantry-e2e.example.com`);
+
+    const item = await createAndGetPantryItem(request, auth.accessToken, "Emoji Cheese", 5);
+
+    await seedSession(page, auth);
+    // Navigate to the item detail page and pick a non-default emoji.
+    await page.goto(`${FRONT_BASE_URL}/item/${item.id}`);
+    await page.getByTestId("item-emoji-btn").click();
+    await page.getByTestId("item-emoji-pick-🧀").click();
+
+    // Consume the item via API
+    await request.post(`${API_BASE_URL}/pantry/items/${item.id}/events`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+      data: { type: "CONSUMED" },
+    });
+
+    // Go to Consumed list and re-add
+    await page.goto(`${FRONT_BASE_URL}/pantry`);
+    await page.getByRole("button", { name: "Consumed" }).click();
+    await expect(page.getByText("Emoji Cheese")).toBeVisible();
+
+    const reAddBtn = page.getByTestId(/event-readd-/).first();
+    await reAddBtn.click();
+    await expect(page.getByTestId("re-add-success")).toBeVisible();
+
+    // Switch to All and verify the emoji is preserved
+    await page.getByRole("button", { name: "All" }).click();
+    await expect(page.getByText("Emoji Cheese")).toBeVisible();
+    // The row for the re-added item should display the 🧀 emoji
+    const itemRow = page.locator(".ios-card").filter({ hasText: "Emoji Cheese" }).first();
+    await expect(itemRow).toContainText("🧀");
+  });
 });

@@ -12,6 +12,7 @@ import {
 } from "class-validator";
 
 export const PANTRY_UNITS = ["unit", "g", "kg", "ml", "l", "pack"] as const;
+export const STORAGE_LOCATIONS = ["Pantry", "Fridge", "Freezer"] as const;
 
 export class CreatePantryItemDto {
   @IsString()
@@ -31,6 +32,11 @@ export class CreatePantryItemDto {
   @IsOptional()
   @IsDateString()
   expirationDate?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(STORAGE_LOCATIONS)
+  storageLocation?: string;
 
   @IsOptional()
   @Type(() => Number)

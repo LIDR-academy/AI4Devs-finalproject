@@ -74,6 +74,7 @@ export class PantryService {
         name: dto.name.trim(),
         quantity: dto.quantity,
         unit: dto.unit.trim(),
+        storageLocation: dto.storageLocation ?? "Pantry",
         expirationDate: dto.expirationDate ? new Date(dto.expirationDate) : null,
         ...(dto.pricePaid !== undefined && { pricePaid: dto.pricePaid }),
       },
@@ -123,6 +124,7 @@ export class PantryService {
       data: {
         ...(dto.quantity !== undefined && { quantity: dto.quantity }),
         ...(dto.unit !== undefined && { unit: dto.unit.trim() }),
+        ...(dto.storageLocation !== undefined && { storageLocation: dto.storageLocation }),
         ...(dto.pricePaid !== undefined && { pricePaid: dto.pricePaid }),
       },
     });

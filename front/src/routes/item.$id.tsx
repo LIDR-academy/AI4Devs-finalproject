@@ -16,6 +16,7 @@ import {
   updatePantryItem,
   WasteConfirmationRequiredError,
   PANTRY_UNITS,
+  STORAGE_LOCATIONS,
   type ExpirationEstimateResponse,
   type PantryApiItem,
 } from "@/features/pantry/pantry.api";
@@ -44,6 +45,8 @@ function ItemDetail() {
 
   const [quantityInput, setQuantityInput] = useState("");
   const [unitInput, setUnitInput] = useState("unit");
+  const [storageLocationInput, setStorageLocationInput] = useState("Pantry");
+  const [unitPriceInput, setUnitPriceInput] = useState("");
   const [pricePaidInput, setPricePaidInput] = useState("");
   const [isSavingDetails, setIsSavingDetails] = useState(false);
   const [detailsMessage, setDetailsMessage] = useState<string | null>(null);
@@ -72,7 +75,11 @@ function ItemDetail() {
         setExpirationInput(found?.expirationDate?.slice(0, 10) ?? "");
         setQuantityInput(String(found?.quantity ?? 1));
         setUnitInput(found?.unit ?? "unit");
-        setPricePaidInput(found?.pricePaid ? Number(found.pricePaid).toFixed(2) : "");
+        setStorageLocationInput(found?.storageLocation ?? "Pantry");
+        const paidNum = found?.pricePaid ? Number(found.pricePaid) : null;
+        const qty = found?.quantity ?? 1;
+        setPricePaidInput(paidNum !== null ? paidNum.toFixed(2) : "");
+        setUnitPriceInput(paidNum !== null && qty > 0 ? (paidNum / qty).toFixed(2) : "");
       }
     }
     void loadItem();
@@ -93,9 +100,15 @@ function ItemDetail() {
     setEmoji(next);
     setShowEmojiPicker(false);
     try {
-      const stored = JSON.parse(localStorage.getItem("rsf_item_emojis") ?? "{}") as Record<string, string>;
-      stored[id] = next;
-      localStorage.setItem("rsf_item_emojis", JSON.stringify(stored));
+      const byId = JSON.parse(localStorage.getItem("rsf_item_emojis") ?? "{}") as Record<string, string>;
+      byId[id] = next;
+      localStorage.setItem("rsf_item_emojis", JSON.stringify(byId));
+
+      if (item) {
+        const byName = JSON.parse(localStorage.getItem("rsf_name_emojis") ?? "{}") as Record<string, string>;
+        byName[item.name] = next;
+        localStorage.setItem("rsf_name_emojis", JSON.stringify(byName));
+      }
     } catch {
       // localStorage unavailable
     }
@@ -139,6 +152,24 @@ function ItemDetail() {
     }
   }
 
+  function handleUnitPriceChange(value: string) {
+    setUnitPriceInput(value);
+    const parsedUnit = parseFloat(value);
+    const parsedQty = parseFloat(quantityInput);
+    if (!Number.isNaN(parsedUnit) && !Number.isNaN(parsedQty) && parsedUnit >= 0 && parsedQty > 0) {
+      setPricePaidInput((parsedUnit * parsedQty).toFixed(2));
+    }
+  }
+
+  function handleQuantityChangeForPrice(value: string) {
+    setQuantityInput(value);
+    const parsedUnit = parseFloat(unitPriceInput);
+    const parsedQty = parseFloat(value);
+    if (!Number.isNaN(parsedUnit) && !Number.isNaN(parsedQty) && parsedUnit >= 0 && parsedQty > 0) {
+      setPricePaidInput((parsedUnit * parsedQty).toFixed(2));
+    }
+  }
+
   async function handleDetailsSave() {
     if (!item) return;
     const qty = parseInt(quantityInput, 10);
@@ -161,6 +192,7 @@ function ItemDetail() {
       const updated = await updatePantryItem(item.id, {
         quantity: qty,
         unit: unitInput,
+        storageLocation: storageLocationInput,
         ...(price !== undefined && { pricePaid: price }),
       });
       setItem((current) => (current ? { ...current, ...updated } : current));
@@ -295,7 +327,7 @@ function ItemDetail() {
           )}
           <h1 className="mt-5 text-2xl font-bold tracking-tight">{item.name}</h1>
           <p className="mt-1 text-[14px] text-muted-foreground">
-            {displayQuantity} · Pantry · Pantry
+            {displayQuantity} · {item.storageLocation ?? "Pantry"}
           </p>
         </div>
 
@@ -317,7 +349,7 @@ function ItemDetail() {
                   type="number"
                   min={1}
                   value={quantityInput}
-                  onChange={(e) => setQuantityInput(e.target.value)}
+                  onChange={(e) => handleQuantityChangeForPrice(e.target.value)}
                   data-testid="item-quantity-input"
                   className="w-full h-11 rounded-xl bg-secondary px-3 text-[14px] outline-none focus:ring-2 focus:ring-primary/30"
                 />
@@ -340,18 +372,50 @@ function ItemDetail() {
             </div>
             <div className="space-y-1">
               <label className="text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">
-                Price paid (€)
+                Storage location
               </label>
-              <input
-                type="number"
-                min={0}
-                step={0.01}
-                placeholder="0.00"
-                value={pricePaidInput}
-                onChange={(e) => setPricePaidInput(e.target.value)}
-                data-testid="item-price-input"
+              <select
+                value={storageLocationInput}
+                onChange={(e) => setStorageLocationInput(e.target.value)}
+                data-testid="item-storage-location-select"
                 className="w-full h-11 rounded-xl bg-secondary px-3 text-[14px] outline-none focus:ring-2 focus:ring-primary/30"
-              />
+              >
+                {STORAGE_LOCATIONS.map((l) => (
+                  <option key={l} value={l}>{l}</option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">
+                  Price per unit (€)
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  placeholder="0.00"
+                  value={unitPriceInput}
+                  onChange={(e) => handleUnitPriceChange(e.target.value)}
+                  data-testid="item-unit-price-input"
+                  className="w-full h-11 rounded-xl bg-secondary px-3 text-[14px] outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">
+                  Price paid (€)
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  placeholder="0.00"
+                  value={pricePaidInput}
+                  onChange={(e) => setPricePaidInput(e.target.value)}
+                  data-testid="item-price-input"
+                  className="w-full h-11 rounded-xl bg-secondary px-3 text-[14px] outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
             </div>
             <button
               type="button"

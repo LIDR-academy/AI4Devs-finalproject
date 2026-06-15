@@ -38,6 +38,22 @@ npm run build
 npm run preview
 ```
 
+## 🧪 Testing
+Unit and component tests run with Vitest + React Testing Library (jsdom):
+
+```bash
+cd front
+npm run test        # run once
+npm run test:watch  # watch mode
+```
+
+End-to-end tests run with Playwright and require the dev server (and backend for
+auth) to be running:
+
+```bash
+npm run test:e2e
+```
+
 ## ⬇️ Installation
 Simple installation for frontend contributors:
 
