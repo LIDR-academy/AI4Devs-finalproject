@@ -3,18 +3,19 @@ import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import {
   getDashboardSummary,
-  getDashboardUseNext,
   type DashboardSummaryResponse,
-  type DashboardUseNextItem,
 } from "@/features/dashboard/dashboard.api";
 import {
   getWasteMetrics,
   type WasteMetricsResponse,
 } from "@/features/insights/insights.api";
 import {
+  getUseNextItems,
   registerPantryItemEvent,
   type PantryEventType,
+  type UseNextItem,
 } from "@/features/pantry/pantry.api";
+import { UseNextList } from "@/features/pantry/UseNextList";
 import {
   requireAuthBeforeLoad,
   useRequireAuthRedirect,
@@ -33,7 +34,7 @@ function InsightsPage() {
   }
 
   const [summary, setSummary] = useState<DashboardSummaryResponse | null>(null);
-  const [useNext, setUseNext] = useState<DashboardUseNextItem[]>([]);
+  const [useNext, setUseNext] = useState<UseNextItem[]>([]);
   const [wasteMetrics, setWasteMetrics] = useState<WasteMetricsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -50,7 +51,7 @@ function InsightsPage() {
     try {
       const [summaryData, useNextData, wasteData] = await Promise.all([
         getDashboardSummary(),
-        getDashboardUseNext(),
+        getUseNextItems(),
         getWasteMetrics(),
       ]);
       setSummary(summaryData);
@@ -141,71 +142,16 @@ function InsightsPage() {
           </button>
         </div>
 
-        {error && (
-          <p className="mb-3 rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-[12px] text-destructive" data-testid="dashboard-error">
-            {error}
-          </p>
-        )}
-
-        {isLoading && (
-          <p className="py-8 text-center text-muted-foreground" data-testid="dashboard-loading">
-            Loading dashboard...
-          </p>
-        )}
-
-        {!isLoading && useNext.length === 0 && (
-          <p className="py-8 text-center text-muted-foreground" data-testid="dashboard-use-next-empty">
-            No active items to prioritize.
-          </p>
-        )}
-
-        {!isLoading && useNext.length > 0 && (
-          <ul className="space-y-2" data-testid="dashboard-use-next-list">
-            {useNext.map((item, index) => (
-              <li key={item.pantryItemId} className="ios-card p-3" data-testid={`dashboard-use-next-item-${index}`}>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-[14px] font-semibold" data-testid={`dashboard-item-name-${item.pantryItemId}`}>
-                      {item.name}
-                    </p>
-                    <p className="text-[12px] text-muted-foreground">
-                      {item.quantity} {item.unit}
-                      {item.pricePaid ? ` · €${Number(item.pricePaid).toFixed(2)}` : ""}
-                    </p>
-                  </div>
-                  <RiskBadge risk={item.riskLevel} />
-                </div>
-
-                <p className="mt-2 text-[12px] text-muted-foreground" data-testid={`dashboard-item-days-${item.pantryItemId}`}>
-                  {formatDays(item.daysUntilExpiration)}
-                </p>
-
-                <div className="mt-3 flex gap-2">
-                  <button
-                    type="button"
-                    className="rounded-lg bg-emerald-500/10 px-3 py-1.5 text-[12px] font-medium text-emerald-700"
-                    onClick={() => {
-                      void handleRegisterEvent(item.pantryItemId, "CONSUMED");
-                    }}
-                    data-testid={`dashboard-consume-${item.pantryItemId}`}
-                  >
-                    Mark consumed
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-lg bg-destructive/10 px-3 py-1.5 text-[12px] font-medium text-destructive"
-                    onClick={() => {
-                      void handleRegisterEvent(item.pantryItemId, "WASTED");
-                    }}
-                    data-testid={`dashboard-waste-${item.pantryItemId}`}
-                  >
-                    Mark wasted
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+        <UseNextList
+          items={useNext}
+          isLoading={isLoading}
+          error={error}
+          onConsume={(id) => handleRegisterEvent(id, "CONSUMED")}
+          onWaste={(id) => handleRegisterEvent(id, "WASTED")}
+          emptyMessage="No active items to prioritize."
+          loadingMessage="Loading dashboard..."
+          testIdPrefix="dashboard-use-next"
+        />
       </section>
     </AppShell>
   );
@@ -230,26 +176,3 @@ function SummaryCard({
   );
 }
 
-function RiskBadge({ risk }: { risk: "HIGH" | "MEDIUM" | "LOW" }) {
-  const classes =
-    risk === "HIGH"
-      ? "bg-destructive/10 text-destructive"
-      : risk === "MEDIUM"
-        ? "bg-warning/20 text-warning-foreground"
-        : "bg-secondary text-muted-foreground";
-
-  return <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${classes}`}>{risk}</span>;
-}
-
-function formatDays(days: number | null): string {
-  if (days === null) {
-    return "No expiration date";
-  }
-  if (days < 0) {
-    return `Expired ${Math.abs(days)} day(s) ago`;
-  }
-  if (days === 0) {
-    return "Expires today";
-  }
-  return `Expires in ${days} day(s)`;
-}

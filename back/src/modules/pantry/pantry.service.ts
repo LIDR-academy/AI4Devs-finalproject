@@ -6,8 +6,29 @@ import { UsersService } from "../users/users.service";
 import { CreatePantryItemDto } from "./dto/create-pantry-item.dto";
 import { PantryConsumptionEventType, RegisterConsumptionEventDto } from "./dto/register-consumption-event.dto";
 import { UpdatePantryItemDto } from "./dto/update-pantry-item.dto";
+import {
+  compareUseNextCandidates,
+  daysUntilExpiration,
+  riskFromDays,
+  type UseNextCandidate,
+} from "./pantry.ranking";
 
 const FAR_PAST_EXPIRY_DAYS = 7;
+
+export interface UseNextItem {
+  pantryItemId: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  pricePaid: string | null;
+  expirationDate: string | null;
+  daysUntilExpiration: number | null;
+  riskLevel: "HIGH" | "MEDIUM" | "LOW";
+}
+
+export interface UseNextResponse {
+  items: UseNextItem[];
+}
 
 export function computeEstimatedValue(
   pricePaid: Decimal | null,
@@ -155,6 +176,49 @@ export class PantryService {
     ]);
 
     return event;
+  }
+
+  async getUseNext(userId: string): Promise<UseNextResponse> {
+    await this.assertUserCanAccessPantry(userId);
+
+    const visibleUserIds = await this.resolveHouseholdUserIds(userId);
+    const now = new Date();
+
+    const activeItems = await this.prisma.pantryItem.findMany({
+      where: {
+        userId: { in: visibleUserIds },
+        consumptionEvents: { none: {} },
+      },
+      select: {
+        id: true,
+        name: true,
+        quantity: true,
+        unit: true,
+        pricePaid: true,
+        expirationDate: true,
+        createdAt: true,
+      },
+    });
+
+    const sorted = activeItems.sort((a, b) =>
+      compareUseNextCandidates(a as UseNextCandidate, b as UseNextCandidate, now),
+    );
+
+    return {
+      items: sorted.map((item) => {
+        const days = item.expirationDate ? daysUntilExpiration(item.expirationDate, now) : null;
+        return {
+          pantryItemId: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          unit: item.unit,
+          pricePaid: item.pricePaid ? item.pricePaid.toString() : null,
+          expirationDate: item.expirationDate ? item.expirationDate.toISOString() : null,
+          daysUntilExpiration: days,
+          riskLevel: riskFromDays(days),
+        };
+      }),
+    };
   }
 
   async listEvents(userId: string, type?: "CONSUMED" | "WASTED") {

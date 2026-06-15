@@ -4,6 +4,7 @@ import { UsersService } from "../users/users.service";
 import {
   compareUseNextCandidates,
   daysUntilExpiration,
+  riskFromDays,
   type UseNextCandidate,
 } from "./dashboard.ranking";
 
@@ -26,19 +27,6 @@ export interface UseNextItem {
 
 export interface DashboardUseNextResponse {
   items: UseNextItem[];
-}
-
-function riskFromDays(days: number | null): "HIGH" | "MEDIUM" | "LOW" {
-  if (days === null) {
-    return "LOW";
-  }
-  if (days <= 1) {
-    return "HIGH";
-  }
-  if (days <= 3) {
-    return "MEDIUM";
-  }
-  return "LOW";
 }
 
 @Injectable()
