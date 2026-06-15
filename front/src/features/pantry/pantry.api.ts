@@ -188,6 +188,25 @@ export function estimateExpirationByName(
   );
 }
 
+export interface UseNextItem {
+  pantryItemId: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  pricePaid: string | null;
+  expirationDate: string | null;
+  daysUntilExpiration: number | null;
+  riskLevel: "HIGH" | "MEDIUM" | "LOW";
+}
+
+export interface UseNextResponse {
+  items: UseNextItem[];
+}
+
+export function getUseNextItems(): Promise<UseNextResponse> {
+  return requestJson<UseNextResponse>("/pantry/use-next", { method: "GET" });
+}
+
 export function updatePantryItem(
   pantryItemId: string,
   payload: UpdatePantryItemPayload,

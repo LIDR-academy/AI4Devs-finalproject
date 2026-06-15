@@ -33,14 +33,14 @@ test.describe("Dashboard summary and use-next", () => {
     await expect(page.getByTestId("dashboard-use-next-item-1")).toContainText("Yogurt");
     await expect(page.getByTestId("dashboard-use-next-item-2")).toContainText("Rice");
 
-    await page.getByTestId(`dashboard-consume-${itemA.id}`).click();
+    await page.getByTestId(`dashboard-use-next-consume-${itemA.id}`).click();
 
     await expect(page.getByTestId("dashboard-active-items")).toContainText("2");
     await expect(page.getByTestId("dashboard-use-next-list")).toContainText("Yogurt");
     await expect(page.getByTestId("dashboard-use-next-list")).toContainText("Rice");
     await expect(page.getByTestId("dashboard-use-next-list")).not.toContainText("Milk");
 
-    await page.getByTestId(`dashboard-waste-${itemC.id}`).click();
+    await page.getByTestId(`dashboard-use-next-waste-${itemC.id}`).click();
 
     await expect(page.getByTestId("dashboard-active-items")).toContainText("1");
     await expect(page.getByTestId("dashboard-use-next-list")).toContainText("Yogurt");

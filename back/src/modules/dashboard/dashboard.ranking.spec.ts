@@ -1,7 +1,7 @@
 import {
   compareUseNextCandidates,
   daysUntilExpiration,
-  type UseNextCandidate,
+  UseNextCandidate,
 } from "./dashboard.ranking";
 
 describe("dashboard ranking", () => {
