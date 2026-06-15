@@ -73,6 +73,36 @@ Añadido en el readme.md: '1.1. Objetivo' y '1.2. Características y funcionalid
 
 </br>
 
+**Prompt 4:**
+
+Agent: Claude Code - Sonnet 4.6
+
+### Request:
+
+¿cambiarías algo del skill @.claude/skills/service-desk-expert/ si dicho service-desk fuese expresamente para una aplicación que gestiona competiciones de tipo torneo, liga o grupos?
+
+### Response:
+
+Sí, cambiaría bastante — pero manteniendo el esqueleto ITSM intacto, porque un Service Desk para una app de competiciones sigue siendo un Service Desk (SPOC, ciclo de vida del ticket, SLAs, colas, escalado). Lo que añadiría es una capa de especialización de dominio. Antes de detallar, hay una bifurcación importante que define cuánto cambia:
+
+Opción A — Soporte de la plataforma (interpretación ITSM pura): los usuarios (jugadores, organizadores) abren Incidents y Service Requests sobre la aplicación ("no puedo inscribirme", "el bracket no carga"). Aquí el skill apenas cambia: solo adapto personas, catálogo y KPIs.
+
+Opción B — La operación de la competición modelada como gestión de servicios: las inscripciones, cambios de roster, reprogramaciones de partido y disputas de resultado se gestionan como "tickets" con workflow, aprobación y SLA. Aquí el dominio entra de lleno en el modelo y el cambio es mayor.
+
+</br>
+
+**Prompt 4:**
+
+Agent: Claude Code - Sonnet 4.6
+
+### Request:
+
+Quiero la Opción A
+
+### Response:
+
+Claude ha añadido al skill @.claude/skills/service-desk-expert/, varios apartados en los que concreta su Alcance y Contexto concreto dentro de la aplicación de Gestión de Ligas y Torneos.
+
 ---
 
 ## 2. Arquitectura del Sistema

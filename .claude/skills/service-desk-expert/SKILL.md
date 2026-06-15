@@ -42,6 +42,60 @@ All output produced under this skill MUST be written in **technical English usin
 
 ---
 
+# Domain Context
+
+This skill operates in the context of a **Service Desk that supports an end-user application for managing competitions** (tournaments, leagues, and group/division formats).
+
+**Scope (important):** the Service Desk is the **support function for the platform**, not the competition operation itself. End users (players, organizers, officials, etc.) contact the Service Desk to report problems with the application or to request platform-related services. Therefore:
+
+- **Incidents** = something is broken or not working in the platform (e.g., standings not updating, bracket not rendering, login failure, payment not processed, notification not delivered).
+- **Service Requests** = a standard, pre-approved platform service the user is entitled to (e.g., account/role provisioning, organizer access, data export, password reset, restoring an account).
+- The competition entities (Tournament, Match, Standings…) appear **as the affected subject of a ticket**, not as tickets themselves. Reschedules, roster changes, or result disputes are **business decisions made inside the application by organizers/officials**, and only reach the Service Desk when they manifest as a platform defect or an entitled service request.
+
+Apply the full ITSM framework below, but contextualize stakeholders, the service catalog, KPIs, and integrations to this competition-platform support domain.
+
+## Domain Personas (platform support)
+
+- **Player / Competitor** — end user reporting issues or requesting account services.
+- **Team Manager / Captain** — manages a team's participation; raises team-level support.
+- **Tournament Organizer / Admin** — power user configuring competitions; higher entitlement tier.
+- **Referee / Match Official** — reports scoring/result-entry issues.
+- **League Administrator** — oversees multiple competitions; escalation contact.
+- **Spectator / Follower** — public consumer of standings/results (limited support entitlement).
+- **Service Desk Agent (L1)** — first-line platform support.
+- **Application Support Analyst (L2/L3)** — platform specialists / engineering resolver group.
+- **System Administrator** — platform configuration and access management.
+
+## Domain-Contextualized Service Catalog (request types)
+
+- Account creation, role/entitlement provisioning, and organizer-access requests.
+- Password reset / account recovery / account unlock.
+- Data export (fixtures, standings, rosters, results).
+- Reporting a platform defect affecting a competition (Incident intake).
+- Billing / registration-payment support requests.
+- Reactivation of a suspended account or competition workspace.
+
+## Domain-Affected Configuration Items / Subjects
+
+When a ticket references the application, the **affected subject** may be: `Tournament`, `League`, `Group / Division`, `Bracket`, `Fixture / Match`, `Standings / Ranking`, `Registration`, `Roster`, `Team`, `Player Account`, `Schedule`, `Result`. Treat these as the _subject_ of Incidents/Requests, not as ticket types.
+
+## Domain-Relevant KPIs (in addition to standard ITSM metrics)
+
+- Time-to-restore for competition-impacting Incidents (e.g., standings/scoring outages).
+- Major Incident rate during live competition windows (match days / finals).
+- Registration/payment support request resolution time.
+- Self-service deflection rate via the platform Knowledge Base.
+
+## Domain Integrations to consider
+
+- Identity provider / SSO of the competition platform.
+- Payment and registration subsystem.
+- Scheduling / calendar engine.
+- Ranking / standings engine.
+- Participant notification channels (email, push, in-app).
+
+---
+
 # Response Principles
 
 For every answer:
