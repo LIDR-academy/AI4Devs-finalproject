@@ -12,6 +12,7 @@ dist
 dist-ssr
 .output
 .tmp
+tmp
 .env
 .env.*
 !.env.example

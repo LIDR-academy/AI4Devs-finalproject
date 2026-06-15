@@ -285,6 +285,41 @@ export class HouseholdsService {
     }));
   }
 
+  /**
+   * Returns the id of the user's active household, or null when the user does
+   * not belong to any active household.
+   */
+  async getActiveHouseholdId(userId: string): Promise<string | null> {
+    const membership = await this.prisma.householdMember.findFirst({
+      where: { userId, status: "ACTIVE" },
+      select: { householdId: true },
+    });
+
+    return membership?.householdId ?? null;
+  }
+
+  /**
+   * Returns the set of user ids that share data with the given user. When the
+   * user belongs to an active household this includes every active member;
+   * otherwise it is just the user themselves. The caller's id is always
+   * included so resources they own remain visible even without a household.
+   */
+  async getHouseholdMemberUserIds(userId: string): Promise<string[]> {
+    const householdId = await this.getActiveHouseholdId(userId);
+    if (!householdId) {
+      return [userId];
+    }
+
+    const members = await this.prisma.householdMember.findMany({
+      where: { householdId, status: "ACTIVE" },
+      select: { userId: true },
+    });
+
+    const memberIds = new Set(members.map((member) => member.userId));
+    memberIds.add(userId);
+    return [...memberIds];
+  }
+
   private async leaveMembership(userId: string, householdId: string): Promise<void> {
     await this.prisma.householdMember.updateMany({
       where: { householdId, userId, status: "ACTIVE" },

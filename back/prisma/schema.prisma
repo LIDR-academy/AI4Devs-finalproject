@@ -168,6 +168,7 @@ model ExpirationAssessment {
 }
 
 enum ReceiptProcessingStatus {
+  PENDING
   PROCESSING
   COMPLETED
   FAILED
@@ -183,30 +184,34 @@ model Receipt {
   ocrStatus        ReceiptProcessingStatus @default(PROCESSING)
   ocrError         String?
   processedAt      DateTime?
+  confirmedAt      DateTime?
   createdAt        DateTime                @default(now())
   updatedAt        DateTime                @updatedAt
   userId           String
+  householdId      String?
   items            ReceiptItem[]
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+  @@index([householdId, createdAt])
   @@index([ocrStatus])
 }
 
 model ReceiptItem {
-  id            String     @id @default(uuid())
-  rawName       String
-  quantity      Int?
-  unit          String?
-  unitPriceEur  Decimal?   @db.Decimal(10, 2)
-  lineTotalEur  Decimal?   @db.Decimal(10, 2)
-  userConfirmed Boolean    @default(false)
-  createdAt     DateTime   @default(now())
-  receiptId     String
-  pantryItemId  String?
-  receipt       Receipt    @relation(fields: [receiptId], references: [id], onDelete: Cascade)
-  pantryItem    PantryItem? @relation(fields: [pantryItemId], references: [id], onDelete: SetNull)
+  id             String     @id @default(uuid())
+  rawName        String
+  normalizedName String     @default("")
+  quantity       Int?
+  unit           String?
+  unitPriceEur   Decimal?   @db.Decimal(10, 2)
+  lineTotalEur   Decimal?   @db.Decimal(10, 2)
+  userConfirmed  Boolean    @default(false)
+  createdAt      DateTime   @default(now())
+  receiptId      String
+  pantryItemId   String?
+  receipt        Receipt    @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  pantryItem     PantryItem? @relation(fields: [pantryItemId], references: [id], onDelete: SetNull)
 
   @@index([receiptId])
   @@index([pantryItemId])

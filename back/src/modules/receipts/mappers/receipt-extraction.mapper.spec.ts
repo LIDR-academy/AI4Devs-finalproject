@@ -9,8 +9,23 @@ describe("receipt extraction mapper", () => {
     });
 
     expect(output.rawName).toBe("Greek Yogurt");
+    expect(output.normalizedName).toBe("Greek Yogurt");
     expect(output.quantity).toBe(2);
     expect(output.unit).toBe("unit");
+  });
+
+  it("keeps original rawName but collapses whitespace into normalizedName", () => {
+    const output = mapExtractedLineToCreateInput({ rawName: "  Whole   Milk  " });
+
+    expect(output.rawName).toBe("  Whole   Milk  ");
+    expect(output.normalizedName).toBe("Whole Milk");
+  });
+
+  it("falls back both names to a placeholder for empty OCR lines", () => {
+    const output = mapExtractedLineToCreateInput({ rawName: "   " });
+
+    expect(output.rawName).toBe("Unknown item");
+    expect(output.normalizedName).toBe("Unknown item");
   });
 
   it("infers quantity and unit from text", () => {

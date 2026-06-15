@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
+import { MetricsModule } from "./common/metrics/metrics.module";
 import { AuthModule } from "./modules/auth/auth.module";
 import { DashboardModule } from "./modules/dashboard/dashboard.module";
 import { DatabaseModule } from "./database/database.module";
@@ -16,6 +17,7 @@ import { UsersModule } from "./modules/users/users.module";
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     DatabaseModule,
+    MetricsModule,
     HealthModule,
     AuthModule,
     UsersModule,

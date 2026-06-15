@@ -336,4 +336,59 @@ test.describe("Add flows: manual and receipt review", () => {
     // Date pre-filled
     await expect(page.getByTestId("manual-expiration-input")).toHaveValue("2026-07-21");
   });
+
+  test("manual entry computes price paid from price per unit and quantity", async ({
+    page,
+    request,
+  }) => {
+    const ts = Date.now();
+    const auth = await registerUser(request, `pw.add.unitprice.${ts}@example.com`);
+
+    let createPantryPayload: Record<string, unknown> | null = null;
+
+    await page.route("**/pantry/items", async (route) => {
+      if (route.request().method() === "POST") {
+        createPantryPayload = route.request().postDataJSON() as Record<string, unknown>;
+        await route.fulfill({
+          status: 201,
+          contentType: "application/json",
+          body: JSON.stringify({
+            id: "item-1",
+            name: createPantryPayload.name,
+            quantity: createPantryPayload.quantity,
+            unit: createPantryPayload.unit,
+            expirationDate: createPantryPayload.expirationDate ?? null,
+            pricePaid:
+              typeof createPantryPayload.pricePaid === "number"
+                ? Number(createPantryPayload.pricePaid).toFixed(2)
+                : null,
+            createdAt: new Date().toISOString(),
+          }),
+        });
+        return;
+      }
+
+      await route.fulfill({ status: 200, contentType: "application/json", body: "[]" });
+    });
+
+    await seedSession(page, auth);
+    await page.goto(`${FRONT_BASE_URL}/add/manual`);
+
+    await page.getByPlaceholder("e.g. Greek Yogurt").fill("Greek Yogurt");
+    await page.getByTestId("manual-quantity-input").fill("3");
+
+    // Entering price per unit auto-fills the total price paid (3 × 1.50 = 4.50).
+    await page.getByTestId("manual-unit-price-input").fill("1.50");
+    await expect(page.getByTestId("manual-price-input")).toHaveValue("4.50");
+
+    // Changing the quantity recomputes the total (4 × 1.50 = 6.00).
+    await page.getByTestId("manual-quantity-input").fill("4");
+    await expect(page.getByTestId("manual-price-input")).toHaveValue("6.00");
+
+    await page.getByRole("button", { name: "Save item" }).click();
+
+    expect(createPantryPayload).toBeTruthy();
+    expect(createPantryPayload?.quantity).toBe(4);
+    expect(createPantryPayload?.pricePaid).toBe(6);
+  });
 });

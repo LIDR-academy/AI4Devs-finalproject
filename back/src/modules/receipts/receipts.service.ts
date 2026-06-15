@@ -1,6 +1,7 @@
 import {
   BadGatewayException,
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Inject,
   Injectable,
@@ -9,11 +10,14 @@ import {
   ServiceUnavailableException,
 } from "@nestjs/common";
 import { ReceiptProcessingStatus } from "@prisma/client";
+import { MetricsService } from "../../common/metrics/metrics.service";
 import { PrismaService } from "../../database/prisma.service";
 import { ExpirationRulesService } from "../expiration/expiration-rules.service";
+import { HouseholdsService } from "../households/households.service";
 import { UsersService } from "../users/users.service";
 import { ConfirmReceiptItemsDto } from "./dto/confirm-receipt-items.dto";
 import { mapExtractedLineToCreateInput } from "./mappers/receipt-extraction.mapper";
+import { RECEIPT_METRICS } from "./receipts.metrics";
 import {
   OcrTimeoutError,
   OcrTransientError,
@@ -46,7 +50,9 @@ export class ReceiptsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
+    private readonly householdsService: HouseholdsService,
     private readonly expirationRulesService: ExpirationRulesService,
+    private readonly metrics: MetricsService,
     @Inject(RECEIPT_STORAGE_PORT)
     private readonly storage: ReceiptStoragePort,
     @Inject(RECEIPT_OCR_PORT)
@@ -59,26 +65,30 @@ export class ReceiptsService {
 
     this.logger.log(`Starting receipt upload for user=${userId}`);
 
+    const householdId = await this.householdsService.getActiveHouseholdId(userId);
+
     const storageResult = await this.storage.savePrivate({
       buffer: uploadedFile.buffer,
       contentType: uploadedFile.mimetype,
       originalName: uploadedFile.originalname,
     });
 
+    // Receipts start as PENDING and only move to PROCESSING once OCR begins.
     const createdReceipt = await this.prisma.receipt.create({
       data: {
         userId,
+        householdId,
         originalFilename: uploadedFile.originalname,
         mimeType: uploadedFile.mimetype,
         sizeBytes: uploadedFile.size,
         storageBucket: storageResult.bucket,
         storageKey: storageResult.key,
-        ocrStatus: ReceiptProcessingStatus.PROCESSING,
+        ocrStatus: ReceiptProcessingStatus.PENDING,
       },
     });
 
     try {
-      const extractedLines = await this.extractLinesWithRetry({
+      const extractedLines = await this.extractLinesWithRetry(createdReceipt.id, {
         buffer: uploadedFile.buffer,
         contentType: uploadedFile.mimetype,
         originalName: uploadedFile.originalname,
@@ -97,6 +107,7 @@ export class ReceiptsService {
         },
       });
 
+      this.metrics.increment(RECEIPT_METRICS.uploadSuccess);
       this.logger.log(`Receipt OCR completed for receipt=${createdReceipt.id}`);
     } catch (error) {
       const errorMessage =
@@ -111,6 +122,7 @@ export class ReceiptsService {
         },
       });
 
+      this.metrics.increment(RECEIPT_METRICS.uploadFailure);
       this.logger.error(
         `Receipt OCR failed for receipt=${createdReceipt.id}: ${errorMessage}`,
       );
@@ -130,8 +142,14 @@ export class ReceiptsService {
   async getById(userId: string, id: string) {
     await this.assertUserCanAccessReceipts(userId);
 
+    // Household members share visibility: a receipt is accessible when its owner
+    // is any active member of the caller's household (which always includes the
+    // caller themselves).
+    const memberUserIds =
+      await this.householdsService.getHouseholdMemberUserIds(userId);
+
     const receipt = await this.prisma.receipt.findFirst({
-      where: { id, userId },
+      where: { id, userId: { in: memberUserIds } },
       include: {
         items: {
           orderBy: { createdAt: "asc" },
@@ -171,6 +189,10 @@ export class ReceiptsService {
       );
     }
 
+    if (receipt.confirmedAt) {
+      throw new ConflictException("Receipt has already been confirmed");
+    }
+
     const allowedItemIds = new Set(receipt.items.map((item) => item.id));
     const invalidId = dto.itemIds.find((itemId) => !allowedItemIds.has(itemId));
     if (invalidId) {
@@ -199,6 +221,12 @@ export class ReceiptsService {
         data: {
           userConfirmed: true,
         },
+      });
+
+      // Mark the receipt as finalized so any later confirmation returns 409.
+      await tx.receipt.update({
+        where: { id: receiptId },
+        data: { confirmedAt: new Date() },
       });
 
       if (!addToPantry) {
@@ -243,39 +271,58 @@ export class ReceiptsService {
       }
     });
 
+    this.metrics.increment(RECEIPT_METRICS.confirmation);
     this.logger.log(`Receipt items confirmed for receipt=${receiptId}`);
     return this.getById(userId, receiptId);
   }
 
-  private async extractLinesWithRetry(params: {
-    buffer: Buffer;
-    contentType: string;
-    originalName: string;
-  }): Promise<OcrExtractedLine[]> {
+  private async extractLinesWithRetry(
+    receiptId: string,
+    params: {
+      buffer: Buffer;
+      contentType: string;
+      originalName: string;
+    },
+  ): Promise<OcrExtractedLine[]> {
+    // Mark the receipt as actively processing right before OCR begins.
+    await this.prisma.receipt.update({
+      where: { id: receiptId },
+      data: { ocrStatus: ReceiptProcessingStatus.PROCESSING },
+    });
+
     const maxAttempts = 3;
     let lastError: unknown;
+    const startedAt = Date.now();
 
-    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-      try {
-        return await this.ocr.extractLines(params);
-      } catch (error) {
-        lastError = error;
-        const isRetryable =
-          error instanceof OcrTransientError || error instanceof OcrTimeoutError;
+    try {
+      for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+        try {
+          return await this.ocr.extractLines(params);
+        } catch (error) {
+          lastError = error;
+          this.metrics.increment(RECEIPT_METRICS.ocrFailure);
+          const isRetryable =
+            error instanceof OcrTransientError || error instanceof OcrTimeoutError;
 
-        this.logger.warn(
-          `OCR attempt ${attempt}/${maxAttempts} failed: ${
-            error instanceof Error ? error.message : "Unknown error"
-          }`,
-        );
+          this.logger.warn(
+            `OCR attempt ${attempt}/${maxAttempts} failed: ${
+              error instanceof Error ? error.message : "Unknown error"
+            }`,
+          );
 
-        if (!isRetryable || attempt === maxAttempts) {
-          throw error;
+          if (!isRetryable || attempt === maxAttempts) {
+            throw error;
+          }
         }
       }
-    }
 
-    throw lastError;
+      throw lastError;
+    } finally {
+      this.metrics.observeDuration(
+        RECEIPT_METRICS.ocrDurationMs,
+        Date.now() - startedAt,
+      );
+    }
   }
 
   private requireValidFile(file: UploadedReceiptFile | undefined): UploadedReceiptFile {
