@@ -121,6 +121,7 @@ function ItemDetail() {
         : "Low confidence";
 
   async function handleEstimate() {
+    if (!item) return;
     setExpirationError(null);
     setExpirationMessage(null);
     setIsEstimating(true);
@@ -139,6 +140,7 @@ function ItemDetail() {
   }
 
   async function handleDetailsSave() {
+    if (!item) return;
     const qty = parseInt(quantityInput, 10);
     const price = pricePaidInput !== "" ? parseFloat(pricePaidInput) : undefined;
 
@@ -170,7 +172,9 @@ function ItemDetail() {
     }
   }
 
-  async function handleOverrideSave() {    if (!expirationInput) {
+  async function handleOverrideSave() {
+    if (!item) return;
+    if (!expirationInput) {
       setExpirationError("Please select an expiration date.");
       return;
     }

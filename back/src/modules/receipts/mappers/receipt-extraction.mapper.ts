@@ -33,12 +33,17 @@ function inferQuantityAndUnit(rawName: string): { quantity?: number; unit?: stri
 export function mapExtractedLineToCreateInput(
   line: OcrExtractedLine,
 ): Prisma.ReceiptItemCreateWithoutReceiptInput {
-  const normalizedRawName = normalizeName(line.rawName || "");
-  const rawName = normalizedRawName || "Unknown item";
-  const inferred = inferQuantityAndUnit(rawName);
+  const collapsed = normalizeName(line.rawName || "");
+  // rawName keeps the original OCR text when it has real content; normalizedName is
+  // always the whitespace-collapsed, trimmed form. Both fall back to a placeholder
+  // when the OCR line is empty or whitespace-only.
+  const rawName = collapsed ? line.rawName : "Unknown item";
+  const normalizedName = collapsed || "Unknown item";
+  const inferred = inferQuantityAndUnit(normalizedName);
 
   return {
     rawName,
+    normalizedName,
     quantity: line.quantity ?? inferred.quantity ?? null,
     unit: line.unit ?? inferred.unit ?? null,
     unitPriceEur: line.unitPriceEur ?? null,

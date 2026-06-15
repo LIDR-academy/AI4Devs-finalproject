@@ -50,9 +50,11 @@ interface ReceiptRecord {
   ocrStatus: ReceiptProcessingStatus;
   ocrError: string | null;
   processedAt: Date | null;
+  confirmedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
   userId: string;
+  householdId: string | null;
 }
 
 describe("Receipts (e2e)", () => {
@@ -83,6 +85,10 @@ describe("Receipts (e2e)", () => {
   prismaMock = {
     $connect: jest.fn().mockResolvedValue(undefined),
     $transaction: jest.fn(async (callback: any) => callback(prismaMock)),
+    householdMember: {
+      findFirst: jest.fn(async () => null),
+      findMany: jest.fn(async () => []),
+    },
     user: {
       findUnique: jest.fn(
         async ({ where }: { where: { id?: string; email?: string } }) => {
@@ -149,6 +155,7 @@ describe("Receipts (e2e)", () => {
         }: {
           data: {
             userId: string;
+            householdId?: string | null;
             originalFilename: string;
             mimeType: string;
             sizeBytes: number;
@@ -161,6 +168,7 @@ describe("Receipts (e2e)", () => {
           const created: ReceiptRecord = {
             id: randomUUID(),
             userId: data.userId,
+            householdId: data.householdId ?? null,
             originalFilename: data.originalFilename,
             mimeType: data.mimeType,
             sizeBytes: data.sizeBytes,
@@ -169,6 +177,7 @@ describe("Receipts (e2e)", () => {
             ocrStatus: data.ocrStatus,
             ocrError: null,
             processedAt: null,
+            confirmedAt: null,
             createdAt: now,
             updatedAt: now,
           };
@@ -186,8 +195,14 @@ describe("Receipts (e2e)", () => {
             ocrStatus?: ReceiptProcessingStatus;
             ocrError?: string;
             processedAt?: Date;
+            confirmedAt?: Date;
             items?: {
-              create: Array<{ rawName: string; quantity?: number | null; unit?: string | null }>;
+              create: Array<{
+                rawName: string;
+                normalizedName?: string;
+                quantity?: number | null;
+                unit?: string | null;
+              }>;
             };
           };
         }) => {
@@ -201,6 +216,7 @@ describe("Receipts (e2e)", () => {
             ocrStatus: data.ocrStatus ?? current.ocrStatus,
             ocrError: data.ocrError ?? current.ocrError,
             processedAt: data.processedAt ?? current.processedAt,
+            confirmedAt: data.confirmedAt ?? current.confirmedAt,
             updatedAt: new Date(),
           };
           receiptsById.set(where.id, updated);
@@ -228,11 +244,13 @@ describe("Receipts (e2e)", () => {
         async ({
           where,
         }: {
-          where: { id: string; userId: string };
+          where: { id: string; userId: string | { in: string[] } };
           include: { items: { orderBy: { createdAt: "asc" } } };
         }) => {
           const receipt = receiptsById.get(where.id);
-          if (!receipt || receipt.userId !== where.userId) {
+          const allowedUserIds =
+            typeof where.userId === "object" ? where.userId.in : [where.userId];
+          if (!receipt || !allowedUserIds.includes(receipt.userId)) {
             return null;
           }
 

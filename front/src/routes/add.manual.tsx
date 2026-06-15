@@ -33,6 +33,7 @@ function ManualEntryPage() {
   const [unit, setUnit] = useState<(typeof UNITS)[number]>("unit");
   const [location, setLocation] = useState<(typeof LOCATIONS)[number]>("Fridge");
   const [expiresAt, setExpiresAt] = useState("");
+  const [unitPrice, setUnitPrice] = useState("");
   const [price, setPrice] = useState("");
   const [notes, setNotes] = useState("");
   const [saved, setSaved] = useState(false);
@@ -44,6 +45,30 @@ function ManualEntryPage() {
 
   const canSave = name.trim().length > 0 && Number(quantity) >= 1;
   const canEstimate = name.trim().length > 0;
+
+  // Keep the total "Price paid" in sync when the user enters a per-unit price.
+  function recomputePriceFromUnit(nextUnitPrice: string, nextQuantity: string) {
+    const parsedUnitPrice = parseFloat(nextUnitPrice);
+    const parsedQuantity = parseFloat(nextQuantity);
+    if (
+      !Number.isNaN(parsedUnitPrice) &&
+      !Number.isNaN(parsedQuantity) &&
+      parsedUnitPrice >= 0 &&
+      parsedQuantity > 0
+    ) {
+      setPrice((parsedUnitPrice * parsedQuantity).toFixed(2));
+    }
+  }
+
+  function handleUnitPriceChange(value: string) {
+    setUnitPrice(value);
+    recomputePriceFromUnit(value, quantity);
+  }
+
+  function handleQuantityChange(value: string) {
+    setQuantity(value);
+    recomputePriceFromUnit(unitPrice, value);
+  }
 
   async function handleEstimateExpiration() {
     setEstimateError(null);
@@ -183,9 +208,10 @@ function ManualEntryPage() {
               min={1}
               step={1}
               value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
+              onChange={(e) => handleQuantityChange(e.target.value)}
               placeholder="1"
               className="input-ios"
+              data-testid="manual-quantity-input"
             />
           </Field>
           <Field label="Unit">
@@ -204,6 +230,16 @@ function ManualEntryPage() {
               ))}
             </select>
           </Field>
+          <Field label="Price per unit (€)">
+            <input
+              value={unitPrice}
+              onChange={(e) => handleUnitPriceChange(e.target.value)}
+              inputMode="decimal"
+              placeholder="1.20"
+              className="input-ios"
+              data-testid="manual-unit-price-input"
+            />
+          </Field>
           <Field label="Price paid (€)">
             <input
               value={price}
@@ -211,6 +247,7 @@ function ManualEntryPage() {
               inputMode="decimal"
               placeholder="2.40"
               className="input-ios"
+              data-testid="manual-price-input"
             />
           </Field>
           <Field label="Expires on" full>
