@@ -15,6 +15,13 @@ import {
   type ConsumptionEventRecord,
   type PantryApiItem,
 } from "@/features/pantry/pantry.api";
+import {
+  consumeHighlightedItem,
+  readPantryFilter,
+  readPantrySearch,
+  savePantryFilter,
+  savePantrySearch,
+} from "@/features/pantry/pantry-view-state";
 
 export const Route = createFileRoute("/pantry")({
   beforeLoad: requireAuthBeforeLoad,
@@ -39,6 +46,36 @@ function PantryPage() {
   const [error, setError] = useState<string | null>(null);
   const [reAddMessage, setReAddMessage] = useState<string | null>(null);
   const [itemEmojis, setItemEmojis] = useState<Record<string, string>>({});
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
+
+  // Restore preserved filter/search and pick up a just-added item to highlight.
+  // Done in an effect (not a lazy initializer) to avoid SSR/client hydration mismatch.
+  useEffect(() => {
+    const savedFilter = readPantryFilter();
+    if (savedFilter && (filters as readonly string[]).includes(savedFilter)) {
+      setFilter(savedFilter as (typeof filters)[number]);
+    }
+    const savedSearch = readPantrySearch();
+    if (savedSearch) {
+      setQ(savedSearch);
+    }
+
+    const newItemId = consumeHighlightedItem();
+    if (newItemId) {
+      setHighlightedId(newItemId);
+      const timer = setTimeout(() => setHighlightedId(null), 2500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  // Persist filter/search so they survive navigating to add-item and back.
+  useEffect(() => {
+    savePantryFilter(filter);
+  }, [filter]);
+
+  useEffect(() => {
+    savePantrySearch(q);
+  }, [q]);
 
   useEffect(() => {
     try {
@@ -103,11 +140,25 @@ function PantryPage() {
 
   async function handleReAdd(event: ConsumptionEventRecord) {
     try {
-      await createPantryItem({
+      const created = await createPantryItem({
         name: event.itemName ?? "Unknown item",
         quantity: event.quantity,
         unit: event.itemUnit ?? "unit",
       });
+      // Carry the emoji from the name-based fallback map so the re-added item
+      // keeps the same icon the user previously set, even though it has a new id.
+      try {
+        const byName = JSON.parse(localStorage.getItem("rsf_name_emojis") ?? "{}") as Record<string, string>;
+        const savedEmoji = event.itemName ? byName[event.itemName] : undefined;
+        if (savedEmoji) {
+          const byId = JSON.parse(localStorage.getItem("rsf_item_emojis") ?? "{}") as Record<string, string>;
+          byId[created.id] = savedEmoji;
+          localStorage.setItem("rsf_item_emojis", JSON.stringify(byId));
+          setItemEmojis((prev) => ({ ...prev, [created.id]: savedEmoji }));
+        }
+      } catch {
+        // localStorage unavailable — silently skip
+      }
       // Remove from the consumed/wasted list immediately
       setEvents((current) => current.filter((e) => e.id !== event.id));
       // Refresh pantry items so All/Expiring/location filters show the re-added item
@@ -132,7 +183,7 @@ function PantryPage() {
         expiresAt: item.expirationDate ?? new Date("2100-01-01").toISOString(),
         estimated: false,
         pricePaid: item.pricePaid ? Number(item.pricePaid) : 0,
-        location: "Pantry",
+        location: (item.storageLocation ?? "Pantry") as PantryItem["location"],
       })),
     [items, itemEmojis],
   );
@@ -252,7 +303,7 @@ function PantryPage() {
           {filtered.map((i) => (
             <li key={i.id}>
               <Link to="/item/$id" params={{ id: i.id }} className="block">
-                <ItemRow item={i} />
+                <ItemRow item={i} highlighted={i.id === highlightedId} />
               </Link>
             </li>
           ))}
@@ -265,7 +316,7 @@ function PantryPage() {
   );
 }
 
-function ItemRow({ item }: { item: PantryItem }) {
+function ItemRow({ item, highlighted }: { item: PantryItem; highlighted?: boolean }) {
   const d = daysUntil(item.expiresAt);
   const tone =
     d < 0 ? "text-destructive" :
@@ -279,7 +330,14 @@ function ItemRow({ item }: { item: PantryItem }) {
     `${d} days left`;
 
   return (
-    <div className="ios-card flex items-center gap-4 p-3.5 transition active:scale-[0.99]">
+    <div
+      className={cn(
+        "ios-card flex items-center gap-4 p-3.5 transition active:scale-[0.99]",
+        highlighted && "ring-2 ring-primary/60 bg-primary/5 animate-pulse",
+      )}
+      data-testid={highlighted ? "pantry-item-highlighted" : undefined}
+      data-highlighted={highlighted ? "true" : undefined}
+    >
       <div className="grid size-12 place-items-center rounded-xl bg-secondary text-2xl">{item.emoji}</div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">

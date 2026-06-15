@@ -1,12 +1,25 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronLeft, Check } from "lucide-react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import {
   requireAuthBeforeLoad,
   useRequireAuthRedirect,
 } from "@/features/auth/route-guard";
-import { createPantryItem, estimateExpirationByName, type QuickExpirationEstimate } from "@/features/pantry/pantry.api";
+import {
+  ApiError,
+  createPantryItem,
+  estimateExpirationByName,
+  type QuickExpirationEstimate,
+} from "@/features/pantry/pantry.api";
+import {
+  validateAddItem,
+  type AddItemErrors,
+} from "@/features/pantry/add-item.schema";
+import { setHighlightedItem } from "@/features/pantry/pantry-view-state";
+import { clearSession } from "@/features/auth/session";
+import { trackEvent } from "@/shared/lib/analytics";
 
 export const Route = createFileRoute("/add/manual")({
   beforeLoad: requireAuthBeforeLoad,
@@ -18,7 +31,7 @@ const LOCATIONS = ["Fridge", "Pantry", "Freezer"] as const;
 const UNITS = ["unit", "g", "kg", "ml", "l", "pack"] as const;
 const EMOJI_SUGGEST = ["🍎", "🥛", "🍞", "🥩", "🐟", "🥦", "🥚", "🧀", "🍝", "🥑", "🍌", "🍅"];
 
-function ManualEntryPage() {
+export function ManualEntryPage() {
   const authed = useRequireAuthRedirect();
 
   if (!authed) {
@@ -37,14 +50,18 @@ function ManualEntryPage() {
   const [price, setPrice] = useState("");
   const [notes, setNotes] = useState("");
   const [saved, setSaved] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<AddItemErrors>({});
+  const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEstimating, setIsEstimating] = useState(false);
   const [expirationEstimate, setExpirationEstimate] = useState<QuickExpirationEstimate | null>(null);
   const [estimateError, setEstimateError] = useState<string | null>(null);
 
-  const canSave = name.trim().length > 0 && Number(quantity) >= 1;
   const canEstimate = name.trim().length > 0;
+
+  useEffect(() => {
+    trackEvent("pantry_add_item_opened");
+  }, []);
 
   // Keep the total "Price paid" in sync when the user enters a per-unit price.
   function recomputePriceFromUnit(nextUnitPrice: string, nextQuantity: string) {
@@ -88,60 +105,94 @@ function ManualEntryPage() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
+    setFormError(null);
+    setFieldErrors({});
 
-    if (!canSave) {
-      setError("Name and quantity are required.");
+    const validation = validateAddItem({
+      name,
+      quantity: Number(quantity),
+      unit,
+      expirationDate: expiresAt || undefined,
+      unitPrice: unitPrice.trim() === "" ? undefined : Number(unitPrice),
+      pricePaid: price.trim() === "" ? undefined : Number(price),
+    });
+
+    if (!validation.success || !validation.values) {
+      setFieldErrors(validation.errors);
       return;
     }
 
-    const parsedQuantity = Number(quantity);
-    if (!Number.isInteger(parsedQuantity) || parsedQuantity <= 0) {
-      setError("Quantity must be a whole number greater than 0.");
-      return;
-    }
-
-    const parsedPrice = price.trim() === "" ? undefined : Number(price);
-    if (
-      parsedPrice !== undefined &&
-      (!Number.isFinite(parsedPrice) || parsedPrice < 0)
-    ) {
-      setError("Price must be a non-negative number.");
-      return;
-    }
+    const values = validation.values;
+    // Only emitted once client validation passes, per the ticket definition.
+    trackEvent("pantry_add_item_submitted", { hasExpiration: Boolean(values.expirationDate) });
 
     setIsSubmitting(true);
     try {
       const created = await createPantryItem({
-        name,
-        quantity: parsedQuantity,
-        unit,
-        expirationDate: expiresAt || undefined,
-        ...(parsedPrice !== undefined && {
-          pricePaid: Number(parsedPrice.toFixed(2)),
+        name: values.name,
+        quantity: values.quantity,
+        unit: values.unit,
+        storageLocation: location,
+        expirationDate: values.expirationDate,
+        ...(values.pricePaid !== undefined && {
+          pricePaid: Number(values.pricePaid.toFixed(2)),
         }),
       });
 
-      // Persist emoji selection so /add recently-added list can display it
+      // Persist emoji by item id and by name (name fallback is used when re-adding consumed/wasted items).
       try {
-        const stored = JSON.parse(localStorage.getItem("rsf_item_emojis") ?? "{}") as Record<string, string>;
-        stored[created.id] = emoji;
-        localStorage.setItem("rsf_item_emojis", JSON.stringify(stored));
+        const byId = JSON.parse(localStorage.getItem("rsf_item_emojis") ?? "{}") as Record<string, string>;
+        byId[created.id] = emoji;
+        localStorage.setItem("rsf_item_emojis", JSON.stringify(byId));
+
+        const byName = JSON.parse(localStorage.getItem("rsf_name_emojis") ?? "{}") as Record<string, string>;
+        byName[values.name] = emoji;
+        localStorage.setItem("rsf_name_emojis", JSON.stringify(byName));
       } catch {
         // localStorage unavailable — silently skip
       }
 
+      trackEvent("pantry_add_item_success");
+      setHighlightedItem(created.id);
       setSaved(true);
+      toast.success(`"${values.name}" added to your pantry.`);
       setTimeout(() => navigate({ to: "/pantry" }), 700);
     } catch (apiError) {
-      setError(
-        apiError instanceof Error
-          ? apiError.message
-          : "Could not save item. Please try again.",
-      );
+      handleSaveError(apiError);
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  function handleSaveError(apiError: unknown) {
+    const status = apiError instanceof ApiError ? apiError.status : undefined;
+
+    // Session expired mid-submit: clear and bounce to login (matches the guard).
+    if (status === 401) {
+      trackEvent("pantry_add_item_failed", { reason: "unauthorized" });
+      clearSession();
+      void navigate({ to: "/auth", replace: true });
+      return;
+    }
+
+    let message: string;
+    let reason: string;
+    if (status === 403) {
+      message = "You don't have access to this household's pantry.";
+      reason = "forbidden";
+    } else if (status !== undefined && status >= 500) {
+      message = "Something went wrong on our end. Please try again.";
+      reason = "server_error";
+    } else if (status === 400) {
+      message = apiError instanceof Error ? apiError.message : "Please check the form and try again.";
+      reason = "validation";
+    } else {
+      message = apiError instanceof Error ? apiError.message : "Could not save item. Please try again.";
+      reason = "unknown";
+    }
+
+    trackEvent("pantry_add_item_failed", { reason });
+    setFormError(message);
   }
 
   return (
@@ -178,8 +229,12 @@ function ManualEntryPage() {
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Greek Yogurt"
               className="flex-1 h-14 rounded-2xl bg-secondary px-4 text-[15px] outline-none focus:ring-2 focus:ring-primary/40"
+              data-testid="manual-name-input"
+              aria-invalid={fieldErrors.name ? true : undefined}
+              aria-describedby={fieldErrors.name ? "manual-name-error" : undefined}
             />
           </div>
+          <FieldError id="manual-name-error" testId="manual-name-error" message={fieldErrors.name} />
           <div className="mt-3 flex flex-wrap gap-1.5">
             {EMOJI_SUGGEST.map((e) => (
               <button
@@ -212,7 +267,10 @@ function ManualEntryPage() {
               placeholder="1"
               className="input-ios"
               data-testid="manual-quantity-input"
+              aria-invalid={fieldErrors.quantity ? true : undefined}
+              aria-describedby={fieldErrors.quantity ? "manual-quantity-error" : undefined}
             />
+            <FieldError id="manual-quantity-error" testId="manual-quantity-error" message={fieldErrors.quantity} />
           </Field>
           <Field label="Unit">
             <select value={unit} onChange={(e) => setUnit(e.target.value as (typeof UNITS)[number])} className="input-ios">
@@ -238,7 +296,10 @@ function ManualEntryPage() {
               placeholder="1.20"
               className="input-ios"
               data-testid="manual-unit-price-input"
+              aria-invalid={fieldErrors.unitPrice ? true : undefined}
+              aria-describedby={fieldErrors.unitPrice ? "manual-unit-price-error" : undefined}
             />
+            <FieldError id="manual-unit-price-error" testId="manual-unit-price-error" message={fieldErrors.unitPrice} />
           </Field>
           <Field label="Price paid (€)">
             <input
@@ -248,7 +309,10 @@ function ManualEntryPage() {
               placeholder="2.40"
               className="input-ios"
               data-testid="manual-price-input"
+              aria-invalid={fieldErrors.pricePaid ? true : undefined}
+              aria-describedby={fieldErrors.pricePaid ? "manual-price-error" : undefined}
             />
+            <FieldError id="manual-price-error" testId="manual-price-error" message={fieldErrors.pricePaid} />
           </Field>
           <Field label="Expires on" full>
             <div className="space-y-2">
@@ -288,9 +352,13 @@ function ManualEntryPage() {
           </Field>
         </section>
 
-        {error && (
-          <p className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-[13px] text-destructive">
-            {error}
+        {formError && (
+          <p
+            className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-[13px] text-destructive"
+            role="alert"
+            data-testid="manual-form-error"
+          >
+            {formError}
           </p>
         )}
 
@@ -307,7 +375,8 @@ function ManualEntryPage() {
 
         <button
           type="submit"
-          disabled={!canSave || saved || isSubmitting}
+          disabled={saved || isSubmitting}
+          data-testid="manual-save-btn"
           className="w-full h-14 rounded-2xl bg-primary text-primary-foreground text-[16px] font-semibold disabled:opacity-50 active:scale-[0.99] transition flex items-center justify-center gap-2"
         >
           {isSubmitting ? (
@@ -348,5 +417,16 @@ function Field({ label, children, full }: { label: string; children: React.React
       <Label>{label}</Label>
       {children}
     </div>
+  );
+}
+
+function FieldError({ id, testId, message }: { id: string; testId: string; message?: string }) {
+  if (!message) {
+    return null;
+  }
+  return (
+    <p id={id} data-testid={testId} role="alert" className="mt-1 px-1 text-[12px] text-destructive">
+      {message}
+    </p>
   );
 }

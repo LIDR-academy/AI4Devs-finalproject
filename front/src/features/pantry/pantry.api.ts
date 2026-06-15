@@ -9,11 +9,15 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? DEFAULT_API_BASE_URL;
 export const PANTRY_UNITS = ["unit", "g", "kg", "ml", "l", "pack"] as const;
 export type PantryUnit = (typeof PANTRY_UNITS)[number];
 
+export const STORAGE_LOCATIONS = ["Pantry", "Fridge", "Freezer"] as const;
+export type StorageLocation = (typeof STORAGE_LOCATIONS)[number];
+
 export interface PantryApiItem {
   id: string;
   name: string;
   quantity: number;
   unit: string;
+  storageLocation: string;
   pricePaid: string | null;
   expirationDate: string | null;
   createdAt: string;
@@ -22,6 +26,7 @@ export interface PantryApiItem {
 export interface UpdatePantryItemPayload {
   quantity?: number;
   unit?: string;
+  storageLocation?: string;
   pricePaid?: number;
 }
 
@@ -31,6 +36,7 @@ export interface CreatePantryItemPayload {
   name: string;
   quantity: number;
   unit: string;
+  storageLocation?: string;
   expirationDate?: string;
   pricePaid?: number;
 }
@@ -61,6 +67,21 @@ interface ApiErrorBody {
   code?: string;
   itemName?: string;
   daysPastExpiry?: number;
+}
+
+/**
+ * Error carrying the HTTP status so callers can branch on it (e.g. 403 → household
+ * access warning, 5xx → retry-friendly message). Extends Error, so existing
+ * `instanceof Error` / `.message` consumers keep working unchanged.
+ */
+export class ApiError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
 }
 
 export class WasteConfirmationRequiredError extends Error {
@@ -106,7 +127,7 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
     const message = Array.isArray(errorBody.message)
       ? errorBody.message.join(", ")
       : (errorBody.message ?? "Request failed");
-    throw new Error(message);
+    throw new ApiError(response.status, message);
   }
 
   return (await response.json()) as T;

@@ -171,4 +171,107 @@ test.describe("Item details edit — quantity, unit, price", () => {
       "Quantity must be a positive number.",
     );
   });
+
+  test("storage location can be changed and is persisted to backend", async ({
+    page,
+    request,
+  }) => {
+    const ts = Date.now();
+    const auth = await registerUser(
+      request,
+      `pw.item-location.${ts}@pantry-e2e.example.com`,
+    );
+
+    const item = await createAndGetPantryItem(request, auth.accessToken, "Ice Cream", 30);
+
+    await seedSession(page, auth);
+    await page.goto(`${FRONT_BASE_URL}/item/${item.id}`);
+
+    // Default is Pantry — select Freezer
+    const locationSelect = page.getByTestId("item-storage-location-select");
+    await expect(locationSelect).toBeVisible();
+    await locationSelect.selectOption("Freezer");
+
+    await page.getByTestId("item-details-save").click();
+    await expect(page.getByTestId("item-details-message")).toContainText("Details saved.");
+
+    // Subtitle in header reflects the new location
+    await expect(page.getByText(/Freezer/)).toBeVisible();
+
+    // Reload and confirm persistence
+    await page.reload();
+    await expect(page.getByTestId("item-storage-location-select")).toHaveValue("Freezer");
+
+    // Confirm via API
+    const listRes = await request.get(`${API_BASE_URL}/pantry/items`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+    });
+    const items = (await listRes.json()) as Array<{ id: string; storageLocation: string }>;
+    const saved = items.find((i) => i.id === item.id);
+    expect(saved?.storageLocation).toBe("Freezer");
+  });
+
+  test("storage location filter shows only Fridge items", async ({ page, request }) => {
+    const ts = Date.now();
+    const auth = await registerUser(
+      request,
+      `pw.item-filter-fridge.${ts}@pantry-e2e.example.com`,
+    );
+
+    // Create one item in each location via API
+    const fridgeRes = await request.post(`${API_BASE_URL}/pantry/items`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+      data: { name: "Fridge Milk", quantity: 1, unit: "l", storageLocation: "Fridge" },
+    });
+    expect(fridgeRes.ok()).toBeTruthy();
+    const pantryRes = await request.post(`${API_BASE_URL}/pantry/items`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+      data: { name: "Pantry Pasta", quantity: 1, unit: "unit", storageLocation: "Pantry" },
+    });
+    expect(pantryRes.ok()).toBeTruthy();
+
+    await seedSession(page, auth);
+    await page.goto(`${FRONT_BASE_URL}/pantry`);
+
+    // Fridge filter shows only fridge items
+    await page.getByRole("button", { name: "Fridge" }).click();
+    await expect(page.getByText("Fridge Milk")).toBeVisible();
+    await expect(page.getByText("Pantry Pasta")).not.toBeVisible();
+
+    // Pantry filter shows only pantry items
+    await page.getByRole("button", { name: "Pantry" }).click();
+    await expect(page.getByText("Pantry Pasta")).toBeVisible();
+    await expect(page.getByText("Fridge Milk")).not.toBeVisible();
+  });
+
+  test("price per unit auto-computes price paid and both are persisted", async ({
+    page,
+    request,
+  }) => {
+    const ts = Date.now();
+    const auth = await registerUser(
+      request,
+      `pw.item-unit-price.${ts}@pantry-e2e.example.com`,
+    );
+
+    const item = await createAndGetPantryItem(request, auth.accessToken, "Olive Oil", 180);
+
+    await seedSession(page, auth);
+    await page.goto(`${FRONT_BASE_URL}/item/${item.id}`);
+
+    // Set quantity to 2 and unit price to 3.50 → price paid should auto-compute to 7.00
+    await page.getByTestId("item-quantity-input").fill("2");
+    await page.getByTestId("item-unit-price-input").fill("3.50");
+
+    await expect(page.getByTestId("item-price-input")).toHaveValue("7.00");
+
+    await page.getByTestId("item-details-save").click();
+    await expect(page.getByTestId("item-details-message")).toContainText("Details saved.");
+
+    // Reload and confirm both values persist
+    await page.reload();
+    await expect(page.getByTestId("item-quantity-input")).toHaveValue("2");
+    await expect(page.getByTestId("item-unit-price-input")).toHaveValue("3.50");
+    await expect(page.getByTestId("item-price-input")).toHaveValue("7.00");
+  });
 });
