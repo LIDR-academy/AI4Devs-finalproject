@@ -100,7 +100,7 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 
 "Based on the system we have defined so far, produce an entity-relationship diagram using Mermaid. Represent the core domain entities, their attributes, and relationships, especially around business profiling, structured discovery data, and generated digital assets. Include primary keys, foreign keys, and constraints. Ensure it supports all use cases defined earlier."
 
-*Resultado:* Diagrama ER con 9 entidades: BusinessProfile, DiscoverySession, ProfileField, CustomerPersona, BrandVoice, BusinessIdentityGraph, GeneratedAsset, AssetVariation, QualityCheck.
+*Resultado:* Diagrama ER con 9 entidades: Organization, User, BusinessProfile, AssetPackage, GeneratedAsset, AssetVariation, QualityCheck, AIRecommendation, PublicationTask.
 
 **Prompt 2: Descripción de entidades y cardinalidades**
 
@@ -121,6 +121,30 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 "Describe the three main backend endpoints in OpenAPI 3.0 format that support: discovery flow, profile management, and asset generation. For each endpoint include: request/response schemas, HTTP methods, status codes, error handling, and realistic examples. Endpoints: POST /api/discovery/sessions, GET /api/profiles/{profileId}, POST /api/assets/generate."
 
 *Resultado:* Especificación completa con schemas, ejemplos de request/response y documentación clara.
+
+**Prompt 2: Manejo de errores y códigos de estado**
+
+*Contexto: API - Robustez operativa*
+
+"Expand the API design to include detailed error handling for the main endpoints. Map the PRD-specific error conditions such as profile_not_normalized, gdpr_consent_required, quota_exceeded, invalid_format and insufficient_permissions to HTTP status codes and response payloads. Ensure each endpoint defines the expected 400/401/403/404/500 responses and uses a consistent error schema."
+
+*Resultado:* Descripción de errores y códigos de estado alineada con el PRD, con payloads de error reutilizables.
+
+**Prompt 3: Validación de request/response y restricciones**
+
+*Contexto: API - Contratos de datos*
+
+"Describe the input validation rules and schema constraints for the API requests and responses. Include required fields, field formats, enum restrictions, array size limits, and relation to domain rules like BusinessProfile status and GDPR consent. Highlight how invalid requests should fail fast with meaningful error messages."
+
+*Resultado:* Reglas de validación claras para request/response schemas y criterios de rechazo anticipado.
+
+**Prompt 4: Cross-cutting API concerns**
+
+*Contexto: API - Operaciones y seguridad*
+
+"Describe how cross-cutting concerns should be handled for the API layer: authentication, authorization, rate limiting, pagination, and error propagation. Use the PRD behavior to explain when requests should be authenticated, which endpoints require user role checks, and how throttling is communicated to clients."
+
+*Resultado:* Recomendaciones de patrones de autenticación, autorización y operación para el API.
 
 ---
 

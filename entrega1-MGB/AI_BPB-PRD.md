@@ -312,7 +312,7 @@ Principios aplicados:
   - content (text) -- canonical generated content
   - status (enum) -- pending, ready_for_review, needs_edit, approved, error
   - generated_at (timestamp)
-  - generated_by (fk User.id) -- null if system-initiated
+  - generated_by (fk User.id) NOT NULL -- user that requested the generation (Owner/Admin)
 
 - AssetVariation
   - id PK (uuid)

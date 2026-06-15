@@ -338,7 +338,7 @@ paths:
                   description: Respuestas estructuradas del descubrimiento
               required:
                 - user_id
-                - - responses
+                - responses
       responses:
         '200':
           description: Sesión de descubrimiento creada o actualizada
@@ -354,6 +354,39 @@ paths:
                   status:
                     type: string
                   next_step:
+                    type: string
+        '400':
+          description: Petición inválida
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+        '401':
+          description: Autenticación requerida o inválida
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
                     type: string
       examples:
         request:
@@ -417,6 +450,50 @@ paths:
                           type: string
                         pain_points:
                           type: string
+        '400':
+          description: Petición inválida
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+        '401':
+          description: Autenticación requerida o inválida
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+        '404':
+          description: Perfil no encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
       examples:
         response:
           value:
@@ -483,6 +560,37 @@ paths:
                           type: string
         '400':
           description: Petición inválida
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+        '401':
+          description: Autenticación requerida o inválida
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
       examples:
         request:
           value:
@@ -648,6 +756,13 @@ Casos borde:
   - Justificación: Incluye diseño de schema, creación de múltiples tablas y relaciones, y optimización de consultas; requiere mayor cuidado de integridad y estructura de datos.
 
 ---
+
+## 6.1 Fases Futuras
+
+Las historias de usuario Should-Have (Historias 6 y 7) se consideran parte de una fase siguiente al MVP. Estas mejoras de dashboard de métricas y revisión colaborativa son importantes, pero se han diferenciado para mantener el alcance actual enfocado en el onboarding, la normalización y la generación de activos revisables.
+
+- Historia 6: métricas básicas de activación y publicación. Se pospone para la próxima iteración una vez el flujo de generación/revisión esté validado.
+- Historia 7: compartir activos para revisión colaborativa con acceso temporal. Se planifica como una extensión de experiencia post-MVP para evitar complejidad adicional en el lanzamiento inicial.
 
 ## 7. Pull Requests
 
