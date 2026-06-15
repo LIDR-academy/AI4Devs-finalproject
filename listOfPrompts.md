@@ -556,3 +556,73 @@ was needed.
 
 Do not modify listOfPrompts.md.
 Write in Spanish.
+
+**************************************
+
+ENTREGA 2
+
+----------
+
+Abre el archivo `readme.md` y aplica los siguientes cambios de texto exactos. No modifiques nada más allá de lo indicado.
+
+CAMBIO 1 — Línea 327 (diagrama ER, campo status de GAMES):
+  ANTES:  string status "🔍 lobby | in_progress | finished"
+  DESPUÉS: string status "🔍 setup | in_progress | finished"
+
+CAMBIO 2 — Línea 435 (tabla de campos de `games`):
+  ANTES:  | `status` | string | 🔍 `lobby`, `in_progress`, `finished` |
+  DESPUÉS: | `status` | string | 🔍 `setup`, `in_progress`, `finished` |
+
+CAMBIO 3 — Línea 446 (descripción de campo `startedAt`):
+  ANTES:  | `startedAt` | timestamp? | Paso de `lobby` a `in_progress` |
+  DESPUÉS: | `startedAt` | timestamp? | Paso de `setup` a `in_progress` |
+
+CAMBIO 4 — Línea 924 (criterio de aceptación HU1 — LPT-5):
+  ANTES:  en estado `lobby` persistido
+  DESPUÉS: en estado `setup` persistido
+
+CAMBIO 5 — Línea 1004 (criterio de aceptación Ticket 1 — LPT-7):
+  ANTES:  mientras `status == lobby`
+  DESPUÉS: mientras `status == setup`
+
+CAMBIO 6 — Línea 1018 (tabla de impacto en modelo de datos, Ticket 1 — LPT-7):
+  ANTES:  | `status` | string | `lobby` → `in_progress` al empezar |
+  DESPUÉS: | `status` | string | `setup` → `in_progress` al empezar |
+
+CAMBIO 7 — Línea 1042 (nota de Security Rules, Ticket 1 — LPT-7):
+  ANTES:  transición `lobby` → `in_progress` en Firestore
+  DESPUÉS: transición `setup` → `in_progress` en Firestore
+
+  -------------------
+
+  Abre el archivo `readme.md` y aplica los siguientes cambios de texto exactos. No modifiques nada más allá de lo indicado.
+
+CAMBIO 1 — Línea 152 (tabla de componentes, fila "Data — local"):
+  ANTES:
+  | **Data — local** | Datasource + local storage (technology to be confirmed in Entrega 2) | Partidas en curso, historial local, favoritos; fuente de verdad durante el juego offline. |
+  
+  DESPUÉS:
+  | **Data — local** | Drift (SQLite) — `drift` + `drift_flutter_libs` | Partidas en curso, historial local, favoritos; fuente de verdad durante el juego offline. Tablas: `games` (con columnas JSON para `players[]` y `roundSequence[]`), `rounds` (FK `gameId`, índice compuesto `gameId + roundNumber`), `favorites` (columna JSON `items[]`). Campos tipo map (`bids`, `tricks`, `scoresDelta`) serializados como `TEXT` mediante `TypeConverter`. |
+
+CAMBIO 2 — Línea 182 (estructura de ficheros, comentario de `data/`):
+  ANTES:  # local storage (Entrega 2) + Firestore datasources, mappers
+  DESPUÉS: # Drift datasource + Firestore datasources, mappers
+
+CAMBIO 3 — Línea 202 (tabla de carpetas, fila `features/<feature>/data/`):
+  ANTES:  | `features/<feature>/data/` | Única capa con SDK Firebase y acceso a local storage (technology to be confirmed in Entrega 2); modelos DTO y mappers. |
+  DESPUÉS: | `features/<feature>/data/` | Única capa con SDK Firebase y Drift (SQLite); modelos DTO, mappers y `TypeConverter` para campos JSON. |
+
+  ----------------------
+
+Abre el archivo `readme.md`. Localiza el encabezado de la sección `## 2. Arquitectura del Sistema` y añade el siguiente bloque JUSTO ANTES de ese encabezado (es decir, entre el cierre de la sección 1 y el inicio de la sección 2). No modifiques nada más.
+
+---
+
+### Decisiones de arquitectura (ADR)
+
+| Decisión | Opción elegida | Alternativa descartada | Motivo |
+|----------|---------------|------------------------|--------|
+| Estado inicial de partida | `setup` | `lobby` | "Lobby" connota sala de espera multijugador (varios dispositivos); La Pocha es single-device. `setup` refleja el flujo real: configuración de jugadores y repartidor antes de empezar. |
+| Almacenamiento local | Drift (SQLite) | Hive | Drift ofrece tipado fuerte, migraciones formales y BD en memoria para tests de repositorio. La tabla `rounds` con FK `gameId` e índice `roundNumber` replica exactamente la subcolección Firestore, simplificando los mappers en `data/`. |
+
+---

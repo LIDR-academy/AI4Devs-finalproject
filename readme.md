@@ -72,6 +72,15 @@ El organizador crea una partida nueva, define jugadores (nombre libre y/o usuari
 
 ---
 
+### Decisiones de arquitectura (ADR)
+
+| Decisión | Opción elegida | Alternativa descartada | Motivo |
+|----------|---------------|------------------------|--------|
+| Estado inicial de partida | `setup` | `lobby` | "Lobby" connota sala de espera multijugador (varios dispositivos); La Pocha es single-device. `setup` refleja el flujo real: configuración de jugadores y repartidor antes de empezar. |
+| Almacenamiento local | Drift (SQLite) | Hive | Drift ofrece tipado fuerte, migraciones formales y BD en memoria para tests de repositorio. La tabla `rounds` con FK `gameId` e índice `roundNumber` replica exactamente la subcolección Firestore, simplificando los mappers en `data/`. |
+
+---
+
 ## 2. Arquitectura del Sistema
 
 ### **2.1. Diagrama de arquitectura**
@@ -149,7 +158,7 @@ flowchart TB
 | **App Flutter** | Flutter (Dart ^3.12), Material/Cupertino | Cliente único para Android e iOS; host de la partida en un solo dispositivo. |
 | **Presentation** | `flutter_bloc`, `equatable`, widgets Flutter | Pantallas, componentes reutilizables, BLoCs (`*Event`, `*State`), navegación (`go_router` cuando aplique). |
 | **Domain** | Dart puro | Entidades (`Game`, `Round`, `Player`, `User`), use cases (`CreateGame`, `SubmitBids`, `SyncFinishedGame`…), interfaces de repositorio. Sin dependencias de Flutter ni Firebase. |
-| **Data — local** | Datasource + local storage (technology to be confirmed in Entrega 2) | Partidas en curso, historial local, favoritos; fuente de verdad durante el juego offline. |
+| **Data — local** | Drift (SQLite) — `drift` + `drift_flutter_libs` | Partidas en curso, historial local, favoritos; fuente de verdad durante el juego offline. Tablas: `games` (con columnas JSON para `players[]` y `roundSequence[]`), `rounds` (FK `gameId`, índice compuesto `gameId + roundNumber`), `favorites` (columna JSON `items[]`). Campos tipo map (`bids`, `tricks`, `scoresDelta`) serializados como `TEXT` mediante `TypeConverter`. |
 | **Data — remota** | FlutterFire: `firebase_core`, `cloud_firestore`, `firebase_auth` | Autenticación, perfiles `users/{uid}`, partidas `games/{gameId}` con roster `players[]` embebido y subcolección `rounds`. |
 | **Repositorios** | Implementaciones en `data/repositories/` | Orquestan local y remoto: leen/escriben local siempre; suben a Firestore al cerrar partida si hay sesión; mapean DTOs ↔ entidades de dominio. |
 | **Firebase Authentication** | Email y contraseña | Registro opcional, login, `authStateChanges` para guards de navegación y subida automática al finalizar. |
@@ -179,7 +188,7 @@ app/lib/
     ├── game/
     │   ├── presentation/     # Flujo de partida y rondas, GameBloc, RoundBloc
     │   ├── domain/           # Entidades Game/Round, use cases de marcador
-    │   └── data/             # local storage (Entrega 2) + Firestore datasources, mappers
+    │   └── data/             # Drift datasource + Firestore datasources, mappers
     ├── players/
     │   ├── presentation/     # Selección de jugadores, favoritos
     │   ├── domain/
@@ -199,7 +208,7 @@ app/lib/
 | `core/` | Infraestructura compartida: routing, tema, DI y errores; sin lógica de negocio de features. |
 | `features/<feature>/presentation/` | UI y BLoC; escucha use cases vía eventos; no importa `cloud_firestore` ni `firebase_auth`. |
 | `features/<feature>/domain/` | Reglas de negocio y contratos; testeable sin emulador ni dispositivo. |
-| `features/<feature>/data/` | Única capa con SDK Firebase y acceso a local storage (technology to be confirmed in Entrega 2); modelos DTO y mappers. |
+| `features/<feature>/data/` | Única capa con SDK Firebase y Drift (SQLite); modelos DTO, mappers y `TypeConverter` para campos JSON. |
 
 Convención de nombres: `game_bloc.dart`, `game_event.dart`, `game_state.dart`, `game_repository.dart` (interfaz en domain, impl en data).
 
@@ -324,7 +333,7 @@ erDiagram
         string gameId PK
         string hostId FK "🔍 historial (organizador)"
         array participantIds "🔍 historial (arrayContains)"
-        string status "🔍 lobby | in_progress | finished"
+        string status "🔍 setup | in_progress | finished"
         number playerCount "3-8"
         number deckSize
         number maxCardsPerRound
@@ -432,7 +441,7 @@ Representa una partida completa: configuración, roster embebido, estado y metad
 |-------|------|-------------|
 | `hostId` | string? | 🔍 `userId` del organizador que creó la partida; `null` en partidas locales sin cuenta |
 | `participantIds` | array\<string\> | 🔍 IDs de usuarios **registrados** que participan; se rellena al subir a Firestore para consultas de historial compartido (`arrayContains`) |
-| `status` | string | 🔍 `lobby`, `in_progress`, `finished` |
+| `status` | string | 🔍 `setup`, `in_progress`, `finished` |
 | `playerCount` | number | Número de jugadores configurado (3–8, según PRD) |
 | `deckSize` | number | Cartas del mazo (30, 40, 48 o 49 según jugadores) |
 | `maxCardsPerRound` | number | Máximo de cartas por ronda (M del PRD) |
@@ -443,7 +452,7 @@ Representa una partida completa: configuración, roster embebido, estado y metad
 | `currentRoundNumber` | number | Ronda activa durante `in_progress` |
 | `createdAt` | timestamp | Creación de la partida |
 | `updatedAt` | timestamp | Última modificación |
-| `startedAt` | timestamp? | Paso de `lobby` a `in_progress` |
+| `startedAt` | timestamp? | Paso de `setup` a `in_progress` |
 | `finishedAt` | timestamp? | 🔍 Cierre de la última ronda; orden del historial |
 | `source` | string | Solo local: `local` o `cloud` (icono en listado unificado) |
 | `cloudGameId` | string? | Solo local: ID del documento en Firestore tras subida exitosa |
@@ -921,7 +930,7 @@ Como organizador, quiero crear una nueva partida seleccionando el número de jug
 1. El organizador puede seleccionar un número de jugadores entre **3 y 8** (inclusive).
 2. Al cambiar el número, la UI muestra en tiempo real: **cartas totales**, **máximo de cartas por jugador por ronda** y **número total de rondas**.
 3. La secuencia de rondas sigue el patrón ascendente-plateau-descendente: 1, 2, …, M (repetido N veces, siendo N el número de jugadores), M-1, …, 2, 1. Ejemplo con 4 jugadores (M=10): 1,2,3,4,5,6,7,8,9,10,10,10,10,9,8,7,6,5,4,3,2,1 = 22 rondas.
-4. Al confirmar, se crea un borrador de partida en estado `lobby` persistido **localmente** (offline-first) con: `playerCount`, `totalCards`, `maxCardsPerRound`, `roundSequence[]` (`roundNumber`, `cardsPerPlayer`).
+4. Al confirmar, se crea un borrador de partida en estado `setup` persistido **localmente** (offline-first) con: `playerCount`, `totalCards`, `maxCardsPerRound`, `roundSequence[]` (`roundNumber`, `cardsPerPlayer`).
 5. Tras confirmar, navega a la pantalla de configuración de jugadores (LPT-6) pasando el `gameId` del borrador.
 6. Si el usuario cancela o vuelve atrás sin confirmar, no se persiste ningún borrador.
 7. La operación funciona **sin conexión** y sin requerir cuenta.
@@ -1001,7 +1010,7 @@ Tercer paso del flujo de creación de partida (épica **Gestión de partida**), 
 
 **Criterios de aceptación**
 
-1. El organizador puede reordenar la lista de jugadores mientras `status == lobby`.
+1. El organizador puede reordenar la lista de jugadores mientras `status == setup`.
 2. Cada jugador muestra su posición (`seatOrder` 1-based) actualizada en tiempo real al reordenar.
 3. El primer repartidor por defecto es el jugador en posición 1; el organizador puede seleccionar otro tocando su fila.
 4. Botón **"Repartidor aleatorio"** asigna aleatoriamente el primer repartidor entre los jugadores del roster.
@@ -1015,7 +1024,7 @@ Tercer paso del flujo de creación de partida (épica **Gestión de partida**), 
 
 | Campo | Tipo | Descripción |
 |-------|------|-------------|
-| `status` | string | `lobby` → `in_progress` al empezar |
+| `status` | string | `setup` → `in_progress` al empezar |
 | `firstDealerPlayerId` | string | `playerId` del primer repartidor |
 | `startedAt` | timestamp | Inicio de partida |
 | `currentRoundNumber` | number | `1` al empezar |
@@ -1039,7 +1048,7 @@ Tercer paso del flujo de creación de partida (épica **Gestión de partida**), 
 
 **Impacto en Security Rules**
 
-Ninguno en este ticket (solo local). Documentar: transición `lobby` → `in_progress` en Firestore requerirá permisos de `hostId`.
+Ninguno en este ticket (solo local). Documentar: transición `setup` → `in_progress` en Firestore requerirá permisos de `hostId`.
 
 **Arquitectura y ficheros (`lib/features/game_setup/`)**
 
