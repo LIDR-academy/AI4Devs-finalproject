@@ -49,6 +49,8 @@ If the request is incomplete, proceed with explicit assumptions instead of block
 
 ## Procedure
 
+0. Please review the current status of the project by preparing a comparison table that outlines what has been implemented and what remains. This will allow the user to accept or reject each item before moving forward.
+
 1. Identify the outcome.
 Determine the actor, desired capability, and business value.
 
@@ -116,6 +118,8 @@ The final story should be:
 - explicit about assumptions and open questions
 
 ## Output Template
+
+One .md file in the same folder adding the suffix "-refined".
 
 Use this structure by default:
 
