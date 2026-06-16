@@ -47,6 +47,7 @@ https://github.com/jesramgue/JRG-AI4Devs-finalproject.git
 Implementation guides:
 - [Frontend README](front/README.md)
 - [Backend README](back/README.md)
+- [Local Development Setup](docs/local-development-setup.md)
 
 
 ## 3. Data Model
