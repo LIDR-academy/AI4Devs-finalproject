@@ -503,3 +503,25 @@ Add missing readme.md in /docs/design move the content from docs/product.md head
 
 Finally: For all .md files internal links across all files in /docs folder should be in the format [link text](./relative-path-to-file.md) and should work when navigating in Github. Please check all links and fix them if they are not in the correct format or if they are broken.
 
+---
+
+### 9. Ticket Implementation Prompts
+
+Index of prompts used during the implementation of each ticket. Each file in `/prompts` contains the full prompt history used to resolve the corresponding ticket in `/docs/tickets`.
+
+| Ticket | Title | Prompts File |
+|--------|-------|--------------|
+| [TKT-001](docs/tickets/TKT-001-auth-register-login.md) | Register and Login | [prompts-TKT-001.md](prompts/prompts-TKT-001.md) |
+| [TKT-002](docs/tickets/TKT-002-pantry-manual-add-item.md) | Pantry Manual Add Item | [prompts-TKT-002.md](prompts/prompts-TKT-002.md) |
+| [TKT-003](docs/tickets/TKT-003-receipt-upload-ocr.md) | Receipt Upload and OCR Extraction | [prompts-TKT-003.md](prompts/prompts-TKT-003.md) |
+| [TKT-004](docs/tickets/TKT-004-expiration-confidence-flow.md) | Expiration Suggestion with Confidence | [prompts-TKT-004.md](prompts/prompts-TKT-004.md) |
+| [TKT-005](docs/tickets/TKT-005-expiring-notifications.md) | Expiring Soon Notifications | [prompts-TKT-005.md](prompts/prompts-TKT-005.md) |
+| [TKT-006](docs/tickets/TKT-006-price-comparison-mvp-dataset.md) | Price Comparison with MVP Dataset | [prompts-TKT-006.md](prompts/prompts-TKT-006.md) |
+| [TKT-007](docs/tickets/TKT-007-dashboard-summary-use-next.md) | Dashboard Summary and Use-Next | [prompts-TKT-007.md](prompts/prompts-TKT-007.md) |
+| [TKT-008](docs/tickets/TKT-008-household-sharing-invite-accept.md) | Household Sharing Invite and Accept | [prompts-TKT-008.md](prompts/prompts-TKT-008.md) |
+| [TKT-009](docs/tickets/TKT-009-consumption-waste-events.md) | Consumption and Waste Events | [prompts-TKT-009.md](prompts/prompts-TKT-009.md) |
+| [TKT-010](docs/tickets/TKT-010-use-next-prioritization.md) | Use-Next Prioritization | [prompts-TKT-010.md](prompts/prompts-TKT-010.md) |
+| [TKT-011](docs/tickets/TKT-011-backend-receipt-ocr-pipeline.md) | Backend Receipt Upload and OCR Pipeline | [prompts-TKT-011.md](prompts/prompts-TKT-011.md) |
+| [TKT-012](docs/tickets/TKT-012-frontend-pantry-add-item-flow.md) | Frontend Pantry Add Item Flow | [prompts-TKT-012.md](prompts/prompts-TKT-012.md) |
+| [TKT-014](docs/tickets/TKT-014-mvp-hardening-schema-receipts-pantry.md) | MVP Hardening: Database Schema, Backend Receipts, and Frontend Pantry | — |
+
