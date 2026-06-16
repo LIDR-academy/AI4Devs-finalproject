@@ -1,0 +1,18 @@
+C4Context
+    title Diagrama de Contexto - Sistema ConectaPH
+    
+    Person(residente, "Residente", "Usuario que reserva zonas comunes")
+    Person(admin, "Administrador", "Gestiona reservas y configura reglas")
+    Person(vigilancia, "Personal de Vigilancia", "Controla acceso de invitados")
+    
+    System(conectaph, "ConectaPH", "Plataforma web para gestión de reservas")
+    
+    System_Ext(email, "Servicio Email", "SendGrid/Gmail")
+    System_Ext(sms, "Servicio SMS", "Twilio")
+    
+    BiRel(residente, conectaph, "Usa")
+    BiRel(admin, conectaph, "Administra")
+    BiRel(vigilancia, conectaph, "Controla")
+    
+    Rel(conectaph, email, "Notificaciones")
+    Rel(conectaph, sms, "Alertas")

@@ -1,0 +1,27 @@
+C4Container
+    title Diagrama de Contenedores - ConectaPH
+    
+    Person(usuario, "Usuario")
+    
+    System_Boundary(c1, "Frontend") {
+        Container(web, "Aplicación Web", "React/Vue", "UI")
+    }
+    
+    System_Boundary(c2, "Backend Microservicios") {
+        Container(gw, "API Gateway", "Express", "Enrutamiento")
+        Container(auth, "Auth Service", "Node.js", "Autenticación")
+        Container(res, "Reservation Service", "Node.js", "Reservas")
+    }
+    
+    System_Boundary(c3, "Infraestructura") {
+        ContainerDb(db, "PostgreSQL", "Datos")
+        Container(redis, "Redis", "Cache")
+    }
+    
+    Rel(usuario, web, "Accede")
+    Rel(web, gw, "REST")
+    Rel(gw, auth, "Valida")
+    Rel(gw, res, "Gestiona")
+    Rel(auth, db, "Lee/Escribe")
+    Rel(res, db, "Lee/Escribe")
+    Rel(gw, redis, "Sesiones")
