@@ -10,9 +10,8 @@ This folder contains implementation-ready tickets derived from the engineering u
 
 ## Main tickets highlighted in README
 
-1. Backend: [TKT-011 - Backend Receipt Upload and OCR Pipeline](./TKT-011-backend-receipt-ocr-pipeline.md)
-2. Frontend: [TKT-012 - Frontend Pantry Add Item Flow](./TKT-012-frontend-pantry-add-item-flow.md)
-3. Database: [TKT-013 - Database Core Schema for Household, Pantry and Events](./TKT-013-database-core-schema-household-pantry-events.md)
+1. **Consolidated hardening**: [TKT-014 - MVP Hardening: Database Schema, Backend Receipts, and Frontend Pantry](./TKT-014-mvp-hardening-schema-receipts-pantry.md)
+   - Consolidates TKT-011, TKT-012, TKT-013 (see below — kept for traceability)
 
 ## Full tickets list by user story
 
@@ -26,6 +25,13 @@ This folder contains implementation-ready tickets derived from the engineering u
 8. US-008: [TKT-008 - Household Sharing Invite and Accept](./TKT-008-household-sharing-invite-accept.md)
 9. US-009: [TKT-009 - Consumption and Waste Events](./TKT-009-consumption-waste-events.md)
 10. US-010: [TKT-010 - Use-Next Prioritization](./TKT-010-use-next-prioritization.md)
+
+## Hardening and gap tickets (Deliverable 2)
+
+11. [TKT-011 - Backend Receipt Pipeline gaps](./TKT-011-backend-receipt-ocr-pipeline.md) — consolidated into TKT-014
+12. [TKT-012 - Frontend Pantry Add Item gaps](./TKT-012-frontend-pantry-add-item-flow.md) — consolidated into TKT-014
+13. [TKT-013 - Database Core Schema](./DISCARDED-TKT-013-database-core-schema-household-pantry-events.md) — consolidated into TKT-014
+14. **[TKT-014 - MVP Hardening: Database Schema, Backend Receipts, and Frontend Pantry](./TKT-014-mvp-hardening-schema-receipts-pantry.md)** ← active
 
 ## Source traceability
 - User stories: [../product/4_User-stories.md](./../product/4_User-stories.md)
