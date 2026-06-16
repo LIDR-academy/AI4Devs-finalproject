@@ -503,6 +503,196 @@ Add missing readme.md in /docs/design move the content from docs/product.md head
 
 Finally: For all .md files internal links across all files in /docs folder should be in the format [link text](./relative-path-to-file.md) and should work when navigating in Github. Please check all links and fix them if they are not in the correct format or if they are broken.
 
+### Prompt 3: 
+~~~markdown
+You are acting as a **Senior Full-Stack Engineer** on the **RealSaveFooding** project.
+
+I need you to create a comprehensive Markdown document explaining **how to run the entire application locally for development and testing purposes**.
+
+Generate a file named:
+
+```text
+docs/local-development-setup.md
+```
+
+After that, update readme.md from root folder to point to this new documentation.
+
+## Context
+
+The project contains the following main areas:
+
+```text
+/front   → Frontend application
+/back    → Backend application
+```
+
+The database must run locally using **Docker Compose**.
+
+Assume that the reader is a developer joining the project for the first time.
+
+---
+
+## Expectations
+
+Produce a well-structured Markdown guide suitable for inclusion in the repository.
+
+The document should include:
+
+### 1. Overview
+
+* Brief explanation of the project architecture.
+* Description of the responsibilities of `/front`, `/back`, and the database container.
+
+---
+
+### 2. Prerequisites
+
+List all required tools and recommended versions, including:
+
+* Git
+* Node.js (specify expected version if it can be inferred from the project)
+* npm
+* Docker
+* Docker Compose
+
+If versions cannot be determined from the repository, explicitly state assumptions.
+
+---
+
+### 3. Repository setup
+
+Provide the steps required to:
+
+* Clone the repository.
+* Install frontend dependencies.
+* Install backend dependencies.
+
+Use the actual folder structure (`front` and `back`).
+
+---
+
+### 4. Environment configuration
+
+Identify all required environment variables.
+
+For each application:
+
+#### Backend
+
+Document:
+
+* Required `.env` file location.
+* Purpose of each variable.
+* Example values suitable for local development.
+
+#### Frontend
+
+Document:
+
+* Required `.env` file location.
+* Purpose of each variable.
+* Example values suitable for local development.
+
+If `.env.example` files already exist, reference them instead of inventing new variables.
+
+---
+
+### 5. Database setup
+
+Explain how to start the database locally using Docker Compose.
+
+Include:
+
+* Required commands.
+* Default ports.
+* Credentials used in local development.
+* Instructions to verify that the database is running correctly.
+
+If migrations exist, explain how to apply them.
+
+---
+
+### 6. Backend startup
+
+Document how to:
+
+* Start the backend in development mode.
+* Run database migrations.
+* Seed the database (if applicable).
+* Verify that the backend is functioning correctly.
+
+Include expected URLs and health-check endpoints if available.
+
+---
+
+### 7. Frontend startup
+
+Document how to:
+
+* Start the frontend in development mode.
+* Verify that it connects correctly to the backend.
+* Access the application in the browser.
+
+Include the expected local URL.
+
+---
+
+### 8. Running automated tests
+
+Document how to execute:
+
+#### Backend tests
+
+* Unit tests
+* Integration tests
+
+#### Frontend tests
+
+* Vitest tests
+
+#### End-to-end tests
+
+* Playwright tests
+
+Explain any prerequisites required before executing the tests.
+
+---
+
+### 9. Typical local development workflow
+
+Provide a recommended sequence for day-to-day development, for example:
+
+1. Start Docker services.
+2. Apply migrations.
+3. Start the backend.
+4. Start the frontend.
+5. Run tests before committing changes.
+
+---
+
+### 10. Troubleshooting
+
+Include common issues and resolutions, such as:
+
+* Database connection failures.
+* Missing environment variables.
+* Port conflicts.
+* Failed migrations.
+* Frontend unable to reach backend.
+* Playwright execution problems.
+
+---
+
+## Additional Instructions
+
+* Review the existing repository structure and scripts before generating the documentation.
+* Reuse commands already defined in `package.json` whenever possible.
+* Avoid inventing commands, ports, or environment variables that do not exist in the project.
+* Clearly identify assumptions when information cannot be inferred from the codebase.
+* Produce the final result as a **single Markdown document ready to commit into the repository**.
+* Use clear headings, code blocks, and copy-paste-friendly examples throughout the document.
+
+~~~
 ---
 
 ### 9. Ticket Implementation Prompts
