@@ -252,7 +252,41 @@ El administrador podrá marcar individualmente cualquier vehículo con la opció
 > Proporciona imágenes y/o videotutorial mostrando la experiencia del usuario desde que aterriza en la aplicación, pasando por todas las funcionalidades principales.
 
 ### **1.4. Instrucciones de instalación:**
-> Documenta de manera precisa las instrucciones para instalar y poner en marcha el proyecto en local (librerías, backend, frontend, servidor, base de datos, migraciones y semillas de datos, etc.)
+
+#### Requisitos
+
+- Node.js 20+
+- Docker Desktop (PostgreSQL)
+- npm
+
+#### Base de datos
+
+Desde la raíz del repositorio:
+
+```bash
+docker compose up -d
+```
+
+PostgreSQL queda disponible en `localhost:5434` (usuario/contraseña/BD: `mecatrack`).
+
+#### API (backend)
+
+```bash
+cd apps/api
+cp .env.example .env
+npm install
+npx prisma migrate dev
+npx prisma db seed
+npm run dev
+```
+
+La API escucha en `http://localhost:4000/api`.
+
+Usuarios de prueba (semilla): `admin@taller.com` / `AdminPass123`, `mechanic@taller.com` / `MechanicPass123`.
+
+#### Frontend
+
+> Pendiente de implementación (US-001 frontend). Se documentará en `apps/web` cuando exista.
 
 ---
 
@@ -1054,7 +1088,7 @@ model WorkOrderTask {
 
 > Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
 
-**Pull Request 1**
+**Pull Request 1* https://github.com/LIDR-academy/AI4Devs-finalproject/pull/198*
 
 **Pull Request 2**
 

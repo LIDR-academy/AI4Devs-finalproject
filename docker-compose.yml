@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mecatrack-postgres
+    restart: unless-stopped
+    ports:
+      - '5434:5432'
+    environment:
+      POSTGRES_USER: mecatrack
+      POSTGRES_PASSWORD: mecatrack
+      POSTGRES_DB: mecatrack
+    volumes:
+      - mecatrack_pg_data:/var/lib/postgresql/data
+
+volumes:
+  mecatrack_pg_data:

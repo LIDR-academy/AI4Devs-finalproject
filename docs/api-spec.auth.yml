@@ -1,0 +1,123 @@
+openapi: 3.0.0
+info:
+  title: MecaTrack API — Authentication
+  description: Auth endpoints for MecaTrack (US-001)
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:4000/api
+    description: Local development
+
+paths:
+  /auth/login:
+    post:
+      summary: Login with email and password
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Successful login
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/UserPayload'
+        '401':
+          description: Invalid credentials
+        '403':
+          description: Inactive account
+        '429':
+          description: Rate limit exceeded
+
+  /auth/refresh:
+    post:
+      summary: Refresh access token
+      tags: [Auth]
+      responses:
+        '200':
+          description: New access token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+        '401':
+          description: Missing or invalid refresh cookie
+
+  /auth/logout:
+    post:
+      summary: Logout and revoke refresh token
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Logged out
+
+  /auth/me:
+    get:
+      summary: Get current user profile
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeResponse'
+        '401':
+          description: Unauthorized
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserPayload:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        fullName:
+          type: string
+        role:
+          type: string
+          enum: [ADMIN, MECHANIC]
+
+    MeResponse:
+      allOf:
+        - $ref: '#/components/schemas/UserPayload'
+        - type: object
+          properties:
+            active:
+              type: boolean

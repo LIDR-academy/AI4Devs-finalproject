@@ -1,6 +1,10 @@
 # Data Model Documentation
 
-This document describes the data model for the LTI (Learning Tracking Initiative) application, including entity descriptions, field definitions, relationships, and an entity-relationship diagram.
+> **MecaTrack:** The implemented schema lives in `apps/api/prisma/schema.prisma`. See `readme.md` §3 for the full domain model. US-001 introduces the `User` entity with `UserRole` (`ADMIN`, `MECHANIC`).
+
+---
+
+This document describes the legacy LTI template data model (reference only).
 
 ## Model Descriptions
 
