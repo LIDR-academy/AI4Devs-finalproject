@@ -75,10 +75,31 @@ describe('PaymentForm', () => {
 
     expect(onSubmit).toHaveBeenCalledTimes(1);
     const arg = onSubmit.mock.calls[0][0] as PaymentData;
-    expect(arg.cardNumber).toBe('1234567890123456');
+    expect(arg.cardNumber).toBe('1234 5678 9012 3456');
     expect(arg.cardName).toBe('Ana Pérez');
     expect(arg.cardExpiry).toBe('12/28');
     expect(arg.cardCVV).toBe('123');
+  });
+
+  it('formatea el número de tarjeta en grupos de 4 dígitos mientras se escribe', async () => {
+    const user = userEvent.setup();
+    render(<PaymentForm onSubmit={onSubmit} onBack={onBack} />);
+    await user.type(screen.getByLabelText(/número de tarjeta/i), '1234567890123456');
+    expect(screen.getByLabelText(/número de tarjeta/i)).toHaveValue('1234 5678 9012 3456');
+  });
+
+  it('ignora caracteres no numéricos al escribir el número de tarjeta', async () => {
+    const user = userEvent.setup();
+    render(<PaymentForm onSubmit={onSubmit} onBack={onBack} />);
+    await user.type(screen.getByLabelText(/número de tarjeta/i), '1234abcd56789012');
+    expect(screen.getByLabelText(/número de tarjeta/i)).toHaveValue('1234 5678 9012');
+  });
+
+  it('inserta la barra en la fecha de vencimiento tras los primeros 2 dígitos', async () => {
+    const user = userEvent.setup();
+    render(<PaymentForm onSubmit={onSubmit} onBack={onBack} />);
+    await user.type(screen.getByLabelText(/fecha de vencimiento/i), '1228');
+    expect(screen.getByLabelText(/fecha de vencimiento/i)).toHaveValue('12/28');
   });
 
   it('llama a onBack al pulsar Volver sin validar el formulario', async () => {
@@ -98,7 +119,7 @@ describe('PaymentForm', () => {
       cardCVV: '123',
     };
     render(<PaymentForm onSubmit={onSubmit} onBack={onBack} initialData={initialData} />);
-    expect(screen.getByLabelText(/número de tarjeta/i)).toHaveValue('1234567890123456');
+    expect(screen.getByLabelText(/número de tarjeta/i)).toHaveValue('1234 5678 9012 3456');
     expect(screen.getByLabelText(/nombre del titular/i)).toHaveValue('Ana Pérez');
     expect(screen.getByLabelText(/fecha de vencimiento/i)).toHaveValue('12/28');
     expect(screen.getByLabelText(/cvv/i)).toHaveValue('123');

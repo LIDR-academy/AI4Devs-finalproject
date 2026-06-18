@@ -15,6 +15,17 @@ const CARD_NUMBER_REGEX = /^\d{16}$/;
 const CARD_EXPIRY_REGEX = /^(0[1-9]|1[0-2])\/\d{2}$/;
 const CARD_CVV_REGEX = /^\d{3}$/;
 
+function formatCardNumber(raw: string): string {
+  const digits = raw.replace(/\D/g, '').slice(0, 16);
+  return digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+}
+
+function formatCardExpiry(raw: string): string {
+  const digits = raw.replace(/\D/g, '').slice(0, 4);
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+}
+
 export function validatePaymentForm(data: PaymentData): FormErrors {
   const errors: FormErrors = {};
 
@@ -48,9 +59,9 @@ export function validatePaymentForm(data: PaymentData): FormErrors {
 
 export function PaymentForm({ initialData, onSubmit, onBack }: PaymentFormProps) {
   const [formData, setFormData] = useState<PaymentData>({
-    cardNumber: initialData?.cardNumber ?? '',
+    cardNumber: formatCardNumber(initialData?.cardNumber ?? ''),
     cardName: initialData?.cardName ?? '',
-    cardExpiry: initialData?.cardExpiry ?? '',
+    cardExpiry: formatCardExpiry(initialData?.cardExpiry ?? ''),
     cardCVV: initialData?.cardCVV ?? '',
   });
   const [errors, setErrors] = useState<FormErrors>({});
@@ -79,7 +90,7 @@ export function PaymentForm({ initialData, onSubmit, onBack }: PaymentFormProps)
         label="Número de tarjeta"
         required
         value={formData.cardNumber}
-        onChange={(v) => handleChange('cardNumber', v)}
+        onChange={(v) => handleChange('cardNumber', formatCardNumber(v))}
         error={errors.cardNumber}
         placeholder="1234 5678 9012 3456"
         autoComplete="cc-number"
@@ -102,7 +113,7 @@ export function PaymentForm({ initialData, onSubmit, onBack }: PaymentFormProps)
           label="Fecha de vencimiento"
           required
           value={formData.cardExpiry}
-          onChange={(v) => handleChange('cardExpiry', v)}
+          onChange={(v) => handleChange('cardExpiry', formatCardExpiry(v))}
           error={errors.cardExpiry}
           placeholder="MM/AA"
           autoComplete="cc-exp"

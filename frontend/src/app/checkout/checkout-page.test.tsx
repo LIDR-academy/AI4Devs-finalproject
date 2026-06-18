@@ -262,7 +262,7 @@ describe('CheckoutPage', () => {
 
       const steps = screen.getAllByRole('listitem');
       expect(steps[1]).toHaveAttribute('aria-current', 'step');
-      expect(screen.getByLabelText(/número de tarjeta/i)).toHaveValue('1234567890123456');
+      expect(screen.getByLabelText(/número de tarjeta/i)).toHaveValue('1234 5678 9012 3456');
     });
   });
 });
