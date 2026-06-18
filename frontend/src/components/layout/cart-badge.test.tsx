@@ -24,6 +24,7 @@ describe('CartBadge', () => {
       addItem: vi.fn(),
       updateItem: vi.fn(),
       removeItem: vi.fn(),
+      clearCart: vi.fn(),
       isLoading: false,
       error: null,
     });
@@ -45,6 +46,7 @@ describe('CartBadge', () => {
       addItem: vi.fn(),
       updateItem: vi.fn(),
       removeItem: vi.fn(),
+      clearCart: vi.fn(),
       isLoading: false,
       error: null,
     });
@@ -64,6 +66,7 @@ describe('CartBadge', () => {
       addItem: vi.fn(),
       updateItem: vi.fn(),
       removeItem: vi.fn(),
+      clearCart: vi.fn(),
       isLoading: false,
       error: null,
     });
@@ -80,6 +83,7 @@ describe('CartBadge', () => {
       addItem: vi.fn(),
       updateItem: vi.fn(),
       removeItem: vi.fn(),
+      clearCart: vi.fn(),
       isLoading: false,
       error: null,
     });

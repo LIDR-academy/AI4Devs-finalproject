@@ -135,6 +135,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  const clearCart = useCallback((): void => {
+    setItems([]);
+    setSubtotal(0);
+    setShipping(0);
+    setTotal(0);
+    localStorage.removeItem(CART_STORAGE_KEY);
+  }, []);
+
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   const value: CartContextValue = {
@@ -146,6 +154,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     addItem,
     updateItem,
     removeItem,
+    clearCart,
     isLoading,
     error,
   };

@@ -59,6 +59,14 @@ function CartConsumer() {
       >
         Remove
       </button>
+      <button
+        data-testid="clearBtn"
+        onClick={() => {
+          cart.clearCart();
+        }}
+      >
+        Clear
+      </button>
     </div>
   );
 }
@@ -387,5 +395,53 @@ describe('CartContext', () => {
     await waitFor(() => expect(mockApiPut).toHaveBeenCalledTimes(1));
 
     expect(localStorage.getItem('sessionId')).toBeNull();
+  });
+
+  // ─── clearCart ─────────────────────────────────────────────────────────────
+
+  it('clearCart vacía items y totales', async () => {
+    const items = [mockCartItem({ quantity: 2, productPrice: 100 })];
+    mockApiPost.mockResolvedValueOnce(mockCartResponse(items));
+
+    renderWithCart();
+
+    await act(async () => { screen.getByTestId('addBtn').click(); });
+
+    await waitFor(() =>
+      expect(screen.getByTestId('itemCount').textContent).toBe('2'),
+    );
+
+    act(() => { screen.getByTestId('clearBtn').click(); });
+
+    expect(screen.getByTestId('itemCount').textContent).toBe('0');
+    expect(screen.getByTestId('subtotal').textContent).toBe('0');
+    expect(screen.getByTestId('total').textContent).toBe('0');
+  });
+
+  it('clearCart borra la caché de localStorage', async () => {
+    const items = [mockCartItem({ quantity: 1 })];
+    mockApiPost.mockResolvedValueOnce(mockCartResponse(items));
+
+    renderWithCart();
+
+    await act(async () => { screen.getByTestId('addBtn').click(); });
+
+    await waitFor(() =>
+      expect(localStorage.getItem('runmarket_cart')).not.toBeNull(),
+    );
+
+    act(() => { screen.getByTestId('clearBtn').click(); });
+
+    expect(localStorage.getItem('runmarket_cart')).toBeNull();
+  });
+
+  it('clearCart no llama a la API', async () => {
+    renderWithCart();
+
+    act(() => { screen.getByTestId('clearBtn').click(); });
+
+    expect(mockApiPost).not.toHaveBeenCalled();
+    expect(mockApiPut).not.toHaveBeenCalled();
+    expect(mockApiDelete).not.toHaveBeenCalled();
   });
 });
