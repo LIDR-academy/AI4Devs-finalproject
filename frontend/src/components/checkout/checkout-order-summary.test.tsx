@@ -23,6 +23,7 @@ function makeCart(items: CartItemUI[], shipping = 4.99) {
     addItem: vi.fn(),
     updateItem: vi.fn(),
     removeItem: vi.fn(),
+    clearCart: vi.fn(),
     isLoading: false,
     error: null,
   };

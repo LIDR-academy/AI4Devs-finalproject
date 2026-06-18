@@ -49,6 +49,7 @@ function makeCart(items: CartItemUI[], extra?: Partial<ReturnType<typeof useCart
     addItem: vi.fn(),
     updateItem: vi.fn().mockResolvedValue(undefined),
     removeItem: vi.fn().mockResolvedValue(undefined),
+    clearCart: vi.fn(),
     ...extra,
   };
 }

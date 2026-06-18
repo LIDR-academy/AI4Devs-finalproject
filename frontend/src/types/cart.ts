@@ -27,6 +27,7 @@ export interface CartContextValue {
   addItem(productId: string, quantity: number, size?: string, color?: string): Promise<void>;
   updateItem(productId: string, quantity: number, size?: string, color?: string): Promise<void>;
   removeItem(productId: string, size?: string, color?: string): Promise<void>;
+  clearCart(): void;
   isLoading: boolean;
   error: string | null;
 }

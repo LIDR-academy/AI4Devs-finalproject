@@ -54,6 +54,43 @@ export interface ProductFilters {
   objective?: string[];
 }
 
+export interface ShippingInput {
+  name: string;
+  email: string;
+  phone?: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
+}
+
+export interface OrderItemResponse {
+  productId: string;
+  productName: string;
+  productBrand: string;
+  productPrice: number;
+  quantity: number;
+  size?: string;
+  color?: string;
+}
+
+export interface OrderResponse {
+  id: string;
+  status: OrderStatus;
+  date: string;
+  subtotal: number;
+  shipping: number;
+  total: number;
+  shippingName: string;
+  shippingEmail: string;
+  shippingPhone?: string;
+  shippingAddress: string;
+  shippingCity: string;
+  shippingPostalCode: string;
+  shippingCountry: string;
+  items: OrderItemResponse[];
+}
+
 export interface Product {
   id: string;
   name: string;
