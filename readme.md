@@ -126,7 +126,73 @@ Historial de pedidos con estado y detalle de productos.
 
 ### **1.4. Instrucciones de instalación:**
 
-> Pendiente de documentar.
+**Requisitos previos:** Node.js 20+, npm 10+, Docker y Docker Compose.
+
+**1. Clonar el repositorio**
+
+```bash
+git clone https://github.com/xavierventeo/AI4Devs-finalproject.git
+cd AI4Devs-finalproject
+git checkout feature-entrega2-XVB
+```
+
+**2. Configurar variables de entorno**
+
+Desde la raíz del repo (`AI4Devs-finalproject/`). El proyecto usa un único fichero `.env`, compartido por backend y Docker Compose.
+
+```bash
+cp .env.example .env
+```
+
+**3. Instalar dependencias**
+
+Desde la raíz del repo. Monorepo con npm workspaces: una sola instalación resuelve `frontend/` y `backend/`.
+
+```bash
+npm install
+```
+
+**4. Levantar la base de datos**
+
+Desde la raíz del repo (ahí está `docker-compose.yml`).
+
+```bash
+docker compose up -d
+```
+
+Esto arranca PostgreSQL 16 en el puerto definido por `DB_PORT` (por defecto `5432`).
+
+**5. Aplicar migraciones y cargar datos de prueba**
+
+Desde la raíz del repo.
+
+```bash
+cd backend
+npx prisma migrate deploy
+npm run db:seed
+cd ..
+```
+
+**6. Arrancar el backend**
+
+Desde la raíz del repo.
+
+```bash
+npm run dev --workspace=backend
+```
+
+API disponible en `http://localhost:4000`. 
+Comprueba que está activa en `http://localhost:4000/api/health`.
+
+**7. Arrancar el frontend**
+
+Desde la raíz del repo, en otra terminal.
+
+```bash
+npm run dev --workspace=frontend
+```
+
+Aplicación disponible en `http://localhost:3000`.
 
 ---
 
