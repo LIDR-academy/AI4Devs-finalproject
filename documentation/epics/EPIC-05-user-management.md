@@ -17,15 +17,21 @@ Covers the admin panel's user and client management features: creating and manag
 
 **1. `Client` entity ownership**
 
-The `Client` entity does not exist yet — EPIC-05 creates it. It lives in `Api.Domain/Clients/Client.cs` (in the `api` repo, `public` schema). Fields: `Id` (Guid, from `BaseEntity`), `Name` (string, unique, max 200), `Description` (string?, max 1000), `IsDeleted` (bool, soft-delete). EPIC-05B (`ClientProject.ClientId`) depends on this entity being in place.
+~~The `Client` entity does not exist yet — EPIC-05 creates it.~~ **Superseded by EPIC-00.** The `Client` entity, its EF Core configuration, and its migration are created in **EPIC-00 TASK-00.2**. By the time EPIC-05 is implemented, `Clients` already exists in the database. EPIC-05's task TASK-05.9.1 is **removed** — do not create a duplicate entity or migration. EPIC-05 starts from the existing entity and adds `IClientRepository`, use cases, and the admin controller on top of it.
 
 ---
 
 **2. `ApplicationUser` ↔ `Client` association — `ClientUser` bridge entity in `api`**
 
-The `identity` service cannot reference `api` data (cross-schema coupling violation). The link between an `ApplicationUser` (in `identity.ASpNetUsers`) and a `Client` (in `public.Clients`) is held by a `ClientUser` entity in the `api` DB (`Api.Domain/Clients/ClientUser.cs`). Fields: `Id` (Guid), `UserId` (Guid — mirrors the JWT `sub` claim, bare Guid, no FK to identity), `ClientId` (Guid, FK → `Clients`), `Email` (string, max 256 — mirrored from identity at invite time), `FirstName` (string, max 100), `LastName` (string, max 100), `Status` (`ClientUserStatus` enum: `PendingActivation` | `Active` | `Inactive`), `InvitedAt` (DateTimeOffset), `ActivatedAt` (DateTimeOffset?), `IsDeleted` (bool, soft-delete). Inherits `BaseEntity`.
+The `identity` service cannot reference `api` data (cross-schema coupling violation). The link between an `ApplicationUser` (in `identity.AspNetUsers`) and a `Client` (in `public.Clients`) is held in two places:
+- **`ApplicationUser.ClientId`** (nullable `Guid?`) in `identity` — added in **EPIC-00 TASK-00.1**. This is the source of the `client_id` JWT claim emitted by `ClientIdClaimHandler`.
+- **`ClientUser`** entity in `api` — the admin's view of a portal user with full profile fields.
 
-The `ClientUser` serves as the admin's view of a portal user. On invite, a row is created in `api` (`ClientUser`) and a user in `identity` (via internal HTTP call). On activation (EPIC-01 TASK-01.1.4), `identity` marks the user confirmed; the `api` status update is driven by a separate endpoint (TASK-05.5.3).
+~~`ClientUser` entity is created by EPIC-05.~~ **Superseded by EPIC-00.** The `ClientUser` entity, its EF Core configuration, and its migration are created in **EPIC-00 TASK-00.2**. EPIC-05's task TASK-05.5.2 is **removed** — do not create a duplicate entity or migration. EPIC-05 adds `IClientUserRepository`, use cases, and the admin controller on top of the existing entity.
+
+`ClientUser` fields (already in schema from EPIC-00): `Id` (Guid), `UserId` (Guid — bare, no FK to identity), `ClientId` (Guid, FK → `Clients`), `Email` (string, max 256), `FirstName` (string, max 100), `LastName` (string, max 100), `Status` (`ClientUserStatus` enum: `PendingActivation | Active | Inactive`), `InvitedAt` (DateTimeOffset), `ActivatedAt` (DateTimeOffset?), `IsDeleted` (bool).
+
+The `ClientUser` serves as the admin's view of a portal user. On invite, a row is created in `api` (`ClientUser`) and a user in `identity` (via internal HTTP call). On activation, `identity` marks the user confirmed; the `api` status update is driven by a separate endpoint (TASK-05.5.3).
 
 This pattern mirrors how `UserEmailPreference` (EPIC-04) links users across services without FK coupling.
 
@@ -357,7 +363,7 @@ Create two routes in the `backoffice` app — `/forgot-password` and `/reset-pas
 #### TASK-05.4.1 — `ListClientUsersUseCase` — paginated, filtered user list (`api`)
 **Layer:** Application
 **Repo:** api
-**Depends on:** TASK-05.5.2 (ClientUser EF Core config and migration)
+**Depends on:** EPIC-00 TASK-00.2 (ClientUser table already exists), TASK-05.5.2 (IClientUserRepository must be implemented)
 
 **What to build:**
 Create `ListClientUsersUseCase` in `Api.Application/UseCases/ClientUsers/` that accepts `ListClientUsersQuery(int page, int pageSize, string? search, Guid? clientId, ClientUserStatus? status)`. The use case calls `IClientUserRepository.ListPagedAsync` and returns `Result<PagedOffsetResult<ClientUserDto>>`. `ClientUserDto` includes: `Id`, `FirstName`, `LastName`, `Email`, `ClientId`, `ClientName`, `Status`, `InvitedAt`.
@@ -466,53 +472,63 @@ Add a `POST /internal/users` endpoint to `InternalUsersController` in `Identity.
 
 ---
 
-#### TASK-05.5.2 — `ClientUser` and `Client` domain entities and repository interfaces (`api`)
-**Layer:** Domain
+#### TASK-05.5.2 — `IClientUserRepository` and domain methods (`api`)
+> ⚠️ **Superseded in part by EPIC-00.** The `ClientUser` entity, `ClientUserStatus` enum, `ClientUserConfiguration`, `DbSet<ClientUser>`, and the `AddClientAndClientUser` migration are all created by **EPIC-00 TASK-00.2**. This task no longer creates the entity or migration — it adds the repository interface, implements the repository, and adds the domain behaviour methods that the admin use cases require.
+
+**Layer:** Domain + Infrastructure
 **Repo:** api
-**Depends on:** TASK-05.9.1 (Client domain entity — defined in US-05.9)
+**Depends on:** EPIC-00 TASK-00.2 (ClientUser entity already in schema)
 
 **What to build:**
-Define the `ClientUser` entity in `Api.Domain/Clients/ClientUser.cs`. Fields: `Id` (Guid, `BaseEntity`), `UserId` (Guid, bare — mirrors JWT `sub`, no FK), `ClientId` (Guid, FK → `Client`), `Email` (string, max 256), `FirstName` (string, max 100), `LastName` (string, max 100), `Status` (`ClientUserStatus` enum: `PendingActivation | Active | Inactive`), `InvitedAt` (DateTimeOffset), `ActivatedAt` (DateTimeOffset?), `IsDeleted` (bool). Static factory method `ClientUser.Create(Guid clientId, string email, string firstName, string lastName)` sets `Status = PendingActivation`, `InvitedAt = UtcNow`. Define `IClientUserRepository` in `Api.Domain/Interfaces/` with: `GetByIdAsync`, `GetByUserIdAsync`, `GetByEmailAsync`, `ListPagedAsync`, `AddAsync`, `UpdateAsync`.
+
+1. **Domain methods on `ClientUser`** — add the following behaviour methods to the existing entity (no public setters):
+   - `Activate(Guid userId)` — sets `UserId`, `Status = Active`, `ActivatedAt = UtcNow`, calls `Touch()`.
+   - `Deactivate()` — sets `Status = Inactive`, `IsDeleted = true`, calls `Touch()`.
+   - `Reactivate()` — sets `Status = Active`, `IsDeleted = false`, calls `Touch()`.
+   - `UpdateProfile(string firstName, string lastName, string email)` — updates the three fields, calls `Touch()`.
+
+2. **`IClientUserRepository`** (`Api.Domain/Interfaces/IClientUserRepository.cs`) — define the interface with: `GetByIdAsync`, `GetByUserIdAsync`, `GetByEmailAsync`, `ListPagedAsync`, `CountByClientIdAsync`, `AddAsync`, `UpdateAsync`.
+
+3. **`ClientUserRepository`** (`Api.Infrastructure/Persistence/Repositories/ClientUserRepository.cs`) — implement `IClientUserRepository` using `AppDbContext`. Register `IClientUserRepository → ClientUserRepository` as `Scoped` in `AddInfrastructure`.
 
 **Constraints:**
-- `ClientUser` inherits from `BaseEntity` (per backend-guidelines §5).
-- No public setters — use domain methods (`Activate(Guid userId)`, `Deactivate()`, `Reactivate()`, `UpdateProfile(firstName, lastName, email)`) to mutate state.
-- `Activate(Guid userId)` sets `UserId`, `Status = Active`, `ActivatedAt = UtcNow`, calls `Touch()`.
 - `IClientUserRepository` lives in `Api.Domain/Interfaces/` — no EF Core references.
-- `ClientUserStatus` enum lives in `Api.Domain/Clients/`.
+- No new migrations — the schema already exists from EPIC-00.
+- No changes to `ClientUserConfiguration` — the Fluent API config already exists from EPIC-00.
 
 **Definition of Done:**
-- [ ] `ClientUser` entity exists at `Api.Domain/Clients/ClientUser.cs` with all fields and factory/domain methods.
-- [ ] `ClientUserStatus` enum exists at `Api.Domain/Clients/ClientUserStatus.cs`.
-- [ ] `IClientUserRepository` exists at `Api.Domain/Interfaces/IClientUserRepository.cs`.
-- [ ] `dotnet build` succeeds for `Api.Domain`.
+- [ ] `ClientUser` entity has `Activate`, `Deactivate`, `Reactivate`, `UpdateProfile` domain methods.
+- [ ] `IClientUserRepository` exists at `Api.Domain/Interfaces/IClientUserRepository.cs` with all listed methods.
+- [ ] `ClientUserRepository` exists and implements `IClientUserRepository`.
+- [ ] `dotnet build` succeeds for `Api.Domain` and `Api.Infrastructure`.
 
 ---
 
-#### TASK-05.5.3 — `ClientUser` EF Core configuration and migration (`api`)
-**Layer:** Infrastructure + DB
+#### TASK-05.5.3 — `ActivateClientUserUseCase` — mark user active after invitation acceptance (`api`)
+> ⚠️ **Renamed and rescoped from original.** The original TASK-05.5.3 created the EF Core configuration and migration — those are now owned by EPIC-00. This task now owns the use case that marks a `ClientUser` as `Active` after the user completes account activation via the identity server.
+
+**Layer:** Application
 **Repo:** api
-**Depends on:** TASK-05.5.2, TASK-05.9.2 (Client EF Core config and migration)
+**Depends on:** TASK-05.5.2
 
 **What to build:**
-Create `Api.Infrastructure/Persistence/Configurations/ClientUserConfiguration.cs` using the EF Core Fluent API. Implement `ClientUserRepository` in `Api.Infrastructure/Persistence/Repositories/`. Add `DbSet<ClientUser>` to `AppDbContext`. Register `IClientUserRepository → ClientUserRepository` as `Scoped` in `AddInfrastructure`. Generate the EF Core migration for the `ClientUsers` table.
+Create `ActivateClientUserUseCase` in `Api.Application/UseCases/ClientUsers/`. It accepts `ActivateClientUserCommand(Guid userId)` — the `sub` claim from the just-activated user's identity (passed by the activation endpoint or called from an internal trigger). The use case: looks up `ClientUser` by `UserId` via `IClientUserRepository.GetByUserIdAsync` — returns `NotFoundError` if absent; calls `clientUser.Activate(userId)`; commits; returns `Result` (void).
+
+Also expose `POST /internal/client-users/{userId}/activate` in a new `InternalClientUsersController` in `Api.API/Controllers/Internal/` secured by `InternalApiKeyMiddleware` (introduced in EPIC-01 TASK-01.F for the `identity` repo — `api` needs the same middleware). This endpoint is called by `identity` after a successful account activation to synchronise `ClientUser.Status`.
 
 **Constraints:**
-- Table name: `ClientUsers`, `public` schema.
-- `UserId` column: unique nullable index (null until activation).
-- `Email` column: `varchar(256)`, unique index (email must be unique across all portal users).
-- `ClientId`: FK → `Clients.Id`, `ON DELETE RESTRICT` (cannot delete a client with users — enforced at DB level too).
-- Soft-delete global query filter: `modelBuilder.Entity<ClientUser>().HasQueryFilter(u => !u.IsDeleted)`.
-- `Status` stored as a `varchar` (not int) for readability in the DB.
-- `InvitedAt`: `timestamptz`, not null. `ActivatedAt`: `timestamptz`, nullable.
-- Migration must not contain raw SQL — Fluent API only.
-- Auto-migration on startup in `Development` only (per backend-guidelines §7).
+- `InternalApiKeyMiddleware` for the `api` repo follows the same pattern as EPIC-01 TASK-01.F: validates `X-Internal-Api-Key` header against `INTERNAL_API_KEY` env var on all `/internal/**` routes.
+- Route: `POST /internal/client-users/{userId}/activate`.
+- Returns `204 No Content` on success; `404` if `ClientUser` not found for the given `userId`.
+- `[AllowAnonymous]` on the controller — authentication is the `X-Internal-Api-Key` header check.
+- Not exposed via Swagger.
 
 **Definition of Done:**
-- [ ] EF Core config file exists at `Api.Infrastructure/Persistence/Configurations/ClientUserConfiguration.cs`.
-- [ ] `ClientUserRepository` exists at `Api.Infrastructure/Persistence/Repositories/ClientUserRepository.cs` and implements `IClientUserRepository`.
-- [ ] Migration file exists under `Api.Infrastructure/Persistence/Migrations/`.
-- [ ] `dotnet ef database update` applies successfully against a local PostgreSQL instance.
+- [ ] `ActivateClientUserUseCase` and `IActivateClientUserUseCase` exist in `Api.Application/UseCases/ClientUsers/`.
+- [ ] `InternalClientUsersController` exists at `Api.API/Controllers/Internal/InternalClientUsersController.cs`.
+- [ ] `POST /internal/client-users/{userId}/activate` with correct API key returns `204`.
+- [ ] `POST /internal/client-users/{userId}/activate` without API key returns `401`.
+- [ ] `POST /internal/client-users/{userId}/activate` with unknown `userId` returns `404`.
 - [ ] `dotnet build` succeeds.
 
 ---
@@ -862,50 +878,40 @@ On the user detail page (`/users/:id`), add conditional deactivate/reactivate bu
 
 **Story Points:** 3
 
-#### TASK-05.9.1 — `Client` domain entity and repository interface (`api`)
-**Layer:** Domain
+#### TASK-05.9.1 — `Client` domain methods, `IClientRepository`, and `ClientRepository` (`api`)
+> ⚠️ **Superseded in part by EPIC-00.** The `Client` entity, `ClientConfiguration`, `DbSet<Client>`, and the `AddClientAndClientUser` migration are all created by **EPIC-00 TASK-00.2**. This task no longer creates the entity or migration — it adds the domain behaviour methods, defines the repository interface, and implements the repository.
+
+**Layer:** Domain + Infrastructure
 **Repo:** api
-**Depends on:** none
+**Depends on:** EPIC-00 TASK-00.2 (Client entity already in schema)
 
 **What to build:**
-Define the `Client` entity in `Api.Domain/Clients/Client.cs`. Fields: `Id` (Guid, `BaseEntity`), `Name` (string, max 200), `Description` (string?, max 1000), `IsDeleted` (bool). Static factory method `Client.Create(string name, string? description)`. Domain methods: `Update(string name, string? description)` (calls `Touch()`), `SoftDelete()` (sets `IsDeleted = true`). Define `IClientRepository` in `Api.Domain/Interfaces/` with: `GetByIdAsync`, `GetByNameAsync`, `ListAsync(bool includeUserCount)`, `AddAsync`, `UpdateAsync`, `HasActiveUsersAsync(Guid clientId)`.
+
+1. **Domain methods on `Client`** — add behaviour methods to the existing entity:
+   - `Client.Create(string name, string? description)` static factory — if not already added by EPIC-00.
+   - `Update(string name, string? description)` — updates fields, calls `Touch()`.
+   - `SoftDelete()` — sets `IsDeleted = true`.
+
+2. **`IClientRepository`** (`Api.Domain/Interfaces/IClientRepository.cs`) — define the interface with: `GetByIdAsync`, `GetByNameAsync`, `ListAsync(bool includeUserCount)`, `AddAsync`, `UpdateAsync`, `HasActiveUsersAsync(Guid clientId)`.
+
+3. **`ClientRepository`** (`Api.Infrastructure/Persistence/Repositories/ClientRepository.cs`) — implement `IClientRepository` using `AppDbContext`. Register `IClientRepository → ClientRepository` as `Scoped` in `AddInfrastructure`.
 
 **Constraints:**
-- `Client` inherits from `BaseEntity` (per backend-guidelines §5).
-- No public setters — domain methods only.
+- No public setters on `Client` — domain methods only.
 - `IClientRepository` lives in `Api.Domain/Interfaces/` — no EF Core references.
-- `HasActiveUsersAsync` returns `bool` — used to enforce the "cannot delete with users" guard. It counts `ClientUser` records where `ClientId = id` and `IsDeleted = false`.
+- `HasActiveUsersAsync` counts `ClientUser` records where `ClientId = id` and `IsDeleted = false`.
+- No new migrations — schema already exists from EPIC-00.
 
 **Definition of Done:**
-- [ ] `Client` entity exists at `Api.Domain/Clients/Client.cs` with all fields and domain methods.
+- [ ] `Client` entity has `Create`, `Update`, `SoftDelete` methods.
 - [ ] `IClientRepository` exists at `Api.Domain/Interfaces/IClientRepository.cs`.
-- [ ] `dotnet build` succeeds for `Api.Domain`.
+- [ ] `ClientRepository` exists and implements `IClientRepository`.
+- [ ] `dotnet build` succeeds for `Api.Domain` and `Api.Infrastructure`.
 
 ---
 
-#### TASK-05.9.2 — `Client` EF Core configuration and migration (`api`)
-**Layer:** Infrastructure + DB
-**Repo:** api
-**Depends on:** TASK-05.9.1
-
-**What to build:**
-Create `Api.Infrastructure/Persistence/Configurations/ClientConfiguration.cs` using EF Core Fluent API. Implement `ClientRepository` in `Api.Infrastructure/Persistence/Repositories/`. Add `DbSet<Client>` to `AppDbContext`. Register `IClientRepository → ClientRepository` as `Scoped` in `AddInfrastructure`. Generate the EF Core migration for the `Clients` table. This migration must run before the `ClientUsers` migration (TASK-05.5.3), since `ClientUsers.ClientId` is a FK to `Clients`.
-
-**Constraints:**
-- Table name: `Clients`, `public` schema.
-- `Name` column: `varchar(200)`, unique index.
-- `Description` column: `varchar(1000)`, nullable.
-- `IsDeleted` column: bool, not null, default `false`.
-- Soft-delete global query filter: `modelBuilder.Entity<Client>().HasQueryFilter(c => !c.IsDeleted)`.
-- Migration must not contain raw SQL — Fluent API only.
-- Auto-migration on startup in `Development` only.
-
-**Definition of Done:**
-- [ ] EF Core config file exists at `Api.Infrastructure/Persistence/Configurations/ClientConfiguration.cs`.
-- [ ] `ClientRepository` exists at `Api.Infrastructure/Persistence/Repositories/ClientRepository.cs`.
-- [ ] Migration file exists under `Api.Infrastructure/Persistence/Migrations/`.
-- [ ] `dotnet ef database update` applies successfully against a local PostgreSQL instance.
-- [ ] `dotnet build` succeeds.
+#### TASK-05.9.2 — ~~`Client` EF Core configuration and migration~~ *(removed — superseded by EPIC-00)*
+> ⚠️ **This task is removed.** The `Clients` table, `ClientConfiguration`, and migration are delivered by **EPIC-00 TASK-00.2**. There is nothing to do here. Proceed directly to TASK-05.9.3.
 
 ---
 
@@ -1028,21 +1034,21 @@ Create the `/clients` route inside `AdminShell`. The page renders a shadcn/ui `T
 
 ## Task Breakdown
 
-> **Recommended sprint order:** Schedule US-05.9 domain/DB tasks (TASK-05.9.1, 05.9.2) and US-05.5 domain/DB tasks (TASK-05.5.2, 05.5.3) at the start — they are foundational prerequisites. Backoffice auth tasks (TASK-05.1.1 through 05.1.6) can run in parallel on the frontend track.
+> **Recommended sprint order:** EPIC-00 must be complete before EPIC-05 begins. The `Client`, `ClientUser`, and `ClientProject` tables already exist — EPIC-05 starts directly with repository interfaces and use cases. Backoffice auth tasks (TASK-05.1.1 through 05.1.6) can run in parallel on the frontend track.
 
 | Task | Title | Story | Layer | Repo | Depends on |
 |---|---|---|---|---|---|
-| TASK-05.9.1 | `Client` domain entity and repository interface | US-05.9 | Domain | api | — |
-| TASK-05.9.2 | `Client` EF Core configuration and migration | US-05.9 | Infrastructure + DB | api | TASK-05.9.1 |
+| TASK-05.9.1 | `Client` domain methods, `IClientRepository`, `ClientRepository` | US-05.9 | Domain + Infrastructure | api | EPIC-00 TASK-00.2 |
+| ~~TASK-05.9.2~~ | ~~`Client` EF Core configuration and migration~~ — **removed, superseded by EPIC-00** | — | — | — | — |
 | TASK-05.9.3 | `CreateClientUseCase` and `UpdateClientUseCase` | US-05.9 | Application | api | TASK-05.9.1 |
 | TASK-05.9.4 | `SoftDeleteClientUseCase` | US-05.9 | Application | api | TASK-05.9.1, TASK-05.5.2 |
-| TASK-05.9.5 | `ClientsController` | US-05.9 | API | api | TASK-05.9.3, TASK-05.9.4, TASK-05.9.2 |
+| TASK-05.9.5 | `ClientsController` | US-05.9 | API | api | TASK-05.9.3, TASK-05.9.4 |
 | TASK-05.9.6 | Client management pages | US-05.9 | Frontend | backoffice | TASK-05.9.5, TASK-05.1.4 |
 | TASK-05.5.1 | `POST /internal/users` in `identity` | US-05.5 | API + Infrastructure | identity | TASK-01.1.1, TASK-04.1.3 |
-| TASK-05.5.2 | `ClientUser` domain entity and repository interface | US-05.5 | Domain | api | TASK-05.9.1 |
-| TASK-05.5.3 | `ClientUser` EF Core configuration and migration | US-05.5 | Infrastructure + DB | api | TASK-05.5.2, TASK-05.9.2 |
+| TASK-05.5.2 | `ClientUser` domain methods, `IClientUserRepository`, `ClientUserRepository` | US-05.5 | Domain + Infrastructure | api | EPIC-00 TASK-00.2 |
+| TASK-05.5.3 | `ActivateClientUserUseCase` + internal activate endpoint | US-05.5 | Application + API | api | TASK-05.5.2 |
 | TASK-05.5.4 | `InviteClientUserUseCase` | US-05.5 | Application | api | TASK-05.5.2, TASK-10.3.1 |
-| TASK-05.5.5 | `InviteClientUser` endpoint on `ClientUsersController` | US-05.5 | API | api | TASK-05.5.4, TASK-05.5.3, TASK-05.4.2 |
+| TASK-05.5.5 | `InviteClientUser` endpoint on `ClientUsersController` | US-05.5 | API | api | TASK-05.5.4, TASK-05.4.2 |
 | TASK-05.5.6 | Invite user form | US-05.5 | Frontend | backoffice | TASK-05.5.5, TASK-05.4.3 |
 | TASK-05.1.1 | `AuthProvider`, PKCE flow, Axios interceptor | US-05.1 | Frontend | backoffice | TASK-01.2.1, TASK-10.2.1 |
 | TASK-05.1.2 | Login page | US-05.1 | Frontend | backoffice | TASK-05.1.1 |

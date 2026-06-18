@@ -1,11 +1,30 @@
 # EPIC-01 — Authentication & User Access
-> Priority: 2 | Status: ✅ Stories + tasks defined
+> Priority: 2 | Status: ✅ Stories + tasks defined (revised 2026-06-18)
+
+---
+
+## Revision Notes (2026-06-18, updated 2026-06-19)
+
+This epic was restructured after an audit of the existing codebase revealed that a significant portion of the identity infrastructure was already implemented in prior work (EF Core + OpenIddict setup, `IdentityAppDbContext`, `OpenIddictClientSeeder`, `IAuditWriter`, `Program.cs`, `ExceptionMiddleware`). Tasks have been merged and scoped to reflect what actually remains to be built, not what existed at the time of the original spec.
+
+**Key decisions confirmed in revision:**
+- Access token lifetime: **1 hour** (corrects the 30-minute value currently in `DependencyInjection.cs`).
+- Refresh token lifetime: **30 days** (replaces the 8-hour sliding window from the original spec — aligns with the existing implementation).
+- `ApplicationUser.Role` property: **removed**. Roles are stored via the standard ASP.NET Core Identity `AspNetUserRoles` junction table and emitted as claims by `UserManager`. No redundant `Role` column on `AspNetUsers`.
+- `ApplicationUserConfiguration`: still required, but only to configure `PreferredLanguage` (no `Role` column to configure).
+- `OpenIddictClientSeeder`: already fully implemented and idempotent — not a remaining task.
+- `IAuditWriter`: already fully implemented — not a remaining task.
+
+**2026-06-19 addition — `client_id` claim and `ApplicationUser.ClientId`:**
+- `ApplicationUser.ClientId` (nullable `Guid?`) and `ClientIdClaimHandler` are defined in **EPIC-00 TASK-00.1**, not this epic. They depend on `ApplicationUser` existing (TASK-01.A) and must be implemented immediately after it.
+- TASK-01.B (`TokenController`) does **not** need to emit `client_id` manually — `ClientIdClaimHandler` handles it automatically via the OpenIddict pipeline, exactly as `LocaleClaimHandler` handles `locale`.
+- TASK-01.6.1 (`ApiControllerBase`) must include `CurrentClientId` as a claim helper (see updated task below).
 
 ---
 
 ## Overview
 
-Covers all authentication and session flows for SupportHub: account activation via invitation, login, logout, session persistence, and password recovery. Delivers the full auth experience for the **client-portal** frontend and the shared **identity** backend. Backoffice frontend auth (login, activation, logout, session, route guards) is deferred to EPIC-05, where the admin home screen and protected pages it lands on are defined.
+Covers all authentication and session flows for SupportHub: account activation via invitation, login, logout, session persistence, and password recovery. Delivers the full auth experience for the **client-portal** frontend and the shared **identity** backend. Backoffice frontend auth (login, activation, logout, session, route guards) is deferred to EPIC-05.
 
 ---
 
@@ -13,22 +32,32 @@ Covers all authentication and session flows for SupportHub: account activation v
 
 **Architectural decisions resolved for this epic:**
 
-- **Role model**: roles (`Admin`, `Client`) are stored as ASP.NET Core Identity claims on `ApplicationUser` and included in the OpenIddict access token as a `role` claim. The `api` service reads the `role` claim from the JWT — no DB lookup at request time. Role assignment happens at invitation acceptance (US-01.1); the EPIC-05 admin flow determines the role at invite creation.
-- **Session duration**: OpenIddict issues short-lived access tokens (1 hour) and a sliding refresh token (8-hour window). The SPA silently refreshes the access token; if the user is inactive for 8 hours the refresh token expires and the user is redirected to login. This satisfies US-01.3 without a custom session abstraction.
-- **Account lockout**: ASP.NET Core Identity's built-in lockout (`LockoutEnabled = true`, `MaxFailedAccessAttempts = 5`, `DefaultLockoutTimeSpan = 15 minutes`) is used. Unlock is time-based — no admin action required. After lockout, OpenIddict will not issue tokens for locked accounts (Identity validates the user state before the token endpoint succeeds).
+- **Role model**: roles (`Admin`, `Client`) are stored in ASP.NET Core Identity's standard `AspNetUserRoles` junction table and assigned via `UserManager.AddToRoleAsync`. They are included in the OpenIddict access token as a `role` claim via claim destination configuration in the token controller. The `api` service reads the `role` claim from the JWT — no DB lookup at request time. Role assignment happens at invitation acceptance (US-01.1); the EPIC-05 admin flow determines the role at invite creation.
+- **Tenant identity claim (`client_id`)**: `ApplicationUser.ClientId` (nullable `Guid?`) is added to `ApplicationUser` in **EPIC-00 TASK-00.1** and emitted as a `client_id` claim by `ClientIdClaimHandler` (also EPIC-00 TASK-00.1). Admin users have `ClientId: null` and receive no `client_id` claim. Client users always carry it. This claim is the sole mechanism by which `api` endpoints identify which tenant a request belongs to — no DB lookup at request time.
+- **Session duration**: OpenIddict issues short-lived access tokens (1 hour) and a long-lived refresh token (30 days). The SPA silently refreshes the access token; if the refresh token is not present or has expired the user is redirected to login.
+- **Account lockout**: ASP.NET Core Identity's built-in lockout (`LockoutEnabled = true`, `MaxFailedAccessAttempts = 5`, `DefaultLockoutTimeSpan = 15 minutes`) is used. Unlock is time-based — no admin action required. After lockout, OpenIddict will not issue tokens for locked accounts.
 - **Session invalidation on password reset**: `IOpenIddictTokenManager.RevokeBySubjectAsync(userId)` is called after a successful password reset. This revokes all outstanding refresh tokens for the user, forcing re-authentication on all devices.
-- **Invitation & reset tokens**: ASP.NET Core Identity's `UserManager.GeneratePasswordResetTokenAsync` / `GenerateEmailConfirmationTokenAsync` are used for invitation and reset link tokens respectively. These tokens are URL-encoded and embedded in the link sent via SES (EPIC-04 owns SES; this epic owns the token lifecycle and the endpoints that consume them). For EPIC-01, email sending is a stub/interface — actual SES wiring is in EPIC-04.
-- **Password policy**: minimum 8 characters, at least one uppercase letter, one digit, one non-alphanumeric character — enforced via `PasswordOptions` in Identity configuration.
-- **Frontend auth state**: the SPA stores the access token in memory (React context) and the refresh token in an `HttpOnly` cookie set by the `identity` server. `localStorage` is not used for tokens (OWASP). EPIC-01 delivers this auth context for `client-portal` only; the `backoffice` app reuses the same pattern in EPIC-05.
-- **Backoffice frontend scope boundary**: the `identity` backend (TASK-01.1.x, TASK-01.2.1, TASK-01.4.1, TASK-01.5.1/2) is fully shared and serves both SPAs. The OpenIddict client seed (TASK-01.1.2) registers both `client-portal` and `backoffice` client IDs so the identity server is ready. However, no backoffice frontend tasks are implemented here — those tasks are defined in EPIC-05, where the admin dashboard (the post-login landing page) is also built.
+- **Invitation & reset tokens**: ASP.NET Core Identity's `UserManager.GeneratePasswordResetTokenAsync` / `GenerateEmailConfirmationTokenAsync` are used for invitation and reset link tokens respectively. Two named token providers configure different expiry times: `"Invitation"` provider (72 hours) and default provider (1 hour for password reset). These tokens are URL-encoded and embedded in the link sent via SES (EPIC-04 owns SES; this epic owns the token lifecycle and the endpoints that consume them). For EPIC-01, email sending is a stub/interface — actual SES wiring is in EPIC-04.
+- **Password policy**: minimum 8 characters, at least one uppercase letter, one digit, one non-alphanumeric character — already enforced in `AddInfrastructure` via `PasswordOptions`.
+- **Frontend auth state**: the SPA stores the access token in memory (React context) and the refresh token in an `HttpOnly` cookie set by the `identity` server's `TokenController`. `localStorage` is not used for tokens (OWASP). EPIC-01 delivers this auth context for `client-portal` only; the `backoffice` app reuses the same pattern in EPIC-05.
+- **Backoffice frontend scope boundary**: the `identity` backend is fully shared and serves both SPAs. The OpenIddict client seed already registers both `client-portal` and `backoffice` client IDs. No backoffice frontend tasks are implemented here — those are defined in EPIC-05.
 
 **Cross-cutting dependencies:**
 - EPIC-01 `identity` tasks are prerequisites for every other epic's backend work (JWT validation depends on a running identity server).
-- EPIC-05 backoffice frontend tasks depend on TASK-01.2.1 (token endpoint), TASK-01.4.1 (logout endpoint), and TASK-01.5.1/2 (password reset endpoints) all being complete.
+- EPIC-05 backoffice frontend tasks depend on TASK-01.B (token endpoint), TASK-01.D (logout endpoint), and TASK-01.E (password reset endpoints) all being complete.
 - US-01.1 (account activation) depends on EPIC-05 creating the invited user record — a stub endpoint is sufficient for EPIC-01.
 - Email sending (invitation and reset links) is stubbed in EPIC-01 via an `IEmailService` interface; EPIC-04 provides the real SES implementation.
-- **Audit log (EPIC-11):** The following events in this epic must write audit records via `IAuditWriter` (defined in EPIC-11): successful login (`LOGIN`), failed login (`LOGIN_FAILED`), account activation (`ACCOUNT_ACTIVATION`), password reset (`PASSWORD_RESET`). These are written from the `identity` controllers — no use-case change required in `api`. The `IAuditWriter` infrastructure must be in place (EPIC-11) before the `identity` controller tasks in this epic are implemented.
-- **i18n (EPIC-10):** The user's language preference (`PreferredLanguage`) must be included in the OpenIddict access token as a `locale` claim so both SPAs can initialise the i18n context immediately after login without an extra API call. The language field is admin-managed (EPIC-05 / EPIC-10 US-10.4). All frontend strings in this epic must use i18n translation keys — no hardcoded UI text. Email templates for invitation and password reset must exist in both Spanish and English (EPIC-10 US-10.5).
+- **Audit log**: The following events must write audit records via `IAuditWriter` (already implemented): successful login (`LOGIN`), failed login (`LOGIN_FAILED`), account activation (`ACCOUNT_ACTIVATION`), password reset completed (`PASSWORD_RESET_COMPLETED`), password reset failed (`PASSWORD_RESET_FAILED`). Written from the `identity` controllers.
+- **i18n**: `ApplicationUser.PreferredLanguage` (default `"es"`) is included in the OpenIddict access token as a `locale` claim (ISO 639-1) by `LocaleClaimHandler`. Both SPAs initialise i18n immediately after login from this claim. A dedicated `PATCH /internal/users/{id}/language` endpoint (TASK-01.F) + `PATCH /api/me/language` on `api` (TASK-01.7.2) allow the user to switch language at runtime.
+
+**What is already implemented (do not re-implement):**
+- `IdentityAppDbContext` — correct schema, `UseOpenIddict()`, Fluent config loading via `ApplyConfigurationsFromAssembly`.
+- `AddInfrastructure` — Identity registered with password policy + lockout settings, OpenIddict server with auth code + PKCE flow, all endpoint passthroughs, development certificates, `IAuditWriter`, `IClock`, health checks.
+- `OpenIddictClientSeeder` — idempotent, seeds both SPA clients with correct scopes, PKCE requirement, redirect/logout URIs from config.
+- `IAuditWriter` / `AuditWriter` / `AuditLog` — complete and registered.
+- `Program.cs` — middleware order, health checks, auto-migration in Development.
+- `ExceptionMiddleware`, `CorrelationIdMiddleware`.
+- `InitialCreate` migration — `identity` schema, all Identity tables, OpenIddict tables, `AuditLogs` table with `jsonb` columns.
 
 ---
 
@@ -50,97 +79,68 @@ Covers all authentication and session flows for SupportHub: account activation v
 
 **Story Points:** 3
 
-#### TASK-01.1.1 — ApplicationUser entity and Identity configuration (identity)
+#### TASK-01.A — Complete ApplicationUser, PreferredLanguage config, LocaleClaimHandler, and migration (identity)
 **Layer:** Infrastructure
 **Repo:** identity
-**Depends on:** none
+**Depends on:** none (replaces original TASK-01.1.1 + TASK-01.1.2 + TASK-01.1.3)
+
+**Context:** `ApplicationUser` already exists but is empty. `IdentityAppDbContext`, `AddInfrastructure`, and `OpenIddictClientSeeder` are already fully implemented. The `InitialCreate` migration exists and has the base schema. This task completes the remaining gaps in the entity layer before any controller work begins.
 
 **What to build:**
-Define `ApplicationUser : IdentityUser` in `Identity.Infrastructure/Identity/` adding a `Role` property (string, not nullable). Configure ASP.NET Core Identity in `DependencyInjection.cs` with password policy (`PasswordOptions`), lockout settings, and `UserManager<ApplicationUser>` registration. The `IdentityAppDbContext` in `Identity.Infrastructure/Persistence/` must call `UseOpenIddict()` in `OnModelCreating` and extend `IdentityDbContext<ApplicationUser>`.
+
+1. **`ApplicationUser`** (`Identity.Infrastructure/Identity/ApplicationUser.cs`): add `PreferredLanguage` property — `string`, not nullable, default value `"es"`. Do **not** add a `Role` property — roles are managed via `AspNetUserRoles` (standard Identity approach).
+
+2. **`ApplicationUserConfiguration`** (`Identity.Infrastructure/Persistence/Configurations/ApplicationUserConfiguration.cs`): implement `IEntityTypeConfiguration<ApplicationUser>`. Configure `PreferredLanguage` as `varchar(10)`, not null, default value `"es"` via Fluent API. No Data Annotations on the entity.
+
+3. **`LocaleClaimHandler`** (`Identity.Infrastructure/OpenIddict/LocaleClaimHandler.cs`): implement `IOpenIddictServerHandler<ProcessSignInContext>`. Reads `ApplicationUser.PreferredLanguage` from the principal's subject claim via `UserManager`, defaults to `"es"` if null or empty, and emits a `locale` claim to the access token only (`Destinations.AccessToken`). Register via `.AddServer(opts => opts.AddEventHandler<ProcessSignInContext>(LocaleClaimHandler.Descriptor))` in `DependencyInjection.cs`.
+
+4. **Token provider configuration**: In `AddInfrastructure`, add a named token provider `"Invitation"` via `AddTokenProvider<DataProtectorTokenProvider<ApplicationUser>>("Invitation")` with `TokenLifespan = TimeSpan.FromHours(72)`. The default `DataProtectionTokenProvider` handles password reset with `TokenLifespan = TimeSpan.FromHours(1)`. Configure both via `services.Configure<DataProtectionTokenProviderOptions>(...)`.
+
+5. **Correct access token lifetime**: Change `SetAccessTokenLifetime(TimeSpan.FromMinutes(30))` to `SetAccessTokenLifetime(TimeSpan.FromHours(1))` in `DependencyInjection.cs`. Leave refresh token lifetime at 30 days.
+
+6. **EF Core migration**: Generate a new migration (`AddPreferredLanguage`) to add the `PreferredLanguage` column to `AspNetUsers` in the `identity` schema.
 
 **Constraints:**
-- `ApplicationUser` lives in `Identity.Infrastructure/Identity/` — not in a Domain project (framework type, per backend-guidelines §1).
-- `IdentityAppDbContext` must use the `identity` PostgreSQL schema (set via `HasDefaultSchema("identity")` in `OnModelCreating`).
-- Password policy minimum: 8 characters, require uppercase, require digit, require non-alphanumeric.
-- Lockout: `MaxFailedAccessAttempts = 5`, `DefaultLockoutTimeSpan = 15 minutes`, `LockoutOnFailure = true`.
-- No `JWT_SECRET` or raw signing keys — development uses `AddDevelopmentSigningCertificate()` / `AddDevelopmentEncryptionCertificate()`.
-- All DI registration goes in `AddInfrastructure` — `Program.cs` calls only `AddInfrastructure`.
-
-**Definition of Done:**
-- [ ] `dotnet build` succeeds for the `identity` solution.
-- [ ] `ApplicationUser` class exists at `Identity.Infrastructure/Identity/ApplicationUser.cs`.
-- [ ] `IdentityAppDbContext` exists at `Identity.Infrastructure/Persistence/IdentityAppDbContext.cs` and calls `UseOpenIddict()`.
-- [ ] `AddInfrastructure` in `DependencyInjection.cs` registers Identity and DbContext without errors.
-
----
-
-#### TASK-01.1.2 — OpenIddict server configuration and SPA client seed (identity)
-**Layer:** Infrastructure
-**Repo:** identity
-**Depends on:** TASK-01.1.1
-
-**What to build:**
-Configure the OpenIddict OIDC server in `AddInfrastructure`: authorization code flow with PKCE, development certificates, all required endpoint URIs (`connect/authorize`, `connect/token`, `connect/userinfo`, `connect/logout`), and scopes (`openid`, `profile`, `email`, `roles`, `supporthub-api`). Add a hosted service (`IHostedService`) that seeds the two SPA client registrations (`client-portal` and `backoffice`) at startup if they do not already exist, including redirect URIs, post-logout URIs, and `Requirements.Features.ProofKeyForCodeExchange`.
-
-**Constraints:**
-- Use `OpenIddict.AspNetCore` + `OpenIddict.EntityFrameworkCore` NuGet packages.
-- Client registration seeding must be idempotent (check existence before creating).
-- SPA clients must have `ClientType = ClientTypes.Public` (no client secret for PKCE public clients).
-- Access token lifetime: 1 hour. Refresh token lifetime: sliding, 8 hours (`SetRefreshTokenLifetime`, `SetRefreshTokenReuseLeeway`).
-- All redirect URIs and allowed origins come from environment variables — no hardcoded localhost URLs in production paths.
-- `RequireProofKeyForCodeExchange()` must be set both globally and per client descriptor (belt-and-suspenders per Context7 docs).
-- `Permissions.Scopes.Roles` must be included so the `role` claim is available in access tokens.
+- `ApplicationUser` uses `Guid` keys: `IdentityUser<Guid>` — already correct, do not change.
+- `PreferredLanguage` is `string`, not nullable, default `"es"` — enforced at both application and DB level.
+- No `JWT_SECRET` or raw signing keys — already using `AddDevelopmentSigningCertificate()` / `AddDevelopmentEncryptionCertificate()`.
+- All DI registration goes in `AddInfrastructure`.
+- Use Context7 to look up current OpenIddict `IOpenIddictServerHandler` API before implementing `LocaleClaimHandler`.
 
 **Definition of Done:**
 - [ ] `dotnet build` succeeds.
-- [ ] OpenIddict server is registered in `AddInfrastructure` with authorization code + PKCE flow.
-- [ ] Hosted service class exists at `Identity.Infrastructure/Identity/OpenIddictClientSeedService.cs`.
-- [ ] Running the app in Development seeds both SPA client registrations without error (verify via `OpenIddictApplications` table row count ≥ 2).
+- [ ] `ApplicationUser` at `Identity.Infrastructure/Identity/ApplicationUser.cs` has `PreferredLanguage` property (no `Role` property).
+- [ ] `ApplicationUserConfiguration` exists and configures `PreferredLanguage` as `varchar(10) NOT NULL DEFAULT 'es'`.
+- [ ] `LocaleClaimHandler` exists at `Identity.Infrastructure/OpenIddict/LocaleClaimHandler.cs` and is registered in `AddInfrastructure`.
+- [ ] `DependencyInjection.cs` has access token lifetime set to 1 hour.
+- [ ] New migration `AddPreferredLanguage` exists in `Identity.Infrastructure/Migrations/` and adds the `PreferredLanguage` column.
+- [ ] `dotnet ef database update` succeeds against the dev database.
 
 ---
 
-#### TASK-01.1.3 — EF Core migration: Identity + OpenIddict schema (identity)
-**Layer:** DB
+#### TASK-01.C — Account activation endpoint (identity)
+**Layer:** API + Infrastructure
 **Repo:** identity
-**Depends on:** TASK-01.1.2
+**Depends on:** TASK-01.A
 
 **What to build:**
-Generate the initial EF Core migration that creates the ASP.NET Core Identity tables and the 4 OpenIddict tables (`OpenIddictApplications`, `OpenIddictAuthorizations`, `OpenIddictScopes`, `OpenIddictTokens`) all within the `identity` schema. Apply auto-migration on startup in `Development` only (guard with `if (app.Environment.IsDevelopment())`).
-
-**Constraints:**
-- Migration runs from the `Identity.Infrastructure` project targeting `IdentityAppDbContext`.
-- All tables must be in the `identity` PostgreSQL schema.
-- Auto-migration guard is `Development`-only — never auto-applied in production containers (per backend-guidelines §7).
-- Migration class must not contain any raw SQL — use EF Core Fluent API exclusively.
-
-**Definition of Done:**
-- [ ] Migration file exists under `Identity.Infrastructure/Persistence/Migrations/`.
-- [ ] `dotnet ef database update` applies successfully against a local PostgreSQL instance.
-- [ ] `dotnet build` succeeds after migration generation.
-
----
-
-#### TASK-01.1.4 — Account activation endpoint (identity)
-**Layer:** API
-**Repo:** identity
-**Depends on:** TASK-01.1.1
-
-**What to build:**
-Implement `POST /api/account/activate` in `Identity.API` that accepts an invitation token and a new password, validates the token via `UserManager.ResetPasswordAsync` (invitation tokens are generated as password reset tokens with a 72-hour expiry), marks the user as confirmed, and assigns the `role` claim. The use case logic lives in a service class in `Identity.Infrastructure` (no Application layer in the identity repo, per backend-guidelines §1).
+Implement `POST /api/account/activate` in `Identity.API`. The endpoint accepts an invitation token and a new password, validates the token via `UserManager.ResetPasswordAsync` using the `"Invitation"` named token provider, marks the user email as confirmed (`EmailConfirmed = true`), and writes the audit record. The use case logic lives in a service class `AccountActivationService` in `Identity.Infrastructure/Endpoints/AccountActivation/`.
 
 **Constraints:**
 - Request DTO: `{ token: string, email: string, password: string, confirmPassword: string }`.
 - Validate `password == confirmPassword` before calling `UserManager` — return `422` with the standard error envelope on mismatch.
-- Invitation token expiry is controlled by `DataProtectionTokenProviderOptions.TokenLifespan = TimeSpan.FromHours(72)` — configure this in `AddInfrastructure`.
-- On success, return `200 OK` with `{ message: "Account activated successfully" }`. Call `IAuditWriter.WriteAsync` with operation `ACCOUNT_ACTIVATION`, the user's ID, and the client IP address.
+- Use the `"Invitation"` named token provider (configured in TASK-01.A) when calling `UserManager.ResetPasswordAsync`.
+- On success, return `200 OK` with `{ message: "Account activated successfully" }`. Call `IAuditWriter.WriteAsync` with operation `ACCOUNT_ACTIVATION`, the user's ID as `entityId`, the user's ID as `userId`, and the client IP address.
 - On expired/invalid token, return `400` with `{ code: "INVALID_TOKEN", message: "...", details: [] }`.
 - Controller inherits from `ApiControllerBase`. `[AllowAnonymous]` — this endpoint is public.
 - Never log the token value.
+- `IEmailService` interface and stub are **not** required by this task — activation token generation happens in EPIC-05 (invitation creation). This endpoint only *consumes* the token.
 
 **Definition of Done:**
 - [ ] `POST /api/account/activate` with a valid token and matching passwords returns `200 OK`.
-- [ ] `POST /api/account/activate` with an expired token returns `400` with `code: "INVALID_TOKEN"`.
+- [ ] `POST /api/account/activate` with an expired/invalid token returns `400` with `code: "INVALID_TOKEN"`.
 - [ ] `POST /api/account/activate` with mismatched passwords returns `422`.
+- [ ] A successful activation produces an `ACCOUNT_ACTIVATION` row in `identity.audit_logs`.
 - [ ] `dotnet build` succeeds.
 
 ---
@@ -148,18 +148,19 @@ Implement `POST /api/account/activate` in `Identity.API` that accepts an invitat
 #### TASK-01.1.5 — Account activation page (client-portal)
 **Layer:** Frontend
 **Repo:** client-portal
-**Depends on:** TASK-01.1.4
+**Depends on:** TASK-01.C
 
 **What to build:**
 Create the `/activate` route in the `client-portal` React app. The page reads `token` and `email` from URL query parameters. It renders a form with a read-only email field, a password field with a strength indicator (use shadcn/ui `Input` + a custom `PasswordStrength` component), and a confirm-password field. On submit, calls `POST /api/account/activate` on the identity server. On success, navigates to `/login` with a success toast. On error (expired/invalid token), shows an inline error with a "Contact support" prompt.
 
 **Constraints:**
 - Use shadcn/ui `Form`, `Input`, `Button` — no raw HTML form elements.
-- `PasswordStrength` is a reusable component (will be reused in TASK-01.5.3a and TASK-01.5.3b).
+- `PasswordStrength` is a reusable component (will be reused in TASK-01.5.3 and backoffice in EPIC-05).
 - Client-side validation: passwords must match before the API call is made.
 - The `email` query parameter is displayed read-only and is not editable by the user.
 - Error states for expired/invalid token and mismatched passwords are visually distinct.
 - Route is `[AllowAnonymous]` — accessible without authentication.
+- All user-visible strings must use `t()` translation keys — no hardcoded text.
 
 **Definition of Done:**
 - [ ] `/activate?token=X&email=Y` route renders the activation form.
@@ -185,28 +186,36 @@ Create the `/activate` route in the `client-portal` React app. The page reads `t
 
 **Story Points:** 3
 
-#### TASK-01.2.1 — OpenIddict authorization and token endpoint controllers (identity)
+#### TASK-01.B — OpenIddict authorization and token endpoint controllers (identity)
 **Layer:** API
 **Repo:** identity
-**Depends on:** TASK-01.1.2
+**Depends on:** TASK-01.A
 
 **What to build:**
-Implement the two OpenIddict passthrough controllers required for the authorization code flow: `AuthorizationController` (handles `GET /connect/authorize` — validates the PKCE challenge, authenticates the user via cookie, issues the authorization code) and `TokenController` (handles `POST /connect/token` — exchanges the code + PKCE verifier for access + refresh tokens, includes `email`, `role`, and `sub` claims in the token). Both controllers use `IOpenIddictServerFeature` (via `HttpContext.GetOpenIddictServerRequest()`) and `SignInAsync` with an `OpenIddictPrincipal`.
+Implement the two OpenIddict passthrough controllers: `AuthorizationController` (handles `GET /connect/authorize`) and `TokenController` (handles `POST /connect/token`). These are always implemented together — they are two sides of the same PKCE code exchange flow.
+
+`AuthorizationController`: validates the PKCE challenge request via `HttpContext.GetOpenIddictServerRequest()`, checks if the user is already authenticated via cookie, builds the `ClaimsPrincipal` with `sub`, `email`, and `role` claims (roles fetched via `UserManager.GetRolesAsync`), and calls `SignInAsync`. For unauthenticated requests, redirects to the login page (challenge).
+
+`TokenController`: handles `POST /connect/token`. For `authorization_code` grant: exchanges the code + PKCE verifier for access + refresh tokens. Validates the user is not locked out. On successful authentication via `UserManager.CheckPasswordAsync`, increments or resets lockout counters accordingly. Builds the `OpenIddictPrincipal` with all claims destined for the access token. Sets the refresh token in an `HttpOnly` cookie via `Response.Cookies.Append` (OpenIddict does not do this automatically — the SPA silent refresh flow depends on this cookie). Calls `IAuditWriter.WriteAsync` with `LOGIN` on success or `LOGIN_FAILED` on failure.
+
+**Note on claim handlers**: the `locale` claim is emitted automatically by `LocaleClaimHandler` (TASK-01.A) and the `client_id` claim is emitted automatically by `ClientIdClaimHandler` (EPIC-00 TASK-00.1). The token controller does not need to add either claim manually. It only needs to ensure the `OpenIddictPrincipal` is built from the `ApplicationUser` (which carries both `PreferredLanguage` and `ClientId`).
 
 **Constraints:**
-- These controllers enable the OpenIddict passthrough endpoints — they must call `EnableAuthorizationEndpointPassthrough()` / `EnableTokenEndpointPassthrough()` (already set in TASK-01.1.2; controllers must be compatible).
-- `role` claim must be included in the access token principal so the `api` service can read it from the JWT.
-- `UserManager.CheckPasswordAsync` + lockout increment (`AccessFailedAsync`) must be called during the authorization step — do not bypass Identity's lockout counters.
+- Use Context7 to look up the current OpenIddict passthrough controller pattern before coding.
+- `UserManager.CheckPasswordAsync` + `AccessFailedAsync` / `ResetAccessFailedCountAsync` must be called during the token exchange step — do not bypass Identity's lockout counters.
 - On locked account, return the OpenIddict error `OpenIddictConstants.Errors.AccessDenied` with a descriptive description.
-- On successful authentication, call `IAuditWriter.WriteAsync` with operation `LOGIN`, the user's ID, and the client IP address (from `HttpContext.Connection.RemoteIpAddress`).
-- On failed authentication (wrong password, user not found, locked), call `IAuditWriter.WriteAsync` with operation `LOGIN_FAILED`, the attempted email as `entityId`, `userId: null`, and the client IP address.
-- Controllers are in `Identity.API/Controllers/`.
-- `[AllowAnonymous]` — OIDC endpoints are public.
+- `role` claims must be set with destination `AccessToken` so they appear in the JWT the `api` service reads.
+- On successful token issuance, call `IAuditWriter.WriteAsync` with operation `LOGIN`, the user's ID as both `entityId` and `userId`, and the client IP from `HttpContext.Connection.RemoteIpAddress`.
+- On failed authentication, call `IAuditWriter.WriteAsync` with operation `LOGIN_FAILED`, the attempted email as `entityId`, `userId: null`, and the client IP.
+- Both controllers in `Identity.API/Controllers/`. `[AllowAnonymous]`.
+- The `HttpOnly` cookie holding the refresh token must be `Secure`, `SameSite=Strict`, and use the path `/connect/token` to limit its scope.
 
 **Definition of Done:**
-- [ ] `GET /connect/authorize` with a valid PKCE request redirects to the login page (or returns a code for an already-authenticated session).
-- [ ] `POST /connect/token` with a valid authorization code + verifier returns a JSON response containing `access_token`, `refresh_token`, `expires_in`.
+- [ ] `GET /connect/authorize` with a valid PKCE request redirects to the login page (or issues a code for an already-authenticated session).
+- [ ] `POST /connect/token` with a valid authorization code + verifier returns `access_token`, `refresh_token` (in body and `HttpOnly` cookie), `expires_in`.
 - [ ] `POST /connect/token` for a locked account returns an error response.
+- [ ] A successful login produces a `LOGIN` row in `identity.audit_logs`.
+- [ ] A failed login produces a `LOGIN_FAILED` row with `UserId = null` and `EntityId = <attempted email>`.
 - [ ] `dotnet build` succeeds.
 
 ---
@@ -214,19 +223,20 @@ Implement the two OpenIddict passthrough controllers required for the authorizat
 #### TASK-01.2.2 — Login page and OIDC authorization code + PKCE flow (client-portal)
 **Layer:** Frontend
 **Repo:** client-portal
-**Depends on:** TASK-01.2.1
+**Depends on:** TASK-01.B
 
 **What to build:**
-Create the `/login` route in the `client-portal` React app. The page renders a login form (email + password fields, show/hide password toggle, submit button with loading state). On submit, initiate the OpenIddict authorization code + PKCE flow: redirect the browser to `identity` `/connect/authorize` with `response_type=code`, `client_id`, `redirect_uri`, `scope`, `code_challenge` (S256), and `code_challenge_method`. After the identity server authenticates and redirects back with a `code`, the SPA calls `POST /connect/token` to exchange it for tokens. Store the access token in React context (memory only); the refresh token arrives via `HttpOnly` cookie set by the identity server. Implement the `AuthProvider` context component that holds auth state.
+Create the `/login` route in the `client-portal` React app. The page renders a login form (email + password fields, show/hide password toggle, submit button with loading state). On submit, initiate the OpenIddict authorization code + PKCE flow: redirect the browser to `identity` `/connect/authorize` with `response_type=code`, `client_id`, `redirect_uri`, `scope`, `code_challenge` (S256), and `code_challenge_method`. After the identity server authenticates and redirects back with a `code`, the SPA calls `POST /connect/token` to exchange it for tokens. Store the access token in React context (memory only); the refresh token arrives via `HttpOnly` cookie set by the identity server's `TokenController`. Implement the `AuthProvider` context component that holds auth state, decodes the access token, and initialises the i18n locale.
 
 **Constraints:**
 - PKCE code verifier and challenge must be generated in the browser (use `crypto.subtle` or the `pkce-challenge` npm package — no server-side generation).
 - No token storage in `localStorage` or `sessionStorage` (OWASP).
-- The `redirect_uri` after login must respect the `returnUrl` query parameter (so the user lands on the originally-requested page).
-- On invalid credentials (identity server returns `error=access_denied`), display "Incorrect email or password" — do not disambiguate.
-- On locked account (identity server returns `error=access_denied` with lockout description), display the locked-account message and a "Reset your password" link.
-- Use shadcn/ui `Form`, `Input`, `Button` components.
-- Login page route is `[AllowAnonymous]`.
+- The `redirect_uri` after login must respect the `returnUrl` query parameter.
+- On invalid credentials (identity server returns `error=access_denied`), display the i18n key for "Incorrect email or password" — do not disambiguate.
+- On locked account, display the locked-account i18n message and a "Reset your password" link.
+- **`AuthProvider` i18n wiring**: after receiving the access token, decode it (JWT decode, no verification needed client-side), read the `locale` claim, call `i18n.changeLanguage(locale)`, and set `document.documentElement.lang = locale`. Fall back to `"es"` if absent. Must happen before any protected page renders.
+- Use shadcn/ui `Form`, `Input`, `Button`.
+- All user-visible strings must use `t()` translation keys.
 
 **Definition of Done:**
 - [ ] `/login` route renders the form.
@@ -242,7 +252,7 @@ Create the `/login` route in the `client-portal` React app. The page renders a l
 
 **Acceptance Criteria:**
 - [ ] After a successful login, returning to the app in a new browser tab or after closing and reopening the browser keeps the user authenticated.
-- [ ] The session expires automatically after 8 hours of inactivity, after which the user is redirected to the login page.
+- [ ] The session expires automatically after 30 days of inactivity (refresh token window), after which the user is redirected to the login page.
 - [ ] When a session expires mid-navigation, the user sees a clear "Your session has expired, please log in again" message before the login page is shown.
 - [ ] Session persistence applies to both client and admin users.
 
@@ -261,7 +271,7 @@ Extend the `AuthProvider` from TASK-01.2.2 with silent token refresh: on app loa
 - If the refresh token cookie is absent or expired, redirect immediately — do not show a blank protected screen.
 - The `401` Axios interceptor must not create a retry loop — a second `401` after refresh must redirect to login.
 - No polling — refresh is triggered on app load and on `401` responses only.
-- Toast component uses shadcn/ui `Sonner` (or equivalent shadcn toast).
+- Toast component uses shadcn/ui `Sonner`.
 
 **Definition of Done:**
 - [ ] Closing and reopening the browser (with a valid refresh token cookie) keeps the user authenticated without re-entering credentials.
@@ -282,23 +292,24 @@ Extend the `AuthProvider` from TASK-01.2.2 with silent token refresh: on app loa
 
 **Story Points:** 1
 
-#### TASK-01.4.1 — Logout endpoint (identity)
+#### TASK-01.D — Logout endpoint (identity)
 **Layer:** API
 **Repo:** identity
-**Depends on:** TASK-01.2.1
+**Depends on:** TASK-01.B
 
 **What to build:**
-Implement the `LogoutController` in `Identity.API` that handles `GET /connect/logout` as an OpenIddict passthrough: validate the `id_token_hint`, revoke all refresh tokens for the subject via `IOpenIddictTokenManager.RevokeBySubjectAsync`, sign out of the cookie session, and redirect to the registered `post_logout_redirect_uri`.
+Implement `LogoutController` in `Identity.API/Controllers/` that handles `GET /connect/logout` as an OpenIddict passthrough: validate the `id_token_hint`, revoke all refresh tokens for the subject via `IOpenIddictTokenManager.RevokeBySubjectAsync`, sign out of the cookie session, and redirect to the registered `post_logout_redirect_uri`.
 
 **Constraints:**
-- `LogoutController` enables the `EnableLogoutEndpointPassthrough()` already configured in TASK-01.1.2.
-- `post_logout_redirect_uri` must match a registered URI in the OpenIddict client descriptor — reject unregistered URIs.
-- Refresh token revocation (`RevokeBySubjectAsync`) must complete before the redirect response — not fire-and-forget.
-- `[AllowAnonymous]` — logout endpoint is public.
+- `LogoutController` enables the `EnableEndSessionEndpointPassthrough()` already configured in `AddInfrastructure`.
+- `post_logout_redirect_uri` must match a registered URI in the OpenIddict client descriptor — OpenIddict validates this automatically; do not bypass.
+- `RevokeBySubjectAsync` must complete before the redirect response — not fire-and-forget.
+- `[AllowAnonymous]`.
+- Use Context7 to look up the current OpenIddict end-session passthrough pattern.
 
 **Definition of Done:**
 - [ ] `GET /connect/logout` with a valid `id_token_hint` revokes the refresh token and redirects to the registered post-logout URI.
-- [ ] `GET /connect/logout` with an unregistered `post_logout_redirect_uri` is rejected.
+- [ ] `GET /connect/logout` with an unregistered `post_logout_redirect_uri` is rejected by OpenIddict.
 - [ ] `dotnet build` succeeds.
 
 ---
@@ -306,7 +317,7 @@ Implement the `LogoutController` in `Identity.API` that handles `GET /connect/lo
 #### TASK-01.4.2 — Logout UI and navigation shell (client-portal)
 **Layer:** Frontend
 **Repo:** client-portal
-**Depends on:** TASK-01.4.1, TASK-01.2.2
+**Depends on:** TASK-01.D, TASK-01.2.2
 
 **What to build:**
 Add a "Log out" button to the main navigation shell component of the `client-portal`. Clicking it initiates the OIDC end-session flow (`GET /connect/logout?id_token_hint=...&post_logout_redirect_uri=/login`) and clears the in-memory access token from `AuthProvider` before the redirect. Protected route loaders detect the cleared auth state and redirect to `/login`.
@@ -314,7 +325,7 @@ Add a "Log out" button to the main navigation shell component of the `client-por
 **Constraints:**
 - Logout button uses shadcn/ui `Button` variant `ghost`, placed in the navigation shell component.
 - In-memory auth state is cleared synchronously before the browser redirect.
-- The `post_logout_redirect_uri` value must match the registered URI from TASK-01.1.2.
+- The `post_logout_redirect_uri` value must match the registered URI from the OpenIddict client seed.
 
 **Definition of Done:**
 - [ ] Clicking "Log out" clears the session and lands on `/login`.
@@ -340,50 +351,42 @@ Add a "Log out" button to the main navigation shell component of the `client-por
 
 **Story Points:** 5
 
-#### TASK-01.5.1 — Password reset request endpoint (identity)
-**Layer:** API
+#### TASK-01.E — Password reset endpoints (identity)
+**Layer:** API + Infrastructure
 **Repo:** identity
-**Depends on:** TASK-01.1.1
+**Depends on:** TASK-01.A
+
+**Context:** Both password reset endpoints (`forgot-password` and `reset-password`) are merged into one task because they share the same service class, `IEmailService` dependency, `UserManager` interaction, and token provider configuration. Splitting them creates artificial sequencing with no real benefit.
 
 **What to build:**
-Implement `POST /api/account/forgot-password` in `Identity.API`. The endpoint accepts `{ email: string }`, looks up the user by email via `UserManager.FindByEmailAsync`, and if found generates a reset token via `UserManager.GeneratePasswordResetTokenAsync` and dispatches it via `IEmailService` (stub interface — real SES implementation is EPIC-04). Always returns `200 OK` regardless of whether the user exists (anti-enumeration).
+
+**`IEmailService`** (`Identity.Infrastructure/Email/IEmailService.cs`): define the interface with a single method `Task SendPasswordResetAsync(string toEmail, string resetLink, string locale, CancellationToken ct)`. Create a no-op stub implementation `NoOpEmailService` in the same folder. Register as `IEmailService → NoOpEmailService` (scoped) in `AddInfrastructure`. EPIC-04 replaces this with the real SES implementation.
+
+**`PasswordResetService`** (`Identity.Infrastructure/Endpoints/PasswordReset/PasswordResetService.cs`): encapsulates both the request and confirm logic, injecting `UserManager<ApplicationUser>`, `IEmailService`, and `IOpenIddictTokenManager`.
+
+**`POST /api/account/forgot-password`**: accepts `{ email: string }`, looks up the user via `UserManager.FindByEmailAsync`, if found generates a reset token via `UserManager.GeneratePasswordResetTokenAsync` (default 1-hour provider) and dispatches via `IEmailService`. Always returns `200 OK` with `{ message: "If that email is registered, a reset link has been sent." }`. Empty email field → `422`.
+
+**`POST /api/account/reset-password`**: accepts `{ token: string, email: string, password: string, confirmPassword: string }`. Validates `password == confirmPassword` first (→ `422`). Calls `UserManager.ResetPasswordAsync`. On success: calls `IOpenIddictTokenManager.RevokeBySubjectAsync(userId)`, then `IAuditWriter.WriteAsync` with operation `PASSWORD_RESET_COMPLETED`. Returns `200 OK` with `{ message: "Password reset successfully. Please log in." }`. On invalid/expired token: calls `IAuditWriter.WriteAsync` with operation `PASSWORD_RESET_FAILED`, `userId: null`, and returns `400` with `code: "INVALID_TOKEN"`.
+
+Both endpoints in the same `AccountController` as TASK-01.C, or a separate `AccountPasswordController` — your call, as long as it is consistent.
 
 **Constraints:**
-- `[AllowAnonymous]`.
-- Token expiry for password reset is 1 hour — configure `DataProtectionTokenProviderOptions.TokenLifespan = TimeSpan.FromHours(1)` in `AddInfrastructure` (separate from the 72h invitation expiry — use a named token provider if needed).
-- Response is always `200 OK` with `{ message: "If that email is registered, a reset link has been sent." }` — never `404` or `400` based on email existence.
-- `IEmailService` is defined in `Identity.Infrastructure` for this epic; EPIC-04 replaces the stub with the real SES implementation.
-- Never log the token or the email address.
-- Empty email field → `422` with standard error envelope.
+- `[AllowAnonymous]` on both endpoints.
+- `RevokeBySubjectAsync` must complete after the password update — not before, not fire-and-forget.
+- Never log the token value or email address.
+- The reset link URL embedded by `IEmailService` must be built from an environment variable (`PORTAL_BASE_URL`) — no hardcoded URLs.
+- All user-visible messages follow the standard error envelope `{ code, message, details }`.
 
 **Definition of Done:**
-- [ ] `POST /api/account/forgot-password` with any email (registered or not) returns `200 OK` with the confirmation message.
-- [ ] `POST /api/account/forgot-password` with empty email returns `422`.
-- [ ] `dotnet build` succeeds.
-
----
-
-#### TASK-01.5.2 — Password reset confirmation endpoint (identity)
-**Layer:** API
-**Repo:** identity
-**Depends on:** TASK-01.5.1
-
-**What to build:**
-Implement `POST /api/account/reset-password` in `Identity.API`. Accepts `{ token: string, email: string, password: string, confirmPassword: string }`, validates the token via `UserManager.ResetPasswordAsync`, and on success calls `IOpenIddictTokenManager.RevokeBySubjectAsync(userId)` to invalidate all active sessions. Returns `200 OK` on success, `400` with `INVALID_TOKEN` code on expired/invalid token, `422` on mismatched passwords.
-
-**Constraints:**
-- `[AllowAnonymous]`.
-- Session revocation (`RevokeBySubjectAsync`) must be called after the password update succeeds — not before.
-- Mismatched password check happens before calling `UserManager` — return `422` immediately.
-- On success, return `{ message: "Password reset successfully. Please log in." }`. Call `IAuditWriter.WriteAsync` with operation `PASSWORD_RESET`, the user's ID, and the client IP address.
-- On invalid/expired token, return the standard error envelope with `code: "INVALID_TOKEN"`.
-- Never log the token value.
-
-**Definition of Done:**
-- [ ] `POST /api/account/reset-password` with a valid token, matching passwords → `200 OK`.
-- [ ] `POST /api/account/reset-password` with an expired token → `400` with `code: "INVALID_TOKEN"`.
-- [ ] `POST /api/account/reset-password` with mismatched passwords → `422`.
-- [ ] Active refresh tokens for the user are revoked after a successful reset (verify via `OpenIddictTokens` table row status).
+- [ ] `POST /api/account/forgot-password` with any email (registered or not) returns `200 OK`.
+- [ ] `POST /api/account/forgot-password` with an empty email returns `422`.
+- [ ] `POST /api/account/reset-password` with a valid token and matching passwords returns `200 OK`.
+- [ ] `POST /api/account/reset-password` with an expired token returns `400` with `code: "INVALID_TOKEN"`.
+- [ ] `POST /api/account/reset-password` with mismatched passwords returns `422`.
+- [ ] Active refresh tokens for the user are revoked after a successful reset (verifiable via `OpenIddictTokens` table row status).
+- [ ] A successful reset produces a `PASSWORD_RESET_COMPLETED` row in `identity.audit_logs`.
+- [ ] An invalid/expired token produces a `PASSWORD_RESET_FAILED` row with `UserId = null`.
+- [ ] `IEmailService` interface exists at `Identity.Infrastructure/Email/IEmailService.cs`.
 - [ ] `dotnet build` succeeds.
 
 ---
@@ -391,7 +394,7 @@ Implement `POST /api/account/reset-password` in `Identity.API`. Accepts `{ token
 #### TASK-01.5.3 — Password reset pages (client-portal)
 **Layer:** Frontend
 **Repo:** client-portal
-**Depends on:** TASK-01.5.2
+**Depends on:** TASK-01.E
 
 **What to build:**
 Create two routes in the `client-portal`: `/forgot-password` (email entry form, always shows the same success message after submit regardless of outcome) and `/reset-password` (reads `token` + `email` from query params, renders password + confirm-password fields with the reusable `PasswordStrength` component from TASK-01.1.5). Add a "Forgot your password?" link on the `/login` page pointing to `/forgot-password`. On successful reset, navigate to `/login?reason=password_reset` and show a success toast.
@@ -402,6 +405,7 @@ Create two routes in the `client-portal`: `/forgot-password` (email entry form, 
 - `/forgot-password`: after response (success or error) always show the same confirmation message — never reveal whether the email exists.
 - `/reset-password`: mismatched passwords caught client-side before the API call.
 - Both routes are `[AllowAnonymous]`.
+- All user-visible strings use `t()` translation keys.
 
 **Definition of Done:**
 - [ ] `/forgot-password` submits and always shows the confirmation message.
@@ -428,22 +432,33 @@ Create two routes in the `client-portal`: `/forgot-password` (email entry form, 
 #### TASK-01.6.1 — JWT Bearer validation in api service (api)
 **Layer:** Infrastructure
 **Repo:** api
-**Depends on:** TASK-01.1.2
+**Depends on:** TASK-01.A (identity server must be running with correct JWKS)
 
 **What to build:**
-Configure JWT Bearer authentication in `Api.Infrastructure/DependencyInjection.cs` (`AddInfrastructure`). The `api` service validates tokens by fetching the JWKS from the `identity` server's discovery endpoint (`IDENTITY_AUTHORITY`). Register a global authorization policy requiring authentication by default; individual endpoints use `[Authorize(Roles = "Admin")]` or `[Authorize(Roles = "Client")]` as needed. Add `ApiControllerBase` in `Api.API/Common/` with `CurrentUserId` and `CurrentUserRole` claim helpers.
+Configure JWT Bearer authentication in `Api.Infrastructure/DependencyInjection.cs` (`AddInfrastructure`). The `api` service validates tokens by fetching the JWKS from the `identity` server's discovery endpoint (`IDENTITY_AUTHORITY`). Register a global authorization policy requiring authentication by default; individual endpoints use `[Authorize(Roles = "Admin")]` or `[Authorize(Roles = "Client")]` as needed. Add `ApiControllerBase` in `Api.API/Common/` with `CurrentUserId`, `CurrentUserRole`, `CurrentUserLocale`, and `CurrentClientId` claim helpers. Also create `ErrorCodes.cs` and `ErrorMessages.cs` static classes in `Api.Application/Common/Errors/`.
 
 **Constraints:**
 - `Authority = config["IDENTITY_AUTHORITY"]`, `Audience = "supporthub-api"`, `RequireHttpsMetadata = false` in Development.
-- No shared secret — JWKS discovery only (per backend-guidelines §9).
+- No shared secret — JWKS discovery only.
 - Default authorization policy: all endpoints require authentication unless explicitly `[AllowAnonymous]`.
-- `ApiControllerBase` provides `CurrentUserId` (from `sub` claim) and `CurrentUserRole` (from `role` claim) as protected properties.
+- `ApiControllerBase` provides the following protected properties:
+  - `CurrentUserId` — `Guid`, from `sub` claim.
+  - `CurrentUserRole` — `string`, from `role` claim.
+  - `CurrentUserLocale` — `string`, from `locale` claim, fallback `"es"`.
+  - `CurrentClientId` — `Guid`, from `client_id` claim. Throws `UnauthorizedAccessException` if the claim is absent. This property must only be read from `[Authorize(Roles = "Client")]` endpoints — Admin JWTs do not carry `client_id` (see EPIC-00 architecture note). Controllers on Admin-scoped routes must never call `CurrentClientId`.
 - `IDENTITY_AUTHORITY` must be documented in `api/.env.example`.
+- `ErrorCodes.cs`: `public static class ErrorCodes` with `public const string` fields — e.g., `AuthUnauthorized = "E0101"`, `UserNotFound = "E0201"`, `UnexpectedError = "E0999"` — follow the domain ranges in `api-conventions.md` §3a.
+- `ErrorMessages.cs`: `public static class ErrorMessages` with a `static readonly IReadOnlyDictionary<string, string> All` mapping each code to a default English message string. The backend is culture-agnostic — no `IStringLocalizer`. Frontend translates using the error code as the i18n key.
+- `ExceptionMiddleware` must use `ErrorCodes.UnexpectedError` — not a hardcoded string.
 
 **Definition of Done:**
 - [ ] Any protected endpoint returns `401` when called without a valid JWT.
 - [ ] A protected endpoint with a valid JWT issued by the identity server returns the expected response.
 - [ ] `GET /health` returns `200` without a JWT.
+- [ ] `ApiControllerBase` exposes `CurrentUserId`, `CurrentUserRole`, `CurrentUserLocale`, and `CurrentClientId` as protected properties.
+- [ ] `ErrorCodes.cs` exists at `Api.Application/Common/Errors/ErrorCodes.cs`.
+- [ ] `ErrorMessages.cs` exists at `Api.Application/Common/Errors/ErrorMessages.cs`.
+- [ ] `ExceptionMiddleware` references `ErrorCodes.UnexpectedError` — no hardcoded error code string.
 - [ ] `dotnet build` succeeds for the `api` solution.
 
 ---
@@ -458,7 +473,7 @@ Implement route protection using React Router v7 `loader` functions in the `clie
 
 **Constraints:**
 - Use React Router v7 `loader` pattern — not `useEffect` or component-level checks (loaders run before render, preventing flash of content).
-- The `returnUrl` parameter survives the login flow and redirects the user back after authentication (wired in TASK-01.2.2).
+- The `returnUrl` parameter survives the login flow and redirects the user back after authentication.
 - Admin-only UI elements must not be mounted in the DOM for `Client` role users — not just hidden with CSS.
 - Route guard logic lives in `src/lib/auth-guards.ts` — not duplicated per route.
 
@@ -466,6 +481,100 @@ Implement route protection using React Router v7 `loader` functions in the `clie
 - [ ] Navigating to a protected route while unauthenticated redirects to `/login?returnUrl=<original-path>`.
 - [ ] After login, the user is sent to the `returnUrl` page.
 - [ ] No flash of protected content before redirect.
+- [ ] `npm run build` succeeds.
+
+---
+
+### US-01.7 — User can change their interface language
+> *As a logged-in user, I want to switch the application language so that I can use SupportHub in my preferred language.*
+
+**Acceptance Criteria:**
+- [ ] A `LanguageSwitcher` control is visible in the main navigation bar on every authenticated page.
+- [ ] The switcher shows the currently active language and allows switching between Spanish and English.
+- [ ] Switching language immediately re-renders all visible text in the new language (optimistic update — no page reload required).
+- [ ] The chosen language persists after closing and reopening the browser (stored server-side in `ApplicationUser.PreferredLanguage`).
+- [ ] If the server call to save the preference fails, the UI reverts to the previous language and shows a non-blocking toast error.
+- [ ] The locale claim in subsequent token refreshes reflects the updated language.
+
+**Story Points:** 3
+
+#### TASK-01.F — Language update endpoint + InternalApiKeyMiddleware (identity)
+**Layer:** API + Infrastructure
+**Repo:** identity
+**Depends on:** TASK-01.A
+
+**Context:** Merges the original TASK-01.7.1 and adds the `InternalApiKeyMiddleware` that was missing from the original task list. The middleware must exist before the endpoint can be secured.
+
+**What to build:**
+
+**`InternalApiKeyMiddleware`** (`Identity.API/Middleware/InternalApiKeyMiddleware.cs`): validates the `X-Internal-Api-Key` header against `INTERNAL_API_KEY` environment variable on all requests to `/internal/**`. Returns `401` if absent or mismatched. Registered in `Program.cs` before routing, scoped to the `/internal` path prefix.
+
+**`InternalUsersController`** (`Identity.API/Controllers/InternalUsersController.cs`): `PATCH /internal/users/{userId}/language`. Accepts `{ "locale": "es" }` (or `"en"`), validates it is one of `["es", "en"]` (→ `400` on invalid), looks up user via `UserManager<ApplicationUser>.FindByIdAsync` (→ `404` if not found), updates `ApplicationUser.PreferredLanguage` via `UserManager.UpdateAsync`. Returns `204 No Content` on success.
+
+**Constraints:**
+- Route: `PATCH /internal/users/{userId}/language`.
+- Use `UserManager<ApplicationUser>` — do not write to `DbContext` directly.
+- Not exposed via Swagger.
+- `INTERNAL_API_KEY` comes from environment variable — no hardcoded fallback value.
+- Returns `204 No Content` on success; `400` for invalid locale; `404` for unknown user.
+
+**Definition of Done:**
+- [ ] `PATCH /internal/users/{userId}/language` with `{ "locale": "en" }` and correct API key returns `204` and persists the change.
+- [ ] `PATCH /internal/users/{userId}/language` with an unknown locale returns `400`.
+- [ ] `PATCH /internal/users/{userId}/language` with an unknown userId returns `404`.
+- [ ] `PATCH /internal/users/{userId}/language` without the `X-Internal-Api-Key` header returns `401`.
+- [ ] A subsequent token issuance for that user includes `"locale": "en"` in the access token.
+- [ ] `dotnet build` succeeds.
+
+---
+
+#### TASK-01.7.2 — Language preference endpoint (api)
+**Layer:** API + Infrastructure
+**Repo:** api
+**Depends on:** TASK-01.F, TASK-01.6.1
+
+**What to build:**
+Implement `PATCH /api/me/language` in a new `MeController` in `Api.API/Controllers/Me/`. The endpoint reads the authenticated user's `sub` claim, validates the requested locale, then calls `IIdentityInternalClient.UpdateUserLanguageAsync(userId, locale)` to persist the change to the `identity` service. Define `IIdentityInternalClient` in `Api.Application/Common/Interfaces/` and implement `IdentityInternalClient` in `Api.Infrastructure/Identity/` — it sends `PATCH /internal/users/{userId}/language` with `X-Internal-Api-Key` header to the `identity` base URL (`IDENTITY_AUTHORITY`).
+
+**Constraints:**
+- Route: `PATCH /api/me/language`. Requires `[Authorize]` — any authenticated role.
+- Request body: `{ "locale": "es" }` — validate `["es", "en"]`; return `400` with `ErrorCodes` constant on invalid value.
+- `IIdentityInternalClient` interface in `Api.Application/Common/Interfaces/IIdentityInternalClient.cs`: single method `Task UpdateUserLanguageAsync(Guid userId, string locale, CancellationToken ct)`.
+- `IdentityInternalClient` in `Api.Infrastructure/Identity/IdentityInternalClient.cs`: typed `HttpClient` registered in `AddInfrastructure`, base URL from `IDENTITY_AUTHORITY`, sends `X-Internal-Api-Key` header from `INTERNAL_API_KEY` env var.
+- On `identity` returning a non-success status, map to `502 Bad Gateway` with the standard error envelope using an `ErrorCodes` constant.
+- Returns `204 No Content` on success.
+
+**Definition of Done:**
+- [ ] `PATCH /api/me/language` with `{ "locale": "en" }` and a valid JWT returns `204`.
+- [ ] `PATCH /api/me/language` with an invalid locale returns `400` with the standard error envelope.
+- [ ] `PATCH /api/me/language` without a valid JWT returns `401`.
+- [ ] `IIdentityInternalClient` exists at `Api.Application/Common/Interfaces/IIdentityInternalClient.cs`.
+- [ ] `IdentityInternalClient` exists at `Api.Infrastructure/Identity/IdentityInternalClient.cs`.
+- [ ] `MeController` exists at `Api.API/Controllers/Me/MeController.cs`.
+- [ ] `dotnet build` succeeds for the `api` solution.
+
+---
+
+#### TASK-01.7.3 — LanguageSwitcher component (client-portal)
+**Layer:** Frontend
+**Repo:** client-portal
+**Depends on:** TASK-01.7.2, TASK-01.4.2
+
+**What to build:**
+Create a `LanguageSwitcher` component in `src/components/LanguageSwitcher.tsx` and add it to the navigation shell (from TASK-01.4.2). The component reads the current language from `i18next`, renders a control to switch between `es` and `en`, and on change: (1) optimistically calls `i18n.changeLanguage(newLocale)` + sets `document.documentElement.lang`, (2) calls `PATCH /api/me/language` in the background. If the API call fails, revert the locale and show a non-blocking toast error.
+
+**Constraints:**
+- Use shadcn/ui `DropdownMenu` or `Select`.
+- Optimistic update: language changes immediately without waiting for the API response.
+- On API failure: revert `i18n.changeLanguage(previousLocale)` + `document.documentElement.lang = previousLocale`, show a shadcn/ui Sonner toast.
+- The component reads current locale from `i18next.language` — not from `AuthProvider` state.
+- All labels within the switcher must use i18n translation keys.
+- The component is reusable — will be placed in the `backoffice` nav shell in EPIC-05.
+
+**Definition of Done:**
+- [ ] `LanguageSwitcher` renders in the navigation shell with the currently active language selected.
+- [ ] Switching language re-renders all visible text immediately without a page reload.
+- [ ] If `PATCH /api/me/language` returns an error, the UI reverts and shows a toast.
 - [ ] `npm run build` succeeds.
 
 ---
@@ -480,38 +589,41 @@ Implement route protection using React Router v7 `loader` functions in the `clie
 | US-01.4 | Log out | 1 |
 | US-01.5 | Recover account via password reset | 5 |
 | US-01.6 | Protected routes enforce authentication and role boundaries | 3 |
-| **Total** | | **17** |
+| US-01.7 | User can change their interface language | 3 |
+| **Total** | | **20** |
 
-### Task breakdown
+### Revised task breakdown
 
-| Task | Title | Story | Repo | Depends on |
-|---|---|---|---|---|
-| TASK-01.1.1 | ApplicationUser entity and Identity configuration | US-01.1 | identity | — |
-| TASK-01.1.2 | OpenIddict server configuration and SPA client seed | US-01.1 | identity | TASK-01.1.1 |
-| TASK-01.1.3 | EF Core migration: Identity + OpenIddict schema | US-01.1 | identity | TASK-01.1.2 |
-| TASK-01.1.4 | Account activation endpoint | US-01.1 | identity | TASK-01.1.1 |
-| TASK-01.1.5 | Account activation page | US-01.1 | client-portal | TASK-01.1.4 |
-| TASK-01.2.1 | OpenIddict authorization and token endpoint controllers | US-01.2 | identity | TASK-01.1.2 |
-| TASK-01.2.2 | Login page and OIDC PKCE flow | US-01.2 | client-portal | TASK-01.2.1 |
-| TASK-01.3.1 | Silent token refresh and session expiry handling | US-01.3 | client-portal | TASK-01.2.2 |
-| TASK-01.4.1 | Logout endpoint | US-01.4 | identity | TASK-01.2.1 |
-| TASK-01.4.2 | Logout UI and navigation shell | US-01.4 | client-portal | TASK-01.4.1, TASK-01.2.2 |
-| TASK-01.5.1 | Password reset request endpoint | US-01.5 | identity | TASK-01.1.1 |
-| TASK-01.5.2 | Password reset confirmation endpoint | US-01.5 | identity | TASK-01.5.1 |
-| TASK-01.5.3 | Password reset pages | US-01.5 | client-portal | TASK-01.5.2 |
-| TASK-01.6.1 | JWT Bearer validation in api service | US-01.6 | api | TASK-01.1.2 |
-| TASK-01.6.2 | Route guards and role-based navigation shell | US-01.6 | client-portal | TASK-01.2.2 |
+| Task | Title | Story | Repo | Depends on | Original tasks |
+|---|---|---|---|---|---|
+| **TASK-01.A** | Complete entity, config, LocaleClaimHandler, token providers, migration | US-01.1 | identity | — | 01.1.1 + 01.1.2 + 01.1.3 (partial) |
+| **TASK-01.B** | OpenIddict authorization + token controllers (PKCE flow, audit, refresh cookie) | US-01.2 | identity | TASK-01.A | 01.2.1 |
+| **TASK-01.C** | Account activation endpoint | US-01.1 | identity | TASK-01.A | 01.1.4 |
+| **TASK-01.D** | Logout endpoint | US-01.4 | identity | TASK-01.B | 01.4.1 |
+| **TASK-01.E** | Password reset endpoints (forgot + confirm) + IEmailService stub | US-01.5 | identity | TASK-01.A | 01.5.1 + 01.5.2 |
+| **TASK-01.F** | Language update endpoint + InternalApiKeyMiddleware | US-01.7 | identity | TASK-01.A | 01.7.1 (+ missing middleware) |
+| TASK-01.1.5 | Account activation page | US-01.1 | client-portal | TASK-01.C | 01.1.5 |
+| TASK-01.2.2 | Login page + PKCE flow + AuthProvider | US-01.2 | client-portal | TASK-01.B | 01.2.2 |
+| TASK-01.3.1 | Silent token refresh + session expiry | US-01.3 | client-portal | TASK-01.2.2 | 01.3.1 |
+| TASK-01.4.2 | Logout UI + navigation shell | US-01.4 | client-portal | TASK-01.D, TASK-01.2.2 | 01.4.2 |
+| TASK-01.5.3 | Password reset pages | US-01.5 | client-portal | TASK-01.E | 01.5.3 |
+| TASK-01.6.1 | JWT Bearer validation + ErrorCodes/Messages (api) | US-01.6 | api | TASK-01.A | 01.6.1 |
+| TASK-01.6.2 | Route guards + role-based nav shell | US-01.6 | client-portal | TASK-01.2.2 | 01.6.2 |
+| TASK-01.7.2 | Language preference endpoint + IIdentityInternalClient (api) | US-01.7 | api | TASK-01.F, TASK-01.6.1 | 01.7.2 |
+| TASK-01.7.3 | LanguageSwitcher component | US-01.7 | client-portal | TASK-01.7.2, TASK-01.4.2 | 01.7.3 |
 
-> **Backoffice frontend tasks deferred to EPIC-05:** login page, activation page, logout UI, session handling, password reset pages, and route guards for the `backoffice` repo are all defined in EPIC-05. They depend on TASK-01.2.1, TASK-01.4.1, and TASK-01.5.1/2 from this epic being complete first.
-
-> **i18n prerequisite (EPIC-10):** All frontend tasks in this epic (`client-portal`) must use i18n translation keys for every user-visible string — no hardcoded text. This requires EPIC-10 US-10.1 (i18n setup for `client-portal`) to be complete before or in the same sprint as the first `client-portal` task here. The `locale` claim in the OpenIddict token (see Architecture Note above) must be added by the architect when writing tasks for US-01.2 / TASK-01.2.1 — the token controller must include the user's `PreferredLanguage` as a claim in the access token principal.
+**Identity repo: 10 original tasks → 6 tasks (TASK-01.A through TASK-01.F)**
+**Frontend/api tasks: unchanged in count, retained original numbering for traceability**
 
 ---
 
 > **Note for Tech Lead:**
 >
-> - **Named token providers**: ASP.NET Core Identity uses `DataProtectionTokenProvider` for both email confirmation (invitation) and password reset. To set different expiry times (72h vs 1h), configure two named providers via `AddTokenProvider<DataProtectorTokenProvider<ApplicationUser>>("Invitation")` and the default provider for reset. The `GenerateEmailConfirmationTokenAsync` call in EPIC-05 (invitation creation) must specify the named provider.
-> - **Refresh token `HttpOnly` cookie**: OpenIddict does not automatically set the refresh token in a cookie — the identity server's `TokenController` must explicitly set it via `Response.Cookies.Append` after issuing tokens. This is a non-trivial customisation; the SPA silent refresh flow (TASK-01.3.1) depends on this working correctly. The same pattern will be applied in the backoffice in EPIC-05.
-> - **`IEmailService` stub**: TASK-01.5.1 introduces `IEmailService` in `Identity.Infrastructure`. EPIC-04 will replace the stub with SES. Ensure the interface is defined in a location EPIC-04 can target without architectural violations.
-> - **Password policy**: minimum 8 characters, require uppercase, digit, non-alphanumeric — enforced via Identity `PasswordOptions` in TASK-01.1.1 and reflected in the `PasswordStrength` component in TASK-01.1.5.
-> - **EPIC-05 handoff**: the `backoffice` OpenIddict client registration is seeded in TASK-01.1.2 (identity server side is ready). EPIC-05 frontend auth tasks must reference TASK-01.2.1, TASK-01.4.1, and TASK-01.5.1/2 as their backend prerequisites. The `AuthProvider`, PKCE flow, silent refresh, logout UI, activation page, password reset pages, and `requireRole("Admin")` route guard are all in scope for EPIC-05's first stories before any admin feature UI is built.
+> - **Named token providers**: `"Invitation"` provider (72h) is added in TASK-01.A. EPIC-05 (invitation creation) must pass the provider name explicitly when calling `GenerateEmailConfirmationTokenAsync`. The default provider (1h) handles password reset and requires no changes from EPIC-05 callers.
+> - **Refresh token HttpOnly cookie**: OpenIddict does not set the refresh token in a cookie automatically. The `TokenController` (TASK-01.B) must do this explicitly via `Response.Cookies.Append`. The same pattern is reused in EPIC-05 for the backoffice `TokenController`.
+> - **Role on ApplicationUser**: the original spec had a `Role` string property on `ApplicationUser`. This has been removed in favour of the standard `AspNetUserRoles` junction table. This means `UserManager.GetRolesAsync(user)` is used to fetch roles — one extra DB call during token issuance, which is acceptable given the token issuance frequency.
+> - **`IEmailService` stub location**: defined in `Identity.Infrastructure/Email/` so EPIC-04 can provide the SES implementation by replacing the registration in `AddInfrastructure` without touching the call sites.
+> - **EPIC-05 handoff**: identity backend is fully shared. EPIC-05 frontend auth tasks depend on TASK-01.B (token), TASK-01.D (logout), and TASK-01.E (password reset) being complete. The `AuthProvider`, PKCE flow, silent refresh, activation page, password reset pages, and `requireRole("Admin")` route guard are all in scope for EPIC-05's first stories.
+> - **Access token / refresh token lifetimes confirmed**: 1-hour access token, 30-day refresh token. The 30-day window means a user who visits the app at least once a month will never be forced to log in again. If a stricter security posture is needed in production, the refresh token lifetime can be reduced via configuration without a code change.
+> - **`client_id` claim and `ClientIdClaimHandler`**: these are delivered by **EPIC-00 TASK-00.1**, not this epic. TASK-00.1 depends on TASK-01.A (ApplicationUser must exist) and should be executed immediately after it in the same sprint. The `TokenController` (TASK-01.B) does not emit `client_id` — the handler does it automatically. `ApiControllerBase` (TASK-01.6.1) exposes `CurrentClientId` which reads this claim. Never call `CurrentClientId` from Admin-scoped controller actions — Admin JWTs do not carry this claim.
+> - **Sprint sequencing**: recommended order within the EPIC-01 sprint is TASK-01.A → TASK-00.1 → TASK-00.2 → TASK-00.3 → TASK-00.4 → TASK-01.B onwards. This ensures `ClientIdClaimHandler` is wired before the token endpoint is fully tested, and seed data is available for end-to-end auth testing.

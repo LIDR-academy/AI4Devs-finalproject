@@ -35,6 +35,7 @@
 - Database: one PostgreSQL 17 instance, two schemas — `public` for `api` (business data + `AuditLogs`), `identity` for `identity` (OpenIddict + ASP.NET Identity + `AuditLogs`). Each service owns its own `AuditLogs` table; there is no shared audit schema (see EPIC-11)
 - **Jira is the system of record**: ticket content (title, description, status, priority, comments, attachments) lives exclusively in Jira. `api` stores only a minimal `Ticket` anchor record (`Id`, `JiraIssueKey`, `ClientId`, `CreatedAt`). SupportHub is a UI layer over Jira — no local duplication of ticket data.
 - **Jira project key is tenant-configured**: every Jira API call resolves the `JiraProjectKey` from the `ClientProject` entity (admin-configured per tenant in EPIC-05B). It is never hardcoded and never caller-supplied.
+- **Tenant identity via `client_id` JWT claim**: `ApplicationUser.ClientId` (nullable `Guid?`) is stored in `identity` and emitted as a `client_id` claim by `ClientIdClaimHandler` (EPIC-00). Client-role JWTs always carry this claim; Admin-role JWTs do not. All `api` tenant-scoped endpoints read `client_id` from the JWT — no DB lookup at request time. The `Client`, `ClientUser`, and `ClientProject` tables are created in EPIC-00 (priority 1.1) to unblock EPIC-01 through EPIC-08 development.
 - **Jira write operations are synchronous and user-facing**: if a Jira call fails, the portal returns an error and nothing is saved locally. No background queues, no partial state.
 - AWS: S3 + SES live in `api` only. `identity` has no AWS dependency.
 - All secrets via environment variables. No hardcoded credentials anywhere.
@@ -60,8 +61,10 @@
 | # | Epic | File | Priority | Status |
 |---|---|---|---|---|
 | EPIC-09 | Infrastructure & DevOps | [EPIC-09-infrastructure.md](epics/EPIC-09-infrastructure.md) | 1 | ✅ Stories + tasks defined |
-| EPIC-10 | Internationalisation (i18n) | [EPIC-10-i18n.md](epics/EPIC-10-i18n.md) | 1.5 | ✅ Stories + tasks defined |
-| EPIC-11 | Audit Log | [EPIC-11-audit-log.md](epics/EPIC-11-audit-log.md) | 1.6 | ✅ Stories + tasks defined |
+| **EPIC-00** | **Foundation Data & Tenant Identity** | [**EPIC-00-foundation-data.md**](epics/EPIC-00-foundation-data.md) | **1.1** | ✅ Stories + tasks defined |
+| EPIC-10 | Internationalisation (i18n) — `client-portal` & backend | [EPIC-10-i18n.md](epics/EPIC-10-i18n.md) | 1.5 | ✅ Stories + tasks defined |
+| EPIC-10B | Internationalisation (i18n) — `backoffice` | [EPIC-10B-i18n-backoffice.md](epics/EPIC-10B-i18n-backoffice.md) | 1.6 | ✅ Stories + tasks defined |
+| EPIC-11 | Audit Log | [EPIC-11-audit-log.md](epics/EPIC-11-audit-log.md) | 1.7 | ✅ Stories + tasks defined |
 | EPIC-01 | Authentication & User Access | [EPIC-01-auth.md](epics/EPIC-01-auth.md) | 2 | ✅ Stories + tasks defined |
 | EPIC-07 | Jira Integration: Outbound (Portal → Jira) | [EPIC-07-jira-outbound.md](epics/EPIC-07-jira-outbound.md) | 3 | ✅ Stories + tasks defined |
 | EPIC-02 | Client Portal: Ticket Management | [EPIC-02-ticket-management.md](epics/EPIC-02-ticket-management.md) | 4 | ✅ Stories + tasks defined |

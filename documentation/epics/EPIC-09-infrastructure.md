@@ -49,7 +49,7 @@
 
 **Acceptance Criteria:**
 - `identity` repo: .NET 10 ASP.NET Core Web API, **2-project structure** (`Identity.Infrastructure` + `Identity.API`), ASP.NET Core Identity + OpenIddict OIDC server + EF Core stub, all DI wired via `AddInfrastructure`, Serilog structured JSON logging, Swagger (dev only), `GET /health` → `200`, dev `Dockerfile` with `dotnet watch`
-- `api` repo: .NET 10 ASP.NET Core Web API, 4-layer Clean Architecture, EF Core + Npgsql stub, JWT Bearer via `IDENTITY_AUTHORITY` (wired in `AddInfrastructure`), CORS from env var (wired in `AddInfrastructure`), `ApiControllerBase`, `ExceptionMiddleware` with `{ code, message, details[] }` envelope, Serilog structured JSON logging, Audit.NET wired for automatic EF Core audit trail (see EPIC-11), Swagger (dev only), `GET /health` → `200`, dev `Dockerfile` with `dotnet watch`
+- `api` repo: .NET 10 ASP.NET Core Web API, 4-layer Clean Architecture, EF Core + Npgsql stub, JWT Bearer via `IDENTITY_AUTHORITY` (wired in `AddInfrastructure`), CORS from env var (wired in `AddInfrastructure`), `ApiControllerBase`, `ExceptionMiddleware` with `{ code, message, details[] }` envelope, Serilog structured JSON logging, Audit.NET wired for automatic EF Core audit trail (see EPIC-11), Swagger, `GET /health` → `200`, dev `Dockerfile` with `dotnet watch`
 - `client-portal` repo: Vite + React 19 + TypeScript, shadcn/ui configured, React Router v7 with routes `/`, `/login`, `/tickets`, `/tickets/:id` (stubs), TanStack Query, Axios instance with `VITE_API_URL`, i18n library installed and wired (Spanish default, English supported — see EPIC-10), dev `Dockerfile` (port 5173)
 - `backoffice` repo: Vite + React 19 + TypeScript, shadcn/ui configured, React Router v7 with routes `/`, `/login`, `/admin`, `/admin/users` (stubs), TanStack Query, Axios instance with `VITE_BACKOFFICE_API_URL`, i18n library installed and wired (Spanish default, English supported — see EPIC-10), dev `Dockerfile` (port 5174)
 - Each repo contains its own `.env.example` documenting its required variables
@@ -84,7 +84,7 @@ Full scaffold of the `identity` repo: 2-project solution (`Identity.Infrastructu
 - [ ] Add Swagger/OpenAPI (dev only): `if (app.Environment.IsDevelopment()) { app.UseSwagger(); app.UseSwaggerUI(); }`
 - [ ] Add `GET /health` using ASP.NET Core health checks with Npgsql check; exclude from auth
 - [ ] Write dev `Dockerfile` (`dotnet watch`, exposes port 5001)
-- [ ] Install `Audit.NET` + `Audit.EntityFramework.Core` in `Identity.Infrastructure`; define `IAuditWriter` and a minimal `AuditWriteDbContext` targeting the shared `audit` schema; register `IAuditWriter` in `AddInfrastructure` (see backend-guidelines §15 and EPIC-11)
+- [ ] Install `Audit.NET` + `Audit.EntityFramework.Core` in `Identity.Infrastructure`; define `IAuditWriter` and register it in `AddInfrastructure`. The `AuditLog` entity is mapped as a `DbSet` on `IdentityAppDbContext` and lives in the `identity` schema — there is no separate `audit` schema and no `AuditWriteDbContext` (see backend-guidelines §15 and EPIC-11)
 - [ ] Add `.env.example` with `ASPNETCORE_ENVIRONMENT`, `ConnectionStrings__Default`, `IDENTITY_BASE_URL`
 
 **Definition of Done:**
@@ -116,7 +116,7 @@ Full scaffold of the `api` repo: 4-layer Clean Architecture solution, all DI wir
 - [ ] Create `Api.API/Common/ErrorResponse.cs`: `public record ErrorResponse(string Code, string Message, IReadOnlyList<string> Details);`
 - [ ] Create `Api.API/Common/ResultExtensions.cs` with `ToActionResult<T>(this Result<T> result, ControllerBase controller)` mapping `NotFoundError` → 404, `ConflictError` → 409, `ForbiddenError` → 403, validation errors → 422, others → 400
 - [ ] Create `Api.API/Middleware/ExceptionMiddleware.cs` catching unhandled exceptions and returning `500` with envelope `{ "code": "INTERNAL_ERROR", "message": "An unexpected error occurred.", "details": [] }`; log the full exception via `ILogger`
-- [ ] Install `Audit.NET` + `Audit.EntityFramework.Core` in `Api.Infrastructure`; wire `AppDbContext` to inherit `AuditDbContext`; configure Audit.NET in `AddInfrastructure` with the `audit` PostgreSQL schema as target and sensitive-field redaction (see backend-guidelines §15 and EPIC-11)
+- [ ] Install `Audit.NET` + `Audit.EntityFramework.Core` in `Api.Infrastructure`; wire `AppDbContext` to inherit `AuditDbContext`; configure Audit.NET in `AddInfrastructure` so that `AuditLog` rows are written to `public.AuditLogs` (same schema as the rest of `api`'s entities, no separate `audit` schema) with sensitive-field redaction (see backend-guidelines §15 and EPIC-11)
 - [ ] Configure Serilog in `Program.cs` before `builder.Build()`: `builder.Host.UseSerilog((ctx, services, cfg) => cfg.ReadFrom.Configuration(ctx.Configuration).Enrich.FromLogContext().Enrich.WithProperty("Service", "SupportHub.Api").WriteTo.Console(new CompactJsonFormatter()))`
 - [ ] In `Program.cs` call only: `builder.Services.AddInfrastructure(builder.Configuration, builder.Environment)`
 - [ ] Wire middleware pipeline in `Program.cs` in the required order: `app.UseMiddleware<ExceptionMiddleware>()` → `app.UseSerilogRequestLogging()` → `app.UseHttpsRedirection()` → `app.UseCors()` → `app.UseAuthentication()` → `app.UseAuthorization()` → `app.MapControllers()`

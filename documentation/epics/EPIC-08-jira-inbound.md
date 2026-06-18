@@ -35,12 +35,10 @@ Notifications are scoped to the authenticated client user (`ClientUserId` → `A
 
 `UpdatedAt` from `BaseEntity` is inherited but not semantically meaningful for notifications — it will be updated when `IsRead` flips. No soft-delete; notifications are never physically deleted but may be archived in a future version.
 
-### Webhook secret storage — extend `ClientProject`
-The webhook secret is a per-tenant configuration value. It belongs to the same `ClientProject` entity already used for `JiraProjectKey` (EPIC-05B). EPIC-08 adds a `JiraWebhookSecretHash` (string?, nullable — null means no secret configured → fail-closed) column to `ClientProject`. The raw secret is never stored; only its HMAC-SHA256 hash is persisted. The admin panel (US-08.6) allows rotating the secret; the new hash replaces the old one immediately.
+### Webhook secret storage — `ClientProject.JiraWebhookSecretHash`
+The webhook secret is a per-tenant configuration value. It belongs to the `ClientProject` entity. The raw secret is never stored; only its HMAC-SHA256 hash is persisted. The admin panel (US-08.6) allows rotating the secret; the new hash replaces the old one immediately. Fail-closed: if `JiraWebhookSecretHash` is null, the request is rejected with `401`.
 
-Because EPIC-05B (`ClientProject` definition) is not yet implemented, EPIC-08 introduces a **stub `ClientProject` entity** in `Api.Domain` with only the fields needed by EPIC-07 and EPIC-08 (`Id`, `ClientId`, `JiraProjectKey`, `JiraWebhookSecretHash`). EPIC-05B will extend this entity with additional admin configuration fields — the stub gives EPIC-07 and EPIC-08 a valid compile target.
-
-> **Note:** If EPIC-07 already introduced `ClientProject`, TASK-08.1.1 merely adds `JiraWebhookSecretHash` via a migration rather than creating the entity from scratch.
+> **Superseded by EPIC-00.** The `ClientProject` entity, its configuration, and the `JiraWebhookSecretHash` column are all created by **EPIC-00 TASK-00.3** — not by EPIC-08. By the time EPIC-08 is implemented, the column already exists in the schema. TASK-08.1.1 (described below) is rescoped accordingly: it no longer creates the entity or migration, only adds the `IClientProjectRepository` method and business logic needed for webhook secret verification.
 
 ### Webhook endpoint authentication — `[AllowAnonymous]` + HMAC verification
 The `POST /api/webhooks/jira` endpoint must be publicly reachable — Jira cannot authenticate as a portal user, so `[Authorize]` must not be applied. Webhook authenticity is verified exclusively via the `X-Hub-Signature` header (HMAC-SHA256 of the raw request body using the per-tenant secret). Fail-closed: if no secret is configured for the tenant, the request is rejected with `401`. Rate limiting is applied at the endpoint level using ASP.NET Core's built-in rate limiter (`AddRateLimiter`) to mitigate unauthenticated denial-of-service — limit of 60 requests per minute per IP.
@@ -92,27 +90,32 @@ ASP.NET Core's built-in `AddRateLimiter` (introduced in .NET 7, available in .NE
 
 **Story Points:** 3
 
-#### TASK-08.1.1 — `ClientProject.JiraWebhookSecretHash` column and migration (api)
-**Layer:** Domain + Infrastructure (DB migration)
+#### TASK-08.1.1 — `IClientProjectRepository` webhook methods and `ClientProjectRepository` (api)
+> ⚠️ **Rescoped from original.** The `ClientProject` entity, `ClientProjectConfiguration`, `DbSet<ClientProject>`, `JiraWebhookSecretHash` column, and migration are all delivered by **EPIC-00 TASK-00.3**. No migration work remains here. This task adds the repository interface and implementation methods that the webhook handler needs.
+
+**Layer:** Domain + Infrastructure
 **Repo:** api
-**Depends on:** TASK-07.1.3
+**Depends on:** EPIC-00 TASK-00.3 (ClientProject entity and schema already exist), TASK-07.1.3
 
 **What to build:**
-Add a nullable `JiraWebhookSecretHash` (string?) property to the `ClientProject` domain entity in `Api.Domain/`. Update `ClientProjectConfiguration` in `Api.Infrastructure/Persistence/Configurations/` to map the new column (max length 128, nullable). Generate an EF Core migration. If `ClientProject` does not yet exist (EPIC-05B not yet implemented), also create the stub entity with fields `Id`, `ClientId` (Guid), `JiraProjectKey` (string), and `JiraWebhookSecretHash` (string?) — enough to support EPIC-07 and EPIC-08.
+
+Define `IClientProjectRepository` in `Api.Domain/Interfaces/IClientProjectRepository.cs` with the methods needed by EPIC-08 and EPIC-07:
+- `GetByClientIdAsync(Guid clientId, CancellationToken ct)` — returns `ClientProject?`
+- `GetByJiraProjectKeyAsync(string jiraProjectKey, CancellationToken ct)` — returns `ClientProject?`
+- `UpsertAsync(ClientProject entity, CancellationToken ct)` — create or update in-place
+
+Implement `ClientProjectRepository` in `Api.Infrastructure/Persistence/Repositories/ClientProjectRepository.cs`. Register `IClientProjectRepository → ClientProjectRepository` as `Scoped` in `AddInfrastructure`.
 
 **Constraints:**
-- The raw webhook secret is never stored — only its HMAC-SHA256 hash (hex string).
-- `JiraWebhookSecretHash` is nullable: null means "no secret configured" → fail-closed in the webhook handler.
-- Column max length: 128 characters (SHA-256 hex = 64 chars; headroom for future algorithm).
-- Entity inherits from `BaseEntity` (per backend-guidelines §5).
-- EF Core configuration in `ClientProjectConfiguration.cs` using Fluent API — no Data Annotations (per backend-guidelines §7).
-- Migration must apply cleanly without data loss on an existing DB.
+- `IClientProjectRepository` lives in `Api.Domain/Interfaces/` — no EF Core references.
+- No new migrations — schema already exists from EPIC-00.
+- `UpsertAsync` is needed by EPIC-05B; include it now so EPIC-05B has no additional repository work.
 
 **Definition of Done:**
-- [ ] `ClientProject` entity has `JiraWebhookSecretHash` (string?) property.
-- [ ] `ClientProjectConfiguration` maps the column with `IsRequired(false).HasMaxLength(128)`.
-- [ ] EF Core migration applies cleanly (`dotnet ef database update` succeeds).
-- [ ] `dotnet build` succeeds with no compilation errors.
+- [ ] `IClientProjectRepository` exists at `Api.Domain/Interfaces/IClientProjectRepository.cs` with all three method signatures.
+- [ ] `ClientProjectRepository` exists at `Api.Infrastructure/Persistence/Repositories/ClientProjectRepository.cs` and implements the interface.
+- [ ] `IClientProjectRepository → ClientProjectRepository` is registered in `AddInfrastructure`.
+- [ ] `dotnet build` succeeds.
 
 ---
 
@@ -601,7 +604,7 @@ Define `IWebhookUrlProvider` in `Api.Application/Common/Interfaces/` with `GetWe
 
 | Task | Title | Story | Layer | Repo | Depends on |
 |---|---|---|---|---|---|
-| TASK-08.1.1 | `ClientProject.JiraWebhookSecretHash` column + migration | US-08.1 | Domain + DB | api | TASK-07.1.3 |
+| TASK-08.1.1 | `IClientProjectRepository` + `ClientProjectRepository` | US-08.1 | Domain + Infrastructure | api | EPIC-00 TASK-00.3, TASK-07.1.3 |
 | TASK-08.1.2 | `Notification` entity + `INotificationRepository` | US-08.1 | Domain | api | TASK-07.1.3 |
 | TASK-08.1.3 | `NotificationConfiguration` + migration + `NotificationRepository` | US-08.1 | Infrastructure + DB | api | TASK-08.1.2 |
 | TASK-08.1.4 | `JiraWebhookPayload` DTOs + `AdfPlainTextExtractor` | US-08.1 | Infrastructure | api | TASK-08.1.1 |

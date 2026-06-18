@@ -82,35 +82,144 @@ public static class ResultExtensions
 
 ## 3. Error Response Envelope
 
-Every non-2xx response returns the same JSON shape. No plain strings, no ASP.NET Core `ProblemDetails` — use this envelope consistently.
+Every non-2xx response returns one of two JSON shapes depending on whether the error is a single business-rule failure or a set of validation failures. No plain strings, no ASP.NET Core `ProblemDetails` — use these envelopes consistently across all controllers.
+
+### Single error (business-rule failures, auth, not-found, etc.)
 
 ```json
 {
-  "code": "NOT_FOUND",
-  "message": "Ticket with id '3fa85f64' was not found.",
-  "details": []
+  "error": {
+    "code": "E0301",
+    "message": "Ticket not found."
+  }
+}
+```
+
+### Validation errors (multiple, field-level — HTTP 422)
+
+```json
+{
+  "errors": [
+    { "code": "E0901", "field": "title",       "message": "Title is required." },
+    { "code": "E0902", "field": "description", "message": "Description exceeds 2000 characters." }
+  ]
 }
 ```
 
 | Field | Type | Notes |
 |---|---|---|
-| `code` | `string` | SCREAMING_SNAKE_CASE error code. Maps 1:1 to error class name. |
-| `message` | `string` | Human-readable summary. Safe to display. |
-| `details` | `string[]` | Optional. Validation field errors, additional context. |
+| `code` | `string` | Structured error code — format `E{domain}{seq}` (see §3a below). |
+| `message` | `string` | English human-readable summary. Always English — frontends localise via code. |
+| `field` | `string?` | Only present on validation errors. The camelCase request field name. |
+
+The HTTP status code is **not** duplicated in the response body — it is on the HTTP response only.
+
+---
+
+### 3a. Error Code Catalogue
+
+**Format:** `E` + 2-digit domain prefix + 2-digit sequence, zero-padded. Example: `E0101`.
+
+| Domain prefix | Domain | Example codes |
+|---|---|---|
+| `E01xx` | Auth / identity (login, token, activation, password reset) | `E0101` UserNotFound, `E0102` InvalidCredentials, `E0103` AccountLocked, `E0104` InvalidToken, `E0105` TokenExpired |
+| `E02xx` | User management (invite, edit, deactivate) | `E0201` EmailAlreadyExists, `E0202` UserAlreadyActive, `E0203` UserAlreadyInactive |
+| `E03xx` | Tickets | `E0301` TicketNotFound, `E0302` TicketCreateFailed, `E0303` CommentCreateFailed |
+| `E04xx` | Clients / tenants | `E0401` ClientNotFound, `E0402` ClientProjectNotFound |
+| `E05xx` | File attachments (S3) | `E0501` UploadFailed, `E0502` FileNotFound |
+| `E06xx` | Email (SES) | `E0601` EmailSendFailed |
+| `E07xx` | Jira integration | `E0701` JiraCreateFailed, `E0702` JiraCommentFailed, `E0703` JiraConnectionFailed |
+| `E09xx` | Generic / infrastructure | `E0901` ValidationFailed, `E0902` ServiceUnavailable, `E0903` ConcurrencyConflict |
+
+**Rules for the catalogue:**
+- All error codes are defined as `public const string` fields in `Api.Application/Common/Errors/ErrorCodes.cs`.
+- English messages paired with each code live in `Api.Application/Common/Errors/ErrorMessages.cs` as a `static readonly Dictionary<string, string>`.
+- FluentValidation validators must call `.WithErrorCode(ErrorCodes.ValidationFailed)` (or the specific code) so the code propagates into the validation error envelope — never pass a raw string.
+- Both classes live in `Api.Application` — zero Infrastructure dependency.
+- When adding a new error, add the code constant and the English message in the same commit. Never add one without the other.
+- Do not reuse or renumber existing codes. When a code is retired, mark it `// RETIRED — do not reuse` rather than deleting it.
+
+```csharp
+// Api.Application/Common/Errors/ErrorCodes.cs
+public static class ErrorCodes
+{
+    // Auth / identity
+    public const string UserNotFound        = "E0101";
+    public const string InvalidCredentials  = "E0102";
+    public const string AccountLocked       = "E0103";
+    public const string InvalidToken        = "E0104";
+    public const string TokenExpired        = "E0105";
+
+    // User management
+    public const string EmailAlreadyExists  = "E0201";
+
+    // Tickets
+    public const string TicketNotFound      = "E0301";
+
+    // Clients
+    public const string ClientNotFound      = "E0401";
+
+    // Generic
+    public const string ValidationFailed    = "E0901";
+    public const string ServiceUnavailable  = "E0902";
+    public const string ConcurrencyConflict = "E0903";
+}
+
+// Api.Application/Common/Errors/ErrorMessages.cs
+public static class ErrorMessages
+{
+    public static readonly IReadOnlyDictionary<string, string> Map =
+        new Dictionary<string, string>
+        {
+            [ErrorCodes.UserNotFound]       = "User not found.",
+            [ErrorCodes.InvalidCredentials] = "Invalid email or password.",
+            [ErrorCodes.AccountLocked]      = "Account is locked. Try again in 15 minutes.",
+            [ErrorCodes.InvalidToken]       = "The token is invalid.",
+            [ErrorCodes.TokenExpired]       = "The token has expired.",
+            [ErrorCodes.EmailAlreadyExists] = "A user with this email already exists.",
+            [ErrorCodes.TicketNotFound]     = "Ticket not found.",
+            [ErrorCodes.ClientNotFound]     = "Client not found.",
+            [ErrorCodes.ValidationFailed]   = "One or more validation errors occurred.",
+            [ErrorCodes.ServiceUnavailable] = "A downstream service is unavailable. Try again later.",
+            [ErrorCodes.ConcurrencyConflict]= "The resource was modified by another request. Reload and try again.",
+        };
+}
+```
+
+---
+
+### 3b. `ErrorResponse` shape and `ResultExtensions` mapping
 
 ```csharp
 // API/Common/ErrorResponse.cs
-public record ErrorResponse(string Code, string Message, IReadOnlyList<string> Details)
+public record ErrorDetail(string Code, string Message, string? Field = null);
+
+public record ErrorResponse
 {
-    public static ErrorResponse From(IEnumerable<IError> errors)
-    {
-        var first = errors.First();
-        var code = first.GetType().Name.Replace("Error", "").ToUpperSnakeCase();
-        return new ErrorResponse(code, first.Message,
-            errors.Skip(1).Select(e => e.Message).ToList());
-    }
+    public ErrorDetail? Error { get; init; }
+    public IReadOnlyList<ErrorDetail>? Errors { get; init; }
+
+    public static ErrorResponse Single(string code, string message) =>
+        new() { Error = new ErrorDetail(code, message) };
+
+    public static ErrorResponse Validation(IEnumerable<(string Code, string Field, string Message)> errors) =>
+        new() { Errors = errors.Select(e => new ErrorDetail(e.Code, e.Message, e.Field)).ToList() };
 }
 ```
+
+`ResultExtensions.ToActionResult` maps `Result<T>` errors to HTTP + envelope:
+
+| Error type | HTTP | Envelope shape |
+|---|---|---|
+| `NotFoundError` | 404 | `Single(E0x01, message)` |
+| `ConflictError` | 409 | `Single(E0x02, message)` |
+| `ForbiddenError` | 403 | `Single(E09xx, message)` |
+| Validation errors | 422 | `Validation([(code, field, message), ...])` |
+| `ServiceUnavailableError` | 503 | `Single(E0902, message)` |
+| `ConcurrencyConflictError` | 409 | `Single(E0903, message)` |
+| Any other error | 400 | `Single(code, message)` |
+
+**Frontend contract:** the frontend receives `error.code` or `errors[n].code`, looks up the localised string in its `errors` i18n namespace, and falls back to the English `message` field if the code is not in its catalogue. The backend is fully culture-agnostic — no `IStringLocalizer`, no `.resx`, no `RequestLocalizationOptions`.
 
 ---
 
@@ -245,8 +354,7 @@ public sealed class ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionM
 
             ctx.Response.StatusCode = 500;
             ctx.Response.ContentType = "application/json";
-            var body = new ErrorResponse("INTERNAL_ERROR",
-                "An unexpected error occurred.", []);
+            var body = ErrorResponse.Single("E0999", "An unexpected error occurred.");
             await ctx.Response.WriteAsJsonAsync(body);
         }
     }

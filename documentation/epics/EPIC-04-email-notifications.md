@@ -10,7 +10,7 @@ Delivers the real AWS SES email implementation that replaces the `NoOpEmailServi
 **Scope:**
 - AWS SES v2 integration: domain verification, sender identity, IAM credentials via environment variables.
 - Real implementation of `IEmailService` (replacing `NoOpEmailService`).
-- HTML email templates for all transactional emails (invitation, password reset, status-change notification, comment notification) in both English and Spanish (per EPIC-10).
+- HTML email templates for all transactional emails (invitation, password reset, status-change notification, comment notification) in both English and Spanish.
 - Per-user email notification preference (opt-in/opt-out) — the toggle UI in the admin panel is part of EPIC-05B.
 
 **Out of scope:**
@@ -28,7 +28,7 @@ Delivers the real AWS SES email implementation that replaces the `NoOpEmailServi
 
 **`IEmailService` implementation — replace stub, no feature flag**
 
-EPIC-10 (TASK-10.5.1) already delivers `TemplateEmailService` in `Api.Infrastructure/Email/`, which handles template loading, `{{Variable}}` substitution, and language fallback. EPIC-04's job is to wire real AWS SES v2 calls underneath it: `TemplateEmailService` becomes a thin coordinator that renders HTML and delegates to `ISesEmailSender` (a new internal interface in `Api.Application/Common/Interfaces/`) for the actual SES dispatch. The `NoOpEmailService` stub in `api` is replaced outright — no feature flag, no toggle. In test environments the DI container registers a `NoOpEmailService` stub (or an `ISesEmailSender` no-op) via an environment guard in `AddInfrastructure`. The `identity` repo has its own separate `IEmailService` stub (introduced in TASK-01.5.1); EPIC-04 delivers a real SES implementation for that repo as well.
+EPIC-04 delivers `TemplateEmailService` in `Api.Infrastructure/Email/` (previously attributed to EPIC-10, now absorbed here). `TemplateEmailService` handles template loading from embedded resources, `{{Variable}}` substitution, and language fallback, and delegates the actual SES dispatch to `ISesEmailSender` (a new internal interface in `Api.Application/Common/Interfaces/`). `IEmailService.SendAsync` requires a `string language` parameter (fallback to `"es"`) — all callers must supply the recipient's preferred language. The `NoOpEmailService` stub in `api` is replaced outright — no feature flag, no toggle. In test environments the DI container registers a `NoOpSesEmailSender : ISesEmailSender` no-op, guarded by an environment check in `AddInfrastructure`. The `identity` repo has its own separate `IEmailService` stub (introduced in TASK-01.5.1); EPIC-04 delivers a real SES implementation for that repo as well.
 
 **Sender identity — domain-level verification, shared sender**
 
@@ -42,9 +42,9 @@ The preference lives in the `api` database as a new `UserEmailPreference` entity
 
 When a notification is created by EPIC-08's `StatusChangedHandler` / `CommentCreatedHandler`, the `IEmailService.SendNotificationEmailAsync` call receives a `toEmail` string parameter. EPIC-08 already passes the email to this method (the stub accepts it). The SES implementation simply uses that parameter directly — no additional lookup. The caller (EPIC-08's handlers) must resolve the `toEmail` and check `EmailNotificationsEnabled` before calling the service. Since EPIC-08 is already implemented with stubs, EPIC-04 must extend `StatusChangedHandler` and `CommentCreatedHandler` to perform this lookup via a new `IUserEmailPreferenceRepository` and only call `IEmailService` when notifications are enabled. This is a targeted modification to existing EPIC-08 use cases — not new use cases.
 
-**Email template ownership — EPIC-10 already delivers all templates**
+**Email template ownership — EPIC-04 delivers all templates**
 
-EPIC-10 (TASK-10.5.2, TASK-10.5.3, TASK-10.5.4) delivers all HTML templates (Invitation, PasswordReset, TicketNotification) in both `es` and `en`. EPIC-04 does NOT create new templates — it wires SES to send them. The `identity` repo's invitation and password-reset emails use separate template files embedded in `Identity.Infrastructure` (a mirror of the `api` templates, since `identity` is a separate service with no reference to `Api.Infrastructure`).
+EPIC-04 owns all HTML email templates. The `api` repo templates (`Invitation`, `PasswordReset`, `TicketNotification`) live as embedded resources under `Api.Infrastructure/EmailTemplates/{name}/{language}.html` and are loaded by `TemplateEmailService`. The `identity` repo's invitation and password-reset templates live separately under `Identity.Infrastructure/EmailTemplates/` (a mirror, since `identity` is an independent service with no reference to `Api.Infrastructure`). Both sets use the same `{{VariableName}}` placeholder format and the same template names/variables.
 
 **`PORTAL_BASE_URL` environment variable**
 
@@ -56,9 +56,10 @@ Both `api` and `identity` use `AWSSDK.SimpleEmailServiceV2`. The SES client is c
 
 **Dependency ordering**
 
-- TASK-04.1.x (SES implementation in `identity`) depends on TASK-01.5.1 (`IEmailService` stub in identity) and TASK-10.5.3 (PasswordReset template) and TASK-10.5.2 (Invitation template) — but since identity has its own templates, those tasks reference a parallel template set embedded in `Identity.Infrastructure`.
-- TASK-04.2.x (SES implementation in `api`) depends on TASK-10.5.1 (`TemplateEmailService`) and TASK-08.2.1 (`IEmailService.SendNotificationEmailAsync` stub).
-- TASK-04.5.x (user preference entity) depends on EPIC-08 Notification entity (TASK-08.1.1) and must be in place before the preference UI tasks (TASK-04.5.x).
+- TASK-04.1.x (identity email templates + SES): depends on TASK-01.5.1 (`IEmailService` stub in identity). Templates are self-contained within `Identity.Infrastructure`.
+- TASK-04.3.3 (`TemplateEmailService` + `SesEmailSender` in `api`): creates both the template engine and the SES dispatcher in one task, no upstream epic dependency beyond TASK-04.3.2.
+- TASK-04.3.4 / TASK-04.4.1 (extending webhook handlers): depend on TASK-04.3.3 (real SES in `api`) and TASK-08.1.6/7 (webhook handlers with stub email).
+- TASK-04.5.x (user preference entity): depends on EPIC-08 Notification entity (TASK-08.1.1) and must be in place before the preference UI tasks.
 
 ---
 
@@ -73,10 +74,10 @@ Both `api` and `identity` use `AWSSDK.SimpleEmailServiceV2`. The SES client is c
 - [ ] When an admin creates a new user invitation (EPIC-05), an email is sent to the invitee's address via AWS SES.
 - [ ] The email contains a unique, single-use activation link that expires after 72 hours (consistent with US-01.1).
 - [ ] The email is sent from a verified sender domain configured via an environment variable — no hardcoded sender address.
-- [ ] The email renders correctly in both English and Spanish based on the user's language preference (EPIC-10). If no preference is set, Spanish is used as the default.
+- [ ] The email renders correctly in both English and Spanish based on the user's language preference. If no preference is set, Spanish is used as the default.
 - [ ] If SES returns an error, the error is logged and surfaced to the caller — the invitation record remains in the DB but the admin is informed that the email could not be sent.
 - [ ] The email is not sent as plain text only — it has an HTML body with a clearly visible "Activate your account" call-to-action button.
-- [ ] The subject line and body copy use i18n-managed strings (EPIC-10) — no hardcoded English-only text.
+- [ ] The subject line and body copy are template-driven — no hardcoded English-only text.
 
 **Story Points:** 3
 
@@ -86,7 +87,7 @@ Both `api` and `identity` use `AWSSDK.SimpleEmailServiceV2`. The SES client is c
 **Depends on:** TASK-01.1.1
 
 **What to build:**
-Create self-contained HTML email templates for the invitation (account activation) email in both Spanish and English, embedded directly in the `identity` repo. Files live at `Identity.Infrastructure/EmailTemplates/Invitation/es.html` and `Identity.Infrastructure/EmailTemplates/Invitation/en.html`. These are separate from the `api` repo templates (EPIC-10 TASK-10.5.2) because `identity` is an independent service with no reference to `Api.Infrastructure`. Declare both files as embedded resources in `Identity.Infrastructure.csproj`. Both templates are valid, self-contained HTML with inline CSS. Variables: `{{UserName}}`, `{{ActivationLink}}`, `{{ExpiryHours}}`.
+Create self-contained HTML email templates for the invitation (account activation) email in both Spanish and English, embedded directly in the `identity` repo. Files live at `Identity.Infrastructure/EmailTemplates/Invitation/es.html` and `Identity.Infrastructure/EmailTemplates/Invitation/en.html`. These are separate from the `api` repo templates (TASK-04.3.3) because `identity` is an independent service with no reference to `Api.Infrastructure`. Declare both files as embedded resources in `Identity.Infrastructure.csproj`. Both templates are valid, self-contained HTML with inline CSS. Variables: `{{UserName}}`, `{{ActivationLink}}`, `{{ExpiryHours}}`.
 
 **Constraints:**
 - Template files are embedded resources: `<EmbeddedResource Include="EmailTemplates/**" />` in `Identity.Infrastructure.csproj`.
@@ -232,29 +233,54 @@ Create the EF Core configuration for `UserEmailPreference` in `Api.Infrastructur
 
 ---
 
-#### TASK-04.3.3 — Real SES v2 email sender in `api` (`SesEmailSender`)
+#### TASK-04.3.3 — `TemplateEmailService`, HTML templates, and `SesEmailSender` in `api`
 **Layer:** Infrastructure
 **Repo:** api
-**Depends on:** TASK-10.5.1 (TemplateEmailService), TASK-04.3.2
+**Depends on:** TASK-04.3.2
 
 **What to build:**
-Create `ISesEmailSender` in `Api.Application/Common/Interfaces/` with a single method `SendHtmlEmailAsync(string toEmail, string fromAddress, string fromName, string subject, string htmlBody, CancellationToken ct)`. Implement `SesEmailSender` in `Api.Infrastructure/Email/` using `AmazonSimpleEmailServiceV2Client`. The existing `TemplateEmailService` (delivered by TASK-10.5.1) is updated to accept `ISesEmailSender` via constructor injection and delegate the actual dispatch to it — replacing the previous no-op dispatch. Register `ISesEmailSender` → `SesEmailSender` as `Singleton` in `AddInfrastructure`. Add `PORTAL_BASE_URL` to `api/.env.example`.
+This task delivers the full email infrastructure for the `api` repo in one coherent unit:
+
+1. **`IEmailService` update**: extend the existing `IEmailService` interface in `Api.Application/Common/Interfaces/` to include a `string language` parameter on `SendAsync` (fallback to `"es"`). Update all call sites accordingly (EPIC-08 stubs use `"es"` as a placeholder until TASK-04.3.4/TASK-04.4.1 pass the real language).
+
+2. **`ISesEmailSender`**: new interface in `Api.Application/Common/Interfaces/ISesEmailSender.cs` with `Task SendHtmlEmailAsync(string toEmail, string fromAddress, string fromName, string subject, string htmlBody, CancellationToken ct)`.
+
+3. **`TemplateEmailService`**: implement in `Api.Infrastructure/Email/TemplateEmailService.cs`. Loads embedded HTML templates from `Api.Infrastructure/EmailTemplates/{templateName}/{language}.html` using `Assembly.GetManifestResourceStream`. Performs `{{VariableName}}` placeholder substitution. Falls back to `"es"` if the requested language resource is not found. Delegates dispatch to `ISesEmailSender`. This is the `IEmailService` implementation registered in all environments.
+
+4. **HTML templates** (embedded resources in `Api.Infrastructure.csproj`):
+   - `EmailTemplates/Invitation/es.html` — vars: `{{UserName}}`, `{{ActivationLink}}`, `{{ExpiryHours}}`
+   - `EmailTemplates/Invitation/en.html`
+   - `EmailTemplates/PasswordReset/es.html` — vars: `{{UserName}}`, `{{ResetLink}}`, `{{ExpiryMinutes}}`
+   - `EmailTemplates/PasswordReset/en.html`
+   - `EmailTemplates/TicketNotification/es.html` — vars: `{{UserName}}`, `{{TicketTitle}}`, `{{TicketKey}}`, `{{EventDescription}}`, `{{PortalLink}}`
+   - `EmailTemplates/TicketNotification/en.html`
+
+5. **`SesEmailSender`**: implement in `Api.Infrastructure/Email/SesEmailSender.cs` using `AmazonSimpleEmailServiceV2Client`. Reads `SES_FROM_ADDRESS`, `SES_FROM_NAME`, `AWS_REGION` from `IConfiguration`.
+
+6. **DI registration**: `services.AddScoped<IEmailService, TemplateEmailService>()`, `services.AddSingleton<ISesEmailSender, SesEmailSender>()`. In test/development without SES, register `NoOpSesEmailSender` (logs + no-ops) guarded by `config["USE_SES"] != "true"`.
 
 **Constraints:**
-- `AmazonSimpleEmailServiceV2Client` constructed with `RegionEndpoint.GetBySystemName(config["AWS_REGION"])` — credentials from environment via AWS default credential chain.
-- `SES_FROM_ADDRESS` and `SES_FROM_NAME` read from `IConfiguration`; passed by `TemplateEmailService` when calling `ISesEmailSender`.
+- `AmazonSimpleEmailServiceV2Client` constructed with `RegionEndpoint.GetBySystemName(config["AWS_REGION"])` — credentials from environment via AWS default credential chain. No explicit credential object in code.
+- `SES_FROM_ADDRESS` and `SES_FROM_NAME` read from `IConfiguration` — no hardcoded sender.
+- Template path format: `Api.Infrastructure.EmailTemplates.{templateName}.{language}.html` (dot-separated namespace, matching embedded resource convention).
+- Language fallback: if the requested language stream is null, retry with `"es"`. If `"es"` is also null, throw `InvalidOperationException`.
+- Placeholder format: `{{VariableName}}` — `string.Replace` for each variable; no templating engine dependency.
+- All templates: valid self-contained HTML with inline CSS only — no external images, fonts, or stylesheets.
+- Subject lines: defined as constants in a `EmailSubjects` static class in `Api.Application/Common/` (separate from templates).
 - All SES calls are fully async — no `.Result` or `.Wait()`.
-- `SesEmailSender` is registered as `Singleton` (the SES client is thread-safe and expensive to initialise per request).
-- `NoOpEmailService` is no longer registered; `TemplateEmailService` is the `IEmailService` implementation in all environments. For test environments, register a `NoOpSesEmailSender : ISesEmailSender` that logs and no-ops, guarded by `if (env.IsDevelopment() && config["USE_SES"] != "true")`.
-- `PORTAL_BASE_URL` added to `api/.env.example` alongside `API_BASE_URL`.
+- `SesEmailSender` is `Singleton` (SES client is thread-safe and expensive to initialise per request).
+- `NoOpEmailService` is removed; `TemplateEmailService` is the `IEmailService` in all environments.
+- `PORTAL_BASE_URL` and `USE_SES` added to `api/.env.example`.
 
 **Definition of Done:**
+- [ ] `IEmailService` interface has `string language` parameter on `SendAsync`.
 - [ ] `ISesEmailSender` interface exists at `Api.Application/Common/Interfaces/ISesEmailSender.cs`.
+- [ ] `TemplateEmailService` exists at `Api.Infrastructure/Email/TemplateEmailService.cs`.
 - [ ] `SesEmailSender` exists at `Api.Infrastructure/Email/SesEmailSender.cs`.
-- [ ] `TemplateEmailService` uses `ISesEmailSender` for dispatch (not a no-op).
-- [ ] `PORTAL_BASE_URL` appears in `api/.env.example`.
+- [ ] All 6 HTML template files exist under `Api.Infrastructure/EmailTemplates/` and are declared as embedded resources.
+- [ ] `PORTAL_BASE_URL` and `USE_SES` appear in `api/.env.example`.
 - [ ] `dotnet build` succeeds.
-- [ ] Manual smoke test: with real SES credentials and a verified sender, an HTML email arrives at the recipient.
+- [ ] Manual smoke test: with real SES credentials and a verified sender, an HTML email arrives at the recipient with correct template substitution.
 
 ---
 
@@ -264,14 +290,14 @@ Create `ISesEmailSender` in `Api.Application/Common/Interfaces/` with a single m
 **Depends on:** TASK-04.3.3, TASK-08.1.6
 
 **What to build:**
-Modify `StatusChangedHandler` (implemented in TASK-08.1.6) in `Api.Application/Webhooks/` to perform a real `EmailNotificationsEnabled` check before calling `IEmailService.SendNotificationEmailAsync`. The handler injects `IUserEmailPreferenceRepository` and, after persisting the `Notification`, calls `GetByUserIdAsync(notification.ClientUserId)`. If the preference row is absent or `EmailNotificationsEnabled` is `false`, the email send is skipped silently. If enabled, the handler calls `IEmailService.SendNotificationEmailAsync(toEmail, subject, htmlBody, ct)` — where subject and body are built using the `TicketNotification` template (from TASK-10.5.4) with variables `{{TicketKey}}`, `{{EventDescription}}`, `{{PortalLink}}`. The `PortalLink` is `{PORTAL_BASE_URL}/tickets/{jiraIssueKey}` resolved from `IConfiguration`. Email failure is fire-and-continue (log `Error`, do not rollback notification).
+Modify `StatusChangedHandler` (implemented in TASK-08.1.6) in `Api.Application/Webhooks/` to perform a real `EmailNotificationsEnabled` check before calling `IEmailService.SendNotificationEmailAsync`. The handler injects `IUserEmailPreferenceRepository` and, after persisting the `Notification`, calls `GetByUserIdAsync(notification.ClientUserId)`. If the preference row is absent or `EmailNotificationsEnabled` is `false`, the email send is skipped silently. If enabled, the handler calls `IEmailService.SendAsync(toEmail, "TicketNotification", variables, preference.PreferredLanguage, ct)` — where variables include `{{UserName}}`, `{{TicketTitle}}`, `{{TicketKey}}`, `{{EventDescription}}`, and `{{PortalLink}}`. The `TicketNotification` template is delivered in TASK-04.3.3. The `PortalLink` is `{PORTAL_BASE_URL}/tickets/{jiraIssueKey}` resolved from `IConfiguration`. Email failure is fire-and-continue (log `Error`, do not rollback notification).
 
 **Constraints:**
 - `IUserEmailPreferenceRepository` is injected into `StatusChangedHandler` — no direct `DbContext` or EF Core usage in Application layer.
 - `PORTAL_BASE_URL` is read from `IConfiguration` via a constructor-injected `IOptions<EmailOptions>` record or directly from `IConfiguration` — never hardcoded.
 - If `GetByUserIdAsync` returns null (user has no preference row), the email is skipped — never throw.
-- Subject line constants (Spanish / English) live in a static `EmailSubjects` class in `Api.Application/Common/`.
-- No changes to `IEmailService` interface signature — the signature was already extended by TASK-10.5.1 to include a `language` parameter; pass `preference.PreferredLanguage`.
+- Subject line constants (Spanish / English) live in the `EmailSubjects` static class in `Api.Application/Common/` created in TASK-04.3.3.
+- Pass `preference.PreferredLanguage` as the `language` parameter to `IEmailService.SendAsync`.
 
 **Definition of Done:**
 - [ ] `StatusChangedHandler` reads `IUserEmailPreferenceRepository` and checks `EmailNotificationsEnabled` before calling `IEmailService`.
@@ -390,7 +416,7 @@ Create `Api.API/Controllers/EmailPreferences/EmailPreferencesController.cs` expo
 **Depends on:** TASK-04.5.2
 
 **What to build:**
-Add an "Email notifications" section to the client portal's profile/settings page (route `/settings` or the closest equivalent that already exists from EPIC-10 or EPIC-01). The section renders a labelled shadcn/ui `Switch` component showing the current preference. On load, the page calls `GET /api/email-preferences` via TanStack Query. When the user toggles the switch, it immediately calls `PATCH /api/email-preferences` (optimistic update), shows a success toast on completion, and shows an error toast (reverting the switch to the previous state) on failure. The page does not navigate away after save.
+Add an "Email notifications" section to the client portal's profile/settings page (route `/settings` or the closest equivalent available at implementation time). The section renders a labelled shadcn/ui `Switch` component showing the current preference. On load, the page calls `GET /api/email-preferences` via TanStack Query. When the user toggles the switch, it immediately calls `PATCH /api/email-preferences` (optimistic update), shows a success toast on completion, and shows an error toast (reverting the switch to the previous state) on failure. The page does not navigate away after save.
 
 **Constraints:**
 - Use shadcn/ui `Switch` — no raw `<input type="checkbox">`.
@@ -426,12 +452,12 @@ Add an "Email notifications" section to the client portal's profile/settings pag
 
 | Task ID | Title | Story | Layer | Repo | Depends on |
 |---|---|---|---|---|---|
-| TASK-04.1.1 | HTML invitation email templates (es + en) | US-04.1 | Infrastructure | identity | TASK-01.1.1 |
-| TASK-04.1.2 | HTML password reset email templates (es + en) | US-04.1 / US-04.2 | Infrastructure | identity | TASK-01.5.1 |
+| TASK-04.1.1 | HTML invitation email templates in `identity` (es + en) | US-04.1 | Infrastructure | identity | TASK-01.1.1 |
+| TASK-04.1.2 | HTML password reset email templates in `identity` (es + en) | US-04.1 / US-04.2 | Infrastructure | identity | TASK-01.5.1 |
 | TASK-04.1.3 | `SesIdentityEmailService` — real SES implementation for `identity` | US-04.1 / US-04.2 | Infrastructure | identity | TASK-04.1.1, TASK-04.1.2 |
 | TASK-04.3.1 | `UserEmailPreference` domain entity and repository interface | US-04.3 | Domain | api | TASK-08.1.1 |
 | TASK-04.3.2 | `UserEmailPreference` EF Core config and migration | US-04.3 | Infrastructure + DB | api | TASK-04.3.1 |
-| TASK-04.3.3 | `ISesEmailSender` + `SesEmailSender` in `api` | US-04.3 | Infrastructure | api | TASK-10.5.1, TASK-04.3.2 |
+| TASK-04.3.3 | `TemplateEmailService`, HTML templates (6 files), and `SesEmailSender` in `api` | US-04.3 | Infrastructure | api | TASK-04.3.2 |
 | TASK-04.3.4 | Extend `StatusChangedHandler` with preference check and SES dispatch | US-04.3 | Application | api | TASK-04.3.3, TASK-08.1.6 |
 | TASK-04.4.1 | Extend `CommentCreatedHandler` with preference check and SES dispatch | US-04.4 | Application | api | TASK-04.3.3, TASK-08.1.7 |
 | TASK-04.5.1 | `GetEmailPreference` and `UpdateEmailPreference` use cases | US-04.5 | Application | api | TASK-04.3.2 |
@@ -442,18 +468,18 @@ Add an "Email notifications" section to the client portal's profile/settings pag
 
 > **Note for Architect:**
 >
-> - **`IEmailService` implementation**: EPIC-01 and EPIC-08 both define stub no-ops for `IEmailService`. EPIC-04's primary deliverable is the real SES v2 implementation. The architect should decide whether to register the real implementation via a feature flag / configuration toggle during transition or simply replace the stub. Also confirm how the `NoOpEmailService` is handled in test environments.
+> - **`IEmailService` implementation**: decided — `TemplateEmailService` is the `IEmailService` registered in all environments (TASK-04.3.3). `NoOpEmailService` is removed. For test/development without SES, a `NoOpSesEmailSender` implements `ISesEmailSender` and is swapped in via `config["USE_SES"] != "true"` guard in `AddInfrastructure`. No feature flag needed on `IEmailService` itself.
 >
-> - **Sender identity configuration**: all emails share a single verified sender (`SES_FROM_ADDRESS`, `SES_FROM_NAME` env vars). The architect should confirm whether domain-level verification (preferred) or individual email address verification is used in development vs. production.
+> - **Email templates**: decided — embedded HTML resources with inline CSS, `{{VariableName}}` substitution via `string.Replace`. No Razor, no Fluid/Scriban. Template loading via `Assembly.GetManifestResourceStream`. Language fallback to `"es"` if the requested language resource is not found.
 >
-> - **`EmailNotificationsEnabled` field placement**: US-04.5 requires a per-user boolean preference. The architect must decide which entity and repo owns this field: the `ApplicationUser` in the `identity` DB (nearest to user management) or a `UserPreference` / `ClientUser` record in the `api` DB. Given that `IEmailService` lives in `api` and the notification use cases run there, a preference stored in `api`'s schema avoids a cross-service lookup on every email send. However, admin-managed fields live in EPIC-05 — coordinate the field definition with the architect to avoid a schema conflict.
+> - **`IEmailService.SendAsync` signature**: decided — must include `string language` parameter (fallback `"es"`). Callers that do not yet have the language (EPIC-08 stubs) pass `"es"` as placeholder; TASK-04.3.4 and TASK-04.4.1 pass `preference.PreferredLanguage`.
 >
-> - **`EmailNotificationsEnabled` admin toggle placement**: the user requested that the admin-panel toggle for enabling/disabling email notifications per user be placed in **EPIC-05B** rather than here. EPIC-04 owns only the client-facing preference UI (US-04.5). EPIC-05B should add an admin-override story (e.g. "Admin can enable or disable email notifications for a user") that writes to the same field. Flag this dependency when writing EPIC-05B stories.
+> - **`EmailNotificationsEnabled` field placement**: decided — `UserEmailPreference` entity lives in `api` DB (TASK-04.3.1). Avoids cross-service lookup on the hot notification path. `UserId` is a bare `Guid` (mirrors JWT `sub`), not a FK to any `identity` table.
 >
-> - **HTML email templates**: the architect should decide the templating mechanism (e.g. Razor views rendered server-side, embedded HTML string resources, or a templating library such as Fluid or Scriban). Given the project uses .NET 10, Razor view rendering outside of ASP.NET Core pipeline context may require a hosted service or `IRazorViewEngine` approach — flag this complexity.
+> - **`EmailNotificationsEnabled` admin toggle**: deferred to EPIC-05B. EPIC-04 owns only the client-facing preference UI (US-04.5). EPIC-05B will add an admin-override story writing to the same `UserEmailPreference` entity.
 >
-> - **Localisation of email templates**: email body localisation (English / Spanish) must align with EPIC-10's i18n approach. Confirm whether email templates use the same resource files or a separate set of `.resx` / JSON files. The recipient's `PreferredLanguage` claim (issued by the identity server, per EPIC-01 Architecture Note) or a field in the `api` DB is needed to resolve the locale at send time.
+> - **Sender identity**: all emails share `SES_FROM_ADDRESS` / `SES_FROM_NAME` env vars. Domain-level verification in production; individual address verification acceptable in development/sandbox.
 >
-> - **PORTAL_BASE_URL env var**: ticket detail links embedded in notification emails (US-04.3 and US-04.4) require the portal's public base URL. A `PORTAL_BASE_URL` environment variable should be introduced in `api/.env.example` alongside the existing `API_BASE_URL`.
+> - **`PORTAL_BASE_URL` env var**: added in TASK-04.3.3 to `api/.env.example`. Used to generate `{{PortalLink}}` in `TicketNotification` templates.
 >
-> - **Dependency ordering**: US-04.1 and US-04.2 activate stub email calls already wired in EPIC-01. US-04.3 and US-04.4 activate the stub wired in EPIC-08 (TASK-08.2.1). The architect should ensure task ordering reflects these upstream stubs and that the SES implementation can be dropped in without modifying call sites.
+> - **Dependency ordering**: US-04.1/04.2 activate stub email calls wired in EPIC-01. US-04.3/04.4 activate the stub wired in EPIC-08 (TASK-08.2.1). SES implementation is a drop-in — no call-site changes needed beyond the `language` parameter already in the interface.
