@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useCart } from '../../contexts/cart-context';
 import { StepIndicator } from '../../components/checkout/step-indicator';
 import { ShippingForm } from '../../components/checkout/shipping-form';
+import { PaymentForm } from '../../components/checkout/payment-form';
 import { CheckoutOrderSummary } from '../../components/checkout/checkout-order-summary';
-import type { ShippingData } from '../../types/checkout';
+import type { ShippingData, PaymentData } from '../../types/checkout';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function CheckoutPage() {
 
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [shippingData, setShippingData] = useState<ShippingData | null>(null);
+  const [paymentData, setPaymentData] = useState<PaymentData | null>(null);
 
   useEffect(() => {
     if (itemCount === 0) {
@@ -24,6 +26,15 @@ export default function CheckoutPage() {
   function handleShippingSubmit(data: ShippingData) {
     setShippingData(data);
     setCurrentStep(2);
+  }
+
+  function handlePaymentSubmit(data: PaymentData) {
+    setPaymentData(data);
+    setCurrentStep(3);
+  }
+
+  function handlePaymentBack() {
+    setCurrentStep(1);
   }
 
   if (itemCount === 0) {
@@ -50,9 +61,12 @@ export default function CheckoutPage() {
 
           {currentStep === 2 && (
             <div className="rounded-lg bg-white p-6 shadow-sm">
-              <p className="text-muted-foreground">
-                Paso 2 — Datos de pago (disponible en US-010)
-              </p>
+              <h2 className="mb-4 text-lg font-semibold">Método de pago</h2>
+              <PaymentForm
+                initialData={paymentData ?? undefined}
+                onSubmit={handlePaymentSubmit}
+                onBack={handlePaymentBack}
+              />
             </div>
           )}
 

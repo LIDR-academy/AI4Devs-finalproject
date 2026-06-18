@@ -97,4 +97,67 @@ describe('CheckoutPage', () => {
     render(<CheckoutPage />);
     expect(mockPush).not.toHaveBeenCalledWith('/cart');
   });
+
+  describe('paso 2 — datos de pago (US-010-TASK-02)', () => {
+    async function fillShippingAndAdvance(user: ReturnType<typeof userEvent.setup>) {
+      await user.type(screen.getByLabelText(/nombre completo/i), 'Ana Pérez');
+      await user.type(screen.getByLabelText(/email/i), 'ana@test.com');
+      await user.type(screen.getByLabelText(/dirección/i), 'Calle Mayor 1');
+      await user.type(screen.getByLabelText(/ciudad/i), 'Madrid');
+      await user.type(screen.getByLabelText(/código postal/i), '28001');
+      await user.click(screen.getByRole('button', { name: /continuar al pago/i }));
+    }
+
+    it('muestra PaymentForm y el paso 2 activo tras enviar el formulario de envío', async () => {
+      const user = userEvent.setup();
+      mockUseCart.mockReturnValue(makeCart([item]));
+      render(<CheckoutPage />);
+
+      await fillShippingAndAdvance(user);
+
+      expect(screen.getByLabelText(/número de tarjeta/i)).toBeInTheDocument();
+      const steps = screen.getAllByRole('listitem');
+      expect(steps[1]).toHaveAttribute('aria-current', 'step');
+    });
+
+    it('avanza al paso 3 al enviar PaymentForm con datos válidos', async () => {
+      const user = userEvent.setup();
+      mockUseCart.mockReturnValue(makeCart([item]));
+      render(<CheckoutPage />);
+
+      await fillShippingAndAdvance(user);
+
+      await user.type(screen.getByLabelText(/número de tarjeta/i), '1234567890123456');
+      await user.type(screen.getByLabelText(/nombre del titular/i), 'Ana Pérez');
+      await user.type(screen.getByLabelText(/fecha de vencimiento/i), '12/28');
+      await user.type(screen.getByLabelText(/cvv/i), '123');
+      await user.click(screen.getByRole('button', { name: /confirmar pedido/i }));
+
+      expect(
+        screen.getByText(/Paso 3 — Revisión del pedido/i)
+      ).toBeInTheDocument();
+    });
+
+    it('vuelve al paso 1 con los datos de envío intactos al pulsar Volver', async () => {
+      const user = userEvent.setup();
+      mockUseCart.mockReturnValue(makeCart([item]));
+      render(<CheckoutPage />);
+
+      await fillShippingAndAdvance(user);
+
+      await user.click(screen.getByRole('button', { name: /volver/i }));
+
+      expect(screen.getByLabelText(/nombre completo/i)).toHaveValue('Ana Pérez');
+    });
+
+    it('el resumen del pedido permanece visible en el paso 2', async () => {
+      const user = userEvent.setup();
+      mockUseCart.mockReturnValue(makeCart([item]));
+      render(<CheckoutPage />);
+
+      await fillShippingAndAdvance(user);
+
+      expect(screen.getByText('Nike Pegasus 41')).toBeInTheDocument();
+    });
+  });
 });
