@@ -145,6 +145,17 @@ describe('POST /api/checkout', () => {
     expect(res.body.available).toBe(2);
   });
 
+  it('devuelve 201 cuando phone es una cadena vacía (sin teléfono)', async () => {
+    const service = makeCheckoutService();
+
+    const res = await request(buildApp(service))
+      .post('/api/checkout')
+      .set('Cookie', [`sessionId=${VALID_UUID}`])
+      .send({ ...VALID_SHIPPING_BODY, phone: '' });
+
+    expect(res.status).toBe(201);
+  });
+
   it('emite Set-Cookie con el nuevo sessionId cuando no había cookie previa', async () => {
     const service = makeCheckoutService();
 

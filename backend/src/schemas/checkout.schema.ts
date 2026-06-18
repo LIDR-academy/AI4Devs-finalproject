@@ -10,7 +10,7 @@ export const CheckoutSchema = z
   .object({
     name: z.string().min(1),
     email: z.string().regex(EMAIL_REGEX),
-    phone: z.string().regex(PHONE_REGEX).optional(),
+    phone: z.union([z.string().regex(PHONE_REGEX), z.literal('')]).optional(),
     address: z.string().min(1),
     city: z.string().min(1),
     postalCode: z.string().regex(POSTAL_CODE_REGEX),
