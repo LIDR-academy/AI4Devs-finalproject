@@ -10,7 +10,11 @@
 >
 > **La fuente de verdad absoluta de todos los prompts utilizados durante el desarrollo es el log automático generado por un hook agnóstico de agente inyectado en el repositorio desde el inicio de la implementación:**
 >
-> 👉 [`prompts-log.md`](https://github.com/ArnauAregall/aregall-agenthub/blob/main/prompts-log.md)
+> **Prompt log actual**: 👉[`prompts-log.md`](https://github.com/ArnauAregall/aregall-agenthub/blob/main/prompts-log.md)
+> 
+> **Prompt log histórico**: 
+> 
+> 🗃️Del 30/04/2026 al 31/05/2026: [`20260430-20260531-prompts-log.md`](https://github.com/ArnauAregall/aregall-agenthub/blob/main/20260430-20260531-prompts-log.md)
 >
 > Dicho log captura cada prompt tal y como fue enviado al agente, en tiempo real, independientemente de la herramienta utilizada (Claude Code CLI, GitHub Copilot CLI, Cursor). Este fichero `prompts.md` cubre principalmente la **fase de planificación previa al primer commit**, que ocurrió en Claude Desktop y no está capturada por el hook.
 

@@ -161,8 +161,12 @@ La estructura completa del proyecto y las decisiones de arquitectura están docu
 
 ### **2.4. Infraestructura y despliegue**
 
-El despliegue objetivo es un stack Docker Compose sobre AWS EC2 con pipeline CI/CD en GitHub Actions. La URL objetivo es
-`https://agenthub.aregall.tech`. El estado actual (Fase 2 completada) incluye CI operativo.
+El despliegue es un stack Docker Compose sobre AWS EC2 con pipeline CI/CD en GitHub Actions.
+
+**Estado actual (Fase 2 — Junio 2026):** entorno de producción operativo sobre AWS. La infraestructura fue
+aprovisionada manualmente y el proceso completo está documentado como guía reproducible en el repositorio privado. El
+pipeline CI/CD ejecuta el build completo (backend + frontend + E2E Playwright) en cada PR. La URL del entorno se
+comunica directamente a los evaluadores.
 
 ### **2.5. Seguridad**
 
@@ -262,6 +266,207 @@ rechazo con motivo.
 
 ---
 
+### Historias de Usuario — Fase 2 (Mayo–Junio 2026)
+
+**Historia de Usuario 4 — US-08: Approve, reject, or request changes to a proposal**
+
+- **Como** Tech Lead,
+- **quiero** aprobar, rechazar o solicitar cambios sobre la propuesta generada por el agente,
+- **para** controlar explícitamente cuándo y bajo qué condiciones el agente puede comenzar a escribir código.
+
+Los escenarios cubren la aprobación directa que desencadena la fase de aplicación, el rechazo con motivo que detiene el
+run, y la solicitud de revisión que devuelve el agente a la fase de propuesta con contexto adicional.
+
+🔗 [Historias completas en el repositorio privado](https://github.com/ArnauAregall/aregall-agenthub/blob/main/docs/backlog/user-stories.md)
+
+---
+
+**Historia de Usuario 5 — US-09: Agent applies the approved spec and pushes the branch automatically**
+
+- **Como** desarrollador,
+- **quiero** que el agente implemente automáticamente la especificación aprobada y suba la rama a GitHub,
+- **para** recibir código listo para revisión sin intervención manual tras aprobar la propuesta.
+
+Los escenarios cubren la ejecución completa de la fase de aplicación, el archivado de la especificación junto al código,
+la creación de un commit semántico con los co-autores del agente, y el push de la rama al repositorio remoto.
+
+🔗 [Historias completas en el repositorio privado](https://github.com/ArnauAregall/aregall-agenthub/blob/main/docs/backlog/user-stories.md)
+
+---
+
+**Historia de Usuario 6 — US-10: Receive a GitHub Pull Request at the end of a successful agent run**
+
+- **Como** desarrollador,
+- **quiero** recibir automáticamente un Pull Request en GitHub al finalizar la ejecución del agente,
+- **para** poder iniciar la revisión de código sin ningún paso manual adicional.
+
+Los escenarios cubren la creación del PR con el título y cuerpo generado por el agente, la persistencia de la URL del PR
+en el sistema, y el caso en que el agente no produce cambios y el PR no se crea.
+
+🔗 [Historias completas en el repositorio privado](https://github.com/ArnauAregall/aregall-agenthub/blob/main/docs/backlog/user-stories.md)
+
+---
+
+**Historia de Usuario 7 — US-11: Monitor agent progress via real-time log streaming**
+
+- **Como** desarrollador,
+- **quiero** ver en tiempo real el output del agente mientras ejecuta,
+- **para** saber en qué punto del proceso se encuentra sin necesidad de consultar herramientas externas.
+
+Los escenarios cubren el streaming continuo del log del agente en un terminal embebido en la UI, la actualización
+periódica del listado de tareas pendientes, y el cierre limpio del stream cuando el agente finaliza o falla.
+
+🔗 [Historias completas en el repositorio privado](https://github.com/ArnauAregall/aregall-agenthub/blob/main/docs/backlog/user-stories.md)
+
+---
+
+**Historia de Usuario 8 — US-12: View the full ticket pipeline on a kanban board**
+
+- **Como** Tech Lead,
+- **quiero** visualizar todos los tickets activos del proyecto en un kanban board de cinco columnas,
+- **para** tener una vista unificada del estado de cada delegación y poder transicionar estados con drag-and-drop.
+
+Los escenarios cubren la carga del board con las cinco columnas de estado, las transiciones por drag-and-drop que
+disparan acciones contextuales, y el soporte responsive en viewport móvil.
+
+🔗 [Historias completas en el repositorio privado](https://github.com/ArnauAregall/aregall-agenthub/blob/main/docs/backlog/user-stories.md)
+
+---
+
+**Historia de Usuario 9 — US-13: Filter the kanban board by runner or search by ID/title**
+
+- **Como** Tech Lead,
+- **quiero** filtrar el kanban board por runner de agente o buscar tickets por ID o título,
+- **para** encontrar rápidamente el estado de un ticket específico en proyectos con muchos runs activos.
+
+Los escenarios cubren el filtrado server-side por runner, la búsqueda por ID parcial y por fragmento de título, y la
+combinación de ambos filtros en una única llamada al backend.
+
+🔗 [Historias completas en el repositorio privado](https://github.com/ArnauAregall/aregall-agenthub/blob/main/docs/backlog/user-stories.md)
+
+---
+
+**Historia de Usuario 10 — US-14: Review proposals on mobile (≥375 px viewport)**
+
+- **Como** Tech Lead,
+- **quiero** revisar y aprobar propuestas del agente desde un dispositivo móvil,
+- **para** no depender de un escritorio para tomar decisiones de aprobación cuando estoy fuera de la oficina.
+
+Los escenarios cubren la visualización completa del panel de propuesta en viewports desde 375 px, los controles de
+aprobación/rechazo accesibles sin scroll horizontal, y la carga correcta del contenido de la propuesta en conexiones
+móviles.
+
+🔗 [Historias completas en el repositorio privado](https://github.com/ArnauAregall/aregall-agenthub/blob/main/docs/backlog/user-stories.md)
+
+---
+
+**Historia de Usuario 11 — US-15: Generate a Linear ticket from a free-text idea (Idea mode)**
+
+- **Como** desarrollador,
+- **quiero** escribir una idea en lenguaje natural y recibir un ticket de Linear estructurado generado por IA,
+- **para** convertir ideas rápidas en tickets accionables sin tener que redactarlos manualmente.
+
+Los escenarios cubren la generación de un título, descripción y criterios de aceptación a partir de la idea del usuario,
+la previsualización del ticket antes de crearlo en Linear, y la validación de que la idea tiene suficiente contexto para
+ser procesada.
+
+🔗 [Historias completas en el repositorio privado](https://github.com/ArnauAregall/aregall-agenthub/blob/main/docs/backlog/user-stories.md)
+
+---
+
+**Historia de Usuario 12 — US-16: Enrich an existing Linear ticket with AI-generated acceptance criteria**
+
+- **Como** desarrollador,
+- **quiero** enriquecer un ticket de backlog existente con criterios de aceptación generados por IA,
+- **para** que el ticket tenga la especificación suficiente para ser delegado a un agente sin trabajo manual adicional.
+
+Los escenarios cubren la generación de criterios de aceptación a partir de contexto adicional libre, la previsualización
+antes de confirmar la escritura al proyecto Linear, y el caso en que el ticket ya tiene suficiente descripción.
+
+🔗 [Historias completas en el repositorio privado](https://github.com/ArnauAregall/aregall-agenthub/blob/main/docs/backlog/user-stories.md)
+
+---
+
+**Historia de Usuario 13 — US-17 + US-18: Onboarding wizard and architecture profile**
+
+- **Como** nuevo usuario,
+- **quiero** completar un wizard guiado al crear mi primer Work Project y configurar el perfil de arquitectura del
+  repositorio,
+- **para** que el agente tenga el contexto técnico del proyecto antes de generar cualquier propuesta.
+
+Los escenarios cubren el wizard paso a paso (repositorio GitHub → proyecto Linear → perfil de arquitectura), la
+validación de cada paso antes de avanzar, y la persistencia del perfil de arquitectura editable posteriormente.
+
+🔗 [Historias completas en el repositorio privado](https://github.com/ArnauAregall/aregall-agenthub/blob/main/docs/backlog/user-stories.md)
+
+---
+
+**Historia de Usuario 14 — US-24: Detect GitHub PR merge via webhook and transition to Done**
+
+- **Como** Tech Lead,
+- **quiero** que el sistema detecte automáticamente cuando el PR del agente es mergeado en GitHub,
+- **para** que el ticket transite a Done sin necesidad de una acción manual en AgentHub.
+
+Los escenarios cubren la recepción del webhook de GitHub al mergear el PR, la transición automática del run al estado
+Done, y el comportamiento cuando el webhook llega fuera de secuencia o con retraso.
+
+🔗 [Historias completas en el repositorio privado](https://github.com/ArnauAregall/aregall-agenthub/blob/main/docs/backlog/user-stories.md)
+
+---
+
+**Historia de Usuario 15 — US-25: Cancel an agent run in progress**
+
+- **Como** Tech Lead,
+- **quiero** cancelar un agent run desde el kanban board en cualquier columna activa,
+- **para** detener la ejecución del agente si la dirección técnica cambia o si el agente entra en un estado incorrecto.
+
+Los escenarios cubren la cancelación desde las columnas de propuesta en progreso, de revisión y de code review, el
+cierre del PR asociado si existe, y la gestión de cancelaciones concurrentes.
+
+🔗 [Historias completas en el repositorio privado](https://github.com/ArnauAregall/aregall-agenthub/blob/main/docs/backlog/user-stories.md)
+
+---
+
+**Historia de Usuario 16 — US-26: Delete a Work Project and clean up its GitHub webhook**
+
+- **Como** Tech Lead,
+- **quiero** eliminar un Work Project cuando ya no sea necesario,
+- **para** que todos sus recursos asociados (runs activos, webhook de GitHub) queden limpios de forma automática.
+
+Los escenarios cubren la cancelación de todos los runs activos antes del borrado, la eliminación best-effort del webhook
+en GitHub, el borrado en cascada de los datos en base de datos, y la confirmación explícita en la UI.
+
+🔗 [Historias completas en el repositorio privado](https://github.com/ArnauAregall/aregall-agenthub/blob/main/docs/backlog/user-stories.md)
+
+---
+
+**Historia de Usuario 17 — US-27: Merge a GitHub Pull Request from the Code Review Kanban column**
+
+- **Como** Tech Lead,
+- **quiero** mergear el PR del agente directamente desde el kanban board de AgentHub,
+- **para** cerrar el ciclo del pipeline sin tener que cambiar de herramienta.
+
+Los escenarios cubren la pre-comprobación de mergeabilidad antes de intentar el merge, la transición del ticket a Done
+al completarse, la gestión de errores de GitHub durante el merge, y el bloqueo de merges concurrentes sobre el mismo PR.
+
+🔗 [Historias completas en el repositorio privado](https://github.com/ArnauAregall/aregall-agenthub/blob/main/docs/backlog/user-stories.md)
+
+---
+
+**Historia de Usuario 18 — US-28: Establish authenticated E2E test harness with CI wiring**
+
+- **Como** desarrollador del equipo,
+- **quiero** disponer de un harness de tests E2E que se ejecute en CI con sesiones autenticadas,
+- **para** poder verificar los flujos de usuario completos sin depender de cuentas reales de GitHub o Linear.
+
+Los escenarios cubren la ejecución del suite E2E completo en GitHub Actions, la autenticación de las sesiones de test
+sin OAuth real, y la cobertura de los flujos principales del producto (login, kanban board, delegación, revisión de
+propuesta).
+
+🔗 [Historias completas en el repositorio privado](https://github.com/ArnauAregall/aregall-agenthub/blob/main/docs/backlog/user-stories.md)
+
+---
+
 ## 6. Tickets de Trabajo
 
 Los tickets de trabajo de AgentHub son generados por sub-agentes de IA a partir de las historias de usuario, siguiendo
@@ -357,4 +562,174 @@ implementación del pipeline.
 
 Implementa el almacenamiento seguro de credenciales de terceros por usuario, habilitando la configuración multi-usuario
 de integraciones externas. Propuesta y aplicada vía pipeline OpenSpec con GitHub Copilot CLI como runner.
+
+---
+
+### Pull Requests — Fase 2 (Mayo–Junio 2026)
+
+**Pull Request 4 — [US-08] Approve, reject, or request changes to a proposal**
+
+- **URL:** [https://github.com/ArnauAregall/aregall-agenthub/pull/113](https://github.com/ArnauAregall/aregall-agenthub/pull/113)
+- **Estado:** Merged
+- **Runner:** Claude Code CLI
+
+Implementa las tres acciones de revisión sobre la propuesta generada por el agente: aprobación (desencadena la fase de
+aplicación), rechazo con motivo (detiene el run) y solicitud de cambios (devuelve el agente a la fase de propuesta con
+contexto adicional). Cierra el ciclo de la puerta de revisión humana obligatoria.
+
+---
+
+**Pull Request 5 — [US-09] Agent applies the approved spec and pushes the branch automatically**
+
+- **URL:** [https://github.com/ArnauAregall/aregall-agenthub/pull/121](https://github.com/ArnauAregall/aregall-agenthub/pull/121)
+- **Estado:** Merged
+- **Runner:** Claude Code CLI
+
+Completa el pipeline `apply → archive → push`: tras la aprobación, el agente implementa las tareas de la especificación,
+archiva el cambio junto al código, genera un commit semántico con trazabilidad de co-autores, y sube la rama al
+repositorio remoto en GitHub. Primer cierre completo del bucle de automatización de extremo a extremo.
+
+---
+
+**Pull Request 6 — [US-10] Receive a GitHub Pull Request at the end of a successful agent run**
+
+- **URL:** [https://github.com/ArnauAregall/aregall-agenthub/pull/123](https://github.com/ArnauAregall/aregall-agenthub/pull/123)
+- **Estado:** Merged
+- **Runner:** Claude Code CLI
+
+Añade la creación automática del Pull Request en GitHub como último paso del pipeline de ejecución del agente. El sistema
+persiste la URL del PR en el registro del run, la muestra en la tarjeta del kanban board y gestiona el caso en que el
+agente no produce cambios netos.
+
+---
+
+**Pull Request 7 — [US-11] Monitor agent progress via real-time log streaming**
+
+- **URL:** [https://github.com/ArnauAregall/aregall-agenthub/pull/128](https://github.com/ArnauAregall/aregall-agenthub/pull/128)
+- **Estado:** Merged
+- **Runner:** Claude Code CLI
+
+Implementa el streaming en tiempo real del output del agente mediante Server-Sent Events. El frontend muestra el log
+del agente en un terminal embebido y actualiza periódicamente el listado de tareas mientras el agente ejecuta, sin
+necesidad de polling activo desde el cliente.
+
+---
+
+**Pull Request 8 — [US-12] View the full ticket pipeline on a kanban board**
+
+- **URL:** [https://github.com/ArnauAregall/aregall-agenthub/pull/158](https://github.com/ArnauAregall/aregall-agenthub/pull/158)
+- **Estado:** Merged
+- **Runner:** Claude Code CLI
+
+Implementa el kanban board de cinco columnas con drag-and-drop que dispara acciones contextuales según la columna de
+destino. El backend expone un endpoint que agrega el estado de runs, tickets y PRs en una única respuesta optimizada
+para el board. Soporte responsive incluido en esta PR.
+
+---
+
+**Pull Request 9 — [US-24 + US-25] Webhook-based PR merge detection and run cancellation**
+
+- **URL:** [https://github.com/ArnauAregall/aregall-agenthub/pull/142](https://github.com/ArnauAregall/aregall-agenthub/pull/142)
+- **Estado:** Merged
+- **Runner:** Claude Code CLI
+
+Implementa la detección automática del merge de un PR vía webhook de GitHub (US-24): cuando el PR del agente es
+mergeado, el run transita automáticamente a Done sin intervención manual. Añade también la cancelación de runs desde
+cualquier columna activa del board (US-25), incluyendo el cierre del PR asociado si existe.
+
+---
+
+**Pull Request 10 — [US-27] Merge a GitHub Pull Request from the Code Review Kanban column**
+
+- **URL:** [https://github.com/ArnauAregall/aregall-agenthub/pull/159](https://github.com/ArnauAregall/aregall-agenthub/pull/159)
+- **Estado:** Merged
+- **Runner:** Claude Code CLI
+
+Añade el flujo de merge iniciado desde AgentHub: el desarrollador arrastra la tarjeta de Code Review a Done o pulsa
+"Merge PR" en el panel de detalle. El sistema comprueba la mergeabilidad antes de actuar y gestiona los distintos modos
+de error de la API de GitHub, evitando merges concurrentes mediante bloqueo optimista.
+
+---
+
+**Pull Request 11 — [US-13] Filter the kanban board by runner or search by ID/title**
+
+- **URL:** [https://github.com/ArnauAregall/aregall-agenthub/pull/166](https://github.com/ArnauAregall/aregall-agenthub/pull/166)
+- **Estado:** Merged
+- **Runner:** Claude Code CLI
+
+Añade filtrado server-side al endpoint del kanban board (por runner, por fragmento de ID y por título) y una barra de
+filtros inline en la cabecera del board que refleja el estado del filtro en la URL, permitiendo compartir vistas filtradas
+directamente.
+
+---
+
+**Pull Request 12 — [US-28] Authenticated E2E test harness with CI wiring**
+
+- **URL:** [https://github.com/ArnauAregall/aregall-agenthub/pull/168](https://github.com/ArnauAregall/aregall-agenthub/pull/168)
+- **Estado:** Merged
+- **Runner:** Claude Code CLI
+
+Implementa el harness de tests E2E autenticados de Playwright con tres niveles: sesión de test sin OAuth real, mocks de
+integraciones externas, y fixtures de estado compartido entre tests. Permite la ejecución del suite E2E completo en
+GitHub Actions sin cuentas reales de GitHub ni Linear.
+
+---
+
+**Pull Request 13 — [US-15] Generate a Linear ticket from a free-text idea (Idea mode)**
+
+- **URL:** [https://github.com/ArnauAregall/aregall-agenthub/pull/172](https://github.com/ArnauAregall/aregall-agenthub/pull/172)
+- **Estado:** Merged
+- **Runner:** Claude Code CLI
+
+Añade el modo Idea al kanban board: el desarrollador escribe una idea en lenguaje libre y Spring AI genera un ticket
+estructurado (título, descripción, criterios de aceptación) con previsualización antes de crearlo en Linear. Primera
+integración de Spring AI con la API de Linear en modo de creación.
+
+---
+
+**Pull Request 14 — [US-17 + US-18] Onboarding wizard and architecture profile**
+
+- **URL:** [https://github.com/ArnauAregall/aregall-agenthub/pull/173](https://github.com/ArnauAregall/aregall-agenthub/pull/173)
+- **Estado:** Merged
+- **Runner:** Claude Code CLI
+
+Implementa el wizard guiado de primer acceso que lleva al usuario por la selección de repositorio GitHub, proyecto Linear
+y configuración del perfil de arquitectura del proyecto. El perfil de arquitectura es persistido y enviado al agente como
+contexto en cada delegación, mejorando la calidad de las propuestas generadas.
+
+---
+
+**Pull Request 15 — [US-26] Delete a Work Project and clean up its GitHub webhook**
+
+- **URL:** [https://github.com/ArnauAregall/aregall-agenthub/pull/177](https://github.com/ArnauAregall/aregall-agenthub/pull/177)
+- **Estado:** Merged
+- **Runner:** Claude Code CLI
+
+Implementa el borrado de Work Projects con limpieza completa: cancelación de todos los runs activos, eliminación
+best-effort del webhook en GitHub, borrado en cascada en base de datos y emisión de eventos de auditoría. Incluye el
+diálogo de confirmación en el frontend.
+
+---
+
+**Pull Request 16 — [US-16] Enrich an existing Linear ticket with AI-generated acceptance criteria**
+
+- **URL:** [https://github.com/ArnauAregall/aregall-agenthub/pull/179](https://github.com/ArnauAregall/aregall-agenthub/pull/179)
+- **Estado:** Merged
+- **Runner:** Claude Code CLI
+
+Añade el modo Enriquecimiento: el desarrollador aporta contexto adicional sobre un ticket existente y Spring AI genera
+criterios de aceptación estructurados que se previsualizan antes de escribirse al ticket en Linear. Demuestra la
+integración bidireccional de Spring AI con la API de Linear vía el pipeline OpenSpec.
+
+---
+
+**Pull Request 17 — [SPIKE] AWS infrastructure deployment documentation**
+
+- **URL:** [https://github.com/ArnauAregall/aregall-agenthub/pull/186](https://github.com/ArnauAregall/aregall-agenthub/pull/186)
+- **Estado:** Merged
+- **Runner:** Claude Code CLI
+
+Documenta el proceso completo de aprovisionamiento de la infraestructura de producción en AWS, incluyendo los problemas
+reales encontrados durante el despliegue live y las soluciones aplicadas. Sirve como guía reproducible para replicar el
+entorno desde cero siguiendo IaC (considerando el futuro uso de AWS CDK) y buenas prácticas de seguridad.
 
