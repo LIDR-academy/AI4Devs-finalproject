@@ -161,6 +161,53 @@ describe('fetchProducts() with filters', () => {
     expect(url).toContain('level=advanced');
     expect(url).toContain('objective=competition');
   });
+
+  it('serializes category as query param', async () => {
+    stubFetch(200, { products: [], total: 0 });
+    const filters: ProductFilters = { category: 'shoes' };
+
+    await fetchProducts(filters);
+
+    const url = mockFetch.mock.calls[0][0] as string;
+    expect(url).toContain('category=shoes');
+  });
+
+  it('serializes priceMax as query param', async () => {
+    stubFetch(200, { products: [], total: 0 });
+    const filters: ProductFilters = { priceMax: 100 };
+
+    await fetchProducts(filters);
+
+    const url = mockFetch.mock.calls[0][0] as string;
+    expect(url).toContain('priceMax=100');
+  });
+
+  it('combines category, priceMax and running dimensions in the same request', async () => {
+    stubFetch(200, { products: [], total: 0 });
+    const filters: ProductFilters = {
+      category: 'shoes',
+      priceMax: 100,
+      distance: ['5K'],
+    };
+
+    await fetchProducts(filters);
+
+    const url = mockFetch.mock.calls[0][0] as string;
+    expect(url).toContain('category=shoes');
+    expect(url).toContain('priceMax=100');
+    expect(url).toContain('distance=5K');
+  });
+
+  it('does not add category/priceMax params when absent', async () => {
+    stubFetch(200, { products: [], total: 0 });
+    const filters: ProductFilters = { distance: ['5K'] };
+
+    await fetchProducts(filters);
+
+    const url = mockFetch.mock.calls[0][0] as string;
+    expect(url).not.toContain('category=');
+    expect(url).not.toContain('priceMax=');
+  });
 });
 
 // ── apiGet ────────────────────────────────────────────────────────────────────
