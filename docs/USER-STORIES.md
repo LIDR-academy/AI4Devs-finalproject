@@ -454,12 +454,12 @@ Paso 3 (revisión final) del checkout. Muestra el desglose completo del pedido: 
 Como corredor, quiero ver una pantalla de confirmación clara tras completar la compra, para tener certeza de que mi pedido ha sido registrado y conocer su número de referencia.
 
 **Descripción:**
-Pantalla de éxito post-checkout. Cierre del ciclo de compra. Muestra el número de pedido generado, el email al que se enviaría la notificación y dos acciones: ver el historial de pedidos o continuar comprando. En este punto el carrito ya ha sido vaciado.
+Pantalla de éxito post-checkout. Cierre del ciclo de compra. Muestra el número de pedido generado, el email al que se enviaría la notificación y la opción de continuar comprando. En este punto el carrito ya ha sido vaciado. El acceso al historial de pedidos se aborda en `US-013`; queda fuera del alcance de esta US mientras esa historia no esté implementada.
 
 **Criterios de aceptación:**
-- [ ] Escenario principal: tras confirmar el pedido, el corredor ve la pantalla de éxito con icono de confirmación, el número de pedido (ORD-XXXXXXX), el mensaje de notificación por email y los CTA «Ver mis pedidos» y «Seguir comprando»
+- [ ] Escenario principal: tras confirmar el pedido, el corredor ve la pantalla de éxito con icono de confirmación, el número de pedido (ORD-XXXXXXX), el mensaje de notificación por email y el CTA «Seguir comprando»
 - [ ] El badge del carrito en el header muestra 0 artículos
-- [ ] «Ver mis pedidos» navega a `/orders`; «Seguir comprando» navega a `/`
+- [ ] «Seguir comprando» navega a `/`
 - [ ] Escenario alternativo: el corredor recarga la página de confirmación; no se genera un segundo pedido; la pantalla muestra la confirmación del pedido ya creado
 - [ ] Error/validación: si el corredor llega a esta pantalla sin un pedido válido recién creado, es redirigido al catálogo
 
