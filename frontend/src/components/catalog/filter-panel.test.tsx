@@ -290,6 +290,81 @@ describe('FilterPanel — category section', () => {
   });
 });
 
+describe('FilterPanel — Limpiar button', () => {
+  it('does not render the Limpiar button when no filters are active', () => {
+    render(<FilterPanel activeFilters={noFilters} />);
+
+    expect(screen.queryByRole('button', { name: 'Limpiar' })).not.toBeInTheDocument();
+  });
+
+  it('renders the Limpiar button when at least one filter is active', () => {
+    mockSearchParamsValue = new URLSearchParams('distance=5K');
+    render(<FilterPanel activeFilters={noFilters} />);
+
+    expect(screen.getByRole('button', { name: 'Limpiar' })).toBeInTheDocument();
+  });
+
+  it('calls router.replace with "/" and scroll:false when Limpiar is clicked', () => {
+    mockSearchParamsValue = new URLSearchParams('distance=5K');
+    render(<FilterPanel activeFilters={noFilters} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar' }));
+
+    expect(mockReplace).toHaveBeenCalledWith('/', { scroll: false });
+  });
+
+  it('calls router.refresh after router.replace when Limpiar is clicked', () => {
+    mockSearchParamsValue = new URLSearchParams('distance=5K');
+    render(<FilterPanel activeFilters={noFilters} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar' }));
+
+    expect(mockReplace).toHaveBeenCalledTimes(1);
+    expect(mockRefresh).toHaveBeenCalledTimes(1);
+  });
+
+  it('clears all active params, not just one, when Limpiar is clicked', () => {
+    mockSearchParamsValue = new URLSearchParams('distance=5K&category=shoes&priceMax=100');
+    render(<FilterPanel activeFilters={noFilters} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar' }));
+
+    expect(mockReplace).toHaveBeenCalledWith('/', { scroll: false });
+  });
+
+  it('still allows toggling the mobile collapse button after the header restructuring', () => {
+    mockSearchParamsValue = new URLSearchParams('distance=5K');
+    render(<FilterPanel activeFilters={noFilters} />);
+    const toggle = screen.getByRole('button', { name: /filtros/i });
+
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByTestId('filter-sections')).toHaveClass('hidden');
+  });
+});
+
+describe('FilterPanel — US-004 regression: badge reflects individual filter removal', () => {
+  it('removing one filter from several active ones preserves the rest in the resulting URL', () => {
+    mockSearchParamsValue = new URLSearchParams('distance=5K&surface=road');
+    render(<FilterPanel activeFilters={noFilters} />);
+    expandFilterPanel();
+
+    fireEvent.click(screen.getByLabelText('5K'));
+
+    const url = mockReplace.mock.calls[0][0] as string;
+    expect(url).not.toContain('distance=5K');
+    expect(url).toContain('surface=road');
+  });
+
+  it('does not render the badge when there are no active filters left', () => {
+    mockSearchParamsValue = new URLSearchParams();
+    render(<FilterPanel activeFilters={noFilters} />);
+
+    expect(screen.queryByTestId('filter-badge')).not.toBeInTheDocument();
+  });
+});
+
 describe('FilterPanel — price section', () => {
   it('renders the price slider with correct min/max/step attributes', () => {
     render(<FilterPanel activeFilters={noFilters} />);

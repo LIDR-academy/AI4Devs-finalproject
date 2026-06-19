@@ -156,33 +156,51 @@ export function FilterPanel({ activeFilters }: FilterPanelProps) {
     });
   };
 
+  const handleClearAll = () => {
+    startTransition(() => {
+      router.replace('/', { scroll: false });
+      router.refresh();
+    });
+  };
+
   return (
     <aside className="w-full lg:w-64 shrink-0 bg-white rounded-lg shadow-sm p-4 lg:p-6 lg:sticky lg:top-20 self-start">
-      <button
-        type="button"
-        className="flex w-full items-center justify-between gap-2 lg:mb-6 lg:pointer-events-none"
-        aria-expanded={isOpen}
-        aria-controls="filter-sections"
-        onClick={() => setIsOpen((open) => !open)}
-      >
-        <span className="flex items-center gap-2">
-          <Filter size={18} aria-hidden="true" />
-          <span className="font-bold">Filtros</span>
-          {activeCount > 0 && (
-            <span
-              data-testid="filter-badge"
-              className="bg-blue-600 text-white text-xs rounded-full px-2 py-1"
-            >
-              {activeCount}
-            </span>
-          )}
-        </span>
-        <ChevronDown
-          size={18}
-          aria-hidden="true"
-          className={`text-gray-500 transition-transform lg:hidden ${isOpen ? 'rotate-180' : ''}`}
-        />
-      </button>
+      <div className="flex w-full items-center justify-between gap-2 lg:mb-6">
+        <button
+          type="button"
+          className="flex w-full items-center justify-between gap-2 lg:pointer-events-none"
+          aria-expanded={isOpen}
+          aria-controls="filter-sections"
+          onClick={() => setIsOpen((open) => !open)}
+        >
+          <span className="flex items-center gap-2">
+            <Filter size={18} aria-hidden="true" />
+            <span className="font-bold">Filtros</span>
+            {activeCount > 0 && (
+              <span
+                data-testid="filter-badge"
+                className="bg-blue-600 text-white text-xs rounded-full px-2 py-1"
+              >
+                {activeCount}
+              </span>
+            )}
+          </span>
+          <ChevronDown
+            size={18}
+            aria-hidden="true"
+            className={`text-gray-500 transition-transform lg:hidden ${isOpen ? 'rotate-180' : ''}`}
+          />
+        </button>
+        {activeCount > 0 && (
+          <button
+            type="button"
+            onClick={handleClearAll}
+            className="text-sm text-blue-600 hover:text-blue-700"
+          >
+            Limpiar
+          </button>
+        )}
+      </div>
       <div
         id="filter-sections"
         data-testid="filter-sections"
