@@ -25,14 +25,14 @@ function toEnumOrUndefined<T extends string>(valid: readonly T[]) {
     );
 }
 
-function toPositiveNumberOrUndefined() {
+function toNonNegativeNumberOrUndefined() {
   return z
     .string()
     .optional()
     .transform((v): number | undefined => {
       if (v === undefined) return undefined;
       const n = Number(v);
-      return Number.isFinite(n) && n > 0 ? n : undefined;
+      return Number.isFinite(n) && n >= 0 ? n : undefined;
     });
 }
 
@@ -43,7 +43,7 @@ export const productFilterSchema = z
     level: toArrayEnum(VALID_LEVELS),
     objective: toArrayEnum(VALID_OBJECTIVES),
     category: toEnumOrUndefined(VALID_CATEGORIES),
-    priceMax: toPositiveNumberOrUndefined(),
+    priceMax: toNonNegativeNumberOrUndefined(),
   })
   .strip();
 

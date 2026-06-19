@@ -291,4 +291,14 @@ describe('GET /api/products with category and priceMax filters', () => {
       expect.objectContaining({ priceMax: undefined }),
     );
   });
+
+  it('passes a priceMax of zero through as a real filter (not discarded)', async () => {
+    const service = makeCatalogService();
+
+    await request(buildApp(service)).get('/api/products?priceMax=0');
+
+    expect(service.getProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ priceMax: 0 }),
+    );
+  });
 });

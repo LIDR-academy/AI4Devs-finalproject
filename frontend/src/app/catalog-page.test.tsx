@@ -209,6 +209,16 @@ describe('CatalogPage — filter params', () => {
     );
   });
 
+  it('passes a priceMax of zero through as a real filter (not discarded)', async () => {
+    vi.mocked(fetchProducts).mockResolvedValue({ products: [], total: 0 });
+
+    await CatalogPage({ searchParams: Promise.resolve({ priceMax: '0' }) });
+
+    expect(fetchProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ priceMax: 0 }),
+    );
+  });
+
   it('discards a negative priceMax', async () => {
     vi.mocked(fetchProducts).mockResolvedValue({ products: [], total: 0 });
 

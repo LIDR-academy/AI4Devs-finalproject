@@ -98,8 +98,11 @@ describe('productFilterSchema', () => {
     expect(result.priceMax).toBeUndefined();
   });
 
-  it('discards a negative or zero priceMax', () => {
+  it('discards a negative priceMax', () => {
     expect(productFilterSchema.parse({ priceMax: '-10' }).priceMax).toBeUndefined();
-    expect(productFilterSchema.parse({ priceMax: '0' }).priceMax).toBeUndefined();
+  });
+
+  it('accepts a zero priceMax (filters out all priced products)', () => {
+    expect(productFilterSchema.parse({ priceMax: '0' }).priceMax).toBe(0);
   });
 });

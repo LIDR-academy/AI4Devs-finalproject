@@ -40,7 +40,7 @@ function buildFilters(params: RawSearchParams): ProductFilters {
 
   const priceMaxRaw = Array.isArray(params.priceMax) ? params.priceMax[0] : params.priceMax;
   const priceMaxNum = priceMaxRaw ? Number(priceMaxRaw) : NaN;
-  const priceMax = Number.isFinite(priceMaxNum) && priceMaxNum > 0 ? priceMaxNum : undefined;
+  const priceMax = Number.isFinite(priceMaxNum) && priceMaxNum >= 0 ? priceMaxNum : undefined;
 
   return {
     distance: normalizeParam(params.distance, VALID_DISTANCES),
