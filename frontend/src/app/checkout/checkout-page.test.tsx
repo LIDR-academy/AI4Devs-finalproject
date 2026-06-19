@@ -19,6 +19,7 @@ vi.mock('next/navigation', () => ({
 
 import { useCart } from '../../contexts/cart-context';
 import { apiPost } from '../../lib/api-client';
+import { Header } from '../../components/layout/header';
 import CheckoutPage from './page';
 
 const mockUseCart = vi.mocked(useCart);
@@ -80,13 +81,70 @@ const orderResponse: OrderResponse = {
 beforeEach(() => {
   vi.clearAllMocks();
   mockPush.mockReset();
+  sessionStorage.clear();
 });
 
 describe('CheckoutPage', () => {
-  it('redirige a /cart cuando el carrito está vacío', () => {
+  it('redirige al catálogo (/) cuando el carrito está vacío y no hay pedido confirmado', () => {
     mockUseCart.mockReturnValue(makeCart([]));
     render(<CheckoutPage />);
-    expect(mockPush).toHaveBeenCalledWith('/cart');
+    expect(mockPush).toHaveBeenCalledWith('/');
+  });
+
+  it('guarda el pedido confirmado en sessionStorage tras un checkout exitoso', async () => {
+    const user = userEvent.setup();
+    const cart = makeCart([item]);
+    mockUseCart.mockReturnValue(cart);
+    mockApiPost.mockResolvedValueOnce(orderResponse);
+    render(<CheckoutPage />);
+
+    await user.type(screen.getByLabelText(/nombre completo/i), 'Ana Pérez');
+    await user.type(screen.getByLabelText(/email/i), 'ana@test.com');
+    await user.type(screen.getByLabelText(/dirección/i), 'Calle Mayor 1');
+    await user.type(screen.getByLabelText(/ciudad/i), 'Madrid');
+    await user.type(screen.getByLabelText(/código postal/i), '28001');
+    await user.click(screen.getByRole('button', { name: /continuar al pago/i }));
+
+    await user.type(screen.getByLabelText(/número de tarjeta/i), '1234567890123456');
+    await user.type(screen.getByLabelText(/nombre del titular/i), 'Ana Pérez');
+    await user.type(screen.getByLabelText(/fecha de vencimiento/i), '12/28');
+    await user.type(screen.getByLabelText(/cvv/i), '123');
+    await user.click(screen.getByRole('button', { name: /confirmar pedido/i }));
+    await user.click(screen.getByRole('button', { name: /confirmar pedido/i }));
+
+    await screen.findByText(/¡Pedido confirmado!/i);
+
+    const stored = sessionStorage.getItem('runmarket_last_order');
+    expect(stored).not.toBeNull();
+    expect(JSON.parse(stored as string).id).toBe(orderResponse.id);
+  });
+
+  it('hidrata la confirmación desde sessionStorage sin llamar a la API', () => {
+    sessionStorage.setItem('runmarket_last_order', JSON.stringify(orderResponse));
+    mockUseCart.mockReturnValue(makeCart([]));
+    render(<CheckoutPage />);
+
+    expect(screen.getByText(/¡Pedido confirmado!/i)).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(orderResponse.id))).toBeInTheDocument();
+    expect(mockApiPost).not.toHaveBeenCalled();
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('redirige al catálogo y limpia la entrada si sessionStorage contiene JSON corrupto', () => {
+    sessionStorage.setItem('runmarket_last_order', '{not-valid-json');
+    mockUseCart.mockReturnValue(makeCart([]));
+    render(<CheckoutPage />);
+
+    expect(mockPush).toHaveBeenCalledWith('/');
+    expect(sessionStorage.getItem('runmarket_last_order')).toBeNull();
+  });
+
+  it('no redirige ni toca sessionStorage si el carrito tiene artículos y no hay pedido', () => {
+    mockUseCart.mockReturnValue(makeCart([item]));
+    render(<CheckoutPage />);
+
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(sessionStorage.getItem('runmarket_last_order')).toBeNull();
   });
 
   it('muestra el formulario de envío cuando el carrito tiene ítems', () => {
@@ -263,6 +321,46 @@ describe('CheckoutPage', () => {
       const steps = screen.getAllByRole('listitem');
       expect(steps[1]).toHaveAttribute('aria-current', 'step');
       expect(screen.getByLabelText(/número de tarjeta/i)).toHaveValue('1234 5678 9012 3456');
+    });
+  });
+
+  describe('pantalla de confirmación (US-012-TASK-03)', () => {
+    async function advanceToReview(user: ReturnType<typeof userEvent.setup>) {
+      await user.type(screen.getByLabelText(/nombre completo/i), 'Ana Pérez');
+      await user.type(screen.getByLabelText(/email/i), 'ana@test.com');
+      await user.type(screen.getByLabelText(/dirección/i), 'Calle Mayor 1');
+      await user.type(screen.getByLabelText(/ciudad/i), 'Madrid');
+      await user.type(screen.getByLabelText(/código postal/i), '28001');
+      await user.click(screen.getByRole('button', { name: /continuar al pago/i }));
+
+      await user.type(screen.getByLabelText(/número de tarjeta/i), '1234567890123456');
+      await user.type(screen.getByLabelText(/nombre del titular/i), 'Ana Pérez');
+      await user.type(screen.getByLabelText(/fecha de vencimiento/i), '12/28');
+      await user.type(screen.getByLabelText(/cvv/i), '123');
+      await user.click(screen.getByRole('button', { name: /confirmar pedido/i }));
+    }
+
+    it('muestra solo la pantalla de confirmación tras un checkout exitoso, sin el wizard', async () => {
+      const user = userEvent.setup();
+      mockUseCart.mockReturnValue(makeCart([item]));
+      mockApiPost.mockResolvedValueOnce(orderResponse);
+      render(<CheckoutPage />);
+
+      await advanceToReview(user);
+      await user.click(screen.getByRole('button', { name: /confirmar pedido/i }));
+
+      expect(await screen.findByText(new RegExp(orderResponse.id))).toBeInTheDocument();
+      expect(screen.queryByRole('navigation', { name: /progreso del checkout/i })).not.toBeInTheDocument();
+      expect(screen.queryByText('Resumen del pedido')).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: 'Ver mis pedidos' })).not.toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Seguir comprando' })).toHaveAttribute('href', '/');
+    });
+
+    it('el badge del carrito no muestra contador cuando el carrito queda vacío tras la confirmación', () => {
+      mockUseCart.mockReturnValue(makeCart([]));
+      render(<Header />);
+
+      expect(screen.queryByTestId('cart-badge')).not.toBeInTheDocument();
     });
   });
 });

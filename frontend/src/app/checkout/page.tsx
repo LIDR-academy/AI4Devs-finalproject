@@ -8,9 +8,12 @@ import { StepIndicator } from '../../components/checkout/step-indicator';
 import { ShippingForm } from '../../components/checkout/shipping-form';
 import { PaymentForm } from '../../components/checkout/payment-form';
 import { OrderReview } from '../../components/checkout/order-review';
+import { OrderConfirmation } from '../../components/checkout/order-confirmation';
 import { CheckoutOrderSummary } from '../../components/checkout/checkout-order-summary';
 import type { ShippingData, PaymentData } from '../../types/checkout';
 import type { OrderResponse } from '../../types/order';
+
+const ORDER_STORAGE_KEY = 'runmarket_last_order';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -24,10 +27,23 @@ export default function CheckoutPage() {
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (itemCount === 0 && !order) {
-      router.push('/cart');
+    if (order) return;
+    if (itemCount > 0) return;
+    try {
+      const raw = sessionStorage.getItem(ORDER_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as OrderResponse;
+        if (parsed && typeof parsed.id === 'string' && Array.isArray(parsed.items)) {
+          setOrder(parsed);
+          return;
+        }
+      }
+    } catch {
+      // entrada corrupta — se ignora y se redirige más abajo
     }
-  }, [itemCount, order, router]);
+    sessionStorage.removeItem(ORDER_STORAGE_KEY);
+    router.push('/');
+  }, [order, itemCount, router]);
 
   function handleShippingSubmit(data: ShippingData) {
     setShippingData(data);
@@ -50,6 +66,7 @@ export default function CheckoutPage() {
     try {
       const result = await apiPost<OrderResponse>('/checkout', shippingData);
       setOrder(result);
+      sessionStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(result));
       clearCart();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error desconocido';
@@ -65,6 +82,10 @@ export default function CheckoutPage() {
 
   if (itemCount === 0 && !order) {
     return null;
+  }
+
+  if (order) {
+    return <OrderConfirmation order={order} />;
   }
 
   return (
@@ -96,7 +117,7 @@ export default function CheckoutPage() {
             </div>
           )}
 
-          {currentStep === 3 && !order && (
+          {currentStep === 3 && (
             <div className="rounded-lg bg-white p-6 shadow-sm">
               <h2 className="mb-4 text-lg font-semibold">Revisar pedido</h2>
               <OrderReview
@@ -110,13 +131,6 @@ export default function CheckoutPage() {
                 onConfirm={handleConfirmOrder}
                 onBack={handleReviewBack}
               />
-            </div>
-          )}
-
-          {order && (
-            <div className="rounded-lg bg-white p-6 shadow-sm text-center">
-              <p className="text-lg font-semibold text-foreground">¡Pedido confirmado!</p>
-              <p className="mt-2 text-muted-foreground">Número de pedido: {order.id}</p>
             </div>
           )}
         </section>
