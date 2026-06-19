@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Providers } from './providers';
 import { Header } from '../components/layout/header';
+import { Footer } from '../components/layout/footer';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
@@ -31,6 +32,7 @@ export default function RootLayout({
         <Providers>
           <Header />
           <div className="min-h-[calc(100vh-4rem)] bg-rm-page-bg">{children}</div>
+          <Footer />
         </Providers>
       </body>
     </html>
