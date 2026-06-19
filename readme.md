@@ -1076,7 +1076,9 @@ model WorkOrderTask {
 
 > Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
 
-**Ticket 1**
+**Ticket 1 — Backend: US-002 User Management**
+
+Admin-only REST endpoints under `/api/users`: list users, create employees (`ADMIN` | `MECHANIC`), and soft-deactivate accounts. Builds on US-001 JWT auth (`JwtAuthGuard`, `RolesGuard`). See [`docs/api-spec.users.yml`](docs/api-spec.users.yml) and [`apps/api/README.md`](apps/api/README.md).
 
 **Ticket 2**
 

@@ -1,0 +1,141 @@
+openapi: 3.0.0
+info:
+  title: MecaTrack API — User Management
+  description: Admin-only user management endpoints for MecaTrack (US-002)
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:4000/api
+    description: Local development
+
+paths:
+  /users:
+    get:
+      summary: List all users
+      description: Returns all users (active and inactive). Admin only.
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User list sorted by active (desc) then fullName (asc)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (non-admin role)
+
+    post:
+      summary: Create a new user
+      description: Creates an active employee account. Admin only.
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (non-admin role)
+        '409':
+          description: Email already registered
+
+  /users/{id}/deactivate:
+    patch:
+      summary: Soft-deactivate a user
+      description: |
+        Sets active=false and revokes refresh tokens.
+        Cannot deactivate self or the last active administrator.
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: User deactivated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          description: Self-deactivate or last admin protection
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (non-admin role)
+        '404':
+          description: User not found
+        '409':
+          description: User already inactive
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CreateUserRequest:
+      type: object
+      required: [fullName, email, password, role]
+      properties:
+        fullName:
+          type: string
+          minLength: 2
+          maxLength: 120
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        role:
+          type: string
+          enum: [ADMIN, MECHANIC]
+
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [ADMIN, MECHANIC]
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time

@@ -1,6 +1,6 @@
 # MecaTrack API
 
-NestJS REST API for MecaTrack workshop management (US-001: authentication).
+NestJS REST API for MecaTrack workshop management (US-001: authentication, US-002: user management).
 
 ## Prerequisites
 
@@ -58,6 +58,20 @@ API base URL: `http://localhost:4000/api`
 | `POST` | `/api/auth/refresh` | New access token from refresh cookie |
 | `POST` | `/api/auth/logout` | Revoke refresh token (Bearer required) |
 | `GET` | `/api/auth/me` | Current user profile (Bearer required) |
+
+## User management (US-002, admin only)
+
+All `/api/users` routes require a valid Bearer token with role `ADMIN`. Mechanics receive `403 Forbidden`.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/users` | List all users (active first, then by name) |
+| `POST` | `/api/users` | Create active employee (`ADMIN` or `MECHANIC`) |
+| `PATCH` | `/api/users/:id/deactivate` | Soft-deactivate user and revoke refresh tokens |
+
+Deactivated users cannot log in or refresh sessions. The last active administrator cannot be deactivated. Admins cannot deactivate their own account.
+
+OpenAPI fragment: [`docs/api-spec.users.yml`](../../docs/api-spec.users.yml)
 
 ## Scripts
 
