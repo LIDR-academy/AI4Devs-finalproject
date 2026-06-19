@@ -227,3 +227,78 @@ describe('GET /api/products with running attribute filters', () => {
     );
   });
 });
+
+describe('GET /api/products with category and priceMax filters', () => {
+  it('passes parsed category filter to the service', async () => {
+    const service = makeCatalogService();
+
+    await request(buildApp(service)).get('/api/products?category=shoes');
+
+    expect(service.getProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ category: 'shoes' }),
+    );
+  });
+
+  it('passes parsed priceMax filter to the service', async () => {
+    const service = makeCatalogService();
+
+    await request(buildApp(service)).get('/api/products?priceMax=50');
+
+    expect(service.getProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ priceMax: 50 }),
+    );
+  });
+
+  it('combines category and a running dimension filter (AND)', async () => {
+    const service = makeCatalogService();
+
+    await request(buildApp(service)).get('/api/products?category=shoes&distance=marathon');
+
+    expect(service.getProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ category: 'shoes', distance: ['marathon'] }),
+    );
+  });
+
+  it('discards an invalid category and responds 200', async () => {
+    const service = makeCatalogService();
+
+    const res = await request(buildApp(service)).get('/api/products?category=INVALIDO');
+
+    expect(res.status).toBe(200);
+    expect(service.getProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ category: undefined }),
+    );
+  });
+
+  it('discards a non-numeric priceMax and responds 200', async () => {
+    const service = makeCatalogService();
+
+    const res = await request(buildApp(service)).get('/api/products?priceMax=abc');
+
+    expect(res.status).toBe(200);
+    expect(service.getProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ priceMax: undefined }),
+    );
+  });
+
+  it('discards a negative priceMax and responds 200', async () => {
+    const service = makeCatalogService();
+
+    const res = await request(buildApp(service)).get('/api/products?priceMax=-10');
+
+    expect(res.status).toBe(200);
+    expect(service.getProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ priceMax: undefined }),
+    );
+  });
+
+  it('passes a priceMax of zero through as a real filter (not discarded)', async () => {
+    const service = makeCatalogService();
+
+    await request(buildApp(service)).get('/api/products?priceMax=0');
+
+    expect(service.getProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ priceMax: 0 }),
+    );
+  });
+});

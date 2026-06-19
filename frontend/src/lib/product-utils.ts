@@ -7,6 +7,10 @@ export const VALID_DISTANCES = ['5K', '10K', 'half-marathon', 'marathon', 'ultra
 export const VALID_SURFACES = ['road', 'trail', 'track', 'mixed'] as const;
 export const VALID_LEVELS = ['beginner', 'intermediate', 'advanced'] as const;
 export const VALID_OBJECTIVES = ['training', 'competition', 'recovery', 'daily'] as const;
+export const VALID_CATEGORIES = ['shoes', 'clothing', 'accessories'] as const;
+export const PRICE_MIN = 0;
+export const PRICE_MAX = 400;
+export const PRICE_STEP = 10;
 
 export const LEVEL_CONFIG: Record<string, { label: string; bg: string; text: string }> = {
   beginner: {

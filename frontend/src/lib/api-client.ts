@@ -33,6 +33,8 @@ export async function fetchProducts(filters?: ProductFilters): Promise<ProductsR
   if (filters?.surface)   filters.surface.forEach(v   => params.append('surface',   v));
   if (filters?.level)     filters.level.forEach(v     => params.append('level',     v));
   if (filters?.objective) filters.objective.forEach(v => params.append('objective', v));
+  if (filters?.category)               params.append('category', filters.category);
+  if (filters?.priceMax !== undefined) params.append('priceMax', String(filters.priceMax));
   const qs = params.toString();
   return apiGet<ProductsResponse>(`/products${qs ? `?${qs}` : ''}`);
 }

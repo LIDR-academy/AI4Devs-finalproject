@@ -9,6 +9,11 @@ import {
   SURFACE_LABELS,
   LEVEL_CONFIG,
   OBJECTIVE_LABELS,
+  VALID_CATEGORIES,
+  CATEGORY_LABELS,
+  PRICE_MIN,
+  PRICE_MAX,
+  PRICE_STEP,
 } from '../../lib/product-utils';
 
 interface FilterPanelProps {
@@ -49,6 +54,45 @@ const LEVEL_LABELS: Record<string, string> = Object.fromEntries(
   Object.entries(LEVEL_CONFIG).map(([k, v]) => [k, v.label]),
 );
 
+interface CategorySectionProps {
+  category: string;
+  onChange: (value: string) => void;
+}
+
+function CategorySection({ category, onChange }: CategorySectionProps) {
+  return (
+    <div className="mb-6">
+      <h3 className="text-sm font-semibold text-gray-900 mb-3">Categoría</h3>
+      <div className="space-y-2">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="radio"
+            name="category"
+            id="category-all"
+            checked={category === ''}
+            onChange={() => onChange('')}
+            className="border-gray-300 text-blue-600"
+          />
+          <span className="text-sm text-gray-700">Todas</span>
+        </label>
+        {VALID_CATEGORIES.map((value) => (
+          <label key={value} className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="category"
+              id={`category-${value}`}
+              checked={category === value}
+              onChange={() => onChange(value)}
+              className="border-gray-300 text-blue-600"
+            />
+            <span className="text-sm text-gray-700">{CATEGORY_LABELS[value]}</span>
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function FilterPanel({ activeFilters }: FilterPanelProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -57,8 +101,17 @@ export function FilterPanel({ activeFilters }: FilterPanelProps) {
   const surface   = searchParams.getAll('surface');
   const level     = searchParams.getAll('level');
   const objective = searchParams.getAll('objective');
+  const category  = searchParams.get('category') ?? '';
+  const priceMaxParam = searchParams.get('priceMax');
+  const priceMax = priceMaxParam ? Number(priceMaxParam) : PRICE_MAX;
 
-  const activeCount = distance.length + surface.length + level.length + objective.length;
+  const activeCount =
+    distance.length +
+    surface.length +
+    level.length +
+    objective.length +
+    (category ? 1 : 0) +
+    (priceMaxParam ? 1 : 0);
   const [isOpen, setIsOpen] = useState(activeCount > 0);
 
   const handleToggle = (dimension: keyof ProductFilters, value: string, checked: boolean) => {
@@ -75,6 +128,30 @@ export function FilterPanel({ activeFilters }: FilterPanelProps) {
       router.replace(qs ? `/?${qs}` : '/', { scroll: false });
       // Force the Server Component to re-render with new searchParams,
       // bypassing the Next.js Router Cache for the current route.
+      router.refresh();
+    });
+  };
+
+  const handleCategoryChange = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) params.set('category', value);
+    else params.delete('category');
+    const qs = params.toString();
+
+    startTransition(() => {
+      router.replace(qs ? `/?${qs}` : '/', { scroll: false });
+      router.refresh();
+    });
+  };
+
+  const handlePriceChange = (value: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value >= PRICE_MAX) params.delete('priceMax');
+    else params.set('priceMax', String(value));
+    const qs = params.toString();
+
+    startTransition(() => {
+      router.replace(qs ? `/?${qs}` : '/', { scroll: false });
       router.refresh();
     });
   };
@@ -111,6 +188,7 @@ export function FilterPanel({ activeFilters }: FilterPanelProps) {
         data-testid="filter-sections"
         className={`${isOpen ? 'block' : 'hidden'} lg:block mt-4 lg:mt-0`}
       >
+        <CategorySection category={category} onChange={handleCategoryChange} />
         <FilterSection
           title="Distancia"
           dimension="distance"
@@ -139,6 +217,22 @@ export function FilterPanel({ activeFilters }: FilterPanelProps) {
           activeValues={objective}
           onToggle={handleToggle}
         />
+        <div className="mb-6">
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Precio máximo</h3>
+          <input
+            type="range"
+            min={PRICE_MIN}
+            max={PRICE_MAX}
+            step={PRICE_STEP}
+            value={priceMax}
+            onChange={(e) => handlePriceChange(Number(e.target.value))}
+            aria-label="Precio máximo"
+            className="w-full"
+          />
+          <p className="text-sm text-gray-700 mt-1">
+            Hasta {priceMax.toLocaleString('es-ES', { style: 'currency', currency: 'EUR' })}
+          </p>
+        </div>
       </div>
     </aside>
   );

@@ -168,4 +168,94 @@ describe('CatalogPage — filter params', () => {
     expect(screen.getByTestId('catalog-empty-state')).toBeInTheDocument();
     expect(screen.queryByTestId('filter-empty-state')).not.toBeInTheDocument();
   });
+
+  it('passes a valid category to fetchProducts', async () => {
+    vi.mocked(fetchProducts).mockResolvedValue({ products: [], total: 0 });
+
+    await CatalogPage({ searchParams: Promise.resolve({ category: 'shoes' }) });
+
+    expect(fetchProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ category: 'shoes' }),
+    );
+  });
+
+  it('discards an invalid category', async () => {
+    vi.mocked(fetchProducts).mockResolvedValue({ products: [], total: 0 });
+
+    await CatalogPage({ searchParams: Promise.resolve({ category: 'bogus' }) });
+
+    expect(fetchProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ category: undefined }),
+    );
+  });
+
+  it('passes a valid priceMax to fetchProducts', async () => {
+    vi.mocked(fetchProducts).mockResolvedValue({ products: [], total: 0 });
+
+    await CatalogPage({ searchParams: Promise.resolve({ priceMax: '150' }) });
+
+    expect(fetchProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ priceMax: 150 }),
+    );
+  });
+
+  it('discards a non-numeric priceMax', async () => {
+    vi.mocked(fetchProducts).mockResolvedValue({ products: [], total: 0 });
+
+    await CatalogPage({ searchParams: Promise.resolve({ priceMax: 'abc' }) });
+
+    expect(fetchProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ priceMax: undefined }),
+    );
+  });
+
+  it('passes a priceMax of zero through as a real filter (not discarded)', async () => {
+    vi.mocked(fetchProducts).mockResolvedValue({ products: [], total: 0 });
+
+    await CatalogPage({ searchParams: Promise.resolve({ priceMax: '0' }) });
+
+    expect(fetchProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ priceMax: 0 }),
+    );
+  });
+
+  it('discards a negative priceMax', async () => {
+    vi.mocked(fetchProducts).mockResolvedValue({ products: [], total: 0 });
+
+    await CatalogPage({ searchParams: Promise.resolve({ priceMax: '-10' }) });
+
+    expect(fetchProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ priceMax: undefined }),
+    );
+  });
+
+  it('combines category and distance in the same call', async () => {
+    vi.mocked(fetchProducts).mockResolvedValue({ products: [], total: 0 });
+
+    await CatalogPage({
+      searchParams: Promise.resolve({ category: 'shoes', distance: 'marathon' }),
+    });
+
+    expect(fetchProducts).toHaveBeenCalledWith(
+      expect.objectContaining({ category: 'shoes', distance: ['marathon'] }),
+    );
+  });
+
+  it('shows FilterEmptyState when only category is active and there are no results', async () => {
+    vi.mocked(fetchProducts).mockResolvedValue({ products: [], total: 0 });
+
+    render(await CatalogPage({ searchParams: Promise.resolve({ category: 'shoes' }) }));
+
+    expect(screen.getByTestId('filter-empty-state')).toBeInTheDocument();
+    expect(screen.queryByTestId('catalog-empty-state')).not.toBeInTheDocument();
+  });
+
+  it('shows FilterEmptyState when only priceMax is active and there are no results', async () => {
+    vi.mocked(fetchProducts).mockResolvedValue({ products: [], total: 0 });
+
+    render(await CatalogPage({ searchParams: Promise.resolve({ priceMax: '50' }) }));
+
+    expect(screen.getByTestId('filter-empty-state')).toBeInTheDocument();
+    expect(screen.queryByTestId('catalog-empty-state')).not.toBeInTheDocument();
+  });
 });

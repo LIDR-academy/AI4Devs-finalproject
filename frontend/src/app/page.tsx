@@ -12,6 +12,7 @@ import {
   VALID_SURFACES,
   VALID_LEVELS,
   VALID_OBJECTIVES,
+  VALID_CATEGORIES,
 } from '../lib/product-utils';
 
 export const dynamic = 'force-dynamic';
@@ -32,23 +33,36 @@ function normalizeParam<T extends string>(
 }
 
 function buildFilters(params: RawSearchParams): ProductFilters {
+  const categoryRaw = Array.isArray(params.category) ? params.category[0] : params.category;
+  const category = categoryRaw && (VALID_CATEGORIES as readonly string[]).includes(categoryRaw)
+    ? categoryRaw
+    : undefined;
+
+  const priceMaxRaw = Array.isArray(params.priceMax) ? params.priceMax[0] : params.priceMax;
+  const priceMaxNum = priceMaxRaw ? Number(priceMaxRaw) : NaN;
+  const priceMax = Number.isFinite(priceMaxNum) && priceMaxNum >= 0 ? priceMaxNum : undefined;
+
   return {
     distance: normalizeParam(params.distance, VALID_DISTANCES),
     surface: normalizeParam(params.surface, VALID_SURFACES),
     level: normalizeParam(params.level, VALID_LEVELS),
     objective: normalizeParam(params.objective, VALID_OBJECTIVES),
+    category,
+    priceMax,
   };
 }
 
 interface CatalogPageProps {
-  searchParams?: Promise<RawSearchParams>;
+  searchParams: Promise<RawSearchParams>;
 }
 
-export default async function CatalogPage({ searchParams }: CatalogPageProps = {}) {
-  const params = await (searchParams ?? Promise.resolve({}));
+export default async function CatalogPage({ searchParams }: CatalogPageProps) {
+  const params = await searchParams;
   const filters = buildFilters(params);
 
-  const hasActiveFilters = Object.values(filters).some((arr) => arr && arr.length > 0);
+  const hasActiveFilters = Object.values(filters).some((v) =>
+    Array.isArray(v) ? v.length > 0 : v !== undefined,
+  );
 
   let data: Awaited<ReturnType<typeof fetchProducts>>;
 
