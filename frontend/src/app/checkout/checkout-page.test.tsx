@@ -15,6 +15,7 @@ vi.mock('../../lib/api-client', () => ({
 const mockPush = vi.fn();
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
+  usePathname: () => '/checkout',
 }));
 
 import { useCart } from '../../contexts/cart-context';
