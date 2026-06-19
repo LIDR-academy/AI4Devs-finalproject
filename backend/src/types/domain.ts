@@ -52,6 +52,8 @@ export interface ProductFilters {
   surface?: string[];
   level?: string[];
   objective?: string[];
+  category?: string;
+  priceMax?: number;
 }
 
 export interface ShippingInput {

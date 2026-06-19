@@ -71,4 +71,35 @@ describe('productFilterSchema', () => {
   it('strips unknown keys instead of throwing', () => {
     expect(() => productFilterSchema.parse({ distance: '5K', unknownKey: 'foo' })).not.toThrow();
   });
+
+  it('returns undefined for category and priceMax when called with empty object', () => {
+    const result = productFilterSchema.parse({});
+    expect(result.category).toBeUndefined();
+    expect(result.priceMax).toBeUndefined();
+  });
+
+  it('accepts a valid category', () => {
+    const result = productFilterSchema.parse({ category: 'shoes' });
+    expect(result.category).toBe('shoes');
+  });
+
+  it('discards a category outside the enum', () => {
+    const result = productFilterSchema.parse({ category: 'INVALIDO' });
+    expect(result.category).toBeUndefined();
+  });
+
+  it('coerces a valid numeric priceMax', () => {
+    const result = productFilterSchema.parse({ priceMax: '150' });
+    expect(result.priceMax).toBe(150);
+  });
+
+  it('discards a non-numeric priceMax', () => {
+    const result = productFilterSchema.parse({ priceMax: 'abc' });
+    expect(result.priceMax).toBeUndefined();
+  });
+
+  it('discards a negative or zero priceMax', () => {
+    expect(productFilterSchema.parse({ priceMax: '-10' }).priceMax).toBeUndefined();
+    expect(productFilterSchema.parse({ priceMax: '0' }).priceMax).toBeUndefined();
+  });
 });

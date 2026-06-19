@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient, Prisma, Category } from '@prisma/client';
 import { Product, ProductFilters } from '../types/domain';
 
 export interface IProductRepository {
@@ -55,6 +55,8 @@ export class ProductRepository implements IProductRepository {
     if (filters?.surface?.length)   where.surface   = { hasSome: filters.surface };
     if (filters?.level?.length)     where.level     = { hasSome: filters.level };
     if (filters?.objective?.length) where.objective = { hasSome: filters.objective };
+    if (filters?.category)              where.category = filters.category as Category;
+    if (filters?.priceMax !== undefined) where.price = { lte: filters.priceMax };
     return where;
   }
 

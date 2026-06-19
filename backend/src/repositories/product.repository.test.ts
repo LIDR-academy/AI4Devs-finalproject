@@ -169,6 +169,62 @@ describe('ProductRepository', () => {
         objective: { hasSome: ['competition'] },
       });
     });
+
+    it('adds an equality clause on where.category when category is provided', async () => {
+      const prisma = makePrisma();
+      const repo = new ProductRepository(prisma as unknown as import('@prisma/client').PrismaClient);
+
+      await repo.findAll({ category: 'shoes' });
+
+      const call = prisma.product.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
+      expect(call.where).toEqual({ category: 'shoes' });
+    });
+
+    it('adds where.price.lte when priceMax is provided', async () => {
+      const prisma = makePrisma();
+      const repo = new ProductRepository(prisma as unknown as import('@prisma/client').PrismaClient);
+
+      await repo.findAll({ priceMax: 100 });
+
+      const call = prisma.product.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
+      expect(call.where).toEqual({ price: { lte: 100 } });
+    });
+
+    it('combines category and priceMax into the same where clause', async () => {
+      const prisma = makePrisma();
+      const repo = new ProductRepository(prisma as unknown as import('@prisma/client').PrismaClient);
+
+      await repo.findAll({ category: 'shoes', priceMax: 100 });
+
+      const call = prisma.product.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
+      expect(call.where).toEqual({ category: 'shoes', price: { lte: 100 } });
+    });
+
+    it('applies AND between category, priceMax and distance', async () => {
+      const prisma = makePrisma();
+      const repo = new ProductRepository(prisma as unknown as import('@prisma/client').PrismaClient);
+
+      await repo.findAll({ category: 'shoes', priceMax: 100, distance: ['marathon'] });
+
+      const call = prisma.product.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
+      expect(call.where).toEqual({
+        category: 'shoes',
+        price: { lte: 100 },
+        distance: { hasSome: ['marathon'] },
+      });
+    });
+
+    it('does not add category or price keys when they are absent', async () => {
+      const prisma = makePrisma();
+      const repo = new ProductRepository(prisma as unknown as import('@prisma/client').PrismaClient);
+
+      await repo.findAll({ distance: ['5K'] });
+
+      const call = prisma.product.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
+      expect(call.where).not.toHaveProperty('category');
+      expect(call.where).not.toHaveProperty('price');
+      expect(call.where).toEqual({ distance: { hasSome: ['5K'] } });
+    });
   });
 
   describe('findById()', () => {
