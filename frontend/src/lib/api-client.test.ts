@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { fetchProducts } from './api-client';
+import { fetchProducts, fetchOrders } from './api-client';
 import { Product, ProductFilters } from '../types';
+import { OrderListResponse } from '../types/order';
 
 // Unified fetch mock: reset and re-stub before each test, restore after.
 const mockFetch = vi.fn();
@@ -189,6 +190,60 @@ describe('apiGet()', () => {
 
     const { apiGet } = await import('./api-client');
     await expect(apiGet('/broken')).rejects.toThrow();
+  });
+
+  it('includes credentials: include so the session cookie is sent', async () => {
+    stubFetch(200, { status: 'ok' });
+
+    const { apiGet } = await import('./api-client');
+    await apiGet('/health');
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      expect.stringContaining('/health'),
+      expect.objectContaining({ credentials: 'include' })
+    );
+  });
+});
+
+// ── fetchOrders ───────────────────────────────────────────────────────────────
+
+const buildOrder = (overrides: Partial<OrderListResponse> = {}): OrderListResponse => ({
+  id: 'ORD-1',
+  status: 'processing',
+  date: '2026-06-19T00:00:00.000Z',
+  subtotal: 100,
+  shipping: 5,
+  total: 105,
+  shippingName: 'Jane Runner',
+  shippingEmail: 'jane@example.com',
+  shippingAddress: 'Calle Falsa 123',
+  shippingCity: 'Madrid',
+  shippingPostalCode: '28080',
+  shippingCountry: 'ES',
+  items: [
+    {
+      productId: 'uuid-1',
+      productName: 'Nike Pegasus 41',
+      productBrand: 'Nike',
+      productPrice: 129.99,
+      image: 'products/nike-pegasus.jpg',
+      quantity: 1,
+    },
+  ],
+  ...overrides,
+});
+
+describe('fetchOrders()', () => {
+  it('calls apiGet("/orders") and returns the typed array', async () => {
+    const orders = [buildOrder()];
+    stubFetch(200, orders);
+
+    const result = await fetchOrders();
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    const url = mockFetch.mock.calls[0][0] as string;
+    expect(url).toContain('/orders');
+    expect(result).toEqual(orders);
   });
 });
 

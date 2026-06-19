@@ -20,12 +20,20 @@ export function OrderConfirmation({ order }: OrderConfirmationProps) {
         Te hemos enviado la confirmación a{' '}
         <span className="font-medium text-foreground">{order.shippingEmail}</span>
       </p>
-      <Link
-        href="/"
-        className="rounded-lg bg-rm-cta px-6 py-3 font-medium text-rm-cta-fg transition-colors hover:bg-rm-cta-hover"
-      >
-        Seguir comprando
-      </Link>
+      <div className="flex flex-wrap items-center justify-center gap-4">
+        <Link
+          href="/"
+          className="rounded-lg bg-rm-cta px-6 py-3 font-medium text-rm-cta-fg transition-colors hover:bg-rm-cta-hover"
+        >
+          Seguir comprando
+        </Link>
+        <Link
+          href="/orders"
+          className="rounded-lg border border-border px-6 py-3 font-medium text-foreground transition-colors hover:bg-gray-50"
+        >
+          Ver mis pedidos
+        </Link>
+      </div>
     </main>
   );
 }

@@ -1,3 +1,5 @@
+import type { OrderStatus } from './index';
+
 export interface OrderItemResponse {
   productId: string;
   productName: string;
@@ -10,7 +12,7 @@ export interface OrderItemResponse {
 
 export interface OrderResponse {
   id: string;
-  status: 'processing';
+  status: OrderStatus;
   date: string;
   subtotal: number;
   shipping: number;
@@ -23,4 +25,13 @@ export interface OrderResponse {
   shippingPostalCode: string;
   shippingCountry: string;
   items: OrderItemResponse[];
+}
+
+export interface OrderListItemResponse extends OrderItemResponse {
+  image: string;
+}
+
+export interface OrderListResponse extends Omit<OrderResponse, 'status' | 'items'> {
+  status: OrderStatus;
+  items: OrderListItemResponse[];
 }

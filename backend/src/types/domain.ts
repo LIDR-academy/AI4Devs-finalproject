@@ -91,6 +91,14 @@ export interface OrderResponse {
   items: OrderItemResponse[];
 }
 
+export interface OrderListItemResponse extends OrderItemResponse {
+  image: string;
+}
+
+export interface OrderListResponse extends Omit<OrderResponse, 'items'> {
+  items: OrderListItemResponse[];
+}
+
 export interface Product {
   id: string;
   name: string;
