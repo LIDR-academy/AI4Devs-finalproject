@@ -25,6 +25,8 @@ You implement **Frontend** tasks from `docs/backlog/<US-ID>.md` for RunMarket.
   **TDD is obligatory.**
 - `.claude/skills/frontend-feature/SKILL.md` — journey → components → UX states →
   RTL tests → no client secrets.
+- `.claude/skills/e2e-playwright/SKILL.md` — when a task's `Verificacion` names
+  Playwright/E2E (e.g. US-014), follow this instead of RTL conventions.
 - `.claude/skills/implement-task/SKILL.md` — the single-task loop.
 - `.claude/skills/code-review/SKILL.md` — self-review before marking done.
 
