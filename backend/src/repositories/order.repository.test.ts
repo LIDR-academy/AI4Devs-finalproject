@@ -11,6 +11,7 @@ const mockCartFindUnique = jest.fn();
 const mockProductFindUnique = jest.fn();
 const mockOrderCreate = jest.fn();
 const mockCartItemDeleteMany = jest.fn();
+const mockOrderFindMany = jest.fn();
 
 const mockTx = {
   cart: {
@@ -33,6 +34,9 @@ const mockTransaction = jest.fn((callback: (tx: typeof mockTx) => unknown) =>
 
 const mockPrisma = {
   $transaction: mockTransaction,
+  order: {
+    findMany: mockOrderFindMany,
+  },
 } as unknown as import('@prisma/client').PrismaClient;
 
 // ---------------------------------------------------------------------------
@@ -230,6 +234,80 @@ describe('OrderRepository', () => {
         repo.createOrderFromCart('session-1', buildShipping()),
       ).rejects.toMatchObject({ name: 'NotFoundError' });
       expect(mockOrderCreate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('findBySession', () => {
+    const buildOrderListRow = (overrides: Record<string, unknown> = {}) => ({
+      id: 'ORD-1700000000000',
+      status: 'processing',
+      date: new Date('2024-02-01T00:00:00.000Z'),
+      subtotal: decimal(40),
+      shipping: decimal(4.99),
+      total: decimal(44.99),
+      shippingName: 'Jane Runner',
+      shippingEmail: 'jane@example.com',
+      shippingPhone: null,
+      shippingAddress: 'Calle Falsa 123',
+      shippingCity: 'Madrid',
+      shippingPostalCode: '28001',
+      shippingCountry: 'España',
+      items: [
+        {
+          productId: 'prod-1',
+          productName: 'Nike Pegasus 41',
+          productBrand: 'Nike',
+          productPrice: decimal(40),
+          quantity: 1,
+          size: null,
+          color: null,
+          product: { image: '/images/pegasus-41.jpg' },
+        },
+      ],
+      ...overrides,
+    });
+
+    it('devuelve los pedidos de la sesión con la imagen del producto', async () => {
+      mockOrderFindMany.mockResolvedValueOnce([buildOrderListRow()]);
+
+      const result = await repo.findBySession('session-1');
+
+      expect(result).toHaveLength(1);
+      expect(result[0].items[0]).toMatchObject({
+        productId: 'prod-1',
+        productName: 'Nike Pegasus 41',
+        productBrand: 'Nike',
+        productPrice: 40,
+        image: '/images/pegasus-41.jpg',
+        quantity: 1,
+      });
+    });
+
+    it('ordena por date descendente vía Prisma', async () => {
+      mockOrderFindMany.mockResolvedValueOnce([]);
+
+      await repo.findBySession('session-1');
+
+      expect(mockOrderFindMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: { date: 'desc' } }),
+      );
+    });
+
+    it('filtra solo por el sessionId recibido', async () => {
+      mockOrderFindMany.mockResolvedValueOnce([]);
+
+      await repo.findBySession('session-1');
+
+      const callArgs = mockOrderFindMany.mock.calls[0][0];
+      expect(callArgs.where).toEqual({ sessionId: 'session-1' });
+    });
+
+    it('devuelve [] si la sesión no tiene pedidos', async () => {
+      mockOrderFindMany.mockResolvedValueOnce([]);
+
+      const result = await repo.findBySession('session-empty');
+
+      expect(result).toEqual([]);
     });
   });
 });

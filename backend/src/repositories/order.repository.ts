@@ -1,5 +1,11 @@
 import { PrismaClient } from '@prisma/client';
-import { OrderItemResponse, OrderResponse, ShippingInput } from '../types/domain';
+import {
+  OrderItemResponse,
+  OrderListItemResponse,
+  OrderListResponse,
+  OrderResponse,
+  ShippingInput,
+} from '../types/domain';
 import { NotFoundError, StockError, ValidationError } from '../types/errors';
 
 // ---------------------------------------------------------------------------
@@ -8,6 +14,7 @@ import { NotFoundError, StockError, ValidationError } from '../types/errors';
 
 export interface IOrderRepository {
   createOrderFromCart(sessionId: string, shipping: ShippingInput): Promise<OrderResponse>;
+  findBySession(sessionId: string): Promise<OrderListResponse[]>;
 }
 
 // ---------------------------------------------------------------------------
@@ -64,6 +71,14 @@ type PrismaOrderRow = {
   items: PrismaOrderItemRow[];
 };
 
+type PrismaOrderListItemRow = PrismaOrderItemRow & {
+  product: { image: string };
+};
+
+type PrismaOrderListRow = Omit<PrismaOrderRow, 'items'> & {
+  items: PrismaOrderListItemRow[];
+};
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -99,6 +114,32 @@ function mapToOrderResponse(row: PrismaOrderRow): OrderResponse {
     shippingPostalCode: row.shippingPostalCode,
     shippingCountry: row.shippingCountry,
     items: row.items.map(mapToOrderItemResponse),
+  };
+}
+
+function mapToOrderListItemResponse(row: PrismaOrderListItemRow): OrderListItemResponse {
+  return {
+    ...mapToOrderItemResponse(row),
+    image: row.product.image,
+  };
+}
+
+function mapToOrderListResponse(row: PrismaOrderListRow): OrderListResponse {
+  return {
+    id: row.id,
+    status: row.status,
+    date: row.date.toISOString(),
+    subtotal: row.subtotal.toNumber(),
+    shipping: row.shipping.toNumber(),
+    total: row.total.toNumber(),
+    shippingName: row.shippingName,
+    shippingEmail: row.shippingEmail,
+    shippingPhone: row.shippingPhone ?? undefined,
+    shippingAddress: row.shippingAddress,
+    shippingCity: row.shippingCity,
+    shippingPostalCode: row.shippingPostalCode,
+    shippingCountry: row.shippingCountry,
+    items: row.items.map(mapToOrderListItemResponse),
   };
 }
 
@@ -193,5 +234,15 @@ export class OrderRepository implements IOrderRepository {
       // 6. Map to domain type (never the Prisma-generated type).
       return mapToOrderResponse(created);
     });
+  }
+
+  async findBySession(sessionId: string): Promise<OrderListResponse[]> {
+    const rows = (await this.prisma.order.findMany({
+      where: { sessionId },
+      orderBy: { date: 'desc' },
+      include: { items: { include: { product: { select: { image: true } } } } },
+    })) as unknown as PrismaOrderListRow[];
+
+    return rows.map(mapToOrderListResponse);
   }
 }

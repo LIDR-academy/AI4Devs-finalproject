@@ -352,7 +352,7 @@ describe('CheckoutPage', () => {
       expect(await screen.findByText(new RegExp(orderResponse.id))).toBeInTheDocument();
       expect(screen.queryByRole('navigation', { name: /progreso del checkout/i })).not.toBeInTheDocument();
       expect(screen.queryByText('Resumen del pedido')).not.toBeInTheDocument();
-      expect(screen.queryByRole('link', { name: 'Ver mis pedidos' })).not.toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Ver mis pedidos' })).toHaveAttribute('href', '/orders');
       expect(screen.getByRole('link', { name: 'Seguir comprando' })).toHaveAttribute('href', '/');
     });
 

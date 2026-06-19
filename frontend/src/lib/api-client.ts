@@ -1,4 +1,5 @@
 import { ProductFilters, ProductsResponse } from '../types';
+import { OrderListResponse } from '../types/order';
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
@@ -19,7 +20,10 @@ async function handleResponse<T>(res: Response): Promise<T> {
 }
 
 export async function apiGet<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, { cache: 'no-store' });
+  const res = await fetch(`${BASE_URL}${path}`, {
+    cache: 'no-store',
+    credentials: 'include',
+  });
   return handleResponse<T>(res);
 }
 
@@ -35,6 +39,10 @@ export async function fetchProducts(filters?: ProductFilters): Promise<ProductsR
 
 export async function fetchProduct(id: string): Promise<import('../types').Product> {
   return apiGet(`/products/${encodeURIComponent(id)}`);
+}
+
+export async function fetchOrders(): Promise<OrderListResponse[]> {
+  return apiGet<OrderListResponse[]>('/orders');
 }
 
 export async function apiPost<T>(path: string, body: unknown): Promise<T> {

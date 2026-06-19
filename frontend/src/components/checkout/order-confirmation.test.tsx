@@ -40,9 +40,9 @@ describe('OrderConfirmation', () => {
     expect(screen.getByText(order.shippingEmail)).toBeInTheDocument();
   });
 
-  it('no renderiza el CTA Ver mis pedidos (US-013 no implementada — /orders no existe)', () => {
+  it('renderiza el CTA Ver mis pedidos enlazando a /orders (US-013 ya implementada)', () => {
     render(<OrderConfirmation order={order} />);
-    expect(screen.queryByRole('link', { name: 'Ver mis pedidos' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Ver mis pedidos' })).toHaveAttribute('href', '/orders');
   });
 
   it('el CTA Seguir comprando enlaza a /', () => {
