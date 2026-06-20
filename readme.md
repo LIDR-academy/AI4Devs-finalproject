@@ -121,9 +121,9 @@ Selection of 3 main tickets (backend, frontend, database):
 > Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
 
 **Pull Request 1**
-
+https://github.com/LIDR-academy/AI4Devs-finalproject/pull/173
 **Pull Request 2**
-
+https://github.com/LIDR-academy/AI4Devs-finalproject/pull/202
 **Pull Request 3**
 
 ## 8. Prompts - AI usage
