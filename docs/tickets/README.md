@@ -33,9 +33,18 @@ This folder contains implementation-ready tickets derived from the engineering u
 13. [TKT-013 - Database Core Schema](./DISCARDED-TKT-013-database-core-schema-household-pantry-events.md) — consolidated into TKT-014
 14. **[TKT-014 - MVP Hardening: Database Schema, Backend Receipts, and Frontend Pantry](./TKT-014-mvp-hardening-schema-receipts-pantry.md)** ← active
 
+## Extended MVP tickets
+
+Implementation-ready tickets for the Extended MVP phase (post-Deliverable 2) are in a separate folder:
+
+- [Extended MVP Tickets Index](./extendedMVP/README.md)
+
+These use the `EXT-XXX` sequence and cover: notification delivery, CI/CD, production infrastructure, observability, recipe suggestions, barcode scan, expiry learning, Mercadona price comparison, gamification, and consumption automation.
+
 ## Source traceability
-- User stories: [../product/4_User-stories.md](./../product/4_User-stories.md)
-- PRD: [../product/3_PRD.md](./../product/3_PRD.md)
+- User stories (MVP): [../product/4_User-stories.md](./../product/4_User-stories.md)
+- PRD (MVP): [../product/3_PRD.md](./../product/3_PRD.md)
+- Extended MVP PRD: [../product/5_Extended-Non-MVP-PRD.md](./../product/5_Extended-Non-MVP-PRD.md)
 - Architecture: [../architecture/architecture.md](./../architecture/architecture.md)
 - Data model: [../db/database-model.md](./../db/database-model.md)
 
