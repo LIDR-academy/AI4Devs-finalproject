@@ -65,6 +65,7 @@ Los filtros por atributos de running (US-002) son el diferencial central de RunM
 | US-004 | Limpiar filtros activos | CU1 | S | Importante | Mejora la usabilidad del panel de filtros; depende de que US-002 y US-003 estén implementados |
 | US-013 | Consultar el historial de pedidos | CU3 | S | Importante | Depende de que existan pedidos creados (US-011); aporta valor pero no bloquea el ciclo de compra |
 | US-014 | Tests E2E con Playwright | Calidad | M | Importante | Debe ir la última: necesita el sistema completo funcionando para ejercitar los tres flujos principales de extremo a extremo |
+| US-015 | Descontar stock al confirmar el pedido | CU3 | S | Importante | Corrige una omisión de integridad de datos detectada tras implementar el checkout: el stock nunca se descuenta tras una compra, por lo que el catálogo muestra disponibilidad incorrecta a partir del primer pedido; no bloquea el ciclo de compra simulado pero compromete la fiabilidad del dato |
 
 ---
 
@@ -529,5 +530,32 @@ Suite de tests E2E que cubre los flujos de mayor riesgo de regresión: búsqueda
 - Sistema levantado: `docker compose up -d` + backend en `:4000` + frontend en `:3000`
 
 **Estimación:** M
+
+**Prioridad:** Importante
+
+---
+
+### US-015 — Descontar stock al confirmar el pedido
+
+**Caso de uso asociado:** CU3 — Proceso de compra: carrito y checkout simulado
+
+**Historia de usuario:**
+Como corredor, quiero que el stock de un producto se reduzca según la cantidad comprada al confirmar mi pedido, para que el catálogo y la ficha de producto reflejen la disponibilidad real tras cada compra.
+
+**Descripción:**
+`OrderRepository.createOrderFromCart` re-valida el stock de cada ítem dentro de la transacción que crea el pedido (lanza error si `quantity > stock`), pero nunca escribe el descuento de vuelta en `Product.stock`. Como consecuencia, el stock mostrado en catálogo y ficha de producto nunca disminuye tras una compra, por más pedidos que se confirmen — la re-validación de stock pierde sentido con el tiempo porque el stock nunca baja. Detectado en revisión manual tras el cierre de US-014, sin US previa que lo cubriera.
+
+**Criterios de aceptación:**
+- [ ] Escenario principal: al confirmar un pedido con N unidades de un producto, el stock de ese producto se reduce en N unidades, persistido en la misma transacción que crea el pedido
+- [ ] El descuento de stock se aplica a todos los ítems del pedido, no solo al primero
+- [ ] Concurrencia: dos confirmaciones simultáneas sobre el mismo producto no dejan el stock en negativo (la re-validación existente dentro de la transacción debe seguir cumpliéndose tras el cambio)
+- [ ] Tras la compra, `GET /api/products/:id` y el catálogo reflejan el nuevo stock sin reiniciar el servidor
+- [ ] Error/validación: si la re-validación de stock falla (ya implementada, `StockError`), no se descuenta nada y la transacción se revierte por completo
+
+**Datos o entidades implicadas:**
+- `Product`: stock (se actualiza)
+- `OrderRepository.createOrderFromCart` (transacción Prisma existente)
+
+**Estimación:** S
 
 **Prioridad:** Importante

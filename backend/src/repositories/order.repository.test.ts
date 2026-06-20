@@ -9,6 +9,7 @@ import { ShippingInput } from '../types/domain';
 
 const mockCartFindUnique = jest.fn();
 const mockProductFindUnique = jest.fn();
+const mockProductUpdateMany = jest.fn();
 const mockOrderCreate = jest.fn();
 const mockCartItemDeleteMany = jest.fn();
 const mockOrderFindMany = jest.fn();
@@ -19,6 +20,7 @@ const mockTx = {
   },
   product: {
     findUnique: mockProductFindUnique,
+    updateMany: mockProductUpdateMany,
   },
   order: {
     create: mockOrderCreate,
@@ -122,6 +124,7 @@ describe('OrderRepository', () => {
     mockTransaction.mockImplementation((callback: (tx: typeof mockTx) => unknown) =>
       callback(mockTx),
     );
+    mockProductUpdateMany.mockResolvedValue({ count: 1 });
     repo = new OrderRepository(mockPrisma);
   });
 
@@ -210,16 +213,63 @@ describe('OrderRepository', () => {
       expect(mockOrderCreate).not.toHaveBeenCalled();
     });
 
-    it('lanza StockError si algún ítem supera el stock disponible', async () => {
+    it('lanza StockError si la actualización condicional de stock no afecta a ninguna fila', async () => {
       const cartRow = buildCartRow([
         { id: 'item-1', cartId: 'cart-1', productId: 'prod-1', quantity: 5, size: null, color: null },
       ]);
       mockCartFindUnique.mockResolvedValueOnce(cartRow);
       mockProductFindUnique.mockResolvedValueOnce(buildProductRow({ stock: 2 }));
+      mockProductUpdateMany.mockResolvedValueOnce({ count: 0 });
 
       await expect(
         repo.createOrderFromCart('session-1', buildShipping()),
       ).rejects.toMatchObject({ name: 'StockError', available: 2 });
+      expect(mockOrderCreate).not.toHaveBeenCalled();
+    });
+
+    it('descuenta el stock de cada ítem con una actualización condicional atómica', async () => {
+      const cartRow = buildCartRow([
+        { id: 'item-1', cartId: 'cart-1', productId: 'prod-1', quantity: 2, size: null, color: null },
+        { id: 'item-2', cartId: 'cart-1', productId: 'prod-2', quantity: 1, size: null, color: null },
+      ]);
+      mockCartFindUnique.mockResolvedValueOnce(cartRow);
+      mockProductFindUnique
+        .mockResolvedValueOnce(buildProductRow({ id: 'prod-1', stock: 10 }))
+        .mockResolvedValueOnce(buildProductRow({ id: 'prod-2', stock: 5 }));
+      mockOrderCreate.mockImplementationOnce(
+        async ({ data }: { data: Parameters<typeof asPrismaOrderRow>[0] }) =>
+          asPrismaOrderRow(data),
+      );
+      mockCartItemDeleteMany.mockResolvedValueOnce({ count: 2 });
+
+      await repo.createOrderFromCart('session-1', buildShipping());
+
+      expect(mockProductUpdateMany).toHaveBeenCalledTimes(2);
+      expect(mockProductUpdateMany).toHaveBeenNthCalledWith(1, {
+        where: { id: 'prod-1', stock: { gte: 2 } },
+        data: { stock: { decrement: 2 } },
+      });
+      expect(mockProductUpdateMany).toHaveBeenNthCalledWith(2, {
+        where: { id: 'prod-2', stock: { gte: 1 } },
+        data: { stock: { decrement: 1 } },
+      });
+    });
+
+    it('se detiene en el primer ítem sin stock suficiente y no procesa el resto', async () => {
+      const cartRow = buildCartRow([
+        { id: 'item-1', cartId: 'cart-1', productId: 'prod-1', quantity: 5, size: null, color: null },
+        { id: 'item-2', cartId: 'cart-1', productId: 'prod-2', quantity: 1, size: null, color: null },
+      ]);
+      mockCartFindUnique.mockResolvedValueOnce(cartRow);
+      mockProductFindUnique.mockResolvedValueOnce(buildProductRow({ id: 'prod-1', stock: 2 }));
+      mockProductUpdateMany.mockResolvedValueOnce({ count: 0 });
+
+      await expect(
+        repo.createOrderFromCart('session-1', buildShipping()),
+      ).rejects.toMatchObject({ name: 'StockError' });
+
+      expect(mockProductFindUnique).toHaveBeenCalledTimes(1);
+      expect(mockProductUpdateMany).toHaveBeenCalledTimes(1);
       expect(mockOrderCreate).not.toHaveBeenCalled();
     });
 
