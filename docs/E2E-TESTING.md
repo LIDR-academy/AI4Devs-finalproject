@@ -96,3 +96,11 @@ npx playwright test
   run (`Date.now()`) para no colisionar entre ejecuciones, y no asume conteos absolutos
   de pedidos — solo verifica el pedido recién creado. Los datos generados no se limpian
   tras la ejecución (deuda aceptada para el MVP).
+- **Consumo de stock real (desde US-015):** el test principal de `purchase.spec.ts`
+  compra una unidad del primer producto del catálogo en cada ejecución, y desde US-015
+  esa compra descuenta el stock real del producto (antes era un no-op). No se reseedea
+  desde el propio spec — haría falta seedear la base de datos directamente desde un
+  test, lo que viola la *black-box rule* de `.claude/skills/e2e-playwright/SKILL.md`.
+  Si tras muchas ejecuciones locales el stock de ese producto llega a 0, `npx prisma db
+  seed` (idempotente, vía `upsert`) lo restaura — mantenimiento de entorno esperado,
+  mismo espíritu que la deuda de pedidos sin limpiar.

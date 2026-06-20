@@ -186,7 +186,16 @@ export class OrderRepository implements IOrderRepository {
           throw new NotFoundError(`Product not found: ${item.productId}`);
         }
 
-        if (item.quantity > product.stock) {
+        // Atomic conditional decrement — the `gte` in `where` is evaluated by
+        // PostgreSQL at write time, not from the `stock` read above. This is
+        // what makes the check safe under concurrent checkouts of the same
+        // product: two simultaneous requests cannot both pass.
+        const stockUpdate = await tx.product.updateMany({
+          where: { id: product.id, stock: { gte: item.quantity } },
+          data: { stock: { decrement: item.quantity } },
+        });
+
+        if (stockUpdate.count === 0) {
           throw new StockError(product.stock);
         }
 
