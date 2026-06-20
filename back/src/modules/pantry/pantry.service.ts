@@ -123,6 +123,7 @@ export class PantryService {
     return this.prisma.pantryItem.update({
       where: { id: itemId },
       data: {
+        ...(dto.name !== undefined && { name: dto.name.trim() }),
         ...(dto.quantity !== undefined && { quantity: dto.quantity }),
         ...(dto.unit !== undefined && { unit: dto.unit.trim() }),
         ...(dto.storageLocation !== undefined && { storageLocation: dto.storageLocation }),

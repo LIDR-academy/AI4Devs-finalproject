@@ -25,6 +25,7 @@ export interface PantryApiItem {
 }
 
 export interface UpdatePantryItemPayload {
+  name?: string;
   quantity?: number;
   unit?: string;
   storageLocation?: string;

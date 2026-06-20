@@ -7,10 +7,17 @@ import {
   IsString,
   MaxLength,
   Min,
+  MinLength,
 } from "class-validator";
 import { PANTRY_UNITS, STORAGE_LOCATIONS } from "./create-pantry-item.dto";
 
 export class UpdatePantryItemDto {
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(120)
+  name?: string;
+
   @IsOptional()
   @Type(() => Number)
   @IsInt()

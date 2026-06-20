@@ -476,6 +476,35 @@ describe("PantryService.create — notes field", () => {
 
 // ── PantryService.update notes ────────────────────────────────────────────────
 
+describe("PantryService.update — name field", () => {
+  it("updates the trimmed name when provided", async () => {
+    const prisma = makePrismaMock();
+    prisma.pantryItem.findUnique.mockResolvedValue(MOCK_ITEM_NO_EXPIRY as any);
+    prisma.pantryItem.update.mockResolvedValue({ ...MOCK_ITEM_NO_EXPIRY, name: "Oat Milk" } as any);
+    const svc = makeService(prisma);
+
+    await svc.update("user-1", "item-1", { name: "  Oat Milk  " });
+
+    expect(prisma.pantryItem.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ name: "Oat Milk" }),
+      }),
+    );
+  });
+
+  it("does not set the name field when name is not provided", async () => {
+    const prisma = makePrismaMock();
+    prisma.pantryItem.findUnique.mockResolvedValue(MOCK_ITEM_NO_EXPIRY as any);
+    prisma.pantryItem.update.mockResolvedValue(MOCK_ITEM_NO_EXPIRY as any);
+    const svc = makeService(prisma);
+
+    await svc.update("user-1", "item-1", { quantity: 2 });
+
+    const call = prisma.pantryItem.update.mock.calls[0][0] as { data: Record<string, unknown> };
+    expect(call.data).not.toHaveProperty("name");
+  });
+});
+
 describe("PantryService.update — notes field", () => {
   it("updates notes when provided", async () => {
     const prisma = makePrismaMock();
