@@ -35,7 +35,7 @@ export function ProductAttributes({ product }: Props) {
   if (!hasContent) return null;
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2" data-testid="product-attributes">
       {level.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {level.map((l) => {

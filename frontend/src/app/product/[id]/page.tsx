@@ -81,7 +81,7 @@ export default async function ProductDetailPage({ params }: Props) {
         <div className="flex flex-col gap-4">
           <p className="text-sm text-gray-500">{product.brand}</p>
           <h1 className="text-2xl font-bold text-gray-900">{product.name}</h1>
-          <p className="text-3xl font-bold text-gray-900">{formatPrice(product.price)}</p>
+          <p data-testid="product-detail-price" className="text-3xl font-bold text-gray-900">{formatPrice(product.price)}</p>
 
           <ProductAttributes product={product} />
 

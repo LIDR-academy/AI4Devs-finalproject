@@ -8,7 +8,7 @@ export function SizeSelector({ sizes, selectedSize, onSelect }: SizeSelectorProp
   if (sizes.length === 0) return null;
 
   return (
-    <div>
+    <div data-testid="size-selector">
       <p className="text-sm font-medium text-gray-700 mb-2">Talla</p>
       <div className="flex flex-wrap gap-2">
         {sizes.map((size) => {
