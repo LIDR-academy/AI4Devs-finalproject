@@ -43,4 +43,9 @@ export class CreatePantryItemDto {
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   pricePaid?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  notes?: string;
 }

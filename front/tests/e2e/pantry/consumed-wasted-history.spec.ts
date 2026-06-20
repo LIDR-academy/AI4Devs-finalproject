@@ -99,6 +99,50 @@ test.describe("Pantry — Consumed history filter", () => {
     expect(items.find((i) => i.name === "Re-add Milk")).toBeDefined();
   });
 
+  test("Re-added item does not stay in the consumed list and cannot be re-added twice", async ({
+    page,
+    request,
+  }) => {
+    const ts = Date.now();
+    const auth = await registerUser(request, `pw.history.readd-once.${ts}@pantry-e2e.example.com`);
+
+    const item = await createAndGetPantryItem(request, auth.accessToken, "Once Only Milk", 3);
+
+    await request.post(`${API_BASE_URL}/pantry/items/${item.id}/events`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+      data: { type: "CONSUMED" },
+    });
+
+    await seedSession(page, auth);
+    await page.goto(`${FRONT_BASE_URL}/pantry`);
+    await page.getByRole("button", { name: "Consumed" }).click();
+    await expect(page.getByText("Once Only Milk")).toBeVisible();
+
+    await page.getByTestId(/event-readd-/).first().click();
+    await expect(page.getByTestId("re-add-success")).toBeVisible();
+
+    // Reload the page entirely — the event must not come back from the API
+    await page.reload();
+    await page.getByRole("button", { name: "Consumed" }).click();
+    await expect(page.getByText("Once Only Milk")).not.toBeVisible();
+
+    // Only ONE pantry item should exist — no duplicates were created
+    const listRes = await request.get(`${API_BASE_URL}/pantry/items`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+    });
+    expect(listRes.ok()).toBeTruthy();
+    const items = (await listRes.json()) as Array<{ name: string }>;
+    expect(items.filter((i) => i.name === "Once Only Milk")).toHaveLength(1);
+
+    // And the consumption event is gone from history
+    const eventsRes = await request.get(`${API_BASE_URL}/pantry/items/events`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+    });
+    expect(eventsRes.ok()).toBeTruthy();
+    const events = (await eventsRes.json()) as Array<{ itemName: string | null }>;
+    expect(events.filter((e) => e.itemName === "Once Only Milk")).toHaveLength(0);
+  });
+
   test("Consumed filter shows empty state when no events exist", async ({ page, request }) => {
     const ts = Date.now();
     const auth = await registerUser(request, `pw.history.empty.${ts}@pantry-e2e.example.com`);
@@ -109,6 +153,61 @@ test.describe("Pantry — Consumed history filter", () => {
     await page.getByRole("button", { name: "Consumed" }).click();
 
     await expect(page.getByText("No consumed items found.")).toBeVisible();
+  });
+
+  test("Re-add restores expirationDate and pricePaid of the original item", async ({
+    page,
+    request,
+  }) => {
+    const ts = Date.now();
+    const auth = await registerUser(
+      request,
+      `pw.readd-fields.${ts}@pantry-e2e.example.com`,
+    );
+
+    // Create item with a known expiration date and price via API
+    const expiry = new Date();
+    expiry.setUTCDate(expiry.getUTCDate() + 10);
+    expiry.setUTCHours(12, 0, 0, 0);
+    const expirationDate = expiry.toISOString();
+
+    const createRes = await request.post(`${API_BASE_URL}/pantry/items`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+      data: { name: "Premium Yogurt", quantity: 2, unit: "unit", pricePaid: 3.49, expirationDate },
+    });
+    expect(createRes.ok()).toBeTruthy();
+    const item = (await createRes.json()) as { id: string };
+
+    // Consume it
+    await request.post(`${API_BASE_URL}/pantry/items/${item.id}/events`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+      data: { type: "CONSUMED" },
+    });
+
+    // Re-add via UI
+    await seedSession(page, auth);
+    await page.goto(`${FRONT_BASE_URL}/pantry`);
+    await page.getByRole("button", { name: "Consumed" }).click();
+    await expect(page.getByText("Premium Yogurt")).toBeVisible();
+
+    await page.getByTestId(/event-readd-/).first().click();
+    await expect(page.getByTestId("re-add-success")).toBeVisible();
+
+    // Confirm via API that the new item has the original expiration and price
+    const listRes = await request.get(`${API_BASE_URL}/pantry/items`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+    });
+    expect(listRes.ok()).toBeTruthy();
+    const items = (await listRes.json()) as Array<{
+      name: string;
+      pricePaid: string | null;
+      expirationDate: string | null;
+    }>;
+    const restored = items.find((i) => i.name === "Premium Yogurt");
+    expect(restored).toBeDefined();
+    expect(restored!.pricePaid).toBe("3.49");
+    expect(restored!.expirationDate).not.toBeNull();
+    expect(new Date(restored!.expirationDate!).toDateString()).toBe(expiry.toDateString());
   });
 
   test("Re-added item preserves emoji set on the original item", async ({ page, request }) => {

@@ -265,4 +265,230 @@ describe("PantryService.registerEvent", () => {
       }),
     );
   });
+
+  it("preserves itemExpirationDate in the event when the item has an expiration date", async () => {
+    const expiry = new Date("2026-07-01T00:00:00.000Z");
+    const item = { ...MOCK_ITEM_NO_EXPIRY, expirationDate: expiry };
+    const prisma = makePrismaMock(item);
+    const svc = makeService(prisma);
+
+    await svc.registerEvent("user-1", "item-1", { type: PantryConsumptionEventType.CONSUMED });
+
+    expect(prisma.consumptionEvent.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ itemExpirationDate: expiry }),
+      }),
+    );
+  });
+
+  it("preserves itemPricePaid in the event when the item has a price", async () => {
+    const item = { ...MOCK_ITEM_NO_EXPIRY, pricePaid: new Decimal("3.50") };
+    const prisma = makePrismaMock(item);
+    const svc = makeService(prisma);
+
+    await svc.registerEvent("user-1", "item-1", { type: PantryConsumptionEventType.CONSUMED });
+
+    expect(prisma.consumptionEvent.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ itemPricePaid: new Decimal("3.50") }),
+      }),
+    );
+  });
+
+  it("does not set itemExpirationDate when item has no expiration date", async () => {
+    const prisma = makePrismaMock(MOCK_ITEM_NO_EXPIRY);
+    const svc = makeService(prisma);
+
+    await svc.registerEvent("user-1", "item-1", { type: PantryConsumptionEventType.CONSUMED });
+
+    const call = prisma.consumptionEvent.create.mock.calls[0][0] as { data: Record<string, unknown> };
+    expect(call.data).not.toHaveProperty("itemExpirationDate");
+  });
+
+  it("preserves itemNotes in the event when the item has notes", async () => {
+    const item = { ...MOCK_ITEM_NO_EXPIRY, notes: "organic brand" };
+    const prisma = makePrismaMock(item as any);
+    const svc = makeService(prisma);
+
+    await svc.registerEvent("user-1", "item-1", { type: PantryConsumptionEventType.CONSUMED });
+
+    expect(prisma.consumptionEvent.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ itemNotes: "organic brand" }),
+      }),
+    );
+  });
+
+  it("does not set itemNotes when item has no notes", async () => {
+    const prisma = makePrismaMock(MOCK_ITEM_NO_EXPIRY);
+    const svc = makeService(prisma);
+
+    await svc.registerEvent("user-1", "item-1", { type: PantryConsumptionEventType.CONSUMED });
+
+    const call = prisma.consumptionEvent.create.mock.calls[0][0] as { data: Record<string, unknown> };
+    expect(call.data).not.toHaveProperty("itemNotes");
+  });
+});
+
+// ── PantryService.reAddEvent ──────────────────────────────────────────────────
+
+const MOCK_EVENT = {
+  id: "evt-1",
+  pantryItemId: "item-old",
+  userId: "user-1",
+  type: "CONSUMED" as const,
+  quantity: 2,
+  itemName: "Greek Yogurt",
+  itemUnit: "unit",
+  itemExpirationDate: null as Date | null,
+  itemPricePaid: null as Decimal | null,
+  itemNotes: null as string | null,
+  estimatedValueEur: null as Decimal | null,
+  occurredAt: new Date(),
+  createdAt: new Date(),
+};
+
+function makeReAddPrismaMock(event: typeof MOCK_EVENT | null = MOCK_EVENT) {
+  const createdItem = { id: "item-new", name: event?.itemName ?? "Unknown item" };
+  return {
+    pantryItem: {
+      create: jest.fn().mockReturnValue("CREATE_OP"),
+    },
+    consumptionEvent: {
+      findUnique: jest.fn().mockResolvedValue(event),
+      delete: jest.fn().mockReturnValue("DELETE_OP"),
+    },
+    householdMember: {
+      findFirst: jest.fn().mockResolvedValue(null),
+    },
+    $transaction: jest.fn().mockResolvedValue([createdItem, { id: event?.id }]),
+  } as any;
+}
+
+describe("PantryService.reAddEvent", () => {
+  it("recreates the pantry item and deletes the event in one transaction", async () => {
+    const prisma = makeReAddPrismaMock();
+    const svc = makeService(prisma);
+
+    const result = await svc.reAddEvent("user-1", "evt-1");
+
+    expect(result.id).toBe("item-new");
+    expect(prisma.pantryItem.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          userId: "user-1",
+          name: "Greek Yogurt",
+          quantity: 2,
+          unit: "unit",
+        }),
+      }),
+    );
+    expect(prisma.consumptionEvent.delete).toHaveBeenCalledWith({ where: { id: "evt-1" } });
+    expect(prisma.$transaction).toHaveBeenCalledWith(["CREATE_OP", "DELETE_OP"]);
+  });
+
+  it("restores expirationDate, pricePaid and notes from the event", async () => {
+    const expiry = new Date("2026-08-01T00:00:00.000Z");
+    const event = {
+      ...MOCK_EVENT,
+      itemExpirationDate: expiry,
+      itemPricePaid: new Decimal("3.49"),
+      itemNotes: "organic brand",
+    };
+    const prisma = makeReAddPrismaMock(event);
+    const svc = makeService(prisma);
+
+    await svc.reAddEvent("user-1", "evt-1");
+
+    expect(prisma.pantryItem.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          expirationDate: expiry,
+          pricePaid: new Decimal("3.49"),
+          notes: "organic brand",
+        }),
+      }),
+    );
+  });
+
+  it("does not set optional fields when the event has none", async () => {
+    const prisma = makeReAddPrismaMock(MOCK_EVENT);
+    const svc = makeService(prisma);
+
+    await svc.reAddEvent("user-1", "evt-1");
+
+    const call = prisma.pantryItem.create.mock.calls[0][0] as { data: Record<string, unknown> };
+    expect(call.data).not.toHaveProperty("expirationDate");
+    expect(call.data).not.toHaveProperty("pricePaid");
+    expect(call.data).not.toHaveProperty("notes");
+  });
+
+  it("throws NotFoundException when the event does not exist", async () => {
+    const prisma = makeReAddPrismaMock(null);
+    const svc = makeService(prisma);
+
+    await expect(svc.reAddEvent("user-1", "evt-x")).rejects.toThrow(NotFoundException);
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("throws NotFoundException when the event belongs to another user", async () => {
+    const prisma = makeReAddPrismaMock({ ...MOCK_EVENT, userId: "user-other" });
+    const svc = makeService(prisma);
+
+    await expect(svc.reAddEvent("user-1", "evt-1")).rejects.toThrow(NotFoundException);
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+});
+
+// ── PantryService.create notes ────────────────────────────────────────────────
+
+describe("PantryService.create — notes field", () => {
+  it("saves notes when provided", async () => {
+    const prisma = makePrismaMock();
+    prisma.pantryItem.create.mockResolvedValue({ id: "item-new", notes: "organic brand" } as any);
+    const svc = makeService(prisma);
+
+    await svc.create("user-1", {
+      name: "Olive Oil",
+      quantity: 1,
+      unit: "unit",
+      notes: "organic brand",
+    });
+
+    expect(prisma.pantryItem.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ notes: "organic brand" }),
+      }),
+    );
+  });
+
+  it("does not set notes field when notes is not provided", async () => {
+    const prisma = makePrismaMock();
+    prisma.pantryItem.create.mockResolvedValue({ id: "item-new" } as any);
+    const svc = makeService(prisma);
+
+    await svc.create("user-1", { name: "Olive Oil", quantity: 1, unit: "unit" });
+
+    const call = prisma.pantryItem.create.mock.calls[0][0] as { data: Record<string, unknown> };
+    expect(call.data).not.toHaveProperty("notes");
+  });
+});
+
+// ── PantryService.update notes ────────────────────────────────────────────────
+
+describe("PantryService.update — notes field", () => {
+  it("updates notes when provided", async () => {
+    const prisma = makePrismaMock();
+    prisma.pantryItem.findUnique.mockResolvedValue(MOCK_ITEM_NO_EXPIRY as any);
+    prisma.pantryItem.update.mockResolvedValue({ ...MOCK_ITEM_NO_EXPIRY, notes: "updated note" } as any);
+    const svc = makeService(prisma);
+
+    await svc.update("user-1", "item-1", { notes: "updated note" });
+
+    expect(prisma.pantryItem.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ notes: "updated note" }),
+      }),
+    );
+  });
 });

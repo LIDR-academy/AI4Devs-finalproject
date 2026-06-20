@@ -164,4 +164,33 @@ describe("ManualEntryPage", () => {
     await waitFor(() => expect(clearSessionMock).toHaveBeenCalled());
     expect(navigateMock).toHaveBeenCalledWith({ to: "/auth", replace: true });
   });
+
+  it("includes notes in the payload when notes are entered", async () => {
+    const user = userEvent.setup();
+    createPantryItemMock.mockResolvedValue({ id: "item-notes-1" });
+
+    render(<ManualEntryPage />);
+    await fillValidForm(user);
+    await user.type(screen.getByPlaceholderText(/optional notes/i), "organic brand from Mercadona");
+
+    await user.click(screen.getByRole("button", { name: /Save item|Added to pantry/ }));
+
+    await waitFor(() => expect(createPantryItemMock).toHaveBeenCalledTimes(1));
+    const payload = createPantryItemMock.mock.calls[0][0] as Record<string, unknown>;
+    expect(payload.notes).toBe("organic brand from Mercadona");
+  });
+
+  it("omits notes from the payload when the notes field is empty", async () => {
+    const user = userEvent.setup();
+    createPantryItemMock.mockResolvedValue({ id: "item-no-notes" });
+
+    render(<ManualEntryPage />);
+    await fillValidForm(user);
+
+    await user.click(screen.getByRole("button", { name: /Save item|Added to pantry/ }));
+
+    await waitFor(() => expect(createPantryItemMock).toHaveBeenCalledTimes(1));
+    const payload = createPantryItemMock.mock.calls[0][0] as Record<string, unknown>;
+    expect(payload).not.toHaveProperty("notes");
+  });
 });

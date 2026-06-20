@@ -9,9 +9,9 @@ import {
   useRequireAuthRedirect,
 } from "@/features/auth/route-guard";
 import {
-  createPantryItem,
   listConsumptionEvents,
   listPantryItems,
+  reAddConsumptionEvent,
   type ConsumptionEventRecord,
   type PantryApiItem,
 } from "@/features/pantry/pantry.api";
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/pantry")({
 
 const filters = ["All", "Expiring", "Fridge", "Pantry", "Freezer", "Consumed", "Wasted"] as const;
 
-function PantryPage() {
+export function PantryPage() {
   const authed = useRequireAuthRedirect();
 
   if (!authed) {
@@ -45,6 +45,8 @@ function PantryPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reAddMessage, setReAddMessage] = useState<string | null>(null);
+  const [reAddingId, setReAddingId] = useState<string | null>(null);
+  const [reAddedIds, setReAddedIds] = useState<Set<string>>(new Set());
   const [itemEmojis, setItemEmojis] = useState<Record<string, string>>({});
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
 
@@ -139,12 +141,12 @@ function PantryPage() {
   }, [filter]);
 
   async function handleReAdd(event: ConsumptionEventRecord) {
+    if (reAddingId !== null) return;
+    setReAddingId(event.id);
     try {
-      const created = await createPantryItem({
-        name: event.itemName ?? "Unknown item",
-        quantity: event.quantity,
-        unit: event.itemUnit ?? "unit",
-      });
+      // The backend recreates the pantry item AND deletes the consumption event in
+      // one transaction, so the item cannot be re-added twice from history.
+      const created = await reAddConsumptionEvent(event.id);
       // Carry the emoji from the name-based fallback map so the re-added item
       // keeps the same icon the user previously set, even though it has a new id.
       try {
@@ -159,7 +161,8 @@ function PantryPage() {
       } catch {
         // localStorage unavailable — silently skip
       }
-      // Remove from the consumed/wasted list immediately
+      // Mark as re-added before the filter effect can re-fetch and restore the event
+      setReAddedIds((prev) => new Set([...prev, event.id]));
       setEvents((current) => current.filter((e) => e.id !== event.id));
       // Refresh pantry items so All/Expiring/location filters show the re-added item
       const fresh = await listPantryItems();
@@ -168,6 +171,8 @@ function PantryPage() {
       setTimeout(() => setReAddMessage(null), 3000);
     } catch (apiError) {
       setError(apiError instanceof Error ? apiError.message : "Could not re-add item.");
+    } finally {
+      setReAddingId(null);
     }
   }
 
@@ -262,6 +267,7 @@ function PantryPage() {
             <p className="py-12 text-center text-muted-foreground">No {filter.toLowerCase()} items found.</p>
           )}
           {events
+            .filter((e) => !reAddedIds.has(e.id))
             .filter((e) => (q ? (e.itemName ?? "").toLowerCase().includes(q.toLowerCase()) : true))
             .map((e) => (
               <li key={e.id} className="ios-card flex items-center gap-4 p-3.5" data-testid={`event-row-${e.id}`}>
@@ -283,11 +289,12 @@ function PantryPage() {
                 </div>
                 <button
                   type="button"
-                  className="shrink-0 rounded-xl bg-primary/10 px-3 py-1.5 text-[12px] font-medium text-primary"
+                  disabled={reAddingId !== null}
+                  className="shrink-0 rounded-xl bg-primary/10 px-3 py-1.5 text-[12px] font-medium text-primary disabled:opacity-50"
                   onClick={() => { void handleReAdd(e); }}
                   data-testid={`event-readd-${e.id}`}
                 >
-                  Re-add
+                  {reAddingId === e.id ? "Adding…" : "Re-add"}
                 </button>
               </li>
             ))}

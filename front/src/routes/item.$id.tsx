@@ -48,6 +48,7 @@ function ItemDetail() {
   const [storageLocationInput, setStorageLocationInput] = useState("Pantry");
   const [unitPriceInput, setUnitPriceInput] = useState("");
   const [pricePaidInput, setPricePaidInput] = useState("");
+  const [notesInput, setNotesInput] = useState("");
   const [isSavingDetails, setIsSavingDetails] = useState(false);
   const [detailsMessage, setDetailsMessage] = useState<string | null>(null);
   const [detailsError, setDetailsError] = useState<string | null>(null);
@@ -80,6 +81,7 @@ function ItemDetail() {
         const qty = found?.quantity ?? 1;
         setPricePaidInput(paidNum !== null ? paidNum.toFixed(2) : "");
         setUnitPriceInput(paidNum !== null && qty > 0 ? (paidNum / qty).toFixed(2) : "");
+        setNotesInput(found?.notes ?? "");
       }
     }
     void loadItem();
@@ -194,6 +196,7 @@ function ItemDetail() {
         unit: unitInput,
         storageLocation: storageLocationInput,
         ...(price !== undefined && { pricePaid: price }),
+        notes: notesInput,
       });
       setItem((current) => (current ? { ...current, ...updated } : current));
       setDetailsMessage("Details saved.");
@@ -416,6 +419,19 @@ function ItemDetail() {
                   className="w-full h-11 rounded-xl bg-secondary px-3 text-[14px] outline-none focus:ring-2 focus:ring-primary/30"
                 />
               </div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">
+                Notes
+              </label>
+              <textarea
+                value={notesInput}
+                onChange={(e) => setNotesInput(e.target.value)}
+                placeholder="Optional notes (brand, store, etc.)"
+                rows={3}
+                data-testid="item-notes-input"
+                className="w-full rounded-xl bg-secondary px-3 py-2 text-[14px] outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+              />
             </div>
             <button
               type="button"

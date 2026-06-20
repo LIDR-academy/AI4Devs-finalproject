@@ -244,6 +244,122 @@ test.describe("Item details edit — quantity, unit, price", () => {
     await expect(page.getByText("Fridge Milk")).not.toBeVisible();
   });
 
+  test("notes entered on the add form are visible and editable in item edit", async ({
+    page,
+    request,
+  }) => {
+    const ts = Date.now();
+    const auth = await registerUser(
+      request,
+      `pw.item-notes.${ts}@pantry-e2e.example.com`,
+    );
+
+    // Create item with notes via API (simulating what the add form does after our fix)
+    const createRes = await request.post(`${API_BASE_URL}/pantry/items`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+      data: { name: "Organic Oats", quantity: 1, unit: "unit", notes: "Bought at Mercadona aisle 3" },
+    });
+    expect(createRes.ok()).toBeTruthy();
+    const item = (await createRes.json()) as { id: string };
+
+    await seedSession(page, auth);
+    await page.goto(`${FRONT_BASE_URL}/item/${item.id}`);
+
+    // Notes field should be pre-populated
+    await expect(page.getByTestId("item-notes-input")).toHaveValue("Bought at Mercadona aisle 3");
+  });
+
+  test("notes can be edited in item details and are persisted", async ({
+    page,
+    request,
+  }) => {
+    const ts = Date.now();
+    const auth = await registerUser(
+      request,
+      `pw.item-notes-edit.${ts}@pantry-e2e.example.com`,
+    );
+
+    const createRes = await request.post(`${API_BASE_URL}/pantry/items`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+      data: { name: "Brown Rice", quantity: 1, unit: "unit", notes: "Original note" },
+    });
+    expect(createRes.ok()).toBeTruthy();
+    const item = (await createRes.json()) as { id: string };
+
+    await seedSession(page, auth);
+    await page.goto(`${FRONT_BASE_URL}/item/${item.id}`);
+
+    // Update the notes
+    const notesInput = page.getByTestId("item-notes-input");
+    await notesInput.fill("Updated note from edit");
+
+    await page.getByTestId("item-details-save").click();
+    await expect(page.getByTestId("item-details-message")).toContainText("Details saved.");
+
+    // Reload and confirm persistence
+    await page.reload();
+    await expect(page.getByTestId("item-notes-input")).toHaveValue("Updated note from edit");
+
+    // Confirm via API
+    const listRes = await request.get(`${API_BASE_URL}/pantry/items`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+    });
+    const items = (await listRes.json()) as Array<{ id: string; notes: string | null }>;
+    const saved = items.find((i) => i.id === item.id);
+    expect(saved?.notes).toBe("Updated note from edit");
+  });
+
+  test("notes are preserved when an item is consumed and re-added", async ({
+    page,
+    request,
+  }) => {
+    const ts = Date.now();
+    const auth = await registerUser(
+      request,
+      `pw.readd-notes.${ts}@pantry-e2e.example.com`,
+    );
+
+    // Create item with notes
+    const createRes = await request.post(`${API_BASE_URL}/pantry/items`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+      data: { name: "Feta Cheese", quantity: 1, unit: "unit", notes: "Greek brand, salty" },
+    });
+    expect(createRes.ok()).toBeTruthy();
+    const item = (await createRes.json()) as { id: string };
+
+    // Consume the item
+    const consumeRes = await request.post(`${API_BASE_URL}/pantry/items/${item.id}/events`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+      data: { type: "CONSUMED" },
+    });
+    expect(consumeRes.ok()).toBeTruthy();
+
+    // Re-add via UI
+    await seedSession(page, auth);
+    await page.goto(`${FRONT_BASE_URL}/pantry`);
+    await page.getByRole("button", { name: "Consumed" }).click();
+    await expect(page.getByText("Feta Cheese")).toBeVisible();
+    await page.getByTestId(/event-readd-/).first().click();
+    await expect(page.getByTestId("re-add-success")).toBeVisible();
+
+    // Confirm notes are preserved via API
+    const listRes = await request.get(`${API_BASE_URL}/pantry/items`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+    });
+    const items = (await listRes.json()) as Array<{ name: string; notes: string | null }>;
+    const restored = items.find((i) => i.name === "Feta Cheese");
+    expect(restored?.notes).toBe("Greek brand, salty");
+
+    // Navigate to item detail and verify notes are visible
+    const listRes2 = await request.get(`${API_BASE_URL}/pantry/items`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+    });
+    const items2 = (await listRes2.json()) as Array<{ id: string; name: string }>;
+    const restoredItem = items2.find((i) => i.name === "Feta Cheese");
+    await page.goto(`${FRONT_BASE_URL}/item/${restoredItem!.id}`);
+    await expect(page.getByTestId("item-notes-input")).toHaveValue("Greek brand, salty");
+  });
+
   test("price per unit auto-computes price paid and both are persisted", async ({
     page,
     request,
