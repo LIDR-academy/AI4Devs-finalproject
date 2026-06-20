@@ -291,6 +291,33 @@ const products = [
     colors: ['black', 'white', 'glacier'],
     stock: 30,
   },
+  // Fixture para US-014: único producto con stock 0, usado por los tests E2E que
+  // verifican el botón "Agotado" deshabilitado en la ficha de producto. No participar
+  // de otros specs (no se añade al carrito desde aquí en ningún otro test).
+  {
+    id: 'prod-013',
+    name: 'ASICS Gel-Kayano 31',
+    brand: 'ASICS',
+    price: '169.99',
+    image: 'products/asics-gel-kayano-31.jpg',
+    category: Category.shoes,
+    subcategory: 'road running',
+    description:
+      'Zapatilla de estabilidad premium para corredores pronadores. Sistema PureGEL-X2 y malla Engineered Mesh para mayor sujeción en distancias largas.',
+    features: [
+      'Sistema de estabilidad PureGEL-X2',
+      'Malla Engineered Mesh',
+      'Entresuela FF BLAST PLUS ECO',
+      'Suela AHARPLUS de alta durabilidad',
+    ],
+    distance: ['10K', 'half-marathon', 'marathon'],
+    surface: ['road'],
+    level: ['intermediate', 'advanced'],
+    objective: ['training', 'daily'],
+    sizes: ['40', '41', '42', '43', '44'],
+    colors: ['black', 'grey'],
+    stock: 0,
+  },
 ];
 
 async function main(): Promise<void> {
