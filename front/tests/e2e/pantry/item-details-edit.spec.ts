@@ -83,6 +83,64 @@ test.describe("Item details edit — quantity, unit, price", () => {
     expect(saved!.pricePaid).toBe("4.99");
   });
 
+  test("item name can be edited and is persisted to UI and backend", async ({
+    page,
+    request,
+  }) => {
+    const ts = Date.now();
+    const auth = await registerUser(
+      request,
+      `pw.item-name-edit.${ts}@pantry-e2e.example.com`,
+    );
+
+    const item = await createAndGetPantryItem(request, auth.accessToken, "Old Name", 5);
+
+    await seedSession(page, auth);
+    await page.goto(`${FRONT_BASE_URL}/item/${item.id}`);
+
+    // Name input is pre-populated with the current name
+    const nameInput = page.getByTestId("item-name-input");
+    await expect(nameInput).toHaveValue("Old Name");
+
+    // Change the name and save
+    await nameInput.fill("New Name");
+    await page.getByTestId("item-details-save").click();
+    await expect(page.getByTestId("item-details-message")).toContainText("Details saved.");
+
+    // Header heading reflects the new name immediately
+    await expect(page.getByRole("heading", { name: "New Name" })).toBeVisible();
+
+    // Reload and confirm persistence in the UI
+    await page.reload();
+    await expect(page.getByTestId("item-name-input")).toHaveValue("New Name");
+
+    // Confirm via API
+    const listRes = await request.get(`${API_BASE_URL}/pantry/items`, {
+      headers: { Authorization: `Bearer ${auth.accessToken}` },
+    });
+    expect(listRes.ok()).toBeTruthy();
+    const items = (await listRes.json()) as Array<{ id: string; name: string }>;
+    expect(items.find((i) => i.id === item.id)?.name).toBe("New Name");
+  });
+
+  test("shows validation error when the name is cleared", async ({ page, request }) => {
+    const ts = Date.now();
+    const auth = await registerUser(
+      request,
+      `pw.item-name-empty.${ts}@pantry-e2e.example.com`,
+    );
+
+    const item = await createAndGetPantryItem(request, auth.accessToken, "Keep Me", 2);
+
+    await seedSession(page, auth);
+    await page.goto(`${FRONT_BASE_URL}/item/${item.id}`);
+
+    await page.getByTestId("item-name-input").fill("   ");
+    await page.getByTestId("item-details-save").click();
+
+    await expect(page.getByTestId("item-details-error")).toContainText("Name is required.");
+  });
+
   test("Mark as consumed removes item from pantry and redirects", async ({
     page,
     request,

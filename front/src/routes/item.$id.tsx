@@ -43,6 +43,7 @@ function ItemDetail() {
   const [expirationMessage, setExpirationMessage] = useState<string | null>(null);
   const [expirationError, setExpirationError] = useState<string | null>(null);
 
+  const [nameInput, setNameInput] = useState("");
   const [quantityInput, setQuantityInput] = useState("");
   const [unitInput, setUnitInput] = useState("unit");
   const [storageLocationInput, setStorageLocationInput] = useState("Pantry");
@@ -73,6 +74,7 @@ function ItemDetail() {
       if (isMounted) {
         const found = items.find((i) => i.id === id) ?? null;
         setItem(found);
+        setNameInput(found?.name ?? "");
         setExpirationInput(found?.expirationDate?.slice(0, 10) ?? "");
         setQuantityInput(String(found?.quantity ?? 1));
         setUnitInput(found?.unit ?? "unit");
@@ -176,7 +178,12 @@ function ItemDetail() {
     if (!item) return;
     const qty = parseInt(quantityInput, 10);
     const price = pricePaidInput !== "" ? parseFloat(pricePaidInput) : undefined;
+    const trimmedName = nameInput.trim();
 
+    if (trimmedName === "") {
+      setDetailsError("Name is required.");
+      return;
+    }
     if (!quantityInput || isNaN(qty) || qty < 1) {
       setDetailsError("Quantity must be a positive number.");
       return;
@@ -192,6 +199,7 @@ function ItemDetail() {
 
     try {
       const updated = await updatePantryItem(item.id, {
+        name: trimmedName,
         quantity: qty,
         unit: unitInput,
         storageLocation: storageLocationInput,
@@ -343,6 +351,20 @@ function ItemDetail() {
         <section className="mt-7 px-5">
           <h2 className="px-2 mb-2 text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">Item details</h2>
           <div className="ios-card p-4 space-y-3">
+            <div className="space-y-1">
+              <label className="text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">
+                Name
+              </label>
+              <input
+                type="text"
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                maxLength={120}
+                placeholder="Item name"
+                data-testid="item-name-input"
+                className="w-full h-11 rounded-xl bg-secondary px-3 text-[14px] outline-none focus:ring-2 focus:ring-primary/30"
+              />
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">
