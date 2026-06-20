@@ -210,7 +210,7 @@ graph TB
         UI["React · componentes hidratados"]
     end
 
-    subgraph FE["Frontend — Next.js 14 SSR · :3000"]
+    subgraph FE["Frontend — Next.js 15 SSR · :3000"]
         SC["Server Components · SSR + SEO"]
         CC["Client Components · Interactividad"]
         APICL["API Client · fetch tipado"]
@@ -244,7 +244,7 @@ graph TB
 
 | Componente | Tecnología | Responsabilidad |
 |---|---|---|
-| **Frontend** | Next.js 14 · React 18 · TypeScript · Tailwind CSS · shadcn/ui | Renderizado SSR de catálogo y fichas de producto; interactividad client-side para carrito y checkout |
+| **Frontend** | Next.js 15 · React 18 · TypeScript · Tailwind CSS · shadcn/ui | Renderizado SSR de catálogo y fichas de producto; interactividad client-side para carrito y checkout |
 | **Backend API** | Node.js 20 · Express 4 · TypeScript · Zod | API REST con lógica de negocio organizada en Services; validación de entrada con Zod |
 | **ORM** | Prisma 5 | Abstracción type-safe de acceso a PostgreSQL; gestión de migraciones y seeds |
 | **Base de datos** | PostgreSQL 16 | Persistencia relacional del catálogo, pedidos e ítems de pedido |
@@ -257,7 +257,7 @@ El proyecto se organiza como **monorepo con npm workspaces** en tres paquetes in
 
 ```
 runmarket/
-├── frontend/          ← Next.js 14 (SSR · puerto 3000)
+├── frontend/          ← Next.js 15 (SSR · puerto 3000)
 │   └── src/
 │       ├── app/       ← App Router: rutas SSR y Client pages
 │       ├── components/← Catálogo, Producto, Carrito, Checkout
@@ -285,7 +285,7 @@ El despliegue del MVP academico se plantea con una infraestructura de coste 0 EU
 
 | Capa | Servicio | Plan | Responsabilidad |
 |---|---|---|---|
-| Frontend | Vercel | Hobby | Publica la aplicacion Next.js 14 con SSR y assets estaticos |
+| Frontend | Vercel | Hobby | Publica la aplicacion Next.js 15 con SSR y assets estaticos |
 | Backend | Render | Free Web Service | Publica la API REST Express |
 | Base de datos | Supabase | Free PostgreSQL | Aloja PostgreSQL para catalogo, carrito y pedidos |
 | Repositorio | GitHub | Free | Fuente de codigo y disparador de despliegues automaticos |

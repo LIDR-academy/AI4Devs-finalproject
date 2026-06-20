@@ -8,7 +8,7 @@ El MVP cubre: catálogo, búsqueda filtrada, ficha de producto, carrito, checkou
 
 ## Stack técnico
 
-- **Frontend:** Next.js 14 (App Router) + React 18 + TypeScript + Tailwind CSS v4 + shadcn/ui
+- **Frontend:** Next.js 15 (App Router) + React 18 + TypeScript + Tailwind CSS v4 + shadcn/ui
 - **Estado:** Context API (`CartContext`) + localStorage para persistencia de sesión (Client Components)
 - **Iconos:** Lucide React
 - **Notificaciones:** Sonner (toasts)

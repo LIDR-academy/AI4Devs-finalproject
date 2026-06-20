@@ -15,12 +15,12 @@ Para el MVP de RunMarket se evaluaron tres opciones:
 
 La arquitectura de **frontend SSR desacoplado + API REST independiente + base de datos relacional** es la más adecuada para el MVP por tres razones:
 
-1. **SEO real**: Next.js 14 con App Router renderiza en servidor las páginas de catálogo y ficha de producto, que son las páginas de mayor impacto SEO en un eCommerce. Los metadatos (`title`, `description`, `og:*`) se generan server-side con la Metadata API de Next.js.
+1. **SEO real**: Next.js 15 con App Router renderiza en servidor las páginas de catálogo y ficha de producto, que son las páginas de mayor impacto SEO en un eCommerce. Los metadatos (`title`, `description`, `og:*`) se generan server-side con la Metadata API de Next.js.
 2. **Separación de responsabilidades testable**: el backend Express puede probarse de forma completamente independiente del frontend mediante Jest + Supertest. El frontend se prueba con Vitest + React Testing Library. Los E2E con Playwright ejercitan el sistema completo.
 3. **Evolución natural**: el backend Express puede crecer hacia microservicios en versiones posteriores sin tocar el frontend. La base de datos relacional (PostgreSQL) es la elección correcta para datos transaccionales de eCommerce (pedidos, stock).
 
-**Por qué Next.js 14 y no React Router v7 (Remix) para SSR:**
-El prototipo de Figma Make usa React Router v7 en modo SPA. Para la implementación real, Next.js 14 con App Router es la elección más reconocida en la industria para SSR con React, con mejor soporte de Server Components, Image Optimization y Metadata API. La migración del código del prototipo es directa dado que ambos son ecosistemas React + TypeScript.
+**Por qué Next.js 15 y no React Router v7 (Remix) para SSR:**
+El prototipo de Figma Make usa React Router v7 en modo SPA. Para la implementación real, Next.js 15 con App Router es la elección más reconocida en la industria para SSR con React, con mejor soporte de Server Components, Image Optimization y Metadata API. La migración del código del prototipo es directa dado que ambos son ecosistemas React + TypeScript.
 
 ### 1.2 Patrón de arquitectura del backend
 
@@ -60,7 +60,7 @@ graph TB
         UI["React\ncomponentes hidratados"]
     end
 
-    subgraph FE["Frontend — Next.js 14 App Router · :3000"]
+    subgraph FE["Frontend — Next.js 15 App Router · :3000"]
         SC["Server Components\nSSR + Metadata API"]
         CC["Client Components\nInteractividad + Estado"]
         APICL["API Client\nfetch wrapper tipado"]
@@ -114,9 +114,9 @@ graph TB
 
 ## 3. Componentes principales
 
-### 3.1 Frontend — Next.js 14 (App Router)
+### 3.1 Frontend — Next.js 15 (App Router)
 
-**Tecnología:** Next.js 14 · React 18 · TypeScript · Tailwind CSS v4 · shadcn/ui · Lucide React
+**Tecnología:** Next.js 15 · React 18 · TypeScript · Tailwind CSS v4 · shadcn/ui · Lucide React
 
 **Responsabilidad:** renderizado SSR de las páginas públicas del eCommerce, hidratación en cliente para interactividad (carrito, filtros, formularios).
 
@@ -186,7 +186,7 @@ Request → Router → Middleware → Controller → Service → Repository → 
 
 | Capa | Tecnología | Versión | Justificación |
 |---|---|---|---|
-| Frontend framework | Next.js | 14 | SSR + App Router + Metadata API |
+| Frontend framework | Next.js | 15 | SSR + App Router + Metadata API |
 | Frontend UI | React | 18 | Ecosistema estándar, Server Components |
 | Lenguaje | TypeScript | 5 | Tipado end-to-end frontend + backend |
 | Estilos | Tailwind CSS | 4 | Utility-first, consistente con el prototipo |
@@ -220,7 +220,7 @@ runmarket/
 │   ├── PRD.md                    ← documentación de producto
 │   └── prototypes/               ← capturas de pantalla
 │
-├── frontend/                     ← Next.js 14 App
+├── frontend/                     ← Next.js 15 App
 │   ├── src/
 │   │   ├── app/                  ← App Router
 │   │   │   ├── page.tsx          ← / Catálogo (SSR)
@@ -321,7 +321,7 @@ C4Container
 
     Person(runner, "Corredor", "Usuario del eCommerce")
 
-    Container(fe, "Frontend Web", "Next.js 14 · React 18 · TypeScript · Tailwind · :3000", "Renderiza catálogo y fichas en servidor (SSR/SEO).\nGestiona carrito y checkout en cliente.\nSe comunica con la API para datos dinámicos.")
+    Container(fe, "Frontend Web", "Next.js 15 · React 18 · TypeScript · Tailwind · :3000", "Renderiza catálogo y fichas en servidor (SSR/SEO).\nGestiona carrito y checkout en cliente.\nSe comunica con la API para datos dinámicos.")
 
     Container(api, "REST API", "Node.js 20 · Express 4 · TypeScript · :4000", "Expone endpoints REST para catálogo, carrito,\ncheckout y pedidos. Contiene la lógica de negocio\norganizada en Services y Repositories.")
 
@@ -383,13 +383,13 @@ C4Component
     Rel(orderRepo, db, "SQL via Prisma")
 ```
 
-#### Frontend — Next.js 14 App Router
+#### Frontend — Next.js 15 App Router
 
 Muestra los componentes internos del contenedor frontend, distinguiendo entre Server Components (SSR) y Client Components.
 
 ```mermaid
 C4Component
-    title Componentes — Frontend Next.js 14
+    title Componentes — Frontend Next.js 15
 
     Person(runner, "Corredor")
     Container(api, "REST API", "Express")
