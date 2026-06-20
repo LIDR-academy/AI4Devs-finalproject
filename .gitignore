@@ -35,6 +35,11 @@ coverage/
 # Prisma compiled artifacts
 backend/prisma/*.js
 
+# Playwright E2E artifacts — may capture checkout form data (fake) on failure
+e2e/test-results/
+e2e/playwright-report/
+e2e/blob-report/
+
 # Logs
 *.log
 npm-debug.log*

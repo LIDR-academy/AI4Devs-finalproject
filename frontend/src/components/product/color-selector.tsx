@@ -8,7 +8,7 @@ export function ColorSelector({ colors, selectedColor, onSelect }: ColorSelector
   if (colors.length === 0) return null;
 
   return (
-    <div>
+    <div data-testid="color-selector">
       <p className="text-sm font-medium text-gray-700 mb-2">Color</p>
       <div className="flex flex-wrap gap-2">
         {colors.map((color) => {

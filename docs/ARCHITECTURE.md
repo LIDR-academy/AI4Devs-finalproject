@@ -178,7 +178,7 @@ Request → Router → Middleware → Controller → Service → Repository → 
 | **Unit — Backend** | Jest + Supertest | Services (lógica de negocio), Controllers (endpoints), Repositories (mockeados con Prisma mock) |
 | **E2E** | Playwright | Flujos completos: búsqueda filtrada → ficha → carrito → checkout → confirmación |
 
-**Estrategia de testing backend:** los Services se prueban con mocks de Repository (sin base de datos real). Los Controllers se prueban con Supertest contra una instancia de Express con base de datos de test (PostgreSQL en Docker). Los E2E usan el sistema completo levantado en local.
+**Estrategia de testing backend:** los Services se prueban con mocks de Repository (sin base de datos real). Los Controllers se prueban con Supertest contra una instancia de Express con base de datos de test (PostgreSQL en Docker). Los E2E usan el sistema completo levantado en local — detalle de journeys cubiertos, precondiciones y comando de ejecución en [`docs/E2E-TESTING.md`](E2E-TESTING.md).
 
 ---
 
