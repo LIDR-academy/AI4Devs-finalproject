@@ -1,3 +1,4 @@
+# MVP (2nd Deliverable)
 ## Índice
 
 1. [Descripción general del producto](#1-descripción-general-del-producto)
@@ -715,3 +716,269 @@ Index of prompts used during the implementation of each ticket. Each file in `/p
 | [TKT-012](docs/tickets/TKT-012-frontend-pantry-add-item-flow.md) | Frontend Pantry Add Item Flow | [prompts-TKT-012.md](prompts/prompts-TKT-012.md) |
 | [TKT-014](docs/tickets/TKT-014-mvp-hardening-schema-receipts-pantry.md) | MVP Hardening: Database Schema, Backend Receipts, and Frontend Pantry | — |
 
+# Extended-MVP (Final Deliverable)
+
+## Index
+
+1. [Descripción general del producto](#1-MVP-extension)
+2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
+3. [Modelo de datos](#3-modelo-de-datos)
+4. [Especificación de la API](#4-especificación-de-la-api)
+5. [Historias de usuario](#5-historias-de-usuario)
+6. [Tickets de trabajo](#6-tickets-de-trabajo)
+7. [Pull requests](#7-pull-requests)
+
+---
+
+## 1. MVP-extension
+
+### Prompt 1: Meta-prompt
+Write a more refined prompt for the following request:
+~~~text
+Give me better prompt for this As an Expert Product Manager considering the current context of the project and the development phase (MVP) completed, review the documentation (/docs/product), the tickets completed (/docs/tickets) to consider the non-MVP remaining functionality that should be included and not yet implemented, to the final project. 
+Output: 
+- Write a new PRD document at the same folder /docs/product/5_Extended-Non-MVP-PRD.md 
+- Update any related documentation to include this new document.
+~~~
+
+### Prompt 2: Restultant prompt execution - Extended-PRD creation
+~~~markdown
+You can make the prompt significantly stronger by forcing the AI to act as a senior PM, perform a gap analysis, avoid duplicating implemented work, prioritize features, and produce a structured PRD with traceability.
+
+# Extended Non-MVP Product Review and PRD Generation
+
+## Role
+
+Act as a Principal Product Manager and Product Strategist with extensive experience delivering SaaS products from MVP to General Availability (GA).
+
+Your objective is to analyze the current state of the project and define the functionality that should be included in the post-MVP product roadmap and final product vision.
+
+---
+
+## Context
+
+The MVP phase has been completed.
+
+You must review and analyze:
+
+* Product documentation: `/docs/product`
+* Completed tickets and implementation history: `/docs/tickets`
+
+Assume that completed tickets represent implemented functionality unless documentation explicitly states otherwise.
+
+---
+
+## Tasks
+
+### 1. Understand the Current Product
+
+Review all product documentation and create a complete understanding of:
+
+* Product vision
+* Business objectives
+* User personas
+* User journeys
+* Existing capabilities
+* MVP scope boundaries
+* Technical constraints
+* Known limitations
+* Future-looking statements already documented
+
+---
+
+### 2. Analyze Implemented Functionality
+
+Review all completed tickets and identify:
+
+* Features already implemented
+* Features partially implemented
+* Technical foundations already prepared for future expansion
+* Features that were deferred during MVP delivery
+* Explicitly out-of-scope MVP items
+
+Create a clear distinction between:
+
+* Implemented
+* Partially Implemented
+* Not Implemented
+
+---
+
+### 3. Perform Gap Analysis
+
+Compare:
+
+* Original product vision
+* Current implementation state
+* User needs
+* Competitive expectations
+* Typical SaaS maturity requirements
+
+Identify all functionality that should exist in the final product but is currently absent.
+
+For each identified gap:
+
+* Describe the feature
+* Explain the business value
+* Explain the user value
+* Describe dependencies
+* Identify risks
+* Estimate implementation complexity:
+
+  * Low
+  * Medium
+  * High
+
+---
+
+### 4. Prioritize Non-MVP Features
+
+Classify proposed functionality into:
+
+#### P1 - Essential for GA Release
+
+Features required before the product can be considered production-ready.
+
+#### P2 - High-Value Enhancements
+
+Features that significantly improve adoption, retention, scalability, or operational efficiency.
+
+#### P3 - Strategic Future Capabilities
+
+Features that align with the long-term product vision but are not required for near-term release.
+
+For every feature include:
+
+* Problem Statement
+* User Story
+* Business Value
+* Acceptance Criteria
+* Dependencies
+* Priority
+* Effort Estimate
+
+---
+
+### 5. Generate Extended PRD
+
+Create a new document:
+
+`/docs/product/5_Extended-Non-MVP-PRD.md`
+
+The document must contain:
+
+# Extended Non-MVP Product Requirements Document
+
+## Executive Summary
+
+## Current State Assessment
+
+## MVP Coverage Summary
+
+## Identified Functional Gaps
+
+## Recommended Features
+
+### P1 Features
+
+...
+
+### P2 Features
+
+...
+
+### P3 Features
+
+...
+
+## Cross-Cutting Concerns
+
+Include recommendations for:
+
+* Security
+* Compliance
+* Observability
+* Monitoring
+* Analytics
+* Performance
+* Scalability
+* Accessibility
+* Internationalization
+* Documentation
+* Support Operations
+
+## Release Strategy
+
+Recommend a phased implementation plan including:
+
+* Phase 1 (GA Readiness)
+* Phase 2 (Growth)
+* Phase 3 (Strategic Expansion)
+
+## Success Metrics
+
+Define measurable KPIs and success criteria for each phase.
+
+---
+
+### 6. Update Documentation
+
+Review all documentation under `/docs/product`.
+
+Update any relevant files to:
+
+* Reference the new PRD
+* Maintain navigation consistency
+* Update indexes, README files, and roadmap references
+* Preserve existing formatting and conventions
+
+---
+
+## Constraints
+
+* Do not duplicate already implemented functionality.
+* Do not propose features already completed unless significant gaps remain.
+* Base recommendations on documented evidence.
+* Explicitly state assumptions where information is missing.
+* Preserve consistency with the existing product vision and architecture.
+* Prefer actionable, implementation-ready requirements over generic recommendations.
+
+---
+
+## Deliverables
+
+1. New file:
+
+   * `/docs/product/5_Extended-Non-MVP-PRD.md`
+
+2. Updated related documentation files referencing the new PRD.
+
+3. Summary report including:
+
+   * Features analyzed
+   * Features already implemented
+   * Newly proposed features
+   * Priority rationale
+   * Documentation changes performed
+~~~
+
+## Prompt 3: Considerations after manual review
+~~~text
+After reviewing the resultant extended MVP document I have some considerations:
+
+#### P1-002: CI/CD deployment pipeline should be built at the end of the project (we may find new infrastructure to be built during the implementation of all tickets)
+Same for: #### P1-003: Production infrastructure (staging + production environments)
+and #### P1-004: Application observability (structured logging + metrics)
+
+for #### P2-001: Recipe suggestions based on current pantry -> is there any free service that we can use? if not we can discard it.
+Same for: #### P2-002: Barcode scan for item entry
+
+for #### P2-003: Automatic expiry learning from user overrides we won't consider any AI (RAG) infrastructure, would be pure data-drive algorith.
+
+for #### P2-004: Live price comparison via supermarket integrations would we have an easy way to integrate at least with few of them?, consider (Mercadona, Carrefour, Lidl, Aldi, Dia)
+
+I don't want to include this in the extended MVP: #### P2-006: Household multi-role permissions (viewer / editor / owner) -> Discard and remove it
+
+All from "### P3 — Strategic Future Capabilities
+" Will be out of scope for the extended MPV, add it to another documents for future implementations.
+~~~

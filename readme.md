@@ -95,6 +95,12 @@ The main MVP user stories, written with product best practices (clear persona-go
 
 Covered scope includes identity, pantry management, receipt OCR flow, expiration intelligence, notifications, price comparison, sharing, waste tracking, and use-next prioritization.
 
+Post-MVP feature roadmap, gap analysis, and extended requirements are documented in:
+
+- [Extended Non-MVP PRD](docs/product/5_Extended-Non-MVP-PRD.md)
+
+Future feature roadmap, not in the scope for the extended MVP are documented in:
+- [Future functionalities](docs/product/6_Future-Capabilities.md)
 ---
 
 ## 6. Development Tickets
