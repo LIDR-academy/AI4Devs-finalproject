@@ -2,9 +2,9 @@
 
 Fecha de referencia: 2026-06-03.
 
-Este documento propone dos estrategias de infraestructura para RunMarket, alineadas con la arquitectura definida en `docs/ARCHITECTURE.md`: frontend SSR desacoplado con Next.js 14, backend REST independiente con Express y base de datos PostgreSQL gestionada mediante Prisma.
+Este documento propone tres estrategias de infraestructura para RunMarket, alineadas con la arquitectura definida en `docs/ARCHITECTURE.md`: frontend SSR desacoplado con Next.js 14, backend REST independiente con Express y base de datos PostgreSQL gestionada mediante Prisma.
 
-La propuesta distingue entre una infraestructura minima para la entrega academica del MVP y una infraestructura profesional evolutiva. El objetivo es evitar sobreingenieria en el corto plazo, pero mantener un camino claro hacia una plataforma operable en produccion.
+La propuesta distingue entre dos infraestructuras posibles para la entrega academica del MVP (una multiproveedor sin servidor y una alternativa monolitica en una unica instancia EC2 dockerizada) y una infraestructura profesional evolutiva. El objetivo es evitar sobreingenieria en el corto plazo, mantener un camino claro hacia una plataforma operable en produccion y, en la opcion EC2, permitir aplicar de forma practica los conocimientos de Docker, Linux y CI/CD trabajados en la sesion de infraestructura del master.
 
 > Nota sobre costes: los importes son orientativos y deben revisarse antes del despliegue final. Los proveedores modifican periodicamente sus planes gratuitos, limites de uso y precios. Las referencias consultadas son las paginas oficiales de Vercel, Render, Supabase, Fly.io y AWS.
 
@@ -19,7 +19,9 @@ Para la entrega academica del MVP se recomienda desplegar:
 - **PostgreSQL en Supabase Free**.
 - **CI/CD automatico desde GitHub** con despliegues por push.
 
-Esta combinacion permite publicar RunMarket con coste 0 EUR/mes, mantiene la separacion frontend/backend definida en la arquitectura, no requiere administrar servidores y es suficientemente estable para una evaluacion academica. La principal limitacion es que el backend gratuito de Render puede entrar en reposo tras inactividad, generando una primera peticion lenta.
+Esta combinacion permite publicar RunMarket con coste 0 EUR/mes, mantiene la separacion frontend/backend definida en la arquitectura, no requiere administrar servidores y es suficientemente estable para una evaluacion academica. La principal limitacion es que el backend gratuito de Render puede entrar en reposo tras inactividad, generando una primera peticion lenta. Una limitacion adicional, mas conceptual que tecnica, es que reparte la aplicacion entre tres proveedores distintos (Vercel, Render, Supabase) para un proyecto de un unico desarrollador, lo que aporta poco aprendizaje de infraestructura mas alla de "conectar servicios administrados".
+
+Como alternativa academica que exige y demuestra mas conocimiento de infraestructura, se propone una **segunda opcion: desplegar todo el stack (frontend, backend y PostgreSQL) dockerizado en una unica instancia AWS EC2**, con un pipeline de GitHub Actions que construye las imagenes y despliega por SSH. Esta opcion concentra todo en un solo proveedor (AWS), tiene coste 0 EUR/mes durante el Free Tier de 12 meses y permite practicar Docker, gestion de un servidor Linux, reverse proxy/TLS y CI/CD de despliegue, contenidos directamente relacionados con la sesion de infraestructura del master. A cambio, exige mas trabajo operativo manual y concentra todo el stack en un unico punto de fallo.
 
 Para una evolucion profesional se recomienda avanzar hacia:
 
@@ -36,21 +38,22 @@ No se recomienda Kubernetes ni microservicios para el MVP ni para los primeros c
 
 ## 2. Tabla comparativa
 
-| Dimension | Opcion 1 - MVP academico | Opcion 2 - Infraestructura profesional |
-|---|---|---|
-| Objetivo | Entrega del Trabajo Final y demo evaluable | Produccion real con crecimiento progresivo |
-| Coste estimado | 0 EUR/mes, maximo 10 EUR/mes si se evita cold start | Desde 80-250 EUR/mes iniciales; escala segun uso |
-| Frontend | Vercel Hobby | Vercel Pro o plataforma cloud con CDN |
-| Backend | Render Free Web Service | AWS ECS Fargate, Render Pro o Fly.io |
-| Base de datos | Supabase Free o Neon Free | AWS RDS PostgreSQL / Aurora PostgreSQL |
-| CDN | Incluido en Vercel | Vercel CDN + CloudFront opcional |
-| CI/CD | GitHub + despliegues automaticos | GitHub Actions con pipelines por entorno |
-| Observabilidad | Logs basicos de proveedor | Sentry, CloudWatch, OpenTelemetry, alertas |
-| Backups | Limitados por free tier | Backups automaticos, PITR y politicas de retencion |
-| Seguridad | HTTPS, variables de entorno, CORS, rate limit | IAM, Secrets Manager, WAF, VPC, gestion de roles |
-| Escalado | Manual y limitado | Horizontal en API, vertical/horizontal en DB, cache |
-| Complejidad operativa | Muy baja | Media, asumible para produccion |
-| Riesgo principal | Cold starts y limites de free tier | Coste y mayor disciplina operativa |
+| Dimension | Opcion 1 - MVP academico (multiproveedor) | Opcion 2 - EC2 monolitico dockerizado (academica) | Opcion 3 - Infraestructura profesional |
+|---|---|---|---|
+| Objetivo | Entrega del Trabajo Final y demo evaluable con minimo esfuerzo | Entrega del Trabajo Final aplicando Docker/Linux/CI-CD del master | Produccion real con crecimiento progresivo |
+| Coste estimado | 0 EUR/mes, maximo 10 EUR/mes si se evita cold start | 0 EUR/mes durante Free Tier (12 meses); despues ~7-12 EUR/mes | Desde 80-250 EUR/mes iniciales; escala segun uso |
+| Proveedores implicados | 3 (Vercel, Render, Supabase) | 1 (AWS) | 1-2 segun componente |
+| Frontend | Vercel Hobby | Contenedor Next.js en la EC2, detras de Nginx | Vercel Pro o plataforma cloud con CDN |
+| Backend | Render Free Web Service | Contenedor Express en la misma EC2 | AWS ECS Fargate, Render Pro o Fly.io |
+| Base de datos | Supabase Free o Neon Free | Contenedor PostgreSQL en la misma EC2 (volumen EBS) | AWS RDS PostgreSQL / Aurora PostgreSQL |
+| CDN | Incluido en Vercel | No incluido (podria anadirse CloudFront) | Vercel CDN + CloudFront opcional |
+| CI/CD | GitHub + despliegues automaticos por proveedor | GitHub Actions: build de imagenes + deploy por SSH | GitHub Actions con pipelines por entorno |
+| Observabilidad | Logs basicos de proveedor | Logs de Docker/journald, sin panel dedicado | Sentry, CloudWatch, OpenTelemetry, alertas |
+| Backups | Limitados por free tier | Manuales (snapshot EBS o `pg_dump` programado) | Backups automaticos, PITR y politicas de retencion |
+| Seguridad | HTTPS, variables de entorno, CORS, rate limit | Security Groups, clave SSH, Nginx + TLS, mismas reglas de la app | IAM, Secrets Manager, WAF, VPC, gestion de roles |
+| Escalado | Manual y limitado | Solo vertical (un unico host) | Horizontal en API, vertical/horizontal en DB, cache |
+| Complejidad operativa | Muy baja | Media (gestion de servidor Linux y Docker) | Media, asumible para produccion |
+| Riesgo principal | Cold starts y limites de free tier | Punto unico de fallo; mantenimiento manual del host | Coste y mayor disciplina operativa |
 
 ---
 
@@ -219,9 +222,132 @@ Controles minimos:
 
 ---
 
-## 4. Opcion 2: infraestructura profesional futura
+## 4. Opcion 2: instancia EC2 unica dockerizada (alternativa academica)
 
 ### 4.1 Recomendacion concreta
+
+Esta opcion es una alternativa a la Opcion 1 para la entrega academica, pensada para quien quiera aplicar de forma practica los contenidos de la sesion de infraestructura del master (Docker, gestion de un servidor Linux, reverse proxy y CI/CD de despliegue) en lugar de delegar todo en plataformas PaaS administradas.
+
+| Componente | Proveedor/herramienta recomendado | Coste estimado |
+|---|---|---|
+| Compute | AWS EC2 `t3.micro` (Free Tier, 12 meses) | 0 EUR/mes durante el Free Tier; ~7-12 EUR/mes despues |
+| Orquestacion | Docker + Docker Compose (frontend, backend y PostgreSQL como servicios) | Incluido |
+| Reverse proxy / TLS | Nginx + Certbot (Let's Encrypt) | 0 EUR/mes |
+| Almacenamiento | Volumen EBS (datos de PostgreSQL) | Incluido en Free Tier hasta 30 GB |
+| Dominio | Subdominio gratuito (por ejemplo DuckDNS) o dominio propio de bajo coste | 0 EUR/mes o coste del dominio |
+| CI/CD | GitHub Actions: build de imagenes + deploy por SSH | 0 EUR/mes |
+
+Coste total estimado: **0 EUR/mes durante el primer ano (Free Tier)**, y aproximadamente **7-12 EUR/mes** despues, segun region y si la instancia permanece encendida 24/7.
+
+Todo el stack (frontend, backend y base de datos) corre dockerizado dentro de una unica instancia EC2, a diferencia de la Opcion 1, que reparte cada capa en un proveedor distinto.
+
+### 4.2 Diagrama de infraestructura
+
+```mermaid
+flowchart TB
+    U["Profesor / Evaluador"] -->|"HTTPS"| NGINX["Nginx + Certbot\nReverse proxy / TLS"]
+
+    subgraph EC2["AWS EC2 t3.micro (Free Tier)\nDocker Compose"]
+        NGINX --> FE["Contenedor frontend\nNext.js 14 SSR"]
+        NGINX -->|"/api"| API["Contenedor backend\nExpress API Node.js 20"]
+        API -->|"Prisma DATABASE_URL"| DB[("Contenedor PostgreSQL\nVolumen EBS")]
+    end
+
+    GH["GitHub Repository\nmonorepo npm workspaces"] -->|"build imagenes"| GHA["GitHub Actions\nbuild + push a GHCR"]
+    GHA -->|"SSH deploy\ndocker compose pull && up -d"| EC2
+    API -->|"prisma migrate deploy\nprisma db seed"| DB
+```
+
+### 4.3 Componentes por capa
+
+#### Frontend y backend
+
+Tanto el frontend Next.js como el backend Express se empaquetan como imagenes Docker independientes a partir de Dockerfiles propios por workspace (`frontend/Dockerfile`, `backend/Dockerfile`), orquestadas con un `docker-compose.yml` en la raiz del repositorio.
+
+Configuracion recomendada:
+
+- Servicio `frontend`: imagen Next.js en modo `standalone`, expuesto solo a la red interna de Docker.
+- Servicio `backend`: imagen Express, expuesto solo a la red interna de Docker.
+- Servicio `nginx`: unico punto de entrada publico, hace de proxy inverso hacia `frontend` (`/`) y `backend` (`/api`), y termina TLS con certificados de Certbot.
+- Variable `NEXT_PUBLIC_API_URL` apuntando al dominio publico servido por Nginx (mismo origen, evita problemas de CORS).
+
+#### Base de datos
+
+PostgreSQL corre como un tercer contenedor (`postgres:16`) con un volumen Docker respaldado por el EBS de la instancia, en lugar de un servicio gestionado externo. Esto mantiene los tres componentes en el mismo host y proveedor, a cambio de asumir backups manuales.
+
+Configuracion recomendada:
+
+- Volumen Docker persistente para `/var/lib/postgresql/data`.
+- `DATABASE_URL` apuntando al nombre del servicio Docker (`postgres://...@postgres:5432/runmarket`), nunca expuesto fuera de la red interna de Compose.
+- Snapshot periodico del volumen EBS o `pg_dump` programado via `cron` como backup minimo.
+- Ejecutar tras cada deploy:
+  - `npx prisma migrate deploy`
+  - `npx prisma db seed` (solo en el primer despliegue)
+
+#### CI/CD
+
+Pipeline recomendado con GitHub Actions:
+
+1. Instalar dependencias del monorepo y ejecutar lint/typecheck/tests.
+2. Construir las imagenes Docker de `frontend` y `backend`.
+3. Publicar las imagenes en GitHub Container Registry (`ghcr.io`).
+4. Conectarse por SSH a la instancia EC2 (clave privada en GitHub Secrets).
+5. Ejecutar `docker compose pull && docker compose up -d`.
+6. Ejecutar `npx prisma migrate deploy` dentro del contenedor backend.
+
+Secretos necesarios en GitHub Actions: `EC2_HOST`, `EC2_SSH_PRIVATE_KEY`, `EC2_USER`, y las variables de entorno de la aplicacion (`DATABASE_URL`, `CORS_ORIGIN`, etc.) almacenadas en un `.env` en la instancia, nunca en el repositorio.
+
+#### Observabilidad
+
+Observabilidad minima:
+
+- Logs de cada contenedor via `docker compose logs` o `journald`.
+- `docker stats` para CPU/memoria puntual.
+- Sin paneles dedicados ni alertas automaticas en esta fase.
+
+#### Seguridad
+
+Controles minimos:
+
+- Security Group de la instancia restringido a los puertos 22 (SSH, idealmente solo desde la IP de despliegue), 80 y 443.
+- Clave SSH dedicada para el deploy, guardada unicamente en GitHub Secrets y rotable.
+- HTTPS gestionado por Nginx + Certbot, renovacion automatica del certificado.
+- Variables de entorno en un `.env` local a la instancia, fuera del control de versiones.
+- PostgreSQL no expuesto fuera de la red interna de Docker.
+- Mismas reglas de aplicacion que en la Opcion 1: CORS restringido, rate limiting en Express, sin datos personales reales en el seed.
+
+### 4.4 Pros
+
+- Un unico proveedor (AWS) para todo el stack, en lugar de tres servicios distintos.
+- Permite aplicar y demostrar de forma directa los contenidos de la sesion de infraestructura del master: Docker, Docker Compose, gestion de un servidor Linux, reverse proxy/TLS y CI/CD de despliegue por SSH.
+- Sin cold starts: los contenedores estan siempre activos, a diferencia del backend gratuito de Render.
+- Coste controlable y predecible, con Free Tier real durante el primer ano.
+- Sirve de puente conceptual hacia la Opcion 3 profesional: los mismos conceptos de contenedores y CI/CD se reutilizan al migrar a ECS Fargate.
+
+### 4.5 Contras
+
+- Mayor responsabilidad operativa que las PaaS: parches del sistema operativo, actualizaciones de Docker y reinicios son manuales.
+- Punto unico de fallo: si la instancia cae, frontend, backend y base de datos caen a la vez.
+- Backups de PostgreSQL manuales, sin automatizacion equivalente a Supabase o RDS.
+- Escalado solo vertical; escalar horizontalmente exige migrar a la Opcion 3.
+- Gestionar una clave SSH en GitHub Actions anade superficie de riesgo si no se rota o restringe correctamente.
+
+### 4.6 Riesgos tecnicos
+
+| Riesgo | Impacto | Mitigacion |
+|---|---|---|
+| Caida de la instancia unica | Frontend, backend y base de datos caidos simultaneamente | Snapshot EBS periodico y alarma basica de CloudWatch sobre el estado de la instancia |
+| Fin del Free Tier | La instancia empieza a facturar | Aceptar el coste (~7-12 EUR/mes) o detener la instancia tras la evaluacion |
+| Clave SSH expuesta o mal restringida | Acceso no autorizado al servidor | Clave dedicada solo para deploy, guardada en GitHub Secrets, Security Group restringido a la IP de despliegue cuando sea posible |
+| Disco lleno (logs, imagenes Docker antiguas) | Caida del servicio | `docker system prune` programado y volumen EBS con margen |
+| Migraciones Prisma fallidas en el deploy | API inconsistente con el esquema | Ejecutar `prisma migrate deploy` como paso explicito y bloqueante del pipeline antes de levantar el contenedor backend |
+| Certificado TLS no renovado | HTTPS roto | Verificar la renovacion automatica de Certbot tras el primer despliegue |
+
+---
+
+## 5. Opcion 3: infraestructura profesional futura
+
+### 5.1 Recomendacion concreta
 
 Para una primera version profesional con cientos o miles de usuarios, se recomienda:
 
@@ -240,7 +366,7 @@ Coste inicial orientativo: **80-250 EUR/mes**, dependiendo de tamano de RDS, num
 
 > **Nota sobre la eleccion de AWS:** La recomendacion de AWS como plataforma cloud para la infraestructura profesional responde a dos factores que conviene hacer explicitos. El primero es tecnico: los servicios gestionados de AWS (ECS Fargate, RDS, ElastiCache, Secrets Manager, CloudWatch) son maduros, estan ampliamente documentados y tienen una integracion nativa entre si que simplifica la operacion a largo plazo. El segundo es una decision personal basada en experiencia de uso amplia con la plataforma: operar infraestructura en solitario sobre una plataforma conocida reduce el riesgo operativo de forma significativa respecto a aprender una nueva. Alternativas equivalentes como **GCP Cloud Run + Cloud SQL** o **Azure Container Apps + Azure Database for PostgreSQL** cubririan los mismos requisitos funcionales con modelos de pricing comparables; la eleccion de AWS sobre ellas no es de superioridad tecnica sino de familiaridad y reduccion de friccion operativa.
 
-### 4.2 Diagrama de infraestructura profesional
+### 5.2 Diagrama de infraestructura profesional
 
 ```mermaid
 flowchart TB
@@ -269,7 +395,7 @@ flowchart TB
     SM --> API2
 ```
 
-### 4.3 Componentes por capa
+### 5.3 Componentes por capa
 
 #### Frontend
 
@@ -381,7 +507,7 @@ Controles recomendados:
 - Logs sin datos sensibles.
 - Dependabot o herramienta equivalente para dependencias.
 
-### 4.4 Coste estimado mensual
+### 5.4 Coste estimado mensual
 
 | Fase profesional | Coste orientativo | Comentario |
 |---|---:|---|
@@ -392,7 +518,7 @@ Controles recomendados:
 
 Estos costes no incluyen equipo humano, soporte enterprise, dominios, impuestos ni herramientas premium de analitica/producto.
 
-### 4.5 Pros
+### 5.5 Pros
 
 - Escala sin reescribir la aplicacion.
 - Mantiene la arquitectura por contenedores: frontend, API y base de datos.
@@ -401,7 +527,7 @@ Estos costes no incluyen equipo humano, soporte enterprise, dominios, impuestos 
 - Mejora seguridad, backups y observabilidad.
 - Facilita evolucion gradual hacia colas, cache y servicios especializados.
 
-### 4.6 Contras
+### 5.6 Contras
 
 - Mayor coste mensual.
 - Mayor complejidad de configuracion.
@@ -411,7 +537,7 @@ Estos costes no incluyen equipo humano, soporte enterprise, dominios, impuestos 
 
 ---
 
-## 5. Cuando introducir componentes avanzados
+## 6. Cuando introducir componentes avanzados
 
 | Componente | Introducir cuando | No introducir aun si |
 |---|---|---|
@@ -425,7 +551,7 @@ Estos costes no incluyen equipo humano, soporte enterprise, dominios, impuestos 
 
 ---
 
-## 6. Camino evolutivo por fases
+## 7. Camino evolutivo por fases
 
 ### Fase 1 - MVP academico
 
@@ -438,6 +564,8 @@ Infraestructura recomendada:
 - Logs basicos.
 
 Objetivo: que los profesores puedan consultar la aplicacion y validar la arquitectura funcional.
+
+**Alternativa de Fase 1 (Opcion 2 - EC2):** sustituir los tres servicios anteriores por una unica instancia EC2 con Docker Compose (frontend, backend y PostgreSQL) y GitHub Actions desplegando por SSH. Mismo objetivo de fase, pero con mas aprendizaje de infraestructura y mas trabajo operativo manual.
 
 ### Fase 2 - Primeros usuarios reales
 
@@ -491,7 +619,7 @@ Objetivo: escalar organizacion, trafico y resiliencia, no solo infraestructura.
 
 ---
 
-## 7. Recomendacion final para el Trabajo Final
+## 8. Recomendacion final para el Trabajo Final
 
 Para la entrega academica, la mejor opcion es:
 
@@ -509,9 +637,11 @@ La decision de alojar PostgreSQL en Supabase mientras el backend se aloja en Ren
 
 La unica mejora de pago que merece considerarse antes de la entrega es contratar un backend basico sin reposo si se quiere una demo mas fluida. Si no, basta con despertar la API antes de la presentacion.
 
+**Alternativa valida:** si el objetivo de la entrega incluye demostrar conocimientos de infraestructura del master (Docker, Linux, CI/CD), la Opcion 2 (instancia EC2 unica dockerizada, ver seccion 4) es preferible a esta combinacion de tres proveedores. Tiene el mismo coste 0 EUR/mes durante el Free Tier y un unico proveedor, a cambio de mas trabajo de configuracion y mantenimiento manual del servidor.
+
 ---
 
-## 8. Recomendacion final para evolucion profesional
+## 9. Recomendacion final para evolucion profesional
 
 Para produccion real, RunMarket deberia evolucionar gradualmente hacia:
 
@@ -533,7 +663,9 @@ Kubernetes, microservicios y multi-region deben tratarse como decisiones de esca
 
 ---
 
-## 9. Checklist para desplegar la opcion basica
+## 10. Checklist para desplegar la opcion basica
+
+> Este checklist cubre la Opcion 1 (multiproveedor). Para la Opcion 2 (EC2 dockerizada), ver la seccion [10.1 Checklist alternativo: Opcion 2 - EC2 dockerizada](#101-checklist-alternativo-opcion-2---ec2-dockerizada) al final de este apartado.
 
 ### Preparacion del repositorio
 
@@ -625,9 +757,49 @@ NEXT_PUBLIC_API_URL=https://<backend>.onrender.com
 - Revisar logs de Vercel y Render.
 - Despertar la API antes de compartir la URL con profesores.
 
+### 10.1 Checklist alternativo: Opcion 2 - EC2 dockerizada
+
+#### Preparacion del repositorio
+
+- Crear `Dockerfile` para `frontend` y para `backend`.
+- Crear `docker-compose.yml` en la raiz con servicios `nginx`, `frontend`, `backend` y `postgres`.
+- Verificar que el `docker-compose.yml` no expone el puerto de `postgres` fuera de la red interna.
+- Crear configuracion de Nginx como reverse proxy (`/` -> `frontend`, `/api` -> `backend`).
+
+#### Instancia EC2
+
+- Lanzar instancia EC2 `t3.micro` (Free Tier) en una region europea.
+- Crear Security Group abriendo solo los puertos 22, 80 y 443.
+- Asociar una Elastic IP o un dominio (por ejemplo via DuckDNS) a la instancia.
+- Instalar Docker y Docker Compose en la instancia.
+- Generar un par de claves SSH dedicado al despliegue (distinto del acceso administrativo, si es posible).
+
+#### GitHub Actions
+
+- Anadir los secretos `EC2_HOST`, `EC2_USER` y `EC2_SSH_PRIVATE_KEY` en GitHub.
+- Configurar el workflow para:
+  - Construir las imagenes de `frontend` y `backend`.
+  - Publicarlas en GitHub Container Registry (`ghcr.io`).
+  - Conectarse por SSH y ejecutar `docker compose pull && docker compose up -d`.
+  - Ejecutar `npx prisma migrate deploy` dentro del contenedor backend.
+
+#### Base de datos y TLS
+
+- Verificar que el volumen de PostgreSQL persiste entre despliegues.
+- Ejecutar `npx prisma db seed` en el primer despliegue.
+- Configurar Certbot para emitir y renovar el certificado TLS del dominio.
+
+#### Validacion final
+
+- Abrir la URL publica servida por Nginx sobre HTTPS.
+- Verificar que el catalogo carga datos reales desde el contenedor de PostgreSQL.
+- Realizar un flujo completo: catalogo -> ficha -> carrito -> checkout -> confirmacion.
+- Revisar logs de los contenedores (`docker compose logs`).
+- Confirmar que un nuevo push a `main` dispara el pipeline y actualiza los contenedores en la instancia.
+
 ---
 
-## 10. Fuentes consultadas
+## 11. Fuentes consultadas
 
 - Vercel Pricing: https://vercel.com/pricing
 - Render Pricing: https://render.com/pricing
@@ -637,3 +809,8 @@ NEXT_PUBLIC_API_URL=https://<backend>.onrender.com
 - Fly.io Pricing: https://fly.io/docs/about/pricing/
 - AWS Fargate Pricing: https://aws.amazon.com/fargate/pricing/
 - Amazon RDS for PostgreSQL Pricing: https://aws.amazon.com/rds/postgresql/pricing/
+- Amazon EC2 Pricing: https://aws.amazon.com/ec2/pricing/on-demand/
+- AWS Free Tier: https://aws.amazon.com/free/
+- Docker Compose documentation: https://docs.docker.com/compose/
+- GitHub Actions documentation: https://docs.github.com/en/actions
+- Certbot (Let's Encrypt): https://certbot.eff.org/
