@@ -97,6 +97,7 @@ model PantryItem {
   storageLocation String   @default("Pantry")
   pricePaid       Decimal? @db.Decimal(10, 2)
   expirationDate  DateTime?
+  notes           String?
   lastExpirationAlertAt DateTime?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -117,16 +118,19 @@ enum ConsumptionEventType {
 }
 
 model ConsumptionEvent {
-  id                String               @id @default(uuid())
-  pantryItemId      String?
-  userId            String
-  type              ConsumptionEventType
-  quantity          Int
-  itemName          String?
-  itemUnit          String?
-  estimatedValueEur Decimal?             @db.Decimal(10, 2)
-  occurredAt        DateTime             @default(now())
-  createdAt         DateTime             @default(now())
+  id                  String               @id @default(uuid())
+  pantryItemId        String?
+  userId              String
+  type                ConsumptionEventType
+  quantity            Int
+  itemName            String?
+  itemUnit            String?
+  itemExpirationDate  DateTime?
+  itemPricePaid       Decimal?             @db.Decimal(10, 2)
+  itemNotes           String?
+  estimatedValueEur   Decimal?             @db.Decimal(10, 2)
+  occurredAt          DateTime             @default(now())
+  createdAt           DateTime             @default(now())
 
   pantryItem PantryItem? @relation(fields: [pantryItemId], references: [id], onDelete: SetNull)
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)

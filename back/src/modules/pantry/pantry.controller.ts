@@ -52,4 +52,9 @@ export class PantryController {
   ) {
     return this.pantryService.registerEvent(req.user.id, itemId, body);
   }
+
+  @Post("events/:eventId/re-add")
+  reAddEvent(@Request() req: RequestWithUser, @Param("eventId") eventId: string) {
+    return this.pantryService.reAddEvent(req.user.id, eventId);
+  }
 }

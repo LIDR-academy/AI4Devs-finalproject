@@ -104,6 +104,59 @@ describe("AwsTextractReceiptOcrService — extractLineItems", () => {
     expect(lines[0].rawName).toBe("Milk");
   });
 
+  it("parses decimal quantities like '1.5 l'", async () => {
+    const svc = makeService();
+    const send = getClientSendMock(svc);
+    send.mockResolvedValue(
+      makeLineItemResponse([{ name: "Orange Juice", price: "1.99", quantity: "1.5 l" }]),
+    );
+
+    const lines = await svc.extractLines(makeParams());
+
+    expect(lines[0].quantity).toBe(1.5);
+    expect(lines[0].unit).toBe("l");
+  });
+
+  it("parses decimal quantities with comma separator like '0,5 kg'", async () => {
+    const svc = makeService();
+    const send = getClientSendMock(svc);
+    send.mockResolvedValue(
+      makeLineItemResponse([{ name: "Cheese", price: "3.20", quantity: "0,5 kg" }]),
+    );
+
+    const lines = await svc.extractLines(makeParams());
+
+    expect(lines[0].quantity).toBe(0.5);
+    expect(lines[0].unit).toBe("kg");
+  });
+
+  it("routes TOTAL_PRICE field to lineTotalEur, not unitPriceEur", async () => {
+    const svc = makeService();
+    const send = getClientSendMock(svc);
+    send.mockResolvedValue({
+      ExpenseDocuments: [
+        {
+          LineItemGroups: [
+            {
+              LineItems: [
+                {
+                  LineItemExpenseFields: [
+                    { Type: { Text: "ITEM" }, ValueDetection: { Text: "Bread" } },
+                    { Type: { Text: "TOTAL_PRICE" }, ValueDetection: { Text: "2.50" } },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    const lines = await svc.extractLines(makeParams());
+    expect(lines[0].lineTotalEur).toBe(2.5);
+    expect(lines[0].unitPriceEur).toBeUndefined();
+  });
+
   it("ignores line items with no name field", async () => {
     const svc = makeService();
     const send = getClientSendMock(svc);

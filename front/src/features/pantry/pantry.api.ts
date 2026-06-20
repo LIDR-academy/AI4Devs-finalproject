@@ -20,6 +20,7 @@ export interface PantryApiItem {
   storageLocation: string;
   pricePaid: string | null;
   expirationDate: string | null;
+  notes: string | null;
   createdAt: string;
 }
 
@@ -28,6 +29,7 @@ export interface UpdatePantryItemPayload {
   unit?: string;
   storageLocation?: string;
   pricePaid?: number;
+  notes?: string;
 }
 
 export type PantryEventType = "CONSUMED" | "WASTED";
@@ -39,6 +41,7 @@ export interface CreatePantryItemPayload {
   storageLocation?: string;
   expirationDate?: string;
   pricePaid?: number;
+  notes?: string;
 }
 
 export interface ExpirationEstimateResponse {
@@ -178,6 +181,9 @@ export interface ConsumptionEventRecord {
   quantity: number;
   itemName: string | null;
   itemUnit: string | null;
+  itemExpirationDate: string | null;
+  itemPricePaid: string | null;
+  itemNotes: string | null;
   estimatedValueEur: string | null;
   occurredAt: string;
 }
@@ -188,6 +194,17 @@ export function listConsumptionEvents(
   const query = type ? `?type=${type}` : "";
   return requestJson<ConsumptionEventRecord[]>(`/pantry/items/events${query}`, {
     method: "GET",
+  });
+}
+
+/**
+ * Re-adds a consumed/wasted item back into the pantry from its history event.
+ * The backend recreates the pantry item and deletes the event atomically, so the
+ * event will no longer appear in the consumed/wasted list afterwards.
+ */
+export function reAddConsumptionEvent(eventId: string): Promise<PantryApiItem> {
+  return requestJson<PantryApiItem>(`/pantry/items/events/${eventId}/re-add`, {
+    method: "POST",
   });
 }
 

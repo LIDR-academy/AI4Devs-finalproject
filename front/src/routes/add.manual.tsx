@@ -137,6 +137,7 @@ export function ManualEntryPage() {
         ...(values.pricePaid !== undefined && {
           pricePaid: Number(values.pricePaid.toFixed(2)),
         }),
+        ...(notes.trim() !== "" && { notes: notes.trim() }),
       });
 
       // Persist emoji by item id and by name (name fallback is used when re-adding consumed/wasted items).

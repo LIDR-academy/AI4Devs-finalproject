@@ -77,6 +77,7 @@ export class PantryService {
         storageLocation: dto.storageLocation ?? "Pantry",
         expirationDate: dto.expirationDate ? new Date(dto.expirationDate) : null,
         ...(dto.pricePaid !== undefined && { pricePaid: dto.pricePaid }),
+        ...(dto.notes !== undefined && { notes: dto.notes }),
       },
     });
   }
@@ -126,6 +127,7 @@ export class PantryService {
         ...(dto.unit !== undefined && { unit: dto.unit.trim() }),
         ...(dto.storageLocation !== undefined && { storageLocation: dto.storageLocation }),
         ...(dto.pricePaid !== undefined && { pricePaid: dto.pricePaid }),
+        ...(dto.notes !== undefined && { notes: dto.notes }),
       },
     });
   }
@@ -170,6 +172,9 @@ export class PantryService {
           quantity,
           itemName: item.name,
           itemUnit: item.unit,
+          ...(item.expirationDate && { itemExpirationDate: item.expirationDate }),
+          ...(item.pricePaid !== null && { itemPricePaid: item.pricePaid }),
+          ...(item.notes && { itemNotes: item.notes }),
           ...(estimatedValueEur !== null && { estimatedValueEur }),
         },
         select: { id: true },
@@ -178,6 +183,37 @@ export class PantryService {
     ]);
 
     return event;
+  }
+
+  /**
+   * Re-adds a previously consumed/wasted item back into the pantry, restoring the
+   * fields captured on the event. The originating consumption event is deleted in
+   * the same transaction so the item cannot be re-added again from history.
+   */
+  async reAddEvent(userId: string, eventId: string): Promise<PantryItem> {
+    await this.assertUserCanAccessPantry(userId);
+
+    const event = await this.prisma.consumptionEvent.findUnique({ where: { id: eventId } });
+    if (!event || event.userId !== userId) {
+      throw new NotFoundException("Consumption event not found");
+    }
+
+    const [item] = await this.prisma.$transaction([
+      this.prisma.pantryItem.create({
+        data: {
+          userId,
+          name: event.itemName ?? "Unknown item",
+          quantity: event.quantity,
+          unit: event.itemUnit ?? "unit",
+          ...(event.itemExpirationDate && { expirationDate: event.itemExpirationDate }),
+          ...(event.itemPricePaid !== null && { pricePaid: event.itemPricePaid }),
+          ...(event.itemNotes && { notes: event.itemNotes }),
+        },
+      }),
+      this.prisma.consumptionEvent.delete({ where: { id: eventId } }),
+    ]);
+
+    return item;
   }
 
   async getUseNext(userId: string): Promise<UseNextResponse> {
@@ -236,6 +272,9 @@ export class PantryService {
         quantity: true,
         itemName: true,
         itemUnit: true,
+        itemExpirationDate: true,
+        itemPricePaid: true,
+        itemNotes: true,
         estimatedValueEur: true,
         occurredAt: true,
       },

@@ -7,7 +7,6 @@ import {
   IsString,
   MaxLength,
   Min,
-  MinLength,
 } from "class-validator";
 import { PANTRY_UNITS, STORAGE_LOCATIONS } from "./create-pantry-item.dto";
 
@@ -33,4 +32,9 @@ export class UpdatePantryItemDto {
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   pricePaid?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  notes?: string;
 }
