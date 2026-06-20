@@ -210,6 +210,11 @@ runmarket/
 ├── CLAUDE.md
 ├── readme.md
 ├── package.json                  ← npm workspaces
+├── tests/
+│   └── setup.test.ts             ← smoke tests de scaffolding (US-000): valida schema.prisma,
+│                                    tsconfig/eslint de frontend y backend, docker-compose.yml,
+│                                    .env.example y los workspaces de package.json — no prueba
+│                                    funcionalidad de la app, solo que el repo está bien montado
 ├── docs/
 │   ├── ARCHITECTURE.md           ← este documento
 │   ├── PRD.md                    ← documentación de producto
