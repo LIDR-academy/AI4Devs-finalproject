@@ -130,8 +130,27 @@ A;ade a @6-tickets-de-trabajo.md
 
 ### 7. Pull Requests
 
-**Prompt 1:**
+Rol: DevOps Engineer con experiencia en Git workflows y proyectos mobile full-stack.
 
-**Prompt 2:**
+Objetivo: Documenta 3 Pull Requests representativas del proyecto Lexio.
 
-**Prompt 3:**
+Contexto del proyecto:
+- Monorepo con backend/ (Node.js + Express + TypeScript + Firebase Admin) y mobile/ (React Native + Expo SDK 56 + expo-router)
+- Rama de desarrollo: feature-entrega2-jfvg → main
+- Flujo E2E implementado: Captura de vocabulario → Sesión diaria con IA → Racha
+
+Define para cada PR:
+- Título y rama de origen/destino
+- Descripción de los cambios incluidos
+- Archivos modificados más relevantes
+- Tipo de cambio (feature / bugfix / docs)
+- Checklist de testing y calidad (TypeScript sin errores, flujo E2E verificado, reglas Firestore desplegadas)
+- Problemas encontrados y cómo se resolvieron
+
+Las 3 PRs deben cubrir:
+1. Entrega 1: documentación y planificación (feature-entrega1-jfvg → main)
+2. Entrega 2: implementación completa backend + mobile MVP (feature-entrega2-jfvg → main)
+3. Hotfix: corrección del modelo Claude deprecado y despliegue de índices Firestore faltantes
+
+Incluye también un template estándar de PR reutilizable para el proyecto.
+Documenta en @7-pull-requests.md

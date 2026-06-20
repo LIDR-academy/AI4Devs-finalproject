@@ -1,0 +1,85 @@
+{
+  "common": {
+    "ok": "Aceptar",
+    "cancel": "Cancelar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "somethingWentWrong": "Algo salió mal. Inténtalo de nuevo.",
+    "save": "Guardar",
+    "delete": "Eliminar"
+  },
+  "auth": {
+    "loginTitle": "Bienvenido de nuevo",
+    "registerTitle": "Crear cuenta",
+    "emailLabel": "Correo electrónico",
+    "passwordLabel": "Contraseña",
+    "loginButton": "Iniciar Sesión",
+    "registerButton": "Registrarse",
+    "noAccount": "¿No tienes una cuenta?",
+    "alreadyAccount": "¿Ya tienes una cuenta?",
+    "logoutButton": "Cerrar Sesión",
+    "loginError": "Correo o contraseña incorrectos",
+    "registerError": "No se pudo crear la cuenta. Inténtalo de nuevo."
+  },
+  "addWord": {
+    "title": "Añadir Palabra",
+    "termLabel": "Palabra o frase",
+    "termPlaceholder": "ej. \"serendipity\"",
+    "langLabel": "Idioma de la definición",
+    "langEs": "Español",
+    "langEn": "Inglés",
+    "generateButton": "Generar Definición",
+    "definitionLabel": "Definición (editable)",
+    "chooseImageLabel": "Elegir una imagen",
+    "saveButton": "Guardar Tarjeta",
+    "errorEmpty": "Por favor introduce una palabra o frase",
+    "errorDuplicate": "Ya tienes una tarjeta para \"{{term}}\"",
+    "errorMinWords": "Necesitas al menos 4 palabras para practicar. Añade más primero.",
+    "generating": "Generando..."
+  },
+  "home": {
+    "greeting": "¡Hola!",
+    "streak": "🔥 Racha de {{count}} días",
+    "noStreak": "¡Empieza tu racha hoy!",
+    "practiceButton": "Iniciar Práctica",
+    "practiceCompleted": "Práctica completada hoy ✓",
+    "addWordButton": "Añadir Palabra",
+    "needMoreWords": "Añade al menos {{min}} palabras para practicar",
+    "wordCount": "{{count}} palabras en tu diccionario"
+  },
+  "dictionary": {
+    "title": "Mi Diccionario",
+    "empty": "Aún no tienes palabras. ¡Añade la primera!",
+    "tabActive": "Activas",
+    "tabLearned": "Aprendidas"
+  },
+  "cardDetail": {
+    "title": "Detalle de la Palabra",
+    "markLearned": "Marcar como Aprendida",
+    "markActive": "Marcar como Activa",
+    "editDefinition": "Editar definición...",
+    "changeImage": "Cambiar Imagen",
+    "saveChanges": "Guardar Cambios"
+  },
+  "practice": {
+    "title": "Práctica Diaria",
+    "progress": "{{current}} / {{total}}",
+    "imageQuestion": "¿Qué palabra corresponde a esta imagen?",
+    "nextButton": "Siguiente",
+    "submitButton": "Finalizar"
+  },
+  "results": {
+    "title": "¡Sesión Completada!",
+    "score": "{{correct}} / {{total}} correctas",
+    "perfect": "¡Puntuación perfecta! 🎉",
+    "streakMessage": "🔥 ¡Racha de {{count}} días!",
+    "backHome": "Volver al Inicio",
+    "viewDictionary": "Ver Diccionario"
+  },
+  "settings": {
+    "title": "Configuración",
+    "languageLabel": "Idioma de la App",
+    "langEs": "Español",
+    "langEn": "English"
+  }
+}
