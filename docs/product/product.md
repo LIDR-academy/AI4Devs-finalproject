@@ -123,6 +123,23 @@ Secondary / later segments:
 See the detailed wireframes and screenshots in the design folder: [Design and UX](./../design/readme.md).
 
 
+## **1.5. Post-MVP Product Roadmap**
+
+The extended product roadmap covering all non-MVP features, gap analysis, and phased release plan is documented in:
+
+- [5_Extended-Non-MVP-PRD.md](./5_Extended-Non-MVP-PRD.md)
+
+Strategic capabilities that are out of scope even for the extended MVP (native app, ML prediction, supermarket QR, cross-user benchmarking) are documented in:
+
+- [6_Future-Capabilities.md](./6_Future-Capabilities.md)
+
+Key phases:
+- **Phase 1 (GA Readiness):** real notification delivery, CI/CD pipeline, production infrastructure, observability. Infrastructure work is done last, after all feature tickets.
+- **Phase 2 (Growth):** recipe suggestions (TheMealDB free API), barcode scan (Open Food Facts + @zxing/browser), expiry learning (data-driven algorithm), live Mercadona price comparison, gamification, consumption automation.
+- **Future:** native mobile app, ML-based expiration prediction, supermarket QR partnerships, cross-user benchmarking — documented in [6_Future-Capabilities.md](./6_Future-Capabilities.md) (out of scope for Extended MVP).
+
+---
+
 ## **1.4. Installation instructions:**
 
 To run the frontend application locally (folder `front`):
