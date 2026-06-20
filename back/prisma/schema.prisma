@@ -1,0 +1,236 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum HouseholdMemberRole {
+  OWNER
+  MEMBER
+}
+
+enum HouseholdMemberStatus {
+  ACTIVE
+  LEFT
+  REMOVED
+}
+
+enum HouseholdInvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
+}
+
+model Household {
+  id              String               @id @default(uuid())
+  name            String
+  createdByUserId String
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  createdBy   User                  @relation("HouseholdCreatedBy", fields: [createdByUserId], references: [id])
+  members     HouseholdMember[]
+  invitations HouseholdInvitation[]
+
+  @@index([createdByUserId])
+}
+
+model HouseholdMember {
+  id          String                @id @default(uuid())
+  householdId String
+  userId      String
+  role        HouseholdMemberRole
+  status      HouseholdMemberStatus @default(ACTIVE)
+  joinedAt    DateTime              @default(now())
+  leftAt      DateTime?
+
+  household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([householdId, userId])
+  @@index([userId])
+  @@index([householdId])
+}
+
+model HouseholdInvitation {
+  id              String                    @id @default(uuid())
+  householdId     String
+  invitedByUserId String
+  inviteeEmail    String
+  status          HouseholdInvitationStatus @default(PENDING)
+  expiresAt       DateTime
+  respondedAt     DateTime?
+  createdAt       DateTime                  @default(now())
+
+  household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  invitedBy User      @relation("HouseholdInvitationInvitedBy", fields: [invitedByUserId], references: [id])
+
+  @@index([householdId, status])
+  @@index([inviteeEmail, status])
+}
+
+model User {
+  id         String      @id @default(uuid())
+  email      String      @unique
+  password   String
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  pantryItems PantryItem[]
+  consumptionEvents ConsumptionEvent[]
+  receipts   Receipt[]
+  confirmedExpirationAssessments ExpirationAssessment[]
+  notificationPreference NotificationPreference?
+  householdsCreated    Household[]          @relation("HouseholdCreatedBy")
+  householdMemberships HouseholdMember[]
+  sentInvitations      HouseholdInvitation[] @relation("HouseholdInvitationInvitedBy")
+}
+
+model PantryItem {
+  id              String   @id @default(uuid())
+  name            String
+  quantity        Int      @default(1)
+  unit            String   @default("unit")
+  storageLocation String   @default("Pantry")
+  pricePaid       Decimal? @db.Decimal(10, 2)
+  expirationDate  DateTime?
+  notes           String?
+  lastExpirationAlertAt DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  userId          String
+  consumptionEvents ConsumptionEvent[]
+  receiptItems   ReceiptItem[]
+  expirationAssessment ExpirationAssessment?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expirationDate])
+  @@index([userId, lastExpirationAlertAt])
+}
+
+enum ConsumptionEventType {
+  CONSUMED
+  WASTED
+}
+
+model ConsumptionEvent {
+  id                  String               @id @default(uuid())
+  pantryItemId        String?
+  userId              String
+  type                ConsumptionEventType
+  quantity            Int
+  itemName            String?
+  itemUnit            String?
+  itemExpirationDate  DateTime?
+  itemPricePaid       Decimal?             @db.Decimal(10, 2)
+  itemNotes           String?
+  estimatedValueEur   Decimal?             @db.Decimal(10, 2)
+  occurredAt          DateTime             @default(now())
+  createdAt           DateTime             @default(now())
+
+  pantryItem PantryItem? @relation(fields: [pantryItemId], references: [id], onDelete: SetNull)
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, occurredAt])
+  @@index([userId, type])
+}
+
+model NotificationPreference {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  expirationEnabled Boolean  @default(true)
+  priceDropEnabled  Boolean  @default(true)
+  foodConsumedByOthersEnabled Boolean @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum ExpirationMethod {
+  RULE_BASED_SPAIN
+  MANUAL_OVERRIDE
+}
+
+model ExpirationAssessment {
+  id                      String           @id @default(uuid())
+  pantryItemId            String           @unique
+  suggestedExpirationDate DateTime
+  confidence              Decimal          @db.Decimal(3, 2)
+  method                  ExpirationMethod
+  userConfirmed           Boolean          @default(false)
+  confirmedByUserId       String?
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+  pantryItem              PantryItem       @relation(fields: [pantryItemId], references: [id], onDelete: Cascade)
+  confirmedByUser         User?            @relation(fields: [confirmedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([confirmedByUserId])
+}
+
+enum ReceiptProcessingStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model Receipt {
+  id               String                  @id @default(uuid())
+  originalFilename String
+  mimeType         String
+  sizeBytes        Int
+  storageBucket    String
+  storageKey       String
+  ocrStatus        ReceiptProcessingStatus @default(PROCESSING)
+  ocrError         String?
+  processedAt      DateTime?
+  confirmedAt      DateTime?
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  userId           String
+  householdId      String?
+  items            ReceiptItem[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([householdId, createdAt])
+  @@index([ocrStatus])
+}
+
+model ReceiptItem {
+  id             String     @id @default(uuid())
+  rawName        String
+  normalizedName String     @default("")
+  quantity       Int?
+  unit           String?
+  unitPriceEur   Decimal?   @db.Decimal(10, 2)
+  lineTotalEur   Decimal?   @db.Decimal(10, 2)
+  userConfirmed  Boolean    @default(false)
+  createdAt      DateTime   @default(now())
+  receiptId      String
+  pantryItemId   String?
+  receipt        Receipt    @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  pantryItem     PantryItem? @relation(fields: [pantryItemId], references: [id], onDelete: SetNull)
+
+  @@index([receiptId])
+  @@index([pantryItemId])
+}
+
+model PriceCatalogItem {
+  id                String   @id @default(uuid())
+  normalizedName    String
+  category          String?
+  sourceLabel       String?
+  referencePriceEur Decimal  @db.Decimal(10, 2)
+  currencyCode      String   @default("EUR")
+  effectiveDate     DateTime @db.Date
+  createdAt         DateTime @default(now())
+
+  @@index([normalizedName, effectiveDate])
+}

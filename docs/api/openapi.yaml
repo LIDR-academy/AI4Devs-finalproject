@@ -1,0 +1,972 @@
+openapi: 3.0.3
+info:
+  title: RealSaveFooding API
+  version: 0.1.0
+paths:
+  /api/auth/register:
+    post:
+      summary: Register a new user account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthCredentialsRequest'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Validation error
+        '409':
+          description: Email already in use
+
+  /api/auth/login:
+    post:
+      summary: Authenticate a user and return a JWT session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthCredentialsRequest'
+      responses:
+        '201':
+          description: User authenticated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Validation error
+        '401':
+          description: Invalid credentials
+
+  /api/auth/me:
+    get:
+      summary: Retrieve current authenticated user session
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current session user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionUser'
+        '401':
+          description: Missing or invalid token
+
+  /api/settings/notifications:
+    get:
+      summary: Retrieve notification preference settings for authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Notification preferences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPreferences'
+        '401':
+          description: Missing or invalid token
+    patch:
+      summary: Update notification preference settings for authenticated user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateNotificationPreferencesRequest'
+      responses:
+        '200':
+          description: Notification preferences updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPreferences'
+        '400':
+          description: Validation error
+        '401':
+          description: Missing or invalid token
+
+  /api/notifications/evaluate-expiring:
+    post:
+      summary: Trigger expiring-threshold evaluation job for current state
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Evaluation metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationEvaluationMetrics'
+        '401':
+          description: Missing or invalid token
+
+  /api/notifications/events:
+    get:
+      summary: List emitted notification events for authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Notification event list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationEventList'
+        '401':
+          description: Missing or invalid token
+
+  /api/insights/price-comparison:
+    get:
+      summary: Compare pantry item name against internal MVP reference prices
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: normalizedName
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Comparison result for matched or unmatched reference data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PriceComparisonResponse'
+        '400':
+          description: Validation error
+        '401':
+          description: Missing or invalid token
+
+  /api/dashboard/summary:
+    get:
+      summary: Retrieve dashboard summary counters for authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dashboard summary counters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardSummary'
+        '401':
+          description: Missing or invalid token
+
+  /api/dashboard/use-next:
+    get:
+      summary: Retrieve prioritized active pantry items to use next
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Prioritized pantry items
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardUseNextResponse'
+        '401':
+          description: Missing or invalid token
+
+  /api/pantry/items:
+    post:
+      summary: Create a manual pantry item for the authenticated user
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePantryItemRequest'
+      responses:
+        '201':
+          description: Pantry item created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PantryItem'
+        '400':
+          description: Validation error
+        '401':
+          description: Missing or invalid token
+        '403':
+          description: No pantry access for current user
+
+  /api/pantry/items/{id}/estimate-expiration:
+    post:
+      summary: Generate expiration estimate and confidence for a pantry item
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '201':
+          description: Expiration estimate generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpirationEstimate'
+        '401':
+          description: Missing or invalid token
+        '403':
+          description: No access to pantry item
+        '404':
+          description: Pantry item not found
+
+  /api/pantry/items/{id}/expiration:
+    patch:
+      summary: Override pantry item expiration date with manual confirmation
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OverrideExpirationRequest'
+      responses:
+        '200':
+          description: Expiration date overridden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OverrideExpirationResponse'
+        '400':
+          description: Validation error
+        '401':
+          description: Missing or invalid token
+        '403':
+          description: No access to pantry item
+        '404':
+          description: Pantry item not found
+
+  /api/pantry/items/{id}/events:
+    post:
+      summary: Register a consume or waste event for a pantry item
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterConsumptionEventRequest'
+      responses:
+        '201':
+          description: Consumption event registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterConsumptionEventResponse'
+        '400':
+          description: Validation error
+        '401':
+          description: Missing or invalid token
+        '404':
+          description: Pantry item not found
+
+  /api/receipts/upload:
+    post:
+      summary: Upload and process a receipt with OCR
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Receipt uploaded and processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Receipt'
+        '400':
+          description: Invalid file type or size
+        '401':
+          description: Missing or invalid token
+        '502':
+          description: OCR provider failure
+        '503':
+          description: OCR provider timeout or temporary unavailability
+
+  /api/receipts/{id}:
+    get:
+      summary: Retrieve receipt details and extracted line items
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Receipt details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Receipt'
+        '401':
+          description: Missing or invalid token
+        '404':
+          description: Receipt not found
+
+  /api/receipts/{id}/status:
+    get:
+      summary: Poll OCR processing status for a receipt
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Receipt OCR status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceiptStatus'
+        '401':
+          description: Missing or invalid token
+        '404':
+          description: Receipt not found
+
+  /api/receipts/{id}/confirm-items:
+    post:
+      summary: Confirm extracted receipt items and optionally add them to pantry
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmReceiptItemsRequest'
+      responses:
+        '201':
+          description: Confirmed receipt details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Receipt'
+        '400':
+          description: Validation error or receipt not ready for confirmation
+        '401':
+          description: Missing or invalid token
+        '404':
+          description: Receipt not found
+
+    get:
+      summary: List pantry items for the authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Pantry item list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PantryItem'
+        '401':
+          description: Missing or invalid token
+        '403':
+          description: No pantry access for current user
+
+  /api/health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: API is healthy
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    AuthCredentialsRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          minLength: 8
+          example: password123
+
+    SessionUser:
+      type: object
+      required:
+        - id
+        - email
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        createdAt:
+          type: string
+          format: date-time
+
+    AuthResponse:
+      type: object
+      required:
+        - accessToken
+        - user
+      properties:
+        accessToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        user:
+          $ref: '#/components/schemas/SessionUser'
+
+    CreatePantryItemRequest:
+      type: object
+      required:
+        - name
+        - quantity
+        - unit
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+          example: Greek Yogurt
+        quantity:
+          type: integer
+          minimum: 1
+          example: 2
+        unit:
+          type: string
+          enum: [unit, g, kg, ml, l, pack]
+          example: unit
+        expirationDate:
+          type: string
+          format: date-time
+          nullable: true
+          example: 2026-12-30T00:00:00.000Z
+
+    PantryItem:
+      type: object
+      required:
+        - id
+        - userId
+        - name
+        - quantity
+        - unit
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        quantity:
+          type: integer
+        unit:
+          type: string
+        expirationDate:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ReceiptItem:
+      type: object
+      required:
+        - id
+        - rawName
+        - userConfirmed
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        rawName:
+          type: string
+        quantity:
+          type: integer
+          nullable: true
+        unit:
+          type: string
+          nullable: true
+        userConfirmed:
+          type: boolean
+        pantryItemId:
+          type: string
+          format: uuid
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    Receipt:
+      type: object
+      required:
+        - id
+        - userId
+        - originalFilename
+        - mimeType
+        - sizeBytes
+        - storageBucket
+        - storageKey
+        - ocrStatus
+        - createdAt
+        - updatedAt
+        - items
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        originalFilename:
+          type: string
+        mimeType:
+          type: string
+        sizeBytes:
+          type: integer
+        storageBucket:
+          type: string
+        storageKey:
+          type: string
+        ocrStatus:
+          type: string
+          enum: [PROCESSING, COMPLETED, FAILED]
+        ocrError:
+          type: string
+          nullable: true
+        processedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReceiptItem'
+
+    ReceiptStatus:
+      type: object
+      required:
+        - id
+        - ocrStatus
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        ocrStatus:
+          type: string
+          enum: [PROCESSING, COMPLETED, FAILED]
+        ocrError:
+          type: string
+          nullable: true
+        processedAt:
+          type: string
+          format: date-time
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+
+    ConfirmReceiptItemsRequest:
+      type: object
+      required:
+        - itemIds
+      properties:
+        itemIds:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            format: uuid
+        addToPantry:
+          type: boolean
+          default: false
+
+    ExpirationEstimate:
+      type: object
+      required:
+        - pantryItemId
+        - itemName
+        - suggestedExpirationDate
+        - confidence
+        - method
+        - lowConfidence
+        - category
+      properties:
+        pantryItemId:
+          type: string
+          format: uuid
+        itemName:
+          type: string
+        suggestedExpirationDate:
+          type: string
+          format: date-time
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        method:
+          type: string
+          enum: [RULE_BASED_SPAIN, MANUAL_OVERRIDE]
+        lowConfidence:
+          type: boolean
+        category:
+          type: string
+
+    OverrideExpirationRequest:
+      type: object
+      required:
+        - expirationDate
+      properties:
+        expirationDate:
+          type: string
+          format: date-time
+
+    OverrideExpirationResponse:
+      type: object
+      required:
+        - pantryItemId
+        - expirationDate
+        - assessment
+      properties:
+        pantryItemId:
+          type: string
+          format: uuid
+        expirationDate:
+          type: string
+          format: date-time
+        assessment:
+          type: object
+          required:
+            - suggestedExpirationDate
+            - confidence
+            - method
+            - userConfirmed
+          properties:
+            suggestedExpirationDate:
+              type: string
+              format: date-time
+            confidence:
+              type: number
+              format: float
+            method:
+              type: string
+              enum: [RULE_BASED_SPAIN, MANUAL_OVERRIDE]
+            userConfirmed:
+              type: boolean
+
+    NotificationPreferences:
+      type: object
+      required:
+        - expirationEnabled
+        - priceDropEnabled
+        - foodConsumedByOthersEnabled
+      properties:
+        expirationEnabled:
+          type: boolean
+        priceDropEnabled:
+          type: boolean
+        foodConsumedByOthersEnabled:
+          type: boolean
+
+    UpdateNotificationPreferencesRequest:
+      type: object
+      required:
+        - expirationEnabled
+        - priceDropEnabled
+        - foodConsumedByOthersEnabled
+      properties:
+        expirationEnabled:
+          type: boolean
+        priceDropEnabled:
+          type: boolean
+        foodConsumedByOthersEnabled:
+          type: boolean
+
+    PriceComparisonReference:
+      type: object
+      required:
+        - normalizedName
+        - referencePriceEur
+        - currencyCode
+        - effectiveDate
+      properties:
+        normalizedName:
+          type: string
+        category:
+          type: string
+          nullable: true
+        sourceLabel:
+          type: string
+          nullable: true
+        referencePriceEur:
+          type: string
+        currencyCode:
+          type: string
+        effectiveDate:
+          type: string
+          format: date-time
+
+    PriceComparisonReceiptContext:
+      type: object
+      required:
+        - latestUnitPriceEur
+        - latestObservedAt
+      properties:
+        latestUnitPriceEur:
+          type: string
+          nullable: true
+        latestObservedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    PriceComparisonResponse:
+      type: object
+      required:
+        - normalizedName
+        - found
+        - reference
+        - receiptContext
+        - unavailableReason
+      properties:
+        normalizedName:
+          type: string
+        found:
+          type: boolean
+        reference:
+          allOf:
+            - $ref: '#/components/schemas/PriceComparisonReference'
+          nullable: true
+        receiptContext:
+          $ref: '#/components/schemas/PriceComparisonReceiptContext'
+        unavailableReason:
+          type: string
+          enum: [NO_REFERENCE_DATA]
+          nullable: true
+
+    DashboardSummary:
+      type: object
+      required:
+        - activeItems
+        - expiringSoonItems
+        - generatedAt
+      properties:
+        activeItems:
+          type: integer
+        expiringSoonItems:
+          type: integer
+        generatedAt:
+          type: string
+          format: date-time
+
+    DashboardUseNextItem:
+      type: object
+      required:
+        - pantryItemId
+        - name
+        - quantity
+        - unit
+        - daysUntilExpiration
+        - riskLevel
+      properties:
+        pantryItemId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        quantity:
+          type: integer
+        unit:
+          type: string
+        pricePaid:
+          type: string
+          nullable: true
+        expirationDate:
+          type: string
+          format: date-time
+          nullable: true
+        daysUntilExpiration:
+          type: integer
+          nullable: true
+        riskLevel:
+          type: string
+          enum: [HIGH, MEDIUM, LOW]
+
+    DashboardUseNextResponse:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DashboardUseNextItem'
+
+    RegisterConsumptionEventRequest:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [CONSUMED, WASTED]
+        quantity:
+          type: integer
+          minimum: 1
+          nullable: true
+
+    RegisterConsumptionEventResponse:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          format: uuid
+
+    NotificationEvaluationMetrics:
+      type: object
+      required:
+        - scanned
+        - generated
+        - suppressedByPreference
+        - suppressedByDuplicate
+        - errors
+      properties:
+        scanned:
+          type: integer
+        generated:
+          type: integer
+        suppressedByPreference:
+          type: integer
+        suppressedByDuplicate:
+          type: integer
+        errors:
+          type: integer
+
+    NotificationEvent:
+      type: object
+      required:
+        - type
+        - userId
+        - pantryItemId
+        - itemName
+        - expirationDate
+        - daysUntilExpiration
+        - emittedAt
+      properties:
+        type:
+          type: string
+          enum: [EXPIRING_SOON]
+        userId:
+          type: string
+          format: uuid
+        pantryItemId:
+          type: string
+          format: uuid
+        itemName:
+          type: string
+        expirationDate:
+          type: string
+          format: date-time
+        daysUntilExpiration:
+          type: integer
+        emittedAt:
+          type: string
+          format: date-time
+
+    NotificationEventList:
+      type: object
+      required:
+        - events
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationEvent'
