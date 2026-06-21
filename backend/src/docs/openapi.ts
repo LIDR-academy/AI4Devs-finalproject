@@ -18,13 +18,13 @@ const ProductSchema = registry.register(
   'Product',
   z
     .object({
-      id: z.string().openapi({ example: 'clx1z2a3b4c5d6e7f8g9h0' }),
-      name: z.string().openapi({ example: 'Nike Pegasus 41' }),
+      id: z.string().openapi({ example: 'prod-001' }),
+      name: z.string().openapi({ example: 'Nike Air Zoom Pegasus 41' }),
       brand: z.string().openapi({ example: 'Nike' }),
       price: z.number().openapi({ example: 129.99 }),
-      image: z.string().openapi({ example: '/images/pegasus-41.jpg' }),
-      category: z.string().openapi({ example: 'zapatillas' }),
-      subcategory: z.string().openapi({ example: 'neutras' }),
+      image: z.string().openapi({ example: 'products/nike-pegasus-41.jpg' }),
+      category: z.string().openapi({ example: 'shoes' }),
+      subcategory: z.string().openapi({ example: 'road running' }),
       description: z.string().openapi({ example: 'Zapatilla de running versátil para asfalto.' }),
       features: z.array(z.string()).openapi({ example: ['Amortiguación React', 'Upper transpirable'] }),
       distance: z.array(z.enum(['5K', '10K', 'half-marathon', 'marathon', 'ultra'])),
@@ -32,7 +32,7 @@ const ProductSchema = registry.register(
       level: z.array(z.enum(['beginner', 'intermediate', 'advanced'])),
       objective: z.array(z.enum(['training', 'competition', 'recovery', 'daily'])),
       sizes: z.array(z.string()).openapi({ example: ['38', '39', '40', '41', '42'] }),
-      colors: z.array(z.string()).openapi({ example: ['negro', 'blanco'] }),
+      colors: z.array(z.string()).openapi({ example: ['black', 'white'] }),
       stock: z.number().int().openapi({ example: 25 }),
     })
     .openapi('Product'),
@@ -44,10 +44,10 @@ const AddToCartInputSchema = registry.register(
   'AddToCartInput',
   z
     .object({
-      productId: z.string().min(1).openapi({ example: 'clx1z2a3b4c5d6e7f8g9h0' }),
+      productId: z.string().min(1).openapi({ example: 'prod-001' }),
       quantity: z.number().int().min(1).openapi({ example: 2 }),
       size: z.string().optional().openapi({ example: '42' }),
-      color: z.string().optional().openapi({ example: 'negro' }),
+      color: z.string().optional().openapi({ example: 'black' }),
     })
     .openapi('AddToCartInput'),
 );
@@ -56,15 +56,15 @@ const CartItemResponseSchema = registry.register(
   'CartItemResponse',
   z
     .object({
-      productId: z.string().openapi({ example: 'clx1z2a3b4c5d6e7f8g9h0' }),
-      productName: z.string().openapi({ example: 'Nike Pegasus 41' }),
+      productId: z.string().openapi({ example: 'prod-001' }),
+      productName: z.string().openapi({ example: 'Nike Air Zoom Pegasus 41' }),
       productBrand: z.string().openapi({ example: 'Nike' }),
       productPrice: z.number().openapi({ example: 129.99 }),
-      image: z.string().openapi({ example: '/images/pegasus-41.jpg' }),
+      image: z.string().openapi({ example: 'products/nike-pegasus-41.jpg' }),
       stock: z.number().int().openapi({ example: 10, description: 'Stock disponible del producto (límite del stepper)' }),
       quantity: z.number().int().openapi({ example: 2 }),
       size: z.string().optional().openapi({ example: '42' }),
-      color: z.string().optional().openapi({ example: 'negro' }),
+      color: z.string().optional().openapi({ example: 'black' }),
     })
     .openapi('CartItemResponse'),
 );
@@ -75,7 +75,7 @@ const UpdateCartItemInputSchema = registry.register(
     .object({
       quantity: z.number().int().min(1).openapi({ example: 3 }),
       size: z.string().optional().openapi({ example: '42' }),
-      color: z.string().optional().openapi({ example: 'negro' }),
+      color: z.string().optional().openapi({ example: 'black' }),
     })
     .openapi('UpdateCartItemInput'),
 );
@@ -116,15 +116,15 @@ const OrderItemResponseSchema = registry.register(
   'OrderItemResponse',
   z
     .object({
-      productId: z.string().openapi({ example: 'clx1z2a3b4c5d6e7f8g9h0' }),
-      productName: z.string().openapi({ example: 'Nike Pegasus 41' }),
+      productId: z.string().openapi({ example: 'prod-001' }),
+      productName: z.string().openapi({ example: 'Nike Air Zoom Pegasus 41' }),
       productBrand: z.string().openapi({ example: 'Nike' }),
       productPrice: z
         .number()
         .openapi({ example: 129.99, description: 'Precio leído del producto en BD en el momento del checkout, nunca del cliente' }),
       quantity: z.number().int().openapi({ example: 2 }),
       size: z.string().optional().openapi({ example: '42' }),
-      color: z.string().optional().openapi({ example: 'negro' }),
+      color: z.string().optional().openapi({ example: 'black' }),
     })
     .openapi('OrderItemResponse'),
 );
@@ -155,14 +155,14 @@ const OrderListItemResponseSchema = registry.register(
   'OrderListItemResponse',
   z
     .object({
-      productId: z.string().openapi({ example: 'clx1z2a3b4c5d6e7f8g9h0' }),
-      productName: z.string().openapi({ example: 'Nike Pegasus 41' }),
+      productId: z.string().openapi({ example: 'prod-001' }),
+      productName: z.string().openapi({ example: 'Nike Air Zoom Pegasus 41' }),
       productBrand: z.string().openapi({ example: 'Nike' }),
       productPrice: z.number().openapi({ example: 129.99 }),
       quantity: z.number().int().openapi({ example: 2 }),
       size: z.string().optional().openapi({ example: '42' }),
-      color: z.string().optional().openapi({ example: 'negro' }),
-      image: z.string().openapi({ example: '/images/pegasus-41.jpg' }),
+      color: z.string().optional().openapi({ example: 'black' }),
+      image: z.string().openapi({ example: 'products/nike-pegasus-41.jpg' }),
     })
     .openapi('OrderListItemResponse'),
 );
@@ -272,7 +272,7 @@ registry.registerPath({
   summary: 'Detalle de un producto',
   request: {
     params: z.object({
-      id: z.string().min(1).max(200).openapi({ example: 'clx1z2a3b4c5d6e7f8g9h0' }),
+      id: z.string().min(1).max(200).openapi({ example: 'prod-001' }),
     }),
   },
   responses: {
@@ -356,7 +356,7 @@ registry.registerPath({
   summary: 'Actualizar la cantidad de un ítem del carrito',
   request: {
     params: z.object({
-      productId: z.string().min(1).openapi({ example: 'clx1z2a3b4c5d6e7f8g9h0' }),
+      productId: z.string().min(1).openapi({ example: 'prod-001' }),
     }),
     body: {
       content: { 'application/json': { schema: UpdateCartItemInputSchema } },
@@ -400,11 +400,11 @@ registry.registerPath({
   summary: 'Eliminar un ítem del carrito',
   request: {
     params: z.object({
-      productId: z.string().min(1).openapi({ example: 'clx1z2a3b4c5d6e7f8g9h0' }),
+      productId: z.string().min(1).openapi({ example: 'prod-001' }),
     }),
     query: z.object({
       size: z.string().optional().openapi({ example: '42', description: 'Talla del ítem a eliminar' }),
-      color: z.string().optional().openapi({ example: 'negro', description: 'Color del ítem a eliminar' }),
+      color: z.string().optional().openapi({ example: 'black', description: 'Color del ítem a eliminar' }),
     }),
   },
   responses: {

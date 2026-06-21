@@ -499,7 +499,7 @@ A continuación se describen los 3 endpoints principales, que cubren el recorrid
 **Ejemplo de petición:**
 
 ```http
-GET /api/products?distance=marathon&surface=road
+GET /api/products?distance=5K&surface=road
 ```
 
 **Ejemplo de respuesta `200 OK`:**
@@ -507,22 +507,22 @@ GET /api/products?distance=marathon&surface=road
 ```json
 [
   {
-    "id": "clx1z2a3b4c5d6e7f8g9h0",
-    "name": "Nike Pegasus 41",
+    "id": "prod-001",
+    "name": "Nike Air Zoom Pegasus 41",
     "brand": "Nike",
     "price": 129.99,
-    "image": "/images/pegasus-41.jpg",
-    "category": "zapatillas",
-    "subcategory": "neutras",
-    "description": "Zapatilla de running versátil para asfalto.",
-    "features": ["Amortiguación React", "Upper transpirable"],
-    "distance": ["marathon", "half-marathon"],
+    "image": "products/nike-pegasus-41.jpg",
+    "category": "shoes",
+    "subcategory": "road running",
+    "description": "Zapatilla versátil para corredores de todos los niveles. Amortiguación React con Zoom Air para mayor respuesta.",
+    "features": ["Amortiguación React", "Zoom Air en el antepié", "Upper de malla transpirable", "Suela de goma duradera"],
+    "distance": ["5K", "10K", "half-marathon"],
     "surface": ["road"],
-    "level": ["intermediate"],
-    "objective": ["training"],
-    "sizes": ["38", "39", "40", "41", "42"],
-    "colors": ["negro", "blanco"],
-    "stock": 25
+    "level": ["beginner", "intermediate"],
+    "objective": ["daily", "training"],
+    "sizes": ["38", "39", "40", "41", "42", "43", "44", "45"],
+    "colors": ["black", "white", "blue"],
+    "stock": 45
   }
 ]
 ```
@@ -563,10 +563,10 @@ GET /api/products?distance=marathon&surface=road
 ```json
 POST /api/cart
 {
-  "productId": "clx1z2a3b4c5d6e7f8g9h0",
+  "productId": "prod-001",
   "quantity": 2,
   "size": "42",
-  "color": "negro"
+  "color": "black"
 }
 ```
 
@@ -577,15 +577,15 @@ POST /api/cart
   "sessionId": "550e8400-e29b-41d4-a716-446655440000",
   "items": [
     {
-      "productId": "clx1z2a3b4c5d6e7f8g9h0",
-      "productName": "Nike Pegasus 41",
+      "productId": "prod-001",
+      "productName": "Nike Air Zoom Pegasus 41",
       "productBrand": "Nike",
       "productPrice": 129.99,
-      "image": "/images/pegasus-41.jpg",
-      "stock": 25,
+      "image": "products/nike-pegasus-41.jpg",
+      "stock": 45,
       "quantity": 2,
       "size": "42",
-      "color": "negro"
+      "color": "black"
     }
   ],
   "subtotal": 259.98,
@@ -661,13 +661,13 @@ POST /api/checkout
   "shippingCountry": "España",
   "items": [
     {
-      "productId": "clx1z2a3b4c5d6e7f8g9h0",
-      "productName": "Nike Pegasus 41",
+      "productId": "prod-001",
+      "productName": "Nike Air Zoom Pegasus 41",
       "productBrand": "Nike",
       "productPrice": 129.99,
       "quantity": 2,
       "size": "42",
-      "color": "negro"
+      "color": "black"
     }
   ]
 }
