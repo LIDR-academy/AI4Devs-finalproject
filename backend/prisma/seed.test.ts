@@ -22,9 +22,9 @@ describeIfDb('US-000-TASK-04: Seed integration tests', () => {
     await prisma.$disconnect();
   });
 
-  it('seed inserts exactly 12 products', async () => {
+  it('seed inserts exactly 13 products', async () => {
     const count = await prisma.product.count();
-    expect(count).toBe(12);
+    expect(count).toBe(13);
   });
 
   it('seed is idempotent — running twice does not duplicate', async () => {
@@ -34,7 +34,7 @@ describeIfDb('US-000-TASK-04: Seed integration tests', () => {
       stdio: 'pipe',
     });
     const count = await prisma.product.count();
-    expect(count).toBe(12);
+    expect(count).toBe(13);
   });
 
   it('seeded products have valid running filter attributes', async () => {
