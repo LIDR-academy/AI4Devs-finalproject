@@ -410,11 +410,27 @@ Lee los ficheros del diseño de Figma mediante el MCP (fileKey: `0wtedXb5138odnA
 
 ## 4. Especificación de la API
 
-**Prompt 1:**
+**Prompt 1: Flujo SDD — `/refine-user-story US-001` + `/implement-user-story US-001`**
 
-**Prompt 2:**
+```
+/refine-user-story US-001
+/implement-user-story US-001
+```
 
-**Prompt 3:**
+El mismo flujo SDD citado en 2.5/2.6 es también el que fija cada contrato de API: la Fase 1 (refinamiento) define el contrato exacto del endpoint antes de implementarlo. US-001 es el primer endpoint REST del proyecto, `GET /api/products`: el refinamiento fija la respuesta (`200 { products: [...], total: N }`) y la decisión explícita de no usar `.strict()` en los query params porque es una lectura pública sin body — ver [`docs/backlog/archive/US-001.md`](docs/backlog/archive/US-001.md), sección "Contrato de la API".
+
+**Prompt 2: Flujo SDD — `/refine-user-story US-007` + `/implement-user-story US-007`**
+
+```
+/refine-user-story US-007
+/implement-user-story US-007
+```
+
+Mismo flujo, ejemplo más completo: el bloque "Contrato de la API" de [`docs/backlog/archive/US-007.md`](docs/backlog/archive/US-007.md) define `POST /api/cart` end-to-end (cookie `sessionId`, body Zod `.strict()`, forma de la respuesta, códigos de error `400/404/409/500`) durante la Fase 1, antes de escribir el primer test. Ese contrato pasó casi literal a la sección 4.2 de este README.
+
+**Prompt 3: Generar la documentación OpenAPI/Swagger**
+
+Genera la especificación OpenAPI de la API REST de RunMarket a partir de los schemas Zod existentes en backend/src/schemas/ (usa zod-to-openapi para que no se pueda desincronizar de la validación real). Cubre todos los endpoints reales de backend/src/routes/, con ejemplos de request/response basados en datos reales de backend/prisma/seed.ts (no inventados). Expón el spec como Swagger UI en /api/docs y JSON en /api/docs.json. 
 
 ---
 

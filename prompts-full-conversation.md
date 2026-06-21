@@ -466,17 +466,19 @@ Actúa como QA Automation Lead. Crea .claude/skills/e2e-playwright/SKILL.md (en 
 
 Cubre: regla black-box (sin mocks de red/BD, sistema real arriba); config con baseURL por env var, un solo navegador, retries solo en CI, artefactos de fallo activados; aislamiento entre specs (datos únicos por ejecución, sin conteos absolutos, sin limpieza de datos); selectores por prioridad (rol/texto → data-testid → añadirlo al componente si falta); prohibido waitForTimeout; solo los escenarios de los criterios de aceptación, nunca inventados; rutas de error solo si son alcanzables vía UI sin canal lateral; confirmar que cada spec falla por el motivo correcto antes de confiarlo en verde; checklist final de "definition of done".
 
+## Prompt 17.2 Crear US Para generar Tests E2E con Playwright
+
 ## Rol
 
 Actúa como **QA Automation Engineer** de RunMarket.
 
-## Contexto
-
-US-014 ("Tests E2E con Playwright") es distinta del resto del backlog: no añade código de producto, solo una suite E2E que ejercita el sistema completo ya construido en US-001 a US-013 (archivadas en `docs/backlog/archive/`). El flujo estándar de `/refine-user-story` y `breakdown-user-story` asume contrato de API/componente, que no aplica aquí.
-
 ## Objetivo
 
 Genera `docs/backlog/US-014.md` ("Tests E2E con Playwright", ver `docs/USER-STORIES.md`). No invoques `/refine-user-story` ni `breakdown-user-story`.
+
+## Contexto
+
+US-014 ("Tests E2E con Playwright") es distinta del resto del backlog: no añade código de producto, solo una suite E2E que ejercita el sistema completo ya construido en US-001 a US-013 (archivadas en `docs/backlog/archive/`). El flujo estándar de `/refine-user-story` y `breakdown-user-story` asume contrato de API/componente, que no aplica aquí.
 
 ## Instrucciones
 
@@ -498,3 +500,8 @@ Genera `docs/backlog/US-014.md` ("Tests E2E con Playwright", ver `docs/USER-STOR
 
 Crea el fichero `docs/backlog/US-014.md` con la estructura descrita. Muestra el fichero al terminar, antes de seguir con `/implement-user-story US-014`.
 
+---
+
+# Prompt 18: Generar la documentación OpenAPI/Swagger
+
+Genera la especificación OpenAPI de la API REST de RunMarket a partir de los schemas Zod existentes en backend/src/schemas/ (usa zod-to-openapi para que no se pueda desincronizar de la validación real). Cubre todos los endpoints reales de backend/src/routes/, con ejemplos de request/response basados en datos reales de backend/prisma/seed.ts (no inventados). Expón el spec como Swagger UI en /api/docs y JSON en /api/docs.json. 
