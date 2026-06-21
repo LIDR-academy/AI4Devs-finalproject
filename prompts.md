@@ -512,8 +512,43 @@ Los 3 tickets de esta sección documentan tareas concretas (`US-000-TASK-03`, `U
 
 ## 7. Pull Requests
 
-**Prompt 1:**
+> Las 3 PRs documentadas en la sección 7 del README usan la misma plantilla de cuerpo (Resumen, Tests, Seguridad, Backlog) — solo cambian la US y el contenido real de cada bullet, para que no haya divergencia de formato entre ellas.
 
-**Prompt 2:**
+**Prompt 1 — PR de `US-000` (scaffolding del monorepo)**
 
-**Prompt 3:**
+```
+Crea la pull request de esta rama hacia feature-entrega2-XVB de la US-000.
+
+Cuerpo conciso (máximo ~40 líneas, nunca pegues el backlog completo):
+- ## Resumen — 3-6 bullets: stack backend, stack frontend, infraestructura
+- ## Tests — una línea por suite con el resultado
+- ## Seguridad — hallazgos OWASP HIGH/CRITICAL corregidos (o "0 hallazgos")
+- ## Backlog — enlace a  US-000.md
+```
+
+**Prompt 2 — PR de `US-001` (catálogo de productos)**
+
+```
+Crea la pull request de esta rama hacia feature-entrega2-XVB de la US-001.
+
+Cuerpo conciso (máximo ~40 líneas, nunca pegues el backlog completo):
+- ## Resumen — 3-6 bullets de qué se construyó (endpoint, componentes clave)
+- ## Criterios de aceptación verificados — checklist de los CA de la US
+- ## Tests — una línea por suite con el resultado (ej. "Backend: 10 tests")
+- ## Seguridad  — hallazgos OWASP HIGH/CRITICAL (o "0 hallazgos")
+- ## Backlog — enlace a US-001.md
+```
+
+**Prompt 3 — PR de `US-007` (añadir al carrito)**
+
+```
+Crea la pull request de esta rama hacia main con `gh pr create`.
+Título: "US-007: Añadir un producto al carrito".
+
+Cuerpo conciso (máximo ~40 líneas, nunca pegues el backlog completo):
+- ## Resumen — 3-6 bullets de qué se construyó (endpoint, componentes clave)
+- ## Criterios de aceptación verificados — checklist de los CA de la US
+- ## Tests — una línea por suite con el resultado (ej. "Backend: 10 tests")
+- ## Seguridad — OWSAP hallazgos HIGH/CRITICAL (o "0 hallazgos")
+- ## Backlog — enlace a US-007.md
+```
