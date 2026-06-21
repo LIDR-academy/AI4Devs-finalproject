@@ -780,12 +780,14 @@ Como corredor, quiero revisar los productos añadidos al carrito y modificar can
 
 ```typescript
 const AddToCartSchema = z.object({
-  productId: z.string().uuid(),
+  productId: z.string().min(1),
   quantity:  z.number().int().min(1),
   size:      z.string().optional(),
   color:     z.string().optional(),
 }).strict();
 ```
+
+> `productId` se validó inicialmente con `.uuid()`; se corrigió post-implementación a `.min(1)` porque los IDs del catálogo siguen el formato `prod-XXX` (`backend/prisma/seed.ts`), no UUIDs.
 
 El `sessionId` se lee de `req.sessionId` (adjuntado por el middleware de sesión de TASK-03, que lo genera con `crypto.randomUUID()` si no existe cookie — nunca con `Math.random()` ni IDs predecibles). El controller delega en `cartService.addItem(sessionId, item)` y mapea sus errores a códigos HTTP: `404` (`NotFoundError`, producto inexistente), `409` (`StockError`, con `available: N`), `500` genérico para el resto (sin stack traces ni detalles de Prisma, vía `error-handler.ts`). Si se generó un `sessionId` nuevo, la respuesta incluye `Set-Cookie`. El endpoint tiene un límite de rate limiting más restrictivo que el catálogo (`express-rate-limit`, regla no negociable de `CLAUDE.md`) y queda documentado en `src/docs/openapi.ts`.
 
