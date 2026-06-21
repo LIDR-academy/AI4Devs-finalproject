@@ -305,7 +305,29 @@ Esta decision evita sobreingenieria para la entrega y mantiene la arquitectura d
 
 ### **2.5. Seguridad**
 
-> Pendiente de documentar.
+Las reglas de seguridad no negociables del proyecto están definidas en [`CLAUDE.md`](CLAUDE.md) y se verifican mediante una revisión OWASP Top 10 obligatoria antes de cerrar cada historia de usuario (`HIGH`/`CRITICAL` bloquean el cierre). Prácticas implementadas:
+
+- **Precio y stock nunca se confían del cliente.** El `price` de cada `OrderItem` se toma siempre del `Product` leído de PostgreSQL en el momento del checkout; cualquier campo `price`/`total` que llegue en el body se ignora. El descuento de stock al confirmar un pedido usa una actualización condicional atómica (`tx.product.updateMany({ where: { stock: { gte: cantidad } }, data: { stock: { decrement: cantidad } } })`) para evitar oversell por condición de carrera entre confirmaciones simultáneas (`backend/src/repositories/order.repository.ts`).
+
+- **Validación estricta en los boundaries de la API.** Todos los schemas Zod expuestos a la red usan `.strict()` (`cart.schema.ts`, `checkout.schema.ts`, `product-filter.schema.ts`): cualquier campo no declarado en el body se rechaza con `400` en lugar de pasar silenciosamente a la capa de negocio.
+
+- **`sessionId` impredecible y gestionado server-side.** Se genera con `crypto.randomUUID()` en `session.middleware.ts` (nunca `Math.random()` ni timestamps) y se transmite al cliente como cookie `HttpOnly; SameSite=Strict; Path=/` (más `Secure` fuera de `NODE_ENV=development`). El frontend nunca lo lee ni lo persiste en `localStorage`.
+
+- **CORS sin wildcard fuera de desarrollo.** `cors.ts` lee el origen permitido de `CORS_ORIGIN`; en producción, si la variable no está definida, el servidor falla al arrancar en lugar de caer de vuelta a un origen abierto.
+
+- **Rate limiting diferenciado por sensibilidad del endpoint.** `express-rate-limit` aplica 100 req/min al catálogo (`generalLimiter`) y 20 req/min a los endpoints de mutación —`POST /api/cart`, `PUT /api/cart/:productId`, `POST /api/checkout`— vía `mutationLimiter`, mitigando abuso y oversell por fuerza bruta.
+
+- **Respuestas de error sin detalles internos.** `error-handler.ts` mapea cada error de dominio (`NotFoundError`, `ValidationError`, `StockError`) a un `{ error: string }` genérico con el código HTTP correspondiente; cualquier excepción no controlada cae en un `500` genérico. El stack trace solo se escribe en el logger del servidor (`console.error`), nunca en el body de la respuesta.
+
+- **Logging sin PII.** El middleware de logging (`logger.ts`, Morgan) usa un formato custom que solo registra método, URL, status y tiempo de respuesta — nunca el body de la petición — y omite explícitamente las peticiones a `/api/checkout`, donde viajan datos de envío y pago simulado.
+
+- **Sin almacenamiento de datos de pago en el cliente.** `PaymentData` solo vive en el estado local del componente `CheckoutPage` durante el flujo de 3 pasos y se descarta al completar o abandonar; `CartContext` y `localStorage` (clave `runmarket_cart`) solo contienen ítems de carrito, nunca datos de tarjeta ni el `sessionId`.
+
+- **Sanitización de filtros de URL contra enums cerrados.** Los query params del catálogo (`?distance=marathon&surface=trail`) se validan en `app/page.tsx` contra las listas cerradas del dominio (`VALID_DISTANCES`, `VALID_SURFACES`, `VALID_LEVELS`, `VALID_OBJECTIVES`, `VALID_CATEGORIES` en `lib/product-utils.ts`) antes de reenviarse a la API; un valor desconocido se descarta silenciosamente.
+
+- **Sin `dangerouslySetInnerHTML`.** Todo contenido dinámico (descripciones y nombres de producto) se renderiza como texto plano vía JSX, que escapa automáticamente — verificado: 0 usos en el código del proyecto.
+
+- **`npm audit` como parte de la revisión OWASP.** Cada cierre de historia de usuario incluye una revisión de dependencias nuevas; las vulnerabilidades preexistentes en `devDependencies` de testing se documentan como aceptadas y fuera de alcance en lugar de ignorarse silenciosamente.
 
 ### **2.6. Tests**
 
