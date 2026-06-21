@@ -499,14 +499,14 @@ Verifica con `npm run build`. Un solo commit.
 ```
 /refine-user-story US-000
 /implement-user-story US-000
-Opción implementación manual ticket: /implement-user-story U`US-000-TASK-03
+Opción implementación manual ticket: /implement-user-story US-000-TASK-03
 
 /refine-user-story US-007
 /implement-user-story US-007
-Opción implementación manual ticket: /implement-user-story US-007-TASK-04
+Opción implementación manual ticket: /implement-user-story US-007-TASK-04 y /implement-user-story US-007-TASK-05
 ```
 
-Los 3 tickets de esta sección documentan tareas concretas (`US-000-TASK-03`, `US-007-TASK-04`, `US-007-TASK-05`) cuya definición original — tabla de tareas, criterios de hecho, tests TDD — no se escribió a mano: salió del mismo flujo SDD citado en las secciones 2.5, 2.6 y 4 de este fichero. Los Prompts 1-3 de arriba son la capa posterior de selección, redacción y corrección de esos tickets para el README; este Prompt 4 es la capa que generó el contenido técnico de partida.
+Las 2 US de esta sección documentan tareas concretas (`US-000-TASK-03`, `US-007-TASK-04`, `US-007-TASK-05`) cuya definición original — tabla de tareas, criterios de hecho, tests TDD — no se escribió a mano: salió del mismo flujo SDD citado en las secciones 2.5, 2.6 y 4 de este fichero. Los Prompts 1-3 de arriba son la capa posterior de selección, redacción y corrección de esos tickets para el README; este Prompt 4 es la capa que generó el contenido técnico de partida.
 
 ---
 
@@ -522,7 +522,7 @@ Crea la pull request de esta rama hacia feature-entrega2-XVB de la US-000.
 Cuerpo conciso (máximo ~40 líneas, nunca pegues el backlog completo):
 - ## Resumen — 3-6 bullets: stack backend, stack frontend, infraestructura
 - ## Tests — una línea por suite con el resultado
-- ## Seguridad — hallazgos OWASP HIGH/CRITICAL corregidos (o "0 hallazgos")
+- ## Seguridad — hallazgos OWASP
 - ## Backlog — enlace a  US-000.md
 ```
 
@@ -535,7 +535,7 @@ Cuerpo conciso (máximo ~40 líneas, nunca pegues el backlog completo):
 - ## Resumen — 3-6 bullets de qué se construyó (endpoint, componentes clave)
 - ## Criterios de aceptación verificados — checklist de los CA de la US
 - ## Tests — una línea por suite con el resultado (ej. "Backend: 10 tests")
-- ## Seguridad  — hallazgos OWASP HIGH/CRITICAL (o "0 hallazgos")
+- ## Seguridad  — hallazgos OWASP
 - ## Backlog — enlace a US-001.md
 ```
 
@@ -549,6 +549,6 @@ Cuerpo conciso (máximo ~40 líneas, nunca pegues el backlog completo):
 - ## Resumen — 3-6 bullets de qué se construyó (endpoint, componentes clave)
 - ## Criterios de aceptación verificados — checklist de los CA de la US
 - ## Tests — una línea por suite con el resultado (ej. "Backend: 10 tests")
-- ## Seguridad — OWSAP hallazgos HIGH/CRITICAL (o "0 hallazgos")
+- ## Seguridad — hallazgos OWASP
 - ## Backlog — enlace a US-007.md
 ```
