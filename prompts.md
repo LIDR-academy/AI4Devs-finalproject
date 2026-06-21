@@ -299,11 +299,70 @@ Dos ejemplos de esa Fase 5 ejecutada sobre el backlog real:
 
 ### **2.6. Tests**
 
-**Prompt 1:**
+**Prompt 1: Crear skill Playwright**
 
-**Prompt 2:**
+Actúa como QA Automation Lead. Crea .claude/skills/e2e-playwright/SKILL.md (en inglés) para guiar tests E2E con Playwright en RunMarket, derivando journeys, puertos y estructura del repo real (docs/ARCHITECTURE.md, package.json, docker-compose.yml) en cada uso, no de valores fijos.
 
-**Prompt 3:**
+Cubre: regla black-box (sin mocks de red/BD, sistema real arriba); config con baseURL por env var, un solo navegador, retries solo en CI, artefactos de fallo activados; aislamiento entre specs (datos únicos por ejecución, sin conteos absolutos, sin limpieza de datos); selectores por prioridad (rol/texto → data-testid → añadirlo al componente si falta); prohibido waitForTimeout; solo los escenarios de los criterios de aceptación, nunca inventados; rutas de error solo si son alcanzables vía UI sin canal lateral; confirmar que cada spec falla por el motivo correcto antes de confiarlo en verde; checklist final de "definition of done".
+
+**Prompt 2: Crear US Para generar Tests E2E con Playwright**
+
+### Rol
+
+Actúa como **QA Automation Engineer** de RunMarket.
+
+### Objetivo
+
+Genera `docs/backlog/US-014.md` ("Tests E2E con Playwright", ver `docs/USER-STORIES.md`). No invoques `/refine-user-story` ni `breakdown-user-story`.
+
+### Contexto
+
+US-014 ("Tests E2E con Playwright") es distinta del resto del backlog: no añade código de producto, solo una suite E2E que ejercita el sistema completo ya construido en US-001 a US-013 (archivadas en `docs/backlog/archive/`). El flujo estándar de `/refine-user-story` y `breakdown-user-story` asume contrato de API/componente, que no aplica aquí.
+
+### Instrucciones
+
+**Reglas QA:** no inventes funcionalidades, endpoints ni datos de seed fuera de lo real (verifica en código, no asumas); prioriza comportamiento observable por el usuario; anota riesgos de flakiness anticipados; valida que cada journey ejercita una llamada de red real y su reflejo en la UI, no solo el clic.
+
+**Lee antes de escribir:** US-014 en `docs/USER-STORIES.md`; `.claude/skills/e2e-playwright/SKILL.md` íntegro (fuente de verdad de specs/config/precondiciones); `docs/ARCHITECTURE.md` (ubicación de `e2e/`, puertos); `.claude/skills/breakdown-user-story/task-template.md` (solo la plantilla de tarea); rutas/endpoints reales en el código (`backend/src/app.ts`, rutas frontend, componentes con `data-testid` ya existentes).
+
+**Escribe `docs/backlog/US-014.md`** en español, con la estructura estándar (estado del workflow, US refinada, tabla de tareas, detalle por tarea, verificación integrada, sección OWASP, cierre) para que `/implement-user-story` lo procese sin cambios:
+
+- US refinada → contrato de journeys (los 3 specs: `catalog`, `product`, `purchase`), rutas/endpoints reales ejercitados, precondición de sistema arriba + US-001 a US-013 ya archivadas.
+- Tareas → una por spec, `Capa: Frontend`, `Verificacion` = fichero Playwright exacto, más una tarea de config de Playwright y una de documentación.
+- Tarea de documentación → crea **`docs/E2E-TESTING.md`** (no toques `readme.md`) con el comando, la precondición y la variable `E2E_BASE_URL`; enlázalo desde la tabla de documentación de `CLAUDE.md`. Anota explícitamente que esto es una desviación deliberada del literal de la US (que dice `readme.md`), sin modificar `docs/USER-STORIES.md`.
+- Detalle de tarea → en "Tests TDD", responde **"no"** a "test en rojo antes del código de producción" con el motivo ("sin código de producción nuevo; el spec verifica comportamiento ya construido en US-001 a US-013"). Sustituye el ciclo rojo-verde-refactor por la disciplina de `e2e-playwright`: confirmar que el spec falla por el motivo correcto antes de confiarlo en verde (no por timing/entorno), más riesgo de flakiness anticipado por tarea (o "ninguno detectado").
+- Verificación integrada → ejecutar `npx playwright test` (los tres specs juntos, modo headless) y pegar la salida en verde; condición de cierre de la Fase 4 antes de pasar a la Fase 5. Sin los tres specs en verde, la US no avanza de fase.
+- Sección OWASP → checklist de 2-3 puntos, no tabla completa del Top 10: (1) artefactos de fallo de Playwright (trace/screenshot/video) no expuestos/commiteados con datos de checkout visibles, (2) sin credenciales reales hardcodeadas en specs/config, (3) `data-testid` no filtra IDs internos sensibles. El resto de categorías OWASP, N/A con motivo ("sin lógica de negocio nueva").
+- Sección Cierre (`## Cierre — US-014`) → el mismo checklist de 8 puntos que usa la Fase 6 de `implement-user-story` (tareas implementadas, criterios mapeados, suite en verde, code-review, seguridad aprobada, reglas de `CLAUDE.md`, fases marcadas, sin alcance fuera de la US), todo sin marcar — se completa al cerrar la US, no ahora.
+
+### Resultado
+
+Crea el fichero `docs/backlog/US-014.md` con la estructura descrita. Muestra el fichero al terminar, antes de seguir con `/implement-user-story US-014`.
+
+**Prompt 3: Implementar US tests E2E
+/implement-user-story US-014
+
+**Prompt 3: Flujo SDD — `/implement-user-story` por cada historia (US-000 a US-015)**
+
+```
+/refine-user-story US-000
+/implement-user-story US-000
+
+/refine-user-story US-001
+/implement-user-story US-001
+
+...
+
+/refine-user-story US-015
+/implement-user-story US-015
+```
+
+El mismo prompt citado en la sección 2.5 es también el que ejecuta los tests unitarios: `/implement-user-story` aplica TDD obligatorio en las Fases 2 (Backend) y 3 (Frontend) de `CLAUDE.md` — por cada tarea del backlog, primero se escribe un test que falla a partir de los "Criterios de hecho" definidos al refinar la US/tarea, después el código mínimo para pasarlo, y por último el refactor en verde. La tabla "Tests TDD (obligatorios)" de cada tarea documenta esos tests antes de implementarlos.
+
+Dos ejemplos de esa disciplina aplicada sobre el backlog real:
+
+- [`docs/backlog/archive/US-007.md`](docs/backlog/archive/US-007.md) — tarea `US-007-TASK-04`: tabla de 7 tests Supertest derivados de los "Criterios de hecho" (`200` con carrito actualizado, `400` con `.strict()`, `404`, `409` con stock insuficiente, `Set-Cookie`, sin stack traces en `500`), con "Test en rojo escrito antes del código de producción: sí".
+- [`docs/backlog/archive/US-015.md`](docs/backlog/archive/US-015.md) — tarea `US-015-TASK-01`: 4 tests Jest (mock de `tx.product`) que fuerzan primero el fallo (`StockError` cuando `updateMany` devuelve `count: 0`, freno en el primer ítem sin stock) antes de escribir el descuento atómico de stock.
 
 ---
 
