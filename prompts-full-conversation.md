@@ -447,6 +447,17 @@ Mantén los nombres de tokens claros, reutilizables y alineados con el diseño e
 
 # Prompt 16: Desarrollo US - Flujo SDD
 
+/refine-user-story US-000
+/implement-user-story US-000
+
+/refine-user-story US-001
+/implement-user-story US-001
+
+...
+
+/refine-user-story US-015
+/implement-user-story US-015
+
 
 # Prompt 17: Test End2End con Playwright
 

@@ -1,5 +1,5 @@
 > Detalla en esta sección los prompts principales utilizados durante la creación del proyecto, que justifiquen el uso de asistentes de código en todas las fases del ciclo de vida del desarrollo. Esperamos un máximo de 3 por sección, principalmente los de creación inicial o  los de corrección o adición de funcionalidades que consideres más relevantes.
-Puedes añadir adicionalmente la conversación completa como link o archivo adjunto si así lo consideras
+> Puedes añadir adicionalmente la conversación completa como link o archivo adjunto si así lo consideras
 
 >  Los prompts fueron iterados y refinados manualmente para ajustar el alcance del MVP y mejorar la calidad de las respuestas generadas por IA.
 
@@ -30,6 +30,7 @@ Actúa como un Business Analyst senior con amplia experiencia en ecommerce, prod
 #### Objetivo del sistema
 
 Definir una primera versión que sea:
+
 - Realista
 - Competitiva
 - Enfocada al MVP
@@ -64,7 +65,6 @@ Escribe el contenido en el fichero `readme-producto.md`:
 
 - En `### 1.1. Objetivo`: descripción breve del software RunMarket, valor añadido y ventajas competitivas
 - En `### 1.2. Características y funcionalidades principales`: lista detallada de las funcionalidades del MVP
-
 
 ---
 
@@ -115,7 +115,7 @@ Toma como base el fichero `#file:readme-producto.md` para entender la visión de
 
 Accede al diseño creado con Figma Make a través del MCP de Figma (fileKey: 0wtedXb5138odnAOgHlMiA):
 
-https://www.figma.com/make/0wtedXb5138odnAOgHlMiA/Ecommerce-para-productos-deportivos?t=IpZidqsmflTLTgQ9-1
+[https://www.figma.com/make/0wtedXb5138odnAOgHlMiA/Ecommerce-para-productos-deportivos?t=IpZidqsmflTLTgQ9-1](https://www.figma.com/make/0wtedXb5138odnAOgHlMiA/Ecommerce-para-productos-deportivos?t=IpZidqsmflTLTgQ9-1)
 
 #### Objetivo
 
@@ -240,6 +240,7 @@ Propón y compara dos opciones:
 2. **Infraestructura profesional**: preparada inicialmente para cientos o miles de usuarios, con evolución progresiva hasta millones sin rehacer la arquitectura actual.
 
 Para ambas opciones, especifica:
+
 - Proveedores y servicios para frontend, backend y base de datos.
 - Variables de entorno, migraciones y seed de Prisma.
 - CI/CD, observabilidad, seguridad, backups y costes mensuales.
@@ -247,6 +248,7 @@ Para ambas opciones, especifica:
 - Una recomendación final concreta y justificada.
 
 Para la opción profesional, incluye además:
+
 - CDN, gestión de secretos, cache y escalado horizontal.
 - Separación entre `dev`, `staging` y `production`.
 - Cuándo introducir Redis, colas, object storage, read replicas, WAF, Kubernetes y microservicios.
@@ -254,6 +256,7 @@ Para la opción profesional, incluye además:
 - Evita recomendar Kubernetes o microservicios prematuramente.
 
 Estructura el documento con:
+
 1. Resumen ejecutivo.
 2. Tabla comparativa.
 3. Diagramas Mermaid.
@@ -266,19 +269,33 @@ Sé concreto, práctico y justifica cada decisión según `docs/ARCHITECTURE.md`
 
 Redacta con tono técnico-académico y genera el resultado en `docs/INFRASTRUCTURE.md`.
 
-# Prompt 2: Despliuege
-A pertir del `docs/INFRASTRUCTURE.md`, Haz un checklist del flujo de despliegue del MVP académico y generalo en `docs/DEPLOYMENT.md`
-
-
 ### 2.5. Seguridad
 
 **Prompt 1: Primera versión prácticas de seguridad y OWASP**
 
 Analiza @docs/ARCHITECTURE.md y @docs/DATA-MODEL.md y enumera las prácticas de seguridad principales a tener en cuenta durante la implementación del proyecto, considerando OWASP Top 10 como referencia. Añádelas como una nueva sección en @CLAUDE.md
 
-**Prompt 2:**
+**Prompt 2: Flujo SDD — `/implement-user-story` por cada historia (US-000 a US-015)**
 
-**Prompt 3:**
+```
+/refine-user-story US-000
+/implement-user-story US-000
+
+/refine-user-story US-001
+/implement-user-story US-001
+
+...
+
+/refine-user-story US-015
+/implement-user-story US-015
+```
+
+Este prompt no menciona seguridad explícitamente, pero es el que en la práctica produjo las prácticas de seguridad documentadas en el README: `/implement-user-story` ejecuta siempre una **Fase 5 — Revisión de seguridad OWASP** antes de poder cerrar la historia (regla no negociable de `CLAUDE.md`), con un bucle de remediación obligatorio si aparece algún hallazgo `HIGH`/`CRITICAL`. Las reglas iniciales del Prompt 1 se verifican y, cuando hace falta, se corrigen historia por historia.
+
+Dos ejemplos de esa Fase 5 ejecutada sobre el backlog real:
+
+- `[docs/backlog/archive/US-007.md](docs/backlog/archive/US-007.md)` — sección "OWASP — Revisión de seguridad": 12 vectores analizados, 1 hallazgo `HIGH` real (cookie `sessionId` sin flag `Secure` en producción) corregido y verificado antes del cierre.
+- `[docs/backlog/archive/US-015.md](docs/backlog/archive/US-015.md)` — sección "OWASP — Revisión de seguridad": revisión centrada en la condición de carrera del descuento de stock (oversell), confirmando que la actualización atómica (`updateMany` con `gte`/`decrement`) mitiga el riesgo sin hallazgos `HIGH`/`CRITICAL`.
 
 ### **2.6. Tests**
 
@@ -344,25 +361,25 @@ Lee los ficheros del diseño de Figma mediante el MCP (fileKey: `0wtedXb5138odnA
 
 ## 5. Historias de Usuario
 
-
 ### Prompt 1: Generación de Historias de Usuario de los principales casos de uso*
 
 /generate-user-stories
-  
+
 #### Contexto
 
 Analiza:
-  - `docs/PRD.md`
-  - `docs/ARCHITECTURE.md` (solo si es necesario para validar coherencia funcional)
-  - Figma Make (fileKey: `0wtedXb5138odnAOgHlMiA`) si necesitas contexto visual de pantallas o flujos. https://www.figma.com/make/0wtedXb5138odnAOgHlMiA/Ecommerce-para-productos-deportivos?t=IpZidqsmflTLTgQ9-1
+
+- `docs/PRD.md`
+- `docs/ARCHITECTURE.md` (solo si es necesario para validar coherencia funcional)
+- Figma Make (fileKey: `0wtedXb5138odnAOgHlMiA`) si necesitas contexto visual de pantallas o flujos. [https://www.figma.com/make/0wtedXb5138odnAOgHlMiA/Ecommerce-para-productos-deportivos?t=IpZidqsmflTLTgQ9-1](https://www.figma.com/make/0wtedXb5138odnAOgHlMiA/Ecommerce-para-productos-deportivos?t=IpZidqsmflTLTgQ9-1)
 
 #### Objetivo
 
 Generar las User Stories necesarias para soportar exclusivamente estos casos de uso del MVP:
 
-  1. Búsqueda filtrada de productos para running
-  2. Consulta de ficha de producto y decisión de compra
-  3. Proceso de compra: carrito y checkout simulado
+1. Búsqueda filtrada de productos para running
+2. Consulta de ficha de producto y decisión de compra
+3. Proceso de compra: carrito y checkout simulado
 
 #### Restricciones
 
@@ -375,9 +392,10 @@ Escribe el fichero `docs/USER-STORIES.md` con las historias agrupadas por caso d
 ### Prompt 2: Generación backlog MVP
 
 Analiza las User Stories generadas en @docs/USER-STORIES.md y añade una sección donde:                                                                                                                
-  1. Explicas los criterios de priorización utilizados.                                                       
-  2. Genera una tabla con las historias clasificadas como "Imprescindible para el MVP", ordenadas según la secuencia recomendada de implementación.                                             
-  3. Genera una segunda tabla con el resto de historias, ordenadas por prioridad.
+
+1. Explicas los criterios de priorización utilizados.                                                       
+2. Genera una tabla con las historias clasificadas como "Imprescindible para el MVP", ordenadas según la secuencia recomendada de implementación.                                             
+3. Genera una segunda tabla con el resto de historias, ordenadas por prioridad.
 
 ---
 
