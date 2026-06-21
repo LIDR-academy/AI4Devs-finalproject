@@ -241,6 +241,8 @@ Propón y compara dos opciones:
 1. **MVP académico**: coste ideal de 0 € y máximo de 10 €/mes, sencillo de mantener por una persona y suficiente para que los profesores prueben toda la aplicación.
 2. **Infraestructura profesional**: preparada inicialmente para cientos o miles de usuarios, con evolución progresiva hasta millones sin rehacer la arquitectura actual.
 
+Idealmentte utiliza un único proveedor, excepto que tengas una opinión muy fuerte para diversificar.
+
 Para ambas opciones, especifica:
 
 - Proveedores y servicios para frontend, backend y base de datos.

@@ -281,27 +281,28 @@ El backend sigue el patrón **Repository + Service Layer**: los Services contien
 
 ### **2.4. Infraestructura y despliegue**
 
-El despliegue del MVP académico se plantea con una infraestructura de coste 0 EUR/mes, suficiente para que los profesores puedan consultar la aplicación completa durante la evaluación:
+El despliegue del MVP académico (Opción A de `docs/INFRASTRUCTURE.md`) se plantea con un único proveedor, AWS, y coste 0 EUR/mes durante el Free Tier, suficiente para que los profesores puedan consultar la aplicación completa durante la evaluación:
 
 | Capa | Servicio | Plan | Responsabilidad |
 |---|---|---|---|
-| Frontend | Vercel | Hobby | Publica la aplicación Next.js 15 con SSR y assets estáticos |
-| Backend | Render | Free Web Service | Publica la API REST Express |
-| Base de datos | Supabase | Free PostgreSQL | Aloja PostgreSQL para catálogo, carrito y pedidos |
-| Repositorio | GitHub | Free | Fuente de código y disparador de despliegues automáticos |
+| Cómputo | AWS EC2 `t3.micro` | Free Tier (12 meses) | Único host; ejecuta frontend, backend y base de datos dockerizados |
+| Orquestación | Docker + Docker Compose | — | `docker-compose.yml` del repositorio, ampliado con `frontend`, `backend` y `nginx` |
+| Reverse proxy | Nginx | — | Único punto de entrada público; enruta `/` al frontend y `/api` al backend |
+| TLS (opcional) | Certbot | Let's Encrypt | Certificado gratuito sobre Nginx; omitible en la entrega académica (se valida por HTTP) |
+| Base de datos | PostgreSQL 16 (contenedor) | — | Volumen EBS persistente, accesible solo desde la red interna de Compose |
+| Repositorio / CI-CD | GitHub + GitHub Actions | Free | Build de imágenes, push a GHCR y despliegue por SSH |
 
-La pipeline del MVP es deliberadamente sencilla: al vincular el repositorio, Vercel despliega automáticamente el frontend y Render despliega automáticamente el backend en cada push. Supabase no despliega código; la base de datos se prepara de forma puntual con Prisma:
+La pipeline construye las imágenes de `frontend` y `backend`, las publica en GitHub Container Registry y se conecta por SSH a la instancia EC2 para desplegar:
 
 ```bash
-cd backend
-npx prisma migrate deploy
-npx prisma db seed
+docker compose pull && docker compose up -d
+docker compose exec backend npx prisma migrate deploy
+docker compose exec backend npm run db:seed   # solo en el primer despliegue
 ```
 
-Esta decisión evita sobreingeniería para la entrega y mantiene la arquitectura desacoplada definida en el sistema: frontend SSR, API REST independiente y PostgreSQL gestionado. La principal limitación es que Render Free puede dormirse tras inactividad y Supabase Free puede pausarse si no se usa durante un período prolongado.
+Esta decisión concentra todo el stack en un único proveedor (una sola facturación, un solo IAM) y reutiliza directamente el `docker-compose.yml` ya presente en el repositorio, en lugar de repartir frontend, backend y base de datos entre plataformas gestionadas distintas. Como contrapartida, todo el stack vive en un único host: su caída afecta a las tres capas a la vez, y el mantenimiento del sistema operativo y de Docker es manual. El backup de la base de datos es opcional en esta fase, ya que el catálogo se reconstruye con `npm run db:seed` (13 productos) y los pedidos generados durante la demo no son datos de negocio reales. El certificado TLS (Certbot) también es opcional: Nginx sigue siendo necesario como punto de entrada único que enruta por path sin necesitar CORS, pero los profesores pueden validar el flujo completo por HTTP plano sin depender de tener un dominio configurado antes de la demo; esta concesión es aceptable solo porque no hay datos de pago ni PII reales en esta fase.
 
-> Propuesta completa de infraestructura: [docs/INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md)  
-> Pipeline de despliegue del MVP: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+> Propuesta completa de infraestructura (MVP académico y evolución profesional): [docs/INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md)
 
 ### **2.5. Seguridad**
 
