@@ -815,6 +815,12 @@ https://github.com/xavierventeo/AI4Devs-finalproject/pull/1
 
 Scaffolding completo del monorepo: workspace npm con `frontend/` (Next.js 15 + TypeScript + Tailwind v4 + shadcn/ui + Vitest) y `backend/` (Express 4 + Prisma 5 + Zod + Jest + Supertest). Incluye Docker Compose para PostgreSQL 16, esquema Prisma con 5 entidades e índices GIN, seed de 12 productos, middlewares de seguridad (CORS, rate-limit, error handler) y health endpoint. Revisión OWASP superada (3 CVEs HIGH corregidos actualizando Next.js a 15.5.19).
 
-**Pull Request 2**
+**Pull Request 2 — [US-001: Ver el catálogo de productos](https://github.com/xavierventeo/AI4Devs-finalproject/pull/2)**
+https://github.com/xavierventeo/AI4Devs-finalproject/pull/2
 
-**Pull Request 3**
+Endpoint `GET /api/products` con arquitectura limpia (`ProductRepository` → `CatalogService` → `ProductsController`) y `CatalogPage` (Server Component SSR) con `ProductGrid` responsiva, `ResultsCounter`, estado vacío y estado de error con botón Reintentar. `ProductCard` con imagen, nombre, marca, precio en euros y badge de nivel. 65 tests en verde (32 backend + 33 frontend). Revisión OWASP sin hallazgos HIGH/CRITICAL.
+
+**Pull Request 3 — [US-007: Añadir un producto al carrito](https://github.com/xavierventeo/AI4Devs-finalproject/pull/6)**
+https://github.com/xavierventeo/AI4Devs-finalproject/pull/6
+
+Implementa `POST /api/cart` completo (`CartRepository` → `CartService` → `CartController`) con middleware de sesión (`crypto.randomUUID`, cookie `HttpOnly; SameSite=Strict; Secure` fuera de desarrollo) y `CartContext` React como fuente de verdad global del carrito, persistido en `localStorage` sin PII. Conecta el botón de añadir al carrito de la ficha de producto al endpoint real, con toasts de éxito/error y badge de cantidad en el Header. 225 tests en verde (91 backend + 134 frontend). 7/7 tareas con TDD, revisión OWASP aprobada (0 HIGH/CRITICAL).
