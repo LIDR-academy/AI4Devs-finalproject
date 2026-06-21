@@ -719,18 +719,80 @@ Como corredor, quiero revisar los productos añadidos al carrito y modificar can
 
 > Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
 
-**Ticket 1**
+**Ticket 1 — Backend: US-007-TASK-04 — `CartController` + ruta `POST /api/cart`**
 
-**Ticket 2**
+| Campo | Detalle |
+|---|---|
+| **ID** | US-007-TASK-04 |
+| **US** | US-007 — Añadir un producto al carrito |
+| **Capa** | Backend |
+| **Depende de** | US-007-TASK-02 (`CartService.addItem`), US-007-TASK-03 (middleware de sesión) |
+| **Criterio cubierto** | Añadido exitoso, upsert de cantidad, stock insuficiente, producto agotado no añadible |
+| **Detalle completo** | [`docs/backlog/archive/US-007.md`](docs/backlog/archive/US-007.md) |
+
+**Descripción**
+
+`backend/src/controllers/cart.controller.ts` expone `POST /api/cart`. El body se valida con un schema Zod `.strict()` (rechaza campos no declarados, conforme a la regla de `CLAUDE.md` sobre boundaries de la API):
+
+```typescript
+const AddToCartSchema = z.object({
+  productId: z.string().uuid(),
+  quantity:  z.number().int().min(1),
+  size:      z.string().optional(),
+  color:     z.string().optional(),
+}).strict();
+```
+
+El `sessionId` se lee de `req.sessionId` (adjuntado por el middleware de sesión de TASK-03, que lo genera con `crypto.randomUUID()` si no existe cookie — nunca con `Math.random()` ni IDs predecibles). El controller delega en `cartService.addItem(sessionId, item)` y mapea sus errores a códigos HTTP: `404` (`NotFoundError`, producto inexistente), `409` (`StockError`, con `available: N`), `500` genérico para el resto (sin stack traces ni detalles de Prisma, vía `error-handler.ts`). Si se generó un `sessionId` nuevo, la respuesta incluye `Set-Cookie`. El endpoint tiene un límite de rate limiting más restrictivo que el catálogo (`express-rate-limit`, regla no negociable de `CLAUDE.md`) y queda documentado en `src/docs/openapi.ts`.
+
+**Tests TDD:** 7 tests Supertest sobre una app Express en memoria con `CartService` mockado: `200` con carrito actualizado, `400` con body inválido, `400` con campo extra (verifica `.strict()`), `404` producto inexistente, `409` stock insuficiente con `available`, `Set-Cookie` emitido sin sesión previa, y verificación de que un error 500 no expone `stack` ni mensajes de Prisma en el body. Test en rojo antes del código de producción.
+
+**Seguridad:** precio nunca leído del cliente (el total se recalcula en `CartService` desde el `Product` de BD); Zod `.strict()` en el boundary; respuestas de error genéricas; rate limiting en la mutación.
+
+---
+
+**Ticket 2 — Frontend: US-007-TASK-05 — `CartContext`, estado global del carrito**
+
+| Campo | Detalle |
+|---|---|
+| **ID** | US-007-TASK-05 |
+| **US** | US-007 — Añadir un producto al carrito |
+| **Capa** | Frontend |
+| **Depende de** | — |
+| **Criterio cubierto** | El badge del header se actualiza con la nueva cantidad total; persistencia de sesión del carrito |
+| **Detalle completo** | [`docs/backlog/archive/US-007.md`](docs/backlog/archive/US-007.md) |
+
+**Descripción**
+
+`frontend/src/contexts/cart-context.tsx` — React Context (`'use client'`) montado en `app/layout.tsx`, accesible desde toda la aplicación:
+
+```typescript
+interface CartContextValue {
+  items: CartItemUI[];
+  itemCount: number;       // suma de quantity, para el badge del header
+  subtotal: number; shipping: number; total: number;
+  addItem(productId: string, quantity: number, size?: string, color?: string): Promise<void>;
+  isLoading: boolean;
+  error: string | null;
+}
+```
+
+Al montarse, `CartProvider` hidrata el carrito con `GET /api/cart/:sessionId` leyendo el `sessionId` de la cookie del navegador (gestionada por el servidor — **nunca** se guarda en `localStorage`, regla no negociable de `CLAUDE.md`). `addItem` llama a `POST /api/cart` vía `api-client.ts` y, en éxito, sustituye el estado local por la respuesta del servidor (fuente de verdad de precios/stock). Los ítems del carrito (no el `sessionId` ni datos de pago) se cachean en `localStorage` bajo `runmarket_cart` como caché optimista para evitar parpadeo en recargas.
+
+**Tests TDD:** RTL en `cart-context.test.tsx` cubriendo: `addItem` actualiza `items`/`itemCount`/totales tras una respuesta exitosa, `isLoading` se activa durante la petición, `error` se popula y los ítems no cambian si `POST /api/cart` falla, hidratación inicial desde `GET /api/cart/:sessionId` al montar, y persistencia/lectura de `runmarket_cart` en `localStorage` (sin incluir `sessionId`).
+
+---
 
 **Ticket 3 — Base de datos: US-000-TASK-03 — Esquema Prisma**
 
 | Campo | Detalle |
 |---|---|
 | **ID** | US-000-TASK-03 |
+| **US** | US-000 — Setup técnico del proyecto |
 | **Capa** | Backend |
 | **Depende de** | US-000-TASK-02 (scaffolding del proyecto backend) |
 | **Criterio cubierto** | Prerequisito de CA-2 — define el esquema que hace posible la migración |
+| **Detalle completo** | [`docs/backlog/archive/US-000.md`](docs/backlog/archive/US-000.md) |
 
 **Descripción**
 
