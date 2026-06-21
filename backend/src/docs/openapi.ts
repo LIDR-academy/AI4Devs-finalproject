@@ -93,6 +93,102 @@ const CartResponseSchema = registry.register(
     .openapi('CartResponse'),
 );
 
+// ─── Checkout & Order schemas ─────────────────────────────────────────────────
+
+const OrderStatusSchema = z.enum(['processing', 'shipped', 'delivered', 'cancelled']);
+
+const CheckoutInputSchema = registry.register(
+  'CheckoutInput',
+  z
+    .object({
+      name: z.string().min(1).openapi({ example: 'Ana García' }),
+      email: z.string().openapi({ example: 'ana.garcia@example.com' }),
+      phone: z.string().optional().openapi({ example: '+34 600 123 456' }),
+      address: z.string().min(1).openapi({ example: 'Calle Mayor 10, 2ºB' }),
+      city: z.string().min(1).openapi({ example: 'Madrid' }),
+      postalCode: z.string().openapi({ example: '28013' }),
+      country: z.string().min(1).openapi({ example: 'España' }),
+    })
+    .openapi('CheckoutInput'),
+);
+
+const OrderItemResponseSchema = registry.register(
+  'OrderItemResponse',
+  z
+    .object({
+      productId: z.string().openapi({ example: 'clx1z2a3b4c5d6e7f8g9h0' }),
+      productName: z.string().openapi({ example: 'Nike Pegasus 41' }),
+      productBrand: z.string().openapi({ example: 'Nike' }),
+      productPrice: z
+        .number()
+        .openapi({ example: 129.99, description: 'Precio leído del producto en BD en el momento del checkout, nunca del cliente' }),
+      quantity: z.number().int().openapi({ example: 2 }),
+      size: z.string().optional().openapi({ example: '42' }),
+      color: z.string().optional().openapi({ example: 'negro' }),
+    })
+    .openapi('OrderItemResponse'),
+);
+
+const OrderResponseSchema = registry.register(
+  'OrderResponse',
+  z
+    .object({
+      id: z.string().openapi({ example: 'ORD-1750000000000' }),
+      status: OrderStatusSchema.openapi({ example: 'processing' }),
+      date: z.string().openapi({ example: '2026-06-21T10:00:00.000Z' }),
+      subtotal: z.number().openapi({ example: 259.98 }),
+      shipping: z.number().openapi({ example: 0 }),
+      total: z.number().openapi({ example: 259.98 }),
+      shippingName: z.string().openapi({ example: 'Ana García' }),
+      shippingEmail: z.string().openapi({ example: 'ana.garcia@example.com' }),
+      shippingPhone: z.string().optional().openapi({ example: '+34 600 123 456' }),
+      shippingAddress: z.string().openapi({ example: 'Calle Mayor 10, 2ºB' }),
+      shippingCity: z.string().openapi({ example: 'Madrid' }),
+      shippingPostalCode: z.string().openapi({ example: '28013' }),
+      shippingCountry: z.string().openapi({ example: 'España' }),
+      items: z.array(OrderItemResponseSchema),
+    })
+    .openapi('OrderResponse'),
+);
+
+const OrderListItemResponseSchema = registry.register(
+  'OrderListItemResponse',
+  z
+    .object({
+      productId: z.string().openapi({ example: 'clx1z2a3b4c5d6e7f8g9h0' }),
+      productName: z.string().openapi({ example: 'Nike Pegasus 41' }),
+      productBrand: z.string().openapi({ example: 'Nike' }),
+      productPrice: z.number().openapi({ example: 129.99 }),
+      quantity: z.number().int().openapi({ example: 2 }),
+      size: z.string().optional().openapi({ example: '42' }),
+      color: z.string().optional().openapi({ example: 'negro' }),
+      image: z.string().openapi({ example: '/images/pegasus-41.jpg' }),
+    })
+    .openapi('OrderListItemResponse'),
+);
+
+const OrderListResponseSchema = registry.register(
+  'OrderListResponse',
+  z
+    .object({
+      id: z.string().openapi({ example: 'ORD-1750000000000' }),
+      status: OrderStatusSchema.openapi({ example: 'processing' }),
+      date: z.string().openapi({ example: '2026-06-21T10:00:00.000Z' }),
+      subtotal: z.number().openapi({ example: 259.98 }),
+      shipping: z.number().openapi({ example: 0 }),
+      total: z.number().openapi({ example: 259.98 }),
+      shippingName: z.string().openapi({ example: 'Ana García' }),
+      shippingEmail: z.string().openapi({ example: 'ana.garcia@example.com' }),
+      shippingPhone: z.string().optional().openapi({ example: '+34 600 123 456' }),
+      shippingAddress: z.string().openapi({ example: 'Calle Mayor 10, 2ºB' }),
+      shippingCity: z.string().openapi({ example: 'Madrid' }),
+      shippingPostalCode: z.string().openapi({ example: '28013' }),
+      shippingCountry: z.string().openapi({ example: 'España' }),
+      items: z.array(OrderListItemResponseSchema),
+    })
+    .openapi('OrderListResponse'),
+);
+
 // ─── Health schema ────────────────────────────────────────────────────────────
 
 const HealthResponseSchema = registry.register(
@@ -323,6 +419,65 @@ registry.registerPath({
     429: {
       description: 'Demasiadas peticiones',
       content: { 'application/json': { schema: ErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/api/checkout',
+  tags: ['Checkout'],
+  summary: 'Confirmar pedido (checkout simulado)',
+  description:
+    'Crea un pedido a partir del carrito de la sesión activa. Revalida el stock de todos los ítems dentro de una ' +
+    'transacción Prisma antes de crear el pedido y descuenta el stock atómicamente. El precio de cada ítem se lee ' +
+    'siempre del producto en BD; cualquier campo de precio/total enviado por el cliente se ignora.',
+  request: {
+    body: {
+      content: { 'application/json': { schema: CheckoutInputSchema } },
+      required: true,
+    },
+  },
+  responses: {
+    201: {
+      description: 'Pedido creado',
+      content: { 'application/json': { schema: OrderResponseSchema } },
+    },
+    400: {
+      description: 'Datos de envío inválidos o carrito vacío',
+      content: { 'application/json': { schema: ErrorSchema } },
+    },
+    404: {
+      description: 'Algún producto del carrito ya no existe',
+      content: { 'application/json': { schema: ErrorSchema } },
+    },
+    409: {
+      description: 'Stock insuficiente para algún ítem del carrito',
+      content: {
+        'application/json': {
+          schema: z
+            .object({ error: z.string(), available: z.number().int() })
+            .openapi({ example: { error: 'Stock insuficiente', available: 3 } }),
+        },
+      },
+    },
+    429: {
+      description: 'Demasiadas peticiones',
+      content: { 'application/json': { schema: ErrorSchema } },
+    },
+  },
+});
+
+registry.registerPath({
+  method: 'get',
+  path: '/api/orders',
+  tags: ['Pedidos'],
+  summary: 'Historial de pedidos de la sesión activa',
+  description: 'Devuelve los pedidos asociados al `sessionId` de la cookie, de más reciente a más antiguo.',
+  responses: {
+    200: {
+      description: 'Lista de pedidos de la sesión (puede estar vacía)',
+      content: { 'application/json': { schema: z.array(OrderListResponseSchema) } },
     },
   },
 });

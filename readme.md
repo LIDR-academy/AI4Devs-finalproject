@@ -397,13 +397,245 @@ erDiagram
 
 ## 4. Especificación de la API
 
-> Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad
+El backend expone una API REST documentada en **OpenAPI 3.0.3**, generada programáticamente con [`zod-to-openapi`](https://github.com/asteasolutions/zod-to-openapi) a partir de los mismos schemas Zod que validan las peticiones (`backend/src/docs/openapi.ts`), de modo que la especificación no puede desincronizarse de la validación real. Con el backend en local, el spec interactivo está disponible en `http://localhost:4000/api/docs` (Swagger UI) y `http://localhost:4000/api/docs.json` (JSON crudo).
+
+A continuación se describen los 3 endpoints principales, que cubren el recorrido completo de compra: consultar catálogo filtrado → añadir al carrito → confirmar pedido.
+
+### 4.1. `GET /api/products` — Catálogo con filtros de running
+
+```yaml
+/api/products:
+  get:
+    tags: [Productos]
+    summary: Listado de productos con filtros opcionales
+    parameters:
+      - name: distance
+        in: query
+        schema:
+          type: array
+          items: { type: string, enum: [5K, 10K, half-marathon, marathon, ultra] }
+        style: form
+        explode: true
+      - name: surface
+        in: query
+        schema:
+          type: array
+          items: { type: string, enum: [road, trail, track, mixed] }
+        style: form
+        explode: true
+      - name: level
+        in: query
+        schema:
+          type: array
+          items: { type: string, enum: [beginner, intermediate, advanced] }
+        style: form
+        explode: true
+      - name: objective
+        in: query
+        schema:
+          type: array
+          items: { type: string, enum: [training, competition, recovery, daily] }
+        style: form
+        explode: true
+    responses:
+      '200':
+        description: Lista de productos
+        content:
+          application/json:
+            schema:
+              type: array
+              items: { $ref: '#/components/schemas/Product' }
+      '400':
+        description: Parámetros de filtro inválidos
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Error' }
+```
+
+**Ejemplo de petición:**
+
+```http
+GET /api/products?distance=marathon&surface=road
+```
+
+**Ejemplo de respuesta `200 OK`:**
+
+```json
+[
+  {
+    "id": "clx1z2a3b4c5d6e7f8g9h0",
+    "name": "Nike Pegasus 41",
+    "brand": "Nike",
+    "price": 129.99,
+    "image": "/images/pegasus-41.jpg",
+    "category": "zapatillas",
+    "subcategory": "neutras",
+    "description": "Zapatilla de running versátil para asfalto.",
+    "features": ["Amortiguación React", "Upper transpirable"],
+    "distance": ["marathon", "half-marathon"],
+    "surface": ["road"],
+    "level": ["intermediate"],
+    "objective": ["training"],
+    "sizes": ["38", "39", "40", "41", "42"],
+    "colors": ["negro", "blanco"],
+    "stock": 25
+  }
+]
+```
+
+### 4.2. `POST /api/cart` — Añadir un producto al carrito
+
+```yaml
+/api/cart:
+  post:
+    tags: [Carrito]
+    summary: Añadir un producto al carrito
+    description: >
+      El sessionId se gestiona mediante cookie HTTP-only (SameSite=Strict).
+      Si no existe sesión activa se crea automáticamente.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/AddToCartInput' }
+    responses:
+      '200':
+        description: Carrito actualizado
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CartResponse' }
+      '400':
+        description: Datos de entrada inválidos
+      '404':
+        description: Producto no encontrado
+      '409':
+        description: Stock insuficiente
+      '429':
+        description: Demasiadas peticiones
+```
+
+**Ejemplo de petición:**
+
+```json
+POST /api/cart
+{
+  "productId": "clx1z2a3b4c5d6e7f8g9h0",
+  "quantity": 2,
+  "size": "42",
+  "color": "negro"
+}
+```
+
+**Ejemplo de respuesta `200 OK`:**
+
+```json
+{
+  "sessionId": "550e8400-e29b-41d4-a716-446655440000",
+  "items": [
+    {
+      "productId": "clx1z2a3b4c5d6e7f8g9h0",
+      "productName": "Nike Pegasus 41",
+      "productBrand": "Nike",
+      "productPrice": 129.99,
+      "image": "/images/pegasus-41.jpg",
+      "stock": 25,
+      "quantity": 2,
+      "size": "42",
+      "color": "negro"
+    }
+  ],
+  "subtotal": 259.98,
+  "shipping": 0,
+  "total": 259.98
+}
+```
+
+### 4.3. `POST /api/checkout` — Confirmar pedido (checkout simulado)
+
+```yaml
+/api/checkout:
+  post:
+    tags: [Checkout]
+    summary: Confirmar pedido (checkout simulado)
+    description: >
+      Crea un pedido a partir del carrito de la sesión activa. Revalida el
+      stock de todos los ítems dentro de una transacción Prisma y lo descuenta
+      atómicamente. El precio de cada ítem se lee siempre del producto en BD;
+      cualquier precio/total enviado por el cliente se ignora.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/CheckoutInput' }
+    responses:
+      '201':
+        description: Pedido creado
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OrderResponse' }
+      '400':
+        description: Datos de envío inválidos o carrito vacío
+      '404':
+        description: Algún producto del carrito ya no existe
+      '409':
+        description: Stock insuficiente para algún ítem del carrito
+      '429':
+        description: Demasiadas peticiones
+```
+
+**Ejemplo de petición:**
+
+```json
+POST /api/checkout
+{
+  "name": "Ana García",
+  "email": "ana.garcia@example.com",
+  "phone": "+34 600 123 456",
+  "address": "Calle Mayor 10, 2ºB",
+  "city": "Madrid",
+  "postalCode": "28013",
+  "country": "España"
+}
+```
+
+**Ejemplo de respuesta `201 Created`:**
+
+```json
+{
+  "id": "ORD-1750000000000",
+  "status": "processing",
+  "date": "2026-06-21T10:00:00.000Z",
+  "subtotal": 259.98,
+  "shipping": 0,
+  "total": 259.98,
+  "shippingName": "Ana García",
+  "shippingEmail": "ana.garcia@example.com",
+  "shippingPhone": "+34 600 123 456",
+  "shippingAddress": "Calle Mayor 10, 2ºB",
+  "shippingCity": "Madrid",
+  "shippingPostalCode": "28013",
+  "shippingCountry": "España",
+  "items": [
+    {
+      "productId": "clx1z2a3b4c5d6e7f8g9h0",
+      "productName": "Nike Pegasus 41",
+      "productBrand": "Nike",
+      "productPrice": 129.99,
+      "quantity": 2,
+      "size": "42",
+      "color": "negro"
+    }
+  ]
+}
+```
+
+> Especificación completa (7 endpoints: health, products, cart, checkout, orders) generada con `zod-to-openapi`: [`backend/src/docs/openapi.ts`](backend/src/docs/openapi.ts).
 
 ---
 
 ## 5. Historias de Usuario
 
-> Set completo de historias (13 US) con criterios de aceptación, estimación y prioridad organizadas por caso de uso: [docs/USER-STORIES.md](docs/USER-STORIES.md)
+> Set completo de historias (15 US) con criterios de aceptación, estimación y prioridad organizadas por caso de uso: [docs/USER-STORIES.md](docs/USER-STORIES.md)
 
 ### Backlog MVP — Secuencia de implementación recomendada
 
