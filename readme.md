@@ -33,6 +33,9 @@ eCommerce especializado en productos deportivos para running. Permite a corredor
 
 [xavierventeo/AI4Devs-finalproject](https://github.com/xavierventeo/AI4Devs-finalproject/tree/feature-entrega2-XVB)
 
+### 0.6. Metodología de desarrollo:
+
+El desarrollo se ha llevado a cabo siguiendo un flujo **Spec-Driven Development (SDD)** asistido por IA: cada historia de usuario se refina a un backlog técnico, se implementa con **TDD obligatorio** (backend y frontend) y pasa una **revisión de seguridad OWASP** antes de cerrarse. El proceso completo —fases, comandos y agentes— está documentado en [`docs/SDD-WORKFLOW.md`](docs/SDD-WORKFLOW.md); su automatización (agents, skills y commands) vive en [`.claude/`](.claude/), la única fuente de verdad del comportamiento agéntico del proyecto.
 
 ---
 
@@ -688,6 +691,8 @@ POST /api/checkout
 
 > Set completo de historias (15 US) con criterios de aceptación, estimación y prioridad organizadas por caso de uso: [docs/USER-STORIES.md](docs/USER-STORIES.md)
 
+> Generadas y refinadas siguiendo el flujo SDD (apartado 0.6) — el backlog técnico completo por historia, con sus tareas, vive en [`docs/backlog/`](docs/backlog/).
+
 ### Backlog MVP — Secuencia de implementación recomendada
 
 | Orden | ID | Título | Caso de uso | Talla | Justificación de la posición |
@@ -769,6 +774,8 @@ Como corredor, quiero revisar los productos añadidos al carrito y modificar can
 ## 6. Tickets de Trabajo
 
 > Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
+
+> Los tickets son la salida del flujo SDD (apartado 0.6): cada uno corresponde a una tarea de `docs/backlog/archive/US-XXX.md`, implementada con TDD y verificada con la revisión OWASP de `CLAUDE.md`.
 
 **Ticket 1 — Backend: US-007-TASK-04 — `CartController` + ruta `POST /api/cart`**
 
