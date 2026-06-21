@@ -31,7 +31,7 @@ eCommerce especializado en productos deportivos para running. Permite a corredor
 
 ### 0.5. URL o archivo comprimido del repositorio
 
-[xavierventeo/AI4Devs-finalproject](https://github.com/xavierventeo/AI4Devs-finalproject/tree/feature-entrega1-XVB)
+[xavierventeo/AI4Devs-finalproject](https://github.com/xavierventeo/AI4Devs-finalproject/tree/feature-entrega2-XVB)
 
 
 ---
@@ -337,7 +337,7 @@ El proyecto sigue TDD obligatorio en toda implementación (test que falla → c�
 |---|---|---|---|
 | Backend | Jest + Supertest | Repository: mock de `PrismaClient`, verifica las queries/mutaciones exactas. Service: mock del repositorio (`jest.fn()`), lógica de negocio aislada (validación de stock, totales, errores de dominio). Controller: mock del service + Supertest, contrato HTTP (status codes, forma del body, cookies, rechazo de schemas Zod inválidos). `prisma/seed.test.ts` es la única suite de integración contra PostgreSQL real (no mockada), gateada con `describe.skip` si `DATABASE_URL` no apunta a una BD real | **171/171**, 17/17 suites |
 | Frontend | Vitest + React Testing Library | Componentes, páginas y contexts: estados de UI (loading/empty/error), interacción de usuario, contratos de los hooks de contexto | **300/300**, 30 ficheros |
-| E2E | Playwright (Chromium) | Caja negra contra frontend + backend + PostgreSQL reales, sin mocks ni seeding desde el propio spec | **6/6** (`catalog.spec.ts`, `product.spec.ts`, `purchase.spec.ts`) |
+| E2E | Playwright (Chromium) | Caja negra contra frontend + backend + PostgreSQL reales, sin mocks ni seeding desde el propio spec | **11/11**, 3 specs (`catalog.spec.ts`, `product.spec.ts`, `purchase.spec.ts`) |
 
 > Detalle de la suite E2E: [`docs/E2E-TESTING.md`](docs/E2E-TESTING.md)
 
@@ -400,22 +400,27 @@ erDiagram
     ORDER {
         string   id          PK  "ORD-timestamp"
         string   sessionId
+        datetime date
         string   status          "processing | shipped | delivered | cancelled"
+        decimal  subtotal
+        decimal  shipping
         decimal  total
         string   shippingName
         string   shippingEmail
         string   shippingPhone
         string   shippingAddress
         string   shippingCity
-        datetime createdAt
+        string   shippingPostalCode
+        string   shippingCountry
     }
 
     ORDER_ITEM {
         string   id           PK
         string   orderId      FK
         string   productId    FK
-        string   productName     "Snapshot precio de compra"
-        decimal  productPrice    "Snapshot precio de compra"
+        string   productName     "Snapshot al confirmar el pedido"
+        string   productBrand    "Snapshot al confirmar el pedido"
+        decimal  productPrice    "Snapshot al confirmar el pedido"
         int      quantity
         string   size
         string   color

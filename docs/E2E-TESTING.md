@@ -6,10 +6,12 @@
 |---|---|
 | Suite | `e2e/` (Playwright, Chromium) |
 | Specs | 3 |
-| Tests | 6 |
-| Resultado | **6/6 en verde** |
-| Última ejecución | 2026-06-20 — `npx playwright test --reporter=list` |
-| Sistema verificado | Frontend `:3000`, Backend `:4000`, PostgreSQL `:5432` (seed cargado), local |
+| Tests | 11 |
+| Resultado | **11/11 en verde** |
+| Última ejecución | 2026-06-21 — `npx playwright test --reporter=list` |
+| Sistema verificado | Frontend `:3001` (puerto por defecto `:3000` ocupado), Backend `:4000`, PostgreSQL `:5432` (seed cargado), local |
+
+> El recuento subió de 6 a 11 tests en el commit `9317ef8` ("cubre escenarios alternativos de CU2/CU3": agotado, variante obligatoria, carrito vacío, datos de envío/pago inválidos). Esta tabla no se había actualizado desde entonces — corregido tras verificar la ejecución real.
 
 Detalle de tareas, decisiones de diseño de cada spec y hallazgos de seguridad asociados:
 `docs/backlog/US-014.md` (o su versión archivada en `docs/backlog/archive/US-014.md` tras
@@ -24,27 +26,43 @@ el cierre de la US).
 | `catalog.spec.ts` | combinar filtros sin resultados muestra el estado vacío | AC-1 (estado vacío) | ✅ Pass |
 | `product.spec.ts` | navega del catálogo a la ficha y muestra nombre, precio y atributos | AC-2 (navegación, nombre/precio/atributos, botón «Volver») | ✅ Pass |
 | `product.spec.ts` | un id de producto inexistente muestra el estado 404 | AC-2 (estado 404) | ✅ Pass |
+| `product.spec.ts` | un producto sin stock muestra el botón Agotado deshabilitado | Escenario alternativo CU2 (producto agotado) | ✅ Pass |
+| `product.spec.ts` | añadir al carrito sin seleccionar talla muestra aviso inline | Escenario alternativo CU2 (variante obligatoria) | ✅ Pass |
 | `purchase.spec.ts` | completa el ciclo carrito → checkout → confirmación | AC-3 (carrito → checkout → confirmación → número de pedido → carrito vacío) | ✅ Pass |
+| `purchase.spec.ts` | un carrito vacío muestra el estado vacío sin opción de tramitar pedido | Escenario alternativo CU3 (carrito vacío) | ✅ Pass |
+| `purchase.spec.ts` | datos de envío inválidos muestran error inline y no avanzan al paso 2 | Escenario alternativo CU3 (validación de envío) | ✅ Pass |
+| `purchase.spec.ts` | tarjeta inválida muestra error inline y no avanza al paso 3 | Escenario alternativo CU3 (validación de pago) | ✅ Pass |
 
 AC-4 (specs en headless), AC-5 (config de Playwright) y AC-6 (documentación) no son
-escenarios ejecutables — se verifican por inspección, ver `docs/backlog/US-014.md`.
+escenarios ejecutables — se verifican por inspección, ver `docs/backlog/US-014.md`. Los
+4 escenarios alternativos se añadieron en el commit `9317ef8`, posterior al cierre de
+US-014; no mapean a un AC de esa US sino a gaps de cobertura detectados en QA sobre CU2/CU3.
 
 ## Resultado de la última ejecución
 
 ```
-$ cd e2e && npx playwright test --reporter=list
+$ E2E_BASE_URL=http://localhost:3001 npx playwright test --reporter=list
 
-Running 6 tests using 5 workers
+Running 11 tests using 5 workers
 
-  ✓  [chromium] › tests/catalog.spec.ts:11:7 › Catálogo de productos › activar un filtro de distancia cambia los resultados (1.8s)
-  ✓  [chromium] › tests/catalog.spec.ts:27:7 › Catálogo de productos › combinar filtros sin resultados muestra el estado vacío (2.0s)
-  ✓  [chromium] › tests/catalog.spec.ts:4:7 › Catálogo de productos › el catálogo muestra productos del seed (1.4s)
+  ✓  [chromium] › tests/product.spec.ts:23:7 › Ficha de producto › un id de producto inexistente muestra el estado 404 (1.5s)
+  ✓  [chromium] › tests/catalog.spec.ts:4:7 › Catálogo de productos › el catálogo muestra productos del seed (1.5s)
   ✓  [chromium] › tests/product.spec.ts:4:7 › Ficha de producto › navega del catálogo a la ficha y muestra nombre, precio y atributos (2.0s)
-  ✓  [chromium] › tests/product.spec.ts:23:7 › Ficha de producto › un id de producto inexistente muestra el estado 404 (1.4s)
-  ✓  [chromium] › tests/purchase.spec.ts:4:7 › Ciclo de compra › completa el ciclo carrito → checkout → confirmación (1.6s)
+  ✓  [chromium] › tests/catalog.spec.ts:11:7 › Catálogo de productos › activar un filtro de distancia cambia los resultados (2.3s)
+  ✓  [chromium] › tests/product.spec.ts:31:7 › Ficha de producto › un producto sin stock muestra el botón Agotado deshabilitado (875ms)
+  ✓  [chromium] › tests/product.spec.ts:43:7 › Ficha de producto › añadir al carrito sin seleccionar talla muestra aviso inline (876ms)
+  ✓  [chromium] › tests/catalog.spec.ts:27:7 › Catálogo de productos › combinar filtros sin resultados muestra el estado vacío (2.8s)
+  ✓  [chromium] › tests/purchase.spec.ts:57:7 › Ciclo de compra › un carrito vacío muestra el estado vacío sin opción de tramitar pedido (880ms)
+  ✓  [chromium] › tests/purchase.spec.ts:65:7 › Ciclo de compra › datos de envío inválidos muestran error inline y no avanzan al paso 2 (2.2s)
+  ✓  [chromium] › tests/purchase.spec.ts:86:7 › Ciclo de compra › tarjeta inválida muestra error inline y no avanza al paso 3 (2.2s)
+  ✓  [chromium] › tests/purchase.spec.ts:4:7 › Ciclo de compra › completa el ciclo carrito → checkout → confirmación (2.8s)
 
-  6 passed (3.4s)
+  11 passed (5.3s)
 ```
+
+> Esta ejecución usó `:3001` porque el puerto `:3000` estaba ocupado por un proceso de
+> desarrollo obsoleto en la máquina donde se verificó; con el `CORS_ORIGIN` del backend
+> apuntando al puerto correcto del frontend, el resultado es idéntico al de `:3000`.
 
 Ejecuciones adicionales registradas durante el desarrollo (ver `docs/backlog/US-014.md`,
 detalle de cada tarea): cada spec se ejecutó al menos dos veces de forma aislada para
