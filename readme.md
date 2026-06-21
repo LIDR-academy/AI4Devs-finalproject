@@ -281,16 +281,16 @@ El backend sigue el patrón **Repository + Service Layer**: los Services contien
 
 ### **2.4. Infraestructura y despliegue**
 
-El despliegue del MVP academico se plantea con una infraestructura de coste 0 EUR/mes, suficiente para que los profesores puedan consultar la aplicacion completa durante la evaluacion:
+El despliegue del MVP académico se plantea con una infraestructura de coste 0 EUR/mes, suficiente para que los profesores puedan consultar la aplicación completa durante la evaluación:
 
 | Capa | Servicio | Plan | Responsabilidad |
 |---|---|---|---|
-| Frontend | Vercel | Hobby | Publica la aplicacion Next.js 15 con SSR y assets estaticos |
+| Frontend | Vercel | Hobby | Publica la aplicación Next.js 15 con SSR y assets estáticos |
 | Backend | Render | Free Web Service | Publica la API REST Express |
-| Base de datos | Supabase | Free PostgreSQL | Aloja PostgreSQL para catalogo, carrito y pedidos |
-| Repositorio | GitHub | Free | Fuente de codigo y disparador de despliegues automaticos |
+| Base de datos | Supabase | Free PostgreSQL | Aloja PostgreSQL para catálogo, carrito y pedidos |
+| Repositorio | GitHub | Free | Fuente de código y disparador de despliegues automáticos |
 
-La pipeline del MVP es deliberadamente sencilla: al vincular el repositorio, Vercel despliega automaticamente el frontend y Render despliega automaticamente el backend en cada push. Supabase no despliega codigo; la base de datos se prepara de forma puntual con Prisma:
+La pipeline del MVP es deliberadamente sencilla: al vincular el repositorio, Vercel despliega automáticamente el frontend y Render despliega automáticamente el backend en cada push. Supabase no despliega código; la base de datos se prepara de forma puntual con Prisma:
 
 ```bash
 cd backend
@@ -298,7 +298,7 @@ npx prisma migrate deploy
 npx prisma db seed
 ```
 
-Esta decision evita sobreingenieria para la entrega y mantiene la arquitectura desacoplada definida en el sistema: frontend SSR, API REST independiente y PostgreSQL gestionado. La principal limitacion es que Render Free puede dormirse tras inactividad y Supabase Free puede pausarse si no se usa durante un periodo prolongado.
+Esta decisión evita sobreingeniería para la entrega y mantiene la arquitectura desacoplada definida en el sistema: frontend SSR, API REST independiente y PostgreSQL gestionado. La principal limitación es que Render Free puede dormirse tras inactividad y Supabase Free puede pausarse si no se usa durante un período prolongado.
 
 > Propuesta completa de infraestructura: [docs/INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md)  
 > Pipeline de despliegue del MVP: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
