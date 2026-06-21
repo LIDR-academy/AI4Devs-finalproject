@@ -503,7 +503,7 @@ Opción implementación manual ticket: /implement-user-story US-000-TASK-03
 
 /refine-user-story US-007
 /implement-user-story US-007
-Opción implementación manual ticket: /implement-user-story US-007-TASK-04 y /implement-user-story US-007-TASK-05
+Opción implementación manual ticket: /implement-task US-007-TASK-04 e /implement-task US-007-TASK-05
 ```
 
 Las 2 US de esta sección documentan tareas concretas (`US-000-TASK-03`, `US-007-TASK-04`, `US-007-TASK-05`) cuya definición original — tabla de tareas, criterios de hecho, tests TDD — no se escribió a mano: salió del mismo flujo SDD citado en las secciones 2.5, 2.6 y 4 de este fichero. Los Prompts 1-3 de arriba son la capa posterior de selección, redacción y corrección de esos tickets para el README; este Prompt 4 es la capa que generó el contenido técnico de partida.
