@@ -499,7 +499,7 @@ Verifica con `npm run build`. Un solo commit.
 ```
 /refine-user-story US-000
 /implement-user-story US-000
-Opción implementación manual ticket: /implement-user-story US-000-TASK-03
+Opción implementación manual ticket: /implement-task US-000-TASK-03
 
 /refine-user-story US-007
 /implement-user-story US-007
