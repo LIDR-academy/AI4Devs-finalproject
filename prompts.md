@@ -5,6 +5,8 @@
 
 Conversación completa: [prompts-full-conversation.md](prompts-full-conversation.md)
 
+Prompt creación estructura para soportar Spec Driven Development (SDD) usado para implementación del proyecto: [prompts_workflow_sdd.md](prompts_workflow_sdd.md)
+
 ## Índice
 
 1. [Descripción general del producto](#1-descripción-general-del-producto)
