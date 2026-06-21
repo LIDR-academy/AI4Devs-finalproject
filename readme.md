@@ -335,9 +335,10 @@ El proyecto sigue TDD obligatorio en toda implementación (test que falla → c�
 
 | Capa | Herramientas | Estrategia | Resultado actual |
 |---|---|---|---|
-| Backend | Jest + Supertest | Repository: mock de `PrismaClient`, verifica las queries/mutaciones exactas. Service: mock del repositorio (`jest.fn()`), lógica de negocio aislada (validación de stock, totales, errores de dominio). Controller: mock del service + Supertest, contrato HTTP (status codes, forma del body, cookies, rechazo de schemas Zod inválidos). `prisma/seed.test.ts` es la única suite de integración contra PostgreSQL real (no mockada), gateada con `describe.skip` si `DATABASE_URL` no apunta a una BD real | **171/171**, 17/17 suites |
-| Frontend | Vitest + React Testing Library | Componentes, páginas y contexts: estados de UI (loading/empty/error), interacción de usuario, contratos de los hooks de contexto | **300/300**, 30 ficheros |
-| E2E | Playwright (Chromium) | Caja negra contra frontend + backend + PostgreSQL reales, sin mocks ni seeding desde el propio spec | **11/11**, 3 specs (`catalog.spec.ts`, `product.spec.ts`, `purchase.spec.ts`) |
+| Backend — unitarios | Jest + Supertest | Repository: mock de `PrismaClient`, verifica las queries/mutaciones exactas. Service: mock del repositorio (`jest.fn()`), lógica de negocio aislada (validación de stock, totales, errores de dominio). Controller: mock del service + Supertest, contrato HTTP (status codes, forma del body, cookies, rechazo de schemas Zod inválidos) | ✅ **168/168 pass**, 16/16 suites |
+| Backend — integración | Jest + PostgreSQL real (Docker) | `prisma/seed.test.ts` es la única suite que toca base de datos real (sin mocks): ejecuta el seed contra PostgreSQL y verifica el resultado. Gateada con `describe.skip` si `DATABASE_URL` no apunta a una BD real, degradando a no-op en entornos sin BD | ✅ **3/3 pass**, 1/1 suite |
+| Frontend — unitarios | Vitest + React Testing Library | Componentes, páginas y contexts: estados de UI (loading/empty/error), interacción de usuario, contratos de los hooks de contexto | ✅ **300/300 pass**, 30 ficheros |
+| E2E | Playwright (Chromium) | Caja negra contra frontend + backend + PostgreSQL reales, sin mocks ni seeding desde el propio spec | ✅ **11/11 pass**, 3 specs (`catalog.spec.ts`, `product.spec.ts`, `purchase.spec.ts`) |
 
 > Detalle de la suite E2E: [`docs/E2E-TESTING.md`](docs/E2E-TESTING.md)
 
