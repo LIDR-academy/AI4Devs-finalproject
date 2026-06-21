@@ -331,7 +331,29 @@ Las reglas de seguridad no negociables del proyecto están definidas en [`CLAUDE
 
 ### **2.6. Tests**
 
-> Pendiente de documentar.
+El proyecto sigue TDD obligatorio en toda implementación (test que falla → código mínimo → refactor en verde, regla de [`CLAUDE.md`](CLAUDE.md)). Cada capa se prueba de forma aislada:
+
+| Capa | Herramientas | Estrategia | Resultado actual |
+|---|---|---|---|
+| Backend | Jest + Supertest | Repository: mock de `PrismaClient`, verifica las queries/mutaciones exactas. Service: mock del repositorio (`jest.fn()`), lógica de negocio aislada (validación de stock, totales, errores de dominio). Controller: mock del service + Supertest, contrato HTTP (status codes, forma del body, cookies, rechazo de schemas Zod inválidos). `prisma/seed.test.ts` es la única suite de integración contra PostgreSQL real (no mockada), gateada con `describe.skip` si `DATABASE_URL` no apunta a una BD real | **171/171**, 17/17 suites |
+| Frontend | Vitest + React Testing Library | Componentes, páginas y contexts: estados de UI (loading/empty/error), interacción de usuario, contratos de los hooks de contexto | **300/300**, 30 ficheros |
+| E2E | Playwright (Chromium) | Caja negra contra frontend + backend + PostgreSQL reales, sin mocks ni seeding desde el propio spec | **6/6** (`catalog.spec.ts`, `product.spec.ts`, `purchase.spec.ts`) |
+
+> Detalle de la suite E2E: [`docs/E2E-TESTING.md`](docs/E2E-TESTING.md)
+
+**Algunos tests representativos:**
+
+- **`prisma/seed.test.ts` — único test de integración contra PostgreSQL real.** Ejecuta el seed contra la base de datos del `docker-compose` y comprueba: inserta exactamente 13 productos (incluida la fixture `prod-013` con stock 0 para los escenarios de "Agotado"), es idempotente al ejecutarse dos veces, y todos los productos tienen atributos de filtrado (`distance`/`surface`) no vacíos.
+
+- **`order.repository.test.ts` — descuento atómico de stock.** Con `tx.product` mockado, verifica que `createOrderFromCart` llama a `updateMany({ where: { stock: { gte: cantidad } }, data: { stock: { decrement: cantidad } } })` por cada ítem del carrito y lanza `StockError` cuando `updateMany` devuelve `count: 0` — sin necesidad de levantar PostgreSQL para probar la condición de carrera.
+
+- **`cart.controller.test.ts` — contrato de `POST /api/cart`.** Vía Supertest sobre una app Express en memoria: body válido → `200` con el carrito actualizado; campo extra en el body → `400` (verifica que el schema Zod es `.strict()`); stock insuficiente → `409` con `available`; comprueba que la respuesta nunca incluye `stack` ni mensajes internos de Prisma.
+
+- **`cart-context.test.tsx` — estado global del carrito.** Con RTL, simula `addItem` exitoso y fallido: en éxito actualiza `items`/`itemCount`/totales desde la respuesta del servidor; en fallo, `error` se popula y el estado previo no se muta — protege la regla de que el frontend nunca decide cantidades ni precios por su cuenta.
+
+- **`checkout-page.test.tsx` — flujo de 3 pasos.** Cubre navegación entre pasos, persistencia de la confirmación en `sessionStorage`, recuperación ante JSON corrupto y el guard que redirige a `/cart` si el carrito está vacío y no hay pedido confirmado.
+
+- **`purchase.spec.ts` (E2E) — ciclo de compra real.** Recorre catálogo → ficha de producto → carrito → checkout → confirmación contra el sistema vivo (sin mocks), comprobando que el pedido se crea, el carrito queda vacío y el número de pedido se muestra — única capa que ejerce las transacciones reales de Prisma/PostgreSQL descritas arriba.
 
 ---
 
