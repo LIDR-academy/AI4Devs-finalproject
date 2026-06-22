@@ -19,6 +19,7 @@
 | US-012 | Ver la confirmación del pedido | CU3 | S | Imprescindible |
 | US-013 | Consultar el historial de pedidos | CU3 | S | Importante |
 | US-014 | Tests E2E con Playwright | Calidad | M | Importante |
+| US-015 | Descontar stock al confirmar el pedido | CU3 | S | Importante |
 
 ---
 
