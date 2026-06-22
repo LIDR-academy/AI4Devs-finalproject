@@ -9,9 +9,7 @@
 | Tests | 11 |
 | Resultado | **11/11 en verde** |
 | Última ejecución | 2026-06-21 — `npx playwright test --reporter=list` |
-| Sistema verificado | Frontend `:3001` (puerto por defecto `:3000` ocupado), Backend `:4000`, PostgreSQL `:5432` (seed cargado), local |
-
-> El recuento subió de 6 a 11 tests en el commit `9317ef8` ("cubre escenarios alternativos de CU2/CU3": agotado, variante obligatoria, carrito vacío, datos de envío/pago inválidos). Esta tabla no se había actualizado desde entonces — corregido tras verificar la ejecución real.
+| Sistema verificado | Frontend `:3000`, Backend `:4000`, PostgreSQL `:5432` (seed cargado), local |
 
 Detalle de tareas, decisiones de diseño de cada spec y hallazgos de seguridad asociados:
 `docs/backlog/US-014.md` (o su versión archivada en `docs/backlog/archive/US-014.md` tras
@@ -41,7 +39,7 @@ US-014; no mapean a un AC de esa US sino a gaps de cobertura detectados en QA so
 ## Resultado de la última ejecución
 
 ```
-$ E2E_BASE_URL=http://localhost:3001 npx playwright test --reporter=list
+$ E2E_BASE_URL=http://localhost:3000 npx playwright test --reporter=list
 
 Running 11 tests using 5 workers
 
@@ -59,10 +57,6 @@ Running 11 tests using 5 workers
 
   11 passed (5.3s)
 ```
-
-> Esta ejecución usó `:3001` porque el puerto `:3000` estaba ocupado por un proceso de
-> desarrollo obsoleto en la máquina donde se verificó; con el `CORS_ORIGIN` del backend
-> apuntando al puerto correcto del frontend, el resultado es idéntico al de `:3000`.
 
 Ejecuciones adicionales registradas durante el desarrollo (ver `docs/backlog/US-014.md`,
 detalle de cada tarea): cada spec se ejecutó al menos dos veces de forma aislada para
