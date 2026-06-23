@@ -626,3 +626,535 @@ Abre el archivo `readme.md`. Localiza el encabezado de la sección `## 2. Arquit
 | Almacenamiento local | Drift (SQLite) | Hive | Drift ofrece tipado fuerte, migraciones formales y BD en memoria para tests de repositorio. La tabla `rounds` con FK `gameId` e índice `roundNumber` replica exactamente la subcolección Firestore, simplificando los mappers en `data/`. |
 
 ---
+
+## Entrega 2 — Decisiones de arquitectura previas a implementación
+
+**Fecha:** 16/06/2026
+**Rama:** feature-entrega2-JMGS
+**Fase:** Decisiones de arquitectura (previas a los tickets de implementación)
+
+### Contexto
+
+El readme de Entrega 1 dejaba dos puntos explícitamente pendientes de
+confirmar en Entrega 2:
+- Estado inicial de la partida, documentado provisionalmente como `lobby`
+  sin haber sido validado contra el dominio real del producto.
+- Tecnología de almacenamiento local, marcada como "technology to be
+  confirmed in Entrega 2".
+
+Ambas se resolvieron en chat (Claude) antes de tocar código, siguiendo el
+proceso definido: decisiones de arquitectura primero, implementación después.
+
+### Decisión 1 — Estado inicial de partida: `setup`
+
+**Elegido:** `setup` → `in_progress` → `finished`
+**Descartado:** mantener `lobby`
+
+**Motivo:** "Lobby" connota una sala de espera multijugador (varios
+dispositivos conectándose a una partida), lo cual no aplica a La Pocha:
+el modelo es single-device, un único organizador configura todo en su
+teléfono antes de empezar a jugar. `setup` refleja con precisión lo que
+ocurre en esa fase: creación de partida (LPT-5), alta de jugadores (LPT-6)
+y configuración de orden/repartidor (LPT-7).
+
+### Decisión 2 — Almacenamiento local: Drift (SQLite)
+
+**Elegido:** Drift
+**Descartado:** Hive
+
+**Motivo:** El modelo de datos del readme (§3) está diseñado como réplica
+local de la estructura Firestore: documento `games` con array `players[]`
+embebido y subcolección `rounds`. Drift ofrece tipado fuerte, migraciones
+formales y bases de datos en memoria para tests de repositorio, lo que
+encaja con la estrategia de tests ya documentada (§2.6, repositorios
+mockeados). La tabla `rounds` con FK `gameId` e índice compuesto
+`(gameId, roundNumber)` replica exactamente la consulta `orderBy
+roundNumber asc` ya documentada para Firestore, simplificando los mappers
+en la capa `data/`. Hive habría sido más ligero y más cercano al modelo
+mental documental de Firestore, pero exige resolver filtrado/ordenación
+en Dart sobre listas cargadas en memoria; para el volumen de este
+proyecto ambas opciones eran viables, pero se priorizó testabilidad y
+paralelismo con el esquema Firestore ya validado.
+
+### Prompts ejecutados
+
+1. Reemplazo de `lobby` por `setup` en las 7 ocurrencias del readme
+   (diagrama ER, tabla de campos `games`, descripción `startedAt`,
+   HU1/LPT-5, Ticket 1/LPT-7 — criterios de aceptación, modelo de datos
+   y Security Rules).
+2. Documentación de Drift como tecnología de almacenamiento local en la
+   tabla de componentes (§2.2) y en la descripción de la capa `data/`
+   local (§2.3).
+3. Añadido de tabla ADR (Architecture Decision Record) en el readme,
+   resumiendo ambas decisiones con alternativa descartada y motivo.
+
+### Artefactos modificados
+
+- `readme.md` — secciones 1 (nueva tabla ADR), 2.2, 2.3, 3.1, 3.2, 5
+  (HU1), 6 (Ticket 1).
+- `prompts.md` — esta entrada.
+
+### Próximo paso
+
+Arranque de implementación: LPT-5 (crear partida), primer ticket del
+Bloque 1 — Gestión de partida (LPT-5 → LPT-6 → LPT-7).
+
+------------
+
+Abre el archivo `readme.md`. Localiza la sección `### **1.3. Diseño y experiencia de usuario:**`, que actualmente solo contiene una nota entre `>` pidiendo imágenes/videotutorial.
+
+Sustituye el contenido completo de esa sección (el encabezado se mantiene) por lo siguiente:
+
+### **1.3. Diseño y experiencia de usuario:**
+
+El diagrama siguiente documenta el flujo de navegación completo del MVP: desde
+Home hasta el ciclo de ronda (apuestas → juego → bazas → resultado), pasando
+por la corrección de datos y el cierre de partida con sincronización opcional.
+Diseñado en sesión de arquitectura previa a la implementación de los tickets
+del Bloque 1 y 2 (ver `listOfPrompts.md`).
+
+```mermaid
+flowchart TB
+    HOME["Home<br/>Crear · Historial · Cuenta"]
+
+    CREAR["Crear partida<br/>LPT-5"]
+    HIST1["Historial<br/>LPT-15"]
+    AUTH["Login / registro<br/>LPT-19"]
+
+    HOME --> CREAR
+    HOME --> HIST1
+    HOME --> AUTH
+
+    JUGADORES["Añadir jugadores<br/>LPT-6"]
+    SETUP["Orden y repartidor<br/>LPT-7"]
+
+    CREAR --> JUGADORES --> SETUP
+
+    subgraph ROUND["Ciclo de ronda — editable mientras status != closed"]
+        direction TB
+        APUESTAS["Apuestas<br/>LPT-9"]
+        JUEGO["Pantalla de juego<br/>LPT-10"]
+        BAZAS["Bazas reales<br/>LPT-11"]
+        RESULTADO_R["Resultado de ronda<br/>LPT-14 · cierra status"]
+        CORREC["Corrección<br/>LPT-12 · hasta cerrar ronda"]
+
+        APUESTAS --> JUEGO --> BAZAS --> RESULTADO_R
+        APUESTAS -.-> CORREC
+        JUEGO -.-> CORREC
+        BAZAS -.-> CORREC
+        CORREC -.-> APUESTAS
+        CORREC -.-> JUEGO
+        CORREC -.-> BAZAS
+    end
+
+    SETUP --> APUESTAS
+    RESULTADO_R -->|"siguiente ronda (repartidor rota)<br/>o última ronda"| RESULTADO_F
+
+    RESULTADO_F["Resultado final<br/>Ranking de partida"]
+    CTA["CTA registro<br/>solo si no hay sesión"]
+
+    RESULTADO_F -.->|"sin sesión"| CTA
+    RESULTADO_F -->|"con sesión y red:<br/>sube a Firestore en background<br/>LPT-20 / LPT-21"| HIST2
+
+    HIST2["Historial<br/>LPT-15"]
+    HIST2 --> HOME
+```
+
+**Notas de diseño:**
+
+- **Home** es la pantalla mínima del MVP: acceso a crear partida, ver historial
+  y gestionar cuenta. La app funciona igual con o sin sesión (PRD §6), por lo
+  que el acceso a cuenta es discreto, no un bloqueo de entrada.
+- **Registro contextual:** el CTA de registro aparece al finalizar una partida
+  sin sesión activa, como invitación a guardar el historial en la nube — nunca
+  como requisito antes de jugar.
+- **Corrección de datos (LPT-12):** disponible desde cualquiera de las tres
+  pantallas activas del ciclo de ronda (apuestas, juego, bazas) mientras
+  `round.status != closed`. Al cerrarse la ronda (tras calcular `scoresDelta`
+  en LPT-11/14), la corrección puntual deja de estar disponible; solo cabe
+  repetir la ronda completa (LPT-13, post-MVP de esta entrega).
+- **Pantallas pendientes de wireframe visual** (Stitch/Figma): Home, Crear
+  partida, Añadir jugadores, Orden y repartidor, Apuestas, Pantalla de juego,
+  Bazas reales, Resultado de ronda, Resultado final, Login/registro, Historial.
+
+No modifiques ninguna otra sección del readme.
+
+
+-----------
+
+## Entrega 2 — Diseño de flujo de navegación (previo a Bloque 1)
+
+**Fecha:** 17/06/2026
+**Tipo:** Decisión de diseño en chat (no ejecución en Cursor)
+
+### Contexto
+
+Al preparar el prompt de LPT-5 se identificó un hueco de proceso: se había
+saltado de historias de usuario a tickets de código sin pasar por diseño de
+navegación/pantallas. Se decidió intercalar una fase de diseño de dos pasos:
+(1) mapa de navegación en chat, (2) wireframes con herramienta IA externa
+(Stitch/Figma), antes de implementar el Bloque 1.
+
+### Decisiones tomadas
+
+- **Home:** pantalla mínima con acceso a crear partida, historial y cuenta;
+  acceso a login discreto (no bloqueante), coherente con PRD §6 (app funciona
+  igual con o sin cuenta).
+- **Registro contextual:** CTA de registro al finalizar partida sin sesión,
+  no como paso obligatorio previo.
+- **Corrección de datos (LPT-12):** editable desde apuestas/juego/bazas
+  mientras `round.status != closed`; bloqueada tras cierre de ronda.
+
+### Artefacto generado
+
+Diagrama de flujo de navegación (Mermaid), trasladado a `readme.md` §1.3
+mediante prompt en Cursor (ver entrada de Cursor correspondiente).
+
+### Próximo paso
+
+Paso 2 de diseño: wireframes de las pantallas clave con herramienta IA
+(Stitch/Figma), en paralelo a la implementación del Bloque 1 (LPT-5/6/7).
+
+-----------------
+
+Prompt para Figma:
+
+Diseña una pantalla de inicio (Home) para una app móvil Android/iOS llamada
+"La Pocha", un marcador digital para un juego de cartas español de grupo.
+
+Estilo visual: limpio y cálido, inspirado en una mesa de juego de cartas sin
+caer en lo infantil. Paleta basada en un verde tapete como color primario
+(tipo #2E7D5B o similar), fondo neutro claro (blanco roto / gris muy claro),
+acentos en un tono cálido secundario (ámbar o terracota) para botones de
+acción secundaria. Sigue los principios de Material Design 3: superficie,
+elevación sutil mediante sombra ligera (no bordes duros), esquinas
+redondeadas (12-16px) en tarjetas y botones.
+
+Tipografía: sans-serif moderna y muy legible (tipo Inter o Roboto), tamaños
+generosos — el público incluye usuarios mayores de 50 años poco
+familiarizados con apps, así que prioriza alto contraste y jerarquía visual
+clara sobre densidad de información.
+
+Contenido de la pantalla:
+
+- Cabecera superior con el nombre "La Pocha" y un icono de cuenta/perfil
+  discreto en la esquina superior derecha (sin sesión iniciada: icono de
+  "iniciar sesión"; no debe parecer obligatorio ni bloqueante).
+- Un botón de acción principal grande y prominente: "Nueva partida".
+- Debajo, una sección secundaria: "Historial" con acceso a partidas
+  recientes (puede mostrarse vacío con un estado vacío amigable, ya que es
+  la primera vez que se abre la app).
+- Diseño mobile-first, un solo frame de tamaño móvil estándar (390x844,
+  equivalente a iPhone 14 / Android medio).
+
+No incluyas texto decorativo de relleno en inglés ("Lorem ipsum"); usa
+español. No incluyas branding ni logos de terceros.
+
+----------------
+
+Prompt — Crear partida (LPT-5):
+
+Usando el mismo estilo visual de la pantalla "Home" que generamos antes
+(verde tapete como color primario, fondo claro, tipografía grande de alto
+contraste, tarjetas con esquinas redondeadas 12-16px, Material 3), diseña
+la pantalla "Crear partida".
+
+Contenido:
+
+- Cabecera con botón de volver (flecha izquierda) y título "Nueva partida".
+- Selector de número de jugadores: 3 a 8, control tipo stepper grande
+  (botones + / - a los lados de un número central grande) o selector
+  segmentado con las 6 opciones visibles a la vez si cabe legible.
+- Debajo del selector, una tarjeta resumen que se actualiza según el
+  número elegido, mostrando en tiempo real tres datos: "Cartas totales",
+  "Máximo por ronda" y "Número de rondas". Usa estos valores de ejemplo
+  para 4 jugadores: 40 cartas totales, máximo 10 por ronda, 22 rondas.
+- Botón de acción principal en la parte inferior: "Continuar" (color
+  primario, ancho completo).
+- Sin campos de texto libre en esta pantalla.
+
+Mobile-first, mismo tamaño de frame que Home (390x844). Texto en español,
+sin contenido de relleno en inglés.
+
+------------
+
+En la pantalla "Crear partida" que generamos, haz dos ajustes:
+
+1. Elimina el control stepper grande (los botones circulares + y - con el
+   número central "4 jugadores"). Mantén únicamente la botonera de chips
+   (3, 4, 5, 6, 7, 8) como único selector de número de jugadores, con el
+   valor seleccionado resaltado en verde como ya está.
+
+2. Corrige el dato "Número de rondas" en la tarjeta resumen: para 4
+   jugadores debe mostrar 22 rondas, no 19. (Cartas totales: 40 y Máximo
+   por ronda: 10 ya son correctos para 4 jugadores).
+
+Ajusta el espaciado vertical de la pantalla tras quitar el stepper para
+que no quede un hueco vacío entre el título "Número de jugadores" y la
+botonera.
+
+-------------
+
+Prompt — Añadir jugadores (LPT-6):
+
+Mismo estilo visual que las pantallas anteriores de "La Pocha" (verde
+tapete, Material 3, tipografía grande). Diseña la pantalla "Añadir
+jugadores", segundo paso de la creación de partida (tras elegir número
+de jugadores).
+
+Contenido:
+
+- Cabecera con botón de volver y título "Jugadores (2 de 4)" como
+  indicador de progreso (X de N, según el número de jugadores elegido
+  en el paso anterior).
+- Lista de "slots" de jugador, uno por cada puesto disponible: los ya
+  rellenados muestran el nombre con un avatar circular con inicial y un
+  icono pequeño que distinga "invitado" de "usuario registrado"; los
+  vacíos muestran un slot con borde discontinuo y texto "Añadir jugador".
+- Al tocar un slot vacío (representa el estado tras tocarlo, como
+  variante o segundo frame si es posible): aparece una tarjeta con tres
+  opciones claras: "Nombre libre" (campo de texto), "Buscar registrado"
+  (campo de búsqueda con lupa), "Favoritos" (lista breve de chips con
+  nombres, ej. "Juan", "María", "Carlos").
+- Botón de acción principal inferior: "Continuar", deshabilitado
+  (visualmente atenuado) hasta completar todos los slots.
+
+Mobile-first, frame 390x844. Texto en español.
+
+-----------------
+
+Prompt — Orden y repartidor (LPT-7):
+
+Mismo estilo visual que las pantallas anteriores de "La Pocha". Diseña
+la pantalla "Orden y repartidor", último paso antes de empezar la
+partida.
+
+Contenido:
+
+- Cabecera con botón de volver y título "Orden de mesa".
+- Lista reordenable de los jugadores ya añadidos (usa 4 nombres de
+  ejemplo: Juan, María, Carlos, Ana), cada fila con: icono de "agarre"
+  para arrastrar (tres líneas horizontales a la izquierda), número de
+  posición en un círculo, nombre del jugador, y un indicador visual
+  (ej. icono de carta o estrella) marcando cuál es el repartidor actual.
+- Debajo de la lista, un botón secundario (no tan prominente como el
+  principal) con icono de dados: "Repartidor aleatorio".
+- Botón de acción principal inferior, color primario: "Empezar partida".
+
+Mobile-first, frame 390x844. Texto en español, sin relleno en inglés.
+
+-----------
+
+Prompt — Apuestas (LPT-9):
+
+Mismo estilo visual que las pantallas anteriores de "La Pocha". Diseña la
+pantalla "Apuestas", durante el flujo de una ronda.
+
+Contenido:
+
+- Cabecera con título "Ronda 5 · 10 cartas" (número de ronda y cartas por
+  jugador en esta ronda, como ejemplo).
+- Indicador destacado de "Bazas restantes": un número grande que baja a
+  medida que se introducen apuestas (ej. empieza en 10, tras dos apuestas
+  de 3 y 2 muestra "5 restantes").
+- Lista de jugadores en orden de turno, cada fila muestra: nombre, y si ya
+  apostó, su número de apuesta en un círculo verde; si todavía no le toca,
+  la fila aparece atenuada/gris; el jugador activo (le toca ahora) se
+  resalta con borde verde y un selector numérico (botones - y + alrededor
+  de un número, rango 0 al máximo de cartas de la ronda).
+- Para el último jugador de la lista (el repartidor, marcado con un icono
+  distintivo), añade una alerta visual clara junto a su selector: un aviso
+  en color ámbar/advertencia con el texto "Número prohibido: 4" (ejemplo),
+  indicando la cifra que no puede apostar porque haría que la suma total
+  igualase las cartas de la ronda.
+- Botón de acción principal inferior: "Cerrar apuestas", visualmente
+  deshabilitado mientras no todos hayan apostado.
+
+Mobile-first, frame 390x844. Texto en español.
+
+-----------------
+
+Necesito añadir labels de clasificación MoSCoW a varios tickets de Jira
+usando acli. Antes de nada, ejecuta `acli jira workitem edit --help` (o el
+comando equivalente que descubras necesario) para confirmar la sintaxis
+correcta para añadir una label a un issue existente SIN eliminar las
+labels que ya tenga (estos tickets ya tienen una label `estimate-S`,
+`estimate-M` o `estimate-L` que debe conservarse intacta).
+
+Una vez confirmada la sintaxis correcta, añade las siguientes labels:
+
+Label "moscow-must" a: LPT-5, LPT-6, LPT-7, LPT-9, LPT-10, LPT-11, LPT-12,
+LPT-14, LPT-15, LPT-19, LPT-20, LPT-21, LPT-24
+
+Label "moscow-should" a: LPT-8, LPT-13, LPT-16, LPT-18
+
+Label "moscow-could" a: LPT-17
+
+Antes de ejecutar el lote completo, pruébalo primero con un solo ticket
+(LPT-5) y muéstrame el resultado en Jira (o el output del comando) para
+confirmar que: (a) el comando no da error, y (b) la label estimate-* que
+ya tenía el ticket no se ha borrado. Espera mi confirmación antes de
+continuar con el resto.
+
+Al terminar, dime qué sintaxis exacta de acli funcionó, para documentarla
+en listOfPrompts.md.
+
+**Sintaxis acli que funcionó (añadir labels sin borrar las existentes):**
+
+`--labels` sustituye todas las labels; para **añadir** sin tocar `estimate-*`
+u otras, usar `--from-json` con el campo `labelsToAdd` (descubierto vía
+`acli jira workitem edit --generate-json`):
+
+```powershell
+# 1. Crear JSON (ejemplo: añadir moscow-must a varios tickets)
+@'
+{
+  "issues": ["LPT-5", "LPT-6"],
+  "labelsToAdd": ["moscow-must"]
+}
+'@ | Set-Content -Encoding utf8 moscow-labels.json
+
+# 2. Aplicar
+acli jira workitem edit --from-json "moscow-labels.json" --yes --json
+
+# 3. Verificar labels conservadas
+acli jira workitem view LPT-5 --fields labels --json
+```
+
+Para quitar labels concretas sin reemplazar el resto: `labelsToRemove` en el
+mismo JSON, o `--remove-labels "label1,label2"` en la línea de comandos.
+
+**Resultado:** 17 tickets actualizados (13× `moscow-must`, 4× `moscow-should`,
+1× `moscow-could`); labels `estimate-S|M|L` conservadas en todos.
+
+-----------------
+
+Necesito cambiar el tipo de issue de varios tickets de Jira de "Historia"
+a "Tarea" usando acli, sin perder ningún dato (descripción, criterios de
+aceptación, comentarios, labels).
+
+Paso 1: ejecuta `acli jira workitem edit --help` (o el subcomando que
+corresponda) para confirmar si existe un flag para cambiar el tipo de
+issue (algo como --type o --issue-type). Si no lo encuentras ahí, busca
+si acli tiene un comando específico para "transition" o "convert" de
+tipo de issue, ya que algunas instancias de Jira requieren un endpoint
+distinto al de edición normal de campos para cambiar el tipo.
+
+Paso 2: antes de aplicar nada en lote, pruébalo SOLO con LPT-24 (que ya
+es Historia, recién creado). Muéstrame el resultado y confirma que:
+(a) el comando no da error,
+(b) la descripción, criterios de aceptación y labels (moscow-must,
+    estimate-*) se conservan intactos tras el cambio,
+(c) el issue sigue siendo accesible con el mismo ID (LPT-24).
+
+Espera mi confirmación antes de continuar.
+
+Paso 3 (solo tras mi confirmación): aplica el mismo cambio de tipo
+"Historia" → "Tarea" a: LPT-5, LPT-6, LPT-7, LPT-8, LPT-9, LPT-10,
+LPT-11, LPT-12, LPT-13, LPT-14, LPT-15, LPT-16, LPT-17, LPT-18, LPT-19,
+LPT-20, LPT-21.
+
+Al terminar, documenta en listOfPrompts.md qué sintaxis exacta de acli
+funcionó para este tipo de operación (cambio de tipo de issue), ya que
+es una operación distinta a editar campos o labels que ya hemos
+documentado antes.
+
+**Sintaxis acli que funcionó (cambiar tipo de issue Historia → Tarea):**
+
+Flag directo en `acli jira workitem edit` (no usar `transition`, que solo
+cambia estado). El nombre del tipo debe coincidir exactamente con Jira
+(case-sensitive; en LPT: `"Tarea"`, no `"Task"`):
+
+```powershell
+# Un ticket
+acli jira workitem edit --key "LPT-21" --type "Tarea" --yes --json
+
+# Lote vía JSON (--generate-json expone el campo "type")
+@'
+{
+  "issues": ["LPT-5", "LPT-6", "LPT-7"],
+  "type": "Tarea"
+}
+'@ | Set-Content -Encoding utf8 historia-to-tarea.json
+
+acli jira workitem edit --from-json "historia-to-tarea.json" --yes --json
+
+# Verificar tipo y datos conservados
+acli jira workitem view LPT-21 --fields issuetype,labels,description --json
+```
+
+**Notas:**
+- Conserva descripción, labels, comentarios e ID/key del issue.
+- **Subtask → Tarea falla** (ej. LPT-24, subtarea de LPT-7): Jira responde
+  «El tipo de incidencia seleccionada no es válido»; no aplica al lote LPT-5…21.
+- Tipos válidos en LPT (según error de Jira): Epic, Subtask, Tarea, Historia,
+  Función, Error.
+
+**Resultado:** 17 tickets LPT-5…LPT-21 convertidos a Tarea; labels
+`estimate-*` y `moscow-*` conservadas; descripciones intactas.
+
+------------
+
+Prompt — Ajustes a la pantalla de Apuestas (LPT-9 + LPT-24);
+
+En la pantalla "Apuestas" que ya generamos para "La Pocha" (Ronda 5 · 10
+cartas), añade los siguientes dos elementos, manteniendo el estilo visual
+ya establecido:
+
+1. CABECERA: añade un icono de "más opciones" (tres puntos verticales) en
+   la esquina superior derecha de la cabecera verde. Al tocarlo, se
+   despliega un menú con una única opción: "Cancelar partida" (texto en
+   color de advertencia/rojo). No diseñes el diálogo de confirmación en
+   esta misma pantalla; basta con mostrar el menú desplegado como
+   variante o anotación.
+
+2. NAVEGACIÓN A RONDA ANTERIOR: añade un botón o enlace secundario, discreto
+   (no debe competir visualmente con el selector de apuestas activo),
+   situado en la parte superior del contenido (debajo de la cabecera,
+   encima de "Bazas restantes"), con un icono de flecha hacia atrás y el
+   texto "Ver ronda anterior". Este elemento solo debe mostrarse a partir
+   de la ronda 2 en adelante (en la ronda 1 no existe ronda anterior, así
+   que no debe aparecer ningún hueco vacío en su lugar).
+
+No modifiques ningún otro elemento de la pantalla (el indicador de bazas
+restantes, la lista de jugadores, el selector del repartidor con el aviso
+de número prohibido, y el botón "Cerrar apuestas" deben quedar exactamente
+igual que en la versión actual).
+
+--------------------
+
+Prompt — Pantalla de juego (LPT-10):
+
+Mismo estilo visual que las pantallas anteriores de "La Pocha". Diseña la
+pantalla "En juego", de solo lectura, mostrada mientras se juega la mano
+físicamente con las cartas reales.
+
+Contenido:
+
+- Cabecera con título "Ronda 5 · 10 cartas".
+- Panel resumen destacado: "Bazas apostadas: 10 / 10" con un check verde
+  indicando que la restricción se cumple correctamente (suma de apuestas
+  distinta a las cartas disponibles).
+- Lista de jugadores, cada fila de solo lectura mostrando: nombre, icono
+  si es el repartidor de esta ronda, apuesta de la ronda actual (número
+  pequeño con etiqueta "apostó"), y puntuación acumulada total a la
+  derecha (número grande, etiqueta "puntos").
+- Sin ningún control editable visible en esta pantalla (ni selectores ni
+  botones +/-, es solo lectura).
+- Botón de acción principal inferior: "Introducir bazas reales".
+- Enlace secundario, más discreto, encima del botón principal: "Corregir
+  apuestas".
+
+Mobile-first, frame 390x844. Texto en español.
+
+--------------
+
+CAMBIO en checklist:
+ANTES:
+
+- [ ] Decisiones de arquitectura pendientes (estados de partida, storage local)
+
+DESPUÉS:
+
+- [x] Decisiones de arquitectura pendientes (estados de partida → `setup`,
+      storage local → Drift). Ver tabla ADR en readme.md.

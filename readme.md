@@ -65,7 +65,75 @@ El organizador crea una partida nueva, define jugadores (nombre libre y/o usuari
 
 ### **1.3. Diseño y experiencia de usuario:**
 
-> Proporciona imágenes y/o videotutorial mostrando la experiencia del usuario desde que aterriza en la aplicación, pasando por todas las funcionalidades principales.
+El diagrama siguiente documenta el flujo de navegación completo del MVP: desde
+Home hasta el ciclo de ronda (apuestas → juego → bazas → resultado), pasando
+por la corrección de datos y el cierre de partida con sincronización opcional.
+Diseñado en sesión de arquitectura previa a la implementación de los tickets
+del Bloque 1 y 2 (ver `listOfPrompts.md`).
+
+```mermaid
+flowchart TB
+    HOME["Home<br/>Crear · Historial · Cuenta"]
+
+    CREAR["Crear partida<br/>LPT-5"]
+    HIST1["Historial<br/>LPT-15"]
+    AUTH["Login / registro<br/>LPT-19"]
+
+    HOME --> CREAR
+    HOME --> HIST1
+    HOME --> AUTH
+
+    JUGADORES["Añadir jugadores<br/>LPT-6"]
+    SETUP["Orden y repartidor<br/>LPT-7"]
+
+    CREAR --> JUGADORES --> SETUP
+
+    subgraph ROUND["Ciclo de ronda — editable mientras status != closed"]
+        direction TB
+        APUESTAS["Apuestas<br/>LPT-9"]
+        JUEGO["Pantalla de juego<br/>LPT-10"]
+        BAZAS["Bazas reales<br/>LPT-11"]
+        RESULTADO_R["Resultado de ronda<br/>LPT-14 · cierra status"]
+        CORREC["Corrección<br/>LPT-12 · hasta cerrar ronda"]
+
+        APUESTAS --> JUEGO --> BAZAS --> RESULTADO_R
+        APUESTAS -.-> CORREC
+        JUEGO -.-> CORREC
+        BAZAS -.-> CORREC
+        CORREC -.-> APUESTAS
+        CORREC -.-> JUEGO
+        CORREC -.-> BAZAS
+    end
+
+    SETUP --> APUESTAS
+    RESULTADO_R -->|"siguiente ronda (repartidor rota)<br/>o última ronda"| RESULTADO_F
+
+    RESULTADO_F["Resultado final<br/>Ranking de partida"]
+    CTA["CTA registro<br/>solo si no hay sesión"]
+
+    RESULTADO_F -.->|"sin sesión"| CTA
+    RESULTADO_F -->|"con sesión y red:<br/>sube a Firestore en background<br/>LPT-20 / LPT-21"| HIST2
+
+    HIST2["Historial<br/>LPT-15"]
+    HIST2 --> HOME
+```
+
+**Notas de diseño:**
+
+- **Home** es la pantalla mínima del MVP: acceso a crear partida, ver historial
+  y gestionar cuenta. La app funciona igual con o sin sesión (PRD §6), por lo
+  que el acceso a cuenta es discreto, no un bloqueo de entrada.
+- **Registro contextual:** el CTA de registro aparece al finalizar una partida
+  sin sesión activa, como invitación a guardar el historial en la nube — nunca
+  como requisito antes de jugar.
+- **Corrección de datos (LPT-12):** disponible desde cualquiera de las tres
+  pantallas activas del ciclo de ronda (apuestas, juego, bazas) mientras
+  `round.status != closed`. Al cerrarse la ronda (tras calcular `scoresDelta`
+  en LPT-11/14), la corrección puntual deja de estar disponible; solo cabe
+  repetir la ronda completa (LPT-13, post-MVP de esta entrega).
+- **Pantallas pendientes de wireframe visual** (Stitch/Figma): Home, Crear
+  partida, Añadir jugadores, Orden y repartidor, Apuestas, Pantalla de juego,
+  Bazas reales, Resultado de ronda, Resultado final, Login/registro, Historial.
 
 ### **1.4. Instrucciones de instalación:**
 > Documenta de manera precisa las instrucciones para instalar y poner en marcha el proyecto en local (librerías, backend, frontend, servidor, base de datos, migraciones y semillas de datos, etc.)
