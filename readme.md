@@ -9,6 +9,10 @@
 4. [API Specification](#4-api-specification)
 5. [User Stories](#5-user-stories)
 6. [Work Tickets](#6-work-tickets)
+7. [CI/CD Pipeline & Automation](#7-cicd-pipeline--automation)
+8. [Delivery Status](#8-delivery-status)
+9. [AI Tools & Engineering](#9-ai-tools--engineering)
+10. [Prompts](#10-prompts)
 
 ---
 
@@ -23,15 +27,35 @@ DiviDox — Dividend Portfolio Tracker
 ### **0.3. Project Description:**
 DiviDox is a cross-platform application (Android, iOS, Desktop) built with **Kotlin Multiplatform (KMP)** that enables individual investors to manage, analyze, and project their passive income from dividends. It provides detailed position tracking, historical dividend analysis, annual income projections, and performance comparisons.
 
-### **0.4. Project URLs:**
-**Code Repository:** https://github.com/javiercamarenatriguero/dividox (public)
+<p align="center">
+  <img src="docs/images/multiplatform.png" alt="DiviDox running on Android, iOS and Desktop" width="800"/>
+</p>
 
-**UI Prototype:** https://stitch.withgoogle.com/projects/10568397103146599411 (Stitch)
+### **0.4. Project URLs:**
+
+| Resource | URL |
+|----------|-----|
+| **Code Repository** | https://github.com/javiercamarenatriguero/dividox *(public)* |
+| **GitHub Project Board** | https://github.com/users/javiercamarenatriguero/projects/1 |
+| **CI/CD Dashboard** | https://github.com/javiercamarenatriguero/dividox/actions |
+| **UI Prototype** | https://stitch.withgoogle.com/projects/10568397103146599411 *(Stitch)* |
 
 ### **0.5. Tools Used:**
-- **GitHub Projects (Dividox Board):** https://github.com/users/javiercamarenatriguero/projects/4 — Issue tracking, user story management, project workflow
-- **Stitch (Google AI for UI):** AI-powered tool for cross-platform interface design and prototyping
-- **Claude Code:** Code generation, architecture design, and documentation
+- **Claude Code (CLI):** Primary AI coding assistant — implementation, architecture, documentation, code review, and agent orchestration
+- **GitHub Copilot:** Complementary AI support via shared `.ai-context/` symlinks
+- **Stitch (Google AI for UI):** AI-powered Material Design 3 screen generation and design system management
+- **Gemini:** Image generation for documentation and promotional graphics
+- **[Looka](https://looka.com/):** Logo design and brand identity
+- **GitHub Projects:** Issue tracking, kanban board, project workflow
+- **MCP Servers:** Stitch, GitHub, Context7, Linear, lean-ctx — connected to Claude Code for external service integration
+
+### **0.6. How to Run / Access the App:**
+
+| Platform | How to Access |
+|----------|---------------|
+| **Android** | APK available via **Firebase App Distribution** (access granted to reviewers). |
+| **iOS** | Clone the [repository](https://github.com/javiercamarenatriguero/dividox), open `iosApp/iosApp.xcworkspace` in Xcode, and run on simulator or device. |
+| **macOS (Desktop/JVM)** | Download the Desktop artifact from [CI — On Merge workflow](https://github.com/javiercamarenatriguero/dividox/actions/workflows/on-merge.yml) or run locally with `./gradlew :composeApp:run`. |
 
 ---
 
@@ -450,11 +474,12 @@ External (Firebase, Yahoo Finance)
 - **iOS:** iOS 14+ (Xcode compilation, App Store publish)
 - **Desktop:** macOS/Windows/Linux (JAR or installer distribution)
 
-**Delivery 1 Deployment (MVP):**
-- ✅ Successful compilation for all targets
+**Deployment Status:**
+- ✅ Successful compilation for all targets (Android, iOS, Desktop)
 - ✅ Firebase project configured (auth + Firestore)
-- ✅ CI/CD with GitHub Actions (gradle build + detekt)
-- 📋 Play Store / App Store: pending (Delivery 2)
+- ✅ CI/CD with GitHub Actions (3 workflows: On Pull Request, On Merge, On Distribute)
+- ✅ Firebase App Distribution for Android APK delivery
+- ✅ Desktop JAR artifact available from CI
 
 ### **2.5. Security:**
 
@@ -884,78 +909,32 @@ Each ticket includes:
 
 ---
 
-## Architecture Decision Records (ADRs)
-
-Critical architectural decisions are documented in [docs/adr/](docs/adr/).
-
-**Key ADRs:**
-- ADR-001: Firebase as Authentication Backend
-- ADR-002: Clean Architecture + Module Split
-- ADR-007: Yahoo Finance as Market Data Source
-- ADR-010: MVI Pattern for Presentation Layer
-- ADR-013: User Session Lifecycle
-
----
-
-## Product Requirements Documents (PRDs)
-
-Feature specifications are documented in [docs/prd/](docs/prd/).
-
-**Delivery 1 PRDs:**
-- PRD-01: Authentication
-- PRD-02: Dashboard
-- PRD-03: My Holdings (Portfolio)
-- PRD-04: Dividend Activity
-- PRD-05: Security Analysis
-
----
-
 ## 7. CI/CD Pipeline & Automation
 
 ### **7.1. GitHub Actions Workflows**
 
-DiviDox uses automated CI/CD pipelines to ensure code quality, security, and deployment readiness:
+Three automated GitHub Actions workflows are in place:
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                  GitHub Actions Workflows                       │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  1. BUILD (on push/PR)                                          │
-│     ✓ Compile for Android, iOS, Desktop                         │
-│     ✓ Run detekt (code quality)                                 │
-│     ✓ Upload artifacts                                          │
-│                                                                 │
-│  2. TEST (on every commit)                                      │
-│     ✓ Run unit tests                                            │
-│     ✓ Generate coverage report (70%+ required)                  │
-│     ✓ Comment coverage on PR                                    │
-│                                                                 │
-│  3. SECURITY (on PR)                                            │
-│     ✓ Scan for secrets (gitleaks)                               │
-│     ✓ Check dependencies (OWASP)                                │
-│     ✓ Run spotbugs                                              │
-│     ✓ Block merge if critical issues                            │
-│                                                                 │
-│  4. DEPLOY (manual dispatch)                                    │
-│     ✓ Build production APK (signed)                             │
-│     ✓ Deploy to Firebase App Distribution                       │
-│     ✓ Notify testers                                            │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+| Workflow | Trigger | What it Does |
+|----------|---------|--------------|
+| [**On Pull Request**](https://github.com/javiercamarenatriguero/dividox/actions/workflows/on-pull-request.yml) | Every PR | Build, detekt, unit tests, security scan |
+| [**On Merge**](https://github.com/javiercamarenatriguero/dividox/actions/workflows/on-merge.yml) | Merge to main | Full build + artifact upload (Android APK, Desktop JAR) |
+| [**On Distribute**](https://github.com/javiercamarenatriguero/dividox/actions/workflows/on-distribute.yml) | Manual dispatch | Build signed APK + distribute via Firebase App Distribution |
 
-### **7.2. Workflow Integration with GitHub**
+Supporting reusable workflows: `distribute-android-action.yml`, `distribute-desktop-action.yml`.
 
-**Pull Request Flow:**
+**CI/CD Dashboard:** https://github.com/javiercamarenatriguero/dividox/actions
+
+| GitHub Actions Overview | On Merge Workflow Detail |
+|:-----------------------:|:-----------------------:|
+| <img src="docs/images/actions.png" width="500"/> | <img src="docs/images/on_merge_action.png" width="500"/> |
+
+### **7.2. Pull Request Flow**
+
 ```
 Developer Push
     ↓
-[BUILD] Compile all platforms
-    ↓ (fail/pass)
-[TEST] Run unit tests + coverage
-    ↓ (fail/pass)
-[SECURITY] Scan code + dependencies
+[On Pull Request] Compile all platforms + detekt + tests + security scan
     ↓ (fail/pass)
 ✅ PR Checks Pass → Ready to merge
     ↓
@@ -963,98 +942,257 @@ Code Review Approval
     ↓
 Merge to main
     ↓
-[DEPLOY] Firebase App Distribution (optional)
+[On Merge] Full build + upload artifacts (APK, Desktop JAR)
     ↓
-Testing & Release
+[On Distribute] (manual) → Firebase App Distribution
 ```
 
-### **7.3. What We Can Do**
+### **7.3. GitHub Project Board (Kanban)**
 
-#### **1. Automated Builds (Every Commit)**
-- Compile for Android (APK), iOS (.app), Desktop (JAR)
-- Fail fast if compilation errors
-- Upload artifacts for manual testing
+All work is tracked on the GitHub Project board with full ticket lifecycle:
 
-#### **2. Pull Request Checks (Before Merge)**
-- ✅ Code compiles successfully
-- ✅ Unit tests pass (90%+ coverage required)
-- ✅ No code quality issues (detekt)
-- ✅ No security vulnerabilities (gitleaks, OWASP)
-- ✅ No critical bugs (spotbugs)
+**Project Board:** https://github.com/users/javiercamarenatriguero/projects/1
 
-#### **3. Deploy to Firebase (Manual)**
-- Build production-signed APK
-- Upload to Firebase App Distribution
-- Distribute to testers instantly
-- Notify team via Slack
-- Track download/crash metrics
+<img src="docs/images/github_project.png" width="800" alt="GitHub Project Board — Kanban" />
 
-#### **4. Automated Merge & Release**
-- Merge approved PRs to main automatically
-- Tag releases (v1.0.0, v1.1.0, etc.)
-- Generate release notes from commit messages
-- Publish to GitHub Releases
+---
 
-### **7.4. Setting Up CI/CD**
+## 8. Delivery Status
 
-**Prerequisites:**
-- GitHub repository (this one ✓)
-- Firebase project (for App Distribution)
-- Slack webhook (optional, for notifications)
+### **8.1. What was delivered in Delivery 1**
 
-**Steps:**
-1. Create `.github/workflows/` directory
-2. Add YAML workflow files (build.yml, test.yml, security.yml, deploy.yml)
-3. Configure GitHub Secrets: `FIREBASE_TOKEN`, `SLACK_WEBHOOK`, etc.
-4. Enable branch protection rules on `main` (require PR checks)
-5. Test workflows on feature branch before merge
+- Technical scaffold and project structure (Kotlin Multiplatform)
+- CI/CD pipelines (GitHub Actions: On Pull Request, On Merge, On Distribute)
+- Firebase Authentication (Email/Password + Google Sign-In)
+- Session lifecycle management (token refresh, persist, expiry redirect)
+- Market data integration (Yahoo Finance API via RapidAPI + Room cache)
+- Dashboard screen with portfolio summary and bottom navigation
 
-**Example: PR Workflow**
-```yaml
-# .github/workflows/build.yml
-name: Build
+### **8.2. What is delivered now — Complete Functional MVP**
 
-on: [push, pull_request]
+**DiviDox is a complete functional MVP deployed and distributed.**
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-      - run: ./gradlew compileDebug detekt
-      - run: ./gradlew test
-      - uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: build-artifacts
-          path: |
-            composeApp/build/outputs/apk/debug/
+- Sign in with Email/Password or Google (Firebase Auth)
+- View portfolio dashboard with key metrics and period selector
+- Manage holdings: add new positions, edit existing ones
+- Analyze securities with real market data (price charts, fundamentals, dividend metrics)
+- Track dividend activity with projections, upcoming payments, and history
+- Manage a watchlist of favorite securities
+- Search for new securities with real-time suggestions
+- Configure settings: default currency, biometric lock, notifications
+- Export portfolio data (CSV via native share sheet)
+- Delete account with full data cleanup
+- Onboarding carousel for new users
+- Market indices carousel on dashboard
+- News feed on dashboard
+- MASVS security tooling
+- Native About, Terms of Service, and Privacy Policy screens
+
+The app runs natively on **Android**, **iOS**, and **macOS Desktop** — all from a single Kotlin Multiplatform codebase.
+
+### **8.3. PRD Phases Delivered**
+
+| Phase | Status |
+|-------|--------|
+| **Setup** — Initial scaffold, skills, symlinks, pipelines | ✅ Delivered in Delivery 1 |
+| **Foundation** — Koin, design system, documentation, planning, session state | ✅ Delivered in Delivery 1 |
+| **Delivery 1 (Core)** — Auth, session, market data, dashboard | ✅ Delivered in Delivery 1 |
+| **Delivery 2 (Features)** — Portfolio, dividends, analysis, favorites, search | ✅ **Complete** |
+| **Polish & Advanced** — Biometric, settings, export, delete, about/terms/privacy | ✅ **Complete** |
+| **Beyond PRD** — Onboarding, market indices, news feed, security tooling | ✅ **Complete** |
+
+### **8.4. 34 User Stories Implemented**
+
+The backlog comprises 34 user stories across 8 domains — all implemented with Gherkin acceptance criteria. Full details in [`docs/user-stories.md`](docs/user-stories.md).
+
+| Domain | Stories | Tickets |
+|--------|---------|---------|
+| **Authentication** | DVX-US-001 – 004 | DVX-TK-011 |
+| **Dashboard** | DVX-US-005 – 010 | DVX-TK-018 |
+| **My Holdings** | DVX-US-011 – 015 | DVX-TK-019, TK-020, TK-014 |
+| **Dividend Activity** | DVX-US-016 – 019 | DVX-TK-021, TK-022, TK-023 |
+| **Security Analysis** | DVX-US-020 – 022 | DVX-TK-024 |
+| **Favorites & Search** | DVX-US-023 – 026 | DVX-TK-025, TK-026, TK-016 |
+| **Settings & Security** | DVX-US-027 – 032 | DVX-TK-028, TK-029, TK-030, TK-031, TK-032 |
+| **Session Management** | DVX-US-033 – 034 | DVX-TK-012 |
+
+### **8.5. Pull Requests — Complete History**
+
+All PRs are merged to `main` in the [dividox repository](https://github.com/javiercamarenatriguero/dividox/pulls?q=is%3Apr+is%3Amerged).
+
+#### Setup & Foundation (Delivery 1)
+
+| PR | Ticket | Title | Status |
+|----|--------|-------|--------|
+| [#1](https://github.com/javiercamarenatriguero/dividox/pull/1) | DVX-2 | Add new Skills | ✅ Merged |
+| [#2](https://github.com/javiercamarenatriguero/dividox/pull/2) | DVX-3 | Use symlinks | ✅ Merged |
+| [#3](https://github.com/javiercamarenatriguero/dividox/pull/3) | DVX-4 | Create on merge & on deploy pipelines | ✅ Merged |
+| [#4](https://github.com/javiercamarenatriguero/dividox/pull/4) | DVX-5 | Rename pipelines | ✅ Merged |
+| [#5](https://github.com/javiercamarenatriguero/dividox/pull/5) | DVX-6 | Upgrade Koin version | ✅ Merged |
+| [#6](https://github.com/javiercamarenatriguero/dividox/pull/6) | DVX-7 | Apply FontText | ✅ Merged |
+| [#7](https://github.com/javiercamarenatriguero/dividox/pull/7) | DVX-8 | Create ADRs, PRDs & STs for the given Stitch design | ✅ Merged |
+| [#8](https://github.com/javiercamarenatriguero/dividox/pull/8) | DVX-9 | Add tasks and redefine favourites | ✅ Merged |
+| [#9](https://github.com/javiercamarenatriguero/dividox/pull/9) | DVX-9 | Update Design kit instructions | ✅ Merged |
+| [#10](https://github.com/javiercamarenatriguero/dividox/pull/10) | DVX-10 | Implement SessionState and fix some issues | ✅ Merged |
+
+#### Delivery 1 — Core (Auth, Market, Dashboard)
+
+| PR | Ticket | Title | Status |
+|----|--------|-------|--------|
+| [#40](https://github.com/javiercamarenatriguero/dividox/pull/40) | DVX-TK-011 | Domain & Data Layer for Authentication | ✅ Merged |
+| [#41](https://github.com/javiercamarenatriguero/dividox/pull/41) | DVX-TK-012 | Firebase Auth integration | ✅ Merged |
+| [#42](https://github.com/javiercamarenatriguero/dividox/pull/42) | DVX-TK-013 | Auth Screens | ✅ Merged |
+| [#43](https://github.com/javiercamarenatriguero/dividox/pull/43) | DVX-TK-014 | Portfolio Component | ✅ Merged |
+| [#44](https://github.com/javiercamarenatriguero/dividox/pull/44) | DVX-TK-015 | Component Market | ✅ Merged |
+| [#45](https://github.com/javiercamarenatriguero/dividox/pull/45) | DVX-TK-016 | Component Watchlist | ✅ Merged |
+| [#47](https://github.com/javiercamarenatriguero/dividox/pull/47) | DVX-TK-018 | Feature Dashboard | ✅ Merged |
+
+#### Delivery 2 — Features (Portfolio, Dividends, Analysis, Favorites, Search)
+
+| PR | Ticket | Title | Status |
+|----|--------|-------|--------|
+| [#46](https://github.com/javiercamarenatriguero/dividox/pull/46) | DVX-TK-017 | Integration security | ✅ Merged |
+| [#48](https://github.com/javiercamarenatriguero/dividox/pull/48) | DVX-TK-019 | Add Portfolio screen | ✅ Merged |
+| [#49](https://github.com/javiercamarenatriguero/dividox/pull/49) | DVX-TK-020 | Add/Edit holding & currency converter | ✅ Merged |
+| [#50](https://github.com/javiercamarenatriguero/dividox/pull/50) | DVX-TK-021 | Component dividend | ✅ Merged |
+| [#51](https://github.com/javiercamarenatriguero/dividox/pull/51) | DVX-TK-022 | Scaffold integration Dividend | ✅ Merged |
+| [#52](https://github.com/javiercamarenatriguero/dividox/pull/52) | DVX-TK-023 | Dividends Activity screen | ✅ Merged |
+| [#53](https://github.com/javiercamarenatriguero/dividox/pull/53) | DVX-TK-024 | Security detail screen | ✅ Merged |
+| [#54](https://github.com/javiercamarenatriguero/dividox/pull/54) | DVX-TK-025 | Feature favorites | ✅ Merged |
+| [#55](https://github.com/javiercamarenatriguero/dividox/pull/55) | DVX-TK-026 | Feature search | ✅ Merged |
+
+#### Polish & Advanced
+
+| PR | Ticket | Title | Status |
+|----|--------|-------|--------|
+| [#56](https://github.com/javiercamarenatriguero/dividox/pull/56) | DVX-TK-027 | Edit holding from security detail | ✅ Merged |
+| [#57](https://github.com/javiercamarenatriguero/dividox/pull/57) | DVX-TK-028 | Biometric authenticator | ✅ Merged |
+| [#58](https://github.com/javiercamarenatriguero/dividox/pull/58) | DVX-TK-029 | Feature settings | ✅ Merged |
+| [#59](https://github.com/javiercamarenatriguero/dividox/pull/59) | DVX-TK-030 | Export Portfolio | ✅ Merged |
+| [#60](https://github.com/javiercamarenatriguero/dividox/pull/60) | DVX-TK-031 | Delete Account | ✅ Merged |
+| [#66](https://github.com/javiercamarenatriguero/dividox/pull/66) | DVX-TK-032 | Native About / Terms / Privacy Screens | ✅ Merged |
+
+#### Beyond Original PRD
+
+| PR | Ticket | Title | Status |
+|----|--------|-------|--------|
+| [#68](https://github.com/javiercamarenatriguero/dividox/pull/68) | DVX-TK-035 | Market Indices Carousel | ✅ Merged |
+| [#70](https://github.com/javiercamarenatriguero/dividox/pull/70) | DVX-TK-036 | Onboarding Carousel | ✅ Merged |
+| [#72](https://github.com/javiercamarenatriguero/dividox/pull/72) | DVX-TK-037 | News Feed on Dashboard | ✅ Merged |
+| [#76](https://github.com/javiercamarenatriguero/dividox/pull/76) | DVX-TK-038 | MASVS Security tooling | ✅ Merged |
+| [#77](https://github.com/javiercamarenatriguero/dividox/pull/77) | DVX-TK-039 | Prompt YAML file fixed and disable iOS deployment | ✅ Merged |
+| [#79](https://github.com/javiercamarenatriguero/dividox/pull/79) | DVX-TK-041 | Add images for the README | ✅ Merged |
+
+**Total: 37 PRs merged** — all implemented with Claude Code as the primary AI coding assistant.
+
+---
+
+## 9. AI Tools & Engineering
+
+DiviDox was built entirely with AI-assisted development. Every phase — from product vision to architecture decisions, UI design, implementation, code review, and security auditing — was driven by AI tooling.
+
+### **9.1. Claude Code — Primary Development Environment**
+
+**Claude Code** (CLI) was the primary coding assistant, used for all implementation, architecture design, documentation, and code review. The project uses two configuration files:
+
+- **`CLAUDE.md`** — Project-level instructions: build commands, architecture rules, convention plugins, spacing/string resource rules, security references, tech stack versions.
+- **`AGENTS.md`** — Agent orchestration guide: skill inventory, agent definitions, workflow patterns, and project conventions.
+
+### **9.2. GitHub Copilot — Complementary AI Support**
+
+**GitHub Copilot** is supported in parallel via **symlinks** that share the same context with Claude Code:
+
+```
+.ai-context/                          ← Single source of truth
+  ├── agents/                         ← Agent definitions
+  ├── skills/                         ← All skill definitions
+  └── security-instructions.md        ← MASVS security context
+
+.claude/agents   → ../.ai-context/agents      (symlink)
+.claude/skills   → ../.ai-context/skills      (symlink)
+.github/agents   → ../.ai-context/agents      (symlink)
+.github/skills   → ../.ai-context/skills      (symlink)
+.github/copilot-instructions.md → ../.ai-context/security-instructions.md (symlink)
 ```
 
-**Deploy to Firebase:**
-```yaml
-# .github/workflows/deploy.yml (manual dispatch)
-name: Deploy to Firebase
+This ensures **both Claude Code and GitHub Copilot share identical context** — agents, skills, and security instructions — without duplication.
 
-on: workflow_dispatch
+Additionally, a **GitHub Copilot prompt file** (`.github/prompts/masvs-audit.prompt.yml`) provides a structured MASVS security audit prompt for use in Copilot Chat.
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3
-      - run: ./gradlew :composeApp:assembleDebug
-      - uses: wzieba/Firebase-Distribution-Github-Action@v1
-        with:
-          serviceCredentialsFileContent: ${{ secrets.FIREBASE_CREDENTIAL_JSON }}
-          file: composeApp/build/outputs/apk/debug/app-debug.apk
+### **9.3. `.ai-context/` — Skills & Agents Suite**
+
+The project includes a comprehensive suite of **29 custom skills** and **3 specialized agents**, organized under `.ai-context/`:
+
+**Agents (3):**
+
+| Agent | Role | Skills Used |
+|-------|------|-------------|
+| **PO (Product Owner)** | Requirements, user stories, tickets, estimation, roadmap | `write-meta-prompt`, `user-story-writer`, `story-map-generator`, `ticket-writer`, `estimate-effort`, `task-planner` |
+| **Developer** | Full-stack KMP engineer: domain, UI, DI, navigation, tests | `implement-domain`, `implement-ui`, `implement-di`, `implement-navigation`, `write-unit-test`, `module-organization`, `manage-git-flow`, `audit-compose-performance`, `owasp-security-review` |
+| **Code Reviewer** | Architecture compliance, code quality, security, Compose performance | `audit-compose-performance`, `manage-git-flow`, `owasp-security-review` |
+
+**Skills by Category:**
+
+| Category | Skills | Purpose |
+|----------|--------|---------|
+| **Product & Requirements** | `write-meta-prompt`, `generate-prd`, `product-description`, `product-roadmap`, `user-story-writer`, `story-map-generator`, `ticket-writer`, `estimate-effort`, `task-planner` | Transform ideas into structured requirements, user stories, tickets, and roadmaps |
+| **Architecture & Design** | `generate-adr`, `design-c4`, `design-data-model`, `design-md`, `design-system`, `stitch-design`, `module-organization` | Document architecture decisions, generate C4 diagrams, design data models, manage KMP module structure |
+| **Implementation** | `implement-domain`, `implement-ui`, `implement-di`, `implement-navigation`, `write-unit-test`, `audit-compose-performance` | Scaffold domain layers, build Compose UI with MVI, wire Koin DI, set up navigation routes, write tests |
+| **Quality & Security** | `owasp-security-review`, `manage-git-flow`, `full-doc`, `skill-creator` | OWASP Top 10 review, git flow validation, documentation generation |
+| **MASVS Security Suite** | `masvs-checklist`, `masvs-auth-assessment`, `masvs-secure-storage-audit`, `masvs-crypto-review`, `masvs-network-security-check`, `masvs-platform-interaction-review`, `masvs-code-quality-scan`, `masvs-privacy-audit`, `masvs-resilience-assessment`, `masvs-mobile-threat-model` | Full OWASP MASVS v2 compliance suite — 10 specialized security audit skills covering all MASVS categories for a Tier 2 fintech app |
+
+**Typical Feature Workflow:**
+
+```
+1. PO Agent       → write-meta-prompt → user-story-writer → story-map-generator
+2. PO Agent       → ticket-writer → estimate-effort
+3. Developer Agent → implement-domain → implement-ui → implement-di → implement-navigation → write-unit-test
+4. Code Reviewer  → owasp-security-review → audit-compose-performance → manage-git-flow
 ```
 
-For complete configuration, see [prompts.md — Prompt 6.1: CI/CD & GitHub Actions](prompts.md#prompt-61-cicd--github-actions)
+### **9.4. MCP Servers (Model Context Protocol)**
+
+The project connects to external services via MCP:
+
+| MCP Server | Purpose |
+|------------|---------|
+| **Stitch** (`.mcp.json`) | Google's AI design tool — generate, edit, and manage UI screens directly from Claude Code |
+| **GitHub** (global plugin) | Repository management, PR operations, issue tracking |
+| **Context7** (global plugin) | Up-to-date library documentation lookup during development |
+| **Linear** (global plugin) | Issue tracking integration (used during early project planning) |
+| **lean-ctx** (global plugin) | Context compression and token-efficient file reading |
+
+### **9.5. Stitch (Google AI) — UX Design Tool**
+
+**[Stitch](https://stitch.withgoogle.com/projects/10568397103146599411)** was used as the primary UI/UX design tool. It generates high-fidelity Material Design 3 screens from text prompts, with a full design system including color palette, typography, spacing, and component definitions.
+
+The project includes:
+- A **`.stitch/DESIGN.md`** file — auto-generated design system document with color tokens, typography scale, spacing units, and creative philosophy ("The Financial Architect" theme)
+- A **`stitch-design` skill** with 3 workflows: `text-to-design`, `edit-design`, and `generate-design-md`
+- All 6 app screens were designed in Stitch and served as the reference for Compose implementation
+
+### **9.6. Gemini — Image Generation**
+
+**Google Gemini** was used to generate images for the project, including promotional graphics and visual assets for documentation.
+
+### **9.7. Looka — Logo Design**
+
+**[Looka](https://looka.com/)** was used to create the DiviDox logo and brand identity.
+
+---
+
+## 10. Prompts
+
+The full prompt catalog covering all project phases is in [`prompts.md`](prompts.md) — 8 sections with 11 prompts covering vision, requirements, architecture, design, tickets, CI/CD, feature implementation, and security tooling.
+
+**Delivery 2 implementation prompt examples** (Section 8 in prompts.md):
+
+| Prompt | Ticket | What It Does |
+|--------|--------|--------------|
+| **8.1** | DVX-TK-023 | Dividends Activity screen — full MVI scaffold with collapsible month groups and 12-month projection chart |
+| **8.2** | DVX-TK-026 | Search feature — 250ms debounced search with SecurityCard results and FAB wiring |
+| **8.3** | DVX-TK-035 | Market Indices Carousel — horizontal carousel of 6 global indices loading independently on Dashboard |
+| **8.4** | DVX-TK-038 | MASVS Security Tooling — 10 OWASP MASVS v2 audit skills + GitHub Copilot prompt |
 
 ---
 

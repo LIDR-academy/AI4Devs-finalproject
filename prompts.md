@@ -351,6 +351,219 @@ Include troubleshooting guide for common CI/CD failures.
 
 ---
 
-**Last Updated:** May 20, 2026
-**Version:** 1.0 (Project Workflow - 7 Core Prompts)
+## 8. Feature Implementation Prompts (Delivery 2)
+
+These prompts demonstrate how tickets were executed during Delivery 2 using the Developer Agent and associated skills.
+
+### Prompt 8.1: DVX-TK-023 — Dividends Activity Screen
+
+**Objective:** Implement the full Dividend Activity screen with MVI pattern, collapsible month groups, and 12-month projection chart.
+
+**Prompt:**
+```
+Execute ticket DVX-TK-023. Follow the task-planner subtasks exactly.
+
+Context:
+- Module: :feature:dividends
+- User Stories: DVX-US-016, DVX-US-017, DVX-US-018, DVX-US-019
+- PRD: PRD-04
+- ADRs: ADR-010 (MVI), ADR-011 (Navigation)
+- Design Reference: https://stitch.withgoogle.com/projects/10568397103146599411
+- Depends on: TK-022 (integration:dividend is already complete)
+
+Implementation order:
+1. Scaffold :feature:dividends module (dividox.kmp.library + dividox.compose.multiplatform + dividox.kmp.ios + dividox.kmp.test)
+2. DividendsContract — State: summary, projectionBars, upcomingPayments, historyByMonth, expandedMonths, isLoading, error
+   Events: SecurityClicked, MonthGroupToggled, Refresh
+   Effects: NavigateToSecurity(ticker)
+3. DividendsViewModel with unit tests — call all 4 integration use cases on init; expand most recent month by default
+4. DividendsScreen composable:
+   - Critical Metrics Block (6 values + YoC progress indicator)
+   - 12-month bar chart (filled past / outlined future)
+   - Upcoming Payments list (Confirmed green / Estimated gray badge)
+   - Collapsible month groups (Cash vs Reinvested visual distinction)
+5. Wire DividendsRoute in mainGraph — onSecurityClick(ticker) → SecurityDetailRoute
+6. Register :feature:dividends Koin module in App.kt
+
+Verify at each phase:
+- ./gradlew :feature:dividends:compileKotlinJvm
+- ./gradlew :feature:dividends:jvmTest
+- ./gradlew :composeApp:assembleDebug
+- ./gradlew detekt
+```
+
+**Output:** Full `:feature:dividends` module with ViewModel tests, screen composable, and navigation wiring.
+
+---
+
+### Prompt 8.2: DVX-TK-026 — Search Feature with Debounce
+
+**Objective:** Implement search screen with 250ms debounce, real-time results from Yahoo Finance, and favorite toggle.
+
+**Prompt:**
+```
+Execute ticket DVX-TK-026. Use skill: implement-ui for the screen, skill: implement-domain 
+for the debounce logic, and skill: write-unit-test for ViewModel coverage.
+
+Context:
+- Module: :feature:search
+- User Story: DVX-US-026
+- PRD: PRD-07
+- Depends on: TK-025 (SecurityCard composable already in :common:ui-resources)
+
+Requirements:
+1. SearchContract:
+   - State: query, results: List<EnrichedWatchlistEntry>, isLoading, isEmpty, error
+   - Events: QueryChanged, FavouriteToggled(ticker), SecurityClicked(ticker), BackClicked
+   - Effects: NavigateToSecurity, NavigateBack
+
+2. SearchViewModel:
+   - SearchSecuritiesUseCase with 250ms debounce (use kotlinx.coroutines.delay + Job cancellation)
+   - IsInWatchlistUseCase for initial heart state
+   - AddToWatchlistUseCase / RemoveFromWatchlistUseCase on toggle
+
+3. SearchScreen:
+   - Auto-focus search bar with back arrow + "Search" title
+   - Placeholder state (before first char typed)
+   - Loading skeleton while fetching
+   - SecurityCard for each result (from :common:ui-resources)
+   - No-results: "No results for '{query}'."
+   - Offline: "Search requires an internet connection."
+   - Disclaimer footer: "Prices delayed 15 minutes"
+
+4. Navigation:
+   - SearchRoute opens from central FAB in BottomNavBar
+   - onSecurityClick → SecurityDetailRoute
+   - onBack → popBackStack
+
+Commit messages follow: DVX-TK-026 <description>
+```
+
+**Output:** Full `:feature:search` module with debounced search, SecurityCard integration, and FAB wiring.
+
+---
+
+### Prompt 8.3: DVX-TK-035 — Market Indices Carousel
+
+**Objective:** Add a horizontal carousel of global market index cards to the Dashboard, loading independently of other content.
+
+**Prompt:**
+```
+Execute ticket DVX-TK-035. This is a new Dashboard section, not a new module.
+
+Context:
+- Indices: Nasdaq (^IXIC), EURO STOXX 50 (^STOXX50E), IBEX 35 (^IBEX), DAX (^GDAXI), 
+  Nikkei 225 (^N225), FTSE 100 (^FTSE)
+- Data source: existing Yahoo Finance integration in :component:market
+  using query1.finance.yahoo.com/v8/finance/chart/{ticker}
+- ADRs: ADR-005, ADR-007, ADR-010
+- Depends on: TK-015 (component:market), TK-018 (feature:dashboard), TK-029 (settings for defaultMarket)
+
+Implementation plan:
+1. Domain model in :component:market:
+   - MarketIndexQuote(name, ticker, marketKey, points, changePoints, changePercent, lastUpdated)
+   - Catalog of 6 supported indices with display name, Yahoo ticker, and market key
+
+2. GetMajorMarketIndicesUseCase:
+   - Fetch all 6 through existing MarketRepository.getMultipleQuotes
+   - Sort: user's defaultMarket first, then stable global order
+   - Partial success: return available results even if some symbols fail
+   - Unit tests: ordering, partial failure, all-failed error, field mapping
+
+3. Extend DashboardContract + DashboardViewModel:
+   - Add marketIndices: List<MarketIndexQuote> to state
+   - Load independently (separate coroutine) — must not delay portfolio/watchlist rendering
+
+4. Dashboard carousel UI:
+   - Horizontal LazyRow of cards
+   - Each card: index name, signed % change (green/red), current points, absolute points +/-
+   - Use MaterialTheme.spacing for all dimensions
+
+Verify: ./gradlew :component:market:jvmTest :composeApp:jvmTest :composeApp:assembleDebug detekt
+```
+
+**Output:** Market indices carousel on Dashboard with independent loading and user's preferred market first.
+
+---
+
+### Prompt 8.4: DVX-TK-038 — MASVS Security Tooling
+
+**Objective:** Create a full suite of MASVS v2 security audit skills for automated security review across all code areas.
+
+**Prompt:**
+```
+I need a complete OWASP MASVS v2 security audit tooling suite for DiviDox.
+
+Context:
+- DiviDox is a fintech app at NowSecure Tier 2 (PII + Financial Data)
+- Required MASVS categories: STORAGE, CRYPTO, AUTH, NETWORK, PLATFORM, CODE, PRIVACY
+- Optional: RESILIENCE (Tier 3)
+- Stack: Kotlin Multiplatform, Android Keystore, iOS Keychain, Ktor HTTP, Firebase Auth
+
+Create the following skills under .ai-context/skills/:
+1. masvs-checklist — Full compliance report for releases
+2. masvs-auth-assessment — Login, tokens, sessions, biometrics, Google Sign-In
+3. masvs-secure-storage-audit — SharedPreferences, DataStore, SQLite, Room, files
+4. masvs-crypto-review — Encryption, key generation, Keystore/Keychain
+5. masvs-network-security-check — Ktor, TLS config, certificates
+6. masvs-platform-interaction-review — Deep links, WebViews, Intents, Manifest
+7. masvs-code-quality-scan — Dependencies, minSdk, R8/ProGuard, input validation
+8. masvs-privacy-audit — Permissions, analytics SDKs, user identifiers
+9. masvs-resilience-assessment — Anti-tampering, root detection, obfuscation
+10. masvs-mobile-threat-model — Architecture, data flows, threat surface
+
+Also create:
+- .ai-context/security-instructions.md — Central security context file linking all skills
+- .github/prompts/masvs-audit.prompt.yml — GitHub Copilot prompt for the same audit
+
+Each skill must output a structured PASS/WARN/FAIL report with:
+- Executive Summary (risk level)
+- Findings Table (category, control, status, severity, location)
+- Detailed Findings with evidence and fix
+- Recommended Next Steps
+
+Reference: OWASP MASVS v2, OWASP MASTG, NowSecure guidelines
+```
+
+**Output:** 10 MASVS skills, security-instructions.md, and GitHub Copilot prompt YAML.
+
+---
+
+## How to Use This Prompt Guide
+
+**For new projects:**
+1. Start with **Prompt 1.1** to define vision & value proposition
+2. Move to **Prompts 2.1 & 2.2** to define requirements and user stories
+3. Execute **Prompt 3.1** to make architectural decisions
+4. Run **Prompt 4.1** to design system architecture
+5. Finish with **Prompt 5.1** to create visual mockups
+
+**For feature development:**
+- Use **Prompt 2.1** to write PRD for new feature
+- Use **Prompt 2.2** to decompose into user stories
+- Use **Prompt 8.x** patterns to execute tickets with the Developer Agent
+- Create ADRs if new architectural decisions needed
+
+**For design system updates:**
+- Use **Prompt 5.1** to revise screen designs
+- Update Stitch prototype with new mockups
+
+**For work breakdown:**
+- Use **Prompt 6.1** to create tickets for new features
+- Link tickets to user stories
+- Track dependencies between tickets
+
+**For CI/CD setup:**
+- Use **Prompt 7.1** to configure automated builds, tests, and deployments
+- Enable pull request checks before merge
+- Setup Firebase App Distribution for testing
+
+**For security:**
+- Use **Prompt 8.4** to create MASVS audit tooling
+- Run security skills on every PR touching auth, network, or storage
+
+---
+
+**Last Updated:** June 23, 2026
+**Version:** 2.0 (Project Workflow - 8 Sections, including Implementation & Security Prompts)
 **Created by:** DiviDox Architecture Team (AI-assisted)
