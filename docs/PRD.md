@@ -1,209 +1,177 @@
-# Weight-Loss Challenge Web App – Product Requirements Document (PRD)
+# Personal Training Management Platform
 
-## 1\. Overview
+## 1\. Document Overview
 
-### Product Summary
+**Product Name:** TBD ("Personal Training Management Platform")  
 
-A social web platform enabling friends to create and join weight-loss challenges, track progress, and build motivation through group accountability. Participants join with an invite code, log their weight weekly, and compete to achieve the highest total weight loss over a defined period. The system calculates BMI, manages leaderboard rankings, and delivers a visually-rich experience in line with wireframes.
+**Purpose:** Define actionable requirements for a unified web application for personal training business management, combining coach/admin operations with coachee access. This document captures all business rules, UI/UX details, and system constraints for actionable engineering and design work.
 
-### Problem Statement
-
-Traditional weight-loss efforts often lack motivation and peer accountability, leading to user drop-off. A challenge-based, social solution can increase engagement, adherence, and results.
-
-### Goals
-
-* Increase user engagement and motivation through gamified weight-loss challenges.
-* Provide transparent, real-time tracking of progress for individuals and groups.
-* Drive retention by making goal achievement visible and rewarding.
-* Foster supportive, healthy competition among friends.
-
-## 2\. Target Users
-
-| Persona | Description | Permissions |
-| --- | --- | --- |
-| Admin | User who can create and join challenges; often the initiator for friend groups | Create + join challenges |
-| Gordi | Standard user; joins existing challenges | Join challenges only |
-
-## 3\. Scope
-
-### In-Scope (v1)
-
-* Registration with personal and health metadata
-* Challenge creation/joining using invite code
-* Weekly weight logging (Monday)
-* Profile with progress metrics (progress bar, weight chart)
-* Challenge detail: group stats, charts, rankings
-* All key UI features and data as shown in the wireframe
-
-### Out-of-Scope (v1)
-
-* Social networking (in-app chat, posts, comments)
-* 3rd-party integrations (wearables, health apps)
-* Mobile app (web app only for now)
-* Automated challenge reminders via push/SMS/email
-
-## 4\. User Flows
-
-### Registration Flow
-
-1. Enter: name, email, height (cm), start weight, target weight, aim date for goal
-2. Automatic calculation and storage of BMI (start and target)
-3. Account created and user is taken to Home
-
-### Challenge Join Flow
-
-1. User enters an invite code
-2. Validates code; joins corresponding challenge
-3. Challenge appears on user’s Home
-
-### Challenge Creation Flow (Admin)
-
-1. Fill: Name, Start/End date, Prize description
-2. Validation: enforce min duration (1 week)
-3. Generates unique invite code
-4. Challenge card appears on Home
-
-### Weekly Weigh-In Flow
-
-1. On Monday: Prompt to enter new weight (defaults to today’s date)
-2. Stores entry, updates charts, progress bars, and rankings
-
-### Viewing Progress
-
-1. Home → Select challenge or profile
-2. Profile: See stats, charts, challenges
-3. Challenge Detail: Group summary, charts (last week, all weeks, ranking)
-
-## 5\. Functional Requirements
-
-### Screen 1 — Home
-
-* Visible to all logged-in users
-* Lists participating challenges as cards displaying challenge name
-* Tap card → Challenge Detail
-* Profile button (top right or in nav)
-
-### Screen 2 — Profile
-
-* Read-only fields: Name, Email, Height, Start weight (with date), BMI at registration
-* Dynamic fields: Current weight & date, current BMI
-* Goals: Target weight, BMI at target
-* Progress:
-  * Weight lost (kg & %)
-  * Remaining kg/% to goal
-  * **Progress bar** for challenge overall status (% elapsed, % to goal)
-  * **Weight-over-time line chart** (API returns weight history series)
-* **Weight progress graphic** — A cartesian line chart with three overlaid series:
-  * **Actual progress (solid line):** Plots the user's logged weight entries over time (x-axis = date, y-axis = weight in kg). Also has dots to mark every weight input from the user.
-  * **Trend prediction (dotted line):** Extends beyond the last logged entry to the aim date, computed via linear regression (or exponential smoothing) on the user's actual entries, showing the projected trajectory if current momentum continues.
-  * **Linear goal target (dotted line, distinct style):** A straight line from start weight on the start date to target weight on the aim date, representing the exact linear pace required to reach the goal on time.
-  * The chart includes a horizontal dashed line marking the target weight, and shaded regions or annotations for start/target weights. A legend distinguishes the three series.
-* List of joined challenges
-
-### Screen 3 — Challenge Detail
-
-* **Header:** Name, Time remaining
-* **Last Week Summary:**
-  * Table: Name | Start-of-week weight | Weekly loss, sorted by loss desc
-  * "All weeks" link/button
-* **Weight Chart:**
-  * Multiline graph, each participant is one color-coded line
-* **Kg Lost Chart:**
-  * Bar chart; x-axis = participant, y-axis = total kg lost
-* **Ranking:**
-  * Table: Rank | Name | Total kg lost (challenge duration)
-* **All Weeks:**
-  * Table: Week | \[Participant columns\], cells for each participant’s weight per week
-  * Cell highlights as per wireframe (e.g., min values)
-
-### Screen 4 — Add Weight Entry
-
-* Fields: Date (defaults to today), Weight (kg)
-* Validation: Monday entries only (per UI)
-* Save button; feedback on success or error
-
-### Screen 5 — Edit Profile
-
-* Editable fields: Name, Email, Height, Current, Desired weight
-* Start weight: Display but not editable
-* Save button; validation on all fields
-
-## 6\. Non-Functional Requirements
-
-* Must load all main screens ≤2s (P95)
-* Secure data handling, passwords hashed (auth not detailed here)
-* All fields validated (non-empty, email format, numeric ranges)
-* Accessibility: Color contrast, keyboard navigation, ARIA labels
-* Responsive design (desktop/tablet/mobile)
-* Charts are accessible and use descriptive hints/captions
-* GDPR-compliant storage of personal and health data
-
-## 7\. Data Models
-
-### User
-
-* id (UUID)
-* name (string)
-* email (string, unique)
-* hashed_password (string)
-* height_cm (int)
-* start_weight_kg (float)
-* current_weight_kg (float)
-* desired_weight_kg (float)
-* aim_date (date)
-* created_at
-* updated_at
-* role (enum: Admin, Gordi)
-
-### Challenge
-
-* id (UUID)
-* name (string)
-* start_date (date)
-* end_date (date)
-* prize_description (string)
-* invite_code (string, unique)
-* created_by (user_id, foreign key)
-
-### Participation
-
-* id
-* user_id (foreign key)
-* challenge_id (foreign key)
-* joined_at (datetime)
-
-### WeightEntry
-
-* id
-* user_id (foreign key)
-* challenge_id (foreign key)
-* date (date)
-* weight_kg (float)
-* created_at
-
-## 8\. Business Logic
-
-* **BMI Calculation:** BMI = weight_kg / ((height_cm / 100) ^ 2)
-* **Challenge duration:** Start/end must be ≥7 days
-* **Invite Code:** Random 6–8 character code, unique per challenge
-* **Weekly Weigh-In:** Only allow one entry per user/challenge for each Monday
-* **Progress Calculations:**
-  * Total loss (kg, % since registration)
-  * Remaining (kg, % to goal)
-  * Progress bar: Weight lost vs total needed for goal
-  * Challenge progress (%): Time elapsed vs total challenge duration, weight lost relative to goal
-* **Ranking:** Sorted by total kg lost from start of challenge (descending)
-* **Data Freshness:** All charts/tables update on new weight entry
-
-## 9\. Open Questions
-
-* What anti-cheating or auditing is required to ensure weight authenticity?
-* Should notifications/reminders be sent for missed weigh-ins (if so, method)?
-* Should users be able to leave or rejoin ongoing challenges?
-* Is there a max/min user limit per challenge?
-* What should happen if a user misses multiple weigh-ins?
-* Are prize winners handled automatically, or externally (manual)?
+**Intended Audience:** Product managers, engineers, designers, QA/testers, and stakeholders directly involved in developing, testing, and deploying the application.
 
 ---
 
-**End of PRD**
+## 2\. Problem Statement & Goals
+
+The Coach and their team require a single, web-based solution for scheduling, managing, and tracking both individual and group coaching sessions at a physical gym with strict space and time constraints. The solution must streamline class creation, attendee tracking, level management, waiting lists, coach staffing, and notifications, while providing a mobile-first user experience for coachees and leveraging Google Calendar as the scheduling backbone.
+
+---
+
+## 3\. User Roles & Permissions
+
+| Role | Capabilities / Permissions |
+| --- | --- |
+| Admin | Add/activate/deactivate Users (Coachees); create/schedule all class types; block calendar time; add/activate/deactivate Coaches; full navigation access |
+| Coach | Create/schedule all class types (but not block time or add users/coaches); access to all non-admin-only screens |
+| Coachee | View calendar (per visibility rules); join/cancel group classes (if available/in scope); receive notifications; mobile navigation |
+
+---
+
+## 4\. Glossary of Key Terms
+
+* **Coach:** User who delivers training sessions; can create and schedule classes.
+* **Coachee:** Client assigned to a Coach; attends classes and interacts with the system mainly via mobile.
+* **Admin:** Admin-level user who manages Coaches, Coachees, classes, and blocked time.
+* **Individual Class:** 1-hour session with a single Coachee; up to 2 such classes may occur simultaneously.
+* **Group Class:** 1-hour session with a group (min 3, max 4) of Coachees at a defined level; only 1 group class can occur at a time.
+* **Block (Calendar):** Reserved gym time; no classes scheduled during blocks.
+* **Level:** One of 5 tiers assigned to Coachees, representing skill or experience; each maps to a specific color.
+* **Waiting List:** Queue for group classes at capacity; Coachees may join if a spot is not immediately available.
+* **Status:** User or Coach activation state (Active/Inactive).
+* **Reach:** Group classes are within a Coachee’s reach if at their level, one above, or one below.
+
+---
+
+## 5\. Business Rules & Constraints
+
+### Levels & Categories
+
+* Each Coachee is assigned one of 5 defined levels; each level is mapped to a distinct color.
+
+### Class Types & Capacity Rules
+
+* **Individual Class:** 1 Coachee only. Max 2 concurrent at any given time.
+* **Group Class:** Min 3, max 4 Coachees from the same level (or reach); only 1 group class at a time.
+
+### Gym/Venue Capacity
+
+* At most 2 individual classes and 1 group class may run simultaneously (per hour).
+
+### Class Duration Rules
+
+* All classes (individual/group) are always 1-hour fixed duration; no modification allowed.
+
+### Waiting List Logic
+
+* If a group class is full, additional eligible Coachees may join a waiting list. When a spot opens (due to cancellation), the waiting list is processed in order, with notifications to Coachees as spots become available.
+
+---
+
+## 6\. Functional Requirements by Screen
+
+### 6.1 Shared Architecture Notes
+
+* Single web application with conditional UI rendering based on authenticated user’s role.
+* Backed by a single application backend handling all business logic/rules.
+* **Calendar management is built on the Google Calendar API.**
+* All notification and scheduling events synchronize with Google Calendar as the single source of scheduling truth.
+
+### 6.2 Admin & Coach Screens
+
+**Layout & Navigation:**
+
+* Desktop & mobile responsive design.
+* Left sidebar: sections for Today, Calendar, Coachees, Coaches (Admin only).
+* **Notifications bell icon** (top-right): opens a dropdown showing only current day’s notifications.
+
+Today Page
+
+* Vertical list of scheduled classes for the day (chronological order).
+  * Each block: Coachee name(s), start time.
+  * Visual distinction: Individual and group classes use two distinct background colors.
+  * Canceled classes: shown in gray, with visible "Canceled" tag.
+
+Calendar Page
+
+* Contextual toolbar at top; includes an "Add Class" button.
+* Calendar rendered using Google Calendar API (not native events).
+* **Add Class Modal**
+  * Fields:
+    * Class type: Individual / Group / Block
+    * Coachees: select (multi-choice as per type rules).
+    * Description
+    * Level: 5-level selector (except when Block is chosen).
+    * Date
+    * Available time slots: surfaced to user (implementation detail to be decided).
+    * Save button.
+  * **Validation**:
+    * If Individual: max 1 Coachee.
+    * If Group: min 3, max 4 Coachees.
+    * If Block: hide Coachee/Level fields.
+
+Coachees Page
+
+* Table: columns for Name, Email, Phone, Class Type (Individual/Group/Both), Status.
+* Actions column: vertical three-dot icon → menu: Activate/Deactivate.
+* Top-right: "Add Coachee" (Admin only): modal collects First/Last name, Email, Mobile, Class type (multi-select), Additional info, Level selector, Save (records current date).
+* Top-left:
+  * Active/Inactive filter: multi-select w/ checkboxes.
+  * Level filter: multi-select w/ checkboxes.
+
+### 6.3 Admin-Only Screens
+
+Coaches Page
+
+* Table: Name, Email, Phone, Bank account, Social Security Number, DNI, Status.
+* Actions: vertical three-dot icon → menu:
+  * View details (opens modal "Additional info").
+  * Activate / Deactivate.
+* Top-right: "Add Coach" (modal: all above fields + Additional info); Save closes modal.
+* Top-left: Active/Inactive multi-select checkbox filter.
+
+### 6.4 Coachee Screens (Mobile-First)
+
+* **Home Screen**
+  * Top: Date/time of Coachee’s next class.
+  * Upcoming group classes to join (within 10-day window).
+* **Bottom navigation bar** with three items:
+  * Home
+  * Calendar (1-week window, with color-coded visibility per rules)
+  * Notifications (bell, dropdown panel)
+
+Calendar Visibility Logic for Coachees
+
+* Individual classes of other users: shown as gray busy/blocked (no detail).
+* Own scheduled classes (individual/group): blue, option to cancel.
+* Group classes within reach and not already joined: green, option to join. If full, Join triggers waiting list.
+* Group classes outside reach: gray busy/blocked (same as above).
+
+---
+
+## 7\. Notifications & Push Notification Rules
+
+* **Waiting list → spot opens**: Coachee receives push notification if a spot becomes available in a group class they’re waitlisted for.
+* **New group class in reach with open spot**: Coachee receives push notification when a new group class (own level ±1) with open spot is created.
+* **Individual class canceled by Coachee**: Assigned Coach receives push notification about the cancellation.
+
+---
+
+## 8\. Technical Requirements
+
+* Web app, supporting push notifications.
+* Must implement "Add to Home Screen" (PWA support) for installable mobile experience.
+* **All calendar functionality must use Google Calendar API.**
+* Back-end and front-end must observe Clean/Hexagonal Architecture principles.
+* Performance: fast load/interactions expected for all workflows.
+* UX: accessible, responsive, and clear, especially for mobile-first Coachee experience.
+
+---
+
+## 9\. Open Questions / Clarifications Needed
+
+* Clarification needed on how "Available time slots" are programmatically surfaced in the Add Class modal (details around UI/UX and integration with Google Calendar’s free/busy logic).
+* The requirements for "Block" calendar type are specified, but the impact on general scheduling logic and notification behavior (if any) needs confirmation.
+* Coachee-side: Is there a hard restriction on the max number of classes (group + individual) a Coachee can join per week or day, or can they theoretically join all available within their reach? No limits are specified, but this could matter for operational rules.
+* Notification: When a waitlisted user receives a notification about an open spot, is there a hold period before the spot is offered to the next in line, or is it first come, first served?
+* Specific color mapping for the 5 levels not provided: Design input required to define exact color codes.
+
+---
