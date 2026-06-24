@@ -10,6 +10,11 @@
 7. [Pull Requests](#7-pull-requests)
 8. [Documentación de prompts](#8-documentación-de-prompts)
 9. [Capturas de pantalla](#9-capturas-de-pantalla)
+10. [Seguridad y OWASP Top 10](#10-seguridad-y-owasp-top-10)
+
+**Plan de negocio SaaS:** [PLAN_NEGOCIO.md](./PLAN_NEGOCIO.md) · **Roadmap técnico:** `codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md`
+
+**Rama entrega 2:** `feature-entrega2-ABR` · **Conversación de referencia:** [README structure analysis for lms-cms-laravel12](./agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md)
 
 ---
 
@@ -28,9 +33,27 @@ Sistema de gestión de aprendizaje (LMS) de código abierto construido con Larav
 
 **Documentación de prompts:** [prompts.md](./prompts.md)
 
+**Plan de negocio SaaS:** [PLAN_NEGOCIO.md](./PLAN_NEGOCIO.md)
+
+**Rama entrega 2:** `feature-entrega2-ABR`
+
+**Conversación de referencia (análisis README):** [agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md](./agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md)
+
 ---
 
 ## 1. Descripción general del producto
+
+### 1.0. Visión SaaS (plan de negocio)
+
+Plataforma **SaaS** orientada a bootcamps, empresas tech y educadores independientes para **crear, compartir y monetizar cursos de tecnología** con **IA integrada** (tutor por lección, analytics, API para LMS externos). El MVP técnico actual cubre la **Fase 1** del roadmap; planes comerciales en `/pricing`.
+
+| Plan | Precio | Estado |
+|------|--------|--------|
+| Básico (estudiantes) | €4.99/mes | Definido en app |
+| Pro (creadores) | €29/mes | Definido en app |
+| Empresa | €299–999/mes | Definido en app |
+
+Roadmap detallado: `codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md`.
 
 ### 1.1. Objetivo
 
@@ -393,6 +416,20 @@ Rutas web en `routes/web.php` (no API REST separada).
 
 Los prompts utilizados con asistentes de código (máx. 3 por sección del ciclo de vida) y el listado detallado de archivos tocados en `codigofinal/lms-cms-laravel12` están en **[prompts.md](./prompts.md)** (secciones 1–9).
 
+### Entrega 2 (`feature-entrega2-ABR`)
+
+Artefactos generados en la conversación [README structure analysis for lms-cms-laravel12](./agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md):
+
+| Artefacto | Descripción |
+|-----------|-------------|
+| [readme.md](./readme.md) | Documentación del producto alineada con el código real de `codigofinal/lms-cms-laravel12` (arquitectura, modelo de datos, API, historias, tickets) |
+| [prompts.md](./prompts.md) | Prompts por fase del ciclo de vida y archivos principales utilizados |
+| [PLAN_NEGOCIO.md](./PLAN_NEGOCIO.md) | Plan de negocio SaaS (planes, target, proyección) |
+| [seguridad.md](./seguridad.md) | Seguridad por historia de usuario y análisis OWASP Top 10 |
+| `codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md` | Hoja de ruta técnica alineada con el plan de negocio |
+
+Índice de transcripts: [agent-transcripts/index.md](./agent-transcripts/index.md).
+
 ---
 
 ## 9. Capturas de pantalla
@@ -434,3 +471,26 @@ Pantalla de inicio de sesión con selector de idioma EN/ES.
 ![Calendario académico — estudiante](docs/screenshots/calendar-student.png)
 
 > El enlace **«+ Nuevo evento»** solo aparece en `/calendar` cuando el usuario tiene rol `teacher`. En el formulario de creación de evento no se muestra en el sidebar.
+
+---
+
+## 10. Seguridad y OWASP Top 10
+
+La documentación de seguridad del proyecto se divide en dos niveles:
+
+| Documento | Contenido |
+|-----------|-----------|
+| [seguridad.md](./seguridad.md#seguridad-por-historia-de-usuario) | Criterios de aceptación y requisitos no funcionales por historia de usuario (HU-1 … HU-12) |
+| [seguridad.md § Análisis OWASP](./seguridad.md#análisis-de-vulnerabilidades-detectadas-owasp-top-10) | Vulnerabilidades prioritarias detectadas en el código, con ejemplos concretos y soluciones propuestas |
+
+### Vulnerabilidades prioritarias (resumen)
+
+| # | OWASP | Vulnerabilidad | Severidad |
+|---|-------|----------------|-----------|
+| 1 | A03 Injection | XSS almacenado en contenido HTML de lecciones (`{!! !!}`) | Crítica |
+| 2 | A01 Broken Access Control | Archivos subidos accesibles sin verificar matriculación | Alta |
+| 3 | A03 / A10 | URLs de embed sin lista blanca en plugins (iframe) | Alta |
+| 4 | A04 / A08 | Reenvío ilimitado de quizzes sin control de integridad | Media-Alta |
+| 5 | A01 Broken Access Control | Matriculación con rol `teacher` arbitrario en curso ajeno | Media |
+
+> Los controles transversales (autenticación, roles globales, TLS, CSRF) se documentan en la sección [2.5. Seguridad](#25-seguridad) y quedan fuera del alcance del análisis por historia de usuario.

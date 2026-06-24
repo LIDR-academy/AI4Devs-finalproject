@@ -3,6 +3,10 @@
 
 **Repositorio de implementación:** `codigofinal/lms-cms-laravel12`
 
+**Rama de entrega:** `feature-entrega2-ABR`
+
+**Conversación de referencia (análisis README, plan SaaS, seguridad):** [agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md](./agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md)
+
 **Conversación de referencia (calendario, i18n, sidebar):** [agent-transcripts/8ff11265-f2f9-4ac1-b458-5dd9a909c31f.md](./agent-transcripts/8ff11265-f2f9-4ac1-b458-5dd9a909c31f.md)
 
 ---
