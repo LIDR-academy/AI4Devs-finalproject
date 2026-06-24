@@ -11,7 +11,7 @@
 
 ---
 
-> **Nota sobre esta entrega (Entrega 1 – Documentación Técnica).** Este `readme.md` resume el proyecto **PeredaHR** y enlaza a los artefactos de documentación, que residen en el repositorio **privado** del proyecto: [github.com/franpereda/PeredaHR](https://github.com/franpereda/PeredaHR) (rama `feature-entrega1-FSF`). Las secciones referidas a código, despliegue y tests se completarán en las Entregas 2 y Final.
+> **Nota sobre esta entrega (Entrega 2 – Primer MVP ejecutable).** Este `readme.md` resume el proyecto **PeredaHR** y enlaza al **repositorio privado** del proyecto, donde reside todo el código, la documentación y la evidencia: [github.com/franpereda/PeredaHR](https://github.com/franpereda/PeredaHR) — rama **`feature-entrega2-FSF`** (PR de entrega: [#12](https://github.com/franpereda/PeredaHR/pull/12)). Al ser privado, el acceso para el equipo evaluador está concedido (ver 0.6). Los componentes de IA (RAG del convenio + Text-to-SQL) son alcance de la Entrega Final.
 
 ## 0. Ficha del proyecto
 
@@ -29,15 +29,17 @@ PeredaHR es una plataforma interna de gestión de tiempo, presencia y operacione
 
 ### **0.4. URL del proyecto:**
 
-Pendiente de despliegue (Entrega 2). La aplicación se desplegará con URL pública accesible en la siguiente entrega.
+**No hay URL pública.** Por requisitos de **RGPD + LOPDGDD** (los datos biométricos de BioStar y la geolocalización deben permanecer en infraestructura controlada por la empresa), PeredaHR se despliega **on-premise** en un servidor Windows interno; el acceso del evaluador se concede por **Terminal Server/RDP** ("privada con acceso concedido"). La aplicación también se ejecuta en **local en un comando** (ver 1.4).
 
-> Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/).
+Como evidencia del MVP en funcionamiento se aportan **capturas del flujo E2E completo** en [docs/evidencia-entrega2.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/evidencia-entrega2.md).
+
+> Repositorio privado: el acceso al código está concedido al equipo evaluador (ver 0.6). Para credenciales adicionales se pueden compartir de forma segura a [alvaro@lidr.co](mailto:alvaro@lidr.co) vía [onetimesecret](https://onetimesecret.com/).
 
 ### 0.5. URL o archivo comprimido del repositorio
 
-Repositorio **privado** del proyecto: [https://github.com/franpereda/PeredaHR](https://github.com/franpereda/PeredaHR) — rama de la entrega: `feature-entrega1-FSF`.
+Repositorio **privado** del proyecto: [https://github.com/franpereda/PeredaHR](https://github.com/franpereda/PeredaHR) — rama de la entrega: **`feature-entrega2-FSF`** · PR de entrega: [#12](https://github.com/franpereda/PeredaHR/pull/12).
 
-> Al tratarse de un repositorio privado, se compartirá el acceso con el equipo evaluador (ver 0.6).
+> Al tratarse de un repositorio privado, el acceso está compartido con el equipo evaluador (ver 0.6).
 
 ### 0.6. Accesos concedidos al repositorio privado (equipo evaluador)
 
@@ -64,30 +66,53 @@ PeredaHR unifica fichaje, presencia, ausencias, informes de cumplimiento legal y
 
 **North Star Metric:** horas de RRHH liberadas por semana.
 
-Detalle completo en el [PRD-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega1-FSF/PRD-PeredaHR.md) (§01).
+Detalle completo en el [PRD-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/PRD-PeredaHR.md) (§01).
 
 ### **1.2. Características y funcionalidades principales:**
 
-| Módulo | Funcionalidad | Prioridad |
-|---|---|---|
-| Fichaje | Fichaje web Entrar/Salir con geolocalización opcional y restricción por IP de centro; **inmutable para el empleado** | Must |
-| Presencia | Mi Presencia (solo lectura), validación y **confirmación de jornadas (exclusiva de Admin/RRHH)** | Must |
-| Solicitudes/Ausencias | Creación, saldos y aprobación individual/masiva con árbol de 2 niveles | Must |
-| Informes | Informes de cumplimiento legal (Registro mensual de jornada, Anexo de horas extra) | Must |
-| Configuración | Centros, convenios, horarios, departamentos, cargos, roles | Must |
-| IA | Asistente RAG sobre convenio (con citación) + reporting conversacional Text-to-SQL con guardrails | Must |
+Implementadas en el MVP (Entrega 2):
 
-Catálogo funcional completo (módulos Empleado, Administrador e IA) en el [PRD-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega1-FSF/PRD-PeredaHR.md) (§03).
+| Módulo | Funcionalidad | Estado |
+|---|---|---|
+| Fichaje | Fichaje web Entrar/Salir con geolocalización opcional y restricción por IP de centro; **inmutable para el empleado** | ✅ MVP |
+| Presencia | Mi Presencia (solo lectura), **confirmación de jornadas** y **validación de incidencias (exclusivas de Admin/RRHH)** | ✅ MVP |
+| Solicitudes/Ausencias | Creación, saldos, calendario y **aprobación individual/masiva** con árbol de 2 niveles | ✅ MVP |
+| Informes | **Registro mensual de jornada RD-Ley 8/2019** (export CSV/PDF) | ✅ MVP |
+| Auth | SSO OIDC (Keycloak) + RBAC de 3 roles; acceso de demo por rol para evaluación | ✅ MVP |
+| IA | Asistente RAG sobre convenio + reporting Text-to-SQL con guardrails | ⏳ Final |
+
+Catálogo funcional completo en el [PRD-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/PRD-PeredaHR.md) (§03).
 
 ### **1.3. Diseño y experiencia de usuario:**
 
-El diseño es **mobile-first** (el fichaje diario ocurre mayoritariamente en móvil), con optimistic updates en el fichaje y streaming en el chat de IA, y accesibilidad **WCAG 2.1 AA**.
+El diseño es **mobile-first** (el fichaje diario ocurre mayoritariamente en móvil), con accesibilidad **WCAG 2.1 AA**. Los user flows, wireframes y design system están en [UX-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/UX-PeredaHR.md).
 
-En esta entrega, la experiencia de usuario se documenta mediante **user flows (Mermaid)**, **wireframes descritos** y un **design system básico** en el artefacto [UX-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega1-FSF/UX-PeredaHR.md). Las capturas y/o videotutorial de la aplicación se incorporarán en la Entrega 2, cuando exista frontend ejecutable.
+**Capturas del MVP en funcionamiento** (login con acceso por rol → fichaje empleado/admin → Mi Presencia → solicitar/ver ausencias → confirmar/validar jornadas → registro RD-Ley con export → aprobación): **[docs/evidencia-entrega2.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/evidencia-entrega2.md)**.
 
 ### **1.4. Instrucciones de instalación:**
 
-La Entrega 1 es exclusivamente documental; aún no hay código que instalar. El stack previsto (justificado en la arquitectura) es **TypeScript full-stack (Next.js + NestJS + Prisma) sobre PostgreSQL + pgvector**, con OpenAI para el módulo de IA. Las instrucciones precisas de instalación (dependencias, backend, frontend, base de datos, migraciones y semillas) se documentarán en la Entrega 2, junto con el primer MVP ejecutable.
+Monorepo **Turborepo + pnpm**: `apps/web` (Next.js 15), `apps/api` (NestJS 11), `packages/db` (Prisma 6 + PostgreSQL 16 + pgvector). Requisitos: Node 20+, pnpm 10, Docker con Compose v2.
+
+```bash
+# 1. Dependencias
+pnpm install
+
+# 2. Configuración
+cp .env.example .env
+
+# 3. Servicios de apoyo (PostgreSQL+pgvector y Keycloak)
+docker compose up -d
+
+# 4. Base de datos: cliente Prisma + migraciones + semillas
+pnpm db:generate && pnpm db:migrate && pnpm db:seed
+
+# 5. Levantar API (:3001) y Web (:3000)
+pnpm dev
+```
+
+Abre **http://localhost:3000**. Para el **acceso de demo por rol** en `/login`: pon `DEMO_LOGIN_ENABLED="true"` en el `.env` raíz y `NEXT_PUBLIC_DEMO_LOGIN=true` en `apps/web/.env.local` (Next.js lee las `NEXT_PUBLIC_*` desde `apps/web/`). Para **datos de demo realistas** (fichajes, jornadas y solicitudes): `pnpm --filter @peredahr/api seed:demo`.
+
+Instrucciones completas (local y despliegue on-premise) en el [readme.md del proyecto](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/readme.md).
 
 ---
 
@@ -95,57 +120,67 @@ La Entrega 1 es exclusivamente documental; aún no hay código que instalar. El 
 
 ### **2.1. Diagrama de arquitectura:**
 
-El diagrama de arquitectura completo en **modelo C4 (niveles 1-3: Contexto, Contenedor, Componente)** se encuentra en el artefacto [Arquitectura-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega1-FSF/Arquitectura-PeredaHR.md).
+El diagrama completo en **modelo C4 (niveles 1-3)** está en [Arquitectura-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/Arquitectura-PeredaHR.md).
 
-**Patrón y justificación.** Se adopta una arquitectura por **contenedores** con separación clara entre: aplicación web (Next.js/PWA), API de negocio (NestJS con RBAC), un **worker de sincronización** (ETL de lectura directa de las BD SQL de BioStar y SAGE) y un **servicio de IA** (RAG + Text-to-SQL con guardrails).
+**Patrón y justificación.** Arquitectura por **contenedores**: aplicación web (Next.js/PWA), API de negocio (NestJS con RBAC), un **worker de sincronización** (ETL de lectura directa de las BD SQL de BioStar y SAGE) y un **servicio de IA** (RAG + Text-to-SQL con guardrails).
 
-- **Por qué esta arquitectura:** el stack único TypeScript reduce el coste cognitivo y acelera el MVP dentro del presupuesto (~30 h); PostgreSQL + pgvector permite cubrir datos productivos y búsqueda vectorial en **un solo motor**, favoreciendo la **soberanía del dato** (hosting controlado por la empresa, exigible por RGPD).
+- **Por qué:** el stack único TypeScript reduce el coste cognitivo y acelera el MVP; PostgreSQL + pgvector cubre datos productivos y búsqueda vectorial en **un solo motor**, favoreciendo la **soberanía del dato** (hosting de la empresa, exigible por RGPD).
 - **Beneficios:** menos piezas móviles, despliegue sencillo, datos bajo control propio, IA integrada.
-- **Sacrificios/déficits:** el acceso directo a las BD de BioStar/SAGE acopla el sistema al esquema del proveedor (mitigado con una capa de adaptación y tests de contrato); pgvector es suficiente para el volumen actual pero podría requerir un vector store dedicado a mayor escala.
+- **Sacrificios:** el acceso directo a las BD de BioStar/SAGE acopla al esquema del proveedor (mitigado con capa de adaptación y tests de contrato); pgvector es suficiente para el volumen actual.
+
+> En el MVP (Entrega 2) están implementados web, API, base de datos y autenticación. El **worker ETL** (BioStar/SAGE) y el **servicio de IA** están diferidos a la Entrega Final (requieren credenciales del cliente y pesan más en la fase de IA).
 
 ### **2.2. Descripción de componentes principales:**
 
-- **Web App** — Next.js (React), PWA mobile-first. Interfaz de empleado, manager y administrador.
-- **API** — NestJS (Node/TypeScript), REST con autenticación OAuth2/OIDC y autorización RBAC (3 roles).
-- **Worker de sincronización** — proceso programado que **lee directamente las BD SQL** de BioStar (fichajes) y SAGE (maestros: empleados, centros, contratos) y reconcilia con los datos productivos.
-- **Servicio de IA** — pipeline RAG (embeddings text-embedding-3 + búsqueda vectorial en pgvector + GPT-4o con citación) y Text-to-SQL con whitelist de tablas/columnas y exclusión de PII.
-- **Base de datos** — PostgreSQL + pgvector.
+- **Web App** — Next.js 15 (React), PWA mobile-first. Interfaz de empleado, manager y administrador. ✅
+- **API** — NestJS 11 (Node/TypeScript), REST con autenticación OIDC y autorización RBAC (3 roles). ✅
+- **Base de datos** — PostgreSQL 16 + pgvector (Prisma 6). ✅
+- **IdP** — Keycloak (OIDC) para el SSO real; login de demo por rol para evaluación. ✅
+- **Worker de sincronización** — lectura directa de las BD SQL de BioStar y SAGE. ⏳ Entrega Final.
+- **Servicio de IA** — RAG (text-embedding-3 + pgvector + GPT-4o con citación) y Text-to-SQL con whitelist y exclusión de PII. ⏳ Entrega Final.
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
-En la Entrega 1, el repositorio del proyecto contiene la documentación técnica y la definición del **sistema multi-agente** usado para generarla:
+Monorepo con organización modular por dominio:
 
 ```
-PRD-PeredaHR.md            · Product Requirements Document (00-09)
-UX-PeredaHR.md             · Diseño de experiencia (flows, wireframes, design system)
-CasosDeUso-PeredaHR.md     · Casos de uso + diagramas de flujos críticos
-ModeloDatos-PeredaHR.md    · Modelo de datos (ER + diccionario + clasificación PII)
-Arquitectura-PeredaHR.md   · Arquitectura C4 + integraciones + pipeline IA
-readme.md / prompts.md     · Documentación de proyecto y prompts
-/agents/                   · 7 definiciones de agente del sistema generador
-/skills/                   · 7 skills asociadas
-/docs/                     · Glosario canónico + log de decisiones
+apps/web/                  · Frontend Next.js 15 (App Router, PWA mobile-first)
+apps/api/                  · Backend NestJS 11 (REST + RBAC + OIDC)
+packages/db/               · Prisma 6 (schema, migraciones, seed) sobre PostgreSQL+pgvector
+docs/                      · PRD, UX, Casos de uso, Modelo de datos, Arquitectura,
+                             runbook de despliegue y evidencia (capturas)
+openspec/                  · Especificaciones spec-driven (cambios + specs vivas)
+.github/workflows/ci.yml   · Pipeline de CI (typecheck, lint, tests, build)
+docker-compose*.yml        · Orquestación local y de producción (db, keycloak, api, web)
+deploy.ps1 / backup.ps1    · Despliegue on-premise y copias de seguridad
 ```
-
-La estructura de código (backend/frontend) seguirá una organización modular por dominio en la Entrega 2.
 
 ### **2.4. Infraestructura y despliegue**
 
-Pendiente de la Entrega 2. El plan previsto incluye: pipeline **CI/CD básico**, gestión de secretos, despliegue del frontend y backend con **URL pública accesible** y base de datos gestionada (PostgreSQL + pgvector). El diagrama de infraestructura y el proceso de despliegue se documentarán en esa entrega.
+- **Runtime:** 4 contenedores Docker — `db` (PostgreSQL+pgvector), `keycloak` (IdP), `api` (NestJS), `web` (Next.js) — orquestados por `docker-compose.prod.yml`. Las imágenes base se traen de `mirror.gcr.io`/`quay.io` (la red corporativa bloquea Docker Hub).
+- **CI:** GitHub Actions ([.github/workflows/ci.yml](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/.github/workflows/ci.yml)) ejecuta en cada push/PR: `db:generate` → typecheck → lint → tests → build sobre un servicio Postgres+pgvector.
+- **Despliegue (CD):** on-premise en servidor Windows interno con un **script de un comando** (`deploy.ps1`): `git pull` → build → `prisma migrate deploy` (nunca `migrate dev`) → `db seed` idempotente → `up` → **smoke E2E como puerta**. Backups con `pg_dump -Fc` + copia externa (`backup.ps1`); rollback documentado.
+- **Acceso del evaluador:** Terminal Server/RDP al servidor interno (RGPD: datos en infraestructura de la empresa).
+
+Runbook completo: [docs/despliegue-entrega2.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/despliegue-entrega2.md).
 
 ### **2.5. Seguridad**
 
-Prácticas de seguridad contempladas en el diseño (detalle en [PRD-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega1-FSF/PRD-PeredaHR.md) §06 y [Arquitectura-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega1-FSF/Arquitectura-PeredaHR.md) §8):
+- **Autenticación** OIDC/SSO (Keycloak) y **autorización RBAC** con 3 roles (Empleado, Manager, Admin/RRHH); el rol es la **fuente de verdad en BD**, no el claim del IdP. Guards globales en la API.
+- **Sesión:** JWT propio en cookie `httpOnly`, `sameSite=lax`, `secure` configurable (`COOKIE_SECURE`).
+- **Fichaje:** sellado en servidor, **inmutable para el empleado**, restricción por IP de centro; toda corrección es de Admin/RRHH y queda auditada.
+- **Privacidad por diseño:** PII sensible (`dni`, `nss`, geolocalización, biométricos) excluida del Text-to-SQL; `/api/me` sin PII.
+- **Auditoría (`AuditLog`):** login, fichajes/incidencias, confirmaciones y validaciones de jornada, correcciones, aprobaciones y generación de informes, con autoría y timestamp.
+- **Soberanía del dato:** hosting on-premise controlado por la empresa (RGPD/LOPDGDD).
 
-- **Autenticación** OAuth2/OIDC (SSO) y **autorización RBAC** con 3 roles (Empleado, Manager, Admin/RRHH).
-- **Cifrado** en tránsito (TLS) y en reposo.
-- **Privacidad por diseño:** PII sensible (`dni`, `nss`, geolocalización, biométricos) **excluida del Text-to-SQL** mediante whitelist; el asistente RAG responde "no consta" si no hay evidencia (anti-alucinación).
-- **Auditoría:** traza de aprobaciones, confirmaciones de jornada y correcciones de fichaje con autoría y timestamp.
-- **Soberanía del dato:** hosting controlado por la empresa (RGPD/LOPDGDD).
+Detalle en [PRD-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/PRD-PeredaHR.md) §06 y [Arquitectura-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/Arquitectura-PeredaHR.md) §8.
 
 ### **2.6. Tests**
 
-Pendiente de la Entrega 2. El plan de pruebas incluye tests **unitarios**, de **integración** y al menos un test **E2E** del flujo principal (US-01 → US-04 → US-06 → US-08), además de **tests de contrato** sobre el esquema de las BD externas (BioStar/SAGE) por el acoplamiento del acceso directo.
+- **API:** **212 tests** (Jest) — unitarios (lógica de dominio: emparejamiento de fichajes, consolidación de jornadas, saldos, días laborables…) e **integración** con guards reales y RBAC sobre la API.
+- **Web:** tests del helper de calendario de ausencias.
+- **E2E / smoke:** `scripts/smoke.mjs` firma un JWT y recorre el camino crítico (US-01/04/06/08); actúa de **puerta del despliegue** (`deploy.ps1` aborta si falla).
+- **Calidad en CI:** typecheck del monorepo y `next build` en cada push/PR.
 
 ---
 
@@ -153,7 +188,7 @@ Pendiente de la Entrega 2. El plan de pruebas incluye tests **unitarios**, de **
 
 ### **3.1. Diagrama del modelo de datos:**
 
-El diagrama entidad-relación completo en **Mermaid `erDiagram`** (con tipos, claves primarias/foráneas y cardinalidades) está en el artefacto [ModeloDatos-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega1-FSF/ModeloDatos-PeredaHR.md) (§1).
+El diagrama entidad-relación completo en **Mermaid `erDiagram`** (tipos, PK/FK y cardinalidades) está en [ModeloDatos-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/ModeloDatos-PeredaHR.md) (§1). El esquema implementado vive en [packages/db/prisma/schema.prisma](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/packages/db/prisma/schema.prisma).
 
 ### **3.2. Descripción de entidades principales:**
 
@@ -163,12 +198,12 @@ El diagrama entidad-relación completo en **Mermaid `erDiagram`** (con tipos, cl
 
 **Entidades de soporte:** `Site`, `Position`, `Role`, `Contract`, `Holiday`, `AgreementChunk` (fragmentos del convenio con embedding para el RAG), `Document`, `AuditLog`.
 
-Ejemplos de atributos y restricciones (detalle y diccionario completo con indicador PII en el artefacto enlazado):
+Ejemplos de atributos y restricciones (diccionario completo con indicador PII en el artefacto enlazado):
 
 - **`Employee`** — `id` (uuid, PK), `first_name`/`last_name`, `email` (unique), `dni` (unique, **PII sensible**), `nss` (unique, **PII sensible**), `department_id`/`position_id`/`role_id`/`schedule_id` (FK), `manager_l1_id`/`manager_l2_id` (FK self), `active` (bool).
-- **`ClockEntry`** — `id` (PK), `employee_id` (FK), `center_id` (FK), `ts` (timestamptz), `type` (ENTRADA/SALIDA), `geo` (point, nullable, **PII opcional**), `source` (PEREDAHR/BIOSTAR), `immutable_for_employee` (bool).
-- **`WorkDay`** — `status` (PENDING/CONFIRMED/INCIDENT/VALIDATED), `confirmed_by` (FK, Admin/RRHH), `confirmed_at`.
-- **`LeaveRequest` / `LeaveAllocation` / `ApprovalLog`** — soportan el ciclo de solicitud con reserva de saldo y aprobación de 1.º/2.º nivel.
+- **`ClockEntry`** — `id` (PK), `employee_id` (FK), `center_id` (FK), `ts` (timestamptz), `type` (ENTRADA/SALIDA), `geo_lat`/`geo_lng` (decimal, nullable, **PII opcional**), `source` (PEREDAHR/BIOSTAR), `immutable_for_employee` (bool).
+- **`WorkDay`** — `status` (PENDING/CONFIRMED/INCIDENT/VALIDATED), `confirmed_by`/`validated_by` (FK, Admin/RRHH), `confirmed_at`/`validated_at`, `@@unique([employee_id, day])`.
+- **`LeaveRequest` / `LeaveAllocation` / `ApprovalLog`** — ciclo de solicitud con reserva de saldo y aprobación de 1.º/2.º nivel.
 
 ---
 
@@ -176,13 +211,43 @@ Ejemplos de atributos y restricciones (detalle y diccionario completo con indica
 
 > Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad
 
-En la Entrega 1 (documentación) se ha definido un **esbozo de contrato de API de alto nivel** por recurso y rol, disponible en [Arquitectura-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega1-FSF/Arquitectura-PeredaHR.md) (§7). Los 3 endpoints principales previstos son:
+Endpoints principales del MVP (esbozo de contrato completo por recurso y rol en [Arquitectura-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/Arquitectura-PeredaHR.md) §7):
 
-- `POST /api/clock-entries` — registrar fichaje de entrada/salida (rol Empleado).
-- `POST /api/leave-requests` — crear solicitud de ausencia (rol Empleado).
-- `GET /api/reports/monthly-journey` — generar el Registro mensual de jornada (rol Admin/RRHH).
-
-La **especificación formal en formato OpenAPI** (esquemas, ejemplos de petición/respuesta, errores) se completará en la Entrega 2, junto con la implementación del backend.
+```yaml
+openapi: 3.0.3
+info: { title: PeredaHR API, version: "0.2.0 (Entrega 2)" }
+paths:
+  /api/clock-entries:
+    post:
+      summary: Registrar fichaje de entrada/salida (rol Empleado)
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type]
+              properties:
+                type: { type: string, enum: [ENTRADA, SALIDA] }
+                geoLat: { type: number, nullable: true }
+                geoLng: { type: number, nullable: true }
+      responses:
+        "201": { description: Fichaje creado (ts sellado en servidor) }
+        "403": { description: IP de centro no autorizada }
+  /api/leave-requests:
+    post:
+      summary: Crear solicitud de ausencia (autoservicio)
+      responses:
+        "201": { description: Solicitud creada (PENDING, saldo reservado) }
+        "409": { description: Solapamiento con otra solicitud }
+  /api/reports/monthly-journey:
+    get:
+      summary: Registro mensual de jornada RD-Ley 8/2019 (rol Admin/RRHH)
+      parameters:
+        - { name: month, in: query, required: true, schema: { type: string, example: "2026-06" } }
+      responses:
+        "200": { description: Informe totalizado por empleado (JSON/CSV) }
+```
 
 ---
 
@@ -190,19 +255,19 @@ La **especificación formal en formato OpenAPI** (esquemas, ejemplos de petició
 
 > Documenta 3 de las historias de usuario principales utilizadas durante el desarrollo, teniendo en cuenta las buenas prácticas de producto al respecto.
 
-Las 10 historias completas con criterios de aceptación en Gherkin están en el [PRD-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega1-FSF/PRD-PeredaHR.md) (§04). Se seleccionan las 3 del flujo E2E prioritario:
+Las 10 historias completas con criterios Gherkin están en el [PRD-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/PRD-PeredaHR.md) (§04). Las 3 del flujo E2E prioritario, ya implementadas:
 
 **Historia de Usuario 1** · US-01 — Fichar entrada/salida
 **Como** empleado, **quiero** fichar mi entrada y salida desde la web, **para** registrar mi jornada y cumplir con el registro horario legal.
-*Criterios clave:* el sistema registra un `ClockEntry` con timestamp, tipo y centro; la geolocalización es opcional; se rechaza el fichaje desde IP no autorizada; **el fichaje es inmutable para el empleado** (no puede editarlo ni borrarlo; toda corrección es competencia de Admin/RRHH con auditoría).
+*Criterios clave:* `ClockEntry` con timestamp, tipo y centro; geolocalización opcional; rechazo desde IP no autorizada; **inmutable para el empleado** (corrección solo Admin/RRHH, auditada).
 
 **Historia de Usuario 2** · US-06 — Gestionar solicitudes (Admin/RRHH)
 **Como** administrador de RRHH, **quiero** aprobar o rechazar solicitudes de forma individual y masiva con comentarios, **para** gestionar el pico de 73 solicitudes sin cuello de botella.
-*Criterios clave:* aprobación individual y en lote filtrada por tipo/departamento; cada acción genera un `ApprovalLog` y actualiza el saldo; soporte de aprobación de **2.º nivel**.
+*Criterios clave:* aprobación individual y en lote; cada acción genera un `ApprovalLog`, actualiza el saldo (con devolución al rechazar) y soporta **2.º nivel**.
 
 **Historia de Usuario 3** · US-08 — Generar el Registro mensual de jornada (Admin/RRHH)
 **Como** administrador, **quiero** generar el informe oficial de Registro mensual de jornada, **para** cumplir el RD-Ley 8/2019 y responder a Inspección al momento.
-*Criterios clave:* selección de mes y ámbito (empleado/centro/compañía); informe con datos totalizados por empleado; exportable (CSV/PDF).
+*Criterios clave:* selección de mes y ámbito (empleado/centro/compañía); totales por empleado + detalle diario; exportable (CSV/PDF).
 
 ---
 
@@ -210,25 +275,22 @@ Las 10 historias completas con criterios de aceptación en Gherkin están en el 
 
 > Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos.
 
-Tickets previstos para el MVP de la Entrega 2, derivados de las historias anteriores (índice en el [readme.md del proyecto](https://github.com/franpereda/PeredaHR/blob/feature-entrega1-FSF/readme.md) §8):
+Tickets reales de la Entrega 2 (gestionados en Linear `PER-XX`, desarrollo spec-driven con OpenSpec; índice completo en el [readme.md del proyecto](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/readme.md) §8):
 
-**Ticket 1 · Backend** — Endpoint de fichaje (US-01)
-- **Objetivo:** implementar `POST /api/clock-entries` en NestJS.
-- **Detalle:** validar empleado autenticado y centro asignado; registrar `ClockEntry` (timestamp, tipo ENTRADA/SALIDA, canal, geo opcional, `source=PEREDAHR`); aplicar restricción por IP de centro; **impedir edición/borrado por el empleado** (inmutabilidad).
-- **Criterios de aceptación:** cubrir los escenarios Gherkin de US-01; respuesta 201 con el recurso creado; 403 si la IP no está autorizada.
-- **DoD:** tests unitarios y de integración; auditoría de la operación.
+**Ticket 1 · Backend** — PER-5 · Endpoint de fichaje (US-01)
+- **Objetivo:** `POST /api/clock-entries` en NestJS.
+- **Detalle:** empleado autenticado y centro asignado; `ClockEntry` (ts sellado en servidor, tipo, canal, geo opcional, `source=PEREDAHR`); restricción por IP de centro; **inmutable para el empleado**; secuencia inválida → incidencia auditada.
+- **Aceptación:** escenarios Gherkin de US-01; 201 con el recurso; 403 si la IP no está autorizada. **DoD:** tests unitarios + integración y auditoría. ✅ (PR #1)
 
-**Ticket 2 · Frontend** — Pantalla de fichaje (US-01)
+**Ticket 2 · Frontend** — PER-5 · Pantalla de fichaje (US-01)
 - **Objetivo:** UI de fichaje en Next.js, mobile-first.
-- **Detalle:** botón persistente Entrar/Salir con estado claro y **optimistic update**; gestión del permiso de geolocalización (opcional); feedback de éxito/error (incluido rechazo por IP); sin acciones de edición sobre fichajes.
-- **Criterios de aceptación:** accesibilidad WCAG 2.1 AA (foco visible, `aria-label` dinámico, contraste ≥ 4.5:1); rollback visual si falla la petición.
-- **DoD:** test de componente; verificación responsive.
+- **Detalle:** botón persistente Entrar/Salir con estado y contador del día; permiso de geolocalización opcional; feedback de éxito/error (incl. rechazo por IP); sin acciones de edición sobre fichajes.
+- **Aceptación:** accesibilidad WCAG 2.1 AA; sin scroll horizontal en desktop (PER-23). **DoD:** verificación responsive. ✅ (PR #1, #13)
 
-**Ticket 3 · Base de datos** — Esquema de presencia
-- **Objetivo:** modelar y migrar las entidades `ClockEntry` y `WorkDay` con Prisma sobre PostgreSQL.
-- **Detalle:** definir tipos, claves foráneas y enums de estado (`PENDING/CONFIRMED/INCIDENT/VALIDATED`); campos de auditoría (`confirmed_by`, `confirmed_at`); índice por `employee_id` y `day`.
-- **Criterios de aceptación:** migración reproducible + semillas mínimas; restricción que refleje la confirmación como competencia de Admin/RRHH.
-- **DoD:** migración aplicada en entorno limpio; diccionario de datos actualizado.
+**Ticket 3 · Base de datos** — PER-16 · Esquema de presencia
+- **Objetivo:** modelar y migrar `ClockEntry` y `WorkDay` con Prisma sobre PostgreSQL.
+- **Detalle:** tipos, FKs y enums de estado (`PENDING/CONFIRMED/INCIDENT/VALIDATED`); auditoría (`confirmed_by/at`, `validated_by/at`); `@@unique([employee_id, day])`; índice HNSW para el RAG.
+- **Aceptación:** migración reproducible (`migrate deploy`) + semillas; confirmación como competencia de Admin/RRHH. **DoD:** migración aplicada en entorno limpio. ✅
 
 ---
 
@@ -236,11 +298,15 @@ Tickets previstos para el MVP de la Entrega 2, derivados de las historias anteri
 
 > Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
 
-**Pull Request 1** · Entrega 1 – Documentación Técnica (repo del proyecto)
-Rama `feature-entrega1-FSF` sobre [franpereda/PeredaHR](https://github.com/franpereda/PeredaHR): incorpora todos los artefactos de documentación (PRD, UX, Casos de Uso, Modelo de Datos, Arquitectura), el sistema multi-agente (`/agents`, `/skills`) y los documentos de control (`/docs`).
+El MVP se construyó con **una PR por ticket** sobre el repo privado [franpereda/PeredaHR](https://github.com/franpereda/PeredaHR) (12 PRs, #1–#13), integradas en la rama de entrega y agrupadas en la PR de entrega **[#12](https://github.com/franpereda/PeredaHR/pull/12)** (`feature-entrega2-FSF` → `main`). Tres representativas:
 
-**Pull Request 2** · Entrega 1 – Documentación del curso (este repositorio)
-Rama `feature-entrega1-FSF` sobre [franpereda/AI4Devs-finalproject](https://github.com/franpereda/AI4Devs-finalproject): `readme.md` y `prompts.md` cumplimentados según la plantilla de entrega.
+**Pull Request 1** · [#1](https://github.com/franpereda/PeredaHR/pull/1) — PER-5 · UC-01 fichar entrada/salida web
+Backend (endpoint inmutable + restricción IP) y frontend (widget de fichaje) del núcleo legal de control horario.
 
-**Pull Request 3** · Pendiente (Entrega 2)
-Se documentará con el primer MVP ejecutable (código de backend/frontend, tests y despliegue).
+**Pull Request 2** · [#8](https://github.com/franpereda/PeredaHR/pull/8) — PER-10 · Gestionar solicitudes (aprobación individual y masiva)
+Workflow de aprobación de 2 niveles con `ApprovalLog` y devolución de saldo al rechazar.
+
+**Pull Request 3** · [#5](https://github.com/franpereda/PeredaHR/pull/5) — PER-12 · Registro mensual de jornada RD-Ley 8/2019
+Informe legal totalizado por empleado con detalle diario y exportación CSV/PDF (criterio no-go de la entrega).
+
+> Además, en **este repositorio** (`AI4Devs-finalproject`), la rama `feature-entrega2-FSF` actualiza `readme.md` con la documentación de la Entrega 2.
