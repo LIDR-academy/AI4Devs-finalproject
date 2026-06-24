@@ -11,11 +11,17 @@ import {
   listNotificationEvents,
   type NotificationEvent,
 } from "@/features/notifications/notifications.api";
+import {
+  subscribeToPush,
+  unsubscribeFromPush,
+} from "@/features/notifications/push-subscription";
 
 export const Route = createFileRoute("/notifications")({
   beforeLoad: requireAuthBeforeLoad,
   component: NotificationsPage,
 });
+
+type PushStatus = "unsupported" | "subscribed" | "unsubscribed";
 
 function NotificationsPage() {
   const authed = useRequireAuthRedirect();
@@ -24,6 +30,60 @@ function NotificationsPage() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pushStatus, setPushStatus] = useState<PushStatus>("unsubscribed");
+  const [pushBusy, setPushBusy] = useState(false);
+
+  useEffect(() => {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+      setPushStatus("unsupported");
+      return;
+    }
+    navigator.serviceWorker.getRegistration().then((reg) => {
+      if (!reg) return;
+      reg.pushManager.getSubscription().then((sub) => {
+        setPushStatus(sub ? "subscribed" : "unsubscribed");
+      });
+    });
+  }, []);
+
+  async function handleSubscribe() {
+    setPushBusy(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const ok = await subscribeToPush();
+      if (ok) {
+        setPushStatus("subscribed");
+        setMessage("Push notifications enabled.");
+      } else {
+        setError("Permission denied or push not supported by this browser.");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not enable push notifications.");
+    } finally {
+      setPushBusy(false);
+    }
+  }
+
+  async function handleUnsubscribe() {
+    setPushBusy(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg) {
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) await sub.unsubscribe();
+      }
+      await unsubscribeFromPush();
+      setPushStatus("unsubscribed");
+      setMessage("Push notifications disabled.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not disable push notifications.");
+    } finally {
+      setPushBusy(false);
+    }
+  }
 
   async function refreshEvents() {
     setLoading(true);
@@ -80,6 +140,32 @@ function NotificationsPage() {
 
   return (
     <AppShell title="Notifications">
+      {pushStatus !== "unsupported" && (
+        <div className="mb-4">
+          {pushStatus === "unsubscribed" ? (
+            <button
+              type="button"
+              data-testid="enable-push-notifications"
+              className="w-full rounded-xl bg-primary px-3 py-2.5 text-[13px] font-semibold text-primary-foreground disabled:opacity-60"
+              disabled={pushBusy}
+              onClick={() => { void handleSubscribe(); }}
+            >
+              {pushBusy ? "Enabling…" : "Enable push notifications"}
+            </button>
+          ) : (
+            <button
+              type="button"
+              data-testid="disable-push-notifications"
+              className="w-full rounded-xl border border-border px-3 py-2.5 text-[13px] font-semibold disabled:opacity-60"
+              disabled={pushBusy}
+              onClick={() => { void handleUnsubscribe(); }}
+            >
+              {pushBusy ? "Disabling…" : "Push notifications enabled — tap to disable"}
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="mb-4 flex gap-2">
         <button
           type="button"

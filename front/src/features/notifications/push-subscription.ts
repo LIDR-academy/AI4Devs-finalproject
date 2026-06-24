@@ -15,12 +15,17 @@ export async function subscribeToPush(): Promise<boolean> {
     return false;
   }
 
+  if (!VAPID_PUBLIC_KEY) {
+    throw new Error("VITE_VAPID_PUBLIC_KEY is not set in front/.env — add it and restart the dev server.");
+  }
+
   const permission = await Notification.requestPermission();
   if (permission !== "granted") {
     return false;
   }
 
-  const registration = await navigator.serviceWorker.register("/sw.js");
+  await navigator.serviceWorker.register("/sw.js");
+  const registration = await navigator.serviceWorker.ready;
   const subscription = await registration.pushManager.subscribe({
     userVisibleOnly: true,
     applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY).buffer as ArrayBuffer,

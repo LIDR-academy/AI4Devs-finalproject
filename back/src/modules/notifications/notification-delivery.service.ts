@@ -49,7 +49,7 @@ export class NotificationDeliveryService {
   async #deliverEmail(userId: string, userEmail: string, items: ExpiryItem[]): Promise<void> {
     const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const existing = await this.prisma.notificationLog.findFirst({
-      where: { userId, type: "EXPIRY", channel: "EMAIL", sentAt: { gte: cutoff } },
+      where: { userId, type: "EXPIRY", channel: "EMAIL", status: "SENT", sentAt: { gte: cutoff } },
     });
     if (existing) return;
 
