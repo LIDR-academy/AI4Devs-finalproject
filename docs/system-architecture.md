@@ -189,20 +189,19 @@ sequenceDiagram
     B->>F: Class creada (con event_id)
 ```
 
-## 4. Component & Technology Breakdown
+## 4. Component Inventory
 
-| Component | Role | Tecnología |
-|-----------|------|------------|
-| **Frontend SPA** | UI con renderizado condicional por rol (Admin/Coach/Coachee); mobile-first para Coachee | React 18+, TypeScript, Vite, TailwindCSS v4, React Router v6, TanStack React Query |
-| **Calendar UI** | Componente custom de calendario en el frontend — nunca llama a Google Calendar API directamente | React component, datos vía API del backend |
-| **PWA Layer** | Service Worker para instalación "Add to Home Screen" + push notifications | vite-plugin-pwa (Workbox), Web Push API |
-| **Backend API** | REST API con arquitectura hexagonal; toda la lógica de negocio | Node.js 22+, TypeScript, Express/Fastify, Zod |
-| **Domain Layer** | Entidades puras y servicios de dominio sin dependencias externas | TypeScript (zero framework deps) |
-| **Database** | Datos relacionales (usuarios, enrolamientos, waiting lists, notifications, referencias a eventos de Google Calendar) | PostgreSQL 16 + Prisma ORM |
-| **Google Calendar Adapter** | Adaptador de salida: Google Calendar es el motor de scheduling interno. Service Account con calendario privado de sistema — ningún usuario humano tiene acceso | Google Calendar API v3 (REST), OAuth2 Service Account (JWT grant) |
-| **Notification Adapter** | Push notifications a los 3 roles | Firebase Cloud Messaging (FCM) |
-| **Auth** | JWT stateless con RBAC (Admin/Coach/Coachee) | jsonwebtoken + bcrypt |
-| **Testing** | Tests unitarios (dominio), integración (adapters), E2E (flujos completos) | Vitest + Supertest + Playwright |
+| Componente | Capa Arquitectónica | Rol |
+|-----------|---------------------|-----|
+| **Frontend SPA** | Interface de usuario | UI con renderizado condicional por rol (Admin/Coach/Coachee); mobile-first para Coachee |
+| **Calendar UI** | Interface de usuario | Componente custom de calendario — nunca llama a Google Calendar API directamente |
+| **PWA Layer** | Interface de usuario | Service Worker para instalación "Add to Home Screen" + push notifications |
+| **Backend API** | Aplicación | REST API con arquitectura hexagonal; toda la lógica de negocio |
+| **Domain Layer** | Dominio | Entidades puras + domain services sin dependencias externas |
+| **Database** | Persistencia | Datos relacionales: usuarios, enrolamientos, waiting lists, notificaciones, referencias a eventos de Google Calendar |
+| **Google Calendar Adapter** | Infraestructura (outbound) | Adaptador de salida: Google Calendar como motor de scheduling interno vía Service Account con calendario privado |
+| **Notification Adapter** | Infraestructura (outbound) | Push notifications a los 3 roles |
+| **Auth** | Infraestructura (cross) | JWT stateless con RBAC |
 
 ## 5. Benefits
 
