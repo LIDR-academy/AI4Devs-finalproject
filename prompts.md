@@ -1,7 +1,7 @@
 > Detalla en esta sección los prompts principales utilizados durante la creación del proyecto, que justifiquen el uso de asistentes de código en todas las fases del ciclo de vida del desarrollo. Esperamos un máximo de 3 por sección, principalmente los de creación inicial o  los de corrección o adición de funcionalidades que consideres más relevantes.
 Puedes añadir adicionalmente la conversación completa como link o archivo adjunto si así lo consideras
 
-> **Nota:** El proyecto se ha generado con un **sistema multi-agente** orquestado (7 agentes + 7 skills) cuyo prompt maestro está versionado en el repositorio del proyecto: [prompt-sistema-multi-agente.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega1-FSF/prompt-sistema-multi-agente.md). El registro completo de decisiones consultadas está en [docs/Decisiones-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega1-FSF/docs/Decisiones-PeredaHR.md).
+> **Nota (Entrega 2).** La **Entrega 1** (documentación) se generó con un **sistema multi-agente** orquestado (7 agentes + 7 skills), prompt maestro en [prompt-sistema-multi-agente.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/prompt-sistema-multi-agente.md). La **Entrega 2** (MVP) se desarrolló con **Claude Code** en flujo **spec-driven (OpenSpec)** y un ticket Linear por unidad de trabajo. El registro de prompts completo (Entrega 1 + Entrega 2, por área) está en [prompts.md del proyecto](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/prompts.md) y el log de decisiones en [docs/Decisiones-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/Decisiones-PeredaHR.md). Abajo se conservan los prompts clave de la Entrega 1 y se añaden los más relevantes de la Entrega 2.
 
 ## Índice
 
@@ -50,8 +50,11 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 
 ### **2.4. Infraestructura y despliegue**
 
-**Prompt 1:**
-"(Previsto para Entrega 2) Documenta el pipeline CI/CD, la gestión de secretos y el despliegue con URL pública."
+**Prompt 1 (Entrega 2):**
+"El despliegue es on-premise en el servidor Windows interno (RGPD: la biometría de BioStar y la geolocalización deben quedarse en infraestructura de la empresa); el evaluador entra por RDP/Terminal Server. El firewall corporativo bloquea Docker Hub: usa siempre `mirror.gcr.io`/`quay.io` para las imágenes base, en Dockerfiles, compose y CI."
+
+**Prompt 2 (Entrega 2):**
+"Despliegue por script PowerShell de un comando (`deploy.ps1`): `migrate deploy` (nunca `migrate dev`), seed idempotente, `up` y un smoke E2E que actúe de puerta; CI en GitHub Actions (typecheck, lint, tests, build) y backups con `pg_dump` + copia externa."
 
 ### **2.5. Seguridad**
 
@@ -60,8 +63,8 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 
 ### **2.6. Tests**
 
-**Prompt 1:**
-"(Previsto para Entrega 2) Define una suite con tests unitarios, de integración, un test E2E del flujo principal y tests de contrato sobre el esquema de las BD externas (BioStar/SAGE)."
+**Prompt 1 (Entrega 2):**
+"No des un ticket por hecho sin tests verdes y, cuando sea un flujo de usuario, una verificación en caliente contra Postgres+API local; reporta el resultado real, no lo que debería pasar. Cubre lógica de dominio (emparejamiento de fichajes, consolidación de jornadas, saldos) con unitarios e integración con guards reales y RBAC."
 
 ---
 
@@ -83,6 +86,9 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 **Prompt 1:**
 "Incluye un esbozo de contrato de API de alto nivel por recurso y rol (p. ej. POST /api/clock-entries, POST /api/leave-requests, GET /api/reports/monthly-journey); el detalle formal OpenAPI se deja para la Entrega 2."
 
+**Prompt 2 (Entrega 2):**
+"Implementa los endpoints REST en NestJS con guards globales JWT+RBAC: el fichaje sella el `ts` en servidor y es inmutable para el empleado; el informe `GET /api/reports/monthly-journey` (solo ADMIN) totaliza los WorkDay congelados sin recalcular y exporta CSV nativo (RFC 4180) + PDF en cliente, nunca con DNI/NSS."
+
 ---
 
 ## 5. Historias de Usuario
@@ -100,6 +106,9 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 **Prompt 1:**
 "Deriva de las historias del flujo E2E tres tickets de desarrollo (uno de backend, uno de frontend y uno de base de datos) con objetivo, detalle, criterios de aceptación y Definition of Done."
 
+**Prompt 2 (Entrega 2):**
+"Cada ticket arranca con `/opsx:propose 'PER-XX …'`: quiero revisar la intención (proposal/design/tasks) y las decisiones abiertas antes de generar código; luego `/opsx:apply` y al cerrar `/opsx:archive`. Conduce el ciclo en Linear (In Progress → In Review → Done) sin que lo pida."
+
 ---
 
 ## 7. Pull Requests
@@ -109,3 +118,6 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 
 **Prompt 2:**
 "Completa el readme.md y el prompts.md de la plantilla del repositorio del curso, enlazando a los artefactos reales del repositorio privado del proyecto, y súbelos en la rama feature-entrega1-FSF."
+
+**Prompt 3 (Entrega 2):**
+"Una PR por ticket hacia la rama de entrega `feature-entrega2-FSF`, con `Closes PER-XX` en el cuerpo; al final, agrupa el MVP en una PR de entrega (`feature-entrega2-FSF` → `main`, PR #12). En el repo público del curso, actualiza el readme.md a la Entrega 2 apuntando al privado (rama `feature-entrega2-FSF`) y abre la PR intra-fork contra su propio `main`."
