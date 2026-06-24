@@ -35,7 +35,7 @@
 
 > Nota: Se instruyó al asistente para que generara la documentación del producto analizando el código real existente, no desde suposiciones. Se pidió concisión y confirmación antes de aplicar cambios.
 
-**Prompt 3:** "Actualiza automáticamente AI4Devs-finalproject/readme.md cuando cambie estructura u otro elemento que observes que varía en el archivo porque varía el código del repositorio codigofinal/lms-cms-laravel12."
+**Prompt 3:** "Actualiza automáticamente AI4Devs-finalproject/readme.md cuando cambie estructura u otro elemento que observes que varía en el archivo porque varía el código del repositorio codigofinal/lms-cms-laravel12.Que se encuentra en el repositorio https://github.com/BurgosAngel/codigofinal."
 
 > Nota: Prompt de mantenimiento para que la documentación refleje siempre el estado actual del código. El LLM analizó modelos, controladores, migraciones, rutas y vistas para actualizar todas las secciones del README.
 
