@@ -6,19 +6,22 @@
 
 ---
 
-# 2 - OpenCode - DeepSeek V4 Flash Free
+# 2 - OpenCode - DeepSeek V4 Flash Free - Plan mode
 
-In the file docs/PRD.md we have a PRd defined for a project. In the Profile screen of that project we want to have a graphic that shows:
-- the current progress of the user's weight. (normal line)
-- the prediction of the progress that is going to happen based on real progress done until now. (dotted line)
-- the linear prediction progress that should be followed to reach the target set within the time set. (dotted line)
-Please consider the image in prompts/images/weight-graphic.png
-
-To do: update the PRD accordingly so that this graphic is clear
-
-image: [weight-graphic.png](/prompts/images/weight-graphic.png)
+I need to improve this PRD and make it bullet proof. 
+For example, in the section 7. Notifications & Push Notification Rules, I've noticed that we are missing some more push notifications. When a coachee cancels a group class, the assigned coach also recieves a push notification saying who has cancelled and informing to who has been send a warning. 
+If in that case, another coachee fills in the spot, a new notification is send to the coach assigned informing who has taken the spot. 
+I want you to understand the whole platform and see the places where we might be missing information about some given scenarios. I don't want you to assume anything. Ask me whatever you need in order to make sure everything is properly tied up.  
+​
+### NOTE:
+Al preguntar en modo Plan, me hizo muchisimas preguntas sobre todos los "huecos" que fue encontrando para asi no asumir ni alucinar.
 
 ---
+
+=========================
+=========================
+=========================
+
 
 # 3 - claude.ai - Claude Sonnet 4.6
 

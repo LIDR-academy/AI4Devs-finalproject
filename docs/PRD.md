@@ -20,24 +20,27 @@ The Coach and their team require a single, web-based solution for scheduling, ma
 
 | Role | Capabilities / Permissions |
 | --- | --- |
-| Admin | Add/activate/deactivate Users (Coachees); create/schedule all class types; block calendar time; add/activate/deactivate Coaches; full navigation access |
-| Coach | Create/schedule all class types (but not block time or add users/coaches); access to all non-admin-only screens |
-| Coachee | View calendar (per visibility rules); join/cancel group classes (if available/in scope); receive notifications; mobile navigation |
+| Admin | Add/activate/deactivate Users (Coachees); create/schedule all class types; block gym-wide time; block own calendar time; add/activate/deactivate Coaches; full navigation access |
+| Coach | Create/schedule all class types (can assign self or another Coach); cancel own or assigned classes; block own calendar time; view all classes from all Coaches on the calendar; access to all non-admin-only screens |
+| Coachee | View calendar (per visibility rules); join/cancel group classes (if available/in scope); join/leave waiting lists for both group and individual classes; receive notifications; mobile navigation |
 
 ---
 
 ## 4\. Glossary of Key Terms
 
-* **Coach:** User who delivers training sessions; can create and schedule classes.
-* **Coachee:** Client assigned to a Coach; attends classes and interacts with the system mainly via mobile.
+* **Coach:** User who delivers training sessions; can create and schedule classes. The Coach who creates a class is its assigned Coach by default; a different Coach may be selected at creation time.
+* **Coachee:** Client who attends classes and interacts with the system mainly via mobile.
 * **Admin:** Admin-level user who manages Coaches, Coachees, classes, and blocked time.
 * **Individual Class:** 1-hour session with a single Coachee; up to 2 such classes may occur simultaneously.
 * **Group Class:** 1-hour session with a group (min 3, max 4) of Coachees at a defined level; only 1 group class can occur at a time.
-* **Block (Calendar):** Reserved gym time; no classes scheduled during blocks.
-* **Level:** One of 5 tiers assigned to Coachees, representing skill or experience; each maps to a specific color.
-* **Waiting List:** Queue for group classes at capacity; Coachees may join if a spot is not immediately available.
+* **Block (Calendar — Personal):** Time blocked by a Coach or Admin on their own calendar; no classes assigned to that person during the block.
+* **Block (Calendar — Gym-wide):** Time blocked by an Admin for the entire gym; no classes of any kind may be scheduled during a gym-wide block.
+* **Level:** One of 5 named tiers assigned to Coachees by a Coach/Admin, representing skill or experience. The levels are: **Principiante, Básico, Intermedio, Avanzado, Experto**. Each maps to a specific color (to be defined by design).
+* **Warning:** Informational push notification sent to a coachee when a spot opens up in a class they are waitlisted for. No penalty associated.
+* **Waiting List:** Queue for a class at full capacity (group) or for a specific time slot (individual). Coachees may join if a spot is not immediately available. Maximum size: 4. First-come, first-serve with no hold time. When one or more spots open, all waitlisted coachees are notified simultaneously.
 * **Status:** User or Coach activation state (Active/Inactive).
-* **Reach:** Group classes are within a Coachee’s reach if at their level, one above, or one below.
+* **Reach:** A class is within a Coachee’s reach if it matches their level, one above, or one below.
+* **Weekly recurrence:** A class may be created as a one-off or as a weekly recurring series (same day, time, level, and assigned Coach every week).
 
 ---
 
