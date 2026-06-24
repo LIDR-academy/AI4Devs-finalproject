@@ -1,0 +1,52 @@
+# E2E stack: base infra (postgres + mailpit from docker-compose.yml) + the app.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.e2e.yml up --build -d
+services:
+  backend:
+    build: ./backend
+    container_name: stayhub-backend-e2e
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${DB_NAME:-stayhub}
+      POSTGRES_USER: ${DB_USER:-stayhub}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-stayhub_dev}
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+      MAIL_FROM: noreply@stayhub.local
+      JWT_SECRET: e2e-jwt-secret-at-least-32-characters-long-000000
+      JWT_ISSUER: stayhub
+      STRIPE_API_KEY: sk_test_dummy
+      STRIPE_WEBHOOK_SECRET: ""
+      MAPBOX_API_KEY: test-token
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8080/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8080
+        NEXT_PUBLIC_E2E: "true"
+        NEXT_PUBLIC_STRIPE_KEY: pk_test_dummy
+        NEXT_PUBLIC_MAPBOX_TOKEN: test-token
+    container_name: stayhub-frontend-e2e
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    healthcheck:
+      # node:22-bookworm-slim has no wget/curl; use Node to probe the server.
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/search', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s

@@ -1,0 +1,64 @@
+spring:
+  application:
+    name: stayhub
+
+  # Optionally import key=value lines from backend/.env so the documented
+  # quickstart (create backend/.env, run ./gradlew bootRun) works without
+  # any manual `set -a` dance. The [.properties] hint forces Spring to
+  # parse the file as plain Java properties — so `.env` must stay plain
+  # KEY=VALUE: no `export`, no quoted values, no shell interpolation.
+  # `optional:` keeps the context starting in CI / prod where envs are
+  # injected directly and no .env file exists.
+  config:
+    import: optional:file:./.env[.properties]
+
+  # Reactive datasource used by the application at runtime.
+  # Defaults match docker-compose.yml so a fresh checkout works without env setup.
+  r2dbc:
+    url: r2dbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:stayhub}
+    username: ${POSTGRES_USER:stayhub}
+    password: ${POSTGRES_PASSWORD:stayhub_dev}
+
+  # Flyway runs against JDBC (not R2DBC). Same env vars as r2dbc, jdbc URL.
+  flyway:
+    enabled: true
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:stayhub}
+    user: ${POSTGRES_USER:stayhub}
+    password: ${POSTGRES_PASSWORD:stayhub_dev}
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  # SMTP configuration — points at MailHog/Mailpit from docker-compose.yml.
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    properties:
+      mail.smtp.auth: false
+      mail.smtp.starttls.enable: false
+
+# Actuator — expose only health and info; lock down sensitive endpoints.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Mapbox configuration — API key for geocoding service.
+mapbox:
+  api-key: ${MAPBOX_API_KEY:pk_test_4x4x4x4x4x4x4x4x4x4x4x4x4x4x4x4x4x4x}
+
+# CORS allowed origins for the frontend dev server (Next.js on :3000).
+# Comma-separated list when overridden via env.
+stayhub:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+
+  # JWT validation settings — secret/issuer are env-driven, NEVER hardcoded.
+  # Empty default lets the context start without auth configured; tokens fail
+  # validation until JWT_SECRET is provided in the runtime environment.
+  jwt:
+    secret: ${JWT_SECRET:}
+    issuer: ${JWT_ISSUER:stayhub}

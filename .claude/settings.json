@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd:*)",
+      "Bash(git:*)",
+      "Bash(./gradlew:*)",
+      "Bash(gh pr:*)",
+      "Bash(gh issue:*)",
+      "Bash(gh api:*)",
+      "Bash(gh repo view:*)",
+      "Bash(gh run:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(sed:*)",
+      "Bash(awk:*)",
+      "Bash(echo:*)",
+      "Bash(printf:*)",
+      "Bash(for *)",
+      "Bash(wc:*)",
+      "Bash(sort:*)",
+      "Bash(uniq:*)",
+      "Bash(diff:*)",
+      "Bash(basename:*)",
+      "Bash(dirname:*)",
+      "Bash(pwd)",
+      "Bash(true)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(docker compose ps)",
+      "Bash(docker compose logs *)",
+      "Bash(docker ps:*)",
+      "Bash(curl http://localhost:*)",
+      "Bash(curl -s http://localhost:*)"
+    ]
+  }
+}

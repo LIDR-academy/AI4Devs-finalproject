@@ -1,0 +1,26 @@
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration
+      - org.springframework.boot.autoconfigure.mail.MailSenderValidatorAutoConfiguration
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/testdb
+    username: testuser
+    password: testpass
+  flyway:
+    enabled: false
+  test:
+    context:
+      cache:
+        maxSize: 1
+
+mapbox:
+  api-key: test-token
+
+stayhub:
+  jwt:
+    # Hardcoded test secret — exists ONLY to satisfy JwtProperties validation
+    # in tests that don't override stayhub.jwt.secret via @TestPropertySource.
+    # 56 chars; same string the existing SecurityConfigTest uses.
+    secret: test-secret-test-secret-test-secret-test-secret-0123456789
+    issuer: stayhub

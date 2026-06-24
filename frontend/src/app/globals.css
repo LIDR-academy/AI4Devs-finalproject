@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+:root {
+  --background: #faf8f5;
+  --foreground: #1b1c1a;
+  --nav-h: 56px;
+}
+
+@theme inline {
+  /* Color */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-ink: #1b1c1a;
+  --color-taupe: #56423d;
+  --color-terracotta: #89351d;
+  --color-terracotta-tint: rgba(137, 53, 29, 0.1);
+  --color-border: rgba(220, 193, 186, 0.3);
+  --color-divider: rgba(220, 193, 186, 0.15);
+  --color-surface: #ffffff;
+  --color-canvas: #faf8f5;
+
+  /* Type — mapped to next/font CSS variables set on <body> in layout.tsx */
+  --font-serif: var(--font-playfair), Georgia, serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+
+  /* Radius */
+  --radius-card: 8px;
+  --radius-pill: 12px;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}

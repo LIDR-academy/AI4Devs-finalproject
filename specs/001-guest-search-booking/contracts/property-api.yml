@@ -1,0 +1,340 @@
+openapi: 3.1.0
+info:
+  title: Property Details API
+  version: 1.0.0
+  description: Endpoints for viewing property details and availability
+
+paths:
+  /api/v1/properties/{propertyId}:
+    get:
+      operationId: getPropertyDetails
+      summary: Get full property details
+      description: Returns all details for a single property including host info.
+      parameters:
+        - name: propertyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Property details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PropertyDetailsResponse"
+        "404":
+          $ref: "./error-responses.yml#/components/responses/NotFound"
+
+  /api/v1/properties/{propertyId}/availability:
+    get:
+      operationId: getPropertyAvailability
+      summary: Get property availability calendar
+      description: |
+        Returns availability for a date range. Dates not returned
+        are considered available.
+      parameters:
+        - name: propertyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Start of range (inclusive)
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: End of range (inclusive)
+      responses:
+        "200":
+          description: Availability data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AvailabilityResponse"
+        "404":
+          $ref: "./error-responses.yml#/components/responses/NotFound"
+
+  /api/v1/properties/{propertyId}/reviews:
+    get:
+      operationId: getPropertyReviews
+      summary: Get reviews for a property
+      description: Returns paginated reviews sorted by most recent.
+      parameters:
+        - name: propertyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        "200":
+          description: Reviews list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewsResponse"
+        "404":
+          $ref: "./error-responses.yml#/components/responses/NotFound"
+
+  /api/v1/properties/{propertyId}/price:
+    get:
+      operationId: calculatePrice
+      summary: Calculate total price for a stay
+      description: Returns full price breakdown for given dates and guest count.
+      parameters:
+        - name: propertyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: check_in
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: check_out
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: guests
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Price breakdown
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PriceBreakdownResponse"
+        "400":
+          $ref: "./error-responses.yml#/components/responses/BadRequest"
+        "404":
+          $ref: "./error-responses.yml#/components/responses/NotFound"
+
+components:
+  schemas:
+    PropertyDetailsResponse:
+      type: object
+      required: [id, title, description, property_type, location, max_guests, bedrooms, bathrooms, nightly_rate_eur, cleaning_fee_eur, amenities, house_rules, photos, host, avg_rating, review_count]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        property_type:
+          type: string
+          enum: [apartment, house, villa, cabin, studio]
+        location:
+          type: object
+          required: [lat, lng, city, country, address]
+          properties:
+            lat:
+              type: number
+              format: double
+            lng:
+              type: number
+              format: double
+            city:
+              type: string
+            region:
+              type: string
+              nullable: true
+            country:
+              type: string
+            address:
+              type: string
+              description: Full address (visible after booking)
+        max_guests:
+          type: integer
+        bedrooms:
+          type: integer
+        bathrooms:
+          type: integer
+        nightly_rate_eur:
+          type: number
+          format: double
+        cleaning_fee_eur:
+          type: number
+          format: double
+        amenities:
+          type: array
+          items:
+            type: string
+        house_rules:
+          type: array
+          items:
+            type: string
+        photos:
+          type: array
+          items:
+            type: object
+            required: [url, caption]
+            properties:
+              url:
+                type: string
+                format: uri
+              caption:
+                type: string
+        host:
+          type: object
+          required: [id, first_name, avatar_url, is_verified]
+          properties:
+            id:
+              type: string
+              format: uuid
+            first_name:
+              type: string
+            avatar_url:
+              type: string
+              format: uri
+              nullable: true
+            is_verified:
+              type: boolean
+        avg_rating:
+          type: number
+          format: double
+          nullable: true
+        review_count:
+          type: integer
+
+    AvailabilityResponse:
+      type: object
+      required: [property_id, unavailable_dates]
+      properties:
+        property_id:
+          type: string
+          format: uuid
+        unavailable_dates:
+          type: array
+          items:
+            type: object
+            required: [date, reason]
+            properties:
+              date:
+                type: string
+                format: date
+              reason:
+                type: string
+                enum: [booked, blocked, held]
+
+    ReviewsResponse:
+      type: object
+      required: [reviews, pagination, avg_rating, total_reviews]
+      properties:
+        reviews:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReviewItem"
+        pagination:
+          type: object
+          required: [page, size, total_results, total_pages]
+          properties:
+            page:
+              type: integer
+            size:
+              type: integer
+            total_results:
+              type: integer
+            total_pages:
+              type: integer
+        avg_rating:
+          type: number
+          format: double
+        total_reviews:
+          type: integer
+
+    ReviewItem:
+      type: object
+      required: [id, guest_name, rating, comment, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        guest_name:
+          type: string
+          description: First name only for privacy
+        guest_avatar_url:
+          type: string
+          format: uri
+          nullable: true
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    PriceBreakdownResponse:
+      type: object
+      required: [property_id, check_in, check_out, nights, nightly_rate_eur, subtotal_eur, cleaning_fee_eur, service_fee_eur, tax_eur, total_eur]
+      properties:
+        property_id:
+          type: string
+          format: uuid
+        check_in:
+          type: string
+          format: date
+        check_out:
+          type: string
+          format: date
+        nights:
+          type: integer
+        nightly_rate_eur:
+          type: number
+          format: double
+        subtotal_eur:
+          type: number
+          format: double
+        cleaning_fee_eur:
+          type: number
+          format: double
+        service_fee_eur:
+          type: number
+          format: double
+          description: "12% of subtotal"
+        tax_eur:
+          type: number
+          format: double
+        total_eur:
+          type: number
+          format: double
