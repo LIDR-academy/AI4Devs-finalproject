@@ -4,6 +4,9 @@
     "conventions/**/*.md",
     "technical-documentation/**/*.md"
   ],
+  "skills": {
+    "paths": [".opencode/skills"]
+  },
   "mcp": {
     "pencil": {
       "type": "local",
