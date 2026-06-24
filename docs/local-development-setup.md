@@ -67,6 +67,10 @@ AWS_ACCESS_KEY_ID=your-access-key
 AWS_SECRET_ACCESS_KEY=your-secret-key
 AWS_S3_BUCKET=RealSaveFooding-receipts-dev
 AWS_SNS_TOPIC_ARN=arn:aws:sns:eu-west-1:123456789012:RealSaveFooding-expiration-dev
+AWS_SES_FROM_ADDRESS=notifications@realsavefooding.com
+VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+VAPID_SUBJECT=mailto:admin@realsavefooding.com
 ```
 
 | Variable | Purpose | Local value |
@@ -76,23 +80,56 @@ AWS_SNS_TOPIC_ARN=arn:aws:sns:eu-west-1:123456789012:RealSaveFooding-expiration-
 | `DATABASE_URL` | PostgreSQL connection string | Matches Docker Compose defaults |
 | `JWT_SECRET` | Signing key for JWT tokens | Any non-empty string locally |
 | `JWT_EXPIRES_IN` | Token lifetime | `1d` |
-| `AWS_REGION` | AWS region for S3/Textract/SNS | `eu-west-1` |
-| `AWS_ACCESS_KEY_ID` | AWS credentials | Required only for receipt OCR |
-| `AWS_SECRET_ACCESS_KEY` | AWS credentials | Required only for receipt OCR |
+| `AWS_REGION` | AWS region for S3/Textract/SNS/SES | `eu-west-1` |
+| `AWS_ACCESS_KEY_ID` | AWS credentials | Required for receipt OCR and email notifications |
+| `AWS_SECRET_ACCESS_KEY` | AWS credentials | Required for receipt OCR and email notifications |
 | `AWS_S3_BUCKET` | S3 bucket for receipt images | Required only for receipt upload |
-| `AWS_SNS_TOPIC_ARN` | SNS topic for expiration alerts | Required only for notifications |
+| `AWS_SNS_TOPIC_ARN` | SNS topic for expiration alerts | Required only for SNS-based notifications |
+| `AWS_SES_FROM_ADDRESS` | Verified sender address in AWS SES | Required for email notifications |
+| `VAPID_PUBLIC_KEY` | VAPID public key for Web Push | Required for browser push notifications |
+| `VAPID_PRIVATE_KEY` | VAPID private key for Web Push | Required for browser push notifications |
+| `VAPID_SUBJECT` | Contact URI sent with push messages | `mailto:admin@yourdomain.com` |
 
 ### Frontend — `front/.env`
 
-The frontend reads `VITE_API_BASE_URL` at build/dev time. The default fallback in the source code is `http://localhost:3000/api`, so **no `.env` file is strictly required** for local development.
+The frontend reads `VITE_API_BASE_URL` and `VITE_VAPID_PUBLIC_KEY` at build/dev time. `VITE_API_BASE_URL` defaults to `http://localhost:3000/api` in source, but **`VITE_VAPID_PUBLIC_KEY` is required** if you want browser push notifications to work.
 
-To override, create `front/.env`:
+Create `front/.env`:
 
 ```dotenv
 VITE_API_BASE_URL=http://localhost:3000/api
+VITE_VAPID_PUBLIC_KEY=<same public key as VAPID_PUBLIC_KEY in back/.env>
 ```
 
-> The root `.env.example` at the repository root documents both sets of variables together and serves as a reference; the applications themselves read from their respective directories.
+> The VAPID public key must be identical in both `back/.env` and `front/.env` — the frontend uses it to register push subscriptions and the backend uses it to sign outgoing push messages.
+
+### Notification credentials setup
+
+The notification service delivers alerts via two channels: **email (AWS SES)** and **browser push (Web Push / VAPID)**. Each requires its own credentials.
+
+#### AWS SES — email delivery
+
+1. Open **AWS Console → IAM → Users → Create user**.
+2. Attach the policy `AmazonSESFullAccess` (or a scoped policy allowing `ses:SendEmail`).
+3. Under **Security credentials**, create an Access Key — copy the values into `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
+4. Open **AWS Console → SES → Verified identities → Create identity**.
+5. Verify the sender email address or domain you intend to use as `AWS_SES_FROM_ADDRESS`.
+6. **Sandbox limitation:** by default SES can only send to other verified addresses. To send to real users, request production access from the SES console.
+
+#### VAPID keys — browser push
+
+Run this once in the `back/` directory (the `web-push` package is already installed):
+
+```bash
+cd back && npx web-push generate-vapid-keys
+```
+
+The command prints a public/private key pair. Copy:
+
+- **Public Key** → `VAPID_PUBLIC_KEY` in `back/.env` **and** `VITE_VAPID_PUBLIC_KEY` in `front/.env`
+- **Private Key** → `VAPID_PRIVATE_KEY` in `back/.env` only
+
+> The private key must never be exposed to the browser or committed to the repository.
 
 ---
 

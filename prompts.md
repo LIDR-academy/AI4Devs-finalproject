@@ -982,3 +982,16 @@ I don't want to include this in the extended MVP: #### P2-006: Household multi-r
 All from "### P3 — Strategic Future Capabilities
 " Will be out of scope for the extended MPV, add it to another documents for future implementations.
 ~~~
+## Prompt 4: Ticket split and ticket refinement
+~~~markdown
+# Extended Non-MVP Product Ticket split
+Given the @docs/product/5_Extended-Non-MVP-PRD.md  PRD
+
+## Role
+Act as a Principal Product Manager and Product Strategist with extensive experience delivering SaaS products and ticket refinement (use @.agents/skills/user-story/SKILL.md ) 
+
+## Tasks
+1. Your objective is to analyze the new PRD and define the tickets in separated .md files each one in a folder called /docs/tickets/extendedMVP/. 
+2. For each ticket invoke a new agent with @.agents/skills/realsavefooding-full-stack-engineer/SKILL.md  skill to detail even more the details, (to prepare them to be build with no allucinations).
+3. After the split and refinement the @.github/agents/docs-maintainer.agent.md  agent should update any related documentation in the project
+~~~

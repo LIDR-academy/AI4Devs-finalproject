@@ -94,3 +94,17 @@ export function clearNotificationEvents(): Promise<{ ok: boolean }> {
     method: "POST",
   });
 }
+
+export function registerPushSubscription(payload: {
+  endpoint: string;
+  keys: { p256dh: string; auth: string };
+}): Promise<{ id: string }> {
+  return requestJson<{ id: string }>("/notifications/push-subscription", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deletePushSubscription(): Promise<void> {
+  return requestJson<void>("/notifications/push-subscription", { method: "DELETE" });
+}

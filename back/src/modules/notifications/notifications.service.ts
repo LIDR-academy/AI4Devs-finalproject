@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import type { PantryItem } from "@prisma/client";
 import { PrismaService } from "../../database/prisma.service";
+import { NotificationDeliveryService } from "./notification-delivery.service";
 import { NotificationEventsPublisher } from "./notification-events.publisher";
 import { NotificationPreferencesService } from "./notification-preferences.service";
 import {
@@ -25,6 +26,7 @@ export class NotificationsService {
     private readonly thresholdService: NotificationThresholdService,
     private readonly preferencesService: NotificationPreferencesService,
     private readonly eventsPublisher: NotificationEventsPublisher,
+    private readonly deliveryService: NotificationDeliveryService,
   ) {}
 
   async evaluateExpiringItems(now = new Date()): Promise<EvaluationMetrics> {
@@ -108,6 +110,22 @@ export class NotificationsService {
       daysUntilExpiration,
       emittedAt: now.toISOString(),
     });
+
+    const user = await this.prisma.user.findUnique({ where: { id: pantryItem.userId } });
+    if (user) {
+      this.deliveryService
+        .deliverExpiry(
+          pantryItem.userId,
+          [{ name: pantryItem.name, expirationDate: pantryItem.expirationDate }],
+          user.email,
+        )
+        .catch((err: unknown) => {
+          this.logger.error(
+            `delivery_error pantryItem=${pantryItem.id}`,
+            err instanceof Error ? err.stack : undefined,
+          );
+        });
+    }
 
     await this.prisma.pantryItem.update({
       where: { id: pantryItem.id },

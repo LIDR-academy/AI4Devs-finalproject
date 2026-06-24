@@ -1,6 +1,8 @@
-import { Body, Controller, Get, Patch, Post, Request, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Patch, Post, Request, UseGuards } from "@nestjs/common";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { UpdateNotificationPreferenceDto } from "./dto/update-notification-preference.dto";
+import { CreatePushSubscriptionDto } from "./dto/create-push-subscription.dto";
+import { NotificationDeliveryService } from "./notification-delivery.service";
 import { NotificationEventsPublisher } from "./notification-events.publisher";
 import { NotificationPreferencesService } from "./notification-preferences.service";
 import { NotificationsService } from "./notifications.service";
@@ -19,6 +21,7 @@ export class NotificationsController {
     private readonly preferencesService: NotificationPreferencesService,
     private readonly notificationsService: NotificationsService,
     private readonly eventsPublisher: NotificationEventsPublisher,
+    private readonly deliveryService: NotificationDeliveryService,
   ) {}
 
   @Get("settings/notifications")
@@ -60,5 +63,22 @@ export class NotificationsController {
     return {
       ok: true,
     };
+  }
+
+  @Post("notifications/push-subscription")
+  @HttpCode(201)
+  async subscribePush(@Request() req: RequestWithUser, @Body() body: CreatePushSubscriptionDto) {
+    const id = await this.deliveryService.savePushSubscription(req.user.id, {
+      endpoint: body.endpoint,
+      p256dh: body.keys.p256dh,
+      auth: body.keys.auth,
+    });
+    return { id };
+  }
+
+  @Delete("notifications/push-subscription")
+  @HttpCode(204)
+  async unsubscribePush(@Request() req: RequestWithUser) {
+    await this.deliveryService.deletePushSubscription(req.user.id);
   }
 }

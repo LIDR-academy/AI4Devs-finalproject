@@ -84,6 +84,8 @@ model User {
   receipts   Receipt[]
   confirmedExpirationAssessments ExpirationAssessment[]
   notificationPreference NotificationPreference?
+  notificationLogs       NotificationLog[]
+  pushSubscription       PushSubscription?
   householdsCreated    Household[]          @relation("HouseholdCreatedBy")
   householdMemberships HouseholdMember[]
   sentInvitations      HouseholdInvitation[] @relation("HouseholdInvitationInvitedBy")
@@ -149,6 +151,29 @@ model NotificationPreference {
   updatedAt         DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model NotificationLog {
+  id         String   @id @default(uuid())
+  userId     String
+  type       String
+  channel    String
+  status     String
+  failReason String?
+  sentAt     DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, sentAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  endpoint  String
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 enum ExpirationMethod {
