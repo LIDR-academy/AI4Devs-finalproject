@@ -535,12 +535,11 @@ All pull requests in `acualuz-monitor` as of generation time (25 merged; none op
 
 ---
 
-## 7. Demostration
+## 8. Demonstration(s)
 
-This section contains aditional artifacts to show the progess made on the acualuz platform development, especially on acualuz-monitor
-backend service.
+This section contains additional artifacts to show the progress made on the acualuz platform development, especially on `acualuz-monitor` backend service
 
-- [Artifacts] (https://drive.google.com/drive/folders/1MhBljKvan5xsZpCzaS2We4d0diSL0dO8?usp=drive_link)
+- [Artifacts](https://drive.google.com/drive/folders/1MhBljKvan5xsZpCzaS2We4d0diSL0dO8?usp=drive_link)
 
 ---
 
