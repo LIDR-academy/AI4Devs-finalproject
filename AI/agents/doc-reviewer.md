@@ -40,7 +40,7 @@ Verify consistency across sections:
 - User stories in Section 5 align with features listed in Section 1.2
 - Work tickets in Section 6 correspond to features that need implementation
 - Pull requests in Section 7 match the work tickets in Section 6
-- Tech stack is consistent throughout (.NET, Angular, SQLite)
+- Tech stack is consistent throughout (.NET, Angular, PostgreSQL, Kubernetes)
 - Installation instructions in Section 1.4 match the project structure in Section 2.3
 
 ### 3. Technical Accuracy Check

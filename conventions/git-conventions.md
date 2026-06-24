@@ -1,8 +1,8 @@
-# Git Conventions for Aura Planning
+# Convenciones de Git para Aura Planning
 
-## Branch Naming
+## Nomenclatura de Ramas
 
-| Type | Pattern | Example |
+| Tipo | Patrón | Ejemplo |
 |------|---------|---------|
 | Feature | `feature/<ticket-id>-short-description` | `feature/PSRP-123-rsvp-form` |
 | Bug Fix | `fix/<ticket-id>-short-description` | `fix/PSRP-456-magic-link-expiry` |
@@ -10,9 +10,9 @@
 | Chore | `chore/<short-description>` | `chore/update-dependencies` |
 | Docs | `docs/<short-description>` | `docs/update-readme` |
 
-## Commit Messages
+## Mensajes de Commit
 
-### Format
+### Formato
 ```
 <type>(<scope>): <description>
 
@@ -21,20 +21,20 @@
 [optional footer]
 ```
 
-### Types
-| Type | Description |
+### Tipos
+| Tipo | Descripción |
 |------|-------------|
-| `feat` | New feature |
-| `fix` | Bug fix |
-| `refactor` | Code refactoring (no functional change) |
-| `docs` | Documentation changes |
-| `style` | Formatting, no code change |
-| `test` | Adding/updating tests |
-| `chore` | Build, tooling, dependencies |
-| `perf` | Performance improvements |
-| `ci` | CI/CD changes |
+| `feat` | Nueva funcionalidad |
+| `fix` | Corrección de bug |
+| `refactor` | Refactorización de código (sin cambio funcional) |
+| `docs` | Cambios en documentación |
+| `style` | Formato, sin cambio de código |
+| `test` | Añadir/actualizar tests |
+| `chore` | Build, tooling, dependencias |
+| `perf` | Mejoras de rendimiento |
+| `ci` | Cambios en CI/CD |
 
-### Examples
+### Ejemplos
 ```
 feat(rsvp): add dietary restrictions field to form
 
@@ -45,21 +45,21 @@ docs(readme): update installation instructions
 refactor(db): extract repository interfaces
 ```
 
-### Rules
-- Use imperative mood ("add" not "added")
-- Keep subject line under 72 characters
-- Reference ticket at end: `Refs: PSRP-123`
-- Separate subject from body with blank line
-- Body explains **what** and **why**, not how
+### Reglas
+- Usar imperativo ("add" no "added")
+- Mantener línea de asunto bajo 72 caracteres
+- Referenciar ticket al final: `Refs: PSRP-123`
+- Separar asunto de cuerpo con línea en blanco
+- Cuerpo explica **qué** y **por qué**, no cómo
 
 ## Pull Requests
 
-### Title Format
+### Formato de Título
 ```
 <type>(<scope>): <description> [PSRP-###]
 ```
 
-### PR Description Template
+### Template de Descripción de PR
 ```markdown
 ## Summary
 Brief description of changes.
@@ -81,49 +81,49 @@ Closes #PSRP-123
 ## Screenshots (if UI changes)
 ```
 
-### Review Checklist
-- [ ] Code follows style guidelines
-- [ ] Tests written and passing
-- [ ] No console.log/debugger left
-- [ ] Variables named meaningfully
-- [ ] Error handling implemented
-- [ ] Comments added for complex logic
+### Checklist de Revisión
+- [ ] Código sigue guidelines de estilo
+- [ ] Tests escritos y pasando
+- [ ] No console.log/debugger dejado
+- [ ] Variables nombradas significativamente
+- [ ] Manejo de errores implementado
+- [ ] Comentarios añadidos para lógica compleja
 
-## Git Workflow
+## Flujo de Git
 
-### Standard Flow
+### Flujo Estándar
 ```
-1. Create branch from main
-2. Make commits with clear messages
-3. Push branch to origin
-4. Create PR on GitHub
-5. Request review
-6. Merge after approval
-7. Delete branch
+1. Crear rama desde main
+2. Hacer commits con mensajes claros
+3. Push rama a origin
+4. Crear PR en GitHub
+5. Solicitar review
+6. Merge después de aprobación
+7. Borrar rama
 ```
 
-### Keeping Branch Updated
+### Mantener Rama Actualizada
 ```bash
-# While working on feature branch
+# Mientras trabajas en rama de feature
 git fetch origin
 git rebase origin/main
 
-# Or merge (if prefer)
+# O merge (si se prefiere)
 git fetch origin
 git merge origin/main
 ```
 
-## Tagging Releases
+## Tagging de Releases
 
 ```
 v<major>.<minor>.<patch>
 ```
 
-Example: `v1.0.0`
+Ejemplo: `v1.0.0`
 
-## Useful Aliases
+## Alias Útiles
 
-Add to your `.gitconfig`:
+Añadir a tu `.gitconfig`:
 ```ini
 [alias]
     lg = log --oneline --graph --decorate

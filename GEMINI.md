@@ -8,6 +8,15 @@ When operating in this workspace, you MUST adhere to the following project conve
 - [Git Conventions](./conventions/git-conventions.md): Rules for committing, branching, and pull requests.
 - [Technical Conventions](./conventions/technical-conventions.md): Architecture guidelines, coding standards, and styles.
 
+## 📐 Technical Documentation (MANDATORY)
+Before implementing any feature or making architectural decisions, consult the technical documentation:
+- [Architecture Diagrams](./technical-documentation/architecture/01-architecture-diagram.md): C4 model, container diagrams, and flow sequences
+- [Component Descriptions](./technical-documentation/architecture/02-components.md): Frontend, API, workers, and data tier details
+- [Project Structure](./technical-documentation/architecture/03-project-structure.md): Clean Architecture, file structure, naming conventions
+- [Infrastructure & Deployment](./technical-documentation/architecture/04-infrastructure-deployment.md): K8s, Kustomize, CI/CD, observability
+- [Security](./technical-documentation/architecture/05-security.md): Auth, authorization, GDPR, rate limiting, K8s security
+- [Testing Strategy](./technical-documentation/architecture/06-testing.md): Unit, integration, E2E tests with Testcontainers
+
 ## 🤖 AI Agents
 Custom subagents are available for specialized tasks. They are located in the `AI/agents/` folder and linked natively to both tools.
 - [doc-reviewer](./AI/agents/doc-reviewer.md)

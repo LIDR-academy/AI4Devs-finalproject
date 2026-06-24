@@ -1,0 +1,22 @@
+root = true
+
+# All files
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# C# files
+[*.cs]
+indent_size = 4
+# C# 14 rules
+csharp_style_namespace_declarations = file_scoped:warning
+dotnet_diagnostic.CS8600.severity = warning # nullable enabled rules
+dotnet_diagnostic.CS8602.severity = warning # nullable enabled rules
+dotnet_diagnostic.CS8603.severity = warning # nullable enabled rules
+
+# TypeScript files
+[*.ts]
+indent_size = 2

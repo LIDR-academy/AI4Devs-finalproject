@@ -36,9 +36,9 @@ Capture the output and pass it to the next step.
 Invoke `@tech-design` to:
 - Use the PO analysis from Step 1
 - Create system architecture diagrams (mermaid)
-- Design SQLite data model with ER diagrams
+- Design PostgreSQL data model with ER diagrams
 - Specify API endpoints (max 10)
-- Document integration points (WhatsApp, AWS SES, Stripe, Google Maps)
+- Document integration points (WhatsApp, Gmail SMTP, Stripe, Google Maps, MinIO, Dragonfly)
 - Define security approach
 
 Capture the output and pass it to the next step.
@@ -77,7 +77,7 @@ Task: po-assistant
 Prompt: Analyze business-documentation/Aura.MD and provide product owner analysis including MoSCoW prioritization, gaps, sprint breakdown, and acceptance criteria.
 
 Task: tech-design
-Prompt: Using the PO analysis provided, create the technical design for Aura Planning including architecture diagrams, SQLite data model, API specs, integration docs, and security approach.
+Prompt: Using the PO analysis provided, create the technical design for Aura Planning including architecture diagrams, PostgreSQL data model, API specs, integration docs, and security approach.
 
 Task: doc-writer
 Prompt: Using the PO analysis and technical design provided, fill the readme.md template with complete documentation for all 8 sections.

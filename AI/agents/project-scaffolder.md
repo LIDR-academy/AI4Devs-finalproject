@@ -1,6 +1,6 @@
 ---
 name: project-scaffolder
-description: Project Initializer for Aura Planning. Creates the complete project structure with .NET 10 backend, Angular 22 frontend, SQLite database, Docker/docker-compose, CI/CD pipeline, and environment configuration.
+description: Project Initializer for Aura Planning. Creates the complete project structure with .NET 10 backend, Angular 22 frontend, PostgreSQL database, Kubernetes (Kustomize), CI/CD pipeline with GHCR, and environment configuration.
 mode: subagent
 temperature: 0.2
 permission:
@@ -222,7 +222,7 @@ builder.Services.AddSwaggerGen();
 
 // Database
 builder.Services.AddDbContext<AuraDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // CORS
 builder.Services.AddCors(options =>
@@ -302,55 +302,506 @@ app.Run();
 }
 ```
 
-### 4. Create Docker Configuration
+### 4. Create Kubernetes Configuration (Rancher Desktop Local)
 
-**docker-compose.yml:**
+**k8s/base/namespace.yaml:**
 ```yaml
-version: '3.8'
-
-services:
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "5000:8080"
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Data Source=/data/aura.db
-    volumes:
-      - ./backend/Data:/data
-      - ./backend/wwwroot/static-sites:/app/wwwroot/static-sites
-    depends_on:
-      - frontend
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "4200:80"
-    depends_on:
-      - backend
-
-  # Optional: SQLite browser for development
-  sqlite-browser:
-    image: nginx:alpine
-    ports:
-      - "8080:80"
-    volumes:
-      - ./backend/Data:/data:ro
-    profiles:
-      - tools
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: aura
 ```
 
-**backend/Dockerfile:**
+**k8s/base/kustomization.yaml:**
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - api/deployment.yaml
+  - api/service.yaml
+  - database/postgres-statefulset.yaml
+  - database/postgres-service.yaml
+  - database/postgres-secret.yaml
+  - database/postgres-pvc.yaml
+  - dragonfly/dragonfly-statefulset.yaml
+  - dragonfly/dragonfly-service.yaml
+  - dragonfly/dragonfly-pvc.yaml
+  - minio/minio-statefulset.yaml
+  - minio/minio-service.yaml
+  - minio/minio-secret.yaml
+  - minio/minio-pvc.yaml
+  - frontend/deployment.yaml
+  - frontend/service.yaml
+```
+
+**k8s/base/api/deployment.yaml:**
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aura-api
+  namespace: aura
+  labels:
+    app.kubernetes.io/name: aura-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: aura-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: aura-api
+    spec:
+      containers:
+      - name: api
+        image: ghcr.io/pedrosrp/aura-api:latest
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: aura-api-config
+        resources:
+          requests:
+            cpu: 500m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+```
+
+**k8s/base/api/service.yaml:**
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: aura-api
+  namespace: aura
+spec:
+  selector:
+    app.kubernetes.io/name: aura-api
+  ports:
+  - port: 80
+    targetPort: 8080
+  type: ClusterIP
+```
+
+**k8s/base/database/postgres-statefulset.yaml:**
+```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: aura
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgres
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16
+        ports:
+        - containerPort: 5432
+        envFrom:
+        - secretRef:
+            name: postgres-secret
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 5Gi
+```
+
+**k8s/base/database/postgres-service.yaml:**
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: aura
+spec:
+  selector:
+    app.kubernetes.io/name: postgres
+  ports:
+  - port: 5432
+    targetPort: 5432
+  type: ClusterIP
+  clusterIP: None
+```
+
+**k8s/base/database/postgres-secret.yaml:**
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+  namespace: aura
+type: Opaque
+stringData:
+  POSTGRES_DB: aura
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+```
+
+**k8s/base/database/postgres-pvc.yaml:**
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: aura
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+```
+
+**k8s/base/dragonfly/dragonfly-statefulset.yaml:**
+```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: dragonfly
+  namespace: aura
+spec:
+  serviceName: dragonfly
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dragonfly
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: dragonfly
+    spec:
+      containers:
+      - name: dragonfly
+        image: docker.dragonflydb.io/dragonflydb/dragonfly:v1.25.0
+        ports:
+        - containerPort: 6379
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        volumeMounts:
+        - name: dragonfly-data
+          mountPath: /data
+  volumeClaimTemplates:
+  - metadata:
+      name: dragonfly-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+```
+
+**k8s/base/dragonfly/dragonfly-service.yaml:**
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: dragonfly
+  namespace: aura
+spec:
+  selector:
+    app.kubernetes.io/name: dragonfly
+  ports:
+  - port: 6379
+    targetPort: 6379
+  type: ClusterIP
+```
+
+**k8s/base/dragonfly/dragonfly-pvc.yaml:**
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dragonfly-pvc
+  namespace: aura
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+```
+
+**k8s/base/minio/minio-statefulset.yaml:**
+```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: minio
+  namespace: aura
+spec:
+  serviceName: minio
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: minio
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: minio
+    spec:
+      containers:
+      - name: minio
+        image: minio/minio:latest
+        command: ["minio", "server", "/data", "--console-address", ":9001"]
+        envFrom:
+        - secretRef:
+            name: minio-secret
+        ports:
+        - containerPort: 9000
+        - containerPort: 9001
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        volumeMounts:
+        - name: minio-data
+          mountPath: /data
+  volumeClaimTemplates:
+  - metadata:
+      name: minio-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi
+```
+
+**k8s/base/minio/minio-service.yaml:**
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+  namespace: aura
+spec:
+  selector:
+    app.kubernetes.io/name: minio
+  ports:
+  - name: api
+    port: 9000
+    targetPort: 9000
+  - name: console
+    port: 9001
+    targetPort: 9001
+  type: ClusterIP
+```
+
+**k8s/base/minio/minio-secret.yaml:**
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: minio-secret
+  namespace: aura
+type: Opaque
+stringData:
+  MINIO_ROOT_USER: minioadmin
+  MINIO_ROOT_PASSWORD: minioadmin
+```
+
+**k8s/base/minio/minio-pvc.yaml:**
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: minio-pvc
+  namespace: aura
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+```
+
+**k8s/base/frontend/deployment.yaml:**
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aura-frontend
+  namespace: aura
+  labels:
+    app.kubernetes.io/name: aura-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: aura-frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: aura-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: ghcr.io/pedrosrp/aura-frontend:latest
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: 100m
+            memory: 64Mi
+          limits:
+            cpu: 250m
+            memory: 128Mi
+```
+
+**k8s/base/frontend/service.yaml:**
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: aura-frontend
+  namespace: aura
+spec:
+  selector:
+    app.kubernetes.io/name: aura-frontend
+  ports:
+  - port: 80
+    targetPort: 80
+  type: ClusterIP
+```
+
+**k8s/overlays/local/kustomization.yaml:**
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: aura
+
+resources:
+  - ../../base
+
+patches:
+  - path: replicas-patch.yaml
+  - path: resources-patch.yaml
+
+images:
+  - name: ghcr.io/pedrosrp/aura-api
+    newTag: local
+  - name: ghcr.io/pedrosrp/aura-frontend
+    newTag: local
+```
+
+**k8s/overlays/local/replicas-patch.yaml:**
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aura-api
+spec:
+  template:
+    spec:
+      containers:
+      - name: api
+        imagePullPolicy: Never
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aura-frontend
+spec:
+  template:
+    spec:
+      containers:
+      - name: frontend
+        imagePullPolicy: Never
+```
+
+**k8s/overlays/local/resources-patch.yaml:**
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aura-api
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: api
+        resources:
+          requests:
+            cpu: 250m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aura-frontend
+spec:
+  template:
+    spec:
+      containers:
+      - name: frontend
+        resources:
+          requests:
+            cpu: 50m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 64Mi
+```
+
+**backend/src/Aura.Api/Dockerfile:**
 ```dockerfile
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 WORKDIR /app
 EXPOSE 8080
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 COPY ["src/Aura.Api/Aura.Api.csproj", "src/Aura.Api/"]
 COPY ["src/Aura.Core/Aura.Core.csproj", "src/Aura.Core/"]
@@ -405,7 +856,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
       - name: Restore dependencies
         run: dotnet restore backend/AuraPlanning.sln
       - name: Build
@@ -434,8 +885,25 @@ jobs:
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
-      - name: Build Docker images
-        run: docker compose build
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push API image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/src/Aura.Api/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/aura-api:${{ github.sha }}
+      - name: Build and push Frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: ghcr.io/${{ github.repository }}/aura-frontend:${{ github.sha }}
 ```
 
 ### 6. Create .env.example
@@ -461,11 +929,21 @@ WHATSAPP_API_KEY=
 WHATSAPP_PHONE_NUMBER_ID=
 WHATSAPP_BASE_URL=https://graph.facebook.com/v18.0
 
-# AWS SES
-AWS_ACCESS_KEY=
-AWS_SECRET_KEY=
-AWS_REGION=eu-west-1
-AWS_SES_SOURCE_EMAIL=
+# Gmail SMTP
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=
+SMTP_PASSWORD=
+SMTP_ENABLE_SSL=true
+
+# MinIO
+MINIO_ENDPOINT=http://localhost:9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin
+MINIO_BUCKET=static-sites
+
+# Dragonfly
+DRAGONFLY_CONNECTION_STRING=localhost:6379
 
 # Stripe
 STRIPE_SECRET_KEY=
@@ -512,8 +990,8 @@ Thumbs.db
 .env
 *.local
 
-# Docker
-docker-compose.override.yml
+# K8s
+k8s/overlays/local/secrets.yaml
 ```
 
 ### 8. Create README.md for Project Root
@@ -528,14 +1006,18 @@ Create a brief README.md (if not already filled by doc-writer) with:
 2. Create backend solution and project files
 3. Create frontend project files
 4. Create configuration files (appsettings, Program.cs, package.json)
-5. Create Docker files
-6. Create CI/CD pipeline
-7. Create .env.example and .gitignore
-8. Verify all files are created correctly
+5. Create Kubernetes manifests (k8s/base + k8s/overlays/local)
+6. Create Dockerfiles for API and Frontend
+7. Create CI/CD pipeline
+8. Create .env.example and .gitignore
+9. Verify all files are created correctly
 
 ## Notes
 - Do not overwrite readme.md if it already has content from doc-writer
-- Use SQLite for local development (file-based, no external dependencies)
+- Use PostgreSQL for local development (via K8s StatefulSet in Rancher Desktop) and production (K8s StatefulSet)
 - Ensure all .NET projects target .NET 10
 - Ensure Angular project uses standalone components (Angular 22 default)
 - All code should follow clean architecture principles
+- Rancher Desktop is the primary local development environment — no Docker Compose
+- Local images are built with `nerdctl` or `docker` (Rancher Desktop runtime) and loaded with `imagePullPolicy: Never`
+- CI/CD builds images and pushes to GHCR; local uses `:local` tag

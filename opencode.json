@@ -1,8 +1,12 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "instructions": [
-    "conventions/**/*.md"
+    "conventions/**/*.md",
+    "technical-documentation/**/*.md"
   ],
+  "skills": {
+    "paths": [".opencode/skills"]
+  },
   "mcp": {
     "pencil": {
       "type": "local",

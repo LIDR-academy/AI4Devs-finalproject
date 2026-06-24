@@ -6,13 +6,15 @@
 |-----------|------------|
 | Backend | .NET 10 (ASP.NET Core Web API) |
 | Frontend | Angular 22 (Standalone components) |
-| Database | SQLite with Entity Framework Core |
+| Database | PostgreSQL 16 with Entity Framework Core |
 | Authentication | Magic links with JWT tokens |
-| Email | AWS SES |
+| Email | Gmail SMTP (IEmailService abstraction — swappable to Mailgun/Brevo) |
 | WhatsApp | Meta WhatsApp Business API |
 | Payments | Stripe Connect |
 | Maps | Google Maps API |
-| Hosting | JAMstack (static sites for guests via CDN) |
+| Queue/Cache | DragonflyDB (Redis-compatible) |
+| Object Storage | MinIO (S3-compatible) |
+| Hosting | Kubernetes (Rancher Desktop local, TBD production: GKE/EKS/DOKS) |
 
 ## Architecture
 
@@ -26,20 +28,21 @@ graph TB
     end
 
     subgraph CDN
-        D[CloudFront / Azure CDN]
+        D[Cloudflare CDN]
     end
 
-    subgraph Backend
+    subgraph K8s_Cluster["Kubernetes Cluster"]
         E[.NET 10 API - ASP.NET Core]
         F[Static Site Generator Service]
-        G[Email Service - AWS SES]
+        G[Email Service - Gmail SMTP]
         H[WhatsApp Service - Meta API]
         I[Payment Service - Stripe]
     end
 
     subgraph Data
-        J[(SQLite)]
-        K[(BackgroundService - Queues)]
+        J[(PostgreSQL)]
+        K[(DragonflyDB - Queue/Cache)]
+        L[(MinIO - Object Storage)]
     end
 
     A --> E
@@ -51,6 +54,7 @@ graph TB
     E --> I
     E --> J
     E --> K
+    E --> L
     F --> D
 ```
 
@@ -136,11 +140,12 @@ sequenceDiagram
 - Rate limits: 1000 messages/hour per phone number
 - Fallback: Email if WhatsApp delivery fails after 2 retries
 
-### AWS SES
+### Gmail SMTP
 - Used for: magic links, email invitations, reminders, thank you cards
-- Template-based emails with personalization tokens
-- Bounce/complaint handling via SNS webhooks
-- Daily quota: 50,000 emails (sandbox: 200/day)
+- Template-based emails with personalization tokens (HTML composition)
+- Known limitation: 500 emails/day limit, no bounce/complaint webhooks
+- IEmailService abstraction allows swap to Mailgun/Brevo/SendGrid
+- Daily quota: 500 emails (free account)
 
 ### Stripe Connect
 - Payment flow: One-time payment for event publishing
@@ -169,7 +174,7 @@ sequenceDiagram
 - Policy-based authorization in .NET
 
 ### Data Protection
-- PII encrypted at rest (SQLite with SQLCipher or application-level)
+- PII encrypted at rest (PostgreSQL with pgcrypto or application-level)
 - TLS 1.3 for all data in transit
 - 30-day automated data deletion after EventEndDate
 - GDPR compliance: right to access, rectify, delete
@@ -191,7 +196,7 @@ backend/
 │   │   ├── Controllers/
 │   │   ├── Middleware/
 │   │   ├── Filters/
-│   │   ├── wwwroot/static-sites/
+│   │   ├── Health/
 │   │   └── Program.cs
 │   ├── Aura.Core/
 │   │   ├── Services/
@@ -203,7 +208,12 @@ backend/
 │       ├── Migrations/
 │       ├── Repositories/
 │       ├── Services/
-│       └── BackgroundServices/
+│       ├── Queue/
+│       └── BackgroundWorkers/
+├── workers/
+│   ├── Aura.Workers.Email/
+│   ├── Aura.Workers.WhatsApp/
+│   └── Aura.Workers.SSG/
 ├── tests/
 └── AuraPlanning.sln
 ```
@@ -223,6 +233,22 @@ frontend/
 └── package.json
 ```
 
+### Kubernetes (Kustomize)
+```
+k8s/
+├── base/
+│   ├── api/
+│   ├── workers/
+│   ├── cronjobs/
+│   ├── database/
+│   ├── dragonfly/
+│   ├── minio/
+│   └── frontend/
+└── overlays/
+    ├── local/
+    └── production/
+```
+
 ## Configuration
 
 ### appsettings.json Keys
@@ -230,7 +256,9 @@ frontend/
 - Jwt:Key, Issuer, Audience, ExpiryMinutes
 - MagicLink:ExpiryMinutes, BaseUrl
 - WhatsApp:ApiKey, PhoneNumberId, BaseUrl
-- Aws:AccessKey, SecretKey, Region, SesSourceEmail
+- Smtp:Host, Port, Username, Password, EnableSsl
+- Minio:Endpoint, AccessKey, SecretKey, BucketName
+- Dragonfly:ConnectionString
 - Stripe:SecretKey, PublishableKey, WebhookSecret, PublishingPrice
 - GoogleMaps:ApiKey
 

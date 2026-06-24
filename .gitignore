@@ -1,0 +1,48 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.swp
+*.swo
+
+# .NET
+bin/
+obj/
+*.nupkg
+*.snk
+*.vssscc
+.vs/
+TestResults/
+BenchmarkDotNet.Artifacts/
+
+# Node.js / Angular
+node_modules/
+dist/
+npm-debug.log
+yarn-error.log
+.angular/
+
+# Docker / Kubernetes
+.dockerignore
+*.yaml.template
+
+# Env files
+.env
+.env.local
+.env.*.local

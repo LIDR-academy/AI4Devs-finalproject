@@ -45,7 +45,7 @@ Propose a prioritization using Must have / Should have / Could have / Won't have
 
 **Should have:**
 - WhatsApp Business API integration for invitations
-- AWS SES for email invitations
+- Gmail SMTP for email invitations
 - Reminder automation for non-responders
 - Google Maps integration for venue directions
 - Calendar sync (Google Calendar, Apple Calendar)
@@ -94,7 +94,7 @@ Propose a sprint plan:
 - Stripe payment integration (publishing paywall)
 
 **Week 7-8: Communication & Polish**
-- Email invitations (AWS SES)
+- Email invitations (Gmail SMTP)
 - WhatsApp integration
 - Reminder automation
 - Testing and bug fixes
@@ -110,7 +110,7 @@ For each Must-have feature, define clear acceptance criteria:
 
 **Event Creation:**
 - User can create an event with: name, date, venue, description
-- Event is saved to SQLite
+- Event is saved to PostgreSQL
 - User is redirected to event dashboard
 - Event URL slug is auto-generated and unique
 
