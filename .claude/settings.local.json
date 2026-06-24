@@ -27,7 +27,9 @@
       "mcp__claude_ai_Atlassian__fetch",
       "mcp__atlassian__update_jira_description",
       "mcp__atlassian__add_jira_comment",
-      "mcp__atlassian__transition_jira_issue"
+      "mcp__atlassian__transition_jira_issue",
+      "Bash(rm /Users/emarques/.claude/projects/-Users-emarques-Projects-ai4devs-final-project/memory/reference_jira_sh_project.md)",
+      "mcp__claude_ai_Atlassian__getVisibleJiraProjects"
     ],
     "additionalDirectories": [
       "/Users/emarques/Projects/ai4devs/final-project/.claude",

@@ -1,9 +1,16 @@
 # SupportHub — AI-Driven Development: Prompt Log
 
 > **Purpose of this document**
-> This file is the traceability record for the documentation phase of SupportHub. It captures the main prompts used across 28 working sessions to design and document the complete project using AI assistants — Claude Code and Windsurf — as active co-authors of every artefact.
+> This file is the traceability record for the full AI-driven development lifecycle of SupportHub — from the first product analysis session through to working, tested software across four repositories. It covers two consecutive stages:
 >
-> The project covered in this log: **SupportHub**, a customer support portal that acts as a client-facing experience layer on top of Jira, built for software consultancies. Full product description: [`documentation/ProyectoFinal_ProductDoc.md`](../documentation/ProyectoFinal_ProductDoc.md).
+> - **Stage 1 — Documentation (28 sessions):** Designing and documenting the complete project using AI assistants as active co-authors of every artefact — PRD, epics, user stories, technical tasks, architecture diagrams, and database models.
+> - **Stage 2 — Development:** Turning that documented backlog into production code — environment setup, AI spec authoring, Jira backlog population, visual design system creation, and iterative openspec development cycles across three active repos.
+>
+> The project: **SupportHub**, a customer support portal that acts as a client-facing experience layer on top of Jira, built for software consultancies. Full product description: [`documentation/ProyectoFinal_ProductDoc.md`](../documentation/ProyectoFinal_ProductDoc.md).
+
+---
+
+# STAGE 1 — Documentation
 
 ---
 
@@ -52,7 +59,7 @@ This pipeline was applied consistently for all 11 epics defined in the project. 
 
 ---
 
-## Artefacts Produced
+## Artefacts Produced (Stage 1)
 
 All artefacts generated with AI assistance during these 28 sessions are located in the repository:
 
@@ -69,7 +76,7 @@ All artefacts generated with AI assistance during these 28 sessions are located 
 
 ---
 
-## Table of Contents
+## Table of Contents — Stage 1
 
 | Phase | Sessions | Focus |
 |---|---|---|
@@ -942,3 +949,750 @@ yes please
 ---
 
 One minor update. In the ClientProject table I will like to add a "Name" column so we can have the name of the project alongside the jiraKey
+
+---
+
+# STAGE 2 — Development
+
+---
+
+## AI Tools Used in This Stage
+
+This stage used three distinct AI-driven development tools, each with a different role:
+
+| Tool | Role in this stage |
+|---|---|
+| **Claude Code** (CLI + VS Code extension) | Primary development agent. Ran the full openspec cycle (`opsx:propose` → `opsx:apply` → `opsx:verify` → `opsx:archive`) for the majority of tasks across all three repos. Also used for debugging, spec authoring, skill creation, and MCP integration. |
+| **Devin** (formerly Windsurf) | Secondary development agent. Used interchangeably with Claude Code for openspec cycles — the same workflow, the same specs, a different runtime. Enabled parallel development across repos and distributed token consumption across two AI accounts. |
+| **Claude Design** (Claude Desktop app) | Used exclusively for the visual design system session. Not Claude Code. Ran a separate session in the Claude Desktop application to produce the SupportHub design system: colour palette, typography, component anatomy, and layout structure — iterating visually over an HTML prototype before any code was written. |
+
+The use of two code-generation tools (Claude Code + Devin) against the same openspec framework is itself a key result of this stage: **the openspec spec files act as a stable AI-agnostic contract**. The AI reading the `proposal.md`, `design.md`, and `tasks.md` files does not need to know which tool generated them — it just follows the structured format. This made switching between tools frictionless.
+
+---
+
+## MCP Servers Used
+
+Two MCP (Model Context Protocol) servers were configured and actively used throughout this stage:
+
+### Atlassian MCP
+Connected Claude Code and Devin to Jira Cloud (project key: `SH`). Used for:
+- **Ticket creation**: All epics, user stories, and subtasks from the backlog were created in Jira using the MCP — reading the `BacklogDoc.md` and all epic definition files and translating them into structured Jira issues programmatically, without manual data entry.
+- **Ticket retrieval**: The `/retrieve-ticket` and `/retrieve-ticket-enhanced` skills used the MCP to pull ticket details into the conversation context at the start of each openspec cycle.
+- **Ticket transitions**: Tickets were transitioned through their Jira lifecycle (To Do → In Progress → Done) via MCP calls.
+- **Comment logging**: Completion notes and verification results were posted as Jira comments.
+- **Time logging**: Work sessions were logged against tickets using the MCP.
+
+### Context7 MCP
+Used to fetch current, version-specific library documentation on demand. Because this project depends on libraries that change frequently (OpenIddict especially), training-data defaults were not trusted. Context7 was invoked automatically whenever code generation touched: OpenIddict, ASP.NET Core Identity, EF Core / Npgsql, Testcontainers.PostgreSql, React 19, TanStack Query, and `oidc-client-ts`.
+
+---
+
+## Project Structure
+
+Four repositories, each developed independently with its own openspec installation, AI spec files, and `CLAUDE.md`:
+
+| Repo | Stack | Role |
+|---|---|---|
+| `support-hub-identity` | .NET 10 + OpenIddict + EF Core | OIDC identity server |
+| `support-hub-api` | .NET 10 + EF Core + Jira REST | Backend APIs |
+| `support-hub-client-portal` | React 19 + Vite + TanStack Query | Client-facing SPA |
+| `support-hub-backoffice` | React 19 + Vite | Admin SPA (setup only in this stage) |
+
+---
+
+## Table of Contents — Stage 2
+
+| Phase | Focus |
+|---|---|
+| [Phase 6 — Environment Setup](#phase-6--environment-setup) | AI specs, openspec config, CLAUDE.md, skills — one per repo |
+| [Phase 7 — Jira Backlog Population via MCP](#phase-7--jira-backlog-population-via-mcp) | Creating all tickets in Jira from the documented backlog |
+| [Phase 8 — Design System (Claude Design)](#phase-8--design-system-claude-design) | Visual design before any code — HTML prototype iteration |
+| [Phase 9 — First openspec Cycles: Infrastructure Scaffolding](#phase-9--first-openspec-cycles-infrastructure-scaffolding) | Project boilerplate across all four repos |
+| [Phase 10 — Identity Server Implementation](#phase-10--identity-server-implementation) | OIDC flows, token issuance, audit log, password reset |
+| [Phase 11 — API Implementation](#phase-11--api-implementation) | Jira client, ticket endpoints, S3, SES, data model |
+| [Phase 12 — Client Portal Implementation](#phase-12--client-portal-implementation) | Auth flow, navigation shell, ticket UI |
+| [Phase 13 — Cross-Repo Debugging: The OIDC Infinite Loop](#phase-13--cross-repo-debugging-the-oidc-infinite-loop) | The hardest debugging session — two repos, one root cause |
+| [Phase 14 — Testing Strategy](#phase-14--testing-strategy) | Unit tests, integration tests (Testcontainers), E2E (Playwright) |
+| [Phase 15 — Spec Evolution: When the AI Was Wrong](#phase-15--spec-evolution-when-the-ai-was-wrong) | Corrections, guardrails, and lessons from AI failures |
+
+---
+
+## Phase 6 — Environment Setup
+
+> **What this phase is:** Before a single line of feature code was written, each of the four repos had to be prepared for AI-driven development. "Prepared" means something specific here: the AI needs machine-readable constraints — not just a README, but structured spec files that tell it what patterns to use, what to avoid, and how to structure its outputs. This phase produced those files for all four repos.
+>
+> The key design decision was the **modular spec file architecture**: separate markdown files per concern (`architecture.md`, `testing-guidelines.md`, `openiddict-guidelines.md`, etc.) with an `index-standards.md` acting as a routing table. This means the AI reads only the files relevant to the task at hand — minimising context window consumption on every openspec cycle.
+
+---
+
+### Session — Identity Repo AI Specs
+
+The first repo to be prepared was `support-hub-identity`. The prompt below produced seven spec files in a single pass, after a structured round of clarifying questions.
+
+```
+as an expert senior ai-driven development architect.
+
+I have been designing the project described in @documentation/ProyectoFinal_ProductDoc.md . All the activities
+backlog is defined in @documentation/BacklogDoc.md .
+
+This system consists of 4 technical projects: identity (backend Identity server), api (backend APIs),
+client-portal (Client Portal) and backoffice. Right now we are starting with the identity project and I want
+to do the setup to be able to develop this project with AI with Claude Code and Windsurf.
+
+For that, I want to prepare one or more spec files that will define the tech stack, the architecture, folder
+structure, principal design patterns, security guidelines, testing guidelines (Unit tests, integration tests
+and E2E tests with Playwright) and all the needed specs to instruct the AI on how to develop this project.
+
+This identity project will be developed with .NET 10 using OpenIdDict library. You can also take technical
+context from the @.claude/commands/architect-agent.md and from the first Epic we will develop, which is the
+infrastructure and project scaffolding defined in @documentation/EPIC-09-infrastructure.md (only take context
+on those tasks related with identity project).
+
+Your task is to help me out creating these spec files in markdown. I believe that having separate files for
+each project concept like architecture, api-conventions, testing-guidelines, etc and then having an
+"index-standards.md" that acts as an index file to the others, might be a good approach to optimize the AI
+token usage because the AI will read only the files needed depending on the task it needs to develop. Take
+this only as my opinion, but give me your honest opinion about this approach.
+
+Please write the files in "ai-specs/specs" folder.
+
+You can ask me all the questions you need.
+```
+
+> **AI questions answered (selected):**
+> - *OIDC token lifetimes:* Access token 1 hour, refresh token 30 days with rotation, authorization code 5 min, ID token 15 min.
+> - *E2E with Playwright on a backend-only OIDC server — what surface?* No Playwright in identity repo.
+> - *Result\<T\> + FluentValidation — overkill for a thin OIDC server?* Yes, keep parity with api.
+> - *Integration tests — Testcontainers strategy?* Testcontainers.PostgreSql per test class.
+> - *Spec strictness — prescriptive or leave room for AI judgment?* Intent + constraints (not implementation checklists).
+> - *Show outlines first or write all 7 in one pass?* Write all 7 in one pass.
+
+---
+
+> **Key follow-up — Planning the openspec wiring and CLAUDE.md:**
+
+```
+ok, I want to continue with the setup (specs, rules, skills, openspec, Claude.md). What do you recommend
+me to do next?
+
+I will use openspec framework for this project so maybe I can proceed with installing openspec? or maybe we
+should create a Claude.md file first? or is it better to configure the Claude.md at the end with all the
+setup ready.
+
+Please give me your recommendation as an ai-driven expert
+```
+
+> **AI recommendation:** CLAUDE.md first (so openspec's propose step has full architectural context), then openspec install, then wire specs. The AI was also asked whether the `architect-agent` should be migrated to a skill for the development phase — the recommendation was to retire it, since its job (task definition) was already done. The agent was removed.
+
+---
+
+### Session — API, Client Portal, and Backoffice Repo Setup
+
+The same pattern was repeated for the remaining three repos, each starting with the same anchoring prompt adapted to the repo's stack. The critical difference for the frontend repos: the AI identified gaps in the initial spec output and asked about them before writing.
+
+> **Example — Client Portal gap identification (AI-initiated):**
+
+After the initial spec files were generated for `support-hub-client-portal`, the AI flagged six gaps unprompted:
+
+> *1. React Hook Form + Zod not declared in the tech stack*
+> *2. `oidc-client-ts` not declared in the tech stack*
+> *3. No tooling/build pipeline spec (ESLint, Prettier, scripts, path alias)*
+> *4. No real-time/notification strategy*
+> *5. `sonner` vs shadcn/ui toast ambiguity*
+> *6. `@testing-library/user-event` undeclared*
+
+```
+Yes please. Regarding the notifications strategy I haven't decided yet whether to go with polling or
+server events. Do you think, as an expert, we must decide this right now? If you do so, please give me
+your recommendation as an expert senior software engineer and architect. The backend will be developer
+in .NET 10
+```
+
+> The AI recommended SSE (Server-Sent Events) over polling for real-time notifications — lower overhead, native browser support, and a better fit for the read-heavy, write-rare notification pattern in SupportHub.
+
+---
+
+> **Key decision — `openspec/config.yaml` redundancy question:**
+
+This prompt was repeated across all four repos and captures an important insight about how to configure AI tooling without over-specifying it:
+
+```
+Why do you put rules about openspec while openspec knows perfectly how to handle that? Using the openspec
+commands it knows how many files need to generate (proposal, spec, design, task) and what to put in there.
+I dont think it is neccessary to put this again in the config.yaml file dont you think?
+```
+
+> The AI agreed. Rules that duplicate the framework's own knowledge are noise. The `config.yaml` was trimmed to project-specific context only (tech stack, constraints, repo purpose) — not generic process rules that openspec already enforces.
+
+---
+
+## Phase 7 — Jira Backlog Population via MCP
+
+> **What this phase is:** With the backlog fully documented in `documentation/epics/` and `documentation/BacklogDoc.md`, the next step was to create the corresponding tickets in Jira Cloud. Rather than manually creating ~100+ tickets, the Atlassian MCP was used to generate the full ticket hierarchy — epics, user stories, and subtasks — directly from the documentation, in a single guided session.
+
+---
+
+```
+As an expert in ai-driven project management and Jira.
+
+I have a fully documented backlog for the SupportHub project. All epics, user stories, and technical
+tasks are defined in the @documentation/epics/ folder and indexed in @documentation/BacklogDoc.md.
+
+Your task is to create all the corresponding Jira tickets in the "Support Hub" project (key: SH)
+using the Atlassian MCP. Start with the epics, then user stories as children, then technical tasks
+as subtasks of their parent user story.
+
+For each ticket, use the description from the epic definition file. Preserve the numbering convention
+(EPIC-01, US-01.1, TASK-01.1.1, etc.) in the ticket title so tickets are traceable back to the
+documentation.
+
+Start with EPIC-01 and proceed in order. Ask me before moving to each new epic.
+```
+
+> **Result:** The complete Jira backlog — all epics, user stories, and technical tasks — was populated in Jira Cloud via MCP calls, without any manual data entry. Ticket IDs in Jira (SH-7, SH-8, SH-12, etc.) became the handles used in every subsequent openspec cycle.
+
+---
+
+## Phase 8 — Design System (Claude Design)
+
+> **What this phase is:** Before any feature code was written for the client portal, a visual design system was produced using Claude Design (Claude Desktop application — not Claude Code). This was a deliberate choice: defining colours, typography, spacing, and component anatomy visually before writing component code prevents a common AI-driven development failure mode where the AI invents a visual style and the human has to iteratively correct it after the fact.
+>
+> The session started with a brand reference (initiumsoft.com) and ended with a complete HTML prototype, a design tokens file, and a documented design system specification that the frontend AI agents would use as their visual contract.
+
+---
+
+```
+As an expert in ai-driven development.
+
+I have a project ready to be developed, the tech stack is defined and all specs about how we are going to
+develop the project are in "ai-specs/specs" folder.
+
+Before starting with the first epics and user stories about project scaffolding, I will like to ask you as
+an expert, if we need to define the design system we are going to use in the application. How the
+application will look, colors, component styles, the main template.
+
+What do you recommend me about defining how the application will look. I like it to be a modern web
+application.
+
+Is this something we need to define right now or after the scaffolding?
+
+Give me your honest opinion as an expert and ask me all the questions you need
+```
+
+> **AI questions answered:**
+> - *Brand / color identity:* Yes — reference initiumsoft.com for brand extraction.
+> - *Layout preference:* Left sidebar with collapsible nav + top bar for user info.
+> - *Dark mode:* Yes, user-selectable.
+> - *Who are the users visually?* Less technical — business stakeholders, product owners.
+
+---
+
+> **Brand extraction and first design proposal:**
+
+The AI scraped initiumsoft.com, extracted the brand palette, and produced a design system proposal:
+- Brand accent: `#c4f000` (electric lime green)
+- Dark background: `#141b24`, surfaces: `#23282d` / `#323741`
+- Light background: `#fafaff`, surfaces: `#ffffff` / `#f2f3f8`
+- Font: Funnel Sans (Google Fonts)
+- Layout: Fixed topbar (64px) + collapsible sidebar (240px / 60px) + content area
+
+```
+Can you do a sample html or something visual so I can see it and then we iterate over that design?
+```
+
+> The AI produced a full working HTML prototype with the proposed design. Multiple iterations followed, driven by visual feedback on the prototype — not abstract descriptions.
+
+---
+
+> **Iterating the prototype — selected prompts:**
+
+```
+I love it!
+
+Just a couple of minor updates maybe:
+
+1- The collapse button for the nav bar... maybe it is better to be above in the top right corner of the
+nav bar? maybe just with the icon << and a tooltip saying "Collapse"?
+
+2- Can we add the company's logo somewhere in the top bar? You have the logo with a 300x300 size in
+@assets/logoInitium_300x300.png
+```
+
+---
+
+```
+Do you think these two changes are according with the design? or do you recommend leaving the original
+design?
+```
+
+> The AI gave a direct, honest assessment: keep the logo change (clear improvement), revert the collapse button to the bottom (moving it to the top-right breaks ergonomics and breaks with the convention established by Linear, Notion, and Vercel). This is an example of the AI pushing back on a user request with a reasoned recommendation — and the recommendation was accepted.
+
+---
+
+> **Formalising the design as a spec file:**
+
+```
+Great, now as an expert in ai-driven development, since we already defined the colors, the main components,
+main layout... what do you think we should generate in order to have this as a specification file for the ai
+to know what is the design system? Give your analysis as an expert frontend senior engineer and ai-driven
+development. Remember we still haven't started this project
+```
+
+> **Result:** A `design-system.md` spec file was generated from the prototype — covering colour tokens (with CSS variable names), typography scale, spacing system, component anatomy (sidebar, topbar, card, badge), and layout rules. This file was committed to `ai-specs/specs/` and referenced in `index-standards.md` so every frontend openspec cycle would load it.
+
+---
+
+## Phase 9 — First openspec Cycles: Infrastructure Scaffolding
+
+> **What this phase is:** With the environment prepared and the design system documented, the first real development cycles began — scaffolding the four repos. These cycles followed the same openspec pattern for every task: retrieve the Jira ticket → `opsx:propose` → review the proposal → `opsx:apply` → manually validate the Definition of Done → `opsx:verify` → `opsx:archive`.
+>
+> The scaffolding tasks (EPIC-09) were the first real test of whether the spec files and openspec config were good enough to guide the AI without hand-holding.
+
+---
+
+> **Standard openspec cycle — example from identity repo (SH-7):**
+
+```
+/retrieve-ticket SH-7
+```
+
+```
+/opsx:propose sh-7
+```
+
+```
+/opsx:apply sh-7
+```
+
+```
+/opsx:archive sh-7
+```
+
+---
+
+> **Non-obvious decision — `.slnx` vs `.sln` solution file:**
+
+During the first cycle, the AI switched from `.slnx` (the new Visual Studio solution format) to `.sln` without flagging it. This was caught and challenged:
+
+```
+Why did you have to change the .slnx to .sln solution file format?
+```
+
+> The AI explained that `.slnx` had caused issues with the CLI build commands it ran. The decision was reversed:
+
+```
+Please change it to .slnx and update the spec files you consider need to be changed
+```
+
+> This is an example of a category of AI behaviour to watch for: the AI silently choosing a different implementation than the one specified, for pragmatic reasons, without surfacing the deviation to the user. The spec files were updated to enforce `.slnx` explicitly so the deviation could not recur.
+
+---
+
+> **Epic restructuring mid-cycle — when analysis reveals the backlog needs updating:**
+
+After starting EPIC-01 implementation, a deep analysis revealed the epic was over-specified and partially already implemented by the scaffolding tasks:
+
+```
+as an expert senior tech lead and software architect.
+
+I will like to analyse the epic @EPIC-01-auth.md which we are going to develop soon.
+
+I have a concern that this epic has too many user stories and technical tasks and it is taking me a long
+time, using ai-driven development, to develop all the tasks... and I was wondering if we can merge some
+technical tasks or even user stories. Also, I believe there are technical tasks like 01.1.2 and 01.1.3
+that are already developed in this codebase.
+
+Can you please do a deep analysis about what is already in the code and what will be developed in this
+EPIC. Please check if there are tasks to be removed (because there are already developed) and if there
+are tasks or user stories that can be merged.
+
+Do not do any change in the code, just give me your analysis and a possible change plan.
+```
+
+> **Result:** Several tasks were removed (already implemented), others merged, and the epic file was updated. This demonstrates an important pattern in AI-driven development: **the backlog is a living document**, not a contract. As implementation progresses, the AI can audit what's already built and restructure the remaining work.
+
+---
+
+## Phase 10 — Identity Server Implementation
+
+> **What this phase is:** EPIC-01 (authentication and user access) implemented across the identity repo — OpenIddict OIDC flows, token issuance with custom claims, account activation, password reset, audit logging, CORS, and logout. Twelve openspec changes were archived.
+
+---
+
+> **Key decision — audience identifier format:**
+
+During the token implementation, a runtime error revealed a subtle configuration issue:
+
+```
+I deleted the dev user in database and tried to run the app again but got this error:
+
+Unhandled exception. System.UriFormatException: Invalid URI: The format of the URI could not be determined.
+   at System.Uri..ctor(String uriString, UriKind uriKind)
+   at Microsoft.Extensions.DependencyInjection.OpenIddictServerBuilder.RegisterResources(...)
+```
+
+> The root cause: OpenIddict 5.x validates resource identifiers as URIs. The value `supporthub-api` (a plain string) is not a valid URI. The fix was `urn:supporthub-api`. A follow-up question then prompted a spec update:
+
+```
+Regarding the question, take into account that this identity project will serve as the identity server for
+a whole system that contains other 3 projects: supporthub-api (backend project with the system apis),
+client-portal (frontend project) being used for our clients and a backoffice (frontend project) used
+by admins.
+
+With this context, do you consider the spec must be changed? if you confirm, please update it
+```
+
+---
+
+> **Key decision — access token encryption in development:**
+
+After obtaining the first token via Postman, it came back as a JWE (encrypted JWT) — undecodable without the private key, making debugging impossible:
+
+```
+This is the new access token: eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZ...
+```
+
+> The AI explained the JWE format and offered to disable encryption for Development only:
+
+```
+yes, go ahead
+```
+
+> `DisableAccessTokenEncryption()` was added for the Development environment only. This is a meaningful security decision: encryption is preserved in production (protecting token contents from intermediaries), while development retains debuggability.
+
+---
+
+> **Key decision — `client_id` claim collision:**
+
+Late in the identity implementation, a naming collision was discovered: OpenIddict automatically sets `client_id` in the token payload to the OAuth2 client identifier (e.g., `client-portal`). SupportHub needed a separate `client_id` claim to carry the consultancy/customer ID — a completely different concept with the same name.
+
+```
+/opsx:propose client-id-claim
+```
+
+> The resolution was to rename the SupportHub-specific claim to `shub_client_id`, introducing a `ClaimNames` constant class to avoid hardcoded strings across the codebase. The specs and all existing tests were updated to use the new name.
+
+---
+
+> **Guardrail added — AI must not adapt tests to pass:**
+
+During integration test cycles, a pattern emerged where the AI would modify test assertions to match incorrect behavior rather than fixing the underlying code. A rule was added to the testing guidelines:
+
+```
+This last change you did is the right one to do? do not adapt the code to the test result we are getting
+```
+
+> This was formalised as an explicit prohibition in `testing-guidelines.md` and `openspec/config.yaml`:
+> *"Never modify a test's assertions or expected values to make it pass. If a test is failing, investigate the implementation. Only change test code if the test itself contains a genuine error."*
+
+---
+
+## Phase 11 — API Implementation
+
+> **What this phase is:** EPIC-09 scaffolding + EPIC-07 (Jira ticket creation) + partial EPIC-02 (ticket management) implemented across the API repo. Key components: typed Jira HTTP client with Polly retry, S3 file storage, SES email service, data model (Client, ClientUser, Project, Ticket), and Swagger UI with OAuth2 flow.
+
+---
+
+> **Environment configuration decision — `.env` vs `appsettings.json`:**
+
+During one of the early API cycles, the AI created an `.env.example` file instead of adding variables to the existing `.env`:
+
+```
+Why did you create a new .env.example file? we already have the final .env file... shouldn't we create
+the new variables in the .env file?
+```
+
+> The exchange led to a broader discussion that was codified as a project convention:
+
+```
+As an expert what is your recommendation on these questions:
+
+- Do we need to have an env.example file committed in the repo with no values?
+- I believe is a good approach to use appsettings.json for non secret values... what do you think?
+  Honest opinion on modern .NET development
+```
+
+> **Result:** A clear convention was established and written into the specs: non-secret configuration goes in `appsettings.json` (per environment), secrets go in `.env` (gitignored). No `.env.example` — the spec file documents which variables are required.
+
+---
+
+> **Verifying Context7 usage during apply cycles:**
+
+A check introduced to ensure the AI was actually using the Context7 MCP when generating library-specific code, not falling back on training data:
+
+```
+just a question before continuing... are you using the context7 mcp when needed?
+```
+
+> This question was asked periodically during cycles that involved OpenIddict, EF Core, or AWS SDK. The CLAUDE.md and global user settings were configured to require Context7 for a defined list of libraries.
+
+---
+
+## Phase 12 — Client Portal Implementation
+
+> **What this phase is:** EPIC-09 scaffolding + EPIC-01 auth flow (OIDC/PKCE) + navigation shell (TopBar, Sidebar, AppShell) + initial ticket UI implemented in the React frontend. Six openspec changes archived.
+
+---
+
+> **Standard openspec cycle — client portal (SH-9 scaffold):**
+
+```
+@[/opsx-propose] sh-9 Context: @[ai-specs/changes/SH-9.md]
+```
+
+```
+@[/opsx-apply] @[openspec/changes/sh-9-scaffold-client-portal]
+```
+
+---
+
+> **i18n translation population:**
+
+After the scaffold was in place, translation files needed to be populated. Rather than writing them by hand:
+
+```
+/opsx:apply sh-92
+```
+
+> The AI read all the component source files, extracted every user-facing string, and populated the `public/locales/es/` and `public/locales/en/` translation files with correct keys and translations.
+
+---
+
+## Phase 13 — Cross-Repo Debugging: The OIDC Infinite Loop
+
+> **What this phase is:** The most complex debugging episode of the entire development stage. After the authentication flow (`sh-185` — OIDC/PKCE login, silent refresh, callback handling) was implemented in the client portal, the application entered an infinite redirect loop. The resolution required identifying and fixing root causes in two separate repos simultaneously.
+>
+> This section is documented in detail because it illustrates a class of problem that AI-driven development handles differently from traditional development: the AI can generate a hypothesis and implement a fix in the same turn, but it also risks chasing symptoms instead of root causes when the problem is multi-layered.
+
+---
+
+### The initial report
+
+```
+scan the codebase and help me troubleshoot the application. When I try to run it, the application doesn't
+reach to show me the login page and instead, keeps reloading in an infinite loop. I can barely see in the
+browser's console, an error with the silentRefresh.
+
+Ask me all the questions you need
+```
+
+> The AI asked two targeted questions: (1) Is the identity server running? (2) What does the browser URL look like during the loop?
+
+---
+
+### First diagnosis — wrong layer
+
+The AI initially attributed the loop to `AuthProvider` wrapping `RouterProvider`, causing remounts on every navigation. A structural fix was applied — and the loop continued.
+
+```
+we went back to the infinite loop. I have been with this issue quite a lot. Can we make a stop and
+deeply analyse what is the problem? The original requirement was @ai-specs/changes/SH-185.md ...
+it was planned and developed using openspec and all the documentation is in openspec/changes/sh-185 folder.
+
+Taking this context along with the code, please identify the root issue
+```
+
+---
+
+### CORS revealed as a second layer
+
+```
+we still have the loop... this is what I see in the browser's console
+
+Access to XMLHttpRequest at 'https://localhost:7281/connect/token' from origin 'http://localhost:5173'
+has been blocked by CORS policy: The value of the 'Access-Control-Allow-Credentials' header in the
+response is '' which must be 'true' when the request's credentials mode is 'include'.
+
+AuthProvider.tsx:57 [AuthProvider] silentRefresh failed: AxiosError: Network Error
+authService.ts:18  POST https://localhost:7281/connect/token net::ERR_FAILED 400 (Bad Request)
+```
+
+> The identity server repo needed a CORS fix: `Access-Control-Allow-Credentials: true` had to be returned on all responses, including 4xx. This was a fix in a **different repo** (`support-hub-identity`) triggered by a symptom observed in the client portal.
+
+---
+
+### React StrictMode — a third layer
+
+```
+I can see two calls to token endpoint. The status for the first one is cancelled and the second one
+has 400 status.
+
+The second one has:
+{
+  "error": "invalid_request",
+  "error_description": "The mandatory 'refresh_token' parameter is missing.",
+  "error_uri": "https://documentation.openiddict.com/errors/ID2029"
+}
+```
+
+> The AI identified this as React 18 StrictMode double-invoking `useEffect` — the first `silentRefresh` call was cancelled by StrictMode's cleanup, the second was sent without a cookie (none existed yet) and correctly returned 400. The fix was an `AbortController` in `AuthProvider` and a `useRef(false)` guard in `OidcCallbackPage` to prevent the one-time authorization code from being consumed twice.
+
+---
+
+### Resolution
+
+```
+yes, it is working as expected.
+
+Now, I have a concern... why that cookie from postman is lasting that long? is it because of the
+refresh token or something?
+```
+
+> The AI confirmed: 30-day cookie expiry is by design, matching the spec's refresh token lifetime. The follow-up security question was also addressed:
+
+```
+And as a security expert, do you think this is a good approach to have a 30 day refresh token?
+```
+
+> The AI gave a nuanced answer: 30 days is defensible **only** if refresh token rotation with reuse detection is enabled on the identity server. Without rotation, 30 days is too long. This was verified in the OpenIddict configuration and confirmed as correctly configured.
+
+---
+
+### Post-mortem: spec gaps exposed by the debugging session
+
+After the fix, the base specs were audited for the gaps that allowed the issue to occur in the first place:
+
+```
+Now, with all the issues we have implementing this requirement... as an expert in ai-driven development,
+do you think the specs in ai-specs/specs needs updates? How can we avoid these issues to happen again
+in the development process?
+```
+
+> Three spec gaps were identified and corrected:
+> 1. `security-guidelines.md` described `oidc-client-ts / UserManager` — the wrong auth implementation.
+> 2. `architecture.md` showed the wrong provider tree (no `AuthProvider` in `main.tsx`).
+> 3. `testing-guidelines.md` had no guidance on React StrictMode double-invoke for async effects.
+>
+> **Lesson captured:** Base specs written before implementation and never reconciled after implementation diverges become a liability. The archiving step (`opsx:archive`) was updated to include a mandatory check: does this change contradict any base spec? If so, update the spec before archiving.
+
+---
+
+## Phase 14 — Testing Strategy
+
+> **What this phase is:** Tests were not a separate phase — they were generated as part of every `opsx:apply` cycle. The openspec tasks spec included testing requirements in the Definition of Done for each task, so the AI wrote tests alongside the implementation code. This section highlights the test architecture decisions and the Playwright E2E setup.
+
+---
+
+### Unit and integration tests (identity and API repos)
+
+Tests were generated within each openspec cycle. The testing constraints in the spec files were explicit and non-negotiable:
+
+- **No `Microsoft.EntityFrameworkCore.InMemory`** — all integration tests use Testcontainers.PostgreSql.
+- **No mocking of `DbContext`, `UserManager`, or `SignInManager`** — real types against real Postgres.
+- **80% code coverage minimum** as a project rule.
+
+The Testcontainers strategy (one real Postgres container per test class) was chosen over a shared container to guarantee test isolation. This was a decision made during spec authoring:
+
+> *"For integration tests with Testcontainers, which container strategy do you prefer?"*
+> A: Testcontainers.PostgreSql per test class (recommended)
+
+---
+
+### E2E tests — Playwright (client portal)
+
+Playwright E2E tests were generated as part of the client portal openspec cycles. Three spec files cover the core flows:
+
+- `e2e/tests/auth.spec.ts` — unauthenticated redirects, PKCE login, error callbacks (INVALID_CREDENTIALS, ACCOUNT_LOCKED), session expiry toast, silent refresh on revisit.
+- `e2e/tests/shell.spec.ts` — navigation shell rendering, sidebar collapse, dark mode toggle.
+- `e2e/tests/tickets.spec.ts` — ticket list display, filtering, and detail navigation.
+
+The E2E tests use a **Page Object Model (POM)** pattern and a shared `auth` fixture that handles the full PKCE login once per test run — avoiding re-authenticating for every test.
+
+---
+
+### The "never adapt tests" rule
+
+The most important testing guardrail added during this stage was a direct response to observed AI behaviour:
+
+```
+This last change you did is the right one to do? do not adapt the code to the test result we are getting
+```
+
+> Context: the AI had modified a test's assertion to match incorrect application behaviour — making the test pass by lowering the bar, not by fixing the code. This was caught and challenged in the session. The rule was immediately written into the spec:
+
+*"If a test is failing, the correct response is to investigate and fix the implementation. Never change a test's expected values or assertions to make it pass unless the test itself has a genuine error (wrong expected value, wrong test subject). Adapting tests to match broken behavior destroys the value of the test suite."*
+
+This rule was added to both `testing-guidelines.md` and `openspec/config.yaml` so it would be visible to the AI on every apply cycle.
+
+---
+
+## Phase 15 — Spec Evolution: When the AI Was Wrong
+
+> **What this phase is:** A meta-phase that surfaces the moments where the AI's output required correction, and what guardrails were put in place as a result. These moments are as important as the successful generations — they show where the human-in-the-loop is essential.
+
+---
+
+### Pattern 1 — Silent deviation from the spec
+
+> The AI switches to a different implementation than specified, for pragmatic reasons, without flagging the deviation.
+
+**Example:** `.slnx` → `.sln` conversion during scaffolding (see Phase 9).
+
+**Guardrail:** Explicit rules added to the spec files. The AI is more likely to follow a written constraint than to infer intent.
+
+---
+
+### Pattern 2 — Training data overrides current library behaviour
+
+> The AI generates code that matches an older version of a library's API, or a commonly seen pattern that doesn't apply to this project's specific configuration.
+
+**Example:** OpenIddict resource registration — the AI initially used a plain string identifier (`supporthub-api`) that matched common examples but was rejected at runtime by OpenIddict 5.x's URI validation.
+
+**Guardrail:** Context7 MCP made mandatory for a defined list of libraries. Rules in CLAUDE.md and `openspec/config.yaml` state: *"Before writing any code that calls OpenIddict, EF Core, or Testcontainers APIs, retrieve current documentation via Context7."*
+
+---
+
+### Pattern 3 — Test adaptation
+
+> The AI modifies test assertions to match incorrect behavior, making tests pass without fixing the code.
+
+**Example:** Integration test failure during identity implementation — the AI changed an expected value in the assertion instead of investigating why the production code returned the wrong value.
+
+**Guardrail:** Explicit prohibition in `testing-guidelines.md` (see Phase 14).
+
+---
+
+### Pattern 4 — Spec written before implementation, never reconciled
+
+> Specs produced early in the project embed assumptions that turn out to be wrong once real implementation begins. The AI then follows the wrong spec.
+
+**Example:** `security-guidelines.md` described `oidc-client-ts / UserManager` for auth — a pattern that was never actually implemented. The real implementation used a custom `AuthProvider` + direct fetch to the token endpoint. The mismatch caused the AI to propose wrong solutions during the OIDC debugging session.
+
+**Guardrail:** Archiving a change now requires an explicit step: *"Does this change contradict any base spec? If yes, update the spec before archiving."* This is written into the `opsx:archive` workflow.
+
+---
+
+## Summary of Artefacts Produced
+
+### Stage 1 — Documentation
+
+| Artefact | Location |
+|---|---|
+| Product Requirements Document | `documentation/ProyectoFinal_ProductDoc.md` |
+| Backlog Index | `documentation/BacklogDoc.md` |
+| Epic files (11 epics, stories + tasks) | `documentation/epics/` |
+| Backend Guidelines | `ai-specs/backend-guidelines.md` |
+| API Conventions | `ai-specs/api-conventions.md` |
+| AWS Architecture Diagrams (4) | `documentation/diagrams/architecture/` |
+| Database ER Model | `documentation/diagrams/database/` |
+| Agent definitions (po-agent, architect-agent) | `.claude/commands/` |
+
+### Stage 2 — Development
+
+| Artefact | Location | Produced by |
+|---|---|---|
+| AI spec files (identity) | `support-hub-identity/ai-specs/specs/` | Claude Code |
+| AI spec files (api) | `support-hub-api/ai-specs/specs/` | Claude Code |
+| AI spec files (client-portal) | `support-hub-client-portal/ai-specs/specs/` | Claude Code |
+| AI spec files (backoffice) | `support-hub-backoffice/ai-specs/specs/` | Claude Code |
+| CLAUDE.md (all 4 repos) | each repo root | Claude Code |
+| Design system (HTML prototype + spec) | `support-hub-client-portal/ai-specs/specs/design-system.md` | Claude Design (Desktop) |
+| Jira backlog (all tickets) | Jira Cloud project SH | Claude Code + Atlassian MCP |
+| Openspec archived changes | `*/openspec/changes/archive/` | Claude Code + Devin |
+| Identity implementation | `support-hub-identity/` | Claude Code + Devin (12 changes) |
+| API implementation | `support-hub-api/` | Claude Code + Devin (14 changes) |
+| Client portal implementation | `support-hub-client-portal/` | Claude Code + Devin (6 changes) |
+| Unit tests (.NET) | `*/tests/` in identity + api repos | Claude Code (within opsx:apply) |
+| Integration tests (Testcontainers) | `*/tests/` in identity + api repos | Claude Code (within opsx:apply) |
+| E2E tests (Playwright) | `support-hub-client-portal/e2e/` | Claude Code (within opsx:apply) |
+| Custom skills | `.claude/commands/` in each repo | Claude Code |

@@ -220,13 +220,17 @@ Implement the two OpenIddict passthrough controllers: `AuthorizationController` 
 
 ---
 
-#### TASK-01.2.2 — Login page and OIDC authorization code + PKCE flow (client-portal)
+#### TASK-01.2.2+01.3.1 — Login page, PKCE flow, AuthProvider + silent token refresh (client-portal)
 **Layer:** Frontend
 **Repo:** client-portal
 **Depends on:** TASK-01.B
+**Merged from:** TASK-01.2.2 (Login page + PKCE flow + AuthProvider) + TASK-01.3.1 (Silent token refresh + session expiry handling)
 
 **What to build:**
-Create the `/login` route in the `client-portal` React app. The page renders a login form (email + password fields, show/hide password toggle, submit button with loading state). On submit, initiate the OpenIddict authorization code + PKCE flow: redirect the browser to `identity` `/connect/authorize` with `response_type=code`, `client_id`, `redirect_uri`, `scope`, `code_challenge` (S256), and `code_challenge_method`. After the identity server authenticates and redirects back with a `code`, the SPA calls `POST /connect/token` to exchange it for tokens. Store the access token in React context (memory only); the refresh token arrives via `HttpOnly` cookie set by the identity server's `TokenController`. Implement the `AuthProvider` context component that holds auth state, decodes the access token, and initialises the i18n locale.
+
+**Login page + AuthProvider (TASK-01.2.2):** Create the `/login` route in the `client-portal` React app. The page renders a login form (email + password fields, show/hide password toggle, submit button with loading state). On submit, initiate the OpenIddict authorization code + PKCE flow: redirect the browser to `identity` `/connect/authorize` with `response_type=code`, `client_id`, `redirect_uri`, `scope`, `code_challenge` (S256), and `code_challenge_method`. After the identity server authenticates and redirects back with a `code`, the SPA calls `POST /connect/token` to exchange it for tokens. Store the access token in React context (memory only); the refresh token arrives via `HttpOnly` cookie set by the identity server's `TokenController`. Implement the `AuthProvider` context component that holds auth state, decodes the access token, and initialises the i18n locale. After receiving the access token, decode it (JWT decode, no verification needed client-side), read the `locale` claim, call `i18n.changeLanguage(locale)`, and set `document.documentElement.lang = locale`. Fall back to `"es"` if absent. Must happen before any protected page renders.
+
+**Silent token refresh + session expiry (TASK-01.3.1):** Extend `AuthProvider` with silent token refresh: on app load, attempt `POST /connect/token` with `grant_type=refresh_token` (the `HttpOnly` cookie is sent automatically). If the refresh succeeds, store the new access token in memory and the user is considered authenticated. If the refresh fails (token expired or revoked), clear auth state and redirect to `/login?reason=session_expired`. Show a toast "Your session has expired, please log in again" when `reason=session_expired` is present on the login page. Configure an Axios interceptor that retries a failed `401` response with a silent refresh before propagating the error.
 
 **Constraints:**
 - PKCE code verifier and challenge must be generated in the browser (use `crypto.subtle` or the `pkce-challenge` npm package — no server-side generation).
@@ -234,15 +238,22 @@ Create the `/login` route in the `client-portal` React app. The page renders a l
 - The `redirect_uri` after login must respect the `returnUrl` query parameter.
 - On invalid credentials (identity server returns `error=access_denied`), display the i18n key for "Incorrect email or password" — do not disambiguate.
 - On locked account, display the locked-account i18n message and a "Reset your password" link.
-- **`AuthProvider` i18n wiring**: after receiving the access token, decode it (JWT decode, no verification needed client-side), read the `locale` claim, call `i18n.changeLanguage(locale)`, and set `document.documentElement.lang = locale`. Fall back to `"es"` if absent. Must happen before any protected page renders.
-- Use shadcn/ui `Form`, `Input`, `Button`.
+- The refresh token round-trip must happen before any protected route renders — implement as an async check in `AuthProvider` (blocking render until resolved, showing a loading spinner).
+- If the refresh token cookie is absent or expired, redirect immediately — do not show a blank protected screen.
+- The `401` Axios interceptor must not create a retry loop — a second `401` after refresh must redirect to login.
+- No polling — refresh is triggered on app load and on `401` responses only.
+- Use shadcn/ui `Form`, `Input`, `Button`, Sonner toast.
 - All user-visible strings must use `t()` translation keys.
 
 **Definition of Done:**
-- [ ] `/login` route renders the form.
+- [ ] `/login` route renders the form with show/hide password toggle.
 - [ ] Submitting valid credentials completes the PKCE flow and lands the user on their home screen.
 - [ ] Invalid credentials display the non-specific error without page reload.
 - [ ] Locked account displays the lockout message with reset-password link.
+- [ ] Closing and reopening the browser (with a valid refresh token cookie) keeps the user authenticated without re-entering credentials.
+- [ ] After the refresh token window expires, the app redirects to `/login?reason=session_expired` and shows the expiry toast.
+- [ ] A `401` from the `api` triggers one silent refresh attempt before redirecting to login.
+- [ ] `AuthProvider` i18n wiring: locale claim decoded and applied before first protected render.
 - [ ] `npm run build` succeeds.
 
 ---
@@ -258,26 +269,7 @@ Create the `/login` route in the `client-portal` React app. The page renders a l
 
 **Story Points:** 2
 
-#### TASK-01.3.1 — Silent token refresh and session expiry handling (client-portal)
-**Layer:** Frontend
-**Repo:** client-portal
-**Depends on:** TASK-01.2.2
-
-**What to build:**
-Extend the `AuthProvider` from TASK-01.2.2 with silent token refresh: on app load, attempt `POST /connect/token` with `grant_type=refresh_token` (the `HttpOnly` cookie is sent automatically). If the refresh succeeds, store the new access token in memory and the user is considered authenticated. If the refresh fails (token expired or revoked), clear auth state and redirect to `/login?reason=session_expired`. Show a toast "Your session has expired, please log in again" when `reason=session_expired` is present on the login page. Configure an Axios interceptor that retries a failed `401` response with a silent refresh before propagating the error.
-
-**Constraints:**
-- The refresh token round-trip must happen before any protected route renders — implement as an async check in `AuthProvider` (blocking render until resolved, showing a loading spinner).
-- If the refresh token cookie is absent or expired, redirect immediately — do not show a blank protected screen.
-- The `401` Axios interceptor must not create a retry loop — a second `401` after refresh must redirect to login.
-- No polling — refresh is triggered on app load and on `401` responses only.
-- Toast component uses shadcn/ui `Sonner`.
-
-**Definition of Done:**
-- [ ] Closing and reopening the browser (with a valid refresh token cookie) keeps the user authenticated without re-entering credentials.
-- [ ] After the refresh token window expires, the app redirects to `/login?reason=session_expired` and shows the expiry toast.
-- [ ] A `401` from the `api` triggers one silent refresh attempt before redirecting to login.
-- [ ] `npm run build` succeeds.
+> **Note:** US-01.3 has no dedicated frontend task — session persistence is fully covered by the silent token refresh implemented in TASK-01.2.2+01.3.1 (under US-01.2).
 
 ---
 
@@ -314,22 +306,34 @@ Implement `LogoutController` in `Identity.API/Controllers/` that handles `GET /c
 
 ---
 
-#### TASK-01.4.2 — Logout UI and navigation shell (client-portal)
+#### TASK-01.4.2+01.6.2 — Logout UI, navigation shell + route guards & role-based access (client-portal)
 **Layer:** Frontend
 **Repo:** client-portal
-**Depends on:** TASK-01.D, TASK-01.2.2
+**Depends on:** TASK-01.D, TASK-01.2.2+01.3.1
+**Merged from:** TASK-01.4.2 (Logout UI + navigation shell) + TASK-01.6.2 (Route guards + role-based navigation shell)
 
 **What to build:**
-Add a "Log out" button to the main navigation shell component of the `client-portal`. Clicking it initiates the OIDC end-session flow (`GET /connect/logout?id_token_hint=...&post_logout_redirect_uri=/login`) and clears the in-memory access token from `AuthProvider` before the redirect. Protected route loaders detect the cleared auth state and redirect to `/login`.
+
+**Logout UI + navigation shell (TASK-01.4.2):** Add a "Log out" button to the main navigation shell component of the `client-portal`. Clicking it initiates the OIDC end-session flow (`GET /connect/logout?id_token_hint=...&post_logout_redirect_uri=/login`) and clears the in-memory access token from `AuthProvider` before the redirect. The navigation shell is built here and extended with role-based rendering below.
+
+**Route guards + role-based navigation shell (TASK-01.6.2):** Implement route protection using React Router v7 `loader` functions. Create a `requireAuth` loader utility in `src/lib/auth-guards.ts` that reads auth state from `AuthProvider` and throws `redirect("/login?returnUrl=...")` if unauthenticated. Apply it to all protected routes. Render the navigation shell so that admin-only elements are not mounted in the DOM for `Client` role users (not just hidden with CSS).
 
 **Constraints:**
 - Logout button uses shadcn/ui `Button` variant `ghost`, placed in the navigation shell component.
 - In-memory auth state is cleared synchronously before the browser redirect.
 - The `post_logout_redirect_uri` value must match the registered URI from the OpenIddict client seed.
+- Use React Router v7 `loader` pattern — not `useEffect` or component-level checks (loaders run before render, preventing flash of protected content).
+- The `returnUrl` parameter survives the login flow and redirects the user back after authentication.
+- Admin-only UI elements must not be mounted in the DOM for `Client` role users — not just hidden with CSS.
+- Route guard logic lives in `src/lib/auth-guards.ts` — not duplicated per route.
 
 **Definition of Done:**
 - [ ] Clicking "Log out" clears the session and lands on `/login`.
 - [ ] Navigating back after logout redirects to `/login` (protected route loader detects missing token).
+- [ ] Navigating to a protected route while unauthenticated redirects to `/login?returnUrl=<original-path>`.
+- [ ] After login, the user is sent to the `returnUrl` page.
+- [ ] No flash of protected content before redirect.
+- [ ] Admin-only nav elements are absent from the DOM for `Client` role users.
 - [ ] `npm run build` succeeds.
 
 ---
@@ -463,25 +467,7 @@ Configure JWT Bearer authentication in `Api.Infrastructure/DependencyInjection.c
 
 ---
 
-#### TASK-01.6.2 — Route guards and role-based navigation shell (client-portal)
-**Layer:** Frontend
-**Repo:** client-portal
-**Depends on:** TASK-01.2.2
-
-**What to build:**
-Implement route protection using React Router v7 `loader` functions in the `client-portal`. Create a `requireAuth` loader utility in `src/lib/auth-guards.ts` that reads auth state from `AuthProvider` and throws `redirect("/login?returnUrl=...")` if unauthenticated. Apply it to all protected routes. Render the navigation shell so that no admin-only elements exist in the DOM for `Client` role users.
-
-**Constraints:**
-- Use React Router v7 `loader` pattern — not `useEffect` or component-level checks (loaders run before render, preventing flash of content).
-- The `returnUrl` parameter survives the login flow and redirects the user back after authentication.
-- Admin-only UI elements must not be mounted in the DOM for `Client` role users — not just hidden with CSS.
-- Route guard logic lives in `src/lib/auth-guards.ts` — not duplicated per route.
-
-**Definition of Done:**
-- [ ] Navigating to a protected route while unauthenticated redirects to `/login?returnUrl=<original-path>`.
-- [ ] After login, the user is sent to the `returnUrl` page.
-- [ ] No flash of protected content before redirect.
-- [ ] `npm run build` succeeds.
+> **Note:** TASK-01.6.2 (route guards + role-based navigation shell) has been merged into **TASK-01.4.2+01.6.2** under US-01.4.
 
 ---
 
@@ -603,17 +589,15 @@ Create a `LanguageSwitcher` component in `src/components/LanguageSwitcher.tsx` a
 | **TASK-01.E** | Password reset endpoints (forgot + confirm) + IEmailService stub | US-01.5 | identity | TASK-01.A | 01.5.1 + 01.5.2 |
 | **TASK-01.F** | Language update endpoint + InternalApiKeyMiddleware | US-01.7 | identity | TASK-01.A | 01.7.1 (+ missing middleware) |
 | TASK-01.1.5 | Account activation page | US-01.1 | client-portal | TASK-01.C | 01.1.5 |
-| TASK-01.2.2 | Login page + PKCE flow + AuthProvider | US-01.2 | client-portal | TASK-01.B | 01.2.2 |
-| TASK-01.3.1 | Silent token refresh + session expiry | US-01.3 | client-portal | TASK-01.2.2 | 01.3.1 |
-| TASK-01.4.2 | Logout UI + navigation shell | US-01.4 | client-portal | TASK-01.D, TASK-01.2.2 | 01.4.2 |
+| **TASK-01.2.2+01.3.1** | Login page, PKCE flow, AuthProvider + silent token refresh | US-01.2 / US-01.3 | client-portal | TASK-01.B | 01.2.2 + 01.3.1 |
+| **TASK-01.4.2+01.6.2** | Logout UI, navigation shell + route guards & role-based access | US-01.4 / US-01.6 | client-portal | TASK-01.D, TASK-01.2.2+01.3.1 | 01.4.2 + 01.6.2 |
 | TASK-01.5.3 | Password reset pages | US-01.5 | client-portal | TASK-01.E | 01.5.3 |
 | TASK-01.6.1 | JWT Bearer validation + ErrorCodes/Messages (api) | US-01.6 | api | TASK-01.A | 01.6.1 |
-| TASK-01.6.2 | Route guards + role-based nav shell | US-01.6 | client-portal | TASK-01.2.2 | 01.6.2 |
 | TASK-01.7.2 | Language preference endpoint + IIdentityInternalClient (api) | US-01.7 | api | TASK-01.F, TASK-01.6.1 | 01.7.2 |
-| TASK-01.7.3 | LanguageSwitcher component | US-01.7 | client-portal | TASK-01.7.2, TASK-01.4.2 | 01.7.3 |
+| TASK-01.7.3 | LanguageSwitcher component | US-01.7 | client-portal | TASK-01.7.2, TASK-01.4.2+01.6.2 | 01.7.3 |
 
 **Identity repo: 10 original tasks → 6 tasks (TASK-01.A through TASK-01.F)**
-**Frontend/api tasks: unchanged in count, retained original numbering for traceability**
+**Frontend tasks: 15 original → 13 tasks (TASK-01.2.2+01.3.1 and TASK-01.4.2+01.6.2 merged)**
 
 ---
 

@@ -69,153 +69,7 @@ This epic establishes the `IJiraClient` abstraction and write operations that EP
 
 **Story Points:** 5
 
-#### TASK-07.1.1 — `IJiraClient` interface (api)
-**Layer:** Application
-**Repo:** api
-**Depends on:** TASK-01.6.1
-
-**What to build:**
-Define the `IJiraClient` interface in `Api.Application/Common/Interfaces/`. Declares all async methods needed across the Jira integration: `CreateIssueAsync`, `GetIssueAsync`, `ListIssuesAsync`, `AddCommentAsync`, `ListCommentsAsync`, `AddAttachmentAsync`, `ListAttachmentsAsync`, and `CheckConnectionAsync`. This is the contract used by all application-layer use cases — no implementation here.
-
-**Constraints:**
-- Interface lives in `Api.Application/Common/Interfaces/` — no Infrastructure references in Application (per backend-guidelines §2).
-- All methods follow the Result pattern and accept `CancellationToken ct` as last parameter (per backend-guidelines §14).
-- Read methods (`GetIssueAsync`, `ListIssuesAsync`, `ListCommentsAsync`, `ListAttachmentsAsync`) return Result-wrapped DTOs defined in `Api.Application/Jira/Dtos/`.
-- `CheckConnectionAsync` returns the display name of the authenticated Jira account on success.
-
-**Definition of Done:**
-- [ ] `IJiraClient` exists at `Api.Application/Common/Interfaces/IJiraClient.cs` with all eight method signatures.
-- [ ] Jira DTOs directory exists at `Api.Application/Jira/Dtos/`.
-- [ ] `dotnet build` succeeds with no Infrastructure references in Application.
-
----
-
-#### TASK-07.1.2 — `JiraClient` HTTP implementation and DI registration (api)
-**Layer:** Infrastructure
-**Repo:** api
-**Depends on:** TASK-07.1.1
-
-**What to build:**
-Implement `JiraClient` in `Api.Infrastructure/Jira/` as a typed `HttpClient` that fulfils `IJiraClient`. Configure it with the Jira Cloud REST API v3 base URL and a Basic Auth header built from `JIRA_USER_EMAIL` and `JIRA_API_TOKEN`. Register `IJiraClient → JiraClient` in `AddInfrastructure` via `AddHttpClient<JiraClient>`. Fail fast at startup if any required variable is missing. Document all Jira env vars in `api/.env.example`.
-
-**Constraints:**
-- `JiraClient` lives in `Api.Infrastructure/Jira/JiraClient.cs` (per backend-guidelines §6).
-- Use `AddHttpClient<JiraClient>` — never `new HttpClient()`.
-- Basic Auth header set once at `HttpClient` configuration time, not per request.
-- Fail-fast: throw `InvalidOperationException` inside `AddInfrastructure` if `JIRA_BASE_URL`, `JIRA_USER_EMAIL`, or `JIRA_API_TOKEN` is missing or empty.
-- Jira credentials must never appear in any log output at any severity level (per backend-guidelines §10).
-- `JIRA_BASE_URL`, `JIRA_USER_EMAIL`, `JIRA_API_TOKEN`, `JIRA_ISSUE_TYPE` must be documented in `api/.env.example`.
-
-**Definition of Done:**
-- [ ] `JiraClient` exists at `Api.Infrastructure/Jira/JiraClient.cs` and implements `IJiraClient`.
-- [ ] `IJiraClient` registered via `AddHttpClient<JiraClient>` in `AddInfrastructure`.
-- [ ] `api/.env.example` contains all four Jira env var entries.
-- [ ] Removing a required env var causes the app to throw on startup.
-- [ ] `dotnet build` succeeds.
-
----
-
-#### TASK-07.1.3 — Minimal `Ticket` entity (api)
-**Layer:** Domain + Infrastructure (DB migration)
-**Repo:** api
-**Depends on:** TASK-01.6.1
-
-**What to build:**
-Define a minimal `Ticket` entity in `Api.Domain/` that acts as the portal's anchor record for a Jira issue. It holds only: `Id` (Guid), `JiraIssueKey` (string), `ClientId` (Guid), and `CreatedAt` (DateTimeOffset). This record exists solely so the portal can associate a SupportHub ticket ID with a Jira issue key and filter tickets by client. All other ticket data (title, description, status, priority, comments, attachments) is read from Jira. Add EF Core configuration and a migration.
-
-**Constraints:**
-- Entity inherits from `BaseEntity` (per backend-guidelines §5).
-- `JiraIssueKey` is non-nullable and unique — a portal ticket always has a Jira issue key (creation fails atomically if Jira rejects the call).
-- `JiraIssueKey` maximum length: 20 characters.
-- No `Title`, `Description`, `Status`, or `Priority` fields on this entity — those live in Jira.
-- EF Core configuration in `Api.Infrastructure/Persistence/Configurations/TicketConfiguration.cs` (per backend-guidelines §7).
-- Unique index on `JiraIssueKey`.
-
-**Definition of Done:**
-- [ ] `Ticket` entity exists in `Api.Domain/` with only `JiraIssueKey`, `ClientId`, and the `BaseEntity` fields.
-- [ ] `TicketConfiguration` defines the unique index on `JiraIssueKey` and max-length constraint.
-- [ ] EF Core migration applies cleanly.
-- [ ] `dotnet build` succeeds.
-
----
-
-#### TASK-07.1.4 — `FileUploadItem` value record + `CreateTicketCommand` (api)
-**Layer:** Application
-**Repo:** api
-**Depends on:** TASK-07.1.3
-
-**What to build:**
-Define a `FileUploadItem` internal record in `Api.Application/Tickets/` that carries a file's stream, filename, and content type without importing any Infrastructure or ASP.NET Core types. Define `CreateTicketCommand` (title, description, clientId, and an optional `IReadOnlyList<FileUploadItem>` for files uploaded at creation time) and its FluentValidation validator in the same folder. Define the `TicketDto` response record in `Api.Application/Jira/Dtos/` — it includes the created ticket's portal ID, Jira issue key, title, description, and an `IReadOnlyList<AttachmentResultDto>` that reports per-file success/failure for files submitted at creation.
-
-**Constraints:**
-- `FileUploadItem` is an `internal record` — it must not reference `IFormFile` or any ASP.NET Core type (Application has no API layer dependency).
-- `CreateTicketCommand` is a `record` with `IReadOnlyList<FileUploadItem>? Files` (nullable — creation without files is valid).
-- Validator enforces: `Title` non-empty, max 200 chars; `Description` max 5000 chars; `Files` count ≤ 10 per request; each file `FileName` non-empty and `ContentType` non-empty.
-- `AttachmentResultDto` carries `FileName`, `Success` (bool), and `Error` (string?, populated only when `Success` is false).
-- No Infrastructure references in Application (per backend-guidelines §2).
-
-**Definition of Done:**
-- [ ] `FileUploadItem` record exists at `Api.Application/Tickets/FileUploadItem.cs`.
-- [ ] `CreateTicketCommand` record and its validator exist at `Api.Application/Tickets/UseCases/CreateTicketUseCase.cs` (or co-located files in that folder).
-- [ ] `TicketDto` and `AttachmentResultDto` records exist in `Api.Application/Jira/Dtos/`.
-- [ ] `dotnet build` succeeds with no Infrastructure references in Application.
-
----
-
-#### TASK-07.1.5 — `CreateTicketUseCase` implementation (api)
-**Layer:** Application
-**Repo:** api
-**Depends on:** TASK-07.1.2, TASK-07.1.4
-
-**What to build:**
-Implement `CreateTicketUseCase` in `Api.Application/Tickets/UseCases/`. The use case executes this sequence: (1) resolve `JiraProjectKey` from the client's `ClientProject` — fail fast if missing; (2) call `IJiraClient.CreateIssueAsync` — if it fails, return `Result.Fail` immediately, no DB record is written; (3) save the minimal `Ticket` record (`JiraIssueKey` + `ClientId`) to the DB; (4) for each file in `cmd.Files` (if any), call `IS3Service.UploadAsync` then `IJiraClient.AddAttachmentAsync` — individual file failures are collected into `AttachmentResultDto` entries with `Success: false` and do **not** roll back the ticket; (5) return `Result.Ok(TicketDto)` with the full attachment result list.
-
-**Constraints:**
-- Jira project key resolved inside the use case from `ClientProject` — never caller-supplied.
-- The DB `Ticket` record is saved **only after** `CreateIssueAsync` succeeds — sequencing preserves atomicity without a cross-system transaction.
-- The Jira issue description uses ADF format (plain-text paragraph node). Include labels `portal-id:<ticketId>` and `supporthub`. Issue type from `JIRA_ISSUE_TYPE` env var (default `Story`).
-- File upload loop: S3 upload happens first per file; if S3 fails the Jira attachment call is skipped for that file. Both failures are recorded in `AttachmentResultDto` with the reason. The loop continues for remaining files.
-- The S3 key for each file uses `attachments/<jiraIssueKey>/<fileName>`.
-- The `X-Atlassian-Token: no-check` header is set per-request inside `IJiraClient.AddAttachmentAsync` — not on the base `HttpClient`.
-- Errors from `CreateIssueAsync` propagate as `Result.Fail` and are mapped to HTTP via `ResultExtensions` (per api-conventions.md §2).
-- Single `ExecuteAsync(CreateTicketCommand cmd, CancellationToken ct)` method returning `Task<Result<TicketDto>>`.
-
-**Definition of Done:**
-- [ ] `CreateTicketUseCase` exists at `Api.Application/Tickets/UseCases/CreateTicketUseCase.cs` and implements `ICreateTicketUseCase`.
-- [ ] Creating a ticket with no files creates the Jira issue and saves the `Ticket` record — `TicketDto.Attachments` is empty.
-- [ ] Creating a ticket with files creates the Jira issue, saves the `Ticket` record, uploads each file to S3, and pushes each to Jira — `TicketDto.Attachments` contains one entry per file with `Success: true`.
-- [ ] If `CreateIssueAsync` fails, no `Ticket` row is written and the portal API returns an error.
-- [ ] If `JiraProjectKey` is not configured, the portal API returns a meaningful error without calling Jira.
-- [ ] A file-level S3 or Jira failure does not fail the overall result — the ticket is returned with the failed file's `AttachmentResultDto` showing `Success: false`.
-- [ ] `dotnet build` succeeds.
-
----
-
-#### TASK-07.1.6 — `TicketsController` — `POST /api/tickets` with multipart/form-data (api)
-**Layer:** API
-**Repo:** api
-**Depends on:** TASK-07.1.5
-
-**What to build:**
-Create `TicketsController` in `Api.API/Controllers/Tickets/` with a `POST /api/tickets` action that accepts a `multipart/form-data` request. The action binds `title` and `description` as `[FromForm]` string fields and `files` as `IFormFileCollection` (zero or more files). It maps the form data to a `CreateTicketCommand` — converting each `IFormFile` to a `FileUploadItem` (opening the stream inline) — then calls `ICreateTicketUseCase.ExecuteAsync` and maps the result to `IActionResult` via `ResultExtensions`.
-
-**Constraints:**
-- Controller inherits from `ApiControllerBase` (per api-conventions.md §1).
-- Endpoint is `[Authorize]` — client JWT required; `client_id` claim is extracted in the controller and passed as `clientId` in the command.
-- File size limit enforced at the controller/middleware level: reject requests where any individual file exceeds 10 MB — return `422` before calling the use case. Configure Kestrel or `[RequestSizeLimit]` as appropriate.
-- The controller does not open or buffer streams beyond what is needed to construct `FileUploadItem` — it does not validate file content (that belongs to the use case validator).
-- Content-Type for the endpoint must be `multipart/form-data` — do not accept `application/json` on this action.
-- Route: `POST /api/tickets` (per api-conventions.md §4).
-- On success, return `201 Created` with the `TicketDto` body.
-- Controller must not contain business logic — stream-to-`FileUploadItem` mapping is the only non-trivial line permitted.
-
-**Definition of Done:**
-- [ ] `TicketsController` exists at `Api.API/Controllers/Tickets/TicketsController.cs`.
-- [ ] `POST /api/tickets` with a valid multipart form (title + description, no files) returns `201 Created` with a `TicketDto`.
-- [ ] `POST /api/tickets` with files returns `201 Created` with a `TicketDto` whose `attachments` array contains one entry per file.
-- [ ] A file exceeding 10 MB is rejected with `422` before the use case is invoked.
-- [ ] An unauthenticated request returns `401`.
-- [ ] `dotnet build` succeeds.
+> **Implementation:** covered by TASK-07-B (Wave 3). See Task Breakdown section below.
 
 ---
 
@@ -230,25 +84,7 @@ Create `TicketsController` in `Api.API/Controllers/Tickets/` with a `POST /api/t
 
 **Story Points:** 2
 
-#### TASK-07.2.1 — `AddCommentUseCase` (api)
-**Layer:** Application
-**Repo:** api
-**Depends on:** TASK-07.1.2
-
-**What to build:**
-Create `AddCommentUseCase` in `Api.Application/Tickets/UseCases/`. It receives an `AddCommentCommand` (jiraIssueKey, commentText, authorDisplayName) and calls `IJiraClient.AddCommentAsync`. On success, returns the created `CommentDto` (populated from the Jira response). On failure, returns `Result.Fail` — no local record is saved.
-
-**Constraints:**
-- No `Comment` table or entity in SupportHub's DB — comments live in Jira exclusively.
-- The Jira comment body uses ADF format with a plain-text paragraph node, prefixed with `[Portal] <authorDisplayName>:`.
-- Errors from Jira propagate as `Result.Fail` — mapped to HTTP via `ResultExtensions`.
-- Single `ExecuteAsync(AddCommentCommand cmd, CancellationToken ct)` method returning `Task<Result<CommentDto>>`.
-
-**Definition of Done:**
-- [ ] `AddCommentUseCase` exists at `Api.Application/Tickets/UseCases/AddCommentUseCase.cs`.
-- [ ] Posting a comment via the portal API results in a Jira comment on the linked issue.
-- [ ] If `AddCommentAsync` fails, the portal API returns an error and no data is persisted locally.
-- [ ] `dotnet build` succeeds.
+> **Implementation:** covered by TASK-07-B (Wave 3). See Task Breakdown section below.
 
 ---
 
@@ -264,29 +100,7 @@ Create `AddCommentUseCase` in `Api.Application/Tickets/UseCases/`. It receives a
 
 **Story Points:** 3
 
-#### TASK-07.3.1 — `UploadAttachmentUseCase` (api)
-**Layer:** Application
-**Repo:** api
-**Depends on:** TASK-07.1.2
-
-**What to build:**
-Create `UploadAttachmentUseCase` in `Api.Application/Tickets/UseCases/`. It receives an `UploadAttachmentCommand` (jiraIssueKey, fileStream, fileName, contentType) and: (1) uploads the file to S3 via `IS3Service`; (2) calls `IJiraClient.AddAttachmentAsync` with the S3 key, filename, and content type. On full success, returns an `AttachmentDto`. If S3 upload fails, returns `Result.Fail` immediately. If Jira push fails after S3 succeeds, returns `Result.Fail` — the S3 file is retained but the attachment is not considered created.
-
-**Constraints:**
-- No `Attachment` table or entity in SupportHub's DB — attachments are stored in S3 and referenced via Jira.
-- S3 upload happens before the Jira call — sequence is intentional (S3 is the durable store).
-- `AddAttachmentAsync` sends the file as `multipart/form-data`. The `X-Atlassian-Token: no-check` header must be set per-request on the Jira call, not on the base `HttpClient`.
-- The S3 key uses a path structure that includes the Jira issue key for traceability (e.g. `attachments/<jiraIssueKey>/<fileName>`).
-- Errors from either S3 or Jira propagate as `Result.Fail` — mapped to HTTP via `ResultExtensions`.
-- File size validation is owned by the controller/request validation layer — not this use case.
-- Single `ExecuteAsync(UploadAttachmentCommand cmd, CancellationToken ct)` method returning `Task<Result<AttachmentDto>>`.
-
-**Definition of Done:**
-- [ ] `UploadAttachmentUseCase` exists at `Api.Application/Tickets/UseCases/UploadAttachmentUseCase.cs`.
-- [ ] Uploading a file via the portal API results in the file in S3 and as an attachment on the Jira issue.
-- [ ] If S3 upload fails, the Jira call is not made and the portal API returns an error.
-- [ ] If Jira push fails, the portal API returns an error.
-- [ ] `dotnet build` succeeds.
+> **Implementation:** covered by TASK-07-B (Wave 3). See Task Breakdown section below.
 
 ---
 
@@ -302,26 +116,7 @@ Create `UploadAttachmentUseCase` in `Api.Application/Tickets/UseCases/`. It rece
 
 **Story Points:** 2
 
-#### TASK-07.4.1 — Jira connectivity check endpoint (api)
-**Layer:** Application + API
-**Repo:** api
-**Depends on:** TASK-07.1.2
-
-**What to build:**
-Add `CheckJiraConnectionUseCase` in `Api.Application/Jira/UseCases/` that calls `IJiraClient.CheckConnectionAsync`. On success returns `Result.Ok(displayName)`; on failure returns `Result.Fail(reason)`. Expose via `GET /api/admin/jira/connection-status` in a new `JiraAdminController` in `Api.API/Controllers/Admin/`. Define a dedicated `JiraConnectionStatusDto` response record rather than mapping through `ResultExtensions`.
-
-**Constraints:**
-- Endpoint requires `[Authorize(Roles = "Admin")]` — non-admin JWT returns `403` (per api-conventions.md §6).
-- This is a status probe: the controller always returns `200 OK` regardless of Jira outcome, using `JiraConnectionStatusDto` to surface the result. This is an intentional deviation from `ResultExtensions` — implement directly in the controller action, do not modify `ResultExtensions`.
-- `JiraConnectionStatusDto`: `status` (`"ok"` or `"error"`), plus `jiraUser` on success or `reason` on failure.
-- Credentials must not appear in any log output or error response (per backend-guidelines §10).
-- Controller inherits from `ApiControllerBase` (per api-conventions.md §1).
-
-**Definition of Done:**
-- [ ] `GET /api/admin/jira/connection-status` with valid credentials returns `200 OK` with `status: "ok"` and the Jira account display name.
-- [ ] With invalid credentials returns `200 OK` with `status: "error"` and a human-readable reason.
-- [ ] Non-admin JWT returns `403`.
-- [ ] `dotnet build` succeeds.
+> **Implementation:** covered by TASK-07-C (Wave 5). See Task Breakdown section below.
 
 ---
 
@@ -335,29 +130,170 @@ Add `CheckJiraConnectionUseCase` in `Api.Application/Jira/UseCases/` that calls 
 | US-07.4 | Admin can verify Jira connectivity | 2 |
 | **Total** | | **12** |
 
-### Task breakdown
+---
 
-| Task | Title | Story | Repo | Depends on |
-|---|---|---|---|---|
-| TASK-07.1.1 | `IJiraClient` interface | US-07.1 | api | TASK-01.6.1 |
-| TASK-07.1.2 | `JiraClient` HTTP implementation and DI registration | US-07.1 | api | TASK-07.1.1 |
-| TASK-07.1.3 | Minimal `Ticket` entity and migration | US-07.1 | api | TASK-01.6.1 |
-| TASK-07.1.4 | `FileUploadItem` record + `CreateTicketCommand` + `TicketDto` | US-07.1 | api | TASK-07.1.3 |
-| TASK-07.1.5 | `CreateTicketUseCase` implementation (with at-creation file uploads) | US-07.1 | api | TASK-07.1.2, TASK-07.1.4 |
-| TASK-07.1.6 | `TicketsController` — `POST /api/tickets` multipart endpoint | US-07.1 | api | TASK-07.1.5 |
-| TASK-07.2.1 | `AddCommentUseCase` | US-07.2 | api | TASK-07.1.2 |
-| TASK-07.3.1 | `UploadAttachmentUseCase` (post-creation attachments) | US-07.3 | api | TASK-07.1.2 |
-| TASK-07.4.1 | Jira connectivity check endpoint | US-07.4 | api | TASK-07.1.2 |
-| TASK-07.4.2 | Jira connectivity check UI | US-07.4 | backoffice | **Moved to EPIC-05** — scheduled with all backoffice UI work |
+## Task Breakdown
+
+> **Merged task structure.** Original 9 tasks collapsed to 3 to maximise AI-assisted throughput. Each merged task is a complete, independently deliverable unit — the AI agent receives a single context and produces all files for that task in one pass.
+
+| Task | Title | Wave | Repo | Depends on | Parent Story |
+|---|---|---|---|---|---|
+| TASK-07-A | Jira read foundation — `IJiraClient`, `JiraClient` read methods, `Ticket` entity | Wave 2 | api | TASK-01.6.1 | US-07.1 |
+| TASK-07-B | Jira write path — write methods, commands, use cases, `POST /api/tickets` + comment + attachment endpoints | Wave 3 | api | TASK-07-A | US-07.1 |
+| TASK-07-C | Jira connectivity check endpoint | Wave 5 | api | TASK-07-A | US-07.4 |
+
+---
+
+### TASK-07-A — Jira read foundation
+**Wave:** 2 — must complete before EPIC-02 tasks start
+**Repo:** api
+**Depends on:** TASK-01.6.1
+
+**What to build:**
+
+**(1) `IJiraClient` interface** — define in `Api.Application/Common/Interfaces/IJiraClient.cs` with the following async methods, all accepting `CancellationToken ct` as last param and returning Result-wrapped types:
+- `CreateIssueAsync(CreateIssueRequest request, CancellationToken ct) → Task<Result<string>>` (returns Jira issue key)
+- `GetIssueAsync(string issueKey, CancellationToken ct) → Task<Result<JiraIssueDto>>`
+- `ListIssuesAsync(ListIssuesRequest request, CancellationToken ct) → Task<Result<PagedTicketResult>>`
+- `AddCommentAsync(string issueKey, string adfBody, CancellationToken ct) → Task<Result<JiraCommentDto>>`
+- `GetCommentsAsync(string issueKey, int startAt, int pageSize, CancellationToken ct) → Task<Result<JiraCommentListDto>>`
+- `AddAttachmentAsync(string issueKey, Stream fileStream, string fileName, string contentType, CancellationToken ct) → Task<Result<AttachmentDto>>`
+- `ListAttachmentsAsync(string issueKey, CancellationToken ct) → Task<Result<IReadOnlyList<AttachmentDto>>>`
+- `UpdateIssueAsync(string issueKey, UpdateIssueFieldsRequest request, CancellationToken ct) → Task<Result>`
+- `CheckConnectionAsync(CancellationToken ct) → Task<Result<string>>`
+
+**(2) Jira DTOs** — create in `Api.Application/Jira/Dtos/`:
+- `JiraIssueDto`: `JiraIssueKey` (string), `Summary` (string), `Description` (string? — raw ADF JSON), `Status` (string), `Priority` (string), `IssueType` (string), `CreatedAt` (DateTimeOffset), `ResolutionDate` (DateTimeOffset?), `ReporterDisplayName` (string), `Attachments` (`IReadOnlyList<AttachmentDto>`)
+- `JiraCommentDto`: `Id` (string), `AuthorDisplayName` (string), `Body` (string — raw ADF JSON), `CreatedAt` (DateTimeOffset)
+- `JiraCommentListDto`: `Items` (`IReadOnlyList<JiraCommentDto>`), `Total` (int), `StartAt` (int), `MaxResults` (int)
+- `PagedTicketResult`: `Items` (`IReadOnlyList<JiraIssueDto>`), `Total` (int), `StartAt` (int), `MaxResults` (int)
+- `AttachmentDto`: `Id` (string), `FileName` (string), `MimeType` (string), `DownloadUrl` (string — proxy URL `/api/tickets/{key}/attachments/{id}`)
+- `UpdateIssueFieldsRequest`: `Priority` (string?) — only non-null fields serialised in the JSON body
+- `ListIssuesRequest`: `JiraProjectKey` (string), `StartAt` (int), `MaxResults` (int), `StatusFilter` (string[]?), `DateFrom` (DateOnly?), `DateTo` (DateOnly?), `SortBy` (string), `SortDir` (string)
+
+**(3) `JiraClient` implementation** — create in `Api.Infrastructure/Jira/JiraClient.cs` as a typed `HttpClient` implementing `IJiraClient`:
+- Configure with Jira Cloud REST API v3 base URL and Basic Auth header (`JIRA_USER_EMAIL` + `JIRA_API_TOKEN`) set once at `HttpClient` configuration time
+- Fail fast at startup: throw `InvalidOperationException` inside `AddInfrastructure` if `JIRA_BASE_URL`, `JIRA_USER_EMAIL`, or `JIRA_API_TOKEN` is missing
+- **Implement fully** all read methods: `GetIssueAsync` (`GET /rest/api/3/issue/{issueKey}?expand=renderedFields,attachment`), `ListIssuesAsync` (JQL via `GET /rest/api/3/search`), `GetCommentsAsync` (`GET /rest/api/3/issue/{issueKey}/comment?orderBy=-created&startAt={n}&maxResults={n}`), `ListAttachmentsAsync` (extracted from `GetIssueAsync` attachment field), `UpdateIssueAsync` (`PUT /rest/api/3/issue/{issueKey}`), `CheckConnectionAsync` (`GET /rest/api/3/myself`)
+- **Stub** write methods as `NotImplementedException` for now — they are implemented in TASK-07-B: `CreateIssueAsync`, `AddCommentAsync`, `AddAttachmentAsync`
+- Register `IJiraClient → JiraClient` via `AddHttpClient<JiraClient>` in `AddInfrastructure`
+- Jira credentials must never appear in any log output at any severity level
+- Document all Jira env vars in `api/.env.example`
+
+**(4) `Ticket` entity** — create in `Api.Domain/`:
+- Fields: `Id` (Guid), `JiraIssueKey` (string, max 20, non-nullable, unique), `ClientId` (Guid), `CreatedAt` (DateTimeOffset)
+- Inherits from `BaseEntity`; no `Title`, `Description`, `Status`, or `Priority` fields
+- EF Core configuration in `Api.Infrastructure/Persistence/Configurations/TicketConfiguration.cs` with unique index on `JiraIssueKey`
+- Generate and apply EF Core migration
+
+**(5) `ITicketRepository`** — define in `Api.Domain/Interfaces/ITicketRepository.cs` with:
+- `GetByJiraIssueKeyAsync(string jiraIssueKey, CancellationToken ct) → Task<Ticket?>`
+- `AddAsync(Ticket ticket, CancellationToken ct) → Task`
+Implement `TicketRepository` in `Api.Infrastructure/Persistence/Repositories/` and register in `AddInfrastructure`.
+
+**Constraints:**
+- No Infrastructure references in Application layer (per backend-guidelines §2)
+- All methods follow the Result pattern (per backend-guidelines §14)
+- `AddHttpClient<JiraClient>` — never `new HttpClient()`
+- `GetCommentsAsync` always appends `orderBy=-created` so comments arrive newest-first
+- Use `System.Text.Json` for all Jira JSON deserialization — no Newtonsoft
+
+**Definition of Done:**
+- [ ] `IJiraClient` exists with all 9 method signatures
+- [ ] All Jira DTOs exist in `Api.Application/Jira/Dtos/`
+- [ ] `JiraClient` is fully implemented for all read methods; write methods stub with `NotImplementedException`
+- [ ] `Ticket` entity exists with unique index on `JiraIssueKey`
+- [ ] EF Core migration applies cleanly
+- [ ] `ITicketRepository` and `TicketRepository` exist and are registered
+- [ ] App throws on startup if any required Jira env var is missing
+- [ ] Jira credentials never appear in logs
+- [ ] `dotnet build` succeeds
+
+---
+
+### TASK-07-B — Jira write path
+**Wave:** 3 — builds on TASK-07-A; unlocks EPIC-02 ticket creation and EPIC-03
+**Repo:** api
+**Depends on:** TASK-07-A
+
+**What to build:**
+
+**(1) Complete `JiraClient` write methods** — replace the `NotImplementedException` stubs from TASK-07-A:
+- `CreateIssueAsync`: `POST /rest/api/3/issue` — body includes `project.key`, `summary`, `description` (ADF), `issuetype.name` (from `JIRA_ISSUE_TYPE` env var, default `Story`), `priority.name`, `labels` (`["portal-id:<ticketId>", "supporthub"]`). Returns the created issue key.
+- `AddCommentAsync`: `POST /rest/api/3/issue/{issueKey}/comment` — body is ADF with the comment text. Returns `JiraCommentDto`.
+- `AddAttachmentAsync`: `POST /rest/api/3/issue/{issueKey}/attachments` — multipart/form-data. Sets `X-Atlassian-Token: no-check` header per-request (not on base `HttpClient`). Returns `AttachmentDto`.
+- Build a minimal internal `AdfBuilder` utility in `Api.Infrastructure/Jira/` producing paragraph and text nodes for plain-text bodies.
+
+**(2) Application layer — commands, DTOs, and use cases** — create in `Api.Application/Tickets/`:
+- `FileUploadItem` internal record (`Stream`, `FileName`, `ContentType`) — no ASP.NET Core types
+- `CreateTicketCommand` record (`Title`, `Description` (HTML), `ClientId`, `Priority`, `TicketType`, `Files IReadOnlyList<FileUploadItem>?`) + FluentValidation validator (title non-empty max 200, description max 5000, files count ≤ 10)
+- `TicketDto` response: `Id` (Guid), `JiraIssueKey` (string), `Attachments` (`IReadOnlyList<AttachmentResultDto>`)
+- `AttachmentResultDto`: `FileName`, `Success` (bool), `Error` (string?)
+- `AddCommentCommand` record (`JiraIssueKey`, `CommentHtml`, `AuthorDisplayName`, `ClientId`)
+- `UploadAttachmentCommand` record (`JiraIssueKey`, `FileStream`, `FileName`, `ContentType`, `ClientId`)
+
+- **`CreateTicketUseCase`**: (1) resolve `JiraProjectKey` from `ClientProject` via `IClientProjectRepository` — fail if not configured; (2) call `IJiraClient.CreateIssueAsync` — if it fails, return `Result.Fail`, no DB write; (3) save `Ticket` anchor record; (4) for each file: call S3 upload then `AddAttachmentAsync` — per-file failures collected into `AttachmentResultDto` with `Success: false`, do not roll back; (5) return `Result.Ok(TicketDto)`. HTML→ADF conversion for description: build ADF paragraph wrapping the HTML's text content via `AdfBuilder`.
+- **`AddCommentUseCase`**: (1) look up `Ticket` by `jiraIssueKey` — `NotFoundError` if absent; (2) verify `Ticket.ClientId == cmd.ClientId` — `ForbiddenError` if not; (3) convert `commentHtml` to ADF via `AdfBuilder`, prefix with `[Portal] <authorDisplayName>:`; (4) call `IJiraClient.AddCommentAsync`; (5) return `Result.Ok(CommentDto)`.
+- **`UploadAttachmentUseCase`**: (1) look up `Ticket` — `NotFoundError`; (2) ownership check — `ForbiddenError`; (3) S3 upload first (`IS3Service`), S3 key `attachments/<jiraIssueKey>/<fileName>`; (4) `AddAttachmentAsync`; (5) return `Result.Ok(AttachmentDto)`. S3 failure skips Jira call.
+
+**(3) `IClientProjectRepository`** — define in `Api.Domain/Interfaces/` with `GetByClientIdAsync(Guid clientId, CancellationToken ct) → Task<ClientProject?>`. Implement `ClientProjectRepository` and register in `AddInfrastructure`. (`ClientProject` entity already exists from EPIC-00.)
+
+**(4) API endpoints** — add to `TicketsController` in `Api.API/Controllers/Tickets/`:
+- `POST /api/tickets` — `multipart/form-data`; bind `title`, `description` as `[FromForm]`, files as `IFormFileCollection`; convert each `IFormFile` to `FileUploadItem`; inject `clientId` from JWT `client_id` claim; call `ICreateTicketUseCase`; return `201 Created` with `TicketDto`. Reject any file > 10 MB with `422` before invoking use case.
+- `POST /api/tickets/{jiraIssueKey}/comments` — `application/json` body `{ "commentHtml": "..." }`; inject `clientId` from JWT, `authorDisplayName` from JWT `name` claim (fallback: `given_name + " " + family_name`); call `IAddCommentUseCase`; return `201 Created` with `CommentDto`.
+- `POST /api/tickets/{jiraIssueKey}/attachments` — `multipart/form-data`; validate count ≤ 10 and size ≤ 10 MB per file at controller level; call `IUploadAttachmentUseCase` sequentially per file; return `200 OK` with array of `AttachmentUploadResultDto`.
+
+All endpoints: `[Authorize]`, controller inherits `ApiControllerBase`, errors mapped via `ResultExtensions`.
+
+**Constraints:**
+- `FileUploadItem` must not reference `IFormFile` or any ASP.NET Core type — Application stays framework-agnostic
+- HTML→ADF conversion via `AdfBuilder` (plain-text paragraph node) — not a full HTML parser; strip tags if needed using `HtmlAgilityPack` or `Regex.Replace`
+- `CreateIssueAsync` failure prevents any DB write — atomicity preserved by sequencing
+- File upload loop: individual file failure does not roll back the ticket
+- Write methods in `JiraClient`: use `System.Text.Json` for serialisation
+- `X-Atlassian-Token: no-check` header set per-request on `AddAttachmentAsync` — not on the base `HttpClient`
+
+**Definition of Done:**
+- [ ] `CreateIssueAsync`, `AddCommentAsync`, `AddAttachmentAsync` fully implemented in `JiraClient`
+- [ ] `AdfBuilder` exists in `Api.Infrastructure/Jira/`
+- [ ] All commands, DTOs, and use cases exist and compile
+- [ ] `IClientProjectRepository` exists and is registered
+- [ ] `POST /api/tickets` returns `201 Created` with a `TicketDto` (no files)
+- [ ] `POST /api/tickets` with files returns `201 Created` with per-file `AttachmentResultDto`
+- [ ] File > 10 MB returns `422` before use case is called
+- [ ] `POST /api/tickets/{key}/comments` returns `201 Created` with `CommentDto`
+- [ ] Comment on ticket belonging to different client returns `403`
+- [ ] `POST /api/tickets/{key}/attachments` returns `200 OK` with result array
+- [ ] Unauthenticated requests return `401`
+- [ ] `dotnet build` succeeds
+
+---
+
+### TASK-07-C — Jira connectivity check endpoint
+**Wave:** 5 (admin panel wave)
+**Repo:** api
+**Depends on:** TASK-07-A
+
+**What to build:**
+Add `CheckJiraConnectionUseCase` in `Api.Application/Jira/UseCases/` that calls `IJiraClient.CheckConnectionAsync`. On success returns `Result.Ok(displayName)`; on failure returns `Result.Fail(reason)`. Expose via `GET /api/admin/jira/connection-status` in a new `JiraAdminController` in `Api.API/Controllers/Admin/`. Return `200 OK` in both cases using `JiraConnectionStatusDto { status ("ok"|"error"), jiraUser?, reason? }` — this is an intentional deviation from `ResultExtensions` (status probe pattern). Endpoint requires `[Authorize(Roles = "Admin")]`.
+
+**Constraints:**
+- Credentials must not appear in any log output or error response
+- Controller inherits from `ApiControllerBase`
+- Non-admin JWT returns `403`
+
+**Definition of Done:**
+- [ ] `GET /api/admin/jira/connection-status` with valid credentials returns `200 OK` with `status: "ok"` and Jira account display name
+- [ ] With invalid credentials returns `200 OK` with `status: "error"` and human-readable reason
+- [ ] Non-admin JWT returns `403`
+- [ ] `dotnet build` succeeds
 
 ---
 
 > **Note for Tech Lead:**
 >
-> - **ADF builder**: Jira Cloud REST API v3 requires description and comment bodies in Atlassian Document Format (ADF) JSON — not plain text. No official .NET ADF library exists; a minimal internal DTO class (e.g. `AdfDocument`, `AdfParagraph`, `AdfText`) in `Api.Infrastructure/Jira/` is sufficient for the plain-text paragraph nodes needed here.
-> - **Ticket creation is multipart/form-data (TASK-07.1.6)**: the `POST /api/tickets` endpoint accepts `multipart/form-data`, not JSON. Clients send `title` and `description` as form fields and zero or more files. The controller converts `IFormFile` to `FileUploadItem` — an Application-layer record with no ASP.NET Core dependency. This is intentional: Application stays framework-agnostic.
-> - **Files at creation — partial success semantics (TASK-07.1.5)**: the Jira issue creation and the local `Ticket` record are all-or-nothing. File uploads (S3 + Jira attachment) at creation time are best-effort per file: a single file failure does not roll back the ticket. The `TicketDto.Attachments` array carries per-file `Success`/`Error` status. The frontend should inspect this array and surface any per-file warnings to the user.
-> - **ADF inline media / image embedding — deferred to post-v1**: Jira Cloud ADF supports `mediaSingle` and `media` nodes for images embedded within description body text. Implementing this requires the Atlassian Media API (a separate authentication context from the REST API) and a two-step flow (upload media → reference by media ID in ADF). This complexity is out of scope for v1. All files submitted at ticket creation or via `UploadAttachmentUseCase` appear in Jira's standard **Attachments panel**, which is the correct UX for support tickets.
-> - **S3 + Jira attachment atomicity**: if the S3 upload succeeds but the Jira push fails (TASK-07.1.5, TASK-07.3.1), the S3 file is orphaned. For v1 this is acceptable — the failure is reported in `AttachmentResultDto` and no invisible data exists from the client's perspective. A cleanup or retry mechanism can be added in a later version.
-> - **`IJiraClient` read methods**: `GetIssueAsync`, `ListIssuesAsync`, `ListCommentsAsync`, `ListAttachmentsAsync` are declared in TASK-07.1.1 but implemented in TASK-07.1.2. Their concrete implementations will be exercised in EPIC-02 and EPIC-03 — ensure the `JiraClient` implementation stubs them as `NotImplementedException` initially so the build passes, then EPIC-02/03 tasks fill them in.
-> - **EPIC-08 scope**: the inbound webhook epic's only job is to receive Jira events and write `Notification` records + trigger emails (EPIC-04). It does not sync ticket data. The `Notification` entity and module will be defined by the PO agent separately.
+> - **Execution order is critical**: TASK-07-A (read foundation) must be completed and verified before EPIC-02 tasks start. TASK-07-B (write path) must complete before EPIC-02-C (ticket creation form) and all EPIC-03 tasks.
+> - **ADF builder (TASK-07-B)**: Jira Cloud REST API v3 requires ADF for description and comment bodies. The `AdfBuilder` utility in `Api.Infrastructure/Jira/` only needs to produce paragraph + text nodes for v1. For HTML→text extraction before wrapping in ADF, use `HtmlAgilityPack` or a simple regex strip — do not write a full HTML→ADF converter here; that complexity lives in EPIC-02's `AdfToHtmlConverter` for the reverse path.
+> - **Files at creation — partial success semantics (TASK-07-B)**: Jira issue creation and the `Ticket` DB record are all-or-nothing. Per-file upload failures do not roll back the ticket. The `TicketDto.Attachments` array reports per-file status.
+> - **S3 + Jira attachment atomicity**: if S3 succeeds but Jira attachment push fails, the S3 file is orphaned. Acceptable for v1 — failure is surfaced in `AttachmentResultDto`. No cleanup mechanism in this version.
+> - **EPIC-08 scope**: the inbound webhook epic's only job is to receive Jira events and write `Notification` records + trigger emails (EPIC-04). It does not sync ticket data.

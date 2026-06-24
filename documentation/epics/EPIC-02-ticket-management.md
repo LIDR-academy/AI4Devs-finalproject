@@ -100,152 +100,7 @@ For v1, inline ADF `mediaSingle`/`media` nodes in comment bodies are not rendere
 
 **Story Points:** 5
 
-#### TASK-02.1.1 — `UpdateIssueAsync` method added to `IJiraClient` and `JiraClient` (api)
-**Layer:** Application + Infrastructure
-**Repo:** api
-**Depends on:** TASK-07.1.2
-
-**What to build:**
-Add `UpdateIssueAsync(string issueKey, UpdateIssueFieldsRequest request, CancellationToken ct)` to the `IJiraClient` interface in `Api.Application/Common/Interfaces/`. Implement it in `JiraClient` using `PUT /rest/api/3/issue/{issueKey}` with a JSON body containing the fields to update. Also add `GetCommentsAsync(string issueKey, int startAt, int pageSize, CancellationToken ct)` if not already fully implemented in TASK-07.1.2. This task completes the `IJiraClient` contract that EPIC-02 requires beyond what EPIC-07 declared.
-
-**Constraints:**
-- `UpdateIssueFieldsRequest` is a record in `Api.Application/Common/Interfaces/` containing a `Priority` (string?) and any other nullable updatable fields — only non-null fields are serialized in the JSON body sent to Jira.
-- `IJiraClient.UpdateIssueAsync` returns `Task<Result>` (not `Result<T>`) — Jira's `PUT /rest/api/3/issue/{issueKey}` returns `204 No Content` on success.
-- `GetCommentsAsync` signature: `Task<Result<JiraCommentListDto>> GetCommentsAsync(string issueKey, int startAt, int pageSize, CancellationToken ct)` — `orderBy=-created` query param must always be appended so comments arrive newest-first.
-- `JiraCommentListDto` (in `Api.Application/Jira/Dtos/`) contains `IReadOnlyList<JiraCommentDto>`, `int Total`, `int StartAt`, `int MaxResults`.
-- No Infrastructure references in Application (per backend-guidelines §2).
-
-**Definition of Done:**
-- [ ] `IJiraClient` has `UpdateIssueAsync` and `GetCommentsAsync` signatures.
-- [ ] `JiraClient` implements both methods.
-- [ ] `JiraCommentListDto` and `JiraCommentDto` exist in `Api.Application/Jira/Dtos/`.
-- [ ] `dotnet build` succeeds.
-
----
-
-#### TASK-02.1.2 — `ListIssuesAsync` full implementation in `JiraClient` + `AdfToHtmlConverter` (api)
-**Layer:** Infrastructure
-**Repo:** api
-**Depends on:** TASK-07.1.2
-
-**What to build:**
-Implement `ListIssuesAsync` and `GetIssueAsync` in `JiraClient` (stubbed in TASK-07.1.2). `ListIssuesAsync` composes a JQL query from the project key, status filter, date range, and sort params, then calls `GET /rest/api/3/search`. `GetIssueAsync` calls `GET /rest/api/3/issue/{issueKey}` and returns a `JiraIssueDto`. Also add `AdfToHtmlConverter` in `Api.Infrastructure/Jira/` that converts Jira ADF JSON (description and comment bodies) to sanitized HTML for the frontend. The converter handles: paragraph, heading, strong, em, underline, bullet list, ordered list, and inline code nodes. Unknown nodes are rendered as their text content; `mediaSingle`/`media` nodes are converted to anchor links using the attachment proxy URL pattern.
-
-**Constraints:**
-- `JiraIssueDto` fields (in `Api.Application/Jira/Dtos/`): `JiraIssueKey` (string), `Summary` (string), `Description` (string? — ADF JSON from Jira, stored as raw string), `Status` (string), `Priority` (string), `IssueType` (string), `CreatedAt` (DateTimeOffset), `ResolutionDate` (DateTimeOffset?), `ReporterDisplayName` (string).
-- `ListIssuesAsync` must pass `startAt`, `maxResults`, and `ORDER BY <sortBy> <sortDir>` in the JQL string — no in-memory sorting.
-- `ListIssuesAsync` returns `Task<Result<PagedTicketResult>>` where `PagedTicketResult` (in `Api.Application/Jira/Dtos/`) contains `IReadOnlyList<JiraIssueDto>`, `int Total`, `int StartAt`, `int MaxResults`.
-- The JQL base filter is `project = "<key>"`. Status filter appends `AND status IN ("s1","s2")`. Date range appends `AND created >= "YYYY-MM-DD" AND created <= "YYYY-MM-DD"`.
-- `AdfToHtmlConverter` is an internal utility class — no public interface needed. For `media` nodes, emit `<a href="/api/tickets/{issueKey}/attachments/{mediaId}">Attachment: {fileName}</a>`.
-- HTML output from `AdfToHtmlConverter` is not sanitized server-side (that is the frontend's responsibility with DOMPurify).
-
-**Definition of Done:**
-- [ ] `ListIssuesAsync` and `GetIssueAsync` are fully implemented (no `NotImplementedException`).
-- [ ] `PagedTicketResult` and updated `JiraIssueDto` exist in `Api.Application/Jira/Dtos/`.
-- [ ] `AdfToHtmlConverter` exists at `Api.Infrastructure/Jira/AdfToHtmlConverter.cs`.
-- [ ] `dotnet build` succeeds.
-
----
-
-#### TASK-02.1.3 — `ListTicketsUseCase` (api)
-**Layer:** Application
-**Repo:** api
-**Depends on:** TASK-02.1.2, TASK-07.1.3
-
-**What to build:**
-Create `ListTicketsUseCase` in `Api.Application/Tickets/UseCases/`. It receives a `ListTicketsQuery` (clientId, page, pageSize, sortBy, sortDir, statusFilter[], dateFrom?, dateTo?) and: (1) resolves `JiraProjectKey` from `ClientProject` — fail fast if not configured; (2) validates date range ≤ 184 days — return `ValidationError` if exceeded; (3) validates `sortBy` against the allowed set — return `ValidationError` if unknown; (4) calls `IJiraClient.ListIssuesAsync` with computed `startAt = (page-1) * pageSize`; (5) maps each `JiraIssueDto` to `TicketListItemDto` using `AdfToHtmlConverter` for the description; (6) returns `Result.Ok(PagedTicketListDto)`.
-
-**Constraints:**
-- `TicketListItemDto` (in `Api.Application/Tickets/Dtos/`): `jiraIssueKey`, `summary`, `status`, `priority`, `createdAt`, `resolutionDate` (nullable).
-- `PagedTicketListDto` wraps `IReadOnlyList<TicketListItemDto>`, `totalCount`, `page`, `pageSize`, `totalPages`.
-- Allowed `sortBy` values: `created`, `resolutiondate`, `priority`, `status`, `summary`. Case-insensitive. Return `ValidationError` for any other value.
-- The 184-day cap check: if both `dateFrom` and `dateTo` are provided, compute `(dateTo - dateFrom).TotalDays > 184`. If only one is provided and `dateRange` is `custom`, return `ValidationError`.
-- `clientId` is extracted from the JWT claim in the controller — never from the query body.
-- Validator for `ListTicketsQuery` enforces: `pageSize` in `{10, 20, 50}`, `page >= 1`, `sortDir` in `{"asc", "desc"}`.
-
-**Definition of Done:**
-- [ ] `ListTicketsUseCase` exists at `Api.Application/Tickets/UseCases/ListTicketsUseCase.cs`.
-- [ ] `TicketListItemDto` and `PagedTicketListDto` exist in `Api.Application/Tickets/Dtos/`.
-- [ ] A date range exceeding 184 days returns a failed `Result` with `ValidationError`.
-- [ ] An unknown `sortBy` value returns a failed `Result` with `ValidationError`.
-- [ ] `dotnet build` succeeds.
-
----
-
-#### TASK-02.1.4 — `GET /api/tickets` list endpoint (api)
-**Layer:** API
-**Repo:** api
-**Depends on:** TASK-02.1.3, TASK-07.1.6
-
-**What to build:**
-Add `GET /api/tickets` action to `TicketsController`. It reads all query parameters (`page`, `pageSize`, `sortBy`, `sortDir`, `status` multi-value, `dateRange`, `dateFrom`, `dateTo`) from the query string, maps them to a `ListTicketsQuery` (injecting `clientId` from the JWT `client_id` claim), calls `IListTicketsUseCase.ExecuteAsync`, and returns the result via `ResultExtensions`.
-
-**Constraints:**
-- Controller inherits from `ApiControllerBase`; endpoint requires `[Authorize]` (per api-conventions.md §1, §6).
-- `client_id` is read from the JWT claim — never from the query string.
-- `status` can be a multi-value query param (`?status=Created&status=In+Progress`); bind as `[FromQuery] string[] status`.
-- Default values applied in the controller if params are absent: `page=1`, `pageSize=20`, `sortBy=created`, `sortDir=desc`.
-- On success, returns `200 OK` with `PagedTicketListDto`.
-- Route: `GET /api/tickets` (per api-conventions.md §4).
-
-**Definition of Done:**
-- [ ] `GET /api/tickets` with valid JWT returns `200 OK` with `PagedTicketListDto`.
-- [ ] `GET /api/tickets?dateFrom=X&dateTo=Y` where range > 184 days returns `422`.
-- [ ] `GET /api/tickets?sortBy=invalid` returns `422`.
-- [ ] Unauthenticated request returns `401`.
-- [ ] `dotnet build` succeeds.
-
----
-
-#### TASK-02.1.5 — Ticket list page — layout, table, and URL state (client-portal)
-**Layer:** Frontend
-**Repo:** client-portal
-**Depends on:** TASK-01.6.2, TASK-02.1.4
-
-**What to build:**
-Create the `/tickets` route in `client-portal`. The page contains a shadcn/ui `DataTable` rendering ticket rows (title, status, priority, creation date, resolution date). All filter/sort/pagination state lives exclusively in URL search params via React Router's `useSearchParams` — no `useState` for these values. Derive state from URL params on every render. Changing a filter or page calls `setSearchParams` with the updated params and resets `page` to `1`. The page is protected by the route guard from TASK-01.6.2.
-
-**Constraints:**
-- State management: `useSearchParams` is the single source of truth for `page`, `pageSize`, `sortBy`, `sortDir`, `status[]`, `dateRange`, `dateFrom`, `dateTo` — no `useState` duplication (per Architecture Note on URL state persistence).
-- Data fetching: `useQuery` from TanStack Query with query key `['tickets', searchParams.toString()]` so the cache key changes with URL params.
-- Column headers are clickable for sort; clicking the active sort column toggles `sortDir`; clicking a different column sets `sortBy` to that column and `sortDir` to `desc`.
-- Page size selector uses shadcn `Select` with options `[10, 20, 50]`.
-- Jira-unavailable error: show a shadcn `Alert` with the error message — not an empty table.
-- "No tickets" empty state: shadcn `Card` with a "Create your first ticket" call-to-action button navigating to `/tickets/new`.
-- "No results for filters" empty state: distinct message with a "Clear filters" action that resets all filter params.
-- All user-visible strings use i18n keys (per EPIC-10 note).
-
-**Definition of Done:**
-- [ ] `/tickets` route renders a paginated table of tickets from the API.
-- [ ] Filter, sort, and page state round-trip through the URL — a browser refresh restores the exact view.
-- [ ] Changing `pageSize` or any filter resets `page` to `1`.
-- [ ] Empty state shown when no tickets exist; error state shown when API fails.
-- [ ] Unauthenticated access redirects to `/login`.
-- [ ] `npm run build` succeeds with no TypeScript errors.
-
----
-
-#### TASK-02.1.6 — Ticket list filter panel (client-portal)
-**Layer:** Frontend
-**Repo:** client-portal
-**Depends on:** TASK-02.1.5
-
-**What to build:**
-Add a filter panel component to the `/tickets` page containing: (1) a multi-select status filter using shadcn `Popover` + `Command` (checkbox list) with options `Created`, `In Progress`, `Waiting for Client Info`, `Resolved`, `Discarded`; (2) a date range selector using shadcn `Select` for presets (`Today`, `Yesterday`, `Last 7 days`, `This Month`, `Last Month`, `Custom`) and shadcn `Popover` + `Calendar` for the custom date range picker. The custom range picker enforces a 6-month maximum selection in the UI. All selections update URL params via `setSearchParams`.
-
-**Constraints:**
-- Multi-select status filter must set the `status` param as repeated keys (`?status=Created&status=Resolved`) — not a comma-separated string.
-- Custom date range: start and end date are stored as `dateFrom` and `dateTo` ISO date strings in the URL; the calendar `Calendar` component disables dates > 184 days from the selected start.
-- Changing any filter calls `setSearchParams` with `page` reset to `1`.
-- All filter labels use i18n keys (per EPIC-10 note).
-- Filter panel state is derived entirely from URL params — no internal `useState` for filter values.
-
-**Definition of Done:**
-- [ ] Status multi-select correctly filters the table and persists in URL.
-- [ ] Date range presets set correct `dateFrom`/`dateTo` values in URL.
-- [ ] Custom range picker prevents selecting a range > 6 months.
-- [ ] Clearing filters resets all filter-related params and returns to page 1.
-- [ ] `npm run build` succeeds with no TypeScript errors.
+> **Implementation:** covered by TASK-02-A (api) and TASK-02-B (client-portal). See Task Breakdown section below.
 
 ---
 
@@ -263,76 +118,7 @@ Add a filter panel component to the `/tickets` page containing: (1) a multi-sele
 
 **Story Points:** 3
 
-#### TASK-02.2.1 — `UpdateTicketPriorityUseCase` (api)
-**Layer:** Application
-**Repo:** api
-**Depends on:** TASK-02.1.1, TASK-07.1.3
-
-**What to build:**
-Create `UpdateTicketPriorityUseCase` in `Api.Application/Tickets/UseCases/`. It receives an `UpdateTicketPriorityCommand` (jiraIssueKey, newPriority, clientId) and: (1) looks up the `Ticket` anchor record by `JiraIssueKey` — returns `NotFoundError` if not found; (2) verifies `Ticket.ClientId` matches the calling user's `clientId` — returns `ForbiddenError` if not; (3) fetches the current issue via `IJiraClient.GetIssueAsync` — returns `NotFoundError` if Jira returns not found; (4) checks issue status is not `Resolved` or `Discarded` — returns a `ConflictError` if it is; (5) calls `IJiraClient.UpdateIssueAsync` with the new priority; (6) returns `Result.Ok()`.
-
-**Constraints:**
-- `newPriority` must be one of `Low`, `Medium`, `High`, `Critical` — validated via FluentValidation in the use case.
-- The eligibility check (status not `Resolved`/`Discarded`) is performed in the use case, not the controller (per Architecture Note).
-- Returns `ConflictError` (→ `409`) when the ticket status makes priority updates ineligible.
-- No EF Core writes — the `Ticket` anchor record is read-only in this use case.
-- Single `ExecuteAsync(UpdateTicketPriorityCommand cmd, CancellationToken ct)` returning `Task<Result>`.
-
-**Definition of Done:**
-- [ ] `UpdateTicketPriorityUseCase` exists at `Api.Application/Tickets/UseCases/UpdateTicketPriorityUseCase.cs`.
-- [ ] An invalid `newPriority` value returns a failed `Result` with `ValidationError`.
-- [ ] Attempting to update priority on a `Resolved` or `Discarded` ticket returns a `ConflictError`.
-- [ ] A `jiraIssueKey` not belonging to the calling user's client returns `ForbiddenError`.
-- [ ] `dotnet build` succeeds.
-
----
-
-#### TASK-02.2.2 — `PATCH /api/tickets/{jiraIssueKey}/priority` endpoint (api)
-**Layer:** API
-**Repo:** api
-**Depends on:** TASK-02.2.1
-
-**What to build:**
-Add a `PATCH /api/tickets/{jiraIssueKey}/priority` action to `TicketsController`. It accepts a JSON body `{ "priority": "High" }`, maps to `UpdateTicketPriorityCommand` (injecting `clientId` from the JWT `client_id` claim), calls `IUpdateTicketPriorityUseCase.ExecuteAsync`, and returns the result via `ResultExtensions`.
-
-**Constraints:**
-- Route: `PATCH /api/tickets/{jiraIssueKey}/priority` (per api-conventions.md §4).
-- `[Authorize]` required; `client_id` from JWT claim — never from request body.
-- On success returns `200 OK` with no body (the frontend updates the row from the request params, not from a response payload).
-- `jiraIssueKey` is a path param; `priority` is the only body field.
-- `ForbiddenError` → `403`, `NotFoundError` → `404`, `ConflictError` → `409`, `ValidationError` → `422`.
-
-**Definition of Done:**
-- [ ] `PATCH /api/tickets/{jiraIssueKey}/priority` with valid payload returns `200 OK`.
-- [ ] Invalid `priority` value returns `422`.
-- [ ] Ticket with status `Resolved` returns `409`.
-- [ ] Ticket belonging to a different client returns `403`.
-- [ ] Unauthenticated request returns `401`.
-- [ ] `dotnet build` succeeds.
-
----
-
-#### TASK-02.2.3 — Inline priority selector in ticket list (client-portal)
-**Layer:** Frontend
-**Repo:** client-portal
-**Depends on:** TASK-02.1.5, TASK-02.2.2
-
-**What to build:**
-Replace the read-only priority cell in the ticket table with an inline shadcn `Select` component for tickets whose status is `Created`, `In Progress`, or `Waiting for Client Info`. For `Resolved` or `Discarded` tickets, render the priority as a plain text badge. The selector calls `PATCH /api/tickets/{jiraIssueKey}/priority` on change via a `useMutation`. While the mutation is in flight, the selector shows a loading state. On success, `invalidateQueries(['tickets'])` to refresh the list. On error, roll back the selector value to the previous priority and show an inline error message on that row.
-
-**Constraints:**
-- Use TanStack Query `useMutation` with optimistic rollback: `onMutate` snapshots the previous priority; `onError` restores it via `setQueryData`; `onSettled` calls `invalidateQueries`.
-- Loading state: disable the `Select` and show a spinner adjacent to it while `isPending` is true.
-- Error message is row-level — shown below or beside the selector for that specific row only, not as a global toast.
-- The selector must not navigate away from the list page on change.
-- Priority options: `Low`, `Medium`, `High`, `Critical` — i18n keys (per EPIC-10 note).
-
-**Definition of Done:**
-- [ ] Priority `Select` is rendered only for eligible statuses.
-- [ ] Selecting a new priority calls the PATCH endpoint and shows a loading state.
-- [ ] On success, the row reflects the new priority without a full page reload.
-- [ ] On API error, the priority reverts to the previous value and an inline error is displayed.
-- [ ] `npm run build` succeeds with no TypeScript errors.
+> **Implementation:** `UpdateTicketPriorityUseCase` and `PATCH /api/tickets/{key}/priority` are covered by TASK-02-A (api). The inline priority selector in the list is covered by TASK-02-B (client-portal). See Task Breakdown section below.
 
 ---
 
@@ -354,56 +140,7 @@ Replace the read-only priority cell in the ticket table with an inline shadcn `S
 
 **Story Points:** 8
 
-#### TASK-02.3.1 — `CreateTicketRequest` multipart binding + Tiptap WYSIWYG editor component (client-portal)
-**Layer:** Frontend
-**Repo:** client-portal
-**Depends on:** TASK-01.6.2
-
-**What to build:**
-Create a reusable `RichTextEditor` component in `client-portal/src/components/` wrapping the Tiptap editor. Configure it with extensions: `StarterKit` (bold, italic, bullet list, ordered list, paragraph), `Underline`, `Code`. The component accepts `value` (HTML string), `onChange` (callback), `maxLength` (number), and `disabled` (bool) props. Display a live character count below the editor, counting the plain-text content (`editor.getText().length`). Prevent further input when the character count reaches `maxLength` and show a visual warning.
-
-**Constraints:**
-- Install Tiptap via `@tiptap/react`, `@tiptap/starter-kit`, `@tiptap/extension-underline`, `@tiptap/extension-code`.
-- The `RichTextEditor` outputs HTML (via `editor.getHTML()`) — not ADF, not Markdown. The backend converts HTML → ADF (per Architecture Note).
-- Character count is measured via `editor.getText().length` on the plain-text equivalent.
-- When `editor.getText().length >= maxLength`, disable the editor's input and show a warning label. The `onChange` must still fire with the current content so the parent form can maintain state.
-- Component uses shadcn/ui styling tokens for border, background, and focus ring — no inline `style` props.
-- All i18n strings (placeholder, counter label, limit warning) use i18n keys (per EPIC-10 note).
-
-**Definition of Done:**
-- [ ] `RichTextEditor` component exists at `client-portal/src/components/RichTextEditor.tsx`.
-- [ ] Bold, italic, underline, bullet list, numbered list, inline code toolbar buttons work.
-- [ ] Live character count updates as user types.
-- [ ] Input is blocked and a warning is shown when count reaches `maxLength`.
-- [ ] `npm run build` succeeds with no TypeScript errors.
-
----
-
-#### TASK-02.3.2 — New ticket form page `/tickets/new` (client-portal)
-**Layer:** Frontend
-**Repo:** client-portal
-**Depends on:** TASK-02.3.1, TASK-02.1.4
-
-**What to build:**
-Create the `/tickets/new` route. The form contains: title (shadcn `Input`, max 200 chars), description (`RichTextEditor`, max 5 000 chars), type (shadcn `Select`: `Bug`, `Question`, `Feature Request`), priority (shadcn `Select`: `Low`, `Medium`, `High`, `Critical`), and a file attachment area (shadcn `Input type="file"` with `multiple`, max 10 files, max 10 MB each). On submit, POST `multipart/form-data` to `POST /api/tickets` via a `useMutation`. On success, navigate to `/tickets/{jiraIssueKey}` and show a success toast. On error, show a clear error message. The submit button is disabled and shows a loading spinner while `isPending`.
-
-**Constraints:**
-- Form uses React Hook Form for field state and submission — `RichTextEditor` is integrated as a controlled component via `Controller`.
-- File validation is enforced client-side before submit: reject files > 10 MB per file, reject more than 10 files. Show a per-file error list.
-- The request body is `FormData` — title and description as string fields, files as file entries. Description is sent as HTML (the backend converts to ADF).
-- `useMutation` `mutationFn` builds and posts `FormData` via the Axios instance configured in TASK-01.3.1.
-- Inline validation: title required, description required, at least one of type/priority required. Errors shown below each field.
-- If any file upload partially fails (per-file `success: false` in `AttachmentResultDto`), navigate to the new ticket detail page and show a warning toast listing the failed filenames — do not block navigation.
-- All labels and error messages use i18n keys (per EPIC-10 note).
-
-**Definition of Done:**
-- [ ] `/tickets/new` route renders the creation form.
-- [ ] Submitting valid form data creates the ticket and navigates to `/tickets/{jiraIssueKey}`.
-- [ ] Files > 10 MB are rejected client-side before submit.
-- [ ] More than 10 files are rejected client-side.
-- [ ] Submit button is disabled while the mutation is in flight.
-- [ ] Jira API failure shows an error message with no navigation.
-- [ ] `npm run build` succeeds with no TypeScript errors.
+> **Implementation:** covered by TASK-02-C (Wave 3 — blocked on TASK-07-B). See Task Breakdown section below.
 
 ---
 
@@ -429,60 +166,7 @@ Create the `/tickets/new` route. The form contains: title (shadcn `Input`, max 2
 
 **Story Points:** 5
 
-#### TASK-02.4.1 — `GetTicketDetailUseCase` + attachment proxy endpoint (api)
-**Layer:** Application + API
-**Repo:** api
-**Depends on:** TASK-02.1.2, TASK-07.1.3
-
-**What to build:**
-Create `GetTicketDetailUseCase` in `Api.Application/Tickets/UseCases/`. It receives a `GetTicketDetailQuery` (jiraIssueKey, clientId) and: (1) looks up the `Ticket` anchor record — returns `NotFoundError` if absent; (2) verifies `Ticket.ClientId` matches `clientId` — returns `ForbiddenError` if not; (3) calls `IJiraClient.GetIssueAsync` for the full issue; (4) calls `IJiraClient.GetCommentsAsync(issueKey, startAt=0, pageSize=200)` for the comment thread; (5) calls `IJiraClient.ListAttachmentsAsync` for ticket-level attachments; (6) converts all ADF content to HTML via `AdfToHtmlConverter`; (7) returns `Result.Ok(TicketDetailDto)`.
-
-Also add `GET /api/tickets/{jiraIssueKey}/attachments/{attachmentId}` to `TicketsController` as a proxy action: it verifies ownership via the `Ticket` anchor record, then fetches the attachment stream from Jira and streams it to the response with the correct `Content-Type` and `Content-Disposition` headers.
-
-**Constraints:**
-- `TicketDetailDto` (in `Api.Application/Tickets/Dtos/`): `jiraIssueKey`, `summary`, `description` (HTML), `status`, `priority`, `issueType`, `createdAt`, `resolutionDate`?, `comments` (`IReadOnlyList<CommentDto>`), `attachments` (`IReadOnlyList<AttachmentLinkDto>`).
-- `CommentDto`: `id`, `authorName`, `isPortalComment` (bool), `body` (HTML), `createdAt`, `attachments` (`IReadOnlyList<AttachmentLinkDto>` — media extracted from ADF by `AdfToHtmlConverter`).
-- `AttachmentLinkDto`: `id`, `fileName`, `mimeType`, `downloadUrl` (`/api/tickets/{key}/attachments/{id}`).
-- Ownership check in the attachment proxy action: resolve `clientId` from JWT, look up `Ticket` by `JiraIssueKey`, compare `ClientId`. Return `403` if mismatch — same logic as the use case, implemented inline in the controller action.
-- The proxy streams the Jira response body directly — do not buffer the full file in memory. Use `HttpClient.GetStreamAsync` and copy to `Response.Body`.
-- `isPortalComment`: true if the ADF text content of the comment body starts with `[Portal]`.
-
-**Definition of Done:**
-- [ ] `GetTicketDetailUseCase` exists at `Api.Application/Tickets/UseCases/GetTicketDetailUseCase.cs`.
-- [ ] `GET /api/tickets/{jiraIssueKey}` with a valid JWT returns `200 OK` with `TicketDetailDto`.
-- [ ] A `jiraIssueKey` belonging to a different client returns `403`.
-- [ ] A non-existent `jiraIssueKey` returns `404`.
-- [ ] `GET /api/tickets/{jiraIssueKey}/attachments/{attachmentId}` streams the file with correct headers.
-- [ ] `dotnet build` succeeds.
-
----
-
-#### TASK-02.4.2 — Ticket detail page `/tickets/:jiraIssueKey` (client-portal)
-**Layer:** Frontend
-**Repo:** client-portal
-**Depends on:** TASK-02.1.5, TASK-02.4.1
-
-**What to build:**
-Create the `/tickets/:jiraIssueKey` route. The page fetches `GET /api/tickets/:jiraIssueKey` via `useQuery` and renders: title, description (HTML via `dangerouslySetInnerHTML` sanitized with DOMPurify), status badge, priority badge, type, creation date, resolution date (if present), a fixed-height scrollable comment thread, and a ticket-level attachments section. The comment thread renders comments newest-first (as returned by the API) inside a shadcn `ScrollArea` with a fixed height. Each comment shows author name, timestamp, body (HTML sanitized), a role label/style distinguishing portal vs. team comments, and any attachment links. If Jira is unavailable, show a clear error state.
-
-**Constraints:**
-- Install and use DOMPurify (`dompurify` + `@types/dompurify`) to sanitize all HTML before rendering via `dangerouslySetInnerHTML`. Never render raw unsanitized HTML.
-- `useQuery` query key: `['ticket', jiraIssueKey]`. `staleTime`: 0 (live read on every visit per AC).
-- The comment container uses shadcn `ScrollArea` with a fixed `max-h` (e.g. `max-h-[600px]`) — not a full-height layout.
-- Comment role distinction: portal comments rendered with a different background or a `[Portal]` label badge; team comments styled differently.
-- Attachment links for both ticket-level and comment-level attachments use the `/api/tickets/{key}/attachments/{id}` proxy URL — not direct Jira URLs.
-- Error state: shadcn `Alert` with destructive variant and a "Retry" button that calls `refetch()`.
-- All user-visible strings use i18n keys (per EPIC-10 note).
-
-**Definition of Done:**
-- [ ] `/tickets/:jiraIssueKey` renders the full ticket detail from the API.
-- [ ] All HTML content is sanitized with DOMPurify before rendering.
-- [ ] Comment thread is in a fixed-height scrollable container.
-- [ ] Portal vs. team comments are visually distinguished.
-- [ ] Attachment links open/download via the proxy.
-- [ ] Jira error shows an error state with a retry action.
-- [ ] Unauthenticated access redirects to `/login`; forbidden ticket shows a "Not found" view.
-- [ ] `npm run build` succeeds with no TypeScript errors.
+> **Implementation:** covered by TASK-02-A (api) and TASK-02-B (client-portal). See Task Breakdown section below.
 
 ---
 
@@ -496,26 +180,7 @@ Create the `/tickets/:jiraIssueKey` route. The page fetches `GET /api/tickets/:j
 
 **Story Points:** 1
 
-#### TASK-02.5.1 — "Back to my tickets" navigation with preserved state (client-portal)
-**Layer:** Frontend
-**Repo:** client-portal
-**Depends on:** TASK-02.4.2
-
-**What to build:**
-Add a "Back to my tickets" link/breadcrumb to the ticket detail page that navigates to `/tickets` with the previously active filter, sort, and page state restored. Store the serialized list URL (including query string) in React Router's `location.state` when navigating from the list to a detail page. On the detail page, read `location.state.listUrl` and use it as the href for the back link. If `listUrl` is absent (direct navigation to detail), fall back to `/tickets` with no query string.
-
-**Constraints:**
-- Use React Router `useLocation` to read `state.listUrl` on the detail page.
-- The list page must pass `state: { listUrl: location.pathname + location.search }` when navigating to a detail (via `<Link>` or `navigate()`).
-- The browser back button provides the same behaviour natively — no additional handling required.
-- The back link is rendered as a shadcn `Button` variant `ghost` or as a breadcrumb component — not a plain `<a>` tag.
-- All labels use i18n keys (per EPIC-10 note).
-
-**Definition of Done:**
-- [ ] "Back to my tickets" link is visible on the detail page.
-- [ ] Clicking it returns to the list with the original URL query string intact.
-- [ ] Direct navigation to a detail URL (no prior list visit) falls back to `/tickets`.
-- [ ] `npm run build` succeeds with no TypeScript errors.
+> **Implementation:** covered by TASK-02-B (client-portal). See Task Breakdown section below.
 
 ---
 
@@ -552,24 +217,179 @@ Add a "Back to my tickets" link/breadcrumb to the ticket detail page that naviga
 
 ## Task Breakdown
 
-| Task | Title | Story | Repo | Depends on |
-|---|---|---|---|---|
-| TASK-02.1.1 | `UpdateIssueAsync` + `GetCommentsAsync` added to `IJiraClient`/`JiraClient` | US-02.1 | api | TASK-07.1.2 |
-| TASK-02.1.2 | `ListIssuesAsync`/`GetIssueAsync` full impl + `AdfToHtmlConverter` | US-02.1 | api | TASK-07.1.2 |
-| TASK-02.1.3 | `ListTicketsUseCase` | US-02.1 | api | TASK-02.1.2, TASK-07.1.3 |
-| TASK-02.1.4 | `GET /api/tickets` list endpoint | US-02.1 | api | TASK-02.1.3, TASK-07.1.6 |
-| TASK-02.1.5 | Ticket list page — layout, table, URL state | US-02.1 | client-portal | TASK-01.6.2, TASK-02.1.4 |
-| TASK-02.1.6 | Ticket list filter panel | US-02.1 | client-portal | TASK-02.1.5 |
-| TASK-02.2.1 | `UpdateTicketPriorityUseCase` | US-02.2 | api | TASK-02.1.1, TASK-07.1.3 |
-| TASK-02.2.2 | `PATCH /api/tickets/{jiraIssueKey}/priority` endpoint | US-02.2 | api | TASK-02.2.1 |
-| TASK-02.2.3 | Inline priority selector in ticket list | US-02.2 | client-portal | TASK-02.1.5, TASK-02.2.2 |
-| TASK-02.3.1 | `RichTextEditor` Tiptap component | US-02.3 | client-portal | TASK-01.6.2 |
-| TASK-02.3.2 | New ticket form page `/tickets/new` | US-02.3 | client-portal | TASK-02.3.1, TASK-02.1.4 |
-| TASK-02.4.1 | `GetTicketDetailUseCase` + attachment proxy endpoint | US-02.4 | api | TASK-02.1.2, TASK-07.1.3 |
-| TASK-02.4.2 | Ticket detail page `/tickets/:jiraIssueKey` | US-02.4 | client-portal | TASK-02.1.5, TASK-02.4.1 |
-| TASK-02.5.1 | "Back to my tickets" navigation with preserved state | US-02.5 | client-portal | TASK-02.4.2 |
+> **Merged task structure.** Original 14 tasks collapsed to 3 to maximise AI-assisted throughput. Each task is a complete, independently deliverable unit. Task A and B (Wave 2) deliver the visible ticket list and detail against real Jira data. Task C (Wave 3) adds the write paths and depends on TASK-07-B completing first.
 
-> US-02.6 (scroll pagination) is v2 — no tasks defined here. Prerequisites: `GetCommentsAsync` already accepts `startAt`/`pageSize` (established in TASK-02.1.1), making v2 non-breaking.
+| Task | Title | Wave | Repo | Depends on |
+|---|---|---|---|---|
+| TASK-02-A | Ticket read API — use cases, `AdfToHtmlConverter`, all read + priority endpoints | Wave 2 | api | TASK-07-A |
+| TASK-02-B | Ticket list + detail frontend — list page, filter panel, detail page, back navigation | Wave 2 | client-portal | TASK-02-A, TASK-01.6.2 |
+| TASK-02-C | Ticket creation — priority update use case + endpoint, `RichTextEditor`, `/tickets/new` form | Wave 3 | api + client-portal | TASK-07-B, TASK-02-B |
+
+---
+
+### TASK-02-A — Ticket read API
+**Wave:** 2 — delivers working backend for ticket list and detail
+**Repo:** api
+**Depends on:** TASK-07-A (`IJiraClient` read methods, `Ticket` entity, `ITicketRepository` all exist)
+
+**What to build:**
+
+**(1) `AdfToHtmlConverter`** — create in `Api.Infrastructure/Jira/AdfToHtmlConverter.cs` as an internal utility class:
+- Converts Jira ADF JSON (description and comment bodies) to HTML for the frontend
+- Handles: `doc`, `paragraph`, `heading`, `text` (with `strong`, `em`, `underline`, `code` marks), `bulletList`, `orderedList`, `listItem`, `codeBlock`
+- Unknown nodes: render text content only; do not throw
+- `mediaSingle`/`media` nodes: emit `<a href="/api/tickets/{issueKey}/attachments/{mediaId}">Attachment: {fileName}</a>`
+- HTML output is NOT sanitised server-side (DOMPurify handles that on the frontend)
+- Extract a static helper `ExtractPlainText(string adfJson)` that concatenates text node values — used by EPIC-08's `AdfPlainTextExtractor`
+
+**(2) Application DTOs** — create in `Api.Application/Tickets/Dtos/`:
+- `TicketListItemDto`: `JiraIssueKey`, `Summary`, `Status`, `Priority`, `CreatedAt`, `ResolutionDate?`
+- `PagedTicketListDto`: `Items` (`IReadOnlyList<TicketListItemDto>`), `TotalCount`, `Page`, `PageSize`, `TotalPages`
+- `TicketDetailDto`: `JiraIssueKey`, `Summary`, `Description` (HTML), `Status`, `Priority`, `IssueType`, `CreatedAt`, `ResolutionDate?`, `Comments` (`IReadOnlyList<CommentDto>`), `Attachments` (`IReadOnlyList<AttachmentLinkDto>`)
+- `CommentDto`: `Id`, `AuthorName`, `IsPortalComment` (bool — true if ADF text starts with `[Portal]`), `Body` (HTML), `CreatedAt`, `Attachments` (`IReadOnlyList<AttachmentLinkDto>`)
+- `AttachmentLinkDto`: `Id`, `FileName`, `MimeType`, `DownloadUrl` (`/api/tickets/{key}/attachments/{id}`)
+
+**(3) `ListTicketsUseCase`** — create in `Api.Application/Tickets/UseCases/`:
+- Input: `ListTicketsQuery` (`ClientId`, `Page`, `PageSize`, `SortBy`, `SortDir`, `StatusFilter[]?`, `DateFrom?`, `DateTo?`)
+- Flow: (1) resolve `JiraProjectKey` from `ClientProject` via `IClientProjectRepository` — fail if not configured; (2) validate `SortBy` against allowed set (`created`, `resolutiondate`, `priority`, `status`, `summary`) — `ValidationError` on unknown; (3) validate date range ≤ 184 days if both provided — `ValidationError` if exceeded; (4) call `IJiraClient.ListIssuesAsync` with `startAt = (page-1) * pageSize`; (5) map to `PagedTicketListDto`
+- Validator: `pageSize` in `{10, 20, 50}`, `page >= 1`, `sortDir` in `{"asc","desc"}`
+
+**(4) `GetTicketDetailUseCase`** — create in `Api.Application/Tickets/UseCases/`:
+- Input: `GetTicketDetailQuery` (`JiraIssueKey`, `ClientId`)
+- Flow: (1) look up `Ticket` anchor by `JiraIssueKey` — `NotFoundError` if absent; (2) verify `Ticket.ClientId == clientId` — `ForbiddenError` if not; (3) call `IJiraClient.GetIssueAsync`; (4) call `IJiraClient.GetCommentsAsync(issueKey, startAt: 0, pageSize: 200)` (default full load for v1); (5) convert all ADF fields to HTML via `AdfToHtmlConverter`; (6) return `Result.Ok(TicketDetailDto)`
+
+**(5) `UpdateTicketPriorityUseCase`** — create in `Api.Application/Tickets/UseCases/`:
+- Input: `UpdateTicketPriorityCommand` (`JiraIssueKey`, `NewPriority`, `ClientId`)
+- Flow: (1) look up `Ticket` — `NotFoundError`; (2) ownership check — `ForbiddenError`; (3) `GetIssueAsync` to fetch current status; (4) if status is `Resolved` or `Discarded` — `ConflictError`; (5) call `IJiraClient.UpdateIssueAsync` with new priority; (6) return `Result.Ok()`
+- Validator: `NewPriority` must be one of `Low`, `Medium`, `High`, `Critical`
+
+**(6) `TicketsController`** — create in `Api.API/Controllers/Tickets/TicketsController.cs` with the following actions (all `[Authorize]`, `client_id` from JWT claim):
+- `GET /api/tickets` — query params: `page` (default 1), `pageSize` (default 20), `sortBy` (default `created`), `sortDir` (default `desc`), `status[]`, `dateRange`, `dateFrom`, `dateTo`. Calls `IListTicketsUseCase`. Returns `200 OK` with `PagedTicketListDto`.
+- `GET /api/tickets/{jiraIssueKey}` — calls `IGetTicketDetailUseCase`. Returns `200 OK` with `TicketDetailDto`. Mismatch → `403`; not found → `404`.
+- `GET /api/tickets/{jiraIssueKey}/attachments/{attachmentId}` — proxy: verify ownership via `Ticket` anchor, fetch attachment stream from Jira via `IJiraClient`, stream response with correct `Content-Type` and `Content-Disposition` headers. Do not buffer in memory — use `HttpClient.GetStreamAsync` and copy to `Response.Body`.
+- `PATCH /api/tickets/{jiraIssueKey}/priority` — JSON body `{ "priority": "High" }`. Calls `IUpdateTicketPriorityUseCase`. Returns `200 OK` on success.
+
+Error mappings via `ResultExtensions`: `ForbiddenError → 403`, `NotFoundError → 404`, `ConflictError → 409`, `ValidationError → 422`.
+
+**Constraints:**
+- `AdfToHtmlConverter` is internal — no public interface needed
+- `GetCommentsAsync` is always called with `orderBy=-created` (established in TASK-07-A) so comments arrive newest-first; the use case does not re-sort
+- `isPortalComment`: true if the ADF plain-text of the comment body starts with `[Portal]` (case-insensitive, after trimming)
+- The attachment proxy must verify ownership before streaming — return `403` on mismatch, never expose Jira attachment URLs to the browser
+- All use cases are `internal`, injected via interfaces (per backend-guidelines §2)
+
+**Definition of Done:**
+- [ ] `AdfToHtmlConverter` exists and handles all specified ADF node types
+- [ ] All application DTOs exist in `Api.Application/Tickets/Dtos/`
+- [ ] `ListTicketsUseCase` validates sort fields and date range; unknown sort → `422`; range > 184 days → `422`
+- [ ] `GetTicketDetailUseCase` returns `403` for wrong client, `404` for missing ticket
+- [ ] `UpdateTicketPriorityUseCase` returns `409` for closed ticket, `422` for invalid priority value
+- [ ] `GET /api/tickets` returns `200 OK` with `PagedTicketListDto`
+- [ ] `GET /api/tickets/{key}` returns `200 OK` with `TicketDetailDto` including HTML-converted description and comments
+- [ ] `GET /api/tickets/{key}/attachments/{id}` streams the file with correct headers; wrong client → `403`
+- [ ] `PATCH /api/tickets/{key}/priority` returns `200 OK` on success
+- [ ] All endpoints return `401` for unauthenticated requests
+- [ ] `dotnet build` succeeds
+
+---
+
+### TASK-02-B — Ticket list + detail frontend
+**Wave:** 2 — delivers the client-facing ticket list and detail UI against real Jira data
+**Repo:** client-portal
+**Depends on:** TASK-02-A (all read endpoints live), TASK-01.6.2 (route guard)
+
+**What to build:**
+
+**(1) `/tickets` route — ticket list page**
+- `DataTable` (shadcn/ui) rendering columns: title (clickable → detail), status (badge), priority (badge or inline selector — see inline selector below), creation date, resolution date (empty if null)
+- **Filter panel**: multi-select status filter (`Popover` + `Command` checkbox list — options: `Created`, `In Progress`, `Waiting for Client Info`, `Resolved`, `Discarded`); date range `Select` with presets (`Today`, `Yesterday`, `Last 7 days`, `This Month`, `Last Month`, `Custom`); custom picker uses shadcn `Calendar`, disables dates > 184 days from selected start
+- **Sort**: column headers are clickable; clicking active column toggles `sortDir`; clicking other column sets `sortBy` + resets `sortDir` to `desc`
+- **Pagination**: page size selector (`Select`: 10/20/50); page controls (prev/next + current page / total pages)
+- **URL state**: all filter, sort, and pagination values live exclusively in URL search params via `useSearchParams` — no `useState` duplication. `TanStack Query` key: `['tickets', searchParams.toString()]`
+- **Inline priority selector**: for tickets with status `Created`, `In Progress`, `Waiting for Client Info` — render shadcn `Select` with options `Low`, `Medium`, `High`, `Critical`; call `PATCH /api/tickets/{key}/priority` via `useMutation` with optimistic rollback (`onMutate` snapshots prev value, `onError` restores via `setQueryData`, `onSettled` calls `invalidateQueries`); loading state disables selector and shows spinner; error shows row-level inline message
+- **Empty states**: (a) no tickets at all — `Card` with "Create your first ticket" CTA to `/tickets/new`; (b) no results for filters — message + "Clear filters" action resetting all filter params
+- **Error state**: shadcn `Alert` when API fails (Jira unavailable)
+- Changing any filter or page size resets `page` to `1`
+- All strings use i18n keys (per EPIC-10)
+
+**(2) `/tickets/:jiraIssueKey` route — ticket detail page**
+- Fetch `GET /api/tickets/:jiraIssueKey` via `useQuery` with `staleTime: 0` (always fresh)
+- Render: title, description (HTML via `dangerouslySetInnerHTML` sanitised with DOMPurify), status badge, priority badge, type, creation date, resolution date (if present)
+- **Comment thread**: `ScrollArea` with `max-h-[600px]`; comments rendered newest-first (as returned by API); each comment shows author name, relative timestamp, HTML body (DOMPurify sanitised), role distinction (portal comments vs team comments via different background or `[Portal]` label badge); attachment links within comments use proxy URL pattern
+- **Attachments section**: ticket-level attachments listed with filename + download link (proxy URL)
+- **Back navigation**: "Back to my tickets" button (`Button` variant `ghost`) that reads `location.state.listUrl` set by the list page when navigating; falls back to `/tickets` on direct navigation. List page passes `state: { listUrl: location.pathname + location.search }` when navigating to detail.
+- **Error state**: `Alert` destructive variant + "Retry" button calling `refetch()`
+- **Forbidden/not-found**: show a "Not found" view (no redirect loop)
+- All strings use i18n keys (per EPIC-10)
+
+**Constraints:**
+- Install and use DOMPurify (`dompurify` + `@types/dompurify`) for all HTML rendering — never raw `dangerouslySetInnerHTML` without sanitisation
+- Status filter multi-select must use repeated query params (`?status=Created&status=Resolved`), not comma-separated
+- All URL-param-driven state derived from `useSearchParams` on every render — no `useState` mirroring
+- Inline priority selector uses TanStack Query `useMutation` with optimistic rollback pattern
+- Both routes protected by route guard from TASK-01.6.2
+
+**Definition of Done:**
+- [ ] `/tickets` renders paginated table with working sort, filter, and page size controls
+- [ ] Filter, sort, and page state round-trip through URL — browser refresh restores the exact view
+- [ ] Inline priority selector updates Jira and rolls back on error with row-level error message
+- [ ] Empty state (no tickets) and error state (Jira down) are both shown correctly
+- [ ] `/tickets/:jiraIssueKey` renders full ticket detail with HTML description and comment thread
+- [ ] DOMPurify sanitises all HTML before rendering
+- [ ] Comment thread is in a fixed-height scrollable container; portal vs team comments are visually distinguished
+- [ ] "Back to my tickets" restores the list URL query string
+- [ ] Unauthenticated access redirects to `/login`
+- [ ] `npm run build` succeeds with no TypeScript errors
+
+---
+
+### TASK-02-C — Ticket creation
+**Wave:** 3 — write path; blocked on TASK-07-B (write methods on `JiraClient` must exist)
+**Repo:** api + client-portal
+**Depends on:** TASK-07-B, TASK-02-B
+
+**What to build:**
+
+**(api) `UpdateTicketPriorityUseCase` and `PATCH /api/tickets/{key}/priority` endpoint** — already fully specified in TASK-02-A; these are implemented as part of TASK-02-A's backend output. No additional API work needed here — this entry is here for cross-reference only.
+
+**(client-portal) `RichTextEditor` component**
+- Create `client-portal/src/components/RichTextEditor.tsx` wrapping Tiptap
+- Extensions: `StarterKit` (bold, italic, bullet list, ordered list, paragraph), `Underline`, `Code`
+- Props: `value` (HTML string), `onChange` (callback), `maxLength` (number), `disabled` (bool), `compact` (bool, default `false`)
+- Live character count via `editor.getText().length`; when count reaches `maxLength`, disable input and show warning label
+- `compact={true}` renders at reduced minimum height (`min-h-[120px]`) — used for comment input in EPIC-03
+- Shadcn/ui styling tokens for border, background, focus ring — no inline `style` props
+- All i18n strings (placeholder, counter label, limit warning) use i18n keys
+
+**(client-portal) `/tickets/new` route — ticket creation form**
+- Form fields: title (`Input`, max 200 chars), description (`RichTextEditor`, max 5000 chars), type (`Select`: `Bug`, `Question`, `Feature Request`), priority (`Select`: `Low`, `Medium`, `High`, `Critical`), file input (`Input type="file" multiple`, max 10 files, max 10 MB each)
+- React Hook Form for state; `RichTextEditor` integrated via `Controller`
+- Client-side validation before submit: title required, description required, file count ≤ 10, file size ≤ 10 MB per file (show per-file error list)
+- On submit: POST `multipart/form-data` to `POST /api/tickets` via `useMutation` with `FormData`
+- On success: navigate to `/tickets/{jiraIssueKey}` and show success toast; if any file in `AttachmentResultDto` has `success: false`, show warning toast listing failed filenames alongside the navigation (do not block navigation)
+- On Jira failure: show inline error message; do not navigate
+- Submit button disabled + spinner while `isPending`
+- "New ticket" button on the `/tickets` list page opens this route
+- All labels and error messages use i18n keys
+
+**Constraints:**
+- `RichTextEditor` `compact` prop is additive — all existing prop behaviour unchanged for the creation form usage
+- `FormData` POST: `title` and `description` as string fields, files as file entries
+- Character count for description enforced on `editor.getText().length` (plain-text equivalent, not HTML markup length)
+
+**Definition of Done:**
+- [ ] `RichTextEditor` component exists with `compact` prop support
+- [ ] Bold, italic, underline, bullet list, numbered list, inline code toolbar buttons work
+- [ ] Live character count blocks input at `maxLength`
+- [ ] `/tickets/new` form renders and submits `multipart/form-data`
+- [ ] Files > 10 MB rejected client-side before submit
+- [ ] More than 10 files rejected client-side
+- [ ] Successful submission navigates to `/tickets/{jiraIssueKey}` with success toast
+- [ ] Partial file failure shows warning toast but still navigates to the new ticket
+- [ ] Jira failure shows inline error with no navigation
+- [ ] `npm run build` succeeds with no TypeScript errors
+
+> US-02.6 (scroll pagination) is v2 — no tasks defined here. `GetCommentsAsync` already accepts `startAt`/`pageSize` (TASK-07-A), making v2 non-breaking.
 
 ---
 
@@ -579,34 +399,19 @@ Add a "Back to my tickets" link/breadcrumb to the ticket detail page that naviga
 >
 > **Dependencies to confirm before writing tasks:**
 >
-> - **`IJiraClient` read methods** (`GetIssueAsync`, `ListIssuesAsync`) are declared in TASK-07.1.1 and stubbed in TASK-07.1.2. EPIC-02 tasks must implement them fully. Confirm the DTO shapes (`JiraIssueDto`, `JiraIssueListDto`) — required fields: summary, description, status name, priority name, issue type, created date, resolution date (`resolutiondate` field in Jira), reporter.
->
-> - **Pagination (US-02.1)**: `ListIssuesAsync` must support server-side pagination via Jira's `startAt` / `maxResults` query parameters and return total count so the frontend can render page controls. JQL base: `project = "<key>"` with appended clauses for status filter and date range filter. Confirm the full JQL composition strategy (multiple `AND` clauses) and how the backend exposes `totalCount`, `page`, `pageSize` in its response envelope (per api-conventions.md pagination pattern).
->
-> - **Sorting (US-02.1)**: Jira JQL supports `ORDER BY` on a limited set of fields. Confirm which columns map to valid JQL sort fields — `created`, `resolutiondate`, `priority`, `status`, `summary` are all valid Jira JQL fields. The `ORDER BY` clause is appended to the JQL query based on the sort parameter received from the frontend. Define the sort parameter contract (`sortBy` + `sortDir` query params).
->
-> - **Date range filter (US-02.1)**: applies to ticket creation date (`created` JQL field). JQL clause: `created >= "YYYY-MM-DD" AND created <= "YYYY-MM-DD"`. The 6-month cap is enforced in the backend use case — reject requests where the range exceeds 184 days and return a `422`. The frontend enforces it in the date picker UI as a secondary guard.
->
-> - **Status label mapping (US-02.1, US-02.4)**: the portal defines a fixed status vocabulary (Created, In Progress, Waiting for Client Info, Resolved, Discarded). The architect must decide whether: (a) Jira project statuses are configured to match these exact names, or (b) the backend maintains a mapping table. For v1, option (a) is simpler and avoids a mapping layer — document this as an assumption and call it out as a setup requirement for admins. The status filter passes the portal label directly as the JQL `status` value.
->
-> - **Resolution date (US-02.1, US-02.4)**: Jira exposes `resolutiondate` on issues. This field is `null` until the issue is resolved. Confirm it is included in the `JiraIssueDto` and passed through to the frontend as a nullable date.
->
-> - **Inline priority change (US-02.2)**: requires `IJiraClient.UpdateIssueAsync` (or a dedicated `UpdatePriorityAsync`) — not yet defined in TASK-07.1.1. The architect must add this method to `IJiraClient` as part of EPIC-02 tasks. The Jira REST API endpoint is `PUT /rest/api/3/issue/{issueKey}` with a `priority.name` field in the request body. The eligibility check (status not Resolved/Discarded) is enforced in the backend use case — not only in the frontend.
->
-> - **Ownership check on ticket detail (US-02.4)**: access is granted to any user belonging to the same client organisation as the ticket — not just the creator. The use case must verify that the `JiraIssueKey` belongs to a Jira project configured for the calling user's `ClientId` (via the `ClientProject` entity — EPIC-05B). The `Ticket` anchor record (`Ticket` table — TASK-07.1.3) can be used as a fast lookup to resolve `ClientId` from `JiraIssueKey` without an extra Jira API call. This check is performed in the use case, not the controller.
->
-> - **Rich text / WYSIWYG description (US-02.3, US-02.4)**: the description is authored in a WYSIWYG editor on the frontend and must be stored/sent to Jira. Jira Cloud's REST API v3 accepts the `description` field as **Atlassian Document Format (ADF)** — a structured JSON format, not HTML or Markdown. The architect must decide the conversion strategy: (a) the frontend editor produces ADF directly (e.g. using a Tiptap + Jira-ADF serialiser), (b) the frontend sends HTML/Markdown and the backend `api` converts it to ADF before calling Jira, or (c) a hybrid. Option (b) keeps the frontend decoupled from Jira's format and is recommended. On the read path (US-02.4), the description returned by Jira is ADF — confirm whether `api` converts it back to HTML/Markdown for the frontend, or the frontend renders ADF directly. The plain-text character count for the 5 000-character limit must be computed consistently on whichever representation the frontend operates on.
->
-> - **Type and priority fields for creation form (US-02.3)**: confirm whether valid values are hardcoded in the frontend or fetched from Jira's metadata API. For v1, hardcoded is simplest. Also confirm how the portal `type` field (Bug, Question, etc.) maps to Jira — given that `JIRA_ISSUE_TYPE` is global, the portal "type" likely becomes a Jira label rather than a Jira issue type.
->
-> - **Attachments on detail page (US-02.4)**: attachment listing is read from Jira (`ListAttachmentsAsync`). Jira attachment URLs require credentials — confirm whether downloads are proxied through `api` (recommended) or use pre-signed S3 URLs. EPIC-03 owns the write path; EPIC-02 reads only.
->
-> - **Comment thread — order and scrollable container (US-02.4)**: comments are now displayed newest-first inside a fixed-height scrollable container. Jira's `GET /rest/api/3/issue/{issueKey}/comment` returns comments in ascending order by default; the `orderBy` parameter (`-created`) can reverse this at the API level — confirm this is applied in `GetCommentsAsync` so the backend handles ordering rather than the frontend sorting an in-memory array.
->
-> - **Image attachments in comments (US-02.4)**: Jira comment bodies (ADF) can reference attached images via their Jira media ID. The architect must decide the v1 fallback strategy: if inline image rendering (fetching media through the proxy) is deferred, the backend must still parse the ADF body to extract any image/media references and expose them as attachment links alongside the comment DTO. Silently dropping them is not acceptable per the AC. Define whether the comment DTO includes a `attachments` array listing media referenced in that comment body.
->
-> - **Comment pagination — v2 (US-02.6)**: Jira's comment endpoint supports `startAt` / `maxResults` / `total` for offset-based pagination. For v2, `GetCommentsAsync` must accept `startAt` and `pageSize` parameters and return `totalCount` so the frontend can implement scroll-triggered loading. The v1 implementation should be written in a way that makes adding these parameters non-breaking (e.g. default `maxResults` to a high value in v1 rather than omitting the param entirely).
->
-> - **Filter and sort state persistence (US-02.1, US-02.5)**: all filter/sort/page state lives in URL query params (`?status=open&sortBy=created&sortDir=desc&pageSize=20&page=2&dateRange=last7days`). This makes the view shareable and allows US-02.5 back-navigation to restore state via React Router history. The architect should define the full query param contract.
->
-> - **Frontend repo**: all UI tasks target `client-portal`. Backend tasks target `api`. Proposed route structure: `/tickets` (list), `/tickets/new` (creation form), `/tickets/:jiraIssueKey` (detail).
+> **All decisions resolved.** The Architecture Note above and the merged tasks (TASK-02-A, TASK-02-B, TASK-02-C) encode the full resolution of all original open questions. Key decisions in summary:
+> - `IJiraClient` read methods fully implemented in TASK-07-A (not stubbed). TASK-02-A consumes them directly.
+> - Pagination: offset-based (`startAt`/`maxResults`) via Jira JQL, exposed as `page`/`pageSize` to frontend. Response envelope: `PagedTicketListDto` with `TotalCount`, `Page`, `PageSize`, `TotalPages`.
+> - Sort: JQL `ORDER BY` clause; valid fields: `created`, `resolutiondate`, `priority`, `status`, `summary`.
+> - Date range: `created` JQL field; 184-day cap enforced in use case (422) and UI (calendar disable).
+> - Status mapping: Jira project statuses configured to match portal labels exactly (admin setup requirement).
+> - Resolution date: nullable `DateTimeOffset?` in `JiraIssueDto`, passed through as nullable ISO string.
+> - Priority change: `IJiraClient.UpdateIssueAsync` is defined in TASK-07-A; eligibility check in use case.
+> - Ownership: `Ticket` anchor record lookup by `JiraIssueKey`, compare `ClientId` vs JWT `client_id`.
+> - ADF conversion: frontend sends HTML; `api` converts HTML→ADF via `AdfBuilder` (write); Jira ADF→HTML via `AdfToHtmlConverter` (read).
+> - Type field: maps to Jira label (`type:bug`, etc.) — not Jira issue type.
+> - Attachment downloads: proxied through `GET /api/tickets/{key}/attachments/{id}` — never direct Jira URLs.
+> - Comment order: `GetCommentsAsync` always sends `orderBy=-created`; no frontend sorting.
+> - Comment attachments: `AdfToHtmlConverter` extracts `mediaSingle`/`media` nodes as anchor links; never silently dropped.
+> - URL state: all filter/sort/page params live in URL search params via `useSearchParams`; back-navigation via `location.state.listUrl`.
+> - Routes: `/tickets`, `/tickets/new`, `/tickets/:jiraIssueKey`.

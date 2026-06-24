@@ -254,5 +254,12 @@ Responses:
 
 ## 7. Pull Requests
 
-> TBD — se documentarán a medida que avance el desarrollo.
+- [Pull Request #1](https://github.com/emarques-7/support-hub/pull/1)
+- [Pull Request #2](https://github.com/emarques-7/support-hub/pull/2)
+- [Pull Request #3](https://github.com/emarques-7/support-hub/pull/3)
+- [Pull Request #4](https://github.com/emarques-7/support-hub/pull/4)
+- [Pull Request #5](https://github.com/emarques-7/support-hub/pull/5)
+- [Pull Request #6](https://github.com/emarques-7/support-hub/pull/6)
+
+
 

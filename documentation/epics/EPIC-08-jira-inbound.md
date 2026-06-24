@@ -1,5 +1,5 @@
 # EPIC-08 — Jira Integration: Inbound (Jira → Portal)
-> Priority: 5 | Status: ✅ Stories + tasks defined
+> Priority: 6 | Status: ✅ Stories + tasks defined
 
 ---
 
@@ -600,36 +600,177 @@ Define `IWebhookUrlProvider` in `Api.Application/Common/Interfaces/` with `GetWe
 
 ---
 
-### Task breakdown
+## Task Breakdown
 
-| Task | Title | Story | Layer | Repo | Depends on |
-|---|---|---|---|---|---|
-| TASK-08.1.1 | `IClientProjectRepository` + `ClientProjectRepository` | US-08.1 | Domain + Infrastructure | api | EPIC-00 TASK-00.3, TASK-07.1.3 |
-| TASK-08.1.2 | `Notification` entity + `INotificationRepository` | US-08.1 | Domain | api | TASK-07.1.3 |
-| TASK-08.1.3 | `NotificationConfiguration` + migration + `NotificationRepository` | US-08.1 | Infrastructure + DB | api | TASK-08.1.2 |
-| TASK-08.1.4 | `JiraWebhookPayload` DTOs + `AdfPlainTextExtractor` | US-08.1 | Infrastructure | api | TASK-08.1.1 |
-| TASK-08.1.5 | `ProcessJiraWebhookUseCase` — routing + HMAC validation | US-08.1 | Application | api | TASK-08.1.3, TASK-08.1.4 |
-| TASK-08.1.6 | `StatusChangedHandler` sub-logic | US-08.2 | Application | api | TASK-08.1.5 |
-| TASK-08.1.7 | `CommentCreatedHandler` sub-logic | US-08.3 | Application | api | TASK-08.1.5 |
-| TASK-08.1.8 | `JiraWebhookController` — `POST /api/webhooks/jira` | US-08.1 | API | api | TASK-08.1.5, TASK-08.1.6, TASK-08.1.7 |
-| TASK-08.2.1 | `IEmailService.SendNotificationEmailAsync` stub | US-08.2 | Application | api | TASK-01.6.1 |
-| TASK-08.4.1 | `GetNotificationsUseCase` + `GetUnreadCountUseCase` | US-08.4 | Application | api | TASK-08.1.3 |
-| TASK-08.4.2 | `GET /api/notifications` + `GET /api/notifications/unread-count` | US-08.4 | API | api | TASK-08.4.1 |
-| TASK-08.4.3 | Notification bell + panel UI | US-08.4 | Frontend | client-portal | TASK-08.4.2 |
-| TASK-08.5.1 | `MarkNotificationReadUseCase` + `MarkAllNotificationsReadUseCase` | US-08.5 | Application | api | TASK-08.1.3 |
-| TASK-08.5.2 | `PATCH /api/notifications/{id}/read` + `PATCH /api/notifications/mark-all-read` | US-08.5 | API | api | TASK-08.5.1 |
-| TASK-08.6.1 | `IWebhookSecretService` + Data Protection wiring | US-08.6 | Application + Infrastructure | api | TASK-08.1.1 |
-| TASK-08.6.2 | `SetWebhookSecretUseCase` + `GetWebhookConfigUseCase` + `IWebhookUrlProvider` | US-08.6 | Application | api | TASK-08.6.1 |
-| TASK-08.6.3 | Admin webhook configuration endpoints | US-08.6 | API | api | **→ EPIC-05B** |
-| TASK-08.6.4 | Admin webhook configuration UI | US-08.6 | Frontend | backoffice | **→ EPIC-05B** |
+> **Merged task structure.** Original 16 tasks collapsed to 2 to maximise AI-assisted throughput. Each task is a complete, independently deliverable unit. TASK-08-A builds the entire backend pipeline in one pass. TASK-08-B adds the notification UI and admin secret management.
+
+| Task | Title | Wave | Repo | Depends on |
+|---|---|---|---|---|
+| TASK-08-A | Notification domain + webhook pipeline — entity, repository, webhook processor, all handlers, secret service, all backend endpoints | Wave 4 | api | TASK-07-A (Ticket entity + ITicketRepository), TASK-01.6.1 (IEmailService stub) |
+| TASK-08-B | Notification UI + admin secret — bell, panel, mark-read, webhook secret use cases + admin endpoints | Wave 4 | api + client-portal | TASK-08-A, TASK-02-B |
+
+---
+
+### TASK-08-A — Notification domain + webhook pipeline
+**Wave:** 4
+**Repo:** api
+**Depends on:** TASK-07-A (`Ticket` entity, `ITicketRepository` exist), TASK-01.6.1 (`IEmailService` stub exists)
+
+**What to build:**
+
+**(1) `Notification` domain entity** — create in `Api.Domain/Notifications/`:
+- Fields: `Id` (Guid), `ClientUserId` (Guid), `JiraIssueKey` (string, max 20), `Type` (`NotificationType` enum: `StatusChanged | CommentAdded`), `Message` (string, max 500), `IsRead` (bool, default false), `CreatedAt` + `UpdatedAt` from `BaseEntity`
+- Inherits `BaseEntity`; private setters; domain methods: `MarkAsRead()`
+- Static factory: `Notification.Create(Guid clientUserId, string jiraIssueKey, NotificationType type, string message)`
+- `NotificationType` enum at `Api.Domain/Notifications/NotificationType.cs`
+
+**(2) `INotificationRepository`** — define in `Api.Domain/Interfaces/INotificationRepository.cs`:
+- `AddAsync(Notification n, CancellationToken ct)`
+- `GetByClientUserIdAsync(Guid clientUserId, string? cursor, int limit, CancellationToken ct) → Task<(IReadOnlyList<Notification> Items, bool HasMore, string? NextCursor)>`
+- `GetUnreadCountAsync(Guid clientUserId, CancellationToken ct) → Task<int>`
+- `MarkAsReadAsync(Guid notificationId, CancellationToken ct)`
+- `MarkAllAsReadAsync(Guid clientUserId, CancellationToken ct)`
+- `GetByIdAsync(Guid id, CancellationToken ct) → Task<Notification?>`
+
+**(3) `NotificationConfiguration` + migration + `NotificationRepository`** — in `Api.Infrastructure/`:
+- `NotificationConfiguration`: `JiraIssueKey` max 20 required; `Message` max 500 required; `ClientUserId` non-unique index; `Type` stored as int
+- `DbSet<Notification>` in `AppDbContext`; generate and apply EF Core migration
+- `NotificationRepository` implementing `INotificationRepository`; cursor-based pagination on `GetByClientUserIdAsync` using `(CreatedAt DESC, Id DESC)` keyset encoded as base64 JSON cursor
+- `MarkAllAsReadAsync` uses `ExecuteUpdateAsync` — not a per-row loop
+- Register `INotificationRepository → NotificationRepository` in `AddInfrastructure`
+
+**(4) `IClientProjectRepository`** — if not already created by TASK-07-B, define in `Api.Domain/Interfaces/IClientProjectRepository.cs`:
+- `GetByClientIdAsync(Guid clientId, CancellationToken ct) → Task<ClientProject?>`
+- `GetByJiraProjectKeyAsync(string jiraProjectKey, CancellationToken ct) → Task<ClientProject?>`
+- `UpsertAsync(ClientProject entity, CancellationToken ct)`
+Implement `ClientProjectRepository` and register in `AddInfrastructure`. Skip if already present from TASK-07-B.
+
+**(5) `IWebhookSecretService`** — define in `Api.Application/Common/Interfaces/IWebhookSecretService.cs`:
+- `SetSecretAsync(Guid clientId, string rawSecret, CancellationToken ct) → Task`
+- `GetRawSecretAsync(Guid clientId, CancellationToken ct) → Task<string?>`
+Implement `WebhookSecretService` in `Api.Infrastructure/Security/` using ASP.NET Core Data Protection (`IDataProtector`, purpose `"SupportHub.JiraWebhookSecret"`). Encrypts raw secret before persisting to `ClientProject.JiraWebhookSecret`; decrypts on read. Register in `AddInfrastructure`. Configure `AddDataProtection()` in `AddInfrastructure`. Raw secret must never appear in logs.
+
+**(6) `IEmailService` — add `SendNotificationEmailAsync`** — if not present, add `SendNotificationEmailAsync(string toEmail, string subject, string body, CancellationToken ct)` to `IEmailService` in `Api.Application/Common/Interfaces/`. Update `NoOpEmailService` to implement as no-op with `Information` log.
+
+**(7) Webhook infrastructure DTOs + `AdfPlainTextExtractor`** — create in `Api.Infrastructure/Jira/Webhook/`:
+- Internal record types: `JiraWebhookPayload` (root), `JiraWebhookIssue`, `JiraWebhookChangelog`, `JiraWebhookChangelogItem` (`field`, `fromString`, `toString`), `JiraWebhookComment` (`id`, `body` as `JsonElement`, `author`), `JiraWebhookAuthor` (`displayName`)
+- `AdfPlainTextExtractor` static class: recursively walks ADF JSON (`JsonElement`) and concatenates text node values with spaces; handles `doc`, `paragraph`, `bulletList`, `listItem`, `text` nodes; other nodes skipped; null/missing nodes return empty string, never throw
+- Use `System.Text.Json` — no Newtonsoft
+
+**(8) `ProcessJiraWebhookUseCase`** — create in `Api.Application/Webhooks/UseCases/`:
+- Input: `ProcessJiraWebhookCommand` (`RawBody` byte[], `Signature` string, `EventType` string, `IssueKey` string, `ChangelogItems` parsed list, `CommentBody` string?, `CommentAuthor` string?)
+- Flow: (1) look up `Ticket` by `IssueKey` via `ITicketRepository` — return `Result.Ok()` (silent ack) if not found; (2) resolve `ClientProject` by `Ticket.ClientId` via `IClientProjectRepository`; (3) get raw secret via `IWebhookSecretService.GetRawSecretAsync` — return `UnauthorizedError` if null; (4) verify HMAC-SHA256: `HMACSHA256(rawBody, secretBytes)` compared to `Signature` using `CryptographicOperations.FixedTimeEquals` — `UnauthorizedError` if mismatch; (5) route to `StatusChangedHandler` or `CommentCreatedHandler` based on `EventType`; unknown event types → `Result.Ok()` silently
+- `StatusChangedHandler` sub-logic (inline or nested class): find changelog item where `field == "status"`; if none → return silently; map new status to portal labels (static dictionary: `Created`, `In Progress`, `Waiting for Client Info`, `Resolved`, `Discarded`; fallback to raw Jira name); create `Notification.Create(...)` with `Type = StatusChanged`; message: `"Ticket {key} status changed to {mappedStatus}."`; persist; call `IEmailService.SendNotificationEmailAsync` (fire-and-continue: catch exception, log `Error`, proceed)
+- `CommentCreatedHandler` sub-logic: extract plain text from ADF comment body via `AdfPlainTextExtractor`; if starts with `[Portal]` (case-insensitive, trimmed) → return silently; if does NOT start with `[Client]` (case-insensitive, trimmed) → return silently; strip `[Client]` prefix + trim; create `Notification.Create(...)` with `Type = CommentAdded`; message: `"New comment on {key} from {authorDisplayName}: {strippedText}"` truncated to 500 chars; `authorDisplayName` defaults to `"Jira Team"` if null/empty; persist; call `IEmailService` (fire-and-continue)
+- Single `ExecuteAsync(ProcessJiraWebhookCommand cmd, CancellationToken ct) → Task<Result>`; must respond within 2 seconds; no `HttpContext` or ASP.NET Core references
+
+**(9) `JiraWebhookController`** — create in `Api.API/Controllers/Webhooks/`:
+- `POST /api/webhooks/jira` — `[AllowAnonymous]` (no `[Authorize]`); route override: `[Route("api/webhooks")]`
+- Call `Request.EnableBuffering()` at start; read body into `byte[]`; deserialise JSON to extract `webhookEvent`, `issue.key`, changelog items, comment body/author; extract `X-Hub-Signature` header
+- Call `IProcessJiraWebhookUseCase.ExecuteAsync`
+- Always return `200 OK` for `Result.Ok()` or silent acks; return `401` for `UnauthorizedError`
+- Register rate limiting: named policy `"webhook"` — fixed-window 60 requests / 1 minute / IP via `AddRateLimiter` in `AddInfrastructure`; apply `[EnableRateLimiting("webhook")]` on the controller
+- Log `webhookEvent` and `issue.key` at `Information` level; log validation failures at `Warning` with raw body (never log headers containing secrets)
+
+**Constraints:**
+- HMAC verification must use `CryptographicOperations.FixedTimeEquals` — never string equality
+- `ProcessJiraWebhookUseCase` must not reference any ASP.NET Core types
+- All notification domain transitions through `Notification.Create` factory and `MarkAsRead()` method only — no public setters
+- Rate limiter registration via built-in `Microsoft.AspNetCore.RateLimiting` (available in .NET 7+/.NET 10)
+- `API_BASE_URL` env var documented in `api/.env.example`
+
+**Definition of Done:**
+- [ ] `Notification` entity with factory and `MarkAsRead()` exists
+- [ ] `INotificationRepository` and `NotificationRepository` with cursor pagination exist and are registered
+- [ ] EF Core migration creates `Notifications` table with `ClientUserId` index
+- [ ] `IWebhookSecretService` and `WebhookSecretService` exist; encrypt/decrypt round-trip works
+- [ ] `IEmailService` has `SendNotificationEmailAsync`; `NoOpEmailService` implements as no-op
+- [ ] `AdfPlainTextExtractor` returns plain text from ADF JSON without throwing
+- [ ] `ProcessJiraWebhookUseCase` with both sub-handlers exists
+- [ ] `issue_updated` with status changelog → `Notification` row with `Type = StatusChanged`
+- [ ] `issue_updated` with no status changelog → no notification created
+- [ ] `comment_created` starting with `[Client]` → `Notification` row with `Type = CommentAdded`; `[Client]` prefix stripped
+- [ ] `comment_created` starting with `[Portal]` → no notification
+- [ ] Unknown `webhookEvent` type → `200 OK`, no notification
+- [ ] Invalid HMAC → `401`
+- [ ] `POST /api/webhooks/jira` is `[AllowAnonymous]` and rate-limited
+- [ ] `dotnet build` succeeds
+
+---
+
+### TASK-08-B — Notification UI + admin secret management
+**Wave:** 4 (can start as soon as TASK-08-A is done)
+**Repo:** api + client-portal
+**Depends on:** TASK-08-A, TASK-02-B (portal header component exists)
+
+**What to build:**
+
+**(api) Notification read + mark-read use cases and endpoints**
+- `GetNotificationsUseCase` (`GetNotificationsQuery`: `ClientUserId`, `Cursor?`, `Limit` clamped to max 50) → `Result<PagedNotificationsDto>`
+- `GetUnreadCountUseCase` (`GetUnreadCountQuery`: `ClientUserId`) → `Result<int>`
+- `MarkNotificationReadUseCase` (`MarkNotificationReadCommand`: `NotificationId`, `ClientUserId`) — look up by ID; verify `ClientUserId` matches — `ForbiddenError` if not; call `MarkAsRead()` + commit
+- `MarkAllNotificationsReadUseCase` (`MarkAllNotificationsReadCommand`: `ClientUserId`) — call `INotificationRepository.MarkAllAsReadAsync` + commit
+- `NotificationDto`: `Id`, `JiraIssueKey`, `Type` (string `"StatusChanged"|"CommentAdded"`), `Message`, `IsRead`, `CreatedAt`
+- `PagedNotificationsDto`: `Items` (`IReadOnlyList<NotificationDto>`), `HasMore` (bool), `NextCursor` (string?)
+
+- `NotificationsController` in `Api.API/Controllers/Notifications/`:
+  - `GET /api/notifications` — query params: `cursor?`, `limit` (default 20). Extracts `ClientUserId` from JWT `sub` claim. Returns `200 OK` with `PagedNotificationsDto`.
+  - `GET /api/notifications/unread-count` — returns `200 OK` with `{ "count": N }`.
+  - `PATCH /api/notifications/{id}/read` — returns `204 No Content`; `403` if notification belongs to different user.
+  - `PATCH /api/notifications/mark-all-read` — returns `204 No Content`.
+  - All endpoints `[Authorize]`; `ClientUserId` from JWT `sub` — never from request body/query.
+
+**(api) Webhook secret admin use cases and endpoints**
+- `SetWebhookSecretUseCase` (`SetWebhookSecretCommand`: `ClientId`, `RawSecret` — min 16 chars, max 256 chars, non-empty) — validates then calls `IWebhookSecretService.SetSecretAsync`
+- `GetWebhookConfigUseCase` (`GetWebhookConfigQuery`: `ClientId`) → `Result<WebhookConfigDto>`: `IsConfigured` (bool), `MaskedSecret` (`"••••••"` if configured, empty if not), `WebhookUrl` (string from `IWebhookUrlProvider`)
+- `IWebhookUrlProvider` in `Api.Application/Common/Interfaces/`: `GetWebhookUrl() → string`. Implement in `Api.Infrastructure/` reading `API_BASE_URL` env var, returning `$"{apiBaseUrl}/api/webhooks/jira"`.
+- Admin endpoints in `WebhookAdminController` at `Api.API/Controllers/Admin/`: `GET /api/admin/webhooks/config` and `PUT /api/admin/webhooks/secret`; both require `[Authorize(Roles = "Admin")]`; `403` for non-admin JWT.
+
+**(client-portal) Notification bell + panel**
+- `NotificationBell` component in the portal header:
+  - Bell icon (`lucide-react Bell`) with red `Badge` showing unread count
+  - Unread count polled every 30 seconds via `useQuery` with `refetchInterval: 30_000` on `GET /api/notifications/unread-count`
+  - Clicking bell opens `NotificationPanel` (shadcn `Popover` or `Sheet`)
+- `NotificationPanel`:
+  - Fetches `GET /api/notifications` with `limit=50` on open
+  - Each notification item: icon (status vs comment type), `message`, `jiraIssueKey` as React Router `<Link>` to `/tickets/{key}`, relative time via `date-fns/formatDistanceToNow`
+  - On panel open: call `PATCH /api/notifications/mark-all-read` via `useMutation`; on success `invalidateQueries(['notifications/unread-count'])`
+  - Empty state: `"You're all caught up."`
+  - Per-item dismiss: `PATCH /api/notifications/{id}/read` via `useMutation`; on success remove from panel optimistically (or invalidate query)
+  - "Mark all as read" action
+  - Error and loading states handled gracefully
+- All strings use i18n keys (per EPIC-10)
+- Use shadcn primitives: `Popover`, `Badge`, `ScrollArea`, `Button` — no raw `<div>` for layout
+- `NotificationBell` rendered inside existing portal header — no new layout wrapper
+
+**Constraints:**
+- Cursor-based pagination: `GetByClientUserIdAsync` uses `(CreatedAt DESC, Id DESC)` keyset encoded as base64 JSON; hard limit 50 items
+- `PATCH /api/notifications/mark-all-read` route must be registered before `PATCH /api/notifications/{id}/read` to avoid ambiguous routing
+- `GetWebhookConfigUseCase` must never return the raw secret — only masked display string `"••••••"`
+- `date-fns` added as dependency if not already present
+- Backoffice UI for webhook config remains delegated to EPIC-05B
+
+**Definition of Done:**
+- [ ] All four notification use cases exist and compile
+- [ ] `GET /api/notifications` returns `200 OK` with `PagedNotificationsDto`; cursor pagination works
+- [ ] `GET /api/notifications/unread-count` returns `{ "count": N }`
+- [ ] `PATCH /api/notifications/{id}/read` returns `204`; wrong owner → `403`
+- [ ] `PATCH /api/notifications/mark-all-read` returns `204`
+- [ ] `SetWebhookSecretUseCase` stores encrypted secret; short secret (< 16 chars) → `ValidationError`
+- [ ] `GetWebhookConfigUseCase` returns `isConfigured: false` when no secret; `isConfigured: true` with masked value after set
+- [ ] `GET /api/admin/webhooks/config` and `PUT /api/admin/webhooks/secret` exist; non-admin → `403`
+- [ ] `NotificationBell` renders in portal header with live unread count badge (30s poll)
+- [ ] Opening panel marks all as read and clears badge
+- [ ] Each notification links to the correct ticket detail route
+- [ ] Empty state shown when no notifications
+- [ ] `dotnet build` succeeds and `npm run build` succeeds with no TypeScript errors
 
 ---
 
 > **Note for Tech Lead:**
 >
-> - **Webhook secret encryption (TASK-08.6.1)**: ASP.NET Core Data Protection is chosen over hashing because the webhook handler needs to perform HMAC-SHA256 verification using the raw secret. Storing only a hash would prevent verification. Data Protection's AES-256-CBC + HMAC-SHA256 envelope is sufficient for at-rest protection. The `IDataProtector` instance should be created with a stable purpose string so keys can be rotated without breaking existing secrets.
-> - **Raw body capture in controller (TASK-08.1.8)**: ASP.NET Core reads the request body as a forward-only stream by default. To preserve the raw bytes for HMAC verification after JSON deserialization, call `Request.EnableBuffering()` at the start of the action and read the body into a `byte[]` before passing to the use case. Alternatively, implement a custom `IActionFilter` that buffers the body and injects it into the request.
-> - **Tenant disambiguation**: this epic assumes a single `Ticket` record has a unique `JiraIssueKey` across all tenants (enforced by the unique index in TASK-07.1.3). When the webhook arrives, the handler resolves the client by looking up the `Ticket` by `JiraIssueKey`. The per-tenant secret is then fetched via that client's `ClientProject`. Multi-tenant isolation is preserved without a per-tenant webhook URL.
-> - **TASK-08.2.1 dependency on TASK-01.6.1**: if `IEmailService` was not introduced until a later EPIC-01 task (the task numbering assumes TASK-01.6.1 is the last EPIC-01 task), substitute the actual task ID from EPIC-01 that introduces `IEmailService`. The intent is that `IEmailService` already exists as a stub before EPIC-08 is implemented.
-> - **`API_BASE_URL` env var**: this is a new addition. Update `api/.env.example` as part of TASK-08.6.2. Value in Development: `http://localhost:5001`.
-> - **EPIC-05B alignment**: `ClientProject` is introduced as a stub in this epic. When EPIC-05B is implemented, it will extend this entity with additional fields (`ClientName`, `JiraProjectKey` settings UI, etc.). The stub created or extended here must not block EPIC-05B from adding further columns.
+> - **Webhook secret storage (TASK-08-A)**: ASP.NET Core Data Protection encrypts the raw secret at rest (AES-256-CBC + HMAC-SHA256). The raw secret is needed for HMAC verification — a hash-only approach would not work. Data Protection keys use the default filesystem key ring in Development; configure a persistent key ring (e.g. Azure Key Vault, AWS SSM) for Production.
+> - **Raw body capture in controller (TASK-08-A)**: call `Request.EnableBuffering()` at the start of the action to allow re-reading the body stream. Read body into `byte[]` first (for HMAC), then deserialise JSON from the buffered stream.
+> - **Tenant disambiguation (TASK-08-A)**: `JiraIssueKey` has a unique index across all tenants (TASK-07-A). The webhook handler resolves the client via `Ticket` → `ClientId` → `ClientProject` — no per-tenant webhook URL needed.
+> - **`API_BASE_URL` env var**: add to `api/.env.example` in TASK-08-A. Development value: `http://localhost:5001`.
+> - **Admin webhook config UI (EPIC-05B)**: `GET /api/admin/webhooks/config` and `PUT /api/admin/webhooks/secret` endpoints are delivered in TASK-08-B. The backoffice UI for these endpoints remains delegated to EPIC-05B.

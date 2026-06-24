@@ -60,20 +60,35 @@
 
 | # | Epic | File | Priority | Status |
 |---|---|---|---|---|
-| EPIC-09 | Infrastructure & DevOps | [EPIC-09-infrastructure.md](epics/EPIC-09-infrastructure.md) | 1 | ✅ Stories + tasks defined |
-| **EPIC-00** | **Foundation Data & Tenant Identity** | [**EPIC-00-foundation-data.md**](epics/EPIC-00-foundation-data.md) | **1.1** | ✅ Stories + tasks defined |
-| EPIC-10 | Internationalisation (i18n) — `client-portal` & backend | [EPIC-10-i18n.md](epics/EPIC-10-i18n.md) | 1.5 | ✅ Stories + tasks defined |
-| EPIC-10B | Internationalisation (i18n) — `backoffice` | [EPIC-10B-i18n-backoffice.md](epics/EPIC-10B-i18n-backoffice.md) | 1.6 | ✅ Stories + tasks defined |
-| EPIC-11 | Audit Log | [EPIC-11-audit-log.md](epics/EPIC-11-audit-log.md) | 1.7 | ✅ Stories + tasks defined |
-| EPIC-01 | Authentication & User Access | [EPIC-01-auth.md](epics/EPIC-01-auth.md) | 2 | ✅ Stories + tasks defined |
+| EPIC-09 | Infrastructure & DevOps | [EPIC-09-infrastructure.md](epics/EPIC-09-infrastructure.md) | 1 | ✅ Done |
+| **EPIC-00** | **Foundation Data & Tenant Identity** | [**EPIC-00-foundation-data.md**](epics/EPIC-00-foundation-data.md) | **1.1** | ✅ Done |
+| EPIC-10 | Internationalisation (i18n) — `client-portal` & backend | [EPIC-10-i18n.md](epics/EPIC-10-i18n.md) | 1.5 | ✅ Done |
+| EPIC-10B | Internationalisation (i18n) — `backoffice` | [EPIC-10B-i18n-backoffice.md](epics/EPIC-10B-i18n-backoffice.md) | 1.6 | ✅ Done |
+| EPIC-11 | Audit Log | [EPIC-11-audit-log.md](epics/EPIC-11-audit-log.md) | 1.7 | ✅ Done |
+| EPIC-01 | Authentication & User Access | [EPIC-01-auth.md](epics/EPIC-01-auth.md) | 2 | ✅ Done |
 | EPIC-07 | Jira Integration: Outbound (Portal → Jira) | [EPIC-07-jira-outbound.md](epics/EPIC-07-jira-outbound.md) | 3 | ✅ Stories + tasks defined |
 | EPIC-02 | Client Portal: Ticket Management | [EPIC-02-ticket-management.md](epics/EPIC-02-ticket-management.md) | 4 | ✅ Stories + tasks defined |
-| EPIC-08 | Jira Integration: Inbound (Jira → Portal) | [EPIC-08-jira-inbound.md](epics/EPIC-08-jira-inbound.md) | 5 | ✅ Stories + tasks defined |
-| EPIC-03 | Client Portal: Comments & Attachments | [EPIC-03-comments-attachments.md](epics/EPIC-03-comments-attachments.md) | 6 | ✅ Stories + tasks defined |
+| EPIC-03 | Client Portal: Comments & Attachments | [EPIC-03-comments-attachments.md](epics/EPIC-03-comments-attachments.md) | 5 | ✅ Stories + tasks defined |
+| EPIC-08 | Jira Integration: Inbound (Jira → Portal) | [EPIC-08-jira-inbound.md](epics/EPIC-08-jira-inbound.md) | 6 | ✅ Stories + tasks defined |
 | EPIC-04 | Email Notifications (AWS SES) | [EPIC-04-email-notifications.md](epics/EPIC-04-email-notifications.md) | 7 | ✅ Stories + tasks defined |
 | EPIC-05 | Admin: User & Client Management | [EPIC-05-user-management.md](epics/EPIC-05-user-management.md) | 8 | ✅ Stories + tasks defined |
 | EPIC-05B | Admin: Jira Configuration | [EPIC-05B-jira-config.md](epics/EPIC-05B-jira-config.md) | 9 | ✅ Stories + tasks defined |
 | EPIC-06 | Admin: Metrics Dashboard | [EPIC-06-metrics.md](epics/EPIC-06-metrics.md) | ⭐ Stretch | ⬜ Not started |
+
+---
+
+## 5. Execution Waves
+
+> **Context:** Jira already contains real ticket data. The goal is to show the client-facing ticket list and detail first, before building the outbound write path. Tasks within each epic have been merged to maximise AI-assisted development throughput (one developer + AI tools).
+
+| Wave | Epics | Goal | Gate |
+|---|---|---|---|
+| **Wave 1** ✅ | EPIC-09, EPIC-00, EPIC-10, EPIC-10B, EPIC-11, EPIC-01 | Infrastructure, i18n, audit, auth | Done |
+| **Wave 2** | **EPIC-07 Task A** → **EPIC-02 Tasks A + B** | `IJiraClient` read foundation → ticket list + detail live against Jira | EPIC-07-A must finish before EPIC-02-A starts |
+| **Wave 3** | **EPIC-07 Task B** → **EPIC-02 Task C** → **EPIC-03** | Ticket creation, comments, file attachments | EPIC-07-B must finish before EPIC-02-C and EPIC-03 |
+| **Wave 4** | **EPIC-08** | Webhook events + in-app notifications | Needs Wave 3 complete |
+| **Wave 5** | **EPIC-04** + **EPIC-05** + **EPIC-05B** | Email, admin panel | EPIC-04 can start alongside Wave 4; EPIC-05/05B are largely independent |
+| **Stretch** | **EPIC-06** | Metrics dashboard | Last |
 
 ---
 

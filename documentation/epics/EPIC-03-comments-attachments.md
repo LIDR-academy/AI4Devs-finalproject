@@ -1,5 +1,5 @@
 # EPIC-03 — Client Portal: Comments & Attachments
-> Priority: 6 | Status: ✅ Stories + tasks defined
+> Priority: 5 | Status: ✅ Stories + tasks defined
 
 ---
 
@@ -313,29 +313,67 @@ Add an "Attach file" section to the attachments area of the `/tickets/:jiraIssue
 
 ## Task Breakdown
 
-| Task | Title | Story | Repo | Depends on |
+> **Merged task structure.** All 7 original tasks (plus US-03.3 which was already zero-task) collapsed into a single merged task. All concerns are closely coupled — the API endpoints were partially defined in EPIC-07-B, the frontend builds on EPIC-02-B's detail page, and the ownership guards are small patches to existing use cases. An AI agent handles this as one coherent context.
+
+| Task | Title | Wave | Repo | Depends on |
 |---|---|---|---|---|
-| TASK-03.1.1 | Extend `AddCommentCommand`/`AddCommentUseCase` with ownership guard | US-03.1 | api | TASK-07.2.1, TASK-07.1.3 |
-| TASK-03.1.2 | `POST /api/tickets/{jiraIssueKey}/comments` endpoint | US-03.1 | api | TASK-03.1.1, TASK-07.1.6 |
-| TASK-03.1.3 | `compact` prop on `RichTextEditor` | US-03.1 | client-portal | TASK-02.3.1 |
-| TASK-03.1.4 | Comment input and post action on ticket detail page | US-03.1 | client-portal | TASK-03.1.3, TASK-02.4.2, TASK-03.1.2 |
-| TASK-03.2.1 | Extend `UploadAttachmentCommand`/`UploadAttachmentUseCase` with ownership guard | US-03.2 | api | TASK-07.3.1, TASK-07.1.3 |
-| TASK-03.2.2 | `POST /api/tickets/{jiraIssueKey}/attachments` endpoint | US-03.2 | api | TASK-03.2.1, TASK-07.1.6 |
-| TASK-03.2.3 | File attachment UI on ticket detail page | US-03.2 | client-portal | TASK-02.4.2, TASK-03.2.2 |
-| *(no tasks)* | US-03.3 covered by TASK-02.4.1 + TASK-02.4.2 (EPIC-02) | US-03.3 | — | TASK-02.4.1, TASK-02.4.2 |
+| TASK-03 | Comments + attachments write path — ownership guards, endpoints, comment + attachment UI | Wave 3 | api + client-portal | TASK-07-B, TASK-02-B, TASK-02-C |
 
 ---
 
-> **Note for Tech Lead:**
->
-> - **Modifying EPIC-07 use cases**: TASK-03.1.1 and TASK-03.2.1 modify the command records and use case implementations that were defined in EPIC-07. This is intentional — the ownership guard is a EPIC-03 concern (the portal UI layer), not EPIC-07 (the pure Jira integration layer). Openspec should treat these tasks as patches to existing files, not new files.
->
-> - **No HTML→ADF conversion for comments**: the comment body is sent as HTML from the frontend (same as descriptions). The existing `AddCommentUseCase` already converts the body to ADF via the `AdfBuilder` internal utility (established in EPIC-07's Architecture Note). No new ADF tooling is needed for EPIC-03. TASK-03.1.2 passes the raw HTML from the request body as `commentHtml` to the command; the use case performs the ADF conversion before calling Jira.
->
-> - **`AttachmentUploadResultDto` vs `AttachmentDto`**: the endpoint in TASK-03.2.2 returns a per-file result array. Define `AttachmentUploadResultDto` in `Api.Application/Tickets/Dtos/` (reusing `AttachmentDto` for the success payload). This is a new DTO not previously defined — add it in TASK-03.2.2.
->
-> - **JWT claim for author display name**: the `name` standard claim should be issued by OpenIddict's identity server (EPIC-01). If `name` is not present in the token, the fallback concatenation (`given_name` + `" "` + `family_name`) is performed in the controller. Document this fallback in TASK-03.1.2's constraints so openspec applies it correctly.
->
-> - **US-03.3 is a zero-task story**: the backend proxy and frontend wiring are covered by EPIC-02. The story's acceptance criteria are verified through TASK-02.4.1 and TASK-02.4.2. No EPIC-03 tasks are opened for US-03.3 — the story closes when its ACs are verified against the existing EPIC-02 implementation.
->
-> - **v2 story (US-03.4)**: edit comment requires `IJiraClient.UpdateCommentAsync` — not yet declared. Flag for EPIC-03 v2 planning. No tasks in this epic.
+### TASK-03 — Comments + attachments write path
+**Wave:** 3
+**Repo:** api + client-portal
+**Depends on:** TASK-07-B (write use cases exist), TASK-02-B (detail page exists), TASK-02-C (`RichTextEditor` with `compact` prop exists)
+
+**What to build:**
+
+> **Context:** `AddCommentUseCase`, `UploadAttachmentUseCase`, and their endpoints (`POST /api/tickets/{key}/comments`, `POST /api/tickets/{key}/attachments`) are already fully implemented in TASK-07-B, including ownership guards (ClientId check). This task's API work is limited to verifying those implementations are correct and adding the `AttachmentUploadResultDto` DTO if not already present. The bulk of this task is the frontend.
+
+**(api — patches only)**
+- Verify `AddCommentUseCase` accepts `ClientId` in command and returns `ForbiddenError` on mismatch — add if missing from TASK-07-B output
+- Verify `UploadAttachmentUseCase` accepts `ClientId` in command and returns `ForbiddenError` on mismatch — add if missing
+- Define `AttachmentUploadResultDto` in `Api.Application/Tickets/Dtos/` if not present: `FileName` (string), `Success` (bool), `Attachment` (`AttachmentDto`?), `Error` (string?)
+- Verify `POST /api/tickets/{key}/attachments` returns an array of `AttachmentUploadResultDto` — processes files sequentially, returns `200 OK` if at least one succeeds
+
+**(client-portal) Comment input on ticket detail page**
+- Add a comment input section below the comment thread on `/tickets/:jiraIssueKey`
+- Use `RichTextEditor` with `compact={true}` and `maxLength={5000}`
+- "Post comment" `Button`: disabled when `editor.getText().trim().length === 0` or `isPending`; shows spinner while `isPending`
+- On submit: `useMutation` calling `POST /api/tickets/{key}/comments` with JSON body `{ commentHtml: editor.getHTML() }`
+- On success: `invalidateQueries(['ticket', jiraIssueKey])` then clear editor — do not navigate
+- On error: show `Alert` (destructive) inline below editor — do not clear editor content
+- Comment input `value` controlled by local `useState` only (not URL-persisted)
+
+**(client-portal) File attachment section on ticket detail page**
+- Add an "Attach file" section in the attachments area of `/tickets/:jiraIssueKey`
+- `Input type="file" multiple` (or styled drop zone using shadcn primitives) + "Attach" `Button`
+- Client-side validation on file selection change (before request): reject files > 10 MB or > 10 files — show per-file error list inline
+- Helper text showing the 10 MB and 10-file limits
+- On submit: `useMutation` calling `POST /api/tickets/{key}/attachments` with `FormData`
+- While in flight: disable attach button, show spinner; comment input area must remain functional — sections are independent
+- On success: `invalidateQueries(['ticket', jiraIssueKey])`, clear file input
+- On partial/full failure: per-file error list naming failed files and reasons; successfully attached files appear in refreshed list
+
+**Constraints:**
+- `POST /api/tickets/{key}/comments` body is `application/json`; `authorDisplayName` comes from JWT `name` claim (fallback: `given_name + " " + family_name`) — never from request body
+- `POST /api/tickets/{key}/attachments` body is `multipart/form-data`; file size and count validated at controller level before use case is called
+- Comment HTML is sent as-is; `AddCommentUseCase` in TASK-07-B handles the ADF conversion via `AdfBuilder`
+- Both sections independent — uploading a file must not affect the comment editor state and vice versa
+- All user-visible strings use i18n keys (per EPIC-10)
+- US-03.3 (download) has no tasks — the attachment proxy endpoint and frontend download links are fully implemented in TASK-02-A and TASK-02-B
+
+**Definition of Done:**
+- [ ] `AddCommentUseCase` has ownership guard; mismatched `ClientId` returns `ForbiddenError`
+- [ ] `UploadAttachmentUseCase` has ownership guard; mismatched `ClientId` returns `ForbiddenError`
+- [ ] `AttachmentUploadResultDto` exists in `Api.Application/Tickets/Dtos/`
+- [ ] `POST /api/tickets/{key}/comments` with valid JWT returns `201 Created` with `CommentDto`; wrong client → `403`; empty comment → `422`
+- [ ] `POST /api/tickets/{key}/attachments` with valid file returns `200 OK` with result array; wrong client → `403`; file > 10 MB → `422`
+- [ ] Comment input appears below comment thread on detail page; posts successfully and refreshes thread
+- [ ] Editor content retained on API error; cleared on success
+- [ ] File attach section validates client-side before submit
+- [ ] Successful attachment upload refreshes the attachment list
+- [ ] Comment and attachment sections are functionally independent
+- [ ] `dotnet build` succeeds and `npm run build` succeeds with no TypeScript errors
+
+> **Note for Tech Lead:** US-03.3 is a zero-task story — the backend proxy (`GET /api/tickets/{key}/attachments/{id}`) and frontend download links are covered by TASK-02-A and TASK-02-B respectively. US-03.4 (edit comment) is v2 and requires `IJiraClient.UpdateCommentAsync` — not yet declared.
