@@ -48,12 +48,15 @@ The Coach and their team require a single, web-based solution for scheduling, ma
 
 ### Levels & Categories
 
-* Each Coachee is assigned one of 5 defined levels; each level is mapped to a distinct color.
+* Each Coachee is assigned one of 5 defined levels: **Principiante, Básico, Intermedio, Avanzado, Experto** (in ascending order). Each level is mapped to a distinct color (to be defined by design).
+* Levels are assigned and can be changed at any time by a Coach or Admin.
+* A class is within a Coachee's **reach** if it matches their level, one above, or one below.
 
 ### Class Types & Capacity Rules
 
-* **Individual Class:** 1 Coachee only. Max 2 concurrent at any given time.
+* **Individual Class:** 1 Coachee only. Max 2 concurrent at any given time. A Coach creates the class and assigns the Coachee.
 * **Group Class:** Min 3, max 4 Coachees from the same level (or reach); only 1 group class at a time.
+* An **assigned Coach** is set at class creation (defaults to the creating Coach; a different Coach may be selected).
 
 ### Gym/Venue Capacity
 
@@ -63,9 +66,29 @@ The Coach and their team require a single, web-based solution for scheduling, ma
 
 * All classes (individual/group) are always 1-hour fixed duration; no modification allowed.
 
+### Class Overlap Rules
+
+* A Coachee cannot be scheduled in two classes (individual + group, or two individuals) that overlap in time, even partially.
+
+### Recurring Classes
+
+* A class may be created as a one-off or as a weekly recurring series. When weekly recurrence is selected, the system generates a class instance for the same day and time every week with the same level, assigned Coach, and class type. Recurrence starts on the selected date and has no automatic end date (Coach can delete individual instances or cancel the entire series).
+
 ### Waiting List Logic
 
-* If a group class is full, additional eligible Coachees may join a waiting list. When a spot opens (due to cancellation), the waiting list is processed in order, with notifications to Coachees as spots become available.
+* **Group classes:** When a group class is full (4/4), additional eligible Coachees may join its waiting list.
+* **Individual classes:** When an individual class time slot is already occupied, other Coachees may click the gray busy block on the calendar to join a waiting list for that specific time slot.
+* **Maximum size:** Waiting list is capped at 4 Coachees per class.
+* **Notifications:** When one or more spots open (due to cancellation), **all Coachees on the waiting list are notified simultaneously**. The spot is claimed on a first-come, first-served basis with no hold time.
+* **Multiple waiting lists:** A Coachee may be on any number of waiting lists simultaneously (both group and individual).
+* **Leaving:** A Coachee may voluntarily leave a waiting list at any time.
+
+### Class Cancellation Rules
+
+* **Coachee cancels own attendance:** No restrictions or penalties. If the class is full or has a waiting list, the system processes the waiting list automatically.
+* **Coach cancels a class entirely:** All enrolled Coachees receive a push notification. The class is marked as "Canceled" and shown in gray in the calendar.
+* **Coach cancels an individual class:** If the class has a waiting list, the first person to claim from the waiting list gets the newly freed slot.
+* **No-show tracking:** Not implemented in v1. Reserved for future.
 
 ---
 
@@ -97,19 +120,24 @@ Calendar Page
 
 * Contextual toolbar at top; includes an "Add Class" button.
 * Calendar rendered using Google Calendar API (not native events).
+* Calendar shows all classes from all Coaches (no Coach-specific filtering in v1).
 * **Add Class Modal**
   * Fields:
     * Class type: Individual / Group / Block
-    * Coachees: select (multi-choice as per type rules).
-    * Description
-    * Level: 5-level selector (except when Block is chosen).
+    * Assigned Coach: defaults to the creating Coach; dropdown to select any other Coach (hidden when Block is selected).
+    * Coachee(s): single-select for Individual, multi-select for Group (as per type rules). For Individual, only one Coachee can be assigned.
+    * Description (visible to all users who can see the class).
+    * Level: 5-level selector (hidden when Block or Individual is chosen).
     * Date
+    * Recurrence: toggle to enable weekly recurrence. When enabled, the class repeats weekly from the selected date.
+    * Block type: selector with two options — "Personal" (block own/assigned Coach's calendar) or "Gym-wide" (block entire gym, Admin only). Only shown when Class type is Block.
     * Available time slots: surfaced to user (implementation detail to be decided).
     * Save button.
   * **Validation**:
-    * If Individual: max 1 Coachee.
-    * If Group: min 3, max 4 Coachees.
-    * If Block: hide Coachee/Level fields.
+    * If Individual: exactly 1 Coachee required.
+    * If Group: min 3, max 4 Coachees required.
+    * If Block: hide Coachee, Level, and Assigned Coach fields. Show Block type selector instead.
+    * Assigned Coach: required for Individual and Group.
 
 Coachees Page
 
@@ -134,27 +162,55 @@ Coaches Page
 ### 6.4 Coachee Screens (Mobile-First)
 
 * **Home Screen**
-  * Top: Date/time of Coachee’s next class.
+  * Top: Date/time of Coachee’s next class. If no class is scheduled, shows "No upcoming classes".
   * Upcoming group classes to join (within 10-day window).
 * **Bottom navigation bar** with three items:
   * Home
   * Calendar (1-week window, with color-coded visibility per rules)
   * Notifications (bell, dropdown panel)
 
-Calendar Visibility Logic for Coachees
+**Calendar Visibility Logic for Coachees**
 
-* Individual classes of other users: shown as gray busy/blocked (no detail).
+* Individual classes of other users: shown as gray busy/blocked (no detail). **Tapping a gray block opens an option to join the waiting list** for that specific time slot.
 * Own scheduled classes (individual/group): blue, option to cancel.
-* Group classes within reach and not already joined: green, option to join. If full, Join triggers waiting list.
+* Group classes within reach and not already joined: green, option to join. If full, Join button is replaced with "Join waiting list".
 * Group classes outside reach: gray busy/blocked (same as above).
+
+**Waiting List Management**
+
+* **View:** The Home screen or a dedicated section (to be defined in design) shows all active waiting lists the Coachee is on, including the class name, date/time, and position (if applicable — since notification is simultaneous, position doesn't guarantee priority).
+* **Join:**
+  * **Group:** Tap "Join waiting list" on a full green group class card.
+  * **Individual:** Tap a gray busy/blocked individual class slot → "Join waiting list for this time slot".
+* **Leave:** Each waiting list entry includes a "Leave" option. Leaving does not notify the Coach.
+* **Notifications:** When a spot opens, the Coachee receives a push notification (see Section 7). Tapping the notification opens the class details for direct booking.
 
 ---
 
 ## 7\. Notifications & Push Notification Rules
 
-* **Waiting list → spot opens**: Coachee receives push notification if a spot becomes available in a group class they’re waitlisted for.
-* **New group class in reach with open spot**: Coachee receives push notification when a new group class (own level ±1) with open spot is created.
-* **Individual class canceled by Coachee**: Assigned Coach receives push notification about the cancellation.
+All notifications are push notifications delivered to the relevant user's device. Notifications are also visible in-app in the Notifications panel (bell icon). Below is the complete catalog of notification events:
+
+| # | Trigger Event | Recipient(s) | Push Content |
+|---|--------------|--------------|--------------|
+| 1 | Spot(s) open in a class with a waiting list (group or individual) | All Coachees on that waiting list | "¡Hay hueco(s) libre(s) en [clase/nivel]! Corre a reservarlo." |
+| 2 | New group class created within reach with at least one open spot | All Coachees in reach of that class's level | "Nueva clase de [nivel] disponible el [fecha/hora]" |
+| 3 | Coachee cancels their **individual** class | Assigned Coach | "[Coachee nombre] canceló su clase individual de las [hora]" |
+| 4 | Coachee cancels their spot in a **group** class — waiting list exists | Assigned Coach | "[Coachee nombre] canceló. Se ha notificado a [N] coache(s) en waiting list." |
+| 5 | Coachee cancels their spot in a **group** class — no waiting list | Assigned Coach | "[Coachee nombre] canceló. El hueco está libre." |
+| 6 | Waitlisted Coachee claims a newly opened spot (group or individual) | Assigned Coach | "[Coachee nombre] ha ocupado el hueco libre en [clase/hora]" |
+| 7 | Coach cancels an entire class (group or individual) | All enrolled Coachees | "La clase de [nivel] del [fecha/hora] ha sido cancelada." |
+| 8 | Coach creates an individual class and assigns a Coachee | Assigned Coachee | "Tienes una clase individual con [Coach nombre] el [fecha/hora]" |
+| 9 | Coachee joins a waiting list | The Coachee who joined | "Te has apuntado a la waiting list de [clase/hora]. Te avisaremos cuando haya hueco." |
+| 10 | Coachee leaves a waiting list voluntarily | The Coachee who left | "Has salido de la waiting list de [clase/hora]" |
+| 11 | Coachee's level is changed by a Coach or Admin | The affected Coachee | "Tu nivel ha sido actualizado a [nuevo nivel]" |
+| 12 | A Coach is assigned to a class they did not create | The newly assigned Coach | "Has sido asignado a [clase/tipo] el [fecha/hora]" |
+
+**Notes:**
+* When multiple spots open simultaneously, all waitlisted Coachees are notified together (#1). The spots are claimed first-come, first-served. There is no hold time or per-user expiry.
+* Notifications #4 and #5 are mutually exclusive: the system checks whether a waiting list exists and sends the appropriate variant.
+* Notification #1 is not sent if a spot opens but the waiting list is empty; instead, the Coach is notified (#4 or #5 depending on context).
+* The in-app Notifications panel (bell icon) shows only the **current day's** notifications for Admin and Coach roles. Coachees see a full chronological history.
 
 ---
 
@@ -171,10 +227,23 @@ Calendar Visibility Logic for Coachees
 
 ## 9\. Open Questions / Clarifications Needed
 
-* Clarification needed on how "Available time slots" are programmatically surfaced in the Add Class modal (details around UI/UX and integration with Google Calendar’s free/busy logic).
-* The requirements for "Block" calendar type are specified, but the impact on general scheduling logic and notification behavior (if any) needs confirmation.
-* Coachee-side: Is there a hard restriction on the max number of classes (group + individual) a Coachee can join per week or day, or can they theoretically join all available within their reach? No limits are specified, but this could matter for operational rules.
-* Notification: When a waitlisted user receives a notification about an open spot, is there a hold period before the spot is offered to the next in line, or is it first come, first served?
-* Specific color mapping for the 5 levels not provided: Design input required to define exact color codes.
+### Resolved
+The following items from earlier versions have been clarified and are now reflected in the sections above:
+
+* **Block types:** Personal (Coach/Admin) vs Gym-wide (Admin only). Notifications not required for blocks.
+* **Max classes per Coachee per week/day:** No limit. Coachees may join any class within reach as long as times don't overlap.
+* **Waiting list mechanics:** First-come, first-served with no hold time. All waitlisted Coachees notified simultaneously when spots open. Max 4 per class.
+* **Individual class waiting list:** Works like group. Coachees tap a gray busy block to join the waiting list for that time slot.
+* **Coach-Coachee assignment:** Coach is assigned to the class (not to the Coachee). Coach creates the class and is the default assigned Coach, but any other Coach can be selected at creation.
+* **Multiple coaches:** Yes, all Coaches see all classes in the calendar.
+* **Recurring classes:** Weekly recurrence supported via toggle in the Add Class modal.
+* **Coach cancels class:** All enrolled Coachees receive a push notification.
+* **Class reminders:** Not in scope for v1.
+
+### Still Pending
+
+* **Available time slots UI/UX:** How "Available time slots" are programmatically surfaced in the Add Class modal (details around integration with Google Calendar's free/busy logic). Implementation decision needed.
+* **Level color mapping:** The 5 levels (Principiante, Básico, Intermedio, Avanzado, Experto) need specific hex color codes assigned. Design input required.
+* **Waiting list placement feedback:** When a Coachee joins a waiting list with 0 spots open and no prior members, the concept of "position" is moot (all notified simultaneously). Design decision needed on whether to display a simple "You're on the list" confirmation vs a numbered position.
 
 ---
