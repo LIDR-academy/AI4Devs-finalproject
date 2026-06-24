@@ -1,7 +1,7 @@
 > Detalla en esta sección los prompts principales utilizados durante la creación del proyecto, que justifiquen el uso de asistentes de código en todas las fases del ciclo de vida del desarrollo. Esperamos un máximo de 3 por sección, principalmente los de creación inicial o los de corrección o adición de funcionalidades que consideres más relevantes.
 > Puedes añadir adicionalmente la conversación completa como link o archivo adjunto si así lo consideras.
 
-**Repositorio de implementación:** `codigofinal/lms-cms-laravel12`
+**Repositorio de implementación:** [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (rama `angel-burgos-r`, carpeta `codigofinal/lms-cms-laravel12`)
 
 **Rama de entrega:** `feature-entrega2-ABR`
 
@@ -35,7 +35,7 @@
 
 > Nota: Se instruyó al asistente para que generara la documentación del producto analizando el código real existente, no desde suposiciones. Se pidió concisión y confirmación antes de aplicar cambios.
 
-**Prompt 3:** "Actualiza automáticamente AI4Devs-finalproject/readme.md cuando cambie estructura u otro elemento que observes que varía en el archivo porque varía el código del repositorio codigofinal/lms-cms-laravel12.Que se encuentra en el repositorio https://github.com/BurgosAngel/codigofinal."
+**Prompt 3:** "Actualiza automáticamente readme.md cuando cambie la estructura u otro elemento del código en codigofinal/lms-cms-laravel12 (repositorio https://github.com/BurgosAngel/codigofinal, rama angel-burgos-r)."
 
 > Nota: Prompt de mantenimiento para que la documentación refleje siempre el estado actual del código. El LLM analizó modelos, controladores, migraciones, rutas y vistas para actualizar todas las secciones del README.
 
@@ -199,7 +199,7 @@
 
 ## 9. Archivos principales utilizados
 
-Rutas relativas a `codigofinal/lms-cms-laravel12/`:
+Rutas relativas a `codigofinal/lms-cms-laravel12/` en [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r) (rama `angel-burgos-r`):
 
 | Área | Archivos |
 |------|----------|

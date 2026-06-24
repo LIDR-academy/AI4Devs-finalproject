@@ -12,7 +12,7 @@
 9. [Capturas de pantalla](#9-capturas-de-pantalla)
 10. [Seguridad y OWASP Top 10](#10-seguridad-y-owasp-top-10)
 
-**Plan de negocio SaaS:** [PLAN_NEGOCIO.md](./PLAN_NEGOCIO.md) · **Roadmap técnico:** `codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md`
+**Plan de negocio SaaS:** [PLAN_NEGOCIO.md](./PLAN_NEGOCIO.md) · **Roadmap técnico:** [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md)
 
 **Rama entrega 2:** `feature-entrega2-ABR` · **Conversación de referencia:** [README structure analysis for lms-cms-laravel12](./agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md)
 
@@ -29,7 +29,7 @@ Sistema de gestión de aprendizaje (LMS) de código abierto construido con Larav
 
 **URL del proyecto:** `http://localhost:8080`(Docker)
 
-**Repositorio de código:** `https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r`
+**Repositorio de código:** [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (rama `angel-burgos-r`, aplicación en `codigofinal/lms-cms-laravel12`)
 
 **Documentación de prompts:** [prompts.md](./prompts.md)
 
@@ -53,7 +53,7 @@ Plataforma **SaaS** orientada a bootcamps, empresas tech y educadores independie
 | Pro (creadores) | €29/mes | Definido en app |
 | Empresa | €299–999/mes | Definido en app |
 
-Roadmap detallado: `codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md`.
+Roadmap detallado: [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md).
 
 ### 1.1. Objetivo
 
@@ -88,7 +88,7 @@ Flujo principal:
 
 **Instalación con Docker:**
 ```bash
-git clone https://github.com/Angel-31/codigofinal.git
+git clone -b angel-burgos-r https://github.com/BurgosAngel/codigofinal.git
 cd codigofinal/lms-cms-laravel12
 cp .env.example .env
 docker compose up -d
@@ -414,7 +414,7 @@ Rutas web en `routes/web.php` (no API REST separada).
 
 ## 8. Documentación de prompts
 
-Los prompts utilizados con asistentes de código (máx. 3 por sección del ciclo de vida) y el listado detallado de archivos tocados en `codigofinal/lms-cms-laravel12` están en **[prompts.md](./prompts.md)** (secciones 1–9).
+Los prompts utilizados con asistentes de código (máx. 3 por sección del ciclo de vida) y el listado detallado de archivos tocados en [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r/codigofinal/lms-cms-laravel12) están en **[prompts.md](./prompts.md)** (secciones 1–9).
 
 ### Entrega 2 (`feature-entrega2-ABR`)
 
@@ -422,11 +422,11 @@ Artefactos generados en la conversación [README structure analysis for lms-cms-
 
 | Artefacto | Descripción |
 |-----------|-------------|
-| [readme.md](./readme.md) | Documentación del producto alineada con el código real de `codigofinal/lms-cms-laravel12` (arquitectura, modelo de datos, API, historias, tickets) |
+| [readme.md](./readme.md) | Documentación del producto alineada con el código en [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r/codigofinal/lms-cms-laravel12) (arquitectura, modelo de datos, API, historias, tickets) |
 | [prompts.md](./prompts.md) | Prompts por fase del ciclo de vida y archivos principales utilizados |
 | [PLAN_NEGOCIO.md](./PLAN_NEGOCIO.md) | Plan de negocio SaaS (planes, target, proyección) |
 | [seguridad.md](./seguridad.md) | Seguridad por historia de usuario y análisis OWASP Top 10 |
-| `codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md` | Hoja de ruta técnica alineada con el plan de negocio |
+| [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md) | Hoja de ruta técnica alineada con el plan de negocio |
 
 Índice de transcripts: [agent-transcripts/index.md](./agent-transcripts/index.md).
 

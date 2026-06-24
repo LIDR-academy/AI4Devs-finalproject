@@ -11,7 +11,7 @@ Documento de requisitos de seguridad y criterios de aceptación específicos del
 5. [Análisis de vulnerabilidades detectadas (OWASP Top 10)](#análisis-de-vulnerabilidades-detectadas-owasp-top-10)
    - [V1 — XSS almacenado en contenido de lecciones](#v1--xss-almacenado-en-contenido-de-lecciones-a03-injection)
    - [V2 — Acceso directo a archivos subidos](#v2--acceso-directo-a-archivos-subidos-sin-autorización-a01-broken-access-control)
-   - [V3 — URLs de embed sin validar en plugins](#v3--urls-de-embed-sin-validar-en-plugins-a03-injection--a10-ssrf)
+   - [V3 — URLs de embed sin validar en plugins](#v3--urls-de-embed-sin-validar-en-plugins-a03-injection--contenido-embebido-malicioso)
    - [V4 — Integridad del quiz comprometida](#v4--integridad-del-quiz-comprometida-a04-insecure-design--a08-integrity-failures)
    - [V5 — Escalada de privilegios en matriculación](#v5--escalada-de-privilegios-en-matriculación-a01-broken-access-control)
 
@@ -100,7 +100,7 @@ Las referencias a OWASP se alinean con el [OWASP Top 10 (2021)](https://owasp.or
 |----|----------|-------|
 | HU-4-S01 | Las subidas de archivos (vídeo, imagen, adjuntos) validan extensión, MIME real, tamaño máximo (128 MB) y almacenan fuera del directorio público ejecutable; el acceso se sirve mediante rutas controladas, no por URL directa predecible. | A01 Broken Access Control / A05 Security Misconfiguration |
 | HU-4-S02 | Se rechazan archivos con extensiones ejecutables (`.php`, `.js`, `.svg` con script, etc.) y dobles extensiones engañosas. | A03 Injection |
-| HU-4-S03 | Los plugins de tipo vídeo/enlace validan el esquema de URL (`https` preferente); se bloquean peticiones a rangos IP privados, `localhost` y metadatos de cloud internos (prevención SSRF en embeds). | A10 Server-Side Request Forgery |
+| HU-4-S03 | Los plugins `video_embed` y `h5p_embed` validan esquema y dominio permitido; se rechazan URLs que permitan contenido embebido malicioso (phishing, clickjacking) o iframes hacia hosts internos no previstos. | A03 Injection |
 | HU-4-S04 | La configuración JSON de cada instancia de plugin se valida por `plugin_type` (campos obligatorios, tipos y límites); no se aceptan claves arbitrarias que alteren comportamiento del motor de renderizado. | A08 Software and Data Integrity Failures |
 | HU-4-S05 | Contenido H5P y bloques HTML se renderizan en contexto restringido (iframe `sandbox` o sanitización estricta) para mitigar XSS almacenado. | A03 Injection |
 | HU-4-S06 | Las operaciones de reordenamiento y borrado de plugins verifican que la instancia pertenece a una lección del curso del profesor solicitante. | A01 Broken Access Control |
@@ -300,7 +300,7 @@ Las referencias a OWASP se alinean con el [OWASP Top 10 (2021)](https://owasp.or
 
 ## Análisis de vulnerabilidades detectadas (OWASP Top 10)
 
-Análisis estático del código en `codigofinal/lms-cms-laravel12`, priorizado por impacto en las historias de usuario (HU-2, HU-4, HU-6, HU-8, HU-9). Se excluyen controles ya cubiertos a nivel global (autenticación, roles, TLS, CSRF).
+Análisis estático del código en [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r/codigofinal/lms-cms-laravel12) (rama `angel-burgos-r`), priorizado por impacto en las historias de usuario (HU-2, HU-4, HU-6, HU-8, HU-9). Se excluyen controles ya cubiertos a nivel global (autenticación, roles, TLS, CSRF).
 
 Cada vulnerabilidad se documenta de forma completa — descripción, evidencia, ejemplo de explotación e impacto, y solución — antes de pasar a la siguiente.
 
@@ -430,7 +430,7 @@ Nginx sirve `/storage/` como fichero estático; no interviene `LessonPolicy::vie
 
 ---
 
-### V3 — URLs de embed sin validar en plugins (A03: Injection / A10: SSRF)
+### V3 — URLs de embed sin validar en plugins (A03: Injection / contenido embebido malicioso)
 
 **Severidad:** Alta  
 **Historias afectadas:** HU-4, HU-8  
@@ -438,7 +438,7 @@ Nginx sirve `/storage/` como fichero estático; no interviene `LessonPolicy::vie
 
 #### Descripción
 
-Los plugins `video_embed` y `h5p_embed` insertan la URL configurada por el profesor directamente en un `<iframe>` o `<video>`, sin lista blanca de dominios ni validación de esquema. Esto abre la puerta a **iframes maliciosos** (phishing, clickjacking) y, en escenarios de red interna, a **SSRF del lado cliente** hacia servicios no expuestos públicamente.
+Los plugins `video_embed` y `h5p_embed` insertan la URL configurada por el profesor directamente en un `<iframe>` o `<video>`, sin lista blanca de dominios ni validación de esquema. El riesgo es **contenido embebido malicioso** en el navegador del usuario: **iframes de phishing**, **clickjacking** y carga de páginas internas no previstas dentro del contexto visual del LMS. No hay petición servidor-a-servidor; el backend no realiza fetch de esas URLs.
 
 #### Evidencia en código
 
@@ -465,12 +465,12 @@ Los plugins `video_embed` y `h5p_embed` insertan la URL configurada por el profe
 2. Los estudiantes ven un iframe a página de phishing dentro del entorno LMS de confianza.
 3. Mayor tasa de éxito en robo de credenciales por contexto visual legítimo.
 
-**Escenario B — SSRF hacia servicios internos (Docker)**
+**Escenario B — Iframe hacia servicio interno (solo lado cliente)**
 
 1. Profesor configura `h5p_embed` con:
    `http://phpmyadmin:80` o `http://localhost:8082` (phpMyAdmin del `docker-compose.yml`).
 2. El navegador del estudiante (o del profesor en preview) carga el iframe contra el panel de administración de BD expuesto en desarrollo.
-3. Si el servicio interno no requiere auth adicional, se expone la interfaz de gestión.
+3. Si el servicio interno no requiere auth adicional, se expone la interfaz de gestión en el contexto del LMS (riesgo de confidencialidad en el cliente, no SSRF en servidor).
 
 **Justificación:** el contenido del iframe se presenta bajo la apariencia del LMS; en entornos Docker la combinación con [A05 Security Misconfiguration](#v2--acceso-directo-a-archivos-subidos-sin-autorización-a01-broken-access-control) amplifica el riesgo.
 
@@ -639,5 +639,5 @@ return $this->enrolledCourses()
 ## Referencias
 
 - [OWASP Top 10 (2021)](https://owasp.org/Top10/)
-- Código fuente analizado: `codigofinal/lms-cms-laravel12`
+- Código fuente analizado: [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r/codigofinal/lms-cms-laravel12) (rama `angel-burgos-r`)
 - Controles globales: [readme.md § 2.5](./readme.md#25-seguridad)

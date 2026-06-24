@@ -1,6 +1,7 @@
 # Cursor Transcripts Export
 
-- Rama: `feature-entrega2-ABR`
+- Rama documentación: `feature-entrega2-ABR`
+- Código de referencia: [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (rama `angel-burgos-r`, carpeta `codigofinal/lms-cms-laravel12`)
 - Output: `agent-transcripts/`
 - Files: `2`
 

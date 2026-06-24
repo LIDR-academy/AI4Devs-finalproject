@@ -1,6 +1,6 @@
 # Plan de negocio — Plataforma LMS SaaS (Tech + IA)
 
-Documento de referencia estratégica para el producto. El código actual (`codigofinal/lms-cms-laravel12`) es el **MVP técnico (Fase 1)**; la hoja de ruta de implementación está en `codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md`.
+Documento de referencia estratégica para el producto. El MVP técnico (Fase 1) está en [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (rama `angel-burgos-r`, carpeta `codigofinal/lms-cms-laravel12`); la hoja de ruta en [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md).
 
 ---
 
@@ -121,7 +121,7 @@ Configuración técnica de planes: `config/saas.php` en el repositorio Laravel.
 
 ## Enlaces del repositorio
 
-- Código MVP: `codigofinal/lms-cms-laravel12`
-- Documentación técnica: `AI4Devs-finalproject/readme.md`
-- Roadmap de implementación: `codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md`
-- Página de planes (app): `/pricing`
+- **Código MVP:** [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r/codigofinal/lms-cms-laravel12) (rama `angel-burgos-r`)
+- **Documentación técnica (este repo):** `readme.md`
+- **Roadmap de implementación:** [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md)
+- **Página de planes (app):** `/pricing`
