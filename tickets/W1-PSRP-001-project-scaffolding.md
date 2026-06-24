@@ -1,57 +1,88 @@
-## PSRP-001: chore(infra): project-scaffolding
+## PSRP-001: chore(infra): project-scaffolding — DECOMPOSED
 
 **Type:** chore
 **Priority:** P0 (Must)
-**Estimated Effort:** L (4-5d)
+**Status:** DECOMPOSED into 5 sequential changes
+**Original Estimated Effort:** L (4-5d)
+**Decomposed Effort:** ~3.5 days (with parallel B+C)
 **Sprint Week:** W1
 **Dependencies:** None
 
-## Resumen de Funcionalidad
-Configurar el esqueleto completo del proyecto incluyendo estructura de solución .NET 10, workspace Angular 22, Dockerfiles para todos los servicios, manifiestos base de Kubernetes con Kustomize, y pipeline CI/CD de GitHub Actions. Esta es la foundation en la que se basan todos los demás tickets.
+## Decomposition Summary
 
-## Requisitos
-- [ ] Crear solución .NET 10 con proyectos: Aura.Api, Aura.Core, Aura.Infrastructure, Aura.Workers.Email, Aura.Workers.WhatsApp, Aura.Workers.SSG
-- [ ] Crear workspace Angular 22 con standalone components, signals, y strict mode habilitado
-- [ ] Crear Dockerfiles para los 5 proyectos .NET (multi-stage builds) y Angular frontend (nginx)
-- [ ] Crear manifiestos base de Kubernetes: namespace, API deployment, 3 worker deployments, PostgreSQL StatefulSet, Dragonfly StatefulSet, MinIO StatefulSet, frontend deployment
-- [ ] Crear overlays Kustomize para local (Rancher Desktop) y producción environments
-- [ ] Crear workflow de GitHub Actions para build, test, Docker image push a GHCR, y kubectl apply
-- [ ] Configurar environment variables y estructura de appsettings.json para todos los servicios
-- [ ] Configurar .editorconfig, .gitignore, y reglas de formateo de código
+This ticket has been decomposed into 5 sequential changes to enable incremental validation, parallel work, and faster feedback. Each change produces working artifacts and keeps CI green on main.
 
-## Notas Técnicas
-- **Backend:** Solution file en `backend/AuraPlanning.sln`. Los proyectos siguen Clean Architecture: Api (presentation), Core (domain/application), Infrastructure (data access, external services), Workers (separate entry points)
-- **Frontend:** Angular workspace en `frontend/` con `src/app/core/`, `src/app/features/`, `src/app/shared/`
-- **Database:** PostgreSQL 16 StatefulSet con PVC, connection string en K8s Secret
-- **Integrations:** Dragonfly (Redis-compatible) para queue/cache, MinIO para object storage
-- **Key files:**
-  - `backend/AuraPlanning.sln`
-  - `backend/src/Aura.Api/Program.cs`
-  - `backend/src/Aura.Core/Aura.Core.csproj`
-  - `backend/src/Aura.Infrastructure/Aura.Infrastructure.csproj`
-  - `backend/workers/Aura.Workers.*/Program.cs`
-  - `frontend/angular.json`
-  - `frontend/package.json`
-  - `k8s/base/kustomization.yaml`
-  - `k8s/overlays/local/kustomization.yaml`
-  - `k8s/overlays/production/kustomization.yaml`
-  - `.github/workflows/build-and-test.yml`
-  - `Dockerfile` files en cada project root
+| Phase | Change | Effort | Dependency | Openspec Change |
+|-------|--------|--------|------------|-----------------|
+| A | #29 | 0.5d | None | `openspec/changes/psrp-001a-repo-hygiene-and-ci-skeleton/` |
+| B | #30 | 1d | A | `openspec/changes/psrp-001b-dotnet-solution-scaffolding/` |
+| C | #31 | 1d | A (PARALLEL with B) | `openspec/changes/psrp-001c-angular-workspace-scaffolding/` |
+| D | #32 | 0.5d | B + C | `openspec/changes/psrp-001d-worker-projects-and-dockerfiles/` |
+| E | #33 | 1.5d | D | `openspec/changes/psrp-001e-k8s-manifests-and-deploy-pipeline/` |
 
-## Criterios de Aceptación
-- [ ] AC1: Dado que el repositorio está clonado, cuando se ejecuta `dotnet build backend/AuraPlanning.sln`, entonces todos los 5 proyectos .NET se construyen exitosamente sin errores
-- [ ] AC2: Dado el directorio frontend, cuando se ejecuta `npm install && npm run build`, entonces Angular se construye exitosamente sin errores
-- [ ] AC3: Dado que Docker está instalado, cuando se ejecuta `docker build` para cada servicio, entonces todas las 6 imágenes Docker (5 .NET + 1 Angular) se construyen exitosamente
-- [ ] AC4: Dado que el cluster de Kubernetes está corriendo, cuando se ejecuta `kubectl apply -k k8s/overlays/local`, entonces todos los pods inician y alcanzan estado Ready
-- [ ] AC5: Dado un push a la rama main, cuando el workflow de GitHub Actions corre, entonces los pasos de build, test, y Docker push completan exitosamente
+## Dependency Graph
 
-## Elementos Relacionados
-- **PRD section:** 07-work-breakdown.md (Infrastructure/DevOps)
-- **Architecture:** 03-project-structure.md, 04-infrastructure-deployment.md
-- **Data model:** N/A (no entities aún)
+```
+         ┌─────┐
+         │  A  │  Repo + CI skeleton
+         └──┬──┘
+      ┌─────┴─────┐
+      ▼           ▼
+   ┌─────┐     ┌─────┐
+   │  B  │     │  C  │  ← PARALLEL
+   └──┬──┘     └──┬──┘
+      └─────┬─────┘
+            ▼
+         ┌─────┐
+         │  D  │  Workers + Dockerfiles
+         └──┬──┘
+            ▼
+         ┌─────┐
+         │  E  │  K8s + Deploy
+         └─────┘
+```
 
-## Bloqueadores
-Ninguno
+## CI Pipeline Growth (Golden Path)
 
-## Branch Name
-`feature/PSRP-001-project-scaffolding`
+Each phase ADDS a CI step. Main stays green after every merge.
+
+```
+Phase A:  [validate]                          ← skeleton passes
+Phase B:  [validate] + dotnet build + test    ← .NET validated
+Phase C:  [previous] + ng build               ← Angular validated
+Phase D:  [previous] + docker build × 6 + push GHCR  ← containers validated
+Phase E:  [previous] + kustomize validate     ← K8s manifests validated
+```
+
+## What Was Decomposed
+
+The original PSRP-001 bundled 7 concerns into one L-sized ticket:
+- ~~.NET solution (6 projects)~~ → PSRP-001B
+- ~~Angular workspace~~ → PSRP-001C
+- ~~Dockerfiles for 5 services~~ → PSRP-001D
+- ~~K8s manifests (StatefulSets, Deployments)~~ → PSRP-001E
+- ~~Kustomize overlays (local + production)~~ → PSRP-001E
+- ~~GitHub Actions CI/CD~~ → PSRP-001A (skeleton), PSRP-001B/C/D/E (incremental)
+- ~~.editorconfig, .gitignore~~ → PSRP-001A
+
+## Rationale
+
+- **Smaller blast radius**: Each PR is < 20 files instead of 100+
+- **Parallel work**: Backend (B) and Frontend (C) can be developed simultaneously
+- **Incremental validation**: CI catches failures at each layer, not all at once
+- **Faster feedback**: Phase A merges in hours, not days
+- **Worker projects deferred**: Workers have no business logic yet — scaffolded when Dockerfiles need them (Phase D)
+
+## Blockers
+
+None
+
+## Branch Names
+
+- `feature/PSRP-001A-repo-hygiene`
+- `feature/PSRP-001B-dotnet-scaffolding`
+- `feature/PSRP-001C-angular-scaffolding`
+- `feature/PSRP-001D-dockerfiles`
+- `feature/PSRP-001E-k8s-manifests`
+
+
