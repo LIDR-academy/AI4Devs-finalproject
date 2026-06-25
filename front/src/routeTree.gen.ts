@@ -18,6 +18,7 @@ import { Route as InsightsRouteImport } from './routes/insights'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AddRouteImport } from './routes/add'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RecipesMealIdRouteImport } from './routes/recipes.$mealId'
 import { Route as ItemIdRouteImport } from './routes/item.$id'
 import { Route as ComparePriceIdRouteImport } from './routes/compare-price.$id'
 import { Route as AddManualRouteImport } from './routes/add.manual'
@@ -67,6 +68,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecipesMealIdRoute = RecipesMealIdRouteImport.update({
+  id: '/$mealId',
+  path: '/$mealId',
+  getParentRoute: () => RecipesRoute,
+} as any)
 const ItemIdRoute = ItemIdRouteImport.update({
   id: '/item/$id',
   path: '/item/$id',
@@ -90,12 +96,13 @@ export interface FileRoutesByFullPath {
   '/insights': typeof InsightsRoute
   '/notifications': typeof NotificationsRoute
   '/pantry': typeof PantryRoute
-  '/recipes': typeof RecipesRoute
+  '/recipes': typeof RecipesRouteWithChildren
   '/settings': typeof SettingsRoute
   '/sharing': typeof SharingRoute
   '/add/manual': typeof AddManualRoute
   '/compare-price/$id': typeof ComparePriceIdRoute
   '/item/$id': typeof ItemIdRoute
+  '/recipes/$mealId': typeof RecipesMealIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -104,12 +111,13 @@ export interface FileRoutesByTo {
   '/insights': typeof InsightsRoute
   '/notifications': typeof NotificationsRoute
   '/pantry': typeof PantryRoute
-  '/recipes': typeof RecipesRoute
+  '/recipes': typeof RecipesRouteWithChildren
   '/settings': typeof SettingsRoute
   '/sharing': typeof SharingRoute
   '/add/manual': typeof AddManualRoute
   '/compare-price/$id': typeof ComparePriceIdRoute
   '/item/$id': typeof ItemIdRoute
+  '/recipes/$mealId': typeof RecipesMealIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -119,12 +127,13 @@ export interface FileRoutesById {
   '/insights': typeof InsightsRoute
   '/notifications': typeof NotificationsRoute
   '/pantry': typeof PantryRoute
-  '/recipes': typeof RecipesRoute
+  '/recipes': typeof RecipesRouteWithChildren
   '/settings': typeof SettingsRoute
   '/sharing': typeof SharingRoute
   '/add/manual': typeof AddManualRoute
   '/compare-price/$id': typeof ComparePriceIdRoute
   '/item/$id': typeof ItemIdRoute
+  '/recipes/$mealId': typeof RecipesMealIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/add/manual'
     | '/compare-price/$id'
     | '/item/$id'
+    | '/recipes/$mealId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
     | '/add/manual'
     | '/compare-price/$id'
     | '/item/$id'
+    | '/recipes/$mealId'
   id:
     | '__root__'
     | '/'
@@ -169,6 +180,7 @@ export interface FileRouteTypes {
     | '/add/manual'
     | '/compare-price/$id'
     | '/item/$id'
+    | '/recipes/$mealId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -178,7 +190,7 @@ export interface RootRouteChildren {
   InsightsRoute: typeof InsightsRoute
   NotificationsRoute: typeof NotificationsRoute
   PantryRoute: typeof PantryRoute
-  RecipesRoute: typeof RecipesRoute
+  RecipesRoute: typeof RecipesRouteWithChildren
   SettingsRoute: typeof SettingsRoute
   SharingRoute: typeof SharingRoute
   ComparePriceIdRoute: typeof ComparePriceIdRoute
@@ -250,6 +262,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recipes/$mealId': {
+      id: '/recipes/$mealId'
+      path: '/$mealId'
+      fullPath: '/recipes/$mealId'
+      preLoaderRoute: typeof RecipesMealIdRouteImport
+      parentRoute: typeof RecipesRoute
+    }
     '/item/$id': {
       id: '/item/$id'
       path: '/item/$id'
@@ -284,6 +303,17 @@ const AddRouteChildren: AddRouteChildren = {
 
 const AddRouteWithChildren = AddRoute._addFileChildren(AddRouteChildren)
 
+interface RecipesRouteChildren {
+  RecipesMealIdRoute: typeof RecipesMealIdRoute
+}
+
+const RecipesRouteChildren: RecipesRouteChildren = {
+  RecipesMealIdRoute: RecipesMealIdRoute,
+}
+
+const RecipesRouteWithChildren =
+  RecipesRoute._addFileChildren(RecipesRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AddRoute: AddRouteWithChildren,
@@ -291,7 +321,7 @@ const rootRouteChildren: RootRouteChildren = {
   InsightsRoute: InsightsRoute,
   NotificationsRoute: NotificationsRoute,
   PantryRoute: PantryRoute,
-  RecipesRoute: RecipesRoute,
+  RecipesRoute: RecipesRouteWithChildren,
   SettingsRoute: SettingsRoute,
   SharingRoute: SharingRoute,
   ComparePriceIdRoute: ComparePriceIdRoute,

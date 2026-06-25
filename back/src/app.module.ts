@@ -11,6 +11,7 @@ import { InsightsModule } from "./modules/insights/insights.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
 import { PantryModule } from "./modules/pantry/pantry.module";
 import { ReceiptsModule } from "./modules/receipts/receipts.module";
+import { RecipesModule } from "./modules/recipes/recipes.module";
 import { UsersModule } from "./modules/users/users.module";
 
 @Module({
@@ -28,6 +29,7 @@ import { UsersModule } from "./modules/users/users.module";
     InsightsModule,
     NotificationsModule,
     DashboardModule,
+    RecipesModule,
   ],
 })
 export class AppModule {}
