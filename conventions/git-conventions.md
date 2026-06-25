@@ -89,6 +89,11 @@ Closes #PSRP-123
 - [ ] Manejo de errores implementado
 - [ ] Comentarios añadidos para lógica compleja
 
+### AI Agents (GitHub CLI)
+**Regla Estricta para Agentes AI:** Al crear Pull Requests vía la CLI de GitHub (`gh pr create`), el agente siempre debe apuntar explícitamente al fork del usuario (`pedrosrp/AI4Devs-finalproject`) en lugar del repositorio upstream padre (`LIDR-academy/AI4Devs-finalproject`).
+Para hacer esto, se debe usar la bandera `--repo pedrosrp/AI4Devs-finalproject`.
+Ejemplo: `gh pr create --repo pedrosrp/AI4Devs-finalproject --title "..." --body "..."`
+
 ## Flujo de Git
 
 ### Flujo Estándar
