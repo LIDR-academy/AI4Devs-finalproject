@@ -133,8 +133,8 @@
 
 **Purpose**: E2E coverage, graceful degradation hardening, navigation, and final validation.
 
-- [ ] T029 [P] Write backend E2E test in `back/test/recipes.e2e-spec.ts` — cover: `GET /api/recipes` 200 with real pantry items (using test DB), `GET /api/recipes` 401 without token, `GET /api/recipes` 503 when TheMealDB fetch is mocked to fail, `POST /api/recipes/:mealId/cook` 201 with valid IDs, `POST /cook` 404 with unknown pantry item ID
-- [ ] T030 [P] Write Playwright E2E test in `front/tests/e2e/recipes/recipe-suggestions.spec.ts` — open Recipes tab, assert at least one RecipeCard renders with real data, click a card, navigate to detail page, assert ingredient list renders, click "Mark as cooked", assert success toast, navigate to Pantry tab and assert consumed items are gone
+- [x] T029 [P] Write backend E2E test in `back/test/recipes.e2e-spec.ts` — cover: `GET /api/recipes` 200 with real pantry items (using test DB), `GET /api/recipes` 401 without token, `GET /api/recipes` 503 when TheMealDB fetch is mocked to fail, `POST /api/recipes/:mealId/cook` 201 with valid IDs, `POST /cook` 404 with unknown pantry item ID
+- [x] T030 [P] Write Playwright E2E test in `front/tests/e2e/recipes/recipe-suggestions.spec.ts` — open Recipes tab, assert at least one RecipeCard renders with real data, click a card, navigate to detail page, assert ingredient list renders, click "Mark as cooked", assert success toast, navigate to Pantry tab and assert consumed items are gone
 - [x] T031 Verify graceful degradation in `RecipesService.getSuggestedRecipes` — `Promise.allSettled` used so partial TheMealDB failures return partial results; only throws `ServiceUnavailableException` when all ingredient searches fail; error state displayed in `front/src/routes/recipes.tsx`
 - [x] T032 [P] Verify Recipes tab appears in bottom navigation — `front/src/components/AppShell.tsx` already has `{ to: "/recipes", label: "Recipes", icon: ChefHat }` in the nav array
 
@@ -241,6 +241,17 @@ T032 [P] Nav verification (✓ complete)
 3. Phase 4 (US3) → Cook action works (API-level) → validate S4
 4. Phase 5 (US2) → Detail view + cook button wired up → full user journey complete
 5. Phase 6 (Polish) → E2E tests, graceful degradation, nav verified → production-ready
+
+---
+
+## Phase 7: Convergence
+
+**Findings source**: `/speckit-converge` run 2026-06-26. CRITICAL items first.
+
+- [x] T033 Fix React Hooks rules violation in `front/src/routes/recipes.tsx` — move `useQuery` call above the `pathname.startsWith("/recipes/")` early return (hooks must not be called conditionally); add `enabled: !!authed && !pathname.startsWith("/recipes/")` to suppress the query when rendering the child Outlet; run `npx eslint --fix` for Prettier errors in the same file; verify zero ESLint errors per Constitution III (contradicts)
+- [x] T034 [P] Harden `cookRecipe` atomicity in `back/src/modules/recipes/recipes.service.ts` — validate that all `pantryItemIds` belong to the authenticated user's household (via a single `getUseNext`-or-lookup pass) before registering any consumption event, so that a rejected ID cannot leave earlier items consumed; write or extend `recipes.service.spec.ts` to assert no events are created when any ID is invalid per FR-007 (partial)
+- [x] T035 [P] Write backend E2E test in `back/test/recipes.e2e-spec.ts` — cover: `GET /api/recipes` 200 with seeded pantry items, 401 without token, 503 when TheMealDB fetch is mocked to fail; `POST /api/recipes/:mealId/cook` 201 with valid IDs, 404 with unknown pantry item ID per T029 / Phase 6 (missing)
+- [x] T036 [P] Write Playwright E2E test in `front/tests/e2e/recipes/recipe-suggestions.spec.ts` — open Recipes tab, assert at least one RecipeCard renders, click a card, assert detail page loads with ingredient list, click "Mark as cooked", assert success toast appears, navigate to Pantry tab and assert consumed items are gone per T030 / Phase 6 (missing)
 
 ---
 

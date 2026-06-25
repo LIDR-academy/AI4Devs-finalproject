@@ -191,12 +191,23 @@ describe("RecipesService.getSuggestedRecipes", () => {
   });
 });
 
-// ── T017: RecipesService.cookRecipe ──────────────────────────────────────────
+// ── T017 + T034: RecipesService.cookRecipe ───────────────────────────────────
 
 describe("RecipesService.cookRecipe", () => {
-  function makeService(registerEvent: jest.Mock) {
+  function makeService(opts: {
+    registerEvent: jest.Mock;
+    getUseNext?: () => Promise<UseNextResponse>;
+  }) {
     const pantryServiceMock = {
-      registerEvent,
+      registerEvent: opts.registerEvent,
+      getUseNext:
+        opts.getUseNext ??
+        jest.fn().mockResolvedValue(
+          makeUseNextResponse([
+            { id: "item-1", name: "Chicken" },
+            { id: "item-2", name: "Tomato" },
+          ]),
+        ),
     } as unknown as PantryService;
 
     const themealdbServiceMock = {
@@ -209,7 +220,7 @@ describe("RecipesService.cookRecipe", () => {
 
   it("calls PantryService.registerEvent for each pantryItemId", async () => {
     const registerEvent = jest.fn().mockResolvedValue({ id: "evt-1" });
-    const service = makeService(registerEvent);
+    const service = makeService({ registerEvent });
 
     await service.cookRecipe("user-1", ["item-1", "item-2"]);
 
@@ -223,7 +234,7 @@ describe("RecipesService.cookRecipe", () => {
       .fn()
       .mockResolvedValueOnce({ id: "evt-1" })
       .mockResolvedValueOnce({ id: "evt-2" });
-    const service = makeService(registerEvent);
+    const service = makeService({ registerEvent });
 
     const result = await service.cookRecipe("user-1", ["item-1", "item-2"]);
 
@@ -231,16 +242,28 @@ describe("RecipesService.cookRecipe", () => {
     expect(result.events).toEqual([{ id: "evt-1" }, { id: "evt-2" }]);
   });
 
-  it("propagates NotFoundException if any item is invalid (atomic failure)", async () => {
+  it("throws NotFoundException before calling registerEvent when an ID does not belong to the user", async () => {
+    const registerEvent = jest.fn().mockResolvedValue({ id: "evt-1" });
+    const service = makeService({
+      registerEvent,
+      getUseNext: () =>
+        Promise.resolve(makeUseNextResponse([{ id: "item-1", name: "Chicken" }])),
+    });
+
+    await expect(
+      service.cookRecipe("user-1", ["item-1", "bad-id"]),
+    ).rejects.toThrow(NotFoundException);
+
+    expect(registerEvent).not.toHaveBeenCalled();
+  });
+
+  it("propagates NotFoundException from registerEvent when item disappears after validation", async () => {
     const registerEvent = jest
       .fn()
-      .mockResolvedValueOnce({ id: "evt-1" })
-      .mockRejectedValueOnce(new NotFoundException("Pantry item not found"));
-    const service = makeService(registerEvent);
+      .mockRejectedValue(new NotFoundException("Pantry item not found"));
+    const service = makeService({ registerEvent });
 
-    await expect(service.cookRecipe("user-1", ["item-1", "bad-id"])).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(service.cookRecipe("user-1", ["item-1"])).rejects.toThrow(NotFoundException);
   });
 });
 

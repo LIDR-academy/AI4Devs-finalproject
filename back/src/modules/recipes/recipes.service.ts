@@ -107,6 +107,14 @@ export class RecipesService {
   }
 
   async cookRecipe(userId: string, pantryItemIds: string[]): Promise<CookRecipeResponse> {
+    const { items } = await this.pantryService.getUseNext(userId);
+    const validIds = new Set(items.map((i) => i.pantryItemId));
+
+    const invalidId = pantryItemIds.find((id) => !validIds.has(id));
+    if (invalidId) {
+      throw new NotFoundException(`Pantry item not found`);
+    }
+
     const events = await Promise.all(
       pantryItemIds.map((id) =>
         this.pantryService.registerEvent(userId, id, {

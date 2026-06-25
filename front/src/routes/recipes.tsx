@@ -4,10 +4,7 @@ import { ChefHat } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { RecipeCard } from "@/components/RecipeCard";
 import { getRecipeSuggestions } from "@/features/recipes/recipes.api";
-import {
-  requireAuthBeforeLoad,
-  useRequireAuthRedirect,
-} from "@/features/auth/route-guard";
+import { requireAuthBeforeLoad, useRequireAuthRedirect } from "@/features/auth/route-guard";
 
 export const Route = createFileRoute("/recipes")({
   beforeLoad: requireAuthBeforeLoad,
@@ -19,16 +16,21 @@ function RecipesPage() {
   const authed = useRequireAuthRedirect();
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const isChildRoute = pathname.startsWith("/recipes/");
 
-  if (pathname.startsWith("/recipes/")) {
-    return <Outlet />;
-  }
-
-  const { data: recipes = [], isLoading, isError } = useQuery({
+  const {
+    data: recipes = [],
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["recipes"],
     queryFn: () => getRecipeSuggestions(),
-    enabled: !!authed,
+    enabled: !!authed && !isChildRoute,
   });
+
+  if (isChildRoute) {
+    return <Outlet />;
+  }
 
   if (!authed) {
     return null;
@@ -81,7 +83,9 @@ function RecipesPage() {
           <li key={recipe.id}>
             <RecipeCard
               recipe={recipe}
-              onSelect={() => void navigate({ to: "/recipes/$mealId", params: { mealId: recipe.id } })}
+              onSelect={() =>
+                void navigate({ to: "/recipes/$mealId", params: { mealId: recipe.id } })
+              }
             />
           </li>
         ))}

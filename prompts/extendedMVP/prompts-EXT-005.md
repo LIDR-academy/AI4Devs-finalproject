@@ -25,7 +25,10 @@ Tasks:
 ## Prompt 6: Fix after manual review
 After a manual review and test, when I try to see the details from a recipe the page doesn't load. i.e. http://localhost:8080/recipes/52959 do not display anything but the list of recipes
 
-## Prompt 7:
-
+## Prompt 7: Improve UX
 The ingredientes in the recipe list is hard to see, I can't even read well properly.
 Change the text colour or the background i.e. "Salmón" from the image (Added an image as context).
+
+## Prompt 8: Converge + Implement
+/speckit-converge
+/speckit-implement
