@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aura-worker-ssg
+  labels:
+    app: aura-worker-ssg
+spec:
+  selector:
+    matchLabels:
+      app: aura-worker-ssg
+  template:
+    metadata:
+      labels:
+        app: aura-worker-ssg
+    spec:
+      containers:
+      - name: worker
+        image: aura-worker-ssg
+        imagePullPolicy: IfNotPresent

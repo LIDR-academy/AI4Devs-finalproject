@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aura-api
+spec:
+  template:
+    spec:
+      containers:
+      - name: api
+        imagePullPolicy: Never
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aura-frontend
+spec:
+  template:
+    spec:
+      containers:
+      - name: frontend
+        imagePullPolicy: Never
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aura-worker-email
+spec:
+  template:
+    spec:
+      containers:
+      - name: worker
+        imagePullPolicy: Never
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aura-worker-whatsapp
+spec:
+  template:
+    spec:
+      containers:
+      - name: worker
+        imagePullPolicy: Never
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aura-worker-ssg
+spec:
+  template:
+    spec:
+      containers:
+      - name: worker
+        imagePullPolicy: Never

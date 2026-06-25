@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: aura-dragonfly
+  labels:
+    app: aura-dragonfly
+spec:
+  serviceName: "aura-dragonfly"
+  selector:
+    matchLabels:
+      app: aura-dragonfly
+  template:
+    metadata:
+      labels:
+        app: aura-dragonfly
+    spec:
+      containers:
+      - name: dragonfly
+        image: docker.dragonflydb.io/dragonflydb/dragonfly:latest
+        ports:
+        - containerPort: 6379
+        volumeMounts:
+        - name: dragonfly-data
+          mountPath: /data
+      volumes:
+      - name: dragonfly-data
+        persistentVolumeClaim:
+          claimName: aura-dragonfly-pvc

@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aura-worker-whatsapp
+  labels:
+    app: aura-worker-whatsapp
+spec:
+  selector:
+    matchLabels:
+      app: aura-worker-whatsapp
+  template:
+    metadata:
+      labels:
+        app: aura-worker-whatsapp
+    spec:
+      containers:
+      - name: worker
+        image: aura-worker-whatsapp
+        imagePullPolicy: IfNotPresent
