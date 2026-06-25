@@ -59,3 +59,45 @@ jobs:
       - name: Build
         run: npm run build -- --configuration production
         working-directory: ./frontend
+
+  docker-build:
+    name: Build & Push Docker Images
+    needs: [dotnet-build, angular-build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - service: api
+            dockerfile: backend/src/Aura.Api/Dockerfile
+            image: ghcr.io/${{ github.repository_owner }}/aura-api
+          - service: worker-email
+            dockerfile: backend/workers/Aura.Workers.Email/Dockerfile
+            image: ghcr.io/${{ github.repository_owner }}/aura-worker-email
+          - service: worker-whatsapp
+            dockerfile: backend/workers/Aura.Workers.WhatsApp/Dockerfile
+            image: ghcr.io/${{ github.repository_owner }}/aura-worker-whatsapp
+          - service: worker-ssg
+            dockerfile: backend/workers/Aura.Workers.SSG/Dockerfile
+            image: ghcr.io/${{ github.repository_owner }}/aura-worker-ssg
+          - service: frontend
+            dockerfile: frontend/Dockerfile
+            image: ghcr.io/${{ github.repository_owner }}/aura-frontend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Build and push
+        run: |
+          docker build -f ${{ matrix.dockerfile }} -t ${{ matrix.image }}:${{ github.sha }} -t ${{ matrix.image }}:latest .
+          docker push ${{ matrix.image }}:${{ github.sha }}
+          docker push ${{ matrix.image }}:latest
