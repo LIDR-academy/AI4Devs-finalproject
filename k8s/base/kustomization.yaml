@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: aura
+
+resources:
+  - namespace.yaml
+  - api/deployment.yaml
+  - api/service.yaml
+  - frontend/deployment.yaml
+  - frontend/service.yaml
+  - workers/email-deployment.yaml
+  - workers/whatsapp-deployment.yaml
+  - workers/ssg-deployment.yaml
+  - database/postgres-statefulset.yaml
+  - database/service.yaml
+  - database/pvc.yaml
+  - dragonfly/statefulset.yaml
+  - dragonfly/service.yaml
+  - dragonfly/pvc.yaml
+  - minio/statefulset.yaml
+  - minio/service.yaml
+  - minio/pvc.yaml
+  - secrets/postgres-secret.yaml
+  - secrets/minio-secret.yaml
+  - secrets/jwt-secret.yaml

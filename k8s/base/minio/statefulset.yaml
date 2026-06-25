@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: aura-minio
+  labels:
+    app: aura-minio
+spec:
+  serviceName: "aura-minio"
+  selector:
+    matchLabels:
+      app: aura-minio
+  template:
+    metadata:
+      labels:
+        app: aura-minio
+    spec:
+      containers:
+      - name: minio
+        image: minio/minio:latest
+        args: ["server", "/data", "--console-address", ":9001"]
+        ports:
+        - containerPort: 9000
+        - containerPort: 9001
+        envFrom:
+        - secretRef:
+            name: aura-minio-secret
+        volumeMounts:
+        - name: minio-data
+          mountPath: /data
+      volumes:
+      - name: minio-data
+        persistentVolumeClaim:
+          claimName: aura-minio-pvc

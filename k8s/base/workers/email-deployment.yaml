@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aura-worker-email
+  labels:
+    app: aura-worker-email
+spec:
+  selector:
+    matchLabels:
+      app: aura-worker-email
+  template:
+    metadata:
+      labels:
+        app: aura-worker-email
+    spec:
+      containers:
+      - name: worker
+        image: aura-worker-email
+        imagePullPolicy: IfNotPresent
