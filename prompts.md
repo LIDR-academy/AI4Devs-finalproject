@@ -120,18 +120,45 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 
 ### 6. Tickets de Trabajo
 
-**Prompt 1:**
+All development tasks were defined in Notion with BDD acceptance criteria. The workflow for every ticket was identical: kick off with the task link, then close with a mutation testing gate before merging.
 
-**Prompt 2:**
+**Prompt 1 — Database ticket: Project schema migration (CF-80)**
 
-**Prompt 3:**
+> Let's work on the following task: https://www.notion.so/384e45a649934184904822ad0ab20fae
+> (BE US-PRJ-1 — Create a new construction project)
+> Start with the database layer: add the migration file for the `projects` table, following the existing Goose migration naming convention and the DBML schema already defined.
+
+**Prompt 2 — Backend ticket: Create project endpoint (CF-80)**
+
+> Let's work on the following task: https://www.notion.so/384e45a649934184904822ad0ab20fae
+> (BE US-PRJ-1 — Create a new construction project)
+
+> Run the mutation tests, and if all is green commit, push the changes and create the PR.
+
+**Prompt 3 — Frontend ticket: Create project form (CF-104)**
+
+> Let's work on the following task: https://www.notion.so/384e45a649934184904822ad0ab20fae
+> (FE CF-104 — Create a new construction project)
+
+> Run the mutation tests, and if all is green commit, push the changes and create the PR.
 
 ---
 
 ### 7. Pull Requests
 
-**Prompt 1:**
+The same closing prompt triggered the test gate and PR creation for every feature branch.
 
-**Prompt 2:**
+**Prompt 1 — BE PR #18: Create project backend**
+[github.com/brolyssjl/constructflow-api/pull/18](https://github.com/brolyssjl/constructflow-api/pull/18)
 
-**Prompt 3:**
+> Run the mutation tests, and if all is green commit, push the changes and create the PR.
+
+**Prompt 2 — FE PR #13: Create project frontend**
+[github.com/brolyssjl/constructflow-web/pull/13](https://github.com/brolyssjl/constructflow-web/pull/13)
+
+> Run the mutation tests, and if all is green commit, push the changes and create the PR.
+
+**Prompt 3 — BE PR #30: Edit project**
+[github.com/brolyssjl/constructflow-api/pull/30](https://github.com/brolyssjl/constructflow-api/pull/30)
+
+> Run the mutation tests, and if all is green commit, push the changes and create the PR.
