@@ -18,3 +18,24 @@ jobs:
       
       - name: Validate pipeline
         run: echo "CI pipeline is alive"
+
+  dotnet-build:
+    name: Build & Test .NET Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+          
+      - name: Restore dependencies
+        run: dotnet restore backend/AuraPlanning.sln
+        
+      - name: Build
+        run: dotnet build backend/AuraPlanning.sln --no-restore
+        
+      - name: Test
+        run: dotnet test backend/AuraPlanning.sln --no-build --verbosity normal

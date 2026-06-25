@@ -1,0 +1,6 @@
+@Aura.Api_HostAddress = http://localhost:5183
+
+GET {{Aura.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
