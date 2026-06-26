@@ -10,7 +10,10 @@ async function main(): Promise<void> {
 
   await prisma.user.upsert({
     where: { email: 'admin@taller.com' },
-    update: {},
+    update: {
+      active: true,
+      passwordHash,
+    },
     create: {
       email: 'admin@taller.com',
       passwordHash,
@@ -22,7 +25,10 @@ async function main(): Promise<void> {
 
   await prisma.user.upsert({
     where: { email: 'mechanic@taller.com' },
-    update: {},
+    update: {
+      active: true,
+      passwordHash: mechanicPasswordHash,
+    },
     create: {
       email: 'mechanic@taller.com',
       passwordHash: mechanicPasswordHash,
@@ -74,6 +80,77 @@ async function main(): Promise<void> {
       email: 'carlos@email.com',
     },
   });
+
+  const juanClient = await prisma.client.findUnique({
+    where: { nationalId: '1-2345-6789' },
+  });
+  const mariaClient = await prisma.client.findUnique({
+    where: { nationalId: '2-3456-7890' },
+  });
+
+  if (juanClient) {
+    const juanVehicle = await prisma.vehicle.upsert({
+      where: { licensePlate: 'ABC123' },
+      update: {},
+      create: {
+        licensePlate: 'ABC123',
+        brand: 'Toyota',
+        model: 'Corolla',
+        year: 2018,
+        color: 'Blanco',
+      },
+    });
+
+    const existingJuanOwnership = await prisma.vehicleOwnership.findFirst({
+      where: {
+        vehicleId: juanVehicle.id,
+        clientId: juanClient.id,
+        validTo: null,
+      },
+    });
+
+    if (!existingJuanOwnership) {
+      await prisma.vehicleOwnership.create({
+        data: {
+          vehicleId: juanVehicle.id,
+          clientId: juanClient.id,
+          validTo: null,
+        },
+      });
+    }
+  }
+
+  if (mariaClient) {
+    const mariaVehicle = await prisma.vehicle.upsert({
+      where: { licensePlate: 'XYZ789' },
+      update: {},
+      create: {
+        licensePlate: 'XYZ789',
+        brand: 'Honda',
+        model: 'Civic',
+        year: 2020,
+        color: 'Gris',
+      },
+    });
+
+    const existingMariaOwnership = await prisma.vehicleOwnership.findFirst({
+      where: {
+        vehicleId: mariaVehicle.id,
+        clientId: mariaClient.id,
+        validTo: null,
+      },
+    });
+
+    if (!existingMariaOwnership) {
+      await prisma.vehicleOwnership.create({
+        data: {
+          vehicleId: mariaVehicle.id,
+          clientId: mariaClient.id,
+          validTo: null,
+        },
+      });
+    }
+  }
 }
 
 main()

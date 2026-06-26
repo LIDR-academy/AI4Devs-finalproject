@@ -1,6 +1,6 @@
 # MecaTrack API
 
-NestJS REST API for MecaTrack workshop management (US-001: authentication, US-002: user management, US-003: client registration).
+NestJS REST API for MecaTrack workshop management (US-001: authentication, US-002: user management, US-003: client registration, US-004: vehicle registration).
 
 ## Prerequisites
 
@@ -83,6 +83,7 @@ All `/api/clients` routes require a valid Bearer token with role `ADMIN` or `MEC
 | `GET` | `/api/clients/search?nationalId=` | Exact national ID lookup |
 | `GET` | `/api/clients/:id` | Get client by ID |
 | `POST` | `/api/clients` | Create a new client |
+| `PATCH` | `/api/clients/:id` | Update client (`fullName`, `phone`, `email`; `nationalId` immutable) |
 
 Search requires at least one of `q` or `nationalId`. Duplicate `nationalId` returns `409` with an `existingClient` object in the response body.
 
@@ -102,6 +103,36 @@ curl -X POST -H "Authorization: Bearer $TOKEN" \
 
 OpenAPI fragment: [`docs/api-spec.clients.yml`](../../docs/api-spec.clients.yml)
 
+## Vehicle management (US-004, admin and mechanic)
+
+All `/api/vehicles` routes require a valid Bearer token with role `ADMIN` or `MECHANIC`.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/vehicles/search?q=` | Search by license plate fragment |
+| `GET` | `/api/vehicles/search?licensePlate=` | Exact plate lookup |
+| `GET` | `/api/vehicles/:id` | Get vehicle with `currentOwner` |
+| `GET` | `/api/vehicles/:id/history` | Visit history (`visits: []` until US-005) |
+| `POST` | `/api/vehicles` | Create vehicle + initial ownership |
+
+Plates are stored normalized (uppercase, no spaces). Duplicate plate returns `409` with `existingVehicle`. Create with unknown `clientId` returns `404`.
+
+### Examples
+
+```bash
+# Search by plate
+curl -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:4000/api/vehicles/search?licensePlate=ABC123"
+
+# Create vehicle for existing client
+curl -X POST -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"licensePlate":"DEF456","brand":"Toyota","model":"Yaris","year":2021,"clientId":"CLIENT_UUID"}' \
+  http://localhost:4000/api/vehicles
+```
+
+OpenAPI fragment: [`docs/api-spec.vehicles.yml`](../../docs/api-spec.vehicles.yml)
+
 ## Seed clients (development only)
 
 | Name | National ID | Phone | Email |
@@ -109,6 +140,13 @@ OpenAPI fragment: [`docs/api-spec.clients.yml`](../../docs/api-spec.clients.yml)
 | Juan Pérez | `1-2345-6789` | `88887777` | `juan@email.com` |
 | María López | `2-3456-7890` | `77776666` | — |
 | Carlos Ruiz | `3-4567-8901` | — | `carlos@email.com` |
+
+## Seed vehicles (development only)
+
+| Plate | Brand | Model | Year | Owner |
+|-------|-------|-------|------|-------|
+| `ABC123` | Toyota | Corolla | 2018 | Juan Pérez |
+| `XYZ789` | Honda | Civic | 2020 | María López |
 
 ## Scripts
 

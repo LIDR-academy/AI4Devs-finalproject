@@ -44,6 +44,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
         ...(body.existingClient !== undefined
           ? { existingClient: body.existingClient }
           : {}),
+        ...(body.existingVehicle !== undefined
+          ? { existingVehicle: body.existingVehicle }
+          : {}),
       });
       return;
     }

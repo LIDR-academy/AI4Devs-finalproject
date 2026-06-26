@@ -23,6 +23,8 @@ model User {
   refreshTokenExpiresAt DateTime?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
+
+  excludedVehicles Vehicle[] @relation("ExcludedBy")
 }
 
 model Client {
@@ -34,6 +36,42 @@ model Client {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
+  ownerships VehicleOwnership[]
+
   @@index([fullName])
   @@index([phone])
+}
+
+model Vehicle {
+  id                   String    @id @default(uuid())
+  licensePlate         String    @unique
+  brand                String
+  model                String
+  year                 Int
+  color                String?
+  excludeFromReminders Boolean   @default(false)
+  excludedAt           DateTime?
+  excludedById         String?
+  lastReminderSentAt   DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  excludedBy User?              @relation("ExcludedBy", fields: [excludedById], references: [id])
+  ownerships VehicleOwnership[]
+
+  @@index([licensePlate])
+}
+
+model VehicleOwnership {
+  id        String    @id @default(uuid())
+  vehicleId String
+  clientId  String
+  validFrom DateTime  @default(now())
+  validTo   DateTime?
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  client  Client  @relation(fields: [clientId], references: [id], onDelete: Restrict)
+
+  @@index([vehicleId, validTo])
+  @@index([clientId])
 }
