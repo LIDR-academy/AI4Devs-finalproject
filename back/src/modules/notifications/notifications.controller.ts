@@ -1,5 +1,6 @@
 import { Body, Controller, Delete, Get, HttpCode, Patch, Post, Request, UseGuards } from "@nestjs/common";
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
+import { UpdateAutoExpirySettingsDto } from "./dto/auto-expiry-settings.dto";
 import { UpdateNotificationPreferenceDto } from "./dto/update-notification-preference.dto";
 import { CreatePushSubscriptionDto } from "./dto/create-push-subscription.dto";
 import { NotificationDeliveryService } from "./notification-delivery.service";
@@ -42,6 +43,19 @@ export class NotificationsController {
         foodConsumedByOthersEnabled: body.foodConsumedByOthersEnabled,
       },
     );
+  }
+
+  @Get("settings/auto-expiry")
+  getAutoExpiry(@Request() req: RequestWithUser) {
+    return this.preferencesService.getAutoExpiry(req.user.id);
+  }
+
+  @Patch("settings/auto-expiry")
+  updateAutoExpiry(@Request() req: RequestWithUser, @Body() body: UpdateAutoExpirySettingsDto) {
+    return this.preferencesService.updateAutoExpiry(req.user.id, {
+      enabled: body.enabled,
+      thresholdDays: body.thresholdDays,
+    });
   }
 
   @Post("notifications/evaluate-expiring")

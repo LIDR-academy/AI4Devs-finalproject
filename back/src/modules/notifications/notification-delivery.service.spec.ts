@@ -244,3 +244,69 @@ describe("NotificationDeliveryService — savePushSubscription / deletePushSubsc
     expect(prismaMock.pushSubscription.deleteMany).toHaveBeenCalledWith({ where: { userId } });
   });
 });
+
+describe("NotificationDeliveryService — deliverDigest", () => {
+  const digestItems = [{ name: "Old Yogurt", daysExpired: 25 }];
+
+  it("sends the digest email and logs SENT", async () => {
+    const { svc, sesServiceMock, logs } = createMocks();
+
+    await svc.deliverDigest(userId, digestItems, userEmail);
+
+    expect(sesServiceMock.sendEmail).toHaveBeenCalledTimes(1);
+    expect(logs).toContainEqual(
+      expect.objectContaining({ type: "AUTO_EXPIRY_DIGEST", channel: "EMAIL", status: "SENT" }),
+    );
+  });
+
+  it("never throws and logs FAILED when email delivery is unavailable", async () => {
+    const { svc, logs } = createMocks({ sesThrows: new Error("SES down") });
+
+    await expect(svc.deliverDigest(userId, digestItems, userEmail)).resolves.toBeUndefined();
+    expect(logs).toContainEqual(
+      expect.objectContaining({ type: "AUTO_EXPIRY_DIGEST", channel: "EMAIL", status: "FAILED" }),
+    );
+  });
+
+  it("also pushes when a subscription exists", async () => {
+    const { svc, webPushServiceMock, logs } = createMocks({ existingPushSub: makePushSub() });
+
+    await svc.deliverDigest(userId, digestItems, userEmail);
+
+    expect(webPushServiceMock.sendNotification).toHaveBeenCalledTimes(1);
+    expect(logs).toContainEqual(
+      expect.objectContaining({ type: "AUTO_EXPIRY_DIGEST", channel: "WEB_PUSH", status: "SENT" }),
+    );
+  });
+
+  it("never throws when push delivery fails", async () => {
+    const { svc, logs } = createMocks({ existingPushSub: makePushSub(), pushThrows: new Error("push down") });
+
+    await expect(svc.deliverDigest(userId, digestItems, userEmail)).resolves.toBeUndefined();
+    expect(logs).toContainEqual(
+      expect.objectContaining({ type: "AUTO_EXPIRY_DIGEST", channel: "WEB_PUSH", status: "FAILED" }),
+    );
+  });
+});
+
+describe("NotificationDeliveryService — deliverDigestSummary", () => {
+  it("sends a summary email and logs SENT", async () => {
+    const { svc, sesServiceMock, logs } = createMocks();
+
+    await svc.deliverDigestSummary(userId, 3, userEmail);
+
+    expect(sesServiceMock.sendEmail).toHaveBeenCalledTimes(1);
+    expect(logs).toContainEqual(
+      expect.objectContaining({ type: "AUTO_EXPIRY_SUMMARY", channel: "EMAIL", status: "SENT" }),
+    );
+  });
+
+  it("never throws when summary email fails", async () => {
+    const { svc, logs } = createMocks({ sesThrows: new Error("SES down") });
+
+    await expect(svc.deliverDigestSummary(userId, 3, userEmail)).resolves.toBeUndefined();
+    expect(logs).toContainEqual(
+      expect.objectContaining({ type: "AUTO_EXPIRY_SUMMARY", channel: "EMAIL", status: "FAILED" }),
+    );
+  });
+});

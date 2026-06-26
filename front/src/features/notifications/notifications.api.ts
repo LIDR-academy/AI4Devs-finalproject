@@ -108,3 +108,22 @@ export function registerPushSubscription(payload: {
 export function deletePushSubscription(): Promise<void> {
   return requestJson<void>("/notifications/push-subscription", { method: "DELETE" });
 }
+
+export interface AutoExpirySettings {
+  enabled: boolean;
+  thresholdDays: number;
+}
+
+export function getAutoExpirySettings(): Promise<AutoExpirySettings> {
+  return requestJson<AutoExpirySettings>("/settings/auto-expiry", { method: "GET" });
+}
+
+export function updateAutoExpirySettings(payload: {
+  enabled: boolean;
+  thresholdDays?: number;
+}): Promise<AutoExpirySettings> {
+  return requestJson<AutoExpirySettings>("/settings/auto-expiry", {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}

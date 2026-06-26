@@ -15,6 +15,52 @@ import {
 } from "./pantry.ranking";
 
 const FAR_PAST_EXPIRY_DAYS = 7;
+const DAY_MS = 24 * 60 * 60 * 1000;
+export const DEFAULT_AUTO_EXPIRY_THRESHOLD_DAYS = 14;
+export const AUTO_EXPIRY_GRACE_DAYS = 7;
+export const AUTO_EXPIRED_METHOD = "AUTO_EXPIRED";
+
+export interface ExpiredCandidate {
+  id: string;
+  name: string;
+  expirationDate: Date;
+  daysExpired: number;
+  estimatedValueEur: number | null;
+}
+
+export interface ExpiredCandidatesView {
+  items: ExpiredCandidate[];
+  digestId: string | null;
+}
+
+/**
+ * Builds the `ConsumptionEvent` create payload for wasting a pantry item, snapshotting the item's
+ * fields exactly as `registerEvent` does. `method` is `null` for user-initiated waste and
+ * `AUTO_EXPIRED` for the automatic auto-resolve pass.
+ */
+export function buildWasteEventData(
+  userId: string,
+  item: Pick<
+    PantryItem,
+    "id" | "name" | "unit" | "quantity" | "expirationDate" | "pricePaid" | "notes"
+  >,
+  method: string | null,
+) {
+  const estimatedValueEur = computeEstimatedValue(item.pricePaid, item.quantity, item.quantity);
+  return {
+    pantryItemId: item.id,
+    userId,
+    type: "WASTED" as const,
+    quantity: item.quantity,
+    itemName: item.name,
+    itemUnit: item.unit,
+    ...(item.expirationDate && { itemExpirationDate: item.expirationDate }),
+    ...(item.pricePaid !== null && { itemPricePaid: item.pricePaid }),
+    ...(item.notes && { itemNotes: item.notes }),
+    ...(estimatedValueEur !== null && { estimatedValueEur }),
+    ...(method && { method }),
+  };
+}
 
 export interface UseNextItem {
   pantryItemId: string;
@@ -293,6 +339,200 @@ export class PantryService {
         occurredAt: true,
       },
     });
+  }
+
+  /**
+   * Reads the user's auto-expiry staleness threshold in days, defaulting to
+   * {@link DEFAULT_AUTO_EXPIRY_THRESHOLD_DAYS} when no preference row exists.
+   */
+  async getAutoExpiryThresholdDays(userId: string): Promise<number> {
+    const preference = await this.prisma.notificationPreference.findUnique({ where: { userId } });
+    return preference?.autoExpiryThresholdDays ?? DEFAULT_AUTO_EXPIRY_THRESHOLD_DAYS;
+  }
+
+  /**
+   * Pure query: the user's own pantry items expired beyond their staleness threshold. Used by both
+   * the candidates endpoint (US1) and the auto-expiry cron passes (US2). Does not assert access or
+   * apply dismiss suppression — callers add those concerns.
+   */
+  async getExpiredCandidates(userId: string, now: Date = new Date()): Promise<ExpiredCandidate[]> {
+    const thresholdDays = await this.getAutoExpiryThresholdDays(userId);
+    const cutoff = new Date(now.getTime() - thresholdDays * DAY_MS);
+
+    const items = await this.prisma.pantryItem.findMany({
+      where: { userId, expirationDate: { not: null, lt: cutoff } },
+      orderBy: { expirationDate: "asc" },
+    });
+
+    return items.map((item) => ({
+      id: item.id,
+      name: item.name,
+      expirationDate: item.expirationDate!,
+      daysExpired: daysPastExpiry(item.expirationDate!, now),
+      estimatedValueEur: computeEstimatedValue(item.pricePaid, item.quantity, item.quantity),
+    }));
+  }
+
+  /**
+   * The expired-candidates view for the pantry banner. Returns an empty list while a recently
+   * dismissed (`USER_RESOLVED`) digest is within the 7-day grace window, otherwise the current
+   * candidates plus the id of any `PENDING` digest.
+   */
+  async getExpiredCandidatesForUser(
+    userId: string,
+    now: Date = new Date(),
+  ): Promise<ExpiredCandidatesView> {
+    await this.assertUserCanAccessPantry(userId);
+
+    const suppressedSince = new Date(now.getTime() - AUTO_EXPIRY_GRACE_DAYS * DAY_MS);
+    const dismissed = await this.prisma.autoExpiryDigest.findFirst({
+      where: { userId, status: "USER_RESOLVED", resolvedAt: { gt: suppressedSince } },
+    });
+    if (dismissed) {
+      return { items: [], digestId: null };
+    }
+
+    const items = await this.getExpiredCandidates(userId, now);
+    const pending = await this.prisma.autoExpiryDigest.findFirst({
+      where: { userId, status: "PENDING" },
+      orderBy: { sentAt: "desc" },
+    });
+
+    return { items, digestId: pending?.id ?? null };
+  }
+
+  /**
+   * Marks the given items as wasted in a single atomic transaction (all-or-nothing, FR-005) and
+   * resolves any pending digest to `USER_RESOLVED`. Throws if any id is not one of the user's own
+   * items, leaving the pantry unchanged.
+   */
+  async bulkWasteItems(
+    userId: string,
+    itemIds: string[],
+    now: Date = new Date(),
+  ): Promise<{ wastedCount: number; events: Array<{ id: string; itemId: string }> }> {
+    await this.assertUserCanAccessPantry(userId);
+    const items = await this.loadOwnedItems(userId, itemIds);
+
+    const eventCreates = items.map((item) =>
+      this.prisma.consumptionEvent.create({
+        data: buildWasteEventData(userId, item, null),
+        select: { id: true },
+      }),
+    );
+    const itemDeletes = items.map((item) =>
+      this.prisma.pantryItem.delete({ where: { id: item.id } }),
+    );
+    const digestResolve = this.prisma.autoExpiryDigest.updateMany({
+      where: { userId, status: "PENDING" },
+      data: { status: "USER_RESOLVED", resolvedAt: now },
+    });
+
+    const results = await this.prisma.$transaction([...eventCreates, ...itemDeletes, digestResolve]);
+
+    const events = items.map((item, index) => ({
+      id: (results[index] as { id: string }).id,
+      itemId: item.id,
+    }));
+
+    await this.processGamificationForEvents(events.map((event) => event.id));
+
+    return { wastedCount: events.length, events };
+  }
+
+  /**
+   * Dismisses the given expired candidates without wasting them: the items stay in the pantry and
+   * the pending digest is resolved to `USER_RESOLVED` (creating one when none is pending) so the
+   * banner is suppressed for the 7-day grace window (R4).
+   */
+  async bulkDismissExpired(
+    userId: string,
+    itemIds: string[],
+    now: Date = new Date(),
+  ): Promise<{ dismissedCount: number }> {
+    await this.assertUserCanAccessPantry(userId);
+    await this.loadOwnedItems(userId, itemIds);
+
+    const resolved = await this.prisma.autoExpiryDigest.updateMany({
+      where: { userId, status: "PENDING" },
+      data: { status: "USER_RESOLVED", resolvedAt: now },
+    });
+    if (resolved.count === 0) {
+      await this.prisma.autoExpiryDigest.create({
+        data: { userId, status: "USER_RESOLVED", resolvedAt: now },
+      });
+    }
+
+    return { dismissedCount: itemIds.length };
+  }
+
+  /**
+   * Re-queries the user's still-stale candidates and wastes them with `method = AUTO_EXPIRED` in a
+   * single transaction. Used by the auto-resolve pass (US2) after the 7-day grace. Returns the
+   * number of items auto-wasted (0 when nothing remains stale). Does not touch digests — the cron
+   * owns digest state.
+   */
+  async autoWasteExpired(userId: string, now: Date = new Date()): Promise<number> {
+    const candidates = await this.getExpiredCandidates(userId, now);
+    if (candidates.length === 0) {
+      return 0;
+    }
+
+    const candidateIds = candidates.map((candidate) => candidate.id);
+    const items = await this.prisma.pantryItem.findMany({ where: { id: { in: candidateIds } } });
+
+    const eventCreates = items.map((item) =>
+      this.prisma.consumptionEvent.create({
+        data: buildWasteEventData(userId, item, AUTO_EXPIRED_METHOD),
+        select: { id: true },
+      }),
+    );
+    const itemDeletes = items.map((item) =>
+      this.prisma.pantryItem.delete({ where: { id: item.id } }),
+    );
+
+    const results = await this.prisma.$transaction([...eventCreates, ...itemDeletes]);
+    const eventIds = items.map((_, index) => (results[index] as { id: string }).id);
+    await this.processGamificationForEvents(eventIds);
+
+    return items.length;
+  }
+
+  /**
+   * Loads the pantry items for the given ids and verifies every one belongs to the user's
+   * household. Throws {@link NotFoundException} listing the failing ids if any is missing or
+   * foreign — no item is touched (FR-015).
+   */
+  private async loadOwnedItems(userId: string, itemIds: string[]): Promise<PantryItem[]> {
+    const visibleUserIds = await this.resolveHouseholdUserIds(userId);
+    const items = await this.prisma.pantryItem.findMany({ where: { id: { in: itemIds } } });
+    const byId = new Map(items.map((item) => [item.id, item]));
+
+    const failedItemIds = itemIds.filter((id) => {
+      const item = byId.get(id);
+      return !item || !visibleUserIds.includes(item.userId);
+    });
+    if (failedItemIds.length > 0) {
+      throw new NotFoundException({ message: "Pantry items not found", failedItemIds });
+    }
+
+    return itemIds.map((id) => byId.get(id)!);
+  }
+
+  /**
+   * Fire-and-forget gamification processing for newly created waste events. A failure here must
+   * never fail the bulk action (FR-018) — errors are logged and swallowed, mirroring
+   * {@link registerEvent}.
+   */
+  private async processGamificationForEvents(eventIds: string[]): Promise<void> {
+    for (const eventId of eventIds) {
+      try {
+        await this.pointsService.processConsumptionEvent(eventId);
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error);
+        this.logger.warn(`Gamification processing failed for event ${eventId}: ${reason}`);
+      }
+    }
   }
 
   private async assertUserCanAccessPantry(userId: string): Promise<void> {

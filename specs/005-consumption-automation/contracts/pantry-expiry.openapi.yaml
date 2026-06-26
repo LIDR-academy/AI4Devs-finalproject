@@ -1,0 +1,175 @@
+openapi: 3.0.3
+info:
+  title: Pantry Expiry Automation API
+  version: 1.0.0
+  description: >
+    Endpoints for surfacing and resolving long-expired pantry items (stale candidates).
+    All endpoints require a valid JWT and operate strictly on the authenticated user's
+    household scope. See spec FR-003, FR-004, FR-005, FR-006, FR-007, FR-014, FR-015.
+servers:
+  - url: /api
+security:
+  - bearerAuth: []
+paths:
+  /pantry/items/expired-candidates:
+    get:
+      summary: List the authenticated user's stale expired candidates
+      description: >
+        Returns pantry items expired beyond the user's threshold. Returns an empty list when a
+        USER_RESOLVED digest exists within the last 7 days (dismiss suppression, R4). digestId is
+        the user's current PENDING digest id, or null.
+      operationId: getExpiredCandidates
+      responses:
+        "200":
+          description: Candidate list (possibly empty) and current pending digest id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpiredCandidatesResponse"
+        "401":
+          description: Missing or invalid JWT
+  /pantry/items/bulk-waste:
+    post:
+      summary: Mark a set of candidates as wasted in one atomic action
+      description: >
+        Validates every itemId belongs to the user's household, then in a single transaction
+        creates a WASTED ConsumptionEvent (method=null) and deletes each PantryItem, and resolves
+        the user's PENDING digest to USER_RESOLVED. All-or-nothing (FR-005).
+      operationId: bulkWasteItems
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkItemIdsRequest"
+      responses:
+        "200":
+          description: Items wasted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkWasteResponse"
+        "400":
+          description: Empty or malformed itemIds
+        "401":
+          description: Missing or invalid JWT
+        "404":
+          description: One or more itemIds do not belong to the user (no items wasted)
+        "500":
+          description: >
+            Partial failure during the transaction; rolled back. Body lists failing item ids so the
+            UI can flag them for manual action.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkWasteFailure"
+  /pantry/items/bulk-dismiss-expired:
+    post:
+      summary: Dismiss a set of candidates without wasting them
+      description: >
+        Keeps the items in the pantry unchanged and resolves the user's PENDING digest to
+        USER_RESOLVED, starting the 7-day banner-suppression window (FR-006, R4).
+      operationId: bulkDismissExpired
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkItemIdsRequest"
+      responses:
+        "200":
+          description: Items dismissed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkDismissResponse"
+        "400":
+          description: Empty or malformed itemIds
+        "401":
+          description: Missing or invalid JWT
+        "404":
+          description: One or more itemIds do not belong to the user
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ExpiredCandidate:
+      type: object
+      required: [id, name, expirationDate, daysExpired, estimatedValueEur]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        expirationDate:
+          type: string
+          format: date-time
+        daysExpired:
+          type: integer
+          minimum: 0
+        estimatedValueEur:
+          type: number
+          nullable: true
+    ExpiredCandidatesResponse:
+      type: object
+      required: [items, digestId]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExpiredCandidate"
+        digestId:
+          type: string
+          format: uuid
+          nullable: true
+    BulkItemIdsRequest:
+      type: object
+      required: [itemIds]
+      properties:
+        itemIds:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            format: uuid
+    BulkWasteResponse:
+      type: object
+      required: [wastedCount, events]
+      properties:
+        wastedCount:
+          type: integer
+          minimum: 0
+        events:
+          type: array
+          items:
+            type: object
+            required: [id, itemId]
+            properties:
+              id:
+                type: string
+                format: uuid
+              itemId:
+                type: string
+                format: uuid
+    BulkWasteFailure:
+      type: object
+      required: [message, failedItemIds]
+      properties:
+        message:
+          type: string
+        failedItemIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+    BulkDismissResponse:
+      type: object
+      required: [dismissedCount]
+      properties:
+        dismissedCount:
+          type: integer
+          minimum: 0

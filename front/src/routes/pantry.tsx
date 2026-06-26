@@ -9,12 +9,17 @@ import {
   useRequireAuthRedirect,
 } from "@/features/auth/route-guard";
 import {
+  bulkDismissExpired,
+  bulkWaste,
+  getExpiredCandidates,
   listConsumptionEvents,
   listPantryItems,
   reAddConsumptionEvent,
   type ConsumptionEventRecord,
+  type ExpiredCandidate,
   type PantryApiItem,
 } from "@/features/pantry/pantry.api";
+import { ExpiredItemsReview } from "@/components/ExpiredItemsReview";
 import {
   consumeHighlightedItem,
   readPantryFilter,
@@ -49,6 +54,9 @@ export function PantryPage() {
   const [reAddedIds, setReAddedIds] = useState<Set<string>>(new Set());
   const [itemEmojis, setItemEmojis] = useState<Record<string, string>>({});
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
+  const [expiredCandidates, setExpiredCandidates] = useState<ExpiredCandidate[]>([]);
+  const [showExpiredReview, setShowExpiredReview] = useState(false);
+  const [isResolvingExpired, setIsResolvingExpired] = useState(false);
 
   // Restore preserved filter/search and pick up a just-added item to highlight.
   // Done in an effect (not a lazy initializer) to avoid SSR/client hydration mismatch.
@@ -115,6 +123,37 @@ export function PantryPage() {
       isMounted = false;
     };
   }, []);
+
+  // Surface long-expired items the user has not acted on yet (FR-014).
+  useEffect(() => {
+    let isMounted = true;
+    getExpiredCandidates()
+      .then((response) => {
+        if (isMounted) setExpiredCandidates(response.items);
+      })
+      .catch(() => {
+        // A failure here must not block the pantry view — the banner simply does not appear.
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  async function resolveExpired(action: (itemIds: string[]) => Promise<unknown>, itemIds: string[]) {
+    if (isResolvingExpired) return;
+    setIsResolvingExpired(true);
+    try {
+      await action(itemIds);
+      setExpiredCandidates([]);
+      setShowExpiredReview(false);
+      const fresh = await listPantryItems();
+      setItems(fresh);
+    } catch (apiError) {
+      setError(apiError instanceof Error ? apiError.message : "Could not resolve expired items.");
+    } finally {
+      setIsResolvingExpired(false);
+    }
+  }
 
   useEffect(() => {
     if (filter !== "Consumed" && filter !== "Wasted") return;
@@ -215,6 +254,42 @@ export function PantryPage() {
         </Link>
       }
     >
+      {expiredCandidates.length > 0 && (
+        <div
+          className="mb-4 rounded-2xl bg-destructive/10 px-4 py-3 border border-destructive/30"
+          data-testid="expired-items-banner"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="size-5 text-destructive" />
+              <div className="text-[14px]">
+                <span className="font-semibold">{expiredCandidates.length} items</span> may be
+                expired
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowExpiredReview((open) => !open)}
+              className="text-[13px] font-semibold text-destructive"
+              data-testid="expired-review-toggle"
+            >
+              {showExpiredReview ? "Hide" : "Review now"}
+            </button>
+          </div>
+
+          {showExpiredReview && (
+            <div className="mt-3">
+              <ExpiredItemsReview
+                candidates={expiredCandidates}
+                isProcessing={isResolvingExpired}
+                onWasteAll={(itemIds) => void resolveExpired(bulkWaste, itemIds)}
+                onDismissAll={(itemIds) => void resolveExpired(bulkDismissExpired, itemIds)}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
       {expiringSoon > 0 && (
         <div className="mb-4 flex items-center gap-3 rounded-2xl bg-warning/15 px-4 py-3 text-warning-foreground border border-warning/30">
           <AlertTriangle className="size-5 text-warning" />

@@ -1,0 +1,75 @@
+openapi: 3.0.3
+info:
+  title: Auto-Expiry Settings API
+  version: 1.0.0
+  description: >
+    Per-user control of automatic expiry. Backed by NotificationPreference
+    (autoExpiryEnabled, autoExpiryThresholdDays). See spec FR-011, FR-012, FR-013, FR-015.
+servers:
+  - url: /api
+security:
+  - bearerAuth: []
+paths:
+  /settings/auto-expiry:
+    get:
+      summary: Read the authenticated user's auto-expiry settings
+      operationId: getAutoExpirySettings
+      responses:
+        "200":
+          description: Current settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AutoExpirySettings"
+        "401":
+          description: Missing or invalid JWT
+    patch:
+      summary: Update the authenticated user's auto-expiry settings
+      description: >
+        Updates enabled and optionally thresholdDays. thresholdDays must be an integer in [7, 60]
+        (FR-012); out-of-range values are rejected with 400.
+      operationId: updateAutoExpirySettings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AutoExpirySettingsUpdate"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AutoExpirySettings"
+        "400":
+          description: thresholdDays out of range or malformed body
+        "401":
+          description: Missing or invalid JWT
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    AutoExpirySettings:
+      type: object
+      required: [enabled, thresholdDays]
+      properties:
+        enabled:
+          type: boolean
+        thresholdDays:
+          type: integer
+          minimum: 7
+          maximum: 60
+    AutoExpirySettingsUpdate:
+      type: object
+      required: [enabled]
+      properties:
+        enabled:
+          type: boolean
+        thresholdDays:
+          type: integer
+          minimum: 7
+          maximum: 60

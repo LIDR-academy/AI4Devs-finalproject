@@ -299,3 +299,41 @@ export async function registerPantryItemEvent(
 
   return (await response.json()) as { id: string };
 }
+
+export interface ExpiredCandidate {
+  id: string;
+  name: string;
+  expirationDate: string;
+  daysExpired: number;
+  estimatedValueEur: number | null;
+}
+
+export interface ExpiredCandidatesResponse {
+  items: ExpiredCandidate[];
+  digestId: string | null;
+}
+
+export function getExpiredCandidates(): Promise<ExpiredCandidatesResponse> {
+  return requestJson<ExpiredCandidatesResponse>("/pantry/items/expired-candidates", {
+    method: "GET",
+  });
+}
+
+export interface BulkWasteResponse {
+  wastedCount: number;
+  events: Array<{ id: string; itemId: string }>;
+}
+
+export function bulkWaste(itemIds: string[]): Promise<BulkWasteResponse> {
+  return requestJson<BulkWasteResponse>("/pantry/items/bulk-waste", {
+    method: "POST",
+    body: JSON.stringify({ itemIds }),
+  });
+}
+
+export function bulkDismissExpired(itemIds: string[]): Promise<{ dismissedCount: number }> {
+  return requestJson<{ dismissedCount: number }>("/pantry/items/bulk-dismiss-expired", {
+    method: "POST",
+    body: JSON.stringify({ itemIds }),
+  });
+}

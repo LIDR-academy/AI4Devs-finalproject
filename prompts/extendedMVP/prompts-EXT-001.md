@@ -12,7 +12,6 @@ Use the ticket context as your guide, and let me know if you have any questions.
 ## Prompt 3: Documentation update
 From the app’s notification service, could you outline what needs to be configured, list the parameters, and include a simple guide for obtaining them? Add this information to the corresponding .md file that includes the project setup.
 
-
 ## Working push notifications:
 ![working_push_notifications](push_notifications.png)
 

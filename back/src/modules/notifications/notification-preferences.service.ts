@@ -8,6 +8,16 @@ export interface NotificationPreferenceResponse {
   foodConsumedByOthersEnabled: boolean;
 }
 
+export interface AutoExpirySettingsResponse {
+  enabled: boolean;
+  thresholdDays: number;
+}
+
+export interface AutoExpirySettingsUpdate {
+  enabled: boolean;
+  thresholdDays?: number;
+}
+
 @Injectable()
 export class NotificationPreferencesService {
   constructor(
@@ -57,6 +67,46 @@ export class NotificationPreferencesService {
       expirationEnabled: preference.expirationEnabled,
       priceDropEnabled: preference.priceDropEnabled,
       foodConsumedByOthersEnabled: preference.foodConsumedByOthersEnabled,
+    };
+  }
+
+  async getAutoExpiry(userId: string): Promise<AutoExpirySettingsResponse> {
+    await this.assertUserExists(userId);
+
+    const preference = await this.prisma.notificationPreference.upsert({
+      where: { userId },
+      create: { userId },
+      update: {},
+    });
+
+    return {
+      enabled: preference.autoExpiryEnabled,
+      thresholdDays: preference.autoExpiryThresholdDays,
+    };
+  }
+
+  async updateAutoExpiry(
+    userId: string,
+    settings: AutoExpirySettingsUpdate,
+  ): Promise<AutoExpirySettingsResponse> {
+    await this.assertUserExists(userId);
+
+    const data = {
+      autoExpiryEnabled: settings.enabled,
+      ...(settings.thresholdDays !== undefined && {
+        autoExpiryThresholdDays: settings.thresholdDays,
+      }),
+    };
+
+    const preference = await this.prisma.notificationPreference.upsert({
+      where: { userId },
+      create: { userId, ...data },
+      update: { ...data },
+    });
+
+    return {
+      enabled: preference.autoExpiryEnabled,
+      thresholdDays: preference.autoExpiryThresholdDays,
     };
   }
 

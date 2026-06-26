@@ -8,7 +8,9 @@ import {
   useRequireAuthRedirect,
 } from "@/features/auth/route-guard";
 import {
+  getAutoExpirySettings,
   getNotificationPreferences,
+  updateAutoExpirySettings,
   updateNotificationPreferences,
 } from "@/features/notifications/notifications.api";
 
@@ -17,7 +19,7 @@ export const Route = createFileRoute("/settings")({
   component: SettingsPage,
 });
 
-function SettingsPage() {
+export function SettingsPage() {
   const authed = useRequireAuthRedirect();
 
   if (!authed) {
@@ -35,6 +37,9 @@ function SettingsPage() {
   const [savingPreference, setSavingPreference] = useState(false);
   const [preferenceMessage, setPreferenceMessage] = useState<string | null>(null);
   const [preferenceError, setPreferenceError] = useState<string | null>(null);
+  const [autoExpiry, setAutoExpiry] = useState({ enabled: true, thresholdDays: 14 });
+  const [savingAutoExpiry, setSavingAutoExpiry] = useState(false);
+  const [autoExpiryError, setAutoExpiryError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -99,6 +104,48 @@ function SettingsPage() {
     }
   }
 
+  useEffect(() => {
+    let mounted = true;
+    getAutoExpirySettings()
+      .then((settings) => {
+        if (mounted) setAutoExpiry(settings);
+      })
+      .catch(() => {
+        // Non-blocking: fall back to defaults if settings cannot be loaded.
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  async function saveAutoExpiry(next: { enabled: boolean; thresholdDays: number }) {
+    setSavingAutoExpiry(true);
+    setAutoExpiryError(null);
+    const previous = autoExpiry;
+    setAutoExpiry(next);
+    try {
+      const updated = await updateAutoExpirySettings(next);
+      setAutoExpiry(updated);
+    } catch (apiError) {
+      setAutoExpiry(previous);
+      setAutoExpiryError(
+        apiError instanceof Error ? apiError.message : "Could not save auto-expiry settings.",
+      );
+    } finally {
+      setSavingAutoExpiry(false);
+    }
+  }
+
+  function handleToggleAutoExpiry() {
+    if (savingAutoExpiry) return;
+    void saveAutoExpiry({ ...autoExpiry, enabled: !autoExpiry.enabled });
+  }
+
+  function handleThresholdChange(value: number) {
+    if (Number.isNaN(value) || value < 7 || value > 60) return;
+    void saveAutoExpiry({ ...autoExpiry, thresholdDays: value });
+  }
+
   function handleSignOut() {
     clearSession();
     navigate({ to: "/auth" });
@@ -153,7 +200,44 @@ function SettingsPage() {
           disabled={loadingPreference || savingPreference}
           testId="notification-food-consumed-toggle"
         />
+        <Toggle
+          label="Auto-expire stale items"
+          on={autoExpiry.enabled}
+          onToggle={handleToggleAutoExpiry}
+          disabled={savingAutoExpiry}
+          testId="auto-expiry-toggle"
+        />
+        <div className="flex items-center justify-between px-4 py-3.5">
+          <div>
+            <p className="text-[14.5px] font-medium">Auto-expire after</p>
+            <p className="text-[12px] text-muted-foreground">
+              Items expired for more than this many days are automatically marked as wasted.
+            </p>
+          </div>
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <input
+              type="number"
+              min={7}
+              max={60}
+              value={autoExpiry.thresholdDays}
+              disabled={!autoExpiry.enabled || savingAutoExpiry}
+              onChange={(e) => handleThresholdChange(Number(e.target.value))}
+              data-testid="auto-expiry-threshold"
+              className="w-16 rounded-lg border border-border bg-surface px-2 py-1 text-right text-[14px] text-foreground outline-none focus:border-primary disabled:opacity-50"
+            />
+            <span className="text-[13.5px]">days</span>
+          </div>
+        </div>
       </Group>
+
+      {autoExpiryError && (
+        <p
+          data-testid="auto-expiry-error"
+          className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-[12px] text-destructive"
+        >
+          {autoExpiryError}
+        </p>
+      )}
 
       {preferenceMessage && (
         <p

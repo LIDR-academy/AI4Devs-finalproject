@@ -26,11 +26,11 @@ enum HouseholdInvitationStatus {
 }
 
 model Household {
-  id              String               @id @default(uuid())
+  id              String   @id @default(uuid())
   name            String
   createdByUserId String
-  createdAt       DateTime             @default(now())
-  updatedAt       DateTime             @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   createdBy   User                  @relation("HouseholdCreatedBy", fields: [createdByUserId], references: [id])
   members     HouseholdMember[]
@@ -74,23 +74,24 @@ model HouseholdInvitation {
 }
 
 model User {
-  id         String      @id @default(uuid())
-  email      String      @unique
-  password   String
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  pantryItems PantryItem[]
-  consumptionEvents ConsumptionEvent[]
-  receipts   Receipt[]
+  id                             String                  @id @default(uuid())
+  email                          String                  @unique
+  password                       String
+  createdAt                      DateTime                @default(now())
+  updatedAt                      DateTime                @updatedAt
+  pantryItems                    PantryItem[]
+  consumptionEvents              ConsumptionEvent[]
+  receipts                       Receipt[]
   confirmedExpirationAssessments ExpirationAssessment[]
-  notificationPreference NotificationPreference?
-  notificationLogs       NotificationLog[]
-  pushSubscription       PushSubscription?
-  householdsCreated    Household[]          @relation("HouseholdCreatedBy")
-  householdMemberships HouseholdMember[]
-  sentInvitations      HouseholdInvitation[] @relation("HouseholdInvitationInvitedBy")
-  userPoints           UserPoints[]
-  userBadges           UserBadge[]
+  notificationPreference         NotificationPreference?
+  notificationLogs               NotificationLog[]
+  pushSubscription               PushSubscription?
+  householdsCreated              Household[]             @relation("HouseholdCreatedBy")
+  householdMemberships           HouseholdMember[]
+  sentInvitations                HouseholdInvitation[]   @relation("HouseholdInvitationInvitedBy")
+  userPoints                     UserPoints[]
+  userBadges                     UserBadge[]
+  autoExpiryDigests              AutoExpiryDigest[]
 }
 
 model UserPoints {
@@ -117,21 +118,21 @@ model UserBadge {
 }
 
 model PantryItem {
-  id              String   @id @default(uuid())
-  name            String
-  quantity        Int      @default(1)
-  unit            String   @default("unit")
-  storageLocation String   @default("Pantry")
-  pricePaid       Decimal? @db.Decimal(10, 2)
-  expirationDate  DateTime?
-  notes           String?
+  id                    String                @id @default(uuid())
+  name                  String
+  quantity              Int                   @default(1)
+  unit                  String                @default("unit")
+  storageLocation       String                @default("Pantry")
+  pricePaid             Decimal?              @db.Decimal(10, 2)
+  expirationDate        DateTime?
+  notes                 String?
   lastExpirationAlertAt DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  userId          String
-  consumptionEvents ConsumptionEvent[]
-  receiptItems   ReceiptItem[]
-  expirationAssessment ExpirationAssessment?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  userId                String
+  consumptionEvents     ConsumptionEvent[]
+  receiptItems          ReceiptItem[]
+  expirationAssessment  ExpirationAssessment?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -145,19 +146,20 @@ enum ConsumptionEventType {
 }
 
 model ConsumptionEvent {
-  id                  String               @id @default(uuid())
-  pantryItemId        String?
-  userId              String
-  type                ConsumptionEventType
-  quantity            Int
-  itemName            String?
-  itemUnit            String?
-  itemExpirationDate  DateTime?
-  itemPricePaid       Decimal?             @db.Decimal(10, 2)
-  itemNotes           String?
-  estimatedValueEur   Decimal?             @db.Decimal(10, 2)
-  occurredAt          DateTime             @default(now())
-  createdAt           DateTime             @default(now())
+  id                 String               @id @default(uuid())
+  pantryItemId       String?
+  userId             String
+  type               ConsumptionEventType
+  quantity           Int
+  itemName           String?
+  itemUnit           String?
+  itemExpirationDate DateTime?
+  itemPricePaid      Decimal?             @db.Decimal(10, 2)
+  itemNotes          String?
+  estimatedValueEur  Decimal?             @db.Decimal(10, 2)
+  method             String?
+  occurredAt         DateTime             @default(now())
+  createdAt          DateTime             @default(now())
 
   pantryItem PantryItem? @relation(fields: [pantryItemId], references: [id], onDelete: SetNull)
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -167,15 +169,29 @@ model ConsumptionEvent {
 }
 
 model NotificationPreference {
-  id                String   @id @default(uuid())
-  userId            String   @unique
-  expirationEnabled Boolean  @default(true)
-  priceDropEnabled  Boolean  @default(true)
-  foodConsumedByOthersEnabled Boolean @default(true)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                          String   @id @default(uuid())
+  userId                      String   @unique
+  expirationEnabled           Boolean  @default(true)
+  priceDropEnabled            Boolean  @default(true)
+  foodConsumedByOthersEnabled Boolean  @default(true)
+  autoExpiryEnabled           Boolean  @default(true)
+  autoExpiryThresholdDays     Int      @default(14)
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AutoExpiryDigest {
+  id         String    @id @default(uuid())
+  userId     String
+  sentAt     DateTime  @default(now())
+  resolvedAt DateTime?
+  status     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([status, sentAt])
 }
 
 model NotificationLog {
@@ -254,18 +270,18 @@ model Receipt {
 }
 
 model ReceiptItem {
-  id             String     @id @default(uuid())
+  id             String      @id @default(uuid())
   rawName        String
-  normalizedName String     @default("")
+  normalizedName String      @default("")
   quantity       Int?
   unit           String?
-  unitPriceEur   Decimal?   @db.Decimal(10, 2)
-  lineTotalEur   Decimal?   @db.Decimal(10, 2)
-  userConfirmed  Boolean    @default(false)
-  createdAt      DateTime   @default(now())
+  unitPriceEur   Decimal?    @db.Decimal(10, 2)
+  lineTotalEur   Decimal?    @db.Decimal(10, 2)
+  userConfirmed  Boolean     @default(false)
+  createdAt      DateTime    @default(now())
   receiptId      String
   pantryItemId   String?
-  receipt        Receipt    @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  receipt        Receipt     @relation(fields: [receiptId], references: [id], onDelete: Cascade)
   pantryItem     PantryItem? @relation(fields: [pantryItemId], references: [id], onDelete: SetNull)
 
   @@index([receiptId])

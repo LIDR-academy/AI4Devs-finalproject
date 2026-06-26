@@ -65,3 +65,42 @@ describe("NotificationsController — push subscription endpoints", () => {
     expect(deliveryServiceMock.deletePushSubscription).toHaveBeenCalledWith(userId);
   });
 });
+
+describe("NotificationsController — auto-expiry settings endpoints", () => {
+  function createAutoExpiryController() {
+    const preferencesServiceMock = {
+      getAutoExpiry: jest.fn(),
+      updateAutoExpiry: jest.fn(),
+    };
+    const controller = new NotificationsController(
+      preferencesServiceMock as any,
+      {} as any,
+      {} as any,
+      {} as any,
+    );
+    return { controller, preferencesServiceMock };
+  }
+
+  it("getAutoExpiry delegates to the preferences service for the user", async () => {
+    const { controller, preferencesServiceMock } = createAutoExpiryController();
+    preferencesServiceMock.getAutoExpiry.mockResolvedValue({ enabled: true, thresholdDays: 14 });
+
+    const result = await controller.getAutoExpiry(makeRequest());
+
+    expect(preferencesServiceMock.getAutoExpiry).toHaveBeenCalledWith(userId);
+    expect(result).toEqual({ enabled: true, thresholdDays: 14 });
+  });
+
+  it("updateAutoExpiry forwards enabled and thresholdDays", async () => {
+    const { controller, preferencesServiceMock } = createAutoExpiryController();
+    preferencesServiceMock.updateAutoExpiry.mockResolvedValue({ enabled: false, thresholdDays: 30 });
+
+    const result = await controller.updateAutoExpiry(makeRequest(), { enabled: false, thresholdDays: 30 });
+
+    expect(preferencesServiceMock.updateAutoExpiry).toHaveBeenCalledWith(userId, {
+      enabled: false,
+      thresholdDays: 30,
+    });
+    expect(result).toEqual({ enabled: false, thresholdDays: 30 });
+  });
+});

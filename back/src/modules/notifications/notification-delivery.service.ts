@@ -64,6 +64,58 @@ export class NotificationDeliveryService {
     }
   }
 
+  /**
+   * Sends the long-expired-items digest (email + optional web-push) listing stale candidates with
+   * a "Review now" prompt. Never throws — a delivery failure is logged so the daily pass still
+   * records the digest and the in-app banner remains the fallback (FR-016).
+   */
+  async deliverDigest(userId: string, items: DigestItem[], userEmail: string): Promise<void> {
+    try {
+      await this.sesService.sendEmail({
+        to: userEmail,
+        subject: "Long-expired items to review — RealSaveFooding",
+        htmlBody: this.#renderDigestHtml(items),
+      });
+      await this.prisma.notificationLog.create({
+        data: { userId, type: "AUTO_EXPIRY_DIGEST", channel: "EMAIL", status: "SENT" },
+      });
+    } catch (error) {
+      const failReason = error instanceof Error ? error.message : String(error);
+      this.logger.error(`digest_email_failed userId=${userId}`, failReason);
+      await this.prisma.notificationLog.create({
+        data: { userId, type: "AUTO_EXPIRY_DIGEST", channel: "EMAIL", status: "FAILED", failReason },
+      });
+    }
+
+    const sub = await this.prisma.pushSubscription.findUnique({ where: { userId } });
+    if (sub) {
+      await this.#deliverDigestPush(userId, sub, items.length);
+    }
+  }
+
+  /**
+   * Sends the post-auto-resolve summary ("N items were automatically marked as wasted"). Never
+   * throws. Only invoked by the auto-resolve pass when items were auto-wasted.
+   */
+  async deliverDigestSummary(userId: string, wastedCount: number, userEmail: string): Promise<void> {
+    try {
+      await this.sesService.sendEmail({
+        to: userEmail,
+        subject: "Items automatically marked as wasted — RealSaveFooding",
+        htmlBody: `<h2>Pantry cleanup</h2><p>${wastedCount} item(s) were automatically marked as wasted after the review period.</p>`,
+      });
+      await this.prisma.notificationLog.create({
+        data: { userId, type: "AUTO_EXPIRY_SUMMARY", channel: "EMAIL", status: "SENT" },
+      });
+    } catch (error) {
+      const failReason = error instanceof Error ? error.message : String(error);
+      this.logger.error(`digest_summary_email_failed userId=${userId}`, failReason);
+      await this.prisma.notificationLog.create({
+        data: { userId, type: "AUTO_EXPIRY_SUMMARY", channel: "EMAIL", status: "FAILED", failReason },
+      });
+    }
+  }
+
   async savePushSubscription(userId: string, data: PushSubscriptionData): Promise<string> {
     const record = await this.prisma.pushSubscription.upsert({
       where: { userId },
@@ -132,4 +184,41 @@ export class NotificationDeliveryService {
       .join("");
     return `<h2>Items expiring soon</h2><ul>${rows}</ul>`;
   }
+
+  async #deliverDigestPush(
+    userId: string,
+    sub: { endpoint: string; p256dh: string; auth: string },
+    count: number,
+  ): Promise<void> {
+    try {
+      await this.webPushService.sendNotification(
+        { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
+        { title: "Long-expired items to review", body: `${count} item(s) may be expired. Review now.` },
+      );
+      await this.prisma.notificationLog.create({
+        data: { userId, type: "AUTO_EXPIRY_DIGEST", channel: "WEB_PUSH", status: "SENT" },
+      });
+    } catch (error) {
+      const failReason = error instanceof Error ? error.message : String(error);
+      const is410 = (error as { statusCode?: number }).statusCode === 410;
+      if (is410) {
+        await this.prisma.pushSubscription.deleteMany({ where: { userId } });
+      }
+      await this.prisma.notificationLog.create({
+        data: { userId, type: "AUTO_EXPIRY_DIGEST", channel: "WEB_PUSH", status: "FAILED", failReason },
+      });
+    }
+  }
+
+  #renderDigestHtml(items: DigestItem[]): string {
+    const rows = items
+      .map((i) => `<li>${i.name} — expired ${i.daysExpired} days ago</li>`)
+      .join("");
+    return `<h2>Long-expired items to review</h2><ul>${rows}</ul><p>Review now to keep your pantry accurate.</p>`;
+  }
+}
+
+export interface DigestItem {
+  name: string;
+  daysExpired: number;
 }

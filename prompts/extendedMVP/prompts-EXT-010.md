@@ -1,5 +1,5 @@
 ## Prompt 1: Specs from refined ticket
-/speckit-specify docs/tickets/extendedMVP/EXT-009-gamification.md
+/speckit-specify docs/tickets/extendedMVP/EXT-010-consumption-automation.md
 
 ## Prompt 2: Plan
 /speckit-plan (with spec.md as context)

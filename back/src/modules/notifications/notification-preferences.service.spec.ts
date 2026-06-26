@@ -95,3 +95,60 @@ describe("NotificationPreferencesService", () => {
     );
   });
 });
+
+describe("NotificationPreferencesService — auto-expiry settings", () => {
+  const user = { id: "user-ax", email: "ax@example.com" };
+
+  function createService() {
+    const store = new Map<string, { autoExpiryEnabled: boolean; autoExpiryThresholdDays: number }>();
+    const prismaMock = {
+      notificationPreference: {
+        upsert: jest.fn(async ({ where, create, update }: any) => {
+          const existing = store.get(where.userId);
+          if (!existing) {
+            const created = {
+              userId: where.userId,
+              autoExpiryEnabled: create.autoExpiryEnabled ?? true,
+              autoExpiryThresholdDays: create.autoExpiryThresholdDays ?? 14,
+            };
+            store.set(where.userId, created);
+            return created;
+          }
+          const merged = {
+            ...existing,
+            autoExpiryEnabled:
+              typeof update.autoExpiryEnabled === "boolean"
+                ? update.autoExpiryEnabled
+                : existing.autoExpiryEnabled,
+            autoExpiryThresholdDays:
+              typeof update.autoExpiryThresholdDays === "number"
+                ? update.autoExpiryThresholdDays
+                : existing.autoExpiryThresholdDays,
+          };
+          store.set(where.userId, merged);
+          return merged;
+        }),
+      },
+    } as any;
+    const usersServiceMock = { findById: jest.fn(async (id: string) => (id === user.id ? user : null)) } as any;
+    return { service: new NotificationPreferencesService(prismaMock, usersServiceMock) };
+  }
+
+  it("returns the defaults (enabled, 14 days) when no row exists", async () => {
+    const { service } = createService();
+    expect(await service.getAutoExpiry(user.id)).toEqual({ enabled: true, thresholdDays: 14 });
+  });
+
+  it("persists an enabled=false update", async () => {
+    const { service } = createService();
+    const updated = await service.updateAutoExpiry(user.id, { enabled: false });
+    expect(updated.enabled).toBe(false);
+    expect((await service.getAutoExpiry(user.id)).enabled).toBe(false);
+  });
+
+  it("persists a custom threshold", async () => {
+    const { service } = createService();
+    const updated = await service.updateAutoExpiry(user.id, { enabled: true, thresholdDays: 30 });
+    expect(updated.thresholdDays).toBe(30);
+  });
+});

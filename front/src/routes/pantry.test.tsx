@@ -30,6 +30,9 @@ vi.mock("@/features/pantry/pantry-view-state", () => ({
 const listPantryItemsMock = vi.fn();
 const reAddConsumptionEventMock = vi.fn();
 const listConsumptionEventsMock = vi.fn();
+const getExpiredCandidatesMock = vi.fn();
+const bulkWasteMock = vi.fn();
+const bulkDismissExpiredMock = vi.fn();
 
 vi.mock("@/features/pantry/pantry.api", async () => {
   const actual = await vi.importActual<typeof import("@/features/pantry/pantry.api")>(
@@ -40,6 +43,9 @@ vi.mock("@/features/pantry/pantry.api", async () => {
     listPantryItems: (...args: unknown[]) => listPantryItemsMock(...args),
     reAddConsumptionEvent: (...args: unknown[]) => reAddConsumptionEventMock(...args),
     listConsumptionEvents: (...args: unknown[]) => listConsumptionEventsMock(...args),
+    getExpiredCandidates: (...args: unknown[]) => getExpiredCandidatesMock(...args),
+    bulkWaste: (...args: unknown[]) => bulkWasteMock(...args),
+    bulkDismissExpired: (...args: unknown[]) => bulkDismissExpiredMock(...args),
   };
 });
 
@@ -66,6 +72,9 @@ beforeEach(() => {
   vi.clearAllMocks();
   listPantryItemsMock.mockResolvedValue([]);
   reAddConsumptionEventMock.mockResolvedValue({ id: "new-item-1", name: "Greek Yogurt" });
+  getExpiredCandidatesMock.mockResolvedValue({ items: [], digestId: null });
+  bulkWasteMock.mockResolvedValue({ wastedCount: 0, events: [] });
+  bulkDismissExpiredMock.mockResolvedValue({ dismissedCount: 0 });
 });
 
 describe("PantryPage — handleReAdd", () => {
@@ -178,5 +187,54 @@ describe("PantryPage — handleReAdd", () => {
     await waitFor(() =>
       expect(screen.queryByTestId(`event-row-${event.id}`)).not.toBeInTheDocument(),
     );
+  });
+});
+
+describe("PantryPage — expired-items banner", () => {
+  const candidate = {
+    id: "old-1",
+    name: "Old Yogurt",
+    expirationDate: "2026-06-01",
+    daysExpired: 25,
+    estimatedValueEur: 4,
+  };
+
+  it("does not show the banner when there are no expired candidates", async () => {
+    getExpiredCandidatesMock.mockResolvedValue({ items: [], digestId: null });
+    render(<PantryPage />);
+    await screen.findByPlaceholderText("Search pantry");
+    expect(screen.queryByTestId("expired-items-banner")).not.toBeInTheDocument();
+  });
+
+  it("shows the banner when expired candidates exist", async () => {
+    getExpiredCandidatesMock.mockResolvedValue({ items: [candidate], digestId: null });
+    render(<PantryPage />);
+    const banner = await screen.findByTestId("expired-items-banner");
+    expect(banner).toHaveTextContent("1 items");
+  });
+
+  it("hides the banner after marking all as wasted", async () => {
+    getExpiredCandidatesMock.mockResolvedValue({ items: [candidate], digestId: null });
+    const user = userEvent.setup();
+    render(<PantryPage />);
+
+    await user.click(await screen.findByTestId("expired-review-toggle"));
+    await user.click(await screen.findByTestId("expired-waste-all"));
+
+    await waitFor(() => expect(bulkWasteMock).toHaveBeenCalledWith(["old-1"]));
+    await waitFor(() =>
+      expect(screen.queryByTestId("expired-items-banner")).not.toBeInTheDocument(),
+    );
+  });
+
+  it("dismisses all via the dismiss endpoint", async () => {
+    getExpiredCandidatesMock.mockResolvedValue({ items: [candidate], digestId: null });
+    const user = userEvent.setup();
+    render(<PantryPage />);
+
+    await user.click(await screen.findByTestId("expired-review-toggle"));
+    await user.click(await screen.findByTestId("expired-dismiss-all"));
+
+    await waitFor(() => expect(bulkDismissExpiredMock).toHaveBeenCalledWith(["old-1"]));
   });
 });

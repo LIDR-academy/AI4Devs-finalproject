@@ -15,7 +15,6 @@ Tasks:
 ## Prompt 3: Plan
 /speckit-plan
 
-
 ## Prompt 4: Tasks
 /speckit-tasks
 

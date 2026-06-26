@@ -4,7 +4,6 @@
 ## Prompt 2: Plan
 /speckit-plan (with spec.md as context)
 
-
 ## Prompt 3: Tasks
 /speckit-tasks (with plan.md as context)
 

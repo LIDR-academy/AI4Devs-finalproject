@@ -562,3 +562,208 @@ describe("PantryService.update — notes field", () => {
     );
   });
 });
+
+// ── Auto-expiry: expired candidates + bulk waste/dismiss (US1) ────────────────
+
+const NOW = new Date("2026-06-26T12:00:00.000Z");
+
+function makeAutoExpiryPrisma(overrides: Record<string, unknown> = {}) {
+  return {
+    notificationPreference: { findUnique: jest.fn().mockResolvedValue(null) },
+    pantryItem: {
+      findMany: jest.fn().mockResolvedValue([]),
+      delete: jest.fn().mockResolvedValue({}),
+    },
+    consumptionEvent: { create: jest.fn().mockResolvedValue({ id: "evt" }) },
+    autoExpiryDigest: {
+      findFirst: jest.fn().mockResolvedValue(null),
+      updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+      create: jest.fn().mockResolvedValue({ id: "digest-new" }),
+    },
+    householdMember: { findFirst: jest.fn().mockResolvedValue(null) },
+    $transaction: jest.fn((ops: Promise<unknown>[]) => Promise.all(ops)),
+    ...overrides,
+  } as any;
+}
+
+function makeAutoExpiryService(prisma: ReturnType<typeof makeAutoExpiryPrisma>) {
+  const usersServiceMock = { findById: jest.fn().mockResolvedValue(MOCK_USER) } as any;
+  return new PantryService(prisma, usersServiceMock, makePointsMock());
+}
+
+function makeExpiredItem(overrides: Partial<typeof MOCK_ITEM_NO_EXPIRY> = {}) {
+  return {
+    ...MOCK_ITEM_NO_EXPIRY,
+    id: "item-old",
+    name: "Old Yogurt",
+    quantity: 2,
+    pricePaid: new Decimal("4.00") as Decimal | null,
+    expirationDate: new Date("2026-06-01T00:00:00.000Z"),
+    notes: null as string | null,
+    storageLocation: "Fridge",
+    ...overrides,
+  };
+}
+
+describe("PantryService.getExpiredCandidates", () => {
+  it("uses the default 14-day threshold when no preference row exists", async () => {
+    const prisma = makeAutoExpiryPrisma();
+    const svc = makeAutoExpiryService(prisma);
+
+    await svc.getExpiredCandidates("user-1", NOW);
+
+    const where = prisma.pantryItem.findMany.mock.calls[0][0].where;
+    expect(where.userId).toBe("user-1");
+    expect(where.expirationDate.not).toBeNull();
+    // 14 days before NOW
+    expect(where.expirationDate.lt).toEqual(new Date("2026-06-12T12:00:00.000Z"));
+  });
+
+  it("honors a custom threshold from the preference row", async () => {
+    const prisma = makeAutoExpiryPrisma({
+      notificationPreference: { findUnique: jest.fn().mockResolvedValue({ autoExpiryThresholdDays: 30 }) },
+    });
+    const svc = makeAutoExpiryService(prisma);
+
+    await svc.getExpiredCandidates("user-1", NOW);
+
+    const where = prisma.pantryItem.findMany.mock.calls[0][0].where;
+    expect(where.expirationDate.lt).toEqual(new Date("2026-05-27T12:00:00.000Z"));
+  });
+
+  it("maps items to candidates with daysExpired and estimatedValueEur", async () => {
+    const prisma = makeAutoExpiryPrisma({
+      pantryItem: {
+        findMany: jest.fn().mockResolvedValue([makeExpiredItem()]),
+        delete: jest.fn(),
+      },
+    });
+    const svc = makeAutoExpiryService(prisma);
+
+    const candidates = await svc.getExpiredCandidates("user-1", NOW);
+
+    expect(candidates).toHaveLength(1);
+    expect(candidates[0]).toEqual({
+      id: "item-old",
+      name: "Old Yogurt",
+      expirationDate: new Date("2026-06-01T00:00:00.000Z"),
+      daysExpired: 25,
+      estimatedValueEur: 4,
+    });
+  });
+});
+
+describe("PantryService.getExpiredCandidatesForUser", () => {
+  it("suppresses candidates while a USER_RESOLVED digest is within the 7-day grace", async () => {
+    const prisma = makeAutoExpiryPrisma({
+      autoExpiryDigest: {
+        findFirst: jest.fn().mockResolvedValue({ id: "d1", status: "USER_RESOLVED" }),
+        updateMany: jest.fn(),
+        create: jest.fn(),
+      },
+    });
+    const svc = makeAutoExpiryService(prisma);
+
+    const view = await svc.getExpiredCandidatesForUser("user-1", NOW);
+
+    expect(view).toEqual({ items: [], digestId: null });
+    expect(prisma.pantryItem.findMany).not.toHaveBeenCalled();
+  });
+
+  it("returns candidates and the pending digest id when not suppressed", async () => {
+    const findFirst = jest
+      .fn()
+      .mockResolvedValueOnce(null) // dismiss-suppression lookup
+      .mockResolvedValueOnce({ id: "pending-1", status: "PENDING" }); // pending lookup
+    const prisma = makeAutoExpiryPrisma({
+      pantryItem: { findMany: jest.fn().mockResolvedValue([makeExpiredItem()]), delete: jest.fn() },
+      autoExpiryDigest: { findFirst, updateMany: jest.fn(), create: jest.fn() },
+    });
+    const svc = makeAutoExpiryService(prisma);
+
+    const view = await svc.getExpiredCandidatesForUser("user-1", NOW);
+
+    expect(view.items).toHaveLength(1);
+    expect(view.digestId).toBe("pending-1");
+  });
+});
+
+describe("PantryService.bulkWasteItems", () => {
+  it("wastes every item with method=null in one transaction and resolves the pending digest", async () => {
+    const prisma = makeAutoExpiryPrisma({
+      pantryItem: {
+        findMany: jest.fn().mockResolvedValue([
+          makeExpiredItem({ id: "a" }),
+          makeExpiredItem({ id: "b" }),
+        ]),
+        delete: jest.fn().mockResolvedValue({}),
+      },
+    });
+    const svc = makeAutoExpiryService(prisma);
+
+    const result = await svc.bulkWasteItems("user-1", ["a", "b"], NOW);
+
+    expect(result.wastedCount).toBe(2);
+    expect(result.events).toEqual([
+      { id: "evt", itemId: "a" },
+      { id: "evt", itemId: "b" },
+    ]);
+    expect(prisma.consumptionEvent.create).toHaveBeenCalledTimes(2);
+    const firstEventData = prisma.consumptionEvent.create.mock.calls[0][0].data;
+    expect(firstEventData.type).toBe("WASTED");
+    expect(firstEventData.method).toBeUndefined();
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(prisma.autoExpiryDigest.updateMany).toHaveBeenCalledWith({
+      where: { userId: "user-1", status: "PENDING" },
+      data: { status: "USER_RESOLVED", resolvedAt: NOW },
+    });
+  });
+
+  it("throws and touches nothing when an itemId is foreign or missing", async () => {
+    const prisma = makeAutoExpiryPrisma({
+      pantryItem: {
+        findMany: jest.fn().mockResolvedValue([makeExpiredItem({ id: "a" })]), // "b" missing
+        delete: jest.fn(),
+      },
+    });
+    const svc = makeAutoExpiryService(prisma);
+
+    await expect(svc.bulkWasteItems("user-1", ["a", "b"], NOW)).rejects.toThrow(NotFoundException);
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+    expect(prisma.consumptionEvent.create).not.toHaveBeenCalled();
+  });
+});
+
+describe("PantryService.bulkDismissExpired", () => {
+  it("resolves the pending digest and leaves items untouched", async () => {
+    const prisma = makeAutoExpiryPrisma({
+      pantryItem: { findMany: jest.fn().mockResolvedValue([makeExpiredItem({ id: "a" })]), delete: jest.fn() },
+    });
+    const svc = makeAutoExpiryService(prisma);
+
+    const result = await svc.bulkDismissExpired("user-1", ["a"], NOW);
+
+    expect(result).toEqual({ dismissedCount: 1 });
+    expect(prisma.autoExpiryDigest.updateMany).toHaveBeenCalled();
+    expect(prisma.autoExpiryDigest.create).not.toHaveBeenCalled();
+    expect(prisma.pantryItem.delete).not.toHaveBeenCalled();
+  });
+
+  it("creates a USER_RESOLVED digest when none is pending so the banner stays suppressed", async () => {
+    const prisma = makeAutoExpiryPrisma({
+      pantryItem: { findMany: jest.fn().mockResolvedValue([makeExpiredItem({ id: "a" })]), delete: jest.fn() },
+      autoExpiryDigest: {
+        findFirst: jest.fn().mockResolvedValue(null),
+        updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+        create: jest.fn().mockResolvedValue({ id: "digest-new" }),
+      },
+    });
+    const svc = makeAutoExpiryService(prisma);
+
+    await svc.bulkDismissExpired("user-1", ["a"], NOW);
+
+    expect(prisma.autoExpiryDigest.create).toHaveBeenCalledWith({
+      data: { userId: "user-1", status: "USER_RESOLVED", resolvedAt: NOW },
+    });
+  });
+});
