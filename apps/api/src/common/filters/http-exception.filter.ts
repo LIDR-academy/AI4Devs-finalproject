@@ -41,6 +41,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
         statusCode: status,
         message: body.message ?? exception.message,
         error: body.error ?? HttpExceptionFilter.mapErrorName(status),
+        ...(body.existingClient !== undefined
+          ? { existingClient: body.existingClient }
+          : {}),
       });
       return;
     }
@@ -62,6 +65,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
         return 'Forbidden';
       case HttpStatus.NOT_FOUND:
         return 'Not Found';
+      case HttpStatus.CONFLICT:
+        return 'Conflict';
       default:
         return 'Error';
     }

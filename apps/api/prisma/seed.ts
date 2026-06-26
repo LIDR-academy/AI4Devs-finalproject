@@ -43,6 +43,37 @@ async function main(): Promise<void> {
       active: false,
     },
   });
+
+  await prisma.client.upsert({
+    where: { nationalId: '1-2345-6789' },
+    update: {},
+    create: {
+      fullName: 'Juan Pérez',
+      nationalId: '1-2345-6789',
+      phone: '88887777',
+      email: 'juan@email.com',
+    },
+  });
+
+  await prisma.client.upsert({
+    where: { nationalId: '2-3456-7890' },
+    update: {},
+    create: {
+      fullName: 'María López',
+      nationalId: '2-3456-7890',
+      phone: '77776666',
+    },
+  });
+
+  await prisma.client.upsert({
+    where: { nationalId: '3-4567-8901' },
+    update: {},
+    create: {
+      fullName: 'Carlos Ruiz',
+      nationalId: '3-4567-8901',
+      email: 'carlos@email.com',
+    },
+  });
 }
 
 main()

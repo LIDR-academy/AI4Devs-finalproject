@@ -1,6 +1,6 @@
 # MecaTrack API
 
-NestJS REST API for MecaTrack workshop management (US-001: authentication, US-002: user management).
+NestJS REST API for MecaTrack workshop management (US-001: authentication, US-002: user management, US-003: client registration).
 
 ## Prerequisites
 
@@ -72,6 +72,43 @@ All `/api/users` routes require a valid Bearer token with role `ADMIN`. Mechanic
 Deactivated users cannot log in or refresh sessions. The last active administrator cannot be deactivated. Admins cannot deactivate their own account.
 
 OpenAPI fragment: [`docs/api-spec.users.yml`](../../docs/api-spec.users.yml)
+
+## Client management (US-003, admin and mechanic)
+
+All `/api/clients` routes require a valid Bearer token with role `ADMIN` or `MECHANIC`.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/clients/search?q=` | Search by name, national ID fragment, or phone digits |
+| `GET` | `/api/clients/search?nationalId=` | Exact national ID lookup |
+| `GET` | `/api/clients/:id` | Get client by ID |
+| `POST` | `/api/clients` | Create a new client |
+
+Search requires at least one of `q` or `nationalId`. Duplicate `nationalId` returns `409` with an `existingClient` object in the response body.
+
+### Examples
+
+```bash
+# Search by name
+curl -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:4000/api/clients/search?q=Juan"
+
+# Create client
+curl -X POST -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"fullName":"New Client","nationalId":"9-8765-4321","phone":"88881234"}' \
+  http://localhost:4000/api/clients
+```
+
+OpenAPI fragment: [`docs/api-spec.clients.yml`](../../docs/api-spec.clients.yml)
+
+## Seed clients (development only)
+
+| Name | National ID | Phone | Email |
+|------|-------------|-------|-------|
+| Juan Pérez | `1-2345-6789` | `88887777` | `juan@email.com` |
+| María López | `2-3456-7890` | `77776666` | — |
+| Carlos Ruiz | `3-4567-8901` | — | `carlos@email.com` |
 
 ## Scripts
 
