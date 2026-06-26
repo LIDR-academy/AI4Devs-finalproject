@@ -8,9 +8,7 @@ import { AppModule } from '../src/app.module';
 import { HttpExceptionFilter } from '../src/common/filters/http-exception.filter';
 import { REFRESH_COOKIE_NAME } from '../src/common/constants/auth.constants';
 
-function getSetCookieHeader(
-  headers: request.Response['headers'],
-): string[] {
+function getSetCookieHeader(headers: request.Response['headers']): string[] {
   const value = headers['set-cookie'];
   if (!value) {
     return [];
