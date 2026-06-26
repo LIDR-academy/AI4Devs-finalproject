@@ -1,6 +1,7 @@
 import { apiClient } from '@/shared/lib/apiClient';
 import type {
   CreateVehicleRequest,
+  UpdateVehicleRequest,
   Vehicle,
   VehicleHistoryResponse,
   VehicleSearchResponse,
@@ -44,6 +45,19 @@ export const vehiclesApi = {
     return apiClient<Vehicle>('/vehicles', {
       method: 'POST',
       body: JSON.stringify(data),
+    });
+  },
+
+  update(id: string, data: UpdateVehicleRequest): Promise<Vehicle> {
+    return apiClient<Vehicle>(`/vehicles/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  delete(id: string): Promise<void> {
+    return apiClient<void>(`/vehicles/${id}`, {
+      method: 'DELETE',
     });
   },
 };

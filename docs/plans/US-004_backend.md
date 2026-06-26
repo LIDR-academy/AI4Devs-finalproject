@@ -10,7 +10,7 @@ Implement **vehicle search, registration, and detail** for MecaTrack (US-004): f
 
 **Prerequisites:** US-001 (auth), US-003 (`Client` model and `ClientsService` / DB table).
 
-**Out of scope:** update/delete vehicles, owner transfer (D3/V2), vehicle deactivation, frontend (`plan-frontend-ticket`), populated visit history (US-005).
+**Out of scope:** owner transfer (D3/V2), vehicle deactivation (D4), populated visit history (US-005).
 
 ---
 
@@ -63,7 +63,8 @@ apps/api/src/app.module.ts         # import VehiclesModule
 | `GET` | `/api/vehicles/search` | Bearer | `ADMIN`, `MECHANIC` | Search by `q` or `licensePlate` |
 | `GET` | `/api/vehicles/:id/history` | Bearer | `ADMIN`, `MECHANIC` | Visit history (empty until US-005) |
 | `GET` | `/api/vehicles/:id` | Bearer | `ADMIN`, `MECHANIC` | Vehicle detail + `currentOwner` |
-| `POST` | `/api/vehicles` | Bearer | `ADMIN`, `MECHANIC` | Create vehicle + initial ownership |
+| `PATCH` | `/api/vehicles/:id` | Bearer | `ADMIN`, `MECHANIC` | Update vehicle data (incl. license plate) |
+| `DELETE` | `/api/vehicles/:id` | Bearer | `ADMIN`, `MECHANIC` | Delete vehicle if no work orders |
 
 ---
 

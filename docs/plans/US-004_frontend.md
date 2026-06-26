@@ -10,7 +10,7 @@ Implement the **vehicle search, registration, and detail UI** for MecaTrack (US-
 
 **Prerequisites:** US-001 frontend, US-003 frontend (`ClientSearchBar`, `clientsApi.getById`), US-004 backend.
 
-**Out of scope:** edit/delete vehicles, owner transfer (D3), populated visit timeline content beyond API contract (full US-009), `hasActiveWorkOrder` until US-005 backend (button can be hidden/stubbed).
+**Out of scope:** owner transfer (D3), populated visit timeline content beyond API contract (full US-009), `hasActiveWorkOrder` until US-005 backend (button can be hidden/stubbed).
 
 ---
 
@@ -70,7 +70,7 @@ apps/web/src/app/mechanic/layout.tsx
 |-------|-------|---------|
 | `/vehicles` | `ADMIN`, `MECHANIC` | Plate search + **Nuevo vehículo** |
 | `/vehicles/new` | `ADMIN`, `MECHANIC` | Create form; `?clientId=` prefill |
-| `/vehicles/[id]` | `ADMIN`, `MECHANIC` | Detail header + visit history |
+| `/vehicles/[id]/edit` | `ADMIN`, `MECHANIC` | Edit vehicle data (owner read-only) |
 
 ### State management
 

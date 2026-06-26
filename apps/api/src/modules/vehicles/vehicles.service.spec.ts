@@ -2,6 +2,7 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Client, Prisma, Vehicle, VehicleOwnership } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
+import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { VehiclesService } from './vehicles.service';
 import { normalizeLicensePlate } from './utils/license-plate-normalizer';
 
@@ -12,12 +13,15 @@ describe('VehiclesService', () => {
       findMany: jest.Mock;
       findUnique: jest.Mock;
       create: jest.Mock;
+      update: jest.Mock;
+      delete: jest.Mock;
     };
     client: {
       findUnique: jest.Mock;
     };
     vehicleOwnership: {
       create: jest.Mock;
+      deleteMany: jest.Mock;
     };
     $transaction: jest.Mock;
   };
@@ -67,12 +71,15 @@ describe('VehiclesService', () => {
         findMany: jest.fn(),
         findUnique: jest.fn(),
         create: jest.fn(),
+        update: jest.fn(),
+        delete: jest.fn(),
       },
       client: {
         findUnique: jest.fn(),
       },
       vehicleOwnership: {
         create: jest.fn(),
+        deleteMany: jest.fn(),
       },
       $transaction: jest.fn(),
     };
@@ -250,6 +257,82 @@ describe('VehiclesService', () => {
 
       await expect(
         vehiclesService.getHistory('00000000-0000-4000-8000-000000000099'),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
+  describe('update', () => {
+    const dto: UpdateVehicleDto = {
+      licensePlate: 'XYZ999',
+      brand: 'Honda',
+      model: 'Fit',
+      year: 2021,
+      color: 'Rojo',
+    };
+
+    it('updates vehicle and returns DTO with currentOwner', async () => {
+      prisma.vehicle.findUnique
+        .mockResolvedValueOnce(vehicle)
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          ...vehicle,
+          licensePlate: 'XYZ999',
+          ownerships: [activeOwnership],
+        });
+      prisma.vehicle.update.mockResolvedValue({
+        ...vehicle,
+        licensePlate: 'XYZ999',
+      });
+
+      const result = await vehiclesService.update('vehicle-1', dto);
+
+      expect(prisma.vehicle.update).toHaveBeenCalledWith({
+        where: { id: 'vehicle-1' },
+        data: {
+          licensePlate: 'XYZ999',
+          brand: 'Honda',
+          model: 'Fit',
+          year: 2021,
+          color: 'Rojo',
+        },
+      });
+      expect(result.licensePlate).toBe('XYZ999');
+    });
+
+    it('throws NotFoundException for unknown id', async () => {
+      prisma.vehicle.findUnique.mockResolvedValue(null);
+
+      await expect(
+        vehiclesService.update('00000000-0000-4000-8000-000000000099', dto),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('throws conflict when plate belongs to another vehicle', async () => {
+      prisma.vehicle.findUnique
+        .mockResolvedValueOnce(vehicle)
+        .mockResolvedValueOnce({ ...vehicle, id: 'vehicle-2' });
+
+      await expect(
+        vehiclesService.update('vehicle-1', dto),
+      ).rejects.toBeInstanceOf(ConflictException);
+    });
+  });
+
+  describe('delete', () => {
+    it('deletes vehicle and ownership records', async () => {
+      prisma.vehicle.findUnique.mockResolvedValue({ id: 'vehicle-1' });
+      prisma.$transaction.mockResolvedValue([]);
+
+      await vehiclesService.delete('vehicle-1');
+
+      expect(prisma.$transaction).toHaveBeenCalled();
+    });
+
+    it('throws NotFoundException for unknown id', async () => {
+      prisma.vehicle.findUnique.mockResolvedValue(null);
+
+      await expect(
+        vehiclesService.delete('00000000-0000-4000-8000-000000000099'),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
   });

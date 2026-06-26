@@ -12,7 +12,7 @@
 **quiero** buscar vehículos por placa, registrar uno nuevo vinculado a un cliente existente y consultar su ficha con el historial de visitas,
 **para** crear órdenes de trabajo (US-005) sin duplicar placas y mantener trazabilidad del propietario actual y futura transferencia de dueño (D3).
 
-**Alcance MVP:** búsqueda por placa, alta de vehículo con propietario inicial (`VehicleOwnership`), ficha con historial de OT (vacío hasta US-005). Acceso `ADMIN` y `MECHANIC`. Fuera de alcance: edición de datos del vehículo, transferencia de propietario (D3/V2), baja de vehículo.
+**Alcance MVP:** búsqueda por placa, alta de vehículo con propietario inicial (`VehicleOwnership`), **edición de datos del vehículo** (marca, modelo, año, color y **corrección de placa**), **eliminación** si el vehículo no tiene órdenes de trabajo, ficha con historial de OT (vacío hasta US-005). Acceso `ADMIN` y `MECHANIC`. Fuera de alcance: transferencia de propietario (D3/V2).
 
 **Dependencia:** US-001 (auth), US-003 (`Client`). **Habilita:** US-005, US-008, US-009.
 
@@ -31,7 +31,7 @@
 
 ### UI — Flujo búsqueda y alta
 
-- [ ] Rutas protegidas: `/vehicles` (búsqueda), `/vehicles/new` (alta), `/vehicles/[id]` (ficha).
+- [ ] Rutas protegidas: `/vehicles` (búsqueda), `/vehicles/new` (alta), `/vehicles/[id]` (ficha), `/vehicles/[id]/edit` (edición).
 - [ ] Enlace **Vehículos** en navegación admin y mecánico.
 - [ ] `/vehicles`: barra de búsqueda por **placa** (≥ 2 caracteres, debounce 300 ms).
 - [ ] Botón **Nuevo vehículo** → `/vehicles/new` (acepta query `?clientId=` si viene desde US-003).
@@ -63,6 +63,27 @@
 - [ ] Cada ítem del historial (cuando existan OT — US-005): fecha ingreso, estado, motivo, monto total (si cerrada).
 - [ ] Sin visitas previas → *"Este vehículo aún no tiene visitas registradas"*.
 - [ ] Botón **Nueva orden de trabajo** si no hay OT activa (regla US-005; en MVP deshabilitar o ocultar si `hasActiveWorkOrder`).
+- [ ] Acciones **Editar vehículo** → `/vehicles/[id]/edit` y **Eliminar vehículo** (con confirmación) en ficha y tarjetas de búsqueda.
+
+### Edición de vehículo (`/vehicles/[id]/edit`)
+
+| Campo UI | Campo API | Editable | Validación |
+|----------|-----------|----------|------------|
+| Placa | `licensePlate` | Sí | Normalizar; unique salvo el propio vehículo |
+| Marca | `brand` | Sí | 1–60 caracteres |
+| Modelo | `model` | Sí | 1–60 caracteres |
+| Año | `year` | Sí | Entero 1900 … año actual + 1 |
+| Color | `color` | Sí | 0–40 caracteres (opcional) |
+| Propietario | — | No (solo lectura) | Cambio de dueño → D3/V2 |
+
+- [ ] Tras guardar: mensaje *"Vehículo actualizado"* + enlace **Ver ficha**.
+- [ ] Placa duplicada en otro vehículo → `409` + `ExistingVehicleAlert`.
+
+### Eliminación de vehículo
+
+- [ ] `DELETE /api/vehicles/:id` elimina vehículo y sus `VehicleOwnership` si **no tiene órdenes de trabajo**.
+- [ ] Si tiene OT asociadas → `409` con mensaje claro; UI muestra error y no elimina.
+- [ ] Tras eliminar: redirigir a `/vehicles` con confirmación.
 
 ### Disponibilidad post-alta
 
@@ -91,8 +112,8 @@
 
 | Rol | Código | Permisos en esta US |
 |-----|--------|---------------------|
-| Administrador | `ADMIN` | Buscar, crear, ver ficha e historial |
-| Mecánico | `MECHANIC` | Buscar, crear, ver ficha e historial |
+| Administrador | `ADMIN` | Buscar, crear, editar, eliminar (sin OT), ver ficha e historial |
+| Mecánico | `MECHANIC` | Buscar, crear, editar, eliminar (sin OT), ver ficha e historial |
 
 ---
 

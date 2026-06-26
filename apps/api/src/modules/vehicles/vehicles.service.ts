@@ -8,6 +8,7 @@ import { Prisma, Vehicle } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { SearchVehiclesQueryDto } from './dto/search-vehicles-query.dto';
+import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { VehicleHistoryResponseDto } from './dto/vehicle-history-response.dto';
 import { VehicleResponseDto } from './dto/vehicle-response.dto';
 import { VehicleSearchResponseDto } from './dto/vehicle-search-response.dto';
@@ -176,6 +177,91 @@ export class VehiclesService {
     return this.prisma.vehicle.findUnique({
       where: { licensePlate: normalized },
     });
+  }
+
+  async update(id: string, dto: UpdateVehicleDto): Promise<VehicleResponseDto> {
+    const existing = await this.prisma.vehicle.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Not Found');
+    }
+
+    const licensePlate = normalizeLicensePlate(dto.licensePlate);
+    const brand = dto.brand.trim();
+    const model = dto.model.trim();
+    const color = dto.color?.trim() || null;
+
+    const plateConflict = await this.findByLicensePlate(licensePlate);
+    if (plateConflict && plateConflict.id !== id) {
+      this.throwLicensePlateConflict(plateConflict);
+    }
+
+    try {
+      await this.prisma.vehicle.update({
+        where: { id },
+        data: {
+          licensePlate,
+          brand,
+          model,
+          year: dto.year,
+          color,
+        },
+      });
+
+      return this.findById(id);
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        const raceExisting = await this.findByLicensePlate(licensePlate);
+        if (raceExisting && raceExisting.id !== id) {
+          this.throwLicensePlateConflict(raceExisting);
+        }
+      }
+
+      throw error;
+    }
+  }
+
+  async delete(id: string): Promise<void> {
+    const existing = await this.prisma.vehicle.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Not Found');
+    }
+
+    await this.assertVehicleHasNoWorkOrders(id);
+
+    await this.prisma.$transaction([
+      this.prisma.vehicleOwnership.deleteMany({ where: { vehicleId: id } }),
+      this.prisma.vehicle.delete({ where: { id } }),
+    ]);
+  }
+
+  private async assertVehicleHasNoWorkOrders(vehicleId: string): Promise<void> {
+    const workOrderModel = (
+      this.prisma as unknown as { workOrder?: { count: (args: unknown) => Promise<number> } }
+    ).workOrder;
+
+    if (!workOrderModel) {
+      return;
+    }
+
+    const workOrderCount = await workOrderModel.count({
+      where: { vehicleId },
+    });
+
+    if (workOrderCount > 0) {
+      throw new ConflictException(
+        'Vehicle has work orders and cannot be deleted',
+      );
+    }
   }
 
   private toVehicleResponseFromEntity(

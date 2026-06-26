@@ -114,6 +114,8 @@ All `/api/vehicles` routes require a valid Bearer token with role `ADMIN` or `ME
 | `GET` | `/api/vehicles/:id` | Get vehicle with `currentOwner` |
 | `GET` | `/api/vehicles/:id/history` | Visit history (`visits: []` until US-005) |
 | `POST` | `/api/vehicles` | Create vehicle + initial ownership |
+| `PATCH` | `/api/vehicles/:id` | Update vehicle (`licensePlate`, `brand`, `model`, `year`, `color`) |
+| `DELETE` | `/api/vehicles/:id` | Delete vehicle if no work orders (204) |
 
 Plates are stored normalized (uppercase, no spaces). Duplicate plate returns `409` with `existingVehicle`. Create with unknown `clientId` returns `404`.
 

@@ -4,9 +4,13 @@ import type { Vehicle } from '../types/vehicle.types';
 
 interface VehicleDetailHeaderProps {
   vehicle: Vehicle;
+  onDelete?: () => void;
 }
 
-export function VehicleDetailHeader({ vehicle }: VehicleDetailHeaderProps) {
+export function VehicleDetailHeader({
+  vehicle,
+  onDelete,
+}: VehicleDetailHeaderProps) {
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -27,9 +31,19 @@ export function VehicleDetailHeader({ vehicle }: VehicleDetailHeaderProps) {
             <p>Identificación: {vehicle.currentOwner.nationalId}</p>
           </div>
         </div>
-        <Link href={`/work-orders/new?vehicleId=${vehicle.id}`}>
-          <Button>Nueva orden de trabajo</Button>
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          <Link href={`/vehicles/${vehicle.id}/edit`}>
+            <Button variant="secondary">Editar vehículo</Button>
+          </Link>
+          {onDelete && (
+            <Button type="button" variant="danger" onClick={onDelete}>
+              Eliminar vehículo
+            </Button>
+          )}
+          <Link href={`/work-orders/new?vehicleId=${vehicle.id}`}>
+            <Button>Nueva orden de trabajo</Button>
+          </Link>
+        </div>
       </div>
     </section>
   );

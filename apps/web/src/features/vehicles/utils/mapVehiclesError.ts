@@ -24,6 +24,13 @@ export function getExistingVehicleFromError(
 export function mapVehiclesError(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.statusCode === 409) {
+      if (
+        typeof error.messages === 'string' &&
+        error.messages.includes('work orders')
+      ) {
+        return 'No se puede eliminar un vehículo con órdenes de trabajo';
+      }
+
       return 'Ya existe un vehículo con esta placa';
     }
 

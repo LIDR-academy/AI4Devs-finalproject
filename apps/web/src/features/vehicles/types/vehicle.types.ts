@@ -28,6 +28,14 @@ export interface CreateVehicleRequest {
   clientId: string;
 }
 
+export interface UpdateVehicleRequest {
+  licensePlate: string;
+  brand: string;
+  model: string;
+  year: number;
+  color?: string;
+}
+
 export interface VehicleVisit {
   workOrderId: string;
   checkedInAt: string;

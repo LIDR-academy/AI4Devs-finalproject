@@ -345,4 +345,95 @@ describe('VehiclesController (e2e)', () => {
       visits: [],
     });
   });
+
+  it('PATCH /api/vehicles/:id updates vehicle data', async () => {
+    const suffix = uniquePlateSuffix();
+    const createResponse = await request(app.getHttpServer())
+      .post('/api/vehicles')
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({
+        licensePlate: `PATCH${suffix}`,
+        brand: 'Ford',
+        model: 'Focus',
+        year: 2017,
+        clientId: juanClientId,
+      })
+      .expect(201);
+
+    const vehicleId = createResponse.body.id as string;
+    const newPlate = `FIX${suffix}`;
+
+    const response = await request(app.getHttpServer())
+      .patch(`/api/vehicles/${vehicleId}`)
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({
+        licensePlate: newPlate,
+        brand: 'Ford',
+        model: 'Focus',
+        year: 2018,
+        color: 'Azul',
+      })
+      .expect(200);
+
+    expect(response.body.licensePlate).toBe(newPlate.toUpperCase());
+    expect(response.body.year).toBe(2018);
+    expect(response.body.color).toBe('Azul');
+  });
+
+  it('PATCH /api/vehicles/:id duplicate plate returns 409', async () => {
+    const suffix = uniquePlateSuffix();
+    const createResponse = await request(app.getHttpServer())
+      .post('/api/vehicles')
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({
+        licensePlate: `DUPA${suffix}`,
+        brand: 'Kia',
+        model: 'Rio',
+        year: 2019,
+        clientId: juanClientId,
+      })
+      .expect(201);
+
+    const vehicleId = createResponse.body.id as string;
+
+    await request(app.getHttpServer())
+      .patch(`/api/vehicles/${vehicleId}`)
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({
+        licensePlate: 'ABC123',
+        brand: 'Kia',
+        model: 'Rio',
+        year: 2019,
+      })
+      .expect(409);
+  });
+
+  it('DELETE /api/vehicles/:id removes vehicle without work orders', async () => {
+    const suffix = uniquePlateSuffix();
+    const plate = `DEL${suffix}`;
+
+    const createResponse = await request(app.getHttpServer())
+      .post('/api/vehicles')
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({
+        licensePlate: plate,
+        brand: 'Mitsubishi',
+        model: 'Lancer',
+        year: 2015,
+        clientId: juanClientId,
+      })
+      .expect(201);
+
+    const vehicleId = createResponse.body.id as string;
+
+    await request(app.getHttpServer())
+      .delete(`/api/vehicles/${vehicleId}`)
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .expect(204);
+
+    await request(app.getHttpServer())
+      .get(`/api/vehicles/${vehicleId}`)
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .expect(404);
+  });
 });

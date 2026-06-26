@@ -414,7 +414,7 @@ Microservicios no se consideran adecuados en esta fase: el volumen, el equipo y 
 | `auth` | US-001 | Login, logout, sesión, validación de cuenta activa |
 | `users` | US-002, D6 (V2) | Alta, listado y desactivación (MVP); edición de perfil en V2 |
 | `clients` | US-003, D5 (V2) | Búsqueda, alta y edición de clientes (MVP); búsqueda por correo en V2 |
-| `vehicles` | US-004 | Registro de vehículos y asociación a cliente |
+| `vehicles` | US-004 | Búsqueda, alta, edición y eliminación de vehículos (sin OT); asociación a cliente |
 | `work-orders` | US-005, US-006 | OT, tareas dinámicas, estados y costos |
 | `task-notes` | US-007 | Diagnósticos, reparaciones y observaciones |
 | `delivery` | US-008 | Panel de vehículos listos para entrega |

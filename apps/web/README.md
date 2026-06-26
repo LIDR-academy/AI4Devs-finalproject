@@ -92,11 +92,11 @@ Mechanics do not see the Usuarios link and are redirected to `/403` if they open
 
 ## Vehicle management (US-004)
 
-- **Routes:** `/vehicles` (search hub), `/vehicles/new` (registration form), `/vehicles/[id]` (detail + visit history)
+- **Routes:** `/vehicles` (search hub), `/vehicles/new` (registration form), `/vehicles/[id]` (detail + visit history), `/vehicles/[id]/edit` (edit form)
 - **Access:** `ADMIN` and `MECHANIC` (shared routes outside role-specific layouts)
 - **Nav:** **Vehículos** link in admin and mechanic nav (`RoleNav`)
 - **Query params:** `?clientId=` on `/vehicles/new` pre-fills read-only owner from US-003; success/detail CTAs link to `/work-orders/new?vehicleId=` (US-005)
-- **Features:** debounced plate search (300 ms), embedded `ClientPicker` (reuses `ClientSearchBar` from US-003), duplicate plate detection on blur/submit, plate normalization to uppercase
+- **Features:** debounced plate search (300 ms), embedded `ClientPicker` (reuses `ClientSearchBar` from US-003), duplicate plate detection on blur/submit, plate normalization to uppercase, **edit vehicle** (incl. plate correction), **delete vehicle** if no work orders
 - **React Query keys:** `['vehicles', 'search', q]`, `['vehicles', id]`, `['vehicles', id, 'history']` (invalidated after create)
 - **409 handling:** `apiClient` attaches `existingVehicle` on conflict; UI shows `ExistingVehicleAlert`
-- **Requires:** US-004 backend (`GET/POST /api/vehicles`, `GET /api/vehicles/search`, `GET /api/vehicles/:id/history`)
+- **Requires:** US-004 backend (`GET/POST/PATCH/DELETE /api/vehicles`, `GET /api/vehicles/search`, `GET /api/vehicles/:id/history`)

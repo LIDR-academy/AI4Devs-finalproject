@@ -79,6 +79,67 @@ test.describe('Vehicles (admin)', () => {
     ).toBeVisible();
   });
 
+  test('edit vehicle updates plate in search', async ({ page }) => {
+    const suffix = String(Date.now()).slice(-6);
+    const plate = `EDT${suffix}`;
+    const newPlate = `FIX${suffix}`;
+
+    await page.goto('/vehicles/new');
+    await page.getByLabel('Placa').fill(plate);
+    await page.getByLabel('Marca').fill('Toyota');
+    await page.getByLabel('Modelo').fill('Corolla');
+    await page.getByLabel('Año').fill('2020');
+    await page.getByRole('button', { name: 'Buscar propietario' }).click();
+    await page.getByLabel('Buscar cliente').fill('Juan');
+    await page.getByRole('button', { name: /Juan Pérez/ }).click();
+    await page.getByRole('button', { name: 'Registrar vehículo' }).click();
+    await expect(page.getByText('Vehículo registrado')).toBeVisible({
+      timeout: 10_000,
+    });
+
+    await page.getByRole('link', { name: 'Ver ficha' }).click();
+    await page.getByRole('link', { name: 'Editar vehículo' }).click();
+    await page.getByLabel('Placa').fill(newPlate);
+    await page.getByRole('button', { name: 'Guardar cambios' }).click();
+    await expect(page.getByText('Vehículo actualizado')).toBeVisible({
+      timeout: 10_000,
+    });
+
+    await page.goto('/vehicles');
+    await page.getByLabel('Buscar por placa').fill(newPlate);
+    await expect(page.getByText(newPlate.toUpperCase())).toBeVisible({
+      timeout: 10_000,
+    });
+  });
+
+  test('delete vehicle removes it from search', async ({ page }) => {
+    const suffix = String(Date.now()).slice(-6);
+    const plate = `DEL${suffix}`;
+
+    await page.goto('/vehicles/new');
+    await page.getByLabel('Placa').fill(plate);
+    await page.getByLabel('Marca').fill('Honda');
+    await page.getByLabel('Modelo').fill('Civic');
+    await page.getByLabel('Año').fill('2019');
+    await page.getByRole('button', { name: 'Buscar propietario' }).click();
+    await page.getByLabel('Buscar cliente').fill('Juan');
+    await page.getByRole('button', { name: /Juan Pérez/ }).click();
+    await page.getByRole('button', { name: 'Registrar vehículo' }).click();
+    await expect(page.getByText('Vehículo registrado')).toBeVisible({
+      timeout: 10_000,
+    });
+
+    await page.getByRole('link', { name: 'Ver ficha' }).click();
+    await page.getByRole('button', { name: 'Eliminar vehículo' }).click();
+    await page.getByRole('button', { name: 'Eliminar vehículo' }).last().click();
+
+    await expect(page).toHaveURL(/\/vehicles$/, { timeout: 10_000 });
+    await page.getByLabel('Buscar por placa').fill(plate);
+    await expect(page.getByText('No se encontraron vehículos')).toBeVisible({
+      timeout: 10_000,
+    });
+  });
+
   test('flow from client create to vehicle registration', async ({ page }) => {
     const suffix = Date.now();
     const fullName = `Vehicle Flow ${suffix}`;

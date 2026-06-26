@@ -21,11 +21,14 @@ export function VehicleResultCard({ vehicle }: VehicleResultCardProps) {
           {vehicle.currentOwner.fullName}
         </p>
       </div>
-      <div className="mt-4">
+      <div className="mt-4 flex flex-wrap gap-3">
         <Link href={`/vehicles/${vehicle.id}`}>
           <Button type="button" variant="secondary">
             Ver ficha
           </Button>
+        </Link>
+        <Link href={`/vehicles/${vehicle.id}/edit`}>
+          <Button type="button">Editar vehículo</Button>
         </Link>
       </div>
     </article>

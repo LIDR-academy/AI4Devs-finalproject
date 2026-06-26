@@ -1,8 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
+  DeleteVehicleDialog,
   VehicleDetailHeader,
   VehicleVisitHistory,
 } from '@/features/vehicles';
@@ -13,6 +15,7 @@ import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 export default function VehicleDetailPage() {
   const params = useParams<{ id: string }>();
   const vehicleId = params.id;
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const {
     data: vehicle,
@@ -55,10 +58,18 @@ export default function VehicleDetailPage() {
         ← Volver a vehículos
       </Link>
 
-      <VehicleDetailHeader vehicle={vehicle} />
+      <VehicleDetailHeader
+        vehicle={vehicle}
+        onDelete={() => setDeleteOpen(true)}
+      />
       <VehicleVisitHistory
         visits={history?.visits ?? []}
         isLoading={isHistoryLoading}
+      />
+      <DeleteVehicleDialog
+        vehicle={vehicle}
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
       />
     </div>
   );
