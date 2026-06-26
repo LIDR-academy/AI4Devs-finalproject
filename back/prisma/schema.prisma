@@ -287,16 +287,3 @@ model ReceiptItem {
   @@index([receiptId])
   @@index([pantryItemId])
 }
-
-model PriceCatalogItem {
-  id                String   @id @default(uuid())
-  normalizedName    String
-  category          String?
-  sourceLabel       String?
-  referencePriceEur Decimal  @db.Decimal(10, 2)
-  currencyCode      String   @default("EUR")
-  effectiveDate     DateTime @db.Date
-  createdAt         DateTime @default(now())
-
-  @@index([normalizedName, effectiveDate])
-}
