@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ChevronLeft, Tag, Repeat, Settings2 } from "lucide-react";
+import { ChevronLeft, Repeat, Settings2 } from "lucide-react";
 
 const ITEM_EMOJIS = ["🍎", "🥛", "🍞", "🥩", "🐟", "🥦", "🥚", "🧀", "🍝", "🥑", "🍌", "🍅", "🛒", "🥫", "🧃", "🧁", "🍽️"];
 import { daysUntil } from "@/lib/mock-data";
@@ -475,14 +475,6 @@ function ItemDetail() {
 
         <section className="mt-6 px-5">
           <h2 className="px-2 mb-2 text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">Actions</h2>          <ul className="ios-card divide-y divide-border overflow-hidden">
-            <ActionLinkRow
-              icon={<Tag className="size-4.5" />}
-              label="Compare prices"
-              sublabel="View internal MVP reference price"
-              to="/compare-price/$id"
-              params={{ id: item.id }}
-              testId="compare-price-action"
-            />
             <ActionRow icon={<Repeat className="size-4.5" />} label="Alternatives" sublabel="Plant-based, lower price, longer shelf life" />
             <ActionRow icon={<Settings2 className="size-4.5" />} label="Change default for this food" />
           </ul>
@@ -643,40 +635,6 @@ function ActionRow({ icon, label, sublabel }: { icon: React.ReactNode; label: st
         {sublabel && <p className="text-[12px] text-muted-foreground truncate">{sublabel}</p>}
       </div>
       <ChevronLeft className="size-4 rotate-180 text-muted-foreground" />
-    </li>
-  );
-}
-
-function ActionLinkRow({
-  icon,
-  label,
-  sublabel,
-  to,
-  params,
-  testId,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  sublabel?: string;
-  to: "/compare-price/$id";
-  params: { id: string };
-  testId?: string;
-}) {
-  return (
-    <li>
-      <Link
-        className="flex items-center gap-3 px-4 py-3.5 active:bg-secondary/50"
-        to={to}
-        params={params}
-        data-testid={testId}
-      >
-        <div className="grid size-8 place-items-center rounded-lg bg-secondary text-primary">{icon}</div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[14.5px] font-medium">{label}</p>
-          {sublabel && <p className="text-[12px] text-muted-foreground truncate">{sublabel}</p>}
-        </div>
-        <ChevronLeft className="size-4 rotate-180 text-muted-foreground" />
-      </Link>
     </li>
   );
 }

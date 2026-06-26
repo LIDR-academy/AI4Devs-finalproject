@@ -58,13 +58,6 @@ export const topWastedFoods = [
   { name: "Cheese", emoji: "🧀", you: 1, avg: 2 },
 ];
 
-export const priceComparison = [
-  { brand: "Mercadona Hacendado", price: 1.05, store: "Mercadona" },
-  { brand: "Central Lechera", price: 1.29, store: "Carrefour" },
-  { brand: "Pascual", price: 1.45, store: "Alcampo" },
-  { brand: "Puleva", price: 1.39, store: "Día" },
-];
-
 export function daysUntil(iso: string): number {
   const ms = new Date(iso).getTime() - Date.now();
   return Math.ceil(ms / (1000 * 60 * 60 * 24));

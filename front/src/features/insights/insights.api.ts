@@ -6,35 +6,6 @@ interface ApiErrorBody {
   message?: string | string[];
 }
 
-export interface MercadonaResult {
-  found: boolean;
-  productName: string | null;
-  priceEur: string | null;
-  unit: string | null;
-  lastUpdatedAt: string | null;
-  source: "MERCADONA_LIVE" | "MERCADONA_CACHED" | null;
-}
-
-export interface PriceComparisonResponse {
-  normalizedName: string;
-  found: boolean;
-  mercadona: MercadonaResult;
-  reference: {
-    normalizedName: string;
-    category: string | null;
-    sourceLabel: string | null;
-    referencePriceEur: string;
-    currencyCode: string;
-    effectiveDate: string;
-  } | null;
-  receiptContext: {
-    latestUnitPriceEur: string | null;
-    latestObservedAt: string | null;
-  };
-  delta: string | null;
-  unavailableReason: "NO_REFERENCE_DATA" | null;
-}
-
 function getAuthHeaders(): Record<string, string> {
   const token = getAccessToken();
   if (!token) {
@@ -65,13 +36,6 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   return (await response.json()) as T;
-}
-
-export function getPriceComparison(normalizedName: string): Promise<PriceComparisonResponse> {
-  const query = new URLSearchParams({ normalizedName });
-  return requestJson<PriceComparisonResponse>(`/insights/price-comparison?${query.toString()}`, {
-    method: "GET",
-  });
 }
 
 export interface WasteMetricsResponse {
