@@ -16,6 +16,10 @@ describe('VehiclesService', () => {
       update: jest.Mock;
       delete: jest.Mock;
     };
+    workOrder: {
+      findMany: jest.Mock;
+      count: jest.Mock;
+    };
     client: {
       findUnique: jest.Mock;
     };
@@ -73,6 +77,10 @@ describe('VehiclesService', () => {
         create: jest.fn(),
         update: jest.fn(),
         delete: jest.fn(),
+      },
+      workOrder: {
+        findMany: jest.fn(),
+        count: jest.fn().mockResolvedValue(0),
       },
       client: {
         findUnique: jest.fn(),
@@ -239,24 +247,6 @@ describe('VehiclesService', () => {
 
       await expect(
         vehiclesService.findById('00000000-0000-4000-8000-000000000099'),
-      ).rejects.toBeInstanceOf(NotFoundException);
-    });
-  });
-
-  describe('getHistory', () => {
-    it('returns empty visits for existing vehicle', async () => {
-      prisma.vehicle.findUnique.mockResolvedValue({ id: 'vehicle-1' });
-
-      const result = await vehiclesService.getHistory('vehicle-1');
-
-      expect(result).toEqual({ vehicleId: 'vehicle-1', visits: [] });
-    });
-
-    it('throws NotFoundException for unknown vehicle', async () => {
-      prisma.vehicle.findUnique.mockResolvedValue(null);
-
-      await expect(
-        vehiclesService.getHistory('00000000-0000-4000-8000-000000000099'),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
   });

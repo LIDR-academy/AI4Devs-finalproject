@@ -8,14 +8,17 @@ import { cn } from '@/shared/lib/cn';
 const ADMIN_NAV = [
   { href: '/admin/dashboard', label: 'Panel' },
   { href: '/admin/users', label: 'Usuarios' },
+  { href: '/admin/delivery', label: 'Listos para entrega' },
   { href: '/clients', label: 'Clientes' },
   { href: '/vehicles', label: 'Vehículos' },
+  { href: '/work-orders/new', label: 'Nueva OT' },
 ];
 
 const MECHANIC_NAV = [
   { href: '/mechanic/dashboard', label: 'Panel' },
   { href: '/clients', label: 'Clientes' },
   { href: '/vehicles', label: 'Vehículos' },
+  { href: '/work-orders/new', label: 'Nueva OT' },
 ];
 
 export function RoleNav() {

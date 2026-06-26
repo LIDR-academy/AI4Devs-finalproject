@@ -10,4 +10,3 @@ export { DeleteVehicleDialog } from './components/DeleteVehicleDialog';
 export { ClientPicker } from './components/ClientPicker';
 export { ExistingVehicleAlert } from './components/ExistingVehicleAlert';
 export { VehicleDetailHeader } from './components/VehicleDetailHeader';
-export { VehicleVisitHistory } from './components/VehicleVisitHistory';

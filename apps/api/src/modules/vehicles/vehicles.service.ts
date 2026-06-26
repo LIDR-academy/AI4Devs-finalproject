@@ -9,7 +9,6 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { SearchVehiclesQueryDto } from './dto/search-vehicles-query.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
-import { VehicleHistoryResponseDto } from './dto/vehicle-history-response.dto';
 import { VehicleResponseDto } from './dto/vehicle-response.dto';
 import { VehicleSearchResponseDto } from './dto/vehicle-search-response.dto';
 import {
@@ -91,22 +90,6 @@ export class VehiclesService {
     }
 
     return this.toVehicleResponseFromEntity(vehicle);
-  }
-
-  async getHistory(vehicleId: string): Promise<VehicleHistoryResponseDto> {
-    const vehicle = await this.prisma.vehicle.findUnique({
-      where: { id: vehicleId },
-      select: { id: true },
-    });
-
-    if (!vehicle) {
-      throw new NotFoundException('Not Found');
-    }
-
-    return {
-      vehicleId,
-      visits: [],
-    };
   }
 
   async create(dto: CreateVehicleDto): Promise<VehicleResponseDto> {
@@ -245,15 +228,7 @@ export class VehiclesService {
   }
 
   private async assertVehicleHasNoWorkOrders(vehicleId: string): Promise<void> {
-    const workOrderModel = (
-      this.prisma as unknown as { workOrder?: { count: (args: unknown) => Promise<number> } }
-    ).workOrder;
-
-    if (!workOrderModel) {
-      return;
-    }
-
-    const workOrderCount = await workOrderModel.count({
+    const workOrderCount = await this.prisma.workOrder.count({
       where: { vehicleId },
     });
 

@@ -43,7 +43,7 @@ paths:
   /vehicles/{id}/history:
     get:
       summary: Get vehicle visit history
-      description: Returns visit history. Empty array until US-005 work orders exist.
+      description: Returns visit history populated from work orders with technical notes (US-005, US-007).
       tags: [Vehicles]
       security:
         - bearerAuth: []
@@ -300,7 +300,79 @@ components:
         visits:
           type: array
           items:
+            $ref: '#/components/schemas/VehicleHistoryVisit'
+
+    VehicleHistoryVisit:
+      type: object
+      required:
+        - workOrderId
+        - checkedInAt
+        - status
+        - entryReason
+        - totalAmount
+        - ownerAtVisit
+        - visitNotes
+        - tasks
+      properties:
+        workOrderId:
+          type: string
+          format: uuid
+        checkedInAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+        entryReason:
+          type: string
+        totalAmount:
+          type: number
+          nullable: true
+        ownerAtVisit:
+          type: object
+          properties:
+            fullName:
+              type: string
+            nationalId:
+              type: string
+        visitNotes:
+          type: object
+          properties:
+            visitDiagnosis:
+              type: string
+              nullable: true
+            visitRepairSummary:
+              type: string
+              nullable: true
+            visitPartsUsed:
+              type: string
+              nullable: true
+            visitAdditionalNotes:
+              type: string
+              nullable: true
+        tasks:
+          type: array
+          items:
             type: object
+            properties:
+              description:
+                type: string
+              status:
+                type: string
+              cost:
+                type: number
+                nullable: true
+              diagnosis:
+                type: string
+                nullable: true
+              repairPerformed:
+                type: string
+                nullable: true
+              partsUsed:
+                type: string
+                nullable: true
+              additionalNotes:
+                type: string
+                nullable: true
 
     VehicleConflictResponse:
       type: object

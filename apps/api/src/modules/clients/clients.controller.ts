@@ -22,12 +22,17 @@ import { ClientSearchResponseDto } from './dto/client-search-response.dto';
 import { CreateClientDto } from './dto/create-client.dto';
 import { SearchClientsQueryDto } from './dto/search-clients-query.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
+import { HistoryService } from '../history/history.service';
+import { ClientProfileResponseDto } from '../history/dto/client-profile-response.dto';
 
 @Controller('clients')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN, UserRole.MECHANIC)
 export class ClientsController {
-  constructor(private readonly clientsService: ClientsService) {}
+  constructor(
+    private readonly clientsService: ClientsService,
+    private readonly historyService: HistoryService,
+  ) {}
 
   @Get('search')
   search(
@@ -45,8 +50,8 @@ export class ClientsController {
   @Get(':id')
   findById(
     @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<ClientResponseDto> {
-    return this.clientsService.findById(id);
+  ): Promise<ClientProfileResponseDto> {
+    return this.historyService.getClientProfile(id);
   }
 
   @Post()

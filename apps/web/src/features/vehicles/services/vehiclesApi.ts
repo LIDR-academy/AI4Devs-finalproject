@@ -1,9 +1,10 @@
 import { apiClient } from '@/shared/lib/apiClient';
+import { historyApi } from '@/features/history/services/historyApi';
+import type { VehicleHistoryResponse } from '@/features/history/types/history.types';
 import type {
   CreateVehicleRequest,
   UpdateVehicleRequest,
   Vehicle,
-  VehicleHistoryResponse,
   VehicleSearchResponse,
 } from '../types/vehicle.types';
 
@@ -38,7 +39,7 @@ export const vehiclesApi = {
   },
 
   getHistory(id: string): Promise<VehicleHistoryResponse> {
-    return apiClient<VehicleHistoryResponse>(`/vehicles/${id}/history`);
+    return historyApi.getVehicleHistory(id);
   },
 
   create(data: CreateVehicleRequest): Promise<Vehicle> {

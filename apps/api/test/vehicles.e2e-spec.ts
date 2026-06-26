@@ -191,10 +191,13 @@ describe('VehiclesController (e2e)', () => {
       .set('Authorization', `Bearer ${adminAccessToken}`)
       .expect(200);
 
-    expect(response.body).toEqual({
-      vehicleId,
-      visits: [],
-    });
+    expect(response.body).toEqual(
+      expect.objectContaining({
+        vehicleId,
+        visits: [],
+        total: 0,
+      }),
+    );
   });
 
   it('POST /api/vehicles valid as MECHANIC returns 201 with normalized plate', async () => {
@@ -340,10 +343,13 @@ describe('VehiclesController (e2e)', () => {
       .set('Authorization', `Bearer ${adminAccessToken}`)
       .expect(200);
 
-    expect(historyResponse.body).toEqual({
-      vehicleId,
-      visits: [],
-    });
+    expect(historyResponse.body).toEqual(
+      expect.objectContaining({
+        vehicleId,
+        visits: [],
+        total: 0,
+      }),
+    );
   });
 
   it('PATCH /api/vehicles/:id updates vehicle data', async () => {

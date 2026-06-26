@@ -16,16 +16,22 @@ export async function parseApiError(response: Response): Promise<ApiError> {
       message?: string | string[];
       existingClient?: unknown;
       existingVehicle?: unknown;
+      activeWorkOrderId?: string;
     };
 
     const data: Record<string, unknown> | undefined =
-      body.existingClient !== undefined || body.existingVehicle !== undefined
+      body.existingClient !== undefined ||
+      body.existingVehicle !== undefined ||
+      body.activeWorkOrderId !== undefined
         ? {
             ...(body.existingClient !== undefined
               ? { existingClient: body.existingClient }
               : {}),
             ...(body.existingVehicle !== undefined
               ? { existingVehicle: body.existingVehicle }
+              : {}),
+            ...(body.activeWorkOrderId !== undefined
+              ? { activeWorkOrderId: body.activeWorkOrderId }
               : {}),
           }
         : undefined;

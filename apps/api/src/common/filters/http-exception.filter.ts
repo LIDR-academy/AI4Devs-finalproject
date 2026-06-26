@@ -47,6 +47,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
         ...(body.existingVehicle !== undefined
           ? { existingVehicle: body.existingVehicle }
           : {}),
+        ...(body.activeWorkOrderId !== undefined
+          ? { activeWorkOrderId: body.activeWorkOrderId }
+          : {}),
       });
       return;
     }

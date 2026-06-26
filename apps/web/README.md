@@ -1,6 +1,6 @@
 # MecaTrack Web
 
-Next.js frontend for MecaTrack (US-001: authentication, US-002: user management, US-003: client registration, US-004: vehicle registration).
+Next.js frontend for MecaTrack (US-001: authentication, US-002: user management, US-003: client registration, US-004: vehicle registration, US-005: work order creation, US-006: work order task management, US-007: technical notes, US-008: delivery panel, US-009: vehicle and client history).
 
 ## Prerequisites
 
@@ -61,12 +61,16 @@ npm run test:e2e
 | `/login` | Public |
 | `/admin/dashboard` | ADMIN |
 | `/admin/users` | ADMIN |
+| `/admin/delivery` | ADMIN |
 | `/clients` | ADMIN, MECHANIC |
 | `/clients/new` | ADMIN, MECHANIC |
+| `/clients/[id]` | ADMIN, MECHANIC |
 | `/clients/[id]/edit` | ADMIN, MECHANIC |
 | `/vehicles` | ADMIN, MECHANIC |
 | `/vehicles/new` | ADMIN, MECHANIC (`?clientId=` prefill) |
 | `/vehicles/[id]` | ADMIN, MECHANIC |
+| `/work-orders/new` | ADMIN, MECHANIC (`?vehicleId=` prefill) |
+| `/work-orders/[id]` | ADMIN, MECHANIC (full task management detail) |
 | `/mechanic/dashboard` | MECHANIC |
 | `/403` | Forbidden |
 
@@ -100,3 +104,61 @@ Mechanics do not see the Usuarios link and are redirected to `/403` if they open
 - **React Query keys:** `['vehicles', 'search', q]`, `['vehicles', id]`, `['vehicles', id, 'history']` (invalidated after create)
 - **409 handling:** `apiClient` attaches `existingVehicle` on conflict; UI shows `ExistingVehicleAlert`
 - **Requires:** US-004 backend (`GET/POST/PATCH/DELETE /api/vehicles`, `GET /api/vehicles/search`, `GET /api/vehicles/:id/history`)
+
+## Work order management (US-005)
+
+- **Routes:** `/work-orders/new` (vehicle intake wizard), `/work-orders/[id]` (detail with task management)
+- **Access:** `ADMIN` and `MECHANIC` (shared layout with `RoleNav`)
+- **Nav:** **Nueva OT** link in admin and mechanic nav
+- **Query params:** `?vehicleId=` on `/work-orders/new` pre-fills vehicle from US-004; vehicle create success links to `/work-orders/new?vehicleId=`
+- **Wizard flow:** Step 1 — search/select vehicle (reuses `VehicleSearchBar`); Step 2 — entry reason, mileage, optional mechanic, dynamic initial tasks (`useFieldArray`)
+- **Active WO guard:** `useActiveWorkOrder` shows `ActiveWorkOrderBanner` and disables form; vehicle detail shows **Ver orden activa** instead of **Nueva orden de trabajo**
+- **React Query keys:** `['work-orders', 'mechanics']`, `['work-orders', 'active', vehicleId]`, `['work-orders', id]`; on create invalidates `['vehicles', vehicleId, 'history']` and `['work-orders', 'active', vehicleId]`
+- **409 handling:** `activeWorkOrderId` in API error body; UI shows banner with link to existing work order
+- **Requires:** US-005 backend (`GET/POST /api/work-orders`, `GET /api/work-orders/mechanics`, `GET /api/work-orders/active`, `GET /api/work-orders/:id`)
+
+## Work order task management (US-006)
+
+- **Route:** `/work-orders/[id]` — interactive detail when `EN_PROCESO`; read-only when `LISTA_PARA_ENTREGA` or `ENTREGADA`
+- **Features:** add tasks, start (`PENDING` → `IN_PROGRESS`), complete with cost modal, live `totalAmount` in header, auto **Lista para entrega** banner when all tasks done
+- **Task state machine:** `PENDING` → `IN_PROGRESS` | `COMPLETED` (shortcut); `IN_PROGRESS` → `COMPLETED`; `COMPLETED` is read-only
+- **Currency:** `formatCurrency` displays CRC (`es-CR`, no decimals)
+- **React Query:** `useAddTask` invalidates detail; `useUpdateTask` merges PATCH response (`task` + `workOrder`) into `['work-orders', id]` cache
+- **Read-only modes:** no add/complete actions when OT is not `EN_PROCESO`; `403`/`409` trigger refetch
+- **Requires:** US-006 backend (`POST/PATCH /api/work-orders/:id/tasks`)
+
+## Technical notes (US-007)
+
+- **Surfaces:** `/work-orders/[id]` (per-task + visit-level notes), `/vehicles/[id]#historial` (read-only)
+- **Fields:** diagnosis, repair, parts, additional notes (task); visit diagnosis/summary/parts/notes (work order)
+- **Edit rules:** task notes editable when OT `EN_PROCESO` and task not `COMPLETED`; visit notes editable only when OT `EN_PROCESO`
+- **Save UX:** explicit **Guardar notas** / **Guardar notas de visita** (no autosave in MVP); toast on success
+- **Empty state:** *Sin registro* for read-only empty fields; saving empty clears to `null`
+- **Validation:** max 5000 characters per field with live counter (`TechnicalNotesField`)
+- **React Query:** `useTaskTechnicalNotes`, `useVisitNotes` merge PATCH responses into `['work-orders', id]`
+- **History:** `VehicleVisitTechnicalDetails` expandable **Detalle técnico** on visit cards (US-009 prep)
+- **Requires:** US-007 backend (`PATCH .../technical-notes`, `PATCH .../visit-notes`, enriched `GET` history)
+
+## Delivery panel (US-008)
+
+- **Route:** `/admin/delivery` (admin only; nav link **Listos para entrega** in admin layout)
+- **Features:** table of `LISTA_PARA_ENTREGA` work orders with **Teléfono** column visible without expanding; expandable billing detail; mark as delivered confirmation
+- **Phone column:** `tel:` link when owner has phone (`ownerPhoneDisplay` e.g. `8888-7777`); *Sin teléfono* when null (snapshot from check-in, not live client record)
+- **Refresh:** **Actualizar** button; optional **Actualizar automáticamente** checkbox enables 60s polling (no WebSockets in MVP)
+- **React Query keys:** `['delivery', 'ready']`, `['delivery', 'ready', workOrderId]`; on deliver invalidates `['vehicles']` and `['work-orders']`
+- **V2 D1:** `OWNER_CONTACTED` / *Contactar propietario* reserved — not implemented
+- **Requires:** US-008 backend (`GET/PATCH /api/delivery/ready`)
+
+Mechanics do not see the **Listos para entrega** link and are redirected to `/403` if they open `/admin/delivery` directly.
+
+## History (US-009)
+
+- **Routes:** `/vehicles/[id]` (full visit timeline at `#historial`), `/clients/[id]` (client profile + active vehicles)
+- **Entry flows:** `/vehicles` search → **Ver ficha**; `/clients` search → **Ver cliente**; client profile → **Ver historial** → `/vehicles/[id]#historial`
+- **Read-only:** timeline shows tasks, technical notes, amounts, and `ownerAtVisit` snapshots — no edit forms in history views
+- **D3:** visit cards show owner-at-visit; note when it differs from current vehicle owner
+- **Actions:** **Continuar OT** only for `EN_PROCESO`; **Ver OT** for closed visits
+- **React Query keys:** `['vehicles', id, 'history']`, `['clients', id, 'profile']`
+- **Requires:** US-009 backend (enriched `GET /vehicles/:id/history`, extended `GET /clients/:id`)
+
+Optional nav **Buscar historial** deferred — reuse existing search pages.

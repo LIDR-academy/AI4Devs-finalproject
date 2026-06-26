@@ -1,0 +1,7 @@
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('es-CR', {
+    style: 'currency',
+    currency: 'CRC',
+    maximumFractionDigits: 0,
+  }).format(amount);
+}

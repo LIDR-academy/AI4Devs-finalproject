@@ -20,16 +20,20 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { SearchVehiclesQueryDto } from './dto/search-vehicles-query.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
-import { VehicleHistoryResponseDto } from './dto/vehicle-history-response.dto';
 import { VehicleResponseDto } from './dto/vehicle-response.dto';
 import { VehicleSearchResponseDto } from './dto/vehicle-search-response.dto';
+import { HistoryService } from '../history/history.service';
+import { VehicleHistoryResponseDto } from '../history/dto/vehicle-history-response.dto';
 import { VehiclesService } from './vehicles.service';
 
 @Controller('vehicles')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.ADMIN, UserRole.MECHANIC)
 export class VehiclesController {
-  constructor(private readonly vehiclesService: VehiclesService) {}
+  constructor(
+    private readonly vehiclesService: VehiclesService,
+    private readonly historyService: HistoryService,
+  ) {}
 
   @Get('search')
   search(
@@ -48,7 +52,7 @@ export class VehiclesController {
   getHistory(
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<VehicleHistoryResponseDto> {
-    return this.vehiclesService.getHistory(id);
+    return this.historyService.getVehicleHistory(id);
   }
 
   @Get(':id')

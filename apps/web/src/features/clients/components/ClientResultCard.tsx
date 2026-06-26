@@ -25,6 +25,11 @@ export function ClientResultCard({ client }: ClientResultCardProps) {
         )}
       </div>
       <div className="mt-4 flex flex-wrap gap-3">
+        <Link href={`/clients/${client.id}`}>
+          <Button type="button" variant="secondary">
+            Ver cliente
+          </Button>
+        </Link>
         <Link href={`/clients/${client.id}/edit`}>
           <Button type="button" variant="secondary">
             Editar cliente

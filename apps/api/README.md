@@ -1,6 +1,6 @@
 # MecaTrack API
 
-NestJS REST API for MecaTrack workshop management (US-001: authentication, US-002: user management, US-003: client registration, US-004: vehicle registration).
+NestJS REST API for MecaTrack workshop management (US-001: authentication, US-002: user management, US-003: client registration, US-004: vehicle registration, US-005: work order creation, US-006: work order task management, US-007: technical notes, US-008: delivery panel, US-009: vehicle and client history).
 
 ## Prerequisites
 
@@ -112,7 +112,7 @@ All `/api/vehicles` routes require a valid Bearer token with role `ADMIN` or `ME
 | `GET` | `/api/vehicles/search?q=` | Search by license plate fragment |
 | `GET` | `/api/vehicles/search?licensePlate=` | Exact plate lookup |
 | `GET` | `/api/vehicles/:id` | Get vehicle with `currentOwner` |
-| `GET` | `/api/vehicles/:id/history` | Visit history (`visits: []` until US-005) |
+| `GET` | `/api/vehicles/:id/history` | Visit history from work orders |
 | `POST` | `/api/vehicles` | Create vehicle + initial ownership |
 | `PATCH` | `/api/vehicles/:id` | Update vehicle (`licensePlate`, `brand`, `model`, `year`, `color`) |
 | `DELETE` | `/api/vehicles/:id` | Delete vehicle if no work orders (204) |
@@ -134,6 +134,160 @@ curl -X POST -H "Authorization: Bearer $TOKEN" \
 ```
 
 OpenAPI fragment: [`docs/api-spec.vehicles.yml`](../../docs/api-spec.vehicles.yml)
+
+## Work order management (US-005, admin and mechanic)
+
+All `/api/work-orders` routes require a valid Bearer token with role `ADMIN` or `MECHANIC`.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/work-orders/mechanics` | List active mechanics for assignment |
+| `GET` | `/api/work-orders/active?vehicleId=` | Active work order for vehicle (or `null`) |
+| `POST` | `/api/work-orders` | Create work order + initial tasks (transactional) |
+| `GET` | `/api/work-orders/:id` | Work order detail with tasks and `totalAmount` |
+| `POST` | `/api/work-orders/:workOrderId/tasks` | Add task (`EN_PROCESO` only) |
+| `PATCH` | `/api/work-orders/:workOrderId/tasks/:taskId` | Update task status / complete with cost |
+| `PATCH` | `/api/work-orders/:workOrderId/tasks/:taskId/technical-notes` | Update task diagnosis/repair/parts/notes |
+| `PATCH` | `/api/work-orders/:workOrderId/visit-notes` | Update visit-level technical notes |
+
+Business rules:
+
+- Only one active work order per vehicle (`EN_PROCESO` or `LISTA_PARA_ENTREGA`).
+- `ownerClientId` is snapshotted from the vehicle's current owner at check-in.
+- `createdById` comes from the JWT — never from the request body.
+- Duplicate active work order returns `409` with `activeWorkOrderId` in the response.
+- Task mutations allowed only when work order status is `EN_PROCESO`.
+- Completing a task requires `cost` ≥ 0; optional `costNotes`.
+- When all tasks are `COMPLETED`, work order auto-transitions to `LISTA_PARA_ENTREGA`.
+- `totalAmount` = sum of completed task costs (0 if none).
+- Technical notes (US-007): editable only when WO is `EN_PROCESO`; task notes not editable when task is `COMPLETED`.
+- Technical note fields max 5000 characters; `null` or empty string clears a field; omitted fields unchanged on PATCH.
+- Technical notes do not block task completion (US-006).
+
+### Examples
+
+```bash
+# List mechanics
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:4000/api/work-orders/mechanics
+
+# Check active work order for vehicle
+curl -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:4000/api/work-orders/active?vehicleId=VEHICLE_UUID"
+
+# Create work order
+curl -X POST -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"vehicleId":"VEHICLE_UUID","entryReason":"Oil change and inspection","mileage":45000,"initialTasks":[{"description":"Change engine oil"}]}' \
+  http://localhost:4000/api/work-orders
+
+# Add task to work order
+curl -X POST -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"description":"Rotate tires"}' \
+  http://localhost:4000/api/work-orders/WORK_ORDER_UUID/tasks
+
+# Complete task with cost
+curl -X PATCH -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"status":"COMPLETED","cost":85.50,"costNotes":"Includes labor"}' \
+  http://localhost:4000/api/work-orders/WORK_ORDER_UUID/tasks/TASK_UUID
+
+# Update task technical notes
+curl -X PATCH -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"diagnosis":"Worn pads","repairPerformed":"Replaced front pads","partsUsed":"Pad kit"}' \
+  http://localhost:4000/api/work-orders/WORK_ORDER_UUID/tasks/TASK_UUID/technical-notes
+
+# Update visit-level notes
+curl -X PATCH -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"visitDiagnosis":"General inspection","visitRepairSummary":"Brake service"}' \
+  http://localhost:4000/api/work-orders/WORK_ORDER_UUID/visit-notes
+```
+
+> **Note:** The readme `task-notes` logical module is implemented as `work-order-technical-notes` inside the `work-orders` Nest module.
+
+OpenAPI fragment: [`docs/api-spec.work-orders.yml`](../../docs/api-spec.work-orders.yml)
+
+## Delivery panel (US-008, admin only)
+
+All `/api/delivery` routes require a valid Bearer token with role `ADMIN`. Mechanics receive `403 Forbidden`.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/delivery/ready` | List work orders `LISTA_PARA_ENTREGA` with owner contact data |
+| `GET` | `/api/delivery/ready/:workOrderId` | Detail for expanded panel row (tasks + totals) |
+| `PATCH` | `/api/delivery/ready/:workOrderId/deliver` | Mark `ENTREGADA` and set `deliveredAt` |
+
+Business rules:
+
+- Panel lists only `LISTA_PARA_ENTREGA` work orders (not `OWNER_CONTACTED` in MVP).
+- `ownerPhone` is always present in list items (nullable when client has no phone); sourced from `ownerClient` snapshot at check-in.
+- `totalAmount` reuses `calculateTotalAmount` from work-orders (sum of completed task costs).
+- `elapsedLabel` is a Spanish human-readable duration since `checkedInAt`.
+- `deliveredAt` is set server-side only; double deliver returns `409`.
+- After delivery, vehicle is released for a new active work order (US-005).
+- **V2 D1:** `OWNER_CONTACTED`, `ownerContactedAt`, `ownerContactedById` reserved for mark-contacted flow (not implemented).
+
+### Examples
+
+```bash
+# List ready for delivery
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:4000/api/delivery/ready
+
+# Sort by total amount descending
+curl -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:4000/api/delivery/ready?sort=totalAmount&order=desc"
+
+# Get detail
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:4000/api/delivery/ready/WORK_ORDER_UUID
+
+# Mark delivered
+curl -X PATCH -H "Authorization: Bearer $TOKEN" \
+  http://localhost:4000/api/delivery/ready/WORK_ORDER_UUID/deliver
+```
+
+OpenAPI fragment: [`docs/api-spec.delivery.yml`](../../docs/api-spec.delivery.yml)
+
+## History (US-009, admin and mechanic)
+
+Read-only consolidated history endpoints. No mutation routes in the `history` module.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/vehicles/:id/history` | Full visit timeline with tasks, notes, amounts, owner snapshots |
+| `GET` | `/api/clients/:id` | Client profile + active vehicles + last visit summary |
+
+### Vehicle history contract
+
+- Includes **all** work order statuses (`EN_PROCESO`, `LISTA_PARA_ENTREGA`, `OWNER_CONTACTED`, `ENTREGADA`).
+- Visits ordered by `checkedInAt` DESC.
+- `ownerAtVisit` comes from `ownerClientId` snapshot at check-in — **not** the vehicle's current owner (D3 integrity).
+- `currentOwner` reflects active `VehicleOwnership` (`validTo IS NULL`).
+- `statusLabel` is Spanish; `status` remains the enum value.
+- `totalAmount` per visit uses `calculateTotalAmount` (sum of completed task costs).
+- Empty history returns `{ visits: [], total: 0 }` with `200`.
+
+### Client profile extension
+
+`GET /api/clients/:id` now includes `vehicles[]` with `lastVisitAt` and `lastVisitStatus` per active vehicle (ownership `validTo IS NULL`). Sold/transferred vehicles are excluded from the client profile; access their history via vehicle plate search.
+
+### Examples
+
+```bash
+# Full vehicle visit timeline
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:4000/api/vehicles/VEHICLE_UUID/history
+
+# Client profile with owned vehicles
+curl -H "Authorization: Bearer $TOKEN" \
+  http://localhost:4000/api/clients/CLIENT_UUID
+```
+
+OpenAPI fragment: [`docs/api-spec.history.yml`](../../docs/api-spec.history.yml)
 
 ## Seed clients (development only)
 

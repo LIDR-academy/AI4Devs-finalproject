@@ -1,0 +1,135 @@
+'use client';
+
+import Link from 'next/link';
+import { Button } from '@/shared/components/Button';
+import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
+import { formatCurrency } from '@/features/work-orders/utils/formatCurrency';
+import { useDeliveryReadyDetail } from '../hooks/useDeliveryReadyDetail';
+import { mapDeliveryError } from '../utils/mapDeliveryError';
+import { OwnerPhoneCell } from './OwnerPhoneCell';
+import { DeliveryTaskBreakdown } from './DeliveryTaskBreakdown';
+
+interface DeliveryReadyDetailProps {
+  workOrderId: string;
+  onMarkDelivered: () => void;
+}
+
+function formatDate(isoDate: string): string {
+  return new Intl.DateTimeFormat('es-CR', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date(isoDate));
+}
+
+export function DeliveryReadyDetail({
+  workOrderId,
+  onMarkDelivered,
+}: DeliveryReadyDetailProps) {
+  const { data, isLoading, isError, error } = useDeliveryReadyDetail(workOrderId);
+
+  if (isLoading) {
+    return (
+      <div className="px-4 py-6">
+        <LoadingSpinner label="Cargando detalle..." />
+      </div>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="px-4 py-4">
+        <p role="alert" className="text-sm text-red-700">
+          {mapDeliveryError(error)}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5 px-4 py-5">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Vehículo
+          </h3>
+          <p className="mt-1 text-sm font-medium text-slate-900">
+            {data.vehicle.licensePlate} — {data.vehicle.brand}{' '}
+            {data.vehicle.model} {data.vehicle.year}
+          </p>
+        </div>
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Propietario
+          </h3>
+          <p className="mt-1 text-sm font-medium text-slate-900">
+            {data.owner.fullName}
+          </p>
+          <p className="mt-1 text-sm text-slate-600">
+            Teléfono:{' '}
+            <OwnerPhoneCell
+              phone={data.owner.phone}
+              phoneDisplay={data.ownerPhoneDisplay}
+            />
+          </p>
+          {data.owner.email && (
+            <p className="mt-1 text-sm text-slate-600">
+              Correo:{' '}
+              <a
+                href={`mailto:${data.owner.email}`}
+                className="text-blue-600 hover:underline"
+              >
+                {data.owner.email}
+              </a>
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Ingreso
+          </h3>
+          <p className="mt-1 text-sm text-slate-700">
+            {formatDate(data.checkedInAt)} ({data.elapsedLabel})
+          </p>
+        </div>
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Motivo / Kilometraje
+          </h3>
+          <p className="mt-1 text-sm text-slate-700">{data.entryReason}</p>
+          <p className="mt-1 text-sm text-slate-600">
+            {data.mileage.toLocaleString('es-CR')} km
+          </p>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          Desglose de tareas
+        </h3>
+        <DeliveryTaskBreakdown tasks={data.tasks} />
+      </div>
+
+      <div className="flex flex-col gap-4 rounded-lg bg-blue-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-base font-semibold text-slate-900">
+          Total a cobrar: {formatCurrency(data.totalAmount)}
+        </p>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href={`/work-orders/${data.workOrderId}`}
+            className="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+          >
+            Ver OT completa
+          </Link>
+          <Button type="button" onClick={onMarkDelivered}>
+            Marcar como entregada
+          </Button>
+        </div>
+      </div>
+
+      {/* V2 D1: placeholder for "Contactar propietario" (OWNER_CONTACTED flow) */}
+    </div>
+  );
+}

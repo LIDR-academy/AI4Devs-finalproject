@@ -1,5 +1,6 @@
 import type { VehicleVisit } from '../types/vehicle.types';
 import { formatCrc } from '../utils/formatCurrency';
+import { VehicleVisitTechnicalDetails } from './VehicleVisitTechnicalDetails';
 
 interface VehicleVisitHistoryProps {
   visits: VehicleVisit[];
@@ -57,6 +58,7 @@ export function VehicleVisitHistory({
                   Total: {formatCrc(visit.totalAmount)}
                 </p>
               )}
+              <VehicleVisitTechnicalDetails visit={visit} />
             </li>
           ))}
         </ul>

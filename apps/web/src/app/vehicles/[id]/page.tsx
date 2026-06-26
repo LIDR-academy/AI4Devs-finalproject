@@ -1,15 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { VisitTimeline } from '@/features/history/components/VisitTimeline';
+import { useVehicleHistory } from '@/features/history/hooks/useVehicleHistory';
 import {
   DeleteVehicleDialog,
   VehicleDetailHeader,
-  VehicleVisitHistory,
 } from '@/features/vehicles';
 import { useVehicle } from '@/features/vehicles/hooks/useVehicle';
-import { useVehicleHistory } from '@/features/vehicles/hooks/useVehicleHistory';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 
 export default function VehicleDetailPage() {
@@ -27,6 +27,16 @@ export default function VehicleDetailPage() {
     data: history,
     isLoading: isHistoryLoading,
   } = useVehicleHistory(vehicleId);
+
+  useEffect(() => {
+    if (isHistoryLoading || typeof window === 'undefined') {
+      return;
+    }
+
+    if (window.location.hash === '#historial') {
+      document.getElementById('historial')?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [isHistoryLoading, history]);
 
   if (isVehicleLoading) {
     return <LoadingSpinner label="Cargando vehículo..." />;
@@ -62,8 +72,10 @@ export default function VehicleDetailPage() {
         vehicle={vehicle}
         onDelete={() => setDeleteOpen(true)}
       />
-      <VehicleVisitHistory
+      <VisitTimeline
         visits={history?.visits ?? []}
+        vehicleId={vehicleId}
+        currentOwnerNationalId={vehicle.currentOwner.nationalId}
         isLoading={isHistoryLoading}
       />
       <DeleteVehicleDialog

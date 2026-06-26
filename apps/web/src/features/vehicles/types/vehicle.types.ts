@@ -1,3 +1,11 @@
+export type {
+  HistoryTask as VehicleVisitTask,
+  OwnerAtVisit,
+  VehicleHistoryResponse,
+  VehicleVisit,
+  VisitNotes as VehicleVisitNotes,
+} from '@/features/history/types/history.types';
+
 export interface CurrentOwner {
   id: string;
   fullName: string;
@@ -34,20 +42,6 @@ export interface UpdateVehicleRequest {
   model: string;
   year: number;
   color?: string;
-}
-
-export interface VehicleVisit {
-  workOrderId: string;
-  checkedInAt: string;
-  status: string;
-  entryReason: string;
-  totalAmount: number | null;
-  ownerAtVisit: { fullName: string; nationalId: string };
-}
-
-export interface VehicleHistoryResponse {
-  vehicleId: string;
-  visits: VehicleVisit[];
 }
 
 export interface ExistingVehicleSummary {

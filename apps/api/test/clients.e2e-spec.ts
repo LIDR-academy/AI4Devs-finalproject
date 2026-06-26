@@ -152,6 +152,7 @@ describe('ClientsController (e2e)', () => {
 
     expect(response.body.id).toBe(clientId);
     expect(response.body.fullName).toBe('Juan Pérez');
+    expect(response.body.vehicles).toEqual(expect.any(Array));
   });
 
   it('GET /api/clients/:id unknown returns 404', async () => {

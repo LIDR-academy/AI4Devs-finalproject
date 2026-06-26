@@ -50,6 +50,51 @@ export default defineConfig({
       },
     },
     {
+      name: 'chromium-work-orders',
+      testMatch: /work-orders\.spec\.ts/,
+      dependencies: ['setup', 'setup-mechanic'],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'e2e/.auth/admin.json',
+      },
+    },
+    {
+      name: 'chromium-work-order-tasks',
+      testMatch: /work-order-tasks\.spec\.ts/,
+      dependencies: ['setup', 'setup-mechanic'],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'e2e/.auth/admin.json',
+      },
+    },
+    {
+      name: 'chromium-technical-notes',
+      testMatch: /technical-notes\.spec\.ts/,
+      dependencies: ['setup', 'setup-mechanic'],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'e2e/.auth/admin.json',
+      },
+    },
+    {
+      name: 'chromium-delivery-panel',
+      testMatch: /delivery-panel\.spec\.ts/,
+      dependencies: ['setup', 'setup-mechanic'],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'e2e/.auth/admin.json',
+      },
+    },
+    {
+      name: 'chromium-history',
+      testMatch: /history\.spec\.ts/,
+      dependencies: ['setup', 'setup-mechanic'],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'e2e/.auth/admin.json',
+      },
+    },
+    {
       name: 'setup-mechanic',
       testMatch: /auth-mechanic\.setup\.ts/,
       dependencies: ['setup'],
