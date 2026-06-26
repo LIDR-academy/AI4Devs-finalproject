@@ -28,7 +28,11 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     ThrottlerModule.forRoot([
       {
         ttl: 900_000,
-        limit: 5,
+        limit:
+          process.env.NODE_ENV === 'production' ||
+          process.env.NODE_ENV === 'test'
+            ? 5
+            : 1000,
       },
     ]),
   ],
