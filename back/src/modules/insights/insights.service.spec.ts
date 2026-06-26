@@ -1,11 +1,16 @@
 import { ForbiddenException } from "@nestjs/common";
 import { Decimal } from "@prisma/client/runtime/library";
 import { InsightsService } from "./insights.service";
+import type { MercadonaService, MercadonaProduct } from "../../integrations/mercadona/mercadona.service";
 
 describe("InsightsService", () => {
   const user = { id: "user-1", email: "user@example.com" };
 
-  function createService() {
+  function makeMercadonaMock(result: MercadonaProduct | null = null) {
+    return { searchProduct: jest.fn().mockResolvedValue(result) } as unknown as MercadonaService;
+  }
+
+  function createService(mercadonaMock?: MercadonaService) {
     const catalogRows = [
       {
         id: "old",
@@ -53,7 +58,7 @@ describe("InsightsService", () => {
     } as any;
 
     return {
-      service: new InsightsService(prismaMock, usersServiceMock),
+      service: new InsightsService(prismaMock, usersServiceMock, mercadonaMock ?? makeMercadonaMock()),
     };
   }
 
@@ -76,6 +81,97 @@ describe("InsightsService", () => {
     expect(result.reference).toBeNull();
     expect(result.unavailableReason).toBe("NO_REFERENCE_DATA");
   });
+
+  // ── T007/US1: Mercadona found path ───────────────────────────────────────
+
+  describe("getPriceComparison — Mercadona found (US1)", () => {
+    const mercadonaProduct: MercadonaProduct = {
+      productName: "Leche entera Hacendado",
+      priceEur: "0.72",
+      unit: "l",
+      fetchedAt: new Date("2026-06-26T10:00:00.000Z"),
+      source: "MERCADONA_LIVE",
+    };
+
+    it("includes mercadona.found: true when MercadonaService returns a product", async () => {
+      const { service } = createService(makeMercadonaMock(mercadonaProduct));
+      const result = await service.getPriceComparison(user.id, "leche");
+      expect(result.mercadona.found).toBe(true);
+    });
+
+    it("populates mercadona fields from the returned product", async () => {
+      const { service } = createService(makeMercadonaMock(mercadonaProduct));
+      const result = await service.getPriceComparison(user.id, "leche");
+      expect(result.mercadona.productName).toBe("Leche entera Hacendado");
+      expect(result.mercadona.priceEur).toBe("0.72");
+      expect(result.mercadona.unit).toBe("l");
+      expect(result.mercadona.lastUpdatedAt).toBe("2026-06-26T10:00:00.000Z");
+      expect(result.mercadona.source).toBe("MERCADONA_LIVE");
+    });
+
+    it("sets top-level found: true when Mercadona has a result", async () => {
+      const { service } = createService(makeMercadonaMock(mercadonaProduct));
+      const result = await service.getPriceComparison(user.id, "leche");
+      expect(result.found).toBe(true);
+    });
+
+    it("computes delta as (latestUnitPriceEur - mercadona.priceEur) when both available", async () => {
+      const prismaMock = {
+        priceCatalogItem: { findFirst: jest.fn().mockResolvedValue(null) },
+        receiptItem: {
+          findMany: jest.fn().mockResolvedValue([
+            { rawName: "leche", unitPriceEur: new Decimal("0.89"), createdAt: new Date() },
+          ]),
+        },
+      } as any;
+      const usersServiceMock = {
+        findById: jest.fn().mockResolvedValue(user),
+      } as any;
+      const service = new InsightsService(prismaMock, usersServiceMock, makeMercadonaMock(mercadonaProduct));
+      const result = await service.getPriceComparison(user.id, "leche");
+      expect(result.delta).toBe("0.17");
+    });
+
+    it("sets delta: null when receiptContext.latestUnitPriceEur is null", async () => {
+      const { service } = createService(makeMercadonaMock(mercadonaProduct));
+      const result = await service.getPriceComparison(user.id, "leche");
+      expect(result.delta).toBeNull();
+    });
+  });
+
+  // ── T014/US2: Fallback path ──────────────────────────────────────────────
+
+  describe("getPriceComparison — Mercadona not found / fallback (US2)", () => {
+    it("sets mercadona.found: false when MercadonaService returns null", async () => {
+      const { service } = createService(makeMercadonaMock(null));
+      const result = await service.getPriceComparison(user.id, "Unknown Product");
+      expect(result.mercadona.found).toBe(false);
+    });
+
+    it("keeps static catalog result when Mercadona returns null", async () => {
+      const { service } = createService(makeMercadonaMock(null));
+      const result = await service.getPriceComparison(user.id, "Whole Milk");
+      expect(result.found).toBe(true);
+      expect(result.reference).not.toBeNull();
+    });
+
+    it("sets unavailableReason: NO_REFERENCE_DATA only when BOTH sources have nothing", async () => {
+      const { service } = createService(makeMercadonaMock(null));
+      const result = await service.getPriceComparison(user.id, "Unknown Product");
+      expect(result.found).toBe(false);
+      expect(result.unavailableReason).toBe("NO_REFERENCE_DATA");
+    });
+
+    it("sets mercadona null fields to null when not found", async () => {
+      const { service } = createService(makeMercadonaMock(null));
+      const result = await service.getPriceComparison(user.id, "leche");
+      expect(result.mercadona.productName).toBeNull();
+      expect(result.mercadona.priceEur).toBeNull();
+      expect(result.mercadona.unit).toBeNull();
+      expect(result.mercadona.lastUpdatedAt).toBeNull();
+      expect(result.mercadona.source).toBeNull();
+    });
+  });
 });
 
 describe("InsightsService — getWasteMetrics", () => {
@@ -97,7 +193,9 @@ describe("InsightsService — getWasteMetrics", () => {
       findById: jest.fn(async (id: string) => (id === user.id ? user : null)),
     } as any;
 
-    return new InsightsService(prismaMock, usersServiceMock);
+    const mercadonaMock = { searchProduct: jest.fn().mockResolvedValue(null) } as unknown as MercadonaService;
+
+    return new InsightsService(prismaMock, usersServiceMock, mercadonaMock);
   }
 
   it("returns zero metrics when no waste events exist", async () => {

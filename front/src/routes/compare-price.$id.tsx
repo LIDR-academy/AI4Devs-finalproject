@@ -13,6 +13,44 @@ export const Route = createFileRoute("/compare-price/$id")({
   component: ComparePricePage,
 });
 
+function formatLastUpdated(isoDate: string): string {
+  const diffMs = Date.now() - new Date(isoDate).getTime();
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  if (hours < 1) {
+    const minutes = Math.floor(diffMs / (1000 * 60));
+    return minutes < 1 ? "just now" : `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+  }
+  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day${days === 1 ? "" : "s"} ago`;
+}
+
+function DeltaBadge({ delta }: { delta: string | null }) {
+  if (!delta) return null;
+  const value = parseFloat(delta);
+  if (isNaN(value)) return null;
+
+  if (value > 0) {
+    return (
+      <p className="text-[13px] text-destructive font-medium" data-testid="price-comparison-delta-overpaid">
+        You overpaid by €{Math.abs(value).toFixed(2)}
+      </p>
+    );
+  }
+  if (value < 0) {
+    return (
+      <p className="text-[13px] text-emerald-700 font-medium" data-testid="price-comparison-delta-underpaid">
+        You paid €{Math.abs(value).toFixed(2)} less than Mercadona
+      </p>
+    );
+  }
+  return (
+    <p className="text-[13px] text-muted-foreground" data-testid="price-comparison-delta-equal">
+      Same price as Mercadona
+    </p>
+  );
+}
+
 function ComparePricePage() {
   const authed = useRequireAuthRedirect();
 
@@ -65,7 +103,6 @@ function ComparePricePage() {
     if (!comparison?.reference?.effectiveDate) {
       return null;
     }
-
     return new Date(comparison.reference.effectiveDate).toLocaleDateString();
   }, [comparison?.reference?.effectiveDate]);
 
@@ -103,6 +140,58 @@ function ComparePricePage() {
             </section>
           )}
 
+          {/* Mercadona live price section */}
+          {!isLoading && !error && comparison?.mercadona.found && (
+            <section className="ios-card p-4 space-y-3" data-testid="price-comparison-mercadona">
+              <div className="flex items-center justify-between">
+                <p className="text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">
+                  Mercadona price
+                </p>
+                {comparison.mercadona.source === "MERCADONA_CACHED" && (
+                  <span
+                    className="text-[11px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full"
+                    data-testid="price-comparison-cached-badge"
+                  >
+                    cached
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-end justify-between gap-2">
+                <p className="text-[32px] font-bold leading-none" data-testid="price-comparison-mercadona-price">
+                  €{Number(comparison.mercadona.priceEur).toFixed(2)}
+                </p>
+                {comparison.mercadona.unit && (
+                  <span className="text-[12px] text-muted-foreground pb-1" data-testid="price-comparison-mercadona-unit">
+                    per {comparison.mercadona.unit}
+                  </span>
+                )}
+              </div>
+
+              <p className="text-[13px] text-muted-foreground" data-testid="price-comparison-mercadona-name">
+                {comparison.mercadona.productName}
+              </p>
+
+              {comparison.mercadona.lastUpdatedAt && (
+                <p className="text-[12px] text-muted-foreground" data-testid="price-comparison-last-updated">
+                  Last updated: {formatLastUpdated(comparison.mercadona.lastUpdatedAt)}
+                </p>
+              )}
+
+              <DeltaBadge delta={comparison.delta} />
+            </section>
+          )}
+
+          {/* No Mercadona match state */}
+          {!isLoading && !error && comparison && !comparison.mercadona.found && (
+            <section className="ios-card p-4" data-testid="price-comparison-mercadona-unavailable">
+              <p className="text-[13px] text-muted-foreground">
+                No live price available from Mercadona for this item.
+              </p>
+            </section>
+          )}
+
+          {/* Static catalog reference */}
           {!isLoading && !error && comparison?.found && comparison.reference && (
             <section className="ios-card p-4 space-y-3" data-testid="price-comparison-result">
               <p className="text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">

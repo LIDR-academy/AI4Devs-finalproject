@@ -1,4 +1,4 @@
-## Prompt 1: Plan Ticket EXT-001 implementation
+## Prompt 1: Plan Ticket EXT-005 implementation
 ~~~text
 /plan
 As the Full-Stack Engineer on the RealSaveFooding project, 

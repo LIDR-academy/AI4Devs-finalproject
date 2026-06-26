@@ -6,9 +6,19 @@ interface ApiErrorBody {
   message?: string | string[];
 }
 
+export interface MercadonaResult {
+  found: boolean;
+  productName: string | null;
+  priceEur: string | null;
+  unit: string | null;
+  lastUpdatedAt: string | null;
+  source: "MERCADONA_LIVE" | "MERCADONA_CACHED" | null;
+}
+
 export interface PriceComparisonResponse {
   normalizedName: string;
   found: boolean;
+  mercadona: MercadonaResult;
   reference: {
     normalizedName: string;
     category: string | null;
@@ -21,6 +31,7 @@ export interface PriceComparisonResponse {
     latestUnitPriceEur: string | null;
     latestObservedAt: string | null;
   };
+  delta: string | null;
   unavailableReason: "NO_REFERENCE_DATA" | null;
 }
 
