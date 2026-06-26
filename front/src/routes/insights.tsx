@@ -1,10 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { PointsSummaryWidget } from "@/components/PointsSummaryWidget";
 import {
   getDashboardSummary,
   type DashboardSummaryResponse,
 } from "@/features/dashboard/dashboard.api";
+import {
+  getGamificationSummary,
+  type GamificationSummary,
+} from "@/features/gamification/gamification.api";
 import {
   getWasteMetrics,
   type WasteMetricsResponse,
@@ -36,6 +41,7 @@ function InsightsPage() {
   const [summary, setSummary] = useState<DashboardSummaryResponse | null>(null);
   const [useNext, setUseNext] = useState<UseNextItem[]>([]);
   const [wasteMetrics, setWasteMetrics] = useState<WasteMetricsResponse | null>(null);
+  const [gamification, setGamification] = useState<GamificationSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,14 +55,16 @@ function InsightsPage() {
     setError(null);
 
     try {
-      const [summaryData, useNextData, wasteData] = await Promise.all([
+      const [summaryData, useNextData, wasteData, gamificationData] = await Promise.all([
         getDashboardSummary(),
         getUseNextItems(),
         getWasteMetrics(),
+        getGamificationSummary(),
       ]);
       setSummary(summaryData);
       setUseNext(useNextData.items);
       setWasteMetrics(wasteData);
+      setGamification(gamificationData);
     } catch (apiError) {
       setError(apiError instanceof Error ? apiError.message : "Could not load dashboard.");
     } finally {
@@ -96,6 +104,10 @@ function InsightsPage() {
           testId="dashboard-expiring-items"
           loading={isLoading}
         />
+      </section>
+
+      <section className="mt-5" data-testid="points-summary-section">
+        <PointsSummaryWidget summary={gamification} isLoading={isLoading} />
       </section>
 
       <section className="mt-5" data-testid="waste-metrics-section">

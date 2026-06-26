@@ -188,6 +188,49 @@ describe("NotificationDeliveryService — deliverExpiry", () => {
   });
 });
 
+describe("NotificationDeliveryService — deliverBadge", () => {
+  it("sends a web push with the badge label/description and logs BADGE_EARNED when a subscription exists", async () => {
+    const { svc, webPushServiceMock, logs } = createMocks({ existingPushSub: makePushSub() });
+
+    await svc.deliverBadge(userId, "First Save", "You consumed your first item before it expired.");
+
+    expect(webPushServiceMock.sendNotification).toHaveBeenCalledTimes(1);
+    expect(webPushServiceMock.sendNotification).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        title: expect.stringContaining("badge"),
+        body: expect.stringContaining("First Save"),
+      }),
+    );
+    const log = logs.find((l) => l.type === "BADGE_EARNED");
+    expect(log?.channel).toBe("WEB_PUSH");
+    expect(log?.status).toBe("SENT");
+  });
+
+  it("is a no-op (no push, no throw) when the user has no push subscription", async () => {
+    const { svc, webPushServiceMock, logs } = createMocks({ existingPushSub: null });
+
+    await expect(
+      svc.deliverBadge(userId, "First Save", "desc"),
+    ).resolves.not.toThrow();
+
+    expect(webPushServiceMock.sendNotification).not.toHaveBeenCalled();
+    expect(logs).toHaveLength(0);
+  });
+
+  it("writes a FAILED log without throwing when push delivery errors", async () => {
+    const { svc, logs } = createMocks({
+      existingPushSub: makePushSub(),
+      pushThrows: Object.assign(new Error("push down"), { statusCode: 500 }),
+    });
+
+    await expect(svc.deliverBadge(userId, "First Save", "desc")).resolves.not.toThrow();
+
+    const log = logs.find((l) => l.type === "BADGE_EARNED");
+    expect(log?.status).toBe("FAILED");
+  });
+});
+
 describe("NotificationDeliveryService — savePushSubscription / deletePushSubscription", () => {
   it("upserts PushSubscription and returns the id", async () => {
     const { svc } = createMocks();

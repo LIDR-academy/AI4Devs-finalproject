@@ -139,9 +139,16 @@ function makePrismaMock(item: typeof MOCK_ITEM_NO_EXPIRY | null = MOCK_ITEM_NO_E
   } as any;
 }
 
-function makeService(prismaMock: ReturnType<typeof makePrismaMock>) {
+function makePointsMock() {
+  return { processConsumptionEvent: jest.fn().mockResolvedValue(undefined) } as any;
+}
+
+function makeService(
+  prismaMock: ReturnType<typeof makePrismaMock>,
+  pointsMock: ReturnType<typeof makePointsMock> = makePointsMock(),
+) {
   const usersServiceMock = { findById: jest.fn().mockResolvedValue(MOCK_USER) } as any;
-  return new PantryService(prismaMock, usersServiceMock);
+  return new PantryService(prismaMock, usersServiceMock, pointsMock);
 }
 
 describe("PantryService.registerEvent", () => {
@@ -242,11 +249,45 @@ describe("PantryService.registerEvent", () => {
   it("throws ForbiddenException when user is not found", async () => {
     const prisma = makePrismaMock();
     const usersServiceMock = { findById: jest.fn().mockResolvedValue(null) } as any;
-    const svc = new PantryService(prisma, usersServiceMock);
+    const svc = new PantryService(prisma, usersServiceMock, makePointsMock());
 
     await expect(
       svc.registerEvent("user-x", "item-1", { type: PantryConsumptionEventType.CONSUMED }),
     ).rejects.toThrow(ForbiddenException);
+  });
+
+  it("calls PointsService.processConsumptionEvent after a successful event registration", async () => {
+    const prisma = makePrismaMock(MOCK_ITEM_NO_EXPIRY);
+    const points = makePointsMock();
+    const svc = makeService(prisma, points);
+
+    await svc.registerEvent("user-1", "item-1", { type: PantryConsumptionEventType.CONSUMED });
+
+    expect(points.processConsumptionEvent).toHaveBeenCalledWith("evt-1");
+  });
+
+  it("does not call PointsService when event registration fails", async () => {
+    const prisma = makePrismaMock(null); // item not found → throws before any event is created
+    const points = makePointsMock();
+    const svc = makeService(prisma, points);
+
+    await expect(
+      svc.registerEvent("user-1", "item-x", { type: PantryConsumptionEventType.CONSUMED }),
+    ).rejects.toThrow(NotFoundException);
+    expect(points.processConsumptionEvent).not.toHaveBeenCalled();
+  });
+
+  it("does not fail the registration when PointsService throws", async () => {
+    const prisma = makePrismaMock(MOCK_ITEM_NO_EXPIRY);
+    const points = makePointsMock();
+    points.processConsumptionEvent.mockRejectedValue(new Error("gamification down"));
+    const svc = makeService(prisma, points);
+
+    const result = await svc.registerEvent("user-1", "item-1", {
+      type: PantryConsumptionEventType.CONSUMED,
+    });
+
+    expect(result.id).toBe("evt-1");
   });
 
   it("includes estimatedValueEur in consumptionEvent.create when pricePaid is set", async () => {

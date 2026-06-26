@@ -33,6 +33,37 @@ export class NotificationDeliveryService {
     }
   }
 
+  /**
+   * Sends a web-push notification announcing a newly earned badge. No-op when the user has no
+   * push subscription. Never throws — a delivery failure is logged and must not block badge
+   * persistence (FR-019).
+   */
+  async deliverBadge(userId: string, badgeLabel: string, badgeDescription: string): Promise<void> {
+    const sub = await this.prisma.pushSubscription.findUnique({ where: { userId } });
+    if (!sub) {
+      return;
+    }
+
+    try {
+      await this.webPushService.sendNotification(
+        { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
+        { title: "You earned a badge!", body: `${badgeLabel} — ${badgeDescription}` },
+      );
+      await this.prisma.notificationLog.create({
+        data: { userId, type: "BADGE_EARNED", channel: "WEB_PUSH", status: "SENT" },
+      });
+    } catch (error) {
+      const failReason = error instanceof Error ? error.message : String(error);
+      const is410 = (error as { statusCode?: number }).statusCode === 410;
+      if (is410) {
+        await this.prisma.pushSubscription.deleteMany({ where: { userId } });
+      }
+      await this.prisma.notificationLog.create({
+        data: { userId, type: "BADGE_EARNED", channel: "WEB_PUSH", status: "FAILED", failReason },
+      });
+    }
+  }
+
   async savePushSubscription(userId: string, data: PushSubscriptionData): Promise<string> {
     const record = await this.prisma.pushSubscription.upsert({
       where: { userId },

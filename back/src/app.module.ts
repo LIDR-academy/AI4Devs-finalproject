@@ -5,6 +5,7 @@ import { AuthModule } from "./modules/auth/auth.module";
 import { DashboardModule } from "./modules/dashboard/dashboard.module";
 import { DatabaseModule } from "./database/database.module";
 import { ExpirationModule } from "./modules/expiration/expiration.module";
+import { GamificationModule } from "./modules/gamification/gamification.module";
 import { HealthModule } from "./health/health.module";
 import { HouseholdsModule } from "./modules/households/households.module";
 import { InsightsModule } from "./modules/insights/insights.module";
@@ -30,6 +31,7 @@ import { UsersModule } from "./modules/users/users.module";
     NotificationsModule,
     DashboardModule,
     RecipesModule,
+    GamificationModule,
   ],
 })
 export class AppModule {}

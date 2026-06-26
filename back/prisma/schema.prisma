@@ -89,6 +89,31 @@ model User {
   householdsCreated    Household[]          @relation("HouseholdCreatedBy")
   householdMemberships HouseholdMember[]
   sentInvitations      HouseholdInvitation[] @relation("HouseholdInvitationInvitedBy")
+  userPoints           UserPoints[]
+  userBadges           UserBadge[]
+}
+
+model UserPoints {
+  id          String   @id @default(uuid())
+  userId      String
+  delta       Int
+  reason      String
+  referenceId String?
+  occurredAt  DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, occurredAt])
+}
+
+model UserBadge {
+  id       String   @id @default(uuid())
+  userId   String
+  code     String
+  earnedAt DateTime @default(now())
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, code])
+  @@index([userId])
 }
 
 model PantryItem {

@@ -1,7 +1,8 @@
-import { ConflictException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { ConflictException, ForbiddenException, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import type { Decimal } from "@prisma/client/runtime/library";
 import type { PantryItem } from "@prisma/client";
 import { PrismaService } from "../../database/prisma.service";
+import { PointsService } from "../gamification/points.service";
 import { UsersService } from "../users/users.service";
 import { CreatePantryItemDto } from "./dto/create-pantry-item.dto";
 import { PantryConsumptionEventType, RegisterConsumptionEventDto } from "./dto/register-consumption-event.dto";
@@ -60,9 +61,12 @@ export function isFarPastExpiry(item: Pick<PantryItem, "expirationDate">, now: D
 
 @Injectable()
 export class PantryService {
+  private readonly logger = new Logger(PantryService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
+    private readonly pointsService: PointsService,
   ) {}
 
   async create(userId: string, dto: CreatePantryItemDto): Promise<PantryItem> {
@@ -182,6 +186,15 @@ export class PantryService {
       }),
       this.prisma.pantryItem.delete({ where: { id: itemId } }),
     ]);
+
+    // Fire-and-forget gamification processing — a failure here must never fail the consume/waste
+    // action (FR-018). Errors are logged and swallowed.
+    try {
+      await this.pointsService.processConsumptionEvent(event.id);
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`Gamification processing failed for event ${event.id}: ${reason}`);
+    }
 
     return event;
   }

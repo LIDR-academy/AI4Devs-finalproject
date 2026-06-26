@@ -24,6 +24,6 @@ import { SES_PORT, WEB_PUSH_PORT } from "./ports/notification-ports";
 		{ provide: SES_PORT, useClass: SesService },
 		{ provide: WEB_PUSH_PORT, useClass: WebPushService },
 	],
-	exports: [NotificationsService, NotificationPreferencesService],
+	exports: [NotificationsService, NotificationPreferencesService, NotificationDeliveryService],
 })
 export class NotificationsModule {}

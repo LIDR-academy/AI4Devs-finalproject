@@ -16,5 +16,9 @@ After a manual review and test, when I try to test the Mercadona API always repl
 
 
 ## Prompt 6: Converge + Implement
+Run /speckit-converge to confirm the implementation satisfies the spec/plan with no drift.
 /speckit-converge (It detected errors in tasks.md)
 /speckit-implement
+
+## Working example
+![Price Comparaison](Price_Comparaison.png)
