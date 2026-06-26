@@ -3,6 +3,7 @@ import type {
   Client,
   ClientSearchResponse,
   CreateClientRequest,
+  UpdateClientRequest,
 } from '../types/client.types';
 
 function buildSearchQuery(params: {
@@ -35,6 +36,13 @@ export const clientsApi = {
   create(data: CreateClientRequest): Promise<Client> {
     return apiClient<Client>('/clients', {
       method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  update(id: string, data: UpdateClientRequest): Promise<Client> {
+    return apiClient<Client>(`/clients/${id}`, {
+      method: 'PATCH',
       body: JSON.stringify(data),
     });
   },

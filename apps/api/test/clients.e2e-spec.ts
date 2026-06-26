@@ -254,4 +254,56 @@ describe('ClientsController (e2e)', () => {
       expect.arrayContaining([expect.objectContaining({ fullName })]),
     );
   });
+
+  it('PATCH /api/clients/:id updates client as MECHANIC', async () => {
+    const searchResponse = await request(app.getHttpServer())
+      .get('/api/clients/search')
+      .query({ q: 'Juan' })
+      .set('Authorization', `Bearer ${mechanicAccessToken}`)
+      .expect(200);
+
+    const clientId = searchResponse.body.items[0].id as string;
+
+    const response = await request(app.getHttpServer())
+      .patch(`/api/clients/${clientId}`)
+      .set('Authorization', `Bearer ${mechanicAccessToken}`)
+      .send({
+        fullName: 'Juan Pérez Actualizado',
+        phone: '88881234',
+        email: 'juan.updated@email.com',
+      })
+      .expect(200);
+
+    expect(response.body.fullName).toBe('Juan Pérez Actualizado');
+    expect(response.body.nationalId).toBe('1-2345-6789');
+    expect(response.body.phone).toBe('88881234');
+  });
+
+  it('PATCH /api/clients/:id unknown returns 404', async () => {
+    await request(app.getHttpServer())
+      .patch(`/api/clients/00000000-0000-4000-8000-000000000099`)
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({
+        fullName: 'Missing Client',
+      })
+      .expect(404);
+  });
+
+  it('PATCH /api/clients/:id missing fullName returns 400', async () => {
+    const searchResponse = await request(app.getHttpServer())
+      .get('/api/clients/search')
+      .query({ q: 'María' })
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .expect(200);
+
+    const clientId = searchResponse.body.items[0].id as string;
+
+    await request(app.getHttpServer())
+      .patch(`/api/clients/${clientId}`)
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({
+        phone: '77776666',
+      })
+      .expect(400);
+  });
 });

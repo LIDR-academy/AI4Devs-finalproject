@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -20,6 +21,7 @@ import { ClientResponseDto } from './dto/client-response.dto';
 import { ClientSearchResponseDto } from './dto/client-search-response.dto';
 import { CreateClientDto } from './dto/create-client.dto';
 import { SearchClientsQueryDto } from './dto/search-clients-query.dto';
+import { UpdateClientDto } from './dto/update-client.dto';
 
 @Controller('clients')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -51,5 +53,13 @@ export class ClientsController {
   @HttpCode(HttpStatus.CREATED)
   create(@Body() dto: CreateClientDto): Promise<ClientResponseDto> {
     return this.clientsService.create(dto);
+  }
+
+  @Patch(':id')
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateClientDto,
+  ): Promise<ClientResponseDto> {
+    return this.clientsService.update(id, dto);
   }
 }

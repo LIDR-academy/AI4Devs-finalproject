@@ -62,6 +62,38 @@ test.describe('Clients (admin)', () => {
     await page.getByLabel('Buscar cliente').fill(fullName);
     await expect(page.getByText(fullName)).toBeVisible({ timeout: 10_000 });
   });
+
+  test('edit existing client updates data in search', async ({ page }) => {
+    const suffix = Date.now();
+    const fullName = `Editable E2E ${suffix}`;
+    const updatedName = `${fullName} Actualizado`;
+
+    await page.goto('/clients/new');
+    await page.getByLabel('Nombre completo').fill(fullName);
+    await page.getByLabel('Identificación').fill(`5-${suffix}`);
+    await page.getByRole('button', { name: 'Registrar cliente' }).click();
+    await expect(page.getByText('Cliente registrado')).toBeVisible({
+      timeout: 10_000,
+    });
+
+    await page.goto('/clients');
+    await page.getByLabel('Buscar cliente').fill(fullName);
+    await expect(page.getByText(fullName)).toBeVisible({ timeout: 10_000 });
+
+    await page.getByRole('link', { name: 'Editar cliente' }).first().click();
+    await expect(page.getByRole('heading', { name: 'Editar cliente' })).toBeVisible();
+
+    await page.getByLabel('Nombre completo').fill(updatedName);
+    await page.getByRole('button', { name: 'Guardar cambios' }).click();
+
+    await expect(page.getByText('Cliente actualizado')).toBeVisible({
+      timeout: 10_000,
+    });
+
+    await page.goto('/clients');
+    await page.getByLabel('Buscar cliente').fill(updatedName);
+    await expect(page.getByText(updatedName)).toBeVisible({ timeout: 10_000 });
+  });
 });
 
 test.describe('Clients (mechanic)', () => {

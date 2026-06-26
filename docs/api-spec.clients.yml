@@ -67,6 +67,40 @@ paths:
         '404':
           description: Client not found
 
+    patch:
+      summary: Update client contact data
+      description: |
+        Updates fullName, phone, and email. nationalId is immutable.
+      tags: [Clients]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateClientRequest'
+      responses:
+        '200':
+          description: Client updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientResponse'
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+        '404':
+          description: Client not found
+
   /clients:
     post:
       summary: Create a new client
@@ -150,6 +184,21 @@ components:
           minLength: 5
           maxLength: 20
           pattern: '^[a-zA-Z0-9-]+$'
+        phone:
+          type: string
+          pattern: '^[0-9]{8,15}$'
+        email:
+          type: string
+          format: email
+
+    UpdateClientRequest:
+      type: object
+      required: [fullName]
+      properties:
+        fullName:
+          type: string
+          minLength: 2
+          maxLength: 150
         phone:
           type: string
           pattern: '^[0-9]{8,15}$'

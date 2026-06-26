@@ -9,6 +9,7 @@ import { ClientResponseDto } from './dto/client-response.dto';
 import { ClientSearchResponseDto } from './dto/client-search-response.dto';
 import { CreateClientDto } from './dto/create-client.dto';
 import { SearchClientsQueryDto } from './dto/search-clients-query.dto';
+import { UpdateClientDto } from './dto/update-client.dto';
 import {
   normalizeEmail,
   normalizeFullName,
@@ -118,6 +119,27 @@ export class ClientsService {
 
       throw error;
     }
+  }
+
+  async update(id: string, dto: UpdateClientDto): Promise<ClientResponseDto> {
+    const existing = await this.prisma.client.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Not Found');
+    }
+
+    const client = await this.prisma.client.update({
+      where: { id },
+      data: {
+        fullName: normalizeFullName(dto.fullName),
+        phone: normalizePhone(dto.phone) ?? null,
+        email: normalizeEmail(dto.email) ?? null,
+      },
+    });
+
+    return this.toClientResponse(client);
   }
 
   async findByNationalId(nationalId: string): Promise<Client | null> {

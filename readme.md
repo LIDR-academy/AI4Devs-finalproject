@@ -236,6 +236,42 @@ El administrador podrá marcar individualmente cualquier vehículo con la opció
 
 > **Consideración de modelo de datos:** se requiere soporte para registrar el estado de exclusión por vehículo (`no_recordar`, `fecha_exclusion`, `excluido_por`) y el historial de recordatorios enviados (fecha, usuario que ejecutó el envío, vehículos incluidos). Ambos elementos deben contemplarse al diseñar el modelo de datos desde la V1.
 
+#### D5. Búsqueda de Clientes por Correo Electrónico
+
+En la versión inicial, la búsqueda de clientes en `/clients` admite **nombre**, **identificación** y **teléfono**. En V2 se extenderá el criterio de búsqueda para incluir el **correo electrónico** del cliente, de modo que términos como `juan@email.com` o fragmentos del dominio (`@email.com`) devuelvan coincidencias en la misma barra de búsqueda unificada.
+
+Esta extensión facilita localizar propietarios cuando el taller solo dispone del correo (por ejemplo, antes de enviar notificaciones D2 o recordatorios D4) y alinea la experiencia con la expectativa del usuario de buscar por cualquier dato de contacto visible en la ficha.
+
+**Comportamiento previsto en V2:**
+
+- La consulta `GET /api/clients/search?q=` incluirá `email` en la condición `OR`, con comparación insensible a mayúsculas/minúsculas.
+- El placeholder de la UI pasará a indicar explícitamente *nombre, identificación, teléfono o correo*.
+- Se recomienda añadir índice en `Client.email` si el volumen de clientes crece o si D2/D4 dependen de consultas frecuentes por correo.
+
+> **Consideración técnica:** no requiere cambios estructurales en el modelo `Client` (el campo `email` ya existe en V1); basta extender el servicio de búsqueda y los tests asociados.
+
+#### D6. Edición de Usuarios del Taller
+
+El MVP de gestión de usuarios (US-002) cubre **alta**, **listado** y **desactivación** (soft delete). En V2 el administrador podrá **editar cuentas existentes** sin recrearlas ni perder el historial operativo vinculado.
+
+**Campos editables previstos:**
+
+| Campo | Reglas |
+|-------|--------|
+| Nombre completo | Actualización directa; validación 2–120 caracteres |
+| Correo electrónico | Único en el sistema; normalización a minúsculas; conflicto → `409` |
+| Rol | Cambio entre `ADMIN` y `MECHANIC`; no permitir dejar el sistema sin al menos un administrador activo |
+| Contraseña | Reseteo opcional por el administrador (nueva contraseña temporal) o flujo de cambio obligatorio en primer login |
+
+**Comportamiento previsto en V2:**
+
+- Endpoint `PATCH /api/users/:id` (solo `ADMIN`) para actualizar datos de perfil.
+- UI en `/admin/users`: acción **Editar** por fila, con formulario modal o página dedicada.
+- Mantener las reglas de integridad del MVP: no desactivar al último admin activo; no auto-desactivación; usuarios inactivos no editables para cambio de rol hasta reactivación (si se implementa).
+- Opcionalmente en la misma versión o en V2.1: **reactivación** de cuentas inactivas (`PATCH .../reactivate`) y **cambio obligatorio de contraseña** en el primer inicio de sesión (`mustChangePassword`).
+
+> **Consideración de modelo de datos:** puede requerir campos `mustChangePassword` y `passwordChangedAt` en `User` (ya previstos en US-002 como extensión V2). El historial de OT y tareas no se altera al editar nombre o correo del empleado.
+
 ---
 
 ### Funcionalidades de Largo Plazo
@@ -332,14 +368,14 @@ flowchart TB
 | Flujo E2E con estados (OT, tareas) | Reglas de dominio en backend, no solo en UI |
 | Roles administrador / mecánico | RBAC en API + rutas protegidas en frontend |
 | Historial e integridad de datos | Base relacional con transacciones ACID |
-| Extensiones V2 (email, recordatorios, propietario histórico) | Puertos/adaptadores sin reescribir el núcleo |
+| Extensiones V2 (email, recordatorios, propietario histórico, búsqueda por correo, edición de usuarios) | Puertos/adaptadores y endpoints PATCH sin reescribir el núcleo |
 | MVP académico y operación en un solo taller | Un despliegue, un repositorio, complejidad operativa baja |
 
 **Beneficios principales**
 
 - **Simplicidad operativa:** un solo backend y una base de datos facilitan desarrollo local, pruebas y despliegue.
 - **Consistencia transaccional:** crear OT, agregar tareas y registrar costos pueden ejecutarse en la misma unidad de trabajo.
-- **Evolución ordenada:** los módulos del monolito (auth, work-orders, notifications) permiten añadir D1–D4 sin cambiar el patrón general.
+- **Evolución ordenada:** los módulos del monolito (auth, work-orders, notifications, users, clients) permiten añadir D1–D6 sin cambiar el patrón general.
 - **Alineación con el dominio:** el modelo relacional encaja con clientes, vehículos, órdenes de trabajo, tareas e historicidad de propietario.
 
 **Sacrificios y déficits**
@@ -376,8 +412,8 @@ Microservicios no se consideran adecuados en esta fase: el volumen, el equipo y 
 | Módulo | Historias de usuario | Alcance |
 |--------|---------------------|---------|
 | `auth` | US-001 | Login, logout, sesión, validación de cuenta activa |
-| `users` | US-002 | Alta y baja de usuarios (solo administrador) |
-| `clients` | US-003 | Registro y búsqueda de clientes |
+| `users` | US-002, D6 (V2) | Alta, listado y desactivación (MVP); edición de perfil en V2 |
+| `clients` | US-003, D5 (V2) | Búsqueda, alta y edición de clientes (MVP); búsqueda por correo en V2 |
 | `vehicles` | US-004 | Registro de vehículos y asociación a cliente |
 | `work-orders` | US-005, US-006 | OT, tareas dinámicas, estados y costos |
 | `task-notes` | US-007 | Diagnósticos, reparaciones y observaciones |
@@ -486,7 +522,7 @@ Esta estructura facilita que cada historia de usuario se implemente de forma inc
 
 ## 3. Modelo de Datos
 
-El modelo relacional de MecaTrack está diseñado en PostgreSQL y gestionado con Prisma. Consolida las entidades definidas en las historias de usuario US-001 a US-009, con campos adicionales preparados para extensiones V2 (D1–D4) sin cambios estructurales.
+El modelo relacional de MecaTrack está diseñado en PostgreSQL y gestionado con Prisma. Consolida las entidades definidas en las historias de usuario US-001 a US-009, con campos adicionales preparados para extensiones V2 (D1–D6) sin cambios estructurales.
 
 ### **3.1. Diagrama del modelo de datos:**
 
@@ -952,14 +988,15 @@ model WorkOrderTask {
 ### US-003 — Registro de Clientes
 
 **Como** mecánico o administrador,
-**quiero** registrar un nuevo cliente en el sistema,
-**para** asociarlo a sus vehículos y órdenes de trabajo.
+**quiero** buscar, registrar y editar clientes en el sistema,
+**para** asociarlos a vehículos y órdenes de trabajo con datos de contacto actualizados.
 
 **Criterios de Aceptación:**
 - El formulario incluye: nombre completo, identificación, teléfono y correo electrónico.
-- Los campos nombre completo e identificación son obligatorios; teléfono y correo son opcionales.
-- El sistema verifica que la identificación no esté ya registrada; si existe, muestra el cliente encontrado en lugar de duplicar.
-- El sistema permite buscar clientes existentes por nombre, identificación o teléfono antes de crear uno nuevo.
+- Los campos nombre completo e identificación son obligatorios en alta; teléfono y correo son opcionales.
+- El sistema verifica que la identificación no esté ya registrada al crear; si existe, muestra el cliente encontrado en lugar de duplicar.
+- El sistema permite buscar clientes existentes por nombre, identificación o teléfono antes de crear uno nuevo (búsqueda por correo electrónico prevista en V2 — D5).
+- El administrador o mecánico puede **editar** nombre, teléfono y correo de un cliente existente; la identificación **no se modifica**.
 - Al guardar, el cliente queda disponible de inmediato para asociarlo a un vehículo.
 
 **Roles:** Administrador, Mecánico | **Prioridad:** Alta

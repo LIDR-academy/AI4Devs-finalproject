@@ -11,6 +11,7 @@ describe('ClientsService', () => {
       findMany: jest.Mock;
       findUnique: jest.Mock;
       create: jest.Mock;
+      update: jest.Mock;
     };
   };
 
@@ -40,6 +41,7 @@ describe('ClientsService', () => {
         findMany: jest.fn(),
         findUnique: jest.fn(),
         create: jest.fn(),
+        update: jest.fn(),
       },
     };
 
@@ -248,6 +250,67 @@ describe('ClientsService', () => {
 
       await expect(
         clientsService.findById('00000000-0000-4000-8000-000000000099'),
+      ).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
+  describe('update', () => {
+    it('updates contact fields without changing nationalId', async () => {
+      prisma.client.findUnique.mockResolvedValue(juanClient);
+      prisma.client.update.mockResolvedValue({
+        ...juanClient,
+        fullName: 'Juan P. Pérez',
+        phone: '99998888',
+        email: 'juan.perez@email.com',
+      });
+
+      const result = await clientsService.update('client-1', {
+        fullName: '  Juan   P. Pérez  ',
+        phone: '99998888',
+        email: 'JUAN.PEREZ@EMAIL.COM',
+      });
+
+      expect(prisma.client.update).toHaveBeenCalledWith({
+        where: { id: 'client-1' },
+        data: {
+          fullName: 'Juan P. Pérez',
+          phone: '99998888',
+          email: 'juan.perez@email.com',
+        },
+      });
+      expect(result.fullName).toBe('Juan P. Pérez');
+      expect(result.nationalId).toBe('1-2345-6789');
+    });
+
+    it('clears optional phone and email when omitted', async () => {
+      prisma.client.findUnique.mockResolvedValue(juanClient);
+      prisma.client.update.mockResolvedValue({
+        ...juanClient,
+        phone: null,
+        email: null,
+      });
+
+      await clientsService.update('client-1', {
+        fullName: 'Juan Pérez',
+      });
+
+      expect(prisma.client.update).toHaveBeenCalledWith({
+        where: { id: 'client-1' },
+        data: {
+          fullName: 'Juan Pérez',
+          phone: null,
+          email: null,
+        },
+      });
+    });
+
+    it('throws NotFoundException for unknown id', async () => {
+      prisma.client.findUnique.mockResolvedValue(null);
+
+      await expect(
+        clientsService.update('00000000-0000-4000-8000-000000000099', {
+          fullName: 'Missing Client',
+        }),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
   });

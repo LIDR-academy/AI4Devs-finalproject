@@ -325,6 +325,15 @@ Alta.
 
 **Estimación orientativa:** 2–4 días (1 dev full-stack) incluyendo UI de listado/formulario y tests.
 
+### Extensiones V2 (no implementar en MVP)
+
+| ID | Funcionalidad | Descripción |
+|----|---------------|-------------|
+| **D6** | Edición de usuarios | `PATCH /api/users/:id` (solo `ADMIN`) para actualizar `fullName`, `email` y `role`, con las mismas reglas de integridad del MVP (último admin activo, email único). UI: acción **Editar** en `/admin/users`. |
+| — | Reseteo de contraseña | El administrador puede asignar una nueva contraseña temporal a un empleado activo. |
+| — | Cambio obligatorio en primer login | Campos `mustChangePassword` y `passwordChangedAt`; el usuario debe cambiar la contraseña temporal antes de operar (complementa el deseable de US-001/US-002). |
+| — | Reactivación de cuenta | `PATCH /api/users/:id/reactivate` para restaurar `active = true` en cuentas desactivadas. |
+
 ---
 
 ## Metadatos

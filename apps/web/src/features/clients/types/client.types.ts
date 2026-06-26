@@ -18,3 +18,9 @@ export interface CreateClientRequest {
   phone?: string;
   email?: string;
 }
+
+export interface UpdateClientRequest {
+  fullName: string;
+  phone?: string;
+  email?: string;
+}
