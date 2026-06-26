@@ -15,11 +15,19 @@ export async function parseApiError(response: Response): Promise<ApiError> {
       statusCode?: number;
       message?: string | string[];
       existingClient?: unknown;
+      existingVehicle?: unknown;
     };
 
-    const data =
-      body.existingClient !== undefined
-        ? { existingClient: body.existingClient }
+    const data: Record<string, unknown> | undefined =
+      body.existingClient !== undefined || body.existingVehicle !== undefined
+        ? {
+            ...(body.existingClient !== undefined
+              ? { existingClient: body.existingClient }
+              : {}),
+            ...(body.existingVehicle !== undefined
+              ? { existingVehicle: body.existingVehicle }
+              : {}),
+          }
         : undefined;
 
     return new ApiError(

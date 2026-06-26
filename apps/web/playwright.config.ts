@@ -20,7 +20,7 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-      testIgnore: /users\.spec\.ts|clients\.spec\.ts/,
+      testIgnore: /users\.spec\.ts|clients\.spec\.ts|vehicles\.spec\.ts/,
     },
     {
       name: 'chromium-admin',
@@ -34,6 +34,15 @@ export default defineConfig({
     {
       name: 'chromium-clients',
       testMatch: /clients\.spec\.ts/,
+      dependencies: ['setup', 'setup-mechanic'],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'e2e/.auth/admin.json',
+      },
+    },
+    {
+      name: 'chromium-vehicles',
+      testMatch: /vehicles\.spec\.ts/,
       dependencies: ['setup', 'setup-mechanic'],
       use: {
         ...devices['Desktop Chrome'],

@@ -1,6 +1,6 @@
 # MecaTrack Web
 
-Next.js frontend for MecaTrack (US-001: authentication, US-002: user management, US-003: client registration).
+Next.js frontend for MecaTrack (US-001: authentication, US-002: user management, US-003: client registration, US-004: vehicle registration).
 
 ## Prerequisites
 
@@ -63,6 +63,10 @@ npm run test:e2e
 | `/admin/users` | ADMIN |
 | `/clients` | ADMIN, MECHANIC |
 | `/clients/new` | ADMIN, MECHANIC |
+| `/clients/[id]/edit` | ADMIN, MECHANIC |
+| `/vehicles` | ADMIN, MECHANIC |
+| `/vehicles/new` | ADMIN, MECHANIC (`?clientId=` prefill) |
+| `/vehicles/[id]` | ADMIN, MECHANIC |
 | `/mechanic/dashboard` | MECHANIC |
 | `/403` | Forbidden |
 
@@ -77,11 +81,22 @@ Mechanics do not see the Usuarios link and are redirected to `/403` if they open
 
 ## Client management (US-003)
 
-- **Routes:** `/clients` (search hub), `/clients/new` (registration form)
+- **Routes:** `/clients` (search hub), `/clients/new` (registration form), `/clients/[id]/edit` (edit form)
 - **Access:** `ADMIN` and `MECHANIC` (shared routes outside role-specific layouts)
 - **Nav:** **Clientes** link in admin and mechanic layouts
-- **Features:** debounced search (300 ms), duplicate detection on national ID blur/submit, post-create link to `/vehicles/new?clientId=`
-- **React Query keys:** `['clients', 'search', q]`, `['clients', 'search', 'nationalId', id]` (invalidated after create)
+- **Features:** debounced search (300 ms), duplicate detection on national ID blur/submit, edit contact data (`nationalId` read-only), post-create link to `/vehicles/new?clientId=`
+- **React Query keys:** `['clients', 'search', q]`, `['clients', id]` (invalidated after create/update)
 - **409 handling:** `apiClient` attaches `existingClient` on conflict; UI shows `ExistingClientAlert`
 - **Reusable export:** `ClientSearchBar` from `@/features/clients` (for US-004 `ClientPicker`)
-- **Requires:** US-003 backend (`GET/POST /api/clients`, `GET /api/clients/search`)
+- **Requires:** US-003 backend (`GET/POST /api/clients`, `GET /api/clients/search`, `PATCH /api/clients/:id`)
+
+## Vehicle management (US-004)
+
+- **Routes:** `/vehicles` (search hub), `/vehicles/new` (registration form), `/vehicles/[id]` (detail + visit history)
+- **Access:** `ADMIN` and `MECHANIC` (shared routes outside role-specific layouts)
+- **Nav:** **Vehículos** link in admin and mechanic nav (`RoleNav`)
+- **Query params:** `?clientId=` on `/vehicles/new` pre-fills read-only owner from US-003; success/detail CTAs link to `/work-orders/new?vehicleId=` (US-005)
+- **Features:** debounced plate search (300 ms), embedded `ClientPicker` (reuses `ClientSearchBar` from US-003), duplicate plate detection on blur/submit, plate normalization to uppercase
+- **React Query keys:** `['vehicles', 'search', q]`, `['vehicles', id]`, `['vehicles', id, 'history']` (invalidated after create)
+- **409 handling:** `apiClient` attaches `existingVehicle` on conflict; UI shows `ExistingVehicleAlert`
+- **Requires:** US-004 backend (`GET/POST /api/vehicles`, `GET /api/vehicles/search`, `GET /api/vehicles/:id/history`)
