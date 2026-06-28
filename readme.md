@@ -1,173 +1,173 @@
-## Índice
+## Table of Contents
 
-0. [Ficha del proyecto](#0-ficha-del-proyecto)
-1. [Descripción general del producto](#1-descripción-general-del-producto)
-2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
-3. [Modelo de datos](#3-modelo-de-datos)
-4. [Especificación de la API](#4-especificación-de-la-api)
-5. [Historias de usuario](#5-historias-de-usuario)
-6. [Tickets de trabajo](#6-tickets-de-trabajo)
-7. [Pull requests](#7-pull-requests)
+0. [Project Overview](#0-project-overview)
+1. [General Product Description](#1-general-product-description)
+2. [System Architecture](#2-system-architecture)
+3. [Data Model](#3-data-model)
+4. [API Specification](#4-api-specification)
+5. [User Stories](#5-user-stories)
+6. [Work Tickets](#6-work-tickets)
+7. [Pull Requests](#7-pull-requests)
 
 ---
 
-## 0. Ficha del proyecto
+## 0. Project Overview
 
-### **0.1. Tu nombre completo:**
+### **0.1. Full name:**
 
 Elvis Manuel Marques Pita
 
-### **0.2. Nombre del proyecto:**
+### **0.2. Project name:**
 
 SupportHub
 
-### **0.3. Descripción breve del proyecto:**
+### **0.3. Brief project description:**
 
-SupportHub es un **portal web de soporte al cliente** diseñado para consultoras de software que gestionan incidencias y peticiones de sus clientes a través de Jira internamente, pero carecen de un canal estructurado y transparente hacia el cliente final.
+SupportHub is a **customer support web portal** designed for software consultancies that manage incidents and requests from their clients through Jira internally, but lack a structured and transparent channel toward the end client.
 
-SupportHub actúa como **capa de experiencia de cliente sobre Jira**: el equipo técnico sigue trabajando en Jira como siempre, mientras que el cliente dispone de un portal propio donde crear tickets, hacer seguimiento en tiempo real y comunicarse con el equipo, eliminando por completo la dependencia del email y el WhatsApp como canal de soporte.
+SupportHub acts as a **customer experience layer on top of Jira**: the technical team continues working in Jira as usual, while the client has their own portal where they can create tickets, track them in real time and communicate with the team, completely eliminating the dependency on email and WhatsApp as support channels.
 
-### **0.4. URL del proyecto:**
+### **0.4. Project URL:**
 
-> TBD — pendiente de despliegue.
+> TBD — pending deployment.
 
-### 0.5. URL o archivo comprimido del repositorio
+### 0.5. Repository URL or compressed file
 
 https://github.com/emarques-7/support-hub
 
 ---
 
-## 1. Descripción general del producto
+## 1. General Product Description
 
-> Documento de producto completo: [documentation/ProyectoFinal_ProductDoc.md](documentation/ProyectoFinal_ProductDoc.md)
+> Full product document: [documentation/ProyectoFinal_ProductDoc.md](documentation/ProyectoFinal_ProductDoc.md)
 
-### **1.1. Objetivo:**
+### **1.1. Objective:**
 
-SupportHub resuelve un problema frecuente en consultoras de software: el equipo técnico gestiona las incidencias de sus clientes en Jira, pero el cliente final no tiene visibilidad ni canal estructurado de comunicación, lo que obliga a intercambiar emails y mensajes de WhatsApp para cualquier consulta de estado.
+SupportHub solves a common problem in software consultancies: the technical team manages client incidents in Jira, but the end client has no visibility or structured communication channel, forcing them to exchange emails and WhatsApp messages for any status inquiry.
 
-El producto ofrece un **portal web de soporte** donde el cliente puede crear tickets, consultarlos, añadir comentarios y recibir notificaciones automáticas ante cualquier cambio — todo sincronizado en tiempo real con Jira. El equipo técnico no cambia su flujo de trabajo: Jira sigue siendo la fuente de verdad.
+The product offers a **support web portal** where the client can create tickets, view them, add comments and receive automatic notifications on any change — all synchronized in real time with Jira. The technical team does not change their workflow: Jira remains the source of truth.
 
-**¿Para quién?** Consultoras de software con clientes que tienen soporte técnico contratado y gestionan su trabajo internamente en Jira.
+**For whom?** Software consultancies with clients who have contracted technical support and manage their work internally in Jira.
 
-**Propuesta de valor única:** *"Tu equipo en Jira. Tu cliente en SupportHub."*
+**Unique value proposition:** *"Your team in Jira. Your client in SupportHub."*
 
-### **1.2. Características y funcionalidades principales:**
+### **1.2. Main features and functionality:**
 
-| Módulo | Funcionalidades |
+| Module | Features |
 |---|---|
-| **Portal del Cliente** | Registro por invitación · Creación de tickets con editor WYSIWYG · Adjuntos (S3) · Listado paginado y filtrable · Detalle con hilo de comentarios · Notificaciones por email |
-| **Panel Administrativo** | Gestión de clientes y usuarios · Envío de invitaciones · Configuración de integración Jira · Dashboard de métricas |
-| **Integración con Jira** | Creación de issues en tiempo real · Lectura directa desde Jira (sin caché local) · Comentarios bidireccionales · Webhooks inbound para notificaciones |
+| **Client Portal** | Invitation-based registration · Ticket creation with WYSIWYG editor · Attachments (S3) · Paginated and filterable listing · Detail view with comment thread · Email notifications |
+| **Admin Panel** | Client and user management · Invitation sending · Jira integration configuration · Metrics dashboard |
+| **Jira Integration** | Real-time issue creation · Direct read from Jira (no local cache) · Bidirectional comments · Inbound webhooks for notifications |
 
-### **1.3. Diseño y experiencia de usuario:**
+### **1.3. Design and user experience:**
 
-> TBD — se añadirán capturas y/o videotutorial cuando el frontend esté implementado.
+> TBD — screenshots and/or video tutorial will be added when the frontend is implemented.
 
-### **1.4. Instrucciones de instalación:**
+### **1.4. Installation instructions:**
 
-> TBD — se documentarán cuando el código final esté disponible.
+> TBD — will be documented when the final code is available.
 
 ---
 
-## 2. Arquitectura del Sistema
+## 2. System Architecture
 
-> Diagramas detallados en [documentation/diagrams/architecture/](documentation/diagrams/architecture/).
+> Detailed diagrams in [documentation/diagrams/architecture/](documentation/diagrams/architecture/).
 
-### **2.1. Diagrama de arquitectura:**
+### **2.1. Architecture diagram:**
 
-El sistema se compone de cuatro servicios desplegados en Docker: un servidor OIDC (`identity`), un backend principal (`api`), y dos SPAs (`client-portal` y `backoffice`). En producción se despliegan sobre EC2 detrás de un ALB, con RDS PostgreSQL en subnet privada, S3 para adjuntos y SES para email.
+The system is composed of four services deployed in Docker: an OIDC server (`identity`), a main backend (`api`), and two SPAs (`client-portal` and `backoffice`). In production they are deployed on EC2 behind an ALB, with RDS PostgreSQL in a private subnet, S3 for attachments, and SES for email.
 
-- [01-aws-infrastructure.md](documentation/diagrams/architecture/01-aws-infrastructure.md) — topología AWS: VPC, subnets, ALB, EC2, RDS.
-- [02-request-flow.md](documentation/diagrams/architecture/02-request-flow.md) — flujo de peticiones desde el navegador hasta los servicios y sistemas externos.
-- [03-auth-flow.md](documentation/diagrams/architecture/03-auth-flow.md) — flujo OIDC authorization_code + PKCE entre SPA, identity y api.
-- [04-jira-integration.md](documentation/diagrams/architecture/04-jira-integration.md) — integración Jira: outbound (portal → Jira) e inbound (webhook → notificaciones).
+- [01-aws-infrastructure.md](documentation/diagrams/architecture/01-aws-infrastructure.md) — AWS topology: VPC, subnets, ALB, EC2, RDS.
+- [02-request-flow.md](documentation/diagrams/architecture/02-request-flow.md) — request flow from the browser to services and external systems.
+- [03-auth-flow.md](documentation/diagrams/architecture/03-auth-flow.md) — OIDC authorization_code + PKCE flow between SPA, identity, and api.
+- [04-jira-integration.md](documentation/diagrams/architecture/04-jira-integration.md) — Jira integration: outbound (portal → Jira) and inbound (webhook → notifications).
 
-### **2.2. Descripción de componentes principales:**
+### **2.2. Description of main components:**
 
-| Componente | Tecnología | Responsabilidad |
+| Component | Technology | Responsibility |
 |---|---|---|
-| `identity` | .NET 10 · ASP.NET Core Identity · OpenIddict | Servidor OIDC. Autenticación, emisión de tokens JWT, gestión de sesiones. |
-| `api` | .NET 10 · ASP.NET Core · EF Core · Npgsql | Backend principal (Clean Architecture). Lógica de negocio, integración Jira, S3, SES. |
-| `client-portal` | React 19 · TypeScript · Vite · shadcn/ui | SPA para usuarios cliente. Tickets, comentarios, notificaciones. |
-| `backoffice` | React 19 · TypeScript · Vite · shadcn/ui | SPA para administradores. Gestión de usuarios, configuración Jira, métricas. |
-| PostgreSQL 17 | RDS / Docker | Una instancia, dos schemas: `public` (api) e `identity`. |
-| AWS S3 | AWSSDK.S3 | Almacenamiento de adjuntos. |
-| AWS SES | AWSSDK.SimpleEmailServiceV2 | Email transaccional: invitaciones, notificaciones. |
-| Jira Cloud | REST API v3 | Sistema de registro de tickets — fuente de verdad para todo el contenido de los tickets. |
+| `identity` | .NET 10 · ASP.NET Core Identity · OpenIddict | OIDC server. Authentication, JWT token issuance, session management. |
+| `api` | .NET 10 · ASP.NET Core · EF Core · Npgsql | Main backend (Clean Architecture). Business logic, Jira integration, S3, SES. |
+| `client-portal` | React 19 · TypeScript · Vite · shadcn/ui | SPA for client users. Tickets, comments, notifications. |
+| `backoffice` | React 19 · TypeScript · Vite · shadcn/ui | SPA for administrators. User management, Jira configuration, metrics. |
+| PostgreSQL 17 | RDS / Docker | Single instance, two schemas: `public` (api) and `identity`. |
+| AWS S3 | AWSSDK.S3 | Attachment storage. |
+| AWS SES | AWSSDK.SimpleEmailServiceV2 | Transactional email: invitations, notifications. |
+| Jira Cloud | REST API v3 | Ticket registration system — source of truth for all ticket content. |
 
-### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
+### **2.3. High-level project description and file structure**
 
-El proyecto sigue una estructura multi-repositorio (4 repos). El backend `api` aplica Clean Architecture en 4 capas (`Domain` / `Application` / `Infrastructure` / `API`). El `identity` usa una estructura de 2 proyectos (servicio de infraestructura, sin lógica de dominio propia). Las SPAs siguen una organización feature-first.
+The project follows a multi-repository structure (4 repos). The `api` backend applies Clean Architecture in 4 layers (`Domain` / `Application` / `Infrastructure` / `API`). The `identity` service uses a 2-project structure (infrastructure service, with no own domain logic). The SPAs follow a feature-first organization.
 
-> Convenciones técnicas detalladas: [ai-specs/backend-guidelines.md](ai-specs/backend-guidelines.md) · [ai-specs/api-conventions.md](ai-specs/api-conventions.md)
+> Detailed technical conventions: [ai-specs/backend-guidelines.md](ai-specs/backend-guidelines.md) · [ai-specs/api-conventions.md](ai-specs/api-conventions.md)
 
-### **2.4. Infraestructura y despliegue**
+### **2.4. Infrastructure and deployment**
 
-> TBD — se documentará cuando el despliegue esté operativo.
+> TBD — will be documented when deployment is operational.
 
-### **2.5. Seguridad**
+### **2.5. Security**
 
-Principales prácticas implementadas:
+Main practices implemented:
 
-- **OIDC authorization_code + PKCE** para SPAs — sin implicit flow, sin client secrets en el navegador.
-- **Access token en memoria, refresh token en HttpOnly cookie** — nunca en `localStorage` (OWASP).
-- **JWKS discovery** — el `api` valida JWTs sin secreto compartido con `identity`.
-- **Account lockout** — 5 intentos fallidos → bloqueo de 15 minutos (ASP.NET Core Identity).
-- **Revocación de sesiones** en reset de contraseña (`RevokeBySubjectAsync`).
-- **HMAC-SHA256** para validar webhooks entrantes de Jira.
-- **Rate limiting** en el endpoint de webhook (60 req/min por IP).
-- **Ownership check** en cada acceso a ticket — el `api` verifica que el ticket pertenece al cliente del JWT.
-- **Audit log automático** con Audit.NET — todos los writes EF Core y eventos de auth quedan registrados con redacción de campos sensibles.
-- **Anti-enumeración** en recuperación de contraseña — respuesta siempre `200 OK` independientemente de si el email existe.
-- **Sin credenciales en logs** — Serilog configurado para excluir tokens, API keys y contraseñas en cualquier nivel.
+- **OIDC authorization_code + PKCE** for SPAs — no implicit flow, no client secrets in the browser.
+- **Access token in memory, refresh token in HttpOnly cookie** — never in `localStorage` (OWASP).
+- **JWKS discovery** — the `api` validates JWTs without a shared secret with `identity`.
+- **Account lockout** — 5 failed attempts → 15-minute lockout (ASP.NET Core Identity).
+- **Session revocation** on password reset (`RevokeBySubjectAsync`).
+- **HMAC-SHA256** to validate inbound Jira webhooks.
+- **Rate limiting** on the webhook endpoint (60 req/min per IP).
+- **Ownership check** on every ticket access — the `api` verifies the ticket belongs to the JWT's client.
+- **Automatic audit log** with Audit.NET — all EF Core writes and auth events are recorded with redaction of sensitive fields.
+- **Anti-enumeration** on password recovery — always responds `200 OK` regardless of whether the email exists.
+- **No credentials in logs** — Serilog configured to exclude tokens, API keys, and passwords at any log level.
 
 ### **2.6. Tests**
 
-> TBD — el proyecto está en fase de desarrollo. Los tests se añadirán a medida que avance la implementación.
+> TBD — the project is in development phase. Tests will be added as implementation progresses.
 
 ---
 
-## 3. Modelo de Datos
+## 3. Data Model
 
-> Diagramas completos en [documentation/diagrams/database/](documentation/diagrams/database/).
+> Full diagrams in [documentation/diagrams/database/](documentation/diagrams/database/).
 >
-> - [cross-schema-overview.mmd](documentation/diagrams/database/cross-schema-overview.mmd) — visión general de ambos schemas y relaciones cross-schema.
-> - [public-schema.mmd](documentation/diagrams/database/public-schema.mmd) — schema `public` (servicio `api`): Clients, ClientUsers, Projects, Tickets, Notifications, NotificationReadReceipts, AuditLogs.
-> - [identity-schema.mmd](documentation/diagrams/database/identity-schema.mmd) — schema `identity`: ApplicationUser, tablas de ASP.NET Identity, tablas de OpenIddict, AuditLogs.
+> - [cross-schema-overview.mmd](documentation/diagrams/database/cross-schema-overview.mmd) — overview of both schemas and cross-schema relationships.
+> - [public-schema.mmd](documentation/diagrams/database/public-schema.mmd) — `public` schema (`api` service): Clients, ClientUsers, Projects, Tickets, Notifications, NotificationReadReceipts, AuditLogs.
+> - [identity-schema.mmd](documentation/diagrams/database/identity-schema.mmd) — `identity` schema: ApplicationUser, ASP.NET Identity tables, OpenIddict tables, AuditLogs.
 
-### **3.1. Diagrama del modelo de datos:**
+### **3.1. Data model diagram:**
 
-Una instancia PostgreSQL 17 con dos schemas independientes:
+A single PostgreSQL 17 instance with two independent schemas:
 
-- **`identity`:** gestiona usuarios, credenciales, roles, tokens de sesión (OpenIddict) y log de eventos de autenticación.
-- **`public`:** gestiona el dominio de negocio — clientes, usuarios del portal, proyectos, tickets (registro ancla mínimo — el contenido vive en Jira), notificaciones y audit log de operaciones.
+- **`identity`:** manages users, credentials, roles, session tokens (OpenIddict), and authentication event log.
+- **`public`:** manages the business domain — clients, portal users, projects, tickets (minimal anchor record — content lives in Jira), notifications, and operations audit log.
 
-Las relaciones cross-schema son **soft FKs** (UUID sin constraint de BD) para mantener el desacoplamiento entre servicios.
+Cross-schema relationships are **soft FKs** (UUID without DB constraint) to maintain decoupling between services.
 
-### **3.2. Descripción de entidades principales:**
+### **3.2. Description of main entities:**
 
-| Entidad | Schema | Descripción |
+| Entity | Schema | Description |
 |---|---|---|
-| `ApplicationUser` | identity | Usuario del sistema (Admin o Client). Extiende `IdentityUser`. Incluye `Role` y `PreferredLanguage` como claims en el JWT. |
-| `Clients` | public | Empresa cliente de la consultora. Entidad raíz del tenant. Soft-delete. |
-| `ClientUsers` | public | Usuario del portal vinculado a un cliente. Ciclo de vida: PendingActivation → Active → Inactive. Soft FK a `ApplicationUser`. |
-| `Projects` | public | Configuración de integración cliente ↔ Jira. Almacena `JiraProjectKey` y el hash del secreto HMAC para webhooks. |
-| `Tickets` | public | Registro ancla mínimo: `JiraIssueKey` + `ProjectId`. Sin título, descripción, estado ni prioridad — todo vive en Jira. |
-| `Notifications` | public | Evento generado por webhook inbound de Jira (StatusChanged, CommentAdded). Una notificación por evento. |
-| `NotificationReadReceipts` | public | Estado de lectura por usuario. Ausencia de fila = no leída. |
-| `AuditLogs` | public / identity | Log automático de operaciones. En `public`: INSERT/UPDATE/DELETE de EF Core. En `identity`: eventos de auth (LOGIN, LOGIN_FAILED, etc.). |
+| `ApplicationUser` | identity | System user (Admin or Client). Extends `IdentityUser`. Includes `Role` and `PreferredLanguage` as JWT claims. |
+| `Clients` | public | Consultancy's client company. Tenant root entity. Soft-delete. |
+| `ClientUsers` | public | Portal user linked to a client. Lifecycle: PendingActivation → Active → Inactive. Soft FK to `ApplicationUser`. |
+| `Projects` | public | Client ↔ Jira integration configuration. Stores `JiraProjectKey` and the HMAC secret hash for webhooks. |
+| `Tickets` | public | Minimal anchor record: `JiraIssueKey` + `ProjectId`. No title, description, status, or priority — all lives in Jira. |
+| `Notifications` | public | Event generated by inbound Jira webhook (StatusChanged, CommentAdded). One notification per event. |
+| `NotificationReadReceipts` | public | Read status per user. Absence of row = unread. |
+| `AuditLogs` | public / identity | Automatic operations log. In `public`: EF Core INSERT/UPDATE/DELETE. In `identity`: auth events (LOGIN, LOGIN_FAILED, etc.). |
 
 ---
 
-## 4. Especificación de la API
+## 4. API Specification
 
-> Convenciones completas de la API: [ai-specs/api-conventions.md](ai-specs/api-conventions.md)
+> Full API conventions: [ai-specs/api-conventions.md](ai-specs/api-conventions.md)
 
-Los tres endpoints principales:
+The three main endpoints:
 
-### `POST /api/tickets` — Crear ticket
+### `POST /api/tickets` — Create ticket
 
-Crea un nuevo ticket de soporte y el issue correspondiente en Jira en tiempo real. Acepta `multipart/form-data`.
+Creates a new support ticket and the corresponding Jira issue in real time. Accepts `multipart/form-data`.
 
 ```yaml
 POST /api/tickets
@@ -175,11 +175,11 @@ Authorization: Bearer {access_token}
 Content-Type: multipart/form-data
 
 Request:
-  title: string        # requerido, max 200 chars
-  description: string  # requerido, HTML (se convierte a ADF antes de enviarse a Jira), max 5000 chars
-  type: string         # requerido — "Bug" | "Question" | "Feature Request"
-  priority: string     # requerido — "Low" | "Medium" | "High" | "Critical"
-  files[]: File[]      # opcional, max 10 archivos, max 10 MB cada uno
+  title: string        # required, max 200 chars
+  description: string  # required, HTML (converted to ADF before sending to Jira), max 5000 chars
+  type: string         # required — "Bug" | "Question" | "Feature Request"
+  priority: string     # required — "Low" | "Medium" | "High" | "Critical"
+  files[]: File[]      # optional, max 10 files, max 10 MB each
 
 Responses:
   201 Created:
@@ -187,14 +187,14 @@ Responses:
   401 Unauthorized
   422 Unprocessable Entity:
     { "code": "VALIDATION_ERROR", "message": "...", "details": ["..."] }
-  502 Bad Gateway  # Jira no disponible — el ticket no se crea
+  502 Bad Gateway  # Jira unavailable — ticket is not created
 ```
 
 ---
 
-### `GET /api/tickets` — Listar tickets del cliente
+### `GET /api/tickets` — List client tickets
 
-Lista paginada de tickets del cliente autenticado, leída en tiempo real desde Jira. El `clientId` se extrae del JWT.
+Paginated list of the authenticated client's tickets, read in real time from Jira. The `clientId` is extracted from the JWT.
 
 ```yaml
 GET /api/tickets
@@ -205,23 +205,23 @@ Query Parameters:
   pageSize: integer        # 10 | 20 | 50, default 20
   sortBy: string           # "created" | "resolutiondate" | "priority" | "status" | "summary"
   sortDir: string          # "asc" | "desc"
-  status: string[]         # multi-value, opcional
+  status: string[]         # multi-value, optional
   dateRange: string        # "today" | "yesterday" | "last7days" | "thisMonth" | "lastMonth" | "custom"
-  dateFrom / dateTo: string # ISO date, solo si dateRange=custom, máximo 184 días de rango
+  dateFrom / dateTo: string # ISO date, only if dateRange=custom, maximum 184-day range
 
 Responses:
   200 OK:
     { "items": [...], "totalCount": 47, "page": 1, "pageSize": 20, "totalPages": 3 }
   401 Unauthorized
-  422 Unprocessable Entity  # rango > 184 días o sortBy inválido
+  422 Unprocessable Entity  # range > 184 days or invalid sortBy
   502 Bad Gateway
 ```
 
 ---
 
-### `POST /api/webhooks/jira` — Webhook inbound de Jira
+### `POST /api/webhooks/jira` — Inbound Jira webhook
 
-Recibe eventos de Jira (cambios de estado, nuevos comentarios) y genera notificaciones para el cliente. Autenticado exclusivamente mediante firma HMAC-SHA256.
+Receives Jira events (status changes, new comments) and generates notifications for the client. Authenticated exclusively via HMAC-SHA256 signature.
 
 ```yaml
 POST /api/webhooks/jira
@@ -232,23 +232,23 @@ Request Body:
   { "webhookEvent": "jira:issue_updated", "issue": { "key": "ACME-42", ... } }
 
 Responses:
-  200 OK       # siempre (evita reintentos innecesarios de Jira)
-  401          # firma HMAC inválida o ausente
-  429          # rate limit superado (60 req/min por IP)
+  200 OK       # always (avoids unnecessary Jira retries)
+  401          # invalid or missing HMAC signature
+  429          # rate limit exceeded (60 req/min per IP)
 ```
 
 ---
 
-## 5. Historias de Usuario
+## 5. User Stories
 
-> Backlog completo: [documentation/BacklogDoc.md](documentation/BacklogDoc.md)  
-> Epics con historias y tareas detalladas: [documentation/epics/](documentation/epics/)
+> Full backlog: [documentation/BacklogDoc.md](documentation/BacklogDoc.md)  
+> Epics with detailed stories and tasks: [documentation/epics/](documentation/epics/)
 
 ---
 
-## 6. Tickets de Trabajo
+## 6. Work Tickets
 
-> Todos los tickets técnicos con detalle completo en [documentation/epics/](documentation/epics/).
+> All technical tickets with full detail in [documentation/epics/](documentation/epics/).
 
 ---
 
@@ -260,6 +260,3 @@ Responses:
 - [Pull Request #4](https://github.com/emarques-7/support-hub/pull/4)
 - [Pull Request #5](https://github.com/emarques-7/support-hub/pull/5)
 - [Pull Request #6](https://github.com/emarques-7/support-hub/pull/6)
-
-
-
