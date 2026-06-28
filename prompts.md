@@ -199,7 +199,7 @@
 
 ## 9. Main files used
 
-Paths relative to `codigofinal/lms-cms-laravel12/` in [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r) (branch `angel-burgos-r`):
+Paths relative to `codigofinal/lms-cms-laravel12/` in [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (branch `angel-burgos-r`):
 
 | Area | Files |
 |------|-------|

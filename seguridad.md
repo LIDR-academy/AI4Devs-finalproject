@@ -300,7 +300,7 @@ OWASP references align with the [OWASP Top 10 (2021)](https://owasp.org/Top10/).
 
 ## Detected vulnerability analysis (OWASP Top 10)
 
-Static code analysis of [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r/codigofinal/lms-cms-laravel12) (`angel-burgos-r` branch), prioritized by impact on user stories (HU-2, HU-4, HU-6, HU-8, HU-9). Controls already covered at the global level (authentication, roles, TLS, CSRF) are excluded.
+Static code analysis of [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (`angel-burgos-r` branch), prioritized by impact on user stories (HU-2, HU-4, HU-6, HU-8, HU-9). Controls already covered at the global level (authentication, roles, TLS, CSRF) are excluded.
 
 Each vulnerability is documented in full — description, evidence, exploitation example and impact, and remediation — before moving to the next.
 
@@ -639,5 +639,5 @@ return $this->enrolledCourses()
 ## References
 
 - [OWASP Top 10 (2021)](https://owasp.org/Top10/)
-- Analyzed source code: [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r/codigofinal/lms-cms-laravel12) (`angel-burgos-r` branch)
+- Analyzed source code: [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (`angel-burgos-r` branch)
 - Global controls: [readme.md § 2.5](./readme.md#25-security)

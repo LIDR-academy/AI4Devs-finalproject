@@ -414,7 +414,7 @@ Web routes in `routes/web.php` (no separate REST API).
 
 ## 8. Prompt Documentation
 
-Prompts used with code assistants (max. 3 per lifecycle section) and the detailed list of files touched in [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r/codigofinal/lms-cms-laravel12) are in **[prompts.md](./prompts.md)** (sections 1–9).
+Prompts used with code assistants (max. 3 per lifecycle section) and the detailed list of files touched in [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) are in **[prompts.md](./prompts.md)** (sections 1–9).
 
 ### Delivery 2 (`feature-entrega2-ABR`)
 
@@ -422,7 +422,7 @@ Artifacts generated in the conversation [README structure analysis for lms-cms-l
 
 | Artifact | Description |
 |----------|-------------|
-| [readme.md](./readme.md) | Product documentation aligned with the code in [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r/codigofinal/lms-cms-laravel12) (architecture, data model, API, user stories, tickets) |
+| [readme.md](./readme.md) | Product documentation aligned with the code in [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (architecture, data model, API, user stories, tickets) |
 | [prompts.md](./prompts.md) | Prompts by lifecycle phase and main files used |
 | [PLAN_NEGOCIO.md](./PLAN_NEGOCIO.md) | SaaS business plan (plans, target, projection) |
 | [seguridad.md](./seguridad.md) | Security by user story and OWASP Top 10 analysis |

@@ -121,7 +121,7 @@ Technical plan configuration: `config/saas.php` in the Laravel repository.
 
 ## Repository links
 
-- **MVP code:** [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r/codigofinal/lms-cms-laravel12) (branch `angel-burgos-r`)
+- **MVP code:** [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (branch `angel-burgos-r`)
 - **Technical documentation (this repo):** `readme.md`
-- **Implementation roadmap:** [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md)
+- **Implementation roadmap:** [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/docs/ROADMAP_SAAS.md)
 - **Plans page (app):** `/pricing`
