@@ -1,17 +1,17 @@
-# Capturas de pantalla — LMS Interactivo
+# Screenshots — Interactive LMS
 
-Imágenes generadas desde `http://localhost:8080` (Docker, `LmsDemoSeeder`).
+Images captured from `http://localhost:8080` (Docker, `LmsDemoSeeder`).
 
-| Archivo | Ruta | Rol |
-|---------|------|-----|
-| `login.png` | `/login` | Invitado |
-| `dashboard-teacher.png` | `/dashboard` | Profesor |
-| `courses-teacher.png` | `/courses` | Profesor |
-| `calendar-teacher.png` | `/calendar` | Profesor (layout Moodle) |
-| `calendar-event-create.png` | `/calendar/events/create` | Profesor |
-| `dashboard-student.png` | `/dashboard` | Estudiante |
-| `calendar-student.png` | `/calendar` | Estudiante |
+| File | Path | Role |
+|------|------|------|
+| `login.png` | `/login` | Guest |
+| `dashboard-teacher.png` | `/dashboard` | Teacher |
+| `courses-teacher.png` | `/courses` | Teacher |
+| `calendar-teacher.png` | `/calendar` | Teacher (Moodle layout) |
+| `calendar-event-create.png` | `/calendar/events/create` | Teacher |
+| `dashboard-student.png` | `/dashboard` | Student |
+| `calendar-student.png` | `/calendar` | Student |
 
-Credenciales de prueba: `teacher@example.com` / `student@example.com` — contraseña `password123`.
+Test credentials: `teacher@example.com` / `student@example.com` — password `password123`.
 
-Referencia en documentación: [readme.md](../../readme.md#9-capturas-de-pantalla).
+Documentation reference: [readme.md](../../readme.md#9-screenshots).
