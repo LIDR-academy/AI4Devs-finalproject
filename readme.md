@@ -1,92 +1,92 @@
-## Índice
+## Table of Contents
 
-0. [Ficha del proyecto](#0-ficha-del-proyecto)
-1. [Descripción general del producto](#1-descripción-general-del-producto)
-2. [Arquitectura del Sistema](#2-arquitectura-del-sistema)
-3. [Modelo de Datos](#3-modelo-de-datos)
-4. [Especificación de la API](#4-especificación-de-la-api)
-5. [Historias de Usuario](#5-historias-de-usuario)
-6. [Tickets de Trabajo](#6-tickets-de-trabajo)
+0. [Project Profile](#0-project-profile)
+1. [Product Overview](#1-product-overview)
+2. [System Architecture](#2-system-architecture)
+3. [Data Model](#3-data-model)
+4. [API Specification](#4-api-specification)
+5. [User Stories](#5-user-stories)
+6. [Work Tickets](#6-work-tickets)
 7. [Pull Requests](#7-pull-requests)
-8. [Documentación de prompts](#8-documentación-de-prompts)
-9. [Capturas de pantalla](#9-capturas-de-pantalla)
-10. [Seguridad y OWASP Top 10](#10-seguridad-y-owasp-top-10)
+8. [Prompt Documentation](#8-prompt-documentation)
+9. [Screenshots](#9-screenshots)
+10. [Security and OWASP Top 10](#10-security-and-owasp-top-10)
 
-**Plan de negocio SaaS:** [PLAN_NEGOCIO.md](./PLAN_NEGOCIO.md) · **Roadmap técnico:** [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md)
+**SaaS business plan:** [PLAN_NEGOCIO.md](./PLAN_NEGOCIO.md) · **Technical roadmap:** [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md)
 
-**Rama entrega 2:** `feature-entrega2-ABR` · **Conversación de referencia:** [README structure analysis for lms-cms-laravel12](./agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md)
-
----
-
-## 0. Ficha del proyecto
-
-**Autor:** Angel Burgos Ruiz
-
-**Nombre del proyecto:** LMS-CMS (Plataforma LMS Interactiva Open Source)
-
-**Descripción breve:**
-Sistema de gestión de aprendizaje (LMS) de código abierto construido con Laravel 12. Permite a instituciones educativas, empresas y formadores crear, gestionar y distribuir cursos online con contenido interactivo mediante un sistema de plugins drag & drop, evaluaciones dinámicas, gestión de matriculaciones, calendario académico, perfil de usuario e interfaz bilingüe (ES/EN).
-
-**URL del proyecto:** `http://localhost:8080`(Docker)
-
-**Repositorio de código:** [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (rama `angel-burgos-r`, aplicación en `codigofinal/lms-cms-laravel12`)
-
-**Documentación de prompts:** [prompts.md](./prompts.md)
-
-**Plan de negocio SaaS:** [PLAN_NEGOCIO.md](./PLAN_NEGOCIO.md)
-
-**Rama entrega 2:** `feature-entrega2-ABR`
-
-**Conversación de referencia (análisis README):** [agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md](./agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md)
+**Delivery 2 branch:** `feature-entrega2-ABR` · **Reference conversation:** [README structure analysis for lms-cms-laravel12](./agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md)
 
 ---
 
-## 1. Descripción general del producto
+## 0. Project Profile
 
-### 1.0. Visión SaaS (plan de negocio)
+**Author:** Angel Burgos Ruiz
 
-Plataforma **SaaS** orientada a bootcamps, empresas tech y educadores independientes para **crear, compartir y monetizar cursos de tecnología** con **IA integrada** (tutor por lección, analytics, API para LMS externos). El MVP técnico actual cubre la **Fase 1** del roadmap; planes comerciales en `/pricing`.
+**Project name:** LMS-CMS (Interactive Open Source LMS Platform)
 
-| Plan | Precio | Estado |
-|------|--------|--------|
-| Básico (estudiantes) | €4.99/mes | Definido en app |
-| Pro (creadores) | €29/mes | Definido en app |
-| Empresa | €299–999/mes | Definido en app |
+**Brief description:**
+Open-source learning management system (LMS) built with Laravel 12. Enables educational institutions, companies, and trainers to create, manage, and distribute online courses with interactive content through a drag & drop plugin system, dynamic assessments, enrollment management, academic calendar, user profile, and bilingual interface (ES/EN).
 
-Roadmap detallado: [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md).
+**Project URL:** `http://localhost:8080`(Docker)
 
-### 1.1. Objetivo
+**Code repository:** [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (branch `angel-burgos-r`, application at `codigofinal/lms-cms-laravel12`)
 
-Ofrecer una plataforma LMS moderna, modular y de código abierto que permita la creación y consumo de cursos con contenido enriquecido mediante plugins, evaluaciones interactivas, roles diferenciados (profesor/estudiante), gestión de matriculaciones, seguimiento de progreso, calendario académico y experiencia de usuario localizada.
+**Prompt documentation:** [prompts.md](./prompts.md)
 
-### 1.2. Características y funcionalidades principales
+**SaaS business plan:** [PLAN_NEGOCIO.md](./PLAN_NEGOCIO.md)
 
-- **Gestión de cursos:** Creación, edición, publicación y organización de cursos con lecciones ordenadas.
-- **Sistema de plugins drag & drop:** Bloques interactivos (texto, imagen, vídeo, código, quiz rápido, matching, fill-blanks, foro, subida de archivos, H5P) con editor visual, reordenamiento y preview.
-- **Evaluaciones dinámicas:** Cuestionarios con opciones múltiples configurables, corrección automática y puntuación.
-- **Gestión de matriculaciones:** Panel drag & drop para asignar/eliminar usuarios en cursos.
-- **Calendario académico:** Vista mensual con eventos de lecciones (`due_at`), matriculaciones y eventos personalizados del profesor; layout Moodle para docente en `/calendar`.
-- **Eventos académicos (profesor):** Crear, editar y eliminar eventos en `/calendar/events/*` (solo rol teacher).
-- **Internacionalización (i18n):** Interfaz en castellano e inglés vía sesión (`/locale/{es|en}`) y archivos `lang/*/lms.php`.
-- **Navegación lateral unificada:** Inicio, Mis cursos, Calendario (+ Salir) en todas las páginas autenticadas; enlace «Nuevo evento» solo en `/calendar` para profesor.
-- **Perfil de usuario:** Edición de nombre, email y avatar.
-- **Seguimiento de progreso:** Registro de lecciones completadas por estudiante.
-- **Dashboards diferenciados:** Vista de profesor y estudiante.
-- **Subida de archivos multimedia:** Vídeos locales con límites configurados (128 MB).
+**Delivery 2 branch:** `feature-entrega2-ABR`
 
-### 1.3. Diseño y experiencia de usuario
+**Reference conversation (README analysis):** [agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md](./agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md)
 
-Flujo principal:
-1. Usuario accede a `/login` o `/register` (selector de idioma disponible).
-2. Profesor crea curso → añade lecciones → gestiona plugins → matricula alumnos → publica curso → consulta calendario y crea eventos.
-3. Estudiante accede al curso → visualiza lección con plugins → responde quiz/interactúa.
-4. Sistema calcula puntuación y registra progreso.
+---
 
-### 1.4. Instrucciones de instalación
+## 1. Product Overview
 
-**Requisitos:** Docker y Docker Compose
+### 1.0. SaaS Vision (business plan)
 
-**Instalación con Docker:**
+**SaaS** platform aimed at bootcamps, tech companies, and independent educators to **create, share, and monetize technology courses** with **integrated AI** (per-lesson tutor, analytics, API for external LMS). The current technical MVP covers **Phase 1** of the roadmap; commercial plans at `/pricing`.
+
+| Plan | Price | Status |
+|------|-------|--------|
+| Basic (students) | €4.99/month | Defined in app |
+| Pro (creators) | €29/month | Defined in app |
+| Enterprise | €299–999/month | Defined in app |
+
+Detailed roadmap: [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md).
+
+### 1.1. Objective
+
+Provide a modern, modular, open-source LMS platform that enables the creation and consumption of courses with rich content through plugins, interactive assessments, differentiated roles (teacher/student), enrollment management, progress tracking, academic calendar, and localized user experience.
+
+### 1.2. Main features and functionality
+
+- **Course management:** Create, edit, publish, and organize courses with ordered lessons.
+- **Drag & drop plugin system:** Interactive blocks (text, image, video, code, quick quiz, matching, fill-blanks, forum, file upload, H5P) with visual editor, reordering, and preview.
+- **Dynamic assessments:** Quizzes with configurable multiple-choice options, automatic grading, and scoring.
+- **Enrollment management:** Drag & drop panel to assign/remove users in courses.
+- **Academic calendar:** Monthly view with lesson events (`due_at`), enrollments, and custom teacher events; Moodle layout for teachers at `/calendar`.
+- **Academic events (teacher):** Create, edit, and delete events at `/calendar/events/*` (teacher role only).
+- **Internationalization (i18n):** Interface in Spanish and English via session (`/locale/{es|en}`) and `lang/*/lms.php` files.
+- **Unified sidebar navigation:** Home, My Courses, Calendar (+ Log out) on all authenticated pages; «New event» link only on `/calendar` for teachers.
+- **User profile:** Edit name, email, and avatar.
+- **Progress tracking:** Record of lessons completed per student.
+- **Differentiated dashboards:** Teacher and student views.
+- **Multimedia file uploads:** Local videos with configured limits (128 MB).
+
+### 1.3. Design and user experience
+
+Main flow:
+1. User accesses `/login` or `/register` (language selector available).
+2. Teacher creates course → adds lessons → manages plugins → enrolls students → publishes course → views calendar and creates events.
+3. Student accesses course → views lesson with plugins → answers quiz/interacts.
+4. System calculates score and records progress.
+
+### 1.4. Installation instructions
+
+**Requirements:** Docker and Docker Compose
+
+**Installation with Docker:**
 ```bash
 git clone -b angel-burgos-r https://github.com/BurgosAngel/codigofinal.git
 cd codigofinal/lms-cms-laravel12
@@ -98,17 +98,17 @@ docker compose exec app php artisan migrate --seed
 docker compose exec app php artisan storage:link
 ```
 
-**Acceso:**
-- Aplicación: `http://localhost:8080`
+**Access:**
+- Application: `http://localhost:8080`
 - phpMyAdmin: `http://localhost:8082`
 
-**Credenciales de prueba (tras seed):**
-- Profesor: `teacher@example.com` / `password123`
-- Estudiante: `student@example.com` / `password123`
+**Test credentials (after seed):**
+- Teacher: `teacher@example.com` / `password123`
+- Student: `student@example.com` / `password123`
 
-**Cambio de idioma:** `http://localhost:8080/locale/es` o `/locale/en`
+**Language switch:** `http://localhost:8080/locale/es` or `/locale/en`
 
-**Instalación local (sin Docker):**
+**Local installation (without Docker):**
 ```bash
 composer install
 cp .env.example .env
@@ -117,53 +117,53 @@ php artisan migrate --seed
 php artisan storage:link
 php artisan serve
 ```
-Requiere: PHP 8.3+, Composer, MySQL 8.4.
+Requires: PHP 8.3+, Composer, MySQL 8.4.
 
 ---
 
-## 2. Arquitectura del Sistema
+## 2. System Architecture
 
-### 2.1. Diagrama de arquitectura
+### 2.1. Architecture diagram
 
 ```mermaid
 graph TD
-    Browser[Navegador] --> Nginx[Nginx :8080]
+    Browser[Browser] --> Nginx[Nginx :8080]
     Nginx --> PhpFpm[PHP-FPM / Laravel 12]
     PhpFpm --> MySQL[MySQL 8.4 :33067]
     Browser --> PMA[phpMyAdmin :8082]
     PMA --> MySQL
 ```
 
-**Patrón:** MVC (Model-View-Controller) con Laravel 12.
+**Pattern:** MVC (Model-View-Controller) with Laravel 12.
 
-### 2.2. Componentes principales
+### 2.2. Main components
 
-| Capa | Tecnología |
-|------|-----------|
+| Layer | Technology |
+|-------|------------|
 | Frontend | Blade + CSS (`public/css/lms.css`, `calendar*.css`) + JS (`public/js/lms.js`) |
 | Backend | Laravel 12 (PHP 8.3) |
 | i18n | `lang/en/lms.php`, `lang/es/lms.php`, middleware `SetLocale` |
-| Base de datos | MySQL 8.4 |
-| Servidor web | Nginx 1.27 (Docker) |
+| Database | MySQL 8.4 |
+| Web server | Nginx 1.27 (Docker) |
 
-### 2.3. Estructura del proyecto
+### 2.3. Project structure
 
 ```text
 lms-cms-laravel12/
 ├── app/
 │   ├── Http/
-│   │   ├── Controllers/           12 controladores
+│   │   ├── Controllers/           12 controllers
 │   │   │   AuthController, CalendarController, CalendarEventController,
 │   │   │   CourseController, DashboardController, EnrollmentController,
 │   │   │   LessonController, LocaleController, PluginController,
 │   │   │   PluginInteractionController, ProfileController, QuizController
 │   │   └── Middleware/            EnsureRole, SetLocale
-│   ├── Models/                    15 modelos Eloquent
+│   ├── Models/                    15 Eloquent models
 │   ├── Services/                  CalendarService.php
 │   └── Support/                   CalendarEvent.php (DTO)
-├── bootstrap/app.php              Registro middleware web + alias role
+├── bootstrap/app.php              Web middleware registration + role alias
 ├── database/
-│   ├── migrations/                15 migraciones
+│   ├── migrations/                15 migrations
 │   └── seeders/                   DatabaseSeeder, LmsDemoSeeder, PluginDefinitionSeeder
 ├── docker/
 │   ├── nginx/default.conf         client_max_body_size 128M
@@ -185,7 +185,7 @@ lms-cms-laravel12/
 │   ├── lessons/                   show, edit
 │   ├── calendar/                  index, teacher, _body, events/*
 │   ├── profile/                   edit
-│   └── plugins/                   partials de bloques
+│   └── plugins/                   block partials
 ├── routes/web.php
 ├── tests/
 │   ├── Feature/                   LmsFlowTest, LocaleTest, CalendarTest, CalendarEventTest
@@ -194,46 +194,46 @@ lms-cms-laravel12/
 └── Dockerfile
 ```
 
-### 2.4. Infraestructura y despliegue
+### 2.4. Infrastructure and deployment
 
-**Docker Compose** con 4 servicios:
+**Docker Compose** with 4 services:
 
-| Servicio | Imagen | Puerto |
-|----------|--------|--------|
-| app | PHP 8.3 FPM Alpine (build local) | — |
+| Service | Image | Port |
+|---------|-------|------|
+| app | PHP 8.3 FPM Alpine (local build) | — |
 | web | nginx:1.27-alpine | 8080 |
 | db | mysql:8.4 | 33067 |
 | phpmyadmin | phpmyadmin:5-apache | 8082 |
 
-### 2.5. Seguridad
+### 2.5. Security
 
-- Hash de contraseñas (bcrypt)
+- Password hashing (bcrypt)
 - Middleware `EnsureRole` (`role:teacher` / `role:student`)
-- Middleware `SetLocale` (solo `en` | `es`)
-- Protección CSRF en formularios
-- Validación de inputs en controladores
-- Rutas de eventos de calendario restringidas a profesor
+- Middleware `SetLocale` (only `en` | `es`)
+- CSRF protection on forms
+- Input validation in controllers
+- Calendar event routes restricted to teachers
 
 ### 2.6. Tests
 
-| Test | Descripción |
+| Test | Description |
 |------|-------------|
-| `LmsFlowTest` | Flujo registro → curso → lección → quiz |
-| `LocaleTest` | Cambio de idioma y textos del sidebar |
-| `CalendarTest` | Acceso calendario, layout teacher/student, enlace «Nuevo evento» |
-| `CalendarEventTest` | CRUD eventos académicos (profesor) |
-| `LessonCastTest` | Casting JSON de contenido de lección |
+| `LmsFlowTest` | Flow: registration → course → lesson → quiz |
+| `LocaleTest` | Language switch and sidebar text |
+| `CalendarTest` | Calendar access, teacher/student layout, «New event» link |
+| `CalendarEventTest` | Academic event CRUD (teacher) |
+| `LessonCastTest` | JSON casting of lesson content |
 
-Ejecución en Docker:
+Run in Docker:
 ```bash
 docker compose exec app php artisan test
 ```
 
 ---
 
-## 3. Modelo de Datos
+## 3. Data Model
 
-### 3.1. Diagrama del modelo (extracto)
+### 3.1. Model diagram (excerpt)
 
 ```mermaid
 erDiagram
@@ -265,232 +265,232 @@ erDiagram
     }
 ```
 
-### 3.2. Entidades principales
+### 3.2. Main entities
 
-| Entidad | Descripción |
-|---------|-------------|
-| **users** | Usuarios con rol `teacher` o `student` |
-| **courses** | Cursos con estado draft/published |
-| **lessons** | Lecciones ordenadas; `due_at` para calendario |
-| **questions** | Preguntas de quiz (opciones JSON, mín. 2) |
-| **quiz_results** | Puntuación por lección y usuario |
-| **progress** | Lecciones completadas |
-| **course_enrollments** | Matriculaciones con rol |
-| **academic_calendar_events** | Eventos personalizados del profesor |
-| **plugin_definitions** … **lesson_layout_snapshots** | Sistema de plugins (ver migraciones 2026_05_07_*) |
-
----
-
-## 4. Especificación de la API
-
-Rutas web en `routes/web.php` (no API REST separada).
-
-### Rutas públicas / locale
-
-| Método | Ruta | Acción |
-|--------|------|--------|
-| GET | `/locale/{locale}` | Cambiar idioma (es/en) |
-| GET/POST | `/login`, `/register` | Autenticación |
-
-### Rutas autenticadas (cualquier rol)
-
-| Método | Ruta | Acción |
-|--------|------|--------|
-| GET | `/dashboard` | Dashboard según rol |
-| GET | `/calendar` | Calendario (vista teacher o student) |
-| GET/PATCH | `/profile/edit`, `/profile` | Perfil de usuario |
-| GET | `/courses` | Listado de cursos |
-| POST | `/logout` | Cerrar sesión |
-
-### Rutas de profesor (`role:teacher`)
-
-| Método | Ruta | Acción |
-|--------|------|--------|
-| GET | `/calendar/events/create` | Formulario nuevo evento |
-| POST | `/calendar/events` | Guardar evento |
-| GET/PUT/DELETE | `/calendar/events/edit?id=` | Editar / actualizar / eliminar evento |
-| POST | `/courses` | Crear curso |
-| GET | `/courses/{course}` | Detalle de curso |
-| POST | `/courses/{course}/publish` | Publicar |
-| GET | `/courses/{course}/enrollments` | Panel matriculaciones |
-| GET/POST/DELETE | `/courses/{course}/enrollments/*` | APIs JSON matriculación |
-| POST | `/lessons` | Crear lección |
-| GET | `/lessons/{lesson}/edit` | Editor lección + plugins + quiz |
-| GET/POST/PATCH/DELETE | `/plugins/*`, `/lessons/{lesson}/plugins/*` | Sistema de plugins |
-
-### Rutas de estudiante (`role:student`)
-
-| Método | Ruta | Acción |
-|--------|------|--------|
-| GET | `/lessons/{lesson}` | Ver lección |
-| POST | `/quiz/submit` | Enviar quiz |
-| POST | `/plugins/instances/{instance}/interact` | Interacción plugin |
-| POST | `/plugins/instances/{instance}/submit` | Envío evaluable |
+| Entity | Description |
+|--------|-------------|
+| **users** | Users with `teacher` or `student` role |
+| **courses** | Courses with draft/published status |
+| **lessons** | Ordered lessons; `due_at` for calendar |
+| **questions** | Quiz questions (JSON options, min. 2) |
+| **quiz_results** | Score per lesson and user |
+| **progress** | Completed lessons |
+| **course_enrollments** | Enrollments with role |
+| **academic_calendar_events** | Custom teacher events |
+| **plugin_definitions** … **lesson_layout_snapshots** | Plugin system (see migrations 2026_05_07_*) |
 
 ---
 
-## 5. Historias de Usuario
+## 4. API Specification
 
-**HU-1:** Como profesor quiero crear cursos para organizar mi contenido educativo.
+Web routes in `routes/web.php` (no separate REST API).
 
-**HU-2:** Como profesor quiero añadir lecciones a un curso para estructurar el material.
+### Public / locale routes
 
-**HU-3:** Como profesor quiero publicar un curso para que los estudiantes accedan.
+| Method | Route | Action |
+|--------|-------|--------|
+| GET | `/locale/{locale}` | Change language (es/en) |
+| GET/POST | `/login`, `/register` | Authentication |
 
-**HU-4:** Como profesor quiero añadir plugins interactivos con drag & drop.
+### Authenticated routes (any role)
 
-**HU-5:** Como profesor quiero gestionar preguntas del quiz dinámicamente.
+| Method | Route | Action |
+|--------|-------|--------|
+| GET | `/dashboard` | Dashboard by role |
+| GET | `/calendar` | Calendar (teacher or student view) |
+| GET/PATCH | `/profile/edit`, `/profile` | User profile |
+| GET | `/courses` | Course listing |
+| POST | `/logout` | Log out |
 
-**HU-6:** Como profesor quiero asignar usuarios a un curso mediante drag & drop.
+### Teacher routes (`role:teacher`)
 
-**HU-7:** Como estudiante quiero ver cursos publicados.
+| Method | Route | Action |
+|--------|-------|--------|
+| GET | `/calendar/events/create` | New event form |
+| POST | `/calendar/events` | Save event |
+| GET/PUT/DELETE | `/calendar/events/edit?id=` | Edit / update / delete event |
+| POST | `/courses` | Create course |
+| GET | `/courses/{course}` | Course detail |
+| POST | `/courses/{course}/publish` | Publish |
+| GET | `/courses/{course}/enrollments` | Enrollment panel |
+| GET/POST/DELETE | `/courses/{course}/enrollments/*` | JSON enrollment APIs |
+| POST | `/lessons` | Create lesson |
+| GET | `/lessons/{lesson}/edit` | Lesson editor + plugins + quiz |
+| GET/POST/PATCH/DELETE | `/plugins/*`, `/lessons/{lesson}/plugins/*` | Plugin system |
 
-**HU-8:** Como estudiante quiero visualizar lecciones con plugins interactivos.
+### Student routes (`role:student`)
 
-**HU-9:** Como estudiante quiero responder cuestionarios y recibir puntuación.
-
-**HU-10:** Como estudiante quiero ver mi progreso.
-
-**HU-11:** Como profesor quiero ver un calendario académico mensual y crear eventos propios para planificar el curso.
-
-**HU-12:** Como usuario quiero cambiar el idioma de la interfaz (ES/EN) y ver la navegación traducida (Inicio, Mis cursos, Calendario).
-
-### 5.1 Priorización MoSCoW (extracto)
-
-**Must-Have:** autenticación, CRUD cursos/lecciones, matriculación, consumo estudiante, evaluación.
-
-**Should-Have:** editor plugins avanzado, calendario académico, i18n completo, perfil de usuario.
+| Method | Route | Action |
+|--------|-------|--------|
+| GET | `/lessons/{lesson}` | View lesson |
+| POST | `/quiz/submit` | Submit quiz |
+| POST | `/plugins/instances/{instance}/interact` | Plugin interaction |
+| POST | `/plugins/instances/{instance}/submit` | Gradable submission |
 
 ---
 
-## 6. Tickets de Trabajo
+## 5. User Stories
 
-**Ticket 1 — Autenticación y roles**
+**HU-1:** As a teacher, I want to create courses to organize my educational content.
 
-**Ticket 2 — CRUD de cursos y lecciones**
+**HU-2:** As a teacher, I want to add lessons to a course to structure the material.
 
-**Ticket 3 — Sistema de evaluaciones (quiz dinámico)**
+**HU-3:** As a teacher, I want to publish a course so students can access it.
 
-**Ticket 4 — Sistema de plugins drag & drop**
+**HU-4:** As a teacher, I want to add interactive plugins with drag & drop.
 
-**Ticket 5 — Gestión de matriculaciones**
+**HU-5:** As a teacher, I want to manage quiz questions dynamically.
 
-**Ticket 6 — Infraestructura Docker y uploads**
+**HU-6:** As a teacher, I want to assign users to a course via drag & drop.
 
-**Ticket 7 — Calendario académico**
-- `CalendarService` + eventos desde lecciones, matriculaciones y `academic_calendar_events`
-- Vistas `calendar/index`, `calendar/teacher`, layout `calendar-moodle`
-- CRUD eventos: `CalendarEventController`, migración y modelo `AcademicCalendarEvent`
-- Campo `lessons.due_at` y datos en `LmsDemoSeeder`
+**HU-7:** As a student, I want to view published courses.
+
+**HU-8:** As a student, I want to view lessons with interactive plugins.
+
+**HU-9:** As a student, I want to answer quizzes and receive a score.
+
+**HU-10:** As a student, I want to view my progress.
+
+**HU-11:** As a teacher, I want to view a monthly academic calendar and create my own events to plan the course.
+
+**HU-12:** As a user, I want to change the interface language (ES/EN) and see translated navigation (Home, My Courses, Calendar).
+
+### 5.1 MoSCoW prioritization (excerpt)
+
+**Must-Have:** authentication, course/lesson CRUD, enrollment, student consumption, assessment.
+
+**Should-Have:** advanced plugin editor, academic calendar, full i18n, user profile.
+
+---
+
+## 6. Work Tickets
+
+**Ticket 1 — Authentication and roles**
+
+**Ticket 2 — Course and lesson CRUD**
+
+**Ticket 3 — Assessment system (dynamic quiz)**
+
+**Ticket 4 — Drag & drop plugin system**
+
+**Ticket 5 — Enrollment management**
+
+**Ticket 6 — Docker infrastructure and uploads**
+
+**Ticket 7 — Academic calendar**
+- `CalendarService` + events from lessons, enrollments, and `academic_calendar_events`
+- Views `calendar/index`, `calendar/teacher`, layout `calendar-moodle`
+- Event CRUD: `CalendarEventController`, migration and `AcademicCalendarEvent` model
+- `lessons.due_at` field and data in `LmsDemoSeeder`
 - Tests `CalendarTest`, `CalendarEventTest`
 
-**Ticket 8 — Internacionalización y navegación**
+**Ticket 8 — Internationalization and navigation**
 - `lang/en/lms.php`, `lang/es/lms.php`, `SetLocale`, `LocaleController`
-- Partial `sidebar-nav` unificado; `language-switcher`, `i18n-js` + `window.lmsT()` en `lms.js`
-- Enlace «Nuevo evento» condicionado a ruta `calendar` y rol teacher
+- Unified `sidebar-nav` partial; `language-switcher`, `i18n-js` + `window.lmsT()` in `lms.js`
+- «New event» link conditioned on `calendar` route and teacher role
 - Test `LocaleTest`
 
 ---
 
 ## 7. Pull Requests
 
-**PR 1 — Autenticación y roles**
+**PR 1 — Authentication and roles**
 
-**PR 2 — Gestión de cursos y lecciones**
+**PR 2 — Course and lesson management**
 
-**PR 3 — Evaluaciones y progreso**
+**PR 3 — Assessments and progress**
 
-**PR 4 — Sistema de plugins interactivos**
+**PR 4 — Interactive plugin system**
 
-**PR 5 — Gestión de matriculaciones**
+**PR 5 — Enrollment management**
 
-**PR 6 — Dockerización y CI**
+**PR 6 — Dockerization and CI**
 
-**PR 7 — Calendario académico y eventos del profesor**
+**PR 7 — Academic calendar and teacher events**
 
-**PR 8 — i18n ES/EN y sidebar de navegación unificado**
-
----
-
-## 8. Documentación de prompts
-
-Los prompts utilizados con asistentes de código (máx. 3 por sección del ciclo de vida) y el listado detallado de archivos tocados en [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r/codigofinal/lms-cms-laravel12) están en **[prompts.md](./prompts.md)** (secciones 1–9).
-
-### Entrega 2 (`feature-entrega2-ABR`)
-
-Artefactos generados en la conversación [README structure analysis for lms-cms-laravel12](./agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md):
-
-| Artefacto | Descripción |
-|-----------|-------------|
-| [readme.md](./readme.md) | Documentación del producto alineada con el código en [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r/codigofinal/lms-cms-laravel12) (arquitectura, modelo de datos, API, historias, tickets) |
-| [prompts.md](./prompts.md) | Prompts por fase del ciclo de vida y archivos principales utilizados |
-| [PLAN_NEGOCIO.md](./PLAN_NEGOCIO.md) | Plan de negocio SaaS (planes, target, proyección) |
-| [seguridad.md](./seguridad.md) | Seguridad por historia de usuario y análisis OWASP Top 10 |
-| [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md) | Hoja de ruta técnica alineada con el plan de negocio |
-
-Índice de transcripts: [agent-transcripts/index.md](./agent-transcripts/index.md).
+**PR 8 — ES/EN i18n and unified navigation sidebar**
 
 ---
 
-## 9. Capturas de pantalla
+## 8. Prompt Documentation
 
-Capturas tomadas de la aplicación en ejecución (`http://localhost:8080`, idioma ES, datos de `LmsDemoSeeder`). Archivos en [`docs/screenshots/`](docs/screenshots/).
+Prompts used with code assistants (max. 3 per lifecycle section) and the detailed list of files touched in [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r/codigofinal/lms-cms-laravel12) are in **[prompts.md](./prompts.md)** (sections 1–9).
 
-### Acceso
+### Delivery 2 (`feature-entrega2-ABR`)
 
-Pantalla de inicio de sesión con selector de idioma EN/ES.
+Artifacts generated in the conversation [README structure analysis for lms-cms-laravel12](./agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md):
 
-![Iniciar sesión](docs/screenshots/login.png)
+| Artifact | Description |
+|----------|-------------|
+| [readme.md](./readme.md) | Product documentation aligned with the code in [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r/codigofinal/lms-cms-laravel12) (architecture, data model, API, user stories, tickets) |
+| [prompts.md](./prompts.md) | Prompts by lifecycle phase and main files used |
+| [PLAN_NEGOCIO.md](./PLAN_NEGOCIO.md) | SaaS business plan (plans, target, projection) |
+| [seguridad.md](./seguridad.md) | Security by user story and OWASP Top 10 analysis |
+| [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md) | Technical roadmap aligned with the business plan |
 
-### Rol profesor
-
-| Vista | Descripción |
-|-------|-------------|
-| Dashboard | Panel principal con cursos, línea de tiempo y formulario de creación |
-| Mis cursos | Listado y gestión de cursos publicados |
-| Calendario | Vista mensual (layout Moodle 5), eventos académicos y botón «+ Nuevo evento» en el sidebar |
-| Nuevo evento | Formulario de alta de evento académico (`/calendar/events/create`) |
-
-![Dashboard profesor](docs/screenshots/dashboard-teacher.png)
-
-![Gestión de cursos — profesor](docs/screenshots/courses-teacher.png)
-
-![Calendario académico — profesor](docs/screenshots/calendar-teacher.png)
-
-![Crear evento académico](docs/screenshots/calendar-event-create.png)
-
-### Rol estudiante
-
-| Vista | Descripción |
-|-------|-------------|
-| Dashboard | Cursos matriculados y acceso rápido |
-| Calendario | Vista mensual con layout estándar LMS (sin layout Moodle) |
-
-![Dashboard estudiante](docs/screenshots/dashboard-student.png)
-
-![Calendario académico — estudiante](docs/screenshots/calendar-student.png)
-
-> El enlace **«+ Nuevo evento»** solo aparece en `/calendar` cuando el usuario tiene rol `teacher`. En el formulario de creación de evento no se muestra en el sidebar.
+Transcript index: [agent-transcripts/index.md](./agent-transcripts/index.md).
 
 ---
 
-## 10. Seguridad y OWASP Top 10
+## 9. Screenshots
 
-La documentación de seguridad del proyecto se divide en dos niveles:
+Screenshots taken from the running application (`http://localhost:8080`, ES language, `LmsDemoSeeder` data). Files in [`docs/screenshots/`](docs/screenshots/).
 
-| Documento | Contenido |
-|-----------|-----------|
-| [seguridad.md](./seguridad.md#seguridad-por-historia-de-usuario) | Criterios de aceptación y requisitos no funcionales por historia de usuario (HU-1 … HU-12) |
-| [seguridad.md § Análisis OWASP](./seguridad.md#análisis-de-vulnerabilidades-detectadas-owasp-top-10) | Vulnerabilidades prioritarias detectadas en el código, con ejemplos concretos y soluciones propuestas |
+### Access
 
-### Vulnerabilidades prioritarias (resumen)
+Login screen with EN/ES language selector.
 
-| # | OWASP | Vulnerabilidad | Severidad |
-|---|-------|----------------|-----------|
-| 1 | A03 Injection | XSS almacenado en contenido HTML de lecciones (`{!! !!}`) | Crítica |
-| 2 | A01 Broken Access Control | Archivos subidos accesibles sin verificar matriculación | Alta |
-| 3 | A03 / A10 | URLs de embed sin lista blanca en plugins (iframe) | Alta |
-| 4 | A04 / A08 | Reenvío ilimitado de quizzes sin control de integridad | Media-Alta |
-| 5 | A01 Broken Access Control | Matriculación con rol `teacher` arbitrario en curso ajeno | Media |
+![Login](docs/screenshots/login.png)
 
-> Los controles transversales (autenticación, roles globales, TLS, CSRF) se documentan en la sección [2.5. Seguridad](#25-seguridad) y quedan fuera del alcance del análisis por historia de usuario.
+### Teacher role
+
+| View | Description |
+|------|-------------|
+| Dashboard | Main panel with courses, timeline, and creation form |
+| My Courses | Listing and management of published courses |
+| Calendar | Monthly view (Moodle 5 layout), academic events, and «+ New event» button in the sidebar |
+| New event | Academic event creation form (`/calendar/events/create`) |
+
+![Teacher dashboard](docs/screenshots/dashboard-teacher.png)
+
+![Course management — teacher](docs/screenshots/courses-teacher.png)
+
+![Academic calendar — teacher](docs/screenshots/calendar-teacher.png)
+
+![Create academic event](docs/screenshots/calendar-event-create.png)
+
+### Student role
+
+| View | Description |
+|------|-------------|
+| Dashboard | Enrolled courses and quick access |
+| Calendar | Monthly view with standard LMS layout (no Moodle layout) |
+
+![Student dashboard](docs/screenshots/dashboard-student.png)
+
+![Academic calendar — student](docs/screenshots/calendar-student.png)
+
+> The **«+ New event»** link only appears on `/calendar` when the user has the `teacher` role. It is not shown in the sidebar on the event creation form.
+
+---
+
+## 10. Security and OWASP Top 10
+
+Project security documentation is split into two levels:
+
+| Document | Content |
+|----------|---------|
+| [seguridad.md](./seguridad.md#security-by-user-story) | Acceptance criteria and non-functional requirements per user story (HU-1 … HU-12); see also [User Stories](#5-user-stories) |
+| [seguridad.md § OWASP Analysis](./seguridad.md#owasp-top-10-vulnerability-analysis) | Priority vulnerabilities detected in the code, with concrete examples and proposed fixes |
+
+### Priority vulnerabilities (summary)
+
+| # | OWASP | Vulnerability | Severity |
+|---|-------|---------------|----------|
+| 1 | A03 Injection | Stored XSS in lesson HTML content (`{!! !!}`) | Critical |
+| 2 | A01 Broken Access Control | Uploaded files accessible without enrollment verification | High |
+| 3 | A03 / A10 | Malicious embedded content via unallowlisted embed URLs in plugins (iframe) | High |
+| 4 | A04 / A08 | Unlimited quiz resubmission without integrity controls | Medium-High |
+| 5 | A01 Broken Access Control | Enrollment with arbitrary `teacher` role on another user's course | Medium |
+
+> Cross-cutting controls (authentication, global roles, TLS, CSRF) are documented in section [2.5. Security](#25-security) and are out of scope for the per-user-story analysis.

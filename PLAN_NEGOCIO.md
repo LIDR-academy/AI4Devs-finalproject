@@ -1,127 +1,127 @@
-# Plan de negocio — Plataforma LMS SaaS (Tech + IA)
+# Business Plan — LMS SaaS Platform (Tech + AI)
 
-Documento de referencia estratégica para el producto. El MVP técnico (Fase 1) está en [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (rama `angel-burgos-r`, carpeta `codigofinal/lms-cms-laravel12`); la hoja de ruta en [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md).
+Strategic reference document for the product. The technical MVP (Phase 1) is in [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (branch `angel-burgos-r`, folder `codigofinal/lms-cms-laravel12`); the roadmap is in [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md).
 
 ---
 
-## 1.1 Concepto del negocio
+## 1.1 Business concept
 
-**Propuesta de valor:** Plataforma SaaS moderna donde desarrolladores, empresas y educadores pueden crear, compartir y monetizar cursos de tecnología con herramientas IA integradas.
+**Value proposition:** Modern SaaS platform where developers, companies, and educators can create, share, and monetize technology courses with integrated AI tools.
 
-### Target principal
+### Primary target
 
-| Segmento | Descripción |
+| Segment | Description |
 |----------|-------------|
-| Bootcamps y academias de coding | 200+ en España/Latam |
-| Empresas tech | Formación interna de equipos |
-| Profesores independientes | Especialistas en tecnología |
-| Comunidades de desarrolladores | Aprendizaje colaborativo |
+| Bootcamps and coding academies | 200+ in Spain/Latin America |
+| Tech companies | Internal team training |
+| Independent instructors | Technology specialists |
+| Developer communities | Collaborative learning |
 
 ---
 
-## 1.2 Características principales
+## 1.2 Main features
 
-| Área | Descripción | Estado MVP actual |
+| Area | Description | Current MVP status |
 |------|-------------|-------------------|
-| Creación de cursos inteligente | Editor drag-and-drop; IA para contenido auxiliar, transcripciones y quizzes automáticos | Editor + plugins ✓; IA generativa pendiente |
-| Tutor IA integrado | Chatbot (LangChain + Claude/GPT) por lección | Pendiente (Fase 1) |
-| Análisis de aprendizaje | Dashboard progreso, conceptos débiles, recomendaciones | Progreso básico ✓; analytics avanzado pendiente |
-| Integración ecológica | GitHub, APIs, entornos de desarrollo | Pendiente (Fase 3) |
-| Monetización flexible | Venta de cursos 70/30, certificaciones, premium | Planes definidos ✓; Stripe pendiente |
-| Comunidades | Foros, proyectos, portfolios, mentoría | Foro como plugin ✓; comunidad global pendiente |
+| Smart course creation | Drag-and-drop editor; AI for auxiliary content, transcriptions, and automatic quizzes | Editor + plugins ✓; generative AI pending |
+| Integrated AI tutor | Chatbot (LangChain + Claude/GPT) per lesson | Pending (Phase 1) |
+| Learning analytics | Progress dashboard, weak concepts, recommendations | Basic progress ✓; advanced analytics pending |
+| Ecosystem integration | GitHub, APIs, development environments | Pending (Phase 3) |
+| Flexible monetization | Course sales 70/30, certifications, premium | Plans defined ✓; Stripe pending |
+| Communities | Forums, projects, portfolios, mentoring | Forum as plugin ✓; global community pending |
 
 ---
 
-## 1.3 Modelo de ingresos (SaaS)
+## 1.3 Revenue model (SaaS)
 
-| Plan | Precio | Público | Incluye |
+| Plan | Price | Audience | Includes |
 |------|--------|---------|---------|
-| **Básico** | €4.99/mes | Estudiantes | Cursos públicos, 1 tutor IA/mes, certificados básicos |
-| **Pro** | €29/mes | Profesores/creadores | 5 cursos, tutor IA ilimitado, analytics, monetización |
-| **Empresa** | €299–999/mes | Instituciones | Cursos ilimitados, SSO, white-label parcial, soporte B2B |
-| **API IA** | €0.10–0.50/consulta | Plataformas externas | Integración Moodle/Canvas/propias |
+| **Basic** | €4.99/month | Students | Public courses, 1 AI tutor/month, basic certificates |
+| **Pro** | €29/month | Teachers/creators | 5 courses, unlimited AI tutor, analytics, monetization |
+| **Enterprise** | €299–999/month | Institutions | Unlimited courses, SSO, partial white-label, B2B support |
+| **AI API** | €0.10–0.50/query | External platforms | Moodle/Canvas/custom integration |
 
-Configuración técnica de planes: `config/saas.php` en el repositorio Laravel.
+Technical plan configuration: `config/saas.php` in the Laravel repository.
 
 ---
 
-## 1.4 Proyección de ingresos (Año 1–3)
+## 1.4 Revenue projection (Years 1–3)
 
-| Métrica | Año 1 | Año 2 | Año 3 |
+| Metric | Year 1 | Year 2 | Year 3 |
 |---------|-------|-------|-------|
-| Usuarios Básico | 300 | 1,200 | 3,500 |
-| Profesores Pro | 15 | 60 | 180 |
-| Clientes Empresa | 2 | 12 | 35 |
+| Basic users | 300 | 1,200 | 3,500 |
+| Pro teachers | 15 | 60 | 180 |
+| Enterprise clients | 2 | 12 | 35 |
 | MRR | €1,500 | €8,500 | €22,000 |
-| Ingresos anuales | €18,000 | €102,000 | €264,000 |
-| Margen operativo | -35% | 15% | 45% |
+| Annual revenue | €18,000 | €102,000 | €264,000 |
+| Operating margin | -35% | 15% | 45% |
 
-**Referencia:** Udemy (€500M+), Teachable (€100M+). Diferenciación: tech + IA + comunidad hispanohablante.
+**Reference:** Udemy (€500M+), Teachable (€100M+). Differentiation: tech + AI + Spanish-speaking community.
 
 ---
 
-## 1.5 Stack técnico recomendado
+## 1.5 Recommended technical stack
 
-| Componente | Tecnología | Estado actual / evolución |
+| Component | Technology | Current status / evolution |
 |------------|------------|---------------------------|
-| Base de datos | Supabase (PostgreSQL + pgvector) | MySQL 8.4 (MVP) → migración futura |
-| Backend | Node/NestJS + Python FastAPI | Laravel 12 (MVP) → microservicio IA en Python |
-| Frontend | React/Next.js + TypeScript | Blade + JS (MVP) → Next.js en Fase 2+ |
-| IA/LLM | Claude API + LangChain | Pendiente |
-| Infraestructura | Azure App Service / AKS | Docker local (MVP) → Azure |
-| Almacenamiento | Azure Blob / S3 | `storage/` Laravel (MVP) |
-| Pagos | Stripe + Paddle (EU) | Pendiente Fase 1 |
-| Video | Mux / JWPlayer | Upload local + embed (MVP) |
+| Database | Supabase (PostgreSQL + pgvector) | MySQL 8.4 (MVP) → future migration |
+| Backend | Node/NestJS + Python FastAPI | Laravel 12 (MVP) → AI microservice in Python |
+| Frontend | React/Next.js + TypeScript | Blade + JS (MVP) → Next.js in Phase 2+ |
+| AI/LLM | Claude API + LangChain | Pending |
+| Infrastructure | Azure App Service / AKS | Local Docker (MVP) → Azure |
+| Storage | Azure Blob / S3 | Laravel `storage/` (MVP) |
+| Payments | Stripe + Paddle (EU) | Pending Phase 1 |
+| Video | Mux / JWPlayer | Local upload + embed (MVP) |
 
 ---
 
-## 1.6 Fases de desarrollo
+## 1.6 Development phases
 
-### Fase 1 — MVP (meses 1–3)
+### Phase 1 — MVP (months 1–3)
 
-- Autenticación y perfiles ✓
-- Editor de cursos básico ✓ (plugins, páginas WYSIWYG, vídeo)
-- Reproductor de video ✓
-- Tutor IA simple (Claude API) — en curso
-- Pagos básicos (Stripe) — pendiente
-- Deploy en Azure — pendiente
+- Authentication and profiles ✓
+- Basic course editor ✓ (plugins, WYSIWYG pages, video)
+- Video player ✓
+- Simple AI tutor (Claude API) — in progress
+- Basic payments (Stripe) — pending
+- Azure deployment — pending
 
-### Fase 2 — Alpha (meses 4–6)
+### Phase 2 — Alpha (months 4–6)
 
-50 usuarios beta, analytics avanzado, dashboard profesores, certificados PDF, €500–1000/mes.
+50 beta users, advanced analytics, teacher dashboard, PDF certificates, €500–1000/month.
 
-### Fase 3 — Expansión (meses 7–12)
+### Phase 3 — Expansion (months 7–12)
 
-300+ usuarios, monetización de cursos, GitHub/Slack, foros activos, MRR €1500+.
+300+ users, course monetization, GitHub/Slack, active forums, MRR €1500+.
 
-### Fase 4 — Consolidación (año 2)
+### Phase 4 — Consolidation (year 2)
 
-1,200+ usuarios, API pública, partnerships bootcamps, white-label, MRR €8,000+.
+1,200+ users, public API, bootcamp partnerships, white-label, MRR €8,000+.
 
 ---
 
-## 1.7 Ventajas y desafíos
+## 1.7 Advantages and challenges
 
-**Ventajas:** escalabilidad SaaS, alto margen a madurez, network effects, diferenciación IA, alineación con skills DevOps/educación.
+**Advantages:** SaaS scalability, high margin at maturity, network effects, AI differentiation, alignment with DevOps/education skills.
 
-**Desafíos:** 18–24 meses a rentabilidad, inversión inicial (hosting, APIs IA, equipo), competencia (Udemy, Teachable), CAC, complejidad técnica (pagos, streaming).
+**Challenges:** 18–24 months to profitability, initial investment (hosting, AI APIs, team), competition (Udemy, Teachable), CAC, technical complexity (payments, streaming).
 
 ---
 
 ## 1.8 Go-to-market
 
-1. **Fase 0:** Validación con 10–20 bootcamps/profesores; landing + waitlist; early bird 50%.
-2. **Lanzamiento:** 5–10 cursos propios de calidad.
-3. **Partnerships:** Bootcamps ES/LATAM, white-label, revenue share 70/30.
-4. **Community:** Dev.to, Hashnode, Reddit, Discord tech hispanohablante.
-5. **Content marketing:** SEO «curso online javascript IA».
-6. **Paid ads:** Google/Meta (año 2+).
+1. **Phase 0:** Validation with 10–20 bootcamps/instructors; landing + waitlist; early bird 50%.
+2. **Launch:** 5–10 high-quality proprietary courses.
+3. **Partnerships:** Bootcamps ES/LATAM, white-label, 70/30 revenue share.
+4. **Community:** Dev.to, Hashnode, Reddit, Spanish-speaking tech Discord.
+5. **Content marketing:** SEO for "online javascript course AI".
+6. **Paid ads:** Google/Meta (year 2+).
 
 ---
 
-## Enlaces del repositorio
+## Repository links
 
-- **Código MVP:** [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r/codigofinal/lms-cms-laravel12) (rama `angel-burgos-r`)
-- **Documentación técnica (este repo):** `readme.md`
-- **Roadmap de implementación:** [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md)
-- **Página de planes (app):** `/pricing`
+- **MVP code:** [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r/codigofinal/lms-cms-laravel12) (branch `angel-burgos-r`)
+- **Technical documentation (this repo):** `readme.md`
+- **Implementation roadmap:** [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md)
+- **Plans page (app):** `/pricing`
