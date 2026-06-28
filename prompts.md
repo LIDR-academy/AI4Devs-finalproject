@@ -1,7 +1,7 @@
 > In this section, document the main prompts used during project creation that justify the use of code assistants across all phases of the development lifecycle. We expect a maximum of 3 per section, mainly initial creation prompts or correction/addition prompts for functionality you consider most relevant.
 > You may additionally include the full conversation as a link or attachment if you consider it appropriate.
 
-**Implementation repository:** [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (branch `angel-burgos-r`, folder `codigofinal/lms-cms-laravel12`)
+**Implementation repository:** [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (branch `angel-burgos-r`)
 
 **Delivery branch:** `feature-entrega2-ABR`
 
@@ -199,7 +199,7 @@
 
 ## 9. Main files used
 
-Paths relative to `codigofinal/lms-cms-laravel12/` in [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (branch `angel-burgos-r`):
+Paths relative to the repository root in [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (branch `angel-burgos-r`):
 
 | Area | Files |
 |------|-------|

@@ -1,7 +1,7 @@
 # Cursor Transcripts Export
 
 - Documentation branch: `feature-entrega2-ABR`
-- Reference code: [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (branch `angel-burgos-r`, folder `codigofinal/lms-cms-laravel12`)
+- Reference code: [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (branch `angel-burgos-r`)
 - Output: `agent-transcripts/`
 - Files: `2`
 

@@ -12,7 +12,7 @@
 9. [Screenshots](#9-screenshots)
 10. [Security and OWASP Top 10](#10-security-and-owasp-top-10)
 
-**SaaS business plan:** [PLAN_NEGOCIO.md](./PLAN_NEGOCIO.md) · **Technical roadmap:** [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md)
+**SaaS business plan:** [PLAN_NEGOCIO.md](./PLAN_NEGOCIO.md) · **Technical roadmap:** [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/docs/ROADMAP_SAAS.md)
 
 **Delivery 2 branch:** `feature-entrega2-ABR` · **Reference conversation:** [README structure analysis for lms-cms-laravel12](./agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md)
 
@@ -29,7 +29,7 @@ Open-source learning management system (LMS) built with Laravel 12. Enables educ
 
 **Project URL:** `http://localhost:8080`(Docker)
 
-**Code repository:** [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (branch `angel-burgos-r`, application at `codigofinal/lms-cms-laravel12`)
+**Code repository:** [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (branch `angel-burgos-r`)
 
 **Prompt documentation:** [prompts.md](./prompts.md)
 
@@ -53,7 +53,7 @@ Open-source learning management system (LMS) built with Laravel 12. Enables educ
 | Pro (creators) | €29/month | Defined in app |
 | Enterprise | €299–999/month | Defined in app |
 
-Detailed roadmap: [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md).
+Detailed roadmap: [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/docs/ROADMAP_SAAS.md).
 
 ### 1.1. Objective
 
@@ -89,7 +89,7 @@ Main flow:
 **Installation with Docker:**
 ```bash
 git clone -b angel-burgos-r https://github.com/BurgosAngel/codigofinal.git
-cd codigofinal/lms-cms-laravel12
+cd codigofinal
 cp .env.example .env
 docker compose up -d
 docker compose exec app composer install
@@ -426,7 +426,7 @@ Artifacts generated in the conversation [README structure analysis for lms-cms-l
 | [prompts.md](./prompts.md) | Prompts by lifecycle phase and main files used |
 | [PLAN_NEGOCIO.md](./PLAN_NEGOCIO.md) | SaaS business plan (plans, target, projection) |
 | [seguridad.md](./seguridad.md) | Security by user story and OWASP Top 10 analysis |
-| [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md) | Technical roadmap aligned with the business plan |
+| [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/docs/ROADMAP_SAAS.md) | Technical roadmap aligned with the business plan |
 
 Transcript index: [agent-transcripts/index.md](./agent-transcripts/index.md).
 

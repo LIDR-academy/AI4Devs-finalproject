@@ -1,6 +1,6 @@
 # Business Plan — LMS SaaS Platform (Tech + AI)
 
-Strategic reference document for the product. The technical MVP (Phase 1) is in [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (branch `angel-burgos-r`, folder `codigofinal/lms-cms-laravel12`); the roadmap is in [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md).
+Strategic reference document for the product. The technical MVP (Phase 1) is in [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (branch `angel-burgos-r`); the roadmap is in [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/docs/ROADMAP_SAAS.md).
 
 ---
 
