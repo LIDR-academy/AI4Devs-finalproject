@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: robodock-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: robodockdb
+      POSTGRES_USER: robodock_user
+      POSTGRES_PASSWORD: robodock_pass
+    ports:
+      - "5434:5432"
+    volumes:
+      - robodock_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  robodock_postgres_data:
