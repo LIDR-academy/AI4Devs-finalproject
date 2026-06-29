@@ -8,28 +8,28 @@ from typing import Any
 
 from dotenv import load_dotenv
 
-from api_client import BackendClient
-from simulation.qr_simulator import simulate_truck_qr
-from simulation.robot_simulator import simulate_pick_drop
-from simulation.vision_simulator import simulate_cube_detection
+try:
+    from .api_client import BackendClient
+    from .config import EdgeConfig, load_edge_config
+    from .models import EdgeRunProfile
+    from .simulation.qr_simulator import simulate_truck_qr
+    from .simulation.robot_simulator import simulate_pick_drop
+    from .simulation.vision_simulator import simulate_cube_detection
+except ImportError:  # Direct execution via python src\edge_runner.py
+    from api_client import BackendClient
+    from config import EdgeConfig, load_edge_config
+    from models import EdgeRunProfile
+    from simulation.qr_simulator import simulate_truck_qr
+    from simulation.robot_simulator import simulate_pick_drop
+    from simulation.vision_simulator import simulate_cube_detection
 
 
 DEFAULT_BACKEND_URL = "http://localhost:3000"
 DEFAULT_CONFIG_PATH = Path("config/edge.config.example.json")
 
 
-def load_config(path: Path) -> dict[str, Any]:
-    with path.open("r", encoding="utf-8") as file:
-        config = json.load(file)
-
-    if not isinstance(config, dict):
-        raise ValueError("Edge config must be a JSON object")
-
-    mode = config.get("mode", "simulation")
-    if mode != "simulation":
-        raise ValueError("Entrega 2 edge runner only supports mode=simulation")
-
-    return config
+def load_config(path: Path) -> EdgeConfig:
+    return load_edge_config(path)
 
 
 def print_step(title: str, payload: Any) -> None:
@@ -39,12 +39,19 @@ def print_step(title: str, payload: Any) -> None:
 
 def run_edge_flow(backend_url: str, config_path: Path) -> dict[str, Any]:
     config = load_config(config_path)
+    if config.profile is not EdgeRunProfile.SIMULATION:
+        raise ValueError(
+            f"Edge profile={config.profile.value} is recognized but not executable in this foundation. "
+            "No camera or serial adapter was opened."
+        )
+
+    simulation_config = config.raw
     client = BackendClient(backend_url)
 
     health = client.health()
     print_step("Backend health", health)
 
-    truck_code = str(config.get("truckCode", "TRUCK-001"))
+    truck_code = config.truck_code
     qr_result = simulate_truck_qr(truck_code)
     print_step("QR simulation", qr_result)
 
@@ -56,7 +63,7 @@ def run_edge_flow(backend_url: str, config_path: Path) -> dict[str, Any]:
     session_id = session["id"]
     print_step("Session created", session)
 
-    vision_result = simulate_cube_detection(config)
+    vision_result = simulate_cube_detection(simulation_config)
     print_step("Vision simulation", vision_result)
 
     cubes_response = client.register_cubes(
@@ -66,7 +73,7 @@ def run_edge_flow(backend_url: str, config_path: Path) -> dict[str, Any]:
     )
     print_step("Cubes registered", cubes_response["session"])
 
-    robot_payload = simulate_pick_drop(config, session_id)
+    robot_payload = simulate_pick_drop(simulation_config, session_id)
     print_step("Robot simulation payload", robot_payload)
 
     robot_response = client.register_robot_action(robot_payload)
@@ -77,6 +84,7 @@ def run_edge_flow(backend_url: str, config_path: Path) -> dict[str, Any]:
 
     return {
         "truckCode": truck_code,
+        "profile": config.profile.value,
         "sessionId": session_id,
         "sessionCode": session.get("code"),
         "cubesSent": len(vision_result["cubes"]),
@@ -86,9 +94,9 @@ def run_edge_flow(backend_url: str, config_path: Path) -> dict[str, Any]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run RoboDock AI Edge in simulation mode.")
+    parser = argparse.ArgumentParser(description="Run RoboDock AI Edge with an explicit execution profile.")
     parser.add_argument("--backend-url", help="Backend base URL. Defaults to BACKEND_URL or localhost.")
-    parser.add_argument("--config", help="Path to edge simulation config JSON.")
+    parser.add_argument("--config", help="Path to Edge config JSON.")
     args = parser.parse_args()
 
     load_dotenv()
@@ -96,7 +104,9 @@ def main() -> None:
     backend_url = args.backend_url or os.getenv("BACKEND_URL", DEFAULT_BACKEND_URL)
     config_path = Path(args.config or os.getenv("EDGE_CONFIG_PATH", str(DEFAULT_CONFIG_PATH)))
 
-    print("RoboDock AI Edge - simulation mode")
+    config = load_config(config_path)
+
+    print(f"RoboDock AI Edge - profile={config.profile.value}")
     print(f"Backend URL: {backend_url}")
     print(f"Config path: {config_path}")
 

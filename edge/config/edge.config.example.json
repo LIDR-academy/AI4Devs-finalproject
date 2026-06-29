@@ -1,6 +1,14 @@
 {
-  "mode": "simulation",
+  "profile": "simulation",
   "truckCode": "TRUCK-001",
+  "dropZones": {
+    "path": "drop_zones.example.json"
+  },
+  "safety": {
+    "dryRun": true,
+    "enableHardwareMotion": false,
+    "humanConfirmationRequired": true
+  },
   "vision": {
     "source": "simulation",
     "cubes": [
