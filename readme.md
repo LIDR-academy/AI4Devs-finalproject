@@ -1,114 +1,114 @@
-## Índice
+## Index
 
-0. [Ficha del proyecto](#0-ficha-del-proyecto)
-1. [Descripción general del producto](#1-descripción-general-del-producto)
-2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
-3. [Modelo de datos](#3-modelo-de-datos)
-4. [Especificación de la API](#4-especificación-de-la-api)
-5. [Historias de usuario](#5-historias-de-usuario)
-6. [Tickets de trabajo](#6-tickets-de-trabajo)
+0. [Project sheet](#0-project-sheet)
+1. [Product overview](#1-product-overview)
+2. [System architecture](#2-system-architecture)
+3. [Data model](#3-data-model)
+4. [API specification](#4-api-specification)
+5. [User stories](#5-user-stories)
+6. [Work tickets](#6-work-tickets)
 7. [Pull requests](#7-pull-requests)
 
 ---
 
-## 0. Ficha del proyecto
+## 0. Project sheet
 
-### **0.1. Tu nombre completo:**
+### **0.1. Your full name:**
 
 Franco Borgato, Mateo Costes
 
-### **0.2. Nombre del proyecto:**
+### **0.2. Project name:**
 
 Veterinary Intelligence Platform
 
-### **0.3. Descripción breve del proyecto:**
+### **0.3. Short project description:**
 
-Plataforma web SaaS multi-tenant para la gestión integral de clínicas veterinarias pequeñas (1–5 veterinarios). El diferenciador central es la **asistencia de IA para estructurar historias clínicas**: el veterinario graba una nota de voz (o sube un archivo de audio) y el sistema transcribe y completa automáticamente los campos predefinidos del registro clínico (motivo, síntomas, peso, temperatura, medicación referida y —cuando el profesional los dicta explícitamente— diagnóstico y tratamiento). El profesional revisa y confirma antes de guardar. **La IA nunca inventa diagnósticos ni tratamientos**: solo estructura lo que el veterinario efectivamente dictó.
+Multi-tenant web SaaS platform for the comprehensive management of small veterinary clinics (1–5 veterinarians). The core differentiator is **AI assistance for structuring clinical records**: the veterinarian records a voice note (or uploads an audio file) and the system transcribes and automatically fills in the predefined fields of the clinical record (reason, symptoms, weight, temperature, referred medication and —when the professional dictates them explicitly— diagnosis and treatment). The professional reviews and confirms before saving. **The AI never invents diagnoses or treatments**: it only structures what the veterinarian actually dictated.
 
-El sistema cubre además gestión de usuarios staff, clientes y mascotas, agenda multi-veterinario con detección de solapamientos (Schedule-X), perfil clínico completo de la mascota, historial clínico con adjuntos (imágenes/PDF), registro de vacunación, recordatorios automáticos de turno por email y auditoría inmutable de cambios y accesos sobre datos clínicos.
+The system also covers staff user management, clients and pets, a multi-veterinarian agenda with overlap detection (Schedule-X), the pet's complete clinical profile, clinical history with attachments (images/PDF), vaccination records, automatic appointment reminders by email and an immutable audit of changes and accesses to clinical data.
 
-> **Estado actual (junio 2026):** el proyecto pasó de la fase de documentación a un **MVP funcional**. Hay backend (FastAPI), frontend (Expo + Tamagui) y base de datos (PostgreSQL 16 con RLS) implementados y ejecutables localmente. Se completaron 24 pull requests sobre la rama `dev` (US-001 a US-014, US-017 a US-023 y US-DASH). El flujo diferenciador de IA (voz → campos clínicos) está operativo end-to-end.
+> **Current status (June 2026):** the project moved from the documentation phase to a **functional MVP**. There is a backend (FastAPI), frontend (Expo + Tamagui) and database (PostgreSQL 16 with RLS) implemented and runnable locally. 24 pull requests were completed onto the `dev` branch (US-001 to US-014, US-017 to US-023 and US-DASH). The differentiating AI flow (voice → clinical fields) is operational end-to-end.
 
-### **0.4. URL del proyecto:**
+### **0.4. Project URL:**
 
-> Producto aún no desplegado en producción (no hay URL pública). El MVP es **ejecutable localmente** con Docker Compose + los scripts `backend/start.ps1` y `frontend/start.ps1` (frontend en `http://localhost:8081`, backend en `http://localhost:8000`). El deploy en Railway está documentado pero pendiente de configurar.
+> Product not yet deployed to production (no public URL). The MVP is **runnable locally** with Docker Compose + the `backend/start.ps1` and `frontend/start.ps1` scripts (frontend at `http://localhost:8081`, backend at `http://localhost:8000`). The Railway deployment is documented but pending configuration.
 
-### 0.5. URL o archivo comprimido del repositorio
+### 0.5. Repository URL or compressed file
 
 https://github.com/mateocostes/Veterinary-Intelligence-Platform
 
-Branch principal: `main`. El desarrollo activo del MVP vive en la rama **`dev`** (24 PRs mergeados, `feat/us-XXX → dev`). La documentación técnica vive en `docs/`.
+Main branch: `main`. Active MVP development lives on the **`dev`** branch (24 merged PRs, `feat/us-XXX → dev`). The technical documentation lives in `docs/`.
 
 ---
 
-## 1. Descripción general del producto
+## 1. Product overview
 
-### **1.1. Objetivo:**
+### **1.1. Objective:**
 
-El producto resuelve un problema cuantificable de las clínicas veterinarias pequeñas: **la documentación clínica manual consume ~10 minutos por consulta**, tiempo que el veterinario no puede dedicar al paciente. La plataforma reduce ese tiempo estructurando automáticamente la historia clínica a partir de lo que el profesional dicta.
+The product solves a quantifiable problem of small veterinary clinics: **manual clinical documentation takes ~10 minutes per consultation**, time the veterinarian cannot dedicate to the patient. The platform reduces that time by automatically structuring the clinical record from what the professional dictates.
 
-**Valor por stakeholder:**
+**Value per stakeholder:**
 
-- **Veterinario:** graba una nota de voz mientras atiende; recibe los campos pre-completados con la información transcrita; revisa, edita lo que necesite y guarda con un click. Reduce la fricción administrativa.
-- **Recepcionista:** gestiona agenda multi-profesional sin solapamientos; el sistema dispara recordatorios automáticos de turno sin llamadas manuales.
-- **Administrador (dueño de la clínica, que suele también ejercer como veterinario):** gestiona el staff de la clínica; ve el perfil clínico completo de cada mascota; audita cambios sobre historias clínicas; controla quién accedió a qué información (cumplimiento Ley 25.326).
-- **Dueño de mascota:** recibe recordatorios automáticos por email; en Fase 1.5 accederá a un portal propio para consultar historial y autogestionar turnos.
+- **Veterinarian:** records a voice note while attending; receives the fields pre-filled with the transcribed information; reviews, edits what is needed and saves with one click. Reduces administrative friction.
+- **Receptionist:** manages a multi-professional agenda without overlaps; the system triggers automatic appointment reminders without manual calls.
+- **Administrator (clinic owner, who usually also practices as a veterinarian):** manages the clinic's staff; sees the complete clinical profile of each pet; audits changes to clinical records; controls who accessed what information (Law 25.326 compliance).
+- **Pet owner:** receives automatic email reminders; in Phase 1.5 will access their own portal to consult history and self-manage appointments.
 
-**Para quién:** clínicas veterinarias pequeñas argentinas de 1–5 veterinarios, donde el dueño suele también ejercer como profesional clínico, con eventual recepcionista, y con acceso a internet estable durante las consultas.
+**For whom:** small Argentine veterinary clinics of 1–5 veterinarians, where the owner usually also practices as a clinical professional, with an eventual receptionist, and with stable internet access during consultations.
 
-### **1.2. Características y funcionalidades principales:**
+### **1.2. Main features and functionalities:**
 
-| Feature | Estado | Descripción |
+| Feature | Status | Description |
 |---|---|---|
-| **Autenticación y multi-tenancy** | ✅ Implementado | Registro de clínica (crea Clinic + User admin atómicamente), login con JWT + refresh tokens en Redis, recuperación de contraseña por email, gestión de usuarios staff (Admin/Vet/Reception) con RBAC. Aislamiento entre clínicas con `clinic_id` + PostgreSQL Row-Level Security. |
-| **Historia Clínica Asistida por IA** | ✅ Implementado | Grabación de voz (MediaRecorder web) o subida de archivo de audio → transcripción con **Groq Whisper (`whisper-large-v3`)** → limpieza con **`claude-haiku-4-5`** → **estructuración** en los campos predefinidos con **`claude-sonnet-4-6`** (tool use + schema Pydantic `ClinicalRecordExtraction`, **prompt caching** activo). La IA extrae motivo, síntomas, peso, temperatura, medicación referida y —solo si el vet los dicta explícitamente— diagnóstico y tratamiento; **nunca los inventa**. Pipeline asíncrono vía ARQ con polling y fallback manual. Toda interacción IA queda auditada en `clinical_records_ai` (append-only). |
-| **Gestión de Clientes y Mascotas** | ✅ Implementado | CRUD de clientes y mascotas. Perfil clínico unificado de la mascota (datos básicos + últimas consultas + vacunas + próximos turnos). Búsqueda global por nombre de mascota o dueño con resultado enriquecido (mascota + dueño + próximo turno). |
-| **Agenda y Turnos** | ✅ Implementado | Vista diaria y semanal filtrable por veterinario (Schedule-X, español, anclada al lunes). Detección de solapamiento (HTTP 409). Reprogramar / cancelar (cancelación lógica que libera el horario). Marcar atendido (`pending → attended`) e iniciar/registrar la consulta desde el turno; ver/editar la consulta ya cargada (una por turno). |
-| **Adjuntos clínicos** | ✅ Implementado | Subida de imágenes/PDF (≤ 20 MB, máx. 10) a una consulta, validando el lote completo antes de subir. Almacenamiento en **Supabase Storage** (bucket privado `clinical-attachments`, URLs firmadas de corta vida). Grilla de miniaturas, apertura en pestaña nueva y borrado (soft delete auditado). |
-| **Vacunación** | ✅ Implementado | Registro de vacunas aplicadas con próxima fecha de vencimiento, opcionalmente vinculadas a una consulta. |
-| **Notificaciones Automáticas** | ✅ Implementado | Recordatorio de turno por email vía **SMTP (`aiosmtplib`)**, disparado por un **cron diario de Railway (`0 8 * * *`)** que avisa los turnos de mañana (un recordatorio, idempotente). Estado de cada envío visible en la agenda para admin/reception. |
-| **Auditoría y Trazabilidad** | ✅ Implementado | Registro automático e inmutable de mutaciones (`audit_log`, vía event listener de SQLAlchemy `after_flush`) y de accesos individuales a historias clínicas (`clinical_record_access_log`). Append-only enforced en motor (`REVOKE UPDATE, DELETE` al rol `app_runtime`). |
-| **Reportes** | 🟡 Parcial | Endpoints de reportes operativos/financieros y de auditoría en el backend; UI de reportes pendiente. |
+| **Authentication and multi-tenancy** | ✅ Implemented | Clinic registration (atomically creates Clinic + admin User), login with JWT + refresh tokens in Redis, password recovery by email, staff user management (Admin/Vet/Reception) with RBAC. Isolation between clinics with `clinic_id` + PostgreSQL Row-Level Security. |
+| **AI-Assisted Clinical Record** | ✅ Implemented | Voice recording (web MediaRecorder) or audio file upload → transcription with **Groq Whisper (`whisper-large-v3`)** → cleanup with **`claude-haiku-4-5`** → **structuring** into the predefined fields with **`claude-sonnet-4-6`** (tool use + Pydantic `ClinicalRecordExtraction` schema, **prompt caching** active). The AI extracts reason, symptoms, weight, temperature, referred medication and —only if the vet dictates them explicitly— diagnosis and treatment; **it never invents them**. Asynchronous pipeline via ARQ with polling and manual fallback. Every AI interaction is audited in `clinical_records_ai` (append-only). |
+| **Client and Pet Management** | ✅ Implemented | CRUD for clients and pets. Unified clinical profile of the pet (basic data + latest consultations + vaccines + upcoming appointments). Global search by pet or owner name with an enriched result (pet + owner + next appointment). |
+| **Agenda and Appointments** | ✅ Implemented | Daily and weekly view filterable by veterinarian (Schedule-X, Spanish, anchored to Monday). Overlap detection (HTTP 409). Reschedule / cancel (logical cancellation that frees the slot). Mark attended (`pending → attended`) and start/register the consultation from the appointment; view/edit the already loaded consultation (one per appointment). |
+| **Clinical attachments** | ✅ Implemented | Upload of images/PDF (≤ 20 MB, max 10) to a consultation, validating the whole batch before uploading. Storage in **Supabase Storage** (private bucket `clinical-attachments`, short-lived signed URLs). Thumbnail grid, opening in a new tab and deletion (audited soft delete). |
+| **Vaccination** | ✅ Implemented | Record of applied vaccines with the next due date, optionally linked to a consultation. |
+| **Automatic Notifications** | ✅ Implemented | Appointment reminder by email via **SMTP (`aiosmtplib`)**, triggered by a **daily Railway cron (`0 8 * * *`)** that notifies tomorrow's appointments (one reminder, idempotent). Status of each send visible in the agenda for admin/reception. |
+| **Audit and Traceability** | ✅ Implemented | Automatic and immutable recording of mutations (`audit_log`, via SQLAlchemy `after_flush` event listener) and of individual accesses to clinical records (`clinical_record_access_log`). Append-only enforced at the engine level (`REVOKE UPDATE, DELETE` on the `app_runtime` role). |
+| **Reports** | 🟡 Partial | Operational/financial and audit report endpoints in the backend; reports UI pending. |
 
-> **Features diferidos.**
-> - **Portal del Cliente (Fase 1.5):** autenticación independiente para dueños de mascotas; ver historial filtrable por veterinario y solicitar/cancelar turnos propios. Los emails de recordatorio ya enlazan a una landing pública informativa (`/appointments/{id}`); la acción real es Fase 1.5.
-> - **Soporte Offline (Fase 2):** Service Workers + IndexedDB con caché local y cola de mutaciones.
-> - **Generación de diagnósticos sugeridos con IA (Fase 2):** la IA del MVP solo estructura lo dictado; generar diagnósticos propios requiere validación clínica y regulatoria independiente.
-> - **Observabilidad completa (Fase 2):** Sentry + Pydantic Logfire / OpenTelemetry + PostHog. El MVP se sostiene con logging estructurado de FastAPI.
+> **Deferred features.**
+> - **Client Portal (Phase 1.5):** independent authentication for pet owners; view history filterable by veterinarian and request/cancel their own appointments. The reminder emails already link to an informational public landing (`/appointments/{id}`); the real action is Phase 1.5.
+> - **Offline Support (Phase 2):** Service Workers + IndexedDB with local cache and a mutation queue.
+> - **AI-generated suggested diagnoses (Phase 2):** the MVP's AI only structures what is dictated; generating its own diagnoses requires independent clinical and regulatory validation.
+> - **Full observability (Phase 2):** Sentry + Pydantic Logfire / OpenTelemetry + PostHog. The MVP relies on FastAPI structured logging.
 
-### **1.3. Diseño y experiencia de usuario:**
+### **1.3. Design and user experience:**
 
-La interfaz está implementada sobre el design system **"Clinical Serenity"** (extraído del proyecto Stitch `VetCare Digital Hub`), codificado como tokens semánticos de marca en `frontend/tamagui.config.ts` (`$brandPrimary` teal médico `#0d9488`, `$surface`, `$onSurface`, `$inputBorder`, `$radiusCard`…) y documentado en `docs/design-system.md`. La app monta `TamaguiProvider` con `defaultTheme="light"`. Cada componente consume **solo** estos tokens (regla R11), nunca hex crudos.
+The interface is implemented over the **"Clinical Serenity"** design system (extracted from the Stitch project `VetCare Digital Hub`), codified as semantic brand tokens in `frontend/tamagui.config.ts` (`$brandPrimary` medical teal `#0d9488`, `$surface`, `$onSurface`, `$inputBorder`, `$radiusCard`…) and documented in `docs/design-system.md`. The app mounts `TamaguiProvider` with `defaultTheme="light"`. Each component consumes **only** these tokens (rule R11), never raw hex.
 
-Flujos principales implementados:
+Main flows implemented:
 
-- **Dashboard por rol:** tarjetas de navegación con visibilidad según rol (admin/vet/reception), saludo dinámico y barra de búsqueda global.
-- **Flujo de consulta con IA:** turno → "Marcar atendido" → "Registrar consulta" → grabar/subir audio → indicador de procesamiento → formulario pre-llenado con los campos extraídos → editar → guardar (con opción de adjuntar archivos).
-- **Flujo de agenda:** calendario Schedule-X día/semana → filtro por veterinario → "Nuevo turno" (búsqueda de mascota + selección de vet, detección de solapamiento) → click en un turno pendiente para reprogramar/cancelar.
-- **Perfil de mascota:** datos básicos + historial clínico (acordeón paginado) + vacunas + próximos turnos.
+- **Dashboard per role:** navigation cards with role-based visibility (admin/vet/reception), dynamic greeting and a global search bar.
+- **AI consultation flow:** appointment → "Mark attended" → "Register consultation" → record/upload audio → processing indicator → form pre-filled with the extracted fields → edit → save (with the option to attach files).
+- **Agenda flow:** Schedule-X day/week calendar → filter by veterinarian → "New appointment" (pet search + vet selection, overlap detection) → click a pending appointment to reschedule/cancel.
+- **Pet profile:** basic data + clinical history (paginated accordion) + vaccines + upcoming appointments.
 
-> **Capturas:** la UI es funcional y verificada manualmente en navegador a lo largo del desarrollo (ver `docs/changelog/US-*.md`). Las capturas formales se agregarán en la próxima iteración de documentación.
+> **Screenshots:** the UI is functional and manually verified in the browser throughout development (see `docs/changelog/US-*.md`). Formal screenshots will be added in the next documentation iteration.
 
-### **1.4. Instrucciones de instalación:**
+### **1.4. Installation instructions:**
 
-**Infraestructura local (Docker):**
+**Local infrastructure (Docker):**
 ```powershell
-docker-compose up -d postgres redis     # PostgreSQL 16 + Redis 7 (ambos healthy)
+docker-compose up -d postgres redis     # PostgreSQL 16 + Redis 7 (both healthy)
 ```
 
 **Backend (FastAPI):**
 ```powershell
-.\backend\start.ps1    # crea venv + instala deps + aplica migraciones + uvicorn (lee .env de la raíz)
-# Worker ARQ (para el flujo IA):
+.\backend\start.ps1    # creates venv + installs deps + applies migrations + uvicorn (reads .env from the root)
+# ARQ Worker (for the AI flow):
 .\.venv\Scripts\python.exe -m arq app.worker.settings.WorkerSettings
 ```
 
 **Frontend (Expo web):**
 ```powershell
-.\frontend\start.ps1   # instala deps si faltan + expo start --web (http://localhost:8081)
+.\frontend\start.ps1   # installs deps if missing + expo start --web (http://localhost:8081)
 ```
 
-**Variables de entorno (`.env` en la raíz, ver `.env.example`):** `DATABASE_URL` / `DATABASE_URL_SYNC`, `JWT_SECRET`, `SMTP_*` (host/port/user/password/from), `GROQ_API_KEY` (Whisper), `ANTHROPIC_API_KEY` (Claude), `SUPABASE_URL` / `SUPABASE_KEY` (adjuntos). Las migraciones (Alembic `0001`–`0011`) crean el schema, activan Row-Level Security y aplican los GRANTs append-only sobre `audit_log` / `clinical_record_access_log` / `clinical_records_ai`.
+**Environment variables (`.env` in the root, see `.env.example`):** `DATABASE_URL` / `DATABASE_URL_SYNC`, `JWT_SECRET`, `SMTP_*` (host/port/user/password/from), `GROQ_API_KEY` (Whisper), `ANTHROPIC_API_KEY` (Claude), `SUPABASE_URL` / `SUPABASE_KEY` (attachments). The migrations (Alembic `0001`–`0011`) create the schema, enable Row-Level Security and apply the append-only GRANTs on `audit_log` / `clinical_record_access_log` / `clinical_records_ai`.
 
 **Tests:**
 ```powershell
@@ -122,35 +122,35 @@ Set-Location e2e; npx playwright test --project=chromium
 
 ---
 
-## 2. Arquitectura del Sistema
+## 2. System Architecture
 
-### **2.1. Diagrama de arquitectura:**
+### **2.1. Architecture diagram:**
 
-La arquitectura sigue un patrón de tres capas desacopladas: frontend (Expo + React Native Web), backend API REST (FastAPI) y base de datos relacional (PostgreSQL). Los servicios de IA y email se consumen como APIs externas. El almacenamiento de archivos es independiente de la base de datos. **Todos los servicios se planifican en un único proyecto de Railway** para simplificar la operación y eliminar CORS interno.
+The architecture follows a three decoupled-layer pattern: frontend (Expo + React Native Web), REST API backend (FastAPI) and relational database (PostgreSQL). The AI and email services are consumed as external APIs. File storage is independent of the database. **All services are planned in a single Railway project** to simplify operations and eliminate internal CORS.
 
 ```mermaid
 flowchart TD
-  subgraph Client["Cliente (Browser / iOS / Android)"]
+  subgraph Client["Client (Browser / iOS / Android)"]
     FE["Expo Router + Tamagui<br/>React Native Web (web)<br/>Schedule-X · TanStack Table"]
   end
 
   subgraph Railway["Railway project (single)"]
     STATIC["Frontend (Static — nginx)"]
-    API["FastAPI Backend<br/>Auth (JWT) · Business Logic · AI Orchestration<br/>+ PostgreSQL RLS por sesión"]
-    ARQ["ARQ Worker<br/>(pipeline IA async)"]
-    CRON["Cron job diario<br/>send_appointment_reminders.py (0 8 * * *)"]
-    RED["Redis managed<br/>(broker ARQ + refresh tokens + task results)"]
+    API["FastAPI Backend<br/>Auth (JWT) · Business Logic · AI Orchestration<br/>+ PostgreSQL RLS per session"]
+    ARQ["ARQ Worker<br/>(async AI pipeline)"]
+    CRON["Daily cron job<br/>send_appointment_reminders.py (0 8 * * *)"]
+    RED["Redis managed<br/>(ARQ broker + refresh tokens + task results)"]
     PG["PostgreSQL 16 managed<br/>Multi-tenancy + Row-Level Security<br/>+ audit_log append-only"]
   end
 
-  subgraph Storage["Almacenamiento de archivos"]
-    S3["Supabase Storage<br/>(bucket privado clinical-attachments)"]
+  subgraph Storage["File storage"]
+    S3["Supabase Storage<br/>(private bucket clinical-attachments)"]
   end
 
-  subgraph External["APIs Externas"]
-    WHISPER["Groq Whisper API<br/>whisper-large-v3 (transcripción)"]
+  subgraph External["External APIs"]
+    WHISPER["Groq Whisper API<br/>whisper-large-v3 (transcription)"]
     CLAUDE["Claude API (Anthropic)<br/>haiku-4-5 cleanup + sonnet-4-6 tool use"]
-    SMTP["SMTP (aiosmtplib)<br/>emails transaccionales"]
+    SMTP["SMTP (aiosmtplib)<br/>transactional emails"]
   end
 
   FE -->|HTTPS| STATIC
@@ -165,83 +165,83 @@ flowchart TD
   CRON --> SMTP
 ```
 
-*Figure 1: Diagrama de arquitectura general del sistema*
+*Figure 1: General system architecture diagram*
 
-**Patrón elegido:** Arquitectura de tres capas (Presentation / Application / Data) con orquestación async desacoplada (ARQ) para el pipeline de IA y un cron diario de Railway para los recordatorios. Multi-tenancy con **defensa en profundidad**: filtro por `clinic_id` en queries SQLAlchemy + PostgreSQL Row-Level Security como segunda capa en motor.
+**Chosen pattern:** Three-layer architecture (Presentation / Application / Data) with decoupled async orchestration (ARQ) for the AI pipeline and a daily Railway cron for reminders. Multi-tenancy with **defense in depth**: filter by `clinic_id` in SQLAlchemy queries + PostgreSQL Row-Level Security as a second layer at the engine.
 
-**Justificación:**
-- **FastAPI + PostgreSQL** proveen un backend tipado, async-nativo y de alta performance. Pydantic v2 hace que el schema de extracción (`ClinicalRecordExtraction`) sirva simultáneamente como tool_use schema para Claude y como shape del JSONB en `clinical_records_ai`.
-- **Expo (Expo Router + Tamagui)** con build web vía React Native Web comparte la UI entre web y móvil desde el primer componente — las capas `services/` y `store/` se portan sin reescritura.
-- **ARQ** desacopla el pipeline de IA (latencia variable de Whisper + 2 llamadas a Claude) de la respuesta HTTP. Async-nativo, mismo Redis que ya se usa para refresh tokens — sin agregar Celery.
-- **PostgreSQL Row-Level Security** en cada tabla con `clinic_id`: si una query omite el filtro, el motor devuelve cero filas en lugar de filtrar entre clínicas. La fuga de datos clínicos entre tenants se vuelve imposible a nivel de motor.
-- **Railway-solo** elimina la fricción operativa de dos clouds (sin CORS, sin duplicación de envs).
+**Justification:**
+- **FastAPI + PostgreSQL** provide a typed, async-native, high-performance backend. Pydantic v2 makes the extraction schema (`ClinicalRecordExtraction`) serve simultaneously as the tool_use schema for Claude and as the shape of the JSONB in `clinical_records_ai`.
+- **Expo (Expo Router + Tamagui)** with a web build via React Native Web shares the UI between web and mobile from the very first component — the `services/` and `store/` layers are ported without a rewrite.
+- **ARQ** decouples the AI pipeline (variable Whisper latency + 2 Claude calls) from the HTTP response. Async-native, the same Redis already used for refresh tokens — without adding Celery.
+- **PostgreSQL Row-Level Security** on each table with `clinic_id`: if a query omits the filter, the engine returns zero rows instead of leaking across clinics. Clinical data leakage between tenants becomes impossible at the engine level.
+- **Railway-only** eliminates the operational friction of two clouds (no CORS, no env duplication).
 
-**Trade-offs y decisiones de implementación:**
-- **Groq Whisper en lugar de OpenAI `whisper-1`:** se adoptó Groq (`whisper-large-v3`, vía SDK de OpenAI con `base_url` override) por su capa gratuita sin tarjeta, suficiente para el desarrollo del MVP. Cambiar de proveedor es config.
-- **SMTP (`aiosmtplib`) en lugar de Resend:** se migró en US-004 para entregar a cualquier destinatario sin verificar dominio (App Password de Gmail en dev; SES/Mailgun/Brevo en prod). Config-only para cambiar de proveedor.
-- **RLS agrega complejidad de setup:** dos usuarios de DB (`app_runtime` con RLS forzado, `app_admin` con `BYPASSRLS` para Alembic) + `set_config('app.clinic_id', …, true)` por request (se usa `set_config`, no `SET LOCAL`, porque Postgres no acepta parámetros vinculados en `SET`).
-- **Soporte offline diferido a Fase 2:** el MVP asume conectividad estable.
+**Trade-offs and implementation decisions:**
+- **Groq Whisper instead of OpenAI `whisper-1`:** Groq was adopted (`whisper-large-v3`, via the OpenAI SDK with a `base_url` override) for its free tier without a card, sufficient for MVP development. Changing providers is config.
+- **SMTP (`aiosmtplib`) instead of Resend:** migrated in US-004 to deliver to any recipient without verifying a domain (Gmail App Password in dev; SES/Mailgun/Brevo in prod). Config-only to change providers.
+- **RLS adds setup complexity:** two DB users (`app_runtime` with forced RLS, `app_admin` with `BYPASSRLS` for Alembic) + `set_config('app.clinic_id', …, true)` per request (`set_config` is used, not `SET LOCAL`, because Postgres does not accept bound parameters in `SET`).
+- **Offline support deferred to Phase 2:** the MVP assumes stable connectivity.
 
-### **2.2. Descripción de componentes principales:**
+### **2.2. Description of main components:**
 
-| Componente | Tecnología | Responsabilidad |
+| Component | Technology | Responsibility |
 |---|---|---|
-| **Frontend** | React 18 + TypeScript, Expo Router + Tamagui, Zustand, TanStack Query, axios | UI web (y móvil compartida), estado local/servidor, grabación de audio (MediaRecorder web) |
-| **Frontend — agenda** | Schedule-X v2 | Vista día/semana, navegación por semana (anclada al lunes), filtro por veterinario, click en turno → reprogramar/cancelar |
-| **Frontend — data grids** | TanStack Table v8 | Listados (usuarios, clientes, mascotas) con orden y filtro |
-| **Backend API** | Python 3.12, FastAPI, Pydantic v2 | REST API con validación, RBAC por rol (JWT), orquestación de servicios IA |
-| **ORM / Migraciones** | SQLAlchemy 2.0 (async), Alembic | Acceso async tipado; migraciones `0001`–`0011`. Migraciones con `app_admin`; queries de la app con `app_runtime` (RLS forzado) |
-| **Worker asíncrono** | ARQ + Redis | Pipeline IA (Groq Whisper → Haiku cleanup → Sonnet extracción → audit en DB) sin bloquear la respuesta HTTP. Crea su propia sesión con `set_config` para RLS |
-| **Tarea programada** | Cron diario de Railway | `python -m app.jobs.send_appointment_reminders` (`0 8 * * *`); también invocable vía endpoint interno con API key |
-| **Base de datos** | PostgreSQL 16 | Multi-tenancy `clinic_id` + RLS, soft delete, JSONB para output IA, tablas append-only de auditoría |
-| **Object Storage** | Supabase Storage (Strategy `supabase`\|`s3`) | Adjuntos clínicos en bucket privado `clinical-attachments` con URLs firmadas (≤ 1h). Facade `StorageService` inyectable y mockeable |
-| **Transcripción** | Groq (`whisper-large-v3`) | Audio → texto, procesado de forma asíncrona vía ARQ |
-| **Estructuración IA** | Anthropic — `claude-haiku-4-5` (cleanup) + `claude-sonnet-4-6` (tool use + Vision a futuro) | Estructuración de la historia clínica vía tool use + schema Pydantic. Prompt caching (`cache_control: ephemeral`). No inventa diagnósticos |
-| **Email** | SMTP vía `aiosmtplib` | Recordatorios de turno y recuperación de contraseña (multipart texto+HTML, timeout 30s, fallos swalloweados anti-enumeración) |
+| **Frontend** | React 18 + TypeScript, Expo Router + Tamagui, Zustand, TanStack Query, axios | Web UI (and shared mobile), local/server state, audio recording (web MediaRecorder) |
+| **Frontend — agenda** | Schedule-X v2 | Day/week view, weekly navigation (anchored to Monday), filter by veterinarian, click an appointment → reschedule/cancel |
+| **Frontend — data grids** | TanStack Table v8 | Listings (users, clients, pets) with sorting and filtering |
+| **Backend API** | Python 3.12, FastAPI, Pydantic v2 | REST API with validation, role-based RBAC (JWT), orchestration of AI services |
+| **ORM / Migrations** | SQLAlchemy 2.0 (async), Alembic | Typed async access; migrations `0001`–`0011`. Migrations with `app_admin`; app queries with `app_runtime` (forced RLS) |
+| **Async worker** | ARQ + Redis | AI pipeline (Groq Whisper → Haiku cleanup → Sonnet extraction → DB audit) without blocking the HTTP response. Creates its own session with `set_config` for RLS |
+| **Scheduled task** | Daily Railway cron | `python -m app.jobs.send_appointment_reminders` (`0 8 * * *`); also invokable via an internal endpoint with an API key |
+| **Database** | PostgreSQL 16 | Multi-tenancy `clinic_id` + RLS, soft delete, JSONB for AI output, append-only audit tables |
+| **Object Storage** | Supabase Storage (Strategy `supabase`\|`s3`) | Clinical attachments in the private bucket `clinical-attachments` with signed URLs (≤ 1h). Injectable and mockable `StorageService` facade |
+| **Transcription** | Groq (`whisper-large-v3`) | Audio → text, processed asynchronously via ARQ |
+| **AI structuring** | Anthropic — `claude-haiku-4-5` (cleanup) + `claude-sonnet-4-6` (tool use + Vision in the future) | Clinical record structuring via tool use + Pydantic schema. Prompt caching (`cache_control: ephemeral`). Does not invent diagnoses |
+| **Email** | SMTP via `aiosmtplib` | Appointment reminders and password recovery (multipart text+HTML, 30s timeout, failures swallowed anti-enumeration) |
 
-### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
+### **2.3. High-level project description and file structure**
 
-Organización monorepo con separación frontend/backend:
+Monorepo organization with frontend/backend separation:
 
 ```
 /
 ├── frontend/                 # Expo + React Native Web
 │   └── src/
-│       ├── app/              # Router (Expo Router): (app) protegido, (auth), rutas públicas
-│       ├── features/         # Módulos por dominio (auth, users, clients, pets,
+│       ├── app/              # Router (Expo Router): (app) protected, (auth), public routes
+│       ├── features/         # Domain modules (auth, users, clients, pets,
 │       │                     #   clinical-records, appointments, vaccinations,
 │       │                     #   ai-assistant, dashboard, …)
-│       ├── shared/           # Componentes Tamagui, hooks y utils reutilizables
-│       ├── services/         # Clientes HTTP por módulo (axios + interceptor JWT/refresh)
-│       └── store/            # Stores de Zustand (persist web/native)
+│       ├── shared/           # Reusable Tamagui components, hooks and utils
+│       ├── services/         # HTTP clients per module (axios + JWT/refresh interceptor)
+│       └── store/            # Zustand stores (persist web/native)
 │
 ├── backend/                  # FastAPI application
 │   └── app/
-│       ├── core/             # Config, security, deps (set_config app.clinic_id para RLS)
+│       ├── core/             # Config, security, deps (set_config app.clinic_id for RLS)
 │       ├── api/v1/endpoints/ # auth, users, clients, pets, appointments,
 │       │                     #   clinical_records, vaccinations, search, ai,
 │       │                     #   reports, audit, internal
-│       ├── models/           # SQLAlchemy 2.0 con Timestamp/SoftDelete/Tenant mixins
+│       ├── models/           # SQLAlchemy 2.0 with Timestamp/SoftDelete/Tenant mixins
 │       ├── schemas/          # Pydantic (request/response + ClinicalRecordExtraction)
-│       ├── crud/             # Operaciones de base de datos
+│       ├── crud/             # Database operations
 │       ├── services/         # ai_service, notification_service, audit_logger, storage
-│       ├── worker/           # ARQ worker (settings + tasks del pipeline IA)
-│       ├── jobs/             # send_appointment_reminders (cron diario)
-│       └── alembic/          # Migraciones 0001–0011
+│       ├── worker/           # ARQ worker (settings + AI pipeline tasks)
+│       ├── jobs/             # send_appointment_reminders (daily cron)
+│       └── alembic/          # Migrations 0001–0011
 │
-├── e2e/                      # Playwright (auth, agenda, flujo IA)
-├── docs/                     # Documentación técnica + changelog/US-XXX.md + prompts
-├── entrega1/ · entrega2/     # Artefactos de las entregas del curso
-├── ia-agents/                # Agentes/skills/rules custom para asistencia de IA
-├── docker-compose.yml        # Entorno de desarrollo local
-└── CLAUDE.md                 # Contexto del proyecto para asistentes de IA
+├── e2e/                      # Playwright (auth, agenda, AI flow)
+├── docs/                     # Technical documentation + changelog/US-XXX.md + prompts
+├── entrega1/ · entrega2/     # Course delivery artifacts
+├── ia-agents/                # Custom agents/skills/rules for AI assistance
+├── docker-compose.yml        # Local development environment
+└── CLAUDE.md                 # Project context for AI assistants
 ```
 
-Patrón: **feature-based** en el frontend, **layered** en el backend (api → services/crud → models). Las capas `services/` y `store/` se comparten directamente entre web y móvil gracias a Expo.
+Pattern: **feature-based** on the frontend, **layered** on the backend (api → services/crud → models). The `services/` and `store/` layers are shared directly between web and mobile thanks to Expo.
 
-### **2.4. Infraestructura y despliegue**
+### **2.4. Infrastructure and deployment**
 
-Todos los servicios se planifican en un único proyecto de **Railway**. El deploy está documentado (`backend/railway.cron.json` define el cron diario) pero aún no configurado; el desarrollo y la validación ocurren en local (Docker Compose).
+All services are planned in a single **Railway** project. The deployment is documented (`backend/railway.cron.json` defines the daily cron) but not yet configured; development and validation happen locally (Docker Compose).
 
 ```mermaid
 flowchart TD
@@ -250,7 +250,7 @@ flowchart TD
     STATIC["Frontend (Static Site)"]
     BACKEND["Backend (Docker — FastAPI)"]
     WORKER["ARQ Worker (Docker)"]
-    CRON["Cron diario (0 8 * * *)"]
+    CRON["Daily cron (0 8 * * *)"]
     PG["PostgreSQL managed"]
     REDIS["Redis managed"]
   end
@@ -263,49 +263,49 @@ flowchart TD
   CRON --> PG
 ```
 
-*Figure 2: Pipeline de infraestructura y despliegue (planificado)*
+*Figure 2: Infrastructure and deployment pipeline (planned)*
 
-| Entorno | Branch | Propósito |
+| Environment | Branch | Purpose |
 |---|---|---|
-| Development | `dev` | Desarrollo activo (Docker Compose local); 24 PRs `feat/us-XXX → dev` |
-| Production | `main` | Clínicas reales (deploy pendiente) |
+| Development | `dev` | Active development (local Docker Compose); 24 PRs `feat/us-XXX → dev` |
+| Production | `main` | Real clinics (deployment pending) |
 
-> **Nota sobre el flujo de git/board:** cada US se desarrolla en `feat/us-XXX` desde `dev`, con un commit por ticket (`feat(db|be|fe):`) y un PR a `dev` (`Closes #N`). El GitHub Project board recorre Todo → In Progress → In Review → Done. Como el PR apunta a `dev` (no a `main`), el `Closes #N` no auto-cierra al mergear a `dev`: el paso a Done es manual.
+> **Note on the git/board flow:** each US is developed on `feat/us-XXX` from `dev`, with one commit per ticket (`feat(db|be|fe):`) and a PR to `dev` (`Closes #N`). The GitHub Project board moves through Todo → In Progress → In Review → Done. Since the PR targets `dev` (not `main`), the `Closes #N` does not auto-close on merge to `dev`: moving to Done is manual.
 
-**Costo estimado mensual (MVP de pocos usuarios):** ~U$ 55–70/mes en Railway-solo (la transcripción usa la capa gratuita de Groq; Claude con prompt caching es marginal a este volumen).
+**Estimated monthly cost (few-user MVP):** ~US$ 55–70/month on Railway-only (transcription uses Groq's free tier; Claude with prompt caching is marginal at this volume).
 
-### **2.5. Seguridad**
+### **2.5. Security**
 
-- **HTTPS obligatorio** (TLS gestionado por Railway en prod).
-- **Autenticación JWT con refresh tokens:** access token de corta duración firmado con HMAC; refresh tokens en Redis con rotación. Payload: `{ user_id, clinic_id, role, exp }`. Índice inverso `user_refresh:{user_id}` para revocar todas las sesiones de un usuario al recuperar contraseña.
-- **Multi-tenancy con defensa en profundidad:** filtro por `clinic_id` en cada query **+ PostgreSQL Row-Level Security**. La sesión ejecuta `SELECT set_config('app.clinic_id', :cid, true)` al abrirse; las policies filtran por `current_setting('app.clinic_id')::uuid`. El usuario `app_runtime` tiene `FORCE ROW LEVEL SECURITY`.
-- **Anti-enumeración:** `forgot-password` siempre responde 200; login corre bcrypt contra un hash dummy si el usuario no existe (cierra el timing-oracle); accesos cruzados a recursos de otra clínica devuelven 404, no 403.
-- **Rate limiting / headers de seguridad:** planificados como middleware en FastAPI.
-- **Cifrado en reposo** (Postgres + Storage managed) y **URLs de archivos firmadas** (≤ 1h) para adjuntos.
-- **Soft delete:** los registros clínicos nunca se eliminan físicamente. Excepción: los turnos se cancelan como cambio de estado (`status='cancelled'` + `cancelled_at`/`cancelled_by`/`cancellation_reason`), no con `deleted_at`, para liberar el horario.
-- **Auditoría completa:**
-  - `audit_log` registra todas las mutaciones (create/update/delete/restore + acciones explícitas como `status_change`, `attachment_added`) sobre tablas tenant-scoped, vía event listener de SQLAlchemy `after_flush`. Diff old/new en JSONB.
-  - `clinical_record_access_log` registra cada lectura individual de una historia clínica.
-  - **Append-only enforced en DB:** `REVOKE UPDATE, DELETE … FROM app_runtime`.
-- **Auditoría de IA:** toda interacción con Whisper y Claude se almacena en `clinical_records_ai` (input, transcripción, prompt completo, schema, output estructurado, modelo, tokens de cache, tiempo). Tabla append-only.
+- **Mandatory HTTPS** (TLS managed by Railway in prod).
+- **JWT authentication with refresh tokens:** short-lived access token signed with HMAC; refresh tokens in Redis with rotation. Payload: `{ user_id, clinic_id, role, exp }`. Reverse index `user_refresh:{user_id}` to revoke all of a user's sessions on password recovery.
+- **Multi-tenancy with defense in depth:** filter by `clinic_id` in every query **+ PostgreSQL Row-Level Security**. The session runs `SELECT set_config('app.clinic_id', :cid, true)` on opening; the policies filter by `current_setting('app.clinic_id')::uuid`. The `app_runtime` user has `FORCE ROW LEVEL SECURITY`.
+- **Anti-enumeration:** `forgot-password` always responds 200; login runs bcrypt against a dummy hash if the user does not exist (closes the timing oracle); cross accesses to another clinic's resources return 404, not 403.
+- **Rate limiting / security headers:** planned as FastAPI middleware.
+- **Encryption at rest** (managed Postgres + Storage) and **signed file URLs** (≤ 1h) for attachments.
+- **Soft delete:** clinical records are never physically deleted. Exception: appointments are cancelled as a state change (`status='cancelled'` + `cancelled_at`/`cancelled_by`/`cancellation_reason`), not with `deleted_at`, to free the slot.
+- **Full audit:**
+  - `audit_log` records all mutations (create/update/delete/restore + explicit actions like `status_change`, `attachment_added`) on tenant-scoped tables, via the SQLAlchemy `after_flush` event listener. Old/new diff in JSONB.
+  - `clinical_record_access_log` records each individual read of a clinical record.
+  - **Append-only enforced in DB:** `REVOKE UPDATE, DELETE … FROM app_runtime`.
+- **AI audit:** every interaction with Whisper and Claude is stored in `clinical_records_ai` (input, transcription, full prompt, schema, structured output, model, cache tokens, time). Append-only table.
 
 ### **2.6. Tests**
 
-| Tipo | Tecnología | Cobertura |
+| Type | Technology | Coverage |
 |---|---|---|
-| **Unitarios + integración (backend)** | pytest + pytest-asyncio (engine aiosqlite, rollback por test, `AsyncClient`) | Endpoints, CRUD, RLS, migraciones, append-only. Suite > 570 tests al cierre de US-010 |
-| **Snapshot del prompt IA** | syrupy | Bloquea el merge si el system prompt o el schema enviado a Claude cambian sin actualizar el snapshot |
-| **Aislamiento multi-tenant + append-only** | pytest (suite custom) | Verifica aislamiento entre clínicas y que `UPDATE`/`DELETE` sobre `audit_log` desde `app_runtime` falle con error de permisos de Postgres |
-| **Frontend** | Jest + React Native Testing Library (mock de Tamagui/Expo Router/Zustand/TanStack Query) | Componentes, hooks, formularios, máscaras de entrada. Suite > 400 tests |
-| **E2E del flujo crítico** | Playwright (chromium) | Registro, login (redirección por rol + persistencia), agenda (ver/togglear/filtrar/crear turno), flujo IA |
+| **Unit + integration (backend)** | pytest + pytest-asyncio (aiosqlite engine, rollback per test, `AsyncClient`) | Endpoints, CRUD, RLS, migrations, append-only. Suite > 570 tests at the close of US-010 |
+| **AI prompt snapshot** | syrupy | Blocks the merge if the system prompt or the schema sent to Claude changes without updating the snapshot |
+| **Multi-tenant isolation + append-only** | pytest (custom suite) | Verifies isolation between clinics and that `UPDATE`/`DELETE` on `audit_log` from `app_runtime` fails with a Postgres permission error |
+| **Frontend** | Jest + React Native Testing Library (mocking Tamagui/Expo Router/Zustand/TanStack Query) | Components, hooks, forms, input masks. Suite > 400 tests |
+| **E2E of the critical flow** | Playwright (chromium) | Registration, login (role-based redirection + persistence), agenda (view/toggle/filter/create appointment), AI flow |
 
 ---
 
-## 3. Modelo de Datos
+## 3. Data Model
 
-### **3.1. Diagrama del modelo de datos:**
+### **3.1. Data model diagram:**
 
-Todas las entidades están implementadas vía migraciones Alembic `0001`–`0011`, con `clinic_id` + RLS forzada en las tablas tenant-scoped.
+All entities are implemented via Alembic migrations `0001`–`0011`, with `clinic_id` + forced RLS on tenant-scoped tables.
 
 ```mermaid
 erDiagram
@@ -356,8 +356,8 @@ erDiagram
     string phone
     text address
     text notes
-    boolean portal_enabled "Fase 1.5"
-    string password_hash "Fase 1.5"
+    boolean portal_enabled "Phase 1.5"
+    string password_hash "Phase 1.5"
     timestamptz deleted_at
   }
 
@@ -366,7 +366,7 @@ erDiagram
     uuid clinic_id FK
     uuid client_id FK
     string name
-    string species "texto libre"
+    string species "free text"
     string breed
     date birthdate
     string sex
@@ -408,8 +408,8 @@ erDiagram
     uuid created_by FK
     text consultation_reason
     text symptoms
-    text diagnosis "vet (manual o dictado a la IA)"
-    text treatment "vet (manual o dictado a la IA)"
+    text diagnosis "vet (manual or dictated to the AI)"
+    text treatment "vet (manual or dictated to the AI)"
     text medication
     decimal weight_kg
     decimal temperature_c
@@ -420,7 +420,7 @@ erDiagram
     uuid id PK
     uuid clinic_id FK
     uuid clinical_record_id FK
-    text file_url "storage key canónico"
+    text file_url "canonical storage key"
     string file_name
     string file_type
     int file_size_bytes
@@ -464,7 +464,7 @@ erDiagram
     string action "create | update | delete | status_change | attachment_added"
     uuid changed_by_user_id
     inet actor_ip
-    jsonb changes "diff old/new"
+    jsonb changes "old/new diff"
     timestamptz changed_at
   }
 
@@ -480,43 +480,43 @@ erDiagram
   }
 ```
 
-*Figure 3: Diagrama ER del modelo de datos del MVP implementado (Fase 1) + campos de Portal del Cliente en `clients` reservados para Fase 1.5*
+*Figure 3: ER diagram of the implemented MVP data model (Phase 1) + Client Portal fields in `clients` reserved for Phase 1.5*
 
-### **3.2. Descripción de entidades principales:**
+### **3.2. Description of main entities:**
 
-**Convenciones globales:** UUID como PK; `created_at`/`updated_at` en todas las tablas; soft delete con `deleted_at` en modelos clínicos y de negocio (excepto `appointments`, que usa cambio de estado); `clinic_id` con RLS habilitado en cada tabla tenant-scoped.
+**Global conventions:** UUID as PK; `created_at`/`updated_at` on all tables; soft delete with `deleted_at` on clinical and business models (except `appointments`, which uses a state change); `clinic_id` with RLS enabled on each tenant-scoped table.
 
-- **`clinics`** — entidad raíz del multi-tenancy. Incluye `timezone` (IANA) para localizar la hora de los recordatorios.
-- **`users`** — staff (Admin/Vet/Reception) con JWT propio; email único por clínica; `last_login_at`.
-- **`clients`** — dueños de mascotas. Los campos de Portal (`portal_enabled`, `password_hash`…) están reservados para Fase 1.5.
-- **`pets`** — pacientes; `species` es texto libre (selector con opción "Otro"); `neutered` boolean.
-- **`appointments`** — turnos; índice para detección de solapamiento; cancelación lógica (`status='cancelled'` + campos asociados) que libera el horario (`has_overlap` y el listado filtran `status != 'cancelled'`).
-- **`clinical_records`** — núcleo del sistema; soft delete; editable (auditado), una historia activa por turno (guard 409).
-- **`clinical_records_ai`** — auditoría append-only del pipeline IA (input, transcripción, prompt, schema, output, modelo, tokens de cache, tiempo).
-- **`clinical_attachments`** — adjuntos (tenant-scoped + RLS); `file_url` es la storage key canónica; la signed URL se resuelve por respuesta.
-- **`vaccinations`** — vacunas aplicadas con próxima fecha; vínculo opcional a una consulta.
-- **`appointment_notifications`** — sin `clinic_id` (aislamiento vía `appointment_id`); índice UNIQUE parcial `(appointment_id, trigger_hours_before) WHERE status='sent'` para idempotencia.
-- **`audit_log` / `clinical_record_access_log`** — append-only enforced en motor (`REVOKE UPDATE, DELETE`); retención 7 años + anonimización ante derecho al olvido.
+- **`clinics`** — multi-tenancy root entity. Includes `timezone` (IANA) to localize the reminder time.
+- **`users`** — staff (Admin/Vet/Reception) with their own JWT; unique email per clinic; `last_login_at`.
+- **`clients`** — pet owners. The Portal fields (`portal_enabled`, `password_hash`…) are reserved for Phase 1.5.
+- **`pets`** — patients; `species` is free text (selector with an "Other" option); `neutered` boolean.
+- **`appointments`** — appointments; index for overlap detection; logical cancellation (`status='cancelled'` + associated fields) that frees the slot (`has_overlap` and the listing filter `status != 'cancelled'`).
+- **`clinical_records`** — system core; soft delete; editable (audited), one active record per appointment (409 guard).
+- **`clinical_records_ai`** — append-only audit of the AI pipeline (input, transcription, prompt, schema, output, model, cache tokens, time).
+- **`clinical_attachments`** — attachments (tenant-scoped + RLS); `file_url` is the canonical storage key; the signed URL is resolved per response.
+- **`vaccinations`** — applied vaccines with the next date; optional link to a consultation.
+- **`appointment_notifications`** — without `clinic_id` (isolation via `appointment_id`); partial UNIQUE index `(appointment_id, trigger_hours_before) WHERE status='sent'` for idempotency.
+- **`audit_log` / `clinical_record_access_log`** — append-only enforced at the engine (`REVOKE UPDATE, DELETE`); 7-year retention + anonymization on right-to-be-forgotten.
 
-> **Entidades de Fase 2** (no implementadas): `services`, `payments`, `inventory_items`.
+> **Phase 2 entities** (not implemented): `services`, `payments`, `inventory_items`.
 
 ---
 
-## 4. Especificación de la API
+## 4. API Specification
 
-Endpoints implementados (selección representativa). Todos requieren JWT con `clinic_id` salvo los públicos (`/auth/*`, landing de turno) y el interno (API key). Multi-tenancy reforzada con RLS.
+Implemented endpoints (representative selection). All require a JWT with `clinic_id` except the public ones (`/auth/*`, appointment landing) and the internal one (API key). Multi-tenancy reinforced with RLS.
 
-**Autenticación** — `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`, `POST /auth/forgot-password`, `POST /auth/reset-password`.
+**Authentication** — `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`, `POST /auth/forgot-password`, `POST /auth/reset-password`.
 
-**Staff / Clientes / Mascotas** — `GET/POST/PATCH/DELETE /users`, `GET/POST/PUT/DELETE /clients`, `GET /pets`, `GET /pets/{id}` (perfil agregado), `POST /clients/{client_id}/pets`, `GET /search?q=`.
+**Staff / Clients / Pets** — `GET/POST/PATCH/DELETE /users`, `GET/POST/PUT/DELETE /clients`, `GET /pets`, `GET /pets/{id}` (aggregated profile), `POST /clients/{client_id}/pets`, `GET /search?q=`.
 
-**Agenda** — `GET /appointments?date=&view=day|week&vet_id=`, `POST /appointments` (409 por solapamiento), `PATCH /appointments/{id}` (reprogramar), `DELETE /appointments/{id}` (cancelar lógico), `PATCH /appointments/{id}/status` (marcar atendido), `GET /appointments/{id}/notifications`.
+**Agenda** — `GET /appointments?date=&view=day|week&vet_id=`, `POST /appointments` (409 on overlap), `PATCH /appointments/{id}` (reschedule), `DELETE /appointments/{id}` (logical cancel), `PATCH /appointments/{id}/status` (mark attended), `GET /appointments/{id}/notifications`.
 
-**Historia clínica** — `GET /pets/{id}/clinical-records` (paginado), `POST /clinical-records`, `GET /clinical-records/{id}`, `PATCH /clinical-records/{id}`, `DELETE /clinical-records/{id}`, `GET /clinical-records/by-appointment/{appointment_id}`, `POST/GET /clinical-records/{id}/attachments`, `DELETE /clinical-records/{id}/attachments/{attachment_id}`.
+**Clinical record** — `GET /pets/{id}/clinical-records` (paginated), `POST /clinical-records`, `GET /clinical-records/{id}`, `PATCH /clinical-records/{id}`, `DELETE /clinical-records/{id}`, `GET /clinical-records/by-appointment/{appointment_id}`, `POST/GET /clinical-records/{id}/attachments`, `DELETE /clinical-records/{id}/attachments/{attachment_id}`.
 
-**Vacunación** — `POST/GET /pets/{pet_id}/vaccinations`.
+**Vaccination** — `POST/GET /pets/{pet_id}/vaccinations`.
 
-**Asistente IA** (flujo diferenciador):
+**AI Assistant** (differentiating flow):
 
 ```yaml
 openapi: 3.1.0
@@ -526,37 +526,37 @@ info:
 paths:
   /ai/transcribe-voice:
     post:
-      summary: Encolar transcripción de una grabación de voz
+      summary: Enqueue transcription of a voice recording
       description: |
-        Recibe el audio grabado, valida formato/tamaño (≤ 20 MB) y encola una tarea ARQ
-        (Groq Whisper → Claude Haiku cleanup → Claude Sonnet tool use). Retorna un task_id
-        para polling. Rol vet/admin.
+        Receives the recorded audio, validates format/size (≤ 20 MB) and enqueues an ARQ task
+        (Groq Whisper → Claude Haiku cleanup → Claude Sonnet tool use). Returns a task_id
+        for polling. Role vet/admin.
       security: [{ bearerAuth: [] }]
       responses:
-        '202': { description: "Tarea encolada — { task_id, status: pending }" }
+        '202': { description: "Task enqueued — { task_id, status: pending }" }
         '413': { description: "Audio > 20 MB" }
-        '403': { description: "Rol distinto de vet o admin" }
+        '403': { description: "Role other than vet or admin" }
 
   /ai/transcribe-upload:
     post:
-      summary: Subir un archivo de audio externo para pre-llenado IA
+      summary: Upload an external audio file for AI pre-fill
       description: |
-        Igual al pipeline de transcribe-voice pero acepta un archivo subido
-        (MP3/MP4/WAV/M4A/WebM/AAC; valida MIME con fallback a extensión).
-        input_type="upload" en clinical_records_ai.
+        Same as the transcribe-voice pipeline but accepts an uploaded file
+        (MP3/MP4/WAV/M4A/WebM/AAC; validates MIME with fallback to extension).
+        input_type="upload" in clinical_records_ai.
       security: [{ bearerAuth: [] }]
       responses:
-        '202': { description: "Tarea encolada" }
-        '413': { description: "Archivo > 20 MB" }
-        '422': { description: "Formato no soportado / archivo vacío / pet_id inválido" }
+        '202': { description: "Task enqueued" }
+        '413': { description: "File > 20 MB" }
+        '422': { description: "Unsupported format / empty file / invalid pet_id" }
 
   /ai/tasks/{task_id}:
     get:
-      summary: Polling del resultado del pipeline IA
+      summary: Poll the AI pipeline result
       security: [{ bearerAuth: [] }]
       responses:
         '200':
-          description: Estado de la tarea
+          description: Task status
           content:
             application/json:
               schema:
@@ -571,23 +571,23 @@ paths:
                       weight_kg: { type: number, nullable: true }
                       temperature_c: { type: number, nullable: true }
                       referred_medication: { type: string, nullable: true }
-                      diagnosis: { type: string, nullable: true, description: "Solo si el vet lo dicta explícitamente; nunca inventado" }
-                      treatment: { type: string, nullable: true, description: "Solo si el vet lo dicta explícitamente; nunca inventado" }
+                      diagnosis: { type: string, nullable: true, description: "Only if the vet dictates it explicitly; never invented" }
+                      treatment: { type: string, nullable: true, description: "Only if the vet dictates it explicitly; never invented" }
                   model_used: { type: string }
                   error: { type: string, nullable: true }
 
   /clinical-records:
     post:
-      summary: Crear historia clínica
+      summary: Create clinical record
       description: |
-        Persiste la historia validada por el veterinario. Si trae appointment_id y el turno
-        está 'pending', lo transiciona a 'attended' (idempotente). El listener de SQLAlchemy
-        registra el insert en audit_log automáticamente. 409 si el turno ya tiene historia activa.
+        Persists the record validated by the veterinarian. If it carries an appointment_id and the
+        appointment is 'pending', it transitions it to 'attended' (idempotent). The SQLAlchemy listener
+        records the insert in audit_log automatically. 409 if the appointment already has an active record.
       security: [{ bearerAuth: [] }]
       responses:
-        '201': { description: Creada }
-        '409': { description: "El turno ya tiene una historia clínica activa" }
-        '403': { description: "Rol distinto de vet o admin" }
+        '201': { description: Created }
+        '409': { description: "The appointment already has an active clinical record" }
+        '403': { description: "Role other than vet or admin" }
 
 components:
   securitySchemes:
@@ -596,154 +596,154 @@ components:
 
 ---
 
-## 5. Historias de Usuario
+## 5. User Stories
 
-**Historia de Usuario 1 — Historia Clínica Asistida por IA (US-013, implementada)**
+**User Story 1 — AI-Assisted Clinical Record (US-013, implemented)**
 
-Como Veterinario, quiero grabar una nota de voz durante o después de la consulta y que la app **complete los campos predefinidos de la historia clínica** a partir de lo dictado, para reducir el tiempo de escritura administrativa.
+As a Veterinarian, I want to record a voice note during or after the consultation and have the app **fill in the predefined fields of the clinical record** from what is dictated, in order to reduce administrative writing time.
 
-**Criterios de aceptación (verificados):**
-- Inicio/detengo la grabación desde la app (MediaRecorder web); veo un indicador de procesamiento.
-- Recibo pre-completados: motivo, síntomas, peso, temperatura y medicación referida.
-- Diagnóstico y tratamiento se completan **solo si los dicté explícitamente**; la IA nunca los inventa (se distingue `referred_medication` —lo que el dueño ya dio— de `treatment` —lo que indica el vet—).
-- Puedo editar cualquier campo antes de guardar; si el procesamiento falla (timeout > 30s) completo el formulario manualmente.
-- El registro y la interacción IA quedan auditados en `clinical_records_ai`.
-
----
-
-**Historia de Usuario 2 — Agenda multi-veterinario sin solapamientos (US-017/018/019, implementada)**
-
-Como Recepcionista o Veterinario, quiero crear, reprogramar y cancelar turnos asignados a una mascota y un veterinario, para organizar la agenda sin solapamientos.
-
-**Criterios de aceptación (verificados):**
-- Selecciono mascota (búsqueda por nombre), veterinario, fecha y hora; el sistema detecta solapamiento (HTTP 409).
-- El turno aparece en la agenda Schedule-X (día/semana, filtrable por vet, en español, anclada al lunes).
-- Click en un turno pendiente abre reprogramar (re-valida disponibilidad) o cancelar (motivo opcional). La cancelación libera el horario (re-bookeable).
+**Acceptance criteria (verified):**
+- I start/stop the recording from the app (web MediaRecorder); I see a processing indicator.
+- I receive pre-filled: reason, symptoms, weight, temperature and referred medication.
+- Diagnosis and treatment are filled in **only if I dictated them explicitly**; the AI never invents them (it distinguishes `referred_medication` —what the owner already gave— from `treatment` —what the vet indicates—).
+- I can edit any field before saving; if processing fails (timeout > 30s) I complete the form manually.
+- The record and the AI interaction are audited in `clinical_records_ai`.
 
 ---
 
-**Historia de Usuario 3 — Adjuntar imágenes y archivos a una consulta (US-010, implementada)**
+**User Story 2 — Multi-veterinarian agenda without overlaps (US-017/018/019, implemented)**
 
-Como Veterinario, quiero adjuntar imágenes o PDFs a una consulta y verlos al reabrirla, para documentar estudios y evidencias.
+As a Receptionist or Veterinarian, I want to create, reschedule and cancel appointments assigned to a pet and a veterinarian, in order to organize the agenda without overlaps.
 
-**Criterios de aceptación (verificados):**
-- Adjunto archivos (JPEG/PNG/PDF, ≤ 20 MB, máx. 10); el lote se valida completo antes de subir nada (sin archivos huérfanos).
-- Los archivos se almacenan en Supabase Storage (bucket privado) y se sirven con URL firmada de corta vida.
-- Al reabrir la consulta veo la grilla de miniaturas; al hacer click se abre el archivo en una pestaña nueva. Borrado por adjunto (soft delete auditado).
-
----
-
-## 6. Tickets de Trabajo
-
-Tres tickets representativos del MVP implementado (backend, frontend y base de datos), con sus commits reales sobre `dev`.
+**Acceptance criteria (verified):**
+- I select a pet (search by name), veterinarian, date and time; the system detects overlap (HTTP 409).
+- The appointment appears in the Schedule-X agenda (day/week, filterable by vet, in Spanish, anchored to Monday).
+- Clicking a pending appointment opens reschedule (re-validates availability) or cancel (optional reason). Cancellation frees the slot (re-bookable).
 
 ---
 
-### Ticket 1 — Backend · `US-013-BE` (#323) · Talla: M · commit `5a4a45e`
+**User Story 3 — Attach images and files to a consultation (US-010, implemented)**
 
-**Título:** Endpoint de transcripción de voz con pipeline IA asíncrono
+As a Veterinarian, I want to attach images or PDFs to a consultation and see them when reopening it, in order to document studies and evidence.
 
-**Descripción técnica:** `POST /ai/transcribe-voice` recibe el audio, valida formato/tamaño y encola una tarea ARQ devolviendo `{ task_id, status: "pending" }` (202); el resultado se recupera con `GET /ai/tasks/{task_id}`. La tarea ARQ ejecuta, en secuencia: (1) transcripción con **Groq Whisper `whisper-large-v3`** (SDK de OpenAI con `base_url` override); (2) limpieza con **`claude-haiku-4-5`**; (3) extracción estructurada con **`claude-sonnet-4-6`** (tool use + schema Pydantic `ClinicalRecordExtraction`, `cache_control: ephemeral`); (4) auditoría: inserta una fila en `clinical_records_ai`. El worker crea su propia sesión con `set_config('app.clinic_id', …, true)` para respetar RLS sin contexto JWT.
+**Acceptance criteria (verified):**
+- I attach files (JPEG/PNG/PDF, ≤ 20 MB, max 10); the batch is fully validated before uploading anything (no orphan files).
+- Files are stored in Supabase Storage (private bucket) and served with a short-lived signed URL.
+- On reopening the consultation I see the thumbnail grid; clicking opens the file in a new tab. Per-attachment deletion (audited soft delete).
+
+---
+
+## 6. Work Tickets
+
+Three representative tickets of the implemented MVP (backend, frontend and database), with their real commits onto `dev`.
+
+---
+
+### Ticket 1 — Backend · `US-013-BE` (#323) · Size: M · commit `5a4a45e`
+
+**Title:** Voice transcription endpoint with asynchronous AI pipeline
+
+**Technical description:** `POST /ai/transcribe-voice` receives the audio, validates format/size and enqueues an ARQ task returning `{ task_id, status: "pending" }` (202); the result is retrieved with `GET /ai/tasks/{task_id}`. The ARQ task runs, in sequence: (1) transcription with **Groq Whisper `whisper-large-v3`** (OpenAI SDK with a `base_url` override); (2) cleanup with **`claude-haiku-4-5`**; (3) structured extraction with **`claude-sonnet-4-6`** (tool use + Pydantic `ClinicalRecordExtraction` schema, `cache_control: ephemeral`); (4) audit: inserts a row in `clinical_records_ai`. The worker creates its own session with `set_config('app.clinic_id', …, true)` to respect RLS without a JWT context.
 
 **Stack:** FastAPI · ARQ + Redis · Groq Whisper · Claude (haiku-4-5 + sonnet-4-6) · Pydantic v2 · pytest + syrupy.
 
-**Criterios de aceptación (BDD):**
-- *Happy path:* vet/admin envía audio válido → 202 + task_id; `GET /ai/tasks/{id}` → `status: "completed"` con los campos extraídos; fila en `clinical_records_ai`.
-- *Audio sin datos clínicos:* `completed` con campos `null`/vacíos; sin excepción; output vacío auditado.
-- *Timeout (> 30s):* `status: "failed"` con mensaje de fallback manual; sin reintento automático.
+**Acceptance criteria (BDD):**
+- *Happy path:* vet/admin sends valid audio → 202 + task_id; `GET /ai/tasks/{id}` → `status: "completed"` with the extracted fields; row in `clinical_records_ai`.
+- *Audio without clinical data:* `completed` with `null`/empty fields; no exception; empty output audited.
+- *Timeout (> 30s):* `status: "failed"` with a manual fallback message; no automatic retry.
 
-**Notas de implementación reales:** se requirió subir el SDK de `anthropic==0.34.2` a `0.111.0` y corregir los model IDs (`claude-haiku-4-5-20251001`, `claude-sonnet-4-6`); se pasó `api_key` explícito al cliente Anthropic porque el worker no heredaba el entorno. El prompt se ajustó para extraer diagnosis/treatment cuando el vet los dicta (sin forzarlos a `None`).
+**Real implementation notes:** it was necessary to bump the `anthropic` SDK from `0.34.2` to `0.111.0` and correct the model IDs (`claude-haiku-4-5-20251001`, `claude-sonnet-4-6`); an explicit `api_key` was passed to the Anthropic client because the worker did not inherit the environment. The prompt was adjusted to extract diagnosis/treatment when the vet dictates them (without forcing them to `None`).
 
-**INVEST:** I✅ N✅ V✅ E✅ S✅ T✅ · Dependencias: US-013-DB (#325), US-013-AI (#326).
-
----
-
-### Ticket 2 — Frontend · `US-013-FE` (#324) · Talla: M · commit `39d5ea9`
-
-**Título:** Grabación de voz con polling y pre-llenado de campos clínicos
-
-**Descripción técnica:** dentro de `frontend/src/features/ai-assistant/`: `VoiceRecorder.tsx` (MediaRecorder web-only con `Platform.OS` guard, estados grabar/detener/procesando, spinner, disclaimer y error con fallback); `useVoiceTranscription.ts` (hook con polling cada 2s, timeout 30s y mapeo de los 6 campos al formulario); integración en `ClinicalRecordFormModal.tsx` (solo modo create). Validación con Zod antes de `POST /clinical-records`.
-
-**Stack:** Expo Router · Tamagui (tokens Clinical Serenity) · TanStack Query · Zustand · Zod · MediaRecorder.
-
-**Criterios de aceptación (BDD):**
-- *Happy path:* grabar → detener → `completed` < 30s → se pre-llenan motivo/síntomas/peso/temperatura/medicación (y diagnóstico/tratamiento si fueron dictados); disclaimer visible; todo editable.
-- *Extracción parcial:* los campos no extraídos quedan con placeholder vacío (no "null"), completables sin marcar error.
-- *Timeout/error:* mensaje de fallback y formulario habilitado para entrada manual; botón de grabación disponible para reintentar.
-
-**Notas reales:** durante el testing se corrigieron warnings de props de accesibilidad filtradas al DOM (`accessibilityRole`/`accessibilityState` solo-native) y la invalidación de queries al guardar (`useCreateClinicalRecord` ahora invalida también `["appointments"]` y la consulta por turno).
-
-**INVEST:** I✅ N✅ V✅ E✅ S✅ T✅ · Dependencias: US-013-BE.
+**INVEST:** I✅ N✅ V✅ E✅ S✅ T✅ · Dependencies: US-013-DB (#325), US-013-AI (#326).
 
 ---
 
-### Ticket 3 — Base de datos · `US-009-DB` (dentro de #315) · Talla: M · commit `9b9ed5f`
+### Ticket 2 — Frontend · `US-013-FE` (#324) · Size: M · commit `39d5ea9`
 
-**Título:** Tabla `audit_log` append-only con REVOKE y listener SQLAlchemy automático
+**Title:** Voice recording with polling and clinical field pre-fill
 
-**Descripción técnica:** migración `0005_clinical_records_and_audit_log.py` que crea `clinical_records` y `audit_log` (índices + RLS forzada + grants, incluyendo `REVOKE UPDATE, DELETE ON audit_log FROM app_runtime`) y registra el listener genérico `setup_audit_listener` (`after_flush`, anti-recursión, snapshot en `create` / diff en `update`). El listener es transparente: ningún endpoint lo llama explícitamente. Acciones específicas (`status_change`, `attachment_added`) se anotan suprimiendo la fila genérica vía `session.info["audit_skip"]`.
+**Technical description:** inside `frontend/src/features/ai-assistant/`: `VoiceRecorder.tsx` (web-only MediaRecorder with a `Platform.OS` guard, record/stop/processing states, spinner, disclaimer and error with fallback); `useVoiceTranscription.ts` (hook with polling every 2s, 30s timeout and mapping of the 6 fields to the form); integration in `ClinicalRecordFormModal.tsx` (create mode only). Validation with Zod before `POST /clinical-records`.
+
+**Stack:** Expo Router · Tamagui (Clinical Serenity tokens) · TanStack Query · Zustand · Zod · MediaRecorder.
+
+**Acceptance criteria (BDD):**
+- *Happy path:* record → stop → `completed` < 30s → reason/symptoms/weight/temperature/medication are pre-filled (and diagnosis/treatment if they were dictated); disclaimer visible; everything editable.
+- *Partial extraction:* the non-extracted fields stay with an empty placeholder (not "null"), completable without marking an error.
+- *Timeout/error:* fallback message and the form enabled for manual entry; record button available to retry.
+
+**Real notes:** during testing, accessibility prop warnings leaked to the DOM were fixed (`accessibilityRole`/`accessibilityState` native-only) and query invalidation on save (`useCreateClinicalRecord` now also invalidates `["appointments"]` and the by-appointment query).
+
+**INVEST:** I✅ N✅ V✅ E✅ S✅ T✅ · Dependencies: US-013-BE.
+
+---
+
+### Ticket 3 — Database · `US-009-DB` (within #315) · Size: M · commit `9b9ed5f`
+
+**Title:** Append-only `audit_log` table with REVOKE and an automatic SQLAlchemy listener
+
+**Technical description:** migration `0005_clinical_records_and_audit_log.py` that creates `clinical_records` and `audit_log` (indexes + forced RLS + grants, including `REVOKE UPDATE, DELETE ON audit_log FROM app_runtime`) and registers the generic listener `setup_audit_listener` (`after_flush`, anti-recursion, snapshot on `create` / diff on `update`). The listener is transparent: no endpoint calls it explicitly. Specific actions (`status_change`, `attachment_added`) are annotated by suppressing the generic row via `session.info["audit_skip"]`.
 
 **Stack:** PostgreSQL 16 · Alembic · SQLAlchemy 2.0 async · pytest.
 
-**Criterios de aceptación (BDD):**
-- *Mutación auditada:* al hacer flush de un update sobre `clinical_records`, se inserta una fila en `audit_log` con `table_name`, `record_id`, `action`, `changed_by_user_id` y diff JSONB; sin llamada explícita.
-- *Append-only garantizado:* `UPDATE`/`DELETE` sobre `audit_log` desde `app_runtime` → `permission denied`; test bloqueante.
-- *Rendimiento:* las queries de auditoría usan índice compuesto.
+**Acceptance criteria (BDD):**
+- *Audited mutation:* when flushing an update on `clinical_records`, a row is inserted in `audit_log` with `table_name`, `record_id`, `action`, `changed_by_user_id` and JSONB diff; without an explicit call.
+- *Append-only guaranteed:* `UPDATE`/`DELETE` on `audit_log` from `app_runtime` → `permission denied`; blocking test.
+- *Performance:* the audit queries use a composite index.
 
-**Notas reales:** durante el QA se detectó que `audit_log.actor_ip` estaba tipado `String(45)` en el modelo pero la migración lo crea como `INET` en Postgres → toda escritura tenant-scoped daba 500 (no detectado por SQLite); fix: `INET().with_variant(String(45), "sqlite")` (commit `3e9ddd1`).
+**Real notes:** during QA it was found that `audit_log.actor_ip` was typed `String(45)` in the model but the migration creates it as `INET` in Postgres → every tenant-scoped write returned 500 (not caught by SQLite); fix: `INET().with_variant(String(45), "sqlite")` (commit `3e9ddd1`).
 
-**INVEST:** I✅ N✅ V✅ E✅ S✅ T✅ · Dependencias: roles `app_runtime`/`app_admin` (US-001-DB).
+**INVEST:** I✅ N✅ V✅ E✅ S✅ T✅ · Dependencies: `app_runtime`/`app_admin` roles (US-001-DB).
 
 ---
 
 ## 7. Pull Requests
 
-El desarrollo del MVP se hizo con un PR por User Story sobre la rama `dev` (24 PRs, `feat/us-XXX → dev`, un commit por ticket). A continuación, tres PRs representativos del flujo diferenciador; la lista completa está debajo.
+MVP development was done with one PR per User Story onto the `dev` branch (24 PRs, `feat/us-XXX → dev`, one commit per ticket). Below, three representative PRs of the differentiating flow; the full list is below.
 
-**Pull Request 1 — US-013 Asistente IA: voz → campos clínicos (PR #415)**
+**Pull Request 1 — US-013 AI Assistant: voice → clinical fields (PR #415)**
 
-- **Branch:** `feat/us-013` → `dev` *(mergeado, commit `60fdf33`)*
-- **Contenido:** pipeline IA completo end-to-end. DB (`0011_clinical_records_ai` append-only), AI (schema `ClinicalRecordExtraction` + system prompt + snapshots syrupy), BE (`POST /ai/transcribe-voice`, `GET /ai/tasks/{id}`, tarea ARQ Groq Whisper → Haiku → Sonnet), FE (`VoiceRecorder` + `useVoiceTranscription` + integración al modal). Incluye el ajuste del prompt para extraer diagnóstico/tratamiento cuando el vet los dicta.
+- **Branch:** `feat/us-013` → `dev` *(merged, commit `60fdf33`)*
+- **Content:** complete end-to-end AI pipeline. DB (`0011_clinical_records_ai` append-only), AI (`ClinicalRecordExtraction` schema + system prompt + syrupy snapshots), BE (`POST /ai/transcribe-voice`, `GET /ai/tasks/{id}`, ARQ task Groq Whisper → Haiku → Sonnet), FE (`VoiceRecorder` + `useVoiceTranscription` + integration into the modal). Includes the prompt adjustment to extract diagnosis/treatment when the vet dictates them.
 
-**Pull Request 2 — US-018 Agenda diaria/semanal (PR #396)**
+**Pull Request 2 — US-018 Daily/weekly agenda (PR #396)**
 
-- **Branch:** `feat/us-018` → `dev` *(mergeado, commit `752a28a`)*
-- **Contenido:** `GET /appointments?date=&view=&vet_id=` (sin N+1) + pantalla `(app)/agenda.tsx` con Schedule-X v2 (español, navegación por semana anclada al lunes, filtro por vet, botón "Nuevo turno"). Integra la búsqueda global como selector de mascota. Incluye `frontend/.npmrc` (`legacy-peer-deps=true`) para resolver el ERESOLVE de `@schedule-x/react` en CI.
+- **Branch:** `feat/us-018` → `dev` *(merged, commit `752a28a`)*
+- **Content:** `GET /appointments?date=&view=&vet_id=` (without N+1) + screen `(app)/agenda.tsx` with Schedule-X v2 (Spanish, weekly navigation anchored to Monday, filter by vet, "New appointment" button). Integrates the global search as a pet selector. Includes `frontend/.npmrc` (`legacy-peer-deps=true`) to resolve the `@schedule-x/react` ERESOLVE in CI.
 
-**Pull Request 3 — US-010 Adjuntos clínicos (PR #414)**
+**Pull Request 3 — US-010 Clinical attachments (PR #414)**
 
-- **Branch:** `feat/us-010` → `dev` *(mergeado, commit `85301a6`)*
-- **Contenido:** `clinical_attachments` (tenant-scoped + RLS), `StorageService` real (Strategy supabase/s3, DI mockeable), `POST/GET /clinical-records/{id}/attachments` (valida el lote antes de subir, signed URL por respuesta), FE con `AttachmentPicker` + grilla de miniaturas + apertura en pestaña nueva. Fix del listener de auditoría para honrar `audit_skip` también en la rama de creates. PR #418 (`fix/clinical-attachments-ux`) pulió la UX (borrar sin abrir, refrescar historial al crear, auto-cerrar).
+- **Branch:** `feat/us-010` → `dev` *(merged, commit `85301a6`)*
+- **Content:** `clinical_attachments` (tenant-scoped + RLS), real `StorageService` (Strategy supabase/s3, mockable DI), `POST/GET /clinical-records/{id}/attachments` (validates the batch before uploading, signed URL per response), FE with `AttachmentPicker` + thumbnail grid + opening in a new tab. Fix of the audit listener to honor `audit_skip` also in the create branch. PR #418 (`fix/clinical-attachments-ux`) polished the UX (delete without opening, refresh history on create, auto-close).
 
 ---
 
-**Listado completo de PRs mergeados a `dev`:**
+**Complete list of PRs merged to `dev`:**
 
 | PR | US | Feature |
 |---|---|---|
-| #388 | US-001 | Registro de clínica (INFRA + DB + RLS + BE + FE) |
-| #389 | US-002 | Login con JWT + redirección por rol |
-| #390 | US-003 | Gestión de usuarios staff (RBAC) |
-| #391 | US-005 | Registrar cliente |
-| #392 | US-004 | Recuperación de contraseña (migración Resend → SMTP `aiosmtplib`) |
-| #393 | US-006 | Registrar mascota |
-| #394 | US-017 | Crear turno (detección de solapamiento) |
-| #395 | US-007 | Búsqueda global enriquecida |
-| #396 | US-018 | Agenda diaria/semanal (Schedule-X) |
-| #397 | US-009 | Registrar consulta + `audit_log` automático |
-| #398 | US-023 | Registrar vacuna aplicada |
-| #399 | US-019 | Reprogramar / cancelar turno |
-| #400 | US-008 | Perfil clínico completo de la mascota |
-| #401 | US-011 | Historial clínico paginado + `clinical_record_access_log` |
-| #405 | US-020 | Marcar turno atendido e iniciar consulta |
-| #406 | US-020b | Ver/editar la consulta de un turno (sin duplicar, 409) |
-| #407 | US-021 | Recordatorio diario por email (cron + SMTP) |
-| #408 | US-022 | Estado efectivo de notificación del turno |
-| #413 | US-DASH | Dashboard por rol + listados de clientes/mascotas |
-| #414 | US-010 | Adjuntos clínicos (Supabase Storage) |
-| #415 | US-013 | Asistente IA: voz → campos clínicos |
-| #416 | US-014 | Subida de audio externo para pre-llenado IA |
-| #417 | US-012 | Editar/eliminar consulta propia |
-| #418 | — | Fix UX de adjuntos de historia clínica |
+| #388 | US-001 | Clinic registration (INFRA + DB + RLS + BE + FE) |
+| #389 | US-002 | Login with JWT + role-based redirection |
+| #390 | US-003 | Staff user management (RBAC) |
+| #391 | US-005 | Register client |
+| #392 | US-004 | Password recovery (Resend → SMTP `aiosmtplib` migration) |
+| #393 | US-006 | Register pet |
+| #394 | US-017 | Create appointment (overlap detection) |
+| #395 | US-007 | Enriched global search |
+| #396 | US-018 | Daily/weekly agenda (Schedule-X) |
+| #397 | US-009 | Register consultation + automatic `audit_log` |
+| #398 | US-023 | Register applied vaccine |
+| #399 | US-019 | Reschedule / cancel appointment |
+| #400 | US-008 | Complete clinical profile of the pet |
+| #401 | US-011 | Paginated clinical history + `clinical_record_access_log` |
+| #405 | US-020 | Mark appointment attended and start consultation |
+| #406 | US-020b | View/edit an appointment's consultation (without duplicating, 409) |
+| #407 | US-021 | Daily email reminder (cron + SMTP) |
+| #408 | US-022 | Effective appointment notification status |
+| #413 | US-DASH | Role-based dashboard + client/pet listings |
+| #414 | US-010 | Clinical attachments (Supabase Storage) |
+| #415 | US-013 | AI Assistant: voice → clinical fields |
+| #416 | US-014 | External audio upload for AI pre-fill |
+| #417 | US-012 | Edit/delete own consultation |
+| #418 | — | Clinical record attachments UX fix |
 
-> El paso a Done del board es manual: como los PRs apuntan a `dev` (no a `main`, la rama default), el `Closes #N` solo auto-cierra al integrar `dev → main`.
+> Moving the board to Done is manual: since the PRs target `dev` (not `main`, the default branch), the `Closes #N` only auto-closes when integrating `dev → main`.

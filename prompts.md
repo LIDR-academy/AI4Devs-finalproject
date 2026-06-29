@@ -1,273 +1,273 @@
-**Estructura de sesiones:** El proyecto atravesó dos grandes etapas. **Etapa de documentación (Sesiones 1–3):** definición del producto con el agente Analyst de BMAD, generación de la documentación técnica completa vía el agente `doc-generator`, y una revisión arquitectónica crítica que fijó el alcance del MVP y la adopción de estándares 2026. **Etapa de implementación (Sesiones 4–28):** generación de tickets por capa, scaffolding, configuración del flujo `/implement-us` y desarrollo iterativo de las User Stories (US-001 a US-014, US-017 a US-023 y US-DASH), cada una con su PR a `dev`. Este documento selecciona, por cada sección de la entrega, los prompts **más relevantes** de ambas etapas. El log cronológico íntegro vive en [docs/prompts/prompts.md](../docs/prompts/prompts.md).
+**Session structure:** The project went through two major stages. **Documentation stage (Sessions 1–3):** product definition with BMAD's Analyst agent, generation of the complete technical documentation via the `doc-generator` agent, and a critical architectural review that fixed the MVP scope and the adoption of 2026 standards. **Implementation stage (Sessions 4–28):** ticket generation by layer, scaffolding, configuration of the `/implement-us` flow, and iterative development of the User Stories (US-001 to US-014, US-017 to US-023 and US-DASH), each with its PR to `dev`. This document selects, for each section of the delivery, the **most relevant** prompts from both stages. The full chronological log lives in [docs/prompts/prompts.md](../docs/prompts/prompts.md).
 
-> **Flujo de desarrollo (Sesiones 6–8).** A partir de la Sesión 6 se construyó el comando `/implement-us <issue>`, que orquesta el ciclo completo de una US: el agente `planning-specialist` genera `docs/changelog/US-XXX.md` (criterios de done, archivos esperados, contrato de interfaz, riesgos, scope y dependencias por ticket); luego se despachan agentes en orden **INFRA → DB → BE → FE**, con `tdd-specialist` tras cada uno y consulta a Stitch MCP antes del FE. Cada ticket genera un commit (`feat(db|be|fe):`) y la US un PR a `dev`. El board de GitHub Projects recorre Todo → In Progress → In Review → Done.
+> **Development flow (Sessions 6–8).** Starting in Session 6, the `/implement-us <issue>` command was built, orchestrating the full cycle of a US: the `planning-specialist` agent generates `docs/changelog/US-XXX.md` (done criteria, expected files, interface contract, risks, scope and dependencies per ticket); then agents are dispatched in order **INFRA → DB → BE → FE**, with `tdd-specialist` after each one and a Stitch MCP consultation before the FE. Each ticket generates a commit (`feat(db|be|fe):`) and the US a PR to `dev`. The GitHub Projects board moves through Todo → In Progress → In Review → Done.
 
-> **Decisiones de implementación que divergieron del plan original** (documentadas en los prompts de abajo): email **Resend → SMTP `aiosmtplib`** (US-004); transcripción **OpenAI `whisper-1` → Groq `whisper-large-v3`** (US-013); recordatorios **48h+24h cada 15 min → un único cron diario a las 08:00 para los turnos de mañana** (US-021); alcance IA **ampliado** para extraer diagnóstico/tratamiento *cuando el veterinario los dicta explícitamente* —sin inventarlos nunca— (US-013).
+> **Implementation decisions that diverged from the original plan** (documented in the prompts below): email **Resend → SMTP `aiosmtplib`** (US-004); transcription **OpenAI `whisper-1` → Groq `whisper-large-v3`** (US-013); reminders **48h+24h every 15 min → a single daily cron at 08:00 for tomorrow's appointments** (US-021); AI scope **expanded** to extract diagnosis/treatment *when the veterinarian dictates them explicitly* —never inventing them— (US-013).
 
-## Índice
+## Index
 
-1. [Descripción general del producto](#1-descripción-general-del-producto)
-2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
-3. [Modelo de datos](#3-modelo-de-datos)
-4. [Especificación de la API](#4-especificación-de-la-api)
-5. [Historias de usuario](#5-historias-de-usuario)
-6. [Tickets de trabajo](#6-tickets-de-trabajo)
+1. [Product overview](#1-product-overview)
+2. [System architecture](#2-system-architecture)
+3. [Data model](#3-data-model)
+4. [API specification](#4-api-specification)
+5. [User stories](#5-user-stories)
+6. [Work tickets](#6-work-tickets)
 7. [Pull requests](#7-pull-requests)
 
 ---
 
-## 1. Descripción general del producto
+## 1. Product overview
 
-**Prompt 1:** *(Sesión 1 — definición inicial, rol Analyst BMAD)*
+**Prompt 1:** *(Session 1 — initial definition, BMAD Analyst role)*
 
-> "Quiero construir @docs/idea-inicial.md — Actuar como el agente Analyst de BMAD"
+> "I want to build @docs/idea-inicial.md — Act as BMAD's Analyst agent"
 
-Disparó el cuestionario inicial del Analyst (10 preguntas sobre piloto, modelo SaaS, roles, notificaciones, exportación, voz, offline, validación IA, stack). Las respuestas fijaron las decisiones fundacionales: SaaS multi-clínica, 3 roles staff + portal cliente, email primero / WhatsApp después, validación IA con edición opcional, stack React + FastAPI + Postgres + Whisper + Claude.
+Triggered the Analyst's initial questionnaire (10 questions about pilot, SaaS model, roles, notifications, export, voice, offline, AI validation, stack). The answers fixed the foundational decisions: multi-clinic SaaS, 3 staff roles + client portal, email first / WhatsApp later, AI validation with optional editing, stack React + FastAPI + Postgres + Whisper + Claude.
 
-**Prompt 2:** *(Sesión 3 — scope IA acotado al MVP)*
+**Prompt 2:** *(Session 3 — AI scope narrowed to the MVP)*
 
-> "la idea que tenemos es utilizar un modelo de IA para en funcion de una historia clinica con un formato y estructura definidos, se complete la misma con la informacion transcrita de el audio/imagen/texto que carge el especialista. no se busca por ahora que el modelo genere diagnosticos o sugerencias para incluir en la historia clinica."
+> "the idea we have is to use an AI model so that, based on a clinical record with a defined format and structure, it gets filled in with the information transcribed from the audio/image/text uploaded by the specialist. for now we don't want the model to generate diagnoses or suggestions to include in the clinical record."
 
-Cambio de alcance fundamental: la IA pasa de "genera la historia clínica" a "estructura los campos predefinidos". Se propagó a 8 archivos (features, RFs, RNFs, user stories, schema `ClinicalRecordExtraction`, Use Case 1, riesgos).
+Fundamental scope change: the AI goes from "generate the clinical record" to "structure the predefined fields". It propagated to 8 files (features, FRs, NFRs, user stories, `ClinicalRecordExtraction` schema, Use Case 1, risks).
 
-**Prompt 3:** *(Sesión 27 — ampliación del alcance IA al implementarlo)*
+**Prompt 3:** *(Session 27 — AI scope expansion while implementing it)*
 
-> "probe el flujo... me transcribio los datos del audio, pero no me seteo todos los campos de la estructura" → "si" (confirma ajustar el prompt para extraer diagnosis/treatment cuando el vet los dicta)
+> "I tested the flow... it transcribed the audio data, but it didn't set all the fields of the structure for me" → "yes" (confirms adjusting the prompt to extract diagnosis/treatment when the vet dictates them)
 
-Al implementar US-013 se detectó que el prompt bloqueaba `diagnosis`/`treatment` aunque el vet los dictara. Se ajustó: el system prompt ahora extrae diagnóstico/tratamiento **si el vet los dicta explícitamente**, distingue `referred_medication` (lo que el dueño ya dio) de `treatment` (lo que indica el vet) y **nunca inventa**; el schema cambió esos campos de `None` fijo a `Optional[str]`. Matiz clave del MVP: la IA estructura lo dictado, no genera diagnósticos propios.
+While implementing US-013 it was found that the prompt blocked `diagnosis`/`treatment` even when the vet dictated them. It was adjusted: the system prompt now extracts diagnosis/treatment **if the vet dictates them explicitly**, distinguishes `referred_medication` (what the owner already gave) from `treatment` (what the vet indicates) and **never invents**; the schema changed those fields from a fixed `None` to `Optional[str]`. Key MVP nuance: the AI structures what is dictated, it does not generate its own diagnoses.
 
 ---
 
-## 2. Arquitectura del Sistema
+## 2. System Architecture
 
-### **2.1. Diagrama de arquitectura:**
+### **2.1. Architecture diagram:**
 
-**Prompt 1:** *(Sesión 2 — generación inicial vía doc-generator)*
+**Prompt 1:** *(Session 2 — initial generation via doc-generator)*
 
-> "@ia-agents/agents/doc-generator.md genera la documentacion del proyecto"
+> "@ia-agents/agents/doc-generator.md generate the project documentation"
 
-Disparó el agente `doc-generator` (rol Senior Product Manager). Produjo el PRD completo con la sección 11 (High-Level System Design) + sección 12 (C4: Context, Container, Component) usando diagramas Mermaid, base del *Figure 1* de arquitectura.
+Triggered the `doc-generator` agent (Senior Product Manager role). It produced the complete PRD with section 11 (High-Level System Design) + section 12 (C4: Context, Container, Component) using Mermaid diagrams, the basis for *Figure 1* of the architecture.
 
-**Prompt 2:** *(Sesión 3 — revisión crítica del stack)*
+**Prompt 2:** *(Session 3 — critical review of the stack)*
 
-> "a partir de @docs/ que opinas de la arquitectura y stack elegidos para desarrollar este sistema, que cambiarias en funcion del alcance del proyecto y de los estandares actuales?"
+> "based on @docs/ what do you think of the architecture and stack chosen to develop this system, what would you change based on the project scope and current standards?"
 
-Revisión en tres bloques (aciertos / cambios por alcance / estándares 2026). Identificó: Celery + Redis es overkill → ARQ + cron Railway; Vercel + Railway → Railway-solo; construir agenda/grids a mano → Schedule-X + TanStack Table; prompt caching y RLS desde el día uno.
+Review in three blocks (good choices / changes by scope / 2026 standards). It identified: Celery + Redis is overkill → ARQ + Railway cron; Vercel + Railway → Railway-only; building agenda/grids by hand → Schedule-X + TanStack Table; prompt caching and RLS from day one.
 
-**Prompt 3:** *(Sesión 3 — aplicación de los cambios de simplificación)*
+**Prompt 3:** *(Session 3 — applying the simplification changes)*
 
-> "de los cambios de alcance sugeridos: Celery → ARQ + cron Railway; Vercel + Railway → Railway solo; Construir agenda/grids vs librerías; no apliques el cambio de no utilizar jwt + redis"
+> "of the suggested scope changes: Celery → ARQ + Railway cron; Vercel + Railway → Railway only; Building agenda/grids vs libraries; don't apply the change of not using jwt + redis"
 
-Propagó las tres decisiones a CLAUDE.md, README.md, architecture.md, prd.md, redibujando el diagrama de arquitectura general. Mantuvo JWT + Redis.
+Propagated the three decisions to CLAUDE.md, README.md, architecture.md, prd.md, redrawing the general architecture diagram. Kept JWT + Redis.
 
-### **2.2. Descripción de componentes principales:**
+### **2.2. Description of main components:**
 
-**Prompt 1:** *(Sesión 3 — profundización de cada herramienta)*
+**Prompt 1:** *(Session 3 — deep dive on each tool)*
 
-> "genera un archivo info.md dentro de @docs/ que explique y profundice en cada una de las herramientas de la primera seccion de la respuesta anterior"
+> "generate an info.md file inside @docs/ that explains and goes deep into each of the tools from the first section of the previous answer"
 
-Creó `docs/info.md` con 4 secciones (Backend, Frontend, patrones de datos, patrones de IA) explicando cada componente: qué es, por qué es la elección correcta **para este proyecto**, ejemplo de código aplicado al dominio veterinario, buenas prácticas y riesgos.
+Created `docs/info.md` with 4 sections (Backend, Frontend, data patterns, AI patterns) explaining each component: what it is, why it is the right choice **for this project**, a code example applied to the veterinary domain, best practices and risks.
 
-**Prompt 2:** *(Sesión 27 — materialización del componente de IA, US-013)*
+**Prompt 2:** *(Session 27 — materialization of the AI component, US-013)*
 
 > `/implement-us 268`
 
-Materializó el componente diferenciador: el pipeline ARQ **Groq Whisper (`whisper-large-v3`) → Claude Haiku cleanup → Claude Sonnet tool use**. Decisiones reales de componente: Groq Whisper vía SDK de OpenAI con `base_url` override; el worker crea su propia sesión con `set_config` para RLS; subida del SDK `anthropic` a `0.111.0` y corrección de model IDs (`claude-haiku-4-5-20251001`, `claude-sonnet-4-6`).
+Materialized the differentiating component: the ARQ pipeline **Groq Whisper (`whisper-large-v3`) → Claude Haiku cleanup → Claude Sonnet tool use**. Real component decisions: Groq Whisper via the OpenAI SDK with a `base_url` override; the worker creates its own session with `set_config` for RLS; bumping the `anthropic` SDK to `0.111.0` and correcting the model IDs (`claude-haiku-4-5-20251001`, `claude-sonnet-4-6`).
 
-**Prompt 3:** *(Sesión 10 — componente de email: Resend → SMTP)*
+**Prompt 3:** *(Session 10 — email component: Resend → SMTP)*
 
-> "el correo de recuperación nunca me llega" → "que otras librerías existen para enviar mail desde una cuenta configurada?" → "vamos por la opción A: aiosmtplib"
+> "the recovery email never arrives" → "what other libraries exist to send mail from a configured account?" → "let's go with option A: aiosmtplib"
 
-Resend sin dominio verificado solo entrega al dueño de la cuenta. Se **migró `NotificationService` de Resend a SMTP con `aiosmtplib`** (nativo async, multipart texto+HTML): nuevas vars `SMTP_*`, `resend==2.3.0` → `aiosmtplib==3.0.2`. Los sends nunca lanzan (anti-enumeración). Cambiar de proveedor es solo configuración.
+Resend without a verified domain only delivers to the account owner. `NotificationService` was **migrated from Resend to SMTP with `aiosmtplib`** (async-native, multipart text+HTML): new `SMTP_*` vars, `resend==2.3.0` → `aiosmtplib==3.0.2`. Sends never raise (anti-enumeration). Changing providers is just configuration.
 
-### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
+### **2.3. High-level project description and file structure**
 
-**Prompt 1:** *(Sesión 2 — estructura documentada vía doc-generator)*
+**Prompt 1:** *(Session 2 — structure documented via doc-generator)*
 
-> "@ia-agents/agents/doc-generator.md genera la documentacion del proyecto"
+> "@ia-agents/agents/doc-generator.md generate the project documentation"
 
-La estructura de ficheros (monorepo frontend/backend, feature-based en el front, layered en el back) se generó como parte de las secciones 2 y 3 de `architecture.md`.
+The file structure (frontend/backend monorepo, feature-based on the front, layered on the back) was generated as part of sections 2 and 3 of `architecture.md`.
 
-**Prompt 2:** *(Sesión 3 — Expo + Tamagui desde el día 1)*
+**Prompt 2:** *(Session 3 — Expo + Tamagui from day 1)*
 
-> "11. Si la migración mobile está comprometida, usar Expo desde el día uno (Expo Router + Tamagui o React Native Web)."
+> "11. If the mobile migration is at risk, use Expo from day one (Expo Router + Tamagui or React Native Web)."
 
-Cambió la estructura de `frontend/` de "React SPA reescribible a React Native" a "Expo Router + Tamagui con build web vía React Native Web desde el primer componente". Las capas `services/` y `store/` quedan portables a móvil sin reescritura.
+Changed the structure of `frontend/` from "React SPA rewritable to React Native" to "Expo Router + Tamagui with a web build via React Native Web from the very first component". The `services/` and `store/` layers remain portable to mobile without a rewrite.
 
-**Prompt 3:** *(Sesión 4 — scaffolding del proyecto)*
+**Prompt 3:** *(Session 4 — project scaffolding)*
 
-> "procede con el scaffolding del proyecto basandote en lo que se encuentra en @docs/architecture.md"
+> "proceed with the project scaffolding based on what's in @docs/architecture.md"
 
-Generó 79 archivos que materializan la estructura documentada: raíz (`docker-compose.yml`, `.env.example`, CI), backend (FastAPI con `/auth` implementado, `deps.py` con `SET LOCAL app.clinic_id` para RLS, mixins SQLAlchemy, Alembic async, ARQ, `conftest.py`) y frontend (Expo Router + Tamagui, store Zustand, axios con refresh queue, guard de auth).
+Generated 79 files that materialize the documented structure: root (`docker-compose.yml`, `.env.example`, CI), backend (FastAPI with `/auth` implemented, `deps.py` with `SET LOCAL app.clinic_id` for RLS, SQLAlchemy mixins, async Alembic, ARQ, `conftest.py`) and frontend (Expo Router + Tamagui, Zustand store, axios with a refresh queue, auth guard).
 
-### **2.4. Infraestructura y despliegue**
+### **2.4. Infrastructure and deployment**
 
-**Prompt 1:** *(Sesión 3 — consolidación en Railway)*
+**Prompt 1:** *(Session 3 — consolidation on Railway)*
 
-> "Vercel + Railway → Railway solo"
+> "Vercel + Railway → Railway only"
 
-Reescritura de la sección de infraestructura: todos los servicios (frontend estático, backend, ARQ worker, cron, Postgres, Redis) viven en un único proyecto Railway. El reverse proxy interno elimina CORS frontend-backend; se removieron las referencias a Vercel y a Render como alternativas.
+Rewrite of the infrastructure section: all services (static frontend, backend, ARQ worker, cron, Postgres, Redis) live in a single Railway project. The internal reverse proxy eliminates frontend-backend CORS; references to Vercel and Render as alternatives were removed.
 
-**Prompt 2:** *(Sesión 24 — recordatorios: del plan a la decisión real)*
+**Prompt 2:** *(Session 24 — reminders: from the plan to the real decision)*
 
-> *(US-021, AskUserQuestion sobre el schedule del cron)* el usuario simplificó a **una corrida diaria que avisa los turnos de mañana** y **un solo recordatorio** (se descarta el de 48h)
+> *(US-021, AskUserQuestion about the cron schedule)* the user simplified to **a single daily run that notifies tomorrow's appointments** and **a single reminder** (the 48h one is dropped)
 
-El plan original (recordatorios 48h y 24h, cron cada 15 min) se simplificó a un cron diario `0 8 * * *` (`backend/railway.cron.json`) con `trigger_hours_before=24`. Idempotencia en dos capas: guard `has_sent` + índice UNIQUE parcial `(appointment_id, trigger_hours_before) WHERE status='sent'`. El cron corre sin JWT → bypassa RLS (`app_admin`). La hora se localiza a `clinics.timezone` (se agregó `tzdata` para resolver zonas IANA en Windows/contenedores).
+The original plan (48h and 24h reminders, cron every 15 min) was simplified to a daily cron `0 8 * * *` (`backend/railway.cron.json`) with `trigger_hours_before=24`. Idempotency in two layers: a `has_sent` guard + a partial UNIQUE index `(appointment_id, trigger_hours_before) WHERE status='sent'`. The cron runs without a JWT → bypasses RLS (`app_admin`). The time is localized to `clinics.timezone` (`tzdata` was added to resolve IANA zones on Windows/containers).
 
-**Prompt 3:** *(Sesión — estimación de billing)*
+**Prompt 3:** *(Session — billing estimate)*
 
-> "en funcion de las herramientas y tecnologias elegidas, realizame una estimacion de billing para el proyecto como un mvp funcional de pocos usuarios"
+> "based on the chosen tools and technologies, give me a billing estimate for the project as a functional MVP with few users"
 
-Produjo una tabla detallada por servicio. Total para un MVP de pocos usuarios: **~U$ 55–70/mes** en Railway-solo (la transcripción usa la capa gratuita de Groq; Claude con prompt caching es marginal a este volumen). Identificó que el cuello de botella económico no es la infraestructura sino el tiempo de los founders.
+Produced a detailed table per service. Total for a few-user MVP: **~US$ 55–70/month** on Railway-only (transcription uses Groq's free tier; Claude with prompt caching is marginal at this volume). It identified that the economic bottleneck is not the infrastructure but the founders' time.
 
-### **2.5. Seguridad**
+### **2.5. Security**
 
-**Prompt 1:** *(Sesión 3 — RLS como defensa en profundidad)*
+**Prompt 1:** *(Session 3 — RLS as defense in depth)*
 
-> "de los cambios sugeridos para estándares 2026... 8. Defensa en profundidad para multi-tenancy: PostgreSQL Row-Level Security (RLS) además del filtro en queries; tests de regresión que validen aislamiento entre clínicas."
+> "of the changes suggested for 2026 standards... 8. Defense in depth for multi-tenancy: PostgreSQL Row-Level Security (RLS) in addition to the query filter; regression tests that validate isolation between clinics."
 
-Incorporó RLS (setup `ENABLE/FORCE ROW LEVEL SECURITY`, policy por tabla, usuarios `app_runtime`/`app_admin`) + suite de aislamiento bloqueante en CI.
+Incorporated RLS (`ENABLE/FORCE ROW LEVEL SECURITY` setup, per-table policy, `app_runtime`/`app_admin` users) + a blocking isolation suite in CI.
 
-**Prompt 2:** *(Sesión 3 — entidades de auditoría append-only)*
+**Prompt 2:** *(Session 3 — append-only audit entities)*
 
-> "es buena idea/practica incorporar al modelo de datos una entidad que registre los logs/historial de las consultas, transacciones, etc a la DB?" → "si, aplicame los cambios"
+> "is it a good idea/practice to add to the data model an entity that records the logs/history of queries, transactions, etc. to the DB?" → "yes, apply the changes"
 
-Incorporó dos tablas append-only: `audit_log` (mutaciones con diff JSONB, auto-poblada vía SQLAlchemy `after_flush`) y `clinical_record_access_log` (lecturas de historias clínicas, Ley 25.326). Append-only enforced en motor (`REVOKE UPDATE, DELETE`).
+Incorporated two append-only tables: `audit_log` (mutations with JSONB diff, auto-populated via SQLAlchemy `after_flush`) and `clinical_record_access_log` (reads of clinical records, Law 25.326). Append-only enforced at the engine level (`REVOKE UPDATE, DELETE`).
 
-**Prompt 3:** *(Sesión 9a — bug raíz de RLS al ejercerlo contra Postgres real)*
+**Prompt 3:** *(Session 9a — root RLS bug when exercising it against real Postgres)*
 
-> "cuando se quiere crear un nuevo usuario... al darle al boton crear muestra un mensaje de error inesperado"
+> "when trying to create a new user... clicking the create button shows an unexpected error message"
 
-`get_current_user` usaba `text("SET LOCAL app.clinic_id = :cid")` y PostgreSQL no acepta parámetros vinculados en `SET` → 500 en toda request autenticada (no detectado por los tests, que mockean sobre SQLite). **Fix:** `SELECT set_config('app.clinic_id', :cid, true)`. US-003 fue la primera feature que ejerció ese camino contra Postgres.
+`get_current_user` used `text("SET LOCAL app.clinic_id = :cid")` and PostgreSQL does not accept bound parameters in `SET` → 500 on every authenticated request (not caught by the tests, which mock over SQLite). **Fix:** `SELECT set_config('app.clinic_id', :cid, true)`. US-003 was the first feature that exercised that path against Postgres.
 
 ### **2.6. Tests**
 
-**Prompt 1:** *(Sesión 3 — Playwright + syrupy)*
+**Prompt 1:** *(Session 3 — Playwright + syrupy)*
 
-> "10. Testing E2E mínimo del flujo IA con Playwright; snapshot tests del prompt enviado a Claude."
+> "10. Minimal E2E testing of the AI flow with Playwright; snapshot tests of the prompt sent to Claude."
 
-Stack de testing base: pytest + pytest-asyncio (engine aiosqlite, rollback por test) + **Playwright** (E2E del flujo IA) + **syrupy** (snapshot del prompt + schema enviado a Claude, bloquea merges).
+Base testing stack: pytest + pytest-asyncio (aiosqlite engine, rollback per test) + **Playwright** (E2E of the AI flow) + **syrupy** (snapshot of the prompt + schema sent to Claude, blocks merges).
 
-**Prompt 2:** *(Implementación — TDD por capa en `/implement-us`)*
+**Prompt 2:** *(Implementation — TDD by layer in `/implement-us`)*
 
-> El flujo `/implement-us` despacha al agente `tdd-specialist` tras cada capa (DB → BE → FE), ejecutando RED→GREEN→REFACTOR.
+> The `/implement-us` flow dispatches the `tdd-specialist` agent after each layer (DB → BE → FE), running RED→GREEN→REFACTOR.
 
-En implementación se sumó **Jest + React Native Testing Library** para el frontend (mock de Tamagui/Expo Router/Zustand/TanStack Query). Al cierre del MVP la suite backend supera los 570 tests y la de frontend los 400.
+In implementation, **Jest + React Native Testing Library** was added for the frontend (mocking Tamagui/Expo Router/Zustand/TanStack Query). At the close of the MVP the backend suite exceeds 570 tests and the frontend one exceeds 400.
 
-**Prompt 3:** *(Implementación — aislamiento multi-tenant + append-only bloqueante)*
+**Prompt 3:** *(Implementation — multi-tenant isolation + blocking append-only)*
 
-> Suite custom de pytest que verifica el aislamiento entre clínicas y que `UPDATE`/`DELETE` sobre `audit_log` desde `app_runtime` falle con `permission denied`.
+> Custom pytest suite that verifies isolation between clinics and that `UPDATE`/`DELETE` on `audit_log` from `app_runtime` fails with `permission denied`.
 
-Es un test **bloqueante en CI**: materializa la garantía de RLS (una clínica no ve filas de otra) y la inmutabilidad append-only directamente contra el motor Postgres, no solo en la capa ORM.
-
----
-
-## 3. Modelo de Datos
-
-**Prompt 1:** *(Sesión 2 — generación inicial del ERD)*
-
-> "@ia-agents/agents/doc-generator.md genera la documentacion del proyecto"
-
-Generó el ERD inicial en `data-model.md` con las entidades principales (clinics, users, clients, pets, appointments, clinical_records, clinical_records_ai, vaccinations + tablas de auditoría).
-
-**Prompt 2:** *(Sesión — justificación de separar users vs clients)*
-
-> "se indica la creacion de dos entidades, 'usuarios' y 'clientes'... Que justificacion encontras para tener esas 2 entidades y no unificarlas?"
-
-Justificación: distintos FKs, distintos ciclos de vida, distintos modelos de auth (JWT staff vs JWT portal en Fase 1.5), RLS más simple con tablas separadas.
-
-**Prompt 3:** *(Sesiones 15, 18, 19, 21 — materialización incremental en migraciones)*
-
-> *(US-009)* `/implement-us 264` — migración `0005` crea `clinical_records` + `audit_log` + listener. *(US-023)* `0006` crea `vaccinations`. *(US-019)* `0007` agrega `cancellation_reason`. *(US-011)* `0008` crea `clinical_record_access_log`. *(US-013)* `0011` crea `clinical_records_ai` append-only.
-
-El modelo se materializó incrementalmente en migraciones Alembic `0001`–`0011`, cada tabla dentro del ticket de la US que la necesita primero. Hallazgo recurrente: el `head` de Alembic debía confirmarse con `alembic heads` antes de encadenar `down_revision` (varias US en paralelo colgaban de la misma migración).
+It is a **CI-blocking** test: it materializes the RLS guarantee (one clinic does not see another's rows) and the append-only immutability directly against the Postgres engine, not just at the ORM layer.
 
 ---
 
-## 4. Especificación de la API
+## 3. Data Model
 
-**Prompt 1:** *(Sesión 3 — endpoint `/ai/extract-record` con alcance acotado)*
+**Prompt 1:** *(Session 2 — initial ERD generation)*
 
-> "la idea que tenemos es utilizar un modelo de IA para que, en funcion de una historia clinica con un formato y estructura definidos, se complete la misma con la informacion transcrita... necesito que modifiques los archivos del proyecto para reflejar esta decision."
+> "@ia-agents/agents/doc-generator.md generate the project documentation"
 
-El endpoint pasó de `/ai/generate-record` (genera todo) a un contrato de estructuración de los campos extraíbles.
+Generated the initial ERD in `data-model.md` with the main entities (clinics, users, clients, pets, appointments, clinical_records, clinical_records_ai, vaccinations + audit tables).
 
-**Prompt 2:** *(Sesión 27 — implementación del flujo IA real, US-013)*
+**Prompt 2:** *(Session — justification for separating users vs clients)*
+
+> "the creation of two entities is indicated, 'users' and 'clients'... What justification do you find for having those 2 entities and not unifying them?"
+
+Justification: different FKs, different lifecycles, different auth models (JWT staff vs JWT portal in Phase 1.5), simpler RLS with separate tables.
+
+**Prompt 3:** *(Sessions 15, 18, 19, 21 — incremental materialization in migrations)*
+
+> *(US-009)* `/implement-us 264` — migration `0005` creates `clinical_records` + `audit_log` + listener. *(US-023)* `0006` creates `vaccinations`. *(US-019)* `0007` adds `cancellation_reason`. *(US-011)* `0008` creates `clinical_record_access_log`. *(US-013)* `0011` creates `clinical_records_ai` append-only.
+
+The model was materialized incrementally in Alembic migrations `0001`–`0011`, each table within the ticket of the US that needs it first. Recurring finding: the Alembic `head` had to be confirmed with `alembic heads` before chaining `down_revision` (several parallel USs hung off the same migration).
+
+---
+
+## 4. API Specification
+
+**Prompt 1:** *(Session 3 — `/ai/extract-record` endpoint with narrowed scope)*
+
+> "the idea we have is to use an AI model so that, based on a clinical record with a defined format and structure, it gets filled in with the transcribed information... I need you to modify the project files to reflect this decision."
+
+The endpoint went from `/ai/generate-record` (generates everything) to a contract for structuring the extractable fields.
+
+**Prompt 2:** *(Session 27 — implementation of the real AI flow, US-013)*
 
 > `/implement-us 268`
 
-Materializó el flujo IA: `POST /ai/transcribe-voice` (202 + task_id), `GET /ai/tasks/{task_id}` (polling), y el pipeline ARQ **Groq Whisper (`whisper-large-v3`) → Claude Haiku cleanup → Claude Sonnet tool use**. Decisiones reales: Groq Whisper vía SDK de OpenAI con `base_url` override; el worker crea su propia sesión con `set_config` para RLS; subida del SDK `anthropic` a `0.111.0` y corrección de model IDs (`claude-haiku-4-5-20251001`, `claude-sonnet-4-6`).
+Materialized the AI flow: `POST /ai/transcribe-voice` (202 + task_id), `GET /ai/tasks/{task_id}` (polling), and the ARQ pipeline **Groq Whisper (`whisper-large-v3`) → Claude Haiku cleanup → Claude Sonnet tool use**. Real decisions: Groq Whisper via the OpenAI SDK with a `base_url` override; the worker creates its own session with `set_config` for RLS; bumping the `anthropic` SDK to `0.111.0` and correcting the model IDs (`claude-haiku-4-5-20251001`, `claude-sonnet-4-6`).
 
-**Prompt 3:** *(Sesión 28 — segundo endpoint del flujo IA, US-014)*
+**Prompt 3:** *(Session 28 — second endpoint of the AI flow, US-014)*
 
 > `/implement-us 269`
 
-`POST /ai/transcribe-upload` para subir un archivo de audio externo: valida formato (MIME con fallback a extensión) y tamaño (413 para > 20 MB), reutiliza el mismo pipeline ARQ con `input_type="upload"`. Reutilización masiva de US-013 (tabla, schema y polling sin cambios).
+`POST /ai/transcribe-upload` to upload an external audio file: validates format (MIME with fallback to extension) and size (413 for > 20 MB), reuses the same ARQ pipeline with `input_type="upload"`. Massive reuse of US-013 (table, schema and polling unchanged).
 
-> **Otros endpoints implementados** a lo largo del MVP: `/auth/*` (register/login/refresh/logout/forgot-password/reset-password), `/users`, `/clients`, `/pets` (+ perfil agregado), `/search`, `/appointments` (crear/listar/reprogramar/cancelar/marcar-atendido/notifications), `/clinical-records` (crear/ver/editar/borrar/by-appointment/attachments), `/pets/{id}/vaccinations`, e internos (`/internal/notifications/send-reminders`).
-
----
-
-## 5. Historias de Usuario
-
-**Prompt 1:** *(Sesión 2 — generación inicial)*
-
-> "@ia-agents/agents/doc-generator.md genera la documentacion del proyecto"
-
-Generó 32 historias de usuario distribuidas en módulos.
-
-**Prompt 2:** *(Sesión 3 — ajuste de US-013/014/015 por scope IA)*
-
-> "no se busca por ahora que el modelo genere diagnosticos ni sugerencias terapeuticas. reescribí las historias de usuario del módulo de historia clínica asistida por IA para reflejar este alcance acotado."
-
-Las historias del Módulo 4 se reescribieron: "que la app complete los campos predefinidos a partir de lo dictado".
-
-**Prompt 3:** *(Sesión 22 — US emergente durante la implementación: nace US-020b)*
-
-> "estaria bien que si ya tiene una consulta cargada, al clickear te la muestre y puedas modificarla, no seguir cargando otras" → "Si, crea la US-020-b asi se sabe que continua a esta"
-
-Probando US-020 (marcar atendido) se detectó que se podían cargar historias duplicadas por turno y no había forma de ver la ya cargada. El `user-story-agent` redactó **US-020b** (issues #402/#403/#404): `GET /clinical-records/by-appointment/{id}` + `PATCH` de edición auditada + guard 409 anti-duplicado, y modo edición en el modal. Ejemplo de cómo el testing manual de una US generó la siguiente.
+> **Other endpoints implemented** throughout the MVP: `/auth/*` (register/login/refresh/logout/forgot-password/reset-password), `/users`, `/clients`, `/pets` (+ aggregated profile), `/search`, `/appointments` (create/list/reschedule/cancel/mark-attended/notifications), `/clinical-records` (create/view/edit/delete/by-appointment/attachments), `/pets/{id}/vaccinations`, and internal ones (`/internal/notifications/send-reminders`).
 
 ---
 
-## 6. Tickets de Trabajo
+## 5. User Stories
 
-**Prompt 1:** *(Sesión de generación — estrategia modular)*
+**Prompt 1:** *(Session 2 — initial generation)*
 
-> "genera los tickets de trabajo para cada historia de usuario en @docs/user-stories.md, aplicando el formato BDD con criterios Dado que / Cuando / Entonces, evaluación INVEST y estimación de talla S/M/L"
+> "@ia-agents/agents/doc-generator.md generate the project documentation"
 
-El `user-story-agent` procesó los módulos uno por uno con ediciones quirúrgicas (límite de tokens de output). Resultado inicial: 82 tickets (41 BE + 41 FE).
+Generated 32 user stories distributed across modules.
 
-**Prompt 2:** *(Sesión 4 — modelo de 5 capas)*
+**Prompt 2:** *(Session 3 — adjustment of US-013/014/015 by AI scope)*
 
-> "@.claude/agents/user-story-agent.md indica al agente que se debe generar user story y tickets de todo el espectro de desarrollo, no solo backend y frontend"
+> "for now we don't want the model to generate diagnoses or therapeutic suggestions. rewrite the user stories of the AI-assisted clinical record module to reflect this narrowed scope."
 
-Se definió el modelo de 5 capas (`-BE`, `-FE`, `-DB`, `-INFRA`, `-AI`), creando ticket de capa separado solo cuando ese trabajo puede asignarse a otra persona, tiene criterios propios y se testea de forma autónoma. Aplicado retroactivamente: total **91 tickets**, importados a GitHub Issues con `scripts/import_to_github.py` (labels por capa).
+The Module 4 stories were rewritten: "that the app fills in the predefined fields from what is dictated".
 
-**Prompt 3:** *(Sesión 7 — planificación por US con el agente `planning-specialist`)*
+**Prompt 3:** *(Session 22 — a US emerging during implementation: US-020b is born)*
 
-> "Bien, faltaria que el plan de implementacion sea un poco mas detallado. Que se podria agregar?" + "porque se crea un agente y no una skill?"
+> "it would be good that if it already has a record loaded, clicking it shows it and you can modify it, not keep loading others" → "Yes, create US-020-b so it's known it continues this one"
 
-Se creó el agente `planning-specialist`, invocado en el Paso 0 de `/implement-us`: lee el issue padre + cada ticket con sus criterios BDD + el codebase, y genera `docs/changelog/US-XXX.md` con seis componentes por ticket (criterios de done, archivos esperados, contrato de interfaz, riesgos, scope explícito y dependencias). El aislamiento de contexto del agente evita inflar el del orquestador. Cada US implementada (US-001 a US-014, US-017 a US-023, US-DASH) tiene su `docs/changelog/US-XXX.md`.
+While testing US-020 (mark attended) it was found that duplicate records could be loaded per appointment and there was no way to see the already loaded one. The `user-story-agent` drafted **US-020b** (issues #402/#403/#404): `GET /clinical-records/by-appointment/{id}` + an audited edit `PATCH` + a 409 anti-duplicate guard, and edit mode in the modal. An example of how manual testing of one US generated the next.
+
+---
+
+## 6. Work Tickets
+
+**Prompt 1:** *(Generation session — modular strategy)*
+
+> "generate the work tickets for each user story in @docs/user-stories.md, applying the BDD format with Given / When / Then criteria, INVEST evaluation and S/M/L size estimation"
+
+The `user-story-agent` processed the modules one by one with surgical edits (output token limit). Initial result: 82 tickets (41 BE + 41 FE).
+
+**Prompt 2:** *(Session 4 — 5-layer model)*
+
+> "@.claude/agents/user-story-agent.md tell the agent that user stories and tickets must be generated across the whole development spectrum, not just backend and frontend"
+
+The 5-layer model was defined (`-BE`, `-FE`, `-DB`, `-INFRA`, `-AI`), creating a separate layer ticket only when that work can be assigned to another person, has its own criteria and is tested autonomously. Applied retroactively: total **91 tickets**, imported to GitHub Issues with `scripts/import_to_github.py` (labels per layer).
+
+**Prompt 3:** *(Session 7 — per-US planning with the `planning-specialist` agent)*
+
+> "Good, what's left is for the implementation plan to be a bit more detailed. What could be added?" + "why is an agent created and not a skill?"
+
+The `planning-specialist` agent was created, invoked in Step 0 of `/implement-us`: it reads the parent issue + each ticket with its BDD criteria + the codebase, and generates `docs/changelog/US-XXX.md` with six components per ticket (done criteria, expected files, interface contract, risks, explicit scope and dependencies). The agent's context isolation avoids bloating the orchestrator's. Each implemented US (US-001 to US-014, US-017 to US-023, US-DASH) has its `docs/changelog/US-XXX.md`.
 
 ---
 
 ## 7. Pull Requests
 
-**Prompt 1:** *(Sesión 6 — definición del flujo git/board)*
+**Prompt 1:** *(Session 6 — definition of the git/board flow)*
 
-> "como seria el flujo de manejo de git?" + "las issues de github issues y del project como las manejas?"
+> "what would the git management flow look like?" + "how do you manage the GitHub issues and the project ones?"
 
-Se definió el flujo: rama `feat/us-XXX` desde `dev` actualizado; un commit por ticket (conventional commits); `gh pr create --base dev` con `Closes #N`; integración con GitHub Projects v2 (Todo → In Progress al iniciar → In Review al crear el PR → Done **manual** tras el merge, porque el PR apunta a `dev`, no a `main`).
+The flow was defined: `feat/us-XXX` branch from an updated `dev`; one commit per ticket (conventional commits); `gh pr create --base dev` with `Closes #N`; integration with GitHub Projects v2 (Todo → In Progress on start → In Review on PR creation → Done **manually** after the merge, because the PR targets `dev`, not `main`).
 
-**Prompt 2:** *(Sesión 23 — cierre y limpieza de una US)*
+**Prompt 2:** *(Session 23 — closing and cleanup of a US)*
 
-> "si, arranca. Ya hice el pr y me movi a dev haciendo pull"
+> "yes, go ahead. I already made the PR and moved to dev with a pull"
 
-Patrón de cierre real por US: mergear el PR a `dev`, mover los issues (padre + tickets) a Done manualmente, limpiar la rama (`git push origin --delete`, `git fetch --prune`), y actualizar `prompts.md`/`README.md`/`CLAUDE.md` cuando la feature cambia el comportamiento documentado.
+Real per-US closing pattern: merge the PR to `dev`, move the issues (parent + tickets) to Done manually, clean up the branch (`git push origin --delete`, `git fetch --prune`), and update `prompts.md`/`README.md`/`CLAUDE.md` when the feature changes documented behavior.
 
-**Prompt 3:** *(Sesiones 9–28 — síntesis del resultado)*
+**Prompt 3:** *(Sessions 9–28 — synthesis of the result)*
 
-> Convención sostenida durante toda la implementación: un PR por User Story sobre `dev`, con changelog por ticket y testing manual contra Postgres real antes de cerrar.
+> Convention sustained throughout the implementation: one PR per User Story onto `dev`, with a changelog per ticket and manual testing against real Postgres before closing.
 
-Se completaron **24 PRs mergeados a `dev`** (`#388`–`#418`): US-001 a US-014, US-017 a US-023, US-DASH y un fix de UX de adjuntos. Cada PR cierra su issue padre y sus tickets, con la suite de tests (backend > 570, frontend > 400) y, para los flujos críticos, specs de Playwright. Los PRs a `main` quedan para el cierre de Fase 1.
+**24 PRs merged to `dev`** were completed (`#388`–`#418`): US-001 to US-014, US-017 to US-023, US-DASH and an attachments UX fix. Each PR closes its parent issue and its tickets, with the test suite (backend > 570, frontend > 400) and, for the critical flows, Playwright specs. The PRs to `main` are reserved for the close of Phase 1.
