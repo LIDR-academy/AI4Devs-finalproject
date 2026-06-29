@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 import cv2
 import numpy as np
 
-from src.edge_dry_run import DryRunEvidenceWriter, run_integrated_dry_run
+from src.edge_dry_run import DryRunEvidenceWriter, build_backend_action_payload, run_integrated_dry_run
 from src.models import CubeDetection, DetectionSnapshot, EdgeRunProfile
 from src.robot.drop_zone_adapter import DropZoneAdapter
 from src.robot.drop_zone_planner import DropZoneUnavailableError
@@ -207,6 +207,82 @@ class EdgeDryRunTests(unittest.TestCase):
 
         adapter.confirm.assert_not_called()
         self.assertTrue(all(not slot.occupied for slot in adapter.slots))
+
+    def test_backend_sync_sends_one_planned_action_then_marks_it_success(self) -> None:
+        self.write_config("red")
+        client = Mock()
+        client.create_session.return_value = {"session": {"id": "session-1"}}
+        client.register_cubes.return_value = {"session": {"id": "session-1"}}
+        client.register_robot_action.return_value = {"action": {"id": "action-1"}}
+        client.update_robot_action.return_value = {"action": {"id": "action-1", "status": "SUCCESS"}}
+
+        result = run_integrated_dry_run(
+            self.config_path,
+            backend_client=client,
+            evidence_writer=DryRunEvidenceWriter(self.directory / "evidence"),
+        )
+
+        action_payload = client.register_robot_action.call_args.args[0]
+        self.assertEqual("PLANNED", action_payload["status"])
+        self.assertEqual("simulation", action_payload["mode"])
+        self.assertTrue(action_payload["metadata"]["dryRun"])
+        self.assertFalse(action_payload["metadata"]["hardwareMovement"])
+        self.assertEqual("DROP_RED_01", action_payload["metadata"]["dropZoneCode"])
+        client.update_robot_action.assert_called_once()
+        self.assertEqual("SUCCESS", result["backend"]["actionStatus"])
+        self.assertEqual("IN_PROGRESS", result["backend"]["sessionStatus"])
+
+    def test_backend_payload_is_allowlisted_and_maps_vision_source(self) -> None:
+        cube = CubeDetection(
+            "blue",
+            1,
+            2,
+            3,
+            4,
+            0.9,
+            metadata={"frameSource": "private/path.png", "token": "secret"},
+        )
+        snapshot = DetectionSnapshot(
+            "run-safe",
+            "file",
+            (cube,),
+            truck_code="TRUCK-001",
+            frame_source="private/path.png",
+            metadata={"password": "secret"},
+        )
+        payload = build_backend_action_payload(
+            snapshot,
+            cube,
+            profile=EdgeRunProfile.VISION_DRY_RUN,
+            drop_zone_code="DROP_BLUE_01",
+            position_order=1,
+        )
+        encoded = str(payload)
+        self.assertEqual("opencv-file", payload["metadata"]["source"])
+        self.assertNotIn("private/path.png", encoded)
+        self.assertNotIn("secret", encoded)
+
+    def test_backend_action_is_marked_error_when_planner_fails(self) -> None:
+        self.write_config("red")
+        client = Mock()
+        client.create_session.return_value = {"session": {"id": "session-error"}}
+        client.register_cubes.return_value = {"session": {"id": "session-error"}}
+        client.register_robot_action.return_value = {"action": {"id": "action-error"}}
+        with patch(
+            "src.edge_dry_run.RobotActionPlanner.plan",
+            side_effect=RobotPlanningError("MISSING_CALIBRATION", "sensitive details"),
+        ):
+            with self.assertRaises(RobotPlanningError):
+                run_integrated_dry_run(
+                    self.config_path,
+                    backend_client=client,
+                    evidence_writer=DryRunEvidenceWriter(self.directory / "evidence"),
+                )
+
+        error_payload = client.update_robot_action.call_args.args[1]
+        self.assertEqual("ERROR", error_payload["status"])
+        self.assertEqual("MISSING_CALIBRATION", error_payload["metadata"]["errorCode"])
+        self.assertNotIn("sensitive details", str(error_payload))
 
 
 if __name__ == "__main__":

@@ -8,6 +8,7 @@ Backend MVP para Entrega 2. Implementa API REST local con Express, TypeScript, P
 - No implementa control real del MaxArm.
 - No implementa autenticacion, RBAC, WebSockets ni streaming.
 - Recibe datos simulados como si fueran enviados por Edge.
+- Recibe trazabilidad saneada de `edge_dry_run.py` sin controlar hardware.
 
 ## Requisitos
 
@@ -188,8 +189,42 @@ curl http://localhost:3000/dashboard/operational
 5. `POST /robot/actions`
 6. `GET /dashboard/operational`
 
+## Dry-run integrado y transiciones
+
+El payload histórico de `POST /robot/actions` sigue vigente. Para trazabilidad se
+puede crear una acción `PLANNED` con `metadata.profile=vision-dry-run` y finalizarla:
+
+```powershell
+Invoke-RestMethod -Method PATCH `
+  -Uri "http://localhost:3000/robot/actions/ACTION_ID" `
+  -ContentType "application/json" `
+  -Body '{"status":"SUCCESS","metadata":{"outcome":"DRY_RUN_PLANNED"}}'
+```
+
+La sesión puede cerrarse explícitamente con:
+
+```powershell
+Invoke-RestMethod -Method PATCH `
+  -Uri "http://localhost:3000/sessions/SESSION_ID" `
+  -ContentType "application/json" `
+  -Body '{"status":"COMPLETED"}'
+```
+
+Estados permitidos: acción `PLANNED -> SUCCESS|ERROR`; sesión
+`IN_PROGRESS -> COMPLETED|ERROR`. Las repeticiones del mismo estado terminal son
+idempotentes. No se requirió migración Prisma: `metadata`, estados y `finishedAt`
+ya existían.
+
+## Tests
+
+```powershell
+npm test
+npm run build
+```
+
 ## Pendientes
 
-- Integracion con Edge real queda para una fase posterior.
+- Idempotencia entre procesos por `runId`.
+- Evidencia E2E reproducible con QR/cámara reales.
 - Control fisico de MaxArm no esta implementado.
 - Autenticacion, RBAC y auditoria avanzada quedan fuera de Entrega 2.

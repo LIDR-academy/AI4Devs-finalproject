@@ -30,6 +30,8 @@ El backend registra datos simulados como si fueran enviados por Edge. No impleme
 | GET | `/sessions/:id` | Obtener sesion por UUID |
 | POST | `/sessions/:id/cubes` | Registrar cubos simulados en una sesion |
 | POST | `/robot/actions` | Registrar accion robot simulada |
+| PATCH | `/robot/actions/:id` | Finalizar una accion `PLANNED` como `SUCCESS` o `ERROR` |
+| PATCH | `/sessions/:id` | Cerrar una sesion como `COMPLETED` o `ERROR` |
 | GET | `/dashboard/operational` | Consultar estado operacional agregado |
 
 ## Convenciones
@@ -257,6 +259,66 @@ Devuelve el estado operacional agregado para dashboard.
 Invoke-RestMethod -Method GET -Uri "http://localhost:3000/dashboard/operational"
 ```
 
+## Trazabilidad de dry-run
+
+`POST /robot/actions` conserva el payload de Entrega 2 y admite metadata operacional:
+
+```json
+{
+  "sessionId": "uuid",
+  "actionType": "PICK_AND_DROP",
+  "status": "PLANNED",
+  "mode": "simulation",
+  "color": "red",
+  "metadata": {
+    "runId": "run-001",
+    "profile": "vision-dry-run",
+    "dryRun": true,
+    "source": "opencv-file",
+    "selectedCube": { "color": "red", "x": 80, "y": 80, "w": 20, "h": 20, "confidence": 0.9 },
+    "dropZoneCode": "DROP_RED_01",
+    "positionOrder": 1,
+    "releaseConfirmed": false,
+    "statePersisted": false,
+    "calibrationVersion": "pickup-v1"
+  }
+}
+```
+
+Para `profile=vision-dry-run`, el servidor impone `mode=simulation`, `dryRun=true`,
+`serialOpened=false` y `hardwareMovement=false`. La metadata tiene límite de 32 KiB,
+rechaza claves sensibles y sanitiza `errorMessage`.
+
+Finalización controlada:
+
+```http
+PATCH /robot/actions/:id
+Content-Type: application/json
+
+{"status":"SUCCESS","metadata":{"outcome":"DRY_RUN_PLANNED"}}
+```
+
+Solo se permite `PLANNED -> SUCCESS|ERROR`; repetir el mismo estado terminal es
+idempotente y cambiar un estado terminal devuelve `409`.
+
+El cierre de sesión es explícito:
+
+```http
+PATCH /sessions/:id
+Content-Type: application/json
+
+{"status":"COMPLETED"}
+```
+
+También acepta `ERROR`, asigna `finishedAt` en el servidor y no permite reabrir una
+sesión terminal. Edge deja la sesión `IN_PROGRESS` durante la demostración para que
+continúe visible como `activeSession`.
+
+El dashboard mantiene `activeSession`, `counts` y `lastActions`, y agrega
+`profile`, `dryRun`, `visionSource`, `selectedCube`, `dropZoneCode`, `lastError`,
+`updatedAt` y una proyección `execution` por acción. Estos datos son reportados por
+Edge; no constituyen evidencia de movimiento físico.
+
 ### Response 200
 
 ```json
@@ -284,9 +346,32 @@ Invoke-RestMethod -Method GET -Uri "http://localhost:3000/dashboard/operational"
       "status": "SUCCESS",
       "mode": "simulation",
       "color": "red",
-      "createdAt": "2026-06-09T01:06:25.895Z"
+      "createdAt": "2026-06-09T01:06:25.895Z",
+      "updatedAt": "2026-06-09T01:06:26.100Z",
+      "execution": {
+        "runId": "run-001",
+        "profile": "vision-dry-run",
+        "dryRun": true,
+        "visionSource": "opencv-file",
+        "selectedCube": { "color": "red", "x": 80, "y": 80, "w": 20, "h": 20, "confidence": 0.9 },
+        "dropZoneCode": "DROP_RED_01",
+        "positionOrder": 1,
+        "releaseConfirmed": false,
+        "statePersisted": false,
+        "configVersion": null,
+        "calibrationVersion": "pickup-v1",
+        "errorCode": null,
+        "errorMessage": null
+      }
     }
-  ]
+  ],
+  "profile": "vision-dry-run",
+  "dryRun": true,
+  "visionSource": "opencv-file",
+  "selectedCube": { "color": "red", "x": 80, "y": 80, "w": 20, "h": 20, "confidence": 0.9 },
+  "dropZoneCode": "DROP_RED_01",
+  "lastError": null,
+  "updatedAt": "2026-06-09T01:06:26.100Z"
 }
 ```
 

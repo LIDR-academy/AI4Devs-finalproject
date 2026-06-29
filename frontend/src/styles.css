@@ -135,6 +135,36 @@ button {
   gap: 12px;
 }
 
+.trace-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.trace-grid > div {
+  min-height: 72px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fbfcfe;
+}
+
+.trace-grid strong {
+  overflow-wrap: anywhere;
+}
+
+.trace-error {
+  border-color: #fecdca !important;
+  color: var(--danger);
+  background: #fff8f7 !important;
+}
+
+.trace-note {
+  margin: 14px 0 0;
+  color: var(--warning);
+  font-size: 13px;
+}
+
 .status-grid div {
   min-height: 76px;
   padding: 12px;
@@ -283,7 +313,8 @@ th {
 
 @media (max-width: 860px) {
   .dashboard-grid,
-  .status-grid {
+  .status-grid,
+  .trace-grid {
     grid-template-columns: 1fr;
   }
 

@@ -22,6 +22,10 @@ export type CubeInput = {
   metadata?: Record<string, unknown>;
 };
 
+export type FinishSessionInput = {
+  status: "COMPLETED" | "ERROR";
+};
+
 export const parseStartSessionInput = (body: unknown): StartSessionInput => {
   const input = assertRecord(body, "body");
   return {
@@ -54,4 +58,11 @@ export const parseCubesInput = (body: unknown): CubeInput[] => {
       }
     };
   });
+};
+
+export const parseFinishSessionInput = (body: unknown): FinishSessionInput => {
+  const input = assertRecord(body, "body");
+  return {
+    status: oneOf(input.status, "status", ["COMPLETED", "ERROR"] as const)
+  };
 };

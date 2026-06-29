@@ -33,7 +33,9 @@ export function ActionsTable({ actions }: Props) {
                 <th>Tipo</th>
                 <th>Estado</th>
                 <th>Modo</th>
+                <th>Perfil</th>
                 <th>Color</th>
+                <th>Drop zone</th>
                 <th>Hora</th>
               </tr>
             </thead>
@@ -46,7 +48,9 @@ export function ActionsTable({ actions }: Props) {
                     <span className={`status-badge status-${action.status.toLowerCase()}`}>{action.status}</span>
                   </td>
                   <td>{action.mode}</td>
+                  <td>{action.execution?.profile ?? "-"}</td>
                   <td>{action.color ?? "-"}</td>
+                  <td>{action.execution?.dropZoneCode ?? "-"}</td>
                   <td>{formatTime(action.createdAt)}</td>
                 </tr>
               ))}

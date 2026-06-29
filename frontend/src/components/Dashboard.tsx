@@ -4,6 +4,7 @@ import type { OperationalDashboard } from "../types/dashboard";
 import { ActionsTable } from "./ActionsTable";
 import { CountsPanel } from "./CountsPanel";
 import { StatusPanel } from "./StatusPanel";
+import { ExecutionPanel } from "./ExecutionPanel";
 
 type LoadState = "loading" | "ready" | "empty" | "error";
 
@@ -63,6 +64,7 @@ export function Dashboard() {
         <div className="dashboard-grid">
           <StatusPanel session={data.activeSession} lastAction={data.lastActions[0]} />
           <CountsPanel counts={data.counts} />
+          <ExecutionPanel dashboard={data} />
           <ActionsTable actions={data.lastActions} />
         </div>
       )}

@@ -1,4 +1,5 @@
 import { prisma } from "../../lib/prisma";
+import { projectExecutionMetadata } from "../robot/robot.metadata";
 
 const emptyCounts = {
   red: 0,
@@ -26,7 +27,14 @@ export const getOperationalDashboard = async () => {
     return {
       activeSession: null,
       counts: emptyCounts,
-      lastActions: []
+      lastActions: [],
+      profile: null,
+      dryRun: null,
+      visionSource: null,
+      selectedCube: null,
+      dropZoneCode: null,
+      lastError: null,
+      updatedAt: null
     };
   }
 
@@ -39,6 +47,24 @@ export const getOperationalDashboard = async () => {
     { ...emptyCounts }
   );
 
+  const lastActions = activeSession.robotActions.map((action) => ({
+    id: action.id,
+    code: action.code,
+    actionType: action.actionType,
+    status: action.status,
+    mode: action.mode,
+    color: action.color,
+    createdAt: action.createdAt,
+    updatedAt: action.updatedAt,
+    execution: projectExecutionMetadata(action.metadata)
+  }));
+  const latest = lastActions[0];
+  const execution = latest?.execution;
+  const lastError =
+    execution?.errorCode || execution?.errorMessage
+      ? { code: execution.errorCode, message: execution.errorMessage }
+      : null;
+
   return {
     activeSession: {
       id: activeSession.id,
@@ -49,14 +75,13 @@ export const getOperationalDashboard = async () => {
       finishedAt: activeSession.finishedAt
     },
     counts,
-    lastActions: activeSession.robotActions.map((action) => ({
-      id: action.id,
-      code: action.code,
-      actionType: action.actionType,
-      status: action.status,
-      mode: action.mode,
-      color: action.color,
-      createdAt: action.createdAt
-    }))
+    lastActions,
+    profile: execution?.profile ?? null,
+    dryRun: execution?.dryRun ?? null,
+    visionSource: execution?.visionSource ?? null,
+    selectedCube: execution?.selectedCube ?? null,
+    dropZoneCode: execution?.dropZoneCode ?? null,
+    lastError,
+    updatedAt: latest?.updatedAt ?? activeSession.updatedAt
   };
 };

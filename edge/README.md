@@ -303,6 +303,28 @@ DetectionSnapshot
 
 No importa ni abre serial. No ejecuta comandos y nunca llama `DropZoneAdapter.confirm()`.
 
+### Sincronizar la traza con Backend
+
+La sincronización es opt-in y no cambia los gates de seguridad:
+
+```powershell
+python src\edge_dry_run.py `
+  --config config\edge.dry-run.example.json `
+  --sync-backend `
+  --backend-url http://localhost:3000
+```
+
+El flujo registra una sesión, las detecciones saneadas y una única acción
+`PLANNED`, que luego actualiza a `SUCCESS` con `outcome=DRY_RUN_PLANNED`. La sesión
+queda `IN_PROGRESS` para que el dashboard la muestre. No se envían poses,
+command previews, rutas, snapshots completos ni metadata cruda. La acción siempre
+usa `mode=simulation`, `dryRun=true`, `serialOpened=false`,
+`hardwareMovement=false`, `releaseConfirmed=false` y `statePersisted=false`.
+
+La sincronización no llama `confirm()`, no cambia `occupied` y no abre serial. Para
+fuentes reales, exige un `truckCode` validado en el snapshot y que coincida con la
+configuración; no presenta un valor configurado como si proviniera del QR.
+
 ### Ejemplo reproducible
 
 Los archivos siguientes contienen valores exclusivamente sintéticos:

@@ -405,3 +405,19 @@ Cada evidencia debe incluir fecha, commit o versión local identificable, config
 - Riesgos y pendientes explícitos.
 - Prompt runs registrados.
 - Sin secretos, sin cambios a `_local_context/` y sin depender de copiar experiments.
+
+### Avance implementado: trazabilidad dry-run
+
+Se implementó la base de G4 sin migración Prisma:
+
+- Edge puede sincronizar de forma opt-in una traza saneada de dry-run.
+- Backend conserva los endpoints de Entrega 2 y agrega transiciones controladas
+  para acciones y sesiones.
+- El dashboard expone perfil, fuente, cubo seleccionado, drop zone y último error.
+- Frontend muestra esa traza sin controles físicos.
+- La sesión no se cierra automáticamente: cerrarla quitaría la semántica de
+  `activeSession`; el cierre explícito queda disponible después de capturar evidencia.
+- `runId` aún no es una clave idempotente de base de datos; los reintentos entre
+  procesos deben evitarse hasta diseñar esa garantía.
+- `SUCCESS` con `outcome=DRY_RUN_PLANNED` significa planificación/evidencia lógica,
+  nunca descarga física ni persistencia de `occupied`.

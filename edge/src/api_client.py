@@ -33,6 +33,12 @@ class BackendClient:
     def register_robot_action(self, payload: dict[str, Any]) -> dict[str, Any]:
         return self._request("POST", "/robot/actions", json=payload)
 
+    def update_robot_action(self, action_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        return self._request("PATCH", f"/robot/actions/{action_id}", json=payload)
+
+    def update_session(self, session_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        return self._request("PATCH", f"/sessions/{session_id}", json=payload)
+
     def get_operational_dashboard(self) -> dict[str, Any]:
         return self._request("GET", "/dashboard/operational")
 

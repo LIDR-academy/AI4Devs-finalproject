@@ -15,6 +15,8 @@ Este frontend implementa una pantalla minima:
 - Ultimas acciones del robot.
 - Modo `simulation` cuando corresponde.
 - Estados loading, error y empty.
+- Perfil, fuente de visión, dry-run, cubo y drop zone planificados.
+- Estado de acción y último error reportado.
 
 No declara hardware real como implementado. El frontend consume datos reales del backend, que para Entrega 2 provienen del Edge en modo `simulation`.
 
@@ -88,6 +90,9 @@ npm run dev
 - el total de cubos es mayor que cero;
 - aparecen conteos por color;
 - la ultima accion del robot muestra `mode=simulation`.
+- el panel de trazabilidad muestra `profile`, fuente, cubo y `dropZoneCode`;
+- `vision-dry-run` se etiqueta como dry-run sin movimiento;
+- no existen controles de movimiento ni reset de ocupación.
 
 ## Build
 

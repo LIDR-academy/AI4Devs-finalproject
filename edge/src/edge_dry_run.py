@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 try:
+    from .api_client import BackendClient
     from .config import EdgeConfig, load_edge_config
     from .models import CubeDetection, DetectionSnapshot, EdgeRunProfile, RobotActionPlan
     from .robot.drop_zone_adapter import DropZoneAdapter
@@ -22,6 +23,7 @@ try:
     from .vision.pipeline import VisionPipeline
     from .vision.qr_reader import QrReader
 except ImportError:
+    from api_client import BackendClient
     from config import EdgeConfig, load_edge_config
     from models import CubeDetection, DetectionSnapshot, EdgeRunProfile, RobotActionPlan
     from robot.drop_zone_adapter import DropZoneAdapter
@@ -63,6 +65,175 @@ class DryRunEvidenceWriter:
             if temporary_path is not None and temporary_path.exists():
                 temporary_path.unlink()
         return filename
+
+
+def _backend_source(source: str) -> str:
+    mapping = {
+        "simulation": "simulation",
+        "file": "opencv-file",
+        "camera": "opencv-camera",
+    }
+    try:
+        return mapping[source]
+    except KeyError as exc:
+        raise ValueError(f"Unsupported snapshot source for Backend sync: {source!r}") from exc
+
+
+def _cube_for_backend(cube: CubeDetection, snapshot: DetectionSnapshot) -> dict[str, Any]:
+    metadata: dict[str, Any] = {"runId": snapshot.run_id}
+    if snapshot.frame_id:
+        metadata["frameId"] = snapshot.frame_id
+    if snapshot.calibration_version:
+        metadata["calibrationVersion"] = snapshot.calibration_version
+    for key in ("coordinateSpace", "sizeValid"):
+        if key in cube.metadata and isinstance(cube.metadata[key], (str, bool)):
+            metadata[key] = cube.metadata[key]
+    return {
+        "color": cube.color,
+        "x": cube.x,
+        "y": cube.y,
+        "w": cube.w,
+        "h": cube.h,
+        "confidence": cube.confidence,
+        "metadata": metadata,
+    }
+
+
+def build_backend_action_payload(
+    snapshot: DetectionSnapshot,
+    selected_cube: CubeDetection,
+    *,
+    profile: EdgeRunProfile,
+    drop_zone_code: str,
+    position_order: int,
+) -> dict[str, Any]:
+    source = _backend_source(snapshot.source)
+    metadata: dict[str, Any] = {
+        "runId": snapshot.run_id,
+        "profile": profile.value,
+        "dryRun": True,
+        "source": source,
+        "selectedCube": {
+            "color": selected_cube.color,
+            "x": selected_cube.x,
+            "y": selected_cube.y,
+            "w": selected_cube.w,
+            "h": selected_cube.h,
+            "confidence": selected_cube.confidence,
+        },
+        "dropZoneCode": drop_zone_code,
+        "positionOrder": position_order,
+        "releaseConfirmed": False,
+        "statePersisted": False,
+        "serialOpened": False,
+        "hardwareMovement": False,
+    }
+    if snapshot.calibration_version:
+        metadata["calibrationVersion"] = snapshot.calibration_version
+    return {
+        "actionType": "PICK_AND_DROP",
+        "status": "PLANNED",
+        "mode": "simulation",
+        "color": selected_cube.color,
+        "metadata": metadata,
+    }
+
+
+def _start_backend_trace(
+    client: BackendClient,
+    config: EdgeConfig,
+    snapshot: DetectionSnapshot,
+    selected_cube: CubeDetection,
+    selection,
+) -> dict[str, Any]:
+    if not snapshot.truck_code:
+        raise ValueError("Backend sync requires a validated truckCode in the snapshot")
+    if snapshot.truck_code != config.truck_code:
+        raise ValueError("Snapshot truckCode does not match configured truckCode")
+
+    source = _backend_source(snapshot.source)
+    session_response = client.create_session(snapshot.truck_code)
+    session = session_response.get("session")
+    session_id = session.get("id") if isinstance(session, dict) else None
+    if not isinstance(session_id, str) or not session_id:
+        raise ValueError("Backend did not return session.id")
+
+    client.register_cubes(
+        session_id,
+        source,
+        [_cube_for_backend(cube, snapshot) for cube in snapshot.detections],
+    )
+    action_payload = build_backend_action_payload(
+        snapshot,
+        selected_cube,
+        profile=config.profile,
+        drop_zone_code=selection.slot.code,
+        position_order=selection.slot.position_order,
+    )
+    action_payload["sessionId"] = session_id
+    action_response = client.register_robot_action(action_payload)
+    action = action_response.get("action")
+    action_id = action.get("id") if isinstance(action, dict) else None
+    if not isinstance(action_id, str) or not action_id:
+        raise ValueError("Backend did not return action.id")
+
+    terminal_metadata = {
+        **action_payload["metadata"],
+        "outcome": "DRY_RUN_PLANNED",
+    }
+    return {
+        "sessionId": session_id,
+        "actionId": action_id,
+        "actionStatus": "PLANNED",
+        "sessionStatus": "IN_PROGRESS",
+        "dashboardReady": True,
+        "metadata": terminal_metadata,
+    }
+
+
+def _finish_backend_trace(
+    client: BackendClient,
+    trace: dict[str, Any],
+    status: str,
+    *,
+    error_code: str | None = None,
+) -> dict[str, Any]:
+    metadata = {
+        **trace["metadata"],
+        "outcome": "DRY_RUN_PLANNED" if status == "SUCCESS" else "DRY_RUN_FAILED",
+    }
+    if error_code:
+        metadata["errorCode"] = error_code
+    response = client.update_robot_action(
+        trace["actionId"],
+        {"status": status, "metadata": metadata},
+    )
+    return {**trace, "actionStatus": status, "response": response}
+
+
+def _safe_error_code(error: Exception) -> str:
+    code = getattr(error, "code", None)
+    allowed = {
+        "ZONE_UNAVAILABLE",
+        "MISSING_CALIBRATION",
+        "CUBE_UNAVAILABLE",
+        "UNSAFE_PROFILE",
+        "DRY_RUN_REQUIRED",
+        "RUN_ID_MISMATCH",
+        "CUBE_NOT_IN_SNAPSHOT",
+        "UNSUPPORTED_COLOR",
+        "INVALID_CUBE",
+        "COLOR_MISMATCH",
+        "DROP_ZONE_NOT_AVAILABLE",
+        "MISSING_PLANNING_CONFIG",
+        "MISSING_WORKSPACE",
+        "MISSING_POSE",
+        "INVALID_SAFE_Z",
+        "INVALID_CALIBRATION",
+        "OUTSIDE_CALIBRATION_ROI",
+        "POSE_OUTSIDE_WORKSPACE",
+    }
+    return code if isinstance(code, str) and code in allowed else "DRY_RUN_FAILED"
 
 
 def _snapshot_from_simulation(config: EdgeConfig) -> DetectionSnapshot:
@@ -223,6 +394,7 @@ def run_integrated_dry_run(
     allow_camera: bool = False,
     adapter: DropZoneAdapter | None = None,
     evidence_writer: DryRunEvidenceWriter | None = None,
+    backend_client: BackendClient | None = None,
 ) -> dict[str, Any]:
     config = load_edge_config(config_path)
     if config.profile not in {EdgeRunProfile.SIMULATION, EdgeRunProfile.VISION_DRY_RUN}:
@@ -246,8 +418,17 @@ def run_integrated_dry_run(
         persist_hardware_state=False,
     )
     selection = None
+    backend_trace: dict[str, Any] | None = None
     try:
         selection = drop_zone_adapter.reserve(selected_cube.color, snapshot.run_id)
+        if backend_client is not None:
+            backend_trace = _start_backend_trace(
+                backend_client,
+                config,
+                snapshot,
+                selected_cube,
+                selection,
+            )
         plan = RobotActionPlanner().plan(
             snapshot,
             selected_cube,
@@ -256,6 +437,18 @@ def run_integrated_dry_run(
             config.profile,
             dry_run=True,
         )
+    except Exception as error:
+        if backend_client is not None and backend_trace is not None:
+            try:
+                _finish_backend_trace(
+                    backend_client,
+                    backend_trace,
+                    "ERROR",
+                    error_code=_safe_error_code(error),
+                )
+            except Exception:
+                pass
+        raise
     finally:
         if selection is not None:
             drop_zone_adapter.cancel(selection.run_id)
@@ -281,13 +474,30 @@ def run_integrated_dry_run(
     }
     writer = evidence_writer or DryRunEvidenceWriter(config.vision.evidence_directory)
     evidence_file = writer.write(payload, snapshot.run_id)
-    return {**payload, "evidence": {"json": evidence_file}}
+    result = {**payload, "evidence": {"json": evidence_file}}
+    if backend_client is not None and backend_trace is not None:
+        result["backend"] = _finish_backend_trace(
+            backend_client,
+            backend_trace,
+            "SUCCESS",
+        )
+    return result
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Plan an integrated Edge dry-run without serial.")
     parser.add_argument("--config", default="config/edge.config.example.json")
     parser.add_argument("--snapshot", help="Optional DetectionSnapshot JSON.")
+    parser.add_argument(
+        "--sync-backend",
+        action="store_true",
+        help="Register the sanitized dry-run trace in Backend; never enables hardware.",
+    )
+    parser.add_argument(
+        "--backend-url",
+        default=os.getenv("BACKEND_URL", "http://localhost:3000"),
+        help="Backend URL used only with --sync-backend.",
+    )
     parser.add_argument(
         "--allow-camera",
         action="store_true",
@@ -298,6 +508,7 @@ def main() -> None:
         Path(args.config),
         snapshot=load_snapshot(Path(args.snapshot)) if args.snapshot else None,
         allow_camera=args.allow_camera,
+        backend_client=BackendClient(args.backend_url) if args.sync_backend else None,
     )
     print(json.dumps(result, indent=2, ensure_ascii=False))
 

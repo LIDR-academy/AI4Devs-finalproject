@@ -17,7 +17,9 @@ export function StatusPanel({ session, lastAction }: Props) {
     return null;
   }
 
-  const mode = lastAction?.mode ?? "simulation";
+  const mode = lastAction?.execution?.dryRun
+    ? `${lastAction.execution.profile ?? "simulation"} · dry-run`
+    : lastAction?.mode ?? "simulation";
 
   return (
     <section className="panel panel-span-2">

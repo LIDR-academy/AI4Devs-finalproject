@@ -39,7 +39,9 @@ export const mapSession = (session: Prisma.UnloadSessionGetPayload<{ include: ty
     status: action.status,
     mode: action.mode,
     color: action.color,
-    createdAt: action.createdAt
+    metadata: action.metadata,
+    createdAt: action.createdAt,
+    updatedAt: action.updatedAt
   }))
 });
 
@@ -121,4 +123,18 @@ export const addCubesToSession = async (sessionId: string, cubes: CubeInput[]) =
   });
 
   return getSessionById(sessionId);
+};
+
+export const finishSession = async (id: string, status: "COMPLETED" | "ERROR") => {
+  const current = await prisma.unloadSession.findUnique({ where: { id } });
+  if (!current) throw new HttpError(404, "Session not found");
+  if (current.status === status) return getSessionById(id);
+  if (current.status !== "IN_PROGRESS") {
+    throw new HttpError(409, `Session cannot transition from ${current.status} to ${status}`);
+  }
+  await prisma.unloadSession.update({
+    where: { id },
+    data: { status, finishedAt: new Date() }
+  });
+  return getSessionById(id);
 };

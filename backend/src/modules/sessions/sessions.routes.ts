@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { asyncHandler } from "../../lib/async-handler";
-import { parseCubesInput, parseStartSessionInput } from "./sessions.validators";
-import { addCubesToSession, getSessionById, listSessions, startSession } from "./sessions.service";
+import { parseCubesInput, parseFinishSessionInput, parseStartSessionInput } from "./sessions.validators";
+import { addCubesToSession, finishSession, getSessionById, listSessions, startSession } from "./sessions.service";
 
 export const sessionsRouter = Router();
 
@@ -11,6 +11,15 @@ sessionsRouter.post(
     const input = parseStartSessionInput(req.body);
     const session = await startSession(input.truckCode);
     res.status(201).json({ session });
+  })
+);
+
+sessionsRouter.patch(
+  "/:id",
+  asyncHandler(async (req, res) => {
+    const input = parseFinishSessionInput(req.body);
+    const session = await finishSession(req.params.id, input.status);
+    res.json({ session });
   })
 );
 

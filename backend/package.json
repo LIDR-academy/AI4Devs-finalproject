@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "description": "RoboDock AI backend MVP for Entrega 2",
-  "main": "dist/server.js",
+  "main": "dist/src/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "test": "vitest run",
+    "start": "node dist/src/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "prisma db seed"
@@ -24,7 +25,8 @@
     "@types/node": "^22.10.2",
     "prisma": "^5.22.0",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.9"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
