@@ -15,21 +15,22 @@ Este modulo simula el flujo Edge de RoboDock AI:
 7. Consulta dashboard con `GET /dashboard/operational`.
 8. Muestra resumen en consola.
 
-No implementa todavía cámara real, OpenCV productivo, comunicación serial ni movimiento físico del MaxArm.
+Implementa procesamiento OpenCV aislado para imagen o un frame de cámara. No integra todavía esa visión con Backend, planificación robot, comunicación serial ni movimiento físico del MaxArm.
 
 ## Perfiles de ejecución
 
 | Perfil | Estado actual | Comportamiento |
 |---|---|---|
 | `simulation` | Implementado y default | Ejecuta el flujo simulado existente contra Backend. |
-| `vision-dry-run` | Reconocido, no ejecutable aún | El runner aborta antes de crear sesión o abrir dispositivos. |
+| `vision-dry-run` | Implementado en `vision_runner.py` | Procesa archivo o, con autorización explícita, un frame de cámara. No llama al Backend ni al robot. |
 | `hardware` | Reconocido, no ejecutable aún | El runner aborta antes de crear sesión o abrir dispositivos. |
 
-Un perfil no implementado nunca degrada silenciosamente a simulación. Esta base no importa OpenCV ni pyserial.
+El runner principal de Entrega 2 continúa ejecutando únicamente `simulation`. Un perfil no implementado nunca degrada silenciosamente a simulación.
 
 ## Requisitos
 
 - Python 3.10+
+- OpenCV y NumPy instalados mediante `requirements.txt`
 - Backend RoboDock ejecutandose en `http://localhost:3000`
 - PostgreSQL y backend configurados segun `backend/README.md`
 
@@ -79,6 +80,18 @@ Valores principales:
 - `vision.cubes`: cubos simulados enviados al backend.
 - `robot`: accion simulada de pick/drop con `dryRun=true`.
 
+Configuración de visión:
+
+- `vision.source`: `simulation`, `file` o `camera`.
+- `vision.imagePath`: ruta relativa de la imagen de prueba.
+- `vision.cameraIndex`: índice configurable, por defecto `0`.
+- `vision.qrRoi` y `vision.cargoRoi`: ROI independientes o `null`.
+- `vision.qr.pattern`: expresión permitida para `truckCode`.
+- `vision.qr.allowedTruckCodes`: allowlist opcional.
+- `vision.detection`: área mínima/máxima y fill ratio.
+- `vision.hsvRanges`: rangos HSV por color.
+- `vision.evidence.directory`: directorio relativo para evidencia opcional.
+
 El campo histórico `mode=simulation` sigue siendo aceptado para configuraciones de Entrega 2.
 
 ## Modelos internos
@@ -94,6 +107,112 @@ El campo histórico `mode=simulation` sigue siendo aceptado para configuraciones
 - `EdgeRunProfile`
 
 Son modelos internos. No cambian todavía los contratos del Backend.
+
+## Visión real aislada
+
+La visión está separada en:
+
+```text
+edge/src/vision/capture.py
+edge/src/vision/qr_reader.py
+edge/src/vision/color_detector.py
+edge/src/vision/cube_selector.py
+edge/src/vision/pipeline.py
+edge/src/vision/evidence.py
+```
+
+`DetectionSnapshot` contiene `runId`, timestamp UTC, source, `truckCode`, detecciones, origen del frame y metadata segura. No contiene la imagen binaria.
+
+### Procesar una imagen
+
+Crear una copia local del config y configurar:
+
+```json
+{
+  "profile": "vision-dry-run",
+  "vision": {
+    "source": "file",
+    "imagePath": "fixtures/escena.png"
+  }
+}
+```
+
+La ruta es relativa al archivo de configuración. Ejecutar:
+
+```powershell
+python src\vision_runner.py --config config\edge.vision.local.json
+```
+
+Para guardar JSON y una imagen anotada:
+
+```powershell
+python src\vision_runner.py --config config\edge.vision.local.json --save-evidence
+```
+
+### Procesar un frame de cámara
+
+Configurar:
+
+```json
+{
+  "profile": "vision-dry-run",
+  "vision": {
+    "source": "camera",
+    "cameraIndex": 0
+  }
+}
+```
+
+La cámara solo se abre con autorización explícita:
+
+```powershell
+python src\vision_runner.py --config config\edge.vision.local.json --allow-camera
+```
+
+Sin `--allow-camera`, el proceso falla antes de llamar a `VideoCapture`.
+
+### ROI
+
+`qrRoi` y `cargoRoi` usan coordenadas globales:
+
+```json
+{
+  "x": 50,
+  "y": 40,
+  "w": 200,
+  "h": 160
+}
+```
+
+Una ROI negativa, vacía o parcial/totalmente fuera del frame produce error. No existe fallback silencioso al frame completo cuando se configuró una ROI.
+
+### Rangos HSV
+
+Cada color acepta uno o más rangos:
+
+```json
+{
+  "red": [
+    { "lower": [0, 100, 80], "upper": [10, 255, 255] },
+    { "lower": [170, 100, 80], "upper": [179, 255, 255] }
+  ]
+}
+```
+
+OpenCV usa H entre 0-179 y S/V entre 0-255. Los valores del ejemplo son un punto inicial; deben recalibrarse para la cámara, iluminación y cubos reales.
+
+### CubeSelector
+
+`CubeSelector` es lógica pura. Excluye colores no soportados, bounding boxes inválidas y detecciones con `sizeValid=false`. La política por defecto selecciona mayor confianza, luego mayor área y finalmente aplica desempate estable. No conoce drop zones, Backend, cámara o serial.
+
+### Evidencia
+
+La evidencia es opt-in con `--save-evidence`:
+
+- un JSON atómico con una única lista `detections`;
+- una imagen anotada cuando hay frame;
+- nombres relativos basados en `runId`;
+- metadata con claves sensibles eliminadas.
 
 ## Drop zones
 
@@ -226,21 +345,25 @@ También puede ejecutarse con la dependencia fijada en `requirements.txt`:
 python -m pytest tests -v
 ```
 
-Los tests cubren perfiles, defaults seguros, validación JSON, selección por color/orden, slots inactivos u ocupados, reservas consecutivas, zona llena, confirmación, reset, aislamiento de estado y regresión del flujo simulation con Backend simulado.
+Los tests cubren perfiles, drop zones y regresión simulation, además de captura desde archivo, gate de cámara, QR válido/ausente/inválido, detección HSV sintética, ROI fail-closed, snapshots, selección de cubos y evidencia.
 
 ## Errores comunes
 
 - Si falla la conexion, verificar que el backend este levantado con `npm run dev`.
 - Si falla Prisma o la DB, revisar `docker compose up -d`, migracion y seed del backend.
 - Si el perfil no es `simulation`, el runner se detiene por seguridad antes de instanciar el cliente Backend.
+- Si no se puede leer una imagen, revisar `vision.imagePath` respecto del archivo de configuración.
+- Si una ROI queda fuera de la resolución real, corregirla; el procesamiento se detiene de forma fail-closed.
 
 ## Evolucion futura
 
 Pendiente para los siguientes pasos:
 
-- incorporar lectura QR real con OpenCV;
-- incorporar deteccion real de cubos por color;
+- estabilizar QR y detecciones entre múltiples frames;
+- calibrar ROI y HSV con el montaje final;
+- incorporar homografía y calibración versionada de pickup;
 - integrar la selección del cubo detectado con `DropZonePlanner`;
+- conectar `DetectionSnapshot` con Backend sin duplicar detecciones;
 - agregar un comando operacional de reset con confirmación humana y auditoría;
 - añadir límites físicos de workspace y Z para coordenadas activas;
 - implementar reservas/persistencia hardware con bloqueo de proceso;

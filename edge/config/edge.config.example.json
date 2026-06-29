@@ -11,6 +11,56 @@
   },
   "vision": {
     "source": "simulation",
+    "imagePath": null,
+    "cameraIndex": 0,
+    "qrRoi": null,
+    "cargoRoi": null,
+    "qr": {
+      "pattern": "^TRUCK-\\d{3}$",
+      "allowedTruckCodes": [
+        "TRUCK-001",
+        "TRUCK-002",
+        "TRUCK-003"
+      ]
+    },
+    "detection": {
+      "minArea": 250,
+      "maxArea": 100000,
+      "minFillRatio": 0.45
+    },
+    "hsvRanges": {
+      "red": [
+        {
+          "lower": [0, 100, 80],
+          "upper": [10, 255, 255]
+        },
+        {
+          "lower": [170, 100, 80],
+          "upper": [179, 255, 255]
+        }
+      ],
+      "blue": [
+        {
+          "lower": [95, 90, 70],
+          "upper": [130, 255, 255]
+        }
+      ],
+      "yellow": [
+        {
+          "lower": [22, 120, 120],
+          "upper": [34, 255, 255]
+        }
+      ],
+      "green": [
+        {
+          "lower": [40, 70, 70],
+          "upper": [85, 255, 255]
+        }
+      ]
+    },
+    "evidence": {
+      "directory": "evidence"
+    },
     "cubes": [
       {
         "color": "red",

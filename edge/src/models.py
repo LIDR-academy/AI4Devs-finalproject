@@ -43,14 +43,43 @@ class CubeDetection:
     confidence: float | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
+    @property
+    def center(self) -> tuple[float, float]:
+        return self.x + self.w / 2.0, self.y + self.h / 2.0
+
+    @property
+    def area(self) -> int:
+        return self.w * self.h
+
 
 @dataclass(frozen=True)
 class DetectionSnapshot:
+    run_id: str
     source: str
     detections: tuple[CubeDetection, ...]
+    truck_code: str | None = None
+    frame_source: str | None = None
     frame_id: str | None = None
     calibration_version: str | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
     captured_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+@dataclass(frozen=True)
+class RegionOfInterest:
+    x: int
+    y: int
+    w: int
+    h: int
+
+    def as_dict(self) -> dict[str, int]:
+        return {"x": self.x, "y": self.y, "w": self.w, "h": self.h}
+
+
+@dataclass(frozen=True)
+class HsvRange:
+    lower: tuple[int, int, int]
+    upper: tuple[int, int, int]
 
 
 @dataclass(frozen=True)
@@ -89,4 +118,3 @@ class RobotActionPlan:
     cube: CubeDetection
     drop_zone: DropZoneSelection
     steps: tuple[RobotPose, ...]
-

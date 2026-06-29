@@ -42,7 +42,42 @@ class EdgeConfigTests(unittest.TestCase):
 
         self.assertIs(EdgeRunProfile.SIMULATION, load_edge_config(self.path).profile)
 
+    def test_parses_vision_file_and_independent_rois(self) -> None:
+        write_json(
+            self.path,
+            {
+                "profile": "vision-dry-run",
+                "vision": {
+                    "source": "file",
+                    "imagePath": "fixtures/scene.png",
+                    "qrRoi": {"x": 10, "y": 20, "w": 30, "h": 40},
+                    "cargoRoi": {"x": 50, "y": 60, "w": 70, "h": 80},
+                },
+            },
+        )
+
+        config = load_edge_config(self.path)
+
+        self.assertEqual(self.path.parent / "fixtures/scene.png", config.vision.image_path)
+        self.assertEqual(10, config.vision.qr_roi.x)
+        self.assertEqual(50, config.vision.cargo_roi.x)
+
+    def test_rejects_invalid_roi_before_capture(self) -> None:
+        write_json(
+            self.path,
+            {
+                "profile": "vision-dry-run",
+                "vision": {
+                    "source": "file",
+                    "imagePath": "fixture.png",
+                    "qrRoi": {"x": -1, "y": 0, "w": 10, "h": 10},
+                },
+            },
+        )
+
+        with self.assertRaises(EdgeConfigError):
+            load_edge_config(self.path)
+
 
 if __name__ == "__main__":
     unittest.main()
-
