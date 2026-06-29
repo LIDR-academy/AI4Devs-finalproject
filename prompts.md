@@ -123,3 +123,16 @@ Puedes añadir adicionalmente la conversación completa como link o archivo adju
 **Prompt 2:**
 
 **Prompt 3:**
+
+---
+
+## Log de prompts
+
+> Registro cronológico de los prompts de contenido del proyecto y un resumen de la
+> respuesta del asistente. Los prompts de configuración/flujo de trabajo no se registran.
+
+<!-- Formato por entrada:
+### [fecha] — Título corto
+**Prompt:** (texto del prompt)
+**Resumen de la respuesta:** (qué hizo el asistente)
+-->
