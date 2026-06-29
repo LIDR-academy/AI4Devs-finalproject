@@ -63,11 +63,6 @@ Given the following PRD, I would like to add a section explaining how are we goi
 
 ---
 
-
-=========================
-=========================
-=========================
-
 # 6 - claude.ai - Claude Sonnet 4.6
 
 ### Instructions 

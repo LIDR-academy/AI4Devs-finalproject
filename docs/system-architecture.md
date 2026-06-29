@@ -352,3 +352,119 @@ personal-training-platform/
     └── workflows/
         └── ci.yml               # Lint → typecheck → test → build → deploy
 ```
+
+---
+
+## 9. Data Structure
+
+### Entity Legend
+
+- **User** — Persona del sistema con rol (Admin/Coach/Coachee), contiene campos específicos según el rol y referencias al nivel asignado (Coachee).
+- **Level** — Los 5 niveles definidos (Principiante, Básico, Intermedio, Avanzado, Experto) con su color y orden.
+- **Class** — Una clase (individual o grupal) dictada por un Coach, con hora fija de 1 hora, estado, y referencia opcional a una serie recurrente.
+- **ClassEnrollment** — Relación muchos-a-muchos entre Coachees y clases grupales, o uno-a-uno para clases individuales.
+- **WaitingList** — Entrada de un Coachee en la lista de espera de una clase (grupal o individual).
+- **RecurrenceSeries** — Definición de una serie semanal recurrente: tipo de clase, Coach, nivel, día y hora. Genera instancias de Class.
+- **Block** — Bloqueo de tiempo (Personal: un Coach/Admin se bloquea a sí mismo; Gym-wide: el Admin bloquea todo el gimnasio).
+- **Notification** — Una de las 12 notificaciones push catalogadas, dirigida a un Usuario, opcionalmente vinculada a una clase.
+
+### Entity-Relationship Diagram
+
+```mermaid
+erDiagram
+    User {
+        uuid id PK
+        string email "Unique login identifier, UK"
+        string password_hash "bcrypt hash, never plaintext"
+        string name
+        string phone
+        string role "admin, coach, coachee"
+        string status "active, inactive"
+        uuid level_id FK "Coachee level, nullable"
+        string class_type_preference "individual, group, both, nullable"
+        string bank_account "Coach only, nullable"
+        string ssn "Coach only, nullable"
+        string dni "Coach only, nullable"
+        text additional_info "Coach only, nullable"
+        datetime created_at
+        datetime updated_at
+    }
+    Level {
+        uuid id PK
+        string name "Principiante, Basico, Intermedio, Avanzado, Experto, UK"
+        string color "Hex color code, design TBD"
+        int sort_order "1 to 5, ascending"
+    }
+    Class {
+        uuid id PK
+        string class_type "individual, group"
+        uuid assigned_coach_id FK "Coach assigned to this class"
+        uuid level_id FK "Group class level, nullable for individual"
+        datetime start_time
+        int duration_minutes "Always 60 (fixed by PRD)"
+        string status "active, canceled"
+        text description
+        uuid recurrence_series_id FK "Nullable, links to series if recurring"
+        string google_event_id "Google Calendar event reference"
+        uuid created_by FK "User who created the class"
+        datetime created_at
+        datetime updated_at
+    }
+    ClassEnrollment {
+        uuid id PK
+        uuid class_id FK
+        uuid coachee_id FK "References User where role=coachee"
+        datetime joined_at
+    }
+    WaitingList {
+        uuid id PK
+        uuid class_id FK
+        uuid coachee_id FK "References User where role=coachee"
+        datetime joined_at
+    }
+    RecurrenceSeries {
+        uuid id PK
+        string class_type "individual, group"
+        uuid level_id FK "Nullable for individual series"
+        uuid coach_id FK "Default assigned coach for each instance"
+        int day_of_week "0=Sunday, 1=Monday..."
+        time start_time
+        date start_date "First occurrence"
+        uuid created_by FK
+        datetime created_at
+    }
+    Block {
+        uuid id PK
+        string block_type "personal, gym-wide"
+        uuid created_by FK "Admin or Coach who created it"
+        uuid coach_id FK "Nullable; for personal blocks, who is blocked"
+        datetime start_time
+        datetime end_time
+        text description
+        string google_event_id "Google Calendar event reference"
+        datetime created_at
+    }
+    Notification {
+        uuid id PK
+        int notification_type "1 to 12, maps to PRD Section 7 catalog"
+        uuid recipient_id FK "References User"
+        uuid class_id FK "Nullable; null for non-class events"
+        text content "Rendered push notification text"
+        bool is_read
+        datetime sent_at
+        datetime created_at
+    }
+
+    Level ||--o{ User : "assigns level"
+    Level ||--o{ Class : "class level"
+    Level ||--o{ RecurrenceSeries : "series level"
+    User ||--o{ Class : "assigned as coach"
+    User ||--o{ Class : "created by"
+    User ||--o{ ClassEnrollment : "enrolled as coachee"
+    User ||--o{ WaitingList : "on waiting list"
+    User ||--o{ Block : "created block"
+    User ||--o{ Notification : "receives notification"
+    Class ||--o{ ClassEnrollment : "has enrollments"
+    Class ||--o{ WaitingList : "has waiting list entries"
+    Class ||--o{ Notification : "triggers notifications"
+    RecurrenceSeries ||--o{ Class : "generates instances"
