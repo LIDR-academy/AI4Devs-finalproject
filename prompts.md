@@ -60,3 +60,12 @@
 29. `bmad-create-architecture`
     
 30. create a readme for the project, and include AGPL license. Ask me any questions
+
+---
+
+## Development
+## During this phase I'm actually following a workflow, added a few instructions in the Agents file and created skills
+## - use /bmad-create-story story X
+## - then use /bmad-advanced-elicitation to review and improve the story
+## - then use my skill /pick-story
+## which is a complete workflow until get the story ready, tested and reviewed, and then I do manual QA

@@ -26,7 +26,7 @@ multiples proyectos.
 
 ### **0.4. URL del proyecto:**
 
-> Proyecto en desarrollo activo — no disponible aún para uso público.
+> Proyecto en desarrollo activo — no disponible aún para uso público como servicio. El código está disponible en el repositorio de GitHub.
 
 ### 0.5. URL o archivo comprimido del repositorio
 
@@ -108,7 +108,7 @@ Project Vault es una **Plataforma de Operaciones de Proyecto (ProjOps)** de cód
 
 ### **1.3. Diseño y experiencia de usuario:**
 
-> ⚠️ *El proyecto está en fase de desarrollo activo. Las pantallas e interfaces aún no han sido implementadas. A continuación se describen los principios y flujos de UX diseñados.*
+> ℹ️ *El proyecto está en desarrollo activo. La capa de UI está en construcción progresiva: el shell MVP (navegación autenticada, dashboard vacío de proyecto, vault init/unseal) está implementado y funcional. Las pantallas de gestión de credenciales y las siguientes epics se implementan de forma iterativa. Los principios y flujos descritos a continuación son los diseñados y guían la implementación.*
 
 **Principio central: La ausencia como señal primaria**
 
@@ -127,12 +127,63 @@ La interacción más frecuente en Project Vault es el *monitoreo de rutina*: un 
 
 ### **1.4. Instrucciones de instalación:**
 
-> ⚠️ *El proyecto está en desarrollo activo. Las instrucciones definitivas se publicarán con el lanzamiento de v1.*
+**Versiones mínimas requeridas:**
 
-**Requisitos previstos:**
-- Docker y Docker Compose instalados
-- 2 vCPU / 4 GB RAM mínimo recomendado
-- Almacenamiento SSD
+| Herramienta | Versión mínima |
+|---|---|
+| Node.js | 24 LTS |
+| pnpm | 9.x o superior |
+| Docker | 24+ con Buildx |
+| Docker Compose | v2 |
+
+Plataformas soportadas: macOS y Linux nativamente. Windows requiere WSL2.
+
+**Inicio rápido con Docker:**
+
+```bash
+cp .env.example .env          # configurar variables de entorno
+docker compose up --build     # iniciar todos los servicios
+```
+
+Servicios disponibles en:
+- Web: http://localhost:5173
+- API: http://localhost:3000
+- Health: http://localhost:3000/health
+
+**Desarrollo local:**
+
+```bash
+pnpm install
+make db-up
+make db-migrate
+
+export DATABASE_URL=postgresql://vault_app:dev-only-change-in-prod@localhost:5432/project_vault
+export VAULT_BOOTSTRAP_TOKEN=$(openssl rand -base64 32)
+pnpm turbo dev
+```
+
+Abrir http://localhost:5173. El flujo de primer uso:
+1. Inicializar el vault (elegir modo Passphrase, introducir el `VAULT_BOOTSTRAP_TOKEN` y una contraseña de unseal)
+2. Registrar el primer usuario
+3. Iniciar sesión para acceder al shell autenticado
+
+**Make targets disponibles:**
+
+```bash
+make help          # listar todas las tareas disponibles
+make db-up         # iniciar solo el contenedor Postgres
+make db-migrate    # ejecutar migraciones (como postgres, inicializa vault_app + RLS)
+make test          # ejecutar tests (como vault_app)
+make check-rls     # verificar cobertura RLS
+make ci            # ejecutar la secuencia completa de quality-gate local
+make docker-up     # construir + iniciar el stack completo
+```
+
+**Producción:**
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+```
 
 ---
 
@@ -1057,17 +1108,24 @@ Notas críticas:
 
 ## 7. Pull Requests
 
-> ⚠️ *El proyecto se encuentra en fase de planificación y desarrollo inicial. No se han realizado Pull Requests todavía. Esta sección se completará con las primeras PRs una vez que el repositorio tenga código base.*
+El proyecto tiene actualmente 25 Pull Requests mergeados. A continuación se documentan tres representativas de distintas capas del sistema.
+La lista completa de requests pueden ser vistos aqui: https://github.com/nestormata/project-vault/pulls?q=is%3Apr+is%3Aclosed
 
-**Pull Request 1**
+**Pull Request 1 — SecureRoute framework y middleware Drizzle RLS**
 
-*(Pendiente — será la PR de inicialización del monorepo Turborepo + scaffolding de packages)*
+- **PR #12:** [Feature/1-11 SecureRoute framework and Drizzle RLS middleware](https://github.com/nestormata/project-vault/pull/12)
+- **Descripción:** Implementa el constructor `SecureRoute` — la abstracción central que aplica RBAC, `org_id`, auditoría, rate limiting y seguridad de memoria como defaults en todas las rutas HTTP. También implementa el middleware Drizzle que inyecta `SET LOCAL app.current_org_id` al inicio de cada transacción, activando el aislamiento de organización a nivel de base de datos vía PostgreSQL RLS. A partir de esta PR, es imposible registrar una ruta sin las salvaguardas de seguridad básicas.
+- **Tipo:** Feature — Infraestructura de seguridad (Epic 1, Story 1.11)
 
-**Pull Request 2**
+**Pull Request 2 — MVP Frontend Shell y Dashboard de Proyecto Vacío**
 
-*(Pendiente — será la PR del esquema de base de datos con RLS)*
+- **PR #21:** [Feature/2-0 MVP frontend shell and empty project dashboard](https://github.com/nestormata/project-vault/pull/21)
+- **Descripción:** Implementa el primer shell web usable: verificación de readiness del vault, formularios de inicialización/unseal, registro, login, refresh de sesión server-side, logout, el shell autenticado con navegación (Dashboard, Projects, Credentials, Alerts, Health, Settings), y dashboards de proyecto vacíos con estados intencionalmente informativos sobre la cobertura operacional pendiente. Es el punto de entrada al producto para usuarios humanos.
+- **Tipo:** Feature — Frontend (Epic 2, Story 2.0)
 
-**Pull Request 3**
+**Pull Request 3 — Almacenamiento y Recuperación de Credenciales con Historial de Versiones**
 
-*(Pendiente — será la PR del SecureRoute y la infraestructura de autenticación)*
+- **PR #24:** [Feature/2-2 Credential storage and retrieval with version history](https://github.com/nestormata/project-vault/pull/24)
+- **Descripción:** Implementa el CRUD completo de credenciales: creación con cifrado AES-256-GCM, recuperación del valor actual (descifrado en memoria, nunca persistido en claro), historial de versiones inmutable con `is_current` por versión, worker de retención configurable con destrucción criptográfica de claves para versiones fuera de la ventana de retención, y logging de auditoría en la misma transacción que cada operación. Cada reveal de un secreto genera una entrada en `security_audit_log` con `event_type: secret.revealed`.
+- **Tipo:** Feature — Backend + Base de datos (Epic 2, Story 2.2)
 
