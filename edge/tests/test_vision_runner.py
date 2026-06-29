@@ -9,6 +9,7 @@ import cv2
 import numpy as np
 
 from src.vision_runner import run_vision
+from src.vision.capture import VisionInputError
 from tests.helpers import write_json
 
 
@@ -41,7 +42,7 @@ class VisionRunnerTests(unittest.TestCase):
                 result = run_vision(config_path)
 
             video_capture.assert_not_called()
-            self.assertEqual("file", result["source"])
+            self.assertEqual("opencv-file", result["source"])
             self.assertEqual("fixture.png", result["frameSource"])
             self.assertEqual("red", result["detections"][0]["color"])
             self.assertEqual({}, result["evidence"])
@@ -63,7 +64,50 @@ class VisionRunnerTests(unittest.TestCase):
 
             read_camera.assert_not_called()
 
+    def test_rejects_unsafe_safety_configuration_before_capture(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            config_path = Path(temporary_directory) / "edge.json"
+            write_json(
+                config_path,
+                {
+                    "profile": "vision-dry-run",
+                    "safety": {
+                        "dryRun": False,
+                        "enableHardwareMotion": True,
+                    },
+                    "vision": {
+                        "source": "file",
+                        "imagePath": "fixture.png",
+                    },
+                },
+            )
+
+            with patch("src.vision_runner.FrameCapture.read_file") as read_file:
+                with self.assertRaisesRegex(ValueError, "dryRun=true"):
+                    run_vision(config_path)
+
+            read_file.assert_not_called()
+
+    def test_missing_image_fails_closed_without_opening_camera(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            config_path = Path(temporary_directory) / "edge.json"
+            write_json(
+                config_path,
+                {
+                    "profile": "vision-dry-run",
+                    "vision": {
+                        "source": "file",
+                        "imagePath": "missing.png",
+                    },
+                },
+            )
+
+            with patch("src.vision.capture.cv2.VideoCapture") as video_capture:
+                with self.assertRaisesRegex(VisionInputError, "Could not read image"):
+                    run_vision(config_path)
+
+            video_capture.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -32,13 +32,14 @@ class VisionPipeline:
         detections = self.color_detector.detect(frame, cargo_roi)
         frame_height, frame_width = frame.shape[:2]
         safe_metadata = {
+            **(metadata or {}),
             "frameWidth": frame_width,
             "frameHeight": frame_height,
             "qrDetected": qr_result.detected,
             "qrValid": qr_result.is_valid,
+            "qrRawValue": qr_result.raw_value,
             "qrRoi": qr_roi.as_dict() if qr_roi else None,
             "cargoRoi": cargo_roi.as_dict() if cargo_roi else None,
-            **(metadata or {}),
         }
         return DetectionSnapshot(
             run_id=run_id,
@@ -48,4 +49,3 @@ class VisionPipeline:
             frame_source=frame_source,
             metadata=safe_metadata,
         )
-

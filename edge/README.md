@@ -126,7 +126,11 @@ edge/src/vision/evidence.py
 
 ### Procesar una imagen
 
-Crear una copia local del config y configurar:
+La configuracion reproducible de referencia esta en
+`edge/config/edge.vision.example.json`. Usa `profile=vision-dry-run`,
+`source=file`, `dryRun=true`, movimiento hardware deshabilitado, ROI separadas y
+rutas relativas. El fixture referenciado es una escena local de QA; para otra
+instalacion, crear una copia local del config y ajustar `imagePath`:
 
 ```json
 {
@@ -150,6 +154,9 @@ Para guardar JSON y una imagen anotada:
 python src\vision_runner.py --config config\edge.vision.local.json --save-evidence
 ```
 
+El snapshot usa `source=opencv-file`. El runner se detiene antes de capturar si
+`dryRun=false` o si el movimiento hardware esta habilitado.
+
 ### Procesar un frame de cámara
 
 Configurar:
@@ -170,7 +177,9 @@ La cámara solo se abre con autorización explícita:
 python src\vision_runner.py --config config\edge.vision.local.json --allow-camera
 ```
 
-Sin `--allow-camera`, el proceso falla antes de llamar a `VideoCapture`.
+Sin `--allow-camera`, el proceso falla antes de llamar a `VideoCapture`. Con
+camara, el snapshot usa `source=opencv-camera`. El comando captura un solo frame,
+libera la camara en `finally` y nunca importa ni abre serial.
 
 ### ROI
 
@@ -202,6 +211,10 @@ Cada color acepta uno o más rangos:
 
 OpenCV usa H entre 0-179 y S/V entre 0-255. Los valores del ejemplo son un punto inicial; deben recalibrarse para la cámara, iluminación y cubos reales.
 
+Para calibrar HSV, mantener primero ROI estrechas sobre QR y carga; despues
+ajustar S/V para rechazar sombras o reflejos y, por ultimo, ajustar H por color.
+Validar cada cambio contra una escena con conteo conocido antes de usar camara.
+
 ### CubeSelector
 
 `CubeSelector` es lógica pura. Excluye colores no soportados, bounding boxes inválidas y detecciones con `sizeValid=false`. La política por defecto selecciona mayor confianza, luego mayor área y finalmente aplica desempate estable. No conoce drop zones, Backend, cámara o serial.
@@ -214,6 +227,11 @@ La evidencia es opt-in con `--save-evidence`:
 - una imagen anotada cuando hay frame;
 - nombres relativos basados en `runId`;
 - metadata con claves sensibles eliminadas.
+
+Por defecto, la configuracion de vision guarda evidencia bajo
+`workspace/generated/vision-evidence/`. El JSON incluye `qrDetected`, `qrValid`,
+`qrRawValue`, bounding boxes y `fillRatio`; la confianza queda `null` mientras el
+detector HSV no tenga un score calibrado.
 
 ## Drop zones
 

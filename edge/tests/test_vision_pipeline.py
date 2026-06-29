@@ -32,6 +32,7 @@ class VisionPipelineTests(unittest.TestCase):
             frame_source="fixture.png",
             qr_roi=None,
             cargo_roi=None,
+            metadata={"qrValid": False},
         )
 
         self.assertEqual("run-vision", result.run_id)
@@ -39,8 +40,9 @@ class VisionPipelineTests(unittest.TestCase):
         self.assertEqual(1, len(result.detections))
         self.assertEqual(160, result.metadata["frameWidth"])
         self.assertEqual(120, result.metadata["frameHeight"])
+        self.assertEqual("TRUCK-001", result.metadata["qrRawValue"])
+        self.assertTrue(result.metadata["qrValid"])
 
 
 if __name__ == "__main__":
     unittest.main()
-

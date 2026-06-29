@@ -32,6 +32,8 @@ def run_vision(
     config = load_edge_config(config_path)
     if config.profile is not EdgeRunProfile.VISION_DRY_RUN:
         raise ValueError("Vision runner requires profile=vision-dry-run")
+    if not config.safety.dry_run or config.safety.enable_hardware_motion:
+        raise ValueError("Vision runner requires dryRun=true and hardware motion disabled")
 
     capture = FrameCapture()
     if config.vision.source == "file":
@@ -60,7 +62,7 @@ def run_vision(
     snapshot = pipeline.process(
         captured.image,
         run_id=str(uuid.uuid4()),
-        source=captured.source,
+        source=f"opencv-{captured.source}",
         frame_source=captured.frame_source,
         qr_roi=config.vision.qr_roi,
         cargo_roi=config.vision.cargo_roi,
@@ -97,4 +99,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
