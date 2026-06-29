@@ -112,9 +112,32 @@ class DropZoneSelection:
 
 
 @dataclass(frozen=True)
+class RobotActionStep:
+    name: str
+    pose: RobotPose
+    suction: int
+    critical: bool = True
+
+    @property
+    def command_preview(self) -> str:
+        return (
+            f"POSE {round(self.pose.x)} {round(self.pose.y)} "
+            f"{round(self.pose.z)} {self.suction}"
+        )
+
+
+@dataclass(frozen=True)
 class RobotActionPlan:
     run_id: str
     profile: EdgeRunProfile
-    cube: CubeDetection
+    dry_run: bool
+    selected_cube: CubeDetection
     drop_zone: DropZoneSelection
-    steps: tuple[RobotPose, ...]
+    safe_z: float
+    pickup_target: RobotPose
+    pickup_safe: RobotPose
+    drop_target: RobotPose
+    drop_safe: RobotPose
+    steps: tuple[RobotActionStep, ...]
+    metadata: dict[str, Any] = field(default_factory=dict)
+    errors: tuple[str, ...] = ()

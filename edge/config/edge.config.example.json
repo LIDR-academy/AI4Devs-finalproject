@@ -9,6 +9,9 @@
     "enableHardwareMotion": false,
     "humanConfirmationRequired": true
   },
+  "robotPlanning": {
+    "enabled": false
+  },
   "vision": {
     "source": "simulation",
     "imagePath": null,

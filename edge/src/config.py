@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+import math
 from pathlib import Path
 from typing import Any
 
 try:
-    from .models import EdgeRunProfile, HsvRange, RegionOfInterest, SUPPORTED_COLORS
+    from .models import EdgeRunProfile, HsvRange, RegionOfInterest, RobotPose, SUPPORTED_COLORS
 except ImportError:  # Direct execution via python src\edge_runner.py
-    from models import EdgeRunProfile, HsvRange, RegionOfInterest, SUPPORTED_COLORS
+    from models import EdgeRunProfile, HsvRange, RegionOfInterest, RobotPose, SUPPORTED_COLORS
 
 
 class EdgeConfigError(ValueError):
@@ -50,12 +51,46 @@ class VisionConfig:
 
 
 @dataclass(frozen=True)
+class WorkspaceLimits:
+    min_x: float
+    max_x: float
+    min_y: float
+    max_y: float
+    min_z: float
+    max_z: float
+
+
+@dataclass(frozen=True)
+class PickupRobotCalibration:
+    version: str
+    image_roi: RegionOfInterest
+    top_left: RobotPose
+    top_right: RobotPose
+    bottom_right: RobotPose
+    bottom_left: RobotPose
+
+
+@dataclass(frozen=True)
+class RobotPlanningConfig:
+    enabled: bool
+    safe_z: float | None = None
+    pick_z: float | None = None
+    drop_safe_z: float | None = None
+    lift_z_delta: float | None = None
+    ready_pose: RobotPose | None = None
+    reset_pose: RobotPose | None = None
+    calibration: PickupRobotCalibration | None = None
+    workspace: WorkspaceLimits | None = None
+
+
+@dataclass(frozen=True)
 class EdgeConfig:
     profile: EdgeRunProfile
     truck_code: str
     drop_zones_path: Path
     safety: EdgeSafetyConfig
     vision: VisionConfig
+    robot_planning: RobotPlanningConfig
     raw: dict[str, Any]
 
 
@@ -129,6 +164,109 @@ def _parse_positive_number(value: object, field_name: str, default: float) -> fl
     if isinstance(value, bool) or not isinstance(value, (int, float)) or value <= 0:
         raise EdgeConfigError(f"{field_name} must be a positive number")
     return float(value)
+
+
+def _parse_finite_number(value: object, field_name: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise EdgeConfigError(f"{field_name} must be numeric")
+    result = float(value)
+    if not math.isfinite(result):
+        raise EdgeConfigError(f"{field_name} must be finite")
+    return result
+
+
+def _parse_pose(value: object, field_name: str) -> RobotPose:
+    if not isinstance(value, dict):
+        raise EdgeConfigError(f"{field_name} must be an object")
+    return RobotPose(
+        x=_parse_finite_number(value.get("x"), f"{field_name}.x"),
+        y=_parse_finite_number(value.get("y"), f"{field_name}.y"),
+        z=_parse_finite_number(value.get("z"), f"{field_name}.z"),
+    )
+
+
+def _parse_robot_planning(value: object) -> RobotPlanningConfig:
+    if value is None:
+        return RobotPlanningConfig(enabled=False)
+    if not isinstance(value, dict):
+        raise EdgeConfigError("robotPlanning must be a JSON object")
+
+    enabled = _require_bool(value.get("enabled"), "robotPlanning.enabled", False)
+    if not enabled:
+        return RobotPlanningConfig(enabled=False)
+
+    safe_z = _parse_finite_number(value.get("safeZ"), "robotPlanning.safeZ")
+    pick_z = _parse_finite_number(value.get("pickZ"), "robotPlanning.pickZ")
+    drop_safe_z = _parse_finite_number(
+        value.get("dropSafeZ", safe_z),
+        "robotPlanning.dropSafeZ",
+    )
+    lift_z_delta = _parse_positive_number(
+        value.get("liftZDelta"),
+        "robotPlanning.liftZDelta",
+        50.0,
+    )
+    ready_pose = _parse_pose(value.get("readyPose"), "robotPlanning.readyPose")
+    reset_pose = _parse_pose(value.get("resetPose"), "robotPlanning.resetPose")
+
+    calibration_raw = value.get("calibration")
+    if not isinstance(calibration_raw, dict):
+        raise EdgeConfigError("robotPlanning.calibration is required when planning is enabled")
+    version = calibration_raw.get("version")
+    if not isinstance(version, str) or not version.strip():
+        raise EdgeConfigError("robotPlanning.calibration.version must be a non-empty string")
+    corners_raw = calibration_raw.get("robotCorners")
+    if not isinstance(corners_raw, dict):
+        raise EdgeConfigError("robotPlanning.calibration.robotCorners must be an object")
+    calibration = PickupRobotCalibration(
+        version=version.strip(),
+        image_roi=_parse_roi(
+            calibration_raw.get("imageRoi"),
+            "robotPlanning.calibration.imageRoi",
+        ),
+        top_left=_parse_pose(corners_raw.get("topLeft"), "robotPlanning.calibration.robotCorners.topLeft"),
+        top_right=_parse_pose(corners_raw.get("topRight"), "robotPlanning.calibration.robotCorners.topRight"),
+        bottom_right=_parse_pose(
+            corners_raw.get("bottomRight"),
+            "robotPlanning.calibration.robotCorners.bottomRight",
+        ),
+        bottom_left=_parse_pose(
+            corners_raw.get("bottomLeft"),
+            "robotPlanning.calibration.robotCorners.bottomLeft",
+        ),
+    )
+    if calibration.image_roi is None:
+        raise EdgeConfigError("robotPlanning.calibration.imageRoi is required")
+
+    workspace_raw = value.get("workspace")
+    if not isinstance(workspace_raw, dict):
+        raise EdgeConfigError("robotPlanning.workspace is required when planning is enabled")
+    workspace = WorkspaceLimits(
+        min_x=_parse_finite_number(workspace_raw.get("minX"), "robotPlanning.workspace.minX"),
+        max_x=_parse_finite_number(workspace_raw.get("maxX"), "robotPlanning.workspace.maxX"),
+        min_y=_parse_finite_number(workspace_raw.get("minY"), "robotPlanning.workspace.minY"),
+        max_y=_parse_finite_number(workspace_raw.get("maxY"), "robotPlanning.workspace.maxY"),
+        min_z=_parse_finite_number(workspace_raw.get("minZ"), "robotPlanning.workspace.minZ"),
+        max_z=_parse_finite_number(workspace_raw.get("maxZ"), "robotPlanning.workspace.maxZ"),
+    )
+    if (
+        workspace.min_x >= workspace.max_x
+        or workspace.min_y >= workspace.max_y
+        or workspace.min_z >= workspace.max_z
+    ):
+        raise EdgeConfigError("robotPlanning.workspace min values must be below max values")
+
+    return RobotPlanningConfig(
+        enabled=True,
+        safe_z=safe_z,
+        pick_z=pick_z,
+        drop_safe_z=drop_safe_z,
+        lift_z_delta=lift_z_delta,
+        ready_pose=ready_pose,
+        reset_pose=reset_pose,
+        calibration=calibration,
+        workspace=workspace,
+    )
 
 
 def load_edge_config(path: Path) -> EdgeConfig:
@@ -252,6 +390,7 @@ def load_edge_config(path: Path) -> EdgeConfig:
         min_fill_ratio=float(min_fill_ratio),
         evidence_directory=evidence_directory,
     )
+    robot_planning = _parse_robot_planning(raw.get("robotPlanning"))
 
     return EdgeConfig(
         profile=profile,
@@ -259,5 +398,6 @@ def load_edge_config(path: Path) -> EdgeConfig:
         drop_zones_path=drop_zones_path,
         safety=safety,
         vision=vision,
+        robot_planning=robot_planning,
         raw=raw,
     )

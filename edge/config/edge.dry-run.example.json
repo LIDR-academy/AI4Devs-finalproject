@@ -1,0 +1,84 @@
+{
+  "profile": "simulation",
+  "truckCode": "TRUCK-001",
+  "dropZones": {
+    "path": "drop_zones.dry-run.example.json"
+  },
+  "safety": {
+    "dryRun": true,
+    "enableHardwareMotion": false,
+    "humanConfirmationRequired": true
+  },
+  "robotPlanning": {
+    "enabled": true,
+    "safeZ": 150,
+    "pickZ": 100,
+    "dropSafeZ": 150,
+    "liftZDelta": 50,
+    "readyPose": {
+      "x": 0,
+      "y": 0,
+      "z": 220
+    },
+    "resetPose": {
+      "x": 0,
+      "y": 0,
+      "z": 190
+    },
+    "calibration": {
+      "version": "dry-run-synthetic-v1",
+      "imageRoi": {
+        "x": 0,
+        "y": 0,
+        "w": 400,
+        "h": 400
+      },
+      "robotCorners": {
+        "topLeft": {
+          "x": -100,
+          "y": -100,
+          "z": 100
+        },
+        "topRight": {
+          "x": 100,
+          "y": -100,
+          "z": 100
+        },
+        "bottomRight": {
+          "x": 100,
+          "y": 100,
+          "z": 100
+        },
+        "bottomLeft": {
+          "x": -100,
+          "y": 100,
+          "z": 100
+        }
+      }
+    },
+    "workspace": {
+      "minX": -300,
+      "maxX": 300,
+      "minY": -300,
+      "maxY": 300,
+      "minZ": 0,
+      "maxZ": 300
+    }
+  },
+  "vision": {
+    "source": "simulation",
+    "evidence": {
+      "directory": "../../workspace/generated/edge-evidence"
+    },
+    "cubes": [
+      {
+        "color": "red",
+        "x": 180,
+        "y": 180,
+        "w": 40,
+        "h": 40,
+        "confidence": 0.95
+      }
+    ]
+  }
+}

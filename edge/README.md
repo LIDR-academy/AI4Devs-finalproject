@@ -21,8 +21,8 @@ Implementa procesamiento OpenCV aislado para imagen o un frame de cámara. No in
 
 | Perfil | Estado actual | Comportamiento |
 |---|---|---|
-| `simulation` | Implementado y default | Ejecuta el flujo simulado existente contra Backend. |
-| `vision-dry-run` | Implementado en `vision_runner.py` | Procesa archivo o, con autorización explícita, un frame de cámara. No llama al Backend ni al robot. |
+| `simulation` | Implementado y default | Ejecuta el flujo simulado existente contra Backend y admite planificación dry-run con snapshot simulado. |
+| `vision-dry-run` | Implementado sin robot | Procesa archivo/cámara y puede generar un plan integrado sin serial. |
 | `hardware` | Reconocido, no ejecutable aún | El runner aborta antes de crear sesión o abrir dispositivos. |
 
 El runner principal de Entrega 2 continúa ejecutando únicamente `simulation`. Un perfil no implementado nunca degrada silenciosamente a simulación.
@@ -77,6 +77,7 @@ Valores principales:
 - `safety.dryRun`: `true` en el ejemplo y por defecto.
 - `safety.enableHardwareMotion`: `false` en el ejemplo y por defecto.
 - `safety.humanConfirmationRequired`: `true` en el ejemplo y por defecto.
+- `robotPlanning`: poses, Z seguras, calibración y workspace; deshabilitado en el config principal.
 - `vision.cubes`: cubos simulados enviados al backend.
 - `robot`: accion simulada de pick/drop con `dryRun=true`.
 
@@ -287,6 +288,77 @@ Reglas:
 
 Un comando operacional dedicado con checklist humano queda pendiente antes de usar estado hardware real.
 
+## Dry-run integrado
+
+El comando `edge_dry_run.py` conecta:
+
+```text
+DetectionSnapshot
+-> CubeSelector
+-> reserva DropZoneAdapter
+-> RobotActionPlanner
+-> evidencia JSON
+-> cancelación de reserva
+```
+
+No importa ni abre serial. No ejecuta comandos y nunca llama `DropZoneAdapter.confirm()`.
+
+### Ejemplo reproducible
+
+Los archivos siguientes contienen valores exclusivamente sintéticos:
+
+```text
+edge/config/edge.dry-run.example.json
+edge/config/drop_zones.dry-run.example.json
+```
+
+No son una calibración válida para hardware. Ejecutar desde `edge/`:
+
+```powershell
+python src\edge_dry_run.py --config config\edge.dry-run.example.json
+```
+
+La evidencia se escribe bajo `workspace/generated/edge-evidence/` y contiene:
+
+- snapshot;
+- cubo seleccionado;
+- código y pose de drop zone;
+- perfil y `dryRun=true`;
+- poses candidatas y `safeZ`;
+- secuencia conceptual y previews `POSE` enteros;
+- `serialOpened=false` y `hardwareMovement=false`;
+- resultado `CANCELLED_AFTER_DRY_RUN` para la reserva.
+
+También puede recibirse un snapshot previamente guardado:
+
+```powershell
+python src\edge_dry_run.py `
+  --config config\edge.dry-run.local.json `
+  --snapshot ..\workspace\generated\snapshot.json
+```
+
+Para usar una imagen, el config local debe usar `profile=vision-dry-run`, `vision.source=file`, calibración válida y drop zones de dry-run. La cámara conserva el gate explícito `--allow-camera`.
+
+### Configuración de planificación
+
+Cuando `robotPlanning.enabled=true`, son obligatorios:
+
+- `safeZ`, `pickZ`, `dropSafeZ` y `liftZDelta`;
+- `readyPose` y `resetPose`;
+- calibración versionada con `imageRoi` y cuatro esquinas robot;
+- límites completos de `workspace`.
+
+El centro del bounding box se interpola bilinealmente dentro de `imageRoi`. El planner rechaza cubos fuera de esa región, calibraciones incompatibles, poses no finitas/fuera del workspace, perfiles hardware y cualquier ejecución con `dryRun=false`.
+
+### Estados de drop zone
+
+- **Selection:** `DropZonePlanner` identifica el primer slot elegible.
+- **Reservation:** `DropZoneAdapter` lo bloquea solo en memoria para un `runId`; `occupied` sigue en `false`.
+- **Release:** en hardware futuro será el paso físico que libera el cubo. El dry-run solo lo previsualiza.
+- **Occupied:** solo una confirmación física futura podrá llamar `confirm()` y persistir `occupied=true`.
+
+En dry-run, tanto éxito como error posterior a la reserva ejecutan `cancel()`. El JSON canónico no cambia.
+
 ## Ejecucion
 
 Con `.env`:
@@ -345,7 +417,7 @@ También puede ejecutarse con la dependencia fijada en `requirements.txt`:
 python -m pytest tests -v
 ```
 
-Los tests cubren perfiles, drop zones y regresión simulation, además de captura desde archivo, gate de cámara, QR válido/ausente/inválido, detección HSV sintética, ROI fail-closed, snapshots, selección de cubos y evidencia.
+Los tests cubren perfiles, drop zones y regresión simulation, captura/QR/HSV/ROI, snapshots, selección, evidencia, planificación robot pura y el flujo dry-run rojo/azul con cancelación de reservas.
 
 ## Errores comunes
 
@@ -354,6 +426,8 @@ Los tests cubren perfiles, drop zones y regresión simulation, además de captur
 - Si el perfil no es `simulation`, el runner se detiene por seguridad antes de instanciar el cliente Backend.
 - Si no se puede leer una imagen, revisar `vision.imagePath` respecto del archivo de configuración.
 - Si una ROI queda fuera de la resolución real, corregirla; el procesamiento se detiene de forma fail-closed.
+- Si `robotPlanning.enabled=false` o falta calibración/poses, el dry-run integrado se detiene antes de generar un plan.
+- Si no hay slot activo y libre, retorna `ZONE_UNAVAILABLE` y no modifica `occupied`.
 
 ## Evolucion futura
 
@@ -364,9 +438,12 @@ Pendiente para los siguientes pasos:
 - incorporar homografía y calibración versionada de pickup;
 - integrar la selección del cubo detectado con `DropZonePlanner`;
 - conectar `DetectionSnapshot` con Backend sin duplicar detecciones;
+- sustituir la calibración sintética por calibración final versionada y evidenciada;
+- agregar estabilidad multiframe y validación QR antes de autorizar planes finales;
 - agregar un comando operacional de reset con confirmación humana y auditoría;
 - añadir límites físicos de workspace y Z para coordenadas activas;
 - implementar reservas/persistencia hardware con bloqueo de proceso;
 - implementar adapter serial solo detrás de gates explícitos;
+- crear un executor hardware separado que confirme release antes de marcar `occupied`;
 - validar coordenadas antes de cualquier comando MaxArm;
 - no mover MaxArm sin configuracion segura, zona despejada y dry run previo.
