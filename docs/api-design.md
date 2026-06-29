@@ -54,6 +54,59 @@ Verifica que el backend esta vivo.
 Invoke-RestMethod -Method GET -Uri "http://localhost:3000/health"
 ```
 
+## API local Edge Vision
+
+Estos endpoints pertenecen al servicio local Edge, no al Backend Express
+principal. Su base URL recomendada para desarrollo es:
+
+```text
+http://localhost:8001
+```
+
+El servicio es opcional para el dashboard y no cambia los contratos del Backend.
+No abre serial, no mueve MaxArm y no ejecuta `mode=hardware`.
+
+| Metodo | Ruta | Proposito |
+|---|---|---|
+| GET | `/health` | Verificar estado del servicio Edge Vision |
+| GET | `/vision/status` | Consultar perfil, fuente, ultimo snapshot y flags seguros |
+| GET | `/vision/snapshot` | Procesar una captura configurada y devolver metadata segura |
+| GET | `/vision/snapshot/image` | Devolver la ultima imagen anotada si existe |
+
+`GET /vision/status` responde:
+
+```json
+{
+  "status": "ok",
+  "profile": "vision-dry-run",
+  "source": "opencv-file",
+  "cameraAllowed": false,
+  "lastSnapshotAt": null,
+  "lastError": null,
+  "serialOpened": false,
+  "hardwareMovement": false
+}
+```
+
+`GET /vision/snapshot` responde:
+
+```json
+{
+  "runId": "uuid",
+  "timestamp": "2026-06-29T00:00:00Z",
+  "source": "opencv-file",
+  "truckCode": "TRUCK-003",
+  "counts": { "red": 1, "blue": 1, "green": 2, "yellow": 2 },
+  "detections": [],
+  "imageUrl": "/vision/snapshot/image",
+  "lastError": null
+}
+```
+
+Si no hay imagen disponible, `GET /vision/snapshot/image` devuelve `404` con un
+mensaje controlado. Si `vision.source=camera` se configura sin `--allow-camera`,
+el servicio reporta error antes de abrir `VideoCapture`.
+
 ### Response 200
 
 ```json

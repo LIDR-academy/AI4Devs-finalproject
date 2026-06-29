@@ -1,16 +1,27 @@
 import { useCallback, useEffect, useState } from "react";
 import { fetchOperationalDashboard } from "../api/dashboard";
+import { fetchEdgeVisionPanel } from "../api/edgeVision";
 import type { OperationalDashboard } from "../types/dashboard";
+import type { EdgeVisionPanelData } from "../types/edgeVision";
 import { ActionsTable } from "./ActionsTable";
 import { CountsPanel } from "./CountsPanel";
 import { StatusPanel } from "./StatusPanel";
 import { ExecutionPanel } from "./ExecutionPanel";
+import { VisionSnapshotPanel } from "./VisionSnapshotPanel";
 
 type LoadState = "loading" | "ready" | "empty" | "error";
 
 export function Dashboard() {
   const [data, setData] = useState<OperationalDashboard | null>(null);
+  const [visionData, setVisionData] = useState<EdgeVisionPanelData>({
+    enabled: false,
+    status: null,
+    snapshot: null,
+    error: null,
+    baseUrl: null,
+  });
   const [state, setState] = useState<LoadState>("loading");
+  const [visionLoading, setVisionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadDashboard = useCallback(async () => {
@@ -28,9 +39,25 @@ export function Dashboard() {
     }
   }, []);
 
+  const loadVision = useCallback(async () => {
+    setVisionLoading(true);
+    try {
+      const vision = await fetchEdgeVisionPanel();
+      setVisionData(vision);
+    } finally {
+      setVisionLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     void loadDashboard();
-  }, [loadDashboard]);
+    void loadVision();
+  }, [loadDashboard, loadVision]);
+
+  const refreshAll = useCallback(() => {
+    void loadDashboard();
+    void loadVision();
+  }, [loadDashboard, loadVision]);
 
   return (
     <main className="app-shell">
@@ -39,7 +66,7 @@ export function Dashboard() {
           <p className="eyebrow">RoboDock AI</p>
           <h1>Dashboard Operacional</h1>
         </div>
-        <button className="icon-button" type="button" aria-label="Actualizar dashboard" onClick={loadDashboard}>
+        <button className="icon-button" type="button" aria-label="Actualizar dashboard" onClick={refreshAll}>
           <span aria-hidden="true">Actualizar</span>
         </button>
       </header>
@@ -65,6 +92,7 @@ export function Dashboard() {
           <StatusPanel session={data.activeSession} lastAction={data.lastActions[0]} />
           <CountsPanel counts={data.counts} />
           <ExecutionPanel dashboard={data} />
+          <VisionSnapshotPanel data={visionData} loading={visionLoading} />
           <ActionsTable actions={data.lastActions} />
         </div>
       )}

@@ -124,6 +124,67 @@ edge/src/vision/evidence.py
 
 `DetectionSnapshot` contiene `runId`, timestamp UTC, source, `truckCode`, detecciones, origen del frame y metadata segura. No contiene la imagen binaria.
 
+## Servicio local Edge Vision
+
+El servicio HTTP local expone un snapshot de vision opcional para el dashboard.
+No reemplaza `edge_runner.py` ni `edge_dry_run.py`, no abre serial y no mueve
+MaxArm. El perfil seguro sigue siendo `vision-dry-run`; `simulation` permanece
+como default del flujo principal.
+
+Instalar dependencias:
+
+```powershell
+cd edge
+pip install -r requirements.txt
+```
+
+Levantar con imagen/fixture:
+
+```powershell
+python src\service\vision_api.py --config config\edge.vision.example.json
+```
+
+El servicio queda por defecto en:
+
+```text
+http://127.0.0.1:8001
+```
+
+Levantar con camara real solo con autorizacion explicita:
+
+```powershell
+python src\service\vision_api.py --config config\edge.vision.local.json --allow-camera
+```
+
+Si `vision.source=camera` y no se entrega `--allow-camera`, el servicio falla de
+forma cerrada antes de llamar a `VideoCapture` y lo reporta en `lastError`.
+
+Endpoints disponibles:
+
+| Metodo | Ruta | Proposito |
+|---|---|---|
+| GET | `/health` | Estado del servicio Edge Vision |
+| GET | `/vision/status` | Perfil, fuente, ultimo snapshot, error y flags seguros |
+| GET | `/vision/snapshot` | Captura bajo demanda y devuelve metadata segura |
+| GET | `/vision/snapshot/image` | Devuelve la ultima imagen anotada si existe |
+
+`/vision/status` siempre informa `serialOpened=false` y
+`hardwareMovement=false`. `/vision/snapshot` devuelve `counts`, `detections`,
+`truckCode`, `imageUrl` relativa y `lastError`. Si no hay imagen disponible,
+`/vision/snapshot/image` responde `404` con un mensaje controlado.
+
+La imagen anotada se mantiene en memoria como ultimo snapshot del proceso. Para
+persistir evidencia JSON/PNG se sigue usando el runner de vision con
+`--save-evidence`; el servicio del dashboard no necesita escribir archivos para
+funcionar.
+
+Limitaciones:
+
+- procesa una captura por request, no un stream continuo;
+- si el fixture configurado no existe, devuelve error controlado;
+- la camara fisica no debe usarse sin `--allow-camera`;
+- no implementa control robotico ni modo hardware.
+
 ### Procesar una imagen
 
 La configuracion reproducible de referencia esta en

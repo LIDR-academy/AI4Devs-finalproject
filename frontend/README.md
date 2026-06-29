@@ -39,7 +39,12 @@ Crear `frontend/.env` desde `frontend/.env.example` si necesitas cambiar la URL 
 
 ```env
 VITE_BACKEND_URL=http://localhost:3000
+VITE_EDGE_VISION_URL=http://localhost:8001
 ```
+
+`VITE_EDGE_VISION_URL` es opcional. Si no existe o el servicio Edge Vision esta
+apagado, el dashboard sigue funcionando con el backend y muestra el panel de
+vision en estado no disponible.
 
 ## Ejecucion
 
@@ -82,7 +87,14 @@ cd frontend
 npm run dev
 ```
 
-5. Verificar visualmente:
+5. Opcional: levantar Edge Vision para snapshot de camara/fixture:
+
+```powershell
+cd edge
+python src\service\vision_api.py --config config\edge.vision.example.json
+```
+
+6. Verificar visualmente:
 
 - existe una sesion activa;
 - el camion es `TRUCK-001`;
@@ -91,6 +103,10 @@ npm run dev
 - aparecen conteos por color;
 - la ultima accion del robot muestra `mode=simulation`.
 - el panel de trazabilidad muestra `profile`, fuente, cubo y `dropZoneCode`;
+- el panel `Vision / Camara` muestra estado, fuente, timestamp, conteos e imagen
+  si Edge Vision esta disponible;
+- si Edge Vision esta apagado, muestra un error visible sin romper el resto del
+  dashboard;
 - `vision-dry-run` se etiqueta como dry-run sin movimiento;
 - no existen controles de movimiento ni reset de ocupación.
 
