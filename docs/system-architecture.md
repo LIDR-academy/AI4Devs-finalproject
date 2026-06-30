@@ -395,7 +395,7 @@ erDiagram
         string color "Hex color code, design TBD"
         int sort_order "1 to 5, ascending"
     }
-    Class {
+    TrainingClass {
         uuid id PK
         string class_type "individual, group"
         uuid assigned_coach_id FK "Coach assigned to this class"
@@ -456,15 +456,16 @@ erDiagram
     }
 
     Level ||--o{ User : "assigns level"
-    Level ||--o{ Class : "class level"
+    Level ||--o{ TrainingClass : "class level"
     Level ||--o{ RecurrenceSeries : "series level"
-    User ||--o{ Class : "assigned as coach"
-    User ||--o{ Class : "created by"
+    User ||--o{ TrainingClass : "assigned as coach"
+    User ||--o{ TrainingClass : "created by"
     User ||--o{ ClassEnrollment : "enrolled as coachee"
     User ||--o{ WaitingList : "on waiting list"
     User ||--o{ Block : "created block"
     User ||--o{ Notification : "receives notification"
-    Class ||--o{ ClassEnrollment : "has enrollments"
-    Class ||--o{ WaitingList : "has waiting list entries"
-    Class ||--o{ Notification : "triggers notifications"
-    RecurrenceSeries ||--o{ Class : "generates instances"
+    TrainingClass ||--o{ ClassEnrollment : "has enrollments"
+    TrainingClass ||--o{ WaitingList : "has waiting list entries"
+    TrainingClass ||--o{ Notification : "triggers notifications"
+    RecurrenceSeries ||--o{ TrainingClass : "generates instances"
+```
