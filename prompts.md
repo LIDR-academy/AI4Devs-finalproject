@@ -5,9 +5,11 @@
 
 **Delivery branch:** `feature-entrega2-ABR`
 
-**Reference conversation (README analysis, SaaS plan, security):** [agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md](./agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md)
+**Reference conversation (README analysis, plugins, WYSIWYG editor, video, SaaS):** [agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md](./agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md)
 
 **Reference conversation (calendar, i18n, sidebar):** [agent-transcripts/8ff11265-f2f9-4ac1-b458-5dd9a909c31f.md](./agent-transcripts/8ff11265-f2f9-4ac1-b458-5dd9a909c31f.md)
+
+**Implementation prompt log (extended):** [codigofinal/lms-cms-laravel12/prompts.md](../codigofinal/lms-cms-laravel12/prompts.md)
 
 ---
 
@@ -21,7 +23,9 @@
 6. [Work tickets](#6-work-tickets)
 7. [Pull requests](#7-pull-requests)
 8. [Calendar, i18n, and navigation](#8-calendar-i18n-and-navigation)
-9. [Main files used](#9-main-files-used)
+9. [Content editor, video, and lessons](#9-content-editor-video-and-lessons)
+10. [SaaS business plan](#10-saas-business-plan)
+11. [Main files used](#11-main-files-used)
 
 ---
 
@@ -131,6 +135,14 @@
 
 > Note: Refinement of the `/enrollments/available` endpoint unifying the available users query.
 
+**Prompt 4:** "Implementa ruta, controlador y clic del botón Vídeo con selección de archivo."
+
+> Note: `POST /lessons/{lesson}/content-video` for multipart upload and public URL in the response.
+
+**Prompt 5:** "Editor WYSIWYG para contenido de lección — Implement the plan."
+
+> Note: `PATCH /lessons/{lesson}/content` with a page array `{ type, title, html }`.
+
 ---
 
 ### 5. User Stories
@@ -147,6 +159,14 @@
 
 > Note: Generated HU-6 (enrollment management).
 
+**Prompt 4:** "Quiero ver y editar lecciones al clickear en Lecciones creadas."
+
+> Note: Navigation to `lessons/{lesson}/edit` from `courses/show`.
+
+**Prompt 5:** "Profesor puede cambiar Contenido actual en /lessons/1/edit."
+
+> Note: WYSIWYG editing of lesson text content.
+
 ---
 
 ### 6. Work Tickets
@@ -162,6 +182,14 @@
 **Prompt 3:** "Debe de poder editarse los quiz + Añadir dinámicamente respuestas."
 
 > Note: Refined Ticket 3 with CRUD for questions and dynamic options in the frontend.
+
+**Prompt 4:** "Editor WYSIWYG + páginas con pestañas + vídeo en contenido."
+
+> Note: Quill multi-page editor and video embeds ticket.
+
+**Prompt 5:** "Quiero que siga el plan de negocio SaaS (planes, tutor IA, Stripe, Azure)."
+
+> Note: `PLAN_NEGOCIO.md`, `ROADMAP_SAAS.md`, `config/saas.php`, and `/pricing`.
 
 ---
 
@@ -197,19 +225,56 @@
 
 ---
 
-## 9. Main files used
+## 9. Content editor, video, and lessons
+
+**Prompt 1:** "Profesor puede cambiar Contenido actual en /lessons/1/edit — Editor WYSIWYG. Implement the plan."
+
+> Note: Quill.js integration via CDN in `layouts/app.blade.php`, autosave with `PATCH /lessons/{lesson}/content`, dedicated editor at `/lessons/{id}/edit`.
+
+**Prompt 2:** "Quiero que soluciones ambos casos: la corrección del editor para que cargue correctamente el HTML formateado y un sistema de páginas/secciones dentro de la lección con navegación por pestañas."
+
+> Note: Fixed double-escaped HTML in the database; load via `<template>` + `clipboard.dangerouslyPasteHTML`. `content` stored as a JSON array of pages `{ type: page, title, html }`.
+
+**Prompt 3:** "Quiero que añadas en Contenido de la lección que pueda añadir video en las páginas. Al clickear Vídeo, seleccionar archivo del PC. Vídeo y URL al lado en la toolbar, con separación."
+
+> Note: Custom Quill blots `lessonIframeVideo` / `lessonHtml5Video`, `POST /lessons/{lesson}/content-video`, toolbar class `ql-video-actions` in `lms.css`. Related plugin work: `PluginController::uploadAsset` for `video_embed`, autosave after upload, and `title` in plugin settings.
+
+---
+
+## 10. SaaS business plan
+
+**Prompt 1:** "Quiero que siga el plan de negocio: concepto SaaS, planes Básico/Pro/Empresa, tutor IA, monetización 70/30, fases MVP→Scale, stack Supabase/Azure/Stripe…"
+
+> Note: Created `PLAN_NEGOCIO.md`, `codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md`, `config/saas.php`, `/pricing` page, and `subscription_plan` fields on `users`. Jira roadmap: epic DEV-17 and phase tickets DEV-18–DEV-22 with subtasks (e.g. DEV-23–DEV-27 for Phase 1 MVP).
+
+**Prompt 2:** "Añade los prompts utilizados en todo el proyecto dentro de codigofinal/lms-cms-laravel12/prompts.md."
+
+> Note: Centralized extended prompt log in the implementation repository, cross-linked from this delivery document.
+
+**Prompt 3:** "Crear tickets en Jira para cada fase del plan de negocio y subtareas por etapa (Fase 0–4, DEV-19, etc.)."
+
+> Note: PowerShell scripts in `scripts/jira/` (`create-saas-phase-tickets.ps1`, `create-phase-subtasks.ps1`) and JSON definitions per phase; records in `docs/JIRA_SAAS_PHASES.json` and `docs/JIRA_DEV_*_SUBTASKS.json`.
+
+---
+
+## 11. Main files used
 
 Paths relative to the repository root in [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (branch `angel-burgos-r`):
 
 | Area | Files |
 |------|-------|
 | **Routes** | `routes/web.php` |
-| **Controllers** | `app/Http/Controllers/AuthController.php`, `app/Http/Controllers/CalendarController.php`, `app/Http/Controllers/CalendarEventController.php`, `app/Http/Controllers/CourseController.php`, `app/Http/Controllers/DashboardController.php`, `app/Http/Controllers/EnrollmentController.php`, `app/Http/Controllers/LessonController.php`, `app/Http/Controllers/LocaleController.php`, `app/Http/Controllers/PluginController.php`, `app/Http/Controllers/PluginInteractionController.php`, `app/Http/Controllers/ProfileController.php`, `app/Http/Controllers/QuizController.php` |
+| **SaaS config** | `config/saas.php` |
+| **Controllers** | `AuthController`, `CalendarController`, `CalendarEventController`, `CourseController`, `DashboardController`, `EnrollmentController`, `LessonController`, `LocaleController`, `PluginController`, `PluginInteractionController`, `PricingController`, `ProfileController`, `QuizController`, `SmartReportController`, `StudentLessonController` |
+| **Enums** | `app/Enums/SubscriptionPlan.php`, `app/Enums/UserRole.php` |
 | **Middleware** | `app/Http/Middleware/EnsureRole.php`, `app/Http/Middleware/SetLocale.php` |
 | **Services** | `app/Services/CalendarService.php` |
 | **Models** | `app/Models/AcademicCalendarEvent.php`, `app/Models/Course.php`, `app/Models/CourseEnrollment.php`, `app/Models/Lesson.php`, `app/Models/User.php`, `app/Models/PluginDefinition.php`, `app/Models/PluginVersion.php`, `app/Models/LessonPluginInstance.php`, `app/Models/PluginAsset.php`, `app/Models/PluginInteraction.php`, `app/Models/PluginGrade.php`, `app/Models/LessonLayoutSnapshot.php`, `app/Models/Question.php`, `app/Models/QuizResult.php`, `app/Models/Progress.php` |
 | **Migrations** | `database/migrations/2026_05_19_120000_create_academic_calendar_events_table.php`, `database/migrations/2026_05_19_000001_add_due_at_to_lessons_table.php`, + migrations in `database/migrations/` (courses, lessons, plugins, progress, enrollments) |
-| **Seeders** | `database/seeders/DatabaseSeeder.php`, `database/seeders/LmsDemoSeeder.php`, `database/seeders/PluginDefinitionSeeder.php` |
+| **Seeders** | `DatabaseSeeder.php`, `LmsDemoSeeder.php`, `PluginDefinitionSeeder.php`, `SmartReportDemoSeeder.php` |
+| **Lessons** | `resources/views/lessons/edit.blade.php`, `resources/views/lessons/show.blade.php` |
+| **Pricing** | `resources/views/pricing/index.blade.php` |
+| **Plugins** | `resources/views/plugins/_*.blade.php` |
 | **Layout views** | `resources/views/layouts/app.blade.php`, `resources/views/layouts/stitch.blade.php`, `resources/views/layouts/calendar-moodle.blade.php` |
 | **Partials** | `resources/views/layouts/partials/sidebar-nav.blade.php`, `resources/views/layouts/partials/language-switcher.blade.php`, `resources/views/layouts/partials/i18n-js.blade.php`, `resources/views/layouts/partials/calendar-moodle-topbar.blade.php` |
 | **Calendar views** | `resources/views/calendar/index.blade.php`, `resources/views/calendar/teacher.blade.php`, `resources/views/calendar/_body.blade.php`, `resources/views/calendar/events/create.blade.php`, `resources/views/calendar/events/edit.blade.php`, `resources/views/calendar/events/_form.blade.php` |
@@ -219,3 +284,9 @@ Paths relative to the repository root in [BurgosAngel/codigofinal](https://githu
 | **Tests** | `tests/Feature/LmsFlowTest.php`, `tests/Feature/LocaleTest.php`, `tests/Feature/CalendarTest.php`, `tests/Feature/CalendarEventTest.php`, `tests/Unit/LessonCastTest.php` |
 | **Docker** | `docker-compose.yml`, `docker/nginx/default.conf`, `docker/php/uploads.ini` |
 | **Screenshots (documentation)** | `AI4Devs-finalproject/docs/screenshots/*.png` — login, dashboard (teacher/student), courses, calendar, create event |
+| **Docs (SaaS)** | `docs/ROADMAP_SAAS.md`, `codigofinal/lms-cms-laravel12/prompts.md`, `AI4Devs-finalproject/PLAN_NEGOCIO.md` |
+| **Jira scripts** | `scripts/jira/create-saas-phase-tickets.ps1`, `create-phase-subtasks.ps1`, `saas-phases-tickets.json`, `dev-*-subtasks.json` |
+
+---
+
+*Last updated: synced with editor, video, and SaaS sections (delivery branch `feature-entrega2-ABR`).*
