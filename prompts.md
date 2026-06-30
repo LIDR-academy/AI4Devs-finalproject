@@ -1,125 +1,292 @@
-> Detalla en esta sección los prompts principales utilizados durante la creación del proyecto, que justifiquen el uso de asistentes de código en todas las fases del ciclo de vida del desarrollo. Esperamos un máximo de 3 por sección, principalmente los de creación inicial o  los de corrección o adición de funcionalidades que consideres más relevantes.
-Puedes añadir adicionalmente la conversación completa como link o archivo adjunto si así lo consideras
+> In this section, document the main prompts used during project creation that justify the use of code assistants across all phases of the development lifecycle. We expect a maximum of 3 per section, mainly initial creation prompts or correction/addition prompts for functionality you consider most relevant.
+> You may additionally include the full conversation as a link or attachment if you consider it appropriate.
 
+**Implementation repository:** [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (branch `angel-burgos-r`)
 
-## Índice
+**Delivery branch:** `feature-entrega2-ABR`
 
-1. [Descripción general del producto](#1-descripción-general-del-producto)
-2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
-3. [Modelo de datos](#3-modelo-de-datos)
-4. [Especificación de la API](#4-especificación-de-la-api)
-5. [Historias de usuario](#5-historias-de-usuario)
-6. [Tickets de trabajo](#6-tickets-de-trabajo)
+**Reference conversation (README analysis, plugins, WYSIWYG editor, video, SaaS):** [agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md](./agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md)
+
+**Reference conversation (calendar, i18n, sidebar):** [agent-transcripts/8ff11265-f2f9-4ac1-b458-5dd9a909c31f.md](./agent-transcripts/8ff11265-f2f9-4ac1-b458-5dd9a909c31f.md)
+
+**Implementation prompt log (extended):** [codigofinal/lms-cms-laravel12/prompts.md](../codigofinal/lms-cms-laravel12/prompts.md)
+
+---
+
+## Index
+
+1. [Product overview](#1-product-overview)
+2. [System architecture](#2-system-architecture)
+3. [Data model](#3-data-model)
+4. [API specification](#4-api-specification)
+5. [User stories](#5-user-stories)
+6. [Work tickets](#6-work-tickets)
 7. [Pull requests](#7-pull-requests)
+8. [Calendar, i18n, and navigation](#8-calendar-i18n-and-navigation)
+9. [Content editor, video, and lessons](#9-content-editor-video-and-lessons)
+10. [SaaS business plan](#10-saas-business-plan)
+11. [Main files used](#11-main-files-used)
 
 ---
 
-## 1. Descripción general del producto
+## 1. Product overview
 
-**Prompt 1:**
+**Prompt 1:** "Codigo libre para desarrollo de plataforma de formación, con desarrollo y diseño de páginas interactivas."
 
-**Prompt 2:**
+> Note: Initial prompt to define project scope. The LLM was guided toward an open source solution with Laravel 12, focusing on interactivity and modularity as key differentiators compared to other LMS platforms.
 
-**Prompt 3:**
+**Prompt 2:** "Edita AI4Devs-finalproject/readme.md para que analice la estructura del repositorio codigofinal/lms-cms-laravel12 y cree la estructura adecuada dentro del documento según su análisis, sé conciso y antes de finalizar debo aceptar el cambio."
+
+> Note: The assistant was instructed to generate product documentation by analyzing the existing real codebase, not from assumptions. Conciseness and confirmation before applying changes were requested.
+
+**Prompt 3:** "Actualiza automáticamente readme.md cuando cambie la estructura u otro elemento del código en codigofinal/lms-cms-laravel12 (repositorio https://github.com/BurgosAngel/codigofinal, rama angel-burgos-r)."
+
+> Note: Maintenance prompt so documentation always reflects the current state of the code. The LLM analyzed models, controllers, migrations, routes, and views to update all README sections.
 
 ---
 
-## 2. Arquitectura del Sistema
+## 2. System Architecture
 
-### **2.1. Diagrama de arquitectura:**
+### **2.1. Architecture diagram:**
 
-**Prompt 1:**
+**Prompt 1:** "Están subidos todos los contenedores pero no puedo ver la bd de lms-cms-laravel12, ¿cómo puedo ver phpMyAdmin?"
 
-**Prompt 2:**
+> Note: This prompt led to diagnosing the actual Docker architecture (ports, services, networks). The LLM ran `docker-compose ps`, identified the port conflict, and generated the Mermaid diagram with the correct ports (8080, 8082, 33067).
 
-**Prompt 3:**
+**Prompt 2:** "No puedo acceder a localhost:8081, puedes comprobar por qué y hacerlo funcionar."
 
-### **2.2. Descripción de componentes principales:**
+> Note: The assistant was guided in diagnostic mode. It ran commands to detect that `wslrelay.exe` was occupying port 8081, which resulted in moving phpMyAdmin to port 8082 and documenting the updated architecture.
 
-**Prompt 1:**
+### **2.2. Main components description:**
 
-**Prompt 2:**
+**Prompt 1:** "Analizando el repositorio https://github.com/moodle/moodle/tree/main/public/blocks, puedes crear plugins estilo drag and drop dentro del repositorio local codigofinal/lms-cms-laravel12."
 
-**Prompt 3:**
+> Note: Key prompt that defined the plugin architecture. Moodle was provided as an architectural reference and the LLM was asked to design an equivalent system adapted to Laravel, including backend (migrations, models, controllers) and frontend (drag & drop JS).
 
-### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
+**Prompt 2:** "Al subir un vídeo desde el equipo no carga automáticamente en la sección vídeo."
 
-**Prompt 1:**
+> Note: This prompt led to identifying architectural limitations: PHP upload_max_filesize (2MB), Nginx without client_max_body_size, and duplicate IDs in the DOM. The LLM created `docker/php/uploads.ini`, modified `docker/nginx/default.conf`, and restructured the view for a dedicated editor per lesson.
 
-**Prompt 2:**
+### **2.3. High-level project description and file structure**
 
-**Prompt 3:**
+**Prompt 1:** "Edita AI4Devs-finalproject/readme.md para que analice la estructura del repositorio codigofinal/lms-cms-laravel12 y cree la estructura adecuada dentro del documento."
 
-### **2.4. Infraestructura y despliegue**
+> Note: The LLM recursively explored the directory tree with glob and listings, generating an accurate representation of the file structure with counts of migrations, models, and controllers.
 
-**Prompt 1:**
+### **2.4. Infrastructure and deployment**
 
-**Prompt 2:**
+**Prompt 1:** "Están subidos todos los contenedores pero no puedo ver la BD."
 
-**Prompt 3:**
+> Note: Triggered a full review of `docker-compose.yml`. The LLM verified the status of each service, identified failed services, and corrected port configuration to ensure accessibility.
 
-### **2.5. Seguridad**
+**Prompt 2:** "Sigue sin funcionar, adjunto imagen. Estoy en http://localhost:8080/courses/1."
 
-**Prompt 1:**
+> Note: Visual evidence was attached. The LLM diagnosed that uploads were failing due to infrastructure configuration (PHP + Nginx), created custom configuration files, mounted them as Docker volumes, and documented everything in the README.
 
-**Prompt 2:**
+### **2.5. Security**
 
-**Prompt 3:**
+**Prompt 1:** "¿Puedes comprobar por qué no entra con estas credenciales dentro de la web?"
+
+> Note: The LLM inspected the seeder and hashing system to verify that bcrypt is applied correctly. It confirmed seed credentials and verified the authentication middleware, documenting the security layers.
 
 ### **2.6. Tests**
 
-**Prompt 1:**
+**Prompt 1:** "The questions field is required — no quiero que aparezca al crear la lección, el mínimo es el título de la lección."
 
-**Prompt 2:**
+> Note: This prompt led to reviewing backend validations. The LLM changed rules from `required` to `nullable` and from `size:4` to `min:2` in option arrays. After the change, `php artisan test` was run to verify that LmsFlowTest remained green.
 
-**Prompt 3:**
+**Prompt 2:** "Cuando entro con rol estudiante no visualizo los plugins y debería verlos pero no editarlos, con este rol. Adjunto imagen que quiero que aparezca."
 
----
+> Note: Bug report prompt with visual evidence. The LLM inspected the load query, the `pluginInstances` relationship, and the `is_visible` field in the database.
 
-### 3. Modelo de Datos
+**Prompt 3:** "Puedes comprobar por qué no entra con estas credenciales dentro de la web?"
 
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
+> Note: Authentication debugging prompt with `php artisan tinker`, hash verification, and `Auth::attempt()`.
 
 ---
 
-### 4. Especificación de la API
+### 3. Data Model
 
-**Prompt 1:**
+**Prompt 1:** "Analizando el repositorio https://github.com/moodle/moodle/tree/main/public/blocks, puedes crear plugins estilo drag and drop dentro del repositorio local codigofinal/lms-cms-laravel12."
 
-**Prompt 2:**
+> Note: Prompt that generated the plugin system tables. The LLM designed the relational schema (plugin_definitions → plugin_versions → lesson_plugin_instances → plugin_assets/interactions/grades) with complete Laravel migrations.
 
-**Prompt 3:**
+**Prompt 2:** "Crea un panel donde pueda asignar los estudiantes a un curso y el profesor al mismo curso, quiero que sea dinámico y que use drag and drop."
 
----
+> Note: Generated the `course_enrollments` table with unique constraints (course_id + user_id), role enum, and enrollment timestamp.
 
-### 5. Historias de Usuario
+**Prompt 3:** "Añadir dinámicamente respuestas a Preguntas del Quiz desde el rol profesor para que de esa manera pueda añadir más de cuatro respuestas posibles."
 
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
+> Note: Modified validation of the `options` field from a fixed-size JSON array (size:4) to flexible (min:2).
 
 ---
 
-### 6. Tickets de Trabajo
+### 4. API Specification
 
-**Prompt 1:**
+**Prompt 1:** "Analizando el repositorio de Moodle, puedes crear plugins estilo drag and drop."
 
-**Prompt 2:**
+> Note: Generated the route layer for the plugin system: endpoints in PluginController and PluginInteractionController, protected by role middleware.
 
-**Prompt 3:**
+**Prompt 2:** "Crea un panel donde pueda asignar los estudiantes a un curso y el profesor al mismo curso."
+
+> Note: Generated 5 enrollment endpoints: list enrolled, list available, enroll, unenroll, and panel view.
+
+**Prompt 3:** "En la web enrollments, quiero que modifiques en disponibles y pongas todos los usuarios que se encuentren en la plataforma que no tengan rol admin y no los diferencies entre alumnos y profesores."
+
+> Note: Refinement of the `/enrollments/available` endpoint unifying the available users query.
+
+**Prompt 4:** "Implementa ruta, controlador y clic del botón Vídeo con selección de archivo."
+
+> Note: `POST /lessons/{lesson}/content-video` for multipart upload and public URL in the response.
+
+**Prompt 5:** "Editor WYSIWYG para contenido de lección — Implement the plan."
+
+> Note: `PATCH /lessons/{lesson}/content` with a page array `{ type, title, html }`.
+
+---
+
+### 5. User Stories
+
+**Prompt 1:** "Código libre para desarrollo de plataforma de formación, con desarrollo y diseño de páginas interactivas."
+
+> Note: From the initial prompt, base stories were derived: HU-1 to HU-3 (teacher) and HU-7/HU-10 (student).
+
+**Prompt 2:** "Analizando Moodle blocks, puedes crear plugins estilo drag and drop."
+
+> Note: Added HU-4 (teacher: drag & drop plugins) and HU-8 (student: interactive multimedia content).
+
+**Prompt 3:** "Crea un panel donde pueda asignar estudiantes y profesor al curso con drag and drop."
+
+> Note: Generated HU-6 (enrollment management).
+
+**Prompt 4:** "Quiero ver y editar lecciones al clickear en Lecciones creadas."
+
+> Note: Navigation to `lessons/{lesson}/edit` from `courses/show`.
+
+**Prompt 5:** "Profesor puede cambiar Contenido actual en /lessons/1/edit."
+
+> Note: WYSIWYG editing of lesson text content.
+
+---
+
+### 6. Work Tickets
+
+**Prompt 1:** "Analizando el repositorio de Moodle, puedes crear plugins estilo drag and drop dentro del repositorio local."
+
+> Note: Most complex ticket (Ticket 4): migrations, models, controllers, JS editor, Blade partials, and seeder.
+
+**Prompt 2:** "Crea un panel donde pueda asignar los estudiantes a un curso."
+
+> Note: Ticket 5: migration, model, controller, drag & drop view, and AJAX JavaScript.
+
+**Prompt 3:** "Debe de poder editarse los quiz + Añadir dinámicamente respuestas."
+
+> Note: Refined Ticket 3 with CRUD for questions and dynamic options in the frontend.
+
+**Prompt 4:** "Editor WYSIWYG + páginas con pestañas + vídeo en contenido."
+
+> Note: Quill multi-page editor and video embeds ticket.
+
+**Prompt 5:** "Quiero que siga el plan de negocio SaaS (planes, tutor IA, Stripe, Azure)."
+
+> Note: `PLAN_NEGOCIO.md`, `ROADMAP_SAAS.md`, `config/saas.php`, and `/pricing`.
 
 ---
 
 ### 7. Pull Requests
 
-**Prompt 1:**
+**Prompt 1:** "Analizando Moodle blocks, puedes crear plugins estilo drag and drop."
 
-**Prompt 2:**
+> Note: PR 4 (Interactive plugin system): tables, models, controllers, JS editor, and 10 block types.
 
-**Prompt 3:**
+**Prompt 2:** "Crea un panel donde pueda asignar los estudiantes a un curso y el profesor al mismo curso."
+
+> Note: PR 5 (Enrollment management) with drag & drop panel and AJAX.
+
+**Prompt 3:** "Actualiza automáticamente readme.md cuando cambie estructura u otro elemento."
+
+> Note: Implicit PR 6 (documentation) keeping the README aligned with the code.
+
+---
+
+## 8. Calendar, i18n, and navigation
+
+**Prompt 1:** "Quiero en el menu sidebar-nav aparezca en todas las paginas de la plataforma los items Dashboard, Course Overview y Calendario y tengan el nombre Inicio, Mis cursos, Calendario respetando el idioma establecido (ES/EN)."
+
+> Note: Extracted `layouts/partials/sidebar-nav.blade.php` and included it in `app.blade.php`, `stitch.blade.php`, and `calendar-moodle.blade.php`. Translations in `lang/es/lms.php` and `lang/en/lms.php` under `nav.*`. Tests in `LocaleTest::test_sidebar_nav_respects_locale`.
+
+**Prompt 2:** "Implementa calendario académico según diseño Figma (nodos 26:4, 27:251, 37:250): vista mensual dinámica, layout Moodle para profesor, crear/editar/eliminar eventos académicos y extender i18n ES/EN a toda la interfaz."
+
+> Note: Generated `CalendarService`, `CalendarController`, `CalendarEventController`, `AcademicCalendarEvent` model, `academic_calendar_events` and `lessons.due_at` migrations, `calendar/*` views, CSS (`calendar.css`, `calendar-teacher.css`, `calendar-event-form.css`), `SetLocale` middleware, `LocaleController`, and `CalendarTest` / `CalendarEventTest` tests.
+
+**Prompt 3:** "Quiero que el link nuevo evento aparezca solo en la pagina http://localhost:8080/calendar y solo para el rol profesor."
+
+> Note: Condition in `sidebar-nav.blade.php`: `auth()->user()->role === 'teacher' && request()->routeIs('calendar')`. Test `CalendarTest::test_teacher_new_event_link_only_on_calendar_page`.
+
+---
+
+## 9. Content editor, video, and lessons
+
+**Prompt 1:** "Profesor puede cambiar Contenido actual en /lessons/1/edit — Editor WYSIWYG. Implement the plan."
+
+> Note: Quill.js integration via CDN in `layouts/app.blade.php`, autosave with `PATCH /lessons/{lesson}/content`, dedicated editor at `/lessons/{id}/edit`.
+
+**Prompt 2:** "Quiero que soluciones ambos casos: la corrección del editor para que cargue correctamente el HTML formateado y un sistema de páginas/secciones dentro de la lección con navegación por pestañas."
+
+> Note: Fixed double-escaped HTML in the database; load via `<template>` + `clipboard.dangerouslyPasteHTML`. `content` stored as a JSON array of pages `{ type: page, title, html }`.
+
+**Prompt 3:** "Quiero que añadas en Contenido de la lección que pueda añadir video en las páginas. Al clickear Vídeo, seleccionar archivo del PC. Vídeo y URL al lado en la toolbar, con separación."
+
+> Note: Custom Quill blots `lessonIframeVideo` / `lessonHtml5Video`, `POST /lessons/{lesson}/content-video`, toolbar class `ql-video-actions` in `lms.css`. Related plugin work: `PluginController::uploadAsset` for `video_embed`, autosave after upload, and `title` in plugin settings.
+
+---
+
+## 10. SaaS business plan
+
+**Prompt 1:** "Quiero que siga el plan de negocio: concepto SaaS, planes Básico/Pro/Empresa, tutor IA, monetización 70/30, fases MVP→Scale, stack Supabase/Azure/Stripe…"
+
+> Note: Created `PLAN_NEGOCIO.md`, `codigofinal/lms-cms-laravel12/docs/ROADMAP_SAAS.md`, `config/saas.php`, `/pricing` page, and `subscription_plan` fields on `users`. Jira roadmap: epic DEV-17 and phase tickets DEV-18–DEV-22 with subtasks (e.g. DEV-23–DEV-27 for Phase 1 MVP).
+
+**Prompt 2:** "Añade los prompts utilizados en todo el proyecto dentro de codigofinal/lms-cms-laravel12/prompts.md."
+
+> Note: Centralized extended prompt log in the implementation repository, cross-linked from this delivery document.
+
+**Prompt 3:** "Crear tickets en Jira para cada fase del plan de negocio y subtareas por etapa (Fase 0–4, DEV-19, etc.)."
+
+> Note: PowerShell scripts in `scripts/jira/` (`create-saas-phase-tickets.ps1`, `create-phase-subtasks.ps1`) and JSON definitions per phase; records in `docs/JIRA_SAAS_PHASES.json` and `docs/JIRA_DEV_*_SUBTASKS.json`.
+
+---
+
+## 11. Main files used
+
+Paths relative to the repository root in [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (branch `angel-burgos-r`):
+
+| Area | Files |
+|------|-------|
+| **Routes** | `routes/web.php` |
+| **SaaS config** | `config/saas.php` |
+| **Controllers** | `AuthController`, `CalendarController`, `CalendarEventController`, `CourseController`, `DashboardController`, `EnrollmentController`, `LessonController`, `LocaleController`, `PluginController`, `PluginInteractionController`, `PricingController`, `ProfileController`, `QuizController`, `SmartReportController`, `StudentLessonController` |
+| **Enums** | `app/Enums/SubscriptionPlan.php`, `app/Enums/UserRole.php` |
+| **Middleware** | `app/Http/Middleware/EnsureRole.php`, `app/Http/Middleware/SetLocale.php` |
+| **Services** | `app/Services/CalendarService.php` |
+| **Models** | `app/Models/AcademicCalendarEvent.php`, `app/Models/Course.php`, `app/Models/CourseEnrollment.php`, `app/Models/Lesson.php`, `app/Models/User.php`, `app/Models/PluginDefinition.php`, `app/Models/PluginVersion.php`, `app/Models/LessonPluginInstance.php`, `app/Models/PluginAsset.php`, `app/Models/PluginInteraction.php`, `app/Models/PluginGrade.php`, `app/Models/LessonLayoutSnapshot.php`, `app/Models/Question.php`, `app/Models/QuizResult.php`, `app/Models/Progress.php` |
+| **Migrations** | `database/migrations/2026_05_19_120000_create_academic_calendar_events_table.php`, `database/migrations/2026_05_19_000001_add_due_at_to_lessons_table.php`, + migrations in `database/migrations/` (courses, lessons, plugins, progress, enrollments) |
+| **Seeders** | `DatabaseSeeder.php`, `LmsDemoSeeder.php`, `PluginDefinitionSeeder.php`, `SmartReportDemoSeeder.php` |
+| **Lessons** | `resources/views/lessons/edit.blade.php`, `resources/views/lessons/show.blade.php` |
+| **Pricing** | `resources/views/pricing/index.blade.php` |
+| **Plugins** | `resources/views/plugins/_*.blade.php` |
+| **Layout views** | `resources/views/layouts/app.blade.php`, `resources/views/layouts/stitch.blade.php`, `resources/views/layouts/calendar-moodle.blade.php` |
+| **Partials** | `resources/views/layouts/partials/sidebar-nav.blade.php`, `resources/views/layouts/partials/language-switcher.blade.php`, `resources/views/layouts/partials/i18n-js.blade.php`, `resources/views/layouts/partials/calendar-moodle-topbar.blade.php` |
+| **Calendar views** | `resources/views/calendar/index.blade.php`, `resources/views/calendar/teacher.blade.php`, `resources/views/calendar/_body.blade.php`, `resources/views/calendar/events/create.blade.php`, `resources/views/calendar/events/edit.blade.php`, `resources/views/calendar/events/_form.blade.php` |
+| **i18n** | `lang/es/lms.php`, `lang/en/lms.php` |
+| **Styles** | `public/css/lms.css`, `public/css/calendar.css`, `public/css/calendar-teacher.css`, `public/css/calendar-event-form.css` |
+| **JS** | `public/js/lms.js` |
+| **Tests** | `tests/Feature/LmsFlowTest.php`, `tests/Feature/LocaleTest.php`, `tests/Feature/CalendarTest.php`, `tests/Feature/CalendarEventTest.php`, `tests/Unit/LessonCastTest.php` |
+| **Docker** | `docker-compose.yml`, `docker/nginx/default.conf`, `docker/php/uploads.ini` |
+| **Screenshots (documentation)** | `AI4Devs-finalproject/docs/screenshots/*.png` — login, dashboard (teacher/student), courses, calendar, create event |
+| **Docs (SaaS)** | `docs/ROADMAP_SAAS.md`, `codigofinal/lms-cms-laravel12/prompts.md`, `AI4Devs-finalproject/PLAN_NEGOCIO.md` |
+| **Jira scripts** | `scripts/jira/create-saas-phase-tickets.ps1`, `create-phase-subtasks.ps1`, `saas-phases-tickets.json`, `dev-*-subtasks.json` |
+
+---
+
+*Last updated: synced with editor, video, and SaaS sections (delivery branch `feature-entrega2-ABR`).*
