@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Worker">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>dotnet-Aura.Workers.SSG-cedf6dbb-e233-4037-bb82-13456230a353</UserSecretsId>
@@ -12,7 +12,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Aura.Core\Aura.Core.csproj" />
     <ProjectReference Include="..\..\src\Aura.Infrastructure\Aura.Infrastructure.csproj" />
   </ItemGroup>
 </Project>
