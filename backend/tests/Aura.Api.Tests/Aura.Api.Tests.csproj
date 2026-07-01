@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="AwesomeAssertions" Version="9.4.0" />
     <PackageReference Include="coverlet.collector" Version="6.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageReference Include="NSubstitute" Version="5.3.0" />
     <PackageReference Include="xunit" Version="2.9.2" />
@@ -18,6 +19,10 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Aura.Api\Aura.Api.csproj" />
   </ItemGroup>
 
 </Project>

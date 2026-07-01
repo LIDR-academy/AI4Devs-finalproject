@@ -120,62 +120,115 @@ Recibir enlace mágico por email → Clic en enlace → Abrir Accomplice Panel
 
 ### **1.4. Instrucciones de instalación:**
 
-> **Estado:** El andamiaje del proyecto está en progreso. Lo siguiente describe la configuración planificada.
-
 #### Requisitos previos
-- .NET 10 SDK
+- .NET 9 SDK
 - Node.js 20+ y npm
-- Rancher Desktop (con k3s + runtime containerd) — entorno de desarrollo local principal
+- Docker Desktop (o Docker Engine + Docker Compose)
 
-#### Desarrollo local (Rancher Desktop + Kubernetes)
+#### Infraestructura local (Docker Compose)
+
+Todos los servicios de infraestructura necesarios para desarrollo local se ejecutan con un solo comando:
+
 ```bash
-# 1. Asegúrate de que Rancher Desktop está ejecutándose con k3s
-kubectl cluster-info
-kubectl create namespace aura
-
-# 2. Construir imágenes locales
-nerdctl build -t ghcr.io/pedrosrp/aura-api:local -f backend/src/Aura.Api/Dockerfile backend/
-nerdctl build -t ghcr.io/pedrosrp/aura-frontend:local -f frontend/Dockerfile frontend/
-
-# 3. Desplegar en cluster local
-kubectl apply -k k8s/overlays/local
-
-# 4. Acceder a la API
-kubectl port-forward svc/aura-api 5001:80 -n aura
+docker compose up -d
 ```
 
-#### Frontend (Angular 22) — Native Dev Mode
+Esto levanta los siguientes servicios:
+
+| Servicio | Puerto(s) | Descripción |
+|----------|-----------|-------------|
+| **PostgreSQL 16** | `5432` | Base de datos relacional. DB: `auraplanning_dev`, User: `postgres`, Pass: `postgres` |
+| **DragonflyDB** | `6379` | Cola distribuida y caché (Redis-compatible) |
+| **MinIO** | `9000` (API), `9001` (Console) | Object storage S3-compatible. User: `minioadmin`, Pass: `minioadmin` |
+
+```bash
+# Levantar infraestructura
+docker compose up -d
+
+# Ver logs
+docker compose logs -f
+
+# Parar infraestructura
+docker compose down
+
+# Parar y eliminar volúmenes (reset completo)
+docker compose down -v
+```
+
+> **Nota:** Los puertos y credenciales están alineados con `backend/src/Aura.Api/appsettings.Development.json`. Si cambias valores en docker-compose, actualiza también ese archivo.
+
+#### Backend (.NET 9) — Desarrollo local
+
+```bash
+# 1. Levantar infraestructura primero
+docker compose up -d
+
+# 2. Aplicar migraciones de base de datos
+dotnet ef database update --project backend/src/Aura.Infrastructure --startup-project backend/src/Aura.Api
+
+# 3. Ejecutar la API
+dotnet run --project backend/src/Aura.Api
+# API disponible en http://localhost:5000
+# Swagger UI: http://localhost:5000/scalar/v1
+```
+
+#### Frontend (Angular 22) — Desarrollo local
+
 ```bash
 cd frontend
 npm install
-ng serve                     # Inicia el servidor de desarrollo en http://localhost:4200
+npm start                     # Servidor de desarrollo en http://localhost:4200
 ```
 
+#### Ejecutar frontend y backend simultáneamente
+
+**Windows (PowerShell):**
+```powershell
+.\dev.ps1                    # Start everything
+.\dev.ps1 -SkipInfra         # Skip docker compose (if already running)
+.\dev.ps1 -BackendOnly       # Only backend
+.\dev.ps1 -FrontendOnly      # Only frontend
+```
+
+**Linux/Mac (Bash):**
+```bash
+chmod +x dev.sh              # Make executable (first time only)
+./dev.sh                     # Start everything
+./dev.sh --skip-infra        # Skip docker compose
+./dev.sh --backend-only      # Only backend
+./dev.sh --frontend-only     # Only frontend
+```
+
+Ambos scripts:
+- Inician infraestructura (docker compose)
+- Inician backend en `http://localhost:5000`
+- Inician frontend en `http://localhost:4200`
+- Escriben logs en `.dev-backend.log` y `.dev-frontend.log`
+- Limpian todo al presionar Ctrl+C
+
 #### Configuración
-Copia `appsettings.json` y configura las siguientes claves:
-| Clave | Propósito |
-|-----|---------|
-| `ConnectionStrings:DefaultConnection` | Cadena de conexión de PostgreSQL |
-| `Jwt:Key` | Clave de 256 bits para firmar JWT |
-| `MagicLink:BaseUrl` | URL base para emails con enlace mágico |
-| `WhatsApp:ApiKey` | Clave API de Meta Cloud |
-| `Smtp:Host` / `Smtp:Port` | Credenciales SMTP de Gmail |
-| `Smtp:Username` / `Smtp:Password` | Contraseña de aplicación de Gmail |
-| `Stripe:SecretKey` | Clave API de Stripe |
-| `GoogleMaps:ApiKey` | Clave API de Google Maps |
-| `Minio:Endpoint` / `Minio:AccessKey` | Credenciales de object storage de MinIO |
-| `Dragonfly:ConnectionString` | Cadena de conexión de DragonflyDB |
+Los valores de desarrollo están preconfigurados en `appsettings.Development.json` y alineados con `docker-compose.yml`:
+
+| Clave | Valor local | Servicio |
+|-------|-------------|----------|
+| `ConnectionStrings:DefaultConnection` | `Host=localhost;Port=5432;Database=auraplanning_dev;Username=postgres;Password=postgres` | PostgreSQL |
+| `Dragonfly:ConnectionString` | `localhost:6379` | DragonflyDB |
+| `Minio:Endpoint` | `localhost:9000` | MinIO |
+| `Minio:AccessKey` / `Minio:SecretKey` | `minioadmin` / `minioadmin` | MinIO |
+| `Smtp:Host` / `Smtp:Port` | `localhost` / `1025` | Mailhog |
+| `Jwt:Key` | Clave de desarrollo (no usar en producción) | — |
+
+Para producción, estas claves se inyectan vía variables de entorno de Kubernetes Secrets.
 
 #### Base de datos
 - PostgreSQL 16 con migraciones EF Core
 - Las migraciones están versionadas y son reversibles
 - Ejecuta `dotnet ef database update` para aplicar (o como InitContainer en K8s)
 - Datos semilla: las plantillas se inyectan en la primera ejecución
-- Local: PostgreSQL se ejecuta como un StatefulSet en el cluster k3s de Rancher Desktop
 
 #### Ejecución de pruebas
 ```bash
-dotnet test    # Pruebas unitarias y de integración del backend (requiere runtime de contenedores para Testcontainers)
+dotnet test    # Pruebas unitarias y de integración del backend
 npm test       # Pruebas unitarias del frontend
 ```
 

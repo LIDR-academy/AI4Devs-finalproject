@@ -1,9 +1,4 @@
-# API Bootstrap
-
-## Purpose
-TBD
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: API starts and responds to HTTP requests
 The Aura.Api project SHALL start as an ASP.NET Core Web Application with controllers, configured with the complete middleware pipeline: ExceptionHandling → SecurityHeaders → RateLimiting → CORS → CSRF → Authentication → Authorization → Routing.
