@@ -16,3 +16,11 @@ The system SHALL define an ISoftDeletable interface to standardize soft deletion
 #### Scenario: Entities support soft delete
 - **WHEN** an entity implements ISoftDeletable
 - **THEN** it exposes an IsDeleted boolean property.
+
+
+### Requirement: User Entity Auth Fields
+The User entity SHALL include properties for storing authentication state.
+
+#### Scenario: Auth fields exist on User
+- **WHEN** the User entity is inspected
+- **THEN** it contains fields for HashedMagicLinkToken, TokenExpiresAt, LastLoginAt, and Status
