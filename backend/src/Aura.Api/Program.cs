@@ -171,6 +171,11 @@ try
     builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
         ConnectionMultiplexer.Connect($"{dragonflyConnectionString},abortConnect=false"));
 
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = dragonflyConnectionString;
+    });
+
     var minioEndpoint = builder.Configuration["Minio:Endpoint"]!;
     var minioAccessKey = builder.Configuration["Minio:AccessKey"]!;
     var minioSecretKey = builder.Configuration["Minio:SecretKey"]!;
