@@ -169,7 +169,7 @@ try
 
     var dragonflyConnectionString = builder.Configuration["Dragonfly:ConnectionString"]!;
     builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
-        ConnectionMultiplexer.Connect(dragonflyConnectionString));
+        ConnectionMultiplexer.Connect($"{dragonflyConnectionString},abortConnect=false"));
 
     var minioEndpoint = builder.Configuration["Minio:Endpoint"]!;
     var minioAccessKey = builder.Configuration["Minio:AccessKey"]!;
@@ -200,7 +200,12 @@ try
     }
 
     app.UseMiddleware<ExceptionHandlingMiddleware>();
-    app.UseMiddleware<SecurityHeadersMiddleware>();
+    
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseMiddleware<SecurityHeadersMiddleware>();
+    }
+    
     app.UseMiddleware<RateLimitingMiddleware>();
     app.UseCors("DefaultPolicy");
     app.UseMiddleware<CsrfValidationMiddleware>();

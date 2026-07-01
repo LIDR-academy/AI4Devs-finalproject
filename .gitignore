@@ -46,3 +46,6 @@ yarn-error.log
 .env
 .env.local
 .env.*.local
+
+# Dev script logs
+.dev-*.log
