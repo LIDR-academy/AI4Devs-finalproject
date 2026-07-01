@@ -1158,3 +1158,158 @@ DESPUÉS:
 
 - [x] Decisiones de arquitectura pendientes (estados de partida → `setup`,
       storage local → Drift). Ver tabla ADR en readme.md.
+
+--------
+
+Vamos a implementar LPT-5 (Crear partida) junto con su subtarea LPT-23
+(setup de Drift), ya que LPT-5 depende de tener persistencia local
+funcional para cumplir su criterio de aceptación 4.
+
+IMPORTANTE — corrección de nomenclatura: el ticket original en Jira usa
+el estado `lobby`, pero esto fue renombrado a `setup` en una decisión de
+arquitectura posterior (ver tabla ADR en readme.md, sección anterior a
+"2. Arquitectura del Sistema"). Usa `setup` en todo el código, NO `lobby`.
+
+═══════════════════════════════════════
+PARTE 1 — LPT-23: Setup de Drift
+═══════════════════════════════════════
+
+Añade dependencias en pubspec.yaml:
+
+- dependencies: drift, drift_flutter (o sqlite3_flutter_libs según la
+  versión estable más reciente compatible con el Flutter SDK del
+  proyecto — comprueba pubspec.yaml actual antes de fijar versión)
+- dev_dependencies: drift_dev, build_runner
+
+Crea lib/core/database/app_database.dart con la clase AppDatabase
+(@DriftDatabase), y lib/core/database/tables/games_table.dart con la
+tabla Games:
+
+- id (text, primary key) — UUID
+- status (text) — valores válidos: 'setup' | 'in_progress' | 'finished'
+- playerCount (integer) — 3 a 8
+- totalCards (integer)
+- maxCardsPerRound (integer)
+- roundSequence (text) — JSON serializado, con TypeConverter a
+  List<RoundDefinition> (cada elemento: { roundNumber: int,
+  cardsPerPlayer: int })
+- createdAt (datetime)
+- updatedAt (datetime)
+
+Genera el código con build_runner. Registra AppDatabase en la inyección
+de dependencias raíz (core/di), de forma que sea inyectable como
+singleton en GameRepositoryImpl más adelante.
+
+No crees todavía las tablas Rounds, Players ni Favorites — eso
+corresponde a LPT-7, LPT-9 y LPT-18 respectivamente.
+
+Test: AppDatabase en memoria (NativeDatabase.memory()) permite insertar
+y leer un Game de prueba con status 'setup'.
+
+═══════════════════════════════════════
+PARTE 2 — LPT-5: Crear partida
+═══════════════════════════════════════
+
+Contexto: primera pantalla del flujo de creación de partida. El
+organizador elige el número de jugadores (3-8) y la app calcula y
+persiste localmente la configuración base de la partida, sin
+intervención manual.
+
+Tabla de configuración (fuente de verdad, PRD §6):
+
+| Jugadores | Cartas totales | Máx. por ronda (M) | Rondas |
+|-----------|----------------|---------------------|--------|
+| 3 | 30 | 10 | 21 |
+| 4 | 40 | 10 | 22 |
+| 5 | 40 | 8 | 19 |
+| 6 | 48 | 8 | 21 |
+| 7 | 49 (+ comodín) | 7 | 19 |
+| 8 | 48 | 6 | 18 |
+
+Criterios de aceptación:
+
+1. Selector de número de jugadores entre 3 y 8 (inclusive). Diseño de
+   referencia: usar SOLO una botonera de chips (3,4,5,6,7,8), sin
+   stepper +/- adicional (ver docs/design.md y wireframe "Crear
+   partida" — el stepper se descartó tras revisión visual por
+   redundante).
+2. Al cambiar el número, la UI muestra en tiempo real: cartas totales,
+   máximo de cartas por ronda y número total de rondas, en una tarjeta
+   resumen (ver docs/design.md, componente "Tarjeta de dato numérico
+   destacado").
+3. La secuencia de rondas sigue el patrón ascendente-plateau-
+   descendente: 1, 2, …, M (repetido N veces, N = número de jugadores),
+   M-1, …, 2, 1. Verifica con el caso 4 jugadores (M=10): debe dar
+   exactamente 22 rondas, con M=10 repetido 4 veces en el plateau.
+4. Al confirmar, se crea un borrador de Game en estado 'setup'
+   persistido localmente vía Drift (AppDatabase de la Parte 1) con:
+   playerCount, totalCards, maxCardsPerRound, roundSequence[].
+5. Tras confirmar, navega a la pantalla de configuración de jugadores
+   (LPT-6) pasando el gameId del borrador. La pantalla de destino
+   puede no existir todavía; deja la ruta definida aunque el
+   siguiente paso esté pendiente de implementar.
+6. Si el usuario cancela o vuelve atrás sin confirmar, no se persiste
+   ningún borrador en Drift.
+7. La operación funciona sin conexión y sin requerir cuenta (no debe
+   haber ninguna dependencia de Firebase en este flujo).
+
+Lógica de dominio (pure Dart, sin Flutter ni Firebase):
+
+- GameDeckConfig: value object inmutable derivado de playerCount.
+- RoundDefinition: { roundNumber (1-based), cardsPerPlayer }.
+- buildRoundSequence(maxCardsPerRound, playerCount): pure function que
+  genera la secuencia completa (2*M - 1 + N rondas en total).
+- CreateGameDraftUseCase: valida rango 3-8, resuelve config desde la
+  tabla, genera secuencia, delega persistencia al repositorio.
+
+Arquitectura (Clean Architecture, ya establecida en el proyecto):
+
+lib/features/game_setup/
+  domain/
+    entities/game.dart, round_definition.dart
+    value_objects/game_deck_config.dart
+    repositories/game_repository.dart          # abstract
+    usecases/create_game_draft_usecase.dart
+    services/round_sequence_builder.dart       # pure Dart
+  data/
+    models/game_model.dart
+    mappers/game_mapper.dart
+    datasources/game_local_datasource.dart     # usa AppDatabase (Drift)
+    repositories/game_repository_impl.dart
+  presentation/
+    bloc/create_game_bloc.dart
+    bloc/create_game_event.dart
+    bloc/create_game_state.dart
+    pages/create_game_page.dart
+    widgets/player_count_selector.dart          # botonera de chips
+    widgets/game_config_preview.dart            # tarjeta resumen
+
+Routing: ruta /games/new → CreateGamePage; al confirmar →
+/games/{gameId}/players (LPT-6, puede no existir aún).
+
+BLoC: eventos PlayerCountChanged, CreateGameConfirmed; estados
+CreateGameInitial, CreateGamePreview, CreateGameSubmitting,
+CreateGameSuccess, CreateGameFailure.
+
+Referencia visual: usa docs/design.md (paleta, tipografía, componentes
+recurrentes) para el estilo de PlayerCountSelector y
+GameConfigPreview — verde tapete como color primario, tarjetas
+redondeadas, números destacados en tipografía grande bold.
+
+Definición de hecho:
+
+- [ ] Test unitario round_sequence_builder_test.dart: secuencia correcta
+      para jugadores 3 a 8 (conteo total, primer/último valor = 1,
+      plateau de longitud N en el valor M). Verifica explícitamente
+      que 4 jugadores → 22 rondas (no 19, error detectado en una
+      iteración previa del wireframe).
+- [ ] Test unitario create_game_draft_usecase_test.dart: mock de
+      GameRepository, validación de rango inválido (rechaza <3 o >8).
+- [ ] Test BLoC (bloc_test): preview se actualiza al cambiar count,
+      éxito al confirmar (persiste en Drift), error de persistencia.
+- [ ] flutter analyze sin errores en ficheros tocados.
+- [ ] UI accesible: labels semánticos en el selector, contraste
+      suficiente (Semantics widget en los chips).
+
+No implementes todavía LPT-6 (añadir jugadores) ni nada relativo a
+Firestore/sincronización — quedan fuera de alcance de este prompt.
