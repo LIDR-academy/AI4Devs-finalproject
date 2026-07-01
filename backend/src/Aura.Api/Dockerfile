@@ -10,6 +10,7 @@ COPY backend/tests/Aura.Core.Tests/Aura.Core.Tests.csproj backend/tests/Aura.Cor
 COPY backend/workers/Aura.Workers.Email/Aura.Workers.Email.csproj backend/workers/Aura.Workers.Email/
 COPY backend/workers/Aura.Workers.WhatsApp/Aura.Workers.WhatsApp.csproj backend/workers/Aura.Workers.WhatsApp/
 COPY backend/workers/Aura.Workers.SSG/Aura.Workers.SSG.csproj backend/workers/Aura.Workers.SSG/
+COPY backend/tests/Aura.Api.Tests/Aura.Api.Tests.csproj backend/tests/Aura.Api.Tests/
 
 # Restore dependencies
 RUN dotnet restore backend/AuraPlanning.sln
