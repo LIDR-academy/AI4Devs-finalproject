@@ -14,6 +14,22 @@ El sistema SHALL ofrecer dos planes: `BASIC` (hasta 1 set en alquiler simultáne
 - **WHEN** un suscriptor `PREMIUM` tiene 2 sets en alquiler
 - **THEN** no puede solicitar ni recibir un tercer set hasta liberar uno
 
+### Requirement: Precio de los planes y del alquiler puntual
+El sistema SHALL asociar un precio mensual configurable a cada plan (`BASIC`,
+`PREMIUM`) y una fórmula de precio para el alquiler puntual, usados para reportes
+y para poder evaluar si el suscriptor está "al corriente de pago" (el cobro real
+queda fuera de alcance del MVP, ver `proposal.md`).
+
+#### Scenario: Precio de planes por defecto
+- **WHEN** se configura el sistema por primera vez
+- **THEN** el plan `BASIC` tiene un precio por defecto de 14,99€/mes y el plan
+  `PREMIUM` de 24,99€/mes, ambos configurables por el admin
+
+#### Scenario: Precio del alquiler puntual
+- **WHEN** un usuario no suscrito solicita un alquiler puntual de un Set
+- **THEN** el precio se calcula como un porcentaje configurable del valor de
+  referencia del Set (ver `catalog-inventory`), con un mínimo configurable
+
 ### Requirement: Devolución previa obligatoria para nuevo set
 El sistema SHALL impedir que un suscriptor solicite un nuevo set mientras una
 devolución previa no esté completada, es decir, hasta que la copia devuelta esté en

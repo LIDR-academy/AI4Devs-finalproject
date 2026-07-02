@@ -16,6 +16,28 @@ asignarle una copia concreta.
 - **THEN** se le ofrece entrar en la cola de reservas del Set (ver
   `reservation-queue`)
 
+### Requirement: Registro de condición en la entrega
+El sistema SHALL registrar el estado de la copia en el momento de la entrega, antes
+de enviarla al suscriptor, como checklist/fotografía de referencia, y SHALL permitir
+al suscriptor confirmar la recepción o reportar una discrepancia dentro de una
+ventana breve tras recibirla.
+
+#### Scenario: Registro de estado antes del envío
+- **WHEN** un operador prepara el envío de una copia recién asignada (`ALQUILADA`)
+- **THEN** se registra un checklist/fotografía del estado de la copia junto con el
+  operador y el instante (auditoría)
+
+#### Scenario: Confirmación tácita de recepción conforme
+- **WHEN** transcurre la ventana de confirmación tras la entrega sin que el
+  suscriptor reporte ninguna discrepancia
+- **THEN** se asume la entrega conforme al registro de condición
+
+#### Scenario: Suscriptor reporta discrepancia en la entrega
+- **WHEN** el suscriptor reporta, dentro de la ventana, que la copia recibida no
+  coincide con el registro de condición (dañada o incompleta)
+- **THEN** se genera una incidencia para el back-office y no se le imputa la
+  discrepancia al suscriptor
+
 ### Requirement: Inicio de devolución
 El sistema SHALL permitir al suscriptor iniciar la devolución de una copia que tiene
 en alquiler.

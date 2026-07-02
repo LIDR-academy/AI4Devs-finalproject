@@ -23,6 +23,13 @@ project. Read it at the start of every session.
 - **Context:** AI4Devs final project (Lidr). The `main` branch currently contains only
   documentation scaffolding: `readme.md` (project deliverable template, in Spanish) and
   `prompts.md` (prompt log template). Application code is expected on other branches.
+- **Product:** Clickoteca — LEGO set rental-by-subscription library. MVP defined as
+  an OpenSpec change at `openspec/changes/clickoteca-mvp/` (not yet implemented —
+  `tasks.md` all unchecked). Pricing (BASIC 14,99€/mes, PREMIUM 24,99€/mes) is
+  benchmarked against real competitors (Brick Borrow, Pley, BrickDrop, NetBricks) —
+  see `design.md` D9. Seed catalog data/images recommended source: Rebrickable
+  (free public dataset/API, has `img_url` per set; no age/difficulty fields —
+  curate those manually for the seed subset).
 - _(More facts to be added as the project develops.)_
 
 ## Open questions

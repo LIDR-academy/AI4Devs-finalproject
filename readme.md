@@ -42,6 +42,14 @@
 
 > Enumera y describe las características y funcionalidades específicas que tiene el producto para satisfacer las necesidades identificadas.
 
+- **Historial de alquileres del suscriptor ("Mis sets")**: vista con los sets que
+  tiene actualmente en préstamo, el histórico de alquileres pasados y su posición
+  en la(s) cola(s) de reservas activas.
+- **Cancelación de la suscripción (camino feliz)**: el suscriptor puede
+  cancelar/pausar su suscripción cuando no tiene ninguna copia en su poder; el
+  sistema confirma que no hay devoluciones pendientes ni saldo pendiente antes de
+  completar la baja.
+
 ### **1.3. Diseño y experiencia de usuario:**
 
 > Proporciona imágenes y/o videotutorial mostrando la experiencia del usuario desde que aterriza en la aplicación, pasando por todas las funcionalidades principales.

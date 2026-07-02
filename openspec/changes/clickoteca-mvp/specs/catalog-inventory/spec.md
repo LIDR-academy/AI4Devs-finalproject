@@ -13,6 +13,18 @@ concreta que la empresa posee). Un Set puede tener varias Copias.
 - **AND** cada copia mantiene su propio estado de ciclo de vida de forma
   independiente
 
+### Requirement: Valor de referencia del Set
+El sistema SHALL almacenar un valor de referencia (coste de reposición) por Set,
+usado para calcular el precio del alquiler puntual (ver `subscriptions`) y como
+base documental ante incidencias de pérdida o daño irreparable. Calcular o cobrar
+una penalización económica automática queda fuera de alcance del MVP (ver
+`proposal.md`); el dato se guarda para poder usarlo más adelante y para fundamentar
+reclamaciones.
+
+#### Scenario: Set sin valor de referencia
+- **WHEN** el admin intenta publicar un Set en el catálogo sin valor de referencia
+- **THEN** la publicación es rechazada hasta completar el dato
+
 ### Requirement: Ciclo de vida de la copia
 El sistema SHALL gestionar el estado de cada copia según los estados: `INTAKE`,
 `DISPONIBLE`, `OFRECIDA`, `ALQUILADA`, `EN_DEVOLUCION`, `EN_INSPECCION`,

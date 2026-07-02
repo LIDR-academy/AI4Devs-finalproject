@@ -53,3 +53,20 @@ legales se muestran como texto de relleno.
 - **WHEN** un usuario se da de alta como suscriptor
 - **THEN** debe declarar ser mayor de edad y aportar una tarjeta (simulada)
 - **AND** se le presentan las condiciones legales (texto *lorem ipsum* en el MVP)
+
+### Requirement: Datos de envío del suscriptor
+El sistema SHALL requerir y mantener una dirección de envío y un contacto
+(teléfono o email) por suscriptor, usados para el registro de entrega y de
+recogida (logística simulada en el MVP). Un modelo más detallado de direcciones
+(varias direcciones, validación postal, etc.) queda para una especificación
+posterior.
+
+#### Scenario: Alta sin dirección de envío
+- **WHEN** un usuario intenta darse de alta como suscriptor sin aportar una
+  dirección de envío
+- **THEN** el alta es rechazada hasta completar el dato
+
+#### Scenario: Actualización de dirección
+- **WHEN** un suscriptor actualiza su dirección de envío
+- **THEN** los envíos futuros usan la dirección actualizada; los envíos ya
+  registrados no se modifican retroactivamente

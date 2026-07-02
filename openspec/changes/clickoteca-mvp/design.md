@@ -91,6 +91,32 @@ tiene ya un set fuera según su plan / no supera su límite). El recorrido de la
 - **Límite de colas simultáneas por usuario** configurable (default 1, sube con
   antigüedad/cumplimiento).
 
+### D8 — Registro de condición en la entrega
+Además de la inspección al retorno (D2), se registra un checklist/foto de la copia
+justo antes del envío, con confirmación tácita o discrepancia explícita del
+suscriptor tras recibirla.
+**Por qué**: sin un registro "antes", no se puede atribuir con certeza una rotura o
+pieza perdida al periodo de alquiler de un suscriptor concreto — es la base
+documental de cualquier reclamación por daño/pérdida. Coste bajo: mismo patrón que
+la inspección de retorno, en sentido inverso.
+
+### D9 — Precio de los planes (benchmarking de mercado)
+`BASIC` 14,99€/mes (1 set, cambios ilimitados) y `PREMIUM` 24,99€/mes (2 sets
+simultáneos), configurables por admin. Alquiler puntual = % configurable del valor
+de referencia del Set (nuevo atributo en `catalog-inventory`).
+**Por qué**: se ancla al competidor con la estructura más parecida a la nuestra —
+**Brick Borrow** (UK): Mystery £9.99, Builder 1 set £14.99, Master 2 sets £24.99 —
+en vez de a servicios con un modelo distinto (varios sets por envío: BrickDrop
+$40–100/mes, NetBricks $24–99/mes), cuyo valor no es comparable (nosotros: un set
+a la vez, cambios ilimitados mientras no haya devolución pendiente). Cifras en EUR
+con paridad numérica sobre las de Brick Borrow en GBP, por simplicidad de MVP; a
+revisar con datos reales de coste logístico.
+**Explícitamente fuera de esto**: no se añade una franquicia de piezas perdidas
+("missing piece allowance", común en BrickDrop) porque cobrar por pérdida de
+piezas sigue siendo *non-goal* del MVP. El valor de referencia del Set se guarda
+igualmente porque hace falta para el propio cálculo del alquiler puntual y como
+base de una futura tabla de valoración legal.
+
 ## Risks / Trade-offs
 
 - **Integridad de piezas**: verificar completitud de un set de cientos/miles de
@@ -106,3 +132,10 @@ tiene ya un set fuera según su plan / no supera su límite). El recorrido de la
 - Categorías/umbral exacto de "set premium" sujeto a antigüedad → a definir con
   datos del catálogo.
 - Valores por defecto de ventana de confirmación y cadencia de recordatorios.
+
+## Backlog (próxima iteración, fuera de este MVP)
+
+- Búsqueda/filtro de catálogo (tema, edad, dificultad, disponibilidad).
+- Panel de métricas para admin (utilización, tiempo medio en cola, sets más
+  solicitados).
+- Valoración/reseña del set por el suscriptor tras la devolución.
