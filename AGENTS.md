@@ -30,8 +30,30 @@ project. Read it at the start of every session.
   see `design.md` D9. Seed catalog data/images recommended source: Rebrickable
   (free public dataset/API, has `img_url` per set; no age/difficulty fields —
   curate those manually for the seed subset).
+- **Arquitectura/stack (tarea 1.1, en curso):** Confirmado — capa de datos
+  **PostgreSQL + Prisma**; backend como **API REST pública en TypeScript**
+  documentada en OpenAPI, siguiendo SOLID/CUPID/DRY vía arquitectura en capas
+  (rutas → casos de uso → repositorios → dominio), sin DI pesado si añade
+  ceremonia innecesaria; frontend en **TypeScript**, cross-browser (evergreen),
+  responsive mobile-first, accesibilidad objetivo **WCAG 2.1 AA** (EN 301 549 /
+  European Accessibility Act). Hosting **propuesto, pendiente de confirmación**
+  del usuario (está explorando opciones): **Vercel** (frontend, gratis sin
+  caducidad), **Render** (API, free tier con cold start) y **Neon** (Postgres,
+  free tier que suspende pero no borra) — descartados la Postgres gratuita de
+  Render (caduca a los 30 días) y Railway (ya no gratuito con BD en 2026). Ver
+  `prompts.md` § Log de prompts, entrada 2026-07-03.
+- **PRD:** borrador completo en `documents/PRD.md`, sintetizado desde
+  `openspec/changes/clickoteca-mvp/` + `readme.md` §1.2 + log de prompts.
+  Sirve de fuente detallada de la que luego se condensará `readme.md` §1.
+  Pendiente de revisión del usuario; diseño/UX y criterios de éxito de
+  negocio quedaron marcados como pendientes ahí (no inventados).
 - _(More facts to be added as the project develops.)_
 
 ## Open questions
 
-- _(none currently)_
+- Framework de frontend concreto (React/Vue/Angular/Svelte...) — el usuario
+  indicó que detallará los requisitos técnicos más adelante.
+- Framework de backend concreto (Express/Fastify/NestJS...) — a decidir junto
+  con el frontend antes de cerrar la tarea 1.1.
+- Confirmación final del hosting (Vercel + Render + Neon, propuesto) — el
+  usuario está explorando las opciones antes de confirmar.
