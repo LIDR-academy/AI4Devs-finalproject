@@ -13,6 +13,12 @@ import {
   updateAutoExpirySettings,
   updateNotificationPreferences,
 } from "@/features/notifications/notifications.api";
+import {
+  ExpiryPreference,
+  getExpiryPreferences,
+  resetExpiryPreference,
+  resetAllExpiryPreferences,
+} from "@/features/pantry/pantry.api";
 
 export const Route = createFileRoute("/settings")({
   beforeLoad: requireAuthBeforeLoad,
@@ -40,6 +46,8 @@ export function SettingsPage() {
   const [autoExpiry, setAutoExpiry] = useState({ enabled: true, thresholdDays: 14 });
   const [savingAutoExpiry, setSavingAutoExpiry] = useState(false);
   const [autoExpiryError, setAutoExpiryError] = useState<string | null>(null);
+  const [expiryPreferences, setExpiryPreferences] = useState<ExpiryPreference[]>([]);
+  const [loadingExpiryPreferences, setLoadingExpiryPreferences] = useState(true);
 
   useEffect(() => {
     let mounted = true;
@@ -118,6 +126,24 @@ export function SettingsPage() {
     };
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+    setLoadingExpiryPreferences(true);
+    getExpiryPreferences()
+      .then((res) => {
+        if (mounted) setExpiryPreferences(res.preferences);
+      })
+      .catch(() => {
+        // Non-blocking: show empty state on failure.
+      })
+      .finally(() => {
+        if (mounted) setLoadingExpiryPreferences(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   async function saveAutoExpiry(next: { enabled: boolean; thresholdDays: number }) {
     setSavingAutoExpiry(true);
     setAutoExpiryError(null);
@@ -144,6 +170,20 @@ export function SettingsPage() {
   function handleThresholdChange(value: number) {
     if (Number.isNaN(value) || value < 7 || value > 60) return;
     void saveAutoExpiry({ ...autoExpiry, thresholdDays: value });
+  }
+
+  async function handleResetExpiryPreference(category: string) {
+    await resetExpiryPreference(category).catch(() => undefined);
+    getExpiryPreferences()
+      .then((res) => setExpiryPreferences(res.preferences))
+      .catch(() => undefined);
+  }
+
+  async function handleResetAllExpiryPreferences() {
+    await resetAllExpiryPreferences().catch(() => undefined);
+    getExpiryPreferences()
+      .then((res) => setExpiryPreferences(res.preferences))
+      .catch(() => undefined);
   }
 
   function handleSignOut() {
@@ -256,6 +296,13 @@ export function SettingsPage() {
         </p>
       )}
 
+      <ExpiryLearningSection
+        preferences={expiryPreferences}
+        loading={loadingExpiryPreferences}
+        onReset={handleResetExpiryPreference}
+        onResetAll={handleResetAllExpiryPreferences}
+      />
+
       <Group title="Cloud Sync" icon={<Cloud className="size-4" />}>
         <Row label="Sync provider" value="iCloud" />
         <Row label="Last sync" value="2 min ago" />
@@ -291,6 +338,75 @@ export function SettingsPage() {
         <LogOut className="size-4" /> Sign out
       </button>
     </AppShell>
+  );
+}
+
+function formatDelta(delta: number): string {
+  const rounded = Math.round(delta);
+  if (rounded >= 0) return `+${rounded} days`;
+  return `−${Math.abs(rounded)} days`;
+}
+
+function ExpiryLearningSection({
+  preferences,
+  loading,
+  onReset,
+  onResetAll,
+}: {
+  preferences: ExpiryPreference[];
+  loading: boolean;
+  onReset: (category: string) => void;
+  onResetAll: () => void;
+}) {
+  return (
+    <section className="mb-5">
+      <h2 className="px-2 mb-2 flex items-center gap-1.5 text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">
+        Expiry Learning
+      </h2>
+      <div className="ios-card divide-y divide-border overflow-hidden">
+        {!loading && preferences.length === 0 ? (
+          <p
+            data-testid="expiry-learning-empty"
+            className="px-4 py-3.5 text-[13.5px] text-muted-foreground"
+          >
+            No expiry preferences learned yet. Override a few expiry suggestions to get started.
+          </p>
+        ) : (
+          preferences.map((pref) => (
+            <div key={pref.category} className="flex items-center justify-between px-4 py-3.5">
+              <div>
+                <p className="text-[14.5px] font-medium capitalize">{pref.category}</p>
+                <p className="text-[12px] text-muted-foreground">
+                  You prefer {formatDelta(pref.averageDelta)} · {pref.sampleCount} override
+                  {pref.sampleCount !== 1 ? "s" : ""}
+                </p>
+              </div>
+              <button
+                data-testid={`reset-expiry-preference-${pref.category}`}
+                onClick={() => onReset(pref.category)}
+                className="text-[13px] text-destructive font-medium px-3 py-1 rounded-lg hover:bg-destructive/10 transition"
+              >
+                Reset
+              </button>
+            </div>
+          ))
+        )}
+        {!loading && preferences.length > 0 && (
+          <div className="px-4 py-3.5">
+            <button
+              data-testid="reset-all-expiry-preferences"
+              onClick={onResetAll}
+              className="w-full text-[13.5px] text-destructive font-medium py-2 rounded-lg hover:bg-destructive/10 transition"
+            >
+              Reset all
+            </button>
+          </div>
+        )}
+        {loading && (
+          <p className="px-4 py-3.5 text-[13.5px] text-muted-foreground">Loading…</p>
+        )}
+      </div>
+    </section>
   );
 }
 

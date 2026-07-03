@@ -337,3 +337,28 @@ export function bulkDismissExpired(itemIds: string[]): Promise<{ dismissedCount:
     body: JSON.stringify({ itemIds }),
   });
 }
+
+export interface ExpiryPreference {
+  category: string;
+  averageDelta: number;
+  sampleCount: number;
+  lastUpdatedAt: string;
+}
+
+export interface ExpiryPreferencesResponse {
+  preferences: ExpiryPreference[];
+}
+
+export function getExpiryPreferences(): Promise<ExpiryPreferencesResponse> {
+  return requestJson<ExpiryPreferencesResponse>("/expiration/preferences", { method: "GET" });
+}
+
+export function resetExpiryPreference(category: string): Promise<void> {
+  return requestJson<void>(`/expiration/preferences/${encodeURIComponent(category)}`, {
+    method: "DELETE",
+  });
+}
+
+export function resetAllExpiryPreferences(): Promise<void> {
+  return requestJson<void>("/expiration/preferences", { method: "DELETE" });
+}
