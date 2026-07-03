@@ -18,6 +18,12 @@ import 'package:la_pocha/features/game_setup/domain/usecases/start_game_usecase.
 import 'package:la_pocha/features/game_setup/presentation/bloc/add_players_bloc.dart';
 import 'package:la_pocha/features/game_setup/presentation/bloc/create_game_bloc.dart';
 import 'package:la_pocha/features/game_setup/presentation/bloc/game_setup_bloc.dart';
+import 'package:la_pocha/features/round/domain/services/bid_order_service.dart';
+import 'package:la_pocha/features/round/domain/services/dealer_restriction_validator.dart';
+import 'package:la_pocha/features/round/domain/usecases/close_bidding_usecase.dart';
+import 'package:la_pocha/features/round/domain/usecases/load_bidding_context_usecase.dart';
+import 'package:la_pocha/features/round/domain/usecases/submit_bid_usecase.dart';
+import 'package:la_pocha/features/round/presentation/bloc/bidding_bloc.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -46,6 +52,36 @@ Future<void> configureDependencies() async {
 
   getIt.registerLazySingleton<DealerRotationService>(
     () => const DealerRotationService(),
+  );
+
+  getIt.registerLazySingleton<BidOrderService>(
+    () => const BidOrderService(),
+  );
+
+  getIt.registerLazySingleton<DealerRestrictionValidator>(
+    () => const DealerRestrictionValidator(),
+  );
+
+  getIt.registerFactory<LoadBiddingContextUseCase>(
+    () => LoadBiddingContextUseCase(
+      getIt<GameRepository>(),
+      getIt<RoundRepository>(),
+      bidOrderService: getIt<BidOrderService>(),
+    ),
+  );
+
+  getIt.registerFactory<SubmitBidUseCase>(
+    () => SubmitBidUseCase(
+      getIt<RoundRepository>(),
+      validator: getIt<DealerRestrictionValidator>(),
+    ),
+  );
+
+  getIt.registerFactory<CloseBiddingUseCase>(
+    () => CloseBiddingUseCase(
+      getIt<RoundRepository>(),
+      validator: getIt<DealerRestrictionValidator>(),
+    ),
   );
 
   getIt.registerFactory<CreateGameDraftUseCase>(
@@ -99,6 +135,15 @@ Future<void> configureDependencies() async {
       setFirstDealer: getIt<SetFirstDealerUseCase>(),
       randomizeFirstDealer: getIt<RandomizeFirstDealerUseCase>(),
       startGame: getIt<StartGameUseCase>(),
+    ),
+  );
+
+  getIt.registerFactory<BiddingBloc>(
+    () => BiddingBloc(
+      loadBiddingContext: getIt<LoadBiddingContextUseCase>(),
+      submitBid: getIt<SubmitBidUseCase>(),
+      closeBidding: getIt<CloseBiddingUseCase>(),
+      validator: getIt<DealerRestrictionValidator>(),
     ),
   );
 }

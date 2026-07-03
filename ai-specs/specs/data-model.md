@@ -164,13 +164,29 @@ Una **ronda** (mano) dentro de la partida: apuestas, bazas, puntuación parcial,
 | Campo | Tipo | Obligatorio | Descripción |
 |-------|------|-------------|-------------|
 | `roundNumber` | number | sí | Orden secuencial (1, 2, 3…) |
-| `dealerPlayerId` | string | no | `playerId` del mano / repartidor *(TBD)* |
-| `status` | string | sí | `open`, `scoring`, `closed` *(TBD)* |
-| `bid` | map / number | no | Apuesta de la ronda *(estructura TBD)* |
-| `tricks` | map / array | no | Bazas por jugador *(TBD)* |
-| `scoresDelta` | map | no | Puntos de la ronda por `playerId` |
+| `cardsInRound` | number | sí | Cartas repartidas a cada jugador en esta ronda |
+| `dealerPlayerId` | string | sí | `playerId` del repartidor de la ronda |
+| `status` | string | sí | `bidding`, `playing`, `closed` (MVP local) |
+| `bids` | map\<string, number\> | no | Apuestas por `playerId` (`playerId` → entero 0…`cardsInRound`) |
+| `tricks` | map\<string, number\> | no | Bazas reales por `playerId` |
+| `scoresDelta` | map\<string, number\> | no | Puntos de la ronda por `playerId` |
 | `createdAt` | timestamp | sí | Apertura de ronda |
 | `closedAt` | timestamp | no | Cierre y reparto de puntos |
+
+**Ejemplo de `bids` (map):**
+
+```json
+{
+  "playerId_abc": 3,
+  "playerId_def": 2,
+  "playerId_ghi": 1,
+  "playerId_jkl": 0
+}
+```
+
+**Persistencia local (Drift):** columna `bids` como `TEXT` serializado con `MapStringIntConverter` (`Map<String, int>`).
+
+**Alineación Firestore:** el campo se documenta como `bids` (map); en borradores anteriores aparecía como `bid` singular — usar `bids` en implementaciones nuevas.
 
 **Ejemplo de `scoresDelta` (map):**
 
@@ -190,6 +206,9 @@ Una **ronda** (mano) dentro de la partida: apuestas, bazas, puntuación parcial,
 
 - `roundNumber` único por partida (transacción al crear la siguiente ronda).
 - No modificar rondas `closed` salvo corrección admin *(TBD)*.
+- **Restricción del repartidor (apuestas):** la suma total de `bids` **no puede igualar** `cardsInRound`. El repartidor apuesta siempre el último; al llegar su turno, el **número prohibido** es `cardsInRound - sum(bids de los demás)`. Si intenta apostar ese valor, se bloquea la confirmación.
+- Orden de apuestas: jugador siguiente al repartidor en `seatOrder` primero; repartidor último.
+- Transición de estado al cerrar apuestas: `bidding` → `playing`.
 
 ---
 
@@ -278,7 +297,8 @@ Detalle de reglas en implementación; este documento solo fija intención.
 ## 11. Checklist al cerrar el modelo definitivo
 
 - [ ] Confirmar valores de `status` en `games`, `players`, `rounds`
-- [ ] Definir estructura de `settings`, `bid`, `tricks`
+- [ ] Definir estructura de `settings`, `tricks`
+- [x] Definir estructura de `bids` (map `playerId` → entero; ver §6)
 - [ ] Decidir `DocumentReference` vs `string` para enlaces a `users`
 - [ ] Actualizar `firebase-data-access.yml` y `firestore.rules`
 - [ ] Añadir índices medidos en consola Firebase

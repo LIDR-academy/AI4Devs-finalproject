@@ -29,6 +29,13 @@ class RoundLocalDatasource {
     return RoundMapper.toDomain(entries.first);
   }
 
+  Future<Round> updateRound(Round round) async {
+    await _database.update(_database.rounds).replace(
+          RoundMapper.toCompanion(round),
+        );
+    return _readRoundById(round.id);
+  }
+
   Future<Round> _readRoundById(String id) async {
     final entry = await (_database.select(_database.rounds)
           ..where((table) => table.id.equals(id)))

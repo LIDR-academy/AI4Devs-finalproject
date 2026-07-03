@@ -1550,3 +1550,53 @@ DEFINICIÓN DE HECHO
 
 No implementes LPT-9 (apuestas) en este prompt. La ruta destino
 /games/{gameId}/rounds/1/bids puede quedar como placeholder.
+
+-------------------------
+
+## Bloque 1 — Gestión de partida (LPT-23, LPT-5, LPT-6, LPT-7)
+
+**Fecha:** 3 julio 2026
+**Rama:** feature-entrega2-JMGS
+
+### Prompt ejecutado (mismo patrón para los 4 tickets)
+
+Lee el ticket [LPT-X] de Jira con acli, revisa docs/design.md
+para referencia visual, y impleméntalo siguiendo las convenciones
+en .cursor/rules/. Usa modo Plan antes de ejecutar.
+
+### Excepción documentada
+
+LPT-7 requirió extender AppDatabase con la tabla `rounds` (no
+estaba en ningún ticket existente). Se incluyó como parte del
+mismo prompt en vez de crear subtarea nueva — decisión pragmática
+dado el calendario (10 julio).
+
+### Decisiones tomadas durante la implementación
+
+- LPT-5: prompt con corrección explícita lobby→setup inline,
+  ya que el ticket en Jira aún mostraba "lobby" en el momento
+  de implementarlo (problema de caché del editor rich-text
+  de Jira, resuelto posteriormente vía acli).
+- LPT-6: stubs para "Buscar usuario registrado" (requiere
+  Firestore, LPT-19) y "Favoritos" (requiere tabla favorites,
+  LPT-18 pospuesta). TODO explícito en código.
+- LPT-7: DealerRotationService implementado en domain/ como
+  pure Dart, reutilizable desde LPT-9.
+
+### Artefactos generados
+
+lib/features/game_setup/ (domain, data, presentation completos)
+lib/core/database/tables/ (games_table.dart, rounds_table.dart)
+lib/core/database/app_database.dart + .g.dart
+
+---------------------
+
+Lee el ticket LPT-9 de Jira con acli, revisa docs/design.md
+para referencia visual (pantalla de Apuestas ya generada),
+y impleméntalo siguiendo las convenciones en .cursor/rules/.
+La ruta destino /games/{gameId}/rounds/{roundNumber}/play
+puede quedar como placeholder (LPT-10 no está implementado aún).
+Usa modo Plan antes de ejecutar.
+
+------------
+

@@ -14,4 +14,8 @@ class RoundRepositoryImpl implements RoundRepository {
   @override
   Future<Round?> getRoundByGameAndNumber(String gameId, int roundNumber) =>
       _localDatasource.getRoundByGameAndNumber(gameId, roundNumber);
+
+  @override
+  Future<Round> updateRound(Round round) =>
+      _localDatasource.updateRound(round);
 }

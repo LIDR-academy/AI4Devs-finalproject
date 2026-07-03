@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class BidsPlaceholderPage extends StatelessWidget {
-  const BidsPlaceholderPage({
+class PlayPlaceholderPage extends StatelessWidget {
+  const PlayPlaceholderPage({
     super.key,
     required this.gameId,
     required this.roundNumber,
@@ -14,13 +14,13 @@ class BidsPlaceholderPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Apuestas — Ronda $roundNumber'),
+        title: Text('En juego — Ronda $roundNumber'),
       ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            'Pantalla LPT-9 pendiente\nPartida: $gameId',
+            'Pantalla LPT-10 pendiente\nPartida: $gameId',
             textAlign: TextAlign.center,
           ),
         ),
