@@ -13,6 +13,9 @@ class Game extends Equatable {
     required this.maxCardsPerRound,
     required this.roundSequence,
     required this.players,
+    this.firstDealerPlayerId,
+    this.startedAt,
+    this.currentRoundNumber,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -24,6 +27,9 @@ class Game extends Equatable {
   final int maxCardsPerRound;
   final List<RoundDefinition> roundSequence;
   final List<PlayerEmbed> players;
+  final String? firstDealerPlayerId;
+  final DateTime? startedAt;
+  final int? currentRoundNumber;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -35,6 +41,9 @@ class Game extends Equatable {
     int? maxCardsPerRound,
     List<RoundDefinition>? roundSequence,
     List<PlayerEmbed>? players,
+    String? firstDealerPlayerId,
+    DateTime? startedAt,
+    int? currentRoundNumber,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -46,6 +55,9 @@ class Game extends Equatable {
       maxCardsPerRound: maxCardsPerRound ?? this.maxCardsPerRound,
       roundSequence: roundSequence ?? this.roundSequence,
       players: players ?? this.players,
+      firstDealerPlayerId: firstDealerPlayerId ?? this.firstDealerPlayerId,
+      startedAt: startedAt ?? this.startedAt,
+      currentRoundNumber: currentRoundNumber ?? this.currentRoundNumber,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -60,6 +72,9 @@ class Game extends Equatable {
         maxCardsPerRound,
         roundSequence,
         players,
+        firstDealerPlayerId,
+        startedAt,
+        currentRoundNumber,
         createdAt,
         updatedAt,
       ];

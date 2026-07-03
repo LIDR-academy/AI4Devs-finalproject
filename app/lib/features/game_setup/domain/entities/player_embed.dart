@@ -41,6 +41,26 @@ class PlayerEmbed extends Equatable {
         'joinedAt': joinedAt.toIso8601String(),
       };
 
+  PlayerEmbed copyWith({
+    String? id,
+    String? displayName,
+    bool? isGuest,
+    String? userId,
+    int? seatOrder,
+    int? totalScore,
+    DateTime? joinedAt,
+  }) {
+    return PlayerEmbed(
+      id: id ?? this.id,
+      displayName: displayName ?? this.displayName,
+      isGuest: isGuest ?? this.isGuest,
+      userId: userId ?? this.userId,
+      seatOrder: seatOrder ?? this.seatOrder,
+      totalScore: totalScore ?? this.totalScore,
+      joinedAt: joinedAt ?? this.joinedAt,
+    );
+  }
+
   @override
   List<Object?> get props => [
         id,

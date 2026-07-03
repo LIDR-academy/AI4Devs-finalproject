@@ -1,7 +1,8 @@
 import 'package:go_router/go_router.dart';
 import 'package:la_pocha/features/game_setup/presentation/pages/add_players_page.dart';
+import 'package:la_pocha/features/game_setup/presentation/pages/bids_placeholder_page.dart';
 import 'package:la_pocha/features/game_setup/presentation/pages/create_game_page.dart';
-import 'package:la_pocha/features/game_setup/presentation/pages/game_setup_placeholder_page.dart';
+import 'package:la_pocha/features/game_setup/presentation/pages/game_setup_page.dart';
 import 'package:la_pocha/features/home/presentation/pages/home_page.dart';
 
 final GoRouter appRouter = GoRouter(
@@ -23,8 +24,15 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/games/:gameId/setup',
-      builder: (context, state) => GameSetupPlaceholderPage(
+      builder: (context, state) => GameSetupPage(
         gameId: state.pathParameters['gameId']!,
+      ),
+    ),
+    GoRoute(
+      path: '/games/:gameId/rounds/:roundNumber/bids',
+      builder: (context, state) => BidsPlaceholderPage(
+        gameId: state.pathParameters['gameId']!,
+        roundNumber: int.parse(state.pathParameters['roundNumber']!),
       ),
     ),
   ],

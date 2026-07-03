@@ -15,6 +15,9 @@ class GameMapper {
       maxCardsPerRound: entry.maxCardsPerRound,
       roundSequence: entry.roundSequence,
       players: entry.players,
+      firstDealerPlayerId: entry.firstDealerPlayerId,
+      startedAt: entry.startedAt,
+      currentRoundNumber: entry.currentRoundNumber,
       createdAt: entry.createdAt,
       updatedAt: entry.updatedAt,
     );
@@ -29,6 +32,9 @@ class GameMapper {
       maxCardsPerRound: game.maxCardsPerRound,
       roundSequence: game.roundSequence,
       players: Value(game.players),
+      firstDealerPlayerId: Value(game.firstDealerPlayerId),
+      startedAt: Value(game.startedAt),
+      currentRoundNumber: Value(game.currentRoundNumber),
       createdAt: game.createdAt,
       updatedAt: game.updatedAt,
     );

@@ -1,23 +1,27 @@
 import 'package:flutter/material.dart';
 
-class GameSetupPlaceholderPage extends StatelessWidget {
-  const GameSetupPlaceholderPage({super.key, required this.gameId});
+class BidsPlaceholderPage extends StatelessWidget {
+  const BidsPlaceholderPage({
+    super.key,
+    required this.gameId,
+    required this.roundNumber,
+  });
 
   final String gameId;
+  final int roundNumber;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Orden de mesa'),
+        title: Text('Apuestas — Ronda $roundNumber'),
       ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            'Pantalla LPT-7 pendiente.\nGame ID: $gameId',
+            'Pantalla LPT-9 pendiente\nPartida: $gameId',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleMedium,
           ),
         ),
       ),

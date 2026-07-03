@@ -13,6 +13,9 @@ class Games extends Table {
   TextColumn get roundSequence => text().map(const RoundSequenceConverter())();
   TextColumn get players =>
       text().map(const PlayersConverter()).withDefault(const Constant('[]'))();
+  TextColumn get firstDealerPlayerId => text().nullable()();
+  DateTimeColumn get startedAt => dateTime().nullable()();
+  IntColumn get currentRoundNumber => integer().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 

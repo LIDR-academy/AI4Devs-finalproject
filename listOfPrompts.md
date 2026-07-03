@@ -1424,3 +1424,129 @@ DEFINICIÓN DE HECHO
       explícita al ticket que los completará (LPT-19 y LPT-18)
 
 No implementes LPT-7 (orden/repartidor) en este prompt.
+
+---------------
+
+Implementa LPT-7 (Orden de mesa, primer repartidor y empezar partida),
+tercer y último paso del flujo de creación de partida.
+
+IMPORTANTE — este ticket extiende AppDatabase (Drift) con la tabla
+rounds. Hazlo como parte de este mismo ticket, no como subtarea separada.
+
+═══════════════════════════════════════
+PARTE 1 — Extensión de Drift: tabla rounds
+═══════════════════════════════════════
+
+Añade a lib/core/database/tables/rounds_table.dart la tabla Rounds:
+
+- id (text, primary key) — UUID
+- gameId (text) — FK lógica a games.id (no constraint de BD, gestión
+  en repositorio)
+- roundNumber (integer) — 1-based, índice compuesto (gameId,
+  roundNumber) único
+- cardsInRound (integer) — valor de roundSequence[roundNumber-1]
+- dealerPlayerId (text) — id del jugador repartidor
+- status (text) — 'bidding' | 'playing' | 'closed'
+- bids (text) — JSON, TypeConverter a Map<String, int>
+  (playerId → apuesta)
+- tricks (text, nullable) — JSON, TypeConverter a Map<String, int>
+  (playerId → bazas reales)
+- scoresDelta (text, nullable) — JSON, TypeConverter a Map<String, int>
+  (playerId → puntos de la ronda)
+- createdAt (datetime)
+- closedAt (datetime, nullable)
+
+Registra la tabla en AppDatabase y regenera con build_runner.
+
+═══════════════════════════════════════
+PARTE 2 — LPT-7: Orden y repartidor
+═══════════════════════════════════════
+
+CONTEXTO
+Tras añadir los jugadores (LPT-6), el organizador define el orden en
+mesa y elige el primer repartidor antes de empezar la partida.
+
+REFERENCIA VISUAL
+docs/design.md + wireframe "Orden de mesa":
+
+- Cabecera verde: "Orden de mesa" + subtítulo "Arrastra para reordenar"
+- Lista reordenable: drag handle (⠿) + número de posición en círculo
+  - avatar + nombre + badge "REPARTE" (solo en el repartidor actual)
+- Botón secundario ámbar: "🎲 Repartidor aleatorio"
+- Botón primario: "▶ Empezar partida"
+- Menú tres puntos en cabecera: "Cancelar partida" (LPT-24 pendiente,
+  incluir como stub/TODO)
+
+CRITERIOS DE ACEPTACIÓN
+
+1. Lista de jugadores reordenable por drag-and-drop (usa el paquete
+   reorderable_list o el ReorderableListView nativo de Flutter).
+2. Posición seatOrder actualizada en tiempo real (1-based) al reordenar.
+3. Primer repartidor por defecto: jugador en posición 1.
+4. Tapping en el icono de carta/repartidor de cualquier fila lo
+   designa como repartidor (solo uno a la vez).
+5. Botón "Repartidor aleatorio": asigna aleatoriamente entre los
+   jugadores del roster.
+6. Al pulsar "Empezar partida":
+   a. Persiste seatOrder y firstDealerPlayerId en el Game (Drift)
+   b. Cambia Game.status de 'setup' a 'in_progress'
+   c. Crea la primera Round en Drift con:
+      - roundNumber: 1
+      - cardsInRound: roundSequence[0].cardsPerPlayer
+      - dealerPlayerId: firstDealerPlayerId
+      - status: 'bidding'
+      - bids, tricks, scoresDelta: maps vacíos
+   d. Navega a /games/{gameId}/rounds/1/bids (LPT-9, puede no
+      existir aún — define la ruta aunque el destino esté pendiente)
+7. No se puede empezar sin exactamente playerCount jugadores
+   (validación ya garantizada por LPT-6, pero verificar en use case).
+8. Funciona sin conexión y sin cuenta.
+
+LÓGICA DE DOMINIO (pure Dart)
+
+- DealerRotationService: dado el roster ordenado por seatOrder y el
+  dealerPlayerId actual, devuelve el siguiente dealerPlayerId en orden
+  circular. Necesario para rondas posteriores (LPT-9 lo usará).
+- StartGameUseCase: valida playerCount, actualiza Game.status →
+  'in_progress', persiste seatOrder en players[], crea Round 1.
+- SetFirstDealerUseCase, RandomizeFirstDealerUseCase: puros, sin I/O.
+
+ARQUITECTURA
+lib/features/game_setup/
+  domain/
+    usecases/reorder_players_usecase.dart
+    usecases/set_first_dealer_usecase.dart
+    usecases/randomize_first_dealer_usecase.dart
+    usecases/start_game_usecase.dart
+    services/dealer_rotation_service.dart
+  data/
+    datasources/round_local_datasource.dart   # nuevo
+    repositories/round_repository_impl.dart   # nuevo (interfaz en domain)
+    # game_local_datasource.dart: añadir updateGameStatus(),
+    #   updateGamePlayers() si no existe ya de LPT-6
+  presentation/
+    bloc/game_setup_bloc.dart  # renombrar/extender el de LPT-6
+    pages/game_setup_page.dart
+    widgets/reorderable_player_list.dart
+    widgets/dealer_selector.dart
+    widgets/random_dealer_button.dart
+
+Routing: /games/{gameId}/setup → GameSetupPage
+Al empezar → /games/{gameId}/rounds/1/bids
+
+DEFINICIÓN DE HECHO
+
+- [ ] Test unitario dealer_rotation_service_test.dart: rotación circular
+      correcta con 3, 4 y 8 jugadores; el siguiente al último es el
+      primero.
+- [ ] Test unitario start_game_usecase_test.dart: crea Round 1 con
+      datos correctos, actualiza status a 'in_progress', falla si
+      playerCount no coincide con players.length.
+- [ ] Test BLoC: reordenar actualiza seatOrder, aleatorio cambia
+      dealer, empezar emite GameStarted con roundId.
+- [ ] flutter analyze sin errores.
+- [ ] La tabla rounds se genera correctamente en build_runner
+      (sin warnings en app_database.g.dart).
+
+No implementes LPT-9 (apuestas) en este prompt. La ruta destino
+/games/{gameId}/rounds/1/bids puede quedar como placeholder.

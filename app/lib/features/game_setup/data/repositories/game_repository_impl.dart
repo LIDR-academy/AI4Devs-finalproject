@@ -1,6 +1,8 @@
 import 'package:la_pocha/features/game_setup/data/datasources/game_local_datasource.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/game.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/player_embed.dart';
+import 'package:la_pocha/features/game_setup/domain/entities/round.dart';
+import 'package:la_pocha/features/game_setup/domain/entities/start_game_result.dart';
 import 'package:la_pocha/features/game_setup/domain/repositories/game_repository.dart';
 
 class GameRepositoryImpl implements GameRepository {
@@ -20,4 +22,18 @@ class GameRepositoryImpl implements GameRepository {
     List<PlayerEmbed> players,
   ) =>
       _localDatasource.updateGamePlayers(gameId, players);
+
+  @override
+  Future<StartGameResult> startGame({
+    required String gameId,
+    required List<PlayerEmbed> players,
+    required String firstDealerPlayerId,
+    required Round firstRound,
+  }) =>
+      _localDatasource.startGame(
+        gameId: gameId,
+        players: players,
+        firstDealerPlayerId: firstDealerPlayerId,
+        firstRound: firstRound,
+      );
 }

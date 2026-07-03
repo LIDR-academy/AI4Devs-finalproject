@@ -1,14 +1,23 @@
 import 'package:get_it/get_it.dart';
 import 'package:la_pocha/core/database/app_database.dart';
 import 'package:la_pocha/features/game_setup/data/datasources/game_local_datasource.dart';
+import 'package:la_pocha/features/game_setup/data/datasources/round_local_datasource.dart';
 import 'package:la_pocha/features/game_setup/data/repositories/game_repository_impl.dart';
+import 'package:la_pocha/features/game_setup/data/repositories/round_repository_impl.dart';
 import 'package:la_pocha/features/game_setup/domain/repositories/game_repository.dart';
+import 'package:la_pocha/features/game_setup/domain/repositories/round_repository.dart';
+import 'package:la_pocha/features/game_setup/domain/services/dealer_rotation_service.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/add_player_usecase.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/create_game_draft_usecase.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/get_game_by_id_usecase.dart';
+import 'package:la_pocha/features/game_setup/domain/usecases/randomize_first_dealer_usecase.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/remove_player_usecase.dart';
+import 'package:la_pocha/features/game_setup/domain/usecases/reorder_players_usecase.dart';
+import 'package:la_pocha/features/game_setup/domain/usecases/set_first_dealer_usecase.dart';
+import 'package:la_pocha/features/game_setup/domain/usecases/start_game_usecase.dart';
 import 'package:la_pocha/features/game_setup/presentation/bloc/add_players_bloc.dart';
 import 'package:la_pocha/features/game_setup/presentation/bloc/create_game_bloc.dart';
+import 'package:la_pocha/features/game_setup/presentation/bloc/game_setup_bloc.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -23,8 +32,20 @@ Future<void> configureDependencies() async {
     () => GameLocalDatasource(getIt<AppDatabase>()),
   );
 
+  getIt.registerLazySingleton<RoundLocalDatasource>(
+    () => RoundLocalDatasource(getIt<AppDatabase>()),
+  );
+
   getIt.registerLazySingleton<GameRepository>(
     () => GameRepositoryImpl(getIt<GameLocalDatasource>()),
+  );
+
+  getIt.registerLazySingleton<RoundRepository>(
+    () => RoundRepositoryImpl(getIt<RoundLocalDatasource>()),
+  );
+
+  getIt.registerLazySingleton<DealerRotationService>(
+    () => const DealerRotationService(),
   );
 
   getIt.registerFactory<CreateGameDraftUseCase>(
@@ -43,6 +64,22 @@ Future<void> configureDependencies() async {
     () => RemovePlayerUseCase(getIt<GameRepository>()),
   );
 
+  getIt.registerFactory<ReorderPlayersUseCase>(
+    () => const ReorderPlayersUseCase(),
+  );
+
+  getIt.registerFactory<SetFirstDealerUseCase>(
+    () => const SetFirstDealerUseCase(),
+  );
+
+  getIt.registerFactory<RandomizeFirstDealerUseCase>(
+    () => RandomizeFirstDealerUseCase(),
+  );
+
+  getIt.registerFactory<StartGameUseCase>(
+    () => StartGameUseCase(getIt<GameRepository>()),
+  );
+
   getIt.registerFactory<CreateGameBloc>(
     () => CreateGameBloc(createGameDraft: getIt<CreateGameDraftUseCase>()),
   );
@@ -52,6 +89,16 @@ Future<void> configureDependencies() async {
       getGameById: getIt<GetGameByIdUseCase>(),
       addPlayer: getIt<AddPlayerUseCase>(),
       removePlayer: getIt<RemovePlayerUseCase>(),
+    ),
+  );
+
+  getIt.registerFactory<GameSetupBloc>(
+    () => GameSetupBloc(
+      getGameById: getIt<GetGameByIdUseCase>(),
+      reorderPlayers: getIt<ReorderPlayersUseCase>(),
+      setFirstDealer: getIt<SetFirstDealerUseCase>(),
+      randomizeFirstDealer: getIt<RandomizeFirstDealerUseCase>(),
+      startGame: getIt<StartGameUseCase>(),
     ),
   );
 }
