@@ -80,6 +80,35 @@ class GameLocalDatasource {
     );
   }
 
+  Future<Round> closeRoundAndUpdateScores({
+    required Round closedRound,
+    required List<PlayerEmbed> updatedPlayers,
+  }) async {
+    await _database.transaction(() async {
+      await (_database.update(_database.games)
+            ..where((table) => table.id.equals(closedRound.gameId)))
+          .write(
+        GamesCompanion(
+          players: Value(updatedPlayers),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+
+      await _database.update(_database.rounds).replace(
+            RoundMapper.toCompanion(closedRound),
+          );
+    });
+
+    return _readRoundById(closedRound.id);
+  }
+
+  Future<Round> _readRoundById(String id) async {
+    final entry = await (_database.select(_database.rounds)
+          ..where((table) => table.id.equals(id)))
+        .getSingle();
+    return RoundMapper.toDomain(entry);
+  }
+
   Future<Game> _readGameById(String id) async {
     final entry = await (_database.select(_database.games)
           ..where((table) => table.id.equals(id)))

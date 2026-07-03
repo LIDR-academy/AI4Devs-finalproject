@@ -5,7 +5,8 @@ import 'package:la_pocha/features/game_setup/presentation/pages/game_setup_page.
 import 'package:la_pocha/features/home/presentation/pages/home_page.dart';
 import 'package:la_pocha/features/round/presentation/pages/bidding_page.dart';
 import 'package:la_pocha/features/round/presentation/pages/play_page.dart';
-import 'package:la_pocha/features/round/presentation/pages/tricks_placeholder_page.dart';
+import 'package:la_pocha/features/round/presentation/pages/result_placeholder_page.dart';
+import 'package:la_pocha/features/round/presentation/pages/scoring_page.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -46,7 +47,14 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/games/:gameId/rounds/:roundNumber/tricks',
-      builder: (context, state) => TricksPlaceholderPage(
+      builder: (context, state) => ScoringPage(
+        gameId: state.pathParameters['gameId']!,
+        roundNumber: int.parse(state.pathParameters['roundNumber']!),
+      ),
+    ),
+    GoRoute(
+      path: '/games/:gameId/rounds/:roundNumber/result',
+      builder: (context, state) => ResultPlaceholderPage(
         gameId: state.pathParameters['gameId']!,
         roundNumber: int.parse(state.pathParameters['roundNumber']!),
       ),

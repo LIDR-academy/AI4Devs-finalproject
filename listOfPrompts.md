@@ -1606,3 +1606,14 @@ y disponible en docs/), e impleméntalo siguiendo las convenciones
 en .cursor/rules/. El atajo a LPT-12 (corregir apuestas) debe
 quedar como stub/TODO — LPT-12 no está implementado aún.
 Usa modo Plan antes de ejecutar.
+
+--------------
+
+Lee el ticket LPT-11 de Jira con acli, revisa docs/design.md
+para referencia visual, e impleméntalo siguiendo las convenciones
+en .cursor/rules/. La navegación destino a LPT-14
+(/games/{gameId}/rounds/{roundNumber}/result) puede quedar
+como placeholder. Usa modo Plan antes de ejecutar.
+
+------------------
+

@@ -24,6 +24,16 @@ class GameRepositoryImpl implements GameRepository {
       _localDatasource.updateGamePlayers(gameId, players);
 
   @override
+  Future<Round> closeRoundAndUpdateScores({
+    required Round closedRound,
+    required List<PlayerEmbed> updatedPlayers,
+  }) =>
+      _localDatasource.closeRoundAndUpdateScores(
+        closedRound: closedRound,
+        updatedPlayers: updatedPlayers,
+      );
+
+  @override
   Future<StartGameResult> startGame({
     required String gameId,
     required List<PlayerEmbed> players,

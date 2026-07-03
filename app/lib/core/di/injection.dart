@@ -20,12 +20,17 @@ import 'package:la_pocha/features/game_setup/presentation/bloc/create_game_bloc.
 import 'package:la_pocha/features/game_setup/presentation/bloc/game_setup_bloc.dart';
 import 'package:la_pocha/features/round/domain/services/bid_order_service.dart';
 import 'package:la_pocha/features/round/domain/services/dealer_restriction_validator.dart';
+import 'package:la_pocha/features/round/domain/services/score_calculator_service.dart';
+import 'package:la_pocha/features/round/domain/services/tricks_sum_validator.dart';
 import 'package:la_pocha/features/round/domain/usecases/close_bidding_usecase.dart';
+import 'package:la_pocha/features/round/domain/usecases/close_round_usecase.dart';
 import 'package:la_pocha/features/round/domain/usecases/get_round_play_state_usecase.dart';
 import 'package:la_pocha/features/round/domain/usecases/load_bidding_context_usecase.dart';
 import 'package:la_pocha/features/round/domain/usecases/submit_bid_usecase.dart';
+import 'package:la_pocha/features/round/domain/usecases/submit_tricks_usecase.dart';
 import 'package:la_pocha/features/round/presentation/bloc/bidding_bloc.dart';
 import 'package:la_pocha/features/round/presentation/bloc/play_state_bloc.dart';
+import 'package:la_pocha/features/round/presentation/bloc/scoring_bloc.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -64,6 +69,14 @@ Future<void> configureDependencies() async {
     () => const DealerRestrictionValidator(),
   );
 
+  getIt.registerLazySingleton<ScoreCalculatorService>(
+    () => const ScoreCalculatorService(),
+  );
+
+  getIt.registerLazySingleton<TricksSumValidator>(
+    () => const TricksSumValidator(),
+  );
+
   getIt.registerFactory<LoadBiddingContextUseCase>(
     () => LoadBiddingContextUseCase(
       getIt<GameRepository>(),
@@ -91,6 +104,20 @@ Future<void> configureDependencies() async {
       getIt<GameRepository>(),
       getIt<RoundRepository>(),
       validator: getIt<DealerRestrictionValidator>(),
+    ),
+  );
+
+  getIt.registerFactory<SubmitTricksUseCase>(
+    () => SubmitTricksUseCase(
+      getIt<ScoreCalculatorService>(),
+      getIt<TricksSumValidator>(),
+    ),
+  );
+
+  getIt.registerFactory<CloseRoundUseCase>(
+    () => CloseRoundUseCase(
+      getIt<GameRepository>(),
+      getIt<SubmitTricksUseCase>(),
     ),
   );
 
@@ -160,6 +187,15 @@ Future<void> configureDependencies() async {
   getIt.registerFactory<PlayStateBloc>(
     () => PlayStateBloc(
       getRoundPlayState: getIt<GetRoundPlayStateUseCase>(),
+    ),
+  );
+
+  getIt.registerFactory<ScoringBloc>(
+    () => ScoringBloc(
+      getRoundPlayState: getIt<GetRoundPlayStateUseCase>(),
+      submitTricks: getIt<SubmitTricksUseCase>(),
+      closeRound: getIt<CloseRoundUseCase>(),
+      validator: getIt<TricksSumValidator>(),
     ),
   );
 }

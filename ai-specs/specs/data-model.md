@@ -209,6 +209,11 @@ Una **ronda** (mano) dentro de la partida: apuestas, bazas, puntuación parcial,
 - **Restricción del repartidor (apuestas):** la suma total de `bids` **no puede igualar** `cardsInRound`. El repartidor apuesta siempre el último; al llegar su turno, el **número prohibido** es `cardsInRound - sum(bids de los demás)`. Si intenta apostar ese valor, se bloquea la confirmación.
 - Orden de apuestas: jugador siguiente al repartidor en `seatOrder` primero; repartidor último.
 - Transición de estado al cerrar apuestas: `bidding` → `playing`.
+- Transición al cerrar bazas: `playing` → `closed`; se persisten `tricks`, `scoresDelta` y `closedAt`.
+- **Reglas de puntuación por ronda** (calculadas al cerrar, ver LPT-11):
+  - Si `tricks[playerId] == bids[playerId]`: `scoresDelta = 10 + (5 × tricks)`.
+  - Si difieren: `scoresDelta = -5 × |bids[playerId] - tricks[playerId]|`.
+  - `players.totalScore` se incrementa con `scoresDelta` de la ronda (persistencia local Drift; Firestore en sync futuro).
 
 ---
 
@@ -297,7 +302,8 @@ Detalle de reglas en implementación; este documento solo fija intención.
 ## 11. Checklist al cerrar el modelo definitivo
 
 - [ ] Confirmar valores de `status` en `games`, `players`, `rounds`
-- [ ] Definir estructura de `settings`, `tricks`
+- [ ] Definir estructura de `settings`
+- [x] Definir estructura de `tricks` y `scoresDelta` (map `playerId` → entero; ver §6 y reglas LPT-11)
 - [x] Definir estructura de `bids` (map `playerId` → entero; ver §6)
 - [ ] Decidir `DocumentReference` vs `string` para enlaces a `users`
 - [ ] Actualizar `firebase-data-access.yml` y `firestore.rules`

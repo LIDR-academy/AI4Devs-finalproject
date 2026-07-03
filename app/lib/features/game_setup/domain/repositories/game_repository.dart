@@ -16,4 +16,9 @@ abstract class GameRepository {
     required String firstDealerPlayerId,
     required Round firstRound,
   });
+
+  Future<Round> closeRoundAndUpdateScores({
+    required Round closedRound,
+    required List<PlayerEmbed> updatedPlayers,
+  });
 }
