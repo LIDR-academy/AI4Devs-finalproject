@@ -277,29 +277,115 @@ Purpose: User-level alert configuration.
 - Relationships:
   - 1:1 with USER.
 
-## 11. PRICE_CATALOG_ITEM
+## 11. USER_POINTS
 
-Purpose: Controlled MVP reference prices for comparison insights.
+Purpose: Ledger of gamification point deltas earned/deducted per user.
 
 | Attribute | Type | Required | Description |
 |---|---|---|---|
-| id | UUID | Yes | Unique reference-price identifier. |
-| normalized_name | VARCHAR(180) | Yes | Normalized product name key. |
-| category | VARCHAR(80) | No | Product category. |
-| source_label | VARCHAR(120) | No | Source/provider metadata. |
-| reference_price_eur | NUMERIC(10,2) | Yes | Reference market price in EUR. |
-| currency_code | CHAR(3) | Yes | Currency code, default EUR. |
-| effective_date | DATE | Yes | Valid-from date for reference price. |
+| id | UUID | Yes | Unique ledger row identifier. |
+| user_id | UUID | Yes | Owning user. |
+| delta | INTEGER | Yes | Points awarded (positive) or deducted (negative). |
+| reason | VARCHAR | Yes | Reason code (e.g. CONSUMED_BEFORE_EXPIRY, WASTED). |
+| reference_id | VARCHAR | No | Optional reference to the source event/item. |
+| occurred_at | TIMESTAMPTZ | Yes | When the points event occurred. |
+
+- Primary key: id.
+- Foreign keys: user_id -> USER.id.
+- Relationships:
+  - N:1 with USER.
+
+## 12. USER_BADGE
+
+Purpose: Achievement badges earned by a user in the gamification system.
+
+| Attribute | Type | Required | Description |
+|---|---|---|---|
+| id | UUID | Yes | Unique badge-award identifier. |
+| user_id | UUID | Yes | Owning user. |
+| code | VARCHAR | Yes | Badge code from the badge catalog. |
+| earned_at | TIMESTAMPTZ | Yes | Timestamp the badge was earned. |
+
+- Primary key: id.
+- Foreign keys: user_id -> USER.id.
+- Unique constraints: unique(user_id, code).
+- Relationships:
+  - N:1 with USER.
+
+## 13. AUTO_EXPIRY_DIGEST
+
+Purpose: Tracks consumption-automation digests sent to users for long-expired items awaiting resolution.
+
+| Attribute | Type | Required | Description |
+|---|---|---|---|
+| id | UUID | Yes | Unique digest identifier. |
+| user_id | UUID | Yes | Recipient user. |
+| sent_at | TIMESTAMPTZ | Yes | Digest send timestamp. |
+| resolved_at | TIMESTAMPTZ | No | Timestamp the digest was resolved (if any). |
+| status | VARCHAR | Yes | Digest lifecycle status. |
+
+- Primary key: id.
+- Foreign keys: user_id -> USER.id.
+- Relationships:
+  - N:1 with USER.
+
+## 14. NOTIFICATION_LOG
+
+Purpose: Delivery audit log for outbound notifications (email/push).
+
+| Attribute | Type | Required | Description |
+|---|---|---|---|
+| id | UUID | Yes | Unique log entry identifier. |
+| user_id | UUID | Yes | Recipient user. |
+| type | VARCHAR | Yes | Notification type. |
+| channel | VARCHAR | Yes | Delivery channel (EMAIL, PUSH). |
+| status | VARCHAR | Yes | Delivery outcome status. |
+| fail_reason | VARCHAR | No | Failure reason, when status indicates failure. |
+| sent_at | TIMESTAMPTZ | Yes | Delivery attempt timestamp. |
+
+- Primary key: id.
+- Foreign keys: user_id -> USER.id.
+- Relationships:
+  - N:1 with USER.
+
+## 15. PUSH_SUBSCRIPTION
+
+Purpose: Web Push subscription credentials for browser push notifications.
+
+| Attribute | Type | Required | Description |
+|---|---|---|---|
+| id | UUID | Yes | Unique subscription identifier. |
+| user_id | UUID | Yes | Owning user. |
+| endpoint | TEXT | Yes | Push service endpoint URL. |
+| p256dh | TEXT | Yes | Subscription public key. |
+| auth | TEXT | Yes | Subscription auth secret. |
 | created_at | TIMESTAMPTZ | Yes | Creation timestamp. |
 
 - Primary key: id.
-- Foreign keys: none.
-- Additional constraints:
-  - normalized_name NOT NULL.
-  - reference_price_eur >= 0.
-  - currency_code default EUR.
+- Foreign keys: user_id -> USER.id.
+- Unique constraints: unique(user_id) — one active subscription per user.
 - Relationships:
-  - Referenced by receipt-item comparison logic.
+  - 1:1 with USER.
+
+## 16. USER_CATEGORY_EXPIRY_PREFERENCE
+
+Purpose: Learned per-user, per-category expiry offset used to auto-adjust future expiration suggestions from confirmed overrides.
+
+| Attribute | Type | Required | Description |
+|---|---|---|---|
+| id | UUID | Yes | Unique preference row identifier. |
+| user_id | UUID | Yes | Owning user. |
+| category | VARCHAR | Yes | Product category key. |
+| deltas | FLOAT[] | Yes | Recent observed day-deltas used to compute the average. |
+| average_delta | FLOAT | Yes | Rolling average day-delta applied to suggestions. |
+| sample_count | INTEGER | Yes | Number of samples contributing to the average. |
+| updated_at | TIMESTAMPTZ | Yes | Last update timestamp. |
+
+- Primary key: id.
+- Foreign keys: user_id -> USER.id.
+- Unique constraints: unique(user_id, category).
+- Relationships:
+  - N:1 with USER.
 
 ## References
 

@@ -171,13 +171,13 @@ describe("ManualEntryPage", () => {
 
     render(<ManualEntryPage />);
     await fillValidForm(user);
-    await user.type(screen.getByPlaceholderText(/optional notes/i), "organic brand from Mercadona");
+    await user.type(screen.getByPlaceholderText(/optional notes/i), "organic brand, aisle 3");
 
     await user.click(screen.getByRole("button", { name: /Save item|Added to pantry/ }));
 
     await waitFor(() => expect(createPantryItemMock).toHaveBeenCalledTimes(1));
     const payload = createPantryItemMock.mock.calls[0][0] as Record<string, unknown>;
-    expect(payload.notes).toBe("organic brand from Mercadona");
+    expect(payload.notes).toBe("organic brand, aisle 3");
   });
 
   it("omits notes from the payload when the notes field is empty", async () => {

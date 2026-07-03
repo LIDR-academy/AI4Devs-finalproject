@@ -71,7 +71,6 @@ Summary of core entities for implementation:
 - EXPIRATION_ASSESSMENT: Suggested expiration traceability and confidence.
 - CONSUMPTION_EVENT: consumption/waste events for analytics and auditing.
 - NOTIFICATION_PREFERENCE: alert preferences per user.
-- PRICE_CATALOG_ITEM: price reference dataset for comparison in MVP.
 
 Design Notes:
 
@@ -114,11 +113,11 @@ The main MVP development tickets, with full end-to-end implementation technical 
 Selection of 3 main tickets (backend, frontend, database):
 1. Backend - [TKT-011 - Backend Receipt Upload and OCR Pipeline](docs/tickets/TKT-011-backend-receipt-ocr-pipeline.md)
 2. Frontend - [TKT-012 - Frontend Pantry Add Item Flow](docs/tickets/TKT-012-frontend-pantry-add-item-flow.md)
-3. Database - [TKT-013 - Database Core Schema for Household, Pantry and Events](docs/tickets/TKT-013-database-core-schema-household-pantry-events.md)
+3. Database - [TKT-013 - Database Core Schema for Household, Pantry and Events](docs/tickets/DISCARDED-TKT-013-database-core-schema-household-pantry-events.md)
 
 ### Extended MVP Tickets (Final Deliverable)
 
-`EXT-001` – `EXT-010` covering notification delivery, CI/CD, production infrastructure, observability, recipe suggestions, barcode scan, expiry learning, Mercadona price comparison, gamification, and consumption automation:
+`EXT-001` – `EXT-010` covering notification delivery, CI/CD, production infrastructure, observability, recipe suggestions, barcode scan, expiry learning, gamification, and consumption automation:
 
 - [Extended MVP Tickets Index](docs/tickets/extendedMVP/README.md)
 

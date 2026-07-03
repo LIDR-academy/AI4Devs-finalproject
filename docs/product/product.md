@@ -135,7 +135,7 @@ Strategic capabilities that are out of scope even for the extended MVP (native a
 
 Key phases:
 - **Phase 1 (GA Readiness):** real notification delivery, CI/CD pipeline, production infrastructure, observability. Infrastructure work is done last, after all feature tickets.
-- **Phase 2 (Growth):** recipe suggestions (TheMealDB free API), barcode scan (Open Food Facts + @zxing/browser), expiry learning (data-driven algorithm), live Mercadona price comparison, gamification, consumption automation.
+- **Phase 2 (Growth):** recipe suggestions (TheMealDB free API), barcode scan (Open Food Facts + @zxing/browser), expiry learning (data-driven algorithm), gamification, consumption automation.
 - **Future:** native mobile app, ML-based expiration prediction, supermarket QR partnerships, cross-user benchmarking — documented in [6_Future-Capabilities.md](./6_Future-Capabilities.md) (out of scope for Extended MVP).
 
 ---

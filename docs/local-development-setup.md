@@ -315,6 +315,16 @@ cd back && npm test
 cd front && npm test
 ```
 
+### Shortcut: `dev.sh`
+
+The repository root includes a `dev.sh` script that automates steps 1, 3, and 4 above in a single terminal: it starts the Postgres container (stopping any other container bound to port `5432`), waits for the database to become ready, then launches the backend and frontend dev servers together.
+
+```bash
+./dev.sh
+```
+
+Press `Ctrl+C` to stop the backend, frontend, and database container together. You still need to run migrations (step 2) separately before first use or after pulling new migrations.
+
 ---
 
 ## 10. Troubleshooting

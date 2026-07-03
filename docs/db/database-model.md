@@ -45,9 +45,29 @@
 - Stores per-user alert configuration.
 - Supports expiry and shared-consumption notification controls.
 
-11. PRICE_CATALOG_ITEM
-- Stores limited predefined dataset for MVP price comparison.
-- Enables compare-prices feature without live supermarket integration.
+11. USER_POINTS
+- Ledger of gamification point deltas (earned/deducted) per user.
+- Drives the total-points counter shown in the gamification summary.
+
+12. USER_BADGE
+- Achievement badges earned by a user.
+- Enforces one award per (user, badge code) pair.
+
+13. AUTO_EXPIRY_DIGEST
+- Tracks consumption-automation digests sent to users for long-expired items.
+- Records send and resolution timestamps for the automation workflow.
+
+14. NOTIFICATION_LOG
+- Delivery audit log for outbound email/push notifications.
+- Captures channel, status, and failure reason for observability.
+
+15. PUSH_SUBSCRIPTION
+- Stores Web Push subscription credentials (endpoint + keys) per user.
+- One active subscription per user for browser push delivery.
+
+16. USER_CATEGORY_EXPIRY_PREFERENCE
+- Learned per-user, per-category expiry offset derived from confirmed overrides.
+- Feeds back into future expiration suggestions (expiry-learning automation).
 
 ## 2. Mermaid ER Diagram
 
@@ -73,7 +93,12 @@ erDiagram
 
     USER ||--o| NOTIFICATION_PREFERENCE : configures
 
-    PRICE_CATALOG_ITEM ||--o{ RECEIPT_ITEM : compared_with
+    USER ||--o{ USER_POINTS : accrues
+    USER ||--o{ USER_BADGE : earns
+    USER ||--o{ AUTO_EXPIRY_DIGEST : receives
+    USER ||--o{ NOTIFICATION_LOG : logs
+    USER ||--o| PUSH_SUBSCRIPTION : registers
+    USER ||--o{ USER_CATEGORY_EXPIRY_PREFERENCE : learns
 
     USER {
         uuid id PK
@@ -188,15 +213,57 @@ erDiagram
         timestamptz updated_at
     }
 
-    PRICE_CATALOG_ITEM {
+    USER_POINTS {
         uuid id PK
-        text normalized_name UK
-        text category
-        text source_label
-        numeric reference_price_eur
-        text currency_code
-        date effective_date
+        uuid user_id FK
+        integer delta
+        text reason
+        text reference_id
+        timestamptz occurred_at
+    }
+
+    USER_BADGE {
+        uuid id PK
+        uuid user_id FK
+        text code
+        timestamptz earned_at
+    }
+
+    AUTO_EXPIRY_DIGEST {
+        uuid id PK
+        uuid user_id FK
+        timestamptz sent_at
+        timestamptz resolved_at
+        text status
+    }
+
+    NOTIFICATION_LOG {
+        uuid id PK
+        uuid user_id FK
+        text type
+        text channel
+        text status
+        text fail_reason
+        timestamptz sent_at
+    }
+
+    PUSH_SUBSCRIPTION {
+        uuid id PK
+        uuid user_id FK
+        text endpoint
+        text p256dh
+        text auth
         timestamptz created_at
+    }
+
+    USER_CATEGORY_EXPIRY_PREFERENCE {
+        uuid id PK
+        uuid user_id FK
+        text category
+        float deltas
+        float average_delta
+        integer sample_count
+        timestamptz updated_at
     }
 ```
 
@@ -341,17 +408,59 @@ erDiagram
 - Relationships:
   - One preference record per user.
 
-### PRICE_CATALOG_ITEM
-- Purpose: MVP static/controlled price reference dataset.
-- Attributes: id, normalized_name, category, source_label, reference_price_eur, currency_code, effective_date, created_at.
+### USER_POINTS
+- Purpose: Ledger of gamification point deltas per user.
+- Attributes: id, user_id, delta, reason, reference_id, occurred_at.
 - PK: id.
-- FKs: none.
-- Constraints:
-  - normalized_name NOT NULL.
-  - reference_price_eur >= 0.
-  - currency_code default EUR.
+- FKs: user_id -> USER.id.
 - Relationships:
-  - Referenced by receipt-item comparison logic.
+  - Many ledger rows per user.
+
+### USER_BADGE
+- Purpose: Achievement badges earned by a user.
+- Attributes: id, user_id, code, earned_at.
+- PK: id.
+- FKs: user_id -> USER.id.
+- Constraints:
+  - unique(user_id, code).
+- Relationships:
+  - Many badges per user.
+
+### AUTO_EXPIRY_DIGEST
+- Purpose: Consumption-automation digest tracking for long-expired items.
+- Attributes: id, user_id, sent_at, resolved_at, status.
+- PK: id.
+- FKs: user_id -> USER.id.
+- Relationships:
+  - Many digests per user.
+
+### NOTIFICATION_LOG
+- Purpose: Delivery audit log for outbound email/push notifications.
+- Attributes: id, user_id, type, channel, status, fail_reason, sent_at.
+- PK: id.
+- FKs: user_id -> USER.id.
+- Relationships:
+  - Many log entries per user.
+
+### PUSH_SUBSCRIPTION
+- Purpose: Web Push subscription credentials for browser push delivery.
+- Attributes: id, user_id, endpoint, p256dh, auth, created_at.
+- PK: id.
+- FKs: user_id -> USER.id.
+- Constraints:
+  - unique(user_id).
+- Relationships:
+  - One subscription per user.
+
+### USER_CATEGORY_EXPIRY_PREFERENCE
+- Purpose: Learned per-user, per-category expiry offset used to auto-adjust future expiration suggestions.
+- Attributes: id, user_id, category, deltas, average_delta, sample_count, updated_at.
+- PK: id.
+- FKs: user_id -> USER.id.
+- Constraints:
+  - unique(user_id, category).
+- Relationships:
+  - Many preference rows per user.
 
 ## 4. Normalization Review
 
@@ -373,7 +482,6 @@ erDiagram
 
 ### Trade-offs
 - PANTRY_ITEM.status can be derived from dates and events, but persisted for fast mobile reads and dashboards.
-- PRICE_CATALOG_ITEM is intentionally simple for MVP (limited dataset) and can be replaced by richer normalized pricing sources later.
 
 ## 5. Index Strategy (PostgreSQL SQL Recommendations)
 
@@ -502,7 +610,7 @@ This section maps the database design to PRD data-model requirements that develo
 - Expiry estimation metadata is separated from item core data (EXPIRATION_ASSESSMENT).
 - OCR lines can exist before pantry mapping confirmation (nullable pantry_item_id in RECEIPT_ITEM).
 - User identity supports case-insensitive uniqueness on email.
-- Price comparison uses controlled dataset table (PRICE_CATALOG_ITEM).
+- Gamification points/badges, notification delivery/push, and expiry-learning preferences are tracked in dedicated per-user tables (USER_POINTS, USER_BADGE, NOTIFICATION_LOG, PUSH_SUBSCRIPTION, USER_CATEGORY_EXPIRY_PREFERENCE).
 
 ### Non-functional alignment checklist
 - Precision: money/quantity use NUMERIC/DECIMAL semantics.

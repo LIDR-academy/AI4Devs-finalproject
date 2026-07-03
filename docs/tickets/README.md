@@ -39,7 +39,7 @@ Implementation-ready tickets for the Extended MVP phase (post-Deliverable 2) are
 
 - [Extended MVP Tickets Index](./extendedMVP/README.md)
 
-These use the `EXT-XXX` sequence and cover: notification delivery, CI/CD, production infrastructure, observability, recipe suggestions, barcode scan, expiry learning, Mercadona price comparison, gamification, and consumption automation.
+These use the `EXT-XXX` sequence and cover: notification delivery, CI/CD, production infrastructure, observability, recipe suggestions, barcode scan, expiry learning, gamification, and consumption automation.
 
 ## Source traceability
 - User stories (MVP): [../product/4_User-stories.md](./../product/4_User-stories.md)

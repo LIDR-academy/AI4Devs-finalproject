@@ -17,7 +17,7 @@ Frontend app typically runs on `http://localhost:5173`.
 - Shared, reusable UI components reduce duplicated implementation effort.
 
 ## ℹ️ Overview
-This frontend is a React + TypeScript + Vite application for the RealSaveFooding MVP. It focuses on an intuitive multi-screen experience for pantry tracking, receipt flows, insights, and settings, created as part of an academic full-stack project with documentation-driven delivery.
+This frontend is a React 19 + TanStack Start + TanStack Router + Vite + TypeScript application for the RealSaveFooding MVP. It focuses on an intuitive multi-screen experience for pantry tracking, receipt flows, insights, and settings, created as part of an academic full-stack project with documentation-driven delivery.
 
 ### ✍️ Authors
 - Jesús Ramírez Guerrero - [GitHub Profile](https://github.com/jesramgue)

@@ -26,7 +26,6 @@ Same as MVP: single unified sequence `EXT-XXX`. Technology is metadata within ea
 | [EXT-005](./EXT-005-recipe-suggestions.md) | Recipe Suggestions Based on Current Pantry | P2 | Medium |
 | [EXT-006](./EXT-006-barcode-scan.md) | Barcode Scan for Item Entry | P2 | Medium |
 | [EXT-007](./EXT-007-expiry-learning.md) | Automatic Expiry Learning from User Overrides | P2 | Medium |
-| [EXT-008](./EXT-008-mercadona-price-comparison.md) | Live Price Comparison via Mercadona API | P2 | Medium |
 | [EXT-009](./EXT-009-gamification.md) | Gamification and Achievement System | P2 | Medium |
 | [EXT-010](./EXT-010-consumption-automation.md) | Consumption Automation for Long-Expired Items | P2 | Medium |
 
@@ -36,7 +35,6 @@ Same as MVP: single unified sequence `EXT-XXX`. Technology is metadata within ea
 EXT-005 (recipes)         ← no external dependencies beyond MVP
 EXT-006 (barcode scan)    ← independent, free tools
 EXT-007 (expiry learning) ← extends existing expiration module
-EXT-008 (price comparison)← extends existing insights module
 EXT-009 (gamification)    ← new module, hooks into pantry events
 EXT-010 (automation)      ← hooks into pantry + notifications
 ```

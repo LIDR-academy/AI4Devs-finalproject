@@ -315,7 +315,7 @@ test.describe("Item details edit — quantity, unit, price", () => {
     // Create item with notes via API (simulating what the add form does after our fix)
     const createRes = await request.post(`${API_BASE_URL}/pantry/items`, {
       headers: { Authorization: `Bearer ${auth.accessToken}` },
-      data: { name: "Organic Oats", quantity: 1, unit: "unit", notes: "Bought at Mercadona aisle 3" },
+      data: { name: "Organic Oats", quantity: 1, unit: "unit", notes: "Bought at the store, aisle 3" },
     });
     expect(createRes.ok()).toBeTruthy();
     const item = (await createRes.json()) as { id: string };
@@ -324,7 +324,7 @@ test.describe("Item details edit — quantity, unit, price", () => {
     await page.goto(`${FRONT_BASE_URL}/item/${item.id}`);
 
     // Notes field should be pre-populated
-    await expect(page.getByTestId("item-notes-input")).toHaveValue("Bought at Mercadona aisle 3");
+    await expect(page.getByTestId("item-notes-input")).toHaveValue("Bought at the store, aisle 3");
   });
 
   test("notes can be edited in item details and are persisted", async ({
