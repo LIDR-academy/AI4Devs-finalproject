@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart';
 import 'package:la_pocha/core/database/app_database.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/game.dart' as domain;
 import 'package:la_pocha/features/game_setup/domain/entities/game_status.dart';
@@ -13,6 +14,7 @@ class GameMapper {
       totalCards: entry.totalCards,
       maxCardsPerRound: entry.maxCardsPerRound,
       roundSequence: entry.roundSequence,
+      players: entry.players,
       createdAt: entry.createdAt,
       updatedAt: entry.updatedAt,
     );
@@ -26,6 +28,7 @@ class GameMapper {
       totalCards: game.totalCards,
       maxCardsPerRound: game.maxCardsPerRound,
       roundSequence: game.roundSequence,
+      players: Value(game.players),
       createdAt: game.createdAt,
       updatedAt: game.updatedAt,
     );

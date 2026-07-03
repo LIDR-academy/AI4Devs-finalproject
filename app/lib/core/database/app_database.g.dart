@@ -68,6 +68,16 @@ class $GamesTable extends Games with TableInfo<$GamesTable, GameEntry> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   ).withConverter<List<RoundDefinition>>($GamesTable.$converterroundSequence);
+  @override
+  late final GeneratedColumnWithTypeConverter<List<PlayerEmbed>, String>
+  players = GeneratedColumn<String>(
+    'players',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  ).withConverter<List<PlayerEmbed>>($GamesTable.$converterplayers);
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -98,6 +108,7 @@ class $GamesTable extends Games with TableInfo<$GamesTable, GameEntry> {
     totalCards,
     maxCardsPerRound,
     roundSequence,
+    players,
     createdAt,
     updatedAt,
   ];
@@ -207,6 +218,12 @@ class $GamesTable extends Games with TableInfo<$GamesTable, GameEntry> {
           data['${effectivePrefix}round_sequence'],
         )!,
       ),
+      players: $GamesTable.$converterplayers.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}players'],
+        )!,
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -225,6 +242,8 @@ class $GamesTable extends Games with TableInfo<$GamesTable, GameEntry> {
 
   static TypeConverter<List<RoundDefinition>, String> $converterroundSequence =
       const RoundSequenceConverter();
+  static TypeConverter<List<PlayerEmbed>, String> $converterplayers =
+      const PlayersConverter();
 }
 
 class GameEntry extends DataClass implements Insertable<GameEntry> {
@@ -234,6 +253,7 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
   final int totalCards;
   final int maxCardsPerRound;
   final List<RoundDefinition> roundSequence;
+  final List<PlayerEmbed> players;
   final DateTime createdAt;
   final DateTime updatedAt;
   const GameEntry({
@@ -243,6 +263,7 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
     required this.totalCards,
     required this.maxCardsPerRound,
     required this.roundSequence,
+    required this.players,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -259,6 +280,11 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
         $GamesTable.$converterroundSequence.toSql(roundSequence),
       );
     }
+    {
+      map['players'] = Variable<String>(
+        $GamesTable.$converterplayers.toSql(players),
+      );
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -272,6 +298,7 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
       totalCards: Value(totalCards),
       maxCardsPerRound: Value(maxCardsPerRound),
       roundSequence: Value(roundSequence),
+      players: Value(players),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -291,6 +318,7 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
       roundSequence: serializer.fromJson<List<RoundDefinition>>(
         json['roundSequence'],
       ),
+      players: serializer.fromJson<List<PlayerEmbed>>(json['players']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -305,6 +333,7 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
       'totalCards': serializer.toJson<int>(totalCards),
       'maxCardsPerRound': serializer.toJson<int>(maxCardsPerRound),
       'roundSequence': serializer.toJson<List<RoundDefinition>>(roundSequence),
+      'players': serializer.toJson<List<PlayerEmbed>>(players),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -317,6 +346,7 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
     int? totalCards,
     int? maxCardsPerRound,
     List<RoundDefinition>? roundSequence,
+    List<PlayerEmbed>? players,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => GameEntry(
@@ -326,6 +356,7 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
     totalCards: totalCards ?? this.totalCards,
     maxCardsPerRound: maxCardsPerRound ?? this.maxCardsPerRound,
     roundSequence: roundSequence ?? this.roundSequence,
+    players: players ?? this.players,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -345,6 +376,7 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
       roundSequence: data.roundSequence.present
           ? data.roundSequence.value
           : this.roundSequence,
+      players: data.players.present ? data.players.value : this.players,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -359,6 +391,7 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
           ..write('totalCards: $totalCards, ')
           ..write('maxCardsPerRound: $maxCardsPerRound, ')
           ..write('roundSequence: $roundSequence, ')
+          ..write('players: $players, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -373,6 +406,7 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
     totalCards,
     maxCardsPerRound,
     roundSequence,
+    players,
     createdAt,
     updatedAt,
   );
@@ -386,6 +420,7 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
           other.totalCards == this.totalCards &&
           other.maxCardsPerRound == this.maxCardsPerRound &&
           other.roundSequence == this.roundSequence &&
+          other.players == this.players &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -397,6 +432,7 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
   final Value<int> totalCards;
   final Value<int> maxCardsPerRound;
   final Value<List<RoundDefinition>> roundSequence;
+  final Value<List<PlayerEmbed>> players;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -407,6 +443,7 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
     this.totalCards = const Value.absent(),
     this.maxCardsPerRound = const Value.absent(),
     this.roundSequence = const Value.absent(),
+    this.players = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -418,6 +455,7 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
     required int totalCards,
     required int maxCardsPerRound,
     required List<RoundDefinition> roundSequence,
+    this.players = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -436,6 +474,7 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
     Expression<int>? totalCards,
     Expression<int>? maxCardsPerRound,
     Expression<String>? roundSequence,
+    Expression<String>? players,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -447,6 +486,7 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
       if (totalCards != null) 'total_cards': totalCards,
       if (maxCardsPerRound != null) 'max_cards_per_round': maxCardsPerRound,
       if (roundSequence != null) 'round_sequence': roundSequence,
+      if (players != null) 'players': players,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -460,6 +500,7 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
     Value<int>? totalCards,
     Value<int>? maxCardsPerRound,
     Value<List<RoundDefinition>>? roundSequence,
+    Value<List<PlayerEmbed>>? players,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -471,6 +512,7 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
       totalCards: totalCards ?? this.totalCards,
       maxCardsPerRound: maxCardsPerRound ?? this.maxCardsPerRound,
       roundSequence: roundSequence ?? this.roundSequence,
+      players: players ?? this.players,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -500,6 +542,11 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
         $GamesTable.$converterroundSequence.toSql(roundSequence.value),
       );
     }
+    if (players.present) {
+      map['players'] = Variable<String>(
+        $GamesTable.$converterplayers.toSql(players.value),
+      );
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -521,6 +568,7 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
           ..write('totalCards: $totalCards, ')
           ..write('maxCardsPerRound: $maxCardsPerRound, ')
           ..write('roundSequence: $roundSequence, ')
+          ..write('players: $players, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -548,6 +596,7 @@ typedef $$GamesTableCreateCompanionBuilder =
       required int totalCards,
       required int maxCardsPerRound,
       required List<RoundDefinition> roundSequence,
+      Value<List<PlayerEmbed>> players,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<int> rowid,
@@ -560,6 +609,7 @@ typedef $$GamesTableUpdateCompanionBuilder =
       Value<int> totalCards,
       Value<int> maxCardsPerRound,
       Value<List<RoundDefinition>> roundSequence,
+      Value<List<PlayerEmbed>> players,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -605,6 +655,12 @@ class $$GamesTableFilterComposer extends Composer<_$AppDatabase, $GamesTable> {
   >
   get roundSequence => $composableBuilder(
     column: $table.roundSequence,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<List<PlayerEmbed>, List<PlayerEmbed>, String>
+  get players => $composableBuilder(
+    column: $table.players,
     builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
@@ -658,6 +714,11 @@ class $$GamesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get players => $composableBuilder(
+    column: $table.players,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -705,6 +766,9 @@ class $$GamesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumnWithTypeConverter<List<PlayerEmbed>, String> get players =>
+      $composableBuilder(column: $table.players, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -747,6 +811,7 @@ class $$GamesTableTableManager
                 Value<int> maxCardsPerRound = const Value.absent(),
                 Value<List<RoundDefinition>> roundSequence =
                     const Value.absent(),
+                Value<List<PlayerEmbed>> players = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -757,6 +822,7 @@ class $$GamesTableTableManager
                 totalCards: totalCards,
                 maxCardsPerRound: maxCardsPerRound,
                 roundSequence: roundSequence,
+                players: players,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -769,6 +835,7 @@ class $$GamesTableTableManager
                 required int totalCards,
                 required int maxCardsPerRound,
                 required List<RoundDefinition> roundSequence,
+                Value<List<PlayerEmbed>> players = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -779,6 +846,7 @@ class $$GamesTableTableManager
                 totalCards: totalCards,
                 maxCardsPerRound: maxCardsPerRound,
                 roundSequence: roundSequence,
+                players: players,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,

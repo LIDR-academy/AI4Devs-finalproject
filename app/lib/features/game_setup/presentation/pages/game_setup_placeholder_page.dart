@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class AddPlayersPlaceholderPage extends StatelessWidget {
-  const AddPlayersPlaceholderPage({super.key, required this.gameId});
+class GameSetupPlaceholderPage extends StatelessWidget {
+  const GameSetupPlaceholderPage({super.key, required this.gameId});
 
   final String gameId;
 
@@ -9,13 +9,13 @@ class AddPlayersPlaceholderPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Añadir jugadores'),
+        title: const Text('Orden de mesa'),
       ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            'Pantalla LPT-6 pendiente.\nGame ID: $gameId',
+            'Pantalla LPT-7 pendiente.\nGame ID: $gameId',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.titleMedium,
           ),

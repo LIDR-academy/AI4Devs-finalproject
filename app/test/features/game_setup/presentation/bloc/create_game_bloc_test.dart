@@ -51,6 +51,7 @@ void main() {
           totalCards: 40,
           maxCardsPerRound: 10,
           roundSequence: const [],
+          players: const [],
           createdAt: DateTime(2026),
           updatedAt: DateTime(2026),
         ),

@@ -34,6 +34,7 @@ class CreateGameDraftUseCase {
       totalCards: config.totalCards,
       maxCardsPerRound: config.maxCardsPerRound,
       roundSequence: roundSequence,
+      players: const [],
       createdAt: now,
       updatedAt: now,
     );

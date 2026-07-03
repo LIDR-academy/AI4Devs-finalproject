@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import 'game_status.dart';
+import 'player_embed.dart';
 import 'round_definition.dart';
 
 class Game extends Equatable {
@@ -11,6 +12,7 @@ class Game extends Equatable {
     required this.totalCards,
     required this.maxCardsPerRound,
     required this.roundSequence,
+    required this.players,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -21,8 +23,33 @@ class Game extends Equatable {
   final int totalCards;
   final int maxCardsPerRound;
   final List<RoundDefinition> roundSequence;
+  final List<PlayerEmbed> players;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  Game copyWith({
+    String? id,
+    GameStatus? status,
+    int? playerCount,
+    int? totalCards,
+    int? maxCardsPerRound,
+    List<RoundDefinition>? roundSequence,
+    List<PlayerEmbed>? players,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return Game(
+      id: id ?? this.id,
+      status: status ?? this.status,
+      playerCount: playerCount ?? this.playerCount,
+      totalCards: totalCards ?? this.totalCards,
+      maxCardsPerRound: maxCardsPerRound ?? this.maxCardsPerRound,
+      roundSequence: roundSequence ?? this.roundSequence,
+      players: players ?? this.players,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
 
   @override
   List<Object?> get props => [
@@ -32,6 +59,7 @@ class Game extends Equatable {
         totalCards,
         maxCardsPerRound,
         roundSequence,
+        players,
         createdAt,
         updatedAt,
       ];
