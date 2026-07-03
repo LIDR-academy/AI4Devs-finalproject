@@ -1313,3 +1313,114 @@ Definición de hecho:
 
 No implementes todavía LPT-6 (añadir jugadores) ni nada relativo a
 Firestore/sincronización — quedan fuera de alcance de este prompt.
+
+----------------
+
+Implementa LPT-6 (Añadir jugadores), segundo paso del flujo de creación
+de partida. Arranca desde el gameId del borrador creado en LPT-5
+(Game en estado 'setup' persistido en Drift).
+
+CONTEXTO DE DISEÑO
+Referencia visual: docs/design.md + wireframe "Añadir jugadores" (imagen
+en el proyecto o en la carpeta docs/wireframes si la has guardado).
+Resumen visual clave:
+
+- Cabecera verde con título "Jugadores" y subtítulo "X de N añadidos"
+- Indicador de progreso: N segmentos (uno por jugador), se rellenan
+  conforme se añaden
+- Lista de slots: los rellenos muestran avatar circular con inicial +
+  nombre + badge "Registrado"/"Invitado"; los vacíos muestran borde
+  discontinuo + "Añadir jugador"
+- Al tocar un slot vacío: panel/modal con tres opciones (nombre libre,
+  buscar registrado, favoritos)
+- Botón inferior: "Continuar" deshabilitado hasta completar todos los
+  slots; cuando está deshabilitado muestra "Faltan X jugadores"
+
+ALCANCE DE ESTE TICKET
+Implementa completamente:
+
+- Flujo de nombre libre (campo de texto, validación no vacío, no
+  duplicado dentro de la misma partida)
+- Eliminar jugador ya añadido (tocar la X de su fila)
+- Persistencia en Drift: cada jugador se añade al array players[]
+  embebido en el documento Game (serializado como JSON en la columna
+  correspondiente de la tabla games en Drift)
+- Navegación a LPT-7 (/games/{gameId}/setup) al pulsar "Continuar"
+  cuando todos los slots estén rellenos
+
+Implementa como STUB (UI visible pero sin lógica de datos real):
+
+- "Buscar usuario registrado": muestra un campo de búsqueda con un
+  resultado hardcodeado de ejemplo; deja un TODO claro indicando que
+  requiere Firestore (LPT-19/LPT-21)
+- "Favoritos": muestra una lista con 2-3 items hardcodeados de ejemplo;
+  deja un TODO claro indicando que requiere tabla favorites en Drift
+  (LPT-18, pospuesta)
+
+MODELO DE DATOS
+Cada jugador añadido genera un PlayerEmbed con:
+
+- id: UUID generado localmente
+- displayName: nombre introducido
+- isGuest: true (para nombre libre); false si es usuario registrado
+- userId: null (para nombre libre); uid si es registrado
+- seatOrder: índice de inserción (0-based), se reordenará en LPT-7
+- totalScore: 0
+- joinedAt: timestamp actual
+
+El array players[] completo se serializa como JSON en la columna
+players TEXT de la tabla games en Drift (TypeConverter a
+List<PlayerEmbed>). Actualiza GameMapper para incluir players[].
+
+ARQUITECTURA
+lib/features/game_setup/
+  domain/
+    entities/player_embed.dart          # nuevo
+    usecases/add_player_usecase.dart    # nuevo
+    usecases/remove_player_usecase.dart # nuevo
+  data/
+    models/player_embed_model.dart      # nuevo
+    mappers/player_embed_mapper.dart    # nuevo
+    # game_local_datasource.dart: añadir métodos updateGamePlayers()
+    # game_repository_impl.dart: implementar add/remove player
+  presentation/
+    bloc/add_players_bloc.dart          # nuevo
+    bloc/add_players_event.dart         # nuevo
+    bloc/add_players_state.dart         # nuevo
+    pages/add_players_page.dart         # nuevo
+    widgets/player_slot.dart            # nuevo (slot vacío y relleno)
+    widgets/add_player_bottom_sheet.dart # nuevo (panel tres opciones)
+    widgets/free_name_input.dart        # nuevo
+    widgets/search_player_stub.dart     # nuevo (stub)
+    widgets/favorites_list_stub.dart    # nuevo (stub)
+
+Routing: /games/{gameId}/players → AddPlayersPage(gameId)
+BLoC eventos: PlayerAdded(name, type), PlayerRemoved(playerId),
+ContinueRequested
+BLoC estados: AddPlayersState con players[], isComplete, isLoading
+
+REFERENCIA VISUAL — TOKENS DE DISEÑO (docs/design.md)
+
+- Avatar circular: color de fondo categórico por jugador (verde, ámbar,
+  azul, lila — asignar por índice)
+- Badge "Registrado": chip pequeño color primary claro
+- Badge "Invitado": chip pequeño color surface con borde
+- Slot vacío: Container con borde discontinuo color onSurfaceVariant,
+  radio 12px
+- Botón "Continuar" deshabilitado: mismo widget que el activo pero con
+  opacity 0.4, texto "Faltan X jugadores" en vez de "Continuar"
+
+DEFINICIÓN DE HECHO
+
+- [ ] Test unitario add_player_usecase_test.dart: añadir jugador válido,
+      rechazar nombre vacío, rechazar nombre duplicado en la misma
+      partida, rechazar si ya hay playerCount jugadores
+- [ ] Test unitario remove_player_usecase_test.dart: eliminar jugador
+      existente, no error si no existe
+- [ ] Test BLoC: añadir jugador actualiza estado, continuar solo
+      disponible cuando players.length == playerCount
+- [ ] flutter analyze sin errores
+- [ ] Los stubs de búsqueda y favoritos tienen TODO con referencia
+      explícita al ticket que los completará (LPT-19 y LPT-18)
+
+No implementes LPT-7 (orden/repartidor) en este prompt.
