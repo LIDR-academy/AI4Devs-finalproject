@@ -25,14 +25,21 @@ export function errorHandler(
     return;
   }
 
+  // HTTP errors from Express middleware (e.g., 413 from body-parser, 400 from malformed JSON)
+  const httpStatus = (err as Error & { status?: number }).status;
+  if (httpStatus && httpStatus >= 400 && httpStatus < 500) {
+    res.status(httpStatus).json({ error: 'Request error' });
+    return;
+  }
+
   // Generic fallback — no internal details
   res.status(500).json({ error: 'Internal server error' });
 }
 
 export function notFoundHandler(
-  req: Request,
+  _req: Request,
   _res: Response,
   next: NextFunction
 ): void {
-  next(new NotFoundError(`Route ${req.method} ${req.path} not found`));
+  next(new NotFoundError('Not found'));
 }

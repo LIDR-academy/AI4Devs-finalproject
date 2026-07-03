@@ -1,4 +1,5 @@
 import express from 'express';
+import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { PrismaClient } from '@prisma/client';
 import { corsMiddleware } from './middleware/cors';
@@ -30,11 +31,13 @@ const orderService = new OrderService(orderRepository);
 
 const app = express();
 
+app.set('trust proxy', 1);
+app.use(helmet({ frameguard: { action: 'deny' } }));
 app.use(corsMiddleware);
 app.use(requestLoggerMiddleware);
 app.use(generalLimiter);
 app.use(cookieParser());
-app.use(express.json());
+app.use(express.json({ limit: '10kb' }));
 
 // Routes
 app.use('/api', healthRouter);
