@@ -321,6 +321,16 @@ Las reglas de seguridad no negociables del proyecto están definidas en [`CLAUDE
 
 - **Rate limiting diferenciado por sensibilidad del endpoint.** `express-rate-limit` aplica 100 req/min al catálogo (`generalLimiter`) y 20 req/min a los endpoints de mutación —`POST /api/cart`, `PUT /api/cart/:productId`, `POST /api/checkout`— vía `mutationLimiter`, mitigando abuso y oversell por fuerza bruta.
 
+- **Cabeceras de seguridad HTTP en el backend.** `helmet` se aplica como primer middleware en `app.ts` (antes de CORS) y emite `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Strict-Transport-Security` y `Referrer-Policy` en todas las respuestas (`backend/src/app.ts`).
+
+- **Content Security Policy en el frontend.** `next.config.mjs` declara una CSP vía `headers()` aplicada a todas las rutas: restringe `script-src`, `style-src`, `img-src`, `font-src` y `connect-src` al origen propio y al dominio de la API. En modo desarrollo se añade `'unsafe-eval'` a `script-src` para el HMR de Next.js; en producción la directiva queda estricta.
+
+- **Body limit de 10 KB y `trust proxy`.** `express.json({ limit: '10kb' })` rechaza con 413 cualquier payload que supere ese umbral antes de invocar middleware propio, mitigando DoS por payloads masivos. `app.set('trust proxy', 1)` garantiza que `express-rate-limit` use la IP real del cliente cuando el backend está detrás de un proxy inverso (Nginx, ALB).
+
+- **Swagger UI deshabilitado en producción.** Las rutas `/api/docs` y `/api/docs.json` solo se registran cuando `NODE_ENV !== 'production'`; en producción devuelven 404, evitando el disclosure del esquema completo de la API (`backend/src/routes/docs.routes.ts`).
+
+- **Handler 404 sin eco de ruta.** `notFoundHandler` en `error-handler.ts` devuelve siempre `{"error":"Not found"}` sin reflejar el método ni el path solicitado, eliminando la fuga de información sobre la estructura de rutas internas.
+
 - **Respuestas de error sin detalles internos.** `error-handler.ts` mapea cada error de dominio (`NotFoundError`, `ValidationError`, `StockError`) a un `{ error: string }` genérico con el código HTTP correspondiente; cualquier excepción no controlada cae en un `500` genérico. El stack trace solo se escribe en el logger del servidor (`console.error`), nunca en el body de la respuesta.
 
 - **Logging sin PII.** El middleware de logging (`logger.ts`, Morgan) usa un formato custom que solo registra método, URL, status y tiempo de respuesta — nunca el body de la petición — y omite explícitamente las peticiones a `/api/checkout`, donde viajan datos de envío y pago simulado.
@@ -339,10 +349,10 @@ El proyecto sigue TDD obligatorio en toda implementación (test que falla → c�
 
 | Capa | Herramientas | Estrategia | Resultado actual |
 |---|---|---|---|
-| Backend — unitarios | Jest + Supertest | Repository: mock de `PrismaClient`, verifica las queries/mutaciones exactas. Service: mock del repositorio (`jest.fn()`), lógica de negocio aislada (validación de stock, totales, errores de dominio). Controller: mock del service + Supertest, contrato HTTP (status codes, forma del body, cookies, rechazo de schemas Zod inválidos) | ✅ **168/168 pass**, 16/16 suites |
+| Backend — unitarios | Jest + Supertest | Repository: mock de `PrismaClient`, verifica las queries/mutaciones exactas. Service: mock del repositorio (`jest.fn()`), lógica de negocio aislada (validación de stock, totales, errores de dominio). Controller: mock del service + Supertest, contrato HTTP (status codes, forma del body, cookies, rechazo de schemas Zod inválidos) | ✅ **183/183 pass**, 17/17 suites |
 | Backend — integración | Jest + PostgreSQL real (Docker) | `prisma/seed.test.ts` es la única suite que toca base de datos real (sin mocks): ejecuta el seed contra PostgreSQL y verifica el resultado. Gateada con `describe.skip` si `DATABASE_URL` no apunta a una BD real, degradando a no-op en entornos sin BD | ✅ **3/3 pass**, 1/1 suite |
 | Frontend — unitarios | Vitest + React Testing Library | Componentes, páginas y contexts: estados de UI (loading/empty/error), interacción de usuario, contratos de los hooks de contexto | ✅ **300/300 pass**, 30 ficheros |
-| E2E | Playwright (Chromium) | Caja negra contra frontend + backend + PostgreSQL reales, sin mocks ni seeding desde el propio spec | ✅ **11/11 pass**, 3 specs (`catalog.spec.ts`, `product.spec.ts`, `purchase.spec.ts`) |
+| E2E | Playwright (Chromium) | Caja negra contra frontend + backend + PostgreSQL reales, sin mocks ni seeding desde el propio spec | ✅ **15/15 pass**, 4 specs (`catalog.spec.ts`, `product.spec.ts`, `purchase.spec.ts`, `security-headers.spec.ts`) |
 
 > Detalle de la suite E2E: [`docs/E2E-TESTING.md`](docs/E2E-TESTING.md)
 

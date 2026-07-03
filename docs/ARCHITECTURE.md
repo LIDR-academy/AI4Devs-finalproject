@@ -147,7 +147,7 @@ Request → Router → Middleware → Controller → Service → Repository → 
 | Capa | Responsabilidad |
 |---|---|
 | **Router** | Definición de endpoints REST y binding con controllers |
-| **Middleware** | CORS, rate limiting, error handler global, logger (Morgan) |
+| **Middleware** | `trust proxy` → `helmet` (security headers) → CORS → logger (Morgan) → rate limiting → `cookie-parser` → `express.json({ limit: '10kb' })` → error handler global |
 | **Controller** | Validación de entrada (Zod), transformación HTTP ↔ dominio, respuesta |
 | **Service** | Lógica de negocio pura; independiente de HTTP y base de datos |
 | **Repository** | Abstracción del acceso a datos; único punto de contacto con Prisma |
@@ -196,7 +196,8 @@ Request → Router → Middleware → Controller → Service → Repository → 
 | ORM | Prisma | 5 | Type-safe, migraciones, compatibilidad PostgreSQL |
 | Base de datos | PostgreSQL | 16 | Relacional, ACID, estándar eCommerce |
 | Validación | Zod | 3 | Schema validation tipado, compartible frontend/backend |
-| Documentación API | @asteasolutions/zod-to-openapi + swagger-ui-express | 7 / 5 | Genera la spec OpenAPI 3.0 desde los schemas Zod; sirve Swagger UI en `/api/docs` |
+| Seguridad HTTP | helmet | 8 | Security headers en Express: `X-Frame-Options`, `X-Content-Type-Options`, `HSTS`, `Referrer-Policy`, etc. |
+| Documentación API | @asteasolutions/zod-to-openapi + swagger-ui-express | 7 / 5 | Genera la spec OpenAPI 3.0 desde los schemas Zod; sirve Swagger UI en `/api/docs` (deshabilitado en producción) |
 | Test unitario FE | Vitest + RTL | latest | Nativo Vite/Next.js, API compatible Jest |
 | Test unitario BE | Jest + Supertest | latest | Estándar Node.js, integración Express |
 | Test E2E | Playwright | 1.60 | Multi-browser, disponible en el entorno |
@@ -270,9 +271,10 @@ runmarket/
 │
 └── e2e/                          ← Playwright E2E
     ├── tests/
-    │   ├── catalog.spec.ts       ← flujo de búsqueda y filtrado
-    │   ├── product.spec.ts       ← ficha de producto
-    │   └── purchase.spec.ts      ← carrito → checkout → confirmación
+    │   ├── catalog.spec.ts           ← flujo de búsqueda y filtrado
+    │   ├── product.spec.ts           ← ficha de producto
+    │   ├── purchase.spec.ts          ← carrito → checkout → confirmación
+    │   └── security-headers.spec.ts  ← cabeceras HTTP del frontend (CSP, X-Frame-Options…)
     └── playwright.config.ts
 ```
 
