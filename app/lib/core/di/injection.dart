@@ -21,9 +21,11 @@ import 'package:la_pocha/features/game_setup/presentation/bloc/game_setup_bloc.d
 import 'package:la_pocha/features/round/domain/services/bid_order_service.dart';
 import 'package:la_pocha/features/round/domain/services/dealer_restriction_validator.dart';
 import 'package:la_pocha/features/round/domain/usecases/close_bidding_usecase.dart';
+import 'package:la_pocha/features/round/domain/usecases/get_round_play_state_usecase.dart';
 import 'package:la_pocha/features/round/domain/usecases/load_bidding_context_usecase.dart';
 import 'package:la_pocha/features/round/domain/usecases/submit_bid_usecase.dart';
 import 'package:la_pocha/features/round/presentation/bloc/bidding_bloc.dart';
+import 'package:la_pocha/features/round/presentation/bloc/play_state_bloc.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -79,6 +81,14 @@ Future<void> configureDependencies() async {
 
   getIt.registerFactory<CloseBiddingUseCase>(
     () => CloseBiddingUseCase(
+      getIt<RoundRepository>(),
+      validator: getIt<DealerRestrictionValidator>(),
+    ),
+  );
+
+  getIt.registerFactory<GetRoundPlayStateUseCase>(
+    () => GetRoundPlayStateUseCase(
+      getIt<GameRepository>(),
       getIt<RoundRepository>(),
       validator: getIt<DealerRestrictionValidator>(),
     ),
@@ -144,6 +154,12 @@ Future<void> configureDependencies() async {
       submitBid: getIt<SubmitBidUseCase>(),
       closeBidding: getIt<CloseBiddingUseCase>(),
       validator: getIt<DealerRestrictionValidator>(),
+    ),
+  );
+
+  getIt.registerFactory<PlayStateBloc>(
+    () => PlayStateBloc(
+      getRoundPlayState: getIt<GetRoundPlayStateUseCase>(),
     ),
   );
 }

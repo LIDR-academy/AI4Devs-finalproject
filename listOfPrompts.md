@@ -1600,3 +1600,9 @@ Usa modo Plan antes de ejecutar.
 
 ------------
 
+Lee el ticket LPT-10 de Jira con acli, revisa docs/design.md
+para referencia visual (wireframe "Pantalla de juego" ya generado
+y disponible en docs/), e impleméntalo siguiendo las convenciones
+en .cursor/rules/. El atajo a LPT-12 (corregir apuestas) debe
+quedar como stub/TODO — LPT-12 no está implementado aún.
+Usa modo Plan antes de ejecutar.
