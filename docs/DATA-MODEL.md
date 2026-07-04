@@ -71,7 +71,7 @@ erDiagram
     }
 
     ORDER {
-        string      id              PK  "ORD-{timestamp}"
+        string      id              PK  "ORD-{8 hex aleatorios}"
         string      sessionId           "Sesión que generó el pedido"
         datetime    date
         string      status              "processing | shipped | delivered | cancelled"
@@ -150,7 +150,7 @@ Línea de ítem dentro de un carrito. Referencia al `Product` para obtener preci
 Pedido generado tras un checkout completado. Almacena la dirección de envío como campos planos (no como entidad separada) dado que en el MVP no hay usuarios autenticados con direcciones guardadas.
 
 **Restricciones relevantes:**
-- `id`: formato `ORD-{timestamp}` para legibilidad en la UI (no UUID)
+- `id`: formato `ORD-{8 hex aleatorios}` (vía `crypto.randomUUID()`) para legibilidad en la UI sin ser predecible por timestamp (no UUID completo)
 - `sessionId`: permite al corredor recuperar sus pedidos de la sesión activa
 - `status`: enum con transiciones válidas: `processing → shipped → delivered` o `processing → cancelled`
 - `subtotal + shipping = total` — invariante mantenida por `CheckoutService`
