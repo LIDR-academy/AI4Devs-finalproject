@@ -1,6 +1,7 @@
 import { ConflictException, ForbiddenException, Injectable, Logger, NotFoundException } from "@nestjs/common";
 import type { Decimal } from "@prisma/client/runtime/library";
 import type { PantryItem } from "@prisma/client";
+import { MetricsService } from "../../common/metrics/metrics.service";
 import { PrismaService } from "../../database/prisma.service";
 import { PointsService } from "../gamification/points.service";
 import { UsersService } from "../users/users.service";
@@ -113,12 +114,13 @@ export class PantryService {
     private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
     private readonly pointsService: PointsService,
+    private readonly metrics: MetricsService,
   ) {}
 
   async create(userId: string, dto: CreatePantryItemDto): Promise<PantryItem> {
     await this.assertUserCanAccessPantry(userId);
 
-    return this.prisma.pantryItem.create({
+    const item = await this.prisma.pantryItem.create({
       data: {
         userId,
         name: dto.name.trim(),
@@ -130,6 +132,10 @@ export class PantryService {
         ...(dto.notes !== undefined && { notes: dto.notes }),
       },
     });
+
+    this.metrics.increment("item_create");
+
+    return item;
   }
 
   async list(userId: string): Promise<PantryItem[]> {
@@ -232,6 +238,10 @@ export class PantryService {
       }),
       this.prisma.pantryItem.delete({ where: { id: itemId } }),
     ]);
+
+    this.metrics.increment(
+      dto.type === PantryConsumptionEventType.WASTED ? "item_waste" : "item_consume",
+    );
 
     // Fire-and-forget gamification processing — a failure here must never fail the consume/waste
     // action (FR-018). Errors are logged and swallowed.
@@ -435,6 +445,10 @@ export class PantryService {
       itemId: item.id,
     }));
 
+    if (events.length > 0) {
+      this.metrics.increment("item_waste", events.length);
+    }
+
     await this.processGamificationForEvents(events.map((event) => event.id));
 
     return { wastedCount: events.length, events };
@@ -493,6 +507,9 @@ export class PantryService {
 
     const results = await this.prisma.$transaction([...eventCreates, ...itemDeletes]);
     const eventIds = items.map((_, index) => (results[index] as { id: string }).id);
+
+    this.metrics.increment("item_waste", items.length);
+
     await this.processGamificationForEvents(eventIds);
 
     return items.length;

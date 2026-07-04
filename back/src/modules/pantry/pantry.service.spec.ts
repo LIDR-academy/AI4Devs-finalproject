@@ -143,12 +143,17 @@ function makePointsMock() {
   return { processConsumptionEvent: jest.fn().mockResolvedValue(undefined) } as any;
 }
 
+function makeMetricsMock() {
+  return { increment: jest.fn() } as any;
+}
+
 function makeService(
   prismaMock: ReturnType<typeof makePrismaMock>,
   pointsMock: ReturnType<typeof makePointsMock> = makePointsMock(),
+  metricsMock: ReturnType<typeof makeMetricsMock> = makeMetricsMock(),
 ) {
   const usersServiceMock = { findById: jest.fn().mockResolvedValue(MOCK_USER) } as any;
-  return new PantryService(prismaMock, usersServiceMock, pointsMock);
+  return new PantryService(prismaMock, usersServiceMock, pointsMock, metricsMock);
 }
 
 describe("PantryService.registerEvent", () => {
@@ -249,7 +254,7 @@ describe("PantryService.registerEvent", () => {
   it("throws ForbiddenException when user is not found", async () => {
     const prisma = makePrismaMock();
     const usersServiceMock = { findById: jest.fn().mockResolvedValue(null) } as any;
-    const svc = new PantryService(prisma, usersServiceMock, makePointsMock());
+    const svc = new PantryService(prisma, usersServiceMock, makePointsMock(), makeMetricsMock());
 
     await expect(
       svc.registerEvent("user-x", "item-1", { type: PantryConsumptionEventType.CONSUMED }),
@@ -586,9 +591,12 @@ function makeAutoExpiryPrisma(overrides: Record<string, unknown> = {}) {
   } as any;
 }
 
-function makeAutoExpiryService(prisma: ReturnType<typeof makeAutoExpiryPrisma>) {
+function makeAutoExpiryService(
+  prisma: ReturnType<typeof makeAutoExpiryPrisma>,
+  metricsMock: ReturnType<typeof makeMetricsMock> = makeMetricsMock(),
+) {
   const usersServiceMock = { findById: jest.fn().mockResolvedValue(MOCK_USER) } as any;
-  return new PantryService(prisma, usersServiceMock, makePointsMock());
+  return new PantryService(prisma, usersServiceMock, makePointsMock(), metricsMock);
 }
 
 function makeExpiredItem(overrides: Partial<typeof MOCK_ITEM_NO_EXPIRY> = {}) {
@@ -765,5 +773,77 @@ describe("PantryService.bulkDismissExpired", () => {
     expect(prisma.autoExpiryDigest.create).toHaveBeenCalledWith({
       data: { userId: "user-1", status: "USER_RESOLVED", resolvedAt: NOW },
     });
+  });
+});
+
+// ── Business metric instrumentation (direct calls, not a route interceptor — see
+// specs/003-observability-logging/research.md Decision 7) ───────────────────────
+
+describe("PantryService — business metric instrumentation", () => {
+  it("increments item_create once when create() succeeds", async () => {
+    const prisma = makePrismaMock();
+    prisma.pantryItem.create.mockResolvedValue({ id: "item-new" } as any);
+    const metrics = makeMetricsMock();
+    const svc = makeService(prisma, makePointsMock(), metrics);
+
+    await svc.create("user-1", { name: "Olive Oil", quantity: 1, unit: "unit" });
+
+    expect(metrics.increment).toHaveBeenCalledWith("item_create");
+  });
+
+  it("increments item_consume when registerEvent is called with type=CONSUMED", async () => {
+    const prisma = makePrismaMock(MOCK_ITEM_NO_EXPIRY);
+    const metrics = makeMetricsMock();
+    const svc = makeService(prisma, makePointsMock(), metrics);
+
+    await svc.registerEvent("user-1", "item-1", { type: PantryConsumptionEventType.CONSUMED });
+
+    expect(metrics.increment).toHaveBeenCalledWith("item_consume");
+    expect(metrics.increment).not.toHaveBeenCalledWith("item_waste");
+  });
+
+  it("increments item_waste when registerEvent is called with type=WASTED", async () => {
+    const prisma = makePrismaMock(MOCK_ITEM_NO_EXPIRY);
+    const metrics = makeMetricsMock();
+    const svc = makeService(prisma, makePointsMock(), metrics);
+
+    await svc.registerEvent("user-1", "item-1", { type: PantryConsumptionEventType.WASTED });
+
+    expect(metrics.increment).toHaveBeenCalledWith("item_waste");
+    expect(metrics.increment).not.toHaveBeenCalledWith("item_consume");
+  });
+
+  it("increments item_waste by the item count in bulkWasteItems", async () => {
+    const prisma = makeAutoExpiryPrisma({
+      pantryItem: {
+        findMany: jest.fn().mockResolvedValue([
+          makeExpiredItem({ id: "a" }),
+          makeExpiredItem({ id: "b" }),
+        ]),
+        delete: jest.fn().mockResolvedValue({}),
+      },
+    });
+    const metrics = makeMetricsMock();
+    const svc = makeAutoExpiryService(prisma, metrics);
+
+    await svc.bulkWasteItems("user-1", ["a", "b"], NOW);
+
+    expect(metrics.increment).toHaveBeenCalledWith("item_waste", 2);
+  });
+
+  it("increments item_waste by the item count in autoWasteExpired", async () => {
+    const prisma = makeAutoExpiryPrisma({
+      pantryItem: {
+        findMany: jest.fn().mockResolvedValue([makeExpiredItem({ id: "a" })]),
+        delete: jest.fn().mockResolvedValue({}),
+      },
+    });
+    const metrics = makeMetricsMock();
+    const svc = makeAutoExpiryService(prisma, metrics);
+
+    const wastedCount = await svc.autoWasteExpired("user-1", NOW);
+
+    expect(wastedCount).toBe(1);
+    expect(metrics.increment).toHaveBeenCalledWith("item_waste", 1);
   });
 });

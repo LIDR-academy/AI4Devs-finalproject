@@ -6,6 +6,7 @@ import {
 import { JwtService } from "@nestjs/jwt";
 import type { User } from "@prisma/client";
 import * as bcrypt from "bcrypt";
+import { MetricsService } from "../../common/metrics/metrics.service";
 import { UsersService } from "../users/users.service";
 import { AuthCredentialsDto } from "./dto/auth-credentials.dto";
 import type { JwtPayload } from "./types/jwt-payload.type";
@@ -17,6 +18,7 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly metrics: MetricsService,
   ) {}
 
   async register(credentials: AuthCredentialsDto) {
@@ -42,13 +44,17 @@ export class AuthService {
     const user = await this.usersService.findByEmail(normalizedEmail);
 
     if (!user) {
+      this.metrics.increment("login_failure");
       throw new UnauthorizedException("Invalid email or password");
     }
 
     const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
     if (!isPasswordValid) {
+      this.metrics.increment("login_failure");
       throw new UnauthorizedException("Invalid email or password");
     }
+
+    this.metrics.increment("login_success");
 
     return this.buildAuthResponse(user);
   }

@@ -54,6 +54,19 @@ resource "aws_sns_topic" "expiration_alerts" {
   name = "${var.project_name}-expiration-alerts-prod"
 }
 
+# --- CloudWatch log group: awslogs Docker driver ships stdout here (see
+# infra/docker/docker-compose.prod.yml) — no ECS in this setup, just EC2 + Docker Compose ---
+
+resource "aws_cloudwatch_log_group" "app" {
+  name              = "/realsavefooding/prod"
+  retention_in_days = 14
+
+  tags = {
+    Project = var.project_name
+    Env     = "prod"
+  }
+}
+
 # --- Security groups ---
 
 resource "aws_security_group" "ec2" {
@@ -169,6 +182,19 @@ resource "aws_iam_role_policy" "ec2_app_access" {
         Effect   = "Allow"
         Action   = ["sns:Publish"]
         Resource = aws_sns_topic.expiration_alerts.arn
+      },
+      {
+        # CloudWatch does not support resource-level restriction on PutMetricData.
+        Sid      = "BusinessMetrics"
+        Effect   = "Allow"
+        Action   = ["cloudwatch:PutMetricData"]
+        Resource = "*"
+      },
+      {
+        Sid      = "ApplicationLogs"
+        Effect   = "Allow"
+        Action   = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"]
+        Resource = "${aws_cloudwatch_log_group.app.arn}:*"
       }
     ]
   })
@@ -363,6 +389,68 @@ resource "aws_cloudfront_distribution" "app" {
 
   viewer_certificate {
     cloudfront_default_certificate = true
+  }
+
+  tags = {
+    Project = var.project_name
+    Env     = "prod"
+  }
+}
+
+# --- CloudWatch alarms (FR-010): CloudFront is the actual HTTPS entrypoint in this single-EC2
+# setup (no ALB), so its additional metrics are the alarm source. Additional/real-time metrics
+# must be explicitly enabled for 5xxErrorRate/OriginLatency to be published. ---
+
+resource "aws_cloudfront_monitoring_subscription" "app" {
+  distribution_id = aws_cloudfront_distribution.app.id
+
+  monitoring_subscription {
+    realtime_metrics_subscription_config {
+      realtime_metrics_subscription_status = "Enabled"
+    }
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "error_rate" {
+  alarm_name          = "${var.project_name}-error-rate-prod"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "5xxErrorRate"
+  namespace           = "AWS/CloudFront"
+  period              = 300
+  statistic           = "Average"
+  threshold           = 1
+  alarm_description   = "CloudFront 5xx error rate exceeded 1% over 5 minutes"
+  alarm_actions       = [aws_sns_topic.expiration_alerts.arn]
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    DistributionId = aws_cloudfront_distribution.app.id
+    Region         = "Global"
+  }
+
+  tags = {
+    Project = var.project_name
+    Env     = "prod"
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "origin_latency_p95" {
+  alarm_name          = "${var.project_name}-p95-latency-prod"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  extended_statistic  = "p95"
+  metric_name         = "OriginLatency"
+  namespace           = "AWS/CloudFront"
+  period              = 300
+  threshold           = 500
+  alarm_description   = "CloudFront origin p95 latency exceeded 500ms over 5 minutes"
+  alarm_actions       = [aws_sns_topic.expiration_alerts.arn]
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    DistributionId = aws_cloudfront_distribution.app.id
+    Region         = "Global"
   }
 
   tags = {

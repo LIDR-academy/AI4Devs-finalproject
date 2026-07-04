@@ -2,6 +2,7 @@ import { ConflictException, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import * as bcrypt from "bcrypt";
 import type { User } from "@prisma/client";
+import type { MetricsService } from "../../common/metrics/metrics.service";
 import { AuthService } from "./auth.service";
 import { UsersService } from "../users/users.service";
 
@@ -9,6 +10,7 @@ describe("AuthService", () => {
   let service: AuthService;
   let usersService: jest.Mocked<UsersService>;
   let jwtService: jest.Mocked<JwtService>;
+  let metrics: jest.Mocked<Pick<MetricsService, "increment">>;
 
   const user: User = {
     id: "user-1",
@@ -29,7 +31,9 @@ describe("AuthService", () => {
       sign: jest.fn().mockReturnValue("token-value"),
     } as unknown as jest.Mocked<JwtService>;
 
-    service = new AuthService(usersService, jwtService);
+    metrics = { increment: jest.fn() };
+
+    service = new AuthService(usersService, jwtService, metrics as unknown as MetricsService);
   });
 
   it("registers a new user and returns a token", async () => {
@@ -83,6 +87,37 @@ describe("AuthService", () => {
         password: "password123",
       }),
     ).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+
+  it("increments login_success exactly once on a successful login", async () => {
+    usersService.findByEmail.mockResolvedValue(user);
+
+    await service.login({ email: "user@example.com", password: "password123" });
+
+    expect(metrics.increment).toHaveBeenCalledTimes(1);
+    expect(metrics.increment).toHaveBeenCalledWith("login_success");
+  });
+
+  it("increments login_failure exactly once for an unknown email", async () => {
+    usersService.findByEmail.mockResolvedValue(null);
+
+    await expect(
+      service.login({ email: "nobody@example.com", password: "password123" }),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+
+    expect(metrics.increment).toHaveBeenCalledTimes(1);
+    expect(metrics.increment).toHaveBeenCalledWith("login_failure");
+  });
+
+  it("increments login_failure exactly once for a wrong password", async () => {
+    usersService.findByEmail.mockResolvedValue(user);
+
+    await expect(
+      service.login({ email: "user@example.com", password: "wrong-password" }),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+
+    expect(metrics.increment).toHaveBeenCalledTimes(1);
+    expect(metrics.increment).toHaveBeenCalledWith("login_failure");
   });
 
   it("returns current user profile", async () => {

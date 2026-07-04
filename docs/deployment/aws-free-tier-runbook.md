@@ -64,10 +64,176 @@ containers on one EC2 box rather than a static frontend host.
 1. Confirm the account's free-tier age in Billing → Free Tier.
 2. Create a ~$30/month AWS Budget with 50/80/100% email alerts (sized for the ~$25/month realistic
    cost on accounts past the free-tier window — see Gotcha #2/#3 above).
-3. Create an IAM deploy user (not root) with least-privilege access (EC2, RDS, VPC/SG, IAM
-   PassRole to the instance role only, S3, SNS, CloudFront scoped to this project) for running
-   Terraform from your machine.
+3. Create an IAM deploy user (not root), `realsavefooding-deploy`, with the least-privilege policy
+   documented below, for running Terraform from your machine.
 4. Confirm root MFA is enabled; use the deploy user for the rest of this runbook.
+
+### Deploy user (`realsavefooding-deploy`): IAM policy
+
+Managed by hand in the AWS Console/CloudShell, not by Terraform — a deploy identity can't be
+trusted to grant itself new permissions (it doesn't even have
+`iam:Get*User*Policy`/`iam:List*User*Policy` on itself, by design, so it can't even be introspected
+by anything running as itself, e.g. an AI coding assistant with only the deploy user's own
+credentials). **Re-apply this if the deploy user is ever recreated** (new semester, new AWS
+account). Current base policy (customer-managed, e.g. `realsavefooding-deploy-policy`) — already
+includes the SSM addition from Lesson 1:
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "EC2",
+            "Effect": "Allow",
+            "Action": "ec2:*",
+            "Resource": "*"
+        },
+        {
+            "Sid": "RDS",
+            "Effect": "Allow",
+            "Action": "rds:*",
+            "Resource": "*"
+        },
+        {
+            "Sid": "CloudFront",
+            "Effect": "Allow",
+            "Action": "cloudfront:*",
+            "Resource": "*"
+        },
+        {
+            "Sid": "S3Project",
+            "Effect": "Allow",
+            "Action": "s3:*",
+            "Resource": [
+                "arn:aws:s3:::realsavefooding-*",
+                "arn:aws:s3:::realsavefooding-*/*"
+            ]
+        },
+        {
+            "Sid": "SNSProject",
+            "Effect": "Allow",
+            "Action": "sns:*",
+            "Resource": "arn:aws:sns:*:*:RealSaveFooding-*"
+        },
+        {
+            "Sid": "IamRoleManagement",
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreateRole",
+                "iam:DeleteRole",
+                "iam:GetRole",
+                "iam:TagRole",
+                "iam:PutRolePolicy",
+                "iam:DeleteRolePolicy",
+                "iam:GetRolePolicy",
+                "iam:ListRolePolicies",
+                "iam:ListAttachedRolePolicies",
+                "iam:CreateInstanceProfile",
+                "iam:DeleteInstanceProfile",
+                "iam:GetInstanceProfile",
+                "iam:AddRoleToInstanceProfile",
+                "iam:RemoveRoleFromInstanceProfile",
+                "iam:ListInstanceProfilesForRole"
+            ],
+            "Resource": [
+                "arn:aws:iam::*:role/RealSaveFooding-*",
+                "arn:aws:iam::*:instance-profile/RealSaveFooding-*"
+            ]
+        },
+        {
+            "Sid": "PassRoleToEc2",
+            "Effect": "Allow",
+            "Action": "iam:PassRole",
+            "Resource": "arn:aws:iam::*:role/RealSaveFooding-*",
+            "Condition": {
+                "StringEquals": {
+                    "iam:PassedToService": "ec2.amazonaws.com"
+                }
+            }
+        },
+        {
+            "Sid": "SsmSessionAccess",
+            "Effect": "Allow",
+            "Action": [
+                "ssm:StartSession",
+                "ssm:TerminateSession",
+                "ssm:ResumeSession",
+                "ssm:DescribeSessions",
+                "ssm:DescribeInstanceInformation",
+                "ssm:GetConnectionStatus"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+```
+
+Note what's deliberately **absent** — no `iam:AttachRolePolicy`/`iam:AttachUserPolicy`, no
+`iam:CreateServiceLinkedRole` (Gotcha #7), no self-directed `iam:*UserPolicy` actions on
+`realsavefooding-deploy` itself, and `IamRoleManagement`/`PassRoleToEc2` are scoped to
+`RealSaveFooding-*`-named roles only, never `*`. This is what makes the "deploy user can't grant
+itself new permissions" property in the paragraph above actually hold.
+
+### Deploy user: permissions added outside the base policy
+
+Whenever a Terraform change introduces a resource type the base policy above didn't anticipate,
+`terraform apply`/`plan` fails with `AccessDeniedException`, and the fix is a one-time manual
+policy update, run from an admin/root session (Console or CloudShell — see Lesson 1 for why
+CloudShell is often easier than a local admin profile on a corporate network). One such addition
+exists so far, as a **separate** inline policy (not merged into the base policy above):
+
+1. **CloudWatch Logs + Alarms** (EXT-004 observability feature) — needed because `main.tf`
+   provisions `aws_cloudwatch_log_group.app` and two `aws_cloudwatch_metric_alarm` resources.
+   Getting this right took three iterations — see Lesson 8 for why each statement is shaped the
+   way it is. Current known-working inline policy (`terraform-cloudwatch-logs-alarms`):
+
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Sid": "TerraformManageLogGroup",
+         "Effect": "Allow",
+         "Action": [
+           "logs:CreateLogGroup",
+           "logs:DeleteLogGroup",
+           "logs:PutRetentionPolicy",
+           "logs:TagResource",
+           "logs:UntagResource",
+           "logs:ListTagsForResource"
+         ],
+         "Resource": "arn:aws:logs:eu-west-1:202982075698:log-group:/realsavefooding/prod*"
+       },
+       {
+         "Sid": "TerraformDescribeLogGroups",
+         "Effect": "Allow",
+         "Action": ["logs:DescribeLogGroups"],
+         "Resource": "*"
+       },
+       {
+         "Sid": "TerraformManageAlarms",
+         "Effect": "Allow",
+         "Action": [
+           "cloudwatch:PutMetricAlarm",
+           "cloudwatch:DeleteAlarms",
+           "cloudwatch:DescribeAlarms",
+           "cloudwatch:TagResource",
+           "cloudwatch:UntagResource",
+           "cloudwatch:ListTagsForResource"
+         ],
+         "Resource": "arn:aws:cloudwatch:eu-west-1:202982075698:alarm:RealSaveFooding-*"
+       }
+     ]
+   }
+   ```
+
+   Apply with (from CloudShell, or a local profile with IAM admin rights):
+   ```bash
+   aws iam put-user-policy \
+     --user-name realsavefooding-deploy \
+     --policy-name terraform-cloudwatch-logs-alarms \
+     --policy-document file://policy.json
+   ```
 
 ### B. Provision infrastructure with Terraform
 Terraform lives in `infra/terraform/envs/prod/`.
@@ -178,3 +344,18 @@ one go.
 7. **After a stop/start or `reboot-instances`, `/tmp` is cleared** but the Docker data directory
    (loaded images, volumes) persists on the EBS root volume — expect to re-transfer source
    tarballs/build context, but not to lose already-built/loaded images.
+8. **CloudWatch IAM errors come in waves, one action at a time, not all at once** — adding
+   `aws_cloudwatch_log_group`/`aws_cloudwatch_metric_alarm` resources to `main.tf` (EXT-004
+   observability feature) surfaced three *separate* `AccessDeniedException`s from the deploy user
+   across three `terraform apply`/`plan` attempts, each only visible after fixing the previous one:
+   `logs:CreateLogGroup`, then `cloudwatch:PutMetricAlarm`, then `logs:DescribeLogGroups`. The last
+   one is the least obvious: `DescribeLogGroups` is a list-style API and **does not support
+   resource-level scoping** — even though `CreateLogGroup` accepts a specific log-group ARN,
+   `DescribeLogGroups` requires `"Resource": "*"` or it's denied with a resource ARN that looks
+   truncated/empty in the error (`log-group::log-stream:`) — that empty-looking ARN is itself the
+   tell that the action doesn't support per-resource scoping, not a sign the policy's ARN pattern is
+   wrong. Don't assume one `terraform apply` failure means the fix is complete — re-run after each
+   IAM change and expect another distinct action to be missing (same lesson as `cloudwatch:PutMetricData`
+   needing `Resource: "*"` for the EC2 role, in `main.tf`'s `BusinessMetrics` statement). The
+   consolidated, known-working policy is documented above under "Deploy user: permissions added
+   outside Terraform".

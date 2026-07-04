@@ -88,13 +88,16 @@ function createMocks(opts: {
     }),
   };
 
+  const metricsMock = { increment: jest.fn() };
+
   const svc = new NotificationDeliveryService(
     prismaMock as any,
     sesServiceMock as any,
     webPushServiceMock as any,
+    metricsMock as any,
   );
 
-  return { svc, prismaMock, sesServiceMock, webPushServiceMock, logs, pushSubs };
+  return { svc, prismaMock, sesServiceMock, webPushServiceMock, metricsMock, logs, pushSubs };
 }
 
 describe("NotificationDeliveryService — deliverExpiry", () => {
@@ -308,5 +311,104 @@ describe("NotificationDeliveryService — deliverDigestSummary", () => {
     expect(logs).toContainEqual(
       expect.objectContaining({ type: "AUTO_EXPIRY_SUMMARY", channel: "EMAIL", status: "FAILED" }),
     );
+  });
+});
+
+// ── Business metric instrumentation (direct calls, not a route interceptor — see
+// specs/003-observability-logging/research.md Decision 7) ───────────────────────
+
+describe("NotificationDeliveryService — notification_sent instrumentation", () => {
+  it("increments notification_sent exactly once for the expiry email SENT path", async () => {
+    const { svc, metricsMock } = createMocks();
+
+    await svc.deliverExpiry(userId, makeItems(), userEmail);
+
+    expect(metricsMock.increment).toHaveBeenCalledTimes(1);
+    expect(metricsMock.increment).toHaveBeenCalledWith("notification_sent");
+  });
+
+  it("does not increment notification_sent when the expiry email FAILS", async () => {
+    const { svc, metricsMock } = createMocks({ sesThrows: new Error("SES quota exceeded") });
+
+    await svc.deliverExpiry(userId, makeItems(), userEmail);
+
+    expect(metricsMock.increment).not.toHaveBeenCalled();
+  });
+
+  it("increments notification_sent for both the expiry email and expiry push SENT paths", async () => {
+    const { svc, metricsMock } = createMocks({ existingPushSub: makePushSub() });
+
+    await svc.deliverExpiry(userId, makeItems(), userEmail);
+
+    expect(metricsMock.increment).toHaveBeenCalledTimes(2);
+    expect(metricsMock.increment).toHaveBeenNthCalledWith(1, "notification_sent");
+    expect(metricsMock.increment).toHaveBeenNthCalledWith(2, "notification_sent");
+  });
+
+  it("does not increment notification_sent when the expiry push FAILS", async () => {
+    const { svc, metricsMock } = createMocks({
+      existingPushSub: makePushSub(),
+      pushThrows: Object.assign(new Error("push down"), { statusCode: 500 }),
+    });
+
+    await svc.deliverExpiry(userId, makeItems(), userEmail);
+
+    // Email path still succeeds and increments once; the failed push must not add a second call.
+    expect(metricsMock.increment).toHaveBeenCalledTimes(1);
+  });
+
+  it("increments notification_sent exactly once for the badge SENT path", async () => {
+    const { svc, metricsMock } = createMocks({ existingPushSub: makePushSub() });
+
+    await svc.deliverBadge(userId, "First Save", "desc");
+
+    expect(metricsMock.increment).toHaveBeenCalledTimes(1);
+    expect(metricsMock.increment).toHaveBeenCalledWith("notification_sent");
+  });
+
+  it("does not increment notification_sent when the badge push FAILS", async () => {
+    const { svc, metricsMock } = createMocks({
+      existingPushSub: makePushSub(),
+      pushThrows: Object.assign(new Error("push down"), { statusCode: 500 }),
+    });
+
+    await svc.deliverBadge(userId, "First Save", "desc");
+
+    expect(metricsMock.increment).not.toHaveBeenCalled();
+  });
+
+  it("increments notification_sent for both the digest email and digest push SENT paths", async () => {
+    const { svc, metricsMock } = createMocks({ existingPushSub: makePushSub() });
+
+    await svc.deliverDigest(userId, [{ name: "Old Yogurt", daysExpired: 25 }], userEmail);
+
+    expect(metricsMock.increment).toHaveBeenCalledTimes(2);
+    expect(metricsMock.increment).toHaveBeenNthCalledWith(1, "notification_sent");
+    expect(metricsMock.increment).toHaveBeenNthCalledWith(2, "notification_sent");
+  });
+
+  it("does not increment notification_sent when the digest email FAILS", async () => {
+    const { svc, metricsMock } = createMocks({ sesThrows: new Error("SES down") });
+
+    await svc.deliverDigest(userId, [{ name: "Old Yogurt", daysExpired: 25 }], userEmail);
+
+    expect(metricsMock.increment).not.toHaveBeenCalled();
+  });
+
+  it("increments notification_sent exactly once for the digest summary SENT path", async () => {
+    const { svc, metricsMock } = createMocks();
+
+    await svc.deliverDigestSummary(userId, 3, userEmail);
+
+    expect(metricsMock.increment).toHaveBeenCalledTimes(1);
+    expect(metricsMock.increment).toHaveBeenCalledWith("notification_sent");
+  });
+
+  it("does not increment notification_sent when the digest summary email FAILS", async () => {
+    const { svc, metricsMock } = createMocks({ sesThrows: new Error("SES down") });
+
+    await svc.deliverDigestSummary(userId, 3, userEmail);
+
+    expect(metricsMock.increment).not.toHaveBeenCalled();
   });
 });

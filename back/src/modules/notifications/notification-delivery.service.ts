@@ -1,4 +1,5 @@
 import { Injectable, Inject, Logger } from "@nestjs/common";
+import { MetricsService } from "../../common/metrics/metrics.service";
 import { PrismaService } from "../../database/prisma.service";
 import {
   SES_PORT,
@@ -17,7 +18,12 @@ export class NotificationDeliveryService {
     private readonly prisma: PrismaService,
     @Inject(SES_PORT) private readonly sesService: SesPort,
     @Inject(WEB_PUSH_PORT) private readonly webPushService: WebPushPort,
+    private readonly metrics: MetricsService,
   ) {}
+
+  #recordSent(): void {
+    this.metrics.increment("notification_sent");
+  }
 
   async deliverExpiry(userId: string, items: ExpiryItem[], userEmail: string): Promise<void> {
     const pref = await this.prisma.notificationPreference.findUnique({ where: { userId } });
@@ -52,6 +58,7 @@ export class NotificationDeliveryService {
       await this.prisma.notificationLog.create({
         data: { userId, type: "BADGE_EARNED", channel: "WEB_PUSH", status: "SENT" },
       });
+      this.#recordSent();
     } catch (error) {
       const failReason = error instanceof Error ? error.message : String(error);
       const is410 = (error as { statusCode?: number }).statusCode === 410;
@@ -79,6 +86,7 @@ export class NotificationDeliveryService {
       await this.prisma.notificationLog.create({
         data: { userId, type: "AUTO_EXPIRY_DIGEST", channel: "EMAIL", status: "SENT" },
       });
+      this.#recordSent();
     } catch (error) {
       const failReason = error instanceof Error ? error.message : String(error);
       this.logger.error(`digest_email_failed userId=${userId}`, failReason);
@@ -107,6 +115,7 @@ export class NotificationDeliveryService {
       await this.prisma.notificationLog.create({
         data: { userId, type: "AUTO_EXPIRY_SUMMARY", channel: "EMAIL", status: "SENT" },
       });
+      this.#recordSent();
     } catch (error) {
       const failReason = error instanceof Error ? error.message : String(error);
       this.logger.error(`digest_summary_email_failed userId=${userId}`, failReason);
@@ -145,6 +154,7 @@ export class NotificationDeliveryService {
       await this.prisma.notificationLog.create({
         data: { userId, type: "EXPIRY", channel: "EMAIL", status: "SENT" },
       });
+      this.#recordSent();
     } catch (error) {
       const failReason = error instanceof Error ? error.message : String(error);
       this.logger.error(`email_delivery_failed userId=${userId}`, failReason);
@@ -166,6 +176,7 @@ export class NotificationDeliveryService {
       await this.prisma.notificationLog.create({
         data: { userId, type: "EXPIRY", channel: "WEB_PUSH", status: "SENT" },
       });
+      this.#recordSent();
     } catch (error) {
       const failReason = error instanceof Error ? error.message : String(error);
       const is410 = (error as { statusCode?: number }).statusCode === 410;
@@ -198,6 +209,7 @@ export class NotificationDeliveryService {
       await this.prisma.notificationLog.create({
         data: { userId, type: "AUTO_EXPIRY_DIGEST", channel: "WEB_PUSH", status: "SENT" },
       });
+      this.#recordSent();
     } catch (error) {
       const failReason = error instanceof Error ? error.message : String(error);
       const is410 = (error as { statusCode?: number }).statusCode === 410;

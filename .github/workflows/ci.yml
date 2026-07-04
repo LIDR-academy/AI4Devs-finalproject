@@ -30,4 +30,6 @@ jobs:
           node-version: 20
       - run: npm ci
       - run: npm run build
+      - name: Verify no unstructured console.* calls remain (FR-011)
+        run: '! grep -rn "console\." src'
       - run: npm test -- --passWithNoTests

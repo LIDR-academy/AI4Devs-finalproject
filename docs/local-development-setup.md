@@ -58,6 +58,9 @@ The file `back/.env.example` contains:
 
 ```dotenv
 NODE_ENV=development
+SENTRY_DSN=
+LOG_LEVEL=info
+CLOUDWATCH_NAMESPACE=RealSaveFooding
 PORT=3000
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/RealSaveFooding
 JWT_SECRET=replace-this-secret
@@ -76,6 +79,9 @@ VAPID_SUBJECT=mailto:admin@realsavefooding.com
 | Variable | Purpose | Local value |
 |----------|---------|-------------|
 | `NODE_ENV` | Runtime mode | `development` |
+| `SENTRY_DSN` | Sentry project DSN for error tracking | Leave blank locally — Sentry capture is skipped when unset |
+| `LOG_LEVEL` | Minimum pino log level (`debug`/`info`/`warn`/`error`) | `info` |
+| `CLOUDWATCH_NAMESPACE` | CloudWatch custom-metric namespace prefix | `RealSaveFooding` — metrics only reach CloudWatch when `NODE_ENV=production` |
 | `PORT` | NestJS HTTP port | `3000` |
 | `DATABASE_URL` | PostgreSQL connection string | Matches Docker Compose defaults |
 | `JWT_SECRET` | Signing key for JWT tokens | Any non-empty string locally |
@@ -89,6 +95,15 @@ VAPID_SUBJECT=mailto:admin@realsavefooding.com
 | `VAPID_PUBLIC_KEY` | VAPID public key for Web Push | Required for browser push notifications |
 | `VAPID_PRIVATE_KEY` | VAPID private key for Web Push | Required for browser push notifications |
 | `VAPID_SUBJECT` | Contact URI sent with push messages | `mailto:admin@yourdomain.com` |
+
+### Observability (logging, error tracking, metrics)
+
+In local development, logs print human-readable via `pino-pretty`, and no calls reach Sentry or CloudWatch (both are no-ops unless `NODE_ENV=production`). In production:
+
+- Structured JSON logs are shipped to the CloudWatch Logs group `/realsavefooding/prod` by the `awslogs` Docker logging driver (`infra/docker/docker-compose.prod.yml`) — not by the application itself.
+- Business-event counters (`item_create`, `item_consume`, `item_waste`, `receipt_upload_success_total`, `receipt_upload_failure_total`, `notification_sent`, `login_success`, `login_failure`) are published under the `RealSaveFooding/production` CloudWatch namespace.
+- Two CloudWatch alarms (`infra/terraform/envs/prod/main.tf`) notify the existing `expiration_alerts` SNS topic: CloudFront 5xx error rate above 1% and CloudFront origin p95 latency above 500ms, each over a 5-minute window.
+- Unhandled exceptions are sent to Sentry when `SENTRY_DSN` is set; see [contracts/log-record.md](../specs/003-observability-logging/contracts/log-record.md) and [contracts/business-metrics.md](../specs/003-observability-logging/contracts/business-metrics.md) for the full field/metric contracts.
 
 ### Frontend — `front/.env`
 

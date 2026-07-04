@@ -13,6 +13,12 @@ services:
       - back.env
     ports:
       - "3000:3000"
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: /realsavefooding/prod
+        awslogs-region: eu-west-1
+        awslogs-stream-prefix: api
 
   frontend:
     image: realsavefooding-front:latest
@@ -25,3 +31,9 @@ services:
     restart: unless-stopped
     ports:
       - "4173:4173"
+    logging:
+      driver: awslogs
+      options:
+        awslogs-group: /realsavefooding/prod
+        awslogs-region: eu-west-1
+        awslogs-stream-prefix: frontend

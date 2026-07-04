@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import { CloudWatchMetricsService } from "../../integrations/aws-cloudwatch/cloudwatch-metrics.service";
 
 interface DurationAggregate {
   count: number;
@@ -14,18 +15,27 @@ export interface MetricsSnapshot {
 /**
  * Minimal in-process metrics registry.
  *
- * No external metrics library is wired in the MVP, so this provides simple
- * counters and duration aggregates that are observable through GET /api/metrics
- * in local and dev environments. It can be replaced by a Prometheus-backed
- * implementation later without changing call sites.
+ * Counters and duration aggregates are observable through GET /api/metrics in local
+ * and dev environments. In production, `increment()` also forwards business-event
+ * counters to CloudWatch via the injected {@link CloudWatchMetricsService}.
  */
 @Injectable()
 export class MetricsService {
   private readonly counters = new Map<string, number>();
   private readonly durations = new Map<string, DurationAggregate>();
 
+  constructor(private readonly cloudWatchMetrics: CloudWatchMetricsService) {}
+
   increment(name: string, value = 1): void {
     this.counters.set(name, (this.counters.get(name) ?? 0) + value);
+
+    if (process.env.NODE_ENV === "production") {
+      try {
+        this.cloudWatchMetrics.emit(name, value);
+      } catch {
+        // CloudWatch forwarding must never affect the in-process counter above (FR-009).
+      }
+    }
   }
 
   observeDuration(name: string, milliseconds: number): void {
