@@ -1,3 +1,16 @@
 dev.sh
+prod.sh
+Makefile
 front/.env
 back/.env
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+
+# Prod deploy secrets (VAPID keys, JWT secret) - never commit
+infra/docker/prod.secrets.env

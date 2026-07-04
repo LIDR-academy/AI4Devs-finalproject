@@ -1,0 +1,42 @@
+name: Deploy
+
+# Manual-only until the EC2_HOST/EC2_SSH_USER/EC2_SSH_PRIVATE_KEY/VITE_API_BASE_URL/VITE_VAPID_PUBLIC_KEY
+# repo secrets are configured (see infra/terraform/envs/prod outputs) — add `push: branches: [main]` once
+# they're set, otherwise every push fails before the infra even exists.
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build backend image
+        run: docker build -t realsavefooding-api:latest ./back
+
+      - name: Build frontend image
+        run: |
+          docker build \
+            --build-arg VITE_API_BASE_URL="${{ secrets.VITE_API_BASE_URL }}" \
+            --build-arg VITE_VAPID_PUBLIC_KEY="${{ secrets.VITE_VAPID_PUBLIC_KEY }}" \
+            -t realsavefooding-front:latest ./front
+
+      - name: Ship images to EC2 and restart containers
+        env:
+          SSH_HOST: ${{ secrets.EC2_HOST }}
+          SSH_USER: ${{ secrets.EC2_SSH_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+
+          docker save realsavefooding-api:latest realsavefooding-front:latest \
+            | ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" 'docker load'
+
+          scp -i ~/.ssh/deploy_key infra/docker/docker-compose.prod.yml \
+            "$SSH_USER@$SSH_HOST:/opt/realsavefooding/docker-compose.prod.yml"
+
+          ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" \
+            'cd /opt/realsavefooding && docker compose -f docker-compose.prod.yml up -d'

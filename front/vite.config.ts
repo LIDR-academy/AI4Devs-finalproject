@@ -12,4 +12,8 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // TanStack Start's build always needs Nitro to render the initial HTML shell (verified: both
+  // `nitro: false` and `{ preset: "static" }` produce no usable index.html for this app), so pin
+  // an explicit, self-hostable target instead of relying on the implicit "auto"/Cloudflare default.
+  nitro: { preset: "node-server" },
 });

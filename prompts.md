@@ -488,8 +488,10 @@ The output should include:
 ### 7. Pull Requests
 
 **Prompt 1:**
+https://github.com/LIDR-academy/AI4Devs-finalproject/pull/173
 
 **Prompt 2:**
+https://github.com/LIDR-academy/AI4Devs-finalproject/pull/202
 
 **Prompt 3:**
 

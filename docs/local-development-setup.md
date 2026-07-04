@@ -315,15 +315,31 @@ cd back && npm test
 cd front && npm test
 ```
 
-### Shortcut: `dev.sh`
+### Shortcut: `dev.sh` / `make dev`
 
 The repository root includes a `dev.sh` script that automates steps 1, 3, and 4 above in a single terminal: it starts the Postgres container (stopping any other container bound to port `5432`), waits for the database to become ready, then launches the backend and frontend dev servers together.
 
 ```bash
 ./dev.sh
+# or
+make dev
 ```
 
 Press `Ctrl+C` to stop the backend, frontend, and database container together. You still need to run migrations (step 2) separately before first use or after pulling new migrations.
+
+A root-level `Makefile` wraps both the local (`dev.sh`) and production (`prod.sh`) scripts:
+
+```bash
+make help
+# make dev         - run the local dev environment (./dev.sh)
+# make deploy      - terraform apply the AWS prod infra (./prod.sh deploy)
+# make destroy     - terraform destroy the AWS prod infra (./prod.sh destroy)
+# make app-deploy  - build+deploy the app containers to the running EC2 box (./prod.sh app-deploy)
+```
+
+`dev.sh`, `prod.sh`, and `Makefile` are gitignored (personal local convenience scripts, not
+committed) — see `docs/prod-development-setup.md` for the production deployment counterpart to
+this document.
 
 ---
 

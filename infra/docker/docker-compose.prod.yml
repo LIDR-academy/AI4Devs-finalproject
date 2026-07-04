@@ -1,0 +1,27 @@
+version: "3.9"
+
+# Runs both app containers on a single EC2 instance for the free-tier demo deployment.
+# CloudFront (configured separately) is the HTTPS entrypoint in front of these two ports.
+services:
+  api:
+    image: realsavefooding-api:latest
+    build:
+      context: ../../back
+    container_name: RealSaveFooding-api
+    restart: unless-stopped
+    env_file:
+      - back.env
+    ports:
+      - "3000:3000"
+
+  frontend:
+    image: realsavefooding-front:latest
+    build:
+      context: ../../front
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+        VITE_VAPID_PUBLIC_KEY: ${VITE_VAPID_PUBLIC_KEY}
+    container_name: RealSaveFooding-frontend
+    restart: unless-stopped
+    ports:
+      - "4173:4173"
