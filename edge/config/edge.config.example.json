@@ -15,7 +15,7 @@
   "vision": {
     "source": "simulation",
     "imagePath": null,
-    "cameraIndex": 0,
+    "cameraIndex": 1,
     "qrRoi": null,
     "cargoRoi": null,
     "qr": {

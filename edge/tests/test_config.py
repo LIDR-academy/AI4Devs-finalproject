@@ -62,6 +62,59 @@ class EdgeConfigTests(unittest.TestCase):
         self.assertEqual(10, config.vision.qr_roi.x)
         self.assertEqual(50, config.vision.cargo_roi.x)
 
+    def test_parses_detection_geometry_filters(self) -> None:
+        write_json(
+            self.path,
+            {
+                "profile": "vision-dry-run",
+                "vision": {
+                    "detection": {
+                        "minArea": 1200,
+                        "maxArea": 14000,
+                        "minWidth": 25,
+                        "maxWidth": 105,
+                        "minHeight": 25,
+                        "maxHeight": 105,
+                        "minFillRatio": 0.45,
+                        "minAspectRatio": 0.55,
+                        "maxAspectRatio": 1.8,
+                        "overlapThreshold": 0.35,
+                        "sizeValid": True,
+                        "morphologyKernelSize": 5,
+                    },
+                },
+            },
+        )
+
+        config = load_edge_config(self.path)
+
+        self.assertEqual(25, config.vision.min_width)
+        self.assertEqual(105, config.vision.max_width)
+        self.assertEqual(25, config.vision.min_height)
+        self.assertEqual(105, config.vision.max_height)
+        self.assertEqual(0.55, config.vision.min_aspect_ratio)
+        self.assertEqual(1.8, config.vision.max_aspect_ratio)
+        self.assertEqual(0.35, config.vision.overlap_threshold)
+        self.assertTrue(config.vision.size_valid)
+        self.assertEqual(5, config.vision.morphology_kernel_size)
+
+    def test_rejects_invalid_detection_geometry_filters(self) -> None:
+        write_json(
+            self.path,
+            {
+                "profile": "vision-dry-run",
+                "vision": {
+                    "detection": {
+                        "minWidth": 80,
+                        "maxWidth": 20,
+                    },
+                },
+            },
+        )
+
+        with self.assertRaisesRegex(EdgeConfigError, "minWidth"):
+            load_edge_config(self.path)
+
     def test_rejects_invalid_roi_before_capture(self) -> None:
         write_json(
             self.path,
@@ -76,6 +129,18 @@ class EdgeConfigTests(unittest.TestCase):
         )
 
         with self.assertRaises(EdgeConfigError):
+            load_edge_config(self.path)
+
+    def test_camera_source_requires_explicit_camera_index(self) -> None:
+        write_json(
+            self.path,
+            {
+                "profile": "vision-dry-run",
+                "vision": {"source": "camera"},
+            },
+        )
+
+        with self.assertRaisesRegex(EdgeConfigError, "cameraIndex is required"):
             load_edge_config(self.path)
 
 

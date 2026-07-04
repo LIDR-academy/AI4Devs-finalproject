@@ -46,7 +46,16 @@ class VisionConfig:
     hsv_ranges: dict[str, tuple[HsvRange, ...]]
     min_area: float
     max_area: float
+    min_width: float
+    max_width: float
+    min_height: float
+    max_height: float
     min_fill_ratio: float
+    min_aspect_ratio: float
+    max_aspect_ratio: float
+    overlap_threshold: float
+    size_valid: bool
+    morphology_kernel_size: int
     evidence_directory: Path
 
 
@@ -164,6 +173,22 @@ def _parse_positive_number(value: object, field_name: str, default: float) -> fl
     if isinstance(value, bool) or not isinstance(value, (int, float)) or value <= 0:
         raise EdgeConfigError(f"{field_name} must be a positive number")
     return float(value)
+
+
+def _parse_ratio(value: object, field_name: str, default: float) -> float:
+    if value is None:
+        return default
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0 <= value <= 1:
+        raise EdgeConfigError(f"{field_name} must be between 0 and 1")
+    return float(value)
+
+
+def _parse_positive_int(value: object, field_name: str, default: int) -> int:
+    if value is None:
+        return default
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+        raise EdgeConfigError(f"{field_name} must be a positive integer")
+    return value
 
 
 def _parse_finite_number(value: object, field_name: str) -> float:
@@ -335,6 +360,8 @@ def load_edge_config(path: Path) -> EdgeConfig:
         if not image_path.is_absolute():
             image_path = path.parent / image_path
 
+    if source == "camera" and "cameraIndex" not in vision_raw:
+        raise EdgeConfigError("vision.cameraIndex is required when vision.source=camera")
     camera_index = vision_raw.get("cameraIndex", 0)
     if isinstance(camera_index, bool) or not isinstance(camera_index, int) or camera_index < 0:
         raise EdgeConfigError("vision.cameraIndex must be a non-negative integer")
@@ -358,13 +385,42 @@ def load_edge_config(path: Path) -> EdgeConfig:
     max_area = _parse_positive_number(detection_raw.get("maxArea"), "vision.detection.maxArea", 100000.0)
     if min_area > max_area:
         raise EdgeConfigError("vision.detection.minArea must not exceed maxArea")
-    min_fill_ratio = detection_raw.get("minFillRatio", 0.45)
-    if (
-        isinstance(min_fill_ratio, bool)
-        or not isinstance(min_fill_ratio, (int, float))
-        or not 0 <= min_fill_ratio <= 1
-    ):
-        raise EdgeConfigError("vision.detection.minFillRatio must be between 0 and 1")
+    min_width = _parse_positive_number(detection_raw.get("minWidth"), "vision.detection.minWidth", 8.0)
+    max_width = _parse_positive_number(detection_raw.get("maxWidth"), "vision.detection.maxWidth", 160.0)
+    if min_width > max_width:
+        raise EdgeConfigError("vision.detection.minWidth must not exceed maxWidth")
+    min_height = _parse_positive_number(detection_raw.get("minHeight"), "vision.detection.minHeight", 8.0)
+    max_height = _parse_positive_number(detection_raw.get("maxHeight"), "vision.detection.maxHeight", 160.0)
+    if min_height > max_height:
+        raise EdgeConfigError("vision.detection.minHeight must not exceed maxHeight")
+    min_fill_ratio = _parse_ratio(
+        detection_raw.get("minFillRatio"),
+        "vision.detection.minFillRatio",
+        0.45,
+    )
+    min_aspect_ratio = _parse_positive_number(
+        detection_raw.get("minAspectRatio"),
+        "vision.detection.minAspectRatio",
+        0.5,
+    )
+    max_aspect_ratio = _parse_positive_number(
+        detection_raw.get("maxAspectRatio"),
+        "vision.detection.maxAspectRatio",
+        2.0,
+    )
+    if min_aspect_ratio > max_aspect_ratio:
+        raise EdgeConfigError("vision.detection.minAspectRatio must not exceed maxAspectRatio")
+    overlap_threshold = _parse_ratio(
+        detection_raw.get("overlapThreshold"),
+        "vision.detection.overlapThreshold",
+        0.35,
+    )
+    size_valid = _require_bool(detection_raw.get("sizeValid"), "vision.detection.sizeValid", True)
+    morphology_kernel_size = _parse_positive_int(
+        detection_raw.get("morphologyKernelSize"),
+        "vision.detection.morphologyKernelSize",
+        5,
+    )
 
     evidence_raw = vision_raw.get("evidence", {})
     if not isinstance(evidence_raw, dict):
@@ -387,7 +443,16 @@ def load_edge_config(path: Path) -> EdgeConfig:
         hsv_ranges=_parse_hsv_ranges(vision_raw.get("hsvRanges")),
         min_area=min_area,
         max_area=max_area,
-        min_fill_ratio=float(min_fill_ratio),
+        min_width=min_width,
+        max_width=max_width,
+        min_height=min_height,
+        max_height=max_height,
+        min_fill_ratio=min_fill_ratio,
+        min_aspect_ratio=min_aspect_ratio,
+        max_aspect_ratio=max_aspect_ratio,
+        overlap_threshold=overlap_threshold,
+        size_valid=size_valid,
+        morphology_kernel_size=morphology_kernel_size,
         evidence_directory=evidence_directory,
     )
     robot_planning = _parse_robot_planning(raw.get("robotPlanning"))

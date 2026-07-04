@@ -16,6 +16,12 @@ except ImportError:
 
 
 SENSITIVE_KEYS = ("password", "secret", "token", "api_key", "apikey")
+BOX_COLORS_BGR = {
+    "red": (0, 0, 255),
+    "blue": (255, 0, 0),
+    "green": (0, 180, 0),
+    "yellow": (0, 220, 255),
+}
 
 
 def _sanitize(value: Any) -> Any:
@@ -99,7 +105,7 @@ class EvidenceWriter:
     def annotate(frame: Any, snapshot: DetectionSnapshot) -> Any:
         annotated = frame.copy()
         for cube in snapshot.detections:
-            color = (0, 0, 255) if cube.color == "red" else (255, 255, 255)
+            color = BOX_COLORS_BGR.get(cube.color, (255, 255, 255))
             cv2.rectangle(
                 annotated,
                 (cube.x, cube.y),
@@ -107,12 +113,16 @@ class EvidenceWriter:
                 color,
                 2,
             )
+            size_valid = cube.metadata.get("sizeValid", True)
+            score = cube.confidence
+            score_text = f" {score:.2f}" if isinstance(score, (int, float)) else ""
+            label = f"{cube.color}{score_text} sizeValid={str(size_valid).lower()}"
             cv2.putText(
                 annotated,
-                cube.color,
+                label,
                 (cube.x, max(15, cube.y - 5)),
                 cv2.FONT_HERSHEY_SIMPLEX,
-                0.5,
+                0.45,
                 color,
                 1,
                 cv2.LINE_AA,

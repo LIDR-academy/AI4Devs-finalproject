@@ -13,20 +13,19 @@
     "enabled": false
   },
   "vision": {
-    "source": "file",
-    "imagePath": "../../_local_context/spikes/experiments/dynamic_pickup_detection/debug/dynamic_pickup_original_20260621_163854.png",
+    "source": "camera",
     "cameraIndex": 1,
     "qrRoi": {
-      "x": 500,
-      "y": 180,
-      "w": 140,
-      "h": 170
+      "x": 496,
+      "y": 159,
+      "w": 143,
+      "h": 197
     },
     "cargoRoi": {
-      "x": 47,
+      "x": 44,
       "y": 157,
-      "w": 348,
-      "h": 203
+      "w": 351,
+      "h": 206
     },
     "qr": {
       "pattern": "^TRUCK-\\d{3}$",
@@ -37,18 +36,9 @@
       ]
     },
     "detection": {
-      "minArea": 1200,
-      "maxArea": 14000,
-      "minWidth": 25,
-      "maxWidth": 105,
-      "minHeight": 25,
-      "maxHeight": 105,
-      "minFillRatio": 0.45,
-      "minAspectRatio": 0.55,
-      "maxAspectRatio": 1.8,
-      "overlapThreshold": 0.35,
-      "sizeValid": true,
-      "morphologyKernelSize": 5
+      "minArea": 250,
+      "maxArea": 100000,
+      "minFillRatio": 0.45
     },
     "hsvRanges": {
       "red": [
@@ -69,7 +59,7 @@
       ],
       "yellow": [
         {
-          "lower": [22, 120, 145],
+          "lower": [22, 120, 120],
           "upper": [34, 255, 255]
         }
       ],

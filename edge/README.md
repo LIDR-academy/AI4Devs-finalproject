@@ -85,11 +85,12 @@ Configuración de visión:
 
 - `vision.source`: `simulation`, `file` o `camera`.
 - `vision.imagePath`: ruta relativa de la imagen de prueba.
-- `vision.cameraIndex`: índice configurable, por defecto `0`.
+- `vision.cameraIndex`: indice configurable; obligatorio cuando `vision.source=camera`.
 - `vision.qrRoi` y `vision.cargoRoi`: ROI independientes o `null`.
 - `vision.qr.pattern`: expresión permitida para `truckCode`.
 - `vision.qr.allowedTruckCodes`: allowlist opcional.
-- `vision.detection`: área mínima/máxima y fill ratio.
+- `vision.detection`: area, ancho/alto, relacion de aspecto, fill ratio,
+  deduplicacion por solape y flag `sizeValid`.
 - `vision.hsvRanges`: rangos HSV por color.
 - `vision.evidence.directory`: directorio relativo para evidencia opcional.
 
@@ -173,10 +174,35 @@ Endpoints disponibles:
 `truckCode`, `imageUrl` relativa y `lastError`. Si no hay imagen disponible,
 `/vision/snapshot/image` responde `404` con un mensaje controlado.
 
+Los endpoints responden con `Cache-Control: no-store`, `Pragma: no-cache` y
+`Expires: 0` para soportar polling frecuente sin cachear status, snapshots ni
+imagenes.
+
 La imagen anotada se mantiene en memoria como ultimo snapshot del proceso. Para
 persistir evidencia JSON/PNG se sigue usando el runner de vision con
 `--save-evidence`; el servicio del dashboard no necesita escribir archivos para
 funcionar.
+
+### Snapshot polling vs streaming
+
+El dashboard usa snapshot polling: consulta `/vision/status` y `/vision/snapshot`
+cada 1 a 3 segundos, y luego carga `/vision/snapshot/image?ts=<timestamp>` para
+evitar imagenes viejas del navegador. Esto da una experiencia similar a camara en
+vivo para el MVP, pero no es streaming MJPEG. El streaming continuo queda fuera
+de este paso.
+
+Para probar auto-refresh:
+
+1. Levantar el servicio:
+
+```powershell
+cd edge
+python src\service\vision_api.py --config config\edge.vision.example.json
+```
+
+2. Levantar el frontend con `VITE_EDGE_VISION_URL=http://localhost:8001`.
+3. Verificar que el panel `Vision / Camara` actualiza timestamp/imagen segun el
+   intervalo configurado.
 
 Limitaciones:
 
@@ -227,10 +253,20 @@ Configurar:
   "profile": "vision-dry-run",
   "vision": {
     "source": "camera",
-    "cameraIndex": 0
+    "cameraIndex": 1
   }
 }
 ```
+
+`vision.cameraIndex` define la camara operacional. Edge Vision abre unicamente
+ese indice y no hace autodiscovery, fallback ni alternancia entre camaras durante
+el polling del dashboard. Si `vision.source=camera`, `cameraIndex` es obligatorio.
+Para el montaje local de RoboDock AI, la camara cenital se configura como
+`cameraIndex=1`; la camara frontal del laptop queda fuera del flujo operacional.
+
+Crear un archivo local no versionado, por ejemplo
+`edge/config/edge.vision.local.json`, para ajustar `source=camera` y
+`cameraIndex=1`. Ese archivo no debe subirse a Git.
 
 La cámara solo se abre con autorización explícita:
 
@@ -241,6 +277,10 @@ python src\vision_runner.py --config config\edge.vision.local.json --allow-camer
 Sin `--allow-camera`, el proceso falla antes de llamar a `VideoCapture`. Con
 camara, el snapshot usa `source=opencv-camera`. El comando captura un solo frame,
 libera la camara en `finally` y nunca importa ni abre serial.
+
+Si la camara configurada no esta disponible, el error esperado es controlado, por
+ejemplo `Configured cameraIndex=1 unavailable`. Edge Vision no intenta abrir otro
+indice como fallback.
 
 ### ROI
 
@@ -256,6 +296,12 @@ libera la camara en `finally` y nunca importa ni abre serial.
 ```
 
 Una ROI negativa, vacía o parcial/totalmente fuera del frame produce error. No existe fallback silencioso al frame completo cuando se configuró una ROI.
+
+La deteccion de color se ejecuta estrictamente dentro de `vision.cargoRoi`
+cuando ese ROI existe. Las cajas devueltas en el snapshot siguen usando
+coordenadas globales del frame completo, no coordenadas locales del recorte.
+Esto permite que el dashboard, evidencia y planificacion trabajen en el mismo
+espacio de pixeles.
 
 ### Rangos HSV
 
@@ -276,6 +322,55 @@ Para calibrar HSV, mantener primero ROI estrechas sobre QR y carga; despues
 ajustar S/V para rechazar sombras o reflejos y, por ultimo, ajustar H por color.
 Validar cada cambio contra una escena con conteo conocido antes de usar camara.
 
+La referencia del spike fisico `dynamic_pickup_maxarm_pick` usa:
+
+- rojo con dos rangos HSV: `0-10` y `170-179`;
+- azul `95-130`;
+- verde `40-85`;
+- amarillo `22-34` con `V` minimo mas alto para reducir ruido;
+- morfologia `OPEN` + `CLOSE` con kernel `5x5`.
+
+Estos valores son punto de partida, no calibracion universal. Si aparece ruido,
+ajustar primero `cargoRoi`; despues subir `minArea`, `minWidth/minHeight` o
+`minFillRatio`; por ultimo ajustar HSV.
+
+### Filtros de cubo
+
+`vision.detection` acepta:
+
+```json
+{
+  "minArea": 1200,
+  "maxArea": 14000,
+  "minWidth": 25,
+  "maxWidth": 105,
+  "minHeight": 25,
+  "maxHeight": 105,
+  "minFillRatio": 0.45,
+  "minAspectRatio": 0.55,
+  "maxAspectRatio": 1.8,
+  "overlapThreshold": 0.35,
+  "sizeValid": true,
+  "morphologyKernelSize": 5
+}
+```
+
+- `minArea` / `maxArea`: rechazan ruido chico y blobs demasiado grandes.
+- `minWidth` / `maxWidth` y `minHeight` / `maxHeight`: acotan el tamano esperado
+  de un cubo en pixeles.
+- `minAspectRatio` / `maxAspectRatio`: rechazan bordes largos del pickup,
+  tiras de color o reflejos alargados.
+- `minFillRatio`: exige que el contorno llene razonablemente su bounding box.
+- `overlapThreshold`: aplica deduplicacion NMS cuando dos detecciones se solapan.
+- `sizeValid`: se propaga en metadata; `CubeSelector` solo elige detecciones con
+  `sizeValid=true`.
+- `morphologyKernelSize`: controla limpieza de mascara HSV.
+
+Para evitar falsos positivos del borde rojo del pickup, mantener `cargoRoi`
+ajustado a la zona de carga real y usar limites de ancho/alto/aspect ratio que
+describan cubos, no bordes. Un borde largo debe fallar por ancho excesivo o
+relacion de aspecto fuera de rango.
+
 ### CubeSelector
 
 `CubeSelector` es lógica pura. Excluye colores no soportados, bounding boxes inválidas y detecciones con `sizeValid=false`. La política por defecto selecciona mayor confianza, luego mayor área y finalmente aplica desempate estable. No conoce drop zones, Backend, cámara o serial.
@@ -288,6 +383,10 @@ La evidencia es opt-in con `--save-evidence`:
 - una imagen anotada cuando hay frame;
 - nombres relativos basados en `runId`;
 - metadata con claves sensibles eliminadas.
+
+La imagen anotada muestra bounding box, color y `sizeValid`; si la deteccion trae
+`confidence`, tambien se muestra como score. Los rechazos internos no se dibujan
+por defecto para no contaminar el dashboard.
 
 Por defecto, la configuracion de vision guarda evidencia bajo
 `workspace/generated/vision-evidence/`. El JSON incluye `qrDetected`, `qrValid`,
@@ -518,7 +617,7 @@ También puede ejecutarse con la dependencia fijada en `requirements.txt`:
 python -m pytest tests -v
 ```
 
-Los tests cubren perfiles, drop zones y regresión simulation, captura/QR/HSV/ROI, snapshots, selección, evidencia, planificación robot pura y el flujo dry-run rojo/azul con cancelación de reservas.
+Los tests cubren perfiles, drop zones y regresión simulation, captura/QR/HSV/ROI, snapshots, selección, evidencia, planificación robot pura, filtros de geometria/NMS para cubos y el flujo dry-run rojo/azul con cancelación de reservas.
 
 ## Errores comunes
 

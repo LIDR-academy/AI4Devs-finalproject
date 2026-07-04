@@ -66,7 +66,65 @@ class ColorDetectorTests(unittest.TestCase):
         with self.assertRaises(VisionInputError):
             self.detector.detect(frame, RegionOfInterest(x=90, y=0, w=20, h=20))
 
+    def test_rejects_long_pickup_edge_as_cube(self) -> None:
+        frame = np.zeros((180, 260, 3), dtype=np.uint8)
+        frame[80:100, 20:240] = (0, 0, 255)
+
+        detections = self.detector.detect(frame)
+
+        self.assertEqual(0, len(detections))
+
+    def test_rejects_invalid_aspect_ratio(self) -> None:
+        frame = np.zeros((160, 160, 3), dtype=np.uint8)
+        frame[40:55, 40:120] = (0, 0, 255)
+
+        detections = self.detector.detect(frame)
+
+        self.assertEqual(0, len(detections))
+
+    def test_rejects_area_too_large(self) -> None:
+        detector = ColorDetector(
+            DEFAULT_HSV_RANGES,
+            min_area=100,
+            max_area=2000,
+            min_fill_ratio=0.5,
+            morphology_kernel_size=3,
+        )
+        frame = np.zeros((180, 180, 3), dtype=np.uint8)
+        frame[30:120, 30:120] = (0, 0, 255)
+
+        detections = detector.detect(frame)
+
+        self.assertEqual(0, len(detections))
+
+    def test_rejects_area_too_small(self) -> None:
+        frame = np.zeros((120, 120, 3), dtype=np.uint8)
+        frame[40:46, 40:46] = (0, 0, 255)
+
+        detections = self.detector.detect(frame)
+
+        self.assertEqual(0, len(detections))
+
+    def test_deduplicates_overlapping_detections(self) -> None:
+        duplicate_ranges = {
+            color: DEFAULT_HSV_RANGES["red"]
+            for color in ("red", "blue", "yellow", "green")
+        }
+        detector = ColorDetector(
+            duplicate_ranges,
+            min_area=100,
+            max_area=10000,
+            min_fill_ratio=0.5,
+            overlap_threshold=0.2,
+            morphology_kernel_size=3,
+        )
+        frame = np.zeros((140, 140, 3), dtype=np.uint8)
+        frame[30:90, 30:90] = (0, 0, 255)
+
+        detections = detector.detect(frame)
+
+        self.assertEqual(1, len(detections))
+
 
 if __name__ == "__main__":
     unittest.main()
-

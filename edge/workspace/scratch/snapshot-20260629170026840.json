@@ -1,0 +1,89 @@
+{
+    "runId":  "3b42a93d-576f-40b4-8ba9-b8b0ac2787ff",
+    "timestamp":  "2026-06-29T21:00:40.721302+00:00",
+    "source":  "opencv-camera",
+    "truckCode":  null,
+    "counts":  {
+                   "red":  2,
+                   "blue":  1,
+                   "yellow":  0,
+                   "green":  1
+               },
+    "detections":  [
+                       {
+                           "color":  "red",
+                           "x":  136,
+                           "y":  182,
+                           "w":  25,
+                           "h":  67,
+                           "center":  {
+                                          "x":  148.5,
+                                          "y":  215.5
+                                      },
+                           "confidence":  null,
+                           "metadata":  {
+                                            "area":  1317.5,
+                                            "fillRatio":  0.7866,
+                                            "sizeValid":  true,
+                                            "coordinateSpace":  "frame-pixels"
+                                        }
+                       },
+                       {
+                           "color":  "red",
+                           "x":  245,
+                           "y":  160,
+                           "w":  138,
+                           "h":  11,
+                           "center":  {
+                                          "x":  314.0,
+                                          "y":  165.5
+                                      },
+                           "confidence":  null,
+                           "metadata":  {
+                                            "area":  1098.0,
+                                            "fillRatio":  0.7233,
+                                            "sizeValid":  true,
+                                            "coordinateSpace":  "frame-pixels"
+                                        }
+                       },
+                       {
+                           "color":  "blue",
+                           "x":  171,
+                           "y":  242,
+                           "w":  84,
+                           "h":  75,
+                           "center":  {
+                                          "x":  213.0,
+                                          "y":  279.5
+                                      },
+                           "confidence":  null,
+                           "metadata":  {
+                                            "area":  4844.5,
+                                            "fillRatio":  0.769,
+                                            "sizeValid":  true,
+                                            "coordinateSpace":  "frame-pixels"
+                                        }
+                       },
+                       {
+                           "color":  "green",
+                           "x":  59,
+                           "y":  262,
+                           "w":  95,
+                           "h":  74,
+                           "center":  {
+                                          "x":  106.5,
+                                          "y":  299.0
+                                      },
+                           "confidence":  null,
+                           "metadata":  {
+                                            "area":  6363.5,
+                                            "fillRatio":  0.9052,
+                                            "sizeValid":  true,
+                                            "coordinateSpace":  "frame-pixels"
+                                        }
+                       }
+                   ],
+    "imageUrl":  "/vision/snapshot/image",
+    "snapshotCameraIndex":  1,
+    "lastError":  null
+}

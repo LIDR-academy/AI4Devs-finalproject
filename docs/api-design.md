@@ -80,6 +80,8 @@ No abre serial, no mueve MaxArm y no ejecuta `mode=hardware`.
   "status": "ok",
   "profile": "vision-dry-run",
   "source": "opencv-file",
+  "configuredCameraIndex": null,
+  "activeCameraIndex": null,
   "cameraAllowed": false,
   "lastSnapshotAt": null,
   "lastError": null,
@@ -87,6 +89,11 @@ No abre serial, no mueve MaxArm y no ejecuta `mode=hardware`.
   "hardwareMovement": false
 }
 ```
+
+Cuando `source=opencv-camera`, `configuredCameraIndex` contiene el valor de
+`vision.cameraIndex` y `activeCameraIndex` solo se informa despues de una captura
+exitosa con ese mismo indice. Edge Vision no hace autodiscovery ni fallback a otra
+camara.
 
 `GET /vision/snapshot` responde:
 
@@ -106,6 +113,12 @@ No abre serial, no mueve MaxArm y no ejecuta `mode=hardware`.
 Si no hay imagen disponible, `GET /vision/snapshot/image` devuelve `404` con un
 mensaje controlado. Si `vision.source=camera` se configura sin `--allow-camera`,
 el servicio reporta error antes de abrir `VideoCapture`.
+
+Para soportar snapshot polling, `/health`, `/vision/status`, `/vision/snapshot` y
+`/vision/snapshot/image` responden con `Cache-Control: no-store`, `Pragma:
+no-cache` y `Expires: 0`. El frontend solicita la imagen como
+`/vision/snapshot/image?ts=<timestamp>` para evitar reutilizar imagenes viejas del
+navegador.
 
 ### Response 200
 

@@ -57,10 +57,10 @@ class FrameCapture:
         camera = cv2.VideoCapture(camera_index)
         try:
             if not camera.isOpened():
-                raise VisionInputError(f"Could not open camera index={camera_index}")
+                raise VisionInputError(f"Configured cameraIndex={camera_index} unavailable")
             ok, frame = camera.read()
             if not ok or frame is None:
-                raise VisionInputError(f"Could not read frame from camera index={camera_index}")
+                raise VisionInputError(f"Configured cameraIndex={camera_index} unavailable")
             return CapturedFrame(
                 image=frame,
                 source="camera",
@@ -68,4 +68,3 @@ class FrameCapture:
             )
         finally:
             camera.release()
-

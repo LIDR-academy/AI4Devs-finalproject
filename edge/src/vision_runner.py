@@ -56,7 +56,16 @@ def run_vision(
             config.vision.hsv_ranges,
             min_area=config.vision.min_area,
             max_area=config.vision.max_area,
+            min_width=config.vision.min_width,
+            max_width=config.vision.max_width,
+            min_height=config.vision.min_height,
+            max_height=config.vision.max_height,
             min_fill_ratio=config.vision.min_fill_ratio,
+            min_aspect_ratio=config.vision.min_aspect_ratio,
+            max_aspect_ratio=config.vision.max_aspect_ratio,
+            overlap_threshold=config.vision.overlap_threshold,
+            size_valid=config.vision.size_valid,
+            morphology_kernel_size=config.vision.morphology_kernel_size,
         ),
     )
     snapshot = pipeline.process(
