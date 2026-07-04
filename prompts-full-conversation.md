@@ -507,3 +507,39 @@ Crea el fichero `docs/backlog/US-014.md` con la estructura descrita. Muestra el 
 # Prompt 18: Generar la documentación OpenAPI/Swagger
 
 Genera la especificación OpenAPI de la API REST de RunMarket a partir de los schemas Zod existentes en backend/src/schemas/ (usa zod-to-openapi para que no se pueda desincronizar de la validación real). Cubre todos los endpoints reales de backend/src/routes/, con ejemplos de request/response basados en datos reales de backend/prisma/seed.ts (no inventados). Expón el spec como Swagger UI en /api/docs y JSON en /api/docs.json. 
+
+---
+
+# Prompt 19: Pentest final
+
+Eres un pentesting experto, quiero que analices la web y me digas todas las vulnerabilidades posibles. Si lo necesitas, create un docker con herramientas de hacking
+
+Dado el informe de pentesting de esta conversación documenta las historias de usiario para resolver las vulnerabilidades en @docs/USER-STORIES.mdd y luego ejecuta
+/refine-user-story para cada historia de usuario.
+
+Actúa como un pentester experto, quiero que analices la aplicación RunMarket y detectes todas las vulnerabilidades de seguridad posibles.
+
+Revisa autenticación, autorización, sesiones, cabeceras HTTP, cookies, CORS, validación de inputs, subida de archivos, APIs y exposición de información sensible. Busca problemas comunes como XSS, SQLi, SSRF, path traversal, CSRF, open redirects, errores de configuración y controles de acceso débiles.
+
+Si necesitas herramientas, puedes preparar un Docker aislado con utilidades de pentesting.
+
+Entrega los resultados con:
+- Vulnerabilidad encontrada
+- Severidad
+- Evidencia
+- Impacto
+- Cómo reproducirla de forma segura
+- Recomendación de corrección
+
+# Prompt 20: Historias de Usuario para Remediación de Vulnerabilidades del Pentest
+
+Dado el informe de pentesting de esta conversación documenta las historias de usiario para resolver las vulnerabilidades en @docs/USER-STORIES.mdd y luego ejecuta /refine-user-story para cada historia de usuario.
+
+# Prompt 21: Implementar Historias de Usuario para Remediación de Vulnerabilidades del Pentest
+
+/implement-user-story US-016
+
+/implement-user-story US-017
+
+
+

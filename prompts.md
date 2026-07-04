@@ -301,6 +301,28 @@ Dos ejemplos de esa Fase 5 ejecutada sobre el backlog real:
 - `[docs/backlog/archive/US-007.md](docs/backlog/archive/US-007.md)` — sección "OWASP — Revisión de seguridad": 12 vectores analizados, 1 hallazgo `HIGH` real (cookie `sessionId` sin flag `Secure` en producción) corregido y verificado antes del cierre.
 - `[docs/backlog/archive/US-015.md](docs/backlog/archive/US-015.md)` — sección "OWASP — Revisión de seguridad": revisión centrada en la condición de carrera del descuento de stock (oversell), confirmando que la actualización atómica (`updateMany` con `gte`/`decrement`) mitiga el riesgo sin hallazgos `HIGH`/`CRITICAL`.
 
+**Prompt 3: Pentest final**
+
+Eres un pentesting experto, quiero que analices la web y me digas todas las vulnerabilidades posibles. Si lo necesitas, create un docker con herramientas de hacking
+
+Dado el informe de pentesting de esta conversación documenta las historias de usiario para resolver las vulnerabilidades en @docs/USER-STORIES.mdd y luego ejecuta
+/refine-user-story para cada historia de usuario.
+
+Actúa como un pentester experto, quiero que analices la aplicación RunMarket y detectes todas las vulnerabilidades de seguridad posibles.
+
+Revisa autenticación, autorización, sesiones, cabeceras HTTP, cookies, CORS, validación de inputs, subida de archivos, APIs y exposición de información sensible. Busca problemas comunes como XSS, SQLi, SSRF, path traversal, CSRF, open redirects, errores de configuración y controles de acceso débiles.
+
+Si necesitas herramientas, puedes preparar un Docker aislado con utilidades de pentesting.
+
+Entrega los resultados con:
+- Vulnerabilidad encontrada
+- Severidad
+- Evidencia
+- Impacto
+- Cómo reproducirla de forma segura
+- Recomendación de corrección
+
+
 ### **2.6. Tests**
 
 **Prompt 1: Crear skill Playwright**
