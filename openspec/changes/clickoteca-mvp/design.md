@@ -148,17 +148,55 @@ en español de estas specs. Decisiones de modelado:
   validada en la aplicación, para adjuntar fotos tanto a `Set` como a
   `ConditionReport`.
 
-### D11 — Score de cola materializado + recálculo
-El `score` de D4 se **almacena como columna** en `ReservationQueueEntry` y se
-**recalcula** (por evento y de forma periódica), en lugar de calcularse al vuelo en
-cada lectura.
-**Por qué**: `días_esperando` cambia con el tiempo, así que la ordenación exige un
-recálculo de todos modos; materializar la columna permite ordenar y auditar la cola
-directamente en SQL. Equivale al caso de uso "UC-P15 Calcular score de cola" del
-PRD.
-**Trade-off**: el score puede quedar momentáneamente desactualizado entre
-recálculos; aceptable porque la ventana de recálculo es corta frente a los tiempos
-de cola (días).
+### D11 — Orden de cola por `entrada_efectiva` inmutable (sin recálculo)
+La ordenación de D4 se implementa **sin materializar ni recalcular un `score`**. Al
+encolar se **congela el bono vigente** y se almacena una marca de entrada efectiva
+**inmutable**: `entrada_efectiva = entrada − bono_aplicado` (el premium "entra
+antes"). El orden de cola es siempre `ORDER BY entrada_efectiva ASC, id ASC`,
+resuelto de forma **lazy** con un `LIMIT` indexado en el momento de ofrecer.
+**Por qué**: como D4 es **aditiva** (no multiplicativa), la diferencia de score
+entre dos entradas **no depende del instante `t`** → el orden es **invariante en el
+tiempo** y nunca hace falta recalcular por el mero paso del tiempo. El orden solo
+cambia por eventos **estructurales** (alta/baja en la cola), que se resuelven en la
+propia inserción/borrado. Un cambio del bono `N` por el admin **solo afecta a nuevas
+incorporaciones** (D4), así que `entrada_efectiva` se escribe **una vez y nunca se
+reescribe**.
+**Consecuencias**:
+- Se **elimina el scheduler de recálculo de score**; el scheduler queda solo para
+  eventos genuinamente temporales: **caducidad de ventana de oferta** (D5) y
+  **recordatorios** (D7).
+- **Granularidad**: `entrada_efectiva` es un `timestamptz` de precisión completa,
+  **sin cuantizar** a días/horas. Cuantizar es lo que *crearía* empates; con
+  timestamp crudo el empate solo ocurre por simultaneidad real, desempatada por `id`
+  (coincide con "quien se encoló antes", D4).
+- **Auditoría**: se conserva `bono_aplicado` en la entrada, de modo que la posición
+  es explicable y un cambio de política **no reordena la cola retroactivamente**.
+**Reemplaza** la versión anterior (score materializado + recálculo periódico), cuyo
+supuesto ("la ordenación exige recálculo") era incorrecto precisamente por la
+aditividad de D4. El "UC-P15 Calcular score de cola" del PRD se reinterpreta como el
+cálculo de `entrada_efectiva` en el momento de encolar.
+
+### D12 — Concurrencia: transiciones de estado guardadas (compare-and-swap)
+Todas las mutaciones de estado del dominio (máquina de estados de la copia D2,
+confirmación/caducidad de oferta D5) se ejecutan como **escrituras condicionadas al
+estado esperado** (*compare-and-swap* sobre la propia columna de estado), **no**
+mediante bloqueo/serialización global.
+- **Patrón de una fila** (Prisma): `updateMany({ where: { id, state: <esperado> },
+  data: {…} })`; si `count === 0`, la precondición falló → error de dominio **409
+  Conflict** (`COPY_STATE_CONFLICT`). Ejemplo: si dos operadores mueven la copia
+  #405 `EN_INSPECCION → EN_HIGIENIZACION`, la segunda obtiene `count === 0` y falla.
+- Cubre con **un solo patrón** las tres carreras: operador-vs-operador,
+  usuario-vs-scheduler y usuario-vs-usuario. La columna de estado **es** el cerrojo;
+  no hacen falta locks explícitos.
+- Invariantes **multi-fila** (p. ej. "ofrecer al cabeza de cola": leer cola + crear
+  `ReservationOffer`) se envuelven en **transacción** con `SELECT … FOR UPDATE`
+  sobre la copia, o un **índice único parcial** "una oferta activa por copia" que
+  impide dos ofertas simultáneas.
+**Por qué**: el dominio tiene **dos escritores concurrentes** (peticiones y
+scheduler in-process) y transiciones sensibles al orden; el CAS hace que el perdedor
+falle de forma **determinista** y barata, sin serializar todo el sistema. Cada
+conflicto expone un `code` estable del contrato de errores RFC 9457
+(`documents/ADR-0002-api-auth-errores.md`).
 
 ## Risks / Trade-offs
 

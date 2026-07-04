@@ -38,9 +38,13 @@ diagramas se deben adjuntar al PRD."
 
 ### **2.1. Diagrama de arquitectura:**
 
-**Prompt 1:**
+**Prompt 1:** "Siguiendo con la arquitectura del sistema, genera en `documents`
+los diagramas C4 a partir de los specs actuales para revisión, junto con un
+Architecture Decision Record (ADR)."
 
-**Prompt 2:**
+**Prompt 2:** "Valora ventajas y desventajas de separar el frontend de usuario
+del de operador/admin. Adopta la opción 2 (SPA única con back-office en chunk
+lazy), fija el ADR y actualiza los specs necesarios."
 
 **Prompt 3:**
 
@@ -288,3 +292,44 @@ Prisma 6 (nota: Prisma 7 exige mover la URL del datasource a `prisma.config.ts`)
 `reservation-queue`, `tasks.md` 1.2 (modelo completo) y 6.2 (materializado);
 `openspec validate --strict` en verde. (6) Se rellenó `readme.md` §3 (Modelo de
 datos) con el ER consolidado y las tablas de entidades por anillo.
+
+### [2026-07-04] — Diagramas C4 y ADR de arquitectura
+**Prompt:** "Siguiendo con la arquitectura del sistema, genera en `documents` los
+diagramas C4 a partir de los specs actuales para revisión, junto con un
+Architecture Decision Record (ADR)."
+**Resumen de la respuesta:** (1) Se creó `documents/C4-architecture.md` con los
+tres niveles C4 en Mermaid: **contexto** (personas Suscriptor/Operador/Admin +
+sistema Clickoteca + tres externos simulados: pagos, logística manual, correo),
+**contenedores** (SPA TS con dos superficies por rol, API REST TS/OpenAPI,
+scheduler para recálculo de score/caducidad de ofertas/recordatorios, PostgreSQL+
+Prisma) y **componentes** de la API siguiendo la arquitectura en capas
+`rutas → casos de uso → repositorios → dominio`, con un slice de casos de uso por
+capability de `specs/*` y el dominio concentrando la máquina de estados y la
+política de score. Incluye tabla de trazabilidad specs↔componentes. (2) Se creó
+`documents/ADR-0001-arquitectura-mvp.md` (estado **Propuesto**) registrando las
+decisiones de arquitectura de la aplicación (Postgres+Prisma, API REST TS/OpenAPI
+en capas sin DI pesado, SPA TS única, scheduler in-process, hosting propuesto
+Vercel+Render+Neon) con alternativas descartadas y consecuencias. (3) Se respetó
+la regla "no inventar": framework concreto de front/back y confirmación de hosting
+quedan marcados como *pendiente/propuesto* (coherente con `AGENTS.md` § Open
+questions). (4) Se archivó el prompt en `§2.1 Diagrama de arquitectura`.
+
+### [2026-07-04] — Separación de superficies frontend (suscriptor vs back-office)
+**Prompt:** "Valora ventajas y desventajas de separar el frontend de usuario del
+de operador/admin. Adopta la opción 2 (SPA única con back-office en chunk lazy),
+fija el ADR y actualiza los specs necesarios."
+**Resumen de la respuesta:** (1) Se valoraron 3 opciones —SPA única sin split, SPA
+única con code-splitting, y dos apps separadas— con sus ventajas (exposición,
+tamaño de bundle, UX/design system, cadencia de deploy) y desventajas
+(duplicación, dos pipelines, más scaffolding, time-to-demo). (2) Se **adoptó la
+opción 2**: SPA única con el Back-office en un *chunk* cargado *lazy*
+(code-splitting) segmentado por rol —no viaja en el bundle público— y la capa
+compartida (cliente OpenAPI, tipos, dominio) factorizada para dejar barata una
+futura separación; la partición en dos apps queda pospuesta y reversible. Motivo:
+captura casi toda la ventaja con coste de setup casi nulo, sin partir el
+time-to-demo, y la autz real la impone la API server-side. (3) Se **fijó
+`ADR-0001` §3** (decisión, alternativas descartadas y consecuencias) y se reflejó
+en `C4-architecture.md` (contenedor SPA + nota) y en `tasks.md` 1.1. (4) Se
+constató que los specs de comportamiento no cambian: `accounts-roles` ya modela el
+acceso al back-office por rol; `openspec validate clickoteca-mvp --strict` en
+verde. (5) Prompt archivado en `§2.1` como Prompt 2.

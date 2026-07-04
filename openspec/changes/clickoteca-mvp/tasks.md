@@ -4,7 +4,7 @@
 > cubrir caminos de error y casos límite, no sólo el camino feliz.
 
 ## 1. Fundaciones
-- [ ] 1.1 Definir stack y scaffolding del proyecto (front suscriptor + back-office + API)
+- [ ] 1.1 Definir stack y scaffolding del proyecto: SPA única (Portal del Suscriptor + Back-office en chunk lazy vía code-splitting, segmentado por rol; capa compartida —cliente OpenAPI, tipos, dominio— factorizada) + API REST. Ver ADR-0001 §3 y `documents/C4-architecture.md`
 - [ ] 1.2 Modelo de datos en `backend/prisma/schema.prisma` (PostgreSQL + Prisma; ver PRD §15 y design.md D10). Núcleo: `User`, `Set`, `Copy`, `Subscription`, `Rental`, `ReservationQueueEntry`, `ReservationOffer`. Operación/trazabilidad: `ConditionReport`, `Incident`, `CopyStateTransition`, `AuditLog`, `Notification`, `Shipment`. Configuración/pagos: `Plan`, `SystemSetting`, `RetentionReminderConfig`, `PaymentMethod`, `Payment`, `Address`, `Theme`, `MediaAsset`
 - [ ] 1.3 Semillas/datos de prueba (sets, copias, usuarios de cada rol); catálogo semilla desde el dataset público de Rebrickable (nombre, año, tema, nº piezas, foto de la caja); edad recomendada y dificultad curadas a mano para el subconjunto semilla
 
