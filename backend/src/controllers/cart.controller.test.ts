@@ -3,6 +3,7 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import { errorHandler } from '../middleware/error-handler';
 import { sessionMiddleware } from '../middleware/session';
+import { mutationLimiter } from '../middleware/rate-limit';
 import { ICartService } from '../services/cart.service';
 import { CartResponse } from '../types/domain';
 import { NotFoundError, StockError } from '../types/errors';
@@ -15,8 +16,17 @@ const { CartController } = require('../controllers/cart.controller');
 
 const VALID_UUID = '550e8400-e29b-41d4-a716-446655440000';
 
+// This file's own mutation requests share `mutationLimiter`'s in-memory store
+// (a module-level singleton), so requests accumulate across tests in this file
+// and can trip the real 20 req/min limit. Reset it before each test so cart
+// behaviour tests don't depend on how many mutation requests ran before them.
+beforeEach(() => {
+  mutationLimiter.resetKey('::ffff:127.0.0.1');
+  mutationLimiter.resetKey('::1');
+  mutationLimiter.resetKey('127.0.0.1');
+});
+
 const buildCartResponse = (overrides: Partial<CartResponse> = {}): CartResponse => ({
-  sessionId: VALID_UUID,
   items: [
     {
       productId: VALID_UUID,
@@ -71,6 +81,20 @@ describe('POST /api/cart', () => {
     expect(res.body.total).toBeDefined();
   });
 
+  it('US-017-TASK-01: no incluye sessionId en la respuesta', async () => {
+    const service = makeCartService({
+      addItem: jest.fn().mockResolvedValue(buildCartResponse()),
+    });
+
+    const res = await request(buildApp(service))
+      .post('/api/cart')
+      .set('Cookie', [`sessionId=${VALID_UUID}`])
+      .send({ productId: VALID_UUID, quantity: 1, size: '42', color: 'black' });
+
+    expect(res.status).toBe(200);
+    expect(res.body).not.toHaveProperty('sessionId');
+  });
+
   it('devuelve 400 con body inválido (quantity negativa)', async () => {
     const service = makeCartService();
 
@@ -94,6 +118,50 @@ describe('POST /api/cart', () => {
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBeDefined();
+  });
+
+  it('US-017-TASK-03: devuelve 400 con quantity: 10000', async () => {
+    const service = makeCartService();
+
+    const res = await request(buildApp(service))
+      .post('/api/cart')
+      .set('Cookie', [`sessionId=${VALID_UUID}`])
+      .send({ productId: VALID_UUID, quantity: 10000 });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('US-017-TASK-03: devuelve 400 con size de 51 caracteres', async () => {
+    const service = makeCartService();
+
+    const res = await request(buildApp(service))
+      .post('/api/cart')
+      .set('Cookie', [`sessionId=${VALID_UUID}`])
+      .send({ productId: VALID_UUID, quantity: 1, size: 'A'.repeat(51) });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('US-017-TASK-03: devuelve 400 con color de 51 caracteres', async () => {
+    const service = makeCartService();
+
+    const res = await request(buildApp(service))
+      .post('/api/cart')
+      .set('Cookie', [`sessionId=${VALID_UUID}`])
+      .send({ productId: VALID_UUID, quantity: 1, color: 'A'.repeat(51) });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('US-017-TASK-03: acepta quantity: 9999 (no devuelve 400)', async () => {
+    const service = makeCartService();
+
+    const res = await request(buildApp(service))
+      .post('/api/cart')
+      .set('Cookie', [`sessionId=${VALID_UUID}`])
+      .send({ productId: VALID_UUID, quantity: 9999 });
+
+    expect(res.status).not.toBe(400);
   });
 
   it('devuelve 404 cuando el producto no existe', async () => {
@@ -185,7 +253,6 @@ describe('POST /api/cart', () => {
 describe('GET /api/cart', () => {
   it('devuelve 200 con carrito vacío', async () => {
     const emptyCart: CartResponse = {
-      sessionId: VALID_UUID,
       items: [],
       subtotal: 0,
       shipping: 4.99,
@@ -216,6 +283,19 @@ describe('GET /api/cart', () => {
     expect(res.status).toBe(200);
     expect(res.body.items[0].stock).toBe(10);
     expect(res.body.items[0].productName).toBe('Nike Pegasus 41');
+  });
+
+  it('US-017-TASK-01: no incluye sessionId en la respuesta', async () => {
+    const service = makeCartService({
+      getCart: jest.fn().mockResolvedValue(buildCartResponse()),
+    });
+
+    const res = await request(buildApp(service))
+      .get('/api/cart')
+      .set('Cookie', [`sessionId=${VALID_UUID}`]);
+
+    expect(res.status).toBe(200);
+    expect(res.body).not.toHaveProperty('sessionId');
   });
 
   it('no expone stack traces en errores 500', async () => {
@@ -262,6 +342,17 @@ describe('PUT /api/cart/:productId', () => {
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBeDefined();
+  });
+
+  it('US-017-TASK-03: devuelve 400 con quantity: 10000', async () => {
+    const service = makeCartService();
+
+    const res = await request(buildApp(service))
+      .put(`/api/cart/${VALID_UUID}`)
+      .set('Cookie', [`sessionId=${VALID_UUID}`])
+      .send({ quantity: 10000 });
+
+    expect(res.status).toBe(400);
   });
 
   it('devuelve 400 con campo extra (strict)', async () => {
@@ -330,7 +421,6 @@ describe('PUT /api/cart/:productId', () => {
 describe('DELETE /api/cart/:productId', () => {
   it('devuelve 200 con carrito actualizado', async () => {
     const emptyCart: CartResponse = {
-      sessionId: VALID_UUID,
       items: [],
       subtotal: 0,
       shipping: 4.99,

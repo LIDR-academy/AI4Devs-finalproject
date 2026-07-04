@@ -75,7 +75,7 @@ Comandos: `/refine-user-story` · `/implement-user-story` ·
 - `Product` — id, name, brand, price, image, category, subcategory, description, features[], distance[], surface[], level[], objective[], sizes[], colors[], stock
 - `Cart` — id, sessionId, items[] (carrito persistente por sesión en BD)
 - `CartItem` — id, cartId, productId, quantity, size?, color?
-- `Order` — id (`ORD-{timestamp}`), sessionId, date, status, subtotal, shipping, total, datos de envío (shippingName, shippingEmail, shippingPhone?, shippingAddress, shippingCity, shippingPostalCode, shippingCountry)
+- `Order` — id (`ORD-{8 hex aleatorios}`, vía `crypto.randomUUID()`), sessionId, date, status, subtotal, shipping, total, datos de envío (shippingName, shippingEmail, shippingPhone?, shippingAddress, shippingCity, shippingPostalCode, shippingCountry)
 - `OrderItem` — id, orderId, productId, productName, productBrand, productPrice (snapshot), quantity, size?, color?
 
 > El modelo completo, con enums y restricciones, vive en [`docs/DATA-MODEL.md`](docs/DATA-MODEL.md) (fuente de verdad).

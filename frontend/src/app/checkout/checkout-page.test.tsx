@@ -1,8 +1,8 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { CartItemUI } from '../../types/cart';
-import type { OrderResponse } from '../../types/order';
+import type { OrderResponse, OrderListResponse } from '../../types/order';
 
 vi.mock('../../contexts/cart-context', () => ({
   useCart: vi.fn(),
@@ -10,6 +10,7 @@ vi.mock('../../contexts/cart-context', () => ({
 
 vi.mock('../../lib/api-client', () => ({
   apiPost: vi.fn(),
+  fetchOrders: vi.fn(),
 }));
 
 const mockPush = vi.fn();
@@ -19,12 +20,13 @@ vi.mock('next/navigation', () => ({
 }));
 
 import { useCart } from '../../contexts/cart-context';
-import { apiPost } from '../../lib/api-client';
+import { apiPost, fetchOrders } from '../../lib/api-client';
 import { Header } from '../../components/layout/header';
 import CheckoutPage from './page';
 
 const mockUseCart = vi.mocked(useCart);
 const mockApiPost = vi.mocked(apiPost);
+const mockFetchOrders = vi.mocked(fetchOrders);
 
 const item: CartItemUI = {
   productId: 'prod-1',
@@ -79,6 +81,13 @@ const orderResponse: OrderResponse = {
   ],
 };
 
+// GET /api/orders devuelve OrderListResponse (items con `image`), un superconjunto
+// de OrderResponse — es lo que fetchOrders() usa para rehidratar la confirmación.
+const orderListResponse: OrderListResponse = {
+  ...orderResponse,
+  items: orderResponse.items.map((i) => ({ ...i, image: 'products/nike-pegasus.jpg' })),
+};
+
 beforeEach(() => {
   vi.clearAllMocks();
   mockPush.mockReset();
@@ -92,7 +101,7 @@ describe('CheckoutPage', () => {
     expect(mockPush).toHaveBeenCalledWith('/');
   });
 
-  it('guarda el pedido confirmado en sessionStorage tras un checkout exitoso', async () => {
+  it('US-017-TASK-06: guarda solo el orderId (string plano) en sessionStorage tras un checkout exitoso', async () => {
     const user = userEvent.setup();
     const cart = makeCart([item]);
     mockUseCart.mockReturnValue(cart);
@@ -116,27 +125,67 @@ describe('CheckoutPage', () => {
     await screen.findByText(/¡Pedido confirmado!/i);
 
     const stored = sessionStorage.getItem('runmarket_last_order');
-    expect(stored).not.toBeNull();
-    expect(JSON.parse(stored as string).id).toBe(orderResponse.id);
+    expect(stored).toBe(orderResponse.id);
   });
 
-  it('hidrata la confirmación desde sessionStorage sin llamar a la API', () => {
-    sessionStorage.setItem('runmarket_last_order', JSON.stringify(orderResponse));
+  it('US-017-TASK-06: sessionStorage no contiene shippingEmail ni shippingAddress tras confirmar', async () => {
+    const user = userEvent.setup();
+    const cart = makeCart([item]);
+    mockUseCart.mockReturnValue(cart);
+    mockApiPost.mockResolvedValueOnce(orderResponse);
+    render(<CheckoutPage />);
+
+    await user.type(screen.getByLabelText(/nombre completo/i), 'Ana Pérez');
+    await user.type(screen.getByLabelText(/email/i), 'ana@test.com');
+    await user.type(screen.getByLabelText(/dirección/i), 'Calle Mayor 1');
+    await user.type(screen.getByLabelText(/ciudad/i), 'Madrid');
+    await user.type(screen.getByLabelText(/código postal/i), '28001');
+    await user.click(screen.getByRole('button', { name: /continuar al pago/i }));
+
+    await user.type(screen.getByLabelText(/número de tarjeta/i), '1234567890123456');
+    await user.type(screen.getByLabelText(/nombre del titular/i), 'Ana Pérez');
+    await user.type(screen.getByLabelText(/fecha de vencimiento/i), '12/28');
+    await user.type(screen.getByLabelText(/cvv/i), '123');
+    await user.click(screen.getByRole('button', { name: /confirmar pedido/i }));
+    await user.click(screen.getByRole('button', { name: /confirmar pedido/i }));
+
+    await screen.findByText(/¡Pedido confirmado!/i);
+
+    const stored = sessionStorage.getItem('runmarket_last_order');
+    expect(stored).not.toContain('@');
+    expect(stored).not.toContain(orderResponse.shippingAddress);
+  });
+
+  it('US-017-TASK-06: en reload con orderId válido, llama a GET /api/orders y muestra la confirmación', async () => {
+    sessionStorage.setItem('runmarket_last_order', orderResponse.id);
+    mockFetchOrders.mockResolvedValueOnce([orderListResponse]);
     mockUseCart.mockReturnValue(makeCart([]));
     render(<CheckoutPage />);
 
-    expect(screen.getByText(/¡Pedido confirmado!/i)).toBeInTheDocument();
+    expect(await screen.findByText(/¡Pedido confirmado!/i)).toBeInTheDocument();
     expect(screen.getByText(new RegExp(orderResponse.id))).toBeInTheDocument();
+    expect(mockFetchOrders).toHaveBeenCalledTimes(1);
     expect(mockApiPost).not.toHaveBeenCalled();
     expect(mockPush).not.toHaveBeenCalled();
   });
 
-  it('redirige al catálogo y limpia la entrada si sessionStorage contiene JSON corrupto', () => {
-    sessionStorage.setItem('runmarket_last_order', '{not-valid-json');
+  it('US-017-TASK-06: en reload con orderId inválido, redirige a /', () => {
+    sessionStorage.setItem('runmarket_last_order', 'not-an-order-id');
     mockUseCart.mockReturnValue(makeCart([]));
     render(<CheckoutPage />);
 
     expect(mockPush).toHaveBeenCalledWith('/');
+    expect(mockFetchOrders).not.toHaveBeenCalled();
+    expect(sessionStorage.getItem('runmarket_last_order')).toBeNull();
+  });
+
+  it('US-017-TASK-06: en reload con orderId bien formado pero inexistente, redirige a /', async () => {
+    sessionStorage.setItem('runmarket_last_order', orderResponse.id);
+    mockFetchOrders.mockResolvedValueOnce([]);
+    mockUseCart.mockReturnValue(makeCart([]));
+    render(<CheckoutPage />);
+
+    await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/'));
     expect(sessionStorage.getItem('runmarket_last_order')).toBeNull();
   });
 

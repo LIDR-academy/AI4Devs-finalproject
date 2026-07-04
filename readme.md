@@ -349,9 +349,9 @@ El proyecto sigue TDD obligatorio en toda implementación (test que falla → c�
 
 | Capa | Herramientas | Estrategia | Resultado actual |
 |---|---|---|---|
-| Backend — unitarios | Jest + Supertest | Repository: mock de `PrismaClient`, verifica las queries/mutaciones exactas. Service: mock del repositorio (`jest.fn()`), lógica de negocio aislada (validación de stock, totales, errores de dominio). Controller: mock del service + Supertest, contrato HTTP (status codes, forma del body, cookies, rechazo de schemas Zod inválidos) | ✅ **183/183 pass**, 17/17 suites |
+| Backend — unitarios | Jest + Supertest | Repository: mock de `PrismaClient`, verifica las queries/mutaciones exactas. Service: mock del repositorio (`jest.fn()`), lógica de negocio aislada (validación de stock, totales, errores de dominio). Controller: mock del service + Supertest, contrato HTTP (status codes, forma del body, cookies, rechazo de schemas Zod inválidos) | ✅ **193/193 pass**, 17/17 suites |
 | Backend — integración | Jest + PostgreSQL real (Docker) | `prisma/seed.test.ts` es la única suite que toca base de datos real (sin mocks): ejecuta el seed contra PostgreSQL y verifica el resultado. Gateada con `describe.skip` si `DATABASE_URL` no apunta a una BD real, degradando a no-op en entornos sin BD | ✅ **3/3 pass**, 1/1 suite |
-| Frontend — unitarios | Vitest + React Testing Library | Componentes, páginas y contexts: estados de UI (loading/empty/error), interacción de usuario, contratos de los hooks de contexto | ✅ **300/300 pass**, 30 ficheros |
+| Frontend — unitarios | Vitest + React Testing Library | Componentes, páginas y contexts: estados de UI (loading/empty/error), interacción de usuario, contratos de los hooks de contexto | ✅ **303/303 pass**, 30 ficheros |
 | E2E | Playwright (Chromium) | Caja negra contra frontend + backend + PostgreSQL reales, sin mocks ni seeding desde el propio spec | ✅ **15/15 pass**, 4 specs (`catalog.spec.ts`, `product.spec.ts`, `purchase.spec.ts`, `security-headers.spec.ts`) |
 
 > Detalle de la suite E2E: [`docs/E2E-TESTING.md`](docs/E2E-TESTING.md)
@@ -413,7 +413,7 @@ erDiagram
     }
 
     ORDER {
-        string   id          PK  "ORD-timestamp"
+        string   id          PK  "ORD-XXXXXXXX (hex aleatorio)"
         string   sessionId
         datetime date
         string   status          "processing | shipped | delivered | cancelled"
@@ -594,7 +594,6 @@ POST /api/cart
 
 ```json
 {
-  "sessionId": "550e8400-e29b-41d4-a716-446655440000",
   "items": [
     {
       "productId": "prod-001",
@@ -666,7 +665,7 @@ POST /api/checkout
 
 ```json
 {
-  "id": "ORD-1750000000000",
+  "id": "ORD-5447B777",
   "status": "processing",
   "date": "2026-06-21T10:00:00.000Z",
   "subtotal": 259.98,

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCart } from '../../contexts/cart-context';
-import { apiPost } from '../../lib/api-client';
+import { apiPost, fetchOrders } from '../../lib/api-client';
 import { StepIndicator } from '../../components/checkout/step-indicator';
 import { ShippingForm } from '../../components/checkout/shipping-form';
 import { PaymentForm } from '../../components/checkout/payment-form';
@@ -29,20 +29,28 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (order) return;
     if (itemCount > 0) return;
-    try {
-      const raw = sessionStorage.getItem(ORDER_STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as OrderResponse;
-        if (parsed && typeof parsed.id === 'string' && Array.isArray(parsed.items)) {
-          setOrder(parsed);
+
+    const storedId = sessionStorage.getItem(ORDER_STORAGE_KEY);
+    if (!storedId || !storedId.startsWith('ORD-')) {
+      sessionStorage.removeItem(ORDER_STORAGE_KEY);
+      router.push('/');
+      return;
+    }
+
+    fetchOrders()
+      .then((orders) => {
+        const found = orders.find((o) => o.id === storedId);
+        if (found) {
+          setOrder(found);
           return;
         }
-      }
-    } catch {
-      // entrada corrupta — se ignora y se redirige más abajo
-    }
-    sessionStorage.removeItem(ORDER_STORAGE_KEY);
-    router.push('/');
+        sessionStorage.removeItem(ORDER_STORAGE_KEY);
+        router.push('/');
+      })
+      .catch(() => {
+        sessionStorage.removeItem(ORDER_STORAGE_KEY);
+        router.push('/');
+      });
   }, [order, itemCount, router]);
 
   function handleShippingSubmit(data: ShippingData) {
@@ -66,7 +74,7 @@ export default function CheckoutPage() {
     try {
       const result = await apiPost<OrderResponse>('/checkout', shippingData);
       setOrder(result);
-      sessionStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(result));
+      sessionStorage.setItem(ORDER_STORAGE_KEY, result.id);
       clearCart();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Error desconocido';

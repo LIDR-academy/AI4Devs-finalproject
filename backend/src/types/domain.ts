@@ -13,7 +13,6 @@ export interface CartItemResponse {
 }
 
 export interface CartResponse {
-  sessionId: string;
   items: CartItemResponse[];
   subtotal: number;
   shipping: number;

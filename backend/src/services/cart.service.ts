@@ -62,7 +62,6 @@ export class CartService implements ICartService {
   ) {}
 
   private async buildCartResponse(
-    sessionId: string,
     cartWithItems: CartWithItems | null,
   ): Promise<CartResponse> {
     const itemResponses: CartItemResponse[] = await Promise.all(
@@ -82,12 +81,12 @@ export class CartService implements ICartService {
       }),
     );
     const { subtotal, shipping, total } = calculateTotals(itemResponses);
-    return { sessionId, items: itemResponses, subtotal, shipping, total };
+    return { items: itemResponses, subtotal, shipping, total };
   }
 
   async getCart(sessionId: string): Promise<CartResponse> {
     const cartWithItems = await this.cartRepository.getCartWithItems(sessionId);
-    return this.buildCartResponse(sessionId, cartWithItems);
+    return this.buildCartResponse(cartWithItems);
   }
 
   async addItem(sessionId: string, item: CartItemInput): Promise<CartResponse> {
@@ -125,7 +124,7 @@ export class CartService implements ICartService {
 
     // 7. Build response from updated cart
     const updatedCart = await this.cartRepository.getCartWithItems(sessionId);
-    return this.buildCartResponse(sessionId, updatedCart);
+    return this.buildCartResponse(updatedCart);
   }
 
   async updateItem(
@@ -167,7 +166,7 @@ export class CartService implements ICartService {
 
     // 4. Return updated cart
     const updatedCart = await this.cartRepository.getCartWithItems(sessionId);
-    return this.buildCartResponse(sessionId, updatedCart);
+    return this.buildCartResponse(updatedCart);
   }
 
   async removeItem(
@@ -196,6 +195,6 @@ export class CartService implements ICartService {
 
     // 3. Return updated cart
     const updatedCart = await this.cartRepository.getCartWithItems(sessionId);
-    return this.buildCartResponse(sessionId, updatedCart);
+    return this.buildCartResponse(updatedCart);
   }
 }

@@ -220,7 +220,7 @@ export class OrderRepository implements IOrderRepository {
       // 4. Create the Order with nested OrderItem[].
       const created = (await tx.order.create({
         data: {
-          id: `ORD-${Date.now()}`,
+          id: `ORD-${crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase()}`,
           sessionId,
           subtotal,
           shipping: shippingCost,
