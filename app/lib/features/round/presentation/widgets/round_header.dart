@@ -8,11 +8,13 @@ class RoundHeader extends StatelessWidget {
     required this.roundNumber,
     required this.cardsInRound,
     required this.subtitle,
+    this.dealerName,
   });
 
   final int roundNumber;
   final int? cardsInRound;
   final String subtitle;
+  final String? dealerName;
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +48,9 @@ class RoundHeader extends StatelessWidget {
                         ),
                   ),
                   Text(
-                    subtitle,
+                    dealerName != null
+                        ? '$subtitle · Repartidor: $dealerName'
+                        : subtitle,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.white.withValues(alpha: 0.8),
                         ),

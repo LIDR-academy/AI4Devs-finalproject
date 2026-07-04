@@ -163,4 +163,66 @@ class MockGameRepository extends _i1.Mock implements _i5.GameRepository {
             ),
           )
           as _i6.Future<_i4.Round>);
+
+  @override
+  _i6.Future<_i4.Round> advanceToNextRound({
+    required _i4.Round? nextRound,
+    required int? nextRoundNumber,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#advanceToNextRound, [], {
+              #nextRound: nextRound,
+              #nextRoundNumber: nextRoundNumber,
+            }),
+            returnValue: _i6.Future<_i4.Round>.value(
+              _FakeRound_2(
+                this,
+                Invocation.method(#advanceToNextRound, [], {
+                  #nextRound: nextRound,
+                  #nextRoundNumber: nextRoundNumber,
+                }),
+              ),
+            ),
+            returnValueForMissingStub: _i6.Future<_i4.Round>.value(
+              _FakeRound_2(
+                this,
+                Invocation.method(#advanceToNextRound, [], {
+                  #nextRound: nextRound,
+                  #nextRoundNumber: nextRoundNumber,
+                }),
+              ),
+            ),
+          )
+          as _i6.Future<_i4.Round>);
+
+  @override
+  _i6.Future<_i2.Game> finishGame({
+    required String? gameId,
+    required DateTime? finishedAt,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#finishGame, [], {
+              #gameId: gameId,
+              #finishedAt: finishedAt,
+            }),
+            returnValue: _i6.Future<_i2.Game>.value(
+              _FakeGame_0(
+                this,
+                Invocation.method(#finishGame, [], {
+                  #gameId: gameId,
+                  #finishedAt: finishedAt,
+                }),
+              ),
+            ),
+            returnValueForMissingStub: _i6.Future<_i2.Game>.value(
+              _FakeGame_0(
+                this,
+                Invocation.method(#finishGame, [], {
+                  #gameId: gameId,
+                  #finishedAt: finishedAt,
+                }),
+              ),
+            ),
+          )
+          as _i6.Future<_i2.Game>);
 }

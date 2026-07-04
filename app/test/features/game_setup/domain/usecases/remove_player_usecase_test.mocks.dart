@@ -3,16 +3,16 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i5;
+import 'dart:async' as _i6;
 
 import 'package:la_pocha/features/game_setup/domain/entities/game.dart' as _i2;
 import 'package:la_pocha/features/game_setup/domain/entities/player_embed.dart'
-    as _i6;
-import 'package:la_pocha/features/game_setup/domain/entities/round.dart' as _i7;
+    as _i7;
+import 'package:la_pocha/features/game_setup/domain/entities/round.dart' as _i4;
 import 'package:la_pocha/features/game_setup/domain/entities/start_game_result.dart'
     as _i3;
 import 'package:la_pocha/features/game_setup/domain/repositories/game_repository.dart'
-    as _i4;
+    as _i5;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -41,60 +41,65 @@ class _FakeStartGameResult_1 extends _i1.SmartFake
     : super(parent, parentInvocation);
 }
 
+class _FakeRound_2 extends _i1.SmartFake implements _i4.Round {
+  _FakeRound_2(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
 /// A class which mocks [GameRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockGameRepository extends _i1.Mock implements _i4.GameRepository {
+class MockGameRepository extends _i1.Mock implements _i5.GameRepository {
   @override
-  _i5.Future<_i2.Game> saveDraft(_i2.Game? game) =>
+  _i6.Future<_i2.Game> saveDraft(_i2.Game? game) =>
       (super.noSuchMethod(
             Invocation.method(#saveDraft, [game]),
-            returnValue: _i5.Future<_i2.Game>.value(
+            returnValue: _i6.Future<_i2.Game>.value(
               _FakeGame_0(this, Invocation.method(#saveDraft, [game])),
             ),
-            returnValueForMissingStub: _i5.Future<_i2.Game>.value(
+            returnValueForMissingStub: _i6.Future<_i2.Game>.value(
               _FakeGame_0(this, Invocation.method(#saveDraft, [game])),
             ),
           )
-          as _i5.Future<_i2.Game>);
+          as _i6.Future<_i2.Game>);
 
   @override
-  _i5.Future<_i2.Game?> getGameById(String? id) =>
+  _i6.Future<_i2.Game?> getGameById(String? id) =>
       (super.noSuchMethod(
             Invocation.method(#getGameById, [id]),
-            returnValue: _i5.Future<_i2.Game?>.value(),
-            returnValueForMissingStub: _i5.Future<_i2.Game?>.value(),
+            returnValue: _i6.Future<_i2.Game?>.value(),
+            returnValueForMissingStub: _i6.Future<_i2.Game?>.value(),
           )
-          as _i5.Future<_i2.Game?>);
+          as _i6.Future<_i2.Game?>);
 
   @override
-  _i5.Future<_i2.Game> updateGamePlayers(
+  _i6.Future<_i2.Game> updateGamePlayers(
     String? gameId,
-    List<_i6.PlayerEmbed>? players,
+    List<_i7.PlayerEmbed>? players,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#updateGamePlayers, [gameId, players]),
-            returnValue: _i5.Future<_i2.Game>.value(
+            returnValue: _i6.Future<_i2.Game>.value(
               _FakeGame_0(
                 this,
                 Invocation.method(#updateGamePlayers, [gameId, players]),
               ),
             ),
-            returnValueForMissingStub: _i5.Future<_i2.Game>.value(
+            returnValueForMissingStub: _i6.Future<_i2.Game>.value(
               _FakeGame_0(
                 this,
                 Invocation.method(#updateGamePlayers, [gameId, players]),
               ),
             ),
           )
-          as _i5.Future<_i2.Game>);
+          as _i6.Future<_i2.Game>);
 
   @override
-  _i5.Future<_i3.StartGameResult> startGame({
+  _i6.Future<_i3.StartGameResult> startGame({
     required String? gameId,
-    required List<_i6.PlayerEmbed>? players,
+    required List<_i7.PlayerEmbed>? players,
     required String? firstDealerPlayerId,
-    required _i7.Round? firstRound,
+    required _i4.Round? firstRound,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#startGame, [], {
@@ -103,7 +108,7 @@ class MockGameRepository extends _i1.Mock implements _i4.GameRepository {
               #firstDealerPlayerId: firstDealerPlayerId,
               #firstRound: firstRound,
             }),
-            returnValue: _i5.Future<_i3.StartGameResult>.value(
+            returnValue: _i6.Future<_i3.StartGameResult>.value(
               _FakeStartGameResult_1(
                 this,
                 Invocation.method(#startGame, [], {
@@ -114,7 +119,7 @@ class MockGameRepository extends _i1.Mock implements _i4.GameRepository {
                 }),
               ),
             ),
-            returnValueForMissingStub: _i5.Future<_i3.StartGameResult>.value(
+            returnValueForMissingStub: _i6.Future<_i3.StartGameResult>.value(
               _FakeStartGameResult_1(
                 this,
                 Invocation.method(#startGame, [], {
@@ -126,5 +131,98 @@ class MockGameRepository extends _i1.Mock implements _i4.GameRepository {
               ),
             ),
           )
-          as _i5.Future<_i3.StartGameResult>);
+          as _i6.Future<_i3.StartGameResult>);
+
+  @override
+  _i6.Future<_i4.Round> closeRoundAndUpdateScores({
+    required _i4.Round? closedRound,
+    required List<_i7.PlayerEmbed>? updatedPlayers,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#closeRoundAndUpdateScores, [], {
+              #closedRound: closedRound,
+              #updatedPlayers: updatedPlayers,
+            }),
+            returnValue: _i6.Future<_i4.Round>.value(
+              _FakeRound_2(
+                this,
+                Invocation.method(#closeRoundAndUpdateScores, [], {
+                  #closedRound: closedRound,
+                  #updatedPlayers: updatedPlayers,
+                }),
+              ),
+            ),
+            returnValueForMissingStub: _i6.Future<_i4.Round>.value(
+              _FakeRound_2(
+                this,
+                Invocation.method(#closeRoundAndUpdateScores, [], {
+                  #closedRound: closedRound,
+                  #updatedPlayers: updatedPlayers,
+                }),
+              ),
+            ),
+          )
+          as _i6.Future<_i4.Round>);
+
+  @override
+  _i6.Future<_i4.Round> advanceToNextRound({
+    required _i4.Round? nextRound,
+    required int? nextRoundNumber,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#advanceToNextRound, [], {
+              #nextRound: nextRound,
+              #nextRoundNumber: nextRoundNumber,
+            }),
+            returnValue: _i6.Future<_i4.Round>.value(
+              _FakeRound_2(
+                this,
+                Invocation.method(#advanceToNextRound, [], {
+                  #nextRound: nextRound,
+                  #nextRoundNumber: nextRoundNumber,
+                }),
+              ),
+            ),
+            returnValueForMissingStub: _i6.Future<_i4.Round>.value(
+              _FakeRound_2(
+                this,
+                Invocation.method(#advanceToNextRound, [], {
+                  #nextRound: nextRound,
+                  #nextRoundNumber: nextRoundNumber,
+                }),
+              ),
+            ),
+          )
+          as _i6.Future<_i4.Round>);
+
+  @override
+  _i6.Future<_i2.Game> finishGame({
+    required String? gameId,
+    required DateTime? finishedAt,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#finishGame, [], {
+              #gameId: gameId,
+              #finishedAt: finishedAt,
+            }),
+            returnValue: _i6.Future<_i2.Game>.value(
+              _FakeGame_0(
+                this,
+                Invocation.method(#finishGame, [], {
+                  #gameId: gameId,
+                  #finishedAt: finishedAt,
+                }),
+              ),
+            ),
+            returnValueForMissingStub: _i6.Future<_i2.Game>.value(
+              _FakeGame_0(
+                this,
+                Invocation.method(#finishGame, [], {
+                  #gameId: gameId,
+                  #finishedAt: finishedAt,
+                }),
+              ),
+            ),
+          )
+          as _i6.Future<_i2.Game>);
 }

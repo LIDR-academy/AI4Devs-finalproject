@@ -46,4 +46,24 @@ class GameRepositoryImpl implements GameRepository {
         firstDealerPlayerId: firstDealerPlayerId,
         firstRound: firstRound,
       );
+
+  @override
+  Future<Round> advanceToNextRound({
+    required Round nextRound,
+    required int nextRoundNumber,
+  }) =>
+      _localDatasource.advanceToNextRound(
+        nextRound: nextRound,
+        nextRoundNumber: nextRoundNumber,
+      );
+
+  @override
+  Future<Game> finishGame({
+    required String gameId,
+    required DateTime finishedAt,
+  }) =>
+      _localDatasource.finishGame(
+        gameId: gameId,
+        finishedAt: finishedAt,
+      );
 }

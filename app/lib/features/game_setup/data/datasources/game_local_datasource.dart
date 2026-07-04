@@ -102,6 +102,49 @@ class GameLocalDatasource {
     return _readRoundById(closedRound.id);
   }
 
+  Future<Round> advanceToNextRound({
+    required Round nextRound,
+    required int nextRoundNumber,
+  }) async {
+    final now = DateTime.now();
+    final roundId = nextRound.id.isEmpty ? _uuid.v4() : nextRound.id;
+    final roundToInsert = nextRound.copyWith(id: roundId);
+
+    await _database.transaction(() async {
+      await (_database.update(_database.games)
+            ..where((table) => table.id.equals(nextRound.gameId)))
+          .write(
+        GamesCompanion(
+          currentRoundNumber: Value(nextRoundNumber),
+          updatedAt: Value(now),
+        ),
+      );
+
+      await _database.into(_database.rounds).insert(
+            RoundMapper.toCompanion(roundToInsert),
+          );
+    });
+
+    return _readRoundById(roundId);
+  }
+
+  Future<Game> finishGame({
+    required String gameId,
+    required DateTime finishedAt,
+  }) async {
+    final now = DateTime.now();
+    await (_database.update(_database.games)
+          ..where((table) => table.id.equals(gameId)))
+        .write(
+      GamesCompanion(
+        status: const Value('finished'),
+        finishedAt: Value(finishedAt),
+        updatedAt: Value(now),
+      ),
+    );
+    return _readGameById(gameId);
+  }
+
   Future<Round> _readRoundById(String id) async {
     final entry = await (_database.select(_database.rounds)
           ..where((table) => table.id.equals(id)))

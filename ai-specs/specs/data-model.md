@@ -120,7 +120,10 @@ Representa una **partida** (sesión de juego): lobby, en curso o finalizada.
 **Reglas de negocio *(borrador)*:**
 
 - Solo el `hostId` (o reglas acordadas) puede pasar `status` de `lobby` a `in_progress` *(TBD)*.
+- Tras la última ronda cerrada, `FinishGameUseCase` pasa `status` de `in_progress` a `finished` y establece `finishedAt`.
 - Borrado: preferir **soft delete** con `status: "cancelled"` *(TBD)* en lugar de borrar documentos con historial.
+
+**Persistencia local (Drift):** la tabla `games` incluye `finishedAt` (nullable) desde schema v4. La transición a `finished` ocurre offline al confirmar "Ver resultado final" en la última ronda (LPT-14).
 
 ---
 

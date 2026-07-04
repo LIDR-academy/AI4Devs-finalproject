@@ -21,4 +21,14 @@ abstract class GameRepository {
     required Round closedRound,
     required List<PlayerEmbed> updatedPlayers,
   });
+
+  Future<Round> advanceToNextRound({
+    required Round nextRound,
+    required int nextRoundNumber,
+  });
+
+  Future<Game> finishGame({
+    required String gameId,
+    required DateTime finishedAt,
+  });
 }

@@ -21,7 +21,7 @@ class AppDatabase extends _$AppDatabase {
   factory AppDatabase.forTesting() => AppDatabase(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -42,6 +42,11 @@ class AppDatabase extends _$AppDatabase {
               'ALTER TABLE games ADD COLUMN current_round_number INTEGER',
             );
             await migrator.createTable(rounds);
+          }
+          if (from < 4) {
+            await migrator.database.customStatement(
+              'ALTER TABLE games ADD COLUMN finished_at DATETIME',
+            );
           }
         },
       );

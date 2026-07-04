@@ -16,6 +16,7 @@ class Game extends Equatable {
     this.firstDealerPlayerId,
     this.startedAt,
     this.currentRoundNumber,
+    this.finishedAt,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -30,6 +31,7 @@ class Game extends Equatable {
   final String? firstDealerPlayerId;
   final DateTime? startedAt;
   final int? currentRoundNumber;
+  final DateTime? finishedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -44,6 +46,7 @@ class Game extends Equatable {
     String? firstDealerPlayerId,
     DateTime? startedAt,
     int? currentRoundNumber,
+    DateTime? finishedAt,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -58,6 +61,7 @@ class Game extends Equatable {
       firstDealerPlayerId: firstDealerPlayerId ?? this.firstDealerPlayerId,
       startedAt: startedAt ?? this.startedAt,
       currentRoundNumber: currentRoundNumber ?? this.currentRoundNumber,
+      finishedAt: finishedAt ?? this.finishedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -75,6 +79,7 @@ class Game extends Equatable {
         firstDealerPlayerId,
         startedAt,
         currentRoundNumber,
+        finishedAt,
         createdAt,
         updatedAt,
       ];

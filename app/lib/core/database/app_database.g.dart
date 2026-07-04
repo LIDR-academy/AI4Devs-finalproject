@@ -110,6 +110,17 @@ class $GamesTable extends Games with TableInfo<$GamesTable, GameEntry> {
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _finishedAtMeta = const VerificationMeta(
+    'finishedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> finishedAt = GeneratedColumn<DateTime>(
+    'finished_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -144,6 +155,7 @@ class $GamesTable extends Games with TableInfo<$GamesTable, GameEntry> {
     firstDealerPlayerId,
     startedAt,
     currentRoundNumber,
+    finishedAt,
     createdAt,
     updatedAt,
   ];
@@ -226,6 +238,12 @@ class $GamesTable extends Games with TableInfo<$GamesTable, GameEntry> {
         ),
       );
     }
+    if (data.containsKey('finished_at')) {
+      context.handle(
+        _finishedAtMeta,
+        finishedAt.isAcceptableOrUnknown(data['finished_at']!, _finishedAtMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -295,6 +313,10 @@ class $GamesTable extends Games with TableInfo<$GamesTable, GameEntry> {
         DriftSqlType.int,
         data['${effectivePrefix}current_round_number'],
       ),
+      finishedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}finished_at'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -328,6 +350,7 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
   final String? firstDealerPlayerId;
   final DateTime? startedAt;
   final int? currentRoundNumber;
+  final DateTime? finishedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
   const GameEntry({
@@ -341,6 +364,7 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
     this.firstDealerPlayerId,
     this.startedAt,
     this.currentRoundNumber,
+    this.finishedAt,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -371,6 +395,9 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
     if (!nullToAbsent || currentRoundNumber != null) {
       map['current_round_number'] = Variable<int>(currentRoundNumber);
     }
+    if (!nullToAbsent || finishedAt != null) {
+      map['finished_at'] = Variable<DateTime>(finishedAt);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -394,6 +421,9 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
       currentRoundNumber: currentRoundNumber == null && nullToAbsent
           ? const Value.absent()
           : Value(currentRoundNumber),
+      finishedAt: finishedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(finishedAt),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -419,6 +449,7 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
       ),
       startedAt: serializer.fromJson<DateTime?>(json['startedAt']),
       currentRoundNumber: serializer.fromJson<int?>(json['currentRoundNumber']),
+      finishedAt: serializer.fromJson<DateTime?>(json['finishedAt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -437,6 +468,7 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
       'firstDealerPlayerId': serializer.toJson<String?>(firstDealerPlayerId),
       'startedAt': serializer.toJson<DateTime?>(startedAt),
       'currentRoundNumber': serializer.toJson<int?>(currentRoundNumber),
+      'finishedAt': serializer.toJson<DateTime?>(finishedAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -453,6 +485,7 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
     Value<String?> firstDealerPlayerId = const Value.absent(),
     Value<DateTime?> startedAt = const Value.absent(),
     Value<int?> currentRoundNumber = const Value.absent(),
+    Value<DateTime?> finishedAt = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => GameEntry(
@@ -470,6 +503,7 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
     currentRoundNumber: currentRoundNumber.present
         ? currentRoundNumber.value
         : this.currentRoundNumber,
+    finishedAt: finishedAt.present ? finishedAt.value : this.finishedAt,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -497,6 +531,9 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
       currentRoundNumber: data.currentRoundNumber.present
           ? data.currentRoundNumber.value
           : this.currentRoundNumber,
+      finishedAt: data.finishedAt.present
+          ? data.finishedAt.value
+          : this.finishedAt,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -515,6 +552,7 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
           ..write('firstDealerPlayerId: $firstDealerPlayerId, ')
           ..write('startedAt: $startedAt, ')
           ..write('currentRoundNumber: $currentRoundNumber, ')
+          ..write('finishedAt: $finishedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -533,6 +571,7 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
     firstDealerPlayerId,
     startedAt,
     currentRoundNumber,
+    finishedAt,
     createdAt,
     updatedAt,
   );
@@ -550,6 +589,7 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
           other.firstDealerPlayerId == this.firstDealerPlayerId &&
           other.startedAt == this.startedAt &&
           other.currentRoundNumber == this.currentRoundNumber &&
+          other.finishedAt == this.finishedAt &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -565,6 +605,7 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
   final Value<String?> firstDealerPlayerId;
   final Value<DateTime?> startedAt;
   final Value<int?> currentRoundNumber;
+  final Value<DateTime?> finishedAt;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -579,6 +620,7 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
     this.firstDealerPlayerId = const Value.absent(),
     this.startedAt = const Value.absent(),
     this.currentRoundNumber = const Value.absent(),
+    this.finishedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -594,6 +636,7 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
     this.firstDealerPlayerId = const Value.absent(),
     this.startedAt = const Value.absent(),
     this.currentRoundNumber = const Value.absent(),
+    this.finishedAt = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -616,6 +659,7 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
     Expression<String>? firstDealerPlayerId,
     Expression<DateTime>? startedAt,
     Expression<int>? currentRoundNumber,
+    Expression<DateTime>? finishedAt,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -633,6 +677,7 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
       if (startedAt != null) 'started_at': startedAt,
       if (currentRoundNumber != null)
         'current_round_number': currentRoundNumber,
+      if (finishedAt != null) 'finished_at': finishedAt,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -650,6 +695,7 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
     Value<String?>? firstDealerPlayerId,
     Value<DateTime?>? startedAt,
     Value<int?>? currentRoundNumber,
+    Value<DateTime?>? finishedAt,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -665,6 +711,7 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
       firstDealerPlayerId: firstDealerPlayerId ?? this.firstDealerPlayerId,
       startedAt: startedAt ?? this.startedAt,
       currentRoundNumber: currentRoundNumber ?? this.currentRoundNumber,
+      finishedAt: finishedAt ?? this.finishedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -710,6 +757,9 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
     if (currentRoundNumber.present) {
       map['current_round_number'] = Variable<int>(currentRoundNumber.value);
     }
+    if (finishedAt.present) {
+      map['finished_at'] = Variable<DateTime>(finishedAt.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -735,6 +785,7 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
           ..write('firstDealerPlayerId: $firstDealerPlayerId, ')
           ..write('startedAt: $startedAt, ')
           ..write('currentRoundNumber: $currentRoundNumber, ')
+          ..write('finishedAt: $finishedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -1445,6 +1496,7 @@ typedef $$GamesTableCreateCompanionBuilder =
       Value<String?> firstDealerPlayerId,
       Value<DateTime?> startedAt,
       Value<int?> currentRoundNumber,
+      Value<DateTime?> finishedAt,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<int> rowid,
@@ -1461,6 +1513,7 @@ typedef $$GamesTableUpdateCompanionBuilder =
       Value<String?> firstDealerPlayerId,
       Value<DateTime?> startedAt,
       Value<int?> currentRoundNumber,
+      Value<DateTime?> finishedAt,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -1527,6 +1580,11 @@ class $$GamesTableFilterComposer extends Composer<_$AppDatabase, $GamesTable> {
 
   ColumnFilters<int> get currentRoundNumber => $composableBuilder(
     column: $table.currentRoundNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get finishedAt => $composableBuilder(
+    column: $table.finishedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1600,6 +1658,11 @@ class $$GamesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get finishedAt => $composableBuilder(
+    column: $table.finishedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -1663,6 +1726,11 @@ class $$GamesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<DateTime> get finishedAt => $composableBuilder(
+    column: $table.finishedAt,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -1709,6 +1777,7 @@ class $$GamesTableTableManager
                 Value<String?> firstDealerPlayerId = const Value.absent(),
                 Value<DateTime?> startedAt = const Value.absent(),
                 Value<int?> currentRoundNumber = const Value.absent(),
+                Value<DateTime?> finishedAt = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -1723,6 +1792,7 @@ class $$GamesTableTableManager
                 firstDealerPlayerId: firstDealerPlayerId,
                 startedAt: startedAt,
                 currentRoundNumber: currentRoundNumber,
+                finishedAt: finishedAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -1739,6 +1809,7 @@ class $$GamesTableTableManager
                 Value<String?> firstDealerPlayerId = const Value.absent(),
                 Value<DateTime?> startedAt = const Value.absent(),
                 Value<int?> currentRoundNumber = const Value.absent(),
+                Value<DateTime?> finishedAt = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -1753,6 +1824,7 @@ class $$GamesTableTableManager
                 firstDealerPlayerId: firstDealerPlayerId,
                 startedAt: startedAt,
                 currentRoundNumber: currentRoundNumber,
+                finishedAt: finishedAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,

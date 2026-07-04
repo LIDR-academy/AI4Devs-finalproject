@@ -16,6 +16,7 @@ class Games extends Table {
   TextColumn get firstDealerPlayerId => text().nullable()();
   DateTimeColumn get startedAt => dateTime().nullable()();
   IntColumn get currentRoundNumber => integer().nullable()();
+  DateTimeColumn get finishedAt => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 

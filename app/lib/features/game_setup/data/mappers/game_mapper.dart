@@ -18,6 +18,7 @@ class GameMapper {
       firstDealerPlayerId: entry.firstDealerPlayerId,
       startedAt: entry.startedAt,
       currentRoundNumber: entry.currentRoundNumber,
+      finishedAt: entry.finishedAt,
       createdAt: entry.createdAt,
       updatedAt: entry.updatedAt,
     );
@@ -35,6 +36,7 @@ class GameMapper {
       firstDealerPlayerId: Value(game.firstDealerPlayerId),
       startedAt: Value(game.startedAt),
       currentRoundNumber: Value(game.currentRoundNumber),
+      finishedAt: Value(game.finishedAt),
       createdAt: game.createdAt,
       updatedAt: game.updatedAt,
     );
