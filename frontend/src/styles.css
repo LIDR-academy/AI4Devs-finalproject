@@ -62,6 +62,13 @@ button {
   line-height: 1.25;
 }
 
+.panel-subtitle {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
 .eyebrow {
   margin: 0 0 5px;
   color: var(--muted);

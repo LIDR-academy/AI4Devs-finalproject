@@ -4,6 +4,9 @@ export type EdgeVisionStatus = {
   status: string;
   profile: string;
   source: "simulation" | "opencv-file" | "opencv-camera" | string;
+  configuredCameraIndex: number | null;
+  activeCameraIndex: number | null;
+  snapshotCameraIndex: number | null;
   cameraAllowed: boolean;
   lastSnapshotAt: string | null;
   lastError: string | null;
@@ -29,6 +32,7 @@ export type EdgeVisionSnapshot = {
   counts: Record<CubeColor, number>;
   detections: EdgeVisionDetection[];
   imageUrl: string | null;
+  snapshotCameraIndex: number | null;
   lastError: string | null;
 };
 
@@ -38,4 +42,6 @@ export type EdgeVisionPanelData = {
   snapshot: EdgeVisionSnapshot | null;
   error: string | null;
   baseUrl: string | null;
+  refreshMs: number;
+  lastUpdatedAt: string | null;
 };

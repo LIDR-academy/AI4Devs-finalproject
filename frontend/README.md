@@ -40,11 +40,16 @@ Crear `frontend/.env` desde `frontend/.env.example` si necesitas cambiar la URL 
 ```env
 VITE_BACKEND_URL=http://localhost:3000
 VITE_EDGE_VISION_URL=http://localhost:8001
+VITE_EDGE_VISION_REFRESH_MS=2000
 ```
 
 `VITE_EDGE_VISION_URL` es opcional. Si no existe o el servicio Edge Vision esta
 apagado, el dashboard sigue funcionando con el backend y muestra el panel de
 vision en estado no disponible.
+
+`VITE_EDGE_VISION_REFRESH_MS` controla el polling automatico del panel de vision.
+Si se omite, usa `2000`. El frontend acepta valores entre `1000` y `3000` ms; los
+valores fuera de rango se ajustan a ese intervalo seguro.
 
 ## Ejecucion
 
@@ -105,6 +110,7 @@ python src\service\vision_api.py --config config\edge.vision.example.json
 - el panel de trazabilidad muestra `profile`, fuente, cubo y `dropZoneCode`;
 - el panel `Vision / Camara` muestra estado, fuente, timestamp, conteos e imagen
   si Edge Vision esta disponible;
+- el panel indica `Auto-refresh cada X segundos` y `Ultima actualizacion`;
 - si Edge Vision esta apagado, muestra un error visible sin romper el resto del
   dashboard;
 - `vision-dry-run` se etiqueta como dry-run sin movimiento;
