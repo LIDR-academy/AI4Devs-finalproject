@@ -1,16 +1,16 @@
 # ADR-0001 — Arquitectura de la aplicación (Clickoteca MVP)
 
-- **Estado:** Propuesto. Hosting **confirmado** (VM única Oracle free, §5);
-  pendiente solo el framework de frontend/backend — ver `AGENTS.md` § Open
-  questions.
-- **Fecha:** 2026-07-04
+- **Estado:** Aceptado. Hosting **confirmado** (VM única Oracle free, §5) y
+  framework **confirmado**: **Next.js full-stack** (App Router) para front + API
+  (decidido 2026-07-05); no quedan *Open questions* de arquitectura.
+- **Fecha:** 2026-07-04 (rev. 2026-07-05: framework Next.js)
 - **Decisores:** Xavier Vergés (owner).
 - **Contexto de origen:** `openspec/changes/clickoteca-mvp/` (proposal + design +
   specs), `documents/PRD.md`, `documents/C4-architecture.md`, `prompts.md`.
 
 > Este ADR registra las decisiones **de arquitectura de la aplicación** (stack,
 > estructura, despliegue). Las decisiones **de dominio** (Set vs Copia, ciclo de
-> vida, score de cola, etc.) están en `design.md` D1–D11 y no se repiten aquí.
+> vida, orden de cola, etc.) están en `design.md` D1–D13 y no se repiten aquí.
 
 ---
 
@@ -31,17 +31,20 @@ Restricciones y fuerzas que condicionan la arquitectura:
 - **Coste ≈ 0.** Se busca free tier en todo el hosting.
 - **Accesibilidad objetivo WCAG 2.1 AA** (EN 301 549 / European Accessibility
   Act) y responsive mobile-first.
-- **Procesos temporales de primera clase:** recálculo de score de cola,
-  caducidad de ventanas de oferta y recordatorios requieren ejecución periódica
-  y por evento (`design.md` D5, D11).
+- **Procesos temporales de primera clase:** caducidad de ventanas de oferta y
+  recordatorios requieren ejecución periódica y por evento (`design.md` D5, D7).
+  El orden de cola **no** los necesita (invariante en el tiempo, D11).
 
 ---
 
 ## Decisión
 
-Adoptar una arquitectura **de tres contenedores desplegables** (SPA + API REST +
-PostgreSQL) más un **scheduler** para los procesos temporales, con las
-siguientes elecciones:
+Adoptar una **aplicación Next.js full-stack** (App Router, TypeScript) que sirve
+tanto el frontend (SSR/RSC) como la **API REST pública** (Route Handlers en
+`app/api/*`, documentada en OpenAPI), sobre **PostgreSQL + Prisma**, más un
+**scheduler** en proceso aparte para los procesos temporales. En la VM (§5) hay,
+por tanto, **dos procesos Node** (app Next + scheduler) y **PostgreSQL** local.
+Elecciones concretas:
 
 ### 1. Capa de datos: PostgreSQL + Prisma
 Base relacional por la naturaleza fuertemente transaccional y relacional del
@@ -53,69 +56,71 @@ El esquema (20 modelos, 16 enums) vive en `backend/prisma/schema.prisma`.
 > Prisma ≤6. Prisma 7 lo mueve a `prisma.config.ts`. **Pinnear Prisma 6** en el
 > `package.json` del backend, o migrar la config del datasource.
 
-### 2. Backend: API REST pública en TypeScript, documentada en OpenAPI
-Arquitectura **en capas**: `rutas → casos de uso → repositorios → dominio`,
-aplicando SOLID/CUPID/DRY, **sin DI pesado** si añade ceremonia innecesaria. El
-dominio (máquina de estados, política de score) se aísla para ser testable sin
-infraestructura. REST + OpenAPI por ser un contrato estándar, cacheable y
-autodocumentado, adecuado para un CRUD-con-flujos como este.
+### 2. Framework: Next.js full-stack (App Router, TypeScript)
+Un **único proyecto Next.js** (App Router) cubre front y back:
+- **Frontend**: rutas SSR/RSC responsive (mobile-first, WCAG 2.1 AA). El
+  **Back-office** se segmenta por rol con **route groups + middleware de auth**
+  (p. ej. `app/(portal)/…` y `app/(backoffice)/…`); el *code-splitting* por ruta
+  lo da Next de serie, así que el código de back-office no viaja al navegador del
+  suscriptor sin autorización.
+- **API REST pública**: **Route Handlers** en `app/api/*`, **documentados en
+  OpenAPI**. Validación de entrada con **Zod**, que además alimenta el spec
+  (`zod-to-openapi` / equivalente). REST + OpenAPI se mantiene como contrato
+  estándar, testeable y autodocumentado (era requisito, `readme.md` §4).
 
-### 3. Frontend: SPA única en TypeScript con back-office en *chunk* diferido
-Una única aplicación web responsive (mobile-first, WCAG 2.1 AA) que expone el
-**Portal del Suscriptor** y el **Back-office** con enrutado segmentado por rol.
-El código del back-office se aísla en un ***chunk* cargado *lazy* mediante
-*code-splitting***: solo se descarga cuando un usuario con rol `OPERATOR/ADMIN`
-navega a esas rutas; el bundle público del suscriptor no lo transporta.
+**Por qué Next.js.** Unifica front y API en un solo proyecto y un solo *deploy*,
+lo que encaja con el hosting **mismo-origen** de §5 (sin CORS, cookie
+*first-party*) mejor que un split SPA + API separada. App Router (no Pages
+Router) por ser el modelo actual y soportar RSC/streaming.
 
-Condición de diseño desde el día uno: la **capa compartida** (cliente generado
-del contrato OpenAPI, tipos, modelos de dominio, tokens de diseño) se factoriza
-como módulo reutilizable, de modo que **partir a dos aplicaciones separadas más
-adelante sea barato**.
+### 3. Arquitectura en capas (dominio agnóstico del framework)
+Los Route Handlers son **finos** y delegan en `casos de uso → repositorios →
+dominio` (Prisma), aplicando SOLID/CUPID/DRY **sin DI pesado**. El dominio
+(máquina de estados, política de cola) **no conoce Next**: es un módulo TS puro,
+testable sin levantar el servidor. Los Server Components/Actions consumen esos
+mismos casos de uso o la API REST según convenga, pero la lógica de negocio vive
+en una sola capa reutilizable — no en los componentes ni en los handlers.
 
-**Por qué esta opción (2 de 3).** Frente a una SPA monolítica sin *split* y a dos
-aplicaciones/despliegues separados desde ya, la SPA única con *code-splitting*:
-- Captura casi toda la ventaja de rendimiento (bundle del suscriptor ligero) y de
-  exposición (el *chunk* de back-office ni se descarga sin rol) con **coste de
-  setup casi nulo**.
-- No parte en dos el *time-to-demo*, criterio de éxito del MVP (circuito E2E
-  demostrable cuanto antes, PRD §10).
-- La autorización real la impone la API server-side (§2, `accounts-roles`), así
-  que el *split* de frontend es *defense-in-depth*/UX, no una frontera de
-  seguridad — no urge separarlo físicamente en el MVP.
-
-Se pospone la separación en dos aplicaciones a una futura iteración; se adoptaría
-solo si domina un factor concreto (back-office no accesible públicamente tras
-*allowlist*/VPN, auth de staff endurecida, o design systems muy divergentes).
-Gracias a la capa compartida factorizada, esa migración no toca la API.
+Condición de diseño: la **capa compartida** (cliente del contrato OpenAPI, tipos,
+modelos de dominio, tokens de diseño) se factoriza como módulo reutilizable, de
+modo que una futura extracción de la API a un servicio aparte sea barata.
 
 ### 4. Procesos programados (scheduler)
 **Caducidad de ventanas de oferta** (`design.md` D5) y **recordatorios** (D7) se
 implementan como procesos programados que **reutilizan los casos de uso** del
 dominio. El **orden de cola ya no requiere recálculo**: se ordena de forma *lazy*
-sobre `entrada_efectiva` inmutable (D11 revisado), así que el scheduler pierde esa
-responsabilidad. Corre **in-process** en la API (`node-cron`); al residir todo en la
-misma VM (§5), esa es su ubicación natural.
+sobre `entrada_efectiva` inmutable (D11 revisado), así que el scheduler solo cubre
+esos dos eventos temporales. Corre como **proceso Node separado** (`node-cron`) en
+la misma VM (§5) — **no** in-process en el servidor Next: el modelo de Next
+(orientado a *serverless*/multi-instancia) haría que un cron in-process se
+**duplicara** por instancia. Un proceso dedicado que importa la misma capa de
+casos de uso lo evita y es reversible (alternativa: *systemd timer* que invoca un
+endpoint interno).
 
 ### 5. Hosting: VM única con IP pública (Oracle Cloud Free Tier)
-Un **único servidor Linux** aloja todo el sistema. Un **reverse proxy**
-(Caddy/nginx) sirve la SPA estática y enruta `/api` al backend Node; **PostgreSQL**
+Un **único servidor Linux** aloja todo el sistema. Un **reverse proxy** (Caddy)
+termina TLS y enruta el tráfico al **servidor Next.js** (que sirve el front y la
+API en `/api`); el **scheduler** corre como proceso Node aparte; **PostgreSQL**
 corre **local** (escuchando solo en `localhost`); las **imágenes** del catálogo se
-guardan en el **filesystem** del host y se sirven como estáticos.
+guardan en el **filesystem** del host y se sirven como estáticos. Despliegue con
+`next build` (output *standalone*) + `next start` gestionado por systemd.
 
 - **Proveedor:** Oracle Cloud **Free Tier**, instancia **Ampere A1 (ARM64 /
   aarch64)**, *always-free*.
 - **Specs:** **2 OCPU · 12 GB RAM · 50 GB** de Block Volume · **Ubuntu 24.04 LTS**
   (holgadamente dentro del envelope *always-free*: 4 OCPU / 24 GB / 200 GB). Con
   este dimensionamiento el pico de *build* en la propia VM no da OOM.
-- **Arquitectura ARM64:** todos los componentes son arm64-nativos (Node,
-  PostgreSQL, Caddy) — sin fricción.
+- **Arquitectura ARM64:** todos los componentes son arm64-nativos (Node/Next,
+  PostgreSQL, Caddy) — sin fricción. Los 12 GB de RAM absorben el pico de
+  `next build` en la propia VM.
 - **TLS:** Caddy con Let's Encrypt automático (necesario para la cookie `Secure`,
   ver `ADR-0002`).
 - **Firewall:** exponer solo 80/443 (y 22 para administración); **Postgres nunca en
   la IP pública**.
 - **Backups:** `pg_dump` por cron (ya no hay backups gestionados de un PaaS).
 
-**Por qué esta opción.** Al residir SPA, API, imágenes y BD en el **mismo origen**:
+**Por qué esta opción.** Al residir la app Next (front + API), imágenes y BD en el
+**mismo origen**:
 - **Desaparece CORS** y se simplifica la auth: la cookie de sesión es *first-party*
   (`SameSite=Lax/Strict`), sin la complejidad cross-origin (`ADR-0002`).
 - **Desaparecen** el *cold-start* (Render) y la **suspensión** de BD (Neon): la
@@ -137,11 +142,13 @@ ociosa; se mitiga con actividad mínima. **Plan B** si Oracle reclama: VPS de pa
 |---|---|---|
 | Datos | NoSQL (Mongo) | El dominio es relacional y transaccional (colas/ofertas/auditoría); una relacional encaja mejor. |
 | Datos | SQL sin ORM / query builder | Prisma da tipado y migraciones con poco coste; el MVP prioriza velocidad y corrección. |
-| API | GraphQL | Sobra flexibilidad de query; REST+OpenAPI es más simple de documentar y testear para este alcance. |
-| API | Monolito con vistas server-rendered | Se prefiere separar SPA/API para un contrato claro y front desacoplado. |
-| Frontend | SPA monolítica sin *code-splitting* | Enviaría el código del back-office a todos los navegadores sin ninguna ventaja de separar. |
-| Frontend | Dos apps/despliegues separados desde ya | Duplicación (paquete compartido), dos pipelines y más scaffolding → *time-to-demo* más lento; innecesario en el MVP. Pospuesto, reversible. |
-| Scheduler | Worker desplegado aparte | in-process basta para el MVP y comparte VM con la API. Reversible. |
+| Framework | React SPA separada + API Node (Fastify/NestJS) | Dos proyectos/despliegues y multi-origen (o un proxy extra); Next.js unifica front+API en uno con mismo origen. La capa compartida factorizada deja reversible una futura extracción. |
+| Framework | Remix / SvelteKit / Astro | Válidos, pero Next.js tiene el ecosistema/DX más extendido para un MVP → menor riesgo de fricción y más material de referencia. |
+| Framework | Next.js **Pages** Router | App Router es el modelo actual (RSC, layouts anidados, streaming); Pages Router queda como legado. |
+| API | Solo Server Actions (sin REST) | Rompería el requisito de **API REST pública documentada en OpenAPI** (`readme.md` §4); se usan Route Handlers REST para el contrato público. |
+| API | GraphQL en vez de REST | Sobra flexibilidad de query; REST+OpenAPI es más simple de documentar/testear para este alcance. |
+| Frontend | SPA pura (sin SSR) servida estática | Se prefiere Next SSR/RSC por accesibilidad/SEO del catálogo público (visitante, D13) y por unificar con la API. |
+| Scheduler | Cron in-process en el servidor Next | El modelo multi-instancia de Next duplicaría el cron; se usa un proceso Node aparte en la misma VM. Reversible. |
 | Hosting | Split PaaS (Vercel + Render + Neon) | Multi-origen (CORS + cookie cross-origin), *cold-start* y suspensión de BD, e imágenes en servicio aparte. La VM única mismo-origen elimina las tres fricciones a coste 0. |
 | Hosting | VPS de pago (Hetzner CX22, ~4 €/mes) | Más fiable (sin reclamación), pero rompe el coste 0; reservado como **plan B** si Oracle reclama la instancia. |
 | Hosting DB | Postgres gratis de Render / Neon | Caducidad/suspensión del free tier; con Postgres **local** en la VM el problema no existe. |
@@ -156,10 +163,11 @@ ociosa; se mitiga con actividad mínima. **Plan B** si Oracle reclama: VPS de pa
   separado.
 - Dominio aislado → los tests pueden centrarse en caminos de error y casos
   límite (máquina de estados, equidad de cola) sin levantar infraestructura.
-- Tipado TS end-to-end (Prisma + API + SPA) reduce errores de contrato.
+- Tipado TS end-to-end (Prisma + API + Next) reduce errores de contrato.
 - Coste operativo **0 €** permanente con el hosting elegido (§5).
-- Bundle del suscriptor ligero (back-office en *chunk* diferido) sin renunciar a un
-  único deploy; la capa compartida factorizada deja barata una futura separación.
+- Un solo proyecto y un solo *deploy* para front + API; el back-office segmentado
+  por ruta no viaja al navegador del suscriptor sin autorización. La capa
+  compartida factorizada deja barata una futura extracción de la API.
 - **Mismo origen** (§5): sin CORS, cookie de sesión *first-party* y sin servicio de
   imágenes aparte; latencia local y constante (sin *cold-start* ni suspensión).
 
@@ -169,13 +177,15 @@ ociosa; se mitiga con actividad mínima. **Plan B** si Oracle reclama: VPS de pa
 - **Punto único de fallo** (todo en un host) — aceptable en un MVP de demo.
 - **Riesgo de reclamación** de la instancia *always-free* de Oracle si queda
   ociosa; mitigable, con Hetzner como plan B sin cambio de arquitectura.
-- Scheduler in-process acopla los procesos temporales al ciclo de vida de la
-  API; si se necesitara escalar habría que extraerlo (previsto, reversible).
+- El **scheduler** es un proceso desplegable aparte (systemd) — uno más que
+  operar, aunque desacoplado del servidor web y sin riesgo de doble ejecución.
+- **Acoplamiento front+API** en un mismo proyecto Next: si se quisiera escalar o
+  independizar la API, hay que extraerla (previsto, reversible vía capa compartida).
 - Prisma 6 pinneado deja una **deuda de migración** a Prisma 7 pendiente.
 
 **Neutras / a seguir**
-- Frameworks concretos de front y back **sin decidir**: esta arquitectura no los
-  presupone (cualquier stack TS de SPA + API REST encaja).
+- Framework **decidido**: Next.js (App Router). El dominio se mantiene agnóstico
+  del framework (§3), así que un cambio de capa de entrega no tocaría la lógica.
 - Auth y contrato de errores de la API se deciden en `ADR-0002`; la concurrencia
   del dominio, en `design.md` D12.
 
@@ -185,13 +195,13 @@ ociosa; se mitiga con actividad mínima. **Plan B** si Oracle reclama: VPS de pa
 
 - `openspec validate clickoteca-mvp --strict` debe seguir en verde (`tasks.md`).
 - Trazabilidad specs ↔ componentes en `documents/C4-architecture.md` §4.
-- Este ADR se revisará al cerrar la última *Open question* de `AGENTS.md`
-  (frameworks): al confirmarse, se actualiza el **Estado** a "Aceptado".
+- Framework confirmado (Next.js, 2026-07-05) → **Estado: Aceptado**; no quedan
+  *Open questions* de arquitectura.
 
 ## Referencias
 
 - `documents/C4-architecture.md` — diagramas C4 (contexto/contenedores/componentes).
-- `openspec/changes/clickoteca-mvp/design.md` — decisiones de dominio D1–D12.
+- `openspec/changes/clickoteca-mvp/design.md` — decisiones de dominio D1–D13.
 - `documents/ADR-0002-api-auth-errores.md` — auth y contrato de errores de la API.
 - `documents/PRD.md` — PRD y modelo de datos (§15).
 - `AGENTS.md` — stack confirmado y preguntas abiertas.

@@ -10,12 +10,13 @@
 > a 3; el nivel 4 (código) se omite por convención C4 (lo cubre el propio código
 > y `backend/prisma/schema.prisma`).
 >
-> **Elementos aún abiertos** (no inventados — ver `AGENTS.md` § Open questions):
-> el framework concreto de frontend y de backend. Aparecen marcados como
-> *por confirmar* en los diagramas. El **hosting ya está decidido** (VM única
-> Oracle Ampere free, mismo origen — `ADR-0001` §5).
+> **Stack confirmado:** **Next.js full-stack** (App Router, TypeScript) para
+> front + API REST (Route Handlers en `app/api/*`, OpenAPI), **PostgreSQL +
+> Prisma**, scheduler en proceso aparte. **Hosting** en VM única Oracle Ampere
+> free, mismo origen (`ADR-0001` §2 y §5). No quedan *Open questions* de
+> arquitectura.
 >
-> Última actualización: 2026-07-04.
+> Última actualización: 2026-07-05.
 
 ---
 
@@ -66,12 +67,11 @@ C4Context
 
 ## 2. Nivel 2 — Diagrama de contenedores
 
-Descompone Clickoteca en unidades lógicas. El stack está confirmado en lo
-esencial (PostgreSQL + Prisma, backend REST en TypeScript documentado con
-OpenAPI y arquitectura en capas, frontend TypeScript) y el **hosting** ya está
-decidido: los cuatro contenedores lógicos **conviven como procesos en una única
-VM** (Oracle Ampere free, mismo origen — ver `ADR-0001` §5). Solo el **framework
-concreto** de front/back sigue pendiente (`AGENTS.md`).
+Descompone Clickoteca en unidades lógicas. El stack está confirmado: **Next.js
+full-stack** (App Router) sirve front + API REST (OpenAPI) sobre **PostgreSQL +
+Prisma**, con un **scheduler** en proceso aparte. Los procesos **conviven en una
+única VM** (Oracle Ampere free, mismo origen — ver `ADR-0001` §5): la app Next y
+el scheduler son dos procesos Node; Postgres corre local.
 
 ```mermaid
 C4Container
@@ -81,9 +81,8 @@ C4Container
     Person(backoffice, "Operador / Admin", "Back-office")
 
     System_Boundary(clickoteca, "Clickoteca — VM única (Oracle Ampere free, mismo origen)") {
-        Container(spa, "Aplicación Web (SPA)", "TypeScript, framework por confirmar; servida como estáticos por el reverse proxy de la VM", "Interfaz responsive mobile-first, WCAG 2.1 AA. Expone dos superficies segmentadas por rol: Portal del Suscriptor y Back-office. El Back-office va en un chunk cargado lazy (code-splitting): no viaja en el bundle público.")
-        Container(api, "API REST", "TypeScript, framework por confirmar; proceso Node en la VM tras el reverse proxy (/api)", "API pública documentada en OpenAPI. Arquitectura en capas: rutas → casos de uso → repositorios → dominio. Aplica las reglas de negocio y la máquina de estados de la copia.")
-        Container(scheduler, "Procesos programados", "TypeScript, in-process con la API (node-cron)", "Caducidad de ventanas de oferta y recordatorios de retención y de mitad de ventana. Disparan notificaciones y ofertas. El orden de cola NO se recalcula (D11).")
+        Container(web, "Aplicación Next.js (front + API)", "Next.js App Router, TypeScript; proceso Node tras el reverse proxy", "SSR/RSC responsive mobile-first, WCAG 2.1 AA. Portal del Suscriptor y Back-office segmentados por rol (route groups + middleware). API REST pública en app/api/* documentada en OpenAPI; arquitectura en capas: Route Handlers → casos de uso → repositorios → dominio.")
+        Container(scheduler, "Procesos programados", "TypeScript, proceso Node aparte (node-cron)", "Caducidad de ventanas de oferta y recordatorios de retención y de mitad de ventana. Disparan notificaciones y ofertas. Proceso separado para no duplicarse con el modelo multi-instancia de Next. El orden de cola NO se recalcula (D11).")
         ContainerDb(db, "Base de datos", "PostgreSQL + Prisma; local en la VM (localhost)", "20 modelos / 16 enums. Estado del dominio, colas, ofertas, auditoría y notificaciones persistidas.")
     }
 
@@ -91,52 +90,53 @@ C4Container
     System_Ext(logistics, "Logística (MANUAL)", "Operador")
     System_Ext(email, "Correo saliente (SIMULADO)", "Mock")
 
-    Rel(subscriber, spa, "Usa", "HTTPS")
-    Rel(backoffice, spa, "Usa", "HTTPS")
-    Rel(spa, api, "Llama a la API", "JSON/HTTPS (OpenAPI)")
+    Rel(subscriber, web, "Usa", "HTTPS")
+    Rel(backoffice, web, "Usa", "HTTPS")
 
-    Rel(api, db, "Lee y escribe", "SQL vía Prisma")
+    Rel(web, db, "Lee y escribe", "SQL vía Prisma")
     Rel(scheduler, db, "Caduca ofertas, marca recordatorios", "SQL vía Prisma")
-    Rel(scheduler, api, "Comparte casos de uso de dominio", "in-process / interno")
+    Rel(scheduler, web, "Comparte la capa de casos de uso (mismo código)", "módulo compartido")
 
-    Rel(api, payments, "Registra pagos", "simulado")
-    Rel(api, logistics, "Registra envíos", "manual")
-    Rel(api, email, "Encola notificaciones", "in-app / simulado")
+    Rel(web, payments, "Registra pagos", "simulado")
+    Rel(web, logistics, "Registra envíos", "manual")
+    Rel(web, email, "Encola notificaciones", "in-app / simulado")
 
     UpdateLayoutConfig($c4ShapeInRow="2", $c4BoundaryInRow="1")
 ```
 
 **Notas de contenedores**
 
-- **SPA única con dos superficies (back-office en *chunk* diferido).** El PRD
-  modela dos caras (Portal del Suscriptor y Back-office, §14.1/§14.2); se
-  implementan como **una sola aplicación** con enrutado segmentado por rol y el
-  código del back-office aislado en un ***chunk* cargado *lazy*** (*code-split*):
-  solo se descarga para `OPERATOR/ADMIN`, no viaja en el bundle público. La capa
-  compartida (cliente OpenAPI, tipos, dominio) se factoriza desde el día uno para
-  dejar barata una futura separación en dos despliegues. Ver
-  `ADR-0001-arquitectura-mvp.md` §3 (decisión adoptada, opción 2 de 3).
+- **App Next.js única con dos superficies.** El PRD modela dos caras (Portal del
+  Suscriptor y Back-office, §14.1/§14.2); se implementan en **un solo proyecto
+  Next** (App Router) con **route groups + middleware** por rol. El
+  *code-splitting* por ruta lo da Next de serie: el código de back-office no viaja
+  al navegador del suscriptor sin autorización. La API pública vive en el mismo
+  proyecto (`app/api/*`, Route Handlers REST + OpenAPI). La capa compartida
+  (tipos, dominio, cliente OpenAPI) se factoriza para dejar barata una futura
+  extracción de la API. Ver `ADR-0001` §2–§3.
 - **Scheduler.** Solo cubre eventos **genuinamente temporales**: la gestión de la
   ventana de confirmación (D5, UC-P16/17) y los recordatorios (D7). El **orden de
   cola ya no se recalcula** — se deriva de forma *lazy* sobre `entrada_efectiva`
   inmutable (`design.md` D11 revisado), así que el antiguo "recálculo de score"
-  desaparece del scheduler. Corre **in-process** en la API (`node-cron`); al
-  residir todo en la misma VM, es su ubicación natural. Se dibuja como contenedor
-  lógico aparte solo para dejar clara la responsabilidad.
+  desaparece del scheduler. Corre como **proceso Node aparte** (`node-cron`) en la
+  misma VM —**no** in-process en Next: su modelo multi-instancia duplicaría el
+  cron—; reutiliza la misma capa de casos de uso importándola como módulo.
 - **Hosting (decidido):** **VM única** con IP pública en **Oracle Cloud Free Tier**
-  (Ampere A1 / ARM64, 2 OCPU · 12 GB · 50 GB). Un reverse proxy (Caddy) sirve la
-  SPA y enruta `/api`; Postgres corre en `localhost`; las imágenes viven en el
-  filesystem. **Mismo origen** → sin CORS y cookie de sesión *first-party*
-  (`ADR-0002`). Alternativas descartadas y trade-offs (ops propio, punto único de
-  fallo, plan B Hetzner) en `ADR-0001` §5.
+  (Ampere A1 / ARM64, 2 OCPU · 12 GB · 50 GB). Un reverse proxy (Caddy) termina TLS
+  y enruta al servidor Next (front + `/api`); Postgres corre en `localhost`; las
+  imágenes viven en el filesystem. **Mismo origen** → sin CORS y cookie de sesión
+  *first-party* (`ADR-0002`). Alternativas descartadas y trade-offs (ops propio,
+  punto único de fallo, plan B Hetzner) en `ADR-0001` §5.
 
 ---
 
-## 3. Nivel 3 — Diagrama de componentes de la API REST
+## 3. Nivel 3 — Diagrama de componentes de la API (Route Handlers de Next.js)
 
-Detalle interno del contenedor **API REST**, siguiendo la arquitectura en capas
-declarada (rutas → casos de uso → repositorios → dominio) y organizado por las
-seis *capabilities* de los specs. Se aplican SOLID/CUPID/DRY sin DI pesado.
+Detalle interno de la **capa API** de la app Next (Route Handlers en `app/api/*`),
+siguiendo la arquitectura en capas declarada (Route Handlers → casos de uso →
+repositorios → dominio) y organizado por las seis *capabilities* de los specs. Se
+aplican SOLID/CUPID/DRY sin DI pesado. El dominio y los casos de uso son módulos
+TS agnósticos de Next (los reutilizan tanto los Route Handlers como el scheduler).
 
 ```mermaid
 C4Component
@@ -145,11 +145,11 @@ C4Component
     Person(subscriber, "Suscriptor", "")
     Person(backoffice, "Operador / Admin", "")
     ContainerDb(db, "PostgreSQL + Prisma", "", "Estado del dominio")
-    Container(scheduler, "Procesos programados", "", "Recálculo / caducidades / recordatorios")
+    Container(scheduler, "Procesos programados", "", "Caducidades / recordatorios")
 
-    Container_Boundary(api, "API REST") {
+    Container_Boundary(api, "API (Route Handlers Next.js)") {
 
-        Component(router, "Capa HTTP (rutas + controllers)", "Router TS + OpenAPI", "Enrutado, validación de request/response contra el contrato OpenAPI, serialización.")
+        Component(router, "Capa HTTP (Route Handlers)", "Next app/api/* + Zod + OpenAPI", "Enrutado, validación de request/response con Zod contra el contrato OpenAPI, serialización.")
         Component(authz, "Auth y autorización", "Middleware", "Autenticación y control de acceso por rol (SUBSCRIBER/OPERATOR/ADMIN).")
 
         Component(ucAccounts, "Casos de uso · Cuentas y roles", "Application", "Registro, login, perfil y dirección de envío (afecta a envíos futuros).")
@@ -159,7 +159,7 @@ C4Component
         Component(ucQueue, "Casos de uso · Cola de reservas", "Application", "Unirse a cola, ofrecer al cabeza elegible, confirmar/rechazar/caducar, re-encolar.")
         Component(ucNotif, "Casos de uso · Notificaciones", "Application", "Emisión de notificaciones dirigidas por eventos de dominio (in-app).")
 
-        Component(domain, "Dominio", "Entidades + políticas", "Máquina de estados de la Copia (9 estados), política de score de cola (aditiva), reglas de elegibilidad y auditoría quién/cuándo.")
+        Component(domain, "Dominio", "Entidades + políticas", "Máquina de estados de la Copia (9 estados), política de cola (aditiva, entrada efectiva inmutable), reglas de elegibilidad y auditoría quién/cuándo.")
 
         Component(repos, "Repositorios", "Prisma", "Acceso a datos por agregado; encapsula Prisma tras interfaces.")
 
@@ -216,9 +216,9 @@ C4Component
   (`score = días_esperando + bono_plan`, congelada en `entrada_efectiva` al
   encolar, D11) viven en el dominio, no en los controllers ni en SQL, para que
   sean testables de forma aislada (criterio de tests de caminos de error, PRD §10).
-- **El scheduler reutiliza casos de uso.** No duplica lógica: invoca los mismos
-  casos de uso de cola/notificaciones que la API, coherente con que pueda correr
-  in-process (nivel 2).
+- **El scheduler reutiliza casos de uso.** No duplica lógica: importa los mismos
+  casos de uso de cola/notificaciones que la API, coherente con que corra como
+  proceso Node aparte que comparte esa capa (nivel 2).
 - **Adaptadores de infraestructura** aíslan lo simulado (pagos, logística,
   email): sustituirlos por integraciones reales en el futuro no toca el dominio.
 
@@ -239,8 +239,8 @@ C4Component
 
 ## 5. Decisiones de arquitectura relacionadas
 
-- Decisiones **de dominio** (D1–D12, incl. concurrencia por CAS y orden de cola
-  inmutable): `openspec/changes/clickoteca-mvp/design.md`.
+- Decisiones **de dominio** (D1–D13, incl. concurrencia por CAS, orden de cola
+  inmutable y visitante no autenticado): `openspec/changes/clickoteca-mvp/design.md`.
 - Decisiones **de arquitectura de la aplicación** (stack, capas, hosting,
   scheduler): `documents/ADR-0001-arquitectura-mvp.md`.
 - Decisiones **de la API** (auth por cookie de sesión, contrato de errores RFC

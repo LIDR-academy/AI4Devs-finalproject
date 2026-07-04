@@ -434,3 +434,24 @@ penalización) y se matizó el requirement aditivo para no implicar columna mate
 (ER + tabla de entidades); (5) **`user_stories.md`** HU-17 reescrita; (6) **`tasks.md`**
 6.2; (7) **`AGENTS.md`**: corregido el resumen de D11 (describía la versión original ya
 revertida). `openspec validate clickoteca-mvp --strict` en verde.
+
+### [2026-07-05] — Stack: Next.js full-stack (front + API REST/OpenAPI)
+**Prompt:** "Para el frontend y el backend estoy valorando para MVP Next.js como
+mejor opción." → (tras evaluar el encaje y elegir modelo de API) "aplica."
+**Resumen de la respuesta:** Se evaluó Next.js frente a las decisiones previas:
+**mejora** el encaje con el hosting mismo-origen (unifica front+API en un deploy) y
+conserva lo transversal (capas, Prisma, cookie+argon2id, RFC 9457, WCAG); **roza**
+con dos compromisos —el requisito de "API REST pública en OpenAPI" (Next empuja a
+Server Actions/RPC) y la decisión "SPA única" (Next es SSR/RSC, no SPA)— y obliga a
+sacar el **scheduler** del in-process. Ante la bifurcación de modelo de API, el
+usuario eligió **mantener REST público + OpenAPI vía Route Handlers**. Decisión
+aplicada: **Next.js full-stack (App Router, TS)** sirve front (SSR/RSC) y API REST
+(`app/api/*` + Zod → OpenAPI); dominio/casos de uso agnósticos del framework;
+back-office por **route groups + middleware** (no chunk lazy de SPA); **scheduler
+como proceso Node aparte** (node-cron); Caddy termina TLS y enruta al servidor Next;
+deploy `next build` standalone + systemd. Docs actualizados: `ADR-0001` (Estado→
+**Aceptado**; §Decisión, alternativas —eje Framework—, consecuencias, contexto),
+`ADR-0002` (SPA→app Next), `C4-architecture.md` (nivel 2 colapsa SPA+API en un
+contenedor Next + scheduler aparte; nivel 3 = Route Handlers), `AGENTS.md` (hecho de
+stack, separación de superficies, **Open questions de arquitectura cerradas**),
+`tasks.md` 1.1. `openspec validate clickoteca-mvp --strict` en verde.

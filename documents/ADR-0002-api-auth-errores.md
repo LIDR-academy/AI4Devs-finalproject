@@ -12,10 +12,10 @@
 
 ## Contexto
 
-La API es pública y da servicio a una SPA con dos superficies segmentadas por rol
-(`ADR-0001` §3). El despliegue es **mismo origen** (VM única, `ADR-0001` §5): SPA,
-API e imágenes se sirven desde el mismo host, lo que simplifica las decisiones de
-sesión. El criterio de éxito del MVP es la **cobertura de caminos de error** (PRD
+La API es pública (Route Handlers de Next.js en `app/api/*`) y da servicio a la
+misma app Next, con dos superficies segmentadas por rol (`ADR-0001` §2–§3). El
+despliegue es **mismo origen** (VM única, `ADR-0001` §5): front, API e imágenes se
+sirven desde el mismo host, lo que simplifica las decisiones de sesión. El criterio de éxito del MVP es la **cobertura de caminos de error** (PRD
 §10), lo que exige un contrato de errores **estable y máquina-legible**, no solo
 códigos HTTP.
 
@@ -30,8 +30,9 @@ códigos HTTP.
   sesión se persiste en Postgres (tabla de sesiones), coherente con la VM única.
 - **Passwords con argon2id** (bcrypt aceptable como alternativa).
 - **Autorización por rol** (`SUBSCRIBER | OPERATOR | ADMIN`) en middleware
-  **server-side**: es la **frontera de seguridad real**. El *code-split* del
-  back-office (`ADR-0001` §3) es *defense-in-depth*/UX, no seguridad.
+  **server-side**: es la **frontera de seguridad real**. La segmentación por rol
+  del back-office en Next (route groups + middleware, `ADR-0001` §3) es
+  *defense-in-depth*/UX, no seguridad.
 - **CSRF**: `SameSite=Lax` cubre el grueso; al ser despliegue **mismo origen**
   (`ADR-0001` §5) no hay POST cross-site en el MVP. Si se añadieran, se incorpora
   token CSRF.

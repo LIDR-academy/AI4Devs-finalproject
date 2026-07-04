@@ -31,15 +31,18 @@ project. Read it at the start of every session.
   see `design.md` D9. Seed catalog data/images recommended source: Rebrickable
   (free public dataset/API, has `img_url` per set; no age/difficulty fields —
   curate those manually for the seed subset).
-- **Arquitectura/stack (tarea 1.1, en curso):** Confirmado — capa de datos
-  **PostgreSQL + Prisma**; backend como **API REST pública en TypeScript**
-  documentada en OpenAPI, siguiendo SOLID/CUPID/DRY vía arquitectura en capas
-  (rutas → casos de uso → repositorios → dominio), sin DI pesado si añade
-  ceremonia innecesaria; frontend en **TypeScript**, cross-browser (evergreen),
-  responsive mobile-first, accesibilidad objetivo **WCAG 2.1 AA** (EN 301 549 /
-  European Accessibility Act). Hosting **decidido**: **VM única con IP pública**
-  en **Oracle Cloud Free Tier** (Ampere A1 / ARM64, 2 OCPU · 12 GB · 50 GB,
-  Ubuntu 24.04). Un reverse proxy (Caddy) sirve la SPA y enruta `/api`; Postgres
+- **Arquitectura/stack (tarea 1.1, en curso):** Confirmado — **framework
+  Next.js full-stack** (App Router, TypeScript; decidido 2026-07-05) que sirve
+  **front (SSR/RSC)** y **API REST pública** (Route Handlers en `app/api/*` +
+  Zod → OpenAPI) en un solo proyecto; capa de datos **PostgreSQL + Prisma**;
+  arquitectura en capas (Route Handlers → casos de uso → repositorios → dominio),
+  dominio agnóstico del framework, sin DI pesado; scheduler como **proceso Node
+  aparte** (node-cron), no in-process (Next multi-instancia lo duplicaría);
+  frontend cross-browser (evergreen), responsive mobile-first, accesibilidad
+  objetivo **WCAG 2.1 AA** (EN 301 549 / European Accessibility Act). Hosting
+  **decidido**: **VM única con IP pública** en **Oracle Cloud Free Tier** (Ampere
+  A1 / ARM64, 2 OCPU · 12 GB · 50 GB, Ubuntu 24.04). Un reverse proxy (Caddy)
+  termina TLS y enruta al servidor Next (front + `/api`); Postgres
   corre en `localhost`; las imágenes en el filesystem → **mismo origen** (sin CORS,
   cookie de sesión *first-party*). Descartado el split PaaS Vercel+Render+Neon
   (multi-origen, cold-start, suspensión de BD); plan B si Oracle reclama la
@@ -76,14 +79,15 @@ project. Read it at the start of every session.
   previsiblemente **in-process** en la API en el MVP. Se mantuvo el criterio "no
   inventar": frameworks concretos y hosting quedan como *pendiente/propuesto*. El
   prompt se archivó en `prompts.md` §2.1.
-- **Frontend — separación de superficies (decidido 2026-07-04):** adoptada la
-  **opción 2** de 3: **SPA única** con el Back-office en un ***chunk* lazy
-  (code-splitting)** segmentado por rol —no viaja en el bundle público— y la capa
-  compartida (cliente OpenAPI, tipos, dominio) factorizada para dejar barata una
-  futura separación en dos apps (pospuesta). Descartadas: SPA monolítica sin split
-  y dos apps separadas desde ya. Registrado en `ADR-0001` §3, reflejado en
-  `C4-architecture.md` y en `tasks.md` 1.1. Los specs de comportamiento
-  (`accounts-roles`) no cambian: el acceso al back-office ya es por rol.
+- **Frontend — separación de superficies:** el principio se mantiene (Portal del
+  Suscriptor y Back-office segmentados por rol; el código de back-office no viaja
+  al navegador del suscriptor sin autorización), pero con **Next.js** el mecanismo
+  ya **no** es un *chunk lazy* de SPA sino **route groups + middleware de auth** y
+  el *code-splitting* por ruta nativo de Next (`ADR-0001` §2–§3, decisión
+  2026-07-05 que supersede la "opción 2 de 3 / SPA única" del 2026-07-04). La capa
+  compartida (tipos, dominio, cliente OpenAPI) se factoriza para dejar barata una
+  futura extracción de la API. Los specs de comportamiento (`accounts-roles`) no
+  cambian: el acceso al back-office ya es por rol.
 - **Visitante = actor no autenticado (decidido 2026-07-05):** el visitante (usuario
   sin sesión) se modela como **actor no autenticado**, **no** como un cuarto rol de
   `User` (los tres roles siguen siendo `SUBSCRIBER|OPERATOR|ADMIN`, uno por cuenta;
@@ -99,11 +103,11 @@ project. Read it at the start of every session.
 
 ## Open questions
 
-- Framework de frontend concreto (React/Vue/Angular/Svelte...) — el usuario
-  indicó que detallará los requisitos técnicos más adelante.
-- Framework de backend concreto (Express/Fastify/NestJS...) — a decidir junto
-  con el frontend antes de cerrar la tarea 1.1.
+- _(Ninguna abierta de arquitectura.)_ Pendiente solo el detalle de librerías de
+  UI/estilos y stack de tests, a fijar durante el scaffolding (tarea 1.1).
 
-_(Cerradas: hosting → VM única Oracle free (`ADR-0001` §5); auth → cookie de sesión
+_(Cerradas: framework front+back → **Next.js full-stack** (App Router), API REST en
+Route Handlers + OpenAPI (`ADR-0001` §2–§3, 2026-07-05); hosting → VM única Oracle
+free (`ADR-0001` §5); auth → cookie de sesión
 + contrato de errores RFC 9457 (`ADR-0002`); concurrencia → CAS y orden de cola
 inmutable (`design.md` D11 rev / D12).)_
