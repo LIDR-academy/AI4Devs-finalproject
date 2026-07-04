@@ -46,7 +46,9 @@ Architecture Decision Record (ADR)."
 del de operador/admin. Adopta la opción 2 (SPA única con back-office en chunk
 lazy), fija el ADR y actualiza los specs necesarios."
 
-**Prompt 3:**
+**Prompt 3:** "¿Queda algún aspecto a revisar de la arquitectura?" — seguido de una
+serie de decisiones dictadas por el usuario (concurrencia, orden de cola,
+autenticación, hosting y contrato de errores). Ver log al final.
 
 ### **2.2. Descripción de componentes principales:**
 
@@ -333,3 +335,32 @@ en `C4-architecture.md` (contenedor SPA + nota) y en `tasks.md` 1.1. (4) Se
 constató que los specs de comportamiento no cambian: `accounts-roles` ya modela el
 acceso al back-office por rol; `openspec validate clickoteca-mvp --strict` en
 verde. (5) Prompt archivado en `§2.1` como Prompt 2.
+
+### [2026-07-04] — Revisión de aspectos abiertos de la arquitectura
+**Prompt:** "¿Queda algún aspecto a revisar de la arquitectura?" — seguido de una
+sesión de dictado de decisiones punto por punto.
+**Resumen de la respuesta:** Se identificaron los transversales sin cerrar
+(concurrencia, auth, CORS, almacenamiento de imágenes, contrato de errores) y el
+usuario fue fijando cada decisión: (1) **Concurrencia → `design.md` D12**:
+transiciones de estado guardadas por *compare-and-swap* (`updateMany` con
+precondición de estado → 409 si `count===0`); cubre operador-vs-operador,
+usuario-vs-scheduler y usuario-vs-usuario con un patrón; invariantes multi-fila con
+transacción `FOR UPDATE` o índice único parcial. (2) **Orden de cola → `design.md`
+D11 reescrito**: se demostró que, por ser D4 **aditiva**, el orden es **invariante
+en el tiempo** → se elimina el score materializado y su recálculo periódico; se
+ordena de forma *lazy* sobre `entrada_efectiva` inmutable (bono congelado al
+encolar, `timestamptz` de precisión completa, desempate por `id`); el scheduler
+queda solo con caducidad de ofertas y recordatorios. El bono `N` solo afecta a
+nuevas incorporaciones. (3) **Auth → `ADR-0002`**: cookie de sesión server-side
+(`httpOnly`+`Secure`+`SameSite`) + argon2id, autorización por rol server-side; se
+descarta JWT (revocación cara). (4) **Contrato de errores → `ADR-0002`**: RFC 9457
+(Problem Details) + miembro de extensión `code` (enum de dominio estable), `errors[]`
+de validación, mapa dominio→HTTP centralizado, 500 sin filtrar interno. (5)
+**Hosting → `ADR-0001` §5 reescrito**: **VM única con IP pública** en **Oracle Cloud
+Free Tier** (Ampere A1/ARM64, 2 OCPU·12 GB·50 GB, Ubuntu 24.04), **mismo origen**
+(Caddy sirve la SPA y enruta `/api`; Postgres en `localhost`; imágenes en
+filesystem) → elimina CORS, cold-start y suspensión de BD; plan B Hetzner CX22 si
+Oracle reclama la instancia. (6) Se creó **`ADR-0002-api-auth-errores.md`**, se
+colapsó el **C4 nivel 2** a un solo host, se actualizaron `ADR-0001`, `design.md`,
+`AGENTS.md` (hosting decidido, Open questions reducidas al framework) y
+`openspec validate --strict` en verde. Commit `7985b78`.
