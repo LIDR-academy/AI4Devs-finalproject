@@ -11,7 +11,6 @@ export interface CartItemUI {
 }
 
 export interface CartState {
-  sessionId: string | null;
   items: CartItemUI[];
   subtotal: number;
   shipping: number;
@@ -33,7 +32,6 @@ export interface CartContextValue {
 }
 
 export interface CartResponse {
-  sessionId: string;
   items: CartItemUI[];
   subtotal: number;
   shipping: number;

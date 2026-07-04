@@ -23,7 +23,7 @@ const VALID_SHIPPING_BODY = {
 };
 
 const buildOrderResponse = (overrides: Partial<OrderResponse> = {}): OrderResponse => ({
-  id: 'ORD-1718700000000',
+  id: 'ORD-A1B2C3D4',
   status: 'processing',
   date: new Date().toISOString(),
   subtotal: 129.99,
@@ -74,7 +74,7 @@ describe('POST /api/checkout', () => {
       .send(VALID_SHIPPING_BODY);
 
     expect(res.status).toBe(201);
-    expect(res.body.id).toMatch(/^ORD-/);
+    expect(res.body.id).toMatch(/^ORD-[A-F0-9]{8}$/);
     expect(res.body.status).toBe('processing');
   });
 

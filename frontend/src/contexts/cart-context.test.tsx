@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, act, waitFor } from '@testing-library/react';
+import { render, renderHook, screen, act, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { CartProvider, useCart } from './cart-context';
 import type { CartResponse } from '../types/cart';
@@ -89,7 +89,6 @@ const mockCartItem = (overrides: Partial<CartResponse['items'][number]> = {}): C
 });
 
 const mockCartResponse = (items: CartResponse['items']): CartResponse => ({
-  sessionId: 'srv-session-uuid',
   items,
   subtotal: items.reduce((s, i) => s + i.productPrice * i.quantity, 0),
   shipping: 0,
@@ -102,6 +101,14 @@ beforeEach(() => {
 });
 
 describe('CartContext', () => {
+  it('US-017-TASK-05: CartProvider no expone sessionId en el contexto', () => {
+    const { result } = renderHook(() => useCart(), {
+      wrapper: ({ children }) => <CartProvider>{children}</CartProvider>,
+    });
+
+    expect(result.current).not.toHaveProperty('sessionId');
+  });
+
   it('itemCount es 0 con carrito vacío', () => {
     renderWithCart();
     expect(screen.getByTestId('itemCount').textContent).toBe('0');

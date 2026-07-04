@@ -7,6 +7,10 @@ function isValidUuidV4(value: unknown): value is string {
   return typeof value === 'string' && UUID_V4_REGEX.test(value);
 }
 
+// La cookie sessionId no está firmada (sin HMAC ni SESSION_SECRET). La seguridad se
+// garantiza por entropía: crypto.randomUUID() produce 122 bits de aleatoriedad, lo
+// que hace la predicción o fuerza bruta inviable. Si en el futuro se necesita firma
+// (p. ej. migrar a express-session), añadir SESSION_SECRET a .env.example entonces.
 export function sessionMiddleware(
   req: Request,
   res: Response,

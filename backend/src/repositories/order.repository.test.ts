@@ -153,6 +153,65 @@ describe('OrderRepository', () => {
       expect(mockTransaction).toHaveBeenCalledTimes(1);
     });
 
+    it('US-017-TASK-02: el ID de pedido creado sigue el patrón ORD-[A-F0-9]{8}', async () => {
+      const cartRow = buildCartRow([
+        { id: 'item-1', cartId: 'cart-1', productId: 'prod-1', quantity: 1, size: null, color: null },
+      ]);
+      mockCartFindUnique.mockResolvedValueOnce(cartRow);
+      mockProductFindUnique.mockResolvedValueOnce(buildProductRow());
+      mockOrderCreate.mockImplementationOnce(
+        async ({ data }: { data: Parameters<typeof asPrismaOrderRow>[0] }) =>
+          asPrismaOrderRow(data),
+      );
+      mockCartItemDeleteMany.mockResolvedValueOnce({ count: 1 });
+
+      const order = await repo.createOrderFromCart('session-1', buildShipping());
+
+      expect(order.id).toMatch(/^ORD-[A-F0-9]{8}$/);
+    });
+
+    it('US-017-TASK-02: dos pedidos creados consecutivamente tienen IDs distintos', async () => {
+      const cartRow = buildCartRow([
+        { id: 'item-1', cartId: 'cart-1', productId: 'prod-1', quantity: 1, size: null, color: null },
+      ]);
+      mockCartFindUnique
+        .mockResolvedValueOnce(cartRow)
+        .mockResolvedValueOnce(cartRow);
+      mockProductFindUnique
+        .mockResolvedValueOnce(buildProductRow())
+        .mockResolvedValueOnce(buildProductRow());
+      mockOrderCreate.mockImplementation(
+        async ({ data }: { data: Parameters<typeof asPrismaOrderRow>[0] }) =>
+          asPrismaOrderRow(data),
+      );
+      mockCartItemDeleteMany
+        .mockResolvedValueOnce({ count: 1 })
+        .mockResolvedValueOnce({ count: 1 });
+
+      const order1 = await repo.createOrderFromCart('session-1', buildShipping());
+      const order2 = await repo.createOrderFromCart('session-1', buildShipping());
+
+      expect(order1.id).not.toBe(order2.id);
+    });
+
+    it('US-017-TASK-02: el ID no contiene el timestamp de creación', async () => {
+      const cartRow = buildCartRow([
+        { id: 'item-1', cartId: 'cart-1', productId: 'prod-1', quantity: 1, size: null, color: null },
+      ]);
+      mockCartFindUnique.mockResolvedValueOnce(cartRow);
+      mockProductFindUnique.mockResolvedValueOnce(buildProductRow());
+      mockOrderCreate.mockImplementationOnce(
+        async ({ data }: { data: Parameters<typeof asPrismaOrderRow>[0] }) =>
+          asPrismaOrderRow(data),
+      );
+      mockCartItemDeleteMany.mockResolvedValueOnce({ count: 1 });
+
+      const before = Date.now();
+      const order = await repo.createOrderFromCart('session-1', buildShipping());
+
+      expect(order.id).not.toContain(String(before).slice(0, 8));
+    });
+
     it('calcula subtotal/shipping/total correctamente para varios ítems', async () => {
       const cartRow = buildCartRow([
         { id: 'item-1', cartId: 'cart-1', productId: 'prod-1', quantity: 1, size: null, color: null },
