@@ -29,6 +29,7 @@
 5. [Historias de usuario](#5-historias-de-usuario)
 6. [Tickets de trabajo](#6-tickets-de-trabajo)
 7. [Pull requests](#7-pull-requests)
+8. [Retrospectiva final](#8-retrospectiva-final)
 
 ---
 
@@ -42,7 +43,7 @@
 >
 > Prompt enviado al agente generador del PRD (extracto del prompt engineered):
 >
-> ```
+> ```text
 > # Role
 > Senior Product Manager with hands-on experience designing API-first developer
 > platforms and AI-powered tooling for engineering teams.
@@ -81,7 +82,7 @@
 >
 > Prompt enviado al agente de extracción UX (extracto):
 >
-> ```
+> ```text
 > # Role
 > You are a senior product manager and UX analyst. You are reviewing a live,
 > interactive Lovable prototype of AgentHub.
@@ -116,7 +117,7 @@
 >
 > Patrón de prompt usado en cada ciclo:
 >
-> ```
+> ```text
 > Roast the docs folder in the aregall-agenthub directory. Score it between 0 to 10
 > and, in case we don't reach at least 9, propose fixes with exact text references
 > before any prompt is written.
@@ -139,7 +140,7 @@
 > **Herramienta:** Claude Sonnet 4.6 (Claude.ai)
 > **Fase:** Diseño — Phase 0
 >
-> ```
+> ```text
 > Extract docs/architecture.md as a standalone document from docs/prd.md §11
 > System Architecture Overview. Include:
 > - C4 Level 1 (System Context) Mermaid diagram
@@ -164,7 +165,7 @@
 >
 > Extracto del prompt de investigación:
 >
-> ```
+> ```text
 > You are a senior Java and full-stack architect. Research the current best practices
 > for structuring a Java monorepo containing a Spring Boot 4.0.6 backend and a React
 > SPA frontend in 2026. Evaluate Nx and alternatives for mixed-language monorepo
@@ -189,7 +190,7 @@
 > **Herramienta:** Claude Code CLI
 > **Fase:** Implementación — validación post-spike
 >
-> ```
+> ```text
 > Review the spring-ai-claude-wrapper spike codebase at
 > /Users/arnau.aregall/git/arnau/master-ai4devs/spikes/spring-ai-claude-wrapper
 > and all AgentHub documentation. Identify findings or architectural gaps.
@@ -211,7 +212,7 @@
 > **Herramienta:** Claude Sonnet 4.6 (Claude.ai) con el skill `/prompt-engineer`
 > **Fase:** Diseño frontend — Phase 3
 >
-> ```
+> ```text
 > Fetch https://base-ui.com/llms.txt and evaluate @base-ui/react against AgentHub's
 > component needs. Evaluate @dnd-kit/core + @dnd-kit/sortable for the Kanban gap.
 > Produce: component coverage map, Tailwind CSS v3 compatibility assessment,
@@ -230,7 +231,7 @@
 > **Herramienta:** Claude in Chrome (browser automation) con el skill `/prompt-engineer`
 > **Fase:** Diseño frontend — Phase 3
 >
-> ```
+> ```text
 > Navigate https://lovable.dev/projects/79049098-9bed-476e-9c00-a122d9114d3c.
 > Follow the complete user flow: login → configure Linear → create work project →
 > open Kanban board → provision agent → open In Progress side panel → open Review
@@ -259,7 +260,7 @@
 > **Herramienta:** Claude Sonnet 4.6 (Claude.ai)
 > **Fase:** Diseño — Phase 0
 >
-> ```
+> ```text
 > Generate AGENTS.md at the repository root. This is the primary source of truth
 > for any AI coding agent working on this repository. Include: project overview,
 > repository layout with one-line descriptions, backend conventions (vertical slice
@@ -293,7 +294,7 @@
 > **Herramienta:** Claude Sonnet 4.6 (Claude.ai) + búsquedas web
 > **Fase:** Diseño — decisiones de infraestructura
 >
-> ```
+> ```text
 > Research the current state of agentic CLI tooling as of April 2026. Evaluate:
 > Claude Code CLI, GitHub Copilot CLI (usage-based billing from June 1 2026),
 > OpenCode, Gemini CLI, Cursor CLI, OpenAI Codex CLI (GPT-5.4/5.5).
@@ -327,7 +328,7 @@
 > **Herramienta:** Claude Code CLI
 > **Fase:** Implementación — revisión transversal
 >
-> ```
+> ```text
 > Review all files in backend/src/ for security issues: hardcoded secrets,
 > API keys, or credentials in source code or application.yml. Verify that:
 > - GitHub OAuth credentials use ${GITHUB_CLIENT_ID} and ${GITHUB_CLIENT_SECRET}
@@ -361,7 +362,7 @@
 > **Herramienta:** Claude Sonnet 4.6 (Claude.ai) con el skill `/prompt-engineer`
 > **Fase:** Diseño — corrección post-tutoría
 >
-> ```
+> ```text
 > Modification 2 — Add §10.8 Test Strategy to §10 Non-Functional Requirements.
 > The development approach is TDD: AI agents building backend features are instructed
 > to write tests first. Backend tests use Spring integration tests backed by
@@ -396,7 +397,7 @@
 > **Herramienta:** Claude Sonnet 4.6 (Claude.ai)
 > **Fase:** Diseño — Phase 0
 >
-> ```
+> ```text
 > Extract docs/data-model.md as a standalone document from docs/prd.md §12 Data Model.
 > Include for each of the 8 entities (user, work_project, architecture_profile, ticket,
 > agent_run, run_log_chunk, proposal_review, audit_log):
@@ -417,7 +418,7 @@
 > **Herramienta:** Claude Sonnet 4.6 (Claude.ai) — ciclo roast-and-fix
 > **Fase:** Diseño — refinamiento
 >
-> ```
+> ```text
 > Review §13 Success Metrics measurements in docs/prd.md.
 > Find all references to stale entity names: execution_run, execution_phase,
 > openspec_artefact, ExecutionTraceRepository.
@@ -444,7 +445,7 @@
 > **Herramienta:** Claude Code CLI
 > **Fase:** Implementación — Phase 1 y Phase 2
 >
-> ```
+> ```text
 > Implement the REST API endpoints for the agent run pipeline following the vertical
 > slice architecture in backend/src/main/java/com/aregall/agenthub/.
 > Use Spring Boot 4.0.6 + Spring Data JDBC. No JPA, no RestTemplate.
@@ -483,7 +484,7 @@
 >
 > Prompt del orquestador (extracto):
 >
-> ```
+> ```text
 > You are the backlog orchestrator for AgentHub. Coordinate agents 01-04 in order:
 > 1. Agent 01 (user-story-writer): derive stories from docs/prd.md §8, §9, §2
 > 2. Agent 02 (backlog-prioritizer): prioritize using §1, §3 MoSCoW
@@ -507,7 +508,7 @@
 > **Herramienta:** Claude Sonnet 4.6 (Claude.ai) con el skill `/prompt-engineer`
 > **Fase:** Planificación — tooling de backlog
 >
-> ```
+> ```text
 > Create .ai-specs/skills/create-github-issue/SKILL.md following the conventions
 > of .ai-specs/skills/create-user-story/SKILL.md.
 > The skill receives a User Story or Work Ticket and publishes it as a GitHub Issue
@@ -540,7 +541,7 @@
 >
 > Extracto del prompt del sub-agente:
 >
-> ```
+> ```text
 > You are the ticket breakdown agent for AgentHub.
 > Input: one User Story with acceptance criteria.
 > Output: work tickets decomposed by layer (backend / frontend / database / qa).
@@ -566,7 +567,7 @@
 > **Herramienta:** Claude Code CLI
 > **Fase:** Implementación — Phase 1 (US-00 bootstrap)
 >
-> ```
+> ```text
 > Implement US-00: Project scaffold — minimal runnable application.
 > Bootstrap the AgentHub monorepo at https://github.com/ArnauAregall/aregall-agenthub
 > following the research report produced earlier.
@@ -605,7 +606,7 @@
 > **Herramienta:** Claude Sonnet 4.6 (Claude.ai)
 > **Fase:** Implementación — configuración del repositorio
 >
-> ```
+> ```text
 > Adjust the following standard MR template for a project mainly coded by AI agents
 > using OpenSpec within the AgentHub mono-repository (backend, frontend, e2e).
 > The human reviewer is the Tech Lead. Key sections needed:
@@ -633,3 +634,48 @@
 **Prompt 3:**
 
 > *(Sin prompt adicional significativo para esta subsección)*
+
+---
+
+## 8. Retrospectiva final
+
+**Prompt 1:**
+
+> **Propósito:** Generar un informe cuantitativo del uso de IA a lo largo de todo el proyecto, contando directamente
+> desde el log de auditoría en lugar de estimar de memoria.
+> **Herramienta:** Claude Code CLI
+> **Fase:** Cierre del proyecto — documentación final
+>
+> ```text
+> Parse prompts-log.md and 20260430-20260531-prompts-log.md end to end. Produce a
+> report counting: total prompts, distinct sessions, tool split (Claude Code vs
+> GitHub Copilot vs unattributed) by session ID pattern, model usage breakdown,
+> activity by month, and skill/sub-agent invocation counts (OpenSpec family,
+> wrapper skills, review skills, handoff). Every number must be counted directly
+> from the log, nothing estimated. Conclude with what the data shows actually
+> drove velocity, not just raw token/time totals.
+> ```
+>
+> **Resultado:** `docs/ai4devs-final-delivery/retrospective/ai-development-report.md` — métricas verificadas del ciclo de vida completo (781 prompts, 186 sesiones, ~9.5 semanas).
+> **Referencia:** [`ai-development-report.md`](https://github.com/ArnauAregall/aregall-agenthub/blob/main/docs/ai4devs-final-delivery/retrospective/ai-development-report.md)
+
+---
+
+**Prompt 2:**
+
+> **Propósito:** Complementar el informe cuantitativo con una retrospectiva cualitativa, entrevistando al propio autor
+> del proyecto sobre momentos concretos extraídos del log de prompts.
+> **Herramienta:** Claude Code CLI
+> **Fase:** Cierre del proyecto — documentación final
+>
+> ```text
+> Using the prompt log and the quantitative report as source material, interview
+> me directly about specific moments in the project's history — tool-switching
+> behavior, the busiest single day, course corrections, the /handoff pattern,
+> pre-emptive guardrails against known AI failure modes. Ask me what actually
+> happened and why, quote me directly, and don't smooth over an honest limitation
+> if I state one. Close with what I'd change starting over.
+> ```
+>
+> **Resultado:** `docs/ai4devs-final-delivery/retrospective/ai-development-human-retrospective.md` — reflexión honesta sobre aciertos y limitaciones, incluyendo la dificultad de trasladar este flujo a un equipo.
+> **Referencia:** [`ai-development-human-retrospective.md`](https://github.com/ArnauAregall/aregall-agenthub/blob/main/docs/ai4devs-final-delivery/retrospective/ai-development-human-retrospective.md)

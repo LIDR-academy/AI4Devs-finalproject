@@ -8,6 +8,7 @@
 5. [Historias de usuario](#5-historias-de-usuario)
 6. [Tickets de trabajo](#6-tickets-de-trabajo)
 7. [Pull requests](#7-pull-requests)
+8. [Retrospectiva final](#8-retrospectiva-final)
 
 ---
 
@@ -732,4 +733,22 @@ integración bidireccional de Spring AI con la API de Linear vía el pipeline Op
 Documenta el proceso completo de aprovisionamiento de la infraestructura de producción en AWS, incluyendo los problemas
 reales encontrados durante el despliegue live y las soluciones aplicadas. Sirve como guía reproducible para replicar el
 entorno desde cero siguiendo IaC (considerando el futuro uso de AWS CDK) y buenas prácticas de seguridad.
+
+---
+
+## 8. Retrospectiva final
+
+Al cierre del proyecto, reconstruí y analicé el uso de IA a lo largo de todo el ciclo de vida de AgentHub a partir del
+propio rastro de auditoría del proyecto (`prompts-log.md`), y complementé ese análisis cuantitativo con una
+retrospectiva humana sobre lo aprendido y los próximos pasos.
+
+Ambos documentos, junto con un informe HTML consolidado y las capturas de pantalla de soporte, están disponibles en el
+repositorio privado:
+
+- [Informe de desarrollo asistido por IA (HTML)](https://github.com/ArnauAregall/aregall-agenthub/blob/main/docs/ai4devs-final-delivery/ai4devs-arnauaregall-final-project-ai-development-report.html)
+- [`docs/ai4devs-final-delivery/retrospective/ai-development-report.md`](https://github.com/ArnauAregall/aregall-agenthub/blob/main/docs/ai4devs-final-delivery/retrospective/ai-development-report.md) — métricas cuantitativas del proceso
+- [`docs/ai4devs-final-delivery/retrospective/ai-development-human-retrospective.md`](https://github.com/ArnauAregall/aregall-agenthub/blob/main/docs/ai4devs-final-delivery/retrospective/ai-development-human-retrospective.md) — reflexión cualitativa: qué funcionó, qué fue más difícil de lo esperado, y qué cambiaría de cara al futuro
+- [`docs/ai4devs-final-delivery/screenshots/`](https://github.com/ArnauAregall/aregall-agenthub/tree/main/docs/ai4devs-final-delivery/screenshots) — capturas de soporte
+
+No repito aquí el contenido para no duplicar el análisis; los documentos enlazados son la fuente completa.
 
