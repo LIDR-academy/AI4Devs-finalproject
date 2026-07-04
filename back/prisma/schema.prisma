@@ -32,7 +32,7 @@ model Household {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  createdBy   User                  @relation("HouseholdCreatedBy", fields: [createdByUserId], references: [id])
+  createdBy   User                  @relation("HouseholdCreatedBy", fields: [createdByUserId], references: [id], onDelete: Cascade)
   members     HouseholdMember[]
   invitations HouseholdInvitation[]
 
@@ -67,7 +67,7 @@ model HouseholdInvitation {
   createdAt       DateTime                  @default(now())
 
   household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
-  invitedBy User      @relation("HouseholdInvitationInvitedBy", fields: [invitedByUserId], references: [id])
+  invitedBy User      @relation("HouseholdInvitationInvitedBy", fields: [invitedByUserId], references: [id], onDelete: Cascade)
 
   @@index([householdId, status])
   @@index([inviteeEmail, status])
@@ -77,6 +77,10 @@ model User {
   id                             String                        @id @default(uuid())
   email                          String                        @unique
   password                       String
+  firstName                      String?
+  lastName                       String?
+  age                            Int?
+  address                        String?
   createdAt                      DateTime                      @default(now())
   updatedAt                      DateTime                      @updatedAt
   pantryItems                    PantryItem[]
@@ -203,7 +207,7 @@ model NotificationLog {
   status     String
   failReason String?
   sentAt     DateTime @default(now())
-  user       User     @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, sentAt])
 }
@@ -215,7 +219,7 @@ model PushSubscription {
   p256dh    String
   auth      String
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 enum ExpirationMethod {

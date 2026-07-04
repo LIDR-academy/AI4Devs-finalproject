@@ -16,6 +16,10 @@ describe("AuthService", () => {
     id: "user-1",
     email: "user@example.com",
     password: bcrypt.hashSync("password123", 12),
+    firstName: null,
+    lastName: null,
+    age: null,
+    address: null,
     createdAt: new Date("2026-01-01T00:00:00.000Z"),
     updatedAt: new Date("2026-01-01T00:00:00.000Z"),
   };
@@ -25,6 +29,9 @@ describe("AuthService", () => {
       findByEmail: jest.fn(),
       createUser: jest.fn(),
       findById: jest.fn(),
+      updateProfile: jest.fn(),
+      updatePassword: jest.fn(),
+      deleteUser: jest.fn(),
     } as unknown as jest.Mocked<UsersService>;
 
     jwtService = {
@@ -128,6 +135,10 @@ describe("AuthService", () => {
     expect(me).toEqual({
       id: "user-1",
       email: "user@example.com",
+      firstName: null,
+      lastName: null,
+      age: null,
+      address: null,
       createdAt: new Date("2026-01-01T00:00:00.000Z"),
     });
   });
@@ -138,5 +149,76 @@ describe("AuthService", () => {
     await expect(service.me("missing")).rejects.toBeInstanceOf(
       UnauthorizedException,
     );
+  });
+
+  it("updates the profile and returns the same shape as me()", async () => {
+    const updatedUser: User = { ...user, firstName: "Alex", lastName: "Garcia", age: 32, address: "Madrid, 28001, ES" };
+    usersService.updateProfile.mockResolvedValue(updatedUser);
+
+    const result = await service.updateProfile("user-1", {
+      firstName: "Alex",
+      lastName: "Garcia",
+      age: 32,
+      address: "Madrid, 28001, ES",
+    });
+
+    expect(usersService.updateProfile).toHaveBeenCalledWith("user-1", {
+      firstName: "Alex",
+      lastName: "Garcia",
+      age: 32,
+      address: "Madrid, 28001, ES",
+    });
+    expect(result).toEqual({
+      id: "user-1",
+      email: "user@example.com",
+      firstName: "Alex",
+      lastName: "Garcia",
+      age: 32,
+      address: "Madrid, 28001, ES",
+      createdAt: new Date("2026-01-01T00:00:00.000Z"),
+    });
+  });
+
+  it("changes the password when the current password is correct", async () => {
+    usersService.findById.mockResolvedValue(user);
+
+    await service.changePassword("user-1", {
+      currentPassword: "password123",
+      newPassword: "newpassword456",
+    });
+
+    expect(usersService.updatePassword).toHaveBeenCalledTimes(1);
+    const [calledUserId, calledHash] = usersService.updatePassword.mock.calls[0];
+    expect(calledUserId).toBe("user-1");
+    expect(await bcrypt.compare("newpassword456", calledHash)).toBe(true);
+  });
+
+  it("throws unauthorized when the current password is incorrect", async () => {
+    usersService.findById.mockResolvedValue(user);
+
+    await expect(
+      service.changePassword("user-1", {
+        currentPassword: "wrong-password",
+        newPassword: "newpassword456",
+      }),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(usersService.updatePassword).not.toHaveBeenCalled();
+  });
+
+  it("throws unauthorized when changing the password for a user that no longer exists", async () => {
+    usersService.findById.mockResolvedValue(null);
+
+    await expect(
+      service.changePassword("missing", {
+        currentPassword: "password123",
+        newPassword: "newpassword456",
+      }),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+
+  it("deletes the account", async () => {
+    await service.deleteAccount("user-1");
+
+    expect(usersService.deleteUser).toHaveBeenCalledWith("user-1");
   });
 });

@@ -1,6 +1,10 @@
 export interface SessionUser {
   id: string;
   email: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  age?: number | null;
+  address?: string | null;
   createdAt: string;
 }
 

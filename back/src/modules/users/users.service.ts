@@ -24,4 +24,25 @@ export class UsersService {
       },
     });
   }
+
+  async updateProfile(
+    id: string,
+    data: { firstName?: string; lastName?: string; age?: number; address?: string },
+  ): Promise<User> {
+    return this.prisma.user.update({
+      where: { id },
+      data,
+    });
+  }
+
+  async updatePassword(id: string, passwordHash: string): Promise<User> {
+    return this.prisma.user.update({
+      where: { id },
+      data: { password: passwordHash },
+    });
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    await this.prisma.user.delete({ where: { id } });
+  }
 }

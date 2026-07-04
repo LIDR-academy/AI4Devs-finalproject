@@ -1,12 +1,33 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Bell, Cloud, User, Shield, Palette, Info, ChevronRight, LogOut, Users } from "lucide-react";
+import { Bell, User, Shield, Info, ChevronRight, LogOut, Users } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { useEffect, useState } from "react";
-import { clearSession, getSessionUser } from "@/features/auth/session";
+import { clearSession, getSessionUser, type SessionUser } from "@/features/auth/session";
+import { changePassword, deleteAccount, getCurrentUser, updateProfile } from "@/features/auth/auth.api";
 import {
   requireAuthBeforeLoad,
   useRequireAuthRedirect,
 } from "@/features/auth/route-guard";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   getAutoExpirySettings,
   getNotificationPreferences,
@@ -25,6 +46,21 @@ export const Route = createFileRoute("/settings")({
   component: SettingsPage,
 });
 
+type EditableProfileField = "firstName" | "lastName" | "age" | "address";
+
+const PROFILE_FIELD_LABELS: Record<EditableProfileField, string> = {
+  firstName: "Name",
+  lastName: "Family name",
+  age: "Age",
+  address: "Address",
+};
+
+function profileFieldValue(profile: SessionUser | null, field: EditableProfileField): string {
+  if (!profile) return "";
+  const value = profile[field];
+  return value === null || value === undefined ? "" : String(value);
+}
+
 export function SettingsPage() {
   const authed = useRequireAuthRedirect();
 
@@ -33,7 +69,11 @@ export function SettingsPage() {
   }
 
   const navigate = useNavigate();
-  const currentUser = getSessionUser();
+  const [currentUser, setCurrentUser] = useState<SessionUser | null>(null);
+  const [profile, setProfile] = useState<SessionUser | null>(null);
+  const [editingField, setEditingField] = useState<EditableProfileField | null>(null);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
   const [notificationPreferences, setNotificationPreferences] = useState({
     expirationEnabled: true,
     priceDropEnabled: true,
@@ -48,6 +88,53 @@ export function SettingsPage() {
   const [autoExpiryError, setAutoExpiryError] = useState<string | null>(null);
   const [expiryPreferences, setExpiryPreferences] = useState<ExpiryPreference[]>([]);
   const [loadingExpiryPreferences, setLoadingExpiryPreferences] = useState(true);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [deleteAccountError, setDeleteAccountError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Read client-only (localStorage-backed) session data after mount, not during render — doing
+    // it synchronously in the render body would make the client's first paint diverge from the
+    // server-rendered HTML (which has no access to localStorage), triggering a React hydration
+    // mismatch that discards and regenerates this whole subtree, wiping any state (e.g. an
+    // in-progress profile edit) set in the window before that regeneration completes.
+    setCurrentUser(getSessionUser());
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    getCurrentUser()
+      .then((user) => {
+        if (mounted) setProfile(user);
+      })
+      .catch(() => {
+        // Non-blocking: the rest of the settings page still works without a loaded profile.
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  async function handleSaveProfileField(field: EditableProfileField, rawValue: string) {
+    setSavingProfile(true);
+    setProfileError(null);
+    try {
+      const payload =
+        field === "age"
+          ? { age: rawValue === "" ? undefined : Number(rawValue) }
+          : { [field]: rawValue };
+      const updated = await updateProfile(payload);
+      setProfile(updated);
+      setEditingField(null);
+    } catch (apiError) {
+      setProfileError(apiError instanceof Error ? apiError.message : "Could not save profile.");
+    } finally {
+      setSavingProfile(false);
+    }
+  }
 
   useEffect(() => {
     let mounted = true;
@@ -186,14 +273,57 @@ export function SettingsPage() {
       .catch(() => undefined);
   }
 
+  async function handleChangePassword(currentPassword: string, newPassword: string) {
+    setSavingPassword(true);
+    setPasswordError(null);
+    try {
+      await changePassword({ currentPassword, newPassword });
+      setChangingPassword(false);
+    } catch (apiError) {
+      setPasswordError(
+        apiError instanceof Error ? apiError.message : "Could not change password.",
+      );
+    } finally {
+      setSavingPassword(false);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    setDeletingAccount(true);
+    setDeleteAccountError(null);
+    try {
+      await deleteAccount();
+      clearSession();
+      navigate({ to: "/auth" });
+    } catch (apiError) {
+      setDeleteAccountError(
+        apiError instanceof Error ? apiError.message : "Could not delete account.",
+      );
+    } finally {
+      setDeletingAccount(false);
+    }
+  }
+
   function handleSignOut() {
     clearSession();
     navigate({ to: "/auth" });
   }
 
+  function handleContactDeveloper() {
+    const subject = encodeURIComponent("Request contact from RealSaveFooding");
+    window.location.href = `mailto:jesramgue@gmail.com?subject=${subject}`;
+  }
+
   return (
     <AppShell title="Settings">
-      <ProfileCard email={currentUser?.email} />
+      <ProfileCard
+        firstName={profile?.firstName}
+        lastName={profile?.lastName}
+        email={profile?.email ?? currentUser?.email}
+        onClick={() =>
+          document.getElementById("profile-section")?.scrollIntoView({ behavior: "smooth" })
+        }
+      />
 
       <Group title="Shared Pantry" icon={<Users className="size-4" />}>
         <Link to="/sharing" className="flex items-center justify-between px-4 py-3.5">
@@ -303,32 +433,131 @@ export function SettingsPage() {
         onResetAll={handleResetAllExpiryPreferences}
       />
 
-      <Group title="Cloud Sync" icon={<Cloud className="size-4" />}>
-        <Row label="Sync provider" value="iCloud" />
-        <Row label="Last sync" value="2 min ago" />
+      <Group id="profile-section" title="Profile" icon={<User className="size-4" />}>
+        <Row
+          label="Name"
+          value={profileFieldValue(profile, "firstName")}
+          onClick={() => setEditingField("firstName")}
+          testId="profile-row-firstName"
+        />
+        <Row
+          label="Family name"
+          value={profileFieldValue(profile, "lastName")}
+          onClick={() => setEditingField("lastName")}
+          testId="profile-row-lastName"
+        />
+        <Row
+          label="Age"
+          value={profileFieldValue(profile, "age")}
+          onClick={() => setEditingField("age")}
+          testId="profile-row-age"
+        />
+        <Row label="Email" value={profile?.email ?? currentUser?.email} />
+        <Row
+          label="Address"
+          value={profileFieldValue(profile, "address")}
+          onClick={() => setEditingField("address")}
+          testId="profile-row-address"
+        />
       </Group>
 
-      <Group title="Profile" icon={<User className="size-4" />}>
-        <Row label="Name" value="Alex" />
-        <Row label="Family name" value="Garcia" />
-        <Row label="Age" value="32" />
-        <Row label="Email" value="alex@example.com" />
-        <Row label="Address" value="Madrid, 28001, ES" />
-      </Group>
+      {profileError && (
+        <p
+          data-testid="profile-error"
+          className="mb-4 rounded-xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-[12px] text-destructive"
+        >
+          {profileError}
+        </p>
+      )}
+
+      <EditProfileFieldDialog
+        open={editingField !== null}
+        label={editingField ? PROFILE_FIELD_LABELS[editingField] : ""}
+        initialValue={profileFieldValue(profile, editingField ?? "firstName")}
+        inputType={editingField === "age" ? "number" : "text"}
+        saving={savingProfile}
+        onCancel={() => {
+          setEditingField(null);
+          setProfileError(null);
+        }}
+        onSave={(value) => {
+          if (editingField) {
+            void handleSaveProfileField(editingField, value);
+          }
+        }}
+      />
 
       <Group title="Privacy & Security" icon={<Shield className="size-4" />}>
-        <Row label="Ad privacy" value="Customize" />
-        <Row label="Change password" />
-        <Row label="Delete account" danger />
+        <Row
+          label="Change password"
+          onClick={() => setChangingPassword(true)}
+          testId="change-password-row"
+        />
+        <Row
+          label="Delete account"
+          danger
+          onClick={() => setConfirmingDelete(true)}
+          testId="delete-account-row"
+        />
       </Group>
 
-      <Group title="Appearance" icon={<Palette className="size-4" />}>
-        <ThemePicker />
-      </Group>
+      <ChangePasswordDialog
+        open={changingPassword}
+        saving={savingPassword}
+        error={passwordError}
+        onCancel={() => {
+          setChangingPassword(false);
+          setPasswordError(null);
+        }}
+        onSave={(currentPassword, newPassword) => {
+          void handleChangePassword(currentPassword, newPassword);
+        }}
+      />
+
+      <AlertDialog open={confirmingDelete} onOpenChange={(next) => !next && setConfirmingDelete(false)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete account?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete your account and all associated data — pantry items,
+              receipts, notifications, and shared pantry memberships. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {deleteAccountError && (
+            <p
+              data-testid="delete-account-error"
+              className="rounded-xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-[12px] text-destructive"
+            >
+              {deleteAccountError}
+            </p>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="delete-account-cancel" disabled={deletingAccount}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              data-testid="delete-account-confirm"
+              disabled={deletingAccount}
+              onClick={(e) => {
+                e.preventDefault();
+                void handleDeleteAccount();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete account
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Group title="App info" icon={<Info className="size-4" />}>
-        <Row label="Version" value="1.0.0 (beta)" />
-        <Row label="Contact developer" value="Email" />
+        <Row label="Version" value="1.0.0 (beta)" showChevron={false} />
+        <Row
+          label="Contact developer"
+          value="Email"
+          onClick={handleContactDeveloper}
+          testId="contact-developer-row"
+        />
       </Group>
 
       <button
@@ -410,22 +639,53 @@ function ExpiryLearningSection({
   );
 }
 
-function ProfileCard({ email }: { email?: string }) {
+function ProfileCard({
+  firstName,
+  lastName,
+  email,
+  onClick,
+}: {
+  firstName?: string | null;
+  lastName?: string | null;
+  email?: string;
+  onClick: () => void;
+}) {
+  const fullName = [firstName, lastName].filter(Boolean).join(" ").trim();
+  const initial = (firstName ?? email ?? "?").charAt(0).toUpperCase();
+
   return (
-    <div className="ios-card flex items-center gap-4 p-4 mb-5">
-      <div className="grid size-14 place-items-center rounded-full bg-primary text-primary-foreground text-xl font-semibold">A</div>
+    <div
+      className="ios-card flex items-center gap-4 p-4 mb-5 cursor-pointer active:bg-muted/50"
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      data-testid="profile-card"
+    >
+      <div className="grid size-14 place-items-center rounded-full bg-primary text-primary-foreground text-xl font-semibold">
+        {initial}
+      </div>
       <div className="flex-1">
-        <p className="font-semibold text-[16px]">Alex Garcia</p>
-        <p className="text-[12.5px] text-muted-foreground">{email ?? "alex@example.com"}</p>
+        <p className="font-semibold text-[16px]">{fullName || "Your profile"}</p>
+        <p className="text-[12.5px] text-muted-foreground">{email ?? ""}</p>
       </div>
       <ChevronRight className="size-4 text-muted-foreground" />
     </div>
   );
 }
 
-function Group({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
+function Group({
+  title,
+  icon,
+  children,
+  id,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  id?: string;
+}) {
   return (
-    <section className="mb-5">
+    <section id={id} className="mb-5 scroll-mt-4">
       <h2 className="px-2 mb-2 flex items-center gap-1.5 text-[12px] uppercase tracking-wider text-muted-foreground font-semibold">
         {icon} {title}
       </h2>
@@ -434,15 +694,183 @@ function Group({ title, icon, children }: { title: string; icon: React.ReactNode
   );
 }
 
-function Row({ label, value, danger }: { label: string; value?: string; danger?: boolean }) {
+function Row({
+  label,
+  value,
+  danger,
+  onClick,
+  testId,
+  showChevron = true,
+}: {
+  label: string;
+  value?: string | null;
+  danger?: boolean;
+  onClick?: () => void;
+  testId?: string;
+  showChevron?: boolean;
+}) {
   return (
-    <div className="flex items-center justify-between px-4 py-3.5">
+    <div
+      className={`flex items-center justify-between px-4 py-3.5 ${onClick ? "cursor-pointer active:bg-muted/50" : ""}`}
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      data-testid={testId}
+    >
       <span className={`text-[14.5px] ${danger ? "text-destructive font-medium" : ""}`}>{label}</span>
       <div className="flex items-center gap-1.5 text-muted-foreground">
         {value && <span className="text-[13.5px]">{value}</span>}
-        <ChevronRight className="size-4" />
+        {showChevron && <ChevronRight className="size-4" />}
       </div>
     </div>
+  );
+}
+
+function EditProfileFieldDialog({
+  open,
+  label,
+  initialValue,
+  inputType,
+  saving,
+  onCancel,
+  onSave,
+}: {
+  open: boolean;
+  label: string;
+  initialValue: string;
+  inputType: "text" | "number";
+  saving: boolean;
+  onCancel: () => void;
+  onSave: (value: string) => void;
+}) {
+  const [value, setValue] = useState(initialValue);
+
+  useEffect(() => {
+    if (open) {
+      setValue(initialValue);
+    }
+  }, [open, initialValue]);
+
+  return (
+    <Dialog open={open} onOpenChange={(next) => !next && onCancel()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{label}</DialogTitle>
+          <DialogDescription>Update your {label.toLowerCase()}.</DialogDescription>
+        </DialogHeader>
+        <Input
+          type={inputType}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          data-testid="profile-edit-input"
+          disabled={saving}
+          autoFocus
+        />
+        <DialogFooter>
+          <Button variant="outline" onClick={onCancel} disabled={saving} data-testid="profile-edit-cancel">
+            Cancel
+          </Button>
+          <Button onClick={() => onSave(value)} disabled={saving} data-testid="profile-edit-save">
+            Save
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ChangePasswordDialog({
+  open,
+  saving,
+  error,
+  onCancel,
+  onSave,
+}: {
+  open: boolean;
+  saving: boolean;
+  error: string | null;
+  onCancel: () => void;
+  onSave: (currentPassword: string, newPassword: string) => void;
+}) {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setValidationError(null);
+    }
+  }, [open]);
+
+  function handleSave() {
+    if (newPassword.length < 8) {
+      setValidationError("New password must be at least 8 characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setValidationError("New passwords do not match.");
+      return;
+    }
+    setValidationError(null);
+    onSave(currentPassword, newPassword);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(next) => !next && onCancel()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Change password</DialogTitle>
+          <DialogDescription>Enter your current password and choose a new one.</DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col gap-3">
+          <Input
+            type="password"
+            placeholder="Current password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            data-testid="change-password-current"
+            disabled={saving}
+            autoFocus
+          />
+          <Input
+            type="password"
+            placeholder="New password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            data-testid="change-password-new"
+            disabled={saving}
+          />
+          <Input
+            type="password"
+            placeholder="Confirm new password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            data-testid="change-password-confirm"
+            disabled={saving}
+          />
+        </div>
+        {(validationError || error) && (
+          <p
+            data-testid="change-password-error"
+            className="rounded-xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-[12px] text-destructive"
+          >
+            {validationError ?? error}
+          </p>
+        )}
+        <DialogFooter>
+          <Button variant="outline" onClick={onCancel} disabled={saving} data-testid="change-password-cancel">
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={saving} data-testid="change-password-save">
+            Save
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -494,21 +922,3 @@ function Toggle({
   );
 }
 
-function ThemePicker() {
-  const [v, setV] = useState<"light" | "dark" | "system">("system");
-  return (
-    <div className="p-3">
-      <div className="grid grid-cols-3 gap-2 rounded-xl bg-secondary p-1">
-        {(["light", "dark", "system"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setV(t)}
-            className={`py-2 rounded-lg text-[13px] font-medium capitalize transition ${v === t ? "bg-surface shadow-ios" : "text-muted-foreground"}`}
-          >
-            {t === "system" ? "Device" : t}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}

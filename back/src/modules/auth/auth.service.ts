@@ -8,7 +8,9 @@ import type { User } from "@prisma/client";
 import * as bcrypt from "bcrypt";
 import { MetricsService } from "../../common/metrics/metrics.service";
 import { UsersService } from "../users/users.service";
+import { UpdateProfileDto } from "../users/dto/update-profile.dto";
 import { AuthCredentialsDto } from "./dto/auth-credentials.dto";
+import { ChangePasswordDto } from "./dto/change-password.dto";
 import type { JwtPayload } from "./types/jwt-payload.type";
 
 @Injectable()
@@ -59,15 +61,47 @@ export class AuthService {
     return this.buildAuthResponse(user);
   }
 
-  async me(userId: string): Promise<{ id: string; email: string; createdAt: Date }> {
+  async me(userId: string): Promise<ProfileResponse> {
     const user = await this.usersService.findById(userId);
     if (!user) {
       throw new UnauthorizedException();
     }
 
+    return this.toProfileResponse(user);
+  }
+
+  async updateProfile(userId: string, dto: UpdateProfileDto): Promise<ProfileResponse> {
+    const updatedUser = await this.usersService.updateProfile(userId, dto);
+    return this.toProfileResponse(updatedUser);
+  }
+
+  async changePassword(userId: string, dto: ChangePasswordDto): Promise<void> {
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+
+    const isCurrentPasswordValid = await bcrypt.compare(dto.currentPassword, user.password);
+    if (!isCurrentPasswordValid) {
+      throw new UnauthorizedException("Current password is incorrect");
+    }
+
+    const newPasswordHash = await bcrypt.hash(dto.newPassword, AuthService.SALT_ROUNDS);
+    await this.usersService.updatePassword(userId, newPasswordHash);
+  }
+
+  async deleteAccount(userId: string): Promise<void> {
+    await this.usersService.deleteUser(userId);
+  }
+
+  private toProfileResponse(user: User): ProfileResponse {
     return {
       id: user.id,
       email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      age: user.age,
+      address: user.address,
       createdAt: user.createdAt,
     };
   }
@@ -80,11 +114,17 @@ export class AuthService {
 
     return {
       accessToken: this.jwtService.sign(payload),
-      user: {
-        id: user.id,
-        email: user.email,
-        createdAt: user.createdAt,
-      },
+      user: this.toProfileResponse(user),
     };
   }
+}
+
+export interface ProfileResponse {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  age: number | null;
+  address: string | null;
+  createdAt: Date;
 }
