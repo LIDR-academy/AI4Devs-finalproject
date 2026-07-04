@@ -25,7 +25,7 @@ class QrReadResult:
 class QrReader:
     def __init__(
         self,
-        pattern: str = r"^TRUCK-\d{3}$",
+        pattern: str = r"^TRUCK-.+$",
         allowed_truck_codes: tuple[str, ...] = (),
         detector: Any | None = None,
     ) -> None:
@@ -51,4 +51,3 @@ class QrReader:
             is_valid=is_valid,
             detected=True,
         )
-

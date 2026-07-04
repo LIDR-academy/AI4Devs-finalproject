@@ -8,6 +8,7 @@ import { healthRouter } from "./modules/health/health.routes";
 import { sessionsRouter } from "./modules/sessions/sessions.routes";
 import { robotRouter } from "./modules/robot/robot.routes";
 import { dashboardRouter } from "./modules/dashboard/dashboard.routes";
+import { visionRouter } from "./modules/vision/vision.routes";
 
 export const createApp = () => {
   const app = express();
@@ -20,6 +21,7 @@ export const createApp = () => {
   app.use("/health", healthRouter);
   app.use("/sessions", sessionsRouter);
   app.use("/robot", robotRouter);
+  app.use("/vision", visionRouter);
   app.use("/dashboard", dashboardRouter);
 
   app.use(notFoundHandler);

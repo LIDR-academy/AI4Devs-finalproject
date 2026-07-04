@@ -10,9 +10,9 @@ from typing import Any
 import cv2
 
 try:
-    from ..models import CubeDetection, DetectionSnapshot
+    from ..models import CubeDetection, DetectionSnapshot, RegionOfInterest
 except ImportError:
-    from models import CubeDetection, DetectionSnapshot
+    from models import CubeDetection, DetectionSnapshot, RegionOfInterest
 
 
 SENSITIVE_KEYS = ("password", "secret", "token", "api_key", "apikey")
@@ -21,6 +21,10 @@ BOX_COLORS_BGR = {
     "blue": (255, 0, 0),
     "green": (0, 180, 0),
     "yellow": (0, 220, 255),
+}
+ROI_COLORS_BGR = {
+    "cargoRoi": (0, 200, 0),
+    "qrRoi": (255, 0, 255),
 }
 
 
@@ -104,6 +108,20 @@ class EvidenceWriter:
     @staticmethod
     def annotate(frame: Any, snapshot: DetectionSnapshot) -> Any:
         annotated = frame.copy()
+        EvidenceWriter._draw_roi(
+            annotated,
+            snapshot.metadata.get("cargoRoi"),
+            label="CARGO ROI",
+            color=ROI_COLORS_BGR["cargoRoi"],
+        )
+        qr_status = snapshot.metadata.get("qrStatus")
+        qr_label = "QR ROI" if qr_status == "OK" else f"QR ROI {qr_status or ''}".strip()
+        EvidenceWriter._draw_roi(
+            annotated,
+            snapshot.metadata.get("qrRoi"),
+            label=qr_label,
+            color=ROI_COLORS_BGR["qrRoi"],
+        )
         for cube in snapshot.detections:
             color = BOX_COLORS_BGR.get(cube.color, (255, 255, 255))
             cv2.rectangle(
@@ -128,6 +146,55 @@ class EvidenceWriter:
                 cv2.LINE_AA,
             )
         return annotated
+
+    @staticmethod
+    def _draw_roi(frame: Any, roi_value: Any, *, label: str, color: tuple[int, int, int]) -> None:
+        roi = EvidenceWriter._parse_roi(roi_value)
+        if roi is None:
+            return
+        height, width = frame.shape[:2]
+        x1 = max(0, min(width - 1, roi.x))
+        y1 = max(0, min(height - 1, roi.y))
+        x2 = max(0, min(width - 1, roi.x + roi.w))
+        y2 = max(0, min(height - 1, roi.y + roi.h))
+        if x1 == x2 or y1 == y2:
+            return
+        cv2.rectangle(frame, (x1, y1), (x2, y2), color, 3)
+        EvidenceWriter._draw_label(frame, label, (x1, max(18, y1 - 8)), color)
+
+    @staticmethod
+    def _parse_roi(value: Any) -> RegionOfInterest | None:
+        if isinstance(value, RegionOfInterest):
+            return value
+        if not isinstance(value, dict):
+            return None
+        try:
+            return RegionOfInterest(
+                x=int(value["x"]),
+                y=int(value["y"]),
+                w=int(value["w"]),
+                h=int(value["h"]),
+            )
+        except (KeyError, TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _draw_label(frame: Any, label: str, origin: tuple[int, int], color: tuple[int, int, int]) -> None:
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 0.5
+        thickness = 2
+        text_size, baseline = cv2.getTextSize(label, font, font_scale, thickness)
+        text_w, text_h = text_size
+        x = max(0, min(origin[0], max(0, frame.shape[1] - text_w - 8)))
+        y = max(text_h + baseline + 4, min(origin[1], frame.shape[0] - 4))
+        cv2.rectangle(
+            frame,
+            (x, y - text_h - baseline - 6),
+            (x + text_w + 8, y + baseline),
+            (0, 0, 0),
+            -1,
+        )
+        cv2.putText(frame, label, (x + 4, y - 4), font, font_scale, color, thickness, cv2.LINE_AA)
 
     @staticmethod
     def _write_json_atomic(path: Path, payload: dict[str, Any]) -> None:

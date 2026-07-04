@@ -16,7 +16,7 @@ export function CountsPanel({ counts }: Props) {
     <section className="panel">
       <div className="panel-header compact">
         <div>
-          <p className="eyebrow">Cubos detectados</p>
+          <p className="eyebrow">Cubos registrados en sesion</p>
           <h2>{counts.total}</h2>
         </div>
       </div>

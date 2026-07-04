@@ -10,6 +10,9 @@ export type EdgeVisionStatus = {
   cameraAllowed: boolean;
   lastSnapshotAt: string | null;
   lastError: string | null;
+  lastVisionSync?: Record<string, unknown> | null;
+  lastSyncedSnapshotSignature?: string | null;
+  lastDryRunPlan?: Record<string, unknown> | null;
   serialOpened: boolean;
   hardwareMovement: boolean;
 };
@@ -29,10 +32,17 @@ export type EdgeVisionSnapshot = {
   timestamp: string | null;
   source: string;
   truckCode: string | null;
+  snapshotSignature?: string | null;
+  qrDetected?: boolean | null;
+  qrValid?: boolean | null;
+  qrStatus?: string | null;
+  qrRoi?: { x: number; y: number; w: number; h: number } | null;
+  cargoRoi?: { x: number; y: number; w: number; h: number } | null;
   counts: Record<CubeColor, number>;
   detections: EdgeVisionDetection[];
   imageUrl: string | null;
   snapshotCameraIndex: number | null;
+  lastVisionSync?: Record<string, unknown> | null;
   lastError: string | null;
 };
 

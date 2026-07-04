@@ -67,11 +67,19 @@ class DryRunEvidenceWriter:
         return filename
 
 
+class DryRunPreconditionError(ValueError):
+    def __init__(self, code: str, message: str) -> None:
+        self.code = code
+        super().__init__(f"{code}: {message}")
+
+
 def _backend_source(source: str) -> str:
     mapping = {
         "simulation": "simulation",
         "file": "opencv-file",
         "camera": "opencv-camera",
+        "opencv-file": "opencv-file",
+        "opencv-camera": "opencv-camera",
     }
     try:
         return mapping[source]
@@ -106,10 +114,16 @@ def build_backend_action_payload(
     profile: EdgeRunProfile,
     drop_zone_code: str,
     position_order: int,
+    drop_zone_pose: dict[str, float] | None = None,
+    sequence_preview: list[str] | None = None,
+    commands_preview: list[str] | None = None,
 ) -> dict[str, Any]:
     source = _backend_source(snapshot.source)
+    center_x, center_y = selected_cube.center
     metadata: dict[str, Any] = {
         "runId": snapshot.run_id,
+        "snapshotSignature": snapshot.metadata.get("snapshotSignature"),
+        "truckCode": snapshot.truck_code,
         "profile": profile.value,
         "dryRun": True,
         "source": source,
@@ -121,8 +135,19 @@ def build_backend_action_payload(
             "h": selected_cube.h,
             "confidence": selected_cube.confidence,
         },
+        "selectedCubeColor": selected_cube.color,
+        "selectedCubeCenter": {"x": center_x, "y": center_y},
+        "selectedCubeBoundingBox": {
+            "x": selected_cube.x,
+            "y": selected_cube.y,
+            "w": selected_cube.w,
+            "h": selected_cube.h,
+        },
         "dropZoneCode": drop_zone_code,
+        "dropZonePose": drop_zone_pose,
         "positionOrder": position_order,
+        "sequencePreview": sequence_preview or [],
+        "commandsPreview": commands_preview or [],
         "releaseConfirmed": False,
         "statePersisted": False,
         "serialOpened": False,
@@ -169,6 +194,7 @@ def _start_backend_trace(
         profile=config.profile,
         drop_zone_code=selection.slot.code,
         position_order=selection.slot.position_order,
+        drop_zone_pose=selection.slot.pose.as_dict(),
     )
     action_payload["sessionId"] = session_id
     action_response = client.register_robot_action(action_payload)
@@ -215,6 +241,9 @@ def _safe_error_code(error: Exception) -> str:
     code = getattr(error, "code", None)
     allowed = {
         "ZONE_UNAVAILABLE",
+        "QR_NOT_DETECTED",
+        "QR_INVALID",
+        "NO_CUBES_DETECTED",
         "MISSING_CALIBRATION",
         "CUBE_UNAVAILABLE",
         "UNSAFE_PROFILE",
@@ -234,6 +263,23 @@ def _safe_error_code(error: Exception) -> str:
         "POSE_OUTSIDE_WORKSPACE",
     }
     return code if isinstance(code, str) and code in allowed else "DRY_RUN_FAILED"
+
+
+def _qr_status(snapshot: DetectionSnapshot) -> str:
+    value = snapshot.metadata.get("qrStatus")
+    return value if isinstance(value, str) and value else "QR_NOT_DETECTED"
+
+
+def _validate_snapshot_preconditions(config: EdgeConfig, snapshot: DetectionSnapshot) -> None:
+    if config.profile is not EdgeRunProfile.VISION_DRY_RUN or snapshot.source == "simulation":
+        return
+
+    if not bool(snapshot.metadata.get("qrDetected")):
+        raise DryRunPreconditionError("QR_NOT_DETECTED", "Valid QR is required before planning")
+    if not snapshot.truck_code or not bool(snapshot.metadata.get("qrValid")) or _qr_status(snapshot) != "OK":
+        raise DryRunPreconditionError("QR_INVALID", "QR must be valid and include truckCode")
+    if not snapshot.detections:
+        raise DryRunPreconditionError("NO_CUBES_DETECTED", "At least one detected cube is required")
 
 
 def _snapshot_from_simulation(config: EdgeConfig) -> DetectionSnapshot:
@@ -419,6 +465,7 @@ def run_integrated_dry_run(
         )
     if not snapshot.run_id:
         raise ValueError("DetectionSnapshot.run_id is required")
+    _validate_snapshot_preconditions(config, snapshot)
 
     selected_cube = CubeSelector().select(snapshot)
     drop_zone_adapter = adapter or DropZoneAdapter(
@@ -446,6 +493,12 @@ def run_integrated_dry_run(
             config.profile,
             dry_run=True,
         )
+        if backend_trace is not None:
+            backend_trace["metadata"] = {
+                **backend_trace["metadata"],
+                "sequencePreview": [step.name for step in plan.steps],
+                "commandsPreview": [step.command_preview for step in plan.steps],
+            }
     except Exception as error:
         if backend_client is not None and backend_trace is not None:
             try:

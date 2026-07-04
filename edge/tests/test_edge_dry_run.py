@@ -8,7 +8,12 @@ from unittest.mock import Mock, patch
 import cv2
 import numpy as np
 
-from src.edge_dry_run import DryRunEvidenceWriter, build_backend_action_payload, run_integrated_dry_run
+from src.edge_dry_run import (
+    DryRunEvidenceWriter,
+    DryRunPreconditionError,
+    build_backend_action_payload,
+    run_integrated_dry_run,
+)
 from src.models import CubeDetection, DetectionSnapshot, EdgeRunProfile
 from src.robot.drop_zone_adapter import DropZoneAdapter
 from src.robot.drop_zone_planner import DropZoneUnavailableError
@@ -138,7 +143,16 @@ class EdgeDryRunTests(unittest.TestCase):
             },
         )
 
-        with patch("src.vision.capture.cv2.VideoCapture") as video_capture:
+        qr_reader = Mock()
+        qr_reader.return_value.read.return_value.raw_value = "TRUCK-001"
+        qr_reader.return_value.read.return_value.truck_code = "TRUCK-001"
+        qr_reader.return_value.read.return_value.is_valid = True
+        qr_reader.return_value.read.return_value.detected = True
+
+        with patch("src.vision.capture.cv2.VideoCapture") as video_capture, patch(
+            "src.edge_dry_run.QrReader",
+            qr_reader,
+        ):
             result = run_integrated_dry_run(self.config_path)
 
         video_capture.assert_not_called()
@@ -261,6 +275,80 @@ class EdgeDryRunTests(unittest.TestCase):
         self.assertEqual("opencv-file", payload["metadata"]["source"])
         self.assertNotIn("private/path.png", encoded)
         self.assertNotIn("secret", encoded)
+
+    def test_real_vision_snapshot_requires_valid_qr_before_planning(self) -> None:
+        self.write_config("red", profile="vision-dry-run")
+        snapshot = DetectionSnapshot(
+            "run-no-qr",
+            "opencv-camera",
+            (CubeDetection("red", 80, 80, 20, 20, 0.9),),
+            metadata={"qrDetected": False, "qrValid": False, "qrStatus": "QR_NOT_DETECTED"},
+        )
+
+        with self.assertRaises(DryRunPreconditionError) as context:
+            run_integrated_dry_run(self.config_path, snapshot=snapshot)
+
+        self.assertEqual("QR_NOT_DETECTED", context.exception.code)
+
+    def test_invalid_qr_does_not_plan(self) -> None:
+        self.write_config("red", profile="vision-dry-run")
+        snapshot = DetectionSnapshot(
+            "run-invalid-qr",
+            "opencv-camera",
+            (CubeDetection("red", 80, 80, 20, 20, 0.9),),
+            metadata={"qrDetected": True, "qrValid": False, "qrStatus": "QR_INVALID"},
+        )
+
+        with self.assertRaises(DryRunPreconditionError) as context:
+            run_integrated_dry_run(self.config_path, snapshot=snapshot)
+
+        self.assertEqual("QR_INVALID", context.exception.code)
+
+    def test_real_vision_snapshot_without_cubes_does_not_plan(self) -> None:
+        self.write_config("red", profile="vision-dry-run")
+        snapshot = DetectionSnapshot(
+            "run-no-cubes",
+            "opencv-camera",
+            (),
+            truck_code="TRUCK-001",
+            metadata={"qrDetected": True, "qrValid": True, "qrStatus": "OK"},
+        )
+
+        with self.assertRaises(DryRunPreconditionError) as context:
+            run_integrated_dry_run(self.config_path, snapshot=snapshot)
+
+        self.assertEqual("NO_CUBES_DETECTED", context.exception.code)
+
+    def test_backend_payload_includes_real_vision_planner_metadata(self) -> None:
+        cube = CubeDetection("red", 10, 20, 30, 40, 0.9)
+        snapshot = DetectionSnapshot(
+            "run-metadata",
+            "opencv-camera",
+            (cube,),
+            truck_code="TRUCK-001",
+            metadata={"snapshotSignature": "sig-001"},
+        )
+
+        payload = build_backend_action_payload(
+            snapshot,
+            cube,
+            profile=EdgeRunProfile.VISION_DRY_RUN,
+            drop_zone_code="DROP_RED_01",
+            position_order=1,
+            drop_zone_pose={"x": 1.0, "y": 2.0, "z": 3.0},
+            sequence_preview=["ready_to_take"],
+            commands_preview=["POSE 1 2 3 0"],
+        )
+
+        metadata = payload["metadata"]
+        self.assertEqual("sig-001", metadata["snapshotSignature"])
+        self.assertEqual("TRUCK-001", metadata["truckCode"])
+        self.assertEqual({"x": 25.0, "y": 40.0}, metadata["selectedCubeCenter"])
+        self.assertEqual({"x": 10, "y": 20, "w": 30, "h": 40}, metadata["selectedCubeBoundingBox"])
+        self.assertEqual({"x": 1.0, "y": 2.0, "z": 3.0}, metadata["dropZonePose"])
+        self.assertEqual(["ready_to_take"], metadata["sequencePreview"])
+        self.assertFalse(metadata["serialOpened"])
+        self.assertFalse(metadata["hardwareMovement"])
 
     def test_backend_action_is_marked_error_when_planner_fails(self) -> None:
         self.write_config("red")

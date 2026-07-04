@@ -30,14 +30,18 @@ export const requireString = (value: unknown, name: string) => {
   return value.trim();
 };
 
-export const optionalString = (value: unknown, name: string) => {
+export const optionalString = (value: unknown, name: string, maxLength?: number) => {
   if (value === undefined || value === null) {
     return undefined;
   }
   if (typeof value !== "string" || value.trim().length === 0) {
     throw new HttpError(400, `${name} must be a string`);
   }
-  return value.trim();
+  const trimmed = value.trim();
+  if (maxLength !== undefined && trimmed.length > maxLength) {
+    throw new HttpError(400, `${name} must be at most ${maxLength} characters`);
+  }
+  return trimmed;
 };
 
 export const optionalNumber = (value: unknown, name: string): number | undefined => {
@@ -81,8 +85,8 @@ export const optionalOneOf = <T extends readonly string[]>(
 
 export const validateTruckCode = (value: unknown) => {
   const truckCode = requireString(value, "truckCode").toUpperCase();
-  if (!/^TRUCK-\d{3}$/.test(truckCode)) {
-    throw new HttpError(400, "truckCode must use format TRUCK-001");
+  if (!/^TRUCK-[A-Z0-9][A-Z0-9_-]*$/.test(truckCode)) {
+    throw new HttpError(400, "truckCode must use format TRUCK-*");
   }
   return truckCode;
 };

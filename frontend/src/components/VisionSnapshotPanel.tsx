@@ -9,6 +9,33 @@ type Props = {
 const colorLabels = ["red", "blue", "green", "yellow"] as const;
 
 const value = (input: string | number | null | undefined) => input ?? "-";
+const booleanValue = (input: boolean | null | undefined) => {
+  if (input === true) return "Si";
+  if (input === false) return "No";
+  return "-";
+};
+
+const syncStatus = (input: Record<string, unknown> | null | undefined) => {
+  if (!input) return "-";
+  const status = typeof input.status === "string" ? input.status : "-";
+  const synced = typeof input.synced === "boolean" ? (input.synced ? "sincronizado" : "no sincronizado") : null;
+  return synced ? `${status} (${synced})` : status;
+};
+
+const dryRunStatus = (input: Record<string, unknown> | null | undefined) => {
+  if (!input) return "Sin plan dry-run generado";
+  const status = typeof input.status === "string" ? input.status : "-";
+  const planned = typeof input.planned === "boolean" ? (input.planned ? "planificado" : "no planificado") : null;
+  return planned ? `${status} (${planned})` : status;
+};
+
+const dryRunDropZone = (input: Record<string, unknown> | null | undefined) => {
+  if (!input) return "-";
+  return typeof input.dropZoneCode === "string" ? input.dropZoneCode : "-";
+};
+
+const roiValue = (roi: { x: number; y: number; w: number; h: number } | null | undefined) =>
+  roi ? `${roi.x},${roi.y},${roi.w},${roi.h}` : "-";
 
 function formatDate(valueToFormat: string | null | undefined) {
   if (!valueToFormat) {
@@ -41,7 +68,7 @@ export function VisionSnapshotPanel({ data, loading }: Props) {
           <p className="eyebrow">Vision / Camara</p>
           <h2>Snapshot de vision</h2>
           <p className="panel-subtitle">
-            Auto-refresh cada {formatSeconds(data.refreshMs)} segundos · Ultima actualizacion:{" "}
+            Auto-refresh cada {formatSeconds(data.refreshMs)} segundos - Ultima actualizacion:{" "}
             {formatDate(data.lastUpdatedAt)}
           </p>
         </div>
@@ -68,8 +95,18 @@ export function VisionSnapshotPanel({ data, loading }: Props) {
             <div><span className="metric-label">Camara activa</span><strong>{value(data.status?.activeCameraIndex)}</strong></div>
             <div><span className="metric-label">Camara snapshot</span><strong>{value(data.snapshot?.snapshotCameraIndex ?? data.status?.snapshotCameraIndex)}</strong></div>
             <div><span className="metric-label">Timestamp</span><strong>{formatDate(data.snapshot?.timestamp ?? data.status?.lastSnapshotAt)}</strong></div>
-            <div><span className="metric-label">Truck code</span><strong>{value(data.snapshot?.truckCode)}</strong></div>
-            <div><span className="metric-label">Cubos detectados</span><strong>{total}</strong></div>
+            <div><span className="metric-label">Truck code QR</span><strong>{value(data.snapshot?.truckCode)}</strong></div>
+            <div><span className="metric-label">QR detectado</span><strong>{booleanValue(data.snapshot?.qrDetected)}</strong></div>
+            <div><span className="metric-label">QR valido</span><strong>{booleanValue(data.snapshot?.qrValid)}</strong></div>
+            <div><span className="metric-label">Estado QR</span><strong>{value(data.snapshot?.qrStatus)}</strong></div>
+            <div><span className="metric-label">Firma snapshot</span><strong>{value(data.snapshot?.snapshotSignature)}</strong></div>
+            <div><span className="metric-label">Firma sincronizada</span><strong>{value(data.status?.lastSyncedSnapshotSignature)}</strong></div>
+            <div><span className="metric-label">Ultimo sync Backend</span><strong>{syncStatus(data.snapshot?.lastVisionSync ?? data.status?.lastVisionSync)}</strong></div>
+            <div><span className="metric-label">Ultimo plan dry-run</span><strong>{dryRunStatus(data.status?.lastDryRunPlan)}</strong></div>
+            <div><span className="metric-label">Drop zone dry-run</span><strong>{dryRunDropZone(data.status?.lastDryRunPlan)}</strong></div>
+            <div><span className="metric-label">QR ROI</span><strong>{roiValue(data.snapshot?.qrRoi)}</strong></div>
+            <div><span className="metric-label">Cargo ROI</span><strong>{roiValue(data.snapshot?.cargoRoi)}</strong></div>
+            <div><span className="metric-label">Cubos detectados por vision</span><strong>{total}</strong></div>
             <div className={serviceError ? "trace-error" : ""}>
               <span className="metric-label">Estado seguro</span>
               <strong>{serviceError ?? "Sin errores reportados"}</strong>

@@ -107,9 +107,21 @@ python src\service\vision_api.py --config config\edge.vision.example.json
 - el total de cubos es mayor que cero;
 - aparecen conteos por color;
 - la ultima accion del robot muestra `mode=simulation`.
-- el panel de trazabilidad muestra `profile`, fuente, cubo y `dropZoneCode`;
+- el panel de trazabilidad muestra `profile`, fuente, firma de snapshot, cubo,
+  centro, bounding box, `dropZoneCode`, cantidad de pasos y ultimo error;
 - el panel `Vision / Camara` muestra estado, fuente, timestamp, conteos e imagen
   si Edge Vision esta disponible;
+- el panel `Vision / Camara` muestra `truckCode` leido por QR, `qrDetected`,
+  `qrValid`, `qrStatus`, ROI QR y ultimo sync Backend si existe;
+- la imagen anotada del panel muestra los rectangulos `CARGO ROI` y `QR ROI`
+  cuando Edge Vision los expone en el snapshot;
+- el panel muestra `cargoRoi` y `qrRoi` en formato compacto `x,y,w,h`;
+- el panel `Vision / Camara` muestra el ultimo resultado de
+  `/vision/plan-dry-run` cuando existe, incluido `dropZoneCode` o error seguro;
+- el panel de conteos superiores se interpreta como `Cubos registrados en
+  sesion`, mientras el panel de vision muestra `Cubos detectados por vision`;
+- si Edge Vision detecta cubos pero no hay QR valido, esos cubos no deben
+  presentarse como registrados en sesion;
 - el panel indica `Auto-refresh cada X segundos` y `Ultima actualizacion`;
 - si Edge Vision esta apagado, muestra un error visible sin romper el resto del
   dashboard;

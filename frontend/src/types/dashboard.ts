@@ -15,12 +15,20 @@ export type SelectedCube = {
 
 export type ExecutionTrace = {
   runId: string | null;
+  snapshotSignature?: string | null;
+  truckCode?: string | null;
   profile: ExecutionProfile | null;
   dryRun: boolean | null;
   visionSource: string | null;
   selectedCube: SelectedCube | null;
+  selectedCubeColor?: string | null;
+  selectedCubeCenter?: { x?: number; y?: number } | null;
+  selectedCubeBoundingBox?: { x?: number; y?: number; w?: number; h?: number } | null;
   dropZoneCode: string | null;
+  dropZonePose?: { x?: number; y?: number; z?: number } | null;
   positionOrder: number | null;
+  sequencePreview?: string[];
+  commandsPreview?: string[];
   releaseConfirmed: boolean | null;
   statePersisted: boolean | null;
   configVersion: string | null;
@@ -64,5 +72,20 @@ export type OperationalDashboard = {
   selectedCube?: SelectedCube | null;
   dropZoneCode?: string | null;
   lastError?: { code: string | null; message: string | null } | null;
+  visionSync?: {
+    snapshotSignature: string | null;
+    source: string | null;
+    truckCode: string | null;
+    qrDetected: boolean | null;
+    qrValid: boolean | null;
+    qrStatus: string | null;
+    cameraIndex: number | null;
+    counts: Record<string, unknown> | null;
+    syncedAt: string | null;
+  } | null;
+  lastVisionSnapshot?: string | null;
+  lastVisionTruckCode?: string | null;
+  lastVisionCounts?: Record<string, unknown> | null;
+  lastVisionError?: { code: string | null; message: string | null } | null;
   updatedAt?: string | null;
 };

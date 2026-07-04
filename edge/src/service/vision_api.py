@@ -15,7 +15,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 try:
+    from ..api_client import BackendApiError, BackendClient
     from ..config import EdgeConfig, load_edge_config
+    from ..edge_dry_run import run_integrated_dry_run
     from ..models import DetectionSnapshot, EdgeRunProfile, SUPPORTED_COLORS
     from ..vision.capture import CapturedFrame, FrameCapture
     from ..vision.color_detector import ColorDetector
@@ -24,7 +26,9 @@ try:
     from ..vision.qr_reader import QrReader
 except ImportError:
     sys.path.append(str(Path(__file__).resolve().parents[1]))
+    from api_client import BackendApiError, BackendClient
     from config import EdgeConfig, load_edge_config
+    from edge_dry_run import run_integrated_dry_run
     from models import DetectionSnapshot, EdgeRunProfile, SUPPORTED_COLORS
     from vision.capture import CapturedFrame, FrameCapture
     from vision.color_detector import ColorDetector
@@ -36,7 +40,10 @@ except ImportError:
 @dataclass
 class VisionServiceState:
     config: EdgeConfig
+    config_path: Path
     allow_camera: bool
+    backend_client: BackendClient | None = None
+    auto_sync_backend: bool = False
     last_snapshot: DetectionSnapshot | None = None
     last_snapshot_monotonic: float | None = None
     last_image: bytes | None = None
@@ -45,6 +52,9 @@ class VisionServiceState:
     snapshot_camera_index: int | None = None
     camera_handle: Any | None = None
     camera_handle_index: int | None = None
+    last_sync: dict[str, object] | None = None
+    last_synced_signature: str | None = None
+    last_dry_run_plan: dict[str, object] | None = None
 
     @property
     def source(self) -> str:
@@ -75,6 +85,9 @@ def _status_payload(state: VisionServiceState) -> dict[str, object]:
         "cameraAllowed": state.allow_camera,
         "lastSnapshotAt": state.last_snapshot.captured_at.isoformat() if state.last_snapshot else None,
         "lastError": state.last_error,
+        "lastVisionSync": state.last_sync,
+        "lastSyncedSnapshotSignature": state.last_synced_signature,
+        "lastDryRunPlan": state.last_dry_run_plan,
         "serialOpened": False,
         "hardwareMovement": False,
     }
@@ -96,15 +109,23 @@ def _snapshot_payload(state: VisionServiceState) -> dict[str, object]:
         }
 
     payload = snapshot_to_dict(snapshot)
+    metadata = payload["metadata"] if isinstance(payload["metadata"], dict) else {}
     return {
         "runId": payload["runId"],
         "timestamp": payload["timestamp"],
         "source": payload["source"],
         "truckCode": payload["truckCode"],
+        "snapshotSignature": metadata.get("snapshotSignature"),
+        "qrDetected": metadata.get("qrDetected"),
+        "qrValid": metadata.get("qrValid"),
+        "qrStatus": metadata.get("qrStatus"),
+        "qrRoi": metadata.get("qrRoi"),
+        "cargoRoi": metadata.get("cargoRoi"),
         "counts": _counts(snapshot),
         "detections": payload["detections"],
         "imageUrl": "/vision/snapshot/image" if state.last_image else None,
         "snapshotCameraIndex": state.snapshot_camera_index,
+        "lastVisionSync": state.last_sync,
         "lastError": state.last_error,
     }
 
@@ -174,6 +195,163 @@ def _read_configured_camera(state: VisionServiceState) -> Any:
     return frame
 
 
+def _snapshot_signature(snapshot: DetectionSnapshot) -> str | None:
+    value = snapshot.metadata.get("snapshotSignature")
+    return value if isinstance(value, str) and value else None
+
+
+def _qr_status(snapshot: DetectionSnapshot) -> str:
+    value = snapshot.metadata.get("qrStatus")
+    return value if isinstance(value, str) else "QR_NOT_DETECTED"
+
+
+def _sync_payload(snapshot: DetectionSnapshot, state: VisionServiceState) -> dict[str, object]:
+    signature = _snapshot_signature(snapshot)
+    if not signature:
+        raise ValueError("Snapshot has no snapshotSignature")
+    return {
+        "runId": snapshot.run_id,
+        "snapshotSignature": signature,
+        "timestamp": snapshot.captured_at.isoformat(),
+        "source": snapshot.source,
+        "truckCode": snapshot.truck_code,
+        "qrDetected": bool(snapshot.metadata.get("qrDetected")),
+        "qrValid": bool(snapshot.metadata.get("qrValid")),
+        "qrStatus": _qr_status(snapshot),
+        "cameraIndex": state.snapshot_camera_index,
+        "counts": _counts(snapshot),
+        "detections": [
+            {
+                "color": detection.color,
+                "x": detection.x,
+                "y": detection.y,
+                "w": detection.w,
+                "h": detection.h,
+                "confidence": detection.confidence,
+                "metadata": detection.metadata,
+            }
+            for detection in snapshot.detections
+        ],
+        "metadata": {
+            "profile": state.config.profile.value,
+            "dryRun": True,
+            "serialOpened": False,
+            "hardwareMovement": False,
+            "qrRoi": snapshot.metadata.get("qrRoi"),
+            "cargoRoi": snapshot.metadata.get("cargoRoi"),
+            "frameSource": snapshot.frame_source,
+        },
+    }
+
+
+def sync_snapshot_to_backend(state: VisionServiceState, snapshot: DetectionSnapshot) -> dict[str, object]:
+    signature = _snapshot_signature(snapshot)
+    qr_status = _qr_status(snapshot)
+    if not snapshot.truck_code or qr_status != "OK":
+        result: dict[str, object] = {
+            "synced": False,
+            "status": qr_status,
+            "snapshotSignature": signature,
+            "truckCode": snapshot.truck_code,
+            "reason": "Valid QR is required before syncing vision detections",
+        }
+        state.last_sync = result
+        return result
+    if state.backend_client is None:
+        result = {
+            "synced": False,
+            "status": "BACKEND_SYNC_DISABLED",
+            "snapshotSignature": signature,
+            "truckCode": snapshot.truck_code,
+            "reason": "Backend sync is not configured",
+        }
+        state.last_sync = result
+        return result
+    if signature and state.last_synced_signature == signature:
+        result = {
+            "synced": False,
+            "status": "DUPLICATE_LOCAL",
+            "snapshotSignature": signature,
+            "truckCode": snapshot.truck_code,
+            "reason": "Snapshot already synced by this Edge Vision process",
+        }
+        state.last_sync = result
+        return result
+
+    response = state.backend_client.sync_vision_snapshot(_sync_payload(snapshot, state))
+    vision_sync = response.get("visionSync") if isinstance(response.get("visionSync"), dict) else response
+    result = {
+        "synced": True,
+        "status": "SYNCED",
+        "snapshotSignature": signature,
+        "truckCode": snapshot.truck_code,
+        "backend": vision_sync,
+    }
+    state.last_synced_signature = signature
+    state.last_sync = result
+    return result
+
+
+def plan_dry_run_from_latest_snapshot(state: VisionServiceState) -> dict[str, object]:
+    snapshot = refresh_snapshot_if_needed(state)
+    try:
+        result = run_integrated_dry_run(
+            state.config_path,
+            snapshot=snapshot,
+            allow_camera=False,
+            backend_client=state.backend_client,
+        )
+    except Exception as exc:
+        code = getattr(exc, "code", None)
+        plan_result: dict[str, object] = {
+            "planned": False,
+            "status": code if isinstance(code, str) and code else "DRY_RUN_FAILED",
+            "reason": str(exc),
+            "runId": snapshot.run_id,
+            "snapshotSignature": _snapshot_signature(snapshot),
+            "truckCode": snapshot.truck_code,
+            "serialOpened": False,
+            "hardwareMovement": False,
+        }
+        state.last_dry_run_plan = plan_result
+        return plan_result
+
+    robot_plan = result.get("robotActionPlan") if isinstance(result.get("robotActionPlan"), dict) else {}
+    selected_cube = result.get("selectedCube") if isinstance(result.get("selectedCube"), dict) else None
+    drop_zone = result.get("dropZone") if isinstance(result.get("dropZone"), dict) else None
+    backend = result.get("backend") if isinstance(result.get("backend"), dict) else None
+    plan_result = {
+        "planned": True,
+        "status": "DRY_RUN_PLANNED",
+        "runId": snapshot.run_id,
+        "snapshotSignature": _snapshot_signature(snapshot),
+        "truckCode": snapshot.truck_code,
+        "selectedCube": selected_cube,
+        "selectedCubeColor": selected_cube.get("color") if selected_cube else None,
+        "dropZoneCode": drop_zone.get("code") if drop_zone else robot_plan.get("dropZoneCode"),
+        "dropZonePose": drop_zone.get("pose") if drop_zone else None,
+        "positionOrder": drop_zone.get("positionOrder") if drop_zone else None,
+        "dryRun": True,
+        "profile": state.config.profile.value,
+        "serialOpened": False,
+        "hardwareMovement": False,
+        "sequencePreview": [
+            step.get("name")
+            for step in robot_plan.get("steps", [])
+            if isinstance(step, dict) and isinstance(step.get("name"), str)
+        ],
+        "commandsPreview": [
+            step.get("commandPreview")
+            for step in robot_plan.get("steps", [])
+            if isinstance(step, dict) and isinstance(step.get("commandPreview"), str)
+        ],
+        "backend": backend,
+        "evidence": result.get("evidence") if isinstance(result.get("evidence"), dict) else None,
+    }
+    state.last_dry_run_plan = plan_result
+    return plan_result
+
+
 def capture_snapshot(state: VisionServiceState) -> DetectionSnapshot:
     _validate_config(state.config, allow_camera=state.allow_camera)
     if state.config.vision.source == "simulation":
@@ -239,6 +417,17 @@ def capture_snapshot(state: VisionServiceState) -> DetectionSnapshot:
     state.last_error = None
     state.active_camera_index = active_camera_index
     state.snapshot_camera_index = active_camera_index
+    if state.auto_sync_backend:
+        try:
+            sync_snapshot_to_backend(state, snapshot)
+        except Exception as exc:
+            state.last_sync = {
+                "synced": False,
+                "status": "BACKEND_ERROR",
+                "snapshotSignature": _snapshot_signature(snapshot),
+                "truckCode": snapshot.truck_code,
+                "reason": str(exc),
+            }
     return snapshot
 
 
@@ -248,9 +437,22 @@ def refresh_snapshot_if_needed(state: VisionServiceState, *, ttl_seconds: float 
     return state.last_snapshot
 
 
-def create_app(config_path: Path, *, allow_camera: bool = False) -> FastAPI:
+def create_app(
+    config_path: Path,
+    *,
+    allow_camera: bool = False,
+    sync_backend: bool = False,
+    backend_url: str | None = None,
+) -> FastAPI:
     config = load_edge_config(config_path)
-    state = VisionServiceState(config=config, allow_camera=allow_camera)
+    backend_client = BackendClient(backend_url) if backend_url else None
+    state = VisionServiceState(
+        config=config,
+        config_path=config_path,
+        allow_camera=allow_camera,
+        backend_client=backend_client,
+        auto_sync_backend=sync_backend,
+    )
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
@@ -266,7 +468,7 @@ def create_app(config_path: Path, *, allow_camera: bool = False) -> FastAPI:
             "http://localhost:5173",
             "http://127.0.0.1:5173",
         ],
-        allow_methods=["GET"],
+        allow_methods=["GET", "POST"],
         allow_headers=["*"],
     )
     app.state.vision_state = state
@@ -296,6 +498,32 @@ def create_app(config_path: Path, *, allow_camera: bool = False) -> FastAPI:
         except Exception as exc:
             state.last_error = str(exc)
         return _json_no_store(_snapshot_payload(state))
+
+    @app.post("/vision/sync-backend")
+    def vision_sync_backend() -> JSONResponse:
+        try:
+            snapshot = refresh_snapshot_if_needed(state)
+            result = sync_snapshot_to_backend(state, snapshot)
+        except BackendApiError as exc:
+            result = {
+                "synced": False,
+                "status": "BACKEND_ERROR",
+                "reason": str(exc),
+            }
+            state.last_sync = result
+        except Exception as exc:
+            result = {
+                "synced": False,
+                "status": "SYNC_ERROR",
+                "reason": str(exc),
+            }
+            state.last_sync = result
+        return _json_no_store(result)
+
+    @app.post("/vision/plan-dry-run")
+    def vision_plan_dry_run() -> JSONResponse:
+        result = plan_dry_run_from_latest_snapshot(state)
+        return _json_no_store(result)
 
     @app.get("/vision/snapshot/image")
     def vision_snapshot_image() -> Response:
@@ -335,12 +563,23 @@ def main() -> None:
     )
     parser.add_argument("--host", default="127.0.0.1", help="Bind host.")
     parser.add_argument("--port", type=int, default=8001, help="Bind port.")
+    parser.add_argument(
+        "--sync-backend",
+        action="store_true",
+        help="Sync each fresh valid-QR snapshot to Backend without frontend involvement.",
+    )
+    parser.add_argument("--backend-url", default="http://localhost:3000", help="Backend URL for vision sync.")
     args = parser.parse_args()
 
     import uvicorn
 
     uvicorn.run(
-        create_app(Path(args.config), allow_camera=args.allow_camera),
+        create_app(
+            Path(args.config),
+            allow_camera=args.allow_camera,
+            sync_backend=args.sync_backend,
+            backend_url=args.backend_url if args.sync_backend else args.backend_url,
+        ),
         host=args.host,
         port=args.port,
     )

@@ -180,6 +180,39 @@ Invoke-RestMethod -Method GET -Uri "http://localhost:3000/dashboard/operational"
 curl http://localhost:3000/dashboard/operational
 ```
 
+### Sincronizar snapshot de vision
+
+Endpoint usado por Edge Vision cuando hay QR valido. Crea o reutiliza una sesion
+activa para el `truckCode` detectado y mantiene los cubos OpenCV como estado
+actual de camara, no como historico acumulativo.
+
+```powershell
+Invoke-RestMethod `
+  -Method POST `
+  -Uri "http://localhost:3000/vision/snapshots/sync" `
+  -ContentType "application/json" `
+  -Body '{
+    "runId": "run-001",
+    "snapshotSignature": "sig-001",
+    "timestamp": "2026-07-04T12:00:00.000Z",
+    "source": "opencv-camera",
+    "truckCode": "TRUCK-001",
+    "qrDetected": true,
+    "qrValid": true,
+    "qrStatus": "OK",
+    "cameraIndex": 1,
+    "detections": [
+      { "color": "red", "x": 10, "y": 20, "w": 30, "h": 30, "confidence": 0.9 }
+    ]
+  }'
+```
+
+La respuesta incluye `sessionId`, `sessionCode`, `truckCode`, `counts`,
+`detectionsRegistered`, `replaced`, `alreadyProcessed` e `ignored`. Repetir el
+mismo `snapshotSignature` no escribe datos. Un snapshot nuevo valido reemplaza
+los cubos previos de fuente `opencv-file`/`opencv-camera` de esa sesion por los
+cubos actuales del snapshot.
+
 ## Flujo de prueba recomendado
 
 1. `GET /health`
@@ -215,6 +248,33 @@ Estados permitidos: acción `PLANNED -> SUCCESS|ERROR`; sesión
 idempotentes. No se requirió migración Prisma: `metadata`, estados y `finishedAt`
 ya existían.
 
+Metadata adicional para planes desde vision real:
+
+```json
+{
+  "runId": "run-001",
+  "snapshotSignature": "sig-001",
+  "truckCode": "TRUCK-001",
+  "profile": "vision-dry-run",
+  "dryRun": true,
+  "source": "opencv-camera",
+  "selectedCube": { "color": "red", "x": 10, "y": 20, "w": 30, "h": 40 },
+  "selectedCubeCenter": { "x": 25, "y": 40 },
+  "selectedCubeBoundingBox": { "x": 10, "y": 20, "w": 30, "h": 40 },
+  "dropZoneCode": "DROP_RED_01",
+  "dropZonePose": { "x": 1, "y": 2, "z": 3 },
+  "positionOrder": 1,
+  "sequencePreview": ["ready_to_take", "cube_target_pick"],
+  "commandsPreview": ["POSE 0 0 220 0"],
+  "serialOpened": false,
+  "hardwareMovement": false
+}
+```
+
+El Backend conserva estos campos en `metadata` y el dashboard proyecta los datos
+seguros. Para `profile=vision-dry-run`, el servidor impone `mode=simulation`,
+`dryRun=true`, `serialOpened=false` y `hardwareMovement=false`.
+
 ## Tests
 
 ```powershell
@@ -224,7 +284,7 @@ npm run build
 
 ## Pendientes
 
-- Idempotencia entre procesos por `runId`.
+- Idempotencia general por `runId` para dry-run; vision snapshots ya usan `snapshotSignature`.
 - Evidencia E2E reproducible con QR/cámara reales.
 - Control fisico de MaxArm no esta implementado.
 - Autenticacion, RBAC y auditoria avanzada quedan fuera de Entrega 2.

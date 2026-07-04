@@ -1,4 +1,5 @@
 import { prisma } from "../../lib/prisma";
+import { isRecord } from "../../lib/validators";
 import { projectExecutionMetadata } from "../robot/robot.metadata";
 
 const emptyCounts = {
@@ -34,11 +35,16 @@ export const getOperationalDashboard = async () => {
       selectedCube: null,
       dropZoneCode: null,
       lastError: null,
+      visionSync: null,
+      lastVisionSnapshot: null,
+      lastVisionTruckCode: null,
+      lastVisionCounts: null,
+      lastVisionError: null,
       updatedAt: null
     };
   }
 
-  const counts = activeSession.cubes.reduce(
+  const persistedCounts = activeSession.cubes.reduce(
     (acc, cube) => {
       acc[cube.color] += 1;
       acc.total += 1;
@@ -60,6 +66,32 @@ export const getOperationalDashboard = async () => {
   }));
   const latest = lastActions[0];
   const execution = latest?.execution;
+  const latestVisionCube = [...activeSession.cubes]
+    .filter((cube) => {
+      const metadata = isRecord(cube.metadata) ? cube.metadata : {};
+      return metadata.source === "opencv-file" || metadata.source === "opencv-camera";
+    })
+    .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime())[0];
+  const visionMetadata = isRecord(latestVisionCube?.metadata) ? latestVisionCube.metadata : null;
+  const lastVisionCounts = isRecord(visionMetadata?.counts) ? visionMetadata.counts : null;
+  const counts = {
+    ...persistedCounts,
+    ...(lastVisionCounts ?? {})
+  };
+  const visionSync = visionMetadata
+    ? {
+        snapshotSignature:
+          typeof visionMetadata.snapshotSignature === "string" ? visionMetadata.snapshotSignature : null,
+        source: typeof visionMetadata.source === "string" ? visionMetadata.source : null,
+        truckCode: typeof visionMetadata.truckCode === "string" ? visionMetadata.truckCode : null,
+        qrDetected: typeof visionMetadata.qrDetected === "boolean" ? visionMetadata.qrDetected : null,
+        qrValid: typeof visionMetadata.qrValid === "boolean" ? visionMetadata.qrValid : null,
+        qrStatus: typeof visionMetadata.qrStatus === "string" ? visionMetadata.qrStatus : null,
+        cameraIndex: typeof visionMetadata.cameraIndex === "number" ? visionMetadata.cameraIndex : null,
+        counts: lastVisionCounts,
+        syncedAt: latestVisionCube?.createdAt ?? null
+      }
+    : null;
   const lastError =
     execution?.errorCode || execution?.errorMessage
       ? { code: execution.errorCode, message: execution.errorMessage }
@@ -82,6 +114,14 @@ export const getOperationalDashboard = async () => {
     selectedCube: execution?.selectedCube ?? null,
     dropZoneCode: execution?.dropZoneCode ?? null,
     lastError,
+    visionSync,
+    lastVisionSnapshot: visionSync?.snapshotSignature ?? null,
+    lastVisionTruckCode: visionSync?.truckCode ?? null,
+    lastVisionCounts,
+    lastVisionError:
+      visionSync && visionSync.qrStatus !== "OK"
+        ? { code: visionSync.qrStatus, message: "Last vision snapshot was not synced" }
+        : null,
     updatedAt: latest?.updatedAt ?? activeSession.updatedAt
   };
 };

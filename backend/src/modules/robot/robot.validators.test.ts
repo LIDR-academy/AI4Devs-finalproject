@@ -95,8 +95,14 @@ describe("robot action dry-run contract", () => {
         profile: "vision-dry-run",
         dryRun: true,
         source: "opencv-file",
+        snapshotSignature: "sig-001",
         selectedCube: { color: "red", x: 1, y: 2, w: 3, h: 4 },
+        selectedCubeCenter: { x: 2.5, y: 4 },
+        selectedCubeBoundingBox: { x: 1, y: 2, w: 3, h: 4 },
         dropZoneCode: "DROP_RED_01",
+        dropZonePose: { x: 1, y: 2, z: 3 },
+        sequencePreview: ["ready_to_take"],
+        commandsPreview: ["POSE 1 2 3 0"],
         errorCode: "ZONE_UNAVAILABLE",
         ignored: "not projected"
       })
@@ -105,8 +111,14 @@ describe("robot action dry-run contract", () => {
         profile: "vision-dry-run",
         dryRun: true,
         visionSource: "opencv-file",
+        snapshotSignature: "sig-001",
         selectedCube: { color: "red", x: 1, y: 2, w: 3, h: 4 },
+        selectedCubeCenter: { x: 2.5, y: 4 },
+        selectedCubeBoundingBox: { x: 1, y: 2, w: 3, h: 4 },
         dropZoneCode: "DROP_RED_01",
+        dropZonePose: { x: 1, y: 2, z: 3 },
+        sequencePreview: ["ready_to_take"],
+        commandsPreview: ["POSE 1 2 3 0"],
         errorCode: "ZONE_UNAVAILABLE"
       })
     );

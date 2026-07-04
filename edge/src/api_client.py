@@ -42,6 +42,9 @@ class BackendClient:
     def get_operational_dashboard(self) -> dict[str, Any]:
         return self._request("GET", "/dashboard/operational")
 
+    def sync_vision_snapshot(self, payload: dict[str, Any]) -> dict[str, Any]:
+        return self._request("POST", "/vision/snapshots/sync", json=payload)
+
     def _request(self, method: str, path: str, **kwargs: Any) -> dict[str, Any]:
         url = f"{self.base_url}{path}"
         try:

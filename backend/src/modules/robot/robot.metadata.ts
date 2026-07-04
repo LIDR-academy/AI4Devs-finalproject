@@ -172,12 +172,22 @@ export const projectExecutionMetadata = (raw: unknown) => {
   const metadata = isRecord(raw) ? raw : {};
   return {
     runId: typeof metadata.runId === "string" ? metadata.runId : null,
+    snapshotSignature: typeof metadata.snapshotSignature === "string" ? metadata.snapshotSignature : null,
+    truckCode: typeof metadata.truckCode === "string" ? metadata.truckCode : null,
     profile: typeof metadata.profile === "string" ? metadata.profile : null,
     dryRun: typeof metadata.dryRun === "boolean" ? metadata.dryRun : null,
     visionSource: typeof metadata.source === "string" ? metadata.source : null,
     selectedCube: isRecord(metadata.selectedCube) ? metadata.selectedCube : null,
+    selectedCubeColor:
+      typeof metadata.selectedCubeColor === "string" ? metadata.selectedCubeColor : null,
+    selectedCubeCenter: isRecord(metadata.selectedCubeCenter) ? metadata.selectedCubeCenter : null,
+    selectedCubeBoundingBox:
+      isRecord(metadata.selectedCubeBoundingBox) ? metadata.selectedCubeBoundingBox : null,
     dropZoneCode: typeof metadata.dropZoneCode === "string" ? metadata.dropZoneCode : null,
+    dropZonePose: isRecord(metadata.dropZonePose) ? metadata.dropZonePose : null,
     positionOrder: typeof metadata.positionOrder === "number" ? metadata.positionOrder : null,
+    sequencePreview: Array.isArray(metadata.sequencePreview) ? metadata.sequencePreview : [],
+    commandsPreview: Array.isArray(metadata.commandsPreview) ? metadata.commandsPreview : [],
     releaseConfirmed: typeof metadata.releaseConfirmed === "boolean" ? metadata.releaseConfirmed : null,
     statePersisted: typeof metadata.statePersisted === "boolean" ? metadata.statePersisted : null,
     configVersion: typeof metadata.configVersion === "string" ? metadata.configVersion : null,

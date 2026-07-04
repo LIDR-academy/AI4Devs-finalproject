@@ -10,7 +10,38 @@ import numpy as np
 from fastapi.testclient import TestClient
 
 from src.service.vision_api import create_app, refresh_snapshot_if_needed
-from tests.helpers import write_json
+from src.vision.qr_reader import QrReadResult
+from tests.helpers import valid_drop_zones, write_json
+
+
+def enabled_planning_payload() -> dict[str, object]:
+    return {
+        "enabled": True,
+        "safeZ": 150,
+        "pickZ": 100,
+        "dropSafeZ": 150,
+        "liftZDelta": 50,
+        "readyPose": {"x": 0, "y": 0, "z": 220},
+        "resetPose": {"x": 0, "y": 0, "z": 190},
+        "calibration": {
+            "version": "test-v1",
+            "imageRoi": {"x": 0, "y": 0, "w": 200, "h": 200},
+            "robotCorners": {
+                "topLeft": {"x": -100, "y": -100, "z": 100},
+                "topRight": {"x": 100, "y": -100, "z": 100},
+                "bottomRight": {"x": 100, "y": 100, "z": 100},
+                "bottomLeft": {"x": -100, "y": 100, "z": 100},
+            },
+        },
+        "workspace": {
+            "minX": -300,
+            "maxX": 300,
+            "minY": -300,
+            "maxY": 300,
+            "minZ": 0,
+            "maxZ": 300,
+        },
+    }
 
 
 class VisionApiTests(unittest.TestCase):
@@ -32,11 +63,45 @@ class VisionApiTests(unittest.TestCase):
                 "vision": {
                     "source": "file",
                     "imagePath": "fixture.png",
+                    "qrRoi": {"x": 2, "y": 3, "w": 30, "h": 30},
+                    "cargoRoi": {"x": 20, "y": 20, "w": 100, "h": 80},
                     "detection": {
                         "minArea": 100,
                         "maxArea": 10000,
                         "minFillRatio": 0.5,
                     },
+                },
+            },
+        )
+        return config_path
+
+    def _write_planning_file_config(self, directory: Path) -> Path:
+        image_path = directory / "fixture.png"
+        frame = np.zeros((200, 200, 3), dtype=np.uint8)
+        frame[80:120, 80:120] = (0, 0, 255)
+        cv2.imwrite(str(image_path), frame)
+        write_json(directory / "drop-zones.json", valid_drop_zones())
+        config_path = directory / "edge.json"
+        write_json(
+            config_path,
+            {
+                "profile": "vision-dry-run",
+                "dropZones": {"path": "drop-zones.json"},
+                "safety": {
+                    "dryRun": True,
+                    "enableHardwareMotion": False,
+                    "humanConfirmationRequired": True,
+                },
+                "robotPlanning": enabled_planning_payload(),
+                "vision": {
+                    "source": "file",
+                    "imagePath": "fixture.png",
+                    "detection": {
+                        "minArea": 100,
+                        "maxArea": 10000,
+                        "minFillRatio": 0.5,
+                    },
+                    "evidence": {"directory": "evidence"},
                 },
             },
         )
@@ -109,15 +174,153 @@ class VisionApiTests(unittest.TestCase):
             self.assertEqual("opencv-file", payload["source"])
             self.assertEqual(1, payload["counts"]["red"])
             self.assertEqual("red", payload["detections"][0]["color"])
+            self.assertEqual("QR_NOT_DETECTED", payload["qrStatus"])
+            self.assertFalse(payload["qrDetected"])
+            self.assertFalse(payload["qrValid"])
+            self.assertIsNotNone(payload["snapshotSignature"])
+            self.assertEqual({"x": 2, "y": 3, "w": 30, "h": 30}, payload["qrRoi"])
+            self.assertEqual({"x": 20, "y": 20, "w": 100, "h": 80}, payload["cargoRoi"])
             self.assertEqual("/vision/snapshot/image", payload["imageUrl"])
             self.assertIsNone(payload["snapshotCameraIndex"])
             self.assertIsNone(payload["lastError"])
             self.assert_no_store(response)
 
+    def test_sync_backend_without_qr_does_not_call_backend(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            config_path = self._write_file_config(Path(temporary_directory))
+            app = create_app(config_path, backend_url="http://localhost:3000")
+            backend_client = Mock()
+            app.state.vision_state.backend_client = backend_client
+            client = TestClient(app)
+
+            response = client.post("/vision/sync-backend")
+
+            backend_client.sync_vision_snapshot.assert_not_called()
+            payload = response.json()
+            self.assertFalse(payload["synced"])
+            self.assertEqual("QR_NOT_DETECTED", payload["status"])
+            self.assert_no_store(response)
+
+    def test_sync_backend_with_valid_qr_is_idempotent_in_process(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            config_path = self._write_file_config(Path(temporary_directory))
+            qr_reader = Mock()
+            qr_reader.return_value.read.return_value = QrReadResult(
+                raw_value="TRUCK-001",
+                truck_code="TRUCK-001",
+                is_valid=True,
+                detected=True,
+            )
+
+            with patch("src.service.vision_api.QrReader", qr_reader):
+                app = create_app(config_path, backend_url="http://localhost:3000")
+                backend_client = Mock()
+                backend_client.sync_vision_snapshot.return_value = {
+                    "visionSync": {
+                        "sessionId": "session-1",
+                        "truckCode": "TRUCK-001",
+                        "detectionsRegistered": 1,
+                    }
+                }
+                app.state.vision_state.backend_client = backend_client
+                client = TestClient(app)
+
+                first = client.post("/vision/sync-backend").json()
+                second = client.post("/vision/sync-backend").json()
+                status = client.get("/vision/status").json()
+
+            backend_client.sync_vision_snapshot.assert_called_once()
+            self.assertTrue(first["synced"])
+            self.assertEqual("SYNCED", first["status"])
+            self.assertFalse(second["synced"])
+            self.assertEqual("DUPLICATE_LOCAL", second["status"])
+            self.assertEqual(first["snapshotSignature"], status["lastSyncedSnapshotSignature"])
+
+    def test_sync_backend_with_invalid_qr_does_not_call_backend(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            config_path = self._write_file_config(Path(temporary_directory))
+            qr_reader = Mock()
+            qr_reader.return_value.read.return_value = QrReadResult(
+                raw_value="NOT-A-TRUCK",
+                truck_code=None,
+                is_valid=False,
+                detected=True,
+            )
+
+            with patch("src.service.vision_api.QrReader", qr_reader):
+                app = create_app(config_path, backend_url="http://localhost:3000")
+                backend_client = Mock()
+                app.state.vision_state.backend_client = backend_client
+                client = TestClient(app)
+                response = client.post("/vision/sync-backend")
+
+            backend_client.sync_vision_snapshot.assert_not_called()
+            self.assertFalse(response.json()["synced"])
+            self.assertEqual("QR_INVALID", response.json()["status"])
+
             image_response = client.get("/vision/snapshot/image")
             self.assertEqual(200, image_response.status_code)
             self.assertEqual("image/png", image_response.headers["content-type"])
             self.assert_no_store(image_response)
+
+    def test_plan_dry_run_without_qr_returns_controlled_error(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            config_path = self._write_file_config(Path(temporary_directory))
+            app = create_app(config_path, backend_url="http://localhost:3000")
+            backend_client = Mock()
+            app.state.vision_state.backend_client = backend_client
+            client = TestClient(app)
+
+            response = client.post("/vision/plan-dry-run")
+            status_response = client.get("/vision/status")
+
+            backend_client.register_robot_action.assert_not_called()
+            self.assertFalse(response.json()["planned"])
+            self.assertEqual("QR_NOT_DETECTED", response.json()["status"])
+            self.assertEqual("QR_NOT_DETECTED", status_response.json()["lastDryRunPlan"]["status"])
+            self.assert_no_store(response)
+
+    def test_plan_dry_run_uses_latest_valid_snapshot_and_registers_backend_trace(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            config_path = self._write_planning_file_config(Path(temporary_directory))
+            qr_reader = Mock()
+            qr_reader.return_value.read.return_value = QrReadResult(
+                raw_value="TRUCK-001",
+                truck_code="TRUCK-001",
+                is_valid=True,
+                detected=True,
+            )
+
+            with patch("src.service.vision_api.QrReader", qr_reader), patch(
+                "src.vision.capture.cv2.VideoCapture"
+            ) as video_capture:
+                app = create_app(config_path, backend_url="http://localhost:3000")
+                backend_client = Mock()
+                backend_client.create_session.return_value = {"session": {"id": "session-1"}}
+                backend_client.register_cubes.return_value = {"session": {"id": "session-1"}}
+                backend_client.register_robot_action.return_value = {"action": {"id": "action-1"}}
+                backend_client.update_robot_action.return_value = {
+                    "action": {"id": "action-1", "status": "SUCCESS"}
+                }
+                app.state.vision_state.backend_client = backend_client
+                client = TestClient(app)
+
+                snapshot = client.get("/vision/snapshot").json()
+                response = client.post("/vision/plan-dry-run")
+                status_response = client.get("/vision/status")
+
+            video_capture.assert_not_called()
+            payload = response.json()
+            self.assertTrue(payload["planned"])
+            self.assertEqual("DRY_RUN_PLANNED", payload["status"])
+            self.assertEqual(snapshot["runId"], payload["runId"])
+            self.assertEqual("red", payload["selectedCubeColor"])
+            self.assertEqual("DROP_RED_01", payload["dropZoneCode"])
+            self.assertFalse(payload["serialOpened"])
+            self.assertFalse(payload["hardwareMovement"])
+            self.assertEqual("DRY_RUN_PLANNED", status_response.json()["lastDryRunPlan"]["status"])
+            backend_client.register_robot_action.assert_called_once()
+            backend_client.update_robot_action.assert_called_once()
 
     def test_image_endpoint_is_controlled_when_no_snapshot_exists(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:

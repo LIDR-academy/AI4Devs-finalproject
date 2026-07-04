@@ -369,7 +369,7 @@ def load_edge_config(path: Path) -> EdgeConfig:
     qr_raw = vision_raw.get("qr", {})
     if not isinstance(qr_raw, dict):
         raise EdgeConfigError("vision.qr must be a JSON object")
-    qr_pattern = qr_raw.get("pattern", r"^TRUCK-\d{3}$")
+    qr_pattern = qr_raw.get("pattern", r"^TRUCK-.+$")
     if not isinstance(qr_pattern, str) or not qr_pattern:
         raise EdgeConfigError("vision.qr.pattern must be a non-empty string")
     allowed_codes_raw = qr_raw.get("allowedTruckCodes", [])

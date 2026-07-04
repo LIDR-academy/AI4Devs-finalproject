@@ -32,6 +32,7 @@ El backend registra datos simulados como si fueran enviados por Edge. No impleme
 | POST | `/robot/actions` | Registrar accion robot simulada |
 | PATCH | `/robot/actions/:id` | Finalizar una accion `PLANNED` como `SUCCESS` o `ERROR` |
 | PATCH | `/sessions/:id` | Cerrar una sesion como `COMPLETED` o `ERROR` |
+| POST | `/vision/snapshots/sync` | Sincronizar snapshot QR/OpenCV de Edge Vision con Backend |
 | GET | `/dashboard/operational` | Consultar estado operacional agregado |
 
 ## Convenciones
@@ -72,6 +73,8 @@ No abre serial, no mueve MaxArm y no ejecuta `mode=hardware`.
 | GET | `/vision/status` | Consultar perfil, fuente, ultimo snapshot y flags seguros |
 | GET | `/vision/snapshot` | Procesar una captura configurada y devolver metadata segura |
 | GET | `/vision/snapshot/image` | Devolver la ultima imagen anotada si existe |
+| POST | `/vision/sync-backend` | Pedir a Edge que sincronice el snapshot valido con Backend |
+| POST | `/vision/plan-dry-run` | Planificar pick/drop conceptual desde el ultimo snapshot valido |
 
 `GET /vision/status` responde:
 
@@ -103,9 +106,15 @@ camara.
   "timestamp": "2026-06-29T00:00:00Z",
   "source": "opencv-file",
   "truckCode": "TRUCK-003",
+  "snapshotSignature": "abc123",
+  "qrDetected": true,
+  "qrValid": true,
+  "qrStatus": "OK",
+  "qrRoi": { "x": 500, "y": 180, "w": 140, "h": 170 },
   "counts": { "red": 1, "blue": 1, "green": 2, "yellow": 2 },
   "detections": [],
   "imageUrl": "/vision/snapshot/image",
+  "lastVisionSync": null,
   "lastError": null
 }
 ```
@@ -119,6 +128,35 @@ Para soportar snapshot polling, `/health`, `/vision/status`, `/vision/snapshot` 
 no-cache` y `Expires: 0`. El frontend solicita la imagen como
 `/vision/snapshot/image?ts=<timestamp>` para evitar reutilizar imagenes viejas del
 navegador.
+
+`POST /vision/sync-backend` no pertenece al Backend Express: pertenece al
+servicio local Edge. Si no hay QR valido devuelve un estado controlado como
+`QR_NOT_DETECTED` o `QR_INVALID` y no llama al Backend.
+
+`POST /vision/plan-dry-run` reutiliza el ultimo `DetectionSnapshot` en memoria
+del servicio Edge Vision, o captura uno nuevo si esta vencido por TTL. Requisitos:
+QR valido, `truckCode`, cubos detectados, `robotPlanning` valido y una drop zone
+activa/libre del mismo color. En caso feliz devuelve:
+
+```json
+{
+  "planned": true,
+  "status": "DRY_RUN_PLANNED",
+  "runId": "uuid",
+  "snapshotSignature": "sig-001",
+  "truckCode": "TRUCK-001",
+  "selectedCubeColor": "red",
+  "dropZoneCode": "DROP_RED_01",
+  "dryRun": true,
+  "profile": "vision-dry-run",
+  "serialOpened": false,
+  "hardwareMovement": false
+}
+```
+
+Si falla devuelve `planned=false` y `status` controlado, por ejemplo
+`QR_NOT_DETECTED`, `QR_INVALID`, `NO_CUBES_DETECTED`, `ZONE_UNAVAILABLE` o
+`MISSING_CALIBRATION`. No registra accion exitosa si no puede planificar.
 
 ### Response 200
 
@@ -161,7 +199,7 @@ Crea una sesion de descarga para un camion identificado por codigo funcional.
 ### Validaciones
 
 - `truckCode` requerido.
-- Formato esperado: `TRUCK-001`.
+- Formato esperado: `TRUCK-*`; los ejemplos usan `TRUCK-001`.
 
 ## GET /sessions
 
@@ -315,6 +353,60 @@ Registra una accion simulada del robot.
 - `mode`: `simulation` o `hardware`.
 - Para Entrega 2, `simulation` es el modo esperado.
 
+## POST /vision/snapshots/sync
+
+Sincroniza un snapshot real de Edge Vision. El Backend valida QR, crea o reutiliza
+una sesion activa para `truckCode` y registra detecciones sin duplicarlas por
+polling.
+
+### Request
+
+```json
+{
+  "runId": "run-001",
+  "snapshotSignature": "sig-001",
+  "timestamp": "2026-07-04T12:00:00.000Z",
+  "source": "opencv-camera",
+  "truckCode": "TRUCK-001",
+  "qrDetected": true,
+  "qrValid": true,
+  "qrStatus": "OK",
+  "cameraIndex": 1,
+  "detections": [
+    { "color": "red", "x": 10, "y": 20, "w": 30, "h": 30, "confidence": 0.9 }
+  ]
+}
+```
+
+### Response 200
+
+```json
+{
+  "visionSync": {
+    "sessionId": "uuid",
+    "sessionCode": "UNLOAD-20260704-001",
+    "truckCode": "TRUCK-001",
+    "snapshotSignature": "sig-001",
+    "counts": { "red": 1, "blue": 0, "green": 0, "yellow": 0, "total": 1 },
+    "detectionsReceived": 1,
+    "detectionsRegistered": 1,
+    "replaced": 0,
+    "duplicated": 0,
+    "ignored": 0,
+    "alreadyProcessed": false,
+    "status": "synced"
+  }
+}
+```
+
+Repetir el mismo `snapshotSignature` para la misma sesion devuelve
+`alreadyProcessed=true` e `ignored > 0`, sin borrar ni crear cubos. Si llega un
+snapshot nuevo valido, el Backend reemplaza los cubos previos de fuente
+`opencv-file`/`opencv-camera` de esa sesion por el estado actual del snapshot.
+Esto evita que el polling convierta conteos de camara en una suma acumulativa.
+Si `qrDetected=false`, `qrValid=false` o `qrStatus` no es `OK`, responde `400` y
+no registra cubos.
+
 ## GET /dashboard/operational
 
 Devuelve el estado operacional agregado para dashboard.
@@ -338,12 +430,20 @@ Invoke-RestMethod -Method GET -Uri "http://localhost:3000/dashboard/operational"
   "color": "red",
   "metadata": {
     "runId": "run-001",
+    "snapshotSignature": "sig-001",
+    "truckCode": "TRUCK-001",
     "profile": "vision-dry-run",
     "dryRun": true,
     "source": "opencv-file",
     "selectedCube": { "color": "red", "x": 80, "y": 80, "w": 20, "h": 20, "confidence": 0.9 },
+    "selectedCubeColor": "red",
+    "selectedCubeCenter": { "x": 90, "y": 90 },
+    "selectedCubeBoundingBox": { "x": 80, "y": 80, "w": 20, "h": 20 },
     "dropZoneCode": "DROP_RED_01",
+    "dropZonePose": { "x": 1, "y": 2, "z": 3 },
     "positionOrder": 1,
+    "sequencePreview": ["ready_to_take", "cube_target_pick"],
+    "commandsPreview": ["POSE 0 0 220 0"],
     "releaseConfirmed": false,
     "statePersisted": false,
     "calibrationVersion": "pickup-v1"
@@ -437,6 +537,21 @@ Edge; no constituyen evidencia de movimiento físico.
   "selectedCube": { "color": "red", "x": 80, "y": 80, "w": 20, "h": 20, "confidence": 0.9 },
   "dropZoneCode": "DROP_RED_01",
   "lastError": null,
+  "visionSync": {
+    "snapshotSignature": "sig-001",
+    "source": "opencv-camera",
+    "truckCode": "TRUCK-001",
+    "qrDetected": true,
+    "qrValid": true,
+    "qrStatus": "OK",
+    "cameraIndex": 1,
+    "counts": { "red": 1, "blue": 0, "green": 0, "yellow": 0, "total": 1 },
+    "syncedAt": "2026-07-04T12:00:00.000Z"
+  },
+  "lastVisionSnapshot": "sig-001",
+  "lastVisionTruckCode": "TRUCK-001",
+  "lastVisionCounts": { "red": 1, "blue": 0, "green": 0, "yellow": 0, "total": 1 },
+  "lastVisionError": null,
   "updatedAt": "2026-06-09T01:06:26.100Z"
 }
 ```

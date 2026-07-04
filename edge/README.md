@@ -168,10 +168,13 @@ Endpoints disponibles:
 | GET | `/vision/status` | Perfil, fuente, ultimo snapshot, error y flags seguros |
 | GET | `/vision/snapshot` | Captura bajo demanda y devuelve metadata segura |
 | GET | `/vision/snapshot/image` | Devuelve la ultima imagen anotada si existe |
+| POST | `/vision/sync-backend` | Sincroniza el ultimo snapshot con Backend si el QR es valido |
+| POST | `/vision/plan-dry-run` | Planifica desde el ultimo snapshot valido y registra traza dry-run si Backend esta configurado |
 
 `/vision/status` siempre informa `serialOpened=false` y
 `hardwareMovement=false`. `/vision/snapshot` devuelve `counts`, `detections`,
-`truckCode`, `imageUrl` relativa y `lastError`. Si no hay imagen disponible,
+`truckCode`, `snapshotSignature`, `qrDetected`, `qrValid`, `qrStatus`, `qrRoi`,
+`imageUrl` relativa y `lastError`. Si no hay imagen disponible,
 `/vision/snapshot/image` responde `404` con un mensaje controlado.
 
 Los endpoints responden con `Cache-Control: no-store`, `Pragma: no-cache` y
@@ -182,6 +185,15 @@ La imagen anotada se mantiene en memoria como ultimo snapshot del proceso. Para
 persistir evidencia JSON/PNG se sigue usando el runner de vision con
 `--save-evidence`; el servicio del dashboard no necesita escribir archivos para
 funcionar.
+
+La imagen anotada dibuja siempre los ROI configurados cuando existen:
+
+- `CARGO ROI`: borde verde grueso sobre la zona de carga/cubos.
+- `QR ROI`: borde magenta grueso sobre la zona esperada del QR.
+- Si el QR no se detecta, la etiqueta muestra `QR ROI QR_NOT_DETECTED`.
+
+Estos overlays se dibujan aunque no haya cubos detectados o aunque no se detecte
+QR, para facilitar ajuste visual de `edge.vision.local.json`.
 
 ### Snapshot polling vs streaming
 
@@ -203,6 +215,108 @@ python src\service\vision_api.py --config config\edge.vision.example.json
 2. Levantar el frontend con `VITE_EDGE_VISION_URL=http://localhost:8001`.
 3. Verificar que el panel `Vision / Camara` actualiza timestamp/imagen segun el
    intervalo configurado.
+
+### Sincronizar snapshot con Backend
+
+La sincronizacion es opt-in y no depende del Frontend como fuente de verdad. Edge
+solo sincroniza si el snapshot tiene QR valido (`qrStatus=OK`) y `truckCode`.
+Si el QR no existe o no cumple el patron/allowlist configurado, responde
+`QR_NOT_DETECTED` o `QR_INVALID` y no llama al Backend.
+
+Levantar Edge Vision con sync automatico por cada snapshot fresco:
+
+```powershell
+cd edge
+python src\service\vision_api.py `
+  --config config\edge.vision.local.json `
+  --allow-camera `
+  --sync-backend `
+  --backend-url http://localhost:3000
+```
+
+Tambien puede usarse sync explicito:
+
+```powershell
+Invoke-RestMethod -Method POST -Uri "http://localhost:8001/vision/sync-backend"
+```
+
+Para evitar duplicados por polling:
+
+- Edge calcula `snapshotSignature` estable desde QR, fuente, ROI y detecciones.
+- Edge no reenvia dos veces la misma firma dentro del mismo proceso.
+- Backend ignora una firma ya procesada.
+- Backend reemplaza los cubos OpenCV previos de la sesion cuando llega un
+  snapshot nuevo valido, de modo que los conteos reflejan el estado actual de
+  camara y no una suma acumulada por polling.
+
+La sincronizacion registra cubos y sesion, no registra acciones robot y no abre
+serial.
+
+### Planificar dry-run desde el ultimo snapshot real
+
+`POST /vision/plan-dry-run` conecta el ultimo `DetectionSnapshot` valido del
+servicio Edge Vision con `CubeSelector`, `DropZoneAdapter` y
+`RobotActionPlanner`.
+
+Requisitos:
+
+- `profile=vision-dry-run`.
+- `safety.dryRun=true`.
+- `safety.enableHardwareMotion=false`.
+- QR detectado y valido (`qrStatus=OK`) con `truckCode`.
+- Al menos un cubo real detectado.
+- `robotPlanning.enabled=true` con calibracion, poses y workspace validos.
+- Drop zone activa y libre del mismo color del cubo seleccionado.
+
+Levantar Edge Vision con camara cenital y Backend:
+
+```powershell
+cd edge
+python src\service\vision_api.py `
+  --config config\edge.vision.local.json `
+  --allow-camera `
+  --backend-url http://localhost:3000
+```
+
+Ejecutar el plan dry-run desde el snapshot en memoria:
+
+```powershell
+Invoke-RestMethod -Method POST -Uri "http://localhost:8001/vision/plan-dry-run"
+```
+
+Respuesta esperada en caso feliz:
+
+```json
+{
+  "planned": true,
+  "status": "DRY_RUN_PLANNED",
+  "profile": "vision-dry-run",
+  "dryRun": true,
+  "selectedCubeColor": "red",
+  "dropZoneCode": "DROP_RED_01",
+  "serialOpened": false,
+  "hardwareMovement": false
+}
+```
+
+Errores controlados:
+
+- `QR_NOT_DETECTED`: no hay QR en `qrRoi`.
+- `QR_INVALID`: el QR no cumple patron/allowlist o no trae `truckCode`.
+- `NO_CUBES_DETECTED`: no hay cubos elegibles.
+- `ZONE_UNAVAILABLE`: no existe slot activo y libre del color seleccionado.
+- `MISSING_CALIBRATION`, `MISSING_PLANNING_CONFIG` o `MISSING_POSE`: falta
+  configuracion de robotPlanning.
+
+Seguridad:
+
+- No abre serial.
+- No mueve MaxArm.
+- Registra acciones con `mode=simulation`, `dryRun=true`,
+  `profile=vision-dry-run`, `serialOpened=false` y `hardwareMovement=false`.
+- No llama `DropZoneAdapter.confirm()` en dry-run.
+- Toda reserva se cancela al finalizar o ante error.
+- El estado canonico de drop zones no se modifica en `vision-dry-run`.
 
 Limitaciones:
 
@@ -302,6 +416,33 @@ cuando ese ROI existe. Las cajas devueltas en el snapshot siguen usando
 coordenadas globales del frame completo, no coordenadas locales del recorte.
 Esto permite que el dashboard, evidencia y planificacion trabajen en el mismo
 espacio de pixeles.
+
+`qrRoi` se procesa de forma independiente de `cargoRoi`. Para validar QR, usar
+un ROI que contenga el codigo del camion y configurar:
+
+```json
+{
+  "vision": {
+    "qr": {
+      "pattern": "^TRUCK-\\d{3}$",
+      "allowedTruckCodes": ["TRUCK-001", "TRUCK-002", "TRUCK-003"]
+    }
+  }
+}
+```
+
+Si `allowedTruckCodes` queda vacio, se acepta cualquier valor que cumpla el
+patron. El default seguro esperado es `TRUCK-*`.
+
+Para diagnosticar `QR_NOT_DETECTED`:
+
+1. Verificar en el dashboard que el rectangulo `QR ROI` cubre completamente el
+   QR fisico.
+2. Si el QR queda fuera, ajustar `vision.qrRoi.x/y/w/h` en el config local.
+3. Si el QR esta dentro pero sigue sin detectarse, revisar foco, luz, tamano del
+   QR y patron `vision.qr.pattern`.
+4. Confirmar que `CARGO ROI` cubre solo la zona de cubos y no tapa ni reemplaza
+   el `QR ROI`; ambos se procesan por separado.
 
 ### Rangos HSV
 

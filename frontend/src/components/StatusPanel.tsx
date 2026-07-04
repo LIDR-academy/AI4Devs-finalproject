@@ -18,7 +18,7 @@ export function StatusPanel({ session, lastAction }: Props) {
   }
 
   const mode = lastAction?.execution?.dryRun
-    ? `${lastAction.execution.profile ?? "simulation"} · dry-run`
+    ? `${lastAction.execution.profile ?? "simulation"} - dry-run`
     : lastAction?.mode ?? "simulation";
 
   return (
