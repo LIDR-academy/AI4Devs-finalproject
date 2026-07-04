@@ -20,6 +20,8 @@
 | US-013 | Consultar el historial de pedidos | CU3 | S | Importante |
 | US-014 | Tests E2E con Playwright | Calidad | M | Importante |
 | US-015 | Descontar stock al confirmar el pedido | CU3 | S | Importante |
+| US-016 | Hardening de cabeceras e infraestructura HTTP | Seguridad | S | Imprescindible |
+| US-017 | Hardening de exposición de datos y validación de entrada | Seguridad | S | Importante |
 
 ---
 
@@ -67,6 +69,8 @@ Los filtros por atributos de running (US-002) son el diferencial central de RunM
 | US-013 | Consultar el historial de pedidos | CU3 | S | Importante | Depende de que existan pedidos creados (US-011); aporta valor pero no bloquea el ciclo de compra |
 | US-014 | Tests E2E con Playwright | Calidad | M | Importante | Debe ir la última: necesita el sistema completo funcionando para ejercitar los tres flujos principales de extremo a extremo |
 | US-015 | Descontar stock al confirmar el pedido | CU3 | S | Importante | Corrige una omisión de integridad de datos detectada tras implementar el checkout: el stock nunca se descuenta tras una compra, por lo que el catálogo muestra disponibilidad incorrecta a partir del primer pedido; no bloquea el ciclo de compra simulado pero compromete la fiabilidad del dato |
+| US-016 | Hardening de cabeceras e infraestructura HTTP | Seguridad | S | Imprescindible | Resuelve vulnerabilidades CRÍTICO/ALTO detectadas en revisión de pentesting: ausencia de security headers, CSP, Swagger UI expuesto en producción, rate-limiter inefectivo tras proxy y body sin límite de tamaño |
+| US-017 | Hardening de exposición de datos y validación de entrada | Seguridad | S | Importante | Resuelve vulnerabilidades ALTO/MEDIO del mismo pentesting: sessionId en body de respuesta, PII en sessionStorage, IDs de pedido predecibles y falta de límites en campos de entrada |
 
 ---
 
@@ -560,3 +564,67 @@ Como corredor, quiero que el stock de un producto se reduzca según la cantidad 
 **Estimación:** S
 
 **Prioridad:** Importante
+
+---
+
+## Seguridad
+
+---
+
+### US-016 — Hardening de cabeceras e infraestructura HTTP
+
+**Caso de uso asociado:** Seguridad — infraestructura transversal
+
+**Historia de usuario:**
+Como equipo de desarrollo, queremos que el backend emita las cabeceras de seguridad HTTP estándar y que el frontend declare una Content Security Policy, para reducir la superficie de ataque ante clickjacking, MIME-sniffing y ataques de downgrade, y para que el rate-limiting sea efectivo en producción detrás de un proxy inverso.
+
+**Descripción:**
+Agrupa las mejoras de seguridad a nivel de infraestructura que no tocan lógica de negocio. Detectadas en revisión de pentesting (vulnerabilidades CRÍTICO/ALTO): ausencia total de security headers en Express, sin CSP en Next.js, Swagger UI accesible en producción exponiendo el esquema completo de la API, rate-limiter que usa la IP del proxy en lugar de la del cliente real, body JSON sin límite de tamaño explícito, y respuestas 404 que hacen eco del path del request.
+
+**Criterios de aceptación:**
+- [ ] `GET /api/health` en producción incluye las cabeceras `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Strict-Transport-Security` y `Referrer-Policy: no-referrer`
+- [ ] `GET /` (frontend) responde con cabecera `Content-Security-Policy` que restringe `default-src 'self'` y permite los orígenes necesarios para imágenes y assets
+- [ ] `GET /api/docs` devuelve 404 cuando `NODE_ENV=production`; sigue accesible en entornos de desarrollo y test
+- [ ] Un request con cabecera `X-Forwarded-For: 1.2.3.4` es contabilizado por el rate-limiter bajo la IP `1.2.3.4` cuando `trust proxy` está activo
+- [ ] Un body JSON superior a 10 KB enviado a `POST /api/cart` devuelve 413 antes de llegar al controller
+- [ ] `GET /api/ruta-inexistente` devuelve `{"error":"Not found"}` sin incluir el path en el mensaje
+
+**Datos o entidades implicadas:**
+- `backend/src/app.ts` — configuración de middleware
+- `backend/src/middleware/error-handler.ts` — handler de 404
+- `frontend/next.config.mjs` — security headers
+
+**Estimación:** S
+
+**Prioridad:** Imprescindible — vulnerabilidades CRÍTICO/ALTO detectadas en revisión de pentesting
+
+---
+
+### US-017 — Hardening de exposición de datos y validación de entrada
+
+**Caso de uso asociado:** Seguridad — protección de datos y API
+
+**Historia de usuario:**
+Como corredor, quiero que mis datos de sesión y los detalles de mi pedido no queden expuestos innecesariamente en respuestas de API ni en almacenamiento del navegador, y que el sistema rechace entradas fuera de rango antes de procesarlas, para reducir el riesgo de exfiltración de datos personales y de abuso de la API.
+
+**Descripción:**
+Agrupa los cambios que eliminan exposición innecesaria de datos y endurecen la validación de entrada. Detectados en revisión de pentesting (vulnerabilidades ALTO/MEDIO): el campo `sessionId` se incluye en el body de `CartResponse` debilitando la protección de la cookie HttpOnly; el `OrderResponse` completo —con nombre, email, dirección y teléfono del corredor— se persiste en `sessionStorage` accesible a cualquier script; los IDs de pedido se generan con `Date.now()` y son predecibles por timestamp; los campos `size`, `color` y `quantity` en los schemas Zod carecen de límite máximo; y la variable `SESSION_SECRET` en `.env` no se usa en ningún punto del código.
+
+**Criterios de aceptación:**
+- [ ] `POST /api/cart` devuelve un body que no incluye el campo `sessionId`; el tipo `CartResponse` no declara esa propiedad
+- [ ] Tras confirmar un pedido, `sessionStorage` contiene únicamente el `orderId` (string), no el objeto `OrderResponse` completo; la pantalla de confirmación obtiene el detalle desde estado React en memoria o vía `GET /api/orders`
+- [ ] Los IDs de pedido tienen la forma `ORD-<sufijo aleatorio criptográfico>`; dos pedidos creados en el mismo milisegundo tienen IDs distintos
+- [ ] `POST /api/cart` con `quantity: 10000` devuelve 400; con `size` de más de 50 caracteres devuelve 400; con `color` de más de 50 caracteres devuelve 400
+- [ ] El fichero `.env.example` no contiene `SESSION_SECRET`, o incluye un comentario que explica que la cookie no está firmada y la variable está reservada para uso futuro
+
+**Datos o entidades implicadas:**
+- `backend/src/types/domain.ts` — tipo `CartResponse`
+- `backend/src/services/cart.service.ts` — construcción de la respuesta del carrito
+- `backend/src/schemas/cart.schema.ts` — validación de entrada
+- `backend/src/repositories/order.repository.ts` — generación de ID de pedido
+- `frontend/src/app/checkout/page.tsx` — persistencia post-checkout
+- `.env` / `.env.example` — variables de entorno
+
+**Estimación:** S
+
+**Prioridad:** Importante — vulnerabilidades ALTO/MEDIO detectadas en revisión de pentesting

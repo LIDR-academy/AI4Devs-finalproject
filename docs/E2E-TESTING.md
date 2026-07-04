@@ -5,10 +5,10 @@
 | | |
 |---|---|
 | Suite | `e2e/` (Playwright, Chromium) |
-| Specs | 3 |
-| Tests | 11 |
-| Resultado | **11/11 en verde** |
-| Última ejecución | 2026-06-21 — `npx playwright test --reporter=list` |
+| Specs | 4 |
+| Tests | 15 |
+| Resultado | **15/15 en verde** |
+| Última ejecución | 2026-07-03 — `npx playwright test --reporter=list` |
 | Sistema verificado | Frontend `:3000`, Backend `:4000`, PostgreSQL `:5432` (seed cargado), local |
 
 Detalle de tareas, decisiones de diseño de cada spec y hallazgos de seguridad asociados:
@@ -17,19 +17,23 @@ el cierre de la US).
 
 ## Cobertura por escenario
 
-| Spec | Test | Criterio de aceptación de US-014 cubierto | Resultado |
+| Spec | Test | Criterio de aceptación cubierto | Resultado |
 |---|---|---|---|
-| `catalog.spec.ts` | el catálogo muestra productos del seed | AC-1 (productos visibles) | ✅ Pass |
-| `catalog.spec.ts` | activar un filtro de distancia cambia los resultados | AC-1 (filtro de distancia cambia resultados) | ✅ Pass |
-| `catalog.spec.ts` | combinar filtros sin resultados muestra el estado vacío | AC-1 (estado vacío) | ✅ Pass |
-| `product.spec.ts` | navega del catálogo a la ficha y muestra nombre, precio y atributos | AC-2 (navegación, nombre/precio/atributos, botón «Volver») | ✅ Pass |
-| `product.spec.ts` | un id de producto inexistente muestra el estado 404 | AC-2 (estado 404) | ✅ Pass |
+| `catalog.spec.ts` | el catálogo muestra productos del seed | US-014 AC-1 (productos visibles) | ✅ Pass |
+| `catalog.spec.ts` | activar un filtro de distancia cambia los resultados | US-014 AC-1 (filtro de distancia cambia resultados) | ✅ Pass |
+| `catalog.spec.ts` | combinar filtros sin resultados muestra el estado vacío | US-014 AC-1 (estado vacío) | ✅ Pass |
+| `product.spec.ts` | navega del catálogo a la ficha y muestra nombre, precio y atributos | US-014 AC-2 (navegación, nombre/precio/atributos, botón «Volver») | ✅ Pass |
+| `product.spec.ts` | un id de producto inexistente muestra el estado 404 | US-014 AC-2 (estado 404) | ✅ Pass |
 | `product.spec.ts` | un producto sin stock muestra el botón Agotado deshabilitado | Escenario alternativo CU2 (producto agotado) | ✅ Pass |
 | `product.spec.ts` | añadir al carrito sin seleccionar talla muestra aviso inline | Escenario alternativo CU2 (variante obligatoria) | ✅ Pass |
-| `purchase.spec.ts` | completa el ciclo carrito → checkout → confirmación | AC-3 (carrito → checkout → confirmación → número de pedido → carrito vacío) | ✅ Pass |
+| `purchase.spec.ts` | completa el ciclo carrito → checkout → confirmación | US-014 AC-3 (carrito → checkout → confirmación → número de pedido → carrito vacío) | ✅ Pass |
 | `purchase.spec.ts` | un carrito vacío muestra el estado vacío sin opción de tramitar pedido | Escenario alternativo CU3 (carrito vacío) | ✅ Pass |
 | `purchase.spec.ts` | datos de envío inválidos muestran error inline y no avanzan al paso 2 | Escenario alternativo CU3 (validación de envío) | ✅ Pass |
 | `purchase.spec.ts` | tarjeta inválida muestra error inline y no avanza al paso 3 | Escenario alternativo CU3 (validación de pago) | ✅ Pass |
+| `security-headers.spec.ts` | GET / incluye Content-Security-Policy | US-016 TASK-05 (CSP presente) | ✅ Pass |
+| `security-headers.spec.ts` | GET / incluye X-Frame-Options: DENY | US-016 TASK-05 (X-Frame-Options) | ✅ Pass |
+| `security-headers.spec.ts` | GET / incluye X-Content-Type-Options: nosniff | US-016 TASK-05 (X-Content-Type-Options) | ✅ Pass |
+| `security-headers.spec.ts` | GET / incluye Referrer-Policy | US-016 TASK-05 (Referrer-Policy) | ✅ Pass |
 
 AC-4 (specs en headless), AC-5 (config de Playwright) y AC-6 (documentación) no son
 escenarios ejecutables — se verifican por inspección, ver `docs/backlog/US-014.md`. Los
@@ -39,23 +43,27 @@ US-014; no mapean a un AC de esa US sino a gaps de cobertura detectados en QA so
 ## Resultado de la última ejecución
 
 ```
-$ E2E_BASE_URL=http://localhost:3000 npx playwright test --reporter=list
+$ npx playwright test --reporter=list
 
-Running 11 tests using 5 workers
+Running 15 tests using 5 workers
 
-  ✓  [chromium] › tests/product.spec.ts:23:7 › Ficha de producto › un id de producto inexistente muestra el estado 404 (1.5s)
-  ✓  [chromium] › tests/catalog.spec.ts:4:7 › Catálogo de productos › el catálogo muestra productos del seed (1.5s)
-  ✓  [chromium] › tests/product.spec.ts:4:7 › Ficha de producto › navega del catálogo a la ficha y muestra nombre, precio y atributos (2.0s)
-  ✓  [chromium] › tests/catalog.spec.ts:11:7 › Catálogo de productos › activar un filtro de distancia cambia los resultados (2.3s)
-  ✓  [chromium] › tests/product.spec.ts:31:7 › Ficha de producto › un producto sin stock muestra el botón Agotado deshabilitado (875ms)
-  ✓  [chromium] › tests/product.spec.ts:43:7 › Ficha de producto › añadir al carrito sin seleccionar talla muestra aviso inline (876ms)
-  ✓  [chromium] › tests/catalog.spec.ts:27:7 › Catálogo de productos › combinar filtros sin resultados muestra el estado vacío (2.8s)
-  ✓  [chromium] › tests/purchase.spec.ts:57:7 › Ciclo de compra › un carrito vacío muestra el estado vacío sin opción de tramitar pedido (880ms)
-  ✓  [chromium] › tests/purchase.spec.ts:65:7 › Ciclo de compra › datos de envío inválidos muestran error inline y no avanzan al paso 2 (2.2s)
-  ✓  [chromium] › tests/purchase.spec.ts:86:7 › Ciclo de compra › tarjeta inválida muestra error inline y no avanza al paso 3 (2.2s)
-  ✓  [chromium] › tests/purchase.spec.ts:4:7 › Ciclo de compra › completa el ciclo carrito → checkout → confirmación (2.8s)
+  ✓  [chromium] › tests/catalog.spec.ts:4:7 › Catálogo de productos › el catálogo muestra productos del seed (1.6s)
+  ✓  [chromium] › tests/product.spec.ts:23:7 › Ficha de producto › un id de producto inexistente muestra el estado 404 (1.6s)
+  ✓  [chromium] › tests/product.spec.ts:4:7 › Ficha de producto › navega del catálogo a la ficha y muestra nombre, precio y atributos (2.2s)
+  ✓  [chromium] › tests/product.spec.ts:31:7 › Ficha de producto › un producto sin stock muestra el botón Agotado deshabilitado (824ms)
+  ✓  [chromium] › tests/catalog.spec.ts:11:7 › Catálogo de productos › activar un filtro de distancia cambia los resultados (2.5s)
+  ✓  [chromium] › tests/product.spec.ts:43:7 › Ficha de producto › añadir al carrito sin seleccionar talla muestra aviso inline (859ms)
+  ✓  [chromium] › tests/catalog.spec.ts:27:7 › Catálogo de productos › combinar filtros sin resultados muestra el estado vacío (3.4s)
+  ✓  [chromium] › tests/security-headers.spec.ts:4:7 › US-016-TASK-05: Security headers en frontend (Next.js) › GET / incluye Content-Security-Policy (152ms)
+  ✓  [chromium] › tests/purchase.spec.ts:57:7 › Ciclo de compra › un carrito vacío muestra el estado vacío sin opción de tramitar pedido (1.1s)
+  ✓  [chromium] › tests/security-headers.spec.ts:11:7 › US-016-TASK-05: Security headers en frontend (Next.js) › GET / incluye X-Frame-Options: DENY (213ms)
+  ✓  [chromium] › tests/security-headers.spec.ts:16:7 › US-016-TASK-05: Security headers en frontend (Next.js) › GET / incluye X-Content-Type-Options: nosniff (184ms)
+  ✓  [chromium] › tests/security-headers.spec.ts:21:7 › US-016-TASK-05: Security headers en frontend (Next.js) › GET / incluye Referrer-Policy (200ms)
+  ✓  [chromium] › tests/purchase.spec.ts:4:7 › Ciclo de compra › completa el ciclo carrito → checkout → confirmación (2.1s)
+  ✓  [chromium] › tests/purchase.spec.ts:65:7 › Ciclo de compra › datos de envío inválidos muestran error inline y no avanzan al paso 2 (2.3s)
+  ✓  [chromium] › tests/purchase.spec.ts:86:7 › Ciclo de compra › tarjeta inválida muestra error inline y no avanza al paso 3 (2.3s)
 
-  11 passed (5.3s)
+  15 passed (5.1s)
 ```
 
 Ejecuciones adicionales registradas durante el desarrollo (ver `docs/backlog/US-014.md`,
@@ -70,6 +78,7 @@ confirmar estabilidad, además de la ejecución conjunta de arriba.
 | `getByRole('link', { name: /catálogo/i })` ambiguo en la página 404 | Coincide con el link de navegación global «Catálogo» y con «Volver al catálogo» | Nombre accesible exacto: «Volver al catálogo» |
 | `getByLabel('Email', { exact: true })` no encontraba el campo | El `<label>` incluye el asterisco de obligatoriedad en el texto comparado, aunque esté en un `span aria-hidden` | Quitado `exact: true` |
 | Timeout de 30 s superado en `purchase.spec.ts` | El journey completo (4 páginas + 2 formularios + 1 checkout real) agota el timeout por defecto de Playwright | `timeout: 60_000` añadido a `playwright.config.ts` |
+| 8 de 11 tests previos rompían al añadir la CSP (US-016) | `script-src 'self' 'unsafe-inline'` no incluye `'unsafe-eval'`, que el servidor de desarrollo de Next.js necesita para HMR y compilación dinámica | `next.config.mjs` añade `'unsafe-eval'` a `script-src` cuando `NODE_ENV !== 'production'`; en build de producción la directiva queda estricta |
 
 Ninguna incidencia reveló un defecto real de la aplicación — todas eran ajustes del propio
 spec o de su configuración. Detalle completo de cada una: `docs/backlog/US-014.md`.
