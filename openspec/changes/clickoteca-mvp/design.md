@@ -117,6 +117,49 @@ piezas sigue siendo *non-goal* del MVP. El valor de referencia del Set se guarda
 igualmente porque hace falta para el propio cálculo del alquiler puntual y como
 base de una futura tabla de valoración legal.
 
+### D10 — Modelo de datos (entidades y esquema Prisma)
+El modelo de datos completo del MVP se documenta en `documents/PRD.md` §15 y se
+implementa en `backend/prisma/schema.prisma` (PostgreSQL + Prisma). Entidades por
+anillos de importancia:
+- **Núcleo del circuito:** `User`, `Set`, `Copy`, `Subscription`, `Rental`,
+  `ReservationQueueEntry`, `ReservationOffer`.
+- **Operación y trazabilidad:** `ConditionReport`, `Incident`,
+  `CopyStateTransition`, `AuditLog`, `Notification`, `Shipment`.
+- **Configuración y pagos (simulados):** `Plan`, `SystemSetting`,
+  `RetentionReminderConfig`, `PaymentMethod`, `Payment`, `Address`, `Theme`,
+  `MediaAsset`.
+
+Los modelos Prisma van en inglés (convención) y mapean a los términos de dominio
+en español de estas specs. Decisiones de modelado:
+- **Un único `User` con `role`** (`SUBSCRIBER | OPERATOR | ADMIN`): no se modela una
+  entidad `Employee` aparte en el MVP (coherente con D6). Solo se separaría si
+  hicieran falta datos laborales (turnos, etc.).
+- **`Rental.shippingAddress` como snapshot JSON inmutable** (no FK a `Address`):
+  materializa la regla "editar la dirección solo afecta a envíos futuros"
+  (`accounts-roles`).
+- **`ReservationOffer` separada de `ReservationQueueEntry`**: una entrada de cola
+  puede recibir varias ofertas a lo largo del tiempo (aceptar/rechazar/caducar y
+  re-encolar, D5); modelarlas aparte hace triviales la ventana de confirmación y su
+  auditoría.
+- **`CopyStateTransition` (ciclo de vida) separada de `AuditLog` (genérico)**: la
+  máquina de estados de la copia es de primera clase (D2); `AuditLog` cubre el resto
+  de acciones admin.
+- **`MediaAsset` polimórfico** (`ownerType` + `ownerId`, sin FK de BD): integridad
+  validada en la aplicación, para adjuntar fotos tanto a `Set` como a
+  `ConditionReport`.
+
+### D11 — Score de cola materializado + recálculo
+El `score` de D4 se **almacena como columna** en `ReservationQueueEntry` y se
+**recalcula** (por evento y de forma periódica), en lugar de calcularse al vuelo en
+cada lectura.
+**Por qué**: `días_esperando` cambia con el tiempo, así que la ordenación exige un
+recálculo de todos modos; materializar la columna permite ordenar y auditar la cola
+directamente en SQL. Equivale al caso de uso "UC-P15 Calcular score de cola" del
+PRD.
+**Trade-off**: el score puede quedar momentáneamente desactualizado entre
+recálculos; aceptable porque la ventana de recálculo es corta frente a los tiempos
+de cola (días).
+
 ## Risks / Trade-offs
 
 - **Integridad de piezas**: verificar completitud de un set de cientos/miles de

@@ -24,7 +24,13 @@ reclamar ante abandono sin devolución o pérdida/rotura de sets."
 **Prompt 2:** "¿Tienes los datos necesarios para redactar un borrador de PRD en
 @documents\PRD.md para revisar?"
 
-**Prompt 3:**
+**Prompt 3:** "Como analista de software experto, enumera y describe brevemente
+los casos de uso más importantes a implementar para una funcionalidad básica,
+tanto desde el punto de vista de los usuarios como de los operadores. Representa
+estos casos de uso en el tipo de diagrama más adecuado usando el formato
+PlantUML. Diferencia entre usuarios visitantes y usuarios logueados. Acorde a la
+sintaxis y buenas prácticas UML, define y describe lo que sea necesario. Estos
+diagramas se deben adjuntar al PRD."
 
 ---
 
@@ -95,7 +101,11 @@ planes, ¿qué sugieres basándote en servicios similares como BrickBorrow? Aña
 también los datos de dirección de envío ahora. Busca una base de datos pública de
 sets de Lego (mínimo foto del set/caja) para facilitar el catálogo."
 
-**Prompt 2:**
+**Prompt 2:** "Como arquitecto de software, genera el modelo de datos para su
+revisión, organizando las entidades y relaciones por orden de importancia. ¿Qué
+otras entidades son importantes en un sistema de este tipo? Usa diagramas mermaid.
+[...] Adopta 'User único con rol' y 'score materializado + recálculo', incorpora una
+nueva sección en PRD.md y genera el esquema prisma en `backend/prisma`."
 
 **Prompt 3:**
 
@@ -231,3 +241,50 @@ marcaron explícitamente **pendientes** en vez de inventadas: diseño/UX (sin
 mockups aún) y criterios de éxito de negocio (no aplican a un MVP académico
 que no escala a producción — se sustituyen por el criterio de circuito E2E
 demostrable + `openspec validate --strict`).
+
+### [2026-07-03] — Casos de uso y diagramas PlantUML para el PRD
+**Prompt:** "Como analista de software experto, enumera y describe brevemente
+los casos de uso más importantes a implementar para una funcionalidad básica,
+tanto desde el punto de vista de los usuarios como de los operadores. Representa
+estos casos de uso en el formato PlantUML. Diferencia entre usuarios visitantes
+y usuarios logueados. Adjuntar al PRD."
+**Resumen de la respuesta:** Se identificaron 32 casos de uso agrupados en dos
+superficies. **Portal del suscriptor (UC-P01–P18):** Visitante (ver catálogo,
+detalle, registrarse, iniciar sesión), Suscriptor (hereda Visitante + activar
+plan, solicitar set, cola de reservas, confirmar/rechazar oferta, «Mis sets»,
+perfil/dirección, discrepancia, devolución, cancelar suscripción), Sistema
+(calcular score de cola, gestionar ventana de confirmación con
+recordatorio/caducidad, ofrecer copia al cabeza de cola, enviar notificación).
+**Back-office (UC-B01–B14):** Operador (panel de trabajo, alta de copia,
+registrar condición de entrega, recepción de devolución, inspección,
+higienización, marcar incompleta/dañada, historial limitado del cliente), Admin
+(hereda Operador + dar de baja copia, configurar planes/precios/reglas,
+activar recordatorios de retención, gestionar empleados, historial completo del
+cliente). Se usaron relaciones <<extend>>, <<include>> y herencia de actores
+(`--|>`) según convención UML. Diagramas y tablas descriptivas añadidas como
+`§14` de `documents/PRD.md`.
+
+### [2026-07-04] — Modelo de datos: diagramas Mermaid, esquema Prisma y sincronización
+**Prompt:** "Reemplaza los esquemas PlantUML del PRD por Mermaid. Luego, como
+arquitecto de software, genera el modelo de datos organizando entidades y
+relaciones por orden de importancia y sugiere qué otras entidades importan. Adopta
+'User único con rol' y 'score materializado + recálculo', incorpora una sección en
+PRD.md y genera el esquema Prisma en `backend/prisma`. Actualiza las specs, verifica
+que todo cuadra y actualiza `readme.md`."
+**Resumen de la respuesta:** (1) Se convirtieron los dos diagramas de casos de uso
+PlantUML del PRD a Mermaid (`flowchart` con actores, `subgraph` como frontera,
+`«include»/«extend»`/herencia punteadas, colores vía `classDef`). (2) Se diseñó el
+modelo de datos en tres anillos de importancia — núcleo (`User`, `Set`, `Copy`,
+`Subscription`, `Rental`, `ReservationQueueEntry`, `ReservationOffer`), operación
+(`ConditionReport`, `Incident`, `CopyStateTransition`, `AuditLog`, `Notification`,
+`Shipment`) y config/pagos (`Plan`, `SystemSetting`, `RetentionReminderConfig`,
+`PaymentMethod`, `Payment`, `Address`, `Theme`, `MediaAsset`) — con diagramas ER y
+máquina de estados de `Copy` como **§15** del PRD. (3) Decisiones adoptadas: `User`
+único con rol (sin `Employee`) y `score` de cola materializado + recálculo,
+registradas como **D10/D11** en `design.md`. (4) Se generó
+`backend/prisma/schema.prisma` (20 modelos + 16 enums, PostgreSQL), validado con
+Prisma 6 (nota: Prisma 7 exige mover la URL del datasource a `prisma.config.ts`).
+(5) Se sincronizaron las specs: nueva Requirement "Recálculo del score de cola" en
+`reservation-queue`, `tasks.md` 1.2 (modelo completo) y 6.2 (materializado);
+`openspec validate --strict` en verde. (6) Se rellenó `readme.md` §3 (Modelo de
+datos) con el ER consolidado y las tablas de entidades por anillo.

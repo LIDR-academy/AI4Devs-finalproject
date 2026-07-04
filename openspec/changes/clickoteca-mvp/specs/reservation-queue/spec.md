@@ -26,6 +26,22 @@ empate, prevalece quien se encoló antes.
 - **WHEN** un `PREMIUM` y un `BASIC` se encolan en el mismo instante
 - **THEN** el `PREMIUM` se ordena por delante por su bono fijo
 
+### Requirement: Recálculo del score de cola
+El sistema SHALL mantener el `score` de cada entrada de forma materializada y
+recalcularlo de forma periódica y ante eventos relevantes (nueva entrada, oferta
+caducada que re-encola, cambio de plan del suscriptor), de modo que la ordenación
+refleje el envejecimiento acumulado sin depender del instante de lectura.
+
+#### Scenario: El score refleja el paso del tiempo
+- **WHEN** transcurre el tiempo y se ejecuta el recálculo de la cola
+- **THEN** el `score` de cada entrada se actualiza a `días_esperando + bono_plan`
+- **AND** la cola queda reordenada según los nuevos valores
+
+#### Scenario: Recálculo tras caducar una oferta
+- **WHEN** una oferta caduca sin respuesta y el suscriptor vuelve al final con
+  prioridad reducida
+- **THEN** su `score` se recalcula aplicando la penalización de prioridad
+
 ### Requirement: Elegibilidad al ofrecer
 El sistema SHALL ofrecer la copia liberada únicamente a entradas de la cola cuyo
 suscriptor pueda recibir el set en ese momento (no supera el límite de su plan ni

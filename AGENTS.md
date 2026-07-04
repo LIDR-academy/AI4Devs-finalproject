@@ -17,6 +17,7 @@ project. Read it at the start of every session.
      respecting the "max 3 per section" rule.
 - **Don't invent.** When anything is ambiguous or unknown, ask the user rather than
   guessing.
+- All diagrams must be written in Mermaid language for enhanced compatibility
 
 ## Project facts
 
@@ -47,6 +48,18 @@ project. Read it at the start of every session.
   Sirve de fuente detallada de la que luego se condensará `readme.md` §1.
   Pendiente de revisión del usuario; diseño/UX y criterios de éxito de
   negocio quedaron marcados como pendientes ahí (no inventados).
+- **Modelo de datos (definido 2026-07-04):** documentado en `documents/PRD.md` §15
+  (tres anillos de importancia + diagramas ER Mermaid + máquina de estados de
+  `Copy`) e implementado en `backend/prisma/schema.prisma` (20 modelos + 16 enums,
+  PostgreSQL). Reflejado también en `readme.md` §3. Modelos en inglés (convención
+  Prisma) que mapean a los términos de dominio en español de las specs. Decisiones
+  clave añadidas a `design.md`: **D10** (catálogo de entidades + `User` único con
+  rol, sin `Employee`) y **D11** (`score` de cola materializado + recálculo). Specs
+  sincronizadas (nueva Requirement de recálculo en `reservation-queue`; `tasks.md`
+  1.2/6.2); `openspec validate clickoteca-mvp --strict` en verde. **Nota de versión:**
+  el esquema usa la forma clásica `url = env("DATABASE_URL")`, válida en Prisma ≤6;
+  Prisma 7 exige moverla a `prisma.config.ts` — pinnear Prisma 6 al fijar el
+  `package.json` del backend, o migrar la config del datasource.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions

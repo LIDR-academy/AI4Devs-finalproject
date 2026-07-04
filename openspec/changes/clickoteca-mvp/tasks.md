@@ -5,7 +5,7 @@
 
 ## 1. Fundaciones
 - [ ] 1.1 Definir stack y scaffolding del proyecto (front suscriptor + back-office + API)
-- [ ] 1.2 Modelo de datos base: `Usuario`, `Set`, `Copia`, `Suscripcion`, `Alquiler`, `EntradaCola`, `Notificacion`, `RegistroAuditoria`
+- [ ] 1.2 Modelo de datos en `backend/prisma/schema.prisma` (PostgreSQL + Prisma; ver PRD §15 y design.md D10). Núcleo: `User`, `Set`, `Copy`, `Subscription`, `Rental`, `ReservationQueueEntry`, `ReservationOffer`. Operación/trazabilidad: `ConditionReport`, `Incident`, `CopyStateTransition`, `AuditLog`, `Notification`, `Shipment`. Configuración/pagos: `Plan`, `SystemSetting`, `RetentionReminderConfig`, `PaymentMethod`, `Payment`, `Address`, `Theme`, `MediaAsset`
 - [ ] 1.3 Semillas/datos de prueba (sets, copias, usuarios de cada rol); catálogo semilla desde el dataset público de Rebrickable (nombre, año, tema, nº piezas, foto de la caja); edad recomendada y dificultad curadas a mano para el subconjunto semilla
 
 ## 2. Cuentas y roles (`accounts-roles`)
@@ -43,7 +43,7 @@
 
 ## 6. Cola de reservas (`reservation-queue`)
 - [ ] 6.1 Encolado por Set con marca de tiempo
-- [ ] 6.2 Ordenación por score aditivo (días_espera + bono_plan)
+- [ ] 6.2 Ordenación por score aditivo materializado (días_espera + bono_plan) con recálculo periódico y por evento (ver design.md D11)
 - [ ] 6.3 Elegibilidad al ofrecer (saltar no elegibles)
 - [ ] 6.4 Ventana de confirmación: aceptar/rechazar, recordatorio a mitad, caducidad → final con prioridad reducida
 - [ ] 6.5 Límite de colas simultáneas por usuario (configurable)
