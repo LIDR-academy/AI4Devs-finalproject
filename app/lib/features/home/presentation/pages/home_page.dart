@@ -31,10 +31,21 @@ class HomePage extends StatelessWidget {
               child: Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
-                  child: FilledButton.icon(
-                    onPressed: () => context.push('/games/new'),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Nueva partida'),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      FilledButton.icon(
+                        onPressed: () => context.push('/games/new'),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Nueva partida'),
+                      ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: () => context.push('/history'),
+                        icon: const Icon(Icons.history),
+                        label: const Text('Ver historial'),
+                      ),
+                    ],
                   ),
                 ),
               ),

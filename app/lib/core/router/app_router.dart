@@ -8,6 +8,8 @@ import 'package:la_pocha/features/round/presentation/pages/play_page.dart';
 import 'package:la_pocha/features/round/presentation/pages/game_final_result_page.dart';
 import 'package:la_pocha/features/round/presentation/pages/round_result_page.dart';
 import 'package:la_pocha/features/round/presentation/pages/scoring_page.dart';
+import 'package:la_pocha/features/history/presentation/pages/game_history_detail_placeholder_page.dart';
+import 'package:la_pocha/features/history/presentation/pages/history_list_page.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -63,6 +65,16 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/games/:gameId/final',
       builder: (context, state) => GameFinalResultPage(
+        gameId: state.pathParameters['gameId']!,
+      ),
+    ),
+    GoRoute(
+      path: '/history',
+      builder: (context, state) => const HistoryListPage(),
+    ),
+    GoRoute(
+      path: '/history/:gameId',
+      builder: (context, state) => GameHistoryDetailPlaceholderPage(
         gameId: state.pathParameters['gameId']!,
       ),
     ),

@@ -1617,3 +1617,59 @@ como placeholder. Usa modo Plan antes de ejecutar.
 
 ------------------
 
+## Bloque 2 — Flujo de ronda (LPT-9, LPT-10, LPT-11, LPT-14)
+
+**Fecha:** 3-4 julio 2026
+**Rama:** feature-entrega2-JMGS
+
+### Prompt ejecutado (patrón estándar para todos los tickets)
+
+Lee el ticket [LPT-X] de Jira con acli, revisa docs/design.md
+para referencia visual, e impleméntalo siguiendo las convenciones
+en .cursor/rules/. Usa modo Plan antes de ejecutar.
+
+### Excepciones documentadas
+
+- LPT-10: stub explícito para el atajo a LPT-12 (corrección de
+  apuestas), no implementado en este bloque.
+- LPT-14: nota explícita a Cursor para reutilizar DealerRotationService
+  de LPT-7, no reinventarlo. CTA de registro al finalizar sin sesión
+  dejado como stub/TODO (depende de LPT-19).
+- LPT-11 y LPT-10 considerados para Multitask — descartado porque
+  ambos tocan go_router (fichero compartido) y el ahorro de tiempo no
+  compensaba el riesgo de colisión. Lanzados secuencialmente.
+
+### Artefactos generados
+
+lib/features/round/ (domain, data, presentation completos)
+
+- score_calculator_service.dart
+- dealer_rotation_service.dart (reutilizado desde LPT-7)
+- scoring_page.dart, play_page.dart, round_result_page.dart
+- game_final_result_page.dart
+
+-------------
+
+Lee el ticket LPT-15 de Jira con acli, revisa docs/design.md
+para referencia visual, e impleméntalo siguiendo las convenciones
+en .cursor/rules/.
+
+Nota importante: LPT-15 tiene dos partes con dependencias distintas:
+
+1. Parte local (implementar completamente): leer games con
+   status == finished de Drift, ordenar por finishedAt desc,
+   mostrar listado con badge "local". Identificación de cada
+   partida: derivada de finishedAt (fecha/hora) + lista de
+   nombres de players[].displayName — no hay campo name en
+   el modelo Game.
+
+2. Parte Firestore (dejar como stub/TODO): merge con partidas
+   en nube, deduplicación por cloudGameId, pull-to-refresh.
+   Depende de LPT-19 (login) y LPT-20 (subida automática),
+   no implementados aún. El stub debe incluir TODO con
+   referencia explícita a esos tickets.
+
+Usa modo Plan antes de ejecutar.
+
+---------------------
+

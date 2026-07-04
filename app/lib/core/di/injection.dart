@@ -36,6 +36,12 @@ import 'package:la_pocha/features/round/presentation/bloc/bidding_bloc.dart';
 import 'package:la_pocha/features/round/presentation/bloc/play_state_bloc.dart';
 import 'package:la_pocha/features/round/presentation/bloc/round_result_bloc.dart';
 import 'package:la_pocha/features/round/presentation/bloc/scoring_bloc.dart';
+import 'package:la_pocha/features/history/data/datasources/history_firestore_datasource.dart';
+import 'package:la_pocha/features/history/data/datasources/history_local_datasource.dart';
+import 'package:la_pocha/features/history/data/repositories/history_repository_impl.dart';
+import 'package:la_pocha/features/history/domain/repositories/history_repository.dart';
+import 'package:la_pocha/features/history/domain/usecases/get_game_history_usecase.dart';
+import 'package:la_pocha/features/history/presentation/bloc/history_list_bloc.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -84,6 +90,29 @@ Future<void> configureDependencies() async {
 
   getIt.registerLazySingleton<RankingService>(
     () => const RankingService(),
+  );
+
+  getIt.registerLazySingleton<HistoryLocalDatasource>(
+    () => HistoryLocalDatasource(getIt<AppDatabase>()),
+  );
+
+  getIt.registerLazySingleton<HistoryFirestoreDatasource>(
+    () => HistoryFirestoreDatasource(),
+  );
+
+  getIt.registerLazySingleton<HistoryRepository>(
+    () => HistoryRepositoryImpl(
+      getIt<HistoryLocalDatasource>(),
+      getIt<HistoryFirestoreDatasource>(),
+    ),
+  );
+
+  getIt.registerFactory<GetGameHistoryUseCase>(
+    () => GetGameHistoryUseCase(getIt<HistoryRepository>()),
+  );
+
+  getIt.registerFactory<HistoryListBloc>(
+    () => HistoryListBloc(getGameHistory: getIt<GetGameHistoryUseCase>()),
   );
 
   getIt.registerFactory<LoadBiddingContextUseCase>(
