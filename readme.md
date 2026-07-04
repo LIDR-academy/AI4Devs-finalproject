@@ -229,9 +229,10 @@ erDiagram
         uuid setId FK
         uuid userId FK
         enum status "WAITING|OFFERED|CONFIRMED|EXPIRED|LEFT"
-        int score "materializado: días_espera + bono_plan"
+        timestamptz enqueuedAt "entrada real (cruda)"
+        int appliedBonus "bono de plan congelado al encolar"
+        timestamptz effectiveEntryAt "= enqueuedAt − appliedBonus; inmutable (D11)"
         int priorityPenalty "tras caducar oferta"
-        timestamptz enqueuedAt
     }
     RESERVATION_OFFER {
         uuid id PK
@@ -355,7 +356,7 @@ Claves: **PK** primaria, **FK** foránea, **UK** única. Todos los `id` son `uui
 | **Copy** | Unidad física concreta de un Set; portadora del estado del ciclo de vida (9 estados). | `state` (enum `CopyState`); FK `setId`. 1—N con `Rental`, `ConditionReport`, `Incident`, `CopyStateTransition`. |
 | **Subscription** | Suscripción de un usuario a un plan. | `status` (ACTIVE/PAUSED/CANCELLED); FK `userId`, `planId`. |
 | **Rental** | Alquiler de una copia por un usuario. `subscriptionId` nulo ⇒ alquiler puntual. | `type` (SUBSCRIPTION/ONE_OFF), `shippingAddress` (snapshot JSON inmutable), `price` (solo puntual); FK `copyId`, `userId`, `subscriptionId?`. 1—1 opcional con `ReservationOffer`. |
-| **ReservationQueueEntry** | Entrada en la cola de un Set. Una cola por Set. | `score` **materializado** (`días_espera + bono_plan`, recalculado), `priorityPenalty`, `status`; FK `setId`, `userId`. |
+| **ReservationQueueEntry** | Entrada en la cola de un Set. Una cola por Set. | `effectiveEntryAt` **inmutable** (`enqueuedAt − appliedBonus`; orden sin recálculo, D11), `appliedBonus`, `priorityPenalty`, `status`; FK `setId`, `userId`. |
 | **ReservationOffer** | Oferta de una copia al cabeza de cola dentro de la ventana de confirmación. Una entrada puede recibir varias ofertas. | `windowExpiresAt`, `status`; FK `queueEntryId`, `copyId`, `rentalId?` **UK**. |
 
 **Anillo 2 — Operación y trazabilidad**

@@ -198,6 +198,23 @@ falle de forma **determinista** y barata, sin serializar todo el sistema. Cada
 conflicto expone un `code` estable del contrato de errores RFC 9457
 (`documents/ADR-0002-api-auth-errores.md`).
 
+### D13 — Visitante = actor no autenticado con proyección pública (no un rol)
+El **visitante** (usuario sin sesión) se modela como **actor no autenticado**, no como
+un cuarto rol de `User`. Puede ver una **proyección pública** del catálogo (atributos
+de Set de Sets publicados, **sin** disponibilidad ni cola), los **planes/condiciones**
+de membresía y la **opción de alta**. La disponibilidad y todo lo de nivel `Copy`/cola
+quedan tras autenticación.
+**Por qué**: los tres roles (D6) son a nivel de cuenta y el visitante **no tiene
+cuenta**; añadirlo al enum `Role` rompería la invariante "una cuenta = un rol" e
+introduciría un valor que nunca se persiste. La frontera se traza en la **proyección
+de datos** (público vs. autenticado), no en el catálogo entero: da descubribilidad/SEO
+y empuja la conversión sin exponer el inventario en vivo. Coste de implementación bajo:
+el middleware de auth ya distingue "hay sesión / no hay sesión".
+**Cambio respecto al PRD original**: UC-P02 concedía al visitante ver "disponibilidad y
+posición en cola"; con D13 eso pasa a exigir login. Reflejado en `accounts-roles`
+(Requirement "Acceso público no autenticado"), `catalog-inventory` (Requirement
+"Proyección pública del catálogo") y `documents/PRD.md` §3/§4.1/§14.1.
+
 ## Risks / Trade-offs
 
 - **Integridad de piezas**: verificar completitud de un set de cientos/miles de

@@ -14,7 +14,8 @@
 - [ ] 2.3 Baja de copia restringida a admin
 - [ ] 2.4 Registro de auditoría "quién/cuándo" en transiciones y acciones admin
 - [ ] 2.5 Alta de suscriptor (adulto + tarjeta simulada + dirección de envío/contacto + condiciones lorem ipsum)
-- [ ] 2.6 Tests: permisos por rol, rechazo de baja por operador, registro de auditoría, alta bloqueada sin dirección de envío
+- [ ] 2.6 Acceso público del visitante (actor no autenticado): proyección pública del catálogo + planes/condiciones + alta; gating que exige login para acciones de suscriptor y back-office (ver design.md D13)
+- [ ] 2.7 Tests: permisos por rol, rechazo de baja por operador, registro de auditoría, alta bloqueada sin dirección de envío, visitante bloqueado en acciones reservadas
 
 ## 3. Catálogo e inventario (`catalog-inventory`)
 - [ ] 3.1 CRUD de Set (incluye valor de referencia) y de Copia; relación Set↔Copias
@@ -22,6 +23,7 @@
 - [ ] 3.3 Flujo de alta (INTAKE → DISPONIBLE)
 - [ ] 3.4 Ramas INCOMPLETA / BAJA
 - [ ] 3.5 Tests: transiciones válidas e inválidas, varias copias por set, ramas de error, publicación bloqueada sin valor de referencia
+- [ ] 3.6 Proyección pública vs. autenticada del catálogo (la pública oculta disponibilidad y cola y solo muestra Sets publicados) + tests
 
 ## 4. Suscripciones (`subscriptions`)
 - [ ] 4.1 Planes basic/premium, límites de sets simultáneos y precio mensual configurable por plan
@@ -43,7 +45,7 @@
 
 ## 6. Cola de reservas (`reservation-queue`)
 - [ ] 6.1 Encolado por Set con marca de tiempo
-- [ ] 6.2 Ordenación por score aditivo materializado (días_espera + bono_plan) con recálculo periódico y por evento (ver design.md D11)
+- [ ] 6.2 Ordenación por `effectiveEntryAt` inmutable (`enqueuedAt − bono_aplicado`), calculada al encolar, sin recálculo periódico (ver design.md D11)
 - [ ] 6.3 Elegibilidad al ofrecer (saltar no elegibles)
 - [ ] 6.4 Ventana de confirmación: aceptar/rechazar, recordatorio a mitad, caducidad → final con prioridad reducida
 - [ ] 6.5 Límite de colas simultáneas por usuario (configurable)

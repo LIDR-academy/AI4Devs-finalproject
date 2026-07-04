@@ -129,11 +129,17 @@ nueva sección en PRD.md y genera el esquema prisma en `backend/prisma`."
 
 ### 5. Historias de Usuario
 
-**Prompt 1:**
+**Prompt 1:** "Quiero redactar en @documents\user_stories.md las historias de
+usuario más relevantes para este MVP basándonos únicamente en la documentación."
 
-**Prompt 2:**
+**Prompt 2:** "Estoy valorando añadir un nuevo rol de usuario, el visitante: un
+usuario sin registrar que solo podría ver los sets ofrecidos (sin disponibilidad) y
+las condiciones de membresía junto con la opción de alta. Opiniones? → aplica los
+cambios usando el actor no autenticado."
 
-**Prompt 3:**
+**Prompt 3:** "Revisando design.md y reservation-queue/spec.md, ¿no es inconsistente
+D11 (orden por entrada_efectiva) con el Requirement de prioridad aditiva? design.md
+tiene la última decisión → aplica la reconciliación."
 
 ---
 
@@ -364,3 +370,67 @@ Oracle reclama la instancia. (6) Se creó **`ADR-0002-api-auth-errores.md`**, se
 colapsó el **C4 nivel 2** a un solo host, se actualizaron `ADR-0001`, `design.md`,
 `AGENTS.md` (hosting decidido, Open questions reducidas al framework) y
 `openspec validate --strict` en verde. Commit `7985b78`.
+
+### [2026-07-05] — Historias de usuario del MVP a partir de la documentación
+**Prompt:** "Quiero redactar en @documents\user_stories.md las historias de usuario
+más relevantes para este MVP basándonos únicamente en la documentación."
+**Resumen de la respuesta:** Se creó `documents/user_stories.md` con **17 historias
+de usuario** derivadas exclusivamente de la documentación existente (`PRD.md` §4/§6/§14,
+las 6 specs de `openspec/changes/clickoteca-mvp/specs/*` y el modelo de datos §15),
+sin inventar pantallas ni reglas. Estructura en tres superficies de actor: **Portal
+del Suscriptor** (HU-01→09: alta, plan, solicitud con asignación directa, unirse a
+cola, confirmar/rechazar oferta, «Mis sets», discrepancia en entrega, iniciar
+devolución, cancelación camino feliz), **Back-office** (HU-10→16: alta de copia,
+registro de condición, recepción+inspección, higienización, marcar incompleta, baja
+solo-admin, configuración de reglas) y **Sistema** (HU-17: equidad de cola / score
+aditivo + elegibilidad al ofrecer). Cada historia lleva plantilla *rol→objetivo→
+beneficio*, prioridad **MoSCoW**, **criterios de aceptación en Gherkin** (tomados de
+los escenarios de las specs) y **trazabilidad** a caso de uso + capability + reglas.
+Se marcaron con ⭐ las 3 candidatas para `readme.md` §5 (HU-04 cola justa, HU-05
+ventana de confirmación, HU-11+HU-13 condición de entrega + doble paso inspección/
+higiene) y se listaron non-goals y puntos aún abiertos en la doc como tales.
+
+### [2026-07-05] — Visitante como actor no autenticado (proyección pública del catálogo)
+**Prompt:** "Estoy valorando añadir un nuevo rol de usuario, el visitante: usuario sin
+registrar que solo podría ver los sets ofrecidos (sin especificar disponibilidad) y
+las condiciones de membresía junto con la opción de alta. Opiniones?" → "aplica estos
+cambios usando el actor no autenticado."
+**Resumen de la respuesta:** Se argumentó que el visitante **ya existía como actor**
+en `PRD.md` §14.1 (UC-P01–P04, con herencia `Suscriptor --|> Visitante`) y que lo
+correcto es modelarlo como **actor no autenticado, no como un cuarto rol de `User`**
+(los tres roles son a nivel de cuenta y "una cuenta = un rol"; el enum `Role` no
+cambia). Lo genuinamente nuevo: (a) exponer planes/condiciones en público y (b)
+**ocultar la disponibilidad y la cola** al visitante —lo que **contradecía** UC-P02,
+que se lo concedía—. Se recomendó trazar la frontera en la **proyección de datos**
+(pública sin disponibilidad ni nivel `Copy`/cola vs. autenticada con ambas), no en el
+catálogo entero. Cambios aplicados: **`design.md` D13** (nueva decisión); nuevas
+Requirements en `accounts-roles` ("Acceso público no autenticado (visitante)") y
+`catalog-inventory` ("Proyección pública del catálogo"); `PRD.md` §3 (nota de
+visitante), §4.1 (bullet de acceso público) y §14.1 (UC-P02 y tabla de actores ya sin
+disponibilidad para el visitante); **HU-00** en `documents/user_stories.md`; hecho de
+proyecto en `AGENTS.md`; tareas **2.6/2.7** (acceso público + tests de gating) y **3.6**
+(proyección pública vs. autenticada + tests). `openspec validate clickoteca-mvp
+--strict` en verde.
+
+### [2026-07-05] — Reconciliar la cola de reservas con D11 (entrada efectiva inmutable)
+**Prompt:** "Revisando design.md y reservation-queue/spec.md, ¿no es inconsistente D11
+(orden por `entrada_efectiva`) con el Requirement de prioridad aditiva? design.md tiene
+la última decisión." → "aplica."
+**Resumen de la respuesta:** Se diagnosticó que el requirement señalado ("Prioridad por
+envejecimiento aditiva") **sí es consistente** con D11 —describe el comportamiento
+aditivo, que D11 implementa dando el mismo orden—, y que la inconsistencia real estaba
+en **otro sitio**: el requirement "Recálculo del score de cola" (residuo del enfoque
+pre-D11 del 2026-07-04 mañana, no reconciliado cuando D11 se reescribió esa tarde,
+commit `7985b78`) y su **propagación al modelo de datos** (`score` materializado en
+`schema.prisma`, `PRD.md` §15 y `readme.md`; UC-P15 descrito como "recalcular"; tarea
+6.2). Reconciliación aplicada hacia D11 (la decisión más reciente manda): (1) **spec
+`reservation-queue`**: se sustituyó "Recálculo del score de cola" por **"Orden de cola
+por entrada efectiva inmutable"** (`entrada_efectiva = enqueuedAt − bono_aplicado`,
+calculada una vez, `SHALL NOT` recalcular; caducar = re-encolar al final con
+penalización) y se matizó el requirement aditivo para no implicar columna materializada.
+(2) **`schema.prisma`**: `score Int` → `effectiveEntryAt DateTime` + `appliedBonus Int`
+(conservando `enqueuedAt` y `priorityPenalty`), reindexado por `effectiveEntryAt, id`.
+(3) **`PRD.md`** §15.1/§15.2 (ER), UC-P15 y labels del diagrama; (4) **`readme.md`** §3
+(ER + tabla de entidades); (5) **`user_stories.md`** HU-17 reescrita; (6) **`tasks.md`**
+6.2; (7) **`AGENTS.md`**: corregido el resumen de D11 (describía la versión original ya
+revertida). `openspec validate clickoteca-mvp --strict` en verde.

@@ -305,23 +305,26 @@ model Rental {
 }
 
 /// Entrada en la cola de reservas de un Set. Una cola por Set (agrupada por setId).
-/// `score` materializado (días_esperando + bono_plan) y recalculado por UC-P15.
+/// Orden por `effectiveEntryAt` inmutable (design.md D11): calculado una vez al
+/// encolar como `enqueuedAt − appliedBonus`; sin recálculo periódico (orden invariante
+/// en el tiempo por ser la prioridad aditiva).
 model ReservationQueueEntry {
-  id             String           @id @default(uuid()) @db.Uuid
-  setId          String           @db.Uuid
-  userId         String           @db.Uuid
-  status         QueueEntryStatus @default(WAITING)
-  score          Int              @default(0) // materializado; recálculo periódico/por evento
-  priorityPenalty Int             @default(0) // aplicado tras dejar caducar una oferta
-  enqueuedAt     DateTime         @default(now()) @db.Timestamptz(6)
-  updatedAt      DateTime         @updatedAt @db.Timestamptz(6)
+  id              String           @id @default(uuid()) @db.Uuid
+  setId           String           @db.Uuid
+  userId          String           @db.Uuid
+  status          QueueEntryStatus @default(WAITING)
+  enqueuedAt      DateTime         @default(now()) @db.Timestamptz(6) // entrada real (cruda)
+  appliedBonus    Int              @default(0) // bono de plan congelado al encolar (auditoría)
+  effectiveEntryAt DateTime        @db.Timestamptz(6) // = enqueuedAt − appliedBonus (+ penalty); inmutable
+  priorityPenalty Int              @default(0) // desplazamiento aplicado tras dejar caducar una oferta
+  updatedAt       DateTime         @updatedAt @db.Timestamptz(6)
 
   set    Set                @relation(fields: [setId], references: [id])
   user   User               @relation(fields: [userId], references: [id])
   offers ReservationOffer[]
 
-  // Orden de servicio: mayor score primero, desempate por antigüedad en cola.
-  @@index([setId, status, score, enqueuedAt])
+  // Orden de servicio: menor effectiveEntryAt primero, desempate por id (D11).
+  @@index([setId, status, effectiveEntryAt, id])
   @@index([userId])
   @@map("reservation_queue_entries")
 }

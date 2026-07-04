@@ -13,6 +13,24 @@ concreta que la empresa posee). Un Set puede tener varias Copias.
 - **AND** cada copia mantiene su propio estado de ciclo de vida de forma
   independiente
 
+### Requirement: Proyección pública del catálogo
+El sistema SHALL exponer el catálogo en dos proyecciones. La **pública** (visitante,
+sin autenticar) muestra únicamente Sets publicados con sus atributos de catálogo
+(foto, nº de piezas, edad recomendada, tema, dificultad) y **oculta la disponibilidad
+y la posición/estado en la cola de reservas**. La **autenticada** (suscriptor) añade
+la disponibilidad de copias y la posición/estado en la cola. El estado a nivel de
+`Copy` nunca se expone en la proyección pública.
+
+#### Scenario: Visitante ve el catálogo sin disponibilidad
+- **WHEN** un usuario no autenticado consulta el catálogo o el detalle de un Set
+- **THEN** ve los atributos de catálogo de los Sets publicados
+- **AND** no ve la disponibilidad de copias ni la posición en cola
+
+#### Scenario: Suscriptor ve la disponibilidad
+- **WHEN** un suscriptor autenticado consulta el detalle de un Set
+- **THEN** ve además la disponibilidad de copias y su posición/estado en la cola de
+  reservas
+
 ### Requirement: Valor de referencia del Set
 El sistema SHALL almacenar un valor de referencia (coste de reposición) por Set,
 usado para calcular el precio del alquiler puntual (ver `subscriptions`) y como

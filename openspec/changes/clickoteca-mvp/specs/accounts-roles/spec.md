@@ -25,6 +25,25 @@ cuenta tiene exactamente un rol. Las acciones disponibles dependen del rol.
   configurar planes/reglas/parámetros, gestionar empleados y ver el historial
   completo de clientes
 
+### Requirement: Acceso público no autenticado (visitante)
+El sistema SHALL permitir el acceso no autenticado (visitante) a un subconjunto de
+solo lectura de la plataforma: explorar la proyección pública del catálogo de Sets
+(ver `catalog-inventory`), consultar los planes de membresía y sus condiciones, e
+iniciar el alta. El visitante **no es un rol de cuenta** —los roles son los tres
+anteriores, uno por cuenta—: representa el estado sin sesión y no tiene registro en
+el modelo de datos.
+
+#### Scenario: Visitante explora sin cuenta
+- **WHEN** un usuario sin sesión accede a la plataforma
+- **THEN** puede ver la proyección pública del catálogo, los planes de membresía con
+  sus condiciones y la opción de registro
+- **AND** no puede solicitar sets, entrar en colas ni acceder al back-office
+
+#### Scenario: Acción reservada exige autenticación
+- **WHEN** un visitante intenta una acción de suscriptor (solicitar un set, unirse a
+  una cola) o acceder al back-office
+- **THEN** la acción es rechazada y se le solicita iniciar sesión o registrarse
+
 ### Requirement: Dar de baja una copia restringido a ADMIN
 El sistema SHALL permitir dar de baja (`BAJA`) una copia únicamente a usuarios con
 rol `ADMIN`.

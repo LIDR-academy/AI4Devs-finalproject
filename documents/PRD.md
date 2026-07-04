@@ -29,7 +29,11 @@ sin comprarlos ni quedárselos.
 
 ## 3. Usuarios y roles
 
-El sistema soporta tres roles; cada cuenta tiene exactamente uno.
+El sistema soporta tres roles; cada cuenta tiene exactamente uno. Además, un
+**visitante** (usuario sin autenticar) puede explorar una proyección pública del
+catálogo, consultar los planes de membresía y sus condiciones, y darse de alta; **no
+es un rol de cuenta**, sino el estado sin sesión (sin registro en el modelo de datos)
+— ver §4.1, §14.1 y `design.md` D13.
 
 | Acción | Suscriptor | Operador | Admin |
 |---|---|---|---|
@@ -47,6 +51,12 @@ realizó y **cuándo** (auditoría).
 
 ### 4.1 Cuentas y roles
 - Autenticación con los 3 roles anteriores.
+- **Acceso público (visitante).** Sin autenticar se puede explorar la proyección
+  pública del catálogo (atributos de Set de los Sets publicados, **sin**
+  disponibilidad ni posición en cola), ver los planes de membresía con sus
+  condiciones e iniciar el alta. El visitante **no es un rol de cuenta**, sino el
+  estado sin sesión; la disponibilidad y todo lo de nivel copia/cola exigen login
+  (ver `design.md` D13).
 - Alta de suscriptor: declaración de mayoría de edad + tarjeta (simulada) +
   dirección de envío/contacto (obligatoria; sin ella no se completa el alta) +
   aceptación de condiciones (texto *lorem ipsum* en el MVP).
@@ -275,8 +285,8 @@ estándar:
 - **`<<extend>>`**: el UC extensión añade comportamiento opcional al UC base
   bajo la condición indicada.
 - **Actor "Sistema"** (diagrama portal): actor secundario que representa los
-  procesos automáticos del backend (score de cola, ventanas de confirmación,
-  notificaciones).
+  procesos automáticos del backend (entrada efectiva de cola, ventanas de
+  confirmación, notificaciones).
 
 ---
 
@@ -286,16 +296,16 @@ estándar:
 
 | Actor | Descripción |
 |---|---|
-| **Visitante** | Usuario no autenticado. Puede explorar el catálogo y registrarse. |
+| **Visitante** | Usuario no autenticado. Puede explorar la proyección pública del catálogo (sin disponibilidad ni cola), ver planes/condiciones y registrarse. **No es un rol de cuenta** (ver `design.md` D13). |
 | **Suscriptor** | Usuario autenticado (hereda los UCs del Visitante). Gestiona su suscripción, solicita sets, interactúa con la cola y gestiona devoluciones. |
-| **Sistema** | Actor secundario automático: calcula scores de cola, gestiona ventanas de confirmación, dispara notificaciones y ofertas. |
+| **Sistema** | Actor secundario automático: calcula la entrada efectiva de cola al encolar, gestiona ventanas de confirmación, dispara notificaciones y ofertas. |
 
 #### Tabla de casos de uso — Portal
 
 | ID | Nombre | Actor principal | Descripción breve |
 |---|---|---|---|
 | UC-P01 | Ver catálogo de sets | Visitante | Navega la lista de sets disponibles en el catálogo. |
-| UC-P02 | Ver detalle de set | Visitante | Consulta la ficha del set: foto, nº de piezas, tema, dificultad, disponibilidad y posición en cola. |
+| UC-P02 | Ver detalle de set | Visitante | Consulta la ficha del set (foto, nº de piezas, tema, dificultad). La **disponibilidad y la posición en cola** solo son visibles para suscriptores autenticados (proyección pública vs. autenticada, `design.md` D13). |
 | UC-P03 | Registrarse | Visitante | Alta como suscriptor: datos personales, declaración de mayoría de edad, tarjeta simulada, dirección de envío (obligatoria) y aceptación de condiciones. |
 | UC-P04 | Iniciar sesión | Visitante | Autenticación con credenciales. Precondición implícita de todos los UCs del Suscriptor. |
 | UC-P05 | Activar / cambiar plan | Suscriptor | Contrata o cambia entre plan BASIC (14,99 €/mes, 1 set) y PREMIUM (24,99 €/mes, hasta 2 sets simultáneos). También cubre el alta de alquiler puntual. |
@@ -308,7 +318,7 @@ estándar:
 | UC-P12 | Reportar discrepancia en la entrega | Suscriptor | Notifica, dentro de la ventana de entrega, que la copia recibida no coincide con el registro de condición. Se abre una incidencia de back-office sin imputársela al suscriptor. |
 | UC-P13 | Iniciar devolución | Suscriptor | Solicita la recogida del set. La copia transita a `EN_DEVOLUCION` y se genera el registro de recogida (logística simulada). |
 | UC-P14 | Cancelar / pausar suscripción | Suscriptor | Solo posible en el camino feliz: sin copias en su poder ni saldo pendiente. |
-| UC-P15 | Calcular score de cola | Sistema | Recalcula la posición de cada entrada: `score = días_esperando + bono_plan` (PREMIUM +N configurable, BASIC +0). Ante empate, prioridad por antigüedad en cola. |
+| UC-P15 | Calcular entrada efectiva de cola | Sistema | Al encolar, congela el bono de plan y calcula `effectiveEntryAt = enqueuedAt − bono` (PREMIUM +N configurable, BASIC +0), marca **inmutable** que fija la posición. El orden es `effectiveEntryAt` ascendente, desempate por antigüedad; sin recálculo periódico (`design.md` D11). |
 | UC-P16 | Gestionar ventana de confirmación | Sistema | Envía recordatorio a mitad de ventana; si caduca sin respuesta, re-encola al suscriptor con prioridad reducida y pasa la oferta al siguiente elegible. Incluye UC-P18. |
 | UC-P17 | Ofrecer copia al cabeza de cola | Sistema | Tras inspección OK, notifica al primer suscriptor elegible de la cola (el que no supera su límite de plan ni tiene devolución pendiente). Incluye UC-P18. |
 | UC-P18 | Enviar notificación | Sistema | Entrega la notificación al suscriptor correspondiente al evento de dominio (turno en cola, confirmación, recordatorio, devolución completada, etc.). |
@@ -347,7 +357,7 @@ flowchart LR
         UCP13(["UC-P13<br/>Iniciar devolución"])
         UCP14(["UC-P14<br/>Cancelar / pausar<br/>suscripción"])
         %% Sistema
-        UCP15(["UC-P15<br/>Calcular score<br/>de cola"])
+        UCP15(["UC-P15<br/>Calcular entrada<br/>efectiva de cola"])
         UCP16(["UC-P16<br/>Gestionar ventana<br/>de confirmación"])
         UCP17(["UC-P17<br/>Ofrecer copia al<br/>cabeza de cola"])
         UCP18(["UC-P18<br/>Enviar notificación"])
@@ -514,9 +524,13 @@ Las entidades se organizan en **tres anillos por orden de importancia**:
 - **Un único `User` con `role`** (`SUBSCRIBER | OPERATOR | ADMIN`): no se modela una
   entidad `Employee` aparte en el MVP; solo se separaría si hicieran falta datos
   laborales (turnos, etc.).
-- **`score` de cola materializado en columna** y recalculado por el proceso del
-  sistema (UC-P15): `score = días_esperando + bono_plan`. Permite ordenar y auditar
-  en SQL; requiere un recálculo periódico/por evento que actualiza la columna.
+- **Orden de cola por `effectiveEntryAt` inmutable** (`design.md` D11): al encolar se
+  congela el bono de plan (`appliedBonus`) y se calcula, una sola vez,
+  `effectiveEntryAt = enqueuedAt − appliedBonus`. El orden es `effectiveEntryAt ASC`
+  (desempate por `id`), **sin recálculo periódico**: por ser la prioridad aditiva, la
+  ordenación es invariante en el tiempo. Se descarta el `score` materializado + su
+  recálculo (enfoque anterior); UC-P15 se reinterpreta como el cálculo de
+  `effectiveEntryAt` al encolar.
 - **`Rental.shippingAddress` como snapshot JSON** (no FK a `Address`): cambiar la
   dirección afecta a envíos futuros, no a los ya registrados (§4.1).
 - **`Subscription` opcional en `Rental`** (`type = ONE_OFF`): cubre el alquiler
@@ -626,8 +640,9 @@ erDiagram
         uuid id PK
         uuid setId FK
         uuid userId FK
-        timestamptz enqueuedAt
-        int score "materializado: días_espera + bono_plan"
+        timestamptz enqueuedAt "entrada real (cruda)"
+        int appliedBonus "bono de plan congelado al encolar"
+        timestamptz effectiveEntryAt "= enqueuedAt − appliedBonus; inmutable (D11)"
         string status "WAITING|OFFERED|CONFIRMED|EXPIRED|LEFT"
         int priorityPenalty "tras caducar oferta"
     }

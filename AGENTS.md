@@ -56,9 +56,15 @@ project. Read it at the start of every session.
   PostgreSQL). Reflejado también en `readme.md` §3. Modelos en inglés (convención
   Prisma) que mapean a los términos de dominio en español de las specs. Decisiones
   clave añadidas a `design.md`: **D10** (catálogo de entidades + `User` único con
-  rol, sin `Employee`) y **D11** (`score` de cola materializado + recálculo). Specs
-  sincronizadas (nueva Requirement de recálculo en `reservation-queue`; `tasks.md`
-  1.2/6.2); `openspec validate clickoteca-mvp --strict` en verde. **Nota de versión:**
+  rol, sin `Employee`) y **D11** — que en su primera versión (esta sesión) fue
+  "`score` de cola materializado + recálculo", pero **fue reescrito** ese mismo día a
+  **orden por `effectiveEntryAt` inmutable, sin recálculo** (ver sesión de
+  arquitectura más abajo y `design.md` D11). El modelo de datos refleja ya la forma
+  reescrita: la entrada de cola guarda `enqueuedAt` + `appliedBonus` +
+  `effectiveEntryAt` (no una columna `score`). Specs y `readme.md`/`PRD.md`
+  sincronizados (Requirement "Orden de cola por entrada efectiva inmutable" en
+  `reservation-queue`; `tasks.md` 1.2/6.2);
+  `openspec validate clickoteca-mvp --strict` en verde. **Nota de versión:**
   el esquema usa la forma clásica `url = env("DATABASE_URL")`, válida en Prisma ≤6;
   Prisma 7 exige moverla a `prisma.config.ts` — pinnear Prisma 6 al fijar el
   `package.json` del backend, o migrar la config del datasource.
@@ -78,6 +84,17 @@ project. Read it at the start of every session.
   y dos apps separadas desde ya. Registrado en `ADR-0001` §3, reflejado en
   `C4-architecture.md` y en `tasks.md` 1.1. Los specs de comportamiento
   (`accounts-roles`) no cambian: el acceso al back-office ya es por rol.
+- **Visitante = actor no autenticado (decidido 2026-07-05):** el visitante (usuario
+  sin sesión) se modela como **actor no autenticado**, **no** como un cuarto rol de
+  `User` (los tres roles siguen siendo `SUBSCRIBER|OPERATOR|ADMIN`, uno por cuenta;
+  el enum `Role` no cambia). Puede ver una **proyección pública** del catálogo
+  (atributos de Sets publicados, **sin** disponibilidad ni cola), los planes/
+  condiciones y el alta; la disponibilidad y todo lo de nivel copia/cola exigen
+  login. La frontera se traza en la proyección de datos, no en el catálogo. Registro
+  en `design.md` **D13**; specs `accounts-roles` (Requirement "Acceso público no
+  autenticado") y `catalog-inventory` (Requirement "Proyección pública del
+  catálogo"); PRD §3/§4.1/§14.1 (UC-P02 ya no muestra disponibilidad al visitante);
+  historia **HU-00** en `documents/user_stories.md`; tareas 2.7 y 3.6.
 - _(More facts to be added as the project develops.)_
 
 ## Open questions

@@ -12,10 +12,12 @@ suscriptores elegibles pueden unirse cuando no hay copias disponibles.
 - **THEN** se añade una entrada de cola con la marca de tiempo de su incorporación
 
 ### Requirement: Prioridad por envejecimiento aditiva
-El sistema SHALL ordenar la cola por una puntuación `score = días_esperando +
-bono_plan`, donde `bono_plan` es un valor fijo configurable para `PREMIUM`
-(p. ej. +10) y 0 para `BASIC`. Mayor puntuación va más cerca de cabeza; ante
-empate, prevalece quien se encoló antes.
+El sistema SHALL ordenar la cola por una prioridad de envejecimiento **aditiva**
+equivalente a `días_esperando + bono_plan`, donde `bono_plan` es un valor fijo
+configurable para `PREMIUM` (p. ej. +10) y 0 para `BASIC`. Mayor prioridad va más
+cerca de cabeza; ante empate, prevalece quien se encoló antes. La implementación
+concreta de este orden se define en "Orden de cola por entrada efectiva inmutable"
+(no se materializa una puntuación recalculada).
 
 #### Scenario: El tiempo de espera supera la ventaja premium
 - **WHEN** un `BASIC` lleva esperando suficientes días para que su puntuación
@@ -26,21 +28,26 @@ empate, prevalece quien se encoló antes.
 - **WHEN** un `PREMIUM` y un `BASIC` se encolan en el mismo instante
 - **THEN** el `PREMIUM` se ordena por delante por su bono fijo
 
-### Requirement: Recálculo del score de cola
-El sistema SHALL mantener el `score` de cada entrada de forma materializada y
-recalcularlo de forma periódica y ante eventos relevantes (nueva entrada, oferta
-caducada que re-encola, cambio de plan del suscriptor), de modo que la ordenación
-refleje el envejecimiento acumulado sin depender del instante de lectura.
+### Requirement: Orden de cola por entrada efectiva inmutable
+El sistema SHALL determinar el orden de la cola mediante una marca de **entrada
+efectiva inmutable** `entrada_efectiva = enqueuedAt − bono_aplicado`, calculada **una
+sola vez al encolar** (congelando el bono de plan vigente). El orden es siempre
+`entrada_efectiva` ascendente, con desempate por identificador, resuelto de forma
+*lazy* al ofrecer. El sistema SHALL NOT recalcular periódicamente ninguna puntuación:
+por ser la prioridad **aditiva**, la ordenación es invariante en el tiempo y solo
+cambia ante eventos estructurales (altas/bajas en la cola). Un cambio del bono por el
+admin solo afecta a nuevas incorporaciones.
 
-#### Scenario: El score refleja el paso del tiempo
-- **WHEN** transcurre el tiempo y se ejecuta el recálculo de la cola
-- **THEN** el `score` de cada entrada se actualiza a `días_esperando + bono_plan`
-- **AND** la cola queda reordenada según los nuevos valores
+#### Scenario: El orden no depende del paso del tiempo
+- **WHEN** transcurre el tiempo sin altas ni bajas en la cola
+- **THEN** el orden relativo de las entradas no cambia
+- **AND** no se recalcula ni materializa ninguna puntuación
 
-#### Scenario: Recálculo tras caducar una oferta
-- **WHEN** una oferta caduca sin respuesta y el suscriptor vuelve al final con
-  prioridad reducida
-- **THEN** su `score` se recalcula aplicando la penalización de prioridad
+#### Scenario: Caducar una oferta re-encola al final con prioridad reducida
+- **WHEN** una oferta caduca sin respuesta
+- **THEN** el suscriptor se re-encola con una nueva `entrada_efectiva` (al final de la
+  cola) que incorpora la penalización de prioridad
+- **AND** no es expulsado de la cola
 
 ### Requirement: Elegibilidad al ofrecer
 El sistema SHALL ofrecer la copia liberada únicamente a entradas de la cola cuyo
