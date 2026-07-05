@@ -31,17 +31,7 @@ class CubeSelector:
         snapshot: DetectionSnapshot,
         allowed_colors: Iterable[str] = SUPPORTED_COLORS,
     ) -> CubeDetection:
-        colors = frozenset(str(color).lower() for color in allowed_colors)
-        eligible = [
-            cube
-            for cube in snapshot.detections
-            if cube.color in SUPPORTED_COLORS
-            and cube.color in colors
-            and cube.w > 0
-            and cube.h > 0
-            and cube.metadata.get("sizeValid", True) is True
-            and (cube.confidence is None or cube.confidence >= self.min_confidence)
-        ]
+        eligible = self.eligible(snapshot, allowed_colors)
         if not eligible:
             raise CubeUnavailableError()
 
@@ -51,3 +41,44 @@ class CubeSelector:
             key = lambda cube: (-(cube.confidence or 0.0), -cube.area, cube.color, cube.x, cube.y)
         return min(eligible, key=key)
 
+    def eligible(
+        self,
+        snapshot: DetectionSnapshot,
+        allowed_colors: Iterable[str] = SUPPORTED_COLORS,
+    ) -> list[CubeDetection]:
+        colors = frozenset(str(color).lower() for color in allowed_colors)
+        return [
+            cube
+            for cube in snapshot.detections
+            if cube.color in SUPPORTED_COLORS
+            and cube.color in colors
+            and cube.w > 0
+            and cube.h > 0
+            and cube.metadata.get("sizeValid", True) is True
+            and (cube.confidence is None or cube.confidence >= self.min_confidence)
+        ]
+
+    def select_many(
+        self,
+        snapshot: DetectionSnapshot,
+        *,
+        max_cubes: int,
+        allowed_colors: Iterable[str] = SUPPORTED_COLORS,
+    ) -> list[CubeDetection]:
+        if max_cubes <= 0:
+            return []
+        eligible = self.eligible(snapshot, allowed_colors)
+        if not eligible:
+            return []
+
+        color_order = {color: index for index, color in enumerate(("red", "blue", "yellow", "green"))}
+        return sorted(
+            eligible,
+            key=lambda cube: (
+                color_order.get(cube.color, len(color_order)),
+                cube.y,
+                cube.x,
+                -(cube.confidence or 0.0),
+                -cube.area,
+            ),
+        )[:max_cubes]

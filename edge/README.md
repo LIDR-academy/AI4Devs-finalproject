@@ -1172,6 +1172,111 @@ Ante error:
 4. Revisar `firmwareResponses` y `errorCode`.
 5. Rehacer `--plan-only` antes de cualquier nuevo intento.
 
+## Flujo multi-cubo real
+
+`multi_cube_pick_drop.py` extiende el flujo operacional validado para descargar
+varios cubos desde un mismo snapshot. Mantiene la misma logica de homografia,
+`pickupPositionCm`, `pickupOffset`, pausas de `movement`, seleccion de drop zone
+por color y sync opcional con Backend. No modifica `single_cube_pick_drop.py`.
+
+La seleccion de cubos es deterministica: primero por color `red`, `blue`,
+`yellow`, `green`; luego por posicion `y/x`; y finalmente por confianza/area.
+El comando reserva drop zones en memoria durante la planificacion para no usar
+dos veces el mismo slot. En hardware persiste `occupied=true` solo despues de
+`drop_zone_release` exitoso para cada cubo.
+
+### Reset previo de drop zones
+
+Antes de una demo fisica, limpiar el estado local de drop zones:
+
+```powershell
+python src\reset_drop_zones.py `
+  --config config\single-cube-pick-drop.local.json `
+  --all `
+  --confirm-reset
+```
+
+### Ejecucion plan-only
+
+Desde `edge/`, usando un snapshot ya capturado:
+
+```powershell
+python src\multi_cube_pick_drop.py `
+  --config config\single-cube-pick-drop.local.json `
+  --snapshot workspace\scratch\single-cube-compatible-snapshot.json `
+  --max-cubes 3 `
+  --plan-only
+```
+
+Tambien puede leer el snapshot actual desde Edge Vision:
+
+```powershell
+python src\multi_cube_pick_drop.py `
+  --config config\single-cube-pick-drop.local.json `
+  --edge-vision-url http://localhost:8001 `
+  --max-cubes 3 `
+  --plan-only
+```
+
+El resultado esperado es evidencia con `status=DRY_RUN_PLANNED`, `plannedActions`
+y `skippedCubes`. No abre serial, no mueve hardware y no persiste
+`occupied=true`.
+
+### Ejecucion hardware
+
+Ejecutar solo despues de revisar el plan y completar el checklist fisico:
+
+```powershell
+python src\multi_cube_pick_drop.py `
+  --config config\single-cube-pick-drop.local.json `
+  --edge-vision-url http://localhost:8001 `
+  --port COM4 `
+  --baudrate 115200 `
+  --max-cubes 3 `
+  --confirm-multi-pick-drop `
+  --enable-hardware-motion `
+  --confirm-zone-clear `
+  --confirm-operator-present `
+  --confirm-emergency-stop-ready `
+  --confirm-suction `
+  --sync-backend `
+  --backend-url http://localhost:3000
+```
+
+Si se quiere exigir coincidencia con una evidencia plan-only previa, agregar:
+
+```powershell
+--dry-run-evidence workspace\generated\edge-evidence\multi-cube-pick-drop\multi-cube-plan-only-RUN_ID.json
+```
+
+Con `--sync-backend`, cada cubo ejecutado registra una accion en
+`POST /robot/actions` con metadata JSON-safe: `multiCubeRunId`,
+`sequenceNumber`, `totalPlannedCubes`, drop zone, color, `pickupOffset`,
+targets, tiempos de movimiento y `firmwareResponses`.
+
+### Consideraciones de seguridad
+
+Hardware multi-cubo exige todos estos gates:
+
+- `--confirm-multi-pick-drop`
+- `--enable-hardware-motion`
+- `--confirm-zone-clear`
+- `--confirm-operator-present`
+- `--confirm-emergency-stop-ready`
+- `--confirm-suction`
+- `--port COMx`
+
+Si falta QR valido, si no hay cubos o si un cubo no tiene drop zone disponible,
+el comando termina con estado controlado y no mueve hardware. Si un cubo falla a
+mitad de la secuencia, no ejecuta cubos posteriores; el resultado queda como
+`PARTIAL_SUCCESS` si ya habia al menos un cubo descargado, o `FAILED` si no.
+
+Limitacion actual: la primera version planifica varios cubos desde un unico
+snapshot. No recaptura despues de cada descarga, por lo que el operador no debe
+mover el pickup ni los cubos entre el plan-only y la ejecucion. La opcion
+`--recapture-between-cubes` queda reservada para una version futura y hoy falla
+de forma explicita con `NOT_IMPLEMENTED`.
+
 ## Ejecucion
 
 Con `.env`:
