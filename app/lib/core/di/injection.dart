@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
 import 'package:la_pocha/core/database/app_database.dart';
 import 'package:la_pocha/features/game_setup/data/datasources/game_local_datasource.dart';
@@ -42,6 +44,15 @@ import 'package:la_pocha/features/history/data/repositories/history_repository_i
 import 'package:la_pocha/features/history/domain/repositories/history_repository.dart';
 import 'package:la_pocha/features/history/domain/usecases/get_game_history_usecase.dart';
 import 'package:la_pocha/features/history/presentation/bloc/history_list_bloc.dart';
+import 'package:la_pocha/features/auth/data/datasources/auth_firebase_datasource.dart';
+import 'package:la_pocha/features/auth/data/datasources/user_firestore_datasource.dart';
+import 'package:la_pocha/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:la_pocha/features/auth/domain/repositories/auth_repository.dart';
+import 'package:la_pocha/features/auth/domain/usecases/get_current_user_usecase.dart';
+import 'package:la_pocha/features/auth/domain/usecases/sign_in_usecase.dart';
+import 'package:la_pocha/features/auth/domain/usecases/sign_out_usecase.dart';
+import 'package:la_pocha/features/auth/domain/usecases/sign_up_usecase.dart';
+import 'package:la_pocha/features/auth/presentation/bloc/auth_bloc.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -51,6 +62,51 @@ Future<void> configureDependencies() async {
   }
 
   getIt.registerLazySingleton<AppDatabase>(AppDatabase.defaults);
+
+  getIt.registerLazySingleton<FirebaseAuth>(() => FirebaseAuth.instance);
+  getIt.registerLazySingleton<FirebaseFirestore>(
+    () => FirebaseFirestore.instance,
+  );
+
+  getIt.registerLazySingleton<AuthFirebaseDatasource>(
+    () => AuthFirebaseDatasource(getIt<FirebaseAuth>()),
+  );
+
+  getIt.registerLazySingleton<UserFirestoreDatasource>(
+    () => UserFirestoreDatasource(getIt<FirebaseFirestore>()),
+  );
+
+  getIt.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(
+      authDatasource: getIt<AuthFirebaseDatasource>(),
+      userDatasource: getIt<UserFirestoreDatasource>(),
+    ),
+  );
+
+  getIt.registerLazySingleton<SignUpUseCase>(
+    () => SignUpUseCase(getIt<AuthRepository>()),
+  );
+
+  getIt.registerLazySingleton<SignInUseCase>(
+    () => SignInUseCase(getIt<AuthRepository>()),
+  );
+
+  getIt.registerLazySingleton<SignOutUseCase>(
+    () => SignOutUseCase(getIt<AuthRepository>()),
+  );
+
+  getIt.registerLazySingleton<GetCurrentUserUseCase>(
+    () => GetCurrentUserUseCase(getIt<AuthRepository>()),
+  );
+
+  getIt.registerLazySingleton<AuthBloc>(
+    () => AuthBloc(
+      authRepository: getIt<AuthRepository>(),
+      signIn: getIt<SignInUseCase>(),
+      signUp: getIt<SignUpUseCase>(),
+      signOut: getIt<SignOutUseCase>(),
+    ),
+  );
 
   getIt.registerLazySingleton<GameLocalDatasource>(
     () => GameLocalDatasource(getIt<AppDatabase>()),

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:la_pocha/core/di/injection.dart';
 import 'package:la_pocha/core/theme/app_theme.dart';
+import 'package:la_pocha/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:la_pocha/features/game_setup/domain/repositories/game_repository.dart';
 import 'package:la_pocha/features/game_setup/domain/repositories/round_repository.dart';
 import 'package:la_pocha/features/round/domain/entities/ranking_entry.dart';
@@ -18,9 +20,6 @@ class GameFinalResultPage extends StatefulWidget {
 }
 
 class _GameFinalResultPageState extends State<GameFinalResultPage> {
-  // TODO(LPT-19): Replace with AuthBloc — show only when Unauthenticated
-  static const _hasActiveSession = false;
-
   static const Color _bannerBackground = Color(0xFFFCEFE0);
   static const Color _bannerText = Color(0xFFF4A259);
 
@@ -124,40 +123,44 @@ class _GameFinalResultPageState extends State<GameFinalResultPage> {
                 ),
               ),
             ),
-            if (!_hasActiveSession)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                child: Material(
-                  color: _bannerBackground,
-                  borderRadius: BorderRadius.circular(16),
-                  child: InkWell(
-                    onTap: () {
-                      // TODO(LPT-19): context.push('/auth/sign-up')
-                    },
+            BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, authState) {
+                if (authState is Authenticated) {
+                  return const SizedBox.shrink();
+                }
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: Material(
+                    color: _bannerBackground,
                     borderRadius: BorderRadius.circular(16),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.cloud_upload_outlined,
-                              color: _bannerText),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'Crea una cuenta para guardar y compartir esta partida',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(color: _bannerText),
+                    child: InkWell(
+                      onTap: () => context.push('/auth/sign-up'),
+                      borderRadius: BorderRadius.circular(16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.cloud_upload_outlined,
+                                color: _bannerText),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Crea una cuenta para guardar y compartir esta partida',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(color: _bannerText),
+                              ),
                             ),
-                          ),
-                          const Icon(Icons.chevron_right, color: _bannerText),
-                        ],
+                            const Icon(Icons.chevron_right, color: _bannerText),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
+                );
+              },
+            ),
             Expanded(
               child: FutureBuilder<_FinalResultData>(
                 future: _loadFuture,

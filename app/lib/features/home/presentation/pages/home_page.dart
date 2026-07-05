@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:la_pocha/core/theme/app_theme.dart';
+import 'package:la_pocha/features/auth/presentation/bloc/auth_bloc.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -19,12 +21,35 @@ class HomePage extends StatelessWidget {
                 color: AppTheme.primary,
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Text(
-                'La Pocha',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'La Pocha',
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
+                  ),
+                  BlocBuilder<AuthBloc, AuthState>(
+                    builder: (context, state) {
+                      final isAuthenticated = state is Authenticated;
+                      return IconButton(
+                        onPressed: () => context.push(
+                          isAuthenticated ? '/profile' : '/auth/sign-in',
+                        ),
+                        icon: Icon(
+                          isAuthenticated
+                              ? Icons.account_circle
+                              : Icons.person_outline,
+                          color: Colors.white,
+                        ),
+                        tooltip: 'Mi cuenta',
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
             Expanded(

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:la_pocha/core/di/injection.dart';
 import 'package:la_pocha/core/theme/app_theme.dart';
+import 'package:la_pocha/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:la_pocha/features/history/presentation/bloc/history_list_bloc.dart';
 import 'package:la_pocha/features/history/presentation/widgets/empty_history_view.dart';
 import 'package:la_pocha/features/history/presentation/widgets/game_history_tile.dart';
@@ -23,9 +24,6 @@ class HistoryListPage extends StatelessWidget {
 class _HistoryListView extends StatelessWidget {
   const _HistoryListView();
 
-  // TODO(LPT-19): Replace with AuthBloc to show offline sync banner when session exists.
-  static const _hasActiveSession = false;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,7 +32,14 @@ class _HistoryListView extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _Header(onBack: () => context.pop()),
-            if (_hasActiveSession) const _OfflineSyncBanner(),
+            BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, authState) {
+                if (authState is! Authenticated) {
+                  return const SizedBox.shrink();
+                }
+                return const _OfflineSyncBanner();
+              },
+            ),
             Expanded(
               child: BlocBuilder<HistoryListBloc, HistoryListState>(
                 builder: (context, state) {
