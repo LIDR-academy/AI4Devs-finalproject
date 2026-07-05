@@ -872,6 +872,8 @@ Tres historias de usuario representativas, una de cada rol principal (Admin/Coac
 > Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
 
 **Pull Request 1**
+feat: initial project documentation and specifications
+https://github.com/LIDR-academy/AI4Devs-finalproject/pull/232
 
 **Pull Request 2**
 
