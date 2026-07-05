@@ -1,5 +1,5 @@
 ---
-name: back-architecture
+name: architecture
 description: Genera el documento de arquitectura técnica del proyecto en docs/architecture/architecture.md — diagrama de sistemas, diagrama de base de datos, diagramas de secuencia, y estructura de carpetas de backend (FastAPI) y frontend (React) con patrón hexagonal y slicing por dominio. Usar cuando el PRD (y opcionalmente las HUs) ya existen y hace falta definir la arquitectura técnica antes de implementar.
 ---
 
