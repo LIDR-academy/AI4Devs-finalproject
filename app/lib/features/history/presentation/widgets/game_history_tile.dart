@@ -58,10 +58,41 @@ class GameHistoryTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              SourceBadge(source: item.source),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  SourceBadge(source: item.source),
+                  if (item.isSyncPending) ...[
+                    const SizedBox(height: 8),
+                    const _SyncPendingBadge(),
+                  ],
+                ],
+              ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SyncPendingBadge extends StatelessWidget {
+  const _SyncPendingBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFCEFE0),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        'Pendiente',
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: const Color(0xFFF4A259),
+              fontWeight: FontWeight.w600,
+            ),
       ),
     );
   }

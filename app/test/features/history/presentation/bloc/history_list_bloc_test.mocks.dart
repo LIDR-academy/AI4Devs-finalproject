@@ -9,6 +9,8 @@ import 'package:la_pocha/features/history/domain/entities/game_history_item.dart
     as _i4;
 import 'package:la_pocha/features/history/domain/usecases/get_game_history_usecase.dart'
     as _i2;
+import 'package:la_pocha/features/sync/domain/usecases/retry_pending_uploads_usecase.dart'
+    as _i5;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -44,4 +46,19 @@ class MockGetGameHistoryUseCase extends _i1.Mock
                 ),
           )
           as _i3.Future<List<_i4.GameHistoryItem>>);
+}
+
+/// A class which mocks [RetryPendingUploadsUseCase].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockRetryPendingUploadsUseCase extends _i1.Mock
+    implements _i5.RetryPendingUploadsUseCase {
+  @override
+  _i3.Future<int> call() =>
+      (super.noSuchMethod(
+            Invocation.method(#call, []),
+            returnValue: _i3.Future<int>.value(0),
+            returnValueForMissingStub: _i3.Future<int>.value(0),
+          )
+          as _i3.Future<int>);
 }

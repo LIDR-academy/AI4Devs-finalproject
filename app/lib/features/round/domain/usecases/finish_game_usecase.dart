@@ -1,13 +1,20 @@
+import 'dart:async';
+
 import 'package:la_pocha/features/game_setup/domain/entities/game.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/game_status.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/round.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/round_status.dart';
 import 'package:la_pocha/features/game_setup/domain/repositories/game_repository.dart';
+import 'package:la_pocha/features/sync/presentation/bloc/game_sync_bloc.dart';
 
 class FinishGameUseCase {
-  FinishGameUseCase(this._gameRepository);
+  FinishGameUseCase(
+    this._gameRepository,
+    this._gameSyncBloc,
+  );
 
   final GameRepository _gameRepository;
+  final GameSyncBloc _gameSyncBloc;
 
   Future<Game> call({
     required String gameId,
@@ -30,9 +37,17 @@ class FinishGameUseCase {
       throw StateError('Cannot finish game before the last round');
     }
 
-    return _gameRepository.finishGame(
+    final finished = await _gameRepository.finishGame(
       gameId: gameId,
       finishedAt: DateTime.now(),
     );
+
+    unawaited(
+      Future<void>(() {
+        _gameSyncBloc.add(GameUploadRequested(gameId: gameId));
+      }),
+    );
+
+    return finished;
   }
 }

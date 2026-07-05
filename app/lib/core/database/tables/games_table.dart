@@ -17,6 +17,8 @@ class Games extends Table {
   DateTimeColumn get startedAt => dateTime().nullable()();
   IntColumn get currentRoundNumber => integer().nullable()();
   DateTimeColumn get finishedAt => dateTime().nullable()();
+  TextColumn get cloudGameId => text().nullable()();
+  TextColumn get syncStatus => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 

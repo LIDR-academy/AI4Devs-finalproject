@@ -1728,3 +1728,34 @@ durante las pruebas que estás en modo reducido y no en la secuencia real.
 No modifiques ningún otro fichero. No uses modo Plan para este cambio
 — es pequeño y quirúrgico.
 -------------------------
+
+Lee el ticket LPT-20 de Jira con acli, revisa docs/design.md
+e impleméntalo siguiendo las convenciones en .cursor/rules/.
+
+CORRECCIÓN CRÍTICA — discrepancia en el ticket respecto al modelo
+validado en readme.md §3:
+El ticket describe players como subcolección
+(games/{gameId}/players/{playerId}), pero el modelo correcto usa
+players[] EMBEBIDO en el documento games (array de PlayerEmbed,
+no subcolección separada). Usa el modelo embebido del readme,
+no el de subcolección del ticket.
+
+El batch de Firestore debe escribir:
+
+- games/{gameId}: con hostId, participantIds[], status: finished,
+  players[] embebido, roundSequence[], finishedAt, etc.
+- games/{gameId}/rounds/{roundNumber}: subcolección de rondas
+  (esta SÍ es subcolección, es correcta en el ticket)
+
+NO crear subcolección games/{gameId}/players/ — eso es incorrecto.
+
+Notas adicionales:
+
+- Tests de integración con Firestore Emulator: usar Firebase en
+  producción (la-pocha-9d070) directamente — no configurar emulador.
+- syncStatus y cloudGameId ya deben existir en la tabla games de
+  Drift (si no existen, añadirlos en este mismo ticket).
+
+Usa modo Plan antes de ejecutar.
+
+--------------

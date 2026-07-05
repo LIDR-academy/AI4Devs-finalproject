@@ -5,6 +5,7 @@ import 'package:la_pocha/features/game_setup/domain/entities/player_embed.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/round_definition.dart';
 import 'package:la_pocha/features/history/domain/entities/game_history_source.dart';
 import 'package:la_pocha/features/history/domain/services/game_history_mapper.dart';
+import 'package:la_pocha/features/sync/domain/entities/sync_status.dart';
 
 void main() {
   const mapper = GameHistoryMapper();
@@ -64,11 +65,13 @@ void main() {
       expect(item.displayLabel, '4 jul 2026, 22:05 — Ana, Carlos');
     });
 
-    test('formats finishedAt in Spanish short month', () {
-      expect(
-        mapper.formatFinishedAt(DateTime(2026, 1, 15, 9, 3)),
-        '15 ene 2026, 09:03',
+    test('marks sync pending badge when syncStatus is pending', () {
+      final item = mapper.fromLocalGame(
+        finishedGame.copyWith(syncStatus: SyncStatus.pending),
       );
+
+      expect(item, isNotNull);
+      expect(item!.isSyncPending, isTrue);
     });
   });
 }

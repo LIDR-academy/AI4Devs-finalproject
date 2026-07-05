@@ -36,6 +36,14 @@ class RoundLocalDatasource {
     return _readRoundById(round.id);
   }
 
+  Future<List<Round>> getRoundsByGameId(String gameId) async {
+    final entries = await (_database.select(_database.rounds)
+          ..where((table) => table.gameId.equals(gameId))
+          ..orderBy([(table) => OrderingTerm.asc(table.roundNumber)]))
+        .get();
+    return entries.map(RoundMapper.toDomain).toList();
+  }
+
   Future<Round> _readRoundById(String id) async {
     final entry = await (_database.select(_database.rounds)
           ..where((table) => table.id.equals(id)))

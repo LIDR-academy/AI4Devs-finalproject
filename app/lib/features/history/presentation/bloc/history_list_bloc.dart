@@ -2,19 +2,24 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:la_pocha/features/history/domain/entities/game_history_item.dart';
 import 'package:la_pocha/features/history/domain/usecases/get_game_history_usecase.dart';
+import 'package:la_pocha/features/sync/domain/usecases/retry_pending_uploads_usecase.dart';
 
 part 'history_list_event.dart';
 part 'history_list_state.dart';
 
 class HistoryListBloc extends Bloc<HistoryListEvent, HistoryListState> {
-  HistoryListBloc({required GetGameHistoryUseCase getGameHistory})
-      : _getGameHistory = getGameHistory,
+  HistoryListBloc({
+    required GetGameHistoryUseCase getGameHistory,
+    required RetryPendingUploadsUseCase retryPendingUploads,
+  })  : _getGameHistory = getGameHistory,
+        _retryPendingUploads = retryPendingUploads,
         super(const HistoryListInitial()) {
     on<HistoryListStarted>(_onStarted);
     on<HistoryListRefreshed>(_onRefreshed);
   }
 
   final GetGameHistoryUseCase _getGameHistory;
+  final RetryPendingUploadsUseCase _retryPendingUploads;
 
   Future<void> _onStarted(
     HistoryListStarted event,
@@ -27,7 +32,7 @@ class HistoryListBloc extends Bloc<HistoryListEvent, HistoryListState> {
     HistoryListRefreshed event,
     Emitter<HistoryListState> emit,
   ) async {
-    // TODO(LPT-19, LPT-20): Refresh cloud games when auth and upload are available.
+    // Retry pending uploads when auth and upload are available.
     await _loadHistory(emit, showLoading: false);
   }
 
@@ -40,6 +45,7 @@ class HistoryListBloc extends Bloc<HistoryListEvent, HistoryListState> {
     }
 
     try {
+      await _retryPendingUploads();
       final items = await _getGameHistory();
       if (items.isEmpty) {
         emit(const HistoryListEmpty());

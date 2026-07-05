@@ -12,6 +12,7 @@ class GameHistoryItem extends Equatable {
     this.winnerName,
     this.winnerScore,
     this.cloudGameId,
+    this.isSyncPending = false,
   });
 
   final String id;
@@ -22,6 +23,7 @@ class GameHistoryItem extends Equatable {
   final String? winnerName;
   final int? winnerScore;
   final String? cloudGameId;
+  final bool isSyncPending;
 
   @override
   List<Object?> get props => [
@@ -33,5 +35,6 @@ class GameHistoryItem extends Equatable {
         winnerName,
         winnerScore,
         cloudGameId,
+        isSyncPending,
       ];
 }

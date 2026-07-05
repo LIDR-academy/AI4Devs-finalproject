@@ -53,6 +53,12 @@ import 'package:la_pocha/features/auth/domain/usecases/sign_in_usecase.dart';
 import 'package:la_pocha/features/auth/domain/usecases/sign_out_usecase.dart';
 import 'package:la_pocha/features/auth/domain/usecases/sign_up_usecase.dart';
 import 'package:la_pocha/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:la_pocha/features/sync/data/datasources/game_firestore_datasource.dart';
+import 'package:la_pocha/features/sync/data/repositories/game_sync_repository_impl.dart';
+import 'package:la_pocha/features/sync/domain/repositories/game_sync_repository.dart';
+import 'package:la_pocha/features/sync/domain/usecases/retry_pending_uploads_usecase.dart';
+import 'package:la_pocha/features/sync/domain/usecases/upload_finished_game_usecase.dart';
+import 'package:la_pocha/features/sync/presentation/bloc/game_sync_bloc.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -97,6 +103,39 @@ Future<void> configureDependencies() async {
 
   getIt.registerLazySingleton<GetCurrentUserUseCase>(
     () => GetCurrentUserUseCase(getIt<AuthRepository>()),
+  );
+
+  getIt.registerLazySingleton<GameFirestoreDatasource>(
+    () => GameFirestoreDatasource(getIt<FirebaseFirestore>()),
+  );
+
+  getIt.registerLazySingleton<GameSyncRepository>(
+    () => GameSyncRepositoryImpl(
+      gameLocalDatasource: getIt<GameLocalDatasource>(),
+      roundLocalDatasource: getIt<RoundLocalDatasource>(),
+      firestoreDatasource: getIt<GameFirestoreDatasource>(),
+    ),
+  );
+
+  getIt.registerLazySingleton<UploadFinishedGameUseCase>(
+    () => UploadFinishedGameUseCase(
+      authRepository: getIt<AuthRepository>(),
+      gameSyncRepository: getIt<GameSyncRepository>(),
+      gameLocalDatasource: getIt<GameLocalDatasource>(),
+    ),
+  );
+
+  getIt.registerLazySingleton<RetryPendingUploadsUseCase>(
+    () => RetryPendingUploadsUseCase(
+      gameSyncRepository: getIt<GameSyncRepository>(),
+      uploadFinishedGame: getIt<UploadFinishedGameUseCase>(),
+    ),
+  );
+
+  getIt.registerLazySingleton<GameSyncBloc>(
+    () => GameSyncBloc(
+      uploadFinishedGame: getIt<UploadFinishedGameUseCase>(),
+    ),
   );
 
   getIt.registerLazySingleton<AuthBloc>(
@@ -168,7 +207,10 @@ Future<void> configureDependencies() async {
   );
 
   getIt.registerFactory<HistoryListBloc>(
-    () => HistoryListBloc(getGameHistory: getIt<GetGameHistoryUseCase>()),
+    () => HistoryListBloc(
+      getGameHistory: getIt<GetGameHistoryUseCase>(),
+      retryPendingUploads: getIt<RetryPendingUploadsUseCase>(),
+    ),
   );
 
   getIt.registerFactory<LoadBiddingContextUseCase>(
@@ -231,7 +273,10 @@ Future<void> configureDependencies() async {
   );
 
   getIt.registerFactory<FinishGameUseCase>(
-    () => FinishGameUseCase(getIt<GameRepository>()),
+    () => FinishGameUseCase(
+      getIt<GameRepository>(),
+      getIt<GameSyncBloc>(),
+    ),
   );
 
   getIt.registerFactory<CreateGameDraftUseCase>(

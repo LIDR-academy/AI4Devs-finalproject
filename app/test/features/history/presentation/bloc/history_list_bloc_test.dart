@@ -4,14 +4,19 @@ import 'package:la_pocha/features/history/domain/entities/game_history_item.dart
 import 'package:la_pocha/features/history/domain/entities/game_history_source.dart';
 import 'package:la_pocha/features/history/domain/usecases/get_game_history_usecase.dart';
 import 'package:la_pocha/features/history/presentation/bloc/history_list_bloc.dart';
+import 'package:la_pocha/features/sync/domain/usecases/retry_pending_uploads_usecase.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
 import 'history_list_bloc_test.mocks.dart';
 
-@GenerateNiceMocks([MockSpec<GetGameHistoryUseCase>()])
+@GenerateNiceMocks([
+  MockSpec<GetGameHistoryUseCase>(),
+  MockSpec<RetryPendingUploadsUseCase>(),
+])
 void main() {
   late MockGetGameHistoryUseCase getGameHistory;
+  late MockRetryPendingUploadsUseCase retryPendingUploads;
 
   final items = [
     GameHistoryItem(
@@ -27,9 +32,14 @@ void main() {
 
   setUp(() {
     getGameHistory = MockGetGameHistoryUseCase();
+    retryPendingUploads = MockRetryPendingUploadsUseCase();
+    when(retryPendingUploads()).thenAnswer((_) async => 0);
   });
 
-  HistoryListBloc buildBloc() => HistoryListBloc(getGameHistory: getGameHistory);
+  HistoryListBloc buildBloc() => HistoryListBloc(
+        getGameHistory: getGameHistory,
+        retryPendingUploads: retryPendingUploads,
+      );
 
   blocTest<HistoryListBloc, HistoryListState>(
     'emits loaded when history has items',

@@ -139,10 +139,38 @@ class GameLocalDatasource {
       GamesCompanion(
         status: const Value('finished'),
         finishedAt: Value(finishedAt),
+        syncStatus: const Value('local'),
         updatedAt: Value(now),
       ),
     );
     return _readGameById(gameId);
+  }
+
+  Future<Game> updateSyncMetadata({
+    required String gameId,
+    String? cloudGameId,
+    required String syncStatus,
+  }) async {
+    final now = DateTime.now();
+    await (_database.update(_database.games)
+          ..where((table) => table.id.equals(gameId)))
+        .write(
+      GamesCompanion(
+        cloudGameId: cloudGameId == null
+            ? const Value.absent()
+            : Value(cloudGameId),
+        syncStatus: Value(syncStatus),
+        updatedAt: Value(now),
+      ),
+    );
+    return _readGameById(gameId);
+  }
+
+  Future<List<Game>> getGamesBySyncStatus(String syncStatus) async {
+    final entries = await (_database.select(_database.games)
+          ..where((table) => table.syncStatus.equals(syncStatus)))
+        .get();
+    return entries.map(GameMapper.toDomain).toList();
   }
 
   Future<Round> _readRoundById(String id) async {

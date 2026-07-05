@@ -1,6 +1,7 @@
 import 'package:la_pocha/features/game_setup/domain/entities/game.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/game_status.dart';
 import 'package:la_pocha/features/round/domain/services/ranking_service.dart';
+import 'package:la_pocha/features/sync/domain/entities/sync_status.dart';
 
 import '../entities/game_history_item.dart';
 import '../entities/game_history_source.dart';
@@ -26,7 +27,7 @@ class GameHistoryMapper {
     'dic',
   ];
 
-  GameHistoryItem? fromLocalGame(Game game, {String? cloudGameId}) {
+  GameHistoryItem? fromLocalGame(Game game) {
     if (game.status != GameStatus.finished || game.finishedAt == null) {
       return null;
     }
@@ -49,7 +50,8 @@ class GameHistoryMapper {
       ),
       winnerName: winner?.player.displayName,
       winnerScore: winner?.totalScore,
-      cloudGameId: cloudGameId,
+      cloudGameId: game.cloudGameId,
+      isSyncPending: game.syncStatus == SyncStatus.pending,
     );
   }
 

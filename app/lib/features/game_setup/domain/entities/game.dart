@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:la_pocha/features/sync/domain/entities/sync_status.dart';
 
 import 'game_status.dart';
 import 'player_embed.dart';
@@ -17,6 +18,8 @@ class Game extends Equatable {
     this.startedAt,
     this.currentRoundNumber,
     this.finishedAt,
+    this.cloudGameId,
+    this.syncStatus,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -32,6 +35,8 @@ class Game extends Equatable {
   final DateTime? startedAt;
   final int? currentRoundNumber;
   final DateTime? finishedAt;
+  final String? cloudGameId;
+  final SyncStatus? syncStatus;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -47,6 +52,8 @@ class Game extends Equatable {
     DateTime? startedAt,
     int? currentRoundNumber,
     DateTime? finishedAt,
+    String? cloudGameId,
+    SyncStatus? syncStatus,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -62,6 +69,8 @@ class Game extends Equatable {
       startedAt: startedAt ?? this.startedAt,
       currentRoundNumber: currentRoundNumber ?? this.currentRoundNumber,
       finishedAt: finishedAt ?? this.finishedAt,
+      cloudGameId: cloudGameId ?? this.cloudGameId,
+      syncStatus: syncStatus ?? this.syncStatus,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -80,6 +89,8 @@ class Game extends Equatable {
         startedAt,
         currentRoundNumber,
         finishedAt,
+        cloudGameId,
+        syncStatus,
         createdAt,
         updatedAt,
       ];

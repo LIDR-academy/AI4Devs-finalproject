@@ -121,6 +121,28 @@ class $GamesTable extends Games with TableInfo<$GamesTable, GameEntry> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _cloudGameIdMeta = const VerificationMeta(
+    'cloudGameId',
+  );
+  @override
+  late final GeneratedColumn<String> cloudGameId = GeneratedColumn<String>(
+    'cloud_game_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _syncStatusMeta = const VerificationMeta(
+    'syncStatus',
+  );
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+    'sync_status',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -156,6 +178,8 @@ class $GamesTable extends Games with TableInfo<$GamesTable, GameEntry> {
     startedAt,
     currentRoundNumber,
     finishedAt,
+    cloudGameId,
+    syncStatus,
     createdAt,
     updatedAt,
   ];
@@ -244,6 +268,21 @@ class $GamesTable extends Games with TableInfo<$GamesTable, GameEntry> {
         finishedAt.isAcceptableOrUnknown(data['finished_at']!, _finishedAtMeta),
       );
     }
+    if (data.containsKey('cloud_game_id')) {
+      context.handle(
+        _cloudGameIdMeta,
+        cloudGameId.isAcceptableOrUnknown(
+          data['cloud_game_id']!,
+          _cloudGameIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+        _syncStatusMeta,
+        syncStatus.isAcceptableOrUnknown(data['sync_status']!, _syncStatusMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -317,6 +356,14 @@ class $GamesTable extends Games with TableInfo<$GamesTable, GameEntry> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}finished_at'],
       ),
+      cloudGameId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cloud_game_id'],
+      ),
+      syncStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_status'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -351,6 +398,8 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
   final DateTime? startedAt;
   final int? currentRoundNumber;
   final DateTime? finishedAt;
+  final String? cloudGameId;
+  final String? syncStatus;
   final DateTime createdAt;
   final DateTime updatedAt;
   const GameEntry({
@@ -365,6 +414,8 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
     this.startedAt,
     this.currentRoundNumber,
     this.finishedAt,
+    this.cloudGameId,
+    this.syncStatus,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -398,6 +449,12 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
     if (!nullToAbsent || finishedAt != null) {
       map['finished_at'] = Variable<DateTime>(finishedAt);
     }
+    if (!nullToAbsent || cloudGameId != null) {
+      map['cloud_game_id'] = Variable<String>(cloudGameId);
+    }
+    if (!nullToAbsent || syncStatus != null) {
+      map['sync_status'] = Variable<String>(syncStatus);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -424,6 +481,12 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
       finishedAt: finishedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(finishedAt),
+      cloudGameId: cloudGameId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cloudGameId),
+      syncStatus: syncStatus == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncStatus),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -450,6 +513,8 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
       startedAt: serializer.fromJson<DateTime?>(json['startedAt']),
       currentRoundNumber: serializer.fromJson<int?>(json['currentRoundNumber']),
       finishedAt: serializer.fromJson<DateTime?>(json['finishedAt']),
+      cloudGameId: serializer.fromJson<String?>(json['cloudGameId']),
+      syncStatus: serializer.fromJson<String?>(json['syncStatus']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -469,6 +534,8 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
       'startedAt': serializer.toJson<DateTime?>(startedAt),
       'currentRoundNumber': serializer.toJson<int?>(currentRoundNumber),
       'finishedAt': serializer.toJson<DateTime?>(finishedAt),
+      'cloudGameId': serializer.toJson<String?>(cloudGameId),
+      'syncStatus': serializer.toJson<String?>(syncStatus),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -486,6 +553,8 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
     Value<DateTime?> startedAt = const Value.absent(),
     Value<int?> currentRoundNumber = const Value.absent(),
     Value<DateTime?> finishedAt = const Value.absent(),
+    Value<String?> cloudGameId = const Value.absent(),
+    Value<String?> syncStatus = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => GameEntry(
@@ -504,6 +573,8 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
         ? currentRoundNumber.value
         : this.currentRoundNumber,
     finishedAt: finishedAt.present ? finishedAt.value : this.finishedAt,
+    cloudGameId: cloudGameId.present ? cloudGameId.value : this.cloudGameId,
+    syncStatus: syncStatus.present ? syncStatus.value : this.syncStatus,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -534,6 +605,12 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
       finishedAt: data.finishedAt.present
           ? data.finishedAt.value
           : this.finishedAt,
+      cloudGameId: data.cloudGameId.present
+          ? data.cloudGameId.value
+          : this.cloudGameId,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -553,6 +630,8 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
           ..write('startedAt: $startedAt, ')
           ..write('currentRoundNumber: $currentRoundNumber, ')
           ..write('finishedAt: $finishedAt, ')
+          ..write('cloudGameId: $cloudGameId, ')
+          ..write('syncStatus: $syncStatus, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -572,6 +651,8 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
     startedAt,
     currentRoundNumber,
     finishedAt,
+    cloudGameId,
+    syncStatus,
     createdAt,
     updatedAt,
   );
@@ -590,6 +671,8 @@ class GameEntry extends DataClass implements Insertable<GameEntry> {
           other.startedAt == this.startedAt &&
           other.currentRoundNumber == this.currentRoundNumber &&
           other.finishedAt == this.finishedAt &&
+          other.cloudGameId == this.cloudGameId &&
+          other.syncStatus == this.syncStatus &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -606,6 +689,8 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
   final Value<DateTime?> startedAt;
   final Value<int?> currentRoundNumber;
   final Value<DateTime?> finishedAt;
+  final Value<String?> cloudGameId;
+  final Value<String?> syncStatus;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -621,6 +706,8 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
     this.startedAt = const Value.absent(),
     this.currentRoundNumber = const Value.absent(),
     this.finishedAt = const Value.absent(),
+    this.cloudGameId = const Value.absent(),
+    this.syncStatus = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -637,6 +724,8 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
     this.startedAt = const Value.absent(),
     this.currentRoundNumber = const Value.absent(),
     this.finishedAt = const Value.absent(),
+    this.cloudGameId = const Value.absent(),
+    this.syncStatus = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -660,6 +749,8 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
     Expression<DateTime>? startedAt,
     Expression<int>? currentRoundNumber,
     Expression<DateTime>? finishedAt,
+    Expression<String>? cloudGameId,
+    Expression<String>? syncStatus,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -678,6 +769,8 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
       if (currentRoundNumber != null)
         'current_round_number': currentRoundNumber,
       if (finishedAt != null) 'finished_at': finishedAt,
+      if (cloudGameId != null) 'cloud_game_id': cloudGameId,
+      if (syncStatus != null) 'sync_status': syncStatus,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -696,6 +789,8 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
     Value<DateTime?>? startedAt,
     Value<int?>? currentRoundNumber,
     Value<DateTime?>? finishedAt,
+    Value<String?>? cloudGameId,
+    Value<String?>? syncStatus,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -712,6 +807,8 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
       startedAt: startedAt ?? this.startedAt,
       currentRoundNumber: currentRoundNumber ?? this.currentRoundNumber,
       finishedAt: finishedAt ?? this.finishedAt,
+      cloudGameId: cloudGameId ?? this.cloudGameId,
+      syncStatus: syncStatus ?? this.syncStatus,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -760,6 +857,12 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
     if (finishedAt.present) {
       map['finished_at'] = Variable<DateTime>(finishedAt.value);
     }
+    if (cloudGameId.present) {
+      map['cloud_game_id'] = Variable<String>(cloudGameId.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -786,6 +889,8 @@ class GamesCompanion extends UpdateCompanion<GameEntry> {
           ..write('startedAt: $startedAt, ')
           ..write('currentRoundNumber: $currentRoundNumber, ')
           ..write('finishedAt: $finishedAt, ')
+          ..write('cloudGameId: $cloudGameId, ')
+          ..write('syncStatus: $syncStatus, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -1497,6 +1602,8 @@ typedef $$GamesTableCreateCompanionBuilder =
       Value<DateTime?> startedAt,
       Value<int?> currentRoundNumber,
       Value<DateTime?> finishedAt,
+      Value<String?> cloudGameId,
+      Value<String?> syncStatus,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<int> rowid,
@@ -1514,6 +1621,8 @@ typedef $$GamesTableUpdateCompanionBuilder =
       Value<DateTime?> startedAt,
       Value<int?> currentRoundNumber,
       Value<DateTime?> finishedAt,
+      Value<String?> cloudGameId,
+      Value<String?> syncStatus,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -1585,6 +1694,16 @@ class $$GamesTableFilterComposer extends Composer<_$AppDatabase, $GamesTable> {
 
   ColumnFilters<DateTime> get finishedAt => $composableBuilder(
     column: $table.finishedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cloudGameId => $composableBuilder(
+    column: $table.cloudGameId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1663,6 +1782,16 @@ class $$GamesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get cloudGameId => $composableBuilder(
+    column: $table.cloudGameId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -1731,6 +1860,16 @@ class $$GamesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get cloudGameId => $composableBuilder(
+    column: $table.cloudGameId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -1778,6 +1917,8 @@ class $$GamesTableTableManager
                 Value<DateTime?> startedAt = const Value.absent(),
                 Value<int?> currentRoundNumber = const Value.absent(),
                 Value<DateTime?> finishedAt = const Value.absent(),
+                Value<String?> cloudGameId = const Value.absent(),
+                Value<String?> syncStatus = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -1793,6 +1934,8 @@ class $$GamesTableTableManager
                 startedAt: startedAt,
                 currentRoundNumber: currentRoundNumber,
                 finishedAt: finishedAt,
+                cloudGameId: cloudGameId,
+                syncStatus: syncStatus,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -1810,6 +1953,8 @@ class $$GamesTableTableManager
                 Value<DateTime?> startedAt = const Value.absent(),
                 Value<int?> currentRoundNumber = const Value.absent(),
                 Value<DateTime?> finishedAt = const Value.absent(),
+                Value<String?> cloudGameId = const Value.absent(),
+                Value<String?> syncStatus = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -1825,6 +1970,8 @@ class $$GamesTableTableManager
                 startedAt: startedAt,
                 currentRoundNumber: currentRoundNumber,
                 finishedAt: finishedAt,
+                cloudGameId: cloudGameId,
+                syncStatus: syncStatus,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,

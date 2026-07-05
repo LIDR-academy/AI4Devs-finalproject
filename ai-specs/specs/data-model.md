@@ -101,11 +101,16 @@ Representa una **partida** (sesión de juego): lobby, en curso o finalizada.
 |-------|------|-------------|-------------|
 | `title` | string | no | Nombre opcional de la partida *(TBD)* |
 | `hostId` | string | sí | `userId` del creador / anfitrión |
-| `status` | string | sí | `lobby`, `in_progress`, `finished` *(valores finales TBD)* |
-| `maxPlayers` | number | no | Límite de jugadores *(TBD, p. ej. 4–8)* |
-| `playerCount` | number | no | Contador denormalizado para listados |
-| `currentRoundNumber` | number | no | Última ronda activa o total de rondas jugadas *(TBD)* |
-| `settings` | map | no | Reglas variante, puntuación, etc. *(TBD)* |
+| `participantIds` | array\<string\> | sí (nube) | IDs de usuarios registrados en `players[]`; para consultas `array-contains` |
+| `status` | string | sí | `setup`, `in_progress`, `finished` |
+| `playerCount` | number | sí | Número de jugadores (3–8) |
+| `deckSize` | number | sí | Tamaño del mazo |
+| `maxCardsPerRound` | number | sí | Máximo de cartas por ronda |
+| `totalRounds` | number | sí | Longitud de `roundSequence` |
+| `roundSequence` | array\<number\> | sí | Cartas por ronda (secuencia precalculada) |
+| `players` | array\<map\> | sí | Roster embebido; ver §5 |
+| `firstDealerPlayerId` | string | sí | `playerId` del primer repartidor |
+| `currentRoundNumber` | number | no | Última ronda jugada |
 | `createdAt` | timestamp | sí | Creación |
 | `updatedAt` | timestamp | sí | Último cambio |
 | `startedAt` | timestamp | no | Inicio de partida |
@@ -113,48 +118,45 @@ Representa una **partida** (sesión de juego): lobby, en curso o finalizada.
 
 **Relaciones:**
 
-- **1:N** → subcolección `players` (participantes en esta partida).
-- **1:N** → subcolección `rounds` (manos / rondas de la partida).
-- **N:1** → `users` vía `hostId` (y cada `players.userId`).
+- **1:N** → subcolección `rounds` (detalle ronda a ronda).
+- **N:1** → `users` vía `hostId` y `participantIds`.
+- Roster en `players[]` embebido (no subcolección en Firestore).
 
 **Reglas de negocio *(borrador)*:**
 
-- Solo el `hostId` (o reglas acordadas) puede pasar `status` de `lobby` a `in_progress` *(TBD)*.
 - Tras la última ronda cerrada, `FinishGameUseCase` pasa `status` de `in_progress` a `finished` y establece `finishedAt`.
+- Al subir a Firestore (`syncFinishedGame`, LPT-20): `hostId == Auth.uid`, `participantIds` desde `players[].userId` no nulos, escritura atómica con `WriteBatch`.
 - Borrado: preferir **soft delete** con `status: "cancelled"` *(TBD)* en lugar de borrar documentos con historial.
 
-**Persistencia local (Drift):** la tabla `games` incluye `finishedAt` (nullable) desde schema v4. La transición a `finished` ocurre offline al confirmar "Ver resultado final" en la última ronda (LPT-14).
+**Persistencia local (Drift):** la tabla `games` incluye `finishedAt` (schema v4), `cloudGameId` y `syncStatus` (schema v5). Campos de sync solo existen en local:
+
+| Campo local | Tipo | Valores |
+|-------------|------|---------|
+| `cloudGameId` | string? | ID del documento Firestore tras subida (`== gameId`) |
+| `syncStatus` | string? | `local`, `pending`, `synced`, `failed` |
 
 ---
 
-## 5. Subcolección `players`
+## 5. Roster embebido `players[]` en `games`
 
-Jugador **dentro de una partida concreta**. Puede ser el mismo usuario en varias partidas con documentos distintos.
+Jugadores **dentro de una partida concreta**, modelados como array embebido en `games/{gameId}` (Firestore y local Drift).
 
-**Ruta:** `games/{gameId}/players/{playerId}`
+**No usar subcolección** `games/{gameId}/players/` en implementaciones MVP (ver readme.md §3).
 
 | Campo | Tipo | Obligatorio | Descripción |
 |-------|------|-------------|-------------|
-| `userId` | string | sí | Referencia lógica a `users/{userId}` |
-| `displayName` | string | no | Copia denormalizada para UI sin leer `users` |
-| `seatOrder` | number | no | Orden en mesa *(TBD)* |
-| `totalScore` | number | no | Puntuación acumulada en la partida |
-| `isHost` | boolean | no | Si coincide con `games.hostId` |
-| `joinedAt` | timestamp | sí | Alta en la partida |
-| `leftAt` | timestamp | no | Abandono anticipado *(TBD)* |
-| `status` | string | no | `active`, `left` *(TBD)* |
-
-**Relaciones:**
-
-- **N:1** → documento padre `games/{gameId}`.
-- **N:1** → `users/{userId}` vía campo `userId`.
-
-**Alternativa de modelado *(TBD)*:** lista embebida `playerIds` en `games` para partidas muy pequeñas; las subcolecciones escalan mejor para puntuaciones y permisos por jugador.
+| `id` | string | sí | Identificador del jugador en la partida |
+| `displayName` | string | sí | Nombre visible en mesa |
+| `userId` | string | no | `users/{uid}` si registrado; null si invitado |
+| `isGuest` | boolean | sí | true si se añadió por nombre libre |
+| `seatOrder` | number | sí | Orden en mesa (0…n−1) |
+| `totalScore` | number | sí | Puntuación acumulada al cierre |
+| `joinedAt` | timestamp | sí | Alta en el roster |
 
 **Reglas de negocio *(borrador)*:**
 
 - Un mismo `userId` no debería aparecer dos veces en la misma partida (validar en use case + reglas).
-- Máximo de jugadores según `games.maxPlayers` *(TBD)*.
+- `players.length` debe coincidir con `playerCount` antes de iniciar.
 
 ---
 
