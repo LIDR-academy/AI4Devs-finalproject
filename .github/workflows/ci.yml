@@ -1,0 +1,82 @@
+name: RestoStock CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    name: Build, Lint & Test
+    runs-on: ubuntu-latest
+
+    # PostgreSQL service container for integration tests
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: ${{ secrets.TEST_DB_USER || 'test_user' }}
+          POSTGRES_PASSWORD: ${{ secrets.TEST_DB_PASSWORD || 'test_password' }}
+          POSTGRES_DB: restostock_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      # Step 1: Checkout the source code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Node.js runtime environment
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Step 3: Install pnpm package manager (aligned with our pnpm monorepo structure)
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: false
+
+      # Step 4: Get pnpm store directory for caching
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      # Step 5: Cache pnpm dependencies to accelerate build times
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      # Step 6: Install dependencies strictly using lockfile
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Step 7: Apply Prisma migrations to the test database service container
+      - name: Run Prisma Migrations (Test DB)
+        run: pnpm --filter backend prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://${{ secrets.TEST_DB_USER || 'test_user' }}:${{ secrets.TEST_DB_PASSWORD || 'test_password' }}@localhost:5432/restostock_test
+
+      # Step 8: Run TypeScript compiler validation and Linters (ESLint, etc.)
+      - name: Run Linters & Typecheck
+        run: pnpm run lint
+
+      # Step 9: Execute Unit and Integration Test Suite
+      - name: Run Unit and Integration Tests
+        run: pnpm run test
+        env:
+          DATABASE_URL: postgresql://${{ secrets.TEST_DB_USER || 'test_user' }}:${{ secrets.TEST_DB_PASSWORD || 'test_password' }}@localhost:5432/restostock_test
+          JWT_SECRET: ${{ secrets.JWT_SECRET || 'test_jwt_secret_key_123456789' }}
+          PIN_SECRET: ${{ secrets.PIN_SECRET || 'test_pin_secret' }}
