@@ -210,7 +210,37 @@ def _parse_pose(value: object, field_name: str) -> RobotPose:
     )
 
 
-def _parse_robot_planning(value: object) -> RobotPlanningConfig:
+def _load_named_poses(path: Path) -> dict[str, object]:
+    try:
+        with path.open("r", encoding="utf-8") as file:
+            payload = json.load(file)
+    except (OSError, json.JSONDecodeError) as exc:
+        raise EdgeConfigError(f"Could not load robotPlanning.namedPosesPath from {path}: {exc}") from exc
+    if not isinstance(payload, dict):
+        raise EdgeConfigError("robotPlanning.namedPosesPath must point to a JSON object")
+    return payload
+
+
+def _parse_named_pose(
+    value: object,
+    field_name: str,
+    *,
+    named_poses: dict[str, object] | None = None,
+    pose_name: object = None,
+) -> RobotPose:
+    if value is not None:
+        return _parse_pose(value, field_name)
+    if named_poses is None:
+        raise EdgeConfigError(f"{field_name} is required")
+    if not isinstance(pose_name, str) or not pose_name.strip():
+        raise EdgeConfigError(f"{field_name} is required or provide a non-empty {field_name}Name")
+    raw_pose = named_poses.get(pose_name.strip())
+    if raw_pose is None:
+        raise EdgeConfigError(f"{field_name}Name={pose_name!r} was not found in robotPlanning.namedPosesPath")
+    return _parse_pose(raw_pose, f"robotPlanning.namedPoses.{pose_name.strip()}")
+
+
+def _parse_robot_planning(value: object, config_directory: Path) -> RobotPlanningConfig:
     if value is None:
         return RobotPlanningConfig(enabled=False)
     if not isinstance(value, dict):
@@ -231,8 +261,28 @@ def _parse_robot_planning(value: object) -> RobotPlanningConfig:
         "robotPlanning.liftZDelta",
         50.0,
     )
-    ready_pose = _parse_pose(value.get("readyPose"), "robotPlanning.readyPose")
-    reset_pose = _parse_pose(value.get("resetPose"), "robotPlanning.resetPose")
+    named_poses: dict[str, object] | None = None
+    named_poses_path_value = value.get("namedPosesPath")
+    if named_poses_path_value is not None:
+        if not isinstance(named_poses_path_value, str) or not named_poses_path_value.strip():
+            raise EdgeConfigError("robotPlanning.namedPosesPath must be a non-empty string")
+        named_poses_path = Path(named_poses_path_value)
+        if not named_poses_path.is_absolute():
+            named_poses_path = config_directory / named_poses_path
+        named_poses = _load_named_poses(named_poses_path)
+
+    ready_pose = _parse_named_pose(
+        value.get("readyPose"),
+        "robotPlanning.readyPose",
+        named_poses=named_poses,
+        pose_name=value.get("readyPoseName", "ready_to_take"),
+    )
+    reset_pose = _parse_named_pose(
+        value.get("resetPose"),
+        "robotPlanning.resetPose",
+        named_poses=named_poses,
+        pose_name=value.get("resetPoseName", "reset"),
+    )
 
     calibration_raw = value.get("calibration")
     if not isinstance(calibration_raw, dict):
@@ -455,7 +505,7 @@ def load_edge_config(path: Path) -> EdgeConfig:
         morphology_kernel_size=morphology_kernel_size,
         evidence_directory=evidence_directory,
     )
-    robot_planning = _parse_robot_planning(raw.get("robotPlanning"))
+    robot_planning = _parse_robot_planning(raw.get("robotPlanning"), path.parent)
 
     return EdgeConfig(
         profile=profile,

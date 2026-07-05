@@ -570,6 +570,59 @@ La migracion termino con exit code 0 y el flujo backend funciono. Si se repite, 
 npm run prisma:generate
 ```
 
+## Metadata para accion hardware controlada
+
+`POST /robot/actions` sigue sin mover hardware. El movimiento fisico ocurre solo
+en Edge. Cuando `single_cube_pick_drop.py` completa un ciclo real con todos los
+gates, puede registrar una accion `mode=hardware` con metadata segura:
+
+```json
+{
+  "sessionId": "uuid",
+  "actionType": "PICK_AND_DROP",
+  "status": "SUCCESS",
+  "mode": "hardware",
+  "color": "red",
+  "metadata": {
+    "runId": "run-001",
+    "snapshotSignature": "sig-001",
+    "truckCode": "TRUCK-001",
+    "selectedCubeColor": "red",
+    "selectedCubeCenter": { "x": 90.0, "y": 90.0 },
+    "selectedCubeBoundingBox": { "x": 80, "y": 80, "w": 20, "h": 20 },
+    "dropZoneCode": "DROP_RED_01",
+    "positionOrder": 1,
+    "releaseConfirmed": true,
+    "occupiedPersisted": true,
+    "serialOpened": true,
+    "hardwareMovement": true,
+    "suctionActivated": true,
+    "pickupExecuted": true,
+    "dropExecuted": true,
+    "firmwareResponses": [
+      {
+        "step": "drop_zone_release",
+        "commandSent": "POSE 1 -1 81 0",
+        "firmwareResponse": "DONE",
+        "success": true
+      }
+    ],
+    "errorCode": null
+  }
+}
+```
+
+Reglas:
+
+- Backend registra la accion; no abre serial ni expone un endpoint de movimiento.
+- `mode=hardware` solo debe enviarse desde Edge despues de movimiento real.
+- `releaseConfirmed=true` y `occupiedPersisted=true` significan que Edge confirmo
+  el release y persistio la drop zone despues de ese hito.
+- Si falla antes del release, Edge debe cancelar la reserva y registrar error sin
+  marcar ocupacion.
+- Si falla despues del release, Edge debe tratar la zona como fisicamente ocupada
+  y registrar `errorCode`.
+
 ## Fuera de alcance del MVP
 
 - Control fisico real del MaxArm.

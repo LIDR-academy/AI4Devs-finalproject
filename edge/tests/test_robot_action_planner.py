@@ -79,6 +79,49 @@ class RobotActionPlannerTests(unittest.TestCase):
         self.assertTrue(all(step.command_preview.startswith("POSE ") for step in plan.steps))
         self.assertFalse(plan.metadata["serialOpened"])
 
+    def test_sequence_preserves_spike_order_with_documented_safe_extra_steps(self) -> None:
+        snapshot, cube, selection = planner_inputs("red")
+
+        plan = RobotActionPlanner().plan(
+            snapshot,
+            cube,
+            selection,
+            planning_config(),
+            EdgeRunProfile.VISION_DRY_RUN,
+        )
+
+        step_names = [step.name for step in plan.steps]
+        spike_order = [
+            "ready_to_take",
+            "reset",
+            "cube_safe_pose",
+            "cube_target_pick",
+            "lift_after_pick",
+            "reset_with_cube",
+            "drop_zone_with_cube",
+            "drop_zone_release",
+            "reset_without_cube",
+            "ready_to_take_end",
+        ]
+        self.assertEqual(
+            [
+                "ready_to_take",
+                "reset",
+                "cube_safe_pose",
+                "cube_target_pick",
+                "lift_after_pick",
+                "reset_with_cube",
+                "drop_safe_pose",
+                "drop_zone_with_cube",
+                "drop_zone_release",
+                "retract_after_release",
+                "reset_without_cube",
+                "ready_to_take_end",
+            ],
+            step_names,
+        )
+        self.assertEqual(spike_order, [name for name in step_names if name not in {"drop_safe_pose", "retract_after_release"}])
+
     def test_blue_plan_uses_blue_slot(self) -> None:
         snapshot, cube, selection = planner_inputs("blue")
 
@@ -152,4 +195,3 @@ class RobotActionPlannerTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

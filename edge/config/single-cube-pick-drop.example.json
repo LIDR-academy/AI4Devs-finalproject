@@ -1,0 +1,51 @@
+{
+  "profile": "vision-dry-run",
+  "truckCode": "TRUCK-001",
+  "dropZones": {
+    "path": "drop_zones.example.json"
+  },
+  "safety": {
+    "dryRun": true,
+    "enableHardwareMotion": false,
+    "humanConfirmationRequired": true
+  },
+  "vision": {
+    "source": "file",
+    "imagePath": "fixtures/single-cube-scene.png",
+    "cameraIndex": 1,
+    "qr": {
+      "pattern": "^TRUCK-\\d{3}$",
+      "allowedTruckCodes": []
+    },
+    "evidence": {
+      "directory": "../workspace/generated/edge-evidence/single-cube-pick-drop"
+    }
+  },
+  "robotPlanning": {
+    "enabled": true,
+    "safeZ": 150,
+    "pickZ": 138,
+    "dropSafeZ": 150,
+    "liftZDelta": 50,
+    "readyPose": { "x": 124, "y": -83, "z": 212 },
+    "resetPose": { "x": 0, "y": -79, "z": 176 },
+    "calibration": {
+      "version": "REPLACE_WITH_LOCAL_CALIBRATION",
+      "imageRoi": { "x": 0, "y": 0, "w": 200, "h": 200 },
+      "robotCorners": {
+        "topLeft": { "x": -100, "y": -100, "z": 100 },
+        "topRight": { "x": 100, "y": -100, "z": 100 },
+        "bottomRight": { "x": 100, "y": 100, "z": 100 },
+        "bottomLeft": { "x": -100, "y": 100, "z": 100 }
+      }
+    },
+    "workspace": {
+      "minX": -300,
+      "maxX": 300,
+      "minY": -300,
+      "maxY": 300,
+      "minZ": 0,
+      "maxZ": 300
+    }
+  }
+}

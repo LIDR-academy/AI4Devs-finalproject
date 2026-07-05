@@ -52,6 +52,17 @@ class DropZonePlannerTests(unittest.TestCase):
 
         self.assertEqual("RED-03", selected.code)
 
+    def test_selects_second_blue_slot_when_first_is_occupied(self) -> None:
+        slots = (
+            slot("DROP_BLUE_01", "blue", 1, occupied=True),
+            slot("DROP_BLUE_02", "blue", 2),
+            slot("DROP_BLUE_03", "blue", 3),
+        )
+
+        selected = self.planner.select("blue", slots)
+
+        self.assertEqual("DROP_BLUE_02", selected.code)
+
     def test_zone_full_returns_zone_unavailable(self) -> None:
         slots = (
             slot("GREEN-01", "green", 1, occupied=True),
@@ -80,4 +91,3 @@ class DropZonePlannerTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -143,6 +143,59 @@ class EdgeConfigTests(unittest.TestCase):
         with self.assertRaisesRegex(EdgeConfigError, "cameraIndex is required"):
             load_edge_config(self.path)
 
+    def test_loads_ready_and_reset_poses_from_named_poses_config(self) -> None:
+        named_poses_path = self.path.parent / "arm_named_poses.json"
+        write_json(
+            named_poses_path,
+            {
+                "reset": {"x": 0, "y": -79, "z": 176},
+                "ready_to_take": {"x": 124, "y": -83, "z": 212},
+            },
+        )
+        write_json(
+            self.path,
+            {
+                "profile": "vision-dry-run",
+                "robotPlanning": {
+                    "enabled": True,
+                    "safeZ": 150,
+                    "pickZ": 138,
+                    "dropSafeZ": 150,
+                    "liftZDelta": 50,
+                    "namedPosesPath": "arm_named_poses.json",
+                    "readyPoseName": "ready_to_take",
+                    "resetPoseName": "reset",
+                    "calibration": {
+                        "version": "pickup-robot-local-2026-07-04",
+                        "imageRoi": {"x": 8, "y": 135, "w": 345, "h": 210},
+                        "robotCorners": {
+                            "topLeft": {"x": 86, "y": -157, "z": 148},
+                            "topRight": {"x": -34, "y": -169, "z": 148},
+                            "bottomRight": {"x": -34, "y": -239, "z": 148},
+                            "bottomLeft": {"x": 94, "y": -233, "z": 148},
+                        },
+                    },
+                    "workspace": {
+                        "minX": -300,
+                        "maxX": 300,
+                        "minY": -300,
+                        "maxY": 300,
+                        "minZ": 0,
+                        "maxZ": 300,
+                    },
+                },
+            },
+        )
+
+        config = load_edge_config(self.path)
+
+        self.assertEqual(124, config.robot_planning.ready_pose.x)
+        self.assertEqual(-83, config.robot_planning.ready_pose.y)
+        self.assertEqual(212, config.robot_planning.ready_pose.z)
+        self.assertEqual(0, config.robot_planning.reset_pose.x)
+        self.assertEqual(-79, config.robot_planning.reset_pose.y)
+        self.assertEqual(176, config.robot_planning.reset_pose.z)
+
 
 if __name__ == "__main__":
     unittest.main()

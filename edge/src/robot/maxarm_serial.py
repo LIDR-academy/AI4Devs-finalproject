@@ -56,14 +56,16 @@ def default_serial_factory(port: str, baudrate: int, timeout_seconds: float) -> 
     return serial.Serial(port, baudrate, timeout=timeout_seconds)
 
 
-def build_pose_command(pose: RobotPose, *, suction: int = 0) -> str:
-    if suction != 0:
-        raise MaxArmSerialError("SUCTION_NOT_ALLOWED", "safe probe only allows suction=0")
+def build_pose_command(pose: RobotPose, *, suction: int = 0, allow_suction: bool = False) -> str:
+    if suction not in {0, 1}:
+        raise MaxArmSerialError("INVALID_SUCTION", "suction must be 0 or 1")
+    if suction != 0 and not allow_suction:
+        raise MaxArmSerialError("SUCTION_NOT_ALLOWED", "suction requires an explicit hardware gate")
     coordinates = (pose.x, pose.y, pose.z)
     if not all(math.isfinite(value) for value in coordinates):
         raise MaxArmSerialError("INVALID_POSE", "pose coordinates must be finite")
     x, y, z = (int(round(value)) for value in coordinates)
-    return f"POSE {x} {y} {z} 0"
+    return f"POSE {x} {y} {z} {suction}"
 
 
 class MaxArmSerialAdapter:
@@ -104,10 +106,16 @@ class MaxArmSerialAdapter:
         finally:
             self._transport = None
 
-    def send_safe_pose(self, pose: RobotPose) -> MaxArmSerialResult:
+    def send_pose(
+        self,
+        pose: RobotPose,
+        *,
+        suction: int = 0,
+        allow_suction: bool = False,
+    ) -> MaxArmSerialResult:
         if not self.is_open or self._transport is None:
             raise MaxArmSerialError("SERIAL_NOT_OPEN", "open serial before sending a pose")
-        command = build_pose_command(pose, suction=0)
+        command = build_pose_command(pose, suction=suction, allow_suction=allow_suction)
         self._transport.write(f"{command}\n".encode("utf-8"))
 
         deadline = time.monotonic() + self.timeout_seconds
@@ -131,3 +139,6 @@ class MaxArmSerialAdapter:
         raise MaxArmSerialTimeout(
             f"Timeout waiting for DONE from MaxArm firmware; lastResponse={last_response!r}"
         )
+
+    def send_safe_pose(self, pose: RobotPose) -> MaxArmSerialResult:
+        return self.send_pose(pose, suction=0, allow_suction=False)

@@ -797,6 +797,233 @@ Interpretacion:
 Advertencia: este probe no usa camara, no usa cubos, no activa succion y no
 ejecuta secuencias pick/drop.
 
+## Single-cube pick/drop controlado
+
+`single_cube_pick_drop.py` implementa el primer flujo operacional para un unico
+cubo detectado por Edge Vision y una unica drop zone del mismo color. Es un
+comando Edge local: no agrega controles al dashboard, no expone endpoint remoto
+de movimiento y no procesa multiples cubos.
+
+Configuracion de referencia:
+
+```text
+edge/config/single-cube-pick-drop.example.json
+```
+
+El ejemplo es seguro por defecto. Para hardware real se debe crear una copia
+local no versionada con calibracion, ROI, snapshot/camara y drop zones reales.
+No usar `edge/config/drop_zones.example.json` para hardware: sus slots son
+placeholders.
+
+### Alineacion con el spike fisico validado
+
+El spike local `dynamic_pickup_maxarm_pick` usa esta secuencia conceptual:
+
+```text
+ready_to_take -> reset -> cube_safe_pose -> cube_target_pick -> lift_after_pick
+-> reset_with_cube -> drop_zone_with_cube -> drop_zone_release
+-> reset_without_cube -> ready_to_take_end
+```
+
+`single_cube_pick_drop.py` conserva ese orden relativo y agrega dos pasos de
+seguridad:
+
+```text
+ready_to_take -> reset -> cube_safe_pose -> cube_target_pick -> lift_after_pick
+-> reset_with_cube -> drop_safe_pose -> drop_zone_with_cube
+-> drop_zone_release -> retract_after_release -> reset_without_cube
+-> ready_to_take_end
+```
+
+`drop_safe_pose` aproxima la descarga a una Z segura antes de bajar al slot.
+`retract_after_release` sube nuevamente a esa Z segura antes de volver a reset.
+Estos pasos no cambian el hito fisico esperado del spike: el slot solo puede
+marcarse ocupado despues de `drop_zone_release` confirmado.
+
+### Configuracion local desde archivos del spike
+
+Para una prueba fisica no se debe versionar la configuracion local. Crear
+`edge/config/single-cube-pick-drop.local.json` a partir del ejemplo y revisar:
+
+- `robotPlanning.readyPose` y `robotPlanning.resetPose` pueden copiarse desde
+  `arm_named_poses.json`, o cargarse con `robotPlanning.namedPosesPath`,
+  `readyPoseName=ready_to_take` y `resetPoseName=reset`.
+- `dropZones.path` debe apuntar a una copia local real de
+  `drop_zones_config.json`, no a `drop_zones.example.json`.
+- La seleccion de slot conserva la politica del spike: mismo color,
+  `active=true`, `occupied=false` y menor `position_order`.
+- Si `DROP_BLUE_01` esta ocupado y `DROP_BLUE_02` libre, el planner elige
+  `DROP_BLUE_02`.
+- `pickup_robot_calibration.json` se mapea a
+  `robotPlanning.calibration.robotCorners`, `safeZ` y `pickZ`.
+- `pickup_calibration.json` contiene un cuadrilatero `corners_px`; el Edge actual
+  usa `imageRoi` rectangular. Si se usa el bounding box de esos puntos, debe
+  quedar documentado como aproximacion y no como equivalencia completa de la
+  homografia del spike.
+
+El campo `calibration.version` debe ser una version local trazable. Nunca usar
+`REPLACE_WITH_LOCAL_CALIBRATION` para hardware.
+
+### Bloqueo fail-closed para hardware
+
+`--plan-only` puede ejecutarse con configuracion placeholder para generar y
+revisar comandos, pero la evidencia incluye `safetyWarnings` y no abre serial.
+La ejecucion con hardware queda bloqueada antes de `serial.open()` si detecta:
+
+- `calibration.version=REPLACE_WITH_LOCAL_CALIBRATION`;
+- `robotCorners` iguales al ejemplo placeholder;
+- `imageRoi` placeholder;
+- `readyPose` o `resetPose` placeholder;
+- Z, workspace o ROI invalidos;
+- `dropZones.path` apuntando a archivos de ejemplo.
+
+Validacion segura de bloqueo con placeholder:
+
+```powershell
+python src\single_cube_pick_drop.py `
+  --config config\single-cube-pick-drop.example.json `
+  --snapshot ..\workspace\generated\vision-evidence\snapshot.json `
+  --dry-run-evidence ..\workspace\generated\edge-evidence\single-cube-pick-drop\single-cube-plan-only-RUN_ID.json `
+  --port COM4 `
+  --confirm-pick-drop `
+  --enable-hardware-motion `
+  --confirm-zone-clear `
+  --confirm-operator-present `
+  --confirm-emergency-stop-ready `
+  --confirm-suction
+```
+
+Resultado esperado: error controlado como
+`MISSING_REAL_PICKUP_ROBOT_CALIBRATION` o `PLACEHOLDER_ROBOT_CORNERS`,
+`serialOpened=false` y cero comandos al firmware.
+
+### Diferencias entre dry-run, safe probe y pick/drop
+
+| Flujo | Camara/snapshot | Serial | Succion | Drop zones | Backend |
+|---|---|---|---|---|---|
+| `edge_dry_run.py` | Si | No | No | Reserva y cancela | Opcional, `mode=simulation` |
+| `maxarm_safe_probe.py` | No | Si | No | No | No |
+| `single_cube_pick_drop.py --plan-only` | Si | No | No | Reserva y cancela | No |
+| `single_cube_pick_drop.py` hardware | Si | Si | Si, con gate | Confirma tras release | Opcional, `mode=hardware` |
+
+`--plan-only` genera la evidencia obligatoria del plan y cancela la reserva. La
+ejecucion fisica exige que el plan actual coincida con esa evidencia mediante
+`--dry-run-evidence`.
+
+### Plan-only obligatorio
+
+Desde `edge/`:
+
+```powershell
+python src\single_cube_pick_drop.py `
+  --config config\single-cube-pick-drop.local.json `
+  --snapshot ..\workspace\generated\vision-evidence\snapshot.json `
+  --plan-only
+```
+
+Tambien puede leer el ultimo snapshot del servicio Edge Vision:
+
+```powershell
+python src\single_cube_pick_drop.py `
+  --config config\single-cube-pick-drop.local.json `
+  --edge-vision-url http://127.0.0.1:8001 `
+  --plan-only
+```
+
+Resultado esperado: evidencia JSON con `status=DRY_RUN_PLANNED`,
+`serialOpened=false`, `hardwareMovement=false`, `maxCubes=1` y
+`planFingerprint.commandsPreview`.
+
+### Prueba de gate sin confirmacion
+
+Este comando debe abortar antes de abrir serial:
+
+```powershell
+python src\single_cube_pick_drop.py `
+  --config config\single-cube-pick-drop.local.json `
+  --snapshot ..\workspace\generated\vision-evidence\snapshot.json `
+  --dry-run-evidence ..\workspace\generated\edge-evidence\single-cube-pick-drop\single-cube-plan-only-RUN_ID.json `
+  --port COM4
+```
+
+Resultado esperado: `CONFIRMATION_REQUIRED`, `serialOpened=false` y cero comandos
+al firmware.
+
+### Ejecucion fisica controlada
+
+Ejecutar solo despues de revisar el plan-only y completar el checklist fisico:
+
+```powershell
+python src\single_cube_pick_drop.py `
+  --config config\single-cube-pick-drop.local.json `
+  --snapshot ..\workspace\generated\vision-evidence\snapshot.json `
+  --dry-run-evidence ..\workspace\generated\edge-evidence\single-cube-pick-drop\single-cube-plan-only-RUN_ID.json `
+  --port COM4 `
+  --baudrate 115200 `
+  --confirm-pick-drop `
+  --enable-hardware-motion `
+  --confirm-zone-clear `
+  --confirm-operator-present `
+  --confirm-emergency-stop-ready `
+  --confirm-suction `
+  --sync-backend `
+  --backend-url http://localhost:3000
+```
+
+Gates obligatorios:
+
+- `--confirm-pick-drop`
+- `--enable-hardware-motion`
+- `--port COMx`
+- `--baudrate` documentado con default `115200`
+- `--max-cubes 1`, implicito por defecto
+- dry-run match obligatorio mediante `--dry-run-evidence`
+- `--confirm-zone-clear`
+- `--confirm-operator-present`
+- `--confirm-emergency-stop-ready`
+- `--confirm-suction`
+
+Sin todos los gates, el comando aborta antes de abrir serial. Si el plan actual
+no coincide con el dry-run previo, aborta con `DRY_RUN_MISMATCH`.
+
+### Checklist fisico
+
+- Brazo estable.
+- Camara y cables fuera del recorrido.
+- Solo 1 cubo en zona de pickup o cubos bien separados.
+- Drop zone del color seleccionado despejada.
+- Puerto COM confirmado.
+- Energia estable.
+- Operador presente.
+- Forma de cortar energia disponible.
+- Nadie cerca del recorrido.
+- Dry-run del mismo plan revisado.
+- Succion revisada.
+- Coordenadas revisadas.
+- Plan y drop zone revisados visualmente.
+
+### Evidencia e interpretacion
+
+La evidencia JSON incluye `runId`, `snapshotSignature`, `truckCode`,
+`selectedCube`, `selectedCubeColor`, `selectedCubeCenter`,
+`selectedCubeBoundingBox`, `dropZoneCode`, `positionOrder`,
+`commandsPreview`, `firmwareResponses`, `serialOpened`, `hardwareMovement`,
+`suctionActivated`, `pickupExecuted`, `dropExecuted`, `releaseConfirmed`,
+`occupiedPersisted` y `errorCode` si aplica.
+
+`occupied=true` se persiste solo despues del paso `drop_zone_release` con
+respuesta valida del firmware. Si falla antes del release, se cancela la reserva
+y queda `occupied=false`. Si falla despues del release, la zona se considera
+fisicamente ocupada y el error queda en la evidencia para conciliacion humana.
+
+Ante error:
+
+1. No repetir el movimiento sin revisar evidencia y estado fisico.
+2. Cortar energia si el brazo queda en una pose insegura.
+3. Verificar si `releaseConfirmed=true`; en ese caso tratar la drop zone como ocupada.
+4. Revisar `firmwareResponses` y `errorCode`.
+5. Rehacer `--plan-only` antes de cualquier nuevo intento.
+
 ## Ejecucion
 
 Con `.env`:
