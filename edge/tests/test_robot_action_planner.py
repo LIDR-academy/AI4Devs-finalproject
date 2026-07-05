@@ -78,11 +78,31 @@ class RobotActionPlannerTests(unittest.TestCase):
         self.assertEqual(150, plan.safe_z)
         self.assertEqual(0, plan.pickup_target.x)
         self.assertEqual(0, plan.pickup_target.y)
+        self.assertEqual({"x": 0.0, "y": 0.0, "z": 0.0}, plan.metadata["pickupOffset"])
         self.assertEqual("drop_zone_release", plan.steps[8].name)
         self.assertTrue(all(step.command_preview.startswith("POSE ") for step in plan.steps))
         self.assertFalse(plan.metadata["serialOpened"])
         self.assertFalse(plan.metadata["visualCalibrationUsed"])
         self.assertFalse(plan.metadata["homographyUsed"])
+
+    def test_pickup_offset_moves_only_pickup_poses(self) -> None:
+        snapshot, cube, selection = planner_inputs("red")
+        config = replace(planning_config(), pickup_offset=RobotPose(5, 0, 0))
+
+        plan = RobotActionPlanner().plan(
+            snapshot,
+            cube,
+            selection,
+            config,
+            EdgeRunProfile.VISION_DRY_RUN,
+        )
+
+        self.assertEqual({"x": 0.0, "y": 0.0, "z": 100.0}, plan.metadata["pickupTargetBase"])
+        self.assertEqual(5, plan.pickup_target.x)
+        self.assertEqual(0, plan.pickup_target.y)
+        self.assertEqual(5, plan.pickup_safe.x)
+        self.assertEqual(120, plan.drop_target.x)
+        self.assertEqual(120, plan.drop_safe.x)
 
     def test_visual_calibration_maps_frame_pixels_to_pickup_cm_and_robot_pose(self) -> None:
         snapshot, cube, selection = planner_inputs("red")

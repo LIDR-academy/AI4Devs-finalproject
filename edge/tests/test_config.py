@@ -285,6 +285,48 @@ class EdgeConfigTests(unittest.TestCase):
         self.assertEqual(0.8, config.movement.pickup_hold_seconds)
         self.assertEqual(0.8, config.movement.release_hold_seconds)
 
+    def test_parses_robot_planning_pickup_offset_with_zero_default(self) -> None:
+        write_json(
+            self.path,
+            {
+                "profile": "vision-dry-run",
+                "robotPlanning": {
+                    "enabled": True,
+                    "safeZ": 150,
+                    "pickZ": 138,
+                    "dropSafeZ": 150,
+                    "liftZDelta": 50,
+                    "pickupOffset": {"x": 5, "y": -1, "z": 2},
+                    "readyPose": {"x": 124, "y": -83, "z": 212},
+                    "resetPose": {"x": 0, "y": -79, "z": 176},
+                    "calibration": {
+                        "version": "pickup-visual-local-2026-07-05",
+                        "imageRoi": {"x": 8, "y": 135, "w": 345, "h": 210},
+                        "robotCorners": {
+                            "topLeft": {"x": 86, "y": -157, "z": 148},
+                            "topRight": {"x": -34, "y": -169, "z": 148},
+                            "bottomRight": {"x": -34, "y": -239, "z": 148},
+                            "bottomLeft": {"x": 94, "y": -233, "z": 148},
+                        },
+                    },
+                    "workspace": {
+                        "minX": -300,
+                        "maxX": 300,
+                        "minY": -300,
+                        "maxY": 300,
+                        "minZ": 0,
+                        "maxZ": 300,
+                    },
+                },
+            },
+        )
+
+        config = load_edge_config(self.path)
+
+        self.assertEqual(5, config.robot_planning.pickup_offset.x)
+        self.assertEqual(-1, config.robot_planning.pickup_offset.y)
+        self.assertEqual(2, config.robot_planning.pickup_offset.z)
+
 
 if __name__ == "__main__":
     unittest.main()

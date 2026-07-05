@@ -48,6 +48,68 @@ describe("robot action dry-run contract", () => {
     });
   });
 
+  it("accepts hardware pick/drop metadata from Edge sync", () => {
+    const input = parseRobotActionInput({
+      sessionId: "session-id",
+      actionType: "PICK_AND_DROP",
+      status: "SUCCESS",
+      mode: "hardware",
+      color: "red",
+      metadata: {
+        runId: "run-hw-001",
+        dryRun: false,
+        profile: "hardware",
+        truckCode: "TRUCK-001",
+        selectedCube: { color: "red", x: 80, y: 80, w: 20, h: 20, confidence: 0.9 },
+        selectedCubeColor: "red",
+        selectedCubeCenter: { x: 90, y: 90 },
+        selectedCubeBoundingBox: { x: 80, y: 80, w: 20, h: 20 },
+        pickupPositionCm: { x: 5.4, y: 2.1 },
+        pickupOffset: { x: 5, y: 0, z: 0 },
+        pickupTargetBase: { x: 39.44, y: -183.88, z: 138 },
+        pickupTarget: { x: 44.44, y: -183.88, z: 138 },
+        pickupSafe: { x: 44.44, y: -183.88, z: 150 },
+        dropZoneCode: "DROP_RED_01",
+        dropZonePose: { x: 1, y: -1, z: 81 },
+        positionOrder: 1,
+        commandsPreview: ["POSE 124 -83 212 0", "POSE 44 -184 138 1"],
+        firmwareResponses: [
+          {
+            step: "cube_target_pick",
+            commandSent: "POSE 44 -184 138 1",
+            firmwareResponse: "DONE",
+            success: true,
+            postStepDelaySeconds: 0.8,
+            elapsedMs: 12.3
+          }
+        ],
+        serialOpened: true,
+        hardwareMovement: true,
+        suctionActivated: true,
+        pickupExecuted: true,
+        dropExecuted: true,
+        releaseConfirmed: true,
+        occupiedPersisted: true,
+        homographyUsed: true,
+        visualCalibrationUsed: true,
+        visualCalibrationVersion: "pickup-robot-local-2026-07-04",
+        movementDelaySeconds: 0.8,
+        pickupHoldSeconds: 1.2,
+        releaseHoldSeconds: 0.5
+      }
+    });
+
+    expect(input.metadata).toMatchObject({
+      profile: "hardware",
+      dryRun: false,
+      runId: "run-hw-001",
+      dropZoneCode: "DROP_RED_01",
+      serialOpened: true,
+      hardwareMovement: true,
+      releaseConfirmed: true
+    });
+  });
+
   it("rejects sensitive metadata and invalid transitions", () => {
     expect(() =>
       parseRobotActionInput({
@@ -56,6 +118,12 @@ describe("robot action dry-run contract", () => {
       })
     ).toThrow(/forbidden sensitive key/);
     expect(() => parseRobotActionUpdateInput({ status: "PLANNED" })).toThrow();
+    expect(() =>
+      parseRobotActionInput({
+        sessionId: "session-id",
+        metadata: { pickupTarget: { x: Number.NaN, y: 1, z: 2 } }
+      })
+    ).toThrow(/finite numbers/);
   });
 
   it("redacts credentials from errorMessage", () => {

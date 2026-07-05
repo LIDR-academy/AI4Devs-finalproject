@@ -478,6 +478,26 @@ class SingleCubePickDropTests(unittest.TestCase):
         self.assertIsInstance(responses[0]["elapsedMs"], float)
         self.assertEqual("command_execution_only", result["successMeaning"])
 
+    def test_dry_run_evidence_detects_pickup_offset_change(self) -> None:
+        self.write_hardware_ready_config()
+        dry_run = self.plan_only()
+        config = json.loads(self.config_path.read_text(encoding="utf-8"))
+        config["robotPlanning"]["pickupOffset"] = {"x": 5, "y": 0, "z": 0}
+        write_json(self.config_path, config)
+
+        with self.assertRaises(SingleCubePickDropError) as context:
+            run_single_cube_pick_drop(
+                self.config_path,
+                snapshot=self.snapshot,
+                dry_run_evidence_path=Path(dry_run["evidence"]["json"]),
+                gates=self.gates(),
+                serial_factory=lambda *_: FakeSerial(),
+                evidence_writer=self.writer,
+            )
+
+        self.assertEqual("DRY_RUN_MISMATCH", context.exception.code)
+        self.assertEqual(0, FakeSerial.opened_count)
+
     def test_missing_movement_config_defaults_to_zero_delay(self) -> None:
         self.write_hardware_ready_config()
         dry_run = self.plan_only()
@@ -544,6 +564,38 @@ class SingleCubePickDropTests(unittest.TestCase):
         self.assertTrue(fake.closed)
         persisted = json.loads(self.drop_zones_path.read_text(encoding="utf-8"))
         self.assertTrue(persisted["red"][0]["occupied"])
+
+    def test_sync_backend_payload_omits_unavailable_error_code(self) -> None:
+        self.write_hardware_ready_config()
+        dry_run = self.plan_only()
+
+        class FakeBackend:
+            def __init__(self) -> None:
+                self.payload: dict[str, object] | None = None
+
+            def create_session(self, truck_code: str) -> dict[str, object]:
+                return {"session": {"id": f"session-{truck_code}"}}
+
+            def register_robot_action(self, payload: dict[str, object]) -> dict[str, object]:
+                self.payload = payload
+                return {"action": {"id": "action-1"}}
+
+        backend = FakeBackend()
+
+        result = run_single_cube_pick_drop(
+            self.config_path,
+            snapshot=self.snapshot,
+            dry_run_evidence_path=Path(dry_run["evidence"]["json"]),
+            gates=self.gates(),
+            serial_factory=lambda *_: FakeSerial(),
+            evidence_writer=self.writer,
+            backend_client=backend,
+        )
+
+        metadata = backend.payload["metadata"]
+        self.assertEqual("SUCCESS", result["status"])
+        self.assertNotIn("errorCode", metadata)
+        self.assertIn("pickupOffset", metadata)
 
     def test_failure_before_release_cancels_reservation_and_closes_serial(self) -> None:
         self.write_hardware_ready_config()

@@ -92,10 +92,16 @@ class RobotActionPlanner:
             raise RobotPlanningError("INVALID_SAFE_Z", "dropSafeZ must be greater than drop target Z")
 
         try:
-            pickup_target, pickup_position_cm = map_cube_to_pick_pose_with_metadata(
+            pickup_target_base, pickup_position_cm = map_cube_to_pick_pose_with_metadata(
                 selected_cube,
                 config.calibration,
                 config.pick_z,
+            )
+            pickup_offset = config.pickup_offset
+            pickup_target = RobotPose(
+                pickup_target_base.x + pickup_offset.x,
+                pickup_target_base.y + pickup_offset.y,
+                pickup_target_base.z + pickup_offset.z,
             )
             pickup_safe = RobotPose(pickup_target.x, pickup_target.y, config.safe_z)
             lift_after_pick = RobotPose(
@@ -150,6 +156,8 @@ class RobotActionPlanner:
             metadata={
                 "calibrationVersion": config.calibration.version,
                 "coordinateSpace": "robot-candidate",
+                "pickupOffset": pickup_offset.as_dict(),
+                "pickupTargetBase": pickup_target_base.as_dict(),
                 "pickupPositionCm": pickup_position_cm.as_dict() if pickup_position_cm else None,
                 "visualCalibrationVersion": config.calibration.version,
                 "visualCalibrationUsed": config.calibration.visual is not None,

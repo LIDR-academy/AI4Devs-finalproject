@@ -24,6 +24,25 @@ const assertNoSensitiveKeys = (value: unknown, path = "metadata"): void => {
   }
 };
 
+const assertJsonSafe = (value: unknown, path = "metadata"): void => {
+  if (value === undefined) {
+    throw new HttpError(400, `${path} must not contain undefined values`);
+  }
+  if (typeof value === "number" && !Number.isFinite(value)) {
+    throw new HttpError(400, `${path} must contain only finite numbers`);
+  }
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => assertJsonSafe(item, `${path}[${index}]`));
+    return;
+  }
+  if (!isRecord(value)) {
+    return;
+  }
+  for (const [key, child] of Object.entries(value)) {
+    assertJsonSafe(child, `${path}.${key}`);
+  }
+};
+
 const optionalString = (value: unknown, field: string, maxLength = 120): string | undefined => {
   if (value === undefined || value === null) return undefined;
   if (typeof value !== "string" || !value.trim() || value.trim().length > maxLength) {
@@ -86,6 +105,7 @@ export const normalizeRobotMetadata = (
   raw: Record<string, unknown>,
   mode: ExecutionMode
 ): Record<string, unknown> => {
+  assertJsonSafe(raw);
   assertNoSensitiveKeys(raw);
   if (Buffer.byteLength(JSON.stringify(raw), "utf8") > MAX_METADATA_BYTES) {
     throw new HttpError(400, `metadata must not exceed ${MAX_METADATA_BYTES} bytes`);

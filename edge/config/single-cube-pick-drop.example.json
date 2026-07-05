@@ -32,6 +32,11 @@
     "pickZ": 138,
     "dropSafeZ": 150,
     "liftZDelta": 50,
+    "pickupOffset": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
     "readyPose": { "x": 124, "y": -83, "z": 212 },
     "resetPose": { "x": 0, "y": -79, "z": 176 },
     "calibration": {

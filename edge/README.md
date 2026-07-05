@@ -866,6 +866,33 @@ Si `movement` no existe, todos los valores quedan en `0.0` para compatibilidad.
 respuesta firmware, `postStepDelaySeconds`, `stepStartedAt`,
 `responseReceivedAt` y `elapsedMs`.
 
+### Configuracion de pickupOffset
+
+`robotPlanning.pickupOffset` permite aplicar un ajuste fino al punto de pickup
+sin alterar la calibracion base ni los `robotCorners`:
+
+```json
+{
+  "robotPlanning": {
+    "pickupOffset": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    }
+  }
+}
+```
+
+Si el bloque no existe, el offset queda en `0,0,0`. El offset se aplica solo a
+`pickupTarget`, `pickupSafe` y poses derivadas del pickup como
+`lift_after_pick`; no cambia `dropTarget`, `dropSafe`, drop zones, `readyPose`
+ni `resetPose`.
+
+La evidencia incluye `pickupOffset`, `pickupTargetBase`, `pickupTarget` y
+`pickupSafe`. `pickupOffset` tambien queda dentro de `planFingerprint`, por lo
+que cambiarlo entre `--plan-only` y la ejecucion hardware produce
+`DRY_RUN_MISMATCH`.
+
 ### Alineacion con el spike fisico validado
 
 El spike local `dynamic_pickup_maxarm_pick` usa esta secuencia conceptual:
@@ -918,6 +945,34 @@ Para una prueba fisica no se debe versionar la configuracion local. Crear
 
 El campo `calibration.version` debe ser una version local trazable. Nunca usar
 `REPLACE_WITH_LOCAL_CALIBRATION` para hardware.
+
+### Reset de drop zones
+
+Para limpiar ocupacion despues de pruebas fisicas, usar la utilidad dedicada.
+Requiere confirmacion explicita, crea backup y modifica solo `occupied=false`;
+no cambia `active`, coordenadas, `code`, `color` ni `position_order`.
+
+Reset completo:
+
+```powershell
+python src\reset_drop_zones.py `
+  --config config\single-cube-pick-drop.local.json `
+  --all `
+  --confirm-reset
+```
+
+Reset por color:
+
+```powershell
+python src\reset_drop_zones.py `
+  --config config\single-cube-pick-drop.local.json `
+  --color blue `
+  --confirm-reset
+```
+
+Sin `--confirm-reset`, el comando aborta sin modificar archivos. El resumen
+impreso indica archivo modificado, backup creado, slots revisados, slots
+reseteados y colores afectados.
 
 ### Bloqueo fail-closed para hardware
 
@@ -1043,6 +1098,27 @@ Gates obligatorios:
 
 Sin todos los gates, el comando aborta antes de abrir serial. Si el plan actual
 no coincide con el dry-run previo, aborta con `DRY_RUN_MISMATCH`.
+
+### Ejecucion hardware con --sync-backend
+
+`--sync-backend` crea o reutiliza la sesion del camion y registra la accion en
+`POST /robot/actions` con `mode=hardware`. El metadata enviado es JSON-safe y
+solo incluye campos disponibles: plan, cubo seleccionado, drop zone, respuestas
+firmware, flags de hardware, homografia/calibracion visual y tiempos de
+movimiento.
+
+Antes de usarlo, levantar backend y base de datos:
+
+```powershell
+cd ..\backend
+npm run build
+npm run dev
+```
+
+Luego ejecutar el flujo hardware desde `edge/` con `--sync-backend` y
+`--backend-url http://localhost:3000`. Si el backend rechaza el payload por
+validacion, debe responder 4xx con `correlationId`; un 500 queda registrado en
+consola con metodo, ruta y `correlationId`.
 
 ### Checklist fisico
 

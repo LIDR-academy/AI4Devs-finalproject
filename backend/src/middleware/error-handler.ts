@@ -11,7 +11,10 @@ export const errorHandler = (error: unknown, req: Request, res: Response, _next:
   const message = isHttpError ? error.message : "Internal server error";
 
   if (!isHttpError) {
-    console.error(`correlationId=${req.correlationId} unexpectedError=`, error);
+    console.error(
+      `correlationId=${req.correlationId} method=${req.method} path=${req.originalUrl} unexpectedError=`,
+      error
+    );
   }
 
   res.status(statusCode).json({

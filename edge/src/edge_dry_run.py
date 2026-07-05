@@ -422,11 +422,13 @@ def plan_to_dict(plan: RobotActionPlan) -> dict[str, Any]:
         "profile": plan.profile.value,
         "safeZ": plan.safe_z,
         "candidatePoses": {
+            "pickupTargetBase": plan.metadata.get("pickupTargetBase"),
             "pickupTarget": pose_dict(plan.pickup_target),
             "pickupSafe": pose_dict(plan.pickup_safe),
             "dropTarget": pose_dict(plan.drop_target),
             "dropSafe": pose_dict(plan.drop_safe),
         },
+        "pickupOffset": plan.metadata.get("pickupOffset", {"x": 0.0, "y": 0.0, "z": 0.0}),
         "pickupPositionCm": plan.pickup_position_cm.as_dict() if plan.pickup_position_cm else None,
         "visualCalibrationVersion": plan.metadata.get("visualCalibrationVersion"),
         "visualCalibrationUsed": bool(plan.metadata.get("visualCalibrationUsed")),

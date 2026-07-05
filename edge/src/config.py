@@ -105,6 +105,7 @@ class RobotPlanningConfig:
     pick_z: float | None = None
     drop_safe_z: float | None = None
     lift_z_delta: float | None = None
+    pickup_offset: RobotPose = RobotPose(0.0, 0.0, 0.0)
     ready_pose: RobotPose | None = None
     reset_pose: RobotPose | None = None
     calibration: PickupRobotCalibration | None = None
@@ -360,6 +361,16 @@ def _parse_robot_planning(value: object, config_directory: Path) -> RobotPlannin
         "robotPlanning.liftZDelta",
         50.0,
     )
+    pickup_offset_raw = value.get("pickupOffset", {})
+    if pickup_offset_raw is None:
+        pickup_offset_raw = {}
+    if not isinstance(pickup_offset_raw, dict):
+        raise EdgeConfigError("robotPlanning.pickupOffset must be a JSON object")
+    pickup_offset = RobotPose(
+        x=_parse_finite_number(pickup_offset_raw.get("x", 0), "robotPlanning.pickupOffset.x"),
+        y=_parse_finite_number(pickup_offset_raw.get("y", 0), "robotPlanning.pickupOffset.y"),
+        z=_parse_finite_number(pickup_offset_raw.get("z", 0), "robotPlanning.pickupOffset.z"),
+    )
     named_poses: dict[str, object] | None = None
     named_poses_path_value = value.get("namedPosesPath")
     if named_poses_path_value is not None:
@@ -441,6 +452,7 @@ def _parse_robot_planning(value: object, config_directory: Path) -> RobotPlannin
         pick_z=pick_z,
         drop_safe_z=drop_safe_z,
         lift_z_delta=lift_z_delta,
+        pickup_offset=pickup_offset,
         ready_pose=ready_pose,
         reset_pose=reset_pose,
         calibration=calibration,

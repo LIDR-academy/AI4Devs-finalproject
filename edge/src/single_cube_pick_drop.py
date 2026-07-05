@@ -209,6 +209,8 @@ def _plan_fingerprint(snapshot: DetectionSnapshot, plan: RobotActionPlan) -> dic
         "visualCalibrationVersion": plan.metadata.get("visualCalibrationVersion"),
         "visualCalibrationUsed": bool(plan.metadata.get("visualCalibrationUsed")),
         "homographyUsed": bool(plan.metadata.get("homographyUsed")),
+        "pickupOffset": plan.metadata.get("pickupOffset", {"x": 0.0, "y": 0.0, "z": 0.0}),
+        "pickupTargetBase": plan.metadata.get("pickupTargetBase"),
         "pickupTarget": plan.pickup_target.as_dict(),
         "pickupSafe": plan.pickup_safe.as_dict(),
         "dropZoneCode": plan.drop_zone.slot.code,
@@ -241,6 +243,7 @@ def _assert_dry_run_match(expected: dict[str, Any], actual: dict[str, Any]) -> N
         "visualCalibrationVersion",
         "visualCalibrationUsed",
         "homographyUsed",
+        "pickupOffset",
         "pickupTarget",
         "pickupSafe",
         "dropZoneCode",
@@ -420,7 +423,7 @@ def _backend_hardware_payload(
     execution: dict[str, Any],
 ) -> dict[str, Any]:
     fingerprint = _plan_fingerprint(snapshot, plan)
-    return {
+    payload = {
         "sessionId": session_id,
         "actionType": "PICK_AND_DROP",
         "status": "SUCCESS" if execution.get("dropExecuted") else "ERROR",
@@ -432,6 +435,8 @@ def _backend_hardware_payload(
             "profile": "hardware",
             "selectedCube": cube_to_dict(plan.selected_cube),
             "pickupPositionCm": plan.pickup_position_cm.as_dict() if plan.pickup_position_cm else None,
+            "pickupOffset": plan.metadata.get("pickupOffset"),
+            "pickupTargetBase": plan.metadata.get("pickupTargetBase"),
             "visualCalibrationVersion": plan.metadata.get("visualCalibrationVersion"),
             "visualCalibrationUsed": bool(plan.metadata.get("visualCalibrationUsed")),
             "homographyUsed": bool(plan.metadata.get("homographyUsed")),
@@ -454,6 +459,28 @@ def _backend_hardware_payload(
             "errorCode": execution.get("errorCode"),
         },
     }
+    return _json_safe(payload)
+
+
+def _json_safe(value: Any) -> Any:
+    if value is None:
+        return None
+    if isinstance(value, bool) or isinstance(value, str) or isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        if value != value or value in (float("inf"), float("-inf")):
+            raise SingleCubePickDropError("BACKEND_PAYLOAD_INVALID", "Backend payload contains non-finite number")
+        return value
+    if isinstance(value, list):
+        return [_json_safe(item) for item in value if item is not None]
+    if isinstance(value, tuple):
+        return [_json_safe(item) for item in value if item is not None]
+    if isinstance(value, dict):
+        return {str(key): _json_safe(child) for key, child in value.items() if child is not None}
+    raise SingleCubePickDropError(
+        "BACKEND_PAYLOAD_INVALID",
+        f"Backend payload contains non-JSON value of type {type(value).__name__}",
+    )
 
 
 def _post_step_delay_seconds(
@@ -513,6 +540,8 @@ def run_single_cube_pick_drop(
         "visualCalibrationVersion": plan.metadata.get("visualCalibrationVersion"),
         "visualCalibrationUsed": bool(plan.metadata.get("visualCalibrationUsed")),
         "homographyUsed": bool(plan.metadata.get("homographyUsed")),
+        "pickupOffset": plan.metadata.get("pickupOffset", {"x": 0.0, "y": 0.0, "z": 0.0}),
+        "pickupTargetBase": plan.metadata.get("pickupTargetBase"),
         "pickupTarget": plan.pickup_target.as_dict(),
         "pickupSafe": plan.pickup_safe.as_dict(),
         "movementDelaySeconds": config.movement.delay_seconds,
