@@ -230,7 +230,7 @@ Se ha utilizado el **Prompt 1** de la sección `2.1. Diagrama de arquitectura`, 
 
 ### 2.4. Infraestructura y despliegue
 
-#### Prompt 2.4.1: Definicón infraestructura y despliegue para MVP y propuesta para extender a sistema productivo
+#### Prompt 2.4.1: Definición infraestructura y despliegue para MVP y propuesta para extender a sistema productivo
 
 Actúa como arquitecto cloud senior especializado en infraestructuras cloud para MVPs eCommerce.
 
@@ -273,7 +273,7 @@ Sé concreto, práctico y justifica cada decisión según `docs/ARCHITECTURE.md`
 
 Redacta con tono técnico-académico y genera el resultado en `docs/INFRASTRUCTURE.md`.
 
-#### Prompt 2.4.2: Despligue aplicación en instancia EC2 de AWS
+#### Prompt 2.4.2: Estrategia Despliegue CI/CD de RunMarket en instancia EC2 de AWS
 
 Actúa como ingeniero DevOps. Redacta docs/DEPLOYMENT-STRATEGY.md: la estrategia de despliegue de RunMarket, implementando la Opción A descrita
 en docs/INFRASTRUCTURE.md — una única instancia EC2 t3.micro con postgres, backend, frontend y nginx como contenedores Docker orquestados por Docker Compose, e infraestructura provisionada con Terraform.

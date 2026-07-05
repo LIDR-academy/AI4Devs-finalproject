@@ -538,7 +538,7 @@ Dado el informe de pentesting de esta conversación documenta las historias de u
 /implement-user-story US-017
 
 
-# Prompt 22: Despligue aplicación en instancia EC2 de AWS
+# Prompt 22: Estrategia Despliegue CI/CD de RunMarket en instancia EC2 de AWS
 
 Actúa como ingeniero DevOps. Redacta docs/DEPLOYMENT-STRATEGY.md: la estrategia de despliegue de RunMarket, implementando la Opción A descrita
 en docs/INFRASTRUCTURE.md — una única instancia EC2 t3.micro con postgres, backend, frontend y nginx como contenedores Docker orquestados por Docker Compose, e infraestructura provisionada con Terraform.
