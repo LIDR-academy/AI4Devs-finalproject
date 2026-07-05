@@ -230,7 +230,7 @@ Se ha utilizado el **Prompt 1** de la sección `2.1. Diagrama de arquitectura`, 
 
 ### 2.4. Infraestructura y despliegue
 
-#### Prompt 1: Definicón infraestructura y despliegue para MVP y propuesta para extender a sistema productivo
+#### Prompt 2.4.1: Definicón infraestructura y despliegue para MVP y propuesta para extender a sistema productivo
 
 Actúa como arquitecto cloud senior especializado en infraestructuras cloud para MVPs eCommerce.
 
@@ -272,6 +272,20 @@ Estructura el documento con:
 Sé concreto, práctico y justifica cada decisión según `docs/ARCHITECTURE.md`. Puedes comparar varios proveedores, pero selecciona una recomendación final para cada opción.
 
 Redacta con tono técnico-académico y genera el resultado en `docs/INFRASTRUCTURE.md`.
+
+#### Prompt 2.4.2: Despligue aplicación en instancia EC2 de AWS
+
+Actúa como ingeniero DevOps. Redacta docs/DEPLOYMENT-STRATEGY.md: la estrategia de despliegue de RunMarket, implementando la Opción A descrita
+en docs/INFRASTRUCTURE.md — una única instancia EC2 t3.micro con postgres, backend, frontend y nginx como contenedores Docker orquestados por Docker Compose, e infraestructura provisionada con Terraform.
+
+Añade un pipeline de GitHub Actions que construya las imágenes de backend y
+frontend, las publique en un registro de contenedores y despliegue contra la EC2 bajo demanda. La autenticación con AWS debe hacerse con el método más seguro disponible (sin credenciales de larga duración guardadas en el repositorio).
+
+El disparador del pipeline debe ser manual, ya que el desarrollo del proyecto está cerrado y no se prevé una evolución continua que justifique desplegar en cada cambio de código.
+
+Incluye también una vía manual de despliegue desde el portátil, para el arranque inicial de la infraestructura y para depurar sin depender del pipeline.
+
+Documenta las decisiones de diseño con su justificación, no solo el "qué" sino el "por qué", y deja claro qué pasos son prerrequisito de cuáles.
 
 ### 2.5. Seguridad
 

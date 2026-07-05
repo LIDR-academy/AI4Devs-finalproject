@@ -400,18 +400,14 @@ Sé concreto, práctico y justifica cada decisión según `docs/ARCHITECTURE.md`
 
 Redacta con tono técnico-académico y genera el resultado en `docs/INFRASTRUCTURE.md`.
 
-# Prompt 13: Despliegue
-Haz un Checklist del flujo de despliegue del MVP académico y generalo en `docs/DEPLOYMENT.md`
 
-
-
-# Prompt 14: Coding Standards
+# Prompt 13: Coding Standards
 
 Qué estandars deberíamos tener dado @docs/ARCHITECTURE.md  tanto en el backend como en el frontend incluido coding estandares
 
 ---
 
-# Prompt 15: US técnica de infraestructura local (base de datos)
+# Prompt 14: US técnica de infraestructura local (base de datos)
 
 Añade una historia de usuario técnica en @docs/USER-STORIES.md que cubra la configuración del entorno de base de datos local como tarea previa a cualquier US de negocio.
 
@@ -542,4 +538,16 @@ Dado el informe de pentesting de esta conversación documenta las historias de u
 /implement-user-story US-017
 
 
+# Prompt 22: Despligue aplicación en instancia EC2 de AWS
 
+Actúa como ingeniero DevOps. Redacta docs/DEPLOYMENT-STRATEGY.md: la estrategia de despliegue de RunMarket, implementando la Opción A descrita
+en docs/INFRASTRUCTURE.md — una única instancia EC2 t3.micro con postgres, backend, frontend y nginx como contenedores Docker orquestados por Docker Compose, e infraestructura provisionada con Terraform.
+
+Añade un pipeline de GitHub Actions que construya las imágenes de backend y
+frontend, las publique en un registro de contenedores y despliegue contra la EC2 bajo demanda. La autenticación con AWS debe hacerse con el método más seguro disponible (sin credenciales de larga duración guardadas en el repositorio).
+
+El disparador del pipeline debe ser manual, ya que el desarrollo del proyecto está cerrado y no se prevé una evolución continua que justifique desplegar en cada cambio de código.
+
+Incluye también una vía manual de despliegue desde el portátil, para el arranque inicial de la infraestructura y para depurar sin depender del pipeline.
+
+Documenta las decisiones de diseño con su justificación, no solo el "qué" sino el "por qué", y deja claro qué pasos son prerrequisito de cuáles.
