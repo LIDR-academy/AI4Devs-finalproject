@@ -204,10 +204,23 @@ corrida quedan documentados como precondicion, no como ejecucion material.
   montaje fisico real.
 - Este paso no habilita pick/drop ni `mode=hardware` en Backend/Dashboard.
 
+Resultado ejecución física controlada:
+
+- Fecha/hora ejecución: 2026-07-05T00:53:45Z
+- Puerto: COM4
+- Baudrate: 115200
+- Pose ejecutada: ready
+- Comando enviado: POSE 124 -83 212 0
+- Respuesta firmware: DONE recibido
+- serialOpened: true
+- hardwareMovement: true
+- suctionActivated: false
+- pickupExecuted: false
+- dropExecuted: false
+- Resultado: SUCCESS
+- Evidencia local generada en workspace/generated/edge-evidence/maxarm-safe-probe/
+- Observación: la respuesta incluye bytes de protocolo antes de DONE, pero el comando finalizó correctamente.
+
 ## Conclusion
 
-**APROBADO CON OBSERVACIONES.**
-
-El safe probe queda implementado, testeado con mocks y documentado. La observacion
-principal es que la validacion fisica real con firmware `DONE` debe ejecutarse de
-forma manual y supervisada.
+APROBADO: comunicación serial real con MaxArm validada mediante pose segura allowlisted, sin carga, sin succión y sin manipulación de cubos.
