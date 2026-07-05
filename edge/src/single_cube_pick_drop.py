@@ -5,11 +5,13 @@ import json
 import os
 import re
 import tempfile
+import time
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from collections.abc import Callable
 
 try:
     from .api_client import BackendClient
@@ -43,6 +45,12 @@ PLACEHOLDER_CALIBRATION_VERSION = "REPLACE_WITH_LOCAL_CALIBRATION"
 PLACEHOLDER_READY_POSE = {"x": 0.0, "y": 0.0, "z": 220.0}
 PLACEHOLDER_RESET_POSE = {"x": 0.0, "y": 0.0, "z": 190.0}
 PLACEHOLDER_IMAGE_ROI = {"x": 0, "y": 0, "w": 200, "h": 200}
+PLACEHOLDER_VISUAL_CORNERS = {
+    "topLeft": {"x": 0.0, "y": 0.0},
+    "topRight": {"x": 200.0, "y": 0.0},
+    "bottomRight": {"x": 200.0, "y": 200.0},
+    "bottomLeft": {"x": 0.0, "y": 200.0},
+}
 PLACEHOLDER_ROBOT_CORNERS = {
     "topLeft": {"x": -100.0, "y": -100.0, "z": 100.0},
     "topRight": {"x": 100.0, "y": -100.0, "z": 100.0},
@@ -197,6 +205,12 @@ def _plan_fingerprint(snapshot: DetectionSnapshot, plan: RobotActionPlan) -> dic
             "w": plan.selected_cube.w,
             "h": plan.selected_cube.h,
         },
+        "pickupPositionCm": plan.pickup_position_cm.as_dict() if plan.pickup_position_cm else None,
+        "visualCalibrationVersion": plan.metadata.get("visualCalibrationVersion"),
+        "visualCalibrationUsed": bool(plan.metadata.get("visualCalibrationUsed")),
+        "homographyUsed": bool(plan.metadata.get("homographyUsed")),
+        "pickupTarget": plan.pickup_target.as_dict(),
+        "pickupSafe": plan.pickup_safe.as_dict(),
         "dropZoneCode": plan.drop_zone.slot.code,
         "positionOrder": plan.drop_zone.slot.position_order,
         "commandsPreview": [step.command_preview for step in plan.steps],
@@ -223,6 +237,12 @@ def _assert_dry_run_match(expected: dict[str, Any], actual: dict[str, Any]) -> N
         "selectedCubeColor",
         "selectedCubeCenter",
         "selectedCubeBoundingBox",
+        "pickupPositionCm",
+        "visualCalibrationVersion",
+        "visualCalibrationUsed",
+        "homographyUsed",
+        "pickupTarget",
+        "pickupSafe",
         "dropZoneCode",
         "positionOrder",
         "commandsPreview",
@@ -308,6 +328,41 @@ def _is_placeholder_image_roi(raw_config: dict[str, Any]) -> bool:
         return False
 
 
+def _same_number_pair(left: dict[str, object] | list[object] | None, right: dict[str, object]) -> bool:
+    if left is None:
+        return False
+    try:
+        if isinstance(left, list):
+            return abs(float(left[0]) - float(right["x"])) < 0.001 and abs(float(left[1]) - float(right["y"])) < 0.001
+        return abs(float(left["x"]) - float(right["x"])) < 0.001 and abs(float(left["y"]) - float(right["y"])) < 0.001
+    except (IndexError, KeyError, TypeError, ValueError):
+        return False
+
+
+def _raw_visual_calibration(raw_config: dict[str, Any]) -> dict[str, Any] | None:
+    robot_planning = raw_config.get("robotPlanning")
+    if not isinstance(robot_planning, dict):
+        return None
+    calibration = robot_planning.get("calibration")
+    if not isinstance(calibration, dict):
+        return None
+    visual = calibration.get("visualCalibration", calibration.get("pickupCalibration"))
+    return visual if isinstance(visual, dict) else None
+
+
+def _is_placeholder_visual_corners(raw_config: dict[str, Any]) -> bool:
+    visual = _raw_visual_calibration(raw_config)
+    if visual is None:
+        return False
+    corners = visual.get("cornersPx")
+    if not isinstance(corners, dict):
+        return False
+    return all(
+        _same_number_pair(corners.get(corner_name), placeholder)
+        for corner_name, placeholder in PLACEHOLDER_VISUAL_CORNERS.items()
+    )
+
+
 def _hardware_config_errors(config: EdgeConfig) -> list[str]:
     errors: list[str] = []
     planning = config.robot_planning
@@ -317,10 +372,14 @@ def _hardware_config_errors(config: EdgeConfig) -> list[str]:
     else:
         if calibration.version.strip().upper() == PLACEHOLDER_CALIBRATION_VERSION:
             errors.append("MISSING_REAL_PICKUP_ROBOT_CALIBRATION")
+        if calibration.visual is None:
+            errors.append("MISSING_VISUAL_PICKUP_CALIBRATION")
+        elif _is_placeholder_visual_corners(config.raw):
+            errors.append("PLACEHOLDER_VISUAL_CORNERS")
         if _is_placeholder_robot_corners(config.raw):
             errors.append("PLACEHOLDER_ROBOT_CORNERS")
-        if _is_placeholder_image_roi(config.raw):
-            errors.append("PLACEHOLDER_IMAGE_ROI")
+        if calibration.visual is None and calibration.image_roi is not None:
+            errors.append("LEGACY_IMAGE_ROI_ONLY")
 
     if _same_number_triplet(_pose_as_plain_dict(planning.ready_pose), PLACEHOLDER_READY_POSE):
         errors.append("PLACEHOLDER_READY_POSE")
@@ -339,8 +398,6 @@ def _hardware_config_errors(config: EdgeConfig) -> list[str]:
         errors.append("INVALID_Z_LIMITS")
     if planning.workspace is None:
         errors.append("INVALID_WORKSPACE")
-    if calibration is not None and calibration.image_roi is None:
-        errors.append("INVALID_IMAGE_ROI")
     if config.drop_zones_path.name in {"drop_zones.example.json", "drop_zones.dry-run.example.json"}:
         errors.append("PLACEHOLDER_DROP_ZONES")
     return errors
@@ -374,6 +431,16 @@ def _backend_hardware_payload(
             "dryRun": False,
             "profile": "hardware",
             "selectedCube": cube_to_dict(plan.selected_cube),
+            "pickupPositionCm": plan.pickup_position_cm.as_dict() if plan.pickup_position_cm else None,
+            "visualCalibrationVersion": plan.metadata.get("visualCalibrationVersion"),
+            "visualCalibrationUsed": bool(plan.metadata.get("visualCalibrationUsed")),
+            "homographyUsed": bool(plan.metadata.get("homographyUsed")),
+            "pickupTarget": plan.pickup_target.as_dict(),
+            "pickupSafe": plan.pickup_safe.as_dict(),
+            "movementDelaySeconds": execution.get("movementDelaySeconds"),
+            "pickupHoldSeconds": execution.get("pickupHoldSeconds"),
+            "releaseHoldSeconds": execution.get("releaseHoldSeconds"),
+            "successMeaning": execution.get("successMeaning"),
             "dropZonePose": plan.drop_zone.slot.pose.as_dict(),
             "releaseConfirmed": execution.get("releaseConfirmed", False),
             "occupiedPersisted": execution.get("occupiedPersisted", False),
@@ -389,6 +456,20 @@ def _backend_hardware_payload(
     }
 
 
+def _post_step_delay_seconds(
+    step_name: str,
+    *,
+    delay_seconds: float,
+    pickup_hold_seconds: float,
+    release_hold_seconds: float,
+) -> float:
+    if step_name == "cube_target_pick":
+        return pickup_hold_seconds
+    if step_name == "drop_zone_release":
+        return release_hold_seconds
+    return delay_seconds
+
+
 def run_single_cube_pick_drop(
     config_path: Path,
     *,
@@ -397,6 +478,7 @@ def run_single_cube_pick_drop(
     dry_run_evidence_path: Path | None = None,
     gates: HardwareGates | None = None,
     serial_factory: SerialFactory | None = None,
+    sleeper: Callable[[float], None] = time.sleep,
     evidence_writer: PickDropEvidenceWriter | None = None,
     backend_client: BackendClient | None = None,
 ) -> dict[str, Any]:
@@ -427,6 +509,16 @@ def run_single_cube_pick_drop(
             "occupiedBeforeRelease": plan.drop_zone.slot.occupied,
         },
         "robotActionPlan": plan_to_dict(plan),
+        "pickupPositionCm": plan.pickup_position_cm.as_dict() if plan.pickup_position_cm else None,
+        "visualCalibrationVersion": plan.metadata.get("visualCalibrationVersion"),
+        "visualCalibrationUsed": bool(plan.metadata.get("visualCalibrationUsed")),
+        "homographyUsed": bool(plan.metadata.get("homographyUsed")),
+        "pickupTarget": plan.pickup_target.as_dict(),
+        "pickupSafe": plan.pickup_safe.as_dict(),
+        "movementDelaySeconds": config.movement.delay_seconds,
+        "pickupHoldSeconds": config.movement.pickup_hold_seconds,
+        "releaseHoldSeconds": config.movement.release_hold_seconds,
+        "successMeaning": "command_execution_only",
         "planFingerprint": fingerprint,
         "serialOpened": False,
         "hardwareMovement": False,
@@ -460,13 +552,27 @@ def run_single_cube_pick_drop(
         "releaseConfirmed": False,
         "occupiedPersisted": False,
         "firmwareResponses": [],
+        "movementDelaySeconds": config.movement.delay_seconds,
+        "pickupHoldSeconds": config.movement.pickup_hold_seconds,
+        "releaseHoldSeconds": config.movement.release_hold_seconds,
+        "successMeaning": "command_execution_only",
     }
     backend_action: dict[str, Any] | None = None
     try:
         serial.open()
         execution["serialOpened"] = serial.is_open
         for step in plan.steps:
+            step_started_at = _utc_now()
+            step_started_monotonic = time.monotonic()
             result = serial.send_pose(step.pose, suction=step.suction, allow_suction=gates.confirm_suction)
+            response_received_at = _utc_now()
+            elapsed_ms = round((time.monotonic() - step_started_monotonic) * 1000, 3)
+            post_step_delay_seconds = _post_step_delay_seconds(
+                step.name,
+                delay_seconds=config.movement.delay_seconds,
+                pickup_hold_seconds=config.movement.pickup_hold_seconds,
+                release_hold_seconds=config.movement.release_hold_seconds,
+            )
             execution["hardwareMovement"] = True
             execution["firmwareResponses"].append(
                 {
@@ -474,6 +580,10 @@ def run_single_cube_pick_drop(
                     "commandSent": result.command_sent,
                     "firmwareResponse": result.firmware_response,
                     "success": result.success,
+                    "postStepDelaySeconds": post_step_delay_seconds,
+                    "stepStartedAt": step_started_at,
+                    "responseReceivedAt": response_received_at,
+                    "elapsedMs": elapsed_ms,
                 }
             )
             if step.suction == 1:
@@ -485,6 +595,8 @@ def run_single_cube_pick_drop(
                 execution["dropExecuted"] = True
                 adapter.confirm(snapshot.run_id)
                 execution["occupiedPersisted"] = True
+            if execution["hardwareMovement"] and post_step_delay_seconds > 0:
+                sleeper(post_step_delay_seconds)
 
         if backend_client is not None and snapshot.truck_code:
             session = backend_client.create_session(snapshot.truck_code).get("session", {})

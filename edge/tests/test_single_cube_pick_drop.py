@@ -28,6 +28,17 @@ def hardware_ready_planning_payload() -> dict[str, object]:
             "calibration": {
                 "version": "pickup-robot-local-2026-07-04",
                 "imageRoi": {"x": 10, "y": 10, "w": 180, "h": 180},
+                "visualCalibration": {
+                    "pickupWidthCm": 13.5,
+                    "pickupHeightCm": 7,
+                    "cubeSizeCm": 2.5,
+                    "cornersPx": {
+                        "topLeft": {"x": 10, "y": 10},
+                        "topRight": {"x": 190, "y": 12},
+                        "bottomRight": {"x": 188, "y": 190},
+                        "bottomLeft": {"x": 12, "y": 188},
+                    },
+                },
                 "robotCorners": {
                     "topLeft": {"x": 86, "y": -157, "z": 148},
                     "topRight": {"x": -34, "y": -169, "z": 148},
@@ -132,6 +143,39 @@ class SingleCubePickDropTests(unittest.TestCase):
                 "profile": "vision-dry-run",
                 "truckCode": "TRUCK-001",
                 "dropZones": {"path": "drop-zones.json"},
+                "safety": {
+                    "dryRun": True,
+                    "enableHardwareMotion": False,
+                    "humanConfirmationRequired": True,
+                },
+                "robotPlanning": hardware_ready_planning_payload(),
+                "vision": {
+                    "source": "simulation",
+                    "evidence": {"directory": "evidence"},
+                    "cubes": [],
+                },
+            },
+        )
+
+    def write_hardware_ready_config_with_movement(
+        self,
+        *,
+        delay_seconds: float = 0.8,
+        pickup_hold_seconds: float | None = None,
+        release_hold_seconds: float | None = None,
+    ) -> None:
+        payload: dict[str, object] = {"delay_seconds": delay_seconds}
+        if pickup_hold_seconds is not None:
+            payload["pickup_hold_seconds"] = pickup_hold_seconds
+        if release_hold_seconds is not None:
+            payload["release_hold_seconds"] = release_hold_seconds
+        write_json(
+            self.config_path,
+            {
+                "profile": "vision-dry-run",
+                "truckCode": "TRUCK-001",
+                "dropZones": {"path": "drop-zones.json"},
+                "movement": payload,
                 "safety": {
                     "dryRun": True,
                     "enableHardwareMotion": False,
@@ -292,6 +336,12 @@ class SingleCubePickDropTests(unittest.TestCase):
     def test_hardware_blocks_placeholder_robot_corners_before_serial(self) -> None:
         payload = enabled_planning_payload()
         payload["calibration"]["version"] = "pickup-robot-local-2026-07-04"
+        payload["calibration"]["visualCalibration"]["cornersPx"] = {
+            "topLeft": {"x": 10, "y": 10},
+            "topRight": {"x": 190, "y": 12},
+            "bottomRight": {"x": 188, "y": 190},
+            "bottomLeft": {"x": 12, "y": 188},
+        }
         write_json(
             self.config_path,
             {
@@ -316,6 +366,138 @@ class SingleCubePickDropTests(unittest.TestCase):
 
         self.assertEqual("PLACEHOLDER_ROBOT_CORNERS", context.exception.code)
         self.assertEqual(0, FakeSerial.opened_count)
+
+    def test_hardware_blocks_image_roi_only_before_serial(self) -> None:
+        payload = hardware_ready_planning_payload()
+        payload["calibration"].pop("visualCalibration")
+        write_json(
+            self.config_path,
+            {
+                "profile": "vision-dry-run",
+                "truckCode": "TRUCK-001",
+                "dropZones": {"path": "drop-zones.json"},
+                "robotPlanning": payload,
+                "vision": {"source": "simulation", "evidence": {"directory": "evidence"}},
+            },
+        )
+        dry_run = self.plan_only()
+
+        with self.assertRaises(SingleCubePickDropError) as context:
+            run_single_cube_pick_drop(
+                self.config_path,
+                snapshot=self.snapshot,
+                dry_run_evidence_path=Path(dry_run["evidence"]["json"]),
+                gates=self.gates(),
+                serial_factory=lambda *_: FakeSerial(),
+                evidence_writer=self.writer,
+            )
+
+        self.assertEqual("MISSING_VISUAL_PICKUP_CALIBRATION", context.exception.code)
+        self.assertEqual(0, FakeSerial.opened_count)
+
+    def test_hardware_blocks_incomplete_visual_calibration_before_serial(self) -> None:
+        payload = hardware_ready_planning_payload()
+        payload["calibration"]["visualCalibration"]["cornersPx"].pop("bottomLeft")
+        write_json(
+            self.config_path,
+            {
+                "profile": "vision-dry-run",
+                "truckCode": "TRUCK-001",
+                "dropZones": {"path": "drop-zones.json"},
+                "robotPlanning": payload,
+                "vision": {"source": "simulation", "evidence": {"directory": "evidence"}},
+            },
+        )
+
+        with self.assertRaises(Exception):
+            run_single_cube_pick_drop(
+                self.config_path,
+                snapshot=self.snapshot,
+                plan_only=True,
+                evidence_writer=self.writer,
+            )
+
+        self.assertEqual(0, FakeSerial.opened_count)
+
+    def test_plan_only_with_visual_calibration_reports_pickup_position_and_homography(self) -> None:
+        self.write_hardware_ready_config()
+        result = self.plan_only()
+
+        self.assertTrue(result["visualCalibrationUsed"])
+        self.assertTrue(result["homographyUsed"])
+        self.assertIsNotNone(result["pickupPositionCm"])
+        self.assertIn("pickupTarget", result)
+
+    def test_plan_only_with_movement_config_never_sleeps(self) -> None:
+        self.write_hardware_ready_config_with_movement(delay_seconds=0.8)
+
+        result = run_single_cube_pick_drop(
+            self.config_path,
+            snapshot=self.snapshot,
+            plan_only=True,
+            sleeper=lambda _: (_ for _ in ()).throw(AssertionError("plan-only must not sleep")),
+            evidence_writer=self.writer,
+        )
+
+        self.assertEqual("DRY_RUN_PLANNED", result["status"])
+        self.assertEqual(0.8, result["movementDelaySeconds"])
+        self.assertEqual(0.8, result["pickupHoldSeconds"])
+        self.assertEqual(0.8, result["releaseHoldSeconds"])
+
+    def test_hardware_execution_applies_configured_step_delays(self) -> None:
+        self.write_hardware_ready_config_with_movement(
+            delay_seconds=0.8,
+            pickup_hold_seconds=1.2,
+            release_hold_seconds=0.5,
+        )
+        dry_run = self.plan_only()
+        sleep_calls: list[float] = []
+
+        result = run_single_cube_pick_drop(
+            self.config_path,
+            snapshot=self.snapshot,
+            dry_run_evidence_path=Path(dry_run["evidence"]["json"]),
+            gates=self.gates(),
+            serial_factory=lambda *_: FakeSerial(),
+            sleeper=sleep_calls.append,
+            evidence_writer=self.writer,
+        )
+
+        self.assertEqual("SUCCESS", result["status"])
+        self.assertEqual(12, len(sleep_calls))
+        self.assertEqual(1.2, sleep_calls[3])
+        self.assertEqual(0.5, sleep_calls[8])
+        self.assertTrue(all(value == 0.8 for index, value in enumerate(sleep_calls) if index not in {3, 8}))
+        responses = result["firmwareResponses"]
+        self.assertEqual(1.2, responses[3]["postStepDelaySeconds"])
+        self.assertEqual("cube_target_pick", responses[3]["step"])
+        self.assertEqual(0.5, responses[8]["postStepDelaySeconds"])
+        self.assertEqual("drop_zone_release", responses[8]["step"])
+        self.assertIn("stepStartedAt", responses[0])
+        self.assertIn("responseReceivedAt", responses[0])
+        self.assertIsInstance(responses[0]["elapsedMs"], float)
+        self.assertEqual("command_execution_only", result["successMeaning"])
+
+    def test_missing_movement_config_defaults_to_zero_delay(self) -> None:
+        self.write_hardware_ready_config()
+        dry_run = self.plan_only()
+        sleep_calls: list[float] = []
+
+        result = run_single_cube_pick_drop(
+            self.config_path,
+            snapshot=self.snapshot,
+            dry_run_evidence_path=Path(dry_run["evidence"]["json"]),
+            gates=self.gates(),
+            serial_factory=lambda *_: FakeSerial(),
+            sleeper=sleep_calls.append,
+            evidence_writer=self.writer,
+        )
+
+        self.assertEqual("SUCCESS", result["status"])
+        self.assertEqual(0.0, result["movementDelaySeconds"])
+        self.assertEqual(0.0, result["pickupHoldSeconds"])
+        self.assertEqual(0.0, result["releaseHoldSeconds"])
+        self.assertEqual([], sleep_calls)
 
     def test_executes_one_cube_sequence_with_mock_serial_and_marks_occupied_after_release(self) -> None:
         self.write_hardware_ready_config()

@@ -196,6 +196,95 @@ class EdgeConfigTests(unittest.TestCase):
         self.assertEqual(-79, config.robot_planning.reset_pose.y)
         self.assertEqual(176, config.robot_planning.reset_pose.z)
 
+    def test_parses_visual_pickup_calibration_corners_px(self) -> None:
+        write_json(
+            self.path,
+            {
+                "profile": "vision-dry-run",
+                "robotPlanning": {
+                    "enabled": True,
+                    "safeZ": 150,
+                    "pickZ": 138,
+                    "dropSafeZ": 150,
+                    "liftZDelta": 50,
+                    "readyPose": {"x": 124, "y": -83, "z": 212},
+                    "resetPose": {"x": 0, "y": -79, "z": 176},
+                    "calibration": {
+                        "version": "pickup-visual-local-2026-07-05",
+                        "visualCalibration": {
+                            "pickupWidthCm": 13.5,
+                            "pickupHeightCm": 7,
+                            "cubeSizeCm": 2.5,
+                            "cornersPx": {
+                                "topLeft": [8, 135],
+                                "topRight": [353, 138],
+                                "bottomRight": [353, 339],
+                                "bottomLeft": [13, 345],
+                            },
+                        },
+                        "robotCorners": {
+                            "topLeft": {"x": 86, "y": -157, "z": 148},
+                            "topRight": {"x": -34, "y": -169, "z": 148},
+                            "bottomRight": {"x": -34, "y": -239, "z": 148},
+                            "bottomLeft": {"x": 94, "y": -233, "z": 148},
+                        },
+                    },
+                    "workspace": {
+                        "minX": -300,
+                        "maxX": 300,
+                        "minY": -300,
+                        "maxY": 300,
+                        "minZ": 0,
+                        "maxZ": 300,
+                    },
+                },
+            },
+        )
+
+        config = load_edge_config(self.path)
+
+        visual = config.robot_planning.calibration.visual
+        self.assertEqual(13.5, visual.pickup_width_cm)
+        self.assertEqual(7, visual.pickup_height_cm)
+        self.assertEqual(2.5, visual.cube_size_cm)
+        self.assertEqual(8, visual.top_left.x)
+        self.assertEqual(345, visual.bottom_left.y)
+
+    def test_parses_movement_timing_with_safe_defaults(self) -> None:
+        write_json(self.path, {"truckCode": "TRUCK-001"})
+
+        config = load_edge_config(self.path)
+
+        self.assertEqual(0.0, config.movement.delay_seconds)
+        self.assertEqual(0.0, config.movement.pickup_hold_seconds)
+        self.assertEqual(0.0, config.movement.release_hold_seconds)
+
+        write_json(
+            self.path,
+            {
+                "movement": {
+                    "delay_seconds": 0.8,
+                    "pickup_hold_seconds": 1.2,
+                    "release_hold_seconds": 0.5,
+                },
+            },
+        )
+
+        config = load_edge_config(self.path)
+
+        self.assertEqual(0.8, config.movement.delay_seconds)
+        self.assertEqual(1.2, config.movement.pickup_hold_seconds)
+        self.assertEqual(0.5, config.movement.release_hold_seconds)
+
+    def test_pickup_and_release_hold_default_to_movement_delay(self) -> None:
+        write_json(self.path, {"movement": {"delay_seconds": 0.8}})
+
+        config = load_edge_config(self.path)
+
+        self.assertEqual(0.8, config.movement.delay_seconds)
+        self.assertEqual(0.8, config.movement.pickup_hold_seconds)
+        self.assertEqual(0.8, config.movement.release_hold_seconds)
+
 
 if __name__ == "__main__":
     unittest.main()

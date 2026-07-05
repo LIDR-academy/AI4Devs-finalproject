@@ -77,6 +77,15 @@ class RegionOfInterest:
 
 
 @dataclass(frozen=True)
+class ImagePoint:
+    x: float
+    y: float
+
+    def as_dict(self) -> dict[str, float]:
+        return {"x": self.x, "y": self.y}
+
+
+@dataclass(frozen=True)
 class HsvRange:
     lower: tuple[int, int, int]
     upper: tuple[int, int, int]
@@ -136,6 +145,7 @@ class RobotActionPlan:
     safe_z: float
     pickup_target: RobotPose
     pickup_safe: RobotPose
+    pickup_position_cm: ImagePoint | None
     drop_target: RobotPose
     drop_safe: RobotPose
     steps: tuple[RobotActionStep, ...]

@@ -34,6 +34,17 @@ def enabled_planning_payload() -> dict[str, object]:
         "calibration": {
             "version": "test-v1",
             "imageRoi": {"x": 0, "y": 0, "w": 200, "h": 200},
+            "visualCalibration": {
+                "pickupWidthCm": 13.5,
+                "pickupHeightCm": 7,
+                "cubeSizeCm": 2.5,
+                "cornersPx": {
+                    "topLeft": {"x": 0, "y": 0},
+                    "topRight": {"x": 200, "y": 0},
+                    "bottomRight": {"x": 200, "y": 200},
+                    "bottomLeft": {"x": 0, "y": 200},
+                },
+            },
             "robotCorners": {
                 "topLeft": {"x": -100, "y": -100, "z": 100},
                 "topRight": {"x": 100, "y": -100, "z": 100},

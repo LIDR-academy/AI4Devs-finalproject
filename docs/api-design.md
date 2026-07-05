@@ -590,6 +590,12 @@ gates, puede registrar una accion `mode=hardware` con metadata segura:
     "selectedCubeColor": "red",
     "selectedCubeCenter": { "x": 90.0, "y": 90.0 },
     "selectedCubeBoundingBox": { "x": 80, "y": 80, "w": 20, "h": 20 },
+    "pickupPositionCm": { "x": 5.4, "y": 2.1 },
+    "visualCalibrationVersion": "pickup-visual-local-2026-07-05",
+    "visualCalibrationUsed": true,
+    "homographyUsed": true,
+    "pickupTarget": { "x": 39.44, "y": -183.88, "z": 138 },
+    "pickupSafe": { "x": 39.44, "y": -183.88, "z": 150 },
     "dropZoneCode": "DROP_RED_01",
     "positionOrder": 1,
     "releaseConfirmed": true,
@@ -618,6 +624,9 @@ Reglas:
 - `mode=hardware` solo debe enviarse desde Edge despues de movimiento real.
 - `releaseConfirmed=true` y `occupiedPersisted=true` significan que Edge confirmo
   el release y persistio la drop zone despues de ese hito.
+- `pickupPositionCm`, `visualCalibrationUsed=true` y `homographyUsed=true`
+  documentan que la pose de pickup salio de `cornersPx` y homografia, no solo de
+  un `imageRoi` rectangular.
 - Si falla antes del release, Edge debe cancelar la reserva y registrar error sin
   marcar ocupacion.
 - Si falla despues del release, Edge debe tratar la zona como fisicamente ocupada

@@ -8,6 +8,7 @@ from unittest.mock import patch
 from src.config import (
     PickupRobotCalibration,
     RobotPlanningConfig,
+    VisualPickupCalibration,
     WorkspaceLimits,
 )
 from src.models import (
@@ -16,6 +17,7 @@ from src.models import (
     DropZoneSelection,
     DropZoneSlot,
     EdgeRunProfile,
+    ImagePoint,
     RegionOfInterest,
     RobotPose,
 )
@@ -34,6 +36,7 @@ def planning_config() -> RobotPlanningConfig:
         calibration=PickupRobotCalibration(
             version="test-v1",
             image_roi=RegionOfInterest(0, 0, 100, 100),
+            visual=None,
             top_left=RobotPose(-100, -100, 100),
             top_right=RobotPose(100, -100, 100),
             bottom_right=RobotPose(100, 100, 100),
@@ -78,6 +81,90 @@ class RobotActionPlannerTests(unittest.TestCase):
         self.assertEqual("drop_zone_release", plan.steps[8].name)
         self.assertTrue(all(step.command_preview.startswith("POSE ") for step in plan.steps))
         self.assertFalse(plan.metadata["serialOpened"])
+        self.assertFalse(plan.metadata["visualCalibrationUsed"])
+        self.assertFalse(plan.metadata["homographyUsed"])
+
+    def test_visual_calibration_maps_frame_pixels_to_pickup_cm_and_robot_pose(self) -> None:
+        snapshot, cube, selection = planner_inputs("red")
+        config = replace(
+            planning_config(),
+            calibration=PickupRobotCalibration(
+                version="visual-v1",
+                image_roi=RegionOfInterest(0, 0, 100, 100),
+                visual=VisualPickupCalibration(
+                    pickup_width_cm=13.5,
+                    pickup_height_cm=7.0,
+                    cube_size_cm=2.5,
+                    top_left=ImagePoint(10, 20),
+                    top_right=ImagePoint(110, 20),
+                    bottom_right=ImagePoint(110, 120),
+                    bottom_left=ImagePoint(10, 120),
+                ),
+                top_left=RobotPose(86, -157, 148),
+                top_right=RobotPose(-34, -169, 148),
+                bottom_right=RobotPose(-34, -239, 148),
+                bottom_left=RobotPose(94, -233, 148),
+            ),
+        )
+
+        plan = RobotActionPlanner().plan(
+            snapshot,
+            cube,
+            selection,
+            config,
+            EdgeRunProfile.VISION_DRY_RUN,
+        )
+
+        self.assertEqual({"x": 5.4, "y": 2.1}, plan.pickup_position_cm.as_dict())
+        self.assertAlmostEqual(39.44, plan.pickup_target.x, places=2)
+        self.assertAlmostEqual(-183.88, plan.pickup_target.y, places=2)
+        self.assertTrue(plan.metadata["visualCalibrationUsed"])
+        self.assertTrue(plan.metadata["homographyUsed"])
+
+    def test_visual_calibration_uses_corner_order_top_left_top_right_bottom_right_bottom_left(self) -> None:
+        cube = CubeDetection("red", 30, 15, 20, 20, 0.9, {"sizeValid": True})
+        snapshot = DetectionSnapshot("run-1", "simulation", (cube,))
+        slot = DropZoneSlot(
+            code="DROP_RED_01",
+            color="red",
+            position_order=1,
+            pose=RobotPose(120, -80, 80),
+            active=True,
+            occupied=False,
+        )
+        selection = DropZoneSelection("run-1", slot)
+        config = replace(
+            planning_config(),
+            calibration=PickupRobotCalibration(
+                version="visual-skewed-v1",
+                image_roi=None,
+                visual=VisualPickupCalibration(
+                    pickup_width_cm=10,
+                    pickup_height_cm=5,
+                    cube_size_cm=2.5,
+                    top_left=ImagePoint(0, 0),
+                    top_right=ImagePoint(100, 0),
+                    bottom_right=ImagePoint(80, 50),
+                    bottom_left=ImagePoint(0, 50),
+                ),
+                top_left=RobotPose(0, 0, 100),
+                top_right=RobotPose(100, 0, 100),
+                bottom_right=RobotPose(100, 50, 100),
+                bottom_left=RobotPose(0, 50, 100),
+            ),
+        )
+
+        plan = RobotActionPlanner().plan(
+            snapshot,
+            cube,
+            selection,
+            config,
+            EdgeRunProfile.VISION_DRY_RUN,
+        )
+
+        self.assertEqual({"x": 4.444, "y": 2.222}, plan.pickup_position_cm.as_dict())
+        self.assertAlmostEqual(44.44, plan.pickup_target.x, places=2)
+        self.assertAlmostEqual(22.22, plan.pickup_target.y, places=2)
 
     def test_sequence_preserves_spike_order_with_documented_safe_extra_steps(self) -> None:
         snapshot, cube, selection = planner_inputs("red")

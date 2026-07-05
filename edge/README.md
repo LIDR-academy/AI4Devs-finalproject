@@ -686,10 +686,30 @@ Cuando `robotPlanning.enabled=true`, son obligatorios:
 
 - `safeZ`, `pickZ`, `dropSafeZ` y `liftZDelta`;
 - `readyPose` y `resetPose`;
-- calibración versionada con `imageRoi` y cuatro esquinas robot;
+- calibración versionada con cuatro esquinas robot;
+- para hardware, `visualCalibration` con dimensiones fisicas y `cornersPx`;
 - límites completos de `workspace`.
 
-El centro del bounding box se interpola bilinealmente dentro de `imageRoi`. El planner rechaza cubos fuera de esa región, calibraciones incompatibles, poses no finitas/fuera del workspace, perfiles hardware y cualquier ejecución con `dryRun=false`.
+`imageRoi` es un fallback legacy rectangular para plan-only o pruebas antiguas.
+No representa la perspectiva real del pickup cuando la camara ve el contenedor
+inclinado o desplazado. Para hardware, `single_cube_pick_drop.py` exige
+`visualCalibration.cornersPx`: cuatro puntos reales del pickup en pixeles del
+frame, en orden `topLeft`, `topRight`, `bottomRight`, `bottomLeft`.
+
+Con `cornersPx`, el planner calcula una homografia desde pixeles de frame hacia
+centimetros fisicos del pickup:
+
+```text
+centro del cubo en frame-pixels
+-> homografia con cornersPx
+-> pickupPositionCm { x, y }
+-> interpolacion bilineal contra robotCorners
+-> pickupTarget / pickupSafe
+```
+
+El planner rechaza cubos fuera de esa region, calibraciones incompatibles,
+poses no finitas/fuera del workspace, perfiles hardware y cualquier ejecucion
+con `dryRun=false`.
 
 ### Estados de drop zone
 
@@ -815,6 +835,37 @@ local no versionada con calibracion, ROI, snapshot/camara y drop zones reales.
 No usar `edge/config/drop_zones.example.json` para hardware: sus slots son
 placeholders.
 
+### Pausas entre movimientos
+
+El spike `dynamic_pickup_maxarm_pick` usaba `movement.delay_seconds=0.8` para
+dar tiempo fisico entre pasos aunque el firmware ya hubiera respondido `DONE`.
+`DONE` confirma la ejecucion del comando, pero no reemplaza una pausa mecanica
+para que el brazo estabilice, la ventosa selle o el cubo se libere.
+
+`single_cube_pick_drop.py` soporta:
+
+```json
+{
+  "movement": {
+    "delay_seconds": 0.8,
+    "pickup_hold_seconds": 0.8,
+    "release_hold_seconds": 0.8
+  }
+}
+```
+
+- `delay_seconds`: pausa general despues de cada `send_pose` exitoso.
+- `pickup_hold_seconds`: pausa especial despues de `cube_target_pick`, antes de
+  `lift_after_pick`; si se omite, usa `delay_seconds`.
+- `release_hold_seconds`: pausa especial despues de `drop_zone_release`, antes
+  de `retract_after_release`; si se omite, usa `delay_seconds`.
+
+Si `movement` no existe, todos los valores quedan en `0.0` para compatibilidad.
+`--plan-only` no duerme ni abre serial. En hardware, la evidencia incluye
+`movementDelaySeconds`, `pickupHoldSeconds`, `releaseHoldSeconds` y, por cada
+respuesta firmware, `postStepDelaySeconds`, `stepStartedAt`,
+`responseReceivedAt` y `elapsedMs`.
+
 ### Alineacion con el spike fisico validado
 
 El spike local `dynamic_pickup_maxarm_pick` usa esta secuencia conceptual:
@@ -856,10 +907,14 @@ Para una prueba fisica no se debe versionar la configuracion local. Crear
   `DROP_BLUE_02`.
 - `pickup_robot_calibration.json` se mapea a
   `robotPlanning.calibration.robotCorners`, `safeZ` y `pickZ`.
-- `pickup_calibration.json` contiene un cuadrilatero `corners_px`; el Edge actual
-  usa `imageRoi` rectangular. Si se usa el bounding box de esos puntos, debe
-  quedar documentado como aproximacion y no como equivalencia completa de la
-  homografia del spike.
+- `pickup_calibration.json` se mapea a
+  `robotPlanning.calibration.visualCalibration`: `pickup_width_cm` ->
+  `pickupWidthCm`, `pickup_height_cm` -> `pickupHeightCm`, `cube_size_cm` ->
+  `cubeSizeCm` y `corners_px.top_left/top_right/bottom_right/bottom_left` ->
+  `cornersPx.topLeft/topRight/bottomRight/bottomLeft`.
+- `arm_named_poses.json` aporta las poses nominales del brazo y
+  `drop_zones_config.json` aporta los slots; ambos deben copiarse o referenciarse
+  desde archivos locales no versionados.
 
 El campo `calibration.version` debe ser una version local trazable. Nunca usar
 `REPLACE_WITH_LOCAL_CALIBRATION` para hardware.
@@ -871,10 +926,13 @@ revisar comandos, pero la evidencia incluye `safetyWarnings` y no abre serial.
 La ejecucion con hardware queda bloqueada antes de `serial.open()` si detecta:
 
 - `calibration.version=REPLACE_WITH_LOCAL_CALIBRATION`;
+- falta `visualCalibration`, `pickupWidthCm`, `pickupHeightCm`, `cubeSizeCm` o
+  algun punto de `cornersPx`;
+- `cornersPx` coincide con placeholders del ejemplo;
 - `robotCorners` iguales al ejemplo placeholder;
-- `imageRoi` placeholder;
+- se intenta usar solo `imageRoi` legacy;
 - `readyPose` o `resetPose` placeholder;
-- Z, workspace o ROI invalidos;
+- Z o workspace invalidos;
 - `dropZones.path` apuntando a archivos de ejemplo.
 
 Validacion segura de bloqueo con placeholder:
@@ -1006,10 +1064,24 @@ no coincide con el dry-run previo, aborta con `DRY_RUN_MISMATCH`.
 
 La evidencia JSON incluye `runId`, `snapshotSignature`, `truckCode`,
 `selectedCube`, `selectedCubeColor`, `selectedCubeCenter`,
-`selectedCubeBoundingBox`, `dropZoneCode`, `positionOrder`,
-`commandsPreview`, `firmwareResponses`, `serialOpened`, `hardwareMovement`,
-`suctionActivated`, `pickupExecuted`, `dropExecuted`, `releaseConfirmed`,
-`occupiedPersisted` y `errorCode` si aplica.
+`selectedCubeBoundingBox`, `pickupPositionCm`, `visualCalibrationVersion`,
+`visualCalibrationUsed`, `homographyUsed`, `pickupTarget`, `pickupSafe`,
+`dropZoneCode`, `positionOrder`, `commandsPreview`, `firmwareResponses`,
+`serialOpened`, `hardwareMovement`, `suctionActivated`, `pickupExecuted`,
+`dropExecuted`, `releaseConfirmed`, `occupiedPersisted` y `errorCode` si aplica.
+
+Para validar el calculo antes de mover hardware:
+
+1. Revisar que `selectedCube.center` corresponda al centro visual del cubo en el
+   frame original.
+2. Confirmar que `visualCalibrationUsed=true` y `homographyUsed=true`.
+3. Revisar `pickupPositionCm` contra el pickup fisico: `x=0` queda hacia
+   `topLeft/bottomLeft`; `y=0` queda hacia `topLeft/topRight`.
+4. Revisar que `pickupTarget` y `pickupSafe` coincidan con poses esperadas dentro
+   del workspace y con la Z segura.
+5. Si el brazo baja pero no centra el cubo, no repetir pick/drop; recalibrar
+   `cornersPx`, validar `pickupPositionCm` en plan-only y recien despues generar
+   nueva evidencia.
 
 `occupied=true` se persiste solo despues del paso `drop_zone_release` con
 respuesta valida del firmware. Si falla antes del release, se cancela la reserva

@@ -427,6 +427,10 @@ def plan_to_dict(plan: RobotActionPlan) -> dict[str, Any]:
             "dropTarget": pose_dict(plan.drop_target),
             "dropSafe": pose_dict(plan.drop_safe),
         },
+        "pickupPositionCm": plan.pickup_position_cm.as_dict() if plan.pickup_position_cm else None,
+        "visualCalibrationVersion": plan.metadata.get("visualCalibrationVersion"),
+        "visualCalibrationUsed": bool(plan.metadata.get("visualCalibrationUsed")),
+        "homographyUsed": bool(plan.metadata.get("homographyUsed")),
         "steps": [
             {
                 "name": step.name,

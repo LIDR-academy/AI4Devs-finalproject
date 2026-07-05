@@ -12,7 +12,7 @@ try:
         RobotPose,
         SUPPORTED_COLORS,
     )
-    from .safety import RobotSafetyError, map_cube_to_pick_pose, validate_pose
+    from .safety import RobotSafetyError, map_cube_to_pick_pose_with_metadata, validate_pose
 except ImportError:
     from config import RobotPlanningConfig
     from models import (
@@ -25,7 +25,7 @@ except ImportError:
         RobotPose,
         SUPPORTED_COLORS,
     )
-    from robot.safety import RobotSafetyError, map_cube_to_pick_pose, validate_pose
+    from robot.safety import RobotSafetyError, map_cube_to_pick_pose_with_metadata, validate_pose
 
 
 class RobotPlanningError(ValueError):
@@ -92,7 +92,7 @@ class RobotActionPlanner:
             raise RobotPlanningError("INVALID_SAFE_Z", "dropSafeZ must be greater than drop target Z")
 
         try:
-            pickup_target = map_cube_to_pick_pose(
+            pickup_target, pickup_position_cm = map_cube_to_pick_pose_with_metadata(
                 selected_cube,
                 config.calibration,
                 config.pick_z,
@@ -143,12 +143,17 @@ class RobotActionPlanner:
             safe_z=config.safe_z,
             pickup_target=pickup_target,
             pickup_safe=pickup_safe,
+            pickup_position_cm=pickup_position_cm,
             drop_target=drop_target,
             drop_safe=drop_safe,
             steps=steps,
             metadata={
                 "calibrationVersion": config.calibration.version,
                 "coordinateSpace": "robot-candidate",
+                "pickupPositionCm": pickup_position_cm.as_dict() if pickup_position_cm else None,
+                "visualCalibrationVersion": config.calibration.version,
+                "visualCalibrationUsed": config.calibration.visual is not None,
+                "homographyUsed": config.calibration.visual is not None,
                 "serialOpened": False,
                 "hardwareMovement": False,
             },

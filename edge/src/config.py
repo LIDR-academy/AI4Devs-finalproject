@@ -7,9 +7,9 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from .models import EdgeRunProfile, HsvRange, RegionOfInterest, RobotPose, SUPPORTED_COLORS
+    from .models import EdgeRunProfile, HsvRange, ImagePoint, RegionOfInterest, RobotPose, SUPPORTED_COLORS
 except ImportError:  # Direct execution via python src\edge_runner.py
-    from models import EdgeRunProfile, HsvRange, RegionOfInterest, RobotPose, SUPPORTED_COLORS
+    from models import EdgeRunProfile, HsvRange, ImagePoint, RegionOfInterest, RobotPose, SUPPORTED_COLORS
 
 
 class EdgeConfigError(ValueError):
@@ -21,6 +21,13 @@ class EdgeSafetyConfig:
     dry_run: bool = True
     enable_hardware_motion: bool = False
     human_confirmation_required: bool = True
+
+
+@dataclass(frozen=True)
+class MovementTimingConfig:
+    delay_seconds: float = 0.0
+    pickup_hold_seconds: float = 0.0
+    release_hold_seconds: float = 0.0
 
 
 DEFAULT_HSV_RANGES: dict[str, tuple[HsvRange, ...]] = {
@@ -70,9 +77,21 @@ class WorkspaceLimits:
 
 
 @dataclass(frozen=True)
+class VisualPickupCalibration:
+    pickup_width_cm: float
+    pickup_height_cm: float
+    cube_size_cm: float
+    top_left: ImagePoint
+    top_right: ImagePoint
+    bottom_right: ImagePoint
+    bottom_left: ImagePoint
+
+
+@dataclass(frozen=True)
 class PickupRobotCalibration:
     version: str
-    image_roi: RegionOfInterest
+    image_roi: RegionOfInterest | None
+    visual: VisualPickupCalibration | None
     top_left: RobotPose
     top_right: RobotPose
     bottom_right: RobotPose
@@ -98,6 +117,7 @@ class EdgeConfig:
     truck_code: str
     drop_zones_path: Path
     safety: EdgeSafetyConfig
+    movement: MovementTimingConfig
     vision: VisionConfig
     robot_planning: RobotPlanningConfig
     raw: dict[str, Any]
@@ -175,6 +195,23 @@ def _parse_positive_number(value: object, field_name: str, default: float) -> fl
     return float(value)
 
 
+def _parse_non_negative_number(value: object, field_name: str, default: float) -> float:
+    if value is None:
+        return default
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
+        raise EdgeConfigError(f"{field_name} must be a non-negative number")
+    result = float(value)
+    if not math.isfinite(result):
+        raise EdgeConfigError(f"{field_name} must be finite")
+    return result
+
+
+def _parse_required_positive_number(value: object, field_name: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or value <= 0:
+        raise EdgeConfigError(f"{field_name} must be a positive number")
+    return float(value)
+
+
 def _parse_ratio(value: object, field_name: str, default: float) -> float:
     if value is None:
         return default
@@ -207,6 +244,68 @@ def _parse_pose(value: object, field_name: str) -> RobotPose:
         x=_parse_finite_number(value.get("x"), f"{field_name}.x"),
         y=_parse_finite_number(value.get("y"), f"{field_name}.y"),
         z=_parse_finite_number(value.get("z"), f"{field_name}.z"),
+    )
+
+
+def _parse_image_point(value: object, field_name: str) -> ImagePoint:
+    if isinstance(value, list):
+        if len(value) != 2:
+            raise EdgeConfigError(f"{field_name} must contain exactly two numbers")
+        point = ImagePoint(
+            x=_parse_finite_number(value[0], f"{field_name}[0]"),
+            y=_parse_finite_number(value[1], f"{field_name}[1]"),
+        )
+    elif isinstance(value, dict):
+        point = ImagePoint(
+            x=_parse_finite_number(value.get("x"), f"{field_name}.x"),
+            y=_parse_finite_number(value.get("y"), f"{field_name}.y"),
+        )
+    else:
+        raise EdgeConfigError(f"{field_name} must be an object or two-item array")
+    if point.x < 0 or point.y < 0:
+        raise EdgeConfigError(f"{field_name} must have x/y >= 0")
+    return point
+
+
+def _parse_visual_pickup_calibration(value: object) -> VisualPickupCalibration | None:
+    if value is None:
+        return None
+    if not isinstance(value, dict):
+        raise EdgeConfigError("robotPlanning.calibration.visualCalibration must be an object")
+
+    corners_raw = value.get("cornersPx")
+    if not isinstance(corners_raw, dict):
+        raise EdgeConfigError("robotPlanning.calibration.visualCalibration.cornersPx must be an object")
+
+    return VisualPickupCalibration(
+        pickup_width_cm=_parse_required_positive_number(
+            value.get("pickupWidthCm"),
+            "robotPlanning.calibration.visualCalibration.pickupWidthCm",
+        ),
+        pickup_height_cm=_parse_required_positive_number(
+            value.get("pickupHeightCm"),
+            "robotPlanning.calibration.visualCalibration.pickupHeightCm",
+        ),
+        cube_size_cm=_parse_required_positive_number(
+            value.get("cubeSizeCm"),
+            "robotPlanning.calibration.visualCalibration.cubeSizeCm",
+        ),
+        top_left=_parse_image_point(
+            corners_raw.get("topLeft"),
+            "robotPlanning.calibration.visualCalibration.cornersPx.topLeft",
+        ),
+        top_right=_parse_image_point(
+            corners_raw.get("topRight"),
+            "robotPlanning.calibration.visualCalibration.cornersPx.topRight",
+        ),
+        bottom_right=_parse_image_point(
+            corners_raw.get("bottomRight"),
+            "robotPlanning.calibration.visualCalibration.cornersPx.bottomRight",
+        ),
+        bottom_left=_parse_image_point(
+            corners_raw.get("bottomLeft"),
+            "robotPlanning.calibration.visualCalibration.cornersPx.bottomLeft",
+        ),
     )
 
 
@@ -299,6 +398,9 @@ def _parse_robot_planning(value: object, config_directory: Path) -> RobotPlannin
             calibration_raw.get("imageRoi"),
             "robotPlanning.calibration.imageRoi",
         ),
+        visual=_parse_visual_pickup_calibration(
+            calibration_raw.get("visualCalibration", calibration_raw.get("pickupCalibration")),
+        ),
         top_left=_parse_pose(corners_raw.get("topLeft"), "robotPlanning.calibration.robotCorners.topLeft"),
         top_right=_parse_pose(corners_raw.get("topRight"), "robotPlanning.calibration.robotCorners.topRight"),
         bottom_right=_parse_pose(
@@ -310,8 +412,10 @@ def _parse_robot_planning(value: object, config_directory: Path) -> RobotPlannin
             "robotPlanning.calibration.robotCorners.bottomLeft",
         ),
     )
-    if calibration.image_roi is None:
-        raise EdgeConfigError("robotPlanning.calibration.imageRoi is required")
+    if calibration.image_roi is None and calibration.visual is None:
+        raise EdgeConfigError(
+            "robotPlanning.calibration requires visualCalibration or legacy imageRoi",
+        )
 
     workspace_raw = value.get("workspace")
     if not isinstance(workspace_raw, dict):
@@ -378,6 +482,28 @@ def load_edge_config(path: Path) -> EdgeConfig:
             safety_raw.get("humanConfirmationRequired"),
             "safety.humanConfirmationRequired",
             True,
+        ),
+    )
+
+    movement_raw = raw.get("movement", {})
+    if not isinstance(movement_raw, dict):
+        raise EdgeConfigError("movement must be a JSON object")
+    movement_delay_seconds = _parse_non_negative_number(
+        movement_raw.get("delay_seconds", movement_raw.get("delaySeconds")),
+        "movement.delay_seconds",
+        0.0,
+    )
+    movement = MovementTimingConfig(
+        delay_seconds=movement_delay_seconds,
+        pickup_hold_seconds=_parse_non_negative_number(
+            movement_raw.get("pickup_hold_seconds", movement_raw.get("pickupHoldSeconds")),
+            "movement.pickup_hold_seconds",
+            movement_delay_seconds,
+        ),
+        release_hold_seconds=_parse_non_negative_number(
+            movement_raw.get("release_hold_seconds", movement_raw.get("releaseHoldSeconds")),
+            "movement.release_hold_seconds",
+            movement_delay_seconds,
         ),
     )
 
@@ -512,6 +638,7 @@ def load_edge_config(path: Path) -> EdgeConfig:
         truck_code=truck_code,
         drop_zones_path=drop_zones_path,
         safety=safety,
+        movement=movement,
         vision=vision,
         robot_planning=robot_planning,
         raw=raw,
