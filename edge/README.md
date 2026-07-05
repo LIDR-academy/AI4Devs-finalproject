@@ -23,7 +23,7 @@ Implementa procesamiento OpenCV aislado para imagen o un frame de cámara. No in
 |---|---|---|
 | `simulation` | Implementado y default | Ejecuta el flujo simulado existente contra Backend y admite planificación dry-run con snapshot simulado. |
 | `vision-dry-run` | Implementado sin robot | Procesa archivo/cámara y puede generar un plan integrado sin serial. |
-| `hardware` | Reconocido, no ejecutable aún | El runner aborta antes de crear sesión o abrir dispositivos. |
+| `hardware` | Probe serial seguro aislado | El runner principal sigue abortando; solo `maxarm_safe_probe.py` puede abrir serial con confirmación explícita y una pose allowlisted. |
 
 El runner principal de Entrega 2 continúa ejecutando únicamente `simulation`. Un perfil no implementado nunca degrada silenciosamente a simulación.
 
@@ -699,6 +699,103 @@ El centro del bounding box se interpola bilinealmente dentro de `imageRoi`. El p
 - **Occupied:** solo una confirmación física futura podrá llamar `confirm()` y persistir `occupied=true`.
 
 En dry-run, tanto éxito como error posterior a la reserva ejecutan `cancel()`. El JSON canónico no cambia.
+
+## MaxArm serial safe probe
+
+`maxarm_safe_probe.py` valida el Gate G5 de la entrega final: abrir el puerto
+serial configurado, enviar una unica pose segura preaprobada con `suction=0`,
+esperar respuesta del firmware y cerrar el puerto de forma controlada.
+
+Este comando no es un pick/drop hardware. Diferencias:
+
+| Flujo | Camara | Serial | Succion | Cubos | Drop zones | Backend/Dashboard |
+|---|---|---|---|---|---|---|
+| `simulation` | No | No | No | Simulados | Simuladas | Si, `mode=simulation` |
+| `vision-dry-run` | Opcional | No | No | Detectados | Reserva en memoria | Si, `dryRun=true` |
+| `maxarm_safe_probe.py` | No | Si, con confirmacion | No | No | No | No |
+| Hardware pick/drop futuro | Si | Si | Si, solo con gates futuros | Si | Si | Pendiente |
+
+Config de ejemplo:
+
+```text
+edge/config/maxarm.safe-probe.example.json
+```
+
+Incluye `serial.port`, `serial.baudrate`, `serial.timeoutSeconds`,
+`safePoses`, `allowedPoseNames`, `defaultPoseName`,
+`suctionAllowed=false`, `pickupAllowed=false`, `dropAllowed=false` y
+`hardwareMotionRequiresConfirmation=true`. Las poses del ejemplo deben revisarse
+fisicamente antes de ejecutar porque dependen del montaje real.
+
+El comando tiene estos gates:
+
+- sin `--confirm-safe-motion`, aborta antes de abrir serial;
+- `--pose-name` debe existir en `safePoses` y estar en `allowedPoseNames`;
+- la allowlist interna solo acepta `reset`, `ready` o `ready_to_take`;
+- rechaza cualquier config con `suctionAllowed=true`, `pickupAllowed=true` o
+  `dropAllowed=true`;
+- envia una sola linea `POSE <x> <y> <z> 0`;
+- redondea coordenadas a enteros antes de escribir al firmware;
+- cierra el puerto en exito, error o timeout.
+
+Prueba sin confirmacion, segura para verificar gates y evidencia:
+
+```powershell
+cd edge
+python src\maxarm_safe_probe.py --config config\maxarm.safe-probe.example.json
+```
+
+Resultado esperado: `CONFIRMATION_REQUIRED`, `serialOpened=false` y
+`hardwareMovement=false`.
+
+Prueba real con confirmacion, solo despues de checklist fisico:
+
+```powershell
+cd edge
+python src\maxarm_safe_probe.py `
+  --config config\maxarm.safe-probe.example.json `
+  --port COM4 `
+  --baudrate 115200 `
+  --pose-name reset `
+  --confirm-safe-motion
+```
+
+Checklist fisico obligatorio antes de usar `--confirm-safe-motion`:
+
+- brazo sobre superficie estable;
+- zona despejada;
+- no hay cubos bajo el brazo;
+- no hay personas u objetos en el recorrido;
+- cable conectado correctamente;
+- puerto COM confirmado;
+- fuente de energia estable;
+- boton o forma de cortar energia accesible;
+- pose segura revisada visualmente;
+- operador presente durante toda la prueba.
+
+La evidencia JSON se guarda por defecto bajo:
+
+```text
+edge/workspace/generated/edge-evidence/maxarm-safe-probe/
+```
+
+Campos principales: `runId`, `timestamp`, `portSanitized`, `baudrate`,
+`poseName`, `commandPreview`, `commandSent`, `firmwareResponse`, `timeout`,
+`serialOpened`, `hardwareMovement`, `suctionActivated`, `pickupExecuted`,
+`dropExecuted`, `result` y `errorCode`.
+
+Interpretacion:
+
+- `SUCCESS` con `firmwareResponse` que contiene `DONE` valida comunicacion serial
+  y movimiento seguro de una pose.
+- `TIMEOUT` indica que se escribio el comando, pero no se recibio `DONE` dentro
+  del plazo.
+- `CONFIRMATION_REQUIRED`, `POSE_NOT_ALLOWLISTED`,
+  `SUCTION_NOT_ALLOWED`, `PICKUP_NOT_ALLOWED` o `DROP_NOT_ALLOWED` abortan antes
+  de abrir serial.
+
+Advertencia: este probe no usa camara, no usa cubos, no activa succion y no
+ejecuta secuencias pick/drop.
 
 ## Ejecucion
 

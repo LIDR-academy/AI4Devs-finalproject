@@ -1,0 +1,32 @@
+{
+  "serial": {
+    "port": "COM4",
+    "baudrate": 115200,
+    "timeoutSeconds": 5
+  },
+  "safePoses": {
+    "reset": {
+      "x": 0,
+      "y": -79,
+      "z": 176
+    },
+    "ready": {
+      "x": 124,
+      "y": -83,
+      "z": 212
+    }
+  },
+  "allowedPoseNames": ["reset", "ready"],
+  "defaultPoseName": "reset",
+  "suctionAllowed": false,
+  "pickupAllowed": false,
+  "dropAllowed": false,
+  "hardwareMotionRequiresConfirmation": true,
+  "evidence": {
+    "directory": "workspace/generated/edge-evidence/maxarm-safe-probe"
+  },
+  "notes": [
+    "These poses are examples from prior local validation and must be physically reviewed before execution.",
+    "This config is only for serial safe probe: no suction, no cubes, no pickup/drop sequence."
+  ]
+}
