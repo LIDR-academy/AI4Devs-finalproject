@@ -392,4 +392,12 @@ El backlog técnico y funcional (disponible en `docs/tickets/`) contiene las esp
 
 ## 7. Pull Requests
 
+### 🔄 PR #1: `docs: setup RestoStock MVP technical specification and backlog`
+*   **Ramas:** `feature-entrega1-JDLM` ➡️ `main`
+*   **Ticket Relacionado:** N/A (Hito inicial de especificación y diseño del MVP)
+*   **Descripción del Cambio:** Creación del PRD del MVP, especificación lógica del modelo de datos, diseño de puertos/adaptadores en arquitectura hexagonal, feed de la API REST, planes de pruebas TDD, planes de seguridad OWASP y la estructuración de las 8 Historias de Usuario (US-001 a US-008) y 9 Tickets Técnicos (TK-001 a TK-009) enlazados dinámicamente en el mapa del backlog.
+*   **Quality Gates (DoD):** 
+    *   Revisión y aprobación de la auditoría documental por el oráculo de IA.
+    *   Formato Markdown y sintaxis de diagramas Mermaid validados.
+    *   Pipeline inicial de integración continua (`ci.yml`) configurado.
 
