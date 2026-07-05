@@ -88,9 +88,58 @@ Considering all the info in the attached files, creare me an md file in docs/ di
 
 ---
 
-# 7 - OpenCode - DeepSeek V4 Flash Free - Plan mode
+# 8 - OpenCode - DeepSeek V4 Flash Free - Plan mode
 
 I need to fill out the template in the @readme.md 
 In order to do that, get the info from @docs/PRD.md @docs/api-specifications.md @docs/system-architecture.md 
 Ask me anything you might need in order to get the best and most accurate result. 
 Even though the @readme.md is in spanish, please write fill it out in english
+
+---
+
+# 9 - arena.ai -> mimo-v2.5 (best result)
+
+As a Software engeenier, I have started working on a new project. I have defined more or less all the documentation needed when it comes to rules/behaviour, architecture, data models, etc.
+
+I now would like to define all the User Stories needed. I want to do that with the AI. However, I have some doubts. I know that for sure I want to use Speckit to develop the project, and I don't know if I should start using speckit from now already to firts define all the User Stories with all its tickets, or how should I generate those and then proceed?
+
+Things to consider: besides the documentation I may add about all the User stories in the repository, I want to use Linear with its MCP to properly manage the project while developing it.
+
+---
+
+# 10 - OpenCode - mimo-v2.5 (best result)
+
+### Instructions 
+
+You are an expert in prompt engineering. Given the following prompt, prepare it using best-practice structure (role, objective, etc.) and formatting to achieve a precise and comprehensive result. Stick strictly to the requested objective by carefully analyzing what is asked in the original prompt. Make it in md so it's easier to copy-paste.
+
+### Original Prompt: 
+
+I want you to create all the user stories necessaries in order to develop the project described in the @docs directory. I want you to cover all functionalities and order them with the developing order we should follow.
+
+Write user stories in standard formats (As a... I want... So that...) in markdown files inside docs/epics/userStories
+
+Create acceptance criteria for each story
+
+Group them into epics. Create a md file for each epic inside docs/epics/. Order them as delevoping order should go. Take into account that these md files will later be usedd to create all this in Linear through its MCP.
+
+---
+
+# 8 - OpenCode - DeepSeek V4 Flash Free - Plan mode
+
+I feel like a lot of user stories look more like tasks. And the epics I feel like they don't really represent milestones in the project. Could we review all and make a plan so that we have less epics and those represent better the most important projects milestones, and better user stories defined with all the tasks assigned. If need, we could also define the tasks in a tasks directory. 
+Ask me anythinng you may need to get the best and most effective result.
+
+## RESULT: came up with a plan and I followed with the next prompt (still plan mode):
+I like the epics. I'm not sure I fully understand the UserStories proposal. I think that I'd like to have user stories that handle more than one acceptance criteria, and represent a "value" delivery. I'd like for each epic not to have more than 5 user stories and each user story should not have more than 6-8 tasks.
+
+---
+
+## PERSONAL NOTE: 
+Since I didn't like how the readme file was fill out previously I asked to do it again
+
+---
+
+# 8 - OpenCode - DeepSeek V4 Flash Free 
+
+Now, in order to fill out properly the @README.md file, grab the 3 most relevant user stories and fill it out with its tasks.

@@ -752,204 +752,128 @@ Lists classes within a date range with role-based visibility. Admin/Coach see al
 
 ## 5. Historias de Usuario
 
-### Historia de Usuario 1: Coach schedules a group class with weekly recurrence
+Tres historias de usuario representativas, una de cada rol principal (Admin/Coach, Coachee) más una transversal del núcleo del negocio.
 
-**As a** Coach/Admin,
-**I want** to create a group class by selecting the level, assigned coach, date, time, and enabling weekly recurrence,
-**So that** the class appears on the calendar every week at the same time without manual re-creation.
+---
 
-**Acceptance Criteria:**
-- The "Add Class" modal includes fields: class type, assigned coach, coachees (min 3, max 4), level, date, description, and recurrence toggle.
-- When recurrence is enabled, the class repeats weekly from the selected date with no automatic end date.
-- Gym capacity is validated: at most 2 individual + 1 group class can run simultaneously.
-- All enrolled coachees receive a push notification when the class is created (group with open spots → notification #2).
-- If the creating coach assigns a different coach, the assigned coach receives notification #12.
-- The Google Calendar event is created with only class type and level in the title (no PII).
+### US-1.1: User Login & Session Management
 
-### Historia de Usuario 2: Coachee joins a group class within their level reach
+**Epic:** EP-01 — Auth & User Foundation
 
-**As a** Coachee,
-**I want** to see group classes within my level reach on the calendar and join those with open spots,
-**So that** I can attend sessions appropriate to my skill level.
+**Formato estándar:**
+> **As a** gym user (Admin, Coach, or Coachee),
+> **I want** to securely log in and out of the platform with my email and password,
+> **So that** I can access my role-appropriate dashboard.
 
-**Acceptance Criteria:**
-- The calendar (1-week mobile window) shows group classes within the coachee's reach in green with a "Join" button.
-- Classes outside reach appear as gray busy blocks (no detail, no join option).
-- Tapping "Join" enrolls the coachee if capacity is not full (max 4).
-- If the class is full, the "Join" button is replaced with "Join waiting list".
-- The system validates level reach (coachee level matches class level ±1) and overlap (coachee cannot be in two classes at the same time).
-- The Coach is not notified when a coachee joins a group class (no notification rule for this event).
+**Criterios de aceptación:**
+- [ ] User can log in with valid email/password and receives JWT access + refresh tokens
+- [ ] Invalid credentials always return "Invalid credentials" (no email enumeration)
+- [ ] Inactive users cannot log in (403 Forbidden)
+- [ ] Expired/revoked tokens return 401 Unauthorized
+- [ ] User can refresh their session via refresh token
+- [ ] User can explicitly log out (token revocation)
+- [ ] Every protected endpoint enforces role guard (RBAC middleware)
+- [ ] Login form provides validation, error states, and loading feedback
 
-### Historia de Usuario 3: Coachee manages a waiting list
+**Tareas:**
+| ID | Capa | Descripción |
+|----|------|-------------|
+| T-1.1.1 | Backend | Set up Express + TypeScript + Prisma project structure |
+| T-1.1.2 | Database | Create User schema + Level schema + initial migration |
+| T-1.1.3 | Backend | Implement JWT middleware and RBAC role guard |
+| T-1.1.4 | Backend | Implement `POST /auth/login` with bcrypt + rate limiting |
+| T-1.1.5 | Backend | Implement `POST /auth/refresh` with token rotation |
+| T-1.1.6 | Backend | Implement `POST /auth/logout` with token revocation |
+| T-1.1.7 | Backend | Set up global error handler, security headers, CORS, health check |
+| T-1.1.8 | Frontend | Set up React + Vite + TailwindCSS, build login page with auth state |
 
-**As a** Coachee,
-**I want** to join a waiting list when a class is full, receive a notification when a spot opens, and claim it on a first-come basis,
-**So that** I don't miss opportunities to attend popular classes.
+---
 
-**Acceptance Criteria:**
-- **Group class:** When a group class is full (4/4), eligible coachees can tap "Join waiting list".
-- **Individual class:** Coachees can tap a gray busy time slot on the calendar to join a waiting list for that specific slot.
-- Maximum waiting list size is 4 coachees per class.
-- When a spot opens, **all** waitlisted coachees receive a push notification simultaneously (notification #1).
-- The spot is claimed first-come, first-served with no hold time.
-- Coachees can see all their active waiting lists on the home screen.
-- Coachees can leave any waiting list at any time (notification #10 sent to the leaver; Coach is not notified).
+### US-2.2: Class Creation (Individual, Group, Recurring)
+
+**Epic:** EP-02 — Core Scheduling Engine
+
+**Formato estándar:**
+> **As a** Coach or Admin,
+> **I want** to create individual and group classes (including weekly recurring series) with proper validation,
+> **So that** training sessions are scheduled correctly.
+
+**Criterios de aceptación:**
+- [ ] Individual class: exactly 1 Coachee, max 2 concurrent individual classes
+- [ ] Group class: min 3, max 4 Coachees, single group at a time
+- [ ] Level is required for group classes (hidden for individual)
+- [ ] Assigned Coach defaults to creator; can select another Coach
+- [ ] Gym capacity: max 2 individual + 1 group simultaneously
+- [ ] Overlap check: Coachee cannot be in two overlapping classes; Coach cannot have overlapping assignments
+- [ ] Level reach: Coachee's level must match, one above, or one below class level
+- [ ] Recurring series: weekly instances generated (same day/time/level/coach)
+- [ ] Google Calendar event created for each class instance
+- [ ] All duration is fixed at 60 minutes
+
+**Tareas:**
+| ID | Capa | Descripción |
+|----|------|-------------|
+| T-2.2.1 | Backend | Implement `POST /classes` for individual class with validations |
+| T-2.2.2 | Backend | Implement `POST /classes` for group class with validations |
+| T-2.2.3 | Backend | Implement recurring series creation + instance generation |
+| T-2.2.4 | Backend | Implement domain validators (CapacityValidator, OverlapChecker, ReachCalculator) |
+| T-2.2.5 | Backend | Integrate Google Calendar event creation (no PII in titles) |
+| T-2.2.6 | Frontend | Build Add Class modal with conditional field logic |
+| T-2.2.7 | Frontend | Build available time slots display in modal |
+| T-2.2.8 | Frontend | Build recurrence toggle UI with day-of-week selector |
+
+---
+
+### US-3.1: Class Enrollment & Cancellation
+
+**Epic:** EP-03 — Coachee Self-Service
+
+**Formato estándar:**
+> **As a** Coachee,
+> **I want** to join and cancel group classes,
+> **So that** I can manage my own attendance.
+
+**Criterios de aceptación:**
+- [ ] Coachee can join a group class with available spots (validates capacity, level reach, overlap)
+- [ ] Coachee cannot join individual classes (Admin/Coach assignment only)
+- [ ] Coachee can cancel their own attendance from any class they're enrolled in
+- [ ] No penalties or restrictions on cancellation
+- [ ] Cancellation removes enrollment record
+- [ ] If class becomes full after enrollment, join button replaced with waiting list option
+- [ ] Appropriate error responses: CLASS_FULL, LEVEL_MISMATCH, OVERLAP_DETECTED, ALREADY_ENROLLED
+- [ ] Coachee identity derived from JWT (no ID in request body)
+
+**Tareas:**
+| ID | Capa | Descripción |
+|----|------|-------------|
+| T-3.1.1 | Backend | Implement `POST /classes/:id/enrollment` with validations |
+| T-3.1.2 | Backend | Implement `DELETE /classes/:id/enrollment` with waiting list trigger |
+| T-3.1.3 | Backend | Implement validation error responses (CLASS_FULL, LEVEL_MISMATCH, etc.) |
+| T-3.1.4 | Frontend | Build "Join" button on green class cards with confirmation dialog |
+| T-3.1.5 | Frontend | Build "Cancel" button on enrolled class cards with confirmation dialog |
+| T-3.1.6 | Frontend | Handle error responses with user-friendly toasts |
 
 ---
 
 ## 6. Tickets de Trabajo
 
-### Ticket 1 (Backend): Implement class creation endpoint
+> Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
 
-**Description:** Implement the `POST /api/v1/classes` endpoint with full business rule validation and Google Calendar integration.
+**Ticket 1**
 
-**Technical Details:**
-- **Route:** `POST /api/v1/classes`
-- **Auth:** Admin or Coach role (RBAC middleware guard).
-- **Validation:** Zod schema for request body — validate `classType`, `coacheeIds` count (exactly 1 for individual, 3-4 for group), `levelId` required for group, `assignedCoachId` required.
-- **Domain services to invoke:**
-  - `CapacityValidator` — max 2 individual + 1 group per hour.
-  - `OverlapChecker` — coachee and coach cannot have overlapping schedule.
-  - `ReachCalculator` — each coachee's level must be within ±1 of class level.
-  - `RecurrenceGenerator` — if `recurrence.enabled`, create recurring instances.
-- **Google Calendar:** Call `GoogleCalendarAdapter.createEvent()` with event title containing only class type and level.
-- **Notifications:** Trigger `SendNotificationService` for notification #2 (group with open spots), #8 (individual assignment), #12 (coach reassignment).
-- **Database:** Insert rows into `TrainingClass` and `ClassEnrollment` tables. If recurring, insert into `RecurrenceSeries` and generate instances.
-- **Error handling:** Return 409 for business rule violations, 503 for Google Calendar API failure.
+**Ticket 2**
 
-**Acceptance Criteria:**
-- Admin or Coach can create a class with valid data → 201 with class object.
-- Coachee role → 403 Forbidden.
-- Invalid coachee count → 400 Validation Error.
-- Capacity exceeded → 409 Capacity Exceeded.
-- Overlap detected → 409 Overlap Detected.
-- Level mismatch → 409 Level Mismatch.
-- Google Calendar API down → 503 Service Unavailable.
-- Recurring class creates weekly instances starting from the selected date.
-
-**Testing:**
-- Unit tests for each domain service in isolation (Vitest).
-- Integration test with Supertest for the full endpoint (mock Google Calendar adapter).
-- Test each 409 error code with specific fixture data.
-
----
-
-### Ticket 2 (Frontend): Build custom calendar component with role-based visibility
-
-**Description:** Implement the calendar page as a custom React component that renders classes and blocks by role. The calendar must never call Google Calendar API directly — all data comes from the backend.
-
-**Technical Details:**
-- **Component location:** `frontend/src/components/Calendar.tsx`
-- **Data source:** React Query hook (`useClasses`) calling `GET /api/v1/classes?start=...&end=...`.
-- **Role-based rendering:**
-  - **Admin/Coach:** Full calendar showing all classes and blocks. "Add Class" button in toolbar.
-  - **Coachee:** 1-week mobile-optimised view. Colour-coded: blue (own), green (joinable group), gray (busy/blocked).
-- **Interactions:**
-  - Tap green class → "Join" button → calls `POST /api/v1/classes/:id/enrollment`.
-  - Tap gray busy block → "Join waiting list for this time slot" → calls `POST /api/v1/classes/:id/waiting-list`.
-  - Tap blue own class → "Cancel attendance" → calls `DELETE /api/v1/classes/:id/enrollment`.
-  - "Add Class" (Admin/Coach) → opens modal with fields per class type.
-- **State management:** React Context for auth/role; `useReducer` for calendar state (selected date, view mode).
-- **Styling:** TailwindCSS v4 utility classes. Responsive breakpoints for mobile vs desktop.
-- **Performance:** TanStack React Query caching with background refetch. Paginate data in weekly/monthly chunks.
-
-**Acceptance Criteria:**
-- Calendar renders classes within the selected date range (default: current week).
-- Admin sees all classes; Coachee sees only role-appropriate visibility.
-- Green class tap shows "Join" button (or "Join waiting list" if full).
-- Gray block tap shows "Join waiting list" option.
-- "Add Class" modal validates class type rules before submission.
-- Mobile view shows 1-week scrollable calendar, desktop shows expanded view.
-
-**Testing:**
-- React Testing Library unit tests for each visibility scenario.
-- Playwright E2E test: log in as coachee, view calendar, join a class.
-
----
-
-### Ticket 3 (Database): Define Prisma schema and create initial migration
-
-**Description:** Define the complete Prisma schema for all entities, create the initial migration, and write a seed script for the 5 levels.
-
-**Technical Details:**
-- **File:** `backend/prisma/schema.prisma`
-- **Entities:** `User`, `Level`, `TrainingClass`, `ClassEnrollment`, `WaitingList`, `RecurrenceSeries`, `Block`, `Notification`.
-- **Key schema decisions:**
-  - UUIDs for all primary keys (`@default(uuid())`).
-  - Unique constraints: `User.email`, `Level.name`, `ClassEnrollment(classId, coacheeId)`, `WaitingList(classId, coacheeId)`.
-  - Indexes: `TrainingClass.start_time`, `TrainingClass.assigned_coach_id`, `Notification.recipient_id`.
-  - Enums: `UserRole` (`ADMIN`, `COACH`, `COACHEE`), `UserStatus` (`ACTIVE`, `INACTIVE`), `ClassType` (`INDIVIDUAL`, `GROUP`), `ClassStatus` (`ACTIVE`, `CANCELED`), `BlockType` (`PERSONAL`, `GYM_WIDE`).
-  - Relations: `User` has many-to-many with `TrainingClass` through `ClassEnrollment` and `WaitingList`. `TrainingClass` belongs to `User` as assigned coach.
-  - `password_hash`, `bank_account`, `ssn`, `dni` use `String` type (encryption handled at application layer).
-- **Migration:** `prisma migrate dev --name init`
-- **Seed:** `prisma/seed.ts` — inserts the 5 levels (Principiante → Experto) with sort_order and placeholder color codes.
-- **Post-migration checks:** Run `prisma validate` and `prisma generate` to verify client generation.
-
-**Acceptance Criteria:**
-- All 8 tables created with correct columns, types, and constraints.
-- Foreign keys properly reference parent tables.
-- Unique constraints prevent duplicate emails and duplicate enrollments.
-- Seed script inserts 5 levels and no other data.
-- Prisma client generates without errors.
-- Migration can be rolled back (`prisma migrate dev --name init` → `prisma migrate reset`).
-
-**Testing:**
-- Run `prisma validate` to check schema correctness.
-- Run `prisma db push` against test database and verify all tables exist.
-- Run seed script and verify levels are inserted.
-- Write a Vitest integration test that inserts a user and a class, then queries them.
+**Ticket 3**
 
 ---
 
 ## 7. Pull Requests
 
-### Pull Request 1: System Architecture and Tech Stack Definition
+> Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
 
-**Branch:** `feature-entrega1-SVJ`
+**Pull Request 1**
 
-**Commits:**
-- `2fc3502` feat: system architecture draft
-- `bc928ce` feat: add tech stack info to system-architecture
-- `1c1e4fe` refactor: reorganize files
-- `914849d` feat: system architecture
+**Pull Request 2**
 
-**Description:** This PR introduced the complete system architecture document using the C4 Model and Hexagonal Architecture (Ports & Adapters). It defined the tech stack decisions including React 18 + TypeScript + Vite for the frontend, Node.js 22 + Express for the backend, PostgreSQL 16 with Prisma ORM, Google Calendar API via Service Account, Firebase Cloud Messaging for push notifications, and Biomejs for linting/formatting. It also established the project directory structure, development methodology (SDD with Speckit), and infrastructure plan (Docker Compose for local dev, Render for production, GitHub Actions for CI/CD).
+**Pull Request 3**
 
-### Pull Request 2: Product Requirements Document
-
-**Branch:** `feature-entrega1-SVJ`
-
-**Commits:**
-- `9f10c3b` feat: prompts and first PRD draft
-- `e0bcdec` update: improve PRD and add reference images
-- `f6c38ef` feat: PRD draft
-- `77e9a12` fix: improve PRD
-- `a75cf39` fix: improve PRD
-
-**Description:** This PR delivered the comprehensive PRD covering the full scope of the Personal Training Management Platform. It defined 3 user roles (Admin, Coach, Coachee) with detailed permissions, 5 skill levels with reach rules, class types and capacity constraints (max 2 individual + 1 group per hour), waiting list mechanics (max 4, simultaneous notification, first-come first-served), 12 push notification types, weekly recurrence support, and a glossary of key terms. The document was iteratively refined to close open questions around block types, waiting list mechanics, coach-coachee assignment, and Google Calendar integration patterns.
-
-### Pull Request 3: Security Controls and Data Model
-
-**Branch:** `feature-entrega1-SVJ`
-
-**Commits:**
-- `7fd2b35` feat: security
-- `5e580b9` feat: add security section in system-architecture
-- `61e1750` feat: add data model section
-- `273255b` draft: data model
-- `260cbe0` fix: data model diagram and remove old drafts
-
-**Description:** This PR added two critical sections. The security section covers OWASP Top 10 (2025) mitigations including JWT auth (15 min access, 7 day refresh), bcrypt cost 12, server-side RBAC, Zod validation, Prisma parameterised queries, AES-256-GCM encryption for coach financial data, CSP headers, rate limiting, and security event logging. The data model section documented all 8 entities (User, Level, TrainingClass, ClassEnrollment, WaitingList, RecurrenceSeries, Block, Notification) with a Mermaid ER diagram showing PKs, FKs, unique constraints, and relationships, plus a detailed attribute table for each entity.
-
----
-
-## 8. AI Prompts Used
-
-All prompts used during the development of this project are documented in the `prompts/` directory:
-- `prompts/prompt-PDR.md` — Original PRD prompt
-- `prompts/autogenerated/PRD-prompt.md` — Executed with ChatPRD.ai
-- `prompts/autogenerated/system-architecture-prompt.md` — Architecture generation
-- `prompts/autogenerated/security-section-prompt.md` — Security controls
-- `prompts/autogenerated/data-model-prompt.md` — Data model and ER diagram
-- `prompts/autogenerated/api-prompt.md` — API specifications
-- `prompts/prompts.md` — Full log of prompts and AI tools used (Claude Sonnet, DeepSeek V4, ChatPRD)
