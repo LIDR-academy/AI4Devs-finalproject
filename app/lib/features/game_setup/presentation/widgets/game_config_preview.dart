@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:la_pocha/core/config/debug_config.dart';
 import 'package:la_pocha/core/theme/app_theme.dart';
 
 class GameConfigPreview extends StatelessWidget {
@@ -36,6 +37,26 @@ class GameConfigPreview extends StatelessWidget {
               label: 'Total de rondas',
               value: '$totalRounds',
               suffix: 'rondas',
+              trailing: kShortGameMode
+                  ? Container(
+                      margin: const EdgeInsets.only(left: 8, bottom: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '⚡ Modo debug',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: AppTheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                    )
+                  : null,
             ),
           ],
         ),
@@ -49,11 +70,13 @@ class _PreviewRow extends StatelessWidget {
     required this.label,
     required this.value,
     required this.suffix,
+    this.trailing,
   });
 
   final String label;
   final String value;
   final String suffix;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -85,6 +108,7 @@ class _PreviewRow extends StatelessWidget {
                 ),
           ),
         ),
+        ?trailing,
       ],
     );
   }

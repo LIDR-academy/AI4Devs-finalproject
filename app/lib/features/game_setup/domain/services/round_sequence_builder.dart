@@ -1,9 +1,21 @@
+import 'package:la_pocha/core/config/debug_config.dart';
+
 import '../entities/round_definition.dart';
 
 List<RoundDefinition> buildRoundSequence({
   required int maxCardsPerRound,
   required int playerCount,
 }) {
+  if (kShortGameMode) {
+    return [
+      for (var i = 0; i < kShortRoundSequence.length; i++)
+        RoundDefinition(
+          roundNumber: i + 1,
+          cardsPerPlayer: kShortRoundSequence[i],
+        ),
+    ];
+  }
+
   final cardsPerRound = <int>[];
 
   for (var cards = 1; cards <= maxCardsPerRound; cards++) {

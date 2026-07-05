@@ -1673,3 +1673,58 @@ Usa modo Plan antes de ejecutar.
 
 ---------------------
 
+## Bloque 3 — Historial local (LPT-15)
+**Fecha:** 4 julio 2026
+**Rama:** feature-entrega2-JMGS
+
+### Prompt ejecutado:
+Lee el ticket LPT-15 de Jira con acli, revisa docs/design.md
+para referencia visual, e impleméntalo siguiendo las convenciones
+en .cursor/rules/. Usa modo Plan antes de ejecutar.
+
+### Excepciones documentadas:
+- Parte Firestore (merge local+nube, deduplicación por cloudGameId,
+  pull-to-refresh) dejada como stub/TODO — depende de LPT-19 y
+  LPT-20 no implementados aún.
+- Identificación de partidas: derivada de finishedAt + players[]
+  displayName (no hay campo name en el modelo Game — decisión de
+  producto tomada en sesión de diseño).
+
+### Artefactos generados:
+lib/features/history/ (domain, data, presentation completos)
+  - game_history_item.dart
+  - history_list_page.dart, game_history_tile.dart
+  - source_badge.dart, empty_history_view.dart
+
+  --------------------
+
+  Añade un flag de debug para secuencia de rondas reducida en el proyecto.
+
+Crea lib/core/config/debug_config.dart con el siguiente contenido:
+
+import 'package:flutter/foundation.dart';
+
+/// Flag de debug para probar el flujo completo de partida sin jugar
+/// todas las rondas reales. Solo activo en modo debug (kDebugMode).
+/// En release siempre se usa la secuencia real del PRD.
+///
+/// Para activar: cambia kShortGameMode a true y define la secuencia
+/// en kShortRoundSequence. Ejemplo: [1, 4, 8, 8, 4, 1] = 6 rondas.
+const bool kShortGameMode = kDebugMode && false;
+const List<int> kShortRoundSequence = [1, 4, 8, 8, 4, 1];
+
+Modifica RoundSequenceBuilder (lib/features/game_setup/domain/services/
+round_sequence_builder.dart) para que:
+- Si kShortGameMode es true: devuelve kShortRoundSequence directamente
+  como List<RoundDefinition>, ignorando maxCardsPerRound y playerCount.
+- Si kShortGameMode es false: comportamiento actual sin cambios.
+
+Modifica también GameConfigPreview (widget que muestra cartas totales,
+máximo por ronda y número de rondas en la pantalla de crear partida)
+para que si kShortGameMode es true muestre un badge o texto discreto
+"⚡ Modo debug" junto al número de rondas, para que sea visible
+durante las pruebas que estás en modo reducido y no en la secuencia real.
+
+No modifiques ningún otro fichero. No uses modo Plan para este cambio
+— es pequeño y quirúrgico.
+-------------------------
