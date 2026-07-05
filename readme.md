@@ -373,17 +373,17 @@ Se han definido detalladamente las siguientes 3 historias de usuario críticas (
 
 El backlog técnico y funcional (disponible en `docs/tickets/`) contiene las especificaciones exactas para el desarrollo del sprint:
 
-### **6.1. RESTO-TK-001: Configuración del Core del Backend y Base de Datos (Base de Datos)**
+### **6.1. TK-001: Configuración del Core del Backend y Base de Datos (Base de Datos)**
 *   **Descripción:** Configuración inicial del monorepo Express, Prisma Client, inyección síncrona segura de variables de entorno y middleware global de excepciones y validación de esquemas Zod.
 *   **Capas Afectadas:** `shared/domain`, `shared/infrastructure`.
 *   **DoD:** Build de typescript exitoso en CI, conexión segura TLS verificada en la base de datos de test efímera.
 
-### **6.2. RESTO-TK-002: Implementación de Autenticación de Operarios por PIN (Backend)**
+### **6.2. TK-002: Implementación de Autenticación de Operarios por PIN (Backend)**
 *   **Descripción:** Implementación de la API `/api/auth/pin` integrando el caso de uso `AuthenticateByPin` y la validación de hash `bcrypt` (10 salt rounds).
 *   **Capas Afectadas:** `auth/domain`, `auth/application`, `auth/infrastructure`.
 *   **DoD:** Test unitario pasando con el 100% de cobertura y aserción de que el PIN plano nunca se retorna ni se guarda.
 
-### **6.3. RESTO-TK-003: Implementación de Extracciones de Bodega (Backend & Log)**
+### **6.3. TK-003: Implementación de Extracciones de Bodega (Backend & Log)**
 *   **Descripción:** Lógica transaccional que reduce stock consolidado y genera un remanente activo calculando su vida útil acotada.
 *   **Capas Afectadas:** `stock/domain`, `stock/application`, `stock/infrastructure`.
 *   **DoD:** Garantía transaccional de base de datos verificada: si el débito de stock o la creación del remanente falla, toda la transacción debe revertirse (rollback).
@@ -391,6 +391,8 @@ El backlog técnico y funcional (disponible en `docs/tickets/`) contiene las esp
 ---
 
 ## 7. Pull Requests
+
+A continuación se registra el histórico de Pull Requests de este repositorio:
 
 ### 🔄 PR #1: `docs: setup RestoStock MVP technical specification and backlog`
 *   **Ramas:** `feature-entrega1-JDLM` ➡️ `main`

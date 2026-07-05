@@ -216,7 +216,7 @@ Este modelo describe la estructura lógica de persistencia del sistema en la Ter
 ### 2.2. Diccionario de Enums
 
 *   **`Role`**: `ADMIN` (administración), `OPERATOR` (cocineros y operarios de línea).
-*   **`MovementType`**: `EXTRACTION` (salida de depósito cerrado a cocina), `TRANSFER` (uso parcial / traslado de remanente), `DISCARD` (descarte/merma).
+*   **`MovementType`**: `EXTRACTION` (salida de depósito cerrado a cocina), `CONSUMPTION` (registro de consumo parcial de remanente), `TRANSFER` (traslado entre sububicaciones o terminales), `DISCARD` (descarte/merma).
 *   **`DiscardReason`**: `EXPIRATION` (vencido), `DAMAGE_OR_DROP` (daño o caída), `CONTAMINATION` (contaminación física/química), `SPOILAGE` (deterioro organoléptico).
 *   **`LocationType`**: `MAIN_WAREHOUSE` (depósito central), `KITCHEN_FRIDGE` (heladera cocina), `KITCHEN_FREEZER` (congelador cocina), `KITCHEN_PANTRY` (alacena secos), `KITCHEN_PREP` (línea de despacho).
 *   **`RemanenteStatus`**: `ACTIVE` (disponible para uso), `CONSUMED` (agotado al 100%), `DISCARDED` (retirado del inventario por merma).
@@ -367,9 +367,9 @@ Registra la apertura de un insumo y su primer consumo parcial. Descuenta una uni
 ### 3.4. GET /api/kitchen/remanentes
 Obtiene el listado de remanentes activos en cocina ordenados bajo estrategia FEFO.
 
-*   **Middleware:** Ninguno (Lectura pública en tablets).
+*   **Middleware:** AuthMiddleware (Rol mínimo: `OPERATOR` u `ADMIN`, via `Authorization: Bearer <token_jwt>`).
 *   **Query Parameters:**
-    *   `search` (opcional): Filtro por nombre de insumo.
+    *   `location` (opcional): Filtra por ubicación específica (`KITCHEN_FRIDGE`, `KITCHEN_FREEZER`, `KITCHEN_PANTRY`, `KITCHEN_PREP`).
 *   **Response Success (HTTP 200 OK):**
     ```json
     [
@@ -479,7 +479,7 @@ Para optimizar el flujo operativo y evitar el registro manual unitario de consum
    * Recupera los ingredientes requeridos y sus porciones.
    * Por cada ingrediente, busca todos los remanentes con estado `ACTIVE` correspondientes al `insumo_id` ordenados cronológicamente por `calculated_expiration_date` (FEFO).
    * Descuenta la cantidad requerida del remanente más antiguo primero. Si la cantidad solicitada excede la cantidad del remanente, actualiza ese remanente a `CONSUMED` (cantidad restante = 0) y continúa debitando el saldo del siguiente remanente más antiguo.
-   * Si la suma total de remanentes activos en cocina es insuficiente, el sistema arroja una alerta de saldo insuficiente pero procesa el descuento hasta agotar existencias, registrando mermas automáticas si la cantidad física restante es negativa.
+   * Si la suma total de remanentes activos en cocina es insuficiente, el sistema detiene el descuento en cascada al agotar los remanentes `ACTIVE` disponibles (llegando a cero), reporta un error de stock insuficiente y no permite saldos negativos en el inventario ni registros de cantidades remanentes negativas.
 
 ### 4.5. Cierre de Turno y Conciliación Rápida
 Al final de cada jornada de trabajo, el personal de cocina realiza un flujo de conciliación de inventario:

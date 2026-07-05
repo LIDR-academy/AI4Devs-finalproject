@@ -160,8 +160,7 @@ Esta especificación detalla los contratos de comunicación HTTP (REST API) indi
     ```json
     {
       "remanenteId": "f8a9e223-92b0-464a-93cd-9bc64e22340b",
-      "quantityConsumed": 0.2500,
-      "reason": "PREPARATION"
+      "quantityConsumed": 0.2500
     }
     ```
 *   **Response Success (`200 OK` - `RecordConsumptionResponse`):**

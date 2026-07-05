@@ -27,7 +27,8 @@ enum Role {
 
 enum MovementType {
   EXTRACTION  // Salida de depósito cerrado a cocina
-  TRANSFER    // Uso parcial o traslado de remanente
+  CONSUMPTION // Registro de consumo parcial de remanente
+  TRANSFER    // Traslado entre sububicaciones o terminales
   DISCARD     // Descarte o merma física
 }
 

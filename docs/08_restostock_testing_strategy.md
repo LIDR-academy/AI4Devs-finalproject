@@ -20,7 +20,7 @@ Para garantizar un código robusto, libre de regresiones y altamente acoplado a 
 
 El sistema RestoStock adopta la **Pirámide de Testing** adaptada al estilo de *Vertical Slices*:
 
-```
+```text
           / \
          /   \     Pruebas E2E (REST API Contracts & Flows)
         / E2E \    ~10% Cobertura

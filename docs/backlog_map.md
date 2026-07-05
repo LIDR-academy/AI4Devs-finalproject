@@ -9,7 +9,7 @@ Este documento representa visualmente la trazabilidad del proyecto, vinculando l
 ```mermaid
 graph TD
     %% Nodos Principales (Roadmap & Epics)
-    Roadmap["🎯 RESTOSTOCK MVP<br/>(docs/02_restostock_prd.md)"]
+    Roadmap["🎯 RESTOSTOCK MVP<br/>(02_restostock_prd.md)"]
     
     EpicAuth["🔐 EPIC: Autenticación y Sesiones<br/>(modules/auth)"]
     EpicStock["📦 EPIC: Control de Bodega<br/>(modules/stock)"]

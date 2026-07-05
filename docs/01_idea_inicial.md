@@ -1,12 +1,12 @@
 # 🚀 Paso 1: Alcance del MVP y Flujo Principal (Happy Path) - RestoStock
 
 ## 📌 Índice
-1. [Frontera entre Problema y Solución](#-1-frontera-entre-problema-y-solución)
-2. [Visión y Métricas de Éxito (KPIs)](#-2-visión-y-métricas-de-éxito-kpis)
-3. [Lenguaje Ubicuo (Glosario DDD)](#-3-lenguaje-ubicuo-glosario-ddd)
-4. [Flujo Principal (Happy Path E2E)](#-4-flujo-principal-happy-path-e2e)
-5. [Fuera de Alcance (Non-Goals)](#-5-fuera-de-alcance-non-goals)
-6. [Preguntas de Clarificación para el Diseño Técnico](#-6-preguntas-de-clarificación-para-el-diseño-técnico)
+1. [Frontera entre Problema y Solución](#1-frontera-entre-problema-y-solución)
+2. [Visión y Métricas de Éxito (KPIs)](#2-visión-y-métricas-de-éxito-kpis)
+3. [Lenguaje Ubicuo (Glosario DDD)](#3-lenguaje-ubicuo-glosario-ddd)
+4. [Flujo Principal (Happy Path E2E)](#4-flujo-principal-happy-path-e2e)
+5. [Fuera de Alcance (Non-Goals)](#5-fuera-de-alcance-non-goals)
+6. [Preguntas de Clarificación para el Diseño Técnico](#6-preguntas-de-clarificación-para-el-diseño-técnico)
 
 ---
 

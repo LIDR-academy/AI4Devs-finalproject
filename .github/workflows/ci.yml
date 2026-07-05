@@ -1,4 +1,4 @@
-name: RestoStock CI
+name: restostock-ci-test
 
 on:
   pull_request:
@@ -6,9 +6,10 @@ on:
       - main
 
 jobs:
-  build-and-test:
+  restostock-ci-test:
     name: Build, Lint & Test
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     # PostgreSQL service container for integration tests
     services:
@@ -27,9 +28,11 @@ jobs:
           --health-retries 5
 
     steps:
-      # Step 1: Checkout the source code
+      # Step 1: Checkout the source code without credential persistence
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       # Step 2: Set up Node.js runtime environment
       - name: Setup Node.js
@@ -63,9 +66,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # Step 7: Apply Prisma migrations to the test database service container
-      - name: Run Prisma Migrations (Test DB)
-        run: pnpm --filter backend prisma migrate deploy
+      # Step 7: Rebuild the test database from a fresh schema load (schema-sync)
+      - name: Sync Prisma Schema (Test DB)
+        run: pnpm --filter backend prisma db push --accept-data-loss
         env:
           DATABASE_URL: postgresql://${{ secrets.TEST_DB_USER || 'test_user' }}:${{ secrets.TEST_DB_PASSWORD || 'test_password' }}@localhost:5432/restostock_test
 

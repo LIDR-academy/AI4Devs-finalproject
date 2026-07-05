@@ -76,19 +76,19 @@ A continuación se muestra el molde homogéneo que el equipo de desarrollo debe 
 Define el puerto (contrato) y la entidad del negocio libre de acoplamientos técnicos.
 
 ```typescript
-// src/stock/domain/entities/stock-movement.entity.ts
+import { Decimal } from 'decimal.js';
 
-export type MovementType = 'EXTRACTION' | 'CONSUMPTION' | 'DISCARD';
-export type Location = 'WAREHOUSE' | 'KITCHEN';
+export type MovementType = 'EXTRACTION' | 'TRANSFER' | 'DISCARD';
+export type LocationType = 'MAIN_WAREHOUSE' | 'KITCHEN_FRIDGE' | 'KITCHEN_FREEZER' | 'KITCHEN_PANTRY' | 'KITCHEN_PREP';
 
 export interface StockMovementProps {
   id: string;
   insumoId: string;
   userId: string;
   type: MovementType;
-  fromLocation: Location;
-  toLocation: Location;
-  quantity: number;
+  fromLocation: LocationType;
+  toLocation: LocationType;
+  quantity: Decimal;
   unit: string;
   createdAt: Date;
 }
@@ -98,7 +98,7 @@ export class StockMovement {
 
   public static create(props: Omit<StockMovementProps, 'id' | 'createdAt'>): StockMovement {
     // Invariante de Dominio: No se permiten cantidades negativas ni iguales a cero
-    if (props.quantity <= 0) {
+    if (props.quantity.isLessThanOrEqualTo(0)) {
       throw new Error("Quantity must be a positive decimal value");
     }
 
@@ -128,10 +128,12 @@ Orquesta el caso de uso sin conocer los controladores Express ni la implementaci
 import { StockMovement } from '../../domain/entities/stock-movement.entity';
 import { IStockMovementRepository } from '../../domain/ports/stock-movement-repository.port';
 
+import { Decimal } from 'decimal.js';
+
 export interface RecordExtractionInput {
   insumoId: string;
   userId: string;
-  quantity: number;
+  quantity: Decimal;
   unit: string;
 }
 
@@ -147,8 +149,8 @@ export class RecordExtractionUseCase {
       insumoId: input.insumoId,
       userId: input.userId,
       type: 'EXTRACTION',
-      fromLocation: 'WAREHOUSE',
-      toLocation: 'KITCHEN',
+      fromLocation: 'MAIN_WAREHOUSE',
+      toLocation: 'KITCHEN_FRIDGE',
       quantity: input.quantity,
       unit: input.unit,
     });

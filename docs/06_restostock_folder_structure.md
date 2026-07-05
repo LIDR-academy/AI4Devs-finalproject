@@ -13,7 +13,7 @@ restostock-monorepo/
 ├── package.json                     # Configuración raíz de dependencias y workspaces
 ├── pnpm-workspace.yaml              # Definición de workspaces del monorepo (usando pnpm)
 ├── docker-compose.yml               # Orquestación de base de datos local (PostgreSQL & PgAdmin)
-├── README.md                        # Documentación general de instalación y setup del proyecto
+├── readme.md                        # Documentación general de instalación y setup del proyecto
 ├── docs/                            # Documentación de requerimientos, arquitectura y diseño técnico
 │   ├── 01_idea_inicial.md
 │   ├── 02_restostock_prd.md

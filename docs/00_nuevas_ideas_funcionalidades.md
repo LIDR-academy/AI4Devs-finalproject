@@ -18,8 +18,8 @@ Dada la idea o requerimiento suministrado por el usuario, debes ejecutar de form
 
 ### FASE 0: Lectura y Mapeo de Contexto (Obligatorio)
 Antes de proponer o realizar cualquier cambio, debes:
-1. Leer los archivos de índices (`docs/user_stories/indice_user_stories.md` y `docs/tickets/indice_tickets.md`) para determinar el **siguiente identificador correlativo libre** (ej. `US-007` y `RESTO-TK-008`). Está terminantemente prohibido usar placeholders como `US-XXX` o `TK-XXX`.
-2. Leer el estado actual del `schema.prisma` y los documentos del core (`docs/02_restostock_prd.md`, `docs/03_restostock_design.md` y `README.md`) para mapear el impacto real.
+1. Leer los archivos de índices (`docs/user_stories/indice_user_stories.md` y `docs/tickets/indice_tickets.md`) para determinar el **siguiente identificador correlativo libre** (ej. `US-007` y `TK-008`). Está terminantemente prohibido usar placeholders como `US-XXX` o `TK-XXX`.
+2. Leer el estado actual del `schema.prisma` y los documentos del core (`docs/02_restostock_prd.md`, `docs/03_restostock_design.md` y `readme.md`) para mapear el impacto real.
 
 ### FASE 1: Análisis de Impacto (Impact Assessment)
 Responde en tu primer turno con un breve reporte estructural:
@@ -42,9 +42,9 @@ Responde en tu primer turno con un breve reporte estructural:
 
 
 ### FASE 4: Consolidación del README y Estructura
-1. **README y Estructura:** Si el cambio altera la estructura de directorios, modifica la sección de mapa de ficheros en el `README.md` y en `docs/06_restostock_folder_structure.md`.
+1. **README y Estructura:** Si el cambio altera la estructura de directorios, modifica la sección de mapa de ficheros en el `readme.md` y en `docs/06_restostock_folder_structure.md`.
 2. **Descripción de Componentes:** Si se introducen nuevos componentes, capas u responsabilidades técnicas, actualiza `docs/05_restostock_components_description.md` para mantener la consistencia arquitectónica.
-3. **README Características:** Actualiza la lista de características principales en el `README.md` de la raíz del proyecto.
+3. **README Características:** Actualiza la lista de características principales en el `readme.md` de la raíz del proyecto.
 
 ---
 
