@@ -15,6 +15,8 @@
 
 ### **0.1. Tu nombre completo:**
 
+Sebastian Ruiz Garcia
+
 ### **0.2. Nombre del proyecto:**
 
 Plataforma médica "Zenta"
