@@ -1,0 +1,49 @@
+---
+description: when creating components in figma-sds or components libraries
+alwaysApply: false
+---
+
+## Atomic design
+
+Atomic design is a methodology composed of five distinct stages:
+
+- Atoms
+- Molecules
+- Organisms
+- Templates
+- Pages
+
+#Atoms
+Atoms of our interfaces serve as the foundational building blocks that comprise all our user interfaces. These atoms include basic elements like form labels, inputs, buttons, and others that can’t be broken down any further without ceasing to be functional.
+
+#Molecules
+Molecules are relatively simple groups of UI elements functioning together as a unit. For example, a form label, search input, and button can join together to create a search form molecule.
+When combined, these abstract atoms suddenly have purpose. The label atom now defines the input atom. Clicking the button atom now submits the form. The result is a simple, portable, reusable component that can be dropped in anywhere search functionality is needed.
+
+#Organisms
+Organisms are relatively complex UI components composed of groups of molecules and/or atoms and/or other organisms. These organisms form distinct sections of an interface.
+Let’s revisit our search form molecule. A search form can often be found in the header of many web experiences, so let’s put that search form molecule into the context of a header organism.
+This header organism is composed of a search form molecule, logo atom, and primary navigation molecule.
+This header organism is composed of a search form molecule, logo atom, and primary navigation molecule.
+The header forms a standalone section of an interface, even though it contains several smaller pieces of interface with their own unique properties and functionality.
+Organisms can consist of similar or different molecule types. A header organism might consist of dissimilar elements such as a logo image, primary navigation list, and search form. We see these types of organisms on almost every website we visit.
+While some organisms might consist of different types of molecules, other organisms might consist of the same molecule repeated over and over again. For instance, visit a category page of almost any e-commerce website and you’ll see a listing of products displayed in some form of grid.
+
+#Templates
+Templates are page-level objects that place components into a layout and articulate the design’s underlying content structure. To build on our previous example, we can take the header organism and apply it to a homepage template.
+The homepage template consists of organisms and molecules applied to a layout.
+This homepage template displays all the necessary page components functioning together, which provides context for these relatively abstract molecules and organisms.
+Another important characteristic of templates is that they focus on the page’s underlying content structure rather than the page’s final content.
+
+#Pages
+Pages are specific instances of templates that show what a UI looks like with real representative content in place. Building on our previous example, we can take the homepage template and pour representative text, images, and media into the template to show real content in action.
+The page stage replaces placeholder content with real representative content to bring the design system to life.
+The page stage replaces placeholder content with real representative content to bring the design system to life.
+
+## Sum up atomic design in a nutshell:
+
+Atoms are UI elements that can’t be broken down any further and serve as the elemental building blocks of an interface.
+Molecules are collections of atoms that form relatively simple UI components.
+Organisms are relatively complex components that form discrete sections of an interface.
+Templates place components within a layout and demonstrate the design’s underlying content structure.
+Pages apply real content to templates and articulate variations to demonstrate the final UI and test the resilience of the design system.

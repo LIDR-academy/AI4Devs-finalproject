@@ -1,0 +1,465 @@
+---
+description: when creating hooks, services, or daos in libs
+alwaysApply: false
+---
+
+# Architecture Documentation
+
+This document outlines the architectural patterns used across this monorepo libraries, specifically focusing on the **DAO**, **Service**, and **Hooks** layers.
+
+## Overview
+
+The codebase follows a three-layer architecture pattern:
+
+```
+Component → Hook → Service → DAO → Supabase / external API
+```
+
+This separation of concerns provides:
+
+- **Clear separation** between data access, business logic, and React integration
+- **Testability** - each layer can be tested independently
+- **Reusability** - services can be used outside React components
+- **Maintainability** - changes to API structure are isolated to DAO layer
+
+## Layer Structure
+
+### 1. DAO Layer (Data Access Object)
+
+**Location**: `libs/services/src/dao/`
+
+**Purpose**: Handles direct communication with external APIs and data sources.
+
+**Characteristics**:
+
+- Contains static methods for API calls
+- Minimal business logic - focuses on data fetching/storing
+- Directly interacts with backend services
+
+**There are two kinds of DAO. Pick by where the data lives:**
+
+| Data source | Approach |
+| --- | --- |
+| App's own backend (DB tables, auth, storage) | **Supabase DAO** — shared Supabase client |
+| Any endpoint not on Supabase (e.g. AI providers with user-supplied key, third-party REST APIs) | **External API DAO** — `fetch` (or `axios` if added later) |
+
+A feature can have both; keep them in separate DAO classes (one per data source).
+
+**Pattern A — Supabase DAO** (uses `getSupabase()` from `src/supabase/supabase-client.ts`):
+
+```typescript
+import { getSupabase } from '../supabase/supabase-client';
+
+export abstract class LessonsDao {
+  static async getLessonsByUserId(userId: string): Promise<Lesson[]> {
+    const { data, error } = await getSupabase()
+      .from('lessons')
+      .select('*')
+      .eq('user_id', userId);
+    if (error) throw error;
+    return data;
+  }
+}
+```
+
+**Pattern B — External API DAO** (endpoints not on Supabase):
+
+```typescript
+export abstract class AiProviderDao {
+  static async generateLesson(apiKey: string, prompt: string): Promise<GeneratedLessonDto> {
+    const response = await fetch('https://api.some-ai-provider.com/v1/generate', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ prompt }),
+    });
+    if (!response.ok) {
+      throw new Error(`AI provider request failed: ${response.status}`);
+    }
+    return response.json();
+  }
+}
+```
+
+Both patterns share the same naming, export, and layering rules below; Services and Hooks are identical regardless of which DAO kind they sit on.
+
+**Examples**:
+
+**Naming Convention**:
+
+- Files: `{feature-name}.dao.ts`
+- Classes: `{FeatureName}Dao` (abstract class)
+- Methods: Descriptive action verbs (e.g., `getProfileById`, `postAuditService`)
+
+**Key Points**:
+
+- DAOs are typically `abstract class` with `static` methods
+- DAOs should use named exports
+- DAOs should not contain business logic or validation beyond basic API interaction
+- DAOs handle response transformation only when necessary for API compatibility
+
+---
+
+### 2. Service Layer
+
+**Location**: `libs/services/src/services/`
+
+**Purpose**: Contains business logic, validation, and orchestrates multiple DAO calls when needed.
+
+**Characteristics**:
+
+- Contains business logic and validation
+- Calls DAO methods to fetch/store data
+- Can compose multiple DAO calls
+- Handles error cases and validation
+- Can transform data between layers
+- Exported through `src/services/index.ts`
+
+**Pattern**:
+
+```typescript
+export abstract class ExampleService {
+  static async getData(id?: number): Promise<SomeResponse> {
+    if (!id) {
+      return Promise.reject(new Error("Invalid id"));
+    }
+    return await ExampleDao.getData(id);
+  }
+}
+```
+
+**Examples**:
+
+**Naming Convention**:
+
+- Files: `{feature-name}.service.ts`
+- Classes: `{FeatureName}Service` (abstract class)
+- Methods: Business-oriented action verbs (e.g., `getProfileById`, `postAuditService`)
+
+**Key Points**:
+
+- Services are typically `abstract class` with `static` methods
+- Services validate inputs before calling DAOs
+- Services can compose multiple DAO calls
+- Some services can be instantiated (like `ProfanityService`) when they need internal state
+- Services handle business logic that shouldn't be in components or DAOs
+
+**Service Types**:
+
+1. **Static Service** (most common):
+
+   ```typescript
+   export abstract class ExampleService {
+     static async method(param1, param2) {
+       if (!param1 || !param2) {
+         return Promise.reject(new Error("..."));
+       }
+     }
+   }
+   ```
+
+2. **Instance Service** (for stateful services):
+
+   ```typescript
+   export class ExampleService {
+     static async create(): Promise<ExampleService> {
+       const service = new ExampleService();
+       await service.initialize();
+       return service;
+     }
+
+     private async initialize() { ... }
+     method() { ... }
+   }
+   ```
+
+---
+
+### 3. Hooks Layer
+
+**Location**:
+
+- `libs/hooks/src/hooks/` - General-purpose hooks
+
+**Purpose**: Provides React-specific integration, managing React state, effects, and context integration.
+
+**Characteristics**:
+
+- React hooks that encapsulate service logic
+- Can use tanstack-query for hooks that fetch data over the network (add @tanstack/react-query to @helsoft/hooks when first needed; not installed yet)
+- Manages React state and side effects
+- Provides convenient API for components
+- Handles React-specific concerns (lifecycle, state management)
+
+**Pattern**:
+
+```typescript
+export function useExampleService() {
+  return useQuery({
+    queryKey: ['example', param1, param2],
+    queryFn: () => ExampleService.getData(param1, param2),
+    enabled: !!param1 && !!param2,
+  });
+}
+```
+
+**Examples**:
+
+**Naming Convention**:
+
+- Files: `use-{feature-name}.ts` or `use-{feature-name}/use-{feature-name}.ts`
+- Functions: `use{FeatureName}` (camelCase)
+- Return values: Object with methods/properties
+
+**Key Points**:
+
+- Hooks wrap services, not DAOs directly
+- Hooks handle React-specific concerns (useEffect, useState, useCallback)
+- Hooks provide a clean API for components
+- Some hooks are standalone utilities (not wrapping services)
+- They usually use useQuery
+
+---
+
+## Data Flow
+
+### Typical Flow
+
+```
+┌─────────────┐
+│  Component  │
+└──────┬──────┘
+       │
+       │ calls hook
+       ▼
+┌─────────────┐
+│    Hook     │ ← uses tanstack-query
+└──────┬──────┘
+       │
+       │ calls service
+       ▼
+┌─────────────┐
+│   Service   │ ← business logic & validation
+└──────┬──────┘
+       │
+       │ calls DAO
+       ▼
+┌─────────────┐
+│     DAO     │ ← API calls
+└──────┬──────┘
+       │
+       │ HTTP request
+       ▼
+┌─────────────┐
+│     API     │
+└─────────────┘
+```
+
+### Direct Service Usage
+
+Components can also use services directly (without hooks) when React-specific features aren't needed:
+
+```
+Component → Service → DAO → API
+```
+
+---
+
+## File Organization
+
+### Directory Structure
+
+```
+libs/
+├── services/                  # @helsoft/services
+│   └── src/
+│       ├── supabase/
+│       │   └── supabase-client.ts   # initSupabase/getSupabase (shared client)
+│       ├── dao/
+│       │   ├── {feature-name}.dao.ts
+│       │   └── ...
+│       ├── services/
+│       │   ├── {feature-name}.service.ts
+│       │   ├── index.ts
+│       │   └── ...
+│       └── index.ts
+└── hooks/                     # @helsoft/hooks
+    └── src/
+        ├── hooks/
+        │   ├── use-{feature-name}.ts
+        │   ├── index.ts
+        │   └── ...
+        └── index.ts
+```
+
+### Export Patterns
+
+**DAO Exports**:
+
+- DAOs should use `export class` or `export abstract class`
+
+**Service Exports**:
+
+- All services are exported through `src/services/index.ts`
+- Services use `export abstract class` (or `export class` for instance-based)
+
+**Hook Exports**:
+
+- Hooks are exported through `src/hooks/index.ts`
+- Hooks use `export function`
+
+---
+
+## Best Practices
+
+### DAO Layer
+
+✅ **Do**:
+
+- Keep API calls simple and focused
+- Handle basic response transformation
+- Return typed responses
+
+❌ **Don't**:
+
+- Add business logic
+- Perform complex validation
+- Combine multiple unrelated API calls
+- Handle React-specific concerns
+
+### Service Layer
+
+✅ **Do**:
+
+- Validate inputs before calling DAOs
+- Add business logic and transformations
+- Compose multiple DAO calls when needed
+- Handle error cases appropriately
+- Provide clear error messages
+
+❌ **Don't**:
+
+- Make direct API calls (use DAOs)
+- Handle React-specific concerns
+- Depend on React hooks or context
+
+### Hooks Layer
+
+✅ **Do**:
+
+- Use React hooks and context
+- Manage React state and effects
+- Wrap services for React integration
+- Provide convenient component APIs
+- Handle React lifecycle concerns
+
+❌ **Don't**:
+
+- Call DAOs directly (use services)
+- Contain complex business logic (delegate to services)
+- Duplicate service logic
+
+---
+
+## Examples
+
+### Complete Example: Audit Service
+
+**DAO** (`profile.dao.ts`):
+
+```typescript
+import { getSupabase } from '../supabase/supabase-client';
+
+export abstract class ProfileDao {
+  static async getProfile(id: number): Promise<ProfileDto> {
+    const { data, error } = await getSupabase()
+      .from('profiles')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (error) throw error;
+    return data;
+  }
+}
+```
+
+**Service** (`profile.service.ts`):
+
+```typescript
+export abstract class ProfileService {
+  static getProfile(id: number): Promise<ProfileDto> {
+    if (!id) {
+      return Promise.reject(new Error("Missing id parameter"));
+    }
+    return ProfileDao.getProfile(id);
+  }
+}
+```
+
+**Hook** (`use-get-profile.ts`):
+
+```typescript
+export const useGetProfile = () => {
+  const { id } = useId();
+
+  return useQuery({
+    queryKey: ['profile', id],
+    queryFn: () => ProfileService.getProfile(id),
+  });
+};
+```
+
+**Component Usage**:
+
+```typescript
+function MyComponent() {
+  const { isLoading, data, error } = useGetProfile();
+
+  if (isLoading) {
+    return <LoadingComponent />
+  }
+
+  if (error) {
+    return <ErrorComponent error={error}/>
+  }
+
+  return <SomeComponent data={data}>;
+}
+```
+
+---
+
+## Testing
+
+Each layer should be tested independently:
+
+- **DAO Tests**: Mock the Supabase client (`getSupabase`) or `fetch` and test API calls
+- **Service Tests**: Mock DAOs and test business logic
+- **Hook Tests**: Mock services and test React integration
+
+See existing test files for examples:
+
+- `*.dao.test.ts`
+- `*.service.test.ts`
+- `*.test.ts` (hooks)
+
+---
+
+## Migration Guidelines
+
+When adding new features:
+
+1. **Start with DAO**: Create the data access layer first
+2. **Add Service**: Wrap DAO with business logic
+3. **Create Hook** (if needed): Add React integration for components
+4. **Export**: Add exports to appropriate `index.ts` files
+
+When refactoring:
+
+- Move API calls from services/components → DAOs
+- Move business logic from hooks/components → Services
+- Keep React-specific code in hooks/components
+
+---
