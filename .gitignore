@@ -1,0 +1,36 @@
+.vscode/autosave-editor.txt
+.DS_Store
+
+# dependencies
+node_modules/
+
+# expo
+.expo/
+expo-env.d.ts
+
+# builds
+dist/
+web-build/
+
+# turborepo
+.turbo/
+
+# storybook
+storybook-static/
+*storybook.log
+
+# env
+.env
+.env.*
+!.env.example
+
+# native
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# supabase
+supabase/.temp/
