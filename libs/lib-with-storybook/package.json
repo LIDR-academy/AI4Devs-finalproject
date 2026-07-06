@@ -1,0 +1,27 @@
+{
+  "name": "@helsoft/lib-with-storybook",
+  "version": "0.0.1",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "dev": "storybook dev -p 6006",
+    "build": "storybook build",
+    "check-types": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
+  },
+  "devDependencies": {
+    "@storybook/react-native-web-vite": "^10.2.9",
+    "@types/react": "~19.2.2",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.0",
+    "react-native-web": "~0.21.0",
+    "storybook": "^10.2.9",
+    "typescript": "~6.0.3",
+    "vite": "^7.1.0"
+  }
+}
