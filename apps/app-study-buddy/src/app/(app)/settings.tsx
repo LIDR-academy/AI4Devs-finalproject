@@ -1,10 +1,10 @@
 import { ScreenContainer } from '@helsoft/components';
 import { Text } from 'react-native';
 
-export default function HomeScreen() {
+export default function SettingsScreen() {
   return (
     <ScreenContainer>
-      <Text>AI Study Buddy</Text>
+      <Text>AI API key management + logout — TODO (R6)</Text>
     </ScreenContainer>
   );
 }
