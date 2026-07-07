@@ -1760,3 +1760,52 @@ Usa modo Plan antes de ejecutar.
 
 --------------
 
+## Bloque 4 — Cuenta y sincronización (LPT-19, LPT-20)
+
+**Fecha:** 4 julio 2026
+**Rama:** feature-entrega2-JMGS
+
+### Prompts ejecutados
+
+**LPT-19:**
+Lee el ticket LPT-19 de Jira con acli, revisa docs/design.md
+e impleméntalo siguiendo las convenciones en .cursor/rules/.
+Notas: Firebase en producción directamente (sin emulador);
+contraseña mínima 6 caracteres (límite Firebase Auth, no 8);
+guard de navegación no bloquea rutas de juego local (PRD §6).
+Usa modo Plan antes de ejecutar.
+
+**LPT-20:**
+Lee el ticket LPT-20 de Jira con acli e impleméntalo siguiendo
+las convenciones en .cursor/rules/.
+CORRECCIÓN: players[] embebido en games (array), NO subcolección
+— el ticket tenía una discrepancia con el modelo validado en
+readme.md §3. Se corrigió explícitamente en el prompt.
+Tests de integración: Firebase producción directamente, sin emulador.
+Usa modo Plan antes de ejecutar.
+
+### Resultado
+
+- 138 tests pasando (flutter test)
+- flutter analyze sin errores
+- Drift v5 regenerado con cloudGameId y syncStatus
+- Reglas e índices Firestore listos en repo (pendiente deploy)
+
+### Decisiones tomadas
+
+- LPT-20 corregía discrepancia crítica: ticket describía players
+  como subcolección, readme lo define como array embebido.
+  Fuente de verdad: readme.md (decisión de Entrega 1).
+- Tests de integración contra Firebase real via --dart-define,
+  no emulador (pragmático dado el calendario).
+
+---------------------
+
+Lee el ticket LPT-24 de Jira con acli e impleméntalo
+siguiendo las convenciones en .cursor/rules/. El botón
+"Cancelar partida" debe integrarse en el AppBar/menú de
+tres puntos ya existente en las pantallas del flujo de
+partida activa (patrón ya establecido en LPT-9 y LPT-10).
+Usa modo Plan antes de ejecutar.
+--------------------
+

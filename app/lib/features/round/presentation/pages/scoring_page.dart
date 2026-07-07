@@ -24,14 +24,15 @@ class ScoringPage extends StatelessWidget {
     return BlocProvider(
       create: (_) => getIt<ScoringBloc>()
         ..add(ScoringStarted(gameId: gameId, roundNumber: roundNumber)),
-      child: _ScoringView(roundNumber: roundNumber),
+      child: _ScoringView(gameId: gameId, roundNumber: roundNumber),
     );
   }
 }
 
 class _ScoringView extends StatelessWidget {
-  const _ScoringView({required this.roundNumber});
+  const _ScoringView({required this.gameId, required this.roundNumber});
 
+  final String gameId;
   final int roundNumber;
 
   @override
@@ -54,6 +55,7 @@ class _ScoringView extends StatelessWidget {
                   final cardsInRound =
                       state is ScoringLoaded ? state.round.cardsInRound : null;
                   return RoundHeader(
+                    gameId: gameId,
                     roundNumber: roundNumber,
                     cardsInRound: cardsInRound,
                     subtitle: 'Bazas reales',

@@ -227,6 +227,15 @@ class MockGameRepository extends _i1.Mock implements _i5.GameRepository {
             ),
           )
           as _i6.Future<_i2.Game>);
+
+  @override
+  _i6.Future<void> deleteGame(String? gameId) =>
+      (super.noSuchMethod(
+            Invocation.method(#deleteGame, [gameId]),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
+          )
+          as _i6.Future<void>);
 }
 
 /// A class which mocks [RoundRepository].

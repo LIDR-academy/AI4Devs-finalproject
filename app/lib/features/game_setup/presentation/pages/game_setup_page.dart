@@ -5,6 +5,7 @@ import 'package:la_pocha/core/di/injection.dart';
 import 'package:la_pocha/core/theme/app_theme.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/player_embed.dart';
 import 'package:la_pocha/features/game_setup/presentation/bloc/game_setup_bloc.dart';
+import 'package:la_pocha/features/game_setup/presentation/widgets/game_overflow_menu.dart';
 import 'package:la_pocha/features/game_setup/presentation/widgets/random_dealer_button.dart';
 import 'package:la_pocha/features/game_setup/presentation/widgets/reorderable_player_list.dart';
 
@@ -43,7 +44,7 @@ class _GameSetupView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _Header(onBack: () => context.pop()),
+              _Header(gameId: gameId, onBack: () => context.pop()),
               Expanded(
                 child: BlocBuilder<GameSetupBloc, GameSetupState>(
                   builder: (context, state) {
@@ -154,8 +155,9 @@ class _LoadedBody extends StatelessWidget {
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.onBack});
+  const _Header({required this.gameId, required this.onBack});
 
+  final String gameId;
   final VoidCallback onBack;
 
   @override
@@ -194,20 +196,7 @@ class _Header extends StatelessWidget {
                 ],
               ),
             ),
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert, color: Colors.white),
-              onSelected: (value) {
-                if (value == 'cancel') {
-                  // TODO(LPT-24): cancel game
-                }
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'cancel',
-                  child: Text('Cancelar partida'),
-                ),
-              ],
-            ),
+            GameOverflowMenu(gameId: gameId),
           ],
         ),
       ),

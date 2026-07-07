@@ -313,6 +313,15 @@ class MockGameLocalDatasource extends _i1.Mock
           as _i7.Future<_i3.Game>);
 
   @override
+  _i7.Future<void> deleteGame(String? gameId) =>
+      (super.noSuchMethod(
+            Invocation.method(#deleteGame, [gameId]),
+            returnValue: _i7.Future<void>.value(),
+            returnValueForMissingStub: _i7.Future<void>.value(),
+          )
+          as _i7.Future<void>);
+
+  @override
   _i7.Future<_i3.Game> updateSyncMetadata({
     required String? gameId,
     String? cloudGameId,

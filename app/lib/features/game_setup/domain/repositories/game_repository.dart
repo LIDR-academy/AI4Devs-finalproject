@@ -31,4 +31,6 @@ abstract class GameRepository {
     required String gameId,
     required DateTime finishedAt,
   });
+
+  Future<void> deleteGame(String gameId);
 }

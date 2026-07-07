@@ -71,6 +71,7 @@ class _RoundResultView extends StatelessWidget {
                     _ => null,
                   };
                   return RoundHeader(
+                    gameId: gameId,
                     roundNumber: roundNumber,
                     cardsInRound: cardsInRound,
                     subtitle: 'Resultado',

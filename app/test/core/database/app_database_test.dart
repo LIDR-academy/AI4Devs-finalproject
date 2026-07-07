@@ -155,4 +155,67 @@ void main() {
     expect(storedRound.cardsInRound, 4);
     expect(storedRound.dealerPlayerId, 'p1');
   });
+
+  test('deleteGame removes the game and all its rounds', () async {
+    const gameId = 'test-game-id';
+    const otherGameId = 'other-game-id';
+    final roundSequence = [
+      const RoundDefinition(roundNumber: 1, cardsPerPlayer: 4),
+      const RoundDefinition(roundNumber: 2, cardsPerPlayer: 5),
+    ];
+    final now = DateTime(2026, 1, 1, 12);
+
+    await database.into(database.games).insert(
+          GamesCompanion.insert(
+            id: gameId,
+            status: 'in_progress',
+            playerCount: 2,
+            totalCards: 40,
+            maxCardsPerRound: 10,
+            roundSequence: roundSequence,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+    await database.into(database.games).insert(
+          GamesCompanion.insert(
+            id: otherGameId,
+            status: 'in_progress',
+            playerCount: 2,
+            totalCards: 40,
+            maxCardsPerRound: 10,
+            roundSequence: roundSequence,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+
+    for (final entry in [
+      (id: 'round-1', gameId: gameId, roundNumber: 1),
+      (id: 'round-2', gameId: gameId, roundNumber: 2),
+      (id: 'other-round-1', gameId: otherGameId, roundNumber: 1),
+    ]) {
+      await database.into(database.rounds).insert(
+            RoundsCompanion.insert(
+              id: entry.id,
+              gameId: entry.gameId,
+              roundNumber: entry.roundNumber,
+              cardsInRound: 4,
+              dealerPlayerId: 'p1',
+              status: RoundStatus.bidding.toStorageString(),
+              bids: const {},
+              createdAt: now,
+            ),
+          );
+    }
+
+    final datasource = GameLocalDatasource(database);
+    await datasource.deleteGame(gameId);
+
+    final remainingGames = await database.select(database.games).get();
+    final remainingRounds = await database.select(database.rounds).get();
+
+    expect(remainingGames.map((g) => g.id), [otherGameId]);
+    expect(remainingRounds.map((r) => r.id), ['other-round-1']);
+  });
 }

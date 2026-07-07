@@ -5,6 +5,8 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i4;
 
+import 'package:la_pocha/features/game_setup/domain/usecases/cancel_game_usecase.dart'
+    as _i5;
 import 'package:la_pocha/features/round/domain/entities/round_play_state.dart'
     as _i2;
 import 'package:la_pocha/features/round/domain/usecases/get_round_play_state_usecase.dart'
@@ -67,4 +69,18 @@ class MockGetRoundPlayStateUseCase extends _i1.Mock
             ),
           )
           as _i4.Future<_i2.RoundPlayState>);
+}
+
+/// A class which mocks [CancelGameUseCase].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockCancelGameUseCase extends _i1.Mock implements _i5.CancelGameUseCase {
+  @override
+  _i4.Future<void> call({required String? gameId}) =>
+      (super.noSuchMethod(
+            Invocation.method(#call, [], {#gameId: gameId}),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 }

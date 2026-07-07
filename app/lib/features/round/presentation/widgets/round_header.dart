@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:la_pocha/core/theme/app_theme.dart';
+import 'package:la_pocha/features/game_setup/presentation/widgets/game_overflow_menu.dart';
 
 class RoundHeader extends StatelessWidget {
   const RoundHeader({
     super.key,
+    required this.gameId,
     required this.roundNumber,
     required this.cardsInRound,
     required this.subtitle,
     this.dealerName,
   });
 
+  final String gameId;
   final int roundNumber;
   final int? cardsInRound;
   final String subtitle;
@@ -58,23 +61,7 @@ class RoundHeader extends StatelessWidget {
                 ],
               ),
             ),
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert, color: Colors.white),
-              onSelected: (value) {
-                if (value == 'cancel') {
-                  // TODO(LPT-24): cancel game
-                }
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'cancel',
-                  child: Text(
-                    'Cancelar partida',
-                    style: TextStyle(color: Color(0xFFD9772E)),
-                  ),
-                ),
-              ],
-            ),
+            GameOverflowMenu(gameId: gameId),
           ],
         ),
       ),

@@ -146,6 +146,17 @@ class GameLocalDatasource {
     return _readGameById(gameId);
   }
 
+  Future<void> deleteGame(String gameId) async {
+    await _database.transaction(() async {
+      await (_database.delete(_database.rounds)
+            ..where((table) => table.gameId.equals(gameId)))
+          .go();
+      await (_database.delete(_database.games)
+            ..where((table) => table.id.equals(gameId)))
+          .go();
+    });
+  }
+
   Future<Game> updateSyncMetadata({
     required String gameId,
     String? cloudGameId,

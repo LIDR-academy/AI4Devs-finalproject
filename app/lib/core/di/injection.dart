@@ -10,6 +10,7 @@ import 'package:la_pocha/features/game_setup/domain/repositories/game_repository
 import 'package:la_pocha/features/game_setup/domain/repositories/round_repository.dart';
 import 'package:la_pocha/features/game_setup/domain/services/dealer_rotation_service.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/add_player_usecase.dart';
+import 'package:la_pocha/features/game_setup/domain/usecases/cancel_game_usecase.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/create_game_draft_usecase.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/get_game_by_id_usecase.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/randomize_first_dealer_usecase.dart';
@@ -18,6 +19,7 @@ import 'package:la_pocha/features/game_setup/domain/usecases/reorder_players_use
 import 'package:la_pocha/features/game_setup/domain/usecases/set_first_dealer_usecase.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/start_game_usecase.dart';
 import 'package:la_pocha/features/game_setup/presentation/bloc/add_players_bloc.dart';
+import 'package:la_pocha/features/game_setup/presentation/bloc/cancel_game_cubit.dart';
 import 'package:la_pocha/features/game_setup/presentation/bloc/create_game_bloc.dart';
 import 'package:la_pocha/features/game_setup/presentation/bloc/game_setup_bloc.dart';
 import 'package:la_pocha/features/round/domain/services/bid_order_service.dart';
@@ -311,8 +313,16 @@ Future<void> configureDependencies() async {
     () => StartGameUseCase(getIt<GameRepository>()),
   );
 
+  getIt.registerFactory<CancelGameUseCase>(
+    () => CancelGameUseCase(getIt<GameRepository>()),
+  );
+
   getIt.registerFactory<CreateGameBloc>(
     () => CreateGameBloc(createGameDraft: getIt<CreateGameDraftUseCase>()),
+  );
+
+  getIt.registerFactory<CancelGameCubit>(
+    () => CancelGameCubit(cancelGame: getIt<CancelGameUseCase>()),
   );
 
   getIt.registerFactory<AddPlayersBloc>(

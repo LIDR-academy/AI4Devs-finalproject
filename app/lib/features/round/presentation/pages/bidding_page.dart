@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:la_pocha/core/di/injection.dart';
 import 'package:la_pocha/core/theme/app_theme.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/player_embed.dart';
+import 'package:la_pocha/features/game_setup/presentation/widgets/game_overflow_menu.dart';
 import 'package:la_pocha/features/round/presentation/bloc/bidding_bloc.dart';
 import 'package:la_pocha/features/round/presentation/bloc/bidding_event.dart';
 import 'package:la_pocha/features/round/presentation/bloc/bidding_state.dart';
@@ -25,14 +26,15 @@ class BiddingPage extends StatelessWidget {
     return BlocProvider(
       create: (_) => getIt<BiddingBloc>()
         ..add(BiddingStarted(gameId: gameId, roundNumber: roundNumber)),
-      child: _BiddingView(roundNumber: roundNumber),
+      child: _BiddingView(gameId: gameId, roundNumber: roundNumber),
     );
   }
 }
 
 class _BiddingView extends StatelessWidget {
-  const _BiddingView({required this.roundNumber});
+  const _BiddingView({required this.gameId, required this.roundNumber});
 
+  final String gameId;
   final int roundNumber;
 
   @override
@@ -55,6 +57,7 @@ class _BiddingView extends StatelessWidget {
                   final cardsInRound =
                       state is BiddingLoaded ? state.round.cardsInRound : null;
                   return _Header(
+                    gameId: gameId,
                     roundNumber: roundNumber,
                     cardsInRound: cardsInRound,
                   );
@@ -214,10 +217,12 @@ class _LoadedBody extends StatelessWidget {
 
 class _Header extends StatelessWidget {
   const _Header({
+    required this.gameId,
     required this.roundNumber,
     required this.cardsInRound,
   });
 
+  final String gameId;
   final int roundNumber;
   final int? cardsInRound;
 
@@ -261,23 +266,7 @@ class _Header extends StatelessWidget {
                 ],
               ),
             ),
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert, color: Colors.white),
-              onSelected: (value) {
-                if (value == 'cancel') {
-                  // TODO(LPT-24): cancel game
-                }
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'cancel',
-                  child: Text(
-                    'Cancelar partida',
-                    style: TextStyle(color: Color(0xFFD9772E)),
-                  ),
-                ),
-              ],
-            ),
+            GameOverflowMenu(gameId: gameId),
           ],
         ),
       ),

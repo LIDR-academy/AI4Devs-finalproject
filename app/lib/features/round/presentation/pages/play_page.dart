@@ -24,14 +24,15 @@ class PlayPage extends StatelessWidget {
     return BlocProvider(
       create: (_) => getIt<PlayStateBloc>()
         ..add(PlayStateStarted(gameId: gameId, roundNumber: roundNumber)),
-      child: _PlayView(roundNumber: roundNumber),
+      child: _PlayView(gameId: gameId, roundNumber: roundNumber),
     );
   }
 }
 
 class _PlayView extends StatelessWidget {
-  const _PlayView({required this.roundNumber});
+  const _PlayView({required this.gameId, required this.roundNumber});
 
+  final String gameId;
   final int roundNumber;
 
   @override
@@ -55,6 +56,7 @@ class _PlayView extends StatelessWidget {
                       ? state.playState.round.cardsInRound
                       : null;
                   return RoundHeader(
+                    gameId: gameId,
                     roundNumber: roundNumber,
                     cardsInRound: cardsInRound,
                     subtitle: 'En juego',
