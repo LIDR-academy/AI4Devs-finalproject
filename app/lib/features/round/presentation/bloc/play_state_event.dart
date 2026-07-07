@@ -23,3 +23,12 @@ final class PlayStateStarted extends PlayStateEvent {
 final class IntroduceTricksRequested extends PlayStateEvent {
   const IntroduceTricksRequested();
 }
+
+final class BidsCorrectionSubmitted extends PlayStateEvent {
+  const BidsCorrectionSubmitted(this.updatedBids);
+
+  final Map<String, int> updatedBids;
+
+  @override
+  List<Object?> get props => [updatedBids];
+}

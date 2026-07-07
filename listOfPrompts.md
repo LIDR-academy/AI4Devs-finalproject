@@ -1808,4 +1808,6 @@ tres puntos ya existente en las pantallas del flujo de
 partida activa (patrón ya establecido en LPT-9 y LPT-10).
 Usa modo Plan antes de ejecutar.
 --------------------
-
+Lee el ticket LPT-12 de Jira con acli e impleméntalo
+siguiendo las convenciones en .cursor/rules/.
+Usa modo Plan antes de ejecutar.

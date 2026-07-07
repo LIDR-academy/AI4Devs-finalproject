@@ -211,6 +211,9 @@ Una **ronda** (mano) dentro de la partida: apuestas, bazas, puntuación parcial,
 
 - `roundNumber` único por partida (transacción al crear la siguiente ronda).
 - No modificar rondas `closed` salvo corrección admin *(TBD)*.
+- **Solo la ronda actual es editable (LPT-12):** las correcciones de datos (apuestas y bazas) solo se permiten mientras la ronda no está `closed`. Las rondas `closed` no son editables desde la UI.
+- **Corrección de apuestas en fase `playing` (LPT-12):** el organizador puede reeditar cualquier apuesta tras cerrar apuestas (`CorrectBidsUseCase`). Se re-valida la restricción del repartidor: si tras la corrección `sum(bids) == cardsInRound`, la corrección se persiste pero **se bloquea el avance** a la introducción de bazas hasta que el repartidor ajuste su apuesta.
+- **Corrección de bazas antes de cerrar (LPT-12):** durante la fase `playing`, las bazas se editan libremente como borrador en la pantalla de bazas y solo se persisten (`tricks`, `scoresDelta`, `totalScore`) al confirmar el cierre; recalcular la suma y los puntos ocurre en ese momento.
 - **Restricción del repartidor (apuestas):** la suma total de `bids` **no puede igualar** `cardsInRound`. El repartidor apuesta siempre el último; al llegar su turno, el **número prohibido** es `cardsInRound - sum(bids de los demás)`. Si intenta apostar ese valor, se bloquea la confirmación.
 - Orden de apuestas: jugador siguiente al repartidor en `seatOrder` primero; repartidor último.
 - Transición de estado al cerrar apuestas: `bidding` → `playing`.

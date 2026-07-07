@@ -7,6 +7,7 @@ import 'package:la_pocha/features/game_setup/domain/entities/round.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/round_definition.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/round_status.dart';
 import 'package:la_pocha/features/round/domain/entities/round_play_state.dart';
+import 'package:la_pocha/features/round/domain/usecases/correct_bids_usecase.dart';
 import 'package:la_pocha/features/round/domain/usecases/get_round_play_state_usecase.dart';
 import 'package:la_pocha/features/round/presentation/bloc/play_state_bloc.dart';
 import 'package:la_pocha/features/round/presentation/bloc/play_state_event.dart';
@@ -16,9 +17,13 @@ import 'package:mockito/mockito.dart';
 
 import 'play_state_bloc_test.mocks.dart';
 
-@GenerateNiceMocks([MockSpec<GetRoundPlayStateUseCase>()])
+@GenerateNiceMocks([
+  MockSpec<GetRoundPlayStateUseCase>(),
+  MockSpec<CorrectBidsUseCase>(),
+])
 void main() {
   late MockGetRoundPlayStateUseCase getRoundPlayState;
+  late MockCorrectBidsUseCase correctBids;
 
   final players = [
     PlayerEmbed(
@@ -77,11 +82,15 @@ void main() {
   );
 
   PlayStateBloc buildBloc() {
-    return PlayStateBloc(getRoundPlayState: getRoundPlayState);
+    return PlayStateBloc(
+      getRoundPlayState: getRoundPlayState,
+      correctBids: correctBids,
+    );
   }
 
   setUp(() {
     getRoundPlayState = MockGetRoundPlayStateUseCase();
+    correctBids = MockCorrectBidsUseCase();
   });
 
   blocTest<PlayStateBloc, PlayStateBlocState>(
@@ -144,6 +153,78 @@ void main() {
       isA<PlayStateNavigateToTricks>()
           .having((s) => s.gameId, 'gameId', 'game-1')
           .having((s) => s.roundNumber, 'roundNumber', 1),
+    ],
+  );
+
+  blocTest<PlayStateBloc, PlayStateBlocState>(
+    'reloads with restriction met when a valid correction is submitted',
+    build: buildBloc,
+    seed: () => PlayStateLoaded(playState: playState),
+    setUp: () {
+      when(
+        correctBids(
+          round: anyNamed('round'),
+          updatedBids: anyNamed('updatedBids'),
+          playerIds: anyNamed('playerIds'),
+        ),
+      ).thenAnswer((_) async => round);
+      final correctedRound = round.copyWith(bids: const {'p0': 0, 'p1': 3});
+      when(
+        getRoundPlayState(
+          gameId: anyNamed('gameId'),
+          roundNumber: anyNamed('roundNumber'),
+        ),
+      ).thenAnswer(
+        (_) async => RoundPlayState(
+          game: game,
+          round: correctedRound,
+          players: players,
+          bidSum: 3,
+          restrictionMet: true,
+        ),
+      );
+    },
+    act: (bloc) => bloc.add(const BidsCorrectionSubmitted({'p0': 0, 'p1': 3})),
+    expect: () => [
+      isA<PlayStateLoaded>()
+          .having((s) => s.playState.bidSum, 'bidSum', 3)
+          .having((s) => s.playState.restrictionMet, 'restrictionMet', true),
+    ],
+  );
+
+  blocTest<PlayStateBloc, PlayStateBlocState>(
+    'reloads with restriction unmet when correction breaks the restriction',
+    build: buildBloc,
+    seed: () => PlayStateLoaded(playState: playState),
+    setUp: () {
+      when(
+        correctBids(
+          round: anyNamed('round'),
+          updatedBids: anyNamed('updatedBids'),
+          playerIds: anyNamed('playerIds'),
+        ),
+      ).thenAnswer((_) async => round);
+      final correctedRound = round.copyWith(bids: const {'p0': 0, 'p1': 4});
+      when(
+        getRoundPlayState(
+          gameId: anyNamed('gameId'),
+          roundNumber: anyNamed('roundNumber'),
+        ),
+      ).thenAnswer(
+        (_) async => RoundPlayState(
+          game: game,
+          round: correctedRound,
+          players: players,
+          bidSum: 4,
+          restrictionMet: false,
+        ),
+      );
+    },
+    act: (bloc) => bloc.add(const BidsCorrectionSubmitted({'p0': 0, 'p1': 4})),
+    expect: () => [
+      isA<PlayStateLoaded>()
+          .having((s) => s.playState.bidSum, 'bidSum', 4)
+          .having((s) => s.playState.restrictionMet, 'restrictionMet', false),
     ],
   );
 }

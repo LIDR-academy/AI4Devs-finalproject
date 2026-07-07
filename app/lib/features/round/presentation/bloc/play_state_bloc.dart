@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:la_pocha/features/round/domain/usecases/correct_bids_usecase.dart';
 import 'package:la_pocha/features/round/domain/usecases/get_round_play_state_usecase.dart';
 import 'package:la_pocha/features/round/presentation/bloc/play_state_event.dart';
 import 'package:la_pocha/features/round/presentation/bloc/play_state_state.dart';
@@ -6,13 +7,17 @@ import 'package:la_pocha/features/round/presentation/bloc/play_state_state.dart'
 class PlayStateBloc extends Bloc<PlayStateEvent, PlayStateBlocState> {
   PlayStateBloc({
     required GetRoundPlayStateUseCase getRoundPlayState,
+    required CorrectBidsUseCase correctBids,
   })  : _getRoundPlayState = getRoundPlayState,
+        _correctBids = correctBids,
         super(const PlayStateInitial()) {
     on<PlayStateStarted>(_onPlayStateStarted);
     on<IntroduceTricksRequested>(_onIntroduceTricksRequested);
+    on<BidsCorrectionSubmitted>(_onBidsCorrectionSubmitted);
   }
 
   final GetRoundPlayStateUseCase _getRoundPlayState;
+  final CorrectBidsUseCase _correctBids;
 
   Future<void> _onPlayStateStarted(
     PlayStateStarted event,
@@ -45,5 +50,32 @@ class PlayStateBloc extends Bloc<PlayStateEvent, PlayStateBlocState> {
         roundNumber: current.playState.round.roundNumber,
       ),
     );
+  }
+
+  Future<void> _onBidsCorrectionSubmitted(
+    BidsCorrectionSubmitted event,
+    Emitter<PlayStateBlocState> emit,
+  ) async {
+    final current = state;
+    if (current is! PlayStateLoaded) {
+      return;
+    }
+
+    final playState = current.playState;
+    try {
+      await _correctBids(
+        round: playState.round,
+        updatedBids: event.updatedBids,
+        playerIds: playState.players.map((player) => player.id).toList(),
+      );
+
+      final refreshed = await _getRoundPlayState(
+        gameId: playState.game.id,
+        roundNumber: playState.round.roundNumber,
+      );
+      emit(PlayStateLoaded(playState: refreshed));
+    } catch (error) {
+      emit(PlayStateFailure(message: error.toString()));
+    }
   }
 }

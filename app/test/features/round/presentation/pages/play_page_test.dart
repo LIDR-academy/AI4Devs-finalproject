@@ -11,6 +11,7 @@ import 'package:la_pocha/features/game_setup/domain/entities/round_status.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/cancel_game_usecase.dart';
 import 'package:la_pocha/features/game_setup/presentation/bloc/cancel_game_cubit.dart';
 import 'package:la_pocha/features/round/domain/entities/round_play_state.dart';
+import 'package:la_pocha/features/round/domain/usecases/correct_bids_usecase.dart';
 import 'package:la_pocha/features/round/domain/usecases/get_round_play_state_usecase.dart';
 import 'package:la_pocha/features/round/presentation/bloc/play_state_bloc.dart';
 import 'package:la_pocha/features/round/presentation/pages/play_page.dart';
@@ -21,10 +22,12 @@ import 'play_page_test.mocks.dart';
 
 @GenerateNiceMocks([
   MockSpec<GetRoundPlayStateUseCase>(),
+  MockSpec<CorrectBidsUseCase>(),
   MockSpec<CancelGameUseCase>(),
 ])
 void main() {
   late MockGetRoundPlayStateUseCase getRoundPlayState;
+  late MockCorrectBidsUseCase correctBids;
   late MockCancelGameUseCase cancelGame;
   final getIt = GetIt.instance;
 
@@ -93,12 +96,17 @@ void main() {
       ),
     ).thenAnswer((_) async => playState);
 
+    correctBids = MockCorrectBidsUseCase();
     cancelGame = MockCancelGameUseCase();
 
     await getIt.reset();
     getIt.registerFactory<GetRoundPlayStateUseCase>(() => getRoundPlayState);
+    getIt.registerFactory<CorrectBidsUseCase>(() => correctBids);
     getIt.registerFactory<PlayStateBloc>(
-      () => PlayStateBloc(getRoundPlayState: getIt()),
+      () => PlayStateBloc(
+        getRoundPlayState: getIt(),
+        correctBids: getIt(),
+      ),
     );
     getIt.registerFactory<CancelGameUseCase>(() => cancelGame);
     getIt.registerFactory<CancelGameCubit>(

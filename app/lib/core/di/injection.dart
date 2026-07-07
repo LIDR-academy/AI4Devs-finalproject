@@ -29,6 +29,7 @@ import 'package:la_pocha/features/round/domain/services/ranking_service.dart';
 import 'package:la_pocha/features/round/domain/services/tricks_sum_validator.dart';
 import 'package:la_pocha/features/round/domain/usecases/advance_to_next_round_usecase.dart';
 import 'package:la_pocha/features/round/domain/usecases/close_bidding_usecase.dart';
+import 'package:la_pocha/features/round/domain/usecases/correct_bids_usecase.dart';
 import 'package:la_pocha/features/round/domain/usecases/close_round_usecase.dart';
 import 'package:la_pocha/features/round/domain/usecases/finish_game_usecase.dart';
 import 'package:la_pocha/features/round/domain/usecases/get_round_result_usecase.dart';
@@ -245,6 +246,10 @@ Future<void> configureDependencies() async {
     ),
   );
 
+  getIt.registerFactory<CorrectBidsUseCase>(
+    () => CorrectBidsUseCase(getIt<RoundRepository>()),
+  );
+
   getIt.registerFactory<SubmitTricksUseCase>(
     () => SubmitTricksUseCase(
       getIt<ScoreCalculatorService>(),
@@ -355,6 +360,7 @@ Future<void> configureDependencies() async {
   getIt.registerFactory<PlayStateBloc>(
     () => PlayStateBloc(
       getRoundPlayState: getIt<GetRoundPlayStateUseCase>(),
+      correctBids: getIt<CorrectBidsUseCase>(),
     ),
   );
 

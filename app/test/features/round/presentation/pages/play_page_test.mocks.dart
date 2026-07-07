@@ -3,14 +3,17 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i4;
+import 'dart:async' as _i5;
 
+import 'package:la_pocha/features/game_setup/domain/entities/round.dart' as _i3;
 import 'package:la_pocha/features/game_setup/domain/usecases/cancel_game_usecase.dart'
-    as _i5;
+    as _i7;
 import 'package:la_pocha/features/round/domain/entities/round_play_state.dart'
     as _i2;
+import 'package:la_pocha/features/round/domain/usecases/correct_bids_usecase.dart'
+    as _i6;
 import 'package:la_pocha/features/round/domain/usecases/get_round_play_state_usecase.dart'
-    as _i3;
+    as _i4;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -34,13 +37,18 @@ class _FakeRoundPlayState_0 extends _i1.SmartFake
     : super(parent, parentInvocation);
 }
 
+class _FakeRound_1 extends _i1.SmartFake implements _i3.Round {
+  _FakeRound_1(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
 /// A class which mocks [GetRoundPlayStateUseCase].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockGetRoundPlayStateUseCase extends _i1.Mock
-    implements _i3.GetRoundPlayStateUseCase {
+    implements _i4.GetRoundPlayStateUseCase {
   @override
-  _i4.Future<_i2.RoundPlayState> call({
+  _i5.Future<_i2.RoundPlayState> call({
     required String? gameId,
     required int? roundNumber,
   }) =>
@@ -49,7 +57,7 @@ class MockGetRoundPlayStateUseCase extends _i1.Mock
               #gameId: gameId,
               #roundNumber: roundNumber,
             }),
-            returnValue: _i4.Future<_i2.RoundPlayState>.value(
+            returnValue: _i5.Future<_i2.RoundPlayState>.value(
               _FakeRoundPlayState_0(
                 this,
                 Invocation.method(#call, [], {
@@ -58,7 +66,7 @@ class MockGetRoundPlayStateUseCase extends _i1.Mock
                 }),
               ),
             ),
-            returnValueForMissingStub: _i4.Future<_i2.RoundPlayState>.value(
+            returnValueForMissingStub: _i5.Future<_i2.RoundPlayState>.value(
               _FakeRoundPlayState_0(
                 this,
                 Invocation.method(#call, [], {
@@ -68,19 +76,60 @@ class MockGetRoundPlayStateUseCase extends _i1.Mock
               ),
             ),
           )
-          as _i4.Future<_i2.RoundPlayState>);
+          as _i5.Future<_i2.RoundPlayState>);
+}
+
+/// A class which mocks [CorrectBidsUseCase].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockCorrectBidsUseCase extends _i1.Mock
+    implements _i6.CorrectBidsUseCase {
+  @override
+  _i5.Future<_i3.Round> call({
+    required _i3.Round? round,
+    required Map<String, int>? updatedBids,
+    required List<String>? playerIds,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#call, [], {
+              #round: round,
+              #updatedBids: updatedBids,
+              #playerIds: playerIds,
+            }),
+            returnValue: _i5.Future<_i3.Round>.value(
+              _FakeRound_1(
+                this,
+                Invocation.method(#call, [], {
+                  #round: round,
+                  #updatedBids: updatedBids,
+                  #playerIds: playerIds,
+                }),
+              ),
+            ),
+            returnValueForMissingStub: _i5.Future<_i3.Round>.value(
+              _FakeRound_1(
+                this,
+                Invocation.method(#call, [], {
+                  #round: round,
+                  #updatedBids: updatedBids,
+                  #playerIds: playerIds,
+                }),
+              ),
+            ),
+          )
+          as _i5.Future<_i3.Round>);
 }
 
 /// A class which mocks [CancelGameUseCase].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockCancelGameUseCase extends _i1.Mock implements _i5.CancelGameUseCase {
+class MockCancelGameUseCase extends _i1.Mock implements _i7.CancelGameUseCase {
   @override
-  _i4.Future<void> call({required String? gameId}) =>
+  _i5.Future<void> call({required String? gameId}) =>
       (super.noSuchMethod(
             Invocation.method(#call, [], {#gameId: gameId}),
-            returnValue: _i4.Future<void>.value(),
-            returnValueForMissingStub: _i4.Future<void>.value(),
+            returnValue: _i5.Future<void>.value(),
+            returnValueForMissingStub: _i5.Future<void>.value(),
           )
-          as _i4.Future<void>);
+          as _i5.Future<void>);
 }

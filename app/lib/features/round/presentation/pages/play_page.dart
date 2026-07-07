@@ -5,6 +5,7 @@ import 'package:la_pocha/core/di/injection.dart';
 import 'package:la_pocha/features/round/presentation/bloc/play_state_bloc.dart';
 import 'package:la_pocha/features/round/presentation/bloc/play_state_event.dart';
 import 'package:la_pocha/features/round/presentation/bloc/play_state_state.dart';
+import 'package:la_pocha/features/round/presentation/widgets/correct_bids_dialog.dart';
 import 'package:la_pocha/features/round/presentation/widgets/player_play_card.dart';
 import 'package:la_pocha/features/round/presentation/widgets/round_header.dart';
 import 'package:la_pocha/features/round/presentation/widgets/tricks_balance_banner.dart';
@@ -93,7 +94,22 @@ class _PlayView extends StatelessWidget {
 class _LoadedBody extends StatelessWidget {
   const _LoadedBody({required this.state});
 
+  static const Color _warningColor = Color(0xFFD9772E);
+
   final PlayStateLoaded state;
+
+  Future<void> _onCorrectBids(BuildContext context) async {
+    final bloc = context.read<PlayStateBloc>();
+    final playState = state.playState;
+    final updatedBids = await showCorrectBidsDialog(
+      context,
+      players: playState.players,
+      round: playState.round,
+    );
+    if (updatedBids != null) {
+      bloc.add(BidsCorrectionSubmitted(updatedBids));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -140,21 +156,32 @@ class _LoadedBody extends StatelessWidget {
             },
           ),
         ),
+        if (!playState.restrictionMet)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+            child: Text(
+              'La suma de apuestas iguala ${playState.round.cardsInRound}. '
+              'El repartidor debe corregir su apuesta antes de continuar.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: _warningColor,
+                  ),
+            ),
+          ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
           child: TextButton(
-            onPressed: () {
-              // TODO(LPT-12): navigate to correct bids
-            },
+            onPressed: () => _onCorrectBids(context),
             child: const Text('Corregir apuestas'),
           ),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
           child: FilledButton(
-            onPressed: () => context.read<PlayStateBloc>().add(
-                  const IntroduceTricksRequested(),
-                ),
+            onPressed: playState.restrictionMet
+                ? () => context.read<PlayStateBloc>().add(
+                      const IntroduceTricksRequested(),
+                    )
+                : null,
             child: const Text('Introducir bazas reales'),
           ),
         ),
