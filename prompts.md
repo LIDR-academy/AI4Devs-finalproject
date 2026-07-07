@@ -243,3 +243,23 @@ These prompts drove refinement, reconciliation and review across the documents r
 
 > ok, now commit the changes and then write this session prompts into prompts.md
 
+---
+
+
+
+## Prompts de la sesión 4 — Rutas de la app (Expo Router) y limpieza del boilerplate
+
+> Note: prompts reproduced verbatim, in chronological order. This session reviewed `PRD.md` and proposed the app's route map, stripped the create-expo-app template boilerplate (demo screens, components, assets, scripts and demo-only deps — committed separately), and scaffolded the routes: `(auth)/{login,sign-up}` and `(app)/{index,upload,settings,lesson/[id]/{index,player,results}}` guarded with SDK 57 `Stack.Protected`, extending `useSession()` with `isLoading` for the splash-gated session check.
+
+**Prompt 1:** *(review the PRD and design the route structure)*
+
+> review the PRD and propose routes for the app
+
+**Prompt 2:** *(clean the Expo template first, commit it, then scaffold routes uncommitted)*
+
+> yes, but first clean-up all the expo boilerplate, including assets, etc. Do a commit for the expo clean-up and then leave the new routes uncommited
+
+**Prompt 3:** *(commit the routes and generate this session's prompts log)*
+
+> ok, now commit and add the prompts of this session into prompts.md
+
