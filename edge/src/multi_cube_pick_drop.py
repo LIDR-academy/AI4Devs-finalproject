@@ -363,7 +363,12 @@ def _base_payload(
         "totalDetectedCubes": len(snapshot.detections),
         "totalPlannedCubes": len(planned_actions),
         "totalExecutedCubes": 0,
+        "totalPhysicalConfirmedCubes": 0,
+        "totalBackendSyncedActions": 0,
+        "totalBackendSyncFailedActions": 0,
+        "totalFailedPhysicalConfirmations": 0,
         "totalSkippedCubes": len(skipped_cubes),
+        "lastBackendSyncError": None,
         "snapshot": snapshot_to_dict(snapshot),
         "plannedActions": planned_actions,
         "executedActions": [],
@@ -461,6 +466,12 @@ def _backend_payload(
     execution: dict[str, Any],
 ) -> dict[str, Any]:
     planned = _planned_action_dict(sequence_number, plan)
+    raw_firmware_responses = execution.get("firmwareResponses", [])
+    firmware_responses = raw_firmware_responses
+    firmware_response_count = len(raw_firmware_responses) if isinstance(raw_firmware_responses, list) else 0
+    firmware_responses_truncated = isinstance(raw_firmware_responses, list) and len(raw_firmware_responses) > 24
+    if firmware_responses_truncated:
+        firmware_responses = raw_firmware_responses[-24:]
     return _json_safe(
         {
             "sessionId": session_id,
@@ -489,9 +500,12 @@ def _backend_payload(
                 "movementDelaySeconds": execution.get("movementDelaySeconds"),
                 "pickupHoldSeconds": execution.get("pickupHoldSeconds"),
                 "releaseHoldSeconds": execution.get("releaseHoldSeconds"),
-                "firmwareResponses": execution.get("firmwareResponses", []),
+                "firmwareResponses": firmware_responses,
+                "firmwareResponseCount": firmware_response_count,
+                "firmwareResponsesTruncated": firmware_responses_truncated,
                 "commandExecutionStatus": execution.get("commandExecutionStatus"),
                 "physicalConfirmation": execution.get("physicalConfirmation"),
+                "backendSyncStatus": execution.get("backendSyncStatus"),
                 "finalPickZUsed": execution.get("finalPickZUsed"),
                 "retryEnabled": execution.get("retryEnabled"),
                 "maxAttempts": execution.get("maxAttempts"),
@@ -503,6 +517,46 @@ def _backend_payload(
                 "occupiedPersisted": execution.get("occupiedPersisted", False),
             },
         }
+    )
+
+
+def _execution_identity(sequence_number: int, plan: RobotActionPlan) -> dict[str, Any]:
+    planned = _planned_action_dict(sequence_number, plan)
+    return {
+        key: planned.get(key)
+        for key in (
+            "selectedCube",
+            "selectedCubeColor",
+            "selectedCubeCenter",
+            "selectedCubeBoundingBox",
+            "pickupPositionCm",
+            "pickupOffset",
+            "pickupTargetBase",
+            "pickupTarget",
+            "pickupSafe",
+            "dropZoneCode",
+            "dropZonePose",
+            "positionOrder",
+            "visualCalibrationVersion",
+            "visualCalibrationUsed",
+            "homographyUsed",
+        )
+    }
+
+
+def _is_physically_executed(action: dict[str, Any]) -> bool:
+    confirmation = action.get("physicalConfirmation")
+    if isinstance(confirmation, dict) and confirmation.get("enabled") is True:
+        return confirmation.get("status") == "CONFIRMED"
+    return action.get("commandExecutionStatus") == "SUCCESS" and action.get("releaseConfirmed") is True
+
+
+def _physical_confirmation_failed(action: dict[str, Any]) -> bool:
+    confirmation = action.get("physicalConfirmation")
+    return (
+        isinstance(confirmation, dict)
+        and confirmation.get("enabled") is True
+        and confirmation.get("status") in {"FAILED", "INCONCLUSIVE"}
     )
 
 
@@ -549,9 +603,11 @@ def _execute_plan(
 
             execution: dict[str, Any] = {
                 "sequenceNumber": index,
+                **_execution_identity(index, plan),
                 "status": "SUCCESS",
                 "firmwareResponses": [],
                 "commandExecutionStatus": "SUCCESS",
+                "backendSyncStatus": "SKIPPED",
                 "serialOpened": serial.is_open,
                 "hardwareMovement": False,
                 "suctionActivated": False,
@@ -702,26 +758,44 @@ def _execute_plan(
                         pass
 
                 if backend_client is not None and snapshot.truck_code:
-                    if session_id is None:
-                        session = backend_client.create_session(snapshot.truck_code).get("session", {})
-                        session_id = session.get("id") if isinstance(session, dict) else None
-                    if not session_id:
-                        raise MultiCubePickDropError("BACKEND_SESSION_MISSING", "Backend did not return session id")
-                    execution["backend"] = backend_client.register_robot_action(
-                        _backend_payload(
-                            session_id=session_id,
-                            run_id=run_id,
-                            sequence_number=index,
-                            total_planned=len(planned),
-                            snapshot=action_snapshot,
-                            plan=plan,
-                            execution=execution,
+                    try:
+                        if session_id is None:
+                            session = backend_client.create_session(snapshot.truck_code).get("session", {})
+                            session_id = session.get("id") if isinstance(session, dict) else None
+                        if not session_id:
+                            raise MultiCubePickDropError("BACKEND_SESSION_MISSING", "Backend did not return session id")
+                        backend_response = backend_client.register_robot_action(
+                            _backend_payload(
+                                session_id=session_id,
+                                run_id=run_id,
+                                sequence_number=index,
+                                total_planned=len(planned),
+                                snapshot=action_snapshot,
+                                plan=plan,
+                                execution=execution,
+                            )
                         )
-                    )
+                        execution["backend"] = backend_response
+                        execution["backendSyncStatus"] = "SUCCESS"
+                        action = backend_response.get("action") if isinstance(backend_response, dict) else None
+                        if isinstance(action, dict):
+                            execution["backendActionId"] = action.get("id")
+                            execution["backendActionCode"] = action.get("code")
+                    except Exception as exc:
+                        execution["backendSyncStatus"] = "FAILED"
+                        execution["backendSyncError"] = str(exc)
+                        execution["backendSyncErrorCode"] = getattr(exc, "code", "BACKEND_SYNC_FAILED")
+                        error_code = "BACKEND_SYNC_FAILED"
+                        error_message = str(exc)
+                        execution["status"] = (
+                            "SUCCESS_WITH_BACKEND_SYNC_FAILED"
+                            if _is_physically_executed(execution)
+                            else "FAILED"
+                        )
                 executed.append(execution)
                 if execution.get("status") != "SUCCESS":
-                    error_code = str(execution.get("errorCode", "PICK_DROP_FAILED"))
-                    error_message = str(execution.get("errorMessage", "Pick/drop failed"))
+                    error_code = str(execution.get("errorCode") or execution.get("backendSyncErrorCode") or "PICK_DROP_FAILED")
+                    error_message = str(execution.get("errorMessage") or execution.get("backendSyncError") or "Pick/drop failed")
                     break
             except Exception as exc:
                 if not execution["releaseConfirmed"]:
@@ -731,6 +805,7 @@ def _execute_plan(
                         pass
                 execution["status"] = "FAILED"
                 execution["commandExecutionStatus"] = "FAILED"
+                execution["backendSyncStatus"] = "SKIPPED"
                 execution["errorCode"] = getattr(exc, "code", "PICK_DROP_FAILED")
                 execution["errorMessage"] = str(exc)
                 executed.append(execution)
@@ -849,17 +924,25 @@ def run_multi_cube_pick_drop(
         backend_client=backend_client,
         post_drop_snapshot_loader=post_drop_snapshot_loader,
     )
-    successful = [action for action in executed if action.get("status") == "SUCCESS"]
+    physically_executed = [action for action in executed if _is_physically_executed(action)]
+    backend_synced = [action for action in executed if action.get("backendSyncStatus") == "SUCCESS"]
+    backend_sync_failed = [action for action in executed if action.get("backendSyncStatus") == "FAILED"]
+    physical_failed = [action for action in executed if _physical_confirmation_failed(action)]
     if error_code is None:
         final_status = "SUCCESS"
-    elif successful:
+    elif physically_executed:
         final_status = "PARTIAL_SUCCESS"
     else:
         final_status = "FAILED"
     payload.update(
         {
             "status": final_status,
-            "totalExecutedCubes": len(successful),
+            "totalExecutedCubes": len(physically_executed),
+            "totalPhysicalConfirmedCubes": len(physically_executed),
+            "totalBackendSyncedActions": len(backend_synced),
+            "totalBackendSyncFailedActions": len(backend_sync_failed),
+            "totalFailedPhysicalConfirmations": len(physical_failed),
+            "lastBackendSyncError": backend_sync_failed[-1].get("backendSyncError") if backend_sync_failed else None,
             "executedActions": executed,
             "serialOpened": any(bool(action.get("serialOpened")) for action in executed),
             "hardwareMovement": any(bool(action.get("hardwareMovement")) for action in executed),

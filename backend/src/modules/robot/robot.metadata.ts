@@ -214,6 +214,17 @@ export const projectExecutionMetadata = (raw: unknown) => {
     calibrationVersion:
       typeof metadata.calibrationVersion === "string" ? metadata.calibrationVersion : null,
     errorCode: typeof metadata.errorCode === "string" ? metadata.errorCode : null,
-    errorMessage: typeof metadata.errorMessage === "string" ? metadata.errorMessage : null
+    errorMessage: typeof metadata.errorMessage === "string" ? metadata.errorMessage : null,
+    multiCubeRunId: typeof metadata.multiCubeRunId === "string" ? metadata.multiCubeRunId : null,
+    sequenceNumber: typeof metadata.sequenceNumber === "number" ? metadata.sequenceNumber : null,
+    totalPlannedCubes: typeof metadata.totalPlannedCubes === "number" ? metadata.totalPlannedCubes : null,
+    pickupOffset: isRecord(metadata.pickupOffset) ? metadata.pickupOffset : null,
+    pickupTargetBase: isRecord(metadata.pickupTargetBase) ? metadata.pickupTargetBase : null,
+    pickupTarget: isRecord(metadata.pickupTarget) ? metadata.pickupTarget : null,
+    physicalConfirmation: isRecord(metadata.physicalConfirmation) ? metadata.physicalConfirmation : null,
+    commandExecutionStatus:
+      typeof metadata.commandExecutionStatus === "string" ? metadata.commandExecutionStatus : null,
+    backendSyncStatus: typeof metadata.backendSyncStatus === "string" ? metadata.backendSyncStatus : null,
+    finalPickZUsed: typeof metadata.finalPickZUsed === "number" ? metadata.finalPickZUsed : null
   };
 };

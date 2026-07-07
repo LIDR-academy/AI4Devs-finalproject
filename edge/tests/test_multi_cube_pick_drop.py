@@ -316,6 +316,111 @@ class MultiCubePickDropTests(unittest.TestCase):
         persisted = json.loads(self.drop_zones_path.read_text(encoding="utf-8"))
         self.assertTrue(persisted["red"][0]["occupied"])
 
+    def test_backend_sync_failure_after_physical_confirmation_keeps_physical_state(self) -> None:
+        self.write_config(
+            physical_confirmation={
+                "enabled": True,
+                "method": "post_drop_vision_count_delta",
+                "visionSettleSeconds": 0.0,
+                "expectedTotalDelta": -1,
+                "expectedColorDelta": -1,
+            },
+            pickup_retry={"enabled": True, "maxAttempts": 3, "zStep": -2, "minPickZ": 132},
+        )
+        snapshot = DetectionSnapshot(
+            "run-five",
+            "opencv-camera",
+            (
+                CubeDetection("red", 80, 80, 20, 20, 0.95, {"sizeValid": True}),
+                CubeDetection("blue", 40, 90, 20, 20, 0.9, {"sizeValid": True}),
+                CubeDetection("yellow", 10, 70, 20, 20, 0.85, {"sizeValid": True}),
+                CubeDetection("yellow", 30, 70, 20, 20, 0.8, {"sizeValid": True}),
+                CubeDetection("red", 60, 70, 20, 20, 0.75, {"sizeValid": True}),
+            ),
+            truck_code="TRUCK-001",
+            metadata={"snapshotSignature": "sig-five", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
+        )
+        after_snapshots = iter(
+            [
+                DetectionSnapshot(
+                    "after-red",
+                    "opencv-camera",
+                    snapshot.detections[1:],
+                    truck_code="TRUCK-001",
+                    metadata={"snapshotSignature": "sig-after-red", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
+                ),
+                DetectionSnapshot(
+                    "after-red-2",
+                    "opencv-camera",
+                    snapshot.detections[1:4],
+                    truck_code="TRUCK-001",
+                    metadata={"snapshotSignature": "sig-after-red-2", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
+                ),
+                DetectionSnapshot(
+                    "after-blue",
+                    "opencv-camera",
+                    snapshot.detections[2:4],
+                    truck_code="TRUCK-001",
+                    metadata={"snapshotSignature": "sig-after-blue", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
+                ),
+                DetectionSnapshot(
+                    "after-yellow-1",
+                    "opencv-camera",
+                    (snapshot.detections[3],),
+                    truck_code="TRUCK-001",
+                    metadata={"snapshotSignature": "sig-after-yellow-1", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
+                ),
+                DetectionSnapshot(
+                    "after-yellow-2",
+                    "opencv-camera",
+                    (),
+                    truck_code="TRUCK-001",
+                    metadata={"snapshotSignature": "sig-after-yellow-2", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
+                ),
+            ]
+        )
+
+        class FailingBackend:
+            def __init__(self) -> None:
+                self.payloads: list[dict[str, object]] = []
+
+            def create_session(self, truck_code: str) -> dict[str, object]:
+                return {"session": {"id": f"session-{truck_code}"}}
+
+            def register_robot_action(self, payload: dict[str, object]) -> dict[str, object]:
+                self.payloads.append(payload)
+                if len(self.payloads) == 5:
+                    raise RuntimeError("Backend returned HTTP 500 for POST /robot/actions")
+                return {"action": {"id": f"action-{len(self.payloads)}", "code": f"ACTION-{len(self.payloads):03d}"}}
+
+        backend = FailingBackend()
+
+        result = run_multi_cube_pick_drop(
+            self.config_path,
+            snapshot=snapshot,
+            max_cubes=5,
+            gates=self.gates(),
+            serial_factory=lambda *_: FakeSerial(),
+            evidence_writer=self.writer,
+            backend_client=backend,
+            post_drop_snapshot_loader=lambda: next(after_snapshots),
+        )
+
+        self.assertEqual("PARTIAL_SUCCESS", result["status"])
+        self.assertEqual(5, result["totalExecutedCubes"])
+        self.assertEqual(5, result["totalPhysicalConfirmedCubes"])
+        self.assertEqual(4, result["totalBackendSyncedActions"])
+        self.assertEqual(1, result["totalBackendSyncFailedActions"])
+        self.assertEqual(0, result["totalFailedPhysicalConfirmations"])
+        action = result["executedActions"][4]
+        self.assertEqual("SUCCESS_WITH_BACKEND_SYNC_FAILED", action["status"])
+        self.assertEqual("SUCCESS", action["commandExecutionStatus"])
+        self.assertEqual("CONFIRMED", action["physicalConfirmation"]["status"])
+        self.assertEqual("FAILED", action["backendSyncStatus"])
+        self.assertEqual("yellow", action["selectedCubeColor"])
+        self.assertEqual("DROP_YELLOW_02", action["dropZoneCode"])
+        self.assertIn("Backend returned HTTP 500", action["backendSyncError"])
+
     def test_physical_confirmation_failed_does_not_persist_drop_zone(self) -> None:
         self.write_config(
             physical_confirmation={"enabled": True, "visionSettleSeconds": 0.0},

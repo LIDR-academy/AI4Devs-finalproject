@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import tempfile
 import unittest
+import json
 from pathlib import Path
 from unittest.mock import Mock, call, patch
 
@@ -9,6 +10,7 @@ import cv2
 import numpy as np
 from fastapi.testclient import TestClient
 
+from src.models import CubeDetection, DetectionSnapshot
 from src.service.vision_api import create_app, refresh_snapshot_if_needed
 from src.vision.qr_reader import QrReadResult
 from tests.helpers import valid_drop_zones, write_json
@@ -41,6 +43,16 @@ def enabled_planning_payload() -> dict[str, object]:
             "minZ": 0,
             "maxZ": 300,
         },
+    }
+
+
+def valid_multi_cube_safety() -> dict[str, bool]:
+    return {
+        "zoneClear": True,
+        "operatorPresent": True,
+        "emergencyStopReady": True,
+        "suctionReady": True,
+        "physicalExecutionConfirmed": True,
     }
 
 
@@ -515,6 +527,350 @@ class VisionApiTests(unittest.TestCase):
             read_file.assert_not_called()
             self.assertIn("dryRun=true", response.json()["lastError"])
             self.assert_no_store(response)
+
+    def test_drop_zones_reset_endpoint_requires_all_scope_and_resets_occupied(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            directory = Path(temporary_directory)
+            config_path = self._write_file_config(directory)
+            unload_config_path = self._write_planning_file_config(directory)
+            payload = valid_drop_zones()
+            payload["red"][0]["occupied"] = True
+            write_json(directory / "drop-zones.json", payload)
+            client = TestClient(create_app(config_path, unload_config_path=unload_config_path))
+
+            invalid = client.post("/drop-zones/reset", json={"scope": "red"})
+            response = client.post("/drop-zones/reset", json={"scope": "all"})
+
+            self.assertEqual(400, invalid.status_code)
+            self.assertEqual(200, response.status_code)
+            body = response.json()
+            self.assertEqual("SUCCESS", body["status"])
+            self.assertEqual(1, body["resetSlots"])
+            self.assertTrue(Path(body["backupPath"]).exists())
+            after = json.loads((directory / "drop-zones.json").read_text(encoding="utf-8"))
+            self.assertFalse(after["red"][0]["occupied"])
+            self.assertTrue(after["red"][0]["active"])
+
+    def test_drop_zones_reset_endpoint_requires_drop_zones_path_in_unload_config(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            directory = Path(temporary_directory)
+            config_path = self._write_file_config(directory)
+            unload_config_path = directory / "unload-without-drop-zones.json"
+            write_json(
+                unload_config_path,
+                {
+                    "profile": "vision-dry-run",
+                    "robotPlanning": enabled_planning_payload(),
+                    "vision": {"source": "simulation"},
+                },
+            )
+            client = TestClient(create_app(config_path, unload_config_path=unload_config_path))
+
+            response = client.post("/drop-zones/reset", json={"scope": "all"})
+
+            self.assertEqual(400, response.status_code)
+            self.assertEqual("MISSING_DROP_ZONES_CONFIG", response.json()["detail"]["code"])
+
+    def test_create_app_accepts_explicit_unload_config_path(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            directory = Path(temporary_directory)
+            config_path = self._write_file_config(directory)
+            unload_config_path = self._write_planning_file_config(directory)
+
+            app = create_app(config_path, unload_config_path=unload_config_path)
+
+            self.assertEqual(unload_config_path, app.state.vision_state.unload_config_path)
+
+    def test_multi_cube_plan_endpoint_generates_plan_from_snapshot(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            directory = Path(temporary_directory)
+            config_path = self._write_file_config(directory)
+            unload_config_path = self._write_planning_file_config(directory)
+            snapshot = DetectionSnapshot(
+                "run-api-plan",
+                "opencv-camera",
+                (CubeDetection("red", 80, 80, 20, 20, 0.9, {"sizeValid": True}),),
+                truck_code="TRUCK-001",
+                metadata={"snapshotSignature": "sig-api-plan", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
+            )
+            plan = {
+                "status": "DRY_RUN_PLANNED",
+                "runId": "multi-run-api-plan",
+                "truckCode": "TRUCK-001",
+                "totalDetectedCubes": 1,
+                "totalPlannedCubes": 1,
+                "plannedActions": [{"sequenceNumber": 1, "selectedCubeColor": "red"}],
+                "evidence": {"json": str(Path(temporary_directory) / "plan.json")},
+            }
+            with patch("src.service.vision_api.refresh_snapshot_if_needed", return_value=snapshot), patch(
+                "src.service.vision_api.run_multi_cube_pick_drop", return_value=plan
+            ) as runner:
+                client = TestClient(create_app(config_path, unload_config_path=unload_config_path))
+                response = client.post("/robot/multi-cube/plan", json={"maxCubes": 6})
+                status = client.get("/robot/multi-cube/status").json()
+
+            self.assertEqual(200, response.status_code)
+            runner.assert_called_once()
+            self.assertEqual(unload_config_path, runner.call_args.args[0])
+            self.assertEqual("DRY_RUN_PLANNED", response.json()["status"])
+            self.assertEqual("planned", status["status"])
+            self.assertEqual("multi-run-api-plan", status["runId"])
+            self.assertIsNone(status["lastError"])
+
+    def test_multi_cube_plan_endpoint_reports_missing_planning_from_unload_config(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            directory = Path(temporary_directory)
+            config_path = self._write_file_config(directory)
+            unload_config_path = directory / "unload-without-planning.json"
+            write_json(
+                unload_config_path,
+                {
+                    "profile": "vision-dry-run",
+                    "dropZones": {"path": "drop-zones.json"},
+                    "robotPlanning": {"enabled": False},
+                    "vision": {"source": "simulation"},
+                },
+            )
+            write_json(directory / "drop-zones.json", valid_drop_zones())
+            client = TestClient(create_app(config_path, unload_config_path=unload_config_path))
+
+            response = client.post("/robot/multi-cube/plan", json={"maxCubes": 1})
+            status = client.get("/robot/multi-cube/status").json()
+
+            self.assertEqual(400, response.status_code)
+            self.assertEqual("MISSING_PLANNING_CONFIG", response.json()["detail"]["code"])
+            self.assertEqual("failed", status["status"])
+
+    def test_multi_cube_status_clears_previous_error_after_successful_plan(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            directory = Path(temporary_directory)
+            config_path = self._write_file_config(directory)
+            unload_config_path = self._write_planning_file_config(directory)
+            snapshot = DetectionSnapshot(
+                "run-api-plan-clean-error",
+                "opencv-camera",
+                (CubeDetection("red", 80, 80, 20, 20, 0.9, {"sizeValid": True}),),
+                truck_code="TRUCK-001",
+                metadata={"snapshotSignature": "sig-api-plan-clean-error", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
+            )
+            plan = {
+                "status": "DRY_RUN_PLANNED",
+                "runId": "multi-run-clean-error",
+                "truckCode": "TRUCK-001",
+                "totalDetectedCubes": 1,
+                "totalPlannedCubes": 1,
+                "plannedActions": [{"sequenceNumber": 1, "selectedCubeColor": "red"}],
+                "evidence": {"json": str(directory / "plan.json")},
+            }
+            app = create_app(config_path, unload_config_path=unload_config_path)
+            app.state.vision_state.multi_cube_last_error = "MISSING_PLANNING_CONFIG: robotPlanning.enabled=true is required"
+            client = TestClient(app)
+
+            with patch("src.service.vision_api.refresh_snapshot_if_needed", return_value=snapshot), patch(
+                "src.service.vision_api.run_multi_cube_pick_drop", return_value=plan
+            ):
+                response = client.post("/robot/multi-cube/plan", json={"maxCubes": 1})
+                status = client.get("/robot/multi-cube/status").json()
+
+            self.assertEqual(200, response.status_code)
+            self.assertEqual("planned", status["status"])
+            self.assertIsNone(status["lastError"])
+
+    def test_multi_cube_execute_requires_plan_and_safety_confirmations(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            config_path = self._write_planning_file_config(Path(temporary_directory))
+            client = TestClient(create_app(config_path, hardware_port="COM4"))
+
+            without_plan = client.post("/robot/multi-cube/execute", json={"maxCubes": 1, "safety": {}})
+            self.assertEqual(409, without_plan.status_code)
+
+            app = create_app(config_path, hardware_port="COM4")
+            app.state.vision_state.multi_cube_status = "planned"
+            app.state.vision_state.multi_cube_run_id = "multi-run"
+            app.state.vision_state.multi_cube_last_plan = {"runId": "multi-run", "evidence": {"json": None}}
+            client = TestClient(app)
+            without_safety = client.post("/robot/multi-cube/execute", json={"runId": "multi-run", "maxCubes": 1})
+
+            self.assertEqual(400, without_safety.status_code)
+            self.assertIn("safety", str(without_safety.json()["detail"]))
+
+    def test_multi_cube_execute_uses_hardware_port_and_baudrate_from_unload_config(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            directory = Path(temporary_directory)
+            config_path = self._write_file_config(directory)
+            unload_config_path = self._write_planning_file_config(directory)
+            unload_payload = json.loads(unload_config_path.read_text(encoding="utf-8"))
+            unload_payload["hardware"] = {"port": "COM4", "baudrate": 57600}
+            write_json(unload_config_path, unload_payload)
+            app = create_app(config_path, unload_config_path=unload_config_path)
+            app.state.vision_state.multi_cube_status = "planned"
+            app.state.vision_state.multi_cube_run_id = "multi-run"
+            app.state.vision_state.multi_cube_last_plan = {
+                "runId": "multi-run",
+                "evidence": {"json": str(directory / "plan.json")},
+            }
+            app.state.vision_state.multi_cube_plan_snapshot = DetectionSnapshot(
+                "run-api-execute",
+                "opencv-camera",
+                (CubeDetection("red", 80, 80, 20, 20, 0.9, {"sizeValid": True}),),
+                truck_code="TRUCK-001",
+                metadata={"snapshotSignature": "sig-api-execute", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
+            )
+            result = {"status": "SUCCESS", "runId": "multi-run", "totalExecutedCubes": 1, "executedActions": []}
+
+            with patch("src.service.vision_api.run_multi_cube_pick_drop", return_value=result) as runner:
+                client = TestClient(app)
+                response = client.post(
+                    "/robot/multi-cube/execute",
+                    json={"runId": "multi-run", "maxCubes": 1, "safety": valid_multi_cube_safety()},
+                )
+
+            self.assertEqual(200, response.status_code)
+            gates = runner.call_args.kwargs["gates"]
+            self.assertEqual("COM4", gates.port)
+            self.assertEqual(57600, gates.baudrate)
+
+    def test_multi_cube_execute_request_port_overrides_unload_config_and_default_baudrate_is_used(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            directory = Path(temporary_directory)
+            config_path = self._write_file_config(directory)
+            unload_config_path = self._write_planning_file_config(directory)
+            unload_payload = json.loads(unload_config_path.read_text(encoding="utf-8"))
+            unload_payload["hardware"] = {"port": "COM4"}
+            write_json(unload_config_path, unload_payload)
+            app = create_app(config_path, unload_config_path=unload_config_path)
+            app.state.vision_state.multi_cube_status = "planned"
+            app.state.vision_state.multi_cube_run_id = "multi-run"
+            app.state.vision_state.multi_cube_last_plan = {
+                "runId": "multi-run",
+                "evidence": {"json": str(directory / "plan.json")},
+            }
+            app.state.vision_state.multi_cube_plan_snapshot = DetectionSnapshot(
+                "run-api-execute",
+                "opencv-camera",
+                (CubeDetection("red", 80, 80, 20, 20, 0.9, {"sizeValid": True}),),
+                truck_code="TRUCK-001",
+                metadata={"snapshotSignature": "sig-api-execute", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
+            )
+            result = {"status": "SUCCESS", "runId": "multi-run", "totalExecutedCubes": 1, "executedActions": []}
+
+            with patch("src.service.vision_api.run_multi_cube_pick_drop", return_value=result) as runner:
+                client = TestClient(app)
+                response = client.post(
+                    "/robot/multi-cube/execute",
+                    json={
+                        "runId": "multi-run",
+                        "maxCubes": 1,
+                        "port": "COM5",
+                        "safety": valid_multi_cube_safety(),
+                    },
+                )
+
+            self.assertEqual(200, response.status_code)
+            gates = runner.call_args.kwargs["gates"]
+            self.assertEqual("COM5", gates.port)
+            self.assertEqual(115200, gates.baudrate)
+
+    def test_multi_cube_execute_request_baudrate_overrides_unload_config(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            directory = Path(temporary_directory)
+            config_path = self._write_file_config(directory)
+            unload_config_path = self._write_planning_file_config(directory)
+            unload_payload = json.loads(unload_config_path.read_text(encoding="utf-8"))
+            unload_payload["hardware"] = {"port": "COM4", "baudrate": 57600}
+            write_json(unload_config_path, unload_payload)
+            app = create_app(config_path, unload_config_path=unload_config_path)
+            app.state.vision_state.multi_cube_status = "planned"
+            app.state.vision_state.multi_cube_run_id = "multi-run"
+            app.state.vision_state.multi_cube_last_plan = {
+                "runId": "multi-run",
+                "evidence": {"json": str(directory / "plan.json")},
+            }
+            app.state.vision_state.multi_cube_plan_snapshot = DetectionSnapshot(
+                "run-api-execute",
+                "opencv-camera",
+                (CubeDetection("red", 80, 80, 20, 20, 0.9, {"sizeValid": True}),),
+                truck_code="TRUCK-001",
+                metadata={"snapshotSignature": "sig-api-execute", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
+            )
+            result = {"status": "SUCCESS", "runId": "multi-run", "totalExecutedCubes": 1, "executedActions": []}
+
+            with patch("src.service.vision_api.run_multi_cube_pick_drop", return_value=result) as runner:
+                client = TestClient(app)
+                response = client.post(
+                    "/robot/multi-cube/execute",
+                    json={
+                        "runId": "multi-run",
+                        "maxCubes": 1,
+                        "baudrate": 38400,
+                        "safety": valid_multi_cube_safety(),
+                    },
+                )
+
+            self.assertEqual(200, response.status_code)
+            gates = runner.call_args.kwargs["gates"]
+            self.assertEqual("COM4", gates.port)
+            self.assertEqual(38400, gates.baudrate)
+
+    def test_multi_cube_execute_missing_hardware_port_returns_clear_error_without_runner(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            directory = Path(temporary_directory)
+            config_path = self._write_file_config(directory)
+            unload_config_path = self._write_planning_file_config(directory)
+            app = create_app(config_path, unload_config_path=unload_config_path)
+            app.state.vision_state.multi_cube_status = "planned"
+            app.state.vision_state.multi_cube_run_id = "multi-run"
+            app.state.vision_state.multi_cube_last_plan = {
+                "runId": "multi-run",
+                "evidence": {"json": str(directory / "plan.json")},
+            }
+            app.state.vision_state.multi_cube_plan_snapshot = DetectionSnapshot(
+                "run-api-execute",
+                "opencv-camera",
+                (CubeDetection("red", 80, 80, 20, 20, 0.9, {"sizeValid": True}),),
+                truck_code="TRUCK-001",
+                metadata={"snapshotSignature": "sig-api-execute", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
+            )
+
+            with patch("src.service.vision_api.run_multi_cube_pick_drop") as runner:
+                client = TestClient(app)
+                response = client.post(
+                    "/robot/multi-cube/execute",
+                    json={"runId": "multi-run", "maxCubes": 1, "safety": valid_multi_cube_safety()},
+                )
+                status = client.get("/robot/multi-cube/status").json()
+
+            self.assertEqual(400, response.status_code)
+            self.assertEqual("MISSING_HARDWARE_PORT", response.json()["detail"]["code"])
+            self.assertEqual(
+                "Configure hardware.port in unload-config or provide port in request",
+                response.json()["detail"]["message"],
+            )
+            self.assertIn("MISSING_HARDWARE_PORT", status["lastError"])
+            self.assertFalse(status["hardwarePortConfigured"])
+            runner.assert_not_called()
+
+    def test_multi_cube_execute_blocks_concurrent_execution(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            config_path = self._write_planning_file_config(Path(temporary_directory))
+            app = create_app(config_path, hardware_port="COM4")
+            app.state.vision_state.multi_cube_executing = True
+            client = TestClient(app)
+
+            response = client.post("/robot/multi-cube/execute", json={"maxCubes": 1, "safety": {}})
+
+            self.assertEqual(409, response.status_code)
+
+    def test_multi_cube_status_returns_idle_shape(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            config_path = self._write_planning_file_config(Path(temporary_directory))
+            client = TestClient(create_app(config_path))
+
+            response = client.get("/robot/multi-cube/status")
+
+            self.assertEqual(200, response.status_code)
+            self.assertEqual("idle", response.json()["status"])
+            self.assertIsNone(response.json()["lastError"])
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 import time
 import uuid
@@ -10,15 +11,17 @@ from pathlib import Path
 from typing import Any
 
 import cv2
-from fastapi import FastAPI, Response
+from fastapi import Body, FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 try:
     from ..api_client import BackendApiError, BackendClient
-    from ..config import EdgeConfig, load_edge_config
+    from ..config import EdgeConfig, EdgeConfigError, load_edge_config
     from ..edge_dry_run import run_integrated_dry_run
     from ..models import DetectionSnapshot, EdgeRunProfile, SUPPORTED_COLORS
+    from ..multi_cube_pick_drop import MultiCubePickDropError, MultiHardwareGates, run_multi_cube_pick_drop
+    from ..reset_drop_zones import ResetDropZonesError, reset_drop_zones
     from ..vision.capture import CapturedFrame, FrameCapture
     from ..vision.color_detector import ColorDetector
     from ..vision.evidence import EvidenceWriter, snapshot_to_dict
@@ -27,9 +30,11 @@ try:
 except ImportError:
     sys.path.append(str(Path(__file__).resolve().parents[1]))
     from api_client import BackendApiError, BackendClient
-    from config import EdgeConfig, load_edge_config
+    from config import EdgeConfig, EdgeConfigError, load_edge_config
     from edge_dry_run import run_integrated_dry_run
     from models import DetectionSnapshot, EdgeRunProfile, SUPPORTED_COLORS
+    from multi_cube_pick_drop import MultiCubePickDropError, MultiHardwareGates, run_multi_cube_pick_drop
+    from reset_drop_zones import ResetDropZonesError, reset_drop_zones
     from vision.capture import CapturedFrame, FrameCapture
     from vision.color_detector import ColorDetector
     from vision.evidence import EvidenceWriter, snapshot_to_dict
@@ -41,6 +46,7 @@ except ImportError:
 class VisionServiceState:
     config: EdgeConfig
     config_path: Path
+    unload_config_path: Path
     allow_camera: bool
     backend_client: BackendClient | None = None
     auto_sync_backend: bool = False
@@ -55,6 +61,16 @@ class VisionServiceState:
     last_sync: dict[str, object] | None = None
     last_synced_signature: str | None = None
     last_dry_run_plan: dict[str, object] | None = None
+    multi_cube_status: str = "idle"
+    multi_cube_run_id: str | None = None
+    multi_cube_last_plan: dict[str, object] | None = None
+    multi_cube_last_result: dict[str, object] | None = None
+    multi_cube_plan_snapshot: DetectionSnapshot | None = None
+    multi_cube_last_error: str | None = None
+    multi_cube_updated_at: str | None = None
+    multi_cube_executing: bool = False
+    hardware_port: str | None = None
+    hardware_baudrate: int = 115200
 
     @property
     def source(self) -> str:
@@ -79,6 +95,8 @@ def _status_payload(state: VisionServiceState) -> dict[str, object]:
         "status": "degraded" if state.last_error else "ok",
         "profile": state.config.profile.value,
         "source": state.source,
+        "configPath": str(state.config_path),
+        "unloadConfigPath": str(state.unload_config_path),
         "configuredCameraIndex": state.config.vision.camera_index if state.config.vision.source == "camera" else None,
         "activeCameraIndex": state.active_camera_index,
         "snapshotCameraIndex": state.snapshot_camera_index,
@@ -140,6 +158,169 @@ def _no_store_headers() -> dict[str, str]:
 
 def _json_no_store(payload: dict[str, object]) -> JSONResponse:
     return JSONResponse(payload, headers=_no_store_headers())
+
+
+def _utc_iso() -> str:
+    from datetime import datetime, timezone
+
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _set_multi_status(
+    state: VisionServiceState,
+    status: str,
+    *,
+    run_id: str | None = None,
+    plan: dict[str, object] | None = None,
+    result: dict[str, object] | None = None,
+    error: str | None = None,
+) -> None:
+    state.multi_cube_status = status
+    if run_id is not None:
+        state.multi_cube_run_id = run_id
+    if plan is not None:
+        state.multi_cube_last_plan = plan
+    if result is not None:
+        state.multi_cube_last_result = result
+    state.multi_cube_last_error = error
+    state.multi_cube_updated_at = _utc_iso()
+
+
+def _multi_status_payload(state: VisionServiceState) -> dict[str, object]:
+    try:
+        port = _configured_hardware_port(state, {})
+    except HTTPException:
+        port = None
+    return {
+        "status": state.multi_cube_status,
+        "runId": state.multi_cube_run_id,
+        "lastPlan": state.multi_cube_last_plan,
+        "lastResult": state.multi_cube_last_result,
+        "lastError": state.multi_cube_last_error,
+        "updatedAt": state.multi_cube_updated_at,
+        "executing": state.multi_cube_executing,
+        "hardwarePortConfigured": port is not None,
+    }
+
+
+def _max_cubes_from_payload(payload: dict[str, Any]) -> int:
+    value = payload.get("maxCubes", 6)
+    if isinstance(value, str) and value == "all":
+        return 6
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+        raise HTTPException(status_code=400, detail="maxCubes must be a positive integer")
+    return min(value, 6)
+
+
+def _default_unload_config_path(config_path: Path) -> Path:
+    config_directory = config_path.parent
+    local_path = config_directory / "single-cube-pick-drop.local.json"
+    if local_path.exists():
+        return local_path
+    return config_directory / "single-cube-pick-drop.example.json"
+
+
+def _load_unload_config(state: VisionServiceState) -> EdgeConfig:
+    try:
+        return load_edge_config(state.unload_config_path)
+    except EdgeConfigError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "INVALID_UNLOAD_CONFIG", "message": str(exc)},
+        ) from exc
+
+
+def _require_drop_zones_path(config: EdgeConfig) -> None:
+    raw = config.raw.get("dropZones")
+    if not isinstance(raw, dict) or not isinstance(raw.get("path"), str) or not raw.get("path", "").strip():
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "MISSING_DROP_ZONES_CONFIG",
+                "message": "dropZones.path is required in unload-config",
+            },
+        )
+
+
+def _require_planning_config(config: EdgeConfig) -> None:
+    if config.robot_planning.enabled is not True:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "MISSING_PLANNING_CONFIG",
+                "message": "MISSING_PLANNING_CONFIG: robotPlanning.enabled=true is required",
+            },
+        )
+    _require_drop_zones_path(config)
+
+
+def _configured_hardware_port(state: VisionServiceState, payload: dict[str, Any]) -> str | None:
+    request_port = payload.get("port")
+    if isinstance(request_port, str) and request_port.strip():
+        return request_port.strip()
+    unload_config = _load_unload_config(state)
+    hardware_raw = unload_config.raw.get("hardware")
+    if isinstance(hardware_raw, dict):
+        configured = hardware_raw.get("port")
+        if isinstance(configured, str) and configured.strip():
+            return configured.strip()
+    if state.hardware_port:
+        return state.hardware_port
+    return None
+
+
+def _configured_hardware_baudrate(state: VisionServiceState, payload: dict[str, Any]) -> int:
+    request_baudrate = payload.get("baudrate")
+    if isinstance(request_baudrate, int) and not isinstance(request_baudrate, bool) and request_baudrate > 0:
+        return request_baudrate
+    unload_config = _load_unload_config(state)
+    hardware_raw = unload_config.raw.get("hardware")
+    if isinstance(hardware_raw, dict):
+        configured = hardware_raw.get("baudrate")
+        if isinstance(configured, int) and not isinstance(configured, bool) and configured > 0:
+            return configured
+    return state.hardware_baudrate
+
+
+def _missing_hardware_port_response(state: VisionServiceState) -> HTTPException:
+    message = "Configure hardware.port in unload-config or provide port in request"
+    _set_multi_status(state, "failed", error=f"MISSING_HARDWARE_PORT: {message}")
+    return HTTPException(
+        status_code=400,
+        detail={
+            "code": "MISSING_HARDWARE_PORT",
+            "message": message,
+        },
+    )
+
+
+def _safety_flags(payload: dict[str, Any]) -> dict[str, bool]:
+    safety = payload.get("safety")
+    if not isinstance(safety, dict):
+        raise HTTPException(status_code=400, detail="safety confirmations are required")
+    required = [
+        "zoneClear",
+        "operatorPresent",
+        "emergencyStopReady",
+        "suctionReady",
+        "physicalExecutionConfirmed",
+    ]
+    missing = [key for key in required if safety.get(key) is not True]
+    if missing:
+        raise HTTPException(status_code=400, detail=f"Missing safety confirmations: {', '.join(missing)}")
+    return {key: True for key in required}
+
+
+def _normalize_multi_status(status: str) -> str:
+    mapping = {
+        "DRY_RUN_PLANNED": "planned",
+        "SUCCESS": "success",
+        "PARTIAL_SUCCESS": "partial_success",
+        "FAILED": "failed",
+        "NO_VALID_QR": "failed",
+        "NO_CUBES_DETECTED": "failed",
+    }
+    return mapping.get(status, status.lower())
 
 
 def _snapshot_is_stale(state: VisionServiceState, *, ttl_seconds: float = 1.0) -> bool:
@@ -440,18 +621,24 @@ def refresh_snapshot_if_needed(state: VisionServiceState, *, ttl_seconds: float 
 def create_app(
     config_path: Path,
     *,
+    unload_config_path: Path | None = None,
     allow_camera: bool = False,
     sync_backend: bool = False,
     backend_url: str | None = None,
+    hardware_port: str | None = None,
+    hardware_baudrate: int = 115200,
 ) -> FastAPI:
     config = load_edge_config(config_path)
     backend_client = BackendClient(backend_url) if backend_url else None
     state = VisionServiceState(
         config=config,
         config_path=config_path,
+        unload_config_path=unload_config_path or _default_unload_config_path(config_path),
         allow_camera=allow_camera,
         backend_client=backend_client,
         auto_sync_backend=sync_backend,
+        hardware_port=hardware_port,
+        hardware_baudrate=hardware_baudrate,
     )
 
     @asynccontextmanager
@@ -525,6 +712,148 @@ def create_app(
         result = plan_dry_run_from_latest_snapshot(state)
         return _json_no_store(result)
 
+    @app.post("/drop-zones/reset")
+    def drop_zones_reset(payload: dict[str, Any] = Body(default_factory=dict)) -> JSONResponse:
+        scope = payload.get("scope", "all")
+        if scope != "all":
+            raise HTTPException(status_code=400, detail="Only scope=all is supported by the dashboard reset")
+        try:
+            unload_config = _load_unload_config(state)
+            _require_drop_zones_path(unload_config)
+            result = reset_drop_zones(state.unload_config_path, reset_all=True, confirm_reset=True)
+        except ResetDropZonesError as exc:
+            raise HTTPException(status_code=400, detail={"code": exc.code, "message": str(exc)}) from exc
+        return _json_no_store(
+            {
+                "status": "SUCCESS",
+                "dropZonesPath": result["file"],
+                "backupPath": result["backup"],
+                "totalSlots": result["totalSlotsReviewed"],
+                "resetSlots": result["totalSlotsReset"],
+                "affectedColors": result["affectedColors"],
+            }
+        )
+
+    @app.post("/robot/multi-cube/plan")
+    def robot_multi_cube_plan(payload: dict[str, Any] = Body(default_factory=dict)) -> JSONResponse:
+        if state.multi_cube_executing:
+            raise HTTPException(status_code=409, detail="A multi-cube execution is already in progress")
+        max_cubes = _max_cubes_from_payload(payload)
+        _set_multi_status(state, "planning", error=None)
+        try:
+            unload_config = _load_unload_config(state)
+            _require_planning_config(unload_config)
+            snapshot = refresh_snapshot_if_needed(state, ttl_seconds=0)
+            result = run_multi_cube_pick_drop(
+                state.unload_config_path,
+                snapshot=snapshot,
+                max_cubes=max_cubes,
+                plan_only=True,
+                backend_client=None,
+            )
+        except HTTPException as exc:
+            detail = exc.detail
+            message = detail.get("message") if isinstance(detail, dict) else str(detail)
+            _set_multi_status(state, "failed", error=str(message))
+            raise
+        except MultiCubePickDropError as exc:
+            error = str(exc)
+            _set_multi_status(state, "failed", error=error)
+            raise HTTPException(status_code=400, detail={"code": exc.code, "message": error}) from exc
+        except Exception as exc:
+            error = str(exc)
+            _set_multi_status(state, "failed", error=error)
+            raise HTTPException(status_code=400, detail=error) from exc
+
+        status = str(result.get("status", "FAILED"))
+        normalized = _normalize_multi_status(status)
+        _set_multi_status(
+            state,
+            normalized,
+            run_id=str(result.get("runId")) if result.get("runId") else None,
+            plan=result,
+            error=None if normalized == "planned" else status,
+        )
+        if normalized == "planned":
+            state.multi_cube_plan_snapshot = snapshot
+        return _json_no_store(result)
+
+    @app.post("/robot/multi-cube/execute")
+    def robot_multi_cube_execute(payload: dict[str, Any] = Body(default_factory=dict)) -> JSONResponse:
+        if state.multi_cube_executing:
+            raise HTTPException(status_code=409, detail="A multi-cube execution is already in progress")
+        if not state.multi_cube_last_plan or state.multi_cube_status != "planned":
+            raise HTTPException(status_code=409, detail="Planificacion previa requerida")
+
+        _safety_flags(payload)
+        max_cubes = _max_cubes_from_payload(payload)
+        requested_run_id = payload.get("runId")
+        if requested_run_id and requested_run_id != state.multi_cube_run_id:
+            raise HTTPException(status_code=409, detail="runId does not match the latest planned run")
+        if state.multi_cube_plan_snapshot is None:
+            raise HTTPException(status_code=409, detail="Plan snapshot is not available")
+
+        port = _configured_hardware_port(state, payload)
+        baudrate = _configured_hardware_baudrate(state, payload)
+        if port is None:
+            raise _missing_hardware_port_response(state)
+        evidence = state.multi_cube_last_plan.get("evidence")
+        evidence_path = None
+        if isinstance(evidence, dict) and isinstance(evidence.get("json"), str):
+            evidence_path = Path(evidence["json"])
+        if evidence_path is None:
+            raise HTTPException(status_code=409, detail="Plan evidence is not available")
+
+        state.multi_cube_executing = True
+        _set_multi_status(state, "executing", error=None)
+        try:
+            snapshot = state.multi_cube_plan_snapshot
+            result = run_multi_cube_pick_drop(
+                state.unload_config_path,
+                snapshot=snapshot,
+                max_cubes=max_cubes,
+                dry_run_evidence_path=evidence_path,
+                gates=MultiHardwareGates(
+                    confirm_multi_pick_drop=True,
+                    enable_hardware_motion=True,
+                    confirm_zone_clear=True,
+                    confirm_operator_present=True,
+                    confirm_emergency_stop_ready=True,
+                    confirm_suction=True,
+                    port=port,
+                    baudrate=baudrate,
+                ),
+                backend_client=state.backend_client,
+                post_drop_snapshot_loader=lambda: refresh_snapshot_if_needed(state, ttl_seconds=0),
+            )
+        except HTTPException:
+            raise
+        except MultiCubePickDropError as exc:
+            error = str(exc)
+            _set_multi_status(state, "failed", error=error)
+            raise HTTPException(status_code=400, detail={"code": exc.code, "message": error}) from exc
+        except Exception as exc:
+            error = str(exc)
+            _set_multi_status(state, "failed", error=error)
+            raise HTTPException(status_code=400, detail=error) from exc
+        finally:
+            state.multi_cube_executing = False
+
+        status = str(result.get("status", "FAILED"))
+        normalized = _normalize_multi_status(status)
+        _set_multi_status(
+            state,
+            normalized,
+            run_id=str(result.get("runId")) if result.get("runId") else None,
+            result=result,
+            error=None if normalized in {"success", "partial_success"} else str(result.get("errorMessage") or status),
+        )
+        return _json_no_store(result)
+
+    @app.get("/robot/multi-cube/status")
+    def robot_multi_cube_status() -> JSONResponse:
+        return _json_no_store(_multi_status_payload(state))
+
     @app.get("/vision/snapshot/image")
     def vision_snapshot_image() -> Response:
         if (
@@ -557,6 +886,15 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Serve safe Edge Vision status and snapshots.")
     parser.add_argument("--config", default="config/edge.vision.example.json", help="Path to Edge config JSON.")
     parser.add_argument(
+        "--unload-config",
+        default=None,
+        help=(
+            "Path to operational unload config with robotPlanning/dropZones. "
+            "If omitted, Edge uses config/single-cube-pick-drop.local.json when present, "
+            "then config/single-cube-pick-drop.example.json as development/test fallback."
+        ),
+    )
+    parser.add_argument(
         "--allow-camera",
         action="store_true",
         help="Explicitly allow opening the configured camera for snapshots.",
@@ -569,6 +907,8 @@ def main() -> None:
         help="Sync each fresh valid-QR snapshot to Backend without frontend involvement.",
     )
     parser.add_argument("--backend-url", default="http://localhost:3000", help="Backend URL for vision sync.")
+    parser.add_argument("--hardware-port", default=os.getenv("EDGE_MAXARM_PORT"), help="Serial port used by dashboard hardware execution, for example COM4.")
+    parser.add_argument("--hardware-baudrate", type=int, default=115200, help="Serial baudrate used by dashboard hardware execution.")
     args = parser.parse_args()
 
     import uvicorn
@@ -576,9 +916,12 @@ def main() -> None:
     uvicorn.run(
         create_app(
             Path(args.config),
+            unload_config_path=Path(args.unload_config) if args.unload_config else None,
             allow_camera=args.allow_camera,
             sync_backend=args.sync_backend,
             backend_url=args.backend_url if args.sync_backend else args.backend_url,
+            hardware_port=args.hardware_port,
+            hardware_baudrate=args.hardware_baudrate,
         ),
         host=args.host,
         port=args.port,

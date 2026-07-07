@@ -110,21 +110,21 @@ describe("robot action dry-run contract", () => {
     });
   });
 
-  it("accepts second multi-cube hardware action metadata with physical confirmation", () => {
+  it("accepts later multi-cube hardware action metadata with retries and physical confirmation", () => {
     const input = parseRobotActionInput({
       sessionId: "session-id",
       actionType: "PICK_AND_DROP",
       status: "SUCCESS",
       mode: "hardware",
-      color: "blue",
+      color: "green",
       metadata: {
         multiCubeRunId: "multi-run-001",
-        sequenceNumber: 2,
-        totalPlannedCubes: 2,
+        sequenceNumber: 5,
+        totalPlannedCubes: 6,
         truckCode: "TRUCK-001",
-        snapshotSignature: "sig-after-red",
-        selectedCube: { color: "blue", x: 40, y: 90, w: 20, h: 20, confidence: 0.8 },
-        selectedCubeColor: "blue",
+        snapshotSignature: "sig-after-yellow",
+        selectedCube: { color: "green", x: 40, y: 90, w: 20, h: 20, confidence: 0.8 },
+        selectedCubeColor: "green",
         selectedCubeCenter: { x: 50, y: 100 },
         selectedCubeBoundingBox: { x: 40, y: 90, w: 20, h: 20 },
         pickupPositionCm: { x: 4.2, y: 6.1 },
@@ -132,7 +132,7 @@ describe("robot action dry-run contract", () => {
         pickupTargetBase: { x: 39.44, y: -183.88, z: 138 },
         pickupTarget: { x: 39.44, y: -183.88, z: 136 },
         pickupSafe: { x: 39.44, y: -183.88, z: 150 },
-        dropZoneCode: "DROP_BLUE_01",
+        dropZoneCode: "DROP_GREEN_01",
         dropZonePose: { x: 1, y: -1, z: 81 },
         positionOrder: 1,
         firmwareResponses: [
@@ -151,7 +151,7 @@ describe("robot action dry-run contract", () => {
           enabled: true,
           status: "CONFIRMED",
           method: "post_drop_vision_count_delta",
-          selectedCubeColor: "blue",
+          selectedCubeColor: "green",
           totalBefore: 2,
           totalAfter: 1,
           colorBefore: 1,
@@ -165,6 +165,7 @@ describe("robot action dry-run contract", () => {
             { attempt: 2, pickZ: 136, totalBefore: 2, totalAfter: 1, colorBefore: 1, colorAfter: 0, status: "CONFIRMED" }
           ]
         },
+        backendSyncStatus: "SKIPPED",
         finalPickZUsed: 136,
         retryEnabled: true,
         maxAttempts: 3,
@@ -176,7 +177,7 @@ describe("robot action dry-run contract", () => {
 
     expect(input.metadata).toMatchObject({
       multiCubeRunId: "multi-run-001",
-      sequenceNumber: 2,
+      sequenceNumber: 5,
       physicalConfirmation: expect.objectContaining({ status: "CONFIRMED" }),
       finalPickZUsed: 136
     });
@@ -254,6 +255,13 @@ describe("robot action dry-run contract", () => {
         dropZonePose: { x: 1, y: 2, z: 3 },
         sequencePreview: ["ready_to_take"],
         commandsPreview: ["POSE 1 2 3 0"],
+        multiCubeRunId: "multi-run-001",
+        sequenceNumber: 5,
+        totalPlannedCubes: 6,
+        commandExecutionStatus: "SUCCESS",
+        backendSyncStatus: "SUCCESS",
+        physicalConfirmation: { status: "CONFIRMED" },
+        finalPickZUsed: 136,
         errorCode: "ZONE_UNAVAILABLE",
         ignored: "not projected"
       })
@@ -270,6 +278,13 @@ describe("robot action dry-run contract", () => {
         dropZonePose: { x: 1, y: 2, z: 3 },
         sequencePreview: ["ready_to_take"],
         commandsPreview: ["POSE 1 2 3 0"],
+        multiCubeRunId: "multi-run-001",
+        sequenceNumber: 5,
+        totalPlannedCubes: 6,
+        commandExecutionStatus: "SUCCESS",
+        backendSyncStatus: "SUCCESS",
+        physicalConfirmation: { status: "CONFIRMED" },
+        finalPickZUsed: 136,
         errorCode: "ZONE_UNAVAILABLE"
       })
     );

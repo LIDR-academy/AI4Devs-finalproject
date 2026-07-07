@@ -160,6 +160,42 @@ python src\service\vision_api.py --config config\edge.vision.local.json --allow-
 Si `vision.source=camera` y no se entrega `--allow-camera`, el servicio falla de
 forma cerrada antes de llamar a `VideoCapture` y lo reporta en `lastError`.
 
+Para usar la descarga full desde Dashboard, Edge Vision debe recibir dos
+configuraciones separadas:
+
+- `--config`: configuracion de vision/camara, ROI, QR y HSV.
+- `--unload-config`: configuracion operacional de descarga con
+  `robotPlanning`, `dropZones`, `physicalConfirmation`, `pickupRetry` y
+  tiempos de `movement`.
+
+No mezclar `robotPlanning` dentro de `edge.vision.local.json`; la configuracion
+de vision debe seguir aislada de la configuracion robotica. Si `--unload-config`
+se omite, el servicio busca `config/single-cube-pick-drop.local.json` y, solo
+como fallback de desarrollo/test, usa
+`config/single-cube-pick-drop.example.json`.
+
+### Configuracion hardware local
+
+Para ejecutar descarga fisica desde Dashboard, agregar localmente en
+`edge/config/single-cube-pick-drop.local.json`:
+
+```json
+{
+  "hardware": {
+    "port": "COM4",
+    "baudrate": 115200
+  }
+}
+```
+
+`hardware.port` es requerido para que `/robot/multi-cube/execute` abra serial.
+En otros equipos puede ser `COM3`, `COM5` u otro puerto asignado por Windows.
+`hardware.baudrate` es opcional; si falta, Edge usa `115200`.
+
+No commitear `single-cube-pick-drop.local.json`. Si falta `hardware.port` y el
+request no trae un override `port`, Edge responde `MISSING_HARDWARE_PORT` antes
+de intentar abrir serial o mover hardware.
+
 Endpoints disponibles:
 
 | Metodo | Ruta | Proposito |
@@ -170,6 +206,10 @@ Endpoints disponibles:
 | GET | `/vision/snapshot/image` | Devuelve la ultima imagen anotada si existe |
 | POST | `/vision/sync-backend` | Sincroniza el ultimo snapshot con Backend si el QR es valido |
 | POST | `/vision/plan-dry-run` | Planifica desde el ultimo snapshot valido y registra traza dry-run si Backend esta configurado |
+| POST | `/drop-zones/reset` | Resetea `occupied=false` para todas las drop zones, con backup |
+| POST | `/robot/multi-cube/plan` | Genera plan multi-cubo desde el snapshot actual para revision en dashboard |
+| POST | `/robot/multi-cube/execute` | Ejecuta descarga fisica multi-cubo usando el ultimo plan aprobado |
+| GET | `/robot/multi-cube/status` | Devuelve estado, ultimo plan, resultado, error y timestamp |
 
 `/vision/status` siempre informa `serialOpened=false` y
 `hardwareMovement=false`. `/vision/snapshot` devuelve `counts`, `detections`,
@@ -229,6 +269,7 @@ Levantar Edge Vision con sync automatico por cada snapshot fresco:
 cd edge
 python src\service\vision_api.py `
   --config config\edge.vision.local.json `
+  --unload-config config\single-cube-pick-drop.local.json `
   --allow-camera `
   --sync-backend `
   --backend-url http://localhost:3000
@@ -324,6 +365,93 @@ Limitaciones:
 - si el fixture configurado no existe, devuelve error controlado;
 - la camara fisica no debe usarse sin `--allow-camera`;
 - no implementa control robotico ni modo hardware.
+
+### Descarga full desde Dashboard
+
+El dashboard puede operar el flujo multi-cubo fisico sin reimplementar logica de
+robot. El frontend llama al servicio Edge Vision y Edge reutiliza
+`reset_drop_zones.py` y `multi_cube_pick_drop.py`.
+
+Levantar Edge Vision para demo fisica:
+
+```powershell
+cd edge
+python src\service\vision_api.py `
+  --config config\edge.vision.local.json `
+  --unload-config config\single-cube-pick-drop.local.json `
+  --allow-camera `
+  --sync-backend `
+  --backend-url http://localhost:3000
+```
+
+En este modo, los endpoints de vision (`/vision/status`, `/vision/snapshot`,
+`/vision/sync-backend`) siguen usando `edge.vision.local.json`. Los endpoints de
+descarga (`/drop-zones/reset`, `/robot/multi-cube/plan`,
+`/robot/multi-cube/execute`) usan exclusivamente
+`single-cube-pick-drop.local.json`.
+
+Endpoints de control:
+
+- `POST /drop-zones/reset` con `{ "scope": "all" }`: lee `dropZones.path` desde
+  `--unload-config`, crea backup del archivo real usado y solo cambia
+  `occupied=false`; no modifica `active`, coordenadas ni codigos.
+- `POST /robot/multi-cube/plan` con `{ "maxCubes": 6 }`: captura snapshot,
+  exige QR valido y cubos, genera evidencia plan-only y cancela reservas.
+- `POST /robot/multi-cube/execute`: requiere plan previo, evidencia del plan y
+  safety flags `zoneClear`, `operatorPresent`, `emergencyStopReady`,
+  `suctionReady` y `physicalExecutionConfirmed`.
+- `GET /robot/multi-cube/status`: expone `idle`, `planning`, `planned`,
+  `executing`, `success`, `partial_success` o `failed`.
+
+La ejecucion desde dashboard mapea las confirmaciones visuales a los gates del
+CLI: `--confirm-multi-pick-drop`, `--enable-hardware-motion`,
+`--confirm-zone-clear`, `--confirm-operator-present`,
+`--confirm-emergency-stop-ready` y `--confirm-suction`. Si falta plan, evidencia,
+QR valido, cubos planificados, puerto serial o alguna confirmacion, Edge responde
+con error controlado antes de abrir serial.
+
+`POST /robot/multi-cube/execute` tambien acepta override opcional:
+
+```json
+{
+  "port": "COM4",
+  "baudrate": 115200
+}
+```
+
+El orden de resolucion es: `request.port`, `hardware.port` del unload-config y,
+solo como fallback operacional del servicio, `--hardware-port`/`EDGE_MAXARM_PORT`.
+Para baudrate: `request.baudrate`, `hardware.baudrate` y default `115200`.
+
+Flujo recomendado de demo:
+
+1. Levantar PostgreSQL y backend.
+2. Levantar Edge Vision con camara, backend URL y puerto MaxArm.
+3. Levantar dashboard.
+4. Usar `Reset drop zones`.
+5. Usar `Planificar descarga`.
+6. Revisar QR, cubos, drop zones, targets, offset, retry y confirmacion fisica.
+7. Marcar todos los checks de seguridad.
+8. Ejecutar `Ejecutar descarga fisica`.
+9. Revisar resultado en dashboard, acciones backend y evidencia JSON.
+
+El CLI sigue siendo fallback operacional:
+
+```powershell
+python src\multi_cube_pick_drop.py `
+  --config config\single-cube-pick-drop.local.json `
+  --edge-vision-url http://localhost:8001 `
+  --port COM4 `
+  --max-cubes 6 `
+  --confirm-multi-pick-drop `
+  --enable-hardware-motion `
+  --confirm-zone-clear `
+  --confirm-operator-present `
+  --confirm-emergency-stop-ready `
+  --confirm-suction `
+  --sync-backend `
+  --backend-url http://localhost:3000
+```
 
 ### Procesar una imagen
 
@@ -1214,9 +1342,27 @@ Si el snapshot post-drop cumple `totalAfter=totalBefore-1` y
 se confirma la drop zone. Si no cumple, queda `FAILED` o `INCONCLUSIVE`, no se
 persiste `occupied=true` y el flujo no avanza al siguiente cubo.
 
+La evidencia incluye tres estados separados por accion:
+
+- `commandExecutionStatus`: si los comandos al robot terminaron (`SUCCESS`) o
+  fallaron (`FAILED`).
+- `physicalConfirmation.status`: resultado de vision post-drop (`CONFIRMED`,
+  `FAILED`, `DISABLED` o `INCONCLUSIVE`).
+- `backendSyncStatus`: sincronizacion de la accion con Backend (`SUCCESS`,
+  `FAILED` o `SKIPPED`).
+
+Una accion puede quedar fisicamente confirmada aunque falle el sync backend. En
+ese caso se conserva `physicalConfirmation.status=CONFIRMED`, se marca
+`backendSyncStatus=FAILED`, se guarda `backendSyncError`, el estado de la accion
+queda `SUCCESS_WITH_BACKEND_SYNC_FAILED` y el resultado general queda
+`PARTIAL_SUCCESS` si el flujo se detiene de forma conservadora.
+
 La evidencia y el metadata enviado a Backend incluyen `physicalConfirmation`,
-`selectedCubeColor`, conteos before/after, firmas de snapshot,
-`commandExecutionStatus`, `successMeaning`, `occupiedPersisted` y los intentos.
+`selectedCubeColor`, `dropZoneCode`, conteos before/after, firmas de snapshot,
+`commandExecutionStatus`, `backendSyncStatus`, `successMeaning`,
+`occupiedPersisted` y los intentos. Para evitar rechazos por metadata demasiado
+grande, el payload de Backend resume `firmwareResponses` cuando la traza serial
+crece; la evidencia local conserva el detalle completo.
 
 ### Retry bajando Z
 
@@ -1326,9 +1472,19 @@ Con `--sync-backend`, cada cubo ejecutado registra una accion en
 `POST /robot/actions` con metadata JSON-safe: `multiCubeRunId`,
 `sequenceNumber`, `totalPlannedCubes`, drop zone, color, `pickupOffset`,
 targets, tiempos de movimiento, `firmwareResponses`, `commandExecutionStatus`,
-`physicalConfirmation`, `finalPickZUsed` y datos de retry. Las fallas fisicas se
-envian al Backend como `status=ERROR` para respetar el enum existente, dejando la
-causa precisa en metadata.
+`backendSyncStatus`, `physicalConfirmation`, `finalPickZUsed` y datos de retry.
+Las fallas fisicas se envian al Backend como `status=ERROR` para respetar el enum
+existente, dejando la causa precisa en metadata.
+
+Los contadores del resultado separan ejecucion fisica de sync:
+
+- `totalExecutedCubes` y `totalPhysicalConfirmedCubes`: cubos confirmados por
+  vision, o comandos liberados cuando la confirmacion fisica esta desactivada.
+- `totalBackendSyncedActions`: acciones aceptadas por Backend.
+- `totalBackendSyncFailedActions`: acciones fisicas cuyo sync fallo.
+- `totalFailedPhysicalConfirmations`: acciones con confirmacion fisica fallida o
+  inconclusa.
+- `lastBackendSyncError`: ultimo error de sincronizacion backend, si aplica.
 
 ### Consideraciones de seguridad
 

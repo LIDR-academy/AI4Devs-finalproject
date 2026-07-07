@@ -7,6 +7,7 @@ import { ActionsTable } from "./ActionsTable";
 import { CountsPanel } from "./CountsPanel";
 import { StatusPanel } from "./StatusPanel";
 import { ExecutionPanel } from "./ExecutionPanel";
+import { PhysicalUnloadPanel } from "./PhysicalUnloadPanel";
 import { VisionSnapshotPanel } from "./VisionSnapshotPanel";
 
 type LoadState = "loading" | "ready" | "empty" | "error";
@@ -17,6 +18,7 @@ export function Dashboard() {
     enabled: false,
     status: null,
     snapshot: null,
+    multiCubeStatus: null,
     error: null,
     baseUrl: null,
     refreshMs: edgeVisionRefreshIntervalMs(),
@@ -61,6 +63,7 @@ export function Dashboard() {
           enabled: true,
           status: null,
           snapshot: null,
+          multiCubeStatus: null,
           error: unknownError instanceof Error ? unknownError.message : "Servicio de vision no disponible",
           baseUrl: null,
           refreshMs: edgeVisionRefreshIntervalMs(),
@@ -142,6 +145,11 @@ export function Dashboard() {
           <StatusPanel session={data.activeSession} lastAction={data.lastActions[0]} />
           <CountsPanel counts={data.counts} />
           <ExecutionPanel dashboard={data} />
+          <PhysicalUnloadPanel
+            dashboard={data}
+            visionData={visionData}
+            onRefresh={refreshAll}
+          />
           <VisionSnapshotPanel data={visionData} loading={visionLoading} />
           <ActionsTable actions={data.lastActions} />
         </div>

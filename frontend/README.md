@@ -17,6 +17,7 @@ Este frontend implementa una pantalla minima:
 - Estados loading, error y empty.
 - Perfil, fuente de visión, dry-run, cubo y drop zone planificados.
 - Estado de acción y último error reportado.
+- Control de descarga fisica multi-cubo desde Edge Vision.
 
 No declara hardware real como implementado. El frontend consume datos reales del backend, que para Entrega 2 provienen del Edge en modo `simulation`.
 
@@ -56,6 +57,14 @@ manual.
 `VITE_EDGE_VISION_REFRESH_MS` controla el polling automatico del panel de vision.
 Si se omite, usa `2000`. El frontend acepta valores entre `1000` y `3000` ms; los
 valores fuera de rango se ajustan a ese intervalo seguro.
+
+El mismo `VITE_EDGE_VISION_URL` se usa para reset de drop zones, planificacion
+multi-cubo, ejecucion fisica y status de la ultima descarga.
+
+La descarga fisica desde Dashboard se ejecuta siempre a traves de Edge Vision.
+El puerto serial del MaxArm se configura en el unload-config local de Edge
+(`edge/config/single-cube-pick-drop.local.json`) mediante `hardware.port`; el
+Dashboard no pide `COM4` al usuario final ni habla directamente con serial.
 
 ## Ejecucion
 
@@ -105,6 +114,34 @@ cd edge
 python src\service\vision_api.py --config config\edge.vision.example.json
 ```
 
+Para demo fisica desde dashboard, levantar Edge Vision con camara y puerto MaxArm:
+
+```powershell
+cd edge
+python src\service\vision_api.py `
+  --config config\edge.vision.local.json `
+  --unload-config config\single-cube-pick-drop.local.json `
+  --allow-camera `
+  --sync-backend `
+  --backend-url http://localhost:3000
+```
+
+Antes de esa demo, agregar localmente en
+`edge/config/single-cube-pick-drop.local.json`:
+
+```json
+{
+  "hardware": {
+    "port": "COM4",
+    "baudrate": 115200
+  }
+}
+```
+
+En otros equipos el puerto puede ser `COM3`, `COM5`, etc. Si falta
+`hardware.port`, el panel muestra el bloqueo:
+`Falta configurar hardware.port en single-cube-pick-drop.local.json`.
+
 6. Verificar visualmente:
 
 - existe una sesion activa;
@@ -134,7 +171,25 @@ python src\service\vision_api.py --config config\edge.vision.example.json
 - si Edge Vision esta apagado, muestra un error visible sin romper el resto del
   dashboard;
 - `vision-dry-run` se etiqueta como dry-run sin movimiento;
-- no existen controles de movimiento ni reset de ocupación.
+- los controles fisicos aparecen solo como llamadas al servicio Edge; el
+  frontend no habla con serial ni calcula movimientos de robot.
+- la seccion `Descarga fisica del camion` muestra estado
+  `idle/planning/planned/executing/success/partial_success/failed`;
+- `Ejecutar descarga fisica` queda deshabilitado sin plan, sin QR valido, sin
+  cubos planificados, sin Edge Vision, sin sesion backend, con ejecucion en curso
+  o sin todos los checks de seguridad;
+- `Reset drop zones` pide confirmacion visual, llama a Edge y muestra slots
+  revisados/reseteados, archivo, backup y colores afectados;
+- `Planificar descarga` llama a `/robot/multi-cube/plan` con el selector
+  `Descargar todos`, `1`, `2`, `4` o `6`;
+- la tabla del plan muestra color, drop zone, orden, pickup target y offset;
+- el resumen de ejecucion distingue cubos fisicamente confirmados, acciones
+  sincronizadas en Backend y fallas de sync;
+- la tabla de acciones ejecutadas muestra color, drop zone,
+  `physicalConfirmation.status`, `backendSyncStatus`, intentos, `finalPickZUsed`,
+  action code de Backend y error si existe;
+- al ejecutar, el payload incluye `zoneClear`, `operatorPresent`,
+  `emergencyStopReady`, `suctionReady` y `physicalExecutionConfirmed`.
 
 ## Build
 
@@ -145,6 +200,5 @@ npm run build
 ## Pendientes
 
 - Agregar pruebas automatizadas de componentes.
-- Agregar refresco periodico si se requiere monitoreo continuo.
 - Integrar evidencia visual de QA.
 - Mantener el contrato `GET /dashboard/operational` estable para Entrega 3.

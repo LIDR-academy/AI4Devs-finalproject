@@ -50,8 +50,89 @@ export type EdgeVisionPanelData = {
   enabled: boolean;
   status: EdgeVisionStatus | null;
   snapshot: EdgeVisionSnapshot | null;
+  multiCubeStatus: EdgeMultiCubeStatus | null;
   error: string | null;
   baseUrl: string | null;
   refreshMs: number;
   lastUpdatedAt: string | null;
+};
+
+export type EdgeMultiCubeRunStatus =
+  | "idle"
+  | "planning"
+  | "planned"
+  | "executing"
+  | "success"
+  | "partial_success"
+  | "failed";
+
+export type EdgeMultiCubeAction = {
+  sequenceNumber: number;
+  selectedCubeColor?: string | null;
+  dropZoneCode?: string | null;
+  positionOrder?: number | null;
+  pickupTarget?: Record<string, number> | null;
+  pickupOffset?: Record<string, number> | null;
+  physicalConfirmation?: Record<string, unknown> | null;
+  pickupRetry?: Record<string, unknown> | null;
+  status?: string | null;
+  commandExecutionStatus?: string | null;
+  backendSyncStatus?: string | null;
+  backendSyncError?: string | null;
+  backendActionCode?: string | null;
+  finalPickZUsed?: number | null;
+};
+
+export type EdgeMultiCubePlan = {
+  status: string;
+  runId: string;
+  truckCode?: string | null;
+  totalDetectedCubes?: number;
+  totalPlannedCubes?: number;
+  plannedActions?: EdgeMultiCubeAction[];
+  skippedCubes?: Array<Record<string, unknown>>;
+  physicalConfirmation?: Record<string, unknown>;
+  pickupRetry?: Record<string, unknown>;
+  evidence?: Record<string, unknown> | null;
+  errorMessage?: string | null;
+};
+
+export type EdgeMultiCubeResult = EdgeMultiCubePlan & {
+  totalExecutedCubes?: number;
+  totalPhysicalConfirmedCubes?: number;
+  totalBackendSyncedActions?: number;
+  totalBackendSyncFailedActions?: number;
+  totalFailedPhysicalConfirmations?: number;
+  lastBackendSyncError?: string | null;
+  executedActions?: EdgeMultiCubeAction[];
+  errorCode?: string | null;
+  errorMessage?: string | null;
+};
+
+export type EdgeMultiCubeStatus = {
+  status: EdgeMultiCubeRunStatus;
+  runId: string | null;
+  lastPlan: EdgeMultiCubePlan | null;
+  lastResult: EdgeMultiCubeResult | null;
+  lastError: string | null;
+  updatedAt: string | null;
+  executing?: boolean;
+  hardwarePortConfigured?: boolean;
+};
+
+export type EdgeDropZonesResetResult = {
+  status: string;
+  dropZonesPath: string;
+  backupPath: string;
+  totalSlots: number;
+  resetSlots: number;
+  affectedColors: string[];
+};
+
+export type EdgeMultiCubeSafety = {
+  zoneClear: boolean;
+  operatorPresent: boolean;
+  emergencyStopReady: boolean;
+  suctionReady: boolean;
+  physicalExecutionConfirmed: boolean;
 };

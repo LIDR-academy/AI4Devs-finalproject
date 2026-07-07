@@ -4,6 +4,10 @@
   "dropZones": {
     "path": "drop_zones.example.json"
   },
+  "hardware": {
+    "port": "COMx",
+    "baudrate": 115200
+  },
   "safety": {
     "dryRun": true,
     "enableHardwareMotion": false,
