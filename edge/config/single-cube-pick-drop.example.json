@@ -14,6 +14,19 @@
     "pickup_hold_seconds": 0.8,
     "release_hold_seconds": 0.8
   },
+  "physicalConfirmation": {
+    "enabled": true,
+    "method": "post_drop_vision_count_delta",
+    "visionSettleSeconds": 1.0,
+    "expectedTotalDelta": -1,
+    "expectedColorDelta": -1
+  },
+  "pickupRetry": {
+    "enabled": true,
+    "maxAttempts": 3,
+    "zStep": -2,
+    "minPickZ": 132
+  },
   "vision": {
     "source": "file",
     "imagePath": "fixtures/single-cube-scene.png",

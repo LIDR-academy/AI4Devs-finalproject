@@ -1175,15 +1175,88 @@ Ante error:
 ## Flujo multi-cubo real
 
 `multi_cube_pick_drop.py` extiende el flujo operacional validado para descargar
-varios cubos desde un mismo snapshot. Mantiene la misma logica de homografia,
+varios cubos desde Edge Vision. Mantiene la misma logica de homografia,
 `pickupPositionCm`, `pickupOffset`, pausas de `movement`, seleccion de drop zone
 por color y sync opcional con Backend. No modifica `single_cube_pick_drop.py`.
 
 La seleccion de cubos es deterministica: primero por color `red`, `blue`,
 `yellow`, `green`; luego por posicion `y/x`; y finalmente por confianza/area.
 El comando reserva drop zones en memoria durante la planificacion para no usar
-dos veces el mismo slot. En hardware persiste `occupied=true` solo despues de
-`drop_zone_release` exitoso para cada cubo.
+dos veces el mismo slot. En hardware con `physicalConfirmation.enabled=true`,
+persiste `occupied=true` solo cuando el snapshot post-drop confirma que el total
+de cubos y el conteo del color descargado bajaron en 1.
+
+### Confirmacion fisica post-drop
+
+La confirmacion por vision se configura en el JSON de Edge:
+
+```json
+{
+  "physicalConfirmation": {
+    "enabled": true,
+    "method": "post_drop_vision_count_delta",
+    "visionSettleSeconds": 1.0,
+    "expectedTotalDelta": -1,
+    "expectedColorDelta": -1
+  }
+}
+```
+
+La verificacion ocurre despues de ejecutar el ciclo completo:
+`pickupSafe`, `pickupTarget` con succion, `lift_after_pick`, `reset_with_cube`,
+`drop_safe`, `drop_target`, `release`, `retract_after_release` y reset/ready.
+No se verifica inmediatamente despues de levantar el cubo para evitar falsos
+negativos cuando el brazo tapa parcialmente el pickup.
+
+Si el snapshot post-drop cumple `totalAfter=totalBefore-1` y
+`colorAfter=colorBefore-1`, la accion queda con
+`physicalConfirmation.status=CONFIRMED`, `successMeaning=physical_confirmed` y
+se confirma la drop zone. Si no cumple, queda `FAILED` o `INCONCLUSIVE`, no se
+persiste `occupied=true` y el flujo no avanza al siguiente cubo.
+
+La evidencia y el metadata enviado a Backend incluyen `physicalConfirmation`,
+`selectedCubeColor`, conteos before/after, firmas de snapshot,
+`commandExecutionStatus`, `successMeaning`, `occupiedPersisted` y los intentos.
+
+### Retry bajando Z
+
+Si la confirmacion fisica falla, el mismo cubo/color se reintenta antes de pasar
+al siguiente:
+
+```json
+{
+  "pickupRetry": {
+    "enabled": true,
+    "maxAttempts": 3,
+    "zStep": -2,
+    "minPickZ": 132
+  }
+}
+```
+
+Con `pickZ=138`, los intentos usan `138`, `136`, `134` y nunca bajan de
+`minPickZ`. Cada intento ejecuta nuevamente el pick/drop completo y captura un
+snapshot post-drop. Si algun intento confirma, se registra `SUCCESS`, se
+persiste la drop zone y se continua. Si todos fallan, el cubo queda `FAILED`, el
+resultado general queda `PARTIAL_SUCCESS` si ya habia cubos confirmados o
+`FAILED` si ninguno fue confirmado, y no se ejecutan cubos posteriores.
+
+En `--plan-only` no hay hardware ni retries reales. La evidencia muestra
+`pickupRetry`, `maxAttempts`, `zStep`, `minPickZ` y los posibles `pickZ`
+planificados para revisar el comportamiento antes de mover MaxArm.
+
+### Replanificacion con snapshot actualizado
+
+Para demo real, usar `--edge-vision-url` y mantener Edge Vision levantado. Tras
+cada descarga confirmada, el snapshot post-drop pasa a ser la base del siguiente
+cubo, de modo que el siguiente pick se planifica contra la escena actual.
+`--recapture-between-cubes` queda como bandera documental/recomendada del flujo
+real; con `--edge-vision-url`, la recaptura post-drop ya se usa para confirmar y
+replanificar.
+
+Para un dry-run simple con `--snapshot`, un snapshot unico puede bastar. Si
+`physicalConfirmation.enabled=true` y no existe fuente post-drop, la accion queda
+`INCONCLUSIVE` y no se marca la drop zone como ocupada.
 
 ### Reset previo de drop zones
 
@@ -1252,7 +1325,10 @@ Si se quiere exigir coincidencia con una evidencia plan-only previa, agregar:
 Con `--sync-backend`, cada cubo ejecutado registra una accion en
 `POST /robot/actions` con metadata JSON-safe: `multiCubeRunId`,
 `sequenceNumber`, `totalPlannedCubes`, drop zone, color, `pickupOffset`,
-targets, tiempos de movimiento y `firmwareResponses`.
+targets, tiempos de movimiento, `firmwareResponses`, `commandExecutionStatus`,
+`physicalConfirmation`, `finalPickZUsed` y datos de retry. Las fallas fisicas se
+envian al Backend como `status=ERROR` para respetar el enum existente, dejando la
+causa precisa en metadata.
 
 ### Consideraciones de seguridad
 
@@ -1271,11 +1347,10 @@ el comando termina con estado controlado y no mueve hardware. Si un cubo falla a
 mitad de la secuencia, no ejecuta cubos posteriores; el resultado queda como
 `PARTIAL_SUCCESS` si ya habia al menos un cubo descargado, o `FAILED` si no.
 
-Limitacion actual: la primera version planifica varios cubos desde un unico
-snapshot. No recaptura despues de cada descarga, por lo que el operador no debe
-mover el pickup ni los cubos entre el plan-only y la ejecucion. La opcion
-`--recapture-between-cubes` queda reservada para una version futura y hoy falla
-de forma explicita con `NOT_IMPLEMENTED`.
+Recomendacion para demo real: resetear drop zones, levantar Edge Vision con
+camara cenital y QR valido, ejecutar plan-only, revisar evidencia, y luego
+ejecutar hardware con `--edge-vision-url`, `--sync-backend`,
+`physicalConfirmation.enabled=true` y `pickupRetry.enabled=true`.
 
 ## Ejecucion
 

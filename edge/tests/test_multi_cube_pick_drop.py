@@ -63,13 +63,17 @@ class MultiCubePickDropTests(unittest.TestCase):
             metadata={"snapshotSignature": "sig-multi", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
         )
 
-    def write_config(self, *, pickup_offset: dict[str, float] | None = None) -> None:
+    def write_config(
+        self,
+        *,
+        pickup_offset: dict[str, float] | None = None,
+        physical_confirmation: dict[str, object] | None = None,
+        pickup_retry: dict[str, object] | None = None,
+    ) -> None:
         planning = hardware_ready_planning_payload()
         if pickup_offset is not None:
             planning["pickupOffset"] = pickup_offset
-        write_json(
-            self.config_path,
-            {
+        payload = {
                 "profile": "vision-dry-run",
                 "truckCode": "TRUCK-001",
                 "dropZones": {"path": "drop-zones.json"},
@@ -81,8 +85,12 @@ class MultiCubePickDropTests(unittest.TestCase):
                 },
                 "robotPlanning": planning,
                 "vision": {"source": "simulation", "evidence": {"directory": "evidence"}, "cubes": []},
-            },
-        )
+        }
+        if physical_confirmation is not None:
+            payload["physicalConfirmation"] = physical_confirmation
+        if pickup_retry is not None:
+            payload["pickupRetry"] = pickup_retry
+        write_json(self.config_path, payload)
 
     def gates(self) -> MultiHardwareGates:
         return MultiHardwareGates(
@@ -269,6 +277,120 @@ class MultiCubePickDropTests(unittest.TestCase):
         self.assertEqual(1, metadata["sequenceNumber"])
         self.assertEqual(2, metadata["totalPlannedCubes"])
         self.assertIn("firmwareResponses", metadata)
+
+    def test_physical_confirmation_confirmed_persists_drop_zone(self) -> None:
+        self.write_config(
+            physical_confirmation={
+                "enabled": True,
+                "method": "post_drop_vision_count_delta",
+                "visionSettleSeconds": 0.0,
+                "expectedTotalDelta": -1,
+                "expectedColorDelta": -1,
+            }
+        )
+        after = DetectionSnapshot(
+            "run-after-red",
+            "opencv-camera",
+            (
+                CubeDetection("blue", 40, 90, 20, 20, 0.8, {"sizeValid": True}),
+                CubeDetection("yellow", 10, 70, 20, 20, 0.7, {"sizeValid": True}),
+            ),
+            truck_code="TRUCK-001",
+            metadata={"snapshotSignature": "sig-after-red", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
+        )
+
+        result = run_multi_cube_pick_drop(
+            self.config_path,
+            snapshot=self.snapshot,
+            max_cubes=1,
+            gates=self.gates(),
+            serial_factory=lambda *_: FakeSerial(),
+            evidence_writer=self.writer,
+            post_drop_snapshot_loader=lambda: after,
+        )
+
+        self.assertEqual("SUCCESS", result["status"])
+        confirmation = result["executedActions"][0]["physicalConfirmation"]
+        self.assertEqual("CONFIRMED", confirmation["status"])
+        self.assertEqual("physical_confirmed", result["executedActions"][0]["successMeaning"])
+        persisted = json.loads(self.drop_zones_path.read_text(encoding="utf-8"))
+        self.assertTrue(persisted["red"][0]["occupied"])
+
+    def test_physical_confirmation_failed_does_not_persist_drop_zone(self) -> None:
+        self.write_config(
+            physical_confirmation={"enabled": True, "visionSettleSeconds": 0.0},
+            pickup_retry={"enabled": False, "maxAttempts": 3, "zStep": -2, "minPickZ": 132},
+        )
+
+        result = run_multi_cube_pick_drop(
+            self.config_path,
+            snapshot=self.snapshot,
+            max_cubes=1,
+            gates=self.gates(),
+            serial_factory=lambda *_: FakeSerial(),
+            evidence_writer=self.writer,
+            post_drop_snapshot_loader=lambda: self.snapshot,
+        )
+
+        self.assertEqual("FAILED", result["status"])
+        action = result["executedActions"][0]
+        self.assertEqual("FAILED", action["physicalConfirmation"]["status"])
+        self.assertEqual("PHYSICAL_CONFIRMATION_FAILED", action["errorCode"])
+        persisted = json.loads(self.drop_zones_path.read_text(encoding="utf-8"))
+        self.assertFalse(persisted["red"][0]["occupied"])
+
+    def test_retry_lowers_pick_z_and_stops_when_confirmed(self) -> None:
+        self.write_config(
+            physical_confirmation={"enabled": True, "visionSettleSeconds": 0.0},
+            pickup_retry={"enabled": True, "maxAttempts": 3, "zStep": -2, "minPickZ": 132},
+        )
+        after_success = DetectionSnapshot(
+            "run-after-retry",
+            "opencv-camera",
+            (
+                CubeDetection("blue", 40, 90, 20, 20, 0.8, {"sizeValid": True}),
+                CubeDetection("yellow", 10, 70, 20, 20, 0.7, {"sizeValid": True}),
+            ),
+            truck_code="TRUCK-001",
+            metadata={"snapshotSignature": "sig-after-retry", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
+        )
+        snapshots = iter([self.snapshot, after_success])
+
+        result = run_multi_cube_pick_drop(
+            self.config_path,
+            snapshot=self.snapshot,
+            max_cubes=1,
+            gates=self.gates(),
+            serial_factory=lambda *_: FakeSerial(),
+            evidence_writer=self.writer,
+            post_drop_snapshot_loader=lambda: next(snapshots),
+        )
+
+        self.assertEqual("SUCCESS", result["status"])
+        attempts = result["executedActions"][0]["physicalConfirmation"]["attempts"]
+        self.assertEqual(["FAILED", "CONFIRMED"], [attempt["status"] for attempt in attempts])
+        self.assertEqual([138.0, 136.0], [attempt["pickZ"] for attempt in attempts])
+        self.assertEqual(136.0, result["executedActions"][0]["finalPickZUsed"])
+
+    def test_retry_respects_min_pick_z_and_stops_after_all_attempts_fail(self) -> None:
+        self.write_config(
+            physical_confirmation={"enabled": True, "visionSettleSeconds": 0.0},
+            pickup_retry={"enabled": True, "maxAttempts": 4, "zStep": -4, "minPickZ": 132},
+        )
+
+        result = run_multi_cube_pick_drop(
+            self.config_path,
+            snapshot=self.snapshot,
+            max_cubes=1,
+            gates=self.gates(),
+            serial_factory=lambda *_: FakeSerial(),
+            evidence_writer=self.writer,
+            post_drop_snapshot_loader=lambda: self.snapshot,
+        )
+
+        attempts = result["executedActions"][0]["physicalConfirmation"]["attempts"]
+        self.assertEqual("FAILED", result["status"])
+        self.assertEqual([138.0, 134.0, 132.0], [attempt["pickZ"] for attempt in attempts])
 
     def test_no_cubes_detected_writes_clear_status_without_motion(self) -> None:
         snapshot = DetectionSnapshot(

@@ -5,7 +5,7 @@ import json
 import os
 import time
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 from collections.abc import Callable
@@ -72,6 +72,23 @@ class MultiHardwareGates:
     baudrate: int = 115200
 
 
+@dataclass(frozen=True)
+class PhysicalConfirmationConfig:
+    enabled: bool = False
+    method: str = "post_drop_vision_count_delta"
+    vision_settle_seconds: float = 1.0
+    expected_total_delta: int = -1
+    expected_color_delta: int = -1
+
+
+@dataclass(frozen=True)
+class PickupRetryConfig:
+    enabled: bool = False
+    max_attempts: int = 1
+    z_step: float = -2.0
+    min_pick_z: float | None = None
+
+
 def _action_run_id(run_id: str, sequence_number: int) -> str:
     return f"{run_id}-multi-{sequence_number}"
 
@@ -88,6 +105,124 @@ def _snapshot_for_action(snapshot: DetectionSnapshot, run_id: str) -> DetectionS
         metadata=snapshot.metadata,
         captured_at=snapshot.captured_at,
     )
+
+
+def _raw_block(config: EdgeConfig, key: str) -> dict[str, Any]:
+    value = config.raw.get(key, {})
+    return value if isinstance(value, dict) else {}
+
+
+def _bool_value(value: Any, default: bool) -> bool:
+    return value if isinstance(value, bool) else default
+
+
+def _number_value(value: Any, default: float) -> float:
+    return float(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else default
+
+
+def _int_value(value: Any, default: int) -> int:
+    return int(value) if isinstance(value, int) and not isinstance(value, bool) else default
+
+
+def _physical_confirmation_config(config: EdgeConfig) -> PhysicalConfirmationConfig:
+    raw = _raw_block(config, "physicalConfirmation")
+    return PhysicalConfirmationConfig(
+        enabled=_bool_value(raw.get("enabled"), False),
+        method=str(raw.get("method", "post_drop_vision_count_delta")),
+        vision_settle_seconds=max(0.0, _number_value(raw.get("visionSettleSeconds"), 1.0)),
+        expected_total_delta=_int_value(raw.get("expectedTotalDelta"), -1),
+        expected_color_delta=_int_value(raw.get("expectedColorDelta"), -1),
+    )
+
+
+def _pickup_retry_config(config: EdgeConfig) -> PickupRetryConfig:
+    raw = _raw_block(config, "pickupRetry")
+    configured_max_attempts = max(1, _int_value(raw.get("maxAttempts"), 3))
+    enabled = _bool_value(raw.get("enabled"), False)
+    return PickupRetryConfig(
+        enabled=enabled,
+        max_attempts=configured_max_attempts if enabled else 1,
+        z_step=_number_value(raw.get("zStep"), -2.0),
+        min_pick_z=(
+            _number_value(raw.get("minPickZ"), 0.0)
+            if raw.get("minPickZ") is not None
+            else None
+        ),
+    )
+
+
+def _retry_pick_z_values(base_pick_z: float, retry: PickupRetryConfig) -> list[float]:
+    values: list[float] = []
+    for attempt_index in range(retry.max_attempts):
+        candidate = base_pick_z + retry.z_step * attempt_index
+        if retry.min_pick_z is not None:
+            candidate = max(retry.min_pick_z, candidate)
+        if values and candidate == values[-1]:
+            break
+        values.append(candidate)
+    return values
+
+
+def _counts_by_color(snapshot: DetectionSnapshot) -> dict[str, int]:
+    counts = {color: 0 for color in ("red", "blue", "yellow", "green")}
+    for cube in snapshot.detections:
+        if cube.color in counts:
+            counts[cube.color] += 1
+    return counts
+
+
+def _build_physical_confirmation(
+    *,
+    config: PhysicalConfirmationConfig,
+    selected_color: str,
+    before_snapshot: DetectionSnapshot,
+    after_snapshot: DetectionSnapshot | None,
+    attempt: int,
+    pick_z: float,
+) -> dict[str, Any]:
+    before_counts = _counts_by_color(before_snapshot)
+    total_before = len(before_snapshot.detections)
+    color_before = before_counts.get(selected_color, 0)
+    expected_total_after = total_before + config.expected_total_delta
+    expected_color_after = color_before + config.expected_color_delta
+
+    base = {
+        "enabled": config.enabled,
+        "method": config.method,
+        "attempt": attempt,
+        "pickZ": pick_z,
+        "selectedCubeColor": selected_color,
+        "totalBefore": total_before,
+        "colorBefore": color_before,
+        "expectedTotalAfter": expected_total_after,
+        "expectedColorAfter": expected_color_after,
+        "snapshotBeforeSignature": _snapshot_signature(before_snapshot),
+        "snapshotAfterSignature": _snapshot_signature(after_snapshot) if after_snapshot else None,
+    }
+    if not config.enabled:
+        return {**base, "status": "DISABLED", "reason": "Physical confirmation disabled"}
+    if after_snapshot is None:
+        return {**base, "status": "INCONCLUSIVE", "reason": "No post-drop vision snapshot available"}
+
+    after_counts = _counts_by_color(after_snapshot)
+    total_after = len(after_snapshot.detections)
+    color_after = after_counts.get(selected_color, 0)
+    confirmed = total_after == expected_total_after and color_after == expected_color_after
+    return {
+        **base,
+        "totalAfter": total_after,
+        "colorAfter": color_after,
+        "status": "CONFIRMED" if confirmed else "FAILED",
+        "reason": (
+            "Total and color counts decreased by 1"
+            if confirmed
+            else "Expected total count to decrease by 1 and selected color count to decrease by 1"
+        ),
+    }
+
+
+def _config_with_pick_z(config: EdgeConfig, pick_z: float) -> EdgeConfig:
+    return replace(config, robot_planning=replace(config.robot_planning, pick_z=pick_z))
 
 
 def _cube_center(cube: CubeDetection) -> dict[str, float]:
@@ -216,6 +351,8 @@ def _base_payload(
     skipped_cubes: list[dict[str, Any]],
     config: EdgeConfig,
 ) -> dict[str, Any]:
+    physical_config = _physical_confirmation_config(config)
+    retry_config = _pickup_retry_config(config)
     return {
         "status": status,
         "timestamp": _utc_now(),
@@ -234,14 +371,31 @@ def _base_payload(
         "movementDelaySeconds": config.movement.delay_seconds,
         "pickupHoldSeconds": config.movement.pickup_hold_seconds,
         "releaseHoldSeconds": config.movement.release_hold_seconds,
-        "successMeaning": "command_execution_only",
+        "successMeaning": "physical_confirmed" if physical_config.enabled else "command_execution_only",
+        "physicalConfirmation": {
+            "enabled": physical_config.enabled,
+            "method": physical_config.method,
+            "visionSettleSeconds": physical_config.vision_settle_seconds,
+            "expectedTotalDelta": physical_config.expected_total_delta,
+            "expectedColorDelta": physical_config.expected_color_delta,
+        },
+        "pickupRetry": {
+            "enabled": retry_config.enabled,
+            "maxAttempts": retry_config.max_attempts,
+            "zStep": retry_config.z_step,
+            "minPickZ": retry_config.min_pick_z,
+            "plannedPickZValues": _retry_pick_z_values(
+                config.robot_planning.pick_z or 0.0,
+                retry_config,
+            ) if config.robot_planning.enabled else [],
+        },
         "planFingerprint": _fingerprint(planned_actions, snapshot, max_cubes),
         "serialOpened": False,
         "hardwareMovement": False,
         "safetyWarnings": _hardware_config_errors(config),
         "limitations": [
-            "This version plans multiple cubes from one snapshot and does not recapture between cubes.",
-            "Physical confirmation remains manual; success means command execution only.",
+            "For real demos, use Edge Vision recapture between cubes so each next pick uses an updated snapshot.",
+            "When physicalConfirmation.enabled=false, success means command execution only.",
         ],
     }
 
@@ -257,7 +411,6 @@ def _plan_multi_cube(
     selected_cubes = CubeSelector().select_many(snapshot, max_cubes=max_cubes)
     planned: list[tuple[str, RobotActionPlan]] = []
     skipped: list[dict[str, Any]] = []
-    planner = RobotActionPlanner()
 
     for cube in selected_cubes:
         sequence_number = len(planned) + len(skipped) + 1
@@ -268,15 +421,7 @@ def _plan_multi_cube(
             skipped.append({"selectedCube": cube_to_dict(cube), "reason": exc.code})
             continue
         try:
-            action_snapshot = _snapshot_for_action(snapshot, action_run_id)
-            plan = planner.plan(
-                action_snapshot,
-                cube,
-                selection,
-                config.robot_planning,
-                EdgeRunProfile.VISION_DRY_RUN,
-                dry_run=True,
-            )
+            plan = _plan_reserved_cube(config, snapshot, cube, selection, action_run_id)
         except Exception:
             try:
                 adapter.cancel(action_run_id)
@@ -285,6 +430,24 @@ def _plan_multi_cube(
             raise
         planned.append((action_run_id, plan))
     return planned, skipped
+
+
+def _plan_reserved_cube(
+    config: EdgeConfig,
+    snapshot: DetectionSnapshot,
+    cube: CubeDetection,
+    selection: Any,
+    action_run_id: str,
+) -> RobotActionPlan:
+    action_snapshot = _snapshot_for_action(snapshot, action_run_id)
+    return RobotActionPlanner().plan(
+        action_snapshot,
+        cube,
+        selection,
+        config.robot_planning,
+        EdgeRunProfile.VISION_DRY_RUN,
+        dry_run=True,
+    )
 
 
 def _backend_payload(
@@ -302,7 +465,7 @@ def _backend_payload(
         {
             "sessionId": session_id,
             "actionType": "PICK_AND_DROP",
-            "status": execution.get("status", "SUCCESS"),
+            "status": "SUCCESS" if execution.get("status") == "SUCCESS" else "ERROR",
             "mode": "hardware",
             "color": plan.selected_cube.color,
             "metadata": {
@@ -327,6 +490,13 @@ def _backend_payload(
                 "pickupHoldSeconds": execution.get("pickupHoldSeconds"),
                 "releaseHoldSeconds": execution.get("releaseHoldSeconds"),
                 "firmwareResponses": execution.get("firmwareResponses", []),
+                "commandExecutionStatus": execution.get("commandExecutionStatus"),
+                "physicalConfirmation": execution.get("physicalConfirmation"),
+                "finalPickZUsed": execution.get("finalPickZUsed"),
+                "retryEnabled": execution.get("retryEnabled"),
+                "maxAttempts": execution.get("maxAttempts"),
+                "zStep": execution.get("zStep"),
+                "minPickZ": execution.get("minPickZ"),
                 "successMeaning": execution.get("successMeaning"),
                 "visualCalibrationUsed": planned["visualCalibrationUsed"],
                 "homographyUsed": planned["homographyUsed"],
@@ -347,6 +517,7 @@ def _execute_plan(
     serial_factory: SerialFactory | None,
     sleeper: Callable[[float], None],
     backend_client: BackendClient | None,
+    post_drop_snapshot_loader: Callable[[], DetectionSnapshot] | None = None,
 ) -> tuple[list[dict[str, Any]], str | None, str | None]:
     serial = MaxArmSerialAdapter(
         gates.port or "",
@@ -358,14 +529,29 @@ def _execute_plan(
     session_id: str | None = None
     error_code: str | None = None
     error_message: str | None = None
+    current_snapshot = snapshot
+    physical_config = _physical_confirmation_config(config)
+    retry_config = _pickup_retry_config(config)
+    base_pick_z = config.robot_planning.pick_z if config.robot_planning.pick_z is not None else 0.0
 
     try:
         serial.open()
         for index, (action_run_id, plan) in enumerate(planned, start=1):
+            planned_color = plan.selected_cube.color
+            if current_snapshot is not snapshot:
+                candidates = [cube for cube in CubeSelector().select_many(current_snapshot, max_cubes=max(1, len(current_snapshot.detections))) if cube.color == planned_color]
+                if not candidates:
+                    error_code = "NO_CUBE_FOR_REPLAN"
+                    error_message = f"No {planned_color} cube available after updated snapshot"
+                    break
+                plan = _plan_reserved_cube(config, current_snapshot, candidates[0], plan.drop_zone, action_run_id)
+            action_snapshot = current_snapshot
+
             execution: dict[str, Any] = {
                 "sequenceNumber": index,
                 "status": "SUCCESS",
                 "firmwareResponses": [],
+                "commandExecutionStatus": "SUCCESS",
                 "serialOpened": serial.is_open,
                 "hardwareMovement": False,
                 "suctionActivated": False,
@@ -377,22 +563,44 @@ def _execute_plan(
                 "pickupHoldSeconds": config.movement.pickup_hold_seconds,
                 "releaseHoldSeconds": config.movement.release_hold_seconds,
                 "successMeaning": "command_execution_only",
+                "physicalConfirmation": {
+                    "enabled": physical_config.enabled,
+                    "status": "DISABLED",
+                    "method": physical_config.method,
+                    "attempts": [],
+                },
+                "retryEnabled": retry_config.enabled,
+                "maxAttempts": retry_config.max_attempts,
+                "zStep": retry_config.z_step,
+                "minPickZ": retry_config.min_pick_z,
             }
             try:
-                for step in plan.steps:
-                    step_started_at = _utc_now()
-                    step_started_monotonic = time.monotonic()
-                    result = serial.send_pose(step.pose, suction=step.suction, allow_suction=gates.confirm_suction)
-                    elapsed_ms = round((time.monotonic() - step_started_monotonic) * 1000, 3)
-                    delay = _post_step_delay_seconds(
-                        step.name,
-                        delay_seconds=config.movement.delay_seconds,
-                        pickup_hold_seconds=config.movement.pickup_hold_seconds,
-                        release_hold_seconds=config.movement.release_hold_seconds,
+                for attempt_number, pick_z in enumerate(_retry_pick_z_values(base_pick_z, retry_config), start=1):
+                    attempt_config = _config_with_pick_z(config, pick_z)
+                    attempt_plan = plan if attempt_number == 1 and pick_z == base_pick_z else _plan_reserved_cube(
+                        attempt_config,
+                        current_snapshot,
+                        plan.selected_cube,
+                        plan.drop_zone,
+                        action_run_id,
                     )
-                    execution["hardwareMovement"] = True
-                    execution["firmwareResponses"].append(
-                        {
+                    execution["finalPickZUsed"] = pick_z
+                    attempt_responses: list[dict[str, Any]] = []
+
+                    for step in attempt_plan.steps:
+                        step_started_at = _utc_now()
+                        step_started_monotonic = time.monotonic()
+                        result = serial.send_pose(step.pose, suction=step.suction, allow_suction=gates.confirm_suction)
+                        elapsed_ms = round((time.monotonic() - step_started_monotonic) * 1000, 3)
+                        delay = _post_step_delay_seconds(
+                            step.name,
+                            delay_seconds=config.movement.delay_seconds,
+                            pickup_hold_seconds=config.movement.pickup_hold_seconds,
+                            release_hold_seconds=config.movement.release_hold_seconds,
+                        )
+                        execution["hardwareMovement"] = True
+                        response = {
+                            "attempt": attempt_number,
                             "step": step.name,
                             "commandSent": result.command_sent,
                             "firmwareResponse": result.firmware_response,
@@ -402,18 +610,96 @@ def _execute_plan(
                             "responseReceivedAt": _utc_now(),
                             "elapsedMs": elapsed_ms,
                         }
+                        execution["firmwareResponses"].append(response)
+                        attempt_responses.append(response)
+                        if step.suction == 1:
+                            execution["suctionActivated"] = True
+                        if step.name == "cube_target_pick":
+                            execution["pickupExecuted"] = True
+                        if step.name == "drop_zone_release":
+                            execution["releaseConfirmed"] = True
+                            execution["dropExecuted"] = True
+                        if execution["hardwareMovement"] and delay > 0:
+                            sleeper(delay)
+
+                    after_snapshot: DetectionSnapshot | None = None
+                    if physical_config.enabled:
+                        if physical_config.vision_settle_seconds > 0:
+                            sleeper(physical_config.vision_settle_seconds)
+                        after_snapshot = post_drop_snapshot_loader() if post_drop_snapshot_loader else None
+                    confirmation = _build_physical_confirmation(
+                        config=physical_config,
+                        selected_color=attempt_plan.selected_cube.color,
+                        before_snapshot=action_snapshot,
+                        after_snapshot=after_snapshot,
+                        attempt=attempt_number,
+                        pick_z=pick_z,
                     )
-                    if step.suction == 1:
-                        execution["suctionActivated"] = True
-                    if step.name == "cube_target_pick":
-                        execution["pickupExecuted"] = True
-                    if step.name == "drop_zone_release":
-                        execution["releaseConfirmed"] = True
-                        execution["dropExecuted"] = True
+                    confirmation["firmwareResponseCount"] = len(attempt_responses)
+                    execution["physicalConfirmation"]["attempts"].append(confirmation)
+
+                    if confirmation["status"] in {"CONFIRMED", "DISABLED"}:
                         adapter.confirm(action_run_id)
                         execution["occupiedPersisted"] = True
-                    if execution["hardwareMovement"] and delay > 0:
-                        sleeper(delay)
+                        execution["physicalConfirmation"].update(
+                            {
+                                key: confirmation.get(key)
+                                for key in (
+                                    "enabled",
+                                    "status",
+                                    "method",
+                                    "selectedCubeColor",
+                                    "totalBefore",
+                                    "totalAfter",
+                                    "colorBefore",
+                                    "colorAfter",
+                                    "expectedTotalAfter",
+                                    "expectedColorAfter",
+                                    "snapshotBeforeSignature",
+                                    "snapshotAfterSignature",
+                                    "reason",
+                                )
+                            }
+                        )
+                        if confirmation["status"] == "CONFIRMED":
+                            execution["successMeaning"] = "physical_confirmed"
+                            if after_snapshot is not None:
+                                current_snapshot = after_snapshot
+                        break
+
+                    execution["physicalConfirmation"].update(
+                        {
+                            key: confirmation.get(key)
+                            for key in (
+                                "enabled",
+                                "status",
+                                "method",
+                                "selectedCubeColor",
+                                "totalBefore",
+                                "totalAfter",
+                                "colorBefore",
+                                "colorAfter",
+                                "expectedTotalAfter",
+                                "expectedColorAfter",
+                                "snapshotBeforeSignature",
+                                "snapshotAfterSignature",
+                                "reason",
+                            )
+                        }
+                    )
+
+                if physical_config.enabled and execution["physicalConfirmation"].get("status") != "CONFIRMED":
+                    execution["status"] = "FAILED"
+                    execution["errorCode"] = (
+                        "PHYSICAL_CONFIRMATION_INCONCLUSIVE"
+                        if execution["physicalConfirmation"].get("status") == "INCONCLUSIVE"
+                        else "PHYSICAL_CONFIRMATION_FAILED"
+                    )
+                    execution["errorMessage"] = str(execution["physicalConfirmation"].get("reason"))
+                    try:
+                        adapter.cancel(action_run_id)
+                    except Exception:
+                        pass
 
                 if backend_client is not None and snapshot.truck_code:
                     if session_id is None:
@@ -427,12 +713,16 @@ def _execute_plan(
                             run_id=run_id,
                             sequence_number=index,
                             total_planned=len(planned),
-                            snapshot=snapshot,
+                            snapshot=action_snapshot,
                             plan=plan,
                             execution=execution,
                         )
                     )
                 executed.append(execution)
+                if execution.get("status") != "SUCCESS":
+                    error_code = str(execution.get("errorCode", "PICK_DROP_FAILED"))
+                    error_message = str(execution.get("errorMessage", "Pick/drop failed"))
+                    break
             except Exception as exc:
                 if not execution["releaseConfirmed"]:
                     try:
@@ -440,6 +730,7 @@ def _execute_plan(
                     except Exception:
                         pass
                 execution["status"] = "FAILED"
+                execution["commandExecutionStatus"] = "FAILED"
                 execution["errorCode"] = getattr(exc, "code", "PICK_DROP_FAILED")
                 execution["errorMessage"] = str(exc)
                 executed.append(execution)
@@ -468,6 +759,7 @@ def run_multi_cube_pick_drop(
     sleeper: Callable[[float], None] = time.sleep,
     evidence_writer: PickDropEvidenceWriter | None = None,
     backend_client: BackendClient | None = None,
+    post_drop_snapshot_loader: Callable[[], DetectionSnapshot] | None = None,
 ) -> dict[str, Any]:
     if max_cubes <= 0:
         raise MultiCubePickDropError("MAX_CUBES_INVALID", "--max-cubes must be greater than 0")
@@ -555,6 +847,7 @@ def run_multi_cube_pick_drop(
         serial_factory=serial_factory,
         sleeper=sleeper,
         backend_client=backend_client,
+        post_drop_snapshot_loader=post_drop_snapshot_loader,
     )
     successful = [action for action in executed if action.get("status") == "SUCCESS"]
     if error_code is None:
@@ -607,15 +900,19 @@ def main() -> None:
     parser.add_argument(
         "--recapture-between-cubes",
         action="store_true",
-        help="Reserved for a future version; current flow plans from one snapshot.",
+        help="Use updated Edge Vision snapshots after each confirmed drop when --edge-vision-url is provided.",
     )
     args = parser.parse_args()
-    if args.recapture_between_cubes:
-        raise MultiCubePickDropError("NOT_IMPLEMENTED", "--recapture-between-cubes is documented but not implemented")
+    initial_snapshot = _resolve_snapshot(args)
+    post_drop_loader = (
+        (lambda: _load_edge_vision_snapshot(args.edge_vision_url))
+        if args.edge_vision_url
+        else None
+    )
 
     result = run_multi_cube_pick_drop(
         Path(args.config),
-        snapshot=_resolve_snapshot(args),
+        snapshot=initial_snapshot,
         max_cubes=args.max_cubes,
         plan_only=args.plan_only,
         dry_run_evidence_path=Path(args.dry_run_evidence) if args.dry_run_evidence else None,
@@ -630,6 +927,7 @@ def main() -> None:
             baudrate=args.baudrate,
         ),
         backend_client=BackendClient(args.backend_url) if args.sync_backend else None,
+        post_drop_snapshot_loader=post_drop_loader,
     )
     print(json.dumps(result, indent=2, ensure_ascii=False))
 

@@ -78,6 +78,13 @@ button {
   text-transform: uppercase;
 }
 
+.refresh-meta {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
 .icon-button {
   display: inline-grid;
   place-items: center;

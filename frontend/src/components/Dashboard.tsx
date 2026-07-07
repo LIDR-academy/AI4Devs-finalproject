@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { fetchOperationalDashboard } from "../api/dashboard";
+import { dashboardRefreshIntervalMs, fetchOperationalDashboard } from "../api/dashboard";
 import { edgeVisionRefreshIntervalMs, fetchEdgeVisionPanel } from "../api/edgeVision";
 import type { OperationalDashboard } from "../types/dashboard";
 import type { EdgeVisionPanelData } from "../types/edgeVision";
@@ -25,16 +25,25 @@ export function Dashboard() {
   const [state, setState] = useState<LoadState>("loading");
   const [visionLoading, setVisionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastDashboardUpdatedAt, setLastDashboardUpdatedAt] = useState<string | null>(null);
 
-  const loadDashboard = useCallback(async () => {
-    setState("loading");
+  const dashboardRefreshMs = dashboardRefreshIntervalMs();
+
+  const loadDashboard = useCallback(async (options?: { quiet?: boolean; signal?: AbortSignal }) => {
+    if (!options?.quiet) {
+      setState("loading");
+    }
     setError(null);
 
     try {
-      const dashboard = await fetchOperationalDashboard();
+      const dashboard = await fetchOperationalDashboard(options?.signal);
       setData(dashboard);
       setState(dashboard.activeSession ? "ready" : "empty");
+      setLastDashboardUpdatedAt(new Date().toISOString());
     } catch (unknownError) {
+      if (unknownError instanceof DOMException && unknownError.name === "AbortError") {
+        return;
+      }
       setData(null);
       setError(unknownError instanceof Error ? unknownError.message : "No se pudo consultar el backend");
       setState("error");
@@ -66,8 +75,17 @@ export function Dashboard() {
   }, []);
 
   useEffect(() => {
-    void loadDashboard();
-  }, [loadDashboard]);
+    const controller = new AbortController();
+    void loadDashboard({ signal: controller.signal });
+    const intervalId = window.setInterval(() => {
+      void loadDashboard({ quiet: true, signal: controller.signal });
+    }, dashboardRefreshMs);
+
+    return () => {
+      window.clearInterval(intervalId);
+      controller.abort();
+    };
+  }, [dashboardRefreshMs, loadDashboard]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -93,6 +111,10 @@ export function Dashboard() {
         <div>
           <p className="eyebrow">RoboDock AI</p>
           <h1>Dashboard Operacional</h1>
+          <p className="refresh-meta">
+            Actualizacion automatica cada {Math.round(dashboardRefreshMs / 1000)}s
+            {lastDashboardUpdatedAt ? ` · Ultima actualizacion ${new Date(lastDashboardUpdatedAt).toLocaleTimeString()}` : ""}
+          </p>
         </div>
         <button className="icon-button" type="button" aria-label="Actualizar dashboard" onClick={refreshAll}>
           <span aria-hidden="true">Actualizar</span>

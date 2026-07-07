@@ -39,6 +39,7 @@ Crear `frontend/.env` desde `frontend/.env.example` si necesitas cambiar la URL 
 
 ```env
 VITE_BACKEND_URL=http://localhost:3000
+VITE_DASHBOARD_REFRESH_MS=3000
 VITE_EDGE_VISION_URL=http://localhost:8001
 VITE_EDGE_VISION_REFRESH_MS=2000
 ```
@@ -46,6 +47,11 @@ VITE_EDGE_VISION_REFRESH_MS=2000
 `VITE_EDGE_VISION_URL` es opcional. Si no existe o el servicio Edge Vision esta
 apagado, el dashboard sigue funcionando con el backend y muestra el panel de
 vision en estado no disponible.
+
+`VITE_DASHBOARD_REFRESH_MS` controla el polling automatico del dashboard
+operacional: sesion activa, cubos registrados, conteos y ultimas acciones robot.
+Si se omite, usa `3000`. El boton `Actualizar` sigue disponible para refresco
+manual.
 
 `VITE_EDGE_VISION_REFRESH_MS` controla el polling automatico del panel de vision.
 Si se omite, usa `2000`. El frontend acepta valores entre `1000` y `3000` ms; los
@@ -123,6 +129,8 @@ python src\service\vision_api.py --config config\edge.vision.example.json
 - si Edge Vision detecta cubos pero no hay QR valido, esos cubos no deben
   presentarse como registrados en sesion;
 - el panel indica `Auto-refresh cada X segundos` y `Ultima actualizacion`;
+- la cabecera indica la actualizacion automatica operacional y cambia sin
+  presionar `Actualizar` cuando el backend recibe nuevas acciones;
 - si Edge Vision esta apagado, muestra un error visible sin romper el resto del
   dashboard;
 - `vision-dry-run` se etiqueta como dry-run sin movimiento;
