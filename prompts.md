@@ -215,3 +215,31 @@ These prompts drove refinement, reconciliation and review across the documents r
 
 > write all the prompts of this session into @prompts.md
 
+---
+
+
+
+## Prompts de la sesión 3 — Migración del gestor de paquetes de yarn a pnpm
+
+> Note: prompts reproduced verbatim, in chronological order. This session covered researching yarn vs npm vs pnpm for this monorepo (Turborepo + Expo SDK 57), migrating to pnpm 11 (`pnpm-workspace.yaml`, `workspace:*` protocol for the `@helsoft/*` libs, lockfile converted with `pnpm import`, `allowBuilds` approvals), verifying with `check-types`/`lint`/`build`, and updating the docs (`AGENTS.md`, `PRD.md`, `.agents/rules/global.mdc`, `readme.md`).
+
+**Prompt 1:** *(research and compare package managers before deciding)*
+
+> I'm thinking in migrating from yarn into npm or pnpm, can you research the advantages/disavantages of doing it, I want to compare them
+
+**Prompt 2:** *(execute the migration)*
+
+> migrate to pnpm
+
+**Prompt 3:** *(document the isolated-dependencies escape hatch in the readme)*
+
+> add this comment into the readme file: "If a future React Native library ever breaks with isolated dependencies, the one-line escape hatch is nodeLinker: hoisted in pnpm-workspace.yaml."
+
+**Prompt 4:** *(keep the course readme in a single language)*
+
+> translate the text so the entire readme is in spanish
+
+**Prompt 5:** *(commit the migration and generate this session's prompts log)*
+
+> ok, now commit the changes and then write this session prompts into prompts.md
+
