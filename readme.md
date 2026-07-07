@@ -49,6 +49,8 @@
 ### **1.4. Instrucciones de instalación:**
 > Documenta de manera precisa las instrucciones para instalar y poner en marcha el proyecto en local (librerías, backend, frontend, servidor, base de datos, migraciones y semillas de datos, etc.)
 
+> **Nota:** Si en el futuro alguna librería de React Native falla con las `isolated dependencies` (que es el comportamiento por defecto de pnpm), la solución rápida es agregar la línea `nodeLinker: hoisted` en `pnpm-workspace.yaml`.
+
 ---
 
 ## 2. Arquitectura del Sistema

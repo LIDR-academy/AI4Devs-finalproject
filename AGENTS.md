@@ -14,25 +14,27 @@ Canonical agent rules live in `.agents/rules/` and take precedence:
 
 ## Commands
 
-Yarn 1.x workspaces + Turborepo. Run from the repo root:
+pnpm workspaces + Turborepo (workspaces declared in `pnpm-workspace.yaml`; internal `@helsoft/*` deps use the `workspace:*` protocol). Run from the repo root:
 
 ```bash
-yarn dev           # turbo run dev (app + storybooks)
-yarn build         # turbo run build
-yarn lint          # turbo run lint
-yarn check-types   # turbo run check-types (tsc --noEmit per workspace)
-yarn clean         # remove node_modules/.turbo/dist/.expo everywhere + watchman
+pnpm dev           # turbo run dev (app + storybooks)
+pnpm build         # turbo run build
+pnpm lint          # turbo run lint
+pnpm check-types   # turbo run check-types (tsc --noEmit per workspace)
+pnpm clean         # remove node_modules/.turbo/dist/.expo everywhere + watchman
 ```
 
 Target a single workspace:
 
 ```bash
-yarn workspace app-study-buddy dev        # Expo dev server (also: web / ios / android)
-yarn workspace @helsoft/components dev    # Storybook on port 6007 (lib-with-storybook uses 6006)
-yarn turbo run check-types --filter=@helsoft/services
+pnpm --filter app-study-buddy dev         # Expo dev server (also: web / ios / android)
+pnpm --filter @helsoft/components dev     # Storybook on port 6007 (lib-with-storybook uses 6006)
+pnpm turbo run check-types --filter=@helsoft/services
 ```
 
-There is a `test` turbo task but no workspace defines a `test` script yet — no test runner is installed. When adding one, wire the workspace's `test` script so `yarn test` picks it up.
+There is a `test` turbo task but no workspace defines a `test` script yet — no test runner is installed. When adding one, wire the workspace's `test` script so `pnpm test` picks it up.
+
+pnpm blocks dependency build scripts by default; if an install reports ignored builds, approve the package in the `allowBuilds` section of `pnpm-workspace.yaml`.
 
 Supabase (hosted project, linked via `supabase/`):
 

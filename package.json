@@ -1,11 +1,7 @@
 {
   "name": "ai-study-buddy",
   "private": true,
-  "packageManager": "yarn@1.22.22",
-  "workspaces": [
-    "apps/*",
-    "libs/*"
-  ],
+  "packageManager": "pnpm@11.10.0",
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
@@ -14,7 +10,7 @@
     "test": "turbo run test",
     "clean-modules": "rm -rf node_modules .turbo apps/*/node_modules apps/*/.expo apps/*/.turbo apps/*/dist libs/*/node_modules libs/*/.turbo libs/*/dist libs/*/storybook-static",
     "clean-watchman": "watchman watch-del-all",
-    "clean": "yarn clean-modules && yarn clean-watchman"
+    "clean": "pnpm clean-modules && pnpm clean-watchman"
   },
   "devDependencies": {
     "turbo": "^2.5.4"

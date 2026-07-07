@@ -33,7 +33,7 @@ This is a monorepo for react-native/node/next applications.
   - Schema changes via migrations: npx supabase migration new <name>, then npx supabase db push.
   - Apps read EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY from .env (see apps/app-study-buddy/.env.example) and call initSupabase at startup.
 
-- Use yarn as package manager.
+- Use pnpm as package manager.
 - Use Turborepo tooling.
 - Use Expo for react-native applications.
 - Use Expo Router for react-native applications.

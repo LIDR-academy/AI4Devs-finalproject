@@ -8,7 +8,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@helsoft/types": "*",
+    "@helsoft/types": "workspace:*",
     "@supabase/supabase-js": "^2.49.0"
   },
   "devDependencies": {

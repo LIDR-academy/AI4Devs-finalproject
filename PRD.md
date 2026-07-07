@@ -67,7 +67,7 @@ Grouped by the core loop. Ordered by priority within each group.
 - As a learner, I want to retake a lesson's activities so that I can measure improvement (learning gains).
 
 ### Project foundation (developer) — ✅ done
-- As a developer, I want the monorepo scaffolded and the backend provisioned so that every story above can be built and verified on a working foundation. Delivered: Turborepo + yarn workspaces (`apps/`, `libs/`, `supabase/`); universal Expo app (`app-study-buddy`, web/iOS/Android with Expo Router); shared `@helsoft/*` libs (types, components, hooks, services, study-buddy) with the Supabase client initialized at app startup; Storybook on react-native-web (template lib `lib-with-storybook` + stories in `components`); hosted Supabase project created, linked to the repo and wired via env vars; agent rules in `.agents/rules/` aligned with this architecture; `build`/`lint`/`check-types`/`clean` pipeline green from the repo root.
+- As a developer, I want the monorepo scaffolded and the backend provisioned so that every story above can be built and verified on a working foundation. Delivered: Turborepo + pnpm workspaces (`apps/`, `libs/`, `supabase/`); universal Expo app (`app-study-buddy`, web/iOS/Android with Expo Router); shared `@helsoft/*` libs (types, components, hooks, services, study-buddy) with the Supabase client initialized at app startup; Storybook on react-native-web (template lib `lib-with-storybook` + stories in `components`); hosted Supabase project created, linked to the repo and wired via env vars; agent rules in `.agents/rules/` aligned with this architecture; `build`/`lint`/`check-types`/`clean` pipeline green from the repo root.
 
 ---
 

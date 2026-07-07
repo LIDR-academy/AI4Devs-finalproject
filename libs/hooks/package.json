@@ -8,7 +8,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@helsoft/services": "*"
+    "@helsoft/services": "workspace:*"
   },
   "peerDependencies": {
     "react": "*"

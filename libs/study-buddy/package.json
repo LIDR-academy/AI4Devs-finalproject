@@ -8,10 +8,10 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@helsoft/components": "*",
-    "@helsoft/hooks": "*",
-    "@helsoft/services": "*",
-    "@helsoft/types": "*"
+    "@helsoft/components": "workspace:*",
+    "@helsoft/hooks": "workspace:*",
+    "@helsoft/services": "workspace:*",
+    "@helsoft/types": "workspace:*"
   },
   "devDependencies": {
     "typescript": "~6.0.3"
