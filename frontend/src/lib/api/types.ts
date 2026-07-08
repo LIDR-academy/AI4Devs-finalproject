@@ -81,3 +81,67 @@ export interface TimelineMilestone {
   estimatedDays: number;
   documentsNeeded: string[];
 }
+
+export type AmortizationScenarioName = 'baseline' | 'light' | 'moderate' | 'aggressive';
+export type InvestmentScenarioName = 'conservative' | 'moderate' | 'aggressive';
+export type Persona = 'conservador' | 'equilibrado' | 'arriesgado';
+
+export interface AmortizationScenario {
+  name: AmortizationScenarioName;
+  monthlyPayment: number;
+  totalPaid: number;
+  totalInterest: number;
+  yearsToPayoff: number;
+  monthlyExtra: number;
+}
+
+export interface InvestmentScenario {
+  name: InvestmentScenarioName;
+  annualReturn: number;
+  nominalValue: number;
+  realValue: number;
+  totalContributed: number;
+}
+
+export interface HiddenCostItem {
+  concept: string;
+  amount: number;
+}
+
+export interface HiddenCosts {
+  itpOrIva: number;
+  notaria: number;
+  registro: number;
+  gestoria: number;
+  tasacion: number;
+  total: number;
+  breakdown: HiddenCostItem[];
+}
+
+export interface ComputedMortgage {
+  hiddenCosts: HiddenCosts;
+  totalCash: number;
+  gap: number;
+  monthlyPayment30yr: number;
+  amortizationScenarios: AmortizationScenario[];
+  investmentScenarios: InvestmentScenario[];
+}
+
+export interface PurchaseProcessDetail {
+  id: string;
+  status: 'ACTIVE' | 'COMPLETED' | 'ABANDONED';
+  currentStage: string;
+  propertyPrice: number | string | null;
+  sourceListingId: string | null;
+  financialProfile: {
+    savings: number;
+    monthlyIncome: number;
+    existingDebts: number;
+    region: string;
+    persona?: Persona;
+    interestRate?: number;
+  } | null;
+  computed: ComputedMortgage | null;
+  createdAt: string;
+  updatedAt: string;
+}
