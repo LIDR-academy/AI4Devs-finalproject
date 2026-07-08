@@ -1,11 +1,8 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '../../infrastructure/prisma/client';
-import { PurchaseProcessAggregator } from '../../domain/services/PurchaseProcessAggregator';
-import { FinancialProfile } from '../../domain/value-objects/FinancialProfile';
+import { buildComputedFor } from '../lib/attachComputed';
 
 export const dashboardRouter = Router();
-
-const aggregator = new PurchaseProcessAggregator();
 
 /**
  * GET /api/dashboard (FR-023)
@@ -32,6 +29,7 @@ dashboardRouter.get('/', async (req: Request, res: Response, next: NextFunction)
     if (!process) {
       res.json({
         empty: true,
+        computed: null,
         ctas: [
           { label: 'Analizar un anuncio', href: '/listing-lens' },
           { label: 'Configurar perfil manualmente', href: '/mortgage-compass' },
@@ -46,13 +44,7 @@ dashboardRouter.get('/', async (req: Request, res: Response, next: NextFunction)
     const totalItems = checklist?.items.length ?? 0;
     const checklistProgress = totalItems > 0 ? completedItems / totalItems : 0;
 
-    const profile = process.financialProfile
-      ? FinancialProfile.create(process.financialProfile as never)
-      : null;
-    const computed = aggregator.compute(
-      process.propertyPrice ? Number(process.propertyPrice) : null,
-      profile,
-    );
+    const computed = buildComputedFor(process);
 
     res.json({
       empty: false,

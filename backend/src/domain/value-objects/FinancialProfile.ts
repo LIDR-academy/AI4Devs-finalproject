@@ -68,4 +68,12 @@ export class FinancialProfile {
       interestRate: this.interestRate,
     };
   }
+
+  /**
+   * Reconstruct a FinancialProfile from a Prisma JSON column.
+   * Centralizes the type cast so call sites don't need `as never`.
+   */
+  static fromPrisma(json: unknown): FinancialProfile {
+    return FinancialProfile.create(json as Parameters<typeof FinancialProfile.create>[0]);
+  }
 }
