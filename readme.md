@@ -8,6 +8,7 @@
 5. [Historias de usuario](#5-historias-de-usuario)
 6. [Tickets de trabajo](#6-tickets-de-trabajo)
 7. [Pull requests](#7-pull-requests)
+8. [AI Engineering Setup](#8-ai-engineering-setup)
 
 ---
 
@@ -31,7 +32,7 @@ Asistente educativo con IA para compradores primerizos de vivienda en España. A
 
 ### 0.5. URL o archivo comprimido del repositorio
 
-`https://github.com/dmiguelm/AI4Devs-finalproject-DMM` (rama `feature-entrega1-DMM` para Entrega 1, `finalproject-DMM` para Entrega final)
+`https://github.com/dmiguelm/AI4Devs-finalproject-DMM` (rama `feature-entrega1-DMM` para Entrega 1, `feature-entrega2-DMM` para Entrega 2, `finalproject-DMM` para Entrega final)
 
 ---
 
@@ -68,15 +69,37 @@ Principios UX: mobile-first (375px+), PWA instalable, navegación por pestañas,
 
 ### **1.4. Instrucciones de instalación:**
 
-> **Estado actual (Entrega 1 — documentación):** no hay código implementado todavía. La Entrega 1 es solo documentación técnica.
->
-> Las instrucciones de setup (`npm install`, `npx prisma migrate dev`, `npm run dev`) se publicarán en la Entrega 2 (10 julio) cuando exista código ejecutable. El **stack planificado** está documentado en:
->
-> - `specs/001-realista-mvp/plan.md` → contexto técnico y arquitectura
-> - `specs/001-realista-mvp/tasks.md` → 127 tareas con criterios de aceptación
-> - `specs/001-realista-mvp/quickstart.md` → guía de setup para cuando exista código
->
-> Resumen del stack: SvelteKit (PWA) + Node.js/Express + TypeScript + PostgreSQL + Prisma + OpenRouter (LLM) + Nominatim (geocoding) + API Catastro + Vitest + Playwright.
+> **Estado actual (Entrega 2 — código MVP + AI engineering):** el proyecto está scaffolded y funcional en local. Ver la [sección 8](#8-ai-engineering-setup) para el detalle de los componentes de IA y [`.opencode/harness/run-locally.md`](.opencode/harness/run-locally.md) para el setup paso a paso.
+
+**Quickstart:**
+
+```bash
+# 1. Clonar y entrar en la rama
+git clone https://github.com/dmiguelm/AI4Devs-finalproject-DMM.git
+cd AI4Devs-finalproject-DMM
+git checkout feature-entrega2-DMM
+
+# 2. Configurar entorno
+cp .env.example .env
+# Editar .env con tu OPENROUTER_API_KEY (https://openrouter.ai/keys)
+
+# 3. Arrancar PostgreSQL
+docker compose up -d
+
+# 4. Instalar dependencias
+npm install                  # raíz (orquesta backend + frontend)
+(cd backend && npm install)
+(cd frontend && npm install)
+
+# 5. Migrar BD y sembrar
+(cd backend && npx prisma migrate dev)
+(cd backend && npm run db:seed)
+
+# 6. Arrancar dev (backend en :3001, frontend en :5173)
+npm run dev
+```
+
+Stack: SvelteKit (PWA) + Node.js/Express + TypeScript + PostgreSQL + Prisma + OpenRouter (LLM) + Nominatim (geocoding) + API Catastro + Vitest + Playwright.
 
 ---
 
@@ -701,3 +724,117 @@ Criterios de aceptación:
 **Impacto:** Cubre los requisitos de la Entrega 1 (Documentación técnica) más allá de la plantilla. Establece la base de gobernanza técnica para futuros colaboradores.
 
 **Cambios:** 7 archivos creados o modificados (649 líneas, 14 eliminadas) en su versión original. Ampliada en commits posteriores (`f1b432c` + `42cc631` + `78de70c` + `b42fd93`) con la traducción completa al español, los 3 fixes críticos del E2E, los 9 fixes importantes+menores, y la corrección del code review (`f1b432c` con 3 critical + 8 important).
+
+---
+
+## 8. AI Engineering Setup
+
+> **Entrega 2 introduce una capa de ingeniería de IA explícita** que define cómo el modelo es invocado, qué puede hacer, y con qué soporte técnico cuenta. Todo el setup vive en `.opencode/` y se documenta en `.opencode/README.md`.
+
+### 8.1. Resumen
+
+| Componente | Cantidad | Ubicación | Propósito |
+|---|---|---|---|
+| **Agentes** | 4 | `.opencode/agents/` | Roles de alto nivel (implementer, reviewer, documenter, orchestrator) |
+| **Comandos** | 8 | `.opencode/commands/` | Slash commands reutilizables (`/analyze-listing`, `/review-pr`, `/sprint`, etc.) |
+| **Skills** | 6 | `.opencode/skills/` | Comportamientos encapsulados (`auto-evidence`, `tdd-cycle`, `hexagonal-check`, etc.) |
+| **Hooks** | 4 | `.opencode/hooks/` | Triggers de automatización (post-commit, pre-push, post-merge, on-save-svelte) |
+| **Playbooks** | 3 | `.opencode/playbooks/` | Flujos multi-paso (`full-story`, `adr-lifecycle`, `release`) |
+| **Prompt-runs** | 3 | `.opencode/prompts/` | System prompts del LLM (listing, location-deprecated, narrative-templates) |
+| **Harness docs** | 6 | `.opencode/harness/` | Stack, env vars, test strategy, run-locally, troubleshooting, config.yaml |
+| **Self-doc** | n/a | `docs/evidence/` | Evidencia auto-generada por tarea (prompt + qué se hizo + deliverables) |
+
+### 8.2. Los 4 agentes
+
+| Agente | Rol | Cuándo se invoca |
+|---|---|---|
+| **`implementer`** | Genera código TDD por historia (value objects → ports → adapters → services → routes → UI) | Por cada US / sub-tarea |
+| **`reviewer`** | Revisión crítica hexagonal + TDD + FR-alignment, categoriza findings (critical/important/minor) | Antes de merge |
+| **`documenter`** | Mantiene `readme.md`, `prompts.md`, ADRs e índice de evidence al día | Tras review aprobado o cambios estructurales |
+| **`orchestrator`** | Despacha los otros agentes para entregar una US completa, trackea estado vs `tasks.md` | Al inicio de cada US |
+
+Detalle completo en [`.opencode/agents/`](.opencode/agents/).
+
+### 8.3. Sistema de autodocumentación
+
+Cada tarea que completa un agente produce un evidence file en `docs/evidence/`:
+
+```
+docs/evidence/
+├── INDEX.md                                    # auto-generado
+├── 2026-07-08-ENTREGA2-SETUP.md                # scaffold inicial
+├── 2026-07-08-T028.md                          # TransparencyScore value object
+├── 2026-07-09-T032.md                          # CheerioAdapter
+└── ...
+```
+
+Formato de cada evidence file (plantilla en `.opencode/skills/auto-evidence.md`):
+
+- **Prompt** (verbatim del usuario que disparó la tarea)
+- **Qué se hizo** (acciones)
+- **Deliverables** (ficheros creados/modificados)
+- **Tests** (unit / integration / coverage)
+- **Commits** (sha + mensaje conventional)
+- **Notas** (contexto, open questions, limitaciones)
+
+El hook `post-merge` (o el script `node .opencode/hooks/scripts/regenerate-evidence-index.js`) regenera el `INDEX.md` automáticamente.
+
+### 8.4. Cumplimiento constitucional
+
+Los componentes de IA refuerzan los 6 principios de la constitución:
+
+- **I. Hexagonal Architecture** — `hexagonal-check` (skill) bloquea commits con imports prohibidos en `domain/`
+- **II. Test-First** — `tdd-cycle` (skill) impone red→green→refactor con cobertura 80% en dominio
+- **III. Educational, Not Commercial** — `narrative-templates.md` (prompt-run) usa plantillas, no LLM, para Mortgage Compass (FR-013)
+- **IV. Privacy & Legal Compliance** — User-Agent `Realista/1.0 (analizador educativo)` configurado en `env-vars.md`; FR-011 (no third-party content) verificado por `reviewer`
+- **V. Mobile-First PWA** — `pwa-shell` (skill) genera manifest + service worker + icons
+- **VI. YAGNI & Future-Proof** — agentes y skills documentan anti-patterns explícitos
+
+### 8.5. Cómo se usa
+
+```bash
+# Ver todos los componentes
+ls .opencode/
+
+# Ejecutar la skill hexagonal-check
+bash .opencode/skills/hexagonal-check/run.sh
+
+# Generar evidencia manualmente
+node .opencode/hooks/scripts/regenerate-evidence-index.js
+
+# Consultar el harness
+cat .opencode/harness/README.md
+```
+
+### 8.6. Estructura del código generado en Entrega 2
+
+```
+.
+├── .opencode/                  # ← Componentes de IA (este sprint)
+├── backend/                    # ← Scaffold Express + Prisma + Hexagonal
+│   ├── src/
+│   │   ├── domain/             # 6 aggregates, 7 VOs, 5 ports, 9 services
+│   │   ├── adapters/           # 7 adaptadores (openrouter, cheerio, etc.)
+│   │   ├── api/                # 8 rutas, 3 middleware, progress emitter
+│   │   ├── infrastructure/     # Prisma, env config, urlValidator
+│   │   └── index.ts            # entry point
+│   ├── tests/unit/             # 8 archivos de test (value objects + services)
+│   └── prisma/schema.prisma    # 7 modelos + 2 enums
+├── frontend/                   # ← Scaffold SvelteKit PWA
+│   ├── src/routes/             # 5 páginas (dashboard, listing-lens, mortgage-compass, timeline, checklist)
+│   ├── src/lib/                # stores, api client, 4 componentes shared
+│   └── static/manifest.webmanifest
+├── e2e/                        # Playwright E2E (3 flows)
+├── docs/evidence/              # ← Self-documentation
+├── docs/superpowers/specs/     # Design docs (brainstorming)
+├── docker-compose.yml          # PostgreSQL 16 + Adminer
+├── .github/workflows/ci.yml    # Backend + Frontend + E2E
+└── .env.example                # Variables de entorno completas
+```
+
+### 8.7. Próximos pasos
+
+- Implementar los 22 tests de cada US (T023-T127) en orden story-by-story
+- Activar el hook `post-commit` vía Husky (ver `.opencode/hooks/post-commit.md`)
+- Crear el primer PR `feature-entrega2-DMM-us1` cuando US1 esté completo
+- Generar el primer evidence file al cerrar T028 (TransparencyScore)
