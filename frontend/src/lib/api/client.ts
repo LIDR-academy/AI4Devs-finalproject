@@ -43,7 +43,7 @@ export async function api<T = unknown>(path: string, options: ApiOptions = {}): 
 
   if (sid && !sid) {
     const newSid = res.headers.get('X-Session-Id');
-    if (newSid) session.set({ sessionId: newSid });
+    if (newSid) session.setSessionId(newSid);
   }
 
   if (!res.ok) {
