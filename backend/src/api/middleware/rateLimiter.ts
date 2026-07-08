@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { prisma } from '../../infrastructure/prisma/client';
 import { env } from '../../infrastructure/config/env';
-import { RATE_LIMITED_STATUS } from '../errors/DomainError';
+import { RATE_LIMITED_STATUS } from '../../domain/errors/DomainError';
 
 /**
  * Rate limit middleware (T015). 20 analyses/day per session UUID (FR-010, FR-020).

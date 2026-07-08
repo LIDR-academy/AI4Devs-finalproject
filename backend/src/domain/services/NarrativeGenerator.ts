@@ -81,14 +81,18 @@ export class NarrativeGenerator {
     const key = `${input.persona}|${input.scenario.name}`;
     const template = TEMPLATES[key] ?? TEMPLATES['equilibrado|any'];
 
+    const isInvestment = 'nominalValue' in input.scenario;
+    const amort = isInvestment ? null : (input.scenario as AmortizationScenario);
+    const invest = isInvestment ? (input.scenario as InvestmentScenario) : null;
+
     return this.substitute(template, {
-      cuota: Math.round(input.scenario.monthlyPayment ?? 0),
-      años: Math.round(input.scenario.yearsToPayoff ?? 30),
-      intereses: Math.round(input.scenario.totalInterest ?? 0),
-      extra: input.scenario.monthlyExtra ?? 0,
-      valor_nominal: Math.round((input.scenario as InvestmentScenario).nominalValue ?? 0),
-      valor_real: Math.round((input.scenario as InvestmentScenario).realValue ?? 0),
-      rentabilidad: ((input.scenario as InvestmentScenario).annualReturn ?? 0) * 100,
+      cuota: amort ? Math.round(amort.monthlyPayment) : 0,
+      años: amort ? Math.round(amort.yearsToPayoff) : 30,
+      intereses: amort ? Math.round(amort.totalInterest) : 0,
+      extra: amort?.monthlyExtra ?? 0,
+      valor_nominal: invest ? Math.round(invest.nominalValue) : 0,
+      valor_real: invest ? Math.round(invest.realValue) : 0,
+      rentabilidad: invest ? invest.annualReturn * 100 : 0,
       inflacion: 2,
       tipo_hipoteca: (input.context?.interestRate ?? 0.035) * 100,
       años_base: Math.round(input.context?.baseAmortization?.yearsToPayoff ?? 30),

@@ -42,7 +42,7 @@ purchaseProcessesRouter.post('/', async (req: Request, res: Response, next: Next
     const body = createSchema.parse(req.body);
 
     let propertyPrice = body.propertyPrice;
-    let sourceListingId = body.analyzedListingId ?? null;
+    const sourceListingId = body.analyzedListingId ?? null;
 
     if (body.analyzedListingId) {
       const listing = await prisma.analyzedListing.findUnique({
@@ -87,10 +87,18 @@ purchaseProcessesRouter.patch('/:id', async (req: Request, res: Response, next: 
   try {
     const id = z.string().uuid().parse(req.params.id);
     const body = updateSchema.parse(req.body);
-    const process = await prisma.purchaseProcess.update({
-      where: { id, userId: req.userId! } as unknown as { id: string },
+
+    const result = await prisma.purchaseProcess.updateMany({
+      where: { id, userId: req.userId! },
       data: body,
     });
+
+    if (result.count === 0) {
+      res.status(404).json({ error: 'NOT_FOUND' });
+      return;
+    }
+
+    const process = await prisma.purchaseProcess.findUnique({ where: { id } });
     res.json(process);
   } catch (err) {
     next(err);

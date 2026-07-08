@@ -27,7 +27,11 @@ negotiationRouter.get('/:id/negotiation-points', async (req: Request, res: Respo
       url: listing.url,
       declaredAddress: listing.declaredAddress,
       transparencyScore: listing.transparencyScore,
-      redFlags: listing.redFlags.map((f) => ({ flag: f.flag, severity: f.severity, reasoning: f.reasoning })),
+      redFlags: listing.redFlags.map((f) => ({
+        flag: f.flag as 'euphemistic_language' | 'vague_location' | 'missing_energy_certificate' | 'inflated_square_meters' | 'no_floor_plan' | 'suspicious_price' | 'stale_listing' | 'missing_community_costs' | 'hidden_fees_mentioned' | 'photos_mismatch' | 'missing_year_built' | 'missing_orientation',
+        severity: f.severity as 'low' | 'medium' | 'high',
+        reasoning: f.reasoning,
+      })),
       createdAt: listing.createdAt,
     });
 
