@@ -1,0 +1,164 @@
+// Realista Backend — Prisma schema
+// See docs/constitution.md, FR-007 (full stack persistence), FR-011 (no third-party content),
+// FR-014 (one PurchaseProcess per session), FR-024 (Checklist auto-attached), FR-025 (RedFlag.reasoning),
+// FR-027 (PortalHealthCheck), FR-028 (RedFlag normalized to table).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Anonymous user session, identified by UUID. No PII. userId nullable for future auth.
+model User {
+  id        String   @id @default(uuid())
+  sessionId String   @unique
+  userId    String?  // nullable for future authenticated users (FR-006 future)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  purchaseProcesses PurchaseProcess[]
+
+  @@index([sessionId])
+}
+
+/// The home-buying process for a user session. At most one active per session (FR-014).
+model PurchaseProcess {
+  id                String   @id @default(uuid())
+  userId            String
+  status            ProcessStatus @default(ACTIVE)
+  currentStage      BureaucraticStage @default(PRE_ARRAS)
+  propertyPrice     Decimal? @db.Decimal(12, 2)
+  financialProfile  Json?    // semi-structured FinancialProfile value object
+  sourceListingId   String?  // listing that originated this process
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user              User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  analyzedListings  AnalyzedListing[]
+  checklists        Checklist[]
+
+  @@index([userId, status])
+}
+
+enum ProcessStatus {
+  ACTIVE
+  COMPLETED
+  ABANDONED
+}
+
+enum BureaucraticStage {
+  PRE_ARRAS
+  ARRAS
+  DUE_DILIGENCE
+  PRE_ESCRITURA
+  ESCRITURA
+  POST_ESCRITURA
+}
+
+/// Result of a Listing Lens analysis. FR-011: no HTML/text stored.
+model AnalyzedListing {
+  id              String   @id @default(uuid())
+  processId       String
+  url             String   // original URL (we store this; it is not third-party content)
+  sourceHash      String   // SnapshotHash SHA-256 of canonical content
+  previousHash    String?  // for diff computation (FR-022)
+  diff            Json?    // computed diff vs previous snapshot
+  transparencyScore Int    // 0-100
+  scoreLabel      String   // baja | media | alta | excelente
+  omissions       Json?    // array of strings
+  positiveSignals Json?    // array of strings
+  summary         String?  // LLM summary in Spanish
+  declaredAddress String?  // extracted from HTML
+  coordinates     Json?    // { lat, lng, source, confidence } | null
+  catastroMatch   Json?    // cadastral cross-reference | null
+  createdAt       DateTime @default(now())
+
+  process         PurchaseProcess @relation(fields: [processId], references: [id], onDelete: Cascade)
+  redFlags        RedFlag[]
+
+  @@index([processId, createdAt])
+  @@index([sourceHash])
+}
+
+/// Normalized red flag (FR-028). Allows SQL aggregate queries.
+model RedFlag {
+  id                String   @id @default(uuid())
+  analyzedListingId String
+  flag              String   // closed enum: euphemistic_language, vague_location, etc.
+  severity          String   // low | medium | high
+  reasoning         String   // exact quote from listing + LLM inference (FR-025)
+  createdAt         DateTime @default(now())
+
+  analyzedListing   AnalyzedListing @relation(fields: [analyzedListingId], references: [id], onDelete: Cascade)
+
+  @@index([flag])
+  @@index([analyzedListingId])
+}
+
+/// Checklist template + per-process state (FR-024).
+model Checklist {
+  id          String   @id @default(uuid())
+  processId   String
+  templateName String  @default("default")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  process     PurchaseProcess @relation(fields: [processId], references: [id], onDelete: Cascade)
+  items       ChecklistItem[]
+
+  @@index([processId])
+}
+
+model ChecklistItem {
+  id              String   @id @default(uuid())
+  checklistId     String
+  stage           String   // PRE_ARRAS | ARRAS | etc.
+  title           String
+  description     String
+  documentsNeeded Json     // array of strings
+  estimatedDays   Int      @default(0)
+  completed       Boolean  @default(false)
+  completedAt     DateTime?
+  sortOrder       Int      @default(0)
+
+  checklist       Checklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+
+  @@index([checklistId, stage, sortOrder])
+}
+
+/// Portal health monitoring (FR-027). Tracks success rate and consecutive failures.
+model PortalHealthCheck {
+  id                  String   @id @default(uuid())
+  domain              String   @unique
+  status              PortalStatus @default(UNKNOWN)
+  successRate         Float    @default(1.0) // rolling window of last 100 requests
+  consecutiveFailures Int      @default(0)
+  lastCheckedAt       DateTime @default(now())
+  alertTriggeredAt    DateTime?
+  metadata            Json?
+
+  @@index([status])
+}
+
+enum PortalStatus {
+  UNKNOWN
+  OK
+  THROTTLED
+  BLOCKED
+  CONFIRMED_BLOCKED
+}
+
+/// Daily analysis counter per session for rate limiting (FR-010).
+model RateLimitCounter {
+  id        String   @id @default(uuid())
+  sessionId String
+  date      DateTime @db.Date
+  count     Int      @default(0)
+
+  @@unique([sessionId, date])
+  @@index([sessionId, date])
+}
