@@ -20,8 +20,8 @@ describe('SnapshotHash', () => {
   });
 
   it('differs for different content', () => {
-    const a = SnapshotHash.compute('content A');
-    const b = SnapshotHash.compute('content B');
+    const a = SnapshotHash.compute('content AAA here');
+    const b = SnapshotHash.compute('content BBB here');
     expect(a.equals(b)).toBe(false);
   });
 

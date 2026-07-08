@@ -13,19 +13,17 @@ export class AmortizationCalculator {
     const monthlyRate = input.annualRate / MONTHS_PER_YEAR;
     const totalMonths = input.years * MONTHS_PER_YEAR;
     const basePayment = this.monthlyPayment(input.principal, monthlyRate, totalMonths);
-    const totalPayment = (basePayment + input.monthlyExtra) * totalMonths;
-    const yearsToPayoff = this.yearsToPayoff(
-      input.principal,
-      basePayment + input.monthlyExtra,
-      monthlyRate,
-    );
-    const totalInterest = totalPayment - input.principal;
+    const actualPayment = basePayment + input.monthlyExtra;
+    const monthsToPayoff = this.monthsToPayoff(input.principal, actualPayment, monthlyRate, totalMonths);
+    const totalPaid = actualPayment * monthsToPayoff;
+    const totalInterest = totalPaid - input.principal;
+    const yearsToPayoff = monthsToPayoff / MONTHS_PER_YEAR;
 
     const name = this.scenarioName(input.monthlyExtra);
     return {
       name,
       monthlyPayment: basePayment,
-      totalPaid: totalPayment,
+      totalPaid,
       totalInterest,
       yearsToPayoff,
       monthlyExtra: input.monthlyExtra,
@@ -41,10 +39,16 @@ export class AmortizationCalculator {
     return (principal * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -months));
   }
 
-  private yearsToPayoff(principal: number, payment: number, monthlyRate: number): number {
-    if (payment <= principal * monthlyRate) return Infinity;
+  private monthsToPayoff(
+    principal: number,
+    payment: number,
+    monthlyRate: number,
+    cap: number,
+  ): number {
+    if (payment <= principal * monthlyRate) return cap;
+    if (monthlyRate === 0) return Math.ceil(principal / payment);
     const months = -Math.log(1 - (principal * monthlyRate) / payment) / Math.log(1 + monthlyRate);
-    return months / MONTHS_PER_YEAR;
+    return Math.min(Math.ceil(months), cap);
   }
 
   private scenarioName(extra: number): AmortizationScenario['name'] {
