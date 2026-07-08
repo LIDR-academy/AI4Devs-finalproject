@@ -1,39 +1,45 @@
-# Dependencies
+# Node
 node_modules/
-
-# Build output
 dist/
 build/
-.output/
+.svelte-kit/
+.vite/
 
-# Environment variables & secrets
+# Env
 .env
-.env.*
-!.env.example
+.env.local
+.env.*.local
 
-# OS files
+# Prisma
+backend/prisma/migrations/dev.db*
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Coverage
+coverage/
+*.lcov
+
+# OS
 .DS_Store
 Thumbs.db
 
-# IDE
+# Editor
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# Agent folder (may store credentials in future updates)
-.opencode/
+# Playwright
+e2e/playwright-report/
+e2e/test-results/
+frontend/playwright-report/
+frontend/test-results/
 
-# Spec-kit toolkit (regenerable con 'specify init'; no versionado en proyectos no colaborativos)
-.specify/
-
-# Python (spec-kit CLI)
-__pycache__/
-*.pyc
-.venv/
-
-# Prisma
-prisma/migrations/*/migration_lock.toml
-
-# Testing
-coverage/
+# OS-specific
+backend/dist/
+frontend/build/
