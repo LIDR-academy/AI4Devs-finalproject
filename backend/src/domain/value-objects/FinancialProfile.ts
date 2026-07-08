@@ -30,6 +30,7 @@ export class FinancialProfile {
     public readonly existingDebts: number,
     public readonly region: Region,
     public readonly persona: Persona | null,
+    public readonly interestRate: number | null,
   ) {}
 
   static create(input: {
@@ -38,17 +39,22 @@ export class FinancialProfile {
     existingDebts: number;
     region: string;
     persona?: Persona;
+    interestRate?: number;
   }): FinancialProfile {
     if (input.savings < 0) throw new Error('Savings must be non-negative');
     if (input.monthlyIncome < 0) throw new Error('Income must be non-negative');
     if (input.existingDebts < 0) throw new Error('Debts must be non-negative');
     if (input.region.length < 2) throw new Error('Region required');
+    if (input.interestRate !== undefined && input.interestRate < 0) {
+      throw new Error('Interest rate must be non-negative');
+    }
     return new FinancialProfile(
       input.savings,
       input.monthlyIncome,
       input.existingDebts,
       input.region as Region,
       input.persona ?? null,
+      input.interestRate ?? null,
     );
   }
 
@@ -59,6 +65,7 @@ export class FinancialProfile {
       existingDebts: this.existingDebts,
       region: this.region,
       persona: this.persona,
+      interestRate: this.interestRate,
     };
   }
 }
