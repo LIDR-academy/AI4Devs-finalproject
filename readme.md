@@ -14,7 +14,7 @@
 
 **SaaS business plan:** [PLAN_NEGOCIO.md](./PLAN_NEGOCIO.md) · **Technical roadmap:** [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/docs/ROADMAP_SAAS.md)
 
-**Delivery 2 branch:** `feature-entrega2-ABR` · **Reference conversation:** [README structure analysis for lms-cms-laravel12](./agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md)
+**Delivery branch:** `finalproject-ABR` · **Reference conversations:** [agent-transcripts/index.md](./agent-transcripts/index.md)
 
 ---
 
@@ -27,17 +27,44 @@
 **Brief description:**
 Open-source learning management system (LMS) built with Laravel 12. Enables educational institutions, companies, and trainers to create, manage, and distribute online courses with interactive content through a drag & drop plugin system, dynamic assessments, enrollment management, academic calendar, user profile, and bilingual interface (ES/EN).
 
-**Project URL:** `http://localhost:8080`(Docker)
+**Project URL (local):** `http://localhost:8080` (Docker) · **Production:** `https://proyectolms.asemad.es`
 
-**Code repository:** [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (branch `angel-burgos-r`)
+**Code repository:** [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) — implementation in `codigofinal/lms-cms-laravel12` (branch `angel-burgos-r`)
+
+**Documentation delivery (this folder):** `AI4Devs-finalproject` on branch `finalproject-ABR`
 
 **Prompt documentation:** [prompts.md](./prompts.md)
 
 **SaaS business plan:** [PLAN_NEGOCIO.md](./PLAN_NEGOCIO.md)
 
-**Delivery 2 branch:** `feature-entrega2-ABR`
+**Transcript index:** [agent-transcripts/index.md](./agent-transcripts/index.md)
 
-**Reference conversation (README analysis):** [agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md](./agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md)
+### Workspace layout (monorepo)
+
+The course workspace groups the **LMS implementation**, **FTP deploy packages**, and **final project documentation**:
+
+```text
+repositorio/                          # Local monorepo (AI4Devs course)
+├── AI4Devs-finalproject/             # Final delivery docs (branch finalproject-ABR)
+│   ├── readme.md, prompts.md, PLAN_NEGOCIO.md, seguridad.md
+│   ├── agent-transcripts/            # Exported Cursor conversations
+│   └── docs/screenshots/             # UI captures for documentation
+├── codigofinal/
+│   ├── lms-cms-laravel12/            # Main Laravel 12 LMS (branch angel-burgos-r)
+│   ├── deploy-moodle52-features/     # FTP pack: login 5.2, gradebook, AI, upgrade assistant
+│   ├── deploy-moodle52-comms/        # FTP pack: notifications, messages, mail, topbar
+│   ├── deploy-proyectolms-roles/     # FTP pack: role hierarchy + seed users
+│   └── deploy-highlight-quill/       # FTP pack: highlight colors in lesson editor
+└── [other AI4Devs course modules]    # backend, frontend, design, cicd, etc.
+```
+
+**Separation of concerns:**
+
+| Location | Purpose |
+|----------|---------|
+| `lms-cms-laravel12` | Full application source, Docker, tests, migrations |
+| `deploy-*` | Minimal file sets + `INSTALAR.md` for cPanel/FTP on `proyectolms.asemad.es` |
+| `AI4Devs-finalproject` | Academic deliverable: product doc, prompts, screenshots, security analysis |
 
 ---
 
@@ -73,6 +100,12 @@ Provide a modern, modular, open-source LMS platform that enables the creation an
 - **Progress tracking:** Record of lessons completed per student.
 - **Differentiated dashboards:** Teacher and student views.
 - **Multimedia file uploads:** Local videos with configured limits (128 MB).
+- **Moodle 5.2-inspired pack:** Redesigned login, multi-grader gradebook, AI tutor actions (`summarize`, `explain`, `tutor_hint`), Smart Upgrade Assistant (`/upgrade-assistant`).
+- **Communications (comms):** In-app notifications, private messaging, internal mail (`/comms/*`) with topbar shortcuts.
+- **Grill me:** Cursor command + in-app guided interrogation for teachers (`POST /ai/grill/*`) to validate plans before building.
+- **Smart Report plugin:** SIIU-oriented reporting and CSV export for Spanish universities.
+- **Role hierarchy:** `student`, `teacher`, `coordinator`, `admin` with policies and enrollment rules.
+- **Production deploy:** cPanel/FTP workflow documented for `proyectolms.asemad.es`.
 
 ### 1.3. Design and user experience
 
@@ -140,58 +173,39 @@ graph TD
 
 | Layer | Technology |
 |-------|------------|
-| Frontend | Blade + CSS (`public/css/lms.css`, `calendar*.css`) + JS (`public/js/lms.js`) |
-| Backend | Laravel 12 (PHP 8.3) |
+| Frontend | Blade + CSS (`lms.css`, `calendar*.css`, `moodle52.css`, `lms-comms.css`, `auth.css`) + JS (`lms.js`, `lms-comms.js`, `lms-ai.js`) |
+| Backend | Laravel 12 (PHP 8.3 local / 8.2+ production) |
 | i18n | `lang/en/lms.php`, `lang/es/lms.php`, middleware `SetLocale` |
 | Database | MySQL 8.4 |
-| Web server | Nginx 1.27 (Docker) |
+| Web server | Nginx 1.27 (Docker) / Apache (cPanel production) |
+| E2E tests | Playwright (`playwright/tests/*.spec.ts`) |
 
-### 2.3. Project structure
+### 2.3. Project structure (`codigofinal/lms-cms-laravel12`)
 
 ```text
 lms-cms-laravel12/
 ├── app/
-│   ├── Http/
-│   │   ├── Controllers/           12 controllers
-│   │   │   AuthController, CalendarController, CalendarEventController,
-│   │   │   CourseController, DashboardController, EnrollmentController,
-│   │   │   LessonController, LocaleController, PluginController,
-│   │   │   PluginInteractionController, ProfileController, QuizController
-│   │   └── Middleware/            EnsureRole, SetLocale
-│   ├── Models/                    15 Eloquent models
-│   ├── Services/                  CalendarService.php
-│   └── Support/                   CalendarEvent.php (DTO)
-├── bootstrap/app.php              Web middleware registration + role alias
-├── database/
-│   ├── migrations/                15 migrations
-│   └── seeders/                   DatabaseSeeder, LmsDemoSeeder, PluginDefinitionSeeder
-├── docker/
-│   ├── nginx/default.conf         client_max_body_size 128M
-│   └── php/uploads.ini            upload_max_filesize 128M
-├── lang/
-│   ├── en/lms.php
-│   └── es/lms.php
-├── public/
-│   ├── css/                       lms.css, calendar.css, calendar-teacher.css,
-│   │                              calendar-event-form.css
-│   └── js/lms.js
+│   ├── Http/Controllers/           19 feature controllers (+ base Controller)
+│   ├── Http/Middleware/            EnsureRole, SetLocale
+│   ├── Models/                     28 Eloquent models
+│   ├── Services/                   13 services (AI, comms, gradebook, calendar…)
+│   ├── Policies/                   Course, Lesson
+│   └── Enums/                      UserRole, SubscriptionPlan
+├── config/                         lms.php, saas.php, grill-me.php
+├── database/migrations/            29 migrations
 ├── resources/views/
-│   ├── layouts/                   app, stitch, calendar-moodle
-│   │   └── partials/              sidebar-nav, language-switcher, i18n-js,
-│   │                              calendar-moodle-topbar
-│   ├── auth/                      login, register
-│   ├── dashboard/                 student, teacher
-│   ├── courses/                   index, show, enrollments
-│   ├── lessons/                   show, edit
-│   ├── calendar/                  index, teacher, _body, events/*
-│   ├── profile/                   edit
-│   └── plugins/                   block partials
+│   ├── comms/                      notifications, messages, mail
+│   ├── gradebook/                  multi-grader UI
+│   ├── upgrade/                    Smart Upgrade Assistant
+│   ├── components/                 ai-assistant (Grill me)
+│   ├── calendar/, courses/, lessons/, plugins/, layouts/
+├── public/css|js/                  lms, comms, moodle52, auth assets
 ├── routes/web.php
-├── tests/
-│   ├── Feature/                   LmsFlowTest, LocaleTest, CalendarTest, CalendarEventTest
-│   └── Unit/                      LessonCastTest
-├── docker-compose.yml
-└── Dockerfile
+├── tests/Feature|Unit/             PHPUnit + GrillMeTest
+├── playwright/                     E2E automation + screenshot script
+├── .cursor/                        commands (grill-me), skills, rules
+├── docker-compose.yml              ports 8080, 8082, 33067
+└── docs/                           DEPLOY-CPANEL-ASEMAD.md, ROADMAP_SAAS.md
 ```
 
 ### 2.4. Infrastructure and deployment
@@ -223,6 +237,8 @@ lms-cms-laravel12/
 | `CalendarTest` | Calendar access, teacher/student layout, «New event» link |
 | `CalendarEventTest` | Academic event CRUD (teacher) |
 | `LessonCastTest` | JSON casting of lesson content |
+| `GrillMeTest` | Grill me API (teacher, policy, session flow) |
+| Playwright specs | Guest, auth, dashboard, courses, calendar, plugins, enrollments, lessons |
 
 Run in Docker:
 ```bash
@@ -300,7 +316,24 @@ Web routes in `routes/web.php` (no separate REST API).
 | GET | `/calendar` | Calendar (teacher or student view) |
 | GET/PATCH | `/profile/edit`, `/profile` | User profile |
 | GET | `/courses` | Course listing |
+| GET | `/upgrade-assistant` | Smart Upgrade Assistant checks |
 | POST | `/logout` | Log out |
+
+### Communications (`/comms`, authenticated)
+
+| Method | Route | Action |
+|--------|-------|--------|
+| GET | `/comms/notifications` | Notification center |
+| GET | `/comms/messages` | Private conversations |
+| GET/POST | `/comms/mail`, `/comms/mail/compose` | Internal mail (incl. reply) |
+
+### AI (`/ai`, authenticated)
+
+| Method | Route | Action |
+|--------|-------|--------|
+| GET/POST | `/ai/policy` | AI policy status / accept |
+| POST | `/ai/action` | `summarize`, `explain`, `tutor_hint` |
+| POST | `/ai/grill/start`, `/respond`, `/finish` | Grill me interrogation (teachers) |
 
 ### Teacher routes (`role:teacher`)
 
@@ -317,6 +350,8 @@ Web routes in `routes/web.php` (no separate REST API).
 | POST | `/lessons` | Create lesson |
 | GET | `/lessons/{lesson}/edit` | Lesson editor + plugins + quiz |
 | GET/POST/PATCH/DELETE | `/plugins/*`, `/lessons/{lesson}/plugins/*` | Plugin system |
+| GET | `/courses/{course}/grades` | Multi-grader gradebook |
+| PATCH/POST | `/courses/{course}/grades/instances/*` | Grader settings and marks |
 
 ### Student routes (`role:student`)
 
@@ -355,6 +390,12 @@ Web routes in `routes/web.php` (no separate REST API).
 
 **HU-12:** As a user, I want to change the interface language (ES/EN) and see translated navigation (Home, My Courses, Calendar).
 
+**HU-13:** As a user, I want notifications, messages, and internal mail from the topbar (`/comms/*`).
+
+**HU-14:** As a teacher, I want a multi-grader gradebook and AI-assisted lesson tools (tutor + Grill me).
+
+**HU-15:** As an operator, I want the Upgrade Assistant to verify DB tables and files before deploying Moodle 5.2 features.
+
 ### 5.1 MoSCoW prioritization (excerpt)
 
 **Must-Have:** authentication, course/lesson CRUD, enrollment, student consumption, assessment.
@@ -390,6 +431,23 @@ Web routes in `routes/web.php` (no separate REST API).
 - «New event» link conditioned on `calendar` route and teacher role
 - Test `LocaleTest`
 
+**Ticket 9 — Moodle 5.2 pack**
+- Login redesign (`auth.blade.php`, `auth.css`), gradebook tables and UI
+- `AiController`, `UpgradeAssistantController`, `moodle52.css`, `lms-ai.js`
+- Deploy package `deploy-moodle52-features`
+
+**Ticket 10 — Communications**
+- `CommsController`, notification/messaging/mail services, comms migrations
+- Topbar partial, `lms-comms.js/css`, reply-to-mail flow
+- Deploy package `deploy-moodle52-comms`
+
+**Ticket 11 — Grill me**
+- `GrillMeService`, Cursor command/skill, in-app UI in `ai-assistant` component
+- `tests/Feature/GrillMeTest.php`
+
+**Ticket 12 — Production deploy (cPanel)**
+- `DEPLOY-CPANEL-ASEMAD.md`, `diag.php`, role/FTP packages, remote i18n merge scripts
+
 ---
 
 ## 7. Pull Requests
@@ -410,37 +468,43 @@ Web routes in `routes/web.php` (no separate REST API).
 
 **PR 8 — ES/EN i18n and unified navigation sidebar**
 
+**PR 9 — Moodle 5.2 pack (login, gradebook, AI, upgrade assistant)**
+
+**PR 10 — Communications module and topbar**
+
+**PR 11 — Grill me (Cursor + in-app)**
+
+**PR 12 — cPanel production deploy and FTP packages**
+
 ---
 
 ## 8. Prompt Documentation
 
-Prompts used with code assistants (max. 3 per lifecycle section) and the detailed list of files touched in [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) are in **[prompts.md](./prompts.md)** (sections 1–9).
+Prompts used with code assistants and the detailed file list are in **[prompts.md](./prompts.md)** (sections 1–17).
 
-### Delivery 2 (`feature-entrega2-ABR`)
-
-Artifacts generated in the conversation [README structure analysis for lms-cms-laravel12](./agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md):
+### Final delivery (`finalproject-ABR`)
 
 | Artifact | Description |
 |----------|-------------|
-| [readme.md](./readme.md) | Product documentation aligned with the code in [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (architecture, data model, API, user stories, tickets) |
-| [prompts.md](./prompts.md) | Prompts by lifecycle phase and main files used |
-| [PLAN_NEGOCIO.md](./PLAN_NEGOCIO.md) | SaaS business plan (plans, target, projection) |
-| [seguridad.md](./seguridad.md) | Security by user story and OWASP Top 10 analysis |
-| [ROADMAP_SAAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/docs/ROADMAP_SAAS.md) | Technical roadmap aligned with the business plan |
+| [readme.md](./readme.md) | Product documentation aligned with `codigofinal/lms-cms-laravel12` |
+| [prompts.md](./prompts.md) | Prompts by lifecycle phase, deploy, comms, Moodle 5.2, grill-me |
+| [PLAN_NEGOCIO.md](./PLAN_NEGOCIO.md) | SaaS business plan |
+| [seguridad.md](./seguridad.md) | Security by user story and OWASP Top 10 |
+| [agent-transcripts/index.md](./agent-transcripts/index.md) | Exported conversation index |
 
-Transcript index: [agent-transcripts/index.md](./agent-transcripts/index.md).
+Transcripts: [362d8b59…](./agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md) (MVP), [8ff11265…](./agent-transcripts/8ff11265-f2f9-4ac1-b458-5dd9a909c31f.md) (calendar/i18n).
 
 ---
 
 ## 9. Screenshots
 
-Screenshots taken from the running application (`http://localhost:8080`, ES language, `LmsDemoSeeder` data). Files in [`docs/screenshots/`](docs/screenshots/).
+Screenshots from Docker (`http://localhost:8080`, `LmsDemoSeeder`). Files in [`docs/screenshots/`](docs/screenshots/). See [docs/screenshots/README.md](docs/screenshots/README.md) for the full index.
 
 ### Access
 
-Login screen with EN/ES language selector.
+Login (Moodle 5.2 style, ASEMAD branding) with EN/ES language selector.
 
-![Login](docs/screenshots/login.png)
+![Login Moodle 5.2](docs/screenshots/login-moodle52.png)
 
 ### Teacher role
 
@@ -448,8 +512,11 @@ Login screen with EN/ES language selector.
 |------|-------------|
 | Dashboard | Main panel with courses, timeline, and creation form |
 | My Courses | Listing and management of published courses |
-| Calendar | Monthly view (Moodle 5 layout), academic events, and «+ New event» button in the sidebar |
-| New event | Academic event creation form (`/calendar/events/create`) |
+| Calendar | Monthly view (Moodle layout), academic events |
+| Upgrade Assistant | Pre-deploy health checks for Moodle 5.2 pack |
+| Gradebook | Multi-grader marks per course activity |
+| Comms | Notifications, messages, internal mail |
+| Grill me | AI assistant panel on lesson view |
 
 ![Teacher dashboard](docs/screenshots/dashboard-teacher.png)
 
@@ -459,18 +526,30 @@ Login screen with EN/ES language selector.
 
 ![Create academic event](docs/screenshots/calendar-event-create.png)
 
+![Upgrade Assistant](docs/screenshots/upgrade-assistant.png)
+
+![Gradebook](docs/screenshots/gradebook-teacher.png)
+
+![Comms — notifications](docs/screenshots/comms-notifications.png)
+
+![Comms — messages](docs/screenshots/comms-messages.png)
+
+![Comms — mail](docs/screenshots/comms-mail.png)
+
+![AI Grill me](docs/screenshots/ai-grill-me.png)
+
 ### Student role
 
 | View | Description |
 |------|-------------|
 | Dashboard | Enrolled courses and quick access |
-| Calendar | Monthly view with standard LMS layout (no Moodle layout) |
+| Calendar | Monthly view with standard LMS layout |
 
 ![Student dashboard](docs/screenshots/dashboard-student.png)
 
 ![Academic calendar — student](docs/screenshots/calendar-student.png)
 
-> The **«+ New event»** link only appears on `/calendar` when the user has the `teacher` role. It is not shown in the sidebar on the event creation form.
+> Regenerate captures: `npm run screenshots` (see [docs/screenshots/README.md](docs/screenshots/README.md))
 
 ---
 

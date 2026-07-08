@@ -1,15 +1,19 @@
-> In this section, document the main prompts used during project creation that justify the use of code assistants across all phases of the development lifecycle. We expect a maximum of 3 per section, mainly initial creation prompts or correction/addition prompts for functionality you consider most relevant.
+, In this section, document the main prompts used during project creation that justify the use of code assistants across all phases of the development lifecycle. We expect a maximum of 3 per section, mainly initial creation prompts or correction/addition prompts for functionality you consider most relevant.
 > You may additionally include the full conversation as a link or attachment if you consider it appropriate.
 
-**Implementation repository:** [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (branch `angel-burgos-r`)
+**Implementation repository:** [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) — path `codigofinal/lms-cms-laravel12` (branch `angel-burgos-r`)
 
-**Delivery branch:** `feature-entrega2-ABR`
+**Delivery branch:** `finalproject-ABR` (this repo: `AI4Devs-finalproject`)
 
-**Reference conversation (README analysis, plugins, WYSIWYG editor, video, SaaS):** [agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md](./agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md)
+**Reference conversations:**
 
-**Reference conversation (calendar, i18n, sidebar):** [agent-transcripts/8ff11265-f2f9-4ac1-b458-5dd9a909c31f.md](./agent-transcripts/8ff11265-f2f9-4ac1-b458-5dd9a909c31f.md)
+| Topic | Transcript |
+|-------|------------|
+| Plugins, enrollments, WYSIWYG, video, SaaS | [362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md](./agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md) |
+| Calendar, i18n, sidebar | [8ff11265-f2f9-4ac1-b458-5dd9a909c31f.md](./agent-transcripts/8ff11265-f2f9-4ac1-b458-5dd9a909c31f.md) |
+| Deploy cPanel, comms, Moodle 5.2, grill-me | Cursor transcript `17d3d3be-a847-4d06-abee-a8643a0a356f` |
 
-**Implementation prompt log (extended):** [codigofinal/lms-cms-laravel12/prompts.md](../codigofinal/lms-cms-laravel12/prompts.md)
+**Extended prompt log in code repo:** [codigofinal/lms-cms-laravel12/prompts.md](../codigofinal/lms-cms-laravel12/prompts.md)
 
 ---
 
@@ -26,6 +30,12 @@
 9. [Content editor, video, and lessons](#9-content-editor-video-and-lessons)
 10. [SaaS business plan](#10-saas-business-plan)
 11. [Main files used](#11-main-files-used)
+12. [Production deploy (cPanel / proyectolms.asemad.es)](#12-production-deploy-cpanel--proyectolmsasemades)
+13. [Moodle 5.2 pack (login, gradebook, upgrade assistant, AI)](#13-moodle-52-pack-login-gradebook-upgrade-assistant-ai)
+14. [Communications module (comms)](#14-communications-module-comms)
+15. [Grill me (adversarial review)](#15-grill-me-adversarial-review)
+16. [Smart Report plugin and OpenSpec](#16-smart-report-plugin-and-openspec)
+17. [Refactoring, tests, CI/CD, and quality](#17-refactoring-tests-cicd-and-quality)
 
 ---
 
@@ -257,36 +267,159 @@
 
 ---
 
+## 12. Production deploy (cPanel / proyectolms.asemad.es)
+
+**Prompt 1:** "Estoy subiendo el proyecto lms-cms-laravel12 a http://proyectolms.asemad.es/, puedes realizar los cambios necesarios con previa aprobación para que sirva de forma correcta la web."
+
+> Note: Generated cPanel deploy assets: root `.htaccess`, `docs/DEPLOY-CPANEL-ASEMAD.md`, `scripts/deploy-cpanel.sh`, `.env.production.example`, PHP 8.2 compatibility in `composer.json`.
+
+**Prompt 2:** "Devuelve diag.php: vendor/autoload.php NO EXISTE, .env no encontrado, extensiones PHP faltantes…" (iterative remote diagnostics)
+
+> Note: Created `public/diag.php` with path detection for docroot `proyectolms/`; guided `.env` placement, `APP_KEY`, and MultiPHP extensions.
+
+**Prompt 3:** "Ya muestra login pero sin diseño en https://proyectolms.asemad.es/login — comprueba CSS, JS e iconos."
+
+> Note: Fixed asset URLs, `public/` structure, and static files for production; documented FTP upload checklist.
+
+**Additional prompts (same thread):**
+
+- "Cambia la configuración de diag.php porque la carpeta es /public_html/proyectolms/vendor/autoload.php"
+- "Necesito añadir rol teacher, coordinator, student, admin en proyectolms.asemad.es — prepara carpeta independiente para FTP"
+- "Quiero añadir rol para usuario en Laravel remoto de proyectolms.asemad.es, ¿qué pasos debo seguir?"
+- "He intentado traducir al castellano en /pricing — comprueba por qué no funciona si están los ficheros en locale"
+- "¿Puedo volcar la BD de Laravel 12 en el remoto?" / "¿Con este dump sería suficiente?" (`asemades_lms_laravel.sql`)
+- "He subido todos los ficheros pero siguen los errores en https://proyectolms.asemad.es/dashboard"
+- "No encuentro la forma de solucionar: Traducciones lang/es/lms.php bloque comms FALTA"
+
+---
+
+## 13. Moodle 5.2 pack (login, gradebook, upgrade assistant, AI)
+
+**Prompt 1:** "Comprueba cómo añadir las nuevas funcionalidades de Moodle 5.2 (IA, nueva interfaz, gestión de notas multi-calificador, Smart Upgrade Assistant) en codigofinal/lms-cms-laravel12 y crea carpeta para subida."
+
+> Note: Pack `deploy-moodle52-features`: migration `2026_07_05_100000_create_moodle52_features_tables.php`, `GradebookController`, `AiController`, `UpgradeAssistantController`, `public/css/moodle52.css`, `public/js/lms-ai.js`.
+
+**Prompt 2:** "Quiero que rediseñes el login al estilo Moodle 5.2 pero que no aparezca por ningún sitio el nombre [Moodle] y añade las funcionalidades en deploy-moodle52-features y en el código local."
+
+> Note: `resources/views/layouts/auth.blade.php`, `public/css/auth.css`, split-panel login without Moodle branding.
+
+**Prompt 3:** "Aparece en upgrade-assistant: Tablas multi-calificador — Fallo — No encontrado" / SQL error FK #1005 en phpMyAdmin.
+
+> Note: Added `sql/` scripts without FK for cPanel; fixed remote migration order and `UpgradeAssistantService` checks.
+
+**Additional prompts:**
+
+- "Tengo error al loguearme en servidor remoto como estudiante" (dashboard / cache / missing tables)
+- "Quiero cambiar el emoticon en login por logo ASEMAD"
+- "Quiero cambiar la imagen del topbar de logo.svg a logo-asemad.png — crea carpeta nueva"
+- "Quiero que dentro del editor de lección tenga opción para sombrear con color" (+ deploy package `deploy-highlight-quill`)
+
+---
+
+## 14. Communications module (comms)
+
+**Prompt 1:** "codigofinal/deploy-moodle52-comms no carga correctamente los iconos de topbar — revisa e impleméntalo también en lms-cms-laravel12."
+
+> Note: Inline SVG in `topbar-comms.blade.php`, `public/js/lms-comms.js`, `public/css/lms-comms.css`, `data-comms-base` for asset paths.
+
+**Prompt 2:** "No funciona correctamente /comms/notifications, /comms/messages, /comms/mail — soluciónalo y cambia la carpeta para subir a remoto."
+
+> Note: Fixed duplicate `PrivateMessage` import (500), comms migrations/tables, `CommsController` + services.
+
+**Prompt 3:** "Quiero solucionar el doble mensaje al enviar uno y los enlaces del topmenu no funcionan en /comms/notifications; en móvil se solapa el menú de idioma."
+
+> Note: Idempotent JS init, `position: fixed` panels, removed duplicate `@push('scripts')`; responsive topbar CSS.
+
+**Additional prompts:**
+
+- "Dentro de /comms/mail/1 con Alex Vega no puedo contestar al mail" → reply flow in `mail-show.blade.php`, `CommsController::mailCompose(?reply=)`
+- "Está oculto en /calendar elementos de topbar-comms — quiero verlo en todos los dispositivos" → `deploy-moodle52-comms` FTP package
+
+---
+
+## 15. Grill me (adversarial review)
+
+**Prompt 1:** "¿Dónde se encuentra la funcionalidad grill me dentro de codigofinal/lms-cms-laravel12?"
+
+> Note: Mapped Cursor skill `AI4Devs-cicd2/.cursor/skills/grill-me/SKILL.md` as reference for in-app flow.
+
+**Prompt 2:** "Quiero que añadas la funcionalidad grill-me en este repositorio como un comando de cursor."
+
+> Note: `.cursor/commands/grill-me.md`, `config/grill-me.php`, `GrillMeService`, routes `POST /ai/grill/*`, translations `lms.grill_me.*`.
+
+**Prompt 3:** "Según respuesta del componente humano empieza a desarrollarlo."
+
+> Note: UI in `components/ai-assistant.blade.php`, `public/js/lms-ai.js`, `tests/Feature/GrillMeTest.php`, skill copy in `.cursor/skills/grill-me/SKILL.md`.
+
+**Related Cursor command prompt:** "/grill-me Quiero crear local_smartreport — un plugin de reportes avanzados para universidades españolas."
+
+---
+
+## 16. Smart Report plugin and OpenSpec
+
+**Prompt 1:** "/grill-me Quiero crear local_smartreport — un plugin de reportes avanzados para universidades españolas."
+
+> Note: Adversarial review before implementation; scope for SIIU-compatible exports.
+
+**Prompt 2:** "Quiero crearlo para codigofinal/lms-cms-laravel12 que no contiene plugin de reporte."
+
+> Note: `SmartReportController`, plugin definition `smart_report`, CSV export, demo seeder.
+
+**Prompt 3:** "Quiero que ejecutes /openspec-propose en lms-cms-laravel12 con este resumen como base y comiences con las fases."
+
+> Note: OpenSpec artifacts under `openspec/` for phased delivery.
+
+---
+
+## 17. Refactoring, tests, CI/CD, and quality
+
+**Prompt 1:** "Resuelve estos hallazgos SOLID/CUPID: QuizController vs lessons.view, enrollment vs public access, PluginController IDOR, duplicated abort_unless…"
+
+> Note: `StudentLessonController`, `LessonPolicy`, `CoursePolicy`, `PluginGradingService`, unified student access checks.
+
+**Prompt 2:** "Creación de Suite de tests: unitarios, integración y al menos un test E2E del flujo principal."
+
+> Note: `tests/Feature/*`, `tests/Unit/*`, Playwright suite in `playwright/` with auth setup and module specs.
+
+**Prompt 3:** "Escribe un script YAML para GitHub Actions… push/PR a main, dependencias, tests, build" (`scripts/despliegue-CI.md`).
+
+> Note: CI workflow; complementary `scripts/script-despliegue-cd.md` for EC2 + Nginx.
+
+**Additional prompts:**
+
+- "Desarrolla las rules .cursor/rules/lti-*.mdc para mi repositorio lms-cms-laravel12"
+- "Usa playwright mcp con lms-cms-laravel12" / "Automatiza este flujo con script en playwright/"
+- "Eres experto en Docker — no puedo arrancar lms-cms-laravel12-web-1"
+- "Instalado lidr-specboot — sigue los pasos en codigofinal/lms-cms-laravel12"
+- "Revisa consultas N+1, caching… las 3 mejoras más importantes"
+- "Prueba a lanzar los tests sobre el grupo de contenedores lms-cms-laravel12"
+
+---
+
 ## 11. Main files used
 
-Paths relative to the repository root in [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) (branch `angel-burgos-r`):
+Paths relative to [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) → `codigofinal/lms-cms-laravel12/`:
 
 | Area | Files |
 |------|-------|
 | **Routes** | `routes/web.php` |
-| **SaaS config** | `config/saas.php` |
-| **Controllers** | `AuthController`, `CalendarController`, `CalendarEventController`, `CourseController`, `DashboardController`, `EnrollmentController`, `LessonController`, `LocaleController`, `PluginController`, `PluginInteractionController`, `PricingController`, `ProfileController`, `QuizController`, `SmartReportController`, `StudentLessonController` |
-| **Enums** | `app/Enums/SubscriptionPlan.php`, `app/Enums/UserRole.php` |
+| **Config** | `config/lms.php`, `config/saas.php`, `config/grill-me.php` |
+| **Controllers** | `app/Http/Controllers/AuthController.php`, `AiController.php`, `CalendarController.php`, `CalendarEventController.php`, `CommsController.php`, `CourseController.php`, `DashboardController.php`, `EnrollmentController.php`, `GradebookController.php`, `LessonController.php`, `LocaleController.php`, `PluginController.php`, `PluginInteractionController.php`, `PricingController.php`, `ProfileController.php`, `QuizController.php`, `SmartReportController.php`, `StudentLessonController.php`, `UpgradeAssistantController.php` |
 | **Middleware** | `app/Http/Middleware/EnsureRole.php`, `app/Http/Middleware/SetLocale.php` |
-| **Services** | `app/Services/CalendarService.php` |
-| **Models** | `app/Models/AcademicCalendarEvent.php`, `app/Models/Course.php`, `app/Models/CourseEnrollment.php`, `app/Models/Lesson.php`, `app/Models/User.php`, `app/Models/PluginDefinition.php`, `app/Models/PluginVersion.php`, `app/Models/LessonPluginInstance.php`, `app/Models/PluginAsset.php`, `app/Models/PluginInteraction.php`, `app/Models/PluginGrade.php`, `app/Models/LessonLayoutSnapshot.php`, `app/Models/Question.php`, `app/Models/QuizResult.php`, `app/Models/Progress.php` |
-| **Migrations** | `database/migrations/2026_05_19_120000_create_academic_calendar_events_table.php`, `database/migrations/2026_05_19_000001_add_due_at_to_lessons_table.php`, + migrations in `database/migrations/` (courses, lessons, plugins, progress, enrollments) |
-| **Seeders** | `DatabaseSeeder.php`, `LmsDemoSeeder.php`, `PluginDefinitionSeeder.php`, `SmartReportDemoSeeder.php` |
-| **Lessons** | `resources/views/lessons/edit.blade.php`, `resources/views/lessons/show.blade.php` |
-| **Pricing** | `resources/views/pricing/index.blade.php` |
-| **Plugins** | `resources/views/plugins/_*.blade.php` |
-| **Layout views** | `resources/views/layouts/app.blade.php`, `resources/views/layouts/stitch.blade.php`, `resources/views/layouts/calendar-moodle.blade.php` |
-| **Partials** | `resources/views/layouts/partials/sidebar-nav.blade.php`, `resources/views/layouts/partials/language-switcher.blade.php`, `resources/views/layouts/partials/i18n-js.blade.php`, `resources/views/layouts/partials/calendar-moodle-topbar.blade.php` |
-| **Calendar views** | `resources/views/calendar/index.blade.php`, `resources/views/calendar/teacher.blade.php`, `resources/views/calendar/_body.blade.php`, `resources/views/calendar/events/create.blade.php`, `resources/views/calendar/events/edit.blade.php`, `resources/views/calendar/events/_form.blade.php` |
-| **i18n** | `lang/es/lms.php`, `lang/en/lms.php` |
-| **Styles** | `public/css/lms.css`, `public/css/calendar.css`, `public/css/calendar-teacher.css`, `public/css/calendar-event-form.css` |
-| **JS** | `public/js/lms.js` |
-| **Tests** | `tests/Feature/LmsFlowTest.php`, `tests/Feature/LocaleTest.php`, `tests/Feature/CalendarTest.php`, `tests/Feature/CalendarEventTest.php`, `tests/Unit/LessonCastTest.php` |
+| **Services** | `app/Services/AiService.php`, `GrillMeService.php`, `CalendarService.php`, `NotificationService.php`, `MessagingService.php`, `MailService.php`, `GradeWorkflowService.php`, `PluginGradingService.php`, `UpgradeAssistantService.php` |
+| **Models** | `app/Models/User.php`, `Course.php`, `Lesson.php`, + plugin, comms, gradebook models (28 total) |
+| **Migrations** | `database/migrations/` (29 files incl. `2026_07_05_100000_create_moodle52_features_tables.php`, `2026_07_06_100000_create_comms_tables.php`) |
+| **Comms views** | `resources/views/comms/*`, `resources/views/layouts/partials/topbar-comms.blade.php` |
+| **Gradebook** | `resources/views/gradebook/*` |
+| **AI / Grill** | `resources/views/components/ai-assistant.blade.php`, `public/js/lms-ai.js`, `.cursor/commands/grill-me.md`, `.cursor/skills/grill-me/SKILL.md` |
+| **Upgrade** | `resources/views/upgrade/index.blade.php` |
+| **i18n** | `lang/es/lms.php`, `lang/en/lms.php` (blocks `comms`, `grill_me`, `ai`, `gradebook`, `upgrade`) |
+| **Styles / JS** | `public/css/lms.css`, `lms-comms.css`, `moodle52.css`, `auth.css`; `public/js/lms.js`, `lms-comms.js`, `lms-ai.js` |
+| **Tests** | `tests/Feature/GrillMeTest.php`, `LmsFlowTest.php`, `LocaleTest.php`, `CalendarTest.php`, + Playwright `playwright/tests/*.spec.ts` |
+| **Deploy packages** | `codigofinal/deploy-moodle52-comms/`, `deploy-moodle52-features/`, `deploy-proyectolms-roles/` |
 | **Docker** | `docker-compose.yml`, `docker/nginx/default.conf`, `docker/php/uploads.ini` |
-| **Screenshots (documentation)** | `AI4Devs-finalproject/docs/screenshots/*.png` — login, dashboard (teacher/student), courses, calendar, create event |
-| **Docs (SaaS)** | `docs/ROADMAP_SAAS.md`, `codigofinal/lms-cms-laravel12/prompts.md`, `AI4Devs-finalproject/PLAN_NEGOCIO.md` |
-| **Jira scripts** | `scripts/jira/create-saas-phase-tickets.ps1`, `create-phase-subtasks.ps1`, `saas-phases-tickets.json`, `dev-*-subtasks.json` |
+| **Screenshots** | `AI4Devs-finalproject/docs/screenshots/*.png` |
 
 ---
 
-*Last updated: synced with editor, video, and SaaS sections (delivery branch `feature-entrega2-ABR`).*
+*Last updated: July 2026 — delivery branch `finalproject-ABR` (Moodle 5.2 pack, comms, deploy cPanel, grill-me).*
