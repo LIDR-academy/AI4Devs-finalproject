@@ -16,6 +16,7 @@ import type {
   AnalyzedListingRepositoryPort,
   StoredAnalyzedListing,
 } from '../ports/AnalyzedListingRepositoryPort';
+import type { ChecklistRepositoryPort } from '../ports/ChecklistRepositoryPort';
 import { AutoAttachService } from './AutoAttachService';
 import { SnapshotHash } from '../value-objects/SnapshotHash';
 import { Coordinates } from '../value-objects/Coordinates';
@@ -57,6 +58,7 @@ export class AnalyzeListingUseCase {
     private readonly catastro: CatastroPort,
     private readonly autoAttach: AutoAttachService,
     private readonly repository: AnalyzedListingRepositoryPort,
+    private readonly checklistRepository: ChecklistRepositoryPort,
   ) {}
 
   async execute(input: AnalyzeListingInput): Promise<AnalyzeListingResult> {
@@ -92,6 +94,10 @@ export class AnalyzeListingUseCase {
       listingUrl: input.url,
       propertyPrice: parsed.price ?? null,
     });
+
+    // FR-024: auto-attach a default Checklist (21 items across 6 stages)
+    // to the process. Idempotent — if one already exists, this is a no-op.
+    await this.checklistRepository.ensureForProcess(processId);
 
     const canonical = `${parsed.url}|${parsed.text}|${parsed.price}|${parsed.squareMeters}`;
     const currentHash = SnapshotHash.compute(canonical);

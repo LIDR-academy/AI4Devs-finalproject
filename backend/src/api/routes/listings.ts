@@ -8,6 +8,7 @@ import { CheerioAdapter } from '../../adapters/cheerio/CheerioAdapter';
 import { OpenRouterAdapter } from '../../adapters/openrouter/OpenRouterAdapter';
 import { CatastroAdapter } from '../../adapters/catastro/CatastroAdapter';
 import { AnalyzedListingRepository } from '../../infrastructure/repositories/AnalyzedListingRepository';
+import { ChecklistRepository } from '../../infrastructure/repositories/ChecklistRepository';
 import { prisma } from '../../infrastructure/prisma/client';
 import { validateListingUrl, UrlValidationError } from '../../infrastructure/utils/urlValidator';
 import { InvalidUrlError } from '../../domain/errors/DomainError';
@@ -25,6 +26,7 @@ const catastro = new CatastroAdapter();
 const locationResolver = new LocationResolver();
 const autoAttach = new AutoAttachService();
 const repository = new AnalyzedListingRepository(prisma);
+const checklistRepository = new ChecklistRepository(prisma);
 const analyzeUseCase = new AnalyzeListingUseCase(
   cheerio,
   openrouter,
@@ -32,6 +34,7 @@ const analyzeUseCase = new AnalyzeListingUseCase(
   catastro,
   autoAttach,
   repository,
+  checklistRepository,
 );
 
 listingsRouter.post('/analyze', rateLimiterMiddleware, async (req: Request, res: Response, next: NextFunction) => {
