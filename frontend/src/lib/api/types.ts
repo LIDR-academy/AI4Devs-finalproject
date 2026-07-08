@@ -76,6 +76,7 @@ export type DashboardResponse =
       process: DashboardProcess;
       latestListing: DashboardListing | null;
       checklist: DashboardChecklist | null;
+      computed: ComputedMortgage | null;
     };
 
 export interface NegotiationPoint {
