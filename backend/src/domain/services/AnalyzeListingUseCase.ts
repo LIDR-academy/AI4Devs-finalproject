@@ -3,16 +3,22 @@
  * Orchestrates: fetch → location resolve (parallel) → LLM analyze → catastro cross-ref → persist.
  * Emits progress events (T037e) and returns processSummary (T037b).
  * Parallelises fetch + location with Promise.all (T037f).
+ *
+ * Hexagonal: depends on the AnalyzedListingRepositoryPort (defined in
+ * domain/ports/), NOT on Prisma. The Prisma implementation lives in
+ * infrastructure/repositories/.
  */
-import { prisma } from '../../infrastructure/prisma/client';
 import type { CheerioAdapter, ParsedListingHtml } from '../../adapters/cheerio/CheerioAdapter';
 import type { ListingAnalyzerPort } from '../ports/ListingAnalyzerPort';
 import type { LocationResolverPort } from '../ports/LocationResolverPort';
 import type { CatastroPort } from '../ports/CatastroPort';
-import type { MiraTuZonaAdapter } from '../../adapters/miratuzona/MiraTuZonaAdapter';
+import type {
+  AnalyzedListingRepositoryPort,
+  StoredAnalyzedListing,
+} from '../ports/AnalyzedListingRepositoryPort';
 import { AutoAttachService } from './AutoAttachService';
 import { SnapshotHash } from '../value-objects/SnapshotHash';
-import { RedFlags } from '../value-objects/RedFlags';
+import { Coordinates } from '../value-objects/Coordinates';
 
 export interface AnalyzeListingInput {
   url: string;
@@ -28,7 +34,7 @@ export interface AnalyzeListingResult {
     url: string;
     transparencyScore: number;
     scoreLabel: string;
-    redFlags: unknown[];
+    redFlags: { id: string; flag: string; severity: string; reasoning: string }[];
     summary: string | null;
     declaredAddress: string | null;
     coordinates: unknown;
@@ -49,8 +55,8 @@ export class AnalyzeListingUseCase {
     private readonly analyzer: ListingAnalyzerPort,
     private readonly locationResolver: LocationResolverPort,
     private readonly catastro: CatastroPort,
-    private readonly miratuzona: MiraTuZonaAdapter,
     private readonly autoAttach: AutoAttachService,
+    private readonly repository: AnalyzedListingRepositoryPort,
   ) {}
 
   async execute(input: AnalyzeListingInput): Promise<AnalyzeListingResult> {
@@ -68,72 +74,63 @@ export class AnalyzeListingUseCase {
         }
       : await this.cheerio.fetch(input.url);
 
-    emit('resolving_location');
-    const [coordinates, analysis, catastroMatch] = await Promise.all([
-      this.locationResolver
-        .resolveLocation({
-          url: parsed.url,
-          declaredAddress: parsed.declaredAddress,
-        })
-        .catch(() => null),
+    const [coordinates, analysis] = await Promise.all([
+      this.resolveLocationSafe(parsed, emit),
       Promise.resolve().then(() => {
         emit('analyzing');
         return this.analyzer.analyze(parsed.text, parsed.url);
       }),
-      Promise.resolve().then(async () => {
-        emit('cross_referencing_cadastro');
-        return coordinates
-          ? this.catastro.lookup(coordinates, parsed.declaredAddress)
-          : Promise.resolve(null);
-      }),
     ]);
 
-    // Auto-attach to active process (FR-014)
+    emit('cross_referencing_cadastro');
+    const catastroResult = coordinates
+      ? await this.tryCatastro(coordinates, parsed.declaredAddress)
+      : null;
+
     const { processId, isNewProcess, propertyPrice } = await this.autoAttach.attach({
       userId: input.userId,
       listingUrl: input.url,
       propertyPrice: parsed.price ?? null,
     });
 
-    // Hash for diff (FR-022)
     const canonical = `${parsed.url}|${parsed.text}|${parsed.price}|${parsed.squareMeters}`;
     const currentHash = SnapshotHash.compute(canonical);
-    const previous = await prisma.analyzedListing.findFirst({
-      where: { processId, url: input.url },
-      orderBy: { createdAt: 'desc' },
-    });
+    const previous = await this.repository.findPreviousByUrl(processId, input.url);
     const diff =
-      previous && !previous.sourceHash.equals(currentHash)
+      previous && previous.sourceHash !== currentHash.value
         ? { changedAt: new Date().toISOString() }
         : null;
 
-    // Persist (FR-011: no HTML/text stored; only analysis results)
-    const stored = await prisma.analyzedListing.create({
-      data: {
-        processId,
-        url: input.url,
-        sourceHash: currentHash.value,
-        previousHash: previous?.sourceHash ?? null,
-        diff: diff ?? undefined,
-        transparencyScore: analysis.transparencyScore.value,
-        scoreLabel: analysis.transparencyScore.label,
-        omissions: analysis.omissions,
-        positiveSignals: analysis.positiveSignals,
-        summary: analysis.summary,
-        declaredAddress: parsed.declaredAddress ?? null,
-        coordinates: coordinates ? coordinates.toJSON() : null,
-        catastroMatch: catastroMatch ?? undefined,
-        redFlags: {
-          create: analysis.redFlags.items.map((f) => ({
-            flag: f.flag,
-            severity: f.severity,
-            reasoning: f.reasoning,
-          })),
-        },
-      },
-      include: { redFlags: true },
+    const stored = await this.repository.create({
+      processId,
+      url: input.url,
+      sourceHash: currentHash.value,
+      previousHash: previous?.sourceHash ?? null,
+      diff,
+      transparencyScore: analysis.transparencyScore.value,
+      scoreLabel: analysis.transparencyScore.label,
+      omissions: analysis.omissions,
+      positiveSignals: analysis.positiveSignals,
+      summary: analysis.summary,
+      declaredAddress: parsed.declaredAddress ?? null,
+      coordinates,
+      catastroMatch: catastroResult,
+      redFlags: analysis.redFlags.items,
     });
 
+    return this.toResult(stored, processId, isNewProcess, propertyPrice);
+  }
+
+  async getById(id: string, userId: string): Promise<StoredAnalyzedListing | null> {
+    return this.repository.findById(id, userId);
+  }
+
+  private toResult(
+    stored: StoredAnalyzedListing,
+    processId: string,
+    isNewProcess: boolean,
+    propertyPrice: number | null,
+  ): AnalyzeListingResult {
     return {
       listing: {
         id: stored.id,
@@ -149,18 +146,36 @@ export class AnalyzeListingUseCase {
       },
       processSummary: {
         processId,
-        propertyPrice: propertyPrice ? Number(propertyPrice) : null,
+        propertyPrice,
         currentStage: 'PRE_ARRAS',
         isNewProcess,
       },
     };
   }
 
-  async getById(id: string, userId: string): Promise<unknown | null> {
-    const listing = await prisma.analyzedListing.findFirst({
-      where: { id, process: { userId } },
-      include: { redFlags: true },
-    });
-    return listing;
+  private async resolveLocationSafe(
+    parsed: ParsedListingHtml,
+    emit: (event: string) => void,
+  ): Promise<Coordinates | null> {
+    emit('resolving_location');
+    try {
+      return await this.locationResolver.resolveLocation({
+        url: parsed.url,
+        declaredAddress: parsed.declaredAddress,
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  private async tryCatastro(
+    coordinates: Coordinates,
+    declaredAddress?: string,
+  ): Promise<Awaited<ReturnType<CatastroPort['lookup']>> | null> {
+    try {
+      return await this.catastro.lookup(coordinates, declaredAddress);
+    } catch {
+      return null;
+    }
   }
 }

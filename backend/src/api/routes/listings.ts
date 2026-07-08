@@ -3,12 +3,12 @@ import { z } from 'zod';
 import { rateLimiterMiddleware } from '../middleware/rateLimiter';
 import { AnalyzeListingUseCase } from '../../domain/services/AnalyzeListingUseCase';
 import { AutoAttachService } from '../../domain/services/AutoAttachService';
+import { LocationResolver } from '../../domain/services/LocationResolver';
 import { CheerioAdapter } from '../../adapters/cheerio/CheerioAdapter';
 import { OpenRouterAdapter } from '../../adapters/openrouter/OpenRouterAdapter';
-import { DeclaredLocationAdapter } from '../../adapters/location/DeclaredLocationAdapter';
-import { GeocodingAdapter } from '../../adapters/location/GeocodingAdapter';
 import { CatastroAdapter } from '../../adapters/catastro/CatastroAdapter';
-import { MiraTuZonaAdapter } from '../../adapters/miratuzona/MiraTuZonaAdapter';
+import { AnalyzedListingRepository } from '../../infrastructure/repositories/AnalyzedListingRepository';
+import { prisma } from '../../infrastructure/prisma/client';
 import { validateListingUrl, UrlValidationError } from '../../infrastructure/utils/urlValidator';
 import { InvalidUrlError } from '../../domain/errors/DomainError';
 
@@ -21,19 +21,17 @@ const analyzeSchema = z.object({
 
 const cheerio = new CheerioAdapter();
 const openrouter = new OpenRouterAdapter();
-const declaredLocation = new DeclaredLocationAdapter();
-const geocoding = new GeocodingAdapter();
 const catastro = new CatastroAdapter();
-const miratuzona = new MiraTuZonaAdapter();
+const locationResolver = new LocationResolver();
 const autoAttach = new AutoAttachService();
+const repository = new AnalyzedListingRepository(prisma);
 const analyzeUseCase = new AnalyzeListingUseCase(
   cheerio,
   openrouter,
-  declaredLocation,
-  geocoding,
+  locationResolver,
   catastro,
-  miratuzona,
   autoAttach,
+  repository,
 );
 
 listingsRouter.post('/analyze', rateLimiterMiddleware, async (req: Request, res: Response, next: NextFunction) => {
