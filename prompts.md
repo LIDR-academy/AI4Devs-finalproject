@@ -1,4 +1,6 @@
-> Documentación del uso de IA en Realista, organizada según el formato esperado para la Entrega 1: skills, subagentes, workflows, herramientas, y procesos de análisis. Los prompts completos están en los artefactos SDD bajo `specs/001-realista-mvp/`. Esta sección los cataloga por categoría y referencia los artefactos donde se documentó el árbol de decisión completo.
+# Documentación de uso de IA en Realista — Entrega 1 + 2
+
+> Documentación del uso de IA en Realista, organizada según el formato esperado para el cohort AI4Devs: skills, subagentes, workflows, herramientas, procesos, prompts y comparativas. La Entrega 1 documentó la fase de planificación (spec-kit + brainstorming + revisión crítica). La **Entrega 2 introduce la capa de AI Engineering explícita** con agentes, comandos, skills, hooks, playbooks, prompt-runs, harness y sistema de autodocumentación — todo en `.opencode/`.
 
 ## Índice
 
@@ -10,6 +12,7 @@
 6. [Prompts clave](#6-prompts-clave)
 7. [Comparativas antes/después](#7-comparativas-antesdespués)
 8. [Ajustes humanos](#8-ajustes-humanos)
+9. [Componentes de IA (Entrega 2)](#9-componentes-de-ia-entrega-2)
 
 ---
 
@@ -252,3 +255,183 @@ Decisiones o cambios aplicados por el autor (no por el agente) durante el proyec
 8. **Final review del E2E por el autor**: tras el flujo principal, el autor pidió revisar el E2E de forma crítica ("estoy en medio de X, esto no tiene sentido"). Este momento de auto-crítica llevó a la identificación de los 3 problemas críticos que guiaron los fixes.
 
 9. **Nombre de la rama con iniciales DMM**: la convención del cohort `feature-entrega1-[iniciales]` fue respetada por el autor usando sus iniciales extraídas de la URL del repo (`dmiguelm` → DMM).
+
+---
+
+## 9. Componentes de IA (Entrega 2)
+
+> La Entrega 2 introduce una **capa de AI Engineering explícita y versionada** que define cómo el modelo es invocado, qué puede hacer, y con qué soporte técnico cuenta. Todo el setup vive en `.opencode/` y se documenta en [`.opencode/README.md`](.opencode/README.md).
+
+### 9.1. Catálogo de componentes
+
+| Tipo | Cantidad | Ubicación | Propósito |
+|---|---|---|---|
+| **Agentes** | 4 | `.opencode/agents/` | Roles de alto nivel con system prompts, contratos entrada/salida y guardarraíles |
+| **Comandos** | 8 | `.opencode/commands/` | Slash commands reutilizables para operaciones comunes |
+| **Skills** | 6 | `.opencode/skills/` | Comportamientos encapsulados invocados desde los agentes |
+| **Hooks** | 4 | `.opencode/hooks/` | Triggers de automatización para eventos de git y editor |
+| **Playbooks** | 3 | `.opencode/playbooks/` | Flujos multi-paso que orquestan agentes |
+| **Prompt-runs** | 3 | `.opencode/prompts/` | System prompts LLM y plantillas hardcoded |
+| **Harness docs** | 6 + 1 | `.opencode/harness/` | Documentación del soporte técnico (stack, env, tests, run, troubleshooting, config) |
+| **Self-doc** | n/a | `docs/evidence/` | Evidencia auto-generada por tarea |
+
+### 9.2. Los 4 agentes de alto nivel
+
+Definidos en `.opencode/agents/`:
+
+| Agente | System prompt resume | Skills que invoca | Cuándo se usa |
+|---|---|---|---|
+| **implementer** | "Sigue TDD, hexagonal purity, español en UI, inglés en código. Una tarea a la vez." | `tdd-cycle`, `auto-evidence`, `prisma-migrate` | Por cada US / sub-tarea |
+| **reviewer** | "Escéptico, minucioso, nunca performativo. Categoriza findings (critical/important/minor) con fixes concretos." | `hexagonal-check`, `adr-suggest` | Antes de merge, tras implementación |
+| **documenter** | "Documentación first-class. Español para usuarios, inglés para código. No fluff." | `adr-suggest`, `auto-evidence` | Tras review aprobado o cambios estructurales |
+| **orchestrator** | "Coordina implementer → reviewer → documenter. Trackea state vs tasks.md." | `tdd-cycle`, `hexagonal-check`, `auto-evidence` | Al inicio de cada US |
+
+Cada agente define: rol, contratos de entrada/salida, system prompt, ejemplos de invocación, anti-patterns.
+
+### 9.3. Las 6 skills
+
+Encapsulan comportamientos reutilizables:
+
+| Skill | Función | Trigger |
+|---|---|---|
+| **`auto-evidence`** | Genera `docs/evidence/<timestamp>-<task-id>.md` con prompt + qué se hizo + deliverables + tests | Al cerrar cada tarea |
+| **`tdd-cycle`** | Impone red→green→refactor con 80% cobertura en dominio | Cada `implementer` |
+| **`hexagonal-check`** | Verifica que `domain/` no importa de Express/Prisma/SvelteKit/Cheerio/fetch | Pre-commit + `reviewer` |
+| **`adr-suggest`** | Detecta decisiones arquitectónicas no documentadas y propone ADR | En `reviewer` y `documenter` |
+| **`pwa-shell`** | Genera manifest, service worker, icons para SvelteKit | En setup inicial |
+| **`prisma-migrate`** | Crea migraciones Prisma seguras con naming convention y rollback | En cambios de schema |
+
+### 9.4. Los 8 comandos
+
+Operaciones de alto nivel:
+
+| Comando | Uso |
+|---|---|
+| `/analyze-listing <url>` | Ejecuta el flujo Listing Lens (fetch + LLM + location + catastro + progress events) |
+| `/review-pr` | Corre `reviewer` sobre el diff staged o una rama |
+| `/document-task <task-id>` | Genera evidence para una tarea específica |
+| `/check-architecture` | Ejecuta `hexagonal-check` sobre todo el repo |
+| `/generate-adr <title>` | Redacta un ADR nuevo siguiendo plantilla |
+| `/scaffold-story <us-id>` | Crea la estructura de carpetas para una US |
+| `/sprint <us-id>` | Orquesta `scaffold-story` → `implementer` → `reviewer` → `documenter` → evidence |
+| `/evidence-report` | Genera reporte agregado de evidence para revisión de hitos |
+
+### 9.5. Los 4 hooks (documentados como scripts ejecutables)
+
+OpenCode no tiene un hook runner nativo, por lo que los hooks se documentan como **intención + scripts ejecutables**:
+
+| Hook | Trigger | Acción documentada |
+|---|---|---|
+| **`post-commit`** | `git commit` succeeds | `lint + typecheck + test + hexagonal-check` |
+| **`pre-push`** | `git push` initiated | Full test suite + Playwright E2E (mocked) |
+| **`post-merge`** | `git merge` completes | Regenera `docs/evidence/INDEX.md` |
+| **`on-save-svelte`** | `.svelte` saved in editor | `svelte-check` (configuración de VS Code / Vim) |
+
+Por ahora se ejecutan en CI (`.github/workflows/ci.yml`) en lugar de como hooks locales. Ver `.opencode/hooks/post-commit.md` para la migración a Husky si se desea ejecución local.
+
+### 9.6. Los 3 playbooks
+
+Flujos multi-paso que orquestan agentes:
+
+- **`full-story.md`** — `scaffold-story` → `implementer` (con `tdd-cycle`) → `reviewer` (con `hexagonal-check`) → `documenter` (con `auto-evidence`) → commit
+- **`adr-lifecycle.md`** — Detección → propuesta → revisión → commit → mención en evidence
+- **`release.md`** — Verificar estado → CHANGELOG → bump de versión → tag → nota en `readme.md` → evidence report
+
+### 9.7. Los 3 prompt-runs (LLM system prompts)
+
+Ubicados en `.opencode/prompts/`:
+
+- **`llm-system-listing.md`** — System prompt del LLM analyzer de Listing Lens. Devuelve JSON con `transparencyScore`, `redFlags[]` (cada uno con `flag`, `severity`, `reasoning` que cita la frase del anuncio — FR-025), `omissions`, `positiveSignals`, `summary`. Sin consejo financiero, sin juicio moral, sin markdown.
+- **`llm-system-location.md`** — **DEPRECATED**. Prompt original para estimación de ubicación por visión. Reemplazado por cadena `DeclaredLocation → Geocoding` (FR-016). Conservado como referencia histórica.
+- **`narrative-templates.md`** — Plantillas narrativas del Mortgage Compass indexadas por `(persona, scenario)`. **No usa LLM** (FR-013) — la salida se computa desde estas plantillas con variables sustituidas. Cada plantilla incluye disclaimer persistente.
+
+### 9.8. Harness (documentación del soporte técnico)
+
+`.opencode/harness/` documenta el "andamiaje" del proyecto:
+
+| Archivo | Contenido |
+|---|---|
+| `README.md` | Visión general del harness |
+| `stack.md` | Versiones exactas, matriz de compatibilidad, rationale |
+| `env-vars.md` | Variables de entorno: requeridas, opcionales con defaults, validación con Zod |
+| `test-strategy.md` | TDD workflow, cobertura 80% dominio, Vitest + Playwright, mocks |
+| `run-locally.md` | Quickstart: `docker compose up -d && npm install && npm run db:migrate && npm run dev` |
+| `troubleshooting.md` | Errores comunes (DB, OpenRouter, Catastro, frontend, tests) |
+| `config.yaml` | Configuración machine-readable (versión, stack, cobertura, catálogo de agentes) |
+
+### 9.9. Sistema de autodocumentación (`docs/evidence/`)
+
+Cada tarea que completa un agente produce un evidence file con:
+
+1. **Prompt** verbatim del usuario que disparó la tarea
+2. **Qué se hizo** (acciones)
+3. **Deliverables** (ficheros creados/modificados)
+4. **Tests** (unit / integration / domain coverage %)
+5. **Commits** (sha + mensaje conventional)
+6. **Notas** (contexto, open questions, limitaciones)
+
+El primer evidence file de Entrega 2 es `docs/evidence/2026-07-08-ENTREGA2-SETUP.md`, que documenta este scaffold inicial. El hook `post-merge` regenera automáticamente `docs/evidence/INDEX.md`.
+
+### 9.10. Cumplimiento constitucional
+
+Los componentes de IA refuerzan los 6 principios de la constitución (ver `docs/constitution.md`):
+
+| Principio | Refuerzo técnico |
+|---|---|
+| **I. Hexagonal Architecture** | `hexagonal-check` (skill) bloquea commits con imports prohibidos en `domain/` |
+| **II. Test-First** | `tdd-cycle` (skill) + coverage threshold ≥80% en `backend/vitest.config.ts` |
+| **III. Educational, Not Commercial** | `narrative-templates.md` (prompt-run) usa plantillas, no LLM, para Mortgage Compass (FR-013) |
+| **IV. Privacy & Legal Compliance** | User-Agent `Realista/1.0 (analizador educativo)` configurado en `env-vars.md`; FR-011 verificado por `reviewer` |
+| **V. Mobile-First PWA** | `pwa-shell` (skill) genera manifest + service worker + icons + meta iOS |
+| **VI. YAGNI & Future-Proof** | Agentes y skills documentan anti-patterns explícitos en sus system prompts |
+
+### 9.11. Decisiones tomadas en Entrega 2
+
+| Decisión | Elección | Rationale |
+|---|---|---|
+| **Granularidad de agentes** | 4 de alto nivel (no 10-12) | Cada agente tiene contrato claro; menos overhead |
+| **Ubicación de componentes** | `.opencode/` (no `ai/`) | Nativo al entorno OpenCode que usa el autor |
+| **Sistema de autodocumentación** | Skill + `docs/evidence/` (no en commits) | Indexable, navegable, separado del flujo de commits |
+| **Hooks** | Documentados como scripts (no nativos) | OpenCode no tiene hook runner; CI cubre la intención |
+| **Harness** | Documentado en markdown (no codegen) | Documentación-as-código, versionada, fácil de mantener |
+| **Plantillas narrativas** | Hardcoded en Markdown (no generador) | Predecible, auditable, sin LLM cost (FR-013) |
+| **Tools externas para spec** | Mantener `spec-kit` (no OpenSpec/BeMac) | Ya usado en Entrega 1; sin valor de migración |
+
+### 9.12. Prompts de Entrega 2 (los más relevantes)
+
+**Prompt 1 — Definición del setup de AI engineering**
+
+> "Comencemos por definir la estructura de carpetas y los primeros agentes para la Épica 1."
+
+**Contexto:** El autor pidió empezar con la estructura. Esto llevó a una sesión de brainstorming que clarificó:
+- Scope: las 6 US a nivel MVP (no solo Épica 1)
+- Granularidad: 4 agentes de alto nivel
+- Ubicación: `.opencode/`
+- Sistema de autodocumentación: skill + `docs/evidence/`
+- Mantener `spec-kit` (no OpenSpec/BeMac)
+
+**Resultado:** Diseño completo aprobado, ejecutado en este commit.
+
+**Prompt 2 — Resolviendo ambigüedad de herramientas de especificación**
+
+> "Mencionas 'OpenSpec o BeMac' como herramientas de especificación para documentar el harness. No tengo conocimiento fiable de herramientas con esos nombres exactos. ¿A qué te refieres?"
+
+**Contexto:** El agente clarificó con el autor que no reconocía "OpenSpec" ni "BeMac" como herramientas establecidas.
+
+**Resultado:** El autor decidió mantener `spec-kit` (ya usado en Entrega 1) y no añadir nuevas herramientas de especificación.
+
+**Prompt 3 — Alcance de implementación**
+
+> "Olvída la referencia a épica 1. Hay que implementar todas las US a nivel MVP"
+
+**Contexto:** Inicialmente se asumió "Épica 1" como alcance; el autor lo aclaró.
+
+**Resultado:** Scope ampliado a 6 US a nivel MVP (implementación mínima funcional completa), secuenciadas story-by-story TDD.
+
+### 9.13. Próximos pasos
+
+1. Activar el hook `post-commit` vía Husky (`.opencode/hooks/post-commit.md`)
+2. Empezar US1 (Listing Lens) con `/sprint US1` — TDD, tests first, commit por tarea
+3. Generar evidence por cada tarea cerrada con `auto-evidence`
+4. Primer PR `feature-entrega2-DMM-us1` cuando US1 esté verde
+5. Generar `/evidence-report` al cerrar cada US para revisión de hitos
