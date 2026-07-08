@@ -1,8 +1,12 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { prisma } from '../../infrastructure/prisma/client';
+import { PurchaseProcessAggregator } from '../../domain/services/PurchaseProcessAggregator';
+import { FinancialProfile } from '../../domain/value-objects/FinancialProfile';
 
 export const purchaseProcessesRouter = Router();
+
+const aggregator = new PurchaseProcessAggregator();
 
 const createSchema = z.object({
   propertyPrice: z.number().nonnegative().optional(),
@@ -14,6 +18,7 @@ const createSchema = z.object({
       existingDebts: z.number().nonnegative(),
       region: z.string().min(2),
       persona: z.enum(['conservador', 'equilibrado', 'arriesgado']).optional(),
+      interestRate: z.number().min(0).max(1).optional(),
     })
     .optional(),
 });
@@ -77,7 +82,14 @@ purchaseProcessesRouter.get('/:id', async (req: Request, res: Response, next: Ne
       res.status(404).json({ error: 'NOT_FOUND' });
       return;
     }
-    res.json(process);
+    const profile = process.financialProfile
+      ? FinancialProfile.create(process.financialProfile as never)
+      : null;
+    const computed = aggregator.compute(
+      process.propertyPrice ? Number(process.propertyPrice) : null,
+      profile,
+    );
+    res.json({ ...process, computed });
   } catch (err) {
     next(err);
   }

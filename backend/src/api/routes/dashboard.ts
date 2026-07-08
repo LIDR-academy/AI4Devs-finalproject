@@ -1,7 +1,11 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '../../infrastructure/prisma/client';
+import { PurchaseProcessAggregator } from '../../domain/services/PurchaseProcessAggregator';
+import { FinancialProfile } from '../../domain/value-objects/FinancialProfile';
 
 export const dashboardRouter = Router();
+
+const aggregator = new PurchaseProcessAggregator();
 
 /**
  * GET /api/dashboard (FR-023)
@@ -42,6 +46,14 @@ dashboardRouter.get('/', async (req: Request, res: Response, next: NextFunction)
     const totalItems = checklist?.items.length ?? 0;
     const checklistProgress = totalItems > 0 ? completedItems / totalItems : 0;
 
+    const profile = process.financialProfile
+      ? FinancialProfile.create(process.financialProfile as never)
+      : null;
+    const computed = aggregator.compute(
+      process.propertyPrice ? Number(process.propertyPrice) : null,
+      profile,
+    );
+
     res.json({
       empty: false,
       process: {
@@ -52,6 +64,7 @@ dashboardRouter.get('/', async (req: Request, res: Response, next: NextFunction)
         financialProfile: process.financialProfile,
         updatedAt: process.updatedAt,
       },
+      computed,
       latestListing: latestListing
         ? {
             id: latestListing.id,
