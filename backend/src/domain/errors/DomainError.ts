@@ -45,7 +45,7 @@ export class PortalBlockedError extends DomainError {
 export class LlmMalformedResponseError extends DomainError {
   readonly code = 'LLM_MALFORMED_RESPONSE';
   readonly httpStatus = UPSTREAM_ERROR_STATUS;
-  constructor() {
+  constructor(public readonly cause?: Error) {
     super('El modelo no devolvió una respuesta válida. Pega el texto del anuncio manualmente.');
     this.name = 'LlmMalformedResponseError';
   }

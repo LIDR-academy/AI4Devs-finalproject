@@ -10,8 +10,6 @@ import { RedFlags, RED_FLAG_TYPES, type RedFlagItem } from '../../domain/value-o
 import { LlmMalformedResponseError } from '../../domain/errors/DomainError';
 import type { ListingAnalyzerPort, LLMAnalysisResult } from '../../domain/ports/ListingAnalyzerPort';
 
-const SYSTEM_PROMPT_PATH = '../../../.opencode/prompts/llm-system-listing.md';
-
 const LLMResponseSchema = z.object({
   transparencyScore: z.number().int().min(0).max(100),
   scoreLabel: z.enum(['baja', 'media', 'alta', 'excelente']),
@@ -68,10 +66,9 @@ export class OpenRouterAdapter implements ListingAnalyzerPort {
         return this.toResult(parsed);
       } catch (err) {
         lastError = err as Error;
-        // retry
       }
     }
-    throw new LlmMalformedResponseError();
+    throw new LlmMalformedResponseError(lastError ?? undefined);
   }
 
   private async callOpenRouter(text: string, url: string): Promise<string> {

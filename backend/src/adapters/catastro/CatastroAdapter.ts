@@ -4,14 +4,13 @@
  * Returns null on SEC failure (FR: don't block the analysis).
  */
 import fetch from 'node-fetch';
-import { parseStringPromise } from 'xml2js';
 import { env } from '../../infrastructure/config/env';
 import { REALISTA_USER_AGENT } from '../../infrastructure/utils/urlValidator';
 import type { Coordinates } from '../../domain/value-objects/Coordinates';
 import type { CatastroMatch, CatastroPort } from '../../domain/ports/CatastroPort';
 
 export class CatastroAdapter implements CatastroPort {
-  async lookup(coordinates: Coordinates, declaredAddress?: string): Promise<CatastroMatch | null> {
+  async lookup(_coordinates: Coordinates, declaredAddress?: string): Promise<CatastroMatch | null> {
     if (env.NODE_ENV === 'test' || process.env.MOCK_CATASTRO === 'true') {
       return {
         cadastralReference: 'MOCK-12345',
