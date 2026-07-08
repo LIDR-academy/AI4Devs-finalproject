@@ -1,0 +1,98 @@
+# Realista Harness
+
+version: 0.2.0
+branch: feature-entrega2-DMM
+last_updated: 2026-07-08
+
+# Stack
+stack:
+  runtime:
+    node: "20 LTS"
+    npm: "10+"
+  backend:
+    typescript: "5.4+"
+    express: "4.19+"
+    prisma: "5.x"
+    cheerio: "1.0.0-rc.12+"
+    zod: "3.x"
+  frontend:
+    sveltekit: "2.x"
+    svelte: "4.x"
+    vite: "5.x"
+    vite_pwa_sveltekit: "0.6+"
+  testing:
+    vitest: "1.x"
+    playwright: "1.4x+"
+    supertest: "7.x"
+
+# Environment
+env:
+  required:
+    - DATABASE_URL
+    - OPENROUTER_API_KEY
+    - PORT
+    - FRONTEND_URL
+    - NODE_ENV
+  optional_with_defaults:
+    OPENROUTER_MODEL: "anthropic/claude-3.5-sonnet"
+    RATE_LIMIT_PER_DAY: 20
+    REALISTA_USER_AGENT: "Realista/1.0 (analizador educativo)"
+
+# Coverage targets
+coverage:
+  domain:
+    target: 80
+    enforcement: hard
+  adapters:
+    target: 60
+    enforcement: soft
+  api:
+    target: 50
+    enforcement: soft
+
+# Constitutional principles (mirrored from docs/constitution.md)
+constitution:
+  - hexagonal_architecture
+  - test_first
+  - educational_not_commercial
+  - privacy_and_legal
+  - pwa_mobile_first
+  - yagni_future_proof
+
+# Agent catalogue
+agents:
+  - name: implementer
+    file: .opencode/agents/implementer.md
+  - name: reviewer
+    file: .opencode/agents/reviewer.md
+  - name: documenter
+    file: .opencode/agents/documenter.md
+  - name: orchestrator
+    file: .opencode/agents/orchestrator.md
+
+# Self-documentation
+self_documentation:
+  enabled: true
+  location: docs/evidence/
+  index_file: docs/evidence/INDEX.md
+  template: |
+    # Evidence: <task-id> — <title>
+    **Date**: <date>
+    **Agent**: <agent>
+    **Story**: <story>
+    ## Prompt
+    > <verbatim>
+    ## What was done
+    ## Deliverables
+    ## Tests
+    ## Commits
+    ## Notes
+
+# Self-documentation: evidence skill
+skills:
+  - auto-evidence
+  - tdd-cycle
+  - hexagonal-check
+  - adr-suggest
+  - pwa-shell
+  - prisma-migrate
