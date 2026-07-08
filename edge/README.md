@@ -196,6 +196,22 @@ No commitear `single-cube-pick-drop.local.json`. Si falta `hardware.port` y el
 request no trae un override `port`, Edge responde `MISSING_HARDWARE_PORT` antes
 de intentar abrir serial o mover hardware.
 
+### Sanitizacion de respuestas firmware
+
+Las respuestas crudas del firmware MaxArm pueden contener caracteres de control
+o bytes no imprimibles junto a texto util como `DONE`. Antes de sincronizar una
+accion robot con Backend, Edge sanitiza recursivamente `metadata` y reemplaza
+controles C0 no seguros para PostgreSQL, incluido el caracter nulo real, por
+marcadores legibles como `<0x00>`.
+
+La metadata sigue siendo JSON estructurado. Cuando un `firmwareResponse` cambia,
+Edge conserva la respuesta util y agrega senales diagnosticas como
+`firmwareResponseSanitized`, `firmwareResponseRawLength`,
+`firmwareResponseHadControlChars` y `firmwareResponseControlCharCount`. Si hubo
+cambios en cualquier string anidado, agrega `metadataSanitized=true` y
+`sanitizedFields` para trazabilidad. Los saltos de linea, retorno de carro y
+tabs se preservan.
+
 Endpoints disponibles:
 
 | Metodo | Ruta | Proposito |
@@ -1353,9 +1369,17 @@ La evidencia incluye tres estados separados por accion:
 
 Una accion puede quedar fisicamente confirmada aunque falle el sync backend. En
 ese caso se conserva `physicalConfirmation.status=CONFIRMED`, se marca
-`backendSyncStatus=FAILED`, se guarda `backendSyncError`, el estado de la accion
-queda `SUCCESS_WITH_BACKEND_SYNC_FAILED` y el resultado general queda
-`PARTIAL_SUCCESS` si el flujo se detiene de forma conservadora.
+`backendSyncStatus=FAILED`, se guarda `backendSyncError` y
+`backendSyncErrorDetails` con `errorCode`, `errorMessage` y `correlationId` si
+Backend lo entrego. El estado de la accion queda
+`SUCCESS_WITH_BACKEND_SYNC_FAILED`, la drop zone conserva `occupied=true`, los
+contadores fisicos aumentan y el flujo continua con el siguiente cubo.
+
+Si todos los cubos planificados quedan confirmados fisicamente pero una o mas
+acciones no sincronizan con Backend, el resultado general queda
+`SUCCESS_WITH_BACKEND_SYNC_WARNINGS`. Si ademas existe un fallo fisico, de
+hardware, serial o seguridad, el resultado mantiene `PARTIAL_SUCCESS` o
+`FAILED` segun corresponda.
 
 La evidencia y el metadata enviado a Backend incluyen `physicalConfirmation`,
 `selectedCubeColor`, `dropZoneCode`, conteos before/after, firmas de snapshot,
@@ -1484,7 +1508,10 @@ Los contadores del resultado separan ejecucion fisica de sync:
 - `totalBackendSyncFailedActions`: acciones fisicas cuyo sync fallo.
 - `totalFailedPhysicalConfirmations`: acciones con confirmacion fisica fallida o
   inconclusa.
+- `totalAttemptedCubes`: acciones fisicas intentadas.
+- `totalRemainingCubes`: acciones planificadas que no llegaron a intentarse.
 - `lastBackendSyncError`: ultimo error de sincronizacion backend, si aplica.
+- `lastPhysicalError`: ultimo error fisico, si aplica.
 
 ### Consideraciones de seguridad
 
@@ -1500,8 +1527,10 @@ Hardware multi-cubo exige todos estos gates:
 
 Si falta QR valido, si no hay cubos o si un cubo no tiene drop zone disponible,
 el comando termina con estado controlado y no mueve hardware. Si un cubo falla a
-mitad de la secuencia, no ejecuta cubos posteriores; el resultado queda como
-`PARTIAL_SUCCESS` si ya habia al menos un cubo descargado, o `FAILED` si no.
+mitad de la secuencia por hardware, serial, seguridad o confirmacion fisica, no
+ejecuta cubos posteriores; el resultado queda como `PARTIAL_SUCCESS` si ya habia
+al menos un cubo descargado, o `FAILED` si no. Un fallo exclusivo de sync backend
+en una accion fisicamente confirmada no detiene cubos posteriores.
 
 Recomendacion para demo real: resetear drop zones, levantar Edge Vision con
 camara cenital y QR valido, ejecutar plan-only, revisar evidencia, y luego

@@ -174,7 +174,7 @@ En otros equipos el puerto puede ser `COM3`, `COM5`, etc. Si falta
 - los controles fisicos aparecen solo como llamadas al servicio Edge; el
   frontend no habla con serial ni calcula movimientos de robot.
 - la seccion `Descarga fisica del camion` muestra estado
-  `idle/planning/planned/executing/success/partial_success/failed`;
+  `idle/planning/planned/executing/success/success_with_backend_sync_warnings/partial_success/failed`;
 - `Ejecutar descarga fisica` queda deshabilitado sin plan, sin QR valido, sin
   cubos planificados, sin Edge Vision, sin sesion backend, con ejecucion en curso
   o sin todos los checks de seguridad;
@@ -183,11 +183,15 @@ En otros equipos el puerto puede ser `COM3`, `COM5`, etc. Si falta
 - `Planificar descarga` llama a `/robot/multi-cube/plan` con el selector
   `Descargar todos`, `1`, `2`, `4` o `6`;
 - la tabla del plan muestra color, drop zone, orden, pickup target y offset;
-- el resumen de ejecucion distingue cubos fisicamente confirmados, acciones
-  sincronizadas en Backend y fallas de sync;
+- el resumen de ejecucion distingue cubos fisicamente confirmados, cubos
+  intentados, cubos restantes, acciones sincronizadas en Backend, fallas de sync,
+  ultimo error backend y ultimo error fisico;
 - la tabla de acciones ejecutadas muestra color, drop zone,
   `physicalConfirmation.status`, `backendSyncStatus`, intentos, `finalPickZUsed`,
   action code de Backend y error si existe;
+- una accion con `physicalConfirmation.status=CONFIRMED` y
+  `backendSyncStatus=FAILED` se interpreta como advertencia de sincronizacion:
+  no borra la confirmacion fisica ni convierte la descarga en fallo fisico;
 - al ejecutar, el payload incluye `zoneClear`, `operatorPresent`,
   `emergencyStopReady`, `suctionReady` y `physicalExecutionConfirmed`.
 

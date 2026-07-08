@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseRobotActionInput, parseRobotActionUpdateInput } from "./robot.validators";
-import { mergeRobotMetadataForTransition, projectExecutionMetadata } from "./robot.metadata";
+import { mergeRobotMetadataForTransition, projectExecutionMetadata, sanitizeRobotMetadata } from "./robot.metadata";
 
 describe("robot action dry-run contract", () => {
   it("keeps the Entrega 2 payload compatible", () => {
@@ -136,16 +136,18 @@ describe("robot action dry-run contract", () => {
         dropZonePose: { x: 1, y: -1, z: 81 },
         positionOrder: 1,
         firmwareResponses: [
-          {
-            attempt: 2,
-            step: "cube_target_pick",
-            commandSent: "POSE 39 -184 136 1",
+          ...Array.from({ length: 24 }, (_, index) => ({
+            attempt: index < 8 ? 1 : index < 16 ? 2 : 3,
+            step: `step-${index}`,
+            commandSent: `POSE ${39 + index} -184 136 1`,
             firmwareResponse: "DONE",
             success: true,
             postStepDelaySeconds: 0.8,
-            elapsedMs: 10.4
-          }
+            elapsedMs: 10.4 + index
+          }))
         ],
+        firmwareResponseCount: 36,
+        firmwareResponsesTruncated: true,
         commandExecutionStatus: "SUCCESS",
         physicalConfirmation: {
           enabled: true,
@@ -171,7 +173,8 @@ describe("robot action dry-run contract", () => {
         maxAttempts: 3,
         zStep: -2,
         minPickZ: 132,
-        occupiedPersisted: true
+        occupiedPersisted: true,
+        diagnosticTrace: "x".repeat(40_000)
       }
     });
 
@@ -181,6 +184,84 @@ describe("robot action dry-run contract", () => {
       physicalConfirmation: expect.objectContaining({ status: "CONFIRMED" }),
       finalPickZUsed: 136
     });
+  });
+
+  it("sanitizes firmware responses with real null characters before persistence", () => {
+    const input = parseRobotActionInput({
+      sessionId: "session-id",
+      actionType: "PICK_AND_DROP",
+      status: "SUCCESS",
+      mode: "hardware",
+      color: "red",
+      metadata: {
+        profile: "hardware",
+        dryRun: false,
+        selectedCube: { color: "red", x: 80, y: 80, w: 20, h: 20 },
+        firmwareResponses: [
+          {
+            step: "cube_target_pick",
+            commandSent: "POSE 44 -184 138 1",
+            firmwareResponse: "UU\u0001\u0007\u0000DONE",
+            success: true
+          }
+        ]
+      }
+    });
+
+    const firmware = (input.metadata?.firmwareResponses as Record<string, unknown>[])[0];
+    expect(firmware.firmwareResponse).toBe("UU<0x01><0x07><0x00>DONE");
+    expect(firmware.firmwareResponseSanitized).toBe(true);
+    expect(firmware.firmwareResponseRawLength).toBe(9);
+    expect(firmware.firmwareResponseHadControlChars).toBe(true);
+    expect(firmware.firmwareResponseControlCharCount).toBe(3);
+    expect(input.metadata?.metadataSanitized).toBe(true);
+    expect(JSON.stringify(input.metadata)).not.toContain("\u0000");
+  });
+
+  it("sanitizes nested control characters while preserving unicode text", () => {
+    const sanitized = sanitizeRobotMetadata({
+      message: "acción física confirmada",
+      "raw\u0000key": "value",
+      nested: { firmwareResponse: "OK\u0000DONE", note: "línea\ncon tab\tválida" }
+    });
+
+    expect(sanitized.message).toBe("acción física confirmada");
+    expect(sanitized["raw<0x00>key"]).toBe("value");
+    expect((sanitized.nested as Record<string, unknown>).firmwareResponse).toBe("OK<0x00>DONE");
+    expect((sanitized.nested as Record<string, unknown>).note).toBe("línea\ncon tab\tválida");
+    expect(sanitized.metadataSanitized).toBe(true);
+    expect(sanitized.sanitizedFields).toContain("metadata.nested.firmwareResponse");
+  });
+
+  it("accepts multi-cube metadata with sanitized attempts and firmware responses", () => {
+    const input = parseRobotActionInput({
+      sessionId: "session-id",
+      actionType: "PICK_AND_DROP",
+      status: "SUCCESS",
+      mode: "hardware",
+      color: "blue",
+      metadata: {
+        multiCubeRunId: "multi-run-001",
+        sequenceNumber: 2,
+        totalPlannedCubes: 6,
+        selectedCube: { color: "blue", x: 40, y: 90, w: 20, h: 20, confidence: 0.9 },
+        selectedCubeColor: "blue",
+        attempts: [{ attempt: 1, pickZ: 138, diagnostic: "raw\u0000byte" }],
+        firmwareResponses: [{ attempt: 1, firmwareResponse: "UU\u0000DONE", success: true }],
+        physicalConfirmation: { enabled: true, status: "CONFIRMED" },
+        backendSyncStatus: "SKIPPED",
+        finalPickZUsed: 138
+      }
+    });
+
+    expect(input.metadata).toMatchObject({
+      multiCubeRunId: "multi-run-001",
+      sequenceNumber: 2,
+      physicalConfirmation: { enabled: true, status: "CONFIRMED" },
+      finalPickZUsed: 138,
+      metadataSanitized: true
+    });
+    expect(JSON.stringify(input.metadata)).not.toContain("\u0000");
   });
 
   it("rejects unsupported FAILED action status as a clear validation error", () => {
@@ -260,6 +341,7 @@ describe("robot action dry-run contract", () => {
         totalPlannedCubes: 6,
         commandExecutionStatus: "SUCCESS",
         backendSyncStatus: "SUCCESS",
+        backendSyncErrorDetails: { errorCode: "BACKEND_SYNC_FAILED", correlationId: "corr-001" },
         physicalConfirmation: { status: "CONFIRMED" },
         finalPickZUsed: 136,
         errorCode: "ZONE_UNAVAILABLE",
@@ -283,6 +365,7 @@ describe("robot action dry-run contract", () => {
         totalPlannedCubes: 6,
         commandExecutionStatus: "SUCCESS",
         backendSyncStatus: "SUCCESS",
+        backendSyncErrorDetails: { errorCode: "BACKEND_SYNC_FAILED", correlationId: "corr-001" },
         physicalConfirmation: { status: "CONFIRMED" },
         finalPickZUsed: 136,
         errorCode: "ZONE_UNAVAILABLE"

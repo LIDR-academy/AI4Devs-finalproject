@@ -31,7 +31,7 @@ function value(input: string | number | null | undefined) {
 
 function formatStatus(status: string | null | undefined) {
   if (!status) return "idle";
-  return status.replace("_", " ");
+  return status.replace(/_/g, " ");
 }
 
 function latestAction(result: Props["visionData"]["multiCubeStatus"]) {
@@ -74,6 +74,12 @@ export function PhysicalUnloadPanel({ dashboard, visionData, onRefresh }: Props)
     status?.lastError?.includes("MISSING_HARDWARE_PORT") === true && status.hardwarePortConfigured === true
       ? null
       : status?.lastError;
+  const resultStatusClass =
+    status?.status === "failed"
+      ? "error"
+      : status?.status === "partial_success" || status?.status === "success_with_backend_sync_warnings"
+        ? "planned"
+        : status?.status ?? "planned";
 
   const executeDisabledReason = useMemo(() => {
     if (!edgeOnline) return "Edge Vision no disponible";
@@ -143,7 +149,7 @@ export function PhysicalUnloadPanel({ dashboard, visionData, onRefresh }: Props)
             {status?.updatedAt ? new Date(status.updatedAt).toLocaleTimeString() : "-"}
           </p>
         </div>
-        <span className={`status-badge status-${status?.status === "failed" ? "error" : status?.status ?? "planned"}`}>
+        <span className={`status-badge status-${resultStatusClass}`}>
           {status?.status ?? "idle"}
         </span>
       </div>
@@ -198,9 +204,13 @@ export function PhysicalUnloadPanel({ dashboard, visionData, onRefresh }: Props)
         <div><span className="metric-label">QR / Camion</span><strong>{value(plan?.truckCode ?? visionData.snapshot?.truckCode)}</strong></div>
         <div><span className="metric-label">Cubos detectados</span><strong>{value(plan?.totalDetectedCubes ?? visionData.snapshot?.detections.length)}</strong></div>
         <div><span className="metric-label">Cubos planificados</span><strong>{value(plan?.totalPlannedCubes)}</strong></div>
-        <div><span className="metric-label">Cubos ejecutados</span><strong>{value(result?.totalPhysicalConfirmedCubes ?? result?.totalExecutedCubes)}</strong></div>
+        <div><span className="metric-label">Cubos fisicos OK</span><strong>{value(result?.totalPhysicalConfirmedCubes ?? result?.totalExecutedCubes)}</strong></div>
+        <div><span className="metric-label">Cubos intentados</span><strong>{value(result?.totalAttemptedCubes)}</strong></div>
+        <div><span className="metric-label">Cubos restantes</span><strong>{value(result?.totalRemainingCubes)}</strong></div>
         <div><span className="metric-label">Sync backend OK</span><strong>{value(result?.totalBackendSyncedActions)}</strong></div>
         <div><span className="metric-label">Sync backend fallido</span><strong>{value(result?.totalBackendSyncFailedActions)}</strong></div>
+        <div><span className="metric-label">Error backend</span><strong>{value(result?.lastBackendSyncError)}</strong></div>
+        <div><span className="metric-label">Error fisico</span><strong>{value(result?.lastPhysicalError)}</strong></div>
         <div><span className="metric-label">Confirmacion fisica</span><strong>{value(lastAction?.physicalConfirmation?.status as string | undefined)}</strong></div>
         <div><span className="metric-label">Ultimo cubo</span><strong>{lastAction ? `${value(lastAction.selectedCubeColor)} -> ${value(lastAction.dropZoneCode)}` : "-"}</strong></div>
         <div><span className="metric-label">Retry Z</span><strong>{value(lastAction?.finalPickZUsed)}</strong></div>

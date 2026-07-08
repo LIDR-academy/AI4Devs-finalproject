@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import time
 import uuid
 from dataclasses import dataclass, replace
@@ -367,8 +368,11 @@ def _base_payload(
         "totalBackendSyncedActions": 0,
         "totalBackendSyncFailedActions": 0,
         "totalFailedPhysicalConfirmations": 0,
+        "totalAttemptedCubes": 0,
+        "totalRemainingCubes": len(planned_actions),
         "totalSkippedCubes": len(skipped_cubes),
         "lastBackendSyncError": None,
+        "lastPhysicalError": None,
         "snapshot": snapshot_to_dict(snapshot),
         "plannedActions": planned_actions,
         "executedActions": [],
@@ -518,6 +522,16 @@ def _backend_payload(
             },
         }
     )
+
+
+def _backend_error_details(exc: Exception) -> dict[str, Any]:
+    message = str(exc)
+    match = re.search(r'"correlationId"\s*:\s*"([^"]+)"', message)
+    return {
+        "errorCode": getattr(exc, "code", "BACKEND_SYNC_FAILED"),
+        "errorMessage": message,
+        "correlationId": match.group(1) if match else None,
+    }
 
 
 def _execution_identity(sequence_number: int, plan: RobotActionPlan) -> dict[str, Any]:
@@ -783,17 +797,22 @@ def _execute_plan(
                             execution["backendActionCode"] = action.get("code")
                     except Exception as exc:
                         execution["backendSyncStatus"] = "FAILED"
-                        execution["backendSyncError"] = str(exc)
-                        execution["backendSyncErrorCode"] = getattr(exc, "code", "BACKEND_SYNC_FAILED")
-                        error_code = "BACKEND_SYNC_FAILED"
-                        error_message = str(exc)
+                        backend_error = _backend_error_details(exc)
+                        execution["backendSyncError"] = backend_error["errorMessage"]
+                        execution["backendSyncErrorCode"] = backend_error["errorCode"]
+                        execution["backendSyncErrorDetails"] = backend_error
+                        if backend_error["correlationId"]:
+                            execution["backendSyncCorrelationId"] = backend_error["correlationId"]
                         execution["status"] = (
                             "SUCCESS_WITH_BACKEND_SYNC_FAILED"
                             if _is_physically_executed(execution)
                             else "FAILED"
                         )
+                        if not _is_physically_executed(execution):
+                            error_code = "BACKEND_SYNC_FAILED"
+                            error_message = str(exc)
                 executed.append(execution)
-                if execution.get("status") != "SUCCESS":
+                if execution.get("status") not in {"SUCCESS", "SUCCESS_WITH_BACKEND_SYNC_FAILED"}:
                     error_code = str(execution.get("errorCode") or execution.get("backendSyncErrorCode") or "PICK_DROP_FAILED")
                     error_message = str(execution.get("errorMessage") or execution.get("backendSyncError") or "Pick/drop failed")
                     break
@@ -928,8 +947,9 @@ def run_multi_cube_pick_drop(
     backend_synced = [action for action in executed if action.get("backendSyncStatus") == "SUCCESS"]
     backend_sync_failed = [action for action in executed if action.get("backendSyncStatus") == "FAILED"]
     physical_failed = [action for action in executed if _physical_confirmation_failed(action)]
+    all_planned_physically_confirmed = len(planned_pairs) > 0 and len(physically_executed) == len(planned_pairs)
     if error_code is None:
-        final_status = "SUCCESS"
+        final_status = "SUCCESS_WITH_BACKEND_SYNC_WARNINGS" if backend_sync_failed and all_planned_physically_confirmed else "SUCCESS"
     elif physically_executed:
         final_status = "PARTIAL_SUCCESS"
     else:
@@ -942,7 +962,10 @@ def run_multi_cube_pick_drop(
             "totalBackendSyncedActions": len(backend_synced),
             "totalBackendSyncFailedActions": len(backend_sync_failed),
             "totalFailedPhysicalConfirmations": len(physical_failed),
+            "totalAttemptedCubes": len(executed),
+            "totalRemainingCubes": max(0, len(planned_pairs) - len(executed)),
             "lastBackendSyncError": backend_sync_failed[-1].get("backendSyncError") if backend_sync_failed else None,
+            "lastPhysicalError": physical_failed[-1].get("errorMessage") if physical_failed else None,
             "executedActions": executed,
             "serialOpened": any(bool(action.get("serialOpened")) for action in executed),
             "hardwareMovement": any(bool(action.get("hardwareMovement")) for action in executed),

@@ -316,7 +316,7 @@ class MultiCubePickDropTests(unittest.TestCase):
         persisted = json.loads(self.drop_zones_path.read_text(encoding="utf-8"))
         self.assertTrue(persisted["red"][0]["occupied"])
 
-    def test_backend_sync_failure_after_physical_confirmation_keeps_physical_state(self) -> None:
+    def test_backend_sync_failure_after_physical_confirmation_continues_next_cube(self) -> None:
         self.write_config(
             physical_confirmation={
                 "enabled": True,
@@ -327,18 +327,23 @@ class MultiCubePickDropTests(unittest.TestCase):
             },
             pickup_retry={"enabled": True, "maxAttempts": 3, "zStep": -2, "minPickZ": 132},
         )
+        drop_zones = json.loads(self.drop_zones_path.read_text(encoding="utf-8"))
+        drop_zones["green"][0].update({"x": 201, "y": -201})
+        drop_zones["green"][1].update({"x": 202, "y": -202})
+        write_json(self.drop_zones_path, drop_zones)
         snapshot = DetectionSnapshot(
-            "run-five",
+            "run-six",
             "opencv-camera",
             (
                 CubeDetection("red", 80, 80, 20, 20, 0.95, {"sizeValid": True}),
                 CubeDetection("blue", 40, 90, 20, 20, 0.9, {"sizeValid": True}),
+                CubeDetection("blue", 60, 90, 20, 20, 0.88, {"sizeValid": True}),
                 CubeDetection("yellow", 10, 70, 20, 20, 0.85, {"sizeValid": True}),
-                CubeDetection("yellow", 30, 70, 20, 20, 0.8, {"sizeValid": True}),
-                CubeDetection("red", 60, 70, 20, 20, 0.75, {"sizeValid": True}),
+                CubeDetection("green", 30, 70, 20, 20, 0.8, {"sizeValid": True}),
+                CubeDetection("green", 60, 70, 20, 20, 0.75, {"sizeValid": True}),
             ),
             truck_code="TRUCK-001",
-            metadata={"snapshotSignature": "sig-five", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
+            metadata={"snapshotSignature": "sig-six", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
         )
         after_snapshots = iter(
             [
@@ -350,32 +355,39 @@ class MultiCubePickDropTests(unittest.TestCase):
                     metadata={"snapshotSignature": "sig-after-red", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
                 ),
                 DetectionSnapshot(
-                    "after-red-2",
+                    "after-blue-1",
                     "opencv-camera",
-                    snapshot.detections[1:4],
+                    snapshot.detections[2:],
                     truck_code="TRUCK-001",
-                    metadata={"snapshotSignature": "sig-after-red-2", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
+                    metadata={"snapshotSignature": "sig-after-blue-1", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
                 ),
                 DetectionSnapshot(
-                    "after-blue",
+                    "after-blue-2",
                     "opencv-camera",
-                    snapshot.detections[2:4],
+                    snapshot.detections[3:],
                     truck_code="TRUCK-001",
-                    metadata={"snapshotSignature": "sig-after-blue", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
+                    metadata={"snapshotSignature": "sig-after-blue-2", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
                 ),
                 DetectionSnapshot(
-                    "after-yellow-1",
+                    "after-yellow",
                     "opencv-camera",
-                    (snapshot.detections[3],),
+                    snapshot.detections[4:],
                     truck_code="TRUCK-001",
-                    metadata={"snapshotSignature": "sig-after-yellow-1", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
+                    metadata={"snapshotSignature": "sig-after-yellow", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
                 ),
                 DetectionSnapshot(
-                    "after-yellow-2",
+                    "after-green-1",
+                    "opencv-camera",
+                    (snapshot.detections[5],),
+                    truck_code="TRUCK-001",
+                    metadata={"snapshotSignature": "sig-after-green-1", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
+                ),
+                DetectionSnapshot(
+                    "after-green-2",
                     "opencv-camera",
                     (),
                     truck_code="TRUCK-001",
-                    metadata={"snapshotSignature": "sig-after-yellow-2", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
+                    metadata={"snapshotSignature": "sig-after-green-2", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
                 ),
             ]
         )
@@ -398,7 +410,7 @@ class MultiCubePickDropTests(unittest.TestCase):
         result = run_multi_cube_pick_drop(
             self.config_path,
             snapshot=snapshot,
-            max_cubes=5,
+            max_cubes=6,
             gates=self.gates(),
             serial_factory=lambda *_: FakeSerial(),
             evidence_writer=self.writer,
@@ -406,20 +418,24 @@ class MultiCubePickDropTests(unittest.TestCase):
             post_drop_snapshot_loader=lambda: next(after_snapshots),
         )
 
-        self.assertEqual("PARTIAL_SUCCESS", result["status"])
-        self.assertEqual(5, result["totalExecutedCubes"])
-        self.assertEqual(5, result["totalPhysicalConfirmedCubes"])
-        self.assertEqual(4, result["totalBackendSyncedActions"])
+        self.assertEqual("SUCCESS_WITH_BACKEND_SYNC_WARNINGS", result["status"])
+        self.assertEqual(6, result["totalExecutedCubes"])
+        self.assertEqual(6, result["totalPhysicalConfirmedCubes"])
+        self.assertEqual(5, result["totalBackendSyncedActions"])
         self.assertEqual(1, result["totalBackendSyncFailedActions"])
         self.assertEqual(0, result["totalFailedPhysicalConfirmations"])
+        self.assertEqual(6, result["totalAttemptedCubes"])
+        self.assertEqual(0, result["totalRemainingCubes"])
         action = result["executedActions"][4]
         self.assertEqual("SUCCESS_WITH_BACKEND_SYNC_FAILED", action["status"])
         self.assertEqual("SUCCESS", action["commandExecutionStatus"])
         self.assertEqual("CONFIRMED", action["physicalConfirmation"]["status"])
         self.assertEqual("FAILED", action["backendSyncStatus"])
-        self.assertEqual("yellow", action["selectedCubeColor"])
-        self.assertEqual("DROP_YELLOW_02", action["dropZoneCode"])
+        self.assertEqual("green", action["selectedCubeColor"])
+        self.assertEqual("DROP_GREEN_01", action["dropZoneCode"])
         self.assertIn("Backend returned HTTP 500", action["backendSyncError"])
+        self.assertEqual("CONFIRMED", result["executedActions"][5]["physicalConfirmation"]["status"])
+        self.assertEqual("SUCCESS", result["executedActions"][5]["backendSyncStatus"])
 
     def test_physical_confirmation_failed_does_not_persist_drop_zone(self) -> None:
         self.write_config(

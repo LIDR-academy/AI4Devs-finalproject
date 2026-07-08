@@ -2,11 +2,82 @@ import { HttpError } from "../../lib/http-error";
 import { cubeColors, isRecord } from "../../lib/validators";
 import { isDeepStrictEqual } from "node:util";
 
-const MAX_METADATA_BYTES = 32_768;
+const MAX_METADATA_BYTES = 131_072;
 const MAX_ERROR_MESSAGE_LENGTH = 500;
 const sensitiveKeyPattern = /(authorization|credential|password|secret|token|api[_-]?key)/i;
 const profiles = ["simulation", "vision-dry-run", "hardware"] as const;
 const visionSources = ["simulation", "edge-simulation", "opencv-file", "opencv-camera"] as const;
+
+type SanitizedMetadata = {
+  value: unknown;
+  changed: boolean;
+  fields: string[];
+};
+
+const sanitizeControlChars = (value: string) =>
+  value.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, (character) =>
+    `<0x${character.charCodeAt(0).toString(16).toUpperCase().padStart(2, "0")}>`
+  );
+
+const countUnsafeControlChars = (value: string) =>
+  Array.from(value).filter((character) => /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(character)).length;
+
+const sanitizeMetadataValue = (value: unknown, path = "metadata"): SanitizedMetadata => {
+  if (typeof value === "string") {
+    const sanitized = sanitizeControlChars(value);
+    return {
+      value: sanitized,
+      changed: sanitized !== value,
+      fields: sanitized !== value ? [path] : []
+    };
+  }
+  if (Array.isArray(value)) {
+    let changed = false;
+    const fields: string[] = [];
+    const sanitizedItems = value.map((item, index) => {
+      const result = sanitizeMetadataValue(item, `${path}[${index}]`);
+      changed = changed || result.changed;
+      fields.push(...result.fields);
+      return result.value;
+    });
+    return { value: sanitizedItems, changed, fields };
+  }
+  if (!isRecord(value)) {
+    return { value, changed: false, fields: [] };
+  }
+
+  let changed = false;
+  const fields: string[] = [];
+  const sanitizedObject: Record<string, unknown> = {};
+  for (const [key, child] of Object.entries(value)) {
+    const sanitizedKey = sanitizeControlChars(key);
+    const keyChanged = sanitizedKey !== key;
+    const childPath = `${path}.${sanitizedKey}`;
+    const result = sanitizeMetadataValue(child, childPath);
+    sanitizedObject[sanitizedKey] = result.value;
+    changed = changed || keyChanged || result.changed;
+    if (keyChanged) fields.push(childPath);
+    fields.push(...result.fields);
+    if (sanitizedKey === "firmwareResponse" && typeof child === "string" && result.changed) {
+      sanitizedObject.firmwareResponseSanitized = true;
+      sanitizedObject.firmwareResponseRawLength = child.length;
+      sanitizedObject.firmwareResponseHadControlChars = true;
+      sanitizedObject.firmwareResponseControlCharCount = countUnsafeControlChars(child);
+    }
+  }
+  return { value: sanitizedObject, changed, fields };
+};
+
+export const sanitizeRobotMetadata = (raw: Record<string, unknown>): Record<string, unknown> => {
+  const result = sanitizeMetadataValue(raw);
+  if (!isRecord(result.value)) return {};
+  if (!result.changed) return result.value;
+  return {
+    ...result.value,
+    metadataSanitized: true,
+    sanitizedFields: result.fields
+  };
+};
 
 const assertNoSensitiveKeys = (value: unknown, path = "metadata"): void => {
   if (Array.isArray(value)) {
@@ -105,33 +176,34 @@ export const normalizeRobotMetadata = (
   raw: Record<string, unknown>,
   mode: ExecutionMode
 ): Record<string, unknown> => {
-  assertJsonSafe(raw);
-  assertNoSensitiveKeys(raw);
-  if (Buffer.byteLength(JSON.stringify(raw), "utf8") > MAX_METADATA_BYTES) {
+  const safeRaw = sanitizeRobotMetadata(raw);
+  assertJsonSafe(safeRaw);
+  assertNoSensitiveKeys(safeRaw);
+  if (Buffer.byteLength(JSON.stringify(safeRaw), "utf8") > MAX_METADATA_BYTES) {
     throw new HttpError(400, `metadata must not exceed ${MAX_METADATA_BYTES} bytes`);
   }
 
-  const profile = optionalString(raw.profile, "profile");
+  const profile = optionalString(safeRaw.profile, "profile");
   if (profile && !profiles.includes(profile as (typeof profiles)[number])) {
     throw new HttpError(400, `metadata.profile must be one of: ${profiles.join(", ")}`);
   }
-  const source = optionalString(raw.source, "source");
+  const source = optionalString(safeRaw.source, "source");
   if (source && !visionSources.includes(source as (typeof visionSources)[number])) {
     throw new HttpError(400, `metadata.source must be one of: ${visionSources.join(", ")}`);
   }
 
-  const normalized: Record<string, unknown> = { ...raw };
+  const normalized: Record<string, unknown> = { ...safeRaw };
   normalized.profile = profile ?? (mode === "simulation" ? "simulation" : "hardware");
-  normalized.dryRun = mode === "simulation" ? true : (optionalBoolean(raw.dryRun, "dryRun") ?? false);
+  normalized.dryRun = mode === "simulation" ? true : (optionalBoolean(safeRaw.dryRun, "dryRun") ?? false);
 
-  const runId = optionalString(raw.runId, "runId");
-  const dropZoneCode = optionalString(raw.dropZoneCode, "dropZoneCode");
-  const configVersion = optionalString(raw.configVersion, "configVersion");
-  const calibrationVersion = optionalString(raw.calibrationVersion, "calibrationVersion");
-  const errorCode = optionalString(raw.errorCode, "errorCode");
-  const errorMessage = optionalString(raw.errorMessage, "errorMessage", MAX_ERROR_MESSAGE_LENGTH);
-  const selectedCube = parseSelectedCube(raw.selectedCube);
-  const positionOrder = optionalPositiveInteger(raw.positionOrder, "positionOrder");
+  const runId = optionalString(safeRaw.runId, "runId");
+  const dropZoneCode = optionalString(safeRaw.dropZoneCode, "dropZoneCode");
+  const configVersion = optionalString(safeRaw.configVersion, "configVersion");
+  const calibrationVersion = optionalString(safeRaw.calibrationVersion, "calibrationVersion");
+  const errorCode = optionalString(safeRaw.errorCode, "errorCode");
+  const errorMessage = optionalString(safeRaw.errorMessage, "errorMessage", MAX_ERROR_MESSAGE_LENGTH);
+  const selectedCube = parseSelectedCube(safeRaw.selectedCube);
+  const positionOrder = optionalPositiveInteger(safeRaw.positionOrder, "positionOrder");
 
   Object.assign(normalized, {
     ...(runId ? { runId } : {}),
@@ -146,7 +218,7 @@ export const normalizeRobotMetadata = (
   });
 
   for (const field of ["releaseConfirmed", "statePersisted", "serialOpened", "hardwareMovement"] as const) {
-    const value = optionalBoolean(raw[field], field);
+    const value = optionalBoolean(safeRaw[field], field);
     if (value !== undefined) normalized[field] = value;
   }
 
@@ -225,6 +297,8 @@ export const projectExecutionMetadata = (raw: unknown) => {
     commandExecutionStatus:
       typeof metadata.commandExecutionStatus === "string" ? metadata.commandExecutionStatus : null,
     backendSyncStatus: typeof metadata.backendSyncStatus === "string" ? metadata.backendSyncStatus : null,
+    backendSyncErrorDetails:
+      isRecord(metadata.backendSyncErrorDetails) ? metadata.backendSyncErrorDetails : null,
     finalPickZUsed: typeof metadata.finalPickZUsed === "number" ? metadata.finalPickZUsed : null
   };
 };

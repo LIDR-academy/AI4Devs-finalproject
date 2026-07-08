@@ -315,6 +315,7 @@ def _normalize_multi_status(status: str) -> str:
     mapping = {
         "DRY_RUN_PLANNED": "planned",
         "SUCCESS": "success",
+        "SUCCESS_WITH_BACKEND_SYNC_WARNINGS": "success_with_backend_sync_warnings",
         "PARTIAL_SUCCESS": "partial_success",
         "FAILED": "failed",
         "NO_VALID_QR": "failed",

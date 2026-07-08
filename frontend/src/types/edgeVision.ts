@@ -63,6 +63,7 @@ export type EdgeMultiCubeRunStatus =
   | "planned"
   | "executing"
   | "success"
+  | "success_with_backend_sync_warnings"
   | "partial_success"
   | "failed";
 
@@ -103,7 +104,10 @@ export type EdgeMultiCubeResult = EdgeMultiCubePlan & {
   totalBackendSyncedActions?: number;
   totalBackendSyncFailedActions?: number;
   totalFailedPhysicalConfirmations?: number;
+  totalAttemptedCubes?: number;
+  totalRemainingCubes?: number;
   lastBackendSyncError?: string | null;
+  lastPhysicalError?: string | null;
   executedActions?: EdgeMultiCubeAction[];
   errorCode?: string | null;
   errorMessage?: string | null;
