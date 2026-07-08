@@ -9,6 +9,7 @@ Backend MVP para Entrega 2. Implementa API REST local con Express, TypeScript, P
 - No implementa autenticacion, RBAC, WebSockets ni streaming.
 - Recibe datos simulados como si fueran enviados por Edge.
 - Recibe trazabilidad saneada de `edge_dry_run.py` sin controlar hardware.
+- Sanitiza metadata de acciones robot antes de guardarla con Prisma/PostgreSQL.
 
 ## Requisitos
 
@@ -169,6 +170,15 @@ curl -X POST http://localhost:3000/robot/actions \
   -H "Content-Type: application/json" \
   -d '{"sessionId":"SESSION_ID","actionType":"PICK_AND_DROP","status":"SUCCESS","mode":"simulation","color":"red","metadata":{"dryRun":true,"commandPreview":"POSE 32 -204 124 1"}}'
 ```
+
+`POST /robot/actions` y las transiciones de acciones robot normalizan metadata
+antes de persistir. La defensa reemplaza recursivamente caracteres de control
+no seguros para PostgreSQL, incluido el caracter nulo real `\u0000`, por
+marcadores como `<0x00>`. Unicode normal, acentos, saltos de linea, retornos de
+carro y tabs se conservan. Si la metadata fue modificada, se marca con
+`metadataSanitized=true` y `sanitizedFields`; en respuestas firmware tambien se
+agregan flags diagnosticos como `firmwareResponseSanitized` y
+`firmwareResponseRawLength`.
 
 ### Dashboard operacional
 

@@ -4,6 +4,11 @@ from typing import Any
 
 import requests
 
+try:
+    from .metadata_sanitizer import sanitize_robot_action_payload
+except ImportError:
+    from metadata_sanitizer import sanitize_robot_action_payload
+
 
 class BackendApiError(RuntimeError):
     """Raised when the backend returns an unexpected response."""
@@ -31,10 +36,10 @@ class BackendClient:
         )
 
     def register_robot_action(self, payload: dict[str, Any]) -> dict[str, Any]:
-        return self._request("POST", "/robot/actions", json=payload)
+        return self._request("POST", "/robot/actions", json=sanitize_robot_action_payload(payload))
 
     def update_robot_action(self, action_id: str, payload: dict[str, Any]) -> dict[str, Any]:
-        return self._request("PATCH", f"/robot/actions/{action_id}", json=payload)
+        return self._request("PATCH", f"/robot/actions/{action_id}", json=sanitize_robot_action_payload(payload))
 
     def update_session(self, session_id: str, payload: dict[str, Any]) -> dict[str, Any]:
         return self._request("PATCH", f"/sessions/{session_id}", json=payload)
