@@ -29,7 +29,7 @@ public class EventConfiguration : IEntityTypeConfiguration<Event>
         builder.Property(e => e.VenueLat).HasPrecision(9, 6);
         builder.Property(e => e.VenueLng).HasPrecision(9, 6);
         
-        builder.Property(e => e.EventEndDate).HasComputedColumnSql("\"EventDate\" + INTERVAL '1 day'", stored: true);
+        // builder.Property(e => e.EventEndDate).HasComputedColumnSql("event_date + INTERVAL '1 day'", stored: true);
         
         builder.HasMany(e => e.Guests).WithOne(e => e.Event).HasForeignKey(e => e.EventId).OnDelete(DeleteBehavior.Cascade);
         builder.HasMany(e => e.Invitations).WithOne(e => e.Event).HasForeignKey(e => e.EventId).OnDelete(DeleteBehavior.Cascade);

@@ -1,15 +1,18 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { NavbarComponent } from './shared/components/navbar.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, NavbarComponent],
   template: `
-    <main class="min-h-screen flex flex-col items-center justify-center p-6">
-      <h1 class="text-4xl text-primary font-heading mb-4">Aura Planning</h1>
-      <router-outlet></router-outlet>
-    </main>
+    <div class="min-h-screen flex flex-col">
+      <app-navbar></app-navbar>
+      <main class="flex-1 p-6">
+        <router-outlet></router-outlet>
+      </main>
+    </div>
   `
 })
 export class AppComponent {

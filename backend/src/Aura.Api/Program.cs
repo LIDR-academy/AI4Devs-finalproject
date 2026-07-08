@@ -124,12 +124,12 @@ try
     {
         options.AddPolicy("EventOwner", policy =>
             policy.RequireAssertion(context =>
-                context.User.FindFirstValue("role") == "host"));
+                context.User.FindFirstValue(ClaimTypes.Role) == "host"));
 
         options.AddPolicy("AccompliceScoped", policy =>
             policy.RequireAssertion(context =>
             {
-                var role = context.User.FindFirstValue("role");
+                var role = context.User.FindFirstValue(ClaimTypes.Role);
                 var eventId = context.User.FindFirstValue("eventId");
                 return role == "accomplice" && !string.IsNullOrEmpty(eventId);
             }));
@@ -142,7 +142,7 @@ try
 
         options.AddPolicy("ActiveAccomplice", policy =>
             policy.RequireAssertion(context =>
-                context.User.FindFirstValue("role") == "accomplice"));
+                context.User.FindFirstValue(ClaimTypes.Role) == "accomplice"));
     });
 
     builder.Services.AddCors(options =>

@@ -17,32 +17,36 @@ public class AuthController : ControllerBase
     private readonly IAuthService _authService;
     private readonly IUserRepository _userRepository;
     private readonly IUserConsentRepository _userConsentRepository;
+    private readonly IConfiguration _configuration;
 
     public AuthController(
         IAuthService authService,
         IUserRepository userRepository,
-        IUserConsentRepository userConsentRepository)
+        IUserConsentRepository userConsentRepository,
+        IConfiguration configuration)
     {
         _authService = authService;
         _userRepository = userRepository;
         _userConsentRepository = userConsentRepository;
+        _configuration = configuration;
     }
 
     [HttpPost("magic-link")]
     public async Task<IActionResult> RequestMagicLink([FromBody] MagicLinkRequest request)
     {
-        var magicLinkUrlTemplate = $"{Request.Scheme}://{Request.Host}/api/auth/verify?token={{token}}";
+        var baseUrl = _configuration["MagicLink:BaseUrl"] ?? "http://localhost:4200";
+        var magicLinkUrlTemplate = $"{baseUrl}/verify?token={{token}}";
         await _authService.RequestMagicLinkAsync(request.Email, magicLinkUrlTemplate);
         
         return Ok(new { Message = "Magic link sent. Check your email." });
     }
 
-    [HttpGet("verify")]
-    public async Task<IActionResult> VerifyMagicLink([FromQuery] string token)
+    [HttpPost("verify")]
+    public async Task<IActionResult> VerifyMagicLink([FromBody] VerifyRequest request)
     {
         try
         {
-            var (user, jwtToken) = await _authService.VerifyMagicLinkAsync(token);
+            var (user, jwtToken) = await _authService.VerifyMagicLinkAsync(request.Token);
 
             SetAuthCookies(jwtToken);
 

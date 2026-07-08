@@ -2,16 +2,19 @@ using System.Net;
 using System.Net.Mail;
 using Aura.Core.Interfaces.Services;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace Aura.Infrastructure.Services;
 
 public class SmtpEmailService : IEmailService
 {
     private readonly IConfiguration _configuration;
+    private readonly ILogger<SmtpEmailService> _logger;
 
-    public SmtpEmailService(IConfiguration configuration)
+    public SmtpEmailService(IConfiguration configuration, ILogger<SmtpEmailService> logger)
     {
         _configuration = configuration;
+        _logger = logger;
     }
 
     public async Task SendMagicLinkAsync(string email, string magicLinkUrl)
@@ -37,6 +40,15 @@ public class SmtpEmailService : IEmailService
         };
         mailMessage.To.Add(email);
 
-        await client.SendMailAsync(mailMessage);
+        _logger.LogInformation("\n========================================\nMAGIC LINK FOR {Email}: {Url}\n========================================\n", email, magicLinkUrl);
+
+        try
+        {
+            await client.SendMailAsync(mailMessage);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to send email to {Email}. If running locally without MailHog, copy the link above.", email);
+        }
     }
 }

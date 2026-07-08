@@ -7,11 +7,13 @@ namespace Aura.Api.Middleware;
 public class CsrfValidationMiddleware(RequestDelegate next)
 {
     private static readonly HashSet<string> SafeMethods = ["GET", "HEAD", "OPTIONS"];
+    private static readonly HashSet<string> ExcludedPaths = new(StringComparer.OrdinalIgnoreCase) { "/api/auth/magic-link", "/api/auth/verify" };
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
     public async Task InvokeAsync(HttpContext context)
     {
-        if (!SafeMethods.Contains(context.Request.Method))
+        var path = context.Request.Path.Value ?? "";
+        if (!SafeMethods.Contains(context.Request.Method) && !ExcludedPaths.Contains(path))
         {
             var cookieToken = context.Request.Cookies["aura_csrf"];
             var headerToken = context.Request.Headers["X-CSRF-Token"].ToString();
