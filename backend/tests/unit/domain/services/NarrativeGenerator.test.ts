@@ -28,7 +28,8 @@ describe('NarrativeGenerator', () => {
       context: { baseAmortization: baseAmort, lightAmortization: lightAmort },
     });
     expect(out).toContain('26200');
-    expect(out).toContain('light');
+    expect(out).toContain('25 años');
+    expect(out).not.toContain('{años_light}');
   });
 
   it('falls back to equilibrado|any when combo missing', () => {

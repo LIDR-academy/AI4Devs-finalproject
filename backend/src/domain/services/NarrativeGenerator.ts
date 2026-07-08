@@ -39,7 +39,7 @@ La más ambiciosa para un perfil conservador. Acumulas patrimonio más rápido, 
 
 ${DISCLAIMER}`,
 
-  'arriesgado|invest-moderate': `Si en lugar de amortizar {extra}€/mes, inviertes esa cantidad en un fondo
+  'arriesgado|moderate': `Si en lugar de amortizar {extra}€/mes, inviertes esa cantidad en un fondo
 diversificado con rentabilidad media histórica del {rentabilidad}% anual,
 acumularías {valor_nominal}€ en {años} años (cifra nominal).
 
@@ -79,8 +79,7 @@ export interface NarrativeInput {
 export class NarrativeGenerator {
   generate(input: NarrativeInput): string {
     const isInvestment = 'nominalValue' in input.scenario;
-    const prefix = isInvestment ? 'invest-' : '';
-    const key = `${input.persona}|${prefix}${input.scenario.name}`;
+    const key = `${input.persona}|${input.scenario.name}`;
     const template = TEMPLATES[key] ?? TEMPLATES['equilibrado|any'];
 
     const amort = isInvestment ? null : (input.scenario as AmortizationScenario);
@@ -116,7 +115,7 @@ export class NarrativeGenerator {
   }
 
   private substitute(template: string, vars: Record<string, string | number>): string {
-    return template.replace(/\{(\w+)\}/g, (_, key: string) =>
+    return template.replace(/\{([\wáéíóúñÁÉÍÓÚÑ]+)\}/g, (_, key: string) =>
       vars[key] !== undefined ? String(vars[key]) : `{${key}}`,
     );
   }
