@@ -19,6 +19,9 @@ describe('NarrativeGenerator', () => {
     expect(out).toContain('720€');
     expect(out).toContain('99200€');
     expect(out).toContain('no es consejo financiero');
+    expect(out).not.toContain('{cuota}');
+    expect(out).not.toContain('{años}');
+    expect(out).not.toContain('{intereses}');
   });
 
   it('renders conservador|light template with savings', () => {
@@ -53,10 +56,7 @@ describe('NarrativeGenerator', () => {
     expect(out).toContain('245000');
     expect(out).toContain('137000');
     expect(out).toContain('19-26%');
-  });
-
-  it('always includes disclaimer', () => {
-    const out = gen.generate({ persona: 'conservador', scenario: baseAmort });
-    expect(out).toContain('no es consejo financiero');
+    expect(out).not.toContain('{valor_nominal}');
+    expect(out).not.toContain('{valor_real}');
   });
 });
