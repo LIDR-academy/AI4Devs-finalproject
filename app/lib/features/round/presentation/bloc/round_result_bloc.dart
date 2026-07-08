@@ -7,13 +7,10 @@ import 'package:la_pocha/features/round/presentation/bloc/round_result_state.dar
 
 class RoundResultBloc extends Bloc<RoundResultEvent, RoundResultState> {
   RoundResultBloc({
-    required GetRoundResultUseCase getRoundResult,
-    required AdvanceToNextRoundUseCase advanceToNextRound,
-    required FinishGameUseCase finishGame,
-  })  : _getRoundResult = getRoundResult,
-        _advanceToNextRound = advanceToNextRound,
-        _finishGame = finishGame,
-        super(const RoundResultInitial()) {
+    required this._getRoundResult,
+    required this._advanceToNextRound,
+    required this._finishGame,
+  }) : super(const RoundResultInitial()) {
     on<RoundResultStarted>(_onStarted);
     on<AdvanceToNextRoundRequested>(_onAdvanceToNextRound);
     on<FinishGameRequested>(_onFinishGame);

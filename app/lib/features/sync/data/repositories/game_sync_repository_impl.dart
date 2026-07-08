@@ -9,12 +9,10 @@ import 'package:la_pocha/features/sync/domain/repositories/game_sync_repository.
 
 class GameSyncRepositoryImpl implements GameSyncRepository {
   GameSyncRepositoryImpl({
-    required GameLocalDatasource gameLocalDatasource,
-    required RoundLocalDatasource roundLocalDatasource,
-    required GameFirestoreDatasource firestoreDatasource,
-  })  : _gameLocalDatasource = gameLocalDatasource,
-        _roundLocalDatasource = roundLocalDatasource,
-        _firestoreDatasource = firestoreDatasource;
+    required this._gameLocalDatasource,
+    required this._roundLocalDatasource,
+    required this._firestoreDatasource,
+  });
 
   final GameLocalDatasource _gameLocalDatasource;
   final RoundLocalDatasource _roundLocalDatasource;

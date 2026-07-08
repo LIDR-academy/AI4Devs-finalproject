@@ -6,9 +6,8 @@ part 'game_sync_event.dart';
 part 'game_sync_state.dart';
 
 class GameSyncBloc extends Bloc<GameSyncEvent, GameSyncState> {
-  GameSyncBloc({required UploadFinishedGameUseCase uploadFinishedGame})
-      : _uploadFinishedGame = uploadFinishedGame,
-        super(const GameSyncIdle()) {
+  GameSyncBloc({required this._uploadFinishedGame})
+    : super(const GameSyncIdle()) {
     on<GameUploadRequested>(_onUploadRequested);
   }
 

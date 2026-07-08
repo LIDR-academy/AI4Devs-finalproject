@@ -9,11 +9,9 @@ part 'history_list_state.dart';
 
 class HistoryListBloc extends Bloc<HistoryListEvent, HistoryListState> {
   HistoryListBloc({
-    required GetGameHistoryUseCase getGameHistory,
-    required RetryPendingUploadsUseCase retryPendingUploads,
-  })  : _getGameHistory = getGameHistory,
-        _retryPendingUploads = retryPendingUploads,
-        super(const HistoryListInitial()) {
+    required this._getGameHistory,
+    required this._retryPendingUploads,
+  }) : super(const HistoryListInitial()) {
     on<HistoryListStarted>(_onStarted);
     on<HistoryListRefreshed>(_onRefreshed);
   }

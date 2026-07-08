@@ -13,17 +13,12 @@ part 'game_setup_state.dart';
 
 class GameSetupBloc extends Bloc<GameSetupEvent, GameSetupState> {
   GameSetupBloc({
-    required GetGameByIdUseCase getGameById,
-    required ReorderPlayersUseCase reorderPlayers,
-    required SetFirstDealerUseCase setFirstDealer,
-    required RandomizeFirstDealerUseCase randomizeFirstDealer,
-    required StartGameUseCase startGame,
-  })  : _getGameById = getGameById,
-        _reorderPlayers = reorderPlayers,
-        _setFirstDealer = setFirstDealer,
-        _randomizeFirstDealer = randomizeFirstDealer,
-        _startGame = startGame,
-        super(const GameSetupInitial()) {
+    required this._getGameById,
+    required this._reorderPlayers,
+    required this._setFirstDealer,
+    required this._randomizeFirstDealer,
+    required this._startGame,
+  }) : super(const GameSetupInitial()) {
     on<GameSetupStarted>(_onStarted);
     on<PlayersReordered>(_onPlayersReordered);
     on<FirstDealerSelected>(_onFirstDealerSelected);
@@ -153,9 +148,7 @@ class GameSetupBloc extends Bloc<GameSetupEvent, GameSetupState> {
         ),
       );
     } catch (error) {
-      emit(
-        current.copyWith(isStarting: false),
-      );
+      emit(current.copyWith(isStarting: false));
       emit(GameSetupFailure(message: error.toString()));
     }
   }

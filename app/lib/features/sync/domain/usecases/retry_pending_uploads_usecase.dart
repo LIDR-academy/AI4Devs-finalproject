@@ -3,10 +3,9 @@ import 'package:la_pocha/features/sync/domain/usecases/upload_finished_game_usec
 
 class RetryPendingUploadsUseCase {
   RetryPendingUploadsUseCase({
-    required GameSyncRepository gameSyncRepository,
-    required UploadFinishedGameUseCase uploadFinishedGame,
-  })  : _gameSyncRepository = gameSyncRepository,
-        _uploadFinishedGame = uploadFinishedGame;
+    required this._gameSyncRepository,
+    required this._uploadFinishedGame,
+  });
 
   final GameSyncRepository _gameSyncRepository;
   final UploadFinishedGameUseCase _uploadFinishedGame;

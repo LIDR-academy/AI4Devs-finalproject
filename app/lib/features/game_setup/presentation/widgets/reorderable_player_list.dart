@@ -23,12 +23,7 @@ class ReorderablePlayerList extends StatelessWidget {
     return ReorderableListView.builder(
       padding: const EdgeInsets.all(20),
       itemCount: players.length,
-      onReorder: (oldIndex, newIndex) {
-        if (oldIndex < newIndex) {
-          newIndex -= 1;
-        }
-        onReorder(oldIndex, newIndex);
-      },
+      onReorderItem: (oldIndex, newIndex) => onReorder(oldIndex, newIndex),
       itemBuilder: (context, index) {
         final player = players[index];
         final isDealer = player.id == firstDealerPlayerId;

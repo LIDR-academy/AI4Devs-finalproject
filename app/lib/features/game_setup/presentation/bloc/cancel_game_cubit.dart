@@ -4,9 +4,8 @@ import 'package:la_pocha/features/game_setup/domain/usecases/cancel_game_usecase
 part 'cancel_game_state.dart';
 
 class CancelGameCubit extends Cubit<CancelGameState> {
-  CancelGameCubit({required CancelGameUseCase cancelGame})
-      : _cancelGame = cancelGame,
-        super(const CancelGameInitial());
+  CancelGameCubit({required this._cancelGame})
+    : super(const CancelGameInitial());
 
   final CancelGameUseCase _cancelGame;
 

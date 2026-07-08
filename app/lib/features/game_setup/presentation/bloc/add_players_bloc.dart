@@ -10,13 +10,10 @@ part 'add_players_state.dart';
 
 class AddPlayersBloc extends Bloc<AddPlayersEvent, AddPlayersState> {
   AddPlayersBloc({
-    required GetGameByIdUseCase getGameById,
-    required AddPlayerUseCase addPlayer,
-    required RemovePlayerUseCase removePlayer,
-  })  : _getGameById = getGameById,
-        _addPlayer = addPlayer,
-        _removePlayer = removePlayer,
-        super(const AddPlayersInitial()) {
+    required this._getGameById,
+    required this._addPlayer,
+    required this._removePlayer,
+  }) : super(const AddPlayersInitial()) {
     on<AddPlayersStarted>(_onStarted);
     on<PlayerAdded>(_onPlayerAdded);
     on<PlayerRemoved>(_onPlayerRemoved);
@@ -38,12 +35,14 @@ class AddPlayersBloc extends Bloc<AddPlayersEvent, AddPlayersState> {
         emit(AddPlayersFailure(message: 'Partida no encontrada'));
         return;
       }
-      emit(AddPlayersLoaded(
-        gameId: game.id,
-        playerCount: game.playerCount,
-        players: game.players,
-        isLoading: false,
-      ));
+      emit(
+        AddPlayersLoaded(
+          gameId: game.id,
+          playerCount: game.playerCount,
+          players: game.players,
+          isLoading: false,
+        ),
+      );
     } catch (error) {
       emit(AddPlayersFailure(message: error.toString()));
     }
@@ -64,20 +63,16 @@ class AddPlayersBloc extends Bloc<AddPlayersEvent, AddPlayersState> {
 
     emit(current.copyWith(isLoading: true, errorMessage: null));
     try {
-      final game = await _addPlayer(
-        gameId: current.gameId,
-        name: event.name,
+      final game = await _addPlayer(gameId: current.gameId, name: event.name);
+      emit(
+        current.copyWith(
+          players: game.players,
+          isLoading: false,
+          errorMessage: null,
+        ),
       );
-      emit(current.copyWith(
-        players: game.players,
-        isLoading: false,
-        errorMessage: null,
-      ));
     } catch (error) {
-      emit(current.copyWith(
-        isLoading: false,
-        errorMessage: error.toString(),
-      ));
+      emit(current.copyWith(isLoading: false, errorMessage: error.toString()));
     }
   }
 
@@ -100,16 +95,15 @@ class AddPlayersBloc extends Bloc<AddPlayersEvent, AddPlayersState> {
         emit(current.copyWith(isLoading: false));
         return;
       }
-      emit(current.copyWith(
-        players: game.players,
-        isLoading: false,
-        errorMessage: null,
-      ));
+      emit(
+        current.copyWith(
+          players: game.players,
+          isLoading: false,
+          errorMessage: null,
+        ),
+      );
     } catch (error) {
-      emit(current.copyWith(
-        isLoading: false,
-        errorMessage: error.toString(),
-      ));
+      emit(current.copyWith(isLoading: false, errorMessage: error.toString()));
     }
   }
 

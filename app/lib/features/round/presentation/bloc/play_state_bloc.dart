@@ -5,12 +5,8 @@ import 'package:la_pocha/features/round/presentation/bloc/play_state_event.dart'
 import 'package:la_pocha/features/round/presentation/bloc/play_state_state.dart';
 
 class PlayStateBloc extends Bloc<PlayStateEvent, PlayStateBlocState> {
-  PlayStateBloc({
-    required GetRoundPlayStateUseCase getRoundPlayState,
-    required CorrectBidsUseCase correctBids,
-  })  : _getRoundPlayState = getRoundPlayState,
-        _correctBids = correctBids,
-        super(const PlayStateInitial()) {
+  PlayStateBloc({required this._getRoundPlayState, required this._correctBids})
+    : super(const PlayStateInitial()) {
     on<PlayStateStarted>(_onPlayStateStarted);
     on<IntroduceTricksRequested>(_onIntroduceTricksRequested);
     on<BidsCorrectionSubmitted>(_onBidsCorrectionSubmitted);

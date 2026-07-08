@@ -10,15 +10,12 @@ import 'package:la_pocha/features/round/presentation/bloc/bidding_state.dart';
 
 class BiddingBloc extends Bloc<BiddingEvent, BiddingState> {
   BiddingBloc({
-    required LoadBiddingContextUseCase loadBiddingContext,
-    required SubmitBidUseCase submitBid,
-    required CloseBiddingUseCase closeBidding,
+    required this._loadBiddingContext,
+    required this._submitBid,
+    required this._closeBidding,
     DealerRestrictionValidator? validator,
-  })  : _loadBiddingContext = loadBiddingContext,
-        _submitBid = submitBid,
-        _closeBidding = closeBidding,
-        _validator = validator ?? const DealerRestrictionValidator(),
-        super(const BiddingInitial()) {
+  }) : _validator = validator ?? const DealerRestrictionValidator(),
+       super(const BiddingInitial()) {
     on<BiddingStarted>(_onBiddingStarted);
     on<BidValueChanged>(_onBidValueChanged);
     on<BidConfirmed>(_onBidConfirmed);
@@ -40,34 +37,35 @@ class BiddingBloc extends Bloc<BiddingEvent, BiddingState> {
         gameId: event.gameId,
         roundNumber: event.roundNumber,
       );
-      emit(_buildLoadedState(
-        game: context.game,
-        round: context.round,
-        biddingOrder: context.biddingOrder,
-        currentPlayerId: context.currentPlayerId,
-        draftBid: 0,
-      ));
+      emit(
+        _buildLoadedState(
+          game: context.game,
+          round: context.round,
+          biddingOrder: context.biddingOrder,
+          currentPlayerId: context.currentPlayerId,
+          draftBid: 0,
+        ),
+      );
     } catch (error) {
       emit(BiddingFailure(message: error.toString()));
     }
   }
 
-  void _onBidValueChanged(
-    BidValueChanged event,
-    Emitter<BiddingState> emit,
-  ) {
+  void _onBidValueChanged(BidValueChanged event, Emitter<BiddingState> emit) {
     final current = state;
     if (current is! BiddingLoaded || current.currentPlayerId == null) {
       return;
     }
 
-    emit(_buildLoadedState(
-      game: current.game,
-      round: current.round,
-      biddingOrder: current.biddingOrder,
-      currentPlayerId: current.currentPlayerId,
-      draftBid: event.bid,
-    ));
+    emit(
+      _buildLoadedState(
+        game: current.game,
+        round: current.round,
+        biddingOrder: current.biddingOrder,
+        currentPlayerId: current.currentPlayerId,
+        draftBid: event.bid,
+      ),
+    );
   }
 
   Future<void> _onBidConfirmed(
@@ -91,13 +89,15 @@ class BiddingBloc extends Bloc<BiddingEvent, BiddingState> {
         bid: current.draftBid,
       );
 
-      emit(_buildLoadedState(
-        game: current.game,
-        round: result.round,
-        biddingOrder: result.biddingOrder,
-        currentPlayerId: result.currentPlayerId,
-        draftBid: 0,
-      ));
+      emit(
+        _buildLoadedState(
+          game: current.game,
+          round: result.round,
+          biddingOrder: result.biddingOrder,
+          currentPlayerId: result.currentPlayerId,
+          draftBid: 0,
+        ),
+      );
     } catch (error) {
       emit(
         current.copyWith(
@@ -113,9 +113,7 @@ class BiddingBloc extends Bloc<BiddingEvent, BiddingState> {
     Emitter<BiddingState> emit,
   ) async {
     final current = state;
-    if (current is! BiddingLoaded ||
-        !current.canClose ||
-        current.isClosing) {
+    if (current is! BiddingLoaded || !current.canClose || current.isClosing) {
       return;
     }
 
@@ -162,18 +160,17 @@ class BiddingBloc extends Bloc<BiddingEvent, BiddingState> {
           )
         : null;
 
-    final isDraftInRange =
-        draftBid >= 0 && draftBid <= round.cardsInRound;
-    final isForbidden = forbiddenBid != null &&
+    final isDraftInRange = draftBid >= 0 && draftBid <= round.cardsInRound;
+    final isForbidden =
+        forbiddenBid != null &&
         _validator.isForbiddenBid(bid: draftBid, forbiddenBid: forbiddenBid);
 
-    final canConfirmBid = currentPlayerId != null &&
-        isDraftInRange &&
-        !isForbidden;
+    final canConfirmBid =
+        currentPlayerId != null && isDraftInRange && !isForbidden;
 
     final validationMessage = isForbidden
         ? 'El repartidor no puede apostar $draftBid porque la suma '
-            'igualaría ${round.cardsInRound} bazas'
+              'igualaría ${round.cardsInRound} bazas'
         : null;
 
     final canClose = _validator.canClose(

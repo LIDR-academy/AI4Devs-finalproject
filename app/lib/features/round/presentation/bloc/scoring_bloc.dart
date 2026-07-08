@@ -11,15 +11,12 @@ import 'package:la_pocha/features/round/presentation/bloc/scoring_state.dart';
 
 class ScoringBloc extends Bloc<ScoringEvent, ScoringState> {
   ScoringBloc({
-    required GetRoundPlayStateUseCase getRoundPlayState,
-    required SubmitTricksUseCase submitTricks,
-    required CloseRoundUseCase closeRound,
+    required this._getRoundPlayState,
+    required this._submitTricks,
+    required this._closeRound,
     TricksSumValidator? validator,
-  })  : _getRoundPlayState = getRoundPlayState,
-        _submitTricks = submitTricks,
-        _closeRound = closeRound,
-        _validator = validator ?? const TricksSumValidator(),
-        super(const ScoringInitial()) {
+  }) : _validator = validator ?? const TricksSumValidator(),
+       super(const ScoringInitial()) {
     on<ScoringStarted>(_onScoringStarted);
     on<TrickValueChanged>(_onTrickValueChanged);
     on<CloseRoundRequested>(_onCloseRoundRequested);
@@ -83,9 +80,7 @@ class ScoringBloc extends Bloc<ScoringEvent, ScoringState> {
     Emitter<ScoringState> emit,
   ) async {
     final current = state;
-    if (current is! ScoringLoaded ||
-        !current.canConfirm ||
-        current.isClosing) {
+    if (current is! ScoringLoaded || !current.canConfirm || current.isClosing) {
       return;
     }
 

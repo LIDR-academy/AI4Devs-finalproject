@@ -16,14 +16,11 @@ enum UploadFinishedGameOutcome {
 
 class UploadFinishedGameUseCase {
   UploadFinishedGameUseCase({
-    required AuthRepository authRepository,
-    required GameSyncRepository gameSyncRepository,
-    required GameLocalDatasource gameLocalDatasource,
+    required this._authRepository,
+    required this._gameSyncRepository,
+    required this._gameLocalDatasource,
     Connectivity? connectivity,
-  })  : _authRepository = authRepository,
-        _gameSyncRepository = gameSyncRepository,
-        _gameLocalDatasource = gameLocalDatasource,
-        _connectivity = connectivity ?? Connectivity();
+  }) : _connectivity = connectivity ?? Connectivity();
 
   final AuthRepository _authRepository;
   final GameSyncRepository _gameSyncRepository;
@@ -65,7 +62,8 @@ class UploadFinishedGameUseCase {
 
       return switch (result) {
         GameUploadResult.synced => UploadFinishedGameOutcome.synced,
-        GameUploadResult.skipped => UploadFinishedGameOutcome.skippedAlreadySynced,
+        GameUploadResult.skipped =>
+          UploadFinishedGameOutcome.skippedAlreadySynced,
       };
     } on GameSyncException catch (error) {
       final syncStatus = switch (error.type) {
