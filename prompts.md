@@ -212,24 +212,42 @@ Define los 5 casos de uso más críticos del sistema con: actor, precondiciones,
 
 ---
 
-### 6. Tickets de Trabajo
+### 6. Tickets de Trabajo y Desarrollo del MVP
 
-**Prompt 1: Tickets de trabajo para la Entrega 1 (Sesión 012 — esta sesión)**
+**Prompt 1: Implementación de Component CRUD y EAV (Sesión 021 - PR #18)**
 
 ```
-Crea 3 tickets de trabajo detallados para el desarrollo: 1 de backend, 1 de frontend, y 1 de base de datos. Cada ticket debe tener ID, tipo, historia asociada, prioridad, estimación, rama, descripción, tareas detalladas, criterios de aceptación y dependencias.
+Estamos en la Fase 04 (Componentes). Necesito implementar el CRUD de Componentes con el modelo EAV que diseñamos.
+La vista debe usar HTMX para cargar dinámicamente los campos de parámetros (`ComponentTypeParameter`) cuando el usuario selecciona un `ComponentType`.
+Recuerda que los parámetros usan columnas tipadas (`value_numeric`, `value_text`, etc.) según el `data_type` del parámetro.
+Genera la vista, el form y el template partial correspondiente.
 ```
 
-**Cómo guié al asistente**: Los tickets fueron generados en esta sesión como parte de la preparación de la plantilla de entrega. Los revisé para asegurar que las tareas fueran lo suficientemente granulares y que los criterios de aceptación fueran verificables.
+**Cómo guié al asistente**: El agente inicializó las vistas y templates, pero olvidó manejar la inmutabilidad de los parámetros una vez creado el componente. Le corregí indicándole que, según el SRS, los parámetros y el tipo son inmutables tras la creación, por lo que en el modo de edición (update) debía renderizar los campos como *readonly* y no procesarlos en el POST.
+
+**Prompt 2: Árbol Documental con django-treebeard (Sesión 022 - PR #19)**
+
+```
+Vamos a implementar la Fase 05: Árbol Documental.
+Usa `django-treebeard` con Materialized Path. Necesitamos un CRUD básico para los nodos, pero lo más importante es la operación de reparentar (mover un nodo).
+Añade validación estricta: un nodo no se puede borrar si tiene documentos asociados o si tiene componentes anclados.
+```
+
+**Cómo guié al asistente**: El agente propuso usar una librería JS compleja para el drag-and-drop. Le pedí que simplificara la interacción usando `SortableJS` ligero y un endpoint HTMX/JSON mínimo que solo recibiera `node_id` y `new_parent_id`. 
 
 ---
 
-### 7. Pull Requests
+### 7. Pull Requests y Features Avanzadas
 
-**Prompt 1: Documentación de PRs existentes (Sesión 012 — esta sesión)**
+**Prompt 1: Integración de IA Gemini con PyMuPDF (Sesión 024 - PR #23)**
 
 ```
-Documenta las 3 Pull Requests más representativas del proyecto. Usa `gh pr view` para obtener los detalles de cada una.
+Iniciamos la Fase 09 (IA Extraction). Tenemos catálogos en PDF (datasheets) que el usuario subirá.
+Quiero un pipeline que:
+1. Extraiga el texto del PDF usando `PyMuPDF`.
+2. Envíe el texto a la API de Gemini (usa `google-genai`) junto con el esquema JSON de parámetros esperado para el `ComponentType` seleccionado.
+3. Devuelva los datos estructurados para rellenar el formulario.
+Crea el servicio `AIExtractionService` y los tests mockeando la API de Gemini.
 ```
 
-**Cómo guié al asistente**: El agente consultó las PRs reales del repositorio con GitHub CLI y las documentó con: URL, rama, estado, cambios (+/-), descripción e impacto. Seleccioné las PRs #1, #3 y #6 por ser las más representativas del progreso del proyecto.
+**Cómo guié al asistente**: El modelo Gemini devolvía el JSON envuelto en bloques de markdown (`` ` ` `json ... ` ` ` ``). Le pedí al agente que implementara un parser robusto en el `AIExtractionService` para limpiar la respuesta antes de intentar hacer el `json.loads()`. Además, le instruí que los valores extraídos por IA debían marcarse con `value_source = 'ai_accepted'` en el modelo EAV para mantener la trazabilidad frente a los manuales.
