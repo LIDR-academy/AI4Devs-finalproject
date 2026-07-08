@@ -67,7 +67,7 @@
         <h2>Tu hipoteca</h2>
         <p><strong>Etapa actual:</strong> {data.process.currentStage}</p>
         {#if data.process.propertyPrice !== null}
-          <p><strong>Precio de la vivienda:</strong> {formatCurrency(data.process.propertyPrice)}</p>
+          <p><strong>Precio de la vivienda:</strong> {formatCurrency(Number(data.process.propertyPrice))}</p>
         {/if}
         <a href="/mortgage-compass">Ver perfil financiero</a>
       </section>

@@ -41,32 +41,42 @@ export interface AnalyzeListingResponse {
   };
 }
 
-export interface DashboardResponse {
-  empty: boolean;
-  ctas?: { label: string; href: string }[];
-  process?: {
-    id: string;
-    status: string;
-    currentStage: string;
-    propertyPrice: number | null;
-    financialProfile: Record<string, unknown> | null;
-    updatedAt: string;
-  };
-  latestListing?: {
-    id: string;
-    url: string;
-    transparencyScore: number;
-    scoreLabel: string;
-    redFlagsCount: number;
-    createdAt: string;
-  };
-  checklist?: {
-    id: string;
-    progress: number;
-    completedItems: number;
-    totalItems: number;
-  };
+export interface DashboardProcess {
+  id: string;
+  status: string;
+  currentStage: string;
+  propertyPrice: number | string | null;
+  financialProfile: Record<string, unknown> | null;
+  updatedAt: string;
 }
+
+export interface DashboardListing {
+  id: string;
+  url: string;
+  transparencyScore: number;
+  scoreLabel: string;
+  redFlagsCount: number;
+  createdAt: string;
+}
+
+export interface DashboardChecklist {
+  id: string;
+  progress: number;
+  completedItems: number;
+  totalItems: number;
+}
+
+export type DashboardResponse =
+  | {
+      empty: true;
+      ctas?: { label: string; href: string }[];
+    }
+  | {
+      empty: false;
+      process: DashboardProcess;
+      latestListing: DashboardListing | null;
+      checklist: DashboardChecklist | null;
+    };
 
 export interface NegotiationPoint {
   category: string;

@@ -106,4 +106,17 @@
     font-size: 0.65rem;
     color: var(--color-text-muted);
   }
+  @media (max-width: 480px) {
+    .row {
+      grid-template-columns: 1fr;
+      gap: 0.25rem;
+    }
+    .value {
+      text-align: left;
+    }
+    .suffix {
+      display: inline;
+      margin-left: 0.5rem;
+    }
+  }
 </style>

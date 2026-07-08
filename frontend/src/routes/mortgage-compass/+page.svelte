@@ -35,7 +35,7 @@
         return;
       }
       const detail = await apiClient.get<PurchaseProcessDetail>(
-        `/api/purchase-processes/${dash.process!.id}`,
+        `/api/purchase-processes/${dash.process.id}`,
       );
       processId = detail.id;
       sourceListingId = detail.sourceListingId;
@@ -49,7 +49,8 @@
       computed = detail.computed;
       if (computed) step = 'strategies';
     } catch (e) {
-      // ignore — user can still fill the form
+      console.error(e);
+      error = 'No se pudo cargar tu proceso anterior. Puedes continuar desde cero.';
     }
   });
 
@@ -59,23 +60,30 @@
     error = null;
     try {
       const fp = $financialProfile;
-      const body = {
-        propertyPrice: fp.propertyPrice ?? 0,
-        financialProfile: {
-          savings: fp.savings,
-          monthlyIncome: fp.monthlyIncome,
-          existingDebts: fp.existingDebts,
-          region: fp.region,
-          persona: fp.persona ?? undefined,
-          interestRate: fp.interestRate,
-        },
+      const profile = {
+        savings: fp.savings,
+        monthlyIncome: fp.monthlyIncome,
+        existingDebts: fp.existingDebts,
+        region: fp.region,
+        persona: fp.persona ?? undefined,
+        interestRate: fp.interestRate,
       };
-      const created = await apiClient.post<PurchaseProcessDetail>(
-        '/api/purchase-processes',
-        body,
+      if (processId) {
+        await apiClient.patch(`/api/purchase-processes/${processId}`, {
+          propertyPrice: fp.propertyPrice ?? 0,
+          financialProfile: profile,
+        });
+      } else {
+        const created = await apiClient.post<PurchaseProcessDetail>(
+          '/api/purchase-processes',
+          { propertyPrice: fp.propertyPrice ?? 0, financialProfile: profile },
+        );
+        processId = created.id;
+      }
+      const detail = await apiClient.get<PurchaseProcessDetail>(
+        `/api/purchase-processes/${processId}`,
       );
-      processId = created.id;
-      computed = created.computed;
+      computed = detail.computed;
       step = 'costs';
     } catch (e) {
       error = e instanceof ApiError ? e.message : 'Error al guardar';
@@ -88,6 +96,17 @@
     if (!processId) return;
     loading = true;
     try {
+      const fp = $financialProfile;
+      await apiClient.patch(`/api/purchase-processes/${processId}`, {
+        financialProfile: {
+          savings: fp.savings,
+          monthlyIncome: fp.monthlyIncome,
+          existingDebts: fp.existingDebts,
+          region: fp.region,
+          persona: fp.persona ?? undefined,
+          interestRate: fp.interestRate,
+        },
+      });
       const detail = await apiClient.get<PurchaseProcessDetail>(
         `/api/purchase-processes/${processId}`,
       );
@@ -106,6 +125,10 @@
   function setStep(next: typeof step): void {
     step = next;
   }
+
+  $: moderateAmort = computed?.amortizationScenarios.find((s) => s.name === 'moderate') ?? null;
+  $: baselineAmort = computed?.amortizationScenarios.find((s) => s.name === 'baseline') ?? null;
+  $: moderateInvest = computed?.investmentScenarios.find((s) => s.name === 'moderate') ?? null;
 </script>
 
 <div class="container">
@@ -124,16 +147,19 @@
       class:active={step === 'profile'}
       on:click={() => setStep('profile')}
       disabled={!processId && step !== 'profile'}
+      aria-current={step === 'profile' ? 'step' : undefined}
     >1. Perfil</button>
     <button
       class:active={step === 'costs'}
       on:click={() => setStep('costs')}
       disabled={!computed}
+      aria-current={step === 'costs' ? 'step' : undefined}
     >2. Gastos ocultos</button>
     <button
       class:active={step === 'strategies'}
       on:click={() => setStep('strategies')}
       disabled={!computed}
+      aria-current={step === 'strategies' ? 'step' : undefined}
     >3. Estrategias</button>
   </nav>
 
@@ -233,13 +259,13 @@
       </p>
       <div class="insight">
         <strong>💡 Idea destacada:</strong>
-        {#if computed.amortizationScenarios[2] && computed.investmentScenarios[1]}
-          Si amortizas {formatCurrency(computed.amortizationScenarios[2].monthlyExtra)}/mes,
-          reduces {Math.round(computed.amortizationScenarios[0].yearsToPayoff - computed.amortizationScenarios[2].yearsToPayoff)} años
-          y ahorras {formatCurrency(computed.amortizationScenarios[0].totalInterest - computed.amortizationScenarios[2].totalInterest)} en intereses.
-          Si inviertes esa misma cantidad al 6%, acumularías
-          {formatCurrency(computed.investmentScenarios[1].nominalValue)} en 30 años
-          (valor real: {formatCurrency(computed.investmentScenarios[1].realValue)}).
+        {#if moderateAmort && baselineAmort && moderateInvest}
+          Si amortizas {formatCurrency(moderateAmort.monthlyExtra)}/mes,
+          reduces {Math.round(baselineAmort.yearsToPayoff - moderateAmort.yearsToPayoff)} años
+          y ahorras {formatCurrency(baselineAmort.totalInterest - moderateAmort.totalInterest)} en intereses.
+          Si inviertes esa misma cantidad al {(moderateInvest.annualReturn * 100).toFixed(0)}%, acumularías
+          {formatCurrency(moderateInvest.nominalValue)} en 30 años
+          (valor real: {formatCurrency(moderateInvest.realValue)}).
         {/if}
       </div>
       <div class="toggle-row">
@@ -267,7 +293,7 @@
   {/if}
 
   {#if error}
-    <div class="card error">
+    <div class="card error" role="alert">
       <p>{error}</p>
     </div>
   {/if}
@@ -282,18 +308,21 @@
           class:selected={$financialProfile.persona === 'conservador'}
           on:click={() => setPersona('conservador')}
           type="button"
+          aria-pressed={$financialProfile.persona === 'conservador'}
         >🛡️ Conservador</button>
         <button
           class="persona"
           class:selected={$financialProfile.persona === 'equilibrado'}
           on:click={() => setPersona('equilibrado')}
           type="button"
+          aria-pressed={$financialProfile.persona === 'equilibrado'}
         >⚖️ Equilibrado</button>
         <button
           class="persona"
           class:selected={$financialProfile.persona === 'arriesgado'}
           on:click={() => setPersona('arriesgado')}
           type="button"
+          aria-pressed={$financialProfile.persona === 'arriesgado'}
         >🚀 Arriesgado</button>
       </div>
     </section>
