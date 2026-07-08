@@ -1,17 +1,10 @@
-import adapter from '@sveltejs/adapter-node';
-import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import { sveltekit } from '@sveltejs/kit/vite';
 import { SvelteKitPWA } from '@vite-pwa/sveltekit';
+import { defineConfig } from 'vite';
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-  preprocess: vitePreprocess(),
-  kit: {
-    adapter: adapter(),
-    alias: {
-      $lib: 'src/lib',
-    },
-  },
+export default defineConfig({
   plugins: [
+    sveltekit(),
     SvelteKitPWA({
       registerType: 'autoUpdate',
       strategies: 'generateSW',
@@ -50,6 +43,4 @@ const config = {
       },
     }),
   ],
-};
-
-export default config;
+});
