@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import AIDisclaimer from '$lib/components/AIDisclaimer.svelte';
+  import DiffBadge from '$lib/components/DiffBadge.svelte';
   import { apiClient, ApiError } from '$lib/api/client';
   import { formatCurrency, formatDate, scoreColor } from '$lib/utils/format';
   import type { DashboardResponse } from '$lib/api/types';
@@ -55,6 +56,9 @@
           {data.latestListing.redFlagsCount} bandera{data.latestListing.redFlagsCount === 1 ? '' : 's'} roja{data.latestListing.redFlagsCount === 1 ? '' : 's'}
           · {formatDate(data.latestListing.createdAt)}
         </p>
+        {#if data.latestListing.diff}
+          <DiffBadge diff={data.latestListing.diff} />
+        {/if}
         <a href="/listing-lens">Volver a analizar</a>
       {:else}
         <p class="text-muted">Sin análisis aún.</p>
