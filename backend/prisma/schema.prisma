@@ -67,6 +67,8 @@ model AnalyzedListing {
   sourceHash      String   // SnapshotHash SHA-256 of canonical content
   previousHash    String?  // for diff computation (FR-022)
   diff            Json?    // computed diff vs previous snapshot
+  price          Int?     // listing's declared price (euros); null if not extracted
+  squareMeters   Int?     // listing's declared m²; null if not extracted
   transparencyScore Int    // 0-100
   scoreLabel      String   // baja | media | alta | excelente
   omissions       Json?    // array of strings

@@ -24,6 +24,8 @@ const baseStored: StoredAnalyzedListing = {
   sourceHash: 'hash-1',
   previousHash: null,
   diff: null,
+  price: null,
+  squareMeters: null,
   transparencyScore: 60,
   scoreLabel: 'media',
   omissions: [],
@@ -39,6 +41,7 @@ const baseStored: StoredAnalyzedListing = {
 function makeDeps(overrides: {
   repository?: Partial<AnalyzedListingRepositoryPort>;
   previous?: StoredAnalyzedListing | null;
+  cheerio?: Partial<CheerioAdapter>;
 } = {}) {
   const cheerio = {
     fetch: vi.fn(async (_url: string): Promise<ParsedListingHtml> => ({
@@ -49,6 +52,7 @@ function makeDeps(overrides: {
       price: 200000,
       squareMeters: 78,
     })),
+    ...overrides.cheerio,
   } as unknown as CheerioAdapter;
   const analyzer = {
     analyze: vi.fn(async () => ({
@@ -161,5 +165,40 @@ describe('AnalyzeListingUseCase — diff', () => {
       userId: 'user-1',
     });
     expect(repository.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('computes priceDelta and squareMetersDelta from previous stored values', async () => {
+    const previous: StoredAnalyzedListing = {
+      ...baseStored,
+      sourceHash: oldHash,
+      price: 180000,
+      squareMeters: 75,
+      redFlags: [],
+    };
+    const cheerio = {
+      fetch: vi.fn(async (_url: string): Promise<ParsedListingHtml> => ({
+        url: 'https://www.idealista.com/inmueble/12345/',
+        html: '<html></html>',
+        text: 'Piso reformado. Sin CEE. 220.000€',
+        declaredAddress: 'CL EJEMPLO 123',
+        price: 220000,
+        squareMeters: 78,
+      })),
+    } as unknown as CheerioAdapter;
+    const { useCase, repository } = makeDeps({ previous, cheerio });
+    await useCase.execute({
+      url: 'https://www.idealista.com/inmueble/12345/',
+      sessionId: 'sess-1',
+      userId: 'user-1',
+    });
+    const createCall = (repository.create as ReturnType<typeof vi.fn>).mock.calls[0]![0];
+    const diff = createCall.diff as {
+      unchanged: boolean;
+      priceDelta: number;
+      squareMetersDelta: number;
+    };
+    expect(diff.unchanged).toBe(false);
+    expect(diff.priceDelta).toBe(40000);
+    expect(diff.squareMetersDelta).toBe(3);
   });
 });

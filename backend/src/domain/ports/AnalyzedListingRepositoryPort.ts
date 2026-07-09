@@ -24,6 +24,8 @@ export interface CreateAnalyzedListingInput {
   sourceHash: string;
   previousHash: string | null;
   diff: ListingDiffResult | null;
+  price: number | null;
+  squareMeters: number | null;
   transparencyScore: number;
   scoreLabel: 'baja' | 'media' | 'alta' | 'excelente';
   omissions: string[];
@@ -42,6 +44,8 @@ export interface StoredAnalyzedListing {
   sourceHash: string;
   previousHash: string | null;
   diff: ListingDiffResult | null;
+  price: number | null;
+  squareMeters: number | null;
   transparencyScore: number;
   scoreLabel: string;
   omissions: unknown;

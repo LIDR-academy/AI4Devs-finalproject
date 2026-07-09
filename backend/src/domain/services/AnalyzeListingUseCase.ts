@@ -116,8 +116,8 @@ export class AnalyzeListingUseCase {
       ? this.diffService.diff(
           {
             hash: previous.sourceHash,
-            price: parsed.price,
-            squareMeters: parsed.squareMeters,
+            price: previous.price ?? undefined,
+            squareMeters: previous.squareMeters ?? undefined,
             yearBuilt: null,
             redFlags: previous.redFlags.map((f) => ({
               flag: f.flag as 'euphemistic_language' | 'vague_location' | 'missing_energy_certificate' | 'inflated_square_meters' | 'no_floor_plan' | 'suspicious_price' | 'stale_listing' | 'missing_community_costs' | 'hidden_fees_mentioned' | 'photos_mismatch' | 'missing_year_built' | 'missing_orientation',
@@ -127,8 +127,8 @@ export class AnalyzeListingUseCase {
           },
           {
             hash: currentHash.value,
-            price: parsed.price,
-            squareMeters: parsed.squareMeters,
+            price: parsed.price ?? undefined,
+            squareMeters: parsed.squareMeters ?? undefined,
             yearBuilt: null,
             redFlags: currentFlags,
           },
@@ -141,6 +141,8 @@ export class AnalyzeListingUseCase {
       sourceHash: currentHash.value,
       previousHash: previous?.sourceHash ?? null,
       diff,
+      price: parsed.price ?? null,
+      squareMeters: parsed.squareMeters ?? null,
       transparencyScore: analysis.transparencyScore.value,
       scoreLabel: analysis.transparencyScore.label,
       omissions: analysis.omissions,

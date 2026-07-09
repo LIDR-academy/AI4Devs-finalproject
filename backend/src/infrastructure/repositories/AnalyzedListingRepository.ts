@@ -21,6 +21,8 @@ export class AnalyzedListingRepository implements AnalyzedListingRepositoryPort 
         sourceHash: input.sourceHash,
         previousHash: input.previousHash,
         diff: input.diff ? (input.diff as Prisma.InputJsonValue) : Prisma.JsonNull,
+        price: input.price,
+        squareMeters: input.squareMeters,
         transparencyScore: input.transparencyScore,
         scoreLabel: input.scoreLabel,
         omissions: input.omissions as unknown as Prisma.InputJsonValue,
@@ -51,6 +53,8 @@ export class AnalyzedListingRepository implements AnalyzedListingRepositoryPort 
       sourceHash: row.sourceHash,
       previousHash: row.previousHash,
       diff: row.diff as StoredAnalyzedListing['diff'],
+      price: row.price,
+      squareMeters: row.squareMeters,
       transparencyScore: row.transparencyScore,
       scoreLabel: row.scoreLabel,
       omissions: row.omissions,
@@ -98,6 +102,8 @@ export class AnalyzedListingRepository implements AnalyzedListingRepositoryPort 
     sourceHash: string;
     previousHash: string | null;
     diff: unknown;
+    price: number | null;
+    squareMeters: number | null;
     transparencyScore: number;
     scoreLabel: string;
     omissions: unknown;
@@ -116,6 +122,8 @@ export class AnalyzedListingRepository implements AnalyzedListingRepositoryPort 
       sourceHash: row.sourceHash,
       previousHash: row.previousHash,
       diff: row.diff as StoredAnalyzedListing['diff'],
+      price: row.price,
+      squareMeters: row.squareMeters,
       transparencyScore: row.transparencyScore,
       scoreLabel: row.scoreLabel,
       omissions: row.omissions,
