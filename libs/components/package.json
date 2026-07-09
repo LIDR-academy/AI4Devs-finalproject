@@ -11,7 +11,8 @@
   },
   "peerDependencies": {
     "react": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "react-native-unistyles": "*"
   },
   "devDependencies": {
     "@storybook/react-native-web-vite": "^10.2.9",
@@ -19,6 +20,8 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.0",
+    "react-native-nitro-modules": "0.36.1",
+    "react-native-unistyles": "3.2.5",
     "react-native-web": "~0.21.0",
     "storybook": "^10.2.9",
     "typescript": "~6.0.3",

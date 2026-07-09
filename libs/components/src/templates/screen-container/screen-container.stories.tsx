@@ -4,7 +4,7 @@ import { Text } from 'react-native';
 import { ScreenContainer } from './screen-container';
 
 const meta = {
-  title: 'Components/ScreenContainer',
+  title: 'Templates/ScreenContainer',
   component: ScreenContainer,
 } satisfies Meta<typeof ScreenContainer>;
 
