@@ -1,134 +1,312 @@
-## Índice
+# RoboDock AI
 
-0. [Ficha del proyecto](#0-ficha-del-proyecto)
-1. [Descripción general del producto](#1-descripción-general-del-producto)
-2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
-3. [Modelo de datos](#3-modelo-de-datos)
-4. [Especificación de la API](#4-especificación-de-la-api)
-5. [Historias de usuario](#5-historias-de-usuario)
-6. [Tickets de trabajo](#6-tickets-de-trabajo)
-7. [Pull requests](#7-pull-requests)
+RoboDock AI es el proyecto final de AI4Devs. El objetivo es demostrar un MVP local que integra backend, base de datos, dashboard web y un modulo Edge para simular la lectura QR, deteccion de cubos por color y acciones de un brazo MaxArm durante una descarga.
 
----
+## Estado de Entrega 2
+
+La Entrega 2 implementa desarrollo funcional, no solo documentacion. El flujo validado es:
 
-## 0. Ficha del proyecto
+```text
+PostgreSQL Docker
+-> Backend API
+-> Edge simulation
+-> crear sesion por truckCode
+-> registrar cubos simulados
+-> registrar accion robot en mode=simulation
+-> consultar dashboard operacional
+-> visualizar estado en frontend
+```
 
-### **0.1. Tu nombre completo:**
+La arquitectura funcional completa queda conectada con contratos HTTP reales. El Edge de Entrega 2 corre en modo `simulation`: no usa camara real, no ejecuta OpenCV productivo y no mueve un MaxArm fisico.
 
-### **0.2. Nombre del proyecto:**
+## Alcance Entrega 2
+
+- Backend local con Node.js, Express, TypeScript, Prisma y PostgreSQL.
+- Modelo minimo con camiones, sesiones de descarga, cubos detectados y acciones robot.
+- Endpoints REST reales sin prefijo `/api`.
+- Edge Python en modo `simulation`, consumiendo los endpoints reales del backend.
+- Frontend React/Vite con dashboard operacional.
+- Evidencias QA para backend, Edge simulation y frontend.
+- Documentacion de ejecucion local y contratos.
 
-### **0.3. Descripción breve del proyecto:**
+## Roadmap Entrega 3
 
-### **0.4. URL del proyecto:**
+Entrega 3 debe reemplazar o complementar los adapters simulados por adapters hardware, manteniendo estables los contratos ya validados:
 
-> Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/).
+- lectura QR real con camara;
+- deteccion de cubos por color con OpenCV;
+- integracion MaxArm real solo con bandera explicita;
+- dry run previo antes de cualquier movimiento fisico;
+- validacion de coordenadas y condiciones seguras.
 
-### 0.5. URL o archivo comprimido del repositorio
+La simulacion de Entrega 2 no es trabajo desechable: es el primer adapter funcional y sirve como fallback permanente para QA, demo y desarrollo sin hardware.
 
-> Puedes tenerlo alojado en público o en privado, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/). También puedes compartir por correo un archivo zip con el contenido
+## Arquitectura resumida
 
+```mermaid
+flowchart LR
+    Edge[Edge Python simulation] -->|HTTP JSON| Backend[Backend API Express]
+    Frontend[Dashboard React/Vite] -->|HTTP JSON| Backend
+    Backend --> Prisma[Prisma ORM]
+    Prisma --> DB[(PostgreSQL 16)]
+```
 
----
+Responsabilidades:
 
-## 1. Descripción general del producto
+- `backend/`: API, validacion, persistencia, dashboard operacional.
+- `edge/`: simulacion QR, cubos y accion robot contra el backend.
+- `frontend/`: dashboard operacional consumiendo `GET /dashboard/operational`.
+- `docs/`: arquitectura, delivery, ADRs, API y evidencias.
+- `prompts/`: agentes, subagentes, skills, commands y playbooks usados.
 
-> Describe en detalle los siguientes aspectos del producto:
+## Estructura del repo
 
-### **1.1. Objetivo:**
+```text
+backend/     API Express + TypeScript + Prisma
+frontend/    Dashboard React + Vite + TypeScript
+edge/        Runner Python en modo simulation
+docs/        Documentacion, arquitectura, decisiones y evidencias
+prompts/     Agentes, subagentes, skills, commands y playbooks
+spikes/      Experimentos de factibilidad para Entrega 3
+docker-compose.yml
+```
 
-> Propósito del producto. Qué valor aporta, qué soluciona, y para quién.
+## Requisitos
 
-### **1.2. Características y funcionalidades principales:**
+- Docker Desktop con Docker Compose.
+- Node.js 20+.
+- npm.
+- Python 3.10+.
+- PowerShell en Windows.
 
-> Enumera y describe las características y funcionalidades específicas que tiene el producto para satisfacer las necesidades identificadas.
+## Levantar PostgreSQL con Docker
 
-### **1.3. Diseño y experiencia de usuario:**
+Desde la raiz del proyecto:
 
-> Proporciona imágenes y/o videotutorial mostrando la experiencia del usuario desde que aterriza en la aplicación, pasando por todas las funcionalidades principales.
+```powershell
+docker compose up -d
+docker compose ps
+```
 
-### **1.4. Instrucciones de instalación:**
-> Documenta de manera precisa las instrucciones para instalar y poner en marcha el proyecto en local (librerías, backend, frontend, servidor, base de datos, migraciones y semillas de datos, etc.)
+Configuracion incluida:
 
----
+- DB: `robodockdb`
+- User: `robodock_user`
+- Password: `robodock_pass`
+- Host port: `5434`
+- Container port: `5432`
+- Volumen: `robodock_postgres_data`
 
-## 2. Arquitectura del Sistema
+## Levantar backend
 
-### **2.1. Diagrama de arquitectura:**
-> Usa el formato que consideres más adecuado para representar los componentes principales de la aplicación y las tecnologías utilizadas. Explica si sigue algún patrón predefinido, justifica por qué se ha elegido esta arquitectura, y destaca los beneficios principales que aportan al proyecto y justifican su uso, así como sacrificios o déficits que implica.
+```powershell
+cd backend
+npm install
+```
 
+Crear `backend/.env` desde `backend/.env.example`:
 
-### **2.2. Descripción de componentes principales:**
+```env
+PORT=3000
+NODE_ENV=development
+DATABASE_URL="postgresql://robodock_user:robodock_pass@localhost:5434/robodockdb?schema=public"
+CORS_ORIGIN="http://localhost:5173"
+```
 
-> Describe los componentes más importantes, incluyendo la tecnología utilizada
+Preparar Prisma y datos demo:
 
-### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
+```powershell
+npm run prisma:generate
+npm run prisma:migrate -- --name init
+npm run prisma:seed
+```
 
-> Representa la estructura del proyecto y explica brevemente el propósito de las carpetas principales, así como si obedece a algún patrón o arquitectura específica.
+Ejecutar:
 
-### **2.4. Infraestructura y despliegue**
+```powershell
+npm run dev
+```
 
-> Detalla la infraestructura del proyecto, incluyendo un diagrama en el formato que creas conveniente, y explica el proceso de despliegue que se sigue
+Backend disponible en:
 
-### **2.5. Seguridad**
+```text
+http://localhost:3000
+```
 
-> Enumera y describe las prácticas de seguridad principales que se han implementado en el proyecto, añadiendo ejemplos si procede
+## Ejecutar Edge simulation
 
-### **2.6. Tests**
+Con el backend levantado:
 
-> Describe brevemente algunos de los tests realizados
+```powershell
+cd edge
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+python src\edge_runner.py --backend-url http://localhost:3000 --config config\edge.config.example.json
+```
 
----
+El runner simula `truckCode=TRUCK-001`, registra cubos y registra una accion `PICK_AND_DROP` con `mode=simulation`.
 
-## 3. Modelo de Datos
+## Levantar frontend
 
-### **3.1. Diagrama del modelo de datos:**
+```powershell
+cd frontend
+npm install
+```
 
-> Recomendamos usar mermaid para el modelo de datos, y utilizar todos los parámetros que permite la sintaxis para dar el máximo detalle, por ejemplo las claves primarias y foráneas.
+Crear `frontend/.env` desde `frontend/.env.example` si necesitas configurar la URL:
 
+```env
+VITE_BACKEND_URL=http://localhost:3000
+```
 
-### **3.2. Descripción de entidades principales:**
+Ejecutar:
 
-> Recuerda incluir el máximo detalle de cada entidad, como el nombre y tipo de cada atributo, descripción breve si procede, claves primarias y foráneas, relaciones y tipo de relación, restricciones (unique, not null…), etc.
+```powershell
+npm run dev
+```
 
----
+Abrir:
 
-## 4. Especificación de la API
+```text
+http://localhost:5173
+```
 
-> Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad
+## Validar flujo completo
 
----
+1. Levantar PostgreSQL:
 
-## 5. Historias de Usuario
+```powershell
+docker compose up -d
+```
 
-> Documenta 3 de las historias de usuario principales utilizadas durante el desarrollo, teniendo en cuenta las buenas prácticas de producto al respecto.
+2. Levantar backend:
 
-**Historia de Usuario 1**
+```powershell
+cd backend
+npm run dev
+```
 
-**Historia de Usuario 2**
+3. Verificar healthcheck:
 
-**Historia de Usuario 3**
+```powershell
+Invoke-RestMethod -Method GET -Uri "http://localhost:3000/health"
+```
 
----
+4. Ejecutar Edge simulation:
 
-## 6. Tickets de Trabajo
+```powershell
+cd edge
+python src\edge_runner.py --backend-url http://localhost:3000 --config config\edge.config.example.json
+```
 
-> Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
+5. Consultar dashboard operacional:
 
-**Ticket 1**
+```powershell
+Invoke-RestMethod -Method GET -Uri "http://localhost:3000/dashboard/operational" | ConvertTo-Json -Depth 10
+```
 
-**Ticket 2**
+6. Levantar frontend y validar visualmente:
 
-**Ticket 3**
+```powershell
+cd frontend
+npm run dev
+```
 
----
+El dashboard debe mostrar sesion activa, `TRUCK-001`, estado `IN_PROGRESS`, conteos por color, total de cubos, ultimas acciones robot y `mode=simulation`.
 
-## 7. Pull Requests
+## Endpoints implementados
 
-> Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
+Base URL local:
 
-**Pull Request 1**
+```text
+http://localhost:3000
+```
 
-**Pull Request 2**
+Rutas implementadas:
 
-**Pull Request 3**
+- `GET /health`
+- `POST /sessions`
+- `GET /sessions`
+- `GET /sessions/:id`
+- `POST /sessions/:id/cubes`
+- `POST /robot/actions`
+- `GET /dashboard/operational`
 
+La fuente detallada de contratos esta en `docs/api-design.md`.
+
+## Evidencias QA disponibles
+
+- `docs/evidence/backend-api-test-results.md`: backend aprobado con observaciones menores.
+- `docs/evidence/edge-simulation-test-results.md`: flujo Backend + PostgreSQL + Edge simulation aprobado con observaciones.
+- `docs/evidence/frontend-dashboard-test-results.md`: frontend aprobado con observaciones.
+
+## Que esta implementado
+
+- PostgreSQL 16 via Docker Compose.
+- Backend API funcional con persistencia Prisma.
+- Migracion inicial y seed demo.
+- Flujo de sesiones de descarga por `truckCode`.
+- Registro de cubos simulados por color.
+- Registro de acciones robot simuladas.
+- Dashboard operacional agregado.
+- Edge runner en modo `simulation`.
+- Frontend operacional consumiendo backend real.
+- Documentacion de arquitectura, delivery, ADRs, API y evidencias.
+
+## Fuera de alcance de Entrega 2
+
+- Movimiento fisico real del MaxArm.
+- Lectura real de camara como parte del flujo MVP.
+- Deteccion OpenCV productiva integrada al runner principal.
+- Calibracion completa camara -> cubo -> robot.
+- Seguridad fisica completa para operacion robotica real.
+- Autenticacion, RBAC, auditoria empresarial, WebSockets, colas o despliegue cloud.
+- Dashboard historico o analytics avanzado.
+
+## Prompts y agentes usados
+
+Agentes principales:
+
+- `prompts/agents/po.md`
+- `prompts/agents/delivery-manager.md`
+- `prompts/agents/architect.md`
+- `prompts/agents/governance.md`
+- `prompts/agents/backend.md`
+- `prompts/agents/edge.md`
+- `prompts/agents/frontend.md`
+- `prompts/agents/qa.md`
+- `prompts/agents/documenter.md`
+
+Subagentes y skills relevantes:
+
+- `prompts/subagents/backend-prisma.md`
+- `prompts/subagents/backend-api.md`
+- `prompts/subagents/edge-vision.md`
+- `prompts/subagents/edge-maxarm.md`
+- `prompts/subagents/qa-api.md`
+- `prompts/skills/api-design.md`
+- `prompts/skills/prisma-postgres.md`
+- `prompts/skills/opencv.md`
+- `prompts/skills/maxarm.md`
+- `prompts/skills/react-dashboard.md`
+- `prompts/skills/documentation.md`
+
+Commands y playbooks usados:
+
+- `prompts/commands/refine-story.md`
+- `prompts/commands/implement-feature.md`
+- `prompts/commands/create-endpoint.md`
+- `prompts/commands/test-flow.md`
+- `prompts/playbooks/delivery-2.md`
+
+## Documentacion relacionada
+
+- `docs/delivery/roadmap-entregas.md`
+- `docs/delivery/01-alcance-entrega2.md`
+- `docs/delivery/02-plan-delivery-entrega2.md`
+- `docs/architecture/architecture-entrega2.md`
+- `docs/api-design.md`
+- `backend/README.md`
+- `edge/README.md`
+- `frontend/README.md`
