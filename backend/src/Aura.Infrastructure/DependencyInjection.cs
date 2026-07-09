@@ -7,6 +7,7 @@ using Aura.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Minio;
 
 namespace Aura.Infrastructure;
 
@@ -42,6 +43,20 @@ public static class DependencyInjection
 
         services.AddScoped<ISlugGenerator, SlugGenerator>();
         services.AddScoped<IEventService, EventService>();
+
+        services.AddScoped<Minio.IMinioClient>(sp => 
+        {
+            var config = sp.GetRequiredService<IConfiguration>();
+            return new Minio.MinioClient()
+                .WithEndpoint(config["Minio:Endpoint"] ?? "localhost:9000")
+                .WithCredentials(
+                    config["Minio:AccessKey"] ?? "minioadmin",
+                    config["Minio:SecretKey"] ?? "minioadmin"
+                )
+                .WithSSL(config.GetValue<bool>("Minio:UseSSL", false))
+                .Build();
+        });
+        services.AddScoped<IObjectStorageService, MinioObjectStorageService>();
 
         return services;
     }

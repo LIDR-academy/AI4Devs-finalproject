@@ -68,6 +68,12 @@ public class EventService : IEventService
         return MapToResponse(ev);
     }
 
+    public async Task<IEnumerable<EventResponse>> GetEventsAsync(Guid userId)
+    {
+        var events = await _eventRepository.GetByUserIdAsync(userId);
+        return events.Select(MapToResponse);
+    }
+
     public async Task<EventResponse?> UpdateEventAsync(string slug, Guid userId, UpdateEventRequest request)
     {
         var ev = await _eventRepository.GetBySlugAsync(slug);
