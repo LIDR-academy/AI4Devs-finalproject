@@ -21,6 +21,7 @@ import { AutoAttachService } from './AutoAttachService';
 import { DiffService } from './DiffService';
 import { SnapshotHash } from '../value-objects/SnapshotHash';
 import { Coordinates } from '../value-objects/Coordinates';
+import type { ListingDiffResult } from '../ports/AnalyzedListingRepositoryPort';
 
 export interface AnalyzeListingInput {
   url: string;
@@ -41,6 +42,7 @@ export interface AnalyzeListingResult {
     declaredAddress: string | null;
     coordinates: unknown;
     catastroMatch: unknown;
+    diff: ListingDiffResult | null;
     createdAt: string;
   };
   processSummary: {
@@ -178,6 +180,7 @@ export class AnalyzeListingUseCase {
         declaredAddress: stored.declaredAddress,
         coordinates: stored.coordinates,
         catastroMatch: stored.catastroMatch,
+        diff: stored.diff,
         createdAt: stored.createdAt.toISOString(),
       },
       processSummary: {

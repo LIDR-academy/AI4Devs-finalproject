@@ -64,6 +64,7 @@ dashboardRouter.get('/', async (req: Request, res: Response, next: NextFunction)
             transparencyScore: latestListing.transparencyScore,
             scoreLabel: latestListing.scoreLabel,
             redFlagsCount: latestListing.redFlags.length,
+            diff: latestListing.diff,
             createdAt: latestListing.createdAt,
           }
         : null,
