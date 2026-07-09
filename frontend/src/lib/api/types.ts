@@ -31,6 +31,7 @@ export interface AnalyzeListingResponse {
     declaredAddress: string | null;
     coordinates: { lat: number; lng: number; source: string; confidence: number } | null;
     catastroMatch: { cadastralReference: string; officialSquareMeters: number; yearBuilt: number | null; address: string; matched: boolean } | null;
+    diff: ListingDiff | null;
     createdAt: string;
   };
   processSummary: {
@@ -56,6 +57,7 @@ export interface DashboardListing {
   transparencyScore: number;
   scoreLabel: string;
   redFlagsCount: number;
+  diff: ListingDiff | null;
   createdAt: string;
 }
 
@@ -155,4 +157,38 @@ export interface PurchaseProcessDetail {
   computed: ComputedMortgage | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface NegotiationResponse {
+  points: NegotiationPoint[];
+}
+
+export interface NegotiationPoint {
+  category: string;
+  question: string;
+  rationale: string;
+}
+
+export type ListingDiff =
+  | { unchanged: true; addedRedFlags: NegotiationPoint[]; removedRedFlags: NegotiationPoint[] }
+  | {
+      unchanged: false;
+      priceDelta?: number;
+      squareMetersDelta?: number;
+      yearBuiltChanged?: boolean;
+      addedRedFlags: NegotiationPoint[];
+      removedRedFlags: NegotiationPoint[];
+    };
+
+export type ProgressEventName =
+  | 'fetching_html'
+  | 'resolving_location'
+  | 'analyzing'
+  | 'cross_referencing_cadastro'
+  | 'done';
+
+export interface ProgressEvent {
+  event: ProgressEventName;
+  payload: unknown;
+  timestamp: string;
 }
