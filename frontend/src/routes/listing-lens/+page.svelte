@@ -3,7 +3,9 @@
   import LoadingState from '$lib/components/LoadingState.svelte';
   import RedFlagCard from '$lib/components/RedFlagCard.svelte';
   import NegotiationPoints from '$lib/components/NegotiationPoints.svelte';
-  import { apiClient, ApiError } from '$lib/api/client';
+  import { ApiError } from '$lib/api/client';
+  import { analyzeListingStream } from '$lib/api/streamingClient';
+  import { session } from '$lib/stores/session';
   import { formatCurrency, formatDate, scoreColor } from '$lib/utils/format';
   import type { AnalyzeListingResponse, RedFlagItem } from '$lib/api/types';
 
@@ -21,23 +23,18 @@
     result = null;
     currentStep = 'fetching_html';
 
-    // Simulate progress events (real impl would use SSE)
-    const stepTimer = setInterval(() => {
-      if (currentStep === 'fetching_html') currentStep = 'resolving_location';
-      else if (currentStep === 'resolving_location') currentStep = 'analyzing';
-      else if (currentStep === 'analyzing') currentStep = 'cross_referencing_cadastro';
-    }, 3000);
-
     try {
-      result = await apiClient.post<AnalyzeListingResponse>('/api/listings/analyze', { url });
+      result = await analyzeListingStream(
+        { url, sessionId: $session.sessionId },
+        (event) => { currentStep = event; },
+      );
     } catch (e) {
       if (e instanceof ApiError) {
         error = `${e.code}: ${e.message}`;
       } else {
-        error = 'Error de red. Inténtalo de nuevo.';
+        error = e instanceof Error ? e.message : 'Error de red. Inténtalo de nuevo.';
       }
     } finally {
-      clearInterval(stepTimer);
       loading = false;
       currentStep = null;
     }
