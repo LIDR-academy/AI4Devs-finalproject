@@ -1,12 +1,10 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["postgresqlExtensions"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
-  provider   = "postgresql"
-  url        = env("DATABASE_URL")
-  extensions = [uuid_ossp, citext]
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum UserRole {
@@ -43,7 +41,7 @@ enum ClassTypePreference {
 
 model User {
   id                   String   @id @default(uuid()) @db.Uuid
-  email                String   @unique @db.Citext
+  email                String   @unique
   password_hash        String
   name                 String
   phone                String
