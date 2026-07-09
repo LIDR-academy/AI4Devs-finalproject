@@ -16,8 +16,9 @@ public class AuthControllerTests
         var authService = Substitute.For<IAuthService>();
         var userRepo = Substitute.For<IUserRepository>();
         var userConsentRepo = Substitute.For<IUserConsentRepository>();
+        var configuration = Substitute.For<Microsoft.Extensions.Configuration.IConfiguration>();
 
-        var sut = new AuthController(authService, userRepo, userConsentRepo);
+        var sut = new AuthController(authService, userRepo, userConsentRepo, configuration);
 
         var httpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext();
         httpContext.Request.Scheme = "http";
