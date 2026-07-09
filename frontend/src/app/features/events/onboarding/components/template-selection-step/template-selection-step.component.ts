@@ -76,13 +76,13 @@ import { Template } from '../../../../../core/models/template.model';
       box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
     }
 
-    .template-image {
+    .template-image-container {
       height: 200px;
       position: relative;
       background: #ddd;
     }
 
-    .template-image img {
+    .template-image-container img {
       width: 100%;
       height: 100%;
       object-fit: cover;

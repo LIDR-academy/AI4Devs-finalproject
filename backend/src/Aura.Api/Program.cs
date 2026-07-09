@@ -38,6 +38,9 @@ try
     builder.Services.AddControllers(options =>
     {
         options.Filters.Add<ValidationFilter>();
+    }).AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
 
     builder.Services.AddOpenApi(options =>

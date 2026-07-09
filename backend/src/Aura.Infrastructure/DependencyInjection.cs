@@ -43,6 +43,9 @@ public static class DependencyInjection
 
         services.AddScoped<ISlugGenerator, SlugGenerator>();
         services.AddScoped<IEventService, EventService>();
+        services.AddScoped<IGuestService, GuestService>();
+        services.AddScoped<FluentValidation.IValidator<Aura.Core.DTOs.Guests.AddGuestRequest>, Aura.Core.Validators.Guests.AddGuestRequestValidator>();
+        services.AddScoped<FluentValidation.IValidator<Aura.Core.DTOs.Guests.ImportGuestRow>, Aura.Core.Validators.Guests.ImportGuestRowValidator>();
 
         services.AddScoped<Minio.IMinioClient>(sp => 
         {

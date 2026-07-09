@@ -36,6 +36,10 @@ import { EventResponse } from '../../../core/models/event.model';
                      style="padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 6px; text-decoration: none; color: #374151; font-weight: 500; font-size: 0.875rem; text-align: center; flex: 1;">
                     Edit Event
                   </a>
+                  <a [routerLink]="['/events', event.slug, 'guests']" 
+                     style="padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 6px; text-decoration: none; color: #374151; font-weight: 500; font-size: 0.875rem; text-align: center; flex: 1; background-color: #f9fafb;">
+                    Manage Guests
+                  </a>
                 </div>
               </div>
             </div>
