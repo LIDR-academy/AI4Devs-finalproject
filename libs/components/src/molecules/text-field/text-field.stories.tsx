@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { expect } from 'storybook/test';
 
 import { TextField } from './text-field';
 
@@ -15,7 +16,16 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Filled: Story = {args: {autoFocus: true}};
+export const Filled: Story = {args: {autoFocus: true, testID: 'email', id: 'email'},
+  play: async ({ canvas, userEvent }) => {
+  // 👇 Simulate interactions with the component
+  await userEvent.type(canvas.getByTestId('email'), 'email@provider.com');
+
+  // 👇 Assert DOM structure
+  await expect(
+    canvas.getByTestId('email'),
+  ).toHaveValue('email@provider.com');
+}};
 
 export const Outlined: Story = {
   args: { variant: 'outlined', autoFocus: true },

@@ -7,12 +7,14 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "check-types": "turbo run check-types",
+    "bootstrap": "pnpm install && pnpm check-types && pnpm lint && pnpm test",
     "test": "turbo run test",
     "clean-modules": "rm -rf node_modules .turbo apps/*/node_modules apps/*/.expo apps/*/.turbo apps/*/dist libs/*/node_modules libs/*/.turbo libs/*/dist libs/*/storybook-static",
     "clean-watchman": "watchman watch-del-all",
     "clean": "pnpm clean-modules && pnpm clean-watchman"
   },
   "devDependencies": {
-    "turbo": "^2.5.4"
+    "@playwright/test": "1.48.0",
+    "turbo": "^2.10.4"
   }
 }

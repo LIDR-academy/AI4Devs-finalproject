@@ -39,3 +39,8 @@ This is a monorepo for react-native/node/next applications.
 - Use Expo Router for react-native applications.
 - Always use functional React. Don't use Redux.
 - Always create a type for React components Props.
+
+### Testing
+- Use Storybook + Playwright for testing components that use storybook.
+- Use Jest, React Native Testing Library for testing hooks, services, daos and components logic.
+- Use Supabase Test Helpers for testing Supabase queries.
