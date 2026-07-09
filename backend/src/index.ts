@@ -56,8 +56,17 @@ const server = app.listen(env.PORT, () => {
   logger.info({ port: env.PORT, env: env.NODE_ENV }, 'Realista backend started');
 });
 
+// FR-027 portal health monitor — stub for MVP.
+// Production should use a proper cron (node-cron or external scheduler) to
+// retry .m. for blocked portals every 30 min. For MVP, we just log a
+// periodic reminder so operators know the feature is intentionally disabled.
+const portalHealthMonitorInterval = setInterval(() => {
+  logger.info('Portal health monitor: disabled in MVP (see FR-027)');
+}, 6 * 60 * 60 * 1000);
+
 const shutdown = (signal: string): void => {
   logger.info({ signal }, 'shutting down');
+  clearInterval(portalHealthMonitorInterval);
   server.close(() => {
     process.exit(0);
   });
