@@ -18,8 +18,19 @@ public class EventRepository : Repository<Event>, IEventRepository
             .FirstOrDefaultAsync(e => e.Slug == slug);
     }
 
-    public async Task<bool> ExistsBySlugAsync(string slug)
+    public Task<bool> ExistsBySlugAsync(string slug)
     {
-        return await _context.Set<Event>().AnyAsync(e => e.Slug == slug);
+        return _context.Set<Event>().AnyAsync(e => e.Slug == slug);
+    }
+
+    public async Task<IEnumerable<Event>> GetByUserIdAsync(Guid userId)
+    {
+        return await _context.Set<Event>()
+            .Include(e => e.Guests)
+                .ThenInclude(g => g.Invitations)
+                    .ThenInclude(i => i.Rsvp)
+            .Where(e => e.UserId == userId)
+            .OrderByDescending(e => e.CreatedAt)
+            .ToListAsync();
     }
 }

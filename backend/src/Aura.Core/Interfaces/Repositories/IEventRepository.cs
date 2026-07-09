@@ -6,4 +6,5 @@ public interface IEventRepository : IRepository<Event>
 {
     Task<Event?> GetBySlugAsync(string slug);
     Task<bool> ExistsBySlugAsync(string slug);
+    Task<IEnumerable<Event>> GetByUserIdAsync(Guid userId);
 }

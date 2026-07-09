@@ -15,6 +15,10 @@ export class EventService {
     return this.http.post<EventResponse>(this.apiUrl, request);
   }
 
+  getEvents(): Observable<EventResponse[]> {
+    return this.http.get<EventResponse[]>(this.apiUrl);
+  }
+
   getEvent(slug: string): Observable<EventResponse> {
     return this.http.get<EventResponse>(`${this.apiUrl}/${slug}`);
   }
@@ -25,5 +29,11 @@ export class EventService {
 
   deleteEvent(slug: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${slug}`);
+  }
+
+  uploadHeroImage(slug: string, file: File): Observable<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ url: string }>(`${this.apiUrl}/${slug}/upload-hero-image`, formData);
   }
 }

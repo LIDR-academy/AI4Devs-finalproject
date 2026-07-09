@@ -1,0 +1,124 @@
+<div class="editor-layout">
+  <!-- Sidebar Editor -->
+  <aside class="editor-sidebar" [formGroup]="editorForm">
+    <div class="sidebar-header">
+      <h2>Template Editor</h2>
+      <div class="save-indicator" [ngClass]="saveState()">
+        @if (saveState() === 'saved') {
+          <span class="icon">✓</span> Saved
+        } @else if (saveState() === 'saving') {
+          <span class="icon spinner">↻</span> Saving...
+        } @else if (saveState() === 'unsaved') {
+          <span class="icon">●</span> Unsaved changes
+        } @else if (saveState() === 'error') {
+          <span class="icon">⚠</span> Error saving
+        }
+      </div>
+    </div>
+
+    @if (errorMessage()) {
+      <div class="error-alert">{{ errorMessage() }}</div>
+    }
+
+    <div class="editor-section">
+      <h3>Template</h3>
+      <div class="template-grid">
+        @for (tpl of templates(); track tpl.id) {
+          <label class="template-card" [class.selected]="editorForm.get('templateId')?.value === tpl.id">
+            <input type="radio" formControlName="templateId" [value]="tpl.id" class="sr-only">
+            <div class="template-preview" [style.background-image]="'url(' + tpl.previewUrl + ')'"></div>
+            <span>{{ tpl.name }}</span>
+          </label>
+        }
+      </div>
+    </div>
+
+    <div class="editor-section">
+      <h3>Colors</h3>
+      <div class="color-picker-group">
+        <div class="color-field">
+          <label for="primaryColor">Primary Color</label>
+          <div class="color-input-wrapper">
+            <input type="color" id="primaryColor" formControlName="primaryColor">
+            <input type="text" formControlName="primaryColor" class="hex-input">
+          </div>
+        </div>
+        <div class="color-field">
+          <label for="secondaryColor">Secondary Color</label>
+          <div class="color-input-wrapper">
+            <input type="color" id="secondaryColor" formControlName="secondaryColor">
+            <input type="text" formControlName="secondaryColor" class="hex-input">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="editor-section">
+      <h3>Typography</h3>
+      <div class="form-group">
+        <label for="fontFamily">Font Family</label>
+        <select id="fontFamily" formControlName="fontFamily" class="form-control">
+          <option value="Inter">Inter</option>
+          <option value="Playfair Display">Playfair Display</option>
+          <option value="Montserrat">Montserrat</option>
+          <option value="Lora">Lora</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="editor-section">
+      <h3>Hero Image</h3>
+      <div 
+        class="upload-zone" 
+        [class.uploading]="isUploading()"
+        (dragover)="onDragOver($event)"
+        (drop)="onDrop($event)"
+        (click)="fileInput.click()">
+        
+        @if (isUploading()) {
+          <div class="upload-progress">Uploading...</div>
+        } @else if (editorForm.get('heroImageUrl')?.value) {
+          <div class="upload-preview" [style.background-image]="'url(' + editorForm.get('heroImageUrl')?.value + ')'"></div>
+          <div class="upload-overlay">
+            <span>Click or drag to change image</span>
+          </div>
+        } @else {
+          <div class="upload-placeholder">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+            </svg>
+            <span>Click or drag to upload (Max 5MB)</span>
+          </div>
+        }
+        <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/jpeg,image/png" class="sr-only">
+      </div>
+    </div>
+  </aside>
+
+  <!-- Live Preview -->
+  <main class="editor-preview">
+    <div class="preview-container" [attr.data-template]="getSelectedTemplateName()" [ngStyle]="getPreviewStyles()">
+      <!-- Mock Preview Content -->
+      <div class="preview-hero">
+        <div class="preview-hero-overlay"></div>
+        <div class="preview-hero-content">
+          <h1 class="preview-title" [style.color]="editorForm.get('primaryColor')?.value">
+            {{ eventData()?.coupleNames || 'Couple Names' }}
+          </h1>
+          <p class="preview-date" [style.color]="editorForm.get('secondaryColor')?.value">
+            {{ (eventData()?.eventDate | date:'longDate') || 'Event Date' }}
+          </p>
+        </div>
+      </div>
+      <div class="preview-body" [style.background-color]="editorForm.get('secondaryColor')?.value">
+        <div class="preview-card" [style.color]="editorForm.get('primaryColor')?.value">
+          <h2>Join Us</h2>
+          <p>{{ eventData()?.venueName || 'Venue Name' }}</p>
+          <app-button variant="primary" [style.background-color]="editorForm.get('primaryColor')?.value" [style.border-color]="editorForm.get('primaryColor')?.value">
+            RSVP Now
+          </app-button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
