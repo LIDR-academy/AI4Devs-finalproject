@@ -1,7 +1,9 @@
+import { useMemo } from 'react';
 import { Pressable, StyleProp, Text, View, ViewStyle } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
-import { useInteractionState } from '../../hooks/use-interaction-state';
+import { useInteractionState } from '@helsoft/hooks';
+import { spacing } from '../../theme/spacing';
 import { Icon } from '../icon/icon';
 import { StateLayer } from '../state-layer/state-layer';
 
@@ -39,8 +41,8 @@ export const Chip = ({
   const isSelected = type === 'filter' && selected;
 
   const fg = isSelected ? theme.colors.onSecondaryContainer : theme.colors.onSurfaceVariant;
-  const padLeft = icon || isSelected ? 12 : 16;
-  const padRight = onRemove ? 8 : 16;
+  const padLeft = icon || isSelected ? spacing.s3 : spacing.s4;
+  const padRight = onRemove ? spacing.s2 : spacing.s4;
 
   const content = (
     <>
@@ -89,7 +91,7 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: 'row',
     alignSelf: 'flex-start',
     alignItems: 'center',
-    gap: 8,
+    gap: spacing.s2,
     height: 32,
     paddingLeft: padLeft,
     paddingRight: padRight,
@@ -106,7 +108,7 @@ const styles = StyleSheet.create((theme) => ({
   body: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: spacing.s2,
     overflow: 'hidden',
   },
   label: (color: string) => ({

@@ -1,8 +1,8 @@
-import { ReactNode } from 'react';
+import { ReactNode, useMemo } from 'react';
 import { Pressable, StyleProp, Text, ViewStyle } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
-import { useInteractionState } from '../../hooks/use-interaction-state';
+import { useInteractionState } from '@helsoft/hooks';
 import { spacing } from '../../theme/spacing';
 import { Icon } from '../icon/icon';
 import { StateLayer } from '../state-layer/state-layer';
@@ -25,6 +25,9 @@ export type ButtonProps = {
 
 const HEIGHTS: Record<ButtonSize, number> = { small: spacing.s8, medium: spacing.s10, large: spacing.s14 };
 const PAD_X: Record<ButtonSize, number> = { small: spacing.s8, medium: spacing.s10, large: spacing.s12 };
+const PAD_TEXT = spacing.s3;
+const PAD_ICON = spacing.s4;
+const PAD_ICON_FULL = spacing.s6;
 
 /**
  * Button — Material Design 3 common button.
@@ -46,26 +49,29 @@ export const Button = ({
 
   styles.useVariants({ variant, size });
 
-  const fgByVariant: Record<ButtonVariant, string> = {
-    filled: theme.colors.onPrimary,
-    tonal: theme.colors.onSecondaryContainer,
-    elevated: theme.colors.primary,
-    outlined: theme.colors.primary,
-    text: theme.colors.primary,
-  };
+  const fgByVariant = useMemo(
+    () => ({
+      filled: theme.colors.onPrimary,
+      tonal: theme.colors.onSecondaryContainer,
+      elevated: theme.colors.primary,
+      outlined: theme.colors.primary,
+      text: theme.colors.primary,
+    }),
+    [theme],
+  );
   const fg = fgByVariant[variant];
 
-  const stateOpacity = disabled
-    ? 0
-    : press
-      ? theme.stateLayerOpacity.press
-      : hover
-        ? theme.stateLayerOpacity.hover
-        : 0;
+  const stateOpacity = useMemo(
+    () =>
+      disabled ? 0 : press ? theme.stateLayerOpacity.press : hover ? theme.stateLayerOpacity.hover : 0,
+    [disabled, press, hover, theme],
+  );
   const hasLabel = children != null;
-  const padX = variant === 'text' ? 12 : hasLabel ? PAD_X[size] : HEIGHTS[size] / 2;
-  const padLeft = icon && hasLabel ? (variant === 'text' ? 16 : 24) : padX;
-  const padRight = trailingIcon && hasLabel ? (variant === 'text' ? 16 : 24) : padX;
+  const padX = variant === 'text' ? PAD_TEXT : hasLabel ? PAD_X[size] : HEIGHTS[size] / 2;
+  const padLeft =
+    icon && hasLabel ? (variant === 'text' ? PAD_ICON : PAD_ICON_FULL) : padX;
+  const padRight =
+    trailingIcon && hasLabel ? (variant === 'text' ? PAD_ICON : PAD_ICON_FULL) : padX;
   const shadow =
     disabled || variant !== 'elevated' ? undefined : hover ? styles.elevatedShadowHover : styles.elevatedShadow;
 
@@ -95,7 +101,7 @@ const styles = StyleSheet.create((theme) => ({
     alignSelf: fullWidth ? 'stretch' : 'flex-start',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: spacing.s2,
     paddingLeft: padLeft,
     paddingRight: padRight,
     borderRadius: theme.shape.button,

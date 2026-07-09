@@ -1,7 +1,8 @@
+import { useMemo } from 'react';
 import { Pressable, StyleProp, ViewStyle } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
-import { useInteractionState } from '../../hooks/use-interaction-state';
+import { useInteractionState } from '@helsoft/hooks';
 import { Icon } from '../icon/icon';
 import { StateLayer } from '../state-layer/state-layer';
 
@@ -39,14 +40,20 @@ export const IconButton = ({
 
   styles.useVariants({ variant });
 
-  const fgByVariant: Record<IconButtonVariant, string> = {
-    standard: theme.colors.onSurfaceVariant,
-    filled: theme.colors.onPrimary,
-    tonal: theme.colors.onSecondaryContainer,
-    outlined: theme.colors.onSurfaceVariant,
-  };
+  const fgByVariant = useMemo(
+    () => ({
+      standard: theme.colors.onSurfaceVariant,
+      filled: theme.colors.onPrimary,
+      tonal: theme.colors.onSecondaryContainer,
+      outlined: theme.colors.onSurfaceVariant,
+    }),
+    [theme],
+  );
   const fg = fgByVariant[variant];
-  const stateOpacity = disabled ? 0 : press ? theme.stateLayerOpacity.press : hover ? theme.stateLayerOpacity.hover : 0;
+  const stateOpacity = useMemo(
+    () => (disabled ? 0 : press ? theme.stateLayerOpacity.press : hover ? theme.stateLayerOpacity.hover : 0),
+    [disabled, press, hover, theme],
+  );
 
   return (
     <Pressable

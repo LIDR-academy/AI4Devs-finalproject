@@ -1,1 +1,1 @@
-export * from './use-interaction-state';
+// Hooks have moved to @helsoft/hooks. Components should import from there.

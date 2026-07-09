@@ -1,8 +1,9 @@
+import { useMemo } from 'react';
 import { Pressable, StyleProp, Text, ViewStyle } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
-import { useInteractionState } from '../../hooks/use-interaction-state';
-import { spacing } from '../../theme/spacing';
+import { useInteractionState } from '@helsoft/hooks';
+import { spacing, layout } from '../../theme/spacing';
 import { Icon } from '../icon/icon';
 import { StateLayer } from '../state-layer/state-layer';
 
@@ -22,7 +23,9 @@ export type FabProps = {
 };
 
 const DIMS: Record<FabSize, number> = { small: spacing.s10, regular: spacing.s14, large: spacing.s24 };
-const ICON_SIZES: Record<FabSize, number> = { small: 24, regular: 24, large: 36 };
+const ICON_SIZES: Record<FabSize, number> = { small: layout.iconSize, regular: layout.iconSize, large: 36 };
+const GAP = spacing.s3;
+const PAD_EXTENDED = spacing.s5;
 
 /**
  * Fab — MD3 Floating Action Button. The single most prominent action;
@@ -42,15 +45,21 @@ export const Fab = ({
 
   styles.useVariants({ color, size });
 
-  const fgByColor: Record<FabColor, string> = {
-    primary: theme.colors.onPrimaryContainer,
-    secondary: theme.colors.onSecondaryContainer,
-    tertiary: theme.colors.onTertiaryContainer,
-    surface: theme.colors.primary,
-  };
+  const fgByColor = useMemo(
+    () => ({
+      primary: theme.colors.onPrimaryContainer,
+      secondary: theme.colors.onSecondaryContainer,
+      tertiary: theme.colors.onTertiaryContainer,
+      surface: theme.colors.primary,
+    }),
+    [theme],
+  );
   const fg = fgByColor[color];
   const extended = !!label;
-  const stateOpacity = press ? theme.stateLayerOpacity.press : hover ? theme.stateLayerOpacity.hover : 0;
+  const stateOpacity = useMemo(
+    () => (press ? theme.stateLayerOpacity.press : hover ? theme.stateLayerOpacity.hover : 0),
+    [press, hover, theme],
+  );
 
   return (
     <Pressable
@@ -73,9 +82,9 @@ const styles = StyleSheet.create((theme) => ({
     alignSelf: 'flex-start',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
+    gap: GAP,
     width,
-    paddingHorizontal: extended ? 20 : 0,
+    paddingHorizontal: extended ? PAD_EXTENDED : 0,
     overflow: 'hidden',
     variants: {
       color: {
