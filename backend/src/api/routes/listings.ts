@@ -41,6 +41,11 @@ listingsRouter.post('/analyze', rateLimiterMiddleware, async (req: Request, res:
   try {
     const body = analyzeSchema.parse(req.body);
     const url = validateListingUrl(body.url);
+    if (req.query.stream === 'true') {
+      const { analyzeStream } = await import('../lib/analyzeStream');
+      await analyzeStream(req, res, analyzeUseCase, { url, manualText: body.manualText });
+      return;
+    }
     const result = await analyzeUseCase.execute({
       url,
       sessionId: req.sessionId!,

@@ -25,7 +25,7 @@ export class ProgressEmitter extends EventEmitter {
     this.res.flushHeaders();
   }
 
-  emit(event: (typeof ProgressEmitter.EVENTS)[number], payload: unknown = {}): boolean {
+  emit(event: (typeof ProgressEmitter.EVENTS)[number] | 'done', payload: unknown = {}): boolean {
     const data = JSON.stringify({ event, payload, timestamp: new Date().toISOString() });
     this.res.write(`event: ${event}\ndata: ${data}\n\n`);
     return super.emit(event, payload);
