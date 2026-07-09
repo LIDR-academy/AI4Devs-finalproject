@@ -105,9 +105,112 @@ I now would like to define all the User Stories needed. I want to do that with t
 
 Things to consider: besides the documentation I may add about all the User stories in the repository, I want to use Linear with its MCP to properly manage the project while developing it.
 
+
+## Answer:
+
+This is an excellent question, and you're thinking about the right things! Let me break down a recommended workflow for you:
+
+### Recommended Workflow
+
+#### Phase 1: Define User Stories First (Outside Speckit)
+
+**Do not start with Speckit for user story definition.** Here's why:
+
+1. **Separation of concerns** - User stories are about *what* the system should do, while Speckit is about *how* to implement it. Mixing them too early can lead to implementation details creeping into requirements.
+
+2. **Human readability first** - User stories should be understandable by non-technical stakeholders, product owners, and the team.
+
+**What to do:**
+- Write user stories in standard formats (As a... I want... So that...) in markdown files in your repository
+- Create acceptance criteria for each story
+- Group them into epics/features
+- Use your existing documentation as input
+
+#### Phase 2: Create Linear Issues via MCP
+
+**Yes, absolutely use Linear from the start!** Here's the optimal flow:
+
+1. **Structure your repository** like this:
+```
+/specs
+  /stories
+    /epic-1-authentication
+      - user-story-login.md
+      - user-story-signup.md
+    /epic-2-dashboard
+      ...
+  architecture.md
+  data-models.md
+```
+
+2. **Use the Linear MCP to:**
+   - Create a project in Linear
+   - Create epics that mirror your repository structure
+   - Create user story issues from your markdown files
+   - Add labels, priorities, and estimates
+
+#### Phase 3: Then Use Speckit for Implementation
+
+**Only after user stories are defined and in Linear:**
+- Convert user stories to Speckit format
+- Generate implementation specs
+- Create technical tasks from stories
+
+### The "Bridge" Pattern
+
+Here's a concrete workflow you could implement:
+
+1. **In your repo:**
+```markdown
+## user-story-123-login.md
+
+### Story: User Login
+**As a** registered user  
+**I want to** login with email/password  
+**So that** I can access my account
+
+#### Acceptance Criteria:
+- [ ] Form validates email format
+- [ ] Password must be ≥ 8 chars
+- [ ] Show error for invalid credentials
+- [ ] Successful login redirects to dashboard
+
+#### Linear Link: [LNX-123]
+```
+
+2. **With MCP, you could ask me to:**
+```
+"Create Linear issue for this user story: 
+[content of the markdown file]"
+```
+
+3. **I would then use the Linear MCP to:**
+- Create the issue with proper formatting
+- Link it back to your repository file
+- Set appropriate labels/priority
+- Create sub-tasks for implementation
+
+### Concrete Recommendation
+
+Start with this workflow:
+
+1. **Today:** Write 3-5 core user stories in markdown in your repo
+2. **Next:** Use me with Linear MCP to create those in Linear
+3. **Then:** Get feedback from stakeholders on the stories
+4. **Finally:** Once stories are approved, convert to Speckit format for implementation
+
+This gives you:
+- ✅ Clean separation of requirements vs implementation
+- ✅ Proper project management from day 1
+- ✅ Traceability from story → implementation
+- ✅ Flexibility to change implementation details without changing requirements
+
+**Would you like me to help you create your first user story in the proper format, or set up the Linear integration?**
+
+
 ---
 
-# 10 - OpenCode - mimo-v2.5 (best result)
+# 10 - OpenCode - mimo-v2.5
 
 ### Instructions 
 
@@ -125,7 +228,7 @@ Group them into epics. Create a md file for each epic inside docs/epics/. Order 
 
 ---
 
-# 8 - OpenCode - DeepSeek V4 Flash Free - Plan mode
+# 11 - OpenCode - DeepSeek V4 Flash Free - Plan mode
 
 I feel like a lot of user stories look more like tasks. And the epics I feel like they don't really represent milestones in the project. Could we review all and make a plan so that we have less epics and those represent better the most important projects milestones, and better user stories defined with all the tasks assigned. If need, we could also define the tasks in a tasks directory. 
 Ask me anythinng you may need to get the best and most effective result.
@@ -140,6 +243,25 @@ Since I didn't like how the readme file was fill out previously I asked to do it
 
 ---
 
-# 8 - OpenCode - DeepSeek V4 Flash Free 
+# 12 - OpenCode - DeepSeek V4 Flash Free 
 
 Now, in order to fill out properly the @README.md file, grab the 3 most relevant user stories and fill it out with its tasks.
+
+---
+
+# 13 - OpenCode - DeepSeek V4 Flash Free 
+
+Can you connect to oLinear MCP?
+
+[answer]
+
+## Switch to plan mode
+
+In @docs/epics there are 5 epics defined and each of them has their own user stories and each user story has its own tasks. 
+I'd like to create and organize all tasks in the Coacher project so We can have a better view and management of the project while developing it. Ask me anything you need in order to do it right from the start
+
+[did the work in Linear through the MCP]
+
+Can you create a different label for each epic and assign it to all its user stories and tasks?
+
+---
