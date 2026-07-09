@@ -1,44 +1,23 @@
-\# Endpoint
+# Endpoint
 
-
-
-\## Nombre
-
-
+## Nombre
 
 POST /sessions
 
+---
 
+## Objetivo
 
-\---
+Crear una nueva sesion de descarga.
 
+---
 
+## Request
 
-\## Objetivo
-
-
-
-Crear una nueva sesión de descarga.
-
-
-
-\---
-
-
-
-\## Request
-
-
-
-\### Body
-
-
+### Body
 
 ```json
-
 {
-
-&#x20; "truckCode": "TRUCK-001"
-
+  "truckCode": "TRUCK-001"
 }
-
+```

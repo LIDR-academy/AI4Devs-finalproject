@@ -25,8 +25,8 @@ export const createRobotAction = async (input: RobotActionInput) => {
       mode: input.mode,
       color: input.color,
       metadata: {
-        dryRun: input.mode === "simulation",
-        ...(input.metadata ?? {})
+        ...(input.metadata ?? {}),
+        dryRun: input.mode === "simulation"
       }
     }
   });

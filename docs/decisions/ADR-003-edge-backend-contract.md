@@ -12,6 +12,8 @@ Contrato HTTP JSON entre Edge y Backend
 
 Propuesta
 
+Nota de actualizacion Entrega 2: esta ADR conserva el razonamiento historico sobre HTTP JSON. La implementacion MVP validada usa rutas REST granulares sin prefijo `/api`: `POST /sessions`, `POST /sessions/:id/cubes`, `POST /robot/actions` y `GET /dashboard/operational`.
+
 ---
 
 ## Contexto
@@ -70,7 +72,7 @@ Desventajas:
 
 Usar HTTP JSON entre Edge y Backend.
 
-El Edge inicia o usa una sesion mediante `POST /api/unload-sessions/start` y reporta eventos al backend mediante `POST /api/edge-events`.
+El Edge inicia o usa una sesion mediante `POST /sessions`, registra cubos mediante `POST /sessions/:id/cubes` y reporta acciones del robot mediante `POST /robot/actions`.
 
 Los eventos minimos son:
 
@@ -78,7 +80,7 @@ Los eventos minimos son:
 - `ROBOT_ACTION_RECORDED`
 - `SESSION_COMPLETED` como opcional
 
-El dashboard no consume al Edge directamente; consume estado agregado desde `GET /api/dashboard/operational`.
+El dashboard no consume al Edge directamente; consume estado agregado desde `GET /dashboard/operational`.
 
 ---
 

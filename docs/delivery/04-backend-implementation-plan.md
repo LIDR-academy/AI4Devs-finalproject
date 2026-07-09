@@ -1,5 +1,7 @@
 # Backend Implementation Plan - Entrega 2
 
+> Snapshot historico: este plan refleja la propuesta previa a la implementacion. El backend MVP validado finalmente usa rutas REST granulares sin prefijo `/api`: `GET /health`, `POST /sessions`, `GET /sessions`, `GET /sessions/:id`, `POST /sessions/:id/cubes`, `POST /robot/actions` y `GET /dashboard/operational`.
+
 ## 1. Estructura backend propuesta
 
 El backend debe implementarse de forma minima, ejecutable y facil de probar. La estructura propuesta evita capas innecesarias, pero separa rutas, servicios, validaciones y acceso a datos.
@@ -48,7 +50,7 @@ Alcance inicial:
 - No crear RBAC.
 - No crear modulos para entidades futuras como `EdgeNode`, `RobotArm`, `DropZone` o `SystemLog`.
 - No implementar WebSockets ni colas.
-- Mantener `GET /api/health` como endpoint tecnico auxiliar.
+- Mantener `GET /health` como endpoint tecnico auxiliar.
 
 ## 2. Modelo Prisma minimo
 
@@ -172,7 +174,7 @@ Reglas:
 
 ### Endpoints principales
 
-#### `POST /api/unload-sessions/start`
+#### `POST /sessions`
 
 Crea o reutiliza un camion por `truckCode` y crea una sesion en estado `IN_PROGRESS`.
 
@@ -203,7 +205,7 @@ Validaciones:
 - `truckCode` requerido.
 - Formato recomendado: `TRUCK-001`.
 
-#### `POST /api/edge-events`
+#### `POST /sessions/:id/cubes`
 
 Registra eventos enviados por Edge.
 
@@ -272,7 +274,7 @@ Validaciones:
 - `mode` permitido: `simulation`, `hardware`.
 - No exponer errores internos de Prisma.
 
-#### `GET /api/dashboard/operational`
+#### `GET /dashboard/operational`
 
 Entrega estado operacional agregado para el frontend.
 
@@ -309,7 +311,7 @@ Respuesta `200`:
 
 ### Endpoint tecnico auxiliar
 
-#### `GET /api/health`
+#### `GET /health`
 
 Respuesta `200`:
 
@@ -386,7 +388,7 @@ Scripts sugeridos en `backend/package.json`:
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "node dist/src/server.js",
     "prisma:migrate": "prisma migrate dev",
     "prisma:generate": "prisma generate",
     "prisma:seed": "prisma db seed"
@@ -403,7 +405,7 @@ npm run dev
 Healthcheck:
 
 ```bash
-curl http://localhost:3000/api/health
+curl http://localhost:3000/health
 ```
 
 ## 7. Plan de pruebas
@@ -414,7 +416,7 @@ curl http://localhost:3000/api/health
 2. Crear sesion con `TRUCK-001`.
 3. Registrar evento `CUBES_DETECTED`.
 4. Registrar evento `ROBOT_ACTION_RECORDED`.
-5. Consultar `GET /api/dashboard/operational`.
+5. Consultar `GET /dashboard/operational`.
 6. Verificar que el dashboard operacional pueda consumir esa respuesta.
 
 ### Casos negativos minimos
@@ -432,14 +434,14 @@ Si el tiempo alcanza:
 - Unit test para generacion de `UnloadSession.code`.
 - Unit test para validacion de colores.
 - Test de servicio para conteo por color.
-- Test de integracion para `POST /api/unload-sessions/start`.
+- Test de integracion para `POST /sessions`.
 
 ### Evidencia esperada
 
 - Salida de `npm run dev`.
 - Payloads usados.
 - Respuestas JSON.
-- Captura o salida de `GET /api/dashboard/operational`.
+- Captura o salida de `GET /dashboard/operational`.
 
 ## 8. Riesgos
 
@@ -450,7 +452,7 @@ Si el tiempo alcanza:
 | PostgreSQL local bloquea avance | Medio | Documentar `DATABASE_URL`, migracion y seed; usar datos demo simples |
 | Validaciones quedan dispersas | Medio | Crear validators por modulo y servicios pequeños |
 | `payload` de Edge queda demasiado libre | Medio | Validar `eventType` y campos minimos por tipo |
-| Dashboard necesita datos agregados no disponibles | Medio | Implementar `GET /api/dashboard/operational` despues de cubos/acciones |
+| Dashboard necesita datos agregados no disponibles | Medio | Implementar `GET /dashboard/operational` despues de cubos/acciones |
 | Claims de hardware se mezclan con simulacion | Alto | Persistir `mode` en `RobotAction` y usar `simulation` por defecto |
 | Errores internos se filtran al cliente | Medio | Usar middleware central de errores |
 
@@ -461,7 +463,7 @@ Si el tiempo alcanza:
 3. Crear schema minimo y migracion.
 4. Crear seed con camiones demo.
 5. Implementar healthcheck.
-6. Implementar `POST /api/unload-sessions/start`.
-7. Implementar `POST /api/edge-events`.
-8. Implementar `GET /api/dashboard/operational`.
+6. Implementar `POST /sessions`.
+7. Implementar `POST /sessions/:id/cubes` y `POST /robot/actions`.
+8. Implementar `GET /dashboard/operational`.
 9. Ejecutar pruebas manuales del flujo completo.

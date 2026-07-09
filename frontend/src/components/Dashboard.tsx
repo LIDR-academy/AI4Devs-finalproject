@@ -46,7 +46,7 @@ export function Dashboard() {
       {state === "loading" && <section className="state-panel">Cargando estado operacional...</section>}
 
       {state === "error" && (
-        <section className="state-panel state-panel-error">
+        <section className="state-panel state-panel-error" role="alert">
           <strong>Error de conexion</strong>
           <span>{error}</span>
         </section>

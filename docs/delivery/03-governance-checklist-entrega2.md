@@ -12,7 +12,7 @@ Estos controles son razonables para un MVP academico local y no deberian bloquea
 | Persistencia con Prisma | Usar Prisma para acceso a PostgreSQL y evitar SQL manual innecesario | `schema.prisma`, migracion o setup documentado |
 | Identificadores consistentes | Usar `id` como UUID tecnico y `code` como identificador funcional | Modelo y respuestas API |
 | Trazabilidad basica | Asociar cubos y acciones robot a una `UnloadSession` | Registros consultables desde backend/dashboard |
-| Estado operacional consultable | Exponer estado para dashboard desde backend | `GET /api/dashboard/operational` |
+| Estado operacional consultable | Exponer estado para dashboard desde backend | `GET /dashboard/operational` |
 | Claims acotados | Diferenciar implementado, simulado, dry run y futuro | README/docs finales |
 | Evidencia minima | Registrar comandos, payloads o capturas del flujo | Docs de pruebas/evidencias |
 | Prompts registrados | Mantener trazabilidad del uso de IA en la planificacion e implementacion | `prompts/` o docs de prompts |

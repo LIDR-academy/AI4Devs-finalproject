@@ -31,6 +31,6 @@ export const parseRobotActionInput = (body: unknown): RobotActionInput => {
     status: optionalOneOf(input.status, "status", robotActionStatuses) ?? "SUCCESS",
     mode: optionalOneOf(input.mode, "mode", executionModes) ?? "simulation",
     color: optionalOneOf(input.color, "color", cubeColors),
-    metadata: input.metadata === undefined ? { dryRun: true, source: "simulation" } : assertRecord(input.metadata, "metadata")
+    metadata: input.metadata === undefined ? { source: "simulation" } : assertRecord(input.metadata, "metadata")
   };
 };

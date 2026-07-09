@@ -66,6 +66,7 @@ Spikes relevantes:
 Para evitar retrabajo, estos contratos deben permanecer estables entre Entrega 2 y Entrega 3 salvo decision documentada:
 
 - `POST /sessions`
+- `GET /health`
 - `GET /sessions`
 - `GET /sessions/:id`
 - `POST /sessions/:id/cubes`
@@ -125,7 +126,7 @@ Estado de Entrega 2 al crear este roadmap:
 - PostgreSQL Docker validado.
 - Edge simulation validado por QA.
 - Dashboard operational backend validado.
-- Frontend pendiente de implementacion.
+- Frontend implementado y validado por QA.
 - Hardware real pendiente para Entrega 3.
 
 ## Proximo paso recomendado

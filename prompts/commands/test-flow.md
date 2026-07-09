@@ -1,40 +1,24 @@
-\# Command Test Flow
+# Command Test Flow
 
-
-
-\## Objetivo
+## Objetivo
 
 Probar flujo principal de Entrega 2.
 
+## Flujo
 
+1. Levantar backend.
+2. Ejecutar seed.
+3. Identificar camion por QR o `truckCode`.
+4. Crear sesion.
+5. Registrar cubos.
+6. Registrar accion robot.
+7. Consultar dashboard.
+8. Levantar frontend.
+9. Validar visualizacion.
 
-\## Flujo
+## Output
 
-1\. Levantar backend.
-
-2\. Ejecutar seed.
-
-3\. Crear sesión.
-
-4\. Registrar cubos.
-
-5\. Registrar acción robot.
-
-6\. Consultar dashboard.
-
-7\. Levantar frontend.
-
-8\. Validar visualización.
-
-
-
-\## Output
-
-\- Checklist.
-
-\- Evidencia.
-
-\- Defectos.
-
-\- Pendientes.
-
+- Checklist.
+- Evidencia.
+- Defectos.
+- Pendientes.

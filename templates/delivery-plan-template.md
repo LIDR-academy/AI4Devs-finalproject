@@ -1,136 +1,68 @@
+---
 
+# 4. delivery-plan-template.md
 
-\---
-
-
-
-\# 4. delivery-plan-template.md
-
-
-
-Este es el que más usarás como Subgerente.
-
-
+Este es el que mas usaras como Subgerente.
 
 ```md
+# Delivery Plan
 
-\# Delivery Plan
+## Objetivo
 
+[Objetivo del sprint o entrega]
 
+---
 
-\## Objetivo
+## Alcance
 
+### Incluido
 
+- ...
+- ...
+- ...
 
-\[Objetivo del sprint o entrega]
+### Excluido
 
+- ...
+- ...
 
+---
 
-\---
-
-
-
-\## Alcance
-
-
-
-\### Incluido
-
-
-
-\- ...
-
-\- ...
-
-\- ...
-
-
-
-\### Excluido
-
-
-
-\- ...
-
-\- ...
-
-
-
-\---
-
-
-
-\## Historias
-
-
+## Historias
 
 | ID | Historia | Estado |
-
 |------|------|------|
-
 | US-001 | ... | Pending |
 
+---
 
+## Dependencias
 
-\---
+- ...
+- ...
 
+---
 
+## Riesgos
 
-\## Dependencias
-
-
-
-\- ...
-
-\- ...
-
-
-
-\---
-
-
-
-\## Riesgos
-
-
-
-| Riesgo | Impacto | Mitigación |
-
+| Riesgo | Impacto | Mitigacion |
 |----------|----------|----------|
-
 | ... | ... | ... |
 
+---
 
+## Entregables
 
-\---
+- Backend
+- Frontend
+- Documentacion
 
+---
 
+## Definition of Done
 
-\## Entregables
-
-
-
-\- Backend
-
-\- Frontend
-
-\- Documentación
-
-
-
-\---
-
-
-
-\## Definition of Done
-
-
-
-\- Código implementado.
-
-\- Probado.
-
-\- Documentado.
-
-\- Demo funcional.
-
+- Codigo implementado.
+- Probado.
+- Documentado.
+- Demo funcional.
+```

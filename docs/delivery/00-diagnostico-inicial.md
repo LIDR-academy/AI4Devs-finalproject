@@ -1,5 +1,7 @@
 # Diagnostico Inicial - RoboDock AI
 
+> Snapshot historico: este diagnostico describe el estado inicial antes de la implementacion de Entrega 2. El estado actual del MVP esta documentado en `docs/delivery/05-final-review-entrega2.md`, `docs/api-design.md` y las evidencias QA.
+
 ## 1. Diagnostico de estructura
 
 La estructura base del laboratorio esta bien encaminada: existen las carpetas esperadas por `AGENTS.md` para separar backend, frontend, edge, documentacion y prompts.
