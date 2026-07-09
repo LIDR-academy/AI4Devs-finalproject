@@ -3,17 +3,20 @@ using System;
 using Aura.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Aura.Infrastructure.Data.Migrations
+namespace Aura.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260701171926_InitialSchema")]
+    partial class InitialSchema
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -238,10 +241,8 @@ namespace Aura.Infrastructure.Data.Migrations
                         .HasColumnName("event_date");
 
                     b.Property<DateTimeOffset>("EventEndDate")
-                        .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("event_end_date")
-                        .HasComputedColumnSql("\"EventDate\" + INTERVAL '1 day'", true);
+                        .HasColumnName("event_end_date");
 
                     b.Property<string>("FontFamily")
                         .IsRequired()

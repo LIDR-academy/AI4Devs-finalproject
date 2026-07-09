@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Aura.Infrastructure.Data.Migrations
+namespace Aura.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class InitialSchema : Migration
@@ -77,7 +77,7 @@ namespace Aura.Infrastructure.Data.Migrations
                     published_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    event_end_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, computedColumnSql: "\"EventDate\" + INTERVAL '1 day'", stored: true)
+                    event_end_date = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {

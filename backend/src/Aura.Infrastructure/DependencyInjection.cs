@@ -1,6 +1,9 @@
 using Aura.Core.Interfaces.Repositories;
+using Aura.Core.Interfaces.Services;
+using Aura.Core.Services;
 using Aura.Infrastructure.Data;
 using Aura.Infrastructure.Repositories;
+using Aura.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +34,15 @@ public static class DependencyInjection
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IDataRetentionJobRepository, DataRetentionJobRepository>();
         services.AddScoped<IDeliveryLogRepository, DeliveryLogRepository>();
+
+        // Auth & Email Services
+        services.AddScoped<IMagicLinkService, MagicLinkService>();
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IEmailService, SmtpEmailService>();
+
+        services.AddScoped<ISlugGenerator, SlugGenerator>();
+        services.AddScoped<IEventService, EventService>();
+
         return services;
     }
 }
