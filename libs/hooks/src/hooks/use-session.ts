@@ -13,13 +13,19 @@ export const useSession = (): UseSessionResult => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const supabase = getSupabase();
+    let supabase;
+    try {
+      supabase = getSupabase();
+    } catch {
+      setIsLoading(false);
+      return;
+    }
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
       setIsLoading(false);
-    });
+    }).catch(() => { setSession(null); setIsLoading(false); })
     const { data } = supabase.auth.onAuthStateChange((_event, next) => setSession(next));
-    return () => data.subscription.unsubscribe();
+    return () => data?.subscription?.unsubscribe();
   }, []);
 
   return { session, isLoading };

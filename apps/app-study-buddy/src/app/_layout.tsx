@@ -12,8 +12,10 @@ export default function RootLayout() {
   const { session, isLoading } = useSession();
 
   useEffect(() => {
-    if (!isLoading) SplashScreen.hideAsync();
+    if (!isLoading) SplashScreen.hideAsync().catch(() => {});
   }, [isLoading]);
+
+  if (isLoading) return null;
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
