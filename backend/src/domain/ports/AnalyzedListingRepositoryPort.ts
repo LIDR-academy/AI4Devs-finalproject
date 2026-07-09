@@ -7,12 +7,23 @@ import type { RedFlagItem } from '../value-objects/RedFlags';
 import type { Coordinates } from '../value-objects/Coordinates';
 import type { CatastroMatch } from './CatastroPort';
 
+export type ListingDiffResult =
+  | { changedAt: string }
+  | {
+      unchanged: boolean;
+      priceDelta?: number;
+      squareMetersDelta?: number;
+      yearBuiltChanged?: boolean;
+      addedRedFlags: { flag: string; severity: string; reasoning: string }[];
+      removedRedFlags: { flag: string; severity: string; reasoning: string }[];
+    };
+
 export interface CreateAnalyzedListingInput {
   processId: string;
   url: string;
   sourceHash: string;
   previousHash: string | null;
-  diff: { changedAt: string } | null;
+  diff: ListingDiffResult | null;
   transparencyScore: number;
   scoreLabel: 'baja' | 'media' | 'alta' | 'excelente';
   omissions: string[];
@@ -30,7 +41,7 @@ export interface StoredAnalyzedListing {
   url: string;
   sourceHash: string;
   previousHash: string | null;
-  diff: unknown;
+  diff: ListingDiffResult | null;
   transparencyScore: number;
   scoreLabel: string;
   omissions: unknown;
