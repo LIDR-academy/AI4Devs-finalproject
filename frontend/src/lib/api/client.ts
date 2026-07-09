@@ -71,3 +71,11 @@ export const apiClient = {
     api<T>(path, { ...opts, method: 'PATCH', body }),
   delete: <T>(path: string, opts?: ApiOptions) => api<T>(path, { ...opts, method: 'DELETE' }),
 };
+
+import type { NegotiationResponse } from './types';
+
+export const negotiationApi = {
+  getPoints(listingId: string): Promise<NegotiationResponse> {
+    return api<NegotiationResponse>(`/api/listings/${listingId}/negotiation-points`);
+  },
+};

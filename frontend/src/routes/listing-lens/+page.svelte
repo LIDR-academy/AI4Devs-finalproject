@@ -2,6 +2,7 @@
   import AIDisclaimer from '$lib/components/AIDisclaimer.svelte';
   import LoadingState from '$lib/components/LoadingState.svelte';
   import RedFlagCard from '$lib/components/RedFlagCard.svelte';
+  import NegotiationPoints from '$lib/components/NegotiationPoints.svelte';
   import { apiClient, ApiError } from '$lib/api/client';
   import { formatCurrency, formatDate, scoreColor } from '$lib/utils/format';
   import type { AnalyzeListingResponse, RedFlagItem } from '$lib/api/types';
@@ -95,6 +96,7 @@
         {#each result.listing.redFlags as flag}
           <RedFlagCard flag={flag} />
         {/each}
+        <NegotiationPoints listingId={result.listing.id} />
       {:else}
         <p class="text-muted">No se detectaron banderas rojas.</p>
       {/if}
