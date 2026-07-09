@@ -1811,3 +1811,58 @@ Usa modo Plan antes de ejecutar.
 Lee el ticket LPT-12 de Jira con acli e impleméntalo
 siguiendo las convenciones en .cursor/rules/.
 Usa modo Plan antes de ejecutar.
+
+---------------------------
+
+Investiga y corrige el error "FirebaseException ([core/duplicate-app]
+A Firebase App named '[DEFAULT]' already exists" que ocurre al lanzar
+la app en modo debug (flutter run) en el dispositivo.
+
+IMPORTANTE — criterio de calidad:
+La solución debe eliminar la causa raíz de la inicialización duplicada,
+NO silenciar ni capturar la excepción duplicate-app. Capturar y obviar
+una excepción es un code smell inaceptable en este proyecto.
+
+Paso 1 — Diagnóstico:
+Busca TODAS las ocurrencias de las siguientes cadenas en el proyecto
+(lib/, test/, incluyendo subdirectorios):
+
+- "initializeApp"
+- "Firebase.apps"
+- "firebase_core"
+
+Muéstrame los ficheros y líneas exactas donde aparece cada una antes
+de tocar nada.
+
+Paso 2 — Análisis:
+Con los resultados del paso 1, identifica:
+
+- ¿Hay más de una llamada a Firebase.initializeApp() fuera de main.dart?
+- ¿El módulo de inyección de dependencias (core/di/) instancia algún
+  datasource de Firebase antes de que main() termine la inicialización?
+- ¿El orden de inicialización en main.dart garantiza que Firebase.initializeApp()
+  se completa ANTES de registrar cualquier dependencia que use Firebase?
+
+Paso 3 — Fix correcto según causa raíz:
+
+- Si hay inicializaciones duplicadas fuera de main.dart: elimínalas.
+  Los datasources de Firebase (AuthFirebaseDatasource, GameFirestoreDatasource,
+  etc.) NO deben llamar a initializeApp — solo usar FirebaseAuth.instance
+  y FirebaseFirestore.instance directamente.
+- Si el problema es el orden en main.dart: reordena para que
+  Firebase.initializeApp() se complete antes de cualquier llamada
+  a get_it, Provider o cualquier otro sistema de DI.
+- Si Firebase.apps.isEmpty no funciona correctamente por un bug conocido
+  del SDK de FlutterFire con hot restart: documenta el bug con referencia
+  y aplica la solución recomendada oficialmente por FlutterFire, no un
+  parche propio.
+
+Paso 4 — Verificación:
+Tras el fix, confirma con flutter analyze que no hay errores, y describe
+exactamente qué causaba la duplicación para que pueda documentarse en
+listOfPrompts.md.
+
+No apliques ningún cambio hasta haber completado el Paso 1 y mostrado
+los resultados.
+
+--------------------------
