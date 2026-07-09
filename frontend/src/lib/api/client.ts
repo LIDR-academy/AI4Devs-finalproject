@@ -4,6 +4,7 @@
  */
 import { session } from '../stores/session';
 import { get } from 'svelte/store';
+import type { NegotiationResponse } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
 
@@ -71,8 +72,6 @@ export const apiClient = {
     api<T>(path, { ...opts, method: 'PATCH', body }),
   delete: <T>(path: string, opts?: ApiOptions) => api<T>(path, { ...opts, method: 'DELETE' }),
 };
-
-import type { NegotiationResponse } from './types';
 
 export const negotiationApi = {
   getPoints(listingId: string): Promise<NegotiationResponse> {

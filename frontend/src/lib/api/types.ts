@@ -81,12 +81,6 @@ export type DashboardResponse =
       computed: ComputedMortgage | null;
     };
 
-export interface NegotiationPoint {
-  category: string;
-  question: string;
-  rationale: string;
-}
-
 export interface TimelineMilestone {
   stage: string;
   title: string;
