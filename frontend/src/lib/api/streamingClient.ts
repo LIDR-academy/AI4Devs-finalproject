@@ -57,7 +57,11 @@ export async function analyzeListingStream(
       const data = JSON.parse(dataMatch[1]) as { event: string; payload: unknown };
 
       if (eventName === 'done') {
-        final = data.payload as AnalyzeListingResponse;
+        const payload = data.payload as AnalyzeListingResponse | { error: string };
+        if ('error' in payload && typeof payload.error === 'string') {
+          throw new Error(payload.error);
+        }
+        final = payload as AnalyzeListingResponse;
       } else {
         onProgress(eventName);
       }
