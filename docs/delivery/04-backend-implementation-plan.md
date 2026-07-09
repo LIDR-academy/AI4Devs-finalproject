@@ -1,6 +1,6 @@
 # Backend Implementation Plan - Entrega 2
 
-> Snapshot historico: este plan refleja la propuesta previa a la implementacion. El backend MVP validado finalmente usa rutas REST granulares sin prefijo `/api`: `GET /health`, `POST /sessions`, `GET /sessions`, `GET /sessions/:id`, `POST /sessions/:id/cubes`, `POST /robot/actions` y `GET /dashboard/operational`.
+> Snapshot historico: este plan refleja la propuesta previa a la implementacion. El backend MVP validado finalmente usa rutas REST granulares sin prefijo `/api`: `GET /health`, `POST /sessions`, `POST /sessions/:id/cubes`, `POST /robot/actions` y `GET /dashboard/operational`.
 
 ## 1. Estructura backend propuesta
 
@@ -207,51 +207,78 @@ Validaciones:
 
 #### `POST /sessions/:id/cubes`
 
-Registra eventos enviados por Edge.
+Registra detecciones de cubos enviadas por Edge.
 
-Eventos MVP:
-
-- `CUBES_DETECTED`
-- `ROBOT_ACTION_RECORDED`
-- `SESSION_COMPLETED` opcional
-
-Request `CUBES_DETECTED`:
+Request:
 
 ```json
 {
-  "sessionId": "uuid",
-  "eventType": "CUBES_DETECTED",
-  "payload": {
-    "source": "simulation",
-    "detections": [
+  "source": "simulation",
+  "detections": [
+    {
+      "color": "red",
+      "x": 143,
+      "y": 323,
+      "w": 84,
+      "h": 68,
+      "confidence": 0.9
+    }
+  ]
+}
+```
+
+Respuesta `201`:
+
+```json
+{
+  "session": {
+    "id": "uuid",
+    "code": "UNLOAD-20260607-001",
+    "status": "IN_PROGRESS",
+    "truckCode": "TRUCK-001",
+    "startedAt": "2026-06-07T21:00:00.000Z",
+    "finishedAt": null,
+    "cubes": [
       {
+        "id": "uuid",
+        "code": "CUBE-001",
         "color": "red",
+        "confidence": 0.9,
         "x": 143,
         "y": 323,
         "w": 84,
         "h": 68,
-        "confidence": 0.9
+        "detectedAt": "2026-06-07T21:00:10.000Z"
       }
-    ]
+    ],
+    "robotActions": []
   }
 }
 ```
 
-Request `ROBOT_ACTION_RECORDED`:
+Validaciones:
+
+- `:id` debe corresponder a una sesion existente.
+- `cubes` o `detections` requerido y no vacio.
+- `color` permitido: `red`, `blue`, `green`, `yellow`.
+- No exponer errores internos de Prisma.
+
+#### `POST /robot/actions`
+
+Registra acciones ejecutadas o simuladas por el robot.
+
+Request:
 
 ```json
 {
   "sessionId": "uuid",
-  "eventType": "ROBOT_ACTION_RECORDED",
-  "payload": {
-    "actionType": "PICK_AND_DROP",
-    "status": "SUCCESS",
-    "mode": "simulation",
-    "color": "red",
-    "metadata": {
-      "dryRun": true,
-      "commandPreview": "POSE 32 -204 124 1"
-    }
+  "actionType": "PICK_AND_DROP",
+  "status": "SUCCESS",
+  "mode": "simulation",
+  "color": "red",
+  "metadata": {
+    "source": "simulation",
+    "commandPreview": "POSE 32 -204 124 1"
   }
 }
 ```
@@ -260,17 +287,23 @@ Respuesta `201`:
 
 ```json
 {
-  "eventType": "CUBES_DETECTED",
-  "status": "recorded",
-  "sessionId": "uuid"
+  "action": {
+    "id": "uuid",
+    "code": "ACTION-001",
+    "sessionId": "uuid",
+    "actionType": "PICK_AND_DROP",
+    "status": "SUCCESS",
+    "mode": "simulation",
+    "color": "red"
+  }
 }
 ```
 
 Validaciones:
 
 - `sessionId` requerido y existente.
-- `eventType` permitido.
-- `color` permitido: `red`, `blue`, `green`, `yellow`.
+- `actionType` permitido: `PICK_AND_DROP`.
+- `status` permitido: `PLANNED`, `SUCCESS`, `ERROR`.
 - `mode` permitido: `simulation`, `hardware`.
 - No exponer errores internos de Prisma.
 
@@ -322,7 +355,7 @@ Respuesta `200`:
 }
 ```
 
-Nota: aunque el agente backend menciona endpoints granulares como `GET /sessions` o `POST /sessions/:id/cubes`, para Entrega 2 se recomienda mantener los 3 endpoints principales definidos por arquitectura. Si durante implementacion se agregan endpoints auxiliares, deben justificarse como soporte de prueba y no reemplazar el contrato MVP.
+Nota: aunque el agente backend puede mencionar endpoints auxiliares de consulta para soporte de prueba, para Entrega 2 se recomienda mantener como contrato documentado las rutas activas del MVP: `GET /health`, `POST /sessions`, `POST /sessions/:id/cubes`, `POST /robot/actions` y `GET /dashboard/operational`.
 
 ## 4. Variables de entorno
 

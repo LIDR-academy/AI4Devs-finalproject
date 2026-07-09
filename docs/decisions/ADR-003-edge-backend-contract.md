@@ -78,7 +78,14 @@ Los eventos minimos son:
 
 - `CUBES_DETECTED`
 - `ROBOT_ACTION_RECORDED`
-- `SESSION_COMPLETED` como opcional
+- `SESSION_COMPLETED` como evento terminal opcional, no como ruta principal separada del MVP
+
+| Ruta | Evento | Payload principal |
+|---|---|---|
+| `POST /sessions` | `SESSION_STARTED` | `truckCode` |
+| `POST /sessions/:id/cubes` | `CUBES_DETECTED` | `source`, `detections[]` o `cubes[]` |
+| `POST /robot/actions` | `ROBOT_ACTION_RECORDED` | `sessionId`, `actionType`, `status`, `mode`, `color`, `metadata` |
+| `GET /dashboard/operational` | Consulta operacional | Sin payload |
 
 El dashboard no consume al Edge directamente; consume estado agregado desde `GET /dashboard/operational`.
 
@@ -86,7 +93,7 @@ El dashboard no consume al Edge directamente; consume estado agregado desde `GET
 
 ## Justificacion
 
-HTTP JSON permite probar el flujo con scripts, curl o cliente Python, y mantiene la arquitectura comprensible. Un endpoint unico de eventos reduce la cantidad de API necesaria sin impedir evolucion futura.
+HTTP JSON permite probar el flujo con scripts, curl o cliente Python, y mantiene la arquitectura comprensible. Las rutas REST granulares del MVP reducen ambiguedad por caso de uso sin impedir evolucion futura.
 
 Esta decision tambien favorece trazabilidad: todos los eventos relevantes quedan asociados a `sessionId` y persistidos por el backend.
 
