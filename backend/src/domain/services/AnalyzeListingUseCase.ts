@@ -18,6 +18,7 @@ import type {
 } from '../ports/AnalyzedListingRepositoryPort';
 import type { ChecklistRepositoryPort } from '../ports/ChecklistRepositoryPort';
 import { AutoAttachService } from './AutoAttachService';
+import { DiffService } from './DiffService';
 import { SnapshotHash } from '../value-objects/SnapshotHash';
 import { Coordinates } from '../value-objects/Coordinates';
 
@@ -51,6 +52,8 @@ export interface AnalyzeListingResult {
 }
 
 export class AnalyzeListingUseCase {
+  private readonly diffService = new DiffService();
+
   constructor(
     private readonly cheerio: CheerioAdapter,
     private readonly analyzer: ListingAnalyzerPort,
@@ -102,10 +105,35 @@ export class AnalyzeListingUseCase {
     const canonical = `${parsed.url}|${parsed.text}|${parsed.price}|${parsed.squareMeters}`;
     const currentHash = SnapshotHash.compute(canonical);
     const previous = await this.repository.findPreviousByUrl(processId, input.url);
-    const diff =
-      previous && previous.sourceHash !== currentHash.value
-        ? { changedAt: new Date().toISOString() }
-        : null;
+
+    const currentFlags = analysis.redFlags.items.map((f) => ({
+      flag: f.flag,
+      severity: f.severity,
+      reasoning: f.reasoning,
+    }));
+
+    const diff = previous
+      ? this.diffService.diff(
+          {
+            hash: previous.sourceHash,
+            price: parsed.price,
+            squareMeters: parsed.squareMeters,
+            yearBuilt: null,
+            redFlags: previous.redFlags.map((f) => ({
+              flag: f.flag as 'euphemistic_language' | 'vague_location' | 'missing_energy_certificate' | 'inflated_square_meters' | 'no_floor_plan' | 'suspicious_price' | 'stale_listing' | 'missing_community_costs' | 'hidden_fees_mentioned' | 'photos_mismatch' | 'missing_year_built' | 'missing_orientation',
+              severity: f.severity as 'low' | 'medium' | 'high',
+              reasoning: f.reasoning,
+            })),
+          },
+          {
+            hash: currentHash.value,
+            price: parsed.price,
+            squareMeters: parsed.squareMeters,
+            yearBuilt: null,
+            redFlags: currentFlags,
+          },
+        )
+      : null;
 
     const stored = await this.repository.create({
       processId,
