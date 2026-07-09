@@ -2,6 +2,9 @@
 
 This index is auto-generated. Each entry links to a per-task evidence file with prompt, actions, deliverables, and test results.
 
+## 2026-07-09
+- [MVP-COMPLETION](./2026-07-09-MVP-COMPLETION.md)
+
 ## 2026-07-08
 - [FRONTEND-VERIFICATION](./2026-07-08-FRONTEND-VERIFICATION.md)
 - [FR024](./2026-07-08-FR024.md)
