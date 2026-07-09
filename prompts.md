@@ -443,3 +443,175 @@ Ajuste humano: se mejoró claridad.
 ```
 
 ```
+
+---
+
+## 8. Resumen de avance y prompts de arranque
+
+> Antes de iniciar implementación, se documenta qué ya quedó definido y qué nuevos prompts se usarán para arrancar desarrollo con foco en el MVP.
+
+### 8.1 Resumen de lo que ya hicimos
+
+Estado actual consolidado:
+
+- Se definió y ajustó el contexto del proyecto en `project_context.md`.
+- Se definió una arquitectura limpia y funcional en `architecture.md`.
+- Se consolidó stack fullstack TypeScript con Node + React + PostgreSQL en `tech_stack.md`.
+- Se dejó planificación local por tickets y sprints (`planning/local-kanban.md` y `planning/plan-inicial-mvp.md`).
+- Se creó un marco de trabajo de agentes/rules/skills en modo lean para ejecutar el MVP sin sobreingeniería.
+- Se incorporó foco en confiabilidad de salida IA (contrato de estimación y validación de parsing).
+
+Decisiones clave que impactan implementación:
+
+- Arquitectura cliente-servidor simple, sin microservicios en MVP.
+- Backend funcional (sin clases), modular por funciones.
+- Integración de IA desde backend únicamente.
+- Estrategia de test IDs en frontend para automatización posterior.
+- Flujo E2E único como prioridad de entrega.
+
+---
+
+### 8.2 Prompts nuevos para iniciar construcción
+
+> Estos prompts extienden los anteriores y sirven para pasar de diseño a ejecución técnica.
+
+---
+
+**Prompt 1 (Kickoff técnico por sprint):**
+
+Actuá como Tech Lead de un MVP fullstack.
+
+Con base en `README.md`, `project_context.md`, `architecture.md`, `tech_stack.md` y `planning/local-kanban.md`, armá un plan de ejecución para **Sprint 1** con:
+
+- orden de implementación por ticket (T01, T02, T05, T06)
+- dependencias entre tareas
+- definición de done por ticket
+- riesgos técnicos por tarea
+- checklists de validación rápida
+
+No propongas features fuera del MVP.
+
+Ajuste humano: se busca arrancar construyendo primero el flujo base persistente y validable de punta a punta.
+
+---
+
+**Prompt 2 (Arquitectura funcional backend):**
+
+Actuá como Backend Developer senior.
+
+Diseñá la estructura inicial del backend en Node + Express + TypeScript + Prisma usando un enfoque **100% funcional** (sin clases), incluyendo:
+
+- estructura de carpetas
+- responsabilidades por módulo
+- contratos de entrada/salida
+- estrategia de validación
+- estrategia de manejo de errores
+
+Debe quedar lista para implementar:
+
+- `POST /projects`
+- `GET /projects`
+- `GET /projects/:id`
+- `POST /projects/:id/estimate`
+
+Ajuste humano: se prioriza claridad y mantenibilidad sobre patrones complejos.
+
+---
+
+**Prompt 3 (Contrato de salida IA y parser):**
+
+Actuá como AI Estimation Engineer.
+
+Definí un contrato de salida estricto para la estimación IA que incluya:
+
+- fases
+- esfuerzo por rol
+- tokens estimados
+- costo estimado
+- supuestos
+- riesgos
+
+Además, devolvé:
+
+- reglas de validación del contrato
+- estrategia de normalización
+- estrategia de fallback cuando la respuesta sea incompleta o inválida
+- casos de prueba mínimos para parser/validador
+
+Ajuste humano: este prompt reduce la variabilidad del modelo y previene errores en el reporte.
+
+---
+
+**Prompt 4 (Frontend con test IDs):**
+
+Actuá como Frontend Developer.
+
+Diseñá los componentes y flujo de frontend para el MVP (crear proyecto, casos de uso, roles, reporte), incluyendo una convención obligatoria de `data-testid` para automatización futura.
+
+Definí:
+
+- árbol de componentes
+- estado local por pantalla
+- puntos de integración API
+- estados de loading/error/empty
+- lista de `data-testid` sugeridos por pantalla
+
+Ajuste humano: se prepara el frontend para E2E robusto sin depender de texto visual.
+
+---
+
+**Prompt 5 (Plan de testing mínimo viable):**
+
+Actuá como QA Engineer.
+
+Definí un plan de testing MVP con cobertura mínima obligatoria para:
+
+- unit tests
+- integration tests
+- E2E del flujo principal
+
+Incluí:
+
+- casos felices
+- casos de error
+- criterios de bloqueo para merge
+- riesgos de regresión más probables
+
+Ajuste humano: se evita sobretestear, pero se protege el flujo crítico completo.
+
+---
+
+**Prompt 6 (Deploy y secretos):**
+
+Actuá como DevOps Engineer para MVP.
+
+Proponé una estrategia mínima de despliegue para frontend y backend con PostgreSQL gestionado, incluyendo:
+
+- variables de entorno requeridas
+- pipeline básico de CI
+- validaciones previas a deploy
+- plan de rollback simple
+
+No incluyas infraestructura enterprise ni complejidad innecesaria.
+
+Ajuste humano: el objetivo es salir a producción temprana con control básico de riesgo.
+
+---
+
+### 8.3 Prompt maestro de ejecución diaria
+
+**Prompt maestro:**
+
+Actuá como Orchestrator de este repositorio.
+
+Tomá el siguiente ticket del `planning/local-kanban.md`, validá contexto en `README.md`, `project_context.md`, `architecture.md` y `tech_stack.md`, y devolvé:
+
+- plan técnico breve
+- archivos a crear o modificar
+- criterios de aceptación verificables
+- tests mínimos a incluir
+- riesgos y mitigaciones
+
+Mantené foco estricto en MVP y no agregues alcance nuevo.
+
+Ajuste humano: permite operar ticket por ticket con consistencia y trazabilidad.
