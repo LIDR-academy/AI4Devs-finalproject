@@ -1,6 +1,6 @@
 # TDD — Three Laws & Red→Green→Refactor (TypeScript)
 
-The `tdd_craftsman` obeys these. Every line of production code exists because a failing test demanded it first.
+The `implementator` obeys these. Every line of production code exists because a failing test demanded it first.
 
 ## The Three Laws (non-negotiable)
 

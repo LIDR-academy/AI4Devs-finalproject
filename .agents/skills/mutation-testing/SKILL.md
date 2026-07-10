@@ -1,6 +1,6 @@
 ---
 name: mutation-testing
-description: Run mutation testing with StrykerJS on a feature's CHANGED source files in this monorepo (`@helsoft/services`, `@helsoft/hooks`, `@helsoft/components`) and prove the tests bite. Use when the orchestrator's mutation phase runs, after a suite is green, or on "run mutation", "stryker", "mutation score", "are my tests any good". Scopes to changed files only (never whole-repo). Do NOT use to write or fix tests — a surviving mutant is handed back to the TDD craftsman.
+description: Run mutation testing with StrykerJS on a feature's CHANGED source files in this monorepo (`@helsoft/services`, `@helsoft/hooks`, `@helsoft/components`) and prove the tests bite. Use when the orchestrator's mutation phase runs, after a suite is green, or on "run mutation", "stryker", "mutation score", "are my tests any good". Scopes to changed files only (never whole-repo). Do NOT use to write or fix tests — a surviving mutant is handed back to the TDD implementator.
 ---
 
 # Mutation testing — proving the tests bite (StrykerJS)
@@ -54,4 +54,4 @@ Per-lib config lives in `libs/<lib>/stryker.config.mjs` (Jest runner; `coverageA
 
 ## Reporting
 
-Write `docs/features/<name>/mutation.md`: per-lib `total / killed / survived / score`, and each **surviving mutant** as `file:line` + the mutation applied. A survivor is not fixed here — it's handed to `tdd_craftsman`, who writes the red test that kills it.
+Write `docs/features/<name>/mutation.md`: per-lib `total / killed / survived / score`, and each **surviving mutant** as `file:line` + the mutation applied. A survivor is not fixed here — it's handed to `implementator`, who writes the red test that kills it.

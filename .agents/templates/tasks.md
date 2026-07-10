@@ -6,7 +6,7 @@ review_round: 0     # incremented by reviews_lead; cap 3
 
 # Tasks — <name>
 
-Index of atomic tasks (one `task-N.md` each), grouped by vertical slice. `orchestrator_lead` owns the `phase` above; `tdd_craftsman` flips each task's `status`.
+Index of atomic tasks (one `task-N.md` each), grouped by vertical slice. `orchestrator_lead` owns the `phase` above; `implementator` flips each task's `status`.
 
 | Task | Slice | Scenarios | Status | Paths |
 |---|---|---|---|---|

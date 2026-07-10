@@ -3,6 +3,10 @@
 **Verdict:** PASS | DOD_FAILED
 _Validated by `dod_validator`. Each item is re-checked against the code, not trusted from prior reports. Cite evidence (command output, `file:line`, links to `review.md` / `mutation.md`)._
 
+## Accepted minors (documented risk-accepted, if any)
+_Only **minor** findings left after the 3-round review loop, explicitly risk-accepted by the human and mirrored in `spec.md` Open decisions. PASS may carry these; it may NOT carry an open blocker/major or an unmet mutation threshold. Leave empty if none._
+- _none_
+
 ## Functionality
 - [ ] All acceptance criteria in `spec.md` met
 - [ ] 4 UI states implemented (if UI)

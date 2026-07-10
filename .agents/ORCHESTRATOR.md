@@ -19,14 +19,16 @@ This pipeline takes one user story from `user-stories/` to a validated, PR-ready
 pending
   → spec_partner        → spec.md, risks.md, tasks.md, task-N.md, gherkin-scenarios.md   [spec_ready]
   → ⏸ HUMAN GATE: approve the spec + Gherkin contract (single approval)            [approved]
-  → tdd_craftsman       → src + tests, one vertical slice at a time                 [in_progress]
-  → reviews_lead        → 6 reviewers in parallel → review.md                       [in_review]
-  → mutation_tester     → StrykerJS on changed files → mutation.md                  [mutation]
+  → implementator       → src + tests, one vertical slice at a time                 [in_progress]
+  → reviews_lead + mutation_tester  → review.md + mutation.md                       [in_review → mutation]
+        └ ONE quality loop (≤ 3 rounds): implementator fixes EVERY review finding
+          (any severity, incl. minor) + every surviving mutant; after each fix,
+          review AND mutation both re-run. review.md keeps only still-open findings.
   → dod_validator       → dod.md (validate only, no PR)                             [pr_ready]
   → ⟵ human opens & merges the PR                                                    [done]
 ```
 
-Only `orchestrator_lead` writes the feature phase (in `tasks.md` frontmatter); `tdd_craftsman` flips `task-N.md` statuses as it builds. Everything after the gate is autonomous up to `pr_ready`. Opening/merging the PR is a manual human step.
+Only `orchestrator_lead` writes the feature phase (in `tasks.md` frontmatter); `implementator` flips `task-N.md` statuses as it builds. Everything after the gate is autonomous up to `pr_ready`. Opening/merging the PR is a manual human step.
 
 ## Roles (see `.agents/agents/<name>.md`)
 
@@ -34,7 +36,7 @@ Only `orchestrator_lead` writes the feature phase (in `tasks.md` frontmatter); `
 |---|---|---|---|
 | `orchestrator_lead` | orchestrates all | `progress/*`, phase in `tasks.md` | no |
 | `spec_partner` | 1 — spec + contract (debate) | `spec.md`, `risks.md`, `tasks.md`, `task-N.md`, `gherkin-scenarios.md` | no |
-| `tdd_craftsman` | 2 — build (TDD) | `src/`, `tests/`, `tdd.md`, task statuses | **yes** |
+| `implementator` | 2 — build (TDD) | `src/`, `tests/`, `tdd.md`, task statuses | **yes** |
 | `reviews_lead` | 3 — review round | `review.md` | no |
 | `reviewer_code` | 3 (parallel) | `review-code.md` | no |
 | `reviewer_design` | 3 (parallel) | `review-design.md` | no |
@@ -45,15 +47,23 @@ Only `orchestrator_lead` writes the feature phase (in `tasks.md` frontmatter); `
 | `mutation_tester` | 4 — StrykerJS | `mutation.md` | no |
 | `dod_validator` | 5 — DoD | `dod.md` | no |
 
-`tdd_craftsman` is the **only** agent that edits feature code. Reviewers and leads prune, they don't patch.
+`implementator` is the **only** agent that edits feature code. Reviewers and leads prune, they don't patch.
+
+## Models (per-agent, set via `model:` in each agent's frontmatter)
+
+- **Opus** — `spec_partner` (highest-leverage reasoning: debating and pinning down the spec + Gherkin contract).
+- **Sonnet** — `orchestrator_lead`, `implementator`, `reviews_lead`, and the 6 reviewers (coding + judgment).
+- **Haiku** — `mutation_tester`, `dod_validator` (mechanical: run scripts/checks and report).
+
+`model` accepts `opus` / `sonnet` / `haiku` (or `inherit`); each agent runs on its own model regardless of which agent invokes it.
 
 ## Gates (all must pass to advance)
 
 1. **spec_ready** — every AC is Given/When/Then; 4 UI states defined (if UI); risks mitigated; one `@s` scenario per behavior in `gherkin-scenarios.md`; every AC maps to a scenario; tasks map to `libs/*` paths obeying the layering rules.
 2. **HUMAN GATE (combined)** — human approves `spec.md` **and** `gherkin-scenarios.md` in one pass → `approved`.
 3. **in_review** — every `@s` covered by a concrete test; integration test green; `pnpm lint` + `pnpm check-types` + `pnpm test` (+ `test:e2e` where relevant) green; no scope beyond contract; no hardcoded strings/colors/dims.
-4. **in_review → mutation** — `reviews_lead` reports all 6 reviewers APPROVED (≤ 3 rounds, else escalate to human).
-5. **mutation → pr_ready** — mutation score threshold met (100% on changed lines).
+4. **review + mutation (one quality loop, ≤ 3 rounds)** — `implementator` fixes **every** review finding (blocker, major, **and minor**) and **every** surviving mutant; after any fix, review **and** mutation both re-run. A round is clean only at **zero open review findings (any severity) + mutation threshold met (100% on changed lines)**. `review.md` is kept pruned to only unresolved findings. **After the 3rd round:** any remaining **blocker/major/mutation-survivor is hard → escalate & block**; if **only minors** remain, they may ship as **documented, human-accepted** risks (recorded in `review.md`, `spec.md`, `dod.md`) → `pr_ready`. On a clean exit `review.md` is empty.
+5. **mutation threshold** — 100% of mutants killed on changed lines (enforced inside the loop above).
 6. **pr_ready** — `dod_validator` marks every DoD item passing. Human opens/merges the PR → `done`.
 
 ## Artifact map — `docs/features/<name>/`
@@ -93,4 +103,4 @@ See `/ORCHESTRATOR_PLAN.md` §7. Validated by `dod_validator`: Functionality · 
 
 - `.agents/skills/gherkin-authoring/` — distill a spec into a tagged `gherkin-scenarios.md` contract (used by `spec_partner`)
 - `.agents/skills/mutation-testing/` — run StrykerJS scoped to changed files, `scripts/run-mutation.sh` (used by `mutation_tester`)
-- `.agents/skills/storybook-e2e-tests/` — write Playwright e2e for Storybook components; owns the `.e2e.js` location convention (used by `tdd_craftsman`)
+- `.agents/skills/storybook-e2e-tests/` — write Playwright e2e for Storybook components; owns the `.e2e.js` location convention (used by `implementator`)

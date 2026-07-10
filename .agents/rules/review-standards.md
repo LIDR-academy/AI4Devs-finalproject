@@ -58,6 +58,6 @@ Runtime and delivery cost.
 ## reviews_lead consolidation
 1. Read all six reports; de-duplicate overlapping findings; resolve conflicts.
 2. Prioritize blocker → major → minor into one ordered change-request list in `review.md`.
-3. If all six APPROVED → `APPROVED` (advance to mutation). Otherwise issue **one** consolidated change request to `tdd_craftsman`.
-4. After fixes, re-run **all six** reviewers in parallel and re-consolidate.
-5. **Cap: 3 rounds.** On a 3rd round still carrying changes, stop and escalate to the human (record in `review.md`).
+3. **Any finding blocks — blocker, major, OR minor.** Only `APPROVED` when there are **zero** findings of any severity; otherwise issue **one** consolidated change request to `implementator`, which fixes **every** item. There is no "approve with minor findings left open."
+4. After fixes, re-run **all six** reviewers in parallel and re-consolidate, **pruning `review.md` to only the findings still open** (drop each resolved one). The orchestrator re-runs **mutation** alongside every round — review + mutation are one quality loop.
+5. **Cap: 3 rounds.** After the 3rd round: any remaining **blocker/major** (or unmet mutation threshold) is **hard** — escalate and block. If **only minors** remain, they may ship as **documented, human-accepted** risks (recorded in `review.md`, `spec.md` Open decisions, `dod.md`). Either way `review.md` holds **only the unresolved findings**.

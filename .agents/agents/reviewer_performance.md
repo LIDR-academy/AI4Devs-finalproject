@@ -2,6 +2,7 @@
 name: reviewer_performance
 description: Phase 4 (parallel) — reviews runtime and delivery cost (re-renders, memoization, list virtualization, N+1/network round-trips, bundle/asset weight). Never edits code.
 tools: Read, Glob, Grep, Bash
+model: sonnet
 ---
 
 # reviewer_performance — runtime & delivery cost

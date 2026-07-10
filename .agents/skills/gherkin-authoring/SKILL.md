@@ -1,6 +1,6 @@
 ---
 name: gherkin-authoring
-description: Distill a spec into a tagged Gherkin `gherkin-scenarios.md` contract for this monorepo's orchestrator. Use when writing or editing a `docs/features/<name>/gherkin-scenarios.md`, turning acceptance criteria into `@s`-tagged scenarios, or on "write the feature file", "gherkin", "BDD scenarios", "the contract". `spec_partner` invokes this in the same step as the spec; the `gherkin-scenarios.md` is part of what the human signs at the single combined spec + contract gate. Do NOT write tests or code here — the TDD craftsman consumes the `@s` tags afterward.
+description: Distill a spec into a tagged Gherkin `gherkin-scenarios.md` contract for this monorepo's orchestrator. Use when writing or editing a `docs/features/<name>/gherkin-scenarios.md`, turning acceptance criteria into `@s`-tagged scenarios, or on "write the feature file", "gherkin", "BDD scenarios", "the contract". `spec_partner` invokes this in the same step as the spec; the `gherkin-scenarios.md` is part of what the human signs at the single combined spec + contract gate. Do NOT write tests or code here — the TDD implementator consumes the `@s` tags afterward.
 ---
 
 # Gherkin authoring — the executable contract
@@ -10,7 +10,7 @@ The `gherkin-scenarios.md` is part of what the human signs at the single combine
 ## Format
 
 - One `Feature:` block per feature; a short description of the value it delivers.
-- One `Scenario:` (or `Scenario Outline:`) per distinct behavior, each **tagged `@s1 … @sn`** on its own line above the scenario. The tag is the traceability key used by `tdd_craftsman` and the reviewers.
+- One `Scenario:` (or `Scenario Outline:`) per distinct behavior, each **tagged `@s1 … @sn`** on its own line above the scenario. The tag is the traceability key used by `implementator` and the reviewers.
 - Steps use `Given` (context) / `When` (action) / `Then` (observable outcome); `And`/`But` to extend.
 - Cover the happy path **and** the error/empty/edge behaviors. For UI, include a scenario per relevant state (Loading/Content/Error/Empty).
 - Use `Scenario Outline` + `Examples` for the same behavior across data variants.
@@ -44,7 +44,7 @@ Feature: Lesson list
     Then I see an error state with a retry action
 ```
 
-## Gherkin → test mapping (how the craftsman consumes it)
+## Gherkin → test mapping (how the implementator consumes it)
 
 | Scenario kind | Primary test (TDD-first) |
 |---|---|
@@ -52,7 +52,7 @@ Feature: Lesson list
 | Business rule / data flow | `*.service.test.ts` / `*.dao.test.ts` / `use-*.test.ts` |
 | Cross-layer behavior | the slice's integration test |
 
-Each `@s` → at least one concrete test. The `tdd_craftsman` records the `@s → test` map in `tdd.md`; the reviewers verify coverage against it.
+Each `@s` → at least one concrete test. The `implementator` records the `@s → test` map in `tdd.md`; the reviewers verify coverage against it.
 
 ## The gate
 

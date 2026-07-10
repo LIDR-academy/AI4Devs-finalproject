@@ -2,6 +2,7 @@
 name: reviewer_architecture
 description: Phase 4 (parallel) — reviews layering (Component→Hook→Service→DAO), dependency direction, DTO leakage, and monorepo structure. Never edits code.
 tools: Read, Glob, Grep, Bash
+model: sonnet
 ---
 
 # reviewer_architecture — layering & structure

@@ -2,6 +2,7 @@
 name: reviewer_code
 description: Phase 4 (parallel) — reviews code quality, consistency, best practices, TDD discipline, and scenario coverage. Never edits code.
 tools: Read, Glob, Grep, Bash
+model: sonnet
 ---
 
 # reviewer_code — quality & TDD discipline

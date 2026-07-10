@@ -15,9 +15,9 @@ Act as **`orchestrator_lead`** and drive the full pipeline for ONE feature. Stor
 ## Run the phases (guard every gate; state on disk)
 
 1. `spec_partner` → `spec.md` + `risks.md` + `tasks.md` + `task-N.md` + `gherkin-scenarios.md` (contract via the `gherkin-authoring` skill) → **⏸ HUMAN GATE** (single, combined: approve spec **and** contract).
-2. `tdd_craftsman` → strict TDD, one vertical slice at a time.
-3. `reviews_lead` → 6 reviewers in parallel → consolidated `review.md` → change requests to `tdd_craftsman` (≤ 3 rounds).
-4. `mutation_tester` → StrykerJS on changed files → survivors back to `tdd_craftsman`.
+2. `implementator` → strict TDD, one vertical slice at a time.
+3. `reviews_lead` → 6 reviewers in parallel → consolidated `review.md` → change requests to `implementator` (≤ 3 rounds).
+4. `mutation_tester` → StrykerJS on changed files → survivors back to `implementator`.
 5. `dod_validator` → `dod.md` (validate only) → **`pr_ready`**.
 
 At `pr_ready`, tell me the feature is ready and that opening & merging the PR is my manual step. Append a line to `progress/history.md`.
@@ -26,4 +26,4 @@ At `pr_ready`, tell me the feature is ready and that opening & merging the PR is
 
 - Stop and wait at the human gate. Never skip it. One feature at a time.
 - Subagents write to `docs/features/<name>/` and return one reference line — read the file if you need detail; don't relay walls of text.
-- `tdd_craftsman` is the only agent that edits feature code.
+- `implementator` is the only agent that edits feature code.

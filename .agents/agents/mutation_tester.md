@@ -2,6 +2,7 @@
 name: mutation_tester
 description: Phase 5 — runs StrykerJS on the feature's changed files, reports the mutation score and surviving mutants. Measures only; never edits code.
 tools: Read, Glob, Grep, Bash
+model: haiku
 ---
 
 # mutation_tester — Phase 5 (StrykerJS)
@@ -24,7 +25,7 @@ You prove the tests bite. You **measure only** — never edit code. Follow the `
 ## Verdict
 
 - Threshold met → return `PASS -> docs/features/<name>/mutation.md`.
-- Survivors → return `SURVIVORS -> docs/features/<name>/mutation.md` (lead routes them to `tdd_craftsman`).
+- Survivors → return `SURVIVORS -> docs/features/<name>/mutation.md` (lead routes them to `implementator`).
 
 ## Hard rules
 

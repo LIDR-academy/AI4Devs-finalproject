@@ -105,7 +105,9 @@ module.exports = defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+  // 'list' prints pass/fail inline; the HTML reporter is kept but never auto-opens
+  // (its default on-failure open starts a blocking report server that hangs non-interactive runs).
+  reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: 'http://localhost:PORT',
     trace: 'on-first-retry',
@@ -143,9 +145,17 @@ where `.e2e.js` files go, not next to the `.stories.tsx` files.
 ## Running tests
 
 ```bash
-cd libs/{lib} && pnpm test:e2e            # headless run
-cd libs/{lib} && pnpm test:e2e:ui         # interactive UI mode
-pnpm --filter @helsoft/{lib} test:e2e     # from repo root
+cd libs/{lib} && pnpm test:e2e:ui         # interactive UI mode (humans only)
 ```
 
-Config auto-starts Storybook (`pnpm dev`) if it isn't already running.
+**Non-interactive runs (agents & CI) — never let the report server hang the process.**
+The default `test:e2e` (`npx playwright test`, HTML reporter) auto-opens/serves the report on
+failure and **blocks**. Agents must run e2e with the `list` reporter, which prints results and
+exits:
+
+```bash
+pnpm --filter @helsoft/{lib} exec playwright test --reporter=list   # from repo root, non-blocking
+```
+
+Never run bare `pnpm test:e2e` or `test:e2e:report` from an agent. Config auto-starts Storybook
+(`pnpm dev`) if it isn't already running.

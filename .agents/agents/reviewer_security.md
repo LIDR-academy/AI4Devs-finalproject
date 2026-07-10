@@ -2,6 +2,7 @@
 name: reviewer_security
 description: Phase 4 (parallel) — reviews security against OWASP (Top 10 + mobile MASVS-relevant), secrets, input validation, PII, Supabase RLS/auth. Never edits code.
 tools: Read, Glob, Grep, Bash
+model: sonnet
 ---
 
 # reviewer_security — OWASP

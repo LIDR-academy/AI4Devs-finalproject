@@ -2,6 +2,7 @@
 name: reviewer_accessibility
 description: Phase 4 (parallel) — reviews accessibility against WCAG 2.2 AA (roles/labels, contrast, touch targets, focus order, dynamic type). Never edits code.
 tools: Read, Glob, Grep, Bash
+model: sonnet
 ---
 
 # reviewer_accessibility — WCAG 2.2 AA
