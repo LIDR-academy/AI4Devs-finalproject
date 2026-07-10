@@ -288,7 +288,38 @@ no Deno CLI; see the human-approved adaptation). No fallback to `unpdf` was need
 see the task-3 testing-boundary note); `supabase db push`, `supabase functions deploy`, `--linked`
 (would target the real hosted project — a manual step later, outside this pipeline).
 
+## Slice-1 review round 1 — fix cycle (reviewer_code CHANGES_REQUESTED)
+
+`review.md` round 1: design APPROVED, code CHANGES_REQUESTED — one minor finding. The
+`PdfExtractionStage` union's `'error'` value plus `usePdfExtraction`'s `error: PdfExtractionErrorCode
+| null` field and `reset()` callback (`use-pdf-extraction.ts`) were built ahead of any Slice-1 test
+demanding them — a Three Laws violation (speculative generality) and scope inflation for a
+happy-path+Loading slice.
+
+- Verified independently before fixing: grepped every consumer
+  (`pdf-upload.tsx`, `pdf-upload-panel.tsx`, `use-pdf-extraction.test.ts`,
+  `pdf-extraction.integration.test.ts`) — none reads `.error`, calls `reset()`, or checks stage
+  `'error'`. `pdf-upload.test.tsx`'s local `extractionValue()` mock factory sets `error`/`reset` as
+  extra untyped object fields (the mock is cast via `as jest.Mock`, not the hook's real return
+  type), but no assertion in that file exercises them either — confirms the finding's premise.
+- **Fix (review's action (a))**: deleted `error`/`reset` from `UsePdfExtractionResult` and the
+  `usePdfExtraction` implementation; narrowed `PdfExtractionStage` to `'idle' | 'processing' |
+  'success'`. `PdfExtractionErrorCode` (from `@helsoft/types`, task-2) is untouched — it was already
+  a plain, untested contract type consumed by nothing else this slice; it stays defined for task-12
+  (Slice 2) to import.
+- Re-ran, all green, no other code touched: `pnpm --filter @helsoft/hooks test` (5 suites/24
+  tests), `pnpm --filter @helsoft/hooks check-types`, `pnpm --filter @helsoft/study-buddy test` (4
+  suites/30 tests) + `check-types`, `pnpm --filter @helsoft/components test` (6 suites/71 tests) +
+  `check-types`, `pnpm --filter app-study-buddy check-types`, whole-repo `pnpm check-types` (8/8)
+  and `pnpm lint` — all clean.
+- No new test was written for this cycle: the fix is a pure deletion of code no existing test
+  demanded, not new behavior — nothing to encode in a new RED test. The existing Slice-1 tests
+  (`use-pdf-extraction.test.ts`, `pdf-extraction.integration.test.ts`) already fully specify the
+  hook's Slice-1 surface and stayed green untouched throughout.
+- Commit: `fix(pdf-upload-extraction): remove untested error/reset surface from
+  use-pdf-extraction ahead of slice 2`.
+
 ## Stop condition
 
-Slice 1 gate is green. Per protocol, stopping here for the light `reviewer_code` +
-`reviewer_design` pass (orchestrated separately) before Slice 2 begins.
+Slice 1 gate is green. Fix cycle above addresses round-1 `review-code.md`'s only finding; stopping
+here for re-review before Slice 2 begins.
