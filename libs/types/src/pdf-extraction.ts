@@ -50,3 +50,10 @@ export type PdfExtractionLimits = {
   maxSizeBytes: number;
   maxPages: number;
 };
+
+/** The minimal shape a normalized extraction failure carries upward from `PdfExtractionService`
+ * (Slice 2, task-9) — mirrors `AuthError`'s precedent so the UI never branches on a raw
+ * Supabase/function error, only on `.code`. */
+export type PdfExtractionError = {
+  code: PdfExtractionErrorCode;
+};

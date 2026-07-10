@@ -20,10 +20,10 @@ Within **Slice 1**, build backend + logic before UI: schema (task-1) → contrac
 | [task-6](./task-6.md) — `usePdfExtraction` hook | 1 | @s1,@s5 | done | libs/hooks/src/hooks/use-pdf-extraction.ts |
 | [task-7](./task-7.md) — `PdfUploadPanel` organism (Loading + Content) | 1 | @s5,@s6 | done | libs/components/src/organisms/pdf-upload-panel/ |
 | [task-8](./task-8.md) — `PdfUpload` wiring + upload screen + integration | 1 | @s1,@s4,@s5,@s6 | done | libs/study-buddy/src/components/pdf-upload/, apps/app-study-buddy/src/app/(app)/upload.tsx |
-| [task-9](./task-9.md) — Server error contract + scanned/page/corrupt detection | 2 | @s8,@s11,@s12,@s14 | todo | supabase/functions/extract-pdf/, libs/services/src/services/pdf-extraction.service.ts |
-| [task-10](./task-10.md) — Client pre-validation (type + size) | 2 | @s9,@s10 | todo | libs/services/src/services/pdf-extraction.service.ts |
-| [task-11](./task-11.md) — `PdfUploadPanel` Empty + Error + Retry states | 2 | @s7,@s8,@s9,@s10,@s11,@s12,@s13 | todo | libs/components/src/organisms/pdf-upload-panel/ |
-| [task-12](./task-12.md) — Hook error/retry + wiring + error integration | 2 | @s13,@s14 | todo | libs/hooks/src/hooks/use-pdf-extraction.ts, libs/study-buddy/src/components/pdf-upload/ |
+| [task-9](./task-9.md) — Server error contract + scanned/page/corrupt detection | 2 | @s8,@s11,@s12,@s14 | done | supabase/functions/extract-pdf/, libs/services/src/services/pdf-extraction.service.ts |
+| [task-10](./task-10.md) — Client pre-validation (type + size) | 2 | @s9,@s10 | done | libs/services/src/services/pdf-extraction.service.ts |
+| [task-11](./task-11.md) — `PdfUploadPanel` Empty + Error + Retry states | 2 | @s7,@s8,@s9,@s10,@s11,@s12,@s13 | done | libs/components/src/organisms/pdf-upload-panel/ |
+| [task-12](./task-12.md) — Hook error/retry + wiring + error integration | 2 | @s13,@s14 | done | libs/hooks/src/hooks/use-pdf-extraction.ts, libs/study-buddy/src/components/pdf-upload/ |
 | [task-13](./task-13.md) — i18n `upload.*` keys (en/es/pt/de) | 3 | @s15 | todo | libs/localization/src/resources/ |
 | [task-14](./task-14.md) — a11y pass + Playwright e2e | 3 | @s16 | todo | libs/components/src/organisms/pdf-upload-panel/, libs/components/tests/e2e/ |
 | [task-15](./task-15.md) — Extraction analytics events | 3 | @s17 | todo | libs/services/src/services/pdf-extraction.service.ts, libs/study-buddy/src/components/pdf-upload/ |

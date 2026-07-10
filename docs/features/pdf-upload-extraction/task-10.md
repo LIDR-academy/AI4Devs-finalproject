@@ -3,7 +3,7 @@ id: task-10
 title: Client pre-validation — file type + size reject before upload
 slice: 2
 scenarios: [s9, s10]
-status: todo
+status: done
 paths: [libs/services/src/services/pdf-extraction.service.ts]
 ---
 

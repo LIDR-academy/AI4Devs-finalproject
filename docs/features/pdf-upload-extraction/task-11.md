@@ -3,7 +3,7 @@ id: task-11
 title: PdfUploadPanel — Empty + Error + Retry states
 slice: 2
 scenarios: [s7, s8, s9, s10, s11, s12, s13]
-status: todo
+status: done
 paths: [libs/components/src/organisms/pdf-upload-panel/]
 ---
 

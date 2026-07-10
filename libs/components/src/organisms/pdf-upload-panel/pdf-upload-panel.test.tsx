@@ -9,19 +9,34 @@ const labels = {
   pageCountLabel: 'Pages',
   imageCountLabel: 'Images',
   continueLabel: 'Continue',
+  constraintsHint: 'Max 10 MB, 20 pages',
+  retry: 'Try again',
 };
 
 describe('PdfUploadPanel', () => {
-  // Wiring precondition (task-8) — before any file is picked (usePdfExtraction's 'idle' stage),
-  // the panel still has to render *something*: just the persistent choose-file control, enabled,
-  // with no loading/content content shown. This is not the fuller Empty state (constraints hint
-  // etc., AC7) — task-11 adds that behind its own failing tests.
-  it('renders only the enabled choose-file control in the idle state', async () => {
+  // @s7 (AC7) — before any file is picked (usePdfExtraction's 'idle' stage), the pristine/Empty
+  // state renders the persistent choose-file control, enabled (so the user can actually get past
+  // this state), with no loading/content content shown.
+  it('renders the enabled choose-file control in the idle (Empty) state', async () => {
     await render(<PdfUploadPanel state="idle" labels={labels} onChooseFile={jest.fn()} />);
 
     expect(screen.getByRole('button', { name: 'Choose a PDF', disabled: false })).toBeTruthy();
     expect(screen.queryByTestId(PDF_UPLOAD_PANEL_LOADING_INDICATOR_TEST_ID)).toBeNull();
     expect(screen.queryByText('Extracting…')).toBeNull();
+  });
+
+  // @s7 — the Empty state shows the size/page constraints hint.
+  it('shows the constraints hint in the idle (Empty) state', async () => {
+    await render(<PdfUploadPanel state="idle" labels={labels} onChooseFile={jest.fn()} />);
+
+    expect(screen.getByText('Max 10 MB, 20 pages')).toBeTruthy();
+  });
+
+  // @s7 — no error is shown in the Empty state.
+  it('shows no error in the idle (Empty) state', async () => {
+    await render(<PdfUploadPanel state="idle" labels={labels} onChooseFile={jest.fn()} />);
+
+    expect(screen.queryByText('Try again')).toBeNull();
   });
 
   // @s5 — the Loading state renders an indeterminate progress affordance and disables the
@@ -83,6 +98,60 @@ describe('PdfUploadPanel', () => {
   it('does not render the loading indicator in the content state', async () => {
     await render(
       <PdfUploadPanel state="content" labels={labels} onChooseFile={jest.fn()} filename="notes.pdf" pageCount={1} imageCount={0} />,
+    );
+
+    expect(screen.queryByTestId(PDF_UPLOAD_PANEL_LOADING_INDICATOR_TEST_ID)).toBeNull();
+  });
+
+  // @s8-@s13 (error-code family) — the Error state renders the message passed for the current
+  // error code and a retry affordance.
+  it('renders the given error message and a retry affordance in the error state', async () => {
+    await render(
+      <PdfUploadPanel
+        state="error"
+        labels={labels}
+        onChooseFile={jest.fn()}
+        errorMessage="This PDF has too many pages (max 20)"
+      />,
+    );
+
+    const errorText = screen.getByText('This PDF has too many pages (max 20)');
+    expect(errorText.parent?.props.accessibilityRole).toBe('alert');
+    expect(screen.getByRole('button', { name: 'Try again' })).toBeTruthy();
+  });
+
+  // Retry affordance wiring — pressing it invokes onRetry.
+  it('calls onRetry when the retry affordance is pressed in the error state', async () => {
+    const onRetry = jest.fn();
+    await render(
+      <PdfUploadPanel
+        state="error"
+        labels={labels}
+        onChooseFile={jest.fn()}
+        errorMessage="Network error"
+        onRetry={onRetry}
+      />,
+    );
+
+    fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
+
+    expect(onRetry).toHaveBeenCalledTimes(1);
+  });
+
+  // "Panel returns to a usable state" (spec's Error row) — choosing a different file stays
+  // available; the choose-file control is not disabled by an error.
+  it('keeps the choose-file control enabled in the error state', async () => {
+    await render(
+      <PdfUploadPanel state="error" labels={labels} onChooseFile={jest.fn()} errorMessage="Network error" />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Choose a PDF', disabled: false })).toBeTruthy();
+  });
+
+  // The Error state does not show the loading affordance.
+  it('does not render the loading indicator in the error state', async () => {
+    await render(
+      <PdfUploadPanel state="error" labels={labels} onChooseFile={jest.fn()} errorMessage="Network error" />,
     );
 
     expect(screen.queryByTestId(PDF_UPLOAD_PANEL_LOADING_INDICATOR_TEST_ID)).toBeNull();

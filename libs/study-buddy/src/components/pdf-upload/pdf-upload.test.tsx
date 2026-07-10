@@ -26,6 +26,8 @@ const extractionValue = (overrides: Partial<ReturnType<typeof usePdfExtraction>>
   extract: jest.fn(),
   stage: 'idle' as const,
   result: null,
+  error: null,
+  retry: jest.fn(),
   ...overrides,
 });
 
@@ -115,5 +117,60 @@ describe('PdfUpload', () => {
     expect(screen.getByText('notes.pdf')).toBeTruthy();
     expect(screen.getByText('4')).toBeTruthy();
     expect(screen.getByText('2')).toBeTruthy();
+  });
+
+  // @s7 — the Empty (idle) state shows the constraints hint.
+  it('shows the constraints hint in the idle state', async () => {
+    mockUsePdfExtraction.mockReturnValue(extractionValue({ stage: 'idle' }));
+
+    await render(<PdfUpload />);
+
+    expect(screen.getByText('upload.constraintsHint')).toBeTruthy();
+  });
+
+  // @s8-@s13 — once stage is 'error', the panel shows the mapped error message and wires retry.
+  it('shows the mapped error message and wires retry into the panel when stage is error', async () => {
+    const retry = jest.fn();
+    mockUsePdfExtraction.mockReturnValue(extractionValue({ stage: 'error', error: 'too_many_pages', retry }));
+
+    await render(<PdfUpload />);
+
+    expect(screen.getByText('upload.error.tooManyPages')).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'upload.retryAction' }));
+    });
+
+    expect(retry).toHaveBeenCalledTimes(1);
+  });
+
+  // @s14 — the unauthenticated code maps to its own clear signed-in-required message.
+  it('maps the unauthenticated error code to its own message', async () => {
+    mockUsePdfExtraction.mockReturnValue(extractionValue({ stage: 'error', error: 'unauthenticated' }));
+
+    await render(<PdfUpload />);
+
+    expect(screen.getByText('upload.error.unauthenticated')).toBeTruthy();
+  });
+
+  const ERROR_CODE_TO_KEY = {
+    unsupported_file_type: 'upload.error.unsupportedType',
+    file_too_large: 'upload.error.fileTooLarge',
+    too_many_pages: 'upload.error.tooManyPages',
+    scanned_or_image_only: 'upload.error.scannedNotSupported',
+    corrupt_or_unreadable: 'upload.error.corrupt',
+    extraction_failed: 'upload.error.extractionFailed',
+    network_error: 'upload.error.network',
+    unauthenticated: 'upload.error.unauthenticated',
+  } as const;
+
+  // Guards against a code silently falling through to a missing/wrong message (i18next has no
+  // missing-key handler) — every PdfExtractionErrorCode maps to its own, distinct message key.
+  it.each(Object.entries(ERROR_CODE_TO_KEY))('maps error code %s to its own message key', async (code, expectedKey) => {
+    mockUsePdfExtraction.mockReturnValue(extractionValue({ stage: 'error', error: code as never }));
+
+    await render(<PdfUpload />);
+
+    expect(screen.getByText(expectedKey)).toBeTruthy();
   });
 });

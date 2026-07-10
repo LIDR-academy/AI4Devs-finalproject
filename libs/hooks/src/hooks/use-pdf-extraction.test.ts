@@ -1,5 +1,6 @@
 jest.mock('@helsoft/services', () => ({
   PdfExtractionService: { extract: jest.fn() },
+  generateDocumentId: jest.fn(() => 'generated-document-id'),
 }));
 jest.mock('./use-session', () => ({ useSession: jest.fn() }));
 
@@ -44,6 +45,7 @@ describe('usePdfExtraction', () => {
     expect(service.extract).toHaveBeenCalledWith(
       { filename: 'notes.pdf', sizeBytes: 3, bytes: new Uint8Array() },
       'user-1',
+      expect.any(String),
     );
   });
 
@@ -71,5 +73,71 @@ describe('usePdfExtraction', () => {
     });
 
     expect(result.current.stage).toBe('success');
+  });
+
+  // @s13/@s14 (Slice 2, task-12) — a typed rejection (PdfExtractionService already normalizes
+  // every failure into a { code } shape) flips stage to 'error' and exposes that code as-is.
+  it('sets stage to error and exposes the typed error code when extract() rejects', async () => {
+    service.extract.mockRejectedValue(Object.assign(new Error('too many pages'), { code: 'too_many_pages' }));
+    const { result } = renderHook(() => usePdfExtraction());
+
+    await act(async () => {
+      await result.current.extract({ filename: 'big.pdf', sizeBytes: 1, bytes: new Uint8Array() });
+    });
+
+    expect(result.current.stage).toBe('error');
+    expect(result.current.error).toBe('too_many_pages');
+  });
+
+  // Defensive fallback (mirrors useAuth's isAuthErrorShape precedent) — an unexpected, untyped
+  // rejection never leaks a raw shape to the UI; it degrades to network_error.
+  it('falls back to network_error when extract() rejects with an untyped error', async () => {
+    service.extract.mockRejectedValue(new Error('boom'));
+    const { result } = renderHook(() => usePdfExtraction());
+
+    await act(async () => {
+      await result.current.extract({ filename: 'a.pdf', sizeBytes: 1, bytes: new Uint8Array() });
+    });
+
+    expect(result.current.stage).toBe('error');
+    expect(result.current.error).toBe('network_error');
+  });
+
+  // @s13 — retry() re-invokes extract() with the exact same input and documentId as the failed
+  // attempt (no duplicate orphaned row, task-12), and a successful retry flips stage to success.
+  it('retry() re-invokes extract with the same input and documentId, resolving to success', async () => {
+    service.extract.mockRejectedValueOnce(Object.assign(new Error('offline'), { code: 'network_error' }));
+    const extractionResult = { documentId: 'd1', filename: 'a.pdf', pageCount: 1, imageCount: 0, pages: [], images: [] };
+    service.extract.mockResolvedValueOnce(extractionResult);
+    const { result } = renderHook(() => usePdfExtraction());
+
+    await act(async () => {
+      await result.current.extract({ filename: 'a.pdf', sizeBytes: 1, bytes: new Uint8Array() });
+    });
+    expect(result.current.stage).toBe('error');
+    expect(result.current.error).toBe('network_error');
+
+    await act(async () => {
+      await result.current.retry();
+    });
+
+    expect(result.current.stage).toBe('success');
+    expect(result.current.result).toBe(extractionResult);
+
+    const [firstCall, secondCall] = service.extract.mock.calls;
+    expect(secondCall[0]).toBe(firstCall[0]);
+    expect(secondCall[2]).toBe(firstCall[2]);
+  });
+
+  // Guard — calling retry() before any extract() attempt is a no-op (nothing to retry).
+  it('retry() does nothing when extract has never been called', async () => {
+    const { result } = renderHook(() => usePdfExtraction());
+
+    await act(async () => {
+      await result.current.retry();
+    });
+
+    expect(service.extract).not.toHaveBeenCalled();
+    expect(result.current.stage).toBe('idle');
   });
 });

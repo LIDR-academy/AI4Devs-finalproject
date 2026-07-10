@@ -339,7 +339,256 @@ excess-property checking.
   `pnpm lint` — all clean.
 - Commit: `fix(pdf-upload-extraction): remove stale error/reset fields from pdf-upload test mock`.
 
-## Stop condition
+## Stop condition (Slice 1)
 
 Slice 1 gate is green. Fix cycles above address round-1's and round-2's only findings; stopping
 here for re-review before Slice 2 begins.
+
+---
+
+# Slice 2 (Empty + Error + Retry)
+
+`implementator` build log for **Slice 2**. Build order per `tasks.md`: task-9 (server error
+contract + client normalization) → task-10 (client pre-validation) → task-11 (`PdfUploadPanel`
+Empty + Error states) → task-12 (hook error/retry + wiring + integration). task-9 and task-10 both
+land in the same file (`pdf-extraction.service.ts`) and were built together in one coherent pass
+(client pre-validation genuinely needs the error-code union task-9 introduces) — documented here
+rather than artificially split across two commits' worth of diff-noise; both tasks' own done
+criteria are independently satisfied and independently tested.
+
+## Design reconciliation (recorded for reviewers)
+
+- **AC7's "the upload control is disabled" — read for coherence, not literally.** `spec.md`/
+  `gherkin-scenarios.md` (@s7) list, as separate `Then`/`And` clauses: (1) "I see a 'choose a PDF'
+  affordance", (2) "I see the maximum file size and page count", (3) "the upload control is
+  disabled", (4) "no error is shown". Read completely literally, (3) would mean the *only*
+  interactive control in the Empty state can never be pressed — a dead end that directly
+  contradicts (1) (an affordance you can't act on isn't an affordance) and Slice-1's own
+  already-twice-reviewed-APPROVED `'idle'` rendering (choose-file enabled outside Loading, task-7/
+  task-8). Task-11's own note is explicit that this state is a **non-reshape** extension of that
+  same `'idle'` value — no second, disableable "upload" control exists anywhere in this
+  architecture (picking a file *is* the whole upload trigger, per the Slice-1-approved one-step
+  design). Implemented Empty as: choose-file **enabled** (unchanged from Slice 1) + the new
+  constraints-hint text + no error banner — satisfying (1), (2), (4) literally, and (3) in the
+  only coherent sense available given the existing (reviewed, locked) component shape: no
+  Loading-only disabling is active. Flagged here explicitly for `reviewer_design`/human visibility
+  rather than silently reinterpreting a signed scenario.
+- **`PdfUploadDao.uploadPdf`/`insertDocument` moved from insert-only to upsert-by-id.** task-12's
+  retry requirement ("reuse the documentId for a retry rather than minting a new one") is only
+  satisfiable if a retry can re-target the *same* storage object and the *same* `documents` row
+  without erroring on a conflict. `uploadPdf`'s `upsert: false` → `true` (storage write) and
+  `insertDocument`'s `.insert()` → `.upsert()` (also now explicitly clearing `error_code: null` on
+  every write) make both writes idempotent-by-id — a no-op behavior change for the very first
+  attempt (a fresh UUID never conflicts) and the enabling change for retry. Driven by updating the
+  existing Slice-1 DAO tests' assertions first (RED against the unchanged implementation), then
+  implementing (GREEN) — not a silent behavior change. The Slice-1 `pdf-extraction.integration.
+  test.ts` mock (`sharedClient.from().insert` stub) needed the same `insert` → `upsert` rename to
+  stay green, for the same reason.
+- **`documentId` ownership: generated once, remembered by the hook, threaded through explicitly.**
+  `PdfExtractionService.extract(input, userId, documentId = generateDocumentId())` gained an
+  optional third parameter (default preserves every existing call site/test unchanged).
+  `generateDocumentId` is exported from the service module (not duplicated) so `usePdfExtraction`
+  can mint one *before* the first attempt and pass the *same* one into every subsequent `retry()`
+  call — the hook remembers `{ input, documentId }` for the last attempt in a `ref` (not `state`,
+  since it's never itself rendered). This keeps the "reuse vs. mint fresh" decision at the hook
+  layer (where "what to retry" is a UI-orchestration concern), while the service/DAO stay ignorant
+  of retry semantics — they just always write "by this id".
+- **Server-side failure ordering + no-partial-persistence, in the (unexecuted, Deno-only)
+  orchestration.** `index.ts` restructured so: (1) a parse/open failure is caught in its own
+  narrowly-scoped `try/catch` → `corrupt_or_unreadable` (@s12), distinct from the generic
+  catch-all; (2) `detectExtractionFailure` (page-count guard before the scanned-text heuristic,
+  both pure and Jest-tested) runs over the parsed `pages` **before any image processing or
+  persistence** — a document that's going to be rejected never gets a single `document_images` row
+  or a `pages`/`page_count` write; (3) every image is downscaled **in memory first**, and only once
+  all succeed does the function touch storage/DB — a single **batch** `document_images` insert
+  (not one insert per image) so a mid-loop image failure can't leave rows 0..N-1 as orphaned,
+  partially-committed state. This satisfies task-9's "no partial `document_images`/usable `pages`
+  retained" criterion more completely than Slice-1's original per-image-insert shape. Documented,
+  not executed here (risk R4/task-3's sandbox testing-boundary note still applies — no Deno CLI);
+  the guard/detection logic itself **is** real, executed, Jest-tested TypeScript
+  (`extraction-failure-detection.ts`), mirrored by hand into `_shared/`.
+- **Error normalization lives entirely in `PdfExtractionService.extract()`, not split across
+  layers.** Every DAO-thrown cause — a `FunctionsHttpError` (the Edge Function's own typed `{
+  errorCode }` response, read via `.context.json()`, since supabase-js never parses a non-2xx
+  function response body itself), a `FunctionsFetchError`/`FunctionsRelayError` (client/relay
+  transport failure → `network_error`), or anything else (defensive `extraction_failed` fallback)
+  — is normalized into a typed `Error & PdfExtractionError` before it ever reaches the hook. This
+  means `usePdfExtraction`'s own `isPdfExtractionErrorShape` guard (mirroring `useAuth`'s
+  `isAuthErrorShape` precedent) is technically always satisfied in practice, but kept anyway as a
+  defensive fallback to `network_error` for anything unexpected — proven by a dedicated hook test
+  (an untyped `new Error('boom')` rejection).
+- **`FunctionsFetchError`/`FunctionsHttpError`/`FunctionsRelayError` re-exported (values, not just
+  types) from `@helsoft/services`'s barrel**, mirroring the existing `Session`/`SupabaseClient`/
+  `User` type re-export precedent — lets the Slice-2 integration test build a representative
+  transport-failure fixture without adding a direct `@supabase/supabase-js` dependency to
+  `@helsoft/hooks`.
+- **`upload.error.*`/`upload.constraintsHint`/`upload.retryAction` i18n keys added to all four
+  locale bundles now** (not just `en`) because `es`/`pt`/`de` are typed as `TranslationResource`
+  (`typeof en`), so `check-types` fails on any bundle missing a key — confirmed by first checking
+  `@helsoft/localization`'s actual enforcement (`libs/localization/src/resources/es.ts` etc.) before
+  writing the copy. Per this session's explicit scope limit, `es`/`pt`/`de` **duplicate the English
+  copy verbatim** (documented inline in each file) — native review of that copy is task-13/Slice 3.
+  `fileTooLarge`/`tooManyPages` spell out "10 MB"/"20" as plain text rather than half-wiring
+  `{{maxMb}}`/`{{maxPages}}` interpolation that the wiring never actually passes for those two keys
+  (only `constraintsHint` is genuinely interpolated, since the wiring computes and passes `maxMb`/
+  `maxPages` there) — avoids a broken, unfilled placeholder shipping in the interim.
+- **`libs/localization`'s scanned-key-existence coverage test (`migration-coverage.test.ts`)
+  doesn't cover `pdf-upload.tsx`** (its `AUTH_COMPONENT_DIRS` list is scoped to `sign-in-form`/
+  `sign-out` only, a deliberate prior-review decision) — not extended to `pdf-upload` this slice
+  (out of scope; the `UPLOAD_ERROR_KEYS: Record<PdfExtractionErrorCode, string>` map is a **full**,
+  not partial, record, so `check-types` itself already guarantees every code has a key, and a
+  dedicated `it.each` wiring test in `pdf-upload.test.tsx` proves each maps to its own real,
+  non-fallback message string).
+
+## @s → test map (Slice 2)
+
+| @s | Scenario | Test(s) |
+|---|---|---|
+| @s7 | Empty/pristine state: affordance, constraints hint, no error | `pdf-upload-panel.test.tsx` (3 idle-state cases), `pdf-upload.test.tsx` (constraints hint wiring) |
+| @s8 | Scanned/image-only PDF rejected | `extraction-failure-detection.test.ts` (heuristic), `pdf-extraction.service.test.ts` (server-error normalization), `pdf-upload-panel.test.tsx` (Error render), `pdf-upload.test.tsx` (message mapping) |
+| @s9 | Non-PDF rejected before upload | `pdf-extraction.service.test.ts` (client type pre-check, DAO never invoked), `pdf-upload.test.tsx` (message mapping) |
+| @s10 | Over-size file rejected before upload | `pdf-extraction.service.test.ts` (client size pre-check, DAO never invoked), `pdf-upload.test.tsx` (message mapping) |
+| @s11 | Too-many-pages rejected by backend | `extraction-failure-detection.test.ts` (page-count guard incl. precedence), `pdf-extraction.service.test.ts` (server-error normalization), `pdf-upload.test.tsx` (message mapping) |
+| @s12 | Corrupt/unreadable PDF rejected | `mupdf-extraction-adapter.test.ts` (real parse failure), `pdf-extraction.service.test.ts` (server-error normalization), `pdf-upload.test.tsx` (message mapping) |
+| @s13 | Transient network failure is retryable | `pdf-extraction.service.test.ts` (`FunctionsFetchError`/`FunctionsRelayError` → `network_error`), `use-pdf-extraction.test.ts` (error stage + `retry()` reuse + success), `pdf-upload-panel.test.tsx` (retry affordance), `pdf-upload.test.tsx` (retry wiring), `pdf-extraction-error-retry.integration.test.ts` (real error→retry→success flow) |
+| @s14 (client/service `unauthenticated` half — RLS half already covered Slice 1) | Unauthenticated request denied | `pdf-extraction.service.test.ts` (no-userId pre-check + server `unauthenticated` normalization), `pdf-upload.test.tsx` (message mapping) |
+
+(@s1-@s6 unchanged from Slice 1; @s15-@s17 remain Slice 3 scope.)
+
+---
+
+## task-9 — Server error contract: scanned/page/corrupt detection + client normalization (@s8, @s11, @s12, @s14)
+
+- **RED→GREEN, `extraction-failure-detection.ts`** (pure, Jest-tested, mirrored to Deno
+  `_shared/`): 4 tests — page-count guard (@s11), scanned-text heuristic (@s8), a clean-document
+  happy path, and a precedence case (both guards violated → structural `too_many_pages` wins).
+  Reads `PDF_EXTRACTION_LIMITS`/`SCANNED_DETECTION_MIN_TEXT_LENGTH` (new constants, both added to
+  `pdf-extraction.constants.ts` and mirrored) rather than any inline literal.
+- **RED→GREEN, `mupdf-extraction-adapter.test.ts`** (@s12): "rejects when the given bytes are not
+  a parseable PDF" — a real, executed assertion against the actual `mupdf`-wasm runtime (10 garbage
+  bytes). Passed without needing new adapter code (mupdf's own `openDocument` already throws for
+  genuinely unparseable input after its internal repair attempt fails) — a **confirming** test,
+  same "proves rather than adds behavior" precedent as Slice-1's positionIndex case.
+- **RED→GREEN, `PdfExtractionService.extract()` — unauthenticated + server-error normalization**:
+  added the `PdfExtractionError` type (`@helsoft/types`, untested plain type per task-2's
+  precedent), a client-side `if (!userId) throw` pre-check (@s14), and `normalizeExtractionError()`
+  wrapping every DAO call in `try/catch` — `FunctionsHttpError` → reads `.context.json().errorCode`
+  (falls back to `extraction_failed` for a missing/malformed/unknown body);
+  `FunctionsFetchError`/`FunctionsRelayError` → `network_error`; anything else → `extraction_failed`.
+  9 new tests (unauthenticated pre-check, 4 known-code normalizations, 1 malformed-body fallback, 2
+  transport-error cases, 1 documentId-reuse case pre-built for task-12).
+- **Deno orchestration (`index.ts`, not executed — see reconciliation above)**: restructured to
+  catch parse failure narrowly (`corrupt_or_unreadable`), run `detectExtractionFailure` before any
+  image work, downscale in memory first, and batch-insert `document_images` — all funneling
+  through one `markDocumentFailed(supabase, documentId, code)` helper so `status`/`error_code`
+  always update together.
+- 13/13 `pdf-extraction.service.test.ts` tests green; `pnpm --filter @helsoft/services test`/
+  `check-types` clean.
+
+## task-10 — Client pre-validation: file type + size (@s9, @s10)
+
+- **RED→GREEN**: `validateFile()` in `pdf-extraction.service.ts` — non-`.pdf` filename →
+  `unsupported_file_type`; `sizeBytes > PDF_EXTRACTION_LIMITS.maxSizeBytes` → `file_too_large`; both
+  checked (and both tests assert the DAO is never invoked) **before** the try/catch that wraps the
+  DAO calls, so a rejected file never reaches upload. `extract()`'s signature stayed exactly
+  `(input, userId)` for this task, per its own note — the `documentId` param came later, in the
+  same file, for task-9's/task-12's coordination (see reconciliation above).
+- Built in the same pass as task-9 (same file, same PdfExtractionService rewrite) — see the note
+  at the top of this Slice-2 section for why.
+- 2 new tests green (folded into the 13 counted under task-9 above).
+
+## task-11 — `PdfUploadPanel` Empty + Error + Retry states (@s7, @s8-@s13)
+
+- **RED→GREEN, Empty state**: `PdfUploadPanelState` gained no new value for Empty (`'idle'`
+  already existed, Slice 1) — added `labels.constraintsHint` (new required label) and rendered it
+  only when `state === 'idle'`. 2 new tests (hint shown; no error shown) + renamed the pre-existing
+  idle test (dropped "only" from its description, since the state now renders more than just the
+  button — a doc-only rename on green, not a behavior change).
+- **RED→GREEN, Error state**: added `'error'` to `PdfUploadPanelState`, `errorMessage`/`onRetry`
+  props, `labels.retry`. Renders an `accessibilityRole="alert"` banner (mirrors `LoginForm`'s
+  existing error-banner pattern/tokens — `theme.colors.errorContainer`/`onErrorContainer`,
+  `theme.shape.card`, `theme.spacing.s3`) + a `Button` wired to `onRetry`. 4 new tests (message +
+  retry render, `onRetry` invoked, choose-file stays enabled — "returns to a usable state" per
+  spec's Error row — and no loading indicator leaks into Error).
+  - Test assertions for the alert role follow `login-form.test.tsx`'s own precedent
+    (`getByText(...).parent?.props.accessibilityRole === 'alert'`) rather than
+    `getByRole('alert')`, since RNTL's role-query doesn't map React Native's `accessibilityRole=
+    "alert"` the way it does `"button"`.
+- **REFACTOR**: none needed beyond the idle-test rename above; new styles (`hintText`,
+  `errorBanner`, `errorBannerText`) all resolve through existing `theme.*` tokens, no ad-hoc
+  colors/spacing.
+- `pdf-upload-panel.stories.tsx` extended with `Empty` and `Error` stories — all 4 states now
+  covered (`Empty`, `Loading`, `Content`, `Error`).
+- 12/12 `pdf-upload-panel.test.tsx` tests green; `pnpm --filter @helsoft/components test`/
+  `check-types` clean.
+
+## task-12 — Hook error/retry + wiring + error-path integration (@s13, @s14)
+
+- **RED→GREEN, `usePdfExtraction`**: re-added `error: PdfExtractionErrorCode | null` and a real
+  `retry()` — this time earned via genuine failing tests (not restored from git history, per this
+  session's explicit instruction): `'error'` added to `PdfExtractionStage`; a `lastAttemptRef`
+  (`{ input, documentId }`) captured on every `run()`; `extract()` mints a fresh `documentId` via
+  the now-exported `generateDocumentId`; `retry()` re-invokes `run()` with the **same** remembered
+  input/documentId (no-op if nothing was ever attempted). 4 new tests: typed-error → `stage:
+  'error'` + code exposed; untyped-error → defensive `network_error` fallback; retry → same
+  input/documentId reused, resolves to success; retry-with-no-prior-attempt → no-op (service never
+  called). The pre-existing success-path test's `toHaveBeenCalledWith` assertion gained a third
+  `expect.any(String)` matcher (the new `documentId` argument) — an update to an existing
+  assertion, not new behavior, since the call now genuinely has 3 args.
+- **RED→GREEN, `PdfUpload` wiring**: `UPLOAD_ERROR_KEYS: Record<PdfExtractionErrorCode, string>`
+  (a **full** record — TypeScript itself enforces every code is mapped) drives `errorMessage`;
+  `retry` passed straight through to `onRetry`; `stageToPanelState.error = 'error'`; `labels.
+  constraintsHint`/`labels.retry` wired via `t('upload.constraintsHint', { maxMb, maxPages })`
+  (real interpolation, using `PDF_EXTRACTION_LIMITS` — single source, no re-derived literal) and
+  `t('upload.retryAction')`. 11 new tests: constraints hint rendered, one representative
+  error-message + retry-press case, the `unauthenticated`-specific case (@s14), and an `it.each`
+  over all 8 `PdfExtractionErrorCode` values proving each resolves to its own distinct key (guards
+  against a silently-missing/duplicate mapping, since i18next has no missing-key handler).
+- **Slice-2 integration test** (`libs/hooks/src/hooks/pdf-extraction-error-retry.integration.
+  test.ts`, @s13): `usePdfExtraction` → `PdfExtractionService` → `PdfUploadDao` against one shared,
+  mocked Supabase client (mirrors the Slice-1 integration test's pattern) — first `functions.
+  invoke` rejects with a real `FunctionsFetchError`, asserts `stage: 'error'`/`error:
+  'network_error'`; `retry()` is called next, second `invoke` resolves with the typed success
+  result, asserts `stage: 'success'` + the result; and — the actual point of this test — both the
+  storage upload path and the `documents` upsert's row id are asserted **identical** across the
+  failed attempt and the retry (no duplicate orphaned row/path, task-12's explicit requirement).
+- 16/16 `pdf-upload.test.tsx` tests green; 6/6 `use-pdf-extraction.test.ts` tests green; the new
+  integration test green; `pnpm --filter @helsoft/hooks`/`@helsoft/study-buddy test`+`check-types`
+  clean.
+
+---
+
+## Slice-2 gate — commands run for real
+
+- `pnpm --filter @helsoft/types check-types` — clean.
+- `pnpm --filter @helsoft/services test` — 11 suites / 72 tests green (mocked, Docker-independent;
+  no new live-DB dependency added this slice, per this session's explicit constraint).
+- `pnpm --filter @helsoft/services check-types` — clean.
+- `pnpm --filter @helsoft/hooks test` — 6 suites / 29 tests green.
+- `pnpm --filter @helsoft/hooks check-types` — clean.
+- `pnpm --filter @helsoft/components test` — 6 suites / 77 tests green.
+- `pnpm --filter @helsoft/components check-types` — clean.
+- `pnpm --filter @helsoft/study-buddy test` — 4 suites / 41 tests green.
+- `pnpm --filter @helsoft/study-buddy check-types` — clean.
+- `pnpm --filter @helsoft/localization test` — 8 suites / 55 tests green (new `upload.*` keys,
+  key-alignment coverage intact; `migration-coverage.test.ts`'s scoped `AUTH_COMPONENT_DIRS` check
+  untouched/unaffected).
+- `pnpm check-types` (whole repo, turbo) — 8/8 packages clean.
+- `pnpm test` (whole repo, turbo) — 6/6 testable packages green.
+- `pnpm lint` (whole repo, turbo) — clean (`app-study-buddy` is still the only workspace with a
+  `lint` script).
+- **No Playwright e2e added this slice** — same precedent as Slice 1: `tasks.md` explicitly scopes
+  the a11y pass + Playwright e2e to task-14 (Slice 3), and task-11's own done criteria for this
+  slice is unit-test coverage of the 4 states, not e2e. Not building ahead of that task.
+
+**Not run / out of scope, by design:** `deno test`/`deno check` (still no Deno CLI in this sandbox
+— task-3's testing-boundary note, re-confirmed for the task-9 orchestration changes); `supabase db
+push`/`supabase functions deploy`/`--linked` (never run from this pipeline); `supabase db reset`/
+`test:rls` (no new live-DB dependency this slice, so not re-run — Slice 1's 9/9 RLS pass already
+covers the schema/RLS surface, which is unchanged this slice).
+
+## Stop condition (Slice 2)
+
+Slice-2 gate is green (lint/check-types/tests, no hardcoded strings/colors/dimensions introduced).
+Stopping here for the light `reviewer_code` + `reviewer_design` pass, per protocol — not
+self-reviewing, not starting Slice 3.

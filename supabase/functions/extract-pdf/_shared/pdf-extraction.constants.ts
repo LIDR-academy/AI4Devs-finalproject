@@ -9,6 +9,10 @@ export const PDF_EXTRACTION_LIMITS: PdfExtractionLimits = {
   maxPages: 20,
 };
 
+export const PDF_FILE_EXTENSION = '.pdf';
+
+export const SCANNED_DETECTION_MIN_TEXT_LENGTH = 40;
+
 export const IMAGE_DOWNSCALE_TARGET = {
   maxLongestEdgePx: 1024,
   jpegQuality: 80,

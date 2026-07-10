@@ -34,6 +34,21 @@ export const en = {
       pageCountLabel: 'Pages',
       imageCountLabel: 'Images',
       continue: 'Continue',
+      constraintsHint: 'Max {{maxMb}} MB, {{maxPages}} pages',
+      retryAction: 'Try again',
+      // fileTooLarge/tooManyPages spell out the limit as plain text for now (matching
+      // PDF_EXTRACTION_LIMITS's locked 10 MB / 20 pages) — interpolating {{maxMb}}/{{maxPages}}
+      // into every error message, not just the constraints hint, is task-13/Slice-3 scope.
+      error: {
+        unsupportedType: 'Only PDF files are supported',
+        fileTooLarge: 'This file is too large (max 10 MB)',
+        tooManyPages: 'This PDF has too many pages (max 20)',
+        scannedNotSupported: "This looks like a scanned PDF; we can't read its text yet",
+        corrupt: "This PDF couldn't be opened",
+        extractionFailed: 'Something went wrong while reading your PDF',
+        network: 'Network error',
+        unauthenticated: 'Please sign in to upload',
+      },
     },
     lesson: {
       title: 'Lesson {{id}}',

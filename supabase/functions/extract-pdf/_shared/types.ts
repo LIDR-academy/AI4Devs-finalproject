@@ -36,3 +36,7 @@ export type PdfExtractionLimits = {
   maxSizeBytes: number;
   maxPages: number;
 };
+
+export type PdfExtractionError = {
+  code: PdfExtractionErrorCode;
+};

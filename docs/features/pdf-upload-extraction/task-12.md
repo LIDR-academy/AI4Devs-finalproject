@@ -3,7 +3,7 @@ id: task-12
 title: Hook error/retry + wiring error handling + error-path integration
 slice: 2
 scenarios: [s13, s14]
-status: todo
+status: done
 paths: [libs/hooks/src/hooks/use-pdf-extraction.ts, libs/study-buddy/src/components/pdf-upload/]
 ---
 

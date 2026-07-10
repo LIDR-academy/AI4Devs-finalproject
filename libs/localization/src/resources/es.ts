@@ -29,6 +29,20 @@ export const es: TranslationResource = {
       pageCountLabel: 'Páginas',
       imageCountLabel: 'Imágenes',
       continue: 'Continuar',
+      // Slice-2 stub, duplicating the en copy so check-types' key-alignment stays green — native
+      // Spanish review of these strings is task-13/Slice-3 scope.
+      constraintsHint: 'Max {{maxMb}} MB, {{maxPages}} pages',
+      retryAction: 'Try again',
+      error: {
+        unsupportedType: 'Only PDF files are supported',
+        fileTooLarge: 'This file is too large (max 10 MB)',
+        tooManyPages: 'This PDF has too many pages (max 20)',
+        scannedNotSupported: "This looks like a scanned PDF; we can't read its text yet",
+        corrupt: "This PDF couldn't be opened",
+        extractionFailed: 'Something went wrong while reading your PDF',
+        network: 'Network error',
+        unauthenticated: 'Please sign in to upload',
+      },
     },
     lesson: {
       title: 'Lección {{id}}',

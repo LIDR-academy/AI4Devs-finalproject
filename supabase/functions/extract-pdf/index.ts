@@ -1,21 +1,29 @@
-// extract-pdf — Edge Function orchestration glue (task-3, pdf-upload-extraction, Slice 1).
+// extract-pdf — Edge Function orchestration glue (task-3 happy path, Slice 1; task-9 typed
+// error contract + failure cleanup, Slice 2).
 //
 // TESTING BOUNDARY (explicit, human-approved sandbox adaptation — see
 // docs/features/pdf-upload-extraction/tdd.md and risk R4): this sandbox has no Deno CLI, so this
 // file (and everything under ./_shared/) is NOT executed or type-checked here. The extraction
-// LOGIC it calls — adapter, downscale, DTO shaping — is implemented as pure TypeScript with no
-// Deno-specific globals, Jest-tested for real in libs/services/src/pdf-extraction/, and manually
-// mirrored into ./_shared/ (kept in sync by hand). This file is the actual Deno deployment
-// source for the orchestration glue itself (storage I/O, auth, persistence) — verify it manually
-// against a real PDF after `supabase functions deploy` in a real environment; never run
-// `supabase functions deploy` from this pipeline (out of scope — a manual step later).
+// LOGIC it calls — adapter, downscale, DTO shaping, failure detection — is implemented as pure
+// TypeScript with no Deno-specific globals, Jest-tested for real in
+// libs/services/src/pdf-extraction/, and manually mirrored into ./_shared/ (kept in sync by
+// hand). This file is the actual Deno deployment source for the orchestration glue itself
+// (storage I/O, auth, persistence) — verify it manually against a real PDF after `supabase
+// functions deploy` in a real environment; never run `supabase functions deploy` from this
+// pipeline (out of scope — a manual step later).
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 import { buildPdfExtractionResult } from './_shared/extraction-dto.ts';
+import { detectExtractionFailure } from './_shared/extraction-failure-detection.ts';
 import { downscaleImage } from './_shared/image-downscale.ts';
 import { MupdfExtractionAdapter } from './_shared/mupdf-extraction-adapter.ts';
-import { PDF_IMAGES_BUCKET, PDF_UPLOAD_BUCKET } from './_shared/pdf-extraction.constants.ts';
-import type { ExtractedImageRef } from './_shared/types.ts';
+import {
+  PDF_EXTRACTION_LIMITS,
+  PDF_IMAGES_BUCKET,
+  PDF_UPLOAD_BUCKET,
+  SCANNED_DETECTION_MIN_TEXT_LENGTH,
+} from './_shared/pdf-extraction.constants.ts';
+import type { ExtractedImageRef, PdfExtractionErrorCode } from './_shared/types.ts';
 
 const EXTENSION_BY_MIME_TYPE: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png' };
 
@@ -25,6 +33,18 @@ type ExtractPdfRequestBody = {
 
 const jsonResponse = (body: unknown, status = 200): Response =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
+
+// deno-lint-ignore no-explicit-any
+type AnySupabaseClient = any;
+
+/** Marks the row failed with the given typed code (task-9) — the single place every failure
+ * path below funnels through, so `status`/`error_code` are always set together and no caller
+ * forgets one or the other. */
+const markDocumentFailed = (
+  supabase: AnySupabaseClient,
+  documentId: string,
+  errorCode: PdfExtractionErrorCode,
+): Promise<unknown> => supabase.from('documents').update({ status: 'failed', error_code: errorCode }).eq('id', documentId);
 
 Deno.serve(async (req) => {
   const authHeader = req.headers.get('Authorization');
@@ -67,13 +87,43 @@ Deno.serve(async (req) => {
     }
     const sourceBytes = new Uint8Array(await sourceBlob.arrayBuffer());
 
-    const { pages, images: rawImages } = await MupdfExtractionAdapter.extract(sourceBytes);
+    // Parse/open failure (damaged, encrypted, or otherwise unparseable, @s12) is its own,
+    // narrowly-scoped try/catch — distinct from the generic extraction_failed catch-all below —
+    // so a corrupt file gets its own clear error rather than the generic one.
+    let pages: Awaited<ReturnType<typeof MupdfExtractionAdapter.extract>>['pages'];
+    let rawImages: Awaited<ReturnType<typeof MupdfExtractionAdapter.extract>>['images'];
+    try {
+      ({ pages, images: rawImages } = await MupdfExtractionAdapter.extract(sourceBytes));
+    } catch (_parseCause) {
+      await markDocumentFailed(supabase, documentId, 'corrupt_or_unreadable');
+      return jsonResponse({ errorCode: 'corrupt_or_unreadable' }, 422);
+    }
 
-    const imageRefs: ExtractedImageRef[] = [];
+    // Structural/content guards (@s8 scanned-detection, @s11 page-count) run over the parsed
+    // result BEFORE any image processing or persistence — a document that's going to be rejected
+    // never gets a single document_images row or a page_count/pages write (task-9's "no partial
+    // usable source retained").
+    const failureCode = detectExtractionFailure({ pages }, PDF_EXTRACTION_LIMITS, SCANNED_DETECTION_MIN_TEXT_LENGTH);
+    if (failureCode) {
+      await markDocumentFailed(supabase, documentId, failureCode);
+      return jsonResponse({ errorCode: failureCode }, 422);
+    }
+
+    // Downscale every image in memory first (pure, no I/O) — a failure here aborts before any
+    // storage/DB write, same "no partial persistence" reasoning as the guards above.
+    const downscaledImages = [];
     for (const rawImage of rawImages) {
       const downscaled = await downscaleImage(rawImage);
       if (!downscaled) continue; // decorative image, dropped per spec decision #4
+      downscaledImages.push({ rawImage, downscaled });
+    }
 
+    // Only once every image is successfully downscaled do we touch storage/DB: upload each
+    // object, then persist every document_images row in a single batch insert (rather than one
+    // insert per image) so a failure partway through image N's upload never leaves rows 0..N-1
+    // as orphaned, partially-committed DB state.
+    const imageRows = [];
+    for (const { rawImage, downscaled } of downscaledImages) {
       const extension = EXTENSION_BY_MIME_TYPE[downscaled.mimeType] ?? 'jpg';
       const storagePath = `${user.id}/${documentId}/p${rawImage.page}-${rawImage.positionIndex}.${extension}`;
 
@@ -82,31 +132,37 @@ Deno.serve(async (req) => {
         .upload(storagePath, downscaled.bytes, { contentType: downscaled.mimeType, upsert: true });
       if (uploadError) throw uploadError;
 
-      const { data: imageRow, error: insertError } = await supabase
-        .from('document_images')
-        .insert({
-          document_id: documentId,
-          page_number: rawImage.page,
-          position_index: rawImage.positionIndex,
-          storage_path: storagePath,
-          width: downscaled.width,
-          height: downscaled.height,
-          mime_type: downscaled.mimeType,
-        })
-        .select('id')
-        .single();
-      if (insertError || !imageRow) throw insertError ?? new Error('image row insert failed');
-
-      imageRefs.push({
-        id: imageRow.id,
-        documentId,
-        pageNumber: rawImage.page,
-        positionIndex: rawImage.positionIndex,
-        storagePath,
+      imageRows.push({
+        document_id: documentId,
+        page_number: rawImage.page,
+        position_index: rawImage.positionIndex,
+        storage_path: storagePath,
         width: downscaled.width,
         height: downscaled.height,
-        mimeType: downscaled.mimeType,
+        mime_type: downscaled.mimeType,
       });
+    }
+
+    const imageRefs: ExtractedImageRef[] = [];
+    if (imageRows.length > 0) {
+      const { data: insertedImageRows, error: insertError } = await supabase
+        .from('document_images')
+        .insert(imageRows)
+        .select('id, page_number, position_index, storage_path, width, height, mime_type');
+      if (insertError || !insertedImageRows) throw insertError ?? new Error('image rows insert failed');
+
+      for (const row of insertedImageRows) {
+        imageRefs.push({
+          id: row.id,
+          documentId,
+          pageNumber: row.page_number,
+          positionIndex: row.position_index,
+          storagePath: row.storage_path,
+          width: row.width,
+          height: row.height,
+          mimeType: row.mime_type,
+        });
+      }
     }
 
     const { error: updateError } = await supabase
@@ -124,7 +180,7 @@ Deno.serve(async (req) => {
 
     return jsonResponse(result, 200);
   } catch (_cause) {
-    await supabase.from('documents').update({ status: 'failed', error_code: 'extraction_failed' }).eq('id', documentId);
+    await markDocumentFailed(supabase, documentId, 'extraction_failed');
     return jsonResponse({ errorCode: 'extraction_failed' }, 500);
   }
 });

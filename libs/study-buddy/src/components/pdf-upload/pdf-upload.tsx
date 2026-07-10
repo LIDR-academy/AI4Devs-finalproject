@@ -1,10 +1,27 @@
 import { PdfUploadPanel, type PdfUploadPanelState } from '@helsoft/components';
 import { usePdfExtraction } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
+import { PDF_EXTRACTION_LIMITS } from '@helsoft/services';
+import type { PdfExtractionErrorCode } from '@helsoft/types';
 import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';
 
 const PDF_MIME_TYPE = 'application/pdf';
+const BYTES_PER_MB = 1024 * 1024;
+
+/** Maps usePdfExtraction()'s normalized PdfExtractionErrorCode to its i18n message key
+ * (@s8-@s14, spec's Error contract table) — a full (not partial) map, so TypeScript itself
+ * guarantees every code has its own key. */
+const UPLOAD_ERROR_KEYS: Record<PdfExtractionErrorCode, string> = {
+  unsupported_file_type: 'upload.error.unsupportedType',
+  file_too_large: 'upload.error.fileTooLarge',
+  too_many_pages: 'upload.error.tooManyPages',
+  scanned_or_image_only: 'upload.error.scannedNotSupported',
+  corrupt_or_unreadable: 'upload.error.corrupt',
+  extraction_failed: 'upload.error.extractionFailed',
+  network_error: 'upload.error.network',
+  unauthenticated: 'upload.error.unauthenticated',
+};
 
 /** React Native's own ambient `Blob`/`File` global types (declared in `react-native/src/types/
  * globals.d.ts`, picked up automatically — no DOM lib in this tsconfig) don't declare
@@ -26,15 +43,17 @@ const stageToPanelState: Record<string, PdfUploadPanelState> = {
   idle: 'idle',
   processing: 'loading',
   success: 'content',
+  error: 'error',
 };
 
 /**
  * PdfUpload — feature component wiring the document picker, `usePdfExtraction()`, and localized
  * strings to the presentational `PdfUploadPanel`. Mirrors the established `SignInForm`/
- * `LanguageSettings` wiring pattern; error/retry wiring lands in task-12 (Slice 2).
+ * `LanguageSettings` wiring pattern. Maps every `PdfExtractionErrorCode` to its `t('upload.error.*')`
+ * message and wires `retry()` into the panel's retry affordance (@s8-@s14, task-12).
  */
 export const PdfUpload = () => {
-  const { extract, stage, result } = usePdfExtraction();
+  const { extract, stage, result, error, retry } = usePdfExtraction();
   const { t } = useLocalization();
 
   const handleChooseFile = async () => {
@@ -53,6 +72,8 @@ export const PdfUpload = () => {
       filename={result?.filename}
       pageCount={result?.pageCount}
       imageCount={result?.imageCount}
+      errorMessage={error ? t(UPLOAD_ERROR_KEYS[error]) : undefined}
+      onRetry={retry}
       labels={{
         chooseFile: t('upload.chooseFile'),
         loading: t('upload.loading'),
@@ -60,6 +81,11 @@ export const PdfUpload = () => {
         pageCountLabel: t('upload.pageCountLabel'),
         imageCountLabel: t('upload.imageCountLabel'),
         continueLabel: t('upload.continue'),
+        constraintsHint: t('upload.constraintsHint', {
+          maxMb: PDF_EXTRACTION_LIMITS.maxSizeBytes / BYTES_PER_MB,
+          maxPages: PDF_EXTRACTION_LIMITS.maxPages,
+        }),
+        retry: t('upload.retryAction'),
       }}
     />
   );

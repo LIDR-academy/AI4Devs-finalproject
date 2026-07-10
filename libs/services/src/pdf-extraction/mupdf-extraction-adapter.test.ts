@@ -59,4 +59,13 @@ describe('MupdfExtractionAdapter', () => {
       { page: 1, positionIndex: 1, bytes: expect.any(Uint8Array), width: 8, height: 6, mimeType: 'image/png' },
     ]);
   });
+
+  // @s12 (Slice 2, task-9) — a damaged/unparseable byte buffer fails to open. The orchestration
+  // (extract-pdf's index.ts) catches this specific parse failure and maps it to
+  // corrupt_or_unreadable, distinct from the generic extraction_failed catch-all.
+  it('rejects when the given bytes are not a parseable PDF', async () => {
+    const garbageBytes = new Uint8Array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+
+    await expect(MupdfExtractionAdapter.extract(garbageBytes)).rejects.toThrow();
+  });
 });

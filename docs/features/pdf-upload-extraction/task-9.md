@@ -3,7 +3,7 @@ id: task-9
 title: Server error contract — scanned / page-limit / corrupt detection + typed errors
 slice: 2
 scenarios: [s8, s11, s12, s14]
-status: todo
+status: done
 paths: [supabase/functions/extract-pdf/, libs/services/src/services/pdf-extraction.service.ts]
 ---
 
