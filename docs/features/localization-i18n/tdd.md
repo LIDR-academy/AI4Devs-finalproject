@@ -189,5 +189,65 @@ No hardcoded strings/colors/dims (audit-enforced). Commit: `feat(localization-i1
 (no analytics in this feature — the commit covers a11y hardening + full string migration/i18n per the plan).
 
 ## All 15 scenarios covered ✅ — see the @s → test map above. Feature left for reviews_lead (not self-marked done).
-</content>
-</invoke>
+
+---
+
+## Phase 4 re-work — kill surviving mutants (mutation_tester report `mutation.md`)
+
+Each item below is a red test written to fail against the reported mutant, then confirmed green on
+correct code, then verified killed by re-running Stryker per lib on the changed files. No production
+behavior was changed — only assertions were added/tightened.
+
+### Group A — behavioral gaps (killed)
+- **#1 `dao/locale-preference.dao.ts:4`** — added `persists under a stable, well-known storage key`
+  to `locale-preference.dao.test.ts` pinning `LOCALE_PREFERENCE_STORAGE_KEY === 'study-buddy.locale-preference'`
+  (was tautological). Also switched the read assertion to the literal key. → services 100%.
+- **#2 `hooks/use-localization.ts:33`** — new `hooks/use-localization.test.tsx`: a consumer calls
+  `t('lesson.title', { id: '7' })` through the hook and asserts `Lesson 7`, proving options are forwarded
+  (kills `?? {}` → `&& {}`).
+- **#3–5 `provider:33,68`** — added `renders nothing until the initial locale resolves, then reveals its
+  children` to `localization-provider.test.tsx`: `queryByText` is null on first synchronous paint, then
+  `findByText` after the async resolve (the R2 no-flash gate). Kills the `ready` useState / `if (!ready)` mutants.
+- **#6 `provider:32`** — added `builds the initial i18n instance for the explicit initialLocale, not the
+  device locale`: spies on `createI18n` and asserts it is called with `'es'` when `initialLocale="es"`
+  `deviceLocale="de-DE"` (kills `?? resolveInitialLocale` → `&&`).
+- **#7 `study-buddy/language-settings.tsx:25`** — added `labels the selector group from the a11y
+  translation key` to `language-settings.test.tsx`: asserts `t` called with `'settings.language.a11yLabel'`
+  and the selector exposes that label (@s13).
+- **#8 `provider:60`** — tightened the failed-save test in `localization-persistence.test.tsx` to
+  `expect(warn).toHaveBeenCalledWith('Failed to persist locale preference', expect.any(Error))`.
+
+### Group B — StyleSheet values on changed `.tsx` (killed via resolved-style assertions)
+- **#9–16 `components/language-selector.tsx`** — added three tests using `toHaveStyle` on the rendered
+  elements: group laid out from tokens (`alignSelf: 'stretch'`, `gap: 8`); each option a spaced row
+  (`flexDirection/alignItems/justifyContent`); active label carries the heavier title typography
+  (`fontWeight: '600'`, `fontSize: 16`). Kills the ObjectLiteral/StringLiteral style mutants.
+- **#17–19 `study-buddy/language-settings.tsx`** — added `spaces the section from a spacing token and
+  styles the heading typography`: heading `toHaveStyle({ fontWeight: '600', fontSize: 14 })` and its
+  container `toHaveStyle({ gap: 12 })`.
+
+### Group C — memo/effect internals & i18next flags
+- **Killed:** `config/i18n.ts` `escapeValue` (#26/#27) — `injects interpolated values without
+  HTML-escaping them` asserts `t('lesson.title', { id: '<b>&"' }) === 'Lesson <b>&"'`; `returnNull`
+  (#29) — `returns a string, never null, for a null-valued resource`; the useEffect dep-array (#20,
+  `provider:50`) — `re-resolves the locale when the device locale prop changes` re-renders with a new
+  `deviceLocale` and asserts the effect re-runs.
+- **Excluded as equivalent (written justification appended to `mutation.md`):** #21/#22 (useCallback/useMemo
+  dep arrays — perf-only, `i18n`/`setLocale` are stable), #23/#24/#25 (async-set-after-unmount guard — no
+  observable effect / no warning in React 18/19), #28 (`initImmediate` — no async backend, inline resources
+  load synchronously either way).
+
+### Tooling fixes (mutation.md "Infra blockers")
+- `libs/study-buddy/stryker.config.mjs` — reworded the JSDoc example so `*/` no longer prematurely closes
+  the block comment; added `inPlace: true` (jest `setupFiles` reaches the sibling `@helsoft/components`
+  theme, absent from Stryker's sandbox); named `plugins`.
+- Explicit `plugins` in all four affected `stryker.config.mjs` (ts-jest libs:
+  `jest-runner` + `typescript-checker`; jest-expo libs: `jest-runner`) so runs work under pnpm without
+  an ad-hoc `--plugins` flag.
+- `.gitignore` — ignore Stryker `reports/mutation/` + `.stryker-tmp/`.
+
+### Re-work gate ✅
+`pnpm check-types` (8 pkgs) + `pnpm lint` clean; `pnpm test` green everywhere (localization 51, components 15,
+study-buddy 5, services 14, hooks 4, lib-with-storybook 2); `pnpm --filter @helsoft/components test:e2e` = 19/19.
+Per-lib Stryker on changed files: services / components / study-buddy = **100%**; localization = 100% of
+non-equivalent mutants killed, 6 documented equivalents. Left for re-review (not self-marked done).

@@ -11,6 +11,9 @@
 export default {
   packageManager: 'pnpm',
   testRunner: 'jest',
+  // pnpm's isolated layout stops Stryker's default `@stryker-mutator/*` glob from
+  // resolving in the runner child process, so it is named explicitly.
+  plugins: ['@stryker-mutator/jest-runner'],
   jest: { projectType: 'custom', configFile: 'jest.config.js' },
   reporters: ['html', 'clear-text', 'progress'],
   coverageAnalysis: 'perTest',

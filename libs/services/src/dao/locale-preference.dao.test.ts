@@ -12,12 +12,19 @@ const store = AsyncStorage as jest.Mocked<typeof AsyncStorage>;
 describe('LocalePreferenceDao', () => {
   beforeEach(() => jest.clearAllMocks());
 
+  // @s7 — the storage key is a stable, versioned literal. Pinning the exact value (rather than
+  // comparing the imported constant to itself) guards against a silent key change breaking
+  // persistence across app versions.
+  it('persists under a stable, well-known storage key', () => {
+    expect(LOCALE_PREFERENCE_STORAGE_KEY).toBe('study-buddy.locale-preference');
+  });
+
   // @s7 — the stored value is read back.
   it('getStoredLocale returns the value stored under the preference key', async () => {
     store.getItem.mockResolvedValue('es');
 
     await expect(LocalePreferenceDao.getStoredLocale()).resolves.toBe('es');
-    expect(store.getItem).toHaveBeenCalledWith(LOCALE_PREFERENCE_STORAGE_KEY);
+    expect(store.getItem).toHaveBeenCalledWith('study-buddy.locale-preference');
   });
 
   it('getStoredLocale returns null when nothing is stored', async () => {

@@ -8,6 +8,9 @@
 export default {
   packageManager: 'pnpm',
   testRunner: 'jest',
+  // pnpm's isolated layout stops Stryker's default `@stryker-mutator/*` glob from
+  // resolving in the checker/runner child processes, so they are named explicitly.
+  plugins: ['@stryker-mutator/jest-runner', '@stryker-mutator/typescript-checker'],
   jest: { projectType: 'custom', configFile: 'jest.config.js' },
   checkers: ['typescript'],
   tsconfigFile: 'tsconfig.json',

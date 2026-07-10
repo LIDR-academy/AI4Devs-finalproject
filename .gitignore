@@ -40,3 +40,7 @@ test-results/
 playwright-report/
 blob-report/
 playwright/.auth/
+
+# stryker (mutation testing output)
+**/reports/mutation/
+**/.stryker-tmp/

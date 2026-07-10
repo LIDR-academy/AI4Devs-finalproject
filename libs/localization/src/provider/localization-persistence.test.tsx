@@ -109,7 +109,7 @@ describe('LocalizationProvider persistence + precedence', () => {
     });
 
     expect(screen.getByText('Ajustes')).toBeTruthy();
-    expect(warn).toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledWith('Failed to persist locale preference', expect.any(Error));
     warn.mockRestore();
   });
 });

@@ -60,4 +60,27 @@ describe('LanguageSettings', () => {
     expect(screen.getByText('Language')).toBeTruthy();
     expect(t).toHaveBeenCalledWith('settings.language.heading');
   });
+
+  // @s13 — the selector's group is given an accessible name from a translation key (not a hardcoded
+  // or empty string), so assistive tech announces the language group.
+  it('labels the selector group from the a11y translation key', async () => {
+    const t = jest.fn((key: string) => key);
+    mockUseLocalization.mockReturnValue(localizationValue({ t }));
+
+    await render(<LanguageSettings />);
+
+    expect(t).toHaveBeenCalledWith('settings.language.a11yLabel');
+    expect(screen.getByLabelText('settings.language.a11yLabel')).toBeTruthy();
+  });
+
+  // The section is laid out from spacing tokens (heading + selector spaced), not left unstyled.
+  it('spaces the section from a spacing token and styles the heading typography', async () => {
+    mockUseLocalization.mockReturnValue(localizationValue());
+
+    await render(<LanguageSettings />);
+
+    const heading = screen.getByText('settings.language.heading');
+    expect(heading).toHaveStyle({ fontWeight: '600', fontSize: 14 });
+    expect(heading.parent).toHaveStyle({ gap: 12 });
+  });
 });

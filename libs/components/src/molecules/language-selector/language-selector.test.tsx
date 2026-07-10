@@ -79,4 +79,32 @@ describe('LanguageSelector', () => {
 
     expect(screen.getByRole('radio', { name: 'Deutsch', disabled: true })).toBeTruthy();
   });
+
+  // The group is laid out from tokens (self-stretch + gap), not left unstyled — so the
+  // list fills its container with consistent spacing. Guards the flat `group` style object.
+  it('lays out the group from spacing tokens', async () => {
+    await render(<LanguageSelector options={options} value="de" onChange={jest.fn()} accessibilityLabel="langs" />);
+
+    expect(screen.getByLabelText('langs')).toHaveStyle({ alignSelf: 'stretch', gap: 8 });
+  });
+
+  // Each option is a token-driven row (icon trailing the label), not an unstyled block.
+  // Guards the flat, unconditional `option` layout style.
+  it('lays out each option as a spaced row', async () => {
+    await render(<LanguageSelector options={options} value="de" onChange={jest.fn()} />);
+
+    expect(screen.getByRole('radio', { name: 'Deutsch' })).toHaveStyle({
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    });
+  });
+
+  // The active option's label carries the heavier title typography (not just color), so the
+  // selection reads even without color (@s13). Guards the `label` style object.
+  it('renders the active label with the heavier title typography', async () => {
+    await render(<LanguageSelector options={options} value="de" onChange={jest.fn()} />);
+
+    expect(screen.getByText('Deutsch')).toHaveStyle({ fontWeight: '600', fontSize: 16 });
+  });
 });

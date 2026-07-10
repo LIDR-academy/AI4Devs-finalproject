@@ -55,4 +55,20 @@ describe('createI18n', () => {
   ])('selects the correct plural form for %s with count %i', (locale, count, expected) => {
     expect(createI18n(locale as 'en' | 'es').t('lessons.count', { count })).toBe(expected);
   });
+
+  // @s10 — interpolated values are injected verbatim: HTML-escaping is disabled because
+  // React Native renders text (no HTML sink), so a value with markup-special characters must
+  // survive untouched rather than being turned into entities.
+  it('injects interpolated values without HTML-escaping them', () => {
+    expect(createI18n('en').t('lesson.title', { id: '<b>&"' })).toBe('Lesson <b>&"');
+  });
+
+  // @s9 — a key whose resource value is null must never surface as `null` (which would crash a
+  // text node); it degrades to a string so the UI never renders a non-string.
+  it('returns a string, never null, for a null-valued resource', () => {
+    const i18n = createI18n('en');
+    i18n.addResource('en', 'translation', 'nullValued', null as unknown as string);
+
+    expect(typeof i18n.t('nullValued')).toBe('string');
+  });
 });

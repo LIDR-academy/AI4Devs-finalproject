@@ -7,6 +7,7 @@ jest.mock('@helsoft/services', () => ({
 
 import { act, render, screen } from '@testing-library/react';
 
+import * as i18nConfig from '../config/i18n';
 import { useLocalization } from '../hooks/use-localization';
 import { LocalizationProvider } from './localization-provider';
 
@@ -105,6 +106,60 @@ describe('LocalizationProvider + useLocalization', () => {
     });
 
     expect(screen.getByText('Einstellungen')).toBeTruthy();
+  });
+
+  // R2 — no flash of untranslated copy: the provider gates first paint (renders nothing)
+  // until the initial locale resolves asynchronously, then reveals the translated tree.
+  it('renders nothing until the initial locale resolves, then reveals its children', async () => {
+    render(
+      <LocalizationProvider initialLocale="en">
+        <Consumer />
+      </LocalizationProvider>,
+    );
+
+    // First synchronous paint: the gate is closed — children are not in the tree yet.
+    expect(screen.queryByText('Settings')).toBeNull();
+
+    // After the async resolution completes, the children appear.
+    expect(await screen.findByText('Settings')).toBeTruthy();
+  });
+
+  // @s8 — the explicit initialLocale wins over device detection for the *synchronous* first i18n
+  // instance, so the very first instance is already on the requested language (not the device one).
+  it('builds the initial i18n instance for the explicit initialLocale, not the device locale', async () => {
+    const spy = jest.spyOn(i18nConfig, 'createI18n');
+
+    render(
+      <LocalizationProvider initialLocale="es" deviceLocale="de-DE">
+        <Consumer />
+      </LocalizationProvider>,
+    );
+
+    expect(spy).toHaveBeenCalledWith('es');
+
+    await screen.findByText('Ajustes');
+    spy.mockRestore();
+  });
+
+  // @s3 — the initial-locale resolver re-runs when the device locale prop changes (effect
+  // dependency tracking), so a device-locale update is reflected rather than ignored.
+  it('re-resolves the locale when the device locale prop changes', async () => {
+    const { rerender } = render(
+      <LocalizationProvider deviceLocale="en-US">
+        <Consumer />
+      </LocalizationProvider>,
+    );
+    expect(await screen.findByText('Settings')).toBeTruthy();
+    expect(screen.getByTestId('locale').textContent).toBe('en');
+
+    rerender(
+      <LocalizationProvider deviceLocale="es-ES">
+        <Consumer />
+      </LocalizationProvider>,
+    );
+
+    expect(await screen.findByText('Ajustes')).toBeTruthy();
+    expect(screen.getByTestId('locale').textContent).toBe('es');
   });
 
   it('throws when useLocalization is used outside the provider', () => {
