@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { AccessibilityInfo, Text, View } from 'react-native';
+import { AccessibilityInfo, Platform, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { Card } from '../../atoms/card/card';
@@ -80,17 +80,14 @@ export const MultipleChoice = ({
   const resultLabel = isCorrect ? labels.correct : labels.incorrect;
 
   // Announces the result to assistive tech the moment the learner answers (@s11, WCAG 4.1.3).
-  // Full-review Round 1 flagged this alongside the banner's own accessibilityLiveRegion (below)
-  // as a possible double-announcement on Android. Resolution (not redundant, both are load-
-  // bearing): RN's own accessibilityLiveRegion doc is explicit that it "Works for Android API
-  // >= 19 only" (@platform android — react-native's ViewAccessibility.js) — it is a no-op on
-  // iOS, so this imperative AccessibilityInfo call is the *only* mechanism that reaches iOS
-  // VoiceOver. On Android/Web, this exactly matches the sibling LoginForm.errorMessage/
-  // isSubmitting precedent (login-form.tsx) already shipping both mechanisms together in this
-  // codebase without a reported double-speak issue — so this stays consistent rather than
-  // diverging into a one-off Platform.OS branch for this single component.
+  // RN's own accessibilityLiveRegion doc is explicit that it "Works for Android API >= 19 only"
+  // (@platform android — react-native's ViewAccessibility.js) — it is a no-op on iOS, so this
+  // imperative AccessibilityInfo call is the *only* mechanism that reaches iOS VoiceOver (and web).
+  // On Android, the banner's own accessibilityLiveRegion (below) already announces the result, so
+  // firing the imperative call there too risks a duplicate TalkBack announcement (Full-review
+  // Round 2, m4) — skip it there and rely on the live region alone.
   useEffect(() => {
-    if (!isUnavailable && answered) {
+    if (!isUnavailable && answered && Platform.OS !== 'android') {
       AccessibilityInfo.announceForAccessibility(resultLabel);
     }
   }, [isUnavailable, answered, resultLabel]);

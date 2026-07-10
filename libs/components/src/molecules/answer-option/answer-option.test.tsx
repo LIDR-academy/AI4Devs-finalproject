@@ -11,6 +11,19 @@ describe('AnswerOption', () => {
     expect(screen.getByRole('button')).toHaveAccessibleName('A Paris');
   });
 
+  // Full-review Round 2 (mutation survivor, `answer-option.tsx:50`) — `toHaveAccessibleName` alone
+  // does not kill a mutant that replaces the `${marker} ${label}` fallback with `""`: RTL's
+  // `computeAccessibleName` treats an empty-string `accessibilityLabel` as unset and falls back to
+  // concatenating the tile's own child `Text` nodes (marker + label), which happens to reconstruct
+  // the exact same string for this component's fixed render shape (regressed by RTL's own fallback
+  // algorithm, not this component). Assert the actual `accessibilityLabel` prop passed to the
+  // `Pressable` directly to make the fallback expression itself observable.
+  it('passes the computed marker-and-label string as the actual accessibilityLabel prop, not via child-text fallback', async () => {
+    await render(<AnswerOption marker="A" label="Paris" />);
+
+    expect(screen.getByRole('button').props.accessibilityLabel).toBe('A Paris');
+  });
+
   // Full-review Round 1 (blocker) — a feedback icon (`check_circle`/`cancel`) renders as a plain
   // sibling `Text`, so RN's default accessible-name computation concatenates its literal ligature
   // name into the option's name (e.g. "A Paris check_circle"). An explicit `accessibilityLabel`

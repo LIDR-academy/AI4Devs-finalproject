@@ -470,3 +470,119 @@ Findings 1, 2, 3, 4, 5, 7, 8 resolved via test-driven code/test changes; finding
 documented judgment call (no behavior change — both existing mechanisms are load-bearing on
 different platforms). `review.md`/`review-*.md`/`mutation.md` are reviewer-owned and left
 untouched for `reviews_lead`/`mutation_tester` to re-run Round 2 against this fix pass.
+
+## Full-review Round 2 → Round 3 fix pass (m4 + mutation survivor `answer-option.tsx:50`)
+
+Round 2 came back with one carried-over minor (m4 — possible duplicate Android TalkBack
+announcement, `review.md`) and a failing mutation run (`mutation.md`) whose one real blocker was
+the `answer-option.tsx:50` `StringLiteral` survivor. This is Round 3 of the 3-round cap — both
+items fixed test-first below.
+
+### m4 — Android-scoped imperative announcement (minor, review-accessibility)
+
+Round 2's re-review correctly distinguished this from the already-resolved iOS-parity reasoning:
+the open question was specifically whether the imperative
+`AccessibilityInfo.announceForAccessibility` call, firing in the same render pass the banner
+subtree first mounts, risks a **duplicate** Android TalkBack announcement alongside the banner
+`Text`'s own `accessibilityLiveRegion` (Android-only per RN's `ViewAccessibility.js`). The
+`Platform.OS !== 'android'` scoping alternative the finding suggested (option (b) in `review.md`)
+had not actually been attempted.
+
+- RED: added a new `describe('platform-scoped imperative announcement (Android relies on the live
+  region alone)', …)` block to `multiple-choice.test.tsx`. Imported `Platform` from `react-native`
+  (no existing repo convention for mocking `Platform.OS` in tests was found — checked
+  `apps/app-study-buddy/src/components/*.web.tsx` siblings and grepped `libs/components`/`libs/*`
+  for `Platform.OS` test mocks; none exist. Confirmed `Platform.OS` is a plain, non-readonly data
+  property on the RN `Platform` object (`Platform.ios.js`: `OS: 'ios'`, no getter/setter) and that
+  direct assignment both works at runtime under `jest-expo` and type-checks cleanly — verified with
+  a throwaway test file before committing to this pattern) — "does not call
+  announceForAccessibility on Android once answered": sets `Platform.OS = 'android'` before
+  rendering an answered `MultipleChoice`, asserts the spy is never called; restores the original
+  `Platform.OS` in `afterEach`. Failed: `Expected number of calls: 0, Received number of calls: 1`
+  — the call fired unconditionally regardless of platform, reproducing the finding.
+- GREEN: `multiple-choice.tsx` — imported `Platform` from `react-native`; the announce `useEffect`
+  condition became `if (!isUnavailable && answered && Platform.OS !== 'android')`. Rewrote the
+  comment above the effect to state the resolution plainly (Android already gets the announcement
+  from the live region; iOS/web still need the imperative call since
+  `accessibilityLiveRegion` is a documented Android-only no-op elsewhere).
+- Also added `it.each(['ios', 'web'])('still calls announceForAccessibility on %s once answered', …)`
+  in the same block, explicitly pinning that the call still fires on the two platforms that have no
+  live-region mechanism (in addition to the pre-existing default-platform, i.e. `ios`, coverage from
+  the Round-1 tests, which continue to pass unchanged).
+- Re-ran `multiple-choice.test.tsx` — 19/19 green (16 pre-existing + 3 new).
+
+### Mutation survivor — `answer-option.tsx:50`, `` accessibilityLabel ?? `${marker} ${label}` `` → `""`
+
+**Investigation (per the run's step-by-step instructions):**
+
+1. Read the driving test ("defaults its accessible name to the marker and label when no override
+   is passed", `answer-option.test.tsx`) — it does render `<AnswerOption marker="A" label="Paris"
+   />` **without** an explicit `accessibilityLabel`, so the fallback branch genuinely is the one
+   exercised at the React-tree level. The gap is not "wrong test setup."
+2. Reproduced the mutation locally (not hand-waved): temporarily edited `answer-option.tsx:50` to
+   `` accessibilityLabel={accessibilityLabel ?? ""} `` and re-ran `answer-option.test.tsx` — **the
+   existing test still passed.** Added a throwaway probe test logging
+   `screen.getByRole('button').props.accessibilityLabel` directly under the mutation: it printed
+   `""` (confirmed the mutant genuinely reaches the rendered prop) while `toHaveAccessibleName('A
+   Paris')` still passed.
+3. Root-caused via `@testing-library/react-native`'s own source
+   (`node_modules/.../dist/helpers/accessibility.js`, `computeAriaLabel`/`computeAccessibleName`):
+   `computeAriaLabel` reads `instance.props['aria-label'] ?? instance.props.accessibilityLabel` and
+   then does a **truthy** check (`if (explicitLabel) return explicitLabel;`) — an empty string is
+   falsy, so RTL's accessible-name algorithm falls through to concatenating the element's own child
+   `Text` nodes instead. `AnswerOption`'s render shape is `<View><Text>{marker}</Text></View>` +
+   `<Text>{label}</Text>` with no icon in the default state; `joinAccessibleNameParts` always
+   inserts a single `' '` separator at this level (its `options.inline` is `isHostText(Pressable)`,
+   always `false`, so the inline-run branch never applies) — so the concatenated child text
+   reconstructs `` `${marker} ${label}` `` byte-for-byte, **for any marker/label pair**, regardless
+   of whether the prop was explicitly the template string or the mutated `""`. `toHaveAccessibleName`
+   cannot structurally distinguish "prop explicitly set to X" from "prop absent/falsy, X
+   reconstructed from children" when X is exactly the child-concatenation of this component's own
+   render tree — this is a real assertion-strength gap, not a Stryker/Babel/coverage artifact (the
+   "possible causes" `mutation.md` speculated were all ruled out: coverage attribution is correct,
+   per the Stryker JSON report keying the mutant to the right line/column; no Babel/transform
+   discrepancy — the manual local reproduction used the same Jest run as the passing suite).
+4. Fix: added a new test asserting the **actual prop value** passed to the `Pressable` directly
+   (`screen.getByRole('button').props.accessibilityLabel`), bypassing RTL's accessible-name
+   fallback semantics entirely — `toBe('A Paris')` is a strict `Object.is` check that cannot be
+   satisfied by any coincidental child-text reconstruction.
+- RED: n/a in the traditional sense (the assertion is new but passes against the current, correct
+  code on first write — per `.agents/rules/tdd.md`, a test that passes on the first run proves
+  nothing unless verified against the mutant). Verified per the run's step 3: reapplied the exact
+  same local source mutation (`?? ""`) and re-ran `answer-option.test.tsx` — the new test failed
+  (`Expected: "A Paris", Received: ""`) while the original "defaults its accessible name…" test
+  still passed, reproducing the exact survivor/kill split Stryker would report. Reverted the
+  mutation immediately after.
+- GREEN: no production change — `answer-option.tsx:50` was already correct; the gap was purely a
+  missing direct-prop assertion. Re-ran `answer-option.test.tsx` — 3/3 green.
+- **Tool-level confirmation:** ran Stryker scoped to just this file
+  (`pnpm --filter @helsoft/components exec stryker run --mutate
+  "src/molecules/answer-option/answer-option.tsx" --reporters json`) and inspected
+  `reports/mutation/mutation.json` for the line-50/column-49 `StringLiteral` mutant directly: status
+  `Killed` (confirmed via the JSON report, not just the local reproduction). The file's overall
+  score is still well under 100% (pre-existing, already-documented equivalent styling/state
+  mutants on lines 32/41/44/45/51/54/65-135 per `mutation.md` — untouched by this fix, consistent
+  with the prior report), but the one real logic-gap survivor this round targeted is now killed.
+  The transient `.stryker-tmp/` sandbox and `reports/mutation/` JSON/HTML this local run generated
+  are both gitignored (`.gitignore:48-49`) and were removed before the final gate run; neither is
+  part of the committed diff.
+
+## Gate checks (full-review Round 3 fix pass)
+
+- `pnpm --filter @helsoft/components exec jest multiple-choice.test.tsx` — 19/19 green.
+- `pnpm --filter @helsoft/components exec jest answer-option.test.tsx` — 3/3 green.
+- `pnpm lint` — green (same pre-existing repo state noted throughout: only `app-study-buddy`
+  defines a `lint` script).
+- `pnpm check-types` (full monorepo, 8 packages) — green.
+- `pnpm test` (full monorepo) — green (`components`: 87/87 across 7 suites, up from 84/7;
+  `study-buddy`: 35/35; `services`: 38/38; `hooks`: 21/21; `localization`: 56/56;
+  `lib-with-storybook`: 2/2).
+- `pnpm --filter @helsoft/components exec playwright test --reporter=list` — 31/31 green (no e2e
+  changes were needed — neither fix touches rendered/visual behavior).
+- No hardcoded strings/colors/dimensions introduced. No `console.log`/debug leftovers, no TODOs.
+  One local source mutation was deliberately, temporarily reintroduced twice (once per item) to
+  verify each new/strengthened test actually kills it, then reverted before the final gate run —
+  neither is part of the committed diff.
+
+`review.md`/`review-*.md`/`mutation.md` are reviewer-owned and left untouched for
+`reviews_lead`/`mutation_tester` to re-run the final Round 3 verification against this fix pass.

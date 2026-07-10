@@ -1,4 +1,4 @@
-import { AccessibilityInfo } from 'react-native';
+import { AccessibilityInfo, Platform } from 'react-native';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 import { MultipleChoice, MultipleChoiceLabels, MultipleChoiceOptionView } from './multiple-choice';
@@ -363,5 +363,60 @@ describe('MultipleChoice', () => {
     expect(announceSpy).toHaveBeenCalledTimes(1);
 
     announceSpy.mockRestore();
+  });
+
+  // Full-review Round 2 (m4, minor) — on Android, the result banner's own `accessibilityLiveRegion`
+  // (`multiple-choice.tsx`, banner `Text`) already announces the result to TalkBack (RN docs mark
+  // `accessibilityLiveRegion` as Android-only); firing the imperative
+  // `AccessibilityInfo.announceForAccessibility` call there too risks a duplicate announcement.
+  // iOS and web have no live-region equivalent, so they still need the imperative call.
+  describe('platform-scoped imperative announcement (Android relies on the live region alone)', () => {
+    const originalOS = Platform.OS;
+
+    afterEach(() => {
+      Platform.OS = originalOS;
+    });
+
+    it('does not call announceForAccessibility on Android once answered', async () => {
+      Platform.OS = 'android';
+      const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+      announceSpy.mockClear();
+
+      await render(
+        <MultipleChoice
+          question="What is the capital of France?"
+          options={options}
+          correctOptionId="opt-a"
+          selectedOptionId="opt-a"
+          labels={labels}
+          onSelectOption={jest.fn()}
+        />,
+      );
+
+      expect(announceSpy).not.toHaveBeenCalled();
+
+      announceSpy.mockRestore();
+    });
+
+    it.each(['ios', 'web'] as const)('still calls announceForAccessibility on %s once answered', async (os) => {
+      Platform.OS = os;
+      const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+      announceSpy.mockClear();
+
+      await render(
+        <MultipleChoice
+          question="What is the capital of France?"
+          options={options}
+          correctOptionId="opt-a"
+          selectedOptionId="opt-a"
+          labels={labels}
+          onSelectOption={jest.fn()}
+        />,
+      );
+
+      expect(announceSpy).toHaveBeenCalledWith(labels.correct);
+
+      announceSpy.mockRestore();
+    });
   });
 });
