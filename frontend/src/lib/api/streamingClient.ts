@@ -11,7 +11,7 @@ import { ApiError } from './client';
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
 
 export interface StreamOptions {
-  url: string;
+  url?: string;
   sessionId?: string;
   manualText?: string;
 }
@@ -21,13 +21,16 @@ export async function analyzeListingStream(
   onProgress: (event: Exclude<ProgressEventName, 'done'>) => void,
 ): Promise<AnalyzeListingResponse> {
   const sid = options.sessionId ?? get(session).sessionId;
+  const body: Record<string, string> = {};
+  if (options.url?.trim()) body.url = options.url;
+  if (options.manualText?.trim()) body.manualText = options.manualText;
   const res = await fetch(`${BASE_URL}/api/listings/analyze?stream=true`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       ...(sid ? { 'X-Session-Id': sid } : {}),
     },
-    body: JSON.stringify({ url: options.url, manualText: options.manualText }),
+    body: JSON.stringify(body),
     credentials: 'include',
   });
 

@@ -21,8 +21,8 @@ import { env } from '../../infrastructure/config/env';
 export const listingsRouter = Router();
 
 const analyzeSchema = z.object({
-  url: z.string().url(),
-  manualText: z.string().optional(),
+  url: z.string().url().optional(),
+  manualText: z.string().min(1).optional(),
 });
 
 // Composition root: Cheerio (fast) → Playwright (DataDome bypass).
@@ -58,7 +58,18 @@ const analyzeUseCase = new AnalyzeListingUseCase(
 listingsRouter.post('/analyze', rateLimiterMiddleware, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body = analyzeSchema.parse(req.body);
-    const url = validateListingUrl(body.url);
+    const hasManualText = !!body.manualText?.trim();
+    const hasUrl = !!body.url?.trim();
+
+    if (!hasManualText && !hasUrl) {
+      next(new InvalidUrlError('Se requiere una URL o texto del anuncio'));
+      return;
+    }
+
+    const url = hasUrl
+      ? validateListingUrl(body.url!)
+      : 'manual://text-only';
+
     if (req.query.stream === 'true') {
       const { analyzeStream } = await import('../lib/analyzeStream');
       await analyzeStream(req, res, analyzeUseCase, { url, manualText: body.manualText });
