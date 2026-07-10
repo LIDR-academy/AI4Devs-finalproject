@@ -1,7 +1,7 @@
 ---
 feature: login-and-logout
-phase: approved   # pending|spec_ready|approved|in_progress|in_review|mutation|pr_ready|done
-review_round: 0     # incremented by reviews_lead; cap 3
+phase: in_review   # pending|spec_ready|approved|in_progress|in_review|mutation|pr_ready|done
+review_round: 2     # incremented by reviews_lead; cap 3
 ---
 
 # Tasks — login-and-logout

@@ -26,6 +26,7 @@ export const SignInForm = () => {
         password: t('auth.password'),
         submit: t('auth.submit'),
         signUpPrompt: t('auth.toSignUp'),
+        signingIn: t('auth.signingIn'),
       }}
     />
   );

@@ -11,21 +11,38 @@ type EmitAuthStateChange = Parameters<SupabaseClient['auth']['onAuthStateChange'
  * Slice-1 integration (login-and-logout): useAuth -> AuthService -> AuthDao and
  * useSession, both exercised for real, against a mocked Supabase client boundary
  * (only `auth.*` methods are stubbed — nothing above the DAO is mocked).
+ *
+ * One real `SupabaseClient` is built for the whole file and reused by every test (rather
+ * than one per test) — matching how the app calls `initSupabase()` exactly once at startup
+ * — so @supabase/supabase-js never sees more than one GoTrueClient instance for the same
+ * storage key and never logs its "Multiple GoTrueClient instances" console.warn.
  */
+let sharedClient: SupabaseClient;
+
 const buildMockedClient = (): { client: SupabaseClient; emit: (session: Session | null) => void } => {
-  const client = initSupabase({ url: 'https://example.supabase.co', anonKey: 'anon-key' });
   let emitAuthStateChange: EmitAuthStateChange | undefined;
-  jest.spyOn(client.auth, 'onAuthStateChange').mockImplementation((callback) => {
+  jest.spyOn(sharedClient.auth, 'onAuthStateChange').mockImplementation((callback) => {
     emitAuthStateChange = callback;
     return { data: { subscription: { unsubscribe: jest.fn() } } } as never;
   });
   return {
-    client,
+    client: sharedClient,
     emit: (session) => emitAuthStateChange?.(session ? 'SIGNED_IN' : 'SIGNED_OUT', session),
   };
 };
 
 describe('login-and-logout slice-1 integration', () => {
+  let warnSpy: jest.SpyInstance;
+
+  beforeAll(() => {
+    warnSpy = jest.spyOn(console, 'warn');
+    sharedClient = initSupabase({ url: 'https://example.supabase.co', anonKey: 'anon-key' });
+  });
+
+  afterAll(() => {
+    warnSpy.mockRestore();
+  });
+
   // @s1 — with no session, useSession (which drives the app's Stack.Protected guard)
   // reports unauthenticated.
   it('reports no session at startup when none is persisted', async () => {
@@ -91,5 +108,15 @@ describe('login-and-logout slice-1 integration', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.session).toBe(persisted);
+  });
+
+  // Regression guard (Round-1 review, Minor 5): this file used to call initSupabase() fresh
+  // in every test, which trips @supabase/supabase-js's "Multiple GoTrueClient instances"
+  // console.warn from the second client onward — harmless to assertions, but noisy. The
+  // client is now built once and reused, so no such warning should ever fire.
+  it('does not trigger a "Multiple GoTrueClient instances" warning across this file', () => {
+    const messages = warnSpy.mock.calls.map((call) => String(call[0]));
+
+    expect(messages.some((message) => message.includes('Multiple GoTrueClient instances'))).toBe(false);
   });
 });

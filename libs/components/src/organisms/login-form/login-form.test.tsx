@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
+import { disabledOpacity } from '../../theme/colors';
 import { LOADING_INDICATOR_TEST_ID, LoginForm } from './login-form';
 
 const labels = {
@@ -7,6 +8,7 @@ const labels = {
   password: 'Password',
   submit: 'Log in',
   signUpPrompt: 'No account? Sign up',
+  signingIn: 'Signing in…',
 };
 
 describe('LoginForm', () => {
@@ -43,12 +45,36 @@ describe('LoginForm', () => {
     expect(screen.getByTestId(LOADING_INDICATOR_TEST_ID)).toBeTruthy();
   });
 
-  // @s3 — fields are also disabled while isSubmitting.
-  it('disables both fields while isSubmitting', async () => {
+  // @s3 — fields are also disabled while isSubmitting, via TextField's own `disabled` prop
+  // (not the raw `editable` attribute) so the Loading state also dims the field per spec.md's
+  // UI-states table ("Loading … fields disabled").
+  it('disables and dims both fields while isSubmitting', async () => {
     await render(<LoginForm onSubmit={jest.fn()} isSubmitting labels={labels} />);
 
-    expect(screen.getByLabelText('Email').props.editable).toBe(false);
-    expect(screen.getByLabelText('Password').props.editable).toBe(false);
+    const emailField = screen.getByLabelText('Email');
+    const passwordField = screen.getByLabelText('Password');
+
+    expect(emailField.props.editable).toBe(false);
+    expect(passwordField.props.editable).toBe(false);
+    expect(emailField.parent).toHaveStyle({ opacity: disabledOpacity });
+    expect(passwordField.parent).toHaveStyle({ opacity: disabledOpacity });
+  });
+
+  // @s3 — screen readers get a programmatic disabled signal on both fields while isSubmitting
+  // (WCAG 4.1.2): RN's TextInput does not derive accessibilityState from `editable`.
+  it('exposes accessibilityState.disabled on both fields while isSubmitting', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} isSubmitting labels={labels} />);
+
+    expect(screen.getByLabelText('Email').props.accessibilityState).toEqual({ disabled: true });
+    expect(screen.getByLabelText('Password').props.accessibilityState).toEqual({ disabled: true });
+  });
+
+  // @s3 — a visually-hidden, polite live-region announces authentication is in progress to
+  // assistive tech (WCAG 4.1.3) — the bare spinner alone is not exposed to screen readers.
+  it('announces a polite live-region while isSubmitting', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} isSubmitting labels={labels} />);
+
+    expect(screen.getByText(labels.signingIn).props.accessibilityLiveRegion).toBe('polite');
   });
 
   // @s3 — the loading affordance and disabled state are exclusive to isSubmitting; the
@@ -59,6 +85,7 @@ describe('LoginForm', () => {
     expect(screen.queryByTestId(LOADING_INDICATOR_TEST_ID)).toBeNull();
     expect(screen.getByRole('button', { name: 'Log in', disabled: false })).toBeTruthy();
     expect(screen.getByLabelText('Email').props.editable).not.toBe(false);
+    expect(screen.queryByText(labels.signingIn)).toBeNull();
   });
 
   // Content state (UI states table, spec.md) — a "Sign up" link is visible and wired.

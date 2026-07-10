@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { Button } from '../../atoms/button/button';
@@ -11,6 +11,8 @@ export type LoginFormLabels = {
   password: string;
   submit: string;
   signUpPrompt: string;
+  /** Announced to assistive tech while isSubmitting (@s3, WCAG 4.1.3) — not shown visually. */
+  signingIn: string;
 };
 
 export type LoginFormProps = {
@@ -42,7 +44,8 @@ export const LoginForm = ({ onSubmit, isSubmitting = false, onNavigateToSignUp, 
         accessibilityLabel={labels.email}
         value={email}
         onChangeText={setEmail}
-        editable={!isSubmitting}
+        disabled={isSubmitting}
+        accessibilityState={{ disabled: isSubmitting }}
         autoCapitalize="none"
         keyboardType="email-address"
       />
@@ -51,7 +54,8 @@ export const LoginForm = ({ onSubmit, isSubmitting = false, onNavigateToSignUp, 
         accessibilityLabel={labels.password}
         value={password}
         onChangeText={setPassword}
-        editable={!isSubmitting}
+        disabled={isSubmitting}
+        accessibilityState={{ disabled: isSubmitting }}
         secureTextEntry
       />
       <View style={styles.submitRow}>
@@ -61,6 +65,9 @@ export const LoginForm = ({ onSubmit, isSubmitting = false, onNavigateToSignUp, 
         {isSubmitting ? (
           <View testID={LOADING_INDICATOR_TEST_ID}>
             <ProgressIndicator variant="circular" size={SUBMIT_SPINNER_SIZE} thickness={SUBMIT_SPINNER_THICKNESS} />
+            <Text accessibilityLiveRegion="polite" style={styles.visuallyHidden}>
+              {labels.signingIn}
+            </Text>
           </View>
         ) : null}
       </View>
@@ -81,5 +88,12 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.s3,
+  },
+  /** Off-screen but still mounted, so screen readers pick up the live-region announcement. */
+  visuallyHidden: {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    overflow: 'hidden',
   },
 }));

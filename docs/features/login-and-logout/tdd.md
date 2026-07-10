@@ -131,3 +131,108 @@ test, none of which assert literal English copy). Business logic lives in `libs/
 `apps/app-study-buddy` screens stay thin composition.
 
 Commit: `feat(login-and-logout): implement happy path`.
+
+---
+
+## Round-1 review fixes
+
+Responds to `docs/features/login-and-logout/review.md` (4 major + 2 minor, zero blockers). One
+block per finding, in the same RED→GREEN→REFACTOR log style as Slice 1. Scenarios covered stay
+`@s3` (Loading state) throughout, except finding 6 (test-code-only refactor).
+
+### Major 1 — `TextField.disabled` + `accessibilityState` on both fields (@s3)
+- **RED** — strengthened the existing `login-form.test.tsx` disabled-fields test into
+  `'disables and dims both fields while isSubmitting'` (asserts `editable === false` **and**
+  `parent` style `opacity === disabledOpacity`, imported from `theme/colors.ts`), and added a new
+  test `'exposes accessibilityState.disabled on both fields while isSubmitting'`
+  (`login-form.test.tsx:56-62`). Both failed against the old `editable={!isSubmitting}` prop: no
+  opacity dimming, no `accessibilityState`.
+- **GREEN** — `login-form.tsx:47-48` (email) and `:57-58` (password): replaced
+  `editable={!isSubmitting}` with `disabled={isSubmitting}` (routes through `TextField`'s own
+  `disabled` prop, which derives `editable` **and** the dimmed `opacity: theme.disabledOpacity` at
+  `text-field.tsx:59,101`) plus an explicit `accessibilityState={{ disabled: isSubmitting }}`,
+  passed through `TextField`'s `...rest` spread onto the underlying `TextInput`
+  (`text-field.tsx:73`).
+- **REFACTOR** — none needed; two one-line prop swaps, no duplication introduced.
+- 2 tests strengthened/added, both green; `libs/components` full suite still green.
+
+### Major 2 — perceivable Loading announcement (@s3)
+- **RED** — added `'announces a polite live-region while isSubmitting'`
+  (`login-form.test.tsx:64-69`, queries `getByText(labels.signingIn)` and asserts
+  `accessibilityLiveRegion === 'polite'`) and extended the existing "isSubmitting false" negative
+  test with `expect(screen.queryByText(labels.signingIn)).toBeNull()` (`login-form.test.tsx:88`).
+  Failed: no `labels.signingIn`, nothing rendered.
+- **GREEN** — new `signingIn` field on `LoginFormLabels` (`login-form.tsx:15`); a visually-hidden
+  `<Text accessibilityLiveRegion="polite">` rendered next to the spinner inside the existing
+  `LOADING_INDICATOR_TEST_ID` wrapper (`login-form.tsx:66-71`), off-screen via a new
+  `styles.visuallyHidden` (`login-form.tsx:92-98`: `position: 'absolute'`, `1x1`, `overflow:
+  'hidden'` — stays mounted so screen readers still pick up the live-region text, unlike
+  `display: 'none'`). Wired `signingIn: t('auth.signingIn')` in `sign-in-form.tsx:29`. Story labels
+  updated (`login-form.stories.tsx:10`) so both stories keep rendering with the new required
+  field.
+- **REFACTOR** — none needed.
+- 3 tests (1 new, 1 strengthened, story labels) green.
+
+### Major 3 — 48dp touch target via `hitSlop` (@s3, and every button call site this feature touches)
+- **RED** — new file `libs/components/src/atoms/button/button.test.tsx`:
+  `'exposes a hitSlop that reaches the 48dp touch-target token'` (asserts
+  `hitSlop.top + hitSlop.bottom + 40 >= layout.touchTarget`, imported from `theme/spacing.ts`).
+  Failed to compile/pass: no `hitSlop` prop on `Button`'s `Pressable`.
+- **GREEN** — `button.tsx:31-39`: a per-size `HIT_SLOP` lookup derived from `layout.touchTarget`
+  (existing, previously-unused token) minus each size's fixed `HEIGHTS` entry, halved per edge;
+  passed to `Pressable`'s `hitSlop` at `button.tsx:92`. No visual box change — purely expands the
+  tappable region, so `LoginForm`'s submit button, `SignOut`'s trigger, and `Dialog`'s
+  cancel/confirm buttons all pick it up for free (none override `size`).
+- **REFACTOR** — none needed; one small derived constant, no duplication.
+- 1 new test green.
+
+### Major 4 — `minHeight` instead of fixed `height` for Dynamic Type (@s3, same call sites as #3)
+- **RED** — same new file, `'lets the box grow with content instead of clipping the label'`
+  (`button.test.tsx:23-31`): flattens the `Pressable`'s style array and asserts
+  `flat.height === undefined` and `flat.minHeight === 40`. Failed against the old fixed
+  `height: HEIGHTS[size]` variant.
+- **GREEN** — `button.tsx:109,123`: dropped the `size`-keyed `height` variant block entirely,
+  passed `HEIGHTS[size]` into `styles.root(...)` as a `minHeight` parameter instead
+  (`button.tsx:94`, `:109`); `styles.useVariants` narrowed to `{ variant }` only (`button.tsx:59`)
+  since `size` no longer drives a style variant. `overflow: 'hidden'` (`button.tsx:119`)
+  deliberately kept — it also clips `StateLayer`'s hover/press wash to the rounded shape, not just
+  the label; the label itself can now grow the box via `minHeight` rather than being clipped.
+- **REFACTOR** — none needed.
+- 1 new test green; `button.test.tsx` totals 2 tests, both green alongside 9 other
+  `login-form.test.tsx` tests (11 total in `@helsoft/components` for these two files).
+
+### Minor 5 — silence "Multiple GoTrueClient instances" noise (no behavior/scenario change)
+- **RED** — added a regression test,
+  `'does not trigger a "Multiple GoTrueClient instances" warning across this file'`
+  (`auth.integration.test.ts:114-119`), spying on `console.warn` from `beforeAll` and asserting no
+  captured call's message contains that substring. Failed against the old per-test
+  `initSupabase()` call (real warning fired from the 2nd test onward).
+- **GREEN** — `auth.integration.test.ts:15-34`: hoisted `initSupabase(...)` out of
+  `buildMockedClient()` into a single `beforeAll` building one `sharedClient` for the whole file
+  (mirrors how the app calls `initSupabase()` exactly once at startup); `buildMockedClient()` now
+  only re-attaches the `onAuthStateChange` spy against the shared client per test.
+  `warnSpy`/`afterAll(warnSpy.mockRestore())` added around it.
+- **REFACTOR** — none needed; the change collapses to fewer real clients, not more code.
+- 5 tests green (4 existing + 1 new regression guard); zero `console.warn` noise on a full run.
+
+### Minor 6 — dedupe `authValue`/`localizationValue` test factories (test-code only, no behavior change)
+Pure refactor under green tests per `tdd.md`'s own rule for test-code cleanup — no new
+RED/GREEN cycle, tests stayed green throughout the extraction.
+- **REFACTOR** — extracted the identical `authValue`/`localizationValue` factory pair, previously
+  duplicated verbatim in `sign-in-form.test.tsx:23-36` and `sign-out.test.tsx:18-31`, into a new
+  shared module `libs/study-buddy/src/test-utils/auth-test-factories.ts`. Both test files now
+  `import { authValue, localizationValue } from '../../test-utils/auth-test-factories'` instead of
+  declaring their own copy. `language-settings.test.tsx`'s pre-existing, differently-shaped
+  `localizationValue` (no `authValue`; plain `string`-typed `Overrides`, not
+  `Partial<ReturnType<typeof useAuth>>`) is untouched, per the review's explicit scope note.
+  `libs/study-buddy` full suite (14 tests across 3 files) re-ran green after the extraction; no
+  test assertions changed.
+
+### Round-1 fixes gate ✅
+`pnpm turbo run check-types --filter=@helsoft/services --filter=@helsoft/hooks
+--filter=@helsoft/components --filter=@helsoft/study-buddy --filter=app-study-buddy`,
+`pnpm --filter @helsoft/hooks test`, `pnpm --filter @helsoft/components test`,
+`pnpm --filter @helsoft/study-buddy test`, and repo-wide `pnpm lint` all green. No new hardcoded
+strings/colors/dimensions — the `signingIn` label flows through `labels`/`t()` like its siblings,
+`HIT_SLOP`/`minHeight` derive from existing tokens (`layout.touchTarget`, `HEIGHTS`). `@s5, @s6,
+@s8, @s12, @s13` (Slice 2/3 scope) untouched this round.

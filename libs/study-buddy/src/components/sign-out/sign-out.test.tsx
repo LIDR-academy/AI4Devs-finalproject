@@ -10,25 +10,11 @@ import { useAuth } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
+import { authValue, localizationValue } from '../../test-utils/auth-test-factories';
 import { SignOut } from './sign-out';
 
 const mockUseAuth = useAuth as jest.Mock;
 const mockUseLocalization = useLocalization as jest.Mock;
-
-const authValue = (overrides: Partial<ReturnType<typeof useAuth>> = {}) => ({
-  signIn: jest.fn(),
-  signOut: jest.fn(),
-  isSubmitting: false,
-  ...overrides,
-});
-
-const localizationValue = (overrides: Partial<ReturnType<typeof useLocalization>> = {}) => ({
-  t: (key: string) => key,
-  locale: 'en' as const,
-  setLocale: jest.fn(),
-  supportedLocales: ['en', 'es', 'pt', 'de'] as const,
-  ...overrides,
-});
 
 describe('SignOut', () => {
   beforeEach(() => jest.clearAllMocks());

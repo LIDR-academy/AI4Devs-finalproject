@@ -7,6 +7,7 @@ const labels = {
   password: 'Password',
   submit: 'Log in',
   signUpPrompt: 'No account? Sign up',
+  signingIn: 'Signing in…',
 };
 
 const meta = {

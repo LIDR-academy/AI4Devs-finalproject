@@ -3,7 +3,7 @@ import { Pressable, StyleProp, Text, ViewStyle } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { useInteractionState } from '@helsoft/hooks';
-import { spacing } from '../../theme/spacing';
+import { layout, spacing } from '../../theme/spacing';
 import { Icon } from '../icon/icon';
 import { StateLayer } from '../state-layer/state-layer';
 
@@ -28,6 +28,15 @@ const PAD_X: Record<ButtonSize, number> = { small: spacing.s8, medium: spacing.s
 const PAD_TEXT = spacing.s3;
 const PAD_ICON = spacing.s4;
 const PAD_ICON_FULL = spacing.s6;
+type Insets = { top: number; bottom: number; left: number; right: number };
+/** Expands the tappable area to the project's 48dp touch-target token (WCAG 2.5.5 AAA / HIG)
+ * without changing the visual box size — sizes already at/above the token get no extra slop. */
+const HIT_SLOP: Record<ButtonSize, Insets> = Object.fromEntries(
+  Object.entries(HEIGHTS).map(([size, height]) => {
+    const slop = Math.max(0, (layout.touchTarget - height) / 2);
+    return [size, { top: slop, bottom: slop, left: slop, right: slop }];
+  }),
+) as Record<ButtonSize, Insets>;
 
 /**
  * Button — Material Design 3 common button.
@@ -47,7 +56,7 @@ export const Button = ({
   const { theme } = useUnistyles();
   const { hover, press, handlers } = useInteractionState();
 
-  styles.useVariants({ variant, size });
+  styles.useVariants({ variant });
 
   const fgByVariant = useMemo(
     () => ({
@@ -80,8 +89,9 @@ export const Button = ({
       accessibilityRole="button"
       disabled={disabled}
       onPress={onPress}
+      hitSlop={HIT_SLOP[size]}
       {...handlers}
-      style={[styles.root(padLeft, padRight, fullWidth, disabled), shadow, style]}
+      style={[styles.root(padLeft, padRight, fullWidth, disabled, HEIGHTS[size]), shadow, style]}
     >
       <StateLayer color={fg} opacity={stateOpacity} />
       {icon ? <Icon name={icon} size={18} color={fg} /> : null}
@@ -96,7 +106,7 @@ export const Button = ({
 };
 
 const styles = StyleSheet.create((theme) => ({
-  root: (padLeft: number, padRight: number, fullWidth: boolean, disabled: boolean) => ({
+  root: (padLeft: number, padRight: number, fullWidth: boolean, disabled: boolean, minHeight: number) => ({
     flexDirection: 'row',
     alignSelf: fullWidth ? 'stretch' : 'flex-start',
     alignItems: 'center',
@@ -107,6 +117,10 @@ const styles = StyleSheet.create((theme) => ({
     borderRadius: theme.shape.button,
     opacity: disabled ? theme.disabledOpacity : 1,
     overflow: 'hidden',
+    // A floor, not a fixed height, so an enlarged Dynamic Type label can grow the box
+    // instead of getting clipped (WCAG 1.4.4). `overflow: hidden` stays — it also clips
+    // StateLayer's hover/press wash to the button's rounded shape.
+    minHeight,
     variants: {
       variant: {
         filled: { backgroundColor: theme.colors.primary },
@@ -118,11 +132,6 @@ const styles = StyleSheet.create((theme) => ({
           borderColor: theme.colors.outline,
         },
         text: { backgroundColor: 'transparent' },
-      },
-      size: {
-        small: { height: HEIGHTS.small },
-        medium: { height: HEIGHTS.medium },
-        large: { height: HEIGHTS.large },
       },
     },
   }),
