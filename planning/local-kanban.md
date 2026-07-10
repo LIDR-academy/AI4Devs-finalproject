@@ -8,16 +8,6 @@ Este tablero se gestiona en el repositorio (sin Jira/Notion).
 - Cada tarea debe incluir Ticket, HU, Sprint y PR objetivo.
 
 ## Backlog
-- [ ] T01 Definir schema Prisma (HU-01, Sprint 1, PR-01)
-- [ ] T02 Implementar API de proyectos (HU-01, Sprint 1, PR-02)
-- [ ] T05 Formulario de proyecto (HU-01, Sprint 1, PR-04)
-- [ ] T06 Formulario de casos de uso (HU-02, Sprint 1, PR-04)
-- [ ] T03 Endpoint de estimacion con Azure OpenAI (HU-04, Sprint 2, PR-03)
-- [ ] T04 Prompt estructurado (HU-04, Sprint 2, PR-03)
-- [ ] T07 Seleccion de roles (HU-03, Sprint 2, PR-04)
-- [ ] T08 Vista de reporte (HU-05, Sprint 2, PR-05)
-- [ ] T09 Unit tests Vitest (Transversal, Sprint 3, PR-06)
-- [ ] T10 Integration tests Supertest (Transversal, Sprint 3, PR-06)
 - [ ] T11 E2E Playwright (Transversal, Sprint 3, PR-06)
 - [ ] T12 Deploy y secretos (Transversal, Sprint 3, PR-07)
 
@@ -25,10 +15,18 @@ Este tablero se gestiona en el repositorio (sin Jira/Notion).
 - [ ] (vacío)
 
 ## Review
-- [ ] (vacío)
+- [ ] T05 Formulario de proyecto (HU-01, Sprint 1, PR-04)
+- [ ] T06 Formulario de casos de uso (HU-02, Sprint 1, PR-04)
+- [ ] T07 Seleccion de roles (HU-03, Sprint 2, PR-04)
+- [ ] T08 Vista de reporte (HU-05, Sprint 2, PR-05)
+- [ ] T03 Endpoint de estimacion con Azure OpenAI (HU-04, Sprint 2, PR-03)
+- [ ] T04 Prompt estructurado (HU-04, Sprint 2, PR-03)
+- [ ] T09 Unit tests Vitest (Transversal, Sprint 3, PR-06)
+- [ ] T10 Integration tests Supertest (Transversal, Sprint 3, PR-06)
 
 ## Done
-- [ ] (vacío)
+- [x] T01 Definir schema Prisma (HU-01, Sprint 1, PR-01)
+- [x] T02 Implementar API de proyectos (HU-01, Sprint 1, PR-02)
 
 ## Estado por sprint
 ### Sprint 1
@@ -44,8 +42,8 @@ Este tablero se gestiona en el repositorio (sin Jira/Notion).
 - Tareas: T09, T10, T11, T12.
 
 ## Plantilla de update semanal
-- Fecha:
-- Completado:
-- En progreso:
-- Bloqueos:
-- Proximo foco:
+- Fecha: 2026-07-09
+- Completado: T01 y T02 finalizados; T05 y T06 conectados end-to-end; T07 implementado con selector de roles y trigger de estimacion; T08 implementado con vista de reporte consolidada por proyecto; T03/T04 integrados con Azure OpenAI configurable por env y fallback heuristico seguro; T09/T10 implementados con Vitest + Supertest y tests frontend iniciales con Testing Library.
+- En progreso: preparar T11 E2E (Playwright).
+- Bloqueos: ninguno.
+- Proximo foco: construir escenario E2E principal de punta a punta (T11).

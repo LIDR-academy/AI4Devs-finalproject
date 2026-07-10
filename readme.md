@@ -11,6 +11,7 @@
 - [Problema y solución](#-problema-y-solución)
 - [Usuarios objetivo](#-usuarios-objetivo)
 - [Flujo E2E](#-flujo-e2e)
+- [Autenticación y permisos (RBAC)](#-autenticación-y-permisos-rbac)
 - [Alcance del MVP — Historias de usuario](#-alcance-del-mvp--historias-de-usuario)
 - [Arquitectura](#️-arquitectura)
 - [Decisiones de arquitectura](#-decisiones-de-arquitectura)
@@ -118,6 +119,38 @@ Crear proyecto → Definir casos de uso → Generar roadmap → Estimar por fase
 | 5    | Sistema | Procesa con IA        | Prompt estructurado → Azure OpenAI                |
 | 6    | Sistema | Genera resultados     | Roadmap, esfuerzo, tokens                         |
 | 7    | Usuario | Visualiza el reporte  | Fases, equipo, horas, costos, supuestos y riesgos |
+
+---
+
+## 🔐 Autenticación y permisos (RBAC)
+
+El MVP incluye autenticación por token (access + refresh) y control de acceso por rol.
+
+### Flujo de autenticación
+
+1. El usuario inicia sesión en el frontend con `actorId` y contraseña.
+2. El backend valida la contraseña contra `AUTH_LOGIN_PASSWORD`.
+3. Se devuelve `accessToken` + `refreshToken` + rol resuelto (`SUPERADMIN`, `ADMIN`, `USER`).
+4. El frontend envía `Authorization: Bearer <accessToken>` en requests protegidas.
+5. Ante `401`, el frontend intenta `POST /auth/refresh` automáticamente.
+6. `POST /auth/logout` invalida la sesión rotando versión de sesión.
+
+### Resolución de roles
+
+- `AUTH_SUPERADMIN_ACTOR_IDS`: lista de actor IDs con rol `SUPERADMIN`.
+- `AUTH_ADMIN_ACTOR_IDS`: lista de actor IDs con rol `ADMIN`.
+- Si un actor no está en esas listas, queda con rol `USER`.
+
+### Permisos principales
+
+| Capacidad | SUPERADMIN | ADMIN | USER |
+| --- | --- | --- | --- |
+| Crear proyecto (`POST /projects`) | ✅ | ✅ | ❌ |
+| Gestionar roles de agentes (`/projects/agent-roles`) | ✅ | ✅ | ❌ |
+| Gestionar usuarios del sistema (`/projects/users`) | ✅ | ❌ | ❌ |
+| Listar/consultar proyectos asignados | ✅ | ✅ | ✅ |
+| Agregar casos de uso en proyectos permitidos | ✅ | ✅ | ✅ |
+| Ejecutar estimación en proyectos permitidos | ✅ | ✅ | ✅ |
 
 ---
 
@@ -485,7 +518,7 @@ erDiagram
 | ----------------- | -------------------------------------------------------------------- |
 | **Project**       | `id`, `name`, `description`, `complexity`, `createdAt`               |
 | **UseCase**       | `id`, `projectId`, `title`, `description`, `priority`                |
-| **Estimation**    | `id`, `projectId`, `totalHours`, `totalCost`, `assumptions`, `risks` |
+| **Estimation**    | `id`, `projectId`, `version`, `totalHours`, `totalCost`, `assumptions`, `risks` |
 | **Phase**         | `id`, `estimationId`, `name`, `description`, `order`                 |
 | **RoleEstimate**  | `role`, `hours`                                                      |
 | **TokenEstimate** | `model`, `tokens`, `cost`                                            |
@@ -498,10 +531,31 @@ erDiagram
 
 | Método | Endpoint                 | Descripción                         |
 | ------ | ------------------------ | ----------------------------------- |
+| `POST` | `/auth/login`            | Iniciar sesión y obtener tokens     |
+| `POST` | `/auth/refresh`          | Renovar access token con refresh token |
+| `POST` | `/auth/logout`           | Cerrar sesión y revocar sesión actual |
 | `POST` | `/projects`              | Crear un nuevo proyecto             |
 | `GET`  | `/projects`              | Listar todos los proyectos          |
-| `GET`  | `/projects/:id`          | Obtener detalle de un proyecto      |
-| `POST` | `/projects/:id/estimate` | Generar roadmap + estimación con IA |
+| `GET`  | `/projects/use-cases`    | Listar casos de uso por proyecto    |
+| `GET`  | `/projects/agent-roles`  | Listar catálogo de roles de agente  |
+| `POST` | `/projects/agent-roles`  | Crear rol de agente (`ADMIN+`)      |
+| `PUT`  | `/projects/agent-roles/:roleId` | Actualizar rol de agente (`ADMIN+`) |
+| `DELETE` | `/projects/agent-roles/:roleId` | Eliminar rol de agente (`ADMIN+`) |
+| `GET`  | `/projects/:id`          | Obtener detalle con la estimación más reciente |
+| `GET`  | `/projects/:id?version=2`| Obtener detalle con una versión específica de estimación |
+| `GET`  | `/projects/:id/estimations` | Listar historial de versiones de estimación |
+| `POST` | `/projects/:id/use-cases`| Crear caso de uso en proyecto       |
+| `POST` | `/projects/:id/estimate` | Generar roadmap + guardar una nueva versión de estimación |
+
+Notas de versionado:
+
+- Cada nueva ejecución de `POST /projects/:id/estimate` crea una nueva versión (`version` incremental) y no sobrescribe la anterior.
+- `GET /projects/:id` devuelve por defecto la versión más reciente.
+
+Notas de seguridad:
+
+- Con `AUTH_ENABLED=true`, la API requiere bearer token para endpoints de negocio.
+- Los permisos dependen del rol y de la pertenencia/asignación de proyecto.
 
 ---
 
@@ -526,13 +580,25 @@ erDiagram
 | **Integration tests** | Supertest | Endpoints de la API REST y acceso a base de datos |
 | **E2E tests** | Playwright | Flujo completo de usuario en el navegador |
 
+### Comandos de testing
+
+- Backend unit + integration: `cd app/backend && npm run test`
+- Frontend unit: `cd app/frontend && npm run test`
+- Frontend E2E: `cd app/frontend && npm run test:e2e`
+
 ### Flujo E2E cubierto
 
 ```
-1. Crear proyecto
-2. Generar estimación
-3. Visualizar resultado
+1. Iniciar sesión
+2. Crear proyecto
+3. Agregar caso de uso
+4. Generar estimación
+5. Visualizar reporte
 ```
+
+Incluye escenario de error:
+
+- Modelo de estimación inválido (validación backend y alerta de error en UI)
 
 ---
 
@@ -548,11 +614,16 @@ erDiagram
 
 ### CI/CD
 
-El flujo de despliegue es continuo y sin configuración manual adicional:
+El repositorio incluye CI mínimo en GitHub Actions:
 
-- Cada push a `main` dispara un deploy automático en Vercel (frontend) y Render (backend)
-- No se requiere pipeline de CI propio para el MVP; la integración con GitHub es nativa en ambas plataformas
-- Los builds fallidos no se despliegan — Vercel y Render realizan health checks antes de promover la versión
+- Workflow: `.github/workflows/ci.yml`
+- Checks backend: prisma generate, typecheck, tests, build
+- Checks frontend: lint, tests, build
+
+Deploy continuo:
+
+- Push a `main` puede disparar deploy automático en Vercel (frontend) y Render (backend)
+- Si los checks fallan, la release debe bloquearse hasta corregir errores
 
 ### Gestión de secretos
 
@@ -566,8 +637,13 @@ Las credenciales y configuraciones sensibles se gestionan exclusivamente mediant
 | `AZURE_OPENAI_DEPLOYMENT` | Nombre del deployment del modelo |
 
 - En **Vercel** y **Render**, las variables se configuran desde el panel de cada servicio
-- El repositorio incluye un archivo `.env.example` con las variables requeridas (sin valores)
+- El repositorio incluye ejemplos de variables en `app/backend/.env.example` y `app/frontend/.env.example`
 - El archivo `.env` está incluido en `.gitignore`
+
+Runbooks operativos:
+
+- Variables de entorno: `docs/operations/environment-variables.md`
+- Deploy y rollback: `docs/operations/release-runbook.md`
 
 ---
 
