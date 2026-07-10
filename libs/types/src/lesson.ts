@@ -1,13 +1,34 @@
 export type SlideKind = 'instructional' | 'activity';
 
-export type Slide = {
+type SlideBase = {
   id: string;
   lessonId: string;
-  kind: SlideKind;
   title: string;
+  /** For an activity slide, `content` holds the question prompt. */
   content: string;
   position: number;
 };
+
+export type InstructionalSlide = SlideBase & { kind: 'instructional' };
+
+export type MultipleChoiceOption = {
+  /** Stable id used to reference the chosen/correct option (persist-friendly for resume). */
+  id: string;
+  label: string;
+};
+
+export type MultipleChoiceSlide = SlideBase & {
+  kind: 'activity';
+  activityType: 'multiple-choice';
+  options: MultipleChoiceOption[];
+  /** id of the single correct option; must match one of `options[].id`. */
+  correctOptionId: string;
+  /** Optional teaching note shown with the result. */
+  explanation?: string;
+};
+
+export type ActivitySlide = MultipleChoiceSlide; // union grows as sibling stories land
+export type Slide = InstructionalSlide | ActivitySlide;
 
 export type Lesson = {
   id: string;

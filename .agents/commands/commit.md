@@ -36,6 +36,8 @@ Commit the current changes following the [Conventional Commits](https://www.conv
 
 7. **Report.** Show the resulting `git log -1 --stat` (short) and the branch. Do NOT push unless the user explicitly asks.
 
+8. Add the commit to the progress history file in the progress folder: progress/history.md
+
 ## Example messages
 
 - `feat(login): add login screen`

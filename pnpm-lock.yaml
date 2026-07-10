@@ -123,6 +123,12 @@ importers:
       '@helsoft/hooks':
         specifier: workspace:*
         version: link:../hooks
+      '@helsoft/localization':
+        specifier: workspace:*
+        version: link:../localization
+      '@helsoft/types':
+        specifier: workspace:*
+        version: link:../types
     devDependencies:
       '@storybook/react-native-web-vite':
         specifier: ^10.2.9
@@ -380,6 +386,9 @@ importers:
         specifier: workspace:*
         version: link:../types
     devDependencies:
+      '@storybook/react-native-web-vite':
+        specifier: ^10.2.9
+        version: 10.4.6(@types/react@19.2.17)(esbuild@0.28.1)(react-dom@19.2.3(react@19.2.3))(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)(rollup@4.62.2)(storybook@10.4.6(@testing-library/dom@10.4.1)(@types/react@19.2.17)(react@19.2.3))(typescript@6.0.3)(vite@7.3.6(@types/node@26.1.0)(lightningcss@1.32.0)(terser@5.48.0)(yaml@2.9.0))
       '@stryker-mutator/core':
         specifier: ^8.2.6
         version: 8.7.1
@@ -422,9 +431,18 @@ importers:
       react-native-web:
         specifier: ~0.21.0
         version: 0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      storybook:
+        specifier: ^10.2.9
+        version: 10.4.6(@testing-library/dom@10.4.1)(@types/react@19.2.17)(react@19.2.3)
+      test-renderer:
+        specifier: ^1.2.0
+        version: 1.2.0(@types/react@19.2.17)(react@19.2.3)
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
+      vite:
+        specifier: ^7.1.0
+        version: 7.3.6(@types/node@26.1.0)(lightningcss@1.32.0)(terser@5.48.0)(yaml@2.9.0)
 
   libs/types:
     devDependencies:

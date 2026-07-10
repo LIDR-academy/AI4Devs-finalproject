@@ -2,6 +2,7 @@
 // evaluates a StyleSheet.create call.
 import '../src/theme/unistyles';
 
+import { LocalizationProvider } from '@helsoft/localization';
 import type { Decorator, Preview } from '@storybook/react-native-web-vite';
 import { useEffect } from 'react';
 import { UnistylesRuntime } from 'react-native-unistyles';
@@ -25,6 +26,15 @@ const withUnistylesTheme: Decorator = (Story, context) => {
 
   return <Story />;
 };
+
+// Real LocalizationProvider (not mocked): LanguageSettings calls useLocalization() directly,
+// and the provider is self-contained (isolated i18next instance, no app-level setup needed) —
+// so stories get genuine translated copy and live locale switching instead of raw i18n keys.
+const withLocalizationProvider: Decorator = (Story) => (
+  <LocalizationProvider initialLocale="en">
+    <Story />
+  </LocalizationProvider>
+);
 
 const preview: Preview = {
   parameters: {
@@ -52,7 +62,7 @@ const preview: Preview = {
   initialGlobals: {
     theme: 'light',
   },
-  decorators: [withUnistylesTheme],
+  decorators: [withUnistylesTheme, withLocalizationProvider],
 };
 
 export default preview;
