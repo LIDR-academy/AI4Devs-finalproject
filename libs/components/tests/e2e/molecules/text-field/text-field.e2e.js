@@ -84,6 +84,23 @@ test('Error text field renders supporting text', async ({ page }) => {
   await expect(canvas.locator('text=We need a title to save your lesson')).toBeVisible();
 });
 
+// Full-review Round 2 — TextField now derives accessibilityInvalid from error by default, so its
+// own canonical Error story (error: true, no explicit accessibilityInvalid) must expose
+// aria-invalid="true" on web, closing the WCAG 4.1.2/1.3.1 gap the design review flagged.
+test('Error text field exposes aria-invalid to assistive tech', async ({ page }) => {
+  await page.goto('/?path=/story/molecules-textfield--error');
+  const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
+
+  await expect(canvas.locator('input')).toHaveAttribute('aria-invalid', 'true');
+});
+
+test('Filled text field does not expose aria-invalid when there is no error', async ({ page }) => {
+  await page.goto('/?path=/story/molecules-textfield--filled');
+  const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
+
+  await expect(canvas.locator('input')).toHaveAttribute('aria-invalid', 'false');
+});
+
 test('Multiline text field renders as a textarea with label', async ({ page }) => {
   await page.goto('/?path=/story/molecules-textfield--multiline');
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');

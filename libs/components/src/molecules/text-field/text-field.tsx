@@ -20,10 +20,13 @@ export type TextFieldProps = Omit<TextInputProps, 'style'> & {
   fullWidth?: boolean;
   style?: StyleProp<ViewStyle>;
   /**
-   * Forwarded onto the underlying TextInput via `...rest`. Not yet declared on this RN version's
+   * Forwarded onto the underlying TextInput. Not yet declared on this RN version's
    * `TextInputProps`, but react-native-web's `createDOMProps` forwards it to `aria-invalid` —
    * unlike `accessibilityHint`, which react-native-web does not forward at all (Full-review
-   * Round 1, Major 3).
+   * Round 1, Major 3). Defaults to `error` (Full-review Round 2) — TextField already owns the
+   * visual error state, so it derives its own a11y-invalid signal instead of requiring every
+   * consumer to pass both in lockstep. Still overridable for the rare case a caller wants to
+   * decouple the two.
    */
   accessibilityInvalid?: boolean;
 };
@@ -46,6 +49,7 @@ export const TextField = ({
   style,
   onFocus,
   onBlur,
+  accessibilityInvalid = error,
   ...rest
 }: TextFieldProps) => {
   const { theme } = useUnistyles();
@@ -54,6 +58,9 @@ export const TextField = ({
   styles.useVariants({ variant });
   const accent = error ? theme.colors.error : focus ? theme.colors.primary : theme.colors.onSurfaceVariant;
   const borderColor = error ? theme.colors.error : focus ? theme.colors.primary : theme.colors.outline;
+  // Not on this RN version's TextInputProps typings (see the prop's own doc comment above), so it
+  // has to be merged into `rest` here rather than passed as a named JSX attribute.
+  const inputProps = { ...rest, accessibilityInvalid };
 
   return (
     <View style={[styles.root(fullWidth), style]}>
@@ -77,7 +84,7 @@ export const TextField = ({
             onBlur?.(e);
           }}
           style={styles.input(!!multiline, rows, borderColor)}
-          {...rest}
+          {...inputProps}
         />
         {trailingIcon ? (
           <Icon name={trailingIcon} size={20} color={accent} style={multiline ? styles.multilineIcon : undefined} />

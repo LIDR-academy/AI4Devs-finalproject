@@ -1011,3 +1011,74 @@ existing tokens). No scope creep beyond the 8 findings — no drive-by refactors
 Slice 1/2/3 files besides the ones each finding required.
 
 Commit: `fix(login-and-logout): resolve full-review Round 1 findings`.
+
+## Full-review Round 2 fix
+
+### Major — `TextField`'s `accessibilityInvalid` prop wasn't derived from its own `error` prop
+`review.md` (Round 2) / `review-design.md` — `TextField` already owns `error?: boolean`
+(`text-field.tsx:13`) but Round 1's Major 3 fix added `accessibilityInvalid?: boolean` (`:28`) as a
+fully independent prop that only flowed through `...rest` onto the underlying `TextInput` —
+nothing derived it from `error`, so every consumer had to pass both in lockstep, unlike every
+sibling atom/molecule (`chip.tsx:63`, `checkbox.tsx:36`, `switch.tsx:30`, `radio-group.tsx:36`,
+`language-selector.tsx:46`, `answer-option.tsx:35`), which all derive their own accessibility
+signal internally from an already-owned prop. Concretely manifested: `TextField`'s own canonical
+`Error` story (`text-field.stories.tsx:43-49`) set `error: true` without `accessibilityInvalid`,
+so it shipped without `aria-invalid` on web — reintroducing, one layer down, the exact WCAG
+4.1.2/1.3.1 gap the Major-3 fix was meant to close.
+
+- **RED** — new `text-field.test.tsx` (this component had no unit test file at all before this
+  fix), 3 tests:
+  1. `'derives accessibilityInvalid from error when no explicit accessibilityInvalid is passed'` —
+     renders `<TextField accessibilityLabel="Email" error />`, asserts
+     `screen.getByLabelText('Email').props.accessibilityInvalid` is `true`.
+  2. `'defaults accessibilityInvalid to false when error is false and none is passed explicitly'` —
+     same but no `error` prop, asserts `false`.
+  3. `'lets an explicit accessibilityInvalid override the value derived from error'` — renders
+     `error accessibilityInvalid={false}`, asserts the explicit `false` wins over the derived `true`.
+  Ran first against the untouched `text-field.tsx`: tests 1 and 2 genuinely failed (`Received:
+  undefined` — `accessibilityInvalid` had no default and was never derived), confirming a real RED;
+  test 3 passed trivially (an explicit value was always forwarded unchanged even before the fix,
+  which is expected and not itself evidence of the derivation working).
+- **GREEN** — `text-field.tsx`: destructured `accessibilityInvalid = error` (defaulting to the
+  already-owned `error` prop, `:52`) instead of leaving it inside `...rest`; merged it back into a
+  named `inputProps = { ...rest, accessibilityInvalid }` object (`:63`) and spread that onto
+  `TextInput` (`:87`) instead of assigning it as a standalone named JSX attribute — a standalone
+  `accessibilityInvalid={accessibilityInvalid}` attribute fails `tsc --noEmit` (`TS2769`) because
+  this RN version's `TextInputProps` typings don't declare the prop at all (same root cause
+  documented in Round 1's Major 3 note) and, unlike a `...rest` spread of a named type, an explicit
+  JSX attribute is subject to TypeScript's excess-property check; merging it into the spread object
+  preserves the derivation while keeping `check-types` clean. All 3 new tests green.
+- **REFACTOR** — none needed beyond the inline `inputProps` extraction above (done on green, kept
+  for readability over the original `{...{ ...rest, accessibilityInvalid }}` double-spread that
+  first made the test pass).
+- **Story/e2e** — `text-field.stories.tsx`'s `Error` story needed no change: since
+  `accessibilityInvalid` now defaults to `error`, `{ error: true, ... }` alone already derives
+  `accessibilityInvalid: true`. Added 2 new cases to `text-field.e2e.js` (`36:1` region) to lock
+  this in as a live DOM assertion rather than leaving it to source-reading: `'Error text field
+  exposes aria-invalid to assistive tech'` (asserts `aria-invalid="true"` on the `Error` story's
+  `<input>`) and `'Filled text field does not expose aria-invalid when there is no error'`
+  (asserts `aria-invalid="false"` on the `Filled` story's `<input>`). Verified both genuinely RED
+  first via a revert→confirm→restore of `text-field.tsx` only (`git stash push` on that one file):
+  both new e2e cases failed against the unfixed component (`unexpected value "null"` — no
+  `aria-invalid` attribute at all), confirming they catch the exact regression the finding
+  described; restored the fix and re-ran green.
+- **Collateral simplification** — `login-form.tsx:99-123`: dropped the now-redundant
+  `accessibilityInvalid={!!emailError}` / `accessibilityInvalid={!!passwordError}` props on both
+  `TextField`s, since `TextField` now derives the identical value itself from the `error` prop
+  already being passed. `login-form.test.tsx`'s existing 4 `accessibilityInvalid` assertions (added
+  in Round 1's Major 3 fix) required zero changes and stayed green, proving the derived default
+  produces the same externally-observable behavior as the explicit props it replaced.
+
+### Full-review Round 2 fix gate ✅
+`pnpm turbo run lint --force` (clean — only `app-study-buddy` defines a `lint` script, matching
+every prior round's gate), `pnpm turbo run check-types --force` (8/8 packages green),
+`pnpm turbo run test --force` (6/6 workspaces green: `@helsoft/services` 38/38, `@helsoft/hooks`
+21/21, `@helsoft/components` 65/65 — up from 62, +3 new `text-field.test.tsx` tests,
+`@helsoft/study-buddy` 25/25, `@helsoft/localization` 55/55, `@helsoft/lib-with-storybook` 2/2),
+`pnpm --filter @helsoft/components exec playwright test --reporter=list` (27/27 — up from 25, +2
+new `text-field.e2e.js` cases, non-interactive). No hardcoded strings/colors/dimensions
+introduced. Scope held to exactly this one finding: `text-field.tsx`, its new `text-field.test.tsx`,
+`text-field.e2e.js`, and the one-line collateral simplification in `login-form.tsx` it enabled —
+no other file touched.
+
+Commit: `fix(login-and-logout): derive TextField accessibilityInvalid from error`.
