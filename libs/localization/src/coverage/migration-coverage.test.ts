@@ -19,12 +19,17 @@ const SHARED_COMPONENTS = resolve(REPO_ROOT, 'libs/components/src');
  * Slice-2 Round-2 review — a t('auth.error.*') key referenced in sign-in-form.tsx didn't exist
  * in any locale bundle (i18next has no missing-key handler, so real users would see the raw key
  * string). Scoped narrowly to this component's own directory rather than the whole `study-buddy`
- * lib: it's the one place this exact regression occurred, and a lib-wide sweep would need to
- * separately account for other, out-of-scope components (e.g. `sign-out.tsx`'s own pre-existing
- * `auth.logOut*` keys) that this fix doesn't own. See migration-coverage.test.ts's "t() key
- * existence coverage" describe block below.
+ * lib: it's the one place this exact regression occurred at the time. `sign-out.tsx`'s own
+ * `auth.logOut*` keys are covered by their own entry in AUTH_COMPONENT_DIRS below (task-8).
  */
 const SIGN_IN_FORM_DIR = resolve(REPO_ROOT, 'libs/study-buddy/src/components/sign-in-form');
+/**
+ * Slice-3/task-8 — review.md's Slice-2 "Flagged forward" note: sign-out.tsx calls
+ * `t('auth.logOut'...)`/`t('auth.logOutConfirm*')`, none of which existed in any bundle yet
+ * (same class of bug the sign-in-form guard above was scoped to fix). Covered here now that
+ * task-8 owns closing that gap.
+ */
+const SIGN_OUT_DIR = resolve(REPO_ROOT, 'libs/study-buddy/src/components/sign-out');
 
 const isExcluded = (file: string) => file.endsWith('.stories.tsx') || file.endsWith('.test.tsx') || file.endsWith('.test.ts');
 
@@ -97,10 +102,17 @@ describe('string-migration coverage', () => {
   });
 });
 
-describe('t() key existence coverage (sign-in-form)', () => {
-  it('every dotted key literal in sign-in-form.tsx resolves in the en bundle', () => {
+// Guarded per-component (rather than a lib-wide sweep) so each new auth component opts in
+// deliberately as it's built/reviewed — see the SIGN_IN_FORM_DIR/SIGN_OUT_DIR doc comments above.
+const AUTH_COMPONENT_DIRS: Array<[name: string, dir: string]> = [
+  ['sign-in-form', SIGN_IN_FORM_DIR],
+  ['sign-out', SIGN_OUT_DIR],
+];
+
+describe.each(AUTH_COMPONENT_DIRS)('t() key existence coverage (%s)', (name, dir) => {
+  it(`every dotted key literal in ${name}.tsx resolves in the en bundle`, () => {
     const definedKeys = flattenKeys(en.translation);
-    const referencedKeys = findDottedKeyLiterals(SIGN_IN_FORM_DIR);
+    const referencedKeys = findDottedKeyLiterals(dir);
 
     // Guards the guard: fails loudly (rather than vacuously passing) if the scan finds nothing.
     expect(referencedKeys.length).toBeGreaterThan(0);
@@ -108,7 +120,9 @@ describe('t() key existence coverage (sign-in-form)', () => {
     const missing = [...new Set(referencedKeys)].filter((key) => !definedKeys.has(key));
     expect(missing).toEqual([]);
   });
+});
 
+describe('t() key existence coverage — detector sanity', () => {
   it('sanity-checks the detector against a known missing key', () => {
     const definedKeys = flattenKeys(en.translation);
 

@@ -50,6 +50,11 @@ export const en = {
       signingIn: 'Signing in…',
       toSignUp: 'No account? Sign up',
       toLogIn: 'Already have an account? Log in',
+      logOut: 'Log Out',
+      logOutConfirmHeadline: 'Log out?',
+      logOutConfirmBody: "You'll need to sign in again to access your lessons.",
+      logOutConfirmAction: 'Log Out',
+      logOutCancelAction: 'Cancel',
       error: {
         email: 'Enter a valid email address',
         invalidCredentials: 'Invalid email or password',

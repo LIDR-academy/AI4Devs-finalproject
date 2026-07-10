@@ -114,6 +114,19 @@ describe('LoginForm', () => {
     announceSpy.mockRestore();
   });
 
+  // @s12 — same iOS-parity gap as the Loading announcement: accessibilityLiveRegion has no
+  // effect on iOS VoiceOver, so an auth-error banner also needs the imperative announcement.
+  it('announces the error banner via AccessibilityInfo when errorMessage is set', async () => {
+    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} errorMessage="Invalid email or password" />);
+
+    expect(announceSpy).toHaveBeenCalledWith('Invalid email or password');
+
+    announceSpy.mockRestore();
+  });
+
   // @s3 — the loading affordance and disabled state are exclusive to isSubmitting; the
   // Content state (isSubmitting omitted, both fields non-empty per @s8) shows neither.
   it('does not show the loading affordance or disable controls outside of isSubmitting', async () => {
@@ -149,6 +162,16 @@ describe('LoginForm', () => {
 
     expect(screen.getByText('Network error')).toBeTruthy();
     expect(screen.queryByText('Invalid email or password')).toBeNull();
+  });
+
+  // @s12 — the auth-error banner exposes an `alert` role and an assertive live region so
+  // assistive tech announces it as soon as it appears, without waiting for focus.
+  it('exposes an alert role and an assertive live region on the error banner', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} errorMessage="Invalid email or password" />);
+
+    const banner = screen.getByText('Invalid email or password');
+    expect(banner.props.accessibilityLiveRegion).toBe('assertive');
+    expect(banner.parent?.props.accessibilityRole).toBe('alert');
   });
 
   it('does not render an error banner when errorMessage is omitted', async () => {
@@ -196,6 +219,15 @@ describe('LoginForm', () => {
     expect(screen.getByRole('button', { name: 'Log in', disabled: true })).toBeTruthy();
   });
 
+  // @s12 — the inline emailError is also exposed as an accessibilityHint on the field itself
+  // (not just a visually-adjacent supporting-text node), so it is programmatically associated
+  // with the field for assistive tech rather than relying on reading order alone.
+  it('exposes emailError as an accessibilityHint on the email field', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} emailError="Enter a valid email address" />);
+
+    expect(screen.getByLabelText('Email').props.accessibilityHint).toBe('Enter a valid email address');
+  });
+
   // @s9 — same, for the password field (empty password case).
   it('renders passwordError as inline supporting text on the password field and blocks submit', async () => {
     await render(<LoginForm onSubmit={jest.fn()} labels={labels} passwordError="Password is required" />);
@@ -206,6 +238,13 @@ describe('LoginForm', () => {
 
     expect(screen.getByText('Password is required')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Log in', disabled: true })).toBeTruthy();
+  });
+
+  // @s12 — same programmatic association as the email field, for the password field.
+  it('exposes passwordError as an accessibilityHint on the password field', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} passwordError="Password is required" />);
+
+    expect(screen.getByLabelText('Password').props.accessibilityHint).toBe('Password is required');
   });
 
   // @s9 fix — LoginForm forwards every email keystroke via onEmailChange so the wiring layer
@@ -266,6 +305,19 @@ describe('LoginForm', () => {
     await render(<LoginForm onSubmit={jest.fn()} labels={labels} />);
 
     expect(screen.queryByText('No account? Sign up')).toBeNull();
+  });
+
+  // @s12 — a sensible reading/focus order (email → password → submit → sign-up prompt):
+  // no explicit override exists, so this pins the render order the tree already produces,
+  // guarding against a future reorder silently scrambling assistive-tech traversal.
+  it('renders email, then password, then submit, then the sign-up prompt in that order', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} onNavigateToSignUp={jest.fn()} />);
+
+    const tree = JSON.stringify(screen.toJSON());
+    const order = ['Email', 'Password', 'Log in', 'No account? Sign up'].map((text) => tree.indexOf(`"${text}"`));
+
+    expect(order.every((index) => index >= 0)).toBe(true);
+    expect(order).toEqual([...order].sort((a, b) => a - b));
   });
 
   // Layout — the submit row lays the button and loading affordance out side-by-side,

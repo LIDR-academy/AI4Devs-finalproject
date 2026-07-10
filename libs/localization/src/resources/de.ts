@@ -45,6 +45,11 @@ export const de: TranslationResource = {
       signingIn: 'Anmeldung läuft…',
       toSignUp: 'Kein Konto? Registrieren',
       toLogIn: 'Schon ein Konto? Anmelden',
+      logOut: 'Abmelden',
+      logOutConfirmHeadline: 'Abmelden?',
+      logOutConfirmBody: 'Du musst dich erneut anmelden, um auf deine Lektionen zuzugreifen.',
+      logOutConfirmAction: 'Abmelden',
+      logOutCancelAction: 'Abbrechen',
       error: {
         email: 'Bitte gib eine gültige E-Mail-Adresse ein',
         invalidCredentials: 'E-Mail oder Passwort ungültig',

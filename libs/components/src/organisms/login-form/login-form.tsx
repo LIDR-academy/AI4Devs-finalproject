@@ -79,11 +79,21 @@ export const LoginForm = ({
     }
   }, [isSubmitting, labels.signingIn]);
 
+  // Same iOS-parity need for the auth-error banner (@s12, WCAG 4.1.3): the banner's own
+  // accessibilityLiveRegion covers Android/Web only.
+  useEffect(() => {
+    if (errorMessage) {
+      AccessibilityInfo.announceForAccessibility(errorMessage);
+    }
+  }, [errorMessage]);
+
   return (
     <View style={styles.form}>
       {errorMessage ? (
-        <View style={styles.errorBanner}>
-          <Text style={styles.errorBannerText}>{errorMessage}</Text>
+        <View style={styles.errorBanner} accessibilityRole="alert">
+          <Text style={styles.errorBannerText} accessibilityLiveRegion="assertive">
+            {errorMessage}
+          </Text>
         </View>
       ) : null}
       <TextField
@@ -97,6 +107,7 @@ export const LoginForm = ({
         keyboardType="email-address"
         error={!!emailError}
         supportingText={emailError}
+        accessibilityHint={emailError}
       />
       <TextField
         label={labels.password}
@@ -108,6 +119,7 @@ export const LoginForm = ({
         secureTextEntry
         error={!!passwordError}
         supportingText={passwordError}
+        accessibilityHint={passwordError}
       />
       <View style={styles.submitRow}>
         <Button

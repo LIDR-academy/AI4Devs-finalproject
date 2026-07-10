@@ -3,7 +3,7 @@ id: task-8
 title: i18n — auth.* keys across en/es/pt/de
 slice: 3
 scenarios: [s12]
-status: todo
+status: done
 paths: [libs/localization/src/resources/en.ts, libs/localization/src/resources/es.ts, libs/localization/src/resources/pt.ts, libs/localization/src/resources/de.ts]
 ---
 
@@ -18,10 +18,10 @@ Add every user-facing login/logout string to the `auth.*` namespace in the **aut
 - reuse existing `auth.toSignUp` for the sign-up link
 
 ## Done criteria
-- [ ] Scenario @s12 covered: the localization coverage/key-alignment test (`libs/localization`) stays green — every new `en` key exists in es/pt/de (no fallback gaps).
-- [ ] All four bundles updated; `TranslationResource` type still compiles (derived from `en`).
-- [ ] `SignInForm`/`SignOut` render copy exclusively via `t(...)` — no hardcoded user strings anywhere in the feature.
-- [ ] `pnpm lint` + `pnpm check-types` + `pnpm test` green.
+- [x] Scenario @s13 covered: the localization coverage/key-alignment test (`libs/localization`) stays green — every new `en` key exists in es/pt/de (no fallback gaps).
+- [x] All four bundles updated; `TranslationResource` type still compiles (derived from `en`).
+- [x] `SignInForm`/`SignOut` render copy exclusively via `t(...)` — no hardcoded user strings anywhere in the feature.
+- [x] `pnpm lint` + `pnpm check-types` + `pnpm test` green.
 
 ## Notes
 - Follow the existing bundle structure in `libs/localization/src/resources/en.ts` (nested `auth`/`nav` objects). The error strings must exactly match the contract in `spec.md` and the literals in `gherkin-scenarios.md` (@s5/@s6).

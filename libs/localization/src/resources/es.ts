@@ -45,6 +45,11 @@ export const es: TranslationResource = {
       signingIn: 'Iniciando sesión…',
       toSignUp: '¿No tienes cuenta? Regístrate',
       toLogIn: '¿Ya tienes cuenta? Inicia sesión',
+      logOut: 'Cerrar sesión',
+      logOutConfirmHeadline: '¿Cerrar sesión?',
+      logOutConfirmBody: 'Tendrás que iniciar sesión de nuevo para acceder a tus lecciones.',
+      logOutConfirmAction: 'Cerrar sesión',
+      logOutCancelAction: 'Cancelar',
       error: {
         email: 'Introduce un correo electrónico válido',
         invalidCredentials: 'Correo electrónico o contraseña incorrectos',

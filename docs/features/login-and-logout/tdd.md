@@ -722,3 +722,141 @@ drive-by refactors, no Slice 1/3 files touched, `AuthService.isValidEmail`'s dir
 component pattern left untouched per the sanctioned "Direct Service Usage" exception.
 
 Awaiting `reviews_lead` re-review before flipping task-7 to `done` and committing.
+
+---
+
+## Slice 3 — a11y + i18n
+
+### @s → test map (Slice 3)
+
+| @s | Scenario | Test(s) |
+|---|---|---|
+| @s12 | The login form is accessible (labels, button role, error announced) | `login-form.test.tsx` (roles/labels/live-region/AccessibilityInfo/accessibilityHint/reading-order), Playwright `login-form.e2e.js` |
+| @s13 | All user-facing strings are localized | `migration-coverage.test.ts` (`t()` key existence coverage, sign-in-form + sign-out), locale bundles `en/es/de/pt` |
+
+### task-8 — i18n keys: closing the `sign-out.tsx` gap (@s13)
+
+- **Context** — `auth.email`/`auth.password`/`auth.submit`/`auth.signingIn`/`auth.toSignUp`/
+  `auth.toLogIn`/`auth.error.{email,invalidCredentials,network}` already exist in all 4 bundles
+  (added during Slice 2's Round-2 blocker fix). The one open gap, explicitly flagged forward in
+  `review.md`'s Slice-2 "Flagged forward" note, is `sign-out.tsx`'s `auth.logOut`/
+  `auth.logOutConfirmHeadline`/`auth.logOutConfirmBody`/`auth.logOutConfirmAction`/
+  `auth.logOutCancelAction` calls — none of which existed in any bundle.
+- **RED** — extended `migration-coverage.test.ts` with a new `'t() key existence coverage
+  (sign-out)'` describe block (mirroring the existing sign-in-form one), scanning
+  `libs/study-buddy/src/components/sign-out` for dotted key literals and asserting each resolves
+  in the flattened `en` bundle. Ran and confirmed genuinely red: reported the exact 5 missing
+  keys (`auth.logOut`, `auth.logOutConfirmHeadline`, `auth.logOutConfirmAction`,
+  `auth.logOutCancelAction`, `auth.logOutConfirmBody`).
+- **GREEN** — added all 5 keys under `auth` in `en.ts` (English source strings) and translated
+  into `es`/`de`/`pt` (native, not placeholder, copy matching each bundle's existing tone). Since
+  `es`/`de`/`pt` are typed as `TranslationResource` (derived from `en`), `check-types` enforces
+  the 4 bundles stay key-aligned.
+- **REFACTOR** — deduped the now-two near-identical "does every dotted key literal in `<dir>`
+  resolve" blocks (sign-in-form, sign-out) into one `describe.each`-parameterized block over an
+  `AUTH_COMPONENT_DIRS` list; moved the detector's own self-test ("sanity-checks the detector
+  against a known missing key", unrelated to any one component) into its own top-level describe.
+  Re-ran green throughout — no assertions changed, purely a test-code restructuring.
+- `@helsoft/localization` 55/55 green (up from 54); `@helsoft/study-buddy` 23/23 green (unaffected
+  — `sign-out.test.tsx` mocks `t()` to echo its key, so it never asserted literal copy).
+  `pnpm turbo run check-types` (8/8), `pnpm lint` clean.
+
+Commit: pending, folded into this slice's final commit once task-9 also lands (per the
+orchestrator's per-slice — not per-task — gate).
+
+### task-9 — accessibility pass + Playwright e2e (@s12)
+
+Prior state: labels, submit button role, touch targets (`Button`'s `HIT_SLOP`/`minHeight`,
+`TextField`'s 56px `minHeight`), and the Loading-state live-region/`AccessibilityInfo`
+announcement were all already built (Slice 1 + Round 1/2 fixes). The open gaps for @s12 were: the
+auth-error banner (added in Slice 2, task-7) had no accessibility role/live-region/announcement at
+all; inline field errors (`emailError`/`passwordError`) had no programmatic association with their
+field beyond visual adjacency; and no e2e existed yet for this organism.
+
+- **RED** — `'exposes an alert role and an assertive live region on the error banner'`
+  (`login-form.test.tsx`): asserts the error `<Text>`'s `accessibilityLiveRegion === 'assertive'`
+  and its parent `<View>`'s `accessibilityRole === 'alert'`. Failed: neither prop existed.
+- **GREEN** — `login-form.tsx`: added `accessibilityRole="alert"` to the error banner `View` and
+  `accessibilityLiveRegion="assertive"` to its `Text` (assertive, not polite like the Loading
+  live-region, since an auth failure should interrupt rather than wait — WCAG 4.1.3).
+- **RED** — `'announces the error banner via AccessibilityInfo when errorMessage is set'`, mirroring
+  the existing Loading-state iOS-parity fix (Round 2, Major 1): `accessibilityLiveRegion` has no
+  effect on iOS VoiceOver, so an imperative announcement is also needed. Failed: no such call.
+- **GREEN** — a second `useEffect`, keyed on `[errorMessage]`, calling
+  `AccessibilityInfo.announceForAccessibility(errorMessage)` whenever an error is set — additive,
+  parallel to the existing `isSubmitting` effect (left as two small effects rather than merged,
+  matching the existing effect's own shape/clarity over premature DRY).
+- **RED** — `'exposes emailError as an accessibilityHint on the email field'` and the password
+  equivalent: asserts `screen.getByLabelText('Email'|'Password').props.accessibilityHint` equals
+  the error string. Failed: no `accessibilityHint` prop was forwarded.
+  - **Design choice, documented**: RN has no `aria-describedby` equivalent, and
+    `react-native-web`'s `TextInput`/`AccessibilityState` don't expose an `invalid` flag either
+    (confirmed by reading `react-native-web`'s installed `TextInput`/`ViewAccessibility` typings —
+    no `aria-invalid`/`accessibilityLabelledBy` pass-through). Appending the error text into
+    `accessibilityLabel` itself was considered and rejected: RNTL's `getByLabelText` does **exact**
+    string matching (verified empirically before choosing this approach), so it would have broken
+    every existing `getByLabelText('Email')`/`('Password')` query the moment an error is present.
+    `accessibilityHint` is read immediately after the label by VoiceOver/TalkBack on focus,
+    achieving the same practical "hear the field, then hear what's wrong with it" outcome without
+    touching the (unrelated, already-tested) `accessibilityLabel` value.
+- **GREEN** — `login-form.tsx`: `accessibilityHint={emailError}` / `accessibilityHint={passwordError}`
+  added to each `TextField` (forwarded to the underlying `TextInput` via `TextField`'s existing
+  `...rest` spread — no change to the shared `TextField` molecule itself).
+- **RED (regression guard, not a new behavior)** — `'renders email, then password, then submit,
+  then the sign-up prompt in that order'`: serializes `screen.toJSON()` and asserts the four
+  elements' string positions are already in ascending order (no explicit `tabIndex`/order override
+  exists anywhere in this component, so DOM/render order **is** the reading/focus order). Passed
+  immediately — the JSX was already in the right order, so this pins the current, correct design
+  rather than driving a code change (same "confirms the design" pattern as task-3's Slice-1 note).
+  **Verified not vacuous**: temporarily moved the "Sign up" `Button` above the `TextField`s (kept
+  the test), re-ran, confirmed the exact expected failure (positions out of ascending order),
+  then restored the original order — the guard genuinely catches a reorder regression.
+- **Not re-tested (already covered elsewhere, no new code)**: color-only signaling — `TextField`'s
+  `error` flag is only ever set as `error={!!emailError}`/`error={!!passwordError}` in this file,
+  always alongside the same string as `supportingText`, so there is no code path where the error
+  styling (color) could ever appear without the same message also rendered as visible text; this
+  invariant is structural, not testable-in-isolation without deliberately decoupling the two props
+  (which nothing in this task asks for). Touch targets — already 100% covered by `button.test.tsx`
+  (Round 1, Major 3) and `TextField`'s pre-existing, unchanged 56px `minHeight` (`text-field.tsx`);
+  no new test needed since neither file's touch-target code changed this task.
+- **Stories** — unchanged. None of the four accessibility additions (`accessibilityRole`,
+  `accessibilityLiveRegion`, the two new `useEffect`s, `accessibilityHint`) touch `LoginFormProps`'
+  public surface, so all 5 existing `login-form.stories.tsx` stories (`Empty`/`Content`/`Loading`/
+  `Error`/`ErrorInlineValidation`) render unchanged and already exercise every new code path.
+- **e2e** — new `libs/components/tests/e2e/organisms/login-form/login-form.e2e.js` per the
+  `storybook-e2e-tests` skill (title `'Organisms/LoginForm'` → slug `organisms-loginform`; exports
+  `Empty`/`Content`/`Loading`/`Error`/`ErrorInlineValidation` → `empty`/`content`/`loading`/`error`/
+  `error-inline-validation`). 6 tests: story-loads smoke test; `Empty` renders both field labels
+  and a disabled submit control; `Content` renders the filled email input and an enabled submit
+  control; `Loading` disables the submit control; `Error` renders the auth-error banner text;
+  `ErrorInlineValidation` renders both field-level messages.
+  - **Locator detour**: initially tried an `xpath=ancestor::div[@aria-disabled]` locator per a
+    guess at `react-native-web`'s `Pressable` output; a debug dump of the actual rendered DOM
+    (`element.outerHTML` walked up the ancestor chain) showed `accessibilityRole="button"` maps
+    `Pressable` to a real `<button>` element (with both `disabled` and `aria-disabled`
+    attributes) in this `react-native-web` version — switched the ancestor selector to
+    `ancestor::button[1]`. A first attempt asserting the literal string
+    `toHaveAttribute('aria-disabled', 'false')` also failed: when `disabled` is falsy,
+    `react-native-web` omits the attribute entirely rather than writing `"false"`. Fixed by using
+    Playwright's semantic `toBeEnabled()`/`toBeDisabled()` matchers instead, which check the
+    underlying DOM `disabled` property directly and work regardless of whether the attribute is
+    present.
+- `@helsoft/components` unit suite: 30/30 in `login-form.test.tsx` (up from 25), 49/49 for the
+  whole lib. e2e: 6/6 new + 19/19 pre-existing = 25/25, run via
+  `pnpm --filter @helsoft/components exec playwright test --reporter=list` (non-blocking `list`
+  reporter, per the skill).
+
+### Slice 3 gate ✅
+`pnpm turbo run test` (6/6 workspaces green), `pnpm turbo run check-types --force` (8/8 packages
+green), `pnpm lint` clean, `pnpm --filter @helsoft/components exec playwright test
+--reporter=list` (25/25 green, non-interactive). No hardcoded strings/colors/dimensions — the two
+new locale keys sets (`auth.logOut*`, task-8) flow through `t()` exactly like their siblings; the
+accessibility additions (`accessibilityRole`, `accessibilityLiveRegion`, `accessibilityHint`) are
+plain RN a11y props, not visual tokens. `@s12` (a11y) and `@s13` (i18n) both covered by concrete,
+verified-non-vacuous tests. Per this session's explicit instruction, the per-slice `reviewer_code`+
+`reviewer_design` light review is skipped for this final slice — the full 6-reviewer round (+
+mutation) runs next instead.
+
+Commit: `feat(login-and-logout): add localization and accessibility` (Slice 3 — no analytics/
+feature-flags in scope per `tasks.md`'s footnote, so the slice-table's generic Slice-3 commit
+message is narrowed to what was actually built).

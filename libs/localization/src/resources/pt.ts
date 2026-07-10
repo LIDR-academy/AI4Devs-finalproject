@@ -45,6 +45,11 @@ export const pt: TranslationResource = {
       signingIn: 'Entrando…',
       toSignUp: 'Não tem conta? Cadastre-se',
       toLogIn: 'Já tem conta? Entre',
+      logOut: 'Sair',
+      logOutConfirmHeadline: 'Sair da conta?',
+      logOutConfirmBody: 'Você precisará entrar novamente para acessar suas lições.',
+      logOutConfirmAction: 'Sair',
+      logOutCancelAction: 'Cancelar',
       error: {
         email: 'Informe um e-mail válido',
         invalidCredentials: 'E-mail ou senha inválidos',
