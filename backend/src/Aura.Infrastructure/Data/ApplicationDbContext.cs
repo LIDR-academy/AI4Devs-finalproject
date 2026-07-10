@@ -32,4 +32,30 @@ public class ApplicationDbContext : DbContext
         
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
     }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        var entries = ChangeTracker.Entries<Aura.Core.Interfaces.ISoftDeletable>()
+            .Where(e => e.State == EntityState.Deleted);
+
+        foreach (var entry in entries)
+        {
+            entry.State = EntityState.Modified;
+            entry.Entity.IsDeleted = true;
+            entry.Entity.DeletedAt = DateTimeOffset.UtcNow;
+
+            if (entry.Entity is Guest guest)
+            {
+                var invitations = await Invitations.Where(i => i.GuestId == guest.Id).ToListAsync(cancellationToken);
+                foreach (var inv in invitations)
+                {
+                    inv.IsDeleted = true;
+                    inv.DeletedAt = DateTimeOffset.UtcNow;
+                    Entry(inv).State = EntityState.Modified;
+                }
+            }
+        }
+
+        return await base.SaveChangesAsync(cancellationToken);
+    }
 }
