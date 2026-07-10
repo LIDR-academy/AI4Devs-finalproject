@@ -39,6 +39,10 @@ export const pt: TranslationResource = {
       backHome: 'Voltar às minhas lições',
     },
     auth: {
+      email: 'E-mail',
+      password: 'Senha',
+      submit: 'Entrar',
+      signingIn: 'Entrando…',
       toSignUp: 'Não tem conta? Cadastre-se',
       toLogIn: 'Já tem conta? Entre',
     },

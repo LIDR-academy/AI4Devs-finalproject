@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { AccessibilityInfo, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { Button } from '../../atoms/button/button';
@@ -25,7 +25,7 @@ export type LoginFormProps = {
 
 const SUBMIT_SPINNER_SIZE = 18;
 const SUBMIT_SPINNER_THICKNESS = 2;
-/** testID for the Loading-state affordance (@s3) — a11y label lands with the Slice 3 a11y pass. */
+/** testID for the Loading-state affordance (@s3) — the a11y announcement lives on the live-region Text node and the AccessibilityInfo call below. */
 export const LOADING_INDICATOR_TEST_ID = 'login-form-loading-indicator';
 
 /**
@@ -36,6 +36,14 @@ export const LOADING_INDICATOR_TEST_ID = 'login-form-loading-indicator';
 export const LoginForm = ({ onSubmit, isSubmitting = false, onNavigateToSignUp, labels }: LoginFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  // accessibilityLiveRegion (below) is Android/Web-only (@platform android) — iOS VoiceOver
+  // needs this imperative call fired directly on the isSubmitting transition (WCAG 4.1.3).
+  useEffect(() => {
+    if (isSubmitting) {
+      AccessibilityInfo.announceForAccessibility(labels.signingIn);
+    }
+  }, [isSubmitting, labels.signingIn]);
 
   return (
     <View style={styles.form}>

@@ -44,6 +44,10 @@ export const en = {
       backHome: 'Back to my lessons',
     },
     auth: {
+      email: 'Email',
+      password: 'Password',
+      submit: 'Log in',
+      signingIn: 'Signing in…',
       toSignUp: 'No account? Sign up',
       toLogIn: 'Already have an account? Log in',
     },

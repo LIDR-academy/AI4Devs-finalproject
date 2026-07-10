@@ -236,3 +236,69 @@ RED/GREEN cycle, tests stayed green throughout the extraction.
 strings/colors/dimensions — the `signingIn` label flows through `labels`/`t()` like its siblings,
 `HIT_SLOP`/`minHeight` derive from existing tokens (`layout.touchTarget`, `HEIGHTS`). `@s5, @s6,
 @s8, @s12, @s13` (Slice 2/3 scope) untouched this round.
+
+---
+
+## Round-2 review fixes
+
+Responds to `docs/features/login-and-logout/review.md` (Round 2 consolidation: 1 major + 2 minor,
+zero blockers). One block per finding, same RED→GREEN→REFACTOR log style. Scenario stays `@s3`
+(Loading state) throughout.
+
+### Major 1 — iOS VoiceOver gets no announcement during Loading (@s3)
+- **RED** — added `'announces "Signing in…" via AccessibilityInfo when isSubmitting becomes
+  true'` (`login-form.test.tsx:84-97`): spies on `AccessibilityInfo.announceForAccessibility`,
+  renders Content first (asserts not called), then `rerender`s into `isSubmitting` and asserts
+  `toHaveBeenCalledWith(labels.signingIn)`. Failed: no such call anywhere in `login-form.tsx`.
+  - **Diagnostic detour**: the first RED run failed on the *wrong* assertion
+    (`not.toHaveBeenCalled()` before the transition) with 4 stray recorded calls. Traced (via a
+    temporary `expect.getState().currentTestName` + `jest.isMockFunction` probe, removed before
+    GREEN) to `react-native`'s `jest-expo` preset already auto-mocking
+    `AccessibilityInfo.announceForAccessibility` as a persistent `jest.fn()` from module load, so
+    call history survives across tests in the same file regardless of when `jest.spyOn` is first
+    called on it. Fixed by adding `announceSpy.mockClear()` right after `jest.spyOn(...)` in the
+    test, isolating this test's assertions from the other Loading-state tests' own mounts earlier
+    in the file (no production-code implication).
+- **GREEN** — `login-form.tsx:1-2` (import `AccessibilityInfo` alongside `useEffect`),
+  `:40-46`: a `useEffect` keyed on `[isSubmitting, labels.signingIn]` that calls
+  `AccessibilityInfo.announceForAccessibility(labels.signingIn)` whenever `isSubmitting` is
+  `true` — fires on the initial mount if Loading starts immediately, and again on every
+  false→true transition. The existing `accessibilityLiveRegion="polite"` `<Text>` is untouched
+  and still drives Android/Web; this is purely additive for iOS, where
+  `accessibilityLiveRegion` has no native effect.
+- **REFACTOR** — none needed; one small effect, no duplication.
+- 1 new test green; `login-form.test.tsx` totals 10 tests, all green.
+
+### Minor 2 — stale doc comment on `LOADING_INDICATOR_TEST_ID` (@s3, content-only)
+- No new test (per the review's own note — content-only, `check-types`/`test` staying green is
+  the check). `login-form.tsx:28`: dropped the "a11y label lands with the Slice 3 a11y pass"
+  clause (no longer true since Round 1), pointed the comment at the live-region Text node and
+  the new `AccessibilityInfo` call instead.
+  - First wording attempt (`` `<Text>` `` in backticks) accidentally tripped
+    `libs/localization/src/coverage/migration-coverage.test.ts`'s plain-text `LITERAL_TEXT_CHILD`
+    regex, which scans raw file source (not JSX-aware) for `<Text ...>literal`ed against the
+    literal string `<Text>` in the comment. Reworded to avoid the bare `<Text>` token
+    (`login-form.tsx:28`); `@helsoft/localization` suite back to 52/52 green.
+
+### Minor 3 — `auth.signingIn` (and `email`/`password`/`submit`) missing from all locale bundles (@s3, @s2)
+- No new test — `t()` is loosely typed (`key: string`, `use-localization.ts:11`) so missing keys
+  are not mechanically caught; the fix is content-only, scoped to exactly what
+  `sign-in-form.tsx:25-29` already calls (`auth.email`, `auth.password`, `auth.submit`,
+  `auth.signingIn`) plus their existing `toSignUp`/`toLogIn` siblings. Added all four keys to
+  `libs/localization/src/resources/{en,es,de,pt}.ts` under the `auth` namespace, matching each
+  bundle's existing style/capitalization. Deliberately did **not** add the unrelated
+  `auth.logOut*` keys `sign-out.tsx` also calls — those are task-8/Slice-3 scope per this file's
+  own Slice-1 design note and out of this review's stated scope (no test currently asserts their
+  literal copy, so nothing regresses).
+- `es`/`de`/`pt` are typed as `TranslationResource` (derived from `en`), so all four bundles had
+  to gain the same keys together or `check-types` would fail — confirmed green
+  (`pnpm check-types`, all 8 packages).
+
+### Round-2 fixes gate ✅
+`pnpm --filter @helsoft/components test` (29/29), `pnpm --filter @helsoft/localization test`
+(52/52), `pnpm --filter @helsoft/study-buddy test` (14/14), `pnpm --filter @helsoft/hooks test`
+(14/14), `pnpm --filter @helsoft/services test` (30/30), `pnpm check-types` (8 packages), `pnpm
+lint` all green. No hardcoded strings/colors/dimensions introduced. `@s5, @s6, @s8, @s12, @s13`
+(Slice 2/3 scope) untouched this round.
+
+Commit: `fix(login-and-logout): resolve Round 2 findings (iOS a11y, locale)`.

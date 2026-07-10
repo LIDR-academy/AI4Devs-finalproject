@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { AccessibilityInfo } from 'react-native';
 
 import { disabledOpacity } from '../../theme/colors';
 import { LOADING_INDICATOR_TEST_ID, LoginForm } from './login-form';
@@ -75,6 +76,27 @@ describe('LoginForm', () => {
     await render(<LoginForm onSubmit={jest.fn()} isSubmitting labels={labels} />);
 
     expect(screen.getByText(labels.signingIn).props.accessibilityLiveRegion).toBe('polite');
+  });
+
+  // @s3 — RN's accessibilityLiveRegion is Android/Web-only (@platform android), so iOS
+  // VoiceOver needs the imperative, cross-platform AccessibilityInfo API fired directly when
+  // isSubmitting transitions to true (WCAG 4.1.3).
+  it('announces "Signing in…" via AccessibilityInfo when isSubmitting becomes true', async () => {
+    // react-native's jest preset already auto-mocks this module-level function, so its call
+    // history persists across tests in this file — clear it before asserting on it here.
+    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    const { rerender } = await render(<LoginForm onSubmit={jest.fn()} labels={labels} />);
+    expect(announceSpy).not.toHaveBeenCalled();
+
+    await act(async () => {
+      rerender(<LoginForm onSubmit={jest.fn()} isSubmitting labels={labels} />);
+    });
+
+    expect(announceSpy).toHaveBeenCalledWith(labels.signingIn);
+
+    announceSpy.mockRestore();
   });
 
   // @s3 — the loading affordance and disabled state are exclusive to isSubmitting; the
