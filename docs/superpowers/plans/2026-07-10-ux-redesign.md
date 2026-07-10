@@ -476,7 +476,9 @@ Crear `frontend/src/lib/components/ProcessStepper.svelte`:
     left: 0;
     right: 0;
     background: var(--color-bg);
-    border-top: 1px solid var(--color-border);
+    border-top-width: 1px;
+    border-top-style: solid;
+    border-top-color: var(--color-border);
     display: flex;
     justify-content: space-around;
     padding: 0.5rem 0.25rem;

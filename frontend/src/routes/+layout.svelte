@@ -5,6 +5,7 @@
   import Header from '$lib/components/Header.svelte';
   import ProcessStepper from '$lib/components/ProcessStepper.svelte';
   import { apiClient } from '$lib/api/client';
+  import type { DashboardResponse } from '$lib/api/types';
 
   const STEPS = [
     { id: 'listing', label: 'Anuncio', href: '/listing-lens' },
@@ -26,15 +27,15 @@
 
   onMount(async () => {
     try {
-      const data = await apiClient.get<{
-        latestListing: unknown | null;
-        process: { propertyPrice: number | null; currentStage: string | null } | null;
-        checklist: { completedItems: number; totalItems: number } | null;
-      }>('/api/dashboard');
+      const data = await apiClient.get<DashboardResponse>('/api/dashboard');
+      if (data.empty) {
+        completedSteps = new Set();
+        return;
+      }
       const cs = new Set<string>();
       if (data.latestListing) cs.add('listing');
-      if (data.process?.propertyPrice != null) cs.add('mortgage');
-      if (data.process?.currentStage != null) cs.add('timeline');
+      if (data.process.propertyPrice != null) cs.add('mortgage');
+      if (data.process.currentStage != null) cs.add('timeline');
       if (data.checklist && data.checklist.completedItems > 0) cs.add('checklist');
       completedSteps = cs;
     } catch {

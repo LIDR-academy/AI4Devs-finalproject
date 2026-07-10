@@ -15,7 +15,7 @@
     <div
       class="step"
       class:current={isCurrent}
-      class:completed={isCompleted}
+      class:completed={isCompleted && !isCurrent}
       class:future={isFuture}
       data-step-id={step.id}
     >
