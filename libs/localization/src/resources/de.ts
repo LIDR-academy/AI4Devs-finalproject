@@ -45,6 +45,11 @@ export const de: TranslationResource = {
       signingIn: 'Anmeldung läuft…',
       toSignUp: 'Kein Konto? Registrieren',
       toLogIn: 'Schon ein Konto? Anmelden',
+      error: {
+        email: 'Bitte gib eine gültige E-Mail-Adresse ein',
+        invalidCredentials: 'E-Mail oder Passwort ungültig',
+        network: 'Netzwerkfehler',
+      },
     },
     settings: {
       title: 'Einstellungen',

@@ -1,0 +1,9 @@
+{
+  "projectId": "be7e10e0-8f41-465e-9f48-9162079c0f9c",
+  "pkg": "@helsoft/components",
+  "shape": "storybook",
+  "storybookConfigDir": "libs/components/.storybook",
+  "storyImports": {
+    "shim": ["react-native"]
+  }
+}

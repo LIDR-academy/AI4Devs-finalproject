@@ -1,6 +1,10 @@
 # Review standards — the 6 reviewer rubrics
 
-The six reviewers run **in parallel**, each an independent lens. Each writes `APPROVED` or `CHANGES_REQUESTED` to its own `docs/features/<name>/review-<type>.md` with concrete `file:line` findings and a severity (blocker / major / minor). Reviewers **never edit code**. `reviews_lead` consolidates all six into `review.md`.
+The reviewers run **in parallel**, each an independent lens. Each writes `APPROVED` or `CHANGES_REQUESTED` to its own `docs/features/<name>/review-<type>.md` with concrete `file:line` findings and a severity (blocker / major / minor). Reviewers **never edit code**. `reviews_lead` consolidates into `review.md`.
+
+**Cadence — two review passes:**
+- **Per slice (during the build):** only **`reviewer_code` + `reviewer_design`** run, scoped to that slice's changes (a fast quality/design gate before the slice closes). No mutation, no minors-accept — every finding is fixed before the next slice.
+- **After all slices (full review):** **all six** reviewers run, coupled with mutation, under the 3-round cap + documented-minors rule.
 
 General hard rules for every reviewer:
 - Never approve with failing `pnpm lint`, `pnpm check-types`, `pnpm test`, or relevant `test:e2e`.

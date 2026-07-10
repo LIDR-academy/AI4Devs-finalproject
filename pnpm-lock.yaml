@@ -184,6 +184,9 @@ importers:
       '@helsoft/services':
         specifier: workspace:*
         version: link:../services
+      '@helsoft/types':
+        specifier: workspace:*
+        version: link:../types
     devDependencies:
       '@stryker-mutator/core':
         specifier: ^8.2.6

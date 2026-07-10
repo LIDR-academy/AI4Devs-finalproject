@@ -15,9 +15,9 @@ Act as **`orchestrator_lead`** and drive the full pipeline for ONE feature. Stor
 ## Run the phases (guard every gate; state on disk)
 
 1. `spec_partner` → `spec.md` + `risks.md` + `tasks.md` + `task-N.md` + `gherkin-scenarios.md` (contract via the `gherkin-authoring` skill) → **⏸ HUMAN GATE** (single, combined: approve spec **and** contract).
-2. `implementator` → strict TDD, one vertical slice at a time.
-3. `reviews_lead` → 6 reviewers in parallel → consolidated `review.md` → change requests to `implementator` (≤ 3 rounds).
-4. `mutation_tester` → StrykerJS on changed files → survivors back to `implementator`.
+2. `implementator` → strict TDD, one vertical slice at a time; **after each slice, `reviews_lead` runs a light `slice` review (reviewer_code + reviewer_design only)** → fix findings → next slice.
+3. After all slices, `reviews_lead` in **`full` mode** → all 6 reviewers in parallel → consolidated `review.md` → change requests to `implementator` (≤ 3 rounds; any finding incl. minor).
+4. `mutation_tester` → StrykerJS on changed files → survivors back to `implementator` (coupled with the full review — both re-run after any fix).
 5. `dod_validator` → `dod.md` (validate only) → **`pr_ready`**.
 
 At `pr_ready`, tell me the feature is ready and that opening & merging the PR is my manual step. Append a line to `progress/history.md`.

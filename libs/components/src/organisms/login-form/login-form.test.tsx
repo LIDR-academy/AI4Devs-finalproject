@@ -115,14 +115,141 @@ describe('LoginForm', () => {
   });
 
   // @s3 — the loading affordance and disabled state are exclusive to isSubmitting; the
-  // Content state (isSubmitting omitted) shows neither.
+  // Content state (isSubmitting omitted, both fields non-empty per @s8) shows neither.
   it('does not show the loading affordance or disable controls outside of isSubmitting', async () => {
     await render(<LoginForm onSubmit={jest.fn()} labels={labels} />);
+
+    await act(async () => {
+      fireEvent.changeText(screen.getByLabelText('Email'), 'user@example.com');
+    });
+    await act(async () => {
+      fireEvent.changeText(screen.getByLabelText('Password'), 'secret1');
+    });
 
     expect(screen.queryByTestId(LOADING_INDICATOR_TEST_ID)).toBeNull();
     expect(screen.getByRole('button', { name: 'Log in', disabled: false })).toBeTruthy();
     expect(screen.getByLabelText('Email').props.editable).not.toBe(false);
     expect(screen.queryByText(labels.signingIn)).toBeNull();
+  });
+
+  // @s5/@s6 — an auth-level failure (invalid_credentials / network_error) renders as an error
+  // banner; the form stays editable so the user can retry (re-submit) — nothing here disables
+  // the fields or the submit control.
+  it('renders an error banner and keeps the form editable when errorMessage is given', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} errorMessage="Invalid email or password" />);
+
+    expect(screen.getByText('Invalid email or password')).toBeTruthy();
+    expect(screen.getByLabelText('Email').props.editable).not.toBe(false);
+    expect(screen.getByLabelText('Password').props.editable).not.toBe(false);
+  });
+
+  // @s6 — a network_error banner is just a different injected string — same rendering path.
+  it('renders a different error banner string for a network error', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} errorMessage="Network error" />);
+
+    expect(screen.getByText('Network error')).toBeTruthy();
+    expect(screen.queryByText('Invalid email or password')).toBeNull();
+  });
+
+  it('does not render an error banner when errorMessage is omitted', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} />);
+
+    expect(screen.queryByText('Invalid email or password')).toBeNull();
+    expect(screen.queryByText('Network error')).toBeNull();
+  });
+
+  // @s5/@s6 — retry: an auth-level errorMessage does not block re-submission (unlike inline
+  // validation errors), since the user should be able to fix credentials and try again.
+  it('keeps submit enabled (once fields are non-empty) alongside an errorMessage banner', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} errorMessage="Invalid email or password" />);
+
+    await act(async () => {
+      fireEvent.changeText(screen.getByLabelText('Email'), 'user@example.com');
+    });
+    await act(async () => {
+      fireEvent.changeText(screen.getByLabelText('Password'), 'secret1');
+    });
+
+    expect(screen.getByRole('button', { name: 'Log in', disabled: false })).toBeTruthy();
+  });
+
+  // @s9 — an inline emailError renders as the email field's supporting text and marks it in
+  // error, and blocks submission even though both fields are non-empty.
+  it('renders emailError as inline supporting text on the email field and blocks submit', async () => {
+    await render(
+      <LoginForm
+        onSubmit={jest.fn()}
+        labels={labels}
+        emailError="Enter a valid email address"
+      />,
+    );
+
+    await act(async () => {
+      fireEvent.changeText(screen.getByLabelText('Email'), 'not-an-email');
+    });
+    await act(async () => {
+      fireEvent.changeText(screen.getByLabelText('Password'), 'secret1');
+    });
+
+    expect(screen.getByText('Enter a valid email address')).toBeTruthy();
+    expect(screen.getByLabelText('Email').props.value).toBe('not-an-email');
+    expect(screen.getByRole('button', { name: 'Log in', disabled: true })).toBeTruthy();
+  });
+
+  // @s9 — same, for the password field (empty password case).
+  it('renders passwordError as inline supporting text on the password field and blocks submit', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} passwordError="Password is required" />);
+
+    await act(async () => {
+      fireEvent.changeText(screen.getByLabelText('Email'), 'user@example.com');
+    });
+
+    expect(screen.getByText('Password is required')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Log in', disabled: true })).toBeTruthy();
+  });
+
+  // @s9 fix — LoginForm forwards every email keystroke via onEmailChange so the wiring layer
+  // (SignInForm) can re-validate/clear emailError reactively; otherwise, once emailError is set,
+  // the only way to clear it is via the submit button it itself keeps disabled (permanent deadlock).
+  it('calls onEmailChange with the new value as the email field changes', async () => {
+    const onEmailChange = jest.fn();
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} onEmailChange={onEmailChange} />);
+
+    await act(async () => {
+      fireEvent.changeText(screen.getByLabelText('Email'), 'user@example.com');
+    });
+
+    expect(onEmailChange).toHaveBeenCalledWith('user@example.com');
+  });
+
+  it('does not render inline field errors when emailError/passwordError are omitted', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} />);
+
+    expect(screen.queryByText('Enter a valid email address')).toBeNull();
+    expect(screen.queryByText('Password is required')).toBeNull();
+  });
+
+  // @s8 — a pristine form (no input yet) disables the submit control and shows no error.
+  it('disables the submit control and shows no error on a pristine (empty) form', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} />);
+
+    expect(screen.getByRole('button', { name: 'Log in', disabled: true })).toBeTruthy();
+    expect(screen.queryByText(labels.signingIn)).toBeNull();
+  });
+
+  // @s8 — the submit control re-enables once both fields hold some input (Content state,
+  // spec.md UI-states table: "non-empty email + non-empty password").
+  it('enables the submit control once both fields hold non-empty input', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} />);
+
+    await act(async () => {
+      fireEvent.changeText(screen.getByLabelText('Email'), 'user@example.com');
+    });
+    await act(async () => {
+      fireEvent.changeText(screen.getByLabelText('Password'), 'secret1');
+    });
+
+    expect(screen.getByRole('button', { name: 'Log in', disabled: false })).toBeTruthy();
   });
 
   // Content state (UI states table, spec.md) — a "Sign up" link is visible and wired.

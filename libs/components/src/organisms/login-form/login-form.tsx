@@ -21,6 +21,22 @@ export type LoginFormProps = {
   isSubmitting?: boolean;
   onNavigateToSignUp?: () => void;
   labels: LoginFormLabels;
+  /**
+   * Auth-level failure banner (invalid_credentials / network_error, @s5/@s6). The form stays
+   * editable and submit stays enabled once fields are non-empty — retry is just re-submitting.
+   */
+  errorMessage?: string;
+  /** Inline validation message for the email field (@s9, e.g. malformed email). Blocks submit. */
+  emailError?: string;
+  /** Inline validation message for the password field (@s9, e.g. empty password). Blocks submit. */
+  passwordError?: string;
+  /**
+   * Called with the email field's next value on every change. Lets the wiring layer
+   * (SignInForm) re-validate/clear `emailError` reactively as the user edits — without this,
+   * once `emailError` is set the submit control that would re-trigger validation is itself
+   * disabled by that same error, permanently deadlocking the form (@s9 fix).
+   */
+  onEmailChange?: (email: string) => void;
 };
 
 const SUBMIT_SPINNER_SIZE = 18;
@@ -33,9 +49,27 @@ export const LOADING_INDICATOR_TEST_ID = 'login-form-loading-indicator';
  * owns only the local field values, reports submissions up via `onSubmit`. All copy
  * comes in through `labels` so the component stays locale-agnostic.
  */
-export const LoginForm = ({ onSubmit, isSubmitting = false, onNavigateToSignUp, labels }: LoginFormProps) => {
+export const LoginForm = ({
+  onSubmit,
+  isSubmitting = false,
+  onNavigateToSignUp,
+  labels,
+  errorMessage,
+  emailError,
+  passwordError,
+  onEmailChange,
+}: LoginFormProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  // Empty state (@s8): a pristine form (either field still blank) keeps submit disabled.
+  const isPristine = !email.trim() || !password.trim();
+  // Inline validation (@s9): a field-level error blocks submit even once fields are non-empty.
+  const hasFieldError = !!emailError || !!passwordError;
+
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    onEmailChange?.(value);
+  };
 
   // accessibilityLiveRegion (below) is Android/Web-only (@platform android) — iOS VoiceOver
   // needs this imperative call fired directly on the isSubmitting transition (WCAG 4.1.3).
@@ -47,15 +81,22 @@ export const LoginForm = ({ onSubmit, isSubmitting = false, onNavigateToSignUp, 
 
   return (
     <View style={styles.form}>
+      {errorMessage ? (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorBannerText}>{errorMessage}</Text>
+        </View>
+      ) : null}
       <TextField
         label={labels.email}
         accessibilityLabel={labels.email}
         value={email}
-        onChangeText={setEmail}
+        onChangeText={handleEmailChange}
         disabled={isSubmitting}
         accessibilityState={{ disabled: isSubmitting }}
         autoCapitalize="none"
         keyboardType="email-address"
+        error={!!emailError}
+        supportingText={emailError}
       />
       <TextField
         label={labels.password}
@@ -65,9 +106,14 @@ export const LoginForm = ({ onSubmit, isSubmitting = false, onNavigateToSignUp, 
         disabled={isSubmitting}
         accessibilityState={{ disabled: isSubmitting }}
         secureTextEntry
+        error={!!passwordError}
+        supportingText={passwordError}
       />
       <View style={styles.submitRow}>
-        <Button disabled={isSubmitting} onPress={() => onSubmit({ email, password })}>
+        <Button
+          disabled={isSubmitting || isPristine || hasFieldError}
+          onPress={() => onSubmit({ email, password })}
+        >
           {labels.submit}
         </Button>
         {isSubmitting ? (
@@ -96,6 +142,15 @@ const styles = StyleSheet.create((theme) => ({
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.s3,
+  },
+  errorBanner: {
+    backgroundColor: theme.colors.errorContainer,
+    borderRadius: theme.shape.card,
+    padding: theme.spacing.s3,
+  },
+  errorBannerText: {
+    ...theme.typography.bodyMedium,
+    color: theme.colors.onErrorContainer,
   },
   /** Off-screen but still mounted, so screen readers pick up the live-region announcement. */
   visuallyHidden: {

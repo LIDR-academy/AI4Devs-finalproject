@@ -45,6 +45,11 @@ export const pt: TranslationResource = {
       signingIn: 'Entrando…',
       toSignUp: 'Não tem conta? Cadastre-se',
       toLogIn: 'Já tem conta? Entre',
+      error: {
+        email: 'Informe um e-mail válido',
+        invalidCredentials: 'E-mail ou senha inválidos',
+        network: 'Erro de rede',
+      },
     },
     settings: {
       title: 'Configurações',

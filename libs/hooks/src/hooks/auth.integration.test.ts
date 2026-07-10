@@ -2,15 +2,16 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { initSupabase } from '@helsoft/services';
 import type { Session, SupabaseClient } from '@helsoft/services';
 
+import { buildAuthApiErrorFixture } from '../test-utils/auth-error-fixtures';
 import { useAuth } from './use-auth';
 import { useSession } from './use-session';
 
 type EmitAuthStateChange = Parameters<SupabaseClient['auth']['onAuthStateChange']>[0];
 
 /**
- * Slice-1 integration (login-and-logout): useAuth -> AuthService -> AuthDao and
- * useSession, both exercised for real, against a mocked Supabase client boundary
- * (only `auth.*` methods are stubbed — nothing above the DAO is mocked).
+ * Integration (login-and-logout, Slice 1 + Slice 2 error normalization): useAuth ->
+ * AuthService -> AuthDao and useSession, both exercised for real, against a mocked Supabase
+ * client boundary (only `auth.*` methods are stubbed — nothing above the DAO is mocked).
  *
  * One real `SupabaseClient` is built for the whole file and reused by every test (rather
  * than one per test) — matching how the app calls `initSupabase()` exactly once at startup
@@ -74,6 +75,43 @@ describe('login-and-logout slice-1 integration', () => {
       await result.current.auth.signIn('user@example.com', 'secret1');
     });
 
+    expect(result.current.session.session).toBe(session);
+  });
+
+  // @s5 — a real Supabase invalid-login error surfaces as useAuth().error === 'invalid_credentials'
+  // (no session is established), and a subsequent successful attempt both establishes the
+  // session useSession observes and clears the error (@s6's "retry works", exercised end-to-end
+  // through AuthService -> AuthDao against the mocked Supabase client boundary).
+  it('surfaces invalid_credentials on a real Supabase auth error, then recovers on a valid retry', async () => {
+    const { client, emit } = buildMockedClient();
+    jest.spyOn(client.auth, 'getSession').mockResolvedValue({ data: { session: null }, error: null } as never);
+    const session = { access_token: 'tok-3' } as Session;
+    jest
+      .spyOn(client.auth, 'signInWithPassword')
+      .mockResolvedValueOnce({
+        data: { session: null, user: null },
+        error: buildAuthApiErrorFixture('Invalid login credentials', 400, 'invalid_credentials'),
+      } as never)
+      .mockImplementationOnce(async () => {
+        emit(session);
+        return { data: { session, user: { id: 'u1' } }, error: null } as never;
+      });
+
+    const { result } = renderHook(() => ({ session: useSession(), auth: useAuth() }));
+    await waitFor(() => expect(result.current.session.isLoading).toBe(false));
+
+    await act(async () => {
+      await expect(result.current.auth.signIn('user@example.com', 'wrongpass')).rejects.toBeTruthy();
+    });
+
+    expect(result.current.auth.error).toBe('invalid_credentials');
+    expect(result.current.session.session).toBeNull();
+
+    await act(async () => {
+      await result.current.auth.signIn('user@example.com', 'secret1');
+    });
+
+    expect(result.current.auth.error).toBeNull();
     expect(result.current.session.session).toBe(session);
   });
 

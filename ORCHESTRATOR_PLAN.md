@@ -20,7 +20,7 @@ This orchestrator blends two references:
 | Entry | "implement next pending feature" | `/spec FEAT-XXX` | User-story `.md` file in `user-stories/`, named on the command line |
 | Spec + Contract | `spec_partner` debates → `project-spec.md`; separate `gherkin_author` | `/spec` → spec + risks + tasks + qa | **`spec_partner` produces spec.md + risks.md + tasks.md + `gherkin-scenarios.md` in one step** (Gherkin via the `gherkin-authoring` skill), approved together at a **single human gate** |
 | Build | `implementator` strict TDD | Code Agent by vertical slice | **`implementator`**, strict TDD **by vertical slice** (1→2→3), branching by artifact type (UI vs logic), always integration tests |
-| Review | single `judge` | `/arch` + `/security` separately | **6 parallel reviewers** (code, design, architecture, security, accessibility, performance) + a **`reviews_lead`** that consolidates all findings and issues one change request to the implementator |
+| Review | single `judge` | `/arch` + `/security` separately | **Two cadences:** per-slice light review (**code + design** only) during the build, then a **full 6-reviewer** round (code, design, architecture, security, accessibility, performance) after all slices — both driven by **`reviews_lead`**, which consolidates findings into one change request to the implementator |
 | Mutation | custom `mutate.py` | — | **StrykerJS** with per-feature score thresholds |
 | DoD / PR | — | `/pr` PR Guardian (validates DoD **and** opens PR) | **`dod_validator`** — validates the full DoD only; PR creation is a manual human step |
 
@@ -158,13 +158,13 @@ flowchart TD
     GATE -->|rejected| P1
 
     GATE -->|"approved"| P3G
-    subgraph P3G["② implementator — strict TDD, one vertical slice at a time (in_progress)"]
+    subgraph P3G["② implementator — strict TDD, one slice at a time (each slice: build → code+design review → next) (in_progress)"]
         direction LR
         S1["Slice 1<br/>Happy path + Loading"] --> S2["Slice 2<br/>Empty + Error + Retry"] --> S3["Slice 3<br/>Analytics + Flag + a11y + i18n"] --> INT["Integration tests"]
     end
 
     P3G -->|in_review| RL
-    subgraph RV["③ Reviewers — run in parallel (independent lenses)"]
+    subgraph RV["③ Full review — all 6 reviewers in parallel (code+design already ran per slice)"]
         direction LR
         R1["code"]
         R2["design"]
@@ -229,7 +229,7 @@ Each agent is a Claude Code subagent defined in `.agents/agents/<name>.md` with 
   | **2 — Empty + Error + Retry** | Empty and Error UI states, retry action, error handling by failure type (e.g. Supabase/API error, 401→refresh, 429→backoff) | the error/empty `@s` scenarios | `feat(<name>): add error handling and empty state` |
   | **3 — Analytics + Flag + a11y + i18n** | Instrument analytics events, wrap in feature flag (if rollout), accessibility labels/roles, strings externalized | the observability/a11y `@s` scenarios | `feat(<name>): add analytics, a11y, and i18n` |
 
-  **Per-slice gate** (before the commit and before the next slice): the slice's `@s` scenarios are covered by passing tests; `pnpm --filter <ws> test` (+ relevant `test:e2e`) green; `pnpm lint` + `pnpm check-types` clean; no hardcoded strings/colors/dims; Conventional Commit made. Each slice is logged as its own block in `docs/features/<name>/tdd.md`. Non-UI/logic-only features still slice by risk (happy path → error/edge → observability) even without the 4 UI states.
+  **Per-slice gate** (before the commit and before the next slice): the slice's `@s` scenarios are covered by passing tests; `pnpm --filter <ws> test` (+ relevant `test:e2e`) green; `pnpm lint` + `pnpm check-types` clean; no hardcoded strings/colors/dims; **and a light `reviewer_code` + `reviewer_design` review (via `reviews_lead` in `slice` mode) is clean** — findings fixed via TDD, ≤ 3 rounds. Then the Conventional Commit is made. Each slice is logged as its own block in `docs/features/<name>/tdd.md`. Non-UI/logic-only features still slice by risk (happy path → error/edge → observability) even without the 4 UI states.
 - **What it generates within each slice, by artifact type:**
 
   **a. UI component** (Storybook-backed, atomic design) — TDD-driven exactly like logic:
@@ -243,11 +243,11 @@ Each agent is a Claude Code subagent defined in `.agents/agents/<name>.md` with 
   - Implementation following the `Component → Hook → Service → DAO` layering, exported through the barrels.
 
   **c. Always:** an **integration test** exercising the vertical slice end-to-end across layers (e.g., hook→service→DAO with a mocked Supabase client, or a Playwright flow across composed components).
-- **Feature gate → `in_review` (after all slices):** every `@s` covered by ≥1 concrete test across the slices; the integration test green; `pnpm --filter <ws> test` and relevant `test:e2e` green; `pnpm lint` and `pnpm check-types` green; no scope beyond the contract; no hardcoded strings/colors/dims. The implementator does **not** self-mark `done`. (The parallel review round and mutation run once per feature, after all slices are green — not per slice, to keep the heavy gates affordable. For unusually large features the lead may run the review round per slice.)
+- **Feature gate → `in_review` (after all slices):** every `@s` covered by ≥1 concrete test across the slices; the integration test green; `pnpm --filter <ws> test` and relevant `test:e2e` green; `pnpm lint` and `pnpm check-types` green; no scope beyond the contract; no hardcoded strings/colors/dims. The implementator does **not** self-mark `done`. (Two review cadences: `reviewer_code` + `reviewer_design` run **per slice** as a fast gate; the **full six-reviewer round + mutation** run **once**, after all slices are green — keeping the four heavier lenses and the compute-bound mutation to a single pass per feature.)
 - **Re-work loop:** review (Phase 3) and mutation (Phase 4) form **one quality loop**. `reviews_lead` sends the implementator one consolidated change request holding **every** finding (any severity, incl. minor); `orchestrator_lead` adds any surviving mutants. `implementator` writes the failing test that captures each gap and makes it green — then **both** review and mutation re-run. The loop is capped at **3 rounds**; `review.md` ends holding only the findings that were never fixed.
 
 ### Phase 3 — Reviewers (the review is the whole game)
-**Six reviewers run in parallel**, each an independent subagent with `Read, Glob, Grep, Bash` only (**reviewers never edit code** — they prune, they don't patch). Each writes its own report file so the parallel runs never collide:
+This is the **full review**, run once after all slices (during the build, `reviewer_code` + `reviewer_design` already ran per slice). **All six reviewers run in parallel**, each an independent subagent with `Read, Glob, Grep, Bash` only (**reviewers never edit code** — they prune, they don't patch). Each writes its own report file so the parallel runs never collide:
 
 ```
 reviewer_code          → review-code.md          quality, consistency, best practices, TDD discipline, scenario coverage

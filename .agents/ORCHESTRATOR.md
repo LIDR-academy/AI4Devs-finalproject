@@ -20,7 +20,8 @@ pending
   → spec_partner        → spec.md, risks.md, tasks.md, task-N.md, gherkin-scenarios.md   [spec_ready]
   → ⏸ HUMAN GATE: approve the spec + Gherkin contract (single approval)            [approved]
   → implementator       → src + tests, one vertical slice at a time                 [in_progress]
-  → reviews_lead + mutation_tester  → review.md + mutation.md                       [in_review → mutation]
+        └ per slice: light review (reviewer_code + reviewer_design only) → fix → next slice
+  → reviews_lead (full: all 6) + mutation_tester  → review.md + mutation.md          [in_review → mutation]
         └ ONE quality loop (≤ 3 rounds): implementator fixes EVERY review finding
           (any severity, incl. minor) + every surviving mutant; after each fix,
           review AND mutation both re-run. review.md keeps only still-open findings.
@@ -37,13 +38,13 @@ Only `orchestrator_lead` writes the feature phase (in `tasks.md` frontmatter); `
 | `orchestrator_lead` | orchestrates all | `progress/*`, phase in `tasks.md` | no |
 | `spec_partner` | 1 — spec + contract (debate) | `spec.md`, `risks.md`, `tasks.md`, `task-N.md`, `gherkin-scenarios.md` | no |
 | `implementator` | 2 — build (TDD) | `src/`, `tests/`, `tdd.md`, task statuses | **yes** |
-| `reviews_lead` | 3 — review round | `review.md` | no |
-| `reviewer_code` | 3 (parallel) | `review-code.md` | no |
-| `reviewer_design` | 3 (parallel) | `review-design.md` | no |
-| `reviewer_architecture` | 3 (parallel) | `review-architecture.md` | no |
-| `reviewer_security` | 3 (parallel, OWASP) | `review-security.md` | no |
-| `reviewer_accessibility` | 3 (parallel, WCAG) | `review-accessibility.md` | no |
-| `reviewer_performance` | 3 (parallel) | `review-performance.md` | no |
+| `reviews_lead` | per-slice review + Phase 3 review round | `review.md` | no |
+| `reviewer_code` | per slice **and** full (parallel) | `review-code.md` | no |
+| `reviewer_design` | per slice **and** full (parallel) | `review-design.md` | no |
+| `reviewer_architecture` | 3 — full only (parallel) | `review-architecture.md` | no |
+| `reviewer_security` | 3 — full only (parallel, OWASP) | `review-security.md` | no |
+| `reviewer_accessibility` | 3 — full only (parallel, WCAG) | `review-accessibility.md` | no |
+| `reviewer_performance` | 3 — full only (parallel) | `review-performance.md` | no |
 | `mutation_tester` | 4 — StrykerJS | `mutation.md` | no |
 | `dod_validator` | 5 — DoD | `dod.md` | no |
 
@@ -61,8 +62,8 @@ Only `orchestrator_lead` writes the feature phase (in `tasks.md` frontmatter); `
 
 1. **spec_ready** — every AC is Given/When/Then; 4 UI states defined (if UI); risks mitigated; one `@s` scenario per behavior in `gherkin-scenarios.md`; every AC maps to a scenario; tasks map to `libs/*` paths obeying the layering rules.
 2. **HUMAN GATE (combined)** — human approves `spec.md` **and** `gherkin-scenarios.md` in one pass → `approved`.
-3. **in_review** — every `@s` covered by a concrete test; integration test green; `pnpm lint` + `pnpm check-types` + `pnpm test` (+ `test:e2e` where relevant) green; no scope beyond contract; no hardcoded strings/colors/dims.
-4. **review + mutation (one quality loop, ≤ 3 rounds)** — `implementator` fixes **every** review finding (blocker, major, **and minor**) and **every** surviving mutant; after any fix, review **and** mutation both re-run. A round is clean only at **zero open review findings (any severity) + mutation threshold met (100% on changed lines)**. `review.md` is kept pruned to only unresolved findings. **After the 3rd round:** any remaining **blocker/major/mutation-survivor is hard → escalate & block**; if **only minors** remain, they may ship as **documented, human-accepted** risks (recorded in `review.md`, `spec.md`, `dod.md`) → `pr_ready`. On a clean exit `review.md` is empty.
+3. **per-slice gate** — for each vertical slice: `pnpm lint` + `pnpm check-types` + `pnpm test` (+ `test:e2e` where relevant) green; the slice's `@s` covered by tests; no scope beyond contract; no hardcoded strings/colors/dims; **and a light `reviewer_code` + `reviewer_design` review is clean** (findings fixed, ≤ 3 rounds) before the slice is committed and the next begins.
+4. **full review + mutation (one quality loop, ≤ 3 rounds — after all slices)** — all six reviewers run; `implementator` fixes **every** review finding (blocker, major, **and minor**) and **every** surviving mutant; after any fix, review **and** mutation both re-run. A round is clean only at **zero open review findings (any severity) + mutation threshold met (100% on changed lines)**. `review.md` is kept pruned to only unresolved findings. **After the 3rd round:** any remaining **blocker/major/mutation-survivor is hard → escalate & block**; if **only minors** remain, they may ship as **documented, human-accepted** risks (recorded in `review.md`, `spec.md`, `dod.md`) → `pr_ready`. On a clean exit `review.md` is empty.
 5. **mutation threshold** — 100% of mutants killed on changed lines (enforced inside the loop above).
 6. **pr_ready** — `dod_validator` marks every DoD item passing. Human opens/merges the PR → `done`.
 

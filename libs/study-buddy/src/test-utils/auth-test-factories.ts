@@ -11,6 +11,7 @@ export const authValue = (overrides: Partial<ReturnType<typeof useAuth>> = {}) =
   signIn: jest.fn(),
   signOut: jest.fn(),
   isSubmitting: false,
+  error: null,
   ...overrides,
 });
 

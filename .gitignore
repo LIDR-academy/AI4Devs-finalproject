@@ -20,6 +20,7 @@ storybook-static/
 *storybook.log
 .design-sync/sb-reference/
 .ds-sync/
+ds-bundle/
 
 # env
 .env

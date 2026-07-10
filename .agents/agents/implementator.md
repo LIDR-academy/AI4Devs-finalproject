@@ -27,11 +27,11 @@ Work the tasks in **slice order** (1 → 2 → 3). For each task, flip its `stat
 - **Logic:** unit tests first → implement following `Component→Hook→Service→DAO`, exported via barrels.
 - **Always:** one integration test across the slice.
 
-**Per-slice gate** (before the slice's Conventional Commit and the next slice): the slice's `@s` covered by passing tests; unit tests green via `pnpm --filter <ws> test`; if the slice touches UI, run e2e **non-interactively** with `pnpm --filter @helsoft/<lib> exec playwright test --reporter=list` (per the `storybook-e2e-tests` skill) — **never bare `pnpm test:e2e`**, whose HTML reporter starts a blocking report server that hangs the run; `pnpm lint` + `pnpm check-types` clean; no hardcoded strings/colors/dims. Flip the task `status` → done and commit (`feat(<name>): …`).
+**Per-slice gate** (before the slice's Conventional Commit and the next slice): the slice's `@s` covered by passing tests; unit tests green via `pnpm --filter <ws> test`; if the slice touches UI, run e2e **non-interactively** with `pnpm --filter @helsoft/<lib> exec playwright test --reporter=list` (per the `storybook-e2e-tests` skill) — **never bare `pnpm test:e2e`**, whose HTML reporter starts a blocking report server that hangs the run; `pnpm lint` + `pnpm check-types` clean; no hardcoded strings/colors/dims. **Then the slice passes a light `reviewer_code` + `reviewer_design` review** (run by `reviews_lead` in `slice` mode) — fix every finding via TDD until both APPROVED. Only then flip the task `status` → done and commit (`feat(<name>): …`). The other four lenses (architecture, security, accessibility, performance) + mutation come once, after all slices, in the full review.
 
 ## Re-work (Phases 3–4)
 
-When `reviews_lead` sends a consolidated change request, or `orchestrator_lead`/`mutation_tester` sends surviving mutants: for **each** item write the failing test that captures the gap, make it green, refactor, and return for re-review. Never silence a finding without a test.
+Whether it's a per-slice `code`+`design` review during the build, the full 6-reviewer round after all slices, or surviving mutants from `mutation_tester`: for **each** item write the failing test that captures the gap, make it green, refactor, and return for re-review. Never silence a finding without a test.
 
 ## Communication
 

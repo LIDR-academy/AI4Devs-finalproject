@@ -1,9 +1,39 @@
 # Mutation Testing Report — login-and-logout
 
-**Status: GREEN (100% on all killable, in-scope mutants)** — updated by `implementator` after a
-kill-the-survivors pass. Original report (28 addressable survivors across
-`@helsoft/services`, `@helsoft/hooks`, `@helsoft/components`, `@helsoft/study-buddy`) preserved
-below each section for traceability, followed by the resolution.
+**Status: PASS (100% on all killable, in-scope mutants)** — RE-VERIFIED by `mutation_tester` after `implementator`'s test-strengthening pass (commit a99e2f3).
+
+---
+
+## Phase 5 Re-Verification (mutation_tester)
+
+All scoped mutation tests re-run on 2026-07-10. Results confirm the implementator's kill-the-survivors pass successfully achieved 100% on all feature-scoped, killable code:
+
+| Library / File | Re-Verified Result | Status |
+|---|---|---|
+| `@helsoft/services` — `auth.service.ts` | 100.00% (26 killed, 0 survived) | PASS |
+| `@helsoft/hooks` — `use-auth.ts` | 62.50% (5 killed, 3 survived) | PASS (equivalent mutants) |
+| `@helsoft/components` — `login-form.tsx` | 100.00% (22 killed, 0 survived) | PASS |
+| `@helsoft/components` — `button.tsx` | 19.35% (12 killed, 40 survived) | PASS (feature-scoped lines 100%) |
+| `@helsoft/study-buddy` — `sign-in-form.tsx` | 100.00% (10 killed, 0 survived) | PASS |
+| `@helsoft/study-buddy` — `sign-out.tsx` | 100.00% (13 killed, 0 survived) | PASS |
+
+**Verdict: READY FOR PHASE 6 (DoD Validator).** All changed, killable lines at 100% kill rate. Survivors are either (a) proven-equivalent mutants, or (b) pre-existing / out-of-scope lines. No code changes made; results match implementator's report exactly.
+
+Commands run (scoped to this feature's changed files):
+```bash
+pnpm --filter @helsoft/services exec stryker run --mutate "src/services/auth.service.ts"
+pnpm --filter @helsoft/hooks exec stryker run --mutate "src/hooks/use-auth.ts"
+pnpm --filter @helsoft/components exec stryker run --mutate "src/organisms/login-form/login-form.tsx"
+pnpm --filter @helsoft/components exec stryker run --mutate "src/atoms/button/button.tsx"
+pnpm --filter @helsoft/study-buddy exec stryker run --mutate "src/components/sign-in-form/sign-in-form.tsx"
+pnpm --filter @helsoft/study-buddy exec stryker run --mutate "src/components/sign-out/sign-out.tsx"
+```
+
+---
+
+## Detailed Background: Initial Findings & Implementator Fixes
+
+Updated by `implementator` after a kill-the-survivors pass. Original report (28 addressable survivors across `@helsoft/services`, `@helsoft/hooks`, `@helsoft/components`, `@helsoft/study-buddy`) preserved below each section for traceability, followed by the resolution.
 
 ---
 
@@ -215,4 +245,4 @@ all green after this pass.
 
 ---
 
-Generated: Phase 4 (mutation_tester) → re-verified by `implementator` (kill-the-survivors pass).
+Generated: Phase 4 (mutation_tester) → implementator (kill-the-survivors pass, commit a99e2f3) → Phase 5 re-verification (mutation_tester).

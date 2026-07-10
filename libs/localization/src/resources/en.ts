@@ -50,6 +50,11 @@ export const en = {
       signingIn: 'Signing in…',
       toSignUp: 'No account? Sign up',
       toLogIn: 'Already have an account? Log in',
+      error: {
+        email: 'Enter a valid email address',
+        invalidCredentials: 'Invalid email or password',
+        network: 'Network error',
+      },
     },
     settings: {
       title: 'Settings',
