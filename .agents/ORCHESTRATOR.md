@@ -6,6 +6,7 @@ This pipeline takes one user story from `user-stories/` to a validated, PR-ready
 
 ## Principles
 
+- **One worktree per feature.** The orchestrator creates a git worktree on branch `feat/<name>` (`git worktree add .worktrees/<name> -b feat/<name>`) and does **all** work there — docs + code — so the main checkout stays clean. The human merges it via the PR; the worktree is removed after.
 - **One feature at a time.** `progress/current.md` points at the active feature.
 - **State on disk, not in chat.** Every agent writes artifacts to `docs/features/<name>/` and returns a single reference line. Content never travels through chat (anti-"telephone" rule).
 - **Contracts per phase + explicit gates.** No phase advances until its gate passes.

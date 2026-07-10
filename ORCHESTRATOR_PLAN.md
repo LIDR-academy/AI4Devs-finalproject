@@ -2,7 +2,7 @@
 
 > **Project:** AI Study Buddy (AI4Devs final project) — Turborepo + pnpm monorepo, Expo/React Native universal app, `@helsoft/*` libs, Supabase backend, Storybook + Playwright, Jest + RN Testing Library.
 > **Goal:** A repeatable, gate-driven agentic orchestrator that takes a user story/ticket from the command line all the way to a merge-ready PR, following strict TDD, layered reviews, mutation testing, and a full Definition of Done.
-> **Decisions locked in:** orchestrator lives under `.agents/` (extends existing folder) · mutation testing uses **StrykerJS** · pipeline driven by an **orchestrator agent** (`orchestrator_lead`) with a single human approval gate · **per-agent models** (via `model:` frontmatter): **Opus** for `spec_partner`, **Sonnet** for `orchestrator_lead` + `implementator` + `reviews_lead` + the 6 reviewers, **Haiku** for `mutation_tester` + `dod_validator`.
+> **Decisions locked in:** orchestrator lives under `.agents/` (extends existing folder) · mutation testing uses **StrykerJS** · pipeline driven by an **orchestrator agent** (`orchestrator_lead`) with a single human approval gate · each feature is built in its own **git worktree** on `feat/<name>` (`.worktrees/<name>`, gitignored) · **per-agent models** (via `model:` frontmatter): **Opus** for `spec_partner`, **Sonnet** for `orchestrator_lead` + `implementator` + `reviews_lead` + the 6 reviewers, **Haiku** for `mutation_tester` + `dod_validator`.
 
 ---
 
@@ -114,6 +114,9 @@ docs/
 progress/                         # NEW — session-level state only (nothing feature-named)
 ├── current.md                    # pointer to the active feature/task
 └── history.md                    # append-only log of completed features
+
+.worktrees/                       # NEW (gitignored) — one git worktree per feature
+└── <name>/                       # branch feat/<name>; ALL work runs here; removed after the PR merges
 ```
 
 **No global state file.** The old `feature_list.json` is gone. The set of features is simply the set of folders under `docs/features/`; "one feature at a time" means `progress/current.md` points at the active one. Per-feature state now lives in that feature's folder:
@@ -151,7 +154,7 @@ One feature at a time. State on disk. One human approval up front — a single c
 
 ```mermaid
 flowchart TD
-    CLI["/ticket-orchestrator &lt;story&gt;<br/>reads user-stories/&lt;story&gt;.md"] --> LEAD{{"orchestrator_lead — orchestrator<br/>guards the gate · writes the feature folder"}}
+    CLI["/ticket-orchestrator &lt;story&gt;<br/>reads user-stories/&lt;story&gt;.md"] --> LEAD{{"orchestrator_lead — orchestrator<br/>creates git worktree feat/&lt;name&gt; · guards the gate · writes the feature folder"}}
 
     LEAD -->|pending| P1["① spec_partner<br/>debate → spec.md · risks.md · tasks.md · task-N.md · gherkin-scenarios.md"]
     P1 -->|spec_ready| GATE{"⏸ HUMAN GATE<br/>approve spec + Gherkin contract"}
@@ -306,7 +309,7 @@ export default {
 
 ## 6. Orchestrator — `orchestrator_lead`
 - **Tools:** `Read, Write, Glob, Grep, Bash, Task` (it invokes subagents; it does **not** implement or edit feature code).
-- **Responsibilities:** own the feature folders under `docs/features/` (task statuses + feature phase in `tasks.md`) and `progress/current.md`; enforce one feature at a time; run phases in order; **stop at the single human gate** (combined spec + Gherkin contract approval) and loop edits back to `spec_partner` until approved; delegate the whole review phase to `reviews_lead` (which fans out the 6 parallel reviewers, consolidates, and loops changes with the implementator); route surviving mutants back to `implementator`; append to `progress/history.md`. It never lets a phase advance until its gate passes.
+- **Responsibilities:** create the feature's **git worktree** on `feat/<name>` (`.worktrees/<name>`) and run everything inside it (never on the main checkout); own the feature folders under `docs/features/` (task statuses + feature phase in `tasks.md`) and `progress/current.md`; enforce one feature at a time; run phases in order; **stop at the single human gate** (combined spec + Gherkin contract approval) and loop edits back to `spec_partner` until approved; delegate the whole review phase to `reviews_lead` (which fans out the 6 parallel reviewers, consolidates, and loops changes with the implementator); route surviving mutants back to `implementator`; append to `progress/history.md`. It never lets a phase advance until its gate passes.
 - **Entry:** the `/ticket-orchestrator <story>` command (`.agents/commands/ticket-orchestrator.md`) sets the role, resolves `$ARGUMENTS` to `user-stories/<story>.md`, and reads it as the ticket.
 
 **Anti-"telephone" rule:** subagents persist artifacts to disk and return a single reference line (e.g. `green -> docs/features/<name>/tdd.md`, `CHANGES_REQUESTED -> docs/features/<name>/review.md`). Content lives on disk, surviving restarts and blown context windows.
@@ -331,7 +334,7 @@ export default {
 **Phase 0 — Foundations (prerequisite)**
 1. **Jest + RN Testing Library is already configured** in `@helsoft/services`, `@helsoft/hooks`, `@helsoft/components` (each has a `test: jest` script). Just confirm the Turbo `test` task fans out to them, and add **Supabase Test Helpers** for DB query tests if not already present. (Note: `libs/study-buddy` and `apps/*` have no `test` script yet — add one when they first get tests.)
 2. Install **StrykerJS** (`@stryker-mutator/core`, `@stryker-mutator/jest-runner`, `@stryker-mutator/typescript-checker`) at the root as a dev dependency; add a `stryker.config.mjs` template per lib and a `mutation` Turbo task.
-3. Create `progress/` (`current.md` + `history.md`) and `docs/features/` with `.gitkeep`. No global state file — each feature gets its own folder with `tasks.md` + `task-N.md`.
+3. Create `progress/` (`current.md` + `history.md`) and `docs/features/` with `.gitkeep`. No global state file — each feature gets its own folder with `tasks.md` + `task-N.md`. Add `.worktrees/` to `.gitignore` (the orchestrator creates a per-feature worktree there).
 
 **Phase 1 — Author the orchestrator docs & rules**
 4. Write `.agents/ORCHESTRATOR.md` (source of truth: roles, contracts, gates, DoD, state machine).

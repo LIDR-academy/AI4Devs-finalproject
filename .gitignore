@@ -47,3 +47,6 @@ playwright/.auth/
 # stryker (mutation testing output)
 **/reports/mutation/
 **/.stryker-tmp/
+
+# orchestrator feature worktrees (one per feature, on feat/<name>)
+.worktrees/

@@ -11,7 +11,7 @@ You run the pipeline end to end for a single feature. You **do not write or edit
 
 ## Protocol
 
-1. **Resolve the story.** The invocation names a story: read `user-stories/<story>.md`. Derive a short kebab `<name>` for the feature. Create `docs/features/<name>/` by copying `.agents/templates/` (spec.md, risks.md, tasks.md, task.md). Set `progress/current.md` to point at it. Set `tasks.md` phase = `pending`.
+1. **Resolve the story & create the worktree.** Read `user-stories/<story>.md`; derive a short kebab `<name>`. **Create an isolated git worktree and do ALL work there** — from the up-to-date default branch: `git worktree add .worktrees/<name> -b feat/<name>` (`.worktrees/` is gitignored). `cd` into `.worktrees/<name>`; every phase after this — docs, code, tests, commits — happens inside the worktree on branch `feat/<name>`, never on the main checkout. If the worktree has no `node_modules`, run `pnpm install` (or symlink from the main checkout) before building. Then create `docs/features/<name>/` by copying `.agents/templates/` (spec.md, risks.md, tasks.md, task.md), point `progress/current.md` at it, and set `tasks.md` phase = `pending`.
 2. **Phase 1 — spec + contract.** Invoke `spec_partner` with the story. It debates with the human and writes `spec.md`, `risks.md`, `tasks.md`, `task-N.md`, **and `gherkin-scenarios.md`** → `spec_ready`.
 3. **⏸ HUMAN GATE (single, combined).** Present **`spec.md` and `gherkin-scenarios.md` together**. Wait for explicit human approval of both. On edits (to spec or scenarios), re-invoke `spec_partner`. On approval → `approved`. When approved, commit the generated documents to the repository.
 4. **Phase 2 — build (per slice, with a light review each slice).** Set `in_progress`. For **each vertical slice in order (1 → 2 → 3)**:
@@ -27,13 +27,14 @@ You run the pipeline end to end for a single feature. You **do not write or edit
    - **Clean exit.** Zero findings → advance normally.
    `review.md` always ends holding exactly the unresolved items — none on a clean exit, or the accepted minors on a minors-only exit.
 7. **Phase 5 — DoD.** Invoke `dod_validator`. On `DOD_FAILED` → route the gap to `implementator` and re-validate. On PASS → set `pr_ready`.
-8. **Hand off.** Tell the human the feature is `pr_ready`; opening & merging the PR is theirs. Append a line to `progress/history.md`.
+8. **Hand off.** Tell the human the feature is `pr_ready` on branch **`feat/<name>`** (worktree `.worktrees/<name>`); opening & merging the PR is theirs. After merge the worktree can be removed with `git worktree remove .worktrees/<name>`. Append a line to `progress/history.md`.
 
 ## Hard rules
 
 - ❌ Never advance a phase until its gate passes (`.agents/ORCHESTRATOR.md` §Gates).
 - ❌ Never skip the human gate. Never edit feature code.
 - ✅ One feature at a time. Everything on disk. Subagents return one reference line; read the file if you need detail.
+- ✅ All work happens in the feature's git worktree on `feat/<name>` — never build on the default branch / main checkout. The human merges via the PR; the worktree is removed after.
 - ✅ You are the only writer of the feature `phase` (in `tasks.md`) and `progress/*`.
 - ✅ In every round the `implementator` fixes **every** finding, including minors. Blockers, majors, and mutation survivors **must** be fixed — they never ship.
 - ✅ Only **minor** findings may survive the 3-round cap, and only as **documented, human-accepted** risks (recorded in `review.md` + `spec.md` + `dod.md`). No human acceptance → blocked.

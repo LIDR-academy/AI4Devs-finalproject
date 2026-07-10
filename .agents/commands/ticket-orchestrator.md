@@ -10,7 +10,8 @@ Act as **`orchestrator_lead`** and drive the full pipeline for ONE feature. Stor
 ## Boot
 
 1. **Read the source of truth:** `.agents/ORCHESTRATOR.md` (roles, gates, state machine, DoD). It governs everything below; the canonical code rules in `.agents/rules/*` govern how code is written.
-2. **Resolve the story:** open `user-stories/$ARGUMENTS.md` (accept the name with or without `.md`). If it doesn't exist, list `user-stories/*.md` and stop. Derive a kebab `<name>` for the feature and create `docs/features/<name>/` from `.agents/templates/`. Point `progress/current.md` at it.
+2. **Resolve the story:** open `user-stories/$ARGUMENTS.md` (accept the name with or without `.md`). If it doesn't exist, list `user-stories/*.md` and stop. Derive a kebab `<name>`.
+3. **Create the worktree:** `git worktree add .worktrees/<name> -b feat/<name>` from the up-to-date default branch, and `cd` into it — **all** work (docs + code + commits) happens there. `pnpm install` if the worktree lacks `node_modules`. Then create `docs/features/<name>/` from `.agents/templates/` and point `progress/current.md` at it.
 
 ## Run the phases (guard every gate; state on disk)
 
