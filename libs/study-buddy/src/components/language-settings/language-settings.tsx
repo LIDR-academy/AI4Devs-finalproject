@@ -1,6 +1,6 @@
 import { LanguageSelector } from '@helsoft/components';
 import { LOCALE_LABELS, useLocalization } from '@helsoft/localization';
-import { type Locale } from '@helsoft/types';
+import { isSupportedLocale } from '@helsoft/types';
 import { Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
@@ -17,11 +17,19 @@ export const LanguageSettings = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>{t('settings.language.heading')}</Text>
+      <Text accessibilityRole="header" style={styles.heading}>
+        {t('settings.language.heading')}
+      </Text>
       <LanguageSelector
         options={options}
         value={locale}
-        onChange={(value) => setLocale(value as Locale)}
+        // The presentational selector emits a plain string; guard the type boundary so only a
+        // supported locale is forwarded to setLocale (no unchecked cast to Locale).
+        onChange={(value) => {
+          if (isSupportedLocale(value)) {
+            setLocale(value);
+          }
+        }}
         accessibilityLabel={t('settings.language.a11yLabel')}
       />
     </View>

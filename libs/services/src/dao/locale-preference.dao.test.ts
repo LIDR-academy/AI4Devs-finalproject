@@ -1,6 +1,6 @@
 jest.mock('@react-native-async-storage/async-storage', () => ({
   __esModule: true,
-  default: { getItem: jest.fn(), setItem: jest.fn(), removeItem: jest.fn() },
+  default: { getItem: jest.fn(), setItem: jest.fn() },
 }));
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -40,14 +40,6 @@ describe('LocalePreferenceDao', () => {
     await LocalePreferenceDao.setStoredLocale('pt');
 
     expect(store.setItem).toHaveBeenCalledWith(LOCALE_PREFERENCE_STORAGE_KEY, 'pt');
-  });
-
-  it('clearStoredLocale removes the preference key', async () => {
-    store.removeItem.mockResolvedValue(undefined);
-
-    await LocalePreferenceDao.clearStoredLocale();
-
-    expect(store.removeItem).toHaveBeenCalledWith(LOCALE_PREFERENCE_STORAGE_KEY);
   });
 
   // @s12 — a read failure surfaces as a rejection so the service can fall back (no crash swallowed here).

@@ -1,6 +1,8 @@
 jest.mock('@helsoft/localization', () => ({
   useLocalization: jest.fn(),
-  LOCALE_LABELS: { en: 'English', es: 'Español', pt: 'Português', de: 'Deutsch' },
+  // `fr` is deliberately present as a label but is NOT a supported Locale — it lets a test
+  // drive an out-of-set value through the presentational selector's onChange boundary.
+  LOCALE_LABELS: { en: 'English', es: 'Español', pt: 'Português', de: 'Deutsch', fr: 'Français' },
 }));
 
 import { useLocalization } from '@helsoft/localization';
@@ -14,6 +16,7 @@ type Overrides = Partial<{
   t: (key: string) => string;
   locale: string;
   setLocale: (value: string) => void;
+  supportedLocales: string[];
 }>;
 
 const localizationValue = (overrides: Overrides = {}) => ({
@@ -49,6 +52,30 @@ describe('LanguageSettings', () => {
     fireEvent.press(screen.getByText('Español'));
 
     expect(setLocale).toHaveBeenCalledWith('es');
+  });
+
+  // Guards the type boundary: the presentational selector hands back a plain string, so an
+  // out-of-set value must NOT be forwarded to setLocale (no unchecked cast to Locale).
+  it('does not forward a selection that is not a supported locale', async () => {
+    const setLocale = jest.fn();
+    mockUseLocalization.mockReturnValue(
+      localizationValue({ locale: 'en', setLocale, supportedLocales: ['en', 'fr'] }),
+    );
+
+    await render(<LanguageSettings />);
+    fireEvent.press(screen.getByText('Français'));
+
+    expect(setLocale).not.toHaveBeenCalled();
+  });
+
+  // WCAG 1.3.1 — the section heading is exposed as a header to assistive tech, not plain text.
+  it('exposes the language heading as a header', async () => {
+    const t = jest.fn((key: string) => (key === 'settings.language.heading' ? 'Language' : key));
+    mockUseLocalization.mockReturnValue(localizationValue({ t }));
+
+    await render(<LanguageSettings />);
+
+    expect(screen.getByRole('header', { name: 'Language' })).toBeTruthy();
   });
 
   it('renders its section heading from a translation key', async () => {

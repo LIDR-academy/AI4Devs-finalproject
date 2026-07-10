@@ -251,3 +251,88 @@ behavior was changed — only assertions were added/tightened.
 study-buddy 5, services 14, hooks 4, lib-with-storybook 2); `pnpm --filter @helsoft/components test:e2e` = 19/19.
 Per-lib Stryker on changed files: services / components / study-buddy = **100%**; localization = 100% of
 non-equivalent mutants killed, 6 documented equivalents. Left for re-review (not self-marked done).
+
+---
+
+## Phase 5 — post-approval polish (review.md minor findings)
+
+Review verdict was APPROVED (no blocker/major); these 6 actionable minors were resolved as a follow-on.
+Each production change was driven RED→GREEN; behavior-preserving refactors rode existing tests. Finding 7
+(the selector's distinct single-select visual + `borderWidth: 2/1` literals) was **not** touched — it is
+human-gate-approved and explicitly not a violation.
+
+### Finding 6 (a11y) — heading exposes header role
+- **RED** — `language-settings.test.tsx` → `exposes the language heading as a header`:
+  `getByRole('header', { name: 'Language' })` (WCAG 1.3.1). Failed (heading was plain `Text`).
+- **GREEN** — added `accessibilityRole="header"` to the heading `Text` in `language-settings.tsx`.
+- Kills the `"header"` StringLiteral mutant on the changed line.
+
+### Finding 1 (a11y, mutation-relevant) — tightened selector assertions
+- **Tests only** (`language-selector.test.tsx`, presentational component unchanged):
+  `exposes a radiogroup role for the container` asserts the labelled container node's
+  `accessibilityRole === 'radiogroup'` (the container is intentionally **not** an accessibility *element*
+  — marking it `accessible` would hide the option children — so the role is asserted on the node, not via a
+  `byRole` query, which only reaches accessible elements); `places the check indicator inside the active
+  option only` uses `within(activeRadio)` to tie the non-color check cue to the selected row and asserts no
+  inactive row carries it. Both green on the existing component (no `radiogroup` was missing).
+
+### Finding 3 (code/security) — narrowed the type-boundary casts via `isSupportedLocale`
+- **`use-localization.ts`** — **RED**: `use-localization.test.tsx` →
+  `falls back to the fallback locale when i18n reports an unsupported language` renders the provider with
+  `initialLocale={'fr' as Locale}` (i18next reports `i18n.language === 'fr'`, no `supportedLngs` filtering)
+  and asserts the hook exposes `locale === 'en'`. Failed (rendered `fr` via the unguarded cast).
+  **GREEN**: `locale: isSupportedLocale(i18n.language) ? i18n.language : FALLBACK_LOCALE`.
+  The new branch is killed both ways — false branch by this test (`fr`→`en`), true branch by the existing
+  per-locale assertions (`es`/`pt`/…).
+- **`language-settings.tsx`** — **RED**: `language-settings.test.tsx` →
+  `does not forward a selection that is not a supported locale` drives the real selector's `onChange` with an
+  out-of-set value (`supportedLocales: ['en','fr']`, `fr` labelled but not a `Locale`) and asserts `setLocale`
+  is **not** called. Failed (the `value as Locale` cast forwarded `fr`). **GREEN**: guard the boundary —
+  `onChange` only calls `setLocale(value)` when `isSupportedLocale(value)`.
+
+### Finding 4 (code) — removed dead `clearStoredLocale`
+- No production consumer existed. Removed `LocalePreferenceDao.clearStoredLocale`, its DAO test
+  (`clearStoredLocale removes the preference key`) + the now-unused `removeItem` on the AsyncStorage mock,
+  and the stray `clearStoredLocale: jest.fn()` entry in `locale-preference.service.test.ts`. Grep confirms no
+  remaining references. Remaining DAO/service mutants stay 100%.
+
+### Finding 5 (architecture) — stopped over-exporting the internal context
+- `libs/localization/src/index.ts` no longer does `export * from './provider/localization-provider'` (which
+  leaked the runtime `LocalizationContext`, letting callers bypass `useLocalization`). Now names the public
+  surface: `export { LocalizationProvider }` + `export type { LocalizationProviderProps }`. The hook still
+  reaches the context via its in-lib relative import; grep confirms no external consumer used the context or
+  `LocalizationContextValue`. (Barrels are excluded from mutation.)
+
+### Finding 2 (performance, mutation-relevant) — memoization, applied selectively
+- **`use-localization.ts` — DONE.** The result object (and its `t` wrapper) is now built inside a single
+  `useMemo(…, [t, language, setLocale])`, so consumers get a stable reference. The empty-deps
+  `ArrayDeclaration` mutant is killed by the existing `re-resolves the locale when the device locale prop
+  changes` test (frozen deps would leave `locale` stale on the in-place re-render). 100% on the file.
+- **`language-settings.tsx` — DECLINED (noted per the task's gate-first guidance).** Wrapping `options` in
+  `useMemo` and the handler in `useCallback` each add an `ArrayDeclaration` dep-array mutant that can only be
+  killed by observing an **in-place re-render** where the dep changes. Under the study-buddy harness
+  (jest-expo + RNTL 14 + React 19) an in-place re-render does not re-invoke the component in a test-observable
+  way — verified by probes: neither `rerender(<propless/>)` nor a reducer-driven update re-ran the component
+  or updated queried output (existing study-buddy tests only ever assert interaction *side-effects*, never
+  re-rendered output). So those mutants would survive and break the 100%-on-changed-lines gate, for **zero**
+  perf benefit (4 static items feeding an unmemoized selector — the review's own "harmless in current usage").
+  The finding-3 guard was therefore kept as a plain inline handler and `options` left inline (the
+  previously-100%-covered shape). `language-settings.tsx` stays at 100%.
+- **`localization-provider.tsx` — NOT TOUCHED.** Per the task, the reportedly-redundant cold-start
+  `changeLanguage` was only to be changed if the first-paint/ready-gate tests and provider mutation both stayed
+  100%. The ready-gate (no flash of untranslated copy, R2) is load-bearing and its mutants are already killed;
+  altering the cold-start path risked regressing that gate with no test-observable win, so it was left as-is.
+
+### @s → test map (additions)
+| @s | Added/changed test |
+|---|---|
+| @s5/@s13 | `language-selector.test.tsx`: `exposes a radiogroup role for the container`, `places the check indicator inside the active option only` |
+| @s6 (a11y) | `language-settings.test.tsx`: `exposes the language heading as a header` |
+| @s6 (boundary) | `language-settings.test.tsx`: `does not forward a selection that is not a supported locale` |
+| @s3/@s4 | `use-localization.test.tsx`: `falls back to the fallback locale when i18n reports an unsupported language` |
+
+### Phase 5 gate ✅
+`pnpm check-types` (8 pkgs) + `pnpm lint` clean; `pnpm test` green everywhere (localization 52, components 17,
+study-buddy 7, services 13, hooks 4, lib-with-storybook 2); `pnpm --filter @helsoft/components test:e2e` = 19/19.
+Per-lib Stryker on changed files — `use-localization.ts`, `language-selector.tsx`, `language-settings.tsx`,
+`locale-preference.dao.ts` (+ `.service.ts`) — all **100%** (0 survived). Left for re-review (not self-marked done).

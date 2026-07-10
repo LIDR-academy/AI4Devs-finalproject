@@ -1,5 +1,5 @@
-import { SUPPORTED_LOCALES, type Locale } from '@helsoft/types';
-import { useContext } from 'react';
+import { FALLBACK_LOCALE, isSupportedLocale, SUPPORTED_LOCALES, type Locale } from '@helsoft/types';
+import { useContext, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { LocalizationContext } from '../provider/localization-provider';
@@ -25,14 +25,28 @@ export const useLocalization = (): UseLocalizationResult => {
   const { t, i18n } = useTranslation();
   const context = useContext(LocalizationContext);
 
-  if (!context) {
+  const language = i18n.language;
+  const setLocale = context?.setLocale;
+
+  // Memoized so consumers get a stable result reference across renders that don't change the
+  // language or the switcher; recomputes only when i18next's `t`, the active language, or the
+  // provider's `setLocale` change. `null` marks "used outside the provider" (thrown below).
+  const result = useMemo<UseLocalizationResult | null>(() => {
+    if (!setLocale) {
+      return null;
+    }
+
+    return {
+      t: (key: string, options?: TranslateOptions) => t(key, options ?? {}),
+      locale: isSupportedLocale(language) ? language : FALLBACK_LOCALE,
+      setLocale,
+      supportedLocales: SUPPORTED_LOCALES,
+    };
+  }, [t, language, setLocale]);
+
+  if (!result) {
     throw new Error('useLocalization must be used within a LocalizationProvider');
   }
 
-  return {
-    t: (key, options) => t(key, options ?? {}),
-    locale: i18n.language as Locale,
-    setLocale: context.setLocale,
-    supportedLocales: SUPPORTED_LOCALES,
-  };
+  return result;
 };

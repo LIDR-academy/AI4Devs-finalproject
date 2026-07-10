@@ -5,6 +5,7 @@ jest.mock('@helsoft/services', () => ({
   },
 }));
 
+import { type Locale } from '@helsoft/types';
 import { render, screen } from '@testing-library/react';
 
 import { LocalizationProvider } from '../provider/localization-provider';
@@ -13,6 +14,11 @@ import { useLocalization } from './use-localization';
 const InterpolatingConsumer = () => {
   const { t } = useLocalization();
   return <span>{t('lesson.title', { id: '7' })}</span>;
+};
+
+const LocaleConsumer = () => {
+  const { locale } = useLocalization();
+  return <span>locale:{locale}</span>;
 };
 
 describe('useLocalization', () => {
@@ -26,5 +32,17 @@ describe('useLocalization', () => {
     );
 
     expect(await screen.findByText('Lesson 7')).toBeTruthy();
+  });
+
+  // The active locale is guarded at the i18next boundary: if i18n reports a language that is not
+  // one of the supported locales, the hook exposes the fallback locale rather than an unchecked cast.
+  it('falls back to the fallback locale when i18n reports an unsupported language', async () => {
+    render(
+      <LocalizationProvider initialLocale={'fr' as Locale}>
+        <LocaleConsumer />
+      </LocalizationProvider>,
+    );
+
+    expect(await screen.findByText('locale:en')).toBeTruthy();
   });
 });

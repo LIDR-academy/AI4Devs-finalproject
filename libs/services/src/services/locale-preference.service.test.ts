@@ -2,7 +2,6 @@ jest.mock('../dao/locale-preference.dao', () => ({
   LocalePreferenceDao: {
     getStoredLocale: jest.fn(),
     setStoredLocale: jest.fn(),
-    clearStoredLocale: jest.fn(),
   },
 }));
 

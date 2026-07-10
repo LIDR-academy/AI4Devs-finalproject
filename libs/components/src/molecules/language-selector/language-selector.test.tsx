@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, within } from '@testing-library/react-native';
 
 import { LanguageSelector } from './language-selector';
 
@@ -35,6 +35,18 @@ describe('LanguageSelector', () => {
     expect(screen.getAllByText('check')).toHaveLength(1);
   });
 
+  // @s13 — the check indicator sits inside the *active* option specifically, and no inactive option
+  // carries it (ties the non-color cue to the selected row, not merely "a check exists somewhere").
+  it('places the check indicator inside the active option only', async () => {
+    await render(<LanguageSelector options={options} value="pt" onChange={jest.fn()} />);
+
+    const active = screen.getByRole('radio', { name: 'Português', selected: true });
+    expect(within(active).getByText('check')).toBeTruthy();
+
+    const inactive = screen.getByRole('radio', { name: 'English', selected: false });
+    expect(within(inactive).queryByText('check')).toBeNull();
+  });
+
   it('calls onChange with the selected value when an option is pressed', async () => {
     const onChange = jest.fn();
     await render(<LanguageSelector options={options} value="de" onChange={onChange} />);
@@ -59,6 +71,18 @@ describe('LanguageSelector', () => {
     );
 
     expect(screen.getByLabelText('Choose a language')).toBeTruthy();
+  });
+
+  // @s13 — the container is announced as a single-choice group (radiogroup), so assistive tech
+  // treats the options as one mutually-exclusive set rather than unrelated controls. The container
+  // is intentionally not an accessibility *element* (children stay navigable), so the role is
+  // asserted on the labelled container node directly rather than via a role query.
+  it('exposes a radiogroup role for the container', async () => {
+    await render(
+      <LanguageSelector options={options} value="de" onChange={jest.fn()} accessibilityLabel="Choose a language" />,
+    );
+
+    expect(screen.getByLabelText('Choose a language').props.accessibilityRole).toBe('radiogroup');
   });
 
   // @s13 — every option exposes an accessible radio role + label; exactly one is announced selected.
