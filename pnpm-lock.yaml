@@ -389,6 +389,9 @@ importers:
       '@types/react':
         specifier: ~19.2.2
         version: 19.2.17
+      expo-router:
+        specifier: ~57.0.3
+        version: 57.0.3(33be339587e66ea5f87a3b18ea47a8b6)
       jest:
         specifier: ~29.7.0
         version: 29.7.0(@types/node@26.1.0)

@@ -1,5 +1,6 @@
 import { ScreenContainer } from '@helsoft/components';
 import { useLocalization } from '@helsoft/localization';
+import { SignOut } from '@helsoft/study-buddy';
 import { Link } from 'expo-router';
 import { Text } from 'react-native';
 
@@ -19,6 +20,7 @@ export default function HomeScreen() {
       <Link href={{ pathname: '/lesson/[id]', params: { id: 'demo' } }}>
         <Text>{t('home.openDemo')}</Text>
       </Link>
+      <SignOut />
     </ScreenContainer>
   );
 }

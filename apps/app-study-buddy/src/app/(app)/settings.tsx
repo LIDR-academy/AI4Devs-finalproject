@@ -1,10 +1,11 @@
 import { ScreenContainer } from '@helsoft/components';
-import { LanguageSettings } from '@helsoft/study-buddy';
+import { LanguageSettings, SignOut } from '@helsoft/study-buddy';
 
 export default function SettingsScreen() {
   return (
     <ScreenContainer>
       <LanguageSettings />
+      <SignOut />
     </ScreenContainer>
   );
 }
