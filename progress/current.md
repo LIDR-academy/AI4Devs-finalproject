@@ -1,7 +1,7 @@
 # Current session
 
-**Active feature:** login-and-logout
-**Folder:** docs/features/login-and-logout/
-**Phase:** pr_ready ✅
-**Status:** All slices complete. DoD validated. Ready for PR.
-**Notes:** Slice 1 (happy path) → Slice 2 (error/empty) → Slice 3 (i18n/a11y/e2e) → full review (3 rounds, APPROVED) → mutation (PASS) → DoD (8/8 PASS). Branch: feature-entrega2-HernanLaura → main.
+**Active feature:** pdf-upload-extraction
+**Folder:** docs/features/pdf-upload-extraction/
+**Phase:** approved
+**Status:** Spec + Gherkin contract (16+1 scenarios, @s1-@s17) approved at the combined human gate. 15 tasks across 3 slices. Starting Phase 2 (implementator, TDD, Slice 1).
+**Notes:** Locked decisions: 10MB/20-page limits (tunable `PDF_EXTRACTION_LIMITS` constant), mupdf-wasm (AGPL, accepted) behind `PdfExtractionAdapter`, analytics included (task-15, @s17), schema (documents+document_images, pdf-uploads/pdf-images buckets) + downscale targets (1024px/JPEG q80) as proposed. Branch: feat/pdf-upload-extraction (worktree .worktrees/pdf-upload-extraction), off feature-entrega2-HernanLaura.
