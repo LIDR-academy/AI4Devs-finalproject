@@ -43,3 +43,6 @@ frontend/test-results/
 # OS-specific
 backend/dist/
 frontend/build/
+
+# Superpowers brainstorming (visual companion artifacts)
+.superpowers/
