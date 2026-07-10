@@ -31,6 +31,7 @@
       );
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Error de red. Inténtalo de nuevo.';
+      console.warn('[listing-lens] analyze error:', { name: (e as Error)?.name, code: (e as { code?: string })?.code, message });
       if (e instanceof ApiError) {
         error = `${e.code}: ${message}`;
         if (e.code === 'PORTAL_BLOCKED' || e.code === 'BLOCKED') urlBlocked = true;
