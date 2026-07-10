@@ -1,102 +1,131 @@
-# Accessibility review — login-and-logout (Round 1 / Slice 1)
+# review-accessibility — login-and-logout — Round 3 (FINAL, full-feature review)
 
-**Verdict: CHANGES_REQUESTED**
+Scope: this round's only change is the fix for Round 2's sole open finding (raised by
+`reviewer_design`, not this lens): `TextField` now derives `accessibilityInvalid` from its own
+`error` prop by default (`text-field.tsx:52`, commit `4f47504`), and `login-form.tsx` dropped the
+now-redundant explicit `accessibilityInvalid={!!emailError}`/`{!!passwordError}` props it
+previously set (Round-1 Major-3 fix). Read in full: `review.md` (Round 2 consolidated),
+`tdd.md`'s "Full-review Round 2 fix" section, current `login-form.tsx`, `text-field.tsx`,
+`login-form.test.tsx`, `text-field.test.tsx`, `login-form.stories.tsx`, `text-field.e2e.js`,
+`login-form.e2e.js`. Confirmed the diff since Round 2's reviewed baseline (`feb4204`) touches
+exactly 4 non-doc files — `text-field.tsx`, `text-field.test.tsx`, `text-field.e2e.js`,
+`login-form.tsx` (a pure 2-line prop removal, `git diff feb4204 4f47504 --
+libs/components/src/organisms/login-form/login-form.tsx`) — nothing else in the feature changed.
 
-Scope: Slice 1 only (happy path + Loading), per `tdd.md`. `@s12` (full accessibility scenario:
-error announcement) and `@s13` (i18n) are legitimately deferred to Slice 3 (task-8/task-9) and are
-**not** flagged here as missing — they are out of scope for this round. This review covers only
-what Slice 1 actually ships: `LoginForm` (Content + Loading states), `SignInForm`, `SignOut` +
-confirmation `Dialog`.
+**Verdict: APPROVED — 0 findings.**
 
-## What already works (no finding)
-- **Labels present** — `LoginForm` (`libs/components/src/organisms/login-form/login-form.tsx:41-47`,
-  `:50-55`) passes matching `label` + `accessibilityLabel` on both `TextField`s; `TextField` forwards
-  `accessibilityLabel` through `...rest` onto the underlying `TextInput`
-  (`libs/components/src/molecules/text-field/text-field.tsx:43,73`). Confirmed by
-  `login-form.test.tsx:17-18` (`getByLabelText('Email'/'Password')`) and
-  `sign-in-form.test.tsx:53,56` (`getByLabelText('auth.email'/'auth.password')`). Satisfies WCAG
-  4.1.2 / part of AC12, ahead of the Slice-3 pass.
-- **Button role present** — `Button` renders `<Pressable accessibilityRole="button" .../>`
-  (`libs/components/src/atoms/button/button.tsx:80`), so the submit control, "Log Out" trigger, and
-  Dialog confirm/cancel controls all expose `role=button`. Confirmed by
-  `login-form.test.tsx:19,42`, `sign-out.test.tsx:43,70,87`. Satisfies the other half of AC12, ahead
-  of schedule.
-- **Submit-button disabled state IS exposed to assistive tech** — RN's `Pressable` merges its
-  `disabled` prop into `accessibilityState.disabled`
-  (`node_modules/react-native/Libraries/Components/Pressable/Pressable.js:230,236`), so
-  `Button disabled={isSubmitting}` (`login-form.tsx:58`) correctly surfaces the Loading state on the
-  submit control to VoiceOver/TalkBack. Confirmed by `login-form.test.tsx:42`
-  (`getByRole('button', { name: 'Log in', disabled: true })`).
-- **No color-only signaling** — no error/validation UI ships in Slice 1 (deferred to Slice 2), so
-  there is nothing color-coded yet to flag.
-- **Dynamic type not disabled** — no `allowFontScaling={false}` / `maxFontSizeMultiplier` found
-  anywhere in `libs/components/src` (grep clean), so OS text-scaling isn't blocked at the API level
-  (see Finding 4 for a real clipping risk this still allows).
-- **Reading/focus order** — `LoginForm`'s DOM order (email → password → submit/spinner → sign-up
-  link) matches its visual top-to-bottom layout; no custom focus/tab order overrides. Sensible.
+---
 
-## Findings
+## Required independent verification: live-DOM aria-invalid on `LoginForm` itself
 
-### 1. [Major] Disabled fields during Loading are not exposed to assistive tech
-`libs/components/src/organisms/login-form/login-form.tsx:45` (email `editable={!isSubmitting}`) and
-`:54` (password, same). Unlike `Pressable`, RN's `TextInput` does **not** derive
-`accessibilityState.disabled` from `editable` — its accessibility state only reads
-`aria-disabled`/`accessibilityState`
-(`node_modules/react-native/Libraries/Components/TextInput/TextInput.js:634-648`). So while the
-fields are correctly made non-editable while `isSubmitting`, a screen-reader user gets no
-programmatic signal that the field is disabled (VoiceOver/TalkBack will not announce "dimmed"/
-"disabled" the way it does for the submit `Button`). `login-form.test.tsx:47-52` only asserts
-`.props.editable === false`, not `accessibilityState`, so this gap isn't caught by the test suite
-either. **WCAG 4.1.2 Name, Role, Value (Level A).** Fix: pass `accessibilityState={{ disabled:
-isSubmitting }}` (or equivalent) alongside `editable` on both `TextField`s.
+Did not trust "removing redundant props that matched the derived default is safe" from source
+reading alone. Built a temporary Playwright spec
+(`libs/components/tests/e2e/tmp-a11y-r3/tmp-a11y-r3.e2e.js`, deleted immediately after use — `git
+status --porcelain -- libs/components/tests/e2e` confirmed empty afterward) and ran it against the
+real `LoginForm` organism's stories (not `TextField` in isolation) via a running Storybook dev
+server on port 6007:
 
-### 2. [Major] Loading affordance (spinner) is not perceivable to assistive tech
-`libs/components/src/atoms/progress-indicator/progress-indicator.tsx:82-86` (circular variant, the
-one `LoginForm` uses) renders a bare `<View accessibilityRole="progressbar" accessibilityValue={...}>`
-with no `accessible` prop. Per RN's accessibility model, a plain `View` is not exposed as a discrete
-accessibility element to VoiceOver/TalkBack unless `accessible={true}` is set — this is confirmed as
-a real runtime gap, not merely an RNTL query limitation (the implementator's own note in `tdd.md:25-29`
-independently reaches the same conclusion). The consuming `LoginForm`
-(`libs/components/src/organisms/login-form/login-form.tsx:61-65`) wraps it only in a `testID`-bearing
-`View` with no compensating live-region text, so during the entire Loading state (@s3, built this
-round) an assistive-tech user's only signal that authentication is in progress is the submit button
-going "dimmed" (Finding covered separately) — nothing announces *why*, or that it's loading. **WCAG
-4.1.2 Name, Role, Value + 4.1.3 Status Messages (Level AA).** Root cause is the shared, pre-existing
-`ProgressIndicator` atom; recommend fixing there (add `accessible` + `accessibilityLiveRegion` support)
-since other consumers share the same gap, or at minimum have `LoginForm` add an
-`accessibilityLiveRegion="polite"` announcement (e.g. a visually-hidden "Signing in…" text) around its
-own Loading affordance.
+- **`ErrorInlineValidation` story (both `emailError`/`passwordError` set)** —
+  `input[aria-label="Email"]` and `input[aria-label="Password"]` both render `aria-invalid="true"`.
+  **Confirmed green.**
+- **`Content` story (no errors)** — both inputs render `aria-invalid="false"`. **Confirmed green.**
 
-### 3. [Major] Touch targets below the 44pt/48dp bar for every actionable control in this feature
-`libs/components/src/atoms/button/button.tsx:26` (`HEIGHTS = { small: 32, medium: 40, large: 56 }`)
-and `:122-126` (`size` variant sets a **fixed** `height: HEIGHTS[size]`). None of this feature's
-buttons override `size`, so all render at the default `medium` = **40dp** tall, with no `hitSlop` to
-compensate:
-- `LoginForm` submit button — `libs/components/src/organisms/login-form/login-form.tsx:58`
-- `SignOut` "Log Out" trigger — `libs/study-buddy/src/components/sign-out/sign-out.tsx:18`
-- `Dialog` cancel/confirm buttons — `libs/components/src/organisms/dialog/dialog.tsx:55,58`
+**Regression-catch proof (revert→confirm-RED→restore methodology, per this lens's own Round-1/2
+precedent):** temporarily replaced `text-field.tsx` with its pre-derivation (`feb4204`) version
+while leaving `login-form.tsx` at HEAD (i.e., exactly the combination the task's concern
+describes — the simplified `LoginForm` paired with a hypothetically-buggy derivation) and re-ran
+the same spec: both assertions genuinely failed — `aria-invalid` was `null`/absent entirely on
+both inputs in both stories (`unexpected value "null"`), not merely wrong-valued. Restored
+`text-field.tsx` to HEAD and re-ran: both green again. This confirms the derivation is doing real
+work and the collateral simplification in `login-form.tsx` does not silently regress the WCAG
+4.1.2/1.3.1 fix — verified empirically on the real rendered DOM through `LoginForm`, not assumed
+from `TextField`'s own isolated test/e2e coverage.
 
-This technically clears the literal WCAG 2.2 **2.5.8 Target Size (Minimum, AA)** floor of 24×24 CSS
-px, but misses the 44pt/48dp bar this review was scoped to check — which matches WCAG **2.5.5
-Target Size Enhanced (AAA)**, Apple HIG, Material Design, and the project's *own* design-system
-token: `layout.touchTarget = 48` (`libs/components/src/theme/spacing.ts:35`) is defined but never
-referenced by `Button`. Every tap target a user needs to hit to log in or log out in this feature
-(submit, Log Out, and both dialog actions) is undersized against the project's own standard.
+## Native `accessibilityHint`/`accessibilityInvalid` on the `LoginForm` organism — unregressed
 
-### 4. [Major] Button labels can clip under Dynamic Type / large system font sizes
-`libs/components/src/atoms/button/button.tsx:109` (`overflow: 'hidden'` on the root `Pressable`
-style) combined with the **fixed** `height` from the `size` variant (`:122-126`, see Finding 3) and
-`<Text numberOfLines={1} .../>` (`:89`). Because dynamic type isn't disabled anywhere (confirmed
-above), a user with an enlarged OS font size will get a taller text line-height for "Log in"/"Log
-Out"/"Confirm"/"Cancel" than the button's fixed-height box allows, and `overflow: 'hidden'` will
-vertically clip the label rather than let the button grow. Affects the same controls listed in
-Finding 3. **WCAG 1.4.4 Resize Text (Level AA).**
+- `login-form.tsx:110,123` — `accessibilityHint={emailError}`/`{passwordError}` are byte-identical
+  to their Round-1/2 form; the only change in this file is the 2-line removal of the explicit
+  `accessibilityInvalid` props, confirmed via `git diff feb4204 4f47504 --
+  libs/components/src/organisms/login-form/login-form.tsx` (a pure 2-deletion diff, zero other
+  lines touched).
+- `login-form.test.tsx:260-270,309-319` — 4 assertions directly on the `LoginForm` organism (not
+  `TextField` in isolation) still pass against the real RN test-renderer props:
+  `getByLabelText('Email'/'Password').props.accessibilityInvalid` is `true` when
+  `emailError`/`passwordError` is set and `false` when absent — now exercising the *derived*
+  value (flowing `LoginForm`'s `error={!!emailError}` → `TextField`'s `accessibilityInvalid =
+  error` default) rather than an explicitly-passed one, and the assertions required zero edits to
+  keep passing, proving the externally-observable native behavior is identical pre/post-fix.
+  `login-form.test.tsx:250-254,302-306` (`accessibilityHint` assertions) are also unchanged and
+  green. `pnpm --filter @helsoft/components test` — 65/65 green (up from 62; +3 new
+  `text-field.test.tsx` tests), including all these.
+- RN-source trace (unchanged from Round 1/2, re-confirmed since `TextInput.js` itself wasn't
+  touched): `node_modules/react-native/Libraries/Components/TextInput/TextInput.js` forwards
+  whatever `accessibilityInvalid`-bearing `inputProps` spread `TextField` gives it straight onto
+  the native accessibility node; `login-form.tsx` no longer needs to supply that value itself since
+  `TextField` now supplies it internally from the same `error` prop `LoginForm` already passes.
 
-## Not flagged (deferred, correctly out of scope this round)
-- `@s12` full coverage (roles/labels ✅ already present per above; error announcement — not yet
-  built, lands with error UI in Slice 2/3).
-- `@s13` i18n coverage — copy currently falls back to raw `t()` keys; expected per `tdd.md:129-130`.
-- Inline validation messages / error banner accessibility (`errorMessage`/`emailError`/
-  `passwordError` props) — not built this slice.
-- `Dialog`'s own internal accessibility semantics (headline not marked as a heading role, scrim
-  `Pressable` role) — pre-existing, unmodified shared organism, not part of this feature's diff.
+## Fresh full WCAG 2.2 AA pass (all 3 slices) — no new findings
+
+- **Roles/labels** — unchanged since Round 2 (no files affecting roles/labels touched this round
+  besides the `accessibilityInvalid` derivation itself, verified above); `login-form.test.tsx`,
+  `sign-in-form.test.tsx`, `sign-out.test.tsx` role/label assertions all still pass.
+- **Color contrast ≥ 4.5:1** — `theme/colors.ts` untouched since Round 2 (confirmed via `git diff
+  feb4204 HEAD --stat`, not in the changed-file list); ratios stand as independently recomputed
+  last round (error banner 12.65:1, error label/supporting text 5.83:1/6.30:1, non-error label
+  6.19:1, filled Button 10.57:1) — all clear the floor with margin.
+- **Touch targets ≥ 48dp** — `button.tsx` untouched since Round 2; `HIT_SLOP`-derived 48dp total
+  tappable height for `medium`/`small`, `large` already ≥48dp, unchanged.
+- **Focus/reading order** — `login-form.tsx`'s field/button JSX order untouched by this round's
+  2-line removal; `login-form.test.tsx:448-456`'s serialization-order test still passes.
+- **Dynamic type** — `text-field.tsx`'s style block (`minHeight: 56`, `:112`) and `button.tsx`'s
+  `minHeight`-not-`height` are untouched this round; no fixed-height regressions introduced by a
+  props-only diff.
+- **No color-only signaling** — `error={!!emailError}`/`{!!passwordError}` (`login-form.tsx:108,
+  121`) is still always paired with the same string rendered as visible `supportingText`
+  (`text-field.tsx:93`) — the derivation change doesn't touch this pairing at all.
+- **State-change announcements** — `AccessibilityInfo.announceForAccessibility` calls for Loading
+  (`login-form.tsx:76-80`) and the error banner (`:84-88`) are untouched this round; both still
+  fire correctly per `login-form.test.tsx`'s existing assertions (all 65 `@helsoft/components`
+  tests green).
+
+## Re-check: previously-flagged-and-fixed flaky test (`AccessibilityInfo` announcement)
+`login-form.test.tsx:99-117` (`'announces "Signing in…" via AccessibilityInfo when isSubmitting
+becomes true'`), hardened with `await waitFor(...)` since Round 1/Minor 8, re-confirmed applied
+(unchanged) and re-confirmed fixed (Round 2). This round: `npx jest -t 'announces "Signing in'` ×
+6 runs — 0 failures, consistent with Round 1's ~60-run and Round 2's 32-run zero-reproduction
+results. No further hardening needed.
+
+## Cross-check: `<name>.test.tsx` asserts roles/labels
+`login-form.test.tsx` (65-suite-total green, `@helsoft/components`) still asserts
+`getByLabelText('Email'/'Password')`, `getByRole('button', {name:...})`, and the 4
+`accessibilityInvalid` true/false assertions on the organism itself (`:260-270,309-319`) — all
+pass against the derived (not explicit) value post-fix, per above. `text-field.test.tsx` (new this
+round, 3 tests) independently pins the derivation contract at the component level: derives-from-
+`error`, defaults-`false`, explicit-override-wins. `text-field.e2e.js:90-102` locks in
+`aria-invalid="true"`/`"false"` on `TextField`'s own `Error`/`Filled` stories on the real DOM.
+
+## Checks run (this round, independently)
+- `pnpm turbo run check-types --force` — 8/8 packages green.
+- `pnpm turbo run lint --force` — green.
+- `pnpm turbo run test --force` — 6/6 workspaces green: `@helsoft/services` 38/38, `@helsoft/hooks`
+  21/21, `@helsoft/components` 65/65 (5 suites, up from 62/4 — `text-field.test.tsx` is new),
+  `@helsoft/study-buddy` 25/25, `@helsoft/localization` 55/55, `@helsoft/lib-with-storybook` 2/2.
+- `pnpm --filter @helsoft/components exec playwright test --reporter=list` (i.e. `npx playwright
+  test` from `libs/components`) — 27/27 green (up from 25 — +2 `text-field.e2e.js` aria-invalid
+  cases), including all 5 `login-form.e2e.js` and all 12 `text-field.e2e.js` cases.
+- Built, ran, and deleted a temporary Playwright spec doing a live-DOM `aria-invalid` check on
+  `LoginForm`'s `ErrorInlineValidation`/`Content` stories specifically (not `TextField` in
+  isolation) — both green; then reproduced a genuine RED via a revert→confirm→restore of
+  `text-field.tsx` only, confirming the check catches the exact regression class described, then
+  restored and re-confirmed green. `git status --porcelain -- libs/components/tests/e2e` empty
+  afterward.
+- Flakiness re-check: `jest -t 'announces "Signing in'` × 6 runs — 0 failures.
+
+## Verdict
+**APPROVED.** The Round-2 fix (derive `TextField.accessibilityInvalid` from `error`) is correctly
+implemented and does not regress the WCAG 4.1.2/1.3.1 fix on `LoginForm` — confirmed via live DOM
+inspection on the organism itself, with an empirical revert→RED→restore proof, not source reading
+alone. Native `accessibilityHint`/`accessibilityInvalid` behavior on `LoginForm` is unregressed.
+A fresh full WCAG 2.2 AA pass across all 3 slices surfaces zero new findings. The previously-flaky
+`AccessibilityInfo` test remains non-reproducible (6/6 clean this round). This is Round 3 (final);
+no open findings from this lens across any of the 3 rounds.

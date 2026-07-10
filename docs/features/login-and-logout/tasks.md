@@ -1,7 +1,13 @@
 ---
 feature: login-and-logout
 phase: in_progress   # pending|spec_ready|approved|in_progress|in_review|mutation|pr_ready|done
-review_round: 3     # incremented by reviews_lead; cap 3
+review_round: 3     # incremented by reviews_lead; cap 3 (final round). Round 1 (full-feature
+                     # cycle, reset from a stale Slice-1-only "Round 3") found 5 major + 3 minor +
+                     # a mutation FAIL, all fixed (commit feb4204). Round 2 re-verified all 8 as
+                     # genuinely fixed and found 1 new major (TextField.accessibilityInvalid not
+                     # derived from error), fixed (commit 4f47504). This is Round 3, the final
+                     # round under the 3-round cap: re-run all 6 reviewers + mutation once more.
+                     # See review.md for the full disposition.
 ---
 
 # Tasks — login-and-logout
