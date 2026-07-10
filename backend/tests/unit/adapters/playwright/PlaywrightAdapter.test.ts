@@ -33,7 +33,12 @@ function makeFakeBrowser(html: string, networkIdle = true): { launcher: BrowserL
 
 describe('PlaywrightAdapter', () => {
   it('fetches HTML via real browser, returns parsed result', async () => {
-    const html = '<html><body><div class="price">300.000 €</div><div class="m2">90 m²</div><div class="address">Calle Mayor 1</div></body></html>';
+    const html = `<html><body>
+      <div class="address">Calle Mayor 1, Madrid</div>
+      <div class="price">300.000 €</div>
+      <div class="m2">90 m²</div>
+      <p>Piso luminoso de 90 m² en el centro de Madrid, 3 dormitorios, 2 baños, orientación sur, certificado energético B, gastos de comunidad 120 €/mes, año de construcción 1995, finca con ascensor. Cerca de metro y autobús. Plaza de garaje incluida en el precio.</p>
+    </body></html>`;
     const { launcher, gotoCalls } = makeFakeBrowser(html);
     const pool = new BrowserPool({ launcher, clock: systemClock, poolSize: 1, idleTimeoutMs: 1000 });
     const adapter = new PlaywrightAdapter({
@@ -57,6 +62,30 @@ describe('PlaywrightAdapter', () => {
       pool,
       userAgent: 'Realista/1.0',
       gotoTimeoutMs: 100,
+    });
+    await expect(adapter.fetch('https://www.idealista.com/inmueble/1')).rejects.toBeInstanceOf(PortalBlockedError);
+  });
+
+  it('throws PortalBlockedError when page is a DataDome captcha challenge', async () => {
+    const datadomeHtml = '<html lang="es"><head><title>DataDome CAPTCHA</title></head><body><iframe src="https://geo.captcha-delivery.com/captcha/?initialCid=AHrlq" title="DataDome CAPTCHA"></iframe></body></html>';
+    const { launcher } = makeFakeBrowser(datadomeHtml);
+    const pool = new BrowserPool({ launcher, clock: systemClock, poolSize: 1, idleTimeoutMs: 1000 });
+    const adapter = new PlaywrightAdapter({
+      pool,
+      userAgent: 'Realista/1.0',
+      gotoTimeoutMs: 5000,
+    });
+    await expect(adapter.fetch('https://www.idealista.com/inmueble/110434717/')).rejects.toBeInstanceOf(PortalBlockedError);
+  });
+
+  it('throws PortalBlockedError when extracted body text is too short to be a listing', async () => {
+    const tinyHtml = '<html><head><title>idealista</title></head><body><div class="price">200.000 €</div></body></html>';
+    const { launcher } = makeFakeBrowser(tinyHtml);
+    const pool = new BrowserPool({ launcher, clock: systemClock, poolSize: 1, idleTimeoutMs: 1000 });
+    const adapter = new PlaywrightAdapter({
+      pool,
+      userAgent: 'Realista/1.0',
+      gotoTimeoutMs: 5000,
     });
     await expect(adapter.fetch('https://www.idealista.com/inmueble/1')).rejects.toBeInstanceOf(PortalBlockedError);
   });

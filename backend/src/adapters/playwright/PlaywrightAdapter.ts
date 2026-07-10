@@ -14,6 +14,19 @@ import type { ListingFetchPort } from '../../domain/ports/ListingFetchPort';
 import type { ParsedListingHtml } from '../../domain/value-objects/ParsedListingHtml';
 import { BrowserPool } from './BrowserPool';
 
+// Markers DataDome injects in its captcha challenge page. Any of these in the
+// returned HTML means we got a challenge, not the listing — treat as blocked.
+const CAPTCHA_HTML_MARKERS: readonly string[] = [
+  'captcha-delivery.com',
+  'DataDome CAPTCHA',
+  'x-datadome',
+];
+
+// A real listing has description, features, location… easily >500 chars.
+// Below this threshold, the page is either a captcha, 404, or stripped page
+// — none of which the LLM can analyze usefully.
+const MIN_LISTING_TEXT_LENGTH = 200;
+
 export interface PlaywrightAdapterOptions {
   pool: BrowserPool;
   userAgent: string;
@@ -49,13 +62,24 @@ export class PlaywrightAdapter implements ListingFetchPort {
           throw new PortalBlockedError(parsedUrl.hostname);
         }
         const html = await page.content();
-        return this.parse(html, url);
+        if (this.looksLikeCaptchaChallenge(html)) {
+          throw new PortalBlockedError(parsedUrl.hostname);
+        }
+        const parsed = this.parse(html, url);
+        if (parsed.text.trim().length < MIN_LISTING_TEXT_LENGTH) {
+          throw new PortalBlockedError(parsedUrl.hostname);
+        }
+        return parsed;
       } finally {
         await page.close().catch(() => undefined);
       }
     } finally {
       await acquired.release();
     }
+  }
+
+  private looksLikeCaptchaChallenge(html: string): boolean {
+    return CAPTCHA_HTML_MARKERS.some((marker) => html.includes(marker));
   }
 
   private parse(html: string, url: string): ParsedListingHtml {
