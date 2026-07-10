@@ -1,0 +1,84 @@
+[data-testid='psai-app-root'] {
+  position: relative;
+}
+
+[data-testid='psai-app-root']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(160, 180, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(160, 180, 255, 0.05) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: radial-gradient(circle at center, black 40%, transparent 85%);
+}
+
+.glass-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card::after {
+  content: '';
+  position: absolute;
+  width: 210px;
+  height: 210px;
+  border-radius: 999px;
+  top: -130px;
+  right: -130px;
+  background: radial-gradient(circle, rgba(108, 99, 255, 0.35) 0%, rgba(108, 99, 255, 0) 72%);
+  pointer-events: none;
+}
+[data-testid='psai-app-root'] {
+  padding: 2rem 1.25rem;
+}
+
+[data-testid='psai-home-header'] {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 20px rgba(17, 43, 36, 0.07);
+}
+
+[data-testid='psai-home-title'] {
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+}
+
+[data-testid='psai-home-subtitle'] {
+  margin-top: 0.85rem;
+  color: var(--muted);
+  max-width: 60ch;
+}
+
+[data-testid='psai-home-next-steps'] {
+  margin-top: 1.2rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 1.25rem;
+}
+
+[data-testid='psai-home-next-steps-title'] {
+  color: var(--accent);
+  font-size: 1.25rem;
+}
+
+[data-testid='psai-home-next-steps-list'] {
+  margin-top: 0.8rem;
+  padding-left: 1.15rem;
+}
+
+[data-testid='psai-home-next-steps-list'] li {
+  margin: 0.45rem 0;
+}
+
+@media (max-width: 640px) {
+  [data-testid='psai-home-header'],
+  [data-testid='psai-home-next-steps'] {
+    border-radius: 12px;
+    padding: 1rem;
+  }
+}
