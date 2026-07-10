@@ -23,6 +23,18 @@ const envSchema = z.object({
     .transform((s) => s.split(',').map((d) => d.trim())),
 
   HEALTH_CHECK_CRON: z.string().default('*/30 * * * *'),
+
+  // Playwright headless-browser adapter (DataDome bypass)
+  PLAYWRIGHT_ENABLED: z
+    .enum(['true', 'false'])
+    .default('true')
+    .transform((v) => v === 'true'),
+  PLAYWRIGHT_POOL_SIZE: z.coerce.number().int().positive().default(1),
+  PLAYWRIGHT_BROWSER_TIMEOUT_MS: z.coerce.number().int().positive().default(15_000),
+  PLAYWRIGHT_HEADLESS: z
+    .enum(['true', 'false'])
+    .default('true')
+    .transform((v) => v === 'true'),
 });
 
 export type Env = z.infer<typeof envSchema>;
