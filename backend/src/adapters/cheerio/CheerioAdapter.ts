@@ -6,7 +6,7 @@ import * as cheerio from 'cheerio';
 import fetch from 'node-fetch';
 import { URL } from 'url';
 import { env } from '../../infrastructure/config/env';
-import { REALISTA_USER_AGENT, isAllowedPortal } from '../../infrastructure/utils/urlValidator';
+import { BROWSER_HEADERS, isAllowedPortal } from '../../infrastructure/utils/urlValidator';
 import { PortalBlockedError } from '../../domain/errors/DomainError';
 
 export interface ParsedListingHtml {
@@ -59,26 +59,38 @@ export class CheerioAdapter {
   }
 
   private async tryFetch(url: string, domain: string): Promise<string | null> {
-    try {
-      const res = await fetch(url, {
-        headers: {
-          'User-Agent': REALISTA_USER_AGENT,
-          Accept: 'text/html,application/xhtml+xml',
-          'Accept-Language': 'es-ES,es;q=0.9',
-        },
-        redirect: 'follow',
-        signal: AbortSignal.timeout(env.NODE_ENV === 'test' ? 2000 : 10000),
-      });
-      if (!res.ok) {
-        this.recordFailure(domain);
-        return null;
+    const maxAttempts = 4;
+    const backoffMs = [0, 1000, 2000, 4000];
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      if (backoffMs[attempt] > 0) {
+        await this.sleep(backoffMs[attempt]);
       }
-      this.recordSuccess(domain);
-      return await res.text();
-    } catch (err) {
-      this.recordFailure(domain);
-      return null;
+      try {
+        const res = await fetch(url, {
+          headers: BROWSER_HEADERS,
+          redirect: 'follow',
+          signal: AbortSignal.timeout(env.NODE_ENV === 'test' ? 2000 : 10000),
+        });
+        if (!res.ok) {
+          if (res.status >= 400 && res.status < 500) {
+            this.recordFailure(domain);
+            return null;
+          }
+          this.recordFailure(domain);
+          continue;
+        }
+        this.recordSuccess(domain);
+        return await res.text();
+      } catch (err) {
+        this.recordFailure(domain);
+      }
     }
+    return null;
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private recordFailure(domain: string): void {

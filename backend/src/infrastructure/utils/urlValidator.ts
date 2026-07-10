@@ -38,3 +38,18 @@ export function isAllowedPortal(hostname: string): boolean {
 }
 
 export const REALISTA_USER_AGENT = env.REALISTA_USER_AGENT;
+
+export const CHROME_USER_AGENT =
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+export const BROWSER_HEADERS: Record<string, string> = {
+  'User-Agent': CHROME_USER_AGENT,
+  Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+  'Accept-Encoding': 'gzip, deflate, br',
+  'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
+  'Sec-Fetch-Dest': 'document',
+  'Sec-Fetch-Mode': 'navigate',
+  'Sec-Fetch-Site': 'none',
+  'Sec-Fetch-User': '?1',
+  'Upgrade-Insecure-Requests': '1',
+};
