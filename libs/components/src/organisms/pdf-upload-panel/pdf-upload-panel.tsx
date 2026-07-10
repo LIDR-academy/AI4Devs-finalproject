@@ -43,6 +43,12 @@ export type PdfUploadPanelProps = {
   errorMessage?: string;
   /** Error-state retry affordance (@s8-@s13) — re-attempts the last extraction. */
   onRetry?: () => void;
+  /** Whether the Error-state retry affordance should render at all. Defaults to `true`. The
+   * wiring layer sets this to `false` for the 6 non-transient `PdfExtractionErrorCode`s
+   * (spec.md's Error contract table) — where `retry()` would deterministically reproduce the
+   * same failure — since the persistent choose-file control is already the real recovery action
+   * for those. */
+  canRetry?: boolean;
 };
 
 export const PDF_UPLOAD_PANEL_LOADING_INDICATOR_TEST_ID = 'pdf-upload-panel-loading-indicator';
@@ -62,6 +68,7 @@ export const PdfUploadPanel = ({
   onContinue,
   errorMessage,
   onRetry,
+  canRetry = true,
 }: PdfUploadPanelProps) => {
   const isLoading = state === 'loading';
 
@@ -102,7 +109,7 @@ export const PdfUploadPanel = ({
         {state === 'error' ? (
           <View style={styles.errorBanner} accessibilityRole="alert">
             <Text style={styles.errorBannerText}>{errorMessage}</Text>
-            <Button onPress={onRetry}>{labels.retry}</Button>
+            {canRetry ? <Button onPress={onRetry}>{labels.retry}</Button> : null}
           </View>
         ) : null}
       </View>

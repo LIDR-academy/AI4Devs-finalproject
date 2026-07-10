@@ -156,4 +156,23 @@ describe('PdfUploadPanel', () => {
 
     expect(screen.queryByTestId(PDF_UPLOAD_PANEL_LOADING_INDICATOR_TEST_ID)).toBeNull();
   });
+
+  // Review round-1 fix (design finding #1, spec.md's per-code Error contract table) — only two of
+  // the eight `PdfExtractionErrorCode`s (`network_error`, `extraction_failed`) are genuinely
+  // retryable; the wiring layer computes `canRetry` from the current code, and the panel just
+  // suppresses the affordance when it's false, since the persistent choose-file control is already
+  // the correct recovery action for the rest.
+  it('does not render the retry affordance in the error state when canRetry is false', async () => {
+    await render(
+      <PdfUploadPanel
+        state="error"
+        labels={labels}
+        onChooseFile={jest.fn()}
+        errorMessage="Choose a smaller file"
+        canRetry={false}
+      />,
+    );
+
+    expect(screen.queryByRole('button', { name: 'Try again' })).toBeNull();
+  });
 });

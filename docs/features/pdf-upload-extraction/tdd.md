@@ -592,3 +592,50 @@ covers the schema/RLS surface, which is unchanged this slice).
 Slice-2 gate is green (lint/check-types/tests, no hardcoded strings/colors/dimensions introduced).
 Stopping here for the light `reviewer_code` + `reviewer_design` pass, per protocol — not
 self-reviewing, not starting Slice 3.
+
+---
+
+## Slice-2 review round-1 fix — restrict retry affordance to transient errors (`review.md` §1)
+
+`reviewer_design`'s only round-1 finding (minor): the Error state rendered one generic "Try
+again" retry button for all 8 `PdfExtractionErrorCode`s, but spec.md's Error contract table (lines
+63-72) gives each code its own distinct recovery action — only `network_error`/`extraction_failed`
+genuinely say "Retry"; the other 6 say "Choose a smaller file" / "Choose a text-based PDF" /
+"Choose another file" / "Sign in", etc. Since `usePdfExtraction.retry()` re-invokes with the exact
+same remembered input/`documentId`, retrying those 6 deterministically reproduces the same
+failure. Fixed via option (a) from the review — suppress the retry affordance for the 6
+non-transient codes; the panel's persistent "Choose a PDF" control is already the correct recovery
+action for them, so no new UI/navigation was added (including for `unauthenticated` — no new
+"sign in" action, since the `(app)` route guard already handles the real auth boundary).
+
+- **RED→GREEN, `pdf-upload-panel.tsx`**: added an optional `canRetry?: boolean` prop (default
+  `true`, preserving every pre-existing test that doesn't pass it) — the Error state's retry
+  `Button` only renders when `canRetry` is true. 1 new test in `pdf-upload-panel.test.tsx`:
+  "does not render the retry affordance in the error state when canRetry is false". The panel
+  stays a dumb, code-agnostic component — it only obeys the boolean, the classification itself
+  lives one layer up.
+- **RED→GREEN, `pdf-upload.tsx`**: added `RETRYABLE_ERROR_CODES` (`Set<PdfExtractionErrorCode>`,
+  just `network_error`/`extraction_failed`) and wired `canRetry={error ? RETRYABLE_ERROR_CODES.has
+  (error) : true}` into the panel. Kept inline in the wiring component (one of the review's
+  suggested options) rather than `@helsoft/types` (that lib is plain-type-only, no logic, per
+  `global.mdc` and the existing `auth-error.ts`/`pdf-extraction.ts` precedent — no function lives
+  there today) or `@helsoft/services` (would've grown a third independently-declared error-code
+  set alongside the two already reviewed as intentional trust-boundary guards; this classification
+  is a UI/UX rule, not a trust boundary, so it belongs with the component that renders the UX).
+  - Updated the pre-existing "shows the mapped error message and wires retry…" test to use
+    `network_error` (a genuinely retryable code) instead of `too_many_pages` (now non-retryable),
+    so its retry-press assertion stays valid.
+  - Added 2 new exhaustive `it.each` blocks in `pdf-upload.test.tsx`, mirroring the file's existing
+    `ERROR_CODE_TO_KEY` exhaustive-mapping pattern: all 6 non-transient codes assert the retry
+    button is absent; both transient codes (`network_error`, `extraction_failed`) assert it's
+    present. 8 new tests total.
+- **Stories**: `pdf-upload-panel.stories.tsx`'s single `Error` story split into `ErrorRetryable`
+  (a transient message, retry affordance shown) and `ErrorNonRetryable` (`too_many_pages`'s
+  message, `canRetry: false`, no retry affordance) — still 4 UI states, now with both Error
+  sub-cases visible in Storybook.
+- **Verification**: `pnpm --filter @helsoft/components test` — 6/6 suites, 78/78 tests green (+1).
+  `pnpm --filter @helsoft/study-buddy test` — 4/4 suites, 49/49 tests green (+8). Both
+  `check-types` clean; `pnpm check-types` (8/8 packages) and `pnpm lint` clean repo-wide.
+
+Not re-running Playwright e2e this cycle — no `.e2e.js` exists yet for `PdfUploadPanel` (Slice 2's
+own gate note above: e2e is explicitly scoped to task-14/Slice 3, unaffected by this fix).

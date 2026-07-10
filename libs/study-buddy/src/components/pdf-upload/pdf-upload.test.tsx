@@ -128,14 +128,16 @@ describe('PdfUpload', () => {
     expect(screen.getByText('upload.constraintsHint')).toBeTruthy();
   });
 
-  // @s8-@s13 — once stage is 'error', the panel shows the mapped error message and wires retry.
-  it('shows the mapped error message and wires retry into the panel when stage is error', async () => {
+  // @s8-@s13 — once stage is 'error' with a transient code, the panel shows the mapped error
+  // message and wires retry. `network_error` is one of the two genuinely retryable codes
+  // (spec.md's Error contract table) — retrying it can actually change the outcome.
+  it('shows the mapped error message and wires retry into the panel when stage is error with a transient code', async () => {
     const retry = jest.fn();
-    mockUsePdfExtraction.mockReturnValue(extractionValue({ stage: 'error', error: 'too_many_pages', retry }));
+    mockUsePdfExtraction.mockReturnValue(extractionValue({ stage: 'error', error: 'network_error', retry }));
 
     await render(<PdfUpload />);
 
-    expect(screen.getByText('upload.error.tooManyPages')).toBeTruthy();
+    expect(screen.getByText('upload.error.network')).toBeTruthy();
 
     await act(async () => {
       fireEvent.press(screen.getByRole('button', { name: 'upload.retryAction' }));
@@ -173,4 +175,33 @@ describe('PdfUpload', () => {
 
     expect(screen.getByText(expectedKey)).toBeTruthy();
   });
+
+  // Review round-1 fix (design finding #1) — retrying re-invokes usePdfExtraction().retry() with
+  // the exact same remembered input/documentId, so it can only change the outcome for a transient
+  // failure. Only `network_error`/`extraction_failed` genuinely say "Retry" in spec.md's Error
+  // contract table; the other 6 codes' recovery action ("choose a smaller file", "choose a
+  // text-based PDF", etc.) is already the panel's persistent choose-file control, so the retry
+  // affordance must not render for them.
+  const NON_TRANSIENT_CODES = Object.keys(ERROR_CODE_TO_KEY).filter(
+    (code) => code !== 'network_error' && code !== 'extraction_failed',
+  ) as (keyof typeof ERROR_CODE_TO_KEY)[];
+
+  it.each(NON_TRANSIENT_CODES)('suppresses the retry affordance for the non-transient code %s', async (code) => {
+    mockUsePdfExtraction.mockReturnValue(extractionValue({ stage: 'error', error: code }));
+
+    await render(<PdfUpload />);
+
+    expect(screen.queryByRole('button', { name: 'upload.retryAction' })).toBeNull();
+  });
+
+  it.each(['network_error', 'extraction_failed'] as const)(
+    'keeps the retry affordance for the transient code %s',
+    async (code) => {
+      mockUsePdfExtraction.mockReturnValue(extractionValue({ stage: 'error', error: code }));
+
+      await render(<PdfUpload />);
+
+      expect(screen.getByRole('button', { name: 'upload.retryAction' })).toBeTruthy();
+    },
+  );
 });

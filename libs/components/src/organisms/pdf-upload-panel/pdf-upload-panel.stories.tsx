@@ -51,12 +51,24 @@ export const Content: Story = {
   },
 };
 
-// Error (@s8-@s13) — the message for the current error code, a retry affordance, and the
-// choose-file control staying enabled ("returns to a usable state").
-export const Error: Story = {
+// Error, retryable (@s8-@s13, review round-1 fix) — a transient code (network_error/
+// extraction_failed) where retrying can actually change the outcome: the message, a retry
+// affordance, and the choose-file control staying enabled ("returns to a usable state").
+export const ErrorRetryable: Story = {
+  args: {
+    state: 'error',
+    errorMessage: 'Something went wrong while reading your PDF',
+    onRetry: () => {},
+  },
+};
+
+// Error, non-retryable (@s8-@s13, review round-1 fix) — one of the 6 non-transient codes (here
+// too_many_pages): no retry affordance, since retrying would deterministically reproduce the same
+// failure — the persistent choose-file control is the real recovery action.
+export const ErrorNonRetryable: Story = {
   args: {
     state: 'error',
     errorMessage: 'This PDF has too many pages (max 20)',
-    onRetry: () => {},
+    canRetry: false,
   },
 };

@@ -46,6 +46,13 @@ const stageToPanelState: Record<string, PdfUploadPanelState> = {
   error: 'error',
 };
 
+/** Only these two codes reflect a transient failure where retrying can actually change the
+ * outcome (spec.md's Error contract table) — `usePdfExtraction().retry()` re-invokes with the
+ * exact same remembered input/documentId, so retrying any other code deterministically reproduces
+ * the same rejection; the panel's persistent "Choose a PDF" control is the real recovery action
+ * for those (@s8-@s13, review round-1 fix). */
+const RETRYABLE_ERROR_CODES: ReadonlySet<PdfExtractionErrorCode> = new Set(['network_error', 'extraction_failed']);
+
 /**
  * PdfUpload — feature component wiring the document picker, `usePdfExtraction()`, and localized
  * strings to the presentational `PdfUploadPanel`. Mirrors the established `SignInForm`/
@@ -74,6 +81,7 @@ export const PdfUpload = () => {
       imageCount={result?.imageCount}
       errorMessage={error ? t(UPLOAD_ERROR_KEYS[error]) : undefined}
       onRetry={retry}
+      canRetry={error ? RETRYABLE_ERROR_CODES.has(error) : true}
       labels={{
         chooseFile: t('upload.chooseFile'),
         loading: t('upload.loading'),
