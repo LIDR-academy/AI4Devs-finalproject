@@ -4,12 +4,22 @@ The reviewers run **in parallel**, each an independent lens. Each writes `APPROV
 
 **Cadence — two review passes:**
 - **Per slice (during the build):** only **`reviewer_code` + `reviewer_design`** run, scoped to that slice's changes (a fast quality/design gate before the slice closes). No mutation, no minors-accept — every finding is fixed before the next slice.
-- **After all slices (full review):** **all six** reviewers run, coupled with mutation, under the 3-round cap + documented-minors rule.
+- **After all slices (full review):** **all six** reviewers run, coupled with mutation, under the 2-round cap + documented-minors rule.
 
 General hard rules for every reviewer:
 - Never approve with failing `pnpm lint`, `pnpm check-types`, `pnpm test`, or relevant `test:e2e`.
 - Be specific: cite `file:line`. No generic feedback.
 - Judge against the approved `gherkin-scenarios.md`, `spec.md`, and the project rules in `.agents/rules/`.
+
+---
+
+## 0. spec_reviewer → `review-spec.md` (pre-gate, before human approval)
+Runs once after `spec_partner` drafts the bundle and **before** the human gate, so the human reviews a spec/contract that's already coherent. Reviews **documents, not code**; loops findings back to `spec_partner` (not `implementator`); any finding blocks (including minor).
+- **spec.md** — every AC is a testable Given/When/Then; 4 UI states (if UI); analytics named; feature flags if rollout; non-goals present; decisions carry rationale; scope matches the story (nothing missing, no gold-plating); no ambiguity/contradiction.
+- **risks.md** — real risks, each with a concrete mitigation; dependencies have a status.
+- **tasks.md + task-N.md** — atomic tasks that collectively cover every AC/scenario; correct slice grouping; each `paths` a valid `libs/*` location obeying the layering + atomic-design rules; `scenarios` reference real `@s` tags.
+- **gherkin-scenarios.md** — one `@s` per behavior; happy + error/empty/edge; **every AC ↔ ≥ 1 scenario**; declarative steps; unique tags.
+- **Traceability** — story → ACs → `@s` → tasks mutually consistent; nothing orphaned.
 
 ---
 
@@ -64,4 +74,4 @@ Runtime and delivery cost.
 2. Prioritize blocker → major → minor into one ordered change-request list in `review.md`.
 3. **Any finding blocks — blocker, major, OR minor.** Only `APPROVED` when there are **zero** findings of any severity; otherwise issue **one** consolidated change request to `implementator`, which fixes **every** item. There is no "approve with minor findings left open."
 4. After fixes, re-run **all six** reviewers in parallel and re-consolidate, **pruning `review.md` to only the findings still open** (drop each resolved one). The orchestrator re-runs **mutation** alongside every round — review + mutation are one quality loop.
-5. **Cap: 3 rounds.** After the 3rd round: any remaining **blocker/major** (or unmet mutation threshold) is **hard** — escalate and block. If **only minors** remain, they may ship as **documented, human-accepted** risks (recorded in `review.md`, `spec.md` Open decisions, `dod.md`). Either way `review.md` holds **only the unresolved findings**.
+5. **Cap: 2 rounds.** After the 2nd round: any remaining **blocker/major** (or unmet mutation threshold) is **hard** — escalate and block. If **only minors** remain, they may ship as **documented, human-accepted** risks (recorded in `review.md`, `spec.md` Open decisions, `dod.md`). Either way `review.md` holds **only the unresolved findings**.
