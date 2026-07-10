@@ -8,6 +8,7 @@ import { URL } from 'url';
 import { env } from '../../infrastructure/config/env';
 import { BROWSER_HEADERS, isAllowedPortal } from '../../infrastructure/utils/urlValidator';
 import { PortalBlockedError } from '../../domain/errors/DomainError';
+import type { ListingFetchPort } from '../../domain/ports/ListingFetchPort';
 
 export interface ParsedListingHtml {
   url: string;
@@ -29,7 +30,7 @@ interface PortalHealthRecord {
   status: 'OK' | 'THROTTLED' | 'BLOCKED' | 'CONFIRMED_BLOCKED';
 }
 
-export class CheerioAdapter {
+export class CheerioAdapter implements ListingFetchPort {
   // Lightweight in-memory portal health (FR-027 subset; full impl in PortalHealthCheckAdapter)
   private static health = new Map<string, PortalHealthRecord>();
 
