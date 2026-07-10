@@ -6,5 +6,6 @@ import 'package:flutter/foundation.dart';
 ///
 /// Para activar: cambia kShortGameMode a true y define la secuencia
 /// en kShortRoundSequence. Ejemplo: [1, 4, 8, 8, 4, 1] = 6 rondas.
-const bool kShortGameMode = kDebugMode && false;
-const List<int> kShortRoundSequence = [1, 4, 8, 8, 4, 1];
+const bool kShortGameMode = kDebugMode && true;
+const List<int> kShortRoundSequence = [1, 3, 1];
+// const List<int> kShortRoundSequence = [1, 4, 8, 8, 4, 1];

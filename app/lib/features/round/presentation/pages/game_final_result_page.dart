@@ -20,9 +20,6 @@ class GameFinalResultPage extends StatefulWidget {
 }
 
 class _GameFinalResultPageState extends State<GameFinalResultPage> {
-  static const Color _bannerBackground = Color(0xFFFCEFE0);
-  static const Color _bannerText = Color(0xFFF4A259);
-
   late Future<_FinalResultData> _loadFuture;
 
   @override
@@ -67,132 +64,143 @@ class _GameFinalResultPageState extends State<GameFinalResultPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppTheme.primary,
-                  borderRadius: BorderRadius.circular(20),
+        child: FutureBuilder<_FinalResultData>(
+          future: _loadFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(snapshot.error.toString()),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-                child: Row(
-                  children: [
-                    IconButton(
+              );
+            }
+
+            final data = snapshot.data!;
+            return SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _FinalResultHeader(data: data),
+                  const _SignUpBanner(),
+                  RankingList(
+                    entries: data.entries,
+                    showPositionDelta: false,
+                    shrinkWrap: true,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    child: OutlinedButton(
                       onPressed: () => context.go('/'),
-                      icon: const Icon(Icons.home, color: Colors.white),
-                    ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Resultado final',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
-                                ?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                          FutureBuilder<_FinalResultData>(
-                            future: _loadFuture,
-                            builder: (context, snapshot) {
-                              if (!snapshot.hasData) {
-                                return const SizedBox.shrink();
-                              }
-                              final data = snapshot.data!;
-                              return Text(
-                                '${data.roundCount} rondas · Ganador: ${data.winnerName}',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(
-                                      color: Colors.white.withValues(alpha: 0.8),
-                                    ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            BlocBuilder<AuthBloc, AuthState>(
-              builder: (context, authState) {
-                if (authState is Authenticated) {
-                  return const SizedBox.shrink();
-                }
-                return Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                  child: Material(
-                    color: _bannerBackground,
-                    borderRadius: BorderRadius.circular(16),
-                    child: InkWell(
-                      onTap: () => context.push('/auth/sign-up'),
-                      borderRadius: BorderRadius.circular(16),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.cloud_upload_outlined,
-                                color: _bannerText),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'Crea una cuenta para guardar y compartir esta partida',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(color: _bannerText),
-                              ),
-                            ),
-                            const Icon(Icons.chevron_right, color: _bannerText),
-                          ],
-                        ),
-                      ),
+                      child: const Text('Nueva partida'),
                     ),
                   ),
-                );
-              },
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _FinalResultHeader extends StatelessWidget {
+  const _FinalResultHeader({required this.data});
+
+  final _FinalResultData data;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppTheme.primary,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+        child: Row(
+          children: [
+            IconButton(
+              onPressed: () => context.go('/'),
+              icon: const Icon(Icons.home, color: Colors.white),
             ),
             Expanded(
-              child: FutureBuilder<_FinalResultData>(
-                future: _loadFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snapshot.hasError) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(snapshot.error.toString()),
-                      ),
-                    );
-                  }
-                  return RankingList(
-                    entries: snapshot.data!.entries,
-                    showPositionDelta: false,
-                  );
-                },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              child: OutlinedButton(
-                onPressed: () => context.go('/'),
-                child: const Text('Volver al inicio'),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Resultado final',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  Text(
+                    '${data.roundCount} rondas · Ganador: ${data.winnerName}',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.white.withValues(alpha: 0.8),
+                        ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SignUpBanner extends StatelessWidget {
+  const _SignUpBanner();
+
+  static const Color _bannerBackground = Color(0xFFFCEFE0);
+  static const Color _bannerText = Color(0xFFF4A259);
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        if (authState is Authenticated) {
+          return const SizedBox.shrink();
+        }
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+          child: Material(
+            color: _bannerBackground,
+            borderRadius: BorderRadius.circular(16),
+            child: InkWell(
+              onTap: () => context.push('/auth/sign-up'),
+              borderRadius: BorderRadius.circular(16),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    const Icon(Icons.cloud_upload_outlined,
+                        color: _bannerText),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Crea una cuenta para guardar y compartir esta partida',
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(color: _bannerText),
+                      ),
+                    ),
+                    const Icon(Icons.chevron_right, color: _bannerText),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

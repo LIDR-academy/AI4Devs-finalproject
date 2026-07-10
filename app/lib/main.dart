@@ -6,6 +6,7 @@ import 'package:la_pocha/core/di/injection.dart';
 import 'package:la_pocha/core/router/app_router.dart';
 import 'package:la_pocha/core/router/auth_refresh_notifier.dart';
 import 'package:la_pocha/core/theme/app_theme.dart';
+import 'package:la_pocha/core/widgets/root_scaffold_messenger_key.dart';
 import 'package:la_pocha/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:la_pocha/features/sync/presentation/bloc/game_sync_bloc.dart';
 import 'package:la_pocha/features/sync/presentation/widgets/sync_status_snackbar.dart';
@@ -56,6 +57,7 @@ class LaPochaApp extends StatelessWidget {
         child: MaterialApp.router(
           title: 'La Pocha',
           theme: AppTheme.light,
+          scaffoldMessengerKey: rootScaffoldMessengerKey,
           routerConfig: router,
         ),
       ),

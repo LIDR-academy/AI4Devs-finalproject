@@ -1866,3 +1866,67 @@ No apliques ningún cambio hasta haber completado el Paso 1 y mostrado
 los resultados.
 
 --------------------------
+
+## Fix — Crash "No ScaffoldMessenger widget found" al finalizar partida (LPT-20)
+
+**Fecha:** 10 julio 2026
+
+### Prompt ejecutado
+
+La app se bloquea con "No ScaffoldMessenger widget found" al pulsar
+"Ver resultado" tras finalizar la última ronda.
+
+Causa identificada: algún código intenta mostrar un SnackBar
+(probablemente SyncStatusSnackbar de LPT-20) usando un BuildContext
+que no tiene un ScaffoldMessenger en el árbol de widgets — ocurre porque
+la navegación a la pantalla de resultado final se ejecuta antes o
+simultáneamente al intento de mostrar el SnackBar de sincronización.
+
+### Diagnóstico
+
+**Punto exacto del crash:** `SyncStatusSnackbar` en
+`lib/features/sync/presentation/widgets/sync_status_snackbar.dart`,
+línea 18: `ScaffoldMessenger.of(context)` dentro del `BlocListener`
+de `GameSyncBloc`. Es el único sitio que muestra el SnackBar de sync;
+no hay otros `BlocListener` de `GameSyncBloc` en `lib/`.
+
+**Cadena de eventos al pulsar "Ver resultado final":**
+
+1. `RoundResultPage` dispara `FinishGameRequested`.
+2. `FinishGameUseCase` persiste la partida y lanza `GameUploadRequested`
+   en `GameSyncBloc` de forma asíncrona (`unawaited`).
+3. `RoundResultBloc` emite `RoundResultNavigateToFinal` y
+   `context.go('/games/:id/final')` desmonta `RoundResultPage`.
+4. Cuando el upload termina, `GameSyncBloc` emite `GameSyncSuccess` o
+   `GameSyncFailure` y el listener de `SyncStatusSnackbar` intenta
+   mostrar el SnackBar → crash.
+
+**Causa raíz:** `SyncStatusSnackbar` envuelve `MaterialApp.router` por
+**fuera** en `main.dart`. El `ScaffoldMessenger` lo crea `MaterialApp`
+**por debajo** en el árbol. `ScaffoldMessenger.of(context)` recorre
+ancestros del `context` del `BlocListener`, que nunca alcanza ese
+`ScaffoldMessenger`. El crash solo se manifiesta al terminar la partida
+porque es el único flujo que emite `GameSyncSuccess`/`GameSyncFailure`.
+
+### Fix aplicado (opción A — clave global)
+
+1. Nuevo fichero `lib/core/widgets/root_scaffold_messenger_key.dart` con
+   `rootScaffoldMessengerKey`.
+2. `main.dart`: `scaffoldMessengerKey: rootScaffoldMessengerKey` en
+   `MaterialApp.router`.
+3. `SyncStatusSnackbar`: usa
+   `rootScaffoldMessengerKey.currentState?.showSnackBar(...)` en lugar
+   de `ScaffoldMessenger.of(context)`.
+
+La opción B (mostrar SnackBar antes de navegar) no aplica: el SnackBar
+lo dispara un listener global de `GameSyncBloc`, no el `BlocListener` de
+`RoundResultPage`.
+
+### Verificación
+
+- `flutter analyze` sin errores en los ficheros modificados.
+- La pantalla de resultado final se muestra con el ranking.
+- El SnackBar de sincronización aparece sobre la pantalla de resultado
+  final sin crash.
+
+--------------------------

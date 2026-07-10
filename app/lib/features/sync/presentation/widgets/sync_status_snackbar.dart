@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:la_pocha/core/theme/app_theme.dart';
+import 'package:la_pocha/core/widgets/root_scaffold_messenger_key.dart';
 import 'package:la_pocha/features/sync/presentation/bloc/game_sync_bloc.dart';
 
 class SyncStatusSnackbar extends StatelessWidget {
@@ -15,7 +16,10 @@ class SyncStatusSnackbar extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocListener<GameSyncBloc, GameSyncState>(
       listener: (context, state) {
-        final messenger = ScaffoldMessenger.of(context);
+        final messenger = rootScaffoldMessengerKey.currentState;
+        if (messenger == null) {
+          return;
+        }
         messenger.hideCurrentSnackBar();
 
         switch (state) {

@@ -9,16 +9,20 @@ class RankingList extends StatelessWidget {
     super.key,
     required this.entries,
     this.showPositionDelta = true,
+    this.shrinkWrap = false,
   });
 
   final List<RankingEntry> entries;
   final bool showPositionDelta;
+  final bool shrinkWrap;
 
   static const Color _negativeScoreColor = Color(0xFFD9772E);
 
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
+      shrinkWrap: shrinkWrap,
+      physics: shrinkWrap ? const NeverScrollableScrollPhysics() : null,
       padding: const EdgeInsets.all(20),
       itemCount: entries.length,
       separatorBuilder: (_, _) => const SizedBox(height: 12),
