@@ -21,7 +21,16 @@
     '/checklist': 'checklist',
   };
 
+  const ROUTES_WITH_STEPPER = new Set([
+    '/mi-proceso',
+    '/listing-lens',
+    '/mortgage-compass',
+    '/timeline',
+    '/checklist',
+  ]);
+
   $: currentStep = PATH_TO_STEP[$page.url.pathname] ?? 'listing';
+  $: showStepper = ROUTES_WITH_STEPPER.has($page.url.pathname);
 
   let completedSteps: Set<string> = new Set();
 
@@ -54,7 +63,9 @@
   <slot />
 </main>
 
-<ProcessStepper steps={STEPS} {currentStep} {completedSteps} />
+{#if showStepper}
+  <ProcessStepper steps={STEPS} {currentStep} {completedSteps} />
+{/if}
 
 <style>
   main {
