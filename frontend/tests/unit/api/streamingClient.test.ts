@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { analyzeListingStream, ApiError } from '../../../src/lib/api/streamingClient';
+import { analyzeListingStream } from '../../../src/lib/api/streamingClient';
+import { ApiError } from '../../../src/lib/api/client';
 
 afterEach(() => {
   vi.unstubAllGlobals();

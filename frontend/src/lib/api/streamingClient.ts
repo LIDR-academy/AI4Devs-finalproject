@@ -6,19 +6,9 @@
 import { session } from '../stores/session';
 import { get } from 'svelte/store';
 import type { ProgressEventName, AnalyzeListingResponse } from './types';
+import { ApiError } from './client';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
-
-export class ApiError extends Error {
-  constructor(
-    public readonly status: number,
-    public readonly code: string,
-    message: string,
-  ) {
-    super(message);
-    this.name = 'ApiError';
-  }
-}
 
 export interface StreamOptions {
   url: string;
