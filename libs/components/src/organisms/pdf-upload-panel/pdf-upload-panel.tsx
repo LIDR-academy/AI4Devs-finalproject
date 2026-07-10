@@ -37,6 +37,10 @@ export type PdfUploadPanelProps = {
   filename?: string;
   pageCount?: number;
   imageCount?: number;
+  /** The image-count row's already-pluralized, screen-reader announcement (e.g. i18next's
+   * `upload.imageCount_one`/`_other`, task-13) — falls back to a plain composed
+   * `"{imageCountLabel}: {imageCount}"` label when omitted (N5, accessibility review round-1 fix). */
+  imageCountAnnouncement?: string;
   /** Content-state continue affordance (@s6) — the generation hand-off is out of scope here. */
   onContinue?: () => void;
   /** Error-state message for the current `PdfExtractionErrorCode` (@s8-@s13) — already localized
@@ -66,6 +70,7 @@ export const PdfUploadPanel = ({
   filename,
   pageCount,
   imageCount,
+  imageCountAnnouncement,
   onContinue,
   errorMessage,
   onRetry,
@@ -105,15 +110,19 @@ export const PdfUploadPanel = ({
 
         {state === 'content' ? (
           <View style={styles.summary}>
-            <View style={styles.summaryRow}>
+            <View style={styles.summaryRow} accessible accessibilityLabel={`${labels.filenameLabel}: ${filename}`}>
               <Text style={styles.summaryLabel}>{labels.filenameLabel}</Text>
               <Text style={styles.summaryValue}>{filename}</Text>
             </View>
-            <View style={styles.summaryRow}>
+            <View style={styles.summaryRow} accessible accessibilityLabel={`${labels.pageCountLabel}: ${pageCount}`}>
               <Text style={styles.summaryLabel}>{labels.pageCountLabel}</Text>
               <Text style={styles.summaryValue}>{pageCount}</Text>
             </View>
-            <View style={styles.summaryRow}>
+            <View
+              style={styles.summaryRow}
+              accessible
+              accessibilityLabel={imageCountAnnouncement ?? `${labels.imageCountLabel}: ${imageCount}`}
+            >
               <Text style={styles.summaryLabel}>{labels.imageCountLabel}</Text>
               <Text style={styles.summaryValue}>{imageCount}</Text>
             </View>

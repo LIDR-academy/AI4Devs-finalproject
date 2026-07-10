@@ -102,6 +102,46 @@ describe('PdfUploadPanel', () => {
     expect(screen.getByText('3')).toBeTruthy();
   });
 
+  // N5 (accessibility review round-1 fix) — each summary field is grouped into a single
+  // `accessible` node with a composed `accessibilityLabel`, so a screen reader announces one
+  // coherent "File: notes.pdf" stop instead of two disconnected "File" / "notes.pdf" stops.
+  it('groups the filename and page-count summary rows into one accessible label each', async () => {
+    await render(
+      <PdfUploadPanel state="content" labels={labels} onChooseFile={jest.fn()} filename="notes.pdf" pageCount={12} imageCount={3} />,
+    );
+
+    expect(screen.getByLabelText('File: notes.pdf')).toBeTruthy();
+    expect(screen.getByLabelText('Pages: 12')).toBeTruthy();
+  });
+
+  // N5 — the image-count row uses the wiring layer's already-pluralized announcement
+  // (`upload.imageCount_one`/`_other`, task-13) when supplied, instead of a plain "Images: 3".
+  it('uses the given imageCountAnnouncement as the image-count row accessible label', async () => {
+    await render(
+      <PdfUploadPanel
+        state="content"
+        labels={labels}
+        onChooseFile={jest.fn()}
+        filename="notes.pdf"
+        pageCount={12}
+        imageCount={3}
+        imageCountAnnouncement="3 images extracted"
+      />,
+    );
+
+    expect(screen.getByLabelText('3 images extracted')).toBeTruthy();
+  });
+
+  // N5 — without an explicit announcement, the image-count row still gets a composed label
+  // rather than staying two disconnected stops.
+  it('falls back to a composed label/value announcement when imageCountAnnouncement is omitted', async () => {
+    await render(
+      <PdfUploadPanel state="content" labels={labels} onChooseFile={jest.fn()} filename="notes.pdf" pageCount={12} imageCount={3} />,
+    );
+
+    expect(screen.getByLabelText('Images: 3')).toBeTruthy();
+  });
+
   // @s6 — the Content state exposes a continue affordance that invokes onContinue when pressed.
   it('calls onContinue when the continue affordance is pressed in the content state', async () => {
     const onContinue = jest.fn();
@@ -256,5 +296,37 @@ describe('PdfUploadPanel', () => {
     );
 
     expect(screen.queryByRole('button', { name: 'Try again' })).toBeNull();
+  });
+
+  // Mutation-kill guard (review round-1 Part B #1) — the existing "shown when idle" tests above
+  // pass equally for a `state === 'idle' ? … : null` mutant hard-coded to `true ? … : null` (the
+  // hint would then leak into every other state too); these assert the hint's absence everywhere
+  // else.
+  it.each(['loading', 'content', 'error'] as const)('does not show the constraints hint in the %s state', async (state) => {
+    await render(
+      <PdfUploadPanel
+        state={state}
+        labels={labels}
+        onChooseFile={jest.fn()}
+        filename="notes.pdf"
+        pageCount={1}
+        imageCount={0}
+        errorMessage="Network error"
+      />,
+    );
+
+    expect(screen.queryByText('Max 10 MB, 20 pages')).toBeNull();
+  });
+
+  // Mutation-kill guard (review round-1 Part B #1) — same gap for the content summary: the
+  // existing "shown in content" tests never assert its absence in the other three states.
+  it.each(['idle', 'loading', 'error'] as const)('does not show the content summary in the %s state', async (state) => {
+    await render(
+      <PdfUploadPanel state={state} labels={labels} onChooseFile={jest.fn()} errorMessage="Network error" />,
+    );
+
+    expect(screen.queryByText('File')).toBeNull();
+    expect(screen.queryByText('Pages')).toBeNull();
+    expect(screen.queryByText('Images')).toBeNull();
   });
 });

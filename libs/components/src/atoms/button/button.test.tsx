@@ -1,7 +1,15 @@
-import { render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
 import { layout } from '../../theme/spacing';
-import { Button } from './button';
+import { BUTTON_STATE_LAYER_TEST_ID, Button } from './button';
+
+/** Unistyles' `StyleSheet.create` style functions return a plain (possibly nested/array) style
+ * value under Jest — flattened the same way the existing "lets the box grow" test below already
+ * does, so a single style property can be asserted directly regardless of that shape. */
+const flattenStyle = (style: unknown): Record<string, unknown> =>
+  Object.assign({}, ...[style].flat(Infinity).filter(Boolean));
+
+const stateLayerOpacity = (): unknown => flattenStyle(screen.getByTestId(BUTTON_STATE_LAYER_TEST_ID).props.style).opacity;
 
 describe('Button', () => {
   // Touch target (WCAG 2.5.5 AAA / platform HIG): the default `medium` size is a fixed 40dp
@@ -23,10 +31,39 @@ describe('Button', () => {
   it('lets the box grow with content instead of clipping the label', async () => {
     await render(<Button onPress={jest.fn()}>Log in</Button>);
 
-    const style = screen.getByRole('button', { name: 'Log in' }).props.style;
-    const flat = Object.assign({}, ...[style].flat(Infinity).filter(Boolean));
+    const flat = flattenStyle(screen.getByRole('button', { name: 'Log in' }).props.style);
 
     expect(flat.height).toBeUndefined();
     expect(flat.minHeight).toBe(40);
+  });
+
+  // N6 (accessibility review round-1 fix, WCAG 2.4.7) — a keyboard-focused button must show a
+  // visible state-layer wash, the same way hover/press already do, instead of no indicator at all.
+  it('shows a visible state-layer wash when the button gains keyboard focus', async () => {
+    await render(<Button onPress={jest.fn()}>Log in</Button>);
+    const buttonElement = screen.getByRole('button', { name: 'Log in' });
+
+    expect(stateLayerOpacity()).toBe(0);
+
+    await act(async () => {
+      await fireEvent(buttonElement, 'focus');
+    });
+
+    expect(stateLayerOpacity()).toBeGreaterThan(0);
+  });
+
+  // N6 — blurring clears the focus wash again.
+  it('clears the state-layer wash when the button loses focus', async () => {
+    await render(<Button onPress={jest.fn()}>Log in</Button>);
+    const buttonElement = screen.getByRole('button', { name: 'Log in' });
+
+    await act(async () => {
+      await fireEvent(buttonElement, 'focus');
+    });
+    await act(async () => {
+      await fireEvent(buttonElement, 'blur');
+    });
+
+    expect(stateLayerOpacity()).toBe(0);
   });
 });
