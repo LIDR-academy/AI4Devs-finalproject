@@ -99,7 +99,7 @@
   <main class="editor-preview">
     <div class="preview-container" [attr.data-template]="getSelectedTemplateName()" [ngStyle]="getPreviewStyles()">
       <!-- Mock Preview Content -->
-      <div class="preview-hero">
+      <div class="preview-hero" [style.background-image]="editorForm.get('heroImageUrl')?.value ? 'url(' + editorForm.get('heroImageUrl')?.value + ')' : 'none'">
         <div class="preview-hero-overlay"></div>
         <div class="preview-hero-content">
           <h1 class="preview-title" [style.color]="editorForm.get('primaryColor')?.value">
