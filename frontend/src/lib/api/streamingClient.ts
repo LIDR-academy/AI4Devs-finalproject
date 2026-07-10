@@ -18,7 +18,7 @@ export interface StreamOptions {
 
 export async function analyzeListingStream(
   options: StreamOptions,
-  onProgress: (event: ProgressEventName) => void,
+  onProgress: (event: Exclude<ProgressEventName, 'done'>) => void,
 ): Promise<AnalyzeListingResponse> {
   const sid = options.sessionId ?? get(session).sessionId;
   const res = await fetch(`${BASE_URL}/api/listings/analyze?stream=true`, {
