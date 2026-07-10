@@ -1,8 +1,9 @@
-import { LanguageSelector } from '@helsoft/components';
 import { LOCALE_LABELS, useLocalization } from '@helsoft/localization';
 import { isSupportedLocale } from '@helsoft/types';
 import { Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
+
+import { LanguageSelector } from '../../molecules/language-selector/language-selector';
 
 /**
  * LanguageSettings — feature component that wires the presentational LanguageSelector

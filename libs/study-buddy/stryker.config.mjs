@@ -3,7 +3,7 @@
  * StrykerJS — @helsoft/study-buddy (jest-expo).
  * The mutation_tester narrows scope to the feature's changed files at runtime, e.g.:
  *   pnpm --filter @helsoft/study-buddy exec stryker run \
- *     --mutate "src/components/language-settings/language-settings.tsx"
+ *     --mutate "src/components/sign-out/sign-out.tsx"
  *
  * `inPlace: true`: jest.config.js `setupFiles` reaches into the sibling
  * `@helsoft/components` lib for the shared unistyles theme, which is absent from
