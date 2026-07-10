@@ -1,7 +1,7 @@
 ---
 feature: activity-multiple-choice
-phase: in_progress   # pending|spec_ready|approved|in_progress|in_review|mutation|pr_ready|done
-review_round: 0     # incremented by reviews_lead; cap 3
+phase: pr_ready   # pending|spec_ready|approved|in_progress|in_review|mutation|pr_ready|done
+review_round: 3     # incremented by reviews_lead; cap 3
 ---
 
 # Tasks — activity-multiple-choice
