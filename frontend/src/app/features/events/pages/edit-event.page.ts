@@ -217,12 +217,6 @@ export default class EditEventPage implements OnInit, OnDestroy {
       '--secondary-color': values.secondaryColor,
       'font-family': values.fontFamily,
     };
-    
-    if (values.heroImageUrl) {
-        styles['background-image'] = 'url(' + values.heroImageUrl + ')';
-    } else {
-        styles['background-image'] = 'none';
-    }
     return styles;
   }
 
