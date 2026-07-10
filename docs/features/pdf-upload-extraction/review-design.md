@@ -1,36 +1,106 @@
 APPROVED
 
 ## Scope
-Slice 3 ("Analytics + a11y + i18n") of `pdf-upload-extraction`, design-system adherence (`.agents/rules/review-standards.md` §2, SLICE-mode). Full diff `2a81b59..d760a23` (commit `d760a23`), scoped to `libs/components/src/organisms/pdf-upload-panel/pdf-upload-panel.{tsx,test.tsx,stories.tsx}`, the new `libs/components/tests/e2e/organisms/pdf-upload-panel/pdf-upload-panel.e2e.js`, and `libs/localization/src/{resources/*.ts,config/i18n.test.ts,coverage/upload-locale-parity.test.ts}`. Analytics files (`libs/services/src/analytics/*`, `pdf-extraction.service.ts`) are out of this lens per the brief.
+FULL-mode design-system review, round 2 (the hard cap — no round 3), of `pdf-upload-extraction`,
+base `0dfc914` through `HEAD` (`904d06e`). Round 1 (`00cbca3`) returned zero design findings; this
+pass re-reads everything touched since, with special focus on the shared `Button` atom's new
+keyboard-focus state layer (commit `2073e65`) and the `pdf-upload-panel.tsx` N5 accessible-grouping
+fix in the same commit. Full diff inspected: `git diff 00cbca3..HEAD --stat` (29 files) plus the
+full current contents of every touched component/test/story file. Locked decisions from the task
+brief (Deno-mirror boundary, local-only RLS exclusion, no `db push`/`functions deploy`, AGPL mupdf,
+AC7/@s7 wording tension, retry-suppression design, analytics as first-of-its-kind) are not
+re-litigated.
 
-Known Slice 1-2 decisions (base 4-state layout, `canRetry` retry-suppression, error-state shape) not re-litigated per instructions.
+## 1. `Button` atom's new focus state layer — tokens and MD3 precedent
+`button.tsx:76-88` adds `focus` to the existing `stateOpacity` `useMemo`, reading
+`theme.stateLayerOpacity.focus` — a **pre-existing** token (`libs/components/src/theme/
+colors.ts:213-218`, value `0.12`, defined since the initial MD3 theme commit `913e38b`, never
+touched by this feature) that was simply unread until now. No new color/opacity/spacing literal
+introduced anywhere in `button.tsx`, `state-layer.tsx`, or `use-interaction-state.ts`.
 
-## 1. a11y implementation fidelity vs. `login-form.tsx` — verified faithful
-`pdf-upload-panel.tsx:76-86` adds two `useEffect`s:
-```
-useEffect(() => { if (isLoading) AccessibilityInfo.announceForAccessibility(labels.loading); }, [isLoading, labels.loading]);
-useEffect(() => { if (errorMessage) AccessibilityInfo.announceForAccessibility(errorMessage); }, [errorMessage]);
-```
-Compared directly against `login-form.tsx:76-88` (`[isSubmitting, labels.signingIn]` / `[errorMessage]`) — same dependency-array shape, same imperative-call idiom, same rationale comment about iOS VoiceOver not honoring `accessibilityLiveRegion`. Live-region politeness levels match the equivalent states: `pdf-upload-panel.tsx:100` (`"polite"` on the loading text) mirrors `login-form.tsx:134` (`"polite"` on the signing-in text); `pdf-upload-panel.tsx:126` (`"assertive"` on the error text) mirrors `login-form.tsx:94` (`"assertive"` on the error text). No `console.*` and no new/ad-hoc styles were introduced for the announcement text — `git diff 2a81b59 d760a23 -- libs/components libs/localization | grep console` is empty, and `pdf-upload-panel.tsx:137-179`'s `StyleSheet.create` block is textually unchanged from Slice 2, still 100% `theme.*` tokens.
+Precedence (`button.tsx:80-86`: `press > focus > hover`) is a direct, consistent extension of the
+single-highest-priority-wins model this codebase already established for `press`/`hover` before
+this feature touched the file — not a deviation into MD3's "additive" state-layer stacking model,
+which this codebase never implemented for hover/press either. Extending the same local convention
+rather than inventing a new blending model is the right call for consistency.
 
-One legitimate, non-blocking difference from `login-form.tsx`: `login-form.tsx:134` puts its "polite" live region on a dedicated visually-hidden `Text` (`styles.visuallyHidden`, `login-form.tsx:168-173`), because that form has no other visible "signing in…" copy; `pdf-upload-panel.tsx:100-102` instead puts `accessibilityLiveRegion="polite"` directly on the already-visible loading `Text` (`labels.loading`, present since Slice 1). This is the correct call, not a deviation to flag — the panel already has visible progress copy, so duplicating it into a second, hidden node would be pure duplication with no test demanding it. Noting this only because the brief asked to verify fidelity; it doesn't rise to a finding.
+`state-layer.tsx`'s only change is an additive, optional `testID` prop (`:6-9,16`) forwarded to the
+underlying `View` — no visual/style change, test-only surface.
 
-Spot-checked the task-14 "verified, no code change needed" claims against the actual code, since they're asserted rather than newly tested this slice:
-- **Role/label on choose-file/continue/retry** — real assertions already exist: `pdf-upload-panel.test.tsx:24,57` (`getByRole('button', {name: 'Choose a PDF', ...})`), `:120` (`Continue`), `:148,218` (`Try again`). Confirmed, not just asserted in prose.
-- **Touch targets ≥ 44pt/48dp** — `libs/components/src/atoms/button/button.tsx:29-36`'s `HIT_SLOP` expands every `ButtonSize` to `layout.touchTarget`, which is `48` at `libs/components/src/theme/spacing.ts:35`. `PdfUploadPanel`'s three controls (`pdf-upload-panel.tsx:91,120,129`) are all the shared `Button` atom, so this is inherited for free — confirmed by reading the token value, not just taking the claim at face value.
-- **No color-only signaling** — `pdf-upload-panel.tsx:124-131`'s error banner carries its meaning via `errorMessage`'s text (always rendered, now also an assertive live region), with `errorBanner`'s `backgroundColor: theme.colors.errorContainer` (`:171`) as a reinforcing, non-exclusive cue. Confirmed.
-- **Scaled-font support** — `loadingText`/`summaryLabel`/`summaryValue`/`hintText`/`errorBannerText` (`pdf-upload-panel.tsx:146-178`) all spread `theme.typography.bodyMedium`, and `grep -rn allowFontScaling libs/components/src/organisms/pdf-upload-panel/ libs/components/src/atoms/button/ libs/components/src/atoms/progress-indicator/` returns zero hits, so RN's default scalable behavior is untouched. Confirmed.
+`use-interaction-state.ts`'s `focus`/`onFocus`/`onBlur` addition (`:6-8,14-15,24,29,38-39`) is
+additive to the existing `hover`/`press` shape; wiring is correct — `Button` spreads
+`{...handlers}` (`button.tsx:104`) onto its `Pressable`, so `onFocus`/`onBlur` reach the native
+element the same way `onHoverIn`/`onPressIn` already do. Independently re-ran
+`pnpm --filter @helsoft/components exec jest src/atoms/button` — 3/3 tests green, including the two
+new focus-wash assertions.
 
-## 2. `InteractiveRetry` story — legitimate reuse, no ad-hoc styling
-`pdf-upload-panel.stories.tsx:76-100` adds a `useState`-backed `InteractiveRetryDemo` + `render: () => <InteractiveRetryDemo />` story. Compared against `libs/components/src/atoms/checkbox/checkbox.stories.tsx:19-23` (`InteractiveDemo` with local `useState` + `render: () => <InteractiveDemo .../>`) — same shape, already an established precedent in this lib (also present in `switch.stories.tsx`), not a novel one-off. `InteractiveRetryDemo` introduces no new styles, colors, or spacing — it only composes the existing `PdfUploadPanel` with the same `labels` object the other stories share (`pdf-upload-panel.stories.tsx:6-14`).
+## 2. `button.stories.tsx` — checked for staleness, not a finding
+`button.stories.tsx` was **not** touched by this feature (absent from `git diff 00cbca3..HEAD
+--stat`) and has no story demonstrating `hover`/`press`/`focus` interaction washes — only static
+variant/size/disabled permutations. Checked whether this is a regression in Storybook coverage
+against the atom's actual states: it is not. Every other atom that consumes the same
+`useInteractionState` + `StateLayer` pair — `fab.stories.tsx`, `chip.stories.tsx`,
+`icon-button.stories.tsx`, `card.stories.tsx` — has the identical characteristic: none demonstrate
+their hover/press wash in Storybook either (verified by reading all four). This is the established,
+codebase-wide convention for this class of ephemeral pointer/focus visual, not something this
+feature's fix made newly stale. Flagging `Button` alone for it would be inconsistent with every
+sibling atom of the same shape, so this is not raised as a finding.
 
-## 3. e2e coverage — exercises all 4 states + retry interaction, correctly scoped
-`pdf-upload-panel.e2e.js` has 7 tests: a smoke test (`:6-12`), Empty (`:16-23`, affordance + hint + no error), Loading (`:26-35`, copy + disabled choose-file via `xpath=ancestor::button[1]`), Content (`:39-47`, full summary + continue), ErrorRetryable (`:51-61`, message + retry + choose-file enabled), ErrorNonRetryable (`:65-71`, message, no retry), and `InteractiveRetry` (`:75-86`, the actual click-through: press "Try again" → `Extracting…` appears). All query through `page.frameLocator('iframe[title="storybook-preview-iframe"]')` per the `storybook-e2e-tests` skill, never the bare `page.locator()` for content. The `xpath=ancestor::button[1]` idiom for asserting disabled/enabled state is not novel — it's the same idiom already used in the sibling `login-form.e2e.js:22-23,33-34,42-43`. Story slug derivation (`organisms-pdfuploadpanel--empty` etc.) matches the meta `title: 'Organisms/PdfUploadPanel'` (`pdf-upload-panel.stories.tsx:16`) per the skill's slugging rule. This is not a shallow smoke test — 6 of the 7 tests assert real per-state content/state, and the interaction test is a genuine behavioral check, not just a markup check.
+## 3. `pdf-upload-panel.tsx` N5 fix — no ad-hoc styling, correct a11y technique
+`pdf-upload-panel.tsx:113,117,121-125` adds `accessible` + a composed `accessibilityLabel` to the
+three existing `summaryRow` `View`s — zero changes to the `StyleSheet.create` block
+(`:146-188` is identical to round 1: `theme.spacing.s3`/`s4`, `theme.typography.bodyMedium`,
+`theme.colors.onSurface`/`onSurfaceVariant`, `theme.shape.card`, all pre-existing tokens, still the
+only styling in the file). `accessible`/`accessibilityLabel` are accessibility props, not layout/
+visual props — this fix introduces no new dimension, color, or typography value anywhere. The
+label/value row shape itself (`summaryRow`, `justifyContent: 'space-between'`) is unchanged from
+round 1, still matching `language-selector.tsx`'s pre-existing label/value-row pattern (re-verified
+present). Grouping child `Text` nodes under one `accessible` parent with a composed label is a
+correct, standard RN accessibility technique — no prior sibling in this codebase does exactly this
+(the closest precedent, `language-selector.tsx`, groups a radiogroup, not a label/value pair), but
+it is not a novel *design* element (no new atom/molecule, no new token), so it doesn't need a
+sibling precedent to pass this rubric.
 
-(Did not re-run the suite live for this review: `lsof -i :6007` showed the port already bound to a concurrent sibling worktree's Storybook instance (`activity-multiple-choice`), the exact collision `tdd.md`'s Slice-3 reconciliation section documents. Re-running here risked attaching to the wrong build. Relying on static review of the test file plus `tdd.md`'s documented run log — "7/7 new `pdf-upload-panel` tests green," non-interactive `--reporter=list`, throwaway port 6017, config reverted byte-for-byte after.)
+## 4. Atomic-design placement, 4 states + 2 error sub-cases, sibling consistency — re-confirmed fresh
+- `PdfUploadPanel` (`libs/components/src/organisms/pdf-upload-panel/pdf-upload-panel.tsx`) is still
+  presentational (props-driven, no hooks/services), composing only `Card`/`Button`/
+  `ProgressIndicator` (`:5-7,94,96,104,129,138`) — organism placement holds.
+  `PdfUpload` (feature wiring, `libs/study-buddy/src/components/pdf-upload/pdf-upload.tsx`) and the
+  `upload.tsx` screen are unchanged in shape from round 1 (only new `imageCountAnnouncement`/typed
+  `stageToPanelState` additions, both logic not placement).
+- `pdf-upload-panel.stories.tsx` still has all 4 states (`Empty`/`Loading`/`Content`) plus both
+  Error sub-cases (`ErrorRetryable`/`ErrorNonRetryable`) plus `InteractiveRetry` — file content
+  unchanged since round 1 (confirmed by reading it in full; not present in the `00cbca3..HEAD` diff
+  stat). `pdf-upload-panel.test.tsx` gained 5 new tests this round (N5's 3 label-grouping tests +
+  2 mutation-kill `it.each` absence-guards, `:105-297,297-332`) — additive, no state removed or
+  weakened.
+- `login-form.tsx` itself has an **empty diff** since round 1 (`git diff 00cbca3..HEAD --
+  libs/components/src/organisms/login-form` produced no output) — the only path by which it could
+  be affected is transitively, through the shared `Button` atom. Re-ran
+  `pnpm --filter @helsoft/components exec jest src/organisms/login-form src/organisms/pdf-upload-panel
+  src/atoms/button` directly: **74/74 tests green** across all three suites, confirming the
+  additive `focus` change doesn't regress `login-form.tsx`'s rendering or behavior. `tdd.md`'s
+  documented fix-cycle log independently corroborates this at the e2e layer (34/34 Playwright specs
+  green post-fix, explicitly including `login-form.e2e.js` as a stated regression check).
 
-## 4. i18n key structural consistency across en/es/pt/de
-`git diff 2a81b59 d760a23 -- libs/localization/src/resources/{en,es,pt,de}.ts` shows all four bundles gain the same two new leaf keys at the same nesting depth — `upload.imageCount_one`/`upload.imageCount_other` (`en.ts:39-41`, `es.ts`, `pt.ts`, `de.ts` equivalents) — and the same 10 previously-stubbed `es`/`pt`/`de` keys (`upload.constraintsHint`, `upload.retryAction`, `upload.error.{unsupportedType,fileTooLarge,tooManyPages,scannedNotSupported,corrupt,extractionFailed,network,unauthenticated}`) get real, distinct translations replacing the Slice-2 English stub, with no locale adding or dropping a key relative to the others. `upload-locale-parity.test.ts:29-52` asserts every one of those 10 keys differs from its English counterpart in all three non-English bundles, and `i18n.test.ts`'s new `it.each` (8 cases, `:59-70`) proves real i18next plural-form selection for `upload.imageCount` across all four locales. No locale invented an extra key or left a placeholder unfilled; `TranslationResource`'s compile-time alignment plus this new value-level test together cover both structural and content parity.
+## 5. e2e — not re-run live this round
+`lsof -i :6007` showed the port already bound to another process (a concurrent worktree's
+Storybook dev server, the same class of collision documented in `tdd.md`'s Slice-3 and round-1
+fix-cycle sections). `libs/components/playwright.config.js` hardcodes `baseURL`/`webServer.url` to
+port 6007 with no environment-variable override — pointing it elsewhere would require editing the
+config file, which a reviewer must not do. Relied instead on (a) `tdd.md`'s documented run log for
+this exact fix cycle (34/34 Playwright specs green, non-interactive `--reporter=list`, throwaway
+port 6017, config confirmed reverted byte-for-byte afterward) and (b) my own fresh, independent
+`jest` re-run of the three directly-relevant suites (§4 above, 74/74 green) as a second, live
+confirmation this round.
 
 ## Verdict
-APPROVED — zero findings. a11y announcements are a faithful, deliberate mirror of `login-form.tsx`'s already-reviewed pattern (dependency arrays, live-region levels, no ad-hoc styling); the `InteractiveRetry` story reuses the existing `checkbox.stories.tsx`/`switch.stories.tsx` interactive-story precedent; the new e2e suite exercises all 4 UI states plus the retry interaction, correctly scoped through the iframe per the `storybook-e2e-tests` skill; and the new/changed i18n keys stay structurally aligned across en/es/pt/de with a real runtime parity test backing it, not just type-level alignment.
+APPROVED — zero findings. The `Button` atom's new focus state layer reads only a pre-existing
+token (`theme.stateLayerOpacity.focus`) and extends the codebase's already-established
+single-priority state-layer model consistently; `button.stories.tsx`'s lack of an interactive-state
+story is checked and found to match every sibling atom of the same shape, not a regression this fix
+introduced. The `pdf-upload-panel.tsx` N5 fix adds accessibility grouping with zero new styling
+values. Atomic-design placement, all 4 UI states + both Error sub-cases in Storybook, and
+consistency with `login-form.tsx`/`sign-in-form.tsx`/`login.tsx` all re-confirmed fresh, with
+`login-form.tsx` independently verified unregressed by the shared `Button` change (74/74 tests
+green, plus the fix cycle's own e2e log).
