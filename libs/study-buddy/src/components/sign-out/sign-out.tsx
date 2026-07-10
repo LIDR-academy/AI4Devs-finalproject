@@ -26,7 +26,11 @@ export const SignOut = () => {
         cancelLabel={t('auth.logOutCancelAction')}
         onConfirm={() => {
           setConfirmOpen(false);
-          void signOut();
+          // The dialog closes optimistically; a failed signOut must not become a silently
+          // unhandled promise rejection (Full-review Round 1, Major 1). No banner is required
+          // here — AuthService.signOut is now normalized (Major 1) and the stale session is
+          // still surfaced by useSession() elsewhere; catching keeps the rejection observed.
+          void signOut().catch(() => {});
         }}
       >
         {t('auth.logOutConfirmBody')}

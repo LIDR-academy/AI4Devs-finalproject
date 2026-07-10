@@ -44,7 +44,11 @@ export const SignInForm = () => {
     const nextEmailError = AuthService.isValidEmail(email) ? undefined : t('auth.error.email');
     setEmailError(nextEmailError);
     if (nextEmailError) return;
-    void signIn(email, password);
+    // useAuth().signIn already records the failure via `error` state before it rejects (Major 2,
+    // full-review Round 1) — the rejection itself must still be observed here so it never becomes
+    // an unhandled promise rejection; no separate handling is needed since `error` already drives
+    // the banner above.
+    void signIn(email, password).catch(() => {});
   };
 
   // Re-validates once an emailError is already showing, so correcting the email re-enables the

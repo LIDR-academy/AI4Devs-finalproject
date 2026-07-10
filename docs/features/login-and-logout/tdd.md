@@ -860,3 +860,154 @@ mutation) runs next instead.
 Commit: `feat(login-and-logout): add localization and accessibility` (Slice 3 — no analytics/
 feature-flags in scope per `tasks.md`'s footnote, so the slice-table's generic Slice-3 commit
 message is narrowed to what was actually built).
+
+---
+
+## Full-review Round 1 fixes
+
+Responds to `docs/features/login-and-logout/review.md` (full-mode Round 1: 5 major + 3 minor,
+zero blockers, from all 6 reviewers + `mutation_tester` after all 3 slices landed). One block per
+finding, same RED→GREEN→REFACTOR log style. No scope creep beyond these 8 items.
+
+### Major 1 — `AuthService.signOut` had no error normalization; `SignOut` discarded the rejection
+- **RED** — `auth.service.test.ts` (`signOut` block): `'normalizes a thrown signOut failure to
+  network_error'` — `dao.signOut.mockRejectedValue(new Error('boom'))`, asserts
+  `.rejects.toMatchObject({ code: 'network_error' })`. Failed: the raw `Error` propagated
+  untouched (no `.code`).
+- **GREEN** — `auth.service.ts:63-68`: `signOut` now `try { await AuthDao.signOut(); } catch
+  (cause) { throw normalizeAuthError(cause); }`, mirroring `signIn`'s existing treatment exactly
+  (reuses the same `normalizeAuthError`, no new classification branch needed since any signOut
+  failure has no "invalid credentials" case).
+- **RED** — `sign-out.test.tsx`: `'does not leave a rejected signOut promise unhandled'` — spies
+  on the Node `'unhandledRejection'` process event, mocks `signOut` to reject, presses confirm,
+  flushes the microtask queue via `setImmediate`, asserts the spy was never called. Verified
+  genuinely red first: Jest reported the rejection directly against this test
+  (`network down` uncaught) before the fix.
+- **GREEN** — `sign-out.tsx:27-33`: `onConfirm` now calls `void signOut().catch(() => {});`
+  instead of `void signOut();` — the dialog still closes optimistically (no new UI banner, per
+  the finding's own allowance), but the rejection is observed rather than silently dropped.
+- **Collateral fix** — two pre-existing tests (`'calls signOut when the confirmation is
+  accepted'`, `'closes the confirmation dialog after confirming'`) used a bare `jest.fn()` for
+  `signOut` (returning `undefined`, not a Promise) which broke once `.catch()` was called on the
+  return value — updated both to `jest.fn().mockResolvedValue(undefined)`, matching `signOut`'s
+  real `() => Promise<void>` contract.
+- **REFACTOR** — none needed.
+- `@helsoft/services` 38/38 green (up from 37); `@helsoft/study-buddy` 25/25 green.
+
+### Major 2 — `SignInForm`'s `void signIn(...)` discarded a rejecting promise, untested
+- **RED** — `sign-in-form.test.tsx`: `'does not leave a rejected signIn promise unhandled on a
+  real signIn failure'` — uses the *real* `useAuth` implementation
+  (`mockUseAuth.mockImplementation(jest.requireActual('@helsoft/hooks').useAuth)`), mocking only
+  `AuthService.signIn` (one layer below) to reject — so `useAuth`'s real `throw cause;` genuinely
+  fires. Spies on `'unhandledRejection'`, submits valid credentials, flushes microtasks, asserts
+  the spy was never called. Verified red: Jest reported the raw `{ code: 'network_error' }`
+  rejection as an uncaught error against this test before the fix.
+- **GREEN** — `sign-in-form.tsx:51`: `void signIn(email, password).catch(() => {});` — `error`
+  state (already set by `useAuth` before it rejects) continues to drive the banner; only the
+  rejection itself needed to stop being silently dropped.
+- **Collateral fix** — same pattern as Major 1: two pre-existing tests used bare `jest.fn()` for
+  `signIn`; updated both to `jest.fn().mockResolvedValue(undefined)`.
+- **REFACTOR** — none needed.
+- `@helsoft/study-buddy` 25/25 green (up from 24, +1 new test after accounting for the two
+  collateral mock fixes).
+
+### Major 3 — `accessibilityHint` has zero effect on web; added `accessibilityInvalid`
+- **RED** — `login-form.test.tsx`: 4 new tests — `accessibilityInvalid` true/false on the email
+  field and the password field, keyed on `emailError`/`passwordError`. Failed: `.props
+  .accessibilityInvalid` was `undefined` in every case (no such prop existed).
+- **GREEN** — `login-form.tsx:111,124`: added `accessibilityInvalid={!!emailError}` /
+  `accessibilityInvalid={!!passwordError}` alongside the existing `accessibilityHint` on both
+  `TextField`s. Required extending `TextField`'s own prop type
+  (`text-field.tsx`'s `TextFieldProps`) with an explicit `accessibilityInvalid?: boolean` field:
+  this RN version's (`0.86`) shipped `TextInputProps`/`AccessibilityProps` typings don't declare
+  `accessibilityInvalid` or any `aria-invalid` equivalent at all (confirmed by grepping the
+  installed `react-native` `types_generated` sources — no match anywhere), even though
+  `react-native-web@0.21.2`'s `createDOMProps` genuinely forwards it to `aria-invalid` at runtime
+  (confirmed directly in its source, `_excluded` allow-list includes `"aria-invalid",
+  "accessibilityInvalid"`). `TextField` already forwards unrecognized props via its `...rest`
+  spread onto the underlying `TextInput`, so no behavior change was needed there — only the type
+  declaration, so the new prop type-checks instead of erroring as an unknown JSX attribute.
+- **REFACTOR** — none needed.
+- `@helsoft/components` 38/38 green after this step; `check-types` clean (8/8).
+
+### Major 4 — unreferenced 638 KB `logo.png` removed
+- No test — a deletion of a confirmed-dead asset (`git rm libs/study-buddy/assets/logo.png`), per
+  the finding's own instruction ("no test needed for a deletion of an unused asset"). Verified
+  nothing depended on it via the full `pnpm turbo run build`/`check-types`/`test` gate below,
+  all green.
+
+### Major 5 (mutation) — 6 killable survivors in `login-form.tsx`
+One block per mutant group, each verified by temporarily reverting `login-form.tsx` to the exact
+mutant, confirming the new test fails, then restoring the real code (same evidentiary bar as this
+file's own prior "Mutation-kill pass" section).
+1. **`isPristine` logic (`:65:22,65:23,65:40`)** — added 4 tests: one-field-filled/other-blank
+   (both directions) and whitespace-only (both fields, both directions run separately). Reverting
+   `||`→`&&` failed all 4 new "keeps submit disabled…" tests; reverting `!email.trim()`→`!email`
+   failed only the email-whitespace test; reverting `!password.trim()`→`!password` failed only
+   the password-whitespace test. All 3 mutants independently confirmed killed.
+2. **`errorMessage` effect deps (`:88:6`)** — added `'announces the error banner again when
+   errorMessage changes to a different value'`: renders with one error, asserts the announcement,
+   clears the spy, rerenders with a *different* error string, asserts the announcement fires
+   again. Reverting `[errorMessage]`→`[]` failed this test (announcement never re-fired);
+   confirmed killed, restored.
+3. **`!!emailError`/`!!passwordError` boolean-conversion (`:108,120`)** — `error` is a
+   `TextField`-internal prop never forwarded onto the underlying `TextInput`'s own props (it only
+   drives local styling), so `field.props.error` is always `undefined` regardless of state —
+   discovered this when the originally-planned assertion failed with "Received: undefined" even
+   against the *correct* code. Pivoted to the mutation report's own documented alternative ("add
+   style assertions verifying error styling is applied"): asserts the email/password label
+   `<Text>`'s `color` style equals `lightColors.error` when the corresponding error is set, and
+   `lightColors.onSurfaceVariant` otherwise (imported `lightColors` from `theme/colors.ts`;
+   verified the unistyles Jest mock always resolves theme-derived style values against the first-
+   registered theme, `lightTheme`, regardless of OS color scheme — read directly from
+   `react-native-unistyles`'s installed `mocks.ts` source, not assumed). Reverting `!!emailError`→
+   `!emailError` failed both new email-label-color tests; same for the password field. Both
+   mutants confirmed killed, restored.
+- Scoped Stryker re-run (`pnpm --filter @helsoft/components exec stryker run --mutate
+  "src/organisms/login-form/login-form.tsx"`): 81.48% → **96.55%** (56 killed / 2 survived / 1
+  runtime-error excluded from scoring). The 2 remaining survivors
+  (`errorBanner`/`errorBannerText` style-object mutants) are the **same, pre-existing** ones
+  already documented as equivalent in `mutation.md`'s "Survivor Group C" before this session —
+  not new regressions, and not among this round's 6 assigned mutants (all 6 are independently
+  confirmed killed above). `mutation.md` updated with a dated note recording this resolution.
+- `login-form.test.tsx` totals 43 tests (up from 38), all green.
+
+### Minor 6 — `auth.logOut`/`auth.logOutConfirmAction` Title Case → sentence case
+- No new test (content-only; `t()` is loosely typed so literal-copy tests don't exist for these
+  keys, matching this feature's own established precedent for locale-content-only fixes).
+  `en.ts:53,56`: `'Log Out'` → `'Log out'` in both places. Grepped for any test asserting the old
+  literal string first (`'Log Out'`) — none found, confirming nothing else needed updating.
+  `es`/`de`/`pt` untouched (already correct).
+- `@helsoft/localization` 55/55 green, unaffected.
+
+### Minor 7 — `isAuthErrorShape` accepted any string `.code`, not just the closed union
+- **RED** — `use-auth.test.ts`: `'falls back to network_error when the rejected cause has a
+  string code outside the AuthErrorCode union'` — `service.signIn.mockRejectedValueOnce({ code:
+  'something_else' })`, asserts `result.current.error` becomes `'network_error'`. Failed:
+  `result.current.error` was `'something_else'` (the bogus code passed straight through).
+- **GREEN** — `use-auth.ts:6-17`: added `AUTH_ERROR_CODES`, a `ReadonlySet<AuthErrorCode>` of the
+  3 valid codes; `isAuthErrorShape` now checks `AUTH_ERROR_CODES.has(cause.code)` instead of
+  `typeof cause.code === 'string'`.
+- **REFACTOR** — none needed.
+- `@helsoft/hooks` 21/21 green (up from 20); `check-types` clean.
+
+### Minor 8 — flaky `AccessibilityInfo` announcement test hardened with `waitFor`
+- No new RED/GREEN cycle (test-code-only hardening of a documented ~1-in-20 flake, per the
+  finding's own prescribed one-line fix). `login-form.test.tsx`: wrapped the post-`act()`
+  assertion in `'announces "Signing in…" via AccessibilityInfo...'` with `await waitFor(() =>
+  expect(announceSpy).toHaveBeenCalledWith(labels.signingIn))` instead of asserting immediately.
+- Test still passes; `@helsoft/components` suite unaffected in count.
+
+### Full-review Round 1 fixes gate ✅
+`pnpm turbo run check-types --force` (8/8 packages green), `pnpm turbo run test --force` (6/6
+workspaces green: `@helsoft/services` 38/38, `@helsoft/hooks` 21/21, `@helsoft/components` 62/62,
+`@helsoft/study-buddy` 25/25, `@helsoft/localization` 55/55, `@helsoft/lib-with-storybook` 2/2),
+`pnpm turbo run lint --force` clean, `pnpm --filter @helsoft/components exec playwright test
+--reporter=list` (25/25 green, non-interactive — `login-form.tsx`'s prop surface/behavior
+changed), scoped Stryker re-run for `login-form.tsx` (96.55%, all 6 assigned survivors killed,
+2 pre-existing documented equivalents remain, 1 runtime-error mutant excluded from scoring). No
+hardcoded strings/colors/dimensions introduced (`lightColors.error`/`onSurfaceVariant` are
+existing tokens). No scope creep beyond the 8 findings — no drive-by refactors, no untouched
+Slice 1/2/3 files besides the ones each finding required.
+
+Commit: `fix(login-and-logout): resolve full-review Round 1 findings`.

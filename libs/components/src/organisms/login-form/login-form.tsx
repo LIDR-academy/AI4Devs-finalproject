@@ -108,6 +108,7 @@ export const LoginForm = ({
         error={!!emailError}
         supportingText={emailError}
         accessibilityHint={emailError}
+        accessibilityInvalid={!!emailError}
       />
       <TextField
         label={labels.password}
@@ -120,6 +121,7 @@ export const LoginForm = ({
         error={!!passwordError}
         supportingText={passwordError}
         accessibilityHint={passwordError}
+        accessibilityInvalid={!!passwordError}
       />
       <View style={styles.submitRow}>
         <Button

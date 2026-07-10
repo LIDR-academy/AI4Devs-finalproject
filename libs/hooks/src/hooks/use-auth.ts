@@ -2,11 +2,19 @@ import { useCallback, useState } from 'react';
 import { AuthService } from '@helsoft/services';
 import type { AuthError, AuthErrorCode } from '@helsoft/types';
 
+/** The closed set of codes AuthService is contractually allowed to reject with. */
+const AUTH_ERROR_CODES: ReadonlySet<AuthErrorCode> = new Set([
+  'invalid_credentials',
+  'network_error',
+  'validation_error',
+]);
+
 /** Narrow runtime guard: a rejected AuthService.signIn cause is only trusted as an AuthError
- * when it actually carries a string `.code` — a violated contract falls back to network_error
- * (Round-1 slice-2 review, Minor 4) rather than reading undefined via an unchecked cast. */
+ * when its `.code` is actually a member of the closed AuthErrorCode union — a violated contract
+ * (missing code, or a string outside the union, Full-review Round 1, Minor 7) falls back to
+ * network_error rather than reading an untrusted value via an unchecked cast. */
 const isAuthErrorShape = (cause: unknown): cause is AuthError =>
-  typeof (cause as { code?: unknown } | null)?.code === 'string';
+  AUTH_ERROR_CODES.has((cause as { code?: unknown } | null)?.code as AuthErrorCode);
 
 export type UseAuthResult = {
   signIn: (email: string, password: string) => Promise<void>;

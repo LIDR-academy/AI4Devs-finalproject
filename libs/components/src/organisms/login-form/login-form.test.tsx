@@ -1,7 +1,7 @@
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { AccessibilityInfo } from 'react-native';
 
-import { disabledOpacity } from '../../theme/colors';
+import { disabledOpacity, lightColors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
 import { LOADING_INDICATOR_TEST_ID, LoginForm } from './login-form';
 
@@ -109,7 +109,9 @@ describe('LoginForm', () => {
       rerender(<LoginForm onSubmit={jest.fn()} isSubmitting labels={labels} />);
     });
 
-    expect(announceSpy).toHaveBeenCalledWith(labels.signingIn);
+    // Full-review Round 1, Minor 8 — a documented ~1-in-20 flake asserting immediately after
+    // act(); waitFor tolerates the announcement landing a tick later instead of racing it.
+    await waitFor(() => expect(announceSpy).toHaveBeenCalledWith(labels.signingIn));
 
     announceSpy.mockRestore();
   });
@@ -123,6 +125,29 @@ describe('LoginForm', () => {
     await render(<LoginForm onSubmit={jest.fn()} labels={labels} errorMessage="Invalid email or password" />);
 
     expect(announceSpy).toHaveBeenCalledWith('Invalid email or password');
+
+    announceSpy.mockRestore();
+  });
+
+  // Mutation-kill (Full-review Round 1, Major 5.2) — pins the errorMessage effect's dependency
+  // array: a `[errorMessage]` → `[]` mutant only fires the announcement once, on mount, so a
+  // second distinct error replacing the first (e.g. a retry that fails differently) would never
+  // be re-announced.
+  it('announces the error banner again when errorMessage changes to a different value', async () => {
+    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    const { rerender } = await render(
+      <LoginForm onSubmit={jest.fn()} labels={labels} errorMessage="Invalid email or password" />,
+    );
+    expect(announceSpy).toHaveBeenCalledWith('Invalid email or password');
+    announceSpy.mockClear();
+
+    await act(async () => {
+      rerender(<LoginForm onSubmit={jest.fn()} labels={labels} errorMessage="Network error" />);
+    });
+
+    expect(announceSpy).toHaveBeenCalledWith('Network error');
 
     announceSpy.mockRestore();
   });
@@ -228,6 +253,39 @@ describe('LoginForm', () => {
     expect(screen.getByLabelText('Email').props.accessibilityHint).toBe('Enter a valid email address');
   });
 
+  // Full-review Round 1, Major 3 — accessibilityHint has no effect on react-native-web (its
+  // createDOMProps allow-list forwards accessibilityInvalid, not accessibilityHint), so web
+  // screen-reader users get no signal at all from the hint alone. accessibilityInvalid closes
+  // that gap for web while native platforms keep reading the hint.
+  it('exposes accessibilityInvalid true on the email field when emailError is set', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} emailError="Enter a valid email address" />);
+
+    expect(screen.getByLabelText('Email').props.accessibilityInvalid).toBe(true);
+  });
+
+  it('exposes accessibilityInvalid false on the email field when emailError is absent', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} />);
+
+    expect(screen.getByLabelText('Email').props.accessibilityInvalid).toBe(false);
+  });
+
+  // Mutation-kill (Full-review Round 1, Major 5.3) — pins the actual error-styling state (the
+  // email label's color, driven by TextField's `error` prop), not just the presence of the
+  // supporting-text string, so a `!!emailError` → `!emailError` boolean-inversion mutant is
+  // caught (TextField consumes `error` for styling only — it is never forwarded onto the
+  // underlying TextInput's own props).
+  it('colors the email label as an error when emailError is set', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} emailError="Enter a valid email address" />);
+
+    expect(screen.getByText('Email')).toHaveStyle({ color: lightColors.error });
+  });
+
+  it('colors the email label as neutral when emailError is absent', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} />);
+
+    expect(screen.getByText('Email')).toHaveStyle({ color: lightColors.onSurfaceVariant });
+  });
+
   // @s9 — same, for the password field (empty password case).
   it('renders passwordError as inline supporting text on the password field and blocks submit', async () => {
     await render(<LoginForm onSubmit={jest.fn()} labels={labels} passwordError="Password is required" />);
@@ -245,6 +303,32 @@ describe('LoginForm', () => {
     await render(<LoginForm onSubmit={jest.fn()} labels={labels} passwordError="Password is required" />);
 
     expect(screen.getByLabelText('Password').props.accessibilityHint).toBe('Password is required');
+  });
+
+  // Full-review Round 1, Major 3 — same web accessibilityHint gap as the email field.
+  it('exposes accessibilityInvalid true on the password field when passwordError is set', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} passwordError="Password is required" />);
+
+    expect(screen.getByLabelText('Password').props.accessibilityInvalid).toBe(true);
+  });
+
+  it('exposes accessibilityInvalid false on the password field when passwordError is absent', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} />);
+
+    expect(screen.getByLabelText('Password').props.accessibilityInvalid).toBe(false);
+  });
+
+  // Mutation-kill (Full-review Round 1, Major 5.3) — password-field equivalent.
+  it('colors the password label as an error when passwordError is set', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} passwordError="Password is required" />);
+
+    expect(screen.getByText('Password')).toHaveStyle({ color: lightColors.error });
+  });
+
+  it('colors the password label as neutral when passwordError is absent', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} />);
+
+    expect(screen.getByText('Password')).toHaveStyle({ color: lightColors.onSurfaceVariant });
   });
 
   // @s9 fix — LoginForm forwards every email keystroke via onEmailChange so the wiring layer
@@ -289,6 +373,57 @@ describe('LoginForm', () => {
     });
 
     expect(screen.getByRole('button', { name: 'Log in', disabled: false })).toBeTruthy();
+  });
+
+  // Mutation-kill (Full-review Round 1, Major 5.1) — pins isPristine's `||`: only both-empty and
+  // both-filled were previously exercised, so a `||` → `&&` mutant (isPristine only true when
+  // BOTH are empty) survived. One field filled, the other still blank, must still disable submit.
+  it('keeps submit disabled when only the email field holds input (password still blank)', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} />);
+
+    await act(async () => {
+      fireEvent.changeText(screen.getByLabelText('Email'), 'user@example.com');
+    });
+
+    expect(screen.getByRole('button', { name: 'Log in', disabled: true })).toBeTruthy();
+  });
+
+  it('keeps submit disabled when only the password field holds input (email still blank)', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} />);
+
+    await act(async () => {
+      fireEvent.changeText(screen.getByLabelText('Password'), 'secret1');
+    });
+
+    expect(screen.getByRole('button', { name: 'Log in', disabled: true })).toBeTruthy();
+  });
+
+  // Mutation-kill (Full-review Round 1, Major 5.1) — pins isPristine's `.trim()` calls: a
+  // whitespace-only value must still count as blank/pristine, not merely an empty string.
+  it('keeps submit disabled when the email field holds only whitespace', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} />);
+
+    await act(async () => {
+      fireEvent.changeText(screen.getByLabelText('Email'), '   ');
+    });
+    await act(async () => {
+      fireEvent.changeText(screen.getByLabelText('Password'), 'secret1');
+    });
+
+    expect(screen.getByRole('button', { name: 'Log in', disabled: true })).toBeTruthy();
+  });
+
+  it('keeps submit disabled when the password field holds only whitespace', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} />);
+
+    await act(async () => {
+      fireEvent.changeText(screen.getByLabelText('Email'), 'user@example.com');
+    });
+    await act(async () => {
+      fireEvent.changeText(screen.getByLabelText('Password'), '   ');
+    });
+
+    expect(screen.getByRole('button', { name: 'Log in', disabled: true })).toBeTruthy();
   });
 
   // Content state (UI states table, spec.md) — a "Sign up" link is visible and wired.

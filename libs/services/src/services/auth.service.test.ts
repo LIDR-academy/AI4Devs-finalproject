@@ -164,5 +164,14 @@ describe('AuthService', () => {
 
       expect(dao.signOut).toHaveBeenCalledWith();
     });
+
+    // Full-review Round 1, Major 1 — a failed signOut must be normalized the same way as a
+    // failed signIn (no raw DAO/provider error escaping upward), so callers get the same
+    // AuthErrorCode contract regardless of which auth mutation failed.
+    it('normalizes a thrown signOut failure to network_error', async () => {
+      dao.signOut.mockRejectedValue(new Error('boom'));
+
+      await expect(AuthService.signOut()).rejects.toMatchObject({ code: 'network_error' });
+    });
   });
 });

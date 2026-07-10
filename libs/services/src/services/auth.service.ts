@@ -60,7 +60,11 @@ export abstract class AuthService {
     }
   }
 
-  static signOut(): Promise<void> {
-    return AuthDao.signOut();
+  static async signOut(): Promise<void> {
+    try {
+      await AuthDao.signOut();
+    } catch (cause) {
+      throw normalizeAuthError(cause);
+    }
   }
 }

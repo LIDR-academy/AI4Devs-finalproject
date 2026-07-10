@@ -19,6 +19,13 @@ export type TextFieldProps = Omit<TextInputProps, 'style'> & {
   rows?: number;
   fullWidth?: boolean;
   style?: StyleProp<ViewStyle>;
+  /**
+   * Forwarded onto the underlying TextInput via `...rest`. Not yet declared on this RN version's
+   * `TextInputProps`, but react-native-web's `createDOMProps` forwards it to `aria-invalid` —
+   * unlike `accessibilityHint`, which react-native-web does not forward at all (Full-review
+   * Round 1, Major 3).
+   */
+  accessibilityInvalid?: boolean;
 };
 
 /**

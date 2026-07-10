@@ -174,6 +174,20 @@ describe('useAuth', () => {
     expect(result.current.error).toBe('network_error');
   });
 
+  // Full-review Round 1, Minor 7 — isAuthErrorShape only checked `typeof code === 'string'`, not
+  // actual membership in the closed AuthErrorCode union, so an out-of-union string code would
+  // have silently passed through instead of falling back to the safe network_error default.
+  it('falls back to network_error when the rejected cause has a string code outside the AuthErrorCode union', async () => {
+    service.signIn.mockRejectedValueOnce({ code: 'something_else' });
+    const { result } = renderHook(() => useAuth());
+
+    await act(async () => {
+      await expect(result.current.signIn('user@example.com', 'wrong')).rejects.toBeTruthy();
+    });
+
+    expect(result.current.error).toBe('network_error');
+  });
+
   // Memoization — signIn/signOut must stay referentially stable across re-renders that
   // don't change any dependency, so a memoized consumer (e.g. React.memo'd button) never
   // re-renders needlessly.

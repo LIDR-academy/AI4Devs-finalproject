@@ -11,6 +11,7 @@ jest.mock('expo-router', () => ({
 
 import { useAuth } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
+import { AuthService } from '@helsoft/services';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { useRouter } from 'expo-router';
 
@@ -29,7 +30,7 @@ describe('SignInForm', () => {
 
   // @s2 — submitting the form calls useAuth().signIn with the entered credentials.
   it('calls signIn with the entered email and password on submit', async () => {
-    const signIn = jest.fn();
+    const signIn = jest.fn().mockResolvedValue(undefined);
     mockUseAuth.mockReturnValue(authValue({ signIn }));
     mockUseLocalization.mockReturnValue(localizationValue());
 
@@ -108,7 +109,7 @@ describe('SignInForm', () => {
   // itself disabled by that same error, so there was no way left to clear it. Correcting the
   // email must re-enable the submit control and allow a real resubmit.
   it('re-enables submit and calls signIn after correcting a malformed email post-error', async () => {
-    const signIn = jest.fn();
+    const signIn = jest.fn().mockResolvedValue(undefined);
     mockUseAuth.mockReturnValue(authValue({ signIn }));
     mockUseLocalization.mockReturnValue(localizationValue());
 
@@ -193,6 +194,40 @@ describe('SignInForm', () => {
     });
 
     expect(screen.getByRole('button', { name: 'auth.submit', disabled: false })).toBeTruthy();
+  });
+
+  // Full-review Round 1, Major 2 — every prior test mocks useAuth() wholesale, so useAuth's real
+  // rejecting signIn (which sets error state then `throw`s the cause) is never exercised through
+  // this component. Uses the *real* useAuth implementation (only AuthService.signIn is mocked,
+  // one layer below) so handleSubmit's `void signIn(...)` genuinely faces a rejecting promise.
+  it('does not leave a rejected signIn promise unhandled on a real signIn failure', async () => {
+    const unhandledRejectionSpy = jest.fn();
+    process.on('unhandledRejection', unhandledRejectionSpy);
+
+    mockUseAuth.mockImplementation(jest.requireActual('@helsoft/hooks').useAuth);
+    mockUseLocalization.mockReturnValue(localizationValue());
+    jest.spyOn(AuthService, 'signIn').mockRejectedValue({ code: 'network_error' });
+
+    await render(<SignInForm />);
+
+    await act(async () => {
+      fireEvent.changeText(screen.getByLabelText('auth.email'), 'user@example.com');
+    });
+    await act(async () => {
+      fireEvent.changeText(screen.getByLabelText('auth.password'), 'secret1');
+    });
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'auth.submit' }));
+    });
+    // Flush the microtask queue so Node has a chance to flag an unhandled rejection.
+    await act(async () => {
+      await new Promise<void>((resolve) => setImmediate(() => resolve()));
+    });
+
+    process.off('unhandledRejection', unhandledRejectionSpy);
+    expect(unhandledRejectionSpy).not.toHaveBeenCalled();
+
+    jest.restoreAllMocks();
   });
 
   // No error at all (Content/Empty states) — no banner renders.
