@@ -11,6 +11,7 @@
     "mutation": "stryker run"
   },
   "dependencies": {
+    "@helsoft/services": "workspace:*",
     "@helsoft/types": "workspace:*",
     "i18next": "^24.2.2",
     "react-i18next": "^15.4.1"

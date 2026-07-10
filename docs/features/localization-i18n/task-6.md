@@ -3,7 +3,7 @@ id: task-6
 title: LocalePreferenceService — validate + read/write the locale preference
 slice: 2
 scenarios: [s7, s12]
-status: todo
+status: done
 paths:
   - libs/services/src/services/locale-preference.service.ts
   - libs/services/src/services/index.ts

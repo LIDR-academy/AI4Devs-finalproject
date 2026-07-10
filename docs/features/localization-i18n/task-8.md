@@ -3,7 +3,7 @@ id: task-8
 title: LanguageSelector molecule (presentational, token-driven)
 slice: 2
 scenarios: [s5]
-status: todo
+status: done
 paths:
   - libs/components/src/molecules/language-selector/language-selector.tsx
   - libs/components/src/molecules/language-selector/language-selector.test.tsx

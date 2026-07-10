@@ -1,10 +1,10 @@
 import { ScreenContainer } from '@helsoft/components';
-import { Text } from 'react-native';
+import { LanguageSettings } from '@helsoft/study-buddy';
 
 export default function SettingsScreen() {
   return (
     <ScreenContainer>
-      <Text>AI API key management + logout — TODO (R6)</Text>
+      <LanguageSettings />
     </ScreenContainer>
   );
 }

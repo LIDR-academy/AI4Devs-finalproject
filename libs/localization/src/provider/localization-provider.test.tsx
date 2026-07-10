@@ -1,3 +1,10 @@
+jest.mock('@helsoft/services', () => ({
+  LocalePreferenceService: {
+    getStoredLocale: jest.fn().mockResolvedValue(null),
+    setStoredLocale: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
 import { act, render, screen } from '@testing-library/react';
 
 import { useLocalization } from '../hooks/use-localization';
@@ -28,60 +35,61 @@ const Switcher = () => {
 
 describe('LocalizationProvider + useLocalization', () => {
   // @s1 — a descendant translates the active locale through the hook (not i18next directly).
-  it('renders the active-locale translation to a descendant', () => {
+  it('renders the active-locale translation to a descendant', async () => {
     render(
       <LocalizationProvider initialLocale="es">
         <Consumer />
       </LocalizationProvider>,
     );
 
-    expect(screen.getByText('Ajustes')).toBeTruthy();
+    expect(await screen.findByText('Ajustes')).toBeTruthy();
     expect(screen.getByTestId('locale').textContent).toBe('es');
   });
 
-  it('defaults to English when no initial locale is given', () => {
+  it('defaults to English when no initial or device locale is given', async () => {
     render(
       <LocalizationProvider>
         <Consumer />
       </LocalizationProvider>,
     );
 
-    expect(screen.getByText('Settings')).toBeTruthy();
+    expect(await screen.findByText('Settings')).toBeTruthy();
     expect(screen.getByTestId('locale').textContent).toBe('en');
   });
 
   // @s3 — the provider auto-detects a supported (region-tagged) device locale.
-  it('resolves the initial locale from a supported device tag', () => {
+  it('resolves the initial locale from a supported device tag', async () => {
     render(
       <LocalizationProvider deviceLocale="pt-BR">
         <Consumer />
       </LocalizationProvider>,
     );
 
-    expect(screen.getByText('Configurações')).toBeTruthy();
+    expect(await screen.findByText('Configurações')).toBeTruthy();
     expect(screen.getByTestId('locale').textContent).toBe('pt');
   });
 
   // @s4 — an unsupported device locale falls back to English.
-  it('falls back to English for an unsupported device tag', () => {
+  it('falls back to English for an unsupported device tag', async () => {
     render(
       <LocalizationProvider deviceLocale="fr-FR">
         <Consumer />
       </LocalizationProvider>,
     );
 
-    expect(screen.getByText('Settings')).toBeTruthy();
+    expect(await screen.findByText('Settings')).toBeTruthy();
     expect(screen.getByTestId('locale').textContent).toBe('en');
   });
 
-  it('exposes the supported locale set through the hook', () => {
+  it('exposes the supported locale set through the hook', async () => {
     render(
       <LocalizationProvider>
         <Consumer />
       </LocalizationProvider>,
     );
 
-    expect(screen.getByTestId('supported').textContent).toBe('en,es,pt,de');
+    const supported = await screen.findByTestId('supported');
+    expect(supported.textContent).toBe('en,es,pt,de');
   });
 
   it('setLocale changes the active language', async () => {
@@ -90,7 +98,7 @@ describe('LocalizationProvider + useLocalization', () => {
         <Switcher />
       </LocalizationProvider>,
     );
-    expect(screen.getByText('Settings')).toBeTruthy();
+    expect(await screen.findByText('Settings')).toBeTruthy();
 
     await act(async () => {
       screen.getByText('switch').click();

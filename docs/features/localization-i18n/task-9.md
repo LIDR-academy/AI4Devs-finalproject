@@ -3,7 +3,7 @@ id: task-9
 title: LanguageSettings feature component + Settings screen wiring
 slice: 2
 scenarios: [s5, s6, s9]
-status: todo
+status: done
 paths:
   - libs/study-buddy/src/components/language-settings/language-settings.tsx
   - libs/study-buddy/src/components/language-settings/language-settings.test.tsx

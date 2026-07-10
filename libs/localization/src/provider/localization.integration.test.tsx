@@ -1,3 +1,10 @@
+jest.mock('@helsoft/services', () => ({
+  LocalePreferenceService: {
+    getStoredLocale: jest.fn().mockResolvedValue(null),
+    setStoredLocale: jest.fn().mockResolvedValue(undefined),
+  },
+}));
+
 import { act, render, screen } from '@testing-library/react';
 
 import { useLocalization } from '../hooks/use-localization';
@@ -35,7 +42,7 @@ const Switcher = () => {
 };
 
 describe('localization slice-1 integration', () => {
-  it('resolves the detected device locale and reaches every descendant', () => {
+  it('resolves the detected device locale and reaches every descendant', async () => {
     render(
       <LocalizationProvider deviceLocale="pt-BR">
         <ScreenTitle />
@@ -43,7 +50,7 @@ describe('localization slice-1 integration', () => {
       </LocalizationProvider>,
     );
 
-    expect(screen.getByRole('heading').textContent).toBe('Configurações');
+    expect((await screen.findByRole('heading')).textContent).toBe('Configurações');
     expect(screen.getByTestId('widget-title').textContent).toBe('Configurações');
     expect(screen.getByTestId('widget-locale').textContent).toBe('pt');
   });
@@ -56,7 +63,7 @@ describe('localization slice-1 integration', () => {
         <Switcher />
       </LocalizationProvider>,
     );
-    expect(screen.getByRole('heading').textContent).toBe('Settings');
+    expect((await screen.findByRole('heading')).textContent).toBe('Settings');
 
     await act(async () => {
       screen.getByText('to-spanish').click();

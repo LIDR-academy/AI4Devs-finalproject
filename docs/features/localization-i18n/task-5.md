@@ -3,7 +3,7 @@ id: task-5
 title: LocalePreferenceDao — persist/read the chosen locale (AsyncStorage)
 slice: 2
 scenarios: [s7, s12]
-status: todo
+status: done
 paths:
   - libs/services/src/dao/locale-preference.dao.ts
   - libs/services/package.json

@@ -30,4 +30,13 @@ describe('createI18n', () => {
 
     expect(i18n.options.fallbackLng).toEqual(['en']);
   });
+
+  // @s9 — a key present in English but missing from the active locale resolves to the English
+  // string (never a raw key), proving the runtime fallback safety net (AC10).
+  it('falls back to the English string when a key is missing from the active locale', () => {
+    const i18n = createI18n('de');
+    i18n.addResource('en', 'translation', 'onlyInEnglish', 'English only');
+
+    expect(i18n.t('onlyInEnglish')).toBe('English only');
+  });
 });

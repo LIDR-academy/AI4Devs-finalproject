@@ -5,6 +5,10 @@ export const pt: TranslationResource = {
   translation: {
     settings: {
       title: 'Configurações',
+      language: {
+        heading: 'Idioma',
+        a11yLabel: 'Escolha um idioma',
+      },
     },
   },
 };

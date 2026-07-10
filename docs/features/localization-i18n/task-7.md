@@ -3,7 +3,7 @@ id: task-7
 title: Wire persistence + precedence into the provider/hook
 slice: 2
 scenarios: [s6, s7, s8, s12]
-status: todo
+status: done
 paths:
   - libs/localization/src/provider/localization-provider.tsx
   - libs/localization/src/hooks/use-localization.ts

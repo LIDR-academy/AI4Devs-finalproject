@@ -8,6 +8,10 @@ export const en = {
   translation: {
     settings: {
       title: 'Settings',
+      language: {
+        heading: 'Language',
+        a11yLabel: 'Choose a language',
+      },
     },
   },
 };
