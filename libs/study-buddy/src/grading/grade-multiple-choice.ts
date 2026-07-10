@@ -5,10 +5,17 @@ import type { MultipleChoiceAnswer, MultipleChoiceSlide } from '@helsoft/types';
  * Turns the learner's pick into the answered-state consumed by the end-of-lesson score (R7)
  * and by resume (R9).
  */
-export const gradeMultipleChoice = (slide: MultipleChoiceSlide, selectedOptionId: string): MultipleChoiceAnswer => ({
-  slideId: slide.id,
-  activityType: 'multiple-choice',
-  selectedOptionId,
-  correctOptionId: slide.correctOptionId,
-  isCorrect: selectedOptionId === slide.correctOptionId,
-});
+export const gradeMultipleChoice = (slide: MultipleChoiceSlide, selectedOptionId: string): MultipleChoiceAnswer => {
+  const isKnownOption = slide.options.some((option) => option.id === selectedOptionId);
+  if (!isKnownOption) {
+    throw new Error(`gradeMultipleChoice: "${selectedOptionId}" is not one of the slide's options`);
+  }
+
+  return {
+    slideId: slide.id,
+    activityType: 'multiple-choice',
+    selectedOptionId,
+    correctOptionId: slide.correctOptionId,
+    isCorrect: selectedOptionId === slide.correctOptionId,
+  };
+};

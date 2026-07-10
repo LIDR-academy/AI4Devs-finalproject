@@ -40,4 +40,12 @@ describe('gradeMultipleChoice', () => {
       isCorrect: false,
     });
   });
+
+  // @s9 — a caller bug: grading a selection that is not one of the slide's options throws
+  // instead of returning a bogus answered-state.
+  it('throws when selectedOptionId is not one of the slide options', () => {
+    expect(() => gradeMultipleChoice(slide, 'opt-does-not-exist')).toThrow(
+      /"opt-does-not-exist" is not one of the slide's options/,
+    );
+  });
 });

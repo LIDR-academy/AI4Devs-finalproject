@@ -51,3 +51,19 @@ export const AnsweredIncorrect: Story = {
     explanation: 'Paris has been the capital of France since the 12th century.',
   },
 };
+
+// Empty — a slide with no options: the unavailable notice replaces the question and nothing
+// is selectable.
+export const Empty: Story = {
+  args: {
+    options: [],
+  },
+};
+
+// Error — a malformed slide whose correctOptionId is not among its options: degrades to the
+// unavailable notice instead of crashing.
+export const Error: Story = {
+  args: {
+    correctOptionId: 'opt-does-not-exist',
+  },
+};

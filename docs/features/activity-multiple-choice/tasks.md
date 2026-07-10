@@ -14,7 +14,7 @@ Index of atomic tasks (one `task-N.md` each), grouped by vertical slice. `orches
 | [task-2](./task-2.md) — `gradeMultipleChoice` pure grader | 1 | @s3,@s4,@s7 | done | libs/study-buddy/src/grading/grade-multiple-choice.ts, libs/study-buddy/src/index.ts |
 | [task-3](./task-3.md) — `MultipleChoice` organism (Content states) + stories | 1 | @s1,@s2,@s3,@s4,@s5,@s6 | done | libs/components/src/organisms/multiple-choice/, libs/components/src/organisms/index.ts |
 | [task-4](./task-4.md) — `MultipleChoiceActivity` wiring + integration | 1 | @s2,@s6,@s7 | done | libs/study-buddy/src/components/multiple-choice-activity/, libs/study-buddy/src/index.ts |
-| [task-5](./task-5.md) — Empty + Error states + grader validation | 2 | @s8,@s9 | todo | libs/components/src/organisms/multiple-choice/, libs/study-buddy/src/grading/grade-multiple-choice.ts |
+| [task-5](./task-5.md) — Empty + Error states + grader validation | 2 | @s8,@s9 | done | libs/components/src/organisms/multiple-choice/, libs/study-buddy/src/grading/grade-multiple-choice.ts |
 | [task-6](./task-6.md) — i18n `activity.mcq.*` (en/es/pt/de) + wire `t()` | 3 | @s10 | todo | libs/localization/src/resources/, libs/study-buddy/src/components/multiple-choice-activity/ |
 | [task-7](./task-7.md) — a11y pass + Playwright e2e | 3 | @s11 | todo | libs/components/src/organisms/multiple-choice/, libs/components/tests/e2e/ |
 

@@ -1,15 +1,15 @@
 # TDD log — activity-multiple-choice
 
 Strict Red→Green→Refactor, one `@s` scenario at a time, per `.agents/rules/tdd.md`. This log
-covers **Slice 1 only** (happy path: tasks 1–4, `@s1,@s2,@s3,@s4,@s5,@s6,@s7`). `@s8`–`@s11` are
-Slice 2/3 and out of scope for this run.
+covers **Slice 1** (happy path: tasks 1–4, `@s1,@s2,@s3,@s4,@s5,@s6,@s7`) and **Slice 2**
+(graceful degradation: task-5, `@s8,@s9`). `@s10`–`@s11` are Slice 3 and out of scope for this run.
 
 ## Build order
 
 Per `tasks.md`: data/domain backbone first (task-1 types → task-2 grader), then UI
-(task-3 organism → task-4 wiring + integration).
+(task-3 organism → task-4 wiring + integration), then graceful degradation (task-5).
 
-## `@s` → test map (Slice 1)
+## `@s` → test map (Slices 1–2)
 
 | Scenario | Test(s) |
 |---|---|
@@ -20,6 +20,8 @@ Per `tasks.md`: data/domain backbone first (task-1 types → task-2 grader), the
 | @s5 | `multiple-choice.test.tsx`: "shows the explanation heading and text together with the result when provided"; "does not show an explanation heading when none is provided" |
 | @s6 | `multiple-choice.test.tsx`: "does not call onSelectOption when a locked option is tapped"; `multiple-choice-activity.test.tsx`: "ignores a second selection and calls onAnswered exactly once" |
 | @s7 | `grade-multiple-choice.test.ts` (both tests above pin the full 5-field `MultipleChoiceAnswer` shape via exact `toEqual`); `multiple-choice-activity.test.tsx`: "exposes the graded answered state and renders the matching feedback, end to end" (slice integration test — real grader, real organism, nothing mocked) |
+| @s8 | `multiple-choice.test.tsx`: "shows the unavailable notice and nothing selectable when there are no options" |
+| @s9 | `multiple-choice.test.tsx`: "shows the unavailable notice and nothing selectable when correctOptionId is not among the options"; `grade-multiple-choice.test.ts`: "throws when selectedOptionId is not one of the slide options" |
 
 ## Cycles
 
@@ -108,3 +110,60 @@ test added in this slice; re-verified `pnpm --filter @helsoft/components test` �
 and `pnpm --filter @helsoft/types --filter @helsoft/study-buddy --filter @helsoft/components
 check-types` — green). Amended into commit `5f0124e` (message unchanged:
 `feat(activity-multiple-choice): implement happy path`).
+
+### task-5 — Empty + Error states + grader validation (`libs/components/src/organisms/multiple-choice/multiple-choice.tsx`, `libs/study-buddy/src/grading/grade-multiple-choice.ts`)
+
+**Cycle 13 (@s8 — Empty state)**
+- RED: `multiple-choice.test.tsx` — "shows the unavailable notice and nothing selectable when there are no options" (`options={[]}`). Failed: `screen.getByText(labels.unavailable)` not found (component rendered the question and an empty options list instead).
+- GREEN: added an early-return guard in `MultipleChoice` — `if (options.length === 0) return <Card style={styles.root}><Text style={styles.question}>{labels.unavailable}</Text></Card>;` — before the normal render, reusing the existing `Card`/`Text` + `styles.question` token style (no new tokens/styles).
+
+**Cycle 14 (@s9 — Error state, malformed `correctOptionId`)**
+- RED: "shows the unavailable notice and nothing selectable when correctOptionId is not among the options" (non-empty `options`, `correctOptionId="opt-does-not-exist"`). Failed: cycle 13's guard only checked `options.length === 0`, so this rendered the normal (broken) content instead of the unavailable notice.
+- GREEN: widened the guard to `const hasCorrectOption = options.some((o) => o.id === correctOptionId); if (options.length === 0 || !hasCorrectOption) { …unavailable… }`.
+- REFACTOR (on green): renamed the combined condition to `isUnavailable` and moved the `answered`/`isCorrect` derivations (only needed by the Content branch) below the guard, so the Empty/Error early return no longer computes values it doesn't use. Re-ran `multiple-choice.test.tsx` — 10/10 green, no behavior change.
+
+**Cycle 15 (@s9 — grader guard)**
+- RED: `grade-multiple-choice.test.ts` — "throws when selectedOptionId is not one of the slide options" (`gradeMultipleChoice(slide, 'opt-does-not-exist')`). Failed: `Received function did not throw` (the Slice-1 grader had no such guard — deferred explicitly at the end of Cycle 2).
+- GREEN: added the guard per spec's "Invalid input contract" — `const isKnownOption = slide.options.some((o) => o.id === selectedOptionId); if (!isKnownOption) throw new Error(...);` before assembling the `MultipleChoiceAnswer`. Re-ran `grade-multiple-choice.test.ts` — 3/3 green; re-ran `multiple-choice-activity.test.tsx` — unaffected (its calls always pass a rendered, therefore valid, option id).
+
+Added `Empty` and `Error` variants to `multiple-choice.stories.tsx` (naming precedent: `text-field.stories.tsx`, `checkbox.stories.tsx`, `login-form.stories.tsx` all export `Error`), covering the two graceful-degradation states alongside Slice 1's three Content substates.
+
+## Gate checks (Slice 2)
+
+- `pnpm --filter @helsoft/types --filter @helsoft/study-buddy --filter @helsoft/components check-types` — green.
+- `pnpm --filter @helsoft/components --filter @helsoft/study-buddy test` — green (`components`: 75 tests / 6 suites; `study-buddy`: 31 tests / 5 suites).
+- `pnpm check-types` (full monorepo, 8 packages) — green.
+- `pnpm test` (full monorepo) — green.
+- `pnpm lint` — green (same pre-existing repo state as Slice 1: no `lint` script yet on `@helsoft/types`/`@helsoft/components`/`@helsoft/study-buddy`).
+- No hardcoded strings/colors/dimensions: the unavailable notice reuses `labels.unavailable` (already part of `MultipleChoiceLabels`) and `styles.question`/`Card` tokens; the grader's `Error` message is an internal, non-user-facing string, not UI chrome.
+- No `console.log`/debug leftovers, no TODOs.
+
+Storybook e2e (Playwright) is **not** part of this slice — deferred to task-7 (Slice 3) per the run's instructions. No i18n wiring or a11y attributes were added beyond what Slice 1 already had, per this run's scope guard (task-6/task-7, Slice 3).
+
+## Slice 2 per-slice review — Round 1 (fixed)
+
+`reviewer_code` + `reviewer_design` ran per `.agents/rules/review-standards.md` (see `review.md`).
+`reviewer_design`: APPROVED, no findings. `reviewer_code`: CHANGES_REQUESTED, 1 minor finding —
+Cycle 15's `grade-multiple-choice.test.ts:47` used a bare `.toThrow()`, proving only that
+*something* throws, not that it throws for the right reason (the repo's sibling domain-guard
+tests, e.g. `auth.service.test.ts:75,85`, all pin the message). Fix: tightened the assertion to
+`.toThrow(/"opt-does-not-exist" is not one of the slide's options/)`, matching the exact message
+`gradeMultipleChoice` throws (`grade-multiple-choice.ts:11`). Re-ran
+`pnpm --filter @helsoft/study-buddy test` — 31/31 green. No production code changed (test-only
+fix, no new production behavior demanded). Amended into commit `154ef44` (message unchanged:
+`feat(activity-multiple-choice): add error handling and empty state`).
+
+## Slice 2 per-slice review — Round 2 (fixed)
+
+`reviewer_design`: APPROVED, zero findings. `reviewer_code`: CHANGES_REQUESTED, 1 minor finding —
+`multiple-choice.tsx:59-60`'s `isUnavailable` guard kept a redundant `options.length === 0 ||`
+sub-condition left over from Cycle 13's guard; `Array.prototype.some` on an empty array is always
+`false`, so `!hasCorrectOption` alone is logically equivalent for every reachable input and no
+test (`@s8`/`@s9`) distinguishes the two — the Cycle 14 REFACTOR step should have collapsed it.
+Fix: simplified `isUnavailable` to `!hasCorrectOption` (the `options.length === 0 ||` clause
+dropped as pure dead-weight condition; `hasCorrectOption` kept as a named intermediate for
+readability). Pure refactor, no behavior change. Re-ran `pnpm --filter @helsoft/components test`
+(75/75 green) and `pnpm --filter @helsoft/types --filter @helsoft/study-buddy --filter
+@helsoft/components check-types` (green); also re-ran `pnpm --filter @helsoft/study-buddy test`
+(31/31 green) to confirm no cross-package regression. Amended into commit `9a060fa` (message
+unchanged: `feat(activity-multiple-choice): add error handling and empty state`).

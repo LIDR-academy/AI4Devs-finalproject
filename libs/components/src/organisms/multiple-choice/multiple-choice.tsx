@@ -56,6 +56,17 @@ export const MultipleChoice = ({
   labels,
   onSelectOption,
 }: MultipleChoiceProps) => {
+  const hasCorrectOption = options.some((option) => option.id === correctOptionId);
+  const isUnavailable = !hasCorrectOption;
+
+  if (isUnavailable) {
+    return (
+      <Card style={styles.root}>
+        <Text style={styles.question}>{labels.unavailable}</Text>
+      </Card>
+    );
+  }
+
   const answered = !!selectedOptionId;
   const isCorrect = selectedOptionId === correctOptionId;
 

@@ -168,4 +168,42 @@ describe('MultipleChoice', () => {
 
     expect(onSelectOption).not.toHaveBeenCalled();
   });
+
+  // @s8 — a slide with no options is Empty: the unavailable notice replaces the question and
+  // nothing is selectable.
+  it('shows the unavailable notice and nothing selectable when there are no options', async () => {
+    await render(
+      <MultipleChoice
+        question="What is the capital of France?"
+        options={[]}
+        correctOptionId="opt-a"
+        labels={labels}
+        onSelectOption={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByText(labels.unavailable)).toBeTruthy();
+    expect(screen.queryByText('What is the capital of France?')).toBeNull();
+    expect(screen.queryAllByRole('button')).toHaveLength(0);
+    expect(screen.queryByText(labels.correct)).toBeNull();
+    expect(screen.queryByText(labels.incorrect)).toBeNull();
+  });
+
+  // @s9 — a malformed slide whose correctOptionId is not among its options degrades to the
+  // unavailable notice instead of a broken question, and does not crash.
+  it('shows the unavailable notice and nothing selectable when correctOptionId is not among the options', async () => {
+    await render(
+      <MultipleChoice
+        question="What is the capital of France?"
+        options={options}
+        correctOptionId="opt-does-not-exist"
+        labels={labels}
+        onSelectOption={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByText(labels.unavailable)).toBeTruthy();
+    expect(screen.queryByText('What is the capital of France?')).toBeNull();
+    expect(screen.queryAllByRole('button')).toHaveLength(0);
+  });
 });

@@ -3,7 +3,7 @@ id: task-5
 title: Empty + Error states + grader validation (graceful degradation)
 slice: 2
 scenarios: [s8, s9]
-status: todo
+status: done
 paths:
   - libs/components/src/organisms/multiple-choice/multiple-choice.tsx
   - libs/components/src/organisms/multiple-choice/multiple-choice.test.tsx
@@ -21,13 +21,13 @@ Make the feature robust against malformed/degenerate slide data (a real risk whi
 - Grader — `gradeMultipleChoice` throws on an unknown `selectedOptionId` (domain guard already introduced in task-2; add/confirm the explicit test here).
 
 ## Done criteria
-- [ ] @s8 — zero options → `unavailable` notice shown, nothing selectable, no result banner
-- [ ] @s9 — `correctOptionId` ∉ options → `unavailable` notice shown, no crash; grader throws on unknown option id
-- [ ] `multiple-choice.test.tsx` drives both states (written first, TDD)
-- [ ] `multiple-choice.stories.tsx` gains Empty + Error (malformed) variants
-- [ ] Reuses existing tokens/components; no ad-hoc styling
-- [ ] `pnpm lint` + `pnpm check-types` + `pnpm test` green
-- [ ] No hardcoded strings/colors/dimensions
+- [x] @s8 — zero options → `unavailable` notice shown, nothing selectable, no result banner
+- [x] @s9 — `correctOptionId` ∉ options → `unavailable` notice shown, no crash; grader throws on unknown option id
+- [x] `multiple-choice.test.tsx` drives both states (written first, TDD)
+- [x] `multiple-choice.stories.tsx` gains Empty + Error (malformed) variants
+- [x] Reuses existing tokens/components; no ad-hoc styling
+- [x] `pnpm lint` + `pnpm check-types` + `pnpm test` green
+- [x] No hardcoded strings/colors/dimensions
 
 ## Notes
 - `labels.unavailable` is one localized string (task-6 provides the `activity.mcq.unavailable` key/values).
