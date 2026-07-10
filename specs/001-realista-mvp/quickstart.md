@@ -26,6 +26,16 @@ npx prisma db seed
 npm run dev          # Starts backend (3001) + frontend (5173)
 ```
 
+### Playwright (DataDome bypass)
+
+El escaneo de URLs contra Idealista/Fotocasa requiere un Chromium real. Instálalo una vez:
+
+```bash
+cd backend && npx playwright install chromium
+```
+
+Si no lo haces, el endpoint `/api/listings/analyze` con URL de un portal protegido devolverá `PORTAL_BLOCKED` y la UI mostrará el fallback de pegar texto.
+
 ## Run Tests
 
 ```bash

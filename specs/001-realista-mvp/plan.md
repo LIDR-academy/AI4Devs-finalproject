@@ -12,11 +12,11 @@ PWA mobile-first para compradores primerizos de vivienda en España. Tres funcio
 
 **Lenguaje/Version**: TypeScript 5.x
 
-**Dependencias principales**: SvelteKit (frontend), Express + node-fetch + cheerio (backend), Prisma ORM, OpenRouter SDK (LLM gateway)
+**Dependencias principales**: SvelteKit (frontend), Express + node-fetch + cheerio + Playwright (fetch fallback) (backend), Prisma ORM, OpenRouter SDK (LLM gateway)
 
 **Almacenamiento**: PostgreSQL 16 + Prisma ORM
 
-**Testing**: Vitest (unitarios + integración), Playwright (E2E)
+**Testing**: Vitest (unitarios + integración), Playwright (E2E + fetch fallback adapter)
 
 **Plataforma objetivo**: Web mobile-first (PWA instalable), iOS Safari + Android Chrome
 

@@ -73,10 +73,10 @@
 - Suficiente para portales inmobiliarios que renderizan en servidor
 - Idealista, Fotocasa y Habitaclia sirven contenido HTML server-side
 - El subdominio `.m.` (ej: `m.idealista.com`) suele tener menos JS
-- Puppeteer/Playwright serían excesivos para el MVP (requieren binario de Chromium)
+- Puppeteer/Playwright serían excesivos para el MVP (requieren binario de Chromium). **Actualizado 2026-07-10**: DataDome bloquea fingerprints de `node-fetch`, por lo que Playwright se añadió como adaptador fallback en la cadena Cheerio→Playwright. Coste aceptado; el operador debe ejecutar `npx playwright install chromium` según `quickstart.md`.
 
 **Alternativas consideradas**:
-- Puppeteer: +300MB de binario, lento, overkill para HTML server-side
+- Puppeteer: +300MB de binario, lento, overkill para HTML server-side. Inicialmente rechazado; **adoptado posteriormente (2026-07-10) como adaptador fallback** para sortear DataDome.
 - Raw HTML → LLM: más tokens consumidos, mismo resultado que Cheerio + LLM
 - API no oficial de Idealista: TOS violation más grave que scrapeo educativo
 
