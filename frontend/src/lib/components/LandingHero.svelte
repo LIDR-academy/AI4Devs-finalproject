@@ -4,7 +4,7 @@
 <section class="hero">
   <h1>Compra una casa<br />con los ojos abiertos</h1>
   <p class="sub">Análisis honesto de anuncios y simulación de hipoteca. Sin humo.</p>
-  <a href="/listing-lens" class="btn-primary cta">Empezar por el paso 1</a>
+  <a href="/listing-lens" class="btn-primary cta">Pon a prueba tu casa soñada</a>
 </section>
 
 <style>
