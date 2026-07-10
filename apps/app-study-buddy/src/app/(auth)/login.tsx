@@ -1,13 +1,16 @@
 import { ScreenContainer } from '@helsoft/components';
+import { useLocalization } from '@helsoft/localization';
 import { Link } from 'expo-router';
 import { Text } from 'react-native';
 
 export default function LoginScreen() {
+  const { t } = useLocalization();
+
   return (
     <ScreenContainer>
-      <Text>Log in — TODO (R5)</Text>
+      <Text>{t('nav.logIn')}</Text>
       <Link href="/sign-up">
-        <Text>No account? Sign up</Text>
+        <Text>{t('auth.toSignUp')}</Text>
       </Link>
     </ScreenContainer>
   );

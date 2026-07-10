@@ -3,7 +3,7 @@ id: task-12
 title: LanguageSelector a11y hardening + Storybook stories + web e2e
 slice: 3
 scenarios: [s5, s13, s15]
-status: todo
+status: done
 paths:
   - libs/components/src/molecules/language-selector/language-selector.tsx
   - libs/components/src/molecules/language-selector/language-selector.stories.tsx

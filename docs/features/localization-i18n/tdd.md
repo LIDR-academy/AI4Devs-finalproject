@@ -146,5 +146,48 @@ Commit: `feat(localization-i18n): implement happy path`.
 (localization 38, services 13, components 10, study-buddy 3, hooks 4, lib-with-storybook 2). No hardcoded
 colors/dims; selector labels are caller-supplied endonyms. `@helsoft/components test:e2e` for the selector is
 part of task-12 (slice 3). Commit: `feat(localization-i18n): add error handling and empty state`.
+
+---
+
+## Slice 3 — Full string migration + a11y + stories
+
+### task-10 — Migrate app screens + nav titles; interpolation + pluralization (@s9, @s10, @s11, @s14)
+- **RED** — `config/i18n.test.ts` extended: interpolation `lesson.title` → "Lesson 7"/"Lección 7" (@s10);
+  pluralization `lessons.count` → singular/plural for en+es (@s11). 5 failed.
+- **GREEN** — expanded all four bundles with the full app key set (`nav`, `home`, `lessons` (plural),
+  `upload`, `lesson` (interpolated title), `player`, `results`, `auth`, `settings`), key-aligned (compiler-enforced).
+  Migrated every app screen + both `_layout` nav-title sets to `t(...)` via `useLocalization`; Settings stays a
+  thin shell. Added `@helsoft/localization` app dep (slice 1) already in place.
+- **@s14** — `coverage/migration-coverage.test.ts`: fs audit over `apps/app-study-buddy/src/app` +
+  `libs/components/src` (stories/tests excluded) flags hardcoded `<Text>` children and literal `title:`;
+  asserts none remain, plus a self-sanity check of the detector regexes.
+- 14 config-level + 2 audit tests green; app `check-types` + `expo lint` clean.
+
+### task-11 — Audit + confirm no hardcoded copy in @helsoft/components (@s14)
+- Covered by the same `migration-coverage.test.ts` scan over `libs/components/src`. **Audit result:** every
+  shared component is prop-driven — visible text is always a `{children}`/`{label}`/`{name}` expression (Icon
+  renders the ligature name from its `name` prop; LanguageSelector renders caller-supplied endonyms). **No component
+  carried hardcoded copy, so no migration was needed.** The test now enforces this going forward.
+
+### task-12 — LanguageSelector a11y hardening + stories + web e2e (@s5, @s13, @s15)
+- **@s13** — added assertions to `language-selector.test.tsx`: all four options expose a radio role + label,
+  exactly one is announced `selected`, and options announce `disabled` when the group is disabled (locks the
+  a11y contract built in task-8 for mutation testing). Non-color indicator (check icon) already covered.
+- **Stories** — `language-selector.stories.tsx` (patterns from `lib-with-storybook`): English/Spanish/Portuguese/
+  German (each locale active), Interactive (stateful switch), Disabled. Demo labels are endonyms (allowed in stories).
+- **@s15 web / e2e** — `tests/e2e/molecules/language-selector/language-selector.e2e.js` (Playwright, via the
+  storybook-e2e-tests skill; mirrors the `src/` path): story loads, all four endonyms render, the active option
+  shows the check indicator, an interactive switch works on the web, disabled renders. `getByText('check',{exact})`
+  avoids matching Storybook's boilerplate. **5/5 e2e pass** on chromium (`pnpm --filter @helsoft/components test:e2e`).
+- @s15 is now proven on both environments: RN/native via jest-expo (components + study-buddy) and web via this e2e.
+- 8 selector unit tests + 5 e2e green; `check-types` clean.
+
+### Slice-3 gate ✅
+`pnpm check-types` (8 pkgs) + `pnpm lint` clean; `pnpm test` green everywhere (localization 45, components 12,
+services 13, study-buddy 3, hooks 4, lib-with-storybook 2); `pnpm --filter @helsoft/components test:e2e` = 5/5.
+No hardcoded strings/colors/dims (audit-enforced). Commit: `feat(localization-i18n): add analytics, a11y, and i18n`
+(no analytics in this feature — the commit covers a11y hardening + full string migration/i18n per the plan).
+
+## All 15 scenarios covered ✅ — see the @s → test map above. Feature left for reviews_lead (not self-marked done).
 </content>
 </invoke>

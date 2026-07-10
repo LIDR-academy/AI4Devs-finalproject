@@ -1,17 +1,20 @@
 import { ScreenContainer } from '@helsoft/components';
+import { useLocalization } from '@helsoft/localization';
 import { Link, useLocalSearchParams } from 'expo-router';
 import { Text } from 'react-native';
 
 export default function ResultsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { t } = useLocalization();
+
   return (
     <ScreenContainer>
-      <Text>Score / completion summary for lesson {id} — TODO (R7)</Text>
+      <Text>{t('results.summary', { id })}</Text>
       <Link href={{ pathname: '/lesson/[id]/player', params: { id } }} replace>
-        <Text>Retake activities</Text>
+        <Text>{t('results.retake')}</Text>
       </Link>
       <Link href="/" replace>
-        <Text>Back to my lessons</Text>
+        <Text>{t('results.backHome')}</Text>
       </Link>
     </ScreenContainer>
   );

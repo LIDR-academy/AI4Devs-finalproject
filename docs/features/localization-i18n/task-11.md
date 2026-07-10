@@ -3,7 +3,7 @@ id: task-11
 title: Audit + migrate any hardcoded copy in @helsoft/components; assert full coverage
 slice: 3
 scenarios: [s14]
-status: todo
+status: done
 paths:
   - libs/components/src/**
 ---

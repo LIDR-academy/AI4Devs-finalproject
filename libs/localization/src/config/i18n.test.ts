@@ -39,4 +39,20 @@ describe('createI18n', () => {
 
     expect(i18n.t('onlyInEnglish')).toBe('English only');
   });
+
+  // @s10 — interpolated values are injected into the translated string, in each locale's position.
+  it('interpolates a value into a translated string', () => {
+    expect(createI18n('en').t('lesson.title', { id: '7' })).toBe('Lesson 7');
+    expect(createI18n('es').t('lesson.title', { id: '7' })).toBe('Lección 7');
+  });
+
+  // @s11 — pluralization selects the correct form by count, per locale.
+  it.each([
+    ['en', 1, '1 lesson'],
+    ['en', 5, '5 lessons'],
+    ['es', 1, '1 lección'],
+    ['es', 5, '5 lecciones'],
+  ])('selects the correct plural form for %s with count %i', (locale, count, expected) => {
+    expect(createI18n(locale as 'en' | 'es').t('lessons.count', { count })).toBe(expected);
+  });
 });

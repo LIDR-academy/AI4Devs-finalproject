@@ -60,4 +60,23 @@ describe('LanguageSelector', () => {
 
     expect(screen.getByLabelText('Choose a language')).toBeTruthy();
   });
+
+  // @s13 — every option exposes an accessible radio role + label; exactly one is announced selected.
+  it('exposes a radio role and label for every option with a single selected', async () => {
+    await render(<LanguageSelector options={options} value="pt" onChange={jest.fn()} />);
+
+    for (const option of options) {
+      expect(screen.getByRole('radio', { name: option.label })).toBeTruthy();
+    }
+    expect(screen.getAllByRole('radio')).toHaveLength(4);
+    expect(screen.getByRole('radio', { name: 'Português', selected: true })).toBeTruthy();
+    expect(screen.queryAllByRole('radio', { selected: true })).toHaveLength(1);
+  });
+
+  // @s13 — options are disabled for assistive tech when the group is disabled.
+  it('announces options as disabled when the group is disabled', async () => {
+    await render(<LanguageSelector options={options} value="de" onChange={jest.fn()} disabled />);
+
+    expect(screen.getByRole('radio', { name: 'Deutsch', disabled: true })).toBeTruthy();
+  });
 });

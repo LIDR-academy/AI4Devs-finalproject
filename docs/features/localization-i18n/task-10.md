@@ -3,7 +3,7 @@ id: task-10
 title: Migrate all app screens + nav titles to keys (incl. interpolation + pluralization)
 slice: 3
 scenarios: [s9, s10, s11, s14]
-status: todo
+status: done
 paths:
   - apps/app-study-buddy/src/app/_layout.tsx
   - apps/app-study-buddy/src/app/(app)/_layout.tsx

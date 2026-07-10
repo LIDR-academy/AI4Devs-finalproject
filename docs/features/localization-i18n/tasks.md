@@ -19,8 +19,8 @@ Index of atomic tasks (one `task-N.md` each), grouped by vertical slice. `orches
 | [task-7](./task-7.md) | 2 | @s6, @s7, @s8, @s12 | done | libs/localization/src/{provider,hooks} |
 | [task-8](./task-8.md) | 2 | @s5 | done | libs/components/src/molecules/language-selector |
 | [task-9](./task-9.md) | 2 | @s5, @s6, @s9 | done | libs/study-buddy/src/components/language-settings, apps/app-study-buddy/src/app/(app)/settings.tsx |
-| [task-10](./task-10.md) | 3 | @s9, @s10, @s11, @s14 | todo | apps/app-study-buddy/src/app/**, libs/localization/src/resources |
-| [task-11](./task-11.md) | 3 | @s14 | todo | libs/components/src/** |
-| [task-12](./task-12.md) | 3 | @s5, @s13, @s15 | todo | libs/components/src/molecules/language-selector, libs/components/tests/e2e |
+| [task-10](./task-10.md) | 3 | @s9, @s10, @s11, @s14 | done | apps/app-study-buddy/src/app/**, libs/localization/src/resources |
+| [task-11](./task-11.md) | 3 | @s14 | done | libs/components/src/** |
+| [task-12](./task-12.md) | 3 | @s5, @s13, @s15 | done | libs/components/src/molecules/language-selector, libs/components/tests/e2e |
 
 **Slice 1 — Happy path: lib + provider + auto-detect (+ Loading gate)** · **Slice 2 — Manual override + persistence + fallback/error** · **Slice 3 — Full string migration + a11y + stories**

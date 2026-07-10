@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "lib": ["ESNext", "DOM"],
-    "types": ["jest"]
+    "types": ["jest", "node"]
   },
   "include": ["src"]
 }

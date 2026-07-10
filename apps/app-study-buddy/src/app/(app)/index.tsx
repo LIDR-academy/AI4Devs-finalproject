@@ -1,19 +1,23 @@
 import { ScreenContainer } from '@helsoft/components';
+import { useLocalization } from '@helsoft/localization';
 import { Link } from 'expo-router';
 import { Text } from 'react-native';
 
 export default function HomeScreen() {
+  const { t } = useLocalization();
+
   return (
     <ScreenContainer>
-      <Text>Saved lessons list — TODO (R5, R9)</Text>
+      <Text>{t('home.savedLessons')}</Text>
+      <Text>{t('lessons.count', { count: 0 })}</Text>
       <Link href="/upload">
-        <Text>New lesson</Text>
+        <Text>{t('nav.newLesson')}</Text>
       </Link>
       <Link href="/settings">
-        <Text>Settings</Text>
+        <Text>{t('nav.settings')}</Text>
       </Link>
       <Link href={{ pathname: '/lesson/[id]', params: { id: 'demo' } }}>
-        <Text>Open demo lesson</Text>
+        <Text>{t('home.openDemo')}</Text>
       </Link>
     </ScreenContainer>
   );
