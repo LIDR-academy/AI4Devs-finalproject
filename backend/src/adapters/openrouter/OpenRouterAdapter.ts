@@ -2,6 +2,7 @@
  * OpenRouterAdapter — LLM system prompt for listing analysis (T033, FR-002, FR-013, FR-025).
  */
 import fetch from 'node-fetch';
+import pino from 'pino';
 import { z } from 'zod';
 import { env } from '../../infrastructure/config/env';
 import { REALISTA_USER_AGENT } from '../../infrastructure/utils/urlValidator';
@@ -9,6 +10,18 @@ import { TransparencyScore, type ScoreBreakdownItem } from '../../domain/value-o
 import { RedFlags, RED_FLAG_TYPES, type RedFlagItem } from '../../domain/value-objects/RedFlags';
 import { LlmMalformedResponseError } from '../../domain/errors/DomainError';
 import type { ListingAnalyzerPort, LLMAnalysisResult } from '../../domain/ports/ListingAnalyzerPort';
+
+const logger = pino({ level: env.LOG_LEVEL }).child({ module: 'OpenRouterAdapter' });
+
+/**
+ * Strip markdown code-block fences that some LLMs wrap around JSON.
+ * Handles ```json\n{...}\n``` and ```\n{...}\n``` variants.
+ */
+function stripMarkdownCodeBlocks(raw: string): string {
+  const trimmed = raw.trim();
+  const match = trimmed.match(/^```(?:json)?\s*\n?([\s\S]*?)\n?\s*```$/);
+  return match ? match[1].trim() : trimmed;
+}
 
 const LLMResponseSchema = z.object({
   transparencyScore: z.number().int().min(0).max(100),
@@ -62,10 +75,13 @@ export class OpenRouterAdapter implements ListingAnalyzerPort {
     for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
       try {
         const raw = await this.callOpenRouter(text, url);
-        const parsed = LLMResponseSchema.parse(JSON.parse(raw));
+        const cleaned = stripMarkdownCodeBlocks(raw);
+        logger.debug({ attempt, rawLength: raw.length, cleanedLength: cleaned.length, hadMarkdown: raw !== cleaned }, 'LLM raw response');
+        const parsed = LLMResponseSchema.parse(JSON.parse(cleaned));
         return this.toResult(parsed);
       } catch (err) {
         lastError = err as Error;
+        logger.warn({ attempt, error: lastError.message }, 'LLM response parse/validation failed');
       }
     }
     throw new LlmMalformedResponseError(lastError ?? undefined);
@@ -90,17 +106,24 @@ export class OpenRouterAdapter implements ListingAnalyzerPort {
         ],
         temperature: 0.2,
       }),
-      signal: AbortSignal.timeout(12_000),
+      signal: AbortSignal.timeout(30_000),
     });
 
     if (!res.ok) {
-      throw new Error(`OpenRouter ${res.status}: ${await res.text()}`);
+      const body = await res.text();
+      logger.error({ status: res.status, body: body.slice(0, 500) }, 'OpenRouter HTTP error');
+      throw new Error(`OpenRouter ${res.status}: ${body}`);
     }
 
     const json = (await res.json()) as {
       choices: { message: { content: string } }[];
     };
-    return json.choices[0].message.content;
+    const content = json.choices[0]?.message?.content;
+    if (!content) {
+      logger.error({ responseKeys: Object.keys(json) }, 'OpenRouter returned empty content');
+      throw new Error('OpenRouter returned empty content');
+    }
+    return content;
   }
 
   private toResult(parsed: z.infer<typeof LLMResponseSchema>): LLMAnalysisResult {
