@@ -5,6 +5,10 @@ import { AnalyzeListingUseCase } from '../../domain/services/AnalyzeListingUseCa
 import { AutoAttachService } from '../../domain/services/AutoAttachService';
 import { LocationResolver } from '../../domain/services/LocationResolver';
 import { CheerioAdapter } from '../../adapters/cheerio/CheerioAdapter';
+import { PlaywrightAdapter } from '../../adapters/playwright/PlaywrightAdapter';
+import { BrowserPool } from '../../adapters/playwright/BrowserPool';
+import { realChromiumLauncher } from '../../adapters/playwright/realChromiumLauncher';
+import { ChainedFetchAdapter } from '../../adapters/fetch/ChainedFetchAdapter';
 import { OpenRouterAdapter } from '../../adapters/openrouter/OpenRouterAdapter';
 import { CatastroAdapter } from '../../adapters/catastro/CatastroAdapter';
 import { AnalyzedListingRepository } from '../../infrastructure/repositories/AnalyzedListingRepository';
@@ -12,6 +16,7 @@ import { ChecklistRepository } from '../../infrastructure/repositories/Checklist
 import { prisma } from '../../infrastructure/prisma/client';
 import { validateListingUrl, UrlValidationError } from '../../infrastructure/utils/urlValidator';
 import { InvalidUrlError } from '../../domain/errors/DomainError';
+import { env } from '../../infrastructure/config/env';
 
 export const listingsRouter = Router();
 
@@ -20,7 +25,20 @@ const analyzeSchema = z.object({
   manualText: z.string().optional(),
 });
 
+// Composition root: Cheerio (fast) → Playwright (DataDome bypass).
+// Only the chain is exposed; the use case depends on the port, not on
+// concrete adapters. Tests can inject a single ListingFetchPort.
 const cheerio = new CheerioAdapter();
+const playwright = env.PLAYWRIGHT_ENABLED
+  ? new PlaywrightAdapter({
+      pool: new BrowserPool({ launcher: realChromiumLauncher(env.PLAYWRIGHT_HEADLESS), poolSize: env.PLAYWRIGHT_POOL_SIZE }),
+      userAgent: env.REALISTA_USER_AGENT,
+      gotoTimeoutMs: env.PLAYWRIGHT_BROWSER_TIMEOUT_MS,
+    })
+  : null;
+const fetcher = playwright
+  ? new ChainedFetchAdapter([cheerio, playwright])
+  : cheerio;
 const openrouter = new OpenRouterAdapter();
 const catastro = new CatastroAdapter();
 const locationResolver = new LocationResolver();
@@ -28,7 +46,7 @@ const autoAttach = new AutoAttachService();
 const repository = new AnalyzedListingRepository(prisma);
 const checklistRepository = new ChecklistRepository(prisma);
 const analyzeUseCase = new AnalyzeListingUseCase(
-  cheerio,
+  fetcher,
   openrouter,
   locationResolver,
   catastro,

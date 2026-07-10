@@ -15,7 +15,6 @@ function makeFakeBrowser(html: string, networkIdle = true): { launcher: BrowserL
   const gotoCalls: string[] = [];
   const page: Page = {
     async setExtraHTTPHeaders() {},
-    async setUserAgent() {},
     async goto(url: string) { gotoCalls.push(url); if (!networkIdle) throw new Error('timeout'); return null; },
     async content() { return html; },
     async close() {},

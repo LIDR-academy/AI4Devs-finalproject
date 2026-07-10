@@ -43,11 +43,11 @@ export class BrowserPool {
     this.idleTimeoutMs = opts.idleTimeoutMs ?? 60_000;
   }
 
-  async acquire(): Promise<AcquiredContext> {
+  async acquire(opts?: { userAgent?: string }): Promise<AcquiredContext> {
     if (this.shuttingDown) throw new Error('BrowserPool is shutting down');
 
     const slot = await this.pickOrLaunchSlot();
-    const context = await slot.browser.newContext();
+    const context = await slot.browser.newContext({ userAgent: opts?.userAgent });
 
     slot.contexts += 1;
     if (slot.idleHandle) {

@@ -14,7 +14,6 @@ export interface BrowserContext {
 
 export interface Page {
   setExtraHTTPHeaders(headers: Record<string, string>): Promise<void>;
-  setUserAgent(userAgent: string): Promise<void>;
   goto(url: string, opts?: { waitUntil?: 'load' | 'domcontentloaded' | 'networkidle'; timeout?: number }): Promise<unknown>;
   content(): Promise<string>;
   close(): Promise<void>;

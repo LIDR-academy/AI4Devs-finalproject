@@ -37,11 +37,10 @@ export class PlaywrightAdapter implements ListingFetchPort {
       throw new PortalBlockedError(parsedUrl.hostname);
     }
 
-    const acquired = await this.pool.acquire();
+    const acquired = await this.pool.acquire({ userAgent: this.userAgent });
     try {
       const page = await acquired.context.newPage();
       try {
-        await page.setUserAgent(this.userAgent);
         try {
           await page.goto(url, { waitUntil: 'domcontentloaded', timeout: this.gotoTimeoutMs });
         } catch (err) {

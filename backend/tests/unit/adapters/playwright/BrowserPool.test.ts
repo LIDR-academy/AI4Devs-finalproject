@@ -15,7 +15,6 @@ function makeLauncher(): { launcher: BrowserLauncher; contexts: BrowserContext[]
             async newPage() {
               const page: Page = {
                 async setExtraHTTPHeaders() {},
-                async setUserAgent() {},
                 async goto() { return null; },
                 async content() { return '<html></html>'; },
                 async close() {},

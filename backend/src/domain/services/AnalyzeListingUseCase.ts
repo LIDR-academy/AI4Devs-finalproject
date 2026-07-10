@@ -8,7 +8,8 @@
  * domain/ports/), NOT on Prisma. The Prisma implementation lives in
  * infrastructure/repositories/.
  */
-import type { CheerioAdapter, ParsedListingHtml } from '../../adapters/cheerio/CheerioAdapter';
+import type { ParsedListingHtml } from '../../adapters/cheerio/CheerioAdapter';
+import type { ListingFetchPort } from '../ports/ListingFetchPort';
 import type { ListingAnalyzerPort } from '../ports/ListingAnalyzerPort';
 import type { LocationResolverPort } from '../ports/LocationResolverPort';
 import type { CatastroPort } from '../ports/CatastroPort';
@@ -57,7 +58,7 @@ export class AnalyzeListingUseCase {
   private readonly diffService = new DiffService();
 
   constructor(
-    private readonly cheerio: CheerioAdapter,
+    private readonly fetcher: ListingFetchPort,
     private readonly analyzer: ListingAnalyzerPort,
     private readonly locationResolver: LocationResolverPort,
     private readonly catastro: CatastroPort,
@@ -79,7 +80,7 @@ export class AnalyzeListingUseCase {
           text: input.manualText,
           declaredAddress: undefined,
         }
-      : await this.cheerio.fetch(input.url);
+      : await this.fetcher.fetch(input.url);
 
     const [coordinates, analysis] = await Promise.all([
       this.resolveLocationSafe(parsed, emit),
