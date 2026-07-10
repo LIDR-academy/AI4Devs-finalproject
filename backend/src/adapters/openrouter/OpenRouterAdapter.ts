@@ -100,6 +100,11 @@ export class OpenRouterAdapter implements ListingAnalyzerPort {
       body: JSON.stringify({
         model: env.OPENROUTER_MODEL,
         response_format: { type: 'json_object' },
+        // Disable reasoning on every request: deepseek-v4-flash auto-enables
+        // it (700+ tokens before the JSON), which inflates cost and aborts
+        // the fetch timeout. See OpenRouter reasoning docs:
+        // https://openrouter.ai/docs/guides/best-practices/reasoning-tokens
+        reasoning: { effort: 'none' },
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: `URL: ${url}\n\n${text}` },

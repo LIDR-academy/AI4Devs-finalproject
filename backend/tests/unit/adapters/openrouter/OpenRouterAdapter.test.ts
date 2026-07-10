@@ -194,5 +194,21 @@ describe('OpenRouterAdapter', () => {
       const result = await adapter.analyze('Piso test', 'https://idealista.com/123');
       expect(result.transparencyScore.value).toBe(65);
     }, 45_000);
+
+    it('sends reasoning: { effort: "none" } to disable costly reasoning mode', async () => {
+      // deepseek/deepseek-v4-flash auto-enables reasoning (700+ tokens before
+      // JSON) which inflates cost and aborts the timeout. The adapter must
+      // explicitly disable reasoning on every request.
+      let sentBody: Record<string, unknown> | null = null;
+      mockFetch.mockImplementation((async (_url: unknown, opts: { body?: string; signal?: AbortSignal } = {}) => {
+        const body = JSON.parse(opts.body ?? '{}') as Record<string, unknown>;
+        sentBody = body;
+        return slowResponse(VALID_LLM_JSON, 0, opts.signal);
+      }) as never);
+      const adapter = await importAdapter();
+      await adapter.analyze('Piso test', 'https://idealista.com/123');
+      expect(sentBody).not.toBeNull();
+      expect(sentBody!.reasoning).toEqual({ effort: 'none' });
+    });
   });
 });
