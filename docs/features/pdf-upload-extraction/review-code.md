@@ -1,104 +1,156 @@
 ---
 feature: pdf-upload-extraction
 mode: slice
-slice: 1
-round: 3
+slice: 2
+round: 2
 verdict: APPROVED
 ---
 
-# Review — pdf-upload-extraction — Slice 1 (happy path + Loading) — Round 3 (final, cap reached)
+# Review — pdf-upload-extraction — Slice 2 (Empty + Error + Retry) — Round 2 (final, 2-round cap)
 
-Scope: (1) verify round-2's finding is actually resolved by `d571d9d`; (2) audit `d571d9d`'s own
-diff for sloppiness; (3) a fresh full pass over the cumulative Slice 1 diff `47c3200..d571d9d`
-against the full reviewer_code rubric, with `pnpm lint`/`check-types`/`test` re-run for real (not
-trusted from the implementator's log).
+**APPROVED**
 
-## Part 1 — Round-2 finding verified resolved
+Findings: none (blocker/major/minor).
 
-`libs/study-buddy/src/components/pdf-upload/pdf-upload.test.tsx:25-29` — `extractionValue()` now
-reads:
-```ts
-const extractionValue = (overrides: Partial<ReturnType<typeof usePdfExtraction>> = {}) => ({
-  extract: jest.fn(),
-  stage: 'idle' as const,
-  result: null,
-  ...overrides,
-});
-```
-`error:`/`reset:` are gone. Cross-checked against the real current shape of `UsePdfExtractionResult`
-in `libs/hooks/src/hooks/use-pdf-extraction.ts:9-13` (`{ extract, stage, result }`) — exact match,
-no wider/narrower fields either way. Grepped the whole worktree for `.error`, `reset(`, and
-`stage === 'error'` / `'error'` as a `PdfExtractionStage` literal outside `use-pdf-extraction.ts`'s
-own type union comment — zero hits in any test or production file. No test in `pdf-upload.test.tsx`
-(or anywhere else in this slice) asserts on the removed fields. Finding closed.
+## Scope
 
-## Part 2 — `d571d9d` diff audit
+1. Verify round-1's only open finding (`reviewer_design`, minor — generic retry affordance
+   ignored spec.md's per-code recovery-action table) is genuinely resolved by commit `a01e92b`
+   (`fix(pdf-upload-extraction): restrict retry affordance to transient errors`).
+2. Check for any new issue introduced by that fix.
+3. Fresh full code-quality pass over the entire cumulative Slice-2 diff, `git diff d571d9d..a01e92b`
+   (tasks 9-12 + the round-1 fix), against the full `reviewer_code` rubric — not re-trusting round
+   1's clean bill or `tdd.md`'s narrative.
+4. Real command runs (not cached, not claimed) from the worktree root.
 
-`git show d571d9d` touches exactly two files: `pdf-upload.test.tsx` (removes the two stale lines,
-nothing else) and `tdd.md` (append-only log entry). No unused mock-helper params introduced, no
-assertion removed beyond the two dead fields, no test intent altered — all 5 pre-existing
-`pdf-upload.test.tsx` cases are byte-for-byte unchanged. Clean, minimal, correctly scoped fix.
+## 1. Round-1 finding — verified genuinely resolved
 
-## Part 3 — Fresh full pass, `47c3200..d571d9d`
+`libs/components/src/organisms/pdf-upload-panel/pdf-upload-panel.tsx:51,71,112` — new optional
+`canRetry?: boolean` prop (default `true`); the Error-state retry `Button` (line 112) only renders
+`{canRetry ? <Button onPress={onRetry}>{labels.retry}</Button> : null}`. Confirmed:
+- `pdf-upload-panel.test.tsx:165-177` — dedicated case: `canRetry={false}` → `queryByRole('button',
+  { name: 'Try again' })` is `null`. Every pre-existing Error-state test (108-158) omits the prop
+  and still asserts the button renders — the default-`true` path stays covered too.
+- `libs/study-buddy/src/components/pdf-upload/pdf-upload.tsx:54` —
+  `RETRYABLE_ERROR_CODES: ReadonlySet<PdfExtractionErrorCode> = new Set(['network_error',
+  'extraction_failed'])`, wired at line 84: `canRetry={error ? RETRYABLE_ERROR_CODES.has(error) :
+  true}`.
+- `pdf-upload.test.tsx:185-206` — two exhaustive `it.each` blocks derived from the same
+  `ERROR_CODE_TO_KEY` map used elsewhere in the file: all 6 non-transient codes
+  (`unsupported_file_type`, `file_too_large`, `too_many_pages`, `scanned_or_image_only`,
+  `corrupt_or_unreadable`, `unauthenticated`) assert the retry button is **absent**; both transient
+  codes (`network_error`, `extraction_failed`) assert it's **present**. This is real exhaustive
+  coverage, not a sampled subset — ran it myself (see §4) rather than trusting the count in
+  `tdd.md`.
+- The one pre-existing wiring test that used to exercise `too_many_pages` (now non-retryable) was
+  correctly updated to `network_error` (`pdf-upload.test.tsx:134-147`) so its retry-press assertion
+  stays meaningful instead of silently asserting a press on a button that would no longer exist for
+  that code.
+- Stories: `pdf-upload-panel.stories.tsx`'s single `Error` story is now `ErrorRetryable` (transient,
+  retry shown) / `ErrorNonRetryable` (`too_many_pages`, `canRetry: false`, retry suppressed) —
+  still exactly 4 states, both Error sub-cases visible.
 
-**Commands run for real, this session, from the worktree root:**
-- `pnpm --filter @helsoft/study-buddy test` — 4 suites / 30 tests green; `check-types` clean.
-- `pnpm --filter @helsoft/hooks test` — 5 suites / 24 tests green; `check-types` clean.
-- `pnpm --filter @helsoft/components test` — 6 suites / 71 tests green; `check-types` clean.
-- `pnpm --filter @helsoft/services test` (`NODE_OPTIONS=--experimental-vm-modules`) — 10 suites /
-  56 tests green; `check-types` clean.
-- `pnpm lint` (turbo, whole repo) — clean.
-- `pnpm check-types` (turbo, whole repo) — 8/8 packages clean.
-- `pnpm test` (turbo, whole repo) — 6/6 testable packages green.
+Verdict: the fix removes the exact defect round 1 flagged (retry offered as a no-op for 6 of 8
+codes) with real, driving tests on both branches (panel-level default/false, wiring-level
+exhaustive per-code). Not just a claim — verified by reading the assertions and re-running them.
 
-**Scenario coverage (`@s` → test), cross-checked against `gherkin-scenarios.md` and `tdd.md`:**
-Slice 1 claims @s1, @s2 (partial, adapter/downscale-level only), @s3, @s4, @s5, @s6, and @s14
-(partial — cross-user isolation only). Verified each has a concrete, currently-passing test:
-- @s1/@s4 → `pdf-upload.dao.test.ts`, `pdf-extraction.service.test.ts`, `use-pdf-extraction.test.ts`,
-  `pdf-upload.test.tsx`, `pdf-extraction.integration.test.ts`, `mupdf-extraction-adapter.test.ts`.
-- @s2/@s3 → `mupdf-extraction-adapter.test.ts` (page/positionIndex, document order),
-  `image-downscale.test.ts` (1024px cap, JPEG/PNG branch, never-upscale, 100×100 floor + wide-thin
-  boundary), `extraction-dto.test.ts` (derived pageCount/imageCount).
-- @s5 → `pdf-upload-panel.test.tsx` (Loading render + disabled control), `use-pdf-extraction.test.ts`
-  (`stage === 'processing'` mid-flight via deferred promise), `pdf-upload.test.tsx` (wiring).
-- @s6 → `pdf-upload-panel.test.tsx` (Content summary + continue callback), `use-pdf-extraction.test.ts`
-  (success result), `pdf-upload.test.tsx` (wiring).
-- @s14 (partial) → `pdf-upload.rls.integration.test.ts`, 9/9, run for real against local Supabase
-  (isolated from default `pnpm test` via `testPathIgnorePatterns`, documented and accepted).
-No scenario in scope for this slice is missing a test; no test exists for an out-of-scope `@s`.
+## 2. New issues introduced by the fix — none found
 
-**TDD discipline:** `tdd.md` shows RED→GREEN per task (task-1 through task-8) plus two prior fix
-cycles, each stating what failed first and the minimum change that passed it. No evidence of
-scope inflation in the cumulative diff — every production module maps to a task/test pair, and both
-prior findings (untested `error`/`reset` hook surface, then the stale test-mock echo of it) were
-themselves caught and removed as speculative generality, which is the Three Laws working as
-intended, not a violation surviving into this round.
+- `git show a01e92b --stat` touches exactly 6 files, all within the panel/wiring components, their
+  tests, and stories, plus `tdd.md` — no drift into DAO/service/hook/Deno/localization layers that
+  didn't need touching for this fix.
+- `canRetry` defaults to `true`, so every pre-existing call site/test that doesn't pass it keeps
+  its prior behavior unchanged — no silent behavior change for callers outside this feature.
+- No new magic values: `RETRYABLE_ERROR_CODES` names the two codes by their real
+  `PdfExtractionErrorCode` literals, not by index/count; no new numeric literal introduced.
+- No duplication of logic: the panel stays a "dumb" boolean-driven component (classification lives
+  only in the wiring layer, per `tdd.md`'s stated rationale for keeping it out of `@helsoft/types`
+  and `@helsoft/services` — a UI/UX concern, not a trust boundary. That rationale holds: neither
+  types-lib nor services-lib has any other UI-affordance logic today).
+- Naming is revealing (`canRetry`, `RETRYABLE_ERROR_CODES`), Props type (`PdfUploadPanelProps`)
+  updated in place, kebab-case files unchanged.
+- No TDD-law violation: the new prop and constant are each driven by a failing test first per
+  `tdd.md`'s round-1-fix log, and I independently confirmed every new line of production code (the
+  `canRetry` prop/conditional render, the `RETRYABLE_ERROR_CODES` set + its use) is exercised by a
+  test that would fail if that line were reverted.
 
-**Craftsmanship, re-verified fresh (not just diffed against prior rounds):**
-- Short, single-purpose functions throughout (`extractPageImages`, `isDecorative`, `computeScale`,
-  `resizePixmap` in `image-downscale.ts`; `readPickedFileBytes` in `pdf-upload.tsx`).
-- No magic numbers: `1024`/`80`/`100` live only in `pdf-extraction.constants.ts`
-  (`IMAGE_DOWNSCALE_TARGET`), `10 MB`/`20 pages` in `PDF_EXTRACTION_LIMITS` — both consumed by name,
-  never re-literaled.
-- No duplication: DAO/service/hook each a thin, single pass-through layer; the Deno
-  `_shared/*` mirror differs from its Jest-tested twin only in import specifiers and stripped
-  doc-comments (diffed line-by-line this round) — logic is identical, not a second implementation.
-- No `console.log`, no `debugger`, no orphan `TODO`/`FIXME` anywhere in `47c3200..d571d9d` (grepped).
-- No `any`/`as any` casts anywhere in the diff. The one narrow cast in `pdf-upload.tsx:20`
-  (`asset.file as unknown as WebBlobLike`) is a documented, named type (`WebBlobLike`), not `any`.
-- Correct error contract for this slice's scope: DAO methods throw the raw Supabase error
-  untouched (documented as intentional — normalization is Slice 2's job); no swallowed errors.
-- Functional React only; every component/hook has a named `Props`/params type
-  (`PdfUploadPanelProps`, `UsePdfExtractionResult`, etc.); every new file is kebab-case.
-- `libs/localization/src/resources/en.ts`'s pre-existing `upload.intro` key is retained unused by
-  the current `upload.tsx` — checked whether this is orphaned dead code: it is not; `spec.md` and
-  `task-13.md` both explicitly earmark it for reuse in Slice 3, and round-2's `review-design.md`
-  already noted this same fact without objection. Not a finding.
+## 3. Fresh full pass over the cumulative Slice-2 diff (`d571d9d..a01e92b`)
 
-No blocker, major, or minor findings remain open.
+Read every changed production/test file end to end (not just diffed): `pdf-extraction.service.ts`
++ its test, `pdf-upload.dao.ts` + its test, `use-pdf-extraction.ts` + its test,
+`pdf-extraction-error-retry.integration.test.ts` (new), `pdf-upload-panel.tsx` + test + stories,
+`pdf-upload.tsx` + test, `extraction-failure-detection.ts` + test (new module),
+`mupdf-extraction-adapter.test.ts`'s new case, `pdf-extraction.constants.ts`, `pdf-extraction.ts`
+(types), `services/index.ts` barrel, the four locale bundles, and `supabase/functions/extract-pdf/
+index.ts` + mirrored `_shared/*`.
+
+- **@s7-@s14 scenario coverage**: every scenario traces to >=1 concrete, currently-passing test —
+  confirmed against `gherkin-scenarios.md`'s scenario-→test-kind table and by reading each test
+  file directly (not just `tdd.md`'s summary): @s7 (`pdf-upload-panel.test.tsx` idle-state cases +
+  `pdf-upload.test.tsx` constraints-hint case), @s8/@s9/@s10/@s11/@s12
+  (`extraction-failure-detection.test.ts`, `pdf-extraction.service.test.ts`'s normalization suite,
+  `mupdf-extraction-adapter.test.ts`'s new parse-failure case, `pdf-upload.test.tsx`'s exhaustive
+  `it.each` over all 8 codes), @s13 (service transport-error tests, `use-pdf-extraction.test.ts`'s
+  error/retry/no-op-retry tests, the new `pdf-extraction-error-retry.integration.test.ts`), @s14
+  (service's no-userId pre-check + server `unauthenticated` normalization + wiring's dedicated
+  message-mapping test). No gap.
+- **Red→Green→Refactor evidence**: `tdd.md`'s task-9 through task-12 sections and the round-1 fix
+  section each state what failed first and the minimal change that passed it; cross-checked several
+  claims against the actual diff (e.g. the DAO's insert→upsert switch is reflected in both
+  `pdf-upload.dao.test.ts`'s updated assertions and `pdf-extraction.integration.test.ts`'s renamed
+  `insert`→`upsert` mock) — consistent, no evidence of code written ahead of a test.
+- **No unrequested production code**: every new export (`generateDocumentId`,
+  `normalizeExtractionError`/`readFunctionErrorCode`/`toExtractionError`, `validateFile`,
+  `detectExtractionFailure`, the hook's `retry()`/`lastAttemptRef`, `UPLOAD_ERROR_KEYS`,
+  `RETRYABLE_ERROR_CODES`, `canRetry`) is exercised by a specific test; no dead/orphaned code found.
+- **Craftsmanship**: short, single-purpose functions throughout
+  (`validateFile`/`normalizeExtractionError`/`readFunctionErrorCode`/`toExtractionError` in
+  `pdf-extraction.service.ts`; `detectExtractionFailure` in its own module; `markDocumentFailed` in
+  the Deno orchestration). Revealing names. No magic numbers in production code — `10 * 1024 *
+  1024` / `20` live only in `PDF_EXTRACTION_LIMITS`; `40` (scanned-detection threshold) lives only
+  in `SCANNED_DETECTION_MIN_TEXT_LENGTH`; `1024`/`80`/`100` only in `IMAGE_DOWNSCALE_TARGET`
+  (unchanged this slice) — all consumed by name. No duplication of logic (the Deno `_shared/*`
+  mirror is a byte-for-byte-equivalent hand-mirror of the Jest-tested source, not a second,
+  independently-written implementation — spot-checked `extraction-failure-detection.ts` against its
+  `_shared/` twin, logically identical).
+- **Error contract**: all 8 `PdfExtractionErrorCode`s are correctly typed
+  (`libs/types/src/pdf-extraction.ts`), produced by `normalizeExtractionError`, detected by
+  `detectExtractionFailure` (page-count checked before the scanned heuristic, matching spec's
+  structural-limit-first framing), and mapped 1:1 to an i18n key via `UPLOAD_ERROR_KEYS` (a full
+  `Record`, so a missing mapping is a compile error, not a runtime gap).
+- **No console.log/debugger/orphan TODOs**: grepped the full `d571d9d..a01e92b` diff for
+  `console.log|console.debug|console.warn|debugger|TODO|FIXME|XXX` — zero hits.
+- **Functional React + Props types + kebab-case**: `PdfUploadPanel`/`PdfUpload` stay functional
+  components with named Props types (`PdfUploadPanelProps`, no props type needed for `PdfUpload` —
+  it takes none, consistent with `SignInForm`'s precedent); every touched/added file is kebab-case.
+- **Two independently-declared error-code sets** (`KNOWN_ERROR_CODES` in
+  `pdf-extraction.service.ts`, `PDF_EXTRACTION_ERROR_CODES` in `use-pdf-extraction.ts`) plus the
+  new, much smaller `RETRYABLE_ERROR_CODES` in the wiring component: re-examined this round now
+  that a third set exists. Still not flagging as duplication — each guards a genuinely distinct
+  concern (service: validating an external wire body; hook: defensive shape-guard mirroring
+  `useAuth`'s precedent; wiring: a 2-item UI/UX retry-affordance classification), and `tdd.md`
+  documents why the third one doesn't belong in `@helsoft/types`/`@helsoft/services`. No shared
+  behavior is duplicated — they answer three different questions about the same closed type.
+
+No blocker, major, or minor findings from this fresh pass either.
+
+## 4. Commands actually run this round (worktree root, not cache-trusted)
+
+- `npx turbo run test --filter=@helsoft/services --filter=@helsoft/hooks --filter=@helsoft/components --filter=@helsoft/study-buddy --filter=@helsoft/localization --force`
+  (bypasses turbo cache): **all green**, matching `tdd.md`'s claimed counts exactly —
+  `@helsoft/services` 11 suites/72 tests, `@helsoft/hooks` 6 suites/29 tests (including both
+  `pdf-extraction.integration.test.ts` and the new `pdf-extraction-error-retry.integration.test.ts`),
+  `@helsoft/components` 6 suites/78 tests, `@helsoft/study-buddy` 4 suites/49 tests,
+  `@helsoft/localization` 8 suites/55 tests.
+- `npx turbo run check-types lint --force` (bypasses cache): 9/9 tasks successful across all 8
+  workspaces — clean.
+
+No claim in `tdd.md` was found inflated; every count was independently reproduced.
 
 ## Verdict
 
-**APPROVED.** Round-2's finding is verified resolved with no regression, `d571d9d` is a clean,
-narrowly-scoped fix, and this round's independent fresh pass over the full `47c3200..d571d9d`
-range found nothing new. Slice 1 gate clears; proceed to Slice 2.
+**APPROVED.** Round-1's minor finding is genuinely fixed with real, exhaustive, driving tests on
+both the panel and wiring layers; the fix introduced no new issue; a fresh full pass over the
+entire Slice-2 diff found zero additional findings; lint/check-types/tests were actually re-run
+(not cache-trusted) and are green. Slice 2 clears the `reviewer_code` gate at round 2 (the cap)
+with a clean result.
