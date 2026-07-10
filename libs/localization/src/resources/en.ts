@@ -28,6 +28,12 @@ export const en = {
     },
     upload: {
       intro: 'Upload a PDF to generate a lesson',
+      chooseFile: 'Choose a PDF',
+      loading: 'Extracting…',
+      filenameLabel: 'File',
+      pageCountLabel: 'Pages',
+      imageCountLabel: 'Images',
+      continue: 'Continue',
     },
     lesson: {
       title: 'Lesson {{id}}',

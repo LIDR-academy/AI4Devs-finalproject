@@ -23,6 +23,12 @@ export const de: TranslationResource = {
     },
     upload: {
       intro: 'Lade ein PDF hoch, um eine Lektion zu erstellen',
+      chooseFile: 'PDF auswählen',
+      loading: 'Wird extrahiert…',
+      filenameLabel: 'Datei',
+      pageCountLabel: 'Seiten',
+      imageCountLabel: 'Bilder',
+      continue: 'Weiter',
     },
     lesson: {
       title: 'Lektion {{id}}',

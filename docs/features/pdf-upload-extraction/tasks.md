@@ -12,14 +12,14 @@ Within **Slice 1**, build backend + logic before UI: schema (task-1) → contrac
 
 | Task | Slice | Scenarios | Status | Paths |
 |---|---|---|---|---|
-| [task-1](./task-1.md) — DB migration: schema + storage buckets + RLS | 1 | @s2,@s3,@s14 | todo | supabase/migrations/ |
-| [task-2](./task-2.md) — Extraction contract types (`@helsoft/types`) | 1 | @s1,@s2,@s3 | todo | libs/types/src/pdf-extraction.ts |
-| [task-3](./task-3.md) — `extract-pdf` Edge Function (happy path + `mupdf`-wasm spike) | 1 | @s1,@s2,@s3,@s4 | todo | supabase/functions/extract-pdf/ |
-| [task-4](./task-4.md) — `PdfUploadDao` (storage upload + function invoke) | 1 | @s1,@s4 | todo | libs/services/src/dao/pdf-upload.dao.ts |
-| [task-5](./task-5.md) — `PdfExtractionService` (validate + orchestrate) | 1 | @s1,@s4 | todo | libs/services/src/services/pdf-extraction.service.ts |
-| [task-6](./task-6.md) — `usePdfExtraction` hook | 1 | @s1,@s5 | todo | libs/hooks/src/hooks/use-pdf-extraction.ts |
-| [task-7](./task-7.md) — `PdfUploadPanel` organism (Loading + Content) | 1 | @s5,@s6 | todo | libs/components/src/organisms/pdf-upload-panel/ |
-| [task-8](./task-8.md) — `PdfUpload` wiring + upload screen + integration | 1 | @s1,@s4,@s5,@s6 | todo | libs/study-buddy/src/components/pdf-upload/, apps/app-study-buddy/src/app/(app)/upload.tsx |
+| [task-1](./task-1.md) — DB migration: schema + storage buckets + RLS | 1 | @s2,@s3,@s14 | done | supabase/migrations/ |
+| [task-2](./task-2.md) — Extraction contract types (`@helsoft/types`) | 1 | @s1,@s2,@s3 | done | libs/types/src/pdf-extraction.ts |
+| [task-3](./task-3.md) — `extract-pdf` Edge Function (happy path + `mupdf`-wasm spike) | 1 | @s1,@s2,@s3,@s4 | done | supabase/functions/extract-pdf/ |
+| [task-4](./task-4.md) — `PdfUploadDao` (storage upload + function invoke) | 1 | @s1,@s4 | done | libs/services/src/dao/pdf-upload.dao.ts |
+| [task-5](./task-5.md) — `PdfExtractionService` (validate + orchestrate) | 1 | @s1,@s4 | done | libs/services/src/services/pdf-extraction.service.ts |
+| [task-6](./task-6.md) — `usePdfExtraction` hook | 1 | @s1,@s5 | done | libs/hooks/src/hooks/use-pdf-extraction.ts |
+| [task-7](./task-7.md) — `PdfUploadPanel` organism (Loading + Content) | 1 | @s5,@s6 | done | libs/components/src/organisms/pdf-upload-panel/ |
+| [task-8](./task-8.md) — `PdfUpload` wiring + upload screen + integration | 1 | @s1,@s4,@s5,@s6 | done | libs/study-buddy/src/components/pdf-upload/, apps/app-study-buddy/src/app/(app)/upload.tsx |
 | [task-9](./task-9.md) — Server error contract + scanned/page/corrupt detection | 2 | @s8,@s11,@s12,@s14 | todo | supabase/functions/extract-pdf/, libs/services/src/services/pdf-extraction.service.ts |
 | [task-10](./task-10.md) — Client pre-validation (type + size) | 2 | @s9,@s10 | todo | libs/services/src/services/pdf-extraction.service.ts |
 | [task-11](./task-11.md) — `PdfUploadPanel` Empty + Error + Retry states | 2 | @s7,@s8,@s9,@s10,@s11,@s12,@s13 | todo | libs/components/src/organisms/pdf-upload-panel/ |
