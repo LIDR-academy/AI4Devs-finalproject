@@ -11,6 +11,7 @@ import { FunctionsFetchError, FunctionsHttpError, FunctionsRelayError } from '@s
 
 import { trackPdfExtractionEvent } from '../analytics/pdf-extraction-analytics';
 import { PdfUploadDao } from '../dao/pdf-upload.dao';
+import { PDF_EXTRACTION_LIMITS } from './pdf-extraction.constants';
 import { PdfExtractionService } from './pdf-extraction.service';
 
 const dao = PdfUploadDao as jest.Mocked<typeof PdfUploadDao>;
@@ -180,13 +181,29 @@ describe('PdfExtractionService', () => {
 
     // @s10 — an over-size file is rejected before any DAO call.
     it('rejects with file_too_large and never calls the DAO for an over-size file', async () => {
-      const oversizeBytes = 10 * 1024 * 1024 + 1;
+      const oversizeBytes = PDF_EXTRACTION_LIMITS.maxSizeBytes + 1;
 
       await expect(
         PdfExtractionService.extract({ filename: 'notes.pdf', sizeBytes: oversizeBytes, bytes: new Uint8Array() }, 'user-1'),
       ).rejects.toMatchObject({ code: 'file_too_large' });
 
       expect(dao.uploadPdf).not.toHaveBeenCalled();
+    });
+
+    // Boundary (mutation-kill guard, review round-1 Part B #3) — the limit is an exclusive upper
+    // bound (spec.md's "exceeds the size limit" language): a file of exactly `maxSizeBytes` is
+    // still within the limit and must pass client pre-validation through to the DAO.
+    it('accepts a file exactly at the size limit and calls the DAO', async () => {
+      dao.uploadPdf.mockResolvedValue({} as never);
+      dao.insertDocument.mockResolvedValue({} as never);
+      dao.invokeExtraction.mockResolvedValue({} as never);
+
+      await PdfExtractionService.extract(
+        { filename: 'notes.pdf', sizeBytes: PDF_EXTRACTION_LIMITS.maxSizeBytes, bytes: new Uint8Array() },
+        'user-1',
+      );
+
+      expect(dao.uploadPdf).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -229,6 +246,12 @@ describe('PdfExtractionService', () => {
     });
 
     it('emits pdf_extraction_succeeded with document_id/page_count/image_count/duration_ms on success', async () => {
+      // Deterministic Date.now() sequence (mutation-kill guard, review round-1 Part B #2):
+      // `expect.any(Number)` alone proves the field exists but not its sign — this pins the
+      // `startedAt`/completion readings so `duration_ms` is provably `50`, catching a
+      // `Date.now() - startedAt` → `+` mutation without relying on real wall-clock timing (which
+      // could otherwise read 0ms on a fast run and pass by coincidence either way).
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValueOnce(1_000).mockReturnValueOnce(1_050);
       dao.uploadPdf.mockResolvedValue({} as never);
       dao.insertDocument.mockResolvedValue({} as never);
       dao.invokeExtraction.mockResolvedValue({ documentId: 'ignored', pageCount: 4, imageCount: 2, filename: 'x', pages: [], images: [] });
@@ -243,10 +266,11 @@ describe('PdfExtractionService', () => {
           document_id: documentId,
           page_count: 4,
           image_count: 2,
-          duration_ms: expect.any(Number),
+          duration_ms: 50,
         },
       });
-      expect(succeededCall?.[0].properties.duration_ms).toBeGreaterThanOrEqual(0);
+      expect(succeededCall?.[0].properties.duration_ms).toBeGreaterThan(0);
+      nowSpy.mockRestore();
     });
 
     it('emits pdf_extraction_failed with stage client for a client pre-validation rejection, and never emits pdf_upload_started', async () => {

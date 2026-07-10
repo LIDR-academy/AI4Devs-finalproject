@@ -26,20 +26,26 @@ export const generateDocumentId = (): string =>
     return value.toString(16);
   });
 
-/** The closed set of codes `PdfExtractionService` is contractually allowed to reject with. */
-const KNOWN_ERROR_CODES: ReadonlySet<PdfExtractionErrorCode> = new Set([
-  'unsupported_file_type',
-  'file_too_large',
-  'too_many_pages',
-  'scanned_or_image_only',
-  'corrupt_or_unreadable',
-  'extraction_failed',
-  'network_error',
-  'unauthenticated',
-]);
+/** The closed set of codes `PdfExtractionService` is contractually allowed to reject with — a
+ * full (not partial) `Record`, matching `pdf-upload.tsx`'s `UPLOAD_ERROR_KEYS` precedent, so
+ * TypeScript itself enforces exhaustiveness against the `PdfExtractionErrorCode` union (a future
+ * added code that's missed here fails to compile, rather than silently under-representing in an
+ * unchecked `Set` literal, review round-1 fix N1). Exported (via the `@helsoft/services` barrel)
+ * so `usePdfExtraction` derives its own runtime guard from this single source instead of
+ * independently re-declaring the same closed set. */
+export const PDF_EXTRACTION_ERROR_CODES: Record<PdfExtractionErrorCode, true> = {
+  unsupported_file_type: true,
+  file_too_large: true,
+  too_many_pages: true,
+  scanned_or_image_only: true,
+  corrupt_or_unreadable: true,
+  extraction_failed: true,
+  network_error: true,
+  unauthenticated: true,
+};
 
 const isKnownErrorCode = (code: unknown): code is PdfExtractionErrorCode =>
-  typeof code === 'string' && KNOWN_ERROR_CODES.has(code as PdfExtractionErrorCode);
+  typeof code === 'string' && Object.hasOwn(PDF_EXTRACTION_ERROR_CODES, code);
 
 /** Builds a sanitized failure the UI can safely branch on — no raw provider error escapes. */
 const toExtractionError = (code: PdfExtractionErrorCode): Error & PdfExtractionError =>

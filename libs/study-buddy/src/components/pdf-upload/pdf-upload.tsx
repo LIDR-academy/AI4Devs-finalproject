@@ -1,5 +1,5 @@
 import { PdfUploadPanel, type PdfUploadPanelState } from '@helsoft/components';
-import { usePdfExtraction } from '@helsoft/hooks';
+import { type PdfExtractionStage, usePdfExtraction } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import { PDF_EXTRACTION_LIMITS } from '@helsoft/services';
 import type { PdfExtractionErrorCode } from '@helsoft/types';
@@ -39,7 +39,10 @@ const readPickedFileBytes = async (asset: DocumentPicker.DocumentPickerAsset): P
   return new Uint8Array(buffer);
 };
 
-const stageToPanelState: Record<string, PdfUploadPanelState> = {
+/** A full (not partial) `Record`, matching `UPLOAD_ERROR_KEYS` below — TypeScript itself proves
+ * every `PdfExtractionStage` maps to a panel state, so the lookup at the call site can never miss
+ * (review round-1 fix N2, drops the previously-untestable `?? 'idle'` runtime fallback). */
+const stageToPanelState: Record<PdfExtractionStage, PdfUploadPanelState> = {
   idle: 'idle',
   processing: 'loading',
   success: 'content',
@@ -52,6 +55,13 @@ const stageToPanelState: Record<string, PdfUploadPanelState> = {
  * the same rejection; the panel's persistent "Choose a PDF" control is the real recovery action
  * for those (@s8-@s13, review round-1 fix). */
 const RETRYABLE_ERROR_CODES: ReadonlySet<PdfExtractionErrorCode> = new Set(['network_error', 'extraction_failed']);
+
+/** Whether the Error-state retry affordance should render — defaults to `true` when there's no
+ * error at all (idle/loading/content never surface it regardless, but the default still needs its
+ * own, directly testable name rather than only living inline in an unreachable-by-render ternary,
+ * review round-1 Part B #5). */
+export const computeCanRetry = (error: PdfExtractionErrorCode | null): boolean =>
+  error ? RETRYABLE_ERROR_CODES.has(error) : true;
 
 /**
  * PdfUpload — feature component wiring the document picker, `usePdfExtraction()`, and localized
@@ -74,14 +84,15 @@ export const PdfUpload = () => {
 
   return (
     <PdfUploadPanel
-      state={stageToPanelState[stage] ?? 'idle'}
+      state={stageToPanelState[stage]}
       onChooseFile={handleChooseFile}
       filename={result?.filename}
       pageCount={result?.pageCount}
       imageCount={result?.imageCount}
+      imageCountAnnouncement={result ? t('upload.imageCount', { count: result.imageCount }) : undefined}
       errorMessage={error ? t(UPLOAD_ERROR_KEYS[error]) : undefined}
       onRetry={retry}
-      canRetry={error ? RETRYABLE_ERROR_CODES.has(error) : true}
+      canRetry={computeCanRetry(error)}
       labels={{
         chooseFile: t('upload.chooseFile'),
         loading: t('upload.loading'),

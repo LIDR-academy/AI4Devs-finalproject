@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { generateDocumentId, PdfExtractionService, type PdfExtractionInput } from '@helsoft/services';
+import { generateDocumentId, PDF_EXTRACTION_ERROR_CODES, PdfExtractionService, type PdfExtractionInput } from '@helsoft/services';
 import type { PdfExtractionError, PdfExtractionErrorCode, PdfExtractionResult } from '@helsoft/types';
 
 import { useSession } from './use-session';
@@ -18,25 +18,16 @@ export type UsePdfExtractionResult = {
   retry: () => Promise<void>;
 };
 
-/** The closed set of codes `PdfExtractionService` is contractually allowed to reject with —
- * mirrors `useAuth`'s `AUTH_ERROR_CODES` precedent. */
-const PDF_EXTRACTION_ERROR_CODES: ReadonlySet<PdfExtractionErrorCode> = new Set([
-  'unsupported_file_type',
-  'file_too_large',
-  'too_many_pages',
-  'scanned_or_image_only',
-  'corrupt_or_unreadable',
-  'extraction_failed',
-  'network_error',
-  'unauthenticated',
-]);
-
 /** Narrow runtime guard: a rejected PdfExtractionService.extract cause is only trusted as a
  * PdfExtractionError when its `.code` is actually a member of the closed union — a violated
  * contract falls back to network_error rather than reading an untrusted value via an unchecked
- * cast (mirrors useAuth's isAuthErrorShape). */
-const isPdfExtractionErrorShape = (cause: unknown): cause is PdfExtractionError =>
-  PDF_EXTRACTION_ERROR_CODES.has((cause as { code?: unknown } | null)?.code as PdfExtractionErrorCode);
+ * cast (mirrors useAuth's isAuthErrorShape). Derives the closed set from
+ * `PdfExtractionService`'s own exported `PDF_EXTRACTION_ERROR_CODES` (review round-1 fix N1)
+ * rather than re-declaring an independent, unchecked duplicate. */
+const isPdfExtractionErrorShape = (cause: unknown): cause is PdfExtractionError => {
+  const code = (cause as { code?: unknown } | null)?.code;
+  return typeof code === 'string' && Object.hasOwn(PDF_EXTRACTION_ERROR_CODES, code);
+};
 
 type LastAttempt = {
   input: PdfExtractionInput;

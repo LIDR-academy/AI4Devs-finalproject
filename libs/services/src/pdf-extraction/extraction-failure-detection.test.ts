@@ -39,4 +39,15 @@ describe('detectExtractionFailure', () => {
 
     expect(detectExtractionFailure({ pages }, PDF_EXTRACTION_LIMITS, SCANNED_DETECTION_MIN_TEXT_LENGTH)).toBe('too_many_pages');
   });
+
+  // Precedence, boundary variant (mutation-kill guard, review round-1 Part B #7) — the case above
+  // uses a page count (25) far past the limit (20), so a `>` → `>=` mutation on the page-count
+  // guard wouldn't be caught by it alone. This pins the precedence at the tightest boundary that
+  // still violates both guards (one page over the limit, empty text), so a boundary mutation on
+  // either guard's comparison surfaces as a wrong result here.
+  it('reports too_many_pages before scanned_or_image_only at the exact page-count boundary', () => {
+    const pages = buildPages(PDF_EXTRACTION_LIMITS.maxPages + 1, '');
+
+    expect(detectExtractionFailure({ pages }, PDF_EXTRACTION_LIMITS, SCANNED_DETECTION_MIN_TEXT_LENGTH)).toBe('too_many_pages');
+  });
 });

@@ -1,6 +1,16 @@
 jest.mock('@helsoft/services', () => ({
   PdfExtractionService: { extract: jest.fn() },
   generateDocumentId: jest.fn(() => 'generated-document-id'),
+  PDF_EXTRACTION_ERROR_CODES: {
+    unsupported_file_type: true,
+    file_too_large: true,
+    too_many_pages: true,
+    scanned_or_image_only: true,
+    corrupt_or_unreadable: true,
+    extraction_failed: true,
+    network_error: true,
+    unauthenticated: true,
+  },
 }));
 jest.mock('./use-session', () => ({ useSession: jest.fn() }));
 

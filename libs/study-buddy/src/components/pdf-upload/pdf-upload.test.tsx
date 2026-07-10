@@ -10,12 +10,13 @@ jest.mock('expo-file-system', () => ({
 
 import { useLocalization } from '@helsoft/localization';
 import { usePdfExtraction } from '@helsoft/hooks';
+import { PDF_EXTRACTION_LIMITS } from '@helsoft/services';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';
 
 import { localizationValue } from '../../test-utils/auth-test-factories';
-import { PdfUpload } from './pdf-upload';
+import { computeCanRetry, PdfUpload } from './pdf-upload';
 
 const mockUsePdfExtraction = usePdfExtraction as jest.Mock;
 const mockUseLocalization = useLocalization as jest.Mock;
@@ -78,6 +79,27 @@ describe('PdfUpload', () => {
     expect(extract).toHaveBeenCalledWith({ filename: 'native.pdf', sizeBytes: 3, bytes: new Uint8Array(bytes) });
   });
 
+  // Mutation-kill guard (review round-1 Part B #4) — when the picked asset reports no usable
+  // `size` (null, as some pickers/platforms do), `sizeBytes` falls back to the actual read byte
+  // length rather than `??`'s left side degrading silently to `null` (which a `??` → `&&` mutation
+  // wouldn't have caught, since every other test's `asset.size` is already a non-zero number).
+  it('falls back to the read byte length when the picked asset reports no size', async () => {
+    const extract = jest.fn().mockResolvedValue(undefined);
+    mockUsePdfExtraction.mockReturnValue(extractionValue({ extract }));
+    const bytes = new Uint8Array([1, 2, 3, 4]).buffer;
+    mockGetDocumentAsync.mockResolvedValue({
+      canceled: false,
+      assets: [{ name: 'notes.pdf', size: null, uri: 'blob:notes', file: { arrayBuffer: () => Promise.resolve(bytes) } }],
+    });
+
+    await render(<PdfUpload />);
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'upload.chooseFile' }));
+    });
+
+    expect(extract).toHaveBeenCalledWith({ filename: 'notes.pdf', sizeBytes: 4, bytes: new Uint8Array(bytes) });
+  });
+
   // Canceling the picker must not call extract() at all.
   it('does not call extract when the picker is canceled', async () => {
     const extract = jest.fn();
@@ -119,6 +141,25 @@ describe('PdfUpload', () => {
     expect(screen.getByText('2')).toBeTruthy();
   });
 
+  // N5 (accessibility review round-1 fix) — the wiring layer computes the image-count row's
+  // pluralized announcement from `upload.imageCount` (task-13's `_one`/`_other` i18n keys) and
+  // passes it through to the panel, instead of leaving it unwired.
+  it('passes an imageCount announcement interpolated with the actual count once stage is success', async () => {
+    const t = jest.fn((key: string) => key);
+    mockUseLocalization.mockReturnValue(localizationValue({ t }));
+    mockUsePdfExtraction.mockReturnValue(
+      extractionValue({
+        stage: 'success',
+        result: { documentId: 'd1', filename: 'notes.pdf', pageCount: 4, imageCount: 2, pages: [], images: [] },
+      }),
+    );
+
+    await render(<PdfUpload />);
+
+    expect(t).toHaveBeenCalledWith('upload.imageCount', { count: 2 });
+    expect(screen.getByLabelText('upload.imageCount')).toBeTruthy();
+  });
+
   // @s7 — the Empty (idle) state shows the constraints hint.
   it('shows the constraints hint in the idle state', async () => {
     mockUsePdfExtraction.mockReturnValue(extractionValue({ stage: 'idle' }));
@@ -126,6 +167,24 @@ describe('PdfUpload', () => {
     await render(<PdfUpload />);
 
     expect(screen.getByText('upload.constraintsHint')).toBeTruthy();
+  });
+
+  // Mutation-kill guard (review round-1 Part B #6) — the default `t: (key) => key` mock ignores
+  // its interpolation argument entirely, so a `BYTES_PER_MB`/`maxSizeBytes / BYTES_PER_MB` mutant
+  // (e.g. `*` instead of `/`) would go unnoticed by the assertion above. A `t` spy that records
+  // its call args proves the actual interpolated `maxMb` value, not just that `t()` was invoked.
+  it('interpolates the exact maxMb/maxPages values into the constraints hint', async () => {
+    const t = jest.fn((key: string) => key);
+    mockUseLocalization.mockReturnValue(localizationValue({ t }));
+    mockUsePdfExtraction.mockReturnValue(extractionValue({ stage: 'idle' }));
+
+    await render(<PdfUpload />);
+
+    const expectedMaxMb = PDF_EXTRACTION_LIMITS.maxSizeBytes / (1024 * 1024);
+    expect(t).toHaveBeenCalledWith('upload.constraintsHint', {
+      maxMb: expectedMaxMb,
+      maxPages: PDF_EXTRACTION_LIMITS.maxPages,
+    });
   });
 
   // @s8-@s13 — once stage is 'error' with a transient code, the panel shows the mapped error
@@ -204,4 +263,23 @@ describe('PdfUpload', () => {
       expect(screen.getByRole('button', { name: 'upload.retryAction' })).toBeTruthy();
     },
   );
+
+  // Mutation-kill guard (review round-1 Part B #5) — `canRetry` defaults to `true` when there's
+  // no error at all (the idle/loading/content states, none of which render the retry affordance
+  // regardless of this value) — a `: true` → `: false` mutation on this default is otherwise
+  // unreachable through any rendered assertion, so it's unit-tested directly on the extracted
+  // `computeCanRetry` helper instead.
+  describe('computeCanRetry', () => {
+    it('defaults to true when there is no error', () => {
+      expect(computeCanRetry(null)).toBe(true);
+    });
+
+    it('is true for a retryable code', () => {
+      expect(computeCanRetry('network_error')).toBe(true);
+    });
+
+    it('is false for a non-retryable code', () => {
+      expect(computeCanRetry('file_too_large')).toBe(false);
+    });
+  });
 });
