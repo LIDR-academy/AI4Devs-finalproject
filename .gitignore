@@ -1,0 +1,10 @@
+app/**/node_modules
+.npm-cache
+app/**/dist
+app/**/.turbo
+app/**/.vite
+app/**/.env
+app/**/.env.local
+app/**/coverage
+app/**/playwright-report
+app/**/test-results

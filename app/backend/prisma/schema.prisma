@@ -1,0 +1,163 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id          String      @id @default(cuid())
+  ownerId     String      @default("local-dev-actor")
+  name        String
+  description String
+  complexity  Complexity  @default(MEDIUM)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  useCases    UseCase[]
+  estimations Estimation[]
+  members     ProjectMember[]
+
+  @@index([ownerId])
+}
+
+model UseCase {
+  id          String   @id @default(cuid())
+  projectId   String
+  title       String
+  description String
+  priority    Priority @default(MEDIUM)
+  createdAt   DateTime @default(now())
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model Estimation {
+  id          String          @id @default(cuid())
+  projectId   String
+  version     Int
+  totalHours  Float
+  totalCost   Float
+  assumptions String
+  risks       String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  project     Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  phases      Phase[]
+  tokens      TokenEstimate[]
+
+  @@index([projectId])
+  @@unique([projectId, version])
+}
+
+model Phase {
+  id           String         @id @default(cuid())
+  estimationId String
+  name         String
+  description  String
+  order        Int
+  estimation   Estimation     @relation(fields: [estimationId], references: [id], onDelete: Cascade)
+  roleEstimates RoleEstimate[]
+
+  @@index([estimationId])
+}
+
+model RoleEstimate {
+  id      String @id @default(cuid())
+  phaseId String
+  role    String
+  hours   Float
+  phase   Phase  @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+
+  @@index([phaseId])
+}
+
+model TokenEstimate {
+  id           String     @id @default(cuid())
+  estimationId String
+  model        String
+  tokens       Int
+  cost         Float
+  estimation   Estimation @relation(fields: [estimationId], references: [id], onDelete: Cascade)
+
+  @@index([estimationId])
+}
+
+model AgentRole {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AuthUser {
+  actorId        String   @id
+  displayName    String
+  role           UserRole @default(USER)
+  sessionVersion Int      @default(1)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Team {
+  id        String       @id @default(cuid())
+  name      String
+  createdBy String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  members   TeamMember[]
+
+  @@index([createdBy])
+}
+
+model TeamMember {
+  id          String   @id @default(cuid())
+  teamId       String
+  actorId      String
+  displayName  String
+  role         UserRole
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  team         Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, actorId])
+  @@index([actorId])
+  @@index([teamId])
+}
+
+model ProjectMember {
+  id        String   @id @default(cuid())
+  projectId String
+  actorId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, actorId])
+  @@index([actorId])
+  @@index([projectId])
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum Complexity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum UserRole {
+  SUPERADMIN
+  ADMIN
+  USER
+}
