@@ -41,7 +41,7 @@ test('selecting an incorrect option shows incorrect feedback and reveals the cor
 
   await canvas.getByText('Berlin', { exact: true }).click();
 
-  await expect(canvas.locator('text=Not quite')).toBeVisible();
+  await expect(canvas.getByText('Not quite — review the explanation below.', { exact: true })).toBeVisible();
   await expect(canvas.getByText('check_circle', { exact: true })).toBeVisible();
   await expect(canvas.getByText('cancel', { exact: true })).toBeVisible();
 });

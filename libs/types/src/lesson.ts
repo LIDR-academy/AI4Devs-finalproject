@@ -1,8 +1,5 @@
 export type SlideKind = 'instructional' | 'activity';
 
-/** Only 'multiple-choice' is defined so far; sibling activity types extend this union later. */
-export type ActivityType = 'multiple-choice' | 'fill-in-the-blank' | 'flashcard' | 'open-ended' | 'matching';
-
 type SlideBase = {
   id: string;
   lessonId: string;

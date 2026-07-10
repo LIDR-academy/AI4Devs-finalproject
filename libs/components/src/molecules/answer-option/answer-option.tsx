@@ -13,13 +13,28 @@ export type AnswerOptionProps = {
   onPress?: () => void;
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
+  /**
+   * Overrides the computed accessible name (default: `"{marker} {label}"`). Composers that add a
+   * feedback icon alongside the label (e.g. the `correct`/`incorrect` states) should pass this
+   * explicitly instead of relying on RN's default child-text concatenation — otherwise the icon's
+   * internal Material Symbols ligature name (e.g. "check_circle") leaks into the accessible name.
+   */
+  accessibilityLabel?: string;
 };
 
 /**
  * AnswerOption — a selectable quiz answer tile (the core activity-slide control).
  * Feedback loop: default → selected → correct/incorrect. Rust = correct, error-red = incorrect.
  */
-export const AnswerOption = ({ label, marker, state = 'default', onPress, disabled = false, style }: AnswerOptionProps) => {
+export const AnswerOption = ({
+  label,
+  marker,
+  state = 'default',
+  onPress,
+  disabled = false,
+  style,
+  accessibilityLabel,
+}: AnswerOptionProps) => {
   const { theme } = useUnistyles();
 
   // 'default' is unistyles' reserved fallback key, selected by passing undefined.
@@ -32,6 +47,7 @@ export const AnswerOption = ({ label, marker, state = 'default', onPress, disabl
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? `${marker} ${label}`}
       accessibilityState={{ disabled: locked, selected: state === 'selected' }}
       disabled={locked}
       onPress={onPress}

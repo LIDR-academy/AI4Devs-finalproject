@@ -24,6 +24,9 @@ export const MultipleChoiceActivity = ({ slide, onAnswered }: MultipleChoiceActi
   const labels: MultipleChoiceLabels = {
     correct: t('activity.mcq.correct'),
     incorrect: t('activity.mcq.incorrect'),
+    // `explanationHeading` deliberately maps to the `activity.mcq.explanation` key (not
+    // `.explanationHeading`) — the i18n key names the *concept* (the explanation), the prop
+    // names its *role* on `MultipleChoiceLabels` (the heading above the explanation body).
     explanationHeading: t('activity.mcq.explanation'),
     unavailable: t('activity.mcq.unavailable'),
   };

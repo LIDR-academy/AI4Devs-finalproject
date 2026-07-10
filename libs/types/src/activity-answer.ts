@@ -10,5 +10,3 @@ export type MultipleChoiceAnswer = {
   correctOptionId: string;
   isCorrect: boolean;
 };
-
-export type ActivityAnswer = MultipleChoiceAnswer; // union grows with sibling activity types

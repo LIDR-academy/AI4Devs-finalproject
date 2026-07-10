@@ -2,14 +2,38 @@ jest.mock('@helsoft/localization', () => ({
   useLocalization: jest.fn(),
 }));
 
+// Wraps the real MultipleChoice by default (every existing test below renders it for real); only
+// the re-selection-guard test further down swaps in a fake implementation for one render.
+jest.mock('@helsoft/components', () => {
+  const actual = jest.requireActual('@helsoft/components');
+  return { ...actual, MultipleChoice: jest.fn(actual.MultipleChoice) };
+});
+
 import type { MultipleChoiceSlide } from '@helsoft/types';
+import { MultipleChoice, MultipleChoiceProps } from '@helsoft/components';
 import { useLocalization } from '@helsoft/localization';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { Pressable, Text } from 'react-native';
 
 import { localizationValue } from '../../test-utils/auth-test-factories';
 import { MultipleChoiceActivity } from './multiple-choice-activity';
 
 const mockUseLocalization = useLocalization as jest.Mock;
+const mockMultipleChoice = MultipleChoice as jest.Mock;
+const actualMultipleChoice = jest.requireActual('@helsoft/components').MultipleChoice;
+
+// A fake MultipleChoice that never disables its options, regardless of `selectedOptionId` —
+// simulating a presentational component whose own locking doesn't block a second `onSelectOption`
+// call, so the wrapper's own re-selection guard is what's under test, in isolation.
+const AlwaysEnabledMultipleChoice = ({ options, onSelectOption }: MultipleChoiceProps) => (
+  <>
+    {options.map((option) => (
+      <Pressable key={option.id} accessibilityRole="button" onPress={() => onSelectOption(option.id)}>
+        <Text>{option.label}</Text>
+      </Pressable>
+    ))}
+  </>
+);
 
 const slide: MultipleChoiceSlide = {
   id: 'slide-1',
@@ -29,6 +53,7 @@ const slide: MultipleChoiceSlide = {
 describe('MultipleChoiceActivity', () => {
   beforeEach(() => {
     mockUseLocalization.mockReturnValue(localizationValue());
+    mockMultipleChoice.mockImplementation(actualMultipleChoice);
   });
 
   // @s2 — selecting an option sets the answer and locks every option (they become disabled).
@@ -54,6 +79,30 @@ describe('MultipleChoiceActivity', () => {
     });
     await act(async () => {
       fireEvent.press(screen.getAllByRole('button')[0]);
+    });
+
+    expect(onAnswered).toHaveBeenCalledTimes(1);
+    expect(onAnswered).toHaveBeenCalledWith(expect.objectContaining({ selectedOptionId: 'opt-b' }));
+  });
+
+  // Mutation-kill (Full-review Round 1 mutation survivor) — the test above never actually
+  // exercises `handleSelect`'s own `if (selectedOptionId) return` guard: the real MultipleChoice
+  // organism already disables every option once answered, so the second `fireEvent.press` in that
+  // test is blocked by RN's Pressable itself before `onSelectOption` is ever called again — a
+  // mutant that deletes the guard still passes that test. This test swaps in a fake MultipleChoice
+  // whose options are never disabled, so a second `onSelectOption` call really reaches
+  // `handleSelect`, proving the wrapper's own guard — not just the organism's UI locking — rejects
+  // the re-selection.
+  it('rejects a second onSelectOption call from the presentational component even when it is not itself locked', async () => {
+    mockMultipleChoice.mockImplementation(AlwaysEnabledMultipleChoice);
+    const onAnswered = jest.fn();
+    await render(<MultipleChoiceActivity slide={slide} onAnswered={onAnswered} />);
+
+    await act(async () => {
+      fireEvent.press(screen.getAllByRole('button')[1]); // opt-b
+    });
+    await act(async () => {
+      fireEvent.press(screen.getAllByRole('button')[0]); // attempted re-selection: opt-a
     });
 
     expect(onAnswered).toHaveBeenCalledTimes(1);

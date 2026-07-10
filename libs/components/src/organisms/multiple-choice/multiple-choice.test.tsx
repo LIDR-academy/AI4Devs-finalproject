@@ -1,5 +1,5 @@
 import { AccessibilityInfo } from 'react-native';
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 import { MultipleChoice, MultipleChoiceLabels, MultipleChoiceOptionView } from './multiple-choice';
 
@@ -226,12 +226,37 @@ describe('MultipleChoice', () => {
     expect(buttons[1]).toHaveAccessibleName('B Berlin');
   });
 
-  // @s11 — once answered, the result is announced to assistive technology: the banner exposes
-  // an alert role + an assertive live region (Android/Web) — matching LoginForm's error-banner
-  // precedent (login-form.tsx), since the result is important feedback the learner needs
-  // announced immediately, not queued behind other speech — and fires the imperative
-  // AccessibilityInfo.announceForAccessibility call for iOS parity (mirrors LoginForm's pattern).
-  it('announces the result via an alert role, an assertive live region, and AccessibilityInfo when answered', async () => {
+  // Full-review Round 1 (blocker) — once answered, the feedback icon's literal ligature name
+  // (`check_circle`/`cancel`) must not leak into an option's accessible name; correctness is
+  // conveyed via the name's wording instead (not just color/icon), matching @s11's accessible-
+  // label requirement in the answered state too.
+  it('conveys correctness through the accessible name, not the icon ligature, once answered', async () => {
+    await render(
+      <MultipleChoice
+        question="What is the capital of France?"
+        options={options}
+        correctOptionId="opt-a"
+        selectedOptionId="opt-b"
+        labels={labels}
+        onSelectOption={jest.fn()}
+      />,
+    );
+
+    const buttons = screen.getAllByRole('button');
+    expect(buttons[0]).toHaveAccessibleName(`A Paris, ${labels.correct}`);
+    expect(buttons[1]).toHaveAccessibleName(`B Berlin, ${labels.incorrect}`);
+    buttons.forEach((button) => {
+      expect(button).not.toHaveAccessibleName(/check_circle|cancel/);
+    });
+  });
+
+  // @s11 — once answered correctly, the result is announced to assistive technology via a
+  // *polite* live region (Android/Web): WAI-ARIA reserves assertive/`alert` for time-critical,
+  // typically negative information that must interrupt current speech — a "Correct!" confirmation
+  // is the majority, non-urgent, positive case, so it should not interrupt (full-review Round 1,
+  // major finding). The imperative AccessibilityInfo.announceForAccessibility call still fires for
+  // iOS parity (mirrors LoginForm's pattern), guaranteeing delivery regardless of politeness level.
+  it('announces a correct result via a polite live region and AccessibilityInfo, without an alert role', async () => {
     const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
     announceSpy.mockClear();
 
@@ -247,9 +272,35 @@ describe('MultipleChoice', () => {
     );
 
     const banner = screen.getByText(labels.correct);
+    expect(banner.props.accessibilityLiveRegion).toBe('polite');
+    expect(banner.parent?.props.accessibilityRole).toBeUndefined();
+    expect(announceSpy).toHaveBeenCalledWith(labels.correct);
+
+    announceSpy.mockRestore();
+  });
+
+  // @s11 — once answered incorrectly, the result keeps the more urgent alert role + assertive
+  // live region: unlike the correct case, a wrong-answer result reveals new, unexpected
+  // information (the correct option, elsewhere on screen) the learner didn't already know.
+  it('announces an incorrect result via an alert role and an assertive live region', async () => {
+    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    await render(
+      <MultipleChoice
+        question="What is the capital of France?"
+        options={options}
+        correctOptionId="opt-a"
+        selectedOptionId="opt-b"
+        labels={labels}
+        onSelectOption={jest.fn()}
+      />,
+    );
+
+    const banner = screen.getByText(labels.incorrect);
     expect(banner.props.accessibilityLiveRegion).toBe('assertive');
     expect(banner.parent?.props.accessibilityRole).toBe('alert');
-    expect(announceSpy).toHaveBeenCalledWith(labels.correct);
+    expect(announceSpy).toHaveBeenCalledWith(labels.incorrect);
 
     announceSpy.mockRestore();
   });
@@ -270,6 +321,46 @@ describe('MultipleChoice', () => {
     );
 
     expect(announceSpy).not.toHaveBeenCalled();
+
+    announceSpy.mockRestore();
+  });
+
+  // Mutation-kill (Full-review Round 1 mutation survivor) — pins the announce effect's dependency
+  // array: an `[isUnavailable, answered, resultLabel]` → `[]` mutant would only run the effect
+  // once, on the initial (unanswered) mount, and never again — so the real-world transition this
+  // organism is controlled to support (a parent re-rendering it with a freshly-set
+  // `selectedOptionId` once the learner answers, mirroring `MultipleChoiceActivity`) would never
+  // be announced. Matches `login-form.test.tsx`'s identical `errorMessage` dependency-array guard.
+  it('announces the result when a re-render transitions from unanswered to answered, not just on mount', async () => {
+    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    const { rerender } = await render(
+      <MultipleChoice
+        question="What is the capital of France?"
+        options={options}
+        correctOptionId="opt-a"
+        labels={labels}
+        onSelectOption={jest.fn()}
+      />,
+    );
+    expect(announceSpy).not.toHaveBeenCalled();
+
+    await act(async () => {
+      rerender(
+        <MultipleChoice
+          question="What is the capital of France?"
+          options={options}
+          correctOptionId="opt-a"
+          selectedOptionId="opt-a"
+          labels={labels}
+          onSelectOption={jest.fn()}
+        />,
+      );
+    });
+
+    await waitFor(() => expect(announceSpy).toHaveBeenCalledWith(labels.correct));
+    expect(announceSpy).toHaveBeenCalledTimes(1);
 
     announceSpy.mockRestore();
   });

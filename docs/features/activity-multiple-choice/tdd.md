@@ -318,3 +318,155 @@ All 7 tasks (Slices 1–3) are now `done`. `@s1`–`@s11` all map to ≥ 1 passi
 `@s` → test map tables above). Per-slice review (code + design) for Slice 3 is pending —
 `reviews_lead` runs it next; the full 6-reviewer + mutation round follows once all slices clear
 their per-slice gates.
+
+## Full-review Round 1 — fix pass (post all-slices)
+
+All slices closed clean (Slice 1/2/3 per-slice reviews above). The full 6-reviewer + mutation
+Round 1 (`review.md`, `mutation.md`) came back `CHANGES_REQUESTED` with 1 blocker + 1 major + 4
+minor findings, plus 2 mutation survivors flagging real logic gaps (14 other survivors were
+justified equivalent-styling mutants, not fixed). One consolidated TDD pass below, each item
+RED → GREEN → REFACTOR where a code change was warranted, re-running tests after each.
+
+### 1 — Blocker: feedback-icon ligature leaking into the option's accessible name
+
+- RED: `answer-option/answer-option.test.tsx` (new file — `AnswerOption` had no co-located unit
+  test before this fix; introducing new prop behavior demands one per Law 1) — "lets an explicit
+  accessibilityLabel override the default computed name" (`state="correct"`,
+  `accessibilityLabel="A Paris, Correct!"`). Failed: `AnswerOptionProps` had no such prop yet;
+  received accessible name was `"A Paris check_circle"` — reproducing the finding exactly.
+- GREEN: added optional `accessibilityLabel` to `AnswerOptionProps`; `AnswerOption`'s `Pressable`
+  now sets `accessibilityLabel={accessibilityLabel ?? \`${marker} ${label}\`}` — always explicit,
+  so RN's default child-text concatenation (which is what pulled the icon's ligature text in) is
+  never reached, override or not.
+- RED (composed level): `multiple-choice.test.tsx` — "conveys correctness through the accessible
+  name, not the icon ligature, once answered" (`selectedOptionId="opt-b"`, `correctOptionId="opt-a"`).
+  Failed: buttons still had their bare default name (no override wired from the organism yet).
+- GREEN: added `optionAccessibilityLabel()` in `multiple-choice.tsx` — `undefined` while
+  default/selected (falls back to `AnswerOption`'s own default), `` `${marker} ${label}, ${labels.correct}` ``
+  for the `correct` tile and the incorrect-labels equivalent for the `incorrect` tile — reusing the
+  *already-localized* `labels.correct`/`labels.incorrect` copy (no new hardcoded a11y strings) so
+  correctness is conveyed through real words, not the icon's internal font-ligature identifier.
+- Re-ran `pnpm --filter @helsoft/components test` — green throughout (existing unanswered-state
+  `toHaveAccessibleName('A Paris')` assertions unaffected, since the default fallback reproduces
+  the same string).
+
+### 2 — Major: uniform assertive/alert on both correct and incorrect result banners
+
+- RED: rewrote the correct-case announcement test to expect `accessibilityLiveRegion="polite"` and
+  `accessibilityRole` `undefined` on the banner (was `assertive`/`alert`); added a new sibling test
+  for the incorrect case asserting `assertive`/`alert` is *kept* there. Failed on the correct-case
+  assertion (`Expected: "polite", Received: "assertive"`) — the incorrect-case test passed
+  immediately since production code was already uniformly assertive (confirms the finding).
+- GREEN: `multiple-choice.tsx` — `accessibilityRole={isCorrect ? undefined : 'alert'}`,
+  `accessibilityLiveRegion={isCorrect ? 'polite' : 'assertive'}`. Reasoning (independent a11y
+  judgment, matching the reviewer's own): a "Correct!" banner is the majority, non-urgent,
+  confirmatory case — WAI-ARIA reserves assertive/`alert` for time-critical/negative information
+  that must interrupt current speech; an incorrect result additionally reveals new information (the
+  correct option elsewhere on screen) the learner didn't already know, which still warrants the
+  more urgent treatment.
+- Re-ran `pnpm --filter @helsoft/components test` — green.
+
+### 6 — Minor: possible duplicate Android TalkBack announcement (judgment call: kept both, documented)
+
+No test/code-behavior change — a **judgment call to keep the existing dual mechanism**, backed by
+concrete evidence rather than the original hedged "possible duplicate" comment: React Native's own
+`accessibilityLiveRegion` prop doc (`ViewAccessibility.js`) states it "Works for Android API >= 19
+only" (`@platform android`) — it is a documented no-op on iOS, so the imperative
+`AccessibilityInfo.announceForAccessibility` call is the *only* mechanism that reaches iOS
+VoiceOver; it cannot double up with the live region there. On Android/Web this exact
+dual-mechanism pattern already ships, unconditionally, in this same codebase's `LoginForm`
+(`login-form.tsx`'s `isSubmitting`/`errorMessage` effects — both fire their imperative announce
+*and* carry a live-region prop, with no `Platform.OS` branch) with no reported double-speak issue.
+Rather than introduce a one-off `Platform.OS === 'ios'` branch for this single component
+(inconsistent with the sibling precedent, and unproven to fix anything not already present
+elsewhere), the comment above `multiple-choice.tsx`'s `useEffect` was rewritten to state this
+reasoning explicitly and resolve the "possible" hedge. Re-ran `pnpm --filter @helsoft/components
+test` — green (comment-only change).
+
+### 7 — Mutation survivor: `useEffect` dependency array `[isUnavailable, answered, resultLabel]`
+
+- RED: added "announces the result when a re-render transitions from unanswered to answered, not
+  just on mount" to `multiple-choice.test.tsx` — mounts unanswered, asserts no announcement, then
+  `rerender()`s the *same instance* with `selectedOptionId` newly set (the real-world transition
+  `MultipleChoiceActivity` drives), asserting the announcement fires exactly once. Mirrors
+  `login-form.test.tsx`'s identical `errorMessage` dependency-array guard test.
+- Verified the test actually kills the target mutant before trusting it (a test that passes on
+  first run proves nothing): temporarily replaced the dependency array with `[]` — the new test
+  failed (`Number of calls: 0`, expected the announcement after rerender) while every other test
+  stayed green, confirming the previous survivor and this fix; reverted immediately after.
+- No production change was needed beyond the test — the dependency array was already correct; the
+  gap was purely a missing test exercising the mount→answered transition (all prior tests only
+  ever mounted pre-answered). Re-ran `pnpm --filter @helsoft/components test` — green (84 tests).
+
+### 3 — Minor: dead `ActivityType`/`ActivityAnswer` scaffolding
+
+Confirmed via repo-wide grep that neither identifier was referenced anywhere except its own
+declaration (`MultipleChoiceSlide.activityType` and `MultipleChoiceAnswer.activityType` both use
+the literal `'multiple-choice'`, not the type alias). Chose **delete** over "narrow and wire in"
+(the reviewer's other option) — no code demands either today, and per TDD Law 1/YAGNI a future
+sibling-activity-type story is the right place to reintroduce the union, once real code needs it.
+Removed `ActivityType` from `libs/types/src/lesson.ts` and the `ActivityAnswer` alias from
+`libs/types/src/activity-answer.ts`. No test change needed (nothing tested them); re-ran `pnpm
+--filter @helsoft/types --filter @helsoft/study-buddy --filter @helsoft/components check-types` —
+green, confirming nothing else in the monorepo referenced either identifier.
+
+### 4 — Minor: inconsistent Playwright locator style
+
+`multiple-choice.e2e.js` — replaced `canvas.locator('text=Not quite')` with
+`canvas.getByText('Not quite — review the explanation below.', { exact: true })`, matching the
+file's own established convention everywhere else and pinning the full banner copy (from
+`multiple-choice.stories.tsx`'s `labels.incorrect`) instead of a loose substring. Re-ran `pnpm
+--filter @helsoft/components exec playwright test --reporter=list` — 31/31 green.
+
+### 5 — Minor: undocumented i18n-key/field-name mapping
+
+`multiple-choice-activity.tsx` — added an inline comment above
+`explanationHeading: t('activity.mcq.explanation')` explaining the intentional mapping (the i18n
+key names the concept — the explanation; the prop names its role — the heading above the
+explanation body) so a future "consistency" rename doesn't silently break it. Comment-only change;
+re-ran `pnpm --filter @helsoft/study-buddy test` — green.
+
+### 8 — Mutation survivor: re-selection lock guard (`if (selectedOptionId) return`)
+
+- Root cause: the existing "ignores a second selection…" test's second `fireEvent.press` never
+  actually reaches `handleSelect` a second time — the real `MultipleChoice` organism already
+  disables every option once answered (`disabled={answered}`), and RN Testing Library's
+  `fireEvent.press` itself checks the Pressable's current disabled state before invoking `onPress`
+  (`@testing-library/react-native`'s `isEventEnabled`), so the guard removal mutant was never
+  exercised.
+- RED: added "rejects a second onSelectOption call from the presentational component even when it
+  is not itself locked" to `multiple-choice-activity.test.tsx` — mocked `@helsoft/components`
+  (`jest.mock` wrapping the real module, `MultipleChoice: jest.fn(actual.MultipleChoice)`, default
+  implementation preserved for every other test) and swapped in a fake `MultipleChoice` whose
+  options are never disabled, so a second press genuinely reaches `onSelectOption` a second time —
+  isolating `MultipleChoiceActivity`'s own defense-in-depth guard from the organism's UI locking.
+  This test passed immediately against the real (correct) `handleSelect` — verified it actually
+  kills the mutant by temporarily changing the guard to `if (false) return`: only this new test
+  failed (`Received number of calls: 2`), while the original "ignores a second selection" test
+  stayed green against the same mutant, confirming the survivor and the fix; reverted immediately
+  after.
+- No production change needed — the guard was already correct; the gap was purely a test blind
+  spot. Re-ran `pnpm --filter @helsoft/study-buddy test` — green (35 tests, up from 34).
+
+## Gate checks (full-review Round 1 fix pass)
+
+- `pnpm --filter @helsoft/types --filter @helsoft/study-buddy --filter @helsoft/components
+  check-types` — green.
+- `pnpm check-types` (full monorepo, 8 packages) — green.
+- `pnpm --filter @helsoft/components --filter @helsoft/study-buddy test` — green (`components`:
+  84/84 across 7 suites, up from 78/6 — new `answer-option.test.tsx` suite added; `study-buddy`:
+  35/35 across 5 suites, up from 34).
+- `pnpm test` (full monorepo) — green.
+- `pnpm lint` (full monorepo via turbo) — green (same pre-existing repo state noted in Slices 1–3:
+  only `app-study-buddy` defines a `lint` script).
+- `pnpm --filter @helsoft/components exec playwright test --reporter=list` — 31/31 green.
+- No hardcoded strings/colors/dimensions introduced: the new accessible-name wording reuses
+  `labels.correct`/`labels.incorrect` (already localized copy); no new styling/tokens touched.
+- No `console.log`/debug leftovers, no TODOs. Two mutants (items 7 and 8) were deliberately,
+  temporarily reintroduced to verify each new test actually kills them, then reverted before the
+  final gate run — neither is part of the committed diff.
+
+Findings 1, 2, 3, 4, 5, 7, 8 resolved via test-driven code/test changes; finding 6 resolved via a
+documented judgment call (no behavior change — both existing mechanisms are load-bearing on
+different platforms). `review.md`/`review-*.md`/`mutation.md` are reviewer-owned and left
+untouched for `reviews_lead`/`mutation_tester` to re-run Round 2 against this fix pass.
