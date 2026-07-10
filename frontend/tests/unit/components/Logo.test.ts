@@ -13,7 +13,7 @@ describe('Logo', () => {
 
   it('muestra el wordmark "Realista" en variant "full"', () => {
     const { container } = render(Logo, { props: { variant: 'full' } });
-    const wordmark = container.querySelector('span');
+    const wordmark = container.querySelector('span.wordmark');
     expect(wordmark?.textContent?.trim()).toBe('Realista');
   });
 

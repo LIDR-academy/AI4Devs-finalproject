@@ -1,5 +1,7 @@
-// Vitest setup file — provides browser globals (localStorage, window, document)
-// even when running in node. Lightweight polyfill, no full jsdom needed.
+// Vitest setup.
+// happy-dom (configured in vitest.config.ts) provides window and document,
+// but not localStorage. This minimal shim fills the gap for tests that
+// touch localStorage at module-import time (e.g. session store tests).
 
 const storage = new Map<string, string>();
 
@@ -27,8 +29,7 @@ const localStoragePolyfill = {
 (globalThis as unknown as { localStorage: typeof localStoragePolyfill }).localStorage =
   localStoragePolyfill;
 
-if (typeof (globalThis as unknown as { window?: unknown }).window === 'undefined') {
-  (globalThis as unknown as { window: Record<string, unknown> }).window = {
-    localStorage: localStoragePolyfill,
-  };
+if (typeof (globalThis as unknown as { window?: unknown }).window !== 'undefined') {
+  (globalThis as unknown as { window: { localStorage: typeof localStoragePolyfill } }).window.localStorage =
+    localStoragePolyfill;
 }
