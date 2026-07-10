@@ -883,3 +883,198 @@ introduced). This is the **last slice** — the `@s → test` map above, combine
 maps earlier in this file, covers `@s1`–`@s17` in full. Stopping here for the light
 `reviewer_code`/`reviewer_design` slice review, per protocol — not self-reviewing. Once that's
 clean, the feature moves to the full 6-reviewer round + mutation testing (not started here).
+
+---
+
+# Round-1 fix — full review + mutation findings
+
+`implementator` fix cycle for `review.md`'s round-1 consolidated change request (9 findings: 3
+major, 6 minor) plus the real (non-equivalent) mutation-testing gaps from `mutation.md`. Every item
+below is a genuine RED→GREEN→(REFACTOR) cycle, not narration — `review.md`/`review-*.md`/
+`mutation.md` themselves are untouched (out of scope for `implementator`; re-run separately by
+`reviews_lead`/`mutation_tester`).
+
+## Part A — review findings
+
+**M1 — [security] no server-side file-size enforcement.**
+- **RED**: `libs/services/src/pdf-extraction/file-size-guard.test.ts` (new file) — imports
+  `isFileTooLarge` from a module that didn't exist yet (`Cannot find module`).
+- **GREEN**: `libs/services/src/pdf-extraction/file-size-guard.ts` (new) — `isFileTooLarge(sizeBytes,
+  limits) => sizeBytes > limits.maxSizeBytes`, mirroring `too_many_pages`'s short-circuit pattern.
+  4 tests: well-under-limit (false), well-over-limit (true), and the two exact-boundary cases
+  (Part B #3): `maxSizeBytes` itself → false (exclusive upper bound), `maxSizeBytes + 1` → true.
+- Mirrored into `supabase/functions/extract-pdf/_shared/file-size-guard.ts` (Deno, untested here
+  per the task-3/R4 testing boundary) and wired into `index.ts`: right after the source blob
+  downloads, `isFileTooLarge(sourceBlob.size, PDF_EXTRACTION_LIMITS)` short-circuits to
+  `file_too_large` (422, `markDocumentFailed`) **before** `sourceBlob.arrayBuffer()` is even read —
+  cheaper than the pre-existing guards, which only run after a full parse.
+
+**M2 — [performance] each embedded image decoded+encoded twice.**
+- **RED**: rewrote `mupdf-extraction-adapter.test.ts`'s two image-assertion tests to expect
+  `image.pixmap` (a real, callable `Pixmap`) instead of `image.bytes`/`image.mimeType` — failed
+  with `TypeError: Cannot read properties of undefined (reading 'getWidth')` (the field didn't
+  exist yet). Rewrote `image-downscale.test.ts` to build a real decoded `Pixmap` via
+  `new mupdf.Image(png).toPixmap()` and pass `{ pixmap, width, height }` (no `bytes`/`mimeType`
+  input) — failed with `TypeError: expected buffer` (the old code still tried to decode
+  `input.bytes`, now `undefined`).
+- **GREEN**: `pdf-extraction-adapter.ts`'s `ExtractedImage` now carries `pixmap: Mupdf.Pixmap`
+  instead of `bytes`/`mimeType` (the one deliberate, documented exception to this file's
+  library-swap-isolation goal). `mupdf-extraction-adapter.ts`'s `extractPageImages` pushes the
+  already-decoded `pixmap` straight onto the result instead of `pixmap.asPNG()`.
+  `image-downscale.ts`'s `downscaleImage` takes that pixmap directly — the `new mupdf.Image(bytes)
+  .toPixmap()` re-decode line is gone entirely, along with the now-unnecessary dynamic `import
+  ('mupdf')` inside the function. Net: 1 decode (adapter) + 1 final encode (downscale) per image,
+  not 2 of each. Mirrored into both `_shared/pdf-extraction-adapter.ts` and
+  `_shared/image-downscale.ts` (Deno).
+- Also tightened per Part B #9 (see below) while in these files.
+
+**M3 — [performance] `page.toStructuredText()` built twice per page.**
+- Folded into the same M2 RED/GREEN cycle above (same files, same commit-worthy change):
+  `MupdfExtractionAdapter.extract()`'s per-page loop now computes `structuredText` once and passes
+  it into `extractPageImages(structuredText, pageNumber)`, which no longer calls
+  `page.toStructuredText()` itself. Mirrored into `_shared/mupdf-extraction-adapter.ts`.
+
+**N1 — [code] duplicated, unchecked error-code `Set` literals.**
+- **GREEN** (no test changes needed beyond the existing suites, which already exercise every
+  code): `pdf-extraction.service.ts`'s `KNOWN_ERROR_CODES` is now an exported
+  `PDF_EXTRACTION_ERROR_CODES: Record<PdfExtractionErrorCode, true>` (exhaustive by construction,
+  matching `UPLOAD_ERROR_KEYS`'s precedent) instead of a private `Set`. `use-pdf-extraction.ts`
+  derives its own guard from that single exported source instead of re-declaring an independent
+  `Set` — `use-pdf-extraction.test.ts`'s `jest.mock('@helsoft/services', …)` updated to export the
+  same shape. `pnpm --filter @helsoft/hooks test` re-run green (31/31) to confirm the mock change
+  didn't regress anything.
+
+**N2 — [code] `stageToPanelState` loosely typed, untestable fallback.**
+- **GREEN**: `pdf-upload.tsx`'s `stageToPanelState` retyped `Record<PdfExtractionStage,
+  PdfUploadPanelState>` (imported from `@helsoft/hooks`); the call site drops `?? 'idle'` — now
+  provably exhaustive, `tsc` proves every stage is covered. `pdf-upload.test.tsx`'s 30 existing
+  tests (all 4 stages) re-run green with no changes needed to the tests themselves.
+
+**N3 — [code] hardcoded `10 * 1024 * 1024 + 1` in a test.**
+- **GREEN**: `pdf-extraction.service.test.ts`'s over-size test now derives
+  `PDF_EXTRACTION_LIMITS.maxSizeBytes + 1`, importing the constant — mirrors
+  `extraction-failure-detection.test.ts`'s existing correct pattern.
+
+**N4 — [performance] sequential per-image storage uploads.**
+- **GREEN** (Edge Function, untested here per R4): `index.ts`'s upload loop replaced with
+  `Promise.all(downscaledImages.map(async ({ rawImage, downscaled }) => {…}))`, returning each
+  image row; the single batch `document_images` insert still runs only after every upload
+  resolves (ordering/no-partial-persistence guarantee unchanged).
+
+**N5 — [accessibility] content summary not grouped for assistive tech.**
+- **RED**: `pdf-upload-panel.test.tsx` — 3 new tests (`getByLabelText('File: notes.pdf')`,
+  `getByLabelText('Pages: 12')`, `getByLabelText('3 images extracted')` /
+  `getByLabelText('Images: 3')` fallback) — failed, no such accessible label existed yet.
+- **GREEN**: each summary row (`pdf-upload-panel.tsx`) is now `accessible` with a composed
+  `accessibilityLabel` — filename/pageCount rows compose `"{label}: {value}"` inline; the
+  image-count row uses a new `imageCountAnnouncement?: string` prop when given, falling back to
+  the same composed form otherwise. Wired at the call site: `pdf-upload.tsx` now computes
+  `t('upload.imageCount', { count: result.imageCount })` — the task-13 `imageCount_one`/`_other`
+  i18n keys, built for exactly this and left unwired until now — and passes it through. New
+  `pdf-upload.test.tsx` test confirms the wiring (`t` spy called with `{ count: 2 }`, rendered
+  label matches).
+
+**N6 — [accessibility] `Button` has no visible keyboard-focus indicator.**
+- **RED**: `use-interaction-state.test.ts` — two new tests reading `result.current.focus` /
+  calling `result.current.handlers.onFocus()` — failed to compile (`Property 'focus' does not
+  exist`). `button.test.tsx` — two new tests asserting the `StateLayer`'s opacity style is `0`
+  before focus and `> 0` after `fireEvent(button, 'focus')` — failed (`getByTestId` found nothing,
+  no test ID existed on `StateLayer`).
+- **GREEN**: `useInteractionState` gained a `focus` boolean + `onFocus`/`onBlur` handlers
+  (additive — existing `hover`/`press`/`handlers` shape unchanged). `StateLayer` gained an optional
+  `testID` prop (additive, forwarded to its `View`). `Button` destructures `focus`, spreads
+  `handlers` (already includes `onFocus`/`onBlur`) onto its `Pressable` as before, and its
+  `stateOpacity` `useMemo` now checks `press > focus > hover` precedence, reading
+  `theme.stateLayerOpacity.focus` (already defined, previously unread).
+- One real bug found mid-cycle: `fireEvent(...)` from `@testing-library/react-native` is `async`
+  and must be `await`ed inside `act(async () => {…})` for the resulting `setFocus` state update to
+  flush before the assertion — the existing `login-form.test.tsx` precedent
+  (`await act(async () => { fireEvent.changeText(...) })`) confirmed the pattern; without it the
+  test passed *only because the assertion silently no-op'd* (a "test that passes on the first run
+  proves nothing" case, caught by re-deriving the intent, not by tightening after the fact).
+- Regression check (N6 explicitly requires this — shared, pre-existing atom): `pnpm --filter
+  @helsoft/components test` (94/94, including `login-form.test.tsx`), `pnpm --filter
+  @helsoft/components exec playwright test --reporter=list` (34/34, including
+  `login-form.e2e.js`) — both green, confirming the additive change doesn't regress the already-
+  shipped `login-form.tsx` consumer.
+
+## Part B — mutation gaps closed
+
+1. **`pdf-upload-panel.tsx` absence assertions** — `pdf-upload-panel.test.tsx`: `it.each(['loading',
+   'content', 'error'])('does not show the constraints hint in the %s state', …)` and
+   `it.each(['idle', 'loading', 'error'])('does not show the content summary in the %s state', …)`
+   — both kill the `state === 'x' ? … : true ? … : null`-shaped conditional-always-true mutants
+   reported in `mutation.md`.
+2. **`duration_ms` sign** — `pdf-extraction.service.test.ts`'s success-analytics test now mocks
+   `Date.now()` with two fixed sequential values (`1_000`/`1_050`) and asserts `duration_ms` is
+   exactly `50` (not just `expect.any(Number)`) — deterministic, kills the `Date.now() - startedAt`
+   → `+` mutant without relying on real (possibly-0ms) wall-clock timing.
+3. **File-size boundary, both sides** — covered above: client pre-check in
+   `pdf-extraction.service.test.ts` ("accepts a file exactly at the size limit…") and server-side
+   in `file-size-guard.test.ts` (both exact-`maxSizeBytes` and `+1` cases).
+4. **`asset.size` null fallback** — `pdf-upload.test.tsx`: new test picks an asset with `size:
+   null`, asserts `extract()` is called with `sizeBytes` equal to the read `bytes.byteLength` —
+   kills the `??` → `&&` mutant.
+5. **`canRetry` idle default** — extracted `computeCanRetry(error): boolean` out of the inline
+   ternary in `pdf-upload.tsx` (a small, directly-named refactor — the default is otherwise
+   unreachable through any rendered assertion, since the idle/loading/content states never render
+   the retry affordance regardless of the value) and unit-tested it directly:
+   `computeCanRetry(null) === true`, plus the retryable/non-retryable cases.
+6. **`maxMb` interpolation value** — `pdf-upload.test.tsx`: new test swaps in a `t: jest.fn((key) =>
+   key)` spy (the shared `localizationValue()` factory's default `t` ignores its second argument
+   entirely) and asserts `t` was called with `{ maxMb: 10, maxPages: 20 }` (derived from
+   `PDF_EXTRACTION_LIMITS`, not hardcoded) — kills the `/` → `*` mutant on the `maxMb` calculation.
+7. **`extraction-failure-detection` precedence, boundary variant** — added a second precedence test
+   at the tightest boundary that still violates both guards (`maxPages + 1` pages, empty text) —
+   the existing precedence test used 25 pages (far past the 20 limit), which wouldn't catch a
+   `>` → `>=` mutation on the page-count guard; the boundary variant does.
+8. **`test-utils/` fixture-builder survivors** — confirmed via `grep -rln` that
+   `build-solid-png.ts`/`build-test-pdf.ts` are imported **only** from `*.test.ts` files, nowhere in
+   shipped production code — genuine test fixtures, not mutation-testable logic. Excluded from
+   scope with a one-line documented justification in both `.agents/skills/mutation-testing/scripts/
+   run-mutation.sh` (the `git diff`-based file filter) and `libs/services/stryker.config.mjs`'s
+   default `mutate` glob (`!src/**/test-utils/**`), rather than left as unexplained survivors.
+9. **`mupdf-extraction-adapter.ts`/`image-downscale.ts` remaining survivors** — closed naturally as
+   part of the M2/M3 refactor (the old re-decode/re-encode code paths those mutants lived in no
+   longer exist) plus tightened assertions: the adapter test now asserts `image.pixmap.getWidth()`/
+   `getHeight()` match the recorded `width`/`height` fields (proving the handed-through pixmap is
+   internally consistent, not just present); the downscale tests now decode the *returned* bytes
+   back into a real pixmap and assert its actual dimensions for both the oversized-opaque and
+   alpha-channel cases (verifying the real re-encoded image, not just the metadata object), and the
+   "does not upscale" case now also asserts `mimeType: 'image/jpeg'`.
+
+## Full-workspace re-run (post-fix)
+
+- `pnpm --filter @helsoft/services test` — 12/12 suites, 84/84 tests green (+1 suite:
+  `file-size-guard.test.ts`; +6 tests net across the touched files).
+- `pnpm --filter @helsoft/hooks test` — 6/6 suites, 31/31 tests green (+2:
+  `use-interaction-state.test.ts`'s focus tests).
+- `pnpm --filter @helsoft/components test` — 6/6 suites, 94/94 tests green (+11 across
+  `pdf-upload-panel.test.tsx`/`button.test.tsx`), including the pre-existing `login-form.test.tsx`
+  (N6 regression check).
+- `pnpm --filter @helsoft/study-buddy test` — 4/4 suites, 55/55 tests green (+6 across
+  `pdf-upload.test.tsx`).
+- `pnpm --filter @helsoft/localization test` — 9/9 suites, 94/94 tests green (unchanged — confirms
+  the `upload.imageCount_*` keys were already locale-complete before this fix).
+- `pnpm --filter @helsoft/components exec playwright test --reporter=list` — 34/34 (all e2e specs,
+  not just `pdf-upload-panel`) green, including `login-form.e2e.js` (N6 regression check). Run
+  against a throwaway alternate-port Storybook instance for this worktree (port 6007 was held by
+  an unrelated concurrent worktree's dev server — same reconciliation as Slice 3's gate);
+  `libs/components/playwright.config.js` confirmed reverted to its committed (port 6007) state
+  afterward (`git diff` empty for that file).
+- `pnpm check-types` (whole repo, turbo) — 8/8 packages clean.
+- `pnpm lint` (whole repo, turbo) — clean.
+
+**Not re-run / out of scope, by design (unchanged from the full review's own "known, locked
+decisions" list):** `deno test`/`deno check` (no Deno CLI, task-3/R4 testing-boundary note — the
+`_shared/` mirror edits for M1–M3/N4 are code-only, faithfulness-checked by hand against their
+Jest-tested twins, same as every prior mirror edit this feature has made); `supabase db push`/
+`functions deploy`/`test:rls` (no schema/RLS changes this round).
+
+## Stop condition (round-1 fix)
+
+Every Part A finding (3 major, 6 minor) and every Part B mutation gap flagged as a real test gap
+(not already justified as equivalent/acceptable in `mutation.md`) has a genuine failing-test-first
+fix above. `review.md`/`review-*.md`/`mutation.md` are unchanged — re-run separately by
+`reviews_lead`/`mutation_tester` for round 2 of the (reduced) 2-round cap. Feature status/phase
+left untouched — that's `orchestrator_lead`'s call, not `implementator`'s.
