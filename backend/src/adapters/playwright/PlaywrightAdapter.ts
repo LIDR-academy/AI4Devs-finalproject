@@ -11,7 +11,7 @@ import { URL } from 'url';
 import { PortalBlockedError } from '../../domain/errors/DomainError';
 import { isAllowedPortal } from '../../infrastructure/utils/urlValidator';
 import type { ListingFetchPort } from '../../domain/ports/ListingFetchPort';
-import type { ParsedListingHtml } from '../cheerio/CheerioAdapter';
+import type { ParsedListingHtml } from '../../domain/value-objects/ParsedListingHtml';
 import { BrowserPool } from './BrowserPool';
 
 export interface PlaywrightAdapterOptions {

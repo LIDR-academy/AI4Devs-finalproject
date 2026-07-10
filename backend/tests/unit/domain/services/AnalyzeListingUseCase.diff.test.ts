@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AnalyzeListingUseCase } from '../../../../src/domain/services/AnalyzeListingUseCase';
-import type { CheerioAdapter, ParsedListingHtml } from '../../../../src/adapters/cheerio/CheerioAdapter';
+import type { CheerioAdapter } from '../../../../src/adapters/cheerio/CheerioAdapter';
+import type { ParsedListingHtml } from '../../../../src/domain/value-objects/ParsedListingHtml';
 import type { ListingAnalyzerPort } from '../../../../src/domain/ports/ListingAnalyzerPort';
 import type { LocationResolverPort } from '../../../../src/domain/ports/LocationResolverPort';
 import type { CatastroPort } from '../../../../src/domain/ports/CatastroPort';

@@ -9,20 +9,9 @@ import { env } from '../../infrastructure/config/env';
 import { BROWSER_HEADERS, isAllowedPortal } from '../../infrastructure/utils/urlValidator';
 import { PortalBlockedError } from '../../domain/errors/DomainError';
 import type { ListingFetchPort } from '../../domain/ports/ListingFetchPort';
+import type { ParsedListingHtml } from '../../domain/value-objects/ParsedListingHtml';
 
-export interface ParsedListingHtml {
-  url: string;
-  html: string;
-  text: string;
-  declaredAddress?: string;
-  declaredNeighbourhood?: string;
-  declaredCity?: string;
-  price?: number;
-  squareMeters?: number;
-  rooms?: number;
-  yearBuilt?: number;
-  energyCertificate?: string;
-}
+export type { ParsedListingHtml };
 
 interface PortalHealthRecord {
   domain: string;

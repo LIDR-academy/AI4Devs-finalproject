@@ -8,7 +8,7 @@
  * domain/ports/), NOT on Prisma. The Prisma implementation lives in
  * infrastructure/repositories/.
  */
-import type { ParsedListingHtml } from '../../adapters/cheerio/CheerioAdapter';
+import type { ParsedListingHtml } from '../value-objects/ParsedListingHtml';
 import type { ListingFetchPort } from '../ports/ListingFetchPort';
 import type { ListingAnalyzerPort } from '../ports/ListingAnalyzerPort';
 import type { LocationResolverPort } from '../ports/LocationResolverPort';

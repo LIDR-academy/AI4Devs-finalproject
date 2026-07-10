@@ -6,7 +6,7 @@
  */
 import { PortalBlockedError } from '../../domain/errors/DomainError';
 import type { ListingFetchPort } from '../../domain/ports/ListingFetchPort';
-import type { ParsedListingHtml } from '../cheerio/CheerioAdapter';
+import type { ParsedListingHtml } from '../../domain/value-objects/ParsedListingHtml';
 
 export class ChainedFetchAdapter implements ListingFetchPort {
   constructor(private readonly chain: ListingFetchPort[]) {}
