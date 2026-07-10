@@ -5,10 +5,11 @@ import * as mupdf from 'npm:mupdf@1.28.0';
 import { IMAGE_DOWNSCALE_TARGET } from './pdf-extraction.constants.ts';
 
 export type DownscaleImageInput = {
-  bytes: Uint8Array;
+  // The already-decoded pixmap (M2, performance review round-1 fix) — handed straight through
+  // from MupdfExtractionAdapter, never re-serialized to/from bytes in between.
+  pixmap: mupdf.Pixmap;
   width: number;
   height: number;
-  mimeType: string;
 };
 
 export type DownscaleImageOutput = {
@@ -44,13 +45,12 @@ export const downscaleImage = async (input: DownscaleImageInput): Promise<Downsc
     return null;
   }
 
-  const sourcePixmap = new mupdf.Image(input.bytes).toPixmap();
-  const hasAlpha = sourcePixmap.getAlpha() === 1;
+  const hasAlpha = input.pixmap.getAlpha() === 1;
 
   const scale = computeScale(input.width, input.height);
   const targetWidth = Math.round(input.width * scale);
   const targetHeight = Math.round(input.height * scale);
-  const pixmap = scale === 1 ? sourcePixmap : resizePixmap(sourcePixmap, targetWidth, targetHeight);
+  const pixmap = scale === 1 ? input.pixmap : resizePixmap(input.pixmap, targetWidth, targetHeight);
 
   return hasAlpha
     ? { bytes: pixmap.asPNG(), width: targetWidth, height: targetHeight, mimeType: PNG_MIME_TYPE }

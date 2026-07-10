@@ -15,6 +15,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 
 import { buildPdfExtractionResult } from './_shared/extraction-dto.ts';
 import { detectExtractionFailure } from './_shared/extraction-failure-detection.ts';
+import { isFileTooLarge } from './_shared/file-size-guard.ts';
 import { downscaleImage } from './_shared/image-downscale.ts';
 import { MupdfExtractionAdapter } from './_shared/mupdf-extraction-adapter.ts';
 import {
@@ -85,6 +86,16 @@ Deno.serve(async (req) => {
     if (downloadError || !sourceBlob) {
       throw new Error('source PDF not found');
     }
+
+    // Server-authoritative size guard (M1, security review round-1 fix) — the client pre-check
+    // (`pdf-extraction.service.ts`'s `validateFile`) is a UX fast-path only; a caller bypassing it
+    // entirely must still be rejected here, on the actual downloaded object's own size, before any
+    // parse/image work runs (no `.arrayBuffer()` read needed for the oversized case at all).
+    if (isFileTooLarge(sourceBlob.size, PDF_EXTRACTION_LIMITS)) {
+      await markDocumentFailed(supabase, documentId, 'file_too_large');
+      return jsonResponse({ errorCode: 'file_too_large' }, 422);
+    }
+
     const sourceBytes = new Uint8Array(await sourceBlob.arrayBuffer());
 
     // Parse/open failure (damaged, encrypted, or otherwise unparseable, @s12) is its own,
@@ -118,30 +129,32 @@ Deno.serve(async (req) => {
       downscaledImages.push({ rawImage, downscaled });
     }
 
-    // Only once every image is successfully downscaled do we touch storage/DB: upload each
-    // object, then persist every document_images row in a single batch insert (rather than one
-    // insert per image) so a failure partway through image N's upload never leaves rows 0..N-1
-    // as orphaned, partially-committed DB state.
-    const imageRows = [];
-    for (const { rawImage, downscaled } of downscaledImages) {
-      const extension = EXTENSION_BY_MIME_TYPE[downscaled.mimeType] ?? 'jpg';
-      const storagePath = `${user.id}/${documentId}/p${rawImage.page}-${rawImage.positionIndex}.${extension}`;
+    // Only once every image is successfully downscaled do we touch storage/DB: upload every
+    // object concurrently (N4, performance review round-1 fix — the independent per-image
+    // uploads don't need to run serialized against each other), then persist every
+    // document_images row in a single batch insert (rather than one insert per image) so a
+    // failure in any upload never leaves some rows committed and others missing.
+    const imageRows = await Promise.all(
+      downscaledImages.map(async ({ rawImage, downscaled }) => {
+        const extension = EXTENSION_BY_MIME_TYPE[downscaled.mimeType] ?? 'jpg';
+        const storagePath = `${user.id}/${documentId}/p${rawImage.page}-${rawImage.positionIndex}.${extension}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from(PDF_IMAGES_BUCKET)
-        .upload(storagePath, downscaled.bytes, { contentType: downscaled.mimeType, upsert: true });
-      if (uploadError) throw uploadError;
+        const { error: uploadError } = await supabase.storage
+          .from(PDF_IMAGES_BUCKET)
+          .upload(storagePath, downscaled.bytes, { contentType: downscaled.mimeType, upsert: true });
+        if (uploadError) throw uploadError;
 
-      imageRows.push({
-        document_id: documentId,
-        page_number: rawImage.page,
-        position_index: rawImage.positionIndex,
-        storage_path: storagePath,
-        width: downscaled.width,
-        height: downscaled.height,
-        mime_type: downscaled.mimeType,
-      });
-    }
+        return {
+          document_id: documentId,
+          page_number: rawImage.page,
+          position_index: rawImage.positionIndex,
+          storage_path: storagePath,
+          width: downscaled.width,
+          height: downscaled.height,
+          mime_type: downscaled.mimeType,
+        };
+      }),
+    );
 
     const imageRefs: ExtractedImageRef[] = [];
     if (imageRows.length > 0) {

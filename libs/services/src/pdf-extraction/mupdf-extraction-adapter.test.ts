@@ -25,7 +25,10 @@ describe('MupdfExtractionAdapter', () => {
   });
 
   // @s2/@s3 — an embedded image is extracted and associated with the exact page it came from;
-  // its reported dimensions are the source image's own pixel size (not the drawn box).
+  // its reported dimensions are the source image's own pixel size (not the drawn box). The image
+  // carries the already-decoded `Pixmap` directly (M2, performance review round-1 fix) rather than
+  // re-serialized PNG bytes, so its own reported dimensions must agree with the extracted
+  // width/height fields.
   it('associates an extracted image with the page it came from and its native pixel size', async () => {
     const bytes = await buildTestPdf([
       { text: 'Text only page' },
@@ -34,9 +37,11 @@ describe('MupdfExtractionAdapter', () => {
 
     const result = await MupdfExtractionAdapter.extract(bytes);
 
-    expect(result.images).toEqual([
-      { page: 2, positionIndex: 0, bytes: expect.any(Uint8Array), width: 4, height: 4, mimeType: 'image/png' },
-    ]);
+    expect(result.images).toHaveLength(1);
+    const [image] = result.images;
+    expect(image).toMatchObject({ page: 2, positionIndex: 0, width: 4, height: 4 });
+    expect(image.pixmap.getWidth()).toBe(4);
+    expect(image.pixmap.getHeight()).toBe(4);
   });
 
   // @s2/@s3 — two images on the same page get increasing positionIndex values in draw order,
@@ -54,10 +59,12 @@ describe('MupdfExtractionAdapter', () => {
 
     const result = await MupdfExtractionAdapter.extract(bytes);
 
-    expect(result.images).toEqual([
-      { page: 1, positionIndex: 0, bytes: expect.any(Uint8Array), width: 4, height: 4, mimeType: 'image/png' },
-      { page: 1, positionIndex: 1, bytes: expect.any(Uint8Array), width: 8, height: 6, mimeType: 'image/png' },
+    expect(result.images).toHaveLength(2);
+    expect(result.images.map((image) => ({ page: image.page, positionIndex: image.positionIndex, width: image.width, height: image.height }))).toEqual([
+      { page: 1, positionIndex: 0, width: 4, height: 4 },
+      { page: 1, positionIndex: 1, width: 8, height: 6 },
     ]);
+    expect(result.images.map((image) => image.pixmap.getWidth())).toEqual([4, 8]);
   });
 
   // @s12 (Slice 2, task-9) — a damaged/unparseable byte buffer fails to open. The orchestration

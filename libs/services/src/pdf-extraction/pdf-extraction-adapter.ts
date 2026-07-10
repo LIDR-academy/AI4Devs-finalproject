@@ -1,8 +1,14 @@
+import type * as Mupdf from 'mupdf';
+
 /**
  * The seam that isolates the PDF-parsing library (mupdf-wasm, spec decision #2) from every
  * consumer (the extract-pdf Edge Function orchestration, and — mirrored — its Deno copy).
  * Consumers depend on this interface only, so the library stays swappable (risk R1's documented
  * fallback is `unpdf`) without reworking the orchestration, downscale, or DTO-shaping modules.
+ * `ExtractedImage.pixmap`'s concrete `Mupdf.Pixmap` type is the one deliberate exception to that
+ * isolation (M2, performance review round-1 fix) — passing the already-decoded pixmap straight
+ * into `image-downscale.ts` avoids a redundant decode+encode round-trip through serialized PNG
+ * bytes; swapping the parsing library would need to update this one field's type too.
  */
 
 /** One page's plain-text content, in document order (page numbers are 1-based). */
@@ -17,10 +23,11 @@ export type ExtractedImage = {
   page: number;
   /** Order of appearance within the page (0-based) — carries @s2/@s3's "position it came from". */
   positionIndex: number;
-  bytes: Uint8Array;
+  /** The already-decoded pixmap (M2 fix) — handed directly to `downscaleImage`, never
+   * re-serialized to/from bytes in between. */
+  pixmap: Mupdf.Pixmap;
   width: number;
   height: number;
-  mimeType: string;
 };
 
 export type PdfExtractionAdapterResult = {

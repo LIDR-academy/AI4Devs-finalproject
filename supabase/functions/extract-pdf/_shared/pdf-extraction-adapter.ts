@@ -1,18 +1,22 @@
 // Mirrors libs/services/src/pdf-extraction/pdf-extraction-adapter.ts — kept manually in sync
-// (task-3 note). Plain types only; no Deno-specific globals.
+// (task-3 note).
+import * as mupdf from 'npm:mupdf@1.28.0';
 
 export type ExtractedPageText = {
   page: number;
   text: string;
 };
 
+// `pixmap`'s concrete `mupdf.Pixmap` type is a deliberate exception to this file's usual
+// "plain types only" rule (M2, performance review round-1 fix) — the already-decoded pixmap is
+// handed straight through to `image-downscale.ts`, avoiding a redundant decode+encode round-trip
+// through serialized PNG bytes.
 export type ExtractedImage = {
   page: number;
   positionIndex: number;
-  bytes: Uint8Array;
+  pixmap: mupdf.Pixmap;
   width: number;
   height: number;
-  mimeType: string;
 };
 
 export type PdfExtractionAdapterResult = {
