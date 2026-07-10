@@ -1617,8 +1617,31 @@ finish_game → if (authenticated && online) → UploadFinishedGameUseCase
 
 > Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
 
-**Pull Request 1**
+### Pull Request 1 — Entrega 1: Documentación técnica
 
-**Pull Request 2**
+**URL:** <https://github.com/juanmigrau/AI4Devs-finalproject/pull/1>
 
-**Pull Request 3**
+**Estado:** Mergeada a `main`
+
+**Descripción:** Documentación técnica completa del proyecto: README con
+arquitectura, modelo de datos, especificación de API Firebase, historias
+de usuario y tickets de trabajo. Incluye PRD, reglas e índices Firestore,
+configuración del proyecto Firebase y decisiones de arquitectura (Clean
+Architecture + BLoC).
+
+**Rama:** `finalproject-entrega1-JMGS` → `main`
+
+---
+
+### Pull Request 2 — Entrega 2: Implementación Flutter
+
+**URL:** <https://github.com/juanmigrau/AI4Devs-finalproject/pull/2>
+
+**Descripción:** Implementación completa del MVP: 13 tickets (LPT-5 a
+LPT-24), flujo E2E funcional en dispositivo Android (Xiaomi Mi A1),
+138+ tests pasando y flutter analyze limpio. Incluye wireframes generados
+con Figma Make, sistema de diseño en docs/design.md, decisiones ADR
+documentadas (Drift vs Hive, setup vs lobby), instrucciones de instalación
+y prompts.md completo de Entrega 2.
+
+**Rama:** `feature-entrega2-JMGS` → `main`
