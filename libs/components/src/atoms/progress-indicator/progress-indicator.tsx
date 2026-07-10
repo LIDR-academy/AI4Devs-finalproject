@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { Animated, Easing, StyleProp, View, ViewStyle } from 'react-native';
+import { Animated, Easing, Platform, StyleProp, View, ViewStyle } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 export type ProgressIndicatorVariant = 'linear' | 'circular';
@@ -69,7 +69,8 @@ export const ProgressIndicator = ({
         duration: variant === 'circular' ? 1400 : 1600,
         easing: Easing.linear,
         // Linear indeterminate animates `left` (layout prop) — no native driver.
-        useNativeDriver: variant === 'circular',
+        // Web doesn't have native animated module, so only use native driver on iOS/Android.
+        useNativeDriver: Platform.OS !== 'web' && variant === 'circular',
       }),
     );
     loop.start();
