@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { MultipleChoice, MultipleChoiceLabels } from '@helsoft/components';
+import { useLocalization } from '@helsoft/localization';
 import type { MultipleChoiceAnswer, MultipleChoiceSlide } from '@helsoft/types';
 
 import { gradeMultipleChoice } from '../../grading/grade-multiple-choice';
@@ -9,14 +10,6 @@ export type MultipleChoiceActivityProps = {
   onAnswered?: (answer: MultipleChoiceAnswer) => void;
 };
 
-// Placeholder chrome copy — task-6 replaces this with @helsoft/localization's t('activity.mcq.*').
-const LABELS: MultipleChoiceLabels = {
-  correct: 'Correct!',
-  incorrect: 'Not quite.',
-  explanationHeading: 'Why',
-  unavailable: 'This activity is unavailable.',
-};
-
 /**
  * MultipleChoiceActivity — feature wiring for a multiple-choice activity slide. Owns the
  * local selection state, grades the first selection, and reports it up via `onAnswered`
@@ -24,6 +17,16 @@ const LABELS: MultipleChoiceLabels = {
  */
 export const MultipleChoiceActivity = ({ slide, onAnswered }: MultipleChoiceActivityProps) => {
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
+  const { t } = useLocalization();
+
+  // Only the UI chrome is localized (@s10) — question/option/explanation text is AI-generated
+  // slide content, not translated (see spec.md's i18n Open decision).
+  const labels: MultipleChoiceLabels = {
+    correct: t('activity.mcq.correct'),
+    incorrect: t('activity.mcq.incorrect'),
+    explanationHeading: t('activity.mcq.explanation'),
+    unavailable: t('activity.mcq.unavailable'),
+  };
 
   const handleSelect = (optionId: string) => {
     if (selectedOptionId) return; // locked — no re-selection (@s6)
@@ -38,7 +41,7 @@ export const MultipleChoiceActivity = ({ slide, onAnswered }: MultipleChoiceActi
       correctOptionId={slide.correctOptionId}
       selectedOptionId={selectedOptionId}
       explanation={slide.explanation}
-      labels={LABELS}
+      labels={labels}
       onSelectOption={handleSelect}
     />
   );

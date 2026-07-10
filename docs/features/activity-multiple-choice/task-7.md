@@ -3,7 +3,7 @@ id: task-7
 title: Accessibility pass + Playwright e2e for the MultipleChoice organism
 slice: 3
 scenarios: [s11]
-status: todo
+status: done
 paths:
   - libs/components/src/organisms/multiple-choice/multiple-choice.tsx
   - libs/components/src/organisms/multiple-choice/multiple-choice.test.tsx
@@ -19,11 +19,11 @@ Harden accessibility and add an end-to-end interaction check. Ensure options exp
 - Touch targets ≥ 44pt (AnswerOption padding already satisfies; verify).
 
 ## Done criteria
-- [ ] @s11 — component test asserts roles/labels, non-color-only feedback (icon + result text present), and the result announcement on answer
-- [ ] Playwright e2e (`multiple-choice.e2e.js`) drives select → correct feedback and select → incorrect + reveal, over the stories; located under `libs/components/tests/e2e/` mirroring `src/` (per the `storybook-e2e-tests` skill), not co-located
-- [ ] Color contrast ≥ 4.5:1 and target sizes verified against existing tokens (no new tokens)
-- [ ] `pnpm lint` + `pnpm check-types` + `pnpm test` + relevant `test:e2e` green
-- [ ] No hardcoded strings/colors/dimensions
+- [x] @s11 — component test asserts roles/labels, non-color-only feedback (icon + result text present), and the result announcement on answer
+- [x] Playwright e2e (`multiple-choice.e2e.js`) drives select → correct feedback and select → incorrect + reveal, over the stories; located under `libs/components/tests/e2e/` mirroring `src/` (per the `storybook-e2e-tests` skill), not co-located
+- [x] Color contrast ≥ 4.5:1 and target sizes verified against existing tokens (no new tokens)
+- [x] `pnpm lint` + `pnpm check-types` + `pnpm test` + relevant `test:e2e` green
+- [x] No hardcoded strings/colors/dimensions
 
 ## Notes
 - The live-region announcement uses the localized result label from task-6.

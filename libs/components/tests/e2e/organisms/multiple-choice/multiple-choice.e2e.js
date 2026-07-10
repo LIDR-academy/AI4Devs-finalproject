@@ -1,0 +1,47 @@
+const { test, expect } = require('@playwright/test');
+
+// Title 'Organisms/MultipleChoice' → slug 'organisms-multiplechoice'.
+const story = (name) => `/?path=/story/organisms-multiplechoice--${name}`;
+
+test('Unanswered story loads', async ({ page }) => {
+  await page.goto(story('unanswered'));
+
+  const iframe = page.locator('iframe[title="storybook-preview-iframe"]');
+  await expect(iframe).toBeVisible();
+  expect(page.url()).toContain('organisms-multiplechoice--unanswered');
+});
+
+test('Unanswered story renders every option with no result banner', async ({ page }) => {
+  await page.goto(story('unanswered'));
+  const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
+
+  await expect(canvas.getByText('Paris', { exact: true })).toBeVisible();
+  await expect(canvas.getByText('Berlin', { exact: true })).toBeVisible();
+  await expect(canvas.getByText('Madrid', { exact: true })).toBeVisible();
+  await expect(canvas.getByText('Correct!', { exact: true })).toHaveCount(0);
+});
+
+// The Unanswered/AnsweredCorrect/AnsweredIncorrect stories' onSelectOption is a no-op stub
+// (MultipleChoice is a controlled organism), so clicking there never transitions state — the
+// Interactive story wires real useState and is what these two tests drive.
+test('selecting the correct option shows the correct feedback', async ({ page }) => {
+  await page.goto(story('interactive'));
+  const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
+
+  await canvas.getByText('Paris', { exact: true }).click();
+
+  await expect(canvas.getByText('Correct!', { exact: true })).toBeVisible();
+  // Feedback icon (Material Symbols ligature) — correctness is not color-only.
+  await expect(canvas.getByText('check_circle', { exact: true })).toBeVisible();
+});
+
+test('selecting an incorrect option shows incorrect feedback and reveals the correct option', async ({ page }) => {
+  await page.goto(story('interactive'));
+  const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
+
+  await canvas.getByText('Berlin', { exact: true }).click();
+
+  await expect(canvas.locator('text=Not quite')).toBeVisible();
+  await expect(canvas.getByText('check_circle', { exact: true })).toBeVisible();
+  await expect(canvas.getByText('cancel', { exact: true })).toBeVisible();
+});

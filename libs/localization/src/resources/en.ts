@@ -68,6 +68,14 @@ export const en = {
         a11yLabel: 'Choose a language',
       },
     },
+    activity: {
+      mcq: {
+        correct: 'Correct',
+        incorrect: 'Incorrect',
+        explanation: 'Explanation',
+        unavailable: 'This question is unavailable',
+      },
+    },
   },
 };
 

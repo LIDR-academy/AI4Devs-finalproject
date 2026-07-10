@@ -1,3 +1,4 @@
+import { AccessibilityInfo } from 'react-native';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { MultipleChoice, MultipleChoiceLabels, MultipleChoiceOptionView } from './multiple-choice';
@@ -205,5 +206,71 @@ describe('MultipleChoice', () => {
     expect(screen.getByText(labels.unavailable)).toBeTruthy();
     expect(screen.queryByText('What is the capital of France?')).toBeNull();
     expect(screen.queryAllByRole('button')).toHaveLength(0);
+  });
+
+  // @s11 — every option exposes a button role and an accessible label combining its marker and
+  // option text (not just a bare `<Text>`), so assistive tech announces what each option is.
+  it('exposes a button role and an accessible label for every option', async () => {
+    await render(
+      <MultipleChoice
+        question="What is the capital of France?"
+        options={options}
+        correctOptionId="opt-a"
+        labels={labels}
+        onSelectOption={jest.fn()}
+      />,
+    );
+
+    const buttons = screen.getAllByRole('button');
+    expect(buttons[0]).toHaveAccessibleName('A Paris');
+    expect(buttons[1]).toHaveAccessibleName('B Berlin');
+  });
+
+  // @s11 — once answered, the result is announced to assistive technology: the banner exposes
+  // an alert role + an assertive live region (Android/Web) — matching LoginForm's error-banner
+  // precedent (login-form.tsx), since the result is important feedback the learner needs
+  // announced immediately, not queued behind other speech — and fires the imperative
+  // AccessibilityInfo.announceForAccessibility call for iOS parity (mirrors LoginForm's pattern).
+  it('announces the result via an alert role, an assertive live region, and AccessibilityInfo when answered', async () => {
+    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    await render(
+      <MultipleChoice
+        question="What is the capital of France?"
+        options={options}
+        correctOptionId="opt-a"
+        selectedOptionId="opt-a"
+        labels={labels}
+        onSelectOption={jest.fn()}
+      />,
+    );
+
+    const banner = screen.getByText(labels.correct);
+    expect(banner.props.accessibilityLiveRegion).toBe('assertive');
+    expect(banner.parent?.props.accessibilityRole).toBe('alert');
+    expect(announceSpy).toHaveBeenCalledWith(labels.correct);
+
+    announceSpy.mockRestore();
+  });
+
+  // @s11 — no announcement fires while unanswered (nothing to announce yet).
+  it('does not announce anything to assistive technology while unanswered', async () => {
+    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    await render(
+      <MultipleChoice
+        question="What is the capital of France?"
+        options={options}
+        correctOptionId="opt-a"
+        labels={labels}
+        onSelectOption={jest.fn()}
+      />,
+    );
+
+    expect(announceSpy).not.toHaveBeenCalled();
+
+    announceSpy.mockRestore();
   });
 });

@@ -1,8 +1,8 @@
 # TDD log — activity-multiple-choice
 
 Strict Red→Green→Refactor, one `@s` scenario at a time, per `.agents/rules/tdd.md`. This log
-covers **Slice 1** (happy path: tasks 1–4, `@s1,@s2,@s3,@s4,@s5,@s6,@s7`) and **Slice 2**
-(graceful degradation: task-5, `@s8,@s9`). `@s10`–`@s11` are Slice 3 and out of scope for this run.
+covers **Slice 1** (happy path: tasks 1–4, `@s1,@s2,@s3,@s4,@s5,@s6,@s7`), **Slice 2**
+(graceful degradation: task-5, `@s8,@s9`), and **Slice 3** (i18n + a11y: tasks 6–7, `@s10,@s11`).
 
 ## Build order
 
@@ -167,3 +167,154 @@ readability). Pure refactor, no behavior change. Re-ran `pnpm --filter @helsoft/
 @helsoft/components check-types` (green); also re-ran `pnpm --filter @helsoft/study-buddy test`
 (31/31 green) to confirm no cross-package regression. Amended into commit `9a060fa` (message
 unchanged: `feat(activity-multiple-choice): add error handling and empty state`).
+
+## `@s` → test map (Slice 3)
+
+| Scenario | Test(s) |
+|---|---|
+| @s10 | `multiple-choice-activity.test.tsx`: "labels the correct-answer banner from useLocalization()"; "labels the incorrect-answer banner and the explanation heading from useLocalization()"; "labels the unavailable notice from useLocalization()" — `migration-coverage.test.ts`: "every dotted key literal in multiple-choice-activity.tsx resolves in the en bundle" (real en/es/pt/de bundles, compiler-enforced key alignment) |
+| @s11 | `multiple-choice.test.tsx`: "exposes a button role and an accessible label for every option"; "announces the result via an alert role, a live region, and AccessibilityInfo when answered"; "does not announce anything to assistive technology while unanswered" — `multiple-choice.e2e.js` (Playwright, Storybook `Interactive` story): "selecting the correct option shows the correct feedback"; "selecting an incorrect option shows incorrect feedback and reveals the correct option" |
+
+## Cycles (Slice 3)
+
+### task-6 — i18n `activity.mcq.*` (en/es/pt/de) + wire `t()` in the wrapper
+
+**Cycle 16 (@s10 — wrapper sources labels via `t()`)**
+- RED: added `jest.mock('@helsoft/localization', …)` + `localizationValue()` (reused from
+  `test-utils/auth-test-factories.ts`, the same factory `sign-in-form.test.tsx` uses) to
+  `multiple-choice-activity.test.tsx`, then "labels the correct-answer banner from
+  useLocalization()" — selects the correct option and asserts `screen.getByText('activity.mcq.correct')`.
+  Failed: the wrapper still built `labels` from the Slice-1 placeholder `LABELS` object
+  (`'Correct!'`), so the key string never rendered. Also had to add
+  `mockUseLocalization.mockReturnValue(localizationValue())` to the file's `beforeEach` so the
+  three pre-existing Slice-1/2 tests (which don't care about localization) keep passing once the
+  component unconditionally calls `useLocalization()`.
+- GREEN: imported `useLocalization` from `@helsoft/localization` in `multiple-choice-activity.tsx`;
+  replaced the placeholder `LABELS` constant with a `labels` object built from
+  `t('activity.mcq.correct')` / `t('activity.mcq.incorrect')` / `t('activity.mcq.explanation')` /
+  `t('activity.mcq.unavailable')` (the `explanationHeading` field maps to the `activity.mcq.explanation`
+  key per task-6's spec'd key list — the object key and the i18n key intentionally differ).
+- Two more tests added and **passed immediately** (documented, not driving new code — same
+  generalization pattern as Slice-1 Cycle 2/7): "labels the incorrect-answer banner and the
+  explanation heading from useLocalization()" (selects the wrong option, with an explanation) and
+  "labels the unavailable notice from useLocalization()" (`options: []`) — both already covered by
+  the single `labels` object built in the GREEN step above.
+- REFACTOR: none needed — the `labels` object is already the minimal, revealing shape.
+
+**Cycle 17 (@s10 — real-bundle key-existence guard)**
+- RED: added `MULTIPLE_CHOICE_ACTIVITY_DIR` (pointing at
+  `libs/study-buddy/src/components/multiple-choice-activity`) to
+  `libs/localization/src/coverage/migration-coverage.test.ts`'s per-component guard array
+  (renamed `AUTH_COMPONENT_DIRS` → `KEY_EXISTENCE_DIRS` since it now covers a non-auth component
+  too — a plain rename, no behavior change to the existing two entries). Failed: the real `en`
+  bundle didn't yet have an `activity` key at all, so all four `activity.mcq.*` literals referenced
+  in the wrapper (added in Cycle 16) were reported `missing`.
+- GREEN: added the `activity: { mcq: { correct, incorrect, explanation, unavailable } }` block to
+  `en.ts`, and the mirrored, key-aligned (`TranslationResource`-typed) translations to `es.ts`
+  (`Correcto`/`Incorrecto`/`Explicación`/`Esta pregunta no está disponible`), `pt.ts`
+  (`Correto`/`Incorreto`/`Explicação`/`Esta pergunta não está disponível`), and `de.ts`
+  (`Richtig`/`Falsch`/`Erklärung`/`Diese Frage ist nicht verfügbar`) — the compiler enforces the
+  three non-`en` bundles stay key-aligned with `en` (`check-types` re-confirmed this).
+- REFACTOR: none needed.
+
+Gate: `pnpm --filter @helsoft/localization test` — 56/56 green (8 suites);
+`pnpm --filter @helsoft/localization check-types` — green (proves `es`/`pt`/`de` are key-aligned
+with `en`'s new `activity.mcq` shape).
+
+### task-7 — a11y pass + Playwright e2e for the `MultipleChoice` organism
+
+**Cycle 18 (@s11 — button role + accessible label, confirmed not driven)**
+- RED/GREEN: "exposes a button role and an accessible label for every option" — passed
+  immediately. `AnswerOption`'s `Pressable` already carries `accessibilityRole="button"`
+  (task-3/Slice-1), and React Native's default accessible-name computation concatenates the
+  marker `Text` ("A") and the label `Text` ("Paris") into `"A Paris"` with no explicit
+  `accessibilityLabel` needed — verified directly (not assumed) via
+  `expect(buttons[0]).toHaveAccessibleName('A Paris')` before trusting it. Documented rather than
+  silently dropped, per task-7's "confirm and test at this organism's level too".
+
+**Cycle 19 (@s11 — result announced to assistive tech)**
+- RED: "announces the result via an alert role, a live region, and AccessibilityInfo when
+  answered" (mirrors `login-form.test.tsx`'s `isSubmitting`/`errorMessage` announcement tests).
+  Failed: `banner.props.accessibilityLiveRegion` was `undefined` — the Slice-1 Cycle 6 attempt at
+  this had been reverted per the per-slice review (see the Cycle 6 correction note above); this
+  time a failing test drives it back in.
+- GREEN: in `multiple-choice.tsx`, hoisted `answered`/`isCorrect` above the `isUnavailable` early
+  return (hooks can't be called conditionally) and added `resultLabel = isCorrect ? labels.correct
+  : labels.incorrect`; added a `useEffect` that calls
+  `AccessibilityInfo.announceForAccessibility(resultLabel)` once `!isUnavailable && answered`;
+  added `accessibilityRole="alert"` to the banner `View` and `accessibilityLiveRegion="polite"` to
+  the banner `Text`.
+- A paired test, "does not announce anything to assistive technology while unanswered", was added
+  alongside and passed immediately (the effect's own `answered` guard already covers it) — kept as
+  a regression guard, documented rather than dropped.
+- REFACTOR (on green): the `resultLabel` extraction also removed the duplicated
+  `isCorrect ? labels.correct : labels.incorrect` ternary that previously existed only inline in
+  the JSX. Re-ran `multiple-choice.test.tsx` — 13/13 green.
+
+**Correction (post per-slice review, Round 1):** `reviewer_design` flagged (`review.md` Slice 3
+Round 1, major) that pairing `accessibilityRole="alert"` with `accessibilityLiveRegion="polite"`
+on the result banner was an undocumented hybrid matching neither of this codebase's two existing
+live-region precedents in `login-form.tsx` — `errorBanner` pairs `alert` with `assertive`
+(`login-form.tsx:93-94`), while the `isSubmitting` text uses `polite` but carries no `alert` role
+at all (`login-form.tsx:134`). Chose **(a): `accessibilityLiveRegion="assertive"`**, matching the
+`errorBanner` precedent, rather than (b) dropping `alert` and keeping `polite`. Reasoning: a
+graded MCQ result — correct or incorrect — is the direct, singular consequence of the learner's
+own just-completed action, structurally the same as a form's auth-error banner: both are the one
+thing the screen just changed to tell the user about, and both deserve to interrupt/queue ahead
+of other speech rather than wait politely. (`polite` without `alert`, as used for
+`isSubmitting`, fits an ambient in-progress status the user isn't specifically waiting to be
+interrupted for — not a fitting analogy for a graded result.) Updated the RED test first
+(`multiple-choice.test.tsx:248`, `banner.props.accessibilityLiveRegion` expectation `'polite'` →
+`'assertive'` — confirmed it failed against the then-current `polite` production code), then
+GREEN: changed `multiple-choice.tsx`'s banner `Text` to `accessibilityLiveRegion="assertive"` and
+updated the driving comment above the `useEffect` to state the "assertive, matches LoginForm's
+error banner" rationale instead of the vague "mirrors LoginForm" claim the reviewer correctly
+called out as under-documented. Re-ran `pnpm --filter @helsoft/components test` — 78/78 green,
+no other assertions touched.
+
+Gate: `pnpm --filter @helsoft/components test` — 78/78 green (6 suites);
+`pnpm --filter @helsoft/components --filter @helsoft/study-buddy check-types` — green.
+
+**Playwright e2e** (`libs/components/tests/e2e/organisms/multiple-choice/multiple-choice.e2e.js`,
+per the `storybook-e2e-tests` skill — mirrors `src/organisms/multiple-choice/`, not co-located):
+- `story = (name) => '/?path=/story/organisms-multiplechoice--' + name` — title
+  `'Organisms/MultipleChoice'` → slug `organisms-multiplechoice` (confirmed against the running
+  Storybook's `/index.json`, not guessed).
+- "Unanswered story loads" / "Unanswered story renders every option with no result banner" —
+  render-only checks against the existing `Unanswered` story.
+- "selecting the correct option shows the correct feedback" / "selecting an incorrect option shows
+  incorrect feedback and reveals the correct option" — **discovered mid-cycle** that the
+  `Unanswered`/`AnsweredCorrect`/`AnsweredIncorrect` stories' `onSelectOption` is a no-op stub (the
+  organism is controlled/presentational, so the meta-level args never update `selectedOptionId`);
+  clicking an option there is inert. Added an `Interactive` story to
+  `multiple-choice.stories.tsx` wiring real `useState` for `selectedOptionId` — the same pattern
+  already established by `language-selector.stories.tsx`'s `Interactive` story — and pointed these
+  two e2e tests at it instead. This is production-story code the e2e test itself demands (the
+  Playwright run is what proved the Unanswered-story click was inert, then proved the Interactive
+  story fixes it), consistent with this repo's `component → story → e2e` TDD flow for UI.
+- Ran non-interactively per the skill: `pnpm --filter @helsoft/components exec playwright test
+  --reporter=list` — 31/31 green (27 pre-existing + 4 new).
+
+## Gate checks (Slice 3)
+
+- `pnpm --filter @helsoft/components --filter @helsoft/study-buddy --filter @helsoft/localization test`
+  — green (`components`: 78/78; `study-buddy`: 34/34; `localization`: 56/56).
+- `pnpm check-types` (full monorepo, 8 packages) — green.
+- `pnpm test` (full monorepo) — green.
+- `pnpm lint` (full monorepo via turbo) — green (only `app-study-buddy` defines a `lint` script;
+  same pre-existing repo state noted in Slices 1–2).
+- `pnpm --filter @helsoft/components exec playwright test --reporter=list` — 31/31 green.
+- No hardcoded strings/colors/dimensions: all Slice-3 chrome copy flows through
+  `t('activity.mcq.*')` → `labels`; the a11y additions reuse existing `AccessibilityInfo`/RN
+  primitives and the organism's existing `theme.colors`/`theme.spacing` tokens (no new tokens).
+  Color contrast and touch targets are unchanged from the already-reviewed `AnswerOption`/banner
+  styling (Slice 1/2), so no new contrast risk was introduced.
+- No `console.log`/debug leftovers, no TODOs. (A scratch debug test file used once to inspect the
+  real RN-Testing-Library computed accessible name, and a stale pre-existing Storybook dev server
+  that hadn't picked up `multiple-choice.stories.tsx`, were both cleaned up/restarted before the
+  final e2e run — neither is part of the committed diff.)
+
+All 7 tasks (Slices 1–3) are now `done`. `@s1`–`@s11` all map to ≥ 1 passing test (see the three
+`@s` → test map tables above). Per-slice review (code + design) for Slice 3 is pending —
+`reviews_lead` runs it next; the full 6-reviewer + mutation round follows once all slices clear
+their per-slice gates.

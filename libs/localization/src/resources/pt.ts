@@ -63,5 +63,13 @@ export const pt: TranslationResource = {
         a11yLabel: 'Escolha um idioma',
       },
     },
+    activity: {
+      mcq: {
+        correct: 'Correto',
+        incorrect: 'Incorreto',
+        explanation: 'Explicação',
+        unavailable: 'Esta pergunta não está disponível',
+      },
+    },
   },
 };

@@ -1,4 +1,5 @@
-import { Text, View } from 'react-native';
+import { useEffect } from 'react';
+import { AccessibilityInfo, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { Card } from '../../atoms/card/card';
@@ -58,6 +59,21 @@ export const MultipleChoice = ({
 }: MultipleChoiceProps) => {
   const hasCorrectOption = options.some((option) => option.id === correctOptionId);
   const isUnavailable = !hasCorrectOption;
+  const answered = !!selectedOptionId;
+  const isCorrect = selectedOptionId === correctOptionId;
+  const resultLabel = isCorrect ? labels.correct : labels.incorrect;
+
+  // Announces the result to assistive tech the moment the learner answers (@s11, WCAG 4.1.3).
+  // The banner's own accessibilityLiveRegion="assertive" (below) covers Android/Web only — same
+  // urgency as LoginForm's error banner (login-form.tsx), since a graded result is important
+  // feedback the learner needs announced immediately, not queued behind other speech. iOS
+  // VoiceOver needs this imperative call fired directly on the transition (mirrors LoginForm's
+  // isSubmitting/errorMessage effects).
+  useEffect(() => {
+    if (!isUnavailable && answered) {
+      AccessibilityInfo.announceForAccessibility(resultLabel);
+    }
+  }, [isUnavailable, answered, resultLabel]);
 
   if (isUnavailable) {
     return (
@@ -66,9 +82,6 @@ export const MultipleChoice = ({
       </Card>
     );
   }
-
-  const answered = !!selectedOptionId;
-  const isCorrect = selectedOptionId === correctOptionId;
 
   return (
     <Card style={styles.root}>
@@ -86,9 +99,12 @@ export const MultipleChoice = ({
         ))}
       </View>
       {answered ? (
-        <View style={[styles.banner, isCorrect ? styles.bannerCorrect : styles.bannerIncorrect]}>
-          <Text style={styles.bannerText(isCorrect)}>
-            {isCorrect ? labels.correct : labels.incorrect}
+        <View
+          accessibilityRole="alert"
+          style={[styles.banner, isCorrect ? styles.bannerCorrect : styles.bannerIncorrect]}
+        >
+          <Text style={styles.bannerText(isCorrect)} accessibilityLiveRegion="assertive">
+            {resultLabel}
           </Text>
         </View>
       ) : null}

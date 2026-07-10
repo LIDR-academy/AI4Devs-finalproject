@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { useState } from 'react';
 
 import { MultipleChoice } from './multiple-choice';
 
@@ -66,4 +67,26 @@ export const Error: Story = {
   args: {
     correctOptionId: 'opt-does-not-exist',
   },
+};
+
+// Interactive — wires real selection state (the meta-level onSelectOption is a no-op stub, so
+// clicking an option in the other stories doesn't transition state). Drives the e2e's
+// select-then-see-feedback flows (task-7/@s11), mirroring LanguageSelector's Interactive story.
+const InteractiveDemo = () => {
+  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
+  return (
+    <MultipleChoice
+      question="What is the capital of France?"
+      options={options}
+      correctOptionId="opt-a"
+      selectedOptionId={selectedOptionId}
+      explanation="Paris has been the capital of France since the 12th century."
+      labels={labels}
+      onSelectOption={setSelectedOptionId}
+    />
+  );
+};
+
+export const Interactive: Story = {
+  render: () => <InteractiveDemo />,
 };

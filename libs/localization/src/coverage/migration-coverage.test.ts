@@ -30,6 +30,16 @@ const SIGN_IN_FORM_DIR = resolve(REPO_ROOT, 'libs/study-buddy/src/components/sig
  * task-8 owns closing that gap.
  */
 const SIGN_OUT_DIR = resolve(REPO_ROOT, 'libs/study-buddy/src/components/sign-out');
+/**
+ * activity-multiple-choice, task-6/@s10 — the MultipleChoiceActivity wrapper's chrome copy
+ * (`t('activity.mcq.*')`) needs the same missing-key guard as the auth components above: i18next
+ * has no missing-key handler, so a typo'd/undefined key would silently render the raw key string
+ * to real users.
+ */
+const MULTIPLE_CHOICE_ACTIVITY_DIR = resolve(
+  REPO_ROOT,
+  'libs/study-buddy/src/components/multiple-choice-activity',
+);
 
 const isExcluded = (file: string) => file.endsWith('.stories.tsx') || file.endsWith('.test.tsx') || file.endsWith('.test.ts');
 
@@ -102,14 +112,16 @@ describe('string-migration coverage', () => {
   });
 });
 
-// Guarded per-component (rather than a lib-wide sweep) so each new auth component opts in
-// deliberately as it's built/reviewed — see the SIGN_IN_FORM_DIR/SIGN_OUT_DIR doc comments above.
-const AUTH_COMPONENT_DIRS: Array<[name: string, dir: string]> = [
+// Guarded per-component (rather than a lib-wide sweep) so each new component opts in
+// deliberately as it's built/reviewed — see the SIGN_IN_FORM_DIR/SIGN_OUT_DIR/
+// MULTIPLE_CHOICE_ACTIVITY_DIR doc comments above.
+const KEY_EXISTENCE_DIRS: Array<[name: string, dir: string]> = [
   ['sign-in-form', SIGN_IN_FORM_DIR],
   ['sign-out', SIGN_OUT_DIR],
+  ['multiple-choice-activity', MULTIPLE_CHOICE_ACTIVITY_DIR],
 ];
 
-describe.each(AUTH_COMPONENT_DIRS)('t() key existence coverage (%s)', (name, dir) => {
+describe.each(KEY_EXISTENCE_DIRS)('t() key existence coverage (%s)', (name, dir) => {
   it(`every dotted key literal in ${name}.tsx resolves in the en bundle`, () => {
     const definedKeys = flattenKeys(en.translation);
     const referencedKeys = findDottedKeyLiterals(dir);
