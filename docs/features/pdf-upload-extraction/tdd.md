@@ -639,3 +639,247 @@ action for them, so no new UI/navigation was added (including for `unauthenticat
 
 Not re-running Playwright e2e this cycle — no `.e2e.js` exists yet for `PdfUploadPanel` (Slice 2's
 own gate note above: e2e is explicitly scoped to task-14/Slice 3, unaffected by this fix).
+
+---
+
+# Slice 3 (Analytics + a11y + i18n) — final slice
+
+`implementator` build log for **Slice 3**, the last slice. Build order per `tasks.md`/this
+session's brief: task-13 (i18n parity) → task-14 (a11y + Playwright e2e) → task-15 (analytics).
+
+## Design reconciliation (recorded for reviewers)
+
+- **`upload.imageCount` pluralization (task-13) is a real, tested i18next key — not wired into the
+  UI this slice.** The brief asked for "success-summary copy… with i18next `_one`/`_other`
+  pluralization mirroring `lessons.count_*`". Rather than restructuring the twice-reviewed-APPROVED
+  Content-state layout (a `filenameLabel`/`pageCountLabel`/`imageCountLabel` + value grid, Slices
+  1–2), `upload.imageCount_one`/`upload.imageCount_other` was added to all four bundles and proven
+  via real `createI18n(locale).t('upload.imageCount', {count})` calls in `i18n.test.ts` — the same
+  "resource file proven by its real consumer, not a dedicated per-key test" precedent as task-2's
+  plain-type files, except here the *consumer* is i18next itself (a genuinely executable runtime
+  contract, not a vacant type). No `PdfUploadPanel`/`PdfUpload` production code was touched for
+  this key — nothing in the reviewed layout currently needs a combined "N images extracted"
+  sentence, so wiring it in would be code with no test demanding it (Law 1). Left available for a
+  future accessible-label use if a reviewer/future task wants one.
+- **A new `libs/localization/src/coverage/upload-locale-parity.test.ts` guards the Slice-2 stub
+  regression.** Slice 2 deliberately left `upload.constraintsHint`/`upload.retryAction`/
+  `upload.error.*` in `es`/`pt`/`de` as verbatim English duplicates (to keep `TranslationResource`'s
+  compile-time key-alignment green ahead of native review) — documented inline in each bundle file
+  at the time. `TranslationResource` typing alone can't catch "still equals the English stub"; only
+  a value-level runtime check can. This new test flattens each bundle and asserts every one of
+  those 10 keys differs from its English counterpart in `es`/`pt`/`de` — RED before task-13's
+  translations (30 failing assertions), GREEN after.
+- **e2e port collision with a concurrent worktree session (environment note, not a code change).**
+  `libs/components/playwright.config.js` hardcodes port 6007; another agent's session (a sibling
+  git worktree, `activity-multiple-choice`) already had a Storybook dev server bound to that port,
+  so Playwright's `reuseExistingServer` transparently attached to *that other worktree's* build —
+  `iframe[title="storybook-preview-iframe"]`/URL assertions passed trivially (Storybook renders the
+  iframe regardless of whether the story id resolves) while every content assertion timed out
+  (the new `PdfUploadPanel` stories simply didn't exist in that other build). Diagnosed via `lsof
+  -i :6007`. Fix: started a throwaway Storybook instance for this worktree on port 6017, temporarily
+  pointed `playwright.config.js` at it, ran the full e2e suite, then `git checkout --` the config
+  back to its committed 6007 value (confirmed via `git diff`/`git status` — zero net diff) and killed
+  the throwaway instance. No lasting config change; this is an environment note for future sessions,
+  not a fix or workaround baked into the repo.
+- **Two pre-existing, unrelated e2e failures (`card.e2e.js`, one `text-field.e2e.js` case) on the
+  first full-suite run — confirmed flaky/cold-start, not caused by this slice.** Both passed on an
+  immediate re-run once the throwaway Storybook instance had finished its first Vite compile; they
+  don't touch `PdfUploadPanel` or any file this slice changed. Not fixed (out of scope, unrelated to
+  the feature) — noted here so a reviewer doesn't mistake them for a regression this session caused.
+- **`PdfUploadPanel`'s a11y announcements mirror `login-form.tsx`'s already-established, already-
+  reviewed pattern exactly** (`accessibilityLiveRegion` on the visible live-region text for
+  Android/Web + an imperative `AccessibilityInfo.announceForAccessibility` call for iOS parity,
+  since `accessibilityLiveRegion` has no effect on VoiceOver) — chosen over inventing a new pattern,
+  and over touching the shared `ProgressIndicator`/`Button` atoms (both already carry the a11y
+  properties this feature needs — `accessibilityRole="progressbar"`/`"button"`, and `Button`'s
+  `HIT_SLOP` already floors every touch target at the `layout.touchTarget` (48dp) token — see the
+  "verified, no change needed" bullet below).
+- **Verified, no code change needed (task-14's remaining done-criteria bullets):**
+  - *Role/label on the choose-file and continue/retry controls* — already real, tested behavior
+    since Slices 1–2 (`Button`'s `accessibilityRole="button"` + its text child as the accessible
+    name); `getByRole('button', {name: …})` assertions already exist for all three controls in
+    `pdf-upload-panel.test.tsx`/`pdf-upload.test.tsx`. Confirmed, not re-added (a passing-on-first-
+    run test proves nothing new — the existing tests already prove this).
+  - *No color-only signaling* — the error banner's meaning is carried by its text message
+    (`errorMessage`, always rendered), not by `errorContainer`'s background color alone; the color
+    is a reinforcing cue, not the only one.
+  - *Touch targets ≥ 44pt/48dp* — `Button`'s `HIT_SLOP` (`libs/components/src/atoms/button/
+    button.tsx`) already expands every size variant's tappable area to `layout.touchTarget` (48,
+    `libs/components/src/theme/spacing.ts:35`) — inherited for free, no new code.
+  - *Constraints hint readable at scaled fonts* — `hintText`/`loadingText`/`summaryLabel`/
+    `summaryValue`/`errorBannerText` all resolve through `theme.typography.*` tokens on a plain RN
+    `Text`; grepped the whole component tree for `allowFontScaling` — zero hits, so RN's default
+    (scalable) behavior is untouched.
+- **task-15's analytics sink is a plain no-op function, not a pluggable "set the sink" registry.**
+  Considered (and rejected) a `setPdfExtractionAnalyticsSink()`/mutable-singleton design and a
+  pub-sub `subscribe()` design — both would add an extension point with zero current callers (no
+  vendor exists yet, confirmed by grep before starting), which is speculative generality nothing in
+  this session's tests demands. Also rejected `console.info`/`console.log` as the sink body — that
+  reads exactly like the "no console.log / debug leftovers" finding `reviewer_code` flags, even
+  though it would have been deliberate. Landed on the simplest thing that satisfies "thin,
+  vendor-agnostic, decoupled, no SDK": one exported function, `trackPdfExtractionEvent`, whose body
+  is empty today; wiring a real vendor later means editing this one function, never
+  `PdfExtractionService`. Not exported through `@helsoft/services`'s main barrel (`src/index.ts`) —
+  nothing outside this package needs to call or reference it yet, and adding the export wasn't
+  demanded by any test (added it once, speculatively, then removed it — see below).
+- **No separate hook-level "analytics integration test" — and why one that mocked `@helsoft/services`
+  would have been a false test.** `usePdfExtraction`/wiring never call `trackPdfExtractionEvent`
+  directly; only `PdfExtractionService.extract()` does, via its own **relative** import
+  (`../analytics/pdf-extraction-analytics`). A hooks-package test that did
+  `jest.mock('@helsoft/services', () => ({...jest.requireActual('@helsoft/services'),
+  trackPdfExtractionEvent: jest.fn()}))` would resolve `'@helsoft/services'` to
+  `libs/services/src/index.ts` and replace *that* module's exports — a completely different
+  resolved file from `libs/services/src/analytics/pdf-extraction-analytics.ts`, which
+  `pdf-extraction.service.ts` imports directly and which `jest.requireActual` would still load for
+  real (transitively, via the real `PdfExtractionService` class inside the spread). The mocked
+  `trackPdfExtractionEvent` property on the synthetic barrel object would sit unread; the real
+  no-op would still be the one actually called. Worked this through by tracing Jest's per-resolved-
+  path module registry before writing (and discarding) that test, rather than shipping a green test
+  that verifies nothing. task-15's "analytics (task-15, @s17)" describe block inside
+  `pdf-extraction.service.test.ts` — which mocks only the true external boundary, `PdfUploadDao`,
+  exactly like every other test in that file — is this slice's legitimate integration-level coverage
+  for the extraction lifecycle → analytics wiring (`tdd.md`'s "always one integration test" rule is
+  satisfied per-concern here, since Slice 3 bundles three independent concerns rather than one
+  vertical flow: task-13's is `i18n.test.ts`'s real-`createI18n`-against-real-bundles checks,
+  task-14's is the Playwright e2e against real rendered Storybook output, task-15's is the
+  service-level describe block above).
+- **`document_id` is always populated on `pdf_extraction_failed`, even for the very first,
+  earliest-possible client rejection (no session at all).** `extract(input, userId, documentId =
+  generateDocumentId())`'s default parameter evaluates at call time regardless of where the
+  function later branches, so a `documentId` already exists in scope before the `!userId` check
+  runs. Since this id is an internal random UUID (never derived from or linked to any user-
+  identifying value), attaching it uniformly to every failure — rather than making it
+  conditionally present only after upload begins — keeps `trackExtractionFailure`'s shape simple
+  (one helper, one call shape) without creating a PII risk; `document_id?` stays optional in the
+  type only to leave room for a future call site that genuinely has none.
+- **`PdfUploadPanel.stories.tsx` gained one new story, `InteractiveRetry`** (a small
+  `useState`-backed wrapper, mirroring the existing `Checkbox`/`Switch` "Interactive" story
+  pattern already used elsewhere in this lib) purely so the Playwright e2e could exercise the
+  retry **interaction** itself (task-14's explicit "retry interaction" requirement) — pressing "Try
+  again" visibly transitions the demo back to the Loading state — not just assert each state's
+  static markup like the other 5 stories. Still within "reuse existing patterns": `render: () =>
+  <Demo/>` + local `useState` is an established precedent (`checkbox.stories.tsx`), not a new one.
+
+## @s → test map (Slice 3)
+
+| @s | Scenario | Test(s) |
+|---|---|---|
+| @s15 | All user-facing strings are localized | `i18n.test.ts` (`upload.imageCount` real pluralization, en/es/pt/de), `upload-locale-parity.test.ts` (es/pt/de translations differ from the English stub for every previously-stubbed key), `migration-coverage.test.ts` (no hardcoded `<Text>` literals, unchanged from Slice 1), `pdf-upload-panel.test.tsx`/`pdf-upload.test.tsx` (all copy read via `labels`/`t()`, unchanged from Slices 1–2) |
+| @s16 | The upload flow is accessible | `pdf-upload-panel.test.tsx` (polite live region + `AccessibilityInfo` announce on Loading; assertive live region + `AccessibilityInfo` announce, incl. re-announce-on-change, on Error; role/label coverage on choose-file/continue/retry — confirmed via existing Slices 1–2 tests), Playwright e2e (`pdf-upload-panel.e2e.js`: all 4 states' rendered markup + the `InteractiveRetry` story's actual retry click → Loading transition) |
+| @s17 | The extraction lifecycle emits PII-free analytics | `pdf-extraction.service.test.ts`'s "analytics (task-15, @s17)" describe block: `pdf_upload_started` fires once validation passes and before the DAO is touched; `pdf_extraction_succeeded` fires with `document_id`/`page_count`/`image_count`/`duration_ms` on success; `pdf_extraction_failed` fires with `stage: 'client'` for both pre-validation and unauthenticated client rejections (and `pdf_upload_started` never fires for either); `pdf_extraction_failed` fires with `stage: 'server'` for a normalized server error; a dedicated PII-free-payload test asserts no emitted event ever contains the filename |
+
+(@s1–@s14 unchanged from Slices 1–2; see those sections above for their maps.)
+
+---
+
+## task-13 — i18n `upload.*` keys across en/es/pt/de (@s15)
+
+- **RED**, `i18n.test.ts`: 8 new `it.each` cases (`upload.imageCount` pluralization × 4 locales ×
+  2 counts) failed — the key didn't exist in any bundle (`t()` returned the raw key, i18next's
+  missing-key fallback).
+- **RED**, new `upload-locale-parity.test.ts`: 30 failing assertions (10 stubbed keys × 3 non-
+  English locales) — `es`/`pt`/`de`'s `constraintsHint`/`retryAction`/`error.*` were still verbatim
+  copies of the English string (Slice 2's documented, deliberate interim state).
+- **GREEN**: added `upload.imageCount_one`/`upload.imageCount_other` to all four bundles (real
+  translations, not just `en`); replaced every stubbed `es`/`pt`/`de` value with a real, distinct
+  translation. `fileTooLarge`/`tooManyPages` stay plain-text "10 MB"/"20 pages" phrasing per
+  locale (Slice 2's decision — only `constraintsHint` is genuinely interpolated by the wiring
+  layer; the other two never receive `{{maxMb}}`/`{{maxPages}}` args, so interpolating them now
+  would ship an unfilled placeholder).
+- **REFACTOR**: none needed — plain data edits, no logic.
+- `pnpm --filter @helsoft/localization test` — 9/9 suites, 94/94 tests green. `check-types` clean
+  for `@helsoft/localization`, `@helsoft/components`, `@helsoft/study-buddy` (consumers of
+  `TranslationResource`).
+
+## task-14 — Accessibility pass + Playwright e2e for `PdfUploadPanel` (@s16)
+
+- **RED**, `pdf-upload-panel.test.tsx`: 5 new tests failed against the unmodified component —
+  polite live region on the loading text; `AccessibilityInfo.announceForAccessibility` fired on the
+  idle→loading transition; assertive live region on the error banner text;
+  `AccessibilityInfo.announceForAccessibility` fired when an error renders; the announcement fires
+  again when the error message changes to a different value (mutation-kill guard, mirrors
+  `login-form.tsx`'s own precedent for the same dependency-array risk).
+- **GREEN**: added two `useEffect`s (loading → announce `labels.loading`; `errorMessage` set →
+  announce it) plus `accessibilityLiveRegion="polite"`/`"assertive"` on the respective `Text`
+  nodes — a direct mirror of `login-form.tsx`'s already-reviewed pattern for the exact same problem.
+- **REFACTOR**: none needed; the two effects stayed short and single-purpose from the start.
+- **Playwright e2e** (`libs/components/tests/e2e/organisms/pdf-upload-panel/pdf-upload-panel.e2e.js`,
+  via the `storybook-e2e-tests` skill): 7 tests — story-loads smoke test; Empty (affordance + hint,
+  no error); Loading (copy + disabled choose-file control); Content (full summary + continue);
+  ErrorRetryable (message + retry, choose-file stays enabled); ErrorNonRetryable (message, no retry
+  affordance); and the new `InteractiveRetry` story's actual click-through (press "Try again" →
+  Loading copy appears). Ran non-interactively (`playwright test --reporter=list`) against a
+  throwaway port-6017 Storybook instance (see reconciliation above for why 6007 was occupied by a
+  different worktree) — **7/7 new tests green**; 2 pre-existing, unrelated failures on the first
+  pass (cold-start flake, confirmed by an immediate green re-run) — not this slice's concern.
+- 18/18 `pdf-upload-panel.test.tsx` tests green (+5); `pnpm --filter @helsoft/components
+  test`/`check-types` clean.
+
+## task-15 — Extraction analytics events (@s17)
+
+- **RED**, `pdf-extraction.service.test.ts`: added `jest.mock('../analytics/pdf-extraction-
+  analytics', …)` + an import — failed immediately at module resolution (`Cannot find module`,
+  the file didn't exist yet; per `tdd.md`'s "not compiling / not importing counts as failing").
+- **GREEN**: created `libs/services/src/analytics/pdf-extraction-analytics.ts` — the closed,
+  discriminated `PdfExtractionAnalyticsEvent` union (mirrors the three locked events exactly) and
+  one no-op `trackPdfExtractionEvent` function (see reconciliation above for why not a
+  setter/pub-sub, and not `console.*`). Wired `PdfExtractionService.extract()` to call it at three
+  points: `pdf_upload_started` right after `validateFile()` passes (before any DAO call);
+  `pdf_extraction_succeeded` right after `invokeExtraction()` resolves, with `duration_ms` measured
+  from the upload-started instant; `pdf_extraction_failed` (via a new `trackExtractionFailure()`
+  helper — single source of truth for that event's PII-free shape) from all three failure paths:
+  the `!userId` pre-check (`stage: 'client'`), a `validateFile()` rejection (`stage: 'client'`),
+  and the existing `catch` block's `normalizeExtractionError()` result (`stage: 'server'`).
+- 6 new tests in a new "analytics (task-15, @s17)" describe block, all green: `pdf_upload_started`
+  fires with the right payload before the DAO is touched; `pdf_extraction_succeeded` fires with
+  `document_id`/`page_count`/`image_count`/a non-negative `duration_ms`; `pdf_extraction_failed`
+  fires with `stage: 'client'` for both the pre-validation and the unauthenticated paths (and
+  `pdf_upload_started` never fires for either); `pdf_extraction_failed` fires with `stage: 'server'`
+  for a normalized server error; a dedicated test asserts no emitted payload ever contains the
+  filename (PII-free, checked both via property-value membership and a stringified-payload
+  substring match, so a future refactor that spreads `input`/`result` wholesale into a payload
+  would fail this test immediately).
+- **REFACTOR**: extracted `trackExtractionFailure(documentId, code, stage)` once the third call
+  site (server catch) made the duplication concrete — one place constructs the
+  `pdf_extraction_failed` shape.
+- No production changes to `libs/study-buddy/src/components/pdf-upload/` — every event fires from
+  the service layer, which the hook already calls unconditionally on every `extract()`/`retry()`
+  attempt; the wiring component doesn't need to know analytics exists (task-15's own "keep business
+  logic decoupled from the sink" goal, satisfied by not touching this layer at all).
+- 19/19 `pdf-extraction.service.test.ts` tests green (+6); `pnpm --filter @helsoft/services
+  test`/`check-types` clean (78/78 suite tests total, up from 72).
+
+---
+
+## Slice-3 gate — commands run for real
+
+- `pnpm --filter @helsoft/localization test` — 9/9 suites, 94/94 tests green.
+- `pnpm --filter @helsoft/services test` — 11/11 suites, 78/78 tests green (mocked, Docker-
+  independent — no new live-DB dependency this slice).
+- `pnpm --filter @helsoft/hooks test` — 6/6 suites, 29/29 tests green (unchanged from Slice 2 — no
+  hook-layer code touched this slice, per the reconciliation note above).
+- `pnpm --filter @helsoft/components test` — 6/6 suites, 83/83 tests green (+5).
+- `pnpm --filter @helsoft/study-buddy test` — 4/4 suites, 49/49 tests green (unchanged — no wiring
+  code touched this slice).
+- `pnpm --filter @helsoft/components exec playwright test --reporter=list` — 7/7 new
+  `pdf-upload-panel` tests green (non-interactive, `list` reporter, per the `storybook-e2e-tests`
+  skill's hard rule against the blocking HTML-reporter run); run against a throwaway port-6017
+  instance for this worktree (see reconciliation above); `libs/components/playwright.config.js`
+  confirmed byte-for-byte reverted to its committed (port 6007) state afterward (`git status`/`git
+  diff` both empty for that file).
+- `pnpm check-types` (whole repo, turbo) — 8/8 packages clean.
+- `pnpm lint` (whole repo, turbo) — clean.
+- `pnpm test` (whole repo, turbo) — 6/6 testable packages green.
+
+**Not run / out of scope, by design:** `deno test`/`deno check` (no Deno CLI, task-3's testing-
+boundary note — unchanged this slice, no Edge Function code touched); `supabase db push`/`supabase
+functions deploy`/`--linked`/`db reset`/`test:rls` (no schema/RLS changes this slice, per this
+session's brief — Slice 1's 9/9 RLS pass already covers the unchanged schema/RLS surface).
+
+## Stop condition (Slice 3 — final slice)
+
+Slice-3 gate is green (lint/check-types/tests/e2e, no hardcoded strings/colors/dimensions
+introduced). This is the **last slice** — the `@s → test` map above, combined with Slices 1–2's
+maps earlier in this file, covers `@s1`–`@s17` in full. Stopping here for the light
+`reviewer_code`/`reviewer_design` slice review, per protocol — not self-reviewing. Once that's
+clean, the feature moves to the full 6-reviewer round + mutation testing (not started here).

@@ -1,4 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { AccessibilityInfo } from 'react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 
 import { PDF_UPLOAD_PANEL_LOADING_INDICATOR_TEST_ID, PdfUploadPanel } from './pdf-upload-panel';
 
@@ -54,6 +55,33 @@ describe('PdfUploadPanel', () => {
     await render(<PdfUploadPanel state="loading" labels={labels} onChooseFile={jest.fn()} />);
 
     expect(screen.getByRole('button', { name: 'Choose a PDF', disabled: true })).toBeTruthy();
+  });
+
+  // @s16 (WCAG 4.1.3) — RN's `accessibilityLiveRegion` is Android/Web-only, but it's a first,
+  // cheap signal that the visible loading copy is a live region, not just static text.
+  it('exposes a polite live region on the loading text', async () => {
+    await render(<PdfUploadPanel state="loading" labels={labels} onChooseFile={jest.fn()} />);
+
+    expect(screen.getByText('Extracting…').props.accessibilityLiveRegion).toBe('polite');
+  });
+
+  // @s16 — same iOS-parity gap `login-form.tsx` already documents: `accessibilityLiveRegion` has
+  // no effect on iOS VoiceOver, so the imperative, cross-platform `AccessibilityInfo` API must
+  // fire directly when the loading state becomes active.
+  it('announces the loading copy via AccessibilityInfo when the loading state becomes active', async () => {
+    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    const { rerender } = await render(<PdfUploadPanel state="idle" labels={labels} onChooseFile={jest.fn()} />);
+    expect(announceSpy).not.toHaveBeenCalled();
+
+    await act(async () => {
+      rerender(<PdfUploadPanel state="loading" labels={labels} onChooseFile={jest.fn()} />);
+    });
+
+    await waitFor(() => expect(announceSpy).toHaveBeenCalledWith(labels.loading));
+
+    announceSpy.mockRestore();
   });
 
   // @s6 — the Content state renders the success summary: filename, page count, image count.
@@ -118,6 +146,60 @@ describe('PdfUploadPanel', () => {
     const errorText = screen.getByText('This PDF has too many pages (max 20)');
     expect(errorText.parent?.props.accessibilityRole).toBe('alert');
     expect(screen.getByRole('button', { name: 'Try again' })).toBeTruthy();
+  });
+
+  // @s16 (WCAG 4.1.3) — the error banner text is also an assertive live region (Android/Web),
+  // mirroring `login-form.tsx`'s established error-banner pattern.
+  it('exposes an assertive live region on the error banner text', async () => {
+    await render(
+      <PdfUploadPanel state="error" labels={labels} onChooseFile={jest.fn()} errorMessage="Network error" />,
+    );
+
+    expect(screen.getByText('Network error').props.accessibilityLiveRegion).toBe('assertive');
+  });
+
+  // @s16 — iOS-parity: the imperative, cross-platform AccessibilityInfo API fires directly when
+  // an error message is set, since accessibilityLiveRegion has no effect on iOS VoiceOver.
+  it('announces the error message via AccessibilityInfo when the error state renders', async () => {
+    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    await render(
+      <PdfUploadPanel state="error" labels={labels} onChooseFile={jest.fn()} errorMessage="Network error" />,
+    );
+
+    expect(announceSpy).toHaveBeenCalledWith('Network error');
+
+    announceSpy.mockRestore();
+  });
+
+  // Mutation-kill guard (mirrors login-form's precedent) — a later error replacing an earlier one
+  // (e.g. a retry that fails differently) must be re-announced, not silently swallowed by a
+  // dependency array that only fires once.
+  it('announces the error message again when it changes to a different value', async () => {
+    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    const { rerender } = await render(
+      <PdfUploadPanel state="error" labels={labels} onChooseFile={jest.fn()} errorMessage="Network error" />,
+    );
+    expect(announceSpy).toHaveBeenCalledWith('Network error');
+    announceSpy.mockClear();
+
+    await act(async () => {
+      rerender(
+        <PdfUploadPanel
+          state="error"
+          labels={labels}
+          onChooseFile={jest.fn()}
+          errorMessage="This PDF has too many pages (max 20)"
+        />,
+      );
+    });
+
+    expect(announceSpy).toHaveBeenCalledWith('This PDF has too many pages (max 20)');
+
+    announceSpy.mockRestore();
   });
 
   // Retry affordance wiring — pressing it invokes onRetry.

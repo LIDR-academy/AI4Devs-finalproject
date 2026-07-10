@@ -3,7 +3,7 @@ id: task-15
 title: Extraction analytics events
 slice: 3
 scenarios: [s17]
-status: todo
+status: done
 paths: [libs/services/src/services/pdf-extraction.service.ts, libs/study-buddy/src/components/pdf-upload/]
 ---
 

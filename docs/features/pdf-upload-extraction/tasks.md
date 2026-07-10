@@ -24,9 +24,9 @@ Within **Slice 1**, build backend + logic before UI: schema (task-1) → contrac
 | [task-10](./task-10.md) — Client pre-validation (type + size) | 2 | @s9,@s10 | done | libs/services/src/services/pdf-extraction.service.ts |
 | [task-11](./task-11.md) — `PdfUploadPanel` Empty + Error + Retry states | 2 | @s7,@s8,@s9,@s10,@s11,@s12,@s13 | done | libs/components/src/organisms/pdf-upload-panel/ |
 | [task-12](./task-12.md) — Hook error/retry + wiring + error integration | 2 | @s13,@s14 | done | libs/hooks/src/hooks/use-pdf-extraction.ts, libs/study-buddy/src/components/pdf-upload/ |
-| [task-13](./task-13.md) — i18n `upload.*` keys (en/es/pt/de) | 3 | @s15 | todo | libs/localization/src/resources/ |
-| [task-14](./task-14.md) — a11y pass + Playwright e2e | 3 | @s16 | todo | libs/components/src/organisms/pdf-upload-panel/, libs/components/tests/e2e/ |
-| [task-15](./task-15.md) — Extraction analytics events | 3 | @s17 | todo | libs/services/src/services/pdf-extraction.service.ts, libs/study-buddy/src/components/pdf-upload/ |
+| [task-13](./task-13.md) — i18n `upload.*` keys (en/es/pt/de) | 3 | @s15 | done | libs/localization/src/resources/ |
+| [task-14](./task-14.md) — a11y pass + Playwright e2e | 3 | @s16 | done | libs/components/src/organisms/pdf-upload-panel/, libs/components/tests/e2e/ |
+| [task-15](./task-15.md) — Extraction analytics events | 3 | @s17 | done | libs/services/src/services/pdf-extraction.service.ts, libs/study-buddy/src/components/pdf-upload/ |
 
 **Slice 1 — Happy path + Loading** · **Slice 2 — Empty + Error + Retry** · **Slice 3 — Analytics + a11y + i18n**
 

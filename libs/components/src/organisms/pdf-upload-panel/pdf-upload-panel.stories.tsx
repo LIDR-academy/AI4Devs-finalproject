@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { useState } from 'react';
 
-import { PdfUploadPanel } from './pdf-upload-panel';
+import { PdfUploadPanel, type PdfUploadPanelState } from './pdf-upload-panel';
 
 const labels = {
   loading: 'Extracting…',
@@ -71,4 +72,29 @@ export const ErrorNonRetryable: Story = {
     errorMessage: 'This PDF has too many pages (max 20)',
     canRetry: false,
   },
+};
+
+/** @s16 (task-14) — a stateful demo purely so the Playwright e2e can exercise the retry
+ * *interaction* itself (pressing "Try again" transitions the panel back to Loading), not just
+ * assert each state's static markup like the stories above. */
+const InteractiveRetryDemo = () => {
+  const [state, setState] = useState<PdfUploadPanelState>('error');
+
+  return (
+    <PdfUploadPanel
+      state={state}
+      labels={labels}
+      onChooseFile={() => {}}
+      errorMessage="Something went wrong while reading your PDF"
+      onRetry={() => setState('loading')}
+    />
+  );
+};
+
+export const InteractiveRetry: Story = {
+  // `state`/`errorMessage`/`onRetry` are all owned by InteractiveRetryDemo itself; `args.state`
+  // only exists to satisfy StoryObj's required-args typing (PdfUploadPanelProps has no optional
+  // default for `state`) — `render` below never reads it.
+  args: { state: 'error' },
+  render: () => <InteractiveRetryDemo />,
 };

@@ -5,13 +5,16 @@ jest.mock('../dao/pdf-upload.dao', () => ({
     invokeExtraction: jest.fn(),
   },
 }));
+jest.mock('../analytics/pdf-extraction-analytics', () => ({ trackPdfExtractionEvent: jest.fn() }));
 
 import { FunctionsFetchError, FunctionsHttpError, FunctionsRelayError } from '@supabase/supabase-js';
 
+import { trackPdfExtractionEvent } from '../analytics/pdf-extraction-analytics';
 import { PdfUploadDao } from '../dao/pdf-upload.dao';
 import { PdfExtractionService } from './pdf-extraction.service';
 
 const dao = PdfUploadDao as jest.Mocked<typeof PdfUploadDao>;
+const trackEvent = trackPdfExtractionEvent as jest.Mock;
 
 /** A `FunctionsHttpError`-shaped rejection carrying the Edge Function's `{ errorCode }` JSON
  * body, unread until `.context.json()` is called (real `@supabase/functions-js` behavior — see
@@ -202,5 +205,113 @@ describe('PdfExtractionService', () => {
 
     expect(dao.uploadPdf.mock.calls[0][0].documentId).toBe('given-document-id');
     expect(dao.invokeExtraction).toHaveBeenCalledWith('given-document-id');
+  });
+
+  // @s17 (task-15) — the extraction lifecycle emits three PII-free, vendor-agnostic events at the
+  // right lifecycle points: upload-started (once client pre-validation passes), and either
+  // extraction-succeeded or extraction-failed. No filename/bytes/user text ever reaches a payload.
+  describe('analytics (task-15, @s17)', () => {
+    it('emits pdf_upload_started with size_bytes and document_id once validation passes, before any DAO call', async () => {
+      dao.uploadPdf.mockImplementation(() => {
+        // pdf_upload_started must already have fired by the time the DAO is first touched.
+        expect(trackEvent).toHaveBeenCalledWith({
+          name: 'pdf_upload_started',
+          properties: { size_bytes: 3, document_id: expect.stringMatching(UUID_V4_PATTERN) },
+        });
+        return Promise.resolve({} as never);
+      });
+      dao.insertDocument.mockResolvedValue({} as never);
+      dao.invokeExtraction.mockResolvedValue({} as never);
+
+      await PdfExtractionService.extract({ filename: 'notes.pdf', sizeBytes: 3, bytes: new Uint8Array() }, 'user-1');
+
+      expect(dao.uploadPdf).toHaveBeenCalledTimes(1);
+    });
+
+    it('emits pdf_extraction_succeeded with document_id/page_count/image_count/duration_ms on success', async () => {
+      dao.uploadPdf.mockResolvedValue({} as never);
+      dao.insertDocument.mockResolvedValue({} as never);
+      dao.invokeExtraction.mockResolvedValue({ documentId: 'ignored', pageCount: 4, imageCount: 2, filename: 'x', pages: [], images: [] });
+
+      await PdfExtractionService.extract({ filename: 'notes.pdf', sizeBytes: 3, bytes: new Uint8Array() }, 'user-1');
+
+      const documentId = dao.uploadPdf.mock.calls[0][0].documentId;
+      const succeededCall = trackEvent.mock.calls.find(([event]) => event.name === 'pdf_extraction_succeeded');
+      expect(succeededCall?.[0]).toEqual({
+        name: 'pdf_extraction_succeeded',
+        properties: {
+          document_id: documentId,
+          page_count: 4,
+          image_count: 2,
+          duration_ms: expect.any(Number),
+        },
+      });
+      expect(succeededCall?.[0].properties.duration_ms).toBeGreaterThanOrEqual(0);
+    });
+
+    it('emits pdf_extraction_failed with stage client for a client pre-validation rejection, and never emits pdf_upload_started', async () => {
+      await expect(
+        PdfExtractionService.extract({ filename: 'notes.txt', sizeBytes: 3, bytes: new Uint8Array() }, 'user-1'),
+      ).rejects.toMatchObject({ code: 'unsupported_file_type' });
+
+      expect(trackEvent).toHaveBeenCalledWith({
+        name: 'pdf_extraction_failed',
+        properties: {
+          document_id: expect.stringMatching(UUID_V4_PATTERN),
+          error_code: 'unsupported_file_type',
+          stage: 'client',
+        },
+      });
+      expect(trackEvent).not.toHaveBeenCalledWith(expect.objectContaining({ name: 'pdf_upload_started' }));
+    });
+
+    it('emits pdf_extraction_failed with stage client when unauthenticated, and never emits pdf_upload_started', async () => {
+      await expect(
+        PdfExtractionService.extract({ filename: 'notes.pdf', sizeBytes: 3, bytes: new Uint8Array() }, ''),
+      ).rejects.toMatchObject({ code: 'unauthenticated' });
+
+      expect(trackEvent).toHaveBeenCalledWith({
+        name: 'pdf_extraction_failed',
+        properties: {
+          document_id: expect.stringMatching(UUID_V4_PATTERN),
+          error_code: 'unauthenticated',
+          stage: 'client',
+        },
+      });
+      expect(trackEvent).not.toHaveBeenCalledWith(expect.objectContaining({ name: 'pdf_upload_started' }));
+    });
+
+    it('emits pdf_extraction_failed with stage server for a normalized server error', async () => {
+      dao.uploadPdf.mockResolvedValue({} as never);
+      dao.insertDocument.mockResolvedValue({} as never);
+      dao.invokeExtraction.mockRejectedValue(httpErrorWithBody({ errorCode: 'scanned_or_image_only' }));
+
+      await expect(
+        PdfExtractionService.extract({ filename: 'notes.pdf', sizeBytes: 1, bytes: new Uint8Array() }, 'user-1'),
+      ).rejects.toMatchObject({ code: 'scanned_or_image_only' });
+
+      const documentId = dao.uploadPdf.mock.calls[0][0].documentId;
+      expect(trackEvent).toHaveBeenCalledWith({
+        name: 'pdf_extraction_failed',
+        properties: { document_id: documentId, error_code: 'scanned_or_image_only', stage: 'server' },
+      });
+    });
+
+    it('never includes filename, bytes, or any field beyond the locked PII-free payload shape', async () => {
+      dao.uploadPdf.mockResolvedValue({} as never);
+      dao.insertDocument.mockResolvedValue({} as never);
+      dao.invokeExtraction.mockResolvedValue({ documentId: 'ignored', pageCount: 1, imageCount: 0, filename: 'secret-notes.pdf', pages: [], images: [] });
+
+      await PdfExtractionService.extract(
+        { filename: 'secret-notes.pdf', sizeBytes: 3, bytes: new Uint8Array([1, 2, 3]) },
+        'user-1',
+      );
+
+      for (const [event] of trackEvent.mock.calls) {
+        const values = Object.values(event.properties);
+        expect(values).not.toContain('secret-notes.pdf');
+        expect(JSON.stringify(event.properties)).not.toMatch(/secret-notes/);
+      }
+    });
   });
 });

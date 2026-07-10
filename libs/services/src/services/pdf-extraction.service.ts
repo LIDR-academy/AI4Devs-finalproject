@@ -1,6 +1,7 @@
 import { FunctionsFetchError, FunctionsHttpError, FunctionsRelayError } from '@supabase/supabase-js';
 import type { PdfExtractionError, PdfExtractionErrorCode, PdfExtractionResult } from '@helsoft/types';
 
+import { trackPdfExtractionEvent } from '../analytics/pdf-extraction-analytics';
 import { PdfUploadDao } from '../dao/pdf-upload.dao';
 import { PDF_EXTRACTION_LIMITS, PDF_FILE_EXTENSION } from './pdf-extraction.constants';
 
@@ -80,6 +81,12 @@ const validateFile = (input: PdfExtractionInput): void => {
   }
 };
 
+/** Emits the PII-free `pdf_extraction_failed` event (task-15, @s17) — only `document_id`,
+ * `error_code`, and `stage` ever leave this function, regardless of what caused the failure. */
+const trackExtractionFailure = (documentId: string, code: PdfExtractionErrorCode, stage: 'client' | 'server'): void => {
+  trackPdfExtractionEvent({ name: 'pdf_extraction_failed', properties: { document_id: documentId, error_code: code, stage } });
+};
+
 /**
  * Business layer that orchestrates upload+extract via `PdfUploadDao`: validates the caller and
  * the file client-side (@s9/@s10/@s14), then uploads, inserts, and invokes extraction — all via
@@ -93,8 +100,23 @@ export abstract class PdfExtractionService {
     userId: string,
     documentId: string = generateDocumentId(),
   ): Promise<PdfExtractionResult> {
-    if (!userId) throw toExtractionError('unauthenticated');
-    validateFile(input);
+    if (!userId) {
+      trackExtractionFailure(documentId, 'unauthenticated', 'client');
+      throw toExtractionError('unauthenticated');
+    }
+
+    try {
+      validateFile(input);
+    } catch (cause) {
+      trackExtractionFailure(documentId, (cause as PdfExtractionError).code, 'client');
+      throw cause;
+    }
+
+    trackPdfExtractionEvent({
+      name: 'pdf_upload_started',
+      properties: { size_bytes: input.sizeBytes, document_id: documentId },
+    });
+    const startedAt = Date.now();
 
     try {
       await PdfUploadDao.uploadPdf({ userId, documentId, bytes: input.bytes });
@@ -104,9 +126,21 @@ export abstract class PdfExtractionService {
         filename: input.filename,
         sizeBytes: input.sizeBytes,
       });
-      return await PdfUploadDao.invokeExtraction(documentId);
+      const result = await PdfUploadDao.invokeExtraction(documentId);
+      trackPdfExtractionEvent({
+        name: 'pdf_extraction_succeeded',
+        properties: {
+          document_id: documentId,
+          page_count: result.pageCount,
+          image_count: result.imageCount,
+          duration_ms: Date.now() - startedAt,
+        },
+      });
+      return result;
     } catch (cause) {
-      throw await normalizeExtractionError(cause);
+      const normalized = await normalizeExtractionError(cause);
+      trackExtractionFailure(documentId, normalized.code, 'server');
+      throw normalized;
     }
   }
 }

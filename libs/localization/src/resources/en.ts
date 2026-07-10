@@ -36,6 +36,10 @@ export const en = {
       continue: 'Continue',
       constraintsHint: 'Max {{maxMb}} MB, {{maxPages}} pages',
       retryAction: 'Try again',
+      // Success-summary image count (@s6/@s15, task-13) — i18next one/other pluralization,
+      // mirroring `lessons.count_*`.
+      imageCount_one: '{{count}} image extracted',
+      imageCount_other: '{{count}} images extracted',
       // fileTooLarge/tooManyPages spell out the limit as plain text for now (matching
       // PDF_EXTRACTION_LIMITS's locked 10 MB / 20 pages) — interpolating {{maxMb}}/{{maxPages}}
       // into every error message, not just the constraints hint, is task-13/Slice-3 scope.

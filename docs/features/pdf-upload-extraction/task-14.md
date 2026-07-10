@@ -3,7 +3,7 @@ id: task-14
 title: Accessibility pass + Playwright e2e for the upload panel
 slice: 3
 scenarios: [s16]
-status: todo
+status: done
 paths: [libs/components/src/organisms/pdf-upload-panel/, libs/components/tests/e2e/]
 ---
 

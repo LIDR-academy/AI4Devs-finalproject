@@ -29,19 +29,20 @@ export const pt: TranslationResource = {
       pageCountLabel: 'Páginas',
       imageCountLabel: 'Imagens',
       continue: 'Continuar',
-      // Slice-2 stub, duplicating the en copy so check-types' key-alignment stays green — native
-      // Portuguese review of these strings is task-13/Slice-3 scope.
-      constraintsHint: 'Max {{maxMb}} MB, {{maxPages}} pages',
-      retryAction: 'Try again',
+      // task-13/Slice-3 — native Portuguese translations (replaces the Slice-2 verbatim-English stub).
+      constraintsHint: 'Máx. {{maxMb}} MB, {{maxPages}} páginas',
+      retryAction: 'Tentar novamente',
+      imageCount_one: '{{count}} imagem extraída',
+      imageCount_other: '{{count}} imagens extraídas',
       error: {
-        unsupportedType: 'Only PDF files are supported',
-        fileTooLarge: 'This file is too large (max 10 MB)',
-        tooManyPages: 'This PDF has too many pages (max 20)',
-        scannedNotSupported: "This looks like a scanned PDF; we can't read its text yet",
-        corrupt: "This PDF couldn't be opened",
-        extractionFailed: 'Something went wrong while reading your PDF',
-        network: 'Network error',
-        unauthenticated: 'Please sign in to upload',
+        unsupportedType: 'Apenas arquivos PDF são aceitos',
+        fileTooLarge: 'Este arquivo é muito grande (máx. 10 MB)',
+        tooManyPages: 'Este PDF tem muitas páginas (máx. 20)',
+        scannedNotSupported: 'Este PDF parece digitalizado; ainda não conseguimos ler o texto',
+        corrupt: 'Não foi possível abrir este PDF',
+        extractionFailed: 'Algo deu errado ao ler seu PDF',
+        network: 'Erro de rede',
+        unauthenticated: 'Faça login para enviar o arquivo',
       },
     },
     lesson: {

@@ -3,7 +3,7 @@ id: task-13
 title: i18n — upload.* keys across en/es/pt/de
 slice: 3
 scenarios: [s15]
-status: todo
+status: done
 paths: [libs/localization/src/resources/]
 ---
 

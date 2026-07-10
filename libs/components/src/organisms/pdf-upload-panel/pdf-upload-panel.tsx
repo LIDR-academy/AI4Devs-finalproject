@@ -1,4 +1,5 @@
-import { Text, View } from 'react-native';
+import { useEffect } from 'react';
+import { AccessibilityInfo, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { Button } from '../../atoms/button/button';
@@ -72,6 +73,18 @@ export const PdfUploadPanel = ({
 }: PdfUploadPanelProps) => {
   const isLoading = state === 'loading';
 
+  // @s16 (WCAG 4.1.3) — accessibilityLiveRegion (below, on the visible text nodes) only reaches
+  // Android/Web assistive tech; iOS VoiceOver needs the imperative, cross-platform
+  // AccessibilityInfo call fired directly on the transition, mirroring `login-form.tsx`'s
+  // established pattern for its own loading/error announcements.
+  useEffect(() => {
+    if (isLoading) AccessibilityInfo.announceForAccessibility(labels.loading);
+  }, [isLoading, labels.loading]);
+
+  useEffect(() => {
+    if (errorMessage) AccessibilityInfo.announceForAccessibility(errorMessage);
+  }, [errorMessage]);
+
   return (
     <Card>
       <View style={styles.root}>
@@ -84,7 +97,9 @@ export const PdfUploadPanel = ({
         {isLoading ? (
           <View testID={PDF_UPLOAD_PANEL_LOADING_INDICATOR_TEST_ID} style={styles.row}>
             <ProgressIndicator variant="circular" />
-            <Text style={styles.loadingText}>{labels.loading}</Text>
+            <Text style={styles.loadingText} accessibilityLiveRegion="polite">
+              {labels.loading}
+            </Text>
           </View>
         ) : null}
 
@@ -108,7 +123,9 @@ export const PdfUploadPanel = ({
 
         {state === 'error' ? (
           <View style={styles.errorBanner} accessibilityRole="alert">
-            <Text style={styles.errorBannerText}>{errorMessage}</Text>
+            <Text style={styles.errorBannerText} accessibilityLiveRegion="assertive">
+              {errorMessage}
+            </Text>
             {canRetry ? <Button onPress={onRetry}>{labels.retry}</Button> : null}
           </View>
         ) : null}
