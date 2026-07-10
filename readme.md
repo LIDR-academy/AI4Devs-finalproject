@@ -118,6 +118,9 @@ Recibir enlace mágico por email → Clic en enlace → Abrir Accomplice Panel
 
 > **Nota:** Se añadirán capturas de pantalla de la interfaz de usuario y tutoriales en vídeo una vez que se implemente el frontend. Los wireframes y los tokens del sistema de diseño están definidos en el PRD (ver [07-work-breakdown.md](business-documentation/prd/07-work-breakdown.md) para los flujos de trabajo de UI).
 
+A continuación se muestra un vídeo de demostración de la implementación actual:
+![Demostración de la aplicación](docs/demo.webm)
+
 ### **1.4. Instrucciones de instalación:**
 
 #### Requisitos previos
