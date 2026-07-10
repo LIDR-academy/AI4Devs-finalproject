@@ -18,12 +18,13 @@ This pipeline takes one user story from `user-stories/` to a validated, PR-ready
 
 ```
 pending
-  → spec_partner        → spec.md, risks.md, tasks.md, task-N.md, gherkin-scenarios.md   [spec_ready]
+  → spec_partner        → spec.md, risks.md, tasks.md, task-N.md, gherkin-scenarios.md   [spec_drafted]
+  → spec_reviewer       → review-spec.md  (loop with spec_partner, ≤ 2 rounds)           [spec_ready]
   → ⏸ HUMAN GATE: approve the spec + Gherkin contract (single approval)            [approved]
   → implementator       → src + tests, one vertical slice at a time                 [in_progress]
         └ per slice: light review (reviewer_code + reviewer_design only) → fix → next slice
   → reviews_lead (full: all 6) + mutation_tester  → review.md + mutation.md          [in_review → mutation]
-        └ ONE quality loop (≤ 3 rounds): implementator fixes EVERY review finding
+        └ ONE quality loop (≤ 2 rounds): implementator fixes EVERY review finding
           (any severity, incl. minor) + every surviving mutant; after each fix,
           review AND mutation both re-run. review.md keeps only still-open findings.
   → dod_validator       → dod.md (validate only, no PR)                             [pr_ready]
@@ -38,6 +39,7 @@ Only `orchestrator_lead` writes the feature phase (in `tasks.md` frontmatter); `
 |---|---|---|---|
 | `orchestrator_lead` | orchestrates all | `progress/*`, phase in `tasks.md` | no |
 | `spec_partner` | 1 — spec + contract (debate) | `spec.md`, `risks.md`, `tasks.md`, `task-N.md`, `gherkin-scenarios.md` | no |
+| `spec_reviewer` | 1 — spec review (pre-gate) | `review-spec.md` | no |
 | `implementator` | 2 — build (TDD) | `src/`, `tests/`, `tdd.md`, task statuses | **yes** |
 | `reviews_lead` | per-slice review + Phase 3 review round | `review.md` | no |
 | `reviewer_code` | per slice **and** full (parallel) | `review-code.md` | no |
@@ -54,17 +56,17 @@ Only `orchestrator_lead` writes the feature phase (in `tasks.md` frontmatter); `
 ## Models (per-agent, set via `model:` in each agent's frontmatter)
 
 - **Opus** — `spec_partner` (highest-leverage reasoning: debating and pinning down the spec + Gherkin contract).
-- **Sonnet** — `orchestrator_lead`, `implementator`, `reviews_lead`, and the 6 reviewers (coding + judgment).
+- **Sonnet** — `orchestrator_lead`, `spec_reviewer`, `implementator`, `reviews_lead`, and the 6 reviewers (coding + judgment).
 - **Haiku** — `mutation_tester`, `dod_validator` (mechanical: run scripts/checks and report).
 
 `model` accepts `opus` / `sonnet` / `haiku` (or `inherit`); each agent runs on its own model regardless of which agent invokes it.
 
 ## Gates (all must pass to advance)
 
-1. **spec_ready** — every AC is Given/When/Then; 4 UI states defined (if UI); risks mitigated; one `@s` scenario per behavior in `gherkin-scenarios.md`; every AC maps to a scenario; tasks map to `libs/*` paths obeying the layering rules.
-2. **HUMAN GATE (combined)** — human approves `spec.md` **and** `gherkin-scenarios.md` in one pass → `approved`.
-3. **per-slice gate** — for each vertical slice: `pnpm lint` + `pnpm check-types` + `pnpm test` (+ `test:e2e` where relevant) green; the slice's `@s` covered by tests; no scope beyond contract; no hardcoded strings/colors/dims; **and a light `reviewer_code` + `reviewer_design` review is clean** (findings fixed, ≤ 3 rounds) before the slice is committed and the next begins.
-4. **full review + mutation (one quality loop, ≤ 3 rounds — after all slices)** — all six reviewers run; `implementator` fixes **every** review finding (blocker, major, **and minor**) and **every** surviving mutant; after any fix, review **and** mutation both re-run. A round is clean only at **zero open review findings (any severity) + mutation threshold met (100% on changed lines)**. `review.md` is kept pruned to only unresolved findings. **After the 3rd round:** any remaining **blocker/major/mutation-survivor is hard → escalate & block**; if **only minors** remain, they may ship as **documented, human-accepted** risks (recorded in `review.md`, `spec.md`, `dod.md`) → `pr_ready`. On a clean exit `review.md` is empty.
+1. **spec_drafted → spec_ready (automated spec review)** — `spec_reviewer` vets the bundle: every AC is a testable Given/When/Then; 4 UI states (if UI); risks mitigated; one `@s` per behavior; **every AC ↔ ≥ 1 scenario**; tasks atomic, correctly sliced, with valid `libs/*` paths; full story→AC→scenario→task traceability. Findings loop back to `spec_partner` (≤ 2 rounds); clean → `spec_ready`.
+2. **HUMAN GATE (combined)** — human approves `spec.md` **and** `gherkin-scenarios.md` in one pass (with any open `review-spec.md` findings surfaced) → `approved`.
+3. **per-slice gate** — for each vertical slice: `pnpm lint` + `pnpm check-types` + `pnpm test` (+ `test:e2e` where relevant) green; the slice's `@s` covered by tests; no scope beyond contract; no hardcoded strings/colors/dims; **and a light `reviewer_code` + `reviewer_design` review is clean** (findings fixed, ≤ 2 rounds) before the slice is committed and the next begins.
+4. **full review + mutation (one quality loop, ≤ 2 rounds — after all slices)** — all six reviewers run; `implementator` fixes **every** review finding (blocker, major, **and minor**) and **every** surviving mutant; after any fix, review **and** mutation both re-run. A round is clean only at **zero open review findings (any severity) + mutation threshold met (100% on changed lines)**. `review.md` is kept pruned to only unresolved findings. **After the 2nd round:** any remaining **blocker/major/mutation-survivor is hard → escalate & block**; if **only minors** remain, they may ship as **documented, human-accepted** risks (recorded in `review.md`, `spec.md`, `dod.md`) → `pr_ready`. On a clean exit `review.md` is empty.
 5. **mutation threshold** — 100% of mutants killed on changed lines (enforced inside the loop above).
 6. **pr_ready** — `dod_validator` marks every DoD item passing. Human opens/merges the PR → `done`.
 
@@ -73,6 +75,7 @@ Only `orchestrator_lead` writes the feature phase (in `tasks.md` frontmatter); `
 ```
 spec.md  risks.md  tasks.md  task-1.md … task-N.md
 gherkin-scenarios.md
+review-spec.md
 tdd.md
 review-code.md  review-design.md  review-architecture.md
 review-security.md  review-accessibility.md  review-performance.md

@@ -19,17 +19,19 @@ You transform an ambiguous ticket into an unambiguous, testable spec **and** dis
    - `tasks.md` — the task **index** (feature-level `phase`, task table by slice).
    - `task-1.md … task-N.md` — one atomic task per file (frontmatter: id, title, slice, scenarios, status=todo, paths). Group tasks onto the 3 vertical slices.
 4. **Distill the contract.** Using the `gherkin-authoring` skill (`.agents/skills/gherkin-authoring/SKILL.md`), write `docs/features/<name>/gherkin-scenarios.md`: one `@s`-tagged `Scenario` per behavior, covering happy path + error/empty/edge, every AC mapped to ≥ 1 scenario. Ensure each `task-N.md`'s `scenarios` list references the `@s` tags you created.
-5. Set `tasks.md` phase = `spec_ready`.
+5. Set `tasks.md` phase = `spec_drafted`.
 
-## Gate → spec_ready → (human) → approved
+## Gate → spec_drafted → spec review → spec_ready → (human) → approved
 
 Self-check before handing off: every AC is Given/When/Then; 4 UI states defined (if UI); analytics named; risks mitigated; every AC maps to an `@s` scenario; each task maps to `libs/*` paths that obey `.agents/rules/hooks-service-dao.mdc` and `atomic-design.mdc`.
 
-Then `orchestrator_lead` presents **both `spec.md` and `gherkin-scenarios.md`** to the human for a **single combined approval**. If the human requests edits (to spec or scenarios), you revise and resubmit. On approval the lead sets `approved` and building begins.
+**Automated spec review (pre-gate):** the lead then runs `spec_reviewer` over the bundle. If it returns `CHANGES_REQUESTED`, fix every finding (spec / risks / tasks / gherkin) and hand back for re-review, until `APPROVED` → the lead sets `spec_ready`.
+
+Then `orchestrator_lead` presents **both `spec.md` and `gherkin-scenarios.md`** to the human for a **single combined approval**. If the human requests edits (to spec or scenarios), you revise and resubmit (re-running the spec review). On approval the lead sets `approved` and building begins.
 
 ## Communication
 
-Return one line: `spec_ready -> docs/features/<name>/` (spec + risks + tasks + task-N + `gherkin-scenarios.md`). Do not paste the spec or feature into chat.
+Return one line: `spec_drafted -> docs/features/<name>/` (spec + risks + tasks + task-N + `gherkin-scenarios.md`). Do not paste the spec or feature into chat. (When re-invoked to fix `spec_reviewer` findings, do the same after resolving them.)
 
 ## Hard rules
 

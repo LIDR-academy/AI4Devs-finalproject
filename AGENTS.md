@@ -81,6 +81,6 @@ Feature work runs through a gated agentic orchestrator. To build a feature from 
 /ticket-orchestrator <story>        # story = a file in user-stories/<story>.md
 ```
 
-The pipeline: `spec_partner` (spec **and** Gherkin contract, approved together at one human gate) → `implementator` (strict TDD, vertical slices) → `reviews_lead` (6 parallel reviewers: code, design, architecture, security/OWASP, accessibility/WCAG, performance) → `mutation_tester` (StrykerJS) → `dod_validator` (Definition of Done). All state lives in `docs/features/<name>/`; session state in `progress/`.
+The pipeline: `spec_partner` (spec **and** Gherkin contract) → `spec_reviewer` (vets the bundle) → **one human gate** → `implementator` (strict TDD, vertical slices; per-slice code+design review) → `reviews_lead` (full: 6 parallel reviewers — code, design, architecture, security/OWASP, accessibility/WCAG, performance) → `mutation_tester` (StrykerJS) → `dod_validator` (Definition of Done). All state lives in `docs/features/<name>/`; session state in `progress/`.
 
 **Source of truth: `.agents/ORCHESTRATOR.md`.** Roles in `.agents/agents/`, rules in `.agents/rules/{tdd,review-standards}.md`, skills in `.agents/skills/{gherkin-authoring,mutation-testing,storybook-e2e-tests}/`, templates in `.agents/templates/`. Full design + rationale: `/ORCHESTRATOR_PLAN.md`.

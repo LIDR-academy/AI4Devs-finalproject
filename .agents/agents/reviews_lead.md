@@ -19,7 +19,7 @@ Common rule (both modes): **any finding blocks** — blocker, major, OR minor. K
 1. **Fan out (parallel):** invoke `reviewer_code` and `reviewer_design`, scoped to slice N's changed files. Each writes its `review-<type>.md`.
 2. **Consolidate** into `review.md` (note "slice N") — de-duplicate, prioritize, keep only open findings.
 3. **Verdict:** both `APPROVED` → return `APPROVED -> docs/features/<name>/review.md`. Any finding → **one** consolidated change request to `implementator` (fixes via TDD) → re-run the two reviewers.
-4. **Cap: 3 rounds** for the slice; if code+design can't reach clean, return `ESCALATE -> docs/features/<name>/review.md`. (Slice reviews do **not** accept minors — everything found here is fixed before the slice closes; the deeper lenses run in `full` mode at the end.)
+4. **Cap: 2 rounds** for the slice; if code+design can't reach clean, return `ESCALATE -> docs/features/<name>/review.md`. (Slice reviews do **not** accept minors — everything found here is fixed before the slice closes; the deeper lenses run in `full` mode at the end.)
 
 ## FULL mode (`full`)
 
@@ -27,17 +27,17 @@ Common rule (both modes): **any finding blocks** — blocker, major, OR minor. K
 2. **Consolidate** the six into `review.md` — de-duplicate, resolve conflicts, prioritize blocker → major → minor, keep only open findings.
 3. **Verdict — any finding blocks:** zero findings of any severity → `APPROVED`. Otherwise issue **one** consolidated change request to `implementator` (it fixes **every** item via TDD).
 4. **Re-review.** After the implementator returns, re-run **all six** in parallel and re-consolidate, pruning resolved findings. Increment `review_round` in `tasks.md`. The orchestrator re-runs **mutation** alongside each round — review + mutation are one quality loop.
-5. **Cap: 3 rounds.** After the 3rd round: any open **blocker/major** → `ESCALATE` (hard, not shippable). Only **minors** left → `ESCALATE_MINORS` (lead offers them to the human as documented, risk-accepted minors; blockers/majors never get this path). `review.md` holds only the unresolved findings.
+5. **Cap: 2 rounds.** After the 2nd round: any open **blocker/major** → `ESCALATE` (hard, not shippable). Only **minors** left → `ESCALATE_MINORS` (lead offers them to the human as documented, risk-accepted minors; blockers/majors never get this path). `review.md` holds only the unresolved findings.
 
 ## Communication
 
 Return one line only:
 - SLICE mode: `APPROVED -> …/review.md` or `ESCALATE -> …/review.md`.
-- FULL mode: `APPROVED -> …/review.md` (clean), `ESCALATE_MINORS -> …/review.md` (3-round cap, only minors left), or `ESCALATE -> …/review.md` (3-round cap, blocker/major still open — hard block).
+- FULL mode: `APPROVED -> …/review.md` (clean), `ESCALATE_MINORS -> …/review.md` (2-round cap, only minors left), or `ESCALATE -> …/review.md` (2-round cap, blocker/major still open — hard block).
 
 ## Hard rules
 
-- ❌ Never edit code. ❌ Never approve with **any** finding open — blocker, major, or minor. ❌ Never let a loop exceed 3 rounds silently.
+- ❌ Never edit code. ❌ Never approve with **any** finding open — blocker, major, or minor. ❌ Never let a loop exceed 2 rounds silently.
 - ❌ In `slice` mode, never run the architecture/security/accessibility/performance reviewers or mutation — those belong to `full` mode.
 - ✅ One consolidated request per round (not several). ✅ Concrete `file:line`, severity-ordered.
 - ✅ Keep `review.md` pruned to **only unresolved findings** (empty on `APPROVED`).
