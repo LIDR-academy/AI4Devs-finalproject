@@ -11,6 +11,7 @@
     "test": "jest --coverage=false --passWithNoTests --watchman=false",
     "test:watch": "jest --watch",
     "test:e2e": "npx playwright test",
+    "test:e2e:ci": "npx playwright test --list",
     "test:e2e:ui": "npx playwright test --ui",
     "test:e2e:report": "npx playwright show-report",
     "mutation": "stryker run"
