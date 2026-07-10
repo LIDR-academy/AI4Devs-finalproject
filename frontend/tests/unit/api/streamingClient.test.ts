@@ -44,20 +44,6 @@ describe('analyzeListingStream', () => {
   });
 
   it('throws an ApiError with code PORTAL_BLOCKED on HTTP 503', async () => {
-    const body = new ReadableStream({
-      start(controller) {
-        controller.enqueue(new TextEncoder().encode('{}'));
-        controller.close();
-      },
-    });
-    const fakeResponse = new Response(body, {
-      status: 503,
-      headers: { 'Content-Type': 'application/json' },
-    });
-    const fetchSpy = vi.fn(async () => fakeResponse);
-    vi.stubGlobal('fetch', fetchSpy);
-
-    // Inject the error body via a separate fetch mock that returns a 503 with the JSON body
     const errorBody = JSON.stringify({
       error: 'PORTAL_BLOCKED',
       message: 'Portal idealista.com está bloqueando peticiones.',
@@ -80,6 +66,38 @@ describe('analyzeListingStream', () => {
         name: 'ApiError',
         status: 503,
         code: 'PORTAL_BLOCKED',
+      }),
+    );
+  });
+
+  it('throws an ApiError with code from structured done-event error', async () => {
+    const sseBody = [
+      'event: done\ndata: {"event":"done","payload":{"error":{"code":"PORTAL_BLOCKED","message":"Portal idealista.com está bloqueando peticiones."}}}\n\n',
+    ].join('');
+
+    const encoder = new TextEncoder();
+    const body = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encoder.encode(sseBody));
+        controller.close();
+      },
+    });
+
+    const fakeResponse = new Response(body, { status: 200 });
+    const fetchSpy = vi.fn(async () => fakeResponse);
+    vi.stubGlobal('fetch', fetchSpy);
+
+    await expect(
+      analyzeListingStream(
+        { url: 'https://www.idealista.com/inmueble/123', sessionId: 'sess-1' },
+        () => {},
+      ),
+    ).rejects.toThrowError(
+      expect.objectContaining({
+        name: 'ApiError',
+        status: 200,
+        code: 'PORTAL_BLOCKED',
+        message: expect.stringContaining('idealista'),
       }),
     );
   });

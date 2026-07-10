@@ -5,6 +5,7 @@
 import type { Request, Response } from 'express';
 import { ProgressEmitter } from '../progressEmitter';
 import type { AnalyzeListingUseCase } from '../../domain/services/AnalyzeListingUseCase';
+import { DomainError } from '../../domain/errors/DomainError';
 
 export async function analyzeStream(
   req: Request,
@@ -24,7 +25,12 @@ export async function analyzeStream(
     });
     emitter.emit('done', result);
   } catch (err) {
-    emitter.emit('done', { error: err instanceof Error ? err.message : 'UNKNOWN' });
+    if (err instanceof DomainError) {
+      emitter.emit('done', { error: { code: err.code, message: err.message } });
+    } else {
+      const message = err instanceof Error ? err.message : 'UNKNOWN';
+      emitter.emit('done', { error: { code: 'INTERNAL_ERROR', message } });
+    }
   } finally {
     emitter.done();
   }

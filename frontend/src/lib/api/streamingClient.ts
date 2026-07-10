@@ -82,9 +82,19 @@ export async function analyzeListingStream(
       const data = JSON.parse(dataMatch[1]) as { event: string; payload: unknown };
 
       if (eventName === 'done') {
-        const payload = data.payload as AnalyzeListingResponse | { error: string };
-        if ('error' in payload && typeof payload.error === 'string') {
-          throw new Error(payload.error);
+        const payload = data.payload as
+          | AnalyzeListingResponse
+          | { error: string | { code: string; message?: string } };
+        if ('error' in payload && payload.error != null) {
+          const errData = payload.error;
+          if (typeof errData === 'object' && 'code' in errData) {
+            throw new ApiError(
+              res.status,
+              errData.code,
+              errData.message ?? 'Error del servidor',
+            );
+          }
+          throw new ApiError(res.status, 'UNKNOWN', String(errData));
         }
         final = payload as AnalyzeListingResponse;
       } else {
