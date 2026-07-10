@@ -319,7 +319,27 @@ happy-path+Loading slice.
 - Commit: `fix(pdf-upload-extraction): remove untested error/reset surface from
   use-pdf-extraction ahead of slice 2`.
 
+## Slice-1 review round 2 — fix cycle (reviewer_code minor: stale test-mock fields)
+
+`review.md` round 2: design APPROVED, code CHANGES_REQUESTED — one minor finding. Round 1's fix
+(`5127bb2`) deleted `error`/`reset` from `UsePdfExtractionResult`/`usePdfExtraction`, but didn't
+touch `pdf-upload.test.tsx`'s local `extractionValue()` mock factory, which still hardcoded
+`error: null` and `reset: jest.fn()` — a stale shape wider than the real hook contract. It didn't
+fail `check-types` only because `mockUsePdfExtraction` is typed as a loose `jest.Mock`, which skips
+excess-property checking.
+
+- **Fix**: deleted `error: null,` and `reset: jest.fn(),` from `extractionValue()` in
+  `pdf-upload.test.tsx` (`libs/study-buddy/src/components/pdf-upload/pdf-upload.test.tsx`) so the
+  mock factory matches `UsePdfExtractionResult`'s current, real shape.
+- No new test was written: this is a pure deletion of an untested, stale mock field, not new
+  behavior — nothing to encode in a new RED test. All 5 existing `pdf-upload.test.tsx` cases stayed
+  green and unmodified otherwise.
+- Re-ran and confirmed green: `pnpm --filter @helsoft/study-buddy test` (4 suites / 30 tests),
+  `pnpm --filter @helsoft/study-buddy check-types`, whole-repo `pnpm check-types` (8/8) and
+  `pnpm lint` — all clean.
+- Commit: `fix(pdf-upload-extraction): remove stale error/reset fields from pdf-upload test mock`.
+
 ## Stop condition
 
-Slice 1 gate is green. Fix cycle above addresses round-1 `review-code.md`'s only finding; stopping
+Slice 1 gate is green. Fix cycles above address round-1's and round-2's only findings; stopping
 here for re-review before Slice 2 begins.

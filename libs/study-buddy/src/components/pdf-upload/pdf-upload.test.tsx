@@ -26,8 +26,6 @@ const extractionValue = (overrides: Partial<ReturnType<typeof usePdfExtraction>>
   extract: jest.fn(),
   stage: 'idle' as const,
   result: null,
-  error: null,
-  reset: jest.fn(),
   ...overrides,
 });
 
