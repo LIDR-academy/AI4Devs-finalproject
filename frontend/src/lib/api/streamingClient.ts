@@ -9,6 +9,17 @@ import type { ProgressEventName, AnalyzeListingResponse } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
 
+export class ApiError extends Error {
+  constructor(
+    public readonly status: number,
+    public readonly code: string,
+    message: string,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
 export interface StreamOptions {
   url: string;
   sessionId?: string;
@@ -30,8 +41,22 @@ export async function analyzeListingStream(
     credentials: 'include',
   });
 
-  if (!res.ok || !res.body) {
-    throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) {
+    let body: { error?: string; message?: string } = {};
+    try {
+      body = (await res.json()) as { error?: string; message?: string };
+    } catch {
+      // ignore — body may not be JSON
+    }
+    throw new ApiError(
+      res.status,
+      body.error ?? 'UNKNOWN',
+      body.message ?? `HTTP ${res.status}`,
+    );
+  }
+
+  if (!res.body) {
+    throw new ApiError(res.status, 'NO_BODY', 'Empty response body');
   }
 
   const reader = res.body.getReader();
