@@ -68,4 +68,15 @@ describe('SignInForm', () => {
 
     expect(screen.getByRole('button', { name: 'auth.submit', disabled: true })).toBeTruthy();
   });
+
+  // @s3 — the exact `auth.signingIn` i18n key (not a placeholder/empty string) is wired into
+  // LoginForm's Loading affordance.
+  it('passes the auth.signingIn i18n key into the Loading affordance', async () => {
+    mockUseAuth.mockReturnValue(authValue({ isSubmitting: true }));
+    mockUseLocalization.mockReturnValue(localizationValue());
+
+    await render(<SignInForm />);
+
+    expect(screen.getByText('auth.signingIn')).toBeTruthy();
+  });
 });

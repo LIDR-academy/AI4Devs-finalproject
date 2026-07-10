@@ -302,3 +302,109 @@ lint` all green. No hardcoded strings/colors/dimensions introduced. `@s5, @s6, @
 (Slice 2/3 scope) untouched this round.
 
 Commit: `fix(login-and-logout): resolve Round 2 findings (iOS a11y, locale)`.
+
+---
+
+## Mutation-kill pass (Phase 4 — StrykerJS survivors)
+
+Responds to `docs/features/login-and-logout/mutation.md` (28 addressable survivors across
+`@helsoft/services`, `@helsoft/hooks`, `@helsoft/components`, `@helsoft/study-buddy`). No
+production code changed anywhere in this pass — every implementation was already correct; every
+fix is a strengthened/added test that pins the exact behavior a mutant was allowed to silently
+break. One block per file, RED (mutant survives) → GREEN (test added, passes against real code,
+re-run of scoped Stryker confirms the kill).
+
+### `auth.service.ts` (@s9, @s2) — 4/4 killed
+- **RED** — verified in Node first (not guesswork) that `/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(' user@example.com')`
+  is `false` but the same pattern minus `^` is `true` (anchor pins the *start*); symmetric for
+  `'test@test.com@invalid'` and the `$` anchor (pins the *end*, rejecting trailing `@junk`).
+- **GREEN** — `auth.service.test.ts`: two new `isValidEmail` cases (leading-space, trailing-`@junk`);
+  `signIn`'s two existing rejection tests tightened from `.rejects.toThrow()` to
+  `.rejects.toThrow('Invalid email')` / `.rejects.toThrow('Password is required')` (exact message).
+- Scoped Stryker (`--mutate "src/services/auth.service.ts"`): 84.62% → **100.00%** (26/26 killed).
+
+### `use-auth.ts` (@s2, @s3, @s4) — 0/3 killed, all 3 confirmed equivalent
+- **RED** — the 3 survivors are all `useCallback` dependency-array mutations
+  (`withSubmitting`'s `[]`→`["Stryker was here"]`; `signIn`/`signOut`'s `[withSubmitting]`→`[]`).
+- **Analysis before writing tests**: `withSubmitting` closes over nothing that ever changes across
+  renders of one hook instance (only the React-stable `setIsSubmitting`), so its identity is
+  constant forever — meaning none of these 3 dependency-array mutations can ever produce an
+  observable behavior difference (a textbook equivalent mutant).
+- **Tried anyway, per this phase's "kill first" instruction** — added
+  `'keeps signIn and signOut referentially stable across re-renders'` and
+  `'a signIn reference captured on an earlier render still drives the current isSubmitting
+  state'` (`use-auth.test.ts`). Both green, both valuable regressions in their own right.
+- **GREEN (for the equivalence claim, not the mutants)** — re-ran scoped Stryker
+  (`--mutate "src/hooks/use-auth.ts"`) after adding both tests: still 62.50% (5/8), same 3
+  survivors, empirically confirming no test can distinguish real code from any of these 3
+  mutants. No inline Stryker ignore-comment exists in the installed
+  `@stryker-mutator/instrumenter@8.7.1` (verified against its source); the only lever
+  (`mutator.excludedMutations`) is a package-wide category disable, rejected as too broad.
+  Documented in `mutation.md` as an accepted, human-sign-off-requested risk (same
+  ESCALATE_MINORS precedent as this feature's own Round-3 review).
+
+### `login-form.tsx` (@s2, @s3) — 11/11 killed
+- **RED→GREEN**, one assertion group at a time: pristine initial state
+  (`getByLabelText('Email'|'Password').props.value === ''` on a bare render — kills both
+  `useState('')`→`useState("Stryker was here!")` mutants); the literal `LOADING_INDICATOR_TEST_ID`
+  string (`expect(LOADING_INDICATOR_TEST_ID).toBe('login-form-loading-indicator')` — kills the
+  `= ""` mutant that survived because every query in the file uses the same, now-consistently-empty,
+  imported constant); submit-row layout (`toHaveStyle({ flexDirection: 'row', alignItems:
+  'center', gap: spacing.s3 })` on the submit button's parent View — kills the `submitRow`
+  object-literal mutant plus its two property mutants); form vertical rhythm
+  (`toHaveStyle({ gap: spacing.s4 })` two levels up — kills the `form` object-literal mutant, and
+  transitively the whole-`StyleSheet.create()`→`{}` mutant since any of the three style objects
+  going missing now fails an assertion); live-region visual-hiding
+  (`toHaveStyle({ position: 'absolute', width: 1, height: 1, overflow: 'hidden' })` on the
+  live-region `<Text>` — kills `visuallyHidden` and its two property mutants).
+- **REFACTOR** — none needed; each new test is a single, focused assertion group, no duplication.
+- Scoped Stryker (`--mutate "src/organisms/login-form/login-form.tsx"`): 50.00% → **100.00%**
+  (22/22 killed). 5 new tests, `login-form.test.tsx` now 15 total, all green.
+
+### `button.tsx` — 0/40 killed this pass, all 40 confirmed out of scope
+- **Not a test gap left unaddressed** — investigated every surviving line's origin via
+  `git show 7751666 -- .../button.tsx` (this feature's own Round-1 commit that touched the file).
+  39 of the 40 sit on lines this feature never added/changed (icon/label padding math, the
+  elevated-variant shadow branch, `root`'s non-`minHeight` layout properties, the
+  `variant`→background-color map, `fgByVariant`, `stateOpacity`) — pre-existing since
+  `913e38b` ("feat(components): add Material Design 3 themed component library"), before
+  `button.test.tsx` existed at all (per this file's own Round-1 log entry). This feature's own
+  hitSlop/minHeight lines (`:34-39,92,94,109,123`) have **zero** survivors — already 100% from the
+  two Round-1 tests.
+- The 1 remaining survivor **is** on a line this feature edited
+  (`:59:22`, `useVariants({ variant })`→`useVariants({})`, from dropping `size` out of that call).
+  Did not assume equivalence — inspected `node_modules/react-native-unistyles/src/mocks.ts`
+  directly: the official Jest mock makes `useVariants` a complete no-op and unconditionally strips
+  `variants`/`compoundVariants` from every resolved style before returning it. No test, in this
+  toolchain, can ever observe a difference from what's passed to `useVariants(...)` — confirmed by
+  reading the mock's source, not inferred from the empty coverage line.
+- **Disposition** — no new tests added (none would kill anything real); documented in full in
+  `mutation.md` with the line-by-line origin trace.
+
+### `sign-in-form.tsx` (@s3) — 1/1 killed
+- **RED→GREEN** — `'passes the auth.signingIn i18n key into the Loading affordance'`: renders with
+  `authValue({ isSubmitting: true })` and asserts `getByText('auth.signingIn')` (the test-double
+  `t()` echoes its key verbatim, so asserting the on-screen text pins the exact key string passed
+  to `t(...)`, killing the `t('auth.signingIn')`→`t("")` mutant).
+- Scoped Stryker: 90.00% → **100.00%** (10/10 killed).
+
+### `sign-out.tsx` (@s4, @s10, @s11) — 3/3 killed
+- **RED→GREEN**: `'does not show the confirmation dialog before the trigger is pressed'`
+  (`queryByText('auth.logOutConfirmBody')` is `null` pre-press — kills the initial
+  `useState(false)`→`useState(true)` mutant, verified real `Modal`'s `visible` prop genuinely gates
+  child rendering at the RN level, not just visually); the existing "shows a confirmation dialog"
+  test extended to also assert `getByText('auth.logOutConfirmHeadline')` (previously only body copy
+  was checked — kills the headline `t(...)`→`t("")` mutant); `'closes the confirmation dialog after
+  confirming'` (`queryByText('auth.logOutConfirmBody')` is `null` after pressing confirm — kills
+  the `setConfirmOpen(false)`→`setConfirmOpen(true)` mutant inside `onConfirm`).
+- Scoped Stryker: 76.92% → **100.00%** (13/13 killed).
+
+### Mutation-kill pass gate
+`pnpm turbo run test` (all workspaces), `pnpm turbo run check-types --filter=@helsoft/services
+--filter=@helsoft/hooks --filter=@helsoft/components --filter=@helsoft/study-buddy
+--filter=app-study-buddy`, and `pnpm lint` all green. No production code touched — every change is
+test-only. Full breakdown, including the two documented-equivalent-mutant exceptions
+(`use-auth.ts` ×3, `button.tsx`'s `useVariants` line ×1) and the 39 pre-existing/out-of-scope
+`button.tsx` survivors, is in `docs/features/login-and-logout/mutation.md`.
+
+Commit: `test(login-and-logout): kill surviving mutants`.

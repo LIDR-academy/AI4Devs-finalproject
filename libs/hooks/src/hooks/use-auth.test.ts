@@ -102,4 +102,48 @@ describe('useAuth', () => {
 
     expect(result.current.isSubmitting).toBe(false);
   });
+
+  // Memoization — signIn/signOut must stay referentially stable across re-renders that
+  // don't change any dependency, so a memoized consumer (e.g. React.memo'd button) never
+  // re-renders needlessly.
+  it('keeps signIn and signOut referentially stable across re-renders', () => {
+    const { result, rerender } = renderHook(() => useAuth());
+
+    const firstSignIn = result.current.signIn;
+    const firstSignOut = result.current.signOut;
+
+    rerender();
+
+    expect(result.current.signIn).toBe(firstSignIn);
+    expect(result.current.signOut).toBe(firstSignOut);
+  });
+
+  // Stale-closure guard — a signIn reference captured on an early render must still drive
+  // the *current* isSubmitting state correctly on a later render, not a stale snapshot.
+  it('a signIn reference captured on an earlier render still drives the current isSubmitting state', async () => {
+    let resolveSignIn: (value: unknown) => void = () => {};
+    service.signIn.mockReturnValue(
+      new Promise((resolve) => {
+        resolveSignIn = resolve;
+      }) as never,
+    );
+    const { result, rerender } = renderHook(() => useAuth());
+    const signInFromFirstRender = result.current.signIn;
+
+    rerender();
+
+    let signInPromise!: Promise<void>;
+    act(() => {
+      signInPromise = signInFromFirstRender('user@example.com', 'secret1');
+    });
+
+    expect(result.current.isSubmitting).toBe(true);
+
+    await act(async () => {
+      resolveSignIn({ session: null, user: null });
+      await signInPromise;
+    });
+
+    expect(result.current.isSubmitting).toBe(false);
+  });
 });

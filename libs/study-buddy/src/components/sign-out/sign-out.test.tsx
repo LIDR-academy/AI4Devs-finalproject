@@ -29,6 +29,17 @@ describe('SignOut', () => {
     expect(screen.getByRole('button', { name: 'auth.logOut' })).toBeTruthy();
   });
 
+  // @s4/@s10/@s11 — the confirmation dialog is not shown before the trigger is pressed
+  // (confirmOpen starts false, not true).
+  it('does not show the confirmation dialog before the trigger is pressed', async () => {
+    mockUseAuth.mockReturnValue(authValue());
+    mockUseLocalization.mockReturnValue(localizationValue());
+
+    await render(<SignOut />);
+
+    expect(screen.queryByText('auth.logOutConfirmBody')).toBeNull();
+  });
+
   // @s4/@s10/@s11 — pressing the trigger shows a confirmation dialog before signing out.
   it('shows a confirmation dialog when the trigger is pressed', async () => {
     mockUseAuth.mockReturnValue(authValue());
@@ -40,6 +51,7 @@ describe('SignOut', () => {
     });
 
     expect(screen.getByText('auth.logOutConfirmBody')).toBeTruthy();
+    expect(screen.getByText('auth.logOutConfirmHeadline')).toBeTruthy();
   });
 
   // @s4/@s11 — confirming in the dialog signs the user out.
@@ -57,6 +69,24 @@ describe('SignOut', () => {
     });
 
     expect(signOut).toHaveBeenCalledTimes(1);
+  });
+
+  // @s4/@s11 — confirming closes the dialog (confirmOpen resets to false), not just triggers
+  // signOut alongside a dialog left open.
+  it('closes the confirmation dialog after confirming', async () => {
+    const signOut = jest.fn();
+    mockUseAuth.mockReturnValue(authValue({ signOut }));
+    mockUseLocalization.mockReturnValue(localizationValue());
+
+    await render(<SignOut />);
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'auth.logOut' }));
+    });
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'auth.logOutConfirmAction' }));
+    });
+
+    expect(screen.queryByText('auth.logOutConfirmBody')).toBeNull();
   });
 
   // @s10 — dismissing the dialog (cancel) keeps the session active: signOut is never called.

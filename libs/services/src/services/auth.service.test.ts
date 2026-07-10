@@ -26,6 +26,20 @@ describe('AuthService', () => {
         expect(AuthService.isValidEmail(email)).toBe(false);
       },
     );
+
+    // Regex boundary — a leading, disallowed character before an otherwise well-formed
+    // email must not validate: pins the `^` anchor (without it, the pattern would still
+    // match the well-formed "user@example.com" tail and wrongly report true).
+    it('rejects an email with a disallowed character before the local part', () => {
+      expect(AuthService.isValidEmail(' user@example.com')).toBe(false);
+    });
+
+    // Regex boundary — a well-formed email followed by trailing "@domain" junk must not
+    // validate: pins the `$` anchor (without it, the pattern would match just the leading
+    // "test@test.com" and ignore the trailing junk, wrongly reporting true).
+    it('rejects an email with trailing junk after the tld', () => {
+      expect(AuthService.isValidEmail('test@test.com@invalid')).toBe(false);
+    });
   });
 
   describe('isNonEmptyPassword', () => {
@@ -53,15 +67,17 @@ describe('AuthService', () => {
       });
     });
 
-    // @s9 — a malformed email is rejected before any network call is made.
+    // @s9 — a malformed email is rejected before any network call is made, with the exact
+    // "Invalid email" message (not just "some error").
     it('rejects a malformed email without calling the DAO', async () => {
-      await expect(AuthService.signIn('not-an-email', 'secret1')).rejects.toThrow();
+      await expect(AuthService.signIn('not-an-email', 'secret1')).rejects.toThrow('Invalid email');
       expect(dao.signInWithPassword).not.toHaveBeenCalled();
     });
 
-    // @s9 — an empty password is rejected before any network call is made.
+    // @s9 — an empty password is rejected before any network call is made, with the exact
+    // "Password is required" message (not just "some error").
     it('rejects an empty password without calling the DAO', async () => {
-      await expect(AuthService.signIn('user@example.com', '')).rejects.toThrow();
+      await expect(AuthService.signIn('user@example.com', '')).rejects.toThrow('Password is required');
       expect(dao.signInWithPassword).not.toHaveBeenCalled();
     });
   });

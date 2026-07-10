@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { AccessibilityInfo } from 'react-native';
 
 import { disabledOpacity } from '../../theme/colors';
+import { spacing } from '../../theme/spacing';
 import { LOADING_INDICATOR_TEST_ID, LoginForm } from './login-form';
 
 const labels = {
@@ -20,6 +21,20 @@ describe('LoginForm', () => {
     expect(screen.getByLabelText('Email')).toBeTruthy();
     expect(screen.getByLabelText('Password')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Log in' })).toBeTruthy();
+  });
+
+  // @s2 — the form is pristine on mount: no leftover/injected text in either field.
+  it('starts with empty email and password field values', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} />);
+
+    expect(screen.getByLabelText('Email').props.value).toBe('');
+    expect(screen.getByLabelText('Password').props.value).toBe('');
+  });
+
+  // @s3 — pins the literal testID so the constant can't silently become an empty string
+  // while every query in this file (which imports the same constant) still resolves.
+  it('exposes the documented literal testID for the loading indicator', () => {
+    expect(LOADING_INDICATOR_TEST_ID).toBe('login-form-loading-indicator');
   });
 
   // @s2 — typing credentials then submitting reports the exact entered values up.
@@ -124,5 +139,37 @@ describe('LoginForm', () => {
     await render(<LoginForm onSubmit={jest.fn()} labels={labels} />);
 
     expect(screen.queryByText('No account? Sign up')).toBeNull();
+  });
+
+  // Layout — the submit row lays the button and loading affordance out side-by-side,
+  // vertically centered, with the standard inline gap (spec.md UI-states table).
+  it('lays out the submit row as a horizontally centered row with the standard gap', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} />);
+
+    const submitRow = screen.getByRole('button', { name: 'Log in' }).parent;
+
+    expect(submitRow).toHaveStyle({ flexDirection: 'row', alignItems: 'center', gap: spacing.s3 });
+  });
+
+  // Layout — the form stacks its fields/submit row with the standard vertical gap.
+  it('stacks the form contents with the standard vertical gap', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} labels={labels} />);
+
+    const form = screen.getByRole('button', { name: 'Log in' }).parent?.parent;
+
+    expect(form).toHaveStyle({ gap: spacing.s4 });
+  });
+
+  // Layout/a11y — the live-region text stays mounted (so assistive tech can read it) but is
+  // clipped out of the visual layout via absolute positioning + a 1x1 hidden box.
+  it('keeps the live-region text visually hidden but mounted (absolute, 1x1, clipped)', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} isSubmitting labels={labels} />);
+
+    expect(screen.getByText(labels.signingIn)).toHaveStyle({
+      position: 'absolute',
+      width: 1,
+      height: 1,
+      overflow: 'hidden',
+    });
   });
 });
