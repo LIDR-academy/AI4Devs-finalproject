@@ -72,3 +72,15 @@ Component → Hook → Service → DAO → Supabase / external API
 - Kebab-case filenames: `component-name/component-name.tsx` (+ `component-name.stories.tsx` for every shared component), `{feature}.dao.ts`, `{feature}.service.ts`, `use-{feature}.ts`.
 - Platform-specific files use the `.web.tsx` suffix convention (see `apps/app-study-buddy/src/components/`).
 - New apps `app-{feature}` should pair with a feature lib `libs/{feature}`.
+
+## Agentic orchestrator
+
+Feature work runs through a gated agentic orchestrator. To build a feature from a user story:
+
+```
+/ticket-orchestrator <story>        # story = a file in user-stories/<story>.md
+```
+
+The pipeline: `spec_partner` (spec **and** Gherkin contract, approved together at one human gate) → `tdd_craftsman` (strict TDD, vertical slices) → `reviews_lead` (6 parallel reviewers: code, design, architecture, security/OWASP, accessibility/WCAG, performance) → `mutation_tester` (StrykerJS) → `dod_validator` (Definition of Done). All state lives in `docs/features/<name>/`; session state in `progress/`.
+
+**Source of truth: `.agents/ORCHESTRATOR.md`.** Roles in `.agents/agents/`, rules in `.agents/rules/{tdd,review-standards}.md`, skills in `.agents/skills/{gherkin-authoring,mutation-testing,storybook-e2e-tests}/`, templates in `.agents/templates/`. Full design + rationale: `/ORCHESTRATOR_PLAN.md`.

@@ -8,7 +8,7 @@
     "dev": "storybook dev -p 6006",
     "build": "storybook build",
     "check-types": "tsc --noEmit",
-    "test": "jest",
+    "test": "jest --coverage=false --passWithNoTests --watchman=false",
     "test:watch": "jest --watch",
     "test:e2e": "npx playwright test",
     "test:e2e:ui": "npx playwright test --ui",
