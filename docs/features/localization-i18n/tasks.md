@@ -1,7 +1,7 @@
 ---
 feature: localization-i18n
-phase: approved   # pending|spec_ready|approved|in_progress|in_review|mutation|pr_ready|done
-review_round: 0     # incremented by reviews_lead; cap 3
+phase: pr_ready   # pending|spec_ready|approved|in_progress|in_review|mutation|pr_ready|done
+review_round: 3     # incremented by reviews_lead; cap 3 — CAP REACHED, escalated to human (see review.md)
 ---
 
 # Tasks — localization-i18n
@@ -24,3 +24,11 @@ Index of atomic tasks (one `task-N.md` each), grouped by vertical slice. `orches
 | [task-12](./task-12.md) | 3 | @s5, @s13, @s15 | done | libs/components/src/molecules/language-selector, libs/components/tests/e2e |
 
 **Slice 1 — Happy path: lib + provider + auto-detect (+ Loading gate)** · **Slice 2 — Manual override + persistence + fallback/error** · **Slice 3 — Full string migration + a11y + stories**
+
+## Post-approval history
+- Round 1 review: APPROVED (all six reviewers), 0 blocker/major, minors carried as follow-ons.
+- Mutation (Phase 5): PASS, 100% on changed lines (6 documented + independently-accepted equivalents in `@helsoft/localization`).
+- DoD (Phase 6): PASS → `pr_ready` (2026-07-09).
+- Polish commit `7084e5f` (2026-07-10): resolved round-1 minors (a11y header role, type-boundary casts, dead-code removal, barrel narrowing, partial memoization).
+- Round 2 re-review: triggered by the human to independently confirm `7084e5f` introduced no regressions. 5/6 APPROVED; `reviewer_accessibility` returned CHANGES_REQUESTED (major: `LanguageSelector` container `radiogroup` role likely inert for native assistive tech). One consolidated change request issued to `implementator`.
+- Round 3 re-review (this round, **cap reached**): `implementator` investigated thoroughly and concluded no verified-safe code fix exists (the "obvious" fix, `accessible={true}`, would very likely make the individually-accessible `radio` children unreachable on iOS, and this repo's Jest/RNTL tooling cannot faithfully verify otherwise — empirically demonstrated via a probe). Documented as Follow-on **FO2** in `spec.md` (parallel to the existing human-approved `TODO(FO1)`), with corrected test/doc claims. 5/6 reviewers APPROVED this response; `reviewer_accessibility` independently re-verified the investigation as sound but still returned CHANGES_REQUESTED — not asking for more engineering, but because FO2, unlike FO1, has not yet had an explicit human risk-acceptance sign-off. Per the 3-round cap, `reviews_lead` **escalates to the human**. See `review.md` §"Round 3" for the full record and the exact sign-off needed.

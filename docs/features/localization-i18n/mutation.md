@@ -159,3 +159,80 @@ Post-rework per-lib results on changed lines:
 ### Gate 5 result after re-work
 100% of non-equivalent mutants on the feature's changed lines are killed; the remaining 6 survivors are
 documented equivalents above. Gate met.
+
+---
+
+## Round 2 — independent re-verification by `mutation_tester` (Phase 4, round 2)
+
+**Verdict: PASS** — 100% of non-equivalent mutants on the feature's changed lines are killed;
+the only survivors are the **6 documented equivalents**, each independently re-judged and **accepted** below.
+
+Re-run independently (not trusting the self-report), scoped to the same changed source per lib vs base
+`dee16ff`, on the committed `stryker.config.mjs` files (no ad-hoc flags: each config now declares
+`plugins` explicitly; study-buddy uses `inPlace: true`). All four runs succeeded with the committed
+configs — no workaround needed. Measure-only: `git status` shows every mutated `.ts`/`.tsx` unmodified
+after the runs (study-buddy `inPlace` files restored, tree clean).
+
+Data files carrying no logic (`resources/*.ts`, `config/supported-locales.ts` endonym labels, barrels)
+are excluded from scope — pure translation/label data, consistent with round 1.
+
+### Per-lib scores (round 2)
+
+| Lib | File(s) mutated | total | killed | timeout | survived | #err | score (excl. equivalents) |
+|---|---|---:|---:|---:|---:|---:|---:|
+| @helsoft/services | dao/locale-preference.dao.ts + services/locale-preference.service.ts | 13 | 8 | 0 | 0 | 5 | **100%** |
+| @helsoft/components | molecules/language-selector/language-selector.tsx | 20 | 19 | 0 | 0 | 1 | **100%** |
+| @helsoft/study-buddy | components/language-settings/language-settings.tsx | 10 | 9 | 0 | 0 | 1 | **100%** |
+| @helsoft/localization | config/i18n.ts, detector/{device-locale,resolve-initial-locale}.ts, hooks/use-localization.ts, provider/localization-provider.tsx | 49 | 16 | 7 | 6 (all equivalent) | 20 | **100%** |
+
+Localization per-file: `config/i18n.ts` — only #28 survives (accepted equivalent); `detector/*` — all killed/compile-filtered; `hooks/use-localization.ts` — 100% (#2 killed); `provider/localization-provider.tsx` — 9 killed + 6 timeout; the 5 survivors are #21/#22/#23/#24/#25 (all accepted equivalents).
+
+**Round-1 → round-2 delta:** 29 survivors → 0 real survivors. Every Group A behavioral gap (#1–8),
+every Group B `StyleSheet` mutant (#9–19), and the killable Group C mutants (#20 useEffect deps, #26/#27
+`escapeValue`, #29 `returnNull`) are now **killed** — confirmed in the round-2 logs (e.g. `injects
+interpolated values without HTML-escaping them`, `returns a string, never null...`, `re-resolves the
+locale when the device locale prop changes`, `renders nothing until the initial locale resolves`).
+
+### The 6 surviving mutants observed in round 2 (localization) — identical to the claimed equivalents
+
+1. `config/i18n.ts:23:20` — `initImmediate: false` → `true` (#28)
+2. `provider/localization-provider.tsx:42:11` — `if (active)` → `if (true)` (#23)
+3. `provider/localization-provider.tsx:47:18` — cleanup `return () => { active = false; }` → `return () => {}` (#24)
+4. `provider/localization-provider.tsx:48:16` — `active = false` → `active = true` (#25)
+5. `provider/localization-provider.tsx:63:5` — useCallback deps `[i18n]` → `[]` (#21)
+6. `provider/localization-provider.tsx:66:74` — useMemo deps `[setLocale]` → `[]` (#22)
+
+### Independent ruling on each claimed equivalent
+
+- **#21 `[i18n]` → `[]` — ACCEPTED (equivalent).** `i18n` comes from `const [i18n] = useState(() =>
+  createI18n(...))` with **no setter destructured**, so it is a fixed reference for the component's whole
+  lifetime. A `useCallback` whose only dep never changes is created once and never recreated under both
+  `[i18n]` and `[]` — identical callback identity, identical render output. Perf-only, no observable change.
+
+- **#22 `[setLocale]` → `[]` — ACCEPTED (equivalent).** `setLocale` is stable (it is the #21 callback,
+  which is stable regardless of the #21 mutation). A `useMemo` whose only dep is stable produces the same
+  `value` object under `[setLocale]` and `[]`; context consumers receive the same reference either way.
+  No extra renders, no behavioral change.
+
+- **#23 / #24 / #25 — ACCEPTED (equivalent).** These are one async-set-after-unmount guard. Their only
+  effect is whether `setReady(true)` may run *after* unmount when the async `resolve()` settles late.
+  This project runs **React 19**, which removed the "state update on an unmounted component" warning and
+  treats such a setter call as a silent no-op — no rendered-output change and no console output. There is
+  no observable signal for a test to assert on (the flag is internal, children are already unmounted, no
+  warning fires). Not deterministically killable in jsdom; kept as correct defensive practice.
+
+- **#28 `initImmediate: false` → `true` — ACCEPTED (equivalent).** i18next is initialized from **inline
+  `resources` with no async backend**, so the resource store is populated synchronously in `init` and
+  `t()` returns the correct translation immediately under both values (confirmed: every `config/i18n.test.ts`
+  case — which synchronously calls `t()` right after `createI18n` — still passes with the mutant). The
+  provider's no-flash first-paint gate depends on the awaited `changeLanguage` + `ready` state, **not** on
+  `init` timing (the `renders nothing until the initial locale resolves` test still passes with the
+  mutant), so the flag has no observable effect on translation or first-paint behavior here. The only
+  residual difference is `instance.isInitialized`'s sync-vs-next-tick timing, which no code path or test in
+  the feature observes; asserting it would test i18next internals, not the feature's contract. Weakest of
+  the six but a sound equivalence for this codebase.
+
+### Gate 5 result (round 2)
+services / components / study-buddy = **100% killed** on changed lines. localization = **100% of
+non-equivalent mutants killed**; the 6 remaining survivors are all accepted equivalents (rulings above).
+Threshold met. No real survivors and no rejected equivalence justifications.

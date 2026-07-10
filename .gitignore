@@ -18,6 +18,7 @@ web-build/
 # storybook
 storybook-static/
 *storybook.log
+.design-sync/sb-reference/
 
 # env
 .env

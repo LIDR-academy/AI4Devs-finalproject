@@ -73,10 +73,15 @@ describe('LanguageSelector', () => {
     expect(screen.getByLabelText('Choose a language')).toBeTruthy();
   });
 
-  // @s13 — the container is announced as a single-choice group (radiogroup), so assistive tech
-  // treats the options as one mutually-exclusive set rather than unrelated controls. The container
-  // is intentionally not an accessibility *element* (children stay navigable), so the role is
-  // asserted on the labelled container node directly rather than via a role query.
+  // @s13 — regression guard for the literal `accessibilityRole` prop value only. It does NOT prove
+  // that native (iOS/Android) assistive tech perceives the "radiogroup" grouping: a true
+  // `getByRole('radiogroup')` query throws on this markup, because the container is intentionally
+  // never marked `accessible={true}` (doing so would very likely make VoiceOver treat it as one
+  // opaque leaf and stop recursing into the four `radio` children below, per RN's own accessibility
+  // model — see the "Known limitation" in spec.md's FO2 and tdd.md's Phase 6). So the prop is
+  // asserted directly on the labelled node, not via a `byRole` query, and this test's job is only to
+  // catch a future accidental change/removal of that prop value — not to certify WCAG 1.3.1/4.1.2
+  // group semantics for the container.
   it('exposes a radiogroup role for the container', async () => {
     await render(
       <LanguageSelector options={options} value="de" onChange={jest.fn()} accessibilityLabel="Choose a language" />,

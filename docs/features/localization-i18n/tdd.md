@@ -275,6 +275,16 @@ human-gate-approved and explicitly not a violation.
   `byRole` query, which only reaches accessible elements); `places the check indicator inside the active
   option only` uses `within(activeRadio)` to tie the non-color check cue to the selected row and asserts no
   inactive row carries it. Both green on the existing component (no `radiogroup` was missing).
+- **Correction (round-2 re-review, 2026-07-10):** the paragraph above, and this write-up's original framing,
+  overclaimed what `exposes a radiogroup role for the container` proves. It is a real, legitimate regression
+  guard for the literal `accessibilityRole` prop *value* — nothing more. It does **not** prove, and should
+  not be read as proving, that native (iOS/Android) assistive tech ever perceives the "radiogroup" grouping:
+  a genuine `getByRole('radiogroup')` query throws on this exact markup (empirically reconfirmed independently
+  below, in Phase 6), precisely because the container is never `accessible={true}`. That is by design — see
+  Phase 6 for why — but it means the WCAG 1.3.1/4.1.2 group-semantics gap for the container is real, not
+  closed by this test. The test's own comment and this section have both been corrected accordingly (see
+  `language-selector.test.tsx`'s updated comment on that test, and Phase 6 below for the full investigation
+  and the human-facing "Known limitation" write-up in `spec.md` FO2).
 
 ### Finding 3 (code/security) — narrowed the type-boundary casts via `isSupportedLocale`
 - **`use-localization.ts`** — **RED**: `use-localization.test.tsx` →
@@ -329,10 +339,121 @@ human-gate-approved and explicitly not a violation.
 | @s5/@s13 | `language-selector.test.tsx`: `exposes a radiogroup role for the container`, `places the check indicator inside the active option only` |
 | @s6 (a11y) | `language-settings.test.tsx`: `exposes the language heading as a header` |
 | @s6 (boundary) | `language-settings.test.tsx`: `does not forward a selection that is not a supported locale` |
-| @s3/@s4 | `use-localization.test.tsx`: `falls back to the fallback locale when i18n reports an unsupported language` |
+| supplementary hardening (not tied to a single @s) | `use-localization.test.tsx`: `falls back to the fallback locale when i18n reports an unsupported language` — a defense-in-depth guard on the hook's `locale` exposure (guards against i18next ever reporting an out-of-set `i18n.language` reaching a consumer unguarded), not the device-locale-detection scenario itself; the real @s3/@s4 coverage is `detector/resolve-initial-locale.test.ts` + `provider/localization-provider.test.tsx` as already listed in the `@s → test map` above. |
 
 ### Phase 5 gate ✅
 `pnpm check-types` (8 pkgs) + `pnpm lint` clean; `pnpm test` green everywhere (localization 52, components 17,
 study-buddy 7, services 13, hooks 4, lib-with-storybook 2); `pnpm --filter @helsoft/components test:e2e` = 19/19.
 Per-lib Stryker on changed files — `use-localization.ts`, `language-selector.tsx`, `language-settings.tsx`,
 `locale-preference.dao.ts` (+ `.service.ts`) — all **100%** (0 survived). Left for re-review (not self-marked done).
+
+---
+
+## Phase 6 — round-2 change request response (a11y major finding, `review.md`)
+
+`reviews_lead` issued one consolidated round-2 change request: investigate whether
+`libs/components/src/molecules/language-selector/language-selector.tsx:38`'s container `radiogroup` role +
+group label can be exposed to native (iOS/Android) assistive tech without regressing the four individually-
+accessible `radio` children; ship a verified-safe fix via TDD if one exists, otherwise correct the record
+and document the gap honestly. No `@s` demands new behavior here — this is a re-work response, not a new
+scenario — so no production code was written per Law 1 (no failing test demanded any).
+
+### Investigation (before writing any test or code, per the task's explicit order)
+
+1. **Re-verified the reviewer's claim against the actual installed RN source**
+   (`node_modules/react-native@0.86.0/Libraries/Components/View/ViewAccessibility.js:341-424`): the full
+   `AccessibilityProps` type for a plain `View` was read end-to-end. There is **no public prop** that lets a
+   container announce a group role/label to native assistive tech while leaving its children independently
+   navigable. Candidates considered and rejected:
+   - `accessible={true}` — the "obvious fix"; per RN's own doc comment ("By default, all the touchable
+     elements are accessible") and the native gating the reviewer cited
+     (`RCTViewComponentView.mm:398`: `self.accessibilityElement.isAccessibilityElement = newViewProps.accessible;`),
+     this makes the container an opaque leaf on iOS — the trap, confirmed rather than assumed (see probe below).
+   - `accessibilityLabelledBy` / `aria-labelledby` (Android-only) — solves a different problem (labelling one
+     element *from* another element's text via `nativeID`); does not create a "group, not leaf" relationship.
+   - `importantForAccessibility` (Android-only) — controls whether a view fires accessibility events /
+     is reported to services; doesn't add role/label exposure or grouping semantics by itself.
+   - `accessibilityViewIsModal`, `role` (web-role alias) — unrelated (modal focus-trapping; `role` is just an
+     alias for `accessibilityRole`, same gating).
+   - Checked the Android native delegate too
+     (`ReactAccessibilityDelegate.kt` — `ReactAndroid/src/main/java/com/facebook/react/uimanager/`):
+     Android's `AccessibilityNodeInfo` tree model is structurally different from iOS's opaque
+     `UIAccessibilityContainer` leaf behavior (it supports nested focusable nodes), so a
+     `Platform.OS === 'android'`-scoped `accessible={true}` is *conceivable* in principle — but nothing in
+     this repo's tooling (no Android emulator/TalkBack harness wired into CI) can verify it stays safe, and
+     shipping an unverified, platform-split accessibility prop on the say-so of reading native Kotlin source
+     alone is exactly the "fragile, unverified fix" the task said not to force. Rejected on verification
+     grounds, not on data suggesting it is unsafe.
+2. **Empirically tested whether this repo's own test tooling can even verify the trap**, via a throwaway
+   probe test (written, run, and deleted — never committed; mirrors `reviewer_accessibility`'s own stated
+   methodology of a "throwaway probe... removed after use"). Two facts established directly against the real
+   component and against RNTL's/RN's actual source, not by inference:
+   - **Fact A** — `screen.getByRole('radiogroup')` throws today on the real, unmodified `LanguageSelector`
+     markup ("Unable to find an element with role: radiogroup"). Independently reconfirms
+     `reviewer_accessibility`'s empirical claim.
+   - **Fact B** — rendering the *same* container/children shape with `accessible={true}` added to the
+     container, `screen.getByRole('radiogroup')` **passes** *and* `screen.getAllByRole('radio')` **still
+     finds all 4 children** in `@testing-library/react-native`. Traced why: RNTL's own descendant-filtering
+     logic (`@testing-library/react-native/dist/helpers/accessibility.js:isHiddenFromAccessibility`, called
+     from `dist/helpers/find-all.js:findAll`) only excludes descendants for `aria-hidden`,
+     `accessibilityElementsHidden`, `importantForAccessibility === 'no-hide-descendants'`, `display: none`,
+     or an `accessibilityViewIsModal` sibling — it **never** checks whether an ancestor has `accessible={true}`.
+     RNTL simply does not model the native "accessible container becomes one opaque leaf, children stop being
+     independently reachable" behavior that iOS's `RCTViewComponentView.mm` implements.
+   - **Conclusion of the probe:** this is decisive, not just corroborating. It proves that **the specific
+     verification the task requires — "a real accessibility-tree assertion... that all four radio children
+     remain individually reachable" — cannot be produced with this repo's test tooling (Jest +
+     `@testing-library/react-native`) for this particular native quirk.** A test asserting the children are
+     still queryable after adding `accessible={true}` would go green in CI while the real on-device iOS
+     behavior could still be a regression — i.e. exactly the false-confidence trap the task warned about,
+     now demonstrated rather than hypothesized. Shipping the "fix" on the strength of a passing RNTL test
+     would be worse than not shipping it: a green bar that doesn't mean what it appears to mean.
+
+### Decision: no verified-safe fix — documented as a known limitation, no production code changed
+
+Per the task's own branching (§3), because no fix can be verified safe with the tooling available in this
+repo (no on-device VoiceOver/TalkBack harness, and RNTL cannot faithfully model the native swallowing
+behavior for either candidate platform-scoped variant), `language-selector.tsx`'s accessibility props were
+**left unchanged**. `libs/components/src/molecules/radio-group/radio-group.tsx` — the pre-existing sibling
+with the identical pattern — was **not touched**, per the task's explicit scope boundary (item 4); it is a
+separately-owned component and fixing the systemic pattern generically is out of this feature's scope.
+
+Instead, three doc corrections were made, all traceable to this investigation:
+1. **`language-selector.test.tsx`** — the comment on `exposes a radiogroup role for the container`
+   (previously implying the container is "announced" as a group) now states plainly that the test guards
+   only the literal `accessibilityRole` prop value, links to why (children reachability), and points at
+   `spec.md`'s FO2 / this section for the full context.
+2. **This file, Finding 1 (a11y, mutation-relevant), Phase 5** — appended a correction paragraph: the original
+   write-up implied the new test "tightened" coverage of the container's group semantics; it did not — it
+   only tightened the prop-value regression guard. The gap this round's review surfaced is real and remains
+   open (tracked below, not silently closed).
+3. **`spec.md`** — added **Follow-on FO2** (parallel in form and in "human-approved TODO" spirit to the
+   existing FO1): documents the limitation, its root cause, why the obvious fix is unsafe, why this repo's
+   test tooling cannot verify a fix even if one were attempted, that the identical pattern predates this
+   feature in `RadioGroup`, and that a cross-cutting resolution (if any exists) is out of this feature's
+   scope — flagged for a human/product follow-up decision. A footnote was also added directly under AC14
+   pointing to FO2, so a reader of the acceptance criteria sees the caveat in place, not only in the
+   follow-on list.
+
+No code `TODO` comment was added to `language-selector.tsx` (per the task's explicit instruction — the point
+is an honest paper trail in the tracked docs, not a hidden inline comment).
+
+### What remains true and unchanged
+- Every individual `radio` option is still fully labelled (`accessibilityLabel`), roled
+  (`accessibilityRole="radio"`), and stated (`accessibilityState={{selected, disabled}}`) via `Pressable`,
+  which RN makes accessible by default — unaffected by this investigation. The feature's task remains
+  completable end-to-end with assistive tech; what is missing is the explicit group-level framing on native
+  platforms only (web is unaffected, per the review's own finding on `react-native-web`'s unconditional
+  `role` mapping).
+- The 95 pre-existing tests are untouched in behavior; only the one test's comment changed (no assertion
+  changed), so no test outcome changes as a result of this phase.
+
+### Phase 6 gate ✅
+No production code changed (no failing test demanded any — Law 1 honored by *not* writing one for an
+unverifiable "fix"). Doc-only changes: `language-selector.test.tsx` (comment only, no assertion change),
+`spec.md` (FO2 + AC14 footnote), this file (Finding-1 correction, Phase 6, `@s3/@s4` mistag fix). Re-ran the
+full suite after the comment change: `pnpm test` still green everywhere (95/95, same as Phase 5 — no test
+gained or lost); `pnpm check-types` and `pnpm lint` clean; `pnpm --filter @helsoft/components test:e2e`
+19/19. Left for re-review (not self-marked done) — expected outcome is that `reviewer_accessibility` either
+accepts the documented limitation (round 3) or the human is asked to make the FO2 call, per the review's own
+3-round-cap escalation path.
