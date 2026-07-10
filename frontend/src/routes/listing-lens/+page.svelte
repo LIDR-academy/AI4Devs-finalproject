@@ -1,5 +1,6 @@
 <script lang="ts">
   import AIDisclaimer from '$lib/components/AIDisclaimer.svelte';
+  import ListingTabs from '$lib/components/ListingTabs.svelte';
   import LoadingState from '$lib/components/LoadingState.svelte';
   import RedFlagCard from '$lib/components/RedFlagCard.svelte';
   import NegotiationPoints from '$lib/components/NegotiationPoints.svelte';
@@ -7,17 +8,17 @@
   import { analyzeListingStream } from '$lib/api/streamingClient';
   import { session } from '$lib/stores/session';
   import { formatCurrency, formatDate, scoreColor } from '$lib/utils/format';
-  import type { AnalyzeListingResponse, RedFlagItem } from '$lib/api/types';
+  import type { AnalyzeListingResponse } from '$lib/api/types';
 
   let url = '';
+  let manualText = '';
+  let urlBlocked = false;
   let loading = false;
   let error: string | null = null;
   let result: AnalyzeListingResponse | null = null;
   let currentStep: 'fetching_html' | 'resolving_location' | 'analyzing' | 'cross_referencing_cadastro' | null = null;
 
-  async function analyzeListing(e: SubmitEvent): Promise<void> {
-    e.preventDefault();
-    if (!url.trim()) return;
+  async function handleAnalyze(data: { url: string; manualText: string }): Promise<void> {
     loading = true;
     error = null;
     result = null;
@@ -25,14 +26,16 @@
 
     try {
       result = await analyzeListingStream(
-        { url, sessionId: $session.sessionId },
+        { url: data.url, manualText: data.manualText, sessionId: $session.sessionId },
         (event) => { currentStep = event; },
       );
     } catch (e) {
+      const message = e instanceof Error ? e.message : 'Error de red. Inténtalo de nuevo.';
       if (e instanceof ApiError) {
-        error = `${e.code}: ${e.message}`;
+        error = `${e.code}: ${message}`;
+        if (e.code === 'PORTAL_BLOCKED' || e.code === 'BLOCKED') urlBlocked = true;
       } else {
-        error = e instanceof Error ? e.message : 'Error de red. Inténtalo de nuevo.';
+        error = message;
       }
     } finally {
       loading = false;
@@ -45,31 +48,26 @@
   <h1>Analizar anuncio</h1>
   <AIDisclaimer />
 
-  <form on:submit={analyzeListing}>
-    <label for="url">URL del anuncio</label>
-    <input
-      id="url"
-      type="url"
-      bind:value={url}
-      placeholder="https://www.idealista.com/inmueble/..."
-      required
-      disabled={loading}
-    />
-    <button class="btn-primary" type="submit" disabled={loading || !url}>
-      {loading ? 'Analizando…' : 'Analizar'}
-    </button>
-  </form>
+  <ListingTabs
+    bind:url
+    bind:manualText
+    bind:urlBlocked
+    disabled={loading}
+    onAnalize={handleAnalyze}
+  />
 
   {#if loading}
     <LoadingState activeStep={currentStep} />
   {/if}
 
-  {#if error}
+  {#if error && !urlBlocked}
     <div class="card error">
       <p>{error}</p>
-      <p class="text-muted">
-        Si el portal está bloqueando peticiones, pega el texto del anuncio manualmente.
-      </p>
+      {#if !urlBlocked}
+        <p class="text-muted">
+          Si el portal está bloqueando peticiones, pega el texto del anuncio manualmente.
+        </p>
+      {/if}
     </div>
   {/if}
 
@@ -117,19 +115,6 @@
 </div>
 
 <style>
-  form {
-    margin-bottom: 1.5rem;
-  }
-  label {
-    display: block;
-    font-size: 0.85rem;
-    margin-bottom: 0.25rem;
-    color: var(--color-text-muted);
-  }
-  button {
-    margin-top: 0.75rem;
-    width: 100%;
-  }
   .error {
     border-color: var(--color-danger);
   }
