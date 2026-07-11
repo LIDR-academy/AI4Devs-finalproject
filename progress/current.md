@@ -1,7 +1,7 @@
 # Current session
 
-**Active feature:** activity-open-ended
-**Folder:** docs/features/activity-open-ended/
-**Phase:** pr_ready ✅
-**Status:** All slices + reviews clean. Mutation PASS. Full review APPROVED. DoD PASS. Docs compacted. Ready for PR (manual).
-**Notes:** Worktree `.worktrees/activity-open-ended`, branch `feat/activity-open-ended`, from `feature-entrega2-HernanLaura`. Agents: Grok.
+**Active feature:** activity-flashcard-recall
+**Folder:** docs/features/activity-flashcard-recall/
+**Phase:** approved
+**Status:** Spec + Gherkin approved; Phase 2 in flight on worktree. `activity-open-ended` merged into `feature-entrega2-HernanLaura` (fast-forward).
+**Notes:** Worktree `.worktrees/activity-flashcard-recall`, branch `feat/activity-flashcard-recall`. Open-ended worktree removed. Other in-flight: ai-key-management, pdf-upload-extraction.
