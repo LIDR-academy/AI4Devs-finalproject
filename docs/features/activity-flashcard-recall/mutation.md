@@ -96,3 +96,34 @@ Final mutation score of 100.00 is greater than or equal to break threshold 100
 
 Also re-ran the full `@helsoft/activities` Jest suite (266 tests, 17 suites,
 all green), `pnpm turbo run lint check-types --filter=@helsoft/activities --filter=@helsoft/study-buddy` (clean).
+
+---
+
+## Summary (post-review pass)
+
+| Library | File | Total (valid) | Killed | Survived | Score |
+|---------|------|---------------|--------|----------|-------|
+| @helsoft/activities | `use-flashcard.ts` | 26 | 26 | 0 | 100.00% |
+
+**Status: PASSED — 100% on post-review scoped changes.**
+
+### Review changes tested
+
+The full review round fixed the accessibility announcement to include the revealed answer content (`slide.back`), not just the static heading. Two mutations in the announcement logic and dependency array:
+
+1. Mutation of the `AccessibilityInfo.announceForAccessibility` call string concatenation with `slide.back`
+2. Mutation of `slide.back` in the dependency array
+
+All 26 mutants generated from `use-flashcard.ts` were killed by the strengthened test "announces the answer heading and the revealed answer content when revealed", which now verifies both `labels.answerHeading` and `slide.back` are present in the announcement call.
+
+### Verification
+
+Post-review mutation test run:
+
+```
+File              | % Mutation score | # killed | # survived |
+use-flashcard.ts  | 100.00           | 26       | 0          |
+All files         | 100.00           | 26       | 0          |
+```
+
+All assertions in the strengthened test case passed; no survivors or errors.
