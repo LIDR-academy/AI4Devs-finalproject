@@ -26,7 +26,6 @@ Complete the `LessonResults` wiring (task-7) for the non-happy states:
 - [x] `pnpm lint` + `pnpm check-types` + `pnpm test` green.
 
 ## Notes
-- Retake wiring matches the existing route scaffold (`results.tsx` → player `Link ... replace`).
-- Live session reset on retake is owned by R9; here `onRetake` triggers navigation and the (stubbed) answers reset.
-- `results.tsx` already wired `onRetake` to `router.replace({ pathname: '/lesson/[id]/player', params: { id } })` in task-7 — same lesson id, no regeneration call, and the stubbed player has no slide-index state, so replacing onto it is already "restart from the first slide" (@s11). No change needed; there's no test runner in `apps/app-study-buddy` to add a route-level test, so @s11's callback-threading is proven at the `LessonResults` level instead (`calls onRetake when the retake action is pressed for a scorable lesson`).
-- `Lesson`/`Slide` only has a `multiple-choice` `ActivitySlide` variant so far (flashcard/open-ended slide payloads are a non-goal here per spec.md) — @s9's "only flashcard/open-ended" deck can't be constructed as a real `Lesson` fixture yet. Its `isScorable: false` semantics are already unit-tested directly against `ScorableSlide[]` in `score-lesson.test.ts` (task-2); this task exercises the identical `LessonResults` branch via the instructional-only fixture (@s8), which is real-`Lesson`-constructible today.
+- Retake wiring matches the existing route scaffold (`results.tsx` → player `Link ... replace` to the same lesson id, no regeneration) — already satisfies @s11, no app-level test harness exists so it's proven at the `LessonResults` callback level instead.
+- Live session reset on retake is owned by R9; `onRetake` here triggers navigation + the stubbed answers reset.
+- `Lesson`/`Slide` only has a `multiple-choice` variant so far — @s9's "only flashcard/open-ended" deck isn't `Lesson`-constructible yet; its `isScorable: false` semantics are unit-tested directly against `ScorableSlide[]` in `score-lesson.test.ts` (task-2), and this task exercises the identical branch via the instructional-only fixture (@s8).

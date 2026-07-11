@@ -38,9 +38,7 @@ App route `results.tsx`: replace the stub to render `LessonResults` inside `Scre
 - [x] App route composes `LessonResults` and passes navigation callbacks; no business logic in `apps/*`.
 - [x] `pnpm lint` + `pnpm check-types` + `pnpm test` green.
 
-**Implementation notes:**
-- The stub lesson/answers fixture (risk R1) lives in `@helsoft/study-buddy` (`fixtures/lesson-results-stub.ts`, TDD'd, exported via the barrel) rather than inline in the app route — keeps `apps/*` a thin composition shell and avoids the `migration-coverage` hardcoded-`<Text>`/`title:` literal-detector's false positive on a `.tsx` fixture object (its `title:` field regex doesn't distinguish a data field from route-title config).
-- Added `lesson-results` to `migration-coverage.test.ts`'s `KEY_EXISTENCE_DIRS` (mirrors `sign-in-form`/`sign-out`/`multiple-choice-activity`) so a typo'd/undefined `t()` key in `lesson-results.tsx` fails loudly instead of silently rendering a raw key.
+**Implementation notes:** stub lesson/answers fixture (risk R1) lives in `@helsoft/study-buddy/fixtures/lesson-results-stub.ts` (TDD'd, barrel-exported), not inline in the app route — keeps `apps/*` a thin shell and avoids a `migration-coverage` literal-detector false positive. Added `lesson-results` to `migration-coverage.test.ts`'s `KEY_EXISTENCE_DIRS`.
 
 ## Notes
 - Completion + error/retry branches are added in task-9; this task keeps to score + loading.

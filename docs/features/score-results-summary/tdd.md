@@ -1,198 +1,61 @@
 # TDD log — score-results-summary
 
-## Slice 1 — happy path + loading (tasks 1–7)
+## @s → test map
 
-### @s → test map
-
-| @s | Behavior | Test | File |
-|---|---|---|---|
-| s1 | Score shown for a fully-correct scorable lesson | `scores correct === total when every system-checked slide is answered correctly` | `libs/study-buddy/src/grading/score-lesson.test.ts` |
-| s1 | Organism renders pre-formatted score/percent | `renders the pre-formatted score and percent labels for the score variant` | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
-| s1 | Wiring computes + formats via `t()` | `renders the pre-formatted score and percentage for a scorable lesson` | `libs/study-buddy/src/components/lesson-results/lesson-results.test.tsx` |
-| s2 | Only system-checked types count | `isSystemCheckedActivity` true/false cases | `libs/types/src/activity-type.test.ts` |
-| s2 | Mixed activity types excluded from total/correct | `excludes flashcard and open-ended slides from the total and correct count` | `libs/study-buddy/src/grading/score-lesson.test.ts` |
-| s3 | Matching contributes one whole-slide point | `scores a matching slide as %s → isCorrect=%s → %i out of 1` (each Example row) | `libs/study-buddy/src/grading/score-lesson.test.ts` |
-| s4 | Unanswered system-checked slides count toward total, not correct | `counts unanswered system-checked slides toward the total but not the correct count` | `libs/study-buddy/src/grading/score-lesson.test.ts` |
-| s5 | Hook exposes `saving` while in flight | `sets status to saving while saveAttempt is in flight` | `libs/hooks/src/hooks/use-lesson-attempt.test.ts` |
-| s5 | Organism shows loading + disables actions | `renders the loading indicator and disables both actions while loading` | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
-| s5 | Wiring binds `loading` to hook status | `shows the loading state while useLessonAttempt().status is saving` | `libs/study-buddy/src/components/lesson-results/lesson-results.test.tsx` |
-| s6 | Insert is additive, no update path | `inserts only lesson_id, score, and total…` | `libs/services/src/dao/lesson-attempt.dao.test.ts` |
-| s6 | Service persists a valid attempt | `saveAttempt delegates a valid attempt to LessonAttemptDao.insertAttempt` | `libs/services/src/services/lesson-attempt.service.test.ts` |
-| s6 | Hook: successful save → `saved`, fresh insert per call | `transitions to saved…` / `calls the service again on a second saveAttempt call…` | `libs/hooks/src/hooks/use-lesson-attempt.test.ts` |
-| s6 | Wiring: save exactly once, no double-save on re-render | `calls saveAttempt exactly once on mount…` / `does not call saveAttempt again on a re-render…` | `libs/study-buddy/src/components/lesson-results/lesson-results.test.tsx` |
-| s6 | Integration: compute-then-persist end to end | `computes the score and persists it via the real hook/service pipeline` | `libs/study-buddy/src/components/lesson-results/lesson-results.integration.test.tsx` |
-
-Type-level checks (task-1 Done criteria, not a numbered `@s`): `MultipleChoiceAnswer` → `GradedAnswer` assignability (`graded-answer.test.ts`), `MultipleChoiceSlide` → `ScorableSlide` projection (`scorable-slide.test.ts`), barrel coverage for `ScoreSummary`/`LessonAttempt`/`NewLessonAttempt` (`index.test.ts`).
-
-### Cycles
-
-- **task-1** (`@s2`): RED `isSystemCheckedActivity` test (no module) → GREEN `activity-type.ts` (union + set + guard). RED `ScorableSlide`/`GradedAnswer`/barrel type-level tests → GREEN added `scorable-slide.ts`, `graded-answer.ts`, `score-summary.ts`, `lesson-attempt.ts` + barrel exports. Stood up Jest for `@helsoft/types` (none existed before this feature).
-- **task-2** (`@s1`): RED `scoreLesson` all-correct test → GREEN naive `{correct: answers.length, total: slides.length}`. (`@s2`) RED mixed-types test → GREEN filtered by `isSystemCheckedActivity` into a slide-id set, answers filtered by membership+`isCorrect`. (`@s3`) matching Examples table — passed immediately (algorithm already type-agnostic); kept as a regression pin. (`@s4` + defensive cases) unanswered/zero-total/stray-answer — all passed immediately, confirming the slide-id-set approach already generalizes. Exported via `study-buddy` barrel.
-- **task-3** (`@s6`): wrote the `lesson_attempts` migration (RLS select/insert-own policies, insert-only, soft `lesson_id`). RED `LessonAttemptDao.insertAttempt` test (module missing) → GREEN DAO with snake_case→camelCase row mapping.
-- **task-4** (`@s6`): RED `saveAttempt` delegates-to-DAO test → GREEN thin delegation. RED 5 validation-rejection cases (`total<=0`, `score<0`, `score>total`, empty `lessonId`) → GREEN `validationError()` guard before delegating.
-- **task-5** (`@s5`): RED `saving` status test → GREEN minimal hook (`setStatus('saving')` + `.then`). (`@s6`) RED saved-transition + fresh-insert tests — passed immediately (already covered by the minimal implementation). RED error/retry/no-double-fire/unmount-safety tests → GREEN added `catch` → `error` status, `lastInput` ref + `retry()`, an in-flight `status==='saving'` guard in `saveAttempt`, and an `isMounted` ref checked before every post-await `setState`.
-- **task-6** (`@s1`): RED score-labels render test → GREEN `ResultsSummary` (Card + two Text nodes). RED action-wiring test → GREEN added `Button`s calling `onRetake`/`onBackToLessons`. (`@s5`) RED loading-indicator/disabled-actions test → GREEN added `loading` prop, `RESULTS_LOADING_TEST_ID`, `ProgressIndicator`, `disabled={loading}` on both buttons. Scoped `ResultsSummaryVariant` to `'score'` only for this slice (mirrors how `LoginFormProps` grew slice-by-slice in `login-and-logout` rather than pre-declaring the task doc's eventual `'score' | 'completion'` union) — task-8 widens it alongside its own tests.
-- **task-7** (`@s1`): RED `LessonResults` score/percent render test (module missing) → GREEN component projecting `lesson.slides` → `ScorableSlide[]`, calling `scoreLesson`, formatting via `t()`. (`@s5`) RED loading-bound test — passed immediately (already wired). (`@s6`) RED exactly-once + no-double-save-on-rerender tests → GREEN `useRef` + `useEffect([])` save-once guard. Added `results.score`/`results.scorePercent` to all four locale bundles (RED via a new `migration-coverage` `KEY_EXISTENCE_DIRS` entry for `lesson-results`, GREEN by adding the keys). Added one integration test (real hook→service→DAO, mocked Supabase `.from()`) proving compute-then-persist. Wired the app route (`results.tsx`) to compose `LessonResults`; extracted the stub lesson/answers fixture into `@helsoft/study-buddy/fixtures/lesson-results-stub.ts` (own RED/GREEN test) after the inline `.tsx` version tripped the `migration-coverage` hardcoded-`title:` literal detector as a false positive.
-
-### Gate
-
-`pnpm lint`, `pnpm check-types`, `pnpm test` all green across `@helsoft/types`, `@helsoft/study-buddy`, `@helsoft/services`, `@helsoft/hooks`, `@helsoft/components`, `@helsoft/localization`, and `app-study-buddy`. No e2e run this slice (no UI states beyond score/loading exist yet; Storybook e2e wiring lands in Slice 3 / task-12 per the plan). Committed as `feat(score-results-summary): implement happy path`.
-
-## Slice 2 — empty/completion + error + retry (tasks 8–9)
-
-### @s → test map
-
-| @s | Behavior | Test | File |
-|---|---|---|---|
-| s8/s9 | Completion variant renders no score, both actions | `renders the completion headline and body for the completion variant, with no score` | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
-| s10 | Completion variant exposes both actions | (same test, asserts both `getByRole('button', ...)`) | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
-| s7 | Score stays visible + non-blocking notice when `saveFailed` | `shows the score alongside a non-blocking save-failure notice when saveFailed is true` | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
-| s7 | Retry action wiring | `calls onRetrySave when the retry action is pressed` | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
-| s8 | `isScorable: false` → completion, no `saveAttempt` | `renders the completion variant and never calls saveAttempt for an instructional-only lesson` | `libs/study-buddy/src/components/lesson-results/lesson-results.test.tsx` |
-| s9 | Same `isScorable: false` branch (flashcard/open-ended not yet `Lesson`-constructible — see task-9 Notes); pinned separately at the scorer level | `returns isScorable: false and correct/total of 0 when there are no system-checked slides` | `libs/study-buddy/src/grading/score-lesson.test.ts` (slice 1) |
-| s7 | `saveFailed`/`onRetrySave` bound to hook `error`/`retry` | `shows the score alongside the save-failure notice when useLessonAttempt().status is error` / `calls the hook retry() when the retry action is pressed` | `libs/study-buddy/src/components/lesson-results/lesson-results.test.tsx` |
-| s10/s11 | Retake/back-to-lessons callbacks thread through in both variants | `calls onRetake when the retake action is pressed for a scorable lesson` / `calls onRetake and onBackToLessons in the completion state` | `libs/study-buddy/src/components/lesson-results/lesson-results.test.tsx` |
-| s11 | Retake navigates same lesson, `replace`, no regeneration | pre-existing route wiring (task-7); no route-level test harness in `apps/app-study-buddy` — see task-9 Notes | `apps/app-study-buddy/src/app/(app)/lesson/[id]/results.tsx` |
-
-### Cycles
-
-- **task-8** (`@s8`/`@s9`/`@s10`): RED completion-variant render test (`variant="completion"` not in the type union yet) → GREEN widened `ResultsSummaryVariant` to `'score' | 'completion'`, extended `labels` with `completeHeadline`/`completeBody`/`saveFailed`/`retrySave`, conditional render branch. (`@s7`) RED save-failure notice test + retry-press test → GREEN added `saveFailed`/`onRetrySave` props and the notice `View` (mirrors `LoginForm`'s `errorBanner` pattern: `errorContainer`/`onErrorContainer` tokens, `accessibilityRole="alert"` + `accessibilityLiveRegion`). Added a `does not show the save-failure notice when saveFailed is false` negative pin. Updated `results-summary.stories.tsx` with `Completion` and `SaveFailed` stories (all 4 states now covered).
-- **task-9** (`@s8`): RED `LessonResults` completion test (instructional-only lesson fixture) → GREEN branched on `summary.isScorable` for `variant` and guarded the save-once `useEffect` to skip when unscorable; guarded `percent` against a `NaN` (total 0) even though unrendered. Added `results.completeHeadline`/`completeBody`/`saveFailed`/`retrySave` to all four locale bundles (en/es/pt/de) — required now (not deferred to task-10) to satisfy this slice's "no hardcoded copy" gate; task-10 (slice 3) still owns the native-speaker translation-quality pass and its own explicit i18n-sourcing test. (`@s7`) RED `saveFailed`/retry-binding tests → GREEN wired `saveFailed={status === 'error'}` and `onRetrySave={retry}` from the hook. (`@s10`/`@s11`) RED retake/back-to-lessons callback-threading tests (score + completion variants) — written as regression pins; passed immediately since both callbacks were already threaded through unconditionally, consistent with the slice-1 "pin" precedent. Verified `@s11`'s navigation semantics are already satisfied by the existing `results.tsx` route wiring from task-7 (`router.replace` to the same lesson id) — no code change, no app-level test harness exists to pin it further.
-- Both organism cycles above were caught re-sequencing a Law-1 slip: `saveFailed` was implemented in the same edit as `completion` before its own test was red. Corrected by temporarily reverting the `saveFailed`-specific lines, re-confirming RED, then reinstating as a clean GREEN step (same fix applied in both `results-summary.tsx` and `lesson-results.tsx`).
-
-### Gate
-
-`pnpm lint` (only `app-study-buddy` defines the script; cache-hit clean), `pnpm check-types`, and `pnpm test`/`pnpm turbo run test` all green across `@helsoft/components`, `@helsoft/study-buddy`, `@helsoft/localization`, `@helsoft/activities`, and the rest of the workspace. No e2e this slice (task-12, slice 3). Slice-2 code+design review pending before commit.
-
-## Slice 2 — round-1 review fix-forward (`review.md` findings 1–6)
-
-Both `reviewer_code` and `reviewer_design` returned `CHANGES_REQUESTED` against commit `5525f74`. Fixed all 6 findings via TDD, one behavior at a time.
-
-### Finding → test map
-
-| Finding | Behavior | Test | File |
-|---|---|---|---|
-| Major 1 (design) | iOS VoiceOver announcement on save failure | `announces the save-failure notice via AccessibilityInfo when saveFailed is set` | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
-| Major 1 (extension) | Announcement respects the same variant guard as the render | `does not announce a save-failure notice for the completion variant even if saveFailed is true` | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
-| Major 2 (design) | `LessonResults` Completion/SaveFailed stories | new `Completion`/`SaveFailed` stories (Storybook-only, no Jest test per existing convention) | `libs/study-buddy/src/components/lesson-results/lesson-results.stories.tsx` |
-| Minor 3 (code) | Untested defensive `percent` guard | pure refactor (removed unneeded ternary; all existing tests stayed green) | `libs/study-buddy/src/components/lesson-results/lesson-results.tsx` |
-| Minor 4 (code) | `saveFailed` notice must never render for the completion variant | `does not show the save-failure notice for the completion variant even if saveFailed is true` | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
-| Minor 5 (code) | Style key names shared across variants | pure rename refactor (`score`/`percent` → `headline`/`body`); all existing tests stayed green | `libs/components/src/organisms/results-summary/results-summary.tsx` |
-| Minor 6 (code) | Unenforced `onRetrySave` "required" contract | `does not render the retry action when onRetrySave is omitted even though saveFailed is true` | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
-
-### Cycles
-
-- **Minor 4**: RED `does not show the save-failure notice for the completion variant…` (rendered regardless of variant) → GREEN added `variant === 'score'` to the notice's render condition.
-- **Major 1**: RED `announces the save-failure notice via AccessibilityInfo…` → GREEN added a `useEffect` firing `AccessibilityInfo.announceForAccessibility(labels.saveFailed)` on the `saveFailed` transition, mirroring `LoginForm`'s `errorMessage` effect. Then RED `does not announce…for the completion variant…` → GREEN extended the effect's guard to `saveFailed && variant === 'score'` (kept in sync with the render guard).
-- **Minor 6**: RED `does not render the retry action when onRetrySave is omitted…` → GREEN wrapped the retry `Button` in `{onRetrySave ? … : null}`; chose graceful degradation (no retry action renders) over a discriminated-union prop-type overhaul — smallest fix that removes the runtime risk without inflating the prop typing for a single required-only-in-one-branch field. Docstring on `onRetrySave` updated to describe the actual (soft) contract.
-- **Minor 3**: refactor-only — removed lesson-results.tsx's `summary.isScorable ? … : 0` ternary since `percent` is never rendered in the completion branch (division-by-zero yields an unused `NaN`, confirmed harmless at both the type and runtime level); no new test needed since nothing observable changed, all pre-existing tests stayed green throughout.
-- **Minor 5**: refactor-only — renamed the `score`/`percent` style keys to `headline`/`body` since both are reused for the completion variant's text; no test referenced the style keys by name, so this stayed green throughout.
-- **Major 2**: added `Completion` (instructional-only lesson fixture, mirroring `lesson-results.test.tsx`'s own fixture) and `SaveFailed` (`configureLessonAttemptMock({ status: 'error' })`) stories to `lesson-results.stories.tsx`, matching `results-summary.stories.tsx`'s existing decorator/story conventions. Storybook stories aren't Jest-tested in this codebase (Playwright e2e for this slice is deferred to slice 3 per the slice-1 gate note) — no test cycle applies here beyond the existing convention.
-
-### Gate
-
-`pnpm lint`, `pnpm turbo run check-types`, and `pnpm turbo run test` all green across the whole workspace (`@helsoft/components` 88 tests, `@helsoft/study-buddy` 49 tests, `@helsoft/types`, `@helsoft/services`, `@helsoft/hooks`, `@helsoft/activities`, `app-study-buddy`). No e2e this slice (unchanged from round 1 — task-12/slice 3 owns Storybook e2e wiring). Returning to `reviews_lead` for slice-2 re-review; not committing here (commit happens once both `reviewer_code`/`reviewer_design` return `APPROVED`, per protocol).
-
-Slice-2 was reviewed clean (`review.md`: `reviewer_code`/`reviewer_design` both `APPROVED`, zero open findings) and committed as `0a65cb1` before slice 3 started.
-
-## Slice 3 — a11y + i18n + stories/e2e (tasks 10–12)
-
-### @s → test map (new this slice)
-
-| @s | Behavior | Test | File |
-|---|---|---|---|
-| s12 | Completion labels sourced from `t()`, not hardcoded | `sources the completion labels from translation keys, not hardcoded literals` | `libs/study-buddy/src/components/lesson-results/lesson-results.test.tsx` |
-| s12 | Save-failure labels sourced from `t()`, not hardcoded | `sources the save-failure labels from translation keys, not hardcoded literals` | `libs/study-buddy/src/components/lesson-results/lesson-results.test.tsx` |
-| s13 | Loading→score transition announced to assistive tech | `announces the score via AccessibilityInfo when loading resolves for the score variant` | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
-| s13 | Loading→completion transition announced to assistive tech | `announces the completion headline via AccessibilityInfo when loading resolves for the completion variant` | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
-| s13 | Save-failure announced (regression, already pinned slice 2) | `announces the save-failure notice via AccessibilityInfo when saveFailed is set` | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
-| s13 | Accessible role/label on every action (regression, already pinned slices 1–2) | `calls onRetake…`/`calls onBackToLessons…`/`calls onRetrySave…` (`getByRole('button', …)`) | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
-| s1 | Score state renders `correct/total` + percentage (e2e) | `Score story renders the correct/total ratio and the percentage` | `libs/components/tests/e2e/organisms/results-summary/results-summary.e2e.js` |
-| s7 | Save-failure state shows score + notice, Retry operable (e2e) | `SaveFailed story shows the score alongside the save-failure notice` / `SaveFailed story renders an operable retry action` | `libs/components/tests/e2e/organisms/results-summary/results-summary.e2e.js` |
-| s8 | Completion state shows message, no score, both actions (e2e) | `Completion story shows the completion message without a score` / `Completion story renders both the retake and back-to-lessons actions` | `libs/components/tests/e2e/organisms/results-summary/results-summary.e2e.js` |
-
-### Full @s1–@s13 traceability (all slices)
-
-@s1–@s11 are mapped in the Slice 1/Slice 2 tables above (grading, hook, DAO, service, organism, and wiring unit tests), now additionally exercised end-to-end via `results-summary.e2e.js` for @s1/@s7/@s8. @s12 (i18n) and @s13 (a11y) are net-new this slice, mapped above. Every `@s1`–`@s13` scenario in `gherkin-scenarios.md` resolves to at least one passing test.
-
-### Cycles
-
-- **task-10** (`@s12`): the four completion/save-failure i18n keys (`completeHeadline`/`completeBody`/`saveFailed`/`retrySave`) already existed in all four locale bundles (en/es/pt/de) from slice 2's review fix-forward (task-9) — no locale-bundle edits needed. `LessonResults` already sourced every label via `t(...)`. Added two new regression-pin tests to `lesson-results.test.tsx` that swap in distinct marker strings per key and assert the rendered text matches the marker — both passed immediately; manually verified each genuinely catches a regression by temporarily hardcoding one label, confirming RED, then reverting to GREEN (not committed, sanity check only). `migration-coverage`'s `lesson-results` key-existence + no-hardcoded-copy checks stay green (no changes needed).
-- **task-11** (`@s13`): RED `announces the score via AccessibilityInfo when loading resolves for the score variant` (no such effect existed) → GREEN added a `wasLoading` ref + `useEffect` firing `AccessibilityInfo.announceForAccessibility` on the `loading: true → false` transition, guarded to `variant === 'score'`, mirroring the existing `saveFailed` effect's shape (no live region to hang this off since the headline text doesn't visually change under the spinner — the imperative call is the only iOS-reaching mechanism). Then RED `announces the completion headline…for the completion variant` → GREEN widened the guard to branch the announced text (`labels.score, labels.percent` vs `labels.completeHeadline`) instead of gating out the completion variant. Confirmed (no new test needed, already pinned) that every action already exposes `accessibilityRole="button"` + a label via `Button`, that no color-only signaling exists in `ResultsSummary`, that touch targets meet the 48dp token via `Button`'s `HIT_SLOP`, and that `results-summary.stories.tsx` already covers all four states (Score/Loading/Completion/SaveFailed) from slice 2.
-- **task-12** (`@s1`/`@s7`/`@s8`): added `libs/components/tests/e2e/organisms/results-summary/results-summary.e2e.js` (skill: `storybook-e2e-tests`) — 6 tests over the `Score`/`SaveFailed`/`Completion` stories. Derived the story slug (`organisms-resultssummary--{score,loading,completion,save-failed}`) by reading `results-summary.stories.tsx`'s `title`/exports and cross-checked against a running Storybook's `/index.json` rather than guessing — this surfaced that the pre-existing sibling `slide-progress.e2e.js` uses a slug (`molecules-slide-progress`) that doesn't match the real one (`molecules-slideprogress`) and only "passes" because its assertions (iframe visible + URL contains string) are too weak to notice a wrong/nonexistent story path; left untouched, out of this feature's scope. First run caught two label mismatches against the story's own fixture text (`Retry`, not `Try again`; `We couldn't save this attempt.`, not the localized `Couldn't save this attempt`) — fixed the test assertions to match the story's fixture labels (the story intentionally uses its own local `labels` object, not the real locale bundle).
-
-### Gate
-
-`pnpm lint` (app-study-buddy only, cache hit clean), `pnpm turbo run check-types` (9/9 packages clean), `pnpm turbo run test` (all 8 workspaces green: `@helsoft/types` 10, `@helsoft/hooks` 29, `@helsoft/lib-with-storybook` 2, `@helsoft/localization` 57, `@helsoft/services` 47, `@helsoft/activities` 19, `@helsoft/study-buddy` 51, `@helsoft/components` 90 — 305 tests total). E2e: `pnpm --filter @helsoft/components exec playwright test --reporter=list` — 37/37 passed (6 new + 31 pre-existing, including the previously-flaky `text-field` case passing this run). No hardcoded strings/colors/dimensions introduced. All three slice-3 tasks (10–12) flipped to `done`.
-
-## Slice 3 — round-1 review fix-forward (`review.md` findings 1–3)
-
-Both `reviewer_code` and `reviewer_design` returned `CHANGES_REQUESTED` against commit `0b7801d` (slice-3 diff `0a65cb1..0b7801d`), round 1 of the 2-round cap. Fixed all 3 findings via TDD.
-
-### Finding → test map
-
-| Finding | Behavior | Test | File |
-|---|---|---|---|
-| 2 (major, hardcoded separator) | Organism announces the given `scoreAnnouncement` label, never composes `labels.score`/`percent` itself | `announces the given scoreAnnouncement label instead of composing labels.score and labels.percent` | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
-| 2 (wiring) | `LessonResults` sources the announcement from `t('results.scoreAnnouncement', …)` | `announces the composed score label via t(results.scoreAnnouncement) once saving resolves` | `libs/study-buddy/src/components/lesson-results/lesson-results.test.tsx` |
-| 1 (major, race) | Combined `loading:true→false` + `saveFailed:false→true` transition announces only the failure notice, not the score | `announces only the save-failure notice, not the score, when loading resolves into a save failure` | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
-| 3 (major, e2e locator) | Retry action operability checked via the text locator itself | `SaveFailed story renders an operable retry action` (rewritten, no new Jest test — e2e only) | `libs/components/tests/e2e/organisms/results-summary/results-summary.e2e.js` |
-
-### Cycles
-
-- **Finding 2**: RED `announces the given scoreAnnouncement label…` (asserted a distinct marker string instead of the composed `${labels.score}, ${labels.percent}`) → GREEN added `scoreAnnouncement: string` to `ResultsSummaryLabels` and switched the loading-resolved effect to read `labels.scoreAnnouncement` directly. Then RED `announces the composed score label via t(results.scoreAnnouncement)…` (asserted the exact composed text through the mocked hook/localization) → GREEN wired `LessonResults` to compute `scoreLabel`/`percentLabel` once and pass `scoreAnnouncement: t('results.scoreAnnouncement', { score: scoreLabel, percent: percentLabel })`; added `results.scoreAnnouncement: '{{score}}, {{percent}}'` to all four locale bundles (en/es/pt/de). Collateral fixture updates (non-behavioral): added `scoreAnnouncement` to the shared `labels` object in `results-summary.test.tsx` and `results-summary.stories.tsx`, and a `results.scoreAnnouncement` branch to the mock `t()` in `lesson-results.test.tsx`.
-- **Finding 1**: RED `announces only the save-failure notice, not the score, when loading resolves into a save failure` — mounted `loading=true, saveFailed=false`, rerendered `loading=false, saveFailed=true` (the exact `use-lesson-attempt.ts` saving→error transition) and asserted exactly one announcement; reproduced the reported double-announce (`toHaveBeenCalledTimes(1)` received 2) → GREEN added a `resolvedIntoSaveFailure = saveFailed && variant === 'score'` guard to the loading-resolved effect (skips announcing the score/completion headline when the same commit also lands on a save failure, since the failure-notice effect already announces and is the more actionable message) and added `saveFailed` to that effect's dependency array.
-- **Finding 3**: no Jest test (e2e-only, per the `storybook-e2e-tests` skill — no `.stories.tsx` behavior changed). Rewrote the "renders an operable retry action" e2e test to click the plain `text=Retry` locator directly (visible + click, no `xpath=ancestor::button[1]` walk). Verified both failure modes it must still catch, via a non-committed manual sanity check: (a) temporarily set the `SaveFailed` story's `onRetrySave: undefined` → `toBeVisible()` timed out (RED), confirmed missing/hidden actions still fail; (b) temporarily added `disabled` to the retry `Button` → `.click()` failed with Playwright's own "element is not enabled" actionability error even though the locator targets the inner text node, not the button (RED), confirmed disabled actions still fail without an ancestor-tag walk. Reverted both after confirming.
-
-### Gate
-
-`pnpm turbo run check-types --filter=@helsoft/components --filter=@helsoft/study-buddy --filter=@helsoft/localization` (7/7 clean), `pnpm --filter @helsoft/components test` (92/92), `pnpm --filter @helsoft/study-buddy test` (52/52), `pnpm --filter @helsoft/localization test` (57/57), `pnpm lint` clean, `pnpm --filter @helsoft/components exec playwright test --reporter=list results-summary.e2e.js` (6/6). Not committed — returning to `reviews_lead` for slice-3 re-review (round 2 of 2-round cap); commit happens once both `reviewer_code`/`reviewer_design` return `APPROVED`.
-
-## Mutation pass round 1 (pre-review) — killing survivors
-
-`mutation_tester` reported 40 survivors (70.85%, `mutation.md`). Fixed the real gaps via TDD; documented the rest as equivalent/arbitrary-fixture (see `mutation.md`'s "Justified" sections) after empirically re-applying each by hand and confirming no test in the suite could observe a difference. Final: 165/181 non-equivalent mutants killed (91.16% raw; 100% once the 16 documented survivors are excluded).
-
-### Mutant → test map
-
-| Target | Test | File |
+| @s | Behavior | Test file |
 |---|---|---|
-| `.trim()` removal (service) | `rejects when lessonId is whitespace only, without calling the DAO` | `libs/services/src/services/lesson-attempt.service.test.ts` |
-| `score < 0` → `<=` (service) | `does not reject when score is exactly zero` | `libs/services/src/services/lesson-attempt.service.test.ts` |
-| `variant === 'score'` → `true` (organism) | `still announces the completion headline when loading resolves even if saveFailed is (incorrectly) true` | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
-| 9 `StyleSheet` mutations (organism) | 4 new `toHaveStyle` tests (actions row, content gap, headline/body tokens, notice tokens) | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
-| activity-slide filter removed/bypassed (wiring) | `toScorableSlides` → `excludes instructional slides, keeping only activity slides in the projection` | `libs/study-buddy/src/components/lesson-results/lesson-results.test.tsx` |
-| `'completion'` → `''` (wiring) | `passes the exact "completion"/"score" variant string to ResultsSummary` (2 tests, via a `ResultsSummary` prop spy) | `libs/study-buddy/src/components/lesson-results/lesson-results.test.tsx` |
-| `slideId` template emptied (fixture) | `scopes the generated slide id to the given lessonId` | `libs/study-buddy/src/fixtures/lesson-results-stub.test.ts` |
-| `options`/`correctOptionId` mutations (fixture) | `models a two-option multiple-choice question with correctOptionId referencing a real option` | `libs/study-buddy/src/fixtures/lesson-results-stub.test.ts` |
+| s1 | Score shown, correctly formatted, for a fully-correct scorable lesson | `score-lesson.test.ts`, `results-summary.test.tsx`, `lesson-results.test.tsx` |
+| s2 | Only system-checked types (MC/fill-in-blank/matching) count | `activity-type.test.ts`, `score-lesson.test.ts` |
+| s3 | Matching contributes one whole-slide point | `score-lesson.test.ts` |
+| s4 | Unanswered system-checked slides count toward total, not correct | `score-lesson.test.ts` |
+| s5 | Loading state (hook `saving`, organism spinner+disabled actions, wiring binding) | `use-lesson-attempt.test.ts`, `results-summary.test.tsx`, `lesson-results.test.tsx` |
+| s6 | Attempt persisted, insert-only, exactly-once, integration path | `lesson-attempt.dao.test.ts`, `.service.test.ts`, `use-lesson-attempt.test.ts`, `lesson-results.test.tsx`, `lesson-results.integration.test.tsx` |
+| s7 | Save-failure: score stays visible + non-blocking notice + retry | `results-summary.test.tsx`, `lesson-results.test.tsx` |
+| s8 | Instructional-only lesson → completion, no attempt record | `lesson-results.test.tsx`, `score-lesson.test.ts` |
+| s9 | Zero system-checked slides → completion, not 0/0 | `score-lesson.test.ts` |
+| s10 | Completion variant exposes Retake + Back-to-lessons | `results-summary.test.tsx` |
+| s11 | Retake navigates to player slide 1, `replace`, no regeneration | pre-existing route wiring (`results.tsx`, task-7); no app-route test harness |
+| s12 | All labels sourced from `t()`, zero hardcoded copy | `lesson-results.test.tsx` |
+| s13 | State changes announced (a11y), roles/labels on every action | `results-summary.test.tsx` |
+| s1/s7/s8 (e2e) | Score/SaveFailed/Completion stories render + interact correctly | `results-summary.e2e.js` |
 
-### Cycles
+Type-level checks (task-1): `MultipleChoiceAnswer`→`GradedAnswer` and `MultipleChoiceSlide`→`ScorableSlide` assignability (`graded-answer.test.ts`, `scorable-slide.test.ts`).
 
-- **Services**: RED whitespace-only-`lessonId` case → GREEN (already correct; test pinned the `.trim()` boundary). RED `score: 0`-does-not-reject case → GREEN (already correct; test pinned the `< 0` boundary).
-- **Components**: RED completion+saveFailed-true announcement test → GREEN (already correct; pinned the `variant === 'score'` guard against the `resolvedIntoSaveFailure` short-circuit). RED 4 `toHaveStyle` tests (mirroring `login-form.test.tsx`'s existing token-assertion pattern) → GREEN (already correct; pinned every `StyleSheet.create` entry against emptying).
-- **Study-buddy wiring**: exported `toScorableSlides` (previously module-private) so its filter could be unit-tested directly — `scoreLesson`'s own `isSystemCheckedActivity` filter made this invisible at the integration level, so testing the projection in isolation was the correct fix, not a workaround. Added a `jest.mock('@helsoft/components', … ResultsSummary: jest.fn(actual.ResultsSummary))` prop spy to pin the exact `variant` string, since `ResultsSummary`'s own render branch treats any non-`'score'` string identically.
-- **Study-buddy fixture**: tightened `slideId`/`options`/`correctOptionId` assertions (referential-integrity contract); left `userId`/`title`(×2)/`content` undocumented-by-test since no current consumer reads them (see `mutation.md` justification) — a pure change-detector test would have added no value.
-- **Hooks + the `hasSaved` guard in wiring**: investigated by hand-applying each mutation and re-running the suite; found zero observable difference through any testing approach available in this repo (root cause: React 18+'s `createRoot` already no-ops post-unmount `setState`, independently of the `isMounted`/`hasSaved` ref guards). Documented as equivalent in `mutation.md` rather than adding change-detector tests.
+## Cycles (one line each)
 
-### Gate
+**Slice 1 (happy path + loading, tasks 1-7) — commit `ad1232c`:**
+- task-1: RED/GREEN `isSystemCheckedActivity` guard + `ScorableSlide`/`GradedAnswer`/`ScoreSummary`/`LessonAttempt` types; stood up Jest for `@helsoft/types`.
+- task-2: RED/GREEN `scoreLesson` — all-correct → naive count → filtered-by-system-checked-type → matching/unanswered/defensive cases (algorithm generalized immediately).
+- task-3: `lesson_attempts` migration (RLS, insert-only) + RED/GREEN `LessonAttemptDao.insertAttempt` (row mapping).
+- task-4: RED/GREEN `LessonAttemptService.saveAttempt` (delegates) + 5 validation-rejection cases.
+- task-5: RED/GREEN `useLessonAttempt` — saving/saved/error/retry/no-double-fire/unmount-safety (`isMounted` ref).
+- task-6: RED/GREEN `ResultsSummary` — score labels, action wiring, loading+disabled. Scoped `variant` to `'score'` only this slice (widened task-8).
+- task-7: RED/GREEN `LessonResults` — projects slides, calls `scoreLesson`, formats via `t()`, save-once guard; added `results.score`/`scorePercent` i18n keys; one real hook→service→DAO integration test; wired app route via a new `lesson-results-stub.ts` fixture.
+- Gate: lint/check-types/test green across 7 workspaces. No e2e yet.
 
-Re-ran Stryker per lib after fixes (file-scoped to match the original pass exactly): `@helsoft/services` 100.00%, `@helsoft/hooks` 63.64% (all-equivalent, documented), `@helsoft/components` 98.08% (1 pre-approved equivalent), `@helsoft/study-buddy` 91.57% (3+4 documented equivalents/arbitrary-fixture). `pnpm turbo run test --filter=@helsoft/study-buddy --filter=@helsoft/components --filter=@helsoft/hooks --filter=@helsoft/services` all green; `pnpm turbo run check-types` clean; `pnpm turbo run lint` clean (unaffected — no lib defines a `lint` script). No production behavior changed except exporting the pre-existing `toScorableSlides` helper. Committing as `test(score-results-summary): kill pre-review mutation survivors`.
+**Slice 1 review fix-forward → commit `dad20d0`:** added `lesson-results.stories.tsx` (missing sibling-parity story), dropped orphaned `results.summary` i18n key.
 
-## Full review — round-1 fix-forward (`review.md` findings 1–2)
+**Slice 2 (completion + error/retry, tasks 8-9) — commit `5525f74`:**
+- task-8: RED/GREEN completion variant (widened `ResultsSummaryVariant`), save-failure notice (mirrors `LoginForm`'s `errorBanner`), retry wiring; updated stories to 4 states.
+- task-9: RED/GREEN `LessonResults` completion branch (skips save when unscorable), `saveFailed`/`onRetrySave` bound to hook, retake/back-to-lessons threading pinned; added completion/save-failure i18n keys early (ahead of task-10) to satisfy the no-hardcoded-copy gate.
+- Caught/fixed one Law-1 sequencing slip (production code briefly outran its RED test) via revert→confirm-RED→reinstate.
 
-`reviewer_code` returned `CHANGES_REQUESTED` against the full `c317a5a..HEAD` diff (1 major, 1 minor); the other five lenses approved with zero findings. Fixed both via TDD.
+**Slice 2 review fix-forward (6 findings) → commit `0a65cb1`:** iOS `AccessibilityInfo.announceForAccessibility` on save-failure (+ variant guard), `lesson-results.stories.tsx` Completion/SaveFailed stories, removed untested `percent` ternary, `saveFailed`-notice variant guard, renamed `score`/`percent` styles to `headline`/`body`, graceful-degrade `onRetrySave` when omitted.
 
-### Finding → test map
+**Slice 3 (a11y + i18n + e2e, tasks 10-12) — commit `0b7801d`:**
+- task-10: i18n keys already present from slice 2; added 2 regression-pin tests proving labels come from `t()`.
+- task-11: RED/GREEN `AccessibilityInfo` announcement on `loading:true→false` (score and completion variants); confirmed roles/labels/touch-targets/no-color-only already satisfied.
+- task-12: added `results-summary.e2e.js` (`storybook-e2e-tests` skill) — 6 tests over Score/SaveFailed/Completion stories; fixed label mismatches against story fixture text.
+- Gate: 305 unit tests + 37 e2e (6 new) green across 8 workspaces.
 
-| Finding | Behavior | Test | File |
-|---|---|---|---|
-| 1 (major) | `retry()` refuses to re-fire the service while a save is already in flight, same guard as `saveAttempt` | `does not call the service again when retry is called while a save is already in flight` | `libs/hooks/src/hooks/use-lesson-attempt.test.ts` |
-| 2 (minor) | Duplicated `saveFailed && variant === 'score'` predicate | pure refactor (extracted `showSaveFailure`); all 22 existing tests stayed green, none modified | `libs/components/src/organisms/results-summary/results-summary.tsx` |
+**Slice 3 review fix-forward (3 findings) → commit `3b86c17`:** added `labels.scoreAnnouncement` (moved string composition out of the organism into `t()`-sourced i18n), guarded the combined loading→save-failure transition to announce only the failure (not both), rewrote e2e Retry locator to plain `text=Retry`.
 
-### Cycles
+**Pre-review mutation (40 survivors → 165/181 killed, 16 documented equivalent) → commit `a9a8ea8`:** killed real gaps — service `.trim()`/`score===0` boundaries, organism `variant==='score'` guard + 9 `StyleSheet` mutations (4 new `toHaveStyle` tests), wiring's activity-slide filter (exported `toScorableSlides` for direct testing) + exact variant-string pinning, fixture referential-integrity (`slideId`/`options`/`correctOptionId`). Documented as genuinely equivalent (independently re-verified): `isMounted`/`hasSaved` unmount guards (React 18 no-ops post-unmount setState in this harness), 4 arbitrary unconsumed fixture literals, 1 empty-testID mutant.
 
-- **Finding 1**: RED `does not call the service again when retry is called while a save is already in flight` (saveAttempt→error, then two back-to-back `retry()` calls while the first retry's promise is unresolved) — asserted the service is called exactly twice total (1 initial + 1 retry), reproduced 3 (no guard on retry) → GREEN consolidated the overlap guard into `runSave` itself via a new `isSaving` ref (checked/set synchronously before the service call, cleared in both `.then`/`.catch`), so both `saveAttempt` and `retry` share one enforcement point instead of `saveAttempt` alone checking `status === 'saving'`; `saveAttempt`'s own callback simplified to a thin `runSave` delegate. Confirmed the pre-existing `saveAttempt`-only overlap test (`does not call the service again when saveAttempt is called while already saving`) still passes unmodified.
-- **Finding 2**: refactor-only — derived `showSaveFailure = saveFailed && variant === 'score'` once near the top of the component body, referenced it in the announcement effect, the loading-resolved effect's combined-transition guard, and the notice's render condition. No new test (no new observable behavior); ran the full `results-summary.test.tsx` suite (22/22) with zero test-file edits, confirming behavior is unchanged.
+**Full review round 1 (1 major, 1 minor) → commit `9954137`:** consolidated `retry()`'s overlapping-save guard into the same `isSaving` ref `saveAttempt` uses (was previously unguarded); extracted `showSaveFailure` to dedupe a 3x-repeated predicate.
 
-### Gate
+**Post-review mutation (17 survivors, all documented equivalent, same root causes) → commit `138debd`:** confirmed the review's new `isSaving` guard and `showSaveFailure` dedupe are both fully killed by tests — no new real gaps.
 
-`pnpm turbo run check-types --filter=@helsoft/hooks --filter=@helsoft/components` clean, `pnpm --filter @helsoft/hooks test` (30/30), `pnpm --filter @helsoft/components test` (97/97), `pnpm lint` clean. Not committed — returning to `reviews_lead` for full-review round 2; commit happens once all six lenses approve, per protocol.
+## Final gate
+
+`pnpm lint` / `pnpm check-types` / `pnpm test` (305 tests, 8 workspaces) / `pnpm --filter @helsoft/components exec playwright test --reporter=list` (37/37) all green at HEAD. Mutation PASS both passes (91.16% / 90.23%, only empirically-verified equivalents surviving). Full review APPROVED, zero open findings. DoD PASS.
