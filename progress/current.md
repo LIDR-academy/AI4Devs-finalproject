@@ -1,7 +1,7 @@
 # Current session
 
-**Active feature:** activity-matching
-**Folder:** docs/features/activity-matching/
-**Phase:** pr_ready ✅
-**Status:** All 3 slices + slice reviews clean. Pre+post mutation 100%. Full review APPROVED (round 2). DoD PASS. Ready for PR (manual).
-**Notes:** Branch `feat/activity-matching`, worktree `.worktrees/activity-matching`. Model override: sonnet-tier → grok-4.5-fast-xhigh.
+**Active feature:** activity-fill-in-the-blank
+**Folder:** docs/features/activity-fill-in-the-blank/
+**Phase:** in_progress (Slice 1)
+**Status:** Spec+Gherkin approved. Building Slice 1 via TDD.
+**Notes:** Branch `feat/activity-fill-in-the-blank`, worktree `.worktrees/activity-fill-in-the-blank`. Model: grok-4.5-fast-xhigh.
