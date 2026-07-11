@@ -67,7 +67,10 @@ export const Flashcard = ({
     const confirmedLabel = recalled ? labels.recalledConfirmed : labels.notRecalledConfirmed;
     const label = isChosen ? confirmedLabel : idleLabel;
     const iconName = isChosen ? (recalled ? 'check_circle' : 'cancel') : null;
-    const iconColor = recalled ? theme.colors.tertiary : theme.colors.error;
+    // Self-marked, not graded — both marks share one neutral color pairing so the icon
+    // never contradicts its own (static) container chrome and neither mark reads as
+    // "correct" vs. "wrong" (unlike the graded tertiary/error pairing used elsewhere).
+    const iconColor = theme.colors.onSecondaryContainer;
 
     return (
       <Pressable
@@ -162,7 +165,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   markButtonChosen: {
     backgroundColor: theme.colors.secondaryContainer,
-    borderColor: theme.colors.tertiary,
+    borderColor: theme.colors.secondary,
   },
   markButtonLabel: (isChosen: boolean) => ({
     ...theme.typography.labelLarge,

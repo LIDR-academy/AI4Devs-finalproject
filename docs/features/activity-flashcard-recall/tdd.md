@@ -46,6 +46,20 @@ Tasks 1–4, all `status: done`.
 - Added `flashcard-activity.stories.tsx` (`Features/FlashcardActivity`, `Default` with explanation + `WithoutExplanation`), mirroring `matching-activity.stories.tsx`.
 - Exported via `libs/study-buddy/src/index.ts`.
 
+## Rework — reviewer_slice CHANGES_REQUESTED (Slice 1)
+
+- Finding 1 (major, design): chosen self-mark icon color switched `tertiary`/`error` while
+  `markButtonChosen` container chrome was static — internal clash, and `error` implied a
+  right/wrong judgment on a non-graded self-report.
+  - RED: added `it.each` (Recalled/Not recalled) to `flashcard.test.tsx` asserting the chosen
+    button's icon color and container `backgroundColor`/`borderColor` all resolve to the
+    same neutral `secondary*` family → failed (icon still `tertiary`/`error`).
+  - GREEN: `flashcard.tsx` — `iconColor` now static `theme.colors.onSecondaryContainer` for
+    both marks; `markButtonChosen.borderColor` changed `tertiary` → `secondary`.
+  - Refactor: none needed (comment added explaining the neutral-pairing rationale).
+- Finding 2 (minor, docs): `tasks.md` index Status column fixed `todo` → `done` for tasks 1-4
+  (task-N.md files already said `done`; docs-only, no test).
+
 ## Gate
 
 - `pnpm --filter @helsoft/types test`: 4 suites, 11 tests green.

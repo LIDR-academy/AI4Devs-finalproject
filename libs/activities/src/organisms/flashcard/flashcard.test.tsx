@@ -5,6 +5,7 @@ jest.mock('@helsoft/localization', () => ({
 }));
 
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { lightColors } from '@helsoft/components';
 import type { FlashcardAnswer, FlashcardSlide } from '@helsoft/types';
 
 import { Flashcard } from './flashcard';
@@ -109,6 +110,28 @@ describe('Flashcard', () => {
     expect(screen.getByText(I18N.recalledConfirmed)).toBeTruthy();
     expect(screen.getByText('check_circle')).toBeTruthy();
     expect(screen.getByRole('button', { name: I18N.recalledConfirmed }).props.accessibilityState.selected).toBe(true);
+  });
+
+  // Design-lens fix: the chosen mark's icon color must always agree with its own
+  // (static) container chrome, and never imply a right/wrong judgment — this is a
+  // self-report, not a graded answer.
+  it.each([
+    { mark: 'Recalled' as const, getButton: () => recalledButton(), iconName: 'check_circle' },
+    { mark: 'Not recalled' as const, getButton: () => notRecalledButton(), iconName: 'cancel' },
+  ])('gives the chosen "$mark" button an icon color consistent with its own container chrome', async ({ getButton, iconName }) => {
+    await render(<Flashcard slide={slide} />);
+
+    await press(revealButton);
+    await press(getButton);
+
+    const icon = screen.getByText(iconName);
+    const button = getButton();
+
+    expect(icon).toHaveStyle({ color: lightColors.onSecondaryContainer });
+    expect(button).toHaveStyle({
+      backgroundColor: lightColors.secondaryContainer,
+      borderColor: lightColors.secondary,
+    });
   });
 
   // @s5 — a locked self-mark cannot be changed or re-emitted (switch or re-tap, both ignored).
