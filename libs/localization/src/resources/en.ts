@@ -39,7 +39,6 @@ export const en = {
       finish: 'Finish lesson',
     },
     results: {
-      summary: 'Results for lesson {{id}}',
       score: '{{correct}} / {{total}}',
       scorePercent: '{{percent}}%',
       retake: 'Retake activities',

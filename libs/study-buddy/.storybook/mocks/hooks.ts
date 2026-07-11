@@ -2,10 +2,10 @@
  * Storybook-only stand-in for @helsoft/hooks. Re-exports the real, presentational hooks
  * (reached via a relative import into the sibling package's source, bypassing this same
  * alias — mirrors libs/study-buddy/jest.config.js's setupFiles reaching into
- * ../components/src/theme/unistyles.ts the same way) and replaces useAuth with a fake,
- * story-configurable implementation: the real one calls AuthService -> Supabase, which
- * isn't initialized in Storybook. Aliased in main.ts's viteFinal — never resolved by Jest
- * or the real app build.
+ * ../components/src/theme/unistyles.ts the same way) and replaces useAuth/useLessonAttempt with
+ * fake, story-configurable implementations: the real ones call AuthService/LessonAttemptService
+ * -> Supabase, which isn't initialized in Storybook. Aliased in main.ts's viteFinal — never
+ * resolved by Jest or the real app build.
  */
 export * from '../../../hooks/src/hooks/use-interaction-state';
 export * from '../../../hooks/src/hooks/use-session';
@@ -76,4 +76,31 @@ export const useAuth = () => {
   );
 
   return { signIn, signOut, isSubmitting, error };
+};
+
+export type LessonAttemptStatus = 'idle' | 'saving' | 'saved' | 'error';
+
+export type LessonAttemptMockConfig = {
+  status?: LessonAttemptStatus;
+};
+
+let pendingLessonAttemptConfig: LessonAttemptMockConfig = {};
+
+/** Call from a story's decorator just before it renders, so useLessonAttempt's lazy
+ * initializer below picks it up on that story's first (and only) mount. */
+export const configureLessonAttemptMock = (config: LessonAttemptMockConfig) => {
+  pendingLessonAttemptConfig = config;
+};
+
+export const useLessonAttempt = () => {
+  const [config] = useState(() => {
+    const next = pendingLessonAttemptConfig;
+    pendingLessonAttemptConfig = {};
+    return next;
+  });
+  const [status] = useState<LessonAttemptStatus>(config.status ?? 'idle');
+  const saveAttempt = useCallback(() => {}, []);
+  const retry = useCallback(() => {}, []);
+
+  return { status, attempt: null, saveAttempt, retry };
 };
