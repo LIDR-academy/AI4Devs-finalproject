@@ -68,7 +68,17 @@ export type FillInTheBlankSlide = SlideBase & {
   explanation?: string;
 };
 
-export type ActivitySlide = MultipleChoiceSlide | MatchingSlide | FillInTheBlankSlide;
+export type FlashcardSlide = SlideBase & {
+  kind: 'activity';
+  activityType: 'flashcard';
+  // Front/prompt = SlideBase.content (same convention as the other activity types).
+  /** The answer revealed on the back of the card. */
+  back: string;
+  /** Optional teaching note shown alongside the answer once revealed. */
+  explanation?: string;
+};
+
+export type ActivitySlide = MultipleChoiceSlide | MatchingSlide | FillInTheBlankSlide | FlashcardSlide;
 export type Slide = InstructionalSlide | ActivitySlide;
 
 export type Lesson = {

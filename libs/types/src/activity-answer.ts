@@ -44,4 +44,18 @@ export type FillInTheBlankAnswer = {
   isCorrect: boolean;
 };
 
-export type ActivityAnswer = MultipleChoiceAnswer | MatchingAnswer | FillInTheBlankAnswer;
+/**
+ * Self-marked answered state (never system-graded — R7 excludes 'flashcard' via
+ * `isSystemCheckedActivity`). `recalled` is the learner's own self-assessment;
+ * `isCorrect` mirrors it purely to preserve the shipped structural `GradedAnswer` invariant
+ * every `ActivityAnswer` member satisfies (slideId/activityType/isCorrect) — it is never
+ * counted toward the score.
+ */
+export type FlashcardAnswer = {
+  slideId: string;
+  activityType: 'flashcard';
+  recalled: boolean;
+  isCorrect: boolean;
+};
+
+export type ActivityAnswer = MultipleChoiceAnswer | MatchingAnswer | FillInTheBlankAnswer | FlashcardAnswer;

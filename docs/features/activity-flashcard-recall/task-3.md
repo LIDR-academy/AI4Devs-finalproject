@@ -3,7 +3,7 @@ id: task-3
 title: Flashcard organism — reveal, self-mark, lock (Content states)
 slice: 1
 scenarios: [s1, s2, s3, s4, s5, s7]
-status: todo
+status: done
 paths: [libs/activities/src/organisms/flashcard/flashcard.tsx, libs/activities/src/organisms/flashcard/flashcard.types.ts, libs/activities/src/organisms/flashcard/use-flashcard.ts, libs/activities/src/organisms/flashcard/flashcard.test.tsx, libs/activities/src/organisms/flashcard/use-flashcard.test.ts, libs/activities/src/organisms/index.ts]
 ---
 

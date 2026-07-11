@@ -3,7 +3,7 @@ id: task-4
 title: FlashcardActivity wiring — thin study-buddy component
 slice: 1
 scenarios: [s6]
-status: todo
+status: done
 paths: [libs/study-buddy/src/components/flashcard-activity/flashcard-activity.tsx, libs/study-buddy/src/components/flashcard-activity/flashcard-activity.test.tsx, libs/study-buddy/src/components/flashcard-activity/flashcard-activity.stories.tsx, libs/study-buddy/src/index.ts]
 ---
 

@@ -1,5 +1,7 @@
 export * from './fill-in-the-blank/fill-in-the-blank';
 export * from './fill-in-the-blank/fill-in-the-blank.types';
+export * from './flashcard/flashcard';
+export * from './flashcard/flashcard.types';
 export * from './lesson-results/lesson-results';
 export * from './matching/matching';
 export * from './matching/matching.types';

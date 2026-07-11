@@ -3,7 +3,7 @@ id: task-2
 title: Pure flashcard helpers — validity + answer builder
 slice: 1
 scenarios: [s6, s8]
-status: todo
+status: done
 paths: [libs/activities/src/organisms/flashcard/flashcard.helpers.ts, libs/activities/src/organisms/flashcard/flashcard.helpers.test.ts]
 ---
 

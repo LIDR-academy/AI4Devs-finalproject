@@ -3,7 +3,7 @@ id: task-1
 title: Extend Slide union + answered state with flashcard types
 slice: 1
 scenarios: [s6]
-status: todo
+status: done
 paths: [libs/types/src/lesson.ts, libs/types/src/activity-answer.ts, libs/types/src/graded-answer.test.ts]
 ---
 
