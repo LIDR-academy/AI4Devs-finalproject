@@ -5,6 +5,10 @@ jest.mock('@helsoft/hooks', () => ({
 jest.mock('@helsoft/localization', () => ({
   useLocalization: jest.fn(),
 }));
+jest.mock('@helsoft/components', () => {
+  const actual = jest.requireActual('@helsoft/components');
+  return { ...actual, ResultsSummary: jest.fn(actual.ResultsSummary) };
+});
 
 import type { Lesson } from '@helsoft/types';
 import { useLessonAttempt } from '@helsoft/hooks';
@@ -12,12 +16,13 @@ import { useLocalization } from '@helsoft/localization';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { AccessibilityInfo } from 'react-native';
 
-import { RESULTS_LOADING_TEST_ID } from '@helsoft/components';
+import { RESULTS_LOADING_TEST_ID, ResultsSummary } from '@helsoft/components';
 
-import { LessonResults } from './lesson-results';
+import { LessonResults, toScorableSlides } from './lesson-results';
 
 const mockUseLessonAttempt = useLessonAttempt as jest.Mock;
 const mockUseLocalization = useLocalization as jest.Mock;
+const mockResultsSummary = ResultsSummary as jest.Mock;
 
 // Mimics the real `results.*` i18next templates so assertions can pin the exact rendered text.
 const t = (key: string, options?: Record<string, unknown>) => {
@@ -94,6 +99,38 @@ const instructionalOnlyLesson: Lesson = {
     { id: 'slide-1', lessonId: 'lesson-2', title: 'Intro', content: 'Welcome!', position: 0, kind: 'instructional' },
   ],
 };
+
+// Mutation-kill fixture — a deck mixing an instructional slide with activity slides, used to
+// pin that `toScorableSlides` projects only the activity slides (an instructional slide has no
+// `activityType`, so it must never reach `scoreLesson`'s input).
+const mixedDeckLesson: Lesson = {
+  id: 'lesson-3',
+  userId: 'user-1',
+  title: 'Mixed deck',
+  createdAt: '2026-07-11T00:00:00.000Z',
+  slides: [
+    { id: 'slide-intro', lessonId: 'lesson-3', title: 'Intro', content: 'Welcome!', position: 0, kind: 'instructional' },
+    {
+      id: 'slide-a',
+      lessonId: 'lesson-3',
+      title: 'Q1',
+      content: 'What is the capital of Italy?',
+      position: 1,
+      kind: 'activity',
+      activityType: 'multiple-choice',
+      options: [{ id: 'opt-a', label: 'Rome' }],
+      correctOptionId: 'opt-a',
+    },
+  ],
+};
+
+describe('toScorableSlides', () => {
+  // Mutation-kill — the projection must keep only activity slides: an instructional slide has
+  // no `activityType`, so it must never appear in the array fed to `scoreLesson`.
+  it('excludes instructional slides, keeping only activity slides in the projection', () => {
+    expect(toScorableSlides(mixedDeckLesson)).toEqual([{ id: 'slide-a', activityType: 'multiple-choice' }]);
+  });
+});
 
 describe('LessonResults', () => {
   beforeEach(() => jest.clearAllMocks());
@@ -186,6 +223,35 @@ describe('LessonResults', () => {
     expect(screen.getByText("You've reached the end of this lesson.")).toBeTruthy();
     expect(screen.queryByText('0 / 0')).toBeNull();
     expect(saveAttempt).not.toHaveBeenCalled();
+  });
+
+  // Mutation-kill — pins the exact `variant` string passed to `ResultsSummary` (its declared
+  // `ResultsSummaryVariant` type is exactly `'score' | 'completion'`, so any other literal would
+  // be a contract violation even though it happens to render identically today).
+  it('passes the exact "completion" variant string to ResultsSummary for an instructional-only lesson', async () => {
+    mockUseLessonAttempt.mockReturnValue({ status: 'idle', attempt: null, saveAttempt: jest.fn(), retry: jest.fn() });
+    mockUseLocalization.mockReturnValue(localizationValue());
+
+    await render(
+      <LessonResults lesson={instructionalOnlyLesson} answers={[]} onRetake={jest.fn()} onBackToLessons={jest.fn()} />,
+    );
+
+    expect(mockResultsSummary).toHaveBeenCalledWith(
+      expect.objectContaining({ variant: 'completion' }),
+      undefined,
+    );
+  });
+
+  // Mutation-kill — same pin for the "score" variant, for a scorable lesson.
+  it('passes the exact "score" variant string to ResultsSummary for a scorable lesson', async () => {
+    mockUseLessonAttempt.mockReturnValue({ status: 'idle', attempt: null, saveAttempt: jest.fn(), retry: jest.fn() });
+    mockUseLocalization.mockReturnValue(localizationValue());
+
+    await render(
+      <LessonResults lesson={scorableLesson} answers={allCorrectAnswers} onRetake={jest.fn()} onBackToLessons={jest.fn()} />,
+    );
+
+    expect(mockResultsSummary).toHaveBeenCalledWith(expect.objectContaining({ variant: 'score' }), undefined);
   });
 
   // @s7 — a failed save keeps the score visible and shows the non-blocking save-failure

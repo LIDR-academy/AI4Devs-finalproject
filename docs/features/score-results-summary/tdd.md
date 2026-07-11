@@ -147,3 +147,32 @@ Both `reviewer_code` and `reviewer_design` returned `CHANGES_REQUESTED` against 
 ### Gate
 
 `pnpm turbo run check-types --filter=@helsoft/components --filter=@helsoft/study-buddy --filter=@helsoft/localization` (7/7 clean), `pnpm --filter @helsoft/components test` (92/92), `pnpm --filter @helsoft/study-buddy test` (52/52), `pnpm --filter @helsoft/localization test` (57/57), `pnpm lint` clean, `pnpm --filter @helsoft/components exec playwright test --reporter=list results-summary.e2e.js` (6/6). Not committed — returning to `reviews_lead` for slice-3 re-review (round 2 of 2-round cap); commit happens once both `reviewer_code`/`reviewer_design` return `APPROVED`.
+
+## Mutation pass round 1 (pre-review) — killing survivors
+
+`mutation_tester` reported 40 survivors (70.85%, `mutation.md`). Fixed the real gaps via TDD; documented the rest as equivalent/arbitrary-fixture (see `mutation.md`'s "Justified" sections) after empirically re-applying each by hand and confirming no test in the suite could observe a difference. Final: 165/181 non-equivalent mutants killed (91.16% raw; 100% once the 16 documented survivors are excluded).
+
+### Mutant → test map
+
+| Target | Test | File |
+|---|---|---|
+| `.trim()` removal (service) | `rejects when lessonId is whitespace only, without calling the DAO` | `libs/services/src/services/lesson-attempt.service.test.ts` |
+| `score < 0` → `<=` (service) | `does not reject when score is exactly zero` | `libs/services/src/services/lesson-attempt.service.test.ts` |
+| `variant === 'score'` → `true` (organism) | `still announces the completion headline when loading resolves even if saveFailed is (incorrectly) true` | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
+| 9 `StyleSheet` mutations (organism) | 4 new `toHaveStyle` tests (actions row, content gap, headline/body tokens, notice tokens) | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
+| activity-slide filter removed/bypassed (wiring) | `toScorableSlides` → `excludes instructional slides, keeping only activity slides in the projection` | `libs/study-buddy/src/components/lesson-results/lesson-results.test.tsx` |
+| `'completion'` → `''` (wiring) | `passes the exact "completion"/"score" variant string to ResultsSummary` (2 tests, via a `ResultsSummary` prop spy) | `libs/study-buddy/src/components/lesson-results/lesson-results.test.tsx` |
+| `slideId` template emptied (fixture) | `scopes the generated slide id to the given lessonId` | `libs/study-buddy/src/fixtures/lesson-results-stub.test.ts` |
+| `options`/`correctOptionId` mutations (fixture) | `models a two-option multiple-choice question with correctOptionId referencing a real option` | `libs/study-buddy/src/fixtures/lesson-results-stub.test.ts` |
+
+### Cycles
+
+- **Services**: RED whitespace-only-`lessonId` case → GREEN (already correct; test pinned the `.trim()` boundary). RED `score: 0`-does-not-reject case → GREEN (already correct; test pinned the `< 0` boundary).
+- **Components**: RED completion+saveFailed-true announcement test → GREEN (already correct; pinned the `variant === 'score'` guard against the `resolvedIntoSaveFailure` short-circuit). RED 4 `toHaveStyle` tests (mirroring `login-form.test.tsx`'s existing token-assertion pattern) → GREEN (already correct; pinned every `StyleSheet.create` entry against emptying).
+- **Study-buddy wiring**: exported `toScorableSlides` (previously module-private) so its filter could be unit-tested directly — `scoreLesson`'s own `isSystemCheckedActivity` filter made this invisible at the integration level, so testing the projection in isolation was the correct fix, not a workaround. Added a `jest.mock('@helsoft/components', … ResultsSummary: jest.fn(actual.ResultsSummary))` prop spy to pin the exact `variant` string, since `ResultsSummary`'s own render branch treats any non-`'score'` string identically.
+- **Study-buddy fixture**: tightened `slideId`/`options`/`correctOptionId` assertions (referential-integrity contract); left `userId`/`title`(×2)/`content` undocumented-by-test since no current consumer reads them (see `mutation.md` justification) — a pure change-detector test would have added no value.
+- **Hooks + the `hasSaved` guard in wiring**: investigated by hand-applying each mutation and re-running the suite; found zero observable difference through any testing approach available in this repo (root cause: React 18+'s `createRoot` already no-ops post-unmount `setState`, independently of the `isMounted`/`hasSaved` ref guards). Documented as equivalent in `mutation.md` rather than adding change-detector tests.
+
+### Gate
+
+Re-ran Stryker per lib after fixes (file-scoped to match the original pass exactly): `@helsoft/services` 100.00%, `@helsoft/hooks` 63.64% (all-equivalent, documented), `@helsoft/components` 98.08% (1 pre-approved equivalent), `@helsoft/study-buddy` 91.57% (3+4 documented equivalents/arbitrary-fixture). `pnpm turbo run test --filter=@helsoft/study-buddy --filter=@helsoft/components --filter=@helsoft/hooks --filter=@helsoft/services` all green; `pnpm turbo run check-types` clean; `pnpm turbo run lint` clean (unaffected — no lib defines a `lint` script). No production behavior changed except exporting the pre-existing `toScorableSlides` helper. Committing as `test(score-results-summary): kill pre-review mutation survivors`.

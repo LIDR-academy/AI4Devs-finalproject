@@ -1,6 +1,10 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { AccessibilityInfo } from 'react-native';
 
+import { lightColors } from '../../theme/colors';
+import { shape } from '../../theme/shape';
+import { spacing } from '../../theme/spacing';
+import { typography } from '../../theme/typography';
 import { RESULTS_LOADING_TEST_ID, ResultsSummary } from './results-summary';
 
 const labels = {
@@ -265,6 +269,44 @@ describe('ResultsSummary', () => {
     announceSpy.mockRestore();
   });
 
+  // Mutation-kill — `resolvedIntoSaveFailure` must gate on `variant === 'score'`, not just on
+  // `saveFailed`: `saveFailed` is documented as ignored for the completion variant (nothing is
+  // ever saved there), so a stray `saveFailed=true` on a completion render must not suppress the
+  // completion headline announcement the way it legitimately suppresses the score announcement.
+  it('still announces the completion headline when loading resolves even if saveFailed is (incorrectly) true', async () => {
+    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    const { rerender } = await render(
+      <ResultsSummary
+        variant="completion"
+        labels={labels}
+        loading
+        saveFailed
+        onRetake={jest.fn()}
+        onBackToLessons={jest.fn()}
+      />,
+    );
+    expect(announceSpy).not.toHaveBeenCalled();
+
+    await act(async () => {
+      rerender(
+        <ResultsSummary
+          variant="completion"
+          labels={labels}
+          loading={false}
+          saveFailed
+          onRetake={jest.fn()}
+          onBackToLessons={jest.fn()}
+        />,
+      );
+    });
+
+    expect(announceSpy).toHaveBeenCalledWith('Lesson complete');
+
+    announceSpy.mockRestore();
+  });
+
   // @s13 — the same loading→content state change applies to the completion variant: once
   // saving resolves, the completion headline is announced (nothing renders differently for
   // the completion variant, so this also relies on the imperative call).
@@ -334,5 +376,58 @@ describe('ResultsSummary', () => {
 
     expect(screen.getByText("We couldn't save this attempt.")).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Retry' })).toBeNull();
+  });
+
+  // Layout — the actions row lays the retake/back-to-lessons buttons out side-by-side,
+  // vertically centered, with the standard inline gap (mirrors LoginForm's submit row).
+  it('lays out the actions row as a horizontally centered row with the standard gap', async () => {
+    await render(<ResultsSummary variant="score" labels={labels} onRetake={jest.fn()} onBackToLessons={jest.fn()} />);
+
+    const actionsRow = screen.getByRole('button', { name: 'Retake activities' }).parent;
+
+    expect(actionsRow).toHaveStyle({ flexDirection: 'row', alignItems: 'center', gap: spacing.s3 });
+  });
+
+  // Layout — the card content stacks headline/body/notice/actions with the standard vertical gap.
+  it('stacks the content with the standard vertical gap', async () => {
+    await render(<ResultsSummary variant="score" labels={labels} onRetake={jest.fn()} onBackToLessons={jest.fn()} />);
+
+    const content = screen.getByRole('button', { name: 'Retake activities' }).parent?.parent;
+
+    expect(content).toHaveStyle({ gap: spacing.s2 });
+  });
+
+  // Design tokens — the score headline/body use the type-scale and on-surface color roles,
+  // not ad-hoc styling.
+  it('applies the headline and body typography tokens to the score labels', async () => {
+    await render(<ResultsSummary variant="score" labels={labels} onRetake={jest.fn()} onBackToLessons={jest.fn()} />);
+
+    expect(screen.getByText('3 / 3')).toHaveStyle({ ...typography.headlineSmall, color: lightColors.onSurface });
+    expect(screen.getByText('100%')).toHaveStyle({ ...typography.titleMedium, color: lightColors.onSurfaceVariant });
+  });
+
+  // Design tokens — the save-failure notice uses the error-container color role, card corner
+  // radius, and standard spacing tokens, not ad-hoc styling.
+  it('styles the save-failure notice with the error-container tokens', async () => {
+    await render(
+      <ResultsSummary
+        variant="score"
+        labels={labels}
+        saveFailed
+        onRetake={jest.fn()}
+        onBackToLessons={jest.fn()}
+        onRetrySave={jest.fn()}
+      />,
+    );
+
+    const noticeText = screen.getByText("We couldn't save this attempt.");
+
+    expect(noticeText.parent).toHaveStyle({
+      backgroundColor: lightColors.errorContainer,
+      borderRadius: shape.card,
+      padding: spacing.s3,
+      gap: spacing.s2,
+    });
+    expect(noticeText).toHaveStyle({ ...typography.bodyMedium, color: lightColors.onErrorContainer });
   });
 });

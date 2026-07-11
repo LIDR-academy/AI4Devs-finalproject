@@ -15,7 +15,8 @@ export type LessonResultsProps = {
 
 const PERCENT_MULTIPLIER = 100;
 
-const toScorableSlides = (lesson: Lesson): ScorableSlide[] =>
+/** Exported for direct unit coverage of the activity-only projection (see lesson-results.test.tsx). */
+export const toScorableSlides = (lesson: Lesson): ScorableSlide[] =>
   lesson.slides
     .filter((slide) => slide.kind === 'activity')
     .map((slide) => ({ id: slide.id, activityType: slide.activityType }));
