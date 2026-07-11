@@ -229,6 +229,45 @@ describe('LessonResults', () => {
     expect(onRetake).toHaveBeenCalledTimes(1);
   });
 
+  // @s12 — the completion labels render whatever the active locale's translation returns
+  // (distinct marker strings here), proving they are sourced from `t('results.completeHeadline'
+  // /'results.completeBody')` rather than hardcoded literals baked into the component.
+  it('sources the completion labels from translation keys, not hardcoded literals', async () => {
+    mockUseLessonAttempt.mockReturnValue({ status: 'idle', attempt: null, saveAttempt: jest.fn(), retry: jest.fn() });
+    const localizedT = (key: string, options?: Record<string, unknown>) => {
+      if (key === 'results.completeHeadline') return 'i18n-marker-complete-headline';
+      if (key === 'results.completeBody') return 'i18n-marker-complete-body';
+      return t(key, options);
+    };
+    mockUseLocalization.mockReturnValue({ ...localizationValue(), t: localizedT });
+
+    await render(
+      <LessonResults lesson={instructionalOnlyLesson} answers={[]} onRetake={jest.fn()} onBackToLessons={jest.fn()} />,
+    );
+
+    expect(screen.getByText('i18n-marker-complete-headline')).toBeTruthy();
+    expect(screen.getByText('i18n-marker-complete-body')).toBeTruthy();
+  });
+
+  // @s12 — same proof for the save-failure notice: it renders whatever
+  // `t('results.saveFailed'/'results.retrySave')` returns, not a hardcoded literal.
+  it('sources the save-failure labels from translation keys, not hardcoded literals', async () => {
+    mockUseLessonAttempt.mockReturnValue({ status: 'error', attempt: null, saveAttempt: jest.fn(), retry: jest.fn() });
+    const localizedT = (key: string, options?: Record<string, unknown>) => {
+      if (key === 'results.saveFailed') return 'i18n-marker-save-failed';
+      if (key === 'results.retrySave') return 'i18n-marker-retry-save';
+      return t(key, options);
+    };
+    mockUseLocalization.mockReturnValue({ ...localizationValue(), t: localizedT });
+
+    await render(
+      <LessonResults lesson={scorableLesson} answers={allCorrectAnswers} onRetake={jest.fn()} onBackToLessons={jest.fn()} />,
+    );
+
+    expect(screen.getByText('i18n-marker-save-failed')).toBeTruthy();
+    expect(screen.getByText('i18n-marker-retry-save')).toBeTruthy();
+  });
+
   // @s10 — the completion variant offers both actions and threads their callbacks through.
   it('calls onRetake and onBackToLessons in the completion state', async () => {
     const onRetake = jest.fn();

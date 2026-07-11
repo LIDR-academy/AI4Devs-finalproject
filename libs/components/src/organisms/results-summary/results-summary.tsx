@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { AccessibilityInfo, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
@@ -71,6 +71,20 @@ export const ResultsSummary = ({
       AccessibilityInfo.announceForAccessibility(labels.saveFailed);
     }
   }, [saveFailed, variant, labels.saveFailed]);
+
+  // Announces the final content once saving resolves (@s13 — a loading→score/completion
+  // state change) — same iOS-parity rationale as the saveFailed effect above: there is no
+  // visual content change to hang a `accessibilityLiveRegion` off of (the headline is already
+  // rendered underneath the spinner), so the imperative call is the only way to notify a
+  // screen-reader user the wait is over.
+  const wasLoading = useRef(loading);
+  useEffect(() => {
+    if (wasLoading.current && !loading) {
+      const announcement = variant === 'score' ? `${labels.score}, ${labels.percent}` : labels.completeHeadline;
+      AccessibilityInfo.announceForAccessibility(announcement);
+    }
+    wasLoading.current = loading;
+  }, [loading, variant, labels.score, labels.percent, labels.completeHeadline]);
 
   return (
     <Card>

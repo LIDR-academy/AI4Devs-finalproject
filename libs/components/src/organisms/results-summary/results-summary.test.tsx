@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { AccessibilityInfo } from 'react-native';
 
 import { RESULTS_LOADING_TEST_ID, ResultsSummary } from './results-summary';
@@ -197,6 +197,57 @@ describe('ResultsSummary', () => {
     );
 
     expect(announceSpy).not.toHaveBeenCalled();
+
+    announceSpy.mockRestore();
+  });
+
+  // @s13 — the score becoming final (loading resolves) is a state change that must be
+  // announced to assistive tech, the same iOS-parity need as the save-failure notice.
+  it('announces the score via AccessibilityInfo when loading resolves for the score variant', async () => {
+    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    const { rerender } = await render(
+      <ResultsSummary variant="score" labels={labels} loading onRetake={jest.fn()} onBackToLessons={jest.fn()} />,
+    );
+    expect(announceSpy).not.toHaveBeenCalled();
+
+    await act(async () => {
+      rerender(
+        <ResultsSummary variant="score" labels={labels} loading={false} onRetake={jest.fn()} onBackToLessons={jest.fn()} />,
+      );
+    });
+
+    expect(announceSpy).toHaveBeenCalledWith('3 / 3, 100%');
+
+    announceSpy.mockRestore();
+  });
+
+  // @s13 — the same loading→content state change applies to the completion variant: once
+  // saving resolves, the completion headline is announced (nothing renders differently for
+  // the completion variant, so this also relies on the imperative call).
+  it('announces the completion headline via AccessibilityInfo when loading resolves for the completion variant', async () => {
+    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    const { rerender } = await render(
+      <ResultsSummary variant="completion" labels={labels} loading onRetake={jest.fn()} onBackToLessons={jest.fn()} />,
+    );
+    expect(announceSpy).not.toHaveBeenCalled();
+
+    await act(async () => {
+      rerender(
+        <ResultsSummary
+          variant="completion"
+          labels={labels}
+          loading={false}
+          onRetake={jest.fn()}
+          onBackToLessons={jest.fn()}
+        />,
+      );
+    });
+
+    expect(announceSpy).toHaveBeenCalledWith('Lesson complete');
 
     announceSpy.mockRestore();
   });
