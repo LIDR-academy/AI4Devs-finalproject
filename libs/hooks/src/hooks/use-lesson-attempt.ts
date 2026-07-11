@@ -20,6 +20,10 @@ export const useLessonAttempt = (): UseLessonAttemptResult => {
   const [attempt, setAttempt] = useState<LessonAttempt | null>(null);
   const lastInput = useRef<NewLessonAttempt | null>(null);
   const isMounted = useRef(true);
+  // Tracks whether a save is currently in flight. A ref (not `status` state) is required so
+  // both call sites below — saveAttempt AND retry — see the guard synchronously, before either
+  // triggers a re-render.
+  const isSaving = useRef(false);
 
   useEffect(
     () => () => {
@@ -29,15 +33,22 @@ export const useLessonAttempt = (): UseLessonAttemptResult => {
   );
 
   const runSave = useCallback((input: NewLessonAttempt) => {
+    // Guard against overlapping saves (risk R4/R5) — a second invocation, whether via
+    // saveAttempt or retry, while one is already in flight is refused, not queued. Enforced
+    // once here so both call sites below share the same guarantee.
+    if (isSaving.current) return;
+    isSaving.current = true;
     lastInput.current = input;
     setStatus('saving');
     void LessonAttemptService.saveAttempt(input)
       .then((saved) => {
+        isSaving.current = false;
         if (!isMounted.current) return;
         setAttempt(saved);
         setStatus('saved');
       })
       .catch(() => {
+        isSaving.current = false;
         if (!isMounted.current) return;
         setStatus('error');
       });
@@ -45,12 +56,9 @@ export const useLessonAttempt = (): UseLessonAttemptResult => {
 
   const saveAttempt = useCallback(
     (input: NewLessonAttempt) => {
-      // Guard against overlapping saves (risk R4/R5) — a second call while one is already in
-      // flight is refused, not queued.
-      if (status === 'saving') return;
       runSave(input);
     },
-    [runSave, status],
+    [runSave],
   );
 
   const retry = useCallback(() => {

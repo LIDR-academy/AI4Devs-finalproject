@@ -136,6 +136,36 @@ describe('useLessonAttempt', () => {
     });
   });
 
+  // Guard against overlapping saves via retry — calling retry again while a save triggered by a
+  // prior retry() (or saveAttempt()) is still in flight does not re-fire the service (no
+  // double-fire / double-insert risk R4/R5, same invariant as the saveAttempt-only overlap test
+  // above, now also enforced for the retry call site).
+  it('does not call the service again when retry is called while a save is already in flight', async () => {
+    service.saveAttempt.mockRejectedValueOnce(new Error('insert failed'));
+    const { result } = renderHook(() => useLessonAttempt());
+
+    await act(async () => {
+      result.current.saveAttempt(input);
+    });
+    expect(result.current.status).toBe('error');
+
+    let resolveRetry: (value: unknown) => void = () => {};
+    service.saveAttempt.mockReturnValue(new Promise((resolve) => (resolveRetry = resolve)) as never);
+
+    act(() => {
+      result.current.retry();
+    });
+    act(() => {
+      result.current.retry();
+    });
+
+    expect(service.saveAttempt).toHaveBeenCalledTimes(2);
+
+    await act(async () => {
+      resolveRetry({ id: 'attempt-1', ...input, createdAt: '2026-07-11T00:00:00.000Z' });
+    });
+  });
+
   // Safe against unmount — no console.error ("state update on an unmounted component") fires
   // once an in-flight save resolves after the component has already unmounted.
   it('does not log a state-update-after-unmount warning once the in-flight save resolves post-unmount', async () => {

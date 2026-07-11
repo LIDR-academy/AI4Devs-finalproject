@@ -176,3 +176,23 @@ Both `reviewer_code` and `reviewer_design` returned `CHANGES_REQUESTED` against 
 ### Gate
 
 Re-ran Stryker per lib after fixes (file-scoped to match the original pass exactly): `@helsoft/services` 100.00%, `@helsoft/hooks` 63.64% (all-equivalent, documented), `@helsoft/components` 98.08% (1 pre-approved equivalent), `@helsoft/study-buddy` 91.57% (3+4 documented equivalents/arbitrary-fixture). `pnpm turbo run test --filter=@helsoft/study-buddy --filter=@helsoft/components --filter=@helsoft/hooks --filter=@helsoft/services` all green; `pnpm turbo run check-types` clean; `pnpm turbo run lint` clean (unaffected — no lib defines a `lint` script). No production behavior changed except exporting the pre-existing `toScorableSlides` helper. Committing as `test(score-results-summary): kill pre-review mutation survivors`.
+
+## Full review — round-1 fix-forward (`review.md` findings 1–2)
+
+`reviewer_code` returned `CHANGES_REQUESTED` against the full `c317a5a..HEAD` diff (1 major, 1 minor); the other five lenses approved with zero findings. Fixed both via TDD.
+
+### Finding → test map
+
+| Finding | Behavior | Test | File |
+|---|---|---|---|
+| 1 (major) | `retry()` refuses to re-fire the service while a save is already in flight, same guard as `saveAttempt` | `does not call the service again when retry is called while a save is already in flight` | `libs/hooks/src/hooks/use-lesson-attempt.test.ts` |
+| 2 (minor) | Duplicated `saveFailed && variant === 'score'` predicate | pure refactor (extracted `showSaveFailure`); all 22 existing tests stayed green, none modified | `libs/components/src/organisms/results-summary/results-summary.tsx` |
+
+### Cycles
+
+- **Finding 1**: RED `does not call the service again when retry is called while a save is already in flight` (saveAttempt→error, then two back-to-back `retry()` calls while the first retry's promise is unresolved) — asserted the service is called exactly twice total (1 initial + 1 retry), reproduced 3 (no guard on retry) → GREEN consolidated the overlap guard into `runSave` itself via a new `isSaving` ref (checked/set synchronously before the service call, cleared in both `.then`/`.catch`), so both `saveAttempt` and `retry` share one enforcement point instead of `saveAttempt` alone checking `status === 'saving'`; `saveAttempt`'s own callback simplified to a thin `runSave` delegate. Confirmed the pre-existing `saveAttempt`-only overlap test (`does not call the service again when saveAttempt is called while already saving`) still passes unmodified.
+- **Finding 2**: refactor-only — derived `showSaveFailure = saveFailed && variant === 'score'` once near the top of the component body, referenced it in the announcement effect, the loading-resolved effect's combined-transition guard, and the notice's render condition. No new test (no new observable behavior); ran the full `results-summary.test.tsx` suite (22/22) with zero test-file edits, confirming behavior is unchanged.
+
+### Gate
+
+`pnpm turbo run check-types --filter=@helsoft/hooks --filter=@helsoft/components` clean, `pnpm --filter @helsoft/hooks test` (30/30), `pnpm --filter @helsoft/components test` (97/97), `pnpm lint` clean. Not committed — returning to `reviews_lead` for full-review round 2; commit happens once all six lenses approve, per protocol.

@@ -69,14 +69,19 @@ export const ResultsSummary = ({
   onBackToLessons,
   onRetrySave,
 }: ResultsSummaryProps) => {
+  // Shared predicate: the save-failure notice only ever applies to the score variant (nothing
+  // is ever saved for completion). Derived once, referenced by the announcement effect below,
+  // the loading-resolved effect's combined-transition guard, and the notice's render condition.
+  const showSaveFailure = saveFailed && variant === 'score';
+
   // accessibilityLiveRegion (below) is Android/Web-only (@platform android) — iOS VoiceOver
   // needs this imperative call fired directly on the saveFailed transition (WCAG 4.1.3),
   // mirroring LoginForm's errorMessage announcement.
   useEffect(() => {
-    if (saveFailed && variant === 'score') {
+    if (showSaveFailure) {
       AccessibilityInfo.announceForAccessibility(labels.saveFailed);
     }
-  }, [saveFailed, variant, labels.saveFailed]);
+  }, [showSaveFailure, labels.saveFailed]);
 
   // Announces the final content once saving resolves (@s13 — a loading→score/completion
   // state change) — same iOS-parity rationale as the saveFailed effect above: there is no
@@ -91,13 +96,12 @@ export const ResultsSummary = ({
   // more actionable message and already announces on its own.
   const wasLoading = useRef(loading);
   useEffect(() => {
-    const resolvedIntoSaveFailure = saveFailed && variant === 'score';
-    if (wasLoading.current && !loading && !resolvedIntoSaveFailure) {
+    if (wasLoading.current && !loading && !showSaveFailure) {
       const announcement = variant === 'score' ? labels.scoreAnnouncement : labels.completeHeadline;
       AccessibilityInfo.announceForAccessibility(announcement);
     }
     wasLoading.current = loading;
-  }, [loading, saveFailed, variant, labels.scoreAnnouncement, labels.completeHeadline]);
+  }, [loading, showSaveFailure, variant, labels.scoreAnnouncement, labels.completeHeadline]);
 
   return (
     <Card>
@@ -113,7 +117,7 @@ export const ResultsSummary = ({
             <Text style={styles.body}>{labels.completeBody}</Text>
           </>
         )}
-        {saveFailed && variant === 'score' ? (
+        {showSaveFailure ? (
           <View style={styles.notice} accessibilityRole="alert">
             <Text style={styles.noticeText} accessibilityLiveRegion="assertive">
               {labels.saveFailed}
