@@ -4,7 +4,7 @@ The reviewers run **in parallel**, each an independent lens. Each writes `APPROV
 
 **Cadence — two review passes:**
 - **Per slice (during the build):** only **`reviewer_code` + `reviewer_design`** run, scoped to that slice's changes (a fast quality/design gate before the slice closes). No mutation, no minors-accept — every finding is fixed before the next slice.
-- **After all slices (full review):** **all six** reviewers run, coupled with mutation, under the 2-round cap + documented-minors rule.
+- **After all slices (full review):** **all six** reviewers run under the 2-round cap + documented-minors rule, **bracketed by mutation** — `mutation_tester` runs once **before** the full review and once **after** it (survivors killed both times).
 
 General hard rules for every reviewer:
 - Never approve with failing `pnpm lint`, `pnpm check-types`, `pnpm test`, or relevant `test:e2e`.
@@ -73,5 +73,5 @@ Runtime and delivery cost.
 1. Read all six reports; de-duplicate overlapping findings; resolve conflicts.
 2. Prioritize blocker → major → minor into one ordered change-request list in `review.md`.
 3. **Any finding blocks — blocker, major, OR minor.** Only `APPROVED` when there are **zero** findings of any severity; otherwise issue **one** consolidated change request to `implementator`, which fixes **every** item. There is no "approve with minor findings left open."
-4. After fixes, re-run **all six** reviewers in parallel and re-consolidate, **pruning `review.md` to only the findings still open** (drop each resolved one). The orchestrator re-runs **mutation** alongside every round — review + mutation are one quality loop.
+4. After fixes, re-run **all six** reviewers in parallel and re-consolidate, **pruning `review.md` to only the findings still open** (drop each resolved one). (Mutation is **not** part of this loop — the orchestrator runs `mutation_tester` as a separate pass before **and** after this full review.)
 5. **Cap: 2 rounds.** After the 2nd round: any remaining **blocker/major** (or unmet mutation threshold) is **hard** — escalate and block. If **only minors** remain, they may ship as **documented, human-accepted** risks (recorded in `review.md`, `spec.md` Open decisions, `dod.md`). Either way `review.md` holds **only the unresolved findings**.

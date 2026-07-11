@@ -7,6 +7,8 @@ description: Run mutation testing with StrykerJS on a feature's CHANGED source f
 
 > A green suite says "the code doesn't explode on these inputs." It does **not** say "the tests would fail if the code were wrong." Mutation testing measures the second thing.
 
+**When it runs:** twice per feature, bracketing the full review — **before** it (harden the test net so reviewers look at code whose tests already bite) and **after** it (the review's fixes may have changed code). The threshold must be met and every survivor killed on **both** passes.
+
 ## How it works
 
 StrykerJS introduces small defects (*mutants*) into the source and re-runs the Jest suite:

@@ -2,7 +2,7 @@
 
 > **Rule of precedence:** if this file conflicts with any agent/command/rule file, **this file (`.agents/ORCHESTRATOR.md`) wins** — except the canonical project rules in `.agents/rules/global.mdc`, `hooks-service-dao.mdc`, `atomic-design.mdc`, which always take precedence on _how code is written_.
 
-This pipeline takes one user story from `user-stories/` to a validated, PR-ready feature through five phases, driven by `orchestrator_lead` with **one human gate up front** — a single combined approval of the spec + Gherkin contract. Full rationale lives in `/ORCHESTRATOR_PLAN.md`.
+This pipeline takes one user story from `user-stories/` to a validated, PR-ready feature through four phases, driven by `orchestrator_lead` with **one human gate up front** — a single combined approval of the spec + Gherkin contract. Full rationale lives in `/ORCHESTRATOR_PLAN.md`.
 
 ## Principles
 
@@ -23,10 +23,10 @@ pending
   → ⏸ HUMAN GATE: approve the spec + Gherkin contract (single approval)            [approved]
   → implementator       → src + tests, one vertical slice at a time                 [in_progress]
         └ per slice: light review (reviewer_code + reviewer_design only) → fix → next slice
-  → reviews_lead (full: all 6) + mutation_tester  → review.md + mutation.md          [in_review → mutation]
-        └ ONE quality loop (≤ 2 rounds): implementator fixes EVERY review finding
-          (any severity, incl. minor) + every surviving mutant; after each fix,
-          review AND mutation both re-run. review.md keeps only still-open findings.
+  ── quality gate (after all slices): mutation → full review → mutation ──
+  → mutation_tester (pre-review)   → mutation.md   kill every survivor (≤ 2 rounds)   [mutation]
+  → reviews_lead (full: all 6)     → review.md     fix every finding (≤ 2 rounds)     [in_review]
+  → mutation_tester (post-review)  → mutation.md   kill every survivor again (≤ 2)    [mutation]
   → dod_validator       → dod.md (validate only, no PR)                             [pr_ready]
   → ⟵ human opens & merges the PR                                                    [done]
 ```
@@ -48,8 +48,8 @@ Only `orchestrator_lead` writes the feature phase (in `tasks.md` frontmatter); `
 | `reviewer_security` | 3 — full only (parallel, OWASP) | `review-security.md` | no |
 | `reviewer_accessibility` | 3 — full only (parallel, WCAG) | `review-accessibility.md` | no |
 | `reviewer_performance` | 3 — full only (parallel) | `review-performance.md` | no |
-| `mutation_tester` | 4 — StrykerJS | `mutation.md` | no |
-| `dod_validator` | 5 — DoD | `dod.md` | no |
+| `mutation_tester` | 3 — StrykerJS (pre **and** post review) | `mutation.md` | no |
+| `dod_validator` | 4 — DoD | `dod.md` | no |
 
 `implementator` is the **only** agent that edits feature code. Reviewers and leads prune, they don't patch.
 
@@ -66,9 +66,10 @@ Only `orchestrator_lead` writes the feature phase (in `tasks.md` frontmatter); `
 1. **spec_drafted → spec_ready (automated spec review)** — `spec_reviewer` vets the bundle: every AC is a testable Given/When/Then; 4 UI states (if UI); risks mitigated; one `@s` per behavior; **every AC ↔ ≥ 1 scenario**; tasks atomic, correctly sliced, with valid `libs/*` paths; full story→AC→scenario→task traceability. Findings loop back to `spec_partner` (≤ 2 rounds); clean → `spec_ready`.
 2. **HUMAN GATE (combined)** — human approves `spec.md` **and** `gherkin-scenarios.md` in one pass (with any open `review-spec.md` findings surfaced) → `approved`.
 3. **per-slice gate** — for each vertical slice: `pnpm lint` + `pnpm check-types` + `pnpm test` (+ `test:e2e` where relevant) green; the slice's `@s` covered by tests; no scope beyond contract; no hardcoded strings/colors/dims; **and a light `reviewer_code` + `reviewer_design` review is clean** (findings fixed, ≤ 2 rounds) before the slice is committed and the next begins.
-4. **full review + mutation (one quality loop, ≤ 2 rounds — after all slices)** — all six reviewers run; `implementator` fixes **every** review finding (blocker, major, **and minor**) and **every** surviving mutant; after any fix, review **and** mutation both re-run. A round is clean only at **zero open review findings (any severity) + mutation threshold met (100% on changed lines)**. `review.md` is kept pruned to only unresolved findings. **After the 2nd round:** any remaining **blocker/major/mutation-survivor is hard → escalate & block**; if **only minors** remain, they may ship as **documented, human-accepted** risks (recorded in `review.md`, `spec.md`, `dod.md`) → `pr_ready`. On a clean exit `review.md` is empty.
-5. **mutation threshold** — 100% of mutants killed on changed lines (enforced inside the loop above).
-6. **pr_ready** — `dod_validator` marks every DoD item passing. Human opens/merges the PR → `done`.
+4. **mutation (pre-review)** — after all slices, `mutation_tester` runs **first**; `implementator` kills every surviving mutant until **100% on changed lines** (≤ 2 rounds, else escalate). Hardens the test net before the reviewers look.
+5. **full review (≤ 2 rounds)** — all six reviewers run; `implementator` fixes **every** finding (blocker, major, **and minor**); `review.md` pruned to only open findings. **After the 2nd round:** any open **blocker/major → escalate & block**; **only minors** → ship as **documented, human-accepted** risks (recorded in `review.md`, `spec.md`, `dod.md`).
+6. **mutation (post-review)** — `mutation_tester` re-runs (the review's fixes may have changed code); `implementator` kills every surviving mutant until **100% on changed lines** again (≤ 2 rounds, else escalate). Mutants are killed on **both** passes.
+7. **pr_ready** — `dod_validator` marks every DoD item passing. Human opens/merges the PR → `done`.
 
 ## Artifact map — `docs/features/<name>/`
 

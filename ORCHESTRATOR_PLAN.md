@@ -24,7 +24,7 @@ This orchestrator blends two references:
 | Mutation | custom `mutate.py` | — | **StrykerJS** with per-feature score thresholds |
 | DoD / PR | — | `/pr` PR Guardian (validates DoD **and** opens PR) | **`dod_validator`** — validates the full DoD only; PR creation is a manual human step |
 
-The result is a 5-phase pipeline (below) driven by an orchestrator that guards the gates, keeps all state on disk, and stops for the human at **one point up front** — a single combined approval of the **spec + Gherkin contract** — after which it runs autonomously up to a validated, PR-ready state. Opening and merging the PR stays a manual human step.
+The result is a 4-phase pipeline (below) driven by an orchestrator that guards the gates, keeps all state on disk, and stops for the human at **one point up front** — a single combined approval of the **spec + Gherkin contract** — after which it runs autonomously up to a validated, PR-ready state. Opening and merging the PR stays a manual human step.
 
 ---
 
@@ -78,8 +78,8 @@ We extend the existing `.agents/` folder rather than introducing `.claude/`. Orc
 │   ├── reviewer_security.md      # Phase 3 (parallel, OWASP)
 │   ├── reviewer_accessibility.md # Phase 3 (parallel, WCAG)
 │   ├── reviewer_performance.md   # Phase 3 (parallel, perf)
-│   ├── mutation_tester.md        # Phase 4 (StrykerJS)
-│   └── dod_validator.md          # Phase 5 (validates DoD only; does not open the PR)
+│   ├── mutation_tester.md        # Phase 3 (StrykerJS — runs pre- AND post-review)
+│   └── dod_validator.md          # Phase 4 (validates DoD only; does not open the PR)
 ├── templates/                    # NEW — per-feature doc templates copied at Phase 1
 │   ├── spec.md
 │   ├── risks.md
@@ -143,7 +143,7 @@ progress/                         # NEW — session-level state only (nothing fe
 ```
 pending → spec_drafted → [spec_reviewer ↔ spec_partner, ≤ 2 rounds] → spec_ready
         → [HUMAN GATE: approve spec + Gherkin contract] → approved
-        → in_progress → in_review → mutation → pr_ready
+        → in_progress → mutation (pre-review) → in_review → mutation (post-review) → pr_ready
         → [human opens & merges PR] → done
 ```
 
@@ -171,7 +171,10 @@ flowchart TD
         S1["Slice 1<br/>Happy path + Loading"] --> S2["Slice 2<br/>Empty + Error + Retry"] --> S3["Slice 3<br/>Analytics + Flag + a11y + i18n"] --> INT["Integration tests"]
     end
 
-    P3G -->|in_review| RL
+    P3G -->|"in_progress → mutation"| MUTPRE["③ mutation_tester (pre-review)<br/>StrykerJS on changed files"]
+    MUTPRE -->|"survivor → fix (≤2 rounds)"| P3G
+    MUTPRE -->|"0 survivors → in_review"| RL
+
     subgraph RV["③ Full review — all 6 reviewers in parallel (code+design already ran per slice)"]
         direction LR
         R1["code"]
@@ -186,10 +189,11 @@ flowchart TD
     RV --> RL
 
     RL -->|"any finding — even minor → fix (≤2 rounds)"| P3G
-    RL -->|"0 findings"| MUT["④ mutation_tester<br/>StrykerJS on changed files"]
-    MUT -->|"survivor → fix, then re-review + re-mutate (≤2 rounds)"| P3G
-    MUT -->|"clean: 0 findings + threshold met — OR after 2 rounds: minors-only, documented + human-accepted"| DV["⑤ dod_validator<br/>validate full DoD → dod.md"]
-    MUT -.->|"after 2 rounds: blocker/major/survivor remains → escalate & block"| ESC(["human"])
+    RL -->|"clean — OR after 2 rounds: minors-only (documented + accepted)"| MUTPOST["③ mutation_tester (post-review)<br/>re-run StrykerJS"]
+    RL -.->|"after 2 rounds: blocker/major → escalate & block"| ESC(["human"])
+    MUTPOST -->|"survivor → fix (≤2 rounds)"| P3G
+    MUTPOST -->|"0 survivors → pr_ready"| DV["④ dod_validator<br/>validate full DoD → dod.md"]
+    MUTPOST -.->|"after 2 rounds: survivor remains → escalate & block"| ESC
     DV -->|DOD_FAILED| P3G
     DV -->|"DoD passed → pr_ready"| HPR["human opens the PR<br/>review → merge"]
     HPR -->|merged → done| DONE(["done"])
@@ -204,7 +208,7 @@ flowchart TD
     class DONE terminal;
 ```
 
-*State transitions written by `orchestrator_lead`: `pending → spec_ready → approved → in_progress → in_review → mutation → pr_ready`. The human then opens and merges the PR → `done`.*
+*State transitions written by `orchestrator_lead`: `pending → spec_drafted → spec_ready → approved → in_progress → mutation (pre) → in_review → mutation (post) → pr_ready`. The human then opens and merges the PR → `done`.*
 
 ---
 
@@ -256,10 +260,11 @@ Each agent is a Claude Code subagent defined in `.agents/agents/<name>.md` with 
   - Implementation following the `Component → Hook → Service → DAO` layering, exported through the barrels.
 
   **c. Always:** an **integration test** exercising the vertical slice end-to-end across layers (e.g., hook→service→DAO with a mocked Supabase client, or a Playwright flow across composed components).
-- **Feature gate → `in_review` (after all slices):** every `@s` covered by ≥1 concrete test across the slices; the integration test green; `pnpm --filter <ws> test` and relevant `test:e2e` green; `pnpm lint` and `pnpm check-types` green; no scope beyond the contract; no hardcoded strings/colors/dims. The implementator does **not** self-mark `done`. (Two review cadences: `reviewer_code` + `reviewer_design` run **per slice** as a fast gate; the **full six-reviewer round + mutation** run **once**, after all slices are green — keeping the four heavier lenses and the compute-bound mutation to a single pass per feature.)
-- **Re-work loop:** review (Phase 3) and mutation (Phase 4) form **one quality loop**. `reviews_lead` sends the implementator one consolidated change request holding **every** finding (any severity, incl. minor); `orchestrator_lead` adds any surviving mutants. `implementator` writes the failing test that captures each gap and makes it green — then **both** review and mutation re-run. The loop is capped at **2 rounds**; `review.md` ends holding only the findings that were never fixed.
+- **Feature gate → `in_review` (after all slices):** every `@s` covered by ≥1 concrete test across the slices; the integration test green; `pnpm --filter <ws> test` and relevant `test:e2e` green; `pnpm lint` and `pnpm check-types` green; no scope beyond the contract; no hardcoded strings/colors/dims. The implementator does **not** self-mark `done`. (Two review cadences: `reviewer_code` + `reviewer_design` run **per slice** as a fast gate; then, once after all slices, the **quality gate** runs — **mutation → full six-reviewer round → mutation** — keeping the four heavier lenses to a single round and running the compute-bound mutation twice to bracket it.)
+- **Re-work loop:** the post-build **quality gate** is an ordered sequence — mutation (pre-review) → full review → mutation (post-review). Each is its own loop (≤ 2 rounds) that routes work to `implementator`: `mutation_tester` hands back surviving mutants (kill via a red test); `reviews_lead` hands back one consolidated change request holding **every** finding (any severity, incl. minor). Mutants are killed on **both** mutation passes; `review.md` ends holding only the findings that were never fixed.
 
-### Phase 3 — Reviewers (the review is the whole game)
+### Phase 3 (full review) — Reviewers (the review is the whole game)
+> Bracketed by mutation: `mutation_tester` runs **before** this full review and **again after** it (see "Phase 3 (mutation)" below).
 This is the **full review**, run once after all slices (during the build, `reviewer_code` + `reviewer_design` already ran per slice). **All six reviewers run in parallel**, each an independent subagent with `Read, Glob, Grep, Bash` only (**reviewers never edit code** — they prune, they don't patch). Each writes its own report file so the parallel runs never collide:
 
 ```
@@ -277,19 +282,20 @@ Each reviewer runs its rubric (from `.agents/rules/review-standards.md`), execut
 1. Fan out: invoke all six reviewers **in parallel** and wait for every one to finish.
 2. Consolidate: read the six `review-<type>.md` files, de-duplicate overlapping findings, resolve conflicts, and prioritize (blocker → major → minor). Write the consolidated verdict + a single ordered change-request list to `docs/features/<name>/review.md`.
 3. Verdict — **any finding blocks**: only if there are **zero findings of any severity** → report `APPROVED`. If **any** finding remains — **blocker, major, OR minor** → issue **one consolidated change request** to `implementator`, which fixes **every** item via TDD. There is no "approve with minor findings left open."
-4. Re-review: after `implementator` fixes via TDD, `reviews_lead` re-runs **all six reviewers in parallel** again (a fix in one dimension can break another) and re-consolidates, **pruning `review.md` to only the findings still open**. Review + mutation are **one quality loop** — the orchestrator re-runs mutation alongside each round.
-5. **Round cap:** at most **2 rounds**. After the 2nd round, a remaining **blocker/major** (or unmet mutation threshold) is **hard** — escalate and block. If **only minors** remain, they may ship as **documented, human-accepted** risks (recorded in `review.md`, `spec.md` Open decisions, `dod.md`). `review.md` ends holding **only the unresolved items** (empty on a clean exit, or the accepted minors).
+4. Re-review: after `implementator` fixes via TDD, `reviews_lead` re-runs **all six reviewers in parallel** again (a fix in one dimension can break another) and re-consolidates, **pruning `review.md` to only the findings still open**. (Mutation is **not** part of this loop — `mutation_tester` runs as a separate pass **before** and **after** this full review.)
+5. **Round cap:** at most **2 rounds**. After the 2nd round, a remaining **blocker/major** is **hard** — escalate and block. If **only minors** remain, they may ship as **documented, human-accepted** risks (recorded in `review.md`, `spec.md` Open decisions, `dod.md`). `review.md` ends holding **only the unresolved items** (empty on a clean exit, or the accepted minors).
 
 No fixed ordering among reviewers — they are independent lenses, so running them concurrently is both faster and avoids a false "mechanics first" sequencing. `reviews_lead` is the single point that turns six parallel opinions into one actionable request for the implementator.
 
 **Reviewer hard rules:** never approve with failing tests/lint/types; be specific (`file:line`, no generic feedback); never edit code.
 
-### Phase 4 — `mutation_tester` (StrykerJS)
+### Phase 3 (mutation) — `mutation_tester` (StrykerJS, pre- and post-review)
 - **Tools:** `Read, Glob, Grep, Bash`. **Measures only; never edits code.**
+- **Runs twice, bracketing the full review:** once **before** it (harden the test net so reviewers look at code whose tests already bite) and once **after** it (the review's fixes may have changed code).
 - **Tool:** StrykerJS (`@stryker-mutator/core` + `@stryker-mutator/jest-runner`, plus the TS checker). Config per workspace (`stryker.config.mjs`) scoped to the feature's changed files via `mutate: [...]`.
 - **Behavior:** run Stryker over the feature's new/changed source; report `killed / survived / score` and each surviving mutant to `docs/features/<name>/mutation.md`.
 - **Threshold:** **100% killed on the lines new/changed by this feature** (matching the reference repo's intent); legacy untouched code is measured, not blocked. An *equivalent* mutant may be excluded **only** with a written justification in the report.
-- **Loop (coupled with review):** any survivor → back to `implementator` (write the red test that kills it) → then re-run **both** the review round **and** Stryker. Only when a round is clean — **zero open review findings (any severity) AND the mutation threshold met** — does the feature advance to `dod_validator`. Capped at **2 rounds**; after that, blockers/majors/survivors escalate & block, while **minors-only** may ship documented + human-accepted.
+- **Loop (each pass):** any survivor → back to `implementator` (write the red test that kills it) → re-run Stryker, capped at **2 rounds** (unresolved survivors → escalate & block). Mutants are killed on **both** passes — the pre-review pass gates entry to the full review; the post-review pass is the final gate before `dod_validator`.
 
 Stryker runs on **every workspace that ships changed source — including `libs/components`** — since UI components now carry Jest unit tests. Example `stryker.config.mjs`:
 ```js
@@ -310,7 +316,7 @@ export default {
 // mutate: ['src/**/<name>/<name>.tsx']   // excludes *.stories.tsx and *.e2e.js
 ```
 
-### Phase 5 — `dod_validator` (Definition of Done validation)
+### Phase 4 — `dod_validator` (Definition of Done validation)
 - **Tools:** `Read, Glob, Grep, Bash`. **Validates only — it does not create branches, commits, or the PR.**
 - **Behavior:** run the **complete DoD** (Section 7) against the implemented feature and write a pass/fail report to `docs/features/<name>/dod.md` — every DoD item marked `[x]`/`[ ]` with concrete evidence (command output, `file:line`, links to `review.md` / `mutation.md`). It re-runs the objective checks itself (lint, types, unit/integration/e2e suites, mutation threshold) rather than trusting prior reports. If any item fails, it returns `DOD_FAILED` and `orchestrator_lead` routes the gap back to `implementator`; it never patches code itself.
 - **Gate → `pr_ready`:** every DoD item checked and passing; all suites green; mutation threshold met; reviewers all APPROVED. Opening the PR is a **manual human step** after `pr_ready`; merging the PR is what moves the feature to `done`.
@@ -370,7 +376,7 @@ Resolved (locked in):
 - **Ticket source — RESOLVED:** tickets are markdown files in `user-stories/`. `spec_partner` reads `user-stories/<story>.md` via `/ticket-orchestrator <story>`. No tracker MCP needed.
 - **Figma access — RESOLVED:** no Figma in this repo. `implementator` builds UI from the spec, or from a pasted screenshot if the story includes one. No Figma MCP step.
 - **Jest / Expo SDK 57 / RN 0.86 / React 19 — RESOLVED:** already configured (`jest-expo` in `@helsoft/components`, `ts-jest` in `@helsoft/hooks`/`@helsoft/services`). Phase 0 only adds StrykerJS (+ Supabase Test Helpers if missing).
-- **Review/mutation loop — RESOLVED:** review + mutation are one loop; `implementator` fixes **every** finding (any severity, incl. minor) and every mutant, re-running both after each fix. Capped at **2 rounds**. After the cap, **blockers/majors/mutation survivors are hard → escalate & block**; **minors-only may ship as documented, human-accepted risks** (recorded in `review.md`, `spec.md` Open decisions, `dod.md`). `review.md` ends holding only the unresolved items (see Phase 3, step 5).
+- **Review & mutation sequencing — RESOLVED:** after all slices, the quality gate runs **mutation (pre-review) → full review → mutation (post-review)**. Each is its own ≤ 2-round loop routing fixes to `implementator`; surviving mutants are killed on **both** mutation passes. In the full review `implementator` fixes **every** finding (any severity, incl. minor); after the 2-round cap, blockers/majors → escalate & block, while **minors-only may ship as documented, human-accepted risks** (recorded in `review.md`, `spec.md` Open decisions, `dod.md`).
 - **e2e vs mutation — RESOLVED:** Stryker's Jest runner won't cover Playwright `.e2e.js` visual tests; mutation thresholds apply to Jest-testable code (services/hooks/DAOs **and** component logic/behavior), while Playwright guards rendered/visual behavior. This split is documented in the `mutation-testing` skill (`.agents/skills/mutation-testing/SKILL.md`).
 - **Mutation scope & cost — RESOLVED:** always mutate **only the feature's changed files** (changed services/DAOs/hooks + changed component `.tsx`) with `coverageAnalysis: 'perTest'`. No global mutation runs. This is the accepted cost/coverage tradeoff — it keeps Stryker affordable even though it's the slowest gate and rendering-based component tests add runtime.
 
