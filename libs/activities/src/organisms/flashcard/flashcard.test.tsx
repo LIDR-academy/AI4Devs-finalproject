@@ -5,7 +5,7 @@ jest.mock('@helsoft/localization', () => ({
 }));
 
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
-import { layout, lightColors } from '@helsoft/components';
+import { layout, lightColors, shape, spacing, typography } from '@helsoft/components';
 import type { FlashcardAnswer, FlashcardSlide } from '@helsoft/types';
 
 import { Flashcard } from './flashcard';
@@ -131,6 +131,86 @@ describe('Flashcard', () => {
     expect(button).toHaveStyle({
       backgroundColor: lightColors.secondaryContainer,
       borderColor: lightColors.secondary,
+    });
+  });
+
+  it('lays out root, answer, and explanation blocks with spacing and typography tokens', async () => {
+    const explainedSlide = { ...slide, explanation: 'Chlorophyll reflects green light.' };
+    await render(<Flashcard slide={explainedSlide} />);
+
+    expect(screen.getByTestId('flashcard-root')).toHaveStyle({ gap: spacing.s4 });
+    expect(screen.getByText(explainedSlide.content)).toHaveStyle({
+      ...typography.titleLarge,
+      color: lightColors.onSurface,
+    });
+
+    await press(revealButton);
+
+    expect(screen.getByTestId('flashcard-answer')).toHaveStyle({ gap: spacing.s1 });
+    expect(screen.getByText(I18N.answerHeading)).toHaveStyle({
+      ...typography.titleSmall,
+      color: lightColors.onSurfaceVariant,
+    });
+    expect(screen.getByText(explainedSlide.back)).toHaveStyle({
+      ...typography.bodyLarge,
+      color: lightColors.onSurface,
+    });
+
+    expect(screen.getByTestId('flashcard-explanation')).toHaveStyle({ gap: spacing.s1 });
+    expect(screen.getByText(I18N.explanationHeading)).toHaveStyle({
+      ...typography.titleSmall,
+      color: lightColors.onSurfaceVariant,
+    });
+    expect(screen.getByText(explainedSlide.explanation)).toHaveStyle({
+      ...typography.bodyMedium,
+      color: lightColors.onSurface,
+    });
+  });
+
+  it('lays out the self-mark row and buttons from spacing and shape tokens', async () => {
+    await render(<Flashcard slide={slide} />);
+
+    await press(revealButton);
+
+    expect(screen.getByTestId('flashcard-self-mark')).toHaveStyle({
+      flexDirection: 'row',
+      gap: spacing.s3,
+    });
+    expect(recalledButton()).toHaveStyle({
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.s2,
+      paddingVertical: spacing.s3,
+      paddingHorizontal: spacing.s3,
+      borderRadius: shape.md,
+      minHeight: layout.touchTarget,
+      borderWidth: 1,
+      borderColor: lightColors.outline,
+    });
+  });
+
+  it('styles an idle self-mark label from labelLarge and onSurface tokens', async () => {
+    await render(<Flashcard slide={slide} />);
+
+    await press(revealButton);
+
+    expect(screen.getByText(I18N.recalled)).toHaveStyle({
+      ...typography.labelLarge,
+      color: lightColors.onSurface,
+    });
+  });
+
+  it('styles a confirmed self-mark label from labelLarge and onSecondaryContainer tokens', async () => {
+    await render(<Flashcard slide={slide} />);
+
+    await press(revealButton);
+    await press(recalledButton);
+
+    expect(screen.getByText(I18N.recalledConfirmed)).toHaveStyle({
+      ...typography.labelLarge,
+      color: lightColors.onSecondaryContainer,
     });
   });
 

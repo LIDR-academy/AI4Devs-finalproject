@@ -49,13 +49,16 @@ export const Flashcard = ({
     );
   }
 
+  // No `isUnavailable`/`isRevealed`/`locked` guards here: the component already
+  // returned the unavailable notice above when relevant, the Reveal button only
+  // renders while `!isRevealed`, and each self-mark `Pressable`'s `onPress` is
+  // `undefined` once `locked` — so these handlers are only ever reachable through
+  // the one interaction each is meant to handle.
   const handleReveal = () => {
-    if (isRevealed || isUnavailable) return;
     setRevealed(true);
   };
 
   const handleSelfMark = (recalled: boolean) => {
-    if (locked || !isRevealed || isUnavailable) return;
     const built = buildFlashcardAnswer(slide, recalled);
     setAnswer(built);
     onAnswered?.(built);
@@ -74,7 +77,6 @@ export const Flashcard = ({
 
     return (
       <Pressable
-        key={recalled ? 'recalled' : 'not-recalled'}
         accessibilityRole="button"
         accessibilityLabel={label}
         accessibilityState={{ disabled: locked, selected: isChosen }}
