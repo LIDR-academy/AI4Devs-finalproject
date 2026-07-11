@@ -27,7 +27,9 @@
 **Brief description:**
 Open-source learning management system (LMS) built with Laravel 12. Enables educational institutions, companies, and trainers to create, manage, and distribute online courses with interactive content through a drag & drop plugin system, dynamic assessments, enrollment management, academic calendar, user profile, and bilingual interface (ES/EN).
 
-**Project URL (local):** `http://localhost:8080` (Docker) · **Production:** `https://proyectolms.asemad.es`
+**Project URL (local):** `http://localhost:8080` (Docker)
+
+**Deployment URL (ASEMAD hosting):** [https://proyectolms.asemad.es/](https://proyectolms.asemad.es/) — cPanel/FTP production instance
 
 **Code repository:** [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) — implementation in `codigofinal/lms-cms-laravel12` (branch `angel-burgos-r`)
 
@@ -132,14 +134,18 @@ docker compose exec app php artisan storage:link
 ```
 
 **Access:**
-- Application: `http://localhost:8080`
-- phpMyAdmin: `http://localhost:8082`
+
+| Environment | URL | Notes |
+|-------------|-----|-------|
+| Local (Docker) | [http://localhost:8080](http://localhost:8080) | Development stack |
+| phpMyAdmin | [http://localhost:8082](http://localhost:8082) | Local DB admin |
+| **Production (ASEMAD)** | [https://proyectolms.asemad.es/](https://proyectolms.asemad.es/) | Hosted on cPanel at ASEMAD |
+
+**Language switch (local):** `http://localhost:8080/locale/es` or `/locale/en` · **Production:** [https://proyectolms.asemad.es/locale/es](https://proyectolms.asemad.es/locale/es) or `/locale/en`
 
 **Test credentials (after seed):**
 - Teacher: `teacher@example.com` / `password123`
 - Student: `student@example.com` / `password123`
-
-**Language switch:** `http://localhost:8080/locale/es` or `/locale/en`
 
 **Local installation (without Docker):**
 ```bash
@@ -151,6 +157,10 @@ php artisan storage:link
 php artisan serve
 ```
 Requires: PHP 8.3+, Composer, MySQL 8.4.
+
+**Production deployment (ASEMAD hosting):**
+
+The live application is available at **[https://proyectolms.asemad.es/](https://proyectolms.asemad.es/)**. Deploy uses cPanel/FTP (not Docker): see `codigofinal/lms-cms-laravel12/docs/DEPLOY-CPANEL-ASEMAD.md` and FTP packages under `codigofinal/deploy-*`.
 
 ---
 
