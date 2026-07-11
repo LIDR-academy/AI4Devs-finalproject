@@ -3,7 +3,7 @@ id: task-3
 title: FillInTheBlank organism — Content states, inline blank, Submit + Enter
 slice: 1
 scenarios: [s1, s2, s3, s4, s5, s7]
-status: todo
+status: done
 paths: [libs/activities/src/organisms/fill-in-the-blank/fill-in-the-blank.tsx, libs/activities/src/organisms/fill-in-the-blank/fill-in-the-blank.test.tsx, libs/activities/src/organisms/index.ts]
 ---
 

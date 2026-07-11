@@ -54,7 +54,21 @@ export type MatchingSlide = SlideBase & {
   explanation?: string;
 };
 
-export type ActivitySlide = MultipleChoiceSlide | MatchingSlide; // union grows as sibling stories land
+export type FillInTheBlankSlide = SlideBase & {
+  kind: 'activity';
+  activityType: 'fill-in-the-blank';
+  /**
+   * Prompt with exactly one blank marker `____` (four underscores), replaced by the
+   * inline TextInput at render (e.g. "The capital is ____").
+   */
+  // content inherited from SlideBase
+  /** Non-empty when valid; any normalized match counts as correct. */
+  acceptedAnswers: string[];
+  /** Optional teaching note shown with the result. */
+  explanation?: string;
+};
+
+export type ActivitySlide = MultipleChoiceSlide | MatchingSlide | FillInTheBlankSlide;
 export type Slide = InstructionalSlide | ActivitySlide;
 
 export type Lesson = {

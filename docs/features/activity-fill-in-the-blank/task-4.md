@@ -3,7 +3,7 @@ id: task-4
 title: FillInTheBlankActivity wiring — grade once, emit answered state
 slice: 1
 scenarios: [s2, s3, s5, s7, s10]
-status: todo
+status: done
 paths: [libs/study-buddy/src/components/fill-in-the-blank-activity/fill-in-the-blank-activity.tsx, libs/study-buddy/src/components/fill-in-the-blank-activity/fill-in-the-blank-activity.test.tsx, libs/study-buddy/src/index.ts]
 ---
 

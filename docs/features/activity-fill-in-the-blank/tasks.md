@@ -1,6 +1,6 @@
 ---
 feature: activity-fill-in-the-blank
-phase: approved # pending|spec_drafted|spec_ready|approved|in_progress|in_review|mutation|pr_ready|done
+phase: in_progress # pending|spec_drafted|spec_ready|approved|in_progress|in_review|mutation|pr_ready|done
 review_round: 0
 ---
 
@@ -10,10 +10,10 @@ Index of atomic tasks (one `task-N.md` each), grouped by vertical slice. `orches
 
 | Task | Slice | Scenarios | Status | Paths |
 |---|---|---|---|---|
-| [task-1](./task-1.md) | 1 | @s10 | todo | libs/types/src/lesson.ts, libs/types/src/activity-answer.ts |
-| [task-2](./task-2.md) | 1 | @s2,@s3,@s6,@s8,@s9,@s10,@s11,@s12 | todo | libs/study-buddy/src/grading/grade-fill-in-the-blank.ts |
-| [task-3](./task-3.md) | 1 | @s1,@s2,@s3,@s4,@s5,@s7 | todo | libs/activities/src/organisms/fill-in-the-blank/fill-in-the-blank.tsx |
-| [task-4](./task-4.md) | 1 | @s2,@s3,@s5,@s7,@s10 | todo | libs/study-buddy/src/components/fill-in-the-blank-activity/fill-in-the-blank-activity.tsx |
+| [task-1](./task-1.md) | 1 | @s10 | done | libs/types/src/lesson.ts, libs/types/src/activity-answer.ts |
+| [task-2](./task-2.md) | 1 | @s2,@s3,@s6,@s8,@s9,@s10,@s11,@s12 | done | libs/study-buddy/src/grading/grade-fill-in-the-blank.ts |
+| [task-3](./task-3.md) | 1 | @s1,@s2,@s3,@s4,@s5,@s7 | done | libs/activities/src/organisms/fill-in-the-blank/fill-in-the-blank.tsx |
+| [task-4](./task-4.md) | 1 | @s2,@s3,@s5,@s7,@s10 | done | libs/study-buddy/src/components/fill-in-the-blank-activity/fill-in-the-blank-activity.tsx |
 | [task-5](./task-5.md) | 2 | @s6,@s11,@s12 | todo | libs/activities/src/organisms/fill-in-the-blank/fill-in-the-blank.tsx, libs/study-buddy/src/components/fill-in-the-blank-activity/ |
 | [task-6](./task-6.md) | 3 | @s13 | todo | libs/localization/src/resources/{en,es,pt,de}.ts, libs/study-buddy/src/components/fill-in-the-blank-activity/ |
 | [task-7](./task-7.md) | 3 | @s14 | todo | libs/activities/src/organisms/fill-in-the-blank/fill-in-the-blank.tsx |

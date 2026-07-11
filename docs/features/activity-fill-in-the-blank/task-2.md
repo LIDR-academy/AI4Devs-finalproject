@@ -3,7 +3,7 @@ id: task-2
 title: Pure grader normalize + gradeFillInTheBlank + isFillInTheBlankSlideValid
 slice: 1
 scenarios: [s2, s3, s6, s8, s9, s10, s11, s12]
-status: todo
+status: done
 paths: [libs/study-buddy/src/grading/grade-fill-in-the-blank.ts, libs/study-buddy/src/grading/grade-fill-in-the-blank.test.ts, libs/study-buddy/src/index.ts]
 ---
 
