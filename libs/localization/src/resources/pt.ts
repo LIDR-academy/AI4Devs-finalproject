@@ -70,6 +70,16 @@ export const pt: TranslationResource = {
         explanation: 'Explicação',
         unavailable: 'Esta pergunta não está disponível',
       },
+      matching: {
+        submit: 'Enviar',
+        correct: 'Tudo correto!',
+        incorrect: 'Quase',
+        correctPair: 'correto',
+        incorrectPair: 'incorreto',
+        explanationHeading: 'Por quê',
+        summary: '{{correct}} de {{total}} corretos',
+        unavailable: 'Esta atividade não está disponível',
+      },
     },
   },
 };

@@ -203,10 +203,32 @@ describe('MatchingActivity', () => {
     expect(mockMatching.mock.calls[0][0]).toEqual(expect.objectContaining({ unavailable: true }));
   });
 
-  // Labels from t() (placeholders until task-6 keys land).
+  // Labels from t() (@s16) — chrome keys resolve via useLocalization.
   it('injects chrome labels from useLocalization', async () => {
     await render(<MatchingActivity slide={slide} />);
 
     expect(screen.getByText('activity.matching.submit')).toBeTruthy();
+  });
+
+  // @s16 — summary interpolates {{correct}}/{{total}} from the graded answer.
+  it('interpolates the summary string with correct and total pair counts', async () => {
+    mockUseLocalization.mockReturnValue(
+      localizationValue({
+        t: (key: string, values?: Record<string, unknown>) => {
+          if (key === 'activity.matching.summary' && values) {
+            return `${values.correct} of ${values.total} correct`;
+          }
+          return key;
+        },
+      }),
+    );
+    await render(<MatchingActivity slide={slide} />);
+
+    await pairAll();
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'activity.matching.submit' }));
+    });
+
+    expect(screen.getByText('3 of 3 correct')).toBeTruthy();
   });
 });

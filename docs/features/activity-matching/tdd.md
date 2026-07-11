@@ -120,3 +120,41 @@ Gate re-check: `pnpm --filter @helsoft/activities test` — green. No commit.
 - `pnpm --filter @helsoft/activities --filter @helsoft/study-buddy check-types` — green.
 - `pnpm lint` — green.
 - No commit (orchestrator commits after slice review). No Slice 3 started.
+
+## Slice 3 — i18n + a11y + Storybook + Playwright e2e (tasks 6–9)
+
+### `@s` → test map (Slice 3)
+
+| Scenario | Test(s) |
+|---|---|
+| @s16 | `migration-coverage.test.ts`: matching-activity key existence; `matching-activity.test.tsx`: "injects chrome labels…"; "interpolates the summary string…" |
+| @s17 | `matching.test.tsx`: button role/label; pending/paired via `accessibilityState`; text+icon+label correctness; polite/assertive announce; Android platform guard; touchTarget (Slice 1) |
+| @s1,@s7,@s8,@s9,@s10,@s13,@s14 | `matching.stories.tsx` Unpaired / PartiallyPaired / SubmittedAllCorrect / SubmittedMixed / Empty / Error (+ Interactive) |
+| @s2,@s3,@s6,@s7,@s8,@s9,@s10 | `matching.e2e.js` Interactive + static story assertions |
+
+### Cycles
+
+**Cycle 22 (@s16 — i18n keys)**
+- RED: `migration-coverage` matching-activity dir — missing `activity.matching.*` keys.
+- GREEN: added `activity.matching` block to en/es/pt/de (`submit`, `correct`, `incorrect`, `correctPair`, `incorrectPair`, `explanationHeading`, `summary` with `{{correct}}`/`{{total}}`, `unavailable`). Wrapper already wired via `t()`.
+- REFACTOR: none. Summary interpolation covered in `matching-activity.test.tsx`.
+
+**Cycle 23 (@s17 — a11y)**
+- RED→GREEN: a11y suite (roles, labels, selected state, text+icon correctness, live-region + `announceForAccessibility`, Android guard, transition announce). Implementation already present from Slice 1; tests encode the contract.
+- REFACTOR: none.
+
+**Cycle 24 (stories + `initialPairs` seed)**
+- RED: "seeds formed pairs from initialPairs…" — prop missing.
+- GREEN: optional `initialPairs` on `Matching`; stories: Unpaired, PartiallyPaired, SubmittedAllCorrect, SubmittedMixed, Empty, Error, Interactive.
+- REFACTOR: none.
+
+**Cycle 25 (Playwright e2e)**
+- GREEN: `matching.e2e.js` — 12 cases covering static stories + Interactive pair/release/submit/all-correct/mixed flows.
+
+## Gate checks (Slice 3)
+
+- `pnpm lint` — green.
+- `pnpm check-types` — green.
+- `pnpm --filter @helsoft/{localization,activities,study-buddy} test` — green.
+- `pnpm --filter @helsoft/activities exec playwright test --reporter=list` (matching.e2e.js) — 12 passed.
+- No commit (orchestrator commits after slice review).

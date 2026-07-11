@@ -1,7 +1,8 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { AccessibilityInfo, Platform } from 'react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { layout, lightColors } from '@helsoft/components';
 
 import {
@@ -315,5 +316,149 @@ describe('Matching', () => {
 
     await render(<Matching {...defaultProps} />);
     expect(itemButton('France')).toHaveStyle({ minHeight: layout.touchTarget });
+  });
+
+  // Story/demo seed — initialPairs paints a partially-paired board without interaction.
+  it('seeds formed pairs from initialPairs so Submit stays disabled until all paired', async () => {
+    await render(
+      <Matching
+        {...defaultProps}
+        initialPairs={[{ leftId: 'l1', rightId: 'r1' }]}
+      />,
+    );
+
+    expect(itemButton('France').props.accessibilityState.selected).toBe(true);
+    expect(itemButton('Paris').props.accessibilityState.selected).toBe(true);
+    expect(itemButton('Germany').props.accessibilityState.selected).toBe(false);
+    expect(submitButton().props.accessibilityState.disabled).toBe(true);
+  });
+
+  // @s17 — each item exposes button role + accessible label.
+  it('exposes a button role and accessible label for every item', async () => {
+    await render(<Matching {...defaultProps} />);
+
+    for (const item of [...leftItems, ...rightItems]) {
+      const btn = screen.getByRole('button', { name: item.label });
+      expect(btn.props.accessibilityRole).toBe('button');
+      expect(btn.props.accessibilityLabel).toBe(item.label);
+    }
+  });
+
+  // @s17 — pending/paired conveyed via accessibilityState.selected, not color alone.
+  it('conveys pending and paired states via accessibilityState.selected', async () => {
+    await render(<Matching {...defaultProps} />);
+
+    await press('France');
+    expect(itemButton('France').props.accessibilityState.selected).toBe(true);
+
+    await press('Paris');
+    expect(itemButton('France').props.accessibilityState.selected).toBe(true);
+    expect(itemButton('Paris').props.accessibilityState.selected).toBe(true);
+  });
+
+  // @s17 — post-submit correctness via text + icon + accessible label (not color alone).
+  it('conveys pair correctness via text, icon, and accessible label', async () => {
+    await render(<Matching {...defaultProps} result={mixedResult} />);
+
+    expect(screen.getByText(labels.incorrect)).toBeTruthy();
+    expect(screen.getAllByText('check_circle').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText('cancel').length).toBeGreaterThanOrEqual(2);
+
+    expect(screen.getByRole('button', { name: `France, ${labels.correctPair}` })).toBeTruthy();
+    expect(screen.getByRole('button', { name: `Germany, ${labels.incorrectPair}` })).toBeTruthy();
+    expect(screen.getByRole('button', { name: `Rome, ${labels.incorrectPair}` })).toBeTruthy();
+  });
+
+  // @s17 — correct result announced politely without alert role.
+  it('announces a correct result via a polite live region and AccessibilityInfo, without an alert role', async () => {
+    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    await render(<Matching {...defaultProps} result={allCorrectResult} />);
+
+    const banner = screen.getByText(labels.correct);
+    expect(banner.props.accessibilityLiveRegion).toBe('polite');
+    expect(banner.parent?.props.accessibilityRole).toBeUndefined();
+    expect(announceSpy).toHaveBeenCalledWith(labels.correct);
+
+    announceSpy.mockRestore();
+  });
+
+  // @s17 — incorrect result uses alert + assertive live region.
+  it('announces an incorrect result via an alert role and an assertive live region', async () => {
+    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    await render(<Matching {...defaultProps} result={mixedResult} />);
+
+    const banner = screen.getByText(labels.incorrect);
+    expect(banner.props.accessibilityLiveRegion).toBe('assertive');
+    expect(banner.parent?.props.accessibilityRole).toBe('alert');
+    expect(announceSpy).toHaveBeenCalledWith(labels.incorrect);
+
+    announceSpy.mockRestore();
+  });
+
+  // @s17 — no announcement while unsubmitted.
+  it('does not announce anything to assistive technology while unsubmitted', async () => {
+    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    await render(<Matching {...defaultProps} />);
+
+    expect(announceSpy).not.toHaveBeenCalled();
+
+    announceSpy.mockRestore();
+  });
+
+  // @s17 — announce on transition from unsubmitted → result (dependency-array guard).
+  it('announces the result when a re-render transitions from unsubmitted to submitted', async () => {
+    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    const { rerender } = await render(<Matching {...defaultProps} />);
+    expect(announceSpy).not.toHaveBeenCalled();
+
+    await act(async () => {
+      rerender(<Matching {...defaultProps} result={allCorrectResult} />);
+    });
+
+    await waitFor(() => expect(announceSpy).toHaveBeenCalledWith(labels.correct));
+    expect(announceSpy).toHaveBeenCalledTimes(1);
+
+    announceSpy.mockRestore();
+  });
+
+  // @s17 — Android relies on live region alone (no duplicate announceForAccessibility).
+  describe('platform-scoped imperative announcement (Android relies on the live region alone)', () => {
+    const originalOS = Platform.OS;
+
+    afterEach(() => {
+      Platform.OS = originalOS;
+    });
+
+    it('does not call announceForAccessibility on Android once submitted', async () => {
+      Platform.OS = 'android';
+      const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+      announceSpy.mockClear();
+
+      await render(<Matching {...defaultProps} result={allCorrectResult} />);
+
+      expect(announceSpy).not.toHaveBeenCalled();
+
+      announceSpy.mockRestore();
+    });
+
+    it.each(['ios', 'web'] as const)('still calls announceForAccessibility on %s once submitted', async (os) => {
+      Platform.OS = os;
+      const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+      announceSpy.mockClear();
+
+      await render(<Matching {...defaultProps} result={allCorrectResult} />);
+
+      expect(announceSpy).toHaveBeenCalledWith(labels.correct);
+
+      announceSpy.mockRestore();
+    });
   });
 });

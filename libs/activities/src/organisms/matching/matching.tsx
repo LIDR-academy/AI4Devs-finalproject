@@ -32,6 +32,8 @@ export type MatchingProps = {
   rightItems: MatchingItemView[];
   /** Forces the unavailable (Error) state — set by the wrapper when the slide's correctPairs are malformed. */
   unavailable?: boolean;
+  /** Optional seed for Storybook / demos — paints formed pairs before any taps. */
+  initialPairs?: MatchingPairSelection[];
   /** Set once graded → locks the activity and drives the per-pair result display. */
   result?: MatchingResult | null;
   explanation?: string;
@@ -58,6 +60,7 @@ export const Matching = ({
   leftItems,
   rightItems,
   unavailable = false,
+  initialPairs = [],
   result,
   explanation,
   labels,
@@ -65,7 +68,7 @@ export const Matching = ({
 }: MatchingProps) => {
   const { theme } = useUnistyles();
   const [pending, setPending] = useState<PendingSelection>(null);
-  const [formedPairs, setFormedPairs] = useState<MatchingPairSelection[]>([]);
+  const [formedPairs, setFormedPairs] = useState<MatchingPairSelection[]>(initialPairs);
 
   const locked = !!result;
   const allPaired = formedPairs.length === leftItems.length && leftItems.length > 0;
