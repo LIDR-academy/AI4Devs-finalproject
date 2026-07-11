@@ -80,7 +80,7 @@ Esta especificación detalla los contratos de comunicación HTTP (REST API) indi
     ```json
     {
       "insumoId": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea",
-      "quantity": 2.0000,
+      "quantity": "2.0000",
       "unit": "Horma"
     }
     ```
@@ -92,7 +92,7 @@ Esta especificación detalla los contratos de comunicación HTTP (REST API) indi
       "remanente": {
         "id": "f8a9e223-92b0-464a-93cd-9bc64e22340b",
         "insumoId": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea",
-        "currentQuantity": 2.0000,
+        "currentQuantity": "2.0000",
         "unit": "Horma",
         "status": "ACTIVE",
         "calculatedExpirationDate": "2026-07-05T16:36:12Z"
@@ -127,7 +127,7 @@ Esta especificación detalla los contratos de comunicación HTTP (REST API) indi
           "name": "Queso Mozzarella",
           "consumptionUnit": "KG"
         },
-        "currentQuantity": 1.7500,
+        "currentQuantity": "1.7500",
         "location": "KITCHEN_FRIDGE",
         "sublocation": "Cámara Lácteos",
         "status": "ACTIVE",
@@ -140,7 +140,7 @@ Esta especificación detalla los contratos de comunicación HTTP (REST API) indi
           "name": "Salsa de Tomate",
           "consumptionUnit": "L"
         },
-        "currentQuantity": 5.0000,
+        "currentQuantity": "5.0000",
         "location": "KITCHEN_PANTRY",
         "sublocation": "Estante Salsas",
         "status": "ACTIVE",
@@ -160,7 +160,7 @@ Esta especificación detalla los contratos de comunicación HTTP (REST API) indi
     ```json
     {
       "remanenteId": "f8a9e223-92b0-464a-93cd-9bc64e22340b",
-      "quantityConsumed": 0.2500
+      "quantityConsumed": "0.2500"
     }
     ```
 *   **Response Success (`200 OK` - `RecordConsumptionResponse`):**
@@ -168,7 +168,7 @@ Esta especificación detalla los contratos de comunicación HTTP (REST API) indi
     {
       "message": "Consumption recorded successfully",
       "remanenteId": "f8a9e223-92b0-464a-93cd-9bc64e22340b",
-      "remainingQuantity": 1.5000,
+      "remainingQuantity": "1.5000",
       "status": "ACTIVE"
     }
     ```
@@ -201,7 +201,7 @@ Esta especificación detalla los contratos de comunicación HTTP (REST API) indi
     {
       "message": "Remanente discarded successfully",
       "remanenteId": "f8a9e223-92b0-464a-93cd-9bc64e22340b",
-      "discardedQuantity": 1.5000,
+      "discardedQuantity": "1.5000",
       "status": "DISCARDED"
     }
     ```
@@ -228,11 +228,11 @@ Esta especificación detalla los contratos de comunicación HTTP (REST API) indi
       "ingredients": [
         {
           "insumoId": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea",
-          "quantity": 0.1500
+          "quantity": "0.1500"
         },
         {
           "insumoId": "d9b01518-9276-46c5-84a1-db9b01518f88",
-          "quantity": 0.1000
+          "quantity": "0.1000"
         }
       ]
     }
@@ -297,7 +297,7 @@ Esta especificación detalla los contratos de comunicación HTTP (REST API) indi
       "items": [
         {
           "insumoId": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea",
-          "physicalQuantity": 1.2000
+          "physicalQuantity": "1.2000"
         }
       ]
     }
@@ -318,6 +318,6 @@ Esta especificación detalla los contratos de comunicación HTTP (REST API) indi
 
 
 Para evitar desajustes y errores en el redondeo financiero y control de stock físico:
-1.  **Tipos Decimales de Alta Precisión:** Las cantidades físicas (`quantity`, `initialQuantity`, `currentQuantity`, `quantityConsumed`) son procesadas en el backend como cadenas de texto numéricas de formato fijo o utilizando librerías específicas (como `decimal.js`) en lugar del tipo `number` nativo de JavaScript/TypeScript (coma flotante IEEE 754). Los payloads JSON representan estos campos como números reales sin comillas en las solicitudes y respuestas para asegurar compatibilidad directa con tipados tipificados tipo Number de Zod en validaciones.
+1.  **Tipos Decimales de Alta Precisión:** Las cantidades físicas (`quantity`, `initialQuantity`, `currentQuantity`, `quantityConsumed`, `physicalQuantity`) se serializan de forma consistente y determinista exclusivamente como cadenas de texto decimales en formato JSON (ej. `"2.0000"` o `"0.1500"`) para evitar pérdida de precisión por redondeo flotante de JavaScript (IEEE 754). Estas cadenas son validadas en la frontera mediante esquemas de Zod con el patrón `^\d+(\.\d{1,4})?$` y posteriormente convertidas al objeto de valor `DecimalValue` de dominio.
 2.  **Formato de Tiempos e Hitos Temporales:** Todas las fechas y vencimientos (`openedAt`, `originalExpirationDate`, `calculatedExpirationDate`) se transmiten obligatoriamente bajo el estándar **ISO 8601** con soporte de huso horario UTC (ej. `YYYY-MM-DDTHH:mm:ssZ`), garantizando total coherencia temporal entre la tablet, la API y la base de datos PostgreSQL.
 3.  **Identificadores Únicos Universales:** Todas las entidades lógicas de entrada y salida utilizan exclusivamente identificadores **UUIDv4** para prevenir predecibilidad y asegurar la unicidad entre la base de datos local IndexedDB (desconectada en la cocina) y la base de datos central PostgreSQL.
