@@ -30,4 +30,18 @@ export type MatchingAnswer = {
   isCorrect: boolean;
 };
 
-export type ActivityAnswer = MultipleChoiceAnswer | MatchingAnswer; // union grows with sibling types
+export type FillInTheBlankAnswer = {
+  slideId: string;
+  activityType: 'fill-in-the-blank';
+  /** Raw learner text as typed (pre-normalize). */
+  submittedAnswer: string;
+  /**
+   * Canonical accepted string for R9 rehydrate / incorrect reveal:
+   * - incorrect → always `acceptedAnswers[0]`
+   * - correct → first accepted answer whose normalized form matched the submission
+   */
+  acceptedAnswerShown: string;
+  isCorrect: boolean;
+};
+
+export type ActivityAnswer = MultipleChoiceAnswer | MatchingAnswer | FillInTheBlankAnswer;
