@@ -12,6 +12,7 @@
 | Plugins, enrollments, WYSIWYG, video, SaaS | [362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md](./agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md) |
 | Calendar, i18n, sidebar | [8ff11265-f2f9-4ac1-b458-5dd9a909c31f.md](./agent-transcripts/8ff11265-f2f9-4ac1-b458-5dd9a909c31f.md) |
 | Deploy cPanel, comms, Moodle 5.2, grill-me | Cursor transcript `17d3d3be-a847-4d06-abee-a8643a0a356f` |
+| Topbar móvil, chat duplicado, upgrade solo admin | Cursor transcript (sesión Jul 2026, `lms-cms-laravel12`) |
 
 **Extended prompt log in code repo:** [codigofinal/lms-cms-laravel12/prompts.md](../codigofinal/lms-cms-laravel12/prompts.md)
 
@@ -36,6 +37,7 @@
 15. [Grill me (adversarial review)](#15-grill-me-adversarial-review)
 16. [Smart Report plugin and OpenSpec](#16-smart-report-plugin-and-openspec)
 17. [Refactoring, tests, CI/CD, and quality](#17-refactoring-tests-cicd-and-quality)
+18. [Topbar responsive, comms fixes, and admin-only upgrade](#18-topbar-responsive-comms-fixes-and-admin-only-upgrade)
 
 ---
 
@@ -396,6 +398,28 @@
 
 ---
 
+## 18. Topbar responsive, comms fixes, and admin-only upgrade
+
+**Prompt 1:** "Antes de que crees el commit quiero que soluciones el error de solapamiento en móviles y en cualquier dispositivo que te adjunto en la imagen."
+
+> Note: Responsive topbar in `public/css/lms.css` (flex-wrap, two-row layout ≤768px, avatar 32px, hide brand name ≤480px), comms panels in `lms-comms.css`, verified at 390px/640px on Docker and production target.
+
+**Prompt 2:** "En remoto envío un mensaje y aparece dos veces en el chat, comprueba cuál es el problema con usuario: teacher@example.es y password: password123."
+
+> Note: Root cause on production — `lms-comms.js` loaded twice (layout + manual FTP install); old JS without bootstrap guards → double POST. Fix: `@once` partial `lms-comms-js.blade.php`, guards in `lms-comms.js`, `CommsMessagingTest`, `comms-diagnostico.php` duplicate-script check. Demo emails use `@example.com`, not `.es`.
+
+**Prompt 3:** "Necesito quitar enlace visible dentro del menú Asistente de actualización para teacher y que aparezca solo para admin, al finalizar crear carpeta para upload, crear commit con cambios en codigofinal/lms-cms-laravel12 y añadir todos los prompt dentro de AI4Devs-finalproject/prompts.md."
+
+> Note: `sidebar-nav.blade.php` (admin only), removed tool link from `dashboard/teacher.blade.php`, `UpgradeAssistantController` + route `middleware('role:admin')`, FTP package `deploy-upgrade-admin-only/`, tests `UpgradeAssistantAccessTest.php`.
+
+**Additional prompts (same delivery cycle):**
+
+- "Sincroniza LMS ↔ deploy como siempre" → `scripts/sync-deploy-packages.ps1`, `docs/DEPLOY-SYNC.md`
+- "Si es correcto" (confirmación commit) → commit `fix(comms): topbar móvil y mensajes duplicados en chat`
+- "¿La contraseña de admin@example.es dentro de proyectolms.asemad.es/login cuál es?" → documented seed `admin@example.com` / `password123`
+
+---
+
 ## 11. Main files used
 
 Paths relative to [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) → `codigofinal/lms-cms-laravel12/`:
@@ -412,15 +436,15 @@ Paths relative to [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codig
 | **Comms views** | `resources/views/comms/*`, `resources/views/layouts/partials/topbar-comms.blade.php` |
 | **Gradebook** | `resources/views/gradebook/*` |
 | **AI / Grill** | `resources/views/components/ai-assistant.blade.php`, `public/js/lms-ai.js`, `.cursor/commands/grill-me.md`, `.cursor/skills/grill-me/SKILL.md` |
-| **Upgrade** | `resources/views/upgrade/index.blade.php` |
+| **Upgrade** | `resources/views/upgrade/index.blade.php`, `UpgradeAssistantController.php` (admin only), `deploy-upgrade-admin-only/` |
 | **i18n** | `lang/es/lms.php`, `lang/en/lms.php` (blocks `comms`, `grill_me`, `ai`, `gradebook`, `upgrade`) |
 | **Styles / JS** | `public/css/lms.css`, `lms-comms.css`, `moodle52.css`, `auth.css`; `public/js/lms.js`, `lms-comms.js`, `lms-ai.js` |
-| **Tests** | `tests/Feature/GrillMeTest.php`, `LmsFlowTest.php`, `LocaleTest.php`, `CalendarTest.php`, + Playwright `playwright/tests/*.spec.ts` |
-| **Deploy packages** | `codigofinal/deploy-moodle52-comms/`, `deploy-moodle52-features/`, `deploy-proyectolms-roles/` |
+| **Tests** | `tests/Feature/GrillMeTest.php`, `CommsMessagingTest.php`, `UpgradeAssistantAccessTest.php`, `LmsFlowTest.php`, + Playwright |
+| **Deploy packages** | `deploy-moodle52-comms/`, `deploy-moodle52-features/`, `deploy-upgrade-admin-only/`, `deploy-proyectolms-roles/` |
 | **Docker** | `docker-compose.yml`, `docker/nginx/default.conf`, `docker/php/uploads.ini` |
 | **CI/CD** | `.github/workflows/ci.yml`, `scripts/despliegue-CI.md`, `scripts/script-despliegue-cd.md`, `scripts/deploy-ec2.sh` |
 | **Screenshots** | `AI4Devs-finalproject/docs/screenshots/*.png` |
 
 ---
 
-*Last updated: July 2026 — delivery branch `finalproject-ABR` (Moodle 5.2 pack, comms, deploy cPanel, grill-me).*
+*Last updated: July 2026 — delivery branch `finalproject-ABR` (Moodle 5.2, comms, topbar responsive, upgrade admin-only).*
