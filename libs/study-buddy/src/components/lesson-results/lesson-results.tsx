@@ -22,20 +22,24 @@ const toScorableSlides = (lesson: Lesson): ScorableSlide[] =>
 
 /**
  * LessonResults — feature component wiring the pure `scoreLesson` scorer and
- * `useLessonAttempt()`/`useLocalization()` to the presentational `ResultsSummary`. Covers the
- * scorable happy path + loading (task-7); completion/error/retry land in task-8/9.
+ * `useLessonAttempt()`/`useLocalization()` to the presentational `ResultsSummary`. Renders the
+ * completion variant (no save) when `scoreLesson` finds nothing system-checked (@s8/@s9);
+ * otherwise the score variant, binding the hook's `saving`/`error` status to the loading and
+ * save-failure affordances (@s5/@s7) and `retry` to the retry action.
  */
 export const LessonResults = ({ lesson, answers, onRetake, onBackToLessons }: LessonResultsProps) => {
   const { t } = useLocalization();
-  const { status, saveAttempt } = useLessonAttempt();
+  const { status, saveAttempt, retry } = useLessonAttempt();
 
   const summary = scoreLesson(toScorableSlides(lesson), answers);
-  const percent = Math.round((summary.correct / summary.total) * PERCENT_MULTIPLIER);
+  const percent = summary.isScorable ? Math.round((summary.correct / summary.total) * PERCENT_MULTIPLIER) : 0;
 
   // Save exactly once per completion (risk R5) — a re-render (e.g. a parent state change)
-  // must not re-fire the insert; only an actual remount resets this guard.
+  // must not re-fire the insert; only an actual remount resets this guard. Nothing is ever
+  // saved for an unscorable lesson (@s8/@s9) — no attempt record is created.
   const hasSaved = useRef(false);
   useEffect(() => {
+    if (!summary.isScorable) return;
     if (hasSaved.current) return;
     hasSaved.current = true;
     saveAttempt({ lessonId: lesson.id, score: summary.correct, total: summary.total });
@@ -44,16 +48,22 @@ export const LessonResults = ({ lesson, answers, onRetake, onBackToLessons }: Le
 
   return (
     <ResultsSummary
-      variant="score"
+      variant={summary.isScorable ? 'score' : 'completion'}
       loading={status === 'saving'}
+      saveFailed={status === 'error'}
       labels={{
         score: t('results.score', { correct: summary.correct, total: summary.total }),
         percent: t('results.scorePercent', { percent }),
         retake: t('results.retake'),
         backToLessons: t('results.backHome'),
+        completeHeadline: t('results.completeHeadline'),
+        completeBody: t('results.completeBody'),
+        saveFailed: t('results.saveFailed'),
+        retrySave: t('results.retrySave'),
       }}
       onRetake={onRetake}
       onBackToLessons={onBackToLessons}
+      onRetrySave={retry}
     />
   );
 };

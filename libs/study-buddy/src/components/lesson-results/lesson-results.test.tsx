@@ -9,7 +9,7 @@ jest.mock('@helsoft/localization', () => ({
 import type { Lesson } from '@helsoft/types';
 import { useLessonAttempt } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
-import { act, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
 import { RESULTS_LOADING_TEST_ID } from '@helsoft/components';
 
@@ -18,13 +18,16 @@ import { LessonResults } from './lesson-results';
 const mockUseLessonAttempt = useLessonAttempt as jest.Mock;
 const mockUseLocalization = useLocalization as jest.Mock;
 
-// Mimics the real `results.score` / `results.scorePercent` i18next templates
-// ("{{correct}} / {{total}}" and "{{percent}}%") so assertions can pin the exact rendered text.
+// Mimics the real `results.*` i18next templates so assertions can pin the exact rendered text.
 const t = (key: string, options?: Record<string, unknown>) => {
   if (key === 'results.score') return `${options?.correct} / ${options?.total}`;
   if (key === 'results.scorePercent') return `${options?.percent}%`;
   if (key === 'results.retake') return 'Retake activities';
   if (key === 'results.backHome') return 'Back to my lessons';
+  if (key === 'results.completeHeadline') return 'Lesson complete';
+  if (key === 'results.completeBody') return "You've reached the end of this lesson.";
+  if (key === 'results.saveFailed') return "Couldn't save this attempt";
+  if (key === 'results.retrySave') return 'Try again';
   return key;
 };
 
@@ -77,6 +80,18 @@ const allCorrectAnswers = [
   { slideId: 'slide-2', activityType: 'multiple-choice' as const, isCorrect: true },
   { slideId: 'slide-3', activityType: 'multiple-choice' as const, isCorrect: true },
 ];
+
+// @s8 — an instructional-only lesson has nothing system-checked (scoreLesson returns
+// isScorable: false), driving the completion variant instead of a score.
+const instructionalOnlyLesson: Lesson = {
+  id: 'lesson-2',
+  userId: 'user-1',
+  title: 'Intro to Capitals',
+  createdAt: '2026-07-11T00:00:00.000Z',
+  slides: [
+    { id: 'slide-1', lessonId: 'lesson-2', title: 'Intro', content: 'Welcome!', position: 0, kind: 'instructional' },
+  ],
+};
 
 describe('LessonResults', () => {
   beforeEach(() => jest.clearAllMocks());
@@ -149,5 +164,90 @@ describe('LessonResults', () => {
     });
 
     expect(saveAttempt).toHaveBeenCalledTimes(1);
+  });
+
+  // @s8 — an instructional-only lesson (isScorable: false) renders the completion variant
+  // and never calls saveAttempt (no attempt record is created). The same isScorable: false
+  // branch also drives @s9 (a deck with only flashcard/open-ended slides) — already proven at
+  // the scoreLesson level (score-lesson.test.ts); Lesson/Slide has no flashcard/open-ended
+  // payload yet, so this component test exercises the shared branch via the instructional case.
+  it('renders the completion variant and never calls saveAttempt for an instructional-only lesson', async () => {
+    const saveAttempt = jest.fn();
+    mockUseLessonAttempt.mockReturnValue({ status: 'idle', attempt: null, saveAttempt, retry: jest.fn() });
+    mockUseLocalization.mockReturnValue(localizationValue());
+
+    await render(
+      <LessonResults lesson={instructionalOnlyLesson} answers={[]} onRetake={jest.fn()} onBackToLessons={jest.fn()} />,
+    );
+
+    expect(screen.getByText('Lesson complete')).toBeTruthy();
+    expect(screen.getByText("You've reached the end of this lesson.")).toBeTruthy();
+    expect(screen.queryByText('0 / 0')).toBeNull();
+    expect(saveAttempt).not.toHaveBeenCalled();
+  });
+
+  // @s7 — a failed save keeps the score visible and shows the non-blocking save-failure
+  // notice, bound to the hook's "error" status.
+  it('shows the score alongside the save-failure notice when useLessonAttempt().status is error', async () => {
+    mockUseLessonAttempt.mockReturnValue({ status: 'error', attempt: null, saveAttempt: jest.fn(), retry: jest.fn() });
+    mockUseLocalization.mockReturnValue(localizationValue());
+
+    await render(
+      <LessonResults lesson={scorableLesson} answers={allCorrectAnswers} onRetake={jest.fn()} onBackToLessons={jest.fn()} />,
+    );
+
+    expect(screen.getByText('3 / 3')).toBeTruthy();
+    expect(screen.getByText("Couldn't save this attempt")).toBeTruthy();
+  });
+
+  // @s7 — the retry action re-invokes the hook's retry() to re-attempt the failed save.
+  it('calls the hook retry() when the retry action is pressed', async () => {
+    const retry = jest.fn();
+    mockUseLessonAttempt.mockReturnValue({ status: 'error', attempt: null, saveAttempt: jest.fn(), retry });
+    mockUseLocalization.mockReturnValue(localizationValue());
+
+    await render(
+      <LessonResults lesson={scorableLesson} answers={allCorrectAnswers} onRetake={jest.fn()} onBackToLessons={jest.fn()} />,
+    );
+    fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
+
+    expect(retry).toHaveBeenCalledTimes(1);
+  });
+
+  // @s11 — the retake action, threaded through from ResultsSummary, calls the given onRetake
+  // handler (the app route binds this to the retake navigation, task-9 Notes).
+  it('calls onRetake when the retake action is pressed for a scorable lesson', async () => {
+    const onRetake = jest.fn();
+    mockUseLessonAttempt.mockReturnValue({ status: 'idle', attempt: null, saveAttempt: jest.fn(), retry: jest.fn() });
+    mockUseLocalization.mockReturnValue(localizationValue());
+
+    await render(
+      <LessonResults lesson={scorableLesson} answers={allCorrectAnswers} onRetake={onRetake} onBackToLessons={jest.fn()} />,
+    );
+    fireEvent.press(screen.getByRole('button', { name: 'Retake activities' }));
+
+    expect(onRetake).toHaveBeenCalledTimes(1);
+  });
+
+  // @s10 — the completion variant offers both actions and threads their callbacks through.
+  it('calls onRetake and onBackToLessons in the completion state', async () => {
+    const onRetake = jest.fn();
+    const onBackToLessons = jest.fn();
+    mockUseLessonAttempt.mockReturnValue({ status: 'idle', attempt: null, saveAttempt: jest.fn(), retry: jest.fn() });
+    mockUseLocalization.mockReturnValue(localizationValue());
+
+    await render(
+      <LessonResults
+        lesson={instructionalOnlyLesson}
+        answers={[]}
+        onRetake={onRetake}
+        onBackToLessons={onBackToLessons}
+      />,
+    );
+    await act(async () => fireEvent.press(screen.getByRole('button', { name: 'Retake activities' })));
+    await act(async () => fireEvent.press(screen.getByRole('button', { name: 'Back to my lessons' })));
+
+    expect(onRetake).toHaveBeenCalledTimes(1);
+    expect(onBackToLessons).toHaveBeenCalledTimes(1);
   });
 });

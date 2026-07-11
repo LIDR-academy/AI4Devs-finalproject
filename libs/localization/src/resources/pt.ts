@@ -38,6 +38,10 @@ export const pt: TranslationResource = {
       scorePercent: '{{percent}}%',
       retake: 'Refazer atividades',
       backHome: 'Voltar às minhas lições',
+      completeHeadline: 'Lição concluída',
+      completeBody: 'Você chegou ao final desta lição.',
+      saveFailed: 'Não foi possível salvar esta tentativa',
+      retrySave: 'Tentar novamente',
     },
     auth: {
       email: 'E-mail',

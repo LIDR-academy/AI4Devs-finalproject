@@ -7,6 +7,10 @@ const labels = {
   percent: '100%',
   retake: 'Retake activities',
   backToLessons: 'Back to my lessons',
+  completeHeadline: 'Lesson complete',
+  completeBody: "You've reached the end of this lesson.",
+  saveFailed: "We couldn't save this attempt.",
+  retrySave: 'Retry',
 };
 
 const meta = {
@@ -31,5 +35,21 @@ export const Score: Story = {};
 export const Loading: Story = {
   args: {
     loading: true,
+  },
+};
+
+// Completion (@s8/@s9/@s10) — an instructional-only lesson or a lesson with nothing
+// system-checked; no score, both actions still available.
+export const Completion: Story = {
+  args: {
+    variant: 'completion',
+  },
+};
+
+// Save failure (@s7) — the score still renders; a non-blocking notice offers a retry.
+export const SaveFailed: Story = {
+  args: {
+    saveFailed: true,
+    onRetrySave: () => {},
   },
 };

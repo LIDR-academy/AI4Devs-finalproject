@@ -37,3 +37,29 @@ Type-level checks (task-1 Done criteria, not a numbered `@s`): `MultipleChoiceAn
 ### Gate
 
 `pnpm lint`, `pnpm check-types`, `pnpm test` all green across `@helsoft/types`, `@helsoft/study-buddy`, `@helsoft/services`, `@helsoft/hooks`, `@helsoft/components`, `@helsoft/localization`, and `app-study-buddy`. No e2e run this slice (no UI states beyond score/loading exist yet; Storybook e2e wiring lands in Slice 3 / task-12 per the plan). Committed as `feat(score-results-summary): implement happy path`.
+
+## Slice 2 — empty/completion + error + retry (tasks 8–9)
+
+### @s → test map
+
+| @s | Behavior | Test | File |
+|---|---|---|---|
+| s8/s9 | Completion variant renders no score, both actions | `renders the completion headline and body for the completion variant, with no score` | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
+| s10 | Completion variant exposes both actions | (same test, asserts both `getByRole('button', ...)`) | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
+| s7 | Score stays visible + non-blocking notice when `saveFailed` | `shows the score alongside a non-blocking save-failure notice when saveFailed is true` | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
+| s7 | Retry action wiring | `calls onRetrySave when the retry action is pressed` | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
+| s8 | `isScorable: false` → completion, no `saveAttempt` | `renders the completion variant and never calls saveAttempt for an instructional-only lesson` | `libs/study-buddy/src/components/lesson-results/lesson-results.test.tsx` |
+| s9 | Same `isScorable: false` branch (flashcard/open-ended not yet `Lesson`-constructible — see task-9 Notes); pinned separately at the scorer level | `returns isScorable: false and correct/total of 0 when there are no system-checked slides` | `libs/study-buddy/src/grading/score-lesson.test.ts` (slice 1) |
+| s7 | `saveFailed`/`onRetrySave` bound to hook `error`/`retry` | `shows the score alongside the save-failure notice when useLessonAttempt().status is error` / `calls the hook retry() when the retry action is pressed` | `libs/study-buddy/src/components/lesson-results/lesson-results.test.tsx` |
+| s10/s11 | Retake/back-to-lessons callbacks thread through in both variants | `calls onRetake when the retake action is pressed for a scorable lesson` / `calls onRetake and onBackToLessons in the completion state` | `libs/study-buddy/src/components/lesson-results/lesson-results.test.tsx` |
+| s11 | Retake navigates same lesson, `replace`, no regeneration | pre-existing route wiring (task-7); no route-level test harness in `apps/app-study-buddy` — see task-9 Notes | `apps/app-study-buddy/src/app/(app)/lesson/[id]/results.tsx` |
+
+### Cycles
+
+- **task-8** (`@s8`/`@s9`/`@s10`): RED completion-variant render test (`variant="completion"` not in the type union yet) → GREEN widened `ResultsSummaryVariant` to `'score' | 'completion'`, extended `labels` with `completeHeadline`/`completeBody`/`saveFailed`/`retrySave`, conditional render branch. (`@s7`) RED save-failure notice test + retry-press test → GREEN added `saveFailed`/`onRetrySave` props and the notice `View` (mirrors `LoginForm`'s `errorBanner` pattern: `errorContainer`/`onErrorContainer` tokens, `accessibilityRole="alert"` + `accessibilityLiveRegion`). Added a `does not show the save-failure notice when saveFailed is false` negative pin. Updated `results-summary.stories.tsx` with `Completion` and `SaveFailed` stories (all 4 states now covered).
+- **task-9** (`@s8`): RED `LessonResults` completion test (instructional-only lesson fixture) → GREEN branched on `summary.isScorable` for `variant` and guarded the save-once `useEffect` to skip when unscorable; guarded `percent` against a `NaN` (total 0) even though unrendered. Added `results.completeHeadline`/`completeBody`/`saveFailed`/`retrySave` to all four locale bundles (en/es/pt/de) — required now (not deferred to task-10) to satisfy this slice's "no hardcoded copy" gate; task-10 (slice 3) still owns the native-speaker translation-quality pass and its own explicit i18n-sourcing test. (`@s7`) RED `saveFailed`/retry-binding tests → GREEN wired `saveFailed={status === 'error'}` and `onRetrySave={retry}` from the hook. (`@s10`/`@s11`) RED retake/back-to-lessons callback-threading tests (score + completion variants) — written as regression pins; passed immediately since both callbacks were already threaded through unconditionally, consistent with the slice-1 "pin" precedent. Verified `@s11`'s navigation semantics are already satisfied by the existing `results.tsx` route wiring from task-7 (`router.replace` to the same lesson id) — no code change, no app-level test harness exists to pin it further.
+- Both organism cycles above were caught re-sequencing a Law-1 slip: `saveFailed` was implemented in the same edit as `completion` before its own test was red. Corrected by temporarily reverting the `saveFailed`-specific lines, re-confirming RED, then reinstating as a clean GREEN step (same fix applied in both `results-summary.tsx` and `lesson-results.tsx`).
+
+### Gate
+
+`pnpm lint` (only `app-study-buddy` defines the script; cache-hit clean), `pnpm check-types`, and `pnpm test`/`pnpm turbo run test` all green across `@helsoft/components`, `@helsoft/study-buddy`, `@helsoft/localization`, `@helsoft/activities`, and the rest of the workspace. No e2e this slice (task-12, slice 3). Slice-2 code+design review pending before commit.

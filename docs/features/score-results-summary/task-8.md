@@ -3,7 +3,7 @@ id: task-8
 title: ResultsSummary — completion + error/retry states + completion CTAs
 slice: 2
 scenarios: [s7, s8, s9, s10]
-status: todo
+status: done
 paths:
   - libs/components/src/organisms/results-summary/results-summary.tsx
   - libs/components/src/organisms/results-summary/results-summary.test.tsx
@@ -17,12 +17,12 @@ Extend the `ResultsSummary` organism (task-6) with the remaining states, still p
 - Extend `labels` with `completeHeadline`, `completeBody`, `saveFailed`, `retrySave`.
 
 ## Done criteria
-- [ ] @s8 / @s9 — completion variant shows the completion message and no score; offers Retake + Back-to-lessons.
-- [ ] @s10 — completion variant exposes both actions (`onRetake`, `onBackToLessons`).
-- [ ] @s7 — with `saveFailed`, the score still renders alongside the notice and a working `onRetrySave`; the notice is non-blocking (does not hide the score or the primary actions).
-- [ ] `results-summary.stories.tsx` now covers all four states (loading / score / completion / save-failure).
-- [ ] Tests assert each new branch and action wiring; tokens only; no hardcoded copy.
-- [ ] `pnpm lint` + `pnpm check-types` + `pnpm test` green.
+- [x] @s8 / @s9 — completion variant shows the completion message and no score; offers Retake + Back-to-lessons.
+- [x] @s10 — completion variant exposes both actions (`onRetake`, `onBackToLessons`).
+- [x] @s7 — with `saveFailed`, the score still renders alongside the notice and a working `onRetrySave`; the notice is non-blocking (does not hide the score or the primary actions).
+- [x] `results-summary.stories.tsx` now covers all four states (loading / score / completion / save-failure).
+- [x] Tests assert each new branch and action wiring; tokens only; no hardcoded copy.
+- [x] `pnpm lint` + `pnpm check-types` + `pnpm test` green.
 
 ## Notes
 - Mirrors the `locale-save-failure-notice` non-blocking pattern for the error state.

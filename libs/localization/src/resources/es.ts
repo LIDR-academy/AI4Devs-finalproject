@@ -38,6 +38,10 @@ export const es: TranslationResource = {
       scorePercent: '{{percent}}%',
       retake: 'Repetir actividades',
       backHome: 'Volver a mis lecciones',
+      completeHeadline: 'Lección completada',
+      completeBody: 'Has llegado al final de esta lección.',
+      saveFailed: 'No se pudo guardar este intento',
+      retrySave: 'Intentar de nuevo',
     },
     auth: {
       email: 'Correo electrónico',

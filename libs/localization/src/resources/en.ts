@@ -43,6 +43,10 @@ export const en = {
       scorePercent: '{{percent}}%',
       retake: 'Retake activities',
       backHome: 'Back to my lessons',
+      completeHeadline: 'Lesson complete',
+      completeBody: "You've reached the end of this lesson.",
+      saveFailed: "Couldn't save this attempt",
+      retrySave: 'Try again',
     },
     auth: {
       email: 'Email',
