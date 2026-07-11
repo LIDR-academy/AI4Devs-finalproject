@@ -8,12 +8,12 @@ Este documento detalla el resultado de la auditoría técnica y funcional exhaus
 
 | Área Auditada | Estado | Puntos Verificados | Observaciones / Alineamiento |
 | :--- | :--- | :--- | :--- |
-| **Integridad del PRD y Reglas de Negocio** | 🟢 Consistente | MVP Scope, Roadmap (Fase 2) | Reglas de consumo rápido y cierre de turno alineadas en la sección 1.2 y 7. |
-| **Esquema de Base de Datos (Prisma)** | 🟢 Consistente | Tablas, Tipos, Relaciones FK | Modelos `Recipe`, `RecipeIngredient`, `ShiftReconciliation` y `ShiftReconciliationItem` con FK correctas y tipos `Decimal(12, 4)`. |
-| **Especificación de API (REST)** | 🟢 Consistente | Contratos, HTTP Status, Payload | Payloads de endpoints (/api/catalog/recipes, /api/kitchen/shift-reconciliation) alineados con tipos de BD. |
-| **Backlog de Historias de Usuario (US)** | 🟢 Consistente | Criterios BDD, INVEST | `US-007` y `US-008` detalladas con BDD Given-When-Then y registradas en el índice. |
-| **Backlog de Tickets Técnicos (TK)** | 🟢 Consistente | Hexagonal Layers, DoD, TDD | `TK-008` y `TK-009` vinculados a US correspondientes y registrados en la matriz. |
-| **Marcos de Gobernanza Globales** | 🟢 Consistente | Arquitectura, Seguridad, Testing | Las nuevas funcionalidades adoptan la arquitectura hexagonal, TDD y seguridad Zero Trust sin alterarlos. |
+| **Integridad del PRD y Reglas de Negocio** | 🟢 Consistente | MVP Scope, KPI de TRR a 24h | Se unificó la meta de Tasa de Rotación de Remanentes (TRR) a 24 horas en todos los artefactos. |
+| **Esquema de Base de Datos (Prisma)** | 🟢 Consistente | Tablas, Tipos, Relaciones FK | Modelos `Recipe`, `RecipeIngredient`, `ShiftReconciliation` y `ShiftReconciliationItem` con FK correctas, tipo `Decimal(12, 4)` y generación de archivo ejecutable puro. |
+| **Especificación de API (REST)** | 🟢 Consistente | Contratos, HTTP Status, Payloads | Payloads en `docs/10_restostock_api_specification.md` y `readme.md` corregidos para serializar decimales estrictamente como **strings** (evitando coma flotante). |
+| **Backlog de Historias de Usuario (US)** | 🟢 Consistente | Criterios BDD, INVEST | Redacción en `US-005` y `US-007` alineada para rechazar saldos negativos y mermas duplicadas en remanentes consumidos. |
+| **Backlog de Tickets Técnicos (TK)** | 🟢 Consistente | Hexagonal Layers, DoD, TDD | Modificación de `TK-007` para prohibir Error Boundaries en errores de red y requerir estados de carga asíncronos locales. |
+| **Marcos de Gobernanza Globales** | 🟢 Consistente | Arquitectura, Seguridad, Testing | Adopción de `DecimalValue` (Value Object) en dominio, validación Zod en capa REST de transporte, y registro verídico de PRs reales. |
 
 ---
 
@@ -45,10 +45,20 @@ Este documento detalla el resultado de la auditoría técnica y funcional exhaus
 ### 4. Estructura de Carpetas e Impacto
 *   **Estructura de Carpetas (`docs/06_restostock_folder_structure.md`):** Se actualizó para reflejar la ubicación exacta de las nuevas entidades, interfaces, repositorios y casos de uso en el backend (ej: `CreateRecipe.ts` en `catalog/application/use-cases` y `ConsumeRecipe.ts`, `PerformShiftReconciliation.ts` en `kitchen/application/use-cases`), así como los componentes visuales en el frontend (`RecipeFormModal`, `ShiftReconciliationModal`).
 
+### 5. Correcciones Críticas de Inconsistencias (Segunda Auditoría)
+*   **Serialización Decimal en JSON (strings vs numbers):** Se detectó y resolvió que los ejemplos de JSON en `readme.md` y `docs/10_restostock_api_specification.md` enviaban cantidades como números. Ahora están serializados consistentemente como **strings** (ej. `"2.0000"`) para evitar pérdida de precisión y problemas de coma flotante (IEEE 754) en el backend y frontend.
+*   **Mitigación de Fallos de Red en Frontend (`TK-007`):** Se reestructuró la especificación del ticket eliminando el uso incorrecto de *React Error Boundaries* para capturar excepciones asíncronas de fetches caídos. En su lugar, se exige un flujo de estado local asíncrono que renderice un componente offline amable.
+*   **Saldos Negativos y Doble Descarte (`US-007` y `US-005`):** 
+    *   En `US-007` se eliminó la tolerancia de saldos negativos en remanentes, forzando la reducción a cero y el registro de mermas por el faltante.
+    *   En `US-005` se incorporó la regla e inmutabilidad de rechazo si un operario intenta realizar un descarte sobre un remanente con estado `CONSUMED` o `DISCARDED`.
+*   **Desacoplamiento de Terceros en Capa de Dominio (`docs/05_restostock_components_description.md`):** Se removió el uso e importación directa de `decimal.js` en el plano de dominio e interfaz de aplicación, sustituyéndolo por el Value Object interno `DecimalValue`.
+*   **Validaciones en la Frontera (Zero Trust en `prompts.md` / `cipoaprompts.md`):** Se delegó a esquemas tipificados (`Zod`) la validación de entrada (body, query, params), restringiendo el uso de `DOMPurify` únicamente a renderización de HTML y previniendo ataques XSS.
+*   **Release Management Verídico (`SK-14`):** Se prohibió la invención de PRs ficticios y se documentó únicamente el historial real verificado en Git (PR #1).
+
 ---
 
 ## 🏁 Conclusión y Aprobación
-La base de especificación técnica del MVP de **RestoStock** es robusta y coherente en todas sus ramificaciones. No existen discrepancias en los nombres de las entidades, tipos de datos o lógica algorítmica.
+La base de especificación técnica del MVP de **RestoStock** es completamente robusta, consistente y cumple estrictamente con el marco de gobernanza global del proyecto. No existen discrepancias en los nombres de las entidades, tipos de datos o lógica de transporte de datos.
 
 > [!NOTE]
-> La documentación se encuentra lista y staged para su consolidación mediante commit final.
+> Todos los hallazgos han sido validados y resueltos. La base de documentación se encuentra 100% libre de inconsistencias técnicas y funcionales.
