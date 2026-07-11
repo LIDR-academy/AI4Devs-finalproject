@@ -1,6 +1,6 @@
 ---
 description: Run the agentic orchestrator on a user story — spec → Gherkin → TDD → parallel review → mutation → DoD (PR-ready)
-argument-hint: "<story> — the name of a file in user-stories/ (with or without .md), e.g. lesson-list"
+argument-hint: "<story> — the name of a file in user-stories/pending/ (with or without .md), e.g. lesson-list"
 ---
 
 # /ticket-orchestrator — run the agentic orchestrator
@@ -10,8 +10,8 @@ Act as **`orchestrator_lead`** and drive the full pipeline for ONE feature. Stor
 ## Boot
 
 1. **Read the source of truth:** `.agents/ORCHESTRATOR.md` (roles, gates, state machine, DoD). It governs everything below; the canonical code rules in `.agents/rules/*` govern how code is written.
-2. **Resolve the story:** open `user-stories/$ARGUMENTS.md` (accept the name with or without `.md`). If it doesn't exist, list `user-stories/*.md` and stop. Derive a kebab `<name>`.
-3. **Create the worktree:** `git worktree add .worktrees/<name> -b feat/<name>` from the up-to-date default branch, and `cd` into it — **all** work (docs + code + commits) happens there. `pnpm install` if the worktree lacks `node_modules`. Then create `docs/features/<name>/` from `.agents/templates/` and point `progress/current.md` at it.
+2. **Resolve the story:** open `user-stories/pending/$ARGUMENTS.md` (accept the name with or without `.md`; if not in `pending/`, check `user-stories/in-progress/` for a resume). If it doesn't exist, list `user-stories/pending/*.md` and stop. Derive a kebab `<name>`.
+3. **Create the worktree + mark in-progress:** `git worktree add .worktrees/<name> -b feat/<name>` from the up-to-date default branch, and `cd` into it — **all** work (docs + code + commits) happens there. **Move the story:** `git mv user-stories/pending/<story>.md user-stories/in-progress/<story>.md` + commit. `pnpm install` if the worktree lacks `node_modules`. Then create `docs/features/<name>/` from `.agents/templates/` and point `progress/current.md` at it.
 
 ## Run the phases (guard every gate; state on disk)
 
@@ -22,8 +22,9 @@ Act as **`orchestrator_lead`** and drive the full pipeline for ONE feature. Stor
    b. `reviews_lead` in **`full` mode** → runs CI **once**, skips lenses the diff can't trigger, fans out the applicable reviewers in parallel → consolidated `review.md` → `implementator` fixes every finding (≤ 2 rounds; any severity incl. minor; round 2 re-runs **only** reviewers with open findings).
    c. `mutation_tester` (**post-review**) → **only if the review changed source files**; scoped via `base-ref = <pre-review-sha>` → `implementator` kills every survivor (≤ 2 rounds). Otherwise append one skip line to `mutation.md`.
 4. `dod_validator` → `dod.md` (validate only) → **`pr_ready`**.
+5. **Mark done + compact:** `git mv user-stories/in-progress/<story>.md user-stories/done/<story>.md` + commit; run the `compact-docs` skill on the feature folder.
 
-At `pr_ready`, tell me the feature is ready and that opening & merging the PR is my manual step. Append a line to `progress/history.md`.
+At `pr_ready`, tell me the feature is ready and that opening & merging the PR is my manual step. Append a one-line entry to `progress/history.md`.
 
 ## Rules
 

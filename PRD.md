@@ -66,6 +66,10 @@ Grouped by the core loop. Ordered by priority within each group.
 - As a learner, I want to leave a lesson partway through and return to the exact slide I left off so that I don't lose my place or have to start over.
 - As a learner, I want to retake a lesson's activities so that I can measure improvement (learning gains).
 
+### Localization
+- As a multilingual user, I want the app to display in my language and let me switch languages in-app so that I can study comfortably in the language I understand best (web, iOS, or Android).
+- As a user who changes the app language, I want to be told when my language choice couldn't be saved, with a way to try again, so that I'm not surprised by it reverting after a restart.
+
 ### Project foundation (developer) — ✅ done
 - As a developer, I want the monorepo scaffolded and the backend provisioned so that every story above can be built and verified on a working foundation. Delivered: Turborepo + pnpm workspaces (`apps/`, `libs/`, `supabase/`); universal Expo app (`app-study-buddy`, web/iOS/Android with Expo Router); shared `@helsoft/*` libs (types, components, hooks, services, study-buddy) with the Supabase client initialized at app startup; Storybook on react-native-web (template lib `lib-with-storybook` + stories in `components`); hosted Supabase project created, linked to the repo and wired via env vars; agent rules in `.agents/rules/` aligned with this architecture; `build`/`lint`/`check-types`/`clean` pipeline green from the repo root.
 
@@ -106,7 +110,7 @@ Acceptance criteria:
 - The chosen composition is passed to the Edge Function (R2) and reflected in the generated deck; the prompt enforces it.
 - Edge case: if `activity only` is chosen, the end-of-lesson score (R7) still works; if `instructional only` is chosen, there are no activities to score and the results summary reflects that (no score shown).
 
-**R3 — Activity slide types with feedback**
+~**R3 — Activity slide types with feedback**~
 Description: Render and grade the supported activity types.
 Acceptance criteria (per type):
 - Multiple choice: learner selects an option; correct/incorrect feedback shown immediately.
@@ -124,14 +128,14 @@ Acceptance criteria:
 - Progress through the deck is visible.
 - The player works on web and on a mobile viewport (responsive), and images scale appropriately to the viewport.
 
-**R5 — Auth & persistence**
+~**R5 — Auth & persistence**~
 Description: Supabase-backed accounts; lessons saved per user.
 Acceptance criteria:
 - User can sign up, log in, and log out.
 - A generated lesson is persisted to the user's account and reappears after logout/login.
 - A logged-out user cannot access another user's lessons (row-level security).
 
-**R6 — Bring-your-own AI key (server-side proxy)**
+~**R6 — Bring-your-own AI key (server-side proxy)**~
 Description: User stores their own API key; **all AI calls are proxied through a Supabase Edge Function** so the key is used server-side and never reaches the client at call time.
 Acceptance criteria:
 - User can save, update, and remove their key.
@@ -139,7 +143,7 @@ Acceptance criteria:
 - Generation reads the key inside the Edge Function (R2); the client only triggers the function and never holds the raw key during a request.
 - Generation fails gracefully with guidance if no key is set.
 
-**R7 — Score / results summary**
+~**R7 — Score / results summary**~
 Description: End-of-lesson summary showing performance.
 Acceptance criteria:
 - After completing activity slides, the learner sees a score (correct / total on auto-gradable types).

@@ -1,7 +1,8 @@
 # [EXAMPLE — copy this file, don't build it] Lesson list
 
-> This is a format guide for `/ticket-orchestrator`. Create a real story as `user-stories/<name>.md`
-> (e.g. `user-stories/lesson-list.md`) and run `/ticket-orchestrator lesson-list`.
+> This is a format guide for `/ticket-orchestrator`. Create a real story as `user-stories/pending/<name>.md`
+> (e.g. `user-stories/pending/lesson-list.md`) and run `/ticket-orchestrator lesson-list`.
+> The orchestrator moves the story **pending → in-progress** when it starts and **→ done** when the feature is `pr_ready`.
 
 **As a** learner
 **I want** to see the lessons I've generated

@@ -11,7 +11,7 @@ You independently vet the feature's spec bundle for correctness **before** it re
 
 ## Protocol
 
-1. Read the story `user-stories/<story>.md`, `PRD.md`, and the bundle: `spec.md`, `risks.md`, `tasks.md`, `task-1..N.md`, `gherkin-scenarios.md`.
+1. Read the story (`user-stories/in-progress/<story>.md`), `PRD.md`, and the bundle: `spec.md`, `risks.md`, `tasks.md`, `task-1..N.md`, `gherkin-scenarios.md`.
 2. Check:
    - **spec.md** — terse; 4 UI states (if UI); analytics named/consistent; feature flags if rollout; non-goals present; decisions carry rationale; scope matches the story (nothing missing, no gold-plating); no ambiguity/contradiction. **ACs must NOT be duplicated here** — spec links to `gherkin-scenarios.md`; flag any restated AC prose as a finding to remove.
    - **gherkin-scenarios.md (the acceptance criteria)** — one `@s` per behavior; each a testable Given/When/Then; happy + error/empty/edge covered; declarative steps (no selectors/clicks); tags unique.

@@ -1,6 +1,6 @@
 ---
 name: create-user-story
-description: Manual skill to create user stories in the user-stories/ directory following project format (As a / I want / so that, context, acceptance criteria, optional notes). Invoke explicitly with `/create-user-story` to generate a new story from a rough idea.
+description: Manual skill to create user stories in the user-stories/pending/ directory following project format (As a / I want / so that, context, acceptance criteria, optional notes). Invoke explicitly with `/create-user-story` to generate a new story from a rough idea. New stories land in user-stories/pending/ (the orchestrator moves them → in-progress → done).
 compatibility: 
   - Bash
 ---
@@ -19,7 +19,7 @@ Use this skill when you need help creating a structured user story. Provide your
 3. Optionally collect details like analytics events, feature flags, or design notes if relevant
 4. Generate a properly-formatted markdown file
 
-**Output:** A file saved to `user-stories/<derived-name>.md` with confirmation of the file path
+**Output:** A file saved to `user-stories/pending/<derived-name>.md` with confirmation of the file path
 
 ## Story format
 
@@ -56,7 +56,7 @@ The generated file follows this structure:
 - What counts as success? (see search results, can filter by type, etc.?)
 - Any analytics or flags to track? (optional)
 
-**Result:** A file `user-stories/lesson-search.md` with clear, structured acceptance criteria
+**Result:** A file `user-stories/pending/lesson-search.md` with clear, structured acceptance criteria
 
 ## Running the skill
 

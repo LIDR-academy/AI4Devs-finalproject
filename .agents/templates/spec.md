@@ -1,6 +1,6 @@
 ---
 feature: <name>
-story: user-stories/<story>.md
+story: user-stories/done/<story>.md   # lives in pending/ → in-progress/ → done/ across the run
 status: spec_drafted
 ---
 

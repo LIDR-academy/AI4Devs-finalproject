@@ -79,7 +79,7 @@ Component → Hook → Service → DAO → Supabase / external API
 Feature work runs through a gated agentic orchestrator. To build a feature from a user story:
 
 ```
-/ticket-orchestrator <story>        # story = a file in user-stories/<story>.md
+/ticket-orchestrator <story>        # story = a file in user-stories/pending/<story>.md (moved → in-progress → done as it runs)
 ```
 
 The pipeline: `spec_partner` (spec **and** Gherkin contract) → `spec_reviewer` (vets the bundle) → **one human gate** → `implementator` (strict TDD, vertical slices; per-slice `reviewer_slice` review) → `mutation_tester` (StrykerJS, pre-review) → `reviews_lead` (full review: CI once + the applicable reviewers in parallel — code, design, architecture, security/OWASP, accessibility/WCAG, performance) → `mutation_tester` (post-review, only if the review changed source) → `dod_validator` (Definition of Done). All state lives in `docs/features/<name>/`; session state in `progress/`.

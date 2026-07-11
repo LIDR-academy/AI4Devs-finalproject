@@ -19,7 +19,7 @@ This orchestrator blends two references:
 
 | Aspect | harness-sdd | mobile-facephi | **This orchestrator** |
 |---|---|---|---|
-| Entry | "implement next pending feature" | `/spec FEAT-XXX` | User-story `.md` file in `user-stories/`, named on the command line |
+| Entry | "implement next pending feature" | `/spec FEAT-XXX` | User-story `.md` file in `user-stories/pending/`, named on the command line (moved pending → in-progress → done as it runs) |
 | Spec + Contract | `spec_partner` debates → `project-spec.md`; separate `gherkin_author` | `/spec` → spec + risks + tasks + qa | **`spec_partner` produces spec.md + risks.md + tasks.md + `gherkin-scenarios.md` in one step** (Gherkin via the `gherkin-authoring` skill), **`spec_reviewer` vets the bundle before the gate**, then approved at a **single human gate** |
 | Build | `implementator` strict TDD | Code Agent by vertical slice | **`implementator`**, strict TDD **by vertical slice** (1→2→3), branching by artifact type (UI vs logic), always integration tests |
 | Review | single `judge` | `/arch` + `/security` separately | **Two cadences:** per-slice light review (**code + design** only) during the build, then a **full 6-reviewer** round (code, design, architecture, security, accessibility, performance) after all slices — both driven by **`reviews_lead`**, which consolidates findings into one change request to the implementator |
@@ -93,8 +93,10 @@ We extend the existing `.agents/` folder rather than introducing `.claude/`. Orc
 │   └── dod.md                    # DoD validation report template
 └── ORCHESTRATOR.md               # NEW — source of truth: roles, contracts, gates, DoD
 
-user-stories/                     # EXISTING — input tickets, one markdown file per story
-└── <story>.md                    # read by spec_partner via /ticket-orchestrator <story>
+user-stories/                     # EXISTING — input tickets; a kanban of folders the orchestrator moves stories through
+├── pending/<story>.md            # authored here (via /create-user-story or by hand)
+├── in-progress/<story>.md        # orchestrator git-mv's here on start (step 1)
+└── done/<story>.md               # orchestrator git-mv's here when pr_ready (hand-off)
 
 docs/
 └── features/
@@ -162,7 +164,7 @@ One feature at a time. State on disk. One human approval up front — a single c
 
 ```mermaid
 flowchart TD
-    CLI["/ticket-orchestrator &lt;story&gt;<br/>reads user-stories/&lt;story&gt;.md"] --> LEAD{{"orchestrator_lead — orchestrator<br/>creates git worktree feat/&lt;name&gt; · guards the gate · writes the feature folder"}}
+    CLI["/ticket-orchestrator &lt;story&gt;<br/>reads user-stories/pending/&lt;story&gt;.md"] --> LEAD{{"orchestrator_lead — orchestrator<br/>worktree feat/&lt;name&gt; · story pending→in-progress→done · guards the gate"}}
 
     LEAD -->|pending| P1["① spec_partner<br/>debate → spec.md · risks.md · tasks.md · task-N.md · gherkin-scenarios.md"]
     P1 -->|spec_drafted| SR["① spec_reviewer<br/>vet the bundle → review-spec.md"]
@@ -223,7 +225,7 @@ Each agent is a Claude Code subagent defined in `.agents/agents/<name>.md` with 
 
 ### Phase 1 — `spec_partner` (Spec + Gherkin contract, one step)
 - **Tools:** `Read, Write, Glob, Grep`.
-- **Input:** the user-story markdown file at `user-stories/<story>.md` (named on the CLI: `/ticket-orchestrator <story>`), plus any screenshot or API spec it references, plus `PRD.md` for product context.
+- **Input:** the user-story markdown file (the lead moves it to `user-stories/in-progress/<story>.md` before invoking; named on the CLI: `/ticket-orchestrator <story>`), plus any screenshot or API spec it references, plus `PRD.md` for product context.
 - **Behavior:** Read the ticket, then **ask questions and debate** edge cases, output contracts, and discarded alternatives with the human until the spec is unambiguous (recording decisions *with their rationale*). Then, in the **same step**, distill the spec into the Gherkin contract using the `gherkin-authoring` skill.
 - **Outputs (in `docs/features/<name>/`):**
   - `spec.md` — summary, user stories ("As a … I want … so that …"), the 4 UI states (Loading / Content / Error / Empty) where UI is involved, analytics events, feature flags, non-goals, resolved decisions. **Acceptance criteria are NOT here** — the `@s` scenarios in `gherkin-scenarios.md` are the ACs; `spec.md` links to them (no duplication).
@@ -378,7 +380,7 @@ export default {
 
 Resolved (locked in):
 
-- **Ticket source — RESOLVED:** tickets are markdown files in `user-stories/`. `spec_partner` reads `user-stories/<story>.md` via `/ticket-orchestrator <story>`. No tracker MCP needed.
+- **Ticket source & lifecycle — RESOLVED:** tickets are markdown files in `user-stories/`, organized as a folder kanban: authored in `pending/`; the orchestrator `git mv`s the story to `in-progress/` when it starts (step 1) and to `done/` when the feature reaches `pr_ready` (hand-off), committed on `feat/<name>`. No tracker MCP needed.
 - **Figma access — RESOLVED:** no Figma in this repo. `implementator` builds UI from the spec, or from a pasted screenshot if the story includes one. No Figma MCP step.
 - **Jest / Expo SDK 57 / RN 0.86 / React 19 — RESOLVED:** already configured (`jest-expo` in `@helsoft/components`, `ts-jest` in `@helsoft/hooks`/`@helsoft/services`). Phase 0 only adds StrykerJS (+ Supabase Test Helpers if missing).
 - **Review & mutation sequencing — RESOLVED:** after all slices, the quality gate runs **mutation (pre-review) → full review → mutation (post-review)**. Each is its own ≤ 2-round loop routing fixes to `implementator`; surviving mutants are killed on **both** mutation passes. In the full review `implementator` fixes **every** finding (any severity, incl. minor); after the 2-round cap, blockers/majors → escalate & block, while **minors-only may ship as documented, human-accepted risks** (recorded in `review.md`, `spec.md` Open decisions, `dod.md`).

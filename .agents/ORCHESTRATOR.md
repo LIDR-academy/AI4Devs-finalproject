@@ -91,7 +91,8 @@ Session state: `progress/current.md` (active pointer) + `progress/history.md` (a
 ## Entry
 
 ```
-/ticket-orchestrator <story>      # reads user-stories/<story>.md, invokes orchestrator_lead
+/ticket-orchestrator <story>      # reads user-stories/pending/<story>.md, invokes orchestrator_lead
+# Story lifecycle: user-stories/pending/ → (on start) in-progress/ → (on pr_ready) done/ — moved via git mv, committed on feat/<name>
 ```
 
 ## Definition of Done
