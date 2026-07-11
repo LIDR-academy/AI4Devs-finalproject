@@ -1,10 +1,11 @@
 import { LanguageSettings, ScreenContainer } from '@helsoft/components';
-import { SignOut } from '@helsoft/study-buddy';
+import { ApiKeySettings, SignOut } from '@helsoft/study-buddy';
 
 export default function SettingsScreen() {
   return (
     <ScreenContainer>
       <LanguageSettings />
+      <ApiKeySettings />
       <SignOut />
     </ScreenContainer>
   );

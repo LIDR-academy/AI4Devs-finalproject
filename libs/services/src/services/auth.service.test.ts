@@ -101,6 +101,7 @@ describe('AuthService', () => {
 
       await expect(AuthService.signIn('user@example.com', 'wrongpass')).rejects.toMatchObject({
         code: 'invalid_credentials',
+        message: 'Invalid credentials',
       });
       await expect(AuthService.signIn('user@example.com', 'wrongpass')).rejects.not.toHaveProperty('status');
     });
@@ -126,6 +127,7 @@ describe('AuthService', () => {
 
       await expect(AuthService.signIn('user@example.com', 'secret1')).rejects.toMatchObject({
         code: 'network_error',
+        message: 'Network error',
       });
     });
 

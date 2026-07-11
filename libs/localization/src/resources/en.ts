@@ -28,6 +28,12 @@ export const en = {
     },
     upload: {
       intro: 'Upload a PDF to generate a lesson',
+      // ai-key-management task-12 (Slice 2) — the ApiKeyGate guard-rail copy; added ahead of
+      // task-13 for the same compiler-parity reason as the other apiKey.* keys.
+      apiKeyRequired: {
+        message: 'An API key is required to generate lessons.',
+        action: 'Add API key',
+      },
     },
     lesson: {
       title: 'Lesson {{id}}',
@@ -72,6 +78,46 @@ export const en = {
       language: {
         heading: 'Language',
         a11yLabel: 'Choose a language',
+      },
+      // ai-key-management task-8 (Slice 1) — added ahead of task-13 (Slice 3) out of the
+      // `TranslationResource` type's compiler-enforced parity: es/pt/de are typed against
+      // this exact shape, so these keys had to land (translated) in all four bundles
+      // together rather than as an en-only stub. Task-13 still owns the full i18n slice
+      // (copy review + extending migration-coverage.test.ts's key-existence guard for
+      // api-key-form/api-key-settings).
+      apiKey: {
+        inputLabel: 'API key',
+        save: 'Save',
+        saving: 'Saving…',
+        // Full-review Round 1, Major 4 — announced to assistive tech while the initial status
+        // fetch is in flight (WCAG 4.1.3); not shown visually (mirrors auth.signingIn).
+        loadingStatus: 'Checking your API key status…',
+        replace: 'Replace',
+        remove: 'Remove',
+        savedStatus: '{{provider}} key saved · Updated {{date}}',
+        // ai-key-management task-11 (Slice 2) — added ahead of task-13 for the same
+        // compiler-parity reason as task-8's original apiKey.* keys: es/pt/de are typed
+        // against this exact shape, so ApiKeyForm's new Empty/Error/Remove-confirm labels
+        // had to land (translated) in all four bundles together. Task-13 still owns the
+        // full i18n slice (copy review + migration-coverage.test.ts extension).
+        guidance: "Don't have a key? Get one from OpenAI",
+        removeConfirmHeadline: 'Remove API key?',
+        removeConfirmBody: "You'll need to add a new key to generate lessons again.",
+        // Full-review Round 1, Minor 6 — distinct from `remove` (the trigger button) to avoid
+        // a duplicate-accessible-name collision between the two controls.
+        removeConfirmAction: 'Confirm removal',
+        removeConfirmCancelAction: 'Cancel',
+        error: {
+          invalidKey: "That key didn't validate. Check it and try again.",
+          network: "Couldn't reach the server. Try again.",
+          // ai-key-management task-13 (Slice 3) — spec.md Open decision 3: the defensive
+          // service-layer backstop for a blank/whitespace-only key (validation_error). No
+          // current caller reaches this through the UI (ApiKeyForm disables Save until a
+          // non-blank key is entered, @s5) — reserved for any future consumer of
+          // ApiKeyForm's `error` prop, mirroring AuthErrorCode's own unreachable-but-defined
+          // validation_error precedent.
+          empty: 'Enter your API key.',
+        },
       },
     },
     activity: {

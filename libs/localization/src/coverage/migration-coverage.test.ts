@@ -20,7 +20,7 @@ const SHARED_COMPONENTS = resolve(REPO_ROOT, 'libs/components/src');
  * in any locale bundle (i18next has no missing-key handler, so real users would see the raw key
  * string). Scoped narrowly to this component's own directory rather than the whole `study-buddy`
  * lib: it's the one place this exact regression occurred at the time. `sign-out.tsx`'s own
- * `auth.logOut*` keys are covered by their own entry in AUTH_COMPONENT_DIRS below (task-8).
+ * `auth.logOut*` keys are covered by their own entry in T_KEY_COMPONENT_DIRS below (task-8).
  */
 const SIGN_IN_FORM_DIR = resolve(REPO_ROOT, 'libs/study-buddy/src/components/sign-in-form');
 /**
@@ -71,6 +71,21 @@ const OPEN_ENDED_ACTIVITY_DIR = resolve(
  * from libs/study-buddy/src/components/lesson-results for the same reason as above.
  */
 const LESSON_RESULTS_DIR = resolve(REPO_ROOT, 'libs/activities/src/organisms/lesson-results');
+
+/**
+ * ai-key-management task-13 (Slice 3) — same class of guard, extended for this feature's
+ * feature-wiring components. `api-key-settings.tsx` and `api-key-gate.tsx` are the two
+ * `study-buddy` components that call `t('settings.apiKey.*'...)`/`t('upload.apiKeyRequired.*'...)`
+ * directly; the presentational organisms they wire (`ApiKeyForm`, `ApiKeyRequiredNotice`,
+ * `libs/components/src/organisms/...`) are deliberately **not** added here — they receive all
+ * copy via `labels` props and contain zero `t()` calls of their own (spec.md's architecture:
+ * presentational component vs. feature-wiring split), so adding them to this literal-existence
+ * scan would trip its own "guards the guard" sanity assertion (`referencedKeys.length > 0`) for
+ * no reason — they're already covered by the lib-wide hardcoded-copy sweep above
+ * (`SHARED_COMPONENTS` includes `libs/components/src`).
+ */
+const API_KEY_SETTINGS_DIR = resolve(REPO_ROOT, 'libs/study-buddy/src/components/api-key-settings');
+const API_KEY_GATE_DIR = resolve(REPO_ROOT, 'libs/study-buddy/src/components/api-key-gate');
 
 const isExcluded = (file: string) => file.endsWith('.stories.tsx') || file.endsWith('.test.tsx') || file.endsWith('.test.ts');
 
@@ -146,7 +161,7 @@ describe('string-migration coverage', () => {
 // Guarded per-component (rather than a lib-wide sweep) so each new component opts in
 // deliberately as it's built/reviewed — see the SIGN_IN_FORM_DIR/SIGN_OUT_DIR/
 // MULTIPLE_CHOICE_ACTIVITY_DIR doc comments above.
-const KEY_EXISTENCE_DIRS: Array<[name: string, dir: string]> = [
+const T_KEY_COMPONENT_DIRS: Array<[name: string, dir: string]> = [
   ['sign-in-form', SIGN_IN_FORM_DIR],
   ['sign-out', SIGN_OUT_DIR],
   ['multiple-choice-activity', MULTIPLE_CHOICE_ACTIVITY_DIR],
@@ -154,9 +169,11 @@ const KEY_EXISTENCE_DIRS: Array<[name: string, dir: string]> = [
   ['fill-in-the-blank-activity', FILL_IN_THE_BLANK_ACTIVITY_DIR],
   ['open-ended-activity', OPEN_ENDED_ACTIVITY_DIR],
   ['lesson-results', LESSON_RESULTS_DIR],
+  ['api-key-settings', API_KEY_SETTINGS_DIR],
+  ['api-key-gate', API_KEY_GATE_DIR],
 ];
 
-describe.each(KEY_EXISTENCE_DIRS)('t() key existence coverage (%s)', (name, dir) => {
+describe.each(T_KEY_COMPONENT_DIRS)('t() key existence coverage (%s)', (name, dir) => {
   it(`every dotted key literal in ${name}.tsx resolves in the en bundle`, () => {
     const definedKeys = flattenKeys(en.translation);
     const referencedKeys = findDottedKeyLiterals(dir);

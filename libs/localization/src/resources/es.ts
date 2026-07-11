@@ -23,6 +23,10 @@ export const es: TranslationResource = {
     },
     upload: {
       intro: 'Sube un PDF para generar una lección',
+      apiKeyRequired: {
+        message: 'Se requiere una clave de API para generar lecciones.',
+        action: 'Agregar clave de API',
+      },
     },
     lesson: {
       title: 'Lección {{id}}',
@@ -67,6 +71,25 @@ export const es: TranslationResource = {
       language: {
         heading: 'Idioma',
         a11yLabel: 'Elige un idioma',
+      },
+      apiKey: {
+        inputLabel: 'Clave de API',
+        save: 'Guardar',
+        saving: 'Guardando…',
+        loadingStatus: 'Verificando el estado de tu clave de API…',
+        replace: 'Reemplazar',
+        remove: 'Eliminar',
+        savedStatus: 'Clave de {{provider}} guardada · Actualizada {{date}}',
+        guidance: '¿No tienes una clave? Consíguela en OpenAI',
+        removeConfirmHeadline: '¿Eliminar clave de API?',
+        removeConfirmBody: 'Deberás agregar una nueva clave para volver a generar lecciones.',
+        removeConfirmAction: 'Confirmar eliminación',
+        removeConfirmCancelAction: 'Cancelar',
+        error: {
+          invalidKey: 'Esa clave no se pudo validar. Revísala e intenta de nuevo.',
+          network: 'No se pudo conectar con el servidor. Intenta de nuevo.',
+          empty: 'Ingresa tu clave de API.',
+        },
       },
     },
     activity: {

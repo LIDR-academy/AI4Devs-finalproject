@@ -2,14 +2,14 @@ import type { AuthError, AuthErrorCode } from '@helsoft/types';
 import { isAuthApiError } from '@supabase/supabase-js';
 
 import { AuthDao, type SignInWithPasswordResult } from '../dao/auth.dao';
+import { toTypedError } from '../utils/typed-error';
 
 // Lightweight MVP check: local-part@domain-label.tld — enough to catch missing
 // "@", missing domain, or missing TLD without a full RFC 5322 implementation.
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Builds a sanitized failure the UI can safely branch on — no raw provider error escapes. */
-const toAuthError = (code: AuthErrorCode, message: string): Error & AuthError =>
-  Object.assign(new Error(message), { code });
+const toAuthError = (code: AuthErrorCode, message: string): Error & AuthError => toTypedError(code, message);
 
 /** The exact GoTrue error code a wrong email/password rejection carries (HTTP 400). Every
  * other GoTrue `AuthApiError` — rate limiting, an unconfirmed/banned account, a 5xx, etc. —

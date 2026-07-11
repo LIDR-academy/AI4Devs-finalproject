@@ -23,6 +23,10 @@ export const de: TranslationResource = {
     },
     upload: {
       intro: 'Lade ein PDF hoch, um eine Lektion zu erstellen',
+      apiKeyRequired: {
+        message: 'Ein API-Schlüssel ist erforderlich, um Lektionen zu erstellen.',
+        action: 'API-Schlüssel hinzufügen',
+      },
     },
     lesson: {
       title: 'Lektion {{id}}',
@@ -67,6 +71,25 @@ export const de: TranslationResource = {
       language: {
         heading: 'Sprache',
         a11yLabel: 'Sprache auswählen',
+      },
+      apiKey: {
+        inputLabel: 'API-Schlüssel',
+        save: 'Speichern',
+        saving: 'Wird gespeichert…',
+        loadingStatus: 'Status deines API-Schlüssels wird geprüft…',
+        replace: 'Ersetzen',
+        remove: 'Entfernen',
+        savedStatus: '{{provider}}-Schlüssel gespeichert · Aktualisiert {{date}}',
+        guidance: 'Noch keinen Schlüssel? Bei OpenAI erhalten',
+        removeConfirmHeadline: 'API-Schlüssel entfernen?',
+        removeConfirmBody: 'Du musst einen neuen Schlüssel hinzufügen, um wieder Lektionen zu erstellen.',
+        removeConfirmAction: 'Entfernen bestätigen',
+        removeConfirmCancelAction: 'Abbrechen',
+        error: {
+          invalidKey: 'Dieser Schlüssel konnte nicht validiert werden. Bitte prüfen und erneut versuchen.',
+          network: 'Server nicht erreichbar. Bitte erneut versuchen.',
+          empty: 'Gib deinen API-Schlüssel ein.',
+        },
       },
     },
     activity: {
