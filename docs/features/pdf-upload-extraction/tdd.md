@@ -1078,3 +1078,228 @@ Every Part A finding (3 major, 6 minor) and every Part B mutation gap flagged as
 fix above. `review.md`/`review-*.md`/`mutation.md` are unchanged — re-run separately by
 `reviews_lead`/`mutation_tester` for round 2 of the (reduced) 2-round cap. Feature status/phase
 left untouched — that's `orchestrator_lead`'s call, not `implementator`'s.
+
+## Mutation-closure pass (post full-review round 2, pre-DoD)
+
+Context: the full 6-reviewer review is APPROVED with zero findings (round 2, locked — not touched
+in this pass). Round 2's `mutation.md` reported 39 survivors (80.86%) across
+`@helsoft/{services,hooks,components,study-buddy}`, plus `@helsoft/localization` failing to run
+under Stryker at all. Directive for this pass: kill every mutant for real, not narrate it as
+acceptable — with at most 1-3 individually-justified, ignore-commented equivalents.
+
+**First finding, before any fix**: both `pnpm --filter <lib> test`'s real counts and several of
+`mutation.md`'s own per-mutant rationales were stale/inaccurate (confirmed by re-running Stryker
+fresh, scoped per file, rather than trusting the round-2 narrative):
+
+| Workspace | `mutation.md` claimed | Actually measured |
+|---|---|---|
+| `@helsoft/services` | 78 tests / 10 suites | **84 tests / 12 suites** |
+| `@helsoft/hooks` | 29 tests / 5 suites | **31 tests / 6 suites** |
+| `@helsoft/components` | 83 tests / 6 suites | **94 tests / 6 suites** |
+| `@helsoft/study-buddy` | 49 tests / 4 suites | **55 tests / 4 suites** |
+| `@helsoft/localization` | 94 tests / 8 suites | 94 tests / **9 suites** |
+
+Several "acceptable survivor" rationales also didn't match a fresh Stryker run's actual mutants at
+that file/line (e.g. `extraction-failure-detection.ts`'s claimed "precedence order" survivors were
+really `>`/`<` boundary mutants; `mupdf-extraction-adapter.ts`'s claimed "loop edge cases" were
+really an unasserted MIME-type argument and a missing `.trim()` exact-value check;
+`pdf-upload-panel.tsx`'s claimed "2 conditional-rendering absence gaps" turned out not to exist —
+every conditional gate was already fully killed). Every fix below is against the **real**,
+freshly-measured survivor, not the report's prose.
+
+### Scope note — two categories explicitly left untouched per human direction mid-pass
+
+1. **`pdf-upload-panel.tsx` styling mutations** (~15 `StyleSheet`/color/layout survivors) — no
+   `toHaveStyle` assertions added; left exactly as round 2 classified them (unit tests don't inspect
+   visual styling; the `pdf-upload-panel.e2e.js` Playwright suite guards it). No code/test change.
+2. **`PDF_IMAGES_BUCKET`** (`pdf-extraction.constants.ts:48`) — left as an accepted, undocumented
+   survivor exactly as before (confirmed via `grep -rn` across every Jest-tested workspace: the only
+   other place this exact export name appears is the Deno Edge Function's own independent
+   `supabase/functions/extract-pdf/_shared/pdf-extraction.constants.ts` copy — never imported by any
+   Jest-tested code path). No `// Stryker disable` comment added — explicitly declined for this one.
+
+### Category 1 — `pdf-extraction.constants.ts` + `PDF_UPLOAD_BUCKET` (`@helsoft/services`)
+
+- Added `src/services/pdf-extraction.constants.test.ts` (new file) asserting every exported
+  constant's exact literal value: `PDF_EXTRACTION_LIMITS.maxSizeBytes`/`maxPages`,
+  `PDF_FILE_EXTENSION`, `SCANNED_DETECTION_MIN_TEXT_LENGTH`, `IMAGE_DOWNSCALE_TARGET`, and
+  `PDF_UPLOAD_BUCKET` — kills all 3 value/string mutations Stryker reported for this file (the
+  4th, `PDF_IMAGES_BUCKET`, is the declined exception above).
+- `pdf-upload.dao.test.ts`: added a `storageFrom` spy (`storage: { from: storageFrom }`, replacing
+  the previously-unasserted inline `jest.fn()`) and `expect(storageFrom).toHaveBeenCalledWith
+  ('pdf-uploads')` in the upload test — mirrors the existing `expect(from).toHaveBeenCalledWith
+  ('documents')` pattern two lines below it. Kills the `PDF_UPLOAD_BUCKET → ''` survivor.
+- Result: `pdf-extraction.constants.ts` + `pdf-upload.dao.ts` scoped Stryker run — 100% (22/22
+  killed, 1 declined exception per the scope note above).
+
+### Category 2 — `extraction-failure-detection.ts` boundary guards (`@helsoft/services`)
+
+Fresh Stryker run showed the real survivors were `>` → `>=` (page-count guard) and `<` → `<=`
+(scanned-text guard) boundary mutants, not a "precedence order" gap (the existing precedence test
+already pinned that). Added two boundary tests:
+- `does not report too_many_pages when the page count exactly equals the limit` (pages = 20, i.e.
+  `PDF_EXTRACTION_LIMITS.maxPages`) — expects `null`, kills the `>` → `>=` mutant.
+- `does not report scanned_or_image_only when the combined extracted text exactly equals the
+  threshold` (text length = 40, i.e. `SCANNED_DETECTION_MIN_TEXT_LENGTH`) — expects `null`, kills
+  the `<` → `<=` mutant.
+
+Result: 100% (9/9 killed).
+
+### Category 3 — `image-downscale.ts` conditional branches (`@helsoft/services`)
+
+Fresh survivors: the `isDecorative` `||` guard's left/right operands (`ConditionalExpression`+2
+`EqualityOperator` boundary mutants) and the `scale === 1 ? input.pixmap : resizePixmap(...)`
+no-upscale branch (`ConditionalExpression`). Added:
+- `drops a narrow-but-tall decorative image` (width 4, height 800) — the asymmetric mirror of the
+  existing "wide-but-thin" case; pins the `width < X` operand independently of `height < X`, which
+  the existing test's symmetric-truthiness case couldn't distinguish from `false`.
+- `keeps an image exactly at the 100x100 decorative-floor boundary` (100×100, both dimensions at
+  the exact floor) — kills both `<` → `<=` boundary mutants in one assertion.
+- Extended the existing "does not upscale" test with a `jest.spyOn(mupdf.Pixmap.prototype, 'warp')`
+  spy asserting `not.toHaveBeenCalled()` — the real, exported `Pixmap.warp` method (confirmed via
+  `mupdf`'s own dist source: `class Pixmap extends Userdata { ... warp(points, width, height) {...}
+  }`) is a legitimate collaborator-interaction seam to spy on, same pattern as DAO mock assertions;
+  proves the resize path is genuinely skipped, not just that the output dimensions happen to match
+  what a same-size resize would also produce.
+
+Result: 100% (26/26 killed).
+
+### Category 4 — `mupdf-extraction-adapter.ts` (`@helsoft/services`)
+
+Fresh survivors: `mupdf.Document.openDocument(bytes, 'application/pdf')`'s MIME-type argument was
+never asserted, and `structuredText.asText().trim()`'s `.trim()` call was never proven (only
+`stringContaining` assertions, which pass identically with or without the trailing `'\n\n'`
+`asText()` empirically returns — confirmed via a throwaway inspection test, then removed). Added:
+- `opens the document bytes with the application/pdf MIME type` — spies on the real, static
+  `mupdf.Document.openDocument` and asserts `toHaveBeenCalledWith(bytes, 'application/pdf')`.
+- Changed the "extracts text from every page" test's assertions from `expect.stringContaining(...)`
+  to exact string equality (`'Hello page one'`, not `'Hello page one\n\n'`) — kills the `.trim()`
+  removal mutant directly.
+
+Result: 100% (11/11 killed).
+
+### Category 5 — `pdf-extraction.service.ts` (`@helsoft/services`)
+
+Fresh survivors matched `mutation.md`'s claims here. Added:
+- `generates each hex digit from Math.random(), with the version fixed at 4 and the variant clamped
+  to 8-b at their exact template positions` — mocks `Math.random()` to a fixed `0` and asserts the
+  exact resulting UUID string (`'00000000-0000-4000-8000-000000000000'`). The prior uniqueness-only
+  assertion couldn't distinguish a mutant that always takes the "clamp to variant" branch (which
+  still produces syntactically-valid, unique-looking UUIDs) from the real per-position logic; a
+  fixed-random exact match does. Kills both the `ConditionalExpression` and `StringLiteral`
+  mutants on line 25 in one test.
+- Extended the `unauthenticated`-rejection test with an exact `.message` assertion
+  (`'PDF extraction failed: unauthenticated'`) alongside the existing `.code` check — kills the
+  `Object.assign(new Error(...), ...)` → `new Error('')` mutant directly.
+- Added `falls back to extraction_failed when the server error body itself resolves to null` — a
+  direct investigation of the `body?.errorCode` optional-chaining mutant per the dispatch's
+  instruction to "investigate hard before accepting as equivalent." Result: **confirmed genuinely
+  equivalent**, not just narrated — `readFunctionErrorCode`'s surrounding `try { ... } catch {
+  return 'extraction_failed'; }` swallows the `TypeError` that `body.errorCode` throws when `body`
+  is `null` (with `?.` removed), producing the *identical* `'extraction_failed'` fallback either
+  way; the new null-body test itself doesn't kill the mutant (proving the equivalence empirically,
+  not just by code reading). Documented with a `// Stryker disable next-line OptionalChaining:`
+  comment directly above the line (this repo's first use of the mechanism) citing the exact reason
+  and pointing at the test that confirms it.
+- Added `normalizes an unrecognized error type as extraction_failed, not network_error` (rejects
+  with a plain `new Error(...)`, none of the three known DAO-thrown shapes) — this was the *real*
+  gap behind the `if (cause instanceof FunctionsFetchError || cause instanceof FunctionsRelayError)`
+  → `if (true)` survivor: the two existing `network_error` tests only exercised the "true" side; the
+  final `extraction_failed` catch-all branch had no test forcing a *non-transport, non-Http* cause
+  through it, so the union check was never actually pinned. Not equivalent — a real, closed gap.
+
+Result: 100% (34/34 killed, 1 documented equivalent exclusion).
+
+### Category 6 — `pdf-upload-panel.tsx` conditional-rendering gaps (`@helsoft/components`)
+
+Per the scope note above, styling mutations were left untouched. Investigated the "2
+conditional-rendering absence gaps" `mutation.md` claimed: a fresh, scoped Stryker run showed
+**zero** surviving `ConditionalExpression` mutants on any state gate (idle/loading/content/error) —
+every gate already has both a positive render test and an `it.each`-driven absence test in every
+other state. The only two *non-styling* survivors were `PDF_UPLOAD_PANEL_LOADING_INDICATOR_TEST_ID`
+(a private, non-exported-outside-file constant referenced identically by both the source's
+`testID` prop and the test's `getByTestId(...)` lookup — a genuine constant-sync equivalent, same
+reasoning as `PDF_MIME_TYPE` below) — no code/test change needed; the claimed absence gaps do not
+exist. No fix required for this category beyond confirming there was nothing left to fix.
+
+### Category 7 — `pdf-upload.tsx` (`@helsoft/study-buddy`)
+
+Fresh survivors: `DocumentPicker.getDocumentAsync`'s `type` argument was unasserted; the `labels`
+object's `filenameLabel`/`pageCountLabel`/`imageCountLabel`/`continueLabel` i18n keys were never
+asserted to render (only their *interpolated values*, e.g. `'notes.pdf'`/`4`/`2`, were checked);
+and `PDF_MIME_TYPE`. Added:
+- `expect(mockGetDocumentAsync).toHaveBeenCalledWith({ type: 'application/pdf' })` in the existing
+  web-picker test.
+- Extended "shows the content summary" into "shows the content summary, its field labels, and the
+  continue affordance once stage is success", asserting `screen.getByText('upload.filenameLabel')`
+  /`'upload.pageCountLabel'`/`'upload.imageCountLabel'` and `getByRole('button', { name:
+  'upload.continue' })` — kills all 4 label-key `StringLiteral` mutants.
+- `PDF_MIME_TYPE` turned out **not** to be equivalent after all (unlike `mutation.md`'s claim that
+  "the constant is both exported and imported by the component and its test" — false: it's a
+  module-private, non-exported `const`, and the test file never imports it). It was killed
+  incidentally by the `getDocumentAsync` argument assertion above, which hardcodes the literal
+  `'application/pdf'` independently rather than referencing the source constant.
+- The `network_error`/`unauthenticated` i18n-key mutations `mutation.md` claimed were only "6 of 8"
+  killed were, on a fresh run, **already fully killed** by the existing `it.each(Object.entries
+  (ERROR_CODE_TO_KEY))` exhaustive test — no additional fix needed there.
+
+Result: 100% (45/45 killed, 0 exclusions).
+
+### Category 8 — `@helsoft/localization` Stryker sandbox failure
+
+Root cause confirmed by inspecting `.stryker-tmp/sandbox-*/` directly: Stryker's per-package
+sandbox for this workspace mirrors only `libs/localization`'s own directory tree (nested one level
+deeper, under `.stryker-tmp/sandbox-<id>/`), not the whole monorepo. `migration-coverage.test.ts`'s
+`REPO_ROOT = resolve(__dirname, '../../../..')` assumed a fixed hop count from `src/coverage/` to
+the real repo root; inside the sandbox, that same fixed hop count landed on
+`libs/localization` itself instead (one level short), so `readdirSync(APP_SCREENS)` and the two
+`AUTH_COMPONENT_DIRS` scans threw `ENOENT`, failing Stryker's *initial dry run* outright — blocking
+mutation testing for every file in this workspace, not just the ones `en.ts`/`i18n.ts` proper.
+
+Fix: replaced the fixed-hop `resolve()` with `findMonorepoRoot(startDir)`, which walks upward from
+`__dirname` looking for the real repo's `pnpm-workspace.yaml` marker file instead of counting `..`
+segments. This is sandbox-safe in a way a different hop count wouldn't be, because Stryker's sandbox
+is a real directory on disk (not a chroot) — walking far enough up from it reaches the actual,
+unmutated monorepo root and its real sibling packages (`apps/app-study-buddy`, `libs/study-buddy`,
+`libs/components`), which this suite's own `mutate` scope never touches. Throws a clear error if no
+marker is found in 10 hops (was silently wrong before; now fails loudly, matching Law 2's spirit for
+test code).
+
+Verified: `pnpm --filter @helsoft/localization test` — 9/9 suites, 94/94 tests green (unchanged
+assertions, same real audit behavior). `pnpm --filter @helsoft/localization exec stryker run
+--mutate "src/resources/en.ts"` — dry run now **succeeds** and Stryker completes a full run,
+reporting a real score (18.84% on this particular file, all survivors on resource *values* the
+key-existence-based suite was never designed to catch — exactly `mutation.md`'s own prediction for
+value mutations, not a hidden gap). The structural blocker (workspace failing to run under Stryker
+at all) is closed; `mutation_tester` re-runs with the feature's actual scoped file set for a final
+number.
+
+## Full-workspace re-run (mutation-closure pass)
+
+- `pnpm --filter @helsoft/services test` — 13/13 suites, 97/97 tests green (+1 suite:
+  `pdf-extraction.constants.test.ts`; +13 tests net across the touched files).
+- `pnpm --filter @helsoft/hooks test` — 6/6 suites, 31/31 tests green (untouched this pass).
+- `pnpm --filter @helsoft/components test` — 6/6 suites, 94/94 tests green (untouched this pass,
+  confirmed no regression).
+- `pnpm --filter @helsoft/study-buddy test` — 4/4 suites, 55/55 tests green.
+- `pnpm --filter @helsoft/localization test` — 9/9 suites, 94/94 tests green.
+- `pnpm --filter @helsoft/components exec playwright test tests/e2e/organisms/pdf-upload-panel
+  --reporter=list` — 7/7 e2e specs green (no source change in this pass; confirms no regression).
+- `pnpm check-types` (whole repo, turbo, `--force`) — 8/8 packages clean.
+- `pnpm lint` (whole repo, turbo, `--force`) — clean (only `app-study-buddy` defines a `lint`
+  script; pre-existing repo convention, unrelated to this pass).
+
+## Stop condition (mutation-closure pass)
+
+Every category in the dispatch has a real, freshly-measured fix or a specific, individually-argued,
+empirically-confirmed exception:
+- **1 documented equivalent** (`OptionalChaining`, `pdf-extraction.service.ts:62`) — commented
+  in-code with `// Stryker disable next-line`, confirmed via a dedicated null-body test that itself
+  doesn't kill it (not just code reading).
+- **2 accepted-as-is per explicit human scope reduction, mid-pass** — `pdf-upload-panel.tsx`
+  styling survivors (~15) and `PDF_IMAGES_BUCKET` (both left exactly as round 2 classified them, no
+  new code/comment).
+- **Every other real gap has a genuine, failing-test-first fix** — no narrative-only closures, no
+  padding `mutation.md` with more justification prose. `review.md`/`review-*.md` untouched (locked,
+  round 2, zero findings). `mutation.md` itself untouched — `mutation_tester` re-runs and reports
+  the final consolidated score. Feature status/phase left untouched.
