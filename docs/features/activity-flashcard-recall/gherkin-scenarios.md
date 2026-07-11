@@ -50,9 +50,9 @@ Feature: Flashcard / recall activity slide
     And no new answered state is produced
 
     Examples:
-      | tapped        | note                                    |
-      | Not recalled  | switching to the other mark is ignored  |
-      | Recalled      | re-tapping the already-locked mark is ignored |
+      | tapped        |
+      | Not recalled  |
+      | Recalled      |
 
   @s6
   Scenario Outline: The self-mark is emitted once as answered state and is excluded from the score
