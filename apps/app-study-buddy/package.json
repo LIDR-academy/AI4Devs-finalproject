@@ -3,6 +3,10 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
+    "@expo-google-fonts/ibm-plex-mono": "^0.4.1",
+    "@expo-google-fonts/ibm-plex-sans": "^0.4.1",
+    "@expo-google-fonts/material-symbols-rounded": "^0.4.50",
+    "@expo-google-fonts/sora": "^0.4.2",
     "@helsoft/activities": "workspace:*",
     "@helsoft/components": "workspace:*",
     "@helsoft/hooks": "workspace:*",
@@ -13,6 +17,7 @@
     "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~57.0.2",
     "expo-constants": "~57.0.3",
+    "expo-font": "~57.0.0",
     "expo-image": "~57.0.0",
     "expo-linking": "~57.0.1",
     "expo-localization": "~57.0.0",

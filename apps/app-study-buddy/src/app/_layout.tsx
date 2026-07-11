@@ -1,6 +1,11 @@
 import { useEffect } from 'react';
 import { DarkTheme, DefaultTheme, SplashScreen, Stack, ThemeProvider } from 'expo-router';
 import { getLocales } from 'expo-localization';
+import { useFonts } from 'expo-font';
+import { MaterialSymbolsRounded_400Regular } from '@expo-google-fonts/material-symbols-rounded';
+import { Sora_700Bold } from '@expo-google-fonts/sora';
+import { IBMPlexSans_400Regular } from '@expo-google-fonts/ibm-plex-sans';
+import { IBMPlexMono_400Regular } from '@expo-google-fonts/ibm-plex-mono';
 import { useColorScheme } from 'react-native';
 import { useSession } from '@helsoft/hooks';
 import { LocalizationProvider } from '@helsoft/localization';
@@ -10,9 +15,19 @@ import '@/lib/supabase';
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  // Keys must match `fontFamily` tokens in `@helsoft/components` theme typography.
+  const [fontsLoaded, fontError] = useFonts({
+    'Material Symbols Rounded': MaterialSymbolsRounded_400Regular,
+    Sora: Sora_700Bold,
+    'IBM Plex Sans': IBMPlexSans_400Regular,
+    'IBM Plex Mono': IBMPlexMono_400Regular,
+  });
+
   // The app is the only place that reads the native device locale; the shared,
   // platform-agnostic lib resolves it to a supported locale.
   const deviceLocale = getLocales()[0]?.languageTag;
+
+  if (!fontsLoaded && !fontError) return null;
 
   return (
     <LocalizationProvider deviceLocale={deviceLocale}>
