@@ -1,68 +1,92 @@
-import { AccessibilityInfo } from 'react-native';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { AccessibilityInfo } from 'react-native';
+
+import { useLocalization } from '@helsoft/localization';
 
 import { PDF_UPLOAD_PANEL_LOADING_INDICATOR_TEST_ID, PdfUploadPanel } from './pdf-upload-panel';
 
-const labels = {
-  loading: 'Extracting…',
-  chooseFile: 'Choose a PDF',
-  filenameLabel: 'File',
-  pageCountLabel: 'Pages',
-  imageCountLabel: 'Images',
-  continueLabel: 'Continue',
-  constraintsHint: 'Max 10 MB, 20 pages',
-  retry: 'Try again',
-};
+jest.mock('@helsoft/localization', () => ({
+  useLocalization: jest.fn(),
+}));
+
+const mockUseLocalization = useLocalization as jest.Mock;
+
+const defaultT = (key: string) => key;
 
 describe('PdfUploadPanel', () => {
+  beforeEach(() => {
+    mockUseLocalization.mockReturnValue({ t: defaultT });
+  });
+
   // @s7 (AC7) — before any file is picked (usePdfExtraction's 'idle' stage), the pristine/Empty
   // state renders the persistent choose-file control, enabled (so the user can actually get past
   // this state), with no loading/content content shown.
   it('renders the enabled choose-file control in the idle (Empty) state', async () => {
-    await render(<PdfUploadPanel state="idle" labels={labels} onChooseFile={jest.fn()} />);
+    await render(<PdfUploadPanel state="idle" onChooseFile={jest.fn()} />);
 
-    expect(screen.getByRole('button', { name: 'Choose a PDF', disabled: false })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'upload.chooseFile', disabled: false })).toBeTruthy();
     expect(screen.queryByTestId(PDF_UPLOAD_PANEL_LOADING_INDICATOR_TEST_ID)).toBeNull();
-    expect(screen.queryByText('Extracting…')).toBeNull();
+    expect(screen.queryByText('upload.loading')).toBeNull();
   });
 
   // @s7 — the Empty state shows the size/page constraints hint.
   it('shows the constraints hint in the idle (Empty) state', async () => {
-    await render(<PdfUploadPanel state="idle" labels={labels} onChooseFile={jest.fn()} />);
+    await render(<PdfUploadPanel state="idle" onChooseFile={jest.fn()} />);
 
-    expect(screen.getByText('Max 10 MB, 20 pages')).toBeTruthy();
+    expect(screen.getByText('upload.constraintsHint')).toBeTruthy();
+  });
+
+  // Mutation-kill — default `t: (key) => key` ignores interpolation args, so a maxMb/maxPages
+  // passthrough mutant would go unnoticed by the assertion above. Spy records the exact args.
+  it('interpolates the exact maxMb/maxPages values into the constraints hint', async () => {
+    const t = jest.fn((key: string) => key);
+    mockUseLocalization.mockReturnValue({ t });
+
+    await render(<PdfUploadPanel state="idle" onChooseFile={jest.fn()} maxMb={7} maxPages={15} />);
+
+    expect(t).toHaveBeenCalledWith('upload.constraintsHint', { maxMb: 7, maxPages: 15 });
+  });
+
+  // Mutation-kill — pins the panel's default ceilings (must mirror PDF_EXTRACTION_LIMITS).
+  it('defaults constraints hint interpolation to 10 MB / 20 pages', async () => {
+    const t = jest.fn((key: string) => key);
+    mockUseLocalization.mockReturnValue({ t });
+
+    await render(<PdfUploadPanel state="idle" onChooseFile={jest.fn()} />);
+
+    expect(t).toHaveBeenCalledWith('upload.constraintsHint', { maxMb: 10, maxPages: 20 });
   });
 
   // @s7 — no error is shown in the Empty state.
   it('shows no error in the idle (Empty) state', async () => {
-    await render(<PdfUploadPanel state="idle" labels={labels} onChooseFile={jest.fn()} />);
+    await render(<PdfUploadPanel state="idle" onChooseFile={jest.fn()} />);
 
-    expect(screen.queryByText('Try again')).toBeNull();
+    expect(screen.queryByText('upload.retryAction')).toBeNull();
   });
 
   // @s5 — the Loading state renders an indeterminate progress affordance and disables the
   // choose-file control until the request resolves.
   it('renders an indeterminate progress indicator and loading copy in the loading state', async () => {
-    await render(<PdfUploadPanel state="loading" labels={labels} onChooseFile={jest.fn()} />);
+    await render(<PdfUploadPanel state="loading" onChooseFile={jest.fn()} />);
 
     expect(screen.getByTestId(PDF_UPLOAD_PANEL_LOADING_INDICATOR_TEST_ID)).toBeTruthy();
-    expect(screen.getByText('Extracting…')).toBeTruthy();
+    expect(screen.getByText('upload.loading')).toBeTruthy();
   });
 
   // @s5 — the choose-file control is disabled while loading, so the in-flight request can't be
   // interrupted by picking another file.
   it('disables the choose-file control in the loading state', async () => {
-    await render(<PdfUploadPanel state="loading" labels={labels} onChooseFile={jest.fn()} />);
+    await render(<PdfUploadPanel state="loading" onChooseFile={jest.fn()} />);
 
-    expect(screen.getByRole('button', { name: 'Choose a PDF', disabled: true })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'upload.chooseFile', disabled: true })).toBeTruthy();
   });
 
   // @s16 (WCAG 4.1.3) — RN's `accessibilityLiveRegion` is Android/Web-only, but it's a first,
   // cheap signal that the visible loading copy is a live region, not just static text.
   it('exposes a polite live region on the loading text', async () => {
-    await render(<PdfUploadPanel state="loading" labels={labels} onChooseFile={jest.fn()} />);
+    await render(<PdfUploadPanel state="loading" onChooseFile={jest.fn()} />);
 
-    expect(screen.getByText('Extracting…').props.accessibilityLiveRegion).toBe('polite');
+    expect(screen.getByText('upload.loading').props.accessibilityLiveRegion).toBe('polite');
   });
 
   // @s16 — same iOS-parity gap `login-form.tsx` already documents: `accessibilityLiveRegion` has
@@ -72,14 +96,14 @@ describe('PdfUploadPanel', () => {
     const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
     announceSpy.mockClear();
 
-    const { rerender } = await render(<PdfUploadPanel state="idle" labels={labels} onChooseFile={jest.fn()} />);
+    const { rerender } = await render(<PdfUploadPanel state="idle" onChooseFile={jest.fn()} />);
     expect(announceSpy).not.toHaveBeenCalled();
 
     await act(async () => {
-      rerender(<PdfUploadPanel state="loading" labels={labels} onChooseFile={jest.fn()} />);
+      rerender(<PdfUploadPanel state="loading" onChooseFile={jest.fn()} />);
     });
 
-    await waitFor(() => expect(announceSpy).toHaveBeenCalledWith(labels.loading));
+    await waitFor(() => expect(announceSpy).toHaveBeenCalledWith('upload.loading'));
 
     announceSpy.mockRestore();
   });
@@ -89,7 +113,6 @@ describe('PdfUploadPanel', () => {
     await render(
       <PdfUploadPanel
         state="content"
-        labels={labels}
         onChooseFile={jest.fn()}
         filename="notes.pdf"
         pageCount={12}
@@ -107,11 +130,11 @@ describe('PdfUploadPanel', () => {
   // coherent "File: notes.pdf" stop instead of two disconnected "File" / "notes.pdf" stops.
   it('groups the filename and page-count summary rows into one accessible label each', async () => {
     await render(
-      <PdfUploadPanel state="content" labels={labels} onChooseFile={jest.fn()} filename="notes.pdf" pageCount={12} imageCount={3} />,
+      <PdfUploadPanel state="content" onChooseFile={jest.fn()} filename="notes.pdf" pageCount={12} imageCount={3} />,
     );
 
-    expect(screen.getByLabelText('File: notes.pdf')).toBeTruthy();
-    expect(screen.getByLabelText('Pages: 12')).toBeTruthy();
+    expect(screen.getByLabelText('upload.filenameLabel: notes.pdf')).toBeTruthy();
+    expect(screen.getByLabelText('upload.pageCountLabel: 12')).toBeTruthy();
   });
 
   // N5 — the image-count row uses the wiring layer's already-pluralized announcement
@@ -120,7 +143,6 @@ describe('PdfUploadPanel', () => {
     await render(
       <PdfUploadPanel
         state="content"
-        labels={labels}
         onChooseFile={jest.fn()}
         filename="notes.pdf"
         pageCount={12}
@@ -136,10 +158,10 @@ describe('PdfUploadPanel', () => {
   // rather than staying two disconnected stops.
   it('falls back to a composed label/value announcement when imageCountAnnouncement is omitted', async () => {
     await render(
-      <PdfUploadPanel state="content" labels={labels} onChooseFile={jest.fn()} filename="notes.pdf" pageCount={12} imageCount={3} />,
+      <PdfUploadPanel state="content" onChooseFile={jest.fn()} filename="notes.pdf" pageCount={12} imageCount={3} />,
     );
 
-    expect(screen.getByLabelText('Images: 3')).toBeTruthy();
+    expect(screen.getByLabelText('upload.imageCountLabel: 3')).toBeTruthy();
   });
 
   // @s6 — the Content state exposes a continue affordance that invokes onContinue when pressed.
@@ -148,7 +170,6 @@ describe('PdfUploadPanel', () => {
     await render(
       <PdfUploadPanel
         state="content"
-        labels={labels}
         onChooseFile={jest.fn()}
         filename="notes.pdf"
         pageCount={12}
@@ -157,7 +178,7 @@ describe('PdfUploadPanel', () => {
       />,
     );
 
-    fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
+    fireEvent.press(screen.getByRole('button', { name: 'upload.continue' }));
 
     expect(onContinue).toHaveBeenCalledTimes(1);
   });
@@ -165,7 +186,7 @@ describe('PdfUploadPanel', () => {
   // The Content state does not show the loading affordance.
   it('does not render the loading indicator in the content state', async () => {
     await render(
-      <PdfUploadPanel state="content" labels={labels} onChooseFile={jest.fn()} filename="notes.pdf" pageCount={1} imageCount={0} />,
+      <PdfUploadPanel state="content" onChooseFile={jest.fn()} filename="notes.pdf" pageCount={1} imageCount={0} />,
     );
 
     expect(screen.queryByTestId(PDF_UPLOAD_PANEL_LOADING_INDICATOR_TEST_ID)).toBeNull();
@@ -177,7 +198,6 @@ describe('PdfUploadPanel', () => {
     await render(
       <PdfUploadPanel
         state="error"
-        labels={labels}
         onChooseFile={jest.fn()}
         errorMessage="This PDF has too many pages (max 20)"
       />,
@@ -185,14 +205,14 @@ describe('PdfUploadPanel', () => {
 
     const errorText = screen.getByText('This PDF has too many pages (max 20)');
     expect(errorText.parent?.props.accessibilityRole).toBe('alert');
-    expect(screen.getByRole('button', { name: 'Try again' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'upload.retryAction' })).toBeTruthy();
   });
 
   // @s16 (WCAG 4.1.3) — the error banner text is also an assertive live region (Android/Web),
   // mirroring `login-form.tsx`'s established error-banner pattern.
   it('exposes an assertive live region on the error banner text', async () => {
     await render(
-      <PdfUploadPanel state="error" labels={labels} onChooseFile={jest.fn()} errorMessage="Network error" />,
+      <PdfUploadPanel state="error" onChooseFile={jest.fn()} errorMessage="Network error" />,
     );
 
     expect(screen.getByText('Network error').props.accessibilityLiveRegion).toBe('assertive');
@@ -205,7 +225,7 @@ describe('PdfUploadPanel', () => {
     announceSpy.mockClear();
 
     await render(
-      <PdfUploadPanel state="error" labels={labels} onChooseFile={jest.fn()} errorMessage="Network error" />,
+      <PdfUploadPanel state="error" onChooseFile={jest.fn()} errorMessage="Network error" />,
     );
 
     expect(announceSpy).toHaveBeenCalledWith('Network error');
@@ -221,7 +241,7 @@ describe('PdfUploadPanel', () => {
     announceSpy.mockClear();
 
     const { rerender } = await render(
-      <PdfUploadPanel state="error" labels={labels} onChooseFile={jest.fn()} errorMessage="Network error" />,
+      <PdfUploadPanel state="error" onChooseFile={jest.fn()} errorMessage="Network error" />,
     );
     expect(announceSpy).toHaveBeenCalledWith('Network error');
     announceSpy.mockClear();
@@ -230,7 +250,6 @@ describe('PdfUploadPanel', () => {
       rerender(
         <PdfUploadPanel
           state="error"
-          labels={labels}
           onChooseFile={jest.fn()}
           errorMessage="This PDF has too many pages (max 20)"
         />,
@@ -248,14 +267,13 @@ describe('PdfUploadPanel', () => {
     await render(
       <PdfUploadPanel
         state="error"
-        labels={labels}
         onChooseFile={jest.fn()}
         errorMessage="Network error"
         onRetry={onRetry}
       />,
     );
 
-    fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
+    fireEvent.press(screen.getByRole('button', { name: 'upload.retryAction' }));
 
     expect(onRetry).toHaveBeenCalledTimes(1);
   });
@@ -264,16 +282,16 @@ describe('PdfUploadPanel', () => {
   // available; the choose-file control is not disabled by an error.
   it('keeps the choose-file control enabled in the error state', async () => {
     await render(
-      <PdfUploadPanel state="error" labels={labels} onChooseFile={jest.fn()} errorMessage="Network error" />,
+      <PdfUploadPanel state="error" onChooseFile={jest.fn()} errorMessage="Network error" />,
     );
 
-    expect(screen.getByRole('button', { name: 'Choose a PDF', disabled: false })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'upload.chooseFile', disabled: false })).toBeTruthy();
   });
 
   // The Error state does not show the loading affordance.
   it('does not render the loading indicator in the error state', async () => {
     await render(
-      <PdfUploadPanel state="error" labels={labels} onChooseFile={jest.fn()} errorMessage="Network error" />,
+      <PdfUploadPanel state="error" onChooseFile={jest.fn()} errorMessage="Network error" />,
     );
 
     expect(screen.queryByTestId(PDF_UPLOAD_PANEL_LOADING_INDICATOR_TEST_ID)).toBeNull();
@@ -288,14 +306,13 @@ describe('PdfUploadPanel', () => {
     await render(
       <PdfUploadPanel
         state="error"
-        labels={labels}
         onChooseFile={jest.fn()}
         errorMessage="Choose a smaller file"
         canRetry={false}
       />,
     );
 
-    expect(screen.queryByRole('button', { name: 'Try again' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'upload.retryAction' })).toBeNull();
   });
 
   // Mutation-kill guard (review round-1 Part B #1) — the existing "shown when idle" tests above
@@ -306,7 +323,6 @@ describe('PdfUploadPanel', () => {
     await render(
       <PdfUploadPanel
         state={state}
-        labels={labels}
         onChooseFile={jest.fn()}
         filename="notes.pdf"
         pageCount={1}
@@ -315,18 +331,18 @@ describe('PdfUploadPanel', () => {
       />,
     );
 
-    expect(screen.queryByText('Max 10 MB, 20 pages')).toBeNull();
+    expect(screen.queryByText('upload.constraintsHint')).toBeNull();
   });
 
   // Mutation-kill guard (review round-1 Part B #1) — same gap for the content summary: the
   // existing "shown in content" tests never assert its absence in the other three states.
   it.each(['idle', 'loading', 'error'] as const)('does not show the content summary in the %s state', async (state) => {
     await render(
-      <PdfUploadPanel state={state} labels={labels} onChooseFile={jest.fn()} errorMessage="Network error" />,
+      <PdfUploadPanel state={state} onChooseFile={jest.fn()} errorMessage="Network error" />,
     );
 
-    expect(screen.queryByText('File')).toBeNull();
-    expect(screen.queryByText('Pages')).toBeNull();
-    expect(screen.queryByText('Images')).toBeNull();
+    expect(screen.queryByText('upload.filenameLabel')).toBeNull();
+    expect(screen.queryByText('upload.pageCountLabel')).toBeNull();
+    expect(screen.queryByText('upload.imageCountLabel')).toBeNull();
   });
 });

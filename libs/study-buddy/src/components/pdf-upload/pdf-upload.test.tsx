@@ -181,10 +181,8 @@ describe('PdfUpload', () => {
     expect(screen.getByText('upload.constraintsHint')).toBeTruthy();
   });
 
-  // Mutation-kill guard (review round-1 Part B #6) — the default `t: (key) => key` mock ignores
-  // its interpolation argument entirely, so a `BYTES_PER_MB`/`maxSizeBytes / BYTES_PER_MB` mutant
-  // (e.g. `*` instead of `/`) would go unnoticed by the assertion above. A `t` spy that records
-  // its call args proves the actual interpolated `maxMb` value, not just that `t()` was invoked.
+  // Mutation-kill — wiring must pass live PDF_EXTRACTION_LIMITS into the panel (not stale
+  // literals). Panel interpolates via t(); spy proves the exact maxMb/maxPages values.
   it('interpolates the exact maxMb/maxPages values into the constraints hint', async () => {
     const t = jest.fn((key: string) => key);
     mockUseLocalization.mockReturnValue(localizationValue({ t }));

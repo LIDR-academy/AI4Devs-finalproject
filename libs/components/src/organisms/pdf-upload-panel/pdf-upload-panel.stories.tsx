@@ -3,23 +3,14 @@ import { useState } from 'react';
 
 import { PdfUploadPanel, type PdfUploadPanelState } from './pdf-upload-panel';
 
-const labels = {
-  loading: 'Extracting…',
-  chooseFile: 'Choose a PDF',
-  filenameLabel: 'File',
-  pageCountLabel: 'Pages',
-  imageCountLabel: 'Images',
-  continueLabel: 'Continue',
-  constraintsHint: 'Max 10 MB, 20 pages',
-  retry: 'Try again',
-};
-
 const meta = {
   title: 'Organisms/PdfUploadPanel',
   component: PdfUploadPanel,
   args: {
     onChooseFile: () => {},
-    labels,
+    // Mirror PDF_EXTRACTION_LIMITS so Storybook idle hint matches the service ceiling.
+    maxMb: 10,
+    maxPages: 20,
   },
 } satisfies Meta<typeof PdfUploadPanel>;
 
@@ -83,7 +74,6 @@ const InteractiveRetryDemo = () => {
   return (
     <PdfUploadPanel
       state={state}
-      labels={labels}
       onChooseFile={() => {}}
       errorMessage="Something went wrong while reading your PDF"
       onRetry={() => setState('loading')}

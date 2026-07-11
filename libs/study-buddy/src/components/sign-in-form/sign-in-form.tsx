@@ -70,13 +70,6 @@ export const SignInForm = () => {
       errorMessage={errorMessage}
       emailError={emailError}
       onEmailChange={handleEmailChange}
-      labels={{
-        email: t('auth.email'),
-        password: t('auth.password'),
-        submit: t('auth.submit'),
-        signUpPrompt: t('auth.toSignUp'),
-        signingIn: t('auth.signingIn'),
-      }}
     />
   );
 };

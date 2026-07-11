@@ -129,6 +129,9 @@ importers:
       '@helsoft/hooks':
         specifier: workspace:*
         version: link:../hooks
+      '@helsoft/localization':
+        specifier: workspace:*
+        version: link:../localization
     devDependencies:
       '@storybook/react-native-web-vite':
         specifier: ^10.2.9

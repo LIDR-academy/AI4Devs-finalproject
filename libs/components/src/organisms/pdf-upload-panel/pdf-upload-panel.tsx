@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { AccessibilityInfo, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { useLocalization } from '@helsoft/localization';
 import { Button } from '../../atoms/button/button';
 import { Card } from '../../atoms/card/card';
 import { ProgressIndicator } from '../../atoms/progress-indicator/progress-indicator';
@@ -11,28 +12,17 @@ import { ProgressIndicator } from '../../atoms/progress-indicator/progress-indic
  * message. */
 export type PdfUploadPanelState = 'idle' | 'loading' | 'content' | 'error';
 
-export type PdfUploadPanelLabels = {
-  /** Progress copy shown while the loading state is active, e.g. "Extracting…". */
-  loading: string;
-  /** The persistent choose-file control's label, e.g. "Choose a PDF". */
-  chooseFile: string;
-  filenameLabel: string;
-  pageCountLabel: string;
-  imageCountLabel: string;
-  continueLabel: string;
-  /** Empty-state hint listing the max size/page constraints (@s7). Already-interpolated by the
-   * wiring layer — this component just renders it. */
-  constraintsHint: string;
-  /** The Error-state retry affordance's label (@s8-@s13), e.g. "Try again". */
-  retry: string;
-};
-
 export type PdfUploadPanelProps = {
   state: PdfUploadPanelState;
-  labels: PdfUploadPanelLabels;
   /** Picks a (new) file — disabled while `state` is 'loading' (@s5); stays enabled in every other
    * state, including 'error', so the panel is always "usable again". */
   onChooseFile: () => void;
+  /** Max file size in MB for the idle constraints hint. Default mirrors `PDF_EXTRACTION_LIMITS`;
+   * wiring should pass the live constant so the hint never drifts from the service ceiling. */
+  maxMb?: number;
+  /** Max page count for the idle constraints hint. Default mirrors `PDF_EXTRACTION_LIMITS`;
+   * wiring should pass the live constant so the hint never drifts from the service ceiling. */
+  maxPages?: number;
   /** Content-state summary fields (@s6). */
   filename?: string;
   pageCount?: number;
@@ -60,12 +50,13 @@ export const PDF_UPLOAD_PANEL_LOADING_INDICATOR_TEST_ID = 'pdf-upload-panel-load
 
 /**
  * PdfUploadPanel — presentational organism, all 4 UI states (Empty/Loading/Content/Error).
- * Stateless: driven entirely by props, composed from existing atoms (Card/Button/
- * ProgressIndicator) — no ad-hoc UI, no hooks, no services.
+ * Stateless UI: driven by props + `useLocalization` for chrome copy (`upload.*` keys).
+ * Error / image-count announcement strings stay injected by the wiring layer.
  */
 export const PdfUploadPanel = ({
   state,
-  labels,
+  maxMb = 10,
+  maxPages = 20,
   onChooseFile,
   filename,
   pageCount,
@@ -76,6 +67,7 @@ export const PdfUploadPanel = ({
   onRetry,
   canRetry = true,
 }: PdfUploadPanelProps) => {
+  const { t } = useLocalization();
   const isLoading = state === 'loading';
 
   // @s16 (WCAG 4.1.3) — accessibilityLiveRegion (below, on the visible text nodes) only reaches
@@ -83,8 +75,8 @@ export const PdfUploadPanel = ({
   // AccessibilityInfo call fired directly on the transition, mirroring `login-form.tsx`'s
   // established pattern for its own loading/error announcements.
   useEffect(() => {
-    if (isLoading) AccessibilityInfo.announceForAccessibility(labels.loading);
-  }, [isLoading, labels.loading]);
+    if (isLoading) AccessibilityInfo.announceForAccessibility(t('upload.loading'));
+  }, [isLoading, t]);
 
   useEffect(() => {
     if (errorMessage) AccessibilityInfo.announceForAccessibility(errorMessage);
@@ -94,39 +86,46 @@ export const PdfUploadPanel = ({
     <Card>
       <View style={styles.root}>
         <Button disabled={isLoading} onPress={onChooseFile}>
-          {labels.chooseFile}
+          {t('upload.chooseFile')}
         </Button>
 
-        {state === 'idle' ? <Text style={styles.hintText}>{labels.constraintsHint}</Text> : null}
+        {state === 'idle' ? (
+          <Text style={styles.hintText}>
+            {t('upload.constraintsHint', {
+              maxMb,
+              maxPages,
+            })}
+          </Text>
+        ) : null}
 
         {isLoading ? (
           <View testID={PDF_UPLOAD_PANEL_LOADING_INDICATOR_TEST_ID} style={styles.row}>
             <ProgressIndicator variant="circular" />
             <Text style={styles.loadingText} accessibilityLiveRegion="polite">
-              {labels.loading}
+              {t('upload.loading')}
             </Text>
           </View>
         ) : null}
 
         {state === 'content' ? (
           <View style={styles.summary}>
-            <View style={styles.summaryRow} accessible accessibilityLabel={`${labels.filenameLabel}: ${filename}`}>
-              <Text style={styles.summaryLabel}>{labels.filenameLabel}</Text>
+            <View style={styles.summaryRow} accessible accessibilityLabel={`${t('upload.filenameLabel')}: ${filename}`}>
+              <Text style={styles.summaryLabel}>{t('upload.filenameLabel')}</Text>
               <Text style={styles.summaryValue}>{filename}</Text>
             </View>
-            <View style={styles.summaryRow} accessible accessibilityLabel={`${labels.pageCountLabel}: ${pageCount}`}>
-              <Text style={styles.summaryLabel}>{labels.pageCountLabel}</Text>
+            <View style={styles.summaryRow} accessible accessibilityLabel={`${t('upload.pageCountLabel')}: ${pageCount}`}>
+              <Text style={styles.summaryLabel}>{t('upload.pageCountLabel')}</Text>
               <Text style={styles.summaryValue}>{pageCount}</Text>
             </View>
             <View
               style={styles.summaryRow}
               accessible
-              accessibilityLabel={imageCountAnnouncement ?? `${labels.imageCountLabel}: ${imageCount}`}
+              accessibilityLabel={imageCountAnnouncement ?? `${t('upload.imageCountLabel')}: ${imageCount}`}
             >
-              <Text style={styles.summaryLabel}>{labels.imageCountLabel}</Text>
+              <Text style={styles.summaryLabel}>{t('upload.imageCountLabel')}</Text>
               <Text style={styles.summaryValue}>{imageCount}</Text>
             </View>
-            <Button onPress={onContinue}>{labels.continueLabel}</Button>
+            <Button onPress={onContinue}>{t('upload.continue')}</Button>
           </View>
         ) : null}
 
@@ -135,7 +134,7 @@ export const PdfUploadPanel = ({
             <Text style={styles.errorBannerText} accessibilityLiveRegion="assertive">
               {errorMessage}
             </Text>
-            {canRetry ? <Button onPress={onRetry}>{labels.retry}</Button> : null}
+            {canRetry ? <Button onPress={onRetry}>{t('upload.retryAction')}</Button> : null}
           </View>
         ) : null}
       </View>

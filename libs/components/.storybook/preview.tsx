@@ -3,6 +3,7 @@
 import '../src/theme/unistyles';
 
 import type { Decorator, Preview } from '@storybook/react-native-web-vite';
+import { LocalizationProvider } from '@helsoft/localization';
 import { useEffect } from 'react';
 import { UnistylesRuntime } from 'react-native-unistyles';
 
@@ -25,6 +26,13 @@ const withUnistylesTheme: Decorator = (Story, context) => {
 
   return <Story />;
 };
+
+/** Organisms that call `useLocalization` need a provider; `initialLocale` skips AsyncStorage. */
+const withLocalization: Decorator = (Story) => (
+  <LocalizationProvider initialLocale="en">
+    <Story />
+  </LocalizationProvider>
+);
 
 const preview: Preview = {
   parameters: {
@@ -52,7 +60,7 @@ const preview: Preview = {
   initialGlobals: {
     theme: 'light',
   },
-  decorators: [withUnistylesTheme],
+  decorators: [withLocalization, withUnistylesTheme],
 };
 
 export default preview;

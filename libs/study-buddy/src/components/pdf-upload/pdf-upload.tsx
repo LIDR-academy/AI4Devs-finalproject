@@ -93,19 +93,8 @@ export const PdfUpload = () => {
       errorMessage={error ? t(UPLOAD_ERROR_KEYS[error]) : undefined}
       onRetry={retry}
       canRetry={computeCanRetry(error)}
-      labels={{
-        chooseFile: t('upload.chooseFile'),
-        loading: t('upload.loading'),
-        filenameLabel: t('upload.filenameLabel'),
-        pageCountLabel: t('upload.pageCountLabel'),
-        imageCountLabel: t('upload.imageCountLabel'),
-        continueLabel: t('upload.continue'),
-        constraintsHint: t('upload.constraintsHint', {
-          maxMb: PDF_EXTRACTION_LIMITS.maxSizeBytes / BYTES_PER_MB,
-          maxPages: PDF_EXTRACTION_LIMITS.maxPages,
-        }),
-        retry: t('upload.retryAction'),
-      }}
+      maxMb={PDF_EXTRACTION_LIMITS.maxSizeBytes / BYTES_PER_MB}
+      maxPages={PDF_EXTRACTION_LIMITS.maxPages}
     />
   );
 };

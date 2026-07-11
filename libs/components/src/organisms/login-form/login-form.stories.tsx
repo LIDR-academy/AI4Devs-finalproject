@@ -2,21 +2,12 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 
 import { LoginForm } from './login-form';
 
-const labels = {
-  email: 'Email',
-  password: 'Password',
-  submit: 'Log in',
-  signUpPrompt: 'No account? Sign up',
-  signingIn: 'Signing in…',
-};
-
 const meta = {
   title: 'Organisms/LoginForm',
   component: LoginForm,
   args: {
     onSubmit: () => {},
     onNavigateToSignUp: () => {},
-    labels,
   },
 } satisfies Meta<typeof LoginForm>;
 

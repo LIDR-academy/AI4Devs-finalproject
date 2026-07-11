@@ -2,25 +2,16 @@ import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
+import { useLocalization } from '@helsoft/localization';
 import { Button } from '../../atoms/button/button';
 import { ProgressIndicator } from '../../atoms/progress-indicator/progress-indicator';
 import { TextField } from '../../molecules/text-field/text-field';
-
-export type LoginFormLabels = {
-  email: string;
-  password: string;
-  submit: string;
-  signUpPrompt: string;
-  /** Announced to assistive tech while isSubmitting (@s3, WCAG 4.1.3) — not shown visually. */
-  signingIn: string;
-};
 
 export type LoginFormProps = {
   onSubmit: (credentials: { email: string; password: string }) => void;
   /** True while AuthService.signIn is in flight — drives the Loading state (@s3). */
   isSubmitting?: boolean;
   onNavigateToSignUp?: () => void;
-  labels: LoginFormLabels;
   /**
    * Auth-level failure banner (invalid_credentials / network_error, @s5/@s6). The form stays
    * editable and submit stays enabled once fields are non-empty — retry is just re-submitting.
@@ -46,19 +37,19 @@ export const LOADING_INDICATOR_TEST_ID = 'login-form-loading-indicator';
 
 /**
  * LoginForm — presentational organism (Content + Loading states). Pure/controlled:
- * owns only the local field values, reports submissions up via `onSubmit`. All copy
- * comes in through `labels` so the component stays locale-agnostic.
+ * owns only the local field values, reports submissions up via `onSubmit`.
+ * Chrome copy comes from `useLocalization` (`auth.*` keys); error/field messages stay injected.
  */
 export const LoginForm = ({
   onSubmit,
   isSubmitting = false,
   onNavigateToSignUp,
-  labels,
   errorMessage,
   emailError,
   passwordError,
   onEmailChange,
 }: LoginFormProps) => {
+  const { t } = useLocalization();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   // Empty state (@s8): a pristine form (either field still blank) keeps submit disabled.
@@ -75,9 +66,9 @@ export const LoginForm = ({
   // needs this imperative call fired directly on the isSubmitting transition (WCAG 4.1.3).
   useEffect(() => {
     if (isSubmitting) {
-      AccessibilityInfo.announceForAccessibility(labels.signingIn);
+      AccessibilityInfo.announceForAccessibility(t('auth.signingIn'));
     }
-  }, [isSubmitting, labels.signingIn]);
+  }, [isSubmitting, t]);
 
   // Same iOS-parity need for the auth-error banner (@s12, WCAG 4.1.3): the banner's own
   // accessibilityLiveRegion covers Android/Web only.
@@ -97,8 +88,8 @@ export const LoginForm = ({
         </View>
       ) : null}
       <TextField
-        label={labels.email}
-        accessibilityLabel={labels.email}
+        label={t('auth.email')}
+        accessibilityLabel={t('auth.email')}
         value={email}
         onChangeText={handleEmailChange}
         disabled={isSubmitting}
@@ -110,8 +101,8 @@ export const LoginForm = ({
         accessibilityHint={emailError}
       />
       <TextField
-        label={labels.password}
-        accessibilityLabel={labels.password}
+        label={t('auth.password')}
+        accessibilityLabel={t('auth.password')}
         value={password}
         onChangeText={setPassword}
         disabled={isSubmitting}
@@ -126,20 +117,20 @@ export const LoginForm = ({
           disabled={isSubmitting || isPristine || hasFieldError}
           onPress={() => onSubmit({ email, password })}
         >
-          {labels.submit}
+          {t('auth.submit')}
         </Button>
         {isSubmitting ? (
           <View testID={LOADING_INDICATOR_TEST_ID}>
             <ProgressIndicator variant="circular" size={SUBMIT_SPINNER_SIZE} thickness={SUBMIT_SPINNER_THICKNESS} />
             <Text accessibilityLiveRegion="polite" style={styles.visuallyHidden}>
-              {labels.signingIn}
+              {t('auth.signingIn')}
             </Text>
           </View>
         ) : null}
       </View>
       {onNavigateToSignUp ? (
         <Button variant="text" onPress={onNavigateToSignUp}>
-          {labels.signUpPrompt}
+          {t('auth.toSignUp')}
         </Button>
       ) : null}
     </View>

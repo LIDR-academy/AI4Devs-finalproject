@@ -17,7 +17,8 @@
     "mutation": "stryker run"
   },
   "dependencies": {
-    "@helsoft/hooks": "workspace:*"
+    "@helsoft/hooks": "workspace:*",
+    "@helsoft/localization": "workspace:*"
   },
   "peerDependencies": {
     "react": "*",
