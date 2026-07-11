@@ -56,6 +56,7 @@ export const OpenEnded = ({
       <Text style={styles.prompt}>{prompt}</Text>
       <TextField
         accessibilityLabel={labels.answerInput}
+        accessibilityState={{ disabled: locked }}
         value={draft}
         maxLength={maxLength}
         disabled={locked}

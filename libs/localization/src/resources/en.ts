@@ -99,6 +99,14 @@ export const en = {
         unavailable: 'This activity is unavailable',
         blankInput: 'Fill in the blank',
       },
+      openEnded: {
+        submit: 'Submit',
+        yourAnswer: 'Your answer',
+        modelAnswer: 'Model answer',
+        explanationHeading: 'Why',
+        unavailable: 'This activity is unavailable',
+        answerInput: 'Your response',
+      },
     },
   },
 };

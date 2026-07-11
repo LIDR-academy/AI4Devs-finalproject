@@ -58,6 +58,14 @@ const FILL_IN_THE_BLANK_ACTIVITY_DIR = resolve(
   'libs/activities/src/organisms/fill-in-the-blank',
 );
 /**
+ * activity-open-ended, task-6/@s8 — OpenEndedActivity chrome (`t('activity.openEnded.*')`)
+ * needs the same missing-key guard. Keys live on the study-buddy wrapper (organism takes labels).
+ */
+const OPEN_ENDED_ACTIVITY_DIR = resolve(
+  REPO_ROOT,
+  'libs/study-buddy/src/components/open-ended-activity',
+);
+/**
  * score-results-summary, task-7/@s1 — LessonResults calls `t('results.score'/'results.scorePercent'
  * /'results.retake'/'results.backHome')`; same missing-key guard as the components above. Moved
  * from libs/study-buddy/src/components/lesson-results for the same reason as above.
@@ -144,6 +152,7 @@ const KEY_EXISTENCE_DIRS: Array<[name: string, dir: string]> = [
   ['multiple-choice-activity', MULTIPLE_CHOICE_ACTIVITY_DIR],
   ['matching-activity', MATCHING_ACTIVITY_DIR],
   ['fill-in-the-blank-activity', FILL_IN_THE_BLANK_ACTIVITY_DIR],
+  ['open-ended-activity', OPEN_ENDED_ACTIVITY_DIR],
   ['lesson-results', LESSON_RESULTS_DIR],
 ];
 

@@ -1,7 +1,9 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { AccessibilityInfo, Platform } from 'react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { layout } from '@helsoft/components';
 
 import { OpenEnded } from './open-ended';
 import type { OpenEndedLabels } from './open-ended.types';
@@ -234,5 +236,78 @@ describe('OpenEnded', () => {
     expect(source).toMatch(/from '@helsoft\/components'/);
     expect(source).not.toMatch(/\bTextInput\b/);
     expect(source).not.toMatch(/styles\.input/);
+  });
+
+  // @s9 — accessible name on the answer input
+  it('exposes an accessible name on the answer input', async () => {
+    await render(<OpenEnded {...defaultProps} />);
+
+    expect(screen.getByLabelText(labels.answerInput)).toBeTruthy();
+  });
+
+  // @s9 — Submit meets touch-target via Button hitSlop
+  it('exposes a Submit hitSlop that reaches the touch-target token', async () => {
+    await render(<OpenEnded {...defaultProps} />);
+
+    const { hitSlop } = submitButton().props;
+    const BUTTON_MEDIUM_HEIGHT = 40;
+    expect(hitSlop.top + hitSlop.bottom + BUTTON_MEDIUM_HEIGHT).toBeGreaterThanOrEqual(
+      layout.touchTarget,
+    );
+  });
+
+  // @s9 — locked state reflected for AT
+  it('sets accessibilityState.disabled on the input when locked', async () => {
+    await render(<OpenEnded {...defaultProps} />);
+    expect(answerInput().props.accessibilityState?.disabled).not.toBe(true);
+
+    await render(
+      <OpenEnded {...defaultProps} initialSubmittedAnswer="prior" />,
+    );
+    expect(answerInput().props.accessibilityState.disabled).toBe(true);
+  });
+
+  // @s9 — model-answer reveal announced + polite live region
+  it('announces the model-answer reveal once on submit with a polite live region', async () => {
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    await render(<OpenEnded {...defaultProps} />);
+    expect(announceSpy).not.toHaveBeenCalled();
+
+    await typeAnswer('essay');
+    await pressSubmit();
+
+    await waitFor(() => expect(announceSpy).toHaveBeenCalledWith(labels.modelAnswer));
+    expect(announceSpy).toHaveBeenCalledTimes(1);
+
+    const modelHeading = screen.getByText(labels.modelAnswer);
+    expect(modelHeading.parent?.props.accessibilityLiveRegion).toBe('polite');
+
+    announceSpy.mockRestore();
+  });
+
+  // @s9 — Android relies on live region alone
+  it('does not call announceForAccessibility on Android once submitted', async () => {
+    const originalOS = Platform.OS;
+    Platform.OS = 'android';
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    await render(
+      <OpenEnded {...defaultProps} initialSubmittedAnswer="seed" />,
+    );
+
+    expect(announceSpy).not.toHaveBeenCalled();
+    expect(screen.getByText(labels.modelAnswer).parent?.props.accessibilityLiveRegion).toBe(
+      'polite',
+    );
+
+    announceSpy.mockRestore();
+    Platform.OS = originalOS;
   });
 });

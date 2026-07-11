@@ -4,40 +4,41 @@
 
 | @s | Test | File |
 |---|---|---|
-| @s6 | submitted-only shape; no isCorrect; R7 excluded | `libs/types/src/open-ended-answer.test.ts` |
-| @s6 | emits OpenEndedAnswer once, no isCorrect, `isSystemCheckedActivity` false | `open-ended-activity.test.tsx` |
+| @s6 | submitted-only shape; no isCorrect; R7 excluded | `open-ended-answer.test.ts` |
+| @s6 | emits OpenEndedAnswer once, no isCorrect | `open-ended-activity.test.tsx` |
 | @s7 | empty/whitespace prompt or modelAnswer → false | `is-open-ended-slide-valid.test.ts` |
-| @s7 | invalid slide → unavailable, no onAnswered | `open-ended-activity.test.tsx` |
-| @s1 | unanswered editable multiline; model hidden; no self-mark | `open-ended.test.tsx` |
-| @s2 | submit → lock + reveal model; no grade/self-mark | `open-ended.test.tsx` + activity |
-| @s3 | explanation with reveal | `open-ended.test.tsx` |
-| @s4 | ignore edit/resubmit; onAnswered once | organism + activity |
-| @s10 | submitEditing does not submit; newline in draft OK | `open-ended.test.tsx` |
-| design | reuses TextField (not raw TextInput chrome) | `open-ended.test.tsx` |
+| @s1–@s4,@s10 | organism Content path | `open-ended.test.tsx` |
+| design | reuses TextField | `open-ended.test.tsx` |
 
 ## Cycles — slice 1
 
-- @s6 RED type import fail → GREEN `OpenEndedSlide`/`OpenEndedAnswer` unions
-- @s7 RED missing module → GREEN `isOpenEndedSlideValid`
-- helpers RED → GREEN `isRehydratedSubmission` / `shouldShowExplanation`
-- hook RED → GREEN `useOpenEnded` draft/lock/announce
-- @s1–@s4,@s10 RED missing component → GREEN `OpenEnded` organism + barrel
-- @s2/@s4/@s6 RED missing activity → GREEN `OpenEndedActivity` wiring (`maxLength=2000`, `t()` labels placeholders)
-
-## Cycles — slice 1 review-slice fix
-
-- design RED source asserts TextField / no TextInput → GREEN swap to `TextField` multiline outlined + drop hand-rolled input styles
+- @s6 RED → GREEN types; @s7 RED → GREEN validity; helpers/hook/organism/activity wiring
+- design RED TextField assert → GREEN TextField multiline outlined
 
 ## @s → test map (slice 2)
 
 | @s | Test | File |
 |---|---|---|
-| @s5 | empty submit → reveal/lock; omit empty learner Text | `open-ended.test.tsx` |
-| @s5 | empty submit → `submittedAnswer: ''` + reveal | `open-ended-activity.test.tsx` |
-| @s7 | unavailable when prompt/modelAnswer empty/whitespace | `open-ended-activity.test.tsx` (outline) |
-| @s7 | unavailable: no prompt/input/submit | `open-ended.test.tsx` |
+| @s5 | empty submit reveal; omit empty learner Text | `open-ended.test.tsx` |
+| @s5 | `submittedAnswer: ''` | `open-ended-activity.test.tsx` |
+| @s7 | unavailable outline (prompt/modelAnswer) | `open-ended-activity.test.tsx` |
 
 ## Cycles — slice 2
 
-- @s5 RED empty learner Text after empty submit → GREEN `shouldShowLearnerAnswerBody` + omit empty body
-- @s5/@s7 activity outline locks empty-submit + invalid modelAnswer/prompt paths
+- @s5 RED empty Text → GREEN `shouldShowLearnerAnswerBody`; @s7 activity outline
+
+## @s → test map (slice 3)
+
+| @s | Test | File |
+|---|---|---|
+| @s8 | `activity.openEnded.*` key existence | `migration-coverage.test.ts` |
+| @s9 | input name, Submit hitSlop, locked AT, announce once, Android guard | `open-ended.test.tsx` |
+| @s1,@s2,@s7 | Unanswered / SubmittedWithModelAnswer / Unavailable stories | `open-ended.stories.tsx` |
+| @s1,@s2,@s4,@s5,@s10 | Playwright Interactive + static stories | `open-ended.e2e.js` |
+
+## Cycles — slice 3
+
+- @s8 RED missing keys in coverage → GREEN en/es/pt/de `openEnded` + KEY_EXISTENCE opt-in
+- @s9 RED `accessibilityState.disabled` → GREEN forward onto TextField; announce/hitSlop tests
+- stories: Unanswered / SubmittedWithModelAnswer / Unavailable / Interactive
+- e2e: unanswered, submitted, unavailable, interactive submit/empty/@s4/@s10

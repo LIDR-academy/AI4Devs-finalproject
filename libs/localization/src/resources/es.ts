@@ -94,6 +94,14 @@ export const es: TranslationResource = {
         unavailable: 'Esta actividad no está disponible',
         blankInput: 'Completa el espacio',
       },
+      openEnded: {
+        submit: 'Enviar',
+        yourAnswer: 'Tu respuesta',
+        modelAnswer: 'Respuesta modelo',
+        explanationHeading: 'Por qué',
+        unavailable: 'Esta actividad no está disponible',
+        answerInput: 'Tu respuesta',
+      },
     },
   },
 };
