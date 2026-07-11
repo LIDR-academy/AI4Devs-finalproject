@@ -1,0 +1,23 @@
+# Risks — activity-flashcard-recall
+
+| # | Risk | Type | Likelihood | Impact | Mitigation |
+|---|---|---|---|---|---|
+| R1 | R2 generation isn't built yet, so the real `FlashcardSlide` shape (whether the front lands in `content`, the answer field name `back`, optional `explanation`) may drift from this spec. | technical | M | M | Additive union change; `isFlashcardSlideValid` degrades a missing front/back to the unavailable notice instead of crashing (@s8). Field names flagged for R2 coordination; only the (thin) wrapper mapping changes if fields move. |
+| R2 | The self-mark is recorded as answered state but **must not** leak into the R7 score. A wrong `activityType`, or a future edit adding `flashcard` to `SYSTEM_CHECKED_ACTIVITY_TYPES`, would silently inflate scores. | product | L | H | This story does not touch `score-lesson.ts` or `activity-type.ts`; `flashcard` is already excluded and `score-lesson.test.ts` already asserts a `flashcard` answer with `isCorrect: true` is not counted. `FlashcardAnswer.activityType` is a literal `'flashcard'`; the type keeps the exclusion self-enforcing (@s6). |
+| R3 | Reveal/self-mark state machine (one-way reveal, one-time locked mark, no re-mark) is easy to get subtly wrong — e.g. re-mark changing the answer, or `onAnswered` firing more than once / on reveal. | technical | M | M | State pinned in the spec + covered scenario-by-scenario (@s2–@s5, incl. both switching marks and re-tapping the locked one); organism unit tests + Playwright e2e drive each transition; `onAnswered` emit-once guarded and tested; mutation testing on the guards. |
+| R4 | `FlashcardAnswer` carrying both `recalled` and a mirrored `isCorrect` could read as a code smell (duplicated boolean) or tempt a future caller to treat "recalled" as "scored-correct". | technical | L | M | Preserves the shipped *structural* `ActivityAnswer ⊆ GradedAnswer` invariant (every member shares `slideId`/`activityType`/`isCorrect`); note the invariant is only *asserted in tests* today for `MultipleChoiceAnswer` — task-1 adds the flashcard type-level check to `graded-answer.test.ts`, mirroring the existing MCQ one. Doc-comment states it is never scored; human confirmed the shape at the gate (spec.md Open decisions). |
+| R5 | Accessibility of a reveal→self-mark flow (announcing the newly-revealed answer, conveying the locked mark without color, adequate touch targets) can regress. | product | M | M | `accessibilityRole="button"` + labels on reveal/self-mark, `accessibilityState` for revealed/locked, text+icon (not color) for the confirmed mark, live-region announce on reveal, ≥ touch-target-min sizes (@s10); RN Testing Library + Playwright assertions. On-device screen-reader pass recommended (non-blocking, per shipped-activity precedent). |
+| R6 | Scope creep — adding grading, spaced-repetition, or persistence to "make it useful". | product | L | M | Non-goals restated; self-mark only, no grader; R7/R9 are separate stories this only feeds/exposes. |
+
+## Dependencies
+| Dependency | Status | Notes |
+|---|---|---|
+| `@helsoft/activities` scaffold (Storybook + Jest + Playwright + Stryker) | available | Hosts `multiple-choice/`, `fill-in-the-blank/`, `matching/`; `flashcard/` lands beside them under `src/organisms/`. |
+| `@helsoft/components` (`Card`, `Icon`, theme tokens) | available | Reused for card surface, reveal/self-mark controls, answer + explanation surfaces. |
+| `@helsoft/localization` (`useLocalization`, en/es/pt/de bundles) | available | New `activity.flashcard.*` keys added key-aligned across all four bundles; organism dir registered in `migration-coverage.test.ts` key-existence guard (task-6). |
+| `libs/types` `Slide` union + `activity-answer` | available | Extended additively (`FlashcardSlide`, `FlashcardAnswer`, `ActivityAnswer` union). |
+| `libs/types` `activity-type.ts` (`SYSTEM_CHECKED_ACTIVITY_TYPES`, `isSystemCheckedActivity`) | available — **unchanged** | Already includes `flashcard` in `ActivityType` and excludes it from scoring; no edit in this story. |
+| R7 scorer (`score-lesson.ts`) | available — **unchanged** | Already excludes flashcard (existing tests prove it); out of scope to modify here. |
+| Shipped activity precedent (`Matching` / `MatchingActivity`, `FillInTheBlank`) | available | Reference pattern for organism/hook/helpers split + thin study-buddy wiring + wrapper story. |
+| R2 generation (constructs flashcard slides) | blocked / separate story | This story only defines + defensively validates the payload shape. |
+| R4 player, R9 resume | blocked / separate stories | This story only renders one slide and exposes the answered-state R9 will persist. |
