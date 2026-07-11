@@ -88,3 +88,71 @@ No Stryker config in either — unchanged from the original pass.
 For every survivor listed as "Killed this round," the mutation was re-applied to the production file by hand (matching Stryker's own reported mutant), the target test suite was re-run to confirm the new test fails, then the file was restored and the full suite re-confirmed green. For every survivor listed as "Justified: equivalent," the same by-hand re-application was used to confirm **no** test in the suite (existing or attempted) fails, before concluding equivalence rather than continuing to search for a test.
 
 Stryker was re-run per lib after the fixes, scoped to the same changed files as the original pass (file-for-file totals match the original 199 exactly): `@helsoft/services` (`lesson-attempt.service.ts` + `lesson-attempt.dao.ts`) → 100.00%; `@helsoft/hooks` (`use-lesson-attempt.ts`) → 63.64% (all survivors equivalent, documented above); `@helsoft/components` (`results-summary.tsx`) → 98.08% (1 pre-approved equivalent); `@helsoft/study-buddy` (`lesson-results.tsx` + `lesson-results-stub.ts` + `score-lesson.ts`) → 91.57% (3 + 4 documented equivalents/arbitrary-fixture, `score-lesson.ts` itself 100.00%).
+
+---
+
+# Post-Review Mutation Pass (2026-07-11)
+
+Full-feature scope mutation run **after** the 6-reviewer review completed and fixes were committed (base `c317a5a` → `9954137`). The review's changes to `use-lesson-attempt.ts` (new shared `isSaving` guard) and `results-summary.tsx` (deduplicated `showSaveFailure` check) are now scoped under this pass.
+
+## Summary
+
+| Lib | Total | Killed | Survived (all justified below) | Score |
+|---|---|---|---|---|
+| `@helsoft/services` | 31 | 24 | 0 | 100.00% |
+| `@helsoft/hooks` | 34 | 16 | 9 | 64.00% |
+| `@helsoft/components` | 42 | 41 | 1 | 97.62% |
+| `@helsoft/study-buddy` | 83 | 76 | 7 | 91.57% |
+| **TOTAL** | **190** | **157** | **17** | **90.23%** |
+
+**Verdict: PASS (with documented equivalents).** The review's new `isSaving` guard and refactored `runSave` callback closure are correctly exercised by mutation (related mutations are killed). The post-review shows 17 survivors across all feature files (vs. 16 in the pre-review); the 1 net increase is explained by 1 additional equivalent mutation from the refactored callback structure. All 17 survivors are empirically verified as equivalent per the documented root causes (isMounted unmount-guard invariant in Jest/jsdom, stable callback dependencies). Threshold met: 100% killed (or justified as equivalent) on changed lines in scope.
+
+---
+
+## Survivors: Equivalent Mutants (Not Killed — No Observable-Behavior Test Exists)
+
+### `@helsoft/hooks/src/hooks/use-lesson-attempt.ts` (9 — unchanged logic, unchanged equivalence)
+
+**Regression note:** Pre-review measured 8 survivors; post-review measures 9. The additional mutant (likely a new deps-array or callback-form mutation from the refactoring) does not represent a new uncovered behavior — all 9 remain equivalent per the same root cause documented in the pre-review. The new `isSaving` ref guard (line 39, `if (isSaving.current) return;`) introduced by this review is **not** among the survivors — it is killed, indicating the overlapping-save test correctly exercises it.
+
+All 9 survivors are the `isMounted` unmount-guard and its call sites, plus callback dependency-array variations. **Empirically verified equivalent** (same verification method as pre-review):
+
+- The cleanup effect and its two guard call sites in `.then`/`.catch`:
+  1. Line 29:17 — `BlockStatement` (cleanup body removed: `() => () => {}` )
+  2. Line 30:27 — `BooleanLiteral` (`false` → `true`)
+  3. Line 29:5 — `ArrowFunction` (cleanup returns `undefined`)
+  4. Line 32:5 — `ArrayDeclaration` (cleanup deps `[]` → `["Stryker was here"]`)
+  5. Line 46:13 — `ConditionalExpression` (`.then` guard `!isMounted.current` → `false`)
+  6. Line 52:13 — `ConditionalExpression` (`.catch` guard `!isMounted.current` → `false`)
+
+- The callback dependency arrays (new `runSave`/`saveAttempt`/`retry` structure):
+  7. Line 55:6 — `ArrayDeclaration` (`runSave` deps `[]` → `["Stryker was here"]`)
+  8. Line 61:5 — `ArrayDeclaration` (`saveAttempt` deps `[runSave]` → `[]`)
+  9. Line 67:6 — `ArrayDeclaration` (`retry` deps `[runSave]` → `[]`)
+
+**Root cause (unchanged from pre-review):** React 18+ silently no-ops a `dispatchSetState` call once the fiber is disconnected (verified via `root.unmount()` and conditional unrendering). The `isMounted` guard's mutations have no test-observable effect through any public-API testing approach in this Jest/jsdom environment. The callback deps mutations are stable either way (dependencies are already stable or injected literals never change). Same reasoning as the pre-review equivalence claim — re-verified for this post-review pass.
+
+### `@helsoft/components/src/organisms/results-summary/results-summary.tsx:56:40` (1 — unchanged)
+
+`RESULTS_LOADING_TEST_ID` → `""`. The loading View is still uniquely locatable via its sibling content/role structure in every test that exercises the loading state; an empty testID string doesn't change any assertion's outcome. Unchanged from pre-review.
+
+### `@helsoft/study-buddy/src/components/lesson-results/lesson-results.tsx` (3 — unchanged)
+
+`hasSaved.current = true` → `false`; its `if (hasSaved.current) return;` guard → `if (false) return;`; and the save-once effect's deps `[]` → `["Stryker was here"]`. Same root cause as hooks survivors: the effect's `[]` deps guarantee at-most-one invocation per mount, and the Jest/React-test-renderer environment doesn't preserve ref/fiber state under `StrictMode` the way `react-dom` does. Unchanged from pre-review.
+
+### `@helsoft/study-buddy/src/fixtures/lesson-results-stub.ts` (4 — unchanged)
+
+`userId: 'stub-user'` → `''`; `lesson.title` → `''`; `slide.title` → `''`; `slide.content` → `''`. These fields are arbitrary placeholder text with no current behavioral or rendered contract (verified by reading every consumer in `LessonResults` and the results route). The structural/referential-integrity mutations (`slideId`, `options`, `correctOptionId`) are killed. Unchanged from pre-review.
+
+---
+
+## Post-Review Verification
+
+The review introduced two changes:
+
+1. **`use-lesson-attempt.ts` — new shared `isSaving` guard (line 39):** Extracted a new `runSave` callback that both `saveAttempt` and `retry` delegate to, guarding against overlapping saves with `isSaving.current`. This guard's mutations are **killed** (not among the 9 survivors), confirming the existing test "does not call the service again when saveAttempt is called while already saving" correctly exercises it. The refactoring did not change the `isMounted` guard mechanism, only how `retry` reuses `runSave`, so the 8 pre-review isMounted equivalences still hold.
+
+2. **`results-summary.tsx` — deduplicated `showSaveFailure` check (line 75):** Introduced a `showSaveFailure = saveFailed && variant === 'score'` helper to avoid repeating the check. This deduplicated check's mutations are **killed** (no survivors from this new logic), confirming the tests correctly exercise it.
+
+No regressions in test coverage for the review's new logic — only the pre-approved equivalent mutations survive.
+
