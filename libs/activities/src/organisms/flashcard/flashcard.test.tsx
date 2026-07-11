@@ -181,13 +181,21 @@ describe('Flashcard', () => {
     expect(screen.queryByText(explainedSlide.explanation)).toBeNull();
   });
 
-  // Base unavailable-notice coverage (task-3 Goal) — task-5 hardens missing-front/back cases.
-  it('shows the unavailable notice and nothing interactive when the slide is invalid', async () => {
-    await render(<Flashcard slide={{ ...slide, back: '' }} />);
+  // @s8 — a slide missing its front or back degrades to the unavailable notice, nothing
+  // interactive, no crash, and `onAnswered` never fires.
+  it.each([
+    { missing: 'front/prompt' as const, invalidSlide: { ...slide, content: '' }, hiddenText: slide.back },
+    { missing: 'back/answer' as const, invalidSlide: { ...slide, back: '' }, hiddenText: slide.content },
+  ])('shows the unavailable notice and nothing interactive when the $missing is empty', async ({ invalidSlide, hiddenText }) => {
+    const onAnswered = jest.fn();
+
+    await render(<Flashcard slide={invalidSlide} onAnswered={onAnswered} />);
 
     expect(screen.getByText(I18N.unavailable)).toBeTruthy();
-    expect(screen.queryByText(slide.content)).toBeNull();
+    expect(screen.queryByText(hiddenText)).toBeNull();
+    expect(screen.queryByRole('button', { name: I18N.reveal })).toBeNull();
     expect(screen.queryAllByRole('button')).toHaveLength(0);
+    expect(onAnswered).not.toHaveBeenCalled();
   });
 
   // Storybook-demo support (FlashcardProps) — pre-marked / pre-revealed seeding.

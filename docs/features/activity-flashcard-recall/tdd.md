@@ -69,3 +69,33 @@ Tasks 1–4, all `status: done`.
 - `pnpm turbo run lint` for these three libs: no lint task defined for any lib workspace yet (pre-existing repo state — only `apps/app-study-buddy` has a `lint` script); nothing to run/fix here.
 - No hardcoded colors/dimensions in new files (grepped for hex/rgb — none); all user-facing chrome via `t('activity.flashcard.*')` placeholder keys (real bundle entries land in task-6).
 - No UI in this slice touches Playwright e2e (organism has no `.stories.tsx` yet — that's task-8, Slice 3), so no e2e run required for this gate.
+
+## Slice 2 — task-5: unavailable state hardening + tests
+
+| @s | Test | File |
+|---|---|---|
+| s8 | `it.each` (missing front/prompt, missing back/answer) → unavailable notice, no interactive text/back leak, zero buttons, `onAnswered` never called | `flashcard.test.tsx` |
+
+**task-5 — cycle**
+- Gap check: task-3's `use-flashcard` hook already derives `isUnavailable` from task-2's
+  `isFlashcardSlideValid` (both fields), and the organism's early-return branch already
+  rendered `labels.unavailable` with no interactive elements — but `flashcard.test.tsx` only
+  exercised the missing-*back* case (`back: ''`); missing-*front* was untested.
+- RED: replaced the single ad-hoc unavailable test with an `it.each` over both
+  `{ content: '' }` and `{ back: '' }`, asserting the notice, the non-missing field's own
+  text is still hidden (whole card degrades, not partial), zero `role="button"` elements,
+  and `onAnswered` never invoked. Verified non-vacuousness by temporarily neutering the
+  `isUnavailable` guard in `flashcard.tsx` (`if (false && isUnavailable)`) — both new cases
+  failed as expected — then reverted (no production diff).
+- GREEN: both cases pass unmodified against Slice 1's implementation; no production code
+  change needed for this task.
+- Refactor: none needed.
+
+## Gate (Slice 2)
+
+- `pnpm --filter @helsoft/activities test -- flashcard.test.tsx`: 17 tests green.
+- `pnpm --filter @helsoft/activities test`: 17 suites, 259 tests green.
+- `pnpm turbo run check-types --filter=@helsoft/activities`: clean.
+- No `lint` script on `@helsoft/activities` yet (pre-existing, same as Slice 1 gate) — nothing to run.
+- No hardcoded colors/strings in the touched files (grepped hex/rgb — none; unavailable label via `t()`).
+- No UI/story change in this slice — no e2e run required.
