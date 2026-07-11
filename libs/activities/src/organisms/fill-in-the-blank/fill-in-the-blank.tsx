@@ -68,6 +68,8 @@ export const FillInTheBlank = ({
   const resultLabel = result ? (result.isCorrect ? labels.correct : labels.incorrect) : null;
 
   useEffect(() => {
+    // Matching/MCQ: accessibilityLiveRegion is Android-only (TalkBack). Imperative
+    // announceForAccessibility covers iOS/web; skip on Android to avoid duplicate announce.
     if (!result || Platform.OS === 'android') return;
     AccessibilityInfo.announceForAccessibility(
       result.isCorrect ? labels.correct : labels.incorrect,
@@ -88,6 +90,7 @@ export const FillInTheBlank = ({
         {parts.before.length > 0 ? <Text style={styles.prompt}>{parts.before}</Text> : null}
         <TextInput
           accessibilityLabel={labels.blankInput}
+          accessibilityState={{ disabled: locked }}
           value={value}
           maxLength={maxLength}
           editable={!locked}
@@ -113,12 +116,17 @@ export const FillInTheBlank = ({
             accessibilityRole={result.isCorrect ? undefined : 'alert'}
             style={styles.bannerRow}
           >
-            <Icon
-              name={result.isCorrect ? 'check_circle' : 'cancel'}
-              size={22}
-              fill
-              color={result.isCorrect ? theme.colors.tertiary : theme.colors.error}
-            />
+            <View
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+            >
+              <Icon
+                name={result.isCorrect ? 'check_circle' : 'cancel'}
+                size={22}
+                fill
+                color={result.isCorrect ? theme.colors.tertiary : theme.colors.error}
+              />
+            </View>
             <Text
               style={styles.bannerText(result.isCorrect)}
               accessibilityLiveRegion={result.isCorrect ? 'polite' : 'assertive'}
@@ -161,6 +169,7 @@ const styles = StyleSheet.create((theme) => ({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.outline,
     minWidth: theme.spacing.s16,
+    minHeight: theme.layout.touchTarget,
     paddingVertical: theme.spacing.s1,
     flexGrow: 1,
   },

@@ -148,3 +148,11 @@ Strict Red→Green→Refactor per `.agents/rules/tdd.md`. **Slices 1–3**.
 - Tests: blank-at-start / blank-at-end omit empty Text (toJSON probe); correct does not reveal `acceptedAnswerShown`.
 - Kills ConditionalExpression + EqualityOperator on `:88`/`:99`, ConditionalExpression + LogicalOperator on `:129`.
 - Unit suite: 25 pass. No lasting production change (guards already correct).
+
+## Full-review Round 1 rework — a11y findings
+
+**Cycle 16 (B1 / M1 / M2 / m1)**
+- RED: blank minHeight, locked `accessibilityState.disabled`, decorative Icon a11y hide, ios/web Platform announce asserts.
+- GREEN: `minHeight: theme.layout.touchTarget` on blank; `accessibilityState={{ disabled: locked }}`; Icon wrapped in `accessibilityElementsHidden` + `importantForAccessibility="no-hide-descendants"`; Matching/MCQ Android-skip comment + ios/web branch tests.
+- Tests updated: ligatures via `includeHiddenElements: true` + `queryByText` null (not in a11y tree).
+- Unit: organism 29 pass; activity 13 pass.

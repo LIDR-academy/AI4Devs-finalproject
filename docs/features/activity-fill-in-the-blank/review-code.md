@@ -1,9 +1,8 @@
-# review-code — activity-fill-in-the-blank — SLICE 3
+# review-code — activity-fill-in-the-blank — FULL Round 2
 
 **Reviewer:** reviewer_code  
-**Scope:** Slice 3 only — tasks 6–9 (i18n + a11y + Storybook + Playwright e2e). Primary `@s13`, `@s14`; story/e2e coverage for `@s1`/`@s2`/`@s3`/`@s5`/`@s6`/`@s7`/`@s11`/`@s12`.  
-**Deferred (not flagged):** Slice 1/2 happy-path re-litigation.  
-**Rubric:** `.agents/rules/review-standards.md` §1 + storybook-e2e skill
+**Scope:** Full feature after Round 1 a11y fixes (B1/M1/M2/m1)  
+**Rubric:** `.agents/rules/review-standards.md` §1
 
 ## Verdict: APPROVED
 
@@ -11,33 +10,48 @@
 
 _None._
 
-## Scenario coverage (Slice 3)
+## Round 1 a11y fixes — code-quality check
 
-| Scenario | Concrete test(s) |
+| Finding | Production | Test demand | Regression? |
+|---|---|---|---|
+| B1 blank `minHeight` | `fill-in-the-blank.tsx:172` `theme.layout.touchTarget` | `:271-277` | No — token, not magic |
+| M1 `accessibilityState.disabled` | `:93` tied to `locked` | `:280-291` | No |
+| M2 decorative Icon | `:119-129` hide wrapper | `:304-318` + ligature probes | No |
+| m1 Android announce | `:71-73` comment + skip | `:389-429` android/ios/web | No |
+
+No craftsmanship regressions from the fix delta. Props/`Props` types, kebab-case, functional React unchanged.
+
+## `@s` → concrete test (verified)
+
+| Scenario | Evidence |
 |---|---|
-| @s13 | `fillInTheBlank` keys key-aligned in en/es/pt/de; wrapper `t('activity.fillInTheBlank.*')` (`fill-in-the-blank-activity.tsx:32-39`); `migration-coverage.test.ts` dir + key existence |
-| @s14 | organism unit: blank `accessibilityLabel`; Submit hitSlop≥touchTarget; text+icon; polite/assertive live region; alert on incorrect; no announce unanswered; transition announce; Android skip (`fill-in-the-blank.test.tsx:208-326`) |
-| @s1 | stories `Unanswered`; e2e unanswered content; organism unanswered unit (prior) |
-| @s2 | stories `Correct` + Interactive e2e matching → correct+icon |
-| @s3 | stories `Incorrect` + Interactive e2e wrong → incorrect+reveal `Paris` |
-| @s5 | Interactive e2e: `readonly` + value lock + force resubmit stays correct |
-| @s6 | Interactive e2e: empty Submit → incorrect + reveal |
-| @s7 | Interactive e2e: Enter → correct; organism Enter+button unit (prior) |
-| @s11 | stories `Unavailable` + e2e unavailable notice |
-| @s12 | stories `MissingBlank` + e2e unavailable notice |
+| @s1 | `fill-in-the-blank.test.tsx:61-77`; e2e unanswered |
+| @s2 | grader correct; organism lock+banner; activity lock; e2e Correct/Interactive |
+| @s3 | grader `[0]`; organism reveal+lock; activity wrong; e2e Incorrect/Interactive |
+| @s4 | organism `:148-165`; activity explanation |
+| @s5 | organism ignores edit/resubmit; activity `onAnswered` once; e2e readonly |
+| @s6 | grader empty; organism empty Submit; activity empty; e2e empty |
+| @s7 | organism button+Enter; activity Enter; e2e Enter |
+| @s8 | `normalizeFillInAnswer` + grader `it.each` (`grade-fill-in-the-blank.test.ts:66-78`) |
+| @s9 | grader non-first; activity synonym payload |
+| @s10 | grader `toEqual`; activity `onAnswered` payloads |
+| @s11 | `isFillInTheBlankSlideValid` empty list/entry; organism+activity unavailable; e2e |
+| @s12 | valid=false missing/multi; organism+activity unavailable; e2e MissingBlank |
+| @s13 | `fillInTheBlank` keys; wrapper `t()` (`fill-in-the-blank-activity.tsx:32-39`); migration coverage |
+| @s14 | organism a11y unit (name, touchTarget, disabled state, text+hidden icon, live region, announce, Android skip) |
 
 ## TDD / craftsmanship
 
-- `tdd.md` Cycles 11–14: RED→GREEN for i18n coverage keys, a11y announce/live-region, e2e `@s5` readonly (not disabled).
-- Labels injected; organism has no hardcoded chrome. Sibling-aligned with Matching (announce + live region + Android skip; Button hitSlop).
-- Stories: Unanswered / Correct / Incorrect / Unavailable / MissingBlank / Interactive — Empty+Error via unavailable.
-- E2E: iframe + text locators; slug `organisms-fillintheblank` mirrors MCQ `organisms-multiplechoice`.
-- Functional React; `FillInTheBlankProps` / `FillInTheBlankActivityProps`; kebab-case; no `console.log` / TODO / `.only`/`.skip`.
+- `tdd.md` Cycles 1–16 logged (incl. Round 1 a11y Cycle 16).
+- No production code without a demanding test; no `console.log` / TODO / `.only`/`.skip`.
+- Error contract: grader throws on invalid; wrapper guards via `isFillInTheBlankSlideValid`.
+- Barrels export organism + activity + grader.
 
-## Gates (re-run from worktree)
+## Gates (Round 2 re-run)
 
-- `pnpm --filter @helsoft/activities exec jest … fill-in-the-blank.test.tsx` — **22 pass**
-- `pnpm --filter @helsoft/localization exec jest … migration-coverage.test.ts` — **8 pass**
-- `pnpm --filter @helsoft/activities exec playwright test … fill-in-the-blank.e2e.js --reporter=list` — **11 pass**
-- `pnpm turbo run check-types --filter=@helsoft/activities --filter=@helsoft/localization --filter=@helsoft/study-buddy` — green
+- `@helsoft/activities` organism unit: **29 pass**
+- `@helsoft/study-buddy` grader + activity: **29 pass**
+- `@helsoft/localization` migration-coverage: **8 pass**
+- Playwright `fill-in-the-blank.e2e.js`: **11 pass**
+- `pnpm turbo run check-types --filter=@helsoft/{activities,study-buddy}` (`--force`): green
 - lint: no package lint scripts (turbo no-op)

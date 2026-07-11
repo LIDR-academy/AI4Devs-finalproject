@@ -1,9 +1,9 @@
-# review-design — activity-fill-in-the-blank — SLICE 3
+# review-design — activity-fill-in-the-blank — FULL review Round 2
 
 **Reviewer:** reviewer_design  
-**Scope:** Slice 3 only — tasks 6–9 (i18n labels, a11y chrome, Storybook 4 UI states, e2e wiring)  
+**Scope:** `libs/activities/src/organisms/fill-in-the-blank/` (post Round 1 a11y fixes)  
 **Rubric:** `.agents/rules/review-standards.md` §2 + `.agents/rules/atomic-design.mdc`  
-**Siblings:** `matching/matching.tsx` + `matching.stories.tsx`, `multiple-choice/multiple-choice.tsx` + `multiple-choice.stories.tsx`
+**Siblings:** Matching + MultipleChoice
 
 ## Verdict: APPROVED
 
@@ -11,14 +11,19 @@
 
 _None._
 
-## Checks
+## Round 2 a11y-fix design checks
 
 | Check | Result |
 |---|---|
-| Stories exist + 4 UI states | Pass — `fill-in-the-blank.stories.tsx`: `Unanswered` (Content), `Correct`, `Incorrect`, `Unavailable` (Empty/Error), plus `MissingBlank` (self-detect) + `Interactive` for e2e (`:56-115`). |
-| Story title/args mirror siblings | Pass — `title: 'Organisms/FillInTheBlank'` (`:40`); demo `labels` + controlled args pattern matches Matching/MCQ. |
-| Tokens only / no ad-hoc | Pass — organism StyleSheet (`fill-in-the-blank.tsx:144-198`) uses only `theme.spacing` / `theme.colors` / `theme.typography` / `theme.shape`. Icon `size={22}` matches Matching + `AnswerOption`. No hex/rgb/ad-hoc dims in organism or stories. |
-| Existing components reused | Pass — `Card`, `Button`, `Icon` from `@helsoft/components`. Banner tokens match Matching/MCQ: `tertiaryContainer`/`errorContainer`, `onTertiaryContainer`/`onErrorContainer`, Icon `check_circle`/`cancel` + `theme.colors.tertiary`/`error`. |
-| A11y chrome (design-system) | Pass — banner text+icon (`:116-127`); Submit via `Button` (hitSlop → `layout.touchTarget`); live region + `AccessibilityInfo` Android-guard mirrors Matching/MCQ (`:70-75`). |
-| Labels via props / i18n | Pass — organism chrome from `labels` only; wrapper injects `t('activity.fillInTheBlank.*')` (`fill-in-the-blank-activity.tsx:32-39`); en/es/pt/de key-aligned. No hardcoded chrome colors. |
-| Atomic placement | Pass — organism `libs/activities/src/organisms/fill-in-the-blank/`; wiring in study-buddy. |
+| Tokens only | Pass — `fill-in-the-blank.tsx:152-207` only `theme.spacing` / `colors` / `typography` / `shape` / `layout`. No hex/rgb/ad-hoc dims. |
+| Blank touch target | Pass — `minHeight: theme.layout.touchTarget` (`:172`; token = 48 in `spacing.ts:35`). Matches Matching item floor. |
+| Icon still visual | Pass — `Icon` `check_circle`/`cancel` `size={22}` `fill` tertiary/error (`:123-128`); a11y hide wrapper (`:119-122`) does not remove visual. Parity with Matching (`matching.tsx:173`) + `AnswerOption`. |
+| Existing components | Pass — `Card` / `Button` / `Icon`. Inline RN `TextInput` still justified (spec inline `____`). |
+| Atomic placement | Pass — organism under `organisms/fill-in-the-blank/`. |
+| 4 UI states | Pass — Loading N/A (`spec.md:151`). Content unanswered/correct/incorrect; Empty+Error → unavailable. |
+| Stories | Pass — `Unanswered` / `Correct` / `Incorrect` / `Unavailable` (+ `MissingBlank` / `Interactive`) `fill-in-the-blank.stories.tsx:56-115`. |
+| Sibling parity | Pass — banner/explanation token map matches Matching/MCQ; Submit stays visible+disabled when locked (FITB-spec intentional vs Matching hide). |
+
+## E2e
+
+Optional Playwright not re-run (Storybook boot). Stories assert required states statically.

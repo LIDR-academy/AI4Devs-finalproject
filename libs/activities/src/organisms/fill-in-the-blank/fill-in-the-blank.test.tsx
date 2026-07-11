@@ -95,7 +95,8 @@ describe('FillInTheBlank', () => {
     );
 
     expect(screen.getByText(labels.correct)).toBeTruthy();
-    expect(screen.getByText('check_circle')).toBeTruthy();
+    expect(screen.getByText('check_circle', { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.queryByText('check_circle')).toBeNull();
     expect(screen.getByLabelText(labels.blankInput).props.editable).toBe(false);
     expect(screen.getByRole('button', { name: labels.submit }).props.accessibilityState.disabled).toBe(
       true,
@@ -139,7 +140,8 @@ describe('FillInTheBlank', () => {
     );
 
     expect(screen.getByText(labels.incorrect)).toBeTruthy();
-    expect(screen.getByText('cancel')).toBeTruthy();
+    expect(screen.getByText('cancel', { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.queryByText('cancel')).toBeNull();
     expect(screen.getByText('Paris')).toBeTruthy();
     expect(screen.getByLabelText(labels.blankInput).props.editable).toBe(false);
   });
@@ -266,6 +268,28 @@ describe('FillInTheBlank', () => {
     expect(screen.getByLabelText(labels.blankInput)).toBeTruthy();
   });
 
+  // @s14 / B1 — blank TextInput meets touch-target minHeight.
+  it('gives the blank input a minHeight of layout.touchTarget', async () => {
+    await render(<FillInTheBlank {...defaultProps} />);
+
+    expect(screen.getByLabelText(labels.blankInput)).toHaveStyle({
+      minHeight: layout.touchTarget,
+    });
+  });
+
+  // @s14 / M1 — locked blank exposes accessibilityState.disabled.
+  it('sets accessibilityState.disabled on the blank when locked', async () => {
+    await render(<FillInTheBlank {...defaultProps} />);
+    expect(screen.getByLabelText(labels.blankInput).props.accessibilityState?.disabled).not.toBe(
+      true,
+    );
+
+    await render(
+      <FillInTheBlank {...defaultProps} value="paris" result={correctResult} />,
+    );
+    expect(screen.getByLabelText(labels.blankInput).props.accessibilityState.disabled).toBe(true);
+  });
+
   // @s14 — Submit meets touch-target via Button hitSlop.
   it('exposes a Submit hitSlop that reaches the touch-target token', async () => {
     await render(<FillInTheBlank {...defaultProps} />);
@@ -277,15 +301,21 @@ describe('FillInTheBlank', () => {
     );
   });
 
-  // @s14 — correctness via text + icon, not color alone.
-  it('conveys correctness with text and icon, not color alone', async () => {
+  // @s14 / M2 — correctness via text + decorative icon (icon hidden from AT).
+  it('conveys correctness with text and a decorative icon hidden from the a11y tree', async () => {
     await render(<FillInTheBlank {...defaultProps} result={correctResult} />);
     expect(screen.getByText(labels.correct)).toBeTruthy();
-    expect(screen.getByText('check_circle')).toBeTruthy();
+    const correctIcon = screen.getByText('check_circle', { includeHiddenElements: true });
+    expect(correctIcon.parent?.props.accessibilityElementsHidden).toBe(true);
+    expect(correctIcon.parent?.props.importantForAccessibility).toBe('no-hide-descendants');
+    expect(screen.queryByText('check_circle')).toBeNull();
 
     await render(<FillInTheBlank {...defaultProps} result={incorrectResult} />);
     expect(screen.getByText(labels.incorrect)).toBeTruthy();
-    expect(screen.getByText('cancel')).toBeTruthy();
+    const incorrectIcon = screen.getByText('cancel', { includeHiddenElements: true });
+    expect(incorrectIcon.parent?.props.accessibilityElementsHidden).toBe(true);
+    expect(incorrectIcon.parent?.props.importantForAccessibility).toBe('no-hide-descendants');
+    expect(screen.queryByText('cancel')).toBeNull();
   });
 
   // @s14 — correct result announced politely without alert role.
@@ -356,7 +386,9 @@ describe('FillInTheBlank', () => {
     announceSpy.mockRestore();
   });
 
-  // @s14 — Android relies on live region alone.
+  // @s14 / m1 — Matching/MCQ pattern: Android live region alone; iOS/web imperative announce.
+  // RN docs: accessibilityLiveRegion is Android-only; announceForAccessibility covers iOS/web.
+  // Skipping imperative announce on Android avoids duplicate TalkBack with the live region.
   describe('platform-scoped imperative announcement (Android relies on the live region alone)', () => {
     const originalOS = Platform.OS;
 
@@ -374,8 +406,26 @@ describe('FillInTheBlank', () => {
       await render(<FillInTheBlank {...defaultProps} result={correctResult} />);
 
       expect(announceSpy).not.toHaveBeenCalled();
+      expect(screen.getByText(labels.correct).props.accessibilityLiveRegion).toBe('polite');
 
       announceSpy.mockRestore();
     });
+
+    it.each(['ios', 'web'] as const)(
+      'still calls announceForAccessibility on %s once answered',
+      async (os) => {
+        Platform.OS = os;
+        const announceSpy = jest
+          .spyOn(AccessibilityInfo, 'announceForAccessibility')
+          .mockImplementation(() => {});
+        announceSpy.mockClear();
+
+        await render(<FillInTheBlank {...defaultProps} result={correctResult} />);
+
+        expect(announceSpy).toHaveBeenCalledWith(labels.correct);
+
+        announceSpy.mockRestore();
+      },
+    );
   });
 });
