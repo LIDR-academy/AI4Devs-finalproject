@@ -10,16 +10,17 @@ General hard rules for every reviewer:
 - Never approve with failing `pnpm lint`, `pnpm check-types`, `pnpm test`, or relevant `test:e2e`.
 - Be specific: cite `file:line`. No generic feedback.
 - Judge against the approved `gherkin-scenarios.md`, `spec.md`, and the project rules in `.agents/rules/`.
+- **Artifact hygiene (keep files small):** write **findings only** — verdict + `file:line` + one-line severity note. Do **not** restate the rubric, quote large code blocks, or list what passed. **One file per reviewer, overwritten in place each round** (`review-<type>.md`) — never create per-round copies (`-r2`, `-r3`, …). Read the **diff** (`git diff`), not whole files. The durable consolidated record is `reviews_lead`'s `review.md`, pruned to only open findings.
 
 ---
 
 ## 0. spec_reviewer → `review-spec.md` (pre-gate, before human approval)
 Runs once after `spec_partner` drafts the bundle and **before** the human gate, so the human reviews a spec/contract that's already coherent. Reviews **documents, not code**; loops findings back to `spec_partner` (not `implementator`); any finding blocks (including minor).
-- **spec.md** — every AC is a testable Given/When/Then; 4 UI states (if UI); analytics named; feature flags if rollout; non-goals present; decisions carry rationale; scope matches the story (nothing missing, no gold-plating); no ambiguity/contradiction.
+- **spec.md** — terse; 4 UI states (if UI); analytics named; feature flags if rollout; non-goals present; decisions carry rationale; scope matches the story (nothing missing, no gold-plating); no ambiguity/contradiction. **ACs are NOT here** — spec links to `gherkin-scenarios.md`; flag any duplicated AC prose as a finding to remove.
+- **gherkin-scenarios.md (the acceptance criteria)** — one `@s` per behavior; each is a testable Given/When/Then; happy + error/empty/edge covered; declarative steps; unique tags.
 - **risks.md** — real risks, each with a concrete mitigation; dependencies have a status.
-- **tasks.md + task-N.md** — atomic tasks that collectively cover every AC/scenario; correct slice grouping; each `paths` a valid `libs/*` location obeying the layering + atomic-design rules; `scenarios` reference real `@s` tags.
-- **gherkin-scenarios.md** — one `@s` per behavior; happy + error/empty/edge; **every AC ↔ ≥ 1 scenario**; declarative steps; unique tags.
-- **Traceability** — story → ACs → `@s` → tasks mutually consistent; nothing orphaned.
+- **tasks.md + task-N.md** — atomic tasks that collectively cover every `@s` scenario; correct slice grouping; each `paths` a valid `libs/*` location obeying the layering + atomic-design rules; `scenarios` reference real `@s` tags; **the index doesn't duplicate per-task frontmatter**.
+- **Traceability** — story → user stories → `@s` scenarios → tasks mutually consistent; every scenario maps to ≥ 1 task and vice-versa; nothing orphaned.
 
 ---
 

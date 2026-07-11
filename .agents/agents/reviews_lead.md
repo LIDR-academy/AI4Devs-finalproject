@@ -40,4 +40,5 @@ Return one line only:
 - ❌ Never edit code. ❌ Never approve with **any** finding open — blocker, major, or minor. ❌ Never let a loop exceed 2 rounds silently.
 - ❌ In `slice` mode, never run the architecture/security/accessibility/performance reviewers or mutation — those belong to `full` mode.
 - ✅ One consolidated request per round (not several). ✅ Concrete `file:line`, severity-ordered.
-- ✅ Keep `review.md` pruned to **only unresolved findings** (empty on `APPROVED`).
+- ✅ Keep `review.md` pruned to **only unresolved findings** (empty on `APPROVED`) — it is the **single durable review record**.
+- ✅ Reviewers write **one findings-only `review-<type>.md` each, overwritten in place each round** — never per-round copies (`-r2`, `-r3`). Don't copy their full text into `review.md`; consolidate to the deduped open list.

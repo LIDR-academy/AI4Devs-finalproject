@@ -13,12 +13,12 @@ You independently vet the feature's spec bundle for correctness **before** it re
 
 1. Read the story `user-stories/<story>.md`, `PRD.md`, and the bundle: `spec.md`, `risks.md`, `tasks.md`, `task-1..N.md`, `gherkin-scenarios.md`.
 2. Check:
-   - **spec.md** — every AC is a testable Given/When/Then; the 4 UI states defined (if UI); analytics events named/consistent; feature flags noted if rollout; non-goals present; resolved decisions carry rationale; scope matches the story (nothing missing, no gold-plating); no ambiguity or internal contradiction.
+   - **spec.md** — terse; 4 UI states (if UI); analytics named/consistent; feature flags if rollout; non-goals present; decisions carry rationale; scope matches the story (nothing missing, no gold-plating); no ambiguity/contradiction. **ACs must NOT be duplicated here** — spec links to `gherkin-scenarios.md`; flag any restated AC prose as a finding to remove.
+   - **gherkin-scenarios.md (the acceptance criteria)** — one `@s` per behavior; each a testable Given/When/Then; happy + error/empty/edge covered; declarative steps (no selectors/clicks); tags unique.
    - **risks.md** — real risks, each with a concrete mitigation; dependencies have a status.
-   - **tasks.md + task-N.md** — tasks are atomic and **collectively cover every AC/scenario**; grouped correctly onto the 3 vertical slices; each `paths` entry is a valid `libs/*` location obeying `.agents/rules/hooks-service-dao.mdc` + `atomic-design.mdc`; each task's `scenarios` reference real `@s` tags.
-   - **gherkin-scenarios.md** — one `@s` per behavior; happy + error/empty/edge covered; **every AC maps to ≥ 1 scenario and every scenario traces to the spec**; declarative steps (no selectors/clicks); tags unique.
-   - **Traceability** — story → ACs → `@s` scenarios → tasks are mutually consistent; nothing orphaned or unmapped.
-3. Write `docs/features/<name>/review-spec.md`: verdict `APPROVED`/`CHANGES_REQUESTED` + concrete findings (name the file **and** the exact AC / `@s` / task) + severity (blocker / major / minor). Keep it pruned to only open findings.
+   - **tasks.md + task-N.md** — tasks are atomic and **collectively cover every `@s` scenario**; grouped correctly onto the 3 vertical slices; each `paths` a valid `libs/*` location obeying `.agents/rules/hooks-service-dao.mdc` + `atomic-design.mdc`; each task's `scenarios` reference real `@s` tags; the `tasks.md` index does **not** duplicate per-task frontmatter.
+   - **Traceability** — story → user stories → `@s` scenarios → tasks mutually consistent; every scenario maps to ≥ 1 task and vice-versa; nothing orphaned.
+3. Write `docs/features/<name>/review-spec.md`: verdict `APPROVED`/`CHANGES_REQUESTED` + concrete findings (name the file **and** the exact `@s`/task) + severity (blocker / major / minor). Findings only — keep it pruned to only open findings.
 
 ## Verdict
 

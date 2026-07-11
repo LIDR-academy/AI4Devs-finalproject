@@ -62,7 +62,8 @@ We extend the existing `.agents/` folder rather than introducing `.claude/`. Orc
 ├── skills/                       # invocable procedures (loaded on demand)
 │   ├── gherkin-authoring/        # NEW — distill spec → tagged gherkin-scenarios.md contract
 │   ├── mutation-testing/         # NEW — StrykerJS scoped to changed files (+ scripts/run-mutation.sh)
-│   └── storybook-e2e-tests/      # existing — Playwright e2e for Storybook components (owns the .e2e.js location)
+│   ├── storybook-e2e-tests/      # existing — Playwright e2e for Storybook components (owns the .e2e.js location)
+│   └── compact-docs/             # NEW — pre-PR: trim feature docs, drop stray review copies (+ scripts/compact-docs.sh)
 ├── commands/                     # existing (commit.md) — thin CLI entry points
 │   ├── ticket-orchestrator.md    # NEW — /ticket-orchestrator <story> → reads user-stories/<story>.md, invokes orchestrator_lead
 │   └── commit.md
@@ -221,7 +222,7 @@ Each agent is a Claude Code subagent defined in `.agents/agents/<name>.md` with 
 - **Input:** the user-story markdown file at `user-stories/<story>.md` (named on the CLI: `/ticket-orchestrator <story>`), plus any screenshot or API spec it references, plus `PRD.md` for product context.
 - **Behavior:** Read the ticket, then **ask questions and debate** edge cases, output contracts, and discarded alternatives with the human until the spec is unambiguous (recording decisions *with their rationale*). Then, in the **same step**, distill the spec into the Gherkin contract using the `gherkin-authoring` skill.
 - **Outputs (in `docs/features/<name>/`):**
-  - `spec.md` — summary, user stories ("As a … I want … so that …"), Acceptance Criteria in **Given/When/Then**, the 4 UI states (Loading / Content / Error / Empty) where UI is involved, analytics events, feature flags.
+  - `spec.md` — summary, user stories ("As a … I want … so that …"), the 4 UI states (Loading / Content / Error / Empty) where UI is involved, analytics events, feature flags, non-goals, resolved decisions. **Acceptance criteria are NOT here** — the `@s` scenarios in `gherkin-scenarios.md` are the ACs; `spec.md` links to them (no duplication).
   - `risks.md` — technical / product / timeline risks, each with a mitigation.
   - `tasks.md` — the task **index**: feature-level pipeline status (frontmatter) + a table linking to each `task-N.md`, grouped by vertical slice.
   - `task-1.md`, `task-2.md`, … — one file per atomic task (replaces the old `feature_list.json`), each with frontmatter (`id`, `title`, `slice`, `scenarios`, `status`, `paths`) and a goal/done-criteria body.
@@ -379,6 +380,8 @@ Resolved (locked in):
 - **Review & mutation sequencing — RESOLVED:** after all slices, the quality gate runs **mutation (pre-review) → full review → mutation (post-review)**. Each is its own ≤ 2-round loop routing fixes to `implementator`; surviving mutants are killed on **both** mutation passes. In the full review `implementator` fixes **every** finding (any severity, incl. minor); after the 2-round cap, blockers/majors → escalate & block, while **minors-only may ship as documented, human-accepted risks** (recorded in `review.md`, `spec.md` Open decisions, `dod.md`).
 - **e2e vs mutation — RESOLVED:** Stryker's Jest runner won't cover Playwright `.e2e.js` visual tests; mutation thresholds apply to Jest-testable code (services/hooks/DAOs **and** component logic/behavior), while Playwright guards rendered/visual behavior. This split is documented in the `mutation-testing` skill (`.agents/skills/mutation-testing/SKILL.md`).
 - **Mutation scope & cost — RESOLVED:** always mutate **only the feature's changed files** (changed services/DAOs/hooks + changed component `.tsx`) with `coverageAnalysis: 'perTest'`. No global mutation runs. This is the accepted cost/coverage tradeoff — it keeps Stryker affordable even though it's the slowest gate and rendering-based component tests add runtime.
+
+- **Artifact hygiene / token budget — RESOLVED:** per-feature `.md` files are kept small and deduplicated (see `.agents/ORCHESTRATOR.md` §Artifact hygiene): ACs live only in `gherkin-scenarios.md` (spec links, doesn't copy); `tasks.md` is a bare index (per-task frontmatter is authoritative); `tdd.md` is a `@s → test` map + one line per cycle (no pasted code/diffs); each reviewer keeps **one** findings-only `review-<type>.md` **overwritten each round** (no `-r2`/`-r3` proliferation), with `review.md` the single durable consolidated record; `dod.md` cites `review.md`/`mutation.md` rather than restating; `progress/*` entries are one line. A final **`compact-docs`** step (orchestrator step 10, after DoD PASS and before hand-off — skill + `scripts/compact-docs.sh`) deletes stray per-round review copies and trims oversize docs to summary form before the PR. **Broader token levers:** read the `git diff` not whole files; state on disk + one-line agent handoffs (anti-telephone); model tiering (Haiku for mechanical steps); prune-as-you-go so re-reads shrink each round.
 
 No outstanding open questions — all resolved.
 

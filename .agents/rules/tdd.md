@@ -43,6 +43,13 @@ Logic-only features slice by risk (happy path → error/edge → observability) 
 
 Every `@s` scenario must end up covered by at least one concrete test. Keep the `@s → test` map and one block per cycle/slice in `docs/features/<name>/tdd.md`.
 
+### Keep `tdd.md` terse — it is a **log, not a transcript**
+`tdd.md` is the single largest artifact if you let it be. Write:
+- a compact **`@s → test` table** (scenario tag → test name → file), and
+- **one line per Red→Green→Refactor cycle** (`@s`, the test added, the one-line change) — a short block per slice.
+
+Do **NOT** paste test bodies, production code, diffs, or command output into `tdd.md` — that content already lives in the repo and the git history. Prose summaries only.
+
 ## Conventions
 
 Functional React only; always a `Props` type; kebab-case filenames; reuse existing tokens/components; no hardcoded strings/colors/dimensions; short functions; revealing names; no magic numbers. Conventional Commits per `.agents/commands/commit.md`.

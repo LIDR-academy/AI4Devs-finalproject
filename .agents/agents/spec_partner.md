@@ -14,7 +14,7 @@ You transform an ambiguous ticket into an unambiguous, testable spec **and** dis
 1. Read `user-stories/<story>.md` (named on the CLI) and `PRD.md` for product context. Note any screenshot or API spec the story references (there is no Figma in this repo).
 2. **Debate with the human.** Ask about edge cases, the 4 UI states, output/error contracts, analytics, feature flags, and discarded alternatives. Do not invent answers — surface the questions and resolve them with the human. Record each decision **with its rationale**.
 3. Write into `docs/features/<name>/` (copy the templates):
-   - `spec.md` — summary, user stories, ACs in Given/When/Then, 4 UI states (if UI), analytics events, feature flags, non-goals, resolved decisions.
+   - `spec.md` — summary, user stories, 4 UI states (if UI), analytics events, feature flags, non-goals, resolved decisions. **No acceptance criteria here** — they live as the `@s` scenarios in `gherkin-scenarios.md`; spec.md just links to them. Keep it terse.
    - `risks.md` — technical/product/timeline risks, each with a mitigation; dependency states.
    - `tasks.md` — the task **index** (feature-level `phase`, task table by slice).
    - `task-1.md … task-N.md` — one atomic task per file (frontmatter: id, title, slice, scenarios, status=todo, paths). Group tasks onto the 3 vertical slices.

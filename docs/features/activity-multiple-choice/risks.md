@@ -1,24 +1,23 @@
 # Risks — activity-multiple-choice
 
-| # | Risk | Type | Likelihood | Impact | Mitigation |
-|---|---|---|---|---|---|
-| R1 | **Slide-payload shape drifts from R2 generation.** R2 (AI generation) is not built, so the `MultipleChoiceSlide` shape (`options`/`correctOptionId`/`explanation`, and using `content` as the question prompt) is defined speculatively and may not match what the Edge Function eventually returns. | technical | M | M | Design the discriminated union to be additive-only (new `activityType` variants, optional fields). Keep field names explicit and documented. The **Error UI state** (`correctOptionId` ∉ options) means a shape mismatch degrades to an `unavailable` notice rather than a crash. Field mapping (e.g. question source) is isolated in the `MultipleChoiceActivity` wrapper, so R2 alignment is a one-file change. Record the shape here as the contract R2 must satisfy; flag for the R2 story to consume. |
-| R2 | **Answered-state shape insufficient for R7 scoring / R9 resume.** These stories are not built; `MultipleChoiceAnswer` must be enough to (a) sum correct/total and (b) re-hydrate the answered view on resume. | technical / product | M | M | `MultipleChoiceAnswer` carries `slideId` + `activityType` (discriminant) + `selectedOptionId` (re-hydrate the pick) + `correctOptionId` (re-render feedback without re-grading) + `isCorrect` (score). `ActivityAnswer` is a union so R7/R9 branch by `activityType`. `onAnswered` fires exactly once with the full object. Extra fields (timestamp, attempt number) are additive if R7/R9 need them. |
-| R3 | **Discriminated-union change breaks existing `Slide` consumers.** `Slide` becomes a union; code that constructed a bare activity slide would no longer type-check. | technical | L | L | Grep confirms the only consumer today is `Lesson.slides: Slide[]`; no code constructs activity slides yet (R2 unbuilt). All common fields stay in `SlideBase`, so instructional-slide and shared-field usage is unaffected. `pnpm check-types` across the monorepo is the guard. |
-| R4 | **"No retry" locks a mis-tap permanently.** A learner who taps the wrong option by accident cannot correct it on that view; intentional but may feel punitive. | product | M | L | Explicit product decision (learning gain is measured via whole-lesson retakes, R7, not per-question retries). Documented in spec Open decisions and non-goals. The whole-lesson retake (R7) is the sanctioned correction path. Surface at the human gate for confirmation. |
-| R5 | **Reused `AnswerOption` visuals may not cover all needed states / a11y.** The organism depends on `AnswerOption`'s `default/selected/correct/incorrect` states, feedback icons, and `disabled` locking. | technical | L | L | `AnswerOption` already implements exactly these states, non-color-only feedback icons (`check_circle`/`cancel`), and `accessibilityState`. The organism only composes it; no molecule change anticipated. Any gap is fixed in the molecule under its own tests. |
-| R6 | **Result feedback not announced to assistive tech.** Correct/incorrect appears visually on selection; a screen-reader user may not perceive the state change. | technical / a11y | M | M | Slice 3 adds a live-region announcement of the result (mirroring `LoginForm`'s error-banner + `AccessibilityInfo.announceForAccessibility` pattern) and verifies correctness is conveyed by text + icon, not color alone. Covered by @s11 + Playwright e2e. |
-| R7 | **Degenerate option counts (0 or 1 option).** A malformed/degenerate slide could produce an unusable "choice". | technical | L | L | Empty state handles 0 options; the Error state (correctOptionId not resolvable) covers other malformed payloads. Both render `unavailable` and stay non-interactive. Covered by @s8/@s9. |
+| # | Risk | L/I | Mitigation |
+|---|---|---|---|
+| R1 | Slide-payload shape drifts from R2 (AI generation, unbuilt) — `MultipleChoiceSlide` shape defined speculatively. | M/M | Additive-only union (new `activityType`, optional fields); the **Error UI state** (`correctOptionId` ∉ options) degrades to an `unavailable` notice, not a crash; field mapping isolated in the wrapper (one-file R2 alignment). Record shape here as the contract R2 must satisfy. |
+| R2 | Answered-state shape insufficient for R7 scoring / R9 resume (both unbuilt). | M/M | `MultipleChoiceAnswer` carries `slideId`+`activityType`+`selectedOptionId`+`correctOptionId`+`isCorrect`; `ActivityAnswer` is a union so R7/R9 branch by type; `onAnswered` fires once. Extra fields (timestamp, attempt#) are additive later. |
+| R3 | Discriminated-union change breaks existing `Slide` consumers. | L/L | Only consumer today is `Lesson.slides`; no code constructs activity slides yet; common fields stay in `SlideBase`. `pnpm check-types` is the guard. |
+| R4 | "No retry" locks a mis-tap permanently — may feel punitive. | M/L | Explicit product decision (correction via whole-lesson retakes, R7); documented in spec Open decisions/non-goals; surface at the human gate. |
+| R5 | Reused `AnswerOption` visuals may not cover all needed states / a11y. | L/L | `AnswerOption` already implements `default/selected/correct/incorrect`, non-color-only icons (`check_circle`/`cancel`), `disabled`, `accessibilityState`; organism only composes it. Any gap fixed in the molecule under its own tests. |
+| R6 | Result feedback not announced to assistive tech. | M/M | Slice 3 adds a live-region + `AccessibilityInfo.announceForAccessibility` result announcement (LoginForm pattern); correctness conveyed by text + icon, not color. Covered by @s11 + Playwright e2e. (Residual Android-only risk m4-b — see `review.md`/`spec.md`.) |
+| R7 | Degenerate option counts (0 or 1). | L/L | Empty state handles 0; Error state covers other malformed payloads; both render `unavailable`, non-interactive. Covered by @s8/@s9. |
 
 ## Dependencies
 | Dependency | Status | Notes |
 |---|---|---|
-| `@helsoft/types` `Slide`/`Lesson` (`libs/types/src/lesson.ts`) | available | Extended here into a discriminated union; only consumer is `Lesson.slides`. |
-| `AnswerOption` molecule (`@helsoft/components`) | available | Core reused control; states + icons + a11y already implemented. |
-| `Card`/`Icon` atoms + theme tokens (`@helsoft/components`) | available | Question/explanation surfaces; no new tokens needed. |
-| `@helsoft/localization` (`useLocalization`/`t`, `en/es/pt/de`) | available | Adds `activity.mcq.*` keys; wrapper injects `labels`. |
-| `@helsoft/study-buddy` feature lib | available | Home for the pure grader + wiring component; `LoginForm`/`SignInForm` split is the precedent. |
-| R2 AI generation (slide payload producer) | blocked / not built | This story defines the payload contract R2 must satisfy (R1); no runtime dependency — slides arrive as props. |
-| R4 lesson player (mounts slides, handles deck loading) | not built | Consumes this component; Loading is its concern, not this component's (spec Open decisions). |
-| R7 score / R9 resume (answered-state consumers) | not built | Consume `MultipleChoiceAnswer`; this story only exposes the shape (R2). |
-| Test runner (Jest / RN Testing Library) | not yet wired | `AGENTS.md` notes no `test` script is defined yet; `implementator` wires it when adding the first tests (per project TDD rule). |
+| `@helsoft/types` `Slide`/`Lesson` | available | Extended into a discriminated union; only consumer is `Lesson.slides`. |
+| `AnswerOption` molecule | available | Core reused control; states + icons + a11y already implemented. |
+| `Card`/`Icon` atoms + theme tokens | available | Question/explanation surfaces; no new tokens. |
+| `@helsoft/localization` (`en/es/pt/de`) | available | Adds `activity.mcq.*` keys; wrapper injects `labels`. |
+| `@helsoft/study-buddy` feature lib | available | Home for the pure grader + wiring; `LoginForm`/`SignInForm` precedent. |
+| R2 AI generation | blocked / not built | This story defines the payload contract R2 must satisfy (R1); no runtime dependency. |
+| R4 lesson player | not built | Consumes this component; Loading is its concern. |
+| R7 score / R9 resume | not built | Consume `MultipleChoiceAnswer`; this story only exposes the shape. |

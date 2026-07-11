@@ -63,7 +63,7 @@ Only `orchestrator_lead` writes the feature phase (in `tasks.md` frontmatter); `
 
 ## Gates (all must pass to advance)
 
-1. **spec_drafted → spec_ready (automated spec review)** — `spec_reviewer` vets the bundle: every AC is a testable Given/When/Then; 4 UI states (if UI); risks mitigated; one `@s` per behavior; **every AC ↔ ≥ 1 scenario**; tasks atomic, correctly sliced, with valid `libs/*` paths; full story→AC→scenario→task traceability. Findings loop back to `spec_partner` (≤ 2 rounds); clean → `spec_ready`.
+1. **spec_drafted → spec_ready (automated spec review)** — `spec_reviewer` vets the bundle: the `@s` scenarios in `gherkin-scenarios.md` **are** the ACs (each a testable Given/When/Then) and are **not** duplicated in `spec.md`; 4 UI states (if UI); risks mitigated; tasks atomic, correctly sliced, with valid `libs/*` paths; full story→scenario→task traceability. Findings loop back to `spec_partner` (≤ 2 rounds); clean → `spec_ready`.
 2. **HUMAN GATE (combined)** — human approves `spec.md` **and** `gherkin-scenarios.md` in one pass (with any open `review-spec.md` findings surfaced) → `approved`.
 3. **per-slice gate** — for each vertical slice: `pnpm lint` + `pnpm check-types` + `pnpm test` (+ `test:e2e` where relevant) green; the slice's `@s` covered by tests; no scope beyond contract; no hardcoded strings/colors/dims; **and a light `reviewer_code` + `reviewer_design` review is clean** (findings fixed, ≤ 2 rounds) before the slice is committed and the next begins.
 4. **mutation (pre-review)** — after all slices, `mutation_tester` runs **first**; `implementator` kills every surviving mutant until **100% on changed lines** (≤ 2 rounds, else escalate). Hardens the test net before the reviewers look.
@@ -86,6 +86,17 @@ dod.md
 ```
 
 Session state: `progress/current.md` (active pointer) + `progress/history.md` (append-only).
+
+## Artifact hygiene (keep the token budget small)
+
+Every artifact is written to be **re-read cheaply** by later agents — small, deduplicated, and summary-level:
+
+- **No duplication across files** — a fact lives in exactly one place; others **link**. ACs live only as `@s` scenarios in `gherkin-scenarios.md` (spec.md links, never copies); `tasks.md` is a bare index (each `task-N.md` owns its own `slice`/`scenarios`/`status`/`paths`); DoD cites `review.md` / `mutation.md` rather than restating them.
+- **Logs are summaries, not transcripts** — `tdd.md` is a `@s → test` map + one line per cycle; **never** paste code, diffs, test bodies, or command output (they're in the repo/git).
+- **One file per reviewer, overwritten each round** — `review-<type>.md` is findings-only; **never** create per-round copies (`-r2`, `-r3`). `review.md` is the single durable consolidated record, pruned to only open findings.
+- **Read the diff, not the world** — reviewers/mutation scope to `git diff` + the specific artifact they need, not whole files or sibling reports.
+- **State lines are one line** — `progress/current.md` and each `history.md` entry are a single line, not paragraphs.
+- **Model tiering** cuts $/token (Haiku for mechanical `mutation_tester` + `dod_validator`); see Models above.
 
 ## Entry
 
@@ -110,3 +121,4 @@ See `/ORCHESTRATOR_PLAN.md` §7. Validated by `dod_validator`: Functionality · 
 - `.agents/skills/gherkin-authoring/` — distill a spec into a tagged `gherkin-scenarios.md` contract (used by `spec_partner`)
 - `.agents/skills/mutation-testing/` — run StrykerJS scoped to changed files, `scripts/run-mutation.sh` (used by `mutation_tester`)
 - `.agents/skills/storybook-e2e-tests/` — write Playwright e2e for Storybook components; owns the `.e2e.js` location convention (used by `implementator`)
+- `.agents/skills/compact-docs/` — pre-PR cleanup: delete stray per-round review copies, report oversize docs, trim to summary form, `scripts/compact-docs.sh` (used by `orchestrator_lead`, step 10)

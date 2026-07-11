@@ -1,419 +1,67 @@
 # TDD log — login-and-logout
 
-`implementator` build log. One block per Red→Green→Refactor cycle, grouped by slice.
-Every `@s` scenario in `gherkin-scenarios.md` maps to at least one concrete test below.
+`implementator` build log — one line per Red→Green→Refactor cycle, grouped by slice/round. Every
+`@s` in `gherkin-scenarios.md` maps to ≥ 1 concrete test below. Full detail lives in git history.
 
-## Design reconciliation (recorded for reviewers)
+## Design reconciliation (for reviewers)
+- Slice 1 is a strictly thin vertical: `AuthErrorCode`, `useAuth.error`, and `LoginForm.errorMessage/emailError/passwordError` land in task-6/7 (Slice 2).
+- Added `libs/components/jest-setup-after.ts` (+`setupFilesAfterEnv`) mirroring the `libs/study-buddy` fix so `jest-expo` doesn't resolve native AsyncStorage — no production change.
+- RNTL + React 19 needs explicit `await act()` around `fireEvent` for controlled-input/Modal state.
+- `ProgressIndicator`'s `progressbar` role isn't exposed to `getByRole`; worked around with a `testID` wrapper (`LOADING_INDICATOR_TEST_ID`) in `LoginForm`.
+- `expo-router` added as peer/dev dep of `@helsoft/study-buddy` (plain `router.push('/sign-up')`, not session-driven redirect).
 
-- **Slice 1 is a strictly thin vertical.** Per `spec.md` decisions and task-2/task-3 notes,
-  error normalization (`AuthErrorCode`), the `error`/`reset()` members of `useAuth`, and
-  `LoginForm`'s `errorMessage`/`emailError`/`passwordError` props are **not** built in this
-  slice — they land in task-6/task-7 (Slice 2), driven by their own failing tests. `useAuth`
-  in Slice 1 exposes only `{ signIn, signOut, isSubmitting }`.
-- **Test infra fix, not feature scope creep**: `@helsoft/components` had no prior Jest test
-  that rendered `Button` (which transitively imports `@helsoft/hooks` → `@helsoft/services` →
-  `@react-native-async-storage/async-storage`). Under the `jest-expo` preset this resolves the
-  *native* AsyncStorage module and crashes outside a real device. Fixed by adding
-  `libs/components/jest-setup-after.ts` + `setupFilesAfterEnv`, mirroring the identical,
-  pre-existing fix in `libs/study-buddy/jest-setup-after.ts` (same root cause, one workspace
-  layer up). No production behavior changed.
-- **RNTL + React 19 needs explicit `act()` around `fireEvent` for controlled-input updates**
-  (`TextInput.onChangeText` → `setState` → re-render, and `Pressable.onPress` → `setState` →
-  `Modal` becoming visible) in this repo's toolchain versions — plain `fireEvent.changeText`/
-  `fireEvent.press` without `await act(async () => {...})` reads stale props. Applied
-  consistently in `login-form.test.tsx` and `sign-out.test.tsx`.
-- **`ProgressIndicator`'s `accessibilityRole="progressbar"` is not exposed to RNTL's `getByRole`**
-  query without an explicit `accessible` prop (a real accessibility gap, not just a test
-  artifact) — out of scope to fix on a shared, already-shipped atom from this feature. Worked
-  around by wrapping the indicator in a `testID`-bearing `View` inside `LoginForm` itself
-  (`LOADING_INDICATOR_TEST_ID`), which is fully within this feature's own files.
-- **`expo-router` added as a peer/dev dependency of `@helsoft/study-buddy`**: `SignInForm`'s
-  "Sign up" link is a plain route push (`router.push('/sign-up')`), unrelated to session state
-  — normal navigation, not the session-driven redirect (which stays exclusively in
-  `Stack.Protected` guards, untouched).
+---
 
 ## @s → test map (Slice 1)
 
 | @s | Scenario | Test(s) |
 |---|---|---|
-| @s1 | Unauthenticated → routed to login, no protected access | `hooks/auth.integration.test.ts` ("reports no session at startup") — proves the `useSession` state the root guard reads |
-| @s2 | Successful login with valid credentials → session + home | `auth.dao.test.ts`, `auth.service.test.ts`, `use-auth.test.ts`, `login-form.test.tsx`, `sign-in-form.test.tsx`, `hooks/auth.integration.test.ts` |
-| @s3 | Loading state while authenticating | `use-auth.test.ts` (`isSubmitting`), `login-form.test.tsx` (disabled fields/submit + loading affordance), `sign-in-form.test.tsx` |
-| @s4 | Log out with confirmation clears session, returns to login | `auth.dao.test.ts`, `auth.service.test.ts`, `use-auth.test.ts`, `sign-out.test.tsx`, `hooks/auth.integration.test.ts` |
-| @s7 | Session persists across app restart | `hooks/auth.integration.test.ts` ("restores a persisted session on a fresh mount") — verifies existing `useSession`/`initSupabase` wiring, no new persistence code |
-| @s9 | Malformed email / empty password rejected (validators only; inline UI lands task-7) | `auth.service.test.ts` (`isValidEmail`, `isNonEmptyPassword`, `signIn` rejects before calling the DAO) |
-| @s10 | Logout confirmation dialog can be dismissed | `sign-out.test.tsx` ("does not call signOut when the confirmation is dismissed") |
-| @s11 | Log out from Home screen with confirmation | `sign-out.test.tsx` (same `SignOut` component, mounted on both Settings and Home screens) |
+| @s1 | Unauthenticated → routed to login, no protected access | `auth.integration.test.ts` (no session at startup — the `useSession` state the guard reads) |
+| @s2 | Successful login → session + home | `auth.dao.test.ts`, `auth.service.test.ts`, `use-auth.test.ts`, `login-form.test.tsx`, `sign-in-form.test.tsx`, `auth.integration.test.ts` |
+| @s3 | Loading state while authenticating | `use-auth.test.ts` (`isSubmitting`), `login-form.test.tsx` (disabled fields/submit + affordance), `sign-in-form.test.tsx` |
+| @s4 | Log out with confirmation clears session | `auth.dao.test.ts`, `auth.service.test.ts`, `use-auth.test.ts`, `sign-out.test.tsx`, `auth.integration.test.ts` |
+| @s7 | Session persists across app restart | `auth.integration.test.ts` (restores persisted session on fresh mount — verifies existing wiring, no new code) |
+| @s9 | Malformed email / empty password rejected (validators only) | `auth.service.test.ts` (`isValidEmail`, `isNonEmptyPassword`, `signIn` rejects before the DAO) |
+| @s10 | Logout confirmation can be dismissed | `sign-out.test.tsx` (does not call signOut when dismissed) |
+| @s11 | Log out from Home screen with confirmation | `sign-out.test.tsx` (same `SignOut`, mounted Settings + Home) |
 
-(@s5, @s6, @s8, @s12, @s13 are Slice 2/3 scope — task-6/7/8/9 — not covered here.)
-
----
+(@s5, @s6, @s8, @s12, @s13 are Slice 2/3 scope — task-6/7/8/9.)
 
 ## Slice 1 — Happy path + Loading
+- **task-1 AuthDao (@s2,@s4)** — `AuthDao.signInWithPassword`/`signOut` (Pattern A: throw raw error, return data). 4 tests green.
+- **task-2 AuthService (@s2,@s4,@s9)** — `isValidEmail` (EMAIL_PATTERN), `isNonEmptyPassword`, `signIn` (validates before DAO call), `signOut`. 13 tests green.
+- **task-3 useAuth (@s2,@s3,@s4)** — `signIn`/`signOut` delegating to `AuthService`; `isSubmitting` flips around calls; refactored to shared `withSubmitting<T>()` helper. Plain `useState`, no tanstack-query. 5 tests green.
+- **task-4 LoginForm (@s2,@s3)** — labelled email/password + submit; `onSubmit` reports credentials; `isSubmitting` disables fields/submit + loading affordance; sign-up prompt via `onNavigateToSignUp`. Story `Content`/`Loading`. 7 tests green.
+- **task-5 Wiring+integration (@s1,@s2,@s4,@s7,@s10,@s11)** — `SignInForm` (submit→signIn, sign-up push); `SignOut` (confirm Dialog; confirm→signOut; dismiss doesn't @s10); screens login/settings/index (@s11); integration across `useAuth→AuthService→AuthDao`+`useSession` vs mocked Supabase (@s1/@s2/@s4/@s7). No manual redirect. 3+4 unit + 4 integration green.
+- **Slice-1 gate ✅** — `pnpm test`/`check-types`(8)/`lint` green. Copy via `t('auth.*')` (content lands task-8). Commit `feat(login-and-logout): implement happy path`.
 
-### task-1 — AuthDao (@s2, @s4)
-- **RED** — `dao/auth.dao.test.ts`: `signInWithPassword` calls `getSupabase().auth.signInWithPassword`
-  with `{ email, password }` and returns the raw `{ session, user }`. Compile-failed (no `auth.dao.ts`).
-- **GREEN** — `AuthDao` (abstract, static `signInWithPassword`) — `if (error) throw error; return data;`
-  (Pattern A, `hooks-service-dao.mdc`).
-- **RED** — added the failure-path test (`signInWithPassword` rejects with the raw supabase error)
-  and the two `signOut` tests (`Property 'signOut' does not exist` / DAO throws raw error).
-- **GREEN** — added `AuthDao.signOut()`.
-- **REFACTOR** — none needed (already minimal, single-purpose).
-- 4 tests green; `check-types`/`lint` clean for `@helsoft/services`.
+## Round-1 review fixes (4 major + 2 minor, 0 blockers)
+- **Major 1 (@s3)** — `TextField.disabled` (opacity dim) + `accessibilityState.disabled` on both fields while submitting, replacing `editable={!isSubmitting}`. 2 tests.
+- **Major 2 (@s3)** — perceivable Loading announcement: `signingIn` label in a visually-hidden `accessibilityLiveRegion="polite"` Text. 3 tests.
+- **Major 3 (@s3)** — 48dp touch target via per-size `HIT_SLOP` on `Button` (derived from `layout.touchTarget`). 1 test.
+- **Major 4 (@s3)** — `Button` uses derived `minHeight` instead of fixed `height` (Dynamic Type); `useVariants` narrowed to `{ variant }`. 1 test.
+- **Minor 5** — silence "Multiple GoTrueClient instances": hoisted `initSupabase` into one `beforeAll` shared client in `auth.integration.test.ts`. 1 regression guard.
+- **Minor 6** — test-only: deduped `authValue`/`localizationValue` factories into `test-utils/auth-test-factories.ts`.
+- **Gate ✅** — check-types/tests/lint green; tokens only. Slice 2/3 scope untouched.
 
-### task-2 — AuthService (@s2, @s4, @s9)
-- **RED→GREEN** cycles, one at a time: `isValidEmail` (accepts well-formed → stub `return true`
-  first, then a malformed-email test forced the real `EMAIL_PATTERN` regex); `isNonEmptyPassword`
-  (trim + length check); `signIn` happy path (delegates to `AuthDao.signInWithPassword`); `signIn`
-  validation-rejection tests (malformed email / empty password reject **before** any DAO call —
-  no network call made); `signOut` (delegates to `AuthDao.signOut`).
-- **REFACTOR** — none needed; each method stayed short and single-purpose.
-- 13 tests green. Exported via `libs/services/src/services/index.ts`.
+## Round-2 review fixes (1 major + 2 minor, 0 blockers)
+- **Major 1 (@s3)** — iOS VoiceOver: `useEffect` calling `AccessibilityInfo.announceForAccessibility(labels.signingIn)` on `isSubmitting` true (additive to the Android/Web live-region). 1 test.
+- **Minor 2 (@s3)** — content-only: fixed stale `LOADING_INDICATOR_TEST_ID` doc comment (reworded to avoid tripping the localization literal-text scan).
+- **Minor 3 (@s3,@s2)** — added `auth.email/password/submit/signingIn` to `en/es/de/pt` bundles (all four together, `TranslationResource`-enforced).
+- **Gate ✅** — all workspaces + check-types(8) + lint green. Commit `fix(login-and-logout): resolve Round 2 findings (iOS a11y, locale)`.
 
-### task-3 — useAuth hook (@s2, @s3, @s4)
-- **RED→GREEN**: `signIn` calls `AuthService.signIn` with the given credentials (stub hook first);
-  `isSubmitting` true during the in-flight call, false after resolve (deferred promise + `act`);
-  `signOut` calls `AuthService.signOut`; `isSubmitting` true→false around `signOut`; `isSubmitting`
-  also returns to `false` after a **failed** `signIn` (passed immediately — the existing
-  `try/finally` already covered it, confirming the design rather than adding new code).
-- **REFACTOR** — extracted the duplicated "flip `isSubmitting` around a call" logic from `signIn`/
-  `signOut` into a shared generic `withSubmitting<T>()` helper; re-ran tests green after.
-- 5 tests green. Exported via `libs/hooks/src/hooks/index.ts`. Plain `useState`/`useCallback` — no
-  tanstack-query, per `spec.md` Open decisions.
-
-### task-4 — LoginForm organism (@s2, @s3)
-- **RED→GREEN**: renders labelled email/password fields + submit button; submitting reports the
-  entered `{ email, password }` up via `onSubmit` (required discovering the `act()`-around-
-  `fireEvent.changeText` requirement — see reconciliation above); `isSubmitting` disables the
-  submit control and both fields and shows a loading affordance (`LOADING_INDICATOR_TEST_ID`);
-  a negative test pins the affordance/disabled state to `isSubmitting` only; the "Sign up" prompt
-  (UI-states table, Content state) renders and calls `onNavigateToSignUp` when pressed, and does
-  not render when the callback is omitted.
-- **GREEN encountered a real accessibility gap**: `ProgressIndicator`'s bare
-  `accessibilityRole="progressbar"` View isn't exposed to RNTL's `getByRole` without an explicit
-  `accessible` prop — out of scope to change on the shared atom; worked around locally (see
-  reconciliation above).
-- **REFACTOR** — none needed; component stayed short, all copy via `labels` (no hardcoded strings).
-- 7 tests green. Story `login-form.stories.tsx` with `Content` and `Loading` states (Empty/Error
-  land in task-7). Exported via `libs/components/src/organisms/index.ts`.
-
-### task-5 — Wiring (SignInForm, SignOut) + screens + integration (@s1, @s2, @s4, @s7, @s10, @s11)
-- **RED→GREEN** `sign-in-form.test.tsx` (mocking `useAuth`/`useLocalization`/`expo-router`):
-  submitting calls `signIn` with the entered credentials; the sign-up prompt calls
-  `router.push('/sign-up')`; `useAuth().isSubmitting` disables the submit control (passed
-  immediately — confirms the LoginForm pass-through).
-- **RED→GREEN** `sign-out.test.tsx` (mocking `useAuth`/`useLocalization`): renders a "Log Out"
-  trigger; pressing it opens a confirmation `Dialog` (required the same `act()`-around-`fireEvent`
-  fix as the Loading-state cycle, since opening the Modal is a state update); confirming calls
-  `signOut`; **dismissing does not** call `signOut` and closes the dialog (@s10) — both passed
-  immediately given the single confirm/cancel wiring already in place.
-- **Wiring**: `(auth)/login.tsx` → `<SignInForm/>`; `(app)/settings.tsx` → `<LanguageSettings/>` +
-  `<SignOut/>`; `(app)/index.tsx` (the home screen) → adds `<SignOut/>` alongside existing links
-  (@s11 — same component, same confirm-dialog behavior, mounted a second place). No manual
-  `router.replace`/redirect added anywhere — `Stack.Protected` guards in `_layout.tsx` untouched.
-- **Integration test** — `libs/hooks/src/hooks/auth.integration.test.ts`: `useAuth` (→ `AuthService`
-  → `AuthDao`) and `useSession`, both exercised for real, against a **mocked Supabase client**
-  boundary only (`initSupabase` creates a real `SupabaseClient`; only its `auth.*` methods are
-  `jest.spyOn`-stubbed — nothing above the DAO is mocked): no session at startup (@s1), signing in
-  establishes a session `useSession` observes (@s2), signing out clears it (@s4), and a
-  fresh `useSession` mount restores an already-persisted session without new credentials (@s7,
-  verifying the existing `initSupabase`/`getSession` wiring — no persistence code changed).
-- 3 unit tests (`sign-in-form`) + 4 unit tests (`sign-out`) + 4 integration tests green.
-  Exported via `libs/study-buddy/src/index.ts`.
-
-### Slice-1 gate ✅
-`pnpm test` (workspace-wide), `pnpm check-types` (8 packages), `pnpm lint` all green. No
-hardcoded colors/dimensions; all `LoginForm`/`SignInForm`/`SignOut` copy flows through
-`useLocalization().t(...)` with `auth.*` keys (full copy for those keys lands in task-8, Slice 3 —
-until then `t()` falls back to the raw key, which is expected and does not affect any Slice-1
-test, none of which assert literal English copy). Business logic lives in `libs/study-buddy`;
-`apps/app-study-buddy` screens stay thin composition.
-
-Commit: `feat(login-and-logout): implement happy path`.
+## Mutation-kill pass (Phase 4 — StrykerJS survivors; test-only, no production change)
+- **auth.service.ts (@s9,@s2) — 4/4** — 2 `isValidEmail` anchor cases + exact `signIn` rejection messages. 84.62%→100%.
+- **use-auth.ts (@s2,@s3,@s4) — 0/3, equivalent** — `useCallback` dep-array mutants; `withSubmitting` identity constant so no observable diff. Documented equivalent in `mutation.md`.
+- **login-form.tsx (@s2,@s3) — 11/11** — pristine values, `LOADING_INDICATOR_TEST_ID` literal, style assertions. 50%→100%. 5 tests.
+- **button.tsx — 0/40, out-of-scope** — 39 pre-existing untouched; 1 unistyles-mock no-op. Feature's hitSlop/minHeight already 100%.
+- **sign-in-form.tsx (@s3) — 1/1** — asserts `auth.signingIn` key into Loading affordance. 90%→100%.
+- **sign-out.tsx (@s4,@s10,@s11) — 3/3** — dialog hidden pre-press, headline key, closes after confirm. 76.92%→100%.
+- **Gate ✅** — all workspaces green; no production code touched. Commit `test(login-and-logout): kill surviving mutants`.
 
 ---
 
-## Round-1 review fixes
-
-Responds to `docs/features/login-and-logout/review.md` (4 major + 2 minor, zero blockers). One
-block per finding, in the same RED→GREEN→REFACTOR log style as Slice 1. Scenarios covered stay
-`@s3` (Loading state) throughout, except finding 6 (test-code-only refactor).
-
-### Major 1 — `TextField.disabled` + `accessibilityState` on both fields (@s3)
-- **RED** — strengthened the existing `login-form.test.tsx` disabled-fields test into
-  `'disables and dims both fields while isSubmitting'` (asserts `editable === false` **and**
-  `parent` style `opacity === disabledOpacity`, imported from `theme/colors.ts`), and added a new
-  test `'exposes accessibilityState.disabled on both fields while isSubmitting'`
-  (`login-form.test.tsx:56-62`). Both failed against the old `editable={!isSubmitting}` prop: no
-  opacity dimming, no `accessibilityState`.
-- **GREEN** — `login-form.tsx:47-48` (email) and `:57-58` (password): replaced
-  `editable={!isSubmitting}` with `disabled={isSubmitting}` (routes through `TextField`'s own
-  `disabled` prop, which derives `editable` **and** the dimmed `opacity: theme.disabledOpacity` at
-  `text-field.tsx:59,101`) plus an explicit `accessibilityState={{ disabled: isSubmitting }}`,
-  passed through `TextField`'s `...rest` spread onto the underlying `TextInput`
-  (`text-field.tsx:73`).
-- **REFACTOR** — none needed; two one-line prop swaps, no duplication introduced.
-- 2 tests strengthened/added, both green; `libs/components` full suite still green.
-
-### Major 2 — perceivable Loading announcement (@s3)
-- **RED** — added `'announces a polite live-region while isSubmitting'`
-  (`login-form.test.tsx:64-69`, queries `getByText(labels.signingIn)` and asserts
-  `accessibilityLiveRegion === 'polite'`) and extended the existing "isSubmitting false" negative
-  test with `expect(screen.queryByText(labels.signingIn)).toBeNull()` (`login-form.test.tsx:88`).
-  Failed: no `labels.signingIn`, nothing rendered.
-- **GREEN** — new `signingIn` field on `LoginFormLabels` (`login-form.tsx:15`); a visually-hidden
-  `<Text accessibilityLiveRegion="polite">` rendered next to the spinner inside the existing
-  `LOADING_INDICATOR_TEST_ID` wrapper (`login-form.tsx:66-71`), off-screen via a new
-  `styles.visuallyHidden` (`login-form.tsx:92-98`: `position: 'absolute'`, `1x1`, `overflow:
-  'hidden'` — stays mounted so screen readers still pick up the live-region text, unlike
-  `display: 'none'`). Wired `signingIn: t('auth.signingIn')` in `sign-in-form.tsx:29`. Story labels
-  updated (`login-form.stories.tsx:10`) so both stories keep rendering with the new required
-  field.
-- **REFACTOR** — none needed.
-- 3 tests (1 new, 1 strengthened, story labels) green.
-
-### Major 3 — 48dp touch target via `hitSlop` (@s3, and every button call site this feature touches)
-- **RED** — new file `libs/components/src/atoms/button/button.test.tsx`:
-  `'exposes a hitSlop that reaches the 48dp touch-target token'` (asserts
-  `hitSlop.top + hitSlop.bottom + 40 >= layout.touchTarget`, imported from `theme/spacing.ts`).
-  Failed to compile/pass: no `hitSlop` prop on `Button`'s `Pressable`.
-- **GREEN** — `button.tsx:31-39`: a per-size `HIT_SLOP` lookup derived from `layout.touchTarget`
-  (existing, previously-unused token) minus each size's fixed `HEIGHTS` entry, halved per edge;
-  passed to `Pressable`'s `hitSlop` at `button.tsx:92`. No visual box change — purely expands the
-  tappable region, so `LoginForm`'s submit button, `SignOut`'s trigger, and `Dialog`'s
-  cancel/confirm buttons all pick it up for free (none override `size`).
-- **REFACTOR** — none needed; one small derived constant, no duplication.
-- 1 new test green.
-
-### Major 4 — `minHeight` instead of fixed `height` for Dynamic Type (@s3, same call sites as #3)
-- **RED** — same new file, `'lets the box grow with content instead of clipping the label'`
-  (`button.test.tsx:23-31`): flattens the `Pressable`'s style array and asserts
-  `flat.height === undefined` and `flat.minHeight === 40`. Failed against the old fixed
-  `height: HEIGHTS[size]` variant.
-- **GREEN** — `button.tsx:109,123`: dropped the `size`-keyed `height` variant block entirely,
-  passed `HEIGHTS[size]` into `styles.root(...)` as a `minHeight` parameter instead
-  (`button.tsx:94`, `:109`); `styles.useVariants` narrowed to `{ variant }` only (`button.tsx:59`)
-  since `size` no longer drives a style variant. `overflow: 'hidden'` (`button.tsx:119`)
-  deliberately kept — it also clips `StateLayer`'s hover/press wash to the rounded shape, not just
-  the label; the label itself can now grow the box via `minHeight` rather than being clipped.
-- **REFACTOR** — none needed.
-- 1 new test green; `button.test.tsx` totals 2 tests, both green alongside 9 other
-  `login-form.test.tsx` tests (11 total in `@helsoft/components` for these two files).
-
-### Minor 5 — silence "Multiple GoTrueClient instances" noise (no behavior/scenario change)
-- **RED** — added a regression test,
-  `'does not trigger a "Multiple GoTrueClient instances" warning across this file'`
-  (`auth.integration.test.ts:114-119`), spying on `console.warn` from `beforeAll` and asserting no
-  captured call's message contains that substring. Failed against the old per-test
-  `initSupabase()` call (real warning fired from the 2nd test onward).
-- **GREEN** — `auth.integration.test.ts:15-34`: hoisted `initSupabase(...)` out of
-  `buildMockedClient()` into a single `beforeAll` building one `sharedClient` for the whole file
-  (mirrors how the app calls `initSupabase()` exactly once at startup); `buildMockedClient()` now
-  only re-attaches the `onAuthStateChange` spy against the shared client per test.
-  `warnSpy`/`afterAll(warnSpy.mockRestore())` added around it.
-- **REFACTOR** — none needed; the change collapses to fewer real clients, not more code.
-- 5 tests green (4 existing + 1 new regression guard); zero `console.warn` noise on a full run.
-
-### Minor 6 — dedupe `authValue`/`localizationValue` test factories (test-code only, no behavior change)
-Pure refactor under green tests per `tdd.md`'s own rule for test-code cleanup — no new
-RED/GREEN cycle, tests stayed green throughout the extraction.
-- **REFACTOR** — extracted the identical `authValue`/`localizationValue` factory pair, previously
-  duplicated verbatim in `sign-in-form.test.tsx:23-36` and `sign-out.test.tsx:18-31`, into a new
-  shared module `libs/study-buddy/src/test-utils/auth-test-factories.ts`. Both test files now
-  `import { authValue, localizationValue } from '../../test-utils/auth-test-factories'` instead of
-  declaring their own copy. `language-settings.test.tsx`'s pre-existing, differently-shaped
-  `localizationValue` (no `authValue`; plain `string`-typed `Overrides`, not
-  `Partial<ReturnType<typeof useAuth>>`) is untouched, per the review's explicit scope note.
-  `libs/study-buddy` full suite (14 tests across 3 files) re-ran green after the extraction; no
-  test assertions changed.
-
-### Round-1 fixes gate ✅
-`pnpm turbo run check-types --filter=@helsoft/services --filter=@helsoft/hooks
---filter=@helsoft/components --filter=@helsoft/study-buddy --filter=app-study-buddy`,
-`pnpm --filter @helsoft/hooks test`, `pnpm --filter @helsoft/components test`,
-`pnpm --filter @helsoft/study-buddy test`, and repo-wide `pnpm lint` all green. No new hardcoded
-strings/colors/dimensions — the `signingIn` label flows through `labels`/`t()` like its siblings,
-`HIT_SLOP`/`minHeight` derive from existing tokens (`layout.touchTarget`, `HEIGHTS`). `@s5, @s6,
-@s8, @s12, @s13` (Slice 2/3 scope) untouched this round.
-
----
-
-## Round-2 review fixes
-
-Responds to `docs/features/login-and-logout/review.md` (Round 2 consolidation: 1 major + 2 minor,
-zero blockers). One block per finding, same RED→GREEN→REFACTOR log style. Scenario stays `@s3`
-(Loading state) throughout.
-
-### Major 1 — iOS VoiceOver gets no announcement during Loading (@s3)
-- **RED** — added `'announces "Signing in…" via AccessibilityInfo when isSubmitting becomes
-  true'` (`login-form.test.tsx:84-97`): spies on `AccessibilityInfo.announceForAccessibility`,
-  renders Content first (asserts not called), then `rerender`s into `isSubmitting` and asserts
-  `toHaveBeenCalledWith(labels.signingIn)`. Failed: no such call anywhere in `login-form.tsx`.
-  - **Diagnostic detour**: the first RED run failed on the *wrong* assertion
-    (`not.toHaveBeenCalled()` before the transition) with 4 stray recorded calls. Traced (via a
-    temporary `expect.getState().currentTestName` + `jest.isMockFunction` probe, removed before
-    GREEN) to `react-native`'s `jest-expo` preset already auto-mocking
-    `AccessibilityInfo.announceForAccessibility` as a persistent `jest.fn()` from module load, so
-    call history survives across tests in the same file regardless of when `jest.spyOn` is first
-    called on it. Fixed by adding `announceSpy.mockClear()` right after `jest.spyOn(...)` in the
-    test, isolating this test's assertions from the other Loading-state tests' own mounts earlier
-    in the file (no production-code implication).
-- **GREEN** — `login-form.tsx:1-2` (import `AccessibilityInfo` alongside `useEffect`),
-  `:40-46`: a `useEffect` keyed on `[isSubmitting, labels.signingIn]` that calls
-  `AccessibilityInfo.announceForAccessibility(labels.signingIn)` whenever `isSubmitting` is
-  `true` — fires on the initial mount if Loading starts immediately, and again on every
-  false→true transition. The existing `accessibilityLiveRegion="polite"` `<Text>` is untouched
-  and still drives Android/Web; this is purely additive for iOS, where
-  `accessibilityLiveRegion` has no native effect.
-- **REFACTOR** — none needed; one small effect, no duplication.
-- 1 new test green; `login-form.test.tsx` totals 10 tests, all green.
-
-### Minor 2 — stale doc comment on `LOADING_INDICATOR_TEST_ID` (@s3, content-only)
-- No new test (per the review's own note — content-only, `check-types`/`test` staying green is
-  the check). `login-form.tsx:28`: dropped the "a11y label lands with the Slice 3 a11y pass"
-  clause (no longer true since Round 1), pointed the comment at the live-region Text node and
-  the new `AccessibilityInfo` call instead.
-  - First wording attempt (`` `<Text>` `` in backticks) accidentally tripped
-    `libs/localization/src/coverage/migration-coverage.test.ts`'s plain-text `LITERAL_TEXT_CHILD`
-    regex, which scans raw file source (not JSX-aware) for `<Text ...>literal`ed against the
-    literal string `<Text>` in the comment. Reworded to avoid the bare `<Text>` token
-    (`login-form.tsx:28`); `@helsoft/localization` suite back to 52/52 green.
-
-### Minor 3 — `auth.signingIn` (and `email`/`password`/`submit`) missing from all locale bundles (@s3, @s2)
-- No new test — `t()` is loosely typed (`key: string`, `use-localization.ts:11`) so missing keys
-  are not mechanically caught; the fix is content-only, scoped to exactly what
-  `sign-in-form.tsx:25-29` already calls (`auth.email`, `auth.password`, `auth.submit`,
-  `auth.signingIn`) plus their existing `toSignUp`/`toLogIn` siblings. Added all four keys to
-  `libs/localization/src/resources/{en,es,de,pt}.ts` under the `auth` namespace, matching each
-  bundle's existing style/capitalization. Deliberately did **not** add the unrelated
-  `auth.logOut*` keys `sign-out.tsx` also calls — those are task-8/Slice-3 scope per this file's
-  own Slice-1 design note and out of this review's stated scope (no test currently asserts their
-  literal copy, so nothing regresses).
-- `es`/`de`/`pt` are typed as `TranslationResource` (derived from `en`), so all four bundles had
-  to gain the same keys together or `check-types` would fail — confirmed green
-  (`pnpm check-types`, all 8 packages).
-
-### Round-2 fixes gate ✅
-`pnpm --filter @helsoft/components test` (29/29), `pnpm --filter @helsoft/localization test`
-(52/52), `pnpm --filter @helsoft/study-buddy test` (14/14), `pnpm --filter @helsoft/hooks test`
-(14/14), `pnpm --filter @helsoft/services test` (30/30), `pnpm check-types` (8 packages), `pnpm
-lint` all green. No hardcoded strings/colors/dimensions introduced. `@s5, @s6, @s8, @s12, @s13`
-(Slice 2/3 scope) untouched this round.
-
-Commit: `fix(login-and-logout): resolve Round 2 findings (iOS a11y, locale)`.
-
----
-
-## Mutation-kill pass (Phase 4 — StrykerJS survivors)
-
-Responds to `docs/features/login-and-logout/mutation.md` (28 addressable survivors across
-`@helsoft/services`, `@helsoft/hooks`, `@helsoft/components`, `@helsoft/study-buddy`). No
-production code changed anywhere in this pass — every implementation was already correct; every
-fix is a strengthened/added test that pins the exact behavior a mutant was allowed to silently
-break. One block per file, RED (mutant survives) → GREEN (test added, passes against real code,
-re-run of scoped Stryker confirms the kill).
-
-### `auth.service.ts` (@s9, @s2) — 4/4 killed
-- **RED** — verified in Node first (not guesswork) that `/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(' user@example.com')`
-  is `false` but the same pattern minus `^` is `true` (anchor pins the *start*); symmetric for
-  `'test@test.com@invalid'` and the `$` anchor (pins the *end*, rejecting trailing `@junk`).
-- **GREEN** — `auth.service.test.ts`: two new `isValidEmail` cases (leading-space, trailing-`@junk`);
-  `signIn`'s two existing rejection tests tightened from `.rejects.toThrow()` to
-  `.rejects.toThrow('Invalid email')` / `.rejects.toThrow('Password is required')` (exact message).
-- Scoped Stryker (`--mutate "src/services/auth.service.ts"`): 84.62% → **100.00%** (26/26 killed).
-
-### `use-auth.ts` (@s2, @s3, @s4) — 0/3 killed, all 3 confirmed equivalent
-- **RED** — the 3 survivors are all `useCallback` dependency-array mutations
-  (`withSubmitting`'s `[]`→`["Stryker was here"]`; `signIn`/`signOut`'s `[withSubmitting]`→`[]`).
-- **Analysis before writing tests**: `withSubmitting` closes over nothing that ever changes across
-  renders of one hook instance (only the React-stable `setIsSubmitting`), so its identity is
-  constant forever — meaning none of these 3 dependency-array mutations can ever produce an
-  observable behavior difference (a textbook equivalent mutant).
-- **Tried anyway, per this phase's "kill first" instruction** — added
-  `'keeps signIn and signOut referentially stable across re-renders'` and
-  `'a signIn reference captured on an earlier render still drives the current isSubmitting
-  state'` (`use-auth.test.ts`). Both green, both valuable regressions in their own right.
-- **GREEN (for the equivalence claim, not the mutants)** — re-ran scoped Stryker
-  (`--mutate "src/hooks/use-auth.ts"`) after adding both tests: still 62.50% (5/8), same 3
-  survivors, empirically confirming no test can distinguish real code from any of these 3
-  mutants. No inline Stryker ignore-comment exists in the installed
-  `@stryker-mutator/instrumenter@8.7.1` (verified against its source); the only lever
-  (`mutator.excludedMutations`) is a package-wide category disable, rejected as too broad.
-  Documented in `mutation.md` as an accepted, human-sign-off-requested risk (same
-  ESCALATE_MINORS precedent as this feature's own Round-3 review).
-
-### `login-form.tsx` (@s2, @s3) — 11/11 killed
-- **RED→GREEN**, one assertion group at a time: pristine initial state
-  (`getByLabelText('Email'|'Password').props.value === ''` on a bare render — kills both
-  `useState('')`→`useState("Stryker was here!")` mutants); the literal `LOADING_INDICATOR_TEST_ID`
-  string (`expect(LOADING_INDICATOR_TEST_ID).toBe('login-form-loading-indicator')` — kills the
-  `= ""` mutant that survived because every query in the file uses the same, now-consistently-empty,
-  imported constant); submit-row layout (`toHaveStyle({ flexDirection: 'row', alignItems:
-  'center', gap: spacing.s3 })` on the submit button's parent View — kills the `submitRow`
-  object-literal mutant plus its two property mutants); form vertical rhythm
-  (`toHaveStyle({ gap: spacing.s4 })` two levels up — kills the `form` object-literal mutant, and
-  transitively the whole-`StyleSheet.create()`→`{}` mutant since any of the three style objects
-  going missing now fails an assertion); live-region visual-hiding
-  (`toHaveStyle({ position: 'absolute', width: 1, height: 1, overflow: 'hidden' })` on the
-  live-region `<Text>` — kills `visuallyHidden` and its two property mutants).
-- **REFACTOR** — none needed; each new test is a single, focused assertion group, no duplication.
-- Scoped Stryker (`--mutate "src/organisms/login-form/login-form.tsx"`): 50.00% → **100.00%**
-  (22/22 killed). 5 new tests, `login-form.test.tsx` now 15 total, all green.
-
-### `button.tsx` — 0/40 killed this pass, all 40 confirmed out of scope
-- **Not a test gap left unaddressed** — investigated every surviving line's origin via
-  `git show 7751666 -- .../button.tsx` (this feature's own Round-1 commit that touched the file).
-  39 of the 40 sit on lines this feature never added/changed (icon/label padding math, the
-  elevated-variant shadow branch, `root`'s non-`minHeight` layout properties, the
-  `variant`→background-color map, `fgByVariant`, `stateOpacity`) — pre-existing since
-  `913e38b` ("feat(components): add Material Design 3 themed component library"), before
-  `button.test.tsx` existed at all (per this file's own Round-1 log entry). This feature's own
-  hitSlop/minHeight lines (`:34-39,92,94,109,123`) have **zero** survivors — already 100% from the
-  two Round-1 tests.
-- The 1 remaining survivor **is** on a line this feature edited
-  (`:59:22`, `useVariants({ variant })`→`useVariants({})`, from dropping `size` out of that call).
-  Did not assume equivalence — inspected `node_modules/react-native-unistyles/src/mocks.ts`
-  directly: the official Jest mock makes `useVariants` a complete no-op and unconditionally strips
-  `variants`/`compoundVariants` from every resolved style before returning it. No test, in this
-  toolchain, can ever observe a difference from what's passed to `useVariants(...)` — confirmed by
-  reading the mock's source, not inferred from the empty coverage line.
-- **Disposition** — no new tests added (none would kill anything real); documented in full in
-  `mutation.md` with the line-by-line origin trace.
-
-### `sign-in-form.tsx` (@s3) — 1/1 killed
-- **RED→GREEN** — `'passes the auth.signingIn i18n key into the Loading affordance'`: renders with
-  `authValue({ isSubmitting: true })` and asserts `getByText('auth.signingIn')` (the test-double
-  `t()` echoes its key verbatim, so asserting the on-screen text pins the exact key string passed
-  to `t(...)`, killing the `t('auth.signingIn')`→`t("")` mutant).
-- Scoped Stryker: 90.00% → **100.00%** (10/10 killed).
-
-### `sign-out.tsx` (@s4, @s10, @s11) — 3/3 killed
-- **RED→GREEN**: `'does not show the confirmation dialog before the trigger is pressed'`
-  (`queryByText('auth.logOutConfirmBody')` is `null` pre-press — kills the initial
-  `useState(false)`→`useState(true)` mutant, verified real `Modal`'s `visible` prop genuinely gates
-  child rendering at the RN level, not just visually); the existing "shows a confirmation dialog"
-  test extended to also assert `getByText('auth.logOutConfirmHeadline')` (previously only body copy
-  was checked — kills the headline `t(...)`→`t("")` mutant); `'closes the confirmation dialog after
-  confirming'` (`queryByText('auth.logOutConfirmBody')` is `null` after pressing confirm — kills
-  the `setConfirmOpen(false)`→`setConfirmOpen(true)` mutant inside `onConfirm`).
-- Scoped Stryker: 76.92% → **100.00%** (13/13 killed).
-
-### Mutation-kill pass gate
-`pnpm turbo run test` (all workspaces), `pnpm turbo run check-types --filter=@helsoft/services
---filter=@helsoft/hooks --filter=@helsoft/components --filter=@helsoft/study-buddy
---filter=app-study-buddy`, and `pnpm lint` all green. No production code touched — every change is
-test-only. Full breakdown, including the two documented-equivalent-mutant exceptions
-(`use-auth.ts` ×3, `button.tsx`'s `useVariants` line ×1) and the 39 pre-existing/out-of-scope
-`button.tsx` survivors, is in `docs/features/login-and-logout/mutation.md`.
-
-Commit: `test(login-and-logout): kill surviving mutants`.
-
----
-
-## Slice 2 — Empty + Error + Retry
-
-### @s → test map (Slice 2)
+## @s → test map (Slice 2)
 
 | @s | Scenario | Test(s) |
 |---|---|---|
@@ -422,663 +70,51 @@ Commit: `test(login-and-logout): kill surviving mutants`.
 | @s8 | Pristine form disables submission, no error | `login-form.test.tsx` (Empty state) |
 | @s9 | Malformed email / empty password rejected inline | `auth.service.test.ts` (validation_error code), `login-form.test.tsx` (emailError/passwordError props), `sign-in-form.test.tsx` (email wiring; empty-password covered by Empty-state gating) |
 
-### task-6 — Auth error contract: `AuthErrorCode`/`AuthError` + normalization (@s5, @s6)
+## Slice 2 — Empty + Error + Retry
+- **task-6 error contract (@s5,@s6)** — `libs/types/src/auth-error.ts` (`AuthErrorCode`/`AuthError`); `toAuthError`/`normalizeAuthError` (`isAuthApiError`→`invalid_credentials`, else `network_error`); `signIn` try/catch normalizes; retryable/unknown/retry-works tests; validation throws `validation_error`; `useAuth.error` set/cleared per attempt. 19 service + 9 hook + 6 integration green.
+- **task-7 Empty+Error+inline (@s5,@s6,@s8,@s9)** — `isPristine` gate disables submit (@s8); `errorMessage` banner (MD3 tokens, editable @s5/@s6); `emailError`/`passwordError` inline via `TextField.error/supportingText`, `hasFieldError` gates submit (@s9). Stories `Empty`/`Content`/`Loading`/`Error`/`ErrorInlineValidation`. 24 tests.
+- **Wiring SignInForm (@s5,@s6,@s9)** — `handleSubmit` validates email → `emailError` before `signIn` (@s9); `AUTH_ERROR_KEYS` maps `useAuth().error` → `errorMessage` (@s5/@s6). Removed unreachable `passwordError` branch (dead per `isPristine` gating) — see spec Open decisions. 9 tests.
+- **Slice-2 gate** — all workspaces test/check-types/lint/e2e green; `auth.error.*` content lands task-8.
 
-- **RED** — `auth.service.test.ts`: `'normalizes a Supabase invalid-login error to a sanitized
-  invalid_credentials code'`, asserting both `.rejects.toMatchObject({ code:
-  'invalid_credentials' })` (passed immediately — a real supabase-js `AuthApiError` already
-  carries that raw code) **and** `.rejects.not.toHaveProperty('status')` (failed — the raw
-  `AuthApiError` propagated untouched, `status` intact). Confirmed red via a real test run before
-  implementing.
-- **GREEN** — added `libs/types/src/auth-error.ts` (`AuthErrorCode`, `AuthError`, plain TS,
-  exported via `libs/types/src/index.ts`); `auth.service.ts`: a `toAuthError(code, message)`
-  helper (`Object.assign(new Error(message), { code })`) and `normalizeAuthError(cause)`
-  (`isAuthApiError(cause)` from `@supabase/supabase-js` → `invalid_credentials`; anything else →
-  `network_error`, the safe default); `signIn` now `try { … } catch (cause) { throw
-  normalizeAuthError(cause); }`.
-- **RED→GREEN** — added `'normalizes a Supabase retryable-fetch error to network_error'`
-  (`AuthRetryableFetchError`) and `'normalizes an unrecognized thrown exception (e.g. offline
-  fetch) to network_error'` (`TypeError`) — both passed immediately against the already-general
-  `normalizeAuthError` (the single `else` branch already covered both; confirms the design rather
-  than adding new code, same pattern as Slice 1's task-3 note).
-- **RED→GREEN** — `'resolves normally on a subsequent call after a prior network_error (retry
-  works)'` (@s6): sequential `mockRejectedValueOnce`/`mockResolvedValueOnce` — passed immediately
-  (no shared mutable state in `AuthService.signIn` to leak between calls).
-- **RED** — strengthened the two existing validation-rejection tests to also assert
-  `.rejects.toMatchObject({ code: 'validation_error' })`. To prove this was genuinely red (not a
-  trivial pass), temporarily reverted `signIn`'s two validation throws back to bare `new
-  Error(...)`, re-ran, confirmed both new assertions failed, then re-applied `throw
-  toAuthError('validation_error', …)` — green again.
-- **GREEN** — `use-auth.ts`: added `error: AuthErrorCode | null` to `UseAuthResult`; `signIn`
-  clears it (`setError(null)`) before the call and sets it from the caught error's `.code` on
-  failure. Driven by a new `use-auth.test.ts` test (`'sets error to the failed signIn code, and
-  null on a subsequent successful signIn'`) — red on `Property 'error' does not exist` (compile
-  failure), green once implemented. A second test (`'clears a previous error immediately when a
-  new signIn attempt starts, before it resolves'`, matching spec.md's Loading-state "no error
-  yet" note) passed immediately — the `setError(null)`-before-`await` placement already covered
-  it.
-- **Value export** — `libs/services/src/index.ts` gained a value (not type-only) re-export of
-  `AuthApiError` from `@supabase/supabase-js`, so consuming tests can build realistic supabase-js
-  error shapes instead of ad-hoc plain objects.
-- **Integration** — `auth.integration.test.ts`: new test `'surfaces invalid_credentials on a real
-  Supabase auth error, then recovers on a valid retry'` — a real `AuthApiError` returned from a
-  mocked `client.auth.signInWithPassword`, exercised through the full `useAuth -> AuthService ->
-  AuthDao` stack against the shared mocked-Supabase-client boundary; asserts `useAuth().error ===
-  'invalid_credentials'` with no session, then a second call establishing the session and
-  clearing `error` (@s6's retry, end-to-end). Passed immediately (confirms the already-correct
-  wiring); still valuable as this slice's required integration test.
-- **REFACTOR** — none needed beyond the deliberate revert/reapply above; `toAuthError`/
-  `normalizeAuthError` stayed short, single-purpose, no duplication.
-- `@helsoft/hooks` gained a declared `@helsoft/types` dependency (needed for `AuthErrorCode`).
-- 19 tests green in `auth.service.test.ts`, 9 in `use-auth.test.ts`, 6 in
-  `auth.integration.test.ts`. `pnpm --filter @helsoft/services check-types` /
-  `@helsoft/hooks check-types` / `@helsoft/types check-types` all clean.
+## Slice 2, Round 1 fixes (1 major + 3 minor; design approved 0)
+- **Major 1 (@s5,@s6)** — `normalizeAuthError` now requires `isAuthApiError && code === INVALID_LOGIN_CODE`; other GoTrue errors → `network_error`. 20 tests.
+- **Minor 2 (@s9)** — documented the empty-password scope cut (unreachable `passwordError`) as a spec.md Open decision + `sign-in-form.tsx` docblock pointer.
+- **Minor 3** — removed test-only `AuthApiError` re-export from `services` barrel; added `libs/hooks/src/test-utils/auth-error-fixtures.ts` (`buildAuthApiErrorFixture`, duck-typed). hooks 20/20.
+- **Minor 4 (@s5,@s6)** — added `isAuthErrorShape` runtime guard in `useAuth` replacing unchecked `(cause as AuthError).code` cast. hooks 20/20.
+- **Gate ✅** — 6/6 test, 8/8 check-types, lint green.
 
-### task-7 — LoginForm Empty + Error states, inline validation (@s5, @s6, @s8, @s9)
-
-- **RED** — `login-form.test.tsx`: `'disables the submit control and shows no error on a
-  pristine (empty) form'` (@s8) — failed: submit was enabled on a bare render.
-- **GREEN** — `login-form.tsx`: `isPristine = !email.trim() || !password.trim()`; `Button
-  disabled={isSubmitting || isPristine}`.
-- **Collateral fix** — the pre-existing Slice-1 test `'does not show the loading affordance or
-  disable controls outside of isSubmitting'` broke once Empty-state gating landed (it asserted
-  submit `disabled: false` on a *pristine* render, which is no longer true — Empty and Content are
-  now distinct states). Updated it to type both fields first, so it now genuinely exercises the
-  Content state it was always meant to describe.
-- **RED** — `'renders an error banner and keeps the form editable when errorMessage is given'` and
-  `'renders a different error banner string for a network error'` (@s5/@s6) — failed:
-  `errorMessage` prop didn't exist.
-- **GREEN** — added `errorMessage?: string` to `LoginFormProps`; a banner `View`/`Text` (MD3
-  `theme.colors.errorContainer`/`onErrorContainer`, `theme.shape.card`, `theme.spacing.s3`,
-  `theme.typography.bodyMedium` — tokens only) rendered above the fields when `errorMessage` is
-  set. A third test (`'keeps submit enabled … alongside an errorMessage banner'`) confirms the
-  banner never blocks retry, per spec's error-contract table ("Retry: Edit + resubmit").
-- **RED** — `'renders emailError as inline supporting text on the email field and blocks submit'`
-  and the password equivalent (@s9) — failed: no `emailError`/`passwordError` props.
-- **GREEN** — added `emailError?: string`/`passwordError?: string`; wired into each `TextField`'s
-  existing `error`/`supportingText` props; `hasFieldError = !!emailError || !!passwordError` added
-  to the submit-disabled condition alongside `isSubmitting`/`isPristine`.
-- **REFACTOR** — none needed; each new prop is a one-line addition to existing conditions/JSX, no
-  duplication introduced.
-- **Stories** — rewrote `login-form.stories.tsx`: renamed the old no-args story to `Empty`
-  (pristine, matches its actual rendered state now); added `Content` using a Storybook `play`
-  function (`userEvent.type`, same pattern as `text-field.stories.tsx`'s `Filled` story) to type
-  valid credentials, since the component owns its field state internally; kept `Loading`; added
-  `Error` (banner) and `ErrorInlineValidation` (field-level) — all four spec.md UI states plus the
-  two Error flavors the task called out explicitly.
-- 24 tests green in `login-form.test.tsx` (up from 17); `pnpm --filter @helsoft/components
-  check-types` clean; `pnpm --filter @helsoft/components exec playwright test --reporter=list`
-  — 19/19 existing e2e tests still green (no new e2e this slice — LoginForm's own e2e is task-9,
-  Slice 3, per `tasks.md`).
-
-### Wiring — `SignInForm` (@s5, @s6, @s9)
-
-Not in task-7's own `paths:` list, but required to make @s5/@s6/@s9 observable end-to-end (per
-spec.md: "the parent (SignInForm, using AuthService validators) decides validity") — the vertical
-slice would otherwise be dead props no wiring ever populates.
-
-- **RED** — `sign-in-form.test.tsx`: `'shows an inline email error and does not call signIn when
-  the email is malformed'`, `'renders the invalidCredentials banner …'`, `'renders the network
-  banner …'` — all 3 failed (no such wiring existed).
-- **GREEN** — `sign-in-form.tsx`: `handleSubmit` calls `AuthService.isValidEmail(email)`; on
-  failure sets `emailError` (via `t('auth.error.email')`) and returns without calling `signIn`
-  (@s9, no network call made); a small `AUTH_ERROR_KEYS` map (`invalid_credentials` /
-  `network_error` → i18n key) turns `useAuth().error` into `LoginForm`'s `errorMessage` (@s5/@s6).
-- **Design correction caught before commit**: an initial version also mirrored
-  `AuthService.isNonEmptyPassword` into a `passwordError` state in `SignInForm`. Analysis showed
-  this branch is **unreachable** — `LoginForm`'s own Empty-state gating (`isPristine`, this same
-  slice's @s8 work) already disables the submit control whenever the password is blank/whitespace,
-  so `handleSubmit` can never be invoked with one; the "shows an inline password error…" test
-  written against it only asserted the submit button was disabled, never actually observing
-  `passwordError`. Removed the dead `passwordError` state/branch from `sign-in-form.tsx` (no
-  production code without a test that can actually drive it) and renamed the test to
-  `'keeps submit disabled (never calling signIn) when the password is cleared back to blank'`,
-  asserting `signIn` is never called — documenting that this half of @s9 is fully covered by
-  `LoginForm`'s own Empty-state gating, with `AuthService.signIn`'s own `validation_error` throw
-  (task-6) as the defensive backstop for any caller that bypasses the form entirely. `LoginForm`'s
-  `passwordError` prop itself stays fully specified and tested at the component level (task-7's
-  own done-criteria), independent of whether current wiring populates it.
-- `auth-test-factories.ts`'s `authValue()` gained `error: null` as its default.
-- 9 tests green in `sign-in-form.test.tsx` (up from 4); `pnpm --filter @helsoft/study-buddy
-  check-types` clean.
-
-### Slice-2 gate
-
-`pnpm turbo run test` (all workspaces — 6/6 green), `pnpm turbo run check-types` (8/8 packages
-green), `pnpm lint` clean, `pnpm --filter @helsoft/components exec playwright test
---reporter=list` (19/19 existing e2e green, non-interactive `list` reporter per the
-`storybook-e2e-tests` skill). No hardcoded strings/colors/dimensions — the error banner and every
-new prop's copy comes from `errorMessage`/`emailError`/`passwordError`/`labels`, all sourced from
-`t()` one layer up in `SignInForm`; the banner's visual tokens are all `theme.colors`/
-`theme.shape`/`theme.spacing`/`theme.typography`. `auth.error.*` i18n key **content** (actual
-translated strings, currently falling back to the raw key like `signingIn` did before task-8 in
-Slice 1) lands in task-8 (Slice 3) — no test in this slice asserts literal translated copy.
-
-Awaiting the per-slice `reviewer_code` + `reviewer_design` review before flipping task-7 to `done`
-and committing (`feat(login-and-logout): add error handling and empty state`).
+## Slice 2, Round 2 fixes (2 blockers; both verified RED via revert→confirm→restore)
+- **Blocker 1 (@s9)** — submit-deadlock after one malformed email: `LoginForm.onEmailChange` + `SignInForm.handleEmailChange` re-validates only once `emailError` is set (clears when valid). components 25/25, study-buddy 10/10.
+- **Blocker 2 (@s5,@s6,@s9)** — missing `auth.error.{email,invalidCredentials,network}` keys added to all 4 bundles + coverage test scanning `sign-in-form/` (flagged `sign-out.tsx`'s keys forward). localization 54/54.
+- **Gate ✅** — all workspaces + check-types(8) + lint + e2e 19/19 green.
 
 ---
 
-## Slice 2, Round 1 review fixes
-
-Responds to `docs/features/login-and-logout/review.md` (Slice 2 per-slice consolidation: 1 major
-+ 3 minor from `reviewer_code`; `reviewer_design` approved with zero findings). Slice mode — every
-finding fixed, no open minors. One block per finding, same RED→GREEN→REFACTOR log style.
-
-### Major 1 — `normalizeAuthError` over-classified any GoTrue `AuthApiError` as `invalid_credentials` (@s5, @s6)
-- **RED** — added `'does not classify a differently-coded AuthApiError (e.g. unconfirmed email)
-  as invalid_credentials'` (`auth.service.test.ts`, `signIn error normalization` block):
-  constructs `new AuthApiError('Email not confirmed', 400, 'email_not_confirmed')` and asserts
-  `signIn` rejects with `{ code: 'network_error' }`. Failed against the old
-  `isAuthApiError(cause)`-only check (got `invalid_credentials` instead).
-- **GREEN** — `auth.service.ts`: `normalizeAuthError` now requires both
-  `isAuthApiError(cause)` **and** `cause.code === INVALID_LOGIN_CODE` (`'invalid_credentials'`,
-  the exact code GoTrue returns for a wrong email/password — verified against `@supabase/auth-js`
-  error codes) before classifying as `invalid_credentials`; every other `AuthApiError` (and
-  everything else, as before) falls through to the safe `network_error` default. Docstring
-  updated to state the narrower rule explicitly.
-- **REFACTOR** — none needed; one added condition plus a named constant, no duplication.
-- 20/20 `auth.service.test.ts` tests green (up from 19 pre-fix), including all pre-existing
-  `invalid_credentials`-code tests.
-
-### Minor 2 — undocumented empty-password scope cut (`passwordError` never wired in `SignInForm`) (@s9)
-- No new test — this finding is about documentation, not behavior. Re-verified the reachability
-  analysis already recorded in this file's Slice-2 "Wiring — SignInForm" section above: `LoginForm`'s
-  `isPristine` gate (`!email.trim() || !password.trim()`) uses the identical blank/whitespace rule
-  as `AuthService.isNonEmptyPassword`, so the submit control is disabled for any blank password and
-  `handleSubmit` can never fire with one — a mirrored `passwordError` branch in `SignInForm` would
-  be dead code no test could legitimately drive (Three Laws), which is exactly why it was removed
-  during the original build. Chose **option (b)**: promoted this from an implicit code comment to
-  an explicit, human-facing **Open decision** in `spec.md` ("Open decisions (confirmed)" section),
-  documenting the reasoning and cross-referencing this file. Added a one-line pointer from
-  `sign-in-form.tsx`'s docblock to the new spec.md entry.
-- Re-ran `@helsoft/study-buddy` suite (comment-only change) — 22/22 green, unaffected.
-
-### Minor 3 — `AuthApiError` re-exported from `@helsoft/services`'s production barrel for test convenience
-- **RED** — removed `export { AuthApiError } from '@supabase/supabase-js';` from
-  `libs/services/src/index.ts` first, confirming the only consumer,
-  `libs/hooks/src/hooks/auth.integration.test.ts`, broke (`TypeError: services_1.AuthApiError is
-  not a constructor`) — proving this was the sole reason for the export and it was safe to remove.
-- **GREEN** — created `libs/hooks/src/test-utils/auth-error-fixtures.ts` exporting
-  `buildAuthApiErrorFixture(message, status, code)`, a duck-typed fixture (`Object.assign(new
-  Error(message), { name: 'AuthApiError', status, code, __isAuthError: true })`) matching the exact
-  shape `@supabase/auth-js`'s `isAuthError`/`isAuthApiError` check at runtime — without
-  `@helsoft/hooks` taking a direct dependency on `@supabase/supabase-js` (confirmed it has none:
-  no `@supabase` entry in `libs/hooks/node_modules`) just for test fixtures. Chose a
-  package-local `test-utils` module (mirroring `libs/study-buddy/src/test-utils/`'s existing
-  pattern) over a cross-package deep import, since `libs/services` has no equivalent test-utils
-  directory and no `package.json` "exports" map to support one safely. Updated
-  `auth.integration.test.ts` to import `buildAuthApiErrorFixture` instead of `AuthApiError`.
-- **REFACTOR** — none needed.
-- `@helsoft/hooks` suite 20/20 green (`auth.integration.test.ts` 6/6, including the fixed test);
-  `@helsoft/services` and `@helsoft/hooks` `check-types` both clean.
-
-### Minor 4 — unchecked `(cause as AuthError).code` type assertion in `useAuth` (@s5, @s6)
-- **RED** — added `'falls back to network_error when the rejected cause has no valid string
-  code'` (`use-auth.test.ts`): `service.signIn.mockRejectedValueOnce({ message: 'boom' })` (no
-  `.code`), asserts `result.current.error` becomes `'network_error'`. Failed against the old
-  unchecked cast (`result.current.error` was `undefined`, not `'network_error'`).
-- **GREEN** — `use-auth.ts`: added a narrow runtime guard `isAuthErrorShape(cause): cause is
-  AuthError` checking `typeof (cause as { code?: unknown } | null)?.code === 'string'`; the catch
-  block now does `setError(isAuthErrorShape(cause) ? cause.code : 'network_error')` instead of the
-  bare cast.
-- **REFACTOR** — none needed; one small local guard function, no duplication.
-- `@helsoft/hooks` suite 20/20 green (up from 19); `check-types` clean.
-
-### Slice-2, Round-1 fixes gate ✅
-`pnpm turbo run test` (6/6 workspaces green), `pnpm turbo run check-types --force` (8/8 packages
-green), `pnpm lint` clean (only `app-study-buddy` defines a lint script; cache hit, clean). No
-components/Storybook files touched this round (all 4 findings are in `@helsoft/services`,
-`@helsoft/hooks`, `libs/study-buddy` docblock/comment, and `spec.md`), so the Playwright e2e suite
-was not re-run — not relevant to this round's changes. Scope held to exactly the 4 review
-findings — no drive-by refactors, no Slice 1/3 files touched.
-
-Awaiting `reviews_lead` re-review before flipping task-7 to `done` and committing.
-
-## Slice 2, Round 2 review fixes
-
-Responds to `docs/features/login-and-logout/review.md` (Slice 2, round 2 consolidation: 2 blockers
-from `reviewer_code`'s fresh full pass; `reviewer_design` approved with zero findings both rounds).
-Slice mode — both findings fixed, no open items. One block per finding, same RED→GREEN→REFACTOR
-log style. Both findings were verified RED first by temporarily reverting just the production fix
-(component/prop wiring or the locale-bundle addition) while leaving the new test in place, running
-the suite to confirm the exact reported failure reproduced, then restoring the fix — not merely
-inferred.
-
-### Blocker 1 — permanent submit deadlock after one malformed-email attempt (@s9)
-- **Bug** — `SignInForm.emailError` was only ever set/cleared inside `handleSubmit`.
-  `LoginForm`'s submit button disables via `hasFieldError = !!emailError || !!passwordError`.
-  Once a malformed email set `emailError`, the only control that could ever re-run
-  `handleSubmit` (and thus clear it) was that same now-disabled button — permanently
-  deadlocking the form after one typo, with no test driving the "corrected then resubmit" path.
-- **RED** — added `'re-enables submit and calls signIn after correcting a malformed email
-  post-error'` (`sign-in-form.test.tsx`): submits with `'not-an-email'` (asserts the
-  `auth.error.email` text and that `signIn` was not called), then changes the email to
-  `'user@example.com'` and asserts the error text is gone, the submit button is enabled, and a
-  second press calls `signIn('user@example.com', 'secret1')`. Also added `'calls onEmailChange
-  with the new value as the email field changes'` (`login-form.test.tsx`) for the new prop.
-  Verified both fail against the pre-fix code (temporarily reverted just the fix, kept the
-  tests): `login-form.test.tsx` — 1/25 failing (`onEmailChange` never called, 0 calls recorded);
-  `sign-in-form.test.tsx` — 1/10 failing (`auth.error.email` text still present after correcting
-  the email, i.e. never cleared).
-- **GREEN** — `login-form.tsx`: added an optional `onEmailChange?: (email: string) => void` prop;
-  the email `TextField`'s `onChangeText` now goes through a local `handleEmailChange` that updates
-  `email` state and forwards the value to `onEmailChange` (LoginForm stays presentational — it only
-  reports the change, it doesn't decide validity). `sign-in-form.tsx`: added a `handleEmailChange`
-  that re-validates via `AuthService.isValidEmail` **only when `emailError` is already set**
-  (`if (!emailError) return;`), setting it to `undefined` once the email becomes valid or to the
-  updated message if still invalid, and wired it as `LoginForm`'s `onEmailChange`. Gating on "an
-  error already exists" — rather than validating unconditionally on every keystroke — keeps @s9's
-  submit-triggered-validation behavior intact for a fresh/first attempt (no premature error while
-  the user is still typing their first-ever input) while making the deadlock impossible once an
-  error has been shown: the field becomes live-validated exactly from that point on, so correcting
-  it re-enables submit without a second submit attempt.
-- **REFACTOR** — none needed; one new prop, one new handler on each side, no duplication.
-- `@helsoft/components` 25/25 green (up from 24); `@helsoft/study-buddy` 10/10 green (up from 9).
-  Both `check-types` clean.
-
-### Blocker 2 — missing `auth.error.*` locale keys (@s5, @s6, @s9)
-- **Bug** — `sign-in-form.tsx` calls `t('auth.error.email')`, `t('auth.error.invalidCredentials')`,
-  `t('auth.error.network')`, none of which existed in any of the 4 locale bundles. i18next has no
-  missing-key handler configured, so a real user would see the literal key string instead of a
-  translated message, in every locale.
-- **RED** — added an `error` key-existence test to `libs/localization/src/coverage/
-  migration-coverage.test.ts` (new `describe('t() key existence coverage (sign-in-form)')`):
-  statically scans `sign-in-form.tsx` for quoted, dot-delimited literals (catches both a direct
-  `t('auth.error.email')` call and the `AUTH_ERROR_KEYS` lookup-map's literal values later passed
-  to `t(variable)`) and asserts each resolves against a flattened `en.translation`. Verified RED by
-  temporarily reverting only the `auth.error.*` addition in `en.ts` (keeping the test): 2/4 tests
-  failed, reporting the exact 3 missing keys (`auth.error.invalidCredentials`, `auth.error.network`,
-  `auth.error.email`).
-- **GREEN** — added `error: { email, invalidCredentials, network }` under `auth` in all 4 bundles
-  (`en`/`es`/`de`/`pt`), matching `spec.md`'s error-contract table's exact required English copy
-  for `invalidCredentials` ("Invalid email or password") and `network` ("Network error"); `email`
-  uses "Enter a valid email address" (no literal copy was specified for this one in `spec.md`/
-  `gherkin-scenarios.md`, so it follows the existing inline-validation wording already used in
-  `login-form.test.tsx`'s own fixtures). Translated the same 3 keys into `es`/`de`/`pt` matching
-  each bundle's existing tone/capitalization. Since `es`/`de`/`pt` are typed as `TranslationResource`
-  (derived from `en`), `check-types` would fail if any bundle were missing the new keys — confirmed
-  by leaving them aligned.
-- **Regression guard scope** — deliberately scoped the new coverage check to
-  `libs/study-buddy/src/components/sign-in-form/` only, not the whole `study-buddy` lib: a
-  lib-wide sweep would also need to account for `sign-out.tsx`'s own **pre-existing** missing
-  `auth.logOut`/`auth.logOutConfirm*` keys (confirmed present in `sign-out.tsx`/
-  `sign-out.test.tsx`, committed before this slice, not referenced anywhere in `review.md`'s Slice-2
-  findings). That component is out of this fix's scope (not touched, per the round-2 brief) —
-  flagging it here for `reviews_lead`/a future round's visibility rather than silently fixing or
-  silently ignoring it.
-- **REFACTOR** — none needed.
-- `@helsoft/localization` 54/54 green (up from 52, +2 new tests); `check-types` clean across all
-  8 packages (locale-bundle key alignment enforced by `TranslationResource`).
-
-### Slice-2, Round-2 fixes gate ✅
-`pnpm turbo run test` (6/6 workspaces green: `@helsoft/services` 37/37, `@helsoft/hooks` 20/20,
-`@helsoft/components` 44/44, `@helsoft/study-buddy` 23/23, `@helsoft/localization` 54/54,
-`@helsoft/lib-with-storybook` 2/2), `pnpm turbo run check-types --force` (8/8 packages green),
-`pnpm lint` clean. `login-form.tsx`'s prop surface changed (`onEmailChange` added), so also ran
-`pnpm --filter @helsoft/components exec playwright test --reporter=list` — 19/19 green (no
-`login-form.e2e.js` exists yet; unaffected). Scope held to exactly the 2 round-2 findings — no
-drive-by refactors, no Slice 1/3 files touched, `AuthService.isValidEmail`'s direct-call-from-
-component pattern left untouched per the sanctioned "Direct Service Usage" exception.
-
-Awaiting `reviews_lead` re-review before flipping task-7 to `done` and committing.
-
----
-
-## Slice 3 — a11y + i18n
-
-### @s → test map (Slice 3)
+## @s → test map (Slice 3)
 
 | @s | Scenario | Test(s) |
 |---|---|---|
 | @s12 | The login form is accessible (labels, button role, error announced) | `login-form.test.tsx` (roles/labels/live-region/AccessibilityInfo/accessibilityHint/reading-order), Playwright `login-form.e2e.js` |
 | @s13 | All user-facing strings are localized | `migration-coverage.test.ts` (`t()` key existence coverage, sign-in-form + sign-out), locale bundles `en/es/de/pt` |
 
-### task-8 — i18n keys: closing the `sign-out.tsx` gap (@s13)
-
-- **Context** — `auth.email`/`auth.password`/`auth.submit`/`auth.signingIn`/`auth.toSignUp`/
-  `auth.toLogIn`/`auth.error.{email,invalidCredentials,network}` already exist in all 4 bundles
-  (added during Slice 2's Round-2 blocker fix). The one open gap, explicitly flagged forward in
-  `review.md`'s Slice-2 "Flagged forward" note, is `sign-out.tsx`'s `auth.logOut`/
-  `auth.logOutConfirmHeadline`/`auth.logOutConfirmBody`/`auth.logOutConfirmAction`/
-  `auth.logOutCancelAction` calls — none of which existed in any bundle.
-- **RED** — extended `migration-coverage.test.ts` with a new `'t() key existence coverage
-  (sign-out)'` describe block (mirroring the existing sign-in-form one), scanning
-  `libs/study-buddy/src/components/sign-out` for dotted key literals and asserting each resolves
-  in the flattened `en` bundle. Ran and confirmed genuinely red: reported the exact 5 missing
-  keys (`auth.logOut`, `auth.logOutConfirmHeadline`, `auth.logOutConfirmAction`,
-  `auth.logOutCancelAction`, `auth.logOutConfirmBody`).
-- **GREEN** — added all 5 keys under `auth` in `en.ts` (English source strings) and translated
-  into `es`/`de`/`pt` (native, not placeholder, copy matching each bundle's existing tone). Since
-  `es`/`de`/`pt` are typed as `TranslationResource` (derived from `en`), `check-types` enforces
-  the 4 bundles stay key-aligned.
-- **REFACTOR** — deduped the now-two near-identical "does every dotted key literal in `<dir>`
-  resolve" blocks (sign-in-form, sign-out) into one `describe.each`-parameterized block over an
-  `AUTH_COMPONENT_DIRS` list; moved the detector's own self-test ("sanity-checks the detector
-  against a known missing key", unrelated to any one component) into its own top-level describe.
-  Re-ran green throughout — no assertions changed, purely a test-code restructuring.
-- `@helsoft/localization` 55/55 green (up from 54); `@helsoft/study-buddy` 23/23 green (unaffected
-  — `sign-out.test.tsx` mocks `t()` to echo its key, so it never asserted literal copy).
-  `pnpm turbo run check-types` (8/8), `pnpm lint` clean.
-
-Commit: pending, folded into this slice's final commit once task-9 also lands (per the
-orchestrator's per-slice — not per-task — gate).
-
-### task-9 — accessibility pass + Playwright e2e (@s12)
-
-Prior state: labels, submit button role, touch targets (`Button`'s `HIT_SLOP`/`minHeight`,
-`TextField`'s 56px `minHeight`), and the Loading-state live-region/`AccessibilityInfo`
-announcement were all already built (Slice 1 + Round 1/2 fixes). The open gaps for @s12 were: the
-auth-error banner (added in Slice 2, task-7) had no accessibility role/live-region/announcement at
-all; inline field errors (`emailError`/`passwordError`) had no programmatic association with their
-field beyond visual adjacency; and no e2e existed yet for this organism.
-
-- **RED** — `'exposes an alert role and an assertive live region on the error banner'`
-  (`login-form.test.tsx`): asserts the error `<Text>`'s `accessibilityLiveRegion === 'assertive'`
-  and its parent `<View>`'s `accessibilityRole === 'alert'`. Failed: neither prop existed.
-- **GREEN** — `login-form.tsx`: added `accessibilityRole="alert"` to the error banner `View` and
-  `accessibilityLiveRegion="assertive"` to its `Text` (assertive, not polite like the Loading
-  live-region, since an auth failure should interrupt rather than wait — WCAG 4.1.3).
-- **RED** — `'announces the error banner via AccessibilityInfo when errorMessage is set'`, mirroring
-  the existing Loading-state iOS-parity fix (Round 2, Major 1): `accessibilityLiveRegion` has no
-  effect on iOS VoiceOver, so an imperative announcement is also needed. Failed: no such call.
-- **GREEN** — a second `useEffect`, keyed on `[errorMessage]`, calling
-  `AccessibilityInfo.announceForAccessibility(errorMessage)` whenever an error is set — additive,
-  parallel to the existing `isSubmitting` effect (left as two small effects rather than merged,
-  matching the existing effect's own shape/clarity over premature DRY).
-- **RED** — `'exposes emailError as an accessibilityHint on the email field'` and the password
-  equivalent: asserts `screen.getByLabelText('Email'|'Password').props.accessibilityHint` equals
-  the error string. Failed: no `accessibilityHint` prop was forwarded.
-  - **Design choice, documented**: RN has no `aria-describedby` equivalent, and
-    `react-native-web`'s `TextInput`/`AccessibilityState` don't expose an `invalid` flag either
-    (confirmed by reading `react-native-web`'s installed `TextInput`/`ViewAccessibility` typings —
-    no `aria-invalid`/`accessibilityLabelledBy` pass-through). Appending the error text into
-    `accessibilityLabel` itself was considered and rejected: RNTL's `getByLabelText` does **exact**
-    string matching (verified empirically before choosing this approach), so it would have broken
-    every existing `getByLabelText('Email')`/`('Password')` query the moment an error is present.
-    `accessibilityHint` is read immediately after the label by VoiceOver/TalkBack on focus,
-    achieving the same practical "hear the field, then hear what's wrong with it" outcome without
-    touching the (unrelated, already-tested) `accessibilityLabel` value.
-- **GREEN** — `login-form.tsx`: `accessibilityHint={emailError}` / `accessibilityHint={passwordError}`
-  added to each `TextField` (forwarded to the underlying `TextInput` via `TextField`'s existing
-  `...rest` spread — no change to the shared `TextField` molecule itself).
-- **RED (regression guard, not a new behavior)** — `'renders email, then password, then submit,
-  then the sign-up prompt in that order'`: serializes `screen.toJSON()` and asserts the four
-  elements' string positions are already in ascending order (no explicit `tabIndex`/order override
-  exists anywhere in this component, so DOM/render order **is** the reading/focus order). Passed
-  immediately — the JSX was already in the right order, so this pins the current, correct design
-  rather than driving a code change (same "confirms the design" pattern as task-3's Slice-1 note).
-  **Verified not vacuous**: temporarily moved the "Sign up" `Button` above the `TextField`s (kept
-  the test), re-ran, confirmed the exact expected failure (positions out of ascending order),
-  then restored the original order — the guard genuinely catches a reorder regression.
-- **Not re-tested (already covered elsewhere, no new code)**: color-only signaling — `TextField`'s
-  `error` flag is only ever set as `error={!!emailError}`/`error={!!passwordError}` in this file,
-  always alongside the same string as `supportingText`, so there is no code path where the error
-  styling (color) could ever appear without the same message also rendered as visible text; this
-  invariant is structural, not testable-in-isolation without deliberately decoupling the two props
-  (which nothing in this task asks for). Touch targets — already 100% covered by `button.test.tsx`
-  (Round 1, Major 3) and `TextField`'s pre-existing, unchanged 56px `minHeight` (`text-field.tsx`);
-  no new test needed since neither file's touch-target code changed this task.
-- **Stories** — unchanged. None of the four accessibility additions (`accessibilityRole`,
-  `accessibilityLiveRegion`, the two new `useEffect`s, `accessibilityHint`) touch `LoginFormProps`'
-  public surface, so all 5 existing `login-form.stories.tsx` stories (`Empty`/`Content`/`Loading`/
-  `Error`/`ErrorInlineValidation`) render unchanged and already exercise every new code path.
-- **e2e** — new `libs/components/tests/e2e/organisms/login-form/login-form.e2e.js` per the
-  `storybook-e2e-tests` skill (title `'Organisms/LoginForm'` → slug `organisms-loginform`; exports
-  `Empty`/`Content`/`Loading`/`Error`/`ErrorInlineValidation` → `empty`/`content`/`loading`/`error`/
-  `error-inline-validation`). 6 tests: story-loads smoke test; `Empty` renders both field labels
-  and a disabled submit control; `Content` renders the filled email input and an enabled submit
-  control; `Loading` disables the submit control; `Error` renders the auth-error banner text;
-  `ErrorInlineValidation` renders both field-level messages.
-  - **Locator detour**: initially tried an `xpath=ancestor::div[@aria-disabled]` locator per a
-    guess at `react-native-web`'s `Pressable` output; a debug dump of the actual rendered DOM
-    (`element.outerHTML` walked up the ancestor chain) showed `accessibilityRole="button"` maps
-    `Pressable` to a real `<button>` element (with both `disabled` and `aria-disabled`
-    attributes) in this `react-native-web` version — switched the ancestor selector to
-    `ancestor::button[1]`. A first attempt asserting the literal string
-    `toHaveAttribute('aria-disabled', 'false')` also failed: when `disabled` is falsy,
-    `react-native-web` omits the attribute entirely rather than writing `"false"`. Fixed by using
-    Playwright's semantic `toBeEnabled()`/`toBeDisabled()` matchers instead, which check the
-    underlying DOM `disabled` property directly and work regardless of whether the attribute is
-    present.
-- `@helsoft/components` unit suite: 30/30 in `login-form.test.tsx` (up from 25), 49/49 for the
-  whole lib. e2e: 6/6 new + 19/19 pre-existing = 25/25, run via
-  `pnpm --filter @helsoft/components exec playwright test --reporter=list` (non-blocking `list`
-  reporter, per the skill).
-
-### Slice 3 gate ✅
-`pnpm turbo run test` (6/6 workspaces green), `pnpm turbo run check-types --force` (8/8 packages
-green), `pnpm lint` clean, `pnpm --filter @helsoft/components exec playwright test
---reporter=list` (25/25 green, non-interactive). No hardcoded strings/colors/dimensions — the two
-new locale keys sets (`auth.logOut*`, task-8) flow through `t()` exactly like their siblings; the
-accessibility additions (`accessibilityRole`, `accessibilityLiveRegion`, `accessibilityHint`) are
-plain RN a11y props, not visual tokens. `@s12` (a11y) and `@s13` (i18n) both covered by concrete,
-verified-non-vacuous tests. Per this session's explicit instruction, the per-slice `reviewer_code`+
-`reviewer_design` light review is skipped for this final slice — the full 6-reviewer round (+
-mutation) runs next instead.
-
-Commit: `feat(login-and-logout): add localization and accessibility` (Slice 3 — no analytics/
-feature-flags in scope per `tasks.md`'s footnote, so the slice-table's generic Slice-3 commit
-message is narrowed to what was actually built).
+## Slice 3 — a11y + i18n
+- **task-8 i18n (@s13)** — added `sign-out.tsx`'s 5 `auth.logOut*` keys to all 4 bundles + coverage test; refactored the two coverage blocks into one `describe.each(AUTH_COMPONENT_DIRS)`. localization 55/55, study-buddy 23/23.
+- **task-9 a11y + e2e (@s12)** — error banner `accessibilityRole="alert"` + `accessibilityLiveRegion="assertive"` + `AccessibilityInfo` announce; `accessibilityHint={emailError/passwordError}` on fields (RN has no aria-describedby; label untouched to keep `getByLabelText` exact); reading-order regression guard (verified non-vacuous); new `login-form.e2e.js` (6 tests). login-form.test 30/30, lib 49/49, e2e 25/25.
+- **Slice 3 gate ✅** — 6/6 test, 8/8 check-types, lint, e2e 25/25 green. Per-slice light review skipped (full 6-reviewer + mutation next). Commit `feat(login-and-logout): add localization and accessibility`.
 
 ---
 
-## Full-review Round 1 fixes
+## Full-review Round 1 fixes (5 major + 3 minor, 0 blockers; all 6 reviewers + mutation)
+- **Major 1** — `AuthService.signOut` normalizes errors; `SignOut.onConfirm` does `signOut().catch(()=>{})` (no unhandled rejection). services 38, study-buddy 25.
+- **Major 2** — `SignInForm`'s `void signIn(...).catch(()=>{})` (real-useAuth test, unhandledRejection spy). study-buddy 25.
+- **Major 3** — added `accessibilityInvalid` prop on `TextField` (RN typings lack it → forwarded via `...rest`; web maps to `aria-invalid`); wired `!!emailError/!!passwordError`. 4 tests, components 38.
+- **Major 4** — removed unreferenced 638 KB `logo.png` (deletion, no test).
+- **Major 5 (mutation)** — killed 6 `login-form.tsx` survivors: `isPristine` (4 tests), `errorMessage` effect deps (1), field-error via label-color style assertions (2). Scoped 81.48%→96.55% (2 pre-existing equivalent survivors remain). login-form.test 43.
+- **Minor 6** — `auth.logOut*` Title Case → sentence case in `en.ts`. localization 55.
+- **Minor 7** — `isAuthErrorShape` now checks a closed `AUTH_ERROR_CODES` set, not any string code. hooks 21.
+- **Minor 8** — hardened flaky `AccessibilityInfo` announce test with `waitFor`.
+- **Gate ✅** — check-types(8), test 6/6 (components 62), lint, e2e 25/25, scoped Stryker 96.55%. Commit `fix(login-and-logout): resolve full-review Round 1 findings`.
 
-Responds to `docs/features/login-and-logout/review.md` (full-mode Round 1: 5 major + 3 minor,
-zero blockers, from all 6 reviewers + `mutation_tester` after all 3 slices landed). One block per
-finding, same RED→GREEN→REFACTOR log style. No scope creep beyond these 8 items.
-
-### Major 1 — `AuthService.signOut` had no error normalization; `SignOut` discarded the rejection
-- **RED** — `auth.service.test.ts` (`signOut` block): `'normalizes a thrown signOut failure to
-  network_error'` — `dao.signOut.mockRejectedValue(new Error('boom'))`, asserts
-  `.rejects.toMatchObject({ code: 'network_error' })`. Failed: the raw `Error` propagated
-  untouched (no `.code`).
-- **GREEN** — `auth.service.ts:63-68`: `signOut` now `try { await AuthDao.signOut(); } catch
-  (cause) { throw normalizeAuthError(cause); }`, mirroring `signIn`'s existing treatment exactly
-  (reuses the same `normalizeAuthError`, no new classification branch needed since any signOut
-  failure has no "invalid credentials" case).
-- **RED** — `sign-out.test.tsx`: `'does not leave a rejected signOut promise unhandled'` — spies
-  on the Node `'unhandledRejection'` process event, mocks `signOut` to reject, presses confirm,
-  flushes the microtask queue via `setImmediate`, asserts the spy was never called. Verified
-  genuinely red first: Jest reported the rejection directly against this test
-  (`network down` uncaught) before the fix.
-- **GREEN** — `sign-out.tsx:27-33`: `onConfirm` now calls `void signOut().catch(() => {});`
-  instead of `void signOut();` — the dialog still closes optimistically (no new UI banner, per
-  the finding's own allowance), but the rejection is observed rather than silently dropped.
-- **Collateral fix** — two pre-existing tests (`'calls signOut when the confirmation is
-  accepted'`, `'closes the confirmation dialog after confirming'`) used a bare `jest.fn()` for
-  `signOut` (returning `undefined`, not a Promise) which broke once `.catch()` was called on the
-  return value — updated both to `jest.fn().mockResolvedValue(undefined)`, matching `signOut`'s
-  real `() => Promise<void>` contract.
-- **REFACTOR** — none needed.
-- `@helsoft/services` 38/38 green (up from 37); `@helsoft/study-buddy` 25/25 green.
-
-### Major 2 — `SignInForm`'s `void signIn(...)` discarded a rejecting promise, untested
-- **RED** — `sign-in-form.test.tsx`: `'does not leave a rejected signIn promise unhandled on a
-  real signIn failure'` — uses the *real* `useAuth` implementation
-  (`mockUseAuth.mockImplementation(jest.requireActual('@helsoft/hooks').useAuth)`), mocking only
-  `AuthService.signIn` (one layer below) to reject — so `useAuth`'s real `throw cause;` genuinely
-  fires. Spies on `'unhandledRejection'`, submits valid credentials, flushes microtasks, asserts
-  the spy was never called. Verified red: Jest reported the raw `{ code: 'network_error' }`
-  rejection as an uncaught error against this test before the fix.
-- **GREEN** — `sign-in-form.tsx:51`: `void signIn(email, password).catch(() => {});` — `error`
-  state (already set by `useAuth` before it rejects) continues to drive the banner; only the
-  rejection itself needed to stop being silently dropped.
-- **Collateral fix** — same pattern as Major 1: two pre-existing tests used bare `jest.fn()` for
-  `signIn`; updated both to `jest.fn().mockResolvedValue(undefined)`.
-- **REFACTOR** — none needed.
-- `@helsoft/study-buddy` 25/25 green (up from 24, +1 new test after accounting for the two
-  collateral mock fixes).
-
-### Major 3 — `accessibilityHint` has zero effect on web; added `accessibilityInvalid`
-- **RED** — `login-form.test.tsx`: 4 new tests — `accessibilityInvalid` true/false on the email
-  field and the password field, keyed on `emailError`/`passwordError`. Failed: `.props
-  .accessibilityInvalid` was `undefined` in every case (no such prop existed).
-- **GREEN** — `login-form.tsx:111,124`: added `accessibilityInvalid={!!emailError}` /
-  `accessibilityInvalid={!!passwordError}` alongside the existing `accessibilityHint` on both
-  `TextField`s. Required extending `TextField`'s own prop type
-  (`text-field.tsx`'s `TextFieldProps`) with an explicit `accessibilityInvalid?: boolean` field:
-  this RN version's (`0.86`) shipped `TextInputProps`/`AccessibilityProps` typings don't declare
-  `accessibilityInvalid` or any `aria-invalid` equivalent at all (confirmed by grepping the
-  installed `react-native` `types_generated` sources — no match anywhere), even though
-  `react-native-web@0.21.2`'s `createDOMProps` genuinely forwards it to `aria-invalid` at runtime
-  (confirmed directly in its source, `_excluded` allow-list includes `"aria-invalid",
-  "accessibilityInvalid"`). `TextField` already forwards unrecognized props via its `...rest`
-  spread onto the underlying `TextInput`, so no behavior change was needed there — only the type
-  declaration, so the new prop type-checks instead of erroring as an unknown JSX attribute.
-- **REFACTOR** — none needed.
-- `@helsoft/components` 38/38 green after this step; `check-types` clean (8/8).
-
-### Major 4 — unreferenced 638 KB `logo.png` removed
-- No test — a deletion of a confirmed-dead asset (`git rm libs/study-buddy/assets/logo.png`), per
-  the finding's own instruction ("no test needed for a deletion of an unused asset"). Verified
-  nothing depended on it via the full `pnpm turbo run build`/`check-types`/`test` gate below,
-  all green.
-
-### Major 5 (mutation) — 6 killable survivors in `login-form.tsx`
-One block per mutant group, each verified by temporarily reverting `login-form.tsx` to the exact
-mutant, confirming the new test fails, then restoring the real code (same evidentiary bar as this
-file's own prior "Mutation-kill pass" section).
-1. **`isPristine` logic (`:65:22,65:23,65:40`)** — added 4 tests: one-field-filled/other-blank
-   (both directions) and whitespace-only (both fields, both directions run separately). Reverting
-   `||`→`&&` failed all 4 new "keeps submit disabled…" tests; reverting `!email.trim()`→`!email`
-   failed only the email-whitespace test; reverting `!password.trim()`→`!password` failed only
-   the password-whitespace test. All 3 mutants independently confirmed killed.
-2. **`errorMessage` effect deps (`:88:6`)** — added `'announces the error banner again when
-   errorMessage changes to a different value'`: renders with one error, asserts the announcement,
-   clears the spy, rerenders with a *different* error string, asserts the announcement fires
-   again. Reverting `[errorMessage]`→`[]` failed this test (announcement never re-fired);
-   confirmed killed, restored.
-3. **`!!emailError`/`!!passwordError` boolean-conversion (`:108,120`)** — `error` is a
-   `TextField`-internal prop never forwarded onto the underlying `TextInput`'s own props (it only
-   drives local styling), so `field.props.error` is always `undefined` regardless of state —
-   discovered this when the originally-planned assertion failed with "Received: undefined" even
-   against the *correct* code. Pivoted to the mutation report's own documented alternative ("add
-   style assertions verifying error styling is applied"): asserts the email/password label
-   `<Text>`'s `color` style equals `lightColors.error` when the corresponding error is set, and
-   `lightColors.onSurfaceVariant` otherwise (imported `lightColors` from `theme/colors.ts`;
-   verified the unistyles Jest mock always resolves theme-derived style values against the first-
-   registered theme, `lightTheme`, regardless of OS color scheme — read directly from
-   `react-native-unistyles`'s installed `mocks.ts` source, not assumed). Reverting `!!emailError`→
-   `!emailError` failed both new email-label-color tests; same for the password field. Both
-   mutants confirmed killed, restored.
-- Scoped Stryker re-run (`pnpm --filter @helsoft/components exec stryker run --mutate
-  "src/organisms/login-form/login-form.tsx"`): 81.48% → **96.55%** (56 killed / 2 survived / 1
-  runtime-error excluded from scoring). The 2 remaining survivors
-  (`errorBanner`/`errorBannerText` style-object mutants) are the **same, pre-existing** ones
-  already documented as equivalent in `mutation.md`'s "Survivor Group C" before this session —
-  not new regressions, and not among this round's 6 assigned mutants (all 6 are independently
-  confirmed killed above). `mutation.md` updated with a dated note recording this resolution.
-- `login-form.test.tsx` totals 43 tests (up from 38), all green.
-
-### Minor 6 — `auth.logOut`/`auth.logOutConfirmAction` Title Case → sentence case
-- No new test (content-only; `t()` is loosely typed so literal-copy tests don't exist for these
-  keys, matching this feature's own established precedent for locale-content-only fixes).
-  `en.ts:53,56`: `'Log Out'` → `'Log out'` in both places. Grepped for any test asserting the old
-  literal string first (`'Log Out'`) — none found, confirming nothing else needed updating.
-  `es`/`de`/`pt` untouched (already correct).
-- `@helsoft/localization` 55/55 green, unaffected.
-
-### Minor 7 — `isAuthErrorShape` accepted any string `.code`, not just the closed union
-- **RED** — `use-auth.test.ts`: `'falls back to network_error when the rejected cause has a
-  string code outside the AuthErrorCode union'` — `service.signIn.mockRejectedValueOnce({ code:
-  'something_else' })`, asserts `result.current.error` becomes `'network_error'`. Failed:
-  `result.current.error` was `'something_else'` (the bogus code passed straight through).
-- **GREEN** — `use-auth.ts:6-17`: added `AUTH_ERROR_CODES`, a `ReadonlySet<AuthErrorCode>` of the
-  3 valid codes; `isAuthErrorShape` now checks `AUTH_ERROR_CODES.has(cause.code)` instead of
-  `typeof cause.code === 'string'`.
-- **REFACTOR** — none needed.
-- `@helsoft/hooks` 21/21 green (up from 20); `check-types` clean.
-
-### Minor 8 — flaky `AccessibilityInfo` announcement test hardened with `waitFor`
-- No new RED/GREEN cycle (test-code-only hardening of a documented ~1-in-20 flake, per the
-  finding's own prescribed one-line fix). `login-form.test.tsx`: wrapped the post-`act()`
-  assertion in `'announces "Signing in…" via AccessibilityInfo...'` with `await waitFor(() =>
-  expect(announceSpy).toHaveBeenCalledWith(labels.signingIn))` instead of asserting immediately.
-- Test still passes; `@helsoft/components` suite unaffected in count.
-
-### Full-review Round 1 fixes gate ✅
-`pnpm turbo run check-types --force` (8/8 packages green), `pnpm turbo run test --force` (6/6
-workspaces green: `@helsoft/services` 38/38, `@helsoft/hooks` 21/21, `@helsoft/components` 62/62,
-`@helsoft/study-buddy` 25/25, `@helsoft/localization` 55/55, `@helsoft/lib-with-storybook` 2/2),
-`pnpm turbo run lint --force` clean, `pnpm --filter @helsoft/components exec playwright test
---reporter=list` (25/25 green, non-interactive — `login-form.tsx`'s prop surface/behavior
-changed), scoped Stryker re-run for `login-form.tsx` (96.55%, all 6 assigned survivors killed,
-2 pre-existing documented equivalents remain, 1 runtime-error mutant excluded from scoring). No
-hardcoded strings/colors/dimensions introduced (`lightColors.error`/`onSurfaceVariant` are
-existing tokens). No scope creep beyond the 8 findings — no drive-by refactors, no untouched
-Slice 1/2/3 files besides the ones each finding required.
-
-Commit: `fix(login-and-logout): resolve full-review Round 1 findings`.
-
-## Full-review Round 2 fix
-
-### Major — `TextField`'s `accessibilityInvalid` prop wasn't derived from its own `error` prop
-`review.md` (Round 2) / `review-design.md` — `TextField` already owns `error?: boolean`
-(`text-field.tsx:13`) but Round 1's Major 3 fix added `accessibilityInvalid?: boolean` (`:28`) as a
-fully independent prop that only flowed through `...rest` onto the underlying `TextInput` —
-nothing derived it from `error`, so every consumer had to pass both in lockstep, unlike every
-sibling atom/molecule (`chip.tsx:63`, `checkbox.tsx:36`, `switch.tsx:30`, `radio-group.tsx:36`,
-`language-selector.tsx:46`, `answer-option.tsx:35`), which all derive their own accessibility
-signal internally from an already-owned prop. Concretely manifested: `TextField`'s own canonical
-`Error` story (`text-field.stories.tsx:43-49`) set `error: true` without `accessibilityInvalid`,
-so it shipped without `aria-invalid` on web — reintroducing, one layer down, the exact WCAG
-4.1.2/1.3.1 gap the Major-3 fix was meant to close.
-
-- **RED** — new `text-field.test.tsx` (this component had no unit test file at all before this
-  fix), 3 tests:
-  1. `'derives accessibilityInvalid from error when no explicit accessibilityInvalid is passed'` —
-     renders `<TextField accessibilityLabel="Email" error />`, asserts
-     `screen.getByLabelText('Email').props.accessibilityInvalid` is `true`.
-  2. `'defaults accessibilityInvalid to false when error is false and none is passed explicitly'` —
-     same but no `error` prop, asserts `false`.
-  3. `'lets an explicit accessibilityInvalid override the value derived from error'` — renders
-     `error accessibilityInvalid={false}`, asserts the explicit `false` wins over the derived `true`.
-  Ran first against the untouched `text-field.tsx`: tests 1 and 2 genuinely failed (`Received:
-  undefined` — `accessibilityInvalid` had no default and was never derived), confirming a real RED;
-  test 3 passed trivially (an explicit value was always forwarded unchanged even before the fix,
-  which is expected and not itself evidence of the derivation working).
-- **GREEN** — `text-field.tsx`: destructured `accessibilityInvalid = error` (defaulting to the
-  already-owned `error` prop, `:52`) instead of leaving it inside `...rest`; merged it back into a
-  named `inputProps = { ...rest, accessibilityInvalid }` object (`:63`) and spread that onto
-  `TextInput` (`:87`) instead of assigning it as a standalone named JSX attribute — a standalone
-  `accessibilityInvalid={accessibilityInvalid}` attribute fails `tsc --noEmit` (`TS2769`) because
-  this RN version's `TextInputProps` typings don't declare the prop at all (same root cause
-  documented in Round 1's Major 3 note) and, unlike a `...rest` spread of a named type, an explicit
-  JSX attribute is subject to TypeScript's excess-property check; merging it into the spread object
-  preserves the derivation while keeping `check-types` clean. All 3 new tests green.
-- **REFACTOR** — none needed beyond the inline `inputProps` extraction above (done on green, kept
-  for readability over the original `{...{ ...rest, accessibilityInvalid }}` double-spread that
-  first made the test pass).
-- **Story/e2e** — `text-field.stories.tsx`'s `Error` story needed no change: since
-  `accessibilityInvalid` now defaults to `error`, `{ error: true, ... }` alone already derives
-  `accessibilityInvalid: true`. Added 2 new cases to `text-field.e2e.js` (`36:1` region) to lock
-  this in as a live DOM assertion rather than leaving it to source-reading: `'Error text field
-  exposes aria-invalid to assistive tech'` (asserts `aria-invalid="true"` on the `Error` story's
-  `<input>`) and `'Filled text field does not expose aria-invalid when there is no error'`
-  (asserts `aria-invalid="false"` on the `Filled` story's `<input>`). Verified both genuinely RED
-  first via a revert→confirm→restore of `text-field.tsx` only (`git stash push` on that one file):
-  both new e2e cases failed against the unfixed component (`unexpected value "null"` — no
-  `aria-invalid` attribute at all), confirming they catch the exact regression the finding
-  described; restored the fix and re-ran green.
-- **Collateral simplification** — `login-form.tsx:99-123`: dropped the now-redundant
-  `accessibilityInvalid={!!emailError}` / `accessibilityInvalid={!!passwordError}` props on both
-  `TextField`s, since `TextField` now derives the identical value itself from the `error` prop
-  already being passed. `login-form.test.tsx`'s existing 4 `accessibilityInvalid` assertions (added
-  in Round 1's Major 3 fix) required zero changes and stayed green, proving the derived default
-  produces the same externally-observable behavior as the explicit props it replaced.
-
-### Full-review Round 2 fix gate ✅
-`pnpm turbo run lint --force` (clean — only `app-study-buddy` defines a `lint` script, matching
-every prior round's gate), `pnpm turbo run check-types --force` (8/8 packages green),
-`pnpm turbo run test --force` (6/6 workspaces green: `@helsoft/services` 38/38, `@helsoft/hooks`
-21/21, `@helsoft/components` 65/65 — up from 62, +3 new `text-field.test.tsx` tests,
-`@helsoft/study-buddy` 25/25, `@helsoft/localization` 55/55, `@helsoft/lib-with-storybook` 2/2),
-`pnpm --filter @helsoft/components exec playwright test --reporter=list` (27/27 — up from 25, +2
-new `text-field.e2e.js` cases, non-interactive). No hardcoded strings/colors/dimensions
-introduced. Scope held to exactly this one finding: `text-field.tsx`, its new `text-field.test.tsx`,
-`text-field.e2e.js`, and the one-line collateral simplification in `login-form.tsx` it enabled —
-no other file touched.
-
-Commit: `fix(login-and-logout): derive TextField accessibilityInvalid from error`.
+## Full-review Round 2 fix (1 major)
+- **Major** — `TextField.accessibilityInvalid` now derives from its `error` prop by default (merged into `inputProps` spread for `tsc` reasons), matching sibling convention; override-able. New `text-field.test.tsx` (3 tests, verified RED), +2 `text-field.e2e.js` `aria-invalid` cases; dropped redundant explicit props in `login-form.tsx`. components 65/65, e2e 27/27.
+- **Gate ✅** — lint, check-types(8), test 6/6, e2e 27/27 green. Commit `fix(login-and-logout): derive TextField accessibilityInvalid from error`.
