@@ -1,7 +1,7 @@
 ---
 feature: activity-open-ended
-phase: in_review # pending|spec_drafted|spec_ready|approved|in_progress|in_review|mutation|pr_ready|done
-review_round: 0
+phase: mutation # pending|spec_drafted|spec_ready|approved|in_progress|in_review|mutation|pr_ready|done
+review_round: 1
 ---
 
 # Tasks — activity-open-ended
