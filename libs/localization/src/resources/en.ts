@@ -39,9 +39,15 @@ export const en = {
       finish: 'Finish lesson',
     },
     results: {
-      summary: 'Results for lesson {{id}}',
+      score: '{{correct}} / {{total}}',
+      scorePercent: '{{percent}}%',
+      scoreAnnouncement: '{{score}}, {{percent}}',
       retake: 'Retake activities',
       backHome: 'Back to my lessons',
+      completeHeadline: 'Lesson complete',
+      completeBody: "You've reached the end of this lesson.",
+      saveFailed: "Couldn't save this attempt",
+      retrySave: 'Try again',
     },
     auth: {
       email: 'Email',

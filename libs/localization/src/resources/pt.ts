@@ -34,9 +34,15 @@ export const pt: TranslationResource = {
       finish: 'Concluir lição',
     },
     results: {
-      summary: 'Resultados da lição {{id}}',
+      score: '{{correct}} / {{total}}',
+      scorePercent: '{{percent}}%',
+      scoreAnnouncement: '{{score}}, {{percent}}',
       retake: 'Refazer atividades',
       backHome: 'Voltar às minhas lições',
+      completeHeadline: 'Lição concluída',
+      completeBody: 'Você chegou ao final desta lição.',
+      saveFailed: 'Não foi possível salvar esta tentativa',
+      retrySave: 'Tentar novamente',
     },
     auth: {
       email: 'E-mail',

@@ -56,6 +56,11 @@ const FILL_IN_THE_BLANK_ACTIVITY_DIR = resolve(
   REPO_ROOT,
   'libs/study-buddy/src/components/fill-in-the-blank-activity',
 );
+/**
+ * score-results-summary, task-7/@s1 — LessonResults calls `t('results.score'/'results.scorePercent'
+ * /'results.retake'/'results.backHome')`; same missing-key guard as the components above.
+ */
+const LESSON_RESULTS_DIR = resolve(REPO_ROOT, 'libs/study-buddy/src/components/lesson-results');
 
 const isExcluded = (file: string) => file.endsWith('.stories.tsx') || file.endsWith('.test.tsx') || file.endsWith('.test.ts');
 
@@ -137,6 +142,7 @@ const KEY_EXISTENCE_DIRS: Array<[name: string, dir: string]> = [
   ['multiple-choice-activity', MULTIPLE_CHOICE_ACTIVITY_DIR],
   ['matching-activity', MATCHING_ACTIVITY_DIR],
   ['fill-in-the-blank-activity', FILL_IN_THE_BLANK_ACTIVITY_DIR],
+  ['lesson-results', LESSON_RESULTS_DIR],
 ];
 
 describe.each(KEY_EXISTENCE_DIRS)('t() key existence coverage (%s)', (name, dir) => {
