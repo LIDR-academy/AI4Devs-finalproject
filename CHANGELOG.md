@@ -20,6 +20,15 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
     *   Historia de usuario `US-008` y ticket de trabajo `TK-009`.
 *   **Gobernanza y Aseguramiento:**
     *   [docs/audit_report.md](docs/audit_report.md) para documentar la auditoría de consistencia de la base de especificación.
+*   **Dashboard y Reporte de Mermas Visibles (Opción A):**
+    *   Endpoint `GET /api/reports/waste` para consulta y consolidación agregada de pérdidas físicas (mermas) por ingrediente y motivo en un rango de fechas.
+    *   Modelos y arquitectura para el nuevo vertical slice de reportes (`reports/domain`, `reports/application`, `reports/infrastructure`).
+    *   Historia de usuario `US-009` y ticket de trabajo `TK-010`.
+*   **Estandarización de Precisiones Decimales:**
+    *   Actualización de contratos API (endpoints `POST /api/stock/extraction` y `GET /api/kitchen/remanentes`) para exigir y retornar cantidades físicas serializadas estrictamente como cadenas de texto (`string`) en vez de números flotantes nativos.
+*   **Gobernanza de Historial de Integraciones:**
+    *   Actualización de la habilidad de PRs (`.prompts/skills/SK-14_pull_requests.md`) para forzar la preservación verbatim de metadatos históricos (título y rama de PR) recuperados de GitHub, señalando las no conformidades sin realizar normalizaciones artificiales.
+
 
 ---
 
