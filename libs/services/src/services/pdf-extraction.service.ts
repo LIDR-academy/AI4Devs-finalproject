@@ -59,6 +59,12 @@ const toExtractionError = (code: PdfExtractionErrorCode): Error & PdfExtractionE
 const readFunctionErrorCode = async (error: FunctionsHttpError): Promise<PdfExtractionErrorCode> => {
   try {
     const body = await error.context.json();
+    // Stryker disable next-line OptionalChaining: provably equivalent — if `body` is null/
+    // undefined, dropping `?.` makes `body.errorCode` throw a TypeError, which the surrounding
+    // catch below swallows into the exact same 'extraction_failed' fallback this line already
+    // returns for a null body; a dedicated test with a null server error body (see
+    // pdf-extraction.service.test.ts, "falls back to extraction_failed when the server error body
+    // itself resolves to null") confirms both code paths produce the identical observable result.
     return isKnownErrorCode(body?.errorCode) ? body.errorCode : 'extraction_failed';
   } catch {
     return 'extraction_failed';

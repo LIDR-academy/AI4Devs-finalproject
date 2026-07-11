@@ -12,7 +12,7 @@ import { FunctionsFetchError, FunctionsHttpError, FunctionsRelayError } from '@s
 import { trackPdfExtractionEvent } from '../analytics/pdf-extraction-analytics';
 import { PdfUploadDao } from '../dao/pdf-upload.dao';
 import { PDF_EXTRACTION_LIMITS } from './pdf-extraction.constants';
-import { PdfExtractionService } from './pdf-extraction.service';
+import { generateDocumentId, PdfExtractionService } from './pdf-extraction.service';
 
 const dao = PdfUploadDao as jest.Mocked<typeof PdfUploadDao>;
 const trackEvent = trackPdfExtractionEvent as jest.Mock;
@@ -62,6 +62,22 @@ describe('PdfExtractionService', () => {
     expect(dao.invokeExtraction).toHaveBeenCalledWith(uploadArgs.documentId);
   });
 
+  // Exact bit-formatting (mutation-kill, round-3 pass) — the uniqueness assertion below proves
+  // IDs differ from each other, but not that each hex digit is actually derived from
+  // `Math.random()` at every `x`/`y` template position (a mutant that always takes the `y`-only
+  // "clamp to variant" branch would still produce syntactically-valid, unique-looking v4 UUIDs).
+  // Pinning `Math.random()` to a fixed value and asserting the exact resulting string proves the
+  // `x` positions read the raw random digit while the version nibble (fixed '4' in the template)
+  // and the `y` position's variant nibble (`(random & 0x3) | 0x8`, clamped to 8-b) land at their
+  // exact string positions.
+  it('generates each hex digit from Math.random(), with the version fixed at 4 and the variant clamped to 8-b at their exact template positions', () => {
+    const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0);
+
+    expect(generateDocumentId()).toBe('00000000-0000-4000-8000-000000000000');
+
+    randomSpy.mockRestore();
+  });
+
   // Uniqueness — two separate extract() calls generate two different documentIds, so concurrent
   // uploads never collide on the same storage path/row.
   it('generates a different documentId for each extract() call', async () => {
@@ -77,11 +93,13 @@ describe('PdfExtractionService', () => {
     expect(firstId).not.toBe(secondId);
   });
 
-  // @s14 (task-9) — no session at all is rejected client-side, before any DAO call.
+  // @s14 (task-9) — no session at all is rejected client-side, before any DAO call. The `.message`
+  // is asserted exactly (mutation-kill, round-3 pass), not just `.code` — the code is the UI's
+  // contract, but the message is still part of the thrown Error's observable shape.
   it('rejects with unauthenticated and never calls the DAO when no userId is given', async () => {
     await expect(
       PdfExtractionService.extract({ filename: 'notes.pdf', sizeBytes: 3, bytes: new Uint8Array() }, ''),
-    ).rejects.toMatchObject({ code: 'unauthenticated' });
+    ).rejects.toMatchObject({ code: 'unauthenticated', message: 'PDF extraction failed: unauthenticated' });
 
     expect(dao.uploadPdf).not.toHaveBeenCalled();
   });
@@ -138,6 +156,34 @@ describe('PdfExtractionService', () => {
       dao.uploadPdf.mockResolvedValue({} as never);
       dao.insertDocument.mockResolvedValue({} as never);
       dao.invokeExtraction.mockRejectedValue(httpErrorWithBody({ errorCode: 'not_a_real_code' }));
+
+      await expect(
+        PdfExtractionService.extract({ filename: 'notes.pdf', sizeBytes: 1, bytes: new Uint8Array() }, 'user-1'),
+      ).rejects.toMatchObject({ code: 'extraction_failed' });
+    });
+
+    // Defensive, exercising the `body?.errorCode` optional-chaining path directly (mutation-kill
+    // investigation, round-3 pass): the error body itself resolves to `null` (not just missing the
+    // `errorCode` field) — the fallback path this optional chaining protects.
+    it('falls back to extraction_failed when the server error body itself resolves to null', async () => {
+      dao.uploadPdf.mockResolvedValue({} as never);
+      dao.insertDocument.mockResolvedValue({} as never);
+      dao.invokeExtraction.mockRejectedValue(httpErrorWithBody(null));
+
+      await expect(
+        PdfExtractionService.extract({ filename: 'notes.pdf', sizeBytes: 1, bytes: new Uint8Array() }, 'user-1'),
+      ).rejects.toMatchObject({ code: 'extraction_failed' });
+    });
+
+    // @s12/task-9 — an error that is none of the three known DAO-thrown shapes (not a
+    // FunctionsHttpError, FunctionsFetchError, or FunctionsRelayError) still falls through to the
+    // generic extraction_failed code, distinct from network_error (mutation-kill, round-3 pass):
+    // pins the transport-error union check's own boundary, which the two `network_error` tests
+    // above can't distinguish from an always-true condition on their own.
+    it('normalizes an unrecognized error type as extraction_failed, not network_error', async () => {
+      dao.uploadPdf.mockResolvedValue({} as never);
+      dao.insertDocument.mockResolvedValue({} as never);
+      dao.invokeExtraction.mockRejectedValue(new Error('unexpected DAO failure'));
 
       await expect(
         PdfExtractionService.extract({ filename: 'notes.pdf', sizeBytes: 1, bytes: new Uint8Array() }, 'user-1'),

@@ -12,11 +12,12 @@ describe('PdfUploadDao', () => {
   const upsert = jest.fn(() => ({ select }));
   const from = jest.fn(() => ({ upsert }));
   const invoke = jest.fn();
+  const storageFrom = jest.fn(() => ({ upload }));
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetSupabase.mockReturnValue({
-      storage: { from: jest.fn(() => ({ upload })) },
+      storage: { from: storageFrom },
       from,
       functions: { invoke },
     });
@@ -33,6 +34,7 @@ describe('PdfUploadDao', () => {
 
       const result = await PdfUploadDao.uploadPdf({ userId: 'u1', documentId: 'd1', bytes });
 
+      expect(storageFrom).toHaveBeenCalledWith('pdf-uploads');
       expect(upload).toHaveBeenCalledWith('u1/d1/source.pdf', bytes, { contentType: 'application/pdf', upsert: true });
       expect(result).toEqual({ path: 'u1/d1/source.pdf' });
     });

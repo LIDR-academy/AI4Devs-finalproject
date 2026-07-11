@@ -35,14 +35,21 @@ describe('downscaleImage', () => {
   });
 
   // @s2 — an image already within the 1024px cap is never upscaled; its dimensions pass through
-  // unchanged.
+  // unchanged. Also spies on the real `Pixmap.warp` (mutation-kill guard, round-3 pass) to confirm
+  // the resize path is genuinely skipped — not just that the output dimensions happen to match,
+  // which a `scale === 1 ? input.pixmap : resizePixmap(...)` mutant that always resizes would also
+  // satisfy for a same-size resize.
   it('does not upscale an image already within the 1024px cap', async () => {
+    const mupdf: typeof Mupdf = await import('mupdf');
+    const warpSpy = jest.spyOn(mupdf.Pixmap.prototype, 'warp');
     const png = buildSolidPng({ width: 300, height: 200, color: [40, 50, 60] });
     const pixmap = await toPixmap(png);
 
     const result = await downscaleImage({ pixmap, width: 300, height: 200 });
 
     expect(result).toMatchObject({ width: 300, height: 200, mimeType: 'image/jpeg' });
+    expect(warpSpy).not.toHaveBeenCalled();
+    warpSpy.mockRestore();
   });
 
   // Spec decision #4 — an image with an alpha channel is re-encoded as PNG (not JPEG, which has
@@ -81,5 +88,30 @@ describe('downscaleImage', () => {
     const result = await downscaleImage({ pixmap, width: 800, height: 4 });
 
     expect(result).toBeNull();
+  });
+
+  // Spec decision #4 boundary (mutation-kill, round-3 pass) — the mirror case of the one above: a
+  // narrow-but-tall decorative image (short on width, far past 100px tall) is also dropped. Pins
+  // the width side of the `||` independently of the height side, which the wide-but-thin case
+  // above can't distinguish (both operands already evaluate the same way there).
+  it('drops a narrow-but-tall decorative image', async () => {
+    const png = buildSolidPng({ width: 4, height: 800, color: [1, 2, 3] });
+    const pixmap = await toPixmap(png);
+
+    const result = await downscaleImage({ pixmap, width: 4, height: 800 });
+
+    expect(result).toBeNull();
+  });
+
+  // Spec decision #4 boundary (mutation-kill, round-3 pass) — an image exactly AT the 100x100
+  // floor (not below it) is not decorative and must be kept; pins the strict `<` comparison on
+  // both dimensions against a `<=` mutation on either side.
+  it('keeps an image exactly at the 100x100 decorative-floor boundary', async () => {
+    const png = buildSolidPng({ width: 100, height: 100, color: [5, 6, 7] });
+    const pixmap = await toPixmap(png);
+
+    const result = await downscaleImage({ pixmap, width: 100, height: 100 });
+
+    expect(result).toMatchObject({ width: 100, height: 100, mimeType: 'image/jpeg' });
   });
 });

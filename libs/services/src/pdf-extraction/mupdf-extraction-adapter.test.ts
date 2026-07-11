@@ -1,3 +1,5 @@
+import type * as Mupdf from 'mupdf';
+
 import { MupdfExtractionAdapter } from './mupdf-extraction-adapter';
 import { buildSolidPng } from './test-utils/build-solid-png';
 import { buildTestPdf } from './test-utils/build-test-pdf';
@@ -7,7 +9,11 @@ const BLUE_PIXEL_PNG = buildSolidPng({ width: 8, height: 6, color: [0, 0, 255] }
 
 describe('MupdfExtractionAdapter', () => {
   // @s1/@s3 — a real, mixed-page PDF (text-only, text+image, image-only) is fully extracted:
-  // every page's text is present, in document order, and page numbers are 1-based.
+  // every page's text is present, in document order, and page numbers are 1-based. Text values
+  // are asserted exactly (not `stringContaining`, mutation-kill guard round-3 pass) — mupdf's
+  // `StructuredText.asText()` appends a trailing blank line per page (verified: `'Hello page
+  // one\n\n'`), so an exact match pins the adapter's own `.trim()` call, which a
+  // `stringContaining` match would let survive.
   it('extracts text from every page in document order', async () => {
     const bytes = await buildTestPdf([
       { text: 'Hello page one' },
@@ -18,10 +24,25 @@ describe('MupdfExtractionAdapter', () => {
     const result = await MupdfExtractionAdapter.extract(bytes);
 
     expect(result.pages).toEqual([
-      { page: 1, text: expect.stringContaining('Hello page one') },
-      { page: 2, text: expect.stringContaining('World page two') },
+      { page: 1, text: 'Hello page one' },
+      { page: 2, text: 'World page two' },
       { page: 3, text: '' },
     ]);
+  });
+
+  // @s1/@s3 (mutation-kill, round-3 pass) — the PDF's bytes are opened with the exact
+  // 'application/pdf' MIME hint, not an empty/unspecified one; asserted by spying on the real
+  // `mupdf.Document.openDocument` static method (the only observable point in mupdf's own API
+  // where this argument surfaces).
+  it('opens the document bytes with the application/pdf MIME type', async () => {
+    const mupdf: typeof Mupdf = await import('mupdf');
+    const openDocumentSpy = jest.spyOn(mupdf.Document, 'openDocument');
+    const bytes = await buildTestPdf([{ text: 'Hello page one' }]);
+
+    await MupdfExtractionAdapter.extract(bytes);
+
+    expect(openDocumentSpy).toHaveBeenCalledWith(bytes, 'application/pdf');
+    openDocumentSpy.mockRestore();
   });
 
   // @s2/@s3 — an embedded image is extracted and associated with the exact page it came from;

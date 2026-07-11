@@ -50,4 +50,22 @@ describe('detectExtractionFailure', () => {
 
     expect(detectExtractionFailure({ pages }, PDF_EXTRACTION_LIMITS, SCANNED_DETECTION_MIN_TEXT_LENGTH)).toBe('too_many_pages');
   });
+
+  // Boundary (mutation-kill, round-3 pass) — a page count exactly AT the limit (not over it) is
+  // in-limit and must not trigger too_many_pages; pins the `>` (strictly greater) comparison
+  // against a `>=` mutation, which the far-past-the-limit cases above don't distinguish.
+  it('does not report too_many_pages when the page count exactly equals the limit', () => {
+    const pages = buildPages(PDF_EXTRACTION_LIMITS.maxPages);
+
+    expect(detectExtractionFailure({ pages }, PDF_EXTRACTION_LIMITS, SCANNED_DETECTION_MIN_TEXT_LENGTH)).toBeNull();
+  });
+
+  // Boundary (mutation-kill, round-3 pass) — total extracted text exactly AT the scanned-detection
+  // threshold is sufficient (not below it) and must not trigger scanned_or_image_only; pins the
+  // `<` (strictly less than) comparison against a `<=` mutation.
+  it('does not report scanned_or_image_only when the combined extracted text exactly equals the threshold', () => {
+    const pages = [{ page: 1, text: 'a'.repeat(SCANNED_DETECTION_MIN_TEXT_LENGTH) }];
+
+    expect(detectExtractionFailure({ pages }, PDF_EXTRACTION_LIMITS, SCANNED_DETECTION_MIN_TEXT_LENGTH)).toBeNull();
+  });
 });
