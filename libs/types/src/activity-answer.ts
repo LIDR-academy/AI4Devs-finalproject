@@ -44,4 +44,16 @@ export type FillInTheBlankAnswer = {
   isCorrect: boolean;
 };
 
-export type ActivityAnswer = MultipleChoiceAnswer | MatchingAnswer | FillInTheBlankAnswer;
+/** Submitted-only — no isCorrect; must NOT satisfy GradedAnswer. */
+export type OpenEndedAnswer = {
+  slideId: string;
+  activityType: 'open-ended';
+  /** Raw learner text at submit (may be empty string). */
+  submittedAnswer: string;
+};
+
+export type ActivityAnswer =
+  | MultipleChoiceAnswer
+  | MatchingAnswer
+  | FillInTheBlankAnswer
+  | OpenEndedAnswer;

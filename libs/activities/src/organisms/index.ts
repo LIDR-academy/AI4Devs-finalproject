@@ -5,3 +5,5 @@ export * from './matching/matching';
 export * from './matching/matching.types';
 export * from './multiple-choice/multiple-choice';
 export * from './multiple-choice/multiple-choice.types';
+export * from './open-ended/open-ended';
+export * from './open-ended/open-ended.types';

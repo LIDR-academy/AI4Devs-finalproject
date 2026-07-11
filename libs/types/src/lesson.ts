@@ -68,7 +68,20 @@ export type FillInTheBlankSlide = SlideBase & {
   explanation?: string;
 };
 
-export type ActivitySlide = MultipleChoiceSlide | MatchingSlide | FillInTheBlankSlide;
+export type OpenEndedSlide = SlideBase & {
+  kind: 'activity';
+  activityType: 'open-ended';
+  // content = prompt (SlideBase)
+  /** Non-empty when valid; revealed after submit for learner comparison. */
+  modelAnswer: string;
+  explanation?: string;
+};
+
+export type ActivitySlide =
+  | MultipleChoiceSlide
+  | MatchingSlide
+  | FillInTheBlankSlide
+  | OpenEndedSlide;
 export type Slide = InstructionalSlide | ActivitySlide;
 
 export type Lesson = {
