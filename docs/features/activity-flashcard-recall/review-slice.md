@@ -1,66 +1,31 @@
-# Slice review — activity-flashcard-recall — Slice 2
+# Slice 3 review — activity-flashcard-recall
 
-**Commit:** `02133b7` (branch `feat/activity-flashcard-recall`)
-**Task:** task-5 (Unavailable state — missing front or back)
 **Verdict: APPROVED**
 
-## Scope of the diff
+Commit reviewed: `80743ed` (feat(activity-flashcard-recall): i18n, a11y, stories, and e2e — Slice 3), tasks 6-9.
 
-`git show 02133b7 --stat`: only `flashcard.test.tsx` (production-adjacent test file) plus
-`task-5.md`/`tasks.md`/`tdd.md` (docs) changed. `flashcard.tsx`, `flashcard.helpers.ts`,
-`use-flashcard.ts` are byte-identical to Slice 1 — matches the task's own claim that no
-production change was needed (Slice 1's `isFlashcardSlideValid`/`use-flashcard`/organism
-early-return already implemented the guard; this slice only closes the test gap). No scope
-creep.
+## Scope checked
+- `libs/localization/src/resources/{en,es,pt,de}.ts` — `activity.flashcard.*` keys
+- `libs/localization/src/coverage/migration-coverage.test.ts` — `flashcard` `KEY_EXISTENCE_DIRS` entry
+- `libs/activities/src/organisms/flashcard/flashcard.test.tsx` — new `@s10` accessibility block
+- `libs/activities/src/organisms/flashcard/flashcard.stories.tsx` (new)
+- `libs/activities/tests/e2e/organisms/flashcard/flashcard.e2e.js` (new)
+- Read-only verification (unchanged this slice, cross-checked against claims): `flashcard.tsx`, `use-flashcard.ts`, `flashcard.helpers.ts`, `flashcard.types.ts`
 
 ## Code lens
-
-- **`@s8` fully covered, non-vacuous** (`flashcard.test.tsx:186-199`): the new `it.each`
-  replaces the old single missing-*back*-only test with two cases —
-  `{ content: '' }` (missing front) and `{ back: '' }` (missing back) — each asserting:
-  - the unavailable notice is present (`getByText(I18N.unavailable)`, `:194`);
-  - the **other**, non-missing field's own text is also hidden (`hiddenText` is `slide.back`
-    for the missing-front case and `slide.content` for the missing-back case, `:195`) — this
-    correctly proves the whole card degrades rather than partially rendering the still-valid
-    field;
-  - zero interactive elements: both a targeted `queryByRole('button', { name: I18N.reveal })`
-    (`:196`) and a blanket `queryAllByRole('button')).toHaveLength(0)` (`:197`);
-  - `onAnswered` is never called (`:198`).
-  - Traced against `isFlashcardSlideValid` (`flashcard.helpers.ts:8`, `content.trim().length >
-    0 && back.trim().length > 0`) and the organism's early-return (`flashcard.tsx:44-50`): the
-    front-missing case is a genuine new mutation-kill — before this slice only the AND's
-    right operand (`back`) was exercised by any test; a mutant weakening the check to
-    `back.trim().length > 0` alone (dropping the `content` check) would have survived until
-    now and is caught by the new first case. Reported RED verification (temporarily
-    neutering the guard, both cases failing) in `tdd.md:87-89` is consistent with this
-    analysis.
-- No production regression: confirmed via the diff stat above and a full read of
-  `flashcard.tsx`/`flashcard.helpers.ts`/`use-flashcard.ts` — unchanged since Slice 1's
-  approved round 2.
-- Red→Green→Refactor evidence present in `tdd.md:79-92` (Gap check → RED → GREEN → Refactor:
-  none needed), consistent with the TDD-evidence requirement; no production code added to
-  meet a test that wasn't already required (the task itself frames this as closing a test
-  gap, not adding new behavior).
-- No debug leftovers, no TODOs, no dead code in the diff. Test file remains kebab-case
-  (`flashcard.test.tsx`), no filename changes.
-- Docs bookkeeping is accurate: `task-5.md` done-criteria all checked and `status: done`
-  (`docs/features/activity-flashcard-recall/task-5.md:6,14-19`); `tasks.md` index row synced
-  `todo` → `done` for task-5, matching.
+- **task-6 (i18n)**: `flashcard.tsx:27-34` consumes real `t('activity.flashcard.*')` keys — no placeholder/hardcoded chrome left. All 8 keys (`reveal`, `recalled`, `notRecalled`, `recalledConfirmed`, `notRecalledConfirmed`, `answerHeading`, `explanationHeading`, `unavailable`) present and key-aligned across `en.ts:102-111`, `es.ts`, `pt.ts`, `de.ts` (each `TranslationResource`-typed against `en`, so `check-types` catches missing/extra keys). `explanationHeading: 'Why'` and `unavailable: 'This activity is unavailable'` verified byte-identical to the `matching`/`fillInTheBlank` precedent (`en.ts:90,92,98,99`). `FLASHCARD_DIR` entry in `migration-coverage.test.ts:66-69,151` mirrors the shipped `multiple-choice`/`matching`/`fill-in-the-blank`/`lesson-results` entries exactly (same comment style, same `[name, dir]` tuple shape).
+- **task-7 (a11y)**: Verified against source, not just the test's claim — `flashcard.tsx:78-80` has real `accessibilityRole="button"`, `accessibilityLabel`, `accessibilityState={{ disabled, selected }}` on both self-mark `Pressable`s (plus text+`Icon` confirmation, not color alone, `flashcard.tsx:84-85`); `flashcard.tsx:162` uses `theme.layout.touchTarget` (token, not a magic number) for `minHeight`; `use-flashcard.ts:26-29` has the announce effect guarded `Platform.OS !== 'android'`. All pre-existing from Slice 1, confirmed unchanged in this slice's diff. The new `@s10` block (`flashcard.test.tsx:224-258`) is genuinely non-vacuous: it asserts `accessibilityRole`, `accessibilityLabel`, and `toHaveStyle({ minHeight: layout.touchTarget })` against real rendered props/styles (not tautological), consistent with the implementator's stated red/revert verification.
+- **task-8 (Storybook)**: All 8 required stories present and correctly seeded (`flashcard.stories.tsx:42-75`) — `Hidden` (default), `RevealedUnmarked` (`initialRevealed`), `RevealedRecalled`/`RevealedNotRecalled` (`initialAnswer`), `WithoutExplanation` (explanation stripped, revealed), `UnavailableMissingBack` (`back: ''`), `UnavailableMissingFront` (`content: ''`) — distinct and each correctly triggers `isFlashcardSlideValid` (`flashcard.helpers.ts:8-9`), `Interactive` (unseeded, live). Structure mirrors `matching.stories.tsx` exactly, including the two-separate-stories-for-two-unavailable-cases pattern.
+- **task-9 (e2e)**: `flashcard.e2e.js` genuinely drives the Interactive story's reveal → self-mark → lock flow (`:86-124`) with real clicks and post-condition assertions (locked confirmation stays, re-tap of the other/same mark is a no-op, `{ force: true }` correctly used post-lock since the control becomes non-interactive). Both unavailable stories assert their notice text and absence of interactive controls (`:67-83`). Non-shallow — assertions check both presence of new state and absence of prior state (e.g. bare `'Recalled'` label disappearing once locked, `:44,55`). Structure mirrors `matching.e2e.js` (`frameLocator` on `storybook-preview-iframe`, `getByText` exact) faithfully, including the same `check_circle`/`cancel` icon-as-text-ligature assertion pattern already proven valid there.
+- No debug leftovers, no TODOs, functional React + `Props`/labels types throughout, kebab-case filenames maintained.
 
 ## Design lens
+- No hardcoded colors/dimensions introduced anywhere in this slice's diff (only string bundle entries + a test-registration array + stories/e2e which carry no styling).
+- `explanationHeading`/`unavailable` wording reuses the shared precedent verbatim, not diverged text (confirmed above).
+- `component-split.mdc` respected: a11y announce effect lives in `use-flashcard.ts` (hook), a11y attributes live in `flashcard.tsx` (component) — unchanged, correctly split from Slice 1.
+- Atomic-design placement unchanged and correct (organism-level, reusing `Button`/`Card`/`Icon` atoms/molecules from `@helsoft/components`).
 
-- No hardcoded user-facing strings introduced: the new test uses the existing `I18N` key
-  constants (`flashcard.test.tsx:13-22`) against the mocked `t: (key) => key`
-  (`flashcard.test.tsx:1-5`); production `labels.unavailable` continues to resolve via
-  `t('activity.flashcard.unavailable')` (`flashcard.tsx:34`), unchanged.
-- Consistent with the matching/fill-in-the-blank unavailable-state precedent: same
-  `t('activity.{feature}.unavailable')` naming (`matching.tsx:43`,
-  `fill-in-the-blank.tsx:29`, `flashcard.tsx:34`) and same "whole surface degrades to one
-  notice, nothing interactive" shape (`matching.tsx:86`, `fill-in-the-blank.tsx:55`,
-  `flashcard.tsx:46-49`). No ad-hoc colors/spacing/typography touched by this slice.
-- No `.stories.tsx` change expected or made — story coverage for the unavailable state is
-  explicitly task-8 (Slice 3) per `tasks.md`; correctly out of scope here.
+## Notes (non-blocking, out of this slice's scope)
+- The announce effect (`use-flashcard.ts:28`) announces the static label `labels.answerHeading` ("Answer") rather than the revealed answer content itself. This line was not touched in this slice (present since Slice 1, already reviewed/approved) and is a depth-of-a11y question reserved for the full review's accessibility lens — flagging only for that later pass, not blocking here.
 
-## Result
-
-No findings. Slice 2 (task-5) unblocked.
+No findings block this slice.
