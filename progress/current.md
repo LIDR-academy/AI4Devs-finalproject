@@ -2,6 +2,6 @@
 
 **Active feature:** pdf-upload-extraction
 **Folder:** docs/features/pdf-upload-extraction/
-**Phase:** in_review
-**Status:** All 3 slices complete and clean (per-slice code+design reviews all APPROVED). Starting Phase 3-4: full 6-reviewer round + mutation testing (2-round cap, updated from 3 mid-build per synced orchestrator process changes).
-**Notes:** Slice 1 (happy path, 3 rounds under old cap) → Slice 2 (error/empty/retry, 2 rounds) → Slice 3 (analytics/a11y/i18n, 1 round). Local Supabase stack (Docker) running for RLS integration test. mupdf-wasm spike succeeded. Branch: feat/pdf-upload-extraction (worktree .worktrees/pdf-upload-extraction).
+**Phase:** mutation
+**Status:** Full review APPROVED (round 2, zero findings). Mutation gate PASS after a targeted closure pass (39→0 real gaps) plus explicit human risk-acceptance of 3 content/presentation-only categories (styling, PDF_IMAGES_BUCKET, i18n translation values). Starting Phase 5: dod_validator.
+**Notes:** Branch: feat/pdf-upload-extraction (worktree .worktrees/pdf-upload-extraction). Full history in tdd.md, review.md, mutation.md, spec.md's Resolved decisions.

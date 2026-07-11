@@ -1,6 +1,6 @@
 ---
 feature: pdf-upload-extraction
-phase: in_review   # pending|spec_ready|approved|in_progress|in_review|mutation|pr_ready|done
+phase: mutation   # pending|spec_ready|approved|in_progress|in_review|mutation|pr_ready|done
 review_round: 2     # incremented by reviews_lead; cap 2
 ---
 
