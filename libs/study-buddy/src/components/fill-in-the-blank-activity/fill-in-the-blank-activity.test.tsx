@@ -157,7 +157,8 @@ describe('FillInTheBlankActivity', () => {
       isCorrect: true,
     });
     expect(screen.getByText('activity.fillInTheBlank.correct')).toBeTruthy();
-    expect(screen.getByText('check_circle')).toBeTruthy();
+    expect(screen.getByText('check_circle', { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.queryByText('check_circle')).toBeNull();
     expect(screen.getByText('activity.fillInTheBlank.explanationHeading')).toBeTruthy();
     expect(screen.getByText('Paris is the capital of France.')).toBeTruthy();
   });
@@ -195,7 +196,8 @@ describe('FillInTheBlankActivity', () => {
       isCorrect: false,
     });
     expect(screen.getByText('activity.fillInTheBlank.incorrect')).toBeTruthy();
-    expect(screen.getByText('cancel')).toBeTruthy();
+    expect(screen.getByText('cancel', { includeHiddenElements: true })).toBeTruthy();
+    expect(screen.queryByText('cancel')).toBeNull();
     expect(screen.getByText('Paris')).toBeTruthy();
     expect(blank().props.editable).toBe(false);
     expect(submit().props.accessibilityState.disabled).toBe(true);

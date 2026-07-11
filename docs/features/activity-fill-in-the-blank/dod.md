@@ -1,48 +1,19 @@
-# Definition of Done — <name>
+# Definition of Done — activity-fill-in-the-blank
 
-**Verdict:** PASS | DOD_FAILED
-_Validated by `dod_validator`. Each item re-checked against the code, not trusted from prior reports. **Keep terse:** one line of evidence per item — a `file:line`, a one-line command result (e.g. "lint: 0 errors"), or a link to `review.md` / `mutation.md`. Do **not** paste full command output or restate rubric text._
+**Verdict:** PASS → `pr_ready`
 
-## Accepted minors (documented risk-accepted, if any)
-_Only **minor** findings left after the 2-round review loop, explicitly risk-accepted by the human and mirrored in `spec.md` Open decisions. PASS may carry these; it may NOT carry an open blocker/major or an unmet mutation threshold. Leave empty if none._
-- _none_
+## Accepted minors
+_none_ — `review.md` FULL Round 2 APPROVED.
 
-## Functionality
-- [ ] All acceptance criteria met (the `@s` scenarios in `gherkin-scenarios.md`)
-- [ ] 4 UI states implemented (if UI)
-- [ ] Robust error handling; no undefined/crash states
+## Checklist
 
-## Code quality
-- [ ] `pnpm lint` clean — _evidence:_
-- [ ] `pnpm check-types` clean — _evidence:_
-- [ ] `pnpm test` (unit + integration) green — _evidence:_
-- [ ] `test:e2e` green where relevant — _evidence:_
-- [ ] No TODOs without an issue; Conventional Commits
+- [x] **Functionality** — `@s1`–`@s14` covered (`gherkin-scenarios.md` / `tdd.md`); 4 UI states; unavailable + grader guards.
+- [x] **Code quality** — `pnpm check-types` / test / bootstrap green; Playwright fill-in e2e **11 passed**; no TODOs.
+- [x] **Architecture** — `review-architecture.md` APPROVED; organism ← wiring ← pure grader; no DAO/service.
+- [x] **Design** — `review-design.md` APPROVED; tokens + stories (Unanswered/Correct/Incorrect/Unavailable).
+- [x] **Security** — `review-security.md` APPROVED; no network/secrets.
+- [x] **Accessibility** — `review-accessibility.md` APPROVED (R2); Round 1 B1/M1/M2/m1 FIXED.
+- [x] **Testing rigor** — every `@s` tested; [`mutation.md`](./mutation.md) POST-REVIEW **PASS** (100% logic).
+- [x] **i18n** — `activity.fillInTheBlank.*` en/es/pt/de; labels injected.
 
-## Architecture
-- [ ] `Component→Hook→Service→DAO` respected; no cross-layer imports
-- [ ] DTOs not leaked out of data/DAO; barrels updated
-- [ ] No unapproved dependencies
-
-## Design system
-- [ ] Tokens/existing components reused; correct atomic-design placement
-- [ ] Storybook story per shared component (4 states)
-- [ ] Every component has a Jest unit test (`<name>.test.tsx`)
-
-## Security (OWASP)
-- [ ] No secrets/keys in code or logs; inputs validated
-- [ ] Supabase RLS/auth respected; no PII in logs; TLS for external calls
-
-## Accessibility (WCAG 2.2 AA)
-- [ ] Labels/roles; contrast ≥ 4.5:1; touch targets ≥ 44/48; focus order; dynamic type
-
-## Testing rigor
-- [ ] Every `@s` scenario covered
-- [ ] Mutation score threshold met on changed source (`.tsx` included) — _link mutation.md_
-
-## Observability & i18n
-- [ ] Analytics events per spec; feature flag wrapping (if applicable)
-- [ ] No hardcoded strings
-
----
-**If PASS → `pr_ready`.** Opening & merging the PR is a manual human step → `done`.
+Opening & merging the PR is a manual human step → `done`.
