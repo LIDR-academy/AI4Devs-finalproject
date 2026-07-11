@@ -1,26 +1,37 @@
-# review-code — activity-matching (Slice 1, round 2)
+# review-code — activity-matching (Slice 2)
 
 **Verdict: APPROVED — zero findings.**  
-**Scope:** tasks 1–4 only  
-**Rubric:** `.agents/rules/review-standards.md` §1
+**Scope:** task-5 only (Empty + Error / unavailable) — scenarios `@s13`, `@s14`, `@s15`  
+**Rubric:** `.agents/rules/review-standards.md` §1 + `.agents/rules/tdd.md`
 
-## Prior findings (round 1) — verified fixed
+## Scenario coverage
 
-| # | Severity | Finding | Status |
-|---|---|---|---|
-| 1 | major | `matching.tsx` summary used `onSurfaceVariant` on colored banner | **fixed** — `styles.summary(isCorrect)` uses `onTertiaryContainer` / `onErrorContainer` (`matching.tsx:291-294`); tests assert both |
-| 2 | minor | item `minHeight: theme.spacing.s12` | **fixed** — `minHeight: theme.layout.touchTarget` (`matching.tsx:226`); source + style tests assert token |
+| Scenario | Test evidence |
+|---|---|
+| @s13 | `matching.test.tsx:272-279` — empty `leftItems` → `labels.unavailable`, no prompt/items, zero buttons |
+| @s14 | `matching.test.tsx:282-290` — unequal lengths → unavailable notice, no crash, zero buttons |
+| @s15 | `matching.test.tsx:263-269` (organism `unavailable` prop) + `matching-activity.test.tsx` "passes unavailable and never grades when the slide is invalid" (Slice 1, still green) |
 
-## Scenario coverage / TDD / craftsmanship
+Deferred (out of scope): `@s16`/`@s17`, stories/e2e.
 
-Unchanged from round 1 APPROVED: Slice-1 `@s1`–`@s12`,`@s15` each map to ≥1 concrete test; deferred `@s13`/`@s14`/`@s16`/`@s17`/stories/e2e per tasks. TDD log Cycles 18–19 document Red→Green for the two design fixes. No new production surface; no debug leftovers; Props types + kebab-case intact.
+## TDD discipline
+
+- `tdd.md` Slice 2: Cycles 20–21 document Red→Green for `@s13`/`@s14`; `@s15` organism path already green from Slice 1.
+- Production delta is the self-detect branch only (`isEmpty` / `isUnequal` → `isUnavailable` early return) — demanded by those tests. No gold-plating.
+
+## Craftsmanship
+
+- `MatchingProps` present; kebab-case files; functional React.
+- Early-return unavailable branch (`matching.tsx:73-90`) mirrors MultipleChoice (`Card` + `labels.unavailable`, nothing interactive).
+- No hardcoded chrome strings/colors; theme tokens only; no `console.log` / orphan TODOs.
+- Slice 1 happy path unchanged (20 matching tests still green).
 
 ## Gates (re-run)
 
-- `check-types` (`@helsoft/types` + `@helsoft/study-buddy` + `@helsoft/activities`) — green
-- `@helsoft/study-buddy` jest (`grade-matching|matching-activity`) — **17/17** green
-- `@helsoft/activities` jest (`matching.test`) — **18/18** green (incl. 3 design-fix asserts)
-- `pnpm lint` — green
+- `pnpm --filter @helsoft/activities check-types` — green
+- `pnpm --filter @helsoft/activities test -- matching.test` — **20/20** green
+- `pnpm --filter @helsoft/study-buddy test -- matching-activity` — **6/6** green (incl. @s15)
+- Package has no `lint` script; `pnpm lint --filter=@helsoft/activities` — no tasks (N/A)
 
 ## Findings
 

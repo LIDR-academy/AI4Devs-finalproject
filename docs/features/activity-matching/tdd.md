@@ -26,7 +26,7 @@ Per `tasks.md`: data/domain backbone first (task-1 types → task-2 grader), the
 | @s12 | `grade-matching.test.ts`: all-correct / partial / zero-correct shape tests; `matching-activity.test.tsx`: "emits answered state once with correct partial counts and ignores re-submit" |
 | @s15 | `grade-matching.test.ts`: `isMatchingSlideValid` false cases + grader throws on invalid; `matching-activity.test.tsx`: "passes unavailable and never grades when the slide is invalid"; `matching.test.tsx`: "shows unavailable notice when unavailable prop is true" (wrapper-driven; Empty/Error self-detect → Slice 2) |
 
-Deferred to later slices: @s13/@s14 (task-5), @s16 (task-6), @s17 (task-7), stories/e2e (tasks 8–9).
+Deferred to later slices: @s16 (task-6), @s17 (task-7), stories/e2e (tasks 8–9).
 
 ## Cycles
 
@@ -92,3 +92,31 @@ Deferred to later slices: @s13/@s14 (task-5), @s16 (task-6), @s17 (task-7), stor
 - REFACTOR: none.
 
 Gate re-check: `pnpm --filter @helsoft/activities test` — green. No commit.
+
+## Slice 2 — Empty + Error (task-5)
+
+### `@s` → test map (Slice 2)
+
+| Scenario | Test(s) |
+|---|---|
+| @s13 | `matching.test.tsx`: "shows unavailable notice when a column is empty" |
+| @s14 | `matching.test.tsx`: "shows unavailable notice when column lengths differ" |
+| @s15 | `matching.test.tsx`: "shows unavailable notice when unavailable prop is true" (Slice 1); wrapper path in `matching-activity.test.tsx` unchanged |
+
+### Cycles
+
+**Cycle 20 (@s13 — Empty)**
+- RED: empty `leftItems` still rendered columns/Submit. GREEN: organism self-detects `isEmpty` → early unavailable return.
+- REFACTOR: none.
+
+**Cycle 21 (@s14 — unequal Error)**
+- RED: unequal lengths still rendered content. GREEN: `isUnequal` folded into `isUnavailable` with empty + wrapper flag.
+- REFACTOR: single `isUnavailable` boolean for the three triggers.
+
+## Gate checks (Slice 2)
+
+- `pnpm --filter @helsoft/activities test` — 20 matching + MC green.
+- `pnpm --filter @helsoft/study-buddy test` — green (incl. MatchingActivity @s15).
+- `pnpm --filter @helsoft/activities --filter @helsoft/study-buddy check-types` — green.
+- `pnpm lint` — green.
+- No commit (orchestrator commits after slice review). No Slice 3 started.

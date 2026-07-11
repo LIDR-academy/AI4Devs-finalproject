@@ -70,6 +70,9 @@ export const Matching = ({
   const locked = !!result;
   const allPaired = formedPairs.length === leftItems.length && leftItems.length > 0;
   const resultLabel = result ? (result.isCorrect ? labels.correct : labels.incorrect) : '';
+  const isEmpty = leftItems.length === 0 || rightItems.length === 0;
+  const isUnequal = leftItems.length !== rightItems.length;
+  const isUnavailable = unavailable || isEmpty || isUnequal;
 
   useEffect(() => {
     if (result && Platform.OS !== 'android') {
@@ -77,8 +80,8 @@ export const Matching = ({
     }
   }, [result, resultLabel]);
 
-  // Slice 2 owns Empty/Error self-detection; Slice 1 only honors the wrapper's `unavailable` flag.
-  if (unavailable) {
+  // Empty / unequal lengths (self-detect) or wrapper-forced unavailable → graceful degradation.
+  if (isUnavailable) {
     return (
       <Card style={styles.root}>
         <Text style={styles.prompt}>{labels.unavailable}</Text>

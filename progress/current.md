@@ -2,6 +2,6 @@
 
 **Active feature:** activity-matching
 **Folder:** docs/features/activity-matching/
-**Phase:** in_progress — Slice 1
-**Status:** Spec+Gherkin approved. Building Slice 1 (types + grader + Matching + MatchingActivity). Model override: sonnet-tier → grok-4.5-fast-xhigh.
+**Phase:** in_progress — Slice 2
+**Status:** Slice 1 committed (review clean). Building Slice 2 (Empty + Error). Model: grok-4.5-fast-xhigh for sonnet-tier.
 **Notes:** Worktree `.worktrees/activity-matching`, branch `feat/activity-matching`.

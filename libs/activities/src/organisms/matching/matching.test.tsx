@@ -268,6 +268,27 @@ describe('Matching', () => {
     expect(screen.queryAllByRole('button')).toHaveLength(0);
   });
 
+  // @s13 — empty left or right column → Empty (unavailable notice, nothing interactive).
+  it('shows unavailable notice when a column is empty', async () => {
+    await render(<Matching {...defaultProps} leftItems={[]} />);
+
+    expect(screen.getByText(labels.unavailable)).toBeTruthy();
+    expect(screen.queryByText(defaultProps.prompt)).toBeNull();
+    expect(screen.queryByText('Paris')).toBeNull();
+    expect(screen.queryAllByRole('button')).toHaveLength(0);
+  });
+
+  // @s14 — unequal column lengths → Error (unavailable notice, no crash).
+  it('shows unavailable notice when column lengths differ', async () => {
+    await render(
+      <Matching {...defaultProps} rightItems={rightItems.slice(0, 2)} />,
+    );
+
+    expect(screen.getByText(labels.unavailable)).toBeTruthy();
+    expect(screen.queryByText('France')).toBeNull();
+    expect(screen.queryAllByRole('button')).toHaveLength(0);
+  });
+
   // Slice-1 design review — summary on-* must pair with banner container.
   it('colors the all-correct summary with onTertiaryContainer', async () => {
     await render(<Matching {...defaultProps} result={allCorrectResult} />);
