@@ -36,6 +36,7 @@ export const es: TranslationResource = {
     results: {
       score: '{{correct}} / {{total}}',
       scorePercent: '{{percent}}%',
+      scoreAnnouncement: '{{score}}, {{percent}}',
       retake: 'Repetir actividades',
       backHome: 'Volver a mis lecciones',
       completeHeadline: 'Lección completada',

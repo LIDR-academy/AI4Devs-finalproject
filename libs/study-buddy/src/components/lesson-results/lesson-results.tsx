@@ -35,6 +35,8 @@ export const LessonResults = ({ lesson, answers, onRetake, onBackToLessons }: Le
   // Unrendered (and NaN via a 0/0 division) for the completion variant — scoreLesson only
   // reports isScorable: false when total is 0, so a guard here would be dead code.
   const percent = Math.round((summary.correct / summary.total) * PERCENT_MULTIPLIER);
+  const scoreLabel = t('results.score', { correct: summary.correct, total: summary.total });
+  const percentLabel = t('results.scorePercent', { percent });
 
   // Save exactly once per completion (risk R5) — a re-render (e.g. a parent state change)
   // must not re-fire the insert; only an actual remount resets this guard. Nothing is ever
@@ -54,8 +56,9 @@ export const LessonResults = ({ lesson, answers, onRetake, onBackToLessons }: Le
       loading={status === 'saving'}
       saveFailed={status === 'error'}
       labels={{
-        score: t('results.score', { correct: summary.correct, total: summary.total }),
-        percent: t('results.scorePercent', { percent }),
+        score: scoreLabel,
+        percent: percentLabel,
+        scoreAnnouncement: t('results.scoreAnnouncement', { score: scoreLabel, percent: percentLabel }),
         retake: t('results.retake'),
         backToLessons: t('results.backHome'),
         completeHeadline: t('results.completeHeadline'),

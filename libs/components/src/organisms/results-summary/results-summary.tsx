@@ -11,6 +11,12 @@ export type ResultsSummaryVariant = 'score' | 'completion';
 export type ResultsSummaryLabels = {
   score: string;
   percent: string;
+  /**
+   * Pre-joined, localized announcement for the score variant's loading→content transition
+   * (@s13) — the wiring layer composes this from `labels.score`/`percent` (e.g. via
+   * `t('results.scoreAnnouncement', …)`); the organism never formats it itself.
+   */
+  scoreAnnouncement: string;
   retake: string;
   backToLessons: string;
   /** Completion-variant headline (@s8/@s9) — shown instead of a score. */
@@ -77,14 +83,21 @@ export const ResultsSummary = ({
   // visual content change to hang a `accessibilityLiveRegion` off of (the headline is already
   // rendered underneath the spinner), so the imperative call is the only way to notify a
   // screen-reader user the wait is over.
+  //
+  // Slice-3 review round 1, Finding 1: `useLessonAttempt`'s saving→error transition flips
+  // `loading` and `saveFailed` in the *same* commit, which would otherwise fire this effect
+  // alongside the saveFailed effect above — two competing announcements back to back. Skip this
+  // one when that combined transition lands on a save failure; the failure notice above is the
+  // more actionable message and already announces on its own.
   const wasLoading = useRef(loading);
   useEffect(() => {
-    if (wasLoading.current && !loading) {
-      const announcement = variant === 'score' ? `${labels.score}, ${labels.percent}` : labels.completeHeadline;
+    const resolvedIntoSaveFailure = saveFailed && variant === 'score';
+    if (wasLoading.current && !loading && !resolvedIntoSaveFailure) {
+      const announcement = variant === 'score' ? labels.scoreAnnouncement : labels.completeHeadline;
       AccessibilityInfo.announceForAccessibility(announcement);
     }
     wasLoading.current = loading;
-  }, [loading, variant, labels.score, labels.percent, labels.completeHeadline]);
+  }, [loading, saveFailed, variant, labels.scoreAnnouncement, labels.completeHeadline]);
 
   return (
     <Card>

@@ -10,6 +10,7 @@ import type { Lesson } from '@helsoft/types';
 import { useLessonAttempt } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { AccessibilityInfo } from 'react-native';
 
 import { RESULTS_LOADING_TEST_ID } from '@helsoft/components';
 
@@ -28,6 +29,7 @@ const t = (key: string, options?: Record<string, unknown>) => {
   if (key === 'results.completeBody') return "You've reached the end of this lesson.";
   if (key === 'results.saveFailed') return "Couldn't save this attempt";
   if (key === 'results.retrySave') return 'Try again';
+  if (key === 'results.scoreAnnouncement') return `${options?.score}, ${options?.percent}`;
   return key;
 };
 
@@ -288,5 +290,28 @@ describe('LessonResults', () => {
 
     expect(onRetake).toHaveBeenCalledTimes(1);
     expect(onBackToLessons).toHaveBeenCalledTimes(1);
+  });
+
+  // Slice-3 review round 1, Finding 2 — the announcement handed to ResultsSummary must be a
+  // single pre-joined, localized string sourced from `t('results.scoreAnnouncement', …)`, not
+  // composed inside the presentational organism from `labels.score`/`labels.percent`.
+  it('announces the composed score label via t(results.scoreAnnouncement) once saving resolves', async () => {
+    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    mockUseLessonAttempt.mockReturnValue({ status: 'saving', attempt: null, saveAttempt: jest.fn(), retry: jest.fn() });
+    mockUseLocalization.mockReturnValue(localizationValue());
+
+    const { rerender } = await render(
+      <LessonResults lesson={scorableLesson} answers={allCorrectAnswers} onRetake={jest.fn()} onBackToLessons={jest.fn()} />,
+    );
+    mockUseLessonAttempt.mockReturnValue({ status: 'idle', attempt: null, saveAttempt: jest.fn(), retry: jest.fn() });
+    await act(async () => {
+      rerender(
+        <LessonResults lesson={scorableLesson} answers={allCorrectAnswers} onRetake={jest.fn()} onBackToLessons={jest.fn()} />,
+      );
+    });
+
+    expect(announceSpy).toHaveBeenCalledWith('3 / 3, 100%');
+
+    announceSpy.mockRestore();
   });
 });

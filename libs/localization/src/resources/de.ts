@@ -36,6 +36,7 @@ export const de: TranslationResource = {
     results: {
       score: '{{correct}} / {{total}}',
       scorePercent: '{{percent}}%',
+      scoreAnnouncement: '{{score}}, {{percent}}',
       retake: 'Aktivitäten wiederholen',
       backHome: 'Zurück zu meinen Lektionen',
       completeHeadline: 'Lektion abgeschlossen',

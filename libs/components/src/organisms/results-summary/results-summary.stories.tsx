@@ -5,6 +5,7 @@ import { ResultsSummary } from './results-summary';
 const labels = {
   score: '3 / 3',
   percent: '100%',
+  scoreAnnouncement: '3 / 3, 100%',
   retake: 'Retake activities',
   backToLessons: 'Back to my lessons',
   completeHeadline: 'Lesson complete',

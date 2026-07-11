@@ -29,15 +29,17 @@ test('SaveFailed story shows the score alongside the save-failure notice', async
   await expect(canvas.locator("text=We couldn't save this attempt.")).toBeVisible();
 });
 
-// @s7 — the retry action is present and operable (re-attempts the save).
+// @s7 — the retry action is present and operable (re-attempts the save). Clicks the text
+// locator itself (no ancestor HTML-tag walk, per the storybook-e2e-tests skill) — Playwright's
+// own actionability checks (visible, stable, receives events, enabled) run automatically before
+// the click fires, so a hidden or genuinely disabled retry action still fails this test.
 test('SaveFailed story renders an operable retry action', async ({ page }) => {
   await page.goto(story('save-failed'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
-  const retryLabel = canvas.locator('text=Retry').first();
-  const retryControl = retryLabel.locator('xpath=ancestor::button[1]');
-  await expect(retryControl).toBeEnabled();
-  await retryControl.click();
+  const retryAction = canvas.locator('text=Retry').first();
+  await expect(retryAction).toBeVisible();
+  await retryAction.click();
 });
 
 // @s8 — the completion state shows the completion message instead of a score.

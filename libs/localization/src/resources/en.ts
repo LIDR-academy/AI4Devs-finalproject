@@ -41,6 +41,7 @@ export const en = {
     results: {
       score: '{{correct}} / {{total}}',
       scorePercent: '{{percent}}%',
+      scoreAnnouncement: '{{score}}, {{percent}}',
       retake: 'Retake activities',
       backHome: 'Back to my lessons',
       completeHeadline: 'Lesson complete',

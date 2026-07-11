@@ -1,20 +1,13 @@
 # review-code.md — score-results-summary
 
-**Verdict: APPROVED** (round 2, scoped to the slice-2 fix-forward diff against `5525f74`: `libs/components/src/organisms/results-summary/{results-summary.tsx,results-summary.test.tsx}`, `libs/study-buddy/src/components/lesson-results/{lesson-results.tsx,lesson-results.stories.tsx}`)
+**Verdict: APPROVED** (slice 3, round 2 of 2, diff `0a65cb1..working-tree`, commit `0b7801d` + uncommitted fix)
 
-Zero findings. All 5 reported fixes verified resolved by reading the diff and re-running the suites (no regressions to @s7/@s8/@s9/@s10/@s11 coverage):
+Gates run clean: `check-types` (@helsoft/components, @helsoft/study-buddy, @helsoft/localization), `pnpm --filter @helsoft/components test` (92/92), `pnpm --filter @helsoft/study-buddy test` (52/52), `pnpm --filter @helsoft/localization test` (57/57), `pnpm turbo run test` (whole workspace, no masking), `pnpm lint`, `pnpm --filter @helsoft/components exec playwright test --reporter=list results-summary.e2e.js` (6/6). No debug leftovers, no orphan TODOs, kebab-case filenames, `Props` types intact, functional React only, no cross-layer strays (`lesson-results.tsx` still only composes `t()` output and hands it to the organism — no new DAO/service reach).
 
-1. iOS announcement — `results-summary.tsx:69-73` adds a `useEffect` guarded by `saveFailed && variant === 'score'`, pinned by `results-summary.test.tsx:161-179` (fires) and `:184-202` (does not fire for completion). TDD cycle in `tdd.md` matches Three Laws (RED test before each guard tightening).
-2. Ternary removed — `lesson-results.tsx:37` computes `percent` unconditionally; unused/NaN-for-completion case is inert (never rendered in the completion branch), all pre-existing tests stayed green.
-3. Variant guard on the notice — `results-summary.tsx:89` now requires `saveFailed && variant === 'score'`; negative test at `results-summary.test.tsx:142-156` confirms no notice/retry button renders for `completion` even with `saveFailed` true.
-4. Style rename — `score`/`percent` → `headline`/`body` (`results-summary.tsx:123,127`); confirmed no stale references anywhere in `libs/`.
-5. Optional retry action — `results-summary.tsx:94-98` renders the `Button` only when `onRetrySave` is given; covered by `results-summary.test.tsx:207-214`; docstring at `results-summary.tsx:39-44` updated to describe the soft contract.
+## Round-1 findings — verified fixed
 
-Gates run clean:
-- `pnpm --filter @helsoft/components test` — 8 suites / 88 tests passed.
-- `pnpm --filter @helsoft/components check-types` — clean.
-- `pnpm --filter @helsoft/study-buddy test` — 8 suites / 49 tests passed.
-- `pnpm --filter @helsoft/study-buddy check-types` — clean.
-- `pnpm lint` — clean (cache hit).
+1. **Announcement race** (`results-summary.tsx:92-100`) — `resolvedIntoSaveFailure` guard added; traced the logic by hand against the real `use-lesson-attempt.ts` saving→error single-commit transition (`loading` true→false, `saveFailed` false→true) and confirmed only the failure-notice effect (`:75-79`) fires. New test `results-summary.test.tsx:206-236` ("announces only the save-failure notice, not the score, when loading resolves into a save failure") pins exactly this transition and asserts `toHaveBeenCalledTimes(1)`. Regression-checked the original loading-resolves-successfully path: `results-summary.test.tsx:238-256`/`258-278` (score + completion variants) still pass and correctly announce — confirmed by re-running the suite, not just reading it.
+2. **Hardcoded separator** — `ResultsSummaryLabels.scoreAnnouncement` (`results-summary.tsx:14-19`) is read as-is (`:96`), never composed. `lesson-results.tsx:38-39,61` computes `scoreLabel`/`percentLabel` once and passes `t('results.scoreAnnouncement', { score, percent })`. Key `results.scoreAnnouncement: '{{score}}, {{percent}}'` present and key-aligned in all four bundles (`en.ts:44`, `es.ts:39`, `pt.ts:39`, `de.ts:39`); `migration-coverage` key-existence check for `lesson-results` passes. Verified real i18next interpolation independently (ad hoc, not committed) — resolves correctly for `en`/`es`. Both `results-summary.test.tsx:280-306` (marker-string proof the organism never self-composes) and `lesson-results.test.tsx:295-315` (composed announcement via the real wiring) pin this.
+3. **E2e locator** (`results-summary.e2e.js:36-42`) — rewritten to `canvas.locator('text=Retry').first()` + `.click()`, no `xpath=ancestor::button[1]`. Ran the suite (6/6 green) and independently verified non-vacuousness: reproduced react-native-web's actual disabled-button DOM (`<button disabled aria-disabled="true">` wrapping the label `Text`) via a running Storybook instance and confirmed `.click()` on the text locator times out/throws both when the text is entirely absent and when the ancestor button is disabled — the rewritten assertion still fails for both failure modes the original xpath walk caught.
 
-No new craftsmanship issues: no `console.log`/debug leftovers, no orphan TODOs, functional React with `Props` types intact, kebab-case filenames, no magic numbers introduced, no duplication beyond the already-established `LoginForm` announce-effect precedent this fix intentionally mirrors (per the round-1 design finding).
+No new findings. TDD discipline intact (`tdd.md:128-149` log matches the diff; RED tests precede each GREEN change); scenario traceability (`@s12`/`@s13`, e2e `@s1`/`@s7`/`@s8`) unaffected and still mapped.

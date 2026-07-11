@@ -6,6 +6,7 @@ import { RESULTS_LOADING_TEST_ID, ResultsSummary } from './results-summary';
 const labels = {
   score: '3 / 3',
   percent: '100%',
+  scoreAnnouncement: '3 / 3, 100%',
   retake: 'Retake activities',
   backToLessons: 'Back to my lessons',
   completeHeadline: 'Lesson complete',
@@ -201,6 +202,47 @@ describe('ResultsSummary', () => {
     announceSpy.mockRestore();
   });
 
+  // Slice-3 review round 1, Finding 1 — the real production transition (use-lesson-attempt's
+  // saving→error) flips `loading` false and `saveFailed` true in the *same* commit. Only the
+  // failure notice should announce — announcing the score too would compete with it in the same
+  // screen-reader queue and add no information the user needs right now.
+  it('announces only the save-failure notice, not the score, when loading resolves into a save failure', async () => {
+    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    const { rerender } = await render(
+      <ResultsSummary
+        variant="score"
+        labels={labels}
+        loading
+        saveFailed={false}
+        onRetake={jest.fn()}
+        onBackToLessons={jest.fn()}
+        onRetrySave={jest.fn()}
+      />,
+    );
+    expect(announceSpy).not.toHaveBeenCalled();
+
+    await act(async () => {
+      rerender(
+        <ResultsSummary
+          variant="score"
+          labels={labels}
+          loading={false}
+          saveFailed
+          onRetake={jest.fn()}
+          onBackToLessons={jest.fn()}
+          onRetrySave={jest.fn()}
+        />,
+      );
+    });
+
+    expect(announceSpy).toHaveBeenCalledTimes(1);
+    expect(announceSpy).toHaveBeenCalledWith("We couldn't save this attempt.");
+
+    announceSpy.mockRestore();
+  });
+
   // @s13 — the score becoming final (loading resolves) is a state change that must be
   // announced to assistive tech, the same iOS-parity need as the save-failure notice.
   it('announces the score via AccessibilityInfo when loading resolves for the score variant', async () => {
@@ -248,6 +290,36 @@ describe('ResultsSummary', () => {
     });
 
     expect(announceSpy).toHaveBeenCalledWith('Lesson complete');
+
+    announceSpy.mockRestore();
+  });
+
+  // Slice-3 review round 1, Finding 2 — the organism must announce the given
+  // `scoreAnnouncement` label as-is, never compose one itself from `labels.score`/`percent`
+  // (that composition hardcoded a non-localized ", " separator — formatting belongs to the
+  // wiring layer, per this component's own no-self-formatting contract).
+  it('announces the given scoreAnnouncement label instead of composing labels.score and labels.percent', async () => {
+    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    announceSpy.mockClear();
+    const markerLabels = { ...labels, scoreAnnouncement: 'i18n-marker-score-announcement' };
+
+    const { rerender } = await render(
+      <ResultsSummary variant="score" labels={markerLabels} loading onRetake={jest.fn()} onBackToLessons={jest.fn()} />,
+    );
+
+    await act(async () => {
+      rerender(
+        <ResultsSummary
+          variant="score"
+          labels={markerLabels}
+          loading={false}
+          onRetake={jest.fn()}
+          onBackToLessons={jest.fn()}
+        />,
+      );
+    });
+
+    expect(announceSpy).toHaveBeenCalledWith('i18n-marker-score-announcement');
 
     announceSpy.mockRestore();
   });
