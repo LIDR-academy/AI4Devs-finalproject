@@ -3,7 +3,7 @@ id: task-3
 title: Matching organism — Content states, tap-to-pair UX, Submit gate, results
 slice: 1
 scenarios: [s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11]
-status: todo
+status: done
 paths: [libs/activities/src/organisms/matching/matching.tsx, libs/activities/src/organisms/matching/matching.test.tsx, libs/activities/src/organisms/index.ts]
 ---
 

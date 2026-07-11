@@ -1,0 +1,94 @@
+# TDD log — activity-matching
+
+Strict Red→Green→Refactor, one `@s` scenario at a time, per `.agents/rules/tdd.md`. This log
+covers **Slice 1** (tasks 1–4: types + grader + `Matching` organism + `MatchingActivity` wiring).
+
+## Build order
+
+Per `tasks.md`: data/domain backbone first (task-1 types → task-2 grader), then UI
+(task-3 organism → task-4 wiring + integration).
+
+## `@s` → test map (Slice 1)
+
+| Scenario | Test(s) |
+|---|---|
+| @s1 | `matching.test.tsx`: "renders both columns unpaired and tappable with Submit disabled" |
+| @s2 | `matching.test.tsx`: "marks a tapped unpaired item as the pending selection" |
+| @s3 | `matching.test.tsx`: "forms a pair when tapping left then right"; "forms a pair when tapping right then left" |
+| @s4 | `matching.test.tsx`: "deselects the pending item when tapped again" |
+| @s5 | `matching.test.tsx`: "retargets pending when tapping another item in the same column" |
+| @s6 | `matching.test.tsx`: "releases a pair when a paired item is tapped before submit" |
+| @s7 | `matching.test.tsx`: "keeps Submit disabled while at least one item is unpaired"; "enables Submit when every item is paired" |
+| @s8 | `matching.test.tsx`: "calls onSubmit with formed pairs and locks when result is set"; `matching-activity.test.tsx`: "locks the activity after submit"; "exposes graded answered state and renders feedback end to end" |
+| @s9 | `grade-matching.test.ts`: "returns isCorrect true and full answered-state when every pair matches"; `matching.test.tsx`: "marks every pair correct and shows the correct banner when result is all-correct" |
+| @s10 | `grade-matching.test.ts`: "returns partial counts and isCorrect false when some pairs are wrong"; `matching.test.tsx`: "marks pairs correct/incorrect and shows the incorrect banner for mixed results" |
+| @s11 | `matching.test.tsx`: "shows the explanation with results when provided"; `matching-activity.test.tsx`: "forwards the slide explanation after submit" |
+| @s12 | `grade-matching.test.ts`: all-correct / partial / zero-correct shape tests; `matching-activity.test.tsx`: "emits answered state once with correct partial counts and ignores re-submit" |
+| @s15 | `grade-matching.test.ts`: `isMatchingSlideValid` false cases + grader throws on invalid; `matching-activity.test.tsx`: "passes unavailable and never grades when the slide is invalid"; `matching.test.tsx`: "shows unavailable notice when unavailable prop is true" (wrapper-driven; Empty/Error self-detect → Slice 2) |
+
+Deferred to later slices: @s13/@s14 (task-5), @s16 (task-6), @s17 (task-7), stories/e2e (tasks 8–9).
+
+## Cycles
+
+### task-1 + task-2 — types + `gradeMatching` / `isMatchingSlideValid`
+
+**Cycle 1 (@s9, @s12)**
+- RED: `grade-matching.test.ts` — "returns isCorrect true and full answered-state…". Failed: `Cannot find module './grade-matching'`.
+- GREEN: added `MatchingItem`/`MatchingPair`/`MatchingSlide` to `lesson.ts`, `GradedPair`/`MatchingAnswer`/`ActivityAnswer` to `activity-answer.ts`; implemented `gradeMatching` + `isMatchingSlideValid` (obvious pure implementation).
+- REFACTOR: none.
+
+**Cycle 2 (@s10, @s12 partial/zero)**
+- RED→GREEN: mixed + zero-correct tests passed immediately (cycle 1 implementation already general). Kept as shape/partial-credit guards.
+
+**Cycle 3 (order-independence + defensive throws + @s15 validity)**
+- RED→GREEN: order-independent grading, unknown-id throw, invalid-slide throw, and `isMatchingSlideValid` empty/unequal/unknown-id/duplicate-left cases — all green on existing implementation.
+- Exported via `libs/study-buddy/src/index.ts`.
+
+### task-3 — `Matching` organism
+
+**Cycle 4 (@s1 — render)**
+- RED: "renders both columns unpaired…". Failed: `Cannot find module './matching'`.
+- GREEN: `matching.tsx` with columns + Submit disabled + theme tokens.
+
+**Cycles 5–11 (@s2–@s8 tap-to-pair + submit gate + lock)**
+- RED/GREEN: pending, form-pair (both orders), deselect, retarget, release, submit gate, onSubmit + lock via `result`. Presses wrapped in `act()` (RN Testing Library + React 19).
+- Pair formation asserted via `accessibilityState.selected` (not color alone).
+
+**Cycles 12–14 (@s9–@s11 results)**
+- RED/GREEN: all-correct / mixed banners + icons (`check_circle`/`cancel`) + explanation. Wrapper-driven `unavailable` prop honored (Slice 2 owns Empty/Error self-detect).
+- Exported via `libs/activities/src/organisms/index.ts`.
+
+### task-4 — `MatchingActivity` wiring
+
+**Cycle 15 (@s8 lock)**
+- RED: module missing. GREEN: wrapper with `useState`, `isMatchingSlideValid`, `gradeMatching`, labels via `t('activity.matching.*')` placeholders.
+
+**Cycle 16 (@s12 emit-once)**
+- GREEN: `handleSubmit` guards `if (answer || !valid) return`; fake Matching isolates wrapper lock.
+
+**Cycle 17 (@s8/@s12 integration + @s11 + @s15)**
+- End-to-end real grader + organism; explanation forwarded; invalid slide → `unavailable: true`, no `onAnswered`.
+- Exported via `libs/study-buddy/src/index.ts`.
+
+## Gate checks (Slice 1)
+
+- `pnpm --filter @helsoft/types --filter @helsoft/study-buddy --filter @helsoft/activities check-types` — green.
+- `pnpm --filter @helsoft/study-buddy test` (grade-matching + matching-activity) — 17 tests green.
+- `pnpm --filter @helsoft/activities test` (matching) — 15 tests green.
+- `pnpm lint` — green.
+- No hardcoded user-facing chrome (labels/`t()`); styling via theme tokens only.
+- No commit (orchestrator commits after slice review).
+
+## Slice 1 review re-work (design findings)
+
+### Cycle 18 (major — summary on-* on colored banner)
+- RED: `matching.test.tsx` — "colors the all-correct summary with onTertiaryContainer"; "colors the mixed/incorrect summary with onErrorContainer". Failed: summary used `onSurfaceVariant` (`#414950`).
+- GREEN: `styles.summary(isCorrect)` mirrors `bannerText` — `onTertiaryContainer` / `onErrorContainer`.
+- REFACTOR: none (parallel to existing `bannerText`).
+
+### Cycle 19 (minor — item minHeight → layout.touchTarget)
+- RED: `matching.test.tsx` — "uses layout.touchTarget for item minHeight" (source token assert; numeric value identical to `spacing.s12`). Failed: `minHeight: theme.spacing.s12`.
+- GREEN: `minHeight: theme.layout.touchTarget`.
+- REFACTOR: none.
+
+Gate re-check: `pnpm --filter @helsoft/activities test` — green. No commit.

@@ -3,7 +3,7 @@ id: task-2
 title: Pure grader gradeMatching + isMatchingSlideValid
 slice: 1
 scenarios: [s9, s10, s12, s15]
-status: todo
+status: done
 paths: [libs/study-buddy/src/grading/grade-matching.ts, libs/study-buddy/src/grading/grade-matching.test.ts, libs/study-buddy/src/index.ts]
 ---
 

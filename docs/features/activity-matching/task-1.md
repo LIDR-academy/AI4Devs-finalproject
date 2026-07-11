@@ -3,7 +3,7 @@ id: task-1
 title: Extend Slide union + answered state with matching types
 slice: 1
 scenarios: [s12]
-status: todo
+status: done
 paths: [libs/types/src/lesson.ts, libs/types/src/activity-answer.ts]
 ---
 

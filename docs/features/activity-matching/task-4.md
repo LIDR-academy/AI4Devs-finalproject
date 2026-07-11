@@ -3,7 +3,7 @@ id: task-4
 title: MatchingActivity wiring — grade on submit, emit answered state once
 slice: 1
 scenarios: [s8, s11, s12, s15]
-status: todo
+status: done
 paths: [libs/study-buddy/src/components/matching-activity/matching-activity.tsx, libs/study-buddy/src/components/matching-activity/matching-activity.test.tsx, libs/study-buddy/src/index.ts]
 ---
 
