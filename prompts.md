@@ -12,7 +12,7 @@
 | Plugins, enrollments, WYSIWYG, video, SaaS | [362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md](./agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83cbb.md) |
 | Calendar, i18n, sidebar | [8ff11265-f2f9-4ac1-b458-5dd9a909c31f.md](./agent-transcripts/8ff11265-f2f9-4ac1-b458-5dd9a909c31f.md) |
 | Deploy cPanel, comms, Moodle 5.2, grill-me | Cursor transcript `17d3d3be-a847-4d06-abee-a8643a0a356f` |
-| Topbar móvil, chat duplicado, upgrade solo admin | Cursor transcript (sesión Jul 2026, `lms-cms-laravel12`) |
+| Topbar mobile, duplicate chat, admin-only upgrade | Cursor transcript (Jul 2026 session, `lms-cms-laravel12`) |
 
 **Extended prompt log in code repo:** [codigofinal/lms-cms-laravel12/prompts.md](../codigofinal/lms-cms-laravel12/prompts.md)
 
@@ -38,6 +38,7 @@
 16. [Smart Report plugin and OpenSpec](#16-smart-report-plugin-and-openspec)
 17. [Refactoring, tests, CI/CD, and quality](#17-refactoring-tests-cicd-and-quality)
 18. [Topbar responsive, comms fixes, and admin-only upgrade](#18-topbar-responsive-comms-fixes-and-admin-only-upgrade)
+19. [English documentation for deploy artifacts](#19-english-documentation-for-deploy-artifacts)
 
 ---
 
@@ -417,6 +418,14 @@
 - "Sincroniza LMS ↔ deploy como siempre" → `scripts/sync-deploy-packages.ps1`, `docs/DEPLOY-SYNC.md`
 - "Si es correcto" (confirmación commit) → commit `fix(comms): topbar móvil y mensajes duplicados en chat`
 - "¿La contraseña de admin@example.es dentro de proyectolms.asemad.es/login cuál es?" → documented seed `admin@example.com` / `password123`
+
+---
+
+## 19. English documentation for deploy artifacts
+
+**Prompt 1:** "Necesito que toda la documentación que subas se encuentre en ingles, cambiala y añade commit."
+
+> Note: Translated delivery docs to English: `docs/DEPLOY-SYNC.md`, remote helper pages (`comms-diagnostico.php`, `limpiar-cache-laravel.php`, `fusionar-comms-lang.php`), and FTP package guides (`deploy-upgrade-admin-only/INSTALAR.md`, comms install notes). User-facing LMS UI strings remain in `lang/es` and `lang/en`.
 
 ---
 
