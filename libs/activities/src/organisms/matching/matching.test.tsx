@@ -1,9 +1,6 @@
-import { readFileSync } from 'fs';
-import { join } from 'path';
-
 import { AccessibilityInfo, Platform } from 'react-native';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
-import { layout, lightColors } from '@helsoft/components';
+import { layout, lightColors, mixHex, shape, spacing } from '@helsoft/components';
 
 import {
   Matching,
@@ -307,13 +304,8 @@ describe('Matching', () => {
     });
   });
 
-  // Slice-1 design review — item floor uses layout.touchTarget, not spacing.s12
-  // (same numeric value; assert the semantic token in source + runtime floor).
+  // Slice-1 design review — item floor uses layout.touchTarget (runtime floor; token value).
   it('uses layout.touchTarget for item minHeight', async () => {
-    const src = readFileSync(join(__dirname, 'matching.tsx'), 'utf8');
-    expect(src).toMatch(/minHeight:\s*theme\.layout\.touchTarget/);
-    expect(src).not.toMatch(/minHeight:\s*theme\.spacing\.s12/);
-
     await render(<Matching {...defaultProps} />);
     expect(itemButton('France')).toHaveStyle({ minHeight: layout.touchTarget });
   });
@@ -460,5 +452,287 @@ describe('Matching', () => {
 
       announceSpy.mockRestore();
     });
+  });
+
+  // --- PRE-REVIEW mutation survivors ---
+
+  // Empty right only (left populated) — isEmptyRight branch.
+  it('shows unavailable notice when the right column is empty', async () => {
+    await render(<Matching {...defaultProps} rightItems={[]} />);
+
+    expect(screen.getByText(labels.unavailable)).toBeTruthy();
+    expect(screen.queryByText('France')).toBeNull();
+    expect(screen.queryAllByRole('button')).toHaveLength(0);
+  });
+
+  // Both columns empty — length-equal (0===0); empty guards alone must reject (not isUnequal).
+  it('shows unavailable notice when both columns are empty', async () => {
+    await render(<Matching {...defaultProps} leftItems={[]} rightItems={[]} />);
+
+    expect(screen.getByText(labels.unavailable)).toBeTruthy();
+    expect(screen.queryByText(defaultProps.prompt)).toBeNull();
+    expect(screen.queryAllByRole('button')).toHaveLength(0);
+  });
+
+  // Unsubmitted resultLabel is null — never announced / never shown as banner text.
+  it('uses a null resultLabel while unsubmitted', async () => {
+    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    await render(<Matching {...defaultProps} />);
+    expect(screen.queryByText(labels.correct)).toBeNull();
+    expect(screen.queryByText(labels.incorrect)).toBeNull();
+    expect(announceSpy).not.toHaveBeenCalled();
+
+    announceSpy.mockRestore();
+  });
+
+  // Release via right item — covers pair.rightId !== itemId (NoCoverage) + keeps other pairs.
+  it('releases only the tapped pair when a right-column paired item is pressed', async () => {
+    await render(<Matching {...defaultProps} />);
+
+    await press('France');
+    await press('Paris');
+    await press('Germany');
+    await press('Berlin');
+
+    expect(itemButton('France').props.accessibilityState.selected).toBe(true);
+    expect(itemButton('Paris').props.accessibilityState.selected).toBe(true);
+    expect(itemButton('Germany').props.accessibilityState.selected).toBe(true);
+    expect(itemButton('Berlin').props.accessibilityState.selected).toBe(true);
+
+    await press('Paris');
+
+    expect(itemButton('France').props.accessibilityState.selected).toBe(false);
+    expect(itemButton('Paris').props.accessibilityState.selected).toBe(false);
+    expect(itemButton('Germany').props.accessibilityState.selected).toBe(true);
+    expect(itemButton('Berlin').props.accessibilityState.selected).toBe(true);
+    expect(submitButton().props.accessibilityState.disabled).toBe(true);
+  });
+
+  // Lock via onPress={locked ? undefined : …} — press must not select when result is set.
+  it('ignores item presses once result locks the activity', async () => {
+    const onSubmit = jest.fn();
+    const partialResult: MatchingResult = {
+      pairs: [{ leftId: 'l1', rightId: 'r1', isCorrect: true }],
+      isCorrect: false,
+      summary: '1 of 3 correct',
+    };
+    await render(
+      <Matching {...defaultProps} onSubmit={onSubmit} result={partialResult} />,
+    );
+
+    const germany = screen.getByRole('button', { name: 'Germany' });
+    expect(germany.props.accessibilityState.selected).toBe(false);
+    expect(germany.props.accessibilityState.disabled).toBe(true);
+    expect(germany.props.onPress).toBeUndefined();
+
+    await act(async () => {
+      fireEvent.press(germany);
+    });
+
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Germany' }).props.accessibilityState.selected).toBe(
+      false,
+    );
+    expect(screen.queryByRole('button', { name: labels.submit })).toBeNull();
+  });
+
+  // pending.column → true mutant: same id in both columns must still form a pair, not deselect.
+  it('forms a pair when left and right items share the same id string', async () => {
+    const sharedLeft = [{ id: 'x', label: 'Left X' }];
+    const sharedRight = [{ id: 'x', label: 'Right X' }];
+    const onSubmit = jest.fn();
+    await render(
+      <Matching
+        {...defaultProps}
+        leftItems={sharedLeft}
+        rightItems={sharedRight}
+        onSubmit={onSubmit}
+      />,
+    );
+
+    await press('Left X');
+    await press('Right X');
+
+    expect(itemButton('Left X').props.accessibilityState.selected).toBe(true);
+    expect(itemButton('Right X').props.accessibilityState.selected).toBe(true);
+    expect(submitButton().props.accessibilityState.disabled).toBe(false);
+
+    await act(async () => {
+      fireEvent.press(submitButton());
+    });
+    expect(onSubmit).toHaveBeenCalledWith([{ leftId: 'x', rightId: 'x' }]);
+  });
+
+  // if (graded) → if (true): item missing from result.pairs must stay default (no icon/suffix).
+  it('leaves items absent from result.pairs in the default graded state', async () => {
+    const partialResult: MatchingResult = {
+      pairs: [{ leftId: 'l1', rightId: 'r1', isCorrect: true }],
+      isCorrect: false,
+      summary: '1 of 3 correct',
+    };
+    await render(<Matching {...defaultProps} result={partialResult} />);
+
+    expect(screen.getByRole('button', { name: `France, ${labels.correctPair}` })).toBeTruthy();
+    expect(screen.getByRole('button', { name: `Paris, ${labels.correctPair}` })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Germany' }).props.accessibilityLabel).toBe('Germany');
+    expect(screen.getByRole('button', { name: 'Berlin' }).props.accessibilityLabel).toBe('Berlin');
+    expect(screen.queryByText('cancel')).toBeNull();
+    expect(screen.getAllByText('check_circle')).toHaveLength(2);
+  });
+
+  // feedbackIcon / selected guards — unpaired must not look selected or show feedback icons.
+  it('shows no feedback icons and unselected state for unpaired items', async () => {
+    await render(<Matching {...defaultProps} />);
+
+    expect(screen.queryByText('check_circle')).toBeNull();
+    expect(screen.queryByText('cancel')).toBeNull();
+    expect(itemButton('France').props.accessibilityState.selected).toBe(false);
+  });
+
+  // feedbackColor branches — correct uses tertiary, incorrect uses error on the Icon.
+  it('colors correct and incorrect feedback icons from theme tokens', async () => {
+    await render(<Matching {...defaultProps} result={mixedResult} />);
+
+    for (const icon of screen.getAllByText('check_circle')) {
+      expect(icon).toHaveStyle({ color: lightColors.tertiary });
+    }
+    for (const icon of screen.getAllByText('cancel')) {
+      expect(icon).toHaveStyle({ color: lightColors.error });
+    }
+  });
+
+  // Banner style array must apply correct/incorrect container tokens (not []).
+  it('styles the result banner with shape and semantic container colors', async () => {
+    await render(<Matching {...defaultProps} result={allCorrectResult} />);
+    const correctBanner = screen.getByText(labels.correct).parent;
+    expect(correctBanner).toHaveStyle({
+      borderRadius: shape.card,
+      padding: spacing.s3,
+      backgroundColor: lightColors.tertiaryContainer,
+    });
+
+    await render(<Matching {...defaultProps} result={mixedResult} />);
+    const incorrectBanner = screen.getByText(labels.incorrect).parent;
+    expect(incorrectBanner).toHaveStyle({
+      borderRadius: shape.card,
+      padding: spacing.s3,
+      backgroundColor: lightColors.errorContainer,
+    });
+  });
+
+  // Item / column layout tokens — kills ObjectLiteral empties on shared layout styles.
+  it('lays out columns and items from spacing and shape tokens', async () => {
+    await render(<Matching {...defaultProps} />);
+
+    expect(screen.getByText(defaultProps.prompt)).toHaveStyle({
+      color: lightColors.onSurface,
+    });
+    // Default item label uses onSurface (kills itemLabel incorrect→true falling through).
+    expect(screen.getByText('France')).toHaveStyle({ color: lightColors.onSurface });
+
+    // columns View is the prompt's next sibling under the Card.
+    const prompt = screen.getByText(defaultProps.prompt);
+    const card = prompt.parent as { props?: { style?: unknown }; children?: unknown[] } | undefined;
+    expect(card?.props?.style).toEqual(
+      expect.arrayContaining([expect.objectContaining({ gap: spacing.s4 })]),
+    );
+
+    const columns = card?.children?.[1] as { props?: { style?: unknown }; children?: unknown[] } | undefined;
+    expect(columns?.props?.style).toEqual(
+      expect.objectContaining({ flexDirection: 'row', gap: spacing.s3 }),
+    );
+    const leftColumn = columns?.children?.[0] as { props?: { style?: unknown } } | undefined;
+    expect(leftColumn?.props?.style).toEqual(
+      expect.objectContaining({ flex: 1, gap: spacing.s3 }),
+    );
+
+    const france = itemButton('France');
+    expect(france).toHaveStyle({
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.s2,
+      paddingVertical: spacing.s3,
+      paddingHorizontal: spacing.s3,
+      borderRadius: shape.md,
+      minHeight: layout.touchTarget,
+      backgroundColor: lightColors.surface,
+      borderWidth: 1,
+      borderColor: lightColors.outlineVariant,
+    });
+  });
+
+  it('applies pending, paired, correct, and incorrect item state tokens', async () => {
+    const { rerender } = await render(<Matching {...defaultProps} />);
+
+    await press('France');
+    expect(itemButton('France')).toHaveStyle({
+      backgroundColor: lightColors.primaryContainer,
+      borderWidth: 2,
+      borderColor: lightColors.primary,
+    });
+    expect(screen.getByText('France')).toHaveStyle({ color: lightColors.onPrimaryContainer });
+
+    await press('Paris');
+    expect(itemButton('France')).toHaveStyle({
+      backgroundColor: lightColors.secondaryContainer,
+      borderWidth: 1,
+      borderColor: lightColors.outline,
+    });
+    expect(screen.getByText('France')).toHaveStyle({ color: lightColors.onSecondaryContainer });
+
+    await act(async () => {
+      rerender(<Matching {...defaultProps} result={mixedResult} />);
+    });
+
+    const correctBg = mixHex(lightColors.tertiaryContainer, lightColors.surface, 0.55);
+    expect(screen.getByRole('button', { name: `France, ${labels.correctPair}` })).toHaveStyle({
+      backgroundColor: correctBg,
+      borderWidth: 2,
+      borderColor: lightColors.tertiary,
+    });
+    expect(screen.getByText('France')).toHaveStyle({ color: lightColors.onTertiary });
+
+    expect(screen.getByRole('button', { name: `Germany, ${labels.incorrectPair}` })).toHaveStyle({
+      backgroundColor: lightColors.errorContainer,
+      borderWidth: 2,
+      borderColor: lightColors.error,
+    });
+    expect(screen.getByText('Germany')).toHaveStyle({ color: lightColors.onErrorContainer });
+  });
+
+  it('styles the correct and incorrect banner title text from on-* tokens', async () => {
+    await render(<Matching {...defaultProps} result={allCorrectResult} />);
+    expect(screen.getByText(labels.correct)).toHaveStyle({
+      color: lightColors.onTertiaryContainer,
+    });
+
+    await render(<Matching {...defaultProps} result={mixedResult} />);
+    expect(screen.getByText(labels.incorrect)).toHaveStyle({
+      color: lightColors.onErrorContainer,
+    });
+  });
+
+  it('styles explanation chrome from typography and onSurface tokens', async () => {
+    await render(
+      <Matching
+        {...defaultProps}
+        result={allCorrectResult}
+        explanation="Capitals match their countries."
+      />,
+    );
+
+    const heading = screen.getByText(labels.explanationHeading);
+    expect(heading).toHaveStyle({
+      color: lightColors.onSurfaceVariant,
+    });
+    expect(screen.getByText('Capitals match their countries.')).toHaveStyle({
+      color: lightColors.onSurface,
+    });
+    const explanation = heading.parent as { props?: { style?: unknown } } | undefined;
+    expect(explanation?.props?.style).toEqual(
+      expect.objectContaining({ gap: spacing.s1 }),
+    );
   });
 });

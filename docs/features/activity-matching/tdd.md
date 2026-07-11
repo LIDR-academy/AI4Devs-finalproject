@@ -158,3 +158,22 @@ Gate re-check: `pnpm --filter @helsoft/activities test` — green. No commit.
 - `pnpm --filter @helsoft/{localization,activities,study-buddy} test` — green.
 - `pnpm --filter @helsoft/activities exec playwright test --reporter=list` (matching.e2e.js) — 12 passed.
 - No commit (orchestrator commits after slice review).
+
+## PRE-REVIEW mutation Round 1 — kill survivors
+
+Responds to `docs/features/activity-matching/mutation.md` (84 survivors). Strict TDD; no commit.
+
+### grade-matching.ts (18 → 0)
+- RED: empty-right / both-empty / pairs-length / duplicate column ids / duplicate right-in-pairs / unknown left id.
+- GREEN: split overlapping `||` guards into independently observable early-returns; drop redundant Set-size + final-size checks (pigeonhole); unequal-columns fixture uses extra right items with pairs sized to left.
+- Stryker `@helsoft/study-buddy` (grade-matching + matching-activity): **100%**.
+
+### matching-activity.tsx (3 → 0)
+- RED: `injects chrome labels…` now asserts `incorrect` / `correctPair` / `incorrectPair` (and full labels object) on the Matching props.
+- Stryker: **100%**.
+
+### matching.tsx (63+3+1 → 0)
+- RED: right-empty / both-empty; right-column pair release (keeps other pairs); lock via `onPress` omitted; shared-id pair formation; partial `result.pairs`; icon colors; banner/item/column/explanation token styles; default label `onSurface`.
+- GREEN: `allPaired` without dead `> 0`; empty = left-empty only (one-column caught by unequal); `resultLabel` null while unsubmitted; lock via `onPress={locked ? undefined : …}`; `ItemVisualState` uses `undefined` not `'default'`; announce from `result.isCorrect` directly.
+- Dropped `readFileSync` source asserts (break under Stryker `inPlace` instrumentation).
+- Stryker `@helsoft/activities` matching.tsx: **100%** (1 RuntimeError on `StyleSheet.create`→undefined, counted killed).

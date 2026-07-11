@@ -204,10 +204,22 @@ describe('MatchingActivity', () => {
   });
 
   // Labels from t() (@s16) — chrome keys resolve via useLocalization.
+  // Mutation: incorrect / correctPair / incorrectPair key strings must be asserted (not only submit).
   it('injects chrome labels from useLocalization', async () => {
     await render(<MatchingActivity slide={slide} />);
 
     expect(screen.getByText('activity.matching.submit')).toBeTruthy();
+    expect(mockMatching.mock.calls[0][0].labels).toEqual(
+      expect.objectContaining({
+        submit: 'activity.matching.submit',
+        correct: 'activity.matching.correct',
+        incorrect: 'activity.matching.incorrect',
+        correctPair: 'activity.matching.correctPair',
+        incorrectPair: 'activity.matching.incorrectPair',
+        explanationHeading: 'activity.matching.explanationHeading',
+        unavailable: 'activity.matching.unavailable',
+      }),
+    );
   });
 
   // @s16 — summary interpolates {{correct}}/{{total}} from the graded answer.

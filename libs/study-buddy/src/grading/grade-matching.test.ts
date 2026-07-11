@@ -130,24 +130,74 @@ describe('isMatchingSlideValid', () => {
     expect(isMatchingSlideValid(slide)).toBe(true);
   });
 
-  // @s15 — empty column.
-  it('returns false when a column is empty', () => {
+  // @s15 — empty left only (right still populated; lengths would also mismatch without this guard).
+  it('returns false when the left column is empty', () => {
     expect(isMatchingSlideValid({ ...slide, leftItems: [], correctPairs: [] })).toBe(false);
   });
 
-  // @s15 — unequal lengths.
+  // Mutation — empty-right branch must fire even when left is populated.
+  it('returns false when the right column is empty', () => {
+    expect(isMatchingSlideValid({ ...slide, rightItems: [], correctPairs: [] })).toBe(false);
+  });
+
+  // Mutation — both empty: length checks pass (0===0); empty-column guards alone must reject.
+  it('returns false when both columns are empty', () => {
+    expect(
+      isMatchingSlideValid({ ...slide, leftItems: [], rightItems: [], correctPairs: [] }),
+    ).toBe(false);
+  });
+
+  // @s15 — unequal column lengths (extra right items; pairs still sized to left — isolates length guard).
   it('returns false when column lengths differ', () => {
     expect(
       isMatchingSlideValid({
         ...slide,
-        rightItems: slide.rightItems.slice(0, 2),
+        leftItems: slide.leftItems.slice(0, 2),
+        correctPairs: slide.correctPairs.slice(0, 2),
+        // right keeps 3 items — without the length guard this looks like a valid 2-pair matching
+      }),
+    ).toBe(false);
+  });
+
+  // Mutation — columns equal but correctPairs count differs (isolates pairs-length check).
+  it('returns false when correctPairs length differs from column length', () => {
+    expect(
+      isMatchingSlideValid({
+        ...slide,
         correctPairs: slide.correctPairs.slice(0, 2),
       }),
     ).toBe(false);
   });
 
+  // Mutation / NoCoverage 14:88 — duplicate ids inside a column.
+  it('returns false when leftItems contain duplicate ids', () => {
+    expect(
+      isMatchingSlideValid({
+        ...slide,
+        leftItems: [
+          { id: 'l1', label: 'France' },
+          { id: 'l1', label: 'France dup' },
+          { id: 'l3', label: 'Italy' },
+        ],
+      }),
+    ).toBe(false);
+  });
+
+  it('returns false when rightItems contain duplicate ids', () => {
+    expect(
+      isMatchingSlideValid({
+        ...slide,
+        rightItems: [
+          { id: 'r1', label: 'Paris' },
+          { id: 'r1', label: 'Paris dup' },
+          { id: 'r3', label: 'Rome' },
+        ],
+      }),
+    ).toBe(false);
+  });
+
   // @s15 — unknown id in correctPairs.
-  it('returns false when correctPairs reference an unknown id', () => {
+  it('returns false when correctPairs reference an unknown right id', () => {
     expect(
       isMatchingSlideValid({
         ...slide,
@@ -155,6 +205,19 @@ describe('isMatchingSlideValid', () => {
           { leftId: 'l1', rightId: 'r1' },
           { leftId: 'l2', rightId: 'r2' },
           { leftId: 'l3', rightId: 'unknown' },
+        ],
+      }),
+    ).toBe(false);
+  });
+
+  it('returns false when correctPairs reference an unknown left id', () => {
+    expect(
+      isMatchingSlideValid({
+        ...slide,
+        correctPairs: [
+          { leftId: 'l1', rightId: 'r1' },
+          { leftId: 'l2', rightId: 'r2' },
+          { leftId: 'unknown', rightId: 'r3' },
         ],
       }),
     ).toBe(false);
@@ -168,6 +231,20 @@ describe('isMatchingSlideValid', () => {
         correctPairs: [
           { leftId: 'l1', rightId: 'r1' },
           { leftId: 'l1', rightId: 'r2' },
+          { leftId: 'l3', rightId: 'r3' },
+        ],
+      }),
+    ).toBe(false);
+  });
+
+  // Mutation — reused right id must be rejected independently of left.
+  it('returns false when correctPairs reuse a right id', () => {
+    expect(
+      isMatchingSlideValid({
+        ...slide,
+        correctPairs: [
+          { leftId: 'l1', rightId: 'r1' },
+          { leftId: 'l2', rightId: 'r1' },
           { leftId: 'l3', rightId: 'r3' },
         ],
       }),

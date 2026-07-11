@@ -43,7 +43,8 @@ export type MatchingProps = {
 
 type PendingSelection = { column: 'left' | 'right'; id: string } | null;
 
-type ItemVisualState = 'default' | 'pending' | 'paired' | 'correct' | 'incorrect';
+/** Visual state for a column item. `undefined` = unpaired default (avoids a dead 'default' string). */
+type ItemVisualState = 'pending' | 'paired' | 'correct' | 'incorrect' | undefined;
 
 const findPairForItem = (
   pairs: MatchingPairSelection[],
@@ -71,17 +72,22 @@ export const Matching = ({
   const [formedPairs, setFormedPairs] = useState<MatchingPairSelection[]>(initialPairs);
 
   const locked = !!result;
-  const allPaired = formedPairs.length === leftItems.length && leftItems.length > 0;
-  const resultLabel = result ? (result.isCorrect ? labels.correct : labels.incorrect) : '';
-  const isEmpty = leftItems.length === 0 || rightItems.length === 0;
+  // Empty columns return early below — once past that guard, length > 0 is implied.
+  const allPaired = formedPairs.length === leftItems.length;
+  // null (not '') while unsubmitted — empty string is never rendered and is mutation-blind.
+  const resultLabel = result ? (result.isCorrect ? labels.correct : labels.incorrect) : null;
+  // One-column empty is also unequal; both-empty is 0===0 so needs an explicit empty guard.
+  const isEmpty = leftItems.length === 0;
   const isUnequal = leftItems.length !== rightItems.length;
   const isUnavailable = unavailable || isEmpty || isUnequal;
 
   useEffect(() => {
-    if (result && Platform.OS !== 'android') {
-      AccessibilityInfo.announceForAccessibility(resultLabel);
-    }
-  }, [result, resultLabel]);
+    if (!result || Platform.OS === 'android') return;
+    // Announce from result directly — resultLabel is non-null whenever result is set.
+    AccessibilityInfo.announceForAccessibility(
+      result.isCorrect ? labels.correct : labels.incorrect,
+    );
+  }, [result, labels.correct, labels.incorrect]);
 
   // Empty / unequal lengths (self-detect) or wrapper-forced unavailable → graceful degradation.
   if (isUnavailable) {
@@ -98,8 +104,6 @@ export const Matching = ({
   };
 
   const handleItemPress = (column: 'left' | 'right', id: string) => {
-    if (locked) return;
-
     const existing = findPairForItem(formedPairs, id);
     if (existing) {
       releasePair(id);
@@ -133,11 +137,11 @@ export const Matching = ({
         column === 'left' ? pair.leftId === id : pair.rightId === id,
       );
       if (graded) return graded.isCorrect ? 'correct' : 'incorrect';
-      return 'default';
+      return undefined;
     }
     if (pending?.column === column && pending.id === id) return 'pending';
     if (findPairForItem(formedPairs, id)) return 'paired';
-    return 'default';
+    return undefined;
   };
 
   const itemAccessibilityLabel = (item: MatchingItemView, state: ItemVisualState): string => {
@@ -160,8 +164,8 @@ export const Matching = ({
           disabled: locked,
           selected: state === 'pending' || state === 'paired',
         }}
-        disabled={locked}
-        onPress={() => handleItemPress(column, item.id)}
+        // Lock via omitting onPress (not an early-return) so mutation tests observe the guard.
+        onPress={locked ? undefined : () => handleItemPress(column, item.id)}
         style={[styles.item, styles.itemState(state)]}
       >
         <Text style={styles.itemLabel(state)}>{item.label}</Text>

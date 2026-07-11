@@ -3,25 +3,34 @@ import type { MatchingAnswer, MatchingPair, MatchingSlide } from '@helsoft/types
 /**
  * True iff the slide is renderable/gradable: both columns non-empty, equal length, and
  * correctPairs is a perfect matching whose leftId/rightId all reference distinct items.
+ *
+ * Guards are ordered so each is independently observable (no overlapping early-returns that
+ * make ConditionalExpression→false mutants equivalent). Item-id Set-size checks are omitted —
+ * with equal lengths, duplicate column ids are always caught by the pair-loop uniqueness /
+ * membership guards (pigeonhole).
  */
 export const isMatchingSlideValid = (slide: MatchingSlide): boolean => {
   const { leftItems, rightItems, correctPairs } = slide;
-  if (leftItems.length === 0 || rightItems.length === 0) return false;
-  if (leftItems.length !== rightItems.length || leftItems.length !== correctPairs.length) return false;
+  // Empty left alone rejects both-empty (0===0 would otherwise pass later length checks).
+  if (leftItems.length === 0) return false;
+  // Extra items in one column with pairs sized to the other would otherwise look valid.
+  if (leftItems.length !== rightItems.length) return false;
+  if (leftItems.length !== correctPairs.length) return false;
 
   const leftIds = new Set(leftItems.map((item) => item.id));
   const rightIds = new Set(rightItems.map((item) => item.id));
-  if (leftIds.size !== leftItems.length || rightIds.size !== rightItems.length) return false;
 
   const usedLeft = new Set<string>();
   const usedRight = new Set<string>();
   for (const pair of correctPairs) {
-    if (!leftIds.has(pair.leftId) || !rightIds.has(pair.rightId)) return false;
-    if (usedLeft.has(pair.leftId) || usedRight.has(pair.rightId)) return false;
+    if (!leftIds.has(pair.leftId)) return false;
+    if (!rightIds.has(pair.rightId)) return false;
+    if (usedLeft.has(pair.leftId)) return false;
+    if (usedRight.has(pair.rightId)) return false;
     usedLeft.add(pair.leftId);
     usedRight.add(pair.rightId);
   }
-  return usedLeft.size === leftItems.length && usedRight.size === rightItems.length;
+  return true;
 };
 
 /**
