@@ -56,7 +56,26 @@ describe('OpenEndedActivity', () => {
     expect(onAnswered.mock.calls[0][0]).not.toHaveProperty('isCorrect');
 
     expect(screen.getByText(slide.modelAnswer)).toBeTruthy();
+    // @s8 / mutation — chrome labels from t('activity.openEnded.*'), not ""
+    expect(screen.getByText(labels.modelAnswer)).toBeTruthy();
+    expect(screen.getByText(labels.yourAnswer)).toBeTruthy();
+    expect(screen.getByText(labels.explanationHeading)).toBeTruthy();
     expect(isSystemCheckedActivity('open-ended')).toBe(false);
+  });
+
+  // Mutation — optional onAnswered must not throw when omitted
+  it('submits without throwing when onAnswered is omitted', async () => {
+    await render(<OpenEndedActivity slide={slide} />);
+
+    await act(async () => {
+      fireEvent.changeText(answerInput(), 'solo');
+    });
+    await act(async () => {
+      fireEvent.press(submitButton());
+    });
+
+    expect(screen.getByText(labels.modelAnswer)).toBeTruthy();
+    expect(screen.getByText(slide.modelAnswer)).toBeTruthy();
   });
 
   // @s4 — ignore second submit

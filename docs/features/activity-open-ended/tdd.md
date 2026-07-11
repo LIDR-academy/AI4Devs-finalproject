@@ -33,12 +33,17 @@
 |---|---|---|
 | @s8 | `activity.openEnded.*` key existence | `migration-coverage.test.ts` |
 | @s9 | input name, Submit hitSlop, locked AT, announce once, Android guard | `open-ended.test.tsx` |
-| @s1,@s2,@s7 | Unanswered / SubmittedWithModelAnswer / Unavailable stories | `open-ended.stories.tsx` |
-| @s1,@s2,@s4,@s5,@s10 | Playwright Interactive + static stories | `open-ended.e2e.js` |
+| @s1,@s2,@s7 | stories | `open-ended.stories.tsx` |
+| @s1,@s2,@s4,@s5,@s10 | Playwright | `open-ended.e2e.js` |
 
 ## Cycles — slice 3
 
-- @s8 RED missing keys in coverage → GREEN en/es/pt/de `openEnded` + KEY_EXISTENCE opt-in
-- @s9 RED `accessibilityState.disabled` → GREEN forward onto TextField; announce/hitSlop tests
-- stories: Unanswered / SubmittedWithModelAnswer / Unavailable / Interactive
-- e2e: unanswered, submitted, unavailable, interactive submit/empty/@s4/@s10
+- @s8 RED → GREEN locale keys; @s9 a11y; stories + e2e
+
+## Cycles — mutation kill (pre-review)
+
+- wire onChangeText always; direct `onChangeText` when locked kills changeText guard
+- drop dead submit `if (locked)` (Button strips onPress when disabled)
+- style testIDs + `toHaveStyle` tokens kill ObjectLiteral `{}` survivors
+- activity: chrome label asserts; omit-onAnswered; mocked-organism guards suite
+- re-run: activities 100%, study-buddy 100%

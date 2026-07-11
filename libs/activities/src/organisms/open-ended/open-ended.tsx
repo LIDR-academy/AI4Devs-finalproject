@@ -38,21 +38,20 @@ export const OpenEnded = ({
   };
 
   const handleSubmit = () => {
-    if (locked || isUnavailable) return;
     setSubmitted(true);
     onSubmit(draft);
   };
 
   if (isUnavailable) {
     return (
-      <Card style={styles.root}>
+      <Card testID="open-ended-root" style={styles.root}>
         <Text style={styles.prompt}>{labels.unavailable}</Text>
       </Card>
     );
   }
 
   return (
-    <Card style={styles.root}>
+    <Card testID="open-ended-root" style={styles.root}>
       <Text style={styles.prompt}>{prompt}</Text>
       <TextField
         accessibilityLabel={labels.answerInput}
@@ -62,20 +61,21 @@ export const OpenEnded = ({
         disabled={locked}
         multiline
         variant="outlined"
-        onChangeText={locked ? undefined : handleChangeText}
+        onChangeText={handleChangeText}
       />
-      <Button disabled={locked} fullWidth onPress={locked ? undefined : handleSubmit}>
+      <Button disabled={locked} fullWidth onPress={handleSubmit}>
         {labels.submit}
       </Button>
       {submitted ? (
-        <View style={styles.comparison}>
-          <View style={styles.block}>
+        <View testID="open-ended-comparison" style={styles.comparison}>
+          <View testID="open-ended-your-answer" style={styles.block}>
             <Text style={styles.heading}>{labels.yourAnswer}</Text>
             {shouldShowLearnerAnswerBody(draft) ? (
               <Text style={styles.body}>{draft}</Text>
             ) : null}
           </View>
           <View
+            testID="open-ended-model-answer"
             style={styles.block}
             accessibilityLiveRegion="polite"
           >
@@ -83,7 +83,7 @@ export const OpenEnded = ({
             <Text style={styles.body}>{modelAnswer}</Text>
           </View>
           {shouldShowExplanation(submitted, explanation) ? (
-            <View style={styles.block}>
+            <View testID="open-ended-explanation" style={styles.block}>
               <Text style={styles.heading}>{labels.explanationHeading}</Text>
               <Text style={styles.body}>{explanation}</Text>
             </View>

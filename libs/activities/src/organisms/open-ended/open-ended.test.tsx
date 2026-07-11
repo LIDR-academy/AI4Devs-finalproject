@@ -3,7 +3,7 @@ import { join } from 'path';
 
 import { AccessibilityInfo, Platform } from 'react-native';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
-import { layout } from '@helsoft/components';
+import { layout, lightColors, spacing, typography } from '@helsoft/components';
 
 import { OpenEnded } from './open-ended';
 import type { OpenEndedLabels } from './open-ended.types';
@@ -147,8 +147,11 @@ describe('OpenEnded', () => {
     await pressSubmit();
     expect(onSubmit).toHaveBeenCalledTimes(1);
 
+    // TextField keeps onChangeText when disabled — call it to exercise the locked guard
+    // (fireEvent alone is mutation-blind; Button strips onPress when disabled).
+    expect(answerInput().props.onChangeText).toEqual(expect.any(Function));
     await act(async () => {
-      fireEvent.changeText(answerInput(), 'tampered');
+      answerInput().props.onChangeText!('tampered');
     });
     await pressSubmit();
 
@@ -309,5 +312,46 @@ describe('OpenEnded', () => {
 
     announceSpy.mockRestore();
     Platform.OS = originalOS;
+  });
+
+  // Mutation — StyleSheet token layout (kills ObjectLiteral → {} survivors)
+  it('applies spacing and typography tokens on content and comparison layout', async () => {
+    await render(
+      <OpenEnded
+        {...defaultProps}
+        explanation="Key process in plants."
+        initialSubmittedAnswer="prior"
+      />,
+    );
+
+    expect(screen.getByTestId('open-ended-root')).toHaveStyle({ gap: spacing.s4 });
+    expect(screen.getByText(defaultProps.prompt)).toHaveStyle({
+      ...typography.titleLarge,
+      color: lightColors.onSurface,
+    });
+    expect(screen.getByTestId('open-ended-comparison')).toHaveStyle({ gap: spacing.s3 });
+    expect(screen.getByTestId('open-ended-your-answer')).toHaveStyle({ gap: spacing.s1 });
+    expect(screen.getByTestId('open-ended-model-answer')).toHaveStyle({ gap: spacing.s1 });
+    expect(screen.getByText(labels.yourAnswer)).toHaveStyle({
+      ...typography.titleSmall,
+      color: lightColors.onSurfaceVariant,
+    });
+    expect(screen.getByText(labels.modelAnswer)).toHaveStyle({
+      ...typography.titleSmall,
+      color: lightColors.onSurfaceVariant,
+    });
+    expect(screen.getByText('prior')).toHaveStyle({
+      ...typography.bodyMedium,
+      color: lightColors.onSurface,
+    });
+    expect(screen.getByText(defaultProps.modelAnswer)).toHaveStyle({
+      ...typography.bodyMedium,
+      color: lightColors.onSurface,
+    });
+    expect(screen.getByTestId('open-ended-explanation')).toHaveStyle({ gap: spacing.s1 });
+    expect(screen.getByText(labels.explanationHeading)).toHaveStyle({
+      ...typography.titleSmall,
+      color: lightColors.onSurfaceVariant,
+    });
   });
 });
