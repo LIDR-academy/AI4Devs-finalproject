@@ -1,5 +1,5 @@
-import { readdirSync, readFileSync, statSync } from 'fs';
-import { join, resolve } from 'path';
+import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
+import { dirname, join, resolve } from 'path';
 
 import { en } from '../resources/en';
 
@@ -12,7 +12,36 @@ import { en } from '../resources/en';
  * Stories/tests are excluded (demo copy is acceptable there).
  */
 
-const REPO_ROOT = resolve(__dirname, '../../../..');
+/** The monorepo root marker file — unique to the real repo root, never copied into a per-package
+ * sandbox (see below). */
+const WORKSPACE_MARKER = 'pnpm-workspace.yaml';
+
+/**
+ * Walks up from `startDir` looking for `WORKSPACE_MARKER`, instead of a fixed-depth
+ * `resolve(__dirname, '../../../..')` — StrykerJS's per-package sandbox (confirmed by inspecting
+ * `libs/localization/.stryker-tmp`, under a `sandbox-<id>` subdirectory) mirrors only this
+ * package's own directory tree one level deeper (nested under that `sandbox-<id>` directory), not
+ * the whole monorepo, so a fixed hop count silently resolves to the wrong directory
+ * (`libs/localization/apps/...`) there instead of throwing. Walking up to a real marker file works
+ * in both places: the sandbox is a real directory on disk (not a chroot), so walking far enough up
+ * from it reaches the actual monorepo root and its real (unmutated — this suite's own `mutate`
+ * scope never includes them) sibling packages.
+ */
+const findMonorepoRoot = (startDir: string): string | undefined => {
+  let dir = startDir;
+  for (let hop = 0; hop < 10; hop++) {
+    if (existsSync(join(dir, WORKSPACE_MARKER))) return dir;
+    const parent = dirname(dir);
+    if (parent === dir) return undefined;
+    dir = parent;
+  }
+  return undefined;
+};
+
+const REPO_ROOT = findMonorepoRoot(__dirname);
+if (!REPO_ROOT) {
+  throw new Error(`string-migration coverage: could not locate the monorepo root (${WORKSPACE_MARKER}) above ${__dirname}`);
+}
 const APP_SCREENS = resolve(REPO_ROOT, 'apps/app-study-buddy/src/app');
 const SHARED_COMPONENTS = resolve(REPO_ROOT, 'libs/components/src');
 /**
