@@ -1,4 +1,4 @@
-# review — activity-fill-in-the-blank (SLICE 1)
+# review — activity-fill-in-the-blank (SLICE 2)
 
 **Verdict: APPROVED**
 
@@ -7,7 +7,7 @@
 | code | APPROVED | 0 |
 | design | APPROVED | 0 |
 
-Scope: tasks 1–4 (types + grader + organism + activity). `@s1`–`@s12`. Deferred to later slices: Empty/Error polish, i18n, a11y, stories, e2e.
+Scope: task-5 — Empty + Error unavailable + empty-submit (`@s6`, `@s11`, `@s12`). Test deepen only; Content path unchanged. Deferred to Slice 3: i18n, a11y, stories, e2e.
 
 ---
 

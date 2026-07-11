@@ -1,8 +1,8 @@
-# review-design — activity-fill-in-the-blank — SLICE 1
+# review-design — activity-fill-in-the-blank — SLICE 2
 
 **Reviewer:** reviewer_design  
-**Scope:** Slice 1 only — tasks 1–4 organism + activity wiring (Content: unanswered / correct / incorrect)  
-**Deferred (not flagged):** stories/e2e/i18n (tasks 6–9), Empty/Error polish (task-5), full 4-state Storybook  
+**Scope:** Slice 2 only — task-5 Empty + Error (unavailable) + empty-submit incorrect UI path  
+**Deferred (not flagged):** Storybook (task-8), a11y (task-7)  
 **Rubric:** `.agents/rules/review-standards.md` §2 + `.agents/rules/atomic-design.mdc`  
 **Siblings:** `matching/matching.tsx`, `multiple-choice/multiple-choice.tsx`
 
@@ -16,8 +16,8 @@ _None._
 
 | Check | Result |
 |---|---|
-| Tokens only | Pass — `fill-in-the-blank.tsx:128-181` uses only `theme.spacing` / `theme.colors` / `theme.typography` / `theme.shape.card`. Banner map matches Matching/MCQ (`tertiaryContainer`/`errorContainer` + `onTertiaryContainer`/`onErrorContainer`). Icon `size={22}` + `tertiary`/`error` matches Matching. Raw `TextInput` justified for inline blank (spec); `TextField` is full MD3 form chrome, not sentence-inline. |
-| Existing components | Pass — `Card`, `Button`, `Icon` from `@helsoft/components`. |
-| Atomic placement | Pass — organism `libs/activities/src/organisms/fill-in-the-blank/`; wiring `FillInTheBlankActivity` in study-buddy (no presentational styles). |
-| Slice 1 Content states | Pass — unanswered editable + Submit enabled; correct/incorrect locked banners (+ `acceptedAnswerShown` when incorrect); explanation block token-parity with siblings. |
-| Labels | Pass — organism chrome via `labels` props; wrapper injects `t('activity.fillInTheBlank.*')` (`fill-in-the-blank-activity.tsx:32-39`). No hardcoded chrome colors. |
+| Unavailable state | Pass — early-return `Card` + `labels.unavailable` via `styles.prompt` (`fill-in-the-blank.tsx:69-74`); tokens `theme.typography.titleLarge` / `theme.colors.onSurface` / `theme.spacing.s4`. Non-interactive (no input/Submit). Matches Matching (`matching.tsx:93-98`) + MCQ (`multiple-choice.tsx:94-99`). |
+| Wrapper wiring | Pass — `unavailable={!valid}` (`fill-in-the-blank-activity.tsx:64`); labels via `t('activity.fillInTheBlank.unavailable')` (`:37`). |
+| Empty-submit incorrect path | Pass — same result-driven incorrect banner/reveal as Content incorrect (`fill-in-the-blank.tsx:100-116`): `bannerIncorrect` → `theme.colors.errorContainer`, `bannerText(false)` → `onErrorContainer`, Icon `cancel` + `theme.colors.error`, reveal via `acceptedAnswerShown`. No ad-hoc empty-submit styles. |
+| Tokens / no ad-hoc | Pass — unavailable + banner reuse existing StyleSheet tokens only (`:128-181`). |
+| Atomic placement | Pass — organism under `libs/activities/src/organisms/fill-in-the-blank/`; wiring in study-buddy unchanged. |

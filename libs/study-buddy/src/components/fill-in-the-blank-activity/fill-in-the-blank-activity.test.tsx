@@ -178,8 +178,31 @@ describe('FillInTheBlankActivity', () => {
     });
   });
 
-  // Invalid slide ⇒ unavailable, grader never called.
-  it('passes unavailable and never grades when the slide is invalid', async () => {
+  // @s6 — empty submit resolves incorrect + reveal + lock end to end.
+  it('resolves an empty submit as incorrect with reveal and lock', async () => {
+    const onAnswered = jest.fn();
+    await render(<FillInTheBlankActivity slide={slide} onAnswered={onAnswered} />);
+
+    await act(async () => {
+      fireEvent.press(submit());
+    });
+
+    expect(onAnswered).toHaveBeenCalledWith({
+      slideId: 'slide-1',
+      activityType: 'fill-in-the-blank',
+      submittedAnswer: '',
+      acceptedAnswerShown: 'Paris',
+      isCorrect: false,
+    });
+    expect(screen.getByText('activity.fillInTheBlank.incorrect')).toBeTruthy();
+    expect(screen.getByText('cancel')).toBeTruthy();
+    expect(screen.getByText('Paris')).toBeTruthy();
+    expect(blank().props.editable).toBe(false);
+    expect(submit().props.accessibilityState.disabled).toBe(true);
+  });
+
+  // @s11 — empty acceptedAnswers list ⇒ unavailable, no grading.
+  it('passes unavailable and never grades when acceptedAnswers is empty', async () => {
     const onAnswered = jest.fn();
     const invalid: FillInTheBlankSlide = { ...slide, acceptedAnswers: [] };
 
@@ -191,6 +214,54 @@ describe('FillInTheBlankActivity', () => {
     expect(mockFillInTheBlank.mock.calls[0][0]).toEqual(
       expect.objectContaining({ unavailable: true }),
     );
+  });
+
+  // @s11 — empty-string entry in acceptedAnswers ⇒ unavailable.
+  it('passes unavailable and never grades when acceptedAnswers contains an empty string', async () => {
+    const onAnswered = jest.fn();
+    const invalid: FillInTheBlankSlide = {
+      ...slide,
+      acceptedAnswers: ['Paris', ''],
+    };
+
+    await render(<FillInTheBlankActivity slide={invalid} onAnswered={onAnswered} />);
+
+    expect(screen.getByText('activity.fillInTheBlank.unavailable')).toBeTruthy();
+    expect(screen.queryByLabelText('activity.fillInTheBlank.blankInput')).toBeNull();
+    expect(onAnswered).not.toHaveBeenCalled();
+    expect(mockFillInTheBlank.mock.calls[0][0]).toEqual(
+      expect.objectContaining({ unavailable: true }),
+    );
+  });
+
+  // @s12 — missing blank marker ⇒ unavailable.
+  it('passes unavailable and never grades when content has no blank marker', async () => {
+    const onAnswered = jest.fn();
+    const invalid: FillInTheBlankSlide = {
+      ...slide,
+      content: 'The capital of France is Paris.',
+    };
+
+    await render(<FillInTheBlankActivity slide={invalid} onAnswered={onAnswered} />);
+
+    expect(screen.getByText('activity.fillInTheBlank.unavailable')).toBeTruthy();
+    expect(screen.queryByLabelText('activity.fillInTheBlank.blankInput')).toBeNull();
+    expect(onAnswered).not.toHaveBeenCalled();
+  });
+
+  // @s12 — multiple blank markers ⇒ unavailable.
+  it('passes unavailable and never grades when content has multiple blank markers', async () => {
+    const onAnswered = jest.fn();
+    const invalid: FillInTheBlankSlide = {
+      ...slide,
+      content: '____ is the capital of ____.',
+    };
+
+    await render(<FillInTheBlankActivity slide={invalid} onAnswered={onAnswered} />);
+
+    expect(screen.getByText('activity.fillInTheBlank.unavailable')).toBeTruthy();
+    expect(screen.queryByLabelText('activity.fillInTheBlank.blankInput')).toBeNull();
+    expect(onAnswered).not.toHaveBeenCalled();
   });
 
   // Labels from t() — chrome keys via useLocalization.

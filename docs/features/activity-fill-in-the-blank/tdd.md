@@ -1,6 +1,6 @@
 # TDD log — activity-fill-in-the-blank
 
-Strict Red→Green→Refactor per `.agents/rules/tdd.md`. **Slice 1 only** (tasks 1–4).
+Strict Red→Green→Refactor per `.agents/rules/tdd.md`. **Slice 1** (tasks 1–4) + **Slice 2** (task-5).
 
 ## `@s` → test map (Slice 1)
 
@@ -66,3 +66,38 @@ Strict Red→Green→Refactor per `.agents/rules/tdd.md`. **Slice 1 only** (task
 - check-types study-buddy + activities: pass
 - lint: no package lint scripts (turbo no-op for these filters)
 - No commit (orchestrator owns slice commit after review)
+
+## Slice 2 — Empty + Error + empty-submit (task-5)
+
+### `@s` → test map (Slice 2 deepen)
+
+| Scenario | Test(s) |
+|---|---|
+| @s6 | organism: Submit enabled + onSubmit when value empty; activity: empty submit → incorrect banner + cancel + reveal `[0]` + lock + onAnswered |
+| @s11 | activity: empty `acceptedAnswers` **and** empty-string entry → unavailable, no grading |
+| @s12 | organism: multi-`____` → unavailable; activity: missing blank **and** multi blank → unavailable, no grading |
+
+### Cycles
+
+**Cycle 8 (@s6)**
+- RED: added empty-Submit organism + activity UI e2e asserts.
+- GREEN: passed immediately on Slice 1 implement (no production change).
+- REFACTOR: none.
+
+**Cycle 9 (@s11)**
+- RED: empty-string entry wiring case (empty-list renamed for clarity).
+- GREEN: passed on existing `isFillInTheBlankSlideValid` + `unavailable={!valid}`.
+- REFACTOR: none.
+
+**Cycle 10 (@s12)**
+- RED: organism multi-blank; activity missing + multi blank.
+- GREEN: passed on existing `splitAroundBlank` / validity guards.
+- REFACTOR: none. Content path unchanged.
+
+## Slice 2 gate
+
+- activities organism tests: 14 pass
+- study-buddy activity tests: 13 pass
+- check-types activities + study-buddy: pass
+- No production code change required (coverage deepen only)
+- No commit (orchestrator owns)

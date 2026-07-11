@@ -155,7 +155,22 @@ describe('FillInTheBlank', () => {
     expect(onSubmit).toHaveBeenCalledTimes(1);
   });
 
-  // @s11/@s12 basics — unavailable prop or unrenderable blank.
+  // @s6 — empty value still allows Submit (grades incorrect upstream).
+  it('keeps Submit enabled and invokes onSubmit when the blank is empty', async () => {
+    const onSubmit = jest.fn();
+    await render(<FillInTheBlank {...defaultProps} value="" onSubmit={onSubmit} />);
+
+    const submit = screen.getByRole('button', { name: labels.submit });
+    expect(submit.props.accessibilityState?.disabled).not.toBe(true);
+
+    await act(async () => {
+      fireEvent.press(submit);
+    });
+
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+  });
+
+  // @s11/@s12 — unavailable prop or unrenderable blank.
   it('shows the unavailable notice when unavailable is set', async () => {
     await render(<FillInTheBlank {...defaultProps} unavailable />);
 
@@ -169,6 +184,17 @@ describe('FillInTheBlank', () => {
 
     expect(screen.getByText(labels.unavailable)).toBeTruthy();
     expect(screen.queryByLabelText(labels.blankInput)).toBeNull();
+  });
+
+  // @s12 — multiple blank markers are unrenderable.
+  it('shows the unavailable notice when content has more than one blank marker', async () => {
+    await render(
+      <FillInTheBlank {...defaultProps} content="____ is the capital of ____." />,
+    );
+
+    expect(screen.getByText(labels.unavailable)).toBeTruthy();
+    expect(screen.queryByLabelText(labels.blankInput)).toBeNull();
+    expect(screen.queryByRole('button', { name: labels.submit })).toBeNull();
   });
 
   it('respects maxLength on the blank input', async () => {
