@@ -47,7 +47,7 @@
   },
   "scripts": {
     "start": "expo start",
-    "dev": "expo start",
+    "dev": "bash ./scripts/dev.sh",
     "build": "expo export --platform web",
     "check-types": "tsc --noEmit",
     "android": "expo start --android",
