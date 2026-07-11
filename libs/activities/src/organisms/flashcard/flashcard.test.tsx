@@ -5,7 +5,7 @@ jest.mock('@helsoft/localization', () => ({
 }));
 
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
-import { lightColors } from '@helsoft/components';
+import { layout, lightColors } from '@helsoft/components';
 import type { FlashcardAnswer, FlashcardSlide } from '@helsoft/types';
 
 import { Flashcard } from './flashcard';
@@ -219,5 +219,40 @@ describe('Flashcard', () => {
     expect(screen.getByText(slide.back)).toBeTruthy();
     expect(recalledButton().props.accessibilityState.disabled).toBe(false);
     expect(notRecalledButton().props.accessibilityState.disabled).toBe(false);
+  });
+
+  // @s10 — reveal + self-mark expose button role + accessible label; self-mark meets the
+  // minimum touch-target size via the shared theme token (not a magic number).
+  describe('accessibility', () => {
+    it('exposes a button role and accessible label for reveal', async () => {
+      await render(<Flashcard slide={slide} />);
+
+      const reveal = revealButton();
+      expect(reveal.props.accessibilityRole).toBe('button');
+    });
+
+    it('exposes a button role and accessible label for both self-mark actions', async () => {
+      await render(<Flashcard slide={slide} />);
+
+      await press(revealButton);
+
+      for (const [getButton, label] of [
+        [recalledButton, I18N.recalled],
+        [notRecalledButton, I18N.notRecalled],
+      ] as const) {
+        const btn = getButton();
+        expect(btn.props.accessibilityRole).toBe('button');
+        expect(btn.props.accessibilityLabel).toBe(label);
+      }
+    });
+
+    it('uses layout.touchTarget for self-mark minHeight', async () => {
+      await render(<Flashcard slide={slide} />);
+
+      await press(revealButton);
+
+      expect(recalledButton()).toHaveStyle({ minHeight: layout.touchTarget });
+      expect(notRecalledButton()).toHaveStyle({ minHeight: layout.touchTarget });
+    });
   });
 });

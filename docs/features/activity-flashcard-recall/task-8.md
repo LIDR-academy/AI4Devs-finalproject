@@ -3,7 +3,7 @@ id: task-8
 title: Storybook stories — flashcard states
 slice: 3
 scenarios: [s1, s2, s3, s4, s7, s8]
-status: todo
+status: done
 paths: [libs/activities/src/organisms/flashcard/flashcard.stories.tsx]
 ---
 
@@ -21,12 +21,12 @@ Stories:
 - **Interactive** — no seed; drives reveal → self-mark live (consumed by task-9 e2e) (@s2).
 
 ## Done criteria
-- [ ] All stories above render; the three story-required states (hidden / revealed-recalled / revealed-not-recalled) present
-- [ ] Explanation-present vs -absent both demonstrated (@s7)
-- [ ] Both `@s8` Examples demonstrated as separate stories — `UnavailableMissingBack` (missing answer) and `UnavailableMissingFront` (missing front/prompt) — each showing the notice, nothing interactive
-- [ ] Stories use `initialRevealed` / `initialAnswer` seeds (no test-only props leaking into the runtime contract)
-- [ ] `pnpm lint` + `pnpm check-types` + `pnpm --filter @helsoft/activities build-storybook` (or the lib's storybook build) green
-- [ ] No hardcoded colors/dimensions; slide fixture content is representative
+- [x] All stories above render; the three story-required states (hidden / revealed-recalled / revealed-not-recalled) present
+- [x] Explanation-present vs -absent both demonstrated (@s7)
+- [x] Both `@s8` Examples demonstrated as separate stories — `UnavailableMissingBack` (missing answer) and `UnavailableMissingFront` (missing front/prompt) — each showing the notice, nothing interactive
+- [x] Stories use `initialRevealed` / `initialAnswer` seeds (no test-only props leaking into the runtime contract)
+- [x] `pnpm lint` + `pnpm check-types` + `pnpm --filter @helsoft/activities build-storybook` (or the lib's storybook build) green
+- [x] No hardcoded colors/dimensions; slide fixture content is representative
 
 ## Notes
 Mirrors `matching.stories.tsx` seeding patterns (which likewise splits its two unavailable cases — Empty and Error — into separate stories). Story slug `organisms-flashcard--<name>` is what the Playwright e2e (task-9) navigates to.

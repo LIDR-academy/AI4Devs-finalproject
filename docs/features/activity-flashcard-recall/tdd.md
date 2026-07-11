@@ -1,101 +1,83 @@
-# TDD log — activity-flashcard-recall (Slice 1)
+# TDD log — activity-flashcard-recall
 
-Slice 1: types → pure helpers → `Flashcard` organism → thin `FlashcardActivity` wiring.
-Tasks 1–4, all `status: done`.
+Strict Red→Green→Refactor. Prior-slice detail trimmed to map + one line/cycle (8000-byte budget).
 
-## @s → test map
+## Slice 1 (tasks 1-4) — types, helpers, `Flashcard` organism, `FlashcardActivity` wiring
 
-| @s | Test | File |
-|---|---|---|
-| s1 | renders only the front with a Reveal action and no self-mark actions | `libs/activities/.../flashcard/flashcard.test.tsx` |
-| s2 | shows the back alongside the front once revealed | `flashcard.test.tsx` |
-| s3 | shows both self-mark actions once revealed | `flashcard.test.tsx` |
-| s4 | locks in and confirms "Recalled"/"Not recalled", reporting once + text/icon confirmation | `flashcard.test.tsx` (`it.each`) |
-| s5 | ignores tapping the other mark / the same locked mark again | `flashcard.test.tsx` (`it.each`) |
-| s6 | `FlashcardAnswer` satisfies `GradedAnswer` | `libs/types/src/graded-answer.test.ts` |
-| s6 | `buildFlashcardAnswer` shape, both `recalled` values | `libs/activities/.../flashcard/flashcard.helpers.test.ts` |
-| s6 | `onAnswered` called once with correct shape (organism) | `flashcard.test.tsx` |
-| s6 | wiring forwards + reports the self-mark once | `libs/study-buddy/.../flashcard-activity/flashcard-activity.test.tsx` (integration) |
-| s7 | explanation shown alongside revealed answer / absent when none / absent before reveal | `flashcard.test.tsx` |
-| s8 (base; task-5 hardens) | `isFlashcardSlideValid` true/false (empty/whitespace front or back) | `flashcard.helpers.test.ts` |
-| s8 (base; task-5 hardens) | unavailable notice + nothing interactive for an invalid slide | `flashcard.test.tsx` |
+| @s | Test |
+|---|---|
+| s1-s5,s7 | `flashcard.test.tsx` — hidden/reveal/self-mark/lock/re-tap ignored/explanation |
+| s6 | `graded-answer.test.ts`, `flashcard.helpers.test.ts`, `flashcard.test.tsx`, `flashcard-activity.test.tsx` |
+| s8 (base) | `flashcard.helpers.test.ts` (`isFlashcardSlideValid`), `flashcard.test.tsx` (unavailable base) |
 
-## Cycles
+Cycles: types (`FlashcardSlide`/`FlashcardAnswer`) → pure helpers (`isFlashcardSlideValid`,
+`buildFlashcardAnswer`) → `use-flashcard` state/effect → `Flashcard` organism scenario-by-scenario
+→ `FlashcardActivity` thin wrapper + integration test. Rework (reviewer_slice round 2): chosen
+self-mark icon color unified to neutral `onSecondaryContainer`/`secondary` (was tertiary/error
+clash) — RED `it.each` on icon+container colors, GREEN in `flashcard.tsx`. Gate: types/activities
+/study-buddy unit suites green, check-types clean, no lint script on libs yet, no hardcoded
+colors, i18n via placeholder `t()` keys (real bundle entries deferred to task-6). APPROVED.
 
-**task-1 — types**
-- RED: added `FlashcardAnswer`/`GradedAnswer` type-level assignment to `graded-answer.test.ts` → failed (no `FlashcardAnswer` export).
-- GREEN: added `FlashcardSlide` to `lesson.ts` (grew `ActivitySlide`); added `FlashcardAnswer` to `activity-answer.ts` (grew `ActivityAnswer`). Barrel (`export *`) picks both up automatically.
-- Verified: `activity-type.ts` and `score-lesson.ts` untouched (git status clean on both).
+## Slice 2 (task-5) — unavailable hardening
 
-**task-2 — pure helpers**
-- RED→GREEN: `isFlashcardSlideValid` true for a well-formed slide → trim-based implementation.
-- RED→GREEN (already covered by the general impl): empty/whitespace front, empty/whitespace back → false.
-- RED→GREEN: `buildFlashcardAnswer` for `recalled=true`/`false`, mirrors into `isCorrect`.
+| @s | Test |
+|---|---|
+| s8 | `flashcard.test.tsx` `it.each` (missing front / missing back) — notice, other field still hidden, zero buttons, `onAnswered` never called |
 
-**task-3 — `Flashcard` organism**
-- `flashcard.types.ts` written directly (no runtime logic, mirrors `matching.types.ts` precedent — no dedicated test file).
-- RED→GREEN (`use-flashcard.test.ts`): initial hidden/unlocked/available state → `useState` seeds.
-- RED→GREEN: seeds from `initialAnswer` (revealed+locked) and `initialRevealed` (revealed only); `isUnavailable` derives from `isFlashcardSlideValid`.
-- RED→GREEN: a11y announce effect fires `labels.answerHeading` on reveal, guarded `Platform.OS !== 'android'`.
-- RED→GREEN (`flashcard.test.tsx`) scenario-by-scenario: @s1 hidden → Reveal button + `handleReveal`; @s2 reveal → back becomes visible; @s3 self-mark actions appear once revealed; @s4 self-mark locks + confirms (text+icon+`accessibilityState`), `it.each` both marks; @s5 locked mark ignores re-tap/switch, `it.each`; @s7 explanation shown on reveal (present/absent/before-reveal); base unavailable-notice render (empty/error hardening deferred to task-5); Storybook-demo seeding (`initialAnswer`/`initialRevealed`) render checks.
-- Exported `Flashcard`/`FlashcardProps`(types) via `organisms/index.ts`.
-- Refactor: none needed — component-split respected (handlers in `.tsx`, state/derived/effect in hook, pure transforms in helpers); no duplication found on review.
+Cycle: gap was test-only (Slice 1's guard + early-return already covered both fields); replaced
+single back-only case with `it.each` over both; verified non-vacuous by temporarily neutering the
+guard (both cases failed), reverted. No production diff. Gate green. APPROVED.
 
-**task-4 — `FlashcardActivity` wiring**
-- RED→GREEN (`flashcard-activity.test.tsx`, doubles as the slice's integration test): thin wrapper forwards `slide`/`onAnswered` to `Flashcard`; reveal → self-mark → `onAnswered` called once with the right `FlashcardAnswer` — drives the whole types→helpers→organism→wiring chain.
-- Added `flashcard-activity.stories.tsx` (`Features/FlashcardActivity`, `Default` with explanation + `WithoutExplanation`), mirroring `matching-activity.stories.tsx`.
-- Exported via `libs/study-buddy/src/index.ts`.
+## Slice 3 (tasks 6-9) — i18n, a11y, Storybook, Playwright e2e
 
-## Rework — reviewer_slice CHANGES_REQUESTED (Slice 1)
+| @s | Test |
+|---|---|
+| s9 | `migration-coverage.test.ts` (`flashcard` key-existence guard); bundles carry full `activity.flashcard.*` set |
+| s10 | `flashcard.test.tsx` `accessibility` block — button role/label (reveal + both self-marks), `layout.touchTarget` minHeight; `use-flashcard.test.ts` announce-on-reveal (pre-existing) |
+| s1-s4,s7,s8 | `flashcard.stories.tsx` — Hidden, RevealedUnmarked, RevealedRecalled, RevealedNotRecalled, WithoutExplanation, UnavailableMissingBack, UnavailableMissingFront, Interactive |
+| s1-s5 | `flashcard.e2e.js` — Interactive reveal→self-mark→lock→ignore-relock; seeded stories' visible text; both unavailable stories |
 
-- Finding 1 (major, design): chosen self-mark icon color switched `tertiary`/`error` while
-  `markButtonChosen` container chrome was static — internal clash, and `error` implied a
-  right/wrong judgment on a non-graded self-report.
-  - RED: added `it.each` (Recalled/Not recalled) to `flashcard.test.tsx` asserting the chosen
-    button's icon color and container `backgroundColor`/`borderColor` all resolve to the
-    same neutral `secondary*` family → failed (icon still `tertiary`/`error`).
-  - GREEN: `flashcard.tsx` — `iconColor` now static `theme.colors.onSecondaryContainer` for
-    both marks; `markButtonChosen.borderColor` changed `tertiary` → `secondary`.
-  - Refactor: none needed (comment added explaining the neutral-pairing rationale).
-- Finding 2 (minor, docs): `tasks.md` index Status column fixed `todo` → `done` for tasks 1-4
-  (task-N.md files already said `done`; docs-only, no test).
+### Cycles
 
-## Gate
+**task-6 (i18n)** — RED: registered `flashcard` in `KEY_EXISTENCE_DIRS`
+(`migration-coverage.test.ts`) before bundle keys existed → failed (8 missing keys). GREEN: added
+`activity.flashcard.{reveal,recalled,notRecalled,recalledConfirmed,notRecalledConfirmed,
+answerHeading,explanationHeading,unavailable}` to en/es/pt/de (`explanationHeading` = "Why" per
+matching/fill-in-the-blank precedent; `unavailable` mirrors shared activity wording).
+`flashcard.tsx` already consumed real `t('activity.flashcard.*')` keys from Slice 1 — organism
+unchanged. Refactor: none.
 
-- `pnpm --filter @helsoft/types test`: 4 suites, 11 tests green.
-- `pnpm --filter @helsoft/activities test`: 17 suites, 256 tests green.
+**task-7 (a11y)** — gap check: Slice 1 already built `accessibilityRole`/`accessibilityLabel`/
+`accessibilityState` on self-mark controls, the announce effect (`use-flashcard.ts`,
+`Platform.OS !== 'android'`), and `theme.layout.touchTarget` minHeight (mirrors matching's
+Slice-3 finding: a11y lands with the interaction, not deferred). Added an explicit `@s10` test
+block (`flashcard.test.tsx`) pinning button role/label for reveal + both self-marks and
+`layout.touchTarget` minHeight. Verified non-vacuous: temporarily changed self-mark `minHeight` →
+new test failed as expected; reverted (byte-identical). No production change needed.
+
+**task-8 (Storybook)** — `flashcard.stories.tsx` (`Organisms/Flashcard`): `Hidden`,
+`RevealedUnmarked` (`initialRevealed`), `RevealedRecalled`/`RevealedNotRecalled`
+(`initialAnswer`), `WithoutExplanation`, `UnavailableMissingBack`/`UnavailableMissingFront`
+(empty `back`/`content`), `Interactive` (unseeded, drives task-9). `build` (storybook build)
+green.
+
+**task-9 (Playwright e2e)** — `flashcard.e2e.js`, mirroring `matching.e2e.js` (frameLocator on
+`storybook-preview-iframe`, `getByText` exact). Static-story assertions for all 7 seeded stories +
+`Interactive` reveal → both self-marks appear → lock+confirm → re-tap (other/same) ignored.
+Corrected a wrong assumption while iterating: only the *chosen* mark's idle label swaps to its
+confirmed text; the unchosen mark's idle label stays visible after lock — fixed
+`RevealedRecalled`/`RevealedNotRecalled` assertions before green.
+
+## Gate (Slice 3)
+
+- `pnpm --filter @helsoft/localization test`: 8 suites, 60 tests green.
+- `pnpm --filter @helsoft/activities test`: 17 suites, 262 tests green.
 - `pnpm --filter @helsoft/study-buddy test`: 5 suites, 24 tests green.
-- `pnpm turbo run check-types --filter=@helsoft/types --filter=@helsoft/activities --filter=@helsoft/study-buddy`: clean.
-- `pnpm turbo run lint` for these three libs: no lint task defined for any lib workspace yet (pre-existing repo state — only `apps/app-study-buddy` has a `lint` script); nothing to run/fix here.
-- No hardcoded colors/dimensions in new files (grepped for hex/rgb — none); all user-facing chrome via `t('activity.flashcard.*')` placeholder keys (real bundle entries land in task-6).
-- No UI in this slice touches Playwright e2e (organism has no `.stories.tsx` yet — that's task-8, Slice 3), so no e2e run required for this gate.
-
-## Slice 2 — task-5: unavailable state hardening + tests
-
-| @s | Test | File |
-|---|---|---|
-| s8 | `it.each` (missing front/prompt, missing back/answer) → unavailable notice, no interactive text/back leak, zero buttons, `onAnswered` never called | `flashcard.test.tsx` |
-
-**task-5 — cycle**
-- Gap check: task-3's `use-flashcard` hook already derives `isUnavailable` from task-2's
-  `isFlashcardSlideValid` (both fields), and the organism's early-return branch already
-  rendered `labels.unavailable` with no interactive elements — but `flashcard.test.tsx` only
-  exercised the missing-*back* case (`back: ''`); missing-*front* was untested.
-- RED: replaced the single ad-hoc unavailable test with an `it.each` over both
-  `{ content: '' }` and `{ back: '' }`, asserting the notice, the non-missing field's own
-  text is still hidden (whole card degrades, not partial), zero `role="button"` elements,
-  and `onAnswered` never invoked. Verified non-vacuousness by temporarily neutering the
-  `isUnavailable` guard in `flashcard.tsx` (`if (false && isUnavailable)`) — both new cases
-  failed as expected — then reverted (no production diff).
-- GREEN: both cases pass unmodified against Slice 1's implementation; no production code
-  change needed for this task.
-- Refactor: none needed.
-
-## Gate (Slice 2)
-
-- `pnpm --filter @helsoft/activities test -- flashcard.test.tsx`: 17 tests green.
-- `pnpm --filter @helsoft/activities test`: 17 suites, 259 tests green.
-- `pnpm turbo run check-types --filter=@helsoft/activities`: clean.
-- No `lint` script on `@helsoft/activities` yet (pre-existing, same as Slice 1 gate) — nothing to run.
-- No hardcoded colors/strings in the touched files (grepped hex/rgb — none; unavailable label via `t()`).
-- No UI/story change in this slice — no e2e run required.
+- `pnpm --filter @helsoft/types test`: 4 suites, 11 tests green.
+- `pnpm check-types` (repo-wide, turbo): clean.
+- `pnpm lint` (repo-wide, turbo): clean — no lint script on any lib workspace yet (pre-existing;
+  only `app-study-buddy` defines one).
+- `pnpm --filter @helsoft/activities exec playwright test --reporter=list`: full lib e2e suite
+  (fill-in-the-blank + flashcard + matching + multiple-choice), 38 passed, 0 failed.
+- No hardcoded colors/dimensions/strings introduced; all new chrome via
+  `t('activity.flashcard.*')` and `theme.*` tokens.

@@ -99,6 +99,16 @@ export const en = {
         unavailable: 'This activity is unavailable',
         blankInput: 'Fill in the blank',
       },
+      flashcard: {
+        reveal: 'Reveal answer',
+        recalled: 'Recalled',
+        notRecalled: 'Not recalled',
+        recalledConfirmed: 'Marked recalled',
+        notRecalledConfirmed: 'Marked not recalled',
+        answerHeading: 'Answer',
+        explanationHeading: 'Why',
+        unavailable: 'This activity is unavailable',
+      },
     },
   },
 };

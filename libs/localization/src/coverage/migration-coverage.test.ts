@@ -63,6 +63,13 @@ const FILL_IN_THE_BLANK_ACTIVITY_DIR = resolve(
  * from libs/study-buddy/src/components/lesson-results for the same reason as above.
  */
 const LESSON_RESULTS_DIR = resolve(REPO_ROOT, 'libs/activities/src/organisms/lesson-results');
+/**
+ * activity-flashcard-recall, task-6/@s9 — Flashcard organism chrome
+ * (`t('activity.flashcard.*')`) needs the same missing-key guard: i18next has no
+ * missing-key handler, so a typo'd/renamed key would silently render the raw key
+ * string to real users.
+ */
+const FLASHCARD_DIR = resolve(REPO_ROOT, 'libs/activities/src/organisms/flashcard');
 
 const isExcluded = (file: string) => file.endsWith('.stories.tsx') || file.endsWith('.test.tsx') || file.endsWith('.test.ts');
 
@@ -145,6 +152,7 @@ const KEY_EXISTENCE_DIRS: Array<[name: string, dir: string]> = [
   ['matching-activity', MATCHING_ACTIVITY_DIR],
   ['fill-in-the-blank-activity', FILL_IN_THE_BLANK_ACTIVITY_DIR],
   ['lesson-results', LESSON_RESULTS_DIR],
+  ['flashcard', FLASHCARD_DIR],
 ];
 
 describe.each(KEY_EXISTENCE_DIRS)('t() key existence coverage (%s)', (name, dir) => {

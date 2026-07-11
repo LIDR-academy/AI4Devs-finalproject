@@ -14,10 +14,10 @@ Index only. **Each `task-N.md` owns its `slice`, `scenarios`, `status`, `paths`*
 | [task-3](./task-3.md) | 1 | @s1,@s2,@s3,@s4,@s5,@s7 | done | libs/activities/src/organisms/flashcard/flashcard.tsx, flashcard.types.ts, use-flashcard.ts |
 | [task-4](./task-4.md) | 1 | @s6 | done | libs/study-buddy/src/components/flashcard-activity/flashcard-activity.tsx |
 | [task-5](./task-5.md) | 2 | @s8 | done | libs/activities/src/organisms/flashcard/flashcard.tsx |
-| [task-6](./task-6.md) | 3 | @s9 | todo | libs/localization/src/resources/{en,es,pt,de}.ts, libs/activities/src/organisms/flashcard/flashcard.tsx |
-| [task-7](./task-7.md) | 3 | @s10 | todo | libs/activities/src/organisms/flashcard/flashcard.tsx, use-flashcard.ts |
-| [task-8](./task-8.md) | 3 | @s1,@s2,@s3,@s4,@s7,@s8 | todo | libs/activities/src/organisms/flashcard/flashcard.stories.tsx |
-| [task-9](./task-9.md) | 3 | @s1,@s2,@s3,@s4,@s5 | todo | libs/activities/tests/e2e/organisms/flashcard/flashcard.e2e.js |
+| [task-6](./task-6.md) | 3 | @s9 | done | libs/localization/src/resources/{en,es,pt,de}.ts, libs/activities/src/organisms/flashcard/flashcard.tsx |
+| [task-7](./task-7.md) | 3 | @s10 | done | libs/activities/src/organisms/flashcard/flashcard.tsx, use-flashcard.ts |
+| [task-8](./task-8.md) | 3 | @s1,@s2,@s3,@s4,@s7,@s8 | done | libs/activities/src/organisms/flashcard/flashcard.stories.tsx |
+| [task-9](./task-9.md) | 3 | @s1,@s2,@s3,@s4,@s5 | done | libs/activities/tests/e2e/organisms/flashcard/flashcard.e2e.js |
 
 **Slice 1 — Types + pure helpers + `Flashcard` organism (reveal/self-mark/lock + Content states) + `FlashcardActivity` wiring**
 **Slice 2 — Unavailable state (missing front/back)**

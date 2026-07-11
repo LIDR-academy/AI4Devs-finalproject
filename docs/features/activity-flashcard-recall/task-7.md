@@ -3,7 +3,7 @@ id: task-7
 title: Accessibility — roles, states, announce, touch targets
 slice: 3
 scenarios: [s10]
-status: todo
+status: done
 paths: [libs/activities/src/organisms/flashcard/flashcard.tsx, libs/activities/src/organisms/flashcard/use-flashcard.ts, libs/activities/src/organisms/flashcard/flashcard.test.tsx]
 ---
 
@@ -16,13 +16,13 @@ Make the reveal → self-mark flow accessible, mirroring the shipped organisms' 
 - Interactive targets meet the minimum touch-target size (`theme.layout.touchTarget`).
 
 ## Done criteria
-- [ ] @s10: reveal + self-mark controls expose button role + accessible label
-- [ ] @s10: revealed and locked-self-mark states conveyed via accessibility state, not color alone
-- [ ] @s10: revealed answer announced to assistive technology
-- [ ] @s10: interactive targets meet the minimum touch-target size (theme token, not a magic number)
-- [ ] Assertions in `flashcard.test.tsx` (RN Testing Library) + a11y checks reflected in the Playwright e2e (task-9)
-- [ ] `pnpm lint` + `pnpm check-types` + `pnpm --filter @helsoft/activities test` green
-- [ ] No hardcoded colors/dimensions
+- [x] @s10: reveal + self-mark controls expose button role + accessible label
+- [x] @s10: revealed and locked-self-mark states conveyed via accessibility state, not color alone
+- [x] @s10: revealed answer announced to assistive technology
+- [x] @s10: interactive targets meet the minimum touch-target size (theme token, not a magic number)
+- [x] Assertions in `flashcard.test.tsx` (RN Testing Library) + a11y checks reflected in the Playwright e2e (task-9)
+- [x] `pnpm lint` + `pnpm check-types` + `pnpm --filter @helsoft/activities test` green
+- [x] No hardcoded colors/dimensions
 
 ## Notes
 Announce effect lives in `use-flashcard.ts` (effect = hook per `component-split.mdc`); a11y attrs live in `flashcard.tsx`. Mirrors matching/fill-in-the-blank announce + `accessibilityState` usage.

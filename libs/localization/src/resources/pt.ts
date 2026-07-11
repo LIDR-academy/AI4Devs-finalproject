@@ -94,6 +94,16 @@ export const pt: TranslationResource = {
         unavailable: 'Esta atividade não está disponível',
         blankInput: 'Preencha o espaço',
       },
+      flashcard: {
+        reveal: 'Mostrar resposta',
+        recalled: 'Lembrei',
+        notRecalled: 'Não lembrei',
+        recalledConfirmed: 'Marcado como lembrado',
+        notRecalledConfirmed: 'Marcado como não lembrado',
+        answerHeading: 'Resposta',
+        explanationHeading: 'Por quê',
+        unavailable: 'Esta atividade não está disponível',
+      },
     },
   },
 };
