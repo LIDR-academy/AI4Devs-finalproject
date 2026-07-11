@@ -27,7 +27,34 @@ export type MultipleChoiceSlide = SlideBase & {
   explanation?: string;
 };
 
-export type ActivitySlide = MultipleChoiceSlide; // union grows as sibling stories land
+export type MatchingItem = {
+  /** Stable id used to reference the item in the correct pairing and the answered state (persist-friendly for R9). */
+  id: string;
+  label: string;
+};
+
+/** One correct correspondence: a left item id ↔ a right item id. Left↔right only (cross-column). */
+export type MatchingPair = {
+  leftId: string; // references one leftItems[].id
+  rightId: string; // references one rightItems[].id
+};
+
+export type MatchingSlide = SlideBase & {
+  kind: 'activity';
+  activityType: 'matching';
+  leftItems: MatchingItem[];
+  rightItems: MatchingItem[];
+  /**
+   * The correct pairing — exactly one pair per left item (a perfect matching).
+   * Invariant: leftItems.length === rightItems.length === correctPairs.length,
+   * and every leftId/rightId references a distinct item in its column.
+   */
+  correctPairs: MatchingPair[];
+  /** Optional teaching note shown with the results. */
+  explanation?: string;
+};
+
+export type ActivitySlide = MultipleChoiceSlide | MatchingSlide; // union grows as sibling stories land
 export type Slide = InstructionalSlide | ActivitySlide;
 
 export type Lesson = {

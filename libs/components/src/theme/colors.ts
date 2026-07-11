@@ -147,7 +147,7 @@ export const lightColors: ThemeColors = {
   tertiary: palette.tertiary[45],
   onTertiary: palette.tertiary[100],
   tertiaryContainer: palette.tertiary[90],
-  onTertiaryContainer: palette.tertiary[10],
+  onTertiaryContainer: palette.tertiary[70],
   error: palette.error[40],
   onError: '#ffffff',
   errorContainer: palette.error[90],

@@ -15,12 +15,21 @@ export type CardProps = {
   padding?: number;
   onPress?: () => void;
   style?: StyleProp<ViewStyle>;
+  testID?: string;
 };
 
 /**
  * Card — MD3 surface container. variant: elevated | filled | outlined.
  */
-export const Card = ({ children, variant = 'elevated', interactive = false, padding = 16, onPress, style }: CardProps) => {
+export const Card = ({
+  children,
+  variant = 'elevated',
+  interactive = false,
+  padding = 16,
+  onPress,
+  style,
+  testID,
+}: CardProps) => {
   const { theme } = useUnistyles();
   const { hover, handlers } = useInteractionState();
 
@@ -34,11 +43,21 @@ export const Card = ({ children, variant = 'elevated', interactive = false, padd
   ];
 
   if (!pressable) {
-    return <View style={containerStyle}>{children}</View>;
+    return (
+      <View testID={testID} style={containerStyle}>
+        {children}
+      </View>
+    );
   }
 
   return (
-    <Pressable onPress={onPress} onHoverIn={handlers.onHoverIn} onHoverOut={handlers.onHoverOut} style={containerStyle}>
+    <Pressable
+      testID={testID}
+      onPress={onPress}
+      onHoverIn={handlers.onHoverIn}
+      onHoverOut={handlers.onHoverOut}
+      style={containerStyle}
+    >
       {interactive ? <StateLayer opacity={hover ? theme.stateLayerOpacity.hover : 0} /> : null}
       {children}
     </Pressable>

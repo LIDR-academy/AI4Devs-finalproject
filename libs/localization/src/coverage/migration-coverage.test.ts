@@ -40,6 +40,14 @@ const MULTIPLE_CHOICE_ACTIVITY_DIR = resolve(
   REPO_ROOT,
   'libs/study-buddy/src/components/multiple-choice-activity',
 );
+/**
+ * activity-matching, task-6/@s16 — MatchingActivity chrome (`t('activity.matching.*')`)
+ * needs the same missing-key guard: i18next has no missing-key handler.
+ */
+const MATCHING_ACTIVITY_DIR = resolve(
+  REPO_ROOT,
+  'libs/study-buddy/src/components/matching-activity',
+);
 
 const isExcluded = (file: string) => file.endsWith('.stories.tsx') || file.endsWith('.test.tsx') || file.endsWith('.test.ts');
 
@@ -119,6 +127,7 @@ const KEY_EXISTENCE_DIRS: Array<[name: string, dir: string]> = [
   ['sign-in-form', SIGN_IN_FORM_DIR],
   ['sign-out', SIGN_OUT_DIR],
   ['multiple-choice-activity', MULTIPLE_CHOICE_ACTIVITY_DIR],
+  ['matching-activity', MATCHING_ACTIVITY_DIR],
 ];
 
 describe.each(KEY_EXISTENCE_DIRS)('t() key existence coverage (%s)', (name, dir) => {

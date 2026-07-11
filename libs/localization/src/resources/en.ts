@@ -75,6 +75,16 @@ export const en = {
         explanation: 'Explanation',
         unavailable: 'This question is unavailable',
       },
+      matching: {
+        submit: 'Submit',
+        correct: 'All correct!',
+        incorrect: 'Not quite',
+        correctPair: 'correct',
+        incorrectPair: 'incorrect',
+        explanationHeading: 'Why',
+        summary: '{{correct}} of {{total}} correct',
+        unavailable: 'This activity is unavailable',
+      },
     },
   },
 };

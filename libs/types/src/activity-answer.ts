@@ -10,3 +10,24 @@ export type MultipleChoiceAnswer = {
   correctOptionId: string;
   isCorrect: boolean;
 };
+
+/** A learner-formed pair with its graded result. */
+export type GradedPair = {
+  leftId: string;
+  rightId: string;
+  isCorrect: boolean; // this left↔right pairing is in the slide's correctPairs
+};
+
+export type MatchingAnswer = {
+  slideId: string;
+  activityType: 'matching';
+  /** The learner's pairs at Submit (all items paired — Submit gate), each with its result. */
+  pairs: GradedPair[];
+  /** Per-pair partial credit toward R7 (correct / total). */
+  correctPairCount: number;
+  totalPairCount: number; // === slide.correctPairs.length
+  /** Derived: true iff correctPairCount === totalPairCount (every pair correct). */
+  isCorrect: boolean;
+};
+
+export type ActivityAnswer = MultipleChoiceAnswer | MatchingAnswer; // union grows with sibling types
