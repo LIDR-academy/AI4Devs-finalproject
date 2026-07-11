@@ -40,7 +40,9 @@ describe('PdfUpload', () => {
 
   // @s1/@s4 — choosing a web-style asset (a real `File`/Blob, per DocumentPickerAsset.file) reads
   // its bytes directly and calls usePdfExtraction().extract with the filename/size/bytes — no
-  // PDF parsing happens on the client.
+  // PDF parsing happens on the client. Also asserts the exact `type` filter passed to the native
+  // picker (mutation-kill guard, round-3 pass) — the mock ignores its arguments, but the real
+  // picker only shows PDFs when this filter is present.
   it('reads a web-picked file via its Blob and calls extract with filename, size, and bytes', async () => {
     const extract = jest.fn().mockResolvedValue(undefined);
     mockUsePdfExtraction.mockReturnValue(extractionValue({ extract }));
@@ -55,6 +57,7 @@ describe('PdfUpload', () => {
       fireEvent.press(screen.getByRole('button', { name: 'upload.chooseFile' }));
     });
 
+    expect(mockGetDocumentAsync).toHaveBeenCalledWith({ type: 'application/pdf' });
     expect(extract).toHaveBeenCalledWith({ filename: 'notes.pdf', sizeBytes: 3, bytes: new Uint8Array(bytes) });
   });
 
@@ -126,7 +129,12 @@ describe('PdfUpload', () => {
   });
 
   // @s6 — once stage is 'success', the panel shows the Content summary from the typed result.
-  it('shows the content summary once stage is success', async () => {
+  // Also asserts the summary's own i18n key labels and the continue affordance's key (mutation-kill
+  // guard, round-3 pass) — the prior version only checked the interpolated values, never the
+  // `t('upload.filenameLabel')`/`t('upload.pageCountLabel')`/`t('upload.imageCountLabel')`/
+  // `t('upload.continue')` keys passed into `labels`, so a mutation blanking any one of those keys
+  // went unnoticed.
+  it('shows the content summary, its field labels, and the continue affordance once stage is success', async () => {
     mockUsePdfExtraction.mockReturnValue(
       extractionValue({
         stage: 'success',
@@ -139,6 +147,10 @@ describe('PdfUpload', () => {
     expect(screen.getByText('notes.pdf')).toBeTruthy();
     expect(screen.getByText('4')).toBeTruthy();
     expect(screen.getByText('2')).toBeTruthy();
+    expect(screen.getByText('upload.filenameLabel')).toBeTruthy();
+    expect(screen.getByText('upload.pageCountLabel')).toBeTruthy();
+    expect(screen.getByText('upload.imageCountLabel')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'upload.continue' })).toBeTruthy();
   });
 
   // N5 (accessibility review round-1 fix) — the wiring layer computes the image-count row's
