@@ -58,7 +58,7 @@ El documento completo de requisitos de producto (PRD) se encuentra en:
 * [docs/02_restostock_prd.md](docs/02_restostock_prd.md)
 
 ### Nota de control humano:
-El PRD fue revisado y aprobado para comenzar con el desarrollo, se hizo un cambio en la duracion del la meta de la Tasa de Rotación de Remanentes, de 24 horas a 48 horas.
+El PRD fue revisado y aprobado para comenzar con el desarrollo. Se unificó la meta de la Tasa de Rotación de Remanentes (TRR) a 24 horas para mantener consistencia con el documento de framing.
 
 
 **Prompt 3 Especificación Técnica de Arquitectura y Persistencia:**
@@ -182,6 +182,7 @@ El esquema declarativo de base de datos para Prisma (`schema.prisma`) y su justi
 * [docs/09_restostock_database_schema.md](docs/09_restostock_database_schema.md)
 
 ### Nota de control humano:
+Se validó que el archivo destinado a `schema.prisma` sea un archivo ejecutable con sintaxis pura de Prisma, sin bloques Markdown explicativos embebidos, y que cualquier justificación adicional de índices se mantenga en el artefacto de documentación separado.
 
 ---
 
@@ -197,6 +198,7 @@ La especificación de la API detallada y alineada con OWASP se encuentra en:
 * [docs/10_restostock_api_specification.md](docs/10_restostock_api_specification.md)
 
 ### Nota de control humano:
+Se garantizó que todas las cantidades y representaciones de tipo Decimal en payloads JSON se serialicen de forma consistente y determinista exclusivamente como strings (cadenas de texto numéricas, ej: `"2.0000"`), indicando su precisión y escala.
 
 ---
 
@@ -212,6 +214,7 @@ Las historias de usuario detalladas (en formato INVEST y BDD Gherkin) y su corre
 * [docs/user_stories/indice_user_stories.md](docs/user_stories/indice_user_stories.md)
 
 ### Nota de control humano:
+Se revisó que los escenarios de negocio prohíban saldos negativos en remanentes, y que cualquier descarte sobre un remanente ya CONSUMED o DISCARDED sea explícitamente rechazado sin mutar la base de datos.
 
 ---
 
@@ -228,6 +231,7 @@ La matriz de trazabilidad y las fichas técnicas detalladas de los tickets de tr
 * [docs/tickets/indice_tickets.md](docs/tickets/indice_tickets.md)
 
 ### Nota de control humano:
+Se corroboró que el manejo de caídas de red en el frontend (TK-007) se mitigue mediante capturas explícitas de promesas asíncronas y actualización de estados de error de data-fetching locales, en lugar de Error Boundaries de React.
 
 ---
 
@@ -236,11 +240,12 @@ La matriz de trazabilidad y las fichas técnicas detalladas de los tickets de tr
 **Prompt 1:**
 
 ```md
-Usando el skill de Release Manager en `.prompts/skills/SK-14_pull_requests.md`, documenta las tres Pull Requests iniciales e integraciones del proyecto e infúndelas en la sección correspondiente de `readme.md`.
+Usando el skill de Release Manager en `.prompts/skills/SK-14_pull_requests.md`, documenta las Pull Requests iniciales reales e integraciones del proyecto e infúndelas en la sección correspondiente de `readme.md`.
 
 ```
 
 ### Respuesta del agente de IA:
-La documentación detallada e incremental del historial de 3 Pull Requests se ha integrado en la sección "7. Pull Requests" de [readme.md](readme.md).
+La documentación detallada de las Pull Requests reales se ha integrado en la sección "7. Pull Requests" de [readme.md](readme.md).
 
 ### Nota de control humano:
+Se auditó la documentación de Pull Requests para asegurar que solo contenga información verídica y verificable del repositorio (evitando la invención de PRs ficticios o pipelines de CI falsos), admitiendo documentar menos de tres PRs cuando no existan más en el historial de Git.
