@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import { AccessibilityInfo } from 'react-native';
 
 import { RESULTS_LOADING_TEST_ID, ResultsSummary } from './results-summary';
 
@@ -133,6 +134,82 @@ describe('ResultsSummary', () => {
     );
 
     expect(screen.queryByText("We couldn't save this attempt.")).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Retry' })).toBeNull();
+  });
+
+  // Full-review, Minor 4 — nothing is ever saved for the completion variant (@s8/@s9), so the
+  // save-failure notice must never render there even if a caller mistakenly passes saveFailed.
+  it('does not show the save-failure notice for the completion variant even if saveFailed is true', async () => {
+    await render(
+      <ResultsSummary
+        variant="completion"
+        labels={labels}
+        saveFailed
+        onRetake={jest.fn()}
+        onBackToLessons={jest.fn()}
+        onRetrySave={jest.fn()}
+      />,
+    );
+
+    expect(screen.queryByText("We couldn't save this attempt.")).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Retry' })).toBeNull();
+  });
+
+  // Full-review, Major 1 — accessibilityLiveRegion is Android/Web-only, so iOS VoiceOver needs
+  // the imperative AccessibilityInfo call fired directly when saveFailed is set (mirrors
+  // LoginForm's errorMessage announcement, WCAG 4.1.3).
+  it('announces the save-failure notice via AccessibilityInfo when saveFailed is set', async () => {
+    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    await render(
+      <ResultsSummary
+        variant="score"
+        labels={labels}
+        saveFailed
+        onRetake={jest.fn()}
+        onBackToLessons={jest.fn()}
+        onRetrySave={jest.fn()}
+      />,
+    );
+
+    expect(announceSpy).toHaveBeenCalledWith("We couldn't save this attempt.");
+
+    announceSpy.mockRestore();
+  });
+
+  // Full-review, Major 1 + Minor 4 — the announcement must respect the same variant guard as
+  // the visual notice: nothing is ever saved for the completion variant, so it must never
+  // announce a save failure there either.
+  it('does not announce a save-failure notice for the completion variant even if saveFailed is true', async () => {
+    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    await render(
+      <ResultsSummary
+        variant="completion"
+        labels={labels}
+        saveFailed
+        onRetake={jest.fn()}
+        onBackToLessons={jest.fn()}
+        onRetrySave={jest.fn()}
+      />,
+    );
+
+    expect(announceSpy).not.toHaveBeenCalled();
+
+    announceSpy.mockRestore();
+  });
+
+  // Full-review, Minor 6 — onRetrySave is documented as required whenever saveFailed is true,
+  // but nothing statically enforces it; guard the runtime contract by never rendering a retry
+  // action that would have no handler to call.
+  it('does not render the retry action when onRetrySave is omitted even though saveFailed is true', async () => {
+    await render(
+      <ResultsSummary variant="score" labels={labels} saveFailed onRetake={jest.fn()} onBackToLessons={jest.fn()} />,
+    );
+
+    expect(screen.getByText("We couldn't save this attempt.")).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Retry' })).toBeNull();
   });
 });

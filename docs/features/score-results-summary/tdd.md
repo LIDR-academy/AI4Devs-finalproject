@@ -63,3 +63,32 @@ Type-level checks (task-1 Done criteria, not a numbered `@s`): `MultipleChoiceAn
 ### Gate
 
 `pnpm lint` (only `app-study-buddy` defines the script; cache-hit clean), `pnpm check-types`, and `pnpm test`/`pnpm turbo run test` all green across `@helsoft/components`, `@helsoft/study-buddy`, `@helsoft/localization`, `@helsoft/activities`, and the rest of the workspace. No e2e this slice (task-12, slice 3). Slice-2 code+design review pending before commit.
+
+## Slice 2 — round-1 review fix-forward (`review.md` findings 1–6)
+
+Both `reviewer_code` and `reviewer_design` returned `CHANGES_REQUESTED` against commit `5525f74`. Fixed all 6 findings via TDD, one behavior at a time.
+
+### Finding → test map
+
+| Finding | Behavior | Test | File |
+|---|---|---|---|
+| Major 1 (design) | iOS VoiceOver announcement on save failure | `announces the save-failure notice via AccessibilityInfo when saveFailed is set` | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
+| Major 1 (extension) | Announcement respects the same variant guard as the render | `does not announce a save-failure notice for the completion variant even if saveFailed is true` | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
+| Major 2 (design) | `LessonResults` Completion/SaveFailed stories | new `Completion`/`SaveFailed` stories (Storybook-only, no Jest test per existing convention) | `libs/study-buddy/src/components/lesson-results/lesson-results.stories.tsx` |
+| Minor 3 (code) | Untested defensive `percent` guard | pure refactor (removed unneeded ternary; all existing tests stayed green) | `libs/study-buddy/src/components/lesson-results/lesson-results.tsx` |
+| Minor 4 (code) | `saveFailed` notice must never render for the completion variant | `does not show the save-failure notice for the completion variant even if saveFailed is true` | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
+| Minor 5 (code) | Style key names shared across variants | pure rename refactor (`score`/`percent` → `headline`/`body`); all existing tests stayed green | `libs/components/src/organisms/results-summary/results-summary.tsx` |
+| Minor 6 (code) | Unenforced `onRetrySave` "required" contract | `does not render the retry action when onRetrySave is omitted even though saveFailed is true` | `libs/components/src/organisms/results-summary/results-summary.test.tsx` |
+
+### Cycles
+
+- **Minor 4**: RED `does not show the save-failure notice for the completion variant…` (rendered regardless of variant) → GREEN added `variant === 'score'` to the notice's render condition.
+- **Major 1**: RED `announces the save-failure notice via AccessibilityInfo…` → GREEN added a `useEffect` firing `AccessibilityInfo.announceForAccessibility(labels.saveFailed)` on the `saveFailed` transition, mirroring `LoginForm`'s `errorMessage` effect. Then RED `does not announce…for the completion variant…` → GREEN extended the effect's guard to `saveFailed && variant === 'score'` (kept in sync with the render guard).
+- **Minor 6**: RED `does not render the retry action when onRetrySave is omitted…` → GREEN wrapped the retry `Button` in `{onRetrySave ? … : null}`; chose graceful degradation (no retry action renders) over a discriminated-union prop-type overhaul — smallest fix that removes the runtime risk without inflating the prop typing for a single required-only-in-one-branch field. Docstring on `onRetrySave` updated to describe the actual (soft) contract.
+- **Minor 3**: refactor-only — removed lesson-results.tsx's `summary.isScorable ? … : 0` ternary since `percent` is never rendered in the completion branch (division-by-zero yields an unused `NaN`, confirmed harmless at both the type and runtime level); no new test needed since nothing observable changed, all pre-existing tests stayed green throughout.
+- **Minor 5**: refactor-only — renamed the `score`/`percent` style keys to `headline`/`body` since both are reused for the completion variant's text; no test referenced the style keys by name, so this stayed green throughout.
+- **Major 2**: added `Completion` (instructional-only lesson fixture, mirroring `lesson-results.test.tsx`'s own fixture) and `SaveFailed` (`configureLessonAttemptMock({ status: 'error' })`) stories to `lesson-results.stories.tsx`, matching `results-summary.stories.tsx`'s existing decorator/story conventions. Storybook stories aren't Jest-tested in this codebase (Playwright e2e for this slice is deferred to slice 3 per the slice-1 gate note) — no test cycle applies here beyond the existing convention.
+
+### Gate
+
+`pnpm lint`, `pnpm turbo run check-types`, and `pnpm turbo run test` all green across the whole workspace (`@helsoft/components` 88 tests, `@helsoft/study-buddy` 49 tests, `@helsoft/types`, `@helsoft/services`, `@helsoft/hooks`, `@helsoft/activities`, `app-study-buddy`). No e2e this slice (unchanged from round 1 — task-12/slice 3 owns Storybook e2e wiring). Returning to `reviews_lead` for slice-2 re-review; not committing here (commit happens once both `reviewer_code`/`reviewer_design` return `APPROVED`, per protocol).

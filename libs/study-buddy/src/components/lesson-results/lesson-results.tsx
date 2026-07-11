@@ -32,7 +32,9 @@ export const LessonResults = ({ lesson, answers, onRetake, onBackToLessons }: Le
   const { status, saveAttempt, retry } = useLessonAttempt();
 
   const summary = scoreLesson(toScorableSlides(lesson), answers);
-  const percent = summary.isScorable ? Math.round((summary.correct / summary.total) * PERCENT_MULTIPLIER) : 0;
+  // Unrendered (and NaN via a 0/0 division) for the completion variant — scoreLesson only
+  // reports isScorable: false when total is 0, so a guard here would be dead code.
+  const percent = Math.round((summary.correct / summary.total) * PERCENT_MULTIPLIER);
 
   // Save exactly once per completion (risk R5) — a re-render (e.g. a parent state change)
   // must not re-fire the insert; only an actual remount resets this guard. Nothing is ever

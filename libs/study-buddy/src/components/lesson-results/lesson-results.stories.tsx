@@ -62,6 +62,18 @@ const allCorrectAnswers = [
   { slideId: 'slide-3', activityType: 'multiple-choice' as const, isCorrect: true },
 ];
 
+// @s8/@s9 — an instructional-only lesson has nothing system-checked, so scoreLesson reports
+// isScorable: false and LessonResults renders the completion variant instead of a score.
+const instructionalOnlyLesson: Lesson = {
+  id: 'lesson-2',
+  userId: 'user-1',
+  title: 'Intro to Capitals',
+  createdAt: '2026-07-11T00:00:00.000Z',
+  slides: [
+    { id: 'slide-1', lessonId: 'lesson-2', title: 'Intro', content: 'Welcome!', position: 0, kind: 'instructional' },
+  ],
+};
+
 const meta = {
   title: 'Features/LessonResults',
   component: LessonResults,
@@ -87,4 +99,19 @@ export const Score: Story = {
 // affordance while the attempt is being persisted.
 export const Loading: Story = {
   decorators: [withLessonAttemptMock({ status: 'saving' })],
+};
+
+// Completion (@s8/@s9) — an instructional-only lesson; no score, both actions still available.
+export const Completion: Story = {
+  args: {
+    lesson: instructionalOnlyLesson,
+    answers: [],
+  },
+  decorators: [withLessonAttemptMock({ status: 'idle' })],
+};
+
+// Save failure (@s7) — useLessonAttempt().status is 'error', driving ResultsSummary's
+// non-blocking notice + retry action alongside the score.
+export const SaveFailed: Story = {
+  decorators: [withLessonAttemptMock({ status: 'error' })],
 };

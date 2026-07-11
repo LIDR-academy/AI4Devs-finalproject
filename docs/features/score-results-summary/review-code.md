@@ -1,11 +1,20 @@
-# review-code — score-results-summary (Slice 1, round 2, commit dad20d0)
+# review-code.md — score-results-summary
 
-## Verdict: APPROVED
+**Verdict: APPROVED** (round 2, scoped to the slice-2 fix-forward diff against `5525f74`: `libs/components/src/organisms/results-summary/{results-summary.tsx,results-summary.test.tsx}`, `libs/study-buddy/src/components/lesson-results/{lesson-results.tsx,lesson-results.stories.tsx}`)
 
-Round-1 finding resolved: `results.summary` removed from all four locale bundles (`libs/localization/src/resources/en.ts:42`, `es.ts:37`, `pt.ts:37`, `de.ts:37` — pre-fix line numbers) with no other reference left anywhere in the tree; `LessonResults` (`libs/study-buddy/src/components/lesson-results/lesson-results.tsx:47-50`) only calls `results.score`/`results.scorePercent`/`results.retake`/`results.backHome`, confirming the key was genuinely dead.
+Zero findings. All 5 reported fixes verified resolved by reading the diff and re-running the suites (no regressions to @s7/@s8/@s9/@s10/@s11 coverage):
 
-Re-checked the fix diff (`ad1232c..dad20d0`) against the same rubric: no `console.log`/debug leftovers, no new TODOs, no scope inflation (`configureLessonAttemptMock`/mock `useLessonAttempt` in `libs/study-buddy/.storybook/mocks/hooks.ts:81-106` mirror the existing `useAuth` mock pattern 1:1, type shape matches the real `UseLessonAttemptResult` in `libs/hooks/src/hooks/use-lesson-attempt.ts:7-12`), kebab-case filename (`lesson-results.stories.tsx`), no magic numbers introduced. The new story and mock are Storybook dev-tooling, not app production code, so the "no code without a driving test" law doesn't apply to them (consistent with `tdd.md`'s stated component→story ordering); no `@s` requires new coverage here since this commit doesn't add new behavior.
+1. iOS announcement — `results-summary.tsx:69-73` adds a `useEffect` guarded by `saveFailed && variant === 'score'`, pinned by `results-summary.test.tsx:161-179` (fires) and `:184-202` (does not fire for completion). TDD cycle in `tdd.md` matches Three Laws (RED test before each guard tightening).
+2. Ternary removed — `lesson-results.tsx:37` computes `percent` unconditionally; unused/NaN-for-completion case is inert (never rendered in the completion branch), all pre-existing tests stayed green.
+3. Variant guard on the notice — `results-summary.tsx:89` now requires `saveFailed && variant === 'score'`; negative test at `results-summary.test.tsx:142-156` confirms no notice/retry button renders for `completion` even with `saveFailed` true.
+4. Style rename — `score`/`percent` → `headline`/`body` (`results-summary.tsx:123,127`); confirmed no stale references anywhere in `libs/`.
+5. Optional retry action — `results-summary.tsx:94-98` renders the `Button` only when `onRetrySave` is given; covered by `results-summary.test.tsx:207-214`; docstring at `results-summary.tsx:39-44` updated to describe the soft contract.
 
-Confirmed green: `pnpm --filter @helsoft/localization test` (8 suites/57 tests), `pnpm --filter @helsoft/study-buddy test` (8 suites/44 tests — unchanged counts, as expected for a story-only addition), and `check-types` for both packages via `pnpm turbo run check-types --filter=@helsoft/localization --filter=@helsoft/study-buddy` (7/7 packages pass).
+Gates run clean:
+- `pnpm --filter @helsoft/components test` — 8 suites / 88 tests passed.
+- `pnpm --filter @helsoft/components check-types` — clean.
+- `pnpm --filter @helsoft/study-buddy test` — 8 suites / 49 tests passed.
+- `pnpm --filter @helsoft/study-buddy check-types` — clean.
+- `pnpm lint` — clean (cache hit).
 
-No new findings. `lesson-results.stories.tsx` existing/missing is reviewer_design's concern; noted only that it now exists and wires cleanly.
+No new craftsmanship issues: no `console.log`/debug leftovers, no orphan TODOs, functional React with `Props` types intact, kebab-case filenames, no magic numbers introduced, no duplication beyond the already-established `LoginForm` announce-effect precedent this fix intentionally mirrors (per the round-1 design finding).

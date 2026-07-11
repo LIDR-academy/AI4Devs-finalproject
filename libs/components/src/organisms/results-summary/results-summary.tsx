@@ -1,4 +1,5 @@
-import { Text, View } from 'react-native';
+import { useEffect } from 'react';
+import { AccessibilityInfo, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { Button } from '../../atoms/button/button';
@@ -35,7 +36,11 @@ export type ResultsSummaryProps = {
   labels: ResultsSummaryLabels;
   onRetake: () => void;
   onBackToLessons: () => void;
-  /** Re-attempts the failed save (@s7). Required whenever `saveFailed` is true. */
+  /**
+   * Re-attempts the failed save (@s7). Should always be given whenever `saveFailed` is true —
+   * if omitted, the retry action is not rendered at all (graceful degradation; the notice text
+   * still shows).
+   */
   onRetrySave?: () => void;
 };
 
@@ -57,56 +62,69 @@ export const ResultsSummary = ({
   onRetake,
   onBackToLessons,
   onRetrySave,
-}: ResultsSummaryProps) => (
-  <Card>
-    <View style={styles.content}>
-      {variant === 'score' ? (
-        <>
-          <Text style={styles.score}>{labels.score}</Text>
-          <Text style={styles.percent}>{labels.percent}</Text>
-        </>
-      ) : (
-        <>
-          <Text style={styles.score}>{labels.completeHeadline}</Text>
-          <Text style={styles.percent}>{labels.completeBody}</Text>
-        </>
-      )}
-      {saveFailed ? (
-        <View style={styles.notice} accessibilityRole="alert">
-          <Text style={styles.noticeText} accessibilityLiveRegion="assertive">
-            {labels.saveFailed}
-          </Text>
-          <Button variant="text" onPress={onRetrySave}>
-            {labels.retrySave}
+}: ResultsSummaryProps) => {
+  // accessibilityLiveRegion (below) is Android/Web-only (@platform android) — iOS VoiceOver
+  // needs this imperative call fired directly on the saveFailed transition (WCAG 4.1.3),
+  // mirroring LoginForm's errorMessage announcement.
+  useEffect(() => {
+    if (saveFailed && variant === 'score') {
+      AccessibilityInfo.announceForAccessibility(labels.saveFailed);
+    }
+  }, [saveFailed, variant, labels.saveFailed]);
+
+  return (
+    <Card>
+      <View style={styles.content}>
+        {variant === 'score' ? (
+          <>
+            <Text style={styles.headline}>{labels.score}</Text>
+            <Text style={styles.body}>{labels.percent}</Text>
+          </>
+        ) : (
+          <>
+            <Text style={styles.headline}>{labels.completeHeadline}</Text>
+            <Text style={styles.body}>{labels.completeBody}</Text>
+          </>
+        )}
+        {saveFailed && variant === 'score' ? (
+          <View style={styles.notice} accessibilityRole="alert">
+            <Text style={styles.noticeText} accessibilityLiveRegion="assertive">
+              {labels.saveFailed}
+            </Text>
+            {onRetrySave ? (
+              <Button variant="text" onPress={onRetrySave}>
+                {labels.retrySave}
+              </Button>
+            ) : null}
+          </View>
+        ) : null}
+        {loading ? (
+          <View testID={RESULTS_LOADING_TEST_ID}>
+            <ProgressIndicator variant="circular" size={LOADING_SPINNER_SIZE} thickness={LOADING_SPINNER_THICKNESS} />
+          </View>
+        ) : null}
+        <View style={styles.actions}>
+          <Button disabled={loading} onPress={onRetake}>
+            {labels.retake}
+          </Button>
+          <Button variant="text" disabled={loading} onPress={onBackToLessons}>
+            {labels.backToLessons}
           </Button>
         </View>
-      ) : null}
-      {loading ? (
-        <View testID={RESULTS_LOADING_TEST_ID}>
-          <ProgressIndicator variant="circular" size={LOADING_SPINNER_SIZE} thickness={LOADING_SPINNER_THICKNESS} />
-        </View>
-      ) : null}
-      <View style={styles.actions}>
-        <Button disabled={loading} onPress={onRetake}>
-          {labels.retake}
-        </Button>
-        <Button variant="text" disabled={loading} onPress={onBackToLessons}>
-          {labels.backToLessons}
-        </Button>
       </View>
-    </View>
-  </Card>
-);
+    </Card>
+  );
+};
 
 const styles = StyleSheet.create((theme) => ({
   content: {
     gap: theme.spacing.s2,
   },
-  score: {
+  headline: {
     ...theme.typography.headlineSmall,
     color: theme.colors.onSurface,
   },
-  percent: {
+  body: {
     ...theme.typography.titleMedium,
     color: theme.colors.onSurfaceVariant,
   },
