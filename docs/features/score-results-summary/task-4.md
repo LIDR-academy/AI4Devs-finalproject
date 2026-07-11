@@ -3,7 +3,7 @@ id: task-4
 title: LessonAttemptService (validation, insert-only)
 slice: 1
 scenarios: [s6]
-status: todo
+status: done
 paths:
   - libs/services/src/services/lesson-attempt.service.ts
   - libs/services/src/services/lesson-attempt.service.test.ts
@@ -16,10 +16,10 @@ Add `LessonAttemptService` (`abstract class`, static methods) wrapping `LessonAt
 - No React. Insert-only (no update/upsert).
 
 ## Done criteria
-- [ ] @s6 — a valid attempt is persisted via the DAO (mocked); the service composes no update path.
-- [ ] Validation tests: `total <= 0`, `score < 0`, `score > total`, and empty `lessonId` all reject with a descriptive error and do **not** call the DAO.
-- [ ] Exported via `services/index.ts`.
-- [ ] `pnpm lint` + `pnpm check-types` + `pnpm test` green.
+- [x] @s6 — a valid attempt is persisted via the DAO (mocked); the service composes no update path.
+- [x] Validation tests: `total <= 0`, `score < 0`, `score > total`, and empty `lessonId` all reject with a descriptive error and do **not** call the DAO.
+- [x] Exported via `services/index.ts`.
+- [x] `pnpm lint` + `pnpm check-types` + `pnpm test` green.
 
 ## Notes
 - Mirrors the `LocalePreferenceService`/`AuthService` static-abstract-class precedent.

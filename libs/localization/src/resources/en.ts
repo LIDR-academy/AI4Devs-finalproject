@@ -40,6 +40,8 @@ export const en = {
     },
     results: {
       summary: 'Results for lesson {{id}}',
+      score: '{{correct}} / {{total}}',
+      scorePercent: '{{percent}}%',
       retake: 'Retake activities',
       backHome: 'Back to my lessons',
     },

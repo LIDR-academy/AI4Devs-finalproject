@@ -3,7 +3,7 @@ id: task-7
 title: LessonResults wiring + app results route (score + loading)
 slice: 1
 scenarios: [s1, s5, s6]
-status: todo
+status: done
 paths:
   - libs/study-buddy/src/components/lesson-results/lesson-results.tsx
   - libs/study-buddy/src/components/lesson-results/lesson-results.test.tsx
@@ -30,13 +30,17 @@ i18n: add the two **score** keys the slice-1 happy path needs to all four bundle
 App route `results.tsx`: replace the stub to render `LessonResults` inside `ScreenContainer`, supplying the lesson + answers (**stubbed/fixture** until R4/R9 provide the live source — risk R1) and wiring `onRetake` → `router.replace` to the player and `onBackToLessons` → `router.replace('/')`, matching the existing scaffold.
 
 ## Done criteria
-- [ ] @s1 — a scorable lesson renders the pre-formatted score + percentage via `ResultsSummary`.
-- [ ] @s5 — while the attempt is saving, the loading state shows.
-- [ ] @s6 — completion triggers exactly one `saveAttempt` (guarded); re-render/re-mount does not double-save.
-- [ ] `results.score` + `results.scorePercent` exist in `en`/`es`/`pt`/`de`, key-aligned (the `migration-coverage` parity test stays green); `TranslationResource` still compiles.
-- [ ] Integration test (study-buddy → hook → service, mocked Supabase/service) proves compute-then-persist for a scorable lesson.
-- [ ] App route composes `LessonResults` and passes navigation callbacks; no business logic in `apps/*`.
-- [ ] `pnpm lint` + `pnpm check-types` + `pnpm test` green.
+- [x] @s1 — a scorable lesson renders the pre-formatted score + percentage via `ResultsSummary`.
+- [x] @s5 — while the attempt is saving, the loading state shows.
+- [x] @s6 — completion triggers exactly one `saveAttempt` (guarded); re-render/re-mount does not double-save.
+- [x] `results.score` + `results.scorePercent` exist in `en`/`es`/`pt`/`de`, key-aligned (the `migration-coverage` parity test stays green); `TranslationResource` still compiles.
+- [x] Integration test (study-buddy → hook → service, mocked Supabase/service) proves compute-then-persist for a scorable lesson.
+- [x] App route composes `LessonResults` and passes navigation callbacks; no business logic in `apps/*`.
+- [x] `pnpm lint` + `pnpm check-types` + `pnpm test` green.
+
+**Implementation notes:**
+- The stub lesson/answers fixture (risk R1) lives in `@helsoft/study-buddy` (`fixtures/lesson-results-stub.ts`, TDD'd, exported via the barrel) rather than inline in the app route — keeps `apps/*` a thin composition shell and avoids the `migration-coverage` hardcoded-`<Text>`/`title:` literal-detector's false positive on a `.tsx` fixture object (its `title:` field regex doesn't distinguish a data field from route-title config).
+- Added `lesson-results` to `migration-coverage.test.ts`'s `KEY_EXISTENCE_DIRS` (mirrors `sign-in-form`/`sign-out`/`multiple-choice-activity`) so a typo'd/undefined `t()` key in `lesson-results.tsx` fails loudly instead of silently rendering a raw key.
 
 ## Notes
 - Completion + error/retry branches are added in task-9; this task keeps to score + loading.

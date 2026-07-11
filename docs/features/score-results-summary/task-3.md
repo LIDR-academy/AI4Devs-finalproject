@@ -3,7 +3,7 @@ id: task-3
 title: lesson_attempts migration + LessonAttemptDao
 slice: 1
 scenarios: [s6]
-status: todo
+status: done
 paths:
   - supabase/migrations/*_create_lesson_attempts.sql
   - libs/services/src/dao/lesson-attempt.dao.ts
@@ -28,11 +28,11 @@ Migration `lesson_attempts`:
 - (Optional, for R9 later) `listAttempts(lessonId)` — **not** in scope now; do not add unless a scenario needs it.
 
 ## Done criteria
-- [ ] @s6 — inserting is additive: each call creates a new row; no update path exists (verified by the DAO test mocking `getSupabase()`).
-- [ ] DAO inserts only `lesson_id/score/total`; `user_id` is never sent from the client.
-- [ ] Row → `LessonAttempt` mapping (snake_case DB → camelCase type) covered by a test.
-- [ ] Migration authored via `npx supabase migration new create_lesson_attempts`; RLS enabled with the two policies above.
-- [ ] `pnpm lint` + `pnpm check-types` + `pnpm test` green.
+- [x] @s6 — inserting is additive: each call creates a new row; no update path exists (verified by the DAO test mocking `getSupabase()`).
+- [x] DAO inserts only `lesson_id/score/total`; `user_id` is never sent from the client.
+- [x] Row → `LessonAttempt` mapping (snake_case DB → camelCase type) covered by a test.
+- [x] Migration authored via `npx supabase migration new create_lesson_attempts`; RLS enabled with the two policies above.
+- [x] `pnpm lint` + `pnpm check-types` + `pnpm test` green.
 
 ## Notes
 - Per Open decisions (security/R3): `user_id default auth.uid()` + RLS `with check` means the client cannot spoof another user's attempt.

@@ -35,6 +35,8 @@ export const pt: TranslationResource = {
     },
     results: {
       summary: 'Resultados da lição {{id}}',
+      score: '{{correct}} / {{total}}',
+      scorePercent: '{{percent}}%',
       retake: 'Refazer atividades',
       backHome: 'Voltar às minhas lições',
     },

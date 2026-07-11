@@ -3,7 +3,7 @@ id: task-1
 title: Shared score types + system-checked-activity set & guard
 slice: 1
 scenarios: [s2]
-status: todo
+status: done
 paths:
   - libs/types/src/activity-type.ts
   - libs/types/src/scorable-slide.ts
@@ -23,12 +23,12 @@ Add the plain-TS shapes the rest of the feature builds on, in `@helsoft/types`:
 - `LessonAttempt { id: string; lessonId: string; score: number; total: number; createdAt: string }` and `NewLessonAttempt { lessonId: string; score: number; total: number }` (no `userId` — set server-side by `auth.uid()`).
 
 ## Done criteria
-- [ ] @s2's exclusion rule is expressed by `isSystemCheckedActivity` and covered by a test (true for the 3 system-checked types, false for `flashcard`/`open-ended`).
-- [ ] Each type in its own `type-name.ts` file per the `@helsoft/types` convention; all exported via the types barrel.
-- [ ] `MultipleChoiceAnswer` is (structurally) assignable to `GradedAnswer` — verify with a type-level check; **do not** modify `activity-answer.ts`.
-- [ ] `MultipleChoiceSlide` projects cleanly into `ScorableSlide` (its `id` + `activityType`) — verify with a type-level check; **do not** modify `lesson.ts`.
-- [ ] `pnpm lint` + `pnpm check-types` + `pnpm test` green.
-- [ ] No hardcoded strings/colors/dimensions; no magic numbers.
+- [x] @s2's exclusion rule is expressed by `isSystemCheckedActivity` and covered by a test (true for the 3 system-checked types, false for `flashcard`/`open-ended`).
+- [x] Each type in its own `type-name.ts` file per the `@helsoft/types` convention; all exported via the types barrel.
+- [x] `MultipleChoiceAnswer` is (structurally) assignable to `GradedAnswer` — verify with a type-level check; **do not** modify `activity-answer.ts`.
+- [x] `MultipleChoiceSlide` projects cleanly into `ScorableSlide` (its `id` + `activityType`) — verify with a type-level check; **do not** modify `lesson.ts`.
+- [x] `pnpm lint` + `pnpm check-types` + `pnpm test` green.
+- [x] No hardcoded strings/colors/dimensions; no magic numbers.
 
 ## Notes
 - Per Open decisions: `SYSTEM_CHECKED_ACTIVITY_TYPES` is the single source of truth for "counts toward the score"; adding a future system-checked type is one edit here.

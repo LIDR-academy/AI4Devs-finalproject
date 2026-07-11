@@ -1,21 +1,20 @@
 import { ScreenContainer } from '@helsoft/components';
-import { useLocalization } from '@helsoft/localization';
-import { Link, useLocalSearchParams } from 'expo-router';
-import { Text } from 'react-native';
+import { buildStubLessonResultsFixture, LessonResults } from '@helsoft/study-buddy';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 export default function ResultsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { t } = useLocalization();
+  const router = useRouter();
+  const { lesson, answers } = buildStubLessonResultsFixture(id);
 
   return (
     <ScreenContainer>
-      <Text>{t('results.summary', { id })}</Text>
-      <Link href={{ pathname: '/lesson/[id]/player', params: { id } }} replace>
-        <Text>{t('results.retake')}</Text>
-      </Link>
-      <Link href="/" replace>
-        <Text>{t('results.backHome')}</Text>
-      </Link>
+      <LessonResults
+        lesson={lesson}
+        answers={answers}
+        onRetake={() => router.replace({ pathname: '/lesson/[id]/player', params: { id } })}
+        onBackToLessons={() => router.replace('/')}
+      />
     </ScreenContainer>
   );
 }
