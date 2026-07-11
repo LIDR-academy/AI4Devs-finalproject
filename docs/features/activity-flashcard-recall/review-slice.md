@@ -1,30 +1,66 @@
-# Slice review — activity-flashcard-recall — Slice 1 (Round 2)
+# Slice review — activity-flashcard-recall — Slice 2
 
-**Commit:** `3c93135` (branch `feat/activity-flashcard-recall`, fixes round-1 commit `7dccc48`)
-**Tasks:** task-1 (types), task-2 (helpers), task-3 (organism), task-4 (wiring)
+**Commit:** `02133b7` (branch `feat/activity-flashcard-recall`)
+**Task:** task-5 (Unavailable state — missing front or back)
 **Verdict: APPROVED**
 
-## Round-1 findings — verified fixed
+## Scope of the diff
 
-### 1. [Major — Design lens] Self-mark icon/container color clash + misleading `error` token — FIXED
-`libs/activities/src/organisms/flashcard/flashcard.tsx:73`, `:168`
+`git show 02133b7 --stat`: only `flashcard.test.tsx` (production-adjacent test file) plus
+`task-5.md`/`tasks.md`/`tdd.md` (docs) changed. `flashcard.tsx`, `flashcard.helpers.ts`,
+`use-flashcard.ts` are byte-identical to Slice 1 — matches the task's own claim that no
+production change was needed (Slice 1's `isFlashcardSlideValid`/`use-flashcard`/organism
+early-return already implemented the guard; this slice only closes the test gap). No scope
+creep.
 
-- `iconColor` is now a single static `theme.colors.onSecondaryContainer` for both "Recalled" and "Not recalled" chosen states (no more `recalled ? tertiary : error` branch) — confirmed no other place in the file branches on `recalled` for color (`markButtonLabel` at `:170-173` branches only on `isChosen`, same value both marks, unchanged since round 1 and never flagged).
-- `markButtonChosen.borderColor` changed `tertiary` → `secondary` (`:168`), so icon, background (`secondaryContainer`), and border (`secondary`) are now one coherent, static family for both marks — no internal clash, and `theme.colors.error` is no longer used anywhere in this file, removing the "wrong answer" implication on a non-graded self-report.
-- New test (`flashcard.test.tsx:118-135`) is a genuine, non-vacuous regression guard: `it.each` over both marks asserts the *same* `iconColor`/`backgroundColor`/`borderColor` values for both "Recalled" and "Not recalled" — this would fail against the old `recalled ? tertiary : error` code (which produced different icon colors per mark), so it correctly pins the fix.
-- Contrast check (design lens, quick pass): `onSecondaryContainer` (`secondary[10]` in light mode) against `secondaryContainer` (`secondary[90]`) is the standard MD3 tonal container/on-container pair (`libs/components/src/theme/colors.ts:143-146`) — same pairing already used for the chosen label text (`flashcard.tsx:172`), so no new/untested pairing was introduced and contrast is materially *higher* than the previous `tertiary`/`error` icon against `secondaryContainer`. Dark-mode pairing (`secondary[30]`/`secondary[90]`) mirrors the same inversion. No regression.
+## Code lens
 
-### 2. [Minor] `tasks.md` index Status column stale — FIXED
-`docs/features/activity-flashcard-recall/tasks.md:12-15`
+- **`@s8` fully covered, non-vacuous** (`flashcard.test.tsx:186-199`): the new `it.each`
+  replaces the old single missing-*back*-only test with two cases —
+  `{ content: '' }` (missing front) and `{ back: '' }` (missing back) — each asserting:
+  - the unavailable notice is present (`getByText(I18N.unavailable)`, `:194`);
+  - the **other**, non-missing field's own text is also hidden (`hiddenText` is `slide.back`
+    for the missing-front case and `slide.content` for the missing-back case, `:195`) — this
+    correctly proves the whole card degrades rather than partially rendering the still-valid
+    field;
+  - zero interactive elements: both a targeted `queryByRole('button', { name: I18N.reveal })`
+    (`:196`) and a blanket `queryAllByRole('button')).toHaveLength(0)` (`:197`);
+  - `onAnswered` is never called (`:198`).
+  - Traced against `isFlashcardSlideValid` (`flashcard.helpers.ts:8`, `content.trim().length >
+    0 && back.trim().length > 0`) and the organism's early-return (`flashcard.tsx:44-50`): the
+    front-missing case is a genuine new mutation-kill — before this slice only the AND's
+    right operand (`back`) was exercised by any test; a mutant weakening the check to
+    `back.trim().length > 0` alone (dropping the `content` check) would have survived until
+    now and is caught by the new first case. Reported RED verification (temporarily
+    neutering the guard, both cases failing) in `tdd.md:87-89` is consistent with this
+    analysis.
+- No production regression: confirmed via the diff stat above and a full read of
+  `flashcard.tsx`/`flashcard.helpers.ts`/`use-flashcard.ts` — unchanged since Slice 1's
+  approved round 2.
+- Red→Green→Refactor evidence present in `tdd.md:79-92` (Gap check → RED → GREEN → Refactor:
+  none needed), consistent with the TDD-evidence requirement; no production code added to
+  meet a test that wasn't already required (the task itself frames this as closing a test
+  gap, not adding new behavior).
+- No debug leftovers, no TODOs, no dead code in the diff. Test file remains kebab-case
+  (`flashcard.test.tsx`), no filename changes.
+- Docs bookkeeping is accurate: `task-5.md` done-criteria all checked and `status: done`
+  (`docs/features/activity-flashcard-recall/task-5.md:6,14-19`); `tasks.md` index row synced
+  `todo` → `done` for task-5, matching.
 
-Index now reads `done` for tasks 1-4, matching each `task-N.md`'s own `status: done` (verified directly). Tasks 5-9 correctly remain `todo` (Slices 2-3, not yet started).
+## Design lens
 
-## Fresh pass (code + design lenses) — no new findings
+- No hardcoded user-facing strings introduced: the new test uses the existing `I18N` key
+  constants (`flashcard.test.tsx:13-22`) against the mocked `t: (key) => key`
+  (`flashcard.test.tsx:1-5`); production `labels.unavailable` continues to resolve via
+  `t('activity.flashcard.unavailable')` (`flashcard.tsx:34`), unchanged.
+- Consistent with the matching/fill-in-the-blank unavailable-state precedent: same
+  `t('activity.{feature}.unavailable')` naming (`matching.tsx:43`,
+  `fill-in-the-blank.tsx:29`, `flashcard.tsx:34`) and same "whole surface degrades to one
+  notice, nothing interactive" shape (`matching.tsx:86`, `fill-in-the-blank.tsx:55`,
+  `flashcard.tsx:46-49`). No ad-hoc colors/spacing/typography touched by this slice.
+- No `.stories.tsx` change expected or made — story coverage for the unavailable state is
+  explicitly task-8 (Slice 3) per `tasks.md`; correctly out of scope here.
 
-- **Scope of the fix commit is exact**: `git diff 7dccc48 3c93135 -- libs/` touches only `flashcard.tsx` (production) and `flashcard.test.tsx` (test) — no unrelated production-code drift, no other file in the slice touched.
-- **No stray `error`/`tertiary` self-mark coloring remains** anywhere in `flashcard.tsx` (grepped `recalled` usages: all are label/logic/key, none color-branching post-fix).
-- **`flashcard.helpers.ts`, `use-flashcard.ts`, `flashcard.types.ts`, `flashcard-activity.tsx`/`.test.tsx`/`.stories.tsx`**: untouched by the fix commit and unchanged since round 1's approved findings — re-checked, still solid (state machine, component-split, hooks-service-dao, atomic-design placement, i18n/tokens, a11y-at-contract-level all as previously verified).
-- **`tdd.md`** correctly documents the rework (Red→Green evidence for finding 1, docs-only note for finding 2) under a new "Rework — reviewer_slice CHANGES_REQUESTED" section — consistent with the TDD-evidence requirement.
-- No debug leftovers, no TODOs, no dead code, kebab-case filenames throughout; nothing in the fix reopens or contradicts any round-1 "solid" item.
+## Result
 
-Slice 1 unblocked — proceed to Slice 2.
+No findings. Slice 2 (task-5) unblocked.
