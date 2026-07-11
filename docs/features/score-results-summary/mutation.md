@@ -15,7 +15,7 @@ Pre-review mutation pass using StrykerJS. Scope: all changed source files across
 | `app-study-buddy` | — | — | — | *no Stryker config* |
 | **TOTAL** | **199** | **165** | **16** | **91.16%** |
 
-**Verdict: GREEN (with documented equivalents).** Every survivor below is either killed by a new test (with the mutation re-applied by hand and re-verified as caught) or carries a written equivalent-mutant/arbitrary-fixture justification. Zero unaddressed findings remain.
+**Verdict: PASS (with documented equivalents), independently re-verified.** Every survivor below is either killed by a new test (with the mutation re-applied by hand and re-verified as caught) or carries a written equivalent-mutant/arbitrary-fixture justification. A second, independent `mutation_tester` pass re-ran Stryker from scratch and re-applied every remaining mutation by hand (not trusting the written claims) — same 16 survivors, same numbers, every equivalence claim upheld. Zero unaddressed findings remain.
 
 ---
 
