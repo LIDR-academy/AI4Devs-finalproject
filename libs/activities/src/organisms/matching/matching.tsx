@@ -162,7 +162,8 @@ export const Matching = ({
         accessibilityLabel={itemAccessibilityLabel(item, state)}
         accessibilityState={{
           disabled: locked,
-          selected: state === 'pending' || state === 'paired',
+          selected: state === 'pending',
+          checked: state === 'paired',
         }}
         // Lock via omitting onPress (not an early-return) so mutation tests observe the guard.
         onPress={locked ? undefined : () => handleItemPress(column, item.id)}
@@ -278,7 +279,7 @@ const styles = StyleSheet.create((theme) => ({
         : state === 'paired'
           ? theme.colors.onSecondaryContainer
           : state === 'correct'
-            ? theme.colors.onTertiary
+            ? theme.colors.onTertiaryContainer
             : state === 'incorrect'
               ? theme.colors.onErrorContainer
               : theme.colors.onSurface,

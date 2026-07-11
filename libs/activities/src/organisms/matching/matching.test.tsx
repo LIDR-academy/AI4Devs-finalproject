@@ -113,9 +113,12 @@ describe('Matching', () => {
     await press('France');
     await press('Paris');
 
-    expect(itemButton('France').props.accessibilityState.selected).toBe(true);
-    expect(itemButton('Paris').props.accessibilityState.selected).toBe(true);
+    expect(itemButton('France').props.accessibilityState.selected).toBe(false);
+    expect(itemButton('France').props.accessibilityState.checked).toBe(true);
+    expect(itemButton('Paris').props.accessibilityState.selected).toBe(false);
+    expect(itemButton('Paris').props.accessibilityState.checked).toBe(true);
     expect(itemButton('Germany').props.accessibilityState.selected).toBe(false);
+    expect(itemButton('Germany').props.accessibilityState.checked).toBe(false);
   });
 
   // @s3 — right-then-left forms a pair.
@@ -125,9 +128,12 @@ describe('Matching', () => {
     await press('Berlin');
     await press('Germany');
 
-    expect(itemButton('Berlin').props.accessibilityState.selected).toBe(true);
-    expect(itemButton('Germany').props.accessibilityState.selected).toBe(true);
+    expect(itemButton('Berlin').props.accessibilityState.selected).toBe(false);
+    expect(itemButton('Berlin').props.accessibilityState.checked).toBe(true);
+    expect(itemButton('Germany').props.accessibilityState.selected).toBe(false);
+    expect(itemButton('Germany').props.accessibilityState.checked).toBe(true);
     expect(itemButton('France').props.accessibilityState.selected).toBe(false);
+    expect(itemButton('France').props.accessibilityState.checked).toBe(false);
   });
 
   // @s4 — tap pending again deselects.
@@ -157,13 +163,15 @@ describe('Matching', () => {
 
     await press('France');
     await press('Paris');
-    expect(itemButton('France').props.accessibilityState.selected).toBe(true);
-    expect(itemButton('Paris').props.accessibilityState.selected).toBe(true);
+    expect(itemButton('France').props.accessibilityState.checked).toBe(true);
+    expect(itemButton('Paris').props.accessibilityState.checked).toBe(true);
 
     await press('France');
 
     expect(itemButton('France').props.accessibilityState.selected).toBe(false);
+    expect(itemButton('France').props.accessibilityState.checked).toBe(false);
     expect(itemButton('Paris').props.accessibilityState.selected).toBe(false);
+    expect(itemButton('Paris').props.accessibilityState.checked).toBe(false);
   });
 
   // @s7 — Submit disabled while unpaired remain.
@@ -319,9 +327,9 @@ describe('Matching', () => {
       />,
     );
 
-    expect(itemButton('France').props.accessibilityState.selected).toBe(true);
-    expect(itemButton('Paris').props.accessibilityState.selected).toBe(true);
-    expect(itemButton('Germany').props.accessibilityState.selected).toBe(false);
+    expect(itemButton('France').props.accessibilityState.checked).toBe(true);
+    expect(itemButton('Paris').props.accessibilityState.checked).toBe(true);
+    expect(itemButton('Germany').props.accessibilityState.checked).toBe(false);
     expect(submitButton().props.accessibilityState.disabled).toBe(true);
   });
 
@@ -336,16 +344,19 @@ describe('Matching', () => {
     }
   });
 
-  // @s17 — pending/paired conveyed via accessibilityState.selected, not color alone.
-  it('conveys pending and paired states via accessibilityState.selected', async () => {
+  // @s17 — pending vs paired distinguishable via a11y state (not color alone).
+  it('conveys pending and paired as distinct accessibility states', async () => {
     await render(<Matching {...defaultProps} />);
 
     await press('France');
     expect(itemButton('France').props.accessibilityState.selected).toBe(true);
+    expect(itemButton('France').props.accessibilityState.checked).toBe(false);
 
     await press('Paris');
-    expect(itemButton('France').props.accessibilityState.selected).toBe(true);
-    expect(itemButton('Paris').props.accessibilityState.selected).toBe(true);
+    expect(itemButton('France').props.accessibilityState.selected).toBe(false);
+    expect(itemButton('France').props.accessibilityState.checked).toBe(true);
+    expect(itemButton('Paris').props.accessibilityState.selected).toBe(false);
+    expect(itemButton('Paris').props.accessibilityState.checked).toBe(true);
   });
 
   // @s17 — post-submit correctness via text + icon + accessible label (not color alone).
@@ -496,17 +507,17 @@ describe('Matching', () => {
     await press('Germany');
     await press('Berlin');
 
-    expect(itemButton('France').props.accessibilityState.selected).toBe(true);
-    expect(itemButton('Paris').props.accessibilityState.selected).toBe(true);
-    expect(itemButton('Germany').props.accessibilityState.selected).toBe(true);
-    expect(itemButton('Berlin').props.accessibilityState.selected).toBe(true);
+    expect(itemButton('France').props.accessibilityState.checked).toBe(true);
+    expect(itemButton('Paris').props.accessibilityState.checked).toBe(true);
+    expect(itemButton('Germany').props.accessibilityState.checked).toBe(true);
+    expect(itemButton('Berlin').props.accessibilityState.checked).toBe(true);
 
     await press('Paris');
 
-    expect(itemButton('France').props.accessibilityState.selected).toBe(false);
-    expect(itemButton('Paris').props.accessibilityState.selected).toBe(false);
-    expect(itemButton('Germany').props.accessibilityState.selected).toBe(true);
-    expect(itemButton('Berlin').props.accessibilityState.selected).toBe(true);
+    expect(itemButton('France').props.accessibilityState.checked).toBe(false);
+    expect(itemButton('Paris').props.accessibilityState.checked).toBe(false);
+    expect(itemButton('Germany').props.accessibilityState.checked).toBe(true);
+    expect(itemButton('Berlin').props.accessibilityState.checked).toBe(true);
     expect(submitButton().props.accessibilityState.disabled).toBe(true);
   });
 
@@ -555,8 +566,8 @@ describe('Matching', () => {
     await press('Left X');
     await press('Right X');
 
-    expect(itemButton('Left X').props.accessibilityState.selected).toBe(true);
-    expect(itemButton('Right X').props.accessibilityState.selected).toBe(true);
+    expect(itemButton('Left X').props.accessibilityState.checked).toBe(true);
+    expect(itemButton('Right X').props.accessibilityState.checked).toBe(true);
     expect(submitButton().props.accessibilityState.disabled).toBe(false);
 
     await act(async () => {
@@ -692,7 +703,7 @@ describe('Matching', () => {
       borderWidth: 2,
       borderColor: lightColors.tertiary,
     });
-    expect(screen.getByText('France')).toHaveStyle({ color: lightColors.onTertiary });
+    expect(screen.getByText('France')).toHaveStyle({ color: lightColors.onTertiaryContainer });
 
     expect(screen.getByRole('button', { name: `Germany, ${labels.incorrectPair}` })).toHaveStyle({
       backgroundColor: lightColors.errorContainer,

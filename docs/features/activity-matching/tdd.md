@@ -177,3 +177,19 @@ Responds to `docs/features/activity-matching/mutation.md` (84 survivors). Strict
 - GREEN: `allPaired` without dead `> 0`; empty = left-empty only (one-column caught by unequal); `resultLabel` null while unsubmitted; lock via `onPress={locked ? undefined : …}`; `ItemVisualState` uses `undefined` not `'default'`; announce from `result.isCorrect` directly.
 - Dropped `readFileSync` source asserts (break under Stryker `inPlace` instrumentation).
 - Stryker `@helsoft/activities` matching.tsx: **100%** (1 RuntimeError on `StyleSheet.create`→undefined, counted killed).
+
+## FULL review Round 1 re-work (a11y findings)
+
+Responds to `docs/features/activity-matching/review.md` B1 + M1. Strict TDD; no commit.
+
+**Cycle 26 (B1 — correct-item label contrast)**
+- RED: `matching.test.tsx` — "applies pending, paired, correct…" asserts `onTertiaryContainer` (was `onTertiary`; ~1.15:1 on mixed bg).
+- GREEN: `itemLabel` correct branch → `theme.colors.onTertiaryContainer`.
+- REFACTOR: none.
+
+**Cycle 27 (M1 — pending ≠ paired via a11y state, @s17)**
+- RED: renamed assert "conveys pending and paired as distinct accessibility states" — pending `selected`+`!checked`; paired `!selected`+`checked`.
+- GREEN: `accessibilityState.selected` only for pending; `checked` only for paired.
+- REFACTOR: updated pair-formation / release / `initialPairs` / shared-id asserts to use `checked` for paired.
+
+Gate: `pnpm --filter @helsoft/activities test` — 64 green; `check-types` — green. No commit.

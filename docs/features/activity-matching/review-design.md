@@ -1,31 +1,31 @@
-# review-design — activity-matching (Slice 3)
+# review-design — activity-matching — FULL review, Round 2
 
-**Verdict:** APPROVED  
-**Scope:** tasks 6–9 — i18n, a11y, stories, e2e (`@s16`, `@s17`, story/e2e coverage)  
-**Rubric:** `.agents/rules/review-standards.md` §2 + `.agents/rules/atomic-design.mdc`
+**Reviewer:** reviewer_design  
+**Scope:** full feature re-review after a11y B1/M1 fixes  
+**Rubric:** `.agents/rules/review-standards.md` §2 + `.agents/rules/atomic-design.mdc`  
+**Sibling:** `libs/activities/src/organisms/multiple-choice/` + `AnswerOption` molecule
+
+## Verdict: APPROVED — zero findings
+
+## Round 2 re-checks (B1 / M1)
+
+| Fix | Result |
+|---|---|
+| B1 — correct label → `onTertiaryContainer` | Pass — `matching.tsx:281-282` uses `theme.colors.onTertiaryContainer` on `mixHex(tertiaryContainer, surface, 0.55)` (`:253-256`). Matches banner/summary token pairing (`:300`, `:304`) and MC banner (`multiple-choice.tsx:165`). |
+| M1 — pending `selected` vs paired `checked` | Pass — `matching.tsx:163-167`: `selected: state === 'pending'`, `checked: state === 'paired'`. Visual tokens still distinct: pending=`primaryContainer`/`primary` (`:241-246`), paired=`secondaryContainer`/`outline` (`:247-252`). |
 
 ## Findings
 
 _None._
 
-## Checks (Slice 3)
+## Checks
 
 | Check | Result |
 |---|---|
-| Tokens only (no ad-hoc color/spacing/type) | Pass — `matching.tsx:209-312` uses `theme.spacing` / `theme.colors` / `theme.typography` / `theme.shape` / `theme.layout.touchTarget` / `theme.utils.mixHex`; item states mirror `AnswerOption` token map (pending≈selected, correct/incorrect identical) |
-| Existing components reused | Pass — `Card`, `Button`, `Icon` from `@helsoft/components`; custom item `Pressable` justified (pending/paired states + no letter marker — `AnswerOption` cannot express them) |
-| Atomic placement | Pass — organism at `libs/activities/src/organisms/matching/` |
-| i18n labels (task-6) | Pass — `activity.matching.*` key-aligned in en/es/pt/de; `MatchingActivity` injects `labels` + interpolated `summary` via `t()` (`matching-activity.tsx:24-48`); organism has no hardcoded chrome |
-| a11y tokens/targets (task-7) | Pass — `minHeight: theme.layout.touchTarget` (`matching.tsx:232`); correctness via text+`Icon` + label suffixes, not color alone; live-region + platform-guard mirrors MultipleChoice |
-| Content states in stories | Pass — Unpaired, PartiallyPaired, SubmittedAllCorrect, SubmittedMixed (`matching.stories.tsx:77-100`) |
-| Empty / Error stories | Pass — Empty (`leftItems: []`), Error (unequal lengths) (`matching.stories.tsx:103-114`) |
-| Loading | N/A — documented Open decision in `spec.md` |
-| Interactive + e2e | Pass — Interactive story present; Playwright `matching.e2e.js` **12/12** green (`--reporter=list`) |
-| Sibling parity (MultipleChoice) | Pass — `Organisms/Matching` title, meta/args/Interactive pattern, banner/explanation token styles match `multiple-choice.tsx:142-178` |
-
-## Prior slices
-
-| Slice | Status |
-|---|---|
-| Slice 1 Content | previously APPROVED |
-| Slice 2 Empty/Error | previously APPROVED |
+| Tokens only (no ad-hoc color/spacing/type) | Pass — `matching.tsx:214-317` uses only `theme.spacing` / `theme.colors` / `theme.typography` / `theme.shape` / `theme.layout.touchTarget` / `theme.utils.mixHex`. Icon `size={22}` matches `AnswerOption`. No hex/rgb/ad-hoc dims. |
+| Existing components reused | Pass — `Card`, `Button`, `Icon` from `@helsoft/components`. Custom item `Pressable` justified: `AnswerOption` has no `pending`/`paired` states. |
+| Atomic placement | Pass — organism `libs/activities/src/organisms/matching/`; wiring `MatchingActivity` in study-buddy (no presentational styles). |
+| 4 UI states | Pass — Loading N/A. Content: unpaired / partially-paired / submitted-all-correct / submitted-mixed. Empty + Error → `labels.unavailable` (`:80-98`). |
+| Stories cover required states | Pass — `Unpaired`, `PartiallyPaired`, `SubmittedAllCorrect`, `SubmittedMixed`, `Empty`, `Error`, `Interactive` (`matching.stories.tsx:77-134`). |
+| Sibling parity (MultipleChoice) | Pass — banner/explanation token map matches MC; labels-injection via wrapper. Correct-tile label now uses `onTertiaryContainer` (stricter than AnswerOption's `onTertiary` on the same mix — intentional contrast fix, still a design token). |
+| MatchingActivity | Pass — locale-agnostic organism; wrapper injects `t()` (`matching-activity.tsx:24-62`); no ad-hoc chrome. |

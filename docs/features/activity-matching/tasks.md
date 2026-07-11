@@ -1,7 +1,7 @@
 ---
 feature: activity-matching
 phase: in_review # pending|spec_drafted|spec_ready|approved|in_progress|in_review|mutation|pr_ready|done
-review_round: 1     # incremented by reviews_lead; cap 3
+review_round: 2     # FULL round 2 — APPROVED (B1+M1 fixed; all 6 lenses clean)
 ---
 
 # Tasks — activity-matching

@@ -1,37 +1,63 @@
-# review-code — activity-matching (Slice 3)
+# review-code — activity-matching — FULL review, Round 2
 
 **Verdict: APPROVED — zero findings.**  
-**Scope:** tasks 6–9 only (i18n, a11y, stories, e2e) — scenarios `@s16`, `@s17` + story/e2e coverage for tasks 8–9  
+**Scope:** entire feature (`@s1`–`@s17`) + R1 a11y re-work (B1, M1)  
 **Rubric:** `.agents/rules/review-standards.md` §1 + `.agents/rules/tdd.md`
 
-## Scenario coverage
+---
 
-| Scenario | Test evidence |
+## R1 a11y fixes (B1 / M1) — verified
+
+| Finding | Fix | Evidence |
+|---|---|---|
+| **B1** correct-item label contrast | `itemLabel` correct → `theme.colors.onTertiaryContainer` | `matching.tsx:281-282`; assert `matching.test.tsx:706` |
+| **M1** pending ≠ paired via a11y | `selected` only pending; `checked` only paired | `matching.tsx:163-167`; dedicated test `matching.test.tsx:348-360`; pair/release/`initialPairs` asserts updated to `checked` |
+
+No craftsmanship regression: token swap is one branch; a11y state split is two booleans, no duplication, no debug leftovers.
+
+## Scenario coverage (`@s1`–`@s17`)
+
+| Scenario | Concrete test(s) |
 |---|---|
-| @s16 | `migration-coverage.test.ts` — `matching-activity` key-existence dir; `matching-activity.test.tsx:207-211` injects chrome via `t()`; `:214-234` summary `{{correct}}`/`{{total}}` interpolation; en/es/pt/de `activity.matching.*` key-aligned |
-| @s17 | `matching.test.tsx:337-343` button role + label; `:348-356` pending/paired via `accessibilityState.selected`; `:360-369` text+icon+a11y label correctness; `:373-427` live region + `announceForAccessibility`; `:433-461` Android platform guard; `:312-318` `layout.touchTarget` |
-| @s1,@s7,@s8,@s9,@s10,@s13,@s14 | `matching.stories.tsx` — Unpaired / PartiallyPaired / SubmittedAllCorrect / SubmittedMixed / Empty / Error (+ Interactive) |
-| @s2,@s3,@s6,@s7,@s8,@s9,@s10 | `matching.e2e.js` — 12 cases (static stories + Interactive pair/release/submit/all-correct/mixed) |
+| @s1 | `matching.test.tsx` — unpaired columns + Submit disabled; stories `Unpaired`; e2e |
+| @s2 | `matching.test.tsx` — pending `selected`; e2e Interactive |
+| @s3 | left→right + right→left; paired via `checked`; e2e |
+| @s4 | deselect pending on re-tap |
+| @s5 | same-column retarget |
+| @s6 | release pair (left + right-column); e2e |
+| @s7 | Submit disabled/enabled; stories PartiallyPaired; e2e |
+| @s8 | onSubmit + lock; `matching-activity.test.tsx` lock + e2e |
+| @s9 | `grade-matching.test.ts` all-correct; organism banner/icons; e2e |
+| @s10 | partial grader + mixed banner/icons; e2e |
+| @s11 | explanation in organism + wrapper forward |
+| @s12 | 3/3, 1/3, 0/3 shapes; emit-once in wrapper |
+| @s13 | empty column(s) → unavailable; story Empty; e2e |
+| @s14 | unequal lengths → unavailable; story Error; e2e |
+| @s15 | validity + grader throws; wrapper never grades; `unavailable` prop |
+| @s16 | `migration-coverage` keys; labels/`t()` + summary interpolation |
+| @s17 | roles/labels; **distinct pending `selected` vs paired `checked`**; text+icon; live region + announce; Android guard; `layout.touchTarget` |
+
+All 17 scenarios map to ≥ 1 concrete, currently-passing test.
 
 ## TDD discipline
 
-- `tdd.md` Slice 3: Cycles 22–25 document Red→Green for `@s16` keys, `@s17` a11y suite, `initialPairs` seed, Playwright e2e.
-- Cycle 23 a11y impl was already present from Slice 1; Slice 3 adds the demanding tests (contract now locked). No gold-plating beyond story seed (`initialPairs`, unit-tested).
-- Wrapper chrome already wired via `t('activity.matching.*')`; Slice 3 fills bundles + coverage guards.
+- `tdd.md` Cycles 1–27 document Red→Green→Refactor incl. mutation kill + B1/M1 (Cycles 26–27).
+- Mutation pre-review: **100%** on changed sources (298 mutants, 0 survivors).
+- No production code without a demanding test; `initialPairs` is Storybook seed and unit-tested.
 
 ## Craftsmanship
 
-- `MatchingProps` / `MatchingActivityProps` present; kebab-case; functional React.
-- Organism locale-agnostic (`labels` injection); wrapper owns `t()` + summary interpolation (`matching-activity.tsx:24-49`).
-- A11y mirrors MultipleChoice: live region + `Platform.OS !== 'android'` guard (`matching.tsx:80-84`, `:186-197`); correctness via text+icon+label suffix (`:143-168`).
-- No hardcoded chrome in organism/wrapper; no `console.log` / orphan TODOs; theme tokens for layout/color.
+- Short helpers (`findPairForItem`, `handleItemPress`, `itemState`, `isMatchingSlideValid` / `gradeMatching`).
+- Functional React; `MatchingProps` / `MatchingActivityProps`; kebab-case; barrels export.
+- Error contract: grader throws; wrapper guards `isMatchingSlideValid`, never grades invalid.
+- No `console.log` / `debugger` / orphan TODO / `.only`/`.skip` in feature sources.
+- `Icon size={22}` matches MC `answer-option` precedent.
 
-## Gates (re-run)
+## Gates (re-run from worktree)
 
-- `pnpm --filter @helsoft/{localization,activities,study-buddy} check-types` — green
-- `pnpm --filter @helsoft/{localization,activities,study-buddy} test` — **57 + 50 + 46** green
-- `pnpm --filter @helsoft/activities exec playwright test tests/e2e/organisms/matching/matching.e2e.js --reporter=list` — **12/12** passed
-- `pnpm lint --filter=@helsoft/{localization,activities,study-buddy}` — no lint tasks in those packages (N/A)
+- `pnpm --filter @helsoft/{types,localization,activities,study-buddy} check-types` — green
+- `pnpm --filter @helsoft/{localization,activities,study-buddy} test` — green (localization 57, activities 64, study-buddy 53)
+- `pnpm lint` — green
 
 ## Findings
 

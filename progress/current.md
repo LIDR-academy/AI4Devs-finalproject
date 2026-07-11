@@ -2,6 +2,6 @@
 
 **Active feature:** activity-matching
 **Folder:** docs/features/activity-matching/
-**Phase:** mutation (pre-review)
-**Status:** All 3 slices committed + slice reviews clean. Running pre-review mutation.
+**Phase:** in_review (full, round 1)
+**Status:** Pre-review mutation PASS (298/298). Full 6-lens review starting.
 **Notes:** Worktree `.worktrees/activity-matching`, branch `feat/activity-matching`. Model: grok-4.5-fast-xhigh.
