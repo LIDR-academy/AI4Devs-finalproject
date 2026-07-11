@@ -1,92 +1,63 @@
+import type { MultipleChoiceAnswer, MultipleChoiceSlide } from '@helsoft/types';
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
-import { useState } from 'react';
 
 import { MultipleChoice } from './multiple-choice';
 
-const labels = {
-  correct: 'Correct!',
-  incorrect: 'Not quite — review the explanation below.',
-  explanationHeading: 'Why',
-  unavailable: 'This activity is unavailable.',
+const slide: MultipleChoiceSlide = {
+  id: 'slide-1',
+  lessonId: 'lesson-1',
+  title: 'Capitals',
+  content: 'What is the capital of France?',
+  position: 0,
+  kind: 'activity',
+  activityType: 'multiple-choice',
+  options: [
+    { id: 'opt-a', label: 'Paris' },
+    { id: 'opt-b', label: 'Berlin' },
+    { id: 'opt-c', label: 'Madrid' },
+  ],
+  correctOptionId: 'opt-a',
+  explanation: 'Paris has been the capital of France since the 12th century.',
 };
 
-const options = [
-  { id: 'opt-a', label: 'Paris' },
-  { id: 'opt-b', label: 'Berlin' },
-  { id: 'opt-c', label: 'Madrid' },
-];
+const correctAnswer: MultipleChoiceAnswer = {
+  slideId: slide.id,
+  activityType: 'multiple-choice',
+  selectedOptionId: 'opt-a',
+  correctOptionId: 'opt-a',
+  isCorrect: true,
+};
+
+const incorrectAnswer: MultipleChoiceAnswer = {
+  slideId: slide.id,
+  activityType: 'multiple-choice',
+  selectedOptionId: 'opt-b',
+  correctOptionId: 'opt-a',
+  isCorrect: false,
+};
 
 const meta = {
   title: 'Organisms/MultipleChoice',
   component: MultipleChoice,
-  args: {
-    question: 'What is the capital of France?',
-    options,
-    correctOptionId: 'opt-a',
-    labels,
-    onSelectOption: () => {},
-  },
+  args: { slide },
 } satisfies Meta<typeof MultipleChoice>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// Content (a) — unanswered: every option is enabled, none selected, no result shown.
 export const Unanswered: Story = {};
 
-// Content (b) — answered-correct: the selected tile is marked correct and the correct
-// banner (plus explanation) is shown.
 export const AnsweredCorrect: Story = {
-  args: {
-    selectedOptionId: 'opt-a',
-    explanation: 'Paris has been the capital of France since the 12th century.',
-  },
+  args: { initialAnswer: correctAnswer },
 };
 
-// Content (c) — answered-incorrect: the selected tile is marked incorrect, the correct tile
-// is revealed alongside it, and the incorrect banner (plus explanation) is shown.
 export const AnsweredIncorrect: Story = {
-  args: {
-    selectedOptionId: 'opt-b',
-    explanation: 'Paris has been the capital of France since the 12th century.',
-  },
+  args: { initialAnswer: incorrectAnswer },
 };
 
-// Empty — a slide with no options: the unavailable notice replaces the question and nothing
-// is selectable.
 export const Empty: Story = {
-  args: {
-    options: [],
-  },
+  args: { slide: { ...slide, options: [], correctOptionId: 'opt-a' } },
 };
 
-// Error — a malformed slide whose correctOptionId is not among its options: degrades to the
-// unavailable notice instead of crashing.
-export const Error: Story = {
-  args: {
-    correctOptionId: 'opt-does-not-exist',
-  },
-};
-
-// Interactive — wires real selection state (the meta-level onSelectOption is a no-op stub, so
-// clicking an option in the other stories doesn't transition state). Drives the e2e's
-// select-then-see-feedback flows (task-7/@s11), mirroring LanguageSelector's Interactive story.
-const InteractiveDemo = () => {
-  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
-  return (
-    <MultipleChoice
-      question="What is the capital of France?"
-      options={options}
-      correctOptionId="opt-a"
-      selectedOptionId={selectedOptionId}
-      explanation="Paris has been the capital of France since the 12th century."
-      labels={labels}
-      onSelectOption={setSelectedOptionId}
-    />
-  );
-};
-
-export const Interactive: Story = {
-  render: () => <InteractiveDemo />,
-};
+export const Interactive: Story = {};

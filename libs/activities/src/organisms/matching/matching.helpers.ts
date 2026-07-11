@@ -1,5 +1,4 @@
-import { ItemVisualState, MatchingItemView, MatchingLabels, MatchingPairSelection, MatchingResult, PendingSelection } from "./matching.types";
-
+import { ItemVisualState, MatchingItemView, MatchingLabels, MatchingPairSelection } from "./matching.types";
 
 export const findPairForItem = (
     pairs: MatchingPairSelection[],

@@ -1,4 +1,8 @@
+import { fileURLToPath } from 'node:url';
+
 import type { StorybookConfig } from '@storybook/react-native-web-vite';
+
+const dirname = fileURLToPath(new URL('.', import.meta.url));
 
 // RN primitives the unistyles babel plugin swaps in. Pre-bundling them stops Vite
 // from re-optimizing (and full-page reloading) the first time a story uses one.
@@ -45,6 +49,14 @@ const config: StorybookConfig = {
         'react-native-unistyles',
         ...unistylesComponents.map((name) => `react-native-unistyles/components/native/${name}`),
       ],
+    };
+    viteConfig.resolve = {
+      ...viteConfig.resolve,
+      alias: {
+        ...viteConfig.resolve?.alias,
+        // LessonResults needs a fake useLessonAttempt (real one needs Supabase).
+        '@helsoft/hooks': `${dirname}mocks/hooks.ts`,
+      },
     };
     return viteConfig;
   },

@@ -21,9 +21,12 @@ export default {
   coverageAnalysis: 'perTest',
   inPlace: true,
   mutate: [
+    'src/**/*.ts',
     'src/**/*.tsx',
+    '!src/**/*.test.ts',
     '!src/**/*.test.tsx',
     '!src/**/*.stories.tsx',
+    '!src/**/index.ts',
   ],
   thresholds: { high: 100, low: 100, break: 100 },
 };

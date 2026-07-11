@@ -42,10 +42,8 @@ const lesson: Lesson = {
 const answers = [{ slideId: 'slide-1', activityType: 'multiple-choice' as const, isCorrect: true }];
 
 /**
- * Integration (score-results-summary, Slice 1, task-7/@s1/@s6): LessonResults -> the real
- * scoreLesson -> the real useLessonAttempt -> the real LessonAttemptService -> LessonAttemptDao,
- * exercised end-to-end against a mocked Supabase client boundary (only `.from()` is stubbed —
- * nothing above the DAO is mocked). Proves compute-then-persist for a scorable lesson.
+ * Integration: thin study-buddy LessonResults → activities organism → scoreLesson →
+ * useLessonAttempt → LessonAttemptService → LessonAttemptDao (mocked Supabase `.from()`).
  */
 describe('LessonResults integration (study-buddy -> hook -> service -> DAO)', () => {
   let client: SupabaseClient;

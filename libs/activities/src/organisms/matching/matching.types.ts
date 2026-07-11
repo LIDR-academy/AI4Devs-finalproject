@@ -1,4 +1,4 @@
-
+import type { MatchingAnswer, MatchingSlide } from '@helsoft/types';
 
 export type MatchingItemView = { id: string; label: string };
 /** A learner-formed pair before submit. */
@@ -27,18 +27,12 @@ export type MatchingLabels = {
 };
 
 export type MatchingProps = {
-  prompt: string;
-  leftItems: MatchingItemView[];
-  rightItems: MatchingItemView[];
-  /** Forces the unavailable (Error) state — set by the wrapper when the slide's correctPairs are malformed. */
-  unavailable?: boolean;
+  slide: MatchingSlide;
+  onAnswered?: (answer: MatchingAnswer) => void;
+  /** Pre-graded answer (Storybook demos / resume). */
+  initialAnswer?: MatchingAnswer | null;
   /** Optional seed for Storybook / demos — paints formed pairs before any taps. */
   initialPairs?: MatchingPairSelection[];
-  /** Set once graded → locks the activity and drives the per-pair result display. */
-  result?: MatchingResult | null;
-  explanation?: string;
-  labels: MatchingLabels;
-  onSubmit: (pairs: MatchingPairSelection[]) => void;
 };
 
 export type UseMatchingProps = {

@@ -1,82 +1,55 @@
-import { useEffect } from 'react';
-import { AccessibilityInfo, Platform, Text, TextInput, View } from 'react-native';
+import { Text, TextInput, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { Button, Card, Icon } from '@helsoft/components';
+import { useLocalization } from '@helsoft/localization';
 
-const BLANK_MARKER = '____';
+import { gradeFillInTheBlank } from '../../grading/grade-fill-in-the-blank';
+import type { FillInTheBlankProps } from './fill-in-the-blank.types';
+import { useFillInTheBlank } from './use-fill-in-the-blank';
 
-export type FillInTheBlankResult = {
-  isCorrect: boolean;
-  /** Shown when incorrect (acceptedAnswers[0]). Omitted/unused when correct. */
-  acceptedAnswerShown?: string;
-};
-
-export type FillInTheBlankLabels = {
-  submit: string;
-  correct: string;
-  incorrect: string;
-  explanationHeading: string;
-  unavailable: string;
-  /** Accessible name for the blank TextInput. */
-  blankInput: string;
-};
-
-export type FillInTheBlankProps = {
-  /** Prompt containing exactly one `____` (organism splits around it). */
-  content: string;
-  value: string;
-  maxLength: number;
-  unavailable?: boolean;
-  result?: FillInTheBlankResult | null;
-  explanation?: string;
-  labels: FillInTheBlankLabels;
-  onChangeValue: (value: string) => void;
-  onSubmit: () => void;
-};
-
-const splitAroundBlank = (content: string): { before: string; after: string } | null => {
-  const idx = content.indexOf(BLANK_MARKER);
-  if (idx === -1) return null;
-  const next = content.indexOf(BLANK_MARKER, idx + BLANK_MARKER.length);
-  if (next !== -1) return null;
-  return {
-    before: content.slice(0, idx),
-    after: content.slice(idx + BLANK_MARKER.length),
-  };
-};
+export type { FillInTheBlankProps } from './fill-in-the-blank.types';
 
 /**
- * FillInTheBlank — presentational organism for a fill-in-the-blank activity slide.
- * Controlled: value/result from parent; reports change/submit up. Locks from `result`.
+ * FillInTheBlank — activity organism. Owns value + grading; reports via `onAnswered` once.
  */
 export const FillInTheBlank = ({
-  content,
-  value,
-  maxLength,
-  unavailable = false,
-  result,
-  explanation,
-  labels,
-  onChangeValue,
-  onSubmit,
+  slide,
+  onAnswered,
+  initialAnswer = null,
 }: FillInTheBlankProps) => {
+  const { t } = useLocalization();
   const { theme } = useUnistyles();
-  const parts = splitAroundBlank(content);
-  const locked = !!result;
-  const isUnavailable = unavailable || !parts;
-  const resultLabel = result ? (result.isCorrect ? labels.correct : labels.incorrect) : null;
 
-  useEffect(() => {
-    // Matching/MCQ: accessibilityLiveRegion is Android-only (TalkBack). Imperative
-    // announceForAccessibility covers iOS/web; skip on Android to avoid duplicate announce.
-    if (!result || Platform.OS === 'android') return;
-    AccessibilityInfo.announceForAccessibility(
-      result.isCorrect ? labels.correct : labels.incorrect,
-    );
-  }, [result, labels.correct, labels.incorrect]);
+  const labels = {
+    submit: t('activity.fillInTheBlank.submit'),
+    correct: t('activity.fillInTheBlank.correct'),
+    incorrect: t('activity.fillInTheBlank.incorrect'),
+    explanationHeading: t('activity.fillInTheBlank.explanationHeading'),
+    unavailable: t('activity.fillInTheBlank.unavailable'),
+    blankInput: t('activity.fillInTheBlank.blankInput'),
+  };
 
-  if (isUnavailable) {
+  const {
+    value,
+    setValue,
+    answer,
+    setAnswer,
+    parts,
+    locked,
+    isUnavailable,
+    maxLength,
+    resultLabel,
+  } = useFillInTheBlank({ slide, initialAnswer, labels });
+
+  const handleSubmit = () => {
+    if (answer || isUnavailable) return;
+    const graded = gradeFillInTheBlank(slide, value);
+    setAnswer(graded);
+    onAnswered?.(graded);
+  };
+
+  if (isUnavailable || !parts) {
     return (
       <Card style={styles.root}>
         <Text style={styles.prompt}>{labels.unavailable}</Text>
@@ -94,26 +67,22 @@ export const FillInTheBlank = ({
           value={value}
           maxLength={maxLength}
           editable={!locked}
-          onChangeText={locked ? undefined : onChangeValue}
-          onSubmitEditing={locked ? undefined : onSubmit}
+          onChangeText={locked ? undefined : setValue}
+          onSubmitEditing={locked ? undefined : handleSubmit}
           returnKeyType="done"
           style={styles.blank}
         />
         {parts.after.length > 0 ? <Text style={styles.prompt}>{parts.after}</Text> : null}
       </View>
-      <Button
-        disabled={locked}
-        fullWidth
-        onPress={locked ? undefined : onSubmit}
-      >
+      <Button disabled={locked} fullWidth onPress={locked ? undefined : handleSubmit}>
         {labels.submit}
       </Button>
-      {result ? (
+      {answer ? (
         <View
-          style={[styles.banner, result.isCorrect ? styles.bannerCorrect : styles.bannerIncorrect]}
+          style={[styles.banner, answer.isCorrect ? styles.bannerCorrect : styles.bannerIncorrect]}
         >
           <View
-            accessibilityRole={result.isCorrect ? undefined : 'alert'}
+            accessibilityRole={answer.isCorrect ? undefined : 'alert'}
             style={styles.bannerRow}
           >
             <View
@@ -121,28 +90,28 @@ export const FillInTheBlank = ({
               importantForAccessibility="no-hide-descendants"
             >
               <Icon
-                name={result.isCorrect ? 'check_circle' : 'cancel'}
+                name={answer.isCorrect ? 'check_circle' : 'cancel'}
                 size={22}
                 fill
-                color={result.isCorrect ? theme.colors.tertiary : theme.colors.error}
+                color={answer.isCorrect ? theme.colors.tertiary : theme.colors.error}
               />
             </View>
             <Text
-              style={styles.bannerText(result.isCorrect)}
-              accessibilityLiveRegion={result.isCorrect ? 'polite' : 'assertive'}
+              style={styles.bannerText(answer.isCorrect)}
+              accessibilityLiveRegion={answer.isCorrect ? 'polite' : 'assertive'}
             >
               {resultLabel}
             </Text>
           </View>
-          {!result.isCorrect && result.acceptedAnswerShown ? (
-            <Text style={styles.bannerText(false)}>{result.acceptedAnswerShown}</Text>
+          {!answer.isCorrect && answer.acceptedAnswerShown ? (
+            <Text style={styles.bannerText(false)}>{answer.acceptedAnswerShown}</Text>
           ) : null}
         </View>
       ) : null}
-      {result && explanation ? (
+      {answer && slide.explanation ? (
         <View style={styles.explanation}>
           <Text style={styles.explanationHeading}>{labels.explanationHeading}</Text>
-          <Text style={styles.explanationBody}>{explanation}</Text>
+          <Text style={styles.explanationBody}>{slide.explanation}</Text>
         </View>
       ) : null}
     </Card>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Platform } from 'react-native';
 
-import { ItemVisualState, MatchingItemView, MatchingPairSelection, PendingSelection, UseMatchingProps } from './matching.types';
+import { ItemVisualState, MatchingPairSelection, PendingSelection, UseMatchingProps } from './matching.types';
 import { findPairForItem } from './matching.helpers';
 
 /**

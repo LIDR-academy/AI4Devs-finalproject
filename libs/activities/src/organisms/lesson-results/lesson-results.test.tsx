@@ -11,12 +11,11 @@ jest.mock('@helsoft/components', () => {
 });
 
 import type { Lesson } from '@helsoft/types';
+import { RESULTS_LOADING_TEST_ID, ResultsSummary } from '@helsoft/components';
 import { useLessonAttempt } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { AccessibilityInfo } from 'react-native';
-
-import { RESULTS_LOADING_TEST_ID, ResultsSummary } from '@helsoft/components';
 
 import { LessonResults, toScorableSlides } from './lesson-results';
 

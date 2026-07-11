@@ -14,6 +14,13 @@
 - System-checked type: contributes to the R7 end-of-lesson score.
 - No analytics events for this story at this time (deferred).
 - Component belongs in `@helsoft/activities` (atomic design), not `@helsoft/components` — see `activities-library.md` for the library scaffold (Storybook + Jest + Playwright + Stryker); depends on `@helsoft/components` for shared atoms/molecules/theme.
+- Organism folder follows `.agents/rules/component-split.mdc` (non-trivial UI with state + pure logic):
+  - `matching.tsx` — JSX, styles, a11y attrs, **event handlers** (item tap / submit wiring)
+  - `matching.types.ts` — `Props`, pair/result view models, labels (no JSX → `.ts`)
+  - `use-matching.ts` — pending selection + formed pairs, derived flags (`locked`, `allPaired`, `itemState`, …), a11y announce effect
+  - `matching.helpers.ts` — pure helpers (`findPairForItem`, `itemAccessibilityLabel`, …)
+  - co-located suites: one per file above (`.test.ts` / `.test.tsx`)
+- Pure grading lives in `@helsoft/activities` (`src/grading/grade-matching.ts`). The `use-matching` hook is **UI co-location** only (local tap-to-pair state); not a data-layer hook (`.agents/rules/hooks-service-dao.mdc`).
 
 ## Acceptance criteria
 - Given a matching slide, when it renders, then both the left-side items and right-side items are visible, unpaired, and tappable; no drag interaction exists.
@@ -23,11 +30,13 @@
 - Given the learner taps Submit with some items still unpaired, then those unpaired items are graded as incorrect for their expected pairing (submission is not blocked).
 - Given the slide has an explanation, when results are shown, then the explanation is displayed alongside them.
 - The correct/incorrect result (aggregated across pairs) is exposed as part of this slide's answered state for the R7 score and later R9 persistence.
+- Given the organism is implemented, when inspecting `libs/activities/src/organisms/matching/`, then the folder is split per `.agents/rules/component-split.mdc` (`.tsx` / `.types.ts` / `use-*.ts` / `.helpers.ts` + co-located suites); handlers live in the component, state/derived/effects in the hook, pure transforms in helpers.
 
 ## Notes
 - Extends the `Slide` activity payload with left/right item lists and the correct pairing (e.g. matching IDs) in `libs/types/src/lesson.ts` — coordinate with R2.
 - No retry after submit (same product decision as multiple choice/fill-in-the-blank).
 - Exact scoring granularity (whole-slide correct/incorrect vs. per-pair partial credit toward R7's correct/total) isn't pinned down in the PRD — resolve with `spec_partner` before/during implementation.
+- Grading is a pure function in `@helsoft/activities` `src/grading/` — no DAO/service needed.
 - No analytics event for this story at this time.
 - `matching.stories.tsx` must cover unpaired / partially-paired / submitted-all-correct / submitted-mixed-results states.
 - Reiterates PRD Non-Goal #7 — no drag-and-drop; tap-to-select-two only.

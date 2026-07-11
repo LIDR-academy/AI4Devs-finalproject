@@ -1,35 +1,54 @@
+jest.mock('@helsoft/localization', () => ({
+  useLocalization: () => ({
+    t: (key: string) => key,
+  }),
+}));
+
 import { AccessibilityInfo, Platform } from 'react-native';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import type { MultipleChoiceAnswer, MultipleChoiceSlide } from '@helsoft/types';
 
-import { MultipleChoice, MultipleChoiceLabels, MultipleChoiceOptionView } from './multiple-choice';
+import { MultipleChoice } from './multiple-choice';
 
-const labels: MultipleChoiceLabels = {
-  correct: 'Correct!',
-  incorrect: 'Not quite',
-  explanationHeading: 'Why',
-  unavailable: 'This activity is unavailable.',
+const I18N = {
+  correct: 'activity.mcq.correct',
+  incorrect: 'activity.mcq.incorrect',
+  explanation: 'activity.mcq.explanation',
+  unavailable: 'activity.mcq.unavailable',
+} as const;
+
+const slide: MultipleChoiceSlide = {
+  id: 'slide-1',
+  lessonId: 'lesson-1',
+  title: 'Capitals',
+  content: 'What is the capital of France?',
+  position: 0,
+  kind: 'activity',
+  activityType: 'multiple-choice',
+  options: [
+    { id: 'opt-a', label: 'Paris' },
+    { id: 'opt-b', label: 'Berlin' },
+  ],
+  correctOptionId: 'opt-a',
 };
 
-const options: MultipleChoiceOptionView[] = [
-  { id: 'opt-a', label: 'Paris' },
-  { id: 'opt-b', label: 'Berlin' },
-];
+const gradedAnswer = (
+  selectedOptionId: string,
+  isCorrect: boolean,
+  slideOverride: MultipleChoiceSlide = slide,
+): MultipleChoiceAnswer => ({
+  slideId: slideOverride.id,
+  activityType: 'multiple-choice',
+  selectedOptionId,
+  correctOptionId: slideOverride.correctOptionId,
+  isCorrect,
+});
 
 describe('MultipleChoice', () => {
-  // @s1 — unanswered: the question and every option are visible and enabled, none pre-selected,
-  // and no result banner is shown.
   it('renders the question and every option as visible and enabled, with no result banner', async () => {
-    await render(
-      <MultipleChoice
-        question="What is the capital of France?"
-        options={options}
-        correctOptionId="opt-a"
-        labels={labels}
-        onSelectOption={jest.fn()}
-      />,
-    );
+    await render(<MultipleChoice slide={slide} />);
 
-    expect(screen.getByText('What is the capital of France?')).toBeTruthy();
+    expect(screen.getByText(slide.content)).toBeTruthy();
     expect(screen.getByText('Paris')).toBeTruthy();
     expect(screen.getByText('Berlin')).toBeTruthy();
 
@@ -37,339 +56,246 @@ describe('MultipleChoice', () => {
     expect(buttons).toHaveLength(2);
     buttons.forEach((button) => expect(button.props.accessibilityState.disabled).toBe(false));
 
-    expect(screen.queryByText(labels.correct)).toBeNull();
-    expect(screen.queryByText(labels.incorrect)).toBeNull();
+    expect(screen.queryByText(I18N.correct)).toBeNull();
+    expect(screen.queryByText(I18N.incorrect)).toBeNull();
   });
 
-  // @s1 — every option is selectable in the unanswered state: tapping one reports its id up.
-  it('calls onSelectOption with the tapped option id while unanswered', async () => {
-    const onSelectOption = jest.fn();
-    await render(
-      <MultipleChoice
-        question="What is the capital of France?"
-        options={options}
-        correctOptionId="opt-a"
-        labels={labels}
-        onSelectOption={onSelectOption}
-      />,
-    );
+  it('calls onAnswered with the graded answer once when an option is tapped', async () => {
+    const onAnswered = jest.fn();
+    await render(<MultipleChoice slide={slide} onAnswered={onAnswered} />);
 
-    fireEvent.press(screen.getAllByRole('button')[1]);
+    await act(async () => {
+      fireEvent.press(screen.getAllByRole('button')[1]);
+    });
 
-    expect(onSelectOption).toHaveBeenCalledWith('opt-b');
+    expect(onAnswered).toHaveBeenCalledTimes(1);
+    expect(onAnswered).toHaveBeenCalledWith(gradedAnswer('opt-b', false));
   });
 
-  // @s2 — once a selection has been made, the attempt is locked: every option becomes disabled.
-  it('locks every option once answered', async () => {
+  it('locks every option once answered via tap', async () => {
+    await render(<MultipleChoice slide={slide} />);
+
+    await act(async () => {
+      fireEvent.press(screen.getAllByRole('button')[1]);
+    });
+
+    const buttons = screen.getAllByRole('button');
+    buttons.forEach((button) => expect(button.props.accessibilityState.disabled).toBe(true));
+  });
+
+  it('locks every option when initialAnswer is provided', async () => {
     await render(
-      <MultipleChoice
-        question="What is the capital of France?"
-        options={options}
-        correctOptionId="opt-a"
-        selectedOptionId="opt-b"
-        labels={labels}
-        onSelectOption={jest.fn()}
-      />,
+      <MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-b', false)} />,
     );
 
     const buttons = screen.getAllByRole('button');
     buttons.forEach((button) => expect(button.props.accessibilityState.disabled).toBe(true));
   });
 
-  // @s3 — a correct choice marks the selected tile correct (check_circle feedback icon, not
-  // color-only) and shows the correct result banner.
-  it('marks the selected tile correct and shows the correct banner when the selection matches', async () => {
+  it('marks the selected tile correct and shows the correct banner when tapped correctly', async () => {
+    await render(<MultipleChoice slide={slide} />);
+
+    await act(async () => {
+      fireEvent.press(screen.getAllByRole('button')[0]);
+    });
+
+    expect(screen.getAllByText('check_circle')).toHaveLength(1);
+    expect(screen.queryByText('cancel')).toBeNull();
+    expect(screen.getByText(I18N.correct)).toBeTruthy();
+    expect(screen.queryByText(I18N.incorrect)).toBeNull();
+  });
+
+  it('marks the selected tile correct and shows the correct banner from initialAnswer', async () => {
     await render(
-      <MultipleChoice
-        question="What is the capital of France?"
-        options={options}
-        correctOptionId="opt-a"
-        selectedOptionId="opt-a"
-        labels={labels}
-        onSelectOption={jest.fn()}
-      />,
+      <MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-a', true)} />,
     );
 
     expect(screen.getAllByText('check_circle')).toHaveLength(1);
     expect(screen.queryByText('cancel')).toBeNull();
-    expect(screen.getByText(labels.correct)).toBeTruthy();
-    expect(screen.queryByText(labels.incorrect)).toBeNull();
+    expect(screen.getByText(I18N.correct)).toBeTruthy();
+    expect(screen.queryByText(I18N.incorrect)).toBeNull();
   });
 
-  // @s4 — an incorrect choice marks the selected tile incorrect, reveals the correct tile
-  // alongside it, and shows the incorrect result banner.
-  it('marks the selected tile incorrect, reveals the correct tile, and shows the incorrect banner', async () => {
+  it('marks the selected tile incorrect, reveals the correct tile, and shows the incorrect banner when tapped incorrectly', async () => {
+    await render(<MultipleChoice slide={slide} />);
+
+    await act(async () => {
+      fireEvent.press(screen.getAllByRole('button')[1]);
+    });
+
+    expect(screen.getAllByText('check_circle')).toHaveLength(1);
+    expect(screen.getAllByText('cancel')).toHaveLength(1);
+    expect(screen.getByText(I18N.incorrect)).toBeTruthy();
+    expect(screen.queryByText(I18N.correct)).toBeNull();
+  });
+
+  it('marks the selected tile incorrect, reveals the correct tile, and shows the incorrect banner from initialAnswer', async () => {
     await render(
-      <MultipleChoice
-        question="What is the capital of France?"
-        options={options}
-        correctOptionId="opt-a"
-        selectedOptionId="opt-b"
-        labels={labels}
-        onSelectOption={jest.fn()}
-      />,
+      <MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-b', false)} />,
     );
 
     expect(screen.getAllByText('check_circle')).toHaveLength(1);
     expect(screen.getAllByText('cancel')).toHaveLength(1);
-    expect(screen.getByText(labels.incorrect)).toBeTruthy();
-    expect(screen.queryByText(labels.correct)).toBeNull();
+    expect(screen.getByText(I18N.incorrect)).toBeTruthy();
+    expect(screen.queryByText(I18N.correct)).toBeNull();
   });
 
-  // @s5 — when the slide has an explanation, it is displayed together with the result.
   it('shows the explanation heading and text together with the result when provided', async () => {
+    const slideWithExplanation: MultipleChoiceSlide = {
+      ...slide,
+      explanation: 'Paris has been the capital since the 12th century.',
+    };
     await render(
       <MultipleChoice
-        question="What is the capital of France?"
-        options={options}
-        correctOptionId="opt-a"
-        selectedOptionId="opt-a"
-        explanation="Paris has been the capital since the 12th century."
-        labels={labels}
-        onSelectOption={jest.fn()}
+        slide={slideWithExplanation}
+        initialAnswer={gradedAnswer('opt-a', true, slideWithExplanation)}
       />,
     );
 
-    expect(screen.getByText(labels.explanationHeading)).toBeTruthy();
+    expect(screen.getByText(I18N.explanation)).toBeTruthy();
     expect(screen.getByText('Paris has been the capital since the 12th century.')).toBeTruthy();
   });
 
-  // @s5 — absent when no explanation is provided.
   it('does not show an explanation heading when none is provided', async () => {
     await render(
-      <MultipleChoice
-        question="What is the capital of France?"
-        options={options}
-        correctOptionId="opt-a"
-        selectedOptionId="opt-a"
-        labels={labels}
-        onSelectOption={jest.fn()}
-      />,
+      <MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-a', true)} />,
     );
 
-    expect(screen.queryByText(labels.explanationHeading)).toBeNull();
+    expect(screen.queryByText(I18N.explanation)).toBeNull();
   });
 
-  // @s6 — once answered, a locked option does not fire onSelectOption on tap (single-select,
-  // no re-selection).
-  it('does not call onSelectOption when a locked option is tapped', async () => {
-    const onSelectOption = jest.fn();
+  it('does not call onAnswered when a locked option is tapped', async () => {
+    const onAnswered = jest.fn();
     await render(
-      <MultipleChoice
-        question="What is the capital of France?"
-        options={options}
-        correctOptionId="opt-a"
-        selectedOptionId="opt-a"
-        labels={labels}
-        onSelectOption={onSelectOption}
-      />,
+      <MultipleChoice slide={slide} onAnswered={onAnswered} initialAnswer={gradedAnswer('opt-a', true)} />,
     );
 
-    fireEvent.press(screen.getAllByRole('button')[1]);
+    await act(async () => {
+      fireEvent.press(screen.getAllByRole('button')[1]);
+    });
 
-    expect(onSelectOption).not.toHaveBeenCalled();
+    expect(onAnswered).not.toHaveBeenCalled();
   });
 
-  // @s8 — a slide with no options is Empty: the unavailable notice replaces the question and
-  // nothing is selectable.
+  it('ignores a second tap and calls onAnswered exactly once', async () => {
+    const onAnswered = jest.fn();
+    await render(<MultipleChoice slide={slide} onAnswered={onAnswered} />);
+
+    await act(async () => {
+      fireEvent.press(screen.getAllByRole('button')[1]);
+    });
+    await act(async () => {
+      fireEvent.press(screen.getAllByRole('button')[0]);
+    });
+
+    expect(onAnswered).toHaveBeenCalledTimes(1);
+    expect(onAnswered).toHaveBeenCalledWith(gradedAnswer('opt-b', false));
+  });
+
   it('shows the unavailable notice and nothing selectable when there are no options', async () => {
-    await render(
-      <MultipleChoice
-        question="What is the capital of France?"
-        options={[]}
-        correctOptionId="opt-a"
-        labels={labels}
-        onSelectOption={jest.fn()}
-      />,
-    );
+    const emptySlide: MultipleChoiceSlide = { ...slide, options: [] };
+    await render(<MultipleChoice slide={emptySlide} />);
 
-    expect(screen.getByText(labels.unavailable)).toBeTruthy();
-    expect(screen.queryByText('What is the capital of France?')).toBeNull();
+    expect(screen.getByText(I18N.unavailable)).toBeTruthy();
+    expect(screen.queryByText(slide.content)).toBeNull();
     expect(screen.queryAllByRole('button')).toHaveLength(0);
-    expect(screen.queryByText(labels.correct)).toBeNull();
-    expect(screen.queryByText(labels.incorrect)).toBeNull();
+    expect(screen.queryByText(I18N.correct)).toBeNull();
+    expect(screen.queryByText(I18N.incorrect)).toBeNull();
   });
 
-  // @s9 — a malformed slide whose correctOptionId is not among its options degrades to the
-  // unavailable notice instead of a broken question, and does not crash.
-  it('shows the unavailable notice and nothing selectable when correctOptionId is not among the options', async () => {
-    await render(
-      <MultipleChoice
-        question="What is the capital of France?"
-        options={options}
-        correctOptionId="opt-does-not-exist"
-        labels={labels}
-        onSelectOption={jest.fn()}
-      />,
-    );
+  it('shows the unavailable notice when correctOptionId is not among the options', async () => {
+    const malformedSlide: MultipleChoiceSlide = {
+      ...slide,
+      correctOptionId: 'opt-does-not-exist',
+    };
+    await render(<MultipleChoice slide={malformedSlide} />);
 
-    expect(screen.getByText(labels.unavailable)).toBeTruthy();
-    expect(screen.queryByText('What is the capital of France?')).toBeNull();
+    expect(screen.getByText(I18N.unavailable)).toBeTruthy();
+    expect(screen.queryByText(slide.content)).toBeNull();
     expect(screen.queryAllByRole('button')).toHaveLength(0);
   });
 
-  // @s11 — every option exposes a button role and an accessible label combining its marker and
-  // option text (not just a bare `<Text>`), so assistive tech announces what each option is.
   it('exposes a button role and an accessible label for every option', async () => {
-    await render(
-      <MultipleChoice
-        question="What is the capital of France?"
-        options={options}
-        correctOptionId="opt-a"
-        labels={labels}
-        onSelectOption={jest.fn()}
-      />,
-    );
+    await render(<MultipleChoice slide={slide} />);
 
     const buttons = screen.getAllByRole('button');
     expect(buttons[0]).toHaveAccessibleName('A Paris');
     expect(buttons[1]).toHaveAccessibleName('B Berlin');
   });
 
-  // Full-review Round 1 (blocker) — once answered, the feedback icon's literal ligature name
-  // (`check_circle`/`cancel`) must not leak into an option's accessible name; correctness is
-  // conveyed via the name's wording instead (not just color/icon), matching @s11's accessible-
-  // label requirement in the answered state too.
   it('conveys correctness through the accessible name, not the icon ligature, once answered', async () => {
     await render(
-      <MultipleChoice
-        question="What is the capital of France?"
-        options={options}
-        correctOptionId="opt-a"
-        selectedOptionId="opt-b"
-        labels={labels}
-        onSelectOption={jest.fn()}
-      />,
+      <MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-b', false)} />,
     );
 
     const buttons = screen.getAllByRole('button');
-    expect(buttons[0]).toHaveAccessibleName(`A Paris, ${labels.correct}`);
-    expect(buttons[1]).toHaveAccessibleName(`B Berlin, ${labels.incorrect}`);
+    expect(buttons[0]).toHaveAccessibleName(`A Paris, ${I18N.correct}`);
+    expect(buttons[1]).toHaveAccessibleName(`B Berlin, ${I18N.incorrect}`);
     buttons.forEach((button) => {
       expect(button).not.toHaveAccessibleName(/check_circle|cancel/);
     });
   });
 
-  // @s11 — once answered correctly, the result is announced to assistive technology via a
-  // *polite* live region (Android/Web): WAI-ARIA reserves assertive/`alert` for time-critical,
-  // typically negative information that must interrupt current speech — a "Correct!" confirmation
-  // is the majority, non-urgent, positive case, so it should not interrupt (full-review Round 1,
-  // major finding). The imperative AccessibilityInfo.announceForAccessibility call still fires for
-  // iOS parity (mirrors LoginForm's pattern), guaranteeing delivery regardless of politeness level.
   it('announces a correct result via a polite live region and AccessibilityInfo, without an alert role', async () => {
     const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
     announceSpy.mockClear();
 
     await render(
-      <MultipleChoice
-        question="What is the capital of France?"
-        options={options}
-        correctOptionId="opt-a"
-        selectedOptionId="opt-a"
-        labels={labels}
-        onSelectOption={jest.fn()}
-      />,
+      <MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-a', true)} />,
     );
 
-    const banner = screen.getByText(labels.correct);
+    const banner = screen.getByText(I18N.correct);
     expect(banner.props.accessibilityLiveRegion).toBe('polite');
     expect(banner.parent?.props.accessibilityRole).toBeUndefined();
-    expect(announceSpy).toHaveBeenCalledWith(labels.correct);
+    await waitFor(() => expect(announceSpy).toHaveBeenCalledWith(I18N.correct));
 
     announceSpy.mockRestore();
   });
 
-  // @s11 — once answered incorrectly, the result keeps the more urgent alert role + assertive
-  // live region: unlike the correct case, a wrong-answer result reveals new, unexpected
-  // information (the correct option, elsewhere on screen) the learner didn't already know.
   it('announces an incorrect result via an alert role and an assertive live region', async () => {
     const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
     announceSpy.mockClear();
 
     await render(
-      <MultipleChoice
-        question="What is the capital of France?"
-        options={options}
-        correctOptionId="opt-a"
-        selectedOptionId="opt-b"
-        labels={labels}
-        onSelectOption={jest.fn()}
-      />,
+      <MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-b', false)} />,
     );
 
-    const banner = screen.getByText(labels.incorrect);
+    const banner = screen.getByText(I18N.incorrect);
     expect(banner.props.accessibilityLiveRegion).toBe('assertive');
     expect(banner.parent?.props.accessibilityRole).toBe('alert');
-    expect(announceSpy).toHaveBeenCalledWith(labels.incorrect);
+    await waitFor(() => expect(announceSpy).toHaveBeenCalledWith(I18N.incorrect));
 
     announceSpy.mockRestore();
   });
 
-  // @s11 — no announcement fires while unanswered (nothing to announce yet).
   it('does not announce anything to assistive technology while unanswered', async () => {
     const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
     announceSpy.mockClear();
 
-    await render(
-      <MultipleChoice
-        question="What is the capital of France?"
-        options={options}
-        correctOptionId="opt-a"
-        labels={labels}
-        onSelectOption={jest.fn()}
-      />,
-    );
+    await render(<MultipleChoice slide={slide} />);
 
     expect(announceSpy).not.toHaveBeenCalled();
 
     announceSpy.mockRestore();
   });
 
-  // Mutation-kill (Full-review Round 1 mutation survivor) — pins the announce effect's dependency
-  // array: an `[isUnavailable, answered, resultLabel]` → `[]` mutant would only run the effect
-  // once, on the initial (unanswered) mount, and never again — so the real-world transition this
-  // organism is controlled to support (a parent re-rendering it with a freshly-set
-  // `selectedOptionId` once the learner answers, mirroring `MultipleChoiceActivity`) would never
-  // be announced. Matches `login-form.test.tsx`'s identical `errorMessage` dependency-array guard.
-  it('announces the result when a re-render transitions from unanswered to answered, not just on mount', async () => {
+  it('announces the result when transitioning from unanswered to answered via tap', async () => {
     const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
     announceSpy.mockClear();
 
-    const { rerender } = await render(
-      <MultipleChoice
-        question="What is the capital of France?"
-        options={options}
-        correctOptionId="opt-a"
-        labels={labels}
-        onSelectOption={jest.fn()}
-      />,
-    );
+    await render(<MultipleChoice slide={slide} />);
     expect(announceSpy).not.toHaveBeenCalled();
 
     await act(async () => {
-      rerender(
-        <MultipleChoice
-          question="What is the capital of France?"
-          options={options}
-          correctOptionId="opt-a"
-          selectedOptionId="opt-a"
-          labels={labels}
-          onSelectOption={jest.fn()}
-        />,
-      );
+      fireEvent.press(screen.getAllByRole('button')[0]);
     });
 
-    await waitFor(() => expect(announceSpy).toHaveBeenCalledWith(labels.correct));
+    await waitFor(() => expect(announceSpy).toHaveBeenCalledWith(I18N.correct));
     expect(announceSpy).toHaveBeenCalledTimes(1);
 
     announceSpy.mockRestore();
   });
 
-  // Full-review Round 2 (m4, minor) — on Android, the result banner's own `accessibilityLiveRegion`
-  // (`multiple-choice.tsx`, banner `Text`) already announces the result to TalkBack (RN docs mark
-  // `accessibilityLiveRegion` as Android-only); firing the imperative
-  // `AccessibilityInfo.announceForAccessibility` call there too risks a duplicate announcement.
-  // iOS and web have no live-region equivalent, so they still need the imperative call.
   describe('platform-scoped imperative announcement (Android relies on the live region alone)', () => {
     const originalOS = Platform.OS;
 
@@ -383,14 +309,7 @@ describe('MultipleChoice', () => {
       announceSpy.mockClear();
 
       await render(
-        <MultipleChoice
-          question="What is the capital of France?"
-          options={options}
-          correctOptionId="opt-a"
-          selectedOptionId="opt-a"
-          labels={labels}
-          onSelectOption={jest.fn()}
-        />,
+        <MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-a', true)} />,
       );
 
       expect(announceSpy).not.toHaveBeenCalled();
@@ -404,17 +323,10 @@ describe('MultipleChoice', () => {
       announceSpy.mockClear();
 
       await render(
-        <MultipleChoice
-          question="What is the capital of France?"
-          options={options}
-          correctOptionId="opt-a"
-          selectedOptionId="opt-a"
-          labels={labels}
-          onSelectOption={jest.fn()}
-        />,
+        <MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-a', true)} />,
       );
 
-      expect(announceSpy).toHaveBeenCalledWith(labels.correct);
+      await waitFor(() => expect(announceSpy).toHaveBeenCalledWith(I18N.correct));
 
       announceSpy.mockRestore();
     });

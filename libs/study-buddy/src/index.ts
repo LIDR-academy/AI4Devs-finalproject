@@ -7,7 +7,3 @@ export * from './components/multiple-choice-activity/multiple-choice-activity';
 export * from './components/sign-in-form/sign-in-form';
 export * from './components/sign-out/sign-out';
 export * from './fixtures/lesson-results-stub';
-export * from './grading/grade-fill-in-the-blank';
-export * from './grading/grade-matching';
-export * from './grading/grade-multiple-choice';
-export * from './grading/score-lesson';

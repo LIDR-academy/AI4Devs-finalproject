@@ -1,30 +1,58 @@
+import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { Button, Card, Icon } from '@helsoft/components';
-import { MatchingItemView, MatchingProps } from './matching.types';
-import { useMatching } from './use-matching';
-import { findPairForItem, itemAccessibilityLabel } from './matching.helpers';
+import { useLocalization } from '@helsoft/localization';
+import type { MatchingAnswer } from '@helsoft/types';
 
-/** Visual state for a column item. `undefined` = unpaired default (avoids a dead 'default' string). */
-type ItemVisualState = 'pending' | 'paired' | 'correct' | 'incorrect' | undefined;
+import {
+  gradeMatching,
+  isMatchingSlideValid,
+} from '../../grading/grade-matching';
+import { findPairForItem, itemAccessibilityLabel } from './matching.helpers';
+import type {
+  ItemVisualState,
+  MatchingItemView,
+  MatchingProps,
+  MatchingResult,
+} from './matching.types';
+import { useMatching } from './use-matching';
 
 /**
- * Matching — presentational organism for a matching activity slide.
- * Owns ephemeral tap-to-pair interaction while unsubmitted; locks from `result` once graded.
+ * Matching — activity organism. Owns pairing + grading; reports via `onAnswered` once.
  */
 export const Matching = ({
-  prompt,
-  leftItems,
-  rightItems,
-  unavailable = false,
+  slide,
+  onAnswered,
+  initialAnswer = null,
   initialPairs = [],
-  result,
-  explanation,
-  labels,
-  onSubmit,
 }: MatchingProps) => {
   const { theme } = useUnistyles();
+  const { t } = useLocalization();
+  const [answer, setAnswer] = useState<MatchingAnswer | null>(initialAnswer);
+  const valid = isMatchingSlideValid(slide);
+
+  const labels = {
+    submit: t('activity.matching.submit'),
+    correct: t('activity.matching.correct'),
+    incorrect: t('activity.matching.incorrect'),
+    correctPair: t('activity.matching.correctPair'),
+    incorrectPair: t('activity.matching.incorrectPair'),
+    explanationHeading: t('activity.matching.explanationHeading'),
+    unavailable: t('activity.matching.unavailable'),
+  };
+
+  const result: MatchingResult | null = answer
+    ? {
+        pairs: answer.pairs,
+        isCorrect: answer.isCorrect,
+        summary: t('activity.matching.summary', {
+          correct: answer.correctPairCount,
+          total: answer.totalPairCount,
+        }),
+      }
+    : null;
 
   const {
     pending,
@@ -37,15 +65,21 @@ export const Matching = ({
     setPending,
     allPaired,
   } = useMatching({
-    leftItems,
-    rightItems,
-    unavailable,
+    leftItems: slide.leftItems,
+    rightItems: slide.rightItems,
+    unavailable: !valid,
     initialPairs,
     result,
     labels,
   });
 
-  // Empty / unequal lengths (self-detect) or wrapper-forced unavailable → graceful degradation.
+  const handleSubmit = () => {
+    if (answer || !valid) return;
+    const graded = gradeMatching(slide, formedPairs);
+    setAnswer(graded);
+    onAnswered?.(graded);
+  };
+
   if (isUnavailable) {
     return (
       <Card testID="matching-root" style={styles.root}>
@@ -103,7 +137,6 @@ export const Matching = ({
           selected: state === 'pending',
           checked: state === 'paired',
         }}
-        // Lock via omitting onPress (not an early-return) so mutation tests observe the guard.
         onPress={locked ? undefined : () => handleItemPress(column, item.id)}
         style={[styles.item, styles.itemState(state)]}
       >
@@ -115,17 +148,17 @@ export const Matching = ({
 
   return (
     <Card testID="matching-root" style={styles.root}>
-      <Text style={styles.prompt}>{prompt}</Text>
+      <Text style={styles.prompt}>{slide.content}</Text>
       <View testID="matching-columns" style={styles.columns}>
         <View testID="matching-column-left" style={styles.column}>
-          {leftItems.map((item) => renderItem('left', item))}
+          {slide.leftItems.map((item) => renderItem('left', item))}
         </View>
         <View testID="matching-column-right" style={styles.column}>
-          {rightItems.map((item) => renderItem('right', item))}
+          {slide.rightItems.map((item) => renderItem('right', item))}
         </View>
       </View>
       {!locked ? (
-        <Button disabled={!allPaired} fullWidth onPress={() => onSubmit(formedPairs)}>
+        <Button disabled={!allPaired} fullWidth onPress={handleSubmit}>
           {labels.submit}
         </Button>
       ) : null}
@@ -144,10 +177,10 @@ export const Matching = ({
           <Text style={styles.summary(result.isCorrect)}>{result.summary}</Text>
         </View>
       ) : null}
-      {result && explanation ? (
+      {result && slide.explanation ? (
         <View testID="matching-explanation" style={styles.explanation}>
           <Text style={styles.explanationHeading}>{labels.explanationHeading}</Text>
-          <Text style={styles.explanationBody}>{explanation}</Text>
+          <Text style={styles.explanationBody}>{slide.explanation}</Text>
         </View>
       ) : null}
     </Card>

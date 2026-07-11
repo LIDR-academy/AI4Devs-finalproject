@@ -31,36 +31,38 @@ const SIGN_IN_FORM_DIR = resolve(REPO_ROOT, 'libs/study-buddy/src/components/sig
  */
 const SIGN_OUT_DIR = resolve(REPO_ROOT, 'libs/study-buddy/src/components/sign-out');
 /**
- * activity-multiple-choice, task-6/@s10 — the MultipleChoiceActivity wrapper's chrome copy
+ * activity-multiple-choice, task-6/@s10 — the MultipleChoice organism's chrome copy
  * (`t('activity.mcq.*')`) needs the same missing-key guard as the auth components above: i18next
  * has no missing-key handler, so a typo'd/undefined key would silently render the raw key string
- * to real users.
+ * to real users. Moved from libs/study-buddy/src/components/multiple-choice-activity when that
+ * chrome copy migrated into the @helsoft/activities organism (the study-buddy component is now a
+ * thin wrapper with no t() calls of its own).
  */
 const MULTIPLE_CHOICE_ACTIVITY_DIR = resolve(
   REPO_ROOT,
-  'libs/study-buddy/src/components/multiple-choice-activity',
+  'libs/activities/src/organisms/multiple-choice',
 );
 /**
- * activity-matching, task-6/@s16 — MatchingActivity chrome (`t('activity.matching.*')`)
- * needs the same missing-key guard: i18next has no missing-key handler.
+ * activity-matching, task-6/@s16 — Matching organism chrome (`t('activity.matching.*')`)
+ * needs the same missing-key guard: i18next has no missing-key handler. Moved from
+ * libs/study-buddy/src/components/matching-activity for the same reason as above.
  */
-const MATCHING_ACTIVITY_DIR = resolve(
-  REPO_ROOT,
-  'libs/study-buddy/src/components/matching-activity',
-);
+const MATCHING_ACTIVITY_DIR = resolve(REPO_ROOT, 'libs/activities/src/organisms/matching');
 /**
- * activity-fill-in-the-blank, task-6/@s13 — FillInTheBlankActivity chrome
- * (`t('activity.fillInTheBlank.*')`) needs the same missing-key guard.
+ * activity-fill-in-the-blank, task-6/@s13 — FillInTheBlank organism chrome
+ * (`t('activity.fillInTheBlank.*')`) needs the same missing-key guard. Moved from
+ * libs/study-buddy/src/components/fill-in-the-blank-activity for the same reason as above.
  */
 const FILL_IN_THE_BLANK_ACTIVITY_DIR = resolve(
   REPO_ROOT,
-  'libs/study-buddy/src/components/fill-in-the-blank-activity',
+  'libs/activities/src/organisms/fill-in-the-blank',
 );
 /**
  * score-results-summary, task-7/@s1 — LessonResults calls `t('results.score'/'results.scorePercent'
- * /'results.retake'/'results.backHome')`; same missing-key guard as the components above.
+ * /'results.retake'/'results.backHome')`; same missing-key guard as the components above. Moved
+ * from libs/study-buddy/src/components/lesson-results for the same reason as above.
  */
-const LESSON_RESULTS_DIR = resolve(REPO_ROOT, 'libs/study-buddy/src/components/lesson-results');
+const LESSON_RESULTS_DIR = resolve(REPO_ROOT, 'libs/activities/src/organisms/lesson-results');
 
 const isExcluded = (file: string) => file.endsWith('.stories.tsx') || file.endsWith('.test.tsx') || file.endsWith('.test.ts');
 

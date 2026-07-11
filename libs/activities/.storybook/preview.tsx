@@ -2,6 +2,7 @@
 // StyleSheet.create call. Public `@helsoft/components/theme` subpath (StyleSheet.configure
 // side effect) — activities doesn't own the theme registry.
 import { themes, ThemeScheme } from '@helsoft/components/theme';
+import { LocalizationProvider } from '@helsoft/localization';
 
 import type { Decorator, Preview } from '@storybook/react-native-web-vite';
 import { useEffect } from 'react';
@@ -24,6 +25,12 @@ const withUnistylesTheme: Decorator = (Story, context) => {
 
   return <Story />;
 };
+
+const withLocalizationProvider: Decorator = (Story) => (
+  <LocalizationProvider initialLocale="en">
+    <Story />
+  </LocalizationProvider>
+);
 
 const preview: Preview = {
   parameters: {
@@ -51,7 +58,7 @@ const preview: Preview = {
   initialGlobals: {
     theme: 'light',
   },
-  decorators: [withUnistylesTheme],
+  decorators: [withUnistylesTheme, withLocalizationProvider],
 };
 
 export default preview;

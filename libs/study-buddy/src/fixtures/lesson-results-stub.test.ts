@@ -37,7 +37,9 @@ describe('buildStubLessonResultsFixture', () => {
   it('models a two-option multiple-choice question with correctOptionId referencing a real option', () => {
     const { lesson } = buildStubLessonResultsFixture('lesson-1');
     const slide = lesson.slides[0];
-    if (slide.kind !== 'activity') throw new Error('expected an activity slide');
+    if (slide.kind !== 'activity' || slide.activityType !== 'multiple-choice') {
+      throw new Error('expected a multiple-choice activity slide');
+    }
 
     expect(slide.options).toHaveLength(2);
     slide.options.forEach((option) => {

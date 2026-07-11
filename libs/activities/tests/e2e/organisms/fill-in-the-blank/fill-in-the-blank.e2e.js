@@ -42,7 +42,7 @@ test('Unavailable story shows unavailable notice (@s11)', async ({ page }) => {
   await page.goto(story('unavailable'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
-  await expect(canvas.getByText('This activity is unavailable.', { exact: true })).toBeVisible();
+  await expect(canvas.getByText('This activity is unavailable', { exact: true })).toBeVisible();
   await expect(canvas.getByText('Submit', { exact: true })).toHaveCount(0);
 });
 
@@ -50,7 +50,7 @@ test('MissingBlank story shows unavailable notice (@s12)', async ({ page }) => {
   await page.goto(story('missing-blank'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
-  await expect(canvas.getByText('This activity is unavailable.', { exact: true })).toBeVisible();
+  await expect(canvas.getByText('This activity is unavailable', { exact: true })).toBeVisible();
   await expect(canvas.getByText('Submit', { exact: true })).toHaveCount(0);
 });
 

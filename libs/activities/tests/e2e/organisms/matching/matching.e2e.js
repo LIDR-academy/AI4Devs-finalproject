@@ -47,7 +47,7 @@ test('SubmittedMixed story shows incorrect banner and mixed icons', async ({ pag
   await page.goto(story('submitted-mixed'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
-  await expect(canvas.getByText('Not quite — review the explanation below.', { exact: true })).toBeVisible();
+  await expect(canvas.getByText('Not quite', { exact: true })).toBeVisible();
   await expect(canvas.getByText('1 of 3 correct', { exact: true })).toBeVisible();
   await expect(canvas.getByText('check_circle', { exact: true }).first()).toBeVisible();
   await expect(canvas.getByText('cancel', { exact: true }).first()).toBeVisible();
@@ -57,7 +57,7 @@ test('Empty story shows unavailable notice', async ({ page }) => {
   await page.goto(story('empty'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
-  await expect(canvas.getByText('This activity is unavailable.', { exact: true })).toBeVisible();
+  await expect(canvas.getByText('This activity is unavailable', { exact: true })).toBeVisible();
   await expect(canvas.getByText('France', { exact: true })).toHaveCount(0);
 });
 
@@ -65,7 +65,7 @@ test('Error story shows unavailable notice for unequal columns', async ({ page }
   await page.goto(story('error'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
-  await expect(canvas.getByText('This activity is unavailable.', { exact: true })).toBeVisible();
+  await expect(canvas.getByText('This activity is unavailable', { exact: true })).toBeVisible();
   await expect(canvas.getByText('France', { exact: true })).toHaveCount(0);
 });
 
@@ -148,7 +148,7 @@ test('submitting mixed pairs shows incorrect banner and mixed icons', async ({ p
   await clickItem(canvas, 'Berlin'); // incorrect
   await canvas.getByText('Submit', { exact: true }).click();
 
-  await expect(canvas.getByText('Not quite — review the explanation below.', { exact: true })).toBeVisible();
+  await expect(canvas.getByText('Not quite', { exact: true })).toBeVisible();
   await expect(canvas.getByText('1 of 3 correct', { exact: true })).toBeVisible();
   await expect(canvas.getByText('check_circle', { exact: true }).first()).toBeVisible();
   await expect(canvas.getByText('cancel', { exact: true }).first()).toBeVisible();

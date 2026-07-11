@@ -1,95 +1,49 @@
-import { useEffect } from 'react';
-import { AccessibilityInfo, Platform, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
-import { AnswerOption, AnswerOptionState, Card } from '@helsoft/components';
+import { AnswerOption, Card } from '@helsoft/components';
+import { useLocalization } from '@helsoft/localization';
 
-export type MultipleChoiceOptionView = { id: string; label: string };
+import { gradeMultipleChoice } from '../../grading/grade-multiple-choice';
+import { optionAccessibilityLabel, optionMarkerAt } from './multiple-choice.helpers';
+import type { MultipleChoiceProps } from './multiple-choice.types';
+import { useMultipleChoice } from './use-multiple-choice';
 
-export type MultipleChoiceLabels = {
-  /** Result banner when the answer is right. */
-  correct: string;
-  /** Result banner when the answer is wrong. */
-  incorrect: string;
-  /** Heading above the explanation. */
-  explanationHeading: string;
-  /** Empty/Error fallback notice. */
-  unavailable: string;
-};
-
-export type MultipleChoiceProps = {
-  question: string;
-  options: MultipleChoiceOptionView[];
-  correctOptionId: string;
-  /** null/undefined = unanswered; set = answered/locked. */
-  selectedOptionId?: string | null;
-  explanation?: string;
-  labels: MultipleChoiceLabels;
-  onSelectOption: (optionId: string) => void;
-};
-
-const OPTION_MARKERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-
-/** Per-option tile state, derived from the answered state and this option's role in it. */
-const optionState = (
-  optionId: string,
-  correctOptionId: string,
-  selectedOptionId?: string | null,
-): AnswerOptionState => {
-  if (!selectedOptionId) return 'default';
-  if (optionId === correctOptionId) return 'correct';
-  if (optionId === selectedOptionId) return 'incorrect';
-  return 'default';
-};
+export type { MultipleChoiceProps } from './multiple-choice.types';
 
 /**
- * An option's accessible name, once graded, conveys correctness through wording (not the
- * feedback icon's literal ligature, e.g. "check_circle"/"cancel") — `undefined` while
- * unanswered/unaffected so `AnswerOption` falls back to its own default "{marker} {label}" name.
- */
-const optionAccessibilityLabel = (
-  marker: string,
-  optionLabel: string,
-  state: AnswerOptionState,
-  labels: MultipleChoiceLabels,
-): string | undefined => {
-  if (state === 'correct') return `${marker} ${optionLabel}, ${labels.correct}`;
-  if (state === 'incorrect') return `${marker} ${optionLabel}, ${labels.incorrect}`;
-  return undefined;
-};
-
-/**
- * MultipleChoice — presentational, controlled organism for a multiple-choice activity slide.
- * Renders the display derived entirely from props and reports selections up via
- * `onSelectOption`; owns no domain state (the study-buddy wrapper owns selection + grading).
+ * MultipleChoice — activity organism. Owns selection + grading; reports via `onAnswered` once.
  */
 export const MultipleChoice = ({
-  question,
-  options,
-  correctOptionId,
-  selectedOptionId,
-  explanation,
-  labels,
-  onSelectOption,
+  slide,
+  onAnswered,
+  initialAnswer = null,
 }: MultipleChoiceProps) => {
-  const hasCorrectOption = options.some((option) => option.id === correctOptionId);
-  const isUnavailable = !hasCorrectOption;
-  const answered = !!selectedOptionId;
-  const isCorrect = selectedOptionId === correctOptionId;
-  const resultLabel = isCorrect ? labels.correct : labels.incorrect;
+  const { t } = useLocalization();
 
-  // Announces the result to assistive tech the moment the learner answers (@s11, WCAG 4.1.3).
-  // RN's own accessibilityLiveRegion doc is explicit that it "Works for Android API >= 19 only"
-  // (@platform android — react-native's ViewAccessibility.js) — it is a no-op on iOS, so this
-  // imperative AccessibilityInfo call is the *only* mechanism that reaches iOS VoiceOver (and web).
-  // On Android, the banner's own accessibilityLiveRegion (below) already announces the result, so
-  // firing the imperative call there too risks a duplicate TalkBack announcement (Full-review
-  // Round 2, m4) — skip it there and rely on the live region alone.
-  useEffect(() => {
-    if (!isUnavailable && answered && Platform.OS !== 'android') {
-      AccessibilityInfo.announceForAccessibility(resultLabel);
-    }
-  }, [isUnavailable, answered, resultLabel]);
+  const labels = {
+    correct: t('activity.mcq.correct'),
+    incorrect: t('activity.mcq.incorrect'),
+    explanationHeading: t('activity.mcq.explanation'),
+    unavailable: t('activity.mcq.unavailable'),
+  };
+
+  const {
+    answer,
+    setAnswer,
+    isUnavailable,
+    answered,
+    isCorrect,
+    resultLabel,
+    stateForOption,
+  } = useMultipleChoice({ slide, initialAnswer, labels });
+
+  const handleSelect = (optionId: string) => {
+    if (answer) return;
+    const graded = gradeMultipleChoice(slide, optionId);
+    setAnswer(graded);
+    onAnswered?.(graded);
+  };
 
   if (isUnavailable) {
     return (
@@ -101,11 +55,11 @@ export const MultipleChoice = ({
 
   return (
     <Card style={styles.root}>
-      <Text style={styles.question}>{question}</Text>
+      <Text style={styles.question}>{slide.content}</Text>
       <View style={styles.options}>
-        {options.map((option, index) => {
-          const marker = OPTION_MARKERS[index];
-          const state = optionState(option.id, correctOptionId, selectedOptionId);
+        {slide.options.map((option, index) => {
+          const marker = optionMarkerAt(index);
+          const state = stateForOption(option.id);
           return (
             <AnswerOption
               key={option.id}
@@ -113,8 +67,14 @@ export const MultipleChoice = ({
               label={option.label}
               state={state}
               disabled={answered}
-              accessibilityLabel={optionAccessibilityLabel(marker, option.label, state, labels)}
-              onPress={() => onSelectOption(option.id)}
+              accessibilityLabel={optionAccessibilityLabel(
+                marker,
+                option.label,
+                state,
+                labels.correct,
+                labels.incorrect,
+              )}
+              onPress={() => handleSelect(option.id)}
             />
           );
         })}
@@ -124,15 +84,18 @@ export const MultipleChoice = ({
           accessibilityRole={isCorrect ? undefined : 'alert'}
           style={[styles.banner, isCorrect ? styles.bannerCorrect : styles.bannerIncorrect]}
         >
-          <Text style={styles.bannerText(isCorrect)} accessibilityLiveRegion={isCorrect ? 'polite' : 'assertive'}>
+          <Text
+            style={styles.bannerText(isCorrect)}
+            accessibilityLiveRegion={isCorrect ? 'polite' : 'assertive'}
+          >
             {resultLabel}
           </Text>
         </View>
       ) : null}
-      {answered && explanation ? (
+      {answered && slide.explanation ? (
         <View style={styles.explanation}>
           <Text style={styles.explanationHeading}>{labels.explanationHeading}</Text>
-          <Text style={styles.explanationBody}>{explanation}</Text>
+          <Text style={styles.explanationBody}>{slide.explanation}</Text>
         </View>
       ) : null}
     </Card>

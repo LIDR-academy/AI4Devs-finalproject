@@ -5,7 +5,8 @@ import { configureLessonAttemptMock } from '../../../.storybook/mocks/hooks';
 import { LessonResults } from './lesson-results';
 
 // Seeds the fake useLessonAttempt() (see .storybook/mocks/hooks.ts) just before the story
-// mounts — mirrors sign-in-form.stories.tsx's withAuthMock / components LessonResults stories.
+// mounts, so its useState lazy initializer picks up this story's state on first (and only)
+// render — mirrors sign-in-form.stories.tsx's withAuthMock.
 const withLessonAttemptMock =
   (config: Parameters<typeof configureLessonAttemptMock>[0]): Decorator =>
   (StoryFn) => {
@@ -61,25 +62,20 @@ const allCorrectAnswers = [
   { slideId: 'slide-3', activityType: 'multiple-choice' as const, isCorrect: true },
 ];
 
+// @s8/@s9 — an instructional-only lesson has nothing system-checked, so scoreLesson reports
+// isScorable: false and LessonResults renders the completion variant instead of a score.
 const instructionalOnlyLesson: Lesson = {
   id: 'lesson-2',
   userId: 'user-1',
   title: 'Intro to Capitals',
   createdAt: '2026-07-11T00:00:00.000Z',
   slides: [
-    {
-      id: 'slide-1',
-      lessonId: 'lesson-2',
-      title: 'Intro',
-      content: 'Welcome!',
-      position: 0,
-      kind: 'instructional',
-    },
+    { id: 'slide-1', lessonId: 'lesson-2', title: 'Intro', content: 'Welcome!', position: 0, kind: 'instructional' },
   ],
 };
 
 const meta = {
-  title: 'Features/LessonResults',
+  title: 'Organisms/LessonResults',
   component: LessonResults,
   args: {
     lesson: scorableLesson,
@@ -93,15 +89,19 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// Thin wrapper → components organism scores + persists via mocked useLessonAttempt.
+// Score (@s1) — the real scoreLesson computes 3/3 correct; the fake useLessonAttempt resolves
+// as idle so ResultsSummary renders the score immediately.
 export const Score: Story = {
   decorators: [withLessonAttemptMock({ status: 'idle' })],
 };
 
+// Loading (@s5) — useLessonAttempt().status is 'saving', driving ResultsSummary's loading
+// affordance while the attempt is being persisted.
 export const Loading: Story = {
   decorators: [withLessonAttemptMock({ status: 'saving' })],
 };
 
+// Completion (@s8/@s9) — an instructional-only lesson; no score, both actions still available.
 export const Completion: Story = {
   args: {
     lesson: instructionalOnlyLesson,
@@ -110,6 +110,8 @@ export const Completion: Story = {
   decorators: [withLessonAttemptMock({ status: 'idle' })],
 };
 
+// Save failure (@s7) — useLessonAttempt().status is 'error', driving ResultsSummary's
+// non-blocking notice + retry action alongside the score.
 export const SaveFailed: Story = {
   decorators: [withLessonAttemptMock({ status: 'error' })],
 };

@@ -31,8 +31,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// Real gradeMultipleChoice() + useLocalization() wiring — selecting any option grades and locks
-// live (@s2/@s3/@s4), and the optional explanation shows with the result (@s5).
+// Thin wrapper → organism grades + locks on select (@s2/@s3/@s4); explanation with result (@s5).
 export const Default: Story = {
   args: {
     slide: { ...baseSlide, explanation: 'Paris has been the capital of France since 987 AD.' },
