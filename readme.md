@@ -368,7 +368,7 @@ La API REST opera bajo el estándar OpenAPI 3.0.0. A continuación se detallan l
 
 ## 5. Historias de Usuario
 
-Se han definido detalladamente las siguientes 3 historias de usuario críticas (disponibles en `docs/user_stories/`):
+Se han definido detalladamente las siguientes 9 historias de usuario críticas (disponibles en `docs/user_stories/`):
 
 ### **5.1. US-001: Autenticación por PIN del Personal de Cocina**
 *   **Formato de Negocio:** Como operario de cocina (Staff), quiero autenticarme en la terminal táctil ingresando mi PIN personal de 4 dígitos, para registrar mis movimientos de insumos y consumos de forma rápida y segura sin interrumpir el ritmo del servicio.
@@ -391,6 +391,48 @@ Se han definido detalladamente las siguientes 3 historias de usuario críticas (
     *   *When* el operario accede al panel táctil,
     *   *Then* el sistema ordena en primer lugar el remanente B.
 
+### **5.4. US-004: Registro de Consumo Parcial de Remanentes**
+*   **Formato de Negocio:** Como operario de cocina (Staff), quiero registrar la cantidad parcial de un ingrediente que he consumido de un remanente activo durante el servicio, para mantener actualizadas las existencias físicas en tiempo real y permitir al sistema calcular mermas correctas.
+*   **Criterio de Aceptación (Gherkin):**
+    *   *Given* que el operario está autenticado en el sistema y existe un remanente activo de `Queso Mozzarella` con cantidad de `"1.7500"` KG en cocina,
+    *   *When* el operario registra un consumo parcial de `"0.2500"` KG,
+    *   *Then* el sistema descuenta la cantidad y actualiza las existencias del remanente a `"1.5000"` KG, quedando en estado activo.
+
+### **5.5. US-005: Registro de Descartes y Mermas**
+*   **Formato de Negocio:** Como operario de cocina (Staff), quiero registrar el descarte total de un remanente activo indicando la causa específica del desperdicio (vencimiento, caída, contaminación, etc.), para retirar el insumo del inventario de forma segura y proveer datos precisos para el reporte de mermas administrativas.
+*   **Criterio de Aceptación (Gherkin):**
+    *   *Given* que el operario está autenticado en el sistema y existe un remanente activo de `Queso Mozzarella` con cantidad de `"1.5000"` KG en cocina,
+    *   *When* el operario registra un descarte con la razón `EXPIRATION` (vencido),
+    *   *Then* el sistema actualiza la cantidad del remanente a `"0.0000"` KG, cambia su estado a `DISCARDED` y guarda un registro de tipo `DISCARD`.
+
+### **5.6. US-006: Consulta de Alertas y Notificaciones Críticas en Cocina**
+*   **Formato de Negocio:** Como operario de cocina (Staff), quiero visualizar un feed visual de notificaciones y alertas críticas en la terminal táctil, para ser alertado inmediatamente sobre vencimientos de remanentes (FEFO), existencias bajas de insumos en la línea y estados de red sin conexión, evitando pérdidas y fallos operacionales.
+*   **Criterio de Aceptación (Gherkin):**
+    *   *Given* que el operario de cocina ha iniciado sesión en la terminal táctil y existe un remanente activo de `Queso Mozzarella` con vencimiento dentro de 3 horas,
+    *   *When* el operario abre la pantalla de notificaciones,
+    *   *Then* el sistema muestra una tarjeta de alerta de color ROJO (Urgencia Crítica) detallando el nombre del insumo y el tiempo restante.
+
+### **5.7. US-007: Consumo Rápido de Stock por Recetas**
+*   **Formato de Negocio:** Como operario de cocina (Staff), quiero registrar el consumo de ingredientes seleccionando una receta preconfigurada, para descontar automáticamente en cascada FEFO las porciones de todos los ingredientes asociados a los platos elaborados en un solo paso.
+*   **Criterio de Aceptación (Gherkin):**
+    *   *Given* que la receta `Pizza Margarita` requiere `"0.1500"` KG de `Queso Mozzarella` y existen remanentes de `Queso Mozzarella` A (`"0.1000"` KG, vence hoy) y B (`"0.2000"` KG, vence mañana),
+    *   *When* el operario registra el consumo de 1 porción de `Pizza Margarita`,
+    *   *Then* el sistema consume la totalidad del remanente A (estado `CONSUMED`) y `"0.0500"` KG del remanente B (estado `ACTIVE` con `"0.1500"` KG restantes).
+
+### **5.8. US-008: Cierre de Turno y Conciliación de Cocina**
+*   **Formato de Negocio:** Como operario de cocina (Staff), quiero realizar un proceso guiado de cierre de turno al final de la jornada laboral, para auto-descartar los insumos vencidos de forma masiva y registrar las cantidades físicas de ingredientes restantes, conciliando el inventario teórico con el real.
+*   **Criterio de Aceptación (Gherkin):**
+    *   *Given* que el operario inicia el cierre de turno y existen 3 remanentes activos en cocina que superaron las 24 horas de vida útil TRR,
+    *   *When* el operario confirma la conciliación,
+    *   *Then* el sistema actualiza automáticamente el estado de esos 3 remanentes a `DISCARDED` con motivo `EXPIRATION` y registra los movimientos de descarte.
+
+### **5.9. US-009: Dashboard y Reporte de Mermas Visibles**
+*   **Formato de Negocio:** Como Administrador del restaurante, quiero visualizar un reporte agrupado de las existencias descartadas (mermas) registradas en cocina durante un periodo de tiempo, para identificar los ingredientes que más se desperdician y sus causas exactas, permitiendo tomar decisiones informadas para optimizar costos.
+*   **Criterio de Aceptación (Gherkin):**
+    *   *Given* que se han registrado descartes de `Queso Mozzarella` por `EXPIRATION` (`"3.5000"` KG total) y `Salsa de Tomate` por `DAMAGE_OR_DROP` (`"1.0000"` L total),
+    *   *When* el administrador consulta el endpoint de reporte de mermas para hoy,
+    *   *Then* el sistema responde con una lista consolidada agrupando por ingrediente y motivo mostrando las cantidades exactas en formato de string.
+
 ---
 
 ## 6. Tickets de Trabajo
@@ -411,6 +453,41 @@ El backlog técnico y funcional (disponible en `docs/tickets/`) contiene las esp
 *   **Descripción:** Lógica transaccional que reduce stock consolidado y genera un remanente activo calculando su vida útil acotada.
 *   **Capas Afectadas:** `stock/domain`, `stock/application`, `stock/infrastructure`.
 *   **DoD:** Garantía transaccional de base de datos verificada: si el débito de stock o la creación del remanente falla, toda la transacción debe revertirse (rollback).
+
+### **6.4. TK-004: Implementación del Slice de Consulta de Remanentes Activos en Cocina (FEFO) (Backend)**
+*   **Descripción:** Exposición de una consulta optimizada para obtener los remanentes abiertos y disponibles en cocina ordenados por vencimiento de menor a mayor (FEFO).
+*   **Capas Afectadas:** `kitchen/domain`, `kitchen/application`, `kitchen/infrastructure`.
+*   **DoD:** Test unitario del caso de uso utilizando un repositorio en memoria para validar que el resultado del caso de uso retorne la lista ordenada cronológicamente; autenticación JWT con rol mínimo `OPERATOR` requerida.
+
+### **6.5. TK-005: Implementación del Slice de Consumo Parcial de Remanentes (Backend)**
+*   **Descripción:** Funcionalidad para descontar cantidades de insumos abiertos (remanentes). Si el consumo reduce la cantidad de un remanente a cero exacto, el sistema debe cambiar automáticamente su estado a agotado (`CONSUMED`).
+*   **Capas Afectadas:** `kitchen/domain`, `kitchen/application`, `kitchen/infrastructure`.
+*   **DoD:** Tests unitarios verificando transiciones del flujo (consumo parcial, consumo agotador y rechazo por saldo insuficiente) pasando en verde; uso estricto de la librería `decimal.js` para toda aritmética decimal.
+
+### **6.6. TK-006: Implementación del Slice de Descarte y Mermas de Cocina (Backend)**
+*   **Descripción:** Permite retirar del inventario activo ingredientes abiertos e inservibles (vencidos, dañados, etc.). La cantidad remanente se pone en cero, el estado cambia a descartado (`DISCARDED`) y se crea una entrada de auditoría en la tabla `stock_movements`.
+*   **Capas Afectadas:** `kitchen/domain`, `kitchen/application`, `kitchen/infrastructure`.
+*   **DoD:** Validar en dominio e impedir doble descarte sobre remanentes consumidos o descartados; requerimiento de autenticación JWT con rol mínimo `OPERATOR`.
+
+### **6.7. TK-007: Implementación de Pantalla de Notificaciones y Alertas Dinámicas en Frontend (Frontend)**
+*   **Descripción:** Pantalla táctil de notificaciones en el cliente y lógica de renderizado del feed de alertas críticas en la tablet, calculando dinámicamente vencimientos FEFO, stock mínimo en línea y estado de red offline.
+*   **Capas Afectadas:** `/app/kitchen/notifications/page.tsx`, `features/kitchen/components`.
+*   **DoD:** Banner offline y alertas críticas diseñadas bajo estándares de accesibilidad táctil; simular estado offline mediante tests unitarios en React para validar la renderización del banner.
+
+### **6.8. TK-008: Implementación de Recetas y Descuento FEFO en Cascadas (Backend)**
+*   **Descripción:** Implementa el flujo de descuento rápido de ingredientes en cocina basado en recetas maestras, buscando remanentes activos de cada ingrediente y debitando la cantidad en cascada FEFO de forma atómica.
+*   **Capas Afectadas:** `catalog/domain`, `kitchen/domain`, `kitchen/application`, `kitchen/infrastructure`.
+*   **DoD:** Pruebas unitarias en rojo del caso de uso `ConsumeRecipeUseCase` antes de codificar la lógica del dominio; ejecución de la cascada completa dentro de una única transacción Prisma (`$transaction`).
+
+### **6.9. TK-009: Implementación de Cierre de Turno y Conciliación en Cocina (Backend)**
+*   **Descripción:** Proceso guiado de cierre de turno y conciliación física. Marca automáticamente como `DISCARDED` remanentes vencidos y permite reportar cantidades físicas reales restantes registrando variaciones de stock (varianzas).
+*   **Capas Afectadas:** `kitchen/domain`, `kitchen/application`, `kitchen/infrastructure`.
+*   **DoD:** Escribir pruebas unitarias en rojo del caso de uso antes del código de producción; optimización SQL mediante actualizaciones por lote (`updateMany`) en una transacción atómica.
+
+### **6.10. TK-010: Implementación del Módulo de Reportes y Analítica de Mermas (Backend)**
+*   **Descripción:** Endpoint REST `GET /api/reports/waste` que permite al administrador consultar la cantidad total de inventario desechado (mermas físicas) agrupado por ingrediente y motivo en un rango de fechas.
+*   **Capas Afectadas:** `reports/domain`, `reports/application`, `reports/infrastructure`.
+*   **DoD:** Pruebas de integración para `GetWasteReportUseCase` verificando la sumatoria y el rango de fechas; autenticación JWT con rol requerido `ADMIN`; cantidades devueltas estrictamente como cadenas de texto en formato JSON.
 
 ---
 
