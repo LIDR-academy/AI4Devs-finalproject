@@ -27,3 +27,17 @@
 ## Cycles — slice 1 review-slice fix
 
 - design RED source asserts TextField / no TextInput → GREEN swap to `TextField` multiline outlined + drop hand-rolled input styles
+
+## @s → test map (slice 2)
+
+| @s | Test | File |
+|---|---|---|
+| @s5 | empty submit → reveal/lock; omit empty learner Text | `open-ended.test.tsx` |
+| @s5 | empty submit → `submittedAnswer: ''` + reveal | `open-ended-activity.test.tsx` |
+| @s7 | unavailable when prompt/modelAnswer empty/whitespace | `open-ended-activity.test.tsx` (outline) |
+| @s7 | unavailable: no prompt/input/submit | `open-ended.test.tsx` |
+
+## Cycles — slice 2
+
+- @s5 RED empty learner Text after empty submit → GREEN `shouldShowLearnerAnswerBody` + omit empty body
+- @s5/@s7 activity outline locks empty-submit + invalid modelAnswer/prompt paths

@@ -1,4 +1,8 @@
-import { isRehydratedSubmission, shouldShowExplanation } from './open-ended.helpers';
+import {
+  isRehydratedSubmission,
+  shouldShowExplanation,
+  shouldShowLearnerAnswerBody,
+} from './open-ended.helpers';
 
 describe('open-ended.helpers', () => {
   describe('isRehydratedSubmission', () => {
@@ -19,6 +23,13 @@ describe('open-ended.helpers', () => {
       expect(shouldShowExplanation(true, '')).toBe(false);
       expect(shouldShowExplanation(true, undefined)).toBe(false);
       expect(shouldShowExplanation(false, 'Why')).toBe(false);
+    });
+  });
+
+  describe('shouldShowLearnerAnswerBody', () => {
+    it('is true only for non-empty draft text', () => {
+      expect(shouldShowLearnerAnswerBody('answer')).toBe(true);
+      expect(shouldShowLearnerAnswerBody('')).toBe(false);
     });
   });
 });

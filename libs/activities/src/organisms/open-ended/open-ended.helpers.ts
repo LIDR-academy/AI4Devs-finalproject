@@ -7,3 +7,6 @@ export const shouldShowExplanation = (
   submitted: boolean,
   explanation?: string,
 ): boolean => submitted && !!explanation;
+
+/** Omit empty learner-body Text after an empty submit (@s5). */
+export const shouldShowLearnerAnswerBody = (draft: string): boolean => draft.length > 0;

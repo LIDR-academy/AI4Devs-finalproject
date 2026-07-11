@@ -1,7 +1,7 @@
-# review-slice — activity-open-ended — Slice 1
+# review-slice — activity-open-ended — Slice 2
 
 **Verdict:** APPROVED  
-**Scope:** tasks 1–4 · round 2 (TextField re-review)
+**Scope:** task-5 · @s5 empty submit · @s7 unavailable
 
 ## Findings
 

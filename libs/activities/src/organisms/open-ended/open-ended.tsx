@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native-unistyles';
 
 import { Button, Card, TextField } from '@helsoft/components';
 
-import { shouldShowExplanation } from './open-ended.helpers';
+import { shouldShowExplanation, shouldShowLearnerAnswerBody } from './open-ended.helpers';
 import type { OpenEndedProps } from './open-ended.types';
 import { useOpenEnded } from './use-open-ended';
 
@@ -70,7 +70,9 @@ export const OpenEnded = ({
         <View style={styles.comparison}>
           <View style={styles.block}>
             <Text style={styles.heading}>{labels.yourAnswer}</Text>
-            <Text style={styles.body}>{draft}</Text>
+            {shouldShowLearnerAnswerBody(draft) ? (
+              <Text style={styles.body}>{draft}</Text>
+            ) : null}
           </View>
           <View
             style={styles.block}

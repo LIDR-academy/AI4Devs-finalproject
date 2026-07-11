@@ -6,6 +6,30 @@ import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { OpenEnded } from './open-ended';
 import type { OpenEndedLabels } from './open-ended.types';
 
+/** Collect Text nodes whose only content is an empty string (omit-empty guards). */
+const collectEmptyTextNodes = (node: unknown, out: unknown[] = []): unknown[] => {
+  if (node == null) return out;
+  if (Array.isArray(node)) {
+    for (const child of node) collectEmptyTextNodes(child, out);
+    return out;
+  }
+  if (typeof node === 'object') {
+    const record = node as { type?: unknown; children?: unknown };
+    if (record.type === 'Text') {
+      const kids = record.children;
+      if (
+        kids === '' ||
+        kids == null ||
+        (Array.isArray(kids) && (kids.length === 0 || kids.every((c) => c === '')))
+      ) {
+        out.push(node);
+      }
+    }
+    if ('children' in record) collectEmptyTextNodes(record.children, out);
+  }
+  return out;
+};
+
 const labels: OpenEndedLabels = {
   submit: 'Submit',
   yourAnswer: 'Your answer',
@@ -170,6 +194,25 @@ describe('OpenEnded', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
+  // @s5 — empty submit still reveals + locks; omit empty learner-body Text
+  it('reveals the model answer and locks on empty submit without empty learner Text', async () => {
+    const onSubmit = jest.fn();
+    const { toJSON } = await render(<OpenEnded {...defaultProps} onSubmit={onSubmit} />);
+
+    expect(answerInput().props.value).toBe('');
+    await pressSubmit();
+
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(onSubmit).toHaveBeenCalledWith('');
+    expect(answerInput().props.editable).toBe(false);
+    expect(submitButton().props.accessibilityState.disabled).toBe(true);
+    expect(screen.getByText(labels.yourAnswer)).toBeTruthy();
+    expect(screen.getByText(labels.modelAnswer)).toBeTruthy();
+    expect(screen.getByText(defaultProps.modelAnswer)).toBeTruthy();
+    expect(collectEmptyTextNodes(toJSON())).toHaveLength(0);
+  });
+
+  // @s7
   it('shows unavailable notice and nothing interactive when unavailable', async () => {
     const onSubmit = jest.fn();
     await render(<OpenEnded {...defaultProps} unavailable onSubmit={onSubmit} />);
@@ -177,6 +220,8 @@ describe('OpenEnded', () => {
     expect(screen.getByText(labels.unavailable)).toBeTruthy();
     expect(screen.queryByLabelText(labels.answerInput)).toBeNull();
     expect(screen.queryByRole('button', { name: labels.submit })).toBeNull();
+    expect(screen.queryByText(defaultProps.prompt)).toBeNull();
+    expect(screen.queryByText(defaultProps.modelAnswer)).toBeNull();
 
     expect(onSubmit).not.toHaveBeenCalled();
   });
