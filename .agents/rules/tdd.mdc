@@ -1,3 +1,8 @@
+---
+description: TDD rules for the implementator — Three Laws, Red→Green→Refactor, vertical slices. Loaded on demand, not injected into every agent.
+alwaysApply: false
+---
+
 # TDD — Three Laws & Red→Green→Refactor (TypeScript)
 
 The `implementator` obeys these. Every line of production code exists because a failing test demanded it first.
@@ -19,7 +24,7 @@ REFACTOR → with the bar green, remove duplication, improve names, shorten func
 - One `@s` scenario at a time. Do not pre-write tests for future scenarios.
 - A test that passes on the first run proves nothing — tighten it or be suspicious.
 - Refactor **only on green**. If tests are red, you fix, you don't refactor.
-- Re-run tests after every change.
+- Re-run tests after every change — but **cheaply**: during cycles run only the affected workspace + test file (`pnpm --filter <ws> test -- <test-file> --silent`); the full workspace suite and repo-wide `pnpm lint` / `pnpm check-types` (with `--output-logs=errors-only`) run once, at the slice gate. Never paste reporter output into artifacts or chat.
 
 ## What "a test" means here (by artifact type)
 
@@ -49,6 +54,8 @@ Every `@s` scenario must end up covered by at least one concrete test. Keep the 
 - **one line per Red→Green→Refactor cycle** (`@s`, the test added, the one-line change) — a short block per slice.
 
 Do **NOT** paste test bodies, production code, diffs, or command output into `tdd.md` — that content already lives in the repo and the git history. Prose summaries only.
+
+**Budget: ≤ 8 000 bytes, enforced at every slice gate** — trim before committing each slice (not just pre-PR); reviewers re-read this file every round and pay for every byte.
 
 ## Conventions
 

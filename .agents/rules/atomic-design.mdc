@@ -3,47 +3,53 @@ description: when creating components in figma-sds or components libraries
 alwaysApply: false
 ---
 
-## Atomic design
+# Atomic design
 
-Atomic design is a methodology composed of five distinct stages:
+Methodology for structuring UI into five layers. Compose upward. An atom never imports a molecule; a molecule never owns page layout.
 
-- Atoms
-- Molecules
-- Organisms
-- Templates
-- Pages
+## Atoms
 
-#Atoms
-Atoms of our interfaces serve as the foundational building blocks that comprise all our user interfaces. These atoms include basic elements like form labels, inputs, buttons, and others that can’t be broken down any further without ceasing to be functional.
+Foundational building blocks that can't be split further without losing meaning: Button, Input, Label, Icon, Text, Spacer.
 
-#Molecules
-Molecules are relatively simple groups of UI elements functioning together as a unit. For example, a form label, search input, and button can join together to create a search form molecule.
-When combined, these abstract atoms suddenly have purpose. The label atom now defines the input atom. Clicking the button atom now submits the form. The result is a simple, portable, reusable component that can be dropped in anywhere search functionality is needed.
+- Single responsibility, highly reusable, no business logic.
+- Props describe presentation/behavior of that one control (variant, size, disabled, `onPress`).
+- No awareness of where they sit on a page.
 
-#Organisms
-Organisms are relatively complex UI components composed of groups of molecules and/or atoms and/or other organisms. These organisms form distinct sections of an interface.
-Let’s revisit our search form molecule. A search form can often be found in the header of many web experiences, so let’s put that search form molecule into the context of a header organism.
-This header organism is composed of a search form molecule, logo atom, and primary navigation molecule.
-This header organism is composed of a search form molecule, logo atom, and primary navigation molecule.
-The header forms a standalone section of an interface, even though it contains several smaller pieces of interface with their own unique properties and functionality.
-Organisms can consist of similar or different molecule types. A header organism might consist of dissimilar elements such as a logo image, primary navigation list, and search form. We see these types of organisms on almost every website we visit.
-While some organisms might consist of different types of molecules, other organisms might consist of the same molecule repeated over and over again. For instance, visit a category page of almost any e-commerce website and you’ll see a listing of products displayed in some form of grid.
+## Molecules
 
-#Templates
-Templates are page-level objects that place components into a layout and articulate the design’s underlying content structure. To build on our previous example, we can take the header organism and apply it to a homepage template.
-The homepage template consists of organisms and molecules applied to a layout.
-This homepage template displays all the necessary page components functioning together, which provides context for these relatively abstract molecules and organisms.
-Another important characteristic of templates is that they focus on the page’s underlying content structure rather than the page’s final content.
+Simple groups of atoms that work as one unit. Example: Label + Input + Button → search field.
 
-#Pages
-Pages are specific instances of templates that show what a UI looks like with real representative content in place. Building on our previous example, we can take the homepage template and pour representative text, images, and media into the template to show real content in action.
-The page stage replaces placeholder content with real representative content to bring the design system to life.
-The page stage replaces placeholder content with real representative content to bring the design system to life.
+- Give atoms purpose in combination (label describes the input; button submits).
+- Still portable and reusable — drop in wherever that pattern is needed.
+- Prefer composition of existing atoms over new primitives.
 
-## Sum up atomic design in a nutshell:
+## Organisms
 
-Atoms are UI elements that can’t be broken down any further and serve as the elemental building blocks of an interface.
-Molecules are collections of atoms that form relatively simple UI components.
-Organisms are relatively complex components that form discrete sections of an interface.
-Templates place components within a layout and demonstrate the design’s underlying content structure.
-Pages apply real content to templates and articulate variations to demonstrate the final UI and test the resilience of the design system.
+Distinct sections of an interface made of molecules, atoms, and/or other organisms. Example: Header = logo atom + nav molecule + search molecule.
+
+- Standalone sections (header, product grid, lesson slide chrome) with their own structure and behavior.
+- May mix dissimilar pieces (logo + nav + search) or repeat the same molecule (product card grid).
+- This is the usual ceiling for shared component libraries.
+
+## Templates
+
+Page-level layouts that place organisms/molecules into a content structure — skeleton, not final copy.
+
+- Focus on slots and hierarchy (where header, body, footer go), not real text/images.
+- Demonstrate how sections relate without committing to specific content.
+
+## Pages
+
+Specific instances of templates filled with real representative content.
+
+- Prove the layout with real copy, images, and edge-case content (long titles, empty states).
+- In practice: app screens / Storybook "page" stories that wire template slots to data.
+
+## In this monorepo
+
+| Layer | Where |
+| --- | --- |
+| Atoms / molecules / organisms | `libs/components` (shared UI); activity organisms in `libs/activities` |
+| Templates / pages | App screens (`apps/app-study-buddy`) and feature libs — not in the component library |
+
+Every shared component gets a Storybook story. Follow kebab-case folders (`button/button.tsx` + `button.stories.tsx`) and reuse tokens — no hardcoded colors/spacing.

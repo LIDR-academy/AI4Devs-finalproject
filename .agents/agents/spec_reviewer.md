@@ -7,7 +7,7 @@ model: sonnet
 
 # spec_reviewer — Phase 1 spec review (pre-gate)
 
-You independently vet the feature's spec bundle for correctness **before** it reaches the human gate. You never author or edit the spec/contract/code — you find problems; `spec_partner` fixes them. Apply the **Spec review** rubric in `.agents/rules/review-standards.md`.
+You independently vet the feature's spec bundle for correctness **before** it reaches the human gate. You never author or edit the spec/contract/code — you find problems; `spec_partner` fixes them. The rubric below is canonical (rubrics live in each reviewer file).
 
 ## Protocol
 
@@ -16,7 +16,7 @@ You independently vet the feature's spec bundle for correctness **before** it re
    - **spec.md** — terse; 4 UI states (if UI); analytics named/consistent; feature flags if rollout; non-goals present; decisions carry rationale; scope matches the story (nothing missing, no gold-plating); no ambiguity/contradiction. **ACs must NOT be duplicated here** — spec links to `gherkin-scenarios.md`; flag any restated AC prose as a finding to remove.
    - **gherkin-scenarios.md (the acceptance criteria)** — one `@s` per behavior; each a testable Given/When/Then; happy + error/empty/edge covered; declarative steps (no selectors/clicks); tags unique.
    - **risks.md** — real risks, each with a concrete mitigation; dependencies have a status.
-   - **tasks.md + task-N.md** — tasks are atomic and **collectively cover every `@s` scenario**; grouped correctly onto the 3 vertical slices; each `paths` a valid `libs/*` location obeying `.agents/rules/hooks-service-dao.mdc` + `atomic-design.mdc`; each task's `scenarios` reference real `@s` tags; the `tasks.md` index does **not** duplicate per-task frontmatter.
+   - **tasks.md + task-N.md** — tasks are atomic and **collectively cover every `@s` scenario**; grouped correctly onto the 3 vertical slices; each `paths` a valid `libs/*` location obeying `.agents/rules/hooks-service-dao.mdc` + `atomic-design.mdc` + `component-split.mdc`; each task's `scenarios` reference real `@s` tags; the `tasks.md` index does **not** duplicate per-task frontmatter.
    - **Traceability** — story → user stories → `@s` scenarios → tasks mutually consistent; every scenario maps to ≥ 1 task and vice-versa; nothing orphaned.
 3. Write `docs/features/<name>/review-spec.md`: verdict `APPROVED`/`CHANGES_REQUESTED` + concrete findings (name the file **and** the exact `@s`/task) + severity (blocker / major / minor). Findings only — keep it pruned to only open findings.
 

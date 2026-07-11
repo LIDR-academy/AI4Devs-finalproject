@@ -20,6 +20,7 @@ This is a monorepo for react-native/node/next applications.
     - Each component should have Storybook stories on a file named component-name.stories.tsx
     - Use the examples in libs/lib-with-storybook/src/stories to create new stories.
     - Follow .agents/rules/atomic-design.mdc when structuring components.
+    - Follow .agents/rules/component-split.mdc for non-trivial components (organisms / complex molecules).
     - Storybook dev: port 6007 (libs/lib-with-storybook uses 6006).
   - @helsoft/activities: this library holds activity-slide organisms only (multiple choice, fill-in-the-blank, flashcard, matching, open-ended, etc.) — every new activity type is built here, not in @helsoft/components.
     - Same conventions and tooling as @helsoft/components (Storybook + Jest + Playwright + Stryker), scaffolded the same way.

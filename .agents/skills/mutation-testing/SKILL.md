@@ -7,7 +7,7 @@ description: Run mutation testing with StrykerJS on a feature's CHANGED source f
 
 > A green suite says "the code doesn't explode on these inputs." It does **not** say "the tests would fail if the code were wrong." Mutation testing measures the second thing.
 
-**When it runs:** twice per feature, bracketing the full review — **before** it (harden the test net so reviewers look at code whose tests already bite) and **after** it (the review's fixes may have changed code). The threshold must be met and every survivor killed on **both** passes.
+**When it runs:** before the full review (harden the test net so reviewers look at code whose tests already bite), and again after it **only if the review's fixes changed source files** — the lead passes the pre-review sha as `base-ref` so the re-run mutates only the files those fixes touched. The threshold must be met and every survivor killed on every pass that runs.
 
 ## How it works
 

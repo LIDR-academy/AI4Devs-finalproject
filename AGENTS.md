@@ -11,6 +11,7 @@ Canonical agent rules live in `.agents/rules/` and take precedence:
 - `global.mdc` — monorepo spec (folders, libs, naming, tooling, Supabase)
 - `hooks-service-dao.mdc` — hook/service/DAO layering (read before adding hooks, services, or DAOs)
 - `atomic-design.mdc` — component structure methodology
+- `component-split.mdc` — UI co-location split (tsx / types / hook / helpers) for non-trivial components
 
 ## Commands
 
@@ -81,6 +82,6 @@ Feature work runs through a gated agentic orchestrator. To build a feature from 
 /ticket-orchestrator <story>        # story = a file in user-stories/<story>.md
 ```
 
-The pipeline: `spec_partner` (spec **and** Gherkin contract) → `spec_reviewer` (vets the bundle) → **one human gate** → `implementator` (strict TDD, vertical slices; per-slice code+design review) → `reviews_lead` (full: 6 parallel reviewers — code, design, architecture, security/OWASP, accessibility/WCAG, performance) → `mutation_tester` (StrykerJS) → `dod_validator` (Definition of Done). All state lives in `docs/features/<name>/`; session state in `progress/`.
+The pipeline: `spec_partner` (spec **and** Gherkin contract) → `spec_reviewer` (vets the bundle) → **one human gate** → `implementator` (strict TDD, vertical slices; per-slice `reviewer_slice` review) → `mutation_tester` (StrykerJS, pre-review) → `reviews_lead` (full review: CI once + the applicable reviewers in parallel — code, design, architecture, security/OWASP, accessibility/WCAG, performance) → `mutation_tester` (post-review, only if the review changed source) → `dod_validator` (Definition of Done). All state lives in `docs/features/<name>/`; session state in `progress/`.
 
-**Source of truth: `.agents/ORCHESTRATOR.md`.** Roles in `.agents/agents/`, rules in `.agents/rules/{tdd,review-standards}.md`, skills in `.agents/skills/{gherkin-authoring,mutation-testing,storybook-e2e-tests}/`, templates in `.agents/templates/`. Full design + rationale: `/ORCHESTRATOR_PLAN.md`.
+**Source of truth: `.agents/ORCHESTRATOR.md`.** Roles in `.agents/agents/` (each reviewer carries its own rubric), TDD + code rules in `.agents/rules/`, skills in `.agents/skills/`, templates in `.agents/templates/`. Full design + rationale: `/ORCHESTRATOR_PLAN.md`.

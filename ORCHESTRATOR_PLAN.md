@@ -1,5 +1,7 @@
 # Agentic Orchestrator Workflow — Implementation Plan
 
+> **Superseded in part (2026-07-11, token-efficiency revision):** reviewer rubrics now live **in each reviewer's agent file** (`.agents/rules/review-standards.md` was removed); per-slice reviews run as a single combined `reviewer_slice` agent; `reviews_lead` runs CI once per round and skips non-applicable lenses; round 2 re-runs only reviewers with open findings; the post-review mutation pass runs only if the review changed source (scoped to the pre-review sha); `reviewer_accessibility` runs on Haiku. Where this plan conflicts, `.agents/ORCHESTRATOR.md` wins.
+
 > **Project:** AI Study Buddy (AI4Devs final project) — Turborepo + pnpm monorepo, Expo/React Native universal app, `@helsoft/*` libs, Supabase backend, Storybook + Playwright, Jest + RN Testing Library.
 > **Goal:** A repeatable, gate-driven agentic orchestrator that takes a user story/ticket from the command line all the way to a merge-ready PR, following strict TDD, layered reviews, mutation testing, and a full Definition of Done.
 > **Decisions locked in:** orchestrator lives under `.agents/` (extends existing folder) · mutation testing uses **StrykerJS** · pipeline driven by an **orchestrator agent** (`orchestrator_lead`) with a single human approval gate · each feature is built in its own **git worktree** on `feat/<name>` (`.worktrees/<name>`, gitignored) · **per-agent models** (via `model:` frontmatter): **Opus** for `spec_partner`, **Sonnet** for `orchestrator_lead` + `spec_reviewer` + `implementator` + `reviews_lead` + the 6 reviewers, **Haiku** for `mutation_tester` + `dod_validator`.
@@ -35,6 +37,7 @@ Everything the orchestrator generates must obey the project's existing rules (ca
 - **Monorepo layout** (`global.mdc`): code lives in `libs/*` as `@helsoft/*` packages; `apps/*` stay thin. A feature `app-x` pairs with a lib `libs/x`.
 - **Layering** (`hooks-service-dao.mdc`): `Component → Hook → Service → DAO → Supabase / external API`. DAOs = data access only (Supabase DAO via `getSupabase()` or external-API DAO via `fetch`); Services = validation + business logic, no React; Hooks = React integration (tanstack-query pattern), wrap services never DAOs. Every layer exports via `index.ts`.
 - **Components** (`atomic-design.mdc`): atoms → molecules → organisms → templates → pages. Component files in `component-name/component-name.tsx`, each with `component-name.stories.tsx`. Use existing tokens/components; new Storybook stories follow `libs/lib-with-storybook/src/stories` patterns.
+- **Component file split** (`component-split.mdc`): non-trivial UI (organisms / complex molecules) splits into `*.tsx` (JSX + handlers) / `*.types.ts` / `use-*.ts` (local state) / `*.helpers.ts` (pure); not the data-layer hook.
 - **Conventions**: functional React only, no Redux; always a `Props` type; kebab-case filenames; `.web.tsx` for platform-specific; Conventional Commits.
 - **Testing** (`global.mdc` + `E2E_TESTS.md`):
   - Storybook components → **Jest + React Native Testing Library** unit tests (`<name>.test.tsx`, co-located — rendering/props/states/handlers/a11y) **plus** **Storybook + Playwright** e2e (`*.e2e.js` under `tests/e2e/`, mirroring the component's `src/` path; stories reached via `/?path=/story/...` inside `frameLocator('iframe[title="storybook-preview-iframe"]')`; components port 6007, lib-with-storybook 6006). The orchestrator **requires the Jest unit test on every component** so TDD and mutation testing apply to UI too — this deliberately extends the base convention, which used Storybook + Playwright alone.
@@ -57,6 +60,7 @@ We extend the existing `.agents/` folder rather than introducing `.claude/`. Orc
 │   ├── global.mdc
 │   ├── hooks-service-dao.mdc
 │   ├── atomic-design.mdc
+│   ├── component-split.mdc
 │   ├── tdd.md                    # NEW — Three Laws of TDD, Red-Green-Refactor for TS
 │   └── review-standards.md       # NEW — rubrics for the 6 reviewers (quality, design, arch, OWASP, WCAG, performance)
 ├── skills/                       # invocable procedures (loaded on demand)

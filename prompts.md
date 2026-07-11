@@ -265,8 +265,6 @@ These prompts drove refinement, reconciliation and review across the documents r
 
 ---
 
-
-
 ## Prompts de la sesión 5 — Regla de split de componentes (types / hook / helpers)
 
 > Note: prompts reproduced verbatim, in chronological order. This session reviewed the matching organism file split and added `.agents/rules/component-split.mdc` (types / co-located hook / pure helpers / presentational component), wiring it into `global.mdc`, `AGENTS.md`, and `ORCHESTRATOR.md`.
@@ -283,3 +281,83 @@ These prompts drove refinement, reconciliation and review across the documents r
 
 > add this prompt into @prompts.md
 
+---
+
+## Anexo — Prompts de la sesión: construcción del orquestador agéntico (`.agents/`)
+
+> Prompts del usuario (verbatim, en orden) de la sesión que diseñó e implementó el harness/orquestador de features bajo `.agents/` (agentes, reglas, skills, comando `/ticket-orchestrator`, plan en `ORCHESTRATOR_PLAN.md`).
+
+1. I want to implement an agentic harness workflow mixing this 2 repos:
+   1. https://github.com/betta-tech/harness-sdd/tree/uncle-bob-harness
+   2. https://github.com/LIDR-academy/mobile-facephi
+   The goal is to have an agentic harness workflow that can be used in the current project. But the workflow is different from both, this is the expected flow:
+   1. spec_partner/spec: take a user story/ticket from the command line; read, ask questions and debate with the user until specs are clear; generate spec.md, risks.md, tasks.md.
+   2. gherkin_author: generate features/<name>.feature BDD specs; wait for human approval.
+   3. TDD Craftsman (follow TDD): UI components → component file (use tokens/other components; use figma/screenshot if provided), storybook file, e2e/unit tests file; logic/business rules → unit tests file, logic file; always → integration tests file.
+   4. Reviewer (several steps; each: review → back to TDD Craftsman → re-review): code reviewer, architecture reviewer, design reviewer, security reviewer (OWASP), accessibility reviewer (WCAG). Order: code, design, architecture, security, accessibility. Check how it's done in the repos.
+   5. Mutation testing: follow harness-sdd steps but TypeScript instead of Python.
+   6. PR guardian: prepare the PR with full Definition of Done validation.
+   Make a plan for this and save it on an .md file.
+
+2. I like the vertical slice idea, let's add it too.
+
+3. add a mermaid diagram of the flow.
+
+4. lets add a human gate between the spec_partner and the gherkin_author.
+
+5. the "4. Pipeline overview" is hard to read, convert it into mermaid diagram.
+
+6. lets change the pr_guardian, it should auto-create the pr, it should just do the Definition of Done, let's rename it to dod_validator.
+
+7. replace the feature_list.json file with a folder <name>/task-1.md, <name>/task-2.md, etc. and also move any file that uses <name> into that folder.
+
+8. lets modify the testing part, UI components should also have unit tests so TDD and the mutation testing can be done on UI components too.
+
+9. (Open-questions responses) Ticket source: the user story is an .md file in root/user-stories/. Figma: not needed, no Figma in this repo — fall back to a pasted screenshot or nothing. Mutation cost: yes, scope mutate: tightly to changed files and use coverageAnalysis: 'perTest'. Jest + Expo/RN 0.86 / React 19: already configured. e2e vs mutation: Stryker's Jest runner won't cover Playwright .e2e.js; mutation thresholds apply to Jest-testable logic; document the split in mutation-testing.md. Reviewer loop termination: cap re-review cycles to 3 before escalating.
+
+10. ok, the plan looks good, now help me to implement it.
+
+11. lets rename from harness into orchestator, and the command should be named ticket-orchestator.
+
+12. can we move the content of .agents/AGENTS.md into another file?
+
+13. rename tdd_crafstman to implementator.
+
+14. There was an issue running "pnpm test:e2e" (Playwright's HTML reporter auto-opens the report and blocks/hangs the process). Change the implementator so it runs without auto-opening the browser.
+
+15. is it possible to use different models to run the orchestator_lead, implementator, reviewers, mutation_tester and dod_validator. Basically the only one that should run with Opus is the spec_partner.
+
+16. I want to enforce on the orchestator_lead that any finding on the reviews should be addressed by the implementator, even if it's a minor finding, and after fixing it, should go through the review and mutation process again. The loop can occur 3 times at most, and at the very end the review.md file should contain only the findings that weren't fixed.
+
+17. I do want to allow shipping with documented minors after 3 rounds.
+
+18. I want to do a change for the review, only reviewer_code and reviewer_design should run for each slice. When all the slices are completed then all the reviewers should run.
+
+19. ok, the orchestrator should create a worktree for the work.
+
+20. add a review phase after creating the specs and the gherkin specs, before human approval, so we ensure the spec, risks, tasks, etc. are correct.
+
+21. lets do only 2 reviews of the spec and 2 reviews of code.
+
+22. the mutation testing should be run twice: once before the full review and once after it — and it should be fixed both times.
+
+23. I want to reduce the size of the .md files, for example once the gherkin is created remove AC from the spec.md and just add a link to the gherkin file; research other duplications like this to reduce the final size of the .md files. And tell me if you know another way of reducing token usage.
+
+24. add the "compact this feature's docs".
+
+25. clean the existing ones.
+
+26. write the prompts of this session into prompts.md.
+
+---
+
+## Anexo — Prompts de la sesión: optimización de consumo de tokens del orquestador
+
+> Prompts del usuario (verbatim, en orden) de la sesión que investigó y aplicó la reducción de consumo de tokens del pipeline de `.agents/` (rúbricas embebidas por reviewer, `reviewer_slice` combinado por slice, CI una sola vez por ronda, re-review solo de lenses con findings, mutación post-review condicional, lens skipping, runners silenciosos, dedupe de docs y `reviewer_accessibility` en Haiku).
+
+1. I have and @.agents/ORCHESTRATOR.md on this repo for developing features, but the entire process consumes too much tokens, research ways of using less tokens
+
+2. Go with 1, 2, 3, 4, 5 (and review-standards should be deleted and each agent should have the standards), 6, 7, 8, 9 (only accesibillity on haiku), 10
+   *(aceptando las 10 recomendaciones propuestas: 1 — round 2 re-ejecuta solo reviewers con findings abiertos; 2 — CI una vez por ronda de review, los reviewers no re-ejecutan suites; 3 — review por slice colapsada en un solo agente `reviewer_slice`; 4 — segunda pasada de mutación condicional y acotada al sha pre-review; 5 — borrar `review-standards.md` y embeber cada rúbrica en su agente + sacar las reglas de la inyección global; 6 — lens skipping según el diff; 7 — test runs silenciosos y acotados por workspace/archivo; 8 — dedupe `ORCHESTRATOR.md`/`orchestrator_lead.md` y compactar `hooks-service-dao.mdc`; 9 — solo `reviewer_accessibility` a Haiku; 10 — presupuesto de `tdd.md` verificado en cada slice gate.)*
+
+3. write the prompts of this session in prompts.md
