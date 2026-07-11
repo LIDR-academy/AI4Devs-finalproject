@@ -1,10 +1,9 @@
-# review-design — activity-fill-in-the-blank — SLICE 2
+# review-design — activity-fill-in-the-blank — SLICE 3
 
 **Reviewer:** reviewer_design  
-**Scope:** Slice 2 only — task-5 Empty + Error (unavailable) + empty-submit incorrect UI path  
-**Deferred (not flagged):** Storybook (task-8), a11y (task-7)  
+**Scope:** Slice 3 only — tasks 6–9 (i18n labels, a11y chrome, Storybook 4 UI states, e2e wiring)  
 **Rubric:** `.agents/rules/review-standards.md` §2 + `.agents/rules/atomic-design.mdc`  
-**Siblings:** `matching/matching.tsx`, `multiple-choice/multiple-choice.tsx`
+**Siblings:** `matching/matching.tsx` + `matching.stories.tsx`, `multiple-choice/multiple-choice.tsx` + `multiple-choice.stories.tsx`
 
 ## Verdict: APPROVED
 
@@ -16,8 +15,10 @@ _None._
 
 | Check | Result |
 |---|---|
-| Unavailable state | Pass — early-return `Card` + `labels.unavailable` via `styles.prompt` (`fill-in-the-blank.tsx:69-74`); tokens `theme.typography.titleLarge` / `theme.colors.onSurface` / `theme.spacing.s4`. Non-interactive (no input/Submit). Matches Matching (`matching.tsx:93-98`) + MCQ (`multiple-choice.tsx:94-99`). |
-| Wrapper wiring | Pass — `unavailable={!valid}` (`fill-in-the-blank-activity.tsx:64`); labels via `t('activity.fillInTheBlank.unavailable')` (`:37`). |
-| Empty-submit incorrect path | Pass — same result-driven incorrect banner/reveal as Content incorrect (`fill-in-the-blank.tsx:100-116`): `bannerIncorrect` → `theme.colors.errorContainer`, `bannerText(false)` → `onErrorContainer`, Icon `cancel` + `theme.colors.error`, reveal via `acceptedAnswerShown`. No ad-hoc empty-submit styles. |
-| Tokens / no ad-hoc | Pass — unavailable + banner reuse existing StyleSheet tokens only (`:128-181`). |
-| Atomic placement | Pass — organism under `libs/activities/src/organisms/fill-in-the-blank/`; wiring in study-buddy unchanged. |
+| Stories exist + 4 UI states | Pass — `fill-in-the-blank.stories.tsx`: `Unanswered` (Content), `Correct`, `Incorrect`, `Unavailable` (Empty/Error), plus `MissingBlank` (self-detect) + `Interactive` for e2e (`:56-115`). |
+| Story title/args mirror siblings | Pass — `title: 'Organisms/FillInTheBlank'` (`:40`); demo `labels` + controlled args pattern matches Matching/MCQ. |
+| Tokens only / no ad-hoc | Pass — organism StyleSheet (`fill-in-the-blank.tsx:144-198`) uses only `theme.spacing` / `theme.colors` / `theme.typography` / `theme.shape`. Icon `size={22}` matches Matching + `AnswerOption`. No hex/rgb/ad-hoc dims in organism or stories. |
+| Existing components reused | Pass — `Card`, `Button`, `Icon` from `@helsoft/components`. Banner tokens match Matching/MCQ: `tertiaryContainer`/`errorContainer`, `onTertiaryContainer`/`onErrorContainer`, Icon `check_circle`/`cancel` + `theme.colors.tertiary`/`error`. |
+| A11y chrome (design-system) | Pass — banner text+icon (`:116-127`); Submit via `Button` (hitSlop → `layout.touchTarget`); live region + `AccessibilityInfo` Android-guard mirrors Matching/MCQ (`:70-75`). |
+| Labels via props / i18n | Pass — organism chrome from `labels` only; wrapper injects `t('activity.fillInTheBlank.*')` (`fill-in-the-blank-activity.tsx:32-39`); en/es/pt/de key-aligned. No hardcoded chrome colors. |
+| Atomic placement | Pass — organism `libs/activities/src/organisms/fill-in-the-blank/`; wiring in study-buddy. |

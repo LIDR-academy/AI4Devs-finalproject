@@ -1,9 +1,9 @@
-# review-code — activity-fill-in-the-blank — SLICE 2
+# review-code — activity-fill-in-the-blank — SLICE 3
 
 **Reviewer:** reviewer_code  
-**Scope:** Slice 2 only — task-5 (Empty + Error unavailable + empty-submit). `@s6`, `@s11`, `@s12`.  
-**Deferred (not flagged):** stories/e2e/i18n/a11y (Slice 3).  
-**Rubric:** `.agents/rules/review-standards.md` §1 + `.agents/rules/tdd.md`
+**Scope:** Slice 3 only — tasks 6–9 (i18n + a11y + Storybook + Playwright e2e). Primary `@s13`, `@s14`; story/e2e coverage for `@s1`/`@s2`/`@s3`/`@s5`/`@s6`/`@s7`/`@s11`/`@s12`.  
+**Deferred (not flagged):** Slice 1/2 happy-path re-litigation.  
+**Rubric:** `.agents/rules/review-standards.md` §1 + storybook-e2e skill
 
 ## Verdict: APPROVED
 
@@ -11,26 +11,33 @@
 
 _None._
 
-## Scenario coverage (`@s6` / `@s11` / `@s12`)
+## Scenario coverage (Slice 3)
 
 | Scenario | Concrete test(s) |
 |---|---|
-| @s6 | organism: empty value → Submit enabled + `onSubmit` (`fill-in-the-blank.test.tsx:159`); activity e2e: empty press → incorrect + `cancel` + reveal `Paris` + lock + `onAnswered` (`fill-in-the-blank-activity.test.tsx:182`); grader empty → incorrect+`[0]` (Slice 1, still green) |
-| @s11 | activity: empty `acceptedAnswers` **and** `['Paris','']` → unavailable UI, no blank, `onAnswered` never, `unavailable: true` (`fill-in-the-blank-activity.test.tsx:205` / `:220`); organism `unavailable` prop; grader `isFillInTheBlankSlideValid` empty list/entry |
-| @s12 | organism: multi-`____` → unavailable, no input/button (`fill-in-the-blank.test.tsx:190`); activity: missing **and** multi blank → unavailable, no grading (`fill-in-the-blank-activity.test.tsx:238` / `:253`); grader valid=false for both |
-
-All three Slice 2 scenarios map to ≥ 1 concrete, currently-passing test. Content path for valid slides unchanged (Slice 1 cases still green).
+| @s13 | `fillInTheBlank` keys key-aligned in en/es/pt/de; wrapper `t('activity.fillInTheBlank.*')` (`fill-in-the-blank-activity.tsx:32-39`); `migration-coverage.test.ts` dir + key existence |
+| @s14 | organism unit: blank `accessibilityLabel`; Submit hitSlop≥touchTarget; text+icon; polite/assertive live region; alert on incorrect; no announce unanswered; transition announce; Android skip (`fill-in-the-blank.test.tsx:208-326`) |
+| @s1 | stories `Unanswered`; e2e unanswered content; organism unanswered unit (prior) |
+| @s2 | stories `Correct` + Interactive e2e matching → correct+icon |
+| @s3 | stories `Incorrect` + Interactive e2e wrong → incorrect+reveal `Paris` |
+| @s5 | Interactive e2e: `readonly` + value lock + force resubmit stays correct |
+| @s6 | Interactive e2e: empty Submit → incorrect + reveal |
+| @s7 | Interactive e2e: Enter → correct; organism Enter+button unit (prior) |
+| @s11 | stories `Unavailable` + e2e unavailable notice |
+| @s12 | stories `MissingBlank` + e2e unavailable notice |
 
 ## TDD / craftsmanship
 
-- `tdd.md` Cycles 8–10: tests deepened; GREEN on existing Slice 1 impl — **no production change** (OK; no code without a test demand).
-- New tests demand the contract: empty-submit resolve+lock; both invalid `acceptedAnswers` shapes; missing + multi blank.
+- `tdd.md` Cycles 11–14: RED→GREEN for i18n coverage keys, a11y announce/live-region, e2e `@s5` readonly (not disabled).
+- Labels injected; organism has no hardcoded chrome. Sibling-aligned with Matching (announce + live region + Android skip; Button hitSlop).
+- Stories: Unanswered / Correct / Incorrect / Unavailable / MissingBlank / Interactive — Empty+Error via unavailable.
+- E2E: iframe + text locators; slug `organisms-fillintheblank` mirrors MCQ `organisms-multiplechoice`.
 - Functional React; `FillInTheBlankProps` / `FillInTheBlankActivityProps`; kebab-case; no `console.log` / TODO / `.only`/`.skip`.
-- Wrapper still guards `!valid` before `gradeFillInTheBlank`; organism early-returns on `unavailable \|\| !parts`.
 
 ## Gates (re-run from worktree)
 
-- `pnpm --filter @helsoft/activities exec jest … fill-in-the-blank.test.tsx` — **14 pass**
-- `pnpm --filter @helsoft/study-buddy exec jest … fill-in-the-blank-activity.test.tsx|grade-fill-in-the-blank` — **29 pass**
-- `pnpm turbo run check-types --filter=@helsoft/activities --filter=@helsoft/study-buddy` — green
+- `pnpm --filter @helsoft/activities exec jest … fill-in-the-blank.test.tsx` — **22 pass**
+- `pnpm --filter @helsoft/localization exec jest … migration-coverage.test.ts` — **8 pass**
+- `pnpm --filter @helsoft/activities exec playwright test … fill-in-the-blank.e2e.js --reporter=list` — **11 pass**
+- `pnpm turbo run check-types --filter=@helsoft/activities --filter=@helsoft/localization --filter=@helsoft/study-buddy` — green
 - lint: no package lint scripts (turbo no-op)

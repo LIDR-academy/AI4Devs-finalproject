@@ -85,6 +85,14 @@ export const en = {
         summary: '{{correct}} of {{total}} correct',
         unavailable: 'This activity is unavailable',
       },
+      fillInTheBlank: {
+        submit: 'Submit',
+        correct: 'Correct!',
+        incorrect: 'Incorrect',
+        explanationHeading: 'Why',
+        unavailable: 'This activity is unavailable',
+        blankInput: 'Fill in the blank',
+      },
     },
   },
 };

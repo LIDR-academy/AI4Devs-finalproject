@@ -1,4 +1,6 @@
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { AccessibilityInfo, Platform } from 'react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { layout } from '@helsoft/components';
 
 import {
   FillInTheBlank,
@@ -201,5 +203,125 @@ describe('FillInTheBlank', () => {
     await render(<FillInTheBlank {...defaultProps} maxLength={7} />);
 
     expect(screen.getByLabelText(labels.blankInput).props.maxLength).toBe(7);
+  });
+
+  // @s14 — blank exposes accessible name.
+  it('exposes an accessible name on the blank input', async () => {
+    await render(<FillInTheBlank {...defaultProps} />);
+
+    expect(screen.getByLabelText(labels.blankInput)).toBeTruthy();
+  });
+
+  // @s14 — Submit meets touch-target via Button hitSlop.
+  it('exposes a Submit hitSlop that reaches the touch-target token', async () => {
+    await render(<FillInTheBlank {...defaultProps} />);
+
+    const { hitSlop } = screen.getByRole('button', { name: labels.submit }).props;
+    const BUTTON_MEDIUM_HEIGHT = 40;
+    expect(hitSlop.top + hitSlop.bottom + BUTTON_MEDIUM_HEIGHT).toBeGreaterThanOrEqual(
+      layout.touchTarget,
+    );
+  });
+
+  // @s14 — correctness via text + icon, not color alone.
+  it('conveys correctness with text and icon, not color alone', async () => {
+    await render(<FillInTheBlank {...defaultProps} result={correctResult} />);
+    expect(screen.getByText(labels.correct)).toBeTruthy();
+    expect(screen.getByText('check_circle')).toBeTruthy();
+
+    await render(<FillInTheBlank {...defaultProps} result={incorrectResult} />);
+    expect(screen.getByText(labels.incorrect)).toBeTruthy();
+    expect(screen.getByText('cancel')).toBeTruthy();
+  });
+
+  // @s14 — correct result announced politely without alert role.
+  it('announces a correct result via a polite live region and AccessibilityInfo, without an alert role', async () => {
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    await render(<FillInTheBlank {...defaultProps} result={correctResult} />);
+
+    const banner = screen.getByText(labels.correct);
+    expect(banner.props.accessibilityLiveRegion).toBe('polite');
+    expect(banner.parent?.props.accessibilityRole).toBeUndefined();
+    expect(announceSpy).toHaveBeenCalledWith(labels.correct);
+
+    announceSpy.mockRestore();
+  });
+
+  // @s14 — incorrect result uses alert + assertive live region.
+  it('announces an incorrect result via an alert role and an assertive live region', async () => {
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    await render(<FillInTheBlank {...defaultProps} result={incorrectResult} />);
+
+    const banner = screen.getByText(labels.incorrect);
+    expect(banner.props.accessibilityLiveRegion).toBe('assertive');
+    expect(banner.parent?.props.accessibilityRole).toBe('alert');
+    expect(announceSpy).toHaveBeenCalledWith(labels.incorrect);
+
+    announceSpy.mockRestore();
+  });
+
+  // @s14 — no announcement while unanswered.
+  it('does not announce anything to assistive technology while unanswered', async () => {
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    await render(<FillInTheBlank {...defaultProps} />);
+
+    expect(announceSpy).not.toHaveBeenCalled();
+
+    announceSpy.mockRestore();
+  });
+
+  // @s14 — announce on unanswered → answered transition.
+  it('announces the result when a re-render transitions from unanswered to answered', async () => {
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    const { rerender } = await render(<FillInTheBlank {...defaultProps} />);
+    expect(announceSpy).not.toHaveBeenCalled();
+
+    await act(async () => {
+      rerender(<FillInTheBlank {...defaultProps} result={correctResult} />);
+    });
+
+    await waitFor(() => expect(announceSpy).toHaveBeenCalledWith(labels.correct));
+    expect(announceSpy).toHaveBeenCalledTimes(1);
+
+    announceSpy.mockRestore();
+  });
+
+  // @s14 — Android relies on live region alone.
+  describe('platform-scoped imperative announcement (Android relies on the live region alone)', () => {
+    const originalOS = Platform.OS;
+
+    afterEach(() => {
+      Platform.OS = originalOS;
+    });
+
+    it('does not call announceForAccessibility on Android once answered', async () => {
+      Platform.OS = 'android';
+      const announceSpy = jest
+        .spyOn(AccessibilityInfo, 'announceForAccessibility')
+        .mockImplementation(() => {});
+      announceSpy.mockClear();
+
+      await render(<FillInTheBlank {...defaultProps} result={correctResult} />);
+
+      expect(announceSpy).not.toHaveBeenCalled();
+
+      announceSpy.mockRestore();
+    });
   });
 });

@@ -80,6 +80,14 @@ export const pt: TranslationResource = {
         summary: '{{correct}} de {{total}} corretos',
         unavailable: 'Esta atividade não está disponível',
       },
+      fillInTheBlank: {
+        submit: 'Enviar',
+        correct: 'Correto!',
+        incorrect: 'Incorreto',
+        explanationHeading: 'Por quê',
+        unavailable: 'Esta atividade não está disponível',
+        blankInput: 'Preencha o espaço',
+      },
     },
   },
 };

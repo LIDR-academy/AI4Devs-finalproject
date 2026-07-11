@@ -1,6 +1,6 @@
 # TDD log — activity-fill-in-the-blank
 
-Strict Red→Green→Refactor per `.agents/rules/tdd.md`. **Slice 1** (tasks 1–4) + **Slice 2** (task-5).
+Strict Red→Green→Refactor per `.agents/rules/tdd.md`. **Slices 1–3**.
 
 ## `@s` → test map (Slice 1)
 
@@ -100,4 +100,42 @@ Strict Red→Green→Refactor per `.agents/rules/tdd.md`. **Slice 1** (tasks 1�
 - study-buddy activity tests: 13 pass
 - check-types activities + study-buddy: pass
 - No production code change required (coverage deepen only)
+- No commit (orchestrator owns)
+
+## Slice 3 — i18n + a11y + stories + e2e (tasks 6–9)
+
+### `@s` → test map (Slice 3)
+
+| Scenario | Test(s) |
+|---|---|
+| @s13 | `migration-coverage.test.ts` fill-in keys; en/es/pt/de `activity.fillInTheBlank.*`; wrapper already `t()` |
+| @s14 | organism: blank name, Submit hitSlop→touchTarget, text+icon, polite/assertive announce, no announce unanswered, transition announce, Android no duplicate |
+| @s1/@s2/@s3/@s11/@s12 | stories Unanswered/Correct/Incorrect/Unavailable/MissingBlank + e2e static story loads |
+| @s2/@s3/@s5/@s6/@s7 | Interactive e2e: correct/wrong/empty/Enter/lock |
+
+### Cycles
+
+**Cycle 11 (@s13 / task-6)**
+- RED: migration coverage for fill-in-the-blank-activity — missing keys.
+- GREEN: `fillInTheBlank` block in en/es/pt/de; coverage dir registered. Wrapper already wired.
+- REFACTOR: none.
+
+**Cycle 12 (@s14 / task-7)**
+- RED: announce/live-region/touch-target/text+icon tests failed (no announce).
+- GREEN: Matching-style `AccessibilityInfo` + live region + alert on incorrect `bannerRow`; Android skip.
+- REFACTOR: alert role on `bannerRow` (Text parent) so parent-role assert holds.
+
+**Cycle 13 (task-8 stories)**
+- Stories: Unanswered / Correct / Incorrect / Unavailable / MissingBlank / Interactive.
+- check-types green.
+
+**Cycle 14 (task-9 e2e)**
+- RED: @s5 asserted `toBeDisabled` — RN web uses `readonly`.
+- GREEN: assert `readonly` + value lock; 11 e2e pass via `--reporter=list`.
+
+## Slice 3 gate
+
+- localization coverage + check-types: pass
+- activities organism unit: 22 pass; check-types pass
+- Playwright fill-in-the-blank.e2e.js: 11 pass
 - No commit (orchestrator owns)

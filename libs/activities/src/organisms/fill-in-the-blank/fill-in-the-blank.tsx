@@ -1,4 +1,5 @@
-import { Text, TextInput, View } from 'react-native';
+import { useEffect } from 'react';
+import { AccessibilityInfo, Platform, Text, TextInput, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { Button, Card, Icon } from '@helsoft/components';
@@ -66,6 +67,13 @@ export const FillInTheBlank = ({
   const isUnavailable = unavailable || !parts;
   const resultLabel = result ? (result.isCorrect ? labels.correct : labels.incorrect) : null;
 
+  useEffect(() => {
+    if (!result || Platform.OS === 'android') return;
+    AccessibilityInfo.announceForAccessibility(
+      result.isCorrect ? labels.correct : labels.incorrect,
+    );
+  }, [result, labels.correct, labels.incorrect]);
+
   if (isUnavailable) {
     return (
       <Card style={styles.root}>
@@ -101,14 +109,22 @@ export const FillInTheBlank = ({
         <View
           style={[styles.banner, result.isCorrect ? styles.bannerCorrect : styles.bannerIncorrect]}
         >
-          <View style={styles.bannerRow}>
+          <View
+            accessibilityRole={result.isCorrect ? undefined : 'alert'}
+            style={styles.bannerRow}
+          >
             <Icon
               name={result.isCorrect ? 'check_circle' : 'cancel'}
               size={22}
               fill
               color={result.isCorrect ? theme.colors.tertiary : theme.colors.error}
             />
-            <Text style={styles.bannerText(result.isCorrect)}>{resultLabel}</Text>
+            <Text
+              style={styles.bannerText(result.isCorrect)}
+              accessibilityLiveRegion={result.isCorrect ? 'polite' : 'assertive'}
+            >
+              {resultLabel}
+            </Text>
           </View>
           {!result.isCorrect && result.acceptedAnswerShown ? (
             <Text style={styles.bannerText(false)}>{result.acceptedAnswerShown}</Text>
