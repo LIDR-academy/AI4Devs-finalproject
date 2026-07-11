@@ -696,8 +696,8 @@ describe('Matching', () => {
     await press('France');
     expect(itemButton('France')).toHaveStyle({
       backgroundColor: lightColors.primaryContainer,
-      borderWidth: 2,
-      borderColor: lightColors.primary,
+      borderWidth: 1,
+      borderColor: lightColors.tertiary,
     });
     expect(screen.getByText('France')).toHaveStyle({ color: lightColors.onPrimaryContainer });
 
@@ -716,14 +716,14 @@ describe('Matching', () => {
     const correctBg = mixHex(lightColors.tertiaryContainer, lightColors.surface, 0.55);
     expect(screen.getByRole('button', { name: `France, ${labels.correctPair}` })).toHaveStyle({
       backgroundColor: correctBg,
-      borderWidth: 2,
+      borderWidth: 1,
       borderColor: lightColors.tertiary,
     });
     expect(screen.getByText('France')).toHaveStyle({ color: lightColors.onTertiaryContainer });
 
     expect(screen.getByRole('button', { name: `Germany, ${labels.incorrectPair}` })).toHaveStyle({
       backgroundColor: lightColors.errorContainer,
-      borderWidth: 2,
+      borderWidth: 1,
       borderColor: lightColors.error,
     });
     expect(screen.getByText('Germany')).toHaveStyle({ color: lightColors.onErrorContainer });
