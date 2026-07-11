@@ -1,11 +1,11 @@
 {
-  "name": "@helsoft/study-buddy",
+  "name": "@helsoft/activities",
   "version": "0.0.1",
   "private": true,
   "main": "src/index.ts",
   "types": "src/index.ts",
   "scripts": {
-    "dev": "storybook dev -p 6008",
+    "dev": "storybook dev -p 6009",
     "build": "storybook build",
     "check-types": "tsc --noEmit",
     "test": "jest --coverage=false --passWithNoTests --watchman=false",
@@ -17,15 +17,9 @@
     "mutation": "stryker run"
   },
   "dependencies": {
-    "@helsoft/activities": "workspace:*",
-    "@helsoft/components": "workspace:*",
-    "@helsoft/hooks": "workspace:*",
-    "@helsoft/localization": "workspace:*",
-    "@helsoft/services": "workspace:*",
-    "@helsoft/types": "workspace:*"
+    "@helsoft/components": "workspace:*"
   },
   "peerDependencies": {
-    "expo-router": "*",
     "react": "*",
     "react-native": "*",
     "react-native-unistyles": "*"
@@ -37,7 +31,6 @@
     "@testing-library/react-native": "^14.0.1",
     "@types/jest": "~29.5.14",
     "@types/react": "~19.2.2",
-    "expo-router": "~57.0.3",
     "jest": "~29.7.0",
     "jest-expo": "^57.0.1",
     "react": "19.2.3",

@@ -3,6 +3,7 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
+    "@helsoft/activities": "workspace:*",
     "@helsoft/components": "workspace:*",
     "@helsoft/hooks": "workspace:*",
     "@helsoft/localization": "workspace:*",

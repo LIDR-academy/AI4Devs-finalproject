@@ -17,6 +17,9 @@ importers:
 
   apps/app-study-buddy:
     dependencies:
+      '@helsoft/activities':
+        specifier: workspace:*
+        version: link:../../libs/activities
       '@helsoft/components':
         specifier: workspace:*
         version: link:../../libs/components
@@ -117,6 +120,67 @@ importers:
       typescript:
         specifier: ~6.0.3
         version: 6.0.3
+
+  libs/activities:
+    dependencies:
+      '@helsoft/components':
+        specifier: workspace:*
+        version: link:../components
+    devDependencies:
+      '@storybook/react-native-web-vite':
+        specifier: ^10.2.9
+        version: 10.4.6(@types/react@19.2.17)(esbuild@0.28.1)(react-dom@19.2.3(react@19.2.3))(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)(rollup@4.62.2)(storybook@10.4.6(@testing-library/dom@10.4.1)(@types/react@19.2.17)(react@19.2.3))(typescript@6.0.3)(vite@7.3.6(@types/node@26.1.0)(lightningcss@1.32.0)(terser@5.48.0)(yaml@2.9.0))
+      '@stryker-mutator/core':
+        specifier: ^8.2.6
+        version: 8.7.1
+      '@stryker-mutator/jest-runner':
+        specifier: ^8.2.6
+        version: 8.7.1(@stryker-mutator/core@8.7.1)
+      '@testing-library/react-native':
+        specifier: ^14.0.1
+        version: 14.0.1(jest@29.7.0(@types/node@26.1.0))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)(test-renderer@1.2.0(@types/react@19.2.17)(react@19.2.3))
+      '@types/jest':
+        specifier: ~29.5.14
+        version: 29.5.14
+      '@types/react':
+        specifier: ~19.2.2
+        version: 19.2.17
+      jest:
+        specifier: ~29.7.0
+        version: 29.7.0(@types/node@26.1.0)
+      jest-expo:
+        specifier: ^57.0.1
+        version: 57.0.1(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(expo@57.0.2)(jest@29.7.0(@types/node@26.1.0))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
+      react:
+        specifier: 19.2.3
+        version: 19.2.3
+      react-dom:
+        specifier: 19.2.3
+        version: 19.2.3(react@19.2.3)
+      react-native:
+        specifier: 0.86.0
+        version: 0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3)
+      react-native-nitro-modules:
+        specifier: 0.36.1
+        version: 0.36.1(react-native@0.86.0(@babel/core@7.29.7)(@react-native/jest-preset@0.86.0(@babel/core@7.29.7)(react@19.2.3))(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)
+      react-native-unistyles:
+        specifier: 3.2.5
+        version: 3.2.5(64bd038716d2eb28ec981ecd1084041b)
+      react-native-web:
+        specifier: ~0.21.0
+        version: 0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      storybook:
+        specifier: ^10.2.9
+        version: 10.4.6(@testing-library/dom@10.4.1)(@types/react@19.2.17)(react@19.2.3)
+      test-renderer:
+        specifier: ^1.2.0
+        version: 1.2.0(@types/react@19.2.17)(react@19.2.3)
+      typescript:
+        specifier: ~6.0.3
+        version: 6.0.3
+      vite:
+        specifier: ^7.1.0
+        version: 7.3.6(@types/node@26.1.0)(lightningcss@1.32.0)(terser@5.48.0)(yaml@2.9.0)
 
   libs/components:
     dependencies:
@@ -370,6 +434,9 @@ importers:
 
   libs/study-buddy:
     dependencies:
+      '@helsoft/activities':
+        specifier: workspace:*
+        version: link:../activities
       '@helsoft/components':
         specifier: workspace:*
         version: link:../components

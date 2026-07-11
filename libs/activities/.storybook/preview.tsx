@@ -1,14 +1,13 @@
 // Must stay first: registers the unistyles themes before any story module evaluates a
 // StyleSheet.create call. Public `@helsoft/components/theme` subpath (StyleSheet.configure
-// side effect) — study-buddy doesn't own the theme registry.
+// side effect) — activities doesn't own the theme registry.
 import { themes, ThemeScheme } from '@helsoft/components/theme';
 
-import { LocalizationProvider } from '@helsoft/localization';
 import type { Decorator, Preview } from '@storybook/react-native-web-vite';
 import { useEffect } from 'react';
 import { UnistylesRuntime } from 'react-native-unistyles';
 
-// The library defaults to adaptive (OS) themes; storybook drives them manually.
+// The design system defaults to adaptive (OS) themes; storybook drives them manually.
 // Pinned at module scope so the first story paint matches the toolbar default
 // instead of flashing the OS scheme.
 UnistylesRuntime.setAdaptiveThemes(false);
@@ -25,16 +24,6 @@ const withUnistylesTheme: Decorator = (Story, context) => {
 
   return <Story />;
 };
-
-// Real LocalizationProvider (not mocked): study-buddy's feature components call
-// useLocalization() directly, and the provider is self-contained (isolated i18next
-// instance, no app-level setup needed) — so stories get genuine translated copy and
-// live locale switching instead of raw i18n keys.
-const withLocalizationProvider: Decorator = (Story) => (
-  <LocalizationProvider initialLocale="en">
-    <Story />
-  </LocalizationProvider>
-);
 
 const preview: Preview = {
   parameters: {
@@ -62,7 +51,7 @@ const preview: Preview = {
   initialGlobals: {
     theme: 'light',
   },
-  decorators: [withUnistylesTheme, withLocalizationProvider],
+  decorators: [withUnistylesTheme],
 };
 
 export default preview;

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { MultipleChoice, MultipleChoiceLabels } from '@helsoft/components';
+import { MultipleChoice, MultipleChoiceLabels } from '@helsoft/activities';
 import { useLocalization } from '@helsoft/localization';
 import type { MultipleChoiceAnswer, MultipleChoiceSlide } from '@helsoft/types';
 

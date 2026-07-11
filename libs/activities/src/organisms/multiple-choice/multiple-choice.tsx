@@ -2,8 +2,7 @@ import { useEffect } from 'react';
 import { AccessibilityInfo, Platform, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
-import { Card } from '../../atoms/card/card';
-import { AnswerOption, AnswerOptionState } from '../../molecules/answer-option/answer-option';
+import { AnswerOption, AnswerOptionState, Card } from '@helsoft/components';
 
 export type MultipleChoiceOptionView = { id: string; label: string };
 

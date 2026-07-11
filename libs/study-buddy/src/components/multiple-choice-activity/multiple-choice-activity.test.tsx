@@ -4,13 +4,13 @@ jest.mock('@helsoft/localization', () => ({
 
 // Wraps the real MultipleChoice by default (every existing test below renders it for real); only
 // the re-selection-guard test further down swaps in a fake implementation for one render.
-jest.mock('@helsoft/components', () => {
-  const actual = jest.requireActual('@helsoft/components');
+jest.mock('@helsoft/activities', () => {
+  const actual = jest.requireActual('@helsoft/activities');
   return { ...actual, MultipleChoice: jest.fn(actual.MultipleChoice) };
 });
 
 import type { MultipleChoiceSlide } from '@helsoft/types';
-import { MultipleChoice, MultipleChoiceProps } from '@helsoft/components';
+import { MultipleChoice, MultipleChoiceProps } from '@helsoft/activities';
 import { useLocalization } from '@helsoft/localization';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { Pressable, Text } from 'react-native';
@@ -20,7 +20,7 @@ import { MultipleChoiceActivity } from './multiple-choice-activity';
 
 const mockUseLocalization = useLocalization as jest.Mock;
 const mockMultipleChoice = MultipleChoice as jest.Mock;
-const actualMultipleChoice = jest.requireActual('@helsoft/components').MultipleChoice;
+const actualMultipleChoice = jest.requireActual('@helsoft/activities').MultipleChoice;
 
 // A fake MultipleChoice that never disables its options, regardless of `selectedOptionId` —
 // simulating a presentational component whose own locking doesn't block a second `onSelectOption`
