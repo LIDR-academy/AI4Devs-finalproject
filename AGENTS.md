@@ -28,7 +28,7 @@ Target a single workspace:
 
 ```bash
 pnpm --filter app-study-buddy dev         # Expo dev server (also: web / ios / android)
-pnpm --filter @helsoft/components dev     # Storybook on port 6007 (lib-with-storybook uses 6006)
+pnpm --filter @helsoft/components dev     # Storybook on port 6007 (lib-with-storybook: 6006, study-buddy: 6008, activities: 6009)
 pnpm turbo run check-types --filter=@helsoft/services
 ```
 
@@ -48,7 +48,7 @@ npx supabase db push
 Turborepo monorepo with three top-level areas:
 
 - **`apps/app-study-buddy`** — universal Expo app (SDK 57, Expo Router, React Native 0.86, React 19; ships web + iOS + Android from one codebase). App code stays minimal — screens in `src/app/` (file-based routing) should mostly compose from libs. **Expo SDK 57 changed significantly: consult https://docs.expo.dev/versions/v57.0.0/ before writing Expo code** (see `apps/app-study-buddy/AGENTS.md`).
-- **`libs/*`** — all shared/business code, published as `@helsoft/*` workspace packages: `types` (plain TS types, one `type-name.ts` file each), `components` (shared UI + Storybook stories, atomic design), `hooks`, `services` (services + DAOs + Supabase client), `study-buddy` (the app's feature lib — business logic for the app lives here, not in the app), `lib-with-storybook` (template for new Storybook-enabled libs; copy its story patterns).
+- **`libs/*`** — all shared/business code, published as `@helsoft/*` workspace packages: `types` (plain TS types, one `type-name.ts` file each), `components` (shared UI + Storybook stories, atomic design), `activities` (activity-slide organisms — multiple choice, fill-in-the-blank, flashcard, matching, open-ended, etc.; Storybook + Jest + Playwright + Stryker like `components`, depends on `components` for shared atoms/molecules/theme), `hooks`, `services` (services + DAOs + Supabase client), `study-buddy` (the app's feature lib — business logic for the app lives here, not in the app), `lib-with-storybook` (template for new Storybook-enabled libs; copy its story patterns).
 - **`supabase/`** — backend is Supabase (auth, Postgres, storage, edge functions). CLI config and migrations only.
 
 ### Data-flow layering (enforced — see `hooks-service-dao.mdc`)

@@ -21,6 +21,10 @@ This is a monorepo for react-native/node/next applications.
     - Use the examples in libs/lib-with-storybook/src/stories to create new stories.
     - Follow .agents/rules/atomic-design.mdc when structuring components.
     - Storybook dev: port 6007 (libs/lib-with-storybook uses 6006).
+  - @helsoft/activities: this library holds activity-slide organisms only (multiple choice, fill-in-the-blank, flashcard, matching, open-ended, etc.) — every new activity type is built here, not in @helsoft/components.
+    - Same conventions and tooling as @helsoft/components (Storybook + Jest + Playwright + Stryker), scaffolded the same way.
+    - Depends on @helsoft/components (workspace:*) for shared atoms/molecules/theme (e.g. Card, AnswerOption) — no duplicating the design system.
+    - Storybook dev: port 6009.
   - @helsoft/hooks: this library should contain the shared hooks between the applications.
     - Use rules from .agents/rules/hooks-service-dao.mdc
   - @helsoft/services: this library should contain the shared services and daos between the applications.
