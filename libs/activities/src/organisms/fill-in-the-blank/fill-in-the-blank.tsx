@@ -171,7 +171,6 @@ const styles = StyleSheet.create((theme) => ({
     minWidth: theme.spacing.s16,
     minHeight: theme.layout.touchTarget,
     paddingVertical: theme.spacing.s1,
-    flexGrow: 1,
   },
   banner: {
     borderRadius: theme.shape.card,

@@ -15,8 +15,8 @@ const labels = {
   blankInput: 'Fill in the blank',
 };
 
-const ACCEPTED = ['Paris', 'City of Light'];
-const CONTENT = 'The capital of France is ____.';
+const ACCEPTED = ['Francia', 'France'];
+const CONTENT = 'The capital of ____ is Paris';
 const MAX_LENGTH = Math.ceil(ACCEPTED[0].length * 1.25);
 
 const normalize = (raw: string) =>
