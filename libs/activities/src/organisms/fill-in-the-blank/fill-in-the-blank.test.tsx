@@ -8,6 +8,30 @@ import {
   FillInTheBlankResult,
 } from './fill-in-the-blank';
 
+/** Collect Text nodes whose only content is an empty string (mutation probe for omit-empty guards). */
+const collectEmptyTextNodes = (node: unknown, out: unknown[] = []): unknown[] => {
+  if (node == null) return out;
+  if (Array.isArray(node)) {
+    for (const child of node) collectEmptyTextNodes(child, out);
+    return out;
+  }
+  if (typeof node === 'object') {
+    const record = node as { type?: unknown; children?: unknown };
+    if (record.type === 'Text') {
+      const kids = record.children;
+      if (
+        kids === '' ||
+        kids == null ||
+        (Array.isArray(kids) && (kids.length === 0 || kids.every((c) => c === '')))
+      ) {
+        out.push(node);
+      }
+    }
+    if ('children' in record) collectEmptyTextNodes(record.children, out);
+  }
+  return out;
+};
+
 const labels: FillInTheBlankLabels = {
   submit: 'Submit',
   correct: 'Correct!',
@@ -76,6 +100,36 @@ describe('FillInTheBlank', () => {
     expect(screen.getByRole('button', { name: labels.submit }).props.accessibilityState.disabled).toBe(
       true,
     );
+  });
+
+  // Mutation kill — acceptedAnswerShown must not render when correct (:129).
+  it('does not reveal acceptedAnswerShown when the result is correct', async () => {
+    await render(
+      <FillInTheBlank {...defaultProps} value="paris" result={correctResult} />,
+    );
+
+    expect(screen.getByText(labels.correct)).toBeTruthy();
+    expect(screen.queryByText('Paris')).toBeNull();
+  });
+
+  // Mutation kill — blank-at-start: omit empty before Text (:88).
+  it('omits an empty before-blank Text when the marker is at the start', async () => {
+    const { toJSON } = await render(
+      <FillInTheBlank {...defaultProps} content="____ is the capital." />,
+    );
+
+    expect(screen.getByText(' is the capital.')).toBeTruthy();
+    expect(collectEmptyTextNodes(toJSON())).toHaveLength(0);
+  });
+
+  // Mutation kill — blank-at-end: omit empty after Text (:99).
+  it('omits an empty after-blank Text when the marker is at the end', async () => {
+    const { toJSON } = await render(
+      <FillInTheBlank {...defaultProps} content="The capital is ____" />,
+    );
+
+    expect(screen.getByText('The capital is')).toBeTruthy();
+    expect(collectEmptyTextNodes(toJSON())).toHaveLength(0);
   });
 
   // @s3 — incorrect result reveals acceptedAnswerShown + locks.

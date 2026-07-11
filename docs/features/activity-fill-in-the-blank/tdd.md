@@ -139,3 +139,12 @@ Strict Red→Green→Refactor per `.agents/rules/tdd.md`. **Slices 1–3**.
 - activities organism unit: 22 pass; check-types pass
 - Playwright fill-in-the-blank.e2e.js: 11 pass
 - No commit (orchestrator owns)
+
+## Mutation rework — killable survivors (pre-review)
+
+**Cycle 15 (activities `:88` / `:99` / `:129`)**
+- RED: weakened guards to `true ? …`; tests failed — empty before/after Text mounted; correct still revealed `Paris`.
+- GREEN: restored `parts.before/after.length > 0` and `!result.isCorrect && result.acceptedAnswerShown`.
+- Tests: blank-at-start / blank-at-end omit empty Text (toJSON probe); correct does not reveal `acceptedAnswerShown`.
+- Kills ConditionalExpression + EqualityOperator on `:88`/`:99`, ConditionalExpression + LogicalOperator on `:129`.
+- Unit suite: 25 pass. No lasting production change (guards already correct).
