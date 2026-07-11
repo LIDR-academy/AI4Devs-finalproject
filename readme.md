@@ -300,7 +300,7 @@ La API REST opera bajo el estándar OpenAPI 3.0.0. A continuación se detallan l
     ```json
     {
       "insumoId": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea",
-      "quantity": 2.0000,
+      "quantity": "2.0000",
       "unit": "Horma"
     }
     ```
@@ -312,7 +312,7 @@ La API REST opera bajo el estándar OpenAPI 3.0.0. A continuación se detallan l
       "remanente": {
         "id": "f8a9e223-92b0-464a-93cd-9bc64e22340b",
         "insumoId": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea",
-        "currentQuantity": 2.0000,
+        "currentQuantity": "2.0000",
         "status": "ACTIVE",
         "calculatedExpirationDate": "2026-07-05T16:36:12Z"
       }
@@ -332,7 +332,7 @@ La API REST opera bajo el estándar OpenAPI 3.0.0. A continuación se detallan l
           "name": "Queso Mozzarella",
           "consumptionUnit": "KG"
         },
-        "currentQuantity": 1.7500,
+        "currentQuantity": "1.7500",
         "location": "KITCHEN_FRIDGE",
         "status": "ACTIVE",
         "calculatedExpirationDate": "2026-07-05T16:30:00Z"

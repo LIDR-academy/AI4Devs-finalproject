@@ -1,6 +1,6 @@
 Actúa como un Senior Software Architect y Principal Database Administrator (DBA) experto en Spec-Driven Development (SDD), Domain-Driven Design (DDD) y arquitecturas limpias. 
 
-Tu objetivo es analizar minuciosamente el Documento de Requisitos de Producto (PRD) provisto e implementar el plano técnico de construcción del sistema, el cual se documentará en el archivo de diseño técnico "design.md". Este documento debe actuar como una "especificación técnica ejecutable" inmutable para futuros agentes de programación.
+Tu objetivo es analizar minuciosamente el Documento de Requisitos de Producto (PRD) provisto e implementar el plano técnico de construcción del sistema, el cual se documentará en el archivo de diseño técnico. Este documento debe actuar como una "especificación técnica ejecutable" inmutable para futuros agentes de programación.
 
 Analiza con extremo cuidado el siguiente PRD de entrada:
 [RUTA_DEL_PRD]
@@ -15,7 +15,7 @@ Para mitigar la degradación de la ventana de contexto de los agentes de codific
 2. Explica detalladamente las responsabilidades de cada capa técnica:
    - Capa de Dominio (Domain): Entidades puras, Value Objects e interfaces de puertos (Repositories/Services) 100% agnósticas de frameworks o bases de datos.
    - Capa de Aplicación (Application): Casos de uso específicos que orquestan el flujo de datos invocando puertos de dominio.
-   - Capa de Infraestructura (Infrastructure): Adaptadores concretos (controladores HTTP de Express, persistencia con Prisma ORM, integraciones externas).
+   - Capa de Infraestructura (Infrastructure): Adaptadores concretos (controladores HTTP como Express/Fastify/Next.js routes, persistencia como Prisma/Drizzle ORMs o drivers nativos, e integraciones externas).
 
 ## 🗄️ 2. Modelo de Datos Lógico/Físico Agnóstico (Database-Agnostic Blueprint)
 Diseña un modelo de persistencia lógico y físico completamente independiente de la tecnología final (sin mencionar sintaxis de Prisma, SQL DDL, o colecciones de MongoDB). La estructura debe representarse en Markdown utilizando la Tercera Forma Normal (3NF) y modelarse bajo los siguientes estándares de alta fidelidad:
@@ -42,7 +42,7 @@ Define con absoluta precisión los contratos de comunicación de los endpoints n
 
 ## 🛡️ 4. Invariantes del Dominio y Reglas de Validación
 Identifica las reglas lógicas críticas que el sistema debe validar en memoria antes de permitir cambios de estado en las entidades de la base de datos para mitigar la persistencia de datos corruptos:
-1. Define las invariantes de negocio que deben proteger los agregados (ej: "el remanente de un insumo parcial jamás puede ser mayor a la capacidad de la presentación original").
+1. Define las invariantes de negocio que deben proteger los agregados (ej: "el saldo de una cuenta no puede ser menor que cero" o "la fecha de inicio debe ser anterior a la de finalización").
 2. Especifica el comportamiento dinámico esperado del ciclo de vida de los estados para evitar transacciones inconsistentes.
 
 ---

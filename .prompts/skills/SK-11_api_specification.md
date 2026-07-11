@@ -12,12 +12,13 @@ Por favor, genera de manera exclusiva la sección de Contratos de la API estruct
    - Para cada endpoint listado, detalla de forma clara:
      - Ruta, Método e intenciones de negocio.
      - Cabeceras obligatorias (ej. Authorization JWT).
-     - Payload del Request: Bloque JSON de ejemplo tipado, consistente con las tablas físicas (ej. tipos Decimal representados como números/strings exactos y IDs correlativos).
+     - Payload del Request: Bloque JSON de ejemplo tipado, consistente con las tablas físicas (ej. tipos Decimal representados estrictamente como strings decimales exactos en formato JSON y IDs correlativos).
      - Respuesta Exitosa (200 OK o 201 Created): Bloque JSON de ejemplo documentando la estructura de salida.
      - Respuestas de Error Comunes (401 Unauthorized para autenticación o 422 Unprocessable Entity para reglas de negocio rotas) con un formato JSON autodescriptivo y campos consistentes.
 
 3. **Mapeo de Tipos y Restricciones:**
-   - Asegura que ningún payload envíe o reciba datos inconsistentes con las invariantes del dominio (ej. si el modelo de base de datos prohíbe el uso de Float para pesos, los endpoints deben manejar cantidades exactas con representación de alta precisión).
+   - Asegura que ningún payload envíe o reciba datos inconsistentes con las invariantes del dominio.
+   - Define una única serialización determinista para valores `Decimal`: represente todos los valores decimales como strings (cadenas de texto decimales, ej: `"150.00"`). Documente la precisión requerida (ej: precisión total de 10 dígitos), la escala (ej: 2 decimales para dinero, 4 decimales para cantidades físicas de inventario) y el patrón de validación (regex, ej: `^\d+(\.\d{1,4})?$`). Garantice que todos los payloads de request/response y contratos de endpoints utilicen de forma consistente esta representación.
 
 Genera tu respuesta en formato Markdown limpio, redactando las explicaciones lógicas en español (Latinoamérica) y manteniendo las claves JSON, parámetros de URL, tipos de datos e interfaces en inglés profesional para integración directa con compiladores de TypeScript. Comienza directamente con la documentación técnica sin preámbulos.
 

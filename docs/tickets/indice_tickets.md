@@ -33,5 +33,5 @@ Este documento centraliza el backlog técnico y funcional del Producto Mínimo V
 *   **[TK-006: Implementación del Slice de Descarte y Mermas de Cocina](TK-006.md)**: Flujo de descarte total por expiración u otros motivos, actualizando las cantidades a cero y guardando logs de auditoría.
 *   **[TK-007: Implementación de Pantalla de Notificaciones y Alertas Dinámicas en Frontend](TK-007.md)**: Pantalla táctil en la terminal de cocina que calcula y muestra notificaciones semafóricas (FEFO, stock bajo en línea y avisos de estado offline de red).
 *   **[TK-008: Implementación de Recetas y Descuento FEFO en Cascadas](TK-008.md)**: Lógica transaccional para definir recetas y procesar el consumo rápido de stock en cascada FEFO sobre remanentes activos.
-*   **[TK-009: Implementación de Cierre de Turno y Conciliación en Cocina](TK-009.md)**: Flujo de fin de turno con auto-descarte de insumos caducados (>48h TRR) y registro de auditoría de diferencias físicas.
+*   **[TK-009: Implementación de Cierre de Turno y Conciliación en Cocina](TK-009.md)**: Flujo de fin de turno con auto-descarte de insumos caducados (>24h TRR) y registro de auditoría de diferencias físicas.
 

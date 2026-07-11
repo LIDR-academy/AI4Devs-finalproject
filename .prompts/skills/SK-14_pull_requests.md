@@ -6,21 +6,18 @@ Por favor, ejecuta las siguientes tareas de forma autónoma utilizando tus herra
 
 ### Paso 1: Inspección de Git e Inicialización de Contexto
 1. Ejecuta comandos de terminal como `git log --oneline -n 15` o `git branch` para identificar las ramas de características (feature branches) y los commits lógicos reales que se han realizado en el proyecto.
-2. Si el repositorio aún no cuenta con un historial de commits maduro o te encuentras en una fase inicial de documentación, analiza la estructura de carpetas físicas en `/` y contrasta el backlog del proyecto para deducir qué hitos de desarrollo lógicos deben plasmarse para cumplir con el MVP.
+2. Prohíbe terminantemente la invención de historial, Pull Requests, tickets o Quality Gates. Toda información documentada debe basarse en evidencia verificable extraída del repositorio local, GitHub o de los logs de la integración continua (CI). Si algún dato requerido no cuenta con respaldo verificable en los logs o commits, debe marcarse explícitamente como "No verificable" con su respectiva justificación.
+3. Se permite documentar menos de tres Pull Requests si en el historial real del repositorio no existen tantas.
 
-### Paso 2: Redacción de la Especificación de 3 Pull Requests
-Genera la documentación detallada de exactamente tres (3) Pull Requests consecutivas e incrementales. Cada Pull Request debe estructurarse con la siguiente plantilla de Markdown:
+### Paso 2: Redacción de la Especificación de las Pull Requests Identificadas
+Genera la documentación detallada únicamente para las Pull Requests que hayan sido realmente identificadas y verificadas en el historial. Estructura cada una de ellas empleando la siguiente plantilla de Markdown:
 
 #### 🔄 PR #[Número]: [Título de la PR con Semántica Conventional Commits]
 - **Ramas:** `[nombre-rama-origen]` ➡️ `main` (La rama origen debe reflejar el prefijo de feature y tus iniciales de entrega, ej. feature-auth-JL).
-- **Ticket Relacionado:** Enlace lógico al ID del ticket técnico del backlog (ej. RS-TK-001).
+- **Ticket Relacionado:** Enlace del ID del ticket técnico del backlog (ej. RS-TK-001). Si no se puede verificar la asociación con un ticket, márquese como "No verificable".
 - **Descripción del Cambio:** Un resumen breve de los archivos afectados clasificados por sus capas de arquitectura (Domain, Application, Infrastructure) y la justificación técnica de la integración.
-- **Quality Gates (DoD):** Lista de verificación de las validaciones de calidad obligatorias que superó este cambio (ej. TypeScript compilado sin advertencias, tests de integración pasando en verde con Snyk/npm audit y cobertura del linter).
+- **Quality Gates (DoD):** Lista de verificación de las validaciones de calidad obligatorias que se han verificado con certeza en la ejecución real de CI (ej. TypeScript compilado sin advertencias, tests pasando en verde, cobertura del linter). Si no hay registros de ejecución de una validación específica, márquese como "No verificable".
 
-*Nota técnica:*
-- El **PR #1** debe representar la base del sistema (ej. Inicialización de infraestructura, Docker y esquemas físicos ORM).
-- El **PR #2** debe representar la primera funcionalidad core (ej. Autenticación o módulo de usuarios).
-- El **PR #3** debe representar la lógica de negocio avanzada del MVP (ej. Gestión de lógica de negocio o módulos prioritarios).
 
 ### Paso 3: Modificación del Archivo de Documentación
 1. Lee el archivo [ARCHIVO_README_DE_ENTREGA] para comprender su estado actual.

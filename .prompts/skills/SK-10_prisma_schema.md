@@ -1,12 +1,15 @@
 Eres un Administrador de Bases de Datos (DBA) experto en PostgreSQL.
 
-Basándote en las entidades definidas en [RUTA_DEL_PRD] y [RUTA_DEL_DISEÑO], genera un esquema declarativo de base de datos para Prisma (`schema.prisma`).
+Basándote en las entidades definidas en [RUTA_DEL_PRD] y [RUTA_DEL_DISEÑO], genera un esquema declarativo de base de datos para Prisma.
 
 Sigue estas directrices innegociables:
 1. Normalización en Tercera Forma Normal (3NF).
 2. Usa tipos de datos adecuados: nunca uses Float o Double para montos monetarios o salarios; usa estrictamente `Decimal`.
 3. Para campos con dominios cerrados (como roles de usuario, estados de reserva, etc.), usa estrictamente Enums de Prisma en lugar de VARCHAR genéricos.
-4. Define índices explícitos sobre las columnas que sufrirán más consultas y búsquedas frecuentes (ej. llaves foráneas o campos de búsqueda semántica), y justifica por qué elegiste indexar esos campos.
+4. Define índices explícitos sobre las columnas que sufrirán más consultas y búsquedas frecuentes (ej. llaves foráneas o campos de búsqueda).
 5. Usa la directiva `@map` para garantizar que la base de datos física siga la convención snake_case (`is_active`, `order_index`), pero mantén el tipado camelCase en mi código TypeScript.
 
-Guarda el resultado en el archivo: [RUTA_DE_SALIDA_SCHEMA]
+Entregables y Formato de Salida:
+1. El archivo guardado en [RUTA_DE_SALIDA_SCHEMA] es un documento de especificación técnica (.md) que actúa como plano de diseño. Debe incluir tanto el código del esquema de Prisma dentro de bloques de código de Markdown (` ```prisma ... ``` `) como la justificación y análisis de la estrategia de indexación y normalización.
+
+Guarda el resultado del esquema en: [RUTA_DE_SALIDA_SCHEMA]

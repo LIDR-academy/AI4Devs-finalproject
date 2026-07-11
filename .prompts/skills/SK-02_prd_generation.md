@@ -38,7 +38,7 @@ Identifica al menos dos perfiles o roles clave que interactuarán con el sistema
 ### 3.2. Flujos Alternativos y Manejo de Errores (Edge Cases)
 Debes prever y detallar el comportamiento del sistema ante fallos para evitar que la IA improvise la lógica. Incluye de forma obligatoria especificaciones de comportamiento para:
 - **Validaciones de Entrada de Datos:** Cómo reacciona el sistema ante campos vacíos, inválidos o transacciones que dejen saldos lógicos negativos.
-- **Fallas de Conectividad o Red:** Mecanismos de resiliencia transaccional (ej. almacenamiento local/diferido) en el cliente si se interrumpe la conexión de red.
+- **Fallas de Conectividad o Red:** Defina si el MVP permite operaciones offline. Si está habilitado, especifique una clave de idempotencia, orden de reproducción, prevención de duplicados, resolución de conflictos y comportamiento cuando las credenciales o el estado comercial caduquen antes de la sincronización.
 - **Políticas de Vencimiento o Caducidad Dinámica:** Cómo maneja el sistema la alteración o caducidad del estado de las entidades de negocio.
 
 ---

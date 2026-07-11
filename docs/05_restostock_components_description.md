@@ -12,7 +12,7 @@ A continuación se listan y describen los componentes lógicos de negocio (módu
 *   **`src/auth` (Módulo de Autenticación):** Responsable de gestionar el ciclo de vida de las sesiones y la validación de credenciales. Maneja la autenticación web mediante JWT para roles administrativos y la verificación rápida mediante PIN de 4 dígitos para operarios de cocina.
 *   **`src/catalog` (Módulo de Catálogo Maestro):** Administra el inventario de insumos e ingredientes (catálogo de insumos, factores de conversión, categoría y vida útil en días) así como la definición y proporciones de recetas de platos elaborados. Solo accesible por perfiles administrativos.
 *   **`src/stock` (Módulo de Existencias y Extracciones):** Controla el inventario global dentro de la bodega principal y procesa el egreso/extracción física de insumos hacia la cocina.
-*   **`src/kitchen` (Módulo de Cocina y Remanentes):** Gestiona la conversión de insumos extraídos en remanentes, el cálculo acelerado de expiración (invariante de 48h TRR), el registro de consumos parciales, los descartes por merma física y el descuento rápido de stock mediante recetas (cascada FEFO). También procesa el flujo de cierre de turno (conciliación de inventario físico vs teórico y auto-descarte masivo de insumos vencidos) y el motor de alertas críticas.
+*   **`src/kitchen` (Módulo de Cocina y Remanentes):** Gestiona la conversión de insumos extraídos en remanentes, el cálculo acelerado de expiración (definido como el menor valor entre la fecha de vencimiento original de fábrica del lote y la fecha de apertura (`opened_at`) más los días de vida útil de estante abierto (`open_shelf_life_days`), o la fecha de vencimiento original del lote cuando la vida útil es nula), el registro de consumos parciales, los descartes por merma física y el descuento rápido de stock mediante recetas (cascada FEFO). También procesa el flujo de cierre de turno (conciliación de inventario físico vs teórico y auto-descarte masivo de insumos vencidos) y el motor de alertas críticas.
 
 
 
@@ -76,9 +76,9 @@ A continuación se muestra el molde homogéneo que el equipo de desarrollo debe 
 Define el puerto (contrato) y la entidad del negocio libre de acoplamientos técnicos.
 
 ```typescript
-import { Decimal } from 'decimal.js';
+import { DecimalValue } from '../../../shared/domain/value-objects/DecimalValue';
 
-export type MovementType = 'EXTRACTION' | 'TRANSFER' | 'DISCARD';
+export type MovementType = 'EXTRACTION' | 'TRANSFER' | 'DISCARD' | 'CONSUMPTION';
 export type LocationType = 'MAIN_WAREHOUSE' | 'KITCHEN_FRIDGE' | 'KITCHEN_FREEZER' | 'KITCHEN_PANTRY' | 'KITCHEN_PREP';
 
 export interface StockMovementProps {
@@ -88,7 +88,7 @@ export interface StockMovementProps {
   type: MovementType;
   fromLocation: LocationType;
   toLocation: LocationType;
-  quantity: Decimal;
+  quantity: DecimalValue;
   unit: string;
   createdAt: Date;
 }
@@ -128,12 +128,12 @@ Orquesta el caso de uso sin conocer los controladores Express ni la implementaci
 import { StockMovement } from '../../domain/entities/stock-movement.entity';
 import { IStockMovementRepository } from '../../domain/ports/stock-movement-repository.port';
 
-import { Decimal } from 'decimal.js';
+import { DecimalValue } from '../../../shared/domain/value-objects/DecimalValue';
 
 export interface RecordExtractionInput {
   insumoId: string;
   userId: string;
-  quantity: Decimal;
+  quantity: DecimalValue;
   unit: string;
 }
 
@@ -168,6 +168,7 @@ Controlador encargado de recibir la solicitud HTTP, validar la entrada del clien
 // src/stock/infrastructure/controllers/stock.controller.ts
 import { Request, Response } from 'express';
 import { RecordExtractionUseCase } from '../../application/use-cases/record-extraction.use-case';
+import { DecimalValue } from '../../../shared/domain/value-objects/DecimalValue';
 
 export class StockController {
   constructor(private readonly recordExtractionUseCase: RecordExtractionUseCase) {}
@@ -182,8 +183,8 @@ export class StockController {
         return;
       }
 
-      if (typeof quantity !== 'number' || quantity <= 0) {
-        res.status(422).json({ error: "Quantity must be a positive number" });
+      if (typeof quantity !== 'string' || isNaN(Number(quantity)) || Number(quantity) <= 0) {
+        res.status(422).json({ error: "Quantity must be a positive decimal string" });
         return;
       }
 
@@ -191,7 +192,7 @@ export class StockController {
       await this.recordExtractionUseCase.execute({
         insumoId,
         userId,
-        quantity,
+        quantity: DecimalValue.create(quantity),
         unit,
       });
 

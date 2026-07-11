@@ -13,7 +13,7 @@ Todos los cambios notables en este proyecto serán documentados en este archivo.
     *   Modelos de datos Prisma: `Recipe` y `RecipeIngredient`.
     *   Historia de usuario `US-007` y ticket de trabajo `TK-008`.
 *   **Cierre de Turno y Conciliación de Inventario:**
-    *   Flujo automatizado de descarte masivo de remanentes vencidos (límite 48h TRR).
+    *   Flujo automatizado de descarte masivo de remanentes vencidos (límite 24h TRR).
     *   Registro de conteos físicos y cálculo de varianzas frente al stock teórico del sistema.
     *   Endpoint: `POST /api/kitchen/shift-reconciliation`.
     *   Modelos de datos Prisma: `ShiftReconciliation` y `ShiftReconciliationItem`.

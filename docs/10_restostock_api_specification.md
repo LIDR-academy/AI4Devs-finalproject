@@ -72,7 +72,7 @@ Esta especificación detalla los contratos de comunicación HTTP (REST API) indi
 ---
 
 ### 2.2. `POST /api/stock/extraction`
-*   **Descripción:** Registra la salida física de un insumo desde la bodega principal. Este flujo debita el stock consolidado del depósito central y crea un nuevo remanente abierto en la cocina (en estado `ACTIVE`) con la fecha de expiración acelerada calculada (invariante de vida útil corta en bodega o el límite de 48h TRR si aplica).
+*   **Descripción:** Registra la salida física de un insumo desde la bodega principal. Este flujo debita el stock consolidado del depósito central y crea un nuevo remanente abierto en la cocina (en estado `ACTIVE`) con la fecha de expiración acelerada calculada (invariante de vida útil corta en bodega o el límite de 24h TRR si aplica).
 *   **Cabeceras Requeridas:**
     *   `Content-Type: application/json`
     *   `Authorization: Bearer <token_jwt>` (Rol mínimo: `OPERATOR` u `ADMIN`)
