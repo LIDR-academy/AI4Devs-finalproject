@@ -71,6 +71,13 @@ const OPEN_ENDED_ACTIVITY_DIR = resolve(
  * from libs/study-buddy/src/components/lesson-results for the same reason as above.
  */
 const LESSON_RESULTS_DIR = resolve(REPO_ROOT, 'libs/activities/src/organisms/lesson-results');
+/**
+ * activity-flashcard-recall, task-6/@s9 — Flashcard organism chrome
+ * (`t('activity.flashcard.*')`) needs the same missing-key guard: i18next has no
+ * missing-key handler, so a typo'd/renamed key would silently render the raw key
+ * string to real users.
+ */
+const FLASHCARD_DIR = resolve(REPO_ROOT, 'libs/activities/src/organisms/flashcard');
 
 /**
  * ai-key-management task-13 (Slice 3) — same class of guard, extended for this feature's
@@ -171,6 +178,7 @@ const T_KEY_COMPONENT_DIRS: Array<[name: string, dir: string]> = [
   ['lesson-results', LESSON_RESULTS_DIR],
   ['api-key-settings', API_KEY_SETTINGS_DIR],
   ['api-key-gate', API_KEY_GATE_DIR],
+  ['flashcard', FLASHCARD_DIR],
 ];
 
 describe.each(T_KEY_COMPONENT_DIRS)('t() key existence coverage (%s)', (name, dir) => {

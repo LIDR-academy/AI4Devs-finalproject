@@ -3,6 +3,7 @@
 export * from './components/api-key-gate/api-key-gate';
 export * from './components/api-key-settings/api-key-settings';
 export * from './components/fill-in-the-blank-activity/fill-in-the-blank-activity';
+export * from './components/flashcard-activity/flashcard-activity';
 export * from './components/lesson-results/lesson-results';
 export * from './components/matching-activity/matching-activity';
 export * from './components/multiple-choice-activity/multiple-choice-activity';

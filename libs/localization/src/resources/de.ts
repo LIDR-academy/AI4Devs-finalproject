@@ -125,6 +125,16 @@ export const de: TranslationResource = {
         unavailable: 'Diese Aktivität ist nicht verfügbar',
         answerInput: 'Deine Antwort',
       },
+      flashcard: {
+        reveal: 'Antwort aufdecken',
+        recalled: 'Gewusst',
+        notRecalled: 'Nicht gewusst',
+        recalledConfirmed: 'Als gewusst markiert',
+        notRecalledConfirmed: 'Als nicht gewusst markiert',
+        answerHeading: 'Antwort',
+        explanationHeading: 'Warum',
+        unavailable: 'Diese Aktivität ist nicht verfügbar',
+      },
     },
   },
 };
