@@ -40,7 +40,6 @@ Responde en tu primer turno con un breve reporte estructural:
 2. **Ticket técnico:** Crea el archivo `docs/tickets/TK-NNN.md` (donde NNN es el correlativo correcto) indicando la estimación en Story Points, prioridad MoSCoW, capas de código afectadas y Definition of Done (DoD) estricto. **Exige el cumplimiento de la estrategia de pruebas TDD** (`docs/08_restostock_testing_strategy.md`) y las validaciones de seguridad (`docs/07_restostock_security_strategy.md`). Enlaza este ticket en `docs/tickets/indice_tickets.md`.
 3. **Mapa del Backlog (docs/backlog_map.md):** Actualiza el diagrama Mermaid para incluir el nuevo nodo de la Epic (si corresponde), la nueva User Story (`US-NNN`) y su respectivo Ticket Técnico (`TK-NNN`), definiendo sus relaciones de forma puramente descriptiva. Asimismo, agrega la fila correspondiente con los hipervínculos Markdown en la **Tabla de Navegación del Backlog (Alternativa)** inferior para garantizar la navegabilidad.
 
-
 ### FASE 4: Consolidación del README y Estructura
 1. **README y Estructura:** Si el cambio altera la estructura de directorios, modifica la sección de mapa de ficheros en el `readme.md` y en `docs/06_restostock_folder_structure.md`.
 2. **Descripción de Componentes:** Si se introducen nuevos componentes, capas u responsabilidades técnicas, actualiza `docs/05_restostock_components_description.md` para mantener la consistencia arquitectónica.
