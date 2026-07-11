@@ -381,9 +381,9 @@
 
 > Note: `tests/Feature/*`, `tests/Unit/*`, Playwright suite in `playwright/` with auth setup and module specs.
 
-**Prompt 3:** "Escribe un script YAML para GitHub Actions… push/PR a main, dependencias, tests, build" (`scripts/despliegue-CI.md`).
+**Prompt 3:** "Escribe un script YAML para GitHub Actions… push/PR a main, dependencias, tests, build" (`codigofinal/lms-cms-laravel12/scripts/despliegue-CI.md`).
 
-> Note: CI workflow; complementary `scripts/script-despliegue-cd.md` for EC2 + Nginx.
+> Note: CI workflow in `.github/workflows/ci.yml`; complementary `codigofinal/lms-cms-laravel12/scripts/script-despliegue-cd.md` for EC2 + Nginx (`scripts/deploy-ec2.sh`).
 
 **Additional prompts:**
 
@@ -418,6 +418,7 @@ Paths relative to [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codig
 | **Tests** | `tests/Feature/GrillMeTest.php`, `LmsFlowTest.php`, `LocaleTest.php`, `CalendarTest.php`, + Playwright `playwright/tests/*.spec.ts` |
 | **Deploy packages** | `codigofinal/deploy-moodle52-comms/`, `deploy-moodle52-features/`, `deploy-proyectolms-roles/` |
 | **Docker** | `docker-compose.yml`, `docker/nginx/default.conf`, `docker/php/uploads.ini` |
+| **CI/CD** | `.github/workflows/ci.yml`, `scripts/despliegue-CI.md`, `scripts/script-despliegue-cd.md`, `scripts/deploy-ec2.sh` |
 | **Screenshots** | `AI4Devs-finalproject/docs/screenshots/*.png` |
 
 ---
