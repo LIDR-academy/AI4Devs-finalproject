@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 
+import { Matching } from './matching';
 import {
-  Matching,
   MatchingItemView,
   MatchingPairSelection,
   MatchingResult,
-} from './matching';
+} from './matching.types';
 
 const labels = {
   submit: 'Submit',

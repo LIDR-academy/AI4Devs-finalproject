@@ -119,7 +119,7 @@ const styles = StyleSheet.create((theme) => ({
       state: {
         default: { color: theme.colors.onSurfaceVariant },
         selected: { color: theme.colors.onPrimary },
-        correct: { color: theme.colors.onTertiary },
+        correct: { color: theme.colors.onTertiaryContainer },
         incorrect: { color: theme.colors.onError },
       },
     },
@@ -131,7 +131,7 @@ const styles = StyleSheet.create((theme) => ({
       state: {
         default: { color: theme.colors.onSurface },
         selected: { color: theme.colors.onPrimaryContainer },
-        correct: { color: theme.colors.onTertiary },
+        correct: { color: theme.colors.onTertiaryContainer },
         incorrect: { color: theme.colors.onErrorContainer },
       },
     },

@@ -4,10 +4,8 @@ import { layout, lightColors, mixHex, shape, spacing } from '@helsoft/components
 
 import {
   Matching,
-  MatchingItemView,
-  MatchingLabels,
-  MatchingResult,
 } from './matching';
+import { MatchingItemView, MatchingLabels, MatchingResult } from './matching.types';
 
 const labels: MatchingLabels = {
   submit: 'Submit',
@@ -79,6 +77,18 @@ const pairAllCorrectly = async () => {
 };
 
 describe('Matching', () => {
+  let announceSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    announceSpy.mockClear();
+    defaultProps.onSubmit.mockClear();
+  });
+
+  afterEach(() => {
+    announceSpy.mockRestore();
+  });
+
   // @s1 — both columns visible, all unpaired/tappable, Submit disabled, no result.
   it('renders both columns unpaired and tappable with Submit disabled', async () => {
     await render(<Matching {...defaultProps} />);
@@ -146,6 +156,16 @@ describe('Matching', () => {
     expect(itemButton('France').props.accessibilityState.selected).toBe(false);
   });
 
+  // @s4 — right-column deselect.
+  it('deselects a pending right-column item when tapped again', async () => {
+    await render(<Matching {...defaultProps} />);
+
+    await press('Paris');
+    await press('Paris');
+
+    expect(itemButton('Paris').props.accessibilityState.selected).toBe(false);
+  });
+
   // @s5 — same-column retarget.
   it('retargets pending when tapping another item in the same column', async () => {
     await render(<Matching {...defaultProps} />);
@@ -155,6 +175,17 @@ describe('Matching', () => {
 
     expect(itemButton('France').props.accessibilityState.selected).toBe(false);
     expect(itemButton('Germany').props.accessibilityState.selected).toBe(true);
+  });
+
+  // @s5 — right-column same-column retarget.
+  it('retargets pending when tapping another item in the right column', async () => {
+    await render(<Matching {...defaultProps} />);
+
+    await press('Paris');
+    await press('Berlin');
+
+    expect(itemButton('Paris').props.accessibilityState.selected).toBe(false);
+    expect(itemButton('Berlin').props.accessibilityState.selected).toBe(true);
   });
 
   // @s6 — tap paired item releases the pair.
@@ -183,6 +214,20 @@ describe('Matching', () => {
     await press('France');
     await press('Paris');
     expect(submitButton().props.accessibilityState.disabled).toBe(true);
+  });
+
+  // @s7 — disabled Submit does not call onSubmit.
+  it('does not call onSubmit when Submit is pressed while disabled', async () => {
+    const onSubmit = jest.fn();
+    await render(<Matching {...defaultProps} onSubmit={onSubmit} />);
+
+    expect(submitButton().props.accessibilityState.disabled).toBe(true);
+
+    await act(async () => {
+      fireEvent.press(submitButton());
+    });
+
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 
   // @s7 — Submit enabled when all paired.
@@ -238,8 +283,8 @@ describe('Matching', () => {
   it('marks pairs correct/incorrect and shows the incorrect banner for mixed results', async () => {
     await render(<Matching {...defaultProps} result={mixedResult} />);
 
-    expect(screen.getAllByText('check_circle').length).toBeGreaterThanOrEqual(2);
-    expect(screen.getAllByText('cancel').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText('check_circle')).toHaveLength(2);
+    expect(screen.getAllByText('cancel')).toHaveLength(4);
     expect(screen.getByText(labels.incorrect)).toBeTruthy();
     expect(screen.getByText('1 of 3 correct')).toBeTruthy();
     expect(screen.queryByText(labels.correct)).toBeNull();
@@ -263,6 +308,16 @@ describe('Matching', () => {
     await render(<Matching {...defaultProps} result={allCorrectResult} />);
 
     expect(screen.queryByText(labels.explanationHeading)).toBeNull();
+  });
+
+  it('does not show explanation when result is absent', async () => {
+    await render(
+      <Matching {...defaultProps} explanation="Capitals match their countries." />,
+    );
+
+    expect(screen.queryByTestId('matching-explanation')).toBeNull();
+    expect(screen.queryByText(labels.explanationHeading)).toBeNull();
+    expect(screen.queryByText('Capitals match their countries.')).toBeNull();
   });
 
   // Wrapper-driven unavailable (task-4 / @s15 path); Empty/Error self-detect is Slice 2.
@@ -364,8 +419,8 @@ describe('Matching', () => {
     await render(<Matching {...defaultProps} result={mixedResult} />);
 
     expect(screen.getByText(labels.incorrect)).toBeTruthy();
-    expect(screen.getAllByText('check_circle').length).toBeGreaterThanOrEqual(2);
-    expect(screen.getAllByText('cancel').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText('check_circle')).toHaveLength(2);
+    expect(screen.getAllByText('cancel')).toHaveLength(4);
 
     expect(screen.getByRole('button', { name: `France, ${labels.correctPair}` })).toBeTruthy();
     expect(screen.getByRole('button', { name: `Germany, ${labels.incorrectPair}` })).toBeTruthy();
@@ -374,51 +429,33 @@ describe('Matching', () => {
 
   // @s17 — correct result announced politely without alert role.
   it('announces a correct result via a polite live region and AccessibilityInfo, without an alert role', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
-    announceSpy.mockClear();
-
     await render(<Matching {...defaultProps} result={allCorrectResult} />);
 
     const banner = screen.getByText(labels.correct);
     expect(banner.props.accessibilityLiveRegion).toBe('polite');
-    expect(banner.parent?.props.accessibilityRole).toBeUndefined();
+    expect(screen.getByTestId('matching-result-banner').props.accessibilityRole).toBeUndefined();
     expect(announceSpy).toHaveBeenCalledWith(labels.correct);
-
-    announceSpy.mockRestore();
   });
 
   // @s17 — incorrect result uses alert + assertive live region.
   it('announces an incorrect result via an alert role and an assertive live region', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
-    announceSpy.mockClear();
-
     await render(<Matching {...defaultProps} result={mixedResult} />);
 
     const banner = screen.getByText(labels.incorrect);
     expect(banner.props.accessibilityLiveRegion).toBe('assertive');
-    expect(banner.parent?.props.accessibilityRole).toBe('alert');
+    expect(screen.getByTestId('matching-result-banner').props.accessibilityRole).toBe('alert');
     expect(announceSpy).toHaveBeenCalledWith(labels.incorrect);
-
-    announceSpy.mockRestore();
   });
 
   // @s17 — no announcement while unsubmitted.
   it('does not announce anything to assistive technology while unsubmitted', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
-    announceSpy.mockClear();
-
     await render(<Matching {...defaultProps} />);
 
     expect(announceSpy).not.toHaveBeenCalled();
-
-    announceSpy.mockRestore();
   });
 
   // @s17 — announce on transition from unsubmitted → result (dependency-array guard).
   it('announces the result when a re-render transitions from unsubmitted to submitted', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
-    announceSpy.mockClear();
-
     const { rerender } = await render(<Matching {...defaultProps} />);
     expect(announceSpy).not.toHaveBeenCalled();
 
@@ -428,8 +465,6 @@ describe('Matching', () => {
 
     await waitFor(() => expect(announceSpy).toHaveBeenCalledWith(labels.correct));
     expect(announceSpy).toHaveBeenCalledTimes(1);
-
-    announceSpy.mockRestore();
   });
 
   // @s17 — Android relies on live region alone (no duplicate announceForAccessibility).
@@ -442,32 +477,24 @@ describe('Matching', () => {
 
     it('does not call announceForAccessibility on Android once submitted', async () => {
       Platform.OS = 'android';
-      const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
-      announceSpy.mockClear();
 
       await render(<Matching {...defaultProps} result={allCorrectResult} />);
 
       expect(announceSpy).not.toHaveBeenCalled();
-
-      announceSpy.mockRestore();
     });
 
     it.each(['ios', 'web'] as const)('still calls announceForAccessibility on %s once submitted', async (os) => {
       Platform.OS = os;
-      const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
-      announceSpy.mockClear();
 
       await render(<Matching {...defaultProps} result={allCorrectResult} />);
 
       expect(announceSpy).toHaveBeenCalledWith(labels.correct);
-
-      announceSpy.mockRestore();
     });
   });
 
   // --- PRE-REVIEW mutation survivors ---
 
-  // Empty right only (left populated) — isEmptyRight branch.
+  // Empty right only (left populated) — caught via isUnequal (left.length !== right.length).
   it('shows unavailable notice when the right column is empty', async () => {
     await render(<Matching {...defaultProps} rightItems={[]} />);
 
@@ -487,15 +514,10 @@ describe('Matching', () => {
 
   // Unsubmitted resultLabel is null — never announced / never shown as banner text.
   it('uses a null resultLabel while unsubmitted', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
-    announceSpy.mockClear();
-
     await render(<Matching {...defaultProps} />);
     expect(screen.queryByText(labels.correct)).toBeNull();
     expect(screen.queryByText(labels.incorrect)).toBeNull();
     expect(announceSpy).not.toHaveBeenCalled();
-
-    announceSpy.mockRestore();
   });
 
   // Release via right item — covers pair.rightId !== itemId (NoCoverage) + keeps other pairs.
@@ -615,18 +637,18 @@ describe('Matching', () => {
   });
 
   // Banner style array must apply correct/incorrect container tokens (not []).
-  it('styles the result banner with shape and semantic container colors', async () => {
+  it('styles the all-correct result banner with shape and tertiary container tokens', async () => {
     await render(<Matching {...defaultProps} result={allCorrectResult} />);
-    const correctBanner = screen.getByText(labels.correct).parent;
-    expect(correctBanner).toHaveStyle({
+    expect(screen.getByTestId('matching-result-banner')).toHaveStyle({
       borderRadius: shape.card,
       padding: spacing.s3,
       backgroundColor: lightColors.tertiaryContainer,
     });
+  });
 
+  it('styles the incorrect result banner with shape and error container tokens', async () => {
     await render(<Matching {...defaultProps} result={mixedResult} />);
-    const incorrectBanner = screen.getByText(labels.incorrect).parent;
-    expect(incorrectBanner).toHaveStyle({
+    expect(screen.getByTestId('matching-result-banner')).toHaveStyle({
       borderRadius: shape.card,
       padding: spacing.s3,
       backgroundColor: lightColors.errorContainer,
@@ -643,21 +665,15 @@ describe('Matching', () => {
     // Default item label uses onSurface (kills itemLabel incorrect→true falling through).
     expect(screen.getByText('France')).toHaveStyle({ color: lightColors.onSurface });
 
-    // columns View is the prompt's next sibling under the Card.
-    const prompt = screen.getByText(defaultProps.prompt);
-    const card = prompt.parent as { props?: { style?: unknown }; children?: unknown[] } | undefined;
-    expect(card?.props?.style).toEqual(
-      expect.arrayContaining([expect.objectContaining({ gap: spacing.s4 })]),
-    );
-
-    const columns = card?.children?.[1] as { props?: { style?: unknown }; children?: unknown[] } | undefined;
-    expect(columns?.props?.style).toEqual(
-      expect.objectContaining({ flexDirection: 'row', gap: spacing.s3 }),
-    );
-    const leftColumn = columns?.children?.[0] as { props?: { style?: unknown } } | undefined;
-    expect(leftColumn?.props?.style).toEqual(
-      expect.objectContaining({ flex: 1, gap: spacing.s3 }),
-    );
+    expect(screen.getByTestId('matching-root')).toHaveStyle({ gap: spacing.s4 });
+    expect(screen.getByTestId('matching-columns')).toHaveStyle({
+      flexDirection: 'row',
+      gap: spacing.s3,
+    });
+    expect(screen.getByTestId('matching-column-left')).toHaveStyle({
+      flex: 1,
+      gap: spacing.s3,
+    });
 
     const france = itemButton('France');
     expect(france).toHaveStyle({
@@ -674,8 +690,8 @@ describe('Matching', () => {
     });
   });
 
-  it('applies pending, paired, correct, and incorrect item state tokens', async () => {
-    const { rerender } = await render(<Matching {...defaultProps} />);
+  it('applies pending and paired item state tokens', async () => {
+    await render(<Matching {...defaultProps} />);
 
     await press('France');
     expect(itemButton('France')).toHaveStyle({
@@ -692,10 +708,10 @@ describe('Matching', () => {
       borderColor: lightColors.outline,
     });
     expect(screen.getByText('France')).toHaveStyle({ color: lightColors.onSecondaryContainer });
+  });
 
-    await act(async () => {
-      rerender(<Matching {...defaultProps} result={mixedResult} />);
-    });
+  it('applies correct and incorrect item state tokens', async () => {
+    await render(<Matching {...defaultProps} result={mixedResult} />);
 
     const correctBg = mixHex(lightColors.tertiaryContainer, lightColors.surface, 0.55);
     expect(screen.getByRole('button', { name: `France, ${labels.correctPair}` })).toHaveStyle({
@@ -713,12 +729,14 @@ describe('Matching', () => {
     expect(screen.getByText('Germany')).toHaveStyle({ color: lightColors.onErrorContainer });
   });
 
-  it('styles the correct and incorrect banner title text from on-* tokens', async () => {
+  it('styles the correct banner title text from onTertiaryContainer', async () => {
     await render(<Matching {...defaultProps} result={allCorrectResult} />);
     expect(screen.getByText(labels.correct)).toHaveStyle({
       color: lightColors.onTertiaryContainer,
     });
+  });
 
+  it('styles the incorrect banner title text from onErrorContainer', async () => {
     await render(<Matching {...defaultProps} result={mixedResult} />);
     expect(screen.getByText(labels.incorrect)).toHaveStyle({
       color: lightColors.onErrorContainer,
@@ -734,16 +752,14 @@ describe('Matching', () => {
       />,
     );
 
-    const heading = screen.getByText(labels.explanationHeading);
-    expect(heading).toHaveStyle({
+    expect(screen.getByText(labels.explanationHeading)).toHaveStyle({
       color: lightColors.onSurfaceVariant,
     });
     expect(screen.getByText('Capitals match their countries.')).toHaveStyle({
       color: lightColors.onSurface,
     });
-    const explanation = heading.parent as { props?: { style?: unknown } } | undefined;
-    expect(explanation?.props?.style).toEqual(
-      expect.objectContaining({ gap: spacing.s1 }),
-    );
+    expect(screen.getByTestId('matching-explanation')).toHaveStyle({
+      gap: spacing.s1,
+    });
   });
 });

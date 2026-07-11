@@ -263,3 +263,23 @@ These prompts drove refinement, reconciliation and review across the documents r
 
 > ok, now commit and add the prompts of this session into prompts.md
 
+---
+
+
+
+## Prompts de la sesión 5 — Regla de split de componentes (types / hook / helpers)
+
+> Note: prompts reproduced verbatim, in chronological order. This session reviewed the matching organism file split and added `.agents/rules/component-split.mdc` (types / co-located hook / pure helpers / presentational component), wiring it into `global.mdc`, `AGENTS.md`, and `ORCHESTRATOR.md`.
+
+**Prompt 1:** *(review matching split + add component-split rule)*
+
+> review my current changes and add a short rule in @.agents/rules.md similar to @.agents/rules/hooks-service-dao.mdc where it explains that components should be splited like this:
+> - component-name.types.ts for types
+> - use-component-name.ts for logic (but not event handlers like onClick)
+> - component-name.helpers.ts for pure functions that can be outside of the component and hook
+> add whatever you think it's important, mantain the file short
+
+**Prompt 2:** *(log this session's prompt)*
+
+> add this prompt into @prompts.md
+

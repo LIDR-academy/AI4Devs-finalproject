@@ -1,56 +1,13 @@
-import { useEffect, useState } from 'react';
-import { AccessibilityInfo, Platform, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { Button, Card, Icon } from '@helsoft/components';
-
-export type MatchingItemView = { id: string; label: string };
-/** A learner-formed pair before submit. */
-export type MatchingPairSelection = { leftId: string; rightId: string };
-/** A graded pair, supplied post-submit to drive the result display. */
-export type MatchingResultPair = { leftId: string; rightId: string; isCorrect: boolean };
-
-export type MatchingResult = {
-  pairs: MatchingResultPair[];
-  isCorrect: boolean;
-  summary: string;
-};
-
-export type MatchingLabels = {
-  submit: string;
-  correct: string;
-  incorrect: string;
-  correctPair: string;
-  incorrectPair: string;
-  explanationHeading: string;
-  unavailable: string;
-};
-
-export type MatchingProps = {
-  prompt: string;
-  leftItems: MatchingItemView[];
-  rightItems: MatchingItemView[];
-  /** Forces the unavailable (Error) state — set by the wrapper when the slide's correctPairs are malformed. */
-  unavailable?: boolean;
-  /** Optional seed for Storybook / demos — paints formed pairs before any taps. */
-  initialPairs?: MatchingPairSelection[];
-  /** Set once graded → locks the activity and drives the per-pair result display. */
-  result?: MatchingResult | null;
-  explanation?: string;
-  labels: MatchingLabels;
-  onSubmit: (pairs: MatchingPairSelection[]) => void;
-};
-
-type PendingSelection = { column: 'left' | 'right'; id: string } | null;
+import { MatchingItemView, MatchingProps } from './matching.types';
+import { useMatching } from './use-matching';
+import { findPairForItem, itemAccessibilityLabel } from './matching.helpers';
 
 /** Visual state for a column item. `undefined` = unpaired default (avoids a dead 'default' string). */
 type ItemVisualState = 'pending' | 'paired' | 'correct' | 'incorrect' | undefined;
-
-const findPairForItem = (
-  pairs: MatchingPairSelection[],
-  itemId: string,
-): MatchingPairSelection | undefined =>
-  pairs.find((pair) => pair.leftId === itemId || pair.rightId === itemId);
 
 /**
  * Matching — presentational organism for a matching activity slide.
@@ -68,31 +25,30 @@ export const Matching = ({
   onSubmit,
 }: MatchingProps) => {
   const { theme } = useUnistyles();
-  const [pending, setPending] = useState<PendingSelection>(null);
-  const [formedPairs, setFormedPairs] = useState<MatchingPairSelection[]>(initialPairs);
 
-  const locked = !!result;
-  // Empty columns return early below — once past that guard, length > 0 is implied.
-  const allPaired = formedPairs.length === leftItems.length;
-  // null (not '') while unsubmitted — empty string is never rendered and is mutation-blind.
-  const resultLabel = result ? (result.isCorrect ? labels.correct : labels.incorrect) : null;
-  // One-column empty is also unequal; both-empty is 0===0 so needs an explicit empty guard.
-  const isEmpty = leftItems.length === 0;
-  const isUnequal = leftItems.length !== rightItems.length;
-  const isUnavailable = unavailable || isEmpty || isUnequal;
-
-  useEffect(() => {
-    if (!result || Platform.OS === 'android') return;
-    // Announce from result directly — resultLabel is non-null whenever result is set.
-    AccessibilityInfo.announceForAccessibility(
-      result.isCorrect ? labels.correct : labels.incorrect,
-    );
-  }, [result, labels.correct, labels.incorrect]);
+  const {
+    pending,
+    locked,
+    isUnavailable,
+    resultLabel,
+    formedPairs,
+    itemState,
+    setFormedPairs,
+    setPending,
+    allPaired,
+  } = useMatching({
+    leftItems,
+    rightItems,
+    unavailable,
+    initialPairs,
+    result,
+    labels,
+  });
 
   // Empty / unequal lengths (self-detect) or wrapper-forced unavailable → graceful degradation.
   if (isUnavailable) {
     return (
-      <Card style={styles.root}>
+      <Card testID="matching-root" style={styles.root}>
         <Text style={styles.prompt}>{labels.unavailable}</Text>
       </Card>
     );
@@ -131,35 +87,17 @@ export const Matching = ({
     setPending(null);
   };
 
-  const itemState = (column: 'left' | 'right', id: string): ItemVisualState => {
-    if (result) {
-      const graded = result.pairs.find((pair) =>
-        column === 'left' ? pair.leftId === id : pair.rightId === id,
-      );
-      if (graded) return graded.isCorrect ? 'correct' : 'incorrect';
-      return undefined;
-    }
-    if (pending?.column === column && pending.id === id) return 'pending';
-    if (findPairForItem(formedPairs, id)) return 'paired';
-    return undefined;
-  };
-
-  const itemAccessibilityLabel = (item: MatchingItemView, state: ItemVisualState): string => {
-    if (state === 'correct') return `${item.label}, ${labels.correctPair}`;
-    if (state === 'incorrect') return `${item.label}, ${labels.incorrectPair}`;
-    return item.label;
-  };
-
   const renderItem = (column: 'left' | 'right', item: MatchingItemView) => {
     const state = itemState(column, item.id);
     const feedbackIcon = state === 'correct' ? 'check_circle' : state === 'incorrect' ? 'cancel' : null;
     const feedbackColor = state === 'correct' ? theme.colors.tertiary : theme.colors.error;
+    const accessibilityLabel = itemAccessibilityLabel(item, state, labels);
 
     return (
       <Pressable
         key={item.id}
         accessibilityRole="button"
-        accessibilityLabel={itemAccessibilityLabel(item, state)}
+        accessibilityLabel={accessibilityLabel}
         accessibilityState={{
           disabled: locked,
           selected: state === 'pending',
@@ -176,11 +114,15 @@ export const Matching = ({
   };
 
   return (
-    <Card style={styles.root}>
+    <Card testID="matching-root" style={styles.root}>
       <Text style={styles.prompt}>{prompt}</Text>
-      <View style={styles.columns}>
-        <View style={styles.column}>{leftItems.map((item) => renderItem('left', item))}</View>
-        <View style={styles.column}>{rightItems.map((item) => renderItem('right', item))}</View>
+      <View testID="matching-columns" style={styles.columns}>
+        <View testID="matching-column-left" style={styles.column}>
+          {leftItems.map((item) => renderItem('left', item))}
+        </View>
+        <View testID="matching-column-right" style={styles.column}>
+          {rightItems.map((item) => renderItem('right', item))}
+        </View>
       </View>
       {!locked ? (
         <Button disabled={!allPaired} fullWidth onPress={() => onSubmit(formedPairs)}>
@@ -189,6 +131,7 @@ export const Matching = ({
       ) : null}
       {result ? (
         <View
+          testID="matching-result-banner"
           accessibilityRole={result.isCorrect ? undefined : 'alert'}
           style={[styles.banner, result.isCorrect ? styles.bannerCorrect : styles.bannerIncorrect]}
         >
@@ -202,7 +145,7 @@ export const Matching = ({
         </View>
       ) : null}
       {result && explanation ? (
-        <View style={styles.explanation}>
+        <View testID="matching-explanation" style={styles.explanation}>
           <Text style={styles.explanationHeading}>{labels.explanationHeading}</Text>
           <Text style={styles.explanationBody}>{explanation}</Text>
         </View>
@@ -241,8 +184,8 @@ const styles = StyleSheet.create((theme) => ({
       case 'pending':
         return {
           backgroundColor: theme.colors.primaryContainer,
-          borderWidth: 2,
-          borderColor: theme.colors.primary,
+          borderWidth: 1,
+          borderColor: theme.colors.tertiary,
         };
       case 'paired':
         return {
@@ -253,13 +196,13 @@ const styles = StyleSheet.create((theme) => ({
       case 'correct':
         return {
           backgroundColor: theme.utils.mixHex(theme.colors.tertiaryContainer, theme.colors.surface, 0.55),
-          borderWidth: 2,
+          borderWidth: 1,
           borderColor: theme.colors.tertiary,
         };
       case 'incorrect':
         return {
           backgroundColor: theme.colors.errorContainer,
-          borderWidth: 2,
+          borderWidth: 1,
           borderColor: theme.colors.error,
         };
       default:
