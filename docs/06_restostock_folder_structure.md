@@ -40,7 +40,9 @@ restostock-monorepo/
 │   │       │   │   │   └── page.tsx
 │   │       │   │   ├── recipes/     # Vista administrativa para CRUD de Recetas e ingredientes
 │   │       │   │   │   └── page.tsx
-│   │       │   │   └── stock/       # Vista de existencias y reportes de bodega
+│   │       │   │   ├── stock/       # Vista de existencias y reportes de bodega
+│   │       │   │   │   └── page.tsx
+│   │       │   │   └── reports/     # Vista administrativa de reporte de mermas
 │   │       │   │       └── page.tsx
 │   │       │   └── kitchen/         # Pantalla Táctil de Operación en Cocina (Staff)
 │   │       │       ├── page.tsx     # Autenticación rápida por teclado numérico (PIN)
@@ -67,11 +69,14 @@ restostock-monorepo/
 │   │       │   │   ├── components/  # RecordExtractionForm.tsx (Registro de extracción)
 │   │       │   │   └── services/    # stockApi.ts (Llamadas Axios/Fetch a /api/stock/*)
 │   │       │   │
-│   │       │   └── kitchen/         # Características operacionales de cocina
-│   │       │       ├── components/  # RemanenteCard.tsx, ConsumePartialForm.tsx, DiscardForm.tsx, NotificationFeed.tsx, NotificationBanner.tsx, RecipeSelectorModal.tsx, ShiftReconciliationModal.tsx
-│   │       │       ├── hooks/       # useOfflineQueue.ts (Manejo del almacenamiento local y reintento)
-│   │       │       └── services/    # kitchenApi.ts (Llamadas Axios/Fetch a /api/kitchen/*)
-
+│   │       │   ├── kitchen/         # Características operacionales de cocina
+│   │       │   │   ├── components/  # RemanenteCard.tsx, ConsumePartialForm.tsx, DiscardForm.tsx, NotificationFeed.tsx, NotificationBanner.tsx, RecipeSelectorModal.tsx, ShiftReconciliationModal.tsx
+│   │       │   │   ├── hooks/       # useOfflineQueue.ts (Manejo del almacenamiento local y reintento)
+│   │       │   │   └── services/    # kitchenApi.ts (Llamadas Axios/Fetch a /api/kitchen/*)
+│   │       │   │
+│   │       │   └── reports/         # Características del módulo de reportes
+│   │       │       ├── components/  # WasteDashboard.tsx (Visualización de gráficos y tablas)
+│   │       │       └── services/    # reportsApi.ts (Llamadas Axios/Fetch a /api/reports/*)
 │   │       │
 │   │       └── lib/                 # Utilidades generales del Frontend
 │   │           ├── apiClient.ts     # Cliente HTTP configurado para inyectar JWT/PIN en headers
@@ -143,6 +148,18 @@ restostock-monorepo/
 │                   ├── controllers/ # KitchenController.ts
 │                   ├── repositories/ # PrismaRemanenteRepository.ts, PrismaShiftReconciliationRepository.ts
 │                   └── routes.ts    # Rutas HTTP (/api/kitchen) de este módulo
+│
+│           ├── reports/             # --- Vertical Slice: Reportes y Analíticas ---
+│           │   ├── domain/          # Dominio: Estructura del reporte y puerto de persistencia
+│           │   │   ├── entities/    # WasteSummary.entity.ts
+│           │   │   └── ports/       # IReportRepository.ts
+│           │   ├── application/     # Aplicación: Casos de uso de generación de informes
+│           │   │   └── use-cases/   # GetWasteReport.ts
+│           │   └── infrastructure/  # Infraestructura: Adaptadores Express y Repositorios Prisma
+│           │       ├── controllers/ # ReportController.ts
+│           │       ├── repositories/ # PrismaReportRepository.ts
+│           │       └── routes.ts    # Rutas HTTP (/api/reports) de este módulo
+
 
 ```
 

@@ -14,12 +14,14 @@ graph TD
     EpicAuth["🔐 EPIC: Autenticación y Sesiones<br/>(modules/auth)"]
     EpicStock["📦 EPIC: Control de Bodega<br/>(modules/stock)"]
     EpicKitchen["🍳 EPIC: Operaciones de Cocina<br/>(modules/kitchen)"]
+    EpicReports["📊 EPIC: Reportes y Analíticas<br/>(modules/reports)"]
     EpicShared["🛠️ Cross-Cutting Shared Kernel"]
 
     %% Relaciones de Roadmap a Epics
     Roadmap --> EpicAuth
     Roadmap --> EpicStock
     Roadmap --> EpicKitchen
+    Roadmap --> EpicReports
     Roadmap --> EpicShared
 
     %% Habilitador Técnico Base
@@ -67,6 +69,12 @@ graph TD
     US007 --> TK008
     US008 --> TK009
 
+    %% Epic Reports -> US -> TK
+    US009["📝 US-009: Dashboard de Mermas"]
+    TK010["🎫 TK-010: Módulo de Reportes"]
+    EpicReports --> US009
+    US009 --> TK010
+
 
     %% Estilos de Diseño
     classDef default fill:#F2F3F4,stroke:#BDC3C7,stroke-width:1px,color:#2C3E50;
@@ -76,9 +84,9 @@ graph TD
     classDef tk fill:#F2F3F4,stroke:#7F8C8D,stroke-width:1.5px,color:#2C3E50;
 
     class Roadmap roadmap;
-    class EpicAuth,EpicStock,EpicKitchen epic;
-    class US001,US002,US003,US004,US005,US006,US007,US008 us;
-    class TK001,TK002,TK003,TK004,TK005,TK006,TK007,TK008,TK009 tk;
+    class EpicAuth,EpicStock,EpicKitchen,EpicReports epic;
+    class US001,US002,US003,US004,US005,US006,US007,US008,US009 us;
+    class TK001,TK002,TK003,TK004,TK005,TK006,TK007,TK008,TK009,TK010 tk;
 ```
 
 ---
@@ -98,4 +106,6 @@ Dado que algunos visores de Markdown (como la vista previa de VS Code o GitHub) 
 | | [US-006: Consulta de Alertas](user_stories/US-006.md) | [TK-007: Alertas y Notificaciones (Frontend)](tickets/TK-007.md) |
 | | [US-007: Consumo por Recetas](user_stories/US-007.md) | [TK-008: Recetas y Cascada FEFO](tickets/TK-008.md) |
 | | [US-008: Cierre y Conciliación](user_stories/US-008.md) | [TK-009: Cierre de Turno y Conciliación](tickets/TK-009.md) |
+| **📊 Reportes (`reports`)** | [US-009: Dashboard de Mermas](user_stories/US-009.md) | [TK-010: Módulo de Reportes](tickets/TK-010.md) |
+
 

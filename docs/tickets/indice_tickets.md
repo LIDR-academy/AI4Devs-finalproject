@@ -17,6 +17,8 @@ Este documento centraliza el backlog técnico y funcional del Producto Mínimo V
 | **[TK-007](TK-007.md)** | [US-006](../user_stories/US-006.md) | Implementación de Pantalla de Notificaciones y Alertas Dinámicas en Frontend | `kitchen` | 3 | Should Have |
 | **[TK-008](TK-008.md)** | [US-007](../user_stories/US-007.md) | Implementación de Recetas y Descuento FEFO en Cascadas | `catalog`/`kitchen` | 5 | Should Have |
 | **[TK-009](TK-009.md)** | [US-008](../user_stories/US-008.md) | Implementación de Cierre de Turno y Conciliación en Cocina | `kitchen` | 5 | Should Have |
+| **[TK-010](TK-010.md)** | [US-009](../user_stories/US-009.md) | Implementación del Módulo de Reportes y Analítica de Mermas | `reports` | 3 | Should Have |
+
 
 *SP = Story Points (Puntos de Historia basados en escala Fibonacci).*
 
@@ -34,4 +36,6 @@ Este documento centraliza el backlog técnico y funcional del Producto Mínimo V
 *   **[TK-007: Implementación de Pantalla de Notificaciones y Alertas Dinámicas en Frontend](TK-007.md)**: Pantalla táctil en la terminal de cocina que calcula y muestra notificaciones semafóricas (FEFO, stock bajo en línea y avisos de estado offline de red).
 *   **[TK-008: Implementación de Recetas y Descuento FEFO en Cascadas](TK-008.md)**: Lógica transaccional para definir recetas y procesar el consumo rápido de stock en cascada FEFO sobre remanentes activos.
 *   **[TK-009: Implementación de Cierre de Turno y Conciliación en Cocina](TK-009.md)**: Flujo de fin de turno con auto-descarte de insumos caducados (>24h TRR) y registro de auditoría de diferencias físicas.
+*   **[TK-010: Implementación del Módulo de Reportes y Analítica de Mermas](TK-010.md)**: Endpoint para consultar mermas físicas consolidadas agrupadas por ingrediente y motivo en un rango de fechas.
+
 

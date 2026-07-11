@@ -22,5 +22,8 @@ Este directorio contiene las especificaciones detalladas de las historias de usu
     *   *Descripción:* Permite el registro de consumo en lote de múltiples ingredientes a partir de una receta maestra, aplicando descuento en cascada FEFO sobre los remanentes.
 *   **[US-008: Cierre de Turno y Conciliación de Cocina](US-008.md)**
     *   *Descripción:* Provee un flujo guiado de fin de jornada para reportar conteo físico real, auto-descartar insumos vencidos de forma masiva y registrar variaciones de stock.
+*   **[US-009: Dashboard y Reporte de Mermas Visibles](US-009.md)**
+    *   *Descripción:* Permite visualizar de forma agrupada los desperdicios físicos y mermas por ingrediente y motivo en un periodo de tiempo.
+
 
 

@@ -45,6 +45,8 @@ RestoStock tiene como propósito eliminar las mermas invisibles y desperdicios d
 *   **Feed Táctil de Alertas Críticas (Notificaciones):** Tablero visual e instantáneo con tarjetas semafóricas que alertan al personal de cocina sobre vencimientos inminentes (FEFO), roturas de stock de seguridad por ingrediente y avisos de pérdida de red en la terminal.
 *   **Descuento Rápido de Stock por Recetas:** Consumo ágil en cocina descontando de forma automática del remanente más antiguo activo (FEFO) según las porciones requeridas por los platos.
 *   **Cierre de Turno y Conciliación Rápida:** Flujo de fin de jornada para reportar conteo físico real, auto-descartar insumos vencidos de forma masiva y registrar variaciones de stock.
+*   **Dashboard y Reporte de Mermas Visibles:** Panel web administrativo para visualizar de forma consolidada las pérdidas físicas (mermas) por ingrediente y motivo en un rango de fechas, haciendo visible el desperdicio.
+
 
 
 
@@ -151,18 +153,19 @@ restostock-monorepo/
 ├── apps/
 │   ├── frontend/             # Frontend React/Next.js
 │   │   └── src/
-│   │       ├── app/          # Mapeo de Rutas (Admin y Kitchen)
-│   │       ├── components/   # UI Reutilizable
-│   │       └── features/     # Slices del Cliente (auth, catalog, stock, kitchen)
-│   │
-│   └── backend/              # API Express / Node.js
-│       ├── prisma/           # schema.prisma y migraciones SQL
-│       └── src/
-│           ├── shared/       # Shared Kernel (Prisma client, validation middlewares)
-│           ├── auth/         # Slice de Autenticación
-│           ├── catalog/      # Slice de Catálogo de Insumos
-│           ├── stock/        # Slice de Extracciones y Bodega
-│           └── kitchen/      # Slice de Operaciones de Cocina
+│       │       ├── app/          # Mapeo de Rutas (Admin y Kitchen)
+│       │       ├── components/   # UI Reutilizable
+│       │       └── features/     # Slices del Cliente (auth, catalog, stock, kitchen, reports)
+│       │
+│       └── backend/              # API Express / Node.js
+│           ├── prisma/           # schema.prisma y migraciones SQL
+│           └── src/
+│               ├── shared/       # Shared Kernel (Prisma client, validation middlewares)
+│               ├── auth/         # Slice de Autenticación
+│               ├── catalog/      # Slice de Catálogo de Insumos
+│               ├── stock/        # Slice de Extracciones y Bodega
+│               ├── kitchen/      # Slice de Operaciones de Cocina
+│               └── reports/      # Slice de Reportes y Analíticas
 ```
 
 ### **2.4. Infraestructura y despliegue:**
@@ -336,6 +339,27 @@ La API REST opera bajo el estándar OpenAPI 3.0.0. A continuación se detallan l
         "location": "KITCHEN_FRIDGE",
         "status": "ACTIVE",
         "calculatedExpirationDate": "2026-07-05T16:30:00Z"
+      }
+    ]
+    ```
+
+### **4.4. GET `/api/reports/waste` (Reporte de Mermas)**
+*   **Propósito:** Consulta y consolidación agregada de mermas físicas descartadas en un rango temporal.
+*   **Headers:** `Authorization: Bearer <JWT_TOKEN>` (Rol requerido: `ADMIN`)
+*   **Query Parameters:**
+    *   `startDate` (opcional): Fecha inicial ISO 8601 (ej. `2026-07-01T00:00:00Z`).
+    *   `endDate` (opcional): Fecha final ISO 8601 (ej. `2026-07-11T23:59:59Z`).
+*   **Response Success (`200 OK`):**
+    ```json
+    [
+      {
+        "insumoId": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea",
+        "name": "Queso Mozzarella",
+        "brand": "La Serenísima",
+        "category": "Lácteos",
+        "consumptionUnit": "KG",
+        "reason": "EXPIRATION",
+        "totalDiscardedQuantity": "3.5000"
       }
     ]
     ```

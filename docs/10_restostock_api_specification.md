@@ -314,6 +314,49 @@ Esta especificación detalla los contratos de comunicación HTTP (REST API) indi
 
 ---
 
+### 2.10. `GET /api/reports/waste`
+*   **Descripción:** Retorna el acumulado consolidado de existencias descartadas (mermas) en un rango de fechas especificado, agrupando el volumen físico total por ingrediente y motivo del descarte.
+*   **Cabeceras Requeridas:**
+    *   `Authorization: Bearer <token_jwt>` (Rol requerido: `ADMIN`)
+*   **Query Parameters:**
+    *   `startDate` (String, opcional): Fecha de inicio en formato ISO 8601 (ej: `2026-07-01T00:00:00Z`).
+    *   `endDate` (String, opcional): Fecha de fin en formato ISO 8601 (ej: `2026-07-11T23:59:59Z`).
+*   **Response Success (`200 OK` - `WasteReportResponse`):**
+    ```json
+    [
+      {
+        "insumoId": "e2298c5d-6c17-4886-9a2d-4f1b80e8efea",
+        "name": "Queso Mozzarella",
+        "brand": "La Serenísima",
+        "category": "Lácteos",
+        "consumptionUnit": "KG",
+        "reason": "EXPIRATION",
+        "totalDiscardedQuantity": "3.5000"
+      },
+      {
+        "insumoId": "d9b01518-9276-46c5-84a1-db9b01518f88",
+        "name": "Salsa de Tomate",
+        "brand": "Pomarola",
+        "category": "Salsas",
+        "consumptionUnit": "L",
+        "reason": "DAMAGE_OR_DROP",
+        "totalDiscardedQuantity": "1.0000"
+      }
+    ]
+    ```
+*   **Response Error (`400 Bad Request`):**
+    *   *Causa:* Formato incorrecto o no-ISO de las fechas `startDate` o `endDate`.
+    ```json
+    {
+      "error": "BAD_REQUEST",
+      "message": "Invalid date format for startDate. Must be ISO 8601 standard",
+      "timestamp": "2026-07-11T11:51:30Z"
+    }
+    ```
+
+---
+
+
 ## 📐 3. Mapeo de Tipos de Datos y Preservación de Precisión
 
 

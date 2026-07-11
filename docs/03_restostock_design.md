@@ -488,4 +488,8 @@ Al final de cada jornada de trabajo, el personal de cocina realiza un flujo de c
    $$\text{Varianza} = \text{Cantidad Física} - \text{Cantidad Teórica}$$
 3. **Registro de Conciliación:** Se crea un registro en `ShiftReconciliation` y se detallan las discrepancias en `ShiftReconciliationItem`. Si la discrepancia es significativa (mayor a un umbral configurado), se notifica de inmediato al administrador para auditar la desviación.
 
-
+### 4.6. Reporte Analítico de Mermas y Desperdicio (Dashboard)
+Para visibilizar la pérdida física e ineficiencias en el almacenamiento de alimentos, el administrador dispone del panel web de reportes de mermas:
+1. **Filtro Temporal:** Permite consultar los descartes dentro de un rango de fechas UTC (`startDate` y `endDate`).
+2. **Cómputo Agregado:** El backend ejecuta una consulta de agregación sobre la tabla `StockMovement` filtrando por el tipo de movimiento `DISCARD`. Agrupa los resultados por `insumo_id` y por la causa del desperdicio (`reason`: `EXPIRATION`, `DAMAGE_OR_DROP`, `CONTAMINATION`, `SPOILAGE`).
+3. **Consolidación:** Suma las existencias físicas desechadas (`quantity`) y las asocia con el catálogo maestro (`Insumo`) para recuperar detalles legibles (nombre del ingrediente, marca y unidad de consumo).

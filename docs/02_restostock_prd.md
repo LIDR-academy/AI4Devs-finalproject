@@ -19,6 +19,7 @@
     - [US-006: Consulta de Alertas y Notificaciones Críticas en Cocina](#us-006-consulta-de-alertas-y-notificaciones-críticas-en-cocina)
     - [US-007: Consumo Rápido de Stock por Recetas](#us-007-consumo-rápido-de-stock-por-recetas)
     - [US-008: Cierre de Turno y Conciliación de Cocina](#us-008-cierre-de-turno-y-conciliación-de-cocina)
+    - [US-009: Dashboard y Reporte de Mermas Visibles](#us-009-dashboard-y-reporte-de-mermas-visibles)
 6. [Estrategia de Calidad y Verificación (QA/Testing)](#6-estrategia-de-calidad-y-verificación-qatesting)
 7. [Roadmap Post-MVP (Fase 2)](#7-roadmap-post-mvp-fase-2)
 
@@ -42,6 +43,7 @@ El sistema optimiza la rotación de inventarios forzando una lógica FEFO (First
 *   **Feed táctil de notificaciones críticas:** Tarjetas de alertas sobre vencimientos FEFO inminentes, rotura de stock de seguridad de línea y estado de red offline.
 *   **Consumo rápido por recetas (manual):** Registro manual de uso de insumos mediante plantillas de recetas guardadas en la terminal, descontando de forma secuencial en orden FEFO sin integrarse con sistemas de comandas externos o facturación (BOM).
 *   **Cierre de turno y conciliación física:** Flujo de fin de jornada para que el operario declare el inventario real en cocina y el sistema genere de manera guiada los registros de merma y discrepancias.
+*   **Dashboard y reporte de mermas visibles:** Panel web administrativo para que el administrador visualice en tiempo real los descartes acumulados agrupados por insumo y causa, haciendo la merma visible de inmediato.
 
 
 
@@ -204,6 +206,18 @@ A continuación se resume el backlog del MVP de RestoStock, estructurado bajo el
     *   **S**mall: Se limita al proceso del cierre físico y guardado del reporte de conciliación.
     *   **T**esteable: Se valida que al cerrar el turno, los remanentes vencidos se inactiven y se generen los movimientos de desajuste.
 *   **Detalle completo:** [US-008.md](user_stories/US-008.md)
+
+### US-009: Dashboard y Reporte de Mermas Visibles
+*   **Historia:** Como Administrador, quiero visualizar en el backoffice el desglose y sumatoria de mermas físicas registradas, agrupadas por insumo y motivo de descarte, para identificar pérdidas y tomar acciones correctivas sobre el desperdicio.
+*   **Complejidad:** S
+*   **Evaluación INVEST:**
+    *   **I**ndependiente: Lee los movimientos históricos de descarte en la base de datos sin depender del estado actual en tiempo real de la cocina.
+    *   **N**egociable: Se puede filtrar por un rango de fechas flexible (por defecto el día actual o turno).
+    *   **V**aliosa: Convierte las mermas individuales en datos consolidados de costos y volumen, haciendo visible el desperdicio.
+    *   **E**stimable: La consulta SQL/Prisma de agrupación y agregación (`SUM`) está bien delimitada.
+    *   **S**mall: Consiste en un endpoint de consulta simple y una pantalla de visualización en el panel administrador.
+    *   **T**esteable: Verificable al contrastar los mermas individuales creadas contra la sumatoria reportada por el endpoint.
+*   **Detalle completo:** [US-009.md](user_stories/US-009.md)
 
 
 ---

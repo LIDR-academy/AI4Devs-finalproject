@@ -12,8 +12,8 @@ Por favor, ejecuta las siguientes tareas de forma autónoma utilizando tus herra
 ### Paso 2: Redacción de la Especificación de las Pull Requests Identificadas
 Genera la documentación detallada únicamente para las Pull Requests que hayan sido realmente identificadas y verificadas en el historial. Estructura cada una de ellas empleando la siguiente plantilla de Markdown:
 
-#### 🔄 PR #[Número]: [Título de la PR con Semántica Conventional Commits]
-- **Ramas:** `[nombre-rama-origen]` ➡️ `main` (La rama origen debe reflejar el prefijo de feature y tus iniciales de entrega, ej. feature-auth-JL).
+#### 🔄 PR #[Número]: [Título de la PR recuperado exactamente de GitHub, preservado verbatim]
+- **Ramas:** `[nombre-rama-origen recuperado exactamente de GitHub, preservado verbatim]` ➡️ `main` (Nota: No sintetizar, reescribir ni normalizar metadatos históricos para cumplir con Conventional Commits o convenciones de nombres de ramas; en su lugar, se debe registrar el valor exacto de GitHub de forma verbatim y señalar cualquier disconformidad o desviación respecto a las reglas del proyecto al lado del valor original, sin alterarlo).
 - **Ticket Relacionado:** Enlace del ID del ticket técnico del backlog (ej. RS-TK-001). Si no se puede verificar la asociación con un ticket, márquese como "No verificable".
 - **Descripción del Cambio:** Un resumen breve de los archivos afectados clasificados por sus capas de arquitectura (Domain, Application, Infrastructure) y la justificación técnica de la integración.
 - **Quality Gates (DoD):** Lista de verificación de las validaciones de calidad obligatorias que se han verificado con certeza en la ejecución real de CI (ej. TypeScript compilado sin advertencias, tests pasando en verde, cobertura del linter). Si no hay registros de ejecución de una validación específica, márquese como "No verificable".
