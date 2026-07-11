@@ -25,8 +25,8 @@ export const useFlashcard = ({
 
   useEffect(() => {
     if (!isRevealed || Platform.OS === 'android') return;
-    AccessibilityInfo.announceForAccessibility(labels.answerHeading);
-  }, [isRevealed, labels.answerHeading]);
+    AccessibilityInfo.announceForAccessibility(`${labels.answerHeading}: ${slide.back}`);
+  }, [isRevealed, labels.answerHeading, slide.back]);
 
   return {
     revealed,

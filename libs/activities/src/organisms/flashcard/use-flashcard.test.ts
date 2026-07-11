@@ -94,14 +94,17 @@ describe('useFlashcard', () => {
       expect(announceSpy).not.toHaveBeenCalled();
     });
 
-    it('announces the answer heading when revealed', async () => {
+    it('announces the answer heading and the revealed answer content when revealed', async () => {
       const { result } = await renderHook(() => useFlashcard({ slide, labels }));
 
       await act(async () => {
         result.current.setRevealed(true);
       });
 
-      await waitFor(() => expect(announceSpy).toHaveBeenCalledWith(labels.answerHeading));
+      await waitFor(() =>
+        expect(announceSpy).toHaveBeenCalledWith(expect.stringContaining(slide.back)),
+      );
+      expect(announceSpy).toHaveBeenCalledWith(expect.stringContaining(labels.answerHeading));
     });
 
     it('does not announce on Android', async () => {

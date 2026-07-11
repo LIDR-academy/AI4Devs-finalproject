@@ -81,3 +81,16 @@ confirmed text; the unchosen mark's idle label stays visible after lock — fixe
   (fill-in-the-blank + flashcard + matching + multiple-choice), 38 passed, 0 failed.
 - No hardcoded colors/dimensions/strings introduced; all new chrome via
   `t('activity.flashcard.*')` and `theme.*` tokens.
+
+## Rework — full review round 1 (MAJOR: @s10 announce)
+
+| @s | Test |
+|---|---|
+| s10 | `use-flashcard.test.ts` "announces the answer heading and the revealed answer content when revealed" — asserts `slide.back` present, not just the heading |
+
+RED: strengthened the assertion to `expect.stringContaining(slide.back)`; failed against old code
+(received `"Answer"`, expected string containing `"Chlorophyll"`). GREEN: `use-flashcard.ts`
+announce effect now calls `` announceForAccessibility(`${labels.answerHeading}: ${slide.back}`) ``,
+deps `[isRevealed, labels.answerHeading, slide.back]` (primitive, not whole `slide`). Refactor:
+none needed. Gate: `@helsoft/activities` 17 suites/266 tests green; lint + check-types clean for
+`@helsoft/activities`. `risks.md` R5 wording re-checked — already accurate post-fix, no edit.
