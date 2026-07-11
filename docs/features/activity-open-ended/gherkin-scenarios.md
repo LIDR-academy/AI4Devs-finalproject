@@ -102,33 +102,7 @@ Feature: Open-ended activity slide
     And no answer is recorded
 ```
 
-## AC → scenario coverage
+## Coverage
+@s1 render · @s2 submit/lock/reveal · @s3 explanation · @s4 no resubmit · @s5 empty submit · @s6 answered-state/R7 skip · @s7 unavailable · @s8 i18n · @s9 a11y · @s10 Enter≠submit · component-split = task-3 structural.
 
-| Story / spec AC | Scenario(s) |
-|---|---|
-| Renders empty editable input; model hidden | @s1 |
-| Submit → lock + reveal model answer beside learner text | @s2 |
-| Explanation with model-answer reveal | @s3 |
-| Lock after submit (read-only, no resubmit) | @s4 |
-| Empty submit still reveals model answer | @s5 |
-| No correct/incorrect; excluded from R7; answered for R9 | @s6 |
-| Malformed → unavailable | @s7 |
-| i18n chrome | @s8 |
-| Accessibility | @s9 |
-| Enter/return = newline only (does not submit) | @s10 |
-| Component-split folder (`tsx` / types / hook / helpers) | task-3 done criteria (structural; not a runtime `@s`) |
-
-## Scenario → primary test kind
-
-| Scenario | Primary test |
-|---|---|
-| @s1 | `open-ended.test.tsx` (unanswered + model hidden) |
-| @s2 | organism + `open-ended-activity.test.tsx` (submit → lock + reveal) |
-| @s3 | `open-ended.test.tsx` (explanation with reveal) |
-| @s4 | organism + activity (ignore edit/resubmit; onAnswered once) |
-| @s5 | organism + activity (empty submit → reveal + `submittedAnswer: ''`) |
-| @s6 | activity answered-state shape + `isSystemCheckedActivity('open-ended') === false` |
-| @s7 | `isOpenEndedSlideValid` false + organism unavailable |
-| @s8 | activity labels via `t()` + localization key alignment |
-| @s9 | organism a11y assertions + Playwright e2e |
-| @s10 | `open-ended.test.tsx` + Playwright e2e (Enter → newline, still unlocked) |
+Primary tests: organism/hook/helpers + `open-ended-activity` + `isOpenEndedSlideValid` + localization keys + Playwright `open-ended.e2e.js`.
