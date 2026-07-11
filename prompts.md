@@ -41,7 +41,8 @@ Guarda el archivo como "docs/01_idea_inicial.md"
 
 ### Respuesta del Agente de IA:
 El documento completo con el análisis de la concepción del producto se encuentra en:
-* [docs/01_idea_inicial.md](file:///home/lacruzjd/Documentos/programacion/iadevs/proyecto-final/AI4Devs-finalproject/docs/01_idea_inicial.md)
+* [docs/01_idea_inicial.md](docs/01_idea_inicial.md)
+
 
 ### Nota de control humano: 
 Se hicieron algunos cambios al archivo generado por el agente adoptando un rol de un operario autorizado para las traslaciones y descartes, ya que el agente sugirió que cualquier operario podría realizar traslaciones y descartes, lo cual no es correcto, solo el operario autorizado puede realizar traslaciones y descartes.
