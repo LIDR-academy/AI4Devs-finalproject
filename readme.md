@@ -144,7 +144,7 @@ Historial de pedidos con estado y detalle de productos.
 ```bash
 git clone https://github.com/xavierventeo/AI4Devs-finalproject.git
 cd AI4Devs-finalproject
-git checkout feature-entrega2-XVB
+git checkout finalproject-XVB
 ```
 
 **2. Configurar variables de entorno**
@@ -702,7 +702,7 @@ POST /api/checkout
 }
 ```
 
-> Especificación completa (7 endpoints: health, products, cart, checkout, orders) generada con `zod-to-openapi`: [`backend/src/docs/openapi.ts`](backend/src/docs/openapi.ts).
+> Especificación completa sobre 5 recursos — Health, Productos, Carrito, Checkout, Pedidos (9 operaciones en total) — generada con `zod-to-openapi`: [`backend/src/docs/openapi.ts`](backend/src/docs/openapi.ts).
 
 ---
 
