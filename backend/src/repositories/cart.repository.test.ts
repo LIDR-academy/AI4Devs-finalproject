@@ -6,12 +6,11 @@ import { CartRepository } from './cart.repository';
 
 const mockCartFindUnique = jest.fn();
 const mockCartCreate = jest.fn();
-const mockCartItemFindUnique = jest.fn();
+const mockCartItemFindFirst = jest.fn();
 const mockCartItemCreate = jest.fn();
 const mockCartItemUpdate = jest.fn();
 const mockCartItemUpdateMany = jest.fn();
 const mockCartItemDeleteMany = jest.fn();
-const mockCartFindUniqueWithItems = jest.fn();
 
 const mockPrisma = {
   cart: {
@@ -19,7 +18,7 @@ const mockPrisma = {
     create: mockCartCreate,
   },
   cartItem: {
-    findUnique: mockCartItemFindUnique,
+    findFirst: mockCartItemFindFirst,
     create: mockCartItemCreate,
     update: mockCartItemUpdate,
     updateMany: mockCartItemUpdateMany,
@@ -80,7 +79,7 @@ describe('CartRepository', () => {
 
   describe('upsertItem', () => {
     it('crea nuevo CartItem cuando no existe', async () => {
-      mockCartItemFindUnique.mockResolvedValueOnce(null);
+      mockCartItemFindFirst.mockResolvedValueOnce(null);
       const created = {
         id: 'item-1',
         cartId: 'cart-1',
@@ -98,14 +97,12 @@ describe('CartRepository', () => {
         color: 'red',
       });
 
-      expect(mockCartItemFindUnique).toHaveBeenCalledWith({
+      expect(mockCartItemFindFirst).toHaveBeenCalledWith({
         where: {
-          cartId_productId_size_color: {
-            cartId: 'cart-1',
-            productId: 'prod-1',
-            size: 'M',
-            color: 'red',
-          },
+          cartId: 'cart-1',
+          productId: 'prod-1',
+          size: 'M',
+          color: 'red',
         },
       });
       expect(mockCartItemCreate).toHaveBeenCalledWith({
@@ -137,7 +134,7 @@ describe('CartRepository', () => {
         size: null,
         color: null,
       };
-      mockCartItemFindUnique.mockResolvedValueOnce(existing);
+      mockCartItemFindFirst.mockResolvedValueOnce(existing);
       const updated = { ...existing, quantity: 2 };
       mockCartItemUpdate.mockResolvedValueOnce(updated);
 
@@ -152,6 +149,35 @@ describe('CartRepository', () => {
       });
       expect(mockCartItemCreate).not.toHaveBeenCalled();
       expect(result.quantity).toBe(2);
+    });
+
+    it('busca por size/color null (findFirst, no findUnique) cuando el producto no tiene talla ni color', async () => {
+      // Regression test: Prisma's generated compound-unique-key type for
+      // cartId_productId_size_color requires size/color as non-null strings
+      // and rejects `null` at runtime, even though both columns are
+      // nullable. findFirst's plain where filters accept null and don't hit
+      // this limitation — this is what broke "añadir al carrito" for
+      // sizeless/colorless products in the deployed environment.
+      mockCartItemFindFirst.mockResolvedValueOnce(null);
+      mockCartItemCreate.mockResolvedValueOnce({
+        id: 'item-2',
+        cartId: 'cart-1',
+        productId: 'prod-2',
+        quantity: 1,
+        size: null,
+        color: null,
+      });
+
+      await repo.upsertItem('cart-1', { productId: 'prod-2', quantity: 1 });
+
+      expect(mockCartItemFindFirst).toHaveBeenCalledWith({
+        where: {
+          cartId: 'cart-1',
+          productId: 'prod-2',
+          size: null,
+          color: null,
+        },
+      });
     });
   });
 

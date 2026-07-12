@@ -23,7 +23,11 @@ export class CheckoutController {
 
       // 4. Emit Set-Cookie if this was a new session (same pattern as CartController)
       if (res.locals['newSessionId']) {
-        const secureFlag = process.env.NODE_ENV !== 'development' ? '; Secure' : '';
+        // req.secure (no NODE_ENV): con 'trust proxy' activo refleja el
+        // X-Forwarded-Proto real de nginx. Gatear por NODE_ENV rompía la
+        // sesion en el despliegue MVP sin TLS (US-018) - el navegador nunca
+        // guarda una cookie Secure sobre HTTP plano.
+        const secureFlag = req.secure ? '; Secure' : '';
         res.setHeader(
           'Set-Cookie',
           `sessionId=${res.locals['newSessionId'] as string}; HttpOnly; SameSite=Strict; Path=/${secureFlag}`,

@@ -47,20 +47,6 @@ type PrismaCartWithItemsRow = PrismaCartRow & {
 // Helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Prisma's generated CartItemCartIdProductIdSizeColorCompoundUniqueInput
- * declares size/color as `string`, but the actual DB column is nullable.
- * Prisma requires `null` to match NULL rows in the composite unique index.
- * We cast here to satisfy the Prisma call while keeping the rest of the
- * codebase typed correctly.
- */
-type CompositeUniqueKey = {
-  cartId: string;
-  productId: string;
-  size: string | null;
-  color: string | null;
-};
-
 // ---------------------------------------------------------------------------
 // Mappers
 // ---------------------------------------------------------------------------
@@ -106,21 +92,18 @@ export class CartRepository implements ICartRepository {
   async upsertItem(cartId: string, item: CartItemInput): Promise<CartItem> {
     const { productId, quantity, size, color } = item;
 
-    const key: CompositeUniqueKey = {
-      cartId,
-      productId,
-      size: size ?? null,
-      color: color ?? null,
-    };
-
-    const existing = await this.prisma.cartItem.findUnique({
+    // findUnique on the cartId_productId_size_color compound index doesn't
+    // work here: Prisma's generated compound-key input requires size/color
+    // as non-null strings even though the columns are nullable, and rejects
+    // an actual `null` at runtime (not just in the TS types) whenever a
+    // product is added without a size/color. findFirst's plain where filters
+    // accept `null` for nullable columns, so it's used instead.
+    const existing = await this.prisma.cartItem.findFirst({
       where: {
-        cartId_productId_size_color: key as {
-          cartId: string;
-          productId: string;
-          size: string;
-          color: string;
-        },
+        cartId,
+        productId,
+        size: size ?? null,
+        color: color ?? null,
       },
     });
 

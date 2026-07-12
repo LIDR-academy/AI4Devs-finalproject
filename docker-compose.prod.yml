@@ -1,0 +1,61 @@
+# Compose de producción (EC2 t3.micro, Opción A de docs/INFRASTRUCTURE.md):
+# backend/frontend se consumen por `image:` desde GHCR, nunca se construyen en
+# esta instancia — el build ocurre en el runner de GitHub Actions
+# (docs/DEPLOYMENT-STRATEGY.md). Solo nginx publica puertos al host.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER} -d ${DB_NAME}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    image: ghcr.io/${GHCR_OWNER}/runmarket-backend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      ASSETS_BASE_URL: ${ASSETS_BASE_URL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    image: ghcr.io/${GHCR_OWNER}/runmarket-frontend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      # Solo para fetches del lado servidor (Server Components/SSR) - el
+      # cliente sigue usando la ruta relativa /api vía nginx, ver
+      # frontend/src/lib/api-client.ts.
+      INTERNAL_API_URL: http://backend:4000/api
+    depends_on:
+      - backend
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      # El puerto 443 se añade al activar la extensión TLS opcional
+      # (docs/DEPLOYMENT-STRATEGY.md — "Extensiones opcionales"), junto con el
+      # volumen de certificados que gestiona Certbot.
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+      - frontend
+
+volumes:
+  pgdata:

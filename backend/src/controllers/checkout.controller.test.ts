@@ -57,6 +57,9 @@ const makeCheckoutService = (overrides: Partial<ICheckoutService> = {}): IChecko
 
 const buildApp = (service: ICheckoutService) => {
   const app = express();
+  // Replica el 'trust proxy' de app.ts: sin esto, req.secure ignora
+  // X-Forwarded-Proto y el test SEC-01 no reproduce el comportamiento real.
+  app.set('trust proxy', 1);
   app.use(cookieParser());
   app.use(express.json());
   app.use('/api/checkout', createCheckoutRouter(service));
@@ -169,6 +172,35 @@ describe('POST /api/checkout', () => {
     const cookieStr = Array.isArray(setCookieHeader) ? setCookieHeader.join(';') : String(setCookieHeader);
     expect(cookieStr).toMatch(/sessionId=[0-9a-f-]{36}/i);
     expect(cookieStr).toContain('HttpOnly');
+  });
+
+  it('SEC-01: Set-Cookie incluye Secure cuando la conexión es HTTPS (via X-Forwarded-Proto)', async () => {
+    const service = makeCheckoutService();
+
+    const res = await request(buildApp(service))
+      .post('/api/checkout')
+      .set('X-Forwarded-Proto', 'https')
+      .send(VALID_SHIPPING_BODY);
+
+    const setCookieHeader = res.headers['set-cookie'];
+    const cookieStr = Array.isArray(setCookieHeader) ? setCookieHeader.join(';') : String(setCookieHeader);
+    expect(cookieStr).toContain('Secure');
+  });
+
+  it('no incluye Secure sobre HTTP plano aunque NODE_ENV sea production (US-018: despliegue MVP sin TLS)', async () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+
+    const service = makeCheckoutService();
+    const res = await request(buildApp(service))
+      .post('/api/checkout')
+      .send(VALID_SHIPPING_BODY);
+
+    process.env.NODE_ENV = originalEnv;
+
+    const setCookieHeader = res.headers['set-cookie'];
+    const cookieStr = Array.isArray(setCookieHeader) ? setCookieHeader.join(';') : String(setCookieHeader);
+    expect(cookieStr).not.toContain('Secure');
   });
 
   it('no expone stack traces en errores 500', async () => {

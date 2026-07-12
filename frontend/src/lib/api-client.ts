@@ -1,8 +1,15 @@
 import { ProductFilters, ProductsResponse } from '../types';
 import { OrderListResponse } from '../types/order';
 
+// En Server Components (SSR) no hay `window`/origen de navegador contra el
+// que resolver una ruta relativa como "/api" - fetch() la rechaza. Ahi se usa
+// el hostname interno de la red de Docker Compose (mismo host que nginx,
+// pero sin pasar por el), distinto del NEXT_PUBLIC_API_URL relativo que
+// horneamos para el cliente.
 const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
+  typeof window === 'undefined'
+    ? process.env.INTERNAL_API_URL ?? 'http://localhost:4000/api'
+    : process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {

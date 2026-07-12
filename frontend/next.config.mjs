@@ -23,6 +23,15 @@ const securityHeaders = [
 ];
 
 const nextConfig = {
+  // Genera .next/standalone: server mínimo con solo los módulos usados en
+  // runtime, necesario para no copiar node_modules completo a la imagen Docker.
+  output: 'standalone',
+  // Los productos son imágenes estáticas ya optimizadas del repositorio, no
+  // contenido subido dinámicamente: se evita instalar `sharp` (dependencia
+  // nativa pesada) en un host de 1 GB de RAM (EC2 t3.micro) sin beneficio real.
+  images: {
+    unoptimized: true,
+  },
   async headers() {
     return [{ source: '/(.*)', headers: securityHeaders }];
   },

@@ -1,0 +1,28 @@
+# Estado y caché local de Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+# Variables reales — nunca se versionan; terraform.tfvars.example sí
+*.tfvars
+*.tfvars.json
+!terraform.tfvars.example
+
+# Overrides locales
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+.terraformrc
+terraform.rc
+
+# Artefacto generado por infra/artifacts.tf (data "archive_file") en cada
+# plan/apply — nunca se versiona
+app.zip
+
+# Clave privada del key pair EC2, generada por scripts/bootstrap-account.sh
+# — nunca se versiona, es lo mismo que EC2_SSH_PRIVATE_KEY en GitHub Secrets
+*.pem
