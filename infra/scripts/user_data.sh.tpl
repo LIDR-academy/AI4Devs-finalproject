@@ -48,6 +48,8 @@ GHCR_OWNER=${ghcr_owner}
 IMAGE_TAG=${image_tag}
 CORS_ORIGIN=${cors_origin}
 ASSETS_BASE_URL=${cors_origin}
+ARTIFACTS_BUCKET=${artifacts_bucket}
+AWS_REGION=${aws_region}
 ENVEOF
 chmod 600 "$APP_DIR/.env"
 chown ec2-user:ec2-user "$APP_DIR/.env"

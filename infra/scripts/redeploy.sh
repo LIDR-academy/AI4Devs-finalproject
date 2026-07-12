@@ -20,6 +20,23 @@ log "inicio"
 APP_DIR="${APP_DIR:-/opt/runmarket}"
 cd "$APP_DIR"
 
+# ARTIFACTS_BUCKET/AWS_REGION los escribio user_data.sh.tpl en el primer
+# arranque - se necesitan aqui para poder refrescar docker-compose.prod.yml
+# y nginx/nginx.conf sin tener que reemplazar la instancia en Terraform cada
+# vez que cambian (redeploy.sh no pasa por templatefile(), a diferencia de
+# user_data.sh.tpl, asi que no puede recibirlos como variables de plantilla).
+# Se leen con grep/cut, NUNCA con `source .env`: DB_PASSWORD en ese fichero
+# lleva "$$" escapado para que Docker Compose lo interprete literal, pero
+# bash trataria ese mismo "$$" como su propio PID al hacer source, corrompiendo
+# la contraseña real que luego usarian los contenedores.
+ARTIFACTS_BUCKET=$(grep '^ARTIFACTS_BUCKET=' "$APP_DIR/.env" | cut -d= -f2-)
+AWS_REGION=$(grep '^AWS_REGION=' "$APP_DIR/.env" | cut -d= -f2-)
+
+log "descargando app.zip actualizado de S3"
+aws s3 cp "s3://${ARTIFACTS_BUCKET}/app.zip" /tmp/app.zip --region "$AWS_REGION"
+unzip -o /tmp/app.zip -d "$APP_DIR"
+rm -f /tmp/app.zip
+
 # --progress=plain fuerza lineas de log normales en vez de la barra de
 # progreso interactiva de docker compose, que no se ve bien (o parece
 # colgada) al reenviarse por SSH hasta el log del step de GitHub Actions.
