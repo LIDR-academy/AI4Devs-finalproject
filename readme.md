@@ -67,15 +67,15 @@ El MVP cubre el ciclo completo de descubrimiento y compra:
 
 ### **1.3. Diseño y experiencia de usuario:**
 
-Prototipo interactivo: [eCommerce para productos deportivos — Figma Make](https://www.figma.com/make/0wtedXb5138odnAOgHlMiA/Ecommerce-para-productos-deportivos)
+Diseño original: prototipo interactivo en [Figma Make — eCommerce para productos deportivos](https://www.figma.com/make/0wtedXb5138odnAOgHlMiA/Ecommerce-para-productos-deportivos). Las capturas de ese prototipo de diseño se conservan como referencia histórica en [`docs/prototypes/`](docs/prototypes/).
 
-Las capturas de pantalla se encuentran en [`docs/prototypes/`](docs/prototypes/).
+A continuación, las capturas de la **implementación final** ([`docs/screenshots/`](docs/screenshots/)):
 
 ---
 
 **Home — Catálogo con filtros** · *Caso de uso 1*
 
-![Home — Catálogo con filtros](docs/prototypes/01-home-catalog.png)
+![Home — Catálogo con filtros](docs/screenshots/01-home-catalog.png)
 
 Catálogo con panel lateral de filtros running. Punto de entrada y diferencial principal del producto.
 
@@ -83,7 +83,7 @@ Catálogo con panel lateral de filtros running. Punto de entrada y diferencial p
 
 **Ficha de producto** · *Caso de uso 2*
 
-![Ficha de producto](docs/prototypes/02-pdp.png)
+![Ficha de producto](docs/screenshots/02-pdp.png)
 
 Detalle técnico del producto con atributos running, selector de talla/color y botón de añadir al carrito.
 
@@ -91,7 +91,7 @@ Detalle técnico del producto con atributos running, selector de talla/color y b
 
 **Carrito** · *Caso de uso 3*
 
-![Carrito de compra](docs/prototypes/03-cart.png)
+![Carrito de compra](docs/screenshots/03-cart.png)
 
 Resumen de selección con subtotal, envío y acceso al checkout.
 
@@ -99,23 +99,31 @@ Resumen de selección con subtotal, envío y acceso al checkout.
 
 **Checkout — Datos de envío** · *Caso de uso 3*
 
-![Checkout — Datos de envío](docs/prototypes/04-checkout-send-data.png)
+![Checkout — Datos de envío](docs/screenshots/04-checkout-send-data.png)
 
 Formulario de envío, paso 1 del proceso de compra simulado.
 
 ---
 
-**Checkout — Método de pago** · *Caso de uso 3*
+**Checkout —Datos de pago** · *Caso de uso 3*
 
-![Checkout — Método de pago](docs/prototypes/05-checkout-payment.png)
+![Checkout — Fatos de pago](docs/screenshots/05-checkout-payment.png)
 
 Formulario de tarjeta simulada, paso 2 del proceso de compra.
 
 ---
 
+**Revisión de pedido** · *Caso de uso 3*
+
+![Revisión de pedido](docs/screenshots/06-order-revision.png)
+
+Pantalla con datos completos del pedido.
+
+---
+
 **Confirmación de pedido** · *Caso de uso 3*
 
-![Confirmación de pedido](docs/prototypes/06-order-confirmation.png)
+![Confirmación de pedido](docs/screenshots/07-order-confirmation.png)
 
 Pantalla de éxito con número de pedido generado.
 
@@ -123,7 +131,7 @@ Pantalla de éxito con número de pedido generado.
 
 **Mis pedidos**
 
-![Mis pedidos](docs/prototypes/07-my-orders.png)
+![Mis pedidos](docs/screenshots/08-my-orders.png)
 
 Historial de pedidos con estado y detalle de productos.
 
