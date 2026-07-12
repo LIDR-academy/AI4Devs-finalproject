@@ -190,6 +190,47 @@ Invoke-RestMethod -Method GET -Uri "http://localhost:3000/dashboard/operational"
 curl http://localhost:3000/dashboard/operational
 ```
 
+Cuando no existe una sesion `IN_PROGRESS`, el dashboard responde
+`activeSession: null`, conteos en cero y `lastActions: []`. Las sesiones,
+cubos y acciones historicas siguen disponibles por los endpoints de sesiones.
+
+### Reset operacional
+
+Limpia la operacion actual sin borrar historial:
+
+```powershell
+Invoke-RestMethod `
+  -Method POST `
+  -Uri "http://localhost:3000/dashboard/operational/reset" `
+  -ContentType "application/json" `
+  -Body '{"mode":"start-day","closeActiveSessionAs":"cancelled"}'
+```
+
+Body:
+
+```json
+{
+  "mode": "start-day",
+  "closeActiveSessionAs": "cancelled"
+}
+```
+
+`mode` acepta `start-day` o `next-truck`. `closeActiveSessionAs` acepta
+`completed` o `cancelled`. Como el enum actual de Prisma no tiene `CANCELLED`,
+`cancelled` se persiste como `ERROR` para cerrar la sesion descartada sin
+migraciones y sin eliminar datos. `completed` se persiste como `COMPLETED`.
+
+Respuesta esperada:
+
+```json
+{
+  "status": "OK",
+  "mode": "start-day",
+  "closedSessions": 1,
+  "activeSession": null
+}
+```
+
 ### Sincronizar snapshot de vision
 
 Endpoint usado por Edge Vision cuando hay QR valido. Crea o reutiliza una sesion

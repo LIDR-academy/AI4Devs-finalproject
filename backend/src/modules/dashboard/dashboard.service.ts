@@ -2,6 +2,9 @@ import { prisma } from "../../lib/prisma";
 import { isRecord } from "../../lib/validators";
 import { projectExecutionMetadata } from "../robot/robot.metadata";
 
+type OperationalResetMode = "start-day" | "next-truck";
+type CloseActiveSessionAs = "cancelled" | "completed";
+
 const emptyCounts = {
   red: 0,
   blue: 0,
@@ -19,13 +22,14 @@ export const getOperationalDashboard = async () => {
       cubes: true,
       robotActions: {
         orderBy: { createdAt: "desc" },
-        take: 5
+        take: 10
       }
     }
   });
 
   if (!activeSession) {
     return {
+      operationalState: "IDLE_CLEAN",
       activeSession: null,
       counts: emptyCounts,
       lastActions: [],
@@ -98,6 +102,7 @@ export const getOperationalDashboard = async () => {
       : null;
 
   return {
+    operationalState: "SESSION_ACTIVE",
     activeSession: {
       id: activeSession.id,
       code: activeSession.code,
@@ -123,5 +128,39 @@ export const getOperationalDashboard = async () => {
         ? { code: visionSync.qrStatus, message: "Last vision snapshot was not synced" }
         : null,
     updatedAt: latest?.updatedAt ?? activeSession.updatedAt
+  };
+};
+
+const closeStatusByRequest = (closeActiveSessionAs: CloseActiveSessionAs) =>
+  closeActiveSessionAs === "completed" ? "COMPLETED" : "ERROR";
+
+export const resetOperationalDashboard = async ({
+  mode,
+  closeActiveSessionAs
+}: {
+  mode: OperationalResetMode;
+  closeActiveSessionAs: CloseActiveSessionAs;
+}) => {
+  const closeStatus = mode === "start-day" ? "ERROR" : closeStatusByRequest(closeActiveSessionAs);
+
+  const result = await prisma.unloadSession.updateMany({
+    where: { status: "IN_PROGRESS" },
+    data: {
+      status: closeStatus,
+      finishedAt: new Date()
+    }
+  });
+
+  return {
+    status: "OK",
+    mode,
+    requestedCloseActiveSessionAs: closeActiveSessionAs,
+    effectiveCloseStatus: closeStatus,
+    closeStatusNote:
+      closeActiveSessionAs === "cancelled"
+        ? "SessionStatus no tiene CANCELLED; el reset operacional usa ERROR para cerrar sesiones descartadas sin borrar historial."
+        : null,
+    closedSessions: result.count,
+    activeSession: null
   };
 };

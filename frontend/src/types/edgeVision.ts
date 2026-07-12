@@ -133,6 +133,13 @@ export type EdgeDropZonesResetResult = {
   affectedColors: string[];
 };
 
+export type EdgeOperationResetResult = {
+  status: string;
+  multiCubeStatus: EdgeMultiCubeStatus;
+  dropZonesReset: EdgeDropZonesResetResult | null;
+  warning?: string | null;
+};
+
 export type EdgeMultiCubeSafety = {
   zoneClear: boolean;
   operatorPresent: boolean;

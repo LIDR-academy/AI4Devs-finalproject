@@ -203,6 +203,17 @@ def _multi_status_payload(state: VisionServiceState) -> dict[str, object]:
     }
 
 
+def _reset_multi_cube_operation(state: VisionServiceState) -> None:
+    state.multi_cube_status = "idle"
+    state.multi_cube_run_id = None
+    state.multi_cube_last_plan = None
+    state.multi_cube_last_result = None
+    state.multi_cube_plan_snapshot = None
+    state.multi_cube_last_error = None
+    state.multi_cube_updated_at = _utc_iso()
+    state.multi_cube_executing = False
+
+
 def _max_cubes_from_payload(payload: dict[str, Any]) -> int:
     value = payload.get("maxCubes", 6)
     if isinstance(value, str) and value == "all":
@@ -732,6 +743,40 @@ def create_app(
                 "totalSlots": result["totalSlotsReviewed"],
                 "resetSlots": result["totalSlotsReset"],
                 "affectedColors": result["affectedColors"],
+            }
+        )
+
+    @app.post("/operation/reset")
+    def operation_reset(payload: dict[str, Any] = Body(default_factory=dict)) -> JSONResponse:
+        reset_drop_zones_requested = payload.get("resetDropZones", True) is not False
+        drop_zones_result: dict[str, object] | None = None
+        drop_zones_warning: str | None = None
+
+        _reset_multi_cube_operation(state)
+
+        if reset_drop_zones_requested:
+            try:
+                unload_config = _load_unload_config(state)
+                _require_drop_zones_path(unload_config)
+                result = reset_drop_zones(state.unload_config_path, reset_all=True, confirm_reset=True)
+                drop_zones_result = {
+                    "status": "SUCCESS",
+                    "dropZonesPath": result["file"],
+                    "backupPath": result["backup"],
+                    "totalSlots": result["totalSlotsReviewed"],
+                    "resetSlots": result["totalSlotsReset"],
+                    "affectedColors": result["affectedColors"],
+                }
+            except (ResetDropZonesError, HTTPException) as exc:
+                detail = exc.detail if isinstance(exc, HTTPException) else {"code": exc.code, "message": str(exc)}
+                drop_zones_warning = str(detail)
+
+        return _json_no_store(
+            {
+                "status": "SUCCESS",
+                "multiCubeStatus": _multi_status_payload(state),
+                "dropZonesReset": drop_zones_result,
+                "warning": drop_zones_warning,
             }
         )
 

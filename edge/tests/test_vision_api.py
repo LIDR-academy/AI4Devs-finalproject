@@ -872,6 +872,35 @@ class VisionApiTests(unittest.TestCase):
             self.assertEqual("idle", response.json()["status"])
             self.assertIsNone(response.json()["lastError"])
 
+    def test_operation_reset_clears_multi_cube_memory_and_resets_drop_zones(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            directory = Path(temporary_directory)
+            config_path = self._write_file_config(directory)
+            unload_config_path = self._write_planning_file_config(directory)
+            payload = valid_drop_zones()
+            payload["red"][0]["occupied"] = True
+            write_json(directory / "drop-zones.json", payload)
+            app = create_app(config_path, unload_config_path=unload_config_path)
+            app.state.vision_state.multi_cube_status = "planned"
+            app.state.vision_state.multi_cube_run_id = "multi-run"
+            app.state.vision_state.multi_cube_last_plan = {"runId": "multi-run"}
+            app.state.vision_state.multi_cube_last_result = {"status": "SUCCESS"}
+            app.state.vision_state.multi_cube_last_error = "previous error"
+            client = TestClient(app)
+
+            response = client.post("/operation/reset", json={"resetDropZones": True})
+            status = client.get("/robot/multi-cube/status").json()
+            after = json.loads((directory / "drop-zones.json").read_text(encoding="utf-8"))
+
+            self.assertEqual(200, response.status_code)
+            self.assertEqual("SUCCESS", response.json()["status"])
+            self.assertEqual("idle", status["status"])
+            self.assertIsNone(status["runId"])
+            self.assertIsNone(status["lastPlan"])
+            self.assertIsNone(status["lastResult"])
+            self.assertIsNone(status["lastError"])
+            self.assertFalse(after["red"][0]["occupied"])
+
 
 if __name__ == "__main__":
     unittest.main()

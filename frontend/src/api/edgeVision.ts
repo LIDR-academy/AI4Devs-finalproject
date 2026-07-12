@@ -4,6 +4,7 @@ import type {
   EdgeMultiCubeSafety,
   EdgeMultiCubeStatus,
   EdgeDropZonesResetResult,
+  EdgeOperationResetResult,
   EdgeVisionPanelData,
   EdgeVisionSnapshot,
   EdgeVisionStatus,
@@ -144,6 +145,27 @@ export async function fetchEdgeVisionPanel(signal?: AbortSignal): Promise<EdgeVi
 
 export async function resetDropZones(): Promise<EdgeDropZonesResetResult> {
   return postJson<EdgeDropZonesResetResult>("/drop-zones/reset", { scope: "all" });
+}
+
+export async function resetEdgeOperation(): Promise<EdgeOperationResetResult> {
+  try {
+    return await postJson<EdgeOperationResetResult>("/operation/reset", { resetDropZones: true });
+  } catch (error) {
+    const dropZonesReset = await resetDropZones();
+    return {
+      status: "SUCCESS",
+      multiCubeStatus: {
+        status: "idle",
+        runId: null,
+        lastPlan: null,
+        lastResult: null,
+        lastError: error instanceof Error ? error.message : null,
+        updatedAt: new Date().toISOString(),
+      },
+      dropZonesReset,
+      warning: error instanceof Error ? error.message : "Endpoint /operation/reset no disponible; se reseteo drop zones.",
+    };
+  }
 }
 
 export async function planMultiCubeUnload(maxCubes: number): Promise<EdgeMultiCubePlan> {

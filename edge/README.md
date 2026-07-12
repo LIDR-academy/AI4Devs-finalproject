@@ -223,6 +223,7 @@ Endpoints disponibles:
 | POST | `/vision/sync-backend` | Sincroniza el ultimo snapshot con Backend si el QR es valido |
 | POST | `/vision/plan-dry-run` | Planifica desde el ultimo snapshot valido y registra traza dry-run si Backend esta configurado |
 | POST | `/drop-zones/reset` | Resetea `occupied=false` para todas las drop zones, con backup |
+| POST | `/operation/reset` | Limpia plan/resultado multi-cubo en memoria y opcionalmente resetea drop zones |
 | POST | `/robot/multi-cube/plan` | Genera plan multi-cubo desde el snapshot actual para revision en dashboard |
 | POST | `/robot/multi-cube/execute` | Ejecuta descarga fisica multi-cubo usando el ultimo plan aprobado |
 | GET | `/robot/multi-cube/status` | Devuelve estado, ultimo plan, resultado, error y timestamp |
@@ -411,6 +412,10 @@ Endpoints de control:
 - `POST /drop-zones/reset` con `{ "scope": "all" }`: lee `dropZones.path` desde
   `--unload-config`, crea backup del archivo real usado y solo cambia
   `occupied=false`; no modifica `active`, coordenadas ni codigos.
+- `POST /operation/reset` con `{ "resetDropZones": true }`: deja
+  `/robot/multi-cube/status` en `idle`, elimina ultimo plan, ultimo resultado y
+  ultimo error en memoria, y reutiliza el reset de drop zones. No toca
+  calibraciones, poses ni configs locales.
 - `POST /robot/multi-cube/plan` con `{ "maxCubes": 6 }`: captura snapshot,
   exige QR valido y cubos, genera evidencia plan-only y cancela reservas.
 - `POST /robot/multi-cube/execute`: requiere plan previo, evidencia del plan y

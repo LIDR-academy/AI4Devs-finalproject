@@ -18,6 +18,10 @@ Este frontend implementa una pantalla minima:
 - Perfil, fuente de visión, dry-run, cubo y drop zone planificados.
 - Estado de acción y último error reportado.
 - Control de descarga fisica multi-cubo desde Edge Vision.
+- Layout compacto de consola demo con vision y control fisico visibles arriba.
+- Detalles de plan, acciones, trazabilidad, diagnostico vision y reset en tabs.
+- Flujo operacional para `Iniciar jornada` y `Preparar nuevo camion` sin borrar
+  historial.
 
 No declara hardware real como implementado. El frontend consume datos reales del backend, que para Entrega 2 provienen del Edge en modo `simulation`.
 
@@ -46,8 +50,9 @@ VITE_EDGE_VISION_REFRESH_MS=2000
 ```
 
 `VITE_EDGE_VISION_URL` es opcional. Si no existe o el servicio Edge Vision esta
-apagado, el dashboard sigue funcionando con el backend y muestra el panel de
-vision en estado no disponible.
+apagado, el dashboard sigue funcionando con el backend y muestra un estado
+ejecutivo de Edge Vision no disponible. Los campos tecnicos quedan disponibles
+en la tab `Diagnostico vision`, sin ocupar la vista principal.
 
 `VITE_DASHBOARD_REFRESH_MS` controla el polling automatico del dashboard
 operacional: sesion activa, cubos registrados, conteos y ultimas acciones robot.
@@ -65,6 +70,29 @@ La descarga fisica desde Dashboard se ejecuta siempre a traves de Edge Vision.
 El puerto serial del MaxArm se configura en el unload-config local de Edge
 (`edge/config/single-cube-pick-drop.local.json`) mediante `hardware.port`; el
 Dashboard no pide `COM4` al usuario final ni habla directamente con serial.
+
+## Reset operacional
+
+El boton `Iniciar jornada` llama a `POST /dashboard/operational/reset` con
+`mode=start-day`, intenta `POST /operation/reset` en Edge Vision y refresca el
+dashboard. Si Edge no esta disponible, el backend queda limpio igual y la UI
+muestra el warning correspondiente.
+
+El boton `Preparar nuevo camion` cierra la operacion activa como `COMPLETED`
+cuando Edge reporta exito; en otros casos la descarta como `cancelled` en el
+contrato de UI. El backend lo persiste como `ERROR` porque el enum actual no
+tiene `CANCELLED`.
+
+En estado limpio:
+
+- `activeSession` queda `null`.
+- la tarjeta de sesion muestra `Sin sesion activa` y `Estado: IDLE`;
+- los cubos quedan en 0;
+- plan, progreso y acciones de la operacion actual quedan vacios;
+- la trazabilidad conserva solo estado ejecutivo, no acciones historicas.
+
+Estos flujos limpian solo la operacion actual. No borran sesiones, cubos ni
+acciones historicas del backend.
 
 ## Ejecucion
 
@@ -169,7 +197,15 @@ En otros equipos el puerto puede ser `COM3`, `COM5`, etc. Si falta
 - la cabecera indica la actualizacion automatica operacional y cambia sin
   presionar `Actualizar` cuando el backend recibe nuevas acciones;
 - si Edge Vision esta apagado, muestra un error visible sin romper el resto del
-  dashboard;
+  dashboard y sin desplegar la grilla tecnica completa en la vista principal;
+- `Iniciar jornada` deja el dashboard en `Sin sesion activa`, cubos 0,
+  plan/progreso/acciones vacios y muestra que no borra historial;
+- si Edge Vision no esta disponible durante el reset, el dashboard informa
+  `Backend limpio; Edge no disponible para reset fisico/drop zones`;
+- `Preparar nuevo camion` limpia la operacion actual y vuelve a esperar QR;
+- la vista principal muestra arriba `Vision / Camara` y `Control MaxArm`;
+- las tabs muestran plan de descarga, acciones robot, trazabilidad Edge,
+  diagnostico vision y reset/configuracion;
 - `vision-dry-run` se etiqueta como dry-run sin movimiento;
 - los controles fisicos aparecen solo como llamadas al servicio Edge; el
   frontend no habla con serial ni calcula movimientos de robot.

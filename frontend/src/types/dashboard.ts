@@ -63,6 +63,7 @@ export type RobotAction = {
 };
 
 export type OperationalDashboard = {
+  operationalState?: "IDLE_CLEAN" | "SESSION_ACTIVE" | string;
   activeSession: ActiveSession | null;
   counts: CubeCounts;
   lastActions: RobotAction[];
@@ -88,4 +89,17 @@ export type OperationalDashboard = {
   lastVisionCounts?: Record<string, unknown> | null;
   lastVisionError?: { code: string | null; message: string | null } | null;
   updatedAt?: string | null;
+};
+
+export type OperationalResetMode = "start-day" | "next-truck";
+export type CloseActiveSessionAs = "cancelled" | "completed";
+
+export type OperationalResetResult = {
+  status: "OK";
+  mode: OperationalResetMode;
+  requestedCloseActiveSessionAs: CloseActiveSessionAs;
+  effectiveCloseStatus: SessionStatus;
+  closeStatusNote: string | null;
+  closedSessions: number;
+  activeSession: null;
 };
