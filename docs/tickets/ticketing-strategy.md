@@ -61,7 +61,7 @@ Already applied:
 - docs/tickets/README.md
   - Replaced old mixed prefixes with unified TKT-XXX references.
   - Added explicit strategy section.
-- readme.md (Section 6 Tickets de Trabajo)
+- readme.md (Section 6 Development Tickets)
   - Updated 3 highlighted tickets to unified IDs.
   - Kept one backend, one frontend, one database reference.
 - docs/tickets/* ticket files
@@ -71,7 +71,7 @@ Recommended additional updates:
 - If prompts history should reflect current convention, update examples in prompts.md section 6 to use TKT-XXX format.
 
 ## 6. README sections impacted
-- Section 6: Tickets de Trabajo.
+- Section 6: Development Tickets.
 - No structural changes required in other sections.
 
 ## 7. Final recommendation for RealSaveFooding

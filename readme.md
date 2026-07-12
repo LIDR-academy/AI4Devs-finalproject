@@ -1,11 +1,11 @@
-## Índice
+## Table of Contents
 
 - [0. Project sheet](#0-project-sheet)
 	- [0.1. Full name](#01-full-name)
 	- [0.2. Project name](#02-project-name)
 	- [0.3. Brief project description](#03-brief-project-description)
 	- [0.4. Project URL](#04-project-url)
-	- [0.5. URL o archivo comprimido del repositorio](#05-url-o-archivo-comprimido-del-repositorio)
+	- [0.5. Repository URL or compressed file](#05-repository-url-or-compressed-file)
 - [1. Product overview](#1-product-overview)
 - [2. System architecture](#2-system-architecture)
 - [3. Data Model](#3-data-model)
@@ -34,9 +34,9 @@ https://dtjx9r745cz30.cloudfront.net
 
 Deployed on AWS free tier (EC2 + RDS + CloudFront); see `docs/deployment/aws-free-tier-runbook.md`
 for the deployment process and `infra/` for the Dockerfiles/Terraform/docker-compose.
-> Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/).
+> It can be public or private; if private, you must share access securely. You can send the credentials to [alvaro@lidr.co](mailto:alvaro@lidr.co) using a service such as [onetimesecret](https://onetimesecret.com/).
 
-### 0.5. URL o archivo comprimido del repositorio
+### 0.5. Repository URL or compressed file
 https://github.com/jesramgue/JRG-AI4Devs-finalproject.git
 
 ---
@@ -48,6 +48,7 @@ https://github.com/jesramgue/JRG-AI4Devs-finalproject.git
 [System architecture](docs/architecture/architecture.md)
 
 Implementation guides:
+- [User Guide (compile, deploy, and all functionalities with screenshots)](docs/user-guide/README.md)
 - [Frontend README](front/README.md)
 - [Backend README](back/README.md)
 - [Local Development Setup](docs/local-development-setup.md)
@@ -87,7 +88,7 @@ Design Notes:
 
 ## 4. API Specification
 
-> Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad
+> If your backend communicates through an API, describe the main endpoints (maximum 3) in OpenAPI format. Optionally, you can add an example request and response for extra clarity
 
 ---
 
@@ -130,7 +131,7 @@ Selection of 3 main tickets (backend, frontend, database):
 
 ## 7. Pull Requests
 
-> Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
+> Document 3 of the Pull Requests created during the execution of the project
 
 **Pull Request 1**
 https://github.com/LIDR-academy/AI4Devs-finalproject/pull/173

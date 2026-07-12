@@ -1,17 +1,17 @@
 # MVP (2nd Deliverable)
-## Índice
+## Index
 
-1. [Descripción general del producto](#1-descripción-general-del-producto)
-2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
-3. [Modelo de datos](#3-modelo-de-datos)
-4. [Especificación de la API](#4-especificación-de-la-api)
-5. [Historias de usuario](#5-historias-de-usuario)
-6. [Tickets de trabajo](#6-tickets-de-trabajo)
+1. [Product overview](#1-product-overview)
+2. [System architecture](#2-system-architecture)
+3. [Data model](#3-data-model)
+4. [API specification](#4-api-specification)
+5. [User stories](#5-user-stories)
+6. [Work tickets](#6-work-tickets)
 7. [Pull requests](#7-pull-requests)
 
 ---
 
-## 1. Descripción general del producto
+## 1. Product overview
 
 ### Notion
 I have used Notion so that, from an idea or seed, I develop a market study, comparison, current usefulness and viability.
@@ -69,9 +69,9 @@ The list of shares should allow to remove lines of sharing
 ### Lovable Results
 The final results can be seen in docs/design
 
-## 2. Arquitectura del Sistema
+## 2. System Architecture
 
-### **2.1. Diagrama de arquitectura:**
+### **2.1. Architecture diagram:**
 ### Using ChatGPT
 #### Prompt 1: 
 I want to build RealSaveFooding is a pantry + consumption management mobile app concept focused on reducing food waste and saving money by helping people track what they buy, monitor expiration dates, and get recipe suggestions. A key capability is AI assistance—notably analyzing receipts to automatically infer items and suggest estimated expiration dates, reducing manual entry and improving automation. For Frontend (app) I chose Lovalbe (Radix-UI, React, TailWind, Vite, Typescript, Nitro) but for Backend I'd like to use NodeJS. Give me an architecture for this. Split between MVP and non-MVP as it's an academic project
@@ -168,7 +168,7 @@ From everything that you have produced, I need to limit it to the MVP Version (A
 ---
 **Human Interaction**: organising the resources provided to diferent layers.
 
-### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
+### **2.3. High-level project description and file structure**
 
 #### Prompt 1: Design the folder structure (Github Copilot Codex)
 Detail the project infrastructure, including a diagram in the format you deem appropriate using PlantUML, and explain the deployment process that is followed. Keep it Simple and be tight to the MVP.
@@ -179,7 +179,7 @@ Consider MVP only; lets build the folder structure and add the dependencies to t
 ---
 **Human Interaction**: commit changes into git splitting by front changes, backend and documentation. (Kind of a Checkpoint).
 
-### **2.4. Infraestructura y despliegue**
+### **2.4. Infrastructure and deployment**
 
 #### Prompt 1
 As a Expert Technical Architect detail the project infrastructure, including a diagram in the format you deem appropriate, and explain the deployment process that is followed. Keep it Simple and be tight to the MVP.
@@ -212,7 +212,7 @@ Output
 Write the content to docs/architecture/C4-Model.md and add a reference in architecture.md in a new h2 header 2.5. C4 Model
 ```
 
-### **2.6. Seguridad**
+### **2.6. Security**
 
 #### Prompt 1: Apply security documentation
 # Role
@@ -241,7 +241,7 @@ As a Security Expert, analyze the security implications of the RealSaveFooding a
 
 ---
 
-### 3. Modelo de Datos
+### 3. Data Model
 
 ### Prompt 1:
 ```markdown
@@ -357,7 +357,7 @@ It is based on the `docs/product/3_PRD.md` file to understand the business mod
 
 ---
 
-### 4. Especificación de la API
+### 4. API Specification
 
 **Prompt 1:**
 
@@ -367,7 +367,7 @@ It is based on the `docs/product/3_PRD.md` file to understand the business mod
 
 ---
 
-### 5. Historias de Usuario
+### 5. User Stories
 
 #### Prompt 1:
 ```markdown
@@ -404,7 +404,7 @@ Write the updatred user stories in the same .md file
 
 ---
 
-### 6. Tickets de Trabajo
+### 6. Work Tickets
 
 #### Prompt 1: 
 ```markdown
@@ -722,12 +722,12 @@ Index of prompts used during the implementation of each ticket. Each file in `/p
 
 ## Index
 
-1. [Descripción general del producto](#1-MVP-extension)
-2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
-3. [Modelo de datos](#3-modelo-de-datos)
-4. [Especificación de la API](#4-especificación-de-la-api)
-5. [Historias de usuario](#5-historias-de-usuario)
-6. [Tickets de trabajo](#6-tickets-de-trabajo)
+1. [Product overview](#1-MVP-extension)
+2. [System architecture](#2-system-architecture)
+3. [Data model](#3-data-model)
+4. [API specification](#4-api-specification)
+5. [User stories](#5-user-stories)
+6. [Work tickets](#6-work-tickets)
 7. [Pull requests](#7-pull-requests)
 
 ---

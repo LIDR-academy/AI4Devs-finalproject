@@ -1,6 +1,6 @@
-# 2. Arquitectura del Sistema
+# 2. System Architecture
 
-## **2.1. Diagrama de arquitectura:**
+## **2.1. Architecture diagram:**
 Frontend Architecture
 
 ```plantuml
@@ -270,7 +270,7 @@ User --> [Web Portal]
 ```
 
 
-## **2.2. Descripción de componentes principales:**
+## **2.2. Description of main components:**
 
 ```text
 MVP
@@ -329,7 +329,7 @@ Future Work (design only)
 ```
 
 
-## **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
+## **2.3. High-level project description and file structure**
 
 MVP-first repository structure implemented in this repository:
 
@@ -427,7 +427,7 @@ Can be introduced later:
 - `tests/performance` and `tests/contract`
 - Additional docs/runbooks and advanced CI gates
 
-## **2.4. Infraestructura y despliegue**
+## **2.4. Infrastructure and deployment**
 
 MVP infrastructure (AWS-focused):
 
@@ -531,7 +531,7 @@ MVP notes:
 
 [C4 Model](./C4-Model.md)
 
-## **2.6. Seguridad**
+## **2.6. Security**
 
 Security baseline for MVP architecture:
 
