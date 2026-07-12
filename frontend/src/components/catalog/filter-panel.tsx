@@ -93,7 +93,9 @@ function CategorySection({ category, onChange }: CategorySectionProps) {
   );
 }
 
-export function FilterPanel({ activeFilters }: FilterPanelProps) {
+// FilterPanelProps keeps the caller's contract explicit even though the
+// component derives all filter state from useSearchParams() internally.
+export function FilterPanel({}: FilterPanelProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [, startTransition] = useTransition();
