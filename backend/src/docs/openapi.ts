@@ -84,7 +84,6 @@ const CartResponseSchema = registry.register(
   'CartResponse',
   z
     .object({
-      sessionId: z.string().openapi({ example: '550e8400-e29b-41d4-a716-446655440000' }),
       items: z.array(CartItemResponseSchema),
       subtotal: z.number().openapi({ example: 259.98 }),
       shipping: z.number().openapi({ example: 0 }),
@@ -251,6 +250,14 @@ registry.registerPath({
           description: 'Filtrar por objetivo de entrenamiento. Admite múltiples valores.',
           param: { style: 'form', explode: true },
         }),
+      category: z
+        .enum(['shoes', 'clothing', 'accessories'])
+        .optional()
+        .openapi({ description: 'Filtrar por categoría de producto.' }),
+      priceMax: z
+        .string()
+        .optional()
+        .openapi({ description: 'Precio máximo (filtra productos con price <= priceMax).', example: '150' }),
     }),
   },
   responses: {
