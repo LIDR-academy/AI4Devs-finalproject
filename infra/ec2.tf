@@ -42,6 +42,12 @@ resource "aws_instance" "app" {
   vpc_security_group_ids = [aws_security_group.app.id]
   iam_instance_profile   = aws_iam_instance_profile.ec2.name
 
+  # Sin esto, el provider actualiza user_data con ModifyInstanceAttribute
+  # sobre la instancia existente en lugar de recrearla - pero cloud-init solo
+  # ejecuta user_data una vez por instance-id, asi que un cambio de script
+  # nunca llegaria a correr en una instancia ya arrancada.
+  user_data_replace_on_change = true
+
   user_data = templatefile("${path.module}/scripts/user_data.sh.tpl", {
     aws_region       = var.aws_region
     artifacts_bucket = aws_s3_bucket.artifacts.bucket
