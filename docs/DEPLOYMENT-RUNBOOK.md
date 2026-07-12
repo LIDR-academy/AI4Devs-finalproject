@@ -160,32 +160,31 @@ para el pipeline en su siguiente ejecución, y viceversa.
 
 ### Sobre la seguridad de tener el `.tfstate` en S3
 
-El estado de Terraform contiene `db_password` **en texto plano** —
-`sensitive = true` solo oculta el valor en la salida de consola, no lo cifra
-dentro del fichero. El bucket de estado (sección "Configuración de cuenta",
-paso 2) lo protege con cifrado en reposo (SSE-S3), bloqueo de acceso público
-y versionado. El locking usa `use_lockfile` (nativo de S3, sin tabla
-DynamoDB aparte). Detalle completo en `docs/backlog/US-018.md`.
+`db_password` **no llega a persistirse en el `.tfstate`**: el atributo
+`user_data` de `aws_instance` usa un `StateFunc` (provider de AWS) que
+guarda solo el hash SHA-1 del contenido, nunca el contenido en sí.
+`sensitive = true` no cifra el estado — solo evita que el valor se imprima
+en los logs de `terraform plan`/`apply` en GitHub Actions.
 
-**Para una versión profesional**, lo correcto sería sacar `db_password` del
-flujo de Terraform y gestionarlo con **AWS Secrets Manager** (rotación,
-auditoría de acceso vía CloudTrail, sin depender de proteger un fichero de
-estado) — es el enfoque de la Opción B en `docs/INFRASTRUCTURE.md`, fuera de
-alcance de esta opción académica.
+El secreto en claro sí existe, pero en otros dos sitios: el `.env` en la
+propia EC2 (protegido por el Security Group + key pair) y la API
+`DescribeInstanceAttribute` de EC2 (protegida por el alcance de la policy
+IAM, no por el bucket de estado). El cifrado/versionado del bucket sigue
+siendo buena práctica para el resto del estado, pero no es lo que protege
+`db_password`. Detalle completo en `docs/backlog/US-018.md`.
+
+**Para una versión profesional**, sacar `db_password` del flujo de
+Terraform con **AWS Secrets Manager** (rotación, auditoría vía CloudTrail)
+— Opción B en `docs/INFRASTRUCTURE.md`, fuera de alcance académico.
 
 **Alternativa más ligera evaluada — SSM Parameter Store (`SecureString`).**
-En vez de que `db_password` viaje como variable de Terraform (y por tanto
-como atributo de `aws_instance.app` en el estado), se crearía a mano un
-parámetro SSM con el valor, y la EC2 lo leería en tiempo de arranque con su
-propio rol IAM (`aws ssm get-parameter --with-decryption`) — Terraform solo
-gestionaría el *nombre* del parámetro, no secreto. Elimina la contraseña
-tanto de `user_data` como del `.tfstate`, sin la maquinaria de rotación de
-Secrets Manager. Se descarta para este MVP: el riesgo real que mitiga (una
-contraseña de un Postgres de pruebas académicas, ya protegida por el
-cifrado + bucket policy del bucket de estado) no compensa el coste de tocar
-`iam.tf`, `ec2.tf`, `user_data.sh.tpl` y `redeploy.sh` para pasar a
-resolución en runtime. Queda anotado como mejora disponible si este
-despliegue evoluciona más allá del alcance académico.
+La EC2 leería el valor en el arranque (`aws ssm get-parameter
+--with-decryption`) en vez de recibirlo embebido en `user_data`; Terraform
+solo gestionaría el nombre del parámetro. Elimina la contraseña de
+`user_data` y del `.env` en reposo. Se descarta para este MVP: no compensa
+tocar `iam.tf`, `ec2.tf`, `user_data.sh.tpl` y `redeploy.sh` para una
+contraseña de pruebas académicas ya acotada por policy IAM. Mejora
+disponible si el despliegue evoluciona más allá del alcance académico.
 
 ---
 
