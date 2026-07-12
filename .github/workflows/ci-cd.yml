@@ -57,6 +57,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # `npm ci` no genera el cliente de Prisma por si solo, y `tsc` necesita
+      # sus tipos (Category, Prisma.ProductWhereInput...) para compilar - el
+      # mismo problema de orden que ya se resolvio en backend/Dockerfile
+      # (generate antes de build). `migrate deploy` mas abajo aplica SQL
+      # contra la BD, pero no genera el cliente por si solo.
+      - name: Generate Prisma Client
+        run: npx prisma generate --schema=backend/prisma/schema.prisma
+
       - name: Lint
         run: npm run lint
 
