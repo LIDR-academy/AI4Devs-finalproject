@@ -33,12 +33,20 @@ DiviDox is a cross-platform application (Android, iOS, Desktop) built with **Kot
 
 ### **0.4. Project URLs:**
 
-| Resource | URL |
-|----------|-----|
-| **Code Repository** | https://github.com/javiercamarenatriguero/dividox *(public)* |
-| **GitHub Project Board** | https://github.com/users/javiercamarenatriguero/projects/1 |
-| **CI/CD Dashboard** | https://github.com/javiercamarenatriguero/dividox/actions |
-| **UI Prototype** | https://stitch.withgoogle.com/projects/10568397103146599411 *(Stitch)* |
+| Resource                 | URL                                                                                                                                                                                                            |
+|--------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Code Repository**      | https://github.com/javiercamarenatriguero/dividox *(public)*                                                                                                                                                   |
+| **Release (Final)**      | [`main-build-61`](https://github.com/javiercamarenatriguero/dividox/releases/tag/main-build-61)                                                                                                                |
+| **Android Distribution** | [Firebase App Distribution — release `501v4hmlearco`](https://appdistribution.firebase.google.com/testerapps/1:836293215181:android:6641e79fa99571cf75ba84/releases/501v4hmlearco?utm_source=firebase-console) |
+| **Desktop Distribution** | [CI artifact `8258585556` (run `29187666376`)](https://github.com/javiercamarenatriguero/dividox/actions/runs/29187666376/artifacts/8258585556)                                                                |
+| **Documentation Hub**    | https://github.com/javiercamarenatriguero/dividox/tree/main/docs                                                                                                                                               |
+| **ADRs**                 | https://github.com/javiercamarenatriguero/dividox/tree/main/docs/adr                                                                                                                                           |
+| **PRDs**                 | https://github.com/javiercamarenatriguero/dividox/tree/main/docs/prd                                                                                                                                           |
+| **Tickets**              | https://github.com/javiercamarenatriguero/dividox/tree/main/docs/tickets                                                                                                                                       |
+| **Merged PRs**           | https://github.com/javiercamarenatriguero/dividox/pulls?q=is%3Apr+is%3Amerged                                                                                                                                  |
+| **GitHub Project Board** | https://github.com/users/javiercamarenatriguero/projects/1                                                                                                                                                     |
+| **CI/CD Dashboard**      | https://github.com/javiercamarenatriguero/dividox/actions                                                                                                                                                      |
+| **UI Prototype**         | https://stitch.withgoogle.com/projects/10568397103146599411 *(Stitch)*                                                                                                                                         |
 
 ### **0.5. Tools Used:**
 - **Claude Code (CLI):** Primary AI coding assistant — implementation, architecture, documentation, code review, and agent orchestration
@@ -51,11 +59,13 @@ DiviDox is a cross-platform application (Android, iOS, Desktop) built with **Kot
 
 ### **0.6. How to Run / Access the App:**
 
-| Platform | How to Access |
-|----------|---------------|
-| **Android** | APK available via **Firebase App Distribution** (access granted to reviewers). |
-| **iOS** | Clone the [repository](https://github.com/javiercamarenatriguero/dividox), open `iosApp/iosApp.xcworkspace` in Xcode, and run on simulator or device. |
-| **macOS (Desktop/JVM)** | Download the Desktop artifact from [CI — On Merge workflow](https://github.com/javiercamarenatriguero/dividox/actions/workflows/on-merge.yml) or run locally with `./gradlew :composeApp:run`. |
+| Platform                              | How to Access                                                                                                                                                                                                                                                                      |
+|---------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Android**                           | Install via [**Firebase App Distribution**](https://appdistribution.firebase.google.com/testerapps/1:836293215181:android:6641e79fa99571cf75ba84/releases/501v4hmlearco?utm_source=firebase-console) — tester email must be added to `internal-testers` group in Firebase Console. |
+| **Desktop (macOS / Windows / Linux)** | Download platform installer (`.dmg`, `.msi`, `.deb`, `.AppImage`) from the [CI artifact](https://github.com/javiercamarenatriguero/dividox/actions/runs/29187666376/artifacts/8258585556) *(expires 90 days after publish)*, or run locally via `./gradlew :composeApp:run`.       |
+| **iOS**                               | **Not distributed via CI.** Only runnable by building locally in **Xcode** — clone the [repo](https://github.com/javiercamarenatriguero/dividox), open `iosApp/iosApp.xcodeproj`, select a simulator or connected device, press ⌘R.                                                |
+
+**Release under test:** [`v1.0-final-JCT`](https://github.com/javiercamarenatriguero/dividox/releases/tag/main-build-61).
 
 ---
 
@@ -138,14 +148,14 @@ DiviDox is a cross-platform application (Android, iOS, Desktop) built with **Kot
 
 ### **1.3.2. App Screenshots:**
 
-| Screen | Description |
-|--------|-------------|
-| <img src="docs/images/auth.png" width="250"/> | **Authentication** — Google Sign-In and Email/Password login screens with Material Design 3 styling |
-| <img src="docs/images/dashboard-android.png" width="250"/> | **Dashboard** — Portfolio overview with total value, today's metrics, favorites quick access, and period selector |
-| <img src="docs/images/portfolio.png" width="250"/> | **Portfolio** — Holdings list showing ticker, company name, current value, position size, and gain/loss % |
-| <img src="docs/images/stock-analysis.png" width="250"/> | **Analysis** — Detailed security view with price chart (multiple timeframes), fundamental metrics (P/E, Market Cap, Yield) |
-| <img src="docs/images/dividends.png" width="250"/> | **Dividends** — Income projections, historical payment timeline, ex-dividend dates, frequency and yield comparison |
-| <img src="docs/images/settings.png" width="250"/> | **Settings** — Profile management, currency selection, biometric lock, notifications, data export & account deletion |
+| Screen                                                     | Description                                                                                                                |
+|------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------|
+| <img src="docs/images/auth.png" width="250"/>              | **Authentication** — Google Sign-In and Email/Password login screens with Material Design 3 styling                        |
+| <img src="docs/images/dashboard-android.png" width="250"/> | **Dashboard** — Portfolio overview with total value, today's metrics, favorites quick access, and period selector          |
+| <img src="docs/images/portfolio.png" width="250"/>         | **Portfolio** — Holdings list showing ticker, company name, current value, position size, and gain/loss %                  |
+| <img src="docs/images/stock-analysis.png" width="250"/>    | **Analysis** — Detailed security view with price chart (multiple timeframes), fundamental metrics (P/E, Market Cap, Yield) |
+| <img src="docs/images/dividends.png" width="250"/>         | **Dividends** — Income projections, historical payment timeline, ex-dividend dates, frequency and yield comparison         |
+| <img src="docs/images/settings.png" width="250"/>          | **Settings** — Profile management, currency selection, biometric lock, notifications, data export & account deletion       |
 
 ### **1.4. Installation Instructions:**
 
@@ -296,14 +306,14 @@ graph TB
 
 **Layer Responsibilities:**
 
-| Layer | Purpose | Examples |
-|-------|---------|----------|
-| **App** | Entry point, navigation routing, dependency injection | `:composeApp` with RootGraph & Koin |
-| **Features** | UI screens only (pure presentation) | `:feature:auth`, `:feature:dashboard`, `:feature:portfolio` |
-| **Integration** | Shared business logic & data access | `:integration:market-data`, `:integration:security`, `:integration:dividend` |
-| **Components** | Domain models & data repositories | `:component:auth`, `:component:market`, `:component:security` |
-| **Common** | Cross-platform utilities | `:common:auth` (Firebase), `:common:network` (Ktor), `:common:ui-resources` |
-| **External** | Third-party services | Firebase (Auth, Firestore), Room DB (local cache), Yahoo Finance API |
+| Layer           | Purpose                                               | Examples                                                                     |
+|-----------------|-------------------------------------------------------|------------------------------------------------------------------------------|
+| **App**         | Entry point, navigation routing, dependency injection | `:composeApp` with RootGraph & Koin                                          |
+| **Features**    | UI screens only (pure presentation)                   | `:feature:auth`, `:feature:dashboard`, `:feature:portfolio`                  |
+| **Integration** | Shared business logic & data access                   | `:integration:market-data`, `:integration:security`, `:integration:dividend` |
+| **Components**  | Domain models & data repositories                     | `:component:auth`, `:component:market`, `:component:security`                |
+| **Common**      | Cross-platform utilities                              | `:common:auth` (Firebase), `:common:network` (Ktor), `:common:ui-resources`  |
+| **External**    | Third-party services                                  | Firebase (Auth, Firestore), Room DB (local cache), Yahoo Finance API         |
 
 **Pattern: Clean Architecture + Kotlin Multiplatform (KMP) Modules**
 
@@ -318,44 +328,44 @@ graph TB
 
 #### **App Layer (:composeApp)**
 
-| Component | Technology | Responsibility |
-|---|---|---|
+| Component      | Technology                                  | Responsibility                                              |
+|----------------|---------------------------------------------|-------------------------------------------------------------|
 | **Navigation** | Compose Navigation 3 + Kotlin Serialization | Type-safe routing (RootNavGraph, nested graphs per feature) |
-| **DI Setup** | Koin startKoin() | Initialize all modules, register singletons, factories |
+| **DI Setup**   | Koin startKoin()                            | Initialize all modules, register singletons, factories      |
 
 #### **Feature Layer (:feature:*) — Screens Only**
 
-| Component | Technology | Responsibility |
-|---|---|---|
-| **Presentation (UI)** | Compose Multiplatform + Material Design 3 | Screen rendering, MVI state management, user input |
-| **MVI Contract** | Sealed interfaces | State (immutable data class), Event (user actions), Effect (side effects) |
-| **ViewModel** | Android lifecycle-viewmodel-compose | Orchestrate use cases, manage state, emit effects |
+| Component             | Technology                                | Responsibility                                                            |
+|-----------------------|-------------------------------------------|---------------------------------------------------------------------------|
+| **Presentation (UI)** | Compose Multiplatform + Material Design 3 | Screen rendering, MVI state management, user input                        |
+| **MVI Contract**      | Sealed interfaces                         | State (immutable data class), Event (user actions), Effect (side effects) |
+| **ViewModel**         | Android lifecycle-viewmodel-compose       | Orchestrate use cases, manage state, emit effects                         |
 
 #### **Component Layer (:component:*) — Domain + Data**
 
-| Component | Technology | Responsibility |
-|---|---|---|
-| **Domain Layer** | Pure Kotlin (no Android/iOS deps) | Business logic (use cases, models, interfaces) |
-| **Data Layer** | Repositories (impl of domain interfaces) | External API access, local storage, sync logic |
-| **Data Sources** | expect/actual (platform-specific) | Platform-native access (Firebase, Room, Keychain, etc) |
+| Component        | Technology                               | Responsibility                                         |
+|------------------|------------------------------------------|--------------------------------------------------------|
+| **Domain Layer** | Pure Kotlin (no Android/iOS deps)        | Business logic (use cases, models, interfaces)         |
+| **Data Layer**   | Repositories (impl of domain interfaces) | External API access, local storage, sync logic         |
+| **Data Sources** | expect/actual (platform-specific)        | Platform-native access (Firebase, Room, Keychain, etc) |
 
 #### **Integration Layer (:integration:*) — Shared Integrations**
 
-| Component | Technology | Responsibility |
-|---|---|---|
-| **Market Data** | Yahoo Finance API (via Ktor) | Fetch historical prices, fundamentals, dividends; cache strategy |
-| **Security Data** | Firestore + Room | Holdings, portfolio calculations, watchlist |
-| **Dividend Calculations** | Pure Kotlin functions | Projections, CAGR, yield computations |
+| Component                 | Technology                   | Responsibility                                                   |
+|---------------------------|------------------------------|------------------------------------------------------------------|
+| **Market Data**           | Yahoo Finance API (via Ktor) | Fetch historical prices, fundamentals, dividends; cache strategy |
+| **Security Data**         | Firestore + Room             | Holdings, portfolio calculations, watchlist                      |
+| **Dividend Calculations** | Pure Kotlin functions        | Projections, CAGR, yield computations                            |
 
 #### **Common Layer (:common:*) — Reusable Utilities**
 
-| Component | Technology | Responsibility |
-|---|---|---|
-| **Auth** | Firebase Auth + Google Sign-In | Session management, tokens, expect/actual platform SDKs |
-| **Network** | Ktor HTTP Client | HTTP configuration, interceptors, error handling |
-| **UI Resources** | Material Design 3 theme | Colors, typography, shapes, components (ButtonDefaults, etc) |
-| **Settings** | EncryptedSharedPreferences / Datastore | User preferences, encrypted local storage |
-| **Local Storage** | Room DB (Android/iOS) + File I/O (Desktop) | Price cache, holdings, preferences (expect/actual) |
+| Component         | Technology                                 | Responsibility                                               |
+|-------------------|--------------------------------------------|--------------------------------------------------------------|
+| **Auth**          | Firebase Auth + Google Sign-In             | Session management, tokens, expect/actual platform SDKs      |
+| **Network**       | Ktor HTTP Client                           | HTTP configuration, interceptors, error handling             |
+| **UI Resources**  | Material Design 3 theme                    | Colors, typography, shapes, components (ButtonDefaults, etc) |
+| **Settings**      | EncryptedSharedPreferences / Datastore     | User preferences, encrypted local storage                    |
+| **Local Storage** | Room DB (Android/iOS) + File I/O (Desktop) | Price cache, holdings, preferences (expect/actual)           |
 
 ### **2.3. Project Structure & Module Layers:**
 
@@ -863,41 +873,41 @@ For detailed work tickets and technical specifications, see [docs/tickets/](docs
 
 **Complete Work Tickets Roadmap (33 tickets):**
 
-| Phase | Ticket ID | Module | Title |
-|-------|-----------|--------|-------|
-| **Setup** | TK-001 | infra | Initial Setup |
-| | TK-002 | infra | Skills Assessment |
-| | TK-003 | infra | Symlinks Configuration |
-| | TK-004 | infra | Pipeline Setup |
-| | TK-005 | infra | Pipeline Rename |
-| **Foundation** | TK-006 | gradle | Koin Upgrade |
-| | TK-007 | design | Design System Font |
-| | TK-008 | docs | Documentation |
-| | TK-009 | planning | Ticket Planning |
-| | TK-010 | foundation | Session State Foundation |
-| **Delivery 1 (Core)** | **TK-011** | **:component:auth** | **Firebase Auth + Google Sign-In** |
-| | **TK-012** | **:component:auth** | **Session Lifecycle** |
-| | TK-013 | :feature:auth | Feature Auth |
-| | **TK-015** | **:integration:market-data** | **Yahoo Finance API + Room Cache** |
-| | TK-014 | :component:security | Portfolio Component |
-| | TK-016 | :component:security | Watchlist Component |
-| | **TK-018** | **:feature:dashboard** | **Dashboard Screen + BottomNav** |
-| **Delivery 2 (Features)** | TK-017 | :integration:security | Security Integration |
-| | TK-019 | :feature:portfolio | Portfolio Screen |
-| | TK-020 | :feature:portfolio | Add/Edit Holdings |
-| | TK-021 | :component:dividend | Dividend Component |
-| | TK-022 | :integration:dividend | Dividend Integration |
-| | TK-023 | :feature:dividends | Dividend Activity Screen |
-| | TK-024 | :feature:analysis | Analysis Screen |
-| | TK-025 | :feature:favorites | Favorites Feature |
-| | TK-026 | :feature:search | Search Feature |
-| **Polish & Advanced** | TK-028 | :feature:auth | Biometric Authentication |
-| | TK-029 | :feature:settings | Settings Screen |
-| | TK-030 | :feature:settings | Export Portfolio |
-| | TK-031 | :feature:settings | Delete Account |
-| | TK-032 | :feature:settings | About/Terms/Privacy |
-| | TK-033 | :feature:notifications | Push Notifications |
-| | TK-035 | :feature:dashboard | Market Indices Carousel |
+| Phase                     | Ticket ID  | Module                       | Title                              |
+|---------------------------|------------|------------------------------|------------------------------------|
+| **Setup**                 | TK-001     | infra                        | Initial Setup                      |
+|                           | TK-002     | infra                        | Skills Assessment                  |
+|                           | TK-003     | infra                        | Symlinks Configuration             |
+|                           | TK-004     | infra                        | Pipeline Setup                     |
+|                           | TK-005     | infra                        | Pipeline Rename                    |
+| **Foundation**            | TK-006     | gradle                       | Koin Upgrade                       |
+|                           | TK-007     | design                       | Design System Font                 |
+|                           | TK-008     | docs                         | Documentation                      |
+|                           | TK-009     | planning                     | Ticket Planning                    |
+|                           | TK-010     | foundation                   | Session State Foundation           |
+| **Delivery 1 (Core)**     | **TK-011** | **:component:auth**          | **Firebase Auth + Google Sign-In** |
+|                           | **TK-012** | **:component:auth**          | **Session Lifecycle**              |
+|                           | TK-013     | :feature:auth                | Feature Auth                       |
+|                           | **TK-015** | **:integration:market-data** | **Yahoo Finance API + Room Cache** |
+|                           | TK-014     | :component:security          | Portfolio Component                |
+|                           | TK-016     | :component:security          | Watchlist Component                |
+|                           | **TK-018** | **:feature:dashboard**       | **Dashboard Screen + BottomNav**   |
+| **Delivery 2 (Features)** | TK-017     | :integration:security        | Security Integration               |
+|                           | TK-019     | :feature:portfolio           | Portfolio Screen                   |
+|                           | TK-020     | :feature:portfolio           | Add/Edit Holdings                  |
+|                           | TK-021     | :component:dividend          | Dividend Component                 |
+|                           | TK-022     | :integration:dividend        | Dividend Integration               |
+|                           | TK-023     | :feature:dividends           | Dividend Activity Screen           |
+|                           | TK-024     | :feature:analysis            | Analysis Screen                    |
+|                           | TK-025     | :feature:favorites           | Favorites Feature                  |
+|                           | TK-026     | :feature:search              | Search Feature                     |
+| **Polish & Advanced**     | TK-028     | :feature:auth                | Biometric Authentication           |
+|                           | TK-029     | :feature:settings            | Settings Screen                    |
+|                           | TK-030     | :feature:settings            | Export Portfolio                   |
+|                           | TK-031     | :feature:settings            | Delete Account                     |
+|                           | TK-032     | :feature:settings            | About/Terms/Privacy                |
+|                           | TK-033     | :feature:notifications       | Push Notifications                 |
+|                           | TK-035     | :feature:dashboard           | Market Indices Carousel            |
 
 **Highlighted Delivery 1 Tickets (MVP):** TK-011, TK-012, TK-015, TK-018
 
@@ -915,18 +925,18 @@ Each ticket includes:
 
 Three automated GitHub Actions workflows are in place:
 
-| Workflow | Trigger | What it Does |
-|----------|---------|--------------|
-| [**On Pull Request**](https://github.com/javiercamarenatriguero/dividox/actions/workflows/on-pull-request.yml) | Every PR | Build, detekt, unit tests, security scan |
-| [**On Merge**](https://github.com/javiercamarenatriguero/dividox/actions/workflows/on-merge.yml) | Merge to main | Full build + artifact upload (Android APK, Desktop JAR) |
-| [**On Distribute**](https://github.com/javiercamarenatriguero/dividox/actions/workflows/on-distribute.yml) | Manual dispatch | Build signed APK + distribute via Firebase App Distribution |
+| Workflow                                                                                                       | Trigger         | What it Does                                                |
+|----------------------------------------------------------------------------------------------------------------|-----------------|-------------------------------------------------------------|
+| [**On Pull Request**](https://github.com/javiercamarenatriguero/dividox/actions/workflows/on-pull-request.yml) | Every PR        | Build, detekt, unit tests, security scan                    |
+| [**On Merge**](https://github.com/javiercamarenatriguero/dividox/actions/workflows/on-merge.yml)               | Merge to main   | Full build + artifact upload (Android APK, Desktop JAR)     |
+| [**On Distribute**](https://github.com/javiercamarenatriguero/dividox/actions/workflows/on-distribute.yml)     | Manual dispatch | Build signed APK + distribute via Firebase App Distribution |
 
 Supporting reusable workflows: `distribute-android-action.yml`, `distribute-desktop-action.yml`.
 
 **CI/CD Dashboard:** https://github.com/javiercamarenatriguero/dividox/actions
 
-| GitHub Actions Overview | On Merge Workflow Detail |
-|:-----------------------:|:-----------------------:|
+|             GitHub Actions Overview              |                 On Merge Workflow Detail                 |
+|:------------------------------------------------:|:--------------------------------------------------------:|
 | <img src="docs/images/actions.png" width="500"/> | <img src="docs/images/on_merge_action.png" width="500"/> |
 
 ### **7.2. Pull Request Flow**
@@ -958,6 +968,45 @@ All work is tracked on the GitHub Project board with full ticket lifecycle:
 ---
 
 ## 8. Delivery Status
+
+### **8.0. Final Delivery — Release Snapshot**
+
+The final delivery is the **complete functional MVP** shipped as build `main-build-61`, distributed simultaneously to Android testers and Desktop reviewers.
+
+| Item                                          | Link                                                                                                                                                                                       |
+|-----------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Release tag**                               | [`main-build-61`](https://github.com/javiercamarenatriguero/dividox/releases/tag/main-build-61)                                                                                            |
+| **Android build** (Firebase App Distribution) | [Install release `501v4hmlearco`](https://appdistribution.firebase.google.com/testerapps/1:836293215181:android:6641e79fa99571cf75ba84/releases/501v4hmlearco?utm_source=firebase-console) |
+| **Desktop build** (CI artifact)               | [Artifact `8258585556` — run `29187666376`](https://github.com/javiercamarenatriguero/dividox/actions/runs/29187666376/artifacts/8258585556)                                               |
+| **iOS**                                       | Xcode-only — no CI distribution (open `iosApp/iosApp.xcodeproj` and run)                                                                                                                   |
+
+**Documentation index (dividox repo):**
+
+| Type                                     | Count | Link                                                                                                                       |
+|------------------------------------------|-------|----------------------------------------------------------------------------------------------------------------------------|
+| **ADRs** — Architecture Decision Records | 13    | [`docs/adr/`](https://github.com/javiercamarenatriguero/dividox/tree/main/docs/adr)                                        |
+| **PRDs** — Product Requirements          | 8     | [`docs/prd/`](https://github.com/javiercamarenatriguero/dividox/tree/main/docs/prd)                                        |
+| **Tickets** — Work items                 | 33    | [`docs/tickets/`](https://github.com/javiercamarenatriguero/dividox/tree/main/docs/tickets)                                |
+| **User Stories**                         | 34    | [`docs/user-stories.md`](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/user-stories.md)                 |
+| **Architecture diagram**                 | 1     | [`docs/architecture-diagram.md`](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/architecture-diagram.md) |
+| **Merged PRs**                           | 37    | [Merged PR list](https://github.com/javiercamarenatriguero/dividox/pulls?q=is%3Apr+is%3Amerged)                            |
+
+**Highlighted deliverables (final scope):**
+
+| Area                   | Highlight                                                              | Reference                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|------------------------|------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Auth**               | Firebase Email/Password + Google Sign-In + Biometric lock              | [PRD-01](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/prd/PRD-01-authentication.md) · [TK-011](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/tickets/TK-011-component-auth.md) · [TK-028](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/tickets/TK-028-biometric-authenticator.md)                                                                                                            |
+| **Dashboard**          | Portfolio summary, favorites, market indices carousel, news feed       | [PRD-02](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/prd/PRD-02-dashboard.md) · [TK-018](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/tickets/TK-018-feature-dashboard.md) · [TK-035](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/tickets/TK-035-market-indices-carousel.md)                                                                                                              |
+| **Holdings**           | Add / edit / delete positions with currency conversion                 | [PRD-03](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/prd/PRD-03-my-holdings.md) · [TK-019](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/tickets/TK-019-feature-portfolio-screen.md) · [TK-020](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/tickets/TK-020-feature-add-edit-holding.md)                                                                                                    |
+| **Dividends**          | Historical timeline, 12-month projection, ex-date/pay-date calendar    | [PRD-04](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/prd/PRD-04-dividend-activity.md) · [TK-023](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/tickets/TK-023-feature-dividends.md)                                                                                                                                                                                                                             |
+| **Analysis**           | Interactive price chart + fundamentals (P/E, Market Cap, Yield)        | [PRD-05](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/prd/PRD-05-security-analysis.md) · [TK-024](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/tickets/TK-024-feature-analysis.md)                                                                                                                                                                                                                              |
+| **Favorites & Search** | Watchlist + debounced search with live suggestions                     | [PRD-06](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/prd/PRD-06-favorites.md) · [PRD-07](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/prd/PRD-07-search.md) · [TK-025](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/tickets/TK-025-feature-favorites.md) · [TK-026](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/tickets/TK-026-feature-search.md)                     |
+| **Settings**           | Profile, currency, export CSV, delete account, About/Terms/Privacy     | [PRD-08](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/prd/PRD-08-profile-settings.md) · [TK-029](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/tickets/TK-029-feature-settings.md) · [TK-030](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/tickets/TK-030-export-portfolio.md) · [TK-031](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/tickets/TK-031-delete-account.md) |
+| **Security**           | MASVS v2 tooling suite (10 audit skills) + secure token storage        | [ADR-003](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/adr/ADR-003-secure-token-session-storage.md) · [ADR-008](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/adr/ADR-008-token-storage-contract.md)                                                                                                                                                                                                             |
+| **Architecture**       | Layered KMP modules (App → Feature → Integration → Component → Common) | [ADR-002](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/adr/ADR-002-clean-architecture-auth-module-split.md) · [ADR-010](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/adr/ADR-010-mvi-presentation-pattern.md) · [ADR-011](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/adr/ADR-011-navigation.md)                                                                                           |
+| **CI/CD**              | 3 GitHub Actions workflows + Firebase App Distribution automation      | [ADR-006](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/adr/ADR-006-integration-security.md) · [TK-004](https://github.com/javiercamarenatriguero/dividox/blob/main/docs/tickets/TK-004-dvx4-pipelines.md)                                                                                                                                                                                                                           |
+
+---
 
 ### **8.1. What was delivered in Delivery 1**
 
@@ -992,29 +1041,29 @@ The app runs natively on **Android**, **iOS**, and **macOS Desktop** — all fro
 
 ### **8.3. PRD Phases Delivered**
 
-| Phase | Status |
-|-------|--------|
-| **Setup** — Initial scaffold, skills, symlinks, pipelines | ✅ Delivered in Delivery 1 |
-| **Foundation** — Koin, design system, documentation, planning, session state | ✅ Delivered in Delivery 1 |
-| **Delivery 1 (Core)** — Auth, session, market data, dashboard | ✅ Delivered in Delivery 1 |
-| **Delivery 2 (Features)** — Portfolio, dividends, analysis, favorites, search | ✅ **Complete** |
-| **Polish & Advanced** — Biometric, settings, export, delete, about/terms/privacy | ✅ **Complete** |
-| **Beyond PRD** — Onboarding, market indices, news feed, security tooling | ✅ **Complete** |
+| Phase                                                                            | Status                    |
+|----------------------------------------------------------------------------------|---------------------------|
+| **Setup** — Initial scaffold, skills, symlinks, pipelines                        | ✅ Delivered in Delivery 1 |
+| **Foundation** — Koin, design system, documentation, planning, session state     | ✅ Delivered in Delivery 1 |
+| **Delivery 1 (Core)** — Auth, session, market data, dashboard                    | ✅ Delivered in Delivery 1 |
+| **Delivery 2 (Features)** — Portfolio, dividends, analysis, favorites, search    | ✅ **Complete**            |
+| **Polish & Advanced** — Biometric, settings, export, delete, about/terms/privacy | ✅ **Complete**            |
+| **Beyond PRD** — Onboarding, market indices, news feed, security tooling         | ✅ **Complete**            |
 
 ### **8.4. 34 User Stories Implemented**
 
 The backlog comprises 34 user stories across 8 domains — all implemented with Gherkin acceptance criteria. Full details in [`docs/user-stories.md`](docs/user-stories.md).
 
-| Domain | Stories | Tickets |
-|--------|---------|---------|
-| **Authentication** | DVX-US-001 – 004 | DVX-TK-011 |
-| **Dashboard** | DVX-US-005 – 010 | DVX-TK-018 |
-| **My Holdings** | DVX-US-011 – 015 | DVX-TK-019, TK-020, TK-014 |
-| **Dividend Activity** | DVX-US-016 – 019 | DVX-TK-021, TK-022, TK-023 |
-| **Security Analysis** | DVX-US-020 – 022 | DVX-TK-024 |
-| **Favorites & Search** | DVX-US-023 – 026 | DVX-TK-025, TK-026, TK-016 |
+| Domain                  | Stories          | Tickets                                    |
+|-------------------------|------------------|--------------------------------------------|
+| **Authentication**      | DVX-US-001 – 004 | DVX-TK-011                                 |
+| **Dashboard**           | DVX-US-005 – 010 | DVX-TK-018                                 |
+| **My Holdings**         | DVX-US-011 – 015 | DVX-TK-019, TK-020, TK-014                 |
+| **Dividend Activity**   | DVX-US-016 – 019 | DVX-TK-021, TK-022, TK-023                 |
+| **Security Analysis**   | DVX-US-020 – 022 | DVX-TK-024                                 |
+| **Favorites & Search**  | DVX-US-023 – 026 | DVX-TK-025, TK-026, TK-016                 |
 | **Settings & Security** | DVX-US-027 – 032 | DVX-TK-028, TK-029, TK-030, TK-031, TK-032 |
-| **Session Management** | DVX-US-033 – 034 | DVX-TK-012 |
+| **Session Management**  | DVX-US-033 – 034 | DVX-TK-012                                 |
 
 ### **8.5. Pull Requests — Complete History**
 
@@ -1022,66 +1071,66 @@ All PRs are merged to `main` in the [dividox repository](https://github.com/javi
 
 #### Setup & Foundation (Delivery 1)
 
-| PR | Ticket | Title | Status |
-|----|--------|-------|--------|
-| [#1](https://github.com/javiercamarenatriguero/dividox/pull/1) | DVX-2 | Add new Skills | ✅ Merged |
-| [#2](https://github.com/javiercamarenatriguero/dividox/pull/2) | DVX-3 | Use symlinks | ✅ Merged |
-| [#3](https://github.com/javiercamarenatriguero/dividox/pull/3) | DVX-4 | Create on merge & on deploy pipelines | ✅ Merged |
-| [#4](https://github.com/javiercamarenatriguero/dividox/pull/4) | DVX-5 | Rename pipelines | ✅ Merged |
-| [#5](https://github.com/javiercamarenatriguero/dividox/pull/5) | DVX-6 | Upgrade Koin version | ✅ Merged |
-| [#6](https://github.com/javiercamarenatriguero/dividox/pull/6) | DVX-7 | Apply FontText | ✅ Merged |
-| [#7](https://github.com/javiercamarenatriguero/dividox/pull/7) | DVX-8 | Create ADRs, PRDs & STs for the given Stitch design | ✅ Merged |
-| [#8](https://github.com/javiercamarenatriguero/dividox/pull/8) | DVX-9 | Add tasks and redefine favourites | ✅ Merged |
-| [#9](https://github.com/javiercamarenatriguero/dividox/pull/9) | DVX-9 | Update Design kit instructions | ✅ Merged |
-| [#10](https://github.com/javiercamarenatriguero/dividox/pull/10) | DVX-10 | Implement SessionState and fix some issues | ✅ Merged |
+| PR                                                               | Ticket | Title                                               | Status   |
+|------------------------------------------------------------------|--------|-----------------------------------------------------|----------|
+| [#1](https://github.com/javiercamarenatriguero/dividox/pull/1)   | DVX-2  | Add new Skills                                      | ✅ Merged |
+| [#2](https://github.com/javiercamarenatriguero/dividox/pull/2)   | DVX-3  | Use symlinks                                        | ✅ Merged |
+| [#3](https://github.com/javiercamarenatriguero/dividox/pull/3)   | DVX-4  | Create on merge & on deploy pipelines               | ✅ Merged |
+| [#4](https://github.com/javiercamarenatriguero/dividox/pull/4)   | DVX-5  | Rename pipelines                                    | ✅ Merged |
+| [#5](https://github.com/javiercamarenatriguero/dividox/pull/5)   | DVX-6  | Upgrade Koin version                                | ✅ Merged |
+| [#6](https://github.com/javiercamarenatriguero/dividox/pull/6)   | DVX-7  | Apply FontText                                      | ✅ Merged |
+| [#7](https://github.com/javiercamarenatriguero/dividox/pull/7)   | DVX-8  | Create ADRs, PRDs & STs for the given Stitch design | ✅ Merged |
+| [#8](https://github.com/javiercamarenatriguero/dividox/pull/8)   | DVX-9  | Add tasks and redefine favourites                   | ✅ Merged |
+| [#9](https://github.com/javiercamarenatriguero/dividox/pull/9)   | DVX-9  | Update Design kit instructions                      | ✅ Merged |
+| [#10](https://github.com/javiercamarenatriguero/dividox/pull/10) | DVX-10 | Implement SessionState and fix some issues          | ✅ Merged |
 
 #### Delivery 1 — Core (Auth, Market, Dashboard)
 
-| PR | Ticket | Title | Status |
-|----|--------|-------|--------|
+| PR                                                               | Ticket     | Title                                  | Status   |
+|------------------------------------------------------------------|------------|----------------------------------------|----------|
 | [#40](https://github.com/javiercamarenatriguero/dividox/pull/40) | DVX-TK-011 | Domain & Data Layer for Authentication | ✅ Merged |
-| [#41](https://github.com/javiercamarenatriguero/dividox/pull/41) | DVX-TK-012 | Firebase Auth integration | ✅ Merged |
-| [#42](https://github.com/javiercamarenatriguero/dividox/pull/42) | DVX-TK-013 | Auth Screens | ✅ Merged |
-| [#43](https://github.com/javiercamarenatriguero/dividox/pull/43) | DVX-TK-014 | Portfolio Component | ✅ Merged |
-| [#44](https://github.com/javiercamarenatriguero/dividox/pull/44) | DVX-TK-015 | Component Market | ✅ Merged |
-| [#45](https://github.com/javiercamarenatriguero/dividox/pull/45) | DVX-TK-016 | Component Watchlist | ✅ Merged |
-| [#47](https://github.com/javiercamarenatriguero/dividox/pull/47) | DVX-TK-018 | Feature Dashboard | ✅ Merged |
+| [#41](https://github.com/javiercamarenatriguero/dividox/pull/41) | DVX-TK-012 | Firebase Auth integration              | ✅ Merged |
+| [#42](https://github.com/javiercamarenatriguero/dividox/pull/42) | DVX-TK-013 | Auth Screens                           | ✅ Merged |
+| [#43](https://github.com/javiercamarenatriguero/dividox/pull/43) | DVX-TK-014 | Portfolio Component                    | ✅ Merged |
+| [#44](https://github.com/javiercamarenatriguero/dividox/pull/44) | DVX-TK-015 | Component Market                       | ✅ Merged |
+| [#45](https://github.com/javiercamarenatriguero/dividox/pull/45) | DVX-TK-016 | Component Watchlist                    | ✅ Merged |
+| [#47](https://github.com/javiercamarenatriguero/dividox/pull/47) | DVX-TK-018 | Feature Dashboard                      | ✅ Merged |
 
 #### Delivery 2 — Features (Portfolio, Dividends, Analysis, Favorites, Search)
 
-| PR | Ticket | Title | Status |
-|----|--------|-------|--------|
-| [#46](https://github.com/javiercamarenatriguero/dividox/pull/46) | DVX-TK-017 | Integration security | ✅ Merged |
-| [#48](https://github.com/javiercamarenatriguero/dividox/pull/48) | DVX-TK-019 | Add Portfolio screen | ✅ Merged |
+| PR                                                               | Ticket     | Title                                 | Status   |
+|------------------------------------------------------------------|------------|---------------------------------------|----------|
+| [#46](https://github.com/javiercamarenatriguero/dividox/pull/46) | DVX-TK-017 | Integration security                  | ✅ Merged |
+| [#48](https://github.com/javiercamarenatriguero/dividox/pull/48) | DVX-TK-019 | Add Portfolio screen                  | ✅ Merged |
 | [#49](https://github.com/javiercamarenatriguero/dividox/pull/49) | DVX-TK-020 | Add/Edit holding & currency converter | ✅ Merged |
-| [#50](https://github.com/javiercamarenatriguero/dividox/pull/50) | DVX-TK-021 | Component dividend | ✅ Merged |
-| [#51](https://github.com/javiercamarenatriguero/dividox/pull/51) | DVX-TK-022 | Scaffold integration Dividend | ✅ Merged |
-| [#52](https://github.com/javiercamarenatriguero/dividox/pull/52) | DVX-TK-023 | Dividends Activity screen | ✅ Merged |
-| [#53](https://github.com/javiercamarenatriguero/dividox/pull/53) | DVX-TK-024 | Security detail screen | ✅ Merged |
-| [#54](https://github.com/javiercamarenatriguero/dividox/pull/54) | DVX-TK-025 | Feature favorites | ✅ Merged |
-| [#55](https://github.com/javiercamarenatriguero/dividox/pull/55) | DVX-TK-026 | Feature search | ✅ Merged |
+| [#50](https://github.com/javiercamarenatriguero/dividox/pull/50) | DVX-TK-021 | Component dividend                    | ✅ Merged |
+| [#51](https://github.com/javiercamarenatriguero/dividox/pull/51) | DVX-TK-022 | Scaffold integration Dividend         | ✅ Merged |
+| [#52](https://github.com/javiercamarenatriguero/dividox/pull/52) | DVX-TK-023 | Dividends Activity screen             | ✅ Merged |
+| [#53](https://github.com/javiercamarenatriguero/dividox/pull/53) | DVX-TK-024 | Security detail screen                | ✅ Merged |
+| [#54](https://github.com/javiercamarenatriguero/dividox/pull/54) | DVX-TK-025 | Feature favorites                     | ✅ Merged |
+| [#55](https://github.com/javiercamarenatriguero/dividox/pull/55) | DVX-TK-026 | Feature search                        | ✅ Merged |
 
 #### Polish & Advanced
 
-| PR | Ticket | Title | Status |
-|----|--------|-------|--------|
-| [#56](https://github.com/javiercamarenatriguero/dividox/pull/56) | DVX-TK-027 | Edit holding from security detail | ✅ Merged |
-| [#57](https://github.com/javiercamarenatriguero/dividox/pull/57) | DVX-TK-028 | Biometric authenticator | ✅ Merged |
-| [#58](https://github.com/javiercamarenatriguero/dividox/pull/58) | DVX-TK-029 | Feature settings | ✅ Merged |
-| [#59](https://github.com/javiercamarenatriguero/dividox/pull/59) | DVX-TK-030 | Export Portfolio | ✅ Merged |
-| [#60](https://github.com/javiercamarenatriguero/dividox/pull/60) | DVX-TK-031 | Delete Account | ✅ Merged |
+| PR                                                               | Ticket     | Title                                  | Status   |
+|------------------------------------------------------------------|------------|----------------------------------------|----------|
+| [#56](https://github.com/javiercamarenatriguero/dividox/pull/56) | DVX-TK-027 | Edit holding from security detail      | ✅ Merged |
+| [#57](https://github.com/javiercamarenatriguero/dividox/pull/57) | DVX-TK-028 | Biometric authenticator                | ✅ Merged |
+| [#58](https://github.com/javiercamarenatriguero/dividox/pull/58) | DVX-TK-029 | Feature settings                       | ✅ Merged |
+| [#59](https://github.com/javiercamarenatriguero/dividox/pull/59) | DVX-TK-030 | Export Portfolio                       | ✅ Merged |
+| [#60](https://github.com/javiercamarenatriguero/dividox/pull/60) | DVX-TK-031 | Delete Account                         | ✅ Merged |
 | [#66](https://github.com/javiercamarenatriguero/dividox/pull/66) | DVX-TK-032 | Native About / Terms / Privacy Screens | ✅ Merged |
 
 #### Beyond Original PRD
 
-| PR | Ticket | Title | Status |
-|----|--------|-------|--------|
-| [#68](https://github.com/javiercamarenatriguero/dividox/pull/68) | DVX-TK-035 | Market Indices Carousel | ✅ Merged |
-| [#70](https://github.com/javiercamarenatriguero/dividox/pull/70) | DVX-TK-036 | Onboarding Carousel | ✅ Merged |
-| [#72](https://github.com/javiercamarenatriguero/dividox/pull/72) | DVX-TK-037 | News Feed on Dashboard | ✅ Merged |
-| [#76](https://github.com/javiercamarenatriguero/dividox/pull/76) | DVX-TK-038 | MASVS Security tooling | ✅ Merged |
+| PR                                                               | Ticket     | Title                                             | Status   |
+|------------------------------------------------------------------|------------|---------------------------------------------------|----------|
+| [#68](https://github.com/javiercamarenatriguero/dividox/pull/68) | DVX-TK-035 | Market Indices Carousel                           | ✅ Merged |
+| [#70](https://github.com/javiercamarenatriguero/dividox/pull/70) | DVX-TK-036 | Onboarding Carousel                               | ✅ Merged |
+| [#72](https://github.com/javiercamarenatriguero/dividox/pull/72) | DVX-TK-037 | News Feed on Dashboard                            | ✅ Merged |
+| [#76](https://github.com/javiercamarenatriguero/dividox/pull/76) | DVX-TK-038 | MASVS Security tooling                            | ✅ Merged |
 | [#77](https://github.com/javiercamarenatriguero/dividox/pull/77) | DVX-TK-039 | Prompt YAML file fixed and disable iOS deployment | ✅ Merged |
-| [#79](https://github.com/javiercamarenatriguero/dividox/pull/79) | DVX-TK-041 | Add images for the README | ✅ Merged |
+| [#79](https://github.com/javiercamarenatriguero/dividox/pull/79) | DVX-TK-041 | Add images for the README                         | ✅ Merged |
 
 **Total: 37 PRs merged** — all implemented with Claude Code as the primary AI coding assistant.
 
@@ -1093,10 +1142,27 @@ DiviDox was built entirely with AI-assisted development. Every phase — from pr
 
 ### **9.1. Claude Code — Primary Development Environment**
 
-**Claude Code** (CLI) was the primary coding assistant, used for all implementation, architecture design, documentation, and code review. The project uses two configuration files:
+**Claude Code** (CLI) was the primary coding assistant, used for all implementation, architecture design, documentation, and code review. Model: **Claude Opus 4** (1M-token context window). The project uses two configuration files:
 
 - **`CLAUDE.md`** — Project-level instructions: build commands, architecture rules, convention plugins, spacing/string resource rules, security references, tech stack versions.
 - **`AGENTS.md`** — Agent orchestration guide: skill inventory, agent definitions, workflow patterns, and project conventions.
+
+#### Spec-Driven Development
+
+Every feature flows through a structured pipeline — no code without a traceable spec. Each ticket links back to its user story, each story back to its PRD.
+
+1. **Product Requirements** → PO agent generates PRDs (`generate-prd`, `product-description`)
+2. **User Stories** → INVEST-compliant stories with BDD criteria (`user-story-writer`, `story-map-generator`)
+3. **Sprint Tickets** → Atomic estimable tasks (`ticket-writer`, `estimate-effort`, `task-planner`)
+4. **Implementation** → Developer agent: domain → data → UI → navigation → tests (`implement-domain`, `implement-ui`, `implement-di`, `implement-navigation`)
+5. **Review & Verification** → Code Reviewer validates architecture, performance, security (`audit-compose-performance`, `owasp-security-review`)
+
+#### Hooks
+
+| Hook                  | Trigger               | Action                                                                                                                        |
+|-----------------------|-----------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| **Pre-commit check**  | `PreToolUse` on Bash  | Runs Detekt static analysis + JVM tests before commits                                                                        |
+| **Pre-push security** | `PostToolUse` on Bash | Advisory scan — runs `gitleaks` secret detection and reminds to invoke `owasp-security-review` for security-sensitive changes |
 
 ### **9.2. GitHub Copilot — Complementary AI Support**
 
@@ -1125,21 +1191,21 @@ The project includes a comprehensive suite of **29 custom skills** and **3 speci
 
 **Agents (3):**
 
-| Agent | Role | Skills Used |
-|-------|------|-------------|
-| **PO (Product Owner)** | Requirements, user stories, tickets, estimation, roadmap | `write-meta-prompt`, `user-story-writer`, `story-map-generator`, `ticket-writer`, `estimate-effort`, `task-planner` |
-| **Developer** | Full-stack KMP engineer: domain, UI, DI, navigation, tests | `implement-domain`, `implement-ui`, `implement-di`, `implement-navigation`, `write-unit-test`, `module-organization`, `manage-git-flow`, `audit-compose-performance`, `owasp-security-review` |
-| **Code Reviewer** | Architecture compliance, code quality, security, Compose performance | `audit-compose-performance`, `manage-git-flow`, `owasp-security-review` |
+| Agent                  | Role                                                                 | Skills Used                                                                                                                                                                                   |
+|------------------------|----------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **PO (Product Owner)** | Requirements, user stories, tickets, estimation, roadmap             | `write-meta-prompt`, `user-story-writer`, `story-map-generator`, `ticket-writer`, `estimate-effort`, `task-planner`                                                                           |
+| **Developer**          | Full-stack KMP engineer: domain, UI, DI, navigation, tests           | `implement-domain`, `implement-ui`, `implement-di`, `implement-navigation`, `write-unit-test`, `module-organization`, `manage-git-flow`, `audit-compose-performance`, `owasp-security-review` |
+| **Code Reviewer**      | Architecture compliance, code quality, security, Compose performance | `audit-compose-performance`, `manage-git-flow`, `owasp-security-review`                                                                                                                       |
 
 **Skills by Category:**
 
-| Category | Skills | Purpose |
-|----------|--------|---------|
-| **Product & Requirements** | `write-meta-prompt`, `generate-prd`, `product-description`, `product-roadmap`, `user-story-writer`, `story-map-generator`, `ticket-writer`, `estimate-effort`, `task-planner` | Transform ideas into structured requirements, user stories, tickets, and roadmaps |
-| **Architecture & Design** | `generate-adr`, `design-c4`, `design-data-model`, `design-md`, `design-system`, `stitch-design`, `module-organization` | Document architecture decisions, generate C4 diagrams, design data models, manage KMP module structure |
-| **Implementation** | `implement-domain`, `implement-ui`, `implement-di`, `implement-navigation`, `write-unit-test`, `audit-compose-performance` | Scaffold domain layers, build Compose UI with MVI, wire Koin DI, set up navigation routes, write tests |
-| **Quality & Security** | `owasp-security-review`, `manage-git-flow`, `full-doc`, `skill-creator` | OWASP Top 10 review, git flow validation, documentation generation |
-| **MASVS Security Suite** | `masvs-checklist`, `masvs-auth-assessment`, `masvs-secure-storage-audit`, `masvs-crypto-review`, `masvs-network-security-check`, `masvs-platform-interaction-review`, `masvs-code-quality-scan`, `masvs-privacy-audit`, `masvs-resilience-assessment`, `masvs-mobile-threat-model` | Full OWASP MASVS v2 compliance suite — 10 specialized security audit skills covering all MASVS categories for a Tier 2 fintech app |
+| Category                   | Skills                                                                                                                                                                                                                                                                             | Purpose                                                                                                                            |
+|----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| **Product & Requirements** | `write-meta-prompt`, `generate-prd`, `product-description`, `product-roadmap`, `user-story-writer`, `story-map-generator`, `ticket-writer`, `estimate-effort`, `task-planner`                                                                                                      | Transform ideas into structured requirements, user stories, tickets, and roadmaps                                                  |
+| **Architecture & Design**  | `generate-adr`, `design-c4`, `design-data-model`, `design-md`, `design-system`, `stitch-design`, `module-organization`                                                                                                                                                             | Document architecture decisions, generate C4 diagrams, design data models, manage KMP module structure                             |
+| **Implementation**         | `implement-domain`, `implement-ui`, `implement-di`, `implement-navigation`, `write-unit-test`, `audit-compose-performance`                                                                                                                                                         | Scaffold domain layers, build Compose UI with MVI, wire Koin DI, set up navigation routes, write tests                             |
+| **Quality & Security**     | `owasp-security-review`, `manage-git-flow`, `full-doc`, `skill-creator`                                                                                                                                                                                                            | OWASP Top 10 review, git flow validation, documentation generation                                                                 |
+| **MASVS Security Suite**   | `masvs-checklist`, `masvs-auth-assessment`, `masvs-secure-storage-audit`, `masvs-crypto-review`, `masvs-network-security-check`, `masvs-platform-interaction-review`, `masvs-code-quality-scan`, `masvs-privacy-audit`, `masvs-resilience-assessment`, `masvs-mobile-threat-model` | Full OWASP MASVS v2 compliance suite — 10 specialized security audit skills covering all MASVS categories for a Tier 2 fintech app |
 
 **Typical Feature Workflow:**
 
@@ -1154,13 +1220,13 @@ The project includes a comprehensive suite of **29 custom skills** and **3 speci
 
 The project connects to external services via MCP:
 
-| MCP Server | Purpose |
-|------------|---------|
-| **Stitch** (`.mcp.json`) | Google's AI design tool — generate, edit, and manage UI screens directly from Claude Code |
-| **GitHub** (global plugin) | Repository management, PR operations, issue tracking |
-| **Context7** (global plugin) | Up-to-date library documentation lookup during development |
-| **Linear** (global plugin) | Issue tracking integration (used during early project planning) |
-| **lean-ctx** (global plugin) | Context compression and token-efficient file reading |
+| MCP Server                   | Purpose                                                                                   |
+|------------------------------|-------------------------------------------------------------------------------------------|
+| **Stitch** (`.mcp.json`)     | Google's AI design tool — generate, edit, and manage UI screens directly from Claude Code |
+| **GitHub** (global plugin)   | Repository management, PR operations, issue tracking                                      |
+| **Context7** (global plugin) | Up-to-date library documentation lookup during development                                |
+| **Linear** (global plugin)   | Issue tracking integration (used during early project planning)                           |
+| **lean-ctx** (global plugin) | Context compression and token-efficient file reading                                      |
 
 ### **9.5. Stitch (Google AI) — UX Design Tool**
 
@@ -1187,12 +1253,12 @@ The full prompt catalog covering all project phases is in [`prompts.md`](prompts
 
 **Delivery 2 implementation prompt examples** (Section 8 in prompts.md):
 
-| Prompt | Ticket | What It Does |
-|--------|--------|--------------|
+| Prompt  | Ticket     | What It Does                                                                                              |
+|---------|------------|-----------------------------------------------------------------------------------------------------------|
 | **8.1** | DVX-TK-023 | Dividends Activity screen — full MVI scaffold with collapsible month groups and 12-month projection chart |
-| **8.2** | DVX-TK-026 | Search feature — 250ms debounced search with SecurityCard results and FAB wiring |
-| **8.3** | DVX-TK-035 | Market Indices Carousel — horizontal carousel of 6 global indices loading independently on Dashboard |
-| **8.4** | DVX-TK-038 | MASVS Security Tooling — 10 OWASP MASVS v2 audit skills + GitHub Copilot prompt |
+| **8.2** | DVX-TK-026 | Search feature — 250ms debounced search with SecurityCard results and FAB wiring                          |
+| **8.3** | DVX-TK-035 | Market Indices Carousel — horizontal carousel of 6 global indices loading independently on Dashboard      |
+| **8.4** | DVX-TK-038 | MASVS Security Tooling — 10 OWASP MASVS v2 audit skills + GitHub Copilot prompt                           |
 
 ---
 
