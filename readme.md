@@ -35,7 +35,7 @@ http://52.215.59.169/
 
 ### 0.6. Metodología de desarrollo:
 
-El desarrollo se ha llevado a cabo siguiendo un flujo **Spec-Driven Development (SDD)** asistido por IA: cada historia de usuario se refina a un backlog técnico, se implementa con **TDD obligatorio** (backend y frontend) y pasa una **revisión de seguridad OWASP** antes de cerrarse. El proceso completo —fases, comandos y agentes— está documentado en [`docs/SDD-WORKFLOW.md`](docs/SDD-WORKFLOW.md); su automatización (agents, skills y commands) vive en [`.claude/`](.claude/), la única fuente de verdad del comportamiento agéntico del proyecto.
+El desarrollo se ha llevado a cabo siguiendo un flujo **Spec-Driven Development (SDD)** asistido por IA: cada historia de usuario se refina a un backlog técnico, se implementa con **TDD obligatorio** (backend y frontend) y pasa una **revisión de seguridad OWASP** antes de cerrarse. El proceso completo —fases, comandos y agentes— está documentado en [`docs/SDD-WORKFLOW.md`](docs/SDD-WORKFLOW.md); su automatización (agents, skills y commands) vive en [`.claude/`](.claude/), la única fuente de verdad del comportamiento agéntico del proyecto. Se optó por un flujo propio en lugar de un framework externo (OpenSpec, spec-kit) para poder personalizarlo a las reglas del proyecto e iterarlo con flexibilidad.
 
 ---
 
