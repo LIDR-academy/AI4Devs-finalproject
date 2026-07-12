@@ -11,7 +11,9 @@
 
 ---
 
-> **Note on this delivery (Delivery 2 – First executable MVP).** This `readme.md` summarizes the **PeredaHR** project and links to the project's **private repository**, where all the code, documentation and evidence live: [github.com/franpereda/PeredaHR](https://github.com/franpereda/PeredaHR) — branch **`feature-entrega2-FSF`** (delivery PR: [#12](https://github.com/franpereda/PeredaHR/pull/12)). As it is private, access for the evaluation team has been granted (see 0.6). The AI components (collective-agreement RAG + Text-to-SQL) are in scope for the Final Delivery.
+> **Note on this delivery (Final Delivery – complete product).** This `readme.md` summarizes the **PeredaHR** project and links to the project's **private repository**, where all the code, documentation and evidence live: [github.com/franpereda/PeredaHR](https://github.com/franpereda/PeredaHR) — branch **`finalproject-FSF`**, release tag **`v1.0-final-FSF`**. As it is private, access for the evaluation team has been granted (see 0.6).
+>
+> **What the Final Delivery adds over the Delivery 2 MVP:** the complete **AI block** working against the real APIs — collective-agreement **RAG assistant with mandatory citations** (PER-13/21, Claude + Voyage embeddings + pgvector) and **conversational Text-to-SQL reporting with privacy guardrails** (PER-14) —, a **Playwright E2E suite** covering the primary flow in CI (PER-24), and a full **corporate brand redesign** of the UI with zero functional changes (PER-25). Evidence of everything running: [docs/evidencia-final.md](https://github.com/franpereda/PeredaHR/blob/finalproject-FSF/docs/evidencia-final.md).
 
 ## 0. Project summary
 
@@ -29,15 +31,13 @@ PeredaHR is an internal time, presence and HR operations management platform. It
 
 ### **0.4. Project URL:**
 
-**There is no public URL.** Due to **GDPR + LOPDGDD** requirements (BioStar biometric data and geolocation must stay on infrastructure controlled by the company), PeredaHR is deployed **on-premise** on an internal Windows server; the reviewer's access is granted via **Terminal Server/RDP** ("private with granted access"). The application also runs **locally in one command** (see 1.4).
-
-As evidence of the running MVP, **screenshots of the full E2E flow** are provided in [docs/evidencia-entrega2.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/evidencia-entrega2.md).
+**There is no public URL.** Due to **GDPR + LOPDGDD** requirements (BioStar biometric data and geolocation must stay on infrastructure controlled by the company), PeredaHR is deployed **on-premise** on an internal Windows server that cannot be exposed to third parties, so the delivery is **evidence-based**: **[docs/evidencia-final.md](https://github.com/franpereda/PeredaHR/blob/finalproject-FSF/docs/evidencia-final.md)** contains 18 screenshots of the final system running (desktop and mobile, including both AI features answering against the real Anthropic/Voyage APIs), captured by driving the real UI. The application also runs **locally in one command** (see 1.4), and the whole primary flow is asserted by the **Playwright E2E suite** on every CI run.
 
 > Private repository: access to the code is granted to the evaluation team (see 0.6). For additional credentials, they can be shared securely with [alvaro@lidr.co](mailto:alvaro@lidr.co) via [onetimesecret](https://onetimesecret.com/).
 
 ### 0.5. Repository URL or compressed archive
 
-Project's **private** repository: [https://github.com/franpereda/PeredaHR](https://github.com/franpereda/PeredaHR) — delivery branch: **`feature-entrega2-FSF`** · delivery PR: [#12](https://github.com/franpereda/PeredaHR/pull/12).
+Project's **private** repository: [https://github.com/franpereda/PeredaHR](https://github.com/franpereda/PeredaHR) — delivery branch: **`finalproject-FSF`** · release tag: **`v1.0-final-FSF`** · Final Delivery PRs: [#16](https://github.com/franpereda/PeredaHR/pull/16)–[#20](https://github.com/franpereda/PeredaHR/pull/20).
 
 > As this is a private repository, access is shared with the evaluation team (see 0.6).
 
@@ -66,11 +66,11 @@ PeredaHR unifies clocking, presence, leave, legal-compliance reports and HR conf
 
 **North Star Metric:** HR hours freed up per week.
 
-Full detail in the [PRD-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/PRD-PeredaHR.md) (§01).
+Full detail in the [PRD-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/finalproject-FSF/docs/PRD-PeredaHR.md) (§01).
 
 ### **1.2. Main features and functionalities:**
 
-Implemented in the MVP (Delivery 2):
+Implemented in the final product:
 
 | Module | Feature | Status |
 |---|---|---|
@@ -79,15 +79,19 @@ Implemented in the MVP (Delivery 2):
 | Requests/Leave | Creation, balances, calendar and **individual/bulk approval** with a 2-level tree | ✅ MVP |
 | Reports | **RD-Ley 8/2019 monthly workday register** (CSV/PDF export) | ✅ MVP |
 | Auth | OIDC SSO (Keycloak) + 3-role RBAC; per-role demo login for evaluation | ✅ MVP |
-| AI | RAG assistant over the agreement + Text-to-SQL reporting with guardrails | ⏳ Final |
+| AI | **RAG assistant over the agreement with BOCM citations** (Claude + Voyage + pgvector) + **Text-to-SQL reporting** with schema whitelist, PII exclusion and read-only guardrails | ✅ Final |
+| Quality | **Playwright E2E suite** of the primary flow (clock → request → approval → register), green in CI | ✅ Final |
+| UX | **Corporate brand redesign (#014D88)**: desktop sidebar, mobile home hub, full recolor — zero functional changes | ✅ Final |
 
-Full functional catalog in the [PRD-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/PRD-PeredaHR.md) (§03).
+Full functional catalog in the [PRD-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/finalproject-FSF/docs/PRD-PeredaHR.md) (§03).
 
 ### **1.3. Design and user experience:**
 
-The design is **mobile-first** (daily clocking happens mostly on mobile), with **WCAG 2.1 AA** accessibility. The user flows, wireframes and design system are in [UX-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/UX-PeredaHR.md).
+The design is **mobile-first** (daily clocking happens mostly on mobile), with **WCAG 2.1 AA** accessibility. The user flows, wireframes and design system are in [UX-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/finalproject-FSF/docs/UX-PeredaHR.md).
 
-**Screenshots of the running MVP** (login with per-role access → employee/admin clocking → My Presence → request/view leave → confirm/validate workdays → RD-Ley register with export → approval): **[docs/evidencia-entrega2.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/evidencia-entrega2.md)**.
+For the Final Delivery the whole web app was reskinned to the corporate brand (**#014D88**) from a hi-fi design handoff — persistent desktop sidebar with role-based navigation, mobile home hub with access tiles, corporate login — with **zero functional changes** (the E2E suite passed unmodified). Handoff versioned in [docs/Claude Design/](https://github.com/franpereda/PeredaHR/tree/finalproject-FSF/docs/Claude%20Design/design_handoff_peredahr_ui).
+
+**Screenshots of the final product running** (login → clocking with live session → leave request + approval with modal → admin queues → RD-Ley register → RAG assistant and Text-to-SQL answering for real → mobile hub): **[docs/evidencia-final.md](https://github.com/franpereda/PeredaHR/blob/finalproject-FSF/docs/evidencia-final.md)**. Historical MVP evidence: [docs/evidencia-entrega2.md](https://github.com/franpereda/PeredaHR/blob/finalproject-FSF/docs/evidencia-entrega2.md).
 
 ### **1.4. Installation instructions:**
 
@@ -112,7 +116,7 @@ pnpm dev
 
 Open **http://localhost:3000**. For the **per-role demo login** at `/login`: set `DEMO_LOGIN_ENABLED="true"` in the root `.env` and `NEXT_PUBLIC_DEMO_LOGIN=true` in `apps/web/.env.local` (Next.js reads the `NEXT_PUBLIC_*` variables from `apps/web/`). For **realistic demo data** (clock entries, workdays and requests): `pnpm --filter @peredahr/api seed:demo`.
 
-Full instructions (local and on-premise deployment) in the [project's readme.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/readme.md).
+Full instructions (local and on-premise deployment) in the [project's readme.md](https://github.com/franpereda/PeredaHR/blob/finalproject-FSF/readme.md).
 
 ---
 
@@ -120,7 +124,7 @@ Full instructions (local and on-premise deployment) in the [project's readme.md]
 
 ### **2.1. Architecture diagram:**
 
-The full diagram in the **C4 model (levels 1-3)** is in [Arquitectura-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/Arquitectura-PeredaHR.md).
+The full diagram in the **C4 model (levels 1-3)** is in [Arquitectura-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/finalproject-FSF/docs/Arquitectura-PeredaHR.md).
 
 **Pattern and rationale.** Architecture by **containers**: web application (Next.js/PWA), business API (NestJS with RBAC), a **synchronization worker** (ETL with direct reads of the BioStar and SAGE SQL DBs) and an **AI service** (RAG + Text-to-SQL with guardrails).
 
@@ -128,7 +132,7 @@ The full diagram in the **C4 model (levels 1-3)** is in [Arquitectura-PeredaHR.m
 - **Benefits:** fewer moving parts, simple deployment, data under own control, integrated AI.
 - **Trade-offs:** direct access to the BioStar/SAGE DBs couples to the provider's schema (mitigated with an adaptation layer and contract tests); pgvector is sufficient for the current volume.
 
-> In the MVP (Delivery 2), web, API, database and authentication are implemented. The **ETL worker** (BioStar/SAGE) and the **AI service** are deferred to the Final Delivery (they require client credentials and weigh more on the AI phase).
+> In the final product, web, API, database, authentication and the **AI service** (RAG + Text-to-SQL) are implemented and verified against the real providers. The **ETL worker** (BioStar/SAGE) is **descoped from the Final Delivery**: both integrations depend on read-only credentials to the client's production databases, which were not granted in time; their architecture is fully specified and the data model already accommodates them (`ClockEntry.source=BIOSTAR`, SAGE-sourced master data).
 
 ### **2.2. Description of the main components:**
 
@@ -136,8 +140,8 @@ The full diagram in the **C4 model (levels 1-3)** is in [Arquitectura-PeredaHR.m
 - **API** — NestJS 11 (Node/TypeScript), REST with OIDC authentication and RBAC authorization (3 roles). ✅
 - **Database** — PostgreSQL 16 + pgvector (Prisma 6). ✅
 - **IdP** — Keycloak (OIDC) for real SSO; per-role demo login for evaluation. ✅
-- **Synchronization worker** — direct read of the BioStar and SAGE SQL DBs. ⏳ Final Delivery.
-- **AI service** — RAG (text-embedding-3 + pgvector + GPT-4o with citation) and Text-to-SQL with whitelist and PII exclusion. ⏳ Final Delivery.
+- **AI service** — RAG over the collective agreement (**Voyage `voyage-3.5` embeddings + pgvector + Anthropic Claude**, answers always cite article + BOCM page, similarity threshold against hallucination) and **Text-to-SQL** with a 12-table whitelist without PII, deterministic SQL guardrails and `READ ONLY` execution. ✅ Final.
+- **Synchronization worker** — direct read of the BioStar and SAGE SQL DBs. ⏸ Descoped (client credentials not granted); architecture specified, post-delivery work.
 
 ### **2.3. High-level project description and file structure**
 
@@ -158,11 +162,11 @@ deploy.ps1 / backup.ps1    · On-premise deployment and backups
 ### **2.4. Infrastructure and deployment**
 
 - **Runtime:** 4 Docker containers — `db` (PostgreSQL+pgvector), `keycloak` (IdP), `api` (NestJS), `web` (Next.js) — orchestrated by `docker-compose.prod.yml`. The base images are pulled from `mirror.gcr.io`/`quay.io` (the corporate network blocks Docker Hub).
-- **CI:** GitHub Actions ([.github/workflows/ci.yml](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/.github/workflows/ci.yml)) runs on every push/PR: `db:generate` → typecheck → lint → tests → build over a Postgres+pgvector service.
+- **CI:** GitHub Actions ([.github/workflows/ci.yml](https://github.com/franpereda/PeredaHR/blob/finalproject-FSF/.github/workflows/ci.yml)) runs on every push/PR: `db:generate` → typecheck → lint → tests → build over a Postgres+pgvector service.
 - **Deployment (CD):** on-premise on an internal Windows server with a **one-command script** (`deploy.ps1`): `git pull` → build → `prisma migrate deploy` (never `migrate dev`) → idempotent `db seed` → `up` → **E2E smoke as a gate**. Backups with `pg_dump -Fc` + offsite copy (`backup.ps1`); documented rollback.
-- **Reviewer access:** Terminal Server/RDP to the internal server (GDPR: data on the company's infrastructure).
+- **Reviewer access:** the internal server cannot be exposed to third parties (GDPR: data on the company's infrastructure), so the delivery is evidence-based ([docs/evidencia-final.md](https://github.com/franpereda/PeredaHR/blob/finalproject-FSF/docs/evidencia-final.md)) plus one-command local reproduction (see 1.4).
 
-Full runbook: [docs/despliegue-entrega2.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/despliegue-entrega2.md).
+Full runbook: [docs/despliegue-entrega2.md](https://github.com/franpereda/PeredaHR/blob/finalproject-FSF/docs/despliegue-entrega2.md).
 
 ### **2.5. Security**
 
@@ -173,13 +177,14 @@ Full runbook: [docs/despliegue-entrega2.md](https://github.com/franpereda/Pereda
 - **Auditing (`AuditLog`):** login, clock entries/anomalies, workday confirmations and validations, corrections, approvals and report generation, with authorship and timestamp.
 - **Data sovereignty:** on-premise hosting controlled by the company (GDPR/LOPDGDD).
 
-Detail in [PRD-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/PRD-PeredaHR.md) §06 and [Arquitectura-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/Arquitectura-PeredaHR.md) §8.
+Detail in [PRD-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/finalproject-FSF/docs/PRD-PeredaHR.md) §06 and [Arquitectura-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/finalproject-FSF/docs/Arquitectura-PeredaHR.md) §8.
 
 ### **2.6. Tests**
 
-- **API:** **212 tests** (Jest) — unit (domain logic: clock-entry pairing, workday consolidation, balances, working days…) and **integration** with real guards and RBAC over the API.
+- **API:** **263 tests** (Jest) — unit (domain logic: clock-entry pairing, workday consolidation, balances, working days, RAG chunking, SQL guardrails…) and **integration** with real guards and RBAC over the API (AI SDKs mocked).
 - **Web:** tests of the leave calendar helper.
-- **E2E / smoke:** `scripts/smoke.mjs` signs a JWT and walks the critical path (US-01/04/06/08); acts as the **deployment gate** (`deploy.ps1` aborts if it fails).
+- **E2E (Playwright, PER-24):** dedicated `apps/e2e` workspace exercising the real web + API + Postgres in a browser — US-01 clocking → US-04 request → US-06 approval → US-08 register + CSV download — with idempotent demo data; **runs as a separate `e2e` job in CI** on every PR to the delivery branches.
+- **Smoke as deployment gate:** `scripts/smoke.mjs` walks the critical path; `deploy.ps1` aborts if it fails.
 - **Quality in CI:** monorepo typecheck and `next build` on every push/PR.
 
 ---
@@ -188,7 +193,7 @@ Detail in [PRD-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-
 
 ### **3.1. Data model diagram:**
 
-The full entity-relationship diagram in **Mermaid `erDiagram`** (types, PK/FK and cardinalities) is in [ModeloDatos-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/ModeloDatos-PeredaHR.md) (§1). The implemented schema lives in [packages/db/prisma/schema.prisma](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/packages/db/prisma/schema.prisma).
+The full entity-relationship diagram in **Mermaid `erDiagram`** (types, PK/FK and cardinalities) is in [ModeloDatos-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/finalproject-FSF/docs/ModeloDatos-PeredaHR.md) (§1). The implemented schema lives in [packages/db/prisma/schema.prisma](https://github.com/franpereda/PeredaHR/blob/finalproject-FSF/packages/db/prisma/schema.prisma).
 
 ### **3.2. Description of the main entities:**
 
@@ -211,11 +216,11 @@ Examples of attributes and constraints (full dictionary with PII indicator in th
 
 > If your backend communicates through an API, describe the main endpoints (maximum 3) in OpenAPI format. Optionally, you can add a request and response example for clarity.
 
-Main MVP endpoints (full contract outline per resource and role in [Arquitectura-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/Arquitectura-PeredaHR.md) §7):
+Main MVP endpoints (full contract outline per resource and role in [Arquitectura-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/finalproject-FSF/docs/Arquitectura-PeredaHR.md) §7):
 
 ```yaml
 openapi: 3.0.3
-info: { title: PeredaHR API, version: "0.2.0 (Delivery 2)" }
+info: { title: PeredaHR API, version: "1.0.0 (Final Delivery)" }
 paths:
   /api/clock-entries:
     post:
@@ -240,13 +245,20 @@ paths:
       responses:
         "201": { description: Request created (PENDING, balance reserved) }
         "409": { description: Overlap with another request }
-  /api/reports/monthly-journey:
-    get:
-      summary: RD-Ley 8/2019 monthly workday register (Admin/HR role)
-      parameters:
-        - { name: month, in: query, required: true, schema: { type: string, example: "2026-06" } }
+  /api/ai/report-chat:
+    post:
+      summary: Conversational Text-to-SQL reporting (Admin/HR role)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [question]
+              properties:
+                question: { type: string, example: "¿Cuántas jornadas hay por estado en 2026?" }
       responses:
-        "200": { description: Report totaled per employee (JSON/CSV) }
+        "200": { description: "Result table + generated SQL (inspectable); PII requests answered with a warning" }
+        "422": { description: Out-of-scope question or query rejected by the SQL guardrails }
 ```
 
 ---
@@ -255,7 +267,7 @@ paths:
 
 > Document 3 of the main user stories used during development, taking into account product best practices in this regard.
 
-The full 10 stories with Gherkin criteria are in the [PRD-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/PRD-PeredaHR.md) (§04). The 3 of the priority E2E flow, already implemented:
+The full 10 stories with Gherkin criteria are in the [PRD-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/finalproject-FSF/docs/PRD-PeredaHR.md) (§04). The 3 of the priority E2E flow, already implemented:
 
 **User Story 1** · US-01 — Clock in/out
 **As an** employee, **I want** to clock my entry and exit from the web, **so that** I record my workday and comply with the legal time register.
@@ -275,7 +287,7 @@ The full 10 stories with Gherkin criteria are in the [PRD-PeredaHR.md](https://g
 
 > Document 3 of the main work tickets of the development: one for backend, one for frontend, and one for databases.
 
-Real tickets from Delivery 2 (managed in Linear `PER-XX`, spec-driven development with OpenSpec; full index in the [project's readme.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/readme.md) §8):
+Real tickets (managed in Linear `PER-XX`, spec-driven development with OpenSpec; full index — including the Final Delivery tickets PER-21/13/14/24/25 — in the [project's readme.md](https://github.com/franpereda/PeredaHR/blob/finalproject-FSF/readme.md) §8 and §8b):
 
 **Ticket 1 · Backend** — PER-5 · Clocking endpoint (US-01)
 - **Objective:** `POST /api/clock-entries` in NestJS.
@@ -298,15 +310,15 @@ Real tickets from Delivery 2 (managed in Linear `PER-XX`, spec-driven developmen
 
 > Document 3 of the Pull Requests made during the project's execution.
 
-The MVP was built with **one PR per ticket** on the private repo [franpereda/PeredaHR](https://github.com/franpereda/PeredaHR) (12 PRs, #1–#13), integrated into the delivery branch and grouped in the delivery PR **[#12](https://github.com/franpereda/PeredaHR/pull/12)** (`feature-entrega2-FSF` → `main`). Three representative ones:
+The whole project was built with **one PR per ticket** on the private repo [franpereda/PeredaHR](https://github.com/franpereda/PeredaHR): 12 PRs for the Delivery 2 MVP (#1–#13, grouped in the delivery PR [#12](https://github.com/franpereda/PeredaHR/pull/12)) and 5 PRs for the Final Delivery (#16–#20, targeting `finalproject-FSF`). Three representative ones from the Final:
 
-**Pull Request 1** · [#1](https://github.com/franpereda/PeredaHR/pull/1) — PER-5 · UC-01 web clock in/out
-Backend (immutable endpoint + IP restriction) and frontend (clocking widget) of the legal time-tracking core.
+**Pull Request 1** · [#17](https://github.com/franpereda/PeredaHR/pull/17) — PER-13 · Collective-agreement RAG assistant
+Retrieval with Voyage embeddings over pgvector + Claude generation with **mandatory article/BOCM-page citations**, similarity threshold against hallucination, chat UI. (Its ingestion pipeline is PR [#16](https://github.com/franpereda/PeredaHR/pull/16), PER-21.)
 
-**Pull Request 2** · [#8](https://github.com/franpereda/PeredaHR/pull/8) — PER-10 · Manage requests (individual and bulk approval)
-2-level approval workflow with `ApprovalLog` and balance refund on rejection.
+**Pull Request 2** · [#18](https://github.com/franpereda/PeredaHR/pull/18) — PER-14 · Conversational Text-to-SQL reporting
+Whitelisted PII-free schema, deterministic SQL guardrails (deny-by-default, forced LIMIT, `READ ONLY` transaction), inspectable generated SQL, full auditing — including rejections.
 
-**Pull Request 3** · [#5](https://github.com/franpereda/PeredaHR/pull/5) — PER-12 · RD-Ley 8/2019 monthly workday register
-Legal report totaled per employee with daily detail and CSV/PDF export (the delivery's no-go criterion).
+**Pull Request 3** · [#20](https://github.com/franpereda/PeredaHR/pull/20) — PER-25 · Corporate brand UI redesign
+Design tokens + desktop sidebar + mobile home hub + full recolor of the 11 screens from a hi-fi design handoff, with **zero functional changes** (E2E suite green without touching the test specs). The E2E suite itself is PR [#19](https://github.com/franpereda/PeredaHR/pull/19) (PER-24).
 
-> Additionally, in **this repository** (`AI4Devs-finalproject`), the `feature-entrega2-FSF` branch updates `readme.md` with the Delivery 2 documentation.
+> Additionally, in **this repository** (`AI4Devs-finalproject`), the `finalproject-FSF` branch updates `readme.md` and `prompts.md` with the Final Delivery documentation.

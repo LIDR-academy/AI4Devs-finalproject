@@ -1,7 +1,7 @@
 > Detail in this section the main prompts used during the creation of the project, justifying the use of code assistants across all phases of the development life cycle. We expect a maximum of 3 per section, mainly the ones for initial creation or the ones for correcting or adding the functionalities you consider most relevant.
 You may additionally add the full conversation as a link or attached file if you consider it appropriate.
 
-> **Note (Delivery 2).** **Delivery 1** (documentation) was generated with an orchestrated **multi-agent system** (7 agents + 7 skills), master prompt in [prompt-sistema-multi-agente.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/prompt-sistema-multi-agente.md). **Delivery 2** (MVP) was developed with **Claude Code** in a **spec-driven (OpenSpec)** flow and one Linear ticket per unit of work. The full prompt log (Delivery 1 + Delivery 2, per area) is in the [project's prompts.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/prompts.md) and the decision log in [docs/Decisiones-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/feature-entrega2-FSF/docs/Decisiones-PeredaHR.md). Below, the key prompts of Delivery 1 are kept and the most relevant ones of Delivery 2 are added.
+> **Note (Final Delivery).** **Delivery 1** (documentation) was generated with an orchestrated **multi-agent system** (7 agents + 7 skills), master prompt in [prompt-sistema-multi-agente.md](https://github.com/franpereda/PeredaHR/blob/finalproject-FSF/prompt-sistema-multi-agente.md). **Delivery 2** (MVP) and the **Final Delivery** (AI block, E2E suite, brand redesign) were developed with **Claude Code** in a **spec-driven (OpenSpec)** flow and one Linear ticket per unit of work. The full prompt log (all three deliveries, per area) is in the [project's prompts.md](https://github.com/franpereda/PeredaHR/blob/finalproject-FSF/prompts.md) and the decision log in [docs/Decisiones-PeredaHR.md](https://github.com/franpereda/PeredaHR/blob/finalproject-FSF/docs/Decisiones-PeredaHR.md). Below, the key prompts of each delivery per section.
 
 ## Index
 
@@ -43,6 +43,12 @@ You may additionally add the full conversation as a link or attached file if you
 **Prompt 1:**
 "Split the solution into containers: web (Next.js/PWA), API (NestJS with RBAC), synchronization worker (ETL) and AI service (RAG + Text-to-SQL with guardrails)."
 
+**Prompt 2 (Final):**
+"The project's AI stack switches provider: **Anthropic Claude** for generation and **Voyage AI** for embeddings (Anthropic's recommended partner); OpenAI is discarded. Migrate the vector column to 1024 dimensions. The RAG assistant must always cite the article and BOCM page it relies on, and answer 'not on record' below the similarity threshold instead of calling the model."
+
+**Prompt 3 (Final):**
+"The Text-to-SQL reporting is ADMIN-only and deny-by-default: single source of truth for the 12-table whitelist without PII (prompt + validator), deterministic guardrails (SELECT-only, forbidden keywords, forced LIMIT), execution inside a READ ONLY transaction with a statement timeout, and the generated SQL always inspectable in the UI — audit rejections too."
+
 ### **2.3. High-level project description and file structure**
 
 **Prompt 1:**
@@ -65,6 +71,9 @@ You may additionally add the full conversation as a link or attached file if you
 
 **Prompt 1 (Delivery 2):**
 "Do not consider a ticket done without green tests and, when it is a user flow, a hot verification against local Postgres+API; report the real result, not what should happen. Cover domain logic (clock-entry pairing, workday consolidation, balances) with unit tests and integration with real guards and RBAC."
+
+**Prompt 2 (Final):**
+"The E2E suite exercises web + API + Postgres for real (no mocks): its own `apps/e2e` Playwright workspace so it never pollutes the unit `test` pipeline, authentication by navigating to the real `demo-login` endpoint, and an idempotent global setup that wipes only the operational data of the 3 demo users — master data and the indexed agreement must survive every run."
 
 ---
 
@@ -109,6 +118,9 @@ You may additionally add the full conversation as a link or attached file if you
 **Prompt 2 (Delivery 2):**
 "Each ticket starts with `/opsx:propose 'PER-XX …'`: I want to review the intent (proposal/design/tasks) and the open decisions before generating code; then `/opsx:apply` and on closing `/opsx:archive`. Drive the cycle in Linear (In Progress → In Review → Done) without me asking."
 
+**Prompt 3 (Final):**
+"Implement the redesign described in `docs/Claude Design/design_handoff_peredahr_ui/README.md` in `apps/web`, without changing functionality. First create a new Linear issue describing the task and follow the same flow as the other issues in this project." (→ a single delegation prompt: the assistant created PER-25, ran propose → apply → archive → PR, inventoried the E2E selectors before coding and delivered the full brand redesign with the test suite green and untouched.)
+
 ---
 
 ## 7. Pull Requests
@@ -119,5 +131,5 @@ You may additionally add the full conversation as a link or attached file if you
 **Prompt 2:**
 "Complete the readme.md and the prompts.md of the course repository template, linking to the real artifacts of the project's private repository, and push them on the feature-entrega1-FSF branch."
 
-**Prompt 3 (Delivery 2):**
-"One PR per ticket into the delivery branch `feature-entrega2-FSF`, with `Closes PER-XX` in the body; at the end, group the MVP in a delivery PR (`feature-entrega2-FSF` → `main`, PR #12). In the course's public repo, update the readme.md to Delivery 2 pointing to the private one (branch `feature-entrega2-FSF`) and open the intra-fork PR against its own `main`."
+**Prompt 3 (Final):**
+"One PR per ticket into the delivery branch `finalproject-FSF`, with `Closes PER-XX` in the body and the OpenSpec archive commit inside the same PR. For the wrap-up: since the internal server cannot be exposed (GDPR), the delivery is evidence-based — capture the final system running (desktop + mobile, AI answering for real) into `docs/evidencia-final.md`, tag `v1.0-final-FSF`, and update the course's public repo pointing to the private `finalproject-FSF` branch."
