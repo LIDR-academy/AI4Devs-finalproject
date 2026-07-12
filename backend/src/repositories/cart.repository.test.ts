@@ -11,7 +11,6 @@ const mockCartItemCreate = jest.fn();
 const mockCartItemUpdate = jest.fn();
 const mockCartItemUpdateMany = jest.fn();
 const mockCartItemDeleteMany = jest.fn();
-const mockCartFindUniqueWithItems = jest.fn();
 
 const mockPrisma = {
   cart: {

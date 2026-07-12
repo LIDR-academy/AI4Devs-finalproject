@@ -2,17 +2,14 @@ import request from 'supertest';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import { errorHandler } from '../middleware/error-handler';
-import { sessionMiddleware } from '../middleware/session';
 import { mutationLimiter } from '../middleware/rate-limit';
 import { ICartService } from '../services/cart.service';
 import { CartResponse } from '../types/domain';
 import { NotFoundError, StockError } from '../types/errors';
 
-// We import these after they're created — at test-write time they don't exist yet
+// We import this after it's created — at test-write time it doesn't exist yet
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { createCartRouter } = require('../routes/cart.routes');
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { CartController } = require('../controllers/cart.controller');
 
 const VALID_UUID = '550e8400-e29b-41d4-a716-446655440000';
 

@@ -22,6 +22,7 @@
 | US-015 | Descontar stock al confirmar el pedido | CU3 | S | Importante |
 | US-016 | Hardening de cabeceras e infraestructura HTTP | Seguridad | S | Imprescindible |
 | US-017 | Hardening de exposición de datos y validación de entrada | Seguridad | S | Importante |
+| US-018 | Contenerización y despliegue en AWS (EC2 + Docker + CI/CD) | Despliegue | L | Importante |
 
 ---
 
@@ -71,6 +72,7 @@ Los filtros por atributos de running (US-002) son el diferencial central de RunM
 | US-015 | Descontar stock al confirmar el pedido | CU3 | S | Importante | Corrige una omisión de integridad de datos detectada tras implementar el checkout: el stock nunca se descuenta tras una compra, por lo que el catálogo muestra disponibilidad incorrecta a partir del primer pedido; no bloquea el ciclo de compra simulado pero compromete la fiabilidad del dato |
 | US-016 | Hardening de cabeceras e infraestructura HTTP | Seguridad | S | Imprescindible | Resuelve vulnerabilidades CRÍTICO/ALTO detectadas en revisión de pentesting: ausencia de security headers, CSP, Swagger UI expuesto en producción, rate-limiter inefectivo tras proxy y body sin límite de tamaño |
 | US-017 | Hardening de exposición de datos y validación de entrada | Seguridad | S | Importante | Resuelve vulnerabilidades ALTO/MEDIO del mismo pentesting: sessionId en body de respuesta, PII en sessionStorage, IDs de pedido predecibles y falta de límites en campos de entrada |
+| US-018 | Contenerización y despliegue en AWS (EC2 + Docker + CI/CD) | Despliegue | L | Importante | No bloquea el ciclo de compra simulado ni depende de él; requiere el sistema funcional completo (US-001 a US-017) ya implementado para poder desplegarlo. Es el entregable necesario para exponer una demo real del MVP, según el diseño de `docs/DEPLOYMENT-STRATEGY.md` |
 
 ---
 
@@ -628,3 +630,54 @@ Agrupa los cambios que eliminan exposición innecesaria de datos y endurecen la 
 **Estimación:** S
 
 **Prioridad:** Importante — vulnerabilidades ALTO/MEDIO detectadas en revisión de pentesting
+
+---
+
+## Despliegue
+
+---
+
+### US-018 — Contenerización y despliegue en AWS (EC2 + Docker + CI/CD)
+
+**Caso de uso asociado:** Despliegue — infraestructura de producción, prerequisito para exponer RunMarket a usuarios reales
+
+**Historia de usuario:**
+Como equipo de desarrollo, queremos generar todos los artefactos de contenerización, infraestructura como código y automatización CI/CD descritos en `docs/DEPLOYMENT-STRATEGY.md`, para poder desplegar RunMarket en una instancia EC2 real y disponer de un pipeline repetible para futuros despliegues.
+
+**Descripción:**
+Historia de infraestructura que no añade funcionalidad visible al corredor ni modifica el código de aplicación de backend/frontend más allá de ajustes de configuración de build (p. ej. `next.config.mjs` en modo `standalone`). Implementa la Opción A de `docs/INFRASTRUCTURE.md`: una única EC2 t3.micro con cuatro contenedores Docker (postgres, backend, frontend, nginx) orquestados con Docker Compose, imágenes publicadas en GHCR, infraestructura provisionada con Terraform y despliegue automatizado con un pipeline de GitHub Actions disparado manualmente (`workflow_dispatch`).
+
+Se construye en dos fases, tal como detalla `docs/DEPLOYMENT-STRATEGY.md`: **Fase 1 — Contenerización + infraestructura** (Dockerfiles, `docker-compose.prod.yml`, Terraform — deja el sistema desplegable a mano) y **Fase 2 — Automatización de CI/CD** (el pipeline de GitHub Actions, depende de que la Fase 1 esté completa).
+
+> **Diferencias frente al resto del backlog, a tener en cuenta al desglosar esta US con `/refine-user-story`:**
+> - No existen capas Backend/Frontend en el sentido habitual del proyecto. La columna `Capa` de la tabla de tareas debe sustituirse por algo como `Infraestructura` o `CI/CD`.
+> - No aplica TDD clásico (red-green-refactor sobre lógica de negocio). La columna `Verificacion` de cada tarea debe usar comandos de infraestructura (`terraform validate`, `terraform plan`, `docker build`, `docker compose config`, healthchecks HTTP) en lugar de Jest/RTL/Supertest. Cuando una tarea no sea verificable de forma automática (p. ej. aplicar Terraform contra AWS real), se documenta como verificación manual, siguiendo el precedente de `US-000-TASK-10`/`11` en `docs/backlog/archive/US-000.md`.
+> - No hay Fase 5 de revisión OWASP sobre código de aplicación: el criterio de seguridad relevante es de configuración de infraestructura (IAM de mínimo privilegio, rol OIDC sin credenciales estáticas, Security Groups restrictivos, secrets de GitHub, ausencia de secretos en el repo) y ya está razonado en `docs/DEPLOYMENT-STRATEGY.md`.
+> - No hay entidades de dominio implicadas; en su lugar, la unidad de verificación es "el fichero/artefacto existe y hace lo que dice" más el resultado real de desplegar contra AWS.
+
+**Criterios de aceptación:**
+- [ ] `backend/Dockerfile` y `frontend/Dockerfile` existen y `docker build` completa sin errores para ambos (backend en `node:20-slim` con `openssl`, frontend en modo `standalone`)
+- [ ] `docker-compose.prod.yml` referencia las imágenes de backend/frontend por `image:` (GHCR), nunca por `build:` local; solo el servicio `nginx` expone puertos al host
+- [ ] `nginx/nginx.conf` enruta `/api` al backend y `/` al frontend, con marcador preparado para Certbot
+- [ ] Los ficheros `infra/*.tf` provisionan EC2 t3.micro, Security Group (22/80/443), bucket S3 de artefactos, bucket S3 de estado remoto e IAM necesario; `terraform validate` pasa sin errores
+- [ ] `infra/oidc.tf` define el proveedor OIDC y un rol IAM restringido a la rama `finalproject-XVB`, sin ninguna access key estática en GitHub Secrets
+- [ ] Los scripts `infra/scripts/generar-zip.sh`, `infra/scripts/user_data.sh.tpl` y `infra/scripts/redeploy.sh` existen e implementan el flujo descrito (pull + `up -d` + `prisma migrate deploy`)
+- [ ] `.github/workflows/ci-cd.yml` define los jobs `test` y `deploy`, disparados únicamente por `workflow_dispatch`; el job `deploy` construye y publica imágenes en GHCR, aplica Terraform, despliega por SSH y termina con un health-check contra `GET /api/health`
+- [ ] Ejecutando el pipeline manualmente (o el flujo manual equivalente vía Terraform descrito en el documento), la EC2 queda desplegada, `curl http://<ip>/api/health` responde `200` y el catálogo carga con los 13 productos en `http://<ip>`
+
+**Ficheros y artefactos implicados:**
+(listado completo con su propósito en `docs/DEPLOYMENT-STRATEGY.md` — sección "Ficheros a crear")
+- `backend/Dockerfile`, `frontend/Dockerfile`, `frontend/next.config.mjs`
+- `nginx/nginx.conf`, `docker-compose.prod.yml`, `.dockerignore`
+- `.github/workflows/ci-cd.yml`
+- `infra/*.tf`, `infra/terraform.tfvars.example`, `infra/.gitignore`
+- `infra/scripts/generar-zip.sh`, `infra/scripts/user_data.sh.tpl`, `infra/scripts/redeploy.sh`
+
+**Dependencias:**
+- Requiere el sistema funcional completo (US-001 a US-017) ya implementado y verificado
+- Bootstrap único fuera del pipeline automatizado: rol OIDC (`infra/oidc.tf`) y backend de estado remoto S3 aplicados a mano una sola vez (ver "Alternativa — Terraform manual" en `docs/DEPLOYMENT-STRATEGY.md`)
+- Paso manual único no automatizable por el pipeline: marcar los paquetes `runmarket-backend`/`runmarket-frontend` como públicos en GHCR la primera vez que se crean
+
+**Estimación:** L
+
+**Prioridad:** Importante — no bloquea el ciclo de compra simulado, pero es el entregable necesario para exponer una demo real del MVP desplegada en AWS

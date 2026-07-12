@@ -1,0 +1,12 @@
+aws_region     = "eu-west-1"
+instance_type  = "t3.micro"
+
+key_name = "runmarket-deploy-key"
+
+db_user     = "runmarket"
+db_password = "change-me-generate-a-strong-password"
+db_name     = "runmarket"
+
+cors_origin = "http://<ip-publica-o-dominio>"
+
+github_repository_owner = "xavierventeo"
