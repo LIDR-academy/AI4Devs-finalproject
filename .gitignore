@@ -1,6 +1,3 @@
-dev.sh
-prod.sh
-Makefile
 front/.env
 back/.env
 
