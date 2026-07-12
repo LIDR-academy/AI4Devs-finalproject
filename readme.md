@@ -31,7 +31,7 @@ http://52.215.59.169/
 
 ### 0.5. URL o archivo comprimido del repositorio
 
-[xavierventeo/AI4Devs-finalproject](https://github.com/xavierventeo/AI4Devs-finalproject/tree/feature-entrega2-XVB)
+[xavierventeo/AI4Devs-finalproject](https://github.com/xavierventeo/AI4Devs-finalproject/tree/finalproject-XVB)
 
 ### 0.6. Metodología de desarrollo:
 
@@ -306,10 +306,12 @@ docker compose exec backend npm run db:seed   # solo en el primer despliegue
 Esta decisión concentra todo el stack en un único proveedor (una sola facturación, un solo IAM) y reutiliza directamente el `docker-compose.yml` ya presente en el repositorio, en lugar de repartir frontend, backend y base de datos entre plataformas gestionadas distintas. Como contrapartida, todo el stack vive en un único host: su caída afecta a las tres capas a la vez, y el mantenimiento del sistema operativo y de Docker es manual. El backup de la base de datos es opcional en esta fase, ya que el catálogo se reconstruye con `npm run db:seed` (13 productos) y los pedidos generados durante la demo no son datos de negocio reales. El certificado TLS (Certbot) también es opcional: Nginx sigue siendo necesario como punto de entrada único que enruta por path sin necesitar CORS, pero los profesores pueden validar el flujo completo por HTTP plano sin depender de tener un dominio configurado antes de la demo; esta concesión es aceptable solo porque no hay datos de pago ni PII reales en esta fase.
 
 > Propuesta completa de infraestructura (MVP académico y evolución profesional): [docs/INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md)
+>
+> Implementación real del despliegue (decisiones, justificación y pipeline detallado): [docs/DEPLOYMENT-STRATEGY.md](docs/DEPLOYMENT-STRATEGY.md) · Procedimiento paso a paso para reproducirlo: [docs/DEPLOYMENT-RUNBOOK.md](docs/DEPLOYMENT-RUNBOOK.md)
 
 ### **2.5. Seguridad**
 
-Las reglas de seguridad no negociables del proyecto están definidas en [`CLAUDE.md`](CLAUDE.md) y se verifican mediante una revisión OWASP Top 10 obligatoria antes de cerrar cada historia de usuario (`HIGH`/`CRITICAL` bloquean el cierre). Prácticas implementadas:
+Las reglas de seguridad no negociables del proyecto las marca [`CLAUDE.md`](CLAUDE.md), y cada historia de usuario pasa su propio análisis de vulnerabilidades (revisión OWASP Top 10 obligatoria antes de cerrarse; `HIGH`/`CRITICAL` bloquean el cierre). Adicionalmente, se realizó un **pentesting final** sobre el sistema completo ya implementado, cuyos hallazgos se corrigieron en dos historias de usuario dedicadas: [US-016](docs/backlog/archive/US-016.md) (vulnerabilidades CRÍTICO/ALTO — cabeceras de seguridad HTTP e infraestructura) y [US-017](docs/backlog/archive/US-017.md) (vulnerabilidades ALTO/MEDIO — exposición de datos y validación de entrada). Prácticas implementadas:
 
 - **Precio y stock nunca se confían del cliente.** El `price` de cada `OrderItem` se toma siempre del `Product` leído de PostgreSQL en el momento del checkout; cualquier campo `price`/`total` que llegue en el body se ignora. El descuento de stock al confirmar un pedido usa una actualización condicional atómica (`tx.product.updateMany({ where: { stock: { gte: cantidad } }, data: { stock: { decrement: cantidad } } })`) para evitar oversell por condición de carrera entre confirmaciones simultáneas (`backend/src/repositories/order.repository.ts`).
 
