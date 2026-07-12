@@ -40,7 +40,7 @@ rm -f app.zip
 
 # Variables de entorno para docker-compose.prod.yml - nunca en el
 # repositorio, solo en este fichero generado en la instancia.
-cat > "$APP_DIR/.env" <<ENVEOF
+cat > "$APP_DIR/.env" <<'ENVEOF'
 DB_USER=${db_user}
 DB_PASSWORD=${db_password}
 DB_NAME=${db_name}
