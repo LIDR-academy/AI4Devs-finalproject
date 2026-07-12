@@ -1,0 +1,110 @@
+openapi: 3.1.0
+info:
+  title: Error Responses
+  version: 1.0.0
+  description: Shared error response schemas and reusable response definitions
+
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              description: Machine-readable error code
+              examples:
+                - VALIDATION_ERROR
+                - NOT_FOUND
+                - DATES_UNAVAILABLE
+                - UNAUTHORIZED
+                - FORBIDDEN
+                - BOOKING_CANNOT_CANCEL
+            message:
+              type: string
+              description: Human-readable error description
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                    description: Field that caused the error
+                  reason:
+                    type: string
+                    description: Why the field is invalid
+              description: Field-level validation errors (for 400 responses)
+            trace_id:
+              type: string
+              description: Request trace ID for support/debugging
+
+    # Specific error codes used across the API:
+    #
+    # VALIDATION_ERROR     - Request body/params failed validation (400)
+    # NOT_FOUND            - Resource does not exist (404)
+    # UNAUTHORIZED         - Missing or invalid authentication (401)
+    # FORBIDDEN            - Authenticated but not authorized (403)
+    # DATES_UNAVAILABLE    - Requested dates are held or booked (409)
+    # PAYMENT_FAILED       - Stripe payment could not be processed (400)
+    # HOLD_EXPIRED         - Availability hold expired before payment (409)
+    # BOOKING_CANNOT_CANCEL - Booking is already completed/cancelled (422)
+    # INTERNAL_ERROR       - Unexpected server error (500)
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters or body
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error:
+              code: VALIDATION_ERROR
+              message: "Invalid request parameters"
+              details:
+                - field: check_in
+                  reason: "Check-in date must be in the future"
+                - field: check_out
+                  reason: "Check-out must be after check-in"
+              trace_id: "abc123-def456"
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error:
+              code: UNAUTHORIZED
+              message: "Authentication required"
+              trace_id: "abc123-def456"
+
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error:
+              code: FORBIDDEN
+              message: "You do not have access to this resource"
+              trace_id: "abc123-def456"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error:
+              code: NOT_FOUND
+              message: "Property not found"
+              trace_id: "abc123-def456"

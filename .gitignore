@@ -1,0 +1,4 @@
+# Git worktrees created for issue/feature isolation — never commit these.
+# They are local checkouts (and were previously committed as stray gitlinks).
+/.worktrees/
+/.claude/worktrees/

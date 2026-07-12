@@ -1,0 +1,52 @@
+# StayHub local development infrastructure.
+#
+# Spins up PostgreSQL 16 + PostGIS 3.4 (geospatial property search) and
+# Mailpit (fake SMTP server + web UI for booking-confirmation emails).
+#
+# Default credentials below are for local development only — do NOT use
+# them in any non-local environment. They match the values documented in
+# specs/001-guest-search-booking/quickstart.md.
+#
+# Usage:
+#   docker compose up -d        # start
+#   docker compose ps           # status
+#   docker compose down         # stop (keep data)
+#   docker compose down -v      # stop and wipe Postgres data volume
+
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: stayhub-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-stayhub}
+      POSTGRES_USER: ${DB_USER:-stayhub}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-stayhub_dev}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-stayhub} -d ${DB_NAME:-stayhub}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: stayhub-mailpit
+    restart: unless-stopped
+    ports:
+      - "${MAIL_PORT:-1025}:1025"   # SMTP
+      - "${MAIL_UI_PORT:-8025}:8025" # Web UI: http://localhost:8025
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:8025/readyz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  postgres_data:
+    name: stayhub_postgres_data
