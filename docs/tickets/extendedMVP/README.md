@@ -13,11 +13,11 @@ Same as MVP: single unified sequence `EXT-XXX`. Technology is metadata within ea
 | Ticket | Title | Priority | Effort |
 |---|---|---|---|
 | [EXT-001](./EXT-001-notification-delivery.md) | Real Notification Delivery (Email + Web Push) | P1 | Medium |
-| [EXT-002](./EXT-002-cicd-pipeline.md) | CI/CD Deployment Pipeline | P1 | Medium |
+| [EXT-002](./EXT-002-cicd-pipeline.md) | ~~CI/CD Deployment Pipeline~~ **(Out of scope — will not be implemented)** | ~~P1~~ | ~~Medium~~ |
 | [EXT-003](./EXT-003-production-infrastructure.md) | Production Infrastructure (IaC: Staging + Production) | P1 | High |
 | [EXT-004](./EXT-004-observability-logging.md) | Application Observability (Structured Logging + Metrics) | P1 | Medium |
 
-> **Note on P1 order:** EXT-001 (notification delivery) should be implemented first — it unblocks retention measurement. EXT-002, EXT-003, EXT-004 are built last after all Phase 2 features are complete, since infrastructure scope is clearest when the feature surface is stable.
+> **Note on P1 order:** EXT-001 (notification delivery) should be implemented first — it unblocks retention measurement. EXT-003 and EXT-004 are built last after all Phase 2 features are complete, since infrastructure scope is clearest when the feature surface is stable. **EXT-002 is out of scope and will not be implemented** — project scope was reduced (see [EXT-002](./EXT-002-cicd-pipeline.md)).
 
 ### Phase 2 — Growth (implement in order shown)
 
@@ -44,7 +44,7 @@ Then Phase 1:
 EXT-001 (notifications)   ← SES + web push wiring
 EXT-004 (observability)   ← structured logging + metrics
 EXT-003 (infrastructure)  ← Terraform IaC for staging + prod
-EXT-002 (CI/CD)           ← pipeline built on top of infra
+EXT-002 (CI/CD)           ← OUT OF SCOPE — will not be implemented
 ```
 
 ## Source traceability

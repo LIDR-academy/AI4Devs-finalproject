@@ -49,7 +49,7 @@ The following were explicitly deferred during MVP planning:
 - Automatic expiry learning loop from user edits (PRD §5)
 - Live supermarket price integrations (PRD §5)
 - Real delivery of push and email notifications (Non-MVP.md)
-- CI/CD deployment pipeline (Non-MVP.md)
+- CI/CD deployment pipeline (Non-MVP.md) — **out of scope for this project, will not be implemented (see [EXT-002](../tickets/extendedMVP/EXT-002-cicd-pipeline.md))**
 - Gamification (Non-MVP.md)
 - Barcode scan item entry (PRD §7 future evolution)
 - Cross-user benchmarking and analytics (PRD §5) → deferred to [6_Future-Capabilities.md](./6_Future-Capabilities.md)
@@ -71,6 +71,8 @@ SNS integration emits events but no actual email or mobile push delivery reaches
 ---
 
 ### Gap 2 — No CI/CD pipeline
+
+> **⚠️ Out of scope — will not be addressed.** Project scope has been reduced; see [EXT-002](../tickets/extendedMVP/EXT-002-cicd-pipeline.md).
 
 There is no automated build, test, or deployment pipeline. Every release requires manual steps, which increases error risk and blocks team scaling.
 
@@ -172,7 +174,9 @@ Notifications are the primary daily engagement driver. Without delivery, the not
 
 #### P1-002: CI/CD deployment pipeline
 
-> **Implementation note:** Build this after all feature tickets are delivered.
+> **⚠️ OUT OF SCOPE — WILL NOT BE IMPLEMENTED.** Project scope has been reduced; this feature has been dropped. Kept below for historical reference only. See [EXT-002](../tickets/extendedMVP/EXT-002-cicd-pipeline.md).
+
+> ~~**Implementation note:** Build this after all feature tickets are delivered.~~
 
 **Problem Statement:**  
 There is no automated path from a merged PR to a running environment. Releases require manual CLI steps.
@@ -462,7 +466,7 @@ Ghost items corrupt the use-next ranking, waste analytics, and dashboard counts.
 
 **Scope:**
 - P1-001: Real notification delivery (email via SES, web push via SNS)
-- P1-002: CI/CD pipeline (GitHub Actions → staging) — build last
+- ~~P1-002: CI/CD pipeline (GitHub Actions → staging) — build last~~ **(Out of scope — will not be implemented)**
 - P1-003: Production infrastructure (IaC, staging environment) — build last
 - P1-004: Structured logging and error tracking — build last
 - Security: rate limiting on auth, JWT refresh policy, S3 lifecycle rules, account deletion
@@ -471,7 +475,7 @@ Ghost items corrupt the use-next ranking, waste analytics, and dashboard counts.
 **Success criteria:**
 - Zero critical security vulnerabilities in an OWASP ZAP baseline scan.
 - 99% uptime over 30 days on staging.
-- 100% of CI checks pass before merge.
+- ~~100% of CI checks pass before merge.~~ **(Out of scope — no CI pipeline will be built)**
 - Error tracking receives and surfaces first production error within 5 minutes of occurrence.
 
 ---
@@ -510,7 +514,7 @@ All strategic future capabilities (native mobile app, ML-based expiration, super
 | Metric | Target |
 |---|---|
 | Notification delivery rate | ≥ 95% of generated events delivered within 5 minutes |
-| CI pipeline pass rate | 100% before merge to main |
+| ~~CI pipeline pass rate~~ | ~~100% before merge to main~~ — **out of scope, no CI pipeline will be built (see [EXT-002](../tickets/extendedMVP/EXT-002-cicd-pipeline.md))** |
 | Production uptime (staging) | ≥ 99% over 30-day window |
 | p95 pantry list latency | ≤ 250 ms |
 | Critical security findings (OWASP scan) | 0 |
@@ -533,7 +537,7 @@ All strategic future capabilities (native mobile app, ML-based expiration, super
 | ID | Feature | Priority | Effort | Phase |
 |---|---|---|---|---|
 | P1-001 | Real notification delivery (email + web push) | P1 | Medium | 1 |
-| P1-002 | CI/CD pipeline | P1 | Medium | 1 (last) |
+| P1-002 | ~~CI/CD pipeline~~ **(Out of scope)** | ~~P1~~ | ~~Medium~~ | — |
 | P1-003 | Production infrastructure (IaC) | P1 | High | 1 (last) |
 | P1-004 | Structured logging and error tracking | P1 | Medium | 1 (last) |
 | P2-001 | Recipe suggestions (TheMealDB free API) | P2 | Medium | 2 |

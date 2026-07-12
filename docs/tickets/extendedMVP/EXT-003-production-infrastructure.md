@@ -6,7 +6,7 @@
 - **Phase:** 1 — GA Readiness (implement last, after all feature tickets)
 - **PRD Reference:** [P1-003](../../product/5_Extended-Non-MVP-PRD.md#p1-003-production-infrastructure-staging--production-environments)
 - **Effort:** High
-- **Depends on:** EXT-002 (Dockerfiles must exist before ECR push)
+- **Depends on:** EXT-002 (Dockerfiles must exist before ECR push) — **note: EXT-002 (CI/CD pipeline) is now out of scope and will not be implemented; this dependency needs to be re-evaluated (e.g. Dockerfiles may need to be authored directly under this ticket instead) before EXT-003 can proceed.**
 
 ---
 

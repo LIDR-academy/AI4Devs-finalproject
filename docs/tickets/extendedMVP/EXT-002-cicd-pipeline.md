@@ -1,9 +1,13 @@
 # EXT-002 — CI/CD Deployment Pipeline
 
+> **⚠️ OUT OF SCOPE — WILL NOT BE IMPLEMENTED**
+> Project scope has been reduced. This ticket is kept for historical/reference purposes only. No automated CI/CD pipeline (GitHub Actions build/test/deploy workflows) will be built as part of this project. Any other ticket that lists this one as a dependency should be re-evaluated manually before implementation.
+
 ## Metadata
 - **Type:** Infrastructure (GitHub Actions)
-- **Priority:** P1
-- **Phase:** 1 — GA Readiness (implement last, after all feature tickets)
+- **Priority:** ~~P1~~ **Out of scope**
+- **Status:** **Out of scope — will not be implemented**
+- **Phase:** ~~1 — GA Readiness (implement last, after all feature tickets)~~
 - **PRD Reference:** [P1-002](../../product/5_Extended-Non-MVP-PRD.md#p1-002-cicd-deployment-pipeline)
 - **Effort:** Medium
 - **Depends on:** EXT-003 (production infrastructure — for deploy stage)
@@ -194,6 +198,8 @@ Follow TDD: validate each workflow passes before moving to the next.
 ---
 
 ## Acceptance Criteria
+
+> **Out of scope — not applicable.** The criteria below describe the original intent and are kept for reference only; they will not be validated since this ticket will not be implemented.
 
 1. Every PR triggers a CI run covering lint, typecheck, unit tests, and E2E for both backend and frontend.
 2. A failing test or lint error blocks merge (branch protection enforced).
