@@ -49,7 +49,7 @@ test.describe('Ciclo de compra', () => {
     await expect(page.getByRole('heading', { name: '¡Pedido confirmado!' })).toBeVisible();
     const orderNumber = page.getByText(/Número de pedido:/);
     await expect(orderNumber).toBeVisible();
-    await expect(orderNumber).toContainText(/ORD-\d+/);
+    await expect(orderNumber).toContainText(/ORD-[0-9A-F]+/);
 
     await expect(cartBadge).not.toBeVisible();
   });
