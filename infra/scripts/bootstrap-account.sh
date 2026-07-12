@@ -18,12 +18,16 @@ set -euo pipefail
 
 REGION="eu-west-1"
 IAM_USER="runmarket-github-actions-deploy"
+POLICY_NAME="runmarket-deploy-policy"
 KEY_PAIR_NAME="runmarket-deploy-key"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INFRA_DIR="$(dirname "$SCRIPT_DIR")"
 POLICY_FILE="$SCRIPT_DIR/runmarket-deploy-policy.json"
 PROVIDER_FILE="$INFRA_DIR/provider.tf"
+
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+POLICY_ARN="arn:aws:iam::${ACCOUNT_ID}:policy/${POLICY_NAME}"
 
 # ~/.ssh es la ubicacion estandar de claves privadas SSH en macOS/Linux -
 # fuera del repositorio a proposito, para no depender solo del .gitignore
@@ -86,12 +90,30 @@ cat > "$POLICY_FILE" <<'EOF'
         "s3:PutObject",
         "s3:DeleteObject",
         "s3:ListBucket",
+        "s3:CreateBucket",
+        "s3:DeleteBucket",
+        "s3:GetBucketLocation",
+        "s3:GetBucketAcl",
+        "s3:GetBucketCors",
+        "s3:GetBucketWebsite",
+        "s3:GetBucketLogging",
+        "s3:GetBucketPolicy",
+        "s3:GetBucketRequestPayment",
+        "s3:GetBucketOwnershipControls",
+        "s3:GetAccelerateConfiguration",
+        "s3:GetBucketObjectLockConfiguration",
+        "s3:GetReplicationConfiguration",
+        "s3:GetLifecycleConfiguration",
+        "s3:GetBucketTagging",
+        "s3:PutBucketTagging",
         "s3:GetBucketVersioning",
         "s3:PutBucketVersioning",
         "s3:GetEncryptionConfiguration",
         "s3:PutEncryptionConfiguration",
+        "s3:DeleteBucketEncryption",
         "s3:GetBucketPublicAccessBlock",
-        "s3:PutBucketPublicAccessBlock"
+        "s3:PutBucketPublicAccessBlock",
+        "s3:DeletePublicAccessBlock"
       ],
       "Resource": ["arn:aws:s3:::runmarket-*", "arn:aws:s3:::runmarket-*/*"]
     },
@@ -139,11 +161,37 @@ cat > "$POLICY_FILE" <<'EOF'
 }
 EOF
 
-aws iam put-user-policy \
-  --user-name "$IAM_USER" \
-  --policy-name runmarket-deploy-policy \
-  --policy-document "file://$POLICY_FILE"
+# Politica gestionada (customer-managed), no inline: una inline de usuario
+# (put-user-policy) tope a 2048 bytes, y esta politica ya lo supera. Las
+# gestionadas admiten hasta 6144 bytes y son versionadas.
+if aws iam get-policy --policy-arn "$POLICY_ARN" >/dev/null 2>&1; then
+  # create-policy-version falla si ya hay 5 versiones (limite de IAM) - se
+  # borra la version no-default mas antigua antes de crear la nueva.
+  VERSION_COUNT=$(aws iam list-policy-versions --policy-arn "$POLICY_ARN" \
+    --query 'length(Versions)' --output text)
+  if [ "$VERSION_COUNT" -ge 5 ]; then
+    OLDEST_VERSION=$(aws iam list-policy-versions --policy-arn "$POLICY_ARN" \
+      --query 'Versions[?IsDefaultVersion==`false`]|sort_by(@, &CreateDate)[0].VersionId' \
+      --output text)
+    aws iam delete-policy-version --policy-arn "$POLICY_ARN" --version-id "$OLDEST_VERSION"
+  fi
+  aws iam create-policy-version --policy-arn "$POLICY_ARN" \
+    --policy-document "file://$POLICY_FILE" --set-as-default
+  echo "Actualizada nueva version de: $POLICY_NAME"
+else
+  aws iam create-policy --policy-name "$POLICY_NAME" --policy-document "file://$POLICY_FILE"
+  echo "Creada: $POLICY_NAME"
+fi
 rm -f "$POLICY_FILE"
+
+aws iam attach-user-policy --user-name "$IAM_USER" --policy-arn "$POLICY_ARN"
+
+# Restos de una version anterior de este script que usaba una inline policy
+# del mismo nombre - se retira para no dejar permisos duplicados/obsoletos.
+if aws iam get-user-policy --user-name "$IAM_USER" --policy-name "$POLICY_NAME" >/dev/null 2>&1; then
+  aws iam delete-user-policy --user-name "$IAM_USER" --policy-name "$POLICY_NAME"
+  echo "Retirada policy inline obsoleta de $IAM_USER (sustituida por la gestionada)"
+fi
 
 echo ""
 echo ">>> Access key para $IAM_USER (el SecretAccessKey solo se muestra AHORA):"
@@ -153,7 +201,6 @@ echo ">>> Copia AccessKeyId/SecretAccessKey de arriba - los necesitas en el paso
 echo ""
 echo "=== 2/3 - Bucket de estado de Terraform ==="
 
-ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 BUCKET="runmarket-terraform-state-${ACCOUNT_ID}"
 
 if aws s3api head-bucket --bucket "$BUCKET" 2>/dev/null; then
