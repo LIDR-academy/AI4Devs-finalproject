@@ -38,6 +38,12 @@ aws s3 cp "s3://${artifacts_bucket}/app.zip" app.zip --region "${aws_region}"
 unzip -o app.zip
 rm -f app.zip
 
+# user_data corre como root (cloud-init); redeploy.sh corre despues por SSH
+# como ec2-user (sin sudo) y necesita poder sobrescribir estos ficheros en
+# cada deploy (ver US-018: refresco de app.zip en redeploy.sh) - sin este
+# chown, unzip falla con "Permission denied" al intentar borrarlos.
+chown -R ec2-user:ec2-user "$APP_DIR"
+
 # Variables de entorno para docker-compose.prod.yml - nunca en el
 # repositorio, solo en este fichero generado en la instancia.
 cat > "$APP_DIR/.env" <<'ENVEOF'
