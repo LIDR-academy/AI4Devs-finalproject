@@ -1,7 +1,5 @@
 # RunMarket — Estrategia de despliegue (MVP académico)
 
-Fecha de referencia: 2026-07-05.
-
 Implementa la **Opción A** de [`docs/INFRASTRUCTURE.md`](INFRASTRUCTURE.md): una sola EC2
 t3.micro en AWS donde corren cuatro contenedores Docker (postgres, backend, frontend, nginx)
 orquestados con Docker Compose. Terraform provisiona la instancia y un pipeline de GitHub
@@ -188,100 +186,10 @@ Mapa de alto nivel, en el orden en que se construyen las piezas:
 
 ## Lanzar la infraestructura
 
-Un único camino: **todo despliegue pasa por el pipeline de GitHub Actions**,
-incluida la primerísima vez que se crea la EC2. No hay una fase separada de
-"bootstrap manual desde el portátil" que preceda al pipeline — eso solo era
-necesario con OIDC (el rol tenía que existir antes de que el pipeline pudiera
-autenticarse). Con credenciales IAM estáticas, la credencial existe desde el
-principio, independiente de cualquier `apply`, así que el pipeline puede
-hacer el primer `apply` igual que el número cien.
-
-Lo único que queda fuera del pipeline es **configuración de cuenta, no un
-despliegue** — se hace una vez, con la consola de AWS/GitHub o un puñado de
-comandos, antes de disparar el workflow por primera vez.
-
-### Autenticación y estado — configuración de cuenta (una vez)
-
-1. **Usuario IAM para el pipeline.** Crear un usuario IAM dedicado (consola
-   AWS → IAM → Users → Create user), sin acceso a la consola, con una policy
-   acotada a los recursos `runmarket-*` (EC2, S3, IAM sobre roles/perfiles
-   `runmarket-*`, ver política completa en `docs/DEPLOYMENT-RUNBOOK.md`) —
-   nunca `AdministratorAccess`. Generar una access key para ese usuario.
-2. **Bucket de estado de Terraform.** Crear a mano un bucket S3 privado,
-   versionado y cifrado (`aws s3api create-bucket` + `put-bucket-versioning`
-   + `put-bucket-encryption` + `put-public-access-block`, o los mismos pasos
-   desde la consola). Es el único recurso de esta infraestructura que no
-   gestiona Terraform — ver nota en "Ficheros a crear" más arriba. Editar
-   `infra/provider.tf` sustituyendo `<ACCOUNT_ID>` por el Account ID real en
-   el nombre del bucket, y commitear ese cambio (el nombre del bucket no es
-   secreto).
-3. **Key pair EC2** (consola AWS → EC2 → Key Pairs → Create) — necesario para
-   que el pipeline pueda conectar por SSH y ejecutar `redeploy.sh`.
-4. **Secrets en GitHub** (Settings → Secrets and variables → Actions):
-
-| Nombre | Tipo | Uso |
-|---|---|---|
-| `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | Secret | Credenciales del usuario IAM del paso 1 |
-| `TF_VAR_DB_PASSWORD` | Secret | Variable sensible de Terraform, nunca en el repo |
-| `EC2_SSH_PRIVATE_KEY` | Secret | Contenido del `.pem` del key pair del paso 3 |
-
-5. **Publicar las imágenes en GHCR por primera vez y marcarlas públicas.** El
-   propio job `deploy` construye y publica las imágenes — pero GHCR crea el
-   paquete como privado la primera vez, y el `GITHUB_TOKEN` del workflow no
-   tiene permiso para cambiar su visibilidad. Tras la primera ejecución del
-   pipeline (que probablemente falle en el health-check por este motivo),
-   marca ambos paquetes como públicos a mano (GitHub → tu perfil → Packages
-   → paquete → Package settings → Change visibility) y vuelve a ejecutar el
-   workflow — a partir de ahí, cada push a un paquete ya existente conserva
-   su visibilidad, así que no hay que repetirlo.
-
-### Lanzar el pipeline
-
-1. Pestaña **Actions** del repositorio → workflow `CI/CD` → **Run workflow**.
-2. El job `test` corre primero (lint + tests + build); si pasa, se encadena `deploy`.
-3. `deploy` construye y publica las imágenes en GHCR, aplica Terraform (crea la EC2 solo
-   si no existe todavía), y por SSH ejecuta `redeploy.sh` en la instancia.
-4. El health-check final confirma que `GET /api/health` responde; si falla, el job queda
-   en rojo con el detalle en los logs de Actions.
-
-Los redeploys posteriores son exactamente el mismo paso 1 — no hay un camino
-"primera vez" distinto del camino "enésima vez".
-
-### Alternativa — Terraform manual desde el portátil (depuración)
-
-Sigue disponible para depurar sin pasar por CI, pero deja de ser un requisito
-previo al pipeline. Con AWS CLI configurado (`aws configure`, usando las
-mismas credenciales del usuario IAM del paso 1 o cualquier otra con permisos
-suficientes) y Terraform instalado:
-
-```bash
-cd infra
-cp terraform.tfvars.example terraform.tfvars
-# Editar con los valores reales: key_name, db_password, github_repository_owner
-terraform init
-terraform plan
-terraform apply
-```
-
-**Verificar:**
-```bash
-terraform output app_url   # devuelve http://<ip-pública>
-curl http://<ip>/api/health
-```
-
-Abrir `http://<ip>` en el navegador — el catálogo de RunMarket debe cargar con los 13 productos.
-
-**Seguimiento (opcional):**
-```bash
-ssh -i <key>.pem ec2-user@<ip>
-tail -f /var/log/user-data.log     # primer arranque
-tail -f /var/log/redeploy.log      # deploys posteriores
-```
-
-### Destruir la infraestructura
-```bash
-terraform destroy   # elimina EC2, S3 y SG — los datos de PostgreSQL se pierden
-```
+Se lanza con el pipeline de GitHub Actions, incluida la primera vez que se
+crea la EC2. Como prerrequisito único, un bootstrap de cuenta puntual
+(usuario IAM del pipeline + bucket S3 del estado de Terraform) — script y
+procedimiento completo en [`docs/DEPLOYMENT-RUNBOOK.md`](DEPLOYMENT-RUNBOOK.md).
 
 ---
 
@@ -290,23 +198,17 @@ terraform destroy   # elimina EC2, S3 y SG — los datos de PostgreSQL se pierde
 | Extensión | Cuándo | Cómo |
 |---|---|---|
 | **TLS / HTTPS** | Cuando haya dominio disponible | `sudo certbot --nginx -d <dominio>` en la instancia; actualizar `CORS_ORIGIN` en `.env` |
-
-> **Aviso de seguridad:** hasta que se aplique esta extensión TLS, la app solo sirve
-> por HTTP (puerto 80). Con `NODE_ENV=production` la cookie `sessionId` ya incluye
-> correctamente el atributo `Secure` (fix de una revisión de seguridad anterior,
-> [`US-017`](backlog/archive/US-017.md)) — los navegadores **descartan** cookies
-> `Secure` recibidas por HTTP, así que el carrito/sesión no persistirá entre
-> peticiones en este primer despliegue. Este es el comportamiento *seguro por
-> defecto* (evita transmitir el `sessionId` en claro por una red no cifrada) y
-> **no debe "arreglarse"** quitando `Secure` o forzando `NODE_ENV=development` en
-> producción — eso reabriría la vulnerabilidad de secuestro de sesión que ese flag
-> corrige. La solución correcta es priorizar esta fila (TLS) antes de exponer la URL
-> a usuarios reales.
 | **Backups S3** | Si los datos de demo importan | Añadir `infra/s3_backup.tf` con bucket + IAM `s3:PutObject` y `infra/scripts/pg_backup.sh` con cron diario |
 | **Datadog** | Si se quiere observabilidad avanzada | Provider datadog en Terraform + agente como contenedor en `docker-compose.prod.yml` |
+
+> **Nota:** para este trabajo académico no se ha considerado necesario el TLS.
+> La cookie `sessionId` decide el atributo `Secure` con `req.secure` (no
+> `NODE_ENV`), así que funciona igual por HTTP (como ahora) o por HTTPS en
+> cuanto se active esta extensión, sin cambios de código.
 
 ---
 
 ## Referencias
 
+- [`docs/DEPLOYMENT-RUNBOOK.md`](DEPLOYMENT-RUNBOOK.md) — procedimiento paso a paso (configuración de cuenta, lanzar el pipeline, depuración, destruir infraestructura)
 - [`docs/INFRASTRUCTURE.md`](INFRASTRUCTURE.md) — diseño completo de la Opción A
