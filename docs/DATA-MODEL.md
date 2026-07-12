@@ -304,11 +304,13 @@ El fichero `backend/prisma/seed.ts` carga los datos iniciales necesarios para ar
 
 **Fuente de datos:** los 12 productos definidos en `src/app/data/products.ts` del prototipo de Figma Make. Son datos reales y coherentes — nombres de marca, precios, atributos running correctos, tallas y colores — por lo que sirven directamente como dataset de demostración.
 
+Además, `prod-013` (`stock: 0`) se añadió posteriormente en `US-014-TASK-06` (`docs/backlog/archive/US-014.md`) como fixture exclusiva para los escenarios E2E de "sin stock" — no proviene del prototipo. El seed actual carga **13 productos** en total.
+
 **Ficheros implicados:**
 
 | Fichero | Propósito |
 |---|---|
-| `backend/prisma/seed.ts` | Script que importa los 12 productos y los inserta via Prisma (`upsert` para idempotencia) |
+| `backend/prisma/seed.ts` | Script que importa los 13 productos y los inserta via Prisma (`upsert` para idempotencia) |
 | `backend/prisma/schema.prisma` | Añadir bloque `prisma.seed` apuntando al script |
 | `backend/package.json` | Script `"seed": "ts-node prisma/seed.ts"` |
 
@@ -316,7 +318,7 @@ El fichero `backend/prisma/seed.ts` carga los datos iniciales necesarios para ar
 
 ```bash
 npx prisma migrate dev   # aplica el esquema
-npx prisma db seed       # carga los 12 productos
+npx prisma db seed       # carga los 13 productos
 ```
 
 El seed usa `upsert` (no `create`) para ser idempotente: ejecutarlo múltiples veces no duplica datos, lo que lo hace seguro para entornos de desarrollo y CI.

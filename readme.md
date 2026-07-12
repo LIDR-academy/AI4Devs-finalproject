@@ -27,7 +27,7 @@ eCommerce especializado en productos deportivos para running. Permite a corredor
 
 ### **0.4. URL del proyecto:**
 
-> Pendiente de documentar.
+http://52.215.59.169/
 
 ### 0.5. URL o archivo comprimido del repositorio
 
@@ -59,7 +59,7 @@ El MVP cubre el ciclo completo de descubrimiento y compra:
 2. **Búsqueda y filtrado multidimensional** — por categoría, distancia, superficie, nivel y objetivo de entrenamiento; filtros combinables con actualización dinámica
 3. **Ficha de producto** — descripción técnica, atributos running como etiquetas de color, selector de talla/color, stepper de cantidad y trust signals (envío, devolución, garantía)
 4. **Gestión de carrito** — añadir, modificar cantidad y eliminar; resumen con subtotal, envío y total; persiste en sesión
-5. **Checkout simulado** — flujo en 2 pasos (datos de envío + método de pago); sin procesamiento real de pagos ni autenticación requerida
+5. **Checkout simulado** — flujo en 3 pasos (datos de envío + método de pago + revisión); sin procesamiento real de pagos ni autenticación requerida
 6. **Confirmación de pedido** — número de pedido generado y resumen de compra
 7. **Gestión básica de pedidos** — historial con estados: pendiente, procesando, enviado, entregado
 
@@ -349,7 +349,7 @@ El proyecto sigue TDD obligatorio en toda implementación (test que falla → c�
 
 | Capa | Herramientas | Estrategia | Resultado actual |
 |---|---|---|---|
-| Backend — unitarios | Jest + Supertest | Repository: mock de `PrismaClient`, verifica las queries/mutaciones exactas. Service: mock del repositorio (`jest.fn()`), lógica de negocio aislada (validación de stock, totales, errores de dominio). Controller: mock del service + Supertest, contrato HTTP (status codes, forma del body, cookies, rechazo de schemas Zod inválidos) | ✅ **193/193 pass**, 17/17 suites |
+| Backend — unitarios | Jest + Supertest | Repository: mock de `PrismaClient`, verifica las queries/mutaciones exactas. Service: mock del repositorio (`jest.fn()`), lógica de negocio aislada (validación de stock, totales, errores de dominio). Controller: mock del service + Supertest, contrato HTTP (status codes, forma del body, cookies, rechazo de schemas Zod inválidos) | ✅ **194/194 pass**, 16/16 suites |
 | Backend — integración | Jest + PostgreSQL real (Docker) | `prisma/seed.test.ts` es la única suite que toca base de datos real (sin mocks): ejecuta el seed contra PostgreSQL y verifica el resultado. Gateada con `describe.skip` si `DATABASE_URL` no apunta a una BD real, degradando a no-op en entornos sin BD | ✅ **3/3 pass**, 1/1 suite |
 | Frontend — unitarios | Vitest + React Testing Library | Componentes, páginas y contexts: estados de UI (loading/empty/error), interacción de usuario, contratos de los hooks de contexto | ✅ **303/303 pass**, 30 ficheros |
 | E2E | Playwright (Chromium) | Caja negra contra frontend + backend + PostgreSQL reales, sin mocks ni seeding desde el propio spec | ✅ **15/15 pass**, 4 specs (`catalog.spec.ts`, `product.spec.ts`, `purchase.spec.ts`, `security-headers.spec.ts`) |
@@ -698,7 +698,7 @@ POST /api/checkout
 
 ## 5. Historias de Usuario
 
-> Set completo de historias (15 US) con criterios de aceptación, estimación y prioridad organizadas por caso de uso: [docs/USER-STORIES.md](docs/USER-STORIES.md)
+> Set completo de historias (19 US) con criterios de aceptación, estimación y prioridad organizadas por caso de uso: [docs/USER-STORIES.md](docs/USER-STORIES.md)
 
 > Generadas y refinadas siguiendo el flujo SDD (apartado 0.6) — el backlog técnico completo por historia, con sus tareas, vive en [`docs/backlog/`](docs/backlog/).
 
@@ -713,7 +713,7 @@ POST /api/checkout
 | 5 | US-007 | Añadir un producto al carrito | CU2 | M | Conecta el descubrimiento con la compra; primer paso transaccional |
 | 6 | US-008 | Revisar y modificar el carrito | CU3 | M | Punto de entrada al checkout; el corredor revisa y confirma su selección |
 | 7 | US-009 | Introducir datos de envío | CU3 | M | Paso 1 del checkout; sin dirección no hay pedido |
-| 8 | US-010 | Seleccionar método de pago simulado | CU3 | M | Paso 2 del checkout; completa los datos necesarios para generar el pedido |
+| 8 | US-010 | Introducir los datos de pago simulado | CU3 | M | Paso 2 del checkout; completa los datos necesarios para generar el pedido |
 | 9 | US-011 | Revisar y confirmar el pedido | CU3 | S | Paso 3 del checkout; crea el pedido y vacía el carrito |
 | 10 | US-012 | Ver la confirmación del pedido | CU3 | S | Cierra el ciclo de compra; sin confirmación el corredor no sabe si la compra fue exitosa |
 
