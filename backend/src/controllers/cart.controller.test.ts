@@ -53,6 +53,9 @@ const makeCartService = (overrides: Partial<ICartService> = {}): ICartService =>
 
 const buildApp = (service: ICartService) => {
   const app = express();
+  // Replica el 'trust proxy' de app.ts: sin esto, req.secure ignora
+  // X-Forwarded-Proto y el test SEC-01 no reproduce el comportamiento real.
+  app.set('trust proxy', 1);
   app.use(cookieParser());
   app.use(express.json());
   app.use('/api/cart', createCartRouter(service));
@@ -205,9 +208,30 @@ describe('POST /api/cart', () => {
     expect(cookieStr).toContain('HttpOnly');
   });
 
-  it('SEC-01: Set-Cookie incluye Secure en entorno no-development', async () => {
+  it('SEC-01: Set-Cookie incluye Secure cuando la conexión es HTTPS (via X-Forwarded-Proto)', async () => {
     // Regression test for missing Secure flag — without it the sessionId cookie
-    // is transmitted over HTTP in production, enabling session hijacking.
+    // is transmitted over an HTTPS-terminating proxy without the flag, enabling
+    // session hijacking over a possible downgrade to HTTP.
+    const service = makeCartService();
+
+    const res = await request(buildApp(service))
+      .post('/api/cart')
+      .set('X-Forwarded-Proto', 'https')
+      .send({ productId: VALID_UUID, quantity: 1 });
+
+    const setCookieHeader = res.headers['set-cookie'] as string[] | string | undefined;
+    expect(setCookieHeader).toBeDefined();
+    const cookieStr = Array.isArray(setCookieHeader)
+      ? setCookieHeader.join('; ')
+      : setCookieHeader ?? '';
+    expect(cookieStr).toContain('Secure');
+  });
+
+  it('no incluye Secure sobre HTTP plano aunque NODE_ENV sea production (US-018: despliegue MVP sin TLS)', async () => {
+    // Regression test: gating Secure on NODE_ENV instead of the real connection
+    // made the cookie unstorable by the browser on the plain-HTTP MVP deploy,
+    // silently starting a brand-new empty session on every request (cart
+    // items "disappearing", checkout always seeing an empty cart).
     const originalEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'production';
 
@@ -224,7 +248,7 @@ describe('POST /api/cart', () => {
     const cookieStr = Array.isArray(setCookieHeader)
       ? setCookieHeader.join('; ')
       : setCookieHeader ?? '';
-    expect(cookieStr).toContain('Secure');
+    expect(cookieStr).not.toContain('Secure');
   });
 
   it('no expone stack traces en errores 500', async () => {
