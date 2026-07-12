@@ -52,11 +52,16 @@ resource "aws_instance" "app" {
     aws_region       = var.aws_region
     artifacts_bucket = aws_s3_bucket.artifacts.bucket
     db_user          = var.db_user
-    db_password      = var.db_password
-    db_name          = var.db_name
-    ghcr_owner       = var.github_repository_owner
-    image_tag        = "latest"
-    cors_origin      = local.cors_origin
+    # Docker Compose interpola $VAR/${VAR} tambien dentro del propio fichero
+    # .env (no solo en docker-compose.prod.yml) - un "$" literal en la
+    # contraseña generada se interpreta como referencia a otra variable y se
+    # sustituye por vacio en silencio. "$$" es como Compose escapa un "$"
+    # literal en un .env.
+    db_password = replace(var.db_password, "$", "$$")
+    db_name     = var.db_name
+    ghcr_owner  = var.github_repository_owner
+    image_tag   = "latest"
+    cors_origin = local.cors_origin
   })
 
   root_block_device {

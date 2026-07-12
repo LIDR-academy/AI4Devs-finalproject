@@ -11,18 +11,28 @@ exec > >(tee -a /var/log/redeploy.log) 2>&1
 # A diferencia del primer arranque, aqui NO se ejecuta `npm run db:seed`
 # (ver docs/INFRASTRUCTURE.md 3.3): repetirlo duplicaria el catalogo.
 
-echo "[redeploy] $(date -u +%FT%TZ) - inicio"
+log() {
+  echo "[redeploy] $(date -u +%FT%TZ) - $*"
+}
+
+log "inicio"
 
 APP_DIR="${APP_DIR:-/opt/runmarket}"
 cd "$APP_DIR"
 
-echo "[redeploy] docker compose pull"
-docker compose -f docker-compose.prod.yml pull
+# --progress=plain fuerza lineas de log normales en vez de la barra de
+# progreso interactiva de docker compose, que no se ve bien (o parece
+# colgada) al reenviarse por SSH hasta el log del step de GitHub Actions.
+log "docker compose pull"
+docker compose -f docker-compose.prod.yml --progress=plain pull
 
-echo "[redeploy] docker compose up -d"
+log "docker compose up -d"
 docker compose -f docker-compose.prod.yml up -d
 
-echo "[redeploy] prisma migrate deploy"
+log "estado de los contenedores"
+docker compose -f docker-compose.prod.yml ps
+
+log "prisma migrate deploy"
 docker compose -f docker-compose.prod.yml exec -T backend npx prisma migrate deploy
 
-echo "[redeploy] $(date -u +%FT%TZ) - completado"
+log "completado"
