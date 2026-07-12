@@ -29,7 +29,7 @@ routes/       products.routes.ts    orders.routes.ts
 controllers/  products.controller.ts  checkout.controller.ts
 services/     catalog.service.ts    cart.service.ts
 repositories/ product.repository.ts  order.repository.ts
-schemas/      product.schemas.ts    checkout.schemas.ts
+schemas/      product-filter.schema.ts    checkout.schema.ts
 middleware/   error-handler.ts      cors.ts  logger.ts  rate-limit.ts
 types/        domain.ts             errors.ts
 ```

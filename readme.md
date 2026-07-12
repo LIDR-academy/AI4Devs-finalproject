@@ -27,15 +27,15 @@ eCommerce especializado en productos deportivos para running. Permite a corredor
 
 ### **0.4. URL del proyecto:**
 
-> Pendiente de documentar.
+http://52.215.59.169/
 
 ### 0.5. URL o archivo comprimido del repositorio
 
-[xavierventeo/AI4Devs-finalproject](https://github.com/xavierventeo/AI4Devs-finalproject/tree/feature-entrega2-XVB)
+[xavierventeo/AI4Devs-finalproject](https://github.com/xavierventeo/AI4Devs-finalproject/tree/finalproject-XVB)
 
 ### 0.6. Metodología de desarrollo:
 
-El desarrollo se ha llevado a cabo siguiendo un flujo **Spec-Driven Development (SDD)** asistido por IA: cada historia de usuario se refina a un backlog técnico, se implementa con **TDD obligatorio** (backend y frontend) y pasa una **revisión de seguridad OWASP** antes de cerrarse. El proceso completo —fases, comandos y agentes— está documentado en [`docs/SDD-WORKFLOW.md`](docs/SDD-WORKFLOW.md); su automatización (agents, skills y commands) vive en [`.claude/`](.claude/), la única fuente de verdad del comportamiento agéntico del proyecto.
+El desarrollo se ha llevado a cabo siguiendo un flujo **Spec-Driven Development (SDD)** asistido por IA: cada historia de usuario se refina a un backlog técnico, se implementa con **TDD obligatorio** (backend y frontend) y pasa una **revisión de seguridad OWASP** antes de cerrarse. El proceso completo —fases, comandos y agentes— está documentado en [`docs/SDD-WORKFLOW.md`](docs/SDD-WORKFLOW.md); su automatización (agents, skills y commands) vive en [`.claude/`](.claude/), la única fuente de verdad del comportamiento agéntico del proyecto. Se optó por un flujo propio en lugar de un framework externo (OpenSpec, spec-kit) para poder personalizarlo a las reglas del proyecto e iterarlo con flexibilidad.
 
 ---
 
@@ -59,7 +59,7 @@ El MVP cubre el ciclo completo de descubrimiento y compra:
 2. **Búsqueda y filtrado multidimensional** — por categoría, distancia, superficie, nivel y objetivo de entrenamiento; filtros combinables con actualización dinámica
 3. **Ficha de producto** — descripción técnica, atributos running como etiquetas de color, selector de talla/color, stepper de cantidad y trust signals (envío, devolución, garantía)
 4. **Gestión de carrito** — añadir, modificar cantidad y eliminar; resumen con subtotal, envío y total; persiste en sesión
-5. **Checkout simulado** — flujo en 2 pasos (datos de envío + método de pago); sin procesamiento real de pagos ni autenticación requerida
+5. **Checkout simulado** — flujo en 3 pasos (datos de envío + método de pago + revisión); sin procesamiento real de pagos ni autenticación requerida
 6. **Confirmación de pedido** — número de pedido generado y resumen de compra
 7. **Gestión básica de pedidos** — historial con estados: pendiente, procesando, enviado, entregado
 
@@ -67,15 +67,15 @@ El MVP cubre el ciclo completo de descubrimiento y compra:
 
 ### **1.3. Diseño y experiencia de usuario:**
 
-Prototipo interactivo: [eCommerce para productos deportivos — Figma Make](https://www.figma.com/make/0wtedXb5138odnAOgHlMiA/Ecommerce-para-productos-deportivos)
+Diseño original: prototipo interactivo en [Figma Make — eCommerce para productos deportivos](https://www.figma.com/make/0wtedXb5138odnAOgHlMiA/Ecommerce-para-productos-deportivos). Las capturas de ese prototipo de diseño se conservan como referencia histórica en [`docs/prototypes/`](docs/prototypes/).
 
-Las capturas de pantalla se encuentran en [`docs/prototypes/`](docs/prototypes/).
+A continuación, las capturas de la **implementación final** ([`docs/screenshots/`](docs/screenshots/)):
 
 ---
 
 **Home — Catálogo con filtros** · *Caso de uso 1*
 
-![Home — Catálogo con filtros](docs/prototypes/01-home-catalog.png)
+![Home — Catálogo con filtros](docs/screenshots/01-home-catalog.png)
 
 Catálogo con panel lateral de filtros running. Punto de entrada y diferencial principal del producto.
 
@@ -83,7 +83,7 @@ Catálogo con panel lateral de filtros running. Punto de entrada y diferencial p
 
 **Ficha de producto** · *Caso de uso 2*
 
-![Ficha de producto](docs/prototypes/02-pdp.png)
+![Ficha de producto](docs/screenshots/02-pdp.png)
 
 Detalle técnico del producto con atributos running, selector de talla/color y botón de añadir al carrito.
 
@@ -91,7 +91,7 @@ Detalle técnico del producto con atributos running, selector de talla/color y b
 
 **Carrito** · *Caso de uso 3*
 
-![Carrito de compra](docs/prototypes/03-cart.png)
+![Carrito de compra](docs/screenshots/03-cart.png)
 
 Resumen de selección con subtotal, envío y acceso al checkout.
 
@@ -99,23 +99,31 @@ Resumen de selección con subtotal, envío y acceso al checkout.
 
 **Checkout — Datos de envío** · *Caso de uso 3*
 
-![Checkout — Datos de envío](docs/prototypes/04-checkout-send-data.png)
+![Checkout — Datos de envío](docs/screenshots/04-checkout-send-data.png)
 
 Formulario de envío, paso 1 del proceso de compra simulado.
 
 ---
 
-**Checkout — Método de pago** · *Caso de uso 3*
+**Checkout —Datos de pago** · *Caso de uso 3*
 
-![Checkout — Método de pago](docs/prototypes/05-checkout-payment.png)
+![Checkout — Fatos de pago](docs/screenshots/05-checkout-payment.png)
 
 Formulario de tarjeta simulada, paso 2 del proceso de compra.
 
 ---
 
+**Revisión de pedido** · *Caso de uso 3*
+
+![Revisión de pedido](docs/screenshots/06-order-revision.png)
+
+Pantalla con datos completos del pedido.
+
+---
+
 **Confirmación de pedido** · *Caso de uso 3*
 
-![Confirmación de pedido](docs/prototypes/06-order-confirmation.png)
+![Confirmación de pedido](docs/screenshots/07-order-confirmation.png)
 
 Pantalla de éxito con número de pedido generado.
 
@@ -123,7 +131,7 @@ Pantalla de éxito con número de pedido generado.
 
 **Mis pedidos**
 
-![Mis pedidos](docs/prototypes/07-my-orders.png)
+![Mis pedidos](docs/screenshots/08-my-orders.png)
 
 Historial de pedidos con estado y detalle de productos.
 
@@ -136,7 +144,7 @@ Historial de pedidos con estado y detalle de productos.
 ```bash
 git clone https://github.com/xavierventeo/AI4Devs-finalproject.git
 cd AI4Devs-finalproject
-git checkout feature-entrega2-XVB
+git checkout finalproject-XVB
 ```
 
 **2. Configurar variables de entorno**
@@ -306,10 +314,12 @@ docker compose exec backend npm run db:seed   # solo en el primer despliegue
 Esta decisión concentra todo el stack en un único proveedor (una sola facturación, un solo IAM) y reutiliza directamente el `docker-compose.yml` ya presente en el repositorio, en lugar de repartir frontend, backend y base de datos entre plataformas gestionadas distintas. Como contrapartida, todo el stack vive en un único host: su caída afecta a las tres capas a la vez, y el mantenimiento del sistema operativo y de Docker es manual. El backup de la base de datos es opcional en esta fase, ya que el catálogo se reconstruye con `npm run db:seed` (13 productos) y los pedidos generados durante la demo no son datos de negocio reales. El certificado TLS (Certbot) también es opcional: Nginx sigue siendo necesario como punto de entrada único que enruta por path sin necesitar CORS, pero los profesores pueden validar el flujo completo por HTTP plano sin depender de tener un dominio configurado antes de la demo; esta concesión es aceptable solo porque no hay datos de pago ni PII reales en esta fase.
 
 > Propuesta completa de infraestructura (MVP académico y evolución profesional): [docs/INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md)
+>
+> Implementación real del despliegue (decisiones, justificación y pipeline detallado): [docs/DEPLOYMENT-STRATEGY.md](docs/DEPLOYMENT-STRATEGY.md) · Procedimiento paso a paso para reproducirlo: [docs/DEPLOYMENT-RUNBOOK.md](docs/DEPLOYMENT-RUNBOOK.md)
 
 ### **2.5. Seguridad**
 
-Las reglas de seguridad no negociables del proyecto están definidas en [`CLAUDE.md`](CLAUDE.md) y se verifican mediante una revisión OWASP Top 10 obligatoria antes de cerrar cada historia de usuario (`HIGH`/`CRITICAL` bloquean el cierre). Prácticas implementadas:
+Las reglas de seguridad no negociables del proyecto las marca [`CLAUDE.md`](CLAUDE.md), y cada historia de usuario pasa su propio análisis de vulnerabilidades (revisión OWASP Top 10 obligatoria antes de cerrarse; `HIGH`/`CRITICAL` bloquean el cierre). Adicionalmente, se realizó un **pentesting final** sobre el sistema completo ya implementado, cuyos hallazgos se corrigieron en dos historias de usuario dedicadas: [US-016](docs/backlog/archive/US-016.md) (vulnerabilidades CRÍTICO/ALTO — cabeceras de seguridad HTTP e infraestructura) y [US-017](docs/backlog/archive/US-017.md) (vulnerabilidades ALTO/MEDIO — exposición de datos y validación de entrada). Prácticas implementadas:
 
 - **Precio y stock nunca se confían del cliente.** El `price` de cada `OrderItem` se toma siempre del `Product` leído de PostgreSQL en el momento del checkout; cualquier campo `price`/`total` que llegue en el body se ignora. El descuento de stock al confirmar un pedido usa una actualización condicional atómica (`tx.product.updateMany({ where: { stock: { gte: cantidad } }, data: { stock: { decrement: cantidad } } })`) para evitar oversell por condición de carrera entre confirmaciones simultáneas (`backend/src/repositories/order.repository.ts`).
 
@@ -349,7 +359,7 @@ El proyecto sigue TDD obligatorio en toda implementación (test que falla → c�
 
 | Capa | Herramientas | Estrategia | Resultado actual |
 |---|---|---|---|
-| Backend — unitarios | Jest + Supertest | Repository: mock de `PrismaClient`, verifica las queries/mutaciones exactas. Service: mock del repositorio (`jest.fn()`), lógica de negocio aislada (validación de stock, totales, errores de dominio). Controller: mock del service + Supertest, contrato HTTP (status codes, forma del body, cookies, rechazo de schemas Zod inválidos) | ✅ **193/193 pass**, 17/17 suites |
+| Backend — unitarios | Jest + Supertest | Repository: mock de `PrismaClient`, verifica las queries/mutaciones exactas. Service: mock del repositorio (`jest.fn()`), lógica de negocio aislada (validación de stock, totales, errores de dominio). Controller: mock del service + Supertest, contrato HTTP (status codes, forma del body, cookies, rechazo de schemas Zod inválidos) | ✅ **194/194 pass**, 16/16 suites |
 | Backend — integración | Jest + PostgreSQL real (Docker) | `prisma/seed.test.ts` es la única suite que toca base de datos real (sin mocks): ejecuta el seed contra PostgreSQL y verifica el resultado. Gateada con `describe.skip` si `DATABASE_URL` no apunta a una BD real, degradando a no-op en entornos sin BD | ✅ **3/3 pass**, 1/1 suite |
 | Frontend — unitarios | Vitest + React Testing Library | Componentes, páginas y contexts: estados de UI (loading/empty/error), interacción de usuario, contratos de los hooks de contexto | ✅ **303/303 pass**, 30 ficheros |
 | E2E | Playwright (Chromium) | Caja negra contra frontend + backend + PostgreSQL reales, sin mocks ni seeding desde el propio spec | ✅ **15/15 pass**, 4 specs (`catalog.spec.ts`, `product.spec.ts`, `purchase.spec.ts`, `security-headers.spec.ts`) |
@@ -692,13 +702,13 @@ POST /api/checkout
 }
 ```
 
-> Especificación completa (7 endpoints: health, products, cart, checkout, orders) generada con `zod-to-openapi`: [`backend/src/docs/openapi.ts`](backend/src/docs/openapi.ts).
+> Especificación completa sobre 5 recursos — Health, Productos, Carrito, Checkout, Pedidos (9 operaciones en total) — generada con `zod-to-openapi`: [`backend/src/docs/openapi.ts`](backend/src/docs/openapi.ts).
 
 ---
 
 ## 5. Historias de Usuario
 
-> Set completo de historias (15 US) con criterios de aceptación, estimación y prioridad organizadas por caso de uso: [docs/USER-STORIES.md](docs/USER-STORIES.md)
+> Set completo de historias (19 US) con criterios de aceptación, estimación y prioridad organizadas por caso de uso: [docs/USER-STORIES.md](docs/USER-STORIES.md)
 
 > Generadas y refinadas siguiendo el flujo SDD (apartado 0.6) — el backlog técnico completo por historia, con sus tareas, vive en [`docs/backlog/`](docs/backlog/).
 
@@ -713,7 +723,7 @@ POST /api/checkout
 | 5 | US-007 | Añadir un producto al carrito | CU2 | M | Conecta el descubrimiento con la compra; primer paso transaccional |
 | 6 | US-008 | Revisar y modificar el carrito | CU3 | M | Punto de entrada al checkout; el corredor revisa y confirma su selección |
 | 7 | US-009 | Introducir datos de envío | CU3 | M | Paso 1 del checkout; sin dirección no hay pedido |
-| 8 | US-010 | Seleccionar método de pago simulado | CU3 | M | Paso 2 del checkout; completa los datos necesarios para generar el pedido |
+| 8 | US-010 | Introducir los datos de pago simulado | CU3 | M | Paso 2 del checkout; completa los datos necesarios para generar el pedido |
 | 9 | US-011 | Revisar y confirmar el pedido | CU3 | S | Paso 3 del checkout; crea el pedido y vacía el carrito |
 | 10 | US-012 | Ver la confirmación del pedido | CU3 | S | Cierra el ciclo de compra; sin confirmación el corredor no sabe si la compra fue exitosa |
 

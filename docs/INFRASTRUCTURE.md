@@ -1,8 +1,6 @@
-# RunMarket — Infraestructura de despliegue (v2)
+# RunMarket — Infraestructura de despliegue
 
-Fecha de referencia: 2026-06-21.
-
-Este documento sustituye el enfoque de tres alternativas de [`docs/INFRASTRUCTURE.md`](INFRASTRUCTURE.md) por **dos opciones únicas y cerradas**, siguiendo el criterio de diseño de preferir un único proveedor por opción salvo justificación técnica fuerte para diversificar. Ambas opciones parten de los mismos requisitos no negociables fijados en [`docs/ARCHITECTURE.md`](ARCHITECTURE.md):
+Este documento presenta **dos opciones únicas y cerradas** de infraestructura para RunMarket, siguiendo el criterio de diseño de preferir un único proveedor por opción salvo justificación técnica fuerte para diversificar. Ambas opciones parten de los mismos requisitos no negociables fijados en [`docs/ARCHITECTURE.md`](ARCHITECTURE.md):
 
 - Frontend Next.js 15 (App Router) con SSR selectivo — solo catálogo y ficha de producto necesitan renderizado en servidor.
 - Backend Express 4 + TypeScript, arquitectura en capas (Router → Controller → Service → Repository), sin estado en memoria: el `sessionId` vive en una cookie, no en el proceso. Esta propiedad es la que permite escalar el backend horizontalmente sin tocar código.
@@ -153,7 +151,7 @@ A diferencia de la Opción B, en el MVP académico el backup **no es un requisit
 Si de todos modos se quiere disponer de una copia (por ejemplo, para no perder pedidos generados durante varias sesiones de prueba de los evaluadores), lo recomendado es:
 
 - `pg_dump` programado por `cron` dentro del host, comprimido y rotado (conservar las últimas 7 copias).
-- Copia adicional fuera del host hacia Amazon S3 Free Tier (5 GB), evitando que un fallo de la propia instancia se lleve también las copias de seguridad — limitación explícita que el `INFRASTRUCTURE.md` anterior dejaba sin resolver para la opción de instancia única.
+- Copia adicional fuera del host hacia Amazon S3 Free Tier (5 GB), evitando que un fallo de la propia instancia se lleve también las copias de seguridad.
 - Snapshot manual del volumen EBS antes de cambios estructurales relevantes (por ejemplo, antes de aplicar una migración Prisma con impacto en datos existentes).
 
 Esta sección pasa a ser obligatoria, no opcional, en el momento en que la Opción A deje de usarse solo para evaluación académica y empiece a recibir pedidos reales (es decir, al migrar hacia la Opción B).

@@ -652,7 +652,7 @@ Se construye en dos fases, tal como detalla `docs/DEPLOYMENT-STRATEGY.md`: **Fas
 > **Diferencias frente al resto del backlog, a tener en cuenta al desglosar esta US con `/refine-user-story`:**
 > - No existen capas Backend/Frontend en el sentido habitual del proyecto. La columna `Capa` de la tabla de tareas debe sustituirse por algo como `Infraestructura` o `CI/CD`.
 > - No aplica TDD clásico (red-green-refactor sobre lógica de negocio). La columna `Verificacion` de cada tarea debe usar comandos de infraestructura (`terraform validate`, `terraform plan`, `docker build`, `docker compose config`, healthchecks HTTP) en lugar de Jest/RTL/Supertest. Cuando una tarea no sea verificable de forma automática (p. ej. aplicar Terraform contra AWS real), se documenta como verificación manual, siguiendo el precedente de `US-000-TASK-10`/`11` en `docs/backlog/archive/US-000.md`.
-> - No hay Fase 5 de revisión OWASP sobre código de aplicación: el criterio de seguridad relevante es de configuración de infraestructura (IAM de mínimo privilegio, rol OIDC sin credenciales estáticas, Security Groups restrictivos, secrets de GitHub, ausencia de secretos en el repo) y ya está razonado en `docs/DEPLOYMENT-STRATEGY.md`.
+> - No hay Fase 5 de revisión OWASP sobre código de aplicación: el criterio de seguridad relevante es de configuración de infraestructura (IAM de mínimo privilegio acotado a `runmarket-*`, Security Groups restrictivos, secrets de GitHub, ausencia de secretos en el repo) y ya está razonado en `docs/DEPLOYMENT-STRATEGY.md`.
 > - No hay entidades de dominio implicadas; en su lugar, la unidad de verificación es "el fichero/artefacto existe y hace lo que dice" más el resultado real de desplegar contra AWS.
 
 **Criterios de aceptación:**
@@ -660,7 +660,7 @@ Se construye en dos fases, tal como detalla `docs/DEPLOYMENT-STRATEGY.md`: **Fas
 - [ ] `docker-compose.prod.yml` referencia las imágenes de backend/frontend por `image:` (GHCR), nunca por `build:` local; solo el servicio `nginx` expone puertos al host
 - [ ] `nginx/nginx.conf` enruta `/api` al backend y `/` al frontend, con marcador preparado para Certbot
 - [ ] Los ficheros `infra/*.tf` provisionan EC2 t3.micro, Security Group (22/80/443), bucket S3 de artefactos, bucket S3 de estado remoto e IAM necesario; `terraform validate` pasa sin errores
-- [ ] `infra/oidc.tf` define el proveedor OIDC y un rol IAM restringido a la rama `finalproject-XVB`, sin ninguna access key estática en GitHub Secrets
+- [ ] Un usuario IAM dedicado (`runmarket-github-actions-deploy`), con política acotada a los recursos `runmarket-*` (no `AdministratorAccess`), autentica el pipeline vía `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` en GitHub Secrets — decisión razonada frente a OIDC en `docs/DEPLOYMENT-STRATEGY.md` ("Por qué credenciales IAM estáticas y no OIDC")
 - [ ] Los scripts `infra/scripts/generar-zip.sh`, `infra/scripts/user_data.sh.tpl` y `infra/scripts/redeploy.sh` existen e implementan el flujo descrito (pull + `up -d` + `prisma migrate deploy`)
 - [ ] `.github/workflows/ci-cd.yml` define los jobs `test` y `deploy`, disparados únicamente por `workflow_dispatch`; el job `deploy` construye y publica imágenes en GHCR, aplica Terraform, despliega por SSH y termina con un health-check contra `GET /api/health`
 - [ ] Ejecutando el pipeline manualmente (o el flujo manual equivalente vía Terraform descrito en el documento), la EC2 queda desplegada, `curl http://<ip>/api/health` responde `200` y el catálogo carga con los 13 productos en `http://<ip>`
@@ -675,7 +675,7 @@ Se construye en dos fases, tal como detalla `docs/DEPLOYMENT-STRATEGY.md`: **Fas
 
 **Dependencias:**
 - Requiere el sistema funcional completo (US-001 a US-017) ya implementado y verificado
-- Bootstrap único fuera del pipeline automatizado: rol OIDC (`infra/oidc.tf`) y backend de estado remoto S3 aplicados a mano una sola vez (ver "Alternativa — Terraform manual" en `docs/DEPLOYMENT-STRATEGY.md`)
+- Bootstrap único fuera del pipeline automatizado: usuario IAM del pipeline y backend de estado remoto S3 aplicados a mano una sola vez (`infra/scripts/bootstrap-account.sh`, ver "Alternativa — Terraform manual" en `docs/DEPLOYMENT-STRATEGY.md`)
 - Paso manual único no automatizable por el pipeline: marcar los paquetes `runmarket-backend`/`runmarket-frontend` como públicos en GHCR la primera vez que se crean
 
 **Estimación:** L
