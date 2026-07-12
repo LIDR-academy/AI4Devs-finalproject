@@ -74,3 +74,10 @@ echo "[user_data] db:seed (solo en el primer arranque)"
 docker compose -f docker-compose.prod.yml exec -T backend npm run db:seed
 
 echo "[user_data] $(date -u +%FT%TZ) - completado"
+
+# Marcador para que el pipeline de deploy (SSH + redeploy.sh) sepa que el
+# primer arranque ha terminado y no entre antes de que exista redeploy.sh -
+# sshd esta disponible mucho antes de que este script termine (dnf update +
+# instalar Docker + pull de imagenes en un t3.micro tarda varios minutos).
+touch "$APP_DIR/.user-data-complete"
+chown ec2-user:ec2-user "$APP_DIR/.user-data-complete"

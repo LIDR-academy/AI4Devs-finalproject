@@ -53,10 +53,23 @@ cat > "$POLICY_FILE" <<'EOF'
       "Sid": "Ec2RunInstancesT3MicroOnly",
       "Effect": "Allow",
       "Action": "ec2:RunInstances",
-      "Resource": "*",
+      "Resource": "arn:aws:ec2:*:*:instance/*",
       "Condition": {
         "StringEquals": { "ec2:InstanceType": "t3.micro" }
       }
+    },
+    {
+      "Sid": "Ec2RunInstancesSupportingResources",
+      "Effect": "Allow",
+      "Action": "ec2:RunInstances",
+      "Resource": [
+        "arn:aws:ec2:*:*:image/*",
+        "arn:aws:ec2:*:*:key-pair/*",
+        "arn:aws:ec2:*:*:network-interface/*",
+        "arn:aws:ec2:*:*:security-group/*",
+        "arn:aws:ec2:*:*:subnet/*",
+        "arn:aws:ec2:*:*:volume/*"
+      ]
     },
     {
       "Sid": "Ec2Manage",
@@ -85,36 +98,7 @@ cat > "$POLICY_FILE" <<'EOF'
     {
       "Sid": "S3RunmarketBuckets",
       "Effect": "Allow",
-      "Action": [
-        "s3:GetObject",
-        "s3:PutObject",
-        "s3:DeleteObject",
-        "s3:ListBucket",
-        "s3:CreateBucket",
-        "s3:DeleteBucket",
-        "s3:GetBucketLocation",
-        "s3:GetBucketAcl",
-        "s3:GetBucketCors",
-        "s3:GetBucketWebsite",
-        "s3:GetBucketLogging",
-        "s3:GetBucketPolicy",
-        "s3:GetBucketRequestPayment",
-        "s3:GetBucketOwnershipControls",
-        "s3:GetAccelerateConfiguration",
-        "s3:GetBucketObjectLockConfiguration",
-        "s3:GetReplicationConfiguration",
-        "s3:GetLifecycleConfiguration",
-        "s3:GetBucketTagging",
-        "s3:PutBucketTagging",
-        "s3:GetBucketVersioning",
-        "s3:PutBucketVersioning",
-        "s3:GetEncryptionConfiguration",
-        "s3:PutEncryptionConfiguration",
-        "s3:DeleteBucketEncryption",
-        "s3:GetBucketPublicAccessBlock",
-        "s3:PutBucketPublicAccessBlock",
-        "s3:DeletePublicAccessBlock"
-      ],
+      "Action": ["s3:Get*", "s3:List*", "s3:Put*", "s3:Delete*", "s3:CreateBucket"],
       "Resource": ["arn:aws:s3:::runmarket-*", "arn:aws:s3:::runmarket-*/*"]
     },
     {

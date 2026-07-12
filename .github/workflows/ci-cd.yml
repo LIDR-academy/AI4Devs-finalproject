@@ -175,8 +175,28 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key "ec2-user@$EC2_HOST" \
-            'bash /opt/runmarket/redeploy.sh'
+          SSH="ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key ec2-user@$EC2_HOST"
+
+          # sshd esta disponible mucho antes de que user_data.sh.tpl termine
+          # (dnf update + Docker + pull de imagenes en un t3.micro tarda
+          # varios minutos en el primer arranque) - sin esto, redeploy.sh
+          # todavia no existe y el step falla con "No such file or directory".
+          # En arranques posteriores el marcador ya existe y este bucle pasa
+          # a la primera.
+          echo "Esperando a que termine el primer arranque de la instancia..."
+          for i in $(seq 1 60); do
+            if $SSH 'test -f /opt/runmarket/.user-data-complete'; then
+              echo "Primer arranque completado"
+              break
+            fi
+            if [ "$i" -eq 60 ]; then
+              echo "user_data no completo tras 10 minutos - revisar /var/log/user-data.log en la instancia"
+              exit 1
+            fi
+            sleep 10
+          done
+
+          $SSH 'bash /opt/runmarket/redeploy.sh'
 
       - name: Clean up SSH key
         if: always()
