@@ -36,6 +36,10 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
+      # Solo para fetches del lado servidor (Server Components/SSR) - el
+      # cliente sigue usando la ruta relativa /api vía nginx, ver
+      # frontend/src/lib/api-client.ts.
+      INTERNAL_API_URL: http://backend:4000/api
     depends_on:
       - backend
 
