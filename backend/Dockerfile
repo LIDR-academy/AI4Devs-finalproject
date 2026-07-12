@@ -46,6 +46,11 @@ COPY --from=build /app/node_modules node_modules
 COPY --from=build /app/backend/dist backend/dist
 COPY --from=build /app/backend/prisma backend/prisma
 COPY --from=build /app/backend/package.json backend/package.json
+# ts-node (usado por `npm run db:seed`, ver comentario de node_modules mas
+# abajo) necesita este fichero para saber que module es CommonJS - sin el,
+# cae a un modo distinto y revienta con "Unknown file extension .ts" al
+# intentar cargar prisma/seed.ts.
+COPY --from=build /app/backend/tsconfig.json backend/tsconfig.json
 
 RUN chown -R runmarket:runmarket /app
 USER runmarket
