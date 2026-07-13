@@ -1,99 +1,99 @@
-# SupportHub — Product Document
-> Version 0.2  
-> Status: In progress
+# SupportHub — Documento de Producto
+> Versión 0.2  
+> Estado: En elaboración
 
 ---
 
-## 1. Product Description
+## 1. Descripción del Producto
 
-### What is SupportHub?
+### ¿Qué es SupportHub?
 
-SupportHub is a **customer support web portal** designed for software consultancies that manage incidents and requests from their clients through Jira internally, but lack a structured and transparent channel toward the end client.
+SupportHub es un **portal web de soporte al cliente** diseñado para consultoras de software que gestionan incidencias y peticiones de sus clientes a través de Jira internamente, pero carecen de un canal estructurado y transparente hacia el cliente final.
 
-SupportHub acts as a **customer experience layer on top of Jira**: the technical team continues working in Jira as usual, while the client has their own portal where they can create tickets, track them in real time and communicate with the team, completely eliminating the dependency on email and WhatsApp as support channels.
+SupportHub actúa como **capa de experiencia de cliente sobre Jira**: el equipo técnico sigue trabajando en Jira como siempre, mientras que el cliente dispone de un portal propio donde crear tickets, hacer seguimiento en tiempo real y comunicarse con el equipo, eliminando por completo la dependencia del email y el WhatsApp como canal de soporte.
 
 ---
 
-### Added Value
+### Valor Añadido
 
-| Current problem | How SupportHub solves it |
+| Problema actual | Cómo lo resuelve SupportHub |
 |---|---|
-| The client has no visibility into their tickets | Dedicated portal with real-time updated status |
-| Communication scattered across email and WhatsApp | Centralized channel: everything happens in the portal |
-| A "bridge" person manually translating emails into Jira | Direct integration: the ticket is created in Jira automatically |
-| The client constantly asks about ticket status | Automatic email notifications on any change |
-| Tickets lost or forgotten without a response | Centralized, traceable, and auditable record |
-| No support metrics | Dashboard with basic KPIs for the administrator |
+| El cliente no tiene visibilidad de sus tickets | Portal propio con estado actualizado en tiempo real |
+| Comunicación dispersa por email y WhatsApp | Canal centralizado: todo ocurre en el portal |
+| Persona "puente" que traduce emails a Jira manualmente | Integración directa: el ticket se crea en Jira automáticamente |
+| El cliente pregunta constantemente el estado | Notificaciones automáticas por email ante cualquier cambio |
+| Tickets perdidos u olvidados sin respuesta | Registro centralizado, trazable y auditable |
+| Sin métricas de soporte | Dashboard con KPIs básicos para el administrador |
 
 ---
 
-### Competitive Advantages
+### Ventajas Competitivas
 
-- **Zero friction for the technical team**: the internal workflow doesn't change, Jira remains the source of truth.
-- **Built to measure**: no per-user licensing costs (Zendesk, Freshdesk, Jira Service Management).
-- **Full product ownership**: adaptable to the consultancy's specific needs without depending on third parties.
-- **AWS deployment**: scalable, secure, and aligned with modern cloud infrastructure. (For the Master's project it can be deployed locally with Docker, only using AWS services such as S3 and SES).
-- **Foundation for AI evolution**: architecture ready to incorporate automatic classification, intelligent triage, and response suggestions in future versions.
+- **Sin fricción para el equipo técnico**: no cambia el flujo interno, Jira sigue siendo la fuente de verdad.
+- **Desarrollado a medida**: sin costes de licenciamiento por usuario (Zendesk, Freshdesk, Jira Service Management).
+- **Propiedad total del producto**: adaptable a las necesidades específicas de la consultora sin depender de terceros.
+- **Despliegue en AWS**: escalable, seguro y alineado con infraestructura cloud moderna. (Para el proyecto de Master se puede desplegar de manera local con Docker, solo usaría servicios como S3 y SES de AWS).
+- **Base para evolución con IA**: arquitectura preparada para incorporar clasificación automática, triaje inteligente y sugerencias de respuesta en versiones futuras.
 
 ---
 
-## 2. Main Features
+## 2. Funcionalidades Principales
 
-### Module 1 — Client Portal
+### Módulo 1 — Portal del Cliente
 
-Web interface accessible to the client's end users: people who report, consult, and track their incidents.
+Interfaz web accesible para los usuarios finales del cliente: personas que reportan, consultan y hacen seguimiento de sus incidencias.
 
-| # | Feature | Description |
+| # | Funcionalidad | Descripción |
 |---|---|---|
-| 1.1 | Registration and login | Access via invitation sent by the administrator. Secure login with email and password. |
-| 1.2 | Ticket creation | Form to report incidents: title, description, type, priority, and attachments. |
-| 1.3 | Attachments in tickets and comments | Support for uploading files (screenshots, logs, documents) stored in Amazon S3. |
-| 1.4 | Ticket listing | View of all client tickets with current status, read directly from Jira on each request. |
-| 1.5 | Ticket detail | Full thread view: description, team comments, and attachments — all read from Jira. |
-| 1.6 | Ticket comments | The client can add comments; they are written directly to Jira via API and displayed when read from Jira. |
-| 1.7 | Email notifications | The client receives an email when the team comments or changes the status of their ticket, with a direct link to the portal. |
+| 1.1 | Registro e inicio de sesión | Acceso mediante invitación enviada por el administrador. Login seguro con email y contraseña. |
+| 1.2 | Creación de tickets | Formulario para reportar incidencias: título, descripción, tipo, prioridad y adjuntos. |
+| 1.3 | Adjuntos en tickets y comentarios | Soporte para subir archivos (capturas de pantalla, logs, documentos) almacenados en Amazon S3. |
+| 1.4 | Listado de tickets | Vista de todos los tickets del cliente con estado actual, leído directamente desde Jira en cada petición. |
+| 1.5 | Detalle del ticket | Visualización del hilo completo: descripción, comentarios del equipo y archivos adjuntos — todos leídos desde Jira. |
+| 1.6 | Comentarios en ticket | El cliente puede agregar comentarios; se escriben directamente en Jira vía API y se muestran al leer desde Jira. |
+| 1.7 | Notificaciones por email | El cliente recibe un email cuando el equipo comenta o cambia el estado de su ticket, con enlace directo al portal. |
 
 ---
 
-### Module 2 — Admin Panel
+### Módulo 2 — Panel Administrativo
 
-Restricted interface for consultancy administrators. Allows managing client access and obtaining visibility into portal usage.
+Interfaz restringida para administradores de la consultora. Permite gestionar el acceso de clientes y obtener visibilidad del uso del portal.
 
-| # | Feature | Description |
+| # | Funcionalidad | Descripción |
 |---|---|---|
-| 2.1 | Client user management | Create, edit, activate, and deactivate portal user accounts. |
-| 2.2 | Invitation sending | Send invitation email with account activation link. |
-| 2.3 | User ↔ Jira project association | Link each user (or client company) to their corresponding project or board in Jira. |
-| 2.4 | Metrics dashboard | Visual summary: tickets created, open/closed, average response time, activity per client. |
+| 2.1 | Gestión de usuarios cliente | Crear, editar, activar y desactivar cuentas de usuarios del portal. |
+| 2.2 | Envío de invitaciones | Envío de email de invitación con enlace de activación de cuenta. |
+| 2.3 | Asociación usuario ↔ proyecto Jira | Vincular cada usuario (o empresa cliente) con su proyecto o board correspondiente en Jira. |
+| 2.4 | Dashboard de métricas | Resumen visual: tickets creados, abiertos/cerrados, tiempo medio de respuesta, actividad por cliente. |
 
 ---
 
-### Module 3 — Jira Integration
+### Módulo 3 — Integración con Jira
 
-**Jira is the ticket database.** SupportHub acts as an experience layer: it reads and writes directly to Jira via REST API. No local copy of titles, descriptions, statuses, or comments exists — Jira is the single source of truth for ticket content. SupportHub only stores a minimal `Ticket` record (`Id`, `JiraIssueKey`, `ClientId`, `CreatedAt`) to link the portal identity with Jira data.
+**Jira es la base de datos de tickets.** SupportHub actúa como capa de experiencia: lee y escribe directamente en Jira vía API REST. No existe copia local de títulos, descripciones, estados ni comentarios — Jira es la única fuente de verdad para el contenido de los tickets. SupportHub solo almacena un registro mínimo `Ticket` (`Id`, `JiraIssueKey`, `ClientId`, `CreatedAt`) para enlazar la identidad del portal con los datos de Jira.
 
-| # | Feature | Description |
+| # | Funcionalidad | Descripción |
 |---|---|---|
-| 3.1 | Ticket creation in Jira | When the client creates a ticket in the portal, it is created in real time in the client's corresponding Jira project. If Jira fails, the client receives the error and nothing is saved locally. |
-| 3.2 | Status and detail query | The ticket's status, description, and priority are read directly from Jira on each request — no cache or local copy. |
-| 3.3 | Bidirectional comments | Client comments are written to Jira via API; team comments in Jira are read directly from Jira. |
-| 3.4 | Jira Webhook (notifications) | Jira notifies SupportHub of status changes or new comments. SupportHub generates a notification to the client (in-app and/or email) but does not sync data locally. |
+| 3.1 | Creación de tickets en Jira | Cuando el cliente crea un ticket en el portal, se crea en tiempo real en el proyecto Jira del cliente correspondiente. Si Jira falla, el cliente recibe el error y no se guarda nada localmente. |
+| 3.2 | Consulta de estado y detalle | El estado, descripción y prioridad del ticket se leen directamente desde Jira en cada petición — no hay caché ni copia local. |
+| 3.3 | Comentarios bidireccionales | Los comentarios del cliente se escriben en Jira vía API; los comentarios del equipo en Jira se leen directamente desde Jira. |
+| 3.4 | Webhook de Jira (notificaciones) | Jira notifica a SupportHub ante cambios de estado o nuevos comentarios. SupportHub genera una notificación al cliente (in-app y/o email) pero no sincroniza datos localmente. |
 
 ---
 
-## 3. Business Model — Lean Canvas
+## 3. Modelo de Negocio — Lean Canvas
 
-| Block | Content |
+| Bloque | Contenido |
 |---|---|
-| **🔴 Problem** | 1. Clients with no visibility into their incidents · 2. Fragmented communication via email/WhatsApp · 3. A "bridge" person manually loading tickets into Jira · 4. No support metrics |
-| **🟡 Solution** | Web portal where the client creates tickets, tracks them, and communicates with the team. Automatic Jira integration. Email notifications. Attachments via S3. |
-| **⭐ Unique Value Proposition** | *"Your team in Jira. Your client in SupportHub."* The client has full visibility into their incidents without the team changing their workflow. |
-| **🏆 Unfair Advantage** | Built to measure with no licensing costs. Full code ownership. Native integration with existing Jira. Architecture ready for AI in v2. |
-| **👥 Customer Segments** | Software consultancies with clients who have contracted technical support. Phase 1: internal use. Phase 2: other consultancies in the market. |
-| **📊 Key Metrics** | Tickets created via portal vs email · Average time to first response · % reduction in follow-up emails · Customer satisfaction (CSAT) |
-| **📣 Channels** | Internal deployment at the consultancy. |
-| **💰 Costs** | Initial development · AWS infrastructure · Product maintenance and evolution |
+| **🔴 Problema** | 1. Clientes sin visibilidad de sus incidencias · 2. Comunicación fragmentada por email/WhatsApp · 3. Persona "puente" que carga tickets manualmente en Jira · 4. Sin métricas de soporte |
+| **🟡 Solución** | Portal web donde el cliente crea tickets, hace seguimiento y se comunica con el equipo. Integración automática con Jira. Notificaciones por email. Adjuntos via S3. |
+| **⭐ Propuesta de Valor Única** | *"Tu equipo en Jira. Tu cliente en SupportHub."* El cliente tiene visibilidad total sobre sus incidencias sin que el equipo cambie su flujo de trabajo. |
+| **🏆 Ventaja Injusta** | Desarrollado a medida sin coste de licencias. Propiedad total del código. Integración nativa con Jira existente. Arquitectura preparada para IA en v2. |
+| **👥 Segmentos de Clientes** | Consultoras de software con clientes que tienen soporte técnico contratado. Fase 1: uso interno. Fase 2: otras consultoras del mercado. |
+| **📊 Métricas Clave** | Tickets creados por portal vs email · Tiempo medio de primera respuesta · % reducción de emails de seguimiento · Satisfacción del cliente (CSAT) |
+| **📣 Canales** | Despliegue interno en la consultora. |
+| **💰 Costes** | Desarrollo inicial · Infraestructura AWS · Mantenimiento y evolución del producto |
 
 ---
 
-*Living document — will be updated progressively throughout the project.*
+*Documento vivo — se actualizará progresivamente a lo largo del proyecto.*
