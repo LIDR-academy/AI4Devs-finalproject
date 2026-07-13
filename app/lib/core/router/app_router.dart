@@ -13,7 +13,8 @@ import 'package:la_pocha/features/round/presentation/pages/play_page.dart';
 import 'package:la_pocha/features/round/presentation/pages/game_final_result_page.dart';
 import 'package:la_pocha/features/round/presentation/pages/round_result_page.dart';
 import 'package:la_pocha/features/round/presentation/pages/scoring_page.dart';
-import 'package:la_pocha/features/history/presentation/pages/game_history_detail_placeholder_page.dart';
+import 'package:la_pocha/features/history/domain/entities/game_history_source.dart';
+import 'package:la_pocha/features/history/presentation/pages/game_detail_page.dart';
 import 'package:la_pocha/features/history/presentation/pages/history_list_page.dart';
 
 GoRouter createAppRouter({
@@ -108,9 +109,18 @@ GoRouter createAppRouter({
       ),
       GoRoute(
         path: '/history/:gameId',
-        builder: (context, state) => GameHistoryDetailPlaceholderPage(
-          gameId: state.pathParameters['gameId']!,
-        ),
+        builder: (context, state) {
+          final sourceName = state.uri.queryParameters['source'];
+          final source = GameHistorySource.values.firstWhere(
+            (value) => value.name == sourceName,
+            orElse: () => GameHistorySource.local,
+          );
+
+          return GameDetailPage(
+            gameId: state.pathParameters['gameId']!,
+            source: source,
+          );
+        },
       ),
     ],
   );

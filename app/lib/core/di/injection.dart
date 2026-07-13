@@ -45,7 +45,10 @@ import 'package:la_pocha/features/history/data/datasources/history_firestore_dat
 import 'package:la_pocha/features/history/data/datasources/history_local_datasource.dart';
 import 'package:la_pocha/features/history/data/repositories/history_repository_impl.dart';
 import 'package:la_pocha/features/history/domain/repositories/history_repository.dart';
+import 'package:la_pocha/features/history/domain/services/game_detail_mapper.dart';
+import 'package:la_pocha/features/history/domain/usecases/get_game_detail_usecase.dart';
 import 'package:la_pocha/features/history/domain/usecases/get_game_history_usecase.dart';
+import 'package:la_pocha/features/history/presentation/bloc/game_detail_bloc.dart';
 import 'package:la_pocha/features/history/presentation/bloc/history_list_bloc.dart';
 import 'package:la_pocha/features/auth/data/datasources/auth_firebase_datasource.dart';
 import 'package:la_pocha/features/auth/data/datasources/user_firestore_datasource.dart';
@@ -190,12 +193,20 @@ Future<void> configureDependencies() async {
     () => const RankingService(),
   );
 
+  getIt.registerLazySingleton<GameDetailMapper>(
+    () => const GameDetailMapper(),
+  );
+
   getIt.registerLazySingleton<HistoryLocalDatasource>(
-    () => HistoryLocalDatasource(getIt<AppDatabase>()),
+    () => HistoryLocalDatasource(
+      getIt<AppDatabase>(),
+      getIt<GameLocalDatasource>(),
+      getIt<RoundLocalDatasource>(),
+    ),
   );
 
   getIt.registerLazySingleton<HistoryFirestoreDatasource>(
-    () => HistoryFirestoreDatasource(),
+    () => HistoryFirestoreDatasource(getIt<FirebaseFirestore>()),
   );
 
   getIt.registerLazySingleton<HistoryRepository>(
@@ -209,11 +220,19 @@ Future<void> configureDependencies() async {
     () => GetGameHistoryUseCase(getIt<HistoryRepository>()),
   );
 
+  getIt.registerFactory<GetGameDetailUseCase>(
+    () => GetGameDetailUseCase(getIt<HistoryRepository>()),
+  );
+
   getIt.registerFactory<HistoryListBloc>(
     () => HistoryListBloc(
       getGameHistory: getIt<GetGameHistoryUseCase>(),
       retryPendingUploads: getIt<RetryPendingUploadsUseCase>(),
     ),
+  );
+
+  getIt.registerFactory<GameDetailBloc>(
+    () => GameDetailBloc(getGameDetail: getIt<GetGameDetailUseCase>()),
   );
 
   getIt.registerFactory<LoadBiddingContextUseCase>(

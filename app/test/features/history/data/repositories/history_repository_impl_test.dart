@@ -1,7 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:la_pocha/features/game_setup/domain/entities/game.dart';
+import 'package:la_pocha/features/game_setup/domain/entities/game_status.dart';
+import 'package:la_pocha/features/game_setup/domain/entities/player_embed.dart';
+import 'package:la_pocha/features/game_setup/domain/entities/round.dart';
+import 'package:la_pocha/features/game_setup/domain/entities/round_definition.dart';
+import 'package:la_pocha/features/game_setup/domain/entities/round_status.dart';
 import 'package:la_pocha/features/history/data/datasources/history_firestore_datasource.dart';
 import 'package:la_pocha/features/history/data/datasources/history_local_datasource.dart';
 import 'package:la_pocha/features/history/data/repositories/history_repository_impl.dart';
+import 'package:la_pocha/features/history/domain/entities/game_detail.dart';
 import 'package:la_pocha/features/history/domain/entities/game_history_item.dart';
 import 'package:la_pocha/features/history/domain/entities/game_history_source.dart';
 import 'package:mockito/annotations.dart';
@@ -102,5 +109,78 @@ void main() {
 
     expect(items, hasLength(1));
     expect(items.single.source, GameHistorySource.local);
+  });
+
+  group('getGameDetail', () {
+    final players = [
+      PlayerEmbed(
+        id: 'p1',
+        displayName: 'Ana',
+        isGuest: true,
+        userId: null,
+        seatOrder: 1,
+        totalScore: 10,
+        joinedAt: DateTime(2026),
+      ),
+    ];
+
+    final game = Game(
+      id: 'game-1',
+      status: GameStatus.finished,
+      playerCount: 1,
+      totalCards: 40,
+      maxCardsPerRound: 10,
+      roundSequence: const [RoundDefinition(roundNumber: 1, cardsPerPlayer: 4)],
+      players: players,
+      finishedAt: DateTime(2026),
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+    );
+
+    final round = Round(
+      id: 'round-1',
+      gameId: 'game-1',
+      roundNumber: 1,
+      cardsInRound: 4,
+      dealerPlayerId: 'p1',
+      status: RoundStatus.closed,
+      bids: const {'p1': 2},
+      tricks: const {'p1': 2},
+      scoresDelta: const {'p1': 10},
+      createdAt: DateTime(2026),
+      closedAt: DateTime(2026),
+    );
+
+    test('loads detail from local datasource', () async {
+      when(localDatasource.loadFinishedGameDetail('game-1')).thenAnswer(
+        (_) async => (game: game, rounds: [round]),
+      );
+
+      final detail = await repository.getGameDetail(
+        gameId: 'game-1',
+        source: GameHistorySource.local,
+      );
+
+      expect(detail, isA<GameDetail>());
+      expect(detail.source, GameHistorySource.local);
+      expect(detail.roundSummaries, hasLength(1));
+      verify(localDatasource.loadFinishedGameDetail('game-1')).called(1);
+      verifyNever(firestoreDatasource.loadFinishedGameDetail(any));
+    });
+
+    test('loads detail from cloud datasource', () async {
+      when(firestoreDatasource.loadFinishedGameDetail('cloud-1')).thenAnswer(
+        (_) async => (game: game.copyWith(id: 'cloud-1'), rounds: [round]),
+      );
+
+      final detail = await repository.getGameDetail(
+        gameId: 'cloud-1',
+        source: GameHistorySource.cloud,
+      );
+
+      expect(detail.source, GameHistorySource.cloud);
+      verify(firestoreDatasource.loadFinishedGameDetail('cloud-1')).called(1);
+      verifyNever(localDatasource.loadFinishedGameDetail(any));
+    });
   });
 }

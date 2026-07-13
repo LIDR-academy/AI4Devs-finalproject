@@ -1,5 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:la_pocha/features/game_setup/data/datasources/game_local_datasource.dart';
+import 'package:la_pocha/features/game_setup/data/datasources/round_local_datasource.dart';
 import 'package:la_pocha/core/database/app_database.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/player_embed.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/round_definition.dart';
@@ -12,7 +14,11 @@ void main() {
 
   setUp(() {
     database = AppDatabase.forTesting();
-    datasource = HistoryLocalDatasource(database);
+    datasource = HistoryLocalDatasource(
+      database,
+      GameLocalDatasource(database),
+      RoundLocalDatasource(database),
+    );
   });
 
   tearDown(() async {

@@ -84,7 +84,9 @@ class _HistoryListView extends StatelessWidget {
                             final item = items[index];
                             return GameHistoryTile(
                               item: item,
-                              onTap: () => context.push('/history/${item.id}'),
+                              onTap: () => context.push(
+                                '/history/${item.id}?source=${item.source.name}',
+                              ),
                             );
                           },
                         ),

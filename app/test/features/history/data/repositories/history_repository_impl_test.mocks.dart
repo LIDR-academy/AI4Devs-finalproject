@@ -3,14 +3,16 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i3;
+import 'dart:async' as _i4;
 
+import 'package:la_pocha/features/game_setup/domain/entities/game.dart' as _i2;
+import 'package:la_pocha/features/game_setup/domain/entities/round.dart' as _i6;
 import 'package:la_pocha/features/history/data/datasources/history_firestore_datasource.dart'
-    as _i5;
+    as _i7;
 import 'package:la_pocha/features/history/data/datasources/history_local_datasource.dart'
-    as _i2;
+    as _i3;
 import 'package:la_pocha/features/history/domain/entities/game_history_item.dart'
-    as _i4;
+    as _i5;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -28,42 +30,97 @@ import 'package:mockito/mockito.dart' as _i1;
 // ignore_for_file: subtype_of_sealed_class
 // ignore_for_file: invalid_use_of_internal_member
 
+class _FakeGame_0 extends _i1.SmartFake implements _i2.Game {
+  _FakeGame_0(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
 /// A class which mocks [HistoryLocalDatasource].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockHistoryLocalDatasource extends _i1.Mock
-    implements _i2.HistoryLocalDatasource {
+    implements _i3.HistoryLocalDatasource {
   @override
-  _i3.Future<List<_i4.GameHistoryItem>> getFinishedGames() =>
+  _i4.Future<List<_i5.GameHistoryItem>> getFinishedGames() =>
       (super.noSuchMethod(
             Invocation.method(#getFinishedGames, []),
-            returnValue: _i3.Future<List<_i4.GameHistoryItem>>.value(
-              <_i4.GameHistoryItem>[],
+            returnValue: _i4.Future<List<_i5.GameHistoryItem>>.value(
+              <_i5.GameHistoryItem>[],
             ),
             returnValueForMissingStub:
-                _i3.Future<List<_i4.GameHistoryItem>>.value(
-                  <_i4.GameHistoryItem>[],
+                _i4.Future<List<_i5.GameHistoryItem>>.value(
+                  <_i5.GameHistoryItem>[],
                 ),
           )
-          as _i3.Future<List<_i4.GameHistoryItem>>);
+          as _i4.Future<List<_i5.GameHistoryItem>>);
+
+  @override
+  _i4.Future<({_i2.Game game, List<_i6.Round> rounds})> loadFinishedGameDetail(
+    String? gameId,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#loadFinishedGameDetail, [gameId]),
+            returnValue:
+                _i4.Future<({_i2.Game game, List<_i6.Round> rounds})>.value((
+                  game: _FakeGame_0(
+                    this,
+                    Invocation.method(#loadFinishedGameDetail, [gameId]),
+                  ),
+                  rounds: <_i6.Round>[],
+                )),
+            returnValueForMissingStub:
+                _i4.Future<({_i2.Game game, List<_i6.Round> rounds})>.value((
+                  game: _FakeGame_0(
+                    this,
+                    Invocation.method(#loadFinishedGameDetail, [gameId]),
+                  ),
+                  rounds: <_i6.Round>[],
+                )),
+          )
+          as _i4.Future<({_i2.Game game, List<_i6.Round> rounds})>);
 }
 
 /// A class which mocks [HistoryFirestoreDatasource].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockHistoryFirestoreDatasource extends _i1.Mock
-    implements _i5.HistoryFirestoreDatasource {
+    implements _i7.HistoryFirestoreDatasource {
   @override
-  _i3.Future<List<_i4.GameHistoryItem>> getFinishedCloudGames() =>
+  _i4.Future<List<_i5.GameHistoryItem>> getFinishedCloudGames() =>
       (super.noSuchMethod(
             Invocation.method(#getFinishedCloudGames, []),
-            returnValue: _i3.Future<List<_i4.GameHistoryItem>>.value(
-              <_i4.GameHistoryItem>[],
+            returnValue: _i4.Future<List<_i5.GameHistoryItem>>.value(
+              <_i5.GameHistoryItem>[],
             ),
             returnValueForMissingStub:
-                _i3.Future<List<_i4.GameHistoryItem>>.value(
-                  <_i4.GameHistoryItem>[],
+                _i4.Future<List<_i5.GameHistoryItem>>.value(
+                  <_i5.GameHistoryItem>[],
                 ),
           )
-          as _i3.Future<List<_i4.GameHistoryItem>>);
+          as _i4.Future<List<_i5.GameHistoryItem>>);
+
+  @override
+  _i4.Future<({_i2.Game game, List<_i6.Round> rounds})> loadFinishedGameDetail(
+    String? gameId,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#loadFinishedGameDetail, [gameId]),
+            returnValue:
+                _i4.Future<({_i2.Game game, List<_i6.Round> rounds})>.value((
+                  game: _FakeGame_0(
+                    this,
+                    Invocation.method(#loadFinishedGameDetail, [gameId]),
+                  ),
+                  rounds: <_i6.Round>[],
+                )),
+            returnValueForMissingStub:
+                _i4.Future<({_i2.Game game, List<_i6.Round> rounds})>.value((
+                  game: _FakeGame_0(
+                    this,
+                    Invocation.method(#loadFinishedGameDetail, [gameId]),
+                  ),
+                  rounds: <_i6.Round>[],
+                )),
+          )
+          as _i4.Future<({_i2.Game game, List<_i6.Round> rounds})>);
 }
