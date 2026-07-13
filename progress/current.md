@@ -1,7 +1,7 @@
 # Current session
 
-**Active feature:** pdf-upload-extraction
-**Folder:** docs/features/pdf-upload-extraction/
-**Phase:** done ✅
-**Status:** All 3 slices complete. Full review (round 2, 6 reviewers, APPROVED). Mutation gate PASS (targeted closure + 3 human-accepted content/presentation categories). DoD validated (PASS). Merged into `feature-entrega2-HernanLaura`.
-**Notes:** Merged from worktree `.worktrees/pdf-upload-extraction` (branch `feat/pdf-upload-extraction`); upload screen now renders `PdfUpload` inside `ApiKeyGate`. Prior features activity-flashcard-recall and score-results-summary merged/pr_ready per history.
+**Active feature:** ai-lesson-generation
+**Folder:** docs/features/ai-lesson-generation/
+**Phase:** pending
+**Status:** Worktree created (`.worktrees/ai-lesson-generation`, branch `feat/ai-lesson-generation`, based on `feature-entrega2-HernanLaura`). Story moved to in-progress. Docs scaffolded from templates. Starting Phase 1 (spec_partner).
+**Notes:** Depends on R1 (pdf-upload-extraction, done) and R6 (ai-key-management, done).
