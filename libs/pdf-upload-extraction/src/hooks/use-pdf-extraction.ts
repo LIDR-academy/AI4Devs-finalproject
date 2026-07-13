@@ -1,8 +1,8 @@
 import { useCallback, useRef, useState } from 'react';
-import { generateDocumentId, PDF_EXTRACTION_ERROR_CODES, PdfExtractionService, type PdfExtractionInput } from '@helsoft/services';
-import type { PdfExtractionError, PdfExtractionErrorCode, PdfExtractionResult } from '@helsoft/types';
+import { useSession } from '@helsoft/hooks';
 
-import { useSession } from './use-session';
+import { generateDocumentId, PDF_EXTRACTION_ERROR_CODES, PdfExtractionService, type PdfExtractionInput } from '../services/pdf-extraction.service';
+import type { PdfExtractionError, PdfExtractionErrorCode, PdfExtractionResult } from '../types/pdf-extraction';
 
 export type PdfExtractionStage = 'idle' | 'processing' | 'success' | 'error';
 

@@ -1,4 +1,5 @@
-jest.mock('@helsoft/services', () => ({
+/** @jest-environment jsdom */
+jest.mock('../services/pdf-extraction.service', () => ({
   PdfExtractionService: { extract: jest.fn() },
   generateDocumentId: jest.fn(() => 'generated-document-id'),
   PDF_EXTRACTION_ERROR_CODES: {
@@ -12,12 +13,12 @@ jest.mock('@helsoft/services', () => ({
     unauthenticated: true,
   },
 }));
-jest.mock('./use-session', () => ({ useSession: jest.fn() }));
+jest.mock('@helsoft/hooks', () => ({ useSession: jest.fn() }));
 
 import { act, renderHook } from '@testing-library/react';
-import { PdfExtractionService } from '@helsoft/services';
+import { useSession } from '@helsoft/hooks';
 
-import { useSession } from './use-session';
+import { PdfExtractionService } from '../services/pdf-extraction.service';
 import { usePdfExtraction } from './use-pdf-extraction';
 
 const service = PdfExtractionService as jest.Mocked<typeof PdfExtractionService>;

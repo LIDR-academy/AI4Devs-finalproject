@@ -1,6 +1,6 @@
-jest.mock('../supabase/supabase-client', () => ({ getSupabase: jest.fn() }));
+jest.mock('@helsoft/services', () => ({ getSupabase: jest.fn() }));
 
-import { getSupabase } from '../supabase/supabase-client';
+import { getSupabase } from '@helsoft/services';
 import { PdfUploadDao } from './pdf-upload.dao';
 
 const mockGetSupabase = getSupabase as jest.Mock;

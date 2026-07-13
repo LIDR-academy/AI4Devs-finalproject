@@ -14,6 +14,7 @@
     "@helsoft/components": "workspace:*",
     "@helsoft/hooks": "workspace:*",
     "@helsoft/localization": "workspace:*",
+    "@helsoft/pdf-upload-extraction": "workspace:*",
     "@helsoft/services": "workspace:*",
     "@helsoft/types": "workspace:*"
   },

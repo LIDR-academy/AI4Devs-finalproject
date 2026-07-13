@@ -1,5 +1,5 @@
-jest.mock('@helsoft/hooks', () => ({
-  ...jest.requireActual('@helsoft/hooks'),
+jest.mock('@helsoft/pdf-upload-extraction', () => ({
+  ...jest.requireActual('@helsoft/pdf-upload-extraction'),
   usePdfExtraction: jest.fn(),
 }));
 jest.mock('@helsoft/localization', () => ({ useLocalization: jest.fn() }));
@@ -9,8 +9,7 @@ jest.mock('expo-file-system', () => ({
 }));
 
 import { useLocalization } from '@helsoft/localization';
-import { usePdfExtraction } from '@helsoft/hooks';
-import { PDF_EXTRACTION_LIMITS } from '@helsoft/services';
+import { PDF_EXTRACTION_LIMITS, usePdfExtraction } from '@helsoft/pdf-upload-extraction';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';

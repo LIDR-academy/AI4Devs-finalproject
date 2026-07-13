@@ -1,4 +1,4 @@
-import type { PdfExtractionLimits } from '@helsoft/types';
+import type { PdfExtractionLimits } from '../types/pdf-extraction';
 
 /**
  * Server-side, authoritative file-size guard (M1, security review round-1 fix). The client

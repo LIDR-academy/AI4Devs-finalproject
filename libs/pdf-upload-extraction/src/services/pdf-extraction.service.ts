@@ -1,8 +1,8 @@
 import { FunctionsFetchError, FunctionsHttpError, FunctionsRelayError } from '@supabase/supabase-js';
-import type { PdfExtractionError, PdfExtractionErrorCode, PdfExtractionResult } from '@helsoft/types';
 
 import { trackPdfExtractionEvent } from '../analytics/pdf-extraction-analytics';
 import { PdfUploadDao } from '../dao/pdf-upload.dao';
+import type { PdfExtractionError, PdfExtractionErrorCode, PdfExtractionResult } from '../types/pdf-extraction';
 import { PDF_EXTRACTION_LIMITS, PDF_FILE_EXTENSION } from './pdf-extraction.constants';
 
 export type PdfExtractionInput = {
@@ -30,8 +30,8 @@ export const generateDocumentId = (): string =>
  * full (not partial) `Record`, matching `pdf-upload.tsx`'s `UPLOAD_ERROR_KEYS` precedent, so
  * TypeScript itself enforces exhaustiveness against the `PdfExtractionErrorCode` union (a future
  * added code that's missed here fails to compile, rather than silently under-representing in an
- * unchecked `Set` literal, review round-1 fix N1). Exported (via the `@helsoft/services` barrel)
- * so `usePdfExtraction` derives its own runtime guard from this single source instead of
+ * unchecked `Set` literal, review round-1 fix N1). Exported (via the `@helsoft/pdf-upload-extraction`
+ * barrel) so `usePdfExtraction` derives its own runtime guard from this single source instead of
  * independently re-declaring the same closed set. */
 export const PDF_EXTRACTION_ERROR_CODES: Record<PdfExtractionErrorCode, true> = {
   unsupported_file_type: true,

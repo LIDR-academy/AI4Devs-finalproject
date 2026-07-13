@@ -1,8 +1,11 @@
 import { PdfUploadPanel, type PdfUploadPanelState } from '@helsoft/components';
-import { type PdfExtractionStage, usePdfExtraction } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
-import { PDF_EXTRACTION_LIMITS } from '@helsoft/services';
-import type { PdfExtractionErrorCode } from '@helsoft/types';
+import {
+  PDF_EXTRACTION_LIMITS,
+  type PdfExtractionErrorCode,
+  type PdfExtractionStage,
+  usePdfExtraction,
+} from '@helsoft/pdf-upload-extraction';
 import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';
 

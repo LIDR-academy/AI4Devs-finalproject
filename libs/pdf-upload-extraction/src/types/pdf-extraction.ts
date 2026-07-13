@@ -44,8 +44,9 @@ export type PdfExtractionErrorCode =
   | 'unauthenticated';
 
 /** The shape of the single-source size/page limits constant (`PDF_EXTRACTION_LIMITS`,
- * `libs/services/src/services/pdf-extraction.constants.ts`). This file holds only the shape —
- * the locked values (10 MB / 20 pages, spec decision #1) live in that constant, not here. */
+ * `libs/pdf-upload-extraction/src/services/pdf-extraction.constants.ts`). This file holds only
+ * the shape — the locked values (10 MB / 20 pages, spec decision #1) live in that constant, not
+ * here. */
 export type PdfExtractionLimits = {
   maxSizeBytes: number;
   maxPages: number;

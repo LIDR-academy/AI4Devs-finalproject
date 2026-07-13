@@ -1,7 +1,7 @@
-import type { PdfExtractionResult } from '@helsoft/types';
+import { getSupabase } from '@helsoft/services';
 
 import { PDF_UPLOAD_BUCKET } from '../services/pdf-extraction.constants';
-import { getSupabase } from '../supabase/supabase-client';
+import type { PdfExtractionResult } from '../types/pdf-extraction';
 
 const PDF_CONTENT_TYPE = 'application/pdf';
 const EXTRACT_FUNCTION_NAME = 'extract-pdf';

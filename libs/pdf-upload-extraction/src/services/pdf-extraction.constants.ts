@@ -1,4 +1,4 @@
-import type { PdfExtractionLimits } from '@helsoft/types';
+import type { PdfExtractionLimits } from '../types/pdf-extraction';
 
 /**
  * Single source of truth for the upload/extraction size ceilings (spec decision #1). The client

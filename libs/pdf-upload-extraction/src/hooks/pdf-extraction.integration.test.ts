@@ -1,9 +1,10 @@
+/** @jest-environment jsdom */
 import { act, renderHook, waitFor } from '@testing-library/react';
+import { useSession } from '@helsoft/hooks';
 import { initSupabase } from '@helsoft/services';
 import type { SupabaseClient } from '@helsoft/services';
 
 import { usePdfExtraction } from './use-pdf-extraction';
-import { useSession } from './use-session';
 
 /**
  * Slice-1 integration (pdf-upload-extraction, task-8): usePdfExtraction -> PdfExtractionService

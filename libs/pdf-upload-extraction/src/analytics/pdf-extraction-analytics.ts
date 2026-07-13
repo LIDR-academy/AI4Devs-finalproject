@@ -1,4 +1,4 @@
-import type { PdfExtractionErrorCode } from '@helsoft/types';
+import type { PdfExtractionErrorCode } from '../types/pdf-extraction';
 
 /** The three PII-free extraction-lifecycle events (spec.md's Analytics decision, task-15,
  * @s17) — a closed, discriminated union rather than an open-ended event type, since these three

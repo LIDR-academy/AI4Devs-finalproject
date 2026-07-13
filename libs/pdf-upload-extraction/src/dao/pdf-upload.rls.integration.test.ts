@@ -2,7 +2,7 @@
 // NOT part of the default `pnpm test` run (see jest.config.js's testPathIgnorePatterns) — this
 // repo's other Jest tests are fully mocked and must never require Docker. Run manually with:
 //
-//   pnpm --filter @helsoft/services test:rls
+//   pnpm --filter @helsoft/pdf-upload-extraction test:rls
 //
 // (equivalent to `NODE_OPTIONS=--experimental-vm-modules jest --config jest.rls.config.js`).
 // Requires `npx supabase start` (or `db reset`) to already be running locally — see

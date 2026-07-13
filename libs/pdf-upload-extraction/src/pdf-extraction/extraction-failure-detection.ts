@@ -1,6 +1,5 @@
-import type { PdfExtractionErrorCode, PdfExtractionLimits } from '@helsoft/types';
-
 import type { ExtractedPageText } from './pdf-extraction-adapter';
+import type { PdfExtractionErrorCode, PdfExtractionLimits } from '../types/pdf-extraction';
 
 export type DetectExtractionFailureInput = {
   pages: ExtractedPageText[];

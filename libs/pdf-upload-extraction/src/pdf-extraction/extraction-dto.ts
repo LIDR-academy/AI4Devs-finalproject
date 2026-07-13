@@ -1,4 +1,4 @@
-import type { ExtractedImageRef, PdfExtractionResult } from '@helsoft/types';
+import type { ExtractedImageRef, PdfExtractionResult } from '../types/pdf-extraction';
 
 export type BuildPdfExtractionResultInput = {
   documentId: string;
