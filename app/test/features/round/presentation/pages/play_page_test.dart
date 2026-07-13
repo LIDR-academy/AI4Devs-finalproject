@@ -10,6 +10,8 @@ import 'package:la_pocha/features/game_setup/domain/entities/round_definition.da
 import 'package:la_pocha/features/game_setup/domain/entities/round_status.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/cancel_game_usecase.dart';
 import 'package:la_pocha/features/game_setup/presentation/bloc/cancel_game_cubit.dart';
+import 'package:la_pocha/features/round/domain/usecases/repeat_round_usecase.dart';
+import 'package:la_pocha/features/round/presentation/bloc/repeat_round_cubit.dart';
 import 'package:la_pocha/features/round/domain/entities/round_play_state.dart';
 import 'package:la_pocha/features/round/domain/usecases/correct_bids_usecase.dart';
 import 'package:la_pocha/features/round/domain/usecases/get_round_play_state_usecase.dart';
@@ -24,11 +26,13 @@ import 'play_page_test.mocks.dart';
   MockSpec<GetRoundPlayStateUseCase>(),
   MockSpec<CorrectBidsUseCase>(),
   MockSpec<CancelGameUseCase>(),
+  MockSpec<RepeatRoundUseCase>(),
 ])
 void main() {
   late MockGetRoundPlayStateUseCase getRoundPlayState;
   late MockCorrectBidsUseCase correctBids;
   late MockCancelGameUseCase cancelGame;
+  late MockRepeatRoundUseCase repeatRound;
   final getIt = GetIt.instance;
 
   final players = [
@@ -98,6 +102,7 @@ void main() {
 
     correctBids = MockCorrectBidsUseCase();
     cancelGame = MockCancelGameUseCase();
+    repeatRound = MockRepeatRoundUseCase();
 
     await getIt.reset();
     getIt.registerFactory<GetRoundPlayStateUseCase>(() => getRoundPlayState);
@@ -111,6 +116,10 @@ void main() {
     getIt.registerFactory<CancelGameUseCase>(() => cancelGame);
     getIt.registerFactory<CancelGameCubit>(
       () => CancelGameCubit(cancelGame: getIt()),
+    );
+    getIt.registerFactory<RepeatRoundUseCase>(() => repeatRound);
+    getIt.registerFactory<RepeatRoundCubit>(
+      () => RepeatRoundCubit(repeatRound: getIt()),
     );
   });
 

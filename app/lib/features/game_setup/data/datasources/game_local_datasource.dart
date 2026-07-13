@@ -102,6 +102,28 @@ class GameLocalDatasource {
     return _readRoundById(closedRound.id);
   }
 
+  Future<Round> repeatRoundAndRevertScores({
+    required Round resetRound,
+    required List<PlayerEmbed> updatedPlayers,
+  }) async {
+    await _database.transaction(() async {
+      await (_database.update(_database.games)
+            ..where((table) => table.id.equals(resetRound.gameId)))
+          .write(
+        GamesCompanion(
+          players: Value(updatedPlayers),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+
+      await _database.update(_database.rounds).replace(
+            RoundMapper.toCompanion(resetRound),
+          );
+    });
+
+    return _readRoundById(resetRound.id);
+  }
+
   Future<Round> advanceToNextRound({
     required Round nextRound,
     required int nextRoundNumber,

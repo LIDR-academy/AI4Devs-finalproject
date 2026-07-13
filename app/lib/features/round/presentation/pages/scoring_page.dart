@@ -59,6 +59,7 @@ class _ScoringView extends StatelessWidget {
                     roundNumber: roundNumber,
                     cardsInRound: cardsInRound,
                     subtitle: 'Bazas reales',
+                    repeatRoundNumber: roundNumber,
                   );
                 },
               ),

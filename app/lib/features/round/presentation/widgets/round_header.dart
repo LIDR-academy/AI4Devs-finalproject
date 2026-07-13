@@ -11,6 +11,7 @@ class RoundHeader extends StatelessWidget {
     required this.cardsInRound,
     required this.subtitle,
     this.dealerName,
+    this.repeatRoundNumber,
   });
 
   final String gameId;
@@ -18,6 +19,7 @@ class RoundHeader extends StatelessWidget {
   final int? cardsInRound;
   final String subtitle;
   final String? dealerName;
+  final int? repeatRoundNumber;
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +63,10 @@ class RoundHeader extends StatelessWidget {
                 ],
               ),
             ),
-            GameOverflowMenu(gameId: gameId),
+            GameOverflowMenu(
+              gameId: gameId,
+              repeatRoundNumber: repeatRoundNumber,
+            ),
           ],
         ),
       ),

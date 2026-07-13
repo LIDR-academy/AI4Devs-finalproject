@@ -31,6 +31,7 @@ import 'package:la_pocha/features/round/domain/usecases/advance_to_next_round_us
 import 'package:la_pocha/features/round/domain/usecases/close_bidding_usecase.dart';
 import 'package:la_pocha/features/round/domain/usecases/correct_bids_usecase.dart';
 import 'package:la_pocha/features/round/domain/usecases/close_round_usecase.dart';
+import 'package:la_pocha/features/round/domain/usecases/repeat_round_usecase.dart';
 import 'package:la_pocha/features/round/domain/usecases/finish_game_usecase.dart';
 import 'package:la_pocha/features/round/domain/usecases/get_round_result_usecase.dart';
 import 'package:la_pocha/features/round/domain/usecases/get_round_play_state_usecase.dart';
@@ -39,6 +40,7 @@ import 'package:la_pocha/features/round/domain/usecases/submit_bid_usecase.dart'
 import 'package:la_pocha/features/round/domain/usecases/submit_tricks_usecase.dart';
 import 'package:la_pocha/features/round/presentation/bloc/bidding_bloc.dart';
 import 'package:la_pocha/features/round/presentation/bloc/play_state_bloc.dart';
+import 'package:la_pocha/features/round/presentation/bloc/repeat_round_cubit.dart';
 import 'package:la_pocha/features/round/presentation/bloc/round_result_bloc.dart';
 import 'package:la_pocha/features/round/presentation/bloc/scoring_bloc.dart';
 import 'package:la_pocha/features/history/data/datasources/history_firestore_datasource.dart';
@@ -283,6 +285,13 @@ Future<void> configureDependencies() async {
     ),
   );
 
+  getIt.registerFactory<RepeatRoundUseCase>(
+    () => RepeatRoundUseCase(
+      getIt<GameRepository>(),
+      getIt<RoundRepository>(),
+    ),
+  );
+
   getIt.registerFactory<GetRoundResultUseCase>(
     () => GetRoundResultUseCase(
       getIt<GameRepository>(),
@@ -347,6 +356,10 @@ Future<void> configureDependencies() async {
 
   getIt.registerFactory<CancelGameCubit>(
     () => CancelGameCubit(cancelGame: getIt<CancelGameUseCase>()),
+  );
+
+  getIt.registerFactory<RepeatRoundCubit>(
+    () => RepeatRoundCubit(repeatRound: getIt<RepeatRoundUseCase>()),
   );
 
   getIt.registerFactory<AddPlayersBloc>(

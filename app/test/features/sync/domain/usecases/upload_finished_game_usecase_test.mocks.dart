@@ -269,6 +269,28 @@ class MockGameLocalDatasource extends _i1.Mock
           as _i7.Future<_i5.Round>);
 
   @override
+  _i7.Future<_i5.Round> repeatRoundAndRevertScores({
+    required _i5.Round? resetRound,
+    required List<_i10.PlayerEmbed>? updatedPlayers,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#repeatRoundAndRevertScores, [], {
+              #resetRound: resetRound,
+              #updatedPlayers: updatedPlayers,
+            }),
+            returnValue: _i7.Future<_i5.Round>.value(
+              _FakeRound_3(
+                this,
+                Invocation.method(#repeatRoundAndRevertScores, [], {
+                  #resetRound: resetRound,
+                  #updatedPlayers: updatedPlayers,
+                }),
+              ),
+            ),
+          )
+          as _i7.Future<_i5.Round>);
+
+  @override
   _i7.Future<_i5.Round> advanceToNextRound({
     required _i5.Round? nextRound,
     required int? nextRoundNumber,

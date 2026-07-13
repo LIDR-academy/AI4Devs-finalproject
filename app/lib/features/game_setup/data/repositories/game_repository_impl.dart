@@ -34,6 +34,16 @@ class GameRepositoryImpl implements GameRepository {
       );
 
   @override
+  Future<Round> repeatRoundAndRevertScores({
+    required Round resetRound,
+    required List<PlayerEmbed> updatedPlayers,
+  }) =>
+      _localDatasource.repeatRoundAndRevertScores(
+        resetRound: resetRound,
+        updatedPlayers: updatedPlayers,
+      );
+
+  @override
   Future<StartGameResult> startGame({
     required String gameId,
     required List<PlayerEmbed> players,

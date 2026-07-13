@@ -14,6 +14,8 @@ import 'package:la_pocha/features/round/domain/usecases/correct_bids_usecase.dar
     as _i6;
 import 'package:la_pocha/features/round/domain/usecases/get_round_play_state_usecase.dart'
     as _i4;
+import 'package:la_pocha/features/round/domain/usecases/repeat_round_usecase.dart'
+    as _i8;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -132,4 +134,41 @@ class MockCancelGameUseCase extends _i1.Mock implements _i7.CancelGameUseCase {
             returnValueForMissingStub: _i5.Future<void>.value(),
           )
           as _i5.Future<void>);
+}
+
+/// A class which mocks [RepeatRoundUseCase].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockRepeatRoundUseCase extends _i1.Mock
+    implements _i8.RepeatRoundUseCase {
+  @override
+  _i5.Future<_i3.Round> call({
+    required String? gameId,
+    required int? roundNumber,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#call, [], {
+              #gameId: gameId,
+              #roundNumber: roundNumber,
+            }),
+            returnValue: _i5.Future<_i3.Round>.value(
+              _FakeRound_1(
+                this,
+                Invocation.method(#call, [], {
+                  #gameId: gameId,
+                  #roundNumber: roundNumber,
+                }),
+              ),
+            ),
+            returnValueForMissingStub: _i5.Future<_i3.Round>.value(
+              _FakeRound_1(
+                this,
+                Invocation.method(#call, [], {
+                  #gameId: gameId,
+                  #roundNumber: roundNumber,
+                }),
+              ),
+            ),
+          )
+          as _i5.Future<_i3.Round>);
 }

@@ -218,6 +218,7 @@ Una **ronda** (mano) dentro de la partida: apuestas, bazas, puntuación parcial,
 - Orden de apuestas: jugador siguiente al repartidor en `seatOrder` primero; repartidor último.
 - Transición de estado al cerrar apuestas: `bidding` → `playing`.
 - Transición al cerrar bazas: `playing` → `closed`; se persisten `tricks`, `scoresDelta` y `closedAt`.
+- **Repetir ronda actual (LPT-13):** acción de recuperación solo sobre la ronda en curso (`status` `bidding` o `playing`). Operación atómica local (`RepeatRoundUseCase`): limpia `bids`, `tricks` y `scoresDelta` de la ronda actual, revierte en `players.totalScore` el `scoresDelta` si existía, restablece `status` a `bidding` manteniendo `dealerPlayerId` y `cardsInRound`. Las rondas `closed` permanecen inmutables.
 - **Reglas de puntuación por ronda** (calculadas al cerrar, ver LPT-11):
   - Si `tricks[playerId] == bids[playerId]`: `scoresDelta = 10 + (5 × tricks)`.
   - Si difieren: `scoresDelta = -5 × |bids[playerId] - tricks[playerId]|`.

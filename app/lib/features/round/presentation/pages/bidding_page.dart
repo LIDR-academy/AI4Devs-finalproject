@@ -266,7 +266,10 @@ class _Header extends StatelessWidget {
                 ],
               ),
             ),
-            GameOverflowMenu(gameId: gameId),
+            GameOverflowMenu(
+              gameId: gameId,
+              repeatRoundNumber: roundNumber,
+            ),
           ],
         ),
       ),

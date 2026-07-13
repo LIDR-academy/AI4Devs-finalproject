@@ -29,6 +29,22 @@ class Round extends Equatable {
   final DateTime createdAt;
   final DateTime? closedAt;
 
+  Round resetToBidding() {
+    return Round(
+      id: id,
+      gameId: gameId,
+      roundNumber: roundNumber,
+      cardsInRound: cardsInRound,
+      dealerPlayerId: dealerPlayerId,
+      status: RoundStatus.bidding,
+      bids: const {},
+      tricks: null,
+      scoresDelta: null,
+      createdAt: createdAt,
+      closedAt: null,
+    );
+  }
+
   Round copyWith({
     String? id,
     String? gameId,

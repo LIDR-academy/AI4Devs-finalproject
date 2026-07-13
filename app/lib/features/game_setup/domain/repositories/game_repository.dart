@@ -22,6 +22,11 @@ abstract class GameRepository {
     required List<PlayerEmbed> updatedPlayers,
   });
 
+  Future<Round> repeatRoundAndRevertScores({
+    required Round resetRound,
+    required List<PlayerEmbed> updatedPlayers,
+  });
+
   Future<Round> advanceToNextRound({
     required Round nextRound,
     required int nextRoundNumber,

@@ -61,6 +61,7 @@ class _PlayView extends StatelessWidget {
                     roundNumber: roundNumber,
                     cardsInRound: cardsInRound,
                     subtitle: 'En juego',
+                    repeatRoundNumber: roundNumber,
                   );
                 },
               ),

@@ -167,6 +167,37 @@ class MockGameRepository extends _i1.Mock implements _i5.GameRepository {
           as _i6.Future<_i4.Round>);
 
   @override
+  _i6.Future<_i4.Round> repeatRoundAndRevertScores({
+    required _i4.Round? resetRound,
+    required List<_i7.PlayerEmbed>? updatedPlayers,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#repeatRoundAndRevertScores, [], {
+              #resetRound: resetRound,
+              #updatedPlayers: updatedPlayers,
+            }),
+            returnValue: _i6.Future<_i4.Round>.value(
+              _FakeRound_2(
+                this,
+                Invocation.method(#repeatRoundAndRevertScores, [], {
+                  #resetRound: resetRound,
+                  #updatedPlayers: updatedPlayers,
+                }),
+              ),
+            ),
+            returnValueForMissingStub: _i6.Future<_i4.Round>.value(
+              _FakeRound_2(
+                this,
+                Invocation.method(#repeatRoundAndRevertScores, [], {
+                  #resetRound: resetRound,
+                  #updatedPlayers: updatedPlayers,
+                }),
+              ),
+            ),
+          )
+          as _i6.Future<_i4.Round>);
+
+  @override
   _i6.Future<_i4.Round> advanceToNextRound({
     required _i4.Round? nextRound,
     required int? nextRoundNumber,
