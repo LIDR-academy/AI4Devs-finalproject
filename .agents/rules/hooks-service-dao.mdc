@@ -72,6 +72,14 @@ export const useGetProfile = () => {
 };
 ```
 
+## Types
+
+Follow `.agents/rules/types.mdc`.
+
+- Multi-file / shared layer shapes (DAO DTOs, service results, hook return shapes, error codes) → co-located `{feature}.types.ts` (or `@helsoft/types` for cross-lib contracts)
+- Do **not** export types from the DAO / service / hook implementation file
+- Private / single-file types stay next to the implementation (or inline)
+
 ## Hard boundaries
 
 - A component never imports a DAO; a hook never calls a DAO; a service never touches React; a DAO never holds business logic.

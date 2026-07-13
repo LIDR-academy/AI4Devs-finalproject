@@ -49,4 +49,24 @@ describe('useInteractionState', () => {
     expect(result.current.hover).toBe(false);
     expect(result.current.press).toBe(false);
   });
+
+  // N6 (accessibility review round-1 fix, WCAG 2.4.7) — a visible keyboard-focus indicator needs
+  // its own tracked state, wired the same way hover/press already are.
+  it('starts with focus false', () => {
+    const { result } = renderHook(() => useInteractionState());
+
+    expect(result.current.focus).toBe(false);
+  });
+
+  it('tracks focus independently via onFocus/onBlur', () => {
+    const { result } = renderHook(() => useInteractionState());
+
+    act(() => result.current.handlers.onFocus());
+    expect(result.current.focus).toBe(true);
+    expect(result.current.hover).toBe(false);
+    expect(result.current.press).toBe(false);
+
+    act(() => result.current.handlers.onBlur());
+    expect(result.current.focus).toBe(false);
+  });
 });

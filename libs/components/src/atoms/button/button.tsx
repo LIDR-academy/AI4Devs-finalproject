@@ -23,6 +23,8 @@ export type ButtonProps = {
   style?: StyleProp<ViewStyle>;
 };
 
+export const BUTTON_STATE_LAYER_TEST_ID = 'button-state-layer';
+
 const HEIGHTS: Record<ButtonSize, number> = { small: spacing.s8, medium: spacing.s10, large: spacing.s14 };
 const PAD_X: Record<ButtonSize, number> = { small: spacing.s8, medium: spacing.s10, large: spacing.s12 };
 const PAD_TEXT = spacing.s3;
@@ -54,7 +56,7 @@ export const Button = ({
   style,
 }: ButtonProps) => {
   const { theme } = useUnistyles();
-  const { hover, press, handlers } = useInteractionState();
+  const { hover, press, focus, handlers } = useInteractionState();
 
   styles.useVariants({ variant });
 
@@ -70,10 +72,19 @@ export const Button = ({
   );
   const fg = fgByVariant[variant];
 
+  // Precedence mirrors MD3's own state-layer stacking: press > focus (WCAG 2.4.7) > hover.
   const stateOpacity = useMemo(
     () =>
-      disabled ? 0 : press ? theme.stateLayerOpacity.press : hover ? theme.stateLayerOpacity.hover : 0,
-    [disabled, press, hover, theme],
+      disabled
+        ? 0
+        : press
+          ? theme.stateLayerOpacity.press
+          : focus
+            ? theme.stateLayerOpacity.focus
+            : hover
+              ? theme.stateLayerOpacity.hover
+              : 0,
+    [disabled, press, focus, hover, theme],
   );
   const hasLabel = children != null;
   const padX = variant === 'text' ? PAD_TEXT : hasLabel ? PAD_X[size] : HEIGHTS[size] / 2;
@@ -93,7 +104,7 @@ export const Button = ({
       {...handlers}
       style={[styles.root(padLeft, padRight, fullWidth, disabled, HEIGHTS[size]), shadow, style]}
     >
-      <StateLayer color={fg} opacity={stateOpacity} />
+      <StateLayer testID={BUTTON_STATE_LAYER_TEST_ID} color={fg} opacity={stateOpacity} />
       {icon ? <Icon name={icon} size={18} color={fg} /> : null}
       {hasLabel ? (
         <Text numberOfLines={1} style={styles.label(fg)}>

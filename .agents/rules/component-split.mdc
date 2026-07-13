@@ -7,10 +7,12 @@ alwaysApply: false
 
 For components with real state or pure logic, split the folder. Keep simple atoms/molecules as a single `component-name.tsx` (+ stories).
 
+Types follow `.agents/rules/types.mdc` — multi-file types go in `*.types.ts` (exported only); do not export types from the component / hook / helpers.
+
 ```
 component-name/
   component-name.tsx          # JSX + event handlers (onPress / onClick wiring)
-  component-name.types.ts     # Props + related types (no JSX → .ts, not .tsx)
+  component-name.types.ts     # Props + related types (no JSX → .ts, not .tsx; see types.mdc)
   use-component-name.ts       # state, derived values, effects
   component-name.helpers.ts   # pure functions (no React, no hooks)
   component-name.stories.tsx
@@ -24,7 +26,7 @@ component-name/
 | `*.tsx` | layout, styles, a11y attrs, **event handlers** that call hook setters / props | business state machines |
 | `use-*.ts` | `useState` / `useEffect`, derived flags, computed getters | `onPress` / `onClick` handlers |
 | `*.helpers.ts` | pure transforms / lookups / label builders | React, hooks, side effects |
-| `*.types.ts` | `Props`, view models, result shapes | runtime logic |
+| `*.types.ts` | public `Props`, view models, result shapes | private types, runtime logic (see `types.mdc`) |
 
 ## Rules of thumb
 

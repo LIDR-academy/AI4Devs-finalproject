@@ -30,6 +30,7 @@ const withUnistylesTheme: Decorator = (Story, context) => {
 // Real LocalizationProvider (not mocked): LanguageSettings calls useLocalization() directly,
 // and the provider is self-contained (isolated i18next instance, no app-level setup needed) —
 // so stories get genuine translated copy and live locale switching instead of raw i18n keys.
+// `initialLocale` skips AsyncStorage.
 const withLocalizationProvider: Decorator = (Story) => (
   <LocalizationProvider initialLocale="en">
     <Story />

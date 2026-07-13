@@ -1,7 +1,6 @@
-import { useState } from 'react';
 import { Button, Dialog } from '@helsoft/components';
-import { useAuth } from '@helsoft/hooks';
-import { useLocalization } from '@helsoft/localization';
+
+import { useSignOut } from './use-sign-out';
 
 /**
  * SignOut — feature component wiring useAuth().signOut behind a confirmation dialog
@@ -9,9 +8,7 @@ import { useLocalization } from '@helsoft/localization';
  * confirm: the root Stack.Protected guard reacts to the session change.
  */
 export const SignOut = () => {
-  const { signOut } = useAuth();
-  const { t } = useLocalization();
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const { signOut, t, confirmOpen, setConfirmOpen } = useSignOut();
 
   return (
     <>

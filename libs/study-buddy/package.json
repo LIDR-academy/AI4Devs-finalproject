@@ -21,10 +21,13 @@
     "@helsoft/components": "workspace:*",
     "@helsoft/hooks": "workspace:*",
     "@helsoft/localization": "workspace:*",
+    "@helsoft/pdf-upload-extraction": "workspace:*",
     "@helsoft/services": "workspace:*",
     "@helsoft/types": "workspace:*"
   },
   "peerDependencies": {
+    "expo-document-picker": "*",
+    "expo-file-system": "*",
     "expo-router": "*",
     "react": "*",
     "react-native": "*",
@@ -37,6 +40,8 @@
     "@testing-library/react-native": "^14.0.1",
     "@types/jest": "~29.5.14",
     "@types/react": "~19.2.2",
+    "expo-document-picker": "~57.0.0",
+    "expo-file-system": "~57.0.0",
     "expo-router": "~57.0.3",
     "jest": "~29.7.0",
     "jest-expo": "^57.0.1",

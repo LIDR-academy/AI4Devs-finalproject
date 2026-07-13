@@ -1,21 +1,8 @@
-import { useState } from 'react';
 import { LoginForm } from '@helsoft/components';
-import { useAuth } from '@helsoft/hooks';
-import { useLocalization } from '@helsoft/localization';
 import { AuthService } from '@helsoft/services';
-import type { AuthErrorCode } from '@helsoft/types';
-import { useRouter } from 'expo-router';
 
-/**
- * Maps useAuth()'s normalized AuthErrorCode to its i18n banner key (@s5/@s6). validation_error
- * is deliberately absent: a malformed email is caught by this form's own @s9 handling before
- * ever calling signIn, and an empty password can't reach signIn either (see the component doc
- * below) — so useAuth().error should never actually surface that code through this form.
- */
-const AUTH_ERROR_KEYS: Partial<Record<AuthErrorCode, string>> = {
-  invalid_credentials: 'auth.error.invalidCredentials',
-  network_error: 'auth.error.network',
-};
+import { resolveAuthErrorMessage } from './sign-in-form.helpers';
+import { useSignInForm } from './use-sign-in-form';
 
 /**
  * SignInForm — feature component wiring useAuth()/useLocalization() to the
@@ -35,10 +22,7 @@ const AUTH_ERROR_KEYS: Partial<Record<AuthErrorCode, string>> = {
  * explicit scope decision — see spec.md's "Open decisions" section.
  */
 export const SignInForm = () => {
-  const { signIn, isSubmitting, error } = useAuth();
-  const { t } = useLocalization();
-  const router = useRouter();
-  const [emailError, setEmailError] = useState<string | undefined>(undefined);
+  const { signIn, isSubmitting, error, t, router, emailError, setEmailError } = useSignInForm();
 
   const handleSubmit = ({ email, password }: { email: string; password: string }) => {
     const nextEmailError = AuthService.isValidEmail(email) ? undefined : t('auth.error.email');
@@ -59,24 +43,14 @@ export const SignInForm = () => {
     setEmailError(AuthService.isValidEmail(value) ? undefined : t('auth.error.email'));
   };
 
-  const errorKey = error ? AUTH_ERROR_KEYS[error] : undefined;
-  const errorMessage = errorKey ? t(errorKey) : undefined;
-
   return (
     <LoginForm
       onSubmit={handleSubmit}
       isSubmitting={isSubmitting}
       onNavigateToSignUp={() => router.push('/sign-up')}
-      errorMessage={errorMessage}
+      errorMessage={resolveAuthErrorMessage(error, t)}
       emailError={emailError}
       onEmailChange={handleEmailChange}
-      labels={{
-        email: t('auth.email'),
-        password: t('auth.password'),
-        submit: t('auth.submit'),
-        signUpPrompt: t('auth.toSignUp'),
-        signingIn: t('auth.signingIn'),
-      }}
     />
   );
 };

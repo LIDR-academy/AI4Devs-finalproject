@@ -1,0 +1,18 @@
+---
+description: when creating types on a component, class, service, hook, etc.
+alwaysApply: false
+---
+
+# Types
+
+Types are used to define the shape of data that is used in a component, class, service, hook, etc. If the type is used in multiple files, it should be stored in a `*.types.ts` file, and not exported from the component, class, service, hook, etc.
+
+```
+component-name.types.ts     # Props + related types (no JSX → .ts, not .tsx) (only exported types, no private types)
+```
+
+## Rules
+
+- **Only exported types** — no private / unexported types in `*.types.ts`; if a type isn't part of the public contract, keep it next to the implementation that uses it (or inline)
+- **No runtime logic** — types files are type-only; pure transforms go in helpers / services
+- Prefer `export type` / `export interface` for every shape consumers need (DAO DTOs, service results, hook return shapes, error codes)

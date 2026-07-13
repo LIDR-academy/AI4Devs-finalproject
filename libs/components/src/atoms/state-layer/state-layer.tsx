@@ -6,6 +6,8 @@ export type StateLayerProps = {
   color?: string;
   /** Use theme.stateLayerOpacity values; 0 hides the layer. */
   opacity: number;
+  /** Optional, for consumers that need to assert the wash's opacity directly in tests. */
+  testID?: string;
 };
 
 /**
@@ -13,8 +15,8 @@ export type StateLayerProps = {
  * of the content color shown on hover/focus/press/drag.
  * The parent container must set overflow: 'hidden' to clip it to its shape.
  */
-export const StateLayer = ({ color, opacity }: StateLayerProps) => (
-  <View pointerEvents="none" style={styles.layer(color, opacity)} />
+export const StateLayer = ({ color, opacity, testID }: StateLayerProps) => (
+  <View testID={testID} pointerEvents="none" style={styles.layer(color, opacity)} />
 );
 
 const styles = StyleSheet.create((theme) => ({

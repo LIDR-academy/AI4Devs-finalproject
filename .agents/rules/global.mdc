@@ -10,9 +10,10 @@ This is a monorepo for react-native/node/next applications.
 
 - libs: this folder should contain the shared code between the applications. Always name them with @helsoft/
   The main libraries are:
-  - @helsoft/types: this library should contain the shared types between the applications.
+  - @helsoft/types: this library should contain the shared types between the applications (cross-lib contracts only).
     - The files on this folder should be named like this: type-name.ts.
     - The files on this folder should be plain typescript files. No need to use any framework or library.
+    - Feature-local / multi-file types stay co-located as `*.types.ts` next to the component / hook / service / DAO — see `.agents/rules/types.mdc`.
   - @helsoft/lib-with-storybook: this library is a template library for creating new libraries that use storybook
   - @helsoft/components: this library should contain the shared components between the applications.
     - The files on this folder should be on a folder named like this: component-name.
@@ -43,7 +44,8 @@ This is a monorepo for react-native/node/next applications.
 - Use Expo for react-native applications.
 - Use Expo Router for react-native applications.
 - Always use functional React. Don't use Redux.
-- Always create a type for React components Props.
+- Always create a type for React components Props. Types rules: `.agents/rules/types.mdc` (multi-file → `*.types.ts`; only exported types there; no runtime logic).
+- **Comment the *why*, not the *what**.**
 
 ### Testing
 - Use Storybook + Playwright for testing components that use storybook.

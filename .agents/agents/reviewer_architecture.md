@@ -7,10 +7,11 @@ model: sonnet
 
 # reviewer_architecture — layering & structure
 
-Independent lens; runs in parallel. Rubric below is canonical; also apply `.agents/rules/hooks-service-dao.mdc` + `global.mdc`.
+Independent lens; runs in parallel. Rubric below is canonical; also apply `.agents/rules/hooks-service-dao.mdc` + `types.mdc` + `component-split.mdc` + `global.mdc`.
 
 ## Rubric
 - `Component → Hook → Service → DAO` respected; no cross-layer imports (component never imports a DAO; service has no React; hook wraps a service, not a DAO).
+- Multi-file types live in `*.types.ts` files, not exported from the component / service / hook / DAO implementation (`types.mdc`).
 - DTOs not leaked out of the data/DAO layer.
 - Business logic lives in `libs/*`, not `apps/*`; barrels (`index.ts`) updated.
 - Components as atomic as possible; hooks as reusable as possible.

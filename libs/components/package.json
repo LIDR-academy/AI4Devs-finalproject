@@ -24,7 +24,6 @@
   "dependencies": {
     "@helsoft/hooks": "workspace:*",
     "@helsoft/localization": "workspace:*",
-    "@helsoft/types": "workspace:*",
     "@helsoft/types": "workspace:*"
   },
   "peerDependencies": {
