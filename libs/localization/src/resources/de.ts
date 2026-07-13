@@ -107,7 +107,6 @@ export const de: TranslationResource = {
         removeConfirmAction: 'Entfernen bestätigen',
         removeConfirmCancelAction: 'Abbrechen',
         error: {
-          invalidKey: 'Dieser Schlüssel konnte nicht validiert werden. Bitte prüfen und erneut versuchen.',
           network: 'Server nicht erreichbar. Bitte erneut versuchen.',
           empty: 'Gib deinen API-Schlüssel ein.',
         },

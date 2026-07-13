@@ -61,45 +61,15 @@ describe('ApiKeyService', () => {
       expect(dao.saveApiKey).not.toHaveBeenCalled();
     });
 
-    // @s6 — the Edge Function's structured invalid_key rejection normalizes to the typed
-    // invalid_key code; the raw FunctionsHttpError never leaks upward.
-    it('normalizes an invalid_key Edge Function rejection to a typed invalid_key error', async () => {
-      dao.saveApiKey.mockRejectedValue(edgeFunctionError({ code: 'invalid_key' }));
-
-      await expect(ApiKeyService.saveApiKey('sk-bad-key')).rejects.toMatchObject({
-        code: 'invalid_key',
-        message: "That key didn't validate",
-      });
-    });
-
-    // Full-review Round 1, Major 1 — a structured FunctionsHttpError body that carries a
-    // *different* code (or none at all) must NOT be classified as invalid_key: only the exact
-    // `{ code: 'invalid_key' }` shape collapses to that code, mirroring AuthService's own
-    // analogous branch (auth.service.test.ts: "does not classify a differently-coded
-    // AuthApiError ... as invalid_credentials").
-    it('does not classify a differently-coded FunctionsHttpError body as invalid_key', async () => {
-      dao.saveApiKey.mockRejectedValue(edgeFunctionError({ code: 'some_other_code' }));
+    // The Edge Function's structured error rejection normalizes to the typed network_error
+    // code; the raw FunctionsHttpError never leaks upward.
+    it('normalizes a structured Edge Function rejection to a typed network_error', async () => {
+      dao.saveApiKey.mockRejectedValue(edgeFunctionError({ code: 'network_error' }));
 
       await expect(ApiKeyService.saveApiKey('sk-bad-key')).rejects.toMatchObject({ code: 'network_error' });
     });
 
-    it('does not classify a FunctionsHttpError with an empty body as invalid_key', async () => {
-      dao.saveApiKey.mockRejectedValue(edgeFunctionError({}));
-
-      await expect(ApiKeyService.saveApiKey('sk-bad-key')).rejects.toMatchObject({ code: 'network_error' });
-    });
-
-    // Full-review Round 1, Major 1 — an unreadable body (context.json() rejects) must also
-    // fall back to the safe default rather than throwing out of normalizeApiKeyError itself.
-    it('normalizes to network_error when the FunctionsHttpError body cannot be read', async () => {
-      dao.saveApiKey.mockRejectedValue(
-        new FunctionsHttpError({ json: () => Promise.reject(new Error('bad json')) }),
-      );
-
-      await expect(ApiKeyService.saveApiKey('sk-bad-key')).rejects.toMatchObject({ code: 'network_error' });
-    });
-
-    // @s7 — a transport/thrown failure (never a structured invalid_key body) normalizes to
+    // @s7 — a transport/thrown failure normalizes to
     // the safer default, network_error; a retry is just calling saveApiKey again.
     it('normalizes a transport failure to a typed network_error, and a retry succeeds independently', async () => {
       dao.saveApiKey.mockRejectedValueOnce(new Error('offline'));

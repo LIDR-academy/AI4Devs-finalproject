@@ -14,13 +14,12 @@ const PROVIDER_DISPLAY_NAMES: Record<AiProvider, string> = { openai: 'OpenAI' };
 const GUIDANCE_URL = 'https://platform.openai.com/api-keys';
 
 /**
- * Maps useApiKey()'s normalized ApiKeyErrorCode to its i18n banner key (@s6/@s7/@s9).
+ * Maps useApiKey()'s normalized ApiKeyErrorCode to its i18n banner key (@s7/@s9).
  * validation_error is deliberately absent: ApiKeyForm's Empty-state Save stays disabled until
  * a non-blank key is entered (@s5), so that code can never surface through this form (spec.md
  * Open decision 3 — mirrors SignInForm's AUTH_ERROR_KEYS omitting the same auth code).
  */
 const API_KEY_ERROR_KEYS: Partial<Record<ApiKeyErrorCode, string>> = {
-  invalid_key: 'settings.apiKey.error.invalidKey',
   network_error: 'settings.apiKey.error.network',
 };
 

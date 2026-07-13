@@ -54,10 +54,10 @@ export const Loading: Story = {
   },
 };
 
-// Error (@s6/@s7/@s9) — a save/remove failure banner; the input stays editable and retry is
+// Error (@s7/@s9) — a save/remove failure banner; the input stays editable and retry is
 // just resubmitting.
 export const Error: Story = {
   args: {
-    errorMessage: "That key didn't validate. Check it and try again.",
+    errorMessage: "Couldn't reach the server. Try again.",
   },
 };

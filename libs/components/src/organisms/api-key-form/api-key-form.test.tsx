@@ -427,20 +427,20 @@ describe('ApiKeyForm', () => {
     expect(screen.getByText('Saving…')).toBeTruthy();
   });
 
-  // @s6 — an invalid_key (or any) errorMessage renders as an inline banner and the input
-  // stays editable (no masked-saved state appears — status.hasKey is still false).
+  // A save-failure errorMessage renders as an inline banner and the input stays editable
+  // (no masked-saved state appears — status.hasKey is still false).
   it('renders an errorMessage banner in the Empty state and keeps the input editable', async () => {
     await render(
       <ApiKeyForm
         status={noKeyStatus}
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        errorMessage="That key didn't validate."
+        errorMessage="Couldn't reach the server."
         labels={labels}
       />,
     );
 
-    expect(screen.getByText("That key didn't validate.")).toBeTruthy();
+    expect(screen.getByText("Couldn't reach the server.")).toBeTruthy();
     expect(screen.getByLabelText('API key').props.editable).toBe(true);
     expect(screen.queryByText('OpenAI key saved · Updated Jan 1, 2026')).toBeNull();
   });

@@ -203,11 +203,13 @@ describe('useApiKey', () => {
     expect(result.current.error).toBeNull();
   });
 
-  // @s6/@s7 (task-10) — a failed saveApiKey sets error to the service's normalized code
-  // (ApiKeyService already narrows every failure to a closed ApiKeyErrorCode).
+  // @s7 (task-10) — a failed saveApiKey sets error to the service's normalized code
+  // (ApiKeyService already narrows every failure to a closed ApiKeyErrorCode). Uses
+  // validation_error to prove the code passes through rather than hitting the
+  // network_error fallback.
   it('sets error to the normalized code after a failed saveApiKey', async () => {
     mockUseSession.mockReturnValue(authenticatedSession);
-    service.saveApiKey.mockRejectedValue(Object.assign(new Error('bad key'), { code: 'invalid_key' }));
+    service.saveApiKey.mockRejectedValue(Object.assign(new Error('bad key'), { code: 'validation_error' }));
     const { result } = renderHook(() => useApiKey());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -215,7 +217,7 @@ describe('useApiKey', () => {
       await expect(result.current.saveApiKey('sk-bad-key')).rejects.toThrow('bad key');
     });
 
-    expect(result.current.error).toBe('invalid_key');
+    expect(result.current.error).toBe('validation_error');
   });
 
   // @s7 — a retry (a subsequent successful saveApiKey) clears a previously set error.

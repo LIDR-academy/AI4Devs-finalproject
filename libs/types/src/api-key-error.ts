@@ -5,7 +5,7 @@
  * provider/Supabase/Vault error shapes. Message copy is deliberately not part of this
  * contract — the UI layer maps `code` -> an i18n key (mirrors `AuthErrorCode`).
  */
-export type ApiKeyErrorCode = 'invalid_key' | 'network_error' | 'validation_error';
+export type ApiKeyErrorCode = 'network_error' | 'validation_error';
 
 /** The minimal shape a normalized API-key failure carries upward from the service layer. */
 export type ApiKeyError = {

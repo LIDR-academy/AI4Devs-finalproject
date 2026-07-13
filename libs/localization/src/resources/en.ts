@@ -133,7 +133,6 @@ export const en = {
         removeConfirmAction: 'Confirm removal',
         removeConfirmCancelAction: 'Cancel',
         error: {
-          invalidKey: "That key didn't validate. Check it and try again.",
           network: "Couldn't reach the server. Try again.",
           // ai-key-management task-13 (Slice 3) — spec.md Open decision 3: the defensive
           // service-layer backstop for a blank/whitespace-only key (validation_error). No

@@ -43,9 +43,9 @@ export type ApiKeyFormProps = {
    * hardcoded here, so ApiKeyForm stays free of any provider-specific destination. */
   guidanceUrl: string;
   /**
-   * Save/remove failure banner (invalid_key/network_error, @s6/@s7/@s9). Rendered alongside
-   * whichever state is showing (input or masked saved) — the input stays editable and the
-   * masked state stays visible; retry is just resubmitting/re-confirming.
+   * Save/remove failure banner (network_error, @s7/@s9). Rendered alongside whichever state
+   * is showing (input or masked saved) — the input stays editable and the masked state stays
+   * visible; retry is just resubmitting/re-confirming.
    */
   errorMessage?: string;
   labels: ApiKeyFormLabels;

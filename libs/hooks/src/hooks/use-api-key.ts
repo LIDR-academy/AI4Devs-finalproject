@@ -17,7 +17,6 @@ const NO_KEY_STATUS: ApiKeyStatus = { hasKey: false };
 
 /** The closed set of codes ApiKeyService is contractually allowed to reject with. */
 const API_KEY_ERROR_CODES: ReadonlySet<ApiKeyErrorCode> = new Set([
-  'invalid_key',
   'network_error',
   'validation_error',
 ]);

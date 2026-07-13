@@ -107,7 +107,6 @@ export const pt: TranslationResource = {
         removeConfirmAction: 'Confirmar remoção',
         removeConfirmCancelAction: 'Cancelar',
         error: {
-          invalidKey: 'Essa chave não foi validada. Verifique e tente novamente.',
           network: 'Não foi possível conectar ao servidor. Tente novamente.',
           empty: 'Informe sua chave de API.',
         },

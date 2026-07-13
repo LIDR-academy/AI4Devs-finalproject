@@ -103,16 +103,6 @@ describe('ApiKeySettings', () => {
     expect(screen.getByRole('button', { name: 'settings.apiKey.save', disabled: true })).toBeTruthy();
   });
 
-  // @s6 — an invalid_key error maps to the invalidKey i18n key and is passed to ApiKeyForm.
-  it('maps an invalid_key error to the invalidKey message', async () => {
-    mockUseApiKey.mockReturnValue(apiKeyValue({ error: 'invalid_key' }));
-    mockUseLocalization.mockReturnValue(localizationValue());
-
-    await render(<ApiKeySettings />);
-
-    expect(screen.getByText('settings.apiKey.error.invalidKey')).toBeTruthy();
-  });
-
   // @s7/@s9 — a network_error maps to the network i18n key (also used for a failed remove).
   it('maps a network_error to the network message', async () => {
     mockUseApiKey.mockReturnValue(apiKeyValue({ error: 'network_error' }));
