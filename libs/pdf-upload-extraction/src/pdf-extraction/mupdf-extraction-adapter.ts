@@ -5,7 +5,7 @@ import type {
   ExtractedPageText,
   PdfExtractionAdapter,
   PdfExtractionAdapterResult,
-} from './pdf-extraction-adapter';
+} from './pdf-extraction-adapter.types';
 
 /** Enables StructuredText's image walk callback — without it, `onImageBlock` never fires
  * (confirmed against the real mupdf-wasm runtime during the task-3 spike, risk R1). */

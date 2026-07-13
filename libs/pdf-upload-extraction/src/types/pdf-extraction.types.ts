@@ -58,3 +58,10 @@ export type PdfExtractionLimits = {
 export type PdfExtractionError = {
   code: PdfExtractionErrorCode;
 };
+
+/** Filename + size + bytes the service (and hook) accept for an extract attempt. */
+export type PdfExtractionInput = {
+  filename: string;
+  sizeBytes: number;
+  bytes: Uint8Array;
+};

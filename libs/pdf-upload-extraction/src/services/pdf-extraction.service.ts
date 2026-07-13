@@ -2,14 +2,13 @@ import { FunctionsFetchError, FunctionsHttpError, FunctionsRelayError } from '@s
 
 import { trackPdfExtractionEvent } from '../analytics/pdf-extraction-analytics';
 import { PdfUploadDao } from '../dao/pdf-upload.dao';
-import type { PdfExtractionError, PdfExtractionErrorCode, PdfExtractionResult } from '../types/pdf-extraction';
+import type {
+  PdfExtractionError,
+  PdfExtractionErrorCode,
+  PdfExtractionInput,
+  PdfExtractionResult,
+} from '../types/pdf-extraction.types';
 import { PDF_EXTRACTION_LIMITS, PDF_FILE_EXTENSION } from './pdf-extraction.constants';
-
-export type PdfExtractionInput = {
-  filename: string;
-  sizeBytes: number;
-  bytes: Uint8Array;
-};
 
 const UUID_V4_TEMPLATE = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx';
 

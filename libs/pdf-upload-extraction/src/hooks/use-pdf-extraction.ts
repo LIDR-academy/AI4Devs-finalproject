@@ -1,22 +1,9 @@
 import { useCallback, useRef, useState } from 'react';
 import { useSession } from '@helsoft/hooks';
 
-import { generateDocumentId, PDF_EXTRACTION_ERROR_CODES, PdfExtractionService, type PdfExtractionInput } from '../services/pdf-extraction.service';
-import type { PdfExtractionError, PdfExtractionErrorCode, PdfExtractionResult } from '../types/pdf-extraction';
-
-export type PdfExtractionStage = 'idle' | 'processing' | 'success' | 'error';
-
-export type UsePdfExtractionResult = {
-  extract: (input: PdfExtractionInput) => Promise<void>;
-  stage: PdfExtractionStage;
-  result: PdfExtractionResult | null;
-  /** The normalized code from the most recent failed extract()/retry() — null once it succeeds. */
-  error: PdfExtractionErrorCode | null;
-  /** Re-invokes the last extraction with the exact same input and documentId (@s13) — a no-op
-   * before any extract() attempt. Reusing the documentId avoids a duplicate orphaned row
-   * (task-12/task-9's failure cleanup). */
-  retry: () => Promise<void>;
-};
+import { generateDocumentId, PDF_EXTRACTION_ERROR_CODES, PdfExtractionService } from '../services/pdf-extraction.service';
+import type { PdfExtractionError, PdfExtractionErrorCode, PdfExtractionInput, PdfExtractionResult } from '../types/pdf-extraction.types';
+import type { PdfExtractionStage, UsePdfExtractionResult } from './use-pdf-extraction.types';
 
 /** Narrow runtime guard: a rejected PdfExtractionService.extract cause is only trusted as a
  * PdfExtractionError when its `.code` is actually a member of the closed union — a violated

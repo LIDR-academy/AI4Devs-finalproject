@@ -1,4 +1,4 @@
-import type { PdfExtractionLimits } from '../types/pdf-extraction';
+import type { PdfExtractionLimits } from '../types/pdf-extraction.types';
 
 /**
  * Single source of truth for the upload/extraction size ceilings (spec decision #1). The client

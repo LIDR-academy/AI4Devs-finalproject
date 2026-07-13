@@ -12,7 +12,7 @@ const chunk = (tag: string, data: Buffer): Buffer => {
   return Buffer.concat([length, body, crc]);
 };
 
-export type SolidPngOptions = {
+type SolidPngOptions = {
   width: number;
   height: number;
   /** [r, g, b] or [r, g, b, a] — 4 components produce an alpha-carrying PNG (colorType 6). */

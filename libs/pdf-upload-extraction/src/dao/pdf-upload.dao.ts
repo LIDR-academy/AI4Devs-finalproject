@@ -1,25 +1,13 @@
 import { getSupabase } from '@helsoft/services';
 
 import { PDF_UPLOAD_BUCKET } from '../services/pdf-extraction.constants';
-import type { PdfExtractionResult } from '../types/pdf-extraction';
+import type { PdfExtractionResult } from '../types/pdf-extraction.types';
+import type { InsertDocumentParams, UploadPdfParams } from './pdf-upload.types';
 
 const PDF_CONTENT_TYPE = 'application/pdf';
 const EXTRACT_FUNCTION_NAME = 'extract-pdf';
 const DOCUMENTS_TABLE = 'documents';
 const PROCESSING_STATUS = 'processing';
-
-export type UploadPdfParams = {
-  userId: string;
-  documentId: string;
-  bytes: Uint8Array;
-};
-
-export type InsertDocumentParams = {
-  documentId: string;
-  userId: string;
-  filename: string;
-  sizeBytes: number;
-};
 
 const buildSourcePath = (userId: string, documentId: string): string => `${userId}/${documentId}/source.pdf`;
 

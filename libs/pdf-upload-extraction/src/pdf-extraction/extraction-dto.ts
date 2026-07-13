@@ -1,6 +1,6 @@
-import type { ExtractedImageRef, PdfExtractionResult } from '../types/pdf-extraction';
+import type { ExtractedImageRef, PdfExtractionResult } from '../types/pdf-extraction.types';
 
-export type BuildPdfExtractionResultInput = {
+type BuildPdfExtractionResultInput = {
   documentId: string;
   filename: string;
   pages: { page: number; text: string }[];

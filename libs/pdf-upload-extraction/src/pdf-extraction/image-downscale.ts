@@ -2,7 +2,7 @@ import type * as Mupdf from 'mupdf';
 
 import { IMAGE_DOWNSCALE_TARGET } from '../services/pdf-extraction.constants';
 
-export type DownscaleImageInput = {
+type DownscaleImageInput = {
   /** The already-decoded pixmap (M2, performance review round-1 fix) — handed straight through
    * from `MupdfExtractionAdapter`, never re-serialized to/from bytes in between. */
   pixmap: Mupdf.Pixmap;
@@ -10,7 +10,7 @@ export type DownscaleImageInput = {
   height: number;
 };
 
-export type DownscaleImageOutput = {
+type DownscaleImageOutput = {
   bytes: Uint8Array;
   width: number;
   height: number;

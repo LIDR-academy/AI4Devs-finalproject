@@ -1,10 +1,10 @@
-import type { PdfExtractionErrorCode } from '../types/pdf-extraction';
+import type { PdfExtractionErrorCode } from '../types/pdf-extraction.types';
 
 /** The three PII-free extraction-lifecycle events (spec.md's Analytics decision, task-15,
  * @s17) — a closed, discriminated union rather than an open-ended event type, since these three
  * are the only ones locked at the gate. No filename, file bytes, or user text is ever a valid
  * property on any of them. */
-export type PdfExtractionAnalyticsEvent =
+type PdfExtractionAnalyticsEvent =
   | { name: 'pdf_upload_started'; properties: { size_bytes: number; document_id: string } }
   | {
       name: 'pdf_extraction_succeeded';

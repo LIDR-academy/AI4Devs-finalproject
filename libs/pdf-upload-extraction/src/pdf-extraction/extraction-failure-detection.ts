@@ -1,7 +1,7 @@
-import type { ExtractedPageText } from './pdf-extraction-adapter';
-import type { PdfExtractionErrorCode, PdfExtractionLimits } from '../types/pdf-extraction';
+import type { PdfExtractionErrorCode, PdfExtractionLimits } from '../types/pdf-extraction.types';
+import type { ExtractedPageText } from './pdf-extraction-adapter.types';
 
-export type DetectExtractionFailureInput = {
+type DetectExtractionFailureInput = {
   pages: ExtractedPageText[];
 };
 

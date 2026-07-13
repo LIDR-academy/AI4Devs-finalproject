@@ -1,13 +1,13 @@
 import { PDFDocument } from 'pdf-lib';
 
-export type TestPdfImageSpec = {
+type TestPdfImageSpec = {
   png: Uint8Array;
   /** Drawn box on the page — independent of the PNG's own pixel dimensions. */
   drawWidth: number;
   drawHeight: number;
 };
 
-export type TestPdfPageSpec = {
+type TestPdfPageSpec = {
   text?: string;
   images?: TestPdfImageSpec[];
 };
