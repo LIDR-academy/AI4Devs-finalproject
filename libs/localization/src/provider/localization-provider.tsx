@@ -1,25 +1,17 @@
 import { LocalePreferenceService } from '@helsoft/services';
 import { type Locale } from '@helsoft/types';
-import { createContext, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 import { I18nextProvider } from 'react-i18next';
 
 import { createI18n } from '../config/i18n';
 import { resolveInitialLocale } from '../detector/resolve-initial-locale';
 
-export type LocalizationContextValue = {
-  /** Change the active language immediately and persist the choice. */
-  setLocale: (locale: Locale) => void;
-};
+import type {
+  LocalizationContextValue,
+  LocalizationProviderProps,
+} from './localization-provider.types';
 
 export const LocalizationContext = createContext<LocalizationContextValue | undefined>(undefined);
-
-export type LocalizationProviderProps = {
-  children: ReactNode;
-  /** Explicit starting locale; wins over saved preference and device (tests/pre-resolved callers). */
-  initialLocale?: Locale;
-  /** Raw device locale tag (e.g. `pt-BR`) from the app's `expo-localization`. */
-  deviceLocale?: string | null;
-};
 
 /**
  * Wraps react-i18next's provider with an isolated i18next instance and exposes

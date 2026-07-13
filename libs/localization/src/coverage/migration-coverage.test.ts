@@ -123,14 +123,27 @@ const FLASHCARD_DIR = resolve(REPO_ROOT, 'libs/activities/src/organisms/flashcar
 const API_KEY_SETTINGS_DIR = resolve(REPO_ROOT, 'libs/study-buddy/src/components/api-key-settings');
 const API_KEY_GATE_DIR = resolve(REPO_ROOT, 'libs/study-buddy/src/components/api-key-gate');
 
-const isExcluded = (file: string) => file.endsWith('.stories.tsx') || file.endsWith('.test.tsx') || file.endsWith('.test.ts');
+const isExcluded = (file: string) =>
+  file.endsWith('.stories.tsx') || file.endsWith('.test.tsx') || file.endsWith('.test.ts');
 
+/** JSX sources only — used by the hardcoded `<Text>` / `title:` audit. */
 const collectTsx = (dir: string): string[] => {
   const entries = readdirSync(dir);
   return entries.flatMap((entry) => {
     const full = join(dir, entry);
     if (statSync(full).isDirectory()) return collectTsx(full);
     if (full.endsWith('.tsx') && !isExcluded(full)) return [full];
+    return [];
+  });
+};
+
+/** `.ts` + `.tsx` — `t()` keys often live in co-located hooks/helpers after component-split. */
+const collectSourceFiles = (dir: string): string[] => {
+  const entries = readdirSync(dir);
+  return entries.flatMap((entry) => {
+    const full = join(dir, entry);
+    if (statSync(full).isDirectory()) return collectSourceFiles(full);
+    if ((full.endsWith('.tsx') || full.endsWith('.ts')) && !isExcluded(full)) return [full];
     return [];
   });
 };
@@ -173,7 +186,7 @@ const flattenKeys = (node: unknown, prefix = ''): Set<string> => {
 
 const findDottedKeyLiterals = (dir: string): string[] => {
   const keys: string[] = [];
-  for (const file of collectTsx(dir)) {
+  for (const file of collectSourceFiles(dir)) {
     const source = readFileSync(file, 'utf8');
     for (const match of source.matchAll(DOTTED_KEY_LITERAL)) keys.push(match[1]);
   }
@@ -211,7 +224,7 @@ const T_KEY_COMPONENT_DIRS: Array<[name: string, dir: string]> = [
 ];
 
 describe.each(T_KEY_COMPONENT_DIRS)('t() key existence coverage (%s)', (name, dir) => {
-  it(`every dotted key literal in ${name}.tsx resolves in the en bundle`, () => {
+  it(`every dotted key literal in ${name} sources resolves in the en bundle`, () => {
     const definedKeys = flattenKeys(en.translation);
     const referencedKeys = findDottedKeyLiterals(dir);
 
