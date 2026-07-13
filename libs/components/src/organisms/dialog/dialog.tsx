@@ -1,24 +1,10 @@
-import { ReactNode } from 'react';
-import { Modal, Pressable, StyleProp, Text, View, ViewStyle } from 'react-native';
+import { Modal, Pressable, Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { Button } from '../../atoms/button/button';
 import { Icon } from '../../atoms/icon/icon';
 
-export type DialogProps = {
-  open: boolean;
-  onClose?: () => void;
-  /** Optional hero Material Symbols icon, centered above the headline. */
-  icon?: string;
-  headline?: string;
-  children?: ReactNode;
-  confirmLabel?: string;
-  cancelLabel?: string;
-  onConfirm?: () => void;
-  /** Custom action row; replaces the default cancel/confirm buttons. */
-  actions?: ReactNode;
-  style?: StyleProp<ViewStyle>;
-};
+import type { DialogProps } from './dialog.types';
 
 /**
  * Dialog — MD3 basic dialog. Renders a 32% scrim + centered surface.

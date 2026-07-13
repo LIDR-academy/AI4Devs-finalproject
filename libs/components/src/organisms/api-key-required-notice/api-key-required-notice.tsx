@@ -3,17 +3,7 @@ import { StyleSheet } from 'react-native-unistyles';
 
 import { Button } from '../../atoms/button/button';
 
-export type ApiKeyRequiredNoticeLabels = {
-  /** Inline copy explaining an API key is required (AC10). */
-  message: string;
-  /** Label for the action that navigates to the account screen. */
-  action: string;
-};
-
-export type ApiKeyRequiredNoticeProps = {
-  onNavigateToAccount: () => void;
-  labels: ApiKeyRequiredNoticeLabels;
-};
+import type { ApiKeyRequiredNoticeProps } from './api-key-required-notice.types';
 
 /**
  * ApiKeyRequiredNotice — presentational organism (AC10, @s10/@s14): an inline "an API key is

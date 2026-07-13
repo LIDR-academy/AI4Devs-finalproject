@@ -1,6 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
-import type { ApiKeyStatus } from '@helsoft/types';
-import { AccessibilityInfo, Linking, Text, View } from 'react-native';
+import { Linking, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { Button } from '../../atoms/button/button';
@@ -8,48 +6,8 @@ import { ProgressIndicator } from '../../atoms/progress-indicator/progress-indic
 import { TextField } from '../../molecules/text-field/text-field';
 import { Dialog } from '../dialog/dialog';
 
-export type ApiKeyFormLabels = {
-  inputLabel: string;
-  save: string;
-  /** Progress label shown (and announced) while a save is in flight (@s2). */
-  saving: string;
-  /** Announced to assistive tech while the initial status fetch is in flight (WCAG 4.1.3) —
-   * not shown visually (mirrors LoginForm's `signingIn`). */
-  loadingStatus: string;
-  replace: string;
-  remove: string;
-  /** Fully-formatted masked status text (provider + last-updated) — the wiring layer builds
-   * this via `t()` so ApiKeyForm stays free of i18n/date-formatting concerns. */
-  keySavedStatus: string;
-  /** Empty-state "where to get a key" guidance link text (@s5). */
-  guidance: string;
-  /** Remove-confirmation Dialog copy (@s8, reuses the SignOut confirm pattern). */
-  removeConfirmHeadline: string;
-  removeConfirmBody: string;
-  removeConfirmAction: string;
-  removeConfirmCancelAction: string;
-};
-
-export type ApiKeyFormProps = {
-  status: ApiKeyStatus;
-  /** True while the initial status fetch is in flight (task-7 Loading state). */
-  isLoadingStatus?: boolean;
-  /** True while a save is in flight (@s2). */
-  isSubmitting?: boolean;
-  onSave: (rawKey: string) => void;
-  onRemove?: () => void;
-  /** Where the Empty state's guidance link sends the user (@s5). Injected by the wiring layer
-   * (mirrors ApiKeyGate's `onNavigateToAccount`, LoginForm's `onNavigateToSignUp`) rather than
-   * hardcoded here, so ApiKeyForm stays free of any provider-specific destination. */
-  guidanceUrl: string;
-  /**
-   * Save/remove failure banner (network_error, @s7/@s9). Rendered alongside whichever state
-   * is showing (input or masked saved) — the input stays editable and the masked state stays
-   * visible; retry is just resubmitting/re-confirming.
-   */
-  errorMessage?: string;
-  labels: ApiKeyFormLabels;
-};
+import type { ApiKeyFormProps } from './api-key-form.types';
+import { useApiKeyForm } from './use-api-key-form';
 
 export const LOADING_STATUS_TEST_ID = 'api-key-form-loading-status';
 
@@ -69,46 +27,22 @@ export const ApiKeyForm = ({
   errorMessage,
   labels,
 }: ApiKeyFormProps) => {
-  const [apiKey, setApiKey] = useState('');
-  const [isReplacing, setIsReplacing] = useState(false);
-  const [isConfirmingRemove, setIsConfirmingRemove] = useState(false);
-  const wasSubmitting = useRef(isSubmitting);
-
-  // @s4 — once a replace-save resolves successfully (isSubmitting flips back to false while
-  // the status still reports a saved key), the form reverts to the masked state instead of
-  // leaving the input open.
-  useEffect(() => {
-    if (wasSubmitting.current && !isSubmitting && status.hasKey) {
-      setIsReplacing(false);
-      setApiKey('');
-    }
-    wasSubmitting.current = isSubmitting;
-  }, [isSubmitting, status.hasKey]);
-
-  // @s6/@s9 — announces a save/remove failure to assistive tech (iOS VoiceOver parity;
-  // Android/Web get the banner's own accessibilityLiveRegion below).
-  useEffect(() => {
-    if (errorMessage) {
-      AccessibilityInfo.announceForAccessibility(errorMessage);
-    }
-  }, [errorMessage]);
-
-  // Full-review Round 1, Major 4 (WCAG 4.1.3) — accessibilityLiveRegion (the companion Text
-  // below) has no effect on iOS VoiceOver, so the status-loading transition also needs this
-  // imperative, cross-platform announcement (mirrors LoginForm's isSubmitting effect).
-  useEffect(() => {
-    if (isLoadingStatus) {
-      AccessibilityInfo.announceForAccessibility(labels.loadingStatus);
-    }
-  }, [isLoadingStatus, labels.loadingStatus]);
-
-  // Same iOS-parity need for the isSubmitting progress label (WCAG 4.1.3) — its own
-  // accessibilityLiveRegion below is Android/Web-only.
-  useEffect(() => {
-    if (isSubmitting) {
-      AccessibilityInfo.announceForAccessibility(labels.saving);
-    }
-  }, [isSubmitting, labels.saving]);
+  const {
+    apiKey,
+    setApiKey,
+    setIsReplacing,
+    isConfirmingRemove,
+    setIsConfirmingRemove,
+    showInput,
+    isSaveDisabled,
+  } = useApiKeyForm({
+    status,
+    isLoadingStatus,
+    isSubmitting,
+    errorMessage,
+    loadingStatusLabel: labels.loadingStatus,
+    savingLabel: labels.saving,
+  });
 
   if (isLoadingStatus) {
     return (
@@ -121,12 +55,9 @@ export const ApiKeyForm = ({
     );
   }
 
-  const showInput = !status.hasKey || isReplacing;
-  // @s5 — a blank/whitespace-only key is never submittable (AC7).
-  const isSaveDisabled = isSubmitting || !apiKey.trim();
   // spec.md:76 — the same progress label surfaces for either in-flight mutation (save or
   // remove), whichever branch (input or masked) is currently showing. accessibilityLiveRegion
-  // covers Android/Web (WCAG 4.1.3) — the isSubmitting effect above covers iOS VoiceOver.
+  // covers Android/Web (WCAG 4.1.3) — the isSubmitting effect in the hook covers iOS VoiceOver.
   const progressLabel = isSubmitting ? (
     <Text accessibilityLiveRegion="polite">{labels.saving}</Text>
   ) : null;

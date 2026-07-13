@@ -1,9 +1,13 @@
 export * from './api-key-form/api-key-form';
+export type * from './api-key-form/api-key-form.types';
 export * from './api-key-required-notice/api-key-required-notice';
+export type * from './api-key-required-notice/api-key-required-notice.types';
 export * from './dialog/dialog';
+export type * from './dialog/dialog.types';
 export * from './language-settings/language-settings';
 export * from './login-form/login-form';
 export type * from './login-form/login-form.types';
 export * from './pdf-upload-panel/pdf-upload-panel';
 export type * from './pdf-upload-panel/pdf-upload-panel.types';
 export * from './results-summary/results-summary';
+export type * from './results-summary/results-summary.types';

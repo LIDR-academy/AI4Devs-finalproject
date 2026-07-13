@@ -1,10 +1,7 @@
-import type { ReactNode } from 'react';
-import { View, ViewProps } from 'react-native';
+import { View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
-export type ScreenContainerProps = ViewProps & {
-  children: ReactNode;
-};
+import type { ScreenContainerProps } from './screen-container.types';
 
 export const ScreenContainer = ({ children, style, ...rest }: ScreenContainerProps) => (
   <View style={[styles.container, style]} {...rest}>
