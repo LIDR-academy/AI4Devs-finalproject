@@ -1,6 +1,6 @@
 ---
 name: mutation-testing
-description: Run mutation testing with StrykerJS on a feature's CHANGED source files in this monorepo (`@helsoft/services`, `@helsoft/hooks`, `@helsoft/components`) and prove the tests bite. Use when the orchestrator's mutation phase runs, after a suite is green, or on "run mutation", "stryker", "mutation score", "are my tests any good". Scopes to changed files only (never whole-repo). Do NOT use to write or fix tests — a surviving mutant is handed back to the TDD implementator.
+description: Run mutation testing with StrykerJS on a feature's CHANGED source files in this monorepo (`@helsoft/services`, `@helsoft/supabase-services`, `@helsoft/hooks`, `@helsoft/components`) and prove the tests bite. Use when the orchestrator's mutation phase runs, after a suite is green, or on "run mutation", "stryker", "mutation score", "are my tests any good". Scopes to changed files only (never whole-repo). Do NOT use to write or fix tests — a surviving mutant is handed back to the TDD implementator.
 ---
 
 # Mutation testing — proving the tests bite (StrykerJS)
@@ -30,7 +30,8 @@ Always mutate **only the files the feature changed** — never the whole repo. T
 Or run a single lib by hand:
 
 ```bash
-pnpm --filter @helsoft/services   exec stryker run --mutate "src/services/foo.service.ts,src/dao/foo.dao.ts"
+pnpm --filter @helsoft/services            exec stryker run --mutate "src/services/foo.service.ts,src/dao/foo.dao.ts"
+pnpm --filter @helsoft/supabase-services   exec stryker run --mutate "src/services/foo.service.ts,src/dao/foo.dao.ts"
 pnpm --filter @helsoft/hooks      exec stryker run --mutate "src/hooks/use-foo.ts"
 pnpm --filter @helsoft/components exec stryker run --mutate "src/atoms/foo/foo.tsx"
 ```
@@ -39,7 +40,7 @@ Per-lib config lives in `libs/<lib>/stryker.config.mjs` (Jest runner; `coverageA
 
 ## Tooling notes
 
-- `@helsoft/services`, `@helsoft/hooks` — ts-jest; `checkers: ['typescript']`.
+- `@helsoft/services` (REST), `@helsoft/supabase-services` (Supabase), `@helsoft/hooks` — ts-jest; `checkers: ['typescript']`.
 - `@helsoft/components` — jest-expo/babel; no typescript checker. UI components are mutated via their `<name>.test.tsx` unit tests.
 
 ## Scope & threshold (feature policy)

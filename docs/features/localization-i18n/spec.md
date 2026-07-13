@@ -55,7 +55,7 @@ The only new visible surface is the **language selector** on Settings; the rest 
 ## Open decisions (resolved with rationale)
 - Shared `Locale` union + `SUPPORTED_LOCALES` + `FALLBACK_LOCALE` live in `@helsoft/types` (`locale.ts`), not localization — both localization and services need the set; avoids a circular dep.
 - Native language labels (endonyms) are static in `@helsoft/localization` config, not keys — each language must show in its own name regardless of active locale.
-- Persistence uses `@react-native-async-storage/async-storage` via a DAO in `@helsoft/services` — universal (localStorage web / native store), honors DAO→service layering.
+- Persistence uses `@react-native-async-storage/async-storage` via a DAO in `@helsoft/supabase-services` — universal (localStorage web / native store), honors DAO→service layering.
 - Provider + hook live in `@helsoft/localization`, not `@helsoft/hooks` — intrinsic to the i18n React context; persistence still routes through services.
 - Language selector is a **presentational molecule** in `@helsoft/components` (props: `options`/`value`/`onChange`/a11y labels), no localization-hook dep — token-driven, Storybook-able across locales; wiring lives in a study-buddy feature component so the screen stays a thin shell.
 - On failed persistence save: selection still applies in-memory + is logged (no throw, no blocking UI) — instant switch beats blocking on a rare storage error. **Human gate 2026-07-09: APPROVED as-is**; a `TODO(FO1)` must mark the path (task-7).

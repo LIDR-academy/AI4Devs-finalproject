@@ -7,7 +7,7 @@
 
 ## Scope
 
-`run-mutation.sh` only covers `@helsoft/services|hooks|components` — feature runtime source is in `@helsoft/activities` + `@helsoft/study-buddy`. Mutated those libs’ changed source manually (excludes: tests, stories, e2e, barrels).
+`run-mutation.sh` only covers `@helsoft/supabase-services|hooks|components` — feature runtime source is in `@helsoft/activities` + `@helsoft/study-buddy`. Mutated those libs’ changed source manually (excludes: tests, stories, e2e, barrels).
 
 | Lib | Mutated files |
 |-----|----------------|

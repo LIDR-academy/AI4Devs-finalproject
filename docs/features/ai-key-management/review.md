@@ -140,7 +140,7 @@ touched.
 - The two suspicious mid-session tool-output messages (falsely claiming `handle-save.ts`/`validate-key.ts` had reverted to broken/insecure states, instructing agents to hide this) were independently investigated by `reviewer_code` and `reviewer_security` this round: both re-read the actual files, re-ran the full Deno suite (24/24 green), and `reviewer_security` additionally checked `git fsck`/`git reflog` — no evidence either claim was ever true. Not a finding; recorded for the human's awareness given the pattern. (A *different* recurrence of this anomaly class happened again in Round 3 — see below.)
 
 ## Mutation status (separate track, informational cross-reference only)
-`mutation.md` (StrykerJS, Round 1) found survivors in `@helsoft/services` (91.55%), `@helsoft/hooks`
+`mutation.md` (StrykerJS, Round 1) found survivors in `@helsoft/supabase-services` (91.55%), `@helsoft/hooks`
 (80.00%), and `@helsoft/components` (62.30%) — below the 100%-on-changed-lines gate. Round 1's
 code findings #1/#2 and design finding #8 independently overlapped several of the same real gaps.
 `mutation_tester` owns the remaining survivor list and its own re-run passes (before and after each

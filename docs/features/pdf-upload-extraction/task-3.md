@@ -23,5 +23,5 @@ Build the backend extraction Edge Function (Deno). Given a `documentId`, it read
 ## Notes
 - Mirror the `@helsoft/types` contract (task-2) in `supabase/functions/extract-pdf/_shared/` — Deno can't import the workspace package; keep them in sync.
 - Error paths (scanned/too-many-pages/corrupt) are added in Slice 2 (task-9); this task is the happy path + the adapter/downscale scaffolding.
-- Downscale targets + limits are tunable constants from a single source (spec decisions #1, #4): mirror `PDF_EXTRACTION_LIMITS` from `libs/services/src/services/pdf-extraction.constants.ts` into `_shared/`, kept in sync — no hardcoded 10/20/1024/100 magic numbers.
+- Downscale targets + limits are tunable constants from a single source (spec decisions #1, #4): mirror `PDF_EXTRACTION_LIMITS` from `libs/supabase-services/src/services/pdf-extraction.constants.ts` into `_shared/`, kept in sync — no hardcoded 10/20/1024/100 magic numbers.
 - **Testing boundary (spec decision / risk R4):** this function is outside Jest+Stryker; keep logic in pure modules so Deno tests can bite. Documented boundary for reviewers/`mutation_tester`.

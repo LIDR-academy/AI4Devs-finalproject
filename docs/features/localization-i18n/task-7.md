@@ -19,7 +19,7 @@ Connect the provider/hook to `LocalePreferenceService` so language choice is dur
 - [ ] `setLocale` calls `i18n.changeLanguage` (immediate UI update) and `LocalePreferenceService.setStoredLocale`; a persistence rejection is caught, logged, and does not throw
 - [ ] The caught-save path carries a `TODO(FO1)` comment referencing spec.md → Follow-on FO1 (robust failed-save handling), so the interim behavior is tracked (satisfies the "no TODO without a reference" review rule)
 - [ ] Integration test across provider → hook → service → DAO with a mocked storage (relaunch simulated by remounting with a pre-seeded store)
-- [ ] `@helsoft/localization` gains a dependency on `@helsoft/services`
+- [ ] `@helsoft/localization` gains a dependency on `@helsoft/supabase-services`
 - [ ] `pnpm lint` + `pnpm check-types` + `pnpm test` green
 - [ ] No hardcoded strings/colors/dimensions
 

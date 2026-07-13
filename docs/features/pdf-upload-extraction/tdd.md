@@ -16,12 +16,12 @@ Every `@s` scenario this slice touches maps to at least one concrete test below.
   time — top-level `await` cannot be down-leveled to CommonJS (a real ECMAScript constraint, not
   a tooling gap), so it can't be `require()`d or statically `import`ed from a CJS Jest test file.
   Fix: the two adapter modules (`mupdf-extraction-adapter.ts`, `image-downscale.ts`) load it via
-  `await import('mupdf')` **and** `libs/services/tsconfig.jest.json` sets `module`/`moduleResolution:
+  `await import('mupdf')` **and** `libs/supabase-services/tsconfig.jest.json` sets `module`/`moduleResolution:
   "node16"` (kept **only** in the Jest-specific tsconfig — the main `tsconfig.json` used by
   `check-types` stays `ESNext`/`bundler`, unaffected) so `tsc` preserves the dynamic `import()` as a
   real one instead of down-leveling it to `require()`. `NODE_OPTIONS=--experimental-vm-modules` is
-  wired into `@helsoft/services`' `test`/`test:rls` scripts so Node's real ESM loader is available
-  inside the Jest VM context. This only affects `@helsoft/services`; no other workspace changed.
+  wired into `@helsoft/supabase-services`' `test`/`test:rls` scripts so Node's real ESM loader is available
+  inside the Jest VM context. This only affects `@helsoft/supabase-services`; no other workspace changed.
 - **pnpm's nested `.pnpm` store defeats the usual `transformIgnorePatterns` trick.** (Dead end,
   abandoned in favor of the dynamic-import approach above — kept here so it isn't re-attempted.)
   `mupdf`'s real path is `node_modules/.pnpm/mupdf@1.28.0/node_modules/mupdf/…`, i.e. it has *two*
@@ -55,8 +55,8 @@ Every `@s` scenario this slice touches maps to at least one concrete test below.
   mirroring the existing `expo-router` pattern in that same `package.json` (peer for the consuming
   app's real resolution, pinned dev version for this lib's own type-check/test run) — and as real
   `dependencies` of `apps/app-study-buddy` (task-8's explicit requirement).
-- **`libs/services/src/pdf-extraction/*` (adapter, downscale, DTO) is deliberately *not*
-  re-exported through `@helsoft/services`' main barrel.** These modules pull in `mupdf` (a
+- **`libs/supabase-services/src/pdf-extraction/*` (adapter, downscale, DTO) is deliberately *not*
+  re-exported through `@helsoft/supabase-services`' main barrel.** These modules pull in `mupdf` (a
   Node/browser-wasm package); the client layers (DAO/service/hook/UI) never import them (task-4's
   "no PDF parsing" requirement) and RN/Hermes almost certainly cannot load `mupdf`'s wasm bundle
   anyway. Barrel-exporting them would risk pulling `mupdf` into the mobile app bundle for no
@@ -86,7 +86,7 @@ Every `@s` scenario this slice touches maps to at least one concrete test below.
   `document_images`), private `pdf-uploads`/`pdf-images` buckets, owner-prefixed storage policies.
 - Applied to the **local** stack only via `npx supabase db reset` (never `db push`, never
   `--linked` — out of scope per the adaptation).
-- **RED** (real, executed): first `pnpm --filter @helsoft/services test:rls` run failed all 9
+- **RED** (real, executed): first `pnpm --filter @helsoft/supabase-services test:rls` run failed all 9
   cases with `permission denied for table documents` (Postgres `42501`) — even the service-role
   admin client. Root cause: no table-level `GRANT`s (see reconciliation above).
 - **GREEN**: added `grant usage on schema public to anon, authenticated, service_role` +
@@ -98,7 +98,7 @@ Every `@s` scenario this slice touches maps to at least one concrete test below.
     document's owner; anon (no session) select returns empty; anon insert rejected; own-bucket
     upload + download succeeds, a **different** authenticated user's download of that same object
     is denied; anon upload to `pdf-uploads` is denied.
-- Command to reproduce manually: `pnpm --filter @helsoft/services test:rls` (Docker/local Supabase
+- Command to reproduce manually: `pnpm --filter @helsoft/supabase-services test:rls` (Docker/local Supabase
   must already be running — `npx supabase status`). Isolated from the default `pnpm test` via
   `jest.config.js`'s `testPathIgnorePatterns: ['\\.rls\\.integration\\.test\\.ts$']` and its own
   `jest.rls.config.js` + `test:rls` script — the default run stays fully mocked/Docker-independent.
@@ -119,7 +119,7 @@ Every `@s` scenario this slice touches maps to at least one concrete test below.
 **Spike outcome: `mupdf`-wasm succeeded** — validated for real under Jest/Node (this sandbox has
 no Deno CLI; see the human-approved adaptation). No fallback to `unpdf` was needed.
 
-- Installed `mupdf@1.28.0` + `pdf-lib` (test-only fixture builder) into `@helsoft/services`.
+- Installed `mupdf@1.28.0` + `pdf-lib` (test-only fixture builder) into `@helsoft/supabase-services`.
 - Manual spike (throwaway `.mjs` scripts, deleted before committing any test): confirmed
   `mupdf.Document.openDocument(bytes, 'application/pdf')` → `page.toStructuredText('preserve-images')`
   gives both `.asText()` (per-page text) and, via `.walk({ onImageBlock })`, embedded images in
@@ -159,7 +159,7 @@ no Deno CLI; see the human-approved adaptation). No fallback to `unpdf` was need
 - **RED→GREEN, `extraction-dto.ts`**: `buildPdfExtractionResult()` derives `pageCount`/
   `imageCount` from the actual arrays (never trusts a separately-passed-in count) — two tests
   (full document, and a zero-image document).
-- Created `libs/services/src/services/pdf-extraction.constants.ts`: `PDF_EXTRACTION_LIMITS` (10 MB
+- Created `libs/supabase-services/src/services/pdf-extraction.constants.ts`: `PDF_EXTRACTION_LIMITS` (10 MB
   / 20 pages — values locked at the gate, consumed for enforcement starting Slice 2/task-9-10 per
   the spec's explicit single-source-of-truth instruction) and `IMAGE_DOWNSCALE_TARGET` (1024px /
   q80 / 100px floor — consumed **now** by `image-downscale.ts`), plus `PDF_UPLOAD_BUCKET`/
@@ -173,10 +173,10 @@ no Deno CLI; see the human-approved adaptation). No fallback to `unpdf` was need
 - **Testing boundary (explicit, accepted — risk R4):** `supabase/functions/extract-pdf/index.ts`
   and everything under `_shared/` are **not executed or type-checked in this sandbox** (no Deno
   CLI). A comment block at the top of `index.ts` states this. The logic it calls is Jest-tested
-  for real in `libs/services/src/pdf-extraction/*`; verify the Deno glue manually against a real
+  for real in `libs/supabase-services/src/pdf-extraction/*`; verify the Deno glue manually against a real
   PDF after `supabase functions deploy` in a real environment — never run that command from this
   pipeline.
-- `pnpm --filter @helsoft/services lint`/`check-types`/`test` green (10 suites, 56 tests).
+- `pnpm --filter @helsoft/supabase-services lint`/`check-types`/`test` green (10 suites, 56 tests).
 
 ## task-4 — `PdfUploadDao` (@s1, @s4)
 
@@ -200,7 +200,7 @@ no Deno CLI; see the human-approved adaptation). No fallback to `unpdf` was need
   with the **same** generated id, returning the DAO's typed result untouched.
 - **RED→GREEN**: a second `extract()` call generates a **different** documentId (uniqueness guard
   — concurrent uploads never collide on the same storage path/row).
-- **REFACTOR**: none needed. Exported via `libs/services/src/services/index.ts`.
+- **REFACTOR**: none needed. Exported via `libs/supabase-services/src/services/index.ts`.
 - 2 tests green (`pdf-extraction.service.test.ts`); `check-types` clean.
 
 ## task-6 — `usePdfExtraction` hook (@s1, @s5)
@@ -264,9 +264,9 @@ no Deno CLI; see the human-approved adaptation). No fallback to `unpdf` was need
 ## Slice-1 gate — commands run for real
 
 - `pnpm --filter @helsoft/types check-types` — clean.
-- `pnpm --filter @helsoft/services test` (mocked, Docker-independent) — 10 suites / 56 tests green.
-- `pnpm --filter @helsoft/services test:rls` (live local Supabase, Docker) — 9/9 real tests green.
-- `pnpm --filter @helsoft/services check-types` — clean.
+- `pnpm --filter @helsoft/supabase-services test` (mocked, Docker-independent) — 10 suites / 56 tests green.
+- `pnpm --filter @helsoft/supabase-services test:rls` (live local Supabase, Docker) — 9/9 real tests green.
+- `pnpm --filter @helsoft/supabase-services check-types` — clean.
 - `pnpm --filter @helsoft/hooks test` — 5 suites / 24 tests green.
 - `pnpm --filter @helsoft/hooks check-types` — clean.
 - `pnpm --filter @helsoft/components test` — 6 suites / 71 tests green.
@@ -418,7 +418,7 @@ criteria are independently satisfied and independently tested.
   defensive fallback to `network_error` for anything unexpected — proven by a dedicated hook test
   (an untyped `new Error('boom')` rejection).
 - **`FunctionsFetchError`/`FunctionsHttpError`/`FunctionsRelayError` re-exported (values, not just
-  types) from `@helsoft/services`'s barrel**, mirroring the existing `Session`/`SupabaseClient`/
+  types) from `@helsoft/supabase-services`'s barrel**, mirroring the existing `Session`/`SupabaseClient`/
   `User` type re-export precedent — lets the Slice-2 integration test build a representative
   transport-failure fixture without adding a direct `@supabase/supabase-js` dependency to
   `@helsoft/hooks`.
@@ -482,7 +482,7 @@ criteria are independently satisfied and independently tested.
   image work, downscale in memory first, and batch-insert `document_images` — all funneling
   through one `markDocumentFailed(supabase, documentId, code)` helper so `status`/`error_code`
   always update together.
-- 13/13 `pdf-extraction.service.test.ts` tests green; `pnpm --filter @helsoft/services test`/
+- 13/13 `pdf-extraction.service.test.ts` tests green; `pnpm --filter @helsoft/supabase-services test`/
   `check-types` clean.
 
 ## task-10 — Client pre-validation: file type + size (@s9, @s10)
@@ -561,9 +561,9 @@ criteria are independently satisfied and independently tested.
 ## Slice-2 gate — commands run for real
 
 - `pnpm --filter @helsoft/types check-types` — clean.
-- `pnpm --filter @helsoft/services test` — 11 suites / 72 tests green (mocked, Docker-independent;
+- `pnpm --filter @helsoft/supabase-services test` — 11 suites / 72 tests green (mocked, Docker-independent;
   no new live-DB dependency added this slice, per this session's explicit constraint).
-- `pnpm --filter @helsoft/services check-types` — clean.
+- `pnpm --filter @helsoft/supabase-services check-types` — clean.
 - `pnpm --filter @helsoft/hooks test` — 6 suites / 29 tests green.
 - `pnpm --filter @helsoft/hooks check-types` — clean.
 - `pnpm --filter @helsoft/components test` — 6 suites / 77 tests green.
@@ -619,7 +619,7 @@ action for them, so no new UI/navigation was added (including for `unauthenticat
   (error) : true}` into the panel. Kept inline in the wiring component (one of the review's
   suggested options) rather than `@helsoft/types` (that lib is plain-type-only, no logic, per
   `global.mdc` and the existing `auth-error.ts`/`pdf-extraction.ts` precedent — no function lives
-  there today) or `@helsoft/services` (would've grown a third independently-declared error-code
+  there today) or `@helsoft/supabase-services` (would've grown a third independently-declared error-code
   set alongside the two already reviewed as intentional trust-boundary guards; this classification
   is a UI/UX rule, not a trust boundary, so it belongs with the component that renders the UX).
   - Updated the pre-existing "shows the mapped error message and wires retry…" test to use
@@ -719,17 +719,17 @@ session's brief: task-13 (i18n parity) → task-14 (a11y + Playwright e2e) → t
   though it would have been deliberate. Landed on the simplest thing that satisfies "thin,
   vendor-agnostic, decoupled, no SDK": one exported function, `trackPdfExtractionEvent`, whose body
   is empty today; wiring a real vendor later means editing this one function, never
-  `PdfExtractionService`. Not exported through `@helsoft/services`'s main barrel (`src/index.ts`) —
+  `PdfExtractionService`. Not exported through `@helsoft/supabase-services`'s main barrel (`src/index.ts`) —
   nothing outside this package needs to call or reference it yet, and adding the export wasn't
   demanded by any test (added it once, speculatively, then removed it — see below).
-- **No separate hook-level "analytics integration test" — and why one that mocked `@helsoft/services`
+- **No separate hook-level "analytics integration test" — and why one that mocked `@helsoft/supabase-services`
   would have been a false test.** `usePdfExtraction`/wiring never call `trackPdfExtractionEvent`
   directly; only `PdfExtractionService.extract()` does, via its own **relative** import
   (`../analytics/pdf-extraction-analytics`). A hooks-package test that did
-  `jest.mock('@helsoft/services', () => ({...jest.requireActual('@helsoft/services'),
-  trackPdfExtractionEvent: jest.fn()}))` would resolve `'@helsoft/services'` to
-  `libs/services/src/index.ts` and replace *that* module's exports — a completely different
-  resolved file from `libs/services/src/analytics/pdf-extraction-analytics.ts`, which
+  `jest.mock('@helsoft/supabase-services', () => ({...jest.requireActual('@helsoft/supabase-services'),
+  trackPdfExtractionEvent: jest.fn()}))` would resolve `'@helsoft/supabase-services'` to
+  `libs/supabase-services/src/index.ts` and replace *that* module's exports — a completely different
+  resolved file from `libs/supabase-services/src/analytics/pdf-extraction-analytics.ts`, which
   `pdf-extraction.service.ts` imports directly and which `jest.requireActual` would still load for
   real (transitively, via the real `PdfExtractionService` class inside the spread). The mocked
   `trackPdfExtractionEvent` property on the synthetic barrel object would sit unread; the real
@@ -820,7 +820,7 @@ session's brief: task-13 (i18n parity) → task-14 (a11y + Playwright e2e) → t
 - **RED**, `pdf-extraction.service.test.ts`: added `jest.mock('../analytics/pdf-extraction-
   analytics', …)` + an import — failed immediately at module resolution (`Cannot find module`,
   the file didn't exist yet; per `tdd.md`'s "not compiling / not importing counts as failing").
-- **GREEN**: created `libs/services/src/analytics/pdf-extraction-analytics.ts` — the closed,
+- **GREEN**: created `libs/supabase-services/src/analytics/pdf-extraction-analytics.ts` — the closed,
   discriminated `PdfExtractionAnalyticsEvent` union (mirrors the three locked events exactly) and
   one no-op `trackPdfExtractionEvent` function (see reconciliation above for why not a
   setter/pub-sub, and not `console.*`). Wired `PdfExtractionService.extract()` to call it at three
@@ -846,7 +846,7 @@ session's brief: task-13 (i18n parity) → task-14 (a11y + Playwright e2e) → t
   the service layer, which the hook already calls unconditionally on every `extract()`/`retry()`
   attempt; the wiring component doesn't need to know analytics exists (task-15's own "keep business
   logic decoupled from the sink" goal, satisfied by not touching this layer at all).
-- 19/19 `pdf-extraction.service.test.ts` tests green (+6); `pnpm --filter @helsoft/services
+- 19/19 `pdf-extraction.service.test.ts` tests green (+6); `pnpm --filter @helsoft/supabase-services
   test`/`check-types` clean (78/78 suite tests total, up from 72).
 
 ---
@@ -854,7 +854,7 @@ session's brief: task-13 (i18n parity) → task-14 (a11y + Playwright e2e) → t
 ## Slice-3 gate — commands run for real
 
 - `pnpm --filter @helsoft/localization test` — 9/9 suites, 94/94 tests green.
-- `pnpm --filter @helsoft/services test` — 11/11 suites, 78/78 tests green (mocked, Docker-
+- `pnpm --filter @helsoft/supabase-services test` — 11/11 suites, 78/78 tests green (mocked, Docker-
   independent — no new live-DB dependency this slice).
 - `pnpm --filter @helsoft/hooks test` — 6/6 suites, 29/29 tests green (unchanged from Slice 2 — no
   hook-layer code touched this slice, per the reconciliation note above).
@@ -897,9 +897,9 @@ below is a genuine RED→GREEN→(REFACTOR) cycle, not narration — `review.md`
 ## Part A — review findings
 
 **M1 — [security] no server-side file-size enforcement.**
-- **RED**: `libs/services/src/pdf-extraction/file-size-guard.test.ts` (new file) — imports
+- **RED**: `libs/supabase-services/src/pdf-extraction/file-size-guard.test.ts` (new file) — imports
   `isFileTooLarge` from a module that didn't exist yet (`Cannot find module`).
-- **GREEN**: `libs/services/src/pdf-extraction/file-size-guard.ts` (new) — `isFileTooLarge(sizeBytes,
+- **GREEN**: `libs/supabase-services/src/pdf-extraction/file-size-guard.ts` (new) — `isFileTooLarge(sizeBytes,
   limits) => sizeBytes > limits.maxSizeBytes`, mirroring `too_many_pages`'s short-circuit pattern.
   4 tests: well-under-limit (false), well-over-limit (true), and the two exact-boundary cases
   (Part B #3): `maxSizeBytes` itself → false (exclusive upper bound), `maxSizeBytes + 1` → true.
@@ -940,7 +940,7 @@ below is a genuine RED→GREEN→(REFACTOR) cycle, not narration — `review.md`
   `PDF_EXTRACTION_ERROR_CODES: Record<PdfExtractionErrorCode, true>` (exhaustive by construction,
   matching `UPLOAD_ERROR_KEYS`'s precedent) instead of a private `Set`. `use-pdf-extraction.ts`
   derives its own guard from that single exported source instead of re-declaring an independent
-  `Set` — `use-pdf-extraction.test.ts`'s `jest.mock('@helsoft/services', …)` updated to export the
+  `Set` — `use-pdf-extraction.test.ts`'s `jest.mock('@helsoft/supabase-services', …)` updated to export the
   same shape. `pnpm --filter @helsoft/hooks test` re-run green (31/31) to confirm the mock change
   didn't regress anything.
 
@@ -1032,7 +1032,7 @@ below is a genuine RED→GREEN→(REFACTOR) cycle, not narration — `review.md`
    `build-solid-png.ts`/`build-test-pdf.ts` are imported **only** from `*.test.ts` files, nowhere in
    shipped production code — genuine test fixtures, not mutation-testable logic. Excluded from
    scope with a one-line documented justification in both `.agents/skills/mutation-testing/scripts/
-   run-mutation.sh` (the `git diff`-based file filter) and `libs/services/stryker.config.mjs`'s
+   run-mutation.sh` (the `git diff`-based file filter) and `libs/supabase-services/stryker.config.mjs`'s
    default `mutate` glob (`!src/**/test-utils/**`), rather than left as unexplained survivors.
 9. **`mupdf-extraction-adapter.ts`/`image-downscale.ts` remaining survivors** — closed naturally as
    part of the M2/M3 refactor (the old re-decode/re-encode code paths those mutants lived in no
@@ -1045,7 +1045,7 @@ below is a genuine RED→GREEN→(REFACTOR) cycle, not narration — `review.md`
 
 ## Full-workspace re-run (post-fix)
 
-- `pnpm --filter @helsoft/services test` — 12/12 suites, 84/84 tests green (+1 suite:
+- `pnpm --filter @helsoft/supabase-services test` — 12/12 suites, 84/84 tests green (+1 suite:
   `file-size-guard.test.ts`; +6 tests net across the touched files).
 - `pnpm --filter @helsoft/hooks test` — 6/6 suites, 31/31 tests green (+2:
   `use-interaction-state.test.ts`'s focus tests).
@@ -1093,7 +1093,7 @@ fresh, scoped per file, rather than trusting the round-2 narrative):
 
 | Workspace | `mutation.md` claimed | Actually measured |
 |---|---|---|
-| `@helsoft/services` | 78 tests / 10 suites | **84 tests / 12 suites** |
+| `@helsoft/supabase-services` | 78 tests / 10 suites | **84 tests / 12 suites** |
 | `@helsoft/hooks` | 29 tests / 5 suites | **31 tests / 6 suites** |
 | `@helsoft/components` | 83 tests / 6 suites | **94 tests / 6 suites** |
 | `@helsoft/study-buddy` | 49 tests / 4 suites | **55 tests / 4 suites** |
@@ -1118,7 +1118,7 @@ freshly-measured survivor, not the report's prose.
    `supabase/functions/extract-pdf/_shared/pdf-extraction.constants.ts` copy — never imported by any
    Jest-tested code path). No `// Stryker disable` comment added — explicitly declined for this one.
 
-### Category 1 — `pdf-extraction.constants.ts` + `PDF_UPLOAD_BUCKET` (`@helsoft/services`)
+### Category 1 — `pdf-extraction.constants.ts` + `PDF_UPLOAD_BUCKET` (`@helsoft/supabase-services`)
 
 - Added `src/services/pdf-extraction.constants.test.ts` (new file) asserting every exported
   constant's exact literal value: `PDF_EXTRACTION_LIMITS.maxSizeBytes`/`maxPages`,
@@ -1132,7 +1132,7 @@ freshly-measured survivor, not the report's prose.
 - Result: `pdf-extraction.constants.ts` + `pdf-upload.dao.ts` scoped Stryker run — 100% (22/22
   killed, 1 declined exception per the scope note above).
 
-### Category 2 — `extraction-failure-detection.ts` boundary guards (`@helsoft/services`)
+### Category 2 — `extraction-failure-detection.ts` boundary guards (`@helsoft/supabase-services`)
 
 Fresh Stryker run showed the real survivors were `>` → `>=` (page-count guard) and `<` → `<=`
 (scanned-text guard) boundary mutants, not a "precedence order" gap (the existing precedence test
@@ -1145,7 +1145,7 @@ already pinned that). Added two boundary tests:
 
 Result: 100% (9/9 killed).
 
-### Category 3 — `image-downscale.ts` conditional branches (`@helsoft/services`)
+### Category 3 — `image-downscale.ts` conditional branches (`@helsoft/supabase-services`)
 
 Fresh survivors: the `isDecorative` `||` guard's left/right operands (`ConditionalExpression`+2
 `EqualityOperator` boundary mutants) and the `scale === 1 ? input.pixmap : resizePixmap(...)`
@@ -1164,7 +1164,7 @@ no-upscale branch (`ConditionalExpression`). Added:
 
 Result: 100% (26/26 killed).
 
-### Category 4 — `mupdf-extraction-adapter.ts` (`@helsoft/services`)
+### Category 4 — `mupdf-extraction-adapter.ts` (`@helsoft/supabase-services`)
 
 Fresh survivors: `mupdf.Document.openDocument(bytes, 'application/pdf')`'s MIME-type argument was
 never asserted, and `structuredText.asText().trim()`'s `.trim()` call was never proven (only
@@ -1178,7 +1178,7 @@ never asserted, and `structuredText.asText().trim()`'s `.trim()` call was never 
 
 Result: 100% (11/11 killed).
 
-### Category 5 — `pdf-extraction.service.ts` (`@helsoft/services`)
+### Category 5 — `pdf-extraction.service.ts` (`@helsoft/supabase-services`)
 
 Fresh survivors matched `mutation.md`'s claims here. Added:
 - `generates each hex digit from Math.random(), with the version fixed at 4 and the variant clamped
@@ -1276,7 +1276,7 @@ number.
 
 ## Full-workspace re-run (mutation-closure pass)
 
-- `pnpm --filter @helsoft/services test` — 13/13 suites, 97/97 tests green (+1 suite:
+- `pnpm --filter @helsoft/supabase-services test` — 13/13 suites, 97/97 tests green (+1 suite:
   `pdf-extraction.constants.test.ts`; +13 tests net across the touched files).
 - `pnpm --filter @helsoft/hooks test` — 6/6 suites, 31/31 tests green (untouched this pass).
 - `pnpm --filter @helsoft/components test` — 6/6 suites, 94/94 tests green (untouched this pass,

@@ -4,7 +4,7 @@ title: ApiKeyDao — invoke save + status select (Supabase DAO)
 slice: 1
 scenarios: [s1, s3, s11]
 status: done
-paths: [libs/services/src/dao/api-key.dao.ts, libs/services/src/dao/api-key.dao.test.ts]
+paths: [libs/supabase-services/src/dao/api-key.dao.ts, libs/supabase-services/src/dao/api-key.dao.test.ts]
 ---
 
 ## Goal

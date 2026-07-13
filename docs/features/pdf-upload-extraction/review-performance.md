@@ -16,15 +16,15 @@ performance regression. No new findings.
 
 Traced the full data flow in both the Jest-tested lib and its Deno mirror:
 
-- **Decode (once, in the adapter):** `libs/services/src/pdf-extraction/mupdf-extraction-adapter.ts:22`
+- **Decode (once, in the adapter):** `libs/supabase-services/src/pdf-extraction/mupdf-extraction-adapter.ts:22`
   — `const pixmap = image.toPixmap();` inside `extractPageImages`. The resulting `Pixmap` is pushed
   straight into `ExtractedImage.pixmap` (`:26`) — no `asPNG()`/serialize step anywhere in this file.
   Mirrored identically at `supabase/functions/extract-pdf/_shared/mupdf-extraction-adapter.ts:18,22`.
 - **Seam type change that makes this possible:** `ExtractedImage.pixmap: Mupdf.Pixmap` (was
-  `bytes: Uint8Array` + `mimeType: string`) — `libs/services/src/pdf-extraction/pdf-extraction-adapter.ts:26-31`,
+  `bytes: Uint8Array` + `mimeType: string`) — `libs/supabase-services/src/pdf-extraction/pdf-extraction-adapter.ts:26-31`,
   mirrored at `supabase/functions/extract-pdf/_shared/pdf-extraction-adapter.ts:14-19`. `DownscaleImageInput.pixmap: Mupdf.Pixmap`
-  — `libs/services/src/pdf-extraction/image-downscale.ts:8`, mirrored at `_shared/image-downscale.ts:10`.
-- **Final encode (once, in downscale):** `libs/services/src/pdf-extraction/image-downscale.ts:64`
+  — `libs/supabase-services/src/pdf-extraction/image-downscale.ts:8`, mirrored at `_shared/image-downscale.ts:10`.
+- **Final encode (once, in downscale):** `libs/supabase-services/src/pdf-extraction/image-downscale.ts:64`
   (`pixmap.asPNG()`, alpha branch) / `:66` (`pixmap.asJPEG(IMAGE_DOWNSCALE_TARGET.jpegQuality)`,
   opaque branch) — the `pixmap` operated on is either `input.pixmap` directly or `resizePixmap(input.pixmap, ...)`
   (`:61`), never a value re-derived from serialized bytes. `new mupdf.Image(...)` (the re-decode
@@ -36,7 +36,7 @@ PNG-bytes round-trip is gone.
 
 ## M3 — RESOLVED: `structuredText` built exactly once per page
 
-`libs/services/src/pdf-extraction/mupdf-extraction-adapter.ts:53-61` — the per-page loop:
+`libs/supabase-services/src/pdf-extraction/mupdf-extraction-adapter.ts:53-61` — the per-page loop:
 ```
 const structuredText = page.toStructuredText(STRUCTURED_TEXT_OPTIONS);   // :58 — once
 pages.push({ page: pageNumber, text: structuredText.asText().trim() });   // :59 — reuses it
@@ -53,7 +53,7 @@ and its mirror.
 
 ## Locked downscale targets — not regressed
 
-- `libs/services/src/services/pdf-extraction.constants.ts:34-41` (`IMAGE_DOWNSCALE_TARGET`) is
+- `libs/supabase-services/src/services/pdf-extraction.constants.ts:34-41` (`IMAGE_DOWNSCALE_TARGET`) is
   byte-identical to before the fix (`maxLongestEdgePx: 1024`, `jpegQuality: 80`, `minDimensionPx: 100`)
   — `image-downscale.ts:3` still imports it as the single source, unchanged import path.
 - `resizePixmap` (`image-downscale.ts:30-40`), `computeScale` (`:27-28`, never-upscale clamp
@@ -67,9 +67,9 @@ and its mirror.
   and alpha cases gained a real decode-and-measure-the-actual-bytes check (`:31-34`, `:58-61`) on
   top of the pre-existing metadata assertions, guarding against a mutant that fakes the returned
   `width`/`height` fields without actually resizing the pixel data.
-- Ran the real suite (not trusting the diff alone): `libs/services` Jest, `pdf-extraction` scope —
+- Ran the real suite (not trusting the diff alone): `libs/supabase-services` Jest, `pdf-extraction` scope —
   **6 suites / 40 tests, all green** (`image-downscale.test.ts`, `mupdf-extraction-adapter.test.ts`,
-  and 4 others). `pnpm --filter @helsoft/services check-types` — clean, no errors.
+  and 4 others). `pnpm --filter @helsoft/supabase-services check-types` — clean, no errors.
 
 No regression to any of the four locked targets.
 

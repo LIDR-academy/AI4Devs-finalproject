@@ -33,7 +33,7 @@ Create the new `@helsoft/localization` workspace package and its i18next core: t
 - [ ] No hardcoded strings/colors/dimensions
 
 ## Notes
-- Per Open decisions: `Locale`/`SUPPORTED_LOCALES`/`FALLBACK_LOCALE` live in `@helsoft/types` to avoid a circular dep between `@helsoft/localization` and `@helsoft/services`.
+- Per Open decisions: `Locale`/`SUPPORTED_LOCALES`/`FALLBACK_LOCALE` live in `@helsoft/types` to avoid a circular dep between `@helsoft/localization` and `@helsoft/supabase-services`.
 - Add `i18next` + `react-i18next` as deps of this lib only. Approve any pnpm ignored-build prompt in `pnpm-workspace.yaml` (R8).
 - `supported-locales.ts` also holds the static endonym labels (English, Español, Português, Deutsch) used later by the selector wiring (Open decision: labels are not translation keys).
 - Keep resources as plain TS objects/namespaces; the migration task (task-10/11) fills in the full key set.

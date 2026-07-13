@@ -127,7 +127,7 @@ other half).
 RED: `api-key.dao.test.ts` (module doesn't exist) → GREEN: `api-key.dao.ts`
 (`saveApiKey`/`getApiKeyStatus`, both via `getSupabase()`; no external-API DAO — the provider call
 lives in the Edge Function). 6 tests; not barrel-exported (only reachable via
-`libs/services/src/services/index.ts` re-exporting the service).
+`libs/supabase-services/src/services/index.ts` re-exporting the service).
 
 ### task-5 — `ApiKeyService`
 RED: `api-key.service.test.ts` → GREEN: `api-key.service.ts` (`saveApiKey(rawKey, provider =
@@ -188,7 +188,7 @@ source) — spying on one instance wouldn't reach the DAO's own later access.
 ## Final verification (Slice 1 gate)
 
 - `pnpm --filter @helsoft/types check-types` — clean.
-- `pnpm --filter @helsoft/services test` — 7 suites / 50 tests green. `check-types` clean.
+- `pnpm --filter @helsoft/supabase-services test` — 7 suites / 50 tests green. `check-types` clean.
 - `pnpm --filter @helsoft/hooks test` — 5 suites / 35 tests green (incl. the integration test).
   `check-types` clean.
 - `pnpm --filter @helsoft/components test` — 6 suites / 75 tests green. `check-types` clean.
@@ -214,7 +214,7 @@ Ready for `reviews_lead` in **slice mode** (`reviewer_code` + `reviewer_design` 
 
 Strict Red→Green→Refactor, one `@s` at a time, per `.agents/rules/tdd.md`. Scope: task-9 → task-12
 only. Slice 3 tasks (task-13/task-14) were not touched. Reuses `toTypedError`
-(`libs/services/src/utils/typed-error.ts`, added in Slice 1's review fix) for every new typed
+(`libs/supabase-services/src/utils/typed-error.ts`, added in Slice 1's review fix) for every new typed
 error rather than reinventing normalization.
 
 ## @s → test map (Slice 2 scope)
@@ -398,7 +398,7 @@ this session, per the orchestrator's explicit boundary.
 ## Final verification (Slice 2 gate)
 
 - `pnpm --filter @helsoft/types check-types` — clean.
-- `pnpm --filter @helsoft/services test` — 7 suites / 56 tests green. `check-types` clean.
+- `pnpm --filter @helsoft/supabase-services test` — 7 suites / 56 tests green. `check-types` clean.
 - `pnpm --filter @helsoft/hooks test` — 5 suites / 43 tests green (incl. the extended
   integration test). `check-types` clean.
 - `pnpm --filter @helsoft/components test` — 7 suites / 86 tests green. `check-types` clean.
@@ -783,7 +783,7 @@ reverted, nothing was silently accepted, and it's recorded here rather than hidd
 feature's own standing precedent of surfacing anomalies rather than silently working around them.
 
 ## Final verification (Full review round 1 — fixes)
-- `pnpm --filter @helsoft/services test` — 7 suites / 59 tests green. `check-types` clean.
+- `pnpm --filter @helsoft/supabase-services test` — 7 suites / 59 tests green. `check-types` clean.
 - `pnpm --filter @helsoft/hooks test` — 5 suites / 46 tests green (was 44; +2 for the
   `ApiKeyProvider` describe block). `check-types` clean.
 - `pnpm --filter @helsoft/components test` — 7 suites / 98 tests green (was 97; +1 for the
@@ -897,7 +897,7 @@ Per `mutation.md`'s Round 2 work order. Test-only changes throughout — no prod
 touched (fixing production code was never demanded; every one of these mutants was killable by
 tightening an assertion against already-correct behavior).
 
-**@helsoft/services (4/4 killed)** — one-line `.message` assertions added to the existing,
+**@helsoft/supabase-services (4/4 killed)** — one-line `.message` assertions added to the existing,
 already-passing test for each path (RED confirmed by reverting the assertion and re-running; the
 `.message` key alone reproduces the mutant's survival):
 - `api-key.service.test.ts`: "normalizes an invalid_key Edge Function rejection..." now also
@@ -946,7 +946,7 @@ already-passing test for each path (RED confirmed by reverting the assertion and
   with `toHaveStyle` assertions against theme tokens (`spacing`, `shape`, `lightColors`,
   `typography`), following `language-selector.test.tsx:117,125,137`'s precedent exactly.
 
-**Re-run scores:** `@helsoft/services` 100% (71/71) · `@helsoft/hooks` 100% of non-equivalent
+**Re-run scores:** `@helsoft/supabase-services` 100% (71/71) · `@helsoft/hooks` 100% of non-equivalent
 mutants (25/25 killed, 3 confirmed-equivalent excluded) · `@helsoft/components` 100%
 (`api-key-form.tsx` 69/69, `api-key-required-notice.tsx` 4/4). Full verification sweep green:
 `pnpm check-types` (8/8), `pnpm test` (all 6 workspaces, 315 tests), `pnpm --filter

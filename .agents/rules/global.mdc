@@ -29,9 +29,13 @@ This is a monorepo for react-native/node/next applications.
     - Storybook dev: port 6009.
   - @helsoft/hooks: this library should contain the shared hooks between the applications.
     - Use rules from .agents/rules/hooks-service-dao.mdc
-  - @helsoft/services: this library should contain the shared services and daos between the applications.
+  - @helsoft/services: non-Supabase services + DAOs (`fetch` REST, AsyncStorage, other external/platform stores).
+    - Use rules from .agents/rules/hooks-service-dao.mdc
+    - Do **not** put Supabase client / DB / auth / storage DAOs here — those live in `@helsoft/supabase-services`.
+  - @helsoft/supabase-services: Supabase services + DAOs + shared client.
     - Use rules from .agents/rules/hooks-service-dao.mdc
     - The shared Supabase client lives in src/supabase/ (initSupabase/getSupabase).
+    - Do **not** put generic REST/`fetch` or platform-store DAOs here — those live in `@helsoft/services`.
 
 - apps: this folder should contain the applications. The code on the applications should be minimal, the business logic should be on the libs folder. So for example for an application named app-feature-name, there should be a lib named libs/feature-name.
 

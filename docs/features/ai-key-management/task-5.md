@@ -4,7 +4,7 @@ title: ApiKeyService — validate input + status
 slice: 1
 scenarios: [s1, s3, s4, s5]
 status: done
-paths: [libs/services/src/services/api-key.service.ts, libs/services/src/services/api-key.service.test.ts, libs/services/src/services/index.ts]
+paths: [libs/supabase-services/src/services/api-key.service.ts, libs/supabase-services/src/services/api-key.service.test.ts, libs/supabase-services/src/services/index.ts]
 ---
 
 ## Goal
@@ -17,7 +17,7 @@ Create the business-logic layer (`ApiKeyService`, abstract class, static methods
 - [x] Scenario @s3: `getApiKeyStatus` returns the DAO's masked status; a read failure resolves to `{ hasKey: false }` (never throws).
 - [x] Scenario @s4: saving when a key already exists runs the same validate-then-store path (the service does not special-case first-save vs update — the Edge Function upserts).
 - [x] Scenario @s5 (non-blank rule — service half + defensive backstop): a blank/whitespace-only key is rejected (trim → `validation_error`) before any DAO/round-trip. The reachable guard is `ApiKeyForm`'s Empty-state disabled submit (@s5, task-7/task-11); this service throw is the defensive backstop per spec Open decision 3 (`validation_error` backstop). Keep the pre-check **minimal** (non-blank only) — no brittle provider-specific prefix/length assumption (risks R-prov).
-- [x] `ApiKeyService` is `abstract class` with `static` methods; exported via `libs/services/src/services/index.ts`.
+- [x] `ApiKeyService` is `abstract class` with `static` methods; exported via `libs/supabase-services/src/services/index.ts`.
 - [x] `pnpm lint` + `pnpm check-types` + `pnpm test` green.
 
 Note: implemented as `saveApiKey(rawKey, provider = 'openai')` (rawKey first, provider defaulted) rather than the `(provider, rawKey)` order sketched in the Goal — matches how every caller (hook/UI) actually supplies just the raw key; functionally identical (provider still defaults to `'openai'` per v1).

@@ -17,7 +17,7 @@
 |---|---|---|
 | `i18next` / `react-i18next` | to add | In `@helsoft/localization`; core engine + provider/hook wrapped by the lib. |
 | `expo-localization` | to add | In `apps/app-study-buddy`; reads device locale. Verified vs SDK 57. |
-| `@react-native-async-storage/async-storage` | available | App dep (v2.2.0); added to `@helsoft/services` for the preference DAO. Universal (localStorage web / native). |
+| `@react-native-async-storage/async-storage` | available | App dep (v2.2.0); added to `@helsoft/supabase-services` for the preference DAO. Universal (localStorage web / native). |
 | `@helsoft/types` | available | Hosts `Locale` + supported-locale constants; already a services dep. |
 | `@helsoft/components` tokens/atoms | available | `theme` tokens + `Icon` for the non-color-only active indicator. |
 | Settings screen + root layout | available | `(app)/settings.tsx` + `_layout.tsx` are the integration points. |

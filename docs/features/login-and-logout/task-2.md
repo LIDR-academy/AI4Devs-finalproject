@@ -4,7 +4,7 @@ title: AuthService — sign-in/out with input validation
 slice: 1
 scenarios: [s2, s4, s9]
 status: done
-paths: [libs/services/src/services/auth.service.ts, libs/services/src/services/auth.service.test.ts, libs/services/src/services/index.ts]
+paths: [libs/supabase-services/src/services/auth.service.ts, libs/supabase-services/src/services/auth.service.test.ts, libs/supabase-services/src/services/index.ts]
 ---
 
 ## Goal
@@ -21,7 +21,7 @@ Error normalization into the typed `AuthErrorCode` contract is added in **task-2
 - [ ] Scenarios @s2, @s4 covered by service tests mocking `AuthDao` (happy path sign-in/out).
 - [ ] Scenario @s9 covered by validator unit tests — email format validation and non-empty password check.
 - [ ] Service validates inputs **before** calling the DAO (rejects invalid input without a network call).
-- [ ] `AuthService` is `abstract class` with `static` methods; no React; exported via `libs/services/src/services/index.ts`.
+- [ ] `AuthService` is `abstract class` with `static` methods; no React; exported via `libs/supabase-services/src/services/index.ts`.
 - [ ] `pnpm lint` + `pnpm check-types` + `pnpm test` green.
 - [ ] No hardcoded strings/colors/dimensions (validator returns codes/booleans, not user copy).
 

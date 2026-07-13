@@ -45,7 +45,7 @@ Everything the orchestrator generates must obey the project's existing rules (ca
   - Supabase queries → **Supabase Test Helpers**.
 - **Backend**: Supabase; schema changes via migrations (`npx supabase migration new`, `npx supabase db push`).
 
-> ✅ **Test tooling status:** Jest + RN Testing Library is **already configured** across `@helsoft/components` (`jest-expo`), `@helsoft/hooks` and `@helsoft/services` (`ts-jest`), each with a `test: jest` script; Playwright is installed at the root. The only Phase 0 gap is **StrykerJS** (not yet installed) and, if needed, **Supabase Test Helpers**.
+> ✅ **Test tooling status:** Jest + RN Testing Library is **already configured** across `@helsoft/components` (`jest-expo`), `@helsoft/hooks`, `@helsoft/services`, and `@helsoft/supabase-services` (`ts-jest`), each with a `test: jest` script; Playwright is installed at the root. The only Phase 0 gap is **StrykerJS** (not yet installed) and, if needed, **Supabase Test Helpers**.
 
 ---
 
@@ -306,7 +306,7 @@ No fixed ordering among reviewers — they are independent lenses, so running th
 
 Stryker runs on **every workspace that ships changed source — including `libs/components`** — since UI components now carry Jest unit tests. Example `stryker.config.mjs`:
 ```js
-// libs/services — logic
+// libs/services — REST logic; libs/supabase-services — Supabase logic
 export default {
   packageManager: 'pnpm',
   testRunner: 'jest',
@@ -355,7 +355,7 @@ export default {
 ## 8. Implementation roadmap
 
 **Phase 0 — Foundations (prerequisite)**
-1. **Jest + RN Testing Library is already configured** in `@helsoft/services`, `@helsoft/hooks`, `@helsoft/components` (each has a `test: jest` script). Just confirm the Turbo `test` task fans out to them, and add **Supabase Test Helpers** for DB query tests if not already present. (Note: `libs/study-buddy` and `apps/*` have no `test` script yet — add one when they first get tests.)
+1. **Jest + RN Testing Library is already configured** in `@helsoft/services`, `@helsoft/supabase-services`, `@helsoft/hooks`, `@helsoft/components` (each has a `test: jest` script). Just confirm the Turbo `test` task fans out to them, and add **Supabase Test Helpers** for DB query tests if not already present. (Note: `libs/study-buddy` and `apps/*` have no `test` script yet — add one when they first get tests.)
 2. Install **StrykerJS** (`@stryker-mutator/core`, `@stryker-mutator/jest-runner`, `@stryker-mutator/typescript-checker`) at the root as a dev dependency; add a `stryker.config.mjs` template per lib and a `mutation` Turbo task.
 3. Create `progress/` (`current.md` + `history.md`) and `docs/features/` with `.gitkeep`. No global state file — each feature gets its own folder with `tasks.md` + `task-N.md`. Add `.worktrees/` to `.gitignore` (the orchestrator creates a per-feature worktree there).
 
@@ -382,7 +382,7 @@ Resolved (locked in):
 
 - **Ticket source & lifecycle — RESOLVED:** tickets are markdown files in `user-stories/`, organized as a folder kanban: authored in `pending/`; the orchestrator `git mv`s the story to `in-progress/` when it starts (step 1) and to `done/` when the feature reaches `pr_ready` (hand-off), committed on `feat/<name>`. No tracker MCP needed.
 - **Figma access — RESOLVED:** no Figma in this repo. `implementator` builds UI from the spec, or from a pasted screenshot if the story includes one. No Figma MCP step.
-- **Jest / Expo SDK 57 / RN 0.86 / React 19 — RESOLVED:** already configured (`jest-expo` in `@helsoft/components`, `ts-jest` in `@helsoft/hooks`/`@helsoft/services`). Phase 0 only adds StrykerJS (+ Supabase Test Helpers if missing).
+- **Jest / Expo SDK 57 / RN 0.86 / React 19 — RESOLVED:** already configured (`jest-expo` in `@helsoft/components`, `ts-jest` in `@helsoft/hooks`/`@helsoft/services`/`@helsoft/supabase-services`). Phase 0 only adds StrykerJS (+ Supabase Test Helpers if missing).
 - **Review & mutation sequencing — RESOLVED:** after all slices, the quality gate runs **mutation (pre-review) → full review → mutation (post-review)**. Each is its own ≤ 2-round loop routing fixes to `implementator`; surviving mutants are killed on **both** mutation passes. In the full review `implementator` fixes **every** finding (any severity, incl. minor); after the 2-round cap, blockers/majors → escalate & block, while **minors-only may ship as documented, human-accepted risks** (recorded in `review.md`, `spec.md` Open decisions, `dod.md`).
 - **e2e vs mutation — RESOLVED:** Stryker's Jest runner won't cover Playwright `.e2e.js` visual tests; mutation thresholds apply to Jest-testable code (services/hooks/DAOs **and** component logic/behavior), while Playwright guards rendered/visual behavior. This split is documented in the `mutation-testing` skill (`.agents/skills/mutation-testing/SKILL.md`).
 - **Mutation scope & cost — RESOLVED:** always mutate **only the feature's changed files** (changed services/DAOs/hooks + changed component `.tsx`) with `coverageAnalysis: 'perTest'`. No global mutation runs. This is the accepted cost/coverage tradeoff — it keeps Stryker affordable even though it's the slowest gate and rendering-based component tests add runtime.

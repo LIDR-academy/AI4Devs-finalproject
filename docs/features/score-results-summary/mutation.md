@@ -6,7 +6,7 @@ Scoped to the feature's changed files only (excl. `*.test.*`/`*.stories.tsx`/`*.
 
 | Lib | Total | Killed | Survived | Score |
 |---|---|---|---|---|
-| `@helsoft/services` | 31 | 24 | 0 | 100.00% |
+| `@helsoft/supabase-services` | 31 | 24 | 0 | 100.00% |
 | `@helsoft/hooks` | 32 | 14 | 8 | 63.64% |
 | `@helsoft/components` | 53 | 51 | 1 | 98.08% |
 | `@helsoft/study-buddy` | 83 | 76 | 7 | 91.57% |
@@ -18,7 +18,7 @@ Scoped to the feature's changed files only (excl. `*.test.*`/`*.stories.tsx`/`*.
 
 | Lib | Total | Killed | Survived | Score |
 |---|---|---|---|---|
-| `@helsoft/services` | 31 | 24 | 0 | 100.00% |
+| `@helsoft/supabase-services` | 31 | 24 | 0 | 100.00% |
 | `@helsoft/hooks` | 34 | 16 | 9 | 64.00% |
 | `@helsoft/components` | 42 | 41 | 1 | 97.62% |
 | `@helsoft/study-buddy` | 83 | 76 | 7 | 91.57% |

@@ -4,7 +4,7 @@ title: PdfUploadDao — Supabase Storage upload + extract-pdf invoke
 slice: 1
 scenarios: [s1, s4]
 status: done
-paths: [libs/services/src/dao/pdf-upload.dao.ts, libs/services/src/dao/pdf-upload.dao.test.ts]
+paths: [libs/supabase-services/src/dao/pdf-upload.dao.ts, libs/supabase-services/src/dao/pdf-upload.dao.test.ts]
 ---
 
 ## Goal
@@ -12,7 +12,7 @@ Create the Supabase DAO for the client side of upload: `PdfUploadDao` (abstract 
 
 ## Done criteria
 - [x] `PdfUploadDao` is an `abstract class` with `static async` methods: `uploadPdf({ userId, documentId, bytes })`, `insertDocument({ documentId, userId, filename, sizeBytes })`, and `invokeExtraction(documentId)` (calls `getSupabase().functions.invoke('extract-pdf', ...)`). (`filename` moved from `uploadPdf` to `insertDocument`, the only method that actually uses it — the upload call only needs bytes + destination path.)
-- [x] Uses `getSupabase()` from `libs/services/src/supabase/supabase-client.ts` (Pattern A — Supabase DAO); returns/throws exactly what supabase-js gives back.
+- [x] Uses `getSupabase()` from `libs/supabase-services/src/supabase/supabase-client.ts` (Pattern A — Supabase DAO); returns/throws exactly what supabase-js gives back.
 - [x] Contains **no PDF parsing** — the client never parses (supports @s4). Only uploads + inserts + invokes.
 - [x] Scenarios @s1 / @s4 covered by `pdf-upload.dao.test.ts` mocking `getSupabase()` (storage, from().insert, functions.invoke) and asserting the right calls + args and pass-through of the raw result/error.
 - [x] Not exported through a barrel (DAOs are consumed by services only, per `hooks-service-dao.mdc`).
@@ -20,5 +20,5 @@ Create the Supabase DAO for the client side of upload: `PdfUploadDao` (abstract 
 - [x] No hardcoded strings/colors/dimensions (bucket names + limits come from constants/config).
 
 ## Notes
-- Mirror `libs/services/src/dao/auth.dao.ts` / `locale-preference.dao.ts` shape.
+- Mirror `libs/supabase-services/src/dao/auth.dao.ts` / `locale-preference.dao.ts` shape.
 - Platform read of the picked file (web `Blob` vs native URI via `expo-file-system`) is the only place that touches platform specifics — keep it isolated here so service/hook/UI stay platform-agnostic (risk R5). The picker itself lives at the app/wiring layer; the DAO receives bytes.

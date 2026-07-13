@@ -4,7 +4,7 @@ title: Extraction analytics events
 slice: 3
 scenarios: [s17]
 status: done
-paths: [libs/services/src/services/pdf-extraction.service.ts, libs/study-buddy/src/components/pdf-upload/]
+paths: [libs/supabase-services/src/services/pdf-extraction.service.ts, libs/study-buddy/src/components/pdf-upload/]
 ---
 
 ## Goal
@@ -19,4 +19,4 @@ Emit lightweight, PII-free extraction telemetry so the PRD's funnel (generation 
 
 ## Notes
 - Confirmed scope (spec Resolved decisions → [Analytics]); the three events are locked, not optional.
-- No analytics vendor is installed yet; add a minimal sink to `@helsoft/services` (or reuse whatever the project standardizes on) — do not pull a heavy SDK without justification (reviewer_architecture).
+- No analytics vendor is installed yet; add a minimal sink to `@helsoft/supabase-services` (or reuse whatever the project standardizes on) — do not pull a heavy SDK without justification (reviewer_architecture).

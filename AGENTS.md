@@ -30,6 +30,7 @@ Target a single workspace:
 ```bash
 pnpm --filter app-study-buddy dev         # Expo dev server (also: web / ios / android)
 pnpm --filter @helsoft/components dev     # Storybook on port 6007 (lib-with-storybook: 6006, study-buddy: 6008, activities: 6009)
+pnpm turbo run check-types --filter=@helsoft/supabase-services
 pnpm turbo run check-types --filter=@helsoft/services
 ```
 
@@ -49,7 +50,7 @@ npx supabase db push
 Turborepo monorepo with three top-level areas:
 
 - **`apps/app-study-buddy`** — universal Expo app (SDK 57, Expo Router, React Native 0.86, React 19; ships web + iOS + Android from one codebase). App code stays minimal — screens in `src/app/` (file-based routing) should mostly compose from libs. **Expo SDK 57 changed significantly: consult https://docs.expo.dev/versions/v57.0.0/ before writing Expo code** (see `apps/app-study-buddy/AGENTS.md`).
-- **`libs/*`** — all shared/business code, published as `@helsoft/*` workspace packages: `types` (plain TS types, one `type-name.ts` file each), `components` (shared UI + Storybook stories, atomic design), `activities` (activity-slide organisms — multiple choice, fill-in-the-blank, flashcard, matching, open-ended, etc.; Storybook + Jest + Playwright + Stryker like `components`, depends on `components` for shared atoms/molecules/theme), `hooks`, `services` (services + DAOs + Supabase client), `study-buddy` (the app's feature lib — business logic for the app lives here, not in the app), `lib-with-storybook` (template for new Storybook-enabled libs; copy its story patterns).
+- **`libs/*`** — all shared/business code, published as `@helsoft/*` workspace packages: `types` (plain TS types, one `type-name.ts` file each), `components` (shared UI + Storybook stories, atomic design), `activities` (activity-slide organisms — multiple choice, fill-in-the-blank, flashcard, matching, open-ended, etc.; Storybook + Jest + Playwright + Stryker like `components`, depends on `components` for shared atoms/molecules/theme), `hooks`, `services` (non-Supabase services + DAOs: REST/`fetch`, AsyncStorage, etc.), `supabase-services` (Supabase services + DAOs + client), `study-buddy` (the app's feature lib — business logic for the app lives here, not in the app), `lib-with-storybook` (template for new Storybook-enabled libs; copy its story patterns).
 - **`supabase/`** — backend is Supabase (auth, Postgres, storage, edge functions). CLI config and migrations only.
 
 ### Data-flow layering (enforced — see `hooks-service-dao.mdc`)
@@ -58,14 +59,18 @@ Turborepo monorepo with three top-level areas:
 Component → Hook → Service → DAO → Supabase / external API
 ```
 
-- **DAOs** (`libs/services/src/dao/{feature}.dao.ts`, `{Feature}Dao` abstract class, static methods): raw data access only. Two kinds — Supabase DAOs use `getSupabase()` from `libs/services/src/supabase/supabase-client.ts`; external-API DAOs (e.g. AI provider with the user's own key) use `fetch`. One DAO class per data source.
-- **Services** (`libs/services/src/services/{feature}.service.ts`, `{Feature}Service` abstract class): validation + business logic; call DAOs, never fetch directly; no React.
+Two service libs — pick by data source:
+
+- **`@helsoft/services`** — non-Supabase DAOs/services (`fetch`, AsyncStorage, etc.). Paths: `libs/services/src/dao|services/{feature}.{dao|service}.ts`.
+- **`@helsoft/supabase-services`** — Supabase DAOs/services + `initSupabase`/`getSupabase`. Paths: `libs/supabase-services/src/dao|services/{feature}.{dao|service}.ts`.
+- **DAOs** (`{Feature}Dao` abstract class, static methods): raw data access only. One DAO class per data source.
+- **Services** (`{Feature}Service` abstract class): validation + business logic; call DAOs, never fetch directly; no React.
 - **Hooks** (`libs/hooks/src/hooks/use-{feature}.ts`): React integration wrapping services (never DAOs directly). tanstack-query is the intended pattern for data-fetching hooks but is not installed yet — add it to `@helsoft/hooks` when first needed.
 - Each layer exports through its `index.ts` barrel files.
 
 ### Supabase client wiring
 
-`initSupabase()`/`getSupabase()` live in `@helsoft/services`. The app initializes the client at startup in `apps/app-study-buddy/src/lib/supabase.ts` from `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` (copy `apps/app-study-buddy/.env.example` to `.env`). Anything in libs just calls `getSupabase()` — it throws if init was skipped. Session state comes from `useSession()` in `@helsoft/hooks`.
+`initSupabase()`/`getSupabase()` live in `@helsoft/supabase-services` (not `@helsoft/services`). The app initializes the client at startup in `apps/app-study-buddy/src/lib/supabase.ts` from `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` (copy `apps/app-study-buddy/.env.example` to `.env`). Anything in libs just calls `getSupabase()` — it throws if init was skipped. Session state comes from `useSession()` in `@helsoft/hooks`.
 
 ## Conventions
 

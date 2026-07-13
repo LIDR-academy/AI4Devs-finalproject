@@ -6,8 +6,8 @@ scenarios: [s7, s12]
 status: done
 paths:
   - libs/services/src/services/locale-preference.service.ts
-  - libs/services/src/services/index.ts
-  - libs/services/src/index.ts
+  - libs/supabase-services/src/services/index.ts
+  - libs/supabase-services/src/index.ts
 ---
 
 ## Goal

@@ -4,7 +4,7 @@ title: Server error contract — scanned / page-limit / corrupt detection + type
 slice: 2
 scenarios: [s8, s11, s12, s14]
 status: done
-paths: [supabase/functions/extract-pdf/, libs/services/src/services/pdf-extraction.service.ts]
+paths: [supabase/functions/extract-pdf/, libs/supabase-services/src/services/pdf-extraction.service.ts]
 ---
 
 ## Goal

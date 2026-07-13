@@ -17,7 +17,7 @@ Create the persistence foundation via a single Supabase migration (`npx supabase
 - [x] RLS enabled on both tables; policies for select/insert/update/delete restricted to `user_id = auth.uid()` (images via parent-document ownership).
 - [x] Storage policies restrict object access to the owner (leading `{user_id}` path segment = `auth.uid()`) on both buckets.
 - [x] Scenario @s14 covered by RLS assertions (real, executed against the local Supabase stack — Jest + `@supabase/supabase-js`, not the Deno-only Supabase Test Helpers, per the sandbox adaptation) proving cross-user isolation + unauthenticated denial; @s2/@s3 supported by the `document_images` (page/position) + `documents.pages` (order) shape.
-- [x] `pnpm lint` + `pnpm check-types` + `pnpm test` green (no code churn; migration + any test helpers only). RLS test isolated in `pnpm --filter @helsoft/services test:rls` (Docker-dependent, excluded from the default run) — see `tdd.md`.
+- [x] `pnpm lint` + `pnpm check-types` + `pnpm test` green (no code churn; migration + any test helpers only). RLS test isolated in `pnpm --filter @helsoft/supabase-services test:rls` (Docker-dependent, excluded from the default run) — see `tdd.md`.
 
 ## Notes
 - Migration only — no app/lib code. Follow `.agents/rules/global.mdc`: schema changes via `supabase migration new` then `db push`.

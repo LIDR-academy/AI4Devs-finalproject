@@ -7,7 +7,7 @@ plus targeted re-verification of Round 2's one open finding (unmemoized `ApiKeyP
 `useApiKeyState` context value, `use-api-key.ts:108,144-145`), fixed in `33cb017`.
 
 Read in full: `libs/hooks/src/hooks/use-api-key.ts` (+`.test.ts`),
-`libs/services/src/dao/api-key.dao.ts`, `libs/services/src/services/api-key.service.ts`,
+`libs/supabase-services/src/dao/api-key.dao.ts`, `libs/supabase-services/src/services/api-key.service.ts`,
 `supabase/functions/manage-api-key/validate-key.ts`, `libs/components/src/organisms/{api-key-form,
 api-key-required-notice}/*`, `libs/study-buddy/src/components/{api-key-settings,api-key-gate}/*`,
 `apps/app-study-buddy/src/app/(app)/{_layout.tsx,settings.tsx,upload.tsx}`.

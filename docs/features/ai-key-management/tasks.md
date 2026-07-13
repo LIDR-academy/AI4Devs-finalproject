@@ -15,13 +15,13 @@ Index of atomic tasks (one `task-N.md` each), grouped by vertical slice. `orches
 | [task-1](./task-1.md) — DB migration: `user_ai_keys` + Vault + RLS | 1 | @s13 | done | supabase/migrations/ |
 | [task-2](./task-2.md) — Edge Function `manage-api-key`: validate-then-store | 1 | @s1,@s12,@s13 | done | supabase/functions/manage-api-key/ |
 | [task-3](./task-3.md) — Types: `AiProvider`, `ApiKeyStatus`, save params | 1 | @s11 | done | libs/types/src/api-key.ts |
-| [task-4](./task-4.md) — `ApiKeyDao` (invoke save + status select) | 1 | @s1,@s3,@s11 | done | libs/services/src/dao/api-key.dao.ts |
-| [task-5](./task-5.md) — `ApiKeyService` (validate + status) | 1 | @s1,@s3,@s4,@s5 | done | libs/services/src/services/api-key.service.ts |
+| [task-4](./task-4.md) — `ApiKeyDao` (invoke save + status select) | 1 | @s1,@s3,@s11 | done | libs/supabase-services/src/dao/api-key.dao.ts |
+| [task-5](./task-5.md) — `ApiKeyService` (validate + status) | 1 | @s1,@s3,@s4,@s5 | done | libs/supabase-services/src/services/api-key.service.ts |
 | [task-6](./task-6.md) — `useApiKey` hook (load status + save) | 1 | @s1,@s2,@s3 | done | libs/hooks/src/hooks/use-api-key.ts |
 | [task-7](./task-7.md) — `ApiKeyForm` organism (Content + Loading) | 1 | @s1,@s2,@s4 | done | libs/components/src/organisms/api-key-form/ |
 | [task-8](./task-8.md) — `ApiKeySettings` wiring + settings screen + integration | 1 | @s1,@s3,@s4 | done | libs/study-buddy/src/components/api-key-settings/, apps/app-study-buddy/src/app/(app)/settings.tsx |
 | [task-9](./task-9.md) — Edge Function: invalid-key rejection + remove action | 2 | @s6,@s8,@s12 | done | supabase/functions/manage-api-key/ |
-| [task-10](./task-10.md) — Error contract + remove backbone (type/DAO/service/hook) | 2 | @s6,@s7,@s8,@s9 | done | libs/types/src/api-key-error.ts, libs/services/src/dao/api-key.dao.ts, libs/services/src/services/api-key.service.ts, libs/hooks/src/hooks/use-api-key.ts |
+| [task-10](./task-10.md) — Error contract + remove backbone (type/DAO/service/hook) | 2 | @s6,@s7,@s8,@s9 | done | libs/types/src/api-key-error.ts, libs/supabase-services/src/dao/api-key.dao.ts, libs/supabase-services/src/services/api-key.service.ts, libs/hooks/src/hooks/use-api-key.ts |
 | [task-11](./task-11.md) — `ApiKeyForm` Empty + Error + Retry + Remove + wiring | 2 | @s5,@s6,@s7,@s8,@s9 | done | libs/components/src/organisms/api-key-form/, libs/study-buddy/src/components/api-key-settings/ |
 | [task-12](./task-12.md) — Guard rail: `ApiKeyRequiredNotice` + `ApiKeyGate` + upload wiring | 2 | @s10,@s14 | done | libs/components/src/organisms/api-key-required-notice/, libs/study-buddy/src/components/api-key-gate/, apps/app-study-buddy/src/app/(app)/upload.tsx |
 | [task-13](./task-13.md) — i18n keys `settings.apiKey.*` (en/es/pt/de) | 3 | @s15 | done | libs/localization/src/resources/, libs/localization/src/coverage/migration-coverage.test.ts |

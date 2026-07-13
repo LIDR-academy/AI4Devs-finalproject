@@ -14,7 +14,7 @@ BASE="${1:-main}"
 ROOT="$(git rev-parse --show-toplevel)"
 cd "$ROOT"
 
-LIBS=("libs/services:@helsoft/services" "libs/hooks:@helsoft/hooks" "libs/components:@helsoft/components")
+LIBS=("libs/services:@helsoft/services" "libs/supabase-services:@helsoft/supabase-services" "libs/hooks:@helsoft/hooks" "libs/components:@helsoft/components")
 
 any=0
 for entry in "${LIBS[@]}"; do

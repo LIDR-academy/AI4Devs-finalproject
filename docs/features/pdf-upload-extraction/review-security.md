@@ -51,27 +51,27 @@ size (OWASP API4:2023 Unrestricted Resource Consumption / A04:2021 Insecure Desi
    (`index.ts:110`, `:120`). No Storage/parse work happens after this point for the rejected file.
 
 4. **Deno mirror matches the Jest-tested source — no logic drift.** Diffed
-   `libs/services/src/pdf-extraction/file-size-guard.ts` against
+   `libs/supabase-services/src/pdf-extraction/file-size-guard.ts` against
    `supabase/functions/extract-pdf/_shared/file-size-guard.ts` directly: the only differences are
    the import path (`@helsoft/types` vs. local `./types.ts`, expected per the locked Deno-mirror
    convention) and comment placement. The executable logic is byte-identical:
    `sizeBytes > limits.maxSizeBytes` in both files.
 
 5. **Real, non-vacuous test coverage — confirmed and re-run.**
-   `libs/services/src/pdf-extraction/file-size-guard.test.ts:8-24` asserts all four boundary
+   `libs/supabase-services/src/pdf-extraction/file-size-guard.test.ts:8-24` asserts all four boundary
    cases: well-under-limit (false), well-over-limit (true), **exactly at the limit** (false —
    correctly exclusive upper bound, matching spec.md's "exceeds the size limit" language), and
    **one byte over the limit** (true — mutation-kill-grade boundary test, not just a coarse
    over/under split). Re-ran the suite directly: `PASS
    src/pdf-extraction/file-size-guard.test.ts`, 4/4 green. Also re-ran the full
-   `@helsoft/services` suite (84/84 green), `@helsoft/hooks` (31/31), `@helsoft/components`
+   `@helsoft/supabase-services` suite (84/84 green), `@helsoft/hooks` (31/31), `@helsoft/components`
    (94/94), and `@helsoft/study-buddy` (55/55) — nothing regressed.
 
 6. **Residual-gap check.** No bypass path found: the guard sits on the one code path every
    `documentId`-driven extraction request must go through (`Deno.serve`'s single handler), keyed
    off the Storage-reported size of the object the server itself downloaded — there is no
    alternate route to `MupdfExtractionAdapter.extract` that skips it. `documents.size_bytes`
-   (`libs/services/src/dao/pdf-upload.dao.ts:50`) is still populated at upload time from the
+   (`libs/supabase-services/src/dao/pdf-upload.dao.ts:50`) is still populated at upload time from the
    client-computed `sizeBytes` and is never re-verified against the real object size — but this
    is a display/analytics metadata field only (grepped every consumer: the upload component, its
    tests, and the analytics `size_bytes` property at `pdf-extraction.service.ts:123`); it is never

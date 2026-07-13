@@ -2,7 +2,7 @@
 
 Scope: `git diff c317a5a..HEAD` (HEAD `758d1c8`) + the round-1 fix diff on top (uncommitted at review time) — the entire feature, all 3 vertical slices, all 13 `@s` scenarios. Supersedes the historical slice-3 note (slices were already reviewed clean and committed; this is the post-slices full 6-reviewer gate, after the pre-review mutation pass PASSED at 91.16%).
 
-CI: green throughout — `pnpm lint`, `pnpm check-types`, fresh forced (non-cached) `pnpm test` across all affected libs (`@helsoft/components`, `@helsoft/study-buddy`, `@helsoft/hooks`, `@helsoft/services`, `@helsoft/types`, `@helsoft/localization`), and `pnpm --filter @helsoft/components exec playwright test --reporter=list results-summary.e2e.js` (6/6) — re-confirmed green both before round 1 and after the round-1 fix.
+CI: green throughout — `pnpm lint`, `pnpm check-types`, fresh forced (non-cached) `pnpm test` across all affected libs (`@helsoft/components`, `@helsoft/study-buddy`, `@helsoft/hooks`, `@helsoft/supabase-services`, `@helsoft/types`, `@helsoft/localization`), and `pnpm --filter @helsoft/components exec playwright test --reporter=list results-summary.e2e.js` (6/6) — re-confirmed green both before round 1 and after the round-1 fix.
 
 Lenses: all six run in round 1 (no skips — diff touches UI components, DAO/service/migration, and hooks/queries).
 

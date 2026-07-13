@@ -8,7 +8,7 @@ Scope: entire feature diff, base `0dfc914` → `HEAD` (`904d06e`), i.e. `git dif
 `6474a15` / `2073e65` / `904d06e` (base `00cbca3` → `HEAD`).
 
 ## Commands run for real, this round (not trusted from tdd.md/mutation.md)
-- `pnpm --filter @helsoft/services test` → **12/12 suites, 84/84 tests green.**
+- `pnpm --filter @helsoft/supabase-services test` → **12/12 suites, 84/84 tests green.**
 - `pnpm --filter @helsoft/hooks test` → **6/6 suites, 31/31 tests green.**
 - `pnpm --filter @helsoft/components test` → **6/6 suites, 94/94 tests green.**
 - `pnpm --filter @helsoft/study-buddy test` → **4/4 suites, 55/55 tests green.**
@@ -30,14 +30,14 @@ is not inflated.
 
 ## N1/N2/N3 (my round-1 findings) — verified against current code, not the commit message
 
-**N1 — RESOLVED.** `libs/services/src/services/pdf-extraction.service.ts:36-45` now exports
+**N1 — RESOLVED.** `libs/supabase-services/src/services/pdf-extraction.service.ts:36-45` now exports
 `PDF_EXTRACTION_ERROR_CODES: Record<PdfExtractionErrorCode, true>` — an exhaustive-by-construction
 map (all 8 codes), replacing the old unchecked `KNOWN_ERROR_CODES: Set`. `grep -rn
 "KNOWN_ERROR_CODES"` across the repo returns nothing — the old name is fully gone, not just
 shadowed. `libs/hooks/src/hooks/use-pdf-extraction.ts:27-30`'s `isPdfExtractionErrorShape` now
 derives its guard via `Object.hasOwn(PDF_EXTRACTION_ERROR_CODES, code)` against the single
-`@helsoft/services`-exported source, instead of re-declaring an independent `Set` — the duplication
-is gone. `libs/hooks/src/hooks/use-pdf-extraction.test.ts:4-13`'s `jest.mock('@helsoft/services',
+`@helsoft/supabase-services`-exported source, instead of re-declaring an independent `Set` — the duplication
+is gone. `libs/hooks/src/hooks/use-pdf-extraction.test.ts:4-13`'s `jest.mock('@helsoft/supabase-services',
 …)` mock was updated to the same `Record<…, true>` shape, and the hook suite is green (31/31).
 TDD evidence: `tdd.md:937-945` documents this as a same-shape refactor (no new failing test needed
 beyond the existing suite, which already exercises every code) — appropriately, since this was a
@@ -52,7 +52,7 @@ not grepping for its absence: no `?? 'idle'` string anywhere in the file). `pdf-
 existing 4-stage coverage re-runs green with no test changes needed, matching `tdd.md:947-951`'s
 narration.
 
-**N3 — RESOLVED.** `libs/services/src/services/pdf-extraction.service.test.ts:184` is now `const
+**N3 — RESOLVED.** `libs/supabase-services/src/services/pdf-extraction.service.test.ts:184` is now `const
 oversizeBytes = PDF_EXTRACTION_LIMITS.maxSizeBytes + 1;`, importing the constant at line 14 — the
 hardcoded `10 * 1024 * 1024 + 1` literal is gone. Mirrors `extraction-failure-detection.test.ts`'s
 pre-existing correct pattern exactly (also re-verified: `extraction-failure-detection.test.ts:49`
@@ -60,7 +60,7 @@ derives its own boundary from `PDF_EXTRACTION_LIMITS.maxPages + 1`).
 
 ## The other 6 findings from round 1 (M1-M3, N4-N6) — spot-verified against current code, since a full-diff review can't selectively ignore majors
 
-**M1 (security) — RESOLVED.** New `libs/services/src/pdf-extraction/file-size-guard.ts` —
+**M1 (security) — RESOLVED.** New `libs/supabase-services/src/pdf-extraction/file-size-guard.ts` —
 `isFileTooLarge(sizeBytes, limits) => sizeBytes > limits.maxSizeBytes`, 4 tests including both exact
 boundaries (`file-size-guard.test.ts:8-24`). Wired into
 `supabase/functions/extract-pdf/index.ts:94-97`, run against `sourceBlob.size` (the actual
@@ -133,7 +133,7 @@ which is a credible, specific TDD anecdote, not generic filler. Regression-check
    precedence test at `PDF_EXTRACTION_LIMITS.maxPages + 1` pages (the existing test used 25, far
    past the boundary) — this is the correct fix for a `>` → `>=` mutation-kill gap.
 8. **`test-utils/` fixture-builder exclusion** — confirmed in
-   `.agents/skills/mutation-testing/scripts/run-mutation.sh` and `libs/services/stryker.config.mjs`:
+   `.agents/skills/mutation-testing/scripts/run-mutation.sh` and `libs/supabase-services/stryker.config.mjs`:
    both now exclude `**/test-utils/**` from the mutation scope/diff filter, with an inline comment
    explaining why (pure fixture builders, only ever imported from `*.test.ts`). Reasonable, not a
    loophole — `build-solid-png.ts`/`build-test-pdf.ts` are genuinely not shipped logic.

@@ -4,7 +4,7 @@ title: Error contract + remove backbone (type / DAO / service / hook)
 slice: 2
 scenarios: [s6, s7, s8, s9]
 status: done
-paths: [libs/types/src/api-key-error.ts, libs/types/src/index.ts, libs/services/src/dao/api-key.dao.ts, libs/services/src/services/api-key.service.ts, libs/services/src/services/api-key.service.test.ts, libs/services/src/dao/api-key.dao.test.ts, libs/hooks/src/hooks/use-api-key.ts, libs/hooks/src/hooks/use-api-key.test.ts]
+paths: [libs/types/src/api-key-error.ts, libs/types/src/index.ts, libs/supabase-services/src/dao/api-key.dao.ts, libs/supabase-services/src/services/api-key.service.ts, libs/supabase-services/src/services/api-key.service.test.ts, libs/supabase-services/src/dao/api-key.dao.test.ts, libs/hooks/src/hooks/use-api-key.ts, libs/hooks/src/hooks/use-api-key.test.ts]
 ---
 
 ## Goal

@@ -11,7 +11,7 @@ components, app screens/layout). Zero findings.
   (`api-key-form.tsx`, `api-key-required-notice.tsx`) import no hook/service; `ApiKeySettings`/
   `ApiKeyGate` (`libs/study-buddy/src/components/...`) call only `useApiKey()`; the hook
   (`libs/hooks/src/hooks/use-api-key.ts`) calls only `ApiKeyService`; the service
-  (`libs/services/src/services/api-key.service.ts`) calls only `ApiKeyDao`, no `fetch`, no React
+  (`libs/supabase-services/src/services/api-key.service.ts`) calls only `ApiKeyDao`, no `fetch`, no React
   import. `apps/app-study-buddy/src/app/(app)/settings.tsx`, `upload.tsx`, `_layout.tsx` contain
   no business logic — pure composition/wiring.
 - New `ApiKeyProvider`/context pattern in `use-api-key.ts:140-159` does not bypass Hook→Service
@@ -21,7 +21,7 @@ components, app screens/layout). Zero findings.
   HEAD:...` and `cat -n` (matches `33cb017`'s diff; an intermediate `Read` tool result in this
   session momentarily displayed a version missing the `useMemo`, contradicted by every other
   independent check — see report to reviews_lead).
-- No DTO leakage: `ApiKeyDao.getApiKeyStatus` (`libs/services/src/dao/api-key.dao.ts:24-32`)
+- No DTO leakage: `ApiKeyDao.getApiKeyStatus` (`libs/supabase-services/src/dao/api-key.dao.ts:24-32`)
   keeps its raw `UserAiKeyRow` Supabase shape private and returns only the public `ApiKeyStatus`
   type; the Edge Function's own internal types (`MaskedApiKeyStatus`, `SaveApiKeyResult`, etc. in
   `handle-save.ts`/`handle-remove.ts`) never cross into `libs/*` — the DAO only consumes the
@@ -30,9 +30,9 @@ components, app screens/layout). Zero findings.
   `useApiKey` and `ApiKeyProvider` via the wildcard); `libs/components/src/organisms/index.ts:1-2`
   exports both new organisms; `libs/study-buddy/src/index.ts:3-4` exports both new feature
   components. No dead per-component barrels (Round 1 finding #10 stays fixed — confirmed no
-  `api-key-form/index.ts`/`api-key-required-notice/index.ts` exist). `libs/services/src/index.ts`
+  `api-key-form/index.ts`/`api-key-required-notice/index.ts` exist). `libs/supabase-services/src/index.ts`
   and `libs/types/src/index.ts` correctly export the service/types layer only — DAOs are not
-  barrel-exported from `@helsoft/services` (by design, consistent with the rest of the codebase).
+  barrel-exported from `@helsoft/supabase-services` (by design, consistent with the rest of the codebase).
 - No unapproved new dependencies: `git diff 7e08dee^...HEAD -- '**/package.json'` shows exactly
   one change, `libs/components/package.json` gaining `@helsoft/types: workspace:*` — an internal
   workspace dep needed for `ApiKeyForm`'s `ApiKeyStatus` prop type, consistent with the existing

@@ -11,7 +11,7 @@
 
 | Library | Total | Killed | Survived | NoCoverage | Score | Status |
 |---------|-------|--------|----------|-----------|-------|--------|
-| @helsoft/services | 159 | 84 | 1 | — | 98.82% | **1 accepted** |
+| @helsoft/supabase-services | 159 | 84 | 1 | — | 98.82% | **1 accepted** |
 | @helsoft/hooks | 30 | 9 | 0 | 1 | 90.00% | **Unreachable** |
 | @helsoft/components | 47 | 30 | 16 | — | 65.22% | **16 accepted** |
 | @helsoft/study-buddy | 45 | 45 | 0 | — | 100.00% | **PASS** |
@@ -24,7 +24,7 @@
 
 ## Surviving Mutants — Final Tally
 
-### @helsoft/services (1 survivor)
+### @helsoft/supabase-services (1 survivor)
 
 #### `src/services/pdf-extraction.constants.ts` — Line 48
 
@@ -104,7 +104,7 @@
 
 | Library | Round 2 | Round 3 | Δ Killed | Δ Survived | Δ Score | Notes |
 |---------|---------|---------|----------|-----------|---------|-------|
-| @helsoft/services | 84.26% (91K/17S) | 98.82% (84K/1S) | −7 | −16 | +14.56% | 1 accepted survivor; integration gaps eliminated |
+| @helsoft/supabase-services | 84.26% (91K/17S) | 98.82% (84K/1S) | −7 | −16 | +14.56% | 1 accepted survivor; integration gaps eliminated |
 | @helsoft/hooks | 90.00% (9K/0S) | 90.00% (9K/0S) | 0 | 0 | 0% | Unchanged; 1 unreachable NoCoverage |
 | @helsoft/components | 65.22% (30K/16S) | 65.22% (30K/16S) | 0 | 0 | 0% | Unchanged; all 16 are accepted styling |
 | @helsoft/study-buddy | 86.67% (39K/6S) | 100.00% (45K/0S) | +6 | −6 | +13.33% | All round-2 survivors killed in round 3 |
@@ -119,7 +119,7 @@
 **Analysis:**
 
 **Feature's changed source files in testable layers (services, hooks, components, study-buddy):**
-- @helsoft/services: 1 survivor (accepted, explicitly out-of-scope)
+- @helsoft/supabase-services: 1 survivor (accepted, explicitly out-of-scope)
 - @helsoft/hooks: 0 real survivors (1 unreachable, acceptable)
 - @helsoft/components: 16 survivors (all styling, explicitly accepted per human direction)
 - @helsoft/study-buddy: 0 survivors ✓ 100% threshold met
@@ -163,7 +163,7 @@ The 2-round full-review + mutation loop cap was reached with 39 survivors (round
 
 - **228 total survivors, all in three accepted categories:**
   1. **16 styling mutations** (`libs/components/src/organisms/pdf-upload-panel/pdf-upload-panel.tsx`, `StyleSheet.create` properties) — accepted as a presentation/rendering concern outside unit-test scope; guarded by the Playwright e2e suite instead.
-  2. **1 `PDF_IMAGES_BUCKET` constant** (`libs/services/src/services/pdf-extraction.constants.ts:48`) — accepted; genuinely unreachable from any Jest-tested code path (Deno Edge Function only).
+  2. **1 `PDF_IMAGES_BUCKET` constant** (`libs/supabase-services/src/services/pdf-extraction.constants.ts:48`) — accepted; genuinely unreachable from any Jest-tested code path (Deno Edge Function only).
   3. **211 translation-value mutations** (`libs/localization/src/resources/{en,es,pt,de}.ts`, this feature's new `upload.*` keys) — accepted as a content/translation-accuracy concern outside unit-test scope (the existing coverage test asserts key existence/alignment, not literal translated text); guarded by TypeScript's `TranslationResource` exhaustiveness at build time.
 - **1 hooks NoCoverage** (unreachable fallback) — acceptable, pre-existing pattern.
 - **1 documented equivalent** (`// Stryker disable next-line OptionalChaining` at `pdf-extraction.service.ts`) — verified genuinely equivalent, this repo's first use of the mechanism.

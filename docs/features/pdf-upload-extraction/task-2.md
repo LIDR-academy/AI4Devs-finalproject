@@ -23,5 +23,5 @@ Define the shared, library-agnostic contract that the client layers, the Edge Fu
 
 ## Notes
 - Mirror the existing `libs/types/src/lesson.ts` / `auth-error.ts` style (plain exported `type`s).
-- This file holds only the **shape** `PdfExtractionLimits`. The locked **values** (10 MB / 20 pages, spec decision #1) live in the constant `PDF_EXTRACTION_LIMITS` in `libs/services/src/services/pdf-extraction.constants.ts` — keep the value out of the types lib (plain types only).
+- This file holds only the **shape** `PdfExtractionLimits`. The locked **values** (10 MB / 20 pages, spec decision #1) live in the constant `PDF_EXTRACTION_LIMITS` in `libs/supabase-services/src/services/pdf-extraction.constants.ts` — keep the value out of the types lib (plain types only).
 - The Edge Function (Deno) can't import the workspace package directly; it mirrors this contract (and the limits constant) in `supabase/functions/extract-pdf/_shared/` — keep this file the source of truth and keep them in sync (noted in task-3).

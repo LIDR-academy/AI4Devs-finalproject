@@ -4,7 +4,7 @@ title: AuthDao — raw Supabase email/password sign-in & sign-out
 slice: 1
 scenarios: [s2, s4]
 status: done
-paths: [libs/services/src/dao/auth.dao.ts, libs/services/src/dao/auth.dao.test.ts]
+paths: [libs/supabase-services/src/dao/auth.dao.ts, libs/supabase-services/src/dao/auth.dao.test.ts]
 ---
 
 ## Goal
@@ -18,6 +18,6 @@ Create the Supabase DAO for authentication: `AuthDao` (abstract class, static me
 - [ ] No hardcoded strings/colors/dimensions.
 
 ## Notes
-- Follows Pattern A (Supabase DAO) in `.agents/rules/hooks-service-dao.mdc`; mirror the shape of `libs/services/src/dao/locale-preference.dao.ts`.
+- Follows Pattern A (Supabase DAO) in `.agents/rules/hooks-service-dao.mdc`; mirror the shape of `libs/supabase-services/src/dao/locale-preference.dao.ts`.
 - `getSupabase()` throws if init was skipped — the service layer decides how to treat that; the DAO just calls it.
-- Types `Session`/`User` are re-exported from `@helsoft/services` (`libs/services/src/index.ts`).
+- Types `Session`/`User` are re-exported from `@helsoft/supabase-services` (`libs/supabase-services/src/index.ts`).

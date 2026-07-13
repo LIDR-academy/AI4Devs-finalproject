@@ -9,11 +9,11 @@ Re-run directly by `orchestrator_lead` (same script/base ref as Round 1) after t
 
 | Lib | total | killed | survived | no cov | score (Δ vs Round 1) |
 |---|---:|---:|---:|---:|---:|
-| @helsoft/services | 71 | 67 | 4 | 0 | **94.37%** (was 91.55%) |
+| @helsoft/supabase-services | 71 | 67 | 4 | 0 | **94.37%** (was 91.55%) |
 | @helsoft/hooks | 28 | 22 | 6 | 0 | **84.21%** (was 80.00%, but same 6 survivors — this gap was never addressed by the review fixes) |
 | @helsoft/components | 73 | 51 | 22 | 0 | **69.86%** (was 62.30%) |
 
-### @helsoft/services — 4 remain (all Round 1 §"real, killable" #3-6; #1/#2 now fixed)
+### @helsoft/supabase-services — 4 remain (all Round 1 §"real, killable" #3-6; #1/#2 now fixed)
 Round 1's #1 (`api-key.service.ts:28` NoCoverage) and #2 (`:26` tautological check) are **fixed** —
 `api-key.service.test.ts` now has "does not classify a differently-coded FunctionsHttpError body,"
 "with an empty body," and "normalizes to network_error when the body cannot be read." Still open,
@@ -66,7 +66,7 @@ for a final verification pass before the mutation gate can close.
 
 ### Round 2 fix pass (implementator) — results
 
-All four `@helsoft/services` message-content survivors killed with one-line `.message`
+All four `@helsoft/supabase-services` message-content survivors killed with one-line `.message`
 assertions added to the existing matching-code test in each case (`api-key.service.test.ts`'s
 "normalizes an invalid_key ..." and "...transport failure..." tests; `auth.service.test.ts`'s
 "normalizes a Supabase invalid-login error..." and "...retryable-fetch error..." tests).
@@ -130,7 +130,7 @@ reasoning, different file), these 3 are excluded as equivalent — no test added
 
 Re-run: **100%** (`api-key-form.tsx` 69/69, `api-key-required-notice.tsx` 4/4).
 
-Final scores: `@helsoft/services` 100% (71/71), `@helsoft/hooks` 100% (25/25 killed + 3 confirmed
+Final scores: `@helsoft/supabase-services` 100% (71/71), `@helsoft/hooks` 100% (25/25 killed + 3 confirmed
 equivalent, excluded), `@helsoft/components` 100% (73/73). Mutation gate closed.
 
 ---
@@ -145,7 +145,7 @@ equivalent, excluded), `@helsoft/components` 100% (73/73). Mutation gate closed.
 
 | Lib | File(s) mutated | total | killed | survived | no cov | score |
 |---|---|---:|---:|---:|---:|---:|
-| @helsoft/services | api-key.dao.ts, api-key.service.ts, auth.service.ts, typed-error.ts | 71 (excl. 51 static/errors) | 65 | 5 | 1 | **91.55%** |
+| @helsoft/supabase-services | api-key.dao.ts, api-key.service.ts, auth.service.ts, typed-error.ts | 71 (excl. 51 static/errors) | 65 | 5 | 1 | **91.55%** |
 | @helsoft/hooks | use-api-key.ts | 30 (excl. 12 static) | 18 | 6 | 0 | **80.00%** |
 | @helsoft/components | api-key-form.tsx, api-key-required-notice.tsx | 61 (excl. 2 errors) | 38 | 23 | 0 | **62.30%** |
 
@@ -155,7 +155,7 @@ Per-file: `api-key.dao.ts` 100% (0 survived) · `api-key.service.ts` 77.78% (3 s
 
 ## Surviving mutants — `file:line:col` + mutation, with judgment call
 
-### @helsoft/services — 6 real, all killable with a targeted assertion (no equivalents)
+### @helsoft/supabase-services — 6 real, all killable with a targeted assertion (no equivalents)
 
 1. **`api-key.service.ts:28:12`** (NoCoverage) `return false;` → `return true;` inside `readsInvalidKeyBody`'s catch block (the case where the invalid-key body's `.json()` call itself throws/rejects). **Zero tests exercise this branch at all.** Not equivalent — this is the exact "safer default" the code comment claims (an unparseable body must not be misread as invalid_key). To kill: a test where `cause` is a `FunctionsHttpError` whose `context.json()` rejects, asserting the result normalizes to `network_error`.
 

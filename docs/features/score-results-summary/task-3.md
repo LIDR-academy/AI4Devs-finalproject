@@ -6,8 +6,8 @@ scenarios: [s6]
 status: done
 paths:
   - supabase/migrations/*_create_lesson_attempts.sql
-  - libs/services/src/dao/lesson-attempt.dao.ts
-  - libs/services/src/dao/lesson-attempt.dao.test.ts
+  - libs/supabase-services/src/dao/lesson-attempt.dao.ts
+  - libs/supabase-services/src/dao/lesson-attempt.dao.test.ts
 ---
 
 ## Goal

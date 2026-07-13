@@ -18,7 +18,7 @@
 | `@helsoft/types` | available | New score/attempt types + `isSystemCheckedActivity`; `MultipleChoiceAnswer`/`Slide` already project cleanly. |
 | `@helsoft/components` | available | `card`/`button`/`progress-indicator` atoms, no new ones needed. |
 | `@helsoft/localization` | available | `results.*` stub existed; score/percent + completion/save-failure keys added across en/es/pt/de. |
-| `@helsoft/hooks`, `@helsoft/services` | available | `use-lesson-attempt` + `LessonAttemptDao`/`Service` added, mirroring `auth`/`locale-preference`. |
+| `@helsoft/hooks`, `@helsoft/supabase-services` | available | `use-lesson-attempt` + `LessonAttemptDao`/`Service` added, mirroring `auth`/`locale-preference`. |
 | Supabase auth (`auth.uid()`) | available | Foundation for `user_id` default + RLS. |
 | `lesson_attempts` table | added | First schema migration in the repo. |
 | `lessons` table / R5 | blocked | `lesson_id` soft reference until R5 lands the table + FK. |

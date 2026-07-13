@@ -22,15 +22,15 @@ documentation-precision gap noted below (non-blocking).
 **What changed (confirmed by diffing `55f7caa` → `76b4be4`):** pre-fix, `ExtractedImage` was
 `{ bytes: Uint8Array, mimeType: string, width, height }` — a fully library-agnostic DTO, and
 `pdf-extraction-adapter.ts` had zero `mupdf` import at all. Post-fix
-(`libs/services/src/pdf-extraction/pdf-extraction-adapter.ts:1,28`), the adapter's own public
+(`libs/supabase-services/src/pdf-extraction/pdf-extraction-adapter.ts:1,28`), the adapter's own public
 seam type imports `Mupdf` and embeds `pixmap: Mupdf.Pixmap` directly.
 
-**Where the leak actually reaches (grep-verified, `libs/services/src/pdf-extraction/*.ts` +
+**Where the leak actually reaches (grep-verified, `libs/supabase-services/src/pdf-extraction/*.ts` +
 `supabase/functions/extract-pdf/**`):**
-- `libs/services/src/pdf-extraction/mupdf-extraction-adapter.ts:18-29` — produces the `Pixmap` (expected; this *is* the mupdf-specific adapter implementation).
-- `libs/services/src/pdf-extraction/image-downscale.ts:1,8` — `DownscaleImageInput.pixmap: Mupdf.Pixmap` (public contract), and the implementation calls six concrete `Mupdf.Pixmap` methods directly: `getAlpha:56`, `getWidth`/`getHeight:31-32` (inside `resizePixmap`), `.warp():39`, `.asPNG():64`, `.asJPEG():66`. Its own unit test (`image-downscale.test.ts:1,8-11`) now has to manufacture a real `mupdf.Image(...).toPixmap()` to exercise it, versus previously just passing plain `bytes`.
+- `libs/supabase-services/src/pdf-extraction/mupdf-extraction-adapter.ts:18-29` — produces the `Pixmap` (expected; this *is* the mupdf-specific adapter implementation).
+- `libs/supabase-services/src/pdf-extraction/image-downscale.ts:1,8` — `DownscaleImageInput.pixmap: Mupdf.Pixmap` (public contract), and the implementation calls six concrete `Mupdf.Pixmap` methods directly: `getAlpha:56`, `getWidth`/`getHeight:31-32` (inside `resizePixmap`), `.warp():39`, `.asPNG():64`, `.asJPEG():66`. Its own unit test (`image-downscale.test.ts:1,8-11`) now has to manufacture a real `mupdf.Image(...).toPixmap()` to exercise it, versus previously just passing plain `bytes`.
 - `supabase/functions/extract-pdf/index.ts:104-107` — only ever destructures `pages`/`images` via `Awaited<ReturnType<...>>` inference, never re-declares or forwards the `Pixmap` type further.
-- **Stops there.** Confirmed by grep across `libs/**` and `apps/**` (excluding `pdf-extraction/`/`_shared/`) that `Mupdf`/`Pixmap`/`pixmap` never appears anywhere else — not in `libs/services/src/dao/pdf-upload.dao.ts`, not in `pdf-extraction.service.ts`, not in `use-pdf-extraction.ts`, not in any component. `extraction-dto.ts:1-8` shapes the orchestration's raw pieces into the client-facing `PdfExtractionResult`/`ExtractedImageRef` (`@helsoft/types`) *before* anything crosses back to the client — those DTOs stay plain.
+- **Stops there.** Confirmed by grep across `libs/**` and `apps/**` (excluding `pdf-extraction/`/`_shared/`) that `Mupdf`/`Pixmap`/`pixmap` never appears anywhere else — not in `libs/supabase-services/src/dao/pdf-upload.dao.ts`, not in `pdf-extraction.service.ts`, not in `use-pdf-extraction.ts`, not in any component. `extraction-dto.ts:1-8` shapes the orchestration's raw pieces into the client-facing `PdfExtractionResult`/`ExtractedImageRef` (`@helsoft/types`) *before* anything crosses back to the client — those DTOs stay plain.
 
 **So:** the concrete-library leak is real, and it is wider than the header comment
 (`pdf-extraction-adapter.ts:8-11`, "the one deliberate exception... swapping the parsing library
@@ -43,7 +43,7 @@ too, not only retype one field. That comment overstates the seam's remaining nar
 1. It never crosses the formal `Component → Hook → Service → DAO` boundary — every module
    touching `Mupdf.Pixmap` (`pdf-extraction-adapter.ts`, `mupdf-extraction-adapter.ts`,
    `image-downscale.ts`) is Edge-Function-internal orchestration code, not re-exported through
-   `libs/services/src/index.ts` (confirmed: no `export * from './pdf-extraction'` in that
+   `libs/supabase-services/src/index.ts` (confirmed: no `export * from './pdf-extraction'` in that
    barrel), and is never imported by `pdf-extraction.service.ts`, any hook, or any component.
 2. No DTO crossing the wire to the client is affected — `PdfExtractionResult`/`ExtractedImageRef`
    remain plain, mupdf-free (`extraction-dto.ts`).
@@ -59,7 +59,7 @@ too, not only retype one field. That comment overstates the seam's remaining nar
    longer re-decodes from bytes), which is exactly what M2 (round-1 performance finding) asked for.
 
 **Non-blocking observation (documentation accuracy only, not counted as a finding):**
-`libs/services/src/pdf-extraction/pdf-extraction-adapter.ts:8-11` and the mirrored comment at
+`libs/supabase-services/src/pdf-extraction/pdf-extraction-adapter.ts:8-11` and the mirrored comment at
 `supabase/functions/extract-pdf/_shared/pdf-extraction-adapter.ts:10-13` should be corrected to
 acknowledge that `image-downscale.ts`'s own contract and implementation — not just this one
 field's type — would need rework on a real library swap, so a future engineer attempting the
@@ -68,16 +68,16 @@ field's type — would need rework on a real library swap, so a future engineer 
 ## 2. Component → Hook → Service → DAO re-verified end-to-end (grep-fresh, not trusted from round 1)
 
 - No component imports a DAO: `grep -rn "PdfUploadDao\|from '.*dao"` across `libs/study-buddy/src`
-  and `libs/components/src` — zero hits outside `libs/services/src/dao/` and its own tests.
-- No service/DAO imports React: `grep -rln "from 'react'" libs/services/src` — zero hits.
+  and `libs/components/src` — zero hits outside `libs/supabase-services/src/dao/` and its own tests.
+- No service/DAO imports React: `grep -rln "from 'react'" libs/supabase-services/src` — zero hits.
 - `libs/hooks/src/hooks/use-pdf-extraction.ts:2` imports only `PdfExtractionService`,
-  `generateDocumentId`, `PDF_EXTRACTION_ERROR_CODES` from `@helsoft/services` — never `PdfUploadDao`
+  `generateDocumentId`, `PDF_EXTRACTION_ERROR_CODES` from `@helsoft/supabase-services` — never `PdfUploadDao`
   directly. Hook wraps the service, per rule.
-- `libs/services/src/dao/pdf-upload.dao.ts` — unchanged since before round 1, still raw
+- `libs/supabase-services/src/dao/pdf-upload.dao.ts` — unchanged since before round 1, still raw
   Supabase access only (`storage.upload`, `.from().upsert()`, `.functions.invoke()`), no
   validation/business logic, returns typed `PdfExtractionResult`/plain rows, no `Mupdf` types.
 - `libs/study-buddy/src/components/pdf-upload/pdf-upload.tsx:4` imports `PDF_EXTRACTION_LIMITS`
-  (a plain constant) directly from `@helsoft/services` — matches the rule's explicitly-allowed
+  (a plain constant) directly from `@helsoft/supabase-services` — matches the rule's explicitly-allowed
   `Component → Service` direct-usage pattern (no React/hook-specific need for a constant lookup);
   pre-existing from slice 1, unchanged in this fix cycle.
 - `apps/app-study-buddy/src/app/(app)/upload.tsx` — still a 9-line thin screen composing
@@ -87,15 +87,15 @@ field's type — would need rework on a real library swap, so a future engineer 
 
 ## 3. Barrels re-verified for fix-cycle-introduced exports
 
-- `isFileTooLarge` (`libs/services/src/pdf-extraction/file-size-guard.ts:14`) — correctly **not**
-  re-exported through `libs/services/src/index.ts`; it's consumed only inside
+- `isFileTooLarge` (`libs/supabase-services/src/pdf-extraction/file-size-guard.ts:14`) — correctly **not**
+  re-exported through `libs/supabase-services/src/index.ts`; it's consumed only inside
   `supabase/functions/extract-pdf/index.ts:18` via the Deno-local `_shared/` copy, matching the
   existing pattern for every other `pdf-extraction/` module (none of which are barrel-exported,
   since none are consumed outside the Edge Function's own orchestration).
-- `PDF_EXTRACTION_ERROR_CODES` (`libs/services/src/services/pdf-extraction.service.ts:36`) —
+- `PDF_EXTRACTION_ERROR_CODES` (`libs/supabase-services/src/services/pdf-extraction.service.ts:36`) —
   correctly flows through `services/index.ts` (`export * from './pdf-extraction.service'`) →
   `services/src/index.ts` (`export * from './services'`) → consumed in
-  `libs/hooks/src/hooks/use-pdf-extraction.ts:2` via `@helsoft/services`.
+  `libs/hooks/src/hooks/use-pdf-extraction.ts:2` via `@helsoft/supabase-services`.
 - `computeCanRetry` (`libs/study-buddy/src/components/pdf-upload/pdf-upload.tsx:63`) — a
   component-local export (not barrel-facing beyond `libs/study-buddy/src/index.ts`'s existing
   `export * from './components/pdf-upload/pdf-upload'`); pre-existing from the round-1 Part B
@@ -126,7 +126,7 @@ structurally enforces the same shape). No logic drift in any of the four pairs.
   and is unchanged since.
 - No new business logic in `apps/app-study-buddy`; the only `apps/*` file in the whole feature
   diff (`upload.tsx`) stays a thin 9-line composition, unchanged in the fix cycle.
-- `pnpm --filter @helsoft/services --filter @helsoft/hooks --filter @helsoft/study-buddy --filter @helsoft/types --filter @helsoft/components --filter app-study-buddy check-types` — clean, zero errors.
+- `pnpm --filter @helsoft/supabase-services --filter @helsoft/hooks --filter @helsoft/study-buddy --filter @helsoft/types --filter @helsoft/components --filter app-study-buddy check-types` — clean, zero errors.
 
 ## Known, locked decisions — not re-litigated
 Deno-mirror-unexecuted testing boundary (risk R4); local-only RLS integration test exclusion

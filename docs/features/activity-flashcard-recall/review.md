@@ -8,7 +8,7 @@ Round 2 (final). CI green (round 1 @ f85f956; round 2 re-run on the post-fix wor
 - `reviewer_design` — ran round 1 only (no findings); fix diff touches no styling/tokens/JSX, territory unaffected
 - `reviewer_accessibility` — ran round 1 + round 2 (had the open MAJOR finding)
 - `reviewer_performance` — ran round 1 only (no findings); fix diff adds one primitive (`slide.back`) to an effect dependency array, no re-render/perf impact, territory unaffected
-- `reviewer_security` — skipped both rounds: no service/DAO/auth/network/storage touches in the feature diff (confirmed via `git diff 5ccf8e5..HEAD -- libs/services libs/hooks` = empty + full-diff grep for `supabase|fetch(|axios|storage.` = no hits)
+- `reviewer_security` — skipped both rounds: no service/DAO/auth/network/storage touches in the feature diff (confirmed via `git diff 5ccf8e5..HEAD -- libs/supabase-services libs/hooks` = empty + full-diff grep for `supabase|fetch(|axios|storage.` = no hits)
 
 ## Round 1 findings (both resolved in round 2)
 - MAJOR — `use-flashcard.ts` reveal-announce effect announced only the static "Answer" heading, never the actual answer content, failing @s10.

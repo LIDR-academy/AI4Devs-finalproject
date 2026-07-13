@@ -24,5 +24,5 @@ Expose the React surface of the lib: a `<LocalizationProvider>` that wraps react
 - [ ] No hardcoded strings/colors/dimensions
 
 ## Notes
-- Per Open decisions the hook/provider live in `@helsoft/localization` (not `@helsoft/hooks`) because they are intrinsic to the i18n context; persistence is still routed through `@helsoft/services` in slice 2.
+- Per Open decisions the hook/provider live in `@helsoft/localization` (not `@helsoft/hooks`) because they are intrinsic to the i18n context; persistence is still routed through `@helsoft/supabase-services` in slice 2.
 - Keep `setLocale` a thin wrapper here; the persistence/precedence logic is layered on in task-7 so this task stays atomic.

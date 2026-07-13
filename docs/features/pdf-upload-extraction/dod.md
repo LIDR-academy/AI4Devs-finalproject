@@ -7,7 +7,7 @@ _Validated by `dod_validator` on 2026-07-10. Each item re-checked against the co
 Per `mutation.md`'s "Human risk-acceptance" section (and mirrored in `spec.md`'s Resolved decisions), the following three categories of mutation survivors are explicitly accepted by the human, not blockers or silently waived:
 
 1. **16 styling mutations** in `libs/components/src/organisms/pdf-upload-panel/pdf-upload-panel.tsx` (lines 146–188, `StyleSheet.create`) — presentation/rendering concerns guarded by Playwright e2e tests (`pdf-upload-panel.e2e.js`), not unit-test scope.
-2. **1 `PDF_IMAGES_BUCKET` constant** (`libs/services/src/services/pdf-extraction.constants.ts:48`) — genuinely unreachable from Jest-tested code paths (Deno Edge Function only); `grep` confirms zero Jest import matches.
+2. **1 `PDF_IMAGES_BUCKET` constant** (`libs/supabase-services/src/services/pdf-extraction.constants.ts:48`) — genuinely unreachable from Jest-tested code paths (Deno Edge Function only); `grep` confirms zero Jest import matches.
 3. **211 translation-value mutations** (`libs/localization/src/resources/{en,es,pt,de}.ts`, new `upload.*` keys) — translation content/accuracy is outside unit-test scope; key existence/alignment guaranteed by build-time `TranslationResource` typing and the coverage test.
 
 Plus 1 unreachable NoCoverage fallback (`use-pdf-extraction.ts` session fallback) and 1 documented equivalent (`// Stryker disable next-line OptionalChaining` in `pdf-extraction.service.ts`). See `mutation.md` round-3 verdict for full justification.
@@ -21,14 +21,14 @@ Plus 1 unreachable NoCoverage fallback (`use-pdf-extraction.ts` session fallback
 
 ## Code quality
 - [x] `pnpm lint` clean — Turbo ran across 9 workspaces; 0 errors
-- [x] `pnpm check-types` clean — `tsc --noEmit` across all 9 workspaces, including `@helsoft/services`'s Jest-only `tsconfig.jest.json` with ESM-compatible settings (`module: "node16"` to preserve `await import('mupdf')`)
-- [x] `pnpm test` (unit + integration) green — 358 core tests (services 97, hooks 31, components 94, study-buddy 55, localization 94, activities 19, lib-with-storybook 2); plus 9/9 RLS integration tests via `pnpm --filter @helsoft/services test:rls` (Docker local Supabase)
+- [x] `pnpm check-types` clean — `tsc --noEmit` across all 9 workspaces, including `@helsoft/supabase-services`'s Jest-only `tsconfig.jest.json` with ESM-compatible settings (`module: "node16"` to preserve `await import('mupdf')`)
+- [x] `pnpm test` (unit + integration) green — 358 core tests (services 97, hooks 31, components 94, study-buddy 55, localization 94, activities 19, lib-with-storybook 2); plus 9/9 RLS integration tests via `pnpm --filter @helsoft/supabase-services test:rls` (Docker local Supabase)
 - [x] `test:e2e` green where relevant — 34/34 Playwright tests passed for `@helsoft/components` (7 pdf-upload-panel-specific e2e tests: Empty, Loading, Content, ErrorRetryable, ErrorNonRetryable, InteractiveRetry, all @s5/@s6/@s7/@s8–@s13/@s16 coverage); run non-interactively via `pnpm --filter @helsoft/components exec playwright test --reporter=list`
 - [x] No TODOs without an issue; Conventional Commits — verify via: `git log --oneline HEAD~15..HEAD` shows feature commits follow conventional format; no orphan TODOs in feature code (searched pdf-extraction code paths)
 
 ## Architecture
 - [x] `Component→Hook→Service→DAO` respected; no cross-layer imports — verified per `review-architecture.md` Round 2 (grep-fresh, zero cross-layer leaks); example chain: `PdfUploadPanel` ← `PdfUpload` (wiring component) ← `usePdfExtraction` hook ← `PdfExtractionService` ← `PdfUploadDao` ← Supabase client
-- [x] DTOs not leaked out of data/DAO; barrels updated — `ExtractedImageRef` / `PdfExtractionResult` / `PdfExtractionErrorCode` live in `@helsoft/types/pdf-extraction.ts`, re-exported via barrel; service/DAO layers never expose Deno-layer types (e.g. `mupdf.Pixmap` is kept isolated in `libs/services/src/pdf-extraction/` pure modules, never exported); all feature exports verified in `index.ts` barrels
+- [x] DTOs not leaked out of data/DAO; barrels updated — `ExtractedImageRef` / `PdfExtractionResult` / `PdfExtractionErrorCode` live in `@helsoft/types/pdf-extraction.ts`, re-exported via barrel; service/DAO layers never expose Deno-layer types (e.g. `mupdf.Pixmap` is kept isolated in `libs/supabase-services/src/pdf-extraction/` pure modules, never exported); all feature exports verified in `index.ts` barrels
 - [x] No unapproved dependencies — `mupdf@1.28.0` (AGPL, spec decision #2: accepted tradeoff), `pdf-lib` (test-only), `expo-document-picker` / `expo-file-system` (peer + dev in study-buddy, matching `expo-router` pattern); all reviewed in security round 2 and approved
 
 ## Design system
@@ -46,7 +46,7 @@ Plus 1 unreachable NoCoverage fallback (`use-pdf-extraction.ts` session fallback
 
 ## Testing rigor
 - [x] Every `@s` scenario covered — all 17 scenarios in `gherkin-scenarios.md` mapped to ≥1 concrete test; sample coverage: @s1 (extraction happy path: 6 test files covering adapter→downscale→DTO→DAO→service→integration), @s2 (image downscale + association: `image-downscale.test.ts` + `mupdf-extraction-adapter.test.ts`), @s7 (Empty state: `pdf-upload-panel.test.tsx`), @s14 (RLS: 9/9 real local Supabase tests), @s17 (analytics: `pdf-extraction.service.test.ts`); `tdd.md` provides full scenario→test map at category-8
-- [x] Mutation score threshold met — `mutation.md` Round 3 PASS verdict; metrics: @helsoft/services 98.82% (84K/1S, 1 accepted constant), @helsoft/hooks 90.00% (9K/0S), @helsoft/components 65.22% (30K/16S, all accepted styling), @helsoft/study-buddy 100.00% (45K/0S); all core logic tested; 228 accepted survivors documented in risk-acceptance section (above); zero unaccepted gaps — link: `docs/features/pdf-upload-extraction/mutation.md`
+- [x] Mutation score threshold met — `mutation.md` Round 3 PASS verdict; metrics: @helsoft/supabase-services 98.82% (84K/1S, 1 accepted constant), @helsoft/hooks 90.00% (9K/0S), @helsoft/components 65.22% (30K/16S, all accepted styling), @helsoft/study-buddy 100.00% (45K/0S); all core logic tested; 228 accepted survivors documented in risk-acceptance section (above); zero unaccepted gaps — link: `docs/features/pdf-upload-extraction/mutation.md`
 
 ## Observability & i18n
 - [x] Analytics events per spec; feature flag wrapping (if applicable) — three locked, PII-free events implemented: `pdf_upload_started` (size_bytes, document_id), `pdf_extraction_succeeded` (document_id, page_count, image_count, duration_ms), `pdf_extraction_failed` (document_id?, error_code, stage); emitted via `trackPdfExtractionEvent` vendor-agnostic sink (`pdf-extraction-analytics.ts`); no feature flag (not required by spec for MVP); tests in `pdf-extraction.service.test.ts` (describe 'analytics (task-15, @s17)')

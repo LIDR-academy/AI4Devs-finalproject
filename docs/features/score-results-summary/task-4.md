@@ -5,9 +5,9 @@ slice: 1
 scenarios: [s6]
 status: done
 paths:
-  - libs/services/src/services/lesson-attempt.service.ts
-  - libs/services/src/services/lesson-attempt.service.test.ts
-  - libs/services/src/services/index.ts
+  - libs/supabase-services/src/services/lesson-attempt.service.ts
+  - libs/supabase-services/src/services/lesson-attempt.service.test.ts
+  - libs/supabase-services/src/services/index.ts
 ---
 
 ## Goal

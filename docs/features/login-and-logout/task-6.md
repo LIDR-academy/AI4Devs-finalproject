@@ -4,7 +4,7 @@ title: Auth error contract — normalization + AuthErrorCode type
 slice: 2
 scenarios: [s5, s6]
 status: done
-paths: [libs/types/src/auth-error.ts, libs/types/src/index.ts, libs/services/src/services/auth.service.ts, libs/services/src/services/auth.service.test.ts]
+paths: [libs/types/src/auth-error.ts, libs/types/src/index.ts, libs/supabase-services/src/services/auth.service.ts, libs/supabase-services/src/services/auth.service.test.ts]
 ---
 
 ## Goal
