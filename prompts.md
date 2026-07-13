@@ -1,125 +1,24 @@
-> Detalla en esta sección los prompts principales utilizados durante la creación del proyecto, que justifiquen el uso de asistentes de código en todas las fases del ciclo de vida del desarrollo. Esperamos un máximo de 3 por sección, principalmente los de creación inicial o  los de corrección o adición de funcionalidades que consideres más relevantes.
-Puedes añadir adicionalmente la conversación completa como link o archivo adjunto si así lo consideras
+﻿# Delivery 1 - Technical Product Documentation Prompts
 
+Author: SCDF  
+Prompt language: English  
 
-## Índice
+Each prompt is stored as an individual file for this delivery.
 
-1. [Descripción general del producto](#1-descripción-general-del-producto)
-2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
-3. [Modelo de datos](#3-modelo-de-datos)
-4. [Especificación de la API](#4-especificación-de-la-api)
-5. [Historias de usuario](#5-historias-de-usuario)
-6. [Tickets de trabajo](#6-tickets-de-trabajo)
-7. [Pull requests](#7-pull-requests)
+- [D1-P01 - Project Sheet](prompts/D1-P01-project-sheet.md)
+- [D1-P02 - Product Objective](prompts/D1-P02-product-objective.md)
+- [D1-P03 - Main Features](prompts/D1-P03-main-features.md)
+- [D1-P04 - UX Description](prompts/D1-P04-ux-description.md)
+- [D1-P05 - Installation Instructions](prompts/D1-P05-installation-instructions.md)
+- [D1-P06 - Architecture Diagram](prompts/D1-P06-architecture-diagram.md)
+- [D1-P07 - Main Components](prompts/D1-P07-main-components.md)
+- [D1-P08 - File Structure](prompts/D1-P08-file-structure.md)
+- [D1-P09 - Infrastructure and Deployment](prompts/D1-P09-infrastructure-and-deployment.md)
+- [D1-P10 - Security](prompts/D1-P10-security.md)
+- [D1-P11 - Tests](prompts/D1-P11-tests.md)
+- [D1-P12 - Data Model](prompts/D1-P12-data-model.md)
+- [D1-P13 - API Specification](prompts/D1-P13-api-specification.md)
+- [D1-P14 - User Stories](prompts/D1-P14-user-stories.md)
+- [D1-P15 - Work Tickets](prompts/D1-P15-work-tickets.md)
+- [D1-P16 - Pull Requests](prompts/D1-P16-pull-requests.md)
 
----
-
-## 1. Descripción general del producto
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
----
-
-## 2. Arquitectura del Sistema
-
-### **2.1. Diagrama de arquitectura:**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
-### **2.2. Descripción de componentes principales:**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
-### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
-### **2.4. Infraestructura y despliegue**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
-### **2.5. Seguridad**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
-### **2.6. Tests**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
----
-
-### 3. Modelo de Datos
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
----
-
-### 4. Especificación de la API
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
----
-
-### 5. Historias de Usuario
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
----
-
-### 6. Tickets de Trabajo
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
----
-
-### 7. Pull Requests
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
