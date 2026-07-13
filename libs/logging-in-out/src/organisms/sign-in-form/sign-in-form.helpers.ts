@@ -1,9 +1,9 @@
 import type { AuthErrorCode } from '@helsoft/types';
 
 /**
- * Maps useAuth()'s normalized AuthErrorCode to its i18n banner key (@s5/@s6). validation_error
- * is deliberately absent: a malformed email is caught by SignInForm's own @s9 handling before
- * ever calling signIn, and an empty password can't reach signIn either — so useAuth().error
+ * Maps parent's AuthErrorCode prop to its i18n banner key (@s5/@s6). validation_error is
+ * deliberately absent: a malformed email is caught by SignInForm's own @s9 handling before
+ * ever calling onSignIn, and an empty password can't reach onSignIn either — so `error`
  * should never actually surface that code through this form.
  */
 export const AUTH_ERROR_KEYS: Partial<Record<AuthErrorCode, string>> = {

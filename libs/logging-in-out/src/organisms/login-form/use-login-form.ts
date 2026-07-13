@@ -35,11 +35,14 @@ export const useLoginForm = ({
     }
   }, [isSubmitting, t]);
 
+  // Also keyed on isSubmitting: a retry that fails with the *identical* message never changes
+  // errorMessage, so keying on the message alone would leave iOS VoiceOver silent on the
+  // second failure — the submit-cycle end (isSubmitting true -> false) re-fires this instead.
   useEffect(() => {
-    if (errorMessage) {
+    if (errorMessage && !isSubmitting) {
       AccessibilityInfo.announceForAccessibility(errorMessage);
     }
-  }, [errorMessage]);
+  }, [errorMessage, isSubmitting]);
 
   return {
     t,

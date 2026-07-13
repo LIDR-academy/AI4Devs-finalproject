@@ -1,13 +1,13 @@
 const { test, expect } = require('@playwright/test');
 
 test('SignInForm Default story loads', async ({ page }) => {
-  await page.goto('/?path=/story/features-signinform--default');
+  await page.goto('/?path=/story/organisms-signinform--default');
   const iframe = page.locator('iframe[title="storybook-preview-iframe"]');
   await expect(iframe).toBeVisible();
 });
 
 test('renders the email/password fields and submit/sign-up copy', async ({ page }) => {
-  await page.goto('/?path=/story/features-signinform--default');
+  await page.goto('/?path=/story/organisms-signinform--default');
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
   await expect(canvas.getByText('Email', { exact: true })).toBeVisible();
@@ -17,7 +17,7 @@ test('renders the email/password fields and submit/sign-up copy', async ({ page 
 });
 
 test('shows an inline error for a malformed email and blocks submit', async ({ page }) => {
-  await page.goto('/?path=/story/features-signinform--default');
+  await page.goto('/?path=/story/organisms-signinform--default');
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
   await canvas.getByLabel('Email').fill('not-an-email');
@@ -28,21 +28,21 @@ test('shows an inline error for a malformed email and blocks submit', async ({ p
 });
 
 test('Loading story disables submit and shows the signing-in affordance', async ({ page }) => {
-  await page.goto('/?path=/story/features-signinform--loading');
+  await page.goto('/?path=/story/organisms-signinform--loading');
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
   await expect(canvas.getByText('Signing in…', { exact: true })).toBeVisible();
 });
 
 test('InvalidCredentials story renders the invalid-credentials banner', async ({ page }) => {
-  await page.goto('/?path=/story/features-signinform--invalid-credentials');
+  await page.goto('/?path=/story/organisms-signinform--invalid-credentials');
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
   await expect(canvas.getByText('Invalid email or password', { exact: true })).toBeVisible();
 });
 
 test('NetworkError story renders the network-error banner and stays interactive', async ({ page }) => {
-  await page.goto('/?path=/story/features-signinform--network-error');
+  await page.goto('/?path=/story/organisms-signinform--network-error');
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
   await expect(canvas.getByText('Network error', { exact: true })).toBeVisible();

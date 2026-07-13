@@ -6,6 +6,7 @@ import { useLocalization } from '@helsoft/localization';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { AccessibilityInfo } from 'react-native';
 
+import { localizationValue } from '../../test-utils/auth-test-factories';
 import { useLoginForm } from './use-login-form';
 
 const mockUseLocalization = useLocalization as jest.Mock;
@@ -20,7 +21,7 @@ type HookProps = {
 describe('useLoginForm', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockUseLocalization.mockReturnValue({ t: (key: string) => key });
+    mockUseLocalization.mockReturnValue(localizationValue());
   });
 
   it('starts with empty fields and isPristine true', async () => {
@@ -115,6 +116,33 @@ describe('useLoginForm', () => {
     });
 
     await waitFor(() => expect(announceSpy).toHaveBeenCalledWith('auth.error.network'));
+    announceSpy.mockRestore();
+  });
+
+  // A retry that fails with the *identical* message never changes errorMessage, so the
+  // announcement must re-fire off the submit cycle ending (isSubmitting true -> false) —
+  // otherwise iOS VoiceOver stays silent on the second failure.
+  it('re-announces the same errorMessage after another submit cycle ends', async () => {
+    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    announceSpy.mockClear();
+
+    const { rerender } = await renderHook(
+      ({ isSubmitting, errorMessage }: HookProps) => useLoginForm({ isSubmitting, errorMessage }),
+      { initialProps: { isSubmitting: false, errorMessage: 'auth.error.invalidCredentials' } },
+    );
+    await waitFor(() => expect(announceSpy).toHaveBeenCalledWith('auth.error.invalidCredentials'));
+
+    await act(async () => {
+      await rerender({ isSubmitting: true, errorMessage: 'auth.error.invalidCredentials' });
+    });
+    await act(async () => {
+      await rerender({ isSubmitting: false, errorMessage: 'auth.error.invalidCredentials' });
+    });
+
+    const errorAnnouncements = announceSpy.mock.calls.filter(
+      ([message]) => message === 'auth.error.invalidCredentials',
+    );
+    expect(errorAnnouncements).toHaveLength(2);
     announceSpy.mockRestore();
   });
 });

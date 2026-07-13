@@ -1,9 +1,6 @@
+import { Button, ProgressIndicator, TextField } from '@helsoft/components';
 import { Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-
-import { Button } from '../../atoms/button/button';
-import { ProgressIndicator } from '../../atoms/progress-indicator/progress-indicator';
-import { TextField } from '../../molecules/text-field/text-field';
 
 import type { LoginFormProps } from './login-form.types';
 import { useLoginForm } from './use-login-form';

@@ -2,9 +2,7 @@ import { useAuth } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 
 /**
- * Shared `useAuth()`/`useLocalization()` mock-return factories for the `sign-in-form` and
- * `sign-out` unit tests (Round-1 review, Minor 6 — dedupes the identical pair that used to be
- * copy-pasted in both files).
+ * Shared `useAuth()`/`useLocalization()` mock-return factories for study-buddy unit tests.
  */
 export const authValue = (overrides: Partial<ReturnType<typeof useAuth>> = {}) => ({
   signIn: jest.fn(),

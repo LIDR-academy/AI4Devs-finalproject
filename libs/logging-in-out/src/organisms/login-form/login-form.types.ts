@@ -1,6 +1,6 @@
 export type LoginFormProps = {
   onSubmit: (credentials: { email: string; password: string }) => void;
-  /** True while AuthService.signIn is in flight — drives the Loading state (@s3). */
+  /** True while the parent's sign-in call is in flight — drives the Loading state (@s3). */
   isSubmitting?: boolean;
   onNavigateToSignUp?: () => void;
   /**

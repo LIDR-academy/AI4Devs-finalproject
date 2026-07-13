@@ -1,17 +1,23 @@
+jest.mock('@helsoft/localization', () => ({
+  useLocalization: jest.fn(),
+}));
+
+import { useLocalization } from '@helsoft/localization';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { AccessibilityInfo } from 'react-native';
 
-import { disabledOpacity, lightColors } from '../../theme/colors';
-import { spacing } from '../../theme/spacing';
+import { disabledOpacity, lightColors, spacing } from '@helsoft/components';
+
+import { localizationValue } from '../../test-utils/auth-test-factories';
 import { LOADING_INDICATOR_TEST_ID, LoginForm } from './login-form';
 
-jest.mock('@helsoft/localization', () => ({
-  useLocalization: () => ({
-    t: (key: string) => key,
-  }),
-}));
+const mockUseLocalization = useLocalization as jest.Mock;
 
 describe('LoginForm', () => {
+  beforeEach(() => {
+    mockUseLocalization.mockReturnValue(localizationValue());
+  });
+
   // @s2 — renders both fields and the submit control, labelled from localization keys.
   it('renders the email field, password field, and submit control', async () => {
     await render(<LoginForm onSubmit={jest.fn()} />);

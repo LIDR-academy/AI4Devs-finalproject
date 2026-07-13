@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
+import { expect } from 'storybook/test';
 
 import { LoginForm } from './login-form';
 
@@ -23,6 +24,8 @@ export const Content: Story = {
   play: async ({ canvas, userEvent }) => {
     await userEvent.type(canvas.getByLabelText('Email'), 'user@example.com');
     await userEvent.type(canvas.getByLabelText('Password'), 'secret1');
+
+    await expect(canvas.getByLabelText('Email')).toHaveValue('user@example.com');
   },
 };
 
