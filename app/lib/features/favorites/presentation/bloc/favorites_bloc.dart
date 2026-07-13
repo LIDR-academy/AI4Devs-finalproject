@@ -10,13 +10,10 @@ part 'favorites_state.dart';
 
 class FavoritesBloc extends Bloc<FavoritesEvent, FavoritesState> {
   FavoritesBloc({
-    required GetFavoritesUseCase getFavorites,
-    required AddFavoriteUseCase addFavorite,
-    required RemoveFavoriteUseCase removeFavorite,
-  })  : _getFavorites = getFavorites,
-        _addFavorite = addFavorite,
-        _removeFavorite = removeFavorite,
-        super(const FavoritesInitial()) {
+    required this._getFavorites,
+    required this._addFavorite,
+    required this._removeFavorite,
+  }) : super(const FavoritesInitial()) {
     on<FavoritesStarted>(_onStarted);
     on<FavoriteAdded>(_onFavoriteAdded);
     on<FavoriteRemoved>(_onFavoriteRemoved);

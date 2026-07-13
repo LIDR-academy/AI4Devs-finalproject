@@ -126,7 +126,9 @@ class _LoadedBody extends StatelessWidget {
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
                 onPressed: () {
-                  // TODO(LPT-14): navigate to previous round summary
+                  context.go(
+                    '/games/${playState.round.gameId}/rounds/${playState.round.roundNumber - 1}/result?readOnly=true',
+                  );
                 },
                 icon: const Icon(Icons.arrow_back, size: 16),
                 label: const Text('Ver ronda anterior'),

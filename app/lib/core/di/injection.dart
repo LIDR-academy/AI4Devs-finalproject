@@ -255,7 +255,10 @@ Future<void> configureDependencies() async {
   );
 
   getIt.registerLazySingleton<HistoryFirestoreDatasource>(
-    () => HistoryFirestoreDatasource(getIt<FirebaseFirestore>()),
+    () => HistoryFirestoreDatasource(
+      getIt<FirebaseFirestore>(),
+      getIt<FirebaseAuth>(),
+    ),
   );
 
   getIt.registerLazySingleton<HistoryRepository>(

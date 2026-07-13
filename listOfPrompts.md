@@ -1930,3 +1930,125 @@ lo dispara un listener global de `GameSyncBloc`, no el `BlocListener` de
   final sin crash.
 
 --------------------------
+
+Lee el ticket LPT-16 de Jira con acli, revisa docs/design.md
+para referencia visual, e impleméntalo siguiendo las convenciones
+en .cursor/rules/. Usa modo Plan antes de ejecutar.
+
+-----------
+
+Lee el ticket LPT-13 de Jira con acli e impleméntalo siguiendo
+las convenciones en .cursor/rules/.
+
+Nota importante: el botón "Repetir ronda" debe integrarse en el
+menú de tres puntos ya existente en las pantallas del ciclo de
+ronda (patrón establecido en LPT-9 y LPT-24 — misma cabecera
+con opciones "Cancelar partida" y ahora también "Repetir ronda").
+No crear un botón flotante independiente.
+
+Usa modo Plan antes de ejecutar.
+
+---------------
+
+Lee el ticket LPT-17 de Jira con acli e impleméntalo siguiendo
+las convenciones en .cursor/rules/.
+
+Nota importante: la eliminación tiene dos comportamientos distintos
+según el origen de la partida:
+
+- Partida local: borrado físico en Drift (cascade Game + Rounds)
+- Partida en nube: ocultación local via hiddenGameIds[], NO borrar
+  el documento en Firestore (otros participantes deben seguir
+  viéndola)
+
+El botón "Eliminar" debe estar disponible tanto en el listado
+(LPT-15, swipe o menú) como en el detalle (LPT-16).
+Usa modo Plan antes de ejecutar.
+
+-----------
+
+Lee el ticket LPT-18 de Jira con acli e impleméntalo siguiendo
+las convenciones en .cursor/rules/.
+
+Nota importante: LPT-6 ya tiene un stub de favoritos
+(favorites_list_stub.dart) con un TODO explícito referenciando
+LPT-18. Localiza ese stub y sustitúyelo por la implementación
+real usando FavoriteRepository — no crear una ruta paralela nueva.
+
+La tabla favorites no existe todavía en Drift (AppDatabase).
+Créala como parte de este ticket en
+lib/core/database/tables/favorites_table.dart con los campos:
+id (text PK), displayName (text), userId (text nullable),
+createdAt (datetime). Registra en AppDatabase y regenera
+con build_runner.
+
+Usa modo Plan antes de ejecutar.
+
+-----------------
+
+Lee el ticket LPT-8 de Jira con acli e impleméntalo siguiendo
+las convenciones en .cursor/rules/.
+
+CORRECCIÓN: el ticket menciona leer players desde subcolección
+Firestore (games/{gameId}/players). El modelo correcto usa
+players[] EMBEBIDO en el documento games — no hay subcolección
+players. Al leer una partida en nube para repetirla, leer el
+array players[] directamente del documento games/{gameId}.
+
+Notas adicionales:
+
+- El botón "Repetir partida" debe estar disponible en el listado
+  (LPT-15) y en el detalle (LPT-16), que ya existen. Intégralo
+  en ambas pantallas.
+- Al crear el borrador de la nueva partida, usa status 'setup'
+  (no 'lobby' como indica el ticket — ver ADR en readme.md).
+- RepeatGameUseCase debe reutilizar GameClonerService para copiar
+  la configuración sin scores ni rondas jugadas.
+- La navegación tras confirmar va a /games/{newGameId}/players
+  (LPT-6, ya implementado).
+
+Usa modo Plan antes de ejecutar.
+
+
+--------------
+
+Resuelve los siguientes TODOs pendientes en el proyecto:
+
+GRUPO 1 — Navegación a ronda anterior (bidding_page.dart,
+play_page.dart, scoring_page.dart):
+Los tres ficheros tienen un TODO(LPT-14) en la línea ~129/112:
+"navigate to previous round summary".
+
+Implementa la navegación de solo lectura a la ronda anterior:
+
+- Solo visible a partir de la ronda 2 (roundNumber > 1)
+- Navega a una vista de solo lectura del resultado de la ronda
+  anterior (roundNumber - 1), ya cerrada (status == closed)
+- Usa la pantalla de resultado de ronda existente (round_result_page
+  o similar de LPT-14) en modo solo lectura, sin botón
+  "Siguiente ronda" ni ninguna acción que modifique datos
+- El enlace debe ser discreto, tipo "‹ Ver ronda anterior",
+  justo debajo de la cabecera verde (patrón ya definido en
+  docs/design.md y wireframes)
+
+GRUPO 2 — Fusión local+nube en historial
+(history_firestore_datasource.dart líneas 14 y 17):
+
+- TODO(LPT-19): añadir filtro por sesión Firebase activa para
+  consultar games donde el usuario es hostId o está en
+  participantIds (query ya definida en LPT-20/LPT-21)
+- TODO(LPT-20): deduplicar por cloudGameId al fusionar
+  historial local y nube, para que una partida subida no
+  aparezca duplicada (local + nube)
+
+Para el Grupo 2: LPT-19 y LPT-20 ya están implementados.
+Localiza el código existente de sincronización y completa
+la fusión en HistoryFirestoreDatasource usando los patrones
+ya establecidos en GameSyncRepositoryImpl.
+
+NO toques search_player_stub.dart — ese TODO requiere
+funcionalidad nueva de búsqueda de usuarios registrados
+que queda fuera del alcance actual.
+
+flutter analyze sin errores tras los cambios.
+

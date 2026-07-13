@@ -5,9 +5,8 @@ import 'package:la_pocha/features/history/domain/usecases/repeat_game_usecase.da
 part 'repeat_game_state.dart';
 
 class RepeatGameCubit extends Cubit<RepeatGameState> {
-  RepeatGameCubit({required RepeatGameUseCase repeatGame})
-      : _repeatGame = repeatGame,
-        super(const RepeatGameInitial());
+  RepeatGameCubit({required this._repeatGame})
+      : super(const RepeatGameInitial());
 
   final RepeatGameUseCase _repeatGame;
 

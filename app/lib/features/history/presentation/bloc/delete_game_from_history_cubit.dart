@@ -7,11 +7,9 @@ part 'delete_game_from_history_state.dart';
 
 class DeleteGameFromHistoryCubit extends Cubit<DeleteGameFromHistoryState> {
   DeleteGameFromHistoryCubit({
-    required DeleteLocalGameUseCase deleteLocalGame,
-    required HideCloudGameUseCase hideCloudGame,
-  })  : _deleteLocalGame = deleteLocalGame,
-        _hideCloudGame = hideCloudGame,
-        super(const DeleteGameFromHistoryInitial());
+    required this._deleteLocalGame,
+    required this._hideCloudGame,
+  }) : super(const DeleteGameFromHistoryInitial());
 
   final DeleteLocalGameUseCase _deleteLocalGame;
   final HideCloudGameUseCase _hideCloudGame;

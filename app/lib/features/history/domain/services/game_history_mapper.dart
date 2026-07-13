@@ -27,6 +27,33 @@ class GameHistoryMapper {
     'dic',
   ];
 
+  GameHistoryItem? fromCloudGame(Game game) {
+    if (game.status != GameStatus.finished || game.finishedAt == null) {
+      return null;
+    }
+
+    final ranking = _rankingService.buildRanking(
+      players: game.players,
+      scoresDelta: const {},
+      includePositionDelta: false,
+    );
+    final winner = ranking.isNotEmpty ? ranking.first : null;
+
+    return GameHistoryItem(
+      id: game.id,
+      source: GameHistorySource.cloud,
+      finishedAt: game.finishedAt!,
+      playerCount: game.playerCount,
+      displayLabel: buildDisplayLabel(
+        finishedAt: game.finishedAt!,
+        playerDisplayNames: _sortedPlayerNames(game),
+      ),
+      winnerName: winner?.player.displayName,
+      winnerScore: winner?.totalScore,
+      cloudGameId: game.id,
+    );
+  }
+
   GameHistoryItem? fromLocalGame(Game game) {
     if (game.status != GameStatus.finished || game.finishedAt == null) {
       return null;
