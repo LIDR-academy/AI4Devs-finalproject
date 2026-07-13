@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p /Users/emarques/Projects/ai4devs/final-project/.claude/commands)",
+      "mcp__claude_ai_Context7__resolve-library-id",
+      "mcp__claude_ai_Context7__query-docs",
+      "Bash(mkdir -p /Users/emarques/Projects/ai4devs/final-project/.claude/context)",
+      "Bash(find /Users/emarques/.claude -name \"po-agent*\" -o -name \"architect-agent*\" 2>/dev/null)",
+      "Read(//Users/emarques/.claude/**)",
+      "Bash(find /Users/emarques -name \"*.md\" | xargs grep -l \"po-agent\\\\|architect-agent\" 2>/dev/null | head -20)",
+      "Read(//Users/emarques/**)",
+      "Bash(mkdir -p /Users/emarques/Projects/ai4devs/final-project/documentation/diagrams/architecture)",
+      "mcp__claude_ai_Mermaid_Chart__validate_and_render_mermaid_diagram",
+      "Bash(mkdir -p /Users/emarques/Projects/ai4devs/final-project/documentation/diagrams/database)",
+      "mcp__claude_ai_Atlassian__getAccessibleAtlassianResources",
+      "mcp__claude_ai_Atlassian__lookupJiraAccountId",
+      "mcp__claude_ai_Atlassian__getJiraProjectIssueTypesMetadata",
+      "mcp__claude_ai_Atlassian__getIssueLinkTypes",
+      "mcp__claude_ai_Atlassian__getJiraIssueTypeMetaWithFields",
+      "mcp__claude_ai_Atlassian__createJiraIssue",
+      "mcp__claude_ai_Atlassian__editJiraIssue",
+      "mcp__claude_ai_Atlassian__getJiraIssue",
+      "mcp__claude_ai_Atlassian__createIssueLink",
+      "mcp__claude_ai_Atlassian__searchJiraIssuesUsingJql",
+      "mcp__atlassian__get_jira_issue",
+      "mcp__atlassian__create_jira_issue",
+      "mcp__claude_ai_Atlassian__fetch",
+      "mcp__atlassian__update_jira_description",
+      "mcp__atlassian__add_jira_comment",
+      "mcp__atlassian__transition_jira_issue",
+      "Bash(rm /Users/emarques/.claude/projects/-Users-emarques-Projects-ai4devs-final-project/memory/reference_jira_sh_project.md)",
+      "mcp__claude_ai_Atlassian__getVisibleJiraProjects"
+    ],
+    "additionalDirectories": [
+      "/Users/emarques/Projects/ai4devs/final-project/.claude",
+      "/Users/emarques/Projects/ai4devs/final-project/documentation/diagrams"
+    ]
+  }
+}

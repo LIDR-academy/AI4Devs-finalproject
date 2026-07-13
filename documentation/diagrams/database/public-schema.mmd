@@ -1,0 +1,95 @@
+---
+title: SupportHub — public schema (api service)
+---
+erDiagram
+    direction TB
+
+    Clients {
+        uuid        Id          PK "NOT NULL"
+        string200   Name        "UNIQUE NOT NULL"
+        string1000  Description "nullable"
+        boolean     IsDeleted   "NOT NULL — default: false (soft-delete)"
+        timestamptz CreatedAt   "NOT NULL"
+        timestamptz UpdatedAt   "NOT NULL"
+    }
+
+    %% FirstName / LastName removed — identity is authoritative for personal data
+    %% EmailNotificationsEnabled and PreferredLanguage merged from UserEmailPreferences
+    ClientUsers {
+        uuid        Id                        PK "NOT NULL"
+        uuid        UserId                    "UNIQUE nullable — SOFT FK: identity.AspNetUsers.Id (null until activation)"
+        uuid        ClientId                  "NOT NULL — FK: Clients.Id ON DELETE RESTRICT"
+        string256   Email                     "UNIQUE NOT NULL"
+        string      Status                    "NOT NULL — PendingActivation | Active | Inactive"
+        boolean     EmailNotificationsEnabled "NOT NULL — default: true"
+        string5     PreferredLanguage         "NOT NULL — default: es"
+        timestamptz InvitedAt                 "NOT NULL"
+        timestamptz ActivatedAt               "nullable — set when invite accepted"
+        boolean     IsDeleted                 "NOT NULL — default: false (soft-delete)"
+        timestamptz CreatedAt                 "NOT NULL"
+        timestamptz UpdatedAt                 "NOT NULL"
+    }
+
+    Projects {
+        uuid        Id                    PK "NOT NULL"
+        uuid        ClientId              "NOT NULL — FK: Clients.Id ON DELETE RESTRICT"
+        string200   Name                  "NOT NULL"
+        string      JiraProjectKey        "nullable — e.g. ACME"
+        string      JiraWebhookSecretHash "nullable — null means no secret configured → requests rejected"
+        timestamptz CreatedAt             "NOT NULL"
+        timestamptz UpdatedAt             "NOT NULL"
+    }
+
+    %% Minimal anchor only — all ticket content (title, status, etc.) lives in Jira
+    Tickets {
+        uuid        Id           PK "NOT NULL"
+        string20    JiraIssueKey "UNIQUE NOT NULL — e.g. ACME-42"
+        uuid        ProjectId    "NOT NULL — FK: Projects.Id ON DELETE RESTRICT"
+        timestamptz CreatedAt    "NOT NULL"
+        timestamptz UpdatedAt    "NOT NULL"
+    }
+
+    %% One Notification per event, visible to all users of the Client
+    %% IsRead is NOT stored here — handled per-user in NotificationReadReceipts
+    Notifications {
+        uuid        Id          PK "NOT NULL"
+        uuid        ClientId    "NOT NULL — FK: Clients.Id ON DELETE RESTRICT"
+        uuid        OwnerUserId "NOT NULL — SOFT FK: identity.AspNetUsers.Id (ticket creator)"
+        string20    JiraIssueKey "NOT NULL"
+        string      Type        "NOT NULL — StatusChanged | CommentAdded"
+        string500   Message     "NOT NULL"
+        timestamptz CreatedAt   "NOT NULL"
+        timestamptz UpdatedAt   "NOT NULL"
+    }
+
+    %% Per-user read state for each Notification
+    %% Absence of a row = unread; presence = read
+    NotificationReadReceipts {
+        uuid        Id             PK "NOT NULL"
+        uuid        NotificationId "NOT NULL — FK: Notifications.Id ON DELETE CASCADE"
+        uuid        UserId         "NOT NULL — SOFT FK: identity.AspNetUsers.Id"
+        timestamptz ReadAt         "NOT NULL"
+        timestamptz CreatedAt      "NOT NULL"
+        timestamptz UpdatedAt      "NOT NULL"
+    }
+
+
+    %% EF Core entity mutation log — written by the api service only
+    AuditLogs {
+        uuid        Id         PK "NOT NULL"
+        timestamptz Timestamp  "NOT NULL"
+        string      Operation  "NOT NULL — INSERT | UPDATE | DELETE"
+        string      EntityName "NOT NULL — e.g. Ticket | ClientUser"
+        string      EntityId   "nullable"
+        jsonb       OldData    "nullable — null for INSERT; sensitive fields redacted"
+        jsonb       NewData    "nullable — null for DELETE; sensitive fields redacted"
+        string      UserId     "nullable"
+        string      IpAddress  "nullable"
+    }
+
+    %% ── Relationships (all DB-level FK unless noted) ─────────────────────
+    Clients       ||--o{  ClientUsers              : "1:N  ON DELETE RESTRICT"
+    Clients       ||--o{  Projects                  : "1:N  ON DELETE RESTRICT"
+    Projects      ||--o{  Tickets                  : "1:N  ON DELETE RESTRICT"
+    Clients       ||--o{  Notifications            : "1:N  ON DELETE RESTRICT"
+    Notifications ||--o{  NotificationReadReceipts : "1:N  ON DELETE CASCADE"

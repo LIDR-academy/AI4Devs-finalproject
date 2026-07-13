@@ -1,0 +1,80 @@
+---
+title: SupportHub — Cross-schema overview
+---
+erDiagram
+    direction TB
+
+    %% ══ identity schema ══════════════════════════════════════════════════
+    ApplicationUser {
+        uuid   Id                PK
+        string Role              "Admin | Client"
+        string Email
+        string PreferredLanguage "default: es"
+    }
+
+    %% ══ public schema ════════════════════════════════════════════════════
+    Clients {
+        uuid        Id        PK
+        string      Name      "UNIQUE NOT NULL"
+        string      Description "nullable"
+        boolean     IsDeleted "default: false (soft-delete)"
+        timestamptz CreatedAt
+        timestamptz UpdatedAt
+    }
+
+    %% FirstName / LastName removed — identity is authoritative for personal data
+    %% EmailNotificationsEnabled and PreferredLanguage merged from UserEmailPreferences
+    ClientUsers {
+        uuid        Id                        PK
+        uuid        UserId                    "UNIQUE nullable — SOFT FK: identity.AspNetUsers.Id"
+        uuid        ClientId                  "NOT NULL — FK: Clients.Id"
+        string      Email                     "UNIQUE NOT NULL"
+        string      Status                    "PendingActivation | Active | Inactive"
+        boolean     EmailNotificationsEnabled "default: true"
+        string5     PreferredLanguage         "default: es"
+        timestamptz InvitedAt
+        timestamptz ActivatedAt               "nullable"
+        boolean     IsDeleted                 "default: false (soft-delete)"
+        timestamptz CreatedAt
+        timestamptz UpdatedAt
+    }
+
+    Projects {
+        uuid        Id                    PK
+        uuid        ClientId              "NOT NULL — FK: Clients.Id"
+        string      Name                  "NOT NULL"
+        string      JiraProjectKey        "nullable"
+        string      JiraWebhookSecretHash "nullable — null → requests rejected"
+        timestamptz CreatedAt
+        timestamptz UpdatedAt
+    }
+
+    %% Minimal anchor only — all ticket content lives in Jira
+    Tickets {
+        uuid        Id           PK
+        string      JiraIssueKey "UNIQUE NOT NULL"
+        uuid        ProjectId    "NOT NULL — FK: Projects.Id"
+        timestamptz CreatedAt
+        timestamptz UpdatedAt
+    }
+
+    %% One Notification per user per event (v1: per-user rows)
+    Notifications {
+        uuid        Id           PK
+        uuid        ClientUserId "NOT NULL — SOFT FK: identity.AspNetUsers.Id"
+        string      JiraIssueKey "NOT NULL"
+        string      Type         "StatusChanged | CommentAdded"
+        string      Message      "NOT NULL max 500"
+        boolean     IsRead       "default: false"
+        timestamptz CreatedAt
+        timestamptz UpdatedAt
+    }
+
+    %% ══ Within public schema — DB-level FK constraints ══════════════════
+    Clients       ||--o{  ClientUsers  : "1:N  ON DELETE RESTRICT"
+    Clients       ||--o{  Projects     : "1:N  ON DELETE RESTRICT"
+    Projects      ||--o{  Tickets      : "1:N  ON DELETE RESTRICT"
+
+    %% ══ Cross-schema — SOFT FKs (plain UUID, no DB constraint) ══════════
+    ApplicationUser ||--o|  ClientUsers  : "soft FK — UserId (nullable until activation)"
+    ApplicationUser ||--o{  Notifications : "soft FK — ClientUserId (notification recipient)"
