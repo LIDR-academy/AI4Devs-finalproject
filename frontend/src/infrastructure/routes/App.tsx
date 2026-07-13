@@ -5,6 +5,7 @@ import { AdminLayout } from "@/ui/components/layouts/AdminLayout";
 import { CoacheeLayout } from "@/ui/components/layouts/CoacheeLayout";
 import { CoachLayout } from "@/ui/components/layouts/CoachLayout";
 import { ProtectedRoute } from "@/ui/components/ProtectedRoute";
+import { ToastContainer } from "@/ui/components/Toast";
 import { AdminCalendarPage } from "@/ui/pages/admin/CalendarPage";
 import { AdminCoacheeDetailPage } from "@/ui/pages/admin/CoacheeDetailPage";
 import { AdminCoacheesPage } from "@/ui/pages/admin/CoacheesPage";
@@ -95,5 +96,10 @@ const router = createBrowserRouter([
 ]);
 
 export default function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <>
+      <RouterProvider router={router} />
+      <ToastContainer />
+    </>
+  );
 }

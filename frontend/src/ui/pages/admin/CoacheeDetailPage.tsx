@@ -20,6 +20,8 @@ export function AdminCoacheeDetailPage() {
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editPhone, setEditPhone] = useState("");
+  const [editClassPreference, setEditClassPreference] = useState("");
+  const [editAdditionalInfo, setEditAdditionalInfo] = useState("");
   const [selectedLevelId, setSelectedLevelId] = useState("");
 
   if (isLoading) {
@@ -50,7 +52,13 @@ export function AdminCoacheeDetailPage() {
     : "None";
 
   const handleSaveProfile = async () => {
-    await updateMutation.mutateAsync({ name: editName, email: editEmail, phone: editPhone });
+    await updateMutation.mutateAsync({
+      name: editName,
+      email: editEmail,
+      phone: editPhone,
+      classTypePreference: editClassPreference || null,
+      additionalInfo: editAdditionalInfo || null,
+    });
     setEditing(false);
   };
 
@@ -71,6 +79,8 @@ export function AdminCoacheeDetailPage() {
     setEditName(coachee.name);
     setEditEmail(coachee.email);
     setEditPhone(coachee.phone || "");
+    setEditClassPreference(coachee.classTypePreference || "");
+    setEditAdditionalInfo(coachee.additionalInfo || "");
     setEditing(true);
   };
 
@@ -101,10 +111,10 @@ export function AdminCoacheeDetailPage() {
               type="button"
               onClick={handleToggleStatus}
               disabled={statusMutation.isPending}
-              className={`px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors ${
+              className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
                 coachee.status === "ACTIVE"
-                  ? "text-red-600 border-red-200 hover:bg-red-50"
-                  : "text-green-600 border-green-200 hover:bg-green-50"
+                  ? "text-red-600 border border-red-200 hover:bg-red-50"
+                  : "bg-green-600 text-white hover:bg-green-700"
               }`}
             >
               {statusMutation.isPending
@@ -159,6 +169,40 @@ export function AdminCoacheeDetailPage() {
                   value={editPhone}
                   onChange={(e) => setEditPhone(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="edit-preference"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Class Type Preference
+                </label>
+                <select
+                  id="edit-preference"
+                  value={editClassPreference}
+                  onChange={(e) => setEditClassPreference(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">None</option>
+                  <option value="INDIVIDUAL">Individual</option>
+                  <option value="GROUP">Group</option>
+                  <option value="BOTH">Both</option>
+                </select>
+              </div>
+              <div>
+                <label
+                  htmlFor="edit-additional"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  Additional Info
+                </label>
+                <textarea
+                  id="edit-additional"
+                  value={editAdditionalInfo}
+                  onChange={(e) => setEditAdditionalInfo(e.target.value)}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />
               </div>
               <div className="flex gap-2 pt-2">

@@ -36,7 +36,13 @@ export const coacheesRepository = {
 
   async update(
     id: string,
-    fields: { name?: string; email?: string; phone?: string },
+    fields: {
+      name?: string;
+      email?: string;
+      phone?: string;
+      classTypePreference?: string | null;
+      additionalInfo?: string | null;
+    },
   ): Promise<Coachee> {
     const { data } = await apiClient.put<Coachee>(`/coachees/${id}`, fields);
     return data;
