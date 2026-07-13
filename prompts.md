@@ -13,6 +13,7 @@
 | Calendar, i18n, sidebar | [8ff11265-f2f9-4ac1-b458-5dd9a909c31f.md](./agent-transcripts/8ff11265-f2f9-4ac1-b458-5dd9a909c31f.md) |
 | Deploy cPanel, comms, Moodle 5.2, grill-me | Cursor transcript `17d3d3be-a847-4d06-abee-a8643a0a356f` |
 | Topbar mobile, duplicate chat, admin-only upgrade | Cursor transcript (Jul 2026 session, `lms-cms-laravel12`) |
+| Responsive all screens, drawer nav, CI e2e bootstrap | Cursor transcript `17d3d3be-a847-4d06-abee-a8643a0a356f` (Jul 2026) |
 
 **Extended prompt log in code repo:** [codigofinal/lms-cms-laravel12/prompts.md](../codigofinal/lms-cms-laravel12/prompts.md)
 
@@ -39,6 +40,7 @@
 17. [Refactoring, tests, CI/CD, and quality](#17-refactoring-tests-cicd-and-quality)
 18. [Topbar responsive, comms fixes, and admin-only upgrade](#18-topbar-responsive-comms-fixes-and-admin-only-upgrade)
 19. [English documentation for deploy artifacts](#19-english-documentation-for-deploy-artifacts)
+20. [Responsive UI — all screens, roles, and devices](#20-responsive-ui--all-screens-roles-and-devices)
 
 ---
 
@@ -429,6 +431,40 @@
 
 ---
 
+## 20. Responsive UI — all screens, roles, and devices
+
+**Prompt 1:** "Quiero que compruebes todas las pantallas para todos los dispositivos y todos los tipos de usuario que se puedan utilizar y ver correctamente. Crea una carpeta con las modificaciones que necesites para que pueda subir la modificacion a https://proyectolms.asemad.es/."
+
+> Note: Full UI audit across 55 Blade templates, 4 layouts (`app`, `stitch`, `calendar-moodle`, guest `app`), breakpoints 480–1400px, and roles guest/student/teacher/coordinator/admin. Delivered FTP package `codigofinal/deploy-responsive-all-screens/` (15 files) with `INSTALAR.md` for cPanel upload.
+
+**Prompt 2:** "Sube los cambios realizados al repositorio y rama que utilizamos en el proyecto AI4Devs-finalproject, antes de subir el commit dejame hacer la comprobacion de todas las pantallas y usuario, documentalas para que pueda hacerlo de manera más rápida y comoda."
+
+> Note: Created `VERIFICAR-PANTALLAS.md` — matrix by role × screen × device (desktop 1280px, tablet 768px, mobile 390px), transversal checks (drawer ☰, comms topbar, i18n), and approval gate before commit to `angel-burgos-r`. Changes kept uncommitted until user signs off.
+
+**Prompt 3:** "Actualiza los documentos de AI4Devs-finalproject/prompts.md y readme.md con los cambios que acabamos de hacer."
+
+> Note: Documentation sync for delivery branch `finalproject-ABR` (this file + `readme.md`).
+
+**Technical changes (implementation repo):**
+
+| Area | Change |
+|------|--------|
+| `public/css/lms.css` | Mobile **sidebar drawer** (≤900px), overlay, mobile search toggle |
+| `public/js/lms.js` | `data-mobile-nav-toggle`, `data-sidebar-overlay`, Escape to close |
+| `layouts/app.blade.php`, `stitch.blade.php`, `calendar-moodle.blade.php` | Hamburger + overlay markup |
+| `calendar-moodle-topbar.blade.php` | Responsive toolbar + real `topbar-comms` (bell, chat, mail) |
+| `moodle-mobile-nav.blade.php` | Secondary nav strip when desktop topbar links hidden (≤1200px) |
+| `public/css/calendar-teacher.css` | Mobile topbar rows, comms panels full-width |
+| `DashboardController`, `CalendarController` | `hasRoleAtLeast(UserRole::Teacher)` so coordinator/admin get teacher shell |
+| `sidebar-nav.blade.php` | Upgrade link admin-only; «New event» for teacher+ |
+| `lang/*/lms.php` | Keys `mobile_nav.open_menu`, `close_menu`, `open_search` |
+
+**Deploy package:** `codigofinal/deploy-responsive-all-screens/` — requires `deploy-moodle52-comms` already on production.
+
+**Verification guide:** [deploy-responsive-all-screens/VERIFICAR-PANTALLAS.md](../codigofinal/deploy-responsive-all-screens/VERIFICAR-PANTALLAS.md)
+
+---
+
 ## 11. Main files used
 
 Paths relative to [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codigofinal) → `codigofinal/lms-cms-laravel12/`:
@@ -447,13 +483,14 @@ Paths relative to [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codig
 | **AI / Grill** | `resources/views/components/ai-assistant.blade.php`, `public/js/lms-ai.js`, `.cursor/commands/grill-me.md`, `.cursor/skills/grill-me/SKILL.md` |
 | **Upgrade** | `resources/views/upgrade/index.blade.php`, `UpgradeAssistantController.php` (admin only), `deploy-upgrade-admin-only/` |
 | **i18n** | `lang/es/lms.php`, `lang/en/lms.php` (blocks `comms`, `grill_me`, `ai`, `gradebook`, `upgrade`) |
-| **Styles / JS** | `public/css/lms.css`, `lms-comms.css`, `moodle52.css`, `auth.css`; `public/js/lms.js`, `lms-comms.js`, `lms-ai.js` |
+| **Styles / JS** | `public/css/lms.css`, `lms-comms.css`, `moodle52.css`, `auth.css`, `calendar-teacher.css`, `topbar-brand-asemad.css`; `public/js/lms.js`, `lms-comms.js`, `lms-ai.js` |
+| **Responsive / mobile** | `layouts/partials/mobile-nav-toggle.blade.php`, `moodle-mobile-nav.blade.php`, drawer CSS in `lms.css`, mobile nav JS in `lms.js` |
 | **Tests** | `tests/Feature/GrillMeTest.php`, `CommsMessagingTest.php`, `UpgradeAssistantAccessTest.php`, `LmsFlowTest.php`, + Playwright |
-| **Deploy packages** | `deploy-moodle52-comms/`, `deploy-moodle52-features/`, `deploy-upgrade-admin-only/`, `deploy-proyectolms-roles/` |
+| **Deploy packages** | `deploy-moodle52-comms/`, `deploy-moodle52-features/`, `deploy-upgrade-admin-only/`, `deploy-proyectolms-roles/`, `deploy-responsive-all-screens/` |
 | **Docker** | `docker-compose.yml`, `docker/nginx/default.conf`, `docker/php/uploads.ini` |
 | **CI/CD** | `.github/workflows/ci.yml`, `scripts/despliegue-CI.md`, `scripts/script-despliegue-cd.md`, `scripts/deploy-ec2.sh` |
 | **Screenshots** | `AI4Devs-finalproject/docs/screenshots/*.png` |
 
 ---
 
-*Last updated: July 2026 — delivery branch `finalproject-ABR` (Moodle 5.2, comms, topbar responsive, upgrade admin-only).*
+*Last updated: July 2026 — delivery branch `finalproject-ABR` (Moodle 5.2, comms, responsive all-screens, CI e2e, upgrade admin-only).*

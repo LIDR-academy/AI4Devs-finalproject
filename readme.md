@@ -56,7 +56,8 @@ repositorio/                          # Local monorepo (AI4Devs course)
 │   ├── deploy-moodle52-features/     # FTP pack: login 5.2, gradebook, AI, upgrade assistant
 │   ├── deploy-moodle52-comms/        # FTP pack: notifications, messages, mail, topbar
 │   ├── deploy-proyectolms-roles/     # FTP pack: role hierarchy + seed users
-│   └── deploy-highlight-quill/       # FTP pack: highlight colors in lesson editor
+│   ├── deploy-highlight-quill/       # FTP pack: highlight colors in lesson editor
+│   └── deploy-responsive-all-screens/ # FTP pack: drawer nav, calendar topbar, all roles/devices
 └── [other AI4Devs course modules]    # backend, frontend, design, cicd, etc.
 ```
 
@@ -98,9 +99,10 @@ Provide a modern, modular, open-source LMS platform that enables the creation an
 - **Academic events (teacher):** Create, edit, and delete events at `/calendar/events/*` (teacher role only).
 - **Internationalization (i18n):** Interface in Spanish and English via session (`/locale/{es|en}`) and `lang/*/lms.php` files.
 - **Unified sidebar navigation:** Home, My Courses, Calendar (+ Log out) on all authenticated pages; «New event» link only on `/calendar` for teachers.
+- **Responsive UI (all screens):** Mobile sidebar drawer (≤900px), overlay menu, mobile search toggle, responsive teacher calendar topbar with comms icons, secondary nav strip on narrow viewports; verification checklist in `deploy-responsive-all-screens/VERIFICAR-PANTALLAS.md`.
 - **User profile:** Edit name, email, and avatar.
 - **Progress tracking:** Record of lessons completed per student.
-- **Differentiated dashboards:** Teacher and student views.
+- **Differentiated dashboards:** Teacher and student views; coordinator and admin use the teacher dashboard and Moodle calendar shell (`hasRoleAtLeast(Teacher)`).
 - **Multimedia file uploads:** Local videos with configured limits (128 MB).
 - **Moodle 5.2-inspired pack:** Redesigned login, multi-grader gradebook, AI tutor actions (`summarize`, `explain`, `tutor_hint`), Smart Upgrade Assistant (`/upgrade-assistant`).
 - **Communications (comms):** In-app notifications, private messaging, internal mail (`/comms/*`) with topbar shortcuts.
@@ -160,7 +162,7 @@ Requires: PHP 8.3+, Composer, MySQL 8.4.
 
 **Production deployment (ASEMAD hosting):**
 
-The live application is available at **[https://proyectolms.asemad.es/](https://proyectolms.asemad.es/)**. Deploy uses cPanel/FTP (not Docker): see `codigofinal/lms-cms-laravel12/docs/DEPLOY-CPANEL-ASEMAD.md` and FTP packages under `codigofinal/deploy-*`.
+The live application is available at **[https://proyectolms.asemad.es/](https://proyectolms.asemad.es/)**. Deploy uses cPanel/FTP (not Docker): see `codigofinal/lms-cms-laravel12/docs/DEPLOY-CPANEL-ASEMAD.md` and FTP packages under `codigofinal/deploy-*` (latest responsive pack: `deploy-responsive-all-screens/`).
 
 ---
 
@@ -183,7 +185,7 @@ graph TD
 
 | Layer | Technology |
 |-------|------------|
-| Frontend | Blade + CSS (`lms.css`, `calendar*.css`, `moodle52.css`, `lms-comms.css`, `auth.css`) + JS (`lms.js`, `lms-comms.js`, `lms-ai.js`) |
+| Frontend | Blade + CSS (`lms.css`, `calendar*.css`, `moodle52.css`, `lms-comms.css`, `auth.css`, `topbar-brand-asemad.css`) + JS (`lms.js`, `lms-comms.js`, `lms-ai.js`) |
 | Backend | Laravel 12 (PHP 8.3 local / 8.2+ production) |
 | i18n | `lang/en/lms.php`, `lang/es/lms.php`, middleware `SetLocale` |
 | Database | MySQL 8.4 |
@@ -209,7 +211,8 @@ lms-cms-laravel12/
 │   ├── upgrade/                    Smart Upgrade Assistant
 │   ├── components/                 ai-assistant (Grill me)
 │   ├── calendar/, courses/, lessons/, plugins/, layouts/
-├── public/css|js/                  lms, comms, moodle52, auth assets
+│   │   └── partials/               mobile-nav-toggle, moodle-mobile-nav, topbar-comms, sidebar-nav
+├── public/css|js/                  lms, comms, moodle52, auth, calendar-teacher assets
 ├── routes/web.php
 ├── tests/Feature|Unit/             PHPUnit + GrillMeTest
 ├── playwright/                     E2E automation + screenshot script
@@ -406,6 +409,8 @@ Web routes in `routes/web.php` (no separate REST API).
 
 **HU-15:** As an operator, I want the Upgrade Assistant to verify DB tables and files before deploying Moodle 5.2 features.
 
+**HU-16:** As a user on mobile or tablet, I want a collapsible navigation menu and readable layouts on every screen (dashboard, courses, calendar, comms, profile) without overlapping topbar elements.
+
 ### 5.1 MoSCoW prioritization (excerpt)
 
 **Must-Have:** authentication, course/lesson CRUD, enrollment, student consumption, assessment.
@@ -458,6 +463,12 @@ Web routes in `routes/web.php` (no separate REST API).
 **Ticket 12 — Production deploy (cPanel)**
 - `DEPLOY-CPANEL-ASEMAD.md`, `diag.php`, role/FTP packages, remote i18n merge scripts
 
+**Ticket 13 — Responsive UI (all screens and roles)**
+- Mobile sidebar drawer + overlay in `lms.css` / `lms.js`
+- Responsive calendar topbar with comms + `moodle-mobile-nav` strip
+- `DashboardController` / `CalendarController`: staff roles see teacher views
+- FTP package `deploy-responsive-all-screens/` with `INSTALAR.md` and `VERIFICAR-PANTALLAS.md`
+
 ---
 
 ## 7. Pull Requests
@@ -486,18 +497,22 @@ Web routes in `routes/web.php` (no separate REST API).
 
 **PR 12 — cPanel production deploy and FTP packages**
 
+**PR 13 — Responsive UI for all screens, roles, and devices**
+- Drawer navigation, calendar topbar responsive, coordinator/admin teacher shell
+- Deploy package `deploy-responsive-all-screens/`
+
 ---
 
 ## 8. Prompt Documentation
 
-Prompts used with code assistants and the detailed file list are in **[prompts.md](./prompts.md)** (sections 1–17).
+Prompts used with code assistants and the detailed file list are in **[prompts.md](./prompts.md)** (sections 1–20).
 
 ### Final delivery (`finalproject-ABR`)
 
 | Artifact | Description |
 |----------|-------------|
 | [readme.md](./readme.md) | Product documentation aligned with `codigofinal/lms-cms-laravel12` |
-| [prompts.md](./prompts.md) | Prompts by lifecycle phase, deploy, comms, Moodle 5.2, grill-me |
+| [prompts.md](./prompts.md) | Prompts by lifecycle phase, deploy, comms, Moodle 5.2, grill-me, responsive UI |
 | [PLAN_NEGOCIO.md](./PLAN_NEGOCIO.md) | SaaS business plan |
 | [seguridad.md](./seguridad.md) | Security by user story and OWASP Top 10 |
 | [agent-transcripts/index.md](./agent-transcripts/index.md) | Exported conversation index |
@@ -522,7 +537,7 @@ Login (Moodle 5.2 style, ASEMAD branding) with EN/ES language selector.
 |------|-------------|
 | Dashboard | Main panel with courses, timeline, and creation form |
 | My Courses | Listing and management of published courses |
-| Calendar | Monthly view (Moodle layout), academic events |
+| Calendar | Monthly view (Moodle layout), academic events; mobile topbar with comms + nav strip |
 | Upgrade Assistant | Pre-deploy health checks for Moodle 5.2 pack |
 | Gradebook | Multi-grader marks per course activity |
 | Comms | Notifications, messages, internal mail |
@@ -559,7 +574,7 @@ Login (Moodle 5.2 style, ASEMAD branding) with EN/ES language selector.
 
 ![Academic calendar — student](docs/screenshots/calendar-student.png)
 
-> Regenerate captures: `npm run screenshots` (see [docs/screenshots/README.md](docs/screenshots/README.md))
+> Regenerate captures: `npm run screenshots` (see [docs/screenshots/README.md](docs/screenshots/README.md)). For responsive QA before production deploy, use [deploy-responsive-all-screens/VERIFICAR-PANTALLAS.md](../codigofinal/deploy-responsive-all-screens/VERIFICAR-PANTALLAS.md).
 
 ---
 
