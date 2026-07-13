@@ -2,7 +2,7 @@
  * Test-only factory for a Supabase GoTrue `AuthApiError`-shaped fixture, used by
  * `auth.integration.test.ts` to exercise `AuthService`'s real error normalization against a
  * realistic rejection — without `@helsoft/hooks` taking a dependency on `@supabase/supabase-js`
- * just for test fixtures (Slice 2, Round 1 review, Minor 3 — `@helsoft/services`'s production
+ * just for test fixtures (Slice 2, Round 1 review, Minor 3 — `@helsoft/supabase-services`'s production
  * barrel no longer re-exports the vendor `AuthApiError` class solely for this purpose).
  *
  * Duck-types the exact shape `@supabase/auth-js`'s `isAuthError`/`isAuthApiError` check at

@@ -1,5 +1,5 @@
 import { LoginForm } from '@helsoft/components';
-import { AuthService } from '@helsoft/services';
+import { AuthService } from '@helsoft/supabase-services';
 
 import { resolveAuthErrorMessage } from './sign-in-form.helpers';
 import { useSignInForm } from './use-sign-in-form';

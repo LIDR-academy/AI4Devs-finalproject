@@ -1,4 +1,4 @@
-import { getSupabase } from '@helsoft/services';
+import { getSupabase } from '@helsoft/supabase-services';
 
 import { PDF_UPLOAD_BUCKET } from '../services/pdf-extraction.constants';
 import type { PdfExtractionResult } from '../types/pdf-extraction.types';

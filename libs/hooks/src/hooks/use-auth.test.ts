@@ -1,4 +1,4 @@
-jest.mock('@helsoft/services', () => ({
+jest.mock('@helsoft/supabase-services', () => ({
   AuthService: {
     signIn: jest.fn(),
     signOut: jest.fn(),
@@ -6,7 +6,7 @@ jest.mock('@helsoft/services', () => ({
 }));
 
 import { act, renderHook } from '@testing-library/react';
-import { AuthService } from '@helsoft/services';
+import { AuthService } from '@helsoft/supabase-services';
 
 import { useAuth } from './use-auth';
 

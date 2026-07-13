@@ -1,8 +1,8 @@
 // @ts-check
 /**
- * StrykerJS — @helsoft/services (ts-jest). REST API services/DAOs.
+ * StrykerJS — @helsoft/supabase-services (ts-jest).
  * The mutation_tester narrows scope to the feature's changed files at runtime:
- *   pnpm --filter @helsoft/services exec stryker run --mutate "src/services/foo.service.ts,src/dao/foo.dao.ts"
+ *   pnpm --filter @helsoft/supabase-services exec stryker run --mutate "src/services/foo.service.ts,src/dao/foo.dao.ts"
  * @type {import('@stryker-mutator/api/core').PartialStrykerOptions}
  */
 export default {

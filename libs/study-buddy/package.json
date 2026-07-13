@@ -22,7 +22,7 @@
     "@helsoft/hooks": "workspace:*",
     "@helsoft/localization": "workspace:*",
     "@helsoft/pdf-upload-extraction": "workspace:*",
-    "@helsoft/services": "workspace:*",
+    "@helsoft/supabase-services": "workspace:*",
     "@helsoft/types": "workspace:*"
   },
   "peerDependencies": {

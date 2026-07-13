@@ -1,4 +1,4 @@
-import type { Session } from '@helsoft/services';
+import type { Session } from '@helsoft/supabase-services';
 
 export type UseSessionResult = {
   session: Session | null;

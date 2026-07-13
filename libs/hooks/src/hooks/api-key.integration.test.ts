@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { initSupabase } from '@helsoft/services';
-import type { Session, SupabaseClient } from '@helsoft/services';
+import { initSupabase } from '@helsoft/supabase-services';
+import type { Session, SupabaseClient } from '@helsoft/supabase-services';
 
 import { useApiKey } from './use-api-key';
 

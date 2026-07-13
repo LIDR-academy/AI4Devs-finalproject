@@ -2,8 +2,8 @@ jest.mock('@helsoft/localization', () => ({ useLocalization: jest.fn() }));
 
 import { render, screen, waitFor } from '@testing-library/react-native';
 import { useLocalization } from '@helsoft/localization';
-import { initSupabase } from '@helsoft/services';
-import type { SupabaseClient } from '@helsoft/services';
+import { initSupabase } from '@helsoft/supabase-services';
+import type { SupabaseClient } from '@helsoft/supabase-services';
 import type { Lesson } from '@helsoft/types';
 
 import { LessonResults } from './lesson-results';

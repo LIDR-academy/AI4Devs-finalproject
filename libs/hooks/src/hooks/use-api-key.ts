@@ -7,7 +7,7 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { ApiKeyService } from '@helsoft/services';
+import { ApiKeyService } from '@helsoft/supabase-services';
 import type { ApiKeyError, ApiKeyErrorCode, ApiKeyStatus } from '@helsoft/types';
 
 import { useSession } from './use-session';

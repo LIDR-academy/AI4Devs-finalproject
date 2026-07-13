@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { getSupabase } from '@helsoft/services';
-import type { Session } from '@helsoft/services';
+import { getSupabase } from '@helsoft/supabase-services';
+import type { Session } from '@helsoft/supabase-services';
 
 import type { UseSessionResult } from './use-session.types';
 

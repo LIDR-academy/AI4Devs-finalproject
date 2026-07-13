@@ -1,9 +1,9 @@
-jest.mock('@helsoft/services', () => ({
+jest.mock('@helsoft/supabase-services', () => ({
   LessonAttemptService: { saveAttempt: jest.fn() },
 }));
 
 import { act, renderHook } from '@testing-library/react';
-import { LessonAttemptService } from '@helsoft/services';
+import { LessonAttemptService } from '@helsoft/supabase-services';
 
 import { useLessonAttempt } from './use-lesson-attempt';
 

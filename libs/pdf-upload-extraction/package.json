@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@helsoft/hooks": "workspace:*",
-    "@helsoft/services": "workspace:*",
+    "@helsoft/supabase-services": "workspace:*",
     "@supabase/supabase-js": "^2.49.0",
     "mupdf": "^1.28.0"
   },

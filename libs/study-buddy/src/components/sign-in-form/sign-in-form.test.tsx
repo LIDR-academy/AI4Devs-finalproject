@@ -11,7 +11,7 @@ jest.mock('expo-router', () => ({
 
 import { useAuth } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
-import { AuthService } from '@helsoft/services';
+import { AuthService } from '@helsoft/supabase-services';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { useRouter } from 'expo-router';
 

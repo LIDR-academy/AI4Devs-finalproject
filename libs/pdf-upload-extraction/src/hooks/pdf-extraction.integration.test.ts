@@ -1,8 +1,8 @@
 /** @jest-environment jsdom */
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { useSession } from '@helsoft/hooks';
-import { initSupabase } from '@helsoft/services';
-import type { SupabaseClient } from '@helsoft/services';
+import { initSupabase } from '@helsoft/supabase-services';
+import type { SupabaseClient } from '@helsoft/supabase-services';
 
 import { usePdfExtraction } from './use-pdf-extraction';
 
