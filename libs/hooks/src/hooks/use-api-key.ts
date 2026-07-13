@@ -6,12 +6,12 @@ import {
   useEffect,
   useMemo,
   useState,
-  type ReactNode,
 } from 'react';
 import { ApiKeyService } from '@helsoft/services';
 import type { ApiKeyError, ApiKeyErrorCode, ApiKeyStatus } from '@helsoft/types';
 
 import { useSession } from './use-session';
+import type { ApiKeyProviderProps, UseApiKeyResult } from './use-api-key.types';
 
 const NO_KEY_STATUS: ApiKeyStatus = { hasKey: false };
 
@@ -27,18 +27,6 @@ const API_KEY_ERROR_CODES: ReadonlySet<ApiKeyErrorCode> = new Set([
  * unchecked cast (mirrors useAuth's isAuthErrorShape). */
 const isApiKeyErrorShape = (cause: unknown): cause is ApiKeyError =>
   API_KEY_ERROR_CODES.has((cause as { code?: unknown } | null)?.code as ApiKeyErrorCode);
-
-export type UseApiKeyResult = {
-  status: ApiKeyStatus;
-  /** True while the initial status fetch is in flight. */
-  isLoading: boolean;
-  /** True while a save/remove call is in flight — drives the ApiKeyForm Loading state. */
-  isSubmitting: boolean;
-  /** The normalized code from the most recent failed save/remove — null once it succeeds. */
-  error: ApiKeyErrorCode | null;
-  saveApiKey: (rawKey: string) => Promise<void>;
-  removeApiKey: () => Promise<void>;
-};
 
 /**
  * The full stateful implementation, shared by both the standalone `useApiKey()` path and
@@ -143,10 +131,6 @@ export const useApiKey = (): UseApiKeyResult => {
   const shared = useContext(ApiKeyContext);
   const own = useApiKeyState(shared !== undefined);
   return shared ?? own;
-};
-
-export type ApiKeyProviderProps = {
-  children: ReactNode;
 };
 
 /**

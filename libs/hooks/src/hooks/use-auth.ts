@@ -2,6 +2,8 @@ import { useCallback, useState } from 'react';
 import { AuthService } from '@helsoft/services';
 import type { AuthError, AuthErrorCode } from '@helsoft/types';
 
+import type { UseAuthResult } from './use-auth.types';
+
 /** The closed set of codes AuthService is contractually allowed to reject with. */
 const AUTH_ERROR_CODES: ReadonlySet<AuthErrorCode> = new Set([
   'invalid_credentials',
@@ -15,15 +17,6 @@ const AUTH_ERROR_CODES: ReadonlySet<AuthErrorCode> = new Set([
  * network_error rather than reading an untrusted value via an unchecked cast. */
 const isAuthErrorShape = (cause: unknown): cause is AuthError =>
   AUTH_ERROR_CODES.has((cause as { code?: unknown } | null)?.code as AuthErrorCode);
-
-export type UseAuthResult = {
-  signIn: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  /** True while a signIn/signOut call is in flight (drives the LoginForm Loading state). */
-  isSubmitting: boolean;
-  /** The normalized code from the most recent failed signIn — null once it succeeds. */
-  error: AuthErrorCode | null;
-};
 
 /**
  * React integration over AuthService: exposes a component-friendly sign-in/out API.

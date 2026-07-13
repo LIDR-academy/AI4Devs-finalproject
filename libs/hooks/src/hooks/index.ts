@@ -1,5 +1,10 @@
 export * from './use-api-key';
+export type * from './use-api-key.types';
 export * from './use-auth';
+export type * from './use-auth.types';
 export * from './use-interaction-state';
+export type * from './use-interaction-state.types';
 export * from './use-lesson-attempt';
+export type * from './use-lesson-attempt.types';
 export * from './use-session';
+export type * from './use-session.types';

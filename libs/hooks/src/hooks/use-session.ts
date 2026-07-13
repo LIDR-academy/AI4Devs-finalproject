@@ -2,11 +2,7 @@ import { useEffect, useState } from 'react';
 import { getSupabase } from '@helsoft/services';
 import type { Session } from '@helsoft/services';
 
-export type UseSessionResult = {
-  session: Session | null;
-  /** True until the initial getSession() resolves — distinguishes "logged out" from "not yet known". */
-  isLoading: boolean;
-};
+import type { UseSessionResult } from './use-session.types';
 
 export const useSession = (): UseSessionResult => {
   const [session, setSession] = useState<Session | null>(null);

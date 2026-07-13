@@ -2,14 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { LessonAttemptService } from '@helsoft/services';
 import type { LessonAttempt, NewLessonAttempt } from '@helsoft/types';
 
-export type LessonAttemptStatus = 'idle' | 'saving' | 'saved' | 'error';
-
-export type UseLessonAttemptResult = {
-  status: LessonAttemptStatus;
-  attempt: LessonAttempt | null;
-  saveAttempt: (input: NewLessonAttempt) => void;
-  retry: () => void;
-};
+import type { LessonAttemptStatus, UseLessonAttemptResult } from './use-lesson-attempt.types';
 
 /**
  * React integration over LessonAttemptService (tanstack-query not installed → local state,
