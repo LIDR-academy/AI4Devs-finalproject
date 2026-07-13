@@ -546,7 +546,6 @@ Login (Moodle 5.2 style, ASEMAD branding) with EN/ES language selector.
 | Comms — notifications | [comms-notifications.png](docs/screenshots/comms-notifications.png) | In-app notifications |
 | Comms — messages | [comms-messages.png](docs/screenshots/comms-messages.png) | Private messaging |
 | Comms — mail | [comms-mail.png](docs/screenshots/comms-mail.png) | Internal mail |
-| Grill me | [ai-grill-me.png](docs/screenshots/ai-grill-me.png) | AI assistant panel on lesson view |
 
 ![Teacher dashboard](docs/screenshots/dashboard-teacher.png)
 
@@ -565,8 +564,6 @@ Login (Moodle 5.2 style, ASEMAD branding) with EN/ES language selector.
 ![Comms — messages](docs/screenshots/comms-messages.png)
 
 ![Comms — mail](docs/screenshots/comms-mail.png)
-
-![AI Grill me](docs/screenshots/ai-grill-me.png)
 
 ### Student role
 

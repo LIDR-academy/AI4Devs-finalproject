@@ -68,32 +68,9 @@ await desktop.evaluate(() => {
 await login(desktop, 'teacher');
 await shot(desktop, 'upgrade-assistant.png', '/upgrade-assistant');
 
-// AI / Grill me — student lesson view (enrolled)
+// Student dashboards
 await desktop.context().clearCookies();
 await login(desktop, 'student');
-await desktop.goto(`${baseUrl}/lessons/1`);
-await desktop.waitForLoadState('networkidle');
-const aiToggle = desktop.locator('#m52-ai-toggle');
-if (await aiToggle.count()) {
-  await aiToggle.click();
-  const accept = desktop.locator('#m52-ai-accept');
-  if (await accept.isVisible()) {
-    await accept.click();
-    await desktop.waitForTimeout(500);
-  }
-  const grillBtn = desktop.locator('[data-grill-open]');
-  if (await grillBtn.count()) {
-    await grillBtn.click();
-    await desktop.waitForTimeout(300);
-  }
-}
-await desktop.screenshot({
-  path: path.join(outDir, 'ai-grill-me.png'),
-  fullPage: true,
-});
-console.log('saved ai-grill-me.png');
-
-// Student dashboards
 await shot(desktop, 'dashboard-student.png', '/dashboard');
 await shot(desktop, 'calendar-student.png', '/calendar');
 await shot(desktop, 'playwright-calendar-student.png', '/calendar');
