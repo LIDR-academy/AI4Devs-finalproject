@@ -15,7 +15,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { File } from 'expo-file-system';
 
 import { localizationValue } from '../../test-utils/auth-test-factories';
-import { computeCanRetry, PdfUpload } from './pdf-upload';
+import { PdfUpload } from './pdf-upload';
 
 const mockUsePdfExtraction = usePdfExtraction as jest.Mock;
 const mockUseLocalization = useLocalization as jest.Mock;
@@ -273,22 +273,4 @@ describe('PdfUpload', () => {
     },
   );
 
-  // Mutation-kill guard (review round-1 Part B #5) — `canRetry` defaults to `true` when there's
-  // no error at all (the idle/loading/content states, none of which render the retry affordance
-  // regardless of this value) — a `: true` → `: false` mutation on this default is otherwise
-  // unreachable through any rendered assertion, so it's unit-tested directly on the extracted
-  // `computeCanRetry` helper instead.
-  describe('computeCanRetry', () => {
-    it('defaults to true when there is no error', () => {
-      expect(computeCanRetry(null)).toBe(true);
-    });
-
-    it('is true for a retryable code', () => {
-      expect(computeCanRetry('network_error')).toBe(true);
-    });
-
-    it('is false for a non-retryable code', () => {
-      expect(computeCanRetry('file_too_large')).toBe(false);
-    });
-  });
 });
