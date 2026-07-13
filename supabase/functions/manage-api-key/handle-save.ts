@@ -1,4 +1,4 @@
-import type { AiProvider, ProbeOutcome } from './validate-key.ts';
+import type { AiProvider } from './provider.ts';
 
 export type SaveApiKeyParams = {
   userId: string;
@@ -12,33 +12,22 @@ export type MaskedApiKeyStatus = {
   updatedAt: string;
 };
 
-export type ApiKeyErrorResult = { code: 'invalid_key' | 'network_error' };
-
-export type SaveApiKeyResult = MaskedApiKeyStatus | ApiKeyErrorResult;
+export type SaveApiKeyResult = MaskedApiKeyStatus;
 
 export type SaveApiKeyDeps = {
-  validateKey: (provider: AiProvider, apiKey: string) => Promise<ProbeOutcome>;
   storeApiKey: (params: SaveApiKeyParams) => Promise<{ provider: string; updatedAt: string }>;
   log: (event: { action: 'save'; outcome: string; userId: string }) => void;
 };
 
 /**
- * Orchestrates the validate-THEN-store flow (spec.md Open decision 2, task-2 Goal): the
- * provider probe always runs first, and `storeApiKey` is only ever reached on a 'valid'
- * outcome -- an invalid/transient result returns the normalized error code straight away,
- * with nothing written to Vault or the metadata table.
+ * Stores the submitted key and replies with the masked status only -- never the raw key. A
+ * store failure propagates to index.ts's catch-all, which responds 502 network_error without
+ * logging the request body (@s12).
  */
 export const handleSaveApiKey = async (
   params: SaveApiKeyParams,
   deps: SaveApiKeyDeps,
 ): Promise<SaveApiKeyResult> => {
-  const outcome = await deps.validateKey(params.provider, params.apiKey);
-
-  if (outcome !== 'valid') {
-    deps.log({ action: 'save', outcome, userId: params.userId });
-    return { code: outcome === 'invalid' ? 'invalid_key' : 'network_error' };
-  }
-
   const stored = await deps.storeApiKey(params);
   deps.log({ action: 'save', outcome: 'success', userId: params.userId });
   return { hasKey: true, provider: stored.provider as AiProvider, updatedAt: stored.updatedAt };

@@ -1,7 +1,7 @@
 // manage-api-key -- the first Edge Function in the repo (task-2, Slice 1: `save` action;
 // `remove` added in task-9, Slice 2). This file is intentionally thin HTTP/Supabase wiring --
 // the actual decision logic lives in the pure, Deno-unit-tested modules it composes
-// (validate-key.ts, handle-save.ts, handle-remove.ts, logger.ts). Verified here via manual
+// (provider.ts, handle-save.ts, handle-remove.ts, logger.ts). Verified here via manual
 // smoke against a running Supabase stack, per risks.md R1 (Deno/Edge sits outside the
 // Jest/Stryker harness).
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
@@ -9,7 +9,7 @@ import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 import { handleRemoveApiKey, type RemoveApiKeyResult } from './handle-remove.ts';
 import { handleSaveApiKey, type SaveApiKeyResult } from './handle-save.ts';
 import { logEvent } from './logger.ts';
-import { isAiProvider, validateKey, type AiProvider } from './validate-key.ts';
+import { isAiProvider, type AiProvider } from './provider.ts';
 
 type SaveRequestBody = {
   action: 'save';
@@ -28,10 +28,8 @@ type DispatchResult = { status: number; body: SaveApiKeyResult | RemoveApiKeyRes
 const jsonResponse = (status: number, body: unknown): Response =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
-const errorStatus = (result: SaveApiKeyResult | RemoveApiKeyResult): number => {
-  if (!('code' in result)) return 200;
-  return result.code === 'invalid_key' ? 401 : 502;
-};
+const errorStatus = (result: SaveApiKeyResult | RemoveApiKeyResult): number =>
+  'code' in result ? 502 : 200;
 
 /**
  * Authenticates the caller from the request's own JWT -- user_id is derived here, never
@@ -88,7 +86,6 @@ const dispatch = async (
   const result = await handleSaveApiKey(
     { userId, provider: body.provider, apiKey: body.apiKey },
     {
-      validateKey,
       storeApiKey: async ({ userId: id, provider, apiKey }) => {
         const { data, error } = await adminClient.rpc('save_api_key', {
           p_user_id: id,
