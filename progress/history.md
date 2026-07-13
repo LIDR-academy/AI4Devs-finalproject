@@ -27,3 +27,4 @@
 2026-07-13 | ai-key-management (ad hoc, no story) | n/a | — | Removed OpenAI key validation: manage-api-key stores keys directly; invalid_key error path stripped client-side. Branch feature-entrega2-HernanLaura.
 2026-07-13 | ui-tweaks (ad hoc, no story) | n/a | — | SignOut moved to settings headerRight (style prop + WithStyle story); home screen spacing. Branch feature-entrega2-HernanLaura.
 2026-07-13 | component-split (ad hoc, no story) | n/a | — | Repo-wide component-split: *.types.ts + co-located hooks/helpers across 6 libs; 831 tests green. Branch feature-entrega2-HernanLaura.
+2026-07-13 | supabase-services-split (ad hoc, no story) | n/a | — | Split @helsoft/supabase-services out of @helsoft/services (Supabase client/DAOs/services); consumers + agent docs repointed; all suites green. Branch feature-entrega2-HernanLaura.
