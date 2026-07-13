@@ -1,7 +1,8 @@
 import type { AuthError, AuthErrorCode } from '@helsoft/types';
 import { isAuthApiError } from '@supabase/supabase-js';
 
-import { AuthDao, type SignInWithPasswordResult } from '../dao/auth.dao';
+import { AuthDao } from '../dao/auth.dao';
+import type { SignInWithPasswordResult } from '../dao/auth.types';
 import { toTypedError } from '../utils/typed-error';
 
 // Lightweight MVP check: local-part@domain-label.tld — enough to catch missing

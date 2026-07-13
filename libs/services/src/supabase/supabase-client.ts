@@ -1,11 +1,6 @@
-import { createClient, SupabaseClient, SupportedStorage } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-export type SupabaseConfig = {
-  url: string;
-  anonKey: string;
-  storage?: SupportedStorage;
-  detectSessionInUrl?: boolean;
-};
+import type { SupabaseConfig } from './supabase-client.types';
 
 let client: SupabaseClient | undefined;
 

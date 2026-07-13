@@ -1,16 +1,6 @@
-import type { Session, User } from '@supabase/supabase-js';
-
 import { getSupabase } from '../supabase/supabase-client';
 
-export type SignInWithPasswordParams = {
-  email: string;
-  password: string;
-};
-
-export type SignInWithPasswordResult = {
-  session: Session | null;
-  user: User | null;
-};
+import type { SignInWithPasswordParams, SignInWithPasswordResult } from './auth.types';
 
 /**
  * Raw Supabase auth data access. No validation, no error mapping — the service layer
