@@ -1,0 +1,36 @@
+---
+description: when creating non-trivial UI components (organisms / complex molecules)
+alwaysApply: false
+---
+
+# Component file split
+
+For components with real state or pure logic, split the folder. Keep simple atoms/molecules as a single `component-name.tsx` (+ stories).
+
+Types follow `.agents/rules/types.mdc` — multi-file types go in `*.types.ts` (exported only); do not export types from the component / hook / helpers.
+
+```
+component-name/
+  component-name.tsx          # JSX + event handlers (onPress / onClick wiring)
+  component-name.types.ts     # Props + related types (see types.mdc)
+  use-component-name.ts       # state, derived values, effects
+  component-name.helpers.ts   # pure functions (no React, no hooks)
+  component-name.stories.tsx
+  *.test.ts(x)                # co-located; one suite per file above
+```
+
+## What goes where
+
+| File | Owns | Does not own |
+| --- | --- | --- |
+| `*.tsx` | layout, styles, a11y attrs, **event handlers** that call hook setters / props | business state machines |
+| `use-*.ts` | `useState` / `useEffect`, derived flags, computed getters | `onPress` / `onClick` handlers |
+| `*.helpers.ts` | pure transforms / lookups / label builders | React, hooks, side effects |
+| `*.types.ts` | public Props / view models / result shapes | private types, runtime logic (see `types.mdc`) |
+
+## Rules of thumb
+
+- **Handlers stay in the component.** Hook exposes state + setters (and maybe small derived helpers like `itemState(id)`); the component wires taps/clicks.
+- **Helpers must be pure** — easy to unit-test without RTL.
+- **Don't invent a hook** for a dumb presentational atom.
+- This is **UI co-location**, not the data layer. Data still follows `Component → Hook → Service → DAO` (see `hooks-service-dao.mdc`). A `use-matching` here is local interaction state; a `use-lessons` in `@helsoft/hooks` wraps a service.

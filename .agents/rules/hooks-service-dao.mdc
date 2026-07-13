@@ -310,6 +310,14 @@ libs/
 - Hooks are exported through `src/hooks/index.ts`
 - Hooks use `export function`
 
+### Types
+
+Follow `.agents/rules/types.mdc`.
+
+- Multi-file / shared layer shapes (DAO DTOs, service results, hook return shapes, error codes) → co-located `{feature}.types.ts` (or `@helsoft/types` for cross-lib contracts)
+- Do **not** export types from the DAO / service / hook implementation file
+- Private / single-file types stay next to the implementation (or inline)
+
 ---
 
 ## Best Practices
