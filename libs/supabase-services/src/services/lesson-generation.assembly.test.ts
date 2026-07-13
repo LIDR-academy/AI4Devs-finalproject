@@ -182,4 +182,112 @@ describe('assembleGeneratedLesson', () => {
 
     expect(first.lessonId).not.toBe(second.lessonId);
   });
+
+  // task-11, @s4/@s5/@s6 — composition is enforced belt-and-suspenders: the prompt instructs it
+  // (lesson-generation.prompt.ts) and assembly rejects a parsed deck that violates it, rather
+  // than silently returning a wrong-composition deck (risks.md R3, feeds task-12's
+  // generation_failed).
+  describe('composition enforcement (task-11)', () => {
+    const instructionalSlide = { kind: 'instructional', title: 'Intro', content: 'Welcome' };
+    const activitySlide = rawDeck.slides[1];
+
+    // @s4 — a model response that ignores the "instructional only" instruction and still
+    // includes an activity slide is rejected, not silently returned.
+    it('rejects an instructional-only deck that contains an activity slide', () => {
+      const deck = { title: 'Photosynthesis', slides: [instructionalSlide, activitySlide] };
+
+      expect(() =>
+        assembleGeneratedLesson({ composition: 'instructional-only', rawDeck: deck, images: [] }),
+      ).toThrow(GenerationSchemaError);
+    });
+
+    // @s4 — an all-instructional deck is accepted for the instructional-only composition.
+    it('accepts an instructional-only deck containing only instructional slides', () => {
+      const deck = { title: 'Photosynthesis', slides: [instructionalSlide] };
+
+      const lesson = assembleGeneratedLesson({
+        composition: 'instructional-only',
+        rawDeck: deck,
+        images: [],
+      });
+
+      expect(lesson.slides.every((slide) => slide.kind === 'instructional')).toBe(true);
+    });
+
+    // @s5 — a model response that ignores the "activity only" instruction and still includes an
+    // instructional slide is rejected, not silently returned.
+    it('rejects an activity-only deck that contains an instructional slide', () => {
+      const deck = { title: 'Photosynthesis', slides: [instructionalSlide, activitySlide] };
+
+      expect(() =>
+        assembleGeneratedLesson({ composition: 'activity-only', rawDeck: deck, images: [] }),
+      ).toThrow(GenerationSchemaError);
+    });
+
+    // @s5 — an all-activity deck is accepted for the activity-only composition.
+    it('accepts an activity-only deck containing only activity slides', () => {
+      const deck = { title: 'Photosynthesis', slides: [activitySlide] };
+
+      const lesson = assembleGeneratedLesson({
+        composition: 'activity-only',
+        rawDeck: deck,
+        images: [],
+      });
+
+      expect(lesson.slides.every((slide) => slide.kind === 'activity')).toBe(true);
+    });
+
+    // @s6 — the "both" composition is never constrained by the instructional-only/activity-only
+    // checks: a mixed deck still assembles for it (already covered by the top-level tests above),
+    // pinned here so a mutant collapsing the composition guard to always-throw is caught.
+    it('never rejects a mixed deck for the "both" composition', () => {
+      const deck = { title: 'Photosynthesis', slides: [instructionalSlide, activitySlide] };
+
+      expect(() =>
+        assembleGeneratedLesson({ composition: 'both', rawDeck: deck, images: [] }),
+      ).not.toThrow();
+    });
+  });
+
+  // task-12, @s10/@s12 — an image metadata couldn't anchor (no matching sourcePage) is still
+  // placed when the caller (the Edge Function) supplies a vision-model decision for it; an
+  // unplaced image with no such decision degrades to text-only rather than failing the deck.
+  describe('vision-fallback placement (task-12)', () => {
+    const unanchorableImage = {
+      imageId: 'image-2',
+      storagePath: 'u/d/p9-0.png',
+      width: 200,
+      height: 150,
+      pageNumber: 9,
+    };
+
+    // @s10 — a vision decision places an image metadata alone couldn't anchor.
+    it('attaches an image via a vision-model decision when metadata leaves it unplaced', () => {
+      const lesson = assembleGeneratedLesson({
+        composition: 'both',
+        rawDeck,
+        images: [unanchorableImage],
+        visionDecisions: [{ imageId: 'image-2', slideIndex: 0 }],
+      });
+
+      expect(lesson.slides[0].image).toEqual({
+        imageId: 'image-2',
+        storagePath: 'u/d/p9-0.png',
+        width: 200,
+        height: 150,
+      });
+    });
+
+    // @s12 — no vision decision for an unanchorable image degrades it to text-only; the deck
+    // still assembles successfully rather than failing the request over it.
+    it('assembles successfully, text-only, when an unanchorable image has no vision decision', () => {
+      const lesson = assembleGeneratedLesson({
+        composition: 'both',
+        rawDeck,
+        images: [unanchorableImage],
+      });
+
+      expect(lesson.slides.every((slide) => slide.image === undefined)).toBe(true);
+    });
+  });
 });

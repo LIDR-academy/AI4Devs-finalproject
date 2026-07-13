@@ -190,4 +190,105 @@ describe('LessonGenerationPanel', () => {
       ).toBeTruthy();
     });
   });
+
+  // task-13, @s15 — the Error state: readable message + the recovery affordance the wiring
+  // layer decided for the current GenerationErrorCode; panel returns to a usable state.
+  describe('Error state', () => {
+    // @s15 — the error message is announced to assistive tech (role=alert + assertive live
+    // region, mirrors PdfUploadPanel; fuller a11y in task-15).
+    it('renders the error message with an alert role and assertive live region', async () => {
+      await render(
+        <LessonGenerationPanel
+          state="error"
+          composition="both"
+          onCompositionChange={jest.fn()}
+          canGenerate={true}
+          onGenerate={jest.fn()}
+          errorMessage="Generation timed out. Try again."
+        />,
+      );
+
+      const errorText = screen.getByText('Generation timed out. Try again.');
+      expect(errorText.parent?.props.accessibilityRole).toBe('alert');
+      expect(errorText.props.accessibilityLiveRegion).toBe('assertive');
+    });
+
+    // @s15 — a code with a recovery affordance (e.g. Retry) shows a labeled action button that
+    // calls onErrorAction when pressed.
+    it('shows the recovery action button and calls onErrorAction when pressed', async () => {
+      const onErrorAction = jest.fn();
+      await render(
+        <LessonGenerationPanel
+          state="error"
+          composition="both"
+          onCompositionChange={jest.fn()}
+          canGenerate={true}
+          onGenerate={jest.fn()}
+          errorMessage="Generation timed out. Try again."
+          errorActionLabel="generation.error.action.retry"
+          onErrorAction={onErrorAction}
+        />,
+      );
+
+      fireEvent.press(screen.getByRole('button', { name: 'generation.error.action.retry' }));
+
+      expect(onErrorAction).toHaveBeenCalledTimes(1);
+    });
+
+    // @s15 — a code with no actionable affordance here (document_not_ready — the re-upload
+    // control is the always-visible sibling PdfUpload panel) renders no action button at all.
+    it('shows no recovery action button when errorActionLabel is omitted', async () => {
+      await render(
+        <LessonGenerationPanel
+          state="error"
+          composition="both"
+          onCompositionChange={jest.fn()}
+          canGenerate={true}
+          onGenerate={jest.fn()}
+          errorMessage="This document isn't ready yet. Please re-upload it."
+        />,
+      );
+
+      expect(screen.queryByRole('button', { name: /error\.action/ })).toBeNull();
+    });
+
+    // "Panel returns to a usable state" (spec's Error row) — the picker and Generate stay
+    // enabled in the Error state, so the learner can adjust composition and try again directly.
+    it('keeps the picker and Generate enabled in the Error state', async () => {
+      await render(
+        <LessonGenerationPanel
+          state="error"
+          composition="both"
+          onCompositionChange={jest.fn()}
+          canGenerate={true}
+          onGenerate={jest.fn()}
+          errorMessage="Network error"
+        />,
+      );
+
+      expect(
+        screen.getByRole('radio', { name: 'generation.composition.both', disabled: false }),
+      ).toBeTruthy();
+      expect(
+        screen.getByRole('button', { name: 'generation.generate', disabled: false }),
+      ).toBeTruthy();
+    });
+
+    // The Error state shows neither the progress stepper nor the content summary.
+    it('shows no progress steps and no content summary in the Error state', async () => {
+      await render(
+        <LessonGenerationPanel
+          state="error"
+          composition="both"
+          onCompositionChange={jest.fn()}
+          canGenerate={true}
+          onGenerate={jest.fn()}
+          errorMessage="Network error"
+        />,
+      );
+
+      expect(screen.queryByText('generation.step.reading')).toBeNull();
+      expect(screen.queryByText('generation.ready.openInPlayer')).toBeNull();
+    });
+  });
 });

@@ -68,6 +68,21 @@ export const pt: TranslationResource = {
         composition: 'Composição: {{composition}}',
         openInPlayer: 'Abrir no player',
       },
+      error: {
+        missingKey: 'É necessária uma chave de API para gerar lições.',
+        invalidKey: 'Sua chave de API foi rejeitada. Verifique-a em Configurações.',
+        rateLimited: 'Você atingiu o limite do provedor. Tente novamente em instantes.',
+        timeout: 'A geração demorou demais. Tente novamente.',
+        generationFailed: 'Algo deu errado ao gerar sua lição. Tente novamente.',
+        documentNotReady: 'Este documento ainda não está pronto. Reenvie seu PDF.',
+        network: 'Erro de rede. Tente novamente.',
+        unauthenticated: 'Entre na sua conta para gerar uma lição.',
+        action: {
+          retry: 'Tentar novamente',
+          settings: 'Ir para Configurações',
+          signIn: 'Entrar',
+        },
+      },
     },
     lesson: {
       title: 'Lição {{id}}',

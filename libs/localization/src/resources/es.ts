@@ -68,6 +68,21 @@ export const es: TranslationResource = {
         composition: 'Composición: {{composition}}',
         openInPlayer: 'Abrir en el reproductor',
       },
+      error: {
+        missingKey: 'Se requiere una clave de API para generar lecciones.',
+        invalidKey: 'Tu clave de API fue rechazada. Revísala en Ajustes.',
+        rateLimited: 'Alcanzaste el límite del proveedor. Vuelve a intentarlo en un momento.',
+        timeout: 'La generación tardó demasiado. Vuelve a intentarlo.',
+        generationFailed: 'Algo salió mal al generar tu lección. Vuelve a intentarlo.',
+        documentNotReady: 'Este documento aún no está listo. Vuelve a subir tu PDF.',
+        network: 'Error de red. Vuelve a intentarlo.',
+        unauthenticated: 'Inicia sesión para generar una lección.',
+        action: {
+          retry: 'Volver a intentar',
+          settings: 'Ir a Ajustes',
+          signIn: 'Iniciar sesión',
+        },
+      },
     },
     lesson: {
       title: 'Lección {{id}}',

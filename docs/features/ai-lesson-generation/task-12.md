@@ -3,7 +3,7 @@ id: task-12
 title: Server error contract + vision fallback + image degradation
 slice: 2
 scenarios: [s10, s12, s15]
-status: todo
+status: done
 paths:
   - supabase/functions/generate-lesson/
   - libs/supabase-services/src/services/lesson-generation.placement.ts
@@ -17,10 +17,10 @@ Make the Edge Function fail cleanly and place hard-to-place images. Add: (a) the
 The function is transactional in its *return*: it validates the full deck (schema + composition + invariants) before responding; on any failure it returns a typed error and **no deck** — nothing partial/corrupt is produced or persisted (there is no `lessons` table to half-write, Open decision #5), and the R1 `documents`/`document_images` rows are untouched.
 
 ## Done criteria
-- [ ] Scenario @s15 (each failure variant → typed code, atomic, source intact) covered by unit tests on the pure modules + the function's mapping; @s10 (vision fallback) + @s12 (degradation to text-only) covered by placement-module tests
-- [ ] Raw Groq/Supabase errors never leak — always a typed `errorCode` (@s8 redaction preserved: no key in any error/log)
-- [ ] Vision call is invoked **only** for un-anchorable images (bounds cost, risks.md R4/R8)
-- [ ] Mirror updated into `_shared/`; `pnpm lint` + `pnpm check-types` + `pnpm test` green
+- [x] Scenario @s15 (each failure variant → typed code, atomic, source intact) covered by unit tests on the pure modules + the function's mapping; @s10 (vision fallback) + @s12 (degradation to text-only) covered by placement-module tests
+- [x] Raw Groq/Supabase errors never leak — always a typed `errorCode` (@s8 redaction preserved: no key in any error/log)
+- [x] Vision call is invoked **only** for un-anchorable images (bounds cost, risks.md R4/R8)
+- [x] Mirror updated into `_shared/`; `pnpm lint` + `pnpm check-types` + `pnpm test` green
 
 ## Notes
 - `missing_key` is the call-time backstop; the primary "no key" UX is R6's `ApiKeyGate`. The client maps `missing_key` to a "add a key" message linking to Settings (task-13).

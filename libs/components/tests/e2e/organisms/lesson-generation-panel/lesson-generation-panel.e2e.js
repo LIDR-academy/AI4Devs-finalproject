@@ -60,6 +60,27 @@ test('Content story renders the ready summary and the open-in-player CTA', async
   await expect(canvas.locator('text=Open in player')).toBeVisible();
 });
 
+// @s15 (task-13) — a retryable error shows the message and its labeled recovery action.
+test('ErrorRetryable story renders the error message and the recovery action', async ({ page }) => {
+  await page.goto(story('error-retryable'));
+  const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
+
+  await expect(canvas.locator('text=Generation timed out. Try again.')).toBeVisible();
+  await expect(canvas.locator('text=Try again').first()).toBeVisible();
+});
+
+// @s15 (task-13) — a code with no actionable affordance here (e.g. document_not_ready) shows
+// only the guidance message, no recovery action button.
+test('ErrorNoAction story renders the message with no recovery action button', async ({ page }) => {
+  await page.goto(story('error-no-action'));
+  const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
+
+  await expect(
+    canvas.locator("text=This document isn't ready yet. Please re-upload it."),
+  ).toBeVisible();
+  await expect(canvas.locator('button', { hasText: 'Try again' })).toHaveCount(0);
+});
+
 // @s2 — the composition picker interaction itself: choosing a different option actually
 // changes the selected value (not just static markup).
 test('InteractivePicker story updates the selected composition when a different option is chosen', async ({

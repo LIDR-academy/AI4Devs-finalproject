@@ -1,7 +1,7 @@
 import type { GeneratedLesson, LessonComposition, Slide, SlideImageRef } from '@helsoft/types';
 
-import type { PageAnchoredImage } from './lesson-generation.placement';
-import { placeImagesByMetadata } from './lesson-generation.placement';
+import type { PageAnchoredImage, VisionPlacementDecision } from './lesson-generation.placement';
+import { applyVisionPlacements, placeImagesByMetadata } from './lesson-generation.placement';
 import { deckSchema, type RawSlide } from './lesson-generation.schema';
 
 /** Thrown when the model's raw response fails `deckSchema` validation (risks.md R3) — the
@@ -20,6 +20,27 @@ export type AssembleGeneratedLessonInput = {
   rawDeck: unknown;
   /** The document's image manifest (position metadata only, never bytes) for placement. */
   images: PageAnchoredImage[];
+  /** Vision-model placement decisions (task-12, @s10) for images metadata alone couldn't anchor
+   * — computed by the caller (the Edge Function) before this synchronous assembly step runs.
+   * Defaults to none (metadata-only placement); an unplaced image with no decision degrades to
+   * text-only rather than failing the deck (@s12). */
+  visionDecisions?: VisionPlacementDecision[];
+};
+
+/** Belt-and-suspenders composition enforcement (task-11, @s4/@s5/@s6): the prompt already
+ * instructs the model, but an LLM that ignores it must still be rejected here rather than
+ * silently returning a wrong-composition deck — `both` is never constrained. */
+const assertComposition = (composition: LessonComposition, slides: RawSlide[]): void => {
+  if (composition === 'instructional-only' && slides.some((slide) => slide.kind === 'activity')) {
+    throw new GenerationSchemaError(
+      'instructional-only composition must not contain activity slides',
+    );
+  }
+  if (composition === 'activity-only' && slides.some((slide) => slide.kind === 'instructional')) {
+    throw new GenerationSchemaError(
+      'activity-only composition must not contain instructional slides',
+    );
+  }
 };
 
 const buildSlide = (
@@ -89,17 +110,26 @@ export const assembleGeneratedLesson = ({
   composition,
   rawDeck,
   images,
+  visionDecisions,
 }: AssembleGeneratedLessonInput): GeneratedLesson => {
   const parsed = deckSchema.safeParse(rawDeck);
   if (!parsed.success) {
     throw new GenerationSchemaError(parsed.error.message);
   }
+  assertComposition(composition, parsed.data.slides);
 
   const lessonId = crypto.randomUUID();
-  const { placements } = placeImagesByMetadata(
+  const metadataPlacement = placeImagesByMetadata(
     parsed.data.slides.map((slide, index) => ({ index, sourcePage: slide.sourcePage })),
     images,
   );
+  const { placements } = visionDecisions?.length
+    ? applyVisionPlacements(
+        metadataPlacement.unplaced,
+        visionDecisions,
+        metadataPlacement.placements,
+      )
+    : metadataPlacement;
 
   const slides = parsed.data.slides.map((raw, index) =>
     buildSlide(raw, {

@@ -15,4 +15,7 @@ export type UseLessonGenerationResult = {
   result: GeneratedLesson | undefined;
   error: GenerationErrorCode | undefined;
   generate: (request: GenerateLessonRequest) => Promise<void>;
+  /** Re-invokes `generate` with the exact same request as the last attempt (task-13, @s15) — a
+   * no-op before any `generate` call has ever been made. */
+  retry: () => Promise<void>;
 };

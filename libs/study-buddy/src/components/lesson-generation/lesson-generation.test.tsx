@@ -23,6 +23,7 @@ const hookValue = (overrides: Partial<ReturnType<typeof useLessonGeneration>> = 
   result: undefined,
   error: undefined,
   generate: jest.fn(),
+  retry: jest.fn(),
   ...overrides,
 });
 
@@ -40,7 +41,7 @@ describe('LessonGeneration', () => {
     await render(<LessonGeneration documentId="doc-1" />);
 
     expect(
-      screen.getByRole('radio', { name: 'generation.composition.both', selected: true }),
+      screen.getByRole('radio', { name: 'generation.composition.both', checked: true }),
     ).toBeTruthy();
   });
 
@@ -54,7 +55,7 @@ describe('LessonGeneration', () => {
     });
 
     expect(
-      screen.getByRole('radio', { name: 'generation.composition.activityOnly', selected: true }),
+      screen.getByRole('radio', { name: 'generation.composition.activityOnly', checked: true }),
     ).toBeTruthy();
   });
 
@@ -139,6 +140,63 @@ describe('LessonGeneration', () => {
     expect(push).toHaveBeenCalledWith({
       pathname: '/lesson/[id]/player',
       params: { id: 'lesson-1' },
+    });
+  });
+
+  // task-13, @s15 — the Error state: readable message + the per-code recovery affordance.
+  describe('Error state (task-13)', () => {
+    // rate_limited/timeout/generation_failed/network_error -> Retry, re-invoking retry().
+    it('shows the retry action for a retryable code and calls retry() when pressed', async () => {
+      const retry = jest.fn();
+      mockUseLessonGeneration.mockReturnValue(
+        hookValue({ stage: 'error', error: 'timeout', retry }),
+      );
+
+      await render(<LessonGeneration documentId="doc-1" />);
+      fireEvent.press(screen.getByRole('button', { name: 'generation.error.action.retry' }));
+
+      expect(screen.getByText('generation.error.timeout')).toBeTruthy();
+      expect(retry).toHaveBeenCalledTimes(1);
+    });
+
+    // missing_key/invalid_key -> go to Settings.
+    it('shows the settings action for missing_key and navigates to Settings when pressed', async () => {
+      const push = jest.fn();
+      mockUseRouter.mockReturnValue({ push });
+      mockUseLessonGeneration.mockReturnValue(hookValue({ stage: 'error', error: 'missing_key' }));
+
+      await render(<LessonGeneration documentId="doc-1" />);
+      fireEvent.press(screen.getByRole('button', { name: 'generation.error.action.settings' }));
+
+      expect(screen.getByText('generation.error.missingKey')).toBeTruthy();
+      expect(push).toHaveBeenCalledWith('/settings');
+    });
+
+    // unauthenticated -> sign in.
+    it('shows the sign-in action for unauthenticated and navigates to login when pressed', async () => {
+      const push = jest.fn();
+      mockUseRouter.mockReturnValue({ push });
+      mockUseLessonGeneration.mockReturnValue(
+        hookValue({ stage: 'error', error: 'unauthenticated' }),
+      );
+
+      await render(<LessonGeneration documentId="doc-1" />);
+      fireEvent.press(screen.getByRole('button', { name: 'generation.error.action.signIn' }));
+
+      expect(push).toHaveBeenCalledWith('/login');
+    });
+
+    // document_not_ready -> re-upload guidance only, no action button here (the sibling
+    // PdfUpload panel's persistent choose-file control is the actual recovery action).
+    it('shows the document_not_ready message with no recovery action button', async () => {
+      mockUseLessonGeneration.mockReturnValue(
+        hookValue({ stage: 'error', error: 'document_not_ready' }),
+      );
+
+      await render(<LessonGeneration documentId="doc-1" />);
+
+      expect(screen.getByText('generation.error.documentNotReady')).toBeTruthy();
+      expect(screen.queryByRole('button', { name: /error\.action/ })).toBeNull();
     });
   });
 });

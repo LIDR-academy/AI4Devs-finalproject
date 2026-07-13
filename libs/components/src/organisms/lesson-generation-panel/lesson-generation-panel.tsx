@@ -25,7 +25,7 @@ const STEP_LABEL_KEYS = [
 
 /**
  * LessonGenerationPanel — presentational organism configuring + triggering generation
- * (spec.md UI states table). Slice-1 states: Empty / Loading / Content (Error is task-13).
+ * (spec.md UI states table), all 4 UI states: Empty / Loading / Content / Error (task-13).
  * Stateless — driven by props + `useLocalization` for its own chrome copy; the
  * `GenerationProgress` molecule's step labels are built here too (this organism owns the
  * `generation.*` i18n keys so the molecule itself stays i18n-free, per task-8).
@@ -39,6 +39,9 @@ export const LessonGenerationPanel = ({
   currentStep,
   slideCount = 0,
   onOpenInPlayer,
+  errorMessage,
+  errorActionLabel,
+  onErrorAction,
 }: LessonGenerationPanelProps) => {
   const { t } = useLocalization();
   const disabled = state === 'loading';
@@ -83,6 +86,15 @@ export const LessonGenerationPanel = ({
             <Button onPress={onOpenInPlayer}>{t('generation.ready.openInPlayer')}</Button>
           </View>
         ) : null}
+
+        {state === 'error' ? (
+          <View style={styles.errorBanner} accessibilityRole="alert">
+            <Text style={styles.errorBannerText} accessibilityLiveRegion="assertive">
+              {errorMessage}
+            </Text>
+            {errorActionLabel ? <Button onPress={onErrorAction}>{errorActionLabel}</Button> : null}
+          </View>
+        ) : null}
       </View>
     </Card>
   );
@@ -102,5 +114,15 @@ const styles = StyleSheet.create((theme) => ({
   summary: {
     ...theme.typography.bodyMedium,
     color: theme.colors.onSurface,
+  },
+  errorBanner: {
+    gap: theme.spacing.s3,
+    backgroundColor: theme.colors.errorContainer,
+    borderRadius: theme.shape.card,
+    padding: theme.spacing.s3,
+  },
+  errorBannerText: {
+    ...theme.typography.bodyMedium,
+    color: theme.colors.onErrorContainer,
   },
 }));

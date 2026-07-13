@@ -1,5 +1,15 @@
 jest.mock('@helsoft/supabase-services', () => ({
   LessonGenerationService: { generate: jest.fn() },
+  GENERATION_ERROR_CODES: {
+    missing_key: true,
+    invalid_key: true,
+    rate_limited: true,
+    timeout: true,
+    generation_failed: true,
+    document_not_ready: true,
+    network_error: true,
+    unauthenticated: true,
+  },
 }));
 jest.mock('./use-session', () => ({ useSession: jest.fn() }));
 
@@ -151,5 +161,52 @@ describe('useLessonGeneration', () => {
     });
 
     expect(service.generate).toHaveBeenCalledWith(request, 'user-1');
+  });
+
+  // task-13, @s15 — retry() re-invokes generate() with the exact same last request (no
+  // duplicate side effects, task-13 Goal), and a successful retry settles to content.
+  describe('retry() (task-13)', () => {
+    it('re-invokes generate with the same documentId/composition as the failed attempt', async () => {
+      service.generate.mockRejectedValueOnce(
+        Object.assign(new Error('timeout'), { code: 'timeout' }),
+      );
+      const lesson = {
+        lessonId: 'lesson-1',
+        title: 'Photosynthesis',
+        composition: 'both' as const,
+        slides: [],
+      };
+      service.generate.mockResolvedValueOnce(lesson);
+      const { result } = renderHook(() => useLessonGeneration());
+
+      await act(async () => {
+        await result.current.generate(request);
+      });
+      expect(result.current.stage).toBe('error');
+      expect(result.current.error).toBe('timeout');
+
+      await act(async () => {
+        await result.current.retry();
+      });
+
+      expect(result.current.stage).toBe('content');
+      expect(result.current.result).toBe(lesson);
+      const [firstCall, secondCall] = service.generate.mock.calls;
+      expect(secondCall[0]).toBe(firstCall[0]);
+      expect(secondCall[1]).toBe(firstCall[1]);
+      expect(service.generate).toHaveBeenCalledTimes(2);
+    });
+
+    // Guard — calling retry() before any generate() attempt is a no-op (nothing to retry).
+    it('does nothing when generate has never been called', async () => {
+      const { result } = renderHook(() => useLessonGeneration());
+
+      await act(async () => {
+        await result.current.retry();
+      });
+
+      expect(service.generate).not.toHaveBeenCalled();
+      expect(result.current.stage).toBe('idle');
+    });
   });
 });

@@ -1,4 +1,9 @@
-import { isLessonComposition, toPanelState } from './lesson-generation.helpers';
+import {
+  GENERATION_ERROR_KEYS,
+  GENERATION_ERROR_RECOVERY,
+  isLessonComposition,
+  toPanelState,
+} from './lesson-generation.helpers';
 
 describe('isLessonComposition', () => {
   it('accepts every LessonComposition value', () => {
@@ -28,9 +33,41 @@ describe('toPanelState', () => {
     expect(toPanelState('idle')).toBe('empty');
   });
 
-  // Slice-1 scope: the panel has no Error state yet (task-13 adds it) — error falls back to
-  // empty rather than crashing on an unhandled state.
-  it('falls back error to empty (Slice-1 scope; task-13 adds the Error state)', () => {
-    expect(toPanelState('error')).toBe('empty');
+  // @s15 (task-13) — the hook's 'error' stage now drives the panel's own Error state.
+  it('maps error to error', () => {
+    expect(toPanelState('error')).toBe('error');
+  });
+});
+
+describe('GENERATION_ERROR_KEYS (task-13)', () => {
+  // @s15/@s18 — every GenerationErrorCode maps to its own i18n message key (spec.md's Error
+  // contract table names these keys verbatim), so a missing mapping fails to compile.
+  it('maps every GenerationErrorCode to its spec.md i18n key', () => {
+    expect(GENERATION_ERROR_KEYS).toEqual({
+      missing_key: 'generation.error.missingKey',
+      invalid_key: 'generation.error.invalidKey',
+      rate_limited: 'generation.error.rateLimited',
+      timeout: 'generation.error.timeout',
+      generation_failed: 'generation.error.generationFailed',
+      document_not_ready: 'generation.error.documentNotReady',
+      network_error: 'generation.error.network',
+      unauthenticated: 'generation.error.unauthenticated',
+    });
+  });
+});
+
+describe('GENERATION_ERROR_RECOVERY (task-13)', () => {
+  // @s15 — recovery per code (task-13.md's "Recovery per code" table).
+  it('maps each code to its recovery-affordance category', () => {
+    expect(GENERATION_ERROR_RECOVERY).toEqual({
+      missing_key: 'settings',
+      invalid_key: 'settings',
+      rate_limited: 'retry',
+      timeout: 'retry',
+      generation_failed: 'retry',
+      document_not_ready: 'none',
+      network_error: 'retry',
+      unauthenticated: 'signIn',
+    });
   });
 });

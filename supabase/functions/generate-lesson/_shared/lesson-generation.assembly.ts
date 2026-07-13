@@ -1,7 +1,7 @@
 // Mirrors libs/supabase-services/src/services/lesson-generation.assembly.ts -- kept manually in
 // sync by hand (task-4 note, same rule as R1's pdf-extraction/_shared mirrors).
-import type { PageAnchoredImage } from './lesson-generation.placement.ts';
-import { placeImagesByMetadata } from './lesson-generation.placement.ts';
+import type { PageAnchoredImage, VisionPlacementDecision } from './lesson-generation.placement.ts';
+import { applyVisionPlacements, placeImagesByMetadata } from './lesson-generation.placement.ts';
 import { deckSchema, type RawSlide } from './lesson-generation.schema.ts';
 import type { GeneratedLesson, LessonComposition, Slide, SlideImageRef } from './types.ts';
 
@@ -16,6 +16,25 @@ export type AssembleGeneratedLessonInput = {
   composition: LessonComposition;
   rawDeck: unknown;
   images: PageAnchoredImage[];
+  // task-12, @s10/@s12 -- vision-model placement decisions for images metadata alone couldn't
+  // anchor; defaults to none (metadata-only placement).
+  visionDecisions?: VisionPlacementDecision[];
+};
+
+// task-11, @s4/@s5/@s6 -- belt-and-suspenders composition enforcement: the prompt already
+// instructs the model, but an LLM that ignores it must still be rejected here rather than
+// silently returning a wrong-composition deck -- "both" is never constrained.
+const assertComposition = (composition: LessonComposition, slides: RawSlide[]): void => {
+  if (composition === 'instructional-only' && slides.some((slide) => slide.kind === 'activity')) {
+    throw new GenerationSchemaError(
+      'instructional-only composition must not contain activity slides',
+    );
+  }
+  if (composition === 'activity-only' && slides.some((slide) => slide.kind === 'instructional')) {
+    throw new GenerationSchemaError(
+      'activity-only composition must not contain instructional slides',
+    );
+  }
 };
 
 const buildSlide = (
@@ -79,17 +98,22 @@ export const assembleGeneratedLesson = ({
   composition,
   rawDeck,
   images,
+  visionDecisions,
 }: AssembleGeneratedLessonInput): GeneratedLesson => {
   const parsed = deckSchema.safeParse(rawDeck);
   if (!parsed.success) {
     throw new GenerationSchemaError(parsed.error.message);
   }
+  assertComposition(composition, parsed.data.slides);
 
   const lessonId = crypto.randomUUID();
-  const { placements } = placeImagesByMetadata(
+  const metadataPlacement = placeImagesByMetadata(
     parsed.data.slides.map((slide, index) => ({ index, sourcePage: slide.sourcePage })),
     images,
   );
+  const { placements } = visionDecisions?.length
+    ? applyVisionPlacements(metadataPlacement.unplaced, visionDecisions, metadataPlacement.placements)
+    : metadataPlacement;
 
   const slides = parsed.data.slides.map((raw, index) =>
     buildSlide(raw, {

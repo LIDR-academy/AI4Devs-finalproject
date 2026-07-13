@@ -1,105 +1,95 @@
-# tdd.md — ai-lesson-generation, Slice 1 (happy path "both" + Loading + Content)
+# tdd.md — ai-lesson-generation
 
-Slice 1 (tasks 1–10) reconstructed for `reviewer_slice`. Deno (`generate-lesson/index.ts`,
-`_shared/*`) + `get_api_key` migration sit outside Jest/Stryker (risks.md R2/R5): verified by
-`deno check` smoke + manual Supabase round-trip, not Jest — noted once, not per scenario below.
+Deno (`generate-lesson/index.ts`, `_shared/*`) + `get_api_key` migration sit outside Jest/Stryker
+(risks.md R2/R5): verified by code review + `deno check`/manual smoke, not Jest — noted once.
 
-## `@s → test` map (file : test, terse)
+## Slice 1 (tasks 1–10) — happy path "both" + Loading + Content — done, reviewed, committed `8e7ffb6`
 
-- **@s1** both default, 3 choices: `lesson-generation.test.ts`(types) 3 values ·
-  `lesson-generation-panel.test.tsx` picker 3 options, "both" selected · `.helpers.test.ts`
-  `COMPOSITION_OPTION_VALUES` · `lesson-generation.test.tsx`(study-buddy) defaults both ·
-  `.integration.test.tsx` happy path · e2e panel 3 choices.
-- **@s2** select non-default: panel "onCompositionChange fires" · wiring "selection updates" ·
-  e2e InteractivePicker.
-- **@s3** both → ordered typed deck: `prompt.test.ts` enforces mix · `schema.test.ts` parses all
-  types · `assembly.test.ts` ordered + per-kind mapping · `service.test.ts` delegates+returns ·
-  `use-lesson-generation.test.ts` settles to content · wiring + integration tests.
-- **@s6** composition sent+enforced: `dao.test.ts` invoke body `{documentId,composition}` ·
-  `service.test.ts` delegation · `prompt.test.ts` enforces both · `index.ts` threads composition
-  (Deno smoke).
-- **@s7** server-side call, key never to client: `dao.test.ts` body has no key ·
-  `get_api_key` migration service-role-only (manual smoke, task-3) · `index.ts` reads key via
-  admin RPC only (Deno smoke).
-- **@s8** key never logged: `index.ts` no `console.*` of body/key/error (grep-verified); catch
-  redacted (Deno smoke) · migration never exposes secret outside `security definer`.
-- **@s9** metadata-driven placement: `placement.test.ts` anchors by sourcePage ·
-  `prompt.test.ts` embeds image manifest · `assembly.test.ts` attaches ref to anchored slide.
-- **@s11** slide refs image-or-text-only: `lesson-generation.test.ts`(types) `SlideImageRef`
-  optional/present · `placement.test.ts` carries `alt` · `assembly.test.ts` same attach test.
-- **@s13** 5 activity types, answers+explanation: `schema.test.ts` parses all 5 + invariants ·
-  `assembly.test.ts` multiple-choice + (gap-fill) matching/fill-in-the-blank/open-ended/
-  flashcard mapping + explanation carried/omitted.
-- **@s14** multi-step labeled progress: `lesson-generation.test.ts`(types) step order ·
-  `use-lesson-generation.test.ts` stepper reading→generating→attaching, caps at last ·
-  `generation-progress.test.tsx` labels+status+live-region · `.helpers.test.ts` `getStepStatus` ·
-  panel test Loading state · panel `.helpers.test.ts` `stepToIndex` · wiring + e2e.
-- **@s16** Generate gated on extraction: panel disabled/enabled · wiring disabled w/o
-  documentId · `pdf-upload.test.tsx` `onExtracted` fires once, success-only · e2e stories.
-- **@s17** ready state + open-in-player: panel Content state (+ new composition-summary test) ·
-  wiring ready summary + router.push · integration reaches Content · e2e Content story.
-- **@s20** provider is Groq: `AiProvider='groq'` (compile-time) · `api-key.service.test.ts`
-  DEFAULT_PROVIDER groq · `api-key.dao.test.ts` groq fixtures · `api-key-settings.test.tsx`
-  Groq guidance URL · `api-key-form.test.tsx`+e2e Groq copy · `api-key-gate.test.tsx`,
-  `use-api-key.test.ts`, `api-key.integration.test.ts` groq fixtures · `provider.test.ts`(Deno)/
-  `handle-save.test.ts`(Deno) groq params · en/es/pt/de guidance strings (compile-time parity).
+`@s` covered: @s1/@s2/@s3/@s6/@s7/@s8/@s9/@s11/@s13/@s14/@s16/@s17/@s20 — types, prompt/schema/
+assembly ("both" only), placement (metadata), DAO, service (happy path), hook (stepper), panel
+(Empty/Loading/Content), wiring, provider swap (openai→groq). One line per task:
+task-1 provider swap · task-2 contract types · task-3 `get_api_key` migration (no Jest, Postgres
+outside harness) · task-4 `generate-lesson` happy path (pure modules test-first, mirrored to
+`_shared/`) · task-5 DAO · task-6 service · task-7 hook (fake timers) · task-8 `GenerationProgress`
+· task-9 `LessonGenerationPanel` (3 states) · task-10 wiring (`onExtracted` + thin `upload.tsx`).
+Post-gate fixes (reviewer_slice CHANGES_REQUESTED, all resolved): package.json revert, panel prop
+type tightened, `index.ts` image-`alt` passthrough gap, `generation-progress.tsx` hardcoded sizing
+→ tokens, panel Content state composition-summary line added.
+Gate: `pnpm turbo run lint check-types` clean; workspace suites green except the pre-existing
+`@helsoft/localization` `migration-coverage.test.ts` (sign-in-form/sign-out) failure.
 
-## Cycle log (one line per task/artifact)
+## Slice 2 (tasks 11–13) — composition enforcement + server error contract + vision fallback + client error/retry — this session
 
-- task-1 provider swap (@s20): `openai`→`groq` atomically across 10 test files + copy. Green.
-- task-2 contract types (@s1/@s3/@s11): types test first, types added till green.
-- task-3 `get_api_key` migration (@s7/@s8): no Jest (Postgres outside harness) — mirrors
-  `save_api_key`'s security-definer/service-role shape; manual smoke.
-- task-4 `generate-lesson` happy path (@s3/@s6/@s7/@s8/@s9/@s11/@s13): pure modules test-first
-  in `@helsoft/supabase-services`, hand-mirrored to `_shared/`; `index.ts` via `deno check` smoke
-  (no live Groq key here — manual step before deploy, risks.md R1).
-- task-5 `LessonGenerationDao` (@s6/@s7): dao test first, then DAO.
-- task-6 `LessonGenerationService` (@s3/@s6): service test first, then guards.
-- task-7 `useLessonGeneration` (@s14): hook test first (fake timers).
-- task-8 `GenerationProgress` (@s14): helpers+component test first, then molecule+story.
-- task-9 `LessonGenerationPanel` (@s1/@s2/@s14/@s16/@s17): tests first (3 states), then organism.
-- task-10 wiring (@s1/@s3/@s16/@s17): `pdf-upload.test.tsx` extended first for `onExtracted`,
-  then `LessonGeneration` + thin `upload.tsx` shell.
-- Gap-fill (@s13): `assembly.test.ts` only covered multiple-choice. RED: added
-  matching/fill-in-the-blank/open-ended/flashcard mapping + explanation-omitted test. GREEN:
-  passed immediately (`buildSlide` unchanged). Suite 84/84 green.
-- RadioGroup `aria-checked` (post-gate e2e): react-native-web doesn't forward
-  `accessibilityState` to `aria-*`. RED: `radio-group.test.tsx` asserts
-  `accessibilityState.checked`. GREEN: `accessibilityState={{ selected, disabled }}`; updated
-  panel test's stale matcher. Suite 168/168, e2e 11/11 green.
+### `@s` → test map
+- **@s4** instructional-only → only instructional: `lesson-generation.prompt.test.ts` (forbids-
+  activity instruction, pre-existing from task-4, now locked) · `lesson-generation.assembly.test.ts`
+  rejects a mixed deck / accepts all-instructional.
+- **@s5** activity-only → only activity: mirrors @s4 (prompt forbids-instructional text; assembly
+  rejects mixed / accepts all-activity).
+- **@s6** composition drives the prompt: `lesson-generation.prompt.test.ts` distinct instruction
+  per composition; assembly's `assertComposition` never fires for `both`.
+- **@s10** vision fallback: `lesson-generation.placement.test.ts` `applyVisionPlacements` (places
+  a decided slide, drops on `null`/missing decision, skips an already-claimed slide, preserves
+  existing placements) · `lesson-generation.assembly.test.ts` `visionDecisions` wiring attaches an
+  otherwise-unplaced image.
+- **@s12** image degradation, never an error: `placement.test.ts` drop/no-decision cases ·
+  `assembly.test.ts` unanchorable-image deck still assembles, text-only · `service.test.ts` a deck
+  with an image-less slide passes through unchanged · `index.ts` download/vision failure degrades
+  rather than throwing (code review, Deno outside Jest).
+- **@s15** typed error contract, atomic, readable message + recovery: `lesson-generation.errors.
+  test.ts` (`GenerationSchemaError`→`generation_failed`, `GenerationTimeoutError`→`timeout`,
+  401/403→`invalid_key`, 429→`rate_limited`, fallback, no-leak) · `lesson-generation.service.
+  test.ts` `normalizeGenerationError` (6 server codes + malformed/null body fallback + 2 transport
+  errors + unrecognized-type fallback) · `use-lesson-generation.test.ts` `retry()` (re-invokes
+  same request; no-op before first attempt) · `lesson-generation-panel.test.tsx` Error state
+  (alert role + assertive live region, action button + handler, no-action-button omission,
+  picker/Generate stay enabled, no progress/content leak) · `lesson-generation.helpers.test.ts`
+  `toPanelState('error')`, `GENERATION_ERROR_KEYS`, `GENERATION_ERROR_RECOVERY` (full Records) ·
+  `lesson-generation.test.tsx` wiring dispatch (retry/settings/sign-in/none per code) ·
+  `lesson-generation.integration.test.tsx` full-stack typed error + retry re-invoking identical
+  `functions.invoke` body.
 
-## Gate status (Slice 1)
+### Cycle log
+- **task-11** composition enforcement: RED 2 assembly tests (instructional-only/activity-only
+  reject a mixed deck) → GREEN `assertComposition` in `assembly.ts` (prompt-side text already
+  existed from task-4; new tests lock/confirm it). Mirrored to `_shared/`.
+- **task-12a** vision placement: RED `applyVisionPlacements` (5 cases) → GREEN in `placement.ts`;
+  wired into `assembly.ts` via optional `visionDecisions` (backward-compatible). Mirrored to
+  `_shared/`.
+- **task-12b** error mapping: RED new `lesson-generation.errors.test.ts` (`mapGenerationError`/
+  `GenerationTimeoutError`, duck-types AI-SDK `statusCode` without importing `ai`) → GREEN. Deno
+  `index.ts` rewired: `withTimeout` (25s) around the whole pipeline; vision fallback is one
+  batched call for every still-unplaced image (bounds cost, R4/R8); a download or vision-call
+  failure degrades every still-unplaced image to text-only rather than throwing (@s12);
+  `mapGenerationError` replaces the old blanket `generation_failed` catch. Deno outside Jest (R2)
+  — verified by code review; a `deno check` attempt reverted an unwanted `package.json` side
+  effect (mirrors a known slice-1 issue) and was not repeated.
+- **task-13a** service normalization: RED `lesson-generation.service.test.ts` (6 codes + 2
+  fallbacks + 2 transport) → GREEN `normalizeGenerationError` (mirrors
+  `PdfExtractionService.normalizeExtractionError`); exported `GENERATION_ERROR_CODES`.
+- **task-13b** hook retry: RED `use-lesson-generation.test.ts` retry cases → GREEN
+  `lastRequestRef` + `retry()`; refactored `isGenerationErrorShape` to derive its closed set from
+  the service's own exported `GENERATION_ERROR_CODES` (drops an independent duplicate).
+- **task-13c** panel Error state: RED `lesson-generation-panel.test.tsx` (5 cases) → GREEN
+  `errorMessage`/`errorActionLabel`/`onErrorAction` props + render branch (reuses `errorContainer`
+  theme tokens, mirrors `PdfUploadPanel`); stories `ErrorRetryable`/`ErrorNoAction`; e2e +2 cases
+  (9/9 green via `playwright test --reporter=list`).
+- **task-13d** wiring: RED `lesson-generation.helpers.test.ts` (`toPanelState('error')`,
+  `GENERATION_ERROR_KEYS`, `GENERATION_ERROR_RECOVERY`) + `lesson-generation.test.tsx` (4
+  recovery-dispatch cases) → GREEN helpers + `lesson-generation.tsx` dispatch
+  (retry / `router.push('/settings')` / `router.push('/login')` / no-op for `document_not_ready`,
+  whose actual recovery is the always-visible sibling `PdfUpload` panel). i18n:
+  `generation.error.*` + `.error.action.*` keys added to en/es/pt/de (compiler-enforced parity).
+  Fixed 2 pre-existing stale `selected: true` role-query typos (should've been `checked: true`) in
+  `lesson-generation.test.tsx` — unrelated to any `@s`, blocked the gate; test-only fix.
+- **Integration**: extended `lesson-generation.integration.test.tsx` with a real error+retry case
+  (mocked `functions.invoke` rejects `FunctionsHttpError({errorCode:'timeout'})`, then resolves) —
+  retry re-invokes with the identical `{ documentId, composition }` body.
 
-`pnpm turbo run lint`/`check-types` clean; `pnpm turbo run test` green except the pre-existing,
-unrelated `@helsoft/localization` `migration-coverage.test.ts` failure (identical on `b05c083`).
-E2e specs exist for every Slice-1 state. Not committed — follows `reviewer_slice` approval.
-
-## Fix cycle — `reviewer_slice` CHANGES_REQUESTED (this session)
-
-1. **package.json** — removed accidental duplicate `workspaces`/`catalog` keys (reverted to
-   `HEAD` shape). Pure revert, no test; `pnpm install` → "Already up to date", lockfile stable.
-2. **`lesson-generation-panel.tsx`** — `COMPOSITION_LABEL_KEYS: Record<string, string>` →
-   `Record<LessonComposition, string>` (`@helsoft/types`). Type-only, no new test; `check-types`
-   clean.
-3. **`generate-lesson/index.ts`** — `placementImages` never carried `image.description` into
-   `PageAnchoredImage.alt`, though `placement.test.ts` already exercises `alt` passthrough at the
-   pure-module layer. Gap is purely in `index.ts`'s inline DB-row→`PageAnchoredImage` mapping
-   (glue code, outside Jest per R2 — no pure module owns this mapping). Fixed directly:
-   `...(image.description ? { alt: image.description } : {})`, mirroring the identical pattern
-   already used for `promptImages` a few lines above. No Jest test (R2); verified against
-   `placement.ts`'s `toSlideImageRef` contract.
-4. **`generation-progress.tsx`** — hardcoded `size={16}`/`width:24,height:24` →
-   `theme.spacing.s4`/`theme.spacing.s6`. Pure refactor on green, no new test; re-ran suite
-   (8/8 green).
-5. **`lesson-generation-panel.tsx`** Content state — spec.md wants "slide count + composition"
-   but only slide count rendered. RED: new panel test case asserting
-   `generation.ready.composition` renders the chosen composition label. GREEN: added
-   `generation.ready.composition` key (en/es/pt/de, compile-time parity) + rendered
-   `t('generation.ready.composition', { composition: t(COMPOSITION_LABEL_KEYS[...]) })` in
-   Content state, alongside existing slideCount text. Suite 11/11 green (panel).
-
-Re-verified after all 5 fixes: `pnpm turbo run lint check-types` clean repo-wide;
-`@helsoft/components` 169/169, `@helsoft/supabase-services` 86/86 green; `@helsoft/localization`
-green except the pre-existing unrelated `migration-coverage.test.ts` (sign-in-form/sign-out)
-failure; e2e (`generation-progress`+`lesson-generation-panel`) 11/11 green. Not committed —
-awaiting re-review.
+### Gate status (Slice 2)
+`pnpm turbo run lint check-types` clean repo-wide. `pnpm --filter <ws> test` green:
+`@helsoft/supabase-services` 121/121, `@helsoft/hooks` 68/68, `@helsoft/components` 174/174
+(incl. panel 13/13), `@helsoft/study-buddy` 117/117; `@helsoft/localization` green except the
+pre-existing, unrelated `migration-coverage.test.ts` (sign-in-form/sign-out) failure, identical to
+the slice-1 baseline, untouched. E2e `lesson-generation-panel` 9/9 (`playwright test
+--reporter=list`). Not committed — awaiting `reviewer_slice`.

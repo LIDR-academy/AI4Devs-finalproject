@@ -37,6 +37,27 @@ export const Content: Story = {
   args: { state: 'content', canGenerate: true, slideCount: 8, onOpenInPlayer: () => {} },
 };
 
+// Error, retryable (@s15, task-13) — a readable message + a labeled recovery action button.
+export const ErrorRetryable: Story = {
+  args: {
+    state: 'error',
+    canGenerate: true,
+    errorMessage: 'Generation timed out. Try again.',
+    errorActionLabel: 'Try again',
+    onErrorAction: () => {},
+  },
+};
+
+// Error, no actionable affordance here (@s15, task-13) — e.g. document_not_ready: the actual
+// re-upload control is the sibling PdfUpload panel, already visible on the same screen.
+export const ErrorNoAction: Story = {
+  args: {
+    state: 'error',
+    canGenerate: false,
+    errorMessage: "This document isn't ready yet. Please re-upload it.",
+  },
+};
+
 /** Interactive demo purely so the Playwright e2e can exercise choosing a composition, not just
  * assert each state's static markup like the stories above. */
 const InteractivePickerDemo = () => {

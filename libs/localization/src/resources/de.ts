@@ -69,6 +69,23 @@ export const de: TranslationResource = {
         composition: 'Zusammensetzung: {{composition}}',
         openInPlayer: 'Im Player öffnen',
       },
+      error: {
+        missingKey: 'Zum Generieren von Lektionen ist ein API-Schlüssel erforderlich.',
+        invalidKey: 'Dein API-Schlüssel wurde abgelehnt. Überprüfe ihn in den Einstellungen.',
+        rateLimited:
+          'Du hast das Ratenlimit des Anbieters erreicht. Versuche es gleich noch einmal.',
+        timeout: 'Die Generierung hat zu lange gedauert. Versuche es erneut.',
+        generationFailed:
+          'Beim Generieren deiner Lektion ist etwas schiefgelaufen. Versuche es erneut.',
+        documentNotReady: 'Dieses Dokument ist noch nicht bereit. Lade dein PDF erneut hoch.',
+        network: 'Netzwerkfehler. Versuche es erneut.',
+        unauthenticated: 'Bitte melde dich an, um eine Lektion zu generieren.',
+        action: {
+          retry: 'Erneut versuchen',
+          settings: 'Zu den Einstellungen',
+          signIn: 'Anmelden',
+        },
+      },
     },
     lesson: {
       title: 'Lektion {{id}}',

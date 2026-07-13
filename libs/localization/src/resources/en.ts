@@ -62,7 +62,7 @@ export const en = {
     },
     // ai-lesson-generation task-9 (Slice 1) — LessonGenerationPanel's chrome copy (composition
     // picker, Generate action, progress step labels, ready-state summary). Error-state copy
-    // (`generation.error.*`) is Slice-2/task-13 scope, added when the Error state itself lands.
+    // (`generation.error.*`) is Slice-2/task-13, added with the Error state itself.
     generation: {
       composition: {
         heading: 'Lesson content',
@@ -81,6 +81,23 @@ export const en = {
         slideCount_other: '{{count}} slides generated',
         composition: 'Composition: {{composition}}',
         openInPlayer: 'Open in player',
+      },
+      // task-13 (Slice 2) — one message key per GenerationErrorCode (spec.md's Error contract
+      // table names these keys verbatim) + the recovery-affordance action labels.
+      error: {
+        missingKey: 'An API key is required to generate lessons.',
+        invalidKey: 'Your API key was rejected. Check it in Settings.',
+        rateLimited: "You've hit the provider's rate limit. Try again in a moment.",
+        timeout: 'Generation took too long. Try again.',
+        generationFailed: 'Something went wrong while generating your lesson. Try again.',
+        documentNotReady: "This document isn't ready yet. Please re-upload your PDF.",
+        network: 'Network error. Try again.',
+        unauthenticated: 'Please sign in to generate a lesson.',
+        action: {
+          retry: 'Try again',
+          settings: 'Go to Settings',
+          signIn: 'Sign in',
+        },
       },
     },
     lesson: {

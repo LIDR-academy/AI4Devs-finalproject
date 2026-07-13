@@ -57,4 +57,38 @@ describe('buildDeckPrompt', () => {
 
     expect(prompt).not.toContain('imageId');
   });
+
+  // task-11, @s4/@s5/@s6 — the other two compositions are enforced in the prompt too, not just
+  // "both" (belt-and-suspenders with assembly.ts's post-parse rejection).
+  describe('composition variants (task-11)', () => {
+    // @s4 — "instructional only" forbids activity slides in the prompt instruction.
+    it('instructs only instructional slides and forbids activity slides for instructional-only', () => {
+      const prompt = buildDeckPrompt({ composition: 'instructional-only', pages, images: [] });
+
+      expect(prompt).toMatch(/only instructional slides/i);
+      expect(prompt).toMatch(/do not include any activity slides/i);
+    });
+
+    // @s5 — "activity only" forbids instructional slides in the prompt instruction.
+    it('instructs only activity slides and forbids instructional slides for activity-only', () => {
+      const prompt = buildDeckPrompt({ composition: 'activity-only', pages, images: [] });
+
+      expect(prompt).toMatch(/only activity slides/i);
+      expect(prompt).toMatch(/do not include any instructional slides/i);
+    });
+
+    // @s6 — the chosen composition (whichever of the three) drives a distinct instruction; no
+    // composition falls back to sharing another's wording.
+    it('embeds a distinct instruction per composition', () => {
+      const both = buildDeckPrompt({ composition: 'both', pages, images: [] });
+      const instructionalOnly = buildDeckPrompt({
+        composition: 'instructional-only',
+        pages,
+        images: [],
+      });
+      const activityOnly = buildDeckPrompt({ composition: 'activity-only', pages, images: [] });
+
+      expect(new Set([both, instructionalOnly, activityOnly]).size).toBe(3);
+    });
+  });
 });

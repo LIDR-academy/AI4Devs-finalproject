@@ -1,8 +1,7 @@
-import { LessonGenerationService } from '@helsoft/supabase-services';
+import { GENERATION_ERROR_CODES, LessonGenerationService } from '@helsoft/supabase-services';
 import type {
   GenerateLessonRequest,
   GenerationError,
-  GenerationErrorCode,
   GenerationProgressStep,
 } from '@helsoft/types';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -25,20 +24,14 @@ export const GENERATION_STEP_INTERVAL_MS = 4000;
 
 /** Narrow runtime guard: a rejected LessonGenerationService.generate cause is only trusted as a
  * GenerationError when its `.code` is actually a member of the closed GenerationErrorCode union
- * (mirrors useAuth/useApiKey's isXErrorShape). */
-const GENERATION_ERROR_CODES: ReadonlySet<GenerationErrorCode> = new Set([
-  'missing_key',
-  'invalid_key',
-  'rate_limited',
-  'timeout',
-  'generation_failed',
-  'document_not_ready',
-  'network_error',
-  'unauthenticated',
-]);
-
-const isGenerationErrorShape = (cause: unknown): cause is GenerationError =>
-  GENERATION_ERROR_CODES.has((cause as { code?: unknown } | null)?.code as GenerationErrorCode);
+ * (mirrors useAuth/useApiKey's isXErrorShape). Derives the closed set from
+ * `LessonGenerationService`'s own exported `GENERATION_ERROR_CODES` rather than re-declaring an
+ * independent, unchecked duplicate (mirrors `usePdfExtraction`'s reuse of
+ * `PDF_EXTRACTION_ERROR_CODES`). */
+const isGenerationErrorShape = (cause: unknown): cause is GenerationError => {
+  const code = (cause as { code?: unknown } | null)?.code;
+  return typeof code === 'string' && Object.hasOwn(GENERATION_ERROR_CODES, code);
+};
 
 /**
  * React integration over `LessonGenerationService` (never the DAO): a plain-state, one-shot
@@ -53,6 +46,10 @@ export const useLessonGeneration = (): UseLessonGenerationResult => {
   const [result, setResult] = useState<UseLessonGenerationResult['result']>(undefined);
   const [error, setError] = useState<UseLessonGenerationResult['error']>(undefined);
   const stepperRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Remembers the last generate() request so retry() (task-13, @s15) can re-run the exact same
+  // documentId/composition rather than requiring the caller to resupply it (no duplicate side
+  // effects — mirrors usePdfExtraction's lastAttemptRef).
+  const lastRequestRef = useRef<GenerateLessonRequest | null>(null);
 
   const stopStepper = useCallback(() => {
     if (stepperRef.current) {
@@ -66,6 +63,7 @@ export const useLessonGeneration = (): UseLessonGenerationResult => {
 
   const generate = useCallback(
     async (request: GenerateLessonRequest) => {
+      lastRequestRef.current = request;
       setStage('generating');
       setResult(undefined);
       setError(undefined);
@@ -93,5 +91,11 @@ export const useLessonGeneration = (): UseLessonGenerationResult => {
     [session, stopStepper],
   );
 
-  return { stage, currentStep, result, error, generate };
+  // task-13, @s15 — re-runs the last generate() request as-is; a no-op before any attempt.
+  const retry = useCallback(() => {
+    const lastRequest = lastRequestRef.current;
+    return lastRequest ? generate(lastRequest) : Promise.resolve();
+  }, [generate]);
+
+  return { stage, currentStep, result, error, generate, retry };
 };

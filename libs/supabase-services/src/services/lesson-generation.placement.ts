@@ -25,6 +25,15 @@ export type PlacementResult = {
   unplaced: PageAnchoredImage[];
 };
 
+/** One vision-model decision for an image metadata couldn't anchor (@s10) — the slide index to
+ * place it at, or `null` to drop it. The actual vision-model call is Deno-only (un-Jest-testable
+ * per risks.md R2, invoked only for these un-anchorable images to bound cost); this type is the
+ * pure, testable seam between that call and placement. */
+export type VisionPlacementDecision = {
+  imageId: string;
+  slideIndex: number | null;
+};
+
 const toSlideImageRef = (image: PageAnchoredImage): SlideImageRef => ({
   imageId: image.imageId,
   storagePath: image.storagePath,
@@ -58,4 +67,31 @@ export const placeImagesByMetadata = (
   }
 
   return { placements, unplaced };
+};
+
+/**
+ * Applies vision-model placement decisions for images `placeImagesByMetadata` couldn't anchor
+ * (@s10). An image whose decision is missing, drops it (`slideIndex: null`), or names a slide
+ * index another image already claims degrades to unplaced/text-only rather than erroring or
+ * overwriting (@s12) — never a hard failure. Pure: the actual vision-model call lives in the Edge
+ * Function; this module only applies its already-decided output.
+ */
+export const applyVisionPlacements = (
+  unplaced: PageAnchoredImage[],
+  decisions: VisionPlacementDecision[],
+  existingPlacements: Map<number, SlideImageRef>,
+): PlacementResult => {
+  const placements = new Map(existingPlacements);
+  const stillUnplaced: PageAnchoredImage[] = [];
+
+  for (const image of unplaced) {
+    const slideIndex = decisions.find((decision) => decision.imageId === image.imageId)?.slideIndex;
+    if (slideIndex == null || placements.has(slideIndex)) {
+      stillUnplaced.push(image);
+      continue;
+    }
+    placements.set(slideIndex, toSlideImageRef(image));
+  }
+
+  return { placements, unplaced: stillUnplaced };
 };
