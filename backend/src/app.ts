@@ -13,6 +13,7 @@ import {
   paymentWebhookSchema,
   pricingRuleSchema,
   productSchema,
+  productUpdateSchema,
   suggestReplySchema,
   whatsappWebhookSchema
 } from './lib/schemas.js';
@@ -64,6 +65,33 @@ export function createApp(db: Database) {
     });
 
     res.status(201).json(product);
+  }));
+
+  app.put('/products/:id', asyncHandler(async (req, res) => {
+    const productId = Number(req.params.id);
+    const input = productUpdateSchema.parse(req.body);
+    requireProduct(db, productId);
+
+    if (input.minPrice > input.basePrice) {
+      throw new HttpError(400, 'minPrice cannot be greater than basePrice');
+    }
+
+    db.prepare(`
+      UPDATE products
+      SET name = ?, description = ?, category = ?, base_price = ?, min_price = ?,
+          status = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(
+      input.name,
+      input.description ?? null,
+      input.category,
+      input.basePrice,
+      input.minPrice,
+      input.status,
+      productId
+    );
+
+    res.json(getProductById(db, productId));
   }));
 
   app.put('/products/:id/pricing-rule', asyncHandler(async (req, res) => {
@@ -138,6 +166,10 @@ export function createApp(db: Database) {
 
   app.post('/webhooks/whatsapp', asyncHandler(async (req, res) => {
     const input = whatsappWebhookSchema.parse(req.body);
+    if (!input.productSku) {
+      throw new HttpError(400, 'productSku is required for the SQLite webhook runtime');
+    }
+
     const product = getProductBySku(db, input.productSku);
     if (!product) {
       throw new HttpError(404, `Product ${input.productSku} not found`);

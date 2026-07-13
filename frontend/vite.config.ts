@@ -5,6 +5,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173
+  },
+  preview: {
+    allowedHosts: ['proyectofinal-production-daab.up.railway.app']
   }
 });
-

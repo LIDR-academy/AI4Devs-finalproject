@@ -1,49 +1,36 @@
-# Entrega 2 - ComercIA Marketplace Assistant MVP
+# Entrega Final - ComercIA Marketplace Assistant
 
-Esta carpeta contiene el desarrollo de la segunda entrega, separado de la documentacion de Entrega 1.
+Esta carpeta contiene la version funcional preparada para la entrega final.
 
-## Que incluye
+## Objetivo
 
-- Backend Express + TypeScript.
-- SQLite local mediante `node:sqlite` para facilitar ejecucion del MVP.
-- Frontend React + TypeScript con Vite.
-- Simulador de lead por WhatsApp.
-- Motor de negociacion deterministico basado en stock, margen minimo y reglas.
-- Generacion de orden y link de pago simulado.
-- Webhook de pago simulado.
-- Coordinacion de entrega con enlace de Google Maps.
-- Tests unitarios e integracion del backend.
+Publicar ComercIA Marketplace Assistant con:
 
-## Flujo principal
+- Backend desplegable en Railway.
+- Frontend desplegable en Railway.
+- Base de datos PostgreSQL en Railway.
+- Webhook listo para Meta WhatsApp Cloud API.
+- Variables de entorno separadas para frontend y backend.
+- Flujo principal funcional: WhatsApp -> conversacion -> oferta -> orden -> pago -> entrega Maps.
 
-1. El vendedor revisa producto, stock y regla de negociacion.
-2. Simula un mensaje entrante de WhatsApp de un comprador.
-3. El sistema crea lead, conversacion y mensaje.
-4. El vendedor genera una oferta sugerida.
-5. El sistema calcula precio seguro y registra la negociacion.
-6. El vendedor crea una orden y un link de pago.
-7. El vendedor simula confirmacion de pago.
-8. El sistema descuenta inventario.
-9. El vendedor coordina entrega con direccion y coordenadas.
-10. El sistema genera y registra un link de Google Maps.
+## Modos de base de datos
 
-## Requisitos
+El backend soporta dos modos:
 
-- Node.js 22 o superior.
-- npm.
+- Local sin `DATABASE_URL`: usa SQLite local para desarrollo y tests.
+- Railway con `DATABASE_URL`: usa PostgreSQL automaticamente.
 
-## Instalacion
-
-Desde esta carpeta:
+## Instalacion local
 
 ```powershell
+cd F:\aspis\SergioCursos\AI4Devs-finalproject\entrega3
 npm install
 Copy-Item backend/.env.example backend/.env
 npm run db:migrate
 npm run db:seed
 ```
 
-## Ejecutar en desarrollo
+## Desarrollo local
 
 Terminal 1:
 
@@ -57,23 +44,89 @@ Terminal 2:
 npm run dev:frontend
 ```
 
-URLs:
+URLs locales:
 
 - Frontend: `http://localhost:5173`
 - Backend: `http://localhost:3000`
 - Health check: `http://localhost:3000/health`
 
-## Tests y build
+## Validacion
 
 ```powershell
 npm test
 npm run build
 ```
 
-## Notas de alcance
+Validado localmente:
 
-- WhatsApp esta simulado mediante `POST /webhooks/whatsapp`.
-- Pagos estan simulados mediante `POST /webhooks/payments`.
-- Maps usa enlaces publicos con latitud y longitud, sin geocoding real.
-- Node puede mostrar una advertencia `ExperimentalWarning` por `node:sqlite`; no bloquea ejecucion, tests ni build.
-- Para Entrega Final se puede migrar a PostgreSQL administrado manteniendo el contrato REST del MVP.
+- 2 suites de tests pasan.
+- 4 tests pasan.
+- Backend compila.
+- Frontend compila.
+
+## Railway
+
+Crear 3 servicios:
+
+1. PostgreSQL.
+2. Backend Node.js.
+3. Frontend Vite.
+
+Backend:
+
+```text
+Root directory: entrega3
+Build command: npm install && npm --workspace backend run build
+Start command: npm --workspace backend start
+Healthcheck path: /health
+```
+
+Frontend:
+
+```text
+Root directory: entrega3
+Build command: npm install && npm --workspace frontend run build
+Start command: npm --workspace frontend start
+```
+
+Mas detalle en:
+
+- `docs/deployment-railway-meta.md`
+- `docs/env-reference.md`
+- `docs/checklist-final.md`
+
+## Meta WhatsApp
+
+Webhook backend:
+
+```text
+GET  /webhooks/whatsapp
+POST /webhooks/whatsapp
+```
+
+Callback URL en Meta:
+
+```text
+https://TU-BACKEND.up.railway.app/webhooks/whatsapp
+```
+
+Verify token:
+
+```text
+META_WHATSAPP_VERIFY_TOKEN
+```
+
+Para activar envio real de mensajes:
+
+```text
+WHATSAPP_PROVIDER=meta
+META_WHATSAPP_ACCESS_TOKEN=...
+META_WHATSAPP_PHONE_NUMBER_ID=...
+```
+
+Para pruebas sin Meta:
+
+```text
+WHATSAPP_PROVIDER=simulator
+```
+
