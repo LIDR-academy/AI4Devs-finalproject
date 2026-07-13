@@ -15,15 +15,18 @@ import { pt } from '../resources/pt';
 
 const flattenValues = (node: unknown, prefix = ''): Record<string, string> => {
   if (!node || typeof node !== 'object') return {};
-  return Object.entries(node as Record<string, unknown>).reduce<Record<string, string>>((acc, [key, value]) => {
-    const path = prefix ? `${prefix}.${key}` : key;
-    if (value && typeof value === 'object') {
-      Object.assign(acc, flattenValues(value, path));
-    } else {
-      acc[path] = String(value);
-    }
-    return acc;
-  }, {});
+  return Object.entries(node as Record<string, unknown>).reduce<Record<string, string>>(
+    (acc, [key, value]) => {
+      const path = prefix ? `${prefix}.${key}` : key;
+      if (value && typeof value === 'object') {
+        Object.assign(acc, flattenValues(value, path));
+      } else {
+        acc[path] = String(value);
+      }
+      return acc;
+    },
+    {},
+  );
 };
 
 const STUBBED_UPLOAD_KEYS = [
@@ -43,7 +46,7 @@ describe.each([
   ['es', es],
   ['pt', pt],
   ['de', de],
-] as const)('upload.* locale parity (%s)', (locale, bundle) => {
+] as const)('upload.* locale parity (%s)', (_locale, bundle) => {
   const enValues = flattenValues(en.translation);
   const localeValues = flattenValues(bundle.translation);
 

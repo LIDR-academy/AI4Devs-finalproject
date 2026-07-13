@@ -11,7 +11,8 @@ const validationError = (input: NewLessonAttempt): string | null => {
   if (!input.lessonId.trim()) return 'LessonAttemptService.saveAttempt: lessonId must not be empty';
   if (input.total <= 0) return 'LessonAttemptService.saveAttempt: total must be greater than 0';
   if (input.score < 0) return 'LessonAttemptService.saveAttempt: score must not be negative';
-  if (input.score > input.total) return 'LessonAttemptService.saveAttempt: score must not exceed total';
+  if (input.score > input.total)
+    return 'LessonAttemptService.saveAttempt: score must not exceed total';
   return null;
 };
 

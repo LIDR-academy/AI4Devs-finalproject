@@ -5,7 +5,11 @@ jest.mock('@helsoft/localization', () => ({
 import { useLocalization } from '@helsoft/localization';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
-import { isValidEmail, localizationValue, type SignInFormTestProps } from '../../test-utils/auth-test-factories';
+import {
+  isValidEmail,
+  localizationValue,
+  type SignInFormTestProps,
+} from '../../test-utils/auth-test-factories';
 import { SignInForm } from './sign-in-form';
 
 const mockUseLocalization = useLocalization as jest.Mock;

@@ -1,5 +1,5 @@
+import type { useLocalization } from '@helsoft/localization';
 import type { AuthErrorCode } from '@helsoft/types';
-import { useLocalization } from '@helsoft/localization';
 
 /**
  * Shared mock-return factories for sign-in-form / sign-out unit tests.

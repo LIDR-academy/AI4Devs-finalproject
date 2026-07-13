@@ -48,7 +48,14 @@ describe('PdfUpload', () => {
     const bytes = new Uint8Array([1, 2, 3]).buffer;
     mockGetDocumentAsync.mockResolvedValue({
       canceled: false,
-      assets: [{ name: 'notes.pdf', size: 3, uri: 'blob:notes', file: { arrayBuffer: () => Promise.resolve(bytes) } }],
+      assets: [
+        {
+          name: 'notes.pdf',
+          size: 3,
+          uri: 'blob:notes',
+          file: { arrayBuffer: () => Promise.resolve(bytes) },
+        },
+      ],
     });
 
     await render(<PdfUpload />);
@@ -57,7 +64,11 @@ describe('PdfUpload', () => {
     });
 
     expect(mockGetDocumentAsync).toHaveBeenCalledWith({ type: 'application/pdf' });
-    expect(extract).toHaveBeenCalledWith({ filename: 'notes.pdf', sizeBytes: 3, bytes: new Uint8Array(bytes) });
+    expect(extract).toHaveBeenCalledWith({
+      filename: 'notes.pdf',
+      sizeBytes: 3,
+      bytes: new Uint8Array(bytes),
+    });
   });
 
   // @s4/risk R5 — choosing a native asset (only a file:// uri, no `.file`) reads its bytes via
@@ -78,7 +89,11 @@ describe('PdfUpload', () => {
     });
 
     expect(MockFile).toHaveBeenCalledWith('file:///tmp/native.pdf');
-    expect(extract).toHaveBeenCalledWith({ filename: 'native.pdf', sizeBytes: 3, bytes: new Uint8Array(bytes) });
+    expect(extract).toHaveBeenCalledWith({
+      filename: 'native.pdf',
+      sizeBytes: 3,
+      bytes: new Uint8Array(bytes),
+    });
   });
 
   // Mutation-kill guard (review round-1 Part B #4) — when the picked asset reports no usable
@@ -91,7 +106,14 @@ describe('PdfUpload', () => {
     const bytes = new Uint8Array([1, 2, 3, 4]).buffer;
     mockGetDocumentAsync.mockResolvedValue({
       canceled: false,
-      assets: [{ name: 'notes.pdf', size: null, uri: 'blob:notes', file: { arrayBuffer: () => Promise.resolve(bytes) } }],
+      assets: [
+        {
+          name: 'notes.pdf',
+          size: null,
+          uri: 'blob:notes',
+          file: { arrayBuffer: () => Promise.resolve(bytes) },
+        },
+      ],
     });
 
     await render(<PdfUpload />);
@@ -99,7 +121,11 @@ describe('PdfUpload', () => {
       fireEvent.press(screen.getByRole('button', { name: 'upload.chooseFile' }));
     });
 
-    expect(extract).toHaveBeenCalledWith({ filename: 'notes.pdf', sizeBytes: 4, bytes: new Uint8Array(bytes) });
+    expect(extract).toHaveBeenCalledWith({
+      filename: 'notes.pdf',
+      sizeBytes: 4,
+      bytes: new Uint8Array(bytes),
+    });
   });
 
   // Canceling the picker must not call extract() at all.
@@ -137,7 +163,14 @@ describe('PdfUpload', () => {
     mockUsePdfExtraction.mockReturnValue(
       extractionValue({
         stage: 'success',
-        result: { documentId: 'd1', filename: 'notes.pdf', pageCount: 4, imageCount: 2, pages: [], images: [] },
+        result: {
+          documentId: 'd1',
+          filename: 'notes.pdf',
+          pageCount: 4,
+          imageCount: 2,
+          pages: [],
+          images: [],
+        },
       }),
     );
 
@@ -161,7 +194,14 @@ describe('PdfUpload', () => {
     mockUsePdfExtraction.mockReturnValue(
       extractionValue({
         stage: 'success',
-        result: { documentId: 'd1', filename: 'notes.pdf', pageCount: 4, imageCount: 2, pages: [], images: [] },
+        result: {
+          documentId: 'd1',
+          filename: 'notes.pdf',
+          pageCount: 4,
+          imageCount: 2,
+          pages: [],
+          images: [],
+        },
       }),
     );
 
@@ -201,7 +241,9 @@ describe('PdfUpload', () => {
   // (spec.md's Error contract table) — retrying it can actually change the outcome.
   it('shows the mapped error message and wires retry into the panel when stage is error with a transient code', async () => {
     const retry = jest.fn();
-    mockUsePdfExtraction.mockReturnValue(extractionValue({ stage: 'error', error: 'network_error', retry }));
+    mockUsePdfExtraction.mockReturnValue(
+      extractionValue({ stage: 'error', error: 'network_error', retry }),
+    );
 
     await render(<PdfUpload />);
 
@@ -216,7 +258,9 @@ describe('PdfUpload', () => {
 
   // @s14 — the unauthenticated code maps to its own clear signed-in-required message.
   it('maps the unauthenticated error code to its own message', async () => {
-    mockUsePdfExtraction.mockReturnValue(extractionValue({ stage: 'error', error: 'unauthenticated' }));
+    mockUsePdfExtraction.mockReturnValue(
+      extractionValue({ stage: 'error', error: 'unauthenticated' }),
+    );
 
     await render(<PdfUpload />);
 
@@ -236,7 +280,9 @@ describe('PdfUpload', () => {
 
   // Guards against a code silently falling through to a missing/wrong message (i18next has no
   // missing-key handler) — every PdfExtractionErrorCode maps to its own, distinct message key.
-  it.each(Object.entries(ERROR_CODE_TO_KEY))('maps error code %s to its own message key', async (code, expectedKey) => {
+  it.each(
+    Object.entries(ERROR_CODE_TO_KEY),
+  )('maps error code %s to its own message key', async (code, expectedKey) => {
     mockUsePdfExtraction.mockReturnValue(extractionValue({ stage: 'error', error: code as never }));
 
     await render(<PdfUpload />);
@@ -254,7 +300,9 @@ describe('PdfUpload', () => {
     (code) => code !== 'network_error' && code !== 'extraction_failed',
   ) as (keyof typeof ERROR_CODE_TO_KEY)[];
 
-  it.each(NON_TRANSIENT_CODES)('suppresses the retry affordance for the non-transient code %s', async (code) => {
+  it.each(
+    NON_TRANSIENT_CODES,
+  )('suppresses the retry affordance for the non-transient code %s', async (code) => {
     mockUsePdfExtraction.mockReturnValue(extractionValue({ stage: 'error', error: code }));
 
     await render(<PdfUpload />);
@@ -262,15 +310,14 @@ describe('PdfUpload', () => {
     expect(screen.queryByRole('button', { name: 'upload.retryAction' })).toBeNull();
   });
 
-  it.each(['network_error', 'extraction_failed'] as const)(
-    'keeps the retry affordance for the transient code %s',
-    async (code) => {
-      mockUsePdfExtraction.mockReturnValue(extractionValue({ stage: 'error', error: code }));
+  it.each([
+    'network_error',
+    'extraction_failed',
+  ] as const)('keeps the retry affordance for the transient code %s', async (code) => {
+    mockUsePdfExtraction.mockReturnValue(extractionValue({ stage: 'error', error: code }));
 
-      await render(<PdfUpload />);
+    await render(<PdfUpload />);
 
-      expect(screen.getByRole('button', { name: 'upload.retryAction' })).toBeTruthy();
-    },
-  );
-
+    expect(screen.getByRole('button', { name: 'upload.retryAction' })).toBeTruthy();
+  });
 });

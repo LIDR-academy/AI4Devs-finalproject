@@ -1,5 +1,5 @@
-import { Stack } from 'expo-router';
 import { useLocalization } from '@helsoft/localization';
+import { Stack } from 'expo-router';
 
 export default function AuthLayout() {
   const { t } = useLocalization();

@@ -1,4 +1,4 @@
-import { Pressable, StyleProp, Text, View, ViewStyle } from 'react-native';
+import { Pressable, type StyleProp, Text, View, type ViewStyle } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { Icon } from '../../atoms/icon/icon';
@@ -40,7 +40,8 @@ export const AnswerOption = ({
   // 'default' is unistyles' reserved fallback key, selected by passing undefined.
   styles.useVariants({ state: state === 'default' ? undefined : state });
 
-  const feedbackIcon = state === 'correct' ? 'check_circle' : state === 'incorrect' ? 'cancel' : null;
+  const feedbackIcon =
+    state === 'correct' ? 'check_circle' : state === 'incorrect' ? 'cancel' : null;
   const feedbackColor = state === 'correct' ? theme.colors.tertiary : theme.colors.error;
   const locked = disabled || state === 'correct' || state === 'incorrect';
 
@@ -84,7 +85,11 @@ const styles = StyleSheet.create((theme) => ({
           borderColor: theme.colors.primary,
         },
         correct: {
-          backgroundColor: theme.utils.mixHex(theme.colors.tertiaryContainer, theme.colors.surface, 0.55),
+          backgroundColor: theme.utils.mixHex(
+            theme.colors.tertiaryContainer,
+            theme.colors.surface,
+            0.55,
+          ),
           borderWidth: 2,
           borderColor: theme.colors.tertiary,
         },

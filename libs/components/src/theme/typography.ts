@@ -1,4 +1,4 @@
-import { Platform, TextStyle } from 'react-native';
+import { Platform, type TextStyle } from 'react-native';
 
 /**
  * AI Study Buddy — typography (MD3 type scale).
@@ -48,19 +48,109 @@ export type TypeRole =
   | 'labelSmall';
 
 export const typography = {
-  displayLarge: { fontFamily: fontFamily.brand, fontSize: 57, lineHeight: 64, fontWeight: '700', letterSpacing: -0.5 },
-  displayMedium: { fontFamily: fontFamily.brand, fontSize: 45, lineHeight: 52, fontWeight: '700', letterSpacing: -0.25 },
-  displaySmall: { fontFamily: fontFamily.brand, fontSize: 36, lineHeight: 44, fontWeight: '700', letterSpacing: 0 },
-  headlineLarge: { fontFamily: fontFamily.brand, fontSize: 32, lineHeight: 40, fontWeight: '600', letterSpacing: 0 },
-  headlineMedium: { fontFamily: fontFamily.brand, fontSize: 28, lineHeight: 36, fontWeight: '600', letterSpacing: 0 },
-  headlineSmall: { fontFamily: fontFamily.brand, fontSize: 24, lineHeight: 32, fontWeight: '600', letterSpacing: 0 },
-  titleLarge: { fontFamily: fontFamily.brand, fontSize: 22, lineHeight: 28, fontWeight: '600', letterSpacing: 0 },
-  titleMedium: { fontFamily: fontFamily.body, fontSize: 16, lineHeight: 24, fontWeight: '600', letterSpacing: 0.15 },
-  titleSmall: { fontFamily: fontFamily.body, fontSize: 14, lineHeight: 20, fontWeight: '600', letterSpacing: 0.1 },
-  bodyLarge: { fontFamily: fontFamily.body, fontSize: 16, lineHeight: 24, fontWeight: '400', letterSpacing: 0.15 },
-  bodyMedium: { fontFamily: fontFamily.body, fontSize: 14, lineHeight: 20, fontWeight: '400', letterSpacing: 0.25 },
-  bodySmall: { fontFamily: fontFamily.body, fontSize: 12, lineHeight: 16, fontWeight: '400', letterSpacing: 0.4 },
-  labelLarge: { fontFamily: fontFamily.body, fontSize: 14, lineHeight: 20, fontWeight: '600', letterSpacing: 0.1 },
-  labelMedium: { fontFamily: fontFamily.body, fontSize: 12, lineHeight: 16, fontWeight: '600', letterSpacing: 0.5 },
-  labelSmall: { fontFamily: fontFamily.body, fontSize: 11, lineHeight: 16, fontWeight: '600', letterSpacing: 0.5 },
+  displayLarge: {
+    fontFamily: fontFamily.brand,
+    fontSize: 57,
+    lineHeight: 64,
+    fontWeight: '700',
+    letterSpacing: -0.5,
+  },
+  displayMedium: {
+    fontFamily: fontFamily.brand,
+    fontSize: 45,
+    lineHeight: 52,
+    fontWeight: '700',
+    letterSpacing: -0.25,
+  },
+  displaySmall: {
+    fontFamily: fontFamily.brand,
+    fontSize: 36,
+    lineHeight: 44,
+    fontWeight: '700',
+    letterSpacing: 0,
+  },
+  headlineLarge: {
+    fontFamily: fontFamily.brand,
+    fontSize: 32,
+    lineHeight: 40,
+    fontWeight: '600',
+    letterSpacing: 0,
+  },
+  headlineMedium: {
+    fontFamily: fontFamily.brand,
+    fontSize: 28,
+    lineHeight: 36,
+    fontWeight: '600',
+    letterSpacing: 0,
+  },
+  headlineSmall: {
+    fontFamily: fontFamily.brand,
+    fontSize: 24,
+    lineHeight: 32,
+    fontWeight: '600',
+    letterSpacing: 0,
+  },
+  titleLarge: {
+    fontFamily: fontFamily.brand,
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: '600',
+    letterSpacing: 0,
+  },
+  titleMedium: {
+    fontFamily: fontFamily.body,
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '600',
+    letterSpacing: 0.15,
+  },
+  titleSmall: {
+    fontFamily: fontFamily.body,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '600',
+    letterSpacing: 0.1,
+  },
+  bodyLarge: {
+    fontFamily: fontFamily.body,
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '400',
+    letterSpacing: 0.15,
+  },
+  bodyMedium: {
+    fontFamily: fontFamily.body,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '400',
+    letterSpacing: 0.25,
+  },
+  bodySmall: {
+    fontFamily: fontFamily.body,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '400',
+    letterSpacing: 0.4,
+  },
+  labelLarge: {
+    fontFamily: fontFamily.body,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '600',
+    letterSpacing: 0.1,
+  },
+  labelMedium: {
+    fontFamily: fontFamily.body,
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+  },
+  labelSmall: {
+    fontFamily: fontFamily.body,
+    fontSize: 11,
+    lineHeight: 16,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+  },
 } as const satisfies Record<TypeRole, TextStyle>;

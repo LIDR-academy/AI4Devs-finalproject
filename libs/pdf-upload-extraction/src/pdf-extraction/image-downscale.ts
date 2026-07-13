@@ -27,7 +27,11 @@ const isDecorative = (width: number, height: number): boolean =>
 const computeScale = (width: number, height: number): number =>
   Math.min(1, IMAGE_DOWNSCALE_TARGET.maxLongestEdgePx / Math.max(width, height));
 
-const resizePixmap = (pixmap: Mupdf.Pixmap, targetWidth: number, targetHeight: number): Mupdf.Pixmap => {
+const resizePixmap = (
+  pixmap: Mupdf.Pixmap,
+  targetWidth: number,
+  targetHeight: number,
+): Mupdf.Pixmap => {
   const width = pixmap.getWidth();
   const height = pixmap.getHeight();
   const corners: Mupdf.Point[] = [
@@ -48,7 +52,9 @@ const resizePixmap = (pixmap: Mupdf.Pixmap, targetWidth: number, targetHeight: n
  * TypeScript (task-3 sandbox adaptation) — mirrored into `supabase/functions/extract-pdf/_shared/`
  * as the real Deno deployment source.
  */
-export const downscaleImage = async (input: DownscaleImageInput): Promise<DownscaleImageOutput | null> => {
+export const downscaleImage = async (
+  input: DownscaleImageInput,
+): Promise<DownscaleImageOutput | null> => {
   if (isDecorative(input.width, input.height)) {
     return null;
   }

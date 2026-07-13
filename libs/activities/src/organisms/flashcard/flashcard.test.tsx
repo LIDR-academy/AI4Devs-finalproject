@@ -4,9 +4,9 @@ jest.mock('@helsoft/localization', () => ({
   }),
 }));
 
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { layout, lightColors, shape, spacing, typography } from '@helsoft/components';
 import type { FlashcardAnswer, FlashcardSlide } from '@helsoft/types';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
 import { Flashcard } from './flashcard';
 
@@ -83,7 +83,10 @@ describe('Flashcard', () => {
   it.each([
     { mark: 'Recalled' as const, recalled: true, getButton: () => recalledButton() },
     { mark: 'Not recalled' as const, recalled: false, getButton: () => notRecalledButton() },
-  ])('locks in and confirms "$mark", reporting the answer exactly once', async ({ recalled, getButton }) => {
+  ])('locks in and confirms "$mark", reporting the answer exactly once', async ({
+    recalled,
+    getButton,
+  }) => {
     const onAnswered = jest.fn();
     await render(<Flashcard slide={slide} onAnswered={onAnswered} />);
 
@@ -109,7 +112,10 @@ describe('Flashcard', () => {
 
     expect(screen.getByText(I18N.recalledConfirmed)).toBeTruthy();
     expect(screen.getByText('check_circle')).toBeTruthy();
-    expect(screen.getByRole('button', { name: I18N.recalledConfirmed }).props.accessibilityState.selected).toBe(true);
+    expect(
+      screen.getByRole('button', { name: I18N.recalledConfirmed }).props.accessibilityState
+        .selected,
+    ).toBe(true);
   });
 
   // Design-lens fix: the chosen mark's icon color must always agree with its own
@@ -118,7 +124,10 @@ describe('Flashcard', () => {
   it.each([
     { mark: 'Recalled' as const, getButton: () => recalledButton(), iconName: 'check_circle' },
     { mark: 'Not recalled' as const, getButton: () => notRecalledButton(), iconName: 'cancel' },
-  ])('gives the chosen "$mark" button an icon color consistent with its own container chrome', async ({ getButton, iconName }) => {
+  ])('gives the chosen "$mark" button an icon color consistent with its own container chrome', async ({
+    getButton,
+    iconName,
+  }) => {
     await render(<Flashcard slide={slide} />);
 
     await press(revealButton);
@@ -264,9 +273,20 @@ describe('Flashcard', () => {
   // @s8 — a slide missing its front or back degrades to the unavailable notice, nothing
   // interactive, no crash, and `onAnswered` never fires.
   it.each([
-    { missing: 'front/prompt' as const, invalidSlide: { ...slide, content: '' }, hiddenText: slide.back },
-    { missing: 'back/answer' as const, invalidSlide: { ...slide, back: '' }, hiddenText: slide.content },
-  ])('shows the unavailable notice and nothing interactive when the $missing is empty', async ({ invalidSlide, hiddenText }) => {
+    {
+      missing: 'front/prompt' as const,
+      invalidSlide: { ...slide, content: '' },
+      hiddenText: slide.back,
+    },
+    {
+      missing: 'back/answer' as const,
+      invalidSlide: { ...slide, back: '' },
+      hiddenText: slide.content,
+    },
+  ])('shows the unavailable notice and nothing interactive when the $missing is empty', async ({
+    invalidSlide,
+    hiddenText,
+  }) => {
     const onAnswered = jest.fn();
 
     await render(<Flashcard slide={invalidSlide} onAnswered={onAnswered} />);

@@ -1,9 +1,8 @@
-import { useMemo } from 'react';
-import { Pressable, StyleProp, Text, ViewStyle } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-
 import { useInteractionState } from '@helsoft/hooks';
-import { spacing, layout } from '../../theme/spacing';
+import { useMemo } from 'react';
+import { Pressable, type StyleProp, Text, type ViewStyle } from 'react-native';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { layout, spacing } from '../../theme/spacing';
 import { Icon } from '../icon/icon';
 import { StateLayer } from '../state-layer/state-layer';
 
@@ -22,8 +21,16 @@ export type FabProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-const DIMS: Record<FabSize, number> = { small: spacing.s10, regular: spacing.s14, large: spacing.s24 };
-const ICON_SIZES: Record<FabSize, number> = { small: layout.iconSize, regular: layout.iconSize, large: 36 };
+const DIMS: Record<FabSize, number> = {
+  small: spacing.s10,
+  regular: spacing.s14,
+  large: spacing.s24,
+};
+const ICON_SIZES: Record<FabSize, number> = {
+  small: layout.iconSize,
+  regular: layout.iconSize,
+  large: 36,
+};
 const GAP = spacing.s3;
 const PAD_EXTENDED = spacing.s5;
 
@@ -67,7 +74,11 @@ export const Fab = ({
       accessibilityLabel={accessibilityLabel ?? label}
       onPress={onPress}
       {...handlers}
-      style={[styles.root(extended ? undefined : DIMS[size], extended), hover ? styles.shadowHover : styles.shadowRest, style]}
+      style={[
+        styles.root(extended ? undefined : DIMS[size], extended),
+        hover ? styles.shadowHover : styles.shadowRest,
+        style,
+      ]}
     >
       <StateLayer color={fg} opacity={stateOpacity} />
       {icon ? <Icon name={icon} size={ICON_SIZES[size]} color={fg} /> : null}

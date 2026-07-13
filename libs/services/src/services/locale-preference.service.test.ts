@@ -49,9 +49,9 @@ describe('LocalePreferenceService', () => {
   });
 
   it('setStoredLocale rejects an unsupported locale and does not persist it', async () => {
-    await expect(
-      LocalePreferenceService.setStoredLocale('fr' as never),
-    ).rejects.toThrow('Unsupported locale: fr');
+    await expect(LocalePreferenceService.setStoredLocale('fr' as never)).rejects.toThrow(
+      'Unsupported locale: fr',
+    );
     expect(dao.setStoredLocale).not.toHaveBeenCalled();
   });
 });

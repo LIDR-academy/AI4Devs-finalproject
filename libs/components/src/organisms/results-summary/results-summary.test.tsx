@@ -24,7 +24,12 @@ describe('ResultsSummary', () => {
   // in (no numeric props, no self-computed percentage).
   it('renders the pre-formatted score and percent labels for the score variant', async () => {
     await render(
-      <ResultsSummary variant="score" labels={labels} onRetake={jest.fn()} onBackToLessons={jest.fn()} />,
+      <ResultsSummary
+        variant="score"
+        labels={labels}
+        onRetake={jest.fn()}
+        onBackToLessons={jest.fn()}
+      />,
     );
 
     expect(screen.getByText('3 / 3')).toBeTruthy();
@@ -35,7 +40,12 @@ describe('ResultsSummary', () => {
   it('calls onRetake when the retake action is pressed', async () => {
     const onRetake = jest.fn();
     await render(
-      <ResultsSummary variant="score" labels={labels} onRetake={onRetake} onBackToLessons={jest.fn()} />,
+      <ResultsSummary
+        variant="score"
+        labels={labels}
+        onRetake={onRetake}
+        onBackToLessons={jest.fn()}
+      />,
     );
 
     fireEvent.press(screen.getByRole('button', { name: 'Retake activities' }));
@@ -47,7 +57,12 @@ describe('ResultsSummary', () => {
   it('calls onBackToLessons when the back-to-lessons action is pressed', async () => {
     const onBackToLessons = jest.fn();
     await render(
-      <ResultsSummary variant="score" labels={labels} onRetake={jest.fn()} onBackToLessons={onBackToLessons} />,
+      <ResultsSummary
+        variant="score"
+        labels={labels}
+        onRetake={jest.fn()}
+        onBackToLessons={onBackToLessons}
+      />,
     );
 
     fireEvent.press(screen.getByRole('button', { name: 'Back to my lessons' }));
@@ -59,7 +74,13 @@ describe('ResultsSummary', () => {
   // saving resolves.
   it('renders the loading indicator and disables both actions while loading', async () => {
     await render(
-      <ResultsSummary variant="score" labels={labels} loading onRetake={jest.fn()} onBackToLessons={jest.fn()} />,
+      <ResultsSummary
+        variant="score"
+        labels={labels}
+        loading
+        onRetake={jest.fn()}
+        onBackToLessons={jest.fn()}
+      />,
     );
 
     expect(screen.getByTestId(RESULTS_LOADING_TEST_ID)).toBeTruthy();
@@ -70,18 +91,32 @@ describe('ResultsSummary', () => {
   // Content state — the loading affordance is absent and actions stay enabled outside of
   // `loading` (the score content state).
   it('does not show the loading indicator and keeps actions enabled outside of loading', async () => {
-    await render(<ResultsSummary variant="score" labels={labels} onRetake={jest.fn()} onBackToLessons={jest.fn()} />);
+    await render(
+      <ResultsSummary
+        variant="score"
+        labels={labels}
+        onRetake={jest.fn()}
+        onBackToLessons={jest.fn()}
+      />,
+    );
 
     expect(screen.queryByTestId(RESULTS_LOADING_TEST_ID)).toBeNull();
     expect(screen.getByRole('button', { name: 'Retake activities', disabled: false })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Back to my lessons', disabled: false })).toBeTruthy();
+    expect(
+      screen.getByRole('button', { name: 'Back to my lessons', disabled: false }),
+    ).toBeTruthy();
   });
 
   // @s8 / @s9 — the completion variant shows the completion message instead of a score, and
   // still offers both actions (@s10).
   it('renders the completion headline and body for the completion variant, with no score', async () => {
     await render(
-      <ResultsSummary variant="completion" labels={labels} onRetake={jest.fn()} onBackToLessons={jest.fn()} />,
+      <ResultsSummary
+        variant="completion"
+        labels={labels}
+        onRetake={jest.fn()}
+        onBackToLessons={jest.fn()}
+      />,
     );
 
     expect(screen.getByText('Lesson complete')).toBeTruthy();
@@ -110,7 +145,9 @@ describe('ResultsSummary', () => {
     expect(screen.getByText('100%')).toBeTruthy();
     expect(screen.getByText("We couldn't save this attempt.")).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Retake activities', disabled: false })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Back to my lessons', disabled: false })).toBeTruthy();
+    expect(
+      screen.getByRole('button', { name: 'Back to my lessons', disabled: false }),
+    ).toBeTruthy();
   });
 
   // @s7 — the retry action re-attempts the save by calling the given handler when pressed.
@@ -135,7 +172,12 @@ describe('ResultsSummary', () => {
   // Content state — outside of saveFailed, no notice or retry action renders.
   it('does not show the save-failure notice when saveFailed is false', async () => {
     await render(
-      <ResultsSummary variant="score" labels={labels} onRetake={jest.fn()} onBackToLessons={jest.fn()} />,
+      <ResultsSummary
+        variant="score"
+        labels={labels}
+        onRetake={jest.fn()}
+        onBackToLessons={jest.fn()}
+      />,
     );
 
     expect(screen.queryByText("We couldn't save this attempt.")).toBeNull();
@@ -164,7 +206,9 @@ describe('ResultsSummary', () => {
   // the imperative AccessibilityInfo call fired directly when saveFailed is set (mirrors
   // LoginForm's errorMessage announcement, WCAG 4.1.3).
   it('announces the save-failure notice via AccessibilityInfo when saveFailed is set', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     await render(
@@ -187,7 +231,9 @@ describe('ResultsSummary', () => {
   // the visual notice: nothing is ever saved for the completion variant, so it must never
   // announce a save failure there either.
   it('does not announce a save-failure notice for the completion variant even if saveFailed is true', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     await render(
@@ -211,7 +257,9 @@ describe('ResultsSummary', () => {
   // failure notice should announce — announcing the score too would compete with it in the same
   // screen-reader queue and add no information the user needs right now.
   it('announces only the save-failure notice, not the score, when loading resolves into a save failure', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     const { rerender } = await render(
@@ -250,17 +298,31 @@ describe('ResultsSummary', () => {
   // @s13 — the score becoming final (loading resolves) is a state change that must be
   // announced to assistive tech, the same iOS-parity need as the save-failure notice.
   it('announces the score via AccessibilityInfo when loading resolves for the score variant', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     const { rerender } = await render(
-      <ResultsSummary variant="score" labels={labels} loading onRetake={jest.fn()} onBackToLessons={jest.fn()} />,
+      <ResultsSummary
+        variant="score"
+        labels={labels}
+        loading
+        onRetake={jest.fn()}
+        onBackToLessons={jest.fn()}
+      />,
     );
     expect(announceSpy).not.toHaveBeenCalled();
 
     await act(async () => {
       rerender(
-        <ResultsSummary variant="score" labels={labels} loading={false} onRetake={jest.fn()} onBackToLessons={jest.fn()} />,
+        <ResultsSummary
+          variant="score"
+          labels={labels}
+          loading={false}
+          onRetake={jest.fn()}
+          onBackToLessons={jest.fn()}
+        />,
       );
     });
 
@@ -274,7 +336,9 @@ describe('ResultsSummary', () => {
   // ever saved there), so a stray `saveFailed=true` on a completion render must not suppress the
   // completion headline announcement the way it legitimately suppresses the score announcement.
   it('still announces the completion headline when loading resolves even if saveFailed is (incorrectly) true', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     const { rerender } = await render(
@@ -311,11 +375,19 @@ describe('ResultsSummary', () => {
   // saving resolves, the completion headline is announced (nothing renders differently for
   // the completion variant, so this also relies on the imperative call).
   it('announces the completion headline via AccessibilityInfo when loading resolves for the completion variant', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     const { rerender } = await render(
-      <ResultsSummary variant="completion" labels={labels} loading onRetake={jest.fn()} onBackToLessons={jest.fn()} />,
+      <ResultsSummary
+        variant="completion"
+        labels={labels}
+        loading
+        onRetake={jest.fn()}
+        onBackToLessons={jest.fn()}
+      />,
     );
     expect(announceSpy).not.toHaveBeenCalled();
 
@@ -341,12 +413,20 @@ describe('ResultsSummary', () => {
   // (that composition hardcoded a non-localized ", " separator — formatting belongs to the
   // wiring layer, per this component's own no-self-formatting contract).
   it('announces the given scoreAnnouncement label instead of composing labels.score and labels.percent', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
     const markerLabels = { ...labels, scoreAnnouncement: 'i18n-marker-score-announcement' };
 
     const { rerender } = await render(
-      <ResultsSummary variant="score" labels={markerLabels} loading onRetake={jest.fn()} onBackToLessons={jest.fn()} />,
+      <ResultsSummary
+        variant="score"
+        labels={markerLabels}
+        loading
+        onRetake={jest.fn()}
+        onBackToLessons={jest.fn()}
+      />,
     );
 
     await act(async () => {
@@ -371,7 +451,13 @@ describe('ResultsSummary', () => {
   // action that would have no handler to call.
   it('does not render the retry action when onRetrySave is omitted even though saveFailed is true', async () => {
     await render(
-      <ResultsSummary variant="score" labels={labels} saveFailed onRetake={jest.fn()} onBackToLessons={jest.fn()} />,
+      <ResultsSummary
+        variant="score"
+        labels={labels}
+        saveFailed
+        onRetake={jest.fn()}
+        onBackToLessons={jest.fn()}
+      />,
     );
 
     expect(screen.getByText("We couldn't save this attempt.")).toBeTruthy();
@@ -381,7 +467,14 @@ describe('ResultsSummary', () => {
   // Layout — the actions row lays the retake/back-to-lessons buttons out side-by-side,
   // vertically centered, with the standard inline gap (mirrors LoginForm's submit row).
   it('lays out the actions row as a horizontally centered row with the standard gap', async () => {
-    await render(<ResultsSummary variant="score" labels={labels} onRetake={jest.fn()} onBackToLessons={jest.fn()} />);
+    await render(
+      <ResultsSummary
+        variant="score"
+        labels={labels}
+        onRetake={jest.fn()}
+        onBackToLessons={jest.fn()}
+      />,
+    );
 
     const actionsRow = screen.getByRole('button', { name: 'Retake activities' }).parent;
 
@@ -390,7 +483,14 @@ describe('ResultsSummary', () => {
 
   // Layout — the card content stacks headline/body/notice/actions with the standard vertical gap.
   it('stacks the content with the standard vertical gap', async () => {
-    await render(<ResultsSummary variant="score" labels={labels} onRetake={jest.fn()} onBackToLessons={jest.fn()} />);
+    await render(
+      <ResultsSummary
+        variant="score"
+        labels={labels}
+        onRetake={jest.fn()}
+        onBackToLessons={jest.fn()}
+      />,
+    );
 
     const content = screen.getByRole('button', { name: 'Retake activities' }).parent?.parent;
 
@@ -400,10 +500,23 @@ describe('ResultsSummary', () => {
   // Design tokens — the score headline/body use the type-scale and on-surface color roles,
   // not ad-hoc styling.
   it('applies the headline and body typography tokens to the score labels', async () => {
-    await render(<ResultsSummary variant="score" labels={labels} onRetake={jest.fn()} onBackToLessons={jest.fn()} />);
+    await render(
+      <ResultsSummary
+        variant="score"
+        labels={labels}
+        onRetake={jest.fn()}
+        onBackToLessons={jest.fn()}
+      />,
+    );
 
-    expect(screen.getByText('3 / 3')).toHaveStyle({ ...typography.headlineSmall, color: lightColors.onSurface });
-    expect(screen.getByText('100%')).toHaveStyle({ ...typography.titleMedium, color: lightColors.onSurfaceVariant });
+    expect(screen.getByText('3 / 3')).toHaveStyle({
+      ...typography.headlineSmall,
+      color: lightColors.onSurface,
+    });
+    expect(screen.getByText('100%')).toHaveStyle({
+      ...typography.titleMedium,
+      color: lightColors.onSurfaceVariant,
+    });
   });
 
   // Design tokens — the save-failure notice uses the error-container color role, card corner
@@ -428,6 +541,9 @@ describe('ResultsSummary', () => {
       padding: spacing.s3,
       gap: spacing.s2,
     });
-    expect(noticeText).toHaveStyle({ ...typography.bodyMedium, color: lightColors.onErrorContainer });
+    expect(noticeText).toHaveStyle({
+      ...typography.bodyMedium,
+      color: lightColors.onErrorContainer,
+    });
   });
 });

@@ -29,7 +29,9 @@ test('Correct story shows correct banner and icon (@s2)', async ({ page }) => {
   await expect(canvas.getByText('check_circle', { exact: true })).toBeVisible();
 });
 
-test('Incorrect story shows incorrect banner, icon, and revealed answer (@s3)', async ({ page }) => {
+test('Incorrect story shows incorrect banner, icon, and revealed answer (@s3)', async ({
+  page,
+}) => {
   await page.goto(story('incorrect'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
@@ -67,7 +69,9 @@ test('submitting a matching answer shows correct feedback and locks (@s2)', asyn
   await expect(canvas.getByText('check_circle', { exact: true })).toBeVisible();
 });
 
-test('submitting a wrong answer shows incorrect feedback and reveals accepted (@s3)', async ({ page }) => {
+test('submitting a wrong answer shows incorrect feedback and reveals accepted (@s3)', async ({
+  page,
+}) => {
   await page.goto(story('interactive'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 

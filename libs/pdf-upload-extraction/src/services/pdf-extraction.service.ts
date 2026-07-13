@@ -1,4 +1,8 @@
-import { FunctionsFetchError, FunctionsHttpError, FunctionsRelayError } from '@supabase/supabase-js';
+import {
+  FunctionsFetchError,
+  FunctionsHttpError,
+  FunctionsRelayError,
+} from '@supabase/supabase-js';
 
 import { trackPdfExtractionEvent } from '../analytics/pdf-extraction-analytics';
 import { PdfUploadDao } from '../dao/pdf-upload.dao';
@@ -55,7 +59,9 @@ const toExtractionError = (code: PdfExtractionErrorCode): Error & PdfExtractionE
  * supabase-js itself for error responses. Falls back to `extraction_failed` for a malformed/
  * absent body or an `errorCode` outside the known union, so a violated server contract never
  * leaks a raw shape to the UI. */
-const readFunctionErrorCode = async (error: FunctionsHttpError): Promise<PdfExtractionErrorCode> => {
+const readFunctionErrorCode = async (
+  error: FunctionsHttpError,
+): Promise<PdfExtractionErrorCode> => {
   try {
     const body = await error.context.json();
     // Stryker disable next-line OptionalChaining: provably equivalent — if `body` is null/
@@ -74,7 +80,8 @@ const readFunctionErrorCode = async (error: FunctionsHttpError): Promise<PdfExtr
  * into the typed union so the UI never branches on a raw Supabase/function error (@s8/@s11/@s12/
  * @s13/@s14, task-9). */
 const normalizeExtractionError = async (cause: unknown): Promise<Error & PdfExtractionError> => {
-  if (cause instanceof FunctionsHttpError) return toExtractionError(await readFunctionErrorCode(cause));
+  if (cause instanceof FunctionsHttpError)
+    return toExtractionError(await readFunctionErrorCode(cause));
   if (cause instanceof FunctionsFetchError || cause instanceof FunctionsRelayError) {
     return toExtractionError('network_error');
   }
@@ -94,8 +101,15 @@ const validateFile = (input: PdfExtractionInput): void => {
 
 /** Emits the PII-free `pdf_extraction_failed` event (task-15, @s17) — only `document_id`,
  * `error_code`, and `stage` ever leave this function, regardless of what caused the failure. */
-const trackExtractionFailure = (documentId: string, code: PdfExtractionErrorCode, stage: 'client' | 'server'): void => {
-  trackPdfExtractionEvent({ name: 'pdf_extraction_failed', properties: { document_id: documentId, error_code: code, stage } });
+const trackExtractionFailure = (
+  documentId: string,
+  code: PdfExtractionErrorCode,
+  stage: 'client' | 'server',
+): void => {
+  trackPdfExtractionEvent({
+    name: 'pdf_extraction_failed',
+    properties: { document_id: documentId, error_code: code, stage },
+  });
 };
 
 /**

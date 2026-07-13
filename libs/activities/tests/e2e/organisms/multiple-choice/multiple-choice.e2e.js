@@ -32,7 +32,9 @@ test('selecting the correct option shows the correct feedback', async ({ page })
   await expect(canvas.getByText('check_circle', { exact: true })).toBeVisible();
 });
 
-test('selecting an incorrect option shows incorrect feedback and reveals the correct option', async ({ page }) => {
+test('selecting an incorrect option shows incorrect feedback and reveals the correct option', async ({
+  page,
+}) => {
   await page.goto(story('interactive'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 

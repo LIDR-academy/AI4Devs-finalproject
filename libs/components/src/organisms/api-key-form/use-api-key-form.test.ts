@@ -97,7 +97,9 @@ describe('useApiKeyForm', () => {
   });
 
   it('announces errorMessage via AccessibilityInfo when set', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     const { rerender } = await renderFormHook({
@@ -115,7 +117,9 @@ describe('useApiKeyForm', () => {
   });
 
   it('announces loadingStatus when isLoadingStatus becomes true', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     const { rerender } = await renderFormHook({
@@ -138,7 +142,9 @@ describe('useApiKeyForm', () => {
   });
 
   it('announces saving label when isSubmitting becomes true', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     const { rerender } = await renderFormHook({

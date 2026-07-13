@@ -5,7 +5,7 @@ jest.mock('@helsoft/services', () => ({
   },
 }));
 
-import { type Locale } from '@helsoft/types';
+import type { Locale } from '@helsoft/types';
 import { render, screen } from '@testing-library/react';
 
 import { LocalizationProvider } from '../provider/localization-provider';

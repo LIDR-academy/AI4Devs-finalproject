@@ -1,5 +1,5 @@
 import { LocalePreferenceService } from '@helsoft/services';
-import { type Locale } from '@helsoft/types';
+import type { Locale } from '@helsoft/types';
 import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 import { I18nextProvider } from 'react-i18next';
 
@@ -20,7 +20,11 @@ export const LocalizationContext = createContext<LocalizationContextValue | unde
  * First paint is gated (`null`) until the initial locale resolves, so no flash of
  * untranslated copy (R2). Precedence: saved preference → device detection → English.
  */
-export const LocalizationProvider = ({ children, initialLocale, deviceLocale }: LocalizationProviderProps) => {
+export const LocalizationProvider = ({
+  children,
+  initialLocale,
+  deviceLocale,
+}: LocalizationProviderProps) => {
   const [i18n] = useState(() => createI18n(initialLocale ?? resolveInitialLocale(deviceLocale)));
   const [ready, setReady] = useState(false);
 
@@ -29,7 +33,9 @@ export const LocalizationProvider = ({ children, initialLocale, deviceLocale }: 
 
     const resolve = async () => {
       const next =
-        initialLocale ?? (await LocalePreferenceService.getStoredLocale()) ?? resolveInitialLocale(deviceLocale);
+        initialLocale ??
+        (await LocalePreferenceService.getStoredLocale()) ??
+        resolveInitialLocale(deviceLocale);
       await i18n.changeLanguage(next);
       if (active) setReady(true);
     };

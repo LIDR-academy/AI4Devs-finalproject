@@ -1,6 +1,6 @@
-import { AccessibilityInfo, Platform } from 'react-native';
-import { act, renderHook, waitFor } from '@testing-library/react-native';
 import type { FlashcardAnswer, FlashcardSlide } from '@helsoft/types';
+import { act, renderHook, waitFor } from '@testing-library/react-native';
+import { AccessibilityInfo, Platform } from 'react-native';
 
 import type { FlashcardLabels } from './flashcard.types';
 import { useFlashcard } from './use-flashcard';
@@ -79,7 +79,9 @@ describe('useFlashcard', () => {
     let announceSpy: jest.SpyInstance;
 
     beforeEach(() => {
-      announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+      announceSpy = jest
+        .spyOn(AccessibilityInfo, 'announceForAccessibility')
+        .mockImplementation(() => {});
       announceSpy.mockClear();
     });
 

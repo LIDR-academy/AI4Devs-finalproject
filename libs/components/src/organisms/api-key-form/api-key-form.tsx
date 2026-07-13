@@ -113,7 +113,11 @@ export const ApiKeyForm = ({
             <Button disabled={isSubmitting} variant="outlined" onPress={() => setIsReplacing(true)}>
               {labels.replace}
             </Button>
-            <Button disabled={isSubmitting} variant="text" onPress={() => setIsConfirmingRemove(true)}>
+            <Button
+              disabled={isSubmitting}
+              variant="text"
+              onPress={() => setIsConfirmingRemove(true)}
+            >
               {labels.remove}
             </Button>
             {progressLabel}

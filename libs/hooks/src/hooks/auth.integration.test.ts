@@ -1,6 +1,6 @@
-import { act, renderHook, waitFor } from '@testing-library/react';
-import { initSupabase } from '@helsoft/supabase-services';
 import type { Session, SupabaseClient } from '@helsoft/supabase-services';
+import { initSupabase } from '@helsoft/supabase-services';
+import { act, renderHook, waitFor } from '@testing-library/react';
 
 import { buildAuthApiErrorFixture } from '../test-utils/auth-error-fixtures';
 import { useAuth } from './use-auth';
@@ -20,7 +20,10 @@ type EmitAuthStateChange = Parameters<SupabaseClient['auth']['onAuthStateChange'
  */
 let sharedClient: SupabaseClient;
 
-const buildMockedClient = (): { client: SupabaseClient; emit: (session: Session | null) => void } => {
+const buildMockedClient = (): {
+  client: SupabaseClient;
+  emit: (session: Session | null) => void;
+} => {
   let emitAuthStateChange: EmitAuthStateChange | undefined;
   jest.spyOn(sharedClient.auth, 'onAuthStateChange').mockImplementation((callback) => {
     emitAuthStateChange = callback;
@@ -48,7 +51,9 @@ describe('login-and-logout slice-1 integration', () => {
   // reports unauthenticated.
   it('reports no session at startup when none is persisted', async () => {
     const { client } = buildMockedClient();
-    jest.spyOn(client.auth, 'getSession').mockResolvedValue({ data: { session: null }, error: null } as never);
+    jest
+      .spyOn(client.auth, 'getSession')
+      .mockResolvedValue({ data: { session: null }, error: null } as never);
 
     const { result } = renderHook(() => useSession());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -60,7 +65,9 @@ describe('login-and-logout slice-1 integration', () => {
   // session that useSession observes, without either hook calling the other directly.
   it('signing in establishes a session that useSession observes', async () => {
     const { client, emit } = buildMockedClient();
-    jest.spyOn(client.auth, 'getSession').mockResolvedValue({ data: { session: null }, error: null } as never);
+    jest
+      .spyOn(client.auth, 'getSession')
+      .mockResolvedValue({ data: { session: null }, error: null } as never);
     const session = { access_token: 'tok-1' } as Session;
     jest.spyOn(client.auth, 'signInWithPassword').mockImplementation(async () => {
       emit(session);
@@ -84,7 +91,9 @@ describe('login-and-logout slice-1 integration', () => {
   // through AuthService -> AuthDao against the mocked Supabase client boundary).
   it('surfaces invalid_credentials on a real Supabase auth error, then recovers on a valid retry', async () => {
     const { client, emit } = buildMockedClient();
-    jest.spyOn(client.auth, 'getSession').mockResolvedValue({ data: { session: null }, error: null } as never);
+    jest
+      .spyOn(client.auth, 'getSession')
+      .mockResolvedValue({ data: { session: null }, error: null } as never);
     const session = { access_token: 'tok-3' } as Session;
     jest
       .spyOn(client.auth, 'signInWithPassword')
@@ -101,7 +110,9 @@ describe('login-and-logout slice-1 integration', () => {
     await waitFor(() => expect(result.current.session.isLoading).toBe(false));
 
     await act(async () => {
-      await expect(result.current.auth.signIn('user@example.com', 'wrongpass')).rejects.toBeTruthy();
+      await expect(
+        result.current.auth.signIn('user@example.com', 'wrongpass'),
+      ).rejects.toBeTruthy();
     });
 
     expect(result.current.auth.error).toBe('invalid_credentials');
@@ -119,7 +130,9 @@ describe('login-and-logout slice-1 integration', () => {
   it('signing out clears the session that useSession observes', async () => {
     const { client, emit } = buildMockedClient();
     const session = { access_token: 'tok-2' } as Session;
-    jest.spyOn(client.auth, 'getSession').mockResolvedValue({ data: { session }, error: null } as never);
+    jest
+      .spyOn(client.auth, 'getSession')
+      .mockResolvedValue({ data: { session }, error: null } as never);
     jest.spyOn(client.auth, 'signOut').mockImplementation(async () => {
       emit(null);
       return { error: null } as never;
@@ -140,7 +153,9 @@ describe('login-and-logout slice-1 integration', () => {
   it('restores a persisted session on a fresh mount without re-entering credentials', async () => {
     const { client } = buildMockedClient();
     const persisted = { access_token: 'persisted-tok' } as Session;
-    jest.spyOn(client.auth, 'getSession').mockResolvedValue({ data: { session: persisted }, error: null } as never);
+    jest
+      .spyOn(client.auth, 'getSession')
+      .mockResolvedValue({ data: { session: persisted }, error: null } as never);
 
     const { result } = renderHook(() => useSession());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -155,6 +170,8 @@ describe('login-and-logout slice-1 integration', () => {
   it('does not trigger a "Multiple GoTrueClient instances" warning across this file', () => {
     const messages = warnSpy.mock.calls.map((call) => String(call[0]));
 
-    expect(messages.some((message) => message.includes('Multiple GoTrueClient instances'))).toBe(false);
+    expect(messages.some((message) => message.includes('Multiple GoTrueClient instances'))).toBe(
+      false,
+    );
   });
 });

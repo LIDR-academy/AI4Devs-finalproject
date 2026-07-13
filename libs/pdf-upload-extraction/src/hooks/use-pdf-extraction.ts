@@ -1,8 +1,17 @@
-import { useCallback, useRef, useState } from 'react';
 import { useSession } from '@helsoft/hooks';
+import { useCallback, useRef, useState } from 'react';
 
-import { generateDocumentId, PDF_EXTRACTION_ERROR_CODES, PdfExtractionService } from '../services/pdf-extraction.service';
-import type { PdfExtractionError, PdfExtractionErrorCode, PdfExtractionInput, PdfExtractionResult } from '../types/pdf-extraction.types';
+import {
+  generateDocumentId,
+  PDF_EXTRACTION_ERROR_CODES,
+  PdfExtractionService,
+} from '../services/pdf-extraction.service';
+import type {
+  PdfExtractionError,
+  PdfExtractionErrorCode,
+  PdfExtractionInput,
+  PdfExtractionResult,
+} from '../types/pdf-extraction.types';
 import type { PdfExtractionStage, UsePdfExtractionResult } from './use-pdf-extraction.types';
 
 /** Narrow runtime guard: a rejected PdfExtractionService.extract cause is only trusted as a
@@ -53,7 +62,10 @@ export const usePdfExtraction = (): UsePdfExtractionResult => {
     [session],
   );
 
-  const extract = useCallback((input: PdfExtractionInput) => run(input, generateDocumentId()), [run]);
+  const extract = useCallback(
+    (input: PdfExtractionInput) => run(input, generateDocumentId()),
+    [run],
+  );
 
   const retry = useCallback(async () => {
     const lastAttempt = lastAttemptRef.current;

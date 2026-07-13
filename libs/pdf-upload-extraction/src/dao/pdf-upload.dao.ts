@@ -9,7 +9,8 @@ const EXTRACT_FUNCTION_NAME = 'extract-pdf';
 const DOCUMENTS_TABLE = 'documents';
 const PROCESSING_STATUS = 'processing';
 
-const buildSourcePath = (userId: string, documentId: string): string => `${userId}/${documentId}/source.pdf`;
+const buildSourcePath = (userId: string, documentId: string): string =>
+  `${userId}/${documentId}/source.pdf`;
 
 /**
  * Raw Supabase data access for the client side of upload: writes the raw PDF to the private
@@ -23,7 +24,10 @@ export abstract class PdfUploadDao {
   static async uploadPdf({ userId, documentId, bytes }: UploadPdfParams) {
     const { data, error } = await getSupabase()
       .storage.from(PDF_UPLOAD_BUCKET)
-      .upload(buildSourcePath(userId, documentId), bytes, { contentType: PDF_CONTENT_TYPE, upsert: true });
+      .upload(buildSourcePath(userId, documentId), bytes, {
+        contentType: PDF_CONTENT_TYPE,
+        upsert: true,
+      });
     if (error) throw error;
     return data;
   }

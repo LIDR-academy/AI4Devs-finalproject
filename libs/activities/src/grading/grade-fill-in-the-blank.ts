@@ -27,12 +27,7 @@ export const isFillInTheBlankSlideValid = (slide: FillInTheBlankSlide): boolean 
  * trim → lowercase → collapse /\s+/ → NFD + strip combining marks.
  */
 export const normalizeFillInAnswer = (raw: string): string =>
-  raw
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, ' ')
-    .normalize('NFD')
-    .replace(/\p{M}/gu, '');
+  raw.trim().toLowerCase().replace(/\s+/g, ' ').normalize('NFD').replace(/\p{M}/gu, '');
 
 /**
  * Pure grader for a fill-in-the-blank slide — no I/O.

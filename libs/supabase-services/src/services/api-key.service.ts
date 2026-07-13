@@ -5,11 +5,13 @@ import { toTypedError } from '../utils/typed-error';
 
 const DEFAULT_PROVIDER: AiProvider = 'openai';
 
-const toApiKeyError = (code: ApiKeyErrorCode, message: string): Error & ApiKeyError => toTypedError(code, message);
+const toApiKeyError = (code: ApiKeyErrorCode, message: string): Error & ApiKeyError =>
+  toTypedError(code, message);
 
 /** A validation-layer failure — the defensive backstop (spec.md Open decision 3), mirroring
  * AuthService.signIn's empty-password rejection. */
-const validationError = (message: string): Error & ApiKeyError => toApiKeyError('validation_error', message);
+const validationError = (message: string): Error & ApiKeyError =>
+  toApiKeyError('validation_error', message);
 
 /** Every raw ApiKeyDao.saveApiKey/removeApiKey rejection (structured Edge Function body,
  * transport failure, thrown, unknown) collapses to the one typed failure code — the raw
@@ -22,7 +24,10 @@ const networkError = (): Error & ApiKeyError => toApiKeyError('network_error', '
  * read from crashing the UI on failure.
  */
 export abstract class ApiKeyService {
-  static async saveApiKey(rawKey: string, provider: AiProvider = DEFAULT_PROVIDER): Promise<ApiKeyStatus> {
+  static async saveApiKey(
+    rawKey: string,
+    provider: AiProvider = DEFAULT_PROVIDER,
+  ): Promise<ApiKeyStatus> {
     if (!rawKey.trim()) {
       throw validationError('API key is required');
     }

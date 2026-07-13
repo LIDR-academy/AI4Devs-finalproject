@@ -86,7 +86,10 @@ describe('pdf-upload.helpers', () => {
       expect(computeCanRetry(null)).toBe(true);
     });
 
-    it.each(['network_error', 'extraction_failed'] as const)('is true for retryable code %s', (code) => {
+    it.each([
+      'network_error',
+      'extraction_failed',
+    ] as const)('is true for retryable code %s', (code) => {
       expect(computeCanRetry(code)).toBe(true);
     });
 

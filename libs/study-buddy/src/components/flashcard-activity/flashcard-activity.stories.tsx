@@ -29,7 +29,10 @@ type Story = StoryObj<typeof meta>;
 // Thin wrapper → organism owns reveal + self-mark; explanation shown alongside the answer.
 export const Default: Story = {
   args: {
-    slide: { ...baseSlide, explanation: 'Chlorophyll reflects green light, giving plants their color.' },
+    slide: {
+      ...baseSlide,
+      explanation: 'Chlorophyll reflects green light, giving plants their color.',
+    },
   },
 };
 

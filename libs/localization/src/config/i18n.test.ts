@@ -1,4 +1,4 @@
-import { SUPPORTED_LOCALES, type Locale } from '@helsoft/types';
+import { type Locale, SUPPORTED_LOCALES } from '@helsoft/types';
 
 import { createI18n } from './i18n';
 

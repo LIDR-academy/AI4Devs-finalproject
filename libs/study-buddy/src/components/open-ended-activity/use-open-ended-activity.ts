@@ -1,7 +1,6 @@
-import { useState } from 'react';
-
 import { useLocalization } from '@helsoft/localization';
 import type { OpenEndedAnswer, OpenEndedSlide } from '@helsoft/types';
+import { useState } from 'react';
 
 import { isOpenEndedSlideValid } from '../../grading/is-open-ended-slide-valid';
 

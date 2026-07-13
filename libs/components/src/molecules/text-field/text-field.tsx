@@ -1,5 +1,12 @@
 import { useState } from 'react';
-import { StyleProp, Text, TextInput, TextInputProps, View, ViewStyle } from 'react-native';
+import {
+  type StyleProp,
+  Text,
+  TextInput,
+  type TextInputProps,
+  View,
+  type ViewStyle,
+} from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { Icon } from '../../atoms/icon/icon';
@@ -56,8 +63,16 @@ export const TextField = ({
   const [focus, setFocus] = useState(false);
 
   styles.useVariants({ variant });
-  const accent = error ? theme.colors.error : focus ? theme.colors.primary : theme.colors.onSurfaceVariant;
-  const borderColor = error ? theme.colors.error : focus ? theme.colors.primary : theme.colors.outline;
+  const accent = error
+    ? theme.colors.error
+    : focus
+      ? theme.colors.primary
+      : theme.colors.onSurfaceVariant;
+  const borderColor = error
+    ? theme.colors.error
+    : focus
+      ? theme.colors.primary
+      : theme.colors.outline;
   // Not on this RN version's TextInputProps typings (see the prop's own doc comment above), so it
   // has to be merged into `rest` here rather than passed as a named JSX attribute.
   const inputProps = { ...rest, accessibilityInvalid };
@@ -67,14 +82,18 @@ export const TextField = ({
       {label ? <Text style={styles.label(error)}>{label}</Text> : null}
       <View style={styles.field(accent, borderColor, focus, !!multiline, disabled)}>
         {leadingIcon ? (
-          <Icon name={leadingIcon} size={20} color={theme.colors.onSurfaceVariant} style={multiline ? styles.multilineIcon : undefined} />
+          <Icon
+            name={leadingIcon}
+            size={20}
+            color={theme.colors.onSurfaceVariant}
+            style={multiline ? styles.multilineIcon : undefined}
+          />
         ) : null}
         <TextInput
           editable={!disabled}
           multiline={multiline}
           numberOfLines={multiline ? rows : 1}
           placeholderTextColor={theme.colors.onSurfaceVariant}
-          
           onFocus={(e) => {
             setFocus(true);
             onFocus?.(e);
@@ -87,7 +106,12 @@ export const TextField = ({
           {...inputProps}
         />
         {trailingIcon ? (
-          <Icon name={trailingIcon} size={20} color={accent} style={multiline ? styles.multilineIcon : undefined} />
+          <Icon
+            name={trailingIcon}
+            size={20}
+            color={accent}
+            style={multiline ? styles.multilineIcon : undefined}
+          />
         ) : null}
       </View>
       {supportingText ? <Text style={styles.supporting(error)}>{supportingText}</Text> : null}
@@ -105,7 +129,13 @@ const styles = StyleSheet.create((theme) => ({
     marginBottom: 6,
     color: error ? theme.colors.error : theme.colors.onSurfaceVariant,
   }),
-  field: (accent: string, borderColor: string, focus: boolean, multiline: boolean, disabled: boolean) => ({
+  field: (
+    accent: string,
+    borderColor: string,
+    focus: boolean,
+    multiline: boolean,
+    disabled: boolean,
+  ) => ({
     flexDirection: 'row',
     alignItems: multiline ? 'flex-start' : 'center',
     gap: 12,
@@ -140,7 +170,7 @@ const styles = StyleSheet.create((theme) => ({
     textAlignVertical: multiline ? 'top' : 'center',
     outlineStyle: 'solid',
     outlineWidth: 0,
-    outlineColor: borderColor,    
+    outlineColor: borderColor,
   }),
   multilineIcon: {
     marginTop: 2,

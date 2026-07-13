@@ -1,6 +1,13 @@
 import { StyleSheet } from 'react-native-unistyles';
 
-import { darkColors, disabledOpacity, hexWithOpacity, lightColors, mixHex, stateLayerOpacity } from './colors';
+import {
+  darkColors,
+  disabledOpacity,
+  hexWithOpacity,
+  lightColors,
+  mixHex,
+  stateLayerOpacity,
+} from './colors';
 import { elevation } from './elevation';
 import { duration, easing } from './motion';
 import { shape } from './shape';

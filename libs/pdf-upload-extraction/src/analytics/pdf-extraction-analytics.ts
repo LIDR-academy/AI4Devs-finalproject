@@ -8,11 +8,20 @@ type PdfExtractionAnalyticsEvent =
   | { name: 'pdf_upload_started'; properties: { size_bytes: number; document_id: string } }
   | {
       name: 'pdf_extraction_succeeded';
-      properties: { document_id: string; page_count: number; image_count: number; duration_ms: number };
+      properties: {
+        document_id: string;
+        page_count: number;
+        image_count: number;
+        duration_ms: number;
+      };
     }
   | {
       name: 'pdf_extraction_failed';
-      properties: { document_id?: string; error_code: PdfExtractionErrorCode; stage: 'client' | 'server' };
+      properties: {
+        document_id?: string;
+        error_code: PdfExtractionErrorCode;
+        stage: 'client' | 'server';
+      };
     };
 
 /**

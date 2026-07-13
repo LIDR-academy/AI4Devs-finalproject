@@ -27,7 +27,11 @@ export const Dialog = ({
   return (
     <Modal transparent visible={open} animationType="fade" onRequestClose={onClose}>
       <Pressable onPress={onClose} style={styles.scrim}>
-        <Pressable accessibilityViewIsModal onPress={(e) => e.stopPropagation()} style={[styles.surface, style]}>
+        <Pressable
+          accessibilityViewIsModal
+          onPress={(e) => e.stopPropagation()}
+          style={[styles.surface, style]}
+        >
           {icon ? (
             <View style={styles.iconWrap}>
               <Icon name={icon} size={24} color={theme.colors.secondary} />

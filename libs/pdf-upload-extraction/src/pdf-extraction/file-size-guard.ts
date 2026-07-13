@@ -11,5 +11,7 @@ import type { PdfExtractionLimits } from '../types/pdf-extraction.types';
  * (task-3 sandbox adaptation) — mirrored into `supabase/functions/extract-pdf/_shared/` as the
  * real Deno deployment source.
  */
-export const isFileTooLarge = (sizeBytes: number, limits: Pick<PdfExtractionLimits, 'maxSizeBytes'>): boolean =>
-  sizeBytes > limits.maxSizeBytes;
+export const isFileTooLarge = (
+  sizeBytes: number,
+  limits: Pick<PdfExtractionLimits, 'maxSizeBytes'>,
+): boolean => sizeBytes > limits.maxSizeBytes;

@@ -1,6 +1,6 @@
-import { useCallback, useState } from 'react';
 import { AuthService } from '@helsoft/supabase-services';
 import type { AuthError, AuthErrorCode } from '@helsoft/types';
+import { useCallback, useState } from 'react';
 
 import type { UseAuthResult } from './use-auth.types';
 

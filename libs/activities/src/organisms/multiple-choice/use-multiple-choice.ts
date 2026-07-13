@@ -1,7 +1,6 @@
+import type { MultipleChoiceAnswer } from '@helsoft/types';
 import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Platform } from 'react-native';
-
-import type { MultipleChoiceAnswer } from '@helsoft/types';
 
 import { hasCorrectOption, optionState } from './multiple-choice.helpers';
 import type { UseMultipleChoiceProps } from './multiple-choice.types';

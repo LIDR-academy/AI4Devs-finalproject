@@ -12,10 +12,20 @@ describe('LessonAttemptService', () => {
 
   // @s6 — a valid attempt is persisted via the DAO; the service composes no update path.
   it('saveAttempt delegates a valid attempt to LessonAttemptDao.insertAttempt', async () => {
-    const attempt = { id: 'attempt-1', lessonId: 'lesson-1', score: 3, total: 3, createdAt: '2026-07-11T00:00:00.000Z' };
+    const attempt = {
+      id: 'attempt-1',
+      lessonId: 'lesson-1',
+      score: 3,
+      total: 3,
+      createdAt: '2026-07-11T00:00:00.000Z',
+    };
     dao.insertAttempt.mockResolvedValue(attempt);
 
-    const result = await LessonAttemptService.saveAttempt({ lessonId: 'lesson-1', score: 3, total: 3 });
+    const result = await LessonAttemptService.saveAttempt({
+      lessonId: 'lesson-1',
+      score: 3,
+      total: 3,
+    });
 
     expect(dao.insertAttempt).toHaveBeenCalledWith({ lessonId: 'lesson-1', score: 3, total: 3 });
     expect(result).toBe(attempt);
@@ -39,10 +49,20 @@ describe('LessonAttemptService', () => {
   // rejection tests above only exercise a negative score, which would still reject even if the
   // operator were mistakenly `<=`).
   it('does not reject when score is exactly zero', async () => {
-    const attempt = { id: 'attempt-2', lessonId: 'lesson-1', score: 0, total: 3, createdAt: '2026-07-11T00:00:00.000Z' };
+    const attempt = {
+      id: 'attempt-2',
+      lessonId: 'lesson-1',
+      score: 0,
+      total: 3,
+      createdAt: '2026-07-11T00:00:00.000Z',
+    };
     dao.insertAttempt.mockResolvedValue(attempt);
 
-    const result = await LessonAttemptService.saveAttempt({ lessonId: 'lesson-1', score: 0, total: 3 });
+    const result = await LessonAttemptService.saveAttempt({
+      lessonId: 'lesson-1',
+      score: 0,
+      total: 3,
+    });
 
     expect(dao.insertAttempt).toHaveBeenCalledWith({ lessonId: 'lesson-1', score: 0, total: 3 });
     expect(result).toBe(attempt);

@@ -169,7 +169,9 @@ describe('LocalizationProvider + useLocalization', () => {
     };
     const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-    expect(() => render(<Orphan />)).toThrow('useLocalization must be used within a LocalizationProvider');
+    expect(() => render(<Orphan />)).toThrow(
+      'useLocalization must be used within a LocalizationProvider',
+    );
 
     spy.mockRestore();
   });

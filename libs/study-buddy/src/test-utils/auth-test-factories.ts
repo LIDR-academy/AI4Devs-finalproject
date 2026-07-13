@@ -1,5 +1,5 @@
-import { useAuth } from '@helsoft/hooks';
-import { useLocalization } from '@helsoft/localization';
+import type { useAuth } from '@helsoft/hooks';
+import type { useLocalization } from '@helsoft/localization';
 
 /**
  * Shared `useAuth()`/`useLocalization()` mock-return factories for study-buddy unit tests.

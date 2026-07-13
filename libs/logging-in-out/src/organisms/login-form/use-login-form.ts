@@ -1,7 +1,6 @@
+import { useLocalization } from '@helsoft/localization';
 import { useEffect, useState } from 'react';
 import { AccessibilityInfo } from 'react-native';
-
-import { useLocalization } from '@helsoft/localization';
 
 type UseLoginFormArgs = {
   isSubmitting?: boolean;

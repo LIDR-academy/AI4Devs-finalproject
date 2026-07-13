@@ -11,9 +11,7 @@ export const Button = ({ label, variant = 'primary', onPress }: ButtonProps) => 
     style={[styles.base, variant === 'primary' ? styles.primary : styles.secondary]}
     onPress={onPress}
   >
-    <Text style={variant === 'primary' ? styles.primaryLabel : styles.secondaryLabel}>
-      {label}
-    </Text>
+    <Text style={variant === 'primary' ? styles.primaryLabel : styles.secondaryLabel}>{label}</Text>
   </Pressable>
 );
 

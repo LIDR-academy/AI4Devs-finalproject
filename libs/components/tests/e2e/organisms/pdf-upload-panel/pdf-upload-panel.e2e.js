@@ -13,7 +13,9 @@ test('Empty story loads', async ({ page }) => {
 
 // @s7 — the pristine/Empty state shows the choose-file affordance and the size/page constraints
 // hint, with no error banner.
-test('Empty story renders the choose-file affordance and constraints hint, with no error', async ({ page }) => {
+test('Empty story renders the choose-file affordance and constraints hint, with no error', async ({
+  page,
+}) => {
   await page.goto(story('empty'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
@@ -23,7 +25,9 @@ test('Empty story renders the choose-file affordance and constraints hint, with 
 });
 
 // @s5/@s16 — the Loading state shows the progress copy and disables the choose-file control.
-test('Loading story shows the loading copy and disables the choose-file control', async ({ page }) => {
+test('Loading story shows the loading copy and disables the choose-file control', async ({
+  page,
+}) => {
   await page.goto(story('loading'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
@@ -62,7 +66,9 @@ test('ErrorRetryable story renders the error message and a retry affordance', as
 
 // @s8-@s13 (review round-1 fix) — a non-retryable error (too_many_pages) shows no retry
 // affordance, since the persistent choose-file control is already the real recovery action.
-test('ErrorNonRetryable story renders the error message without a retry affordance', async ({ page }) => {
+test('ErrorNonRetryable story renders the error message without a retry affordance', async ({
+  page,
+}) => {
   await page.goto(story('error-non-retryable'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 

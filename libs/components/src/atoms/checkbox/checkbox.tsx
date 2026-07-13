@@ -1,4 +1,4 @@
-import { Pressable, StyleProp, Text, View, ViewStyle } from 'react-native';
+import { Pressable, type StyleProp, Text, View, type ViewStyle } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { Icon } from '../icon/icon';
@@ -45,7 +45,11 @@ export const Checkbox = ({
           <Icon name="check" size={16} color={theme.colors.onPrimary} />
         ) : null}
       </View>
-      {label ? <Text style={styles.label} selectable={selectable}>{label}</Text> : null}
+      {label ? (
+        <Text style={styles.label} selectable={selectable}>
+          {label}
+        </Text>
+      ) : null}
     </Pressable>
   );
 };

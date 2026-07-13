@@ -27,7 +27,9 @@ export const FilterSelected: Story = {
 const FilterDemo = () => {
   const [selected, setSelected] = useState<string[]>(['Biology']);
   const toggle = (subject: string) =>
-    setSelected((prev) => (prev.includes(subject) ? prev.filter((s) => s !== subject) : [...prev, subject]));
+    setSelected((prev) =>
+      prev.includes(subject) ? prev.filter((s) => s !== subject) : [...prev, subject],
+    );
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
       {['Biology', 'History', 'Physics', 'Spanish'].map((subject) => (

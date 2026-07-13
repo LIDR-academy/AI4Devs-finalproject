@@ -1,7 +1,6 @@
+import type { FillInTheBlankAnswer } from '@helsoft/types';
 import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Platform } from 'react-native';
-
-import type { FillInTheBlankAnswer } from '@helsoft/types';
 
 import { isFillInTheBlankSlideValid } from '../../grading/grade-fill-in-the-blank';
 import { blankMaxLength, splitAroundBlank } from './fill-in-the-blank.helpers';

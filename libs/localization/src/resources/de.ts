@@ -42,7 +42,8 @@ export const de: TranslationResource = {
         unsupportedType: 'Es werden nur PDF-Dateien unterstützt',
         fileTooLarge: 'Diese Datei ist zu groß (max. 10 MB)',
         tooManyPages: 'Dieses PDF hat zu viele Seiten (max. 20)',
-        scannedNotSupported: 'Dieses PDF scheint gescannt zu sein; wir können den Text noch nicht lesen',
+        scannedNotSupported:
+          'Dieses PDF scheint gescannt zu sein; wir können den Text noch nicht lesen',
         corrupt: 'Dieses PDF konnte nicht geöffnet werden',
         extractionFailed: 'Beim Lesen deines PDFs ist etwas schiefgelaufen',
         network: 'Netzwerkfehler',
@@ -103,7 +104,8 @@ export const de: TranslationResource = {
         savedStatus: '{{provider}}-Schlüssel gespeichert · Aktualisiert {{date}}',
         guidance: 'Noch keinen Schlüssel? Bei OpenAI erhalten',
         removeConfirmHeadline: 'API-Schlüssel entfernen?',
-        removeConfirmBody: 'Du musst einen neuen Schlüssel hinzufügen, um wieder Lektionen zu erstellen.',
+        removeConfirmBody:
+          'Du musst einen neuen Schlüssel hinzufügen, um wieder Lektionen zu erstellen.',
         removeConfirmAction: 'Entfernen bestätigen',
         removeConfirmCancelAction: 'Abbrechen',
         error: {

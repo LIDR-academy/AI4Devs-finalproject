@@ -22,11 +22,9 @@ describe('useInteractionState', () => {
     expect(result.current.press).toBe(true);
   });
 
-
   it('tracks hover and press independently', () => {
     const { result } = renderHook(() => useInteractionState());
 
-    
     act(() => result.current.handlers.onPressIn());
     expect(result.current.press).toBe(true);
     expect(result.current.hover).toBe(false);
@@ -35,7 +33,6 @@ describe('useInteractionState', () => {
     expect(result.current.press).toBe(true);
     expect(result.current.hover).toBe(true);
   });
-
 
   it('clears press when hover ends (drag-off cancel)', () => {
     const { result } = renderHook(() => useInteractionState());

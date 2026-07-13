@@ -1,7 +1,7 @@
-import { AccessibilityInfo, Platform } from 'react-native';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { layout } from '@helsoft/components';
 import type { FillInTheBlankAnswer, FillInTheBlankSlide } from '@helsoft/types';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { AccessibilityInfo, Platform } from 'react-native';
 
 import { FillInTheBlank } from './fill-in-the-blank';
 
@@ -198,9 +198,7 @@ describe('FillInTheBlank', () => {
       ...slide,
       explanation: 'Paris is the capital of France.',
     };
-    await render(
-      <FillInTheBlank slide={explainedSlide} initialAnswer={correctAnswer} />,
-    );
+    await render(<FillInTheBlank slide={explainedSlide} initialAnswer={correctAnswer} />);
 
     expect(screen.getByText(labels.explanationHeading)).toBeTruthy();
     expect(screen.getByText('Paris is the capital of France.')).toBeTruthy();
@@ -289,18 +287,14 @@ describe('FillInTheBlank', () => {
   });
 
   it('shows the unavailable notice when content has no blank marker', async () => {
-    await render(
-      <FillInTheBlank slide={{ ...slide, content: 'No blank here.' }} />,
-    );
+    await render(<FillInTheBlank slide={{ ...slide, content: 'No blank here.' }} />);
 
     expect(screen.getByText(labels.unavailable)).toBeTruthy();
     expect(screen.queryByLabelText(labels.blankInput)).toBeNull();
   });
 
   it('shows the unavailable notice when content has more than one blank marker', async () => {
-    await render(
-      <FillInTheBlank slide={{ ...slide, content: '____ is the capital of ____.' }} />,
-    );
+    await render(<FillInTheBlank slide={{ ...slide, content: '____ is the capital of ____.' }} />);
 
     expect(screen.getByText(labels.unavailable)).toBeTruthy();
     expect(screen.queryByLabelText(labels.blankInput)).toBeNull();
@@ -456,21 +450,21 @@ describe('FillInTheBlank', () => {
       announceSpy.mockRestore();
     });
 
-    it.each(['ios', 'web'] as const)(
-      'still calls announceForAccessibility on %s once answered',
-      async (os) => {
-        Platform.OS = os;
-        const announceSpy = jest
-          .spyOn(AccessibilityInfo, 'announceForAccessibility')
-          .mockImplementation(() => {});
-        announceSpy.mockClear();
+    it.each([
+      'ios',
+      'web',
+    ] as const)('still calls announceForAccessibility on %s once answered', async (os) => {
+      Platform.OS = os;
+      const announceSpy = jest
+        .spyOn(AccessibilityInfo, 'announceForAccessibility')
+        .mockImplementation(() => {});
+      announceSpy.mockClear();
 
-        await render(<FillInTheBlank slide={slide} initialAnswer={correctAnswer} />);
+      await render(<FillInTheBlank slide={slide} initialAnswer={correctAnswer} />);
 
-        expect(announceSpy).toHaveBeenCalledWith(labels.correct);
+      expect(announceSpy).toHaveBeenCalledWith(labels.correct);
 
-        announceSpy.mockRestore();
-      },
-    );
+      announceSpy.mockRestore();
+    });
   });
 });

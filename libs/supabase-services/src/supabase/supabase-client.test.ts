@@ -2,7 +2,9 @@ import { getSupabase, initSupabase } from './supabase-client';
 
 describe('supabase-client', () => {
   it('throws when getSupabase is called before initSupabase', () => {
-    expect(() => getSupabase()).toThrow('Supabase client not initialized. Call initSupabase() first.');
+    expect(() => getSupabase()).toThrow(
+      'Supabase client not initialized. Call initSupabase() first.',
+    );
   });
 
   it('returns the client created by initSupabase', () => {

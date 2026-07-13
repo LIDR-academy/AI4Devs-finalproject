@@ -24,7 +24,13 @@ describe('LessonAttemptDao', () => {
   // RLS set/enforce it), each call is a fresh insert (additive, no update path exists).
   it('inserts only lesson_id, score, and total on the lesson_attempts table', async () => {
     single.mockResolvedValue({
-      data: { id: 'attempt-1', lesson_id: 'lesson-1', score: 3, total: 3, created_at: '2026-07-11T00:00:00.000Z' },
+      data: {
+        id: 'attempt-1',
+        lesson_id: 'lesson-1',
+        score: 3,
+        total: 3,
+        created_at: '2026-07-11T00:00:00.000Z',
+      },
       error: null,
     });
 
@@ -37,11 +43,21 @@ describe('LessonAttemptDao', () => {
   // Row → LessonAttempt mapping (snake_case DB → camelCase type).
   it('maps the inserted row to a camelCase LessonAttempt', async () => {
     single.mockResolvedValue({
-      data: { id: 'attempt-1', lesson_id: 'lesson-1', score: 3, total: 3, created_at: '2026-07-11T00:00:00.000Z' },
+      data: {
+        id: 'attempt-1',
+        lesson_id: 'lesson-1',
+        score: 3,
+        total: 3,
+        created_at: '2026-07-11T00:00:00.000Z',
+      },
       error: null,
     });
 
-    const result = await LessonAttemptDao.insertAttempt({ lessonId: 'lesson-1', score: 3, total: 3 });
+    const result = await LessonAttemptDao.insertAttempt({
+      lessonId: 'lesson-1',
+      score: 3,
+      total: 3,
+    });
 
     expect(result).toEqual({
       id: 'attempt-1',

@@ -10,7 +10,9 @@ describe('isFileTooLarge', () => {
   });
 
   it('returns true for a file over the limit', () => {
-    expect(isFileTooLarge(PDF_EXTRACTION_LIMITS.maxSizeBytes + 1_000_000, PDF_EXTRACTION_LIMITS)).toBe(true);
+    expect(
+      isFileTooLarge(PDF_EXTRACTION_LIMITS.maxSizeBytes + 1_000_000, PDF_EXTRACTION_LIMITS),
+    ).toBe(true);
   });
 
   // Boundary (mutation-kill guard, review round-1 Part B #3) — the limit is an exclusive upper
@@ -20,6 +22,8 @@ describe('isFileTooLarge', () => {
   });
 
   it('returns true for a file one byte over the size limit', () => {
-    expect(isFileTooLarge(PDF_EXTRACTION_LIMITS.maxSizeBytes + 1, PDF_EXTRACTION_LIMITS)).toBe(true);
+    expect(isFileTooLarge(PDF_EXTRACTION_LIMITS.maxSizeBytes + 1, PDF_EXTRACTION_LIMITS)).toBe(
+      true,
+    );
   });
 });

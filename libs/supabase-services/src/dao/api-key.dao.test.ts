@@ -35,7 +35,9 @@ describe('ApiKeyDao', () => {
     const error = { message: 'edge function error' };
     invoke.mockResolvedValue({ data: null, error });
 
-    await expect(ApiKeyDao.saveApiKey({ provider: 'openai', apiKey: 'sk-test-key' })).rejects.toBe(error);
+    await expect(ApiKeyDao.saveApiKey({ provider: 'openai', apiKey: 'sk-test-key' })).rejects.toBe(
+      error,
+    );
   });
 
   // @s3 — a saved row maps to a masked, present status.
@@ -49,7 +51,11 @@ describe('ApiKeyDao', () => {
 
     expect(from).toHaveBeenCalledWith('user_ai_keys');
     expect(select).toHaveBeenCalledWith('provider, updated_at');
-    expect(result).toEqual({ hasKey: true, provider: 'openai', updatedAt: '2026-01-01T00:00:00.000Z' });
+    expect(result).toEqual({
+      hasKey: true,
+      provider: 'openai',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    });
   });
 
   // @s3 — no row (no key saved yet) maps to the no-key status.

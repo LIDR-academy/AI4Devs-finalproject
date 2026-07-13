@@ -1,8 +1,9 @@
 /** @jest-environment jsdom */
-import { act, renderHook, waitFor } from '@testing-library/react';
+
 import { useSession } from '@helsoft/hooks';
-import { FunctionsFetchError, initSupabase } from '@helsoft/supabase-services';
 import type { SupabaseClient } from '@helsoft/supabase-services';
+import { FunctionsFetchError, initSupabase } from '@helsoft/supabase-services';
+import { act, renderHook, waitFor } from '@testing-library/react';
 
 import { usePdfExtraction } from './use-pdf-extraction';
 
@@ -46,7 +47,9 @@ describe('pdf-upload-extraction slice-2 error/retry integration', () => {
     jest.spyOn(sharedClient, 'from').mockReturnValue({
       upsert: jest.fn((row: Record<string, unknown>) => {
         upsertedRowIds.push(row.id as string);
-        return { select: () => ({ single: () => Promise.resolve({ data: { id: row.id }, error: null }) }) };
+        return {
+          select: () => ({ single: () => Promise.resolve({ data: { id: row.id }, error: null }) }),
+        };
       }),
     } as never);
 
@@ -68,7 +71,11 @@ describe('pdf-upload-extraction slice-2 error/retry integration', () => {
     await waitFor(() => expect(result.current.session.isLoading).toBe(false));
 
     await act(async () => {
-      await result.current.pdf.extract({ filename: 'notes.pdf', sizeBytes: 3, bytes: new Uint8Array([1, 2, 3]) });
+      await result.current.pdf.extract({
+        filename: 'notes.pdf',
+        sizeBytes: 3,
+        bytes: new Uint8Array([1, 2, 3]),
+      });
     });
 
     expect(result.current.pdf.stage).toBe('error');

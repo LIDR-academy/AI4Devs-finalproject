@@ -39,7 +39,9 @@ describe('useResultsSummary', () => {
   });
 
   it('announces saveFailed when showSaveFailure becomes true', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     const { rerender } = await renderSummaryHook({
@@ -58,7 +60,9 @@ describe('useResultsSummary', () => {
   });
 
   it('announces score content when loading resolves without save failure', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     const { rerender } = await renderSummaryHook({
@@ -80,7 +84,9 @@ describe('useResultsSummary', () => {
   });
 
   it('skips content announcement when loading resolves into save failure', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     const { rerender } = await renderSummaryHook({

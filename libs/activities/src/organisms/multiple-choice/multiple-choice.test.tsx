@@ -4,9 +4,9 @@ jest.mock('@helsoft/localization', () => ({
   }),
 }));
 
-import { AccessibilityInfo, Platform } from 'react-native';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import type { MultipleChoiceAnswer, MultipleChoiceSlide } from '@helsoft/types';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { AccessibilityInfo, Platform } from 'react-native';
 
 import { MultipleChoice } from './multiple-choice';
 
@@ -54,7 +54,9 @@ describe('MultipleChoice', () => {
 
     const buttons = screen.getAllByRole('button');
     expect(buttons).toHaveLength(2);
-    buttons.forEach((button) => expect(button.props.accessibilityState.disabled).toBe(false));
+    buttons.forEach((button) => {
+      expect(button.props.accessibilityState.disabled).toBe(false);
+    });
 
     expect(screen.queryByText(I18N.correct)).toBeNull();
     expect(screen.queryByText(I18N.incorrect)).toBeNull();
@@ -80,16 +82,18 @@ describe('MultipleChoice', () => {
     });
 
     const buttons = screen.getAllByRole('button');
-    buttons.forEach((button) => expect(button.props.accessibilityState.disabled).toBe(true));
+    buttons.forEach((button) => {
+      expect(button.props.accessibilityState.disabled).toBe(true);
+    });
   });
 
   it('locks every option when initialAnswer is provided', async () => {
-    await render(
-      <MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-b', false)} />,
-    );
+    await render(<MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-b', false)} />);
 
     const buttons = screen.getAllByRole('button');
-    buttons.forEach((button) => expect(button.props.accessibilityState.disabled).toBe(true));
+    buttons.forEach((button) => {
+      expect(button.props.accessibilityState.disabled).toBe(true);
+    });
   });
 
   it('marks the selected tile correct and shows the correct banner when tapped correctly', async () => {
@@ -106,9 +110,7 @@ describe('MultipleChoice', () => {
   });
 
   it('marks the selected tile correct and shows the correct banner from initialAnswer', async () => {
-    await render(
-      <MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-a', true)} />,
-    );
+    await render(<MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-a', true)} />);
 
     expect(screen.getAllByText('check_circle')).toHaveLength(1);
     expect(screen.queryByText('cancel')).toBeNull();
@@ -130,9 +132,7 @@ describe('MultipleChoice', () => {
   });
 
   it('marks the selected tile incorrect, reveals the correct tile, and shows the incorrect banner from initialAnswer', async () => {
-    await render(
-      <MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-b', false)} />,
-    );
+    await render(<MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-b', false)} />);
 
     expect(screen.getAllByText('check_circle')).toHaveLength(1);
     expect(screen.getAllByText('cancel')).toHaveLength(1);
@@ -157,9 +157,7 @@ describe('MultipleChoice', () => {
   });
 
   it('does not show an explanation heading when none is provided', async () => {
-    await render(
-      <MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-a', true)} />,
-    );
+    await render(<MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-a', true)} />);
 
     expect(screen.queryByText(I18N.explanation)).toBeNull();
   });
@@ -167,7 +165,11 @@ describe('MultipleChoice', () => {
   it('does not call onAnswered when a locked option is tapped', async () => {
     const onAnswered = jest.fn();
     await render(
-      <MultipleChoice slide={slide} onAnswered={onAnswered} initialAnswer={gradedAnswer('opt-a', true)} />,
+      <MultipleChoice
+        slide={slide}
+        onAnswered={onAnswered}
+        initialAnswer={gradedAnswer('opt-a', true)}
+      />,
     );
 
     await act(async () => {
@@ -224,9 +226,7 @@ describe('MultipleChoice', () => {
   });
 
   it('conveys correctness through the accessible name, not the icon ligature, once answered', async () => {
-    await render(
-      <MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-b', false)} />,
-    );
+    await render(<MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-b', false)} />);
 
     const buttons = screen.getAllByRole('button');
     expect(buttons[0]).toHaveAccessibleName(`A Paris, ${I18N.correct}`);
@@ -237,12 +237,12 @@ describe('MultipleChoice', () => {
   });
 
   it('announces a correct result via a polite live region and AccessibilityInfo, without an alert role', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
-    await render(
-      <MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-a', true)} />,
-    );
+    await render(<MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-a', true)} />);
 
     const banner = screen.getByText(I18N.correct);
     expect(banner.props.accessibilityLiveRegion).toBe('polite');
@@ -253,12 +253,12 @@ describe('MultipleChoice', () => {
   });
 
   it('announces an incorrect result via an alert role and an assertive live region', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
-    await render(
-      <MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-b', false)} />,
-    );
+    await render(<MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-b', false)} />);
 
     const banner = screen.getByText(I18N.incorrect);
     expect(banner.props.accessibilityLiveRegion).toBe('assertive');
@@ -269,7 +269,9 @@ describe('MultipleChoice', () => {
   });
 
   it('does not announce anything to assistive technology while unanswered', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     await render(<MultipleChoice slide={slide} />);
@@ -280,7 +282,9 @@ describe('MultipleChoice', () => {
   });
 
   it('announces the result when transitioning from unanswered to answered via tap', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     await render(<MultipleChoice slide={slide} />);
@@ -305,26 +309,29 @@ describe('MultipleChoice', () => {
 
     it('does not call announceForAccessibility on Android once answered', async () => {
       Platform.OS = 'android';
-      const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+      const announceSpy = jest
+        .spyOn(AccessibilityInfo, 'announceForAccessibility')
+        .mockImplementation(() => {});
       announceSpy.mockClear();
 
-      await render(
-        <MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-a', true)} />,
-      );
+      await render(<MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-a', true)} />);
 
       expect(announceSpy).not.toHaveBeenCalled();
 
       announceSpy.mockRestore();
     });
 
-    it.each(['ios', 'web'] as const)('still calls announceForAccessibility on %s once answered', async (os) => {
+    it.each([
+      'ios',
+      'web',
+    ] as const)('still calls announceForAccessibility on %s once answered', async (os) => {
       Platform.OS = os;
-      const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+      const announceSpy = jest
+        .spyOn(AccessibilityInfo, 'announceForAccessibility')
+        .mockImplementation(() => {});
       announceSpy.mockClear();
 
-      await render(
-        <MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-a', true)} />,
-      );
+      await render(<MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-a', true)} />);
 
       await waitFor(() => expect(announceSpy).toHaveBeenCalledWith(I18N.correct));
 

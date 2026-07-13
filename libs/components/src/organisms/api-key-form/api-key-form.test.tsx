@@ -23,7 +23,11 @@ const labels = {
 };
 
 const noKeyStatus = { hasKey: false as const };
-const savedStatus = { hasKey: true as const, provider: 'openai' as const, updatedAt: '2026-01-01T00:00:00.000Z' };
+const savedStatus = {
+  hasKey: true as const,
+  provider: 'openai' as const,
+  updatedAt: '2026-01-01T00:00:00.000Z',
+};
 // Full-review Round 1, Minor 8 — a fixture URL distinct from the (former) hardcoded
 // GUIDANCE_URL constant, so a test asserting the exact Linking.openURL argument actually
 // proves the value came from this injected prop, not from an internal component constant.
@@ -32,7 +36,14 @@ const guidanceUrl = 'https://example.com/get-a-key';
 describe('ApiKeyForm', () => {
   // @s1 — with no key saved, the input is rendered (labelled) alongside Save.
   it('renders a labelled secure input and the Save control when no key is saved', async () => {
-    await render(<ApiKeyForm status={noKeyStatus} onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />);
+    await render(
+      <ApiKeyForm
+        status={noKeyStatus}
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
+    );
 
     expect(screen.getByLabelText('API key')).toBeTruthy();
     expect(screen.getByLabelText('API key').props.secureTextEntry).toBe(true);
@@ -41,7 +52,14 @@ describe('ApiKeyForm', () => {
 
   // @s5 — the Empty state's Save control is disabled until a non-blank key is entered.
   it('disables Save until a non-blank key is entered in the Empty state', async () => {
-    await render(<ApiKeyForm status={noKeyStatus} onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />);
+    await render(
+      <ApiKeyForm
+        status={noKeyStatus}
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
+    );
 
     expect(screen.getByRole('button', { name: 'Save', disabled: true })).toBeTruthy();
 
@@ -55,7 +73,14 @@ describe('ApiKeyForm', () => {
   // @s5 — a whitespace-only key never enables Save (a blank/whitespace-only key is never
   // submittable, spec.md AC7).
   it('keeps Save disabled when the entered key is whitespace-only', async () => {
-    await render(<ApiKeyForm status={noKeyStatus} onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />);
+    await render(
+      <ApiKeyForm
+        status={noKeyStatus}
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
+    );
 
     await act(async () => {
       fireEvent.changeText(screen.getByLabelText('API key'), '   ');
@@ -66,7 +91,14 @@ describe('ApiKeyForm', () => {
 
   // @s5 — the Empty state shows guidance on where to get a key.
   it('renders a guidance link to where to get a key in the Empty state', async () => {
-    await render(<ApiKeyForm status={noKeyStatus} onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />);
+    await render(
+      <ApiKeyForm
+        status={noKeyStatus}
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
+    );
 
     expect(screen.getByRole('button', { name: labels.guidance })).toBeTruthy();
   });
@@ -75,10 +107,19 @@ describe('ApiKeyForm', () => {
   // discover where to get a key before (or alongside) the input it explains, not after Save.
   // Mirrors login-form.test.tsx's own "renders ... in that order" reading/focus-order pin.
   it('renders the guidance link before the input in the Empty state', async () => {
-    await render(<ApiKeyForm status={noKeyStatus} onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />);
+    await render(
+      <ApiKeyForm
+        status={noKeyStatus}
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
+    );
 
     const tree = JSON.stringify(screen.toJSON());
-    const order = [labels.guidance, labels.inputLabel, labels.save].map((text) => tree.indexOf(`"${text}"`));
+    const order = [labels.guidance, labels.inputLabel, labels.save].map((text) =>
+      tree.indexOf(`"${text}"`),
+    );
 
     expect(order.every((index) => index >= 0)).toBe(true);
     expect(order).toEqual([...order].sort((a, b) => a - b));
@@ -91,7 +132,14 @@ describe('ApiKeyForm', () => {
   it('opens the injected guidanceUrl prop when the guidance link is pressed', async () => {
     const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
 
-    await render(<ApiKeyForm status={noKeyStatus} onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />);
+    await render(
+      <ApiKeyForm
+        status={noKeyStatus}
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
+    );
     fireEvent.press(screen.getByRole('button', { name: labels.guidance }));
 
     expect(openURL).toHaveBeenCalledWith(guidanceUrl);
@@ -105,7 +153,14 @@ describe('ApiKeyForm', () => {
     process.on('unhandledRejection', unhandledRejectionSpy);
     const openURL = jest.spyOn(Linking, 'openURL').mockRejectedValue(new Error("can't open url"));
 
-    await render(<ApiKeyForm status={noKeyStatus} onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />);
+    await render(
+      <ApiKeyForm
+        status={noKeyStatus}
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
+    );
     await act(async () => {
       fireEvent.press(screen.getByRole('button', { name: labels.guidance }));
     });
@@ -123,7 +178,9 @@ describe('ApiKeyForm', () => {
   // @s1 — entering a key and pressing Save reports the exact typed value up via onSave.
   it('calls onSave with the entered key when Save is pressed', async () => {
     const onSave = jest.fn();
-    await render(<ApiKeyForm status={noKeyStatus} onSave={onSave} guidanceUrl={guidanceUrl} labels={labels} />);
+    await render(
+      <ApiKeyForm status={noKeyStatus} onSave={onSave} guidanceUrl={guidanceUrl} labels={labels} />,
+    );
 
     await act(async () => {
       fireEvent.changeText(screen.getByLabelText('API key'), 'sk-test-key');
@@ -136,7 +193,14 @@ describe('ApiKeyForm', () => {
   // @s1 — given a saved status, the masked "key saved" state renders (labels.keySavedStatus)
   // and neither the input nor any raw key value is shown.
   it('renders the masked key-saved state and no input when a key is saved', async () => {
-    await render(<ApiKeyForm status={savedStatus} onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />);
+    await render(
+      <ApiKeyForm
+        status={savedStatus}
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
+    );
 
     expect(screen.getByText('OpenAI key saved · Updated Jan 1, 2026')).toBeTruthy();
     expect(screen.queryByLabelText('API key')).toBeNull();
@@ -148,14 +212,26 @@ describe('ApiKeyForm', () => {
   // masked state is shown (a re-render with an updated status prop simulates a save success).
   it('never renders the raw key value once the masked state is shown', async () => {
     const { rerender } = await render(
-      <ApiKeyForm status={noKeyStatus} onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />,
+      <ApiKeyForm
+        status={noKeyStatus}
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
     );
 
     await act(async () => {
       fireEvent.changeText(screen.getByLabelText('API key'), 'sk-super-secret-key');
     });
     await act(async () => {
-      rerender(<ApiKeyForm status={savedStatus} onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />);
+      rerender(
+        <ApiKeyForm
+          status={savedStatus}
+          onSave={jest.fn()}
+          guidanceUrl={guidanceUrl}
+          labels={labels}
+        />,
+      );
     });
 
     expect(screen.queryByText('sk-super-secret-key')).toBeNull();
@@ -166,7 +242,13 @@ describe('ApiKeyForm', () => {
   // the input/masked control.
   it('renders a loading placeholder and no controls while isLoadingStatus', async () => {
     await render(
-      <ApiKeyForm status={noKeyStatus} isLoadingStatus onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />,
+      <ApiKeyForm
+        status={noKeyStatus}
+        isLoadingStatus
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
     );
 
     expect(screen.getByTestId(LOADING_STATUS_TEST_ID)).toBeTruthy();
@@ -179,7 +261,13 @@ describe('ApiKeyForm', () => {
   // of the same check identically.
   it('renders the loading placeholder under the literal api-key-form-loading-status test id', async () => {
     await render(
-      <ApiKeyForm status={noKeyStatus} isLoadingStatus onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />,
+      <ApiKeyForm
+        status={noKeyStatus}
+        isLoadingStatus
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
     );
 
     expect(screen.getByTestId('api-key-form-loading-status')).toBeTruthy();
@@ -191,7 +279,13 @@ describe('ApiKeyForm', () => {
   // (login-form.tsx:131-137).
   it('renders a polite live-region signal alongside the status-loading placeholder', async () => {
     await render(
-      <ApiKeyForm status={noKeyStatus} isLoadingStatus onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />,
+      <ApiKeyForm
+        status={noKeyStatus}
+        isLoadingStatus
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
     );
 
     expect(screen.getByText(labels.loadingStatus).props.accessibilityLiveRegion).toBe('polite');
@@ -201,11 +295,18 @@ describe('ApiKeyForm', () => {
   // status-loading transition also needs the imperative, cross-platform announcement
   // (mirrors login-form.tsx:76-80).
   it('announces the status-loading state via AccessibilityInfo when isLoadingStatus becomes true', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     const { rerender } = await render(
-      <ApiKeyForm status={noKeyStatus} onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />,
+      <ApiKeyForm
+        status={noKeyStatus}
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
     );
     expect(announceSpy).not.toHaveBeenCalled();
 
@@ -229,7 +330,13 @@ describe('ApiKeyForm', () => {
   // label is shown; the submit control stays disabled until the request resolves.
   it('disables the input and Save control and shows a progress label while isSubmitting', async () => {
     await render(
-      <ApiKeyForm status={noKeyStatus} isSubmitting onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />,
+      <ApiKeyForm
+        status={noKeyStatus}
+        isSubmitting
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
     );
 
     expect(screen.getByLabelText('API key').props.editable).toBe(false);
@@ -241,13 +348,24 @@ describe('ApiKeyForm', () => {
   // track isSubmitting, not just the (separate) editable prop asserted above.
   it('exposes accessibilityState.disabled on the input matching isSubmitting', async () => {
     const { rerender } = await render(
-      <ApiKeyForm status={noKeyStatus} onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />,
+      <ApiKeyForm
+        status={noKeyStatus}
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
     );
     expect(screen.getByLabelText('API key').props.accessibilityState).toEqual({ disabled: false });
 
     await act(async () => {
       rerender(
-        <ApiKeyForm status={noKeyStatus} isSubmitting onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />,
+        <ApiKeyForm
+          status={noKeyStatus}
+          isSubmitting
+          onSave={jest.fn()}
+          guidanceUrl={guidanceUrl}
+          labels={labels}
+        />,
       );
     });
 
@@ -259,7 +377,13 @@ describe('ApiKeyForm', () => {
   // component; mirrors LoginForm's own "announces a polite live-region while isSubmitting" test.
   it('marks the saving progress label as a polite live region', async () => {
     await render(
-      <ApiKeyForm status={noKeyStatus} isSubmitting onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />,
+      <ApiKeyForm
+        status={noKeyStatus}
+        isSubmitting
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
     );
 
     expect(screen.getByText(labels.saving).props.accessibilityLiveRegion).toBe('polite');
@@ -270,17 +394,30 @@ describe('ApiKeyForm', () => {
   // login-form.tsx's "announces 'Signing in…' via AccessibilityInfo when isSubmitting becomes
   // true" test).
   it('announces the saving progress via AccessibilityInfo when isSubmitting becomes true', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     const { rerender } = await render(
-      <ApiKeyForm status={noKeyStatus} onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />,
+      <ApiKeyForm
+        status={noKeyStatus}
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
     );
     expect(announceSpy).not.toHaveBeenCalled();
 
     await act(async () => {
       rerender(
-        <ApiKeyForm status={noKeyStatus} isSubmitting onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />,
+        <ApiKeyForm
+          status={noKeyStatus}
+          isSubmitting
+          onSave={jest.fn()}
+          guidanceUrl={guidanceUrl}
+          labels={labels}
+        />,
       );
     });
 
@@ -291,7 +428,14 @@ describe('ApiKeyForm', () => {
   // @s2 — outside of isSubmitting (and with a non-blank key entered, @s5), no progress label
   // is shown and Save stays enabled.
   it('shows no progress label and keeps Save enabled outside of isSubmitting', async () => {
-    await render(<ApiKeyForm status={noKeyStatus} onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />);
+    await render(
+      <ApiKeyForm
+        status={noKeyStatus}
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
+    );
 
     await act(async () => {
       fireEvent.changeText(screen.getByLabelText('API key'), 'sk-test-key');
@@ -305,7 +449,9 @@ describe('ApiKeyForm', () => {
   // new key can be entered and submitted via onSave.
   it('reveals the input when Replace is pressed and submits the new key via onSave', async () => {
     const onSave = jest.fn();
-    await render(<ApiKeyForm status={savedStatus} onSave={onSave} guidanceUrl={guidanceUrl} labels={labels} />);
+    await render(
+      <ApiKeyForm status={savedStatus} onSave={onSave} guidanceUrl={guidanceUrl} labels={labels} />,
+    );
 
     await act(async () => {
       fireEvent.press(screen.getByRole('button', { name: 'Replace' }));
@@ -328,7 +474,12 @@ describe('ApiKeyForm', () => {
   // Empty-state path a mutant deleting that guard would wrongly clear.
   it('keeps the typed key in the field after a failed first (non-Replace) save resolves', async () => {
     const { rerender } = await render(
-      <ApiKeyForm status={noKeyStatus} onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />,
+      <ApiKeyForm
+        status={noKeyStatus}
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
     );
     await act(async () => {
       fireEvent.changeText(screen.getByLabelText('API key'), 'sk-typed-key');
@@ -336,7 +487,13 @@ describe('ApiKeyForm', () => {
 
     await act(async () => {
       rerender(
-        <ApiKeyForm status={noKeyStatus} isSubmitting onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />,
+        <ApiKeyForm
+          status={noKeyStatus}
+          isSubmitting
+          onSave={jest.fn()}
+          guidanceUrl={guidanceUrl}
+          labels={labels}
+        />,
       );
     });
     await act(async () => {
@@ -360,14 +517,26 @@ describe('ApiKeyForm', () => {
   // session while this screen is open) must not silently wipe whatever the user is mid-typing.
   it('does not clear the typed key when status.hasKey flips true without ever having submitted', async () => {
     const { rerender } = await render(
-      <ApiKeyForm status={noKeyStatus} onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />,
+      <ApiKeyForm
+        status={noKeyStatus}
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
     );
     await act(async () => {
       fireEvent.changeText(screen.getByLabelText('API key'), 'sk-typed-key');
     });
 
     await act(async () => {
-      rerender(<ApiKeyForm status={savedStatus} onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />);
+      rerender(
+        <ApiKeyForm
+          status={savedStatus}
+          onSave={jest.fn()}
+          guidanceUrl={guidanceUrl}
+          labels={labels}
+        />,
+      );
     });
     await act(async () => {
       fireEvent.press(screen.getByRole('button', { name: 'Replace' }));
@@ -381,7 +550,12 @@ describe('ApiKeyForm', () => {
   // rather than leaving the input open.
   it('reverts to the masked state after a replace-save resolves successfully', async () => {
     const { rerender } = await render(
-      <ApiKeyForm status={savedStatus} onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />,
+      <ApiKeyForm
+        status={savedStatus}
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
     );
 
     await act(async () => {
@@ -394,11 +568,24 @@ describe('ApiKeyForm', () => {
 
     await act(async () => {
       rerender(
-        <ApiKeyForm status={savedStatus} isSubmitting onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />,
+        <ApiKeyForm
+          status={savedStatus}
+          isSubmitting
+          onSave={jest.fn()}
+          guidanceUrl={guidanceUrl}
+          labels={labels}
+        />,
       );
     });
     await act(async () => {
-      rerender(<ApiKeyForm status={savedStatus} onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />);
+      rerender(
+        <ApiKeyForm
+          status={savedStatus}
+          onSave={jest.fn()}
+          guidanceUrl={guidanceUrl}
+          labels={labels}
+        />,
+      );
     });
 
     expect(screen.queryByLabelText('API key')).toBeNull();
@@ -419,7 +606,13 @@ describe('ApiKeyForm', () => {
   // same progress label, not just the Empty/input branch.
   it('disables Replace and Remove and shows a progress label while isSubmitting on the masked saved state', async () => {
     await render(
-      <ApiKeyForm status={savedStatus} isSubmitting onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />,
+      <ApiKeyForm
+        status={savedStatus}
+        isSubmitting
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
     );
 
     expect(screen.getByRole('button', { name: 'Replace', disabled: true })).toBeTruthy();
@@ -447,7 +640,14 @@ describe('ApiKeyForm', () => {
 
   // No errorMessage means no banner is rendered.
   it('renders no error banner when errorMessage is absent', async () => {
-    await render(<ApiKeyForm status={noKeyStatus} onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />);
+    await render(
+      <ApiKeyForm
+        status={noKeyStatus}
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
+    );
 
     expect(screen.queryByRole('alert')).toBeNull();
   });
@@ -457,7 +657,9 @@ describe('ApiKeyForm', () => {
   // iOS VoiceOver needs the imperative AccessibilityInfo call, mirroring LoginForm's own
   // errorMessage-announcement precedent.
   it('announces the error banner via AccessibilityInfo when errorMessage is set', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     await render(
@@ -477,7 +679,9 @@ describe('ApiKeyForm', () => {
   // @s14/AC12 — a second, distinct error (e.g. a retry that fails differently, @s7) must be
   // re-announced, not silently swallowed because an announcement already fired once.
   it('announces the error banner again when errorMessage changes to a different value', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     const { rerender } = await render(
@@ -524,7 +728,14 @@ describe('ApiKeyForm', () => {
     expect(screen.getByText("Couldn't reach the server. Try again.")).toBeTruthy();
 
     await act(async () => {
-      rerender(<ApiKeyForm status={savedStatus} onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />);
+      rerender(
+        <ApiKeyForm
+          status={savedStatus}
+          onSave={jest.fn()}
+          guidanceUrl={guidanceUrl}
+          labels={labels}
+        />,
+      );
     });
 
     expect(screen.queryByText("Couldn't reach the server. Try again.")).toBeNull();
@@ -552,7 +763,13 @@ describe('ApiKeyForm', () => {
   // should prompt for a removal the user hasn't asked for yet.
   it('renders with the removal confirmation dialog closed', async () => {
     await render(
-      <ApiKeyForm status={savedStatus} onSave={jest.fn()} onRemove={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />,
+      <ApiKeyForm
+        status={savedStatus}
+        onSave={jest.fn()}
+        onRemove={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
     );
 
     expect(screen.queryByText(labels.removeConfirmHeadline)).toBeNull();
@@ -631,7 +848,14 @@ describe('ApiKeyForm', () => {
   // Mutation Round 2 — onRemove is typed optional (ApiKeyFormProps), so confirming a removal
   // with no onRemove supplied at all must not crash (guards the `onRemove?.()` optional chain).
   it('does not crash confirming a removal when onRemove is not supplied', async () => {
-    await render(<ApiKeyForm status={savedStatus} onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />);
+    await render(
+      <ApiKeyForm
+        status={savedStatus}
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
+    );
 
     await act(async () => {
       fireEvent.press(screen.getByRole('button', { name: 'Remove' }));
@@ -671,7 +895,14 @@ describe('ApiKeyForm', () => {
   // Mutation Round 2 — StyleSheet assertions, following language-selector.test.tsx's
   // toHaveStyle precedent with react-native-unistyles. Guards the flat `form` layout style.
   it('stacks the form contents with the standard vertical gap', async () => {
-    await render(<ApiKeyForm status={noKeyStatus} onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />);
+    await render(
+      <ApiKeyForm
+        status={noKeyStatus}
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
+    );
 
     const form = screen.getByRole('button', { name: 'Save' }).parent?.parent;
 
@@ -680,7 +911,14 @@ describe('ApiKeyForm', () => {
 
   // Guards the `actionsRow` layout style (Save button + progress label sit in one row).
   it('lays out the actions row as a horizontally centered row with the standard gap', async () => {
-    await render(<ApiKeyForm status={noKeyStatus} onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />);
+    await render(
+      <ApiKeyForm
+        status={noKeyStatus}
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
+    );
 
     const actionsRow = screen.getByRole('button', { name: 'Save' }).parent;
 
@@ -689,7 +927,14 @@ describe('ApiKeyForm', () => {
 
   // Guards the `status` typography+color style on the masked "key saved" text.
   it('renders the masked key-saved status with the standard body typography and neutral color', async () => {
-    await render(<ApiKeyForm status={savedStatus} onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />);
+    await render(
+      <ApiKeyForm
+        status={savedStatus}
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
+    );
 
     expect(screen.getByText('OpenAI key saved · Updated Jan 1, 2026')).toHaveStyle({
       ...typography.bodyMedium,
@@ -738,7 +983,13 @@ describe('ApiKeyForm', () => {
   // but still mounted, mirrors LoginForm's own visuallyHidden precedent).
   it('keeps the loading-status live-region text visually hidden but mounted', async () => {
     await render(
-      <ApiKeyForm status={noKeyStatus} isLoadingStatus onSave={jest.fn()} guidanceUrl={guidanceUrl} labels={labels} />,
+      <ApiKeyForm
+        status={noKeyStatus}
+        isLoadingStatus
+        onSave={jest.fn()}
+        guidanceUrl={guidanceUrl}
+        labels={labels}
+      />,
     );
 
     expect(screen.getByText(labels.loadingStatus)).toHaveStyle({

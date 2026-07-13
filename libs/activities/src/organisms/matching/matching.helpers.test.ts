@@ -1,9 +1,5 @@
 import { findPairForItem, itemAccessibilityLabel } from './matching.helpers';
-import {
-  MatchingItemView,
-  MatchingLabels,
-  MatchingPairSelection,
-} from './matching.types';
+import type { MatchingItemView, MatchingLabels, MatchingPairSelection } from './matching.types';
 
 const labels: MatchingLabels = {
   submit: 'Submit',
@@ -42,9 +38,7 @@ describe('findPairForItem', () => {
 
 describe('itemAccessibilityLabel', () => {
   it('appends correctPair when state is correct', () => {
-    expect(itemAccessibilityLabel(item, 'correct', labels)).toBe(
-      `France, ${labels.correctPair}`,
-    );
+    expect(itemAccessibilityLabel(item, 'correct', labels)).toBe(`France, ${labels.correctPair}`);
   });
 
   it('appends incorrectPair when state is incorrect', () => {
@@ -53,10 +47,11 @@ describe('itemAccessibilityLabel', () => {
     );
   });
 
-  it.each(['pending', 'paired', undefined] as const)(
-    'returns the bare label when state is %s',
-    (state) => {
-      expect(itemAccessibilityLabel(item, state, labels)).toBe('France');
-    },
-  );
+  it.each([
+    'pending',
+    'paired',
+    undefined,
+  ] as const)('returns the bare label when state is %s', (state) => {
+    expect(itemAccessibilityLabel(item, state, labels)).toBe('France');
+  });
 });

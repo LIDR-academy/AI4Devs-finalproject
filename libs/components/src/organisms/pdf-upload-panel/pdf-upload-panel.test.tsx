@@ -1,7 +1,6 @@
+import { useLocalization } from '@helsoft/localization';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { AccessibilityInfo } from 'react-native';
-
-import { useLocalization } from '@helsoft/localization';
 
 import { PDF_UPLOAD_PANEL_LOADING_INDICATOR_TEST_ID, PdfUploadPanel } from './pdf-upload-panel';
 
@@ -93,7 +92,9 @@ describe('PdfUploadPanel', () => {
   // no effect on iOS VoiceOver, so the imperative, cross-platform `AccessibilityInfo` API must
   // fire directly when the loading state becomes active.
   it('announces the loading copy via AccessibilityInfo when the loading state becomes active', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     const { rerender } = await render(<PdfUploadPanel state="idle" onChooseFile={jest.fn()} />);
@@ -130,7 +131,13 @@ describe('PdfUploadPanel', () => {
   // coherent "File: notes.pdf" stop instead of two disconnected "File" / "notes.pdf" stops.
   it('groups the filename and page-count summary rows into one accessible label each', async () => {
     await render(
-      <PdfUploadPanel state="content" onChooseFile={jest.fn()} filename="notes.pdf" pageCount={12} imageCount={3} />,
+      <PdfUploadPanel
+        state="content"
+        onChooseFile={jest.fn()}
+        filename="notes.pdf"
+        pageCount={12}
+        imageCount={3}
+      />,
     );
 
     expect(screen.getByLabelText('upload.filenameLabel: notes.pdf')).toBeTruthy();
@@ -158,7 +165,13 @@ describe('PdfUploadPanel', () => {
   // rather than staying two disconnected stops.
   it('falls back to a composed label/value announcement when imageCountAnnouncement is omitted', async () => {
     await render(
-      <PdfUploadPanel state="content" onChooseFile={jest.fn()} filename="notes.pdf" pageCount={12} imageCount={3} />,
+      <PdfUploadPanel
+        state="content"
+        onChooseFile={jest.fn()}
+        filename="notes.pdf"
+        pageCount={12}
+        imageCount={3}
+      />,
     );
 
     expect(screen.getByLabelText('upload.imageCountLabel: 3')).toBeTruthy();
@@ -186,7 +199,13 @@ describe('PdfUploadPanel', () => {
   // The Content state does not show the loading affordance.
   it('does not render the loading indicator in the content state', async () => {
     await render(
-      <PdfUploadPanel state="content" onChooseFile={jest.fn()} filename="notes.pdf" pageCount={1} imageCount={0} />,
+      <PdfUploadPanel
+        state="content"
+        onChooseFile={jest.fn()}
+        filename="notes.pdf"
+        pageCount={1}
+        imageCount={0}
+      />,
     );
 
     expect(screen.queryByTestId(PDF_UPLOAD_PANEL_LOADING_INDICATOR_TEST_ID)).toBeNull();
@@ -221,7 +240,9 @@ describe('PdfUploadPanel', () => {
   // @s16 — iOS-parity: the imperative, cross-platform AccessibilityInfo API fires directly when
   // an error message is set, since accessibilityLiveRegion has no effect on iOS VoiceOver.
   it('announces the error message via AccessibilityInfo when the error state renders', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     await render(
@@ -237,7 +258,9 @@ describe('PdfUploadPanel', () => {
   // (e.g. a retry that fails differently) must be re-announced, not silently swallowed by a
   // dependency array that only fires once.
   it('announces the error message again when it changes to a different value', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     const { rerender } = await render(
@@ -319,7 +342,11 @@ describe('PdfUploadPanel', () => {
   // pass equally for a `state === 'idle' ? … : null` mutant hard-coded to `true ? … : null` (the
   // hint would then leak into every other state too); these assert the hint's absence everywhere
   // else.
-  it.each(['loading', 'content', 'error'] as const)('does not show the constraints hint in the %s state', async (state) => {
+  it.each([
+    'loading',
+    'content',
+    'error',
+  ] as const)('does not show the constraints hint in the %s state', async (state) => {
     await render(
       <PdfUploadPanel
         state={state}
@@ -336,7 +363,11 @@ describe('PdfUploadPanel', () => {
 
   // Mutation-kill guard (review round-1 Part B #1) — same gap for the content summary: the
   // existing "shown in content" tests never assert its absence in the other three states.
-  it.each(['idle', 'loading', 'error'] as const)('does not show the content summary in the %s state', async (state) => {
+  it.each([
+    'idle',
+    'loading',
+    'error',
+  ] as const)('does not show the content summary in the %s state', async (state) => {
     await render(
       <PdfUploadPanel state={state} onChooseFile={jest.fn()} errorMessage="Network error" />,
     );

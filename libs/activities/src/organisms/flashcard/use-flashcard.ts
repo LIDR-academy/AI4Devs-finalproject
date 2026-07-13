@@ -1,7 +1,6 @@
+import type { FlashcardAnswer } from '@helsoft/types';
 import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Platform } from 'react-native';
-
-import type { FlashcardAnswer } from '@helsoft/types';
 
 import { isFlashcardSlideValid } from './flashcard.helpers';
 import type { UseFlashcardProps } from './flashcard.types';

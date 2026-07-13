@@ -1,4 +1,4 @@
-import { Easing, EasingFunction } from 'react-native';
+import { Easing, type EasingFunction } from 'react-native';
 
 /**
  * AI Study Buddy — motion (MD3 easing + duration).

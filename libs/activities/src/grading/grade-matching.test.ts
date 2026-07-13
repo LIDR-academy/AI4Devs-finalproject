@@ -120,7 +120,9 @@ describe('gradeMatching', () => {
   // @s15 — invalid slide → grader throws.
   it('throws when the slide is invalid', () => {
     const invalid: MatchingSlide = { ...slide, correctPairs: [{ leftId: 'nope', rightId: 'r1' }] };
-    expect(() => gradeMatching(invalid, [{ leftId: 'l1', rightId: 'r1' }])).toThrow(/not a valid matching slide/);
+    expect(() => gradeMatching(invalid, [{ leftId: 'l1', rightId: 'r1' }])).toThrow(
+      /not a valid matching slide/,
+    );
   });
 });
 

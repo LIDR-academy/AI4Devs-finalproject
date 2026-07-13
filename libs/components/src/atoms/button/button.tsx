@@ -1,8 +1,7 @@
-import { ReactNode, useMemo } from 'react';
-import { Pressable, StyleProp, Text, ViewStyle } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-
 import { useInteractionState } from '@helsoft/hooks';
+import { type ReactNode, useMemo } from 'react';
+import { Pressable, type StyleProp, Text, type ViewStyle } from 'react-native';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { layout, spacing } from '../../theme/spacing';
 import { Icon } from '../icon/icon';
 import { StateLayer } from '../state-layer/state-layer';
@@ -25,8 +24,16 @@ export type ButtonProps = {
 
 export const BUTTON_STATE_LAYER_TEST_ID = 'button-state-layer';
 
-const HEIGHTS: Record<ButtonSize, number> = { small: spacing.s8, medium: spacing.s10, large: spacing.s14 };
-const PAD_X: Record<ButtonSize, number> = { small: spacing.s8, medium: spacing.s10, large: spacing.s12 };
+const HEIGHTS: Record<ButtonSize, number> = {
+  small: spacing.s8,
+  medium: spacing.s10,
+  large: spacing.s14,
+};
+const PAD_X: Record<ButtonSize, number> = {
+  small: spacing.s8,
+  medium: spacing.s10,
+  large: spacing.s12,
+};
 const PAD_TEXT = spacing.s3;
 const PAD_ICON = spacing.s4;
 const PAD_ICON_FULL = spacing.s6;
@@ -88,12 +95,15 @@ export const Button = ({
   );
   const hasLabel = children != null;
   const padX = variant === 'text' ? PAD_TEXT : hasLabel ? PAD_X[size] : HEIGHTS[size] / 2;
-  const padLeft =
-    icon && hasLabel ? (variant === 'text' ? PAD_ICON : PAD_ICON_FULL) : padX;
+  const padLeft = icon && hasLabel ? (variant === 'text' ? PAD_ICON : PAD_ICON_FULL) : padX;
   const padRight =
     trailingIcon && hasLabel ? (variant === 'text' ? PAD_ICON : PAD_ICON_FULL) : padX;
   const shadow =
-    disabled || variant !== 'elevated' ? undefined : hover ? styles.elevatedShadowHover : styles.elevatedShadow;
+    disabled || variant !== 'elevated'
+      ? undefined
+      : hover
+        ? styles.elevatedShadowHover
+        : styles.elevatedShadow;
 
   return (
     <Pressable
@@ -117,7 +127,13 @@ export const Button = ({
 };
 
 const styles = StyleSheet.create((theme) => ({
-  root: (padLeft: number, padRight: number, fullWidth: boolean, disabled: boolean, minHeight: number) => ({
+  root: (
+    padLeft: number,
+    padRight: number,
+    fullWidth: boolean,
+    disabled: boolean,
+    minHeight: number,
+  ) => ({
     flexDirection: 'row',
     alignSelf: fullWidth ? 'stretch' : 'flex-start',
     alignItems: 'center',

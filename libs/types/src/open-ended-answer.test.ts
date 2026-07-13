@@ -1,7 +1,7 @@
-import type { GradedAnswer } from './graded-answer';
 import type { OpenEndedAnswer } from './activity-answer';
-import type { OpenEndedSlide } from './lesson';
 import { isSystemCheckedActivity } from './activity-type';
+import type { GradedAnswer } from './graded-answer';
+import type { OpenEndedSlide } from './lesson';
 
 // @s6 — answered-state is submitted-only (no grade) and excluded from R7.
 describe('OpenEndedAnswer / OpenEndedSlide (@s6)', () => {

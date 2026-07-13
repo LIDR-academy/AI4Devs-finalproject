@@ -1,4 +1,4 @@
-import { Pressable, StyleProp, Text, View, ViewStyle } from 'react-native';
+import { Pressable, type StyleProp, Text, View, type ViewStyle } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { Icon } from '../icon/icon';
@@ -21,7 +21,13 @@ const INNER_HEIGHT = TRACK_HEIGHT - BORDER * 2;
 /**
  * Switch — MD3 on/off toggle. The knob grows and shows a check when on.
  */
-export const Switch = ({ checked = false, onChange, disabled = false, label, style }: SwitchProps) => {
+export const Switch = ({
+  checked = false,
+  onChange,
+  disabled = false,
+  label,
+  style,
+}: SwitchProps) => {
   const { theme } = useUnistyles();
 
   return (

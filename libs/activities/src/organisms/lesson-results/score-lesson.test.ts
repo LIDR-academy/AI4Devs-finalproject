@@ -50,7 +50,11 @@ describe('scoreLesson', () => {
     const slides: ScorableSlide[] = [{ id: 'slide-1', activityType: 'matching' }];
     const answers: GradedAnswer[] = [{ slideId: 'slide-1', activityType: 'matching', isCorrect }];
 
-    expect(scoreLesson(slides, answers)).toEqual({ correct: expectedCorrect, total: 1, isScorable: true });
+    expect(scoreLesson(slides, answers)).toEqual({
+      correct: expectedCorrect,
+      total: 1,
+      isScorable: true,
+    });
   });
 
   // @s4 — a system-checked slide with no matching answer counts toward total but not correct.
@@ -73,7 +77,9 @@ describe('scoreLesson', () => {
   // never a 0/0 score, defensively ignoring any stray answers that reference no slide here.
   it('returns isScorable: false and correct/total of 0 when there are no system-checked slides', () => {
     const slides: ScorableSlide[] = [{ id: 'slide-1', activityType: 'flashcard' }];
-    const answers: GradedAnswer[] = [{ slideId: 'slide-1', activityType: 'flashcard', isCorrect: true }];
+    const answers: GradedAnswer[] = [
+      { slideId: 'slide-1', activityType: 'flashcard', isCorrect: true },
+    ];
 
     expect(scoreLesson(slides, answers)).toEqual({ correct: 0, total: 0, isScorable: false });
   });

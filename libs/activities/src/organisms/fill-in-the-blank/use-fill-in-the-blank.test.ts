@@ -1,6 +1,6 @@
-import { AccessibilityInfo, Platform } from 'react-native';
-import { act, renderHook, waitFor } from '@testing-library/react-native';
 import type { FillInTheBlankAnswer, FillInTheBlankSlide } from '@helsoft/types';
+import { act, renderHook, waitFor } from '@testing-library/react-native';
+import { AccessibilityInfo, Platform } from 'react-native';
 
 import type { FillInTheBlankLabels } from './fill-in-the-blank.types';
 import { useFillInTheBlank } from './use-fill-in-the-blank';
@@ -111,9 +111,7 @@ describe('useFillInTheBlank', () => {
         .mockImplementation(() => {});
       announceSpy.mockClear();
 
-      await renderHook(() =>
-        useFillInTheBlank({ slide, initialAnswer: correctAnswer, labels }),
-      );
+      await renderHook(() => useFillInTheBlank({ slide, initialAnswer: correctAnswer, labels }));
 
       await waitFor(() => expect(announceSpy).toHaveBeenCalledWith(labels.correct));
       announceSpy.mockRestore();
@@ -126,9 +124,7 @@ describe('useFillInTheBlank', () => {
         .mockImplementation(() => {});
       announceSpy.mockClear();
 
-      await renderHook(() =>
-        useFillInTheBlank({ slide, initialAnswer: correctAnswer, labels }),
-      );
+      await renderHook(() => useFillInTheBlank({ slide, initialAnswer: correctAnswer, labels }));
 
       expect(announceSpy).not.toHaveBeenCalled();
       announceSpy.mockRestore();

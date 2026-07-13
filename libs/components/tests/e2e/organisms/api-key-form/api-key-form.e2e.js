@@ -13,7 +13,9 @@ test('Empty story loads', async ({ page }) => {
 
 // @s5/@s14 — the Empty state's input exposes an accessible label, guidance is shown, and Save
 // stays disabled until a non-blank key is entered.
-test('Empty story renders a labelled input, guidance, and a disabled Save control', async ({ page }) => {
+test('Empty story renders a labelled input, guidance, and a disabled Save control', async ({
+  page,
+}) => {
   await page.goto(story('empty'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
@@ -28,13 +30,18 @@ test('Empty story renders a labelled input, guidance, and a disabled Save contro
 // @s1/@s3/@s14 — the Content (masked) state shows the saved-status text and enabled
 // Replace/Remove controls (both button-role, WCAG touch-target-sized via the Button atom); the
 // raw key is never rendered.
-test('Content story renders the masked saved status and enabled Replace/Remove controls', async ({ page }) => {
+test('Content story renders the masked saved status and enabled Replace/Remove controls', async ({
+  page,
+}) => {
   await page.goto(story('content'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
   await expect(canvas.locator('text=OpenAI key saved · Updated Jan 1, 2026')).toBeVisible();
 
-  const replaceControl = canvas.locator('text=Replace').first().locator('xpath=ancestor::button[1]');
+  const replaceControl = canvas
+    .locator('text=Replace')
+    .first()
+    .locator('xpath=ancestor::button[1]');
   await expect(replaceControl).toBeEnabled();
   const removeControl = canvas.locator('text=Remove').first().locator('xpath=ancestor::button[1]');
   await expect(removeControl).toBeEnabled();

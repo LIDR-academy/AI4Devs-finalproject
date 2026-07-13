@@ -9,7 +9,6 @@ jest.mock('@helsoft/localization', () => ({
 }));
 
 jest.mock('@helsoft/activities', () => {
-  const React = require('react');
   const { Pressable, Text, View } = require('react-native');
 
   return {
@@ -68,8 +67,8 @@ jest.mock('@helsoft/activities', () => {
   };
 });
 
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import type { OpenEndedSlide } from '@helsoft/types';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
 import { OpenEndedActivity } from './open-ended-activity';
 
@@ -110,10 +109,7 @@ describe('OpenEndedActivity guards (mocked organism)', () => {
   it('does not emit when force-submitted while the slide is invalid', async () => {
     const onAnswered = jest.fn();
     await render(
-      <OpenEndedActivity
-        slide={{ ...slide, content: '   ' }}
-        onAnswered={onAnswered}
-      />,
+      <OpenEndedActivity slide={{ ...slide, content: '   ' }} onAnswered={onAnswered} />,
     );
 
     expect(screen.getByText('activity.openEnded.unavailable')).toBeTruthy();

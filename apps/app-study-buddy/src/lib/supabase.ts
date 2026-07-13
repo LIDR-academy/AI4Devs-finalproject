@@ -1,7 +1,6 @@
+import { initSupabase } from '@helsoft/supabase-services';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-
-import { initSupabase } from '@helsoft/supabase-services';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
@@ -16,6 +15,6 @@ if (supabaseUrl && supabaseAnonKey) {
   });
 } else if (__DEV__) {
   console.warn(
-    'Supabase is not configured. Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY (see .env.example).'
+    'Supabase is not configured. Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY (see .env.example).',
   );
 }

@@ -20,7 +20,6 @@ export const Count: Story = {};
 
 export const Overflow: Story = {
   args: { count: 120 },
-  
 };
 
 export const Dot: Story = {

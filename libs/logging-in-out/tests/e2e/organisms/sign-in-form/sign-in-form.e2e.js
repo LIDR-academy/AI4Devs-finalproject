@@ -41,7 +41,9 @@ test('InvalidCredentials story renders the invalid-credentials banner', async ({
   await expect(canvas.getByText('Invalid email or password', { exact: true })).toBeVisible();
 });
 
-test('NetworkError story renders the network-error banner and stays interactive', async ({ page }) => {
+test('NetworkError story renders the network-error banner and stays interactive', async ({
+  page,
+}) => {
   await page.goto('/?path=/story/organisms-signinform--network-error');
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 

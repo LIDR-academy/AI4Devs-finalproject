@@ -7,7 +7,7 @@ import type { Decorator, Preview } from '@storybook/react-native-web-vite';
 import { useEffect } from 'react';
 import { UnistylesRuntime } from 'react-native-unistyles';
 
-import { themes, ThemeScheme } from '../src/theme/unistyles';
+import { type ThemeScheme, themes } from '../src/theme/unistyles';
 
 // The library defaults to adaptive (OS) themes; storybook drives them manually.
 // Pinned at module scope so the first story paint matches the toolbar default

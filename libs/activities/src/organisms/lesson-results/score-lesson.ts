@@ -1,4 +1,9 @@
-import { isSystemCheckedActivity, type GradedAnswer, type ScorableSlide, type ScoreSummary } from '@helsoft/types';
+import {
+  type GradedAnswer,
+  isSystemCheckedActivity,
+  type ScorableSlide,
+  type ScoreSummary,
+} from '@helsoft/types';
 
 /**
  * Pure end-of-lesson scorer (no I/O). Consumes the decoupled `ScorableSlide[]` projection
@@ -9,7 +14,9 @@ export const scoreLesson = (slides: ScorableSlide[], answers: GradedAnswer[]): S
     slides.filter((slide) => isSystemCheckedActivity(slide.activityType)).map((slide) => slide.id),
   );
   const total = systemCheckedSlideIds.size;
-  const correct = answers.filter((answer) => systemCheckedSlideIds.has(answer.slideId) && answer.isCorrect).length;
+  const correct = answers.filter(
+    (answer) => systemCheckedSlideIds.has(answer.slideId) && answer.isCorrect,
+  ).length;
 
   return { correct, total, isScorable: total > 0 };
 };

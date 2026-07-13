@@ -111,15 +111,15 @@ describe('isFillInTheBlankSlideValid', () => {
 
   // @s12 — missing blank marker.
   it('returns false when content has no blank marker', () => {
-    expect(isFillInTheBlankSlideValid({ ...slide, content: 'The capital of France is Paris.' })).toBe(
-      false,
-    );
+    expect(
+      isFillInTheBlankSlideValid({ ...slide, content: 'The capital of France is Paris.' }),
+    ).toBe(false);
   });
 
   // @s12 — multiple blank markers.
   it('returns false when content has more than one blank marker', () => {
-    expect(
-      isFillInTheBlankSlideValid({ ...slide, content: '____ is the capital of ____.' }),
-    ).toBe(false);
+    expect(isFillInTheBlankSlideValid({ ...slide, content: '____ is the capital of ____.' })).toBe(
+      false,
+    );
   });
 });

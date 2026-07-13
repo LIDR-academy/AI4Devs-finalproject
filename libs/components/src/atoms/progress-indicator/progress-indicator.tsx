@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { Animated, Easing, Platform, StyleProp, View, ViewStyle } from 'react-native';
+import { Animated, Easing, Platform, type StyleProp, View, type ViewStyle } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 export type ProgressIndicatorVariant = 'linear' | 'circular';
@@ -59,6 +59,7 @@ export const ProgressIndicator = ({
 
   // Recreated per variant: a value once driven natively (circular) can't be reused
   // by the JS driver (linear).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: variant is an intentional reset trigger, not a value read inside the memo
   const anim = useMemo(() => new Animated.Value(0), [variant]);
 
   useEffect(() => {
@@ -89,10 +90,22 @@ export const ProgressIndicator = ({
         {determinate ? (
           <>
             {angle > 0 ? (
-              <CircularArc size={size} thickness={thickness} color={barColor} window="right" rotate={Math.min(angle, 180) - 225} />
+              <CircularArc
+                size={size}
+                thickness={thickness}
+                color={barColor}
+                window="right"
+                rotate={Math.min(angle, 180) - 225}
+              />
             ) : null}
             {angle > 180 ? (
-              <CircularArc size={size} thickness={thickness} color={barColor} window="left" rotate={angle - 225} />
+              <CircularArc
+                size={size}
+                thickness={thickness}
+                color={barColor}
+                window="left"
+                rotate={angle - 225}
+              />
             ) : null}
           </>
         ) : (
@@ -128,7 +141,12 @@ export const ProgressIndicator = ({
         <Animated.View
           style={[
             styles.linearIndeterminate(barColor),
-            { left: anim.interpolate({ inputRange: [0, 0.6, 1], outputRange: ['-40%', '100%', '100%'] }) },
+            {
+              left: anim.interpolate({
+                inputRange: [0, 0.6, 1],
+                outputRange: ['-40%', '100%', '100%'],
+              }),
+            },
           ]}
         />
       )}
@@ -145,7 +163,13 @@ const styles = StyleSheet.create((theme) => ({
     height: size,
     overflow: 'hidden',
   }),
-  arc: (size: number, thickness: number, color: string, window: 'left' | 'right', rotate: number) => ({
+  arc: (
+    size: number,
+    thickness: number,
+    color: string,
+    window: 'left' | 'right',
+    rotate: number,
+  ) => ({
     position: 'absolute',
     left: window === 'right' ? -size / 2 : 0,
     width: size,

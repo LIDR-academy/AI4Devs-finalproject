@@ -1,15 +1,11 @@
+import { Button, Card, Icon } from '@helsoft/components';
+import { useLocalization } from '@helsoft/localization';
+import type { MatchingAnswer } from '@helsoft/types';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
-import { Button, Card, Icon } from '@helsoft/components';
-import { useLocalization } from '@helsoft/localization';
-import type { MatchingAnswer } from '@helsoft/types';
-
-import {
-  gradeMatching,
-  isMatchingSlideValid,
-} from '../../grading/grade-matching';
+import { gradeMatching, isMatchingSlideValid } from '../../grading/grade-matching';
 import { findPairForItem, itemAccessibilityLabel } from './matching.helpers';
 import type {
   ItemVisualState,
@@ -89,7 +85,9 @@ export const Matching = ({
   }
 
   const releasePair = (itemId: string) => {
-    setFormedPairs((prev) => prev.filter((pair) => pair.leftId !== itemId && pair.rightId !== itemId));
+    setFormedPairs((prev) =>
+      prev.filter((pair) => pair.leftId !== itemId && pair.rightId !== itemId),
+    );
     setPending(null);
   };
 
@@ -123,7 +121,8 @@ export const Matching = ({
 
   const renderItem = (column: 'left' | 'right', item: MatchingItemView) => {
     const state = itemState(column, item.id);
-    const feedbackIcon = state === 'correct' ? 'check_circle' : state === 'incorrect' ? 'cancel' : null;
+    const feedbackIcon =
+      state === 'correct' ? 'check_circle' : state === 'incorrect' ? 'cancel' : null;
     const feedbackColor = state === 'correct' ? theme.colors.tertiary : theme.colors.error;
     const accessibilityLabel = itemAccessibilityLabel(item, state, labels);
 
@@ -228,7 +227,11 @@ const styles = StyleSheet.create((theme) => ({
         };
       case 'correct':
         return {
-          backgroundColor: theme.utils.mixHex(theme.colors.tertiaryContainer, theme.colors.surface, 0.55),
+          backgroundColor: theme.utils.mixHex(
+            theme.colors.tertiaryContainer,
+            theme.colors.surface,
+            0.55,
+          ),
           borderWidth: 1,
           borderColor: theme.colors.tertiary,
         };

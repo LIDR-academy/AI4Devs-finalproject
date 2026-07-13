@@ -4,8 +4,8 @@ jest.mock('@helsoft/localization', () => ({
   }),
 }));
 
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import type { FlashcardSlide } from '@helsoft/types';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
 import { FlashcardActivity } from './flashcard-activity';
 

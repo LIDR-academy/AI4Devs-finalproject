@@ -65,10 +65,9 @@ describe('useLoginForm', () => {
   });
 
   it('sets hasFieldError when emailError or passwordError is present', async () => {
-    const { result, rerender } = await renderHook(
-      (props: HookProps) => useLoginForm(props),
-      { initialProps: { emailError: undefined, passwordError: undefined } },
-    );
+    const { result, rerender } = await renderHook((props: HookProps) => useLoginForm(props), {
+      initialProps: { emailError: undefined, passwordError: undefined },
+    });
 
     expect(result.current?.hasFieldError).toBe(false);
 
@@ -84,7 +83,9 @@ describe('useLoginForm', () => {
   });
 
   it('announces signing-in copy via AccessibilityInfo when isSubmitting becomes true', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     const { rerender } = await renderHook(
@@ -102,7 +103,9 @@ describe('useLoginForm', () => {
   });
 
   it('announces errorMessage via AccessibilityInfo when set', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     const { rerender } = await renderHook(
@@ -123,7 +126,9 @@ describe('useLoginForm', () => {
   // announcement must re-fire off the submit cycle ending (isSubmitting true -> false) —
   // otherwise iOS VoiceOver stays silent on the second failure.
   it('re-announces the same errorMessage after another submit cycle ends', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     const { rerender } = await renderHook(

@@ -1,8 +1,6 @@
-import { useMemo } from 'react';
-import { Pressable, StyleProp, Text, View, ViewStyle } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-
 import { useInteractionState } from '@helsoft/hooks';
+import { Pressable, type StyleProp, Text, View, type ViewStyle } from 'react-native';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { spacing } from '../../theme/spacing';
 import { Icon } from '../icon/icon';
 import { StateLayer } from '../state-layer/state-layer';

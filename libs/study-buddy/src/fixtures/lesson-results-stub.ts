@@ -6,7 +6,9 @@ import type { GradedAnswer, Lesson } from '@helsoft/types';
  * the same `GradedAnswer[]` contract either way, so swapping this for the real source later is
  * a call-site-only change.
  */
-export const buildStubLessonResultsFixture = (lessonId: string): { lesson: Lesson; answers: GradedAnswer[] } => {
+export const buildStubLessonResultsFixture = (
+  lessonId: string,
+): { lesson: Lesson; answers: GradedAnswer[] } => {
   const slideId = `${lessonId}-slide-1`;
 
   return {

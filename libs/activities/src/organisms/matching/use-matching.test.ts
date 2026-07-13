@@ -1,13 +1,12 @@
-import { AccessibilityInfo, Platform } from 'react-native';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
-
-import { useMatching } from './use-matching';
-import {
+import { AccessibilityInfo, Platform } from 'react-native';
+import type {
   MatchingItemView,
   MatchingLabels,
   MatchingResult,
   UseMatchingProps,
 } from './matching.types';
+import { useMatching } from './use-matching';
 
 const labels: MatchingLabels = {
   submit: 'Submit',
@@ -75,9 +74,7 @@ describe('useMatching', () => {
       { leftId: 'l2', rightId: 'r2' },
       { leftId: 'l3', rightId: 'r3' },
     ];
-    const { result } = await renderHook(() =>
-      useMatching({ ...defaultProps, initialPairs }),
-    );
+    const { result } = await renderHook(() => useMatching({ ...defaultProps, initialPairs }));
 
     expect(result.current.formedPairs).toEqual(initialPairs);
     expect(result.current.allPaired).toBe(true);
@@ -102,9 +99,7 @@ describe('useMatching', () => {
   });
 
   it('marks unavailable when unavailable prop is true', async () => {
-    const { result } = await renderHook(() =>
-      useMatching({ ...defaultProps, unavailable: true }),
-    );
+    const { result } = await renderHook(() => useMatching({ ...defaultProps, unavailable: true }));
 
     expect(result.current.isUnavailable).toBe(true);
   });
@@ -247,10 +242,9 @@ describe('useMatching', () => {
         .mockImplementation(() => {});
       announceSpy.mockClear();
 
-      const { rerender } = await renderHook(
-        (props: UseMatchingProps) => useMatching(props),
-        { initialProps: defaultProps },
-      );
+      const { rerender } = await renderHook((props: UseMatchingProps) => useMatching(props), {
+        initialProps: defaultProps,
+      });
 
       expect(announceSpy).not.toHaveBeenCalled();
 

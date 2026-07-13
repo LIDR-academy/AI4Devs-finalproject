@@ -9,7 +9,8 @@ import { BUTTON_STATE_LAYER_TEST_ID, Button } from './button';
 const flattenStyle = (style: unknown): Record<string, unknown> =>
   Object.assign({}, ...[style].flat(Infinity).filter(Boolean));
 
-const stateLayerOpacity = (): unknown => flattenStyle(screen.getByTestId(BUTTON_STATE_LAYER_TEST_ID).props.style).opacity;
+const stateLayerOpacity = (): unknown =>
+  flattenStyle(screen.getByTestId(BUTTON_STATE_LAYER_TEST_ID).props.style).opacity;
 
 describe('Button', () => {
   // Touch target (WCAG 2.5.5 AAA / platform HIG): the default `medium` size is a fixed 40dp
@@ -21,7 +22,9 @@ describe('Button', () => {
     const { hitSlop } = screen.getByRole('button', { name: 'Log in' }).props;
     const BUTTON_MEDIUM_HEIGHT = 40;
 
-    expect(hitSlop.top + hitSlop.bottom + BUTTON_MEDIUM_HEIGHT).toBeGreaterThanOrEqual(layout.touchTarget);
+    expect(hitSlop.top + hitSlop.bottom + BUTTON_MEDIUM_HEIGHT).toBeGreaterThanOrEqual(
+      layout.touchTarget,
+    );
   });
 
   // Dynamic type (WCAG 1.4.4): under an enlarged OS font size the label's line-height can

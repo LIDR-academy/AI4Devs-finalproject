@@ -58,18 +58,28 @@ export const PdfUploadPanel = ({
 
         {state === 'content' ? (
           <View style={styles.summary}>
-            <View style={styles.summaryRow} accessible accessibilityLabel={`${t('upload.filenameLabel')}: ${filename}`}>
+            <View
+              style={styles.summaryRow}
+              accessible
+              accessibilityLabel={`${t('upload.filenameLabel')}: ${filename}`}
+            >
               <Text style={styles.summaryLabel}>{t('upload.filenameLabel')}</Text>
               <Text style={styles.summaryValue}>{filename}</Text>
             </View>
-            <View style={styles.summaryRow} accessible accessibilityLabel={`${t('upload.pageCountLabel')}: ${pageCount}`}>
+            <View
+              style={styles.summaryRow}
+              accessible
+              accessibilityLabel={`${t('upload.pageCountLabel')}: ${pageCount}`}
+            >
               <Text style={styles.summaryLabel}>{t('upload.pageCountLabel')}</Text>
               <Text style={styles.summaryValue}>{pageCount}</Text>
             </View>
             <View
               style={styles.summaryRow}
               accessible
-              accessibilityLabel={imageCountAnnouncement ?? `${t('upload.imageCountLabel')}: ${imageCount}`}
+              accessibilityLabel={
+                imageCountAnnouncement ?? `${t('upload.imageCountLabel')}: ${imageCount}`
+              }
             >
               <Text style={styles.summaryLabel}>{t('upload.imageCountLabel')}</Text>
               <Text style={styles.summaryValue}>{imageCount}</Text>

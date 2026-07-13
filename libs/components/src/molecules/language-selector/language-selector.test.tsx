@@ -67,7 +67,12 @@ describe('LanguageSelector', () => {
 
   it('applies the group accessibility label', async () => {
     await render(
-      <LanguageSelector options={options} value="de" onChange={jest.fn()} accessibilityLabel="Choose a language" />,
+      <LanguageSelector
+        options={options}
+        value="de"
+        onChange={jest.fn()}
+        accessibilityLabel="Choose a language"
+      />,
     );
 
     expect(screen.getByLabelText('Choose a language')).toBeTruthy();
@@ -84,7 +89,12 @@ describe('LanguageSelector', () => {
   // group semantics for the container.
   it('exposes a radiogroup role for the container', async () => {
     await render(
-      <LanguageSelector options={options} value="de" onChange={jest.fn()} accessibilityLabel="Choose a language" />,
+      <LanguageSelector
+        options={options}
+        value="de"
+        onChange={jest.fn()}
+        accessibilityLabel="Choose a language"
+      />,
     );
 
     expect(screen.getByLabelText('Choose a language').props.accessibilityRole).toBe('radiogroup');
@@ -112,7 +122,14 @@ describe('LanguageSelector', () => {
   // The group is laid out from tokens (self-stretch + gap), not left unstyled — so the
   // list fills its container with consistent spacing. Guards the flat `group` style object.
   it('lays out the group from spacing tokens', async () => {
-    await render(<LanguageSelector options={options} value="de" onChange={jest.fn()} accessibilityLabel="langs" />);
+    await render(
+      <LanguageSelector
+        options={options}
+        value="de"
+        onChange={jest.fn()}
+        accessibilityLabel="langs"
+      />,
+    );
 
     expect(screen.getByLabelText('langs')).toHaveStyle({ alignSelf: 'stretch', gap: 8 });
   });

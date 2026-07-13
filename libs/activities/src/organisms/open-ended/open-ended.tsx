@@ -1,7 +1,6 @@
+import { Button, Card, TextField } from '@helsoft/components';
 import { Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-
-import { Button, Card, TextField } from '@helsoft/components';
 
 import { shouldShowExplanation, shouldShowLearnerAnswerBody } from './open-ended.helpers';
 import type { OpenEndedProps } from './open-ended.types';
@@ -23,14 +22,11 @@ export const OpenEnded = ({
   labels,
   onSubmit,
 }: OpenEndedProps) => {
-  const {
-    draft,
-    setDraft,
-    submitted,
-    setSubmitted,
-    locked,
-    isUnavailable,
-  } = useOpenEnded({ initialSubmittedAnswer, unavailable, labels });
+  const { draft, setDraft, submitted, setSubmitted, locked, isUnavailable } = useOpenEnded({
+    initialSubmittedAnswer,
+    unavailable,
+    labels,
+  });
 
   const handleChangeText = (text: string) => {
     if (locked) return;
@@ -70,9 +66,7 @@ export const OpenEnded = ({
         <View testID="open-ended-comparison" style={styles.comparison}>
           <View testID="open-ended-your-answer" style={styles.block}>
             <Text style={styles.heading}>{labels.yourAnswer}</Text>
-            {shouldShowLearnerAnswerBody(draft) ? (
-              <Text style={styles.body}>{draft}</Text>
-            ) : null}
+            {shouldShowLearnerAnswerBody(draft) ? <Text style={styles.body}>{draft}</Text> : null}
           </View>
           <View
             testID="open-ended-model-answer"

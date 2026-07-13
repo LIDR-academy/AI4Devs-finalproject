@@ -1,5 +1,5 @@
-import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
-import { dirname, join, resolve } from 'path';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 
 import { en } from '../resources/en';
 
@@ -40,7 +40,9 @@ const findMonorepoRoot = (startDir: string): string | undefined => {
 
 const REPO_ROOT = findMonorepoRoot(__dirname);
 if (!REPO_ROOT) {
-  throw new Error(`string-migration coverage: could not locate the monorepo root (${WORKSPACE_MARKER}) above ${__dirname}`);
+  throw new Error(
+    `string-migration coverage: could not locate the monorepo root (${WORKSPACE_MARKER}) above ${__dirname}`,
+  );
 }
 const APP_SCREENS = resolve(REPO_ROOT, 'apps/app-study-buddy/src/app');
 const SHARED_COMPONENTS = resolve(REPO_ROOT, 'libs/components/src');
@@ -243,6 +245,8 @@ describe('t() key existence coverage — detector sanity', () => {
     expect(definedKeys.has('auth.error.email')).toBe(true);
     expect(definedKeys.has('auth.error.doesNotExist')).toBe(false);
     expect([...'auth.error.email'.matchAll(DOTTED_KEY_LITERAL)]).toEqual([]);
-    expect([..."t('auth.error.email')".matchAll(DOTTED_KEY_LITERAL)].map((m) => m[1])).toEqual(['auth.error.email']);
+    expect([..."t('auth.error.email')".matchAll(DOTTED_KEY_LITERAL)].map((m) => m[1])).toEqual([
+      'auth.error.email',
+    ]);
   });
 });

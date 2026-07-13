@@ -1,14 +1,14 @@
-import { useEffect } from 'react';
-import { DarkTheme, DefaultTheme, SplashScreen, Stack, ThemeProvider } from 'expo-router';
-import { getLocales } from 'expo-localization';
-import { useFonts } from 'expo-font';
+import { IBMPlexMono_400Regular } from '@expo-google-fonts/ibm-plex-mono';
+import { IBMPlexSans_400Regular } from '@expo-google-fonts/ibm-plex-sans';
 import { MaterialSymbolsRounded_400Regular } from '@expo-google-fonts/material-symbols-rounded';
 import { Sora_700Bold } from '@expo-google-fonts/sora';
-import { IBMPlexSans_400Regular } from '@expo-google-fonts/ibm-plex-sans';
-import { IBMPlexMono_400Regular } from '@expo-google-fonts/ibm-plex-mono';
-import { useColorScheme } from 'react-native';
 import { useSession } from '@helsoft/hooks';
 import { LocalizationProvider } from '@helsoft/localization';
+import { useFonts } from 'expo-font';
+import { getLocales } from 'expo-localization';
+import { DarkTheme, DefaultTheme, SplashScreen, Stack, ThemeProvider } from 'expo-router';
+import { useEffect } from 'react';
+import { useColorScheme } from 'react-native';
 
 import '@/lib/supabase';
 

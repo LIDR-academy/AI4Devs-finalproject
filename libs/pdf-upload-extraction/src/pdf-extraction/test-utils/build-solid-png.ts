@@ -1,5 +1,4 @@
-import { crc32 } from 'node:zlib';
-import { deflateSync } from 'node:zlib';
+import { crc32, deflateSync } from 'node:zlib';
 
 const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 
@@ -53,6 +52,11 @@ export const buildSolidPng = ({ width, height, color }: SolidPngOptions): Uint8A
   const idat = deflateSync(raw);
 
   return new Uint8Array(
-    Buffer.concat([PNG_SIGNATURE, chunk('IHDR', ihdr), chunk('IDAT', idat), chunk('IEND', Buffer.alloc(0))]),
+    Buffer.concat([
+      PNG_SIGNATURE,
+      chunk('IHDR', ihdr),
+      chunk('IDAT', idat),
+      chunk('IEND', Buffer.alloc(0)),
+    ]),
   );
 };

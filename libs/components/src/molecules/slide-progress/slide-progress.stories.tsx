@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 import { View } from 'react-native';
 
-import { SlideProgress, SlideProgressSlide } from './slide-progress';
+import { SlideProgress, type SlideProgressSlide } from './slide-progress';
 
 const lesson: SlideProgressSlide[] = [
   { type: 'lesson' },

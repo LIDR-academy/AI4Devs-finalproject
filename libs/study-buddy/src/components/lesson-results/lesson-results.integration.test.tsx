@@ -1,10 +1,10 @@
 jest.mock('@helsoft/localization', () => ({ useLocalization: jest.fn() }));
 
-import { render, screen, waitFor } from '@testing-library/react-native';
 import { useLocalization } from '@helsoft/localization';
-import { initSupabase } from '@helsoft/supabase-services';
 import type { SupabaseClient } from '@helsoft/supabase-services';
+import { initSupabase } from '@helsoft/supabase-services';
 import type { Lesson } from '@helsoft/types';
+import { render, screen, waitFor } from '@testing-library/react-native';
 
 import { LessonResults } from './lesson-results';
 
@@ -54,18 +54,38 @@ describe('LessonResults integration (study-buddy -> hook -> service -> DAO)', ()
 
   it('computes the score and persists it via the real hook/service pipeline', async () => {
     const single = jest.fn().mockResolvedValue({
-      data: { id: 'attempt-1', lesson_id: 'lesson-1', score: 1, total: 1, created_at: '2026-07-11T00:00:00.000Z' },
+      data: {
+        id: 'attempt-1',
+        lesson_id: 'lesson-1',
+        score: 1,
+        total: 1,
+        created_at: '2026-07-11T00:00:00.000Z',
+      },
       error: null,
     });
     const select = jest.fn(() => ({ single }));
     const insert = jest.fn(() => ({ select }));
     jest.spyOn(client, 'from').mockReturnValue({ insert } as never);
-    mockUseLocalization.mockReturnValue({ t, locale: 'en', setLocale: jest.fn(), supportedLocales: ['en'] });
+    mockUseLocalization.mockReturnValue({
+      t,
+      locale: 'en',
+      setLocale: jest.fn(),
+      supportedLocales: ['en'],
+    });
 
-    await render(<LessonResults lesson={lesson} answers={answers} onRetake={jest.fn()} onBackToLessons={jest.fn()} />);
+    await render(
+      <LessonResults
+        lesson={lesson}
+        answers={answers}
+        onRetake={jest.fn()}
+        onBackToLessons={jest.fn()}
+      />,
+    );
 
     expect(screen.getByText('1 / 1')).toBeTruthy();
     expect(screen.getByText('100%')).toBeTruthy();
-    await waitFor(() => expect(insert).toHaveBeenCalledWith({ lesson_id: 'lesson-1', score: 1, total: 1 }));
+    await waitFor(() =>
+      expect(insert).toHaveBeenCalledWith({ lesson_id: 'lesson-1', score: 1, total: 1 }),
+    );
   });
 });

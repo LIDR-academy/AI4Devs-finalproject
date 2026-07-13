@@ -1,8 +1,9 @@
 /** @jest-environment jsdom */
-import { act, renderHook, waitFor } from '@testing-library/react';
+
 import { useSession } from '@helsoft/hooks';
-import { initSupabase } from '@helsoft/supabase-services';
 import type { SupabaseClient } from '@helsoft/supabase-services';
+import { initSupabase } from '@helsoft/supabase-services';
+import { act, renderHook, waitFor } from '@testing-library/react';
 
 import { usePdfExtraction } from './use-pdf-extraction';
 
@@ -51,7 +52,9 @@ describe('pdf-upload-extraction slice-1 integration', () => {
     jest.spyOn(sharedClient, 'from').mockReturnValue({
       upsert: jest.fn((row: Record<string, unknown>) => {
         insertedRows.push(row);
-        return { select: () => ({ single: () => Promise.resolve({ data: { id: row.id }, error: null }) }) };
+        return {
+          select: () => ({ single: () => Promise.resolve({ data: { id: row.id }, error: null }) }),
+        };
       }),
     } as never);
 
@@ -66,9 +69,9 @@ describe('pdf-upload-extraction slice-1 integration', () => {
     // `functions` is a getter that builds a fresh FunctionsClient on every access (supabase-js's
     // SupabaseClient.ts) — spying on one snapshot instance's `invoke` wouldn't reach the instance
     // PdfUploadDao later obtains via its own `getSupabase().functions` access; stub the getter.
-    jest
-      .spyOn(sharedClient, 'functions', 'get')
-      .mockReturnValue({ invoke: jest.fn().mockResolvedValue({ data: extractionResult, error: null }) } as never);
+    jest.spyOn(sharedClient, 'functions', 'get').mockReturnValue({
+      invoke: jest.fn().mockResolvedValue({ data: extractionResult, error: null }),
+    } as never);
 
     const { result } = renderHook(() => ({ session: useSession(), pdf: usePdfExtraction() }));
     await waitFor(() => expect(result.current.session.isLoading).toBe(false));
@@ -76,7 +79,11 @@ describe('pdf-upload-extraction slice-1 integration', () => {
     expect(result.current.pdf.stage).toBe('idle');
 
     await act(async () => {
-      await result.current.pdf.extract({ filename: 'notes.pdf', sizeBytes: 3, bytes: new Uint8Array([1, 2, 3]) });
+      await result.current.pdf.extract({
+        filename: 'notes.pdf',
+        sizeBytes: 3,
+        bytes: new Uint8Array([1, 2, 3]),
+      });
     });
 
     expect(result.current.pdf.stage).toBe('success');

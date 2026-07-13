@@ -1,10 +1,10 @@
+import type { FillInTheBlankSlide } from '@helsoft/types';
 import {
   ACCEPTED_LENGTH_HEADROOM,
   BLANK_MARKER,
   blankMaxLength,
   splitAroundBlank,
 } from './fill-in-the-blank.helpers';
-import type { FillInTheBlankSlide } from '@helsoft/types';
 
 const slide: FillInTheBlankSlide = {
   id: 'slide-1',

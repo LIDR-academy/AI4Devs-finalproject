@@ -1,8 +1,7 @@
-import { ReactNode } from 'react';
-import { Pressable, StyleProp, View, ViewStyle } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-
 import { useInteractionState } from '@helsoft/hooks';
+import type { ReactNode } from 'react';
+import { Pressable, type StyleProp, View, type ViewStyle } from 'react-native';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { StateLayer } from '../state-layer/state-layer';
 
 export type CardVariant = 'elevated' | 'filled' | 'outlined';

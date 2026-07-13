@@ -42,13 +42,14 @@ describe('usePdfUploadPanel', () => {
   });
 
   it('announces loading copy via AccessibilityInfo when isLoading becomes true', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
-    const { rerender } = await renderHook(
-      ({ state }: HookProps) => usePdfUploadPanel({ state }),
-      { initialProps: { state: 'idle' } },
-    );
+    const { rerender } = await renderHook(({ state }: HookProps) => usePdfUploadPanel({ state }), {
+      initialProps: { state: 'idle' },
+    });
     expect(announceSpy).not.toHaveBeenCalled();
 
     await act(async () => {
@@ -60,7 +61,9 @@ describe('usePdfUploadPanel', () => {
   });
 
   it('announces errorMessage via AccessibilityInfo when set', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     const { rerender } = await renderHook(

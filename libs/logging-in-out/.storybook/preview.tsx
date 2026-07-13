@@ -1,6 +1,6 @@
 // Must stay first: registers the unistyles themes before any story module evaluates a
 // StyleSheet.create call. Public `@helsoft/components/theme` subpath.
-import { themes, ThemeScheme } from '@helsoft/components/theme';
+import { type ThemeScheme, themes } from '@helsoft/components/theme';
 import { LocalizationProvider } from '@helsoft/localization';
 
 import type { Decorator, Preview } from '@storybook/react-native-web-vite';

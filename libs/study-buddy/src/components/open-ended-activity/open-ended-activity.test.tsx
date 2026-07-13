@@ -4,9 +4,9 @@ jest.mock('@helsoft/localization', () => ({
   }),
 }));
 
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
-import { isSystemCheckedActivity } from '@helsoft/types';
 import type { OpenEndedSlide } from '@helsoft/types';
+import { isSystemCheckedActivity } from '@helsoft/types';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
 import { OpenEndedActivity } from './open-ended-activity';
 
@@ -129,9 +129,7 @@ describe('OpenEndedActivity', () => {
     ['model answer', { modelAnswer: '\t\n' }],
   ] as const)('shows unavailable when %s is empty or whitespace-only', async (_field, patch) => {
     const onAnswered = jest.fn();
-    await render(
-      <OpenEndedActivity slide={{ ...slide, ...patch }} onAnswered={onAnswered} />,
-    );
+    await render(<OpenEndedActivity slide={{ ...slide, ...patch }} onAnswered={onAnswered} />);
 
     expect(screen.getByText(labels.unavailable)).toBeTruthy();
     expect(screen.queryByLabelText(labels.answerInput)).toBeNull();

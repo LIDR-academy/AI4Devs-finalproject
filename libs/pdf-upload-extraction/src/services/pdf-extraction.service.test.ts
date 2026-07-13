@@ -7,7 +7,11 @@ jest.mock('../dao/pdf-upload.dao', () => ({
 }));
 jest.mock('../analytics/pdf-extraction-analytics', () => ({ trackPdfExtractionEvent: jest.fn() }));
 
-import { FunctionsFetchError, FunctionsHttpError, FunctionsRelayError } from '@supabase/supabase-js';
+import {
+  FunctionsFetchError,
+  FunctionsHttpError,
+  FunctionsRelayError,
+} from '@supabase/supabase-js';
 
 import { trackPdfExtractionEvent } from '../analytics/pdf-extraction-analytics';
 import { PdfUploadDao } from '../dao/pdf-upload.dao';
@@ -20,7 +24,8 @@ const trackEvent = trackPdfExtractionEvent as jest.Mock;
 /** A `FunctionsHttpError`-shaped rejection carrying the Edge Function's `{ errorCode }` JSON
  * body, unread until `.context.json()` is called (real `@supabase/functions-js` behavior — see
  * docs/features/pdf-upload-extraction/tdd.md's task-9 section). */
-const httpErrorWithBody = (body: unknown): FunctionsHttpError => new FunctionsHttpError({ json: () => Promise.resolve(body) });
+const httpErrorWithBody = (body: unknown): FunctionsHttpError =>
+  new FunctionsHttpError({ json: () => Promise.resolve(body) });
 
 const UUID_V4_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -44,12 +49,19 @@ describe('PdfExtractionService', () => {
     dao.invokeExtraction.mockResolvedValue(extractionResult);
 
     const bytes = new Uint8Array([1, 2, 3]);
-    const result = await PdfExtractionService.extract({ filename: 'notes.pdf', sizeBytes: 3, bytes }, 'user-1');
+    const result = await PdfExtractionService.extract(
+      { filename: 'notes.pdf', sizeBytes: 3, bytes },
+      'user-1',
+    );
 
     expect(result).toBe(extractionResult);
 
     const [uploadArgs] = dao.uploadPdf.mock.calls[0];
-    expect(uploadArgs).toEqual({ userId: 'user-1', documentId: expect.stringMatching(UUID_V4_PATTERN), bytes });
+    expect(uploadArgs).toEqual({
+      userId: 'user-1',
+      documentId: expect.stringMatching(UUID_V4_PATTERN),
+      bytes,
+    });
 
     const [insertArgs] = dao.insertDocument.mock.calls[0];
     expect(insertArgs).toEqual({
@@ -85,8 +97,14 @@ describe('PdfExtractionService', () => {
     dao.insertDocument.mockResolvedValue({} as never);
     dao.invokeExtraction.mockResolvedValue({} as never);
 
-    await PdfExtractionService.extract({ filename: 'a.pdf', sizeBytes: 1, bytes: new Uint8Array() }, 'user-1');
-    await PdfExtractionService.extract({ filename: 'b.pdf', sizeBytes: 1, bytes: new Uint8Array() }, 'user-1');
+    await PdfExtractionService.extract(
+      { filename: 'a.pdf', sizeBytes: 1, bytes: new Uint8Array() },
+      'user-1',
+    );
+    await PdfExtractionService.extract(
+      { filename: 'b.pdf', sizeBytes: 1, bytes: new Uint8Array() },
+      'user-1',
+    );
 
     const firstId = dao.uploadPdf.mock.calls[0][0].documentId;
     const secondId = dao.uploadPdf.mock.calls[1][0].documentId;
@@ -98,8 +116,14 @@ describe('PdfExtractionService', () => {
   // contract, but the message is still part of the thrown Error's observable shape.
   it('rejects with unauthenticated and never calls the DAO when no userId is given', async () => {
     await expect(
-      PdfExtractionService.extract({ filename: 'notes.pdf', sizeBytes: 3, bytes: new Uint8Array() }, ''),
-    ).rejects.toMatchObject({ code: 'unauthenticated', message: 'PDF extraction failed: unauthenticated' });
+      PdfExtractionService.extract(
+        { filename: 'notes.pdf', sizeBytes: 3, bytes: new Uint8Array() },
+        '',
+      ),
+    ).rejects.toMatchObject({
+      code: 'unauthenticated',
+      message: 'PDF extraction failed: unauthenticated',
+    });
 
     expect(dao.uploadPdf).not.toHaveBeenCalled();
   });
@@ -109,10 +133,15 @@ describe('PdfExtractionService', () => {
     it('normalizes a scanned_or_image_only server error', async () => {
       dao.uploadPdf.mockResolvedValue({} as never);
       dao.insertDocument.mockResolvedValue({} as never);
-      dao.invokeExtraction.mockRejectedValue(httpErrorWithBody({ errorCode: 'scanned_or_image_only' }));
+      dao.invokeExtraction.mockRejectedValue(
+        httpErrorWithBody({ errorCode: 'scanned_or_image_only' }),
+      );
 
       await expect(
-        PdfExtractionService.extract({ filename: 'notes.pdf', sizeBytes: 1, bytes: new Uint8Array() }, 'user-1'),
+        PdfExtractionService.extract(
+          { filename: 'notes.pdf', sizeBytes: 1, bytes: new Uint8Array() },
+          'user-1',
+        ),
       ).rejects.toMatchObject({ code: 'scanned_or_image_only' });
     });
 
@@ -123,7 +152,10 @@ describe('PdfExtractionService', () => {
       dao.invokeExtraction.mockRejectedValue(httpErrorWithBody({ errorCode: 'too_many_pages' }));
 
       await expect(
-        PdfExtractionService.extract({ filename: 'notes.pdf', sizeBytes: 1, bytes: new Uint8Array() }, 'user-1'),
+        PdfExtractionService.extract(
+          { filename: 'notes.pdf', sizeBytes: 1, bytes: new Uint8Array() },
+          'user-1',
+        ),
       ).rejects.toMatchObject({ code: 'too_many_pages' });
     });
 
@@ -131,10 +163,15 @@ describe('PdfExtractionService', () => {
     it('normalizes a corrupt_or_unreadable server error', async () => {
       dao.uploadPdf.mockResolvedValue({} as never);
       dao.insertDocument.mockResolvedValue({} as never);
-      dao.invokeExtraction.mockRejectedValue(httpErrorWithBody({ errorCode: 'corrupt_or_unreadable' }));
+      dao.invokeExtraction.mockRejectedValue(
+        httpErrorWithBody({ errorCode: 'corrupt_or_unreadable' }),
+      );
 
       await expect(
-        PdfExtractionService.extract({ filename: 'notes.pdf', sizeBytes: 1, bytes: new Uint8Array() }, 'user-1'),
+        PdfExtractionService.extract(
+          { filename: 'notes.pdf', sizeBytes: 1, bytes: new Uint8Array() },
+          'user-1',
+        ),
       ).rejects.toMatchObject({ code: 'corrupt_or_unreadable' });
     });
 
@@ -146,7 +183,10 @@ describe('PdfExtractionService', () => {
       dao.invokeExtraction.mockRejectedValue(httpErrorWithBody({ errorCode: 'unauthenticated' }));
 
       await expect(
-        PdfExtractionService.extract({ filename: 'notes.pdf', sizeBytes: 1, bytes: new Uint8Array() }, 'user-1'),
+        PdfExtractionService.extract(
+          { filename: 'notes.pdf', sizeBytes: 1, bytes: new Uint8Array() },
+          'user-1',
+        ),
       ).rejects.toMatchObject({ code: 'unauthenticated' });
     });
 
@@ -158,7 +198,10 @@ describe('PdfExtractionService', () => {
       dao.invokeExtraction.mockRejectedValue(httpErrorWithBody({ errorCode: 'not_a_real_code' }));
 
       await expect(
-        PdfExtractionService.extract({ filename: 'notes.pdf', sizeBytes: 1, bytes: new Uint8Array() }, 'user-1'),
+        PdfExtractionService.extract(
+          { filename: 'notes.pdf', sizeBytes: 1, bytes: new Uint8Array() },
+          'user-1',
+        ),
       ).rejects.toMatchObject({ code: 'extraction_failed' });
     });
 
@@ -171,7 +214,10 @@ describe('PdfExtractionService', () => {
       dao.invokeExtraction.mockRejectedValue(httpErrorWithBody(null));
 
       await expect(
-        PdfExtractionService.extract({ filename: 'notes.pdf', sizeBytes: 1, bytes: new Uint8Array() }, 'user-1'),
+        PdfExtractionService.extract(
+          { filename: 'notes.pdf', sizeBytes: 1, bytes: new Uint8Array() },
+          'user-1',
+        ),
       ).rejects.toMatchObject({ code: 'extraction_failed' });
     });
 
@@ -186,7 +232,10 @@ describe('PdfExtractionService', () => {
       dao.invokeExtraction.mockRejectedValue(new Error('unexpected DAO failure'));
 
       await expect(
-        PdfExtractionService.extract({ filename: 'notes.pdf', sizeBytes: 1, bytes: new Uint8Array() }, 'user-1'),
+        PdfExtractionService.extract(
+          { filename: 'notes.pdf', sizeBytes: 1, bytes: new Uint8Array() },
+          'user-1',
+        ),
       ).rejects.toMatchObject({ code: 'extraction_failed' });
     });
 
@@ -198,7 +247,10 @@ describe('PdfExtractionService', () => {
       dao.invokeExtraction.mockRejectedValue(new FunctionsFetchError(new Error('offline')));
 
       await expect(
-        PdfExtractionService.extract({ filename: 'notes.pdf', sizeBytes: 1, bytes: new Uint8Array() }, 'user-1'),
+        PdfExtractionService.extract(
+          { filename: 'notes.pdf', sizeBytes: 1, bytes: new Uint8Array() },
+          'user-1',
+        ),
       ).rejects.toMatchObject({ code: 'network_error' });
     });
 
@@ -210,7 +262,10 @@ describe('PdfExtractionService', () => {
       dao.invokeExtraction.mockRejectedValue(new FunctionsRelayError({ region: 'us-east-1' }));
 
       await expect(
-        PdfExtractionService.extract({ filename: 'notes.pdf', sizeBytes: 1, bytes: new Uint8Array() }, 'user-1'),
+        PdfExtractionService.extract(
+          { filename: 'notes.pdf', sizeBytes: 1, bytes: new Uint8Array() },
+          'user-1',
+        ),
       ).rejects.toMatchObject({ code: 'network_error' });
     });
   });
@@ -219,7 +274,10 @@ describe('PdfExtractionService', () => {
     // @s9 — a non-PDF filename is rejected before any DAO call.
     it('rejects with unsupported_file_type and never calls the DAO for a non-PDF filename', async () => {
       await expect(
-        PdfExtractionService.extract({ filename: 'notes.txt', sizeBytes: 1, bytes: new Uint8Array() }, 'user-1'),
+        PdfExtractionService.extract(
+          { filename: 'notes.txt', sizeBytes: 1, bytes: new Uint8Array() },
+          'user-1',
+        ),
       ).rejects.toMatchObject({ code: 'unsupported_file_type' });
 
       expect(dao.uploadPdf).not.toHaveBeenCalled();
@@ -230,7 +288,10 @@ describe('PdfExtractionService', () => {
       const oversizeBytes = PDF_EXTRACTION_LIMITS.maxSizeBytes + 1;
 
       await expect(
-        PdfExtractionService.extract({ filename: 'notes.pdf', sizeBytes: oversizeBytes, bytes: new Uint8Array() }, 'user-1'),
+        PdfExtractionService.extract(
+          { filename: 'notes.pdf', sizeBytes: oversizeBytes, bytes: new Uint8Array() },
+          'user-1',
+        ),
       ).rejects.toMatchObject({ code: 'file_too_large' });
 
       expect(dao.uploadPdf).not.toHaveBeenCalled();
@@ -245,7 +306,11 @@ describe('PdfExtractionService', () => {
       dao.invokeExtraction.mockResolvedValue({} as never);
 
       await PdfExtractionService.extract(
-        { filename: 'notes.pdf', sizeBytes: PDF_EXTRACTION_LIMITS.maxSizeBytes, bytes: new Uint8Array() },
+        {
+          filename: 'notes.pdf',
+          sizeBytes: PDF_EXTRACTION_LIMITS.maxSizeBytes,
+          bytes: new Uint8Array(),
+        },
         'user-1',
       );
 
@@ -286,7 +351,10 @@ describe('PdfExtractionService', () => {
       dao.insertDocument.mockResolvedValue({} as never);
       dao.invokeExtraction.mockResolvedValue({} as never);
 
-      await PdfExtractionService.extract({ filename: 'notes.pdf', sizeBytes: 3, bytes: new Uint8Array() }, 'user-1');
+      await PdfExtractionService.extract(
+        { filename: 'notes.pdf', sizeBytes: 3, bytes: new Uint8Array() },
+        'user-1',
+      );
 
       expect(dao.uploadPdf).toHaveBeenCalledTimes(1);
     });
@@ -300,12 +368,24 @@ describe('PdfExtractionService', () => {
       const nowSpy = jest.spyOn(Date, 'now').mockReturnValueOnce(1_000).mockReturnValueOnce(1_050);
       dao.uploadPdf.mockResolvedValue({} as never);
       dao.insertDocument.mockResolvedValue({} as never);
-      dao.invokeExtraction.mockResolvedValue({ documentId: 'ignored', pageCount: 4, imageCount: 2, filename: 'x', pages: [], images: [] });
+      dao.invokeExtraction.mockResolvedValue({
+        documentId: 'ignored',
+        pageCount: 4,
+        imageCount: 2,
+        filename: 'x',
+        pages: [],
+        images: [],
+      });
 
-      await PdfExtractionService.extract({ filename: 'notes.pdf', sizeBytes: 3, bytes: new Uint8Array() }, 'user-1');
+      await PdfExtractionService.extract(
+        { filename: 'notes.pdf', sizeBytes: 3, bytes: new Uint8Array() },
+        'user-1',
+      );
 
       const documentId = dao.uploadPdf.mock.calls[0][0].documentId;
-      const succeededCall = trackEvent.mock.calls.find(([event]) => event.name === 'pdf_extraction_succeeded');
+      const succeededCall = trackEvent.mock.calls.find(
+        ([event]) => event.name === 'pdf_extraction_succeeded',
+      );
       expect(succeededCall?.[0]).toEqual({
         name: 'pdf_extraction_succeeded',
         properties: {
@@ -321,7 +401,10 @@ describe('PdfExtractionService', () => {
 
     it('emits pdf_extraction_failed with stage client for a client pre-validation rejection, and never emits pdf_upload_started', async () => {
       await expect(
-        PdfExtractionService.extract({ filename: 'notes.txt', sizeBytes: 3, bytes: new Uint8Array() }, 'user-1'),
+        PdfExtractionService.extract(
+          { filename: 'notes.txt', sizeBytes: 3, bytes: new Uint8Array() },
+          'user-1',
+        ),
       ).rejects.toMatchObject({ code: 'unsupported_file_type' });
 
       expect(trackEvent).toHaveBeenCalledWith({
@@ -332,12 +415,17 @@ describe('PdfExtractionService', () => {
           stage: 'client',
         },
       });
-      expect(trackEvent).not.toHaveBeenCalledWith(expect.objectContaining({ name: 'pdf_upload_started' }));
+      expect(trackEvent).not.toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'pdf_upload_started' }),
+      );
     });
 
     it('emits pdf_extraction_failed with stage client when unauthenticated, and never emits pdf_upload_started', async () => {
       await expect(
-        PdfExtractionService.extract({ filename: 'notes.pdf', sizeBytes: 3, bytes: new Uint8Array() }, ''),
+        PdfExtractionService.extract(
+          { filename: 'notes.pdf', sizeBytes: 3, bytes: new Uint8Array() },
+          '',
+        ),
       ).rejects.toMatchObject({ code: 'unauthenticated' });
 
       expect(trackEvent).toHaveBeenCalledWith({
@@ -348,29 +436,47 @@ describe('PdfExtractionService', () => {
           stage: 'client',
         },
       });
-      expect(trackEvent).not.toHaveBeenCalledWith(expect.objectContaining({ name: 'pdf_upload_started' }));
+      expect(trackEvent).not.toHaveBeenCalledWith(
+        expect.objectContaining({ name: 'pdf_upload_started' }),
+      );
     });
 
     it('emits pdf_extraction_failed with stage server for a normalized server error', async () => {
       dao.uploadPdf.mockResolvedValue({} as never);
       dao.insertDocument.mockResolvedValue({} as never);
-      dao.invokeExtraction.mockRejectedValue(httpErrorWithBody({ errorCode: 'scanned_or_image_only' }));
+      dao.invokeExtraction.mockRejectedValue(
+        httpErrorWithBody({ errorCode: 'scanned_or_image_only' }),
+      );
 
       await expect(
-        PdfExtractionService.extract({ filename: 'notes.pdf', sizeBytes: 1, bytes: new Uint8Array() }, 'user-1'),
+        PdfExtractionService.extract(
+          { filename: 'notes.pdf', sizeBytes: 1, bytes: new Uint8Array() },
+          'user-1',
+        ),
       ).rejects.toMatchObject({ code: 'scanned_or_image_only' });
 
       const documentId = dao.uploadPdf.mock.calls[0][0].documentId;
       expect(trackEvent).toHaveBeenCalledWith({
         name: 'pdf_extraction_failed',
-        properties: { document_id: documentId, error_code: 'scanned_or_image_only', stage: 'server' },
+        properties: {
+          document_id: documentId,
+          error_code: 'scanned_or_image_only',
+          stage: 'server',
+        },
       });
     });
 
     it('never includes filename, bytes, or any field beyond the locked PII-free payload shape', async () => {
       dao.uploadPdf.mockResolvedValue({} as never);
       dao.insertDocument.mockResolvedValue({} as never);
-      dao.invokeExtraction.mockResolvedValue({ documentId: 'ignored', pageCount: 1, imageCount: 0, filename: 'secret-notes.pdf', pages: [], images: [] });
+      dao.invokeExtraction.mockResolvedValue({
+        documentId: 'ignored',
+        pageCount: 1,
+        imageCount: 0,
+        filename: 'secret-notes.pdf',
+        pages: [],
+        images: [],
+      });
 
       await PdfExtractionService.extract(
         { filename: 'secret-notes.pdf', sizeBytes: 3, bytes: new Uint8Array([1, 2, 3]) },

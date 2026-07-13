@@ -16,7 +16,8 @@ const dao = ApiKeyDao as jest.Mocked<typeof ApiKeyDao>;
 /** Builds the exact shape ApiKeyDao.saveApiKey/removeApiKey rejects with when the
  * manage-api-key Edge Function replies with a structured, non-2xx JSON error body
  * (real supabase-js `functions.invoke` behavior — see FunctionsClient.invoke). */
-const edgeFunctionError = (body: unknown) => new FunctionsHttpError({ json: () => Promise.resolve(body) });
+const edgeFunctionError = (body: unknown) =>
+  new FunctionsHttpError({ json: () => Promise.resolve(body) });
 
 describe('ApiKeyService', () => {
   beforeEach(() => jest.clearAllMocks());
@@ -25,7 +26,11 @@ describe('ApiKeyService', () => {
     // @s1 (service half) — a non-blank key is forwarded to the DAO (defaulting to the v1
     // 'openai' provider) and the masked status it returns is passed straight back.
     it('saves a non-blank key through the DAO with the default openai provider and returns the masked status', async () => {
-      const status = { hasKey: true, provider: 'openai' as const, updatedAt: '2026-01-01T00:00:00.000Z' };
+      const status = {
+        hasKey: true,
+        provider: 'openai' as const,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+      };
       dao.saveApiKey.mockResolvedValue(status);
 
       await expect(ApiKeyService.saveApiKey('sk-test-key')).resolves.toBe(status);
@@ -35,15 +40,29 @@ describe('ApiKeyService', () => {
     // @s4 — replacing an already-saved key runs through the exact same DAO call; the service
     // never special-cases first-save vs. update (the Edge Function upserts).
     it('runs the same save path again when a key is already saved (update/replace)', async () => {
-      const firstStatus = { hasKey: true, provider: 'openai' as const, updatedAt: '2026-01-01T00:00:00.000Z' };
-      const secondStatus = { hasKey: true, provider: 'openai' as const, updatedAt: '2026-02-01T00:00:00.000Z' };
+      const firstStatus = {
+        hasKey: true,
+        provider: 'openai' as const,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+      };
+      const secondStatus = {
+        hasKey: true,
+        provider: 'openai' as const,
+        updatedAt: '2026-02-01T00:00:00.000Z',
+      };
       dao.saveApiKey.mockResolvedValueOnce(firstStatus).mockResolvedValueOnce(secondStatus);
 
       await expect(ApiKeyService.saveApiKey('sk-first-key')).resolves.toBe(firstStatus);
       await expect(ApiKeyService.saveApiKey('sk-replacement-key')).resolves.toBe(secondStatus);
 
-      expect(dao.saveApiKey).toHaveBeenNthCalledWith(1, { provider: 'openai', apiKey: 'sk-first-key' });
-      expect(dao.saveApiKey).toHaveBeenNthCalledWith(2, { provider: 'openai', apiKey: 'sk-replacement-key' });
+      expect(dao.saveApiKey).toHaveBeenNthCalledWith(1, {
+        provider: 'openai',
+        apiKey: 'sk-first-key',
+      });
+      expect(dao.saveApiKey).toHaveBeenNthCalledWith(2, {
+        provider: 'openai',
+        apiKey: 'sk-replacement-key',
+      });
     });
 
     // @s5 (service half + defensive backstop, spec.md Open decision 3) — a blank key is
@@ -52,12 +71,16 @@ describe('ApiKeyService', () => {
     // caller that bypasses the form, mirroring AuthService.signIn's empty-password rejection.
     it('rejects a blank key without calling the DAO', async () => {
       await expect(ApiKeyService.saveApiKey('')).rejects.toThrow('API key is required');
-      await expect(ApiKeyService.saveApiKey('')).rejects.toMatchObject({ code: 'validation_error' });
+      await expect(ApiKeyService.saveApiKey('')).rejects.toMatchObject({
+        code: 'validation_error',
+      });
       expect(dao.saveApiKey).not.toHaveBeenCalled();
     });
 
     it('rejects a whitespace-only key without calling the DAO', async () => {
-      await expect(ApiKeyService.saveApiKey('   ')).rejects.toMatchObject({ code: 'validation_error' });
+      await expect(ApiKeyService.saveApiKey('   ')).rejects.toMatchObject({
+        code: 'validation_error',
+      });
       expect(dao.saveApiKey).not.toHaveBeenCalled();
     });
 
@@ -66,14 +89,20 @@ describe('ApiKeyService', () => {
     it('normalizes a structured Edge Function rejection to a typed network_error', async () => {
       dao.saveApiKey.mockRejectedValue(edgeFunctionError({ code: 'network_error' }));
 
-      await expect(ApiKeyService.saveApiKey('sk-bad-key')).rejects.toMatchObject({ code: 'network_error' });
+      await expect(ApiKeyService.saveApiKey('sk-bad-key')).rejects.toMatchObject({
+        code: 'network_error',
+      });
     });
 
     // @s7 — a transport/thrown failure normalizes to
     // the safer default, network_error; a retry is just calling saveApiKey again.
     it('normalizes a transport failure to a typed network_error, and a retry succeeds independently', async () => {
       dao.saveApiKey.mockRejectedValueOnce(new Error('offline'));
-      const status = { hasKey: true, provider: 'openai' as const, updatedAt: '2026-01-01T00:00:00.000Z' };
+      const status = {
+        hasKey: true,
+        provider: 'openai' as const,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+      };
       dao.saveApiKey.mockResolvedValueOnce(status);
 
       await expect(ApiKeyService.saveApiKey('sk-test-key')).rejects.toMatchObject({
@@ -87,7 +116,11 @@ describe('ApiKeyService', () => {
   describe('getApiKeyStatus', () => {
     // @s3 — the DAO's masked status is returned as-is.
     it('returns the masked status from the DAO', async () => {
-      const status = { hasKey: true, provider: 'openai' as const, updatedAt: '2026-01-01T00:00:00.000Z' };
+      const status = {
+        hasKey: true,
+        provider: 'openai' as const,
+        updatedAt: '2026-01-01T00:00:00.000Z',
+      };
       dao.getApiKeyStatus.mockResolvedValue(status);
 
       await expect(ApiKeyService.getApiKeyStatus()).resolves.toBe(status);

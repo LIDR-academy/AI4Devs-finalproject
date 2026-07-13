@@ -1,6 +1,6 @@
-import { AccessibilityInfo, Platform } from 'react-native';
-import { act, renderHook, waitFor } from '@testing-library/react-native';
 import type { MultipleChoiceAnswer, MultipleChoiceSlide } from '@helsoft/types';
+import { act, renderHook, waitFor } from '@testing-library/react-native';
+import { AccessibilityInfo, Platform } from 'react-native';
 
 import type { MultipleChoiceLabels } from './multiple-choice.types';
 import { useMultipleChoice } from './use-multiple-choice';
@@ -114,9 +114,7 @@ describe('useMultipleChoice', () => {
         .mockImplementation(() => {});
       announceSpy.mockClear();
 
-      await renderHook(() =>
-        useMultipleChoice({ slide, initialAnswer: correctAnswer, labels }),
-      );
+      await renderHook(() => useMultipleChoice({ slide, initialAnswer: correctAnswer, labels }));
 
       await waitFor(() => expect(announceSpy).toHaveBeenCalledWith(labels.correct));
       announceSpy.mockRestore();
@@ -129,9 +127,7 @@ describe('useMultipleChoice', () => {
         .mockImplementation(() => {});
       announceSpy.mockClear();
 
-      await renderHook(() =>
-        useMultipleChoice({ slide, initialAnswer: correctAnswer, labels }),
-      );
+      await renderHook(() => useMultipleChoice({ slide, initialAnswer: correctAnswer, labels }));
 
       expect(announceSpy).not.toHaveBeenCalled();
       announceSpy.mockRestore();

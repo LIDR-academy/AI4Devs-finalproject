@@ -1,5 +1,5 @@
-import { AccessibilityInfo, Platform } from 'react-native';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
+import { AccessibilityInfo, Platform } from 'react-native';
 
 import type { OpenEndedLabels } from './open-ended.types';
 import { useOpenEnded } from './use-open-ended';
@@ -34,9 +34,7 @@ describe('useOpenEnded', () => {
   });
 
   it('locks empty-string rehydrate as submitted', async () => {
-    const { result } = await renderHook(() =>
-      useOpenEnded({ labels, initialSubmittedAnswer: '' }),
-    );
+    const { result } = await renderHook(() => useOpenEnded({ labels, initialSubmittedAnswer: '' }));
 
     expect(result.current.draft).toBe('');
     expect(result.current.submitted).toBe(true);
@@ -44,9 +42,7 @@ describe('useOpenEnded', () => {
   });
 
   it('marks unavailable when unavailable prop is true', async () => {
-    const { result } = await renderHook(() =>
-      useOpenEnded({ labels, unavailable: true }),
-    );
+    const { result } = await renderHook(() => useOpenEnded({ labels, unavailable: true }));
 
     expect(result.current.isUnavailable).toBe(true);
     expect(result.current.locked).toBe(true);
@@ -99,9 +95,7 @@ describe('useOpenEnded', () => {
         .mockImplementation(() => {});
       announceSpy.mockClear();
 
-      await renderHook(() =>
-        useOpenEnded({ labels, initialSubmittedAnswer: 'seed' }),
-      );
+      await renderHook(() => useOpenEnded({ labels, initialSubmittedAnswer: 'seed' }));
 
       await waitFor(() => expect(announceSpy).toHaveBeenCalledWith(labels.modelAnswer));
       announceSpy.mockRestore();
@@ -114,9 +108,7 @@ describe('useOpenEnded', () => {
         .mockImplementation(() => {});
       announceSpy.mockClear();
 
-      await renderHook(() =>
-        useOpenEnded({ labels, initialSubmittedAnswer: 'seed' }),
-      );
+      await renderHook(() => useOpenEnded({ labels, initialSubmittedAnswer: 'seed' }));
 
       expect(announceSpy).not.toHaveBeenCalled();
       announceSpy.mockRestore();

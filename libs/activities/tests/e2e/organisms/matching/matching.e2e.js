@@ -70,7 +70,9 @@ test('Error story shows unavailable notice for unequal columns', async ({ page }
 });
 
 // Interactive drives live select → pair → release → submit → feedback (@s2,@s3,@s6,@s7,@s8,@s9,@s10).
-test('tapping an unpaired item marks it pending then forms a pair with the opposite column', async ({ page }) => {
+test('tapping an unpaired item marks it pending then forms a pair with the opposite column', async ({
+  page,
+}) => {
   await page.goto(story('interactive'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 

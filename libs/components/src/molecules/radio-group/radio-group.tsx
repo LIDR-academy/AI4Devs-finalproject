@@ -1,4 +1,4 @@
-import { Pressable, StyleProp, Text, View, ViewStyle } from 'react-native';
+import { Pressable, type StyleProp, Text, View, type ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 export type RadioOption = { value: string; label: string };
@@ -23,7 +23,9 @@ export const RadioGroup = ({
   direction = 'column',
   style,
 }: RadioGroupProps) => {
-  const norm: RadioOption[] = options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o));
+  const norm: RadioOption[] = options.map((o) =>
+    typeof o === 'string' ? { value: o, label: o } : o,
+  );
 
   return (
     <View accessibilityRole="radiogroup" style={[styles.group(direction), style]}>
@@ -38,7 +40,9 @@ export const RadioGroup = ({
             onPress={() => onChange?.(opt.value)}
             style={styles.option(disabled)}
           >
-            <View style={styles.ring(selected)}>{selected ? <View style={styles.dot} /> : null}</View>
+            <View style={styles.ring(selected)}>
+              {selected ? <View style={styles.dot} /> : null}
+            </View>
             <Text style={styles.label}>{opt.label}</Text>
           </Pressable>
         );

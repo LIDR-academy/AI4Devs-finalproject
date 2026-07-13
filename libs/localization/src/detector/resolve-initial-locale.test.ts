@@ -13,10 +13,14 @@ describe('resolveInitialLocale', () => {
   });
 
   // @s4 — an unsupported or absent device locale falls back to English.
-  it.each([['fr'], ['ja-JP'], ['zh-CN'], [''], [undefined], [null]])(
-    'falls back to English for unsupported/absent tag "%s"',
-    (tag) => {
-      expect(resolveInitialLocale(tag as string | undefined | null)).toBe('en');
-    },
-  );
+  it.each([
+    ['fr'],
+    ['ja-JP'],
+    ['zh-CN'],
+    [''],
+    [undefined],
+    [null],
+  ])('falls back to English for unsupported/absent tag "%s"', (tag) => {
+    expect(resolveInitialLocale(tag as string | undefined | null)).toBe('en');
+  });
 });

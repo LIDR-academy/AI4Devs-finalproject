@@ -1,5 +1,4 @@
-import { render, screen } from '@testing-library/react-native';
-import { fireEvent } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { lightColors } from '../../theme/colors';
 import { spacing } from '../../theme/spacing';
@@ -23,7 +22,9 @@ describe('ApiKeyRequiredNotice', () => {
   // onNavigateToAccount when pressed.
   it('calls onNavigateToAccount when the action is pressed', async () => {
     const onNavigateToAccount = jest.fn();
-    await render(<ApiKeyRequiredNotice onNavigateToAccount={onNavigateToAccount} labels={labels} />);
+    await render(
+      <ApiKeyRequiredNotice onNavigateToAccount={onNavigateToAccount} labels={labels} />,
+    );
 
     fireEvent.press(screen.getByRole('button', { name: 'Add API key' }));
 

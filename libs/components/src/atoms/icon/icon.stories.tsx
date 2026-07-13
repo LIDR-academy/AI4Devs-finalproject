@@ -28,11 +28,26 @@ export const Filled: Story = {
 export const CommonGlyphs: Story = {
   render: () => (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 16 }}>
-      {['upload_file', 'cloud_upload', 'link', 'menu_book', 'auto_stories', 'psychology', 'quiz', 'bolt', 'auto_awesome', 'lightbulb', 'check_circle', 'cancel', 'trending_up', 'local_fire_department', 'bookmark', 'more_vert'].map(
-        (name) => (
-          <Icon key={name} name={name} />
-        ),
-      )}
+      {[
+        'upload_file',
+        'cloud_upload',
+        'link',
+        'menu_book',
+        'auto_stories',
+        'psychology',
+        'quiz',
+        'bolt',
+        'auto_awesome',
+        'lightbulb',
+        'check_circle',
+        'cancel',
+        'trending_up',
+        'local_fire_department',
+        'bookmark',
+        'more_vert',
+      ].map((name) => (
+        <Icon key={name} name={name} />
+      ))}
     </View>
   ),
 };

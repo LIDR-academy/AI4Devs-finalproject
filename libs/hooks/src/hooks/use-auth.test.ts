@@ -5,8 +5,8 @@ jest.mock('@helsoft/supabase-services', () => ({
   },
 }));
 
-import { act, renderHook } from '@testing-library/react';
 import { AuthService } from '@helsoft/supabase-services';
+import { act, renderHook } from '@testing-library/react';
 
 import { useAuth } from './use-auth';
 

@@ -1,5 +1,5 @@
-import { ReactNode } from 'react';
-import { StyleProp, Text, View, ViewStyle } from 'react-native';
+import type { ReactNode } from 'react';
+import { type StyleProp, Text, View, type ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 export type BadgeColor = 'error' | 'primary' | 'tertiary';
@@ -18,10 +18,18 @@ export type BadgeProps = {
 /**
  * Badge — MD3 small status/count indicator.
  */
-export const Badge = ({ count, dot = false, max = 99, color = 'error', children, style }: BadgeProps) => {
+export const Badge = ({
+  count,
+  dot = false,
+  max = 99,
+  color = 'error',
+  children,
+  style,
+}: BadgeProps) => {
   styles.useVariants({ color });
   const showBadge = dot || (count != null && count > 0);
-  const display = !dot && count != null && count > 0 ? (count > max ? `${max}+` : String(count)) : '';
+  const display =
+    !dot && count != null && count > 0 ? (count > max ? `${max}+` : String(count)) : '';
 
   const badge = showBadge ? (
     <View style={[styles.badge(dot, count), children ? undefined : style]}>

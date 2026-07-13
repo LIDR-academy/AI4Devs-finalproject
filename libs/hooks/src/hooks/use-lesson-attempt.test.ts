@@ -2,8 +2,8 @@ jest.mock('@helsoft/supabase-services', () => ({
   LessonAttemptService: { saveAttempt: jest.fn() },
 }));
 
-import { act, renderHook } from '@testing-library/react';
 import { LessonAttemptService } from '@helsoft/supabase-services';
+import { act, renderHook } from '@testing-library/react';
 
 import { useLessonAttempt } from './use-lesson-attempt';
 
@@ -150,7 +150,9 @@ describe('useLessonAttempt', () => {
     expect(result.current.status).toBe('error');
 
     let resolveRetry: (value: unknown) => void = () => {};
-    service.saveAttempt.mockReturnValue(new Promise((resolve) => (resolveRetry = resolve)) as never);
+    service.saveAttempt.mockReturnValue(
+      new Promise((resolve) => (resolveRetry = resolve)) as never,
+    );
 
     act(() => {
       result.current.retry();

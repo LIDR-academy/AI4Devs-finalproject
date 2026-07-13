@@ -1,8 +1,7 @@
-import { Text, View } from 'react-native';
-import { StyleSheet } from 'react-native-unistyles';
-
 import { AnswerOption, Card } from '@helsoft/components';
 import { useLocalization } from '@helsoft/localization';
+import { Text, View } from 'react-native';
+import { StyleSheet } from 'react-native-unistyles';
 
 import { gradeMultipleChoice } from '../../grading/grade-multiple-choice';
 import { optionAccessibilityLabel, optionMarkerAt } from './multiple-choice.helpers';
@@ -28,15 +27,8 @@ export const MultipleChoice = ({
     unavailable: t('activity.mcq.unavailable'),
   };
 
-  const {
-    answer,
-    setAnswer,
-    isUnavailable,
-    answered,
-    isCorrect,
-    resultLabel,
-    stateForOption,
-  } = useMultipleChoice({ slide, initialAnswer, labels });
+  const { answer, setAnswer, isUnavailable, answered, isCorrect, resultLabel, stateForOption } =
+    useMultipleChoice({ slide, initialAnswer, labels });
 
   const handleSelect = (optionId: string) => {
     if (answer) return;

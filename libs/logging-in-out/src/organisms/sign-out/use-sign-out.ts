@@ -1,6 +1,5 @@
-import { useState } from 'react';
-
 import { useLocalization } from '@helsoft/localization';
+import { useState } from 'react';
 
 /**
  * Local confirm-dialog open state + localization for SignOut.

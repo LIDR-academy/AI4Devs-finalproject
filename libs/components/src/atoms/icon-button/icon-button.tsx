@@ -1,8 +1,7 @@
-import { useMemo } from 'react';
-import { Pressable, StyleProp, ViewStyle } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-
 import { useInteractionState } from '@helsoft/hooks';
+import { useMemo } from 'react';
+import { Pressable, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 import { Icon } from '../icon/icon';
 import { StateLayer } from '../state-layer/state-layer';
 
@@ -51,7 +50,14 @@ export const IconButton = ({
   );
   const fg = fgByVariant[variant];
   const stateOpacity = useMemo(
-    () => (disabled ? 0 : press ? theme.stateLayerOpacity.press : hover ? theme.stateLayerOpacity.hover : 0),
+    () =>
+      disabled
+        ? 0
+        : press
+          ? theme.stateLayerOpacity.press
+          : hover
+            ? theme.stateLayerOpacity.hover
+            : 0,
     [disabled, press, hover, theme],
   );
 

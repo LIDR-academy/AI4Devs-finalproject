@@ -1,4 +1,4 @@
-import { Pressable, StyleProp, View, ViewStyle } from 'react-native';
+import { Pressable, type StyleProp, View, type ViewStyle } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 export type SlideType = 'lesson' | 'activity';
@@ -25,6 +25,7 @@ export const SlideProgress = ({ slides = [], current = 0, onSeek, style }: Slide
       const isActivity = slide.type === 'activity';
       return (
         <Pressable
+          // biome-ignore lint/suspicious/noArrayIndexKey: segments are purely positional — the index IS the identity
           key={i}
           accessibilityRole="button"
           accessibilityLabel={`${isActivity ? 'Activity' : 'Lesson'} ${i + 1}`}
@@ -59,7 +60,10 @@ const styles = StyleSheet.create((theme) => ({
     left: -4,
     right: -4,
     borderWidth: 2,
-    borderColor: theme.utils.hexWithOpacity(isActivity ? theme.colors.tertiary : theme.colors.primary, 0.4),
+    borderColor: theme.utils.hexWithOpacity(
+      isActivity ? theme.colors.tertiary : theme.colors.primary,
+      0.4,
+    ),
     borderRadius: theme.shape.full,
   }),
   fill: (isActivity: boolean, done: boolean, active: boolean) => ({

@@ -11,7 +11,10 @@ import type { ApiKeyRequiredNoticeProps } from './api-key-required-notice.types'
  * action is rendered via the Button atom, which sets `accessibilityRole="button"` by
  * construction, so this notice's action always exposes a button role.
  */
-export const ApiKeyRequiredNotice = ({ onNavigateToAccount, labels }: ApiKeyRequiredNoticeProps) => (
+export const ApiKeyRequiredNotice = ({
+  onNavigateToAccount,
+  labels,
+}: ApiKeyRequiredNoticeProps) => (
   <View style={styles.notice}>
     <Text style={styles.message}>{labels.message}</Text>
     <Button onPress={onNavigateToAccount}>{labels.action}</Button>

@@ -1,4 +1,4 @@
-import { Platform, StyleProp, Text, TextStyle } from 'react-native';
+import { Platform, type StyleProp, Text, type TextStyle } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 export type IconProps = {
@@ -19,7 +19,15 @@ export type IconProps = {
  * via expo-font (e.g. `@expo-google-fonts/material-symbols-rounded` in the app root).
  * Variable-font axes (fill/weight/grade) apply on web only.
  */
-export const Icon = ({ name, size = 24, fill = false, weight = 400, grade = 0, color, style }: IconProps) => {
+export const Icon = ({
+  name,
+  size = 24,
+  fill = false,
+  weight = 400,
+  grade = 0,
+  color,
+  style,
+}: IconProps) => {
   const variation: TextStyle | null =
     Platform.OS === 'web'
       ? ({

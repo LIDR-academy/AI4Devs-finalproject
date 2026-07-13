@@ -35,7 +35,10 @@ describe('PdfUploadDao', () => {
       const result = await PdfUploadDao.uploadPdf({ userId: 'u1', documentId: 'd1', bytes });
 
       expect(storageFrom).toHaveBeenCalledWith('pdf-uploads');
-      expect(upload).toHaveBeenCalledWith('u1/d1/source.pdf', bytes, { contentType: 'application/pdf', upsert: true });
+      expect(upload).toHaveBeenCalledWith('u1/d1/source.pdf', bytes, {
+        contentType: 'application/pdf',
+        upsert: true,
+      });
       expect(result).toEqual({ path: 'u1/d1/source.pdf' });
     });
 
@@ -55,7 +58,13 @@ describe('PdfUploadDao', () => {
     // inserting means a retry that reuses the same documentId (task-12) updates the existing
     // failed row instead of erroring on a duplicate primary key.
     it('upserts a documents row with status processing, clears any prior error_code, and returns the row', async () => {
-      const row = { id: 'd1', user_id: 'u1', filename: 'notes.pdf', size_bytes: 2048, status: 'processing' };
+      const row = {
+        id: 'd1',
+        user_id: 'u1',
+        filename: 'notes.pdf',
+        size_bytes: 2048,
+        status: 'processing',
+      };
       single.mockResolvedValue({ data: row, error: null });
 
       const result = await PdfUploadDao.insertDocument({
@@ -82,7 +91,12 @@ describe('PdfUploadDao', () => {
       single.mockResolvedValue({ data: null, error });
 
       await expect(
-        PdfUploadDao.insertDocument({ documentId: 'd1', userId: 'u1', filename: 'notes.pdf', sizeBytes: 1 }),
+        PdfUploadDao.insertDocument({
+          documentId: 'd1',
+          userId: 'u1',
+          filename: 'notes.pdf',
+          sizeBytes: 1,
+        }),
       ).rejects.toBe(error);
     });
   });
@@ -91,7 +105,14 @@ describe('PdfUploadDao', () => {
     // @s1/@s4 — invokes the extract-pdf function with the given documentId and returns its raw
     // result untouched; normalizing it into the typed contract is the service's job.
     it('invokes the extract-pdf function with the given documentId and returns its raw result', async () => {
-      const raw = { documentId: 'd1', filename: 'notes.pdf', pageCount: 2, imageCount: 1, pages: [], images: [] };
+      const raw = {
+        documentId: 'd1',
+        filename: 'notes.pdf',
+        pageCount: 2,
+        imageCount: 1,
+        pages: [],
+        images: [],
+      };
       invoke.mockResolvedValue({ data: raw, error: null });
 
       const result = await PdfUploadDao.invokeExtraction('d1');

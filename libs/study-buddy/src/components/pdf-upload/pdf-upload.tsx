@@ -38,7 +38,9 @@ export const PdfUpload = () => {
       filename={result?.filename}
       pageCount={result?.pageCount}
       imageCount={result?.imageCount}
-      imageCountAnnouncement={result ? t('upload.imageCount', { count: result.imageCount }) : undefined}
+      imageCountAnnouncement={
+        result ? t('upload.imageCount', { count: result.imageCount }) : undefined
+      }
       errorMessage={error ? t(UPLOAD_ERROR_KEYS[error]) : undefined}
       onRetry={retry}
       canRetry={computeCanRetry(error)}

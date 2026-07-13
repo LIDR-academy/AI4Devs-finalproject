@@ -70,7 +70,14 @@ const instructionalOnlyLesson: Lesson = {
   title: 'Intro to Capitals',
   createdAt: '2026-07-11T00:00:00.000Z',
   slides: [
-    { id: 'slide-1', lessonId: 'lesson-2', title: 'Intro', content: 'Welcome!', position: 0, kind: 'instructional' },
+    {
+      id: 'slide-1',
+      lessonId: 'lesson-2',
+      title: 'Intro',
+      content: 'Welcome!',
+      position: 0,
+      kind: 'instructional',
+    },
   ],
 };
 

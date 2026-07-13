@@ -1,8 +1,7 @@
-import { Text, TextInput, View } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-
 import { Button, Card, Icon } from '@helsoft/components';
 import { useLocalization } from '@helsoft/localization';
+import { Text, TextInput, View } from 'react-native';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { gradeFillInTheBlank } from '../../grading/grade-fill-in-the-blank';
 import type { FillInTheBlankProps } from './fill-in-the-blank.types';
@@ -81,14 +80,8 @@ export const FillInTheBlank = ({
         <View
           style={[styles.banner, answer.isCorrect ? styles.bannerCorrect : styles.bannerIncorrect]}
         >
-          <View
-            accessibilityRole={answer.isCorrect ? undefined : 'alert'}
-            style={styles.bannerRow}
-          >
-            <View
-              accessibilityElementsHidden
-              importantForAccessibility="no-hide-descendants"
-            >
+          <View accessibilityRole={answer.isCorrect ? undefined : 'alert'} style={styles.bannerRow}>
+            <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
               <Icon
                 name={answer.isCorrect ? 'check_circle' : 'cancel'}
                 size={22}

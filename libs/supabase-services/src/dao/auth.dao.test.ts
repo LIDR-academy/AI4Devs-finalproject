@@ -32,9 +32,9 @@ describe('AuthDao', () => {
     const error = { message: 'Invalid login credentials', status: 400 };
     signInWithPassword.mockResolvedValue({ data: { session: null, user: null }, error });
 
-    await expect(
-      AuthDao.signInWithPassword({ email: 'a@b.com', password: 'wrong' }),
-    ).rejects.toBe(error);
+    await expect(AuthDao.signInWithPassword({ email: 'a@b.com', password: 'wrong' })).rejects.toBe(
+      error,
+    );
   });
 
   // @s4 — sign-out delegates to supabase-js with no arguments.

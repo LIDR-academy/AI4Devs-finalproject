@@ -1,4 +1,4 @@
-import { ViewStyle } from 'react-native';
+import type { ViewStyle } from 'react-native';
 
 import { hexWithOpacity, palette } from './colors';
 
@@ -9,7 +9,13 @@ import { hexWithOpacity, palette } from './colors';
  */
 const ambient = hexWithOpacity(palette.brand.midnight, 0.3);
 const key = hexWithOpacity(palette.brand.midnight, 0.15);
-const shadow = (ambientY: number, ambientBlur: number, keyY: number, keyBlur: number, keySpread: number) =>
+const shadow = (
+  ambientY: number,
+  ambientBlur: number,
+  keyY: number,
+  keyBlur: number,
+  keySpread: number,
+) =>
   `0px ${ambientY}px ${ambientBlur}px ${ambient}, 0px ${keyY}px ${keyBlur}px ${keySpread}px ${key}`;
 
 export const elevation = {
@@ -19,4 +25,7 @@ export const elevation = {
   level3: { boxShadow: shadow(1, 3, 4, 8, 3) },
   level4: { boxShadow: shadow(2, 3, 6, 10, 4) },
   level5: { boxShadow: shadow(4, 4, 8, 12, 6) },
-} as const satisfies Record<'level0' | 'level1' | 'level2' | 'level3' | 'level4' | 'level5', ViewStyle>;
+} as const satisfies Record<
+  'level0' | 'level1' | 'level2' | 'level3' | 'level4' | 'level5',
+  ViewStyle
+>;

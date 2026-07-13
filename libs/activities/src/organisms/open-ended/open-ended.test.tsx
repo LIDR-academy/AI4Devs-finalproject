@@ -1,9 +1,8 @@
-import { readFileSync } from 'fs';
-import { join } from 'path';
-
-import { AccessibilityInfo, Platform } from 'react-native';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { layout, lightColors, spacing, typography } from '@helsoft/components';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { AccessibilityInfo, Platform } from 'react-native';
 
 import { OpenEnded } from './open-ended';
 import type { OpenEndedLabels } from './open-ended.types';
@@ -125,9 +124,7 @@ describe('OpenEnded', () => {
 
   // @s3
   it('shows explanation alongside the model answer after submit', async () => {
-    await render(
-      <OpenEnded {...defaultProps} explanation="Key process in plants." />,
-    );
+    await render(<OpenEnded {...defaultProps} explanation="Key process in plants." />);
 
     expect(screen.queryByText('Key process in plants.')).toBeNull();
 
@@ -163,11 +160,7 @@ describe('OpenEnded', () => {
   it('rehydrates locked with submitted text and model answer visible', async () => {
     const onSubmit = jest.fn();
     await render(
-      <OpenEnded
-        {...defaultProps}
-        initialSubmittedAnswer="prior answer"
-        onSubmit={onSubmit}
-      />,
+      <OpenEnded {...defaultProps} initialSubmittedAnswer="prior answer" onSubmit={onSubmit} />,
     );
 
     expect(answerInput().props.value).toBe('prior answer');
@@ -264,9 +257,7 @@ describe('OpenEnded', () => {
     await render(<OpenEnded {...defaultProps} />);
     expect(answerInput().props.accessibilityState?.disabled).not.toBe(true);
 
-    await render(
-      <OpenEnded {...defaultProps} initialSubmittedAnswer="prior" />,
-    );
+    await render(<OpenEnded {...defaultProps} initialSubmittedAnswer="prior" />);
     expect(answerInput().props.accessibilityState.disabled).toBe(true);
   });
 
@@ -301,9 +292,7 @@ describe('OpenEnded', () => {
       .mockImplementation(() => {});
     announceSpy.mockClear();
 
-    await render(
-      <OpenEnded {...defaultProps} initialSubmittedAnswer="seed" />,
-    );
+    await render(<OpenEnded {...defaultProps} initialSubmittedAnswer="seed" />);
 
     expect(announceSpy).not.toHaveBeenCalled();
     expect(screen.getByText(labels.modelAnswer).parent?.props.accessibilityLiveRegion).toBe(

@@ -43,7 +43,14 @@ export const German: Story = {
 
 const InteractiveDemo = () => {
   const [value, setValue] = useState('en');
-  return <LanguageSelector options={languages} value={value} onChange={setValue} accessibilityLabel="Choose a language" />;
+  return (
+    <LanguageSelector
+      options={languages}
+      value={value}
+      onChange={setValue}
+      accessibilityLabel="Choose a language"
+    />
+  );
 };
 
 export const Interactive: Story = {

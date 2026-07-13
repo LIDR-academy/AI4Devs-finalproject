@@ -16,9 +16,15 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const InteractiveDemo = ({withLabel}: {withLabel: boolean}) => {
+const InteractiveDemo = ({ withLabel }: { withLabel: boolean }) => {
   const [checked, setChecked] = useState(true);
-  return <Checkbox label={withLabel ? 'Include quick checks' : undefined} checked={checked} onChange={setChecked} />;
+  return (
+    <Checkbox
+      label={withLabel ? 'Include quick checks' : undefined}
+      checked={checked}
+      onChange={setChecked}
+    />
+  );
 };
 
 export const Interactive: Story = {
@@ -28,7 +34,6 @@ export const Interactive: Story = {
 export const NoLabel: Story = {
   render: () => <InteractiveDemo withLabel={false} />,
 };
-
 
 export const Checked: Story = {
   args: { checked: true },

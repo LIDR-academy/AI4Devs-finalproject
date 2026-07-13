@@ -1,10 +1,10 @@
+import type { MultipleChoiceSlide } from '@helsoft/types';
 import {
   hasCorrectOption,
   optionAccessibilityLabel,
   optionMarkerAt,
   optionState,
 } from './multiple-choice.helpers';
-import type { MultipleChoiceSlide } from '@helsoft/types';
 
 const slide: MultipleChoiceSlide = {
   id: 'slide-1',

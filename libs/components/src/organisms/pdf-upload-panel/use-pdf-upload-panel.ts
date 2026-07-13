@@ -1,7 +1,6 @@
+import { useLocalization } from '@helsoft/localization';
 import { useEffect } from 'react';
 import { AccessibilityInfo } from 'react-native';
-
-import { useLocalization } from '@helsoft/localization';
 
 import type { PdfUploadPanelState } from './pdf-upload-panel.types';
 

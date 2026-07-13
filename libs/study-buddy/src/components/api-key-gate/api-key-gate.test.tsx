@@ -75,7 +75,9 @@ describe('ApiKeyGate', () => {
   // @s10 — once a key is saved, the gate renders its children instead of the notice.
   it('renders children when a key is saved', async () => {
     mockUseApiKey.mockReturnValue(
-      apiKeyValue({ status: { hasKey: true, provider: 'openai', updatedAt: '2026-01-01T00:00:00.000Z' } }),
+      apiKeyValue({
+        status: { hasKey: true, provider: 'openai', updatedAt: '2026-01-01T00:00:00.000Z' },
+      }),
     );
 
     await render(

@@ -22,12 +22,15 @@ describe('AuthService', () => {
     });
 
     // @s9 — a malformed email (missing @/domain) is rejected.
-    it.each(['not-an-email', 'user@', '@example.com', 'user@example', ''])(
-      'rejects a malformed email: %s',
-      (email) => {
-        expect(AuthService.isValidEmail(email)).toBe(false);
-      },
-    );
+    it.each([
+      'not-an-email',
+      'user@',
+      '@example.com',
+      'user@example',
+      '',
+    ])('rejects a malformed email: %s', (email) => {
+      expect(AuthService.isValidEmail(email)).toBe(false);
+    });
 
     // Regex boundary — a leading, disallowed character before an otherwise well-formed
     // email must not validate: pins the `^` anchor (without it, the pattern would still
@@ -82,7 +85,9 @@ describe('AuthService', () => {
     // @s9 — an empty password is rejected before any network call is made, with the exact
     // "Password is required" message (not just "some error") and the validation_error code.
     it('rejects an empty password without calling the DAO', async () => {
-      await expect(AuthService.signIn('user@example.com', '')).rejects.toThrow('Password is required');
+      await expect(AuthService.signIn('user@example.com', '')).rejects.toThrow(
+        'Password is required',
+      );
       await expect(AuthService.signIn('user@example.com', '')).rejects.toMatchObject({
         code: 'validation_error',
       });
@@ -96,14 +101,20 @@ describe('AuthService', () => {
     // `{ code: 'invalid_credentials' }`: no raw supabase error (message/status/name) leaks
     // upward to the UI, and no user-enumeration signal differs between the two causes.
     it('normalizes a Supabase invalid-login error to a sanitized invalid_credentials code', async () => {
-      const supabaseError = new AuthApiError('Invalid login credentials', 400, 'invalid_credentials');
+      const supabaseError = new AuthApiError(
+        'Invalid login credentials',
+        400,
+        'invalid_credentials',
+      );
       dao.signInWithPassword.mockRejectedValue(supabaseError);
 
       await expect(AuthService.signIn('user@example.com', 'wrongpass')).rejects.toMatchObject({
         code: 'invalid_credentials',
         message: 'Invalid credentials',
       });
-      await expect(AuthService.signIn('user@example.com', 'wrongpass')).rejects.not.toHaveProperty('status');
+      await expect(AuthService.signIn('user@example.com', 'wrongpass')).rejects.not.toHaveProperty(
+        'status',
+      );
     });
 
     // @s5/@s6 — a differently-coded Supabase AuthApiError (e.g. an unconfirmed-email account —
@@ -145,7 +156,9 @@ describe('AuthService', () => {
     // @s6 — retry works: a subsequent call after a network_error resolves normally once the
     // connection is restored.
     it('resolves normally on a subsequent call after a prior network_error (retry works)', async () => {
-      dao.signInWithPassword.mockRejectedValueOnce(new AuthRetryableFetchError('Failed to fetch', 0));
+      dao.signInWithPassword.mockRejectedValueOnce(
+        new AuthRetryableFetchError('Failed to fetch', 0),
+      );
       await expect(AuthService.signIn('user@example.com', 'secret1')).rejects.toMatchObject({
         code: 'network_error',
       });

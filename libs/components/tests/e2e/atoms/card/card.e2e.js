@@ -6,6 +6,9 @@ test('Card component renders', async ({ page }) => {
 
   // Card is rendered as a div with display: flex and border-radius
   // Look for the container with Storybook's default story styling
-  const storyContainer = canvas.locator('div').filter({ has: canvas.locator('text=Photosynthesis basics') }).first();
+  const storyContainer = canvas
+    .locator('div')
+    .filter({ has: canvas.locator('text=Photosynthesis basics') })
+    .first();
   await expect(storyContainer).toBeVisible();
 });

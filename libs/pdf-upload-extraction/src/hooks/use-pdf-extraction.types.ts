@@ -1,4 +1,8 @@
-import type { PdfExtractionErrorCode, PdfExtractionInput, PdfExtractionResult } from '../types/pdf-extraction.types';
+import type {
+  PdfExtractionErrorCode,
+  PdfExtractionInput,
+  PdfExtractionResult,
+} from '../types/pdf-extraction.types';
 
 export type PdfExtractionStage = 'idle' | 'processing' | 'success' | 'error';
 

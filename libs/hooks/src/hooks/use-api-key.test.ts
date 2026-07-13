@@ -7,9 +7,9 @@ jest.mock('@helsoft/supabase-services', () => ({
 }));
 jest.mock('./use-session', () => ({ useSession: jest.fn() }));
 
-import { createElement } from 'react';
-import { act, render, renderHook, waitFor } from '@testing-library/react';
 import { ApiKeyService } from '@helsoft/supabase-services';
+import { act, render, renderHook, waitFor } from '@testing-library/react';
+import { createElement } from 'react';
 
 import { ApiKeyProvider, useApiKey } from './use-api-key';
 import { useSession } from './use-session';
@@ -30,7 +30,11 @@ describe('useApiKey', () => {
   // stored state.
   it('loads the status on mount when authenticated and reflects hasKey: true', async () => {
     mockUseSession.mockReturnValue(authenticatedSession);
-    const status = { hasKey: true, provider: 'openai' as const, updatedAt: '2026-01-01T00:00:00.000Z' };
+    const status = {
+      hasKey: true,
+      provider: 'openai' as const,
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    };
     service.getApiKeyStatus.mockResolvedValue(status);
 
     const { result } = renderHook(() => useApiKey());
@@ -88,7 +92,11 @@ describe('useApiKey', () => {
   // Same regression, the other half: once the session resolves to authenticated, the status
   // load runs (it doesn't stay stuck skipped just because it was previously "not yet known").
   it('loads the status once the session resolves from still-loading to authenticated', async () => {
-    const status = { hasKey: true, provider: 'openai' as const, updatedAt: '2026-01-01T00:00:00.000Z' };
+    const status = {
+      hasKey: true,
+      provider: 'openai' as const,
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    };
     service.getApiKeyStatus.mockResolvedValue(status);
     mockUseSession.mockReturnValue({ session: null, isLoading: true });
 
@@ -132,7 +140,11 @@ describe('useApiKey', () => {
   // state on success.
   it('saveApiKey calls ApiKeyService.saveApiKey and updates status on success', async () => {
     mockUseSession.mockReturnValue(authenticatedSession);
-    const status = { hasKey: true, provider: 'openai' as const, updatedAt: '2026-01-01T00:00:00.000Z' };
+    const status = {
+      hasKey: true,
+      provider: 'openai' as const,
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    };
     service.saveApiKey.mockResolvedValue(status);
     const { result } = renderHook(() => useApiKey());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -190,7 +202,11 @@ describe('useApiKey', () => {
   // error starts out null and stays null through a successful save.
   it('exposes a null error by default and after a successful save', async () => {
     mockUseSession.mockReturnValue(authenticatedSession);
-    service.saveApiKey.mockResolvedValue({ hasKey: true, provider: 'openai', updatedAt: '2026-01-01T00:00:00.000Z' });
+    service.saveApiKey.mockResolvedValue({
+      hasKey: true,
+      provider: 'openai',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    });
     const { result } = renderHook(() => useApiKey());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -209,7 +225,9 @@ describe('useApiKey', () => {
   // network_error fallback.
   it('sets error to the normalized code after a failed saveApiKey', async () => {
     mockUseSession.mockReturnValue(authenticatedSession);
-    service.saveApiKey.mockRejectedValue(Object.assign(new Error('bad key'), { code: 'validation_error' }));
+    service.saveApiKey.mockRejectedValue(
+      Object.assign(new Error('bad key'), { code: 'validation_error' }),
+    );
     const { result } = renderHook(() => useApiKey());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -223,8 +241,14 @@ describe('useApiKey', () => {
   // @s7 — a retry (a subsequent successful saveApiKey) clears a previously set error.
   it('clears a previously set error once a retried saveApiKey succeeds', async () => {
     mockUseSession.mockReturnValue(authenticatedSession);
-    service.saveApiKey.mockRejectedValueOnce(Object.assign(new Error('offline'), { code: 'network_error' }));
-    const status = { hasKey: true, provider: 'openai' as const, updatedAt: '2026-01-01T00:00:00.000Z' };
+    service.saveApiKey.mockRejectedValueOnce(
+      Object.assign(new Error('offline'), { code: 'network_error' }),
+    );
+    const status = {
+      hasKey: true,
+      provider: 'openai' as const,
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    };
     service.saveApiKey.mockResolvedValueOnce(status);
     const { result } = renderHook(() => useApiKey());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -313,7 +337,11 @@ describe('useApiKey', () => {
   // and nothing else keeps a reference to it.
   it('does not retain the raw key anywhere in the returned hook state', async () => {
     mockUseSession.mockReturnValue(authenticatedSession);
-    service.saveApiKey.mockResolvedValue({ hasKey: true, provider: 'openai', updatedAt: '2026-01-01T00:00:00.000Z' });
+    service.saveApiKey.mockResolvedValue({
+      hasKey: true,
+      provider: 'openai',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    });
     const { result } = renderHook(() => useApiKey());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -327,7 +355,11 @@ describe('useApiKey', () => {
   // @s8 — a successful removeApiKey calls the service and updates status to the no-key state.
   it('removeApiKey calls ApiKeyService.removeApiKey and updates status on success', async () => {
     mockUseSession.mockReturnValue(authenticatedSession);
-    service.getApiKeyStatus.mockResolvedValue({ hasKey: true, provider: 'openai', updatedAt: '2026-01-01T00:00:00.000Z' });
+    service.getApiKeyStatus.mockResolvedValue({
+      hasKey: true,
+      provider: 'openai',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    });
     service.removeApiKey.mockResolvedValue({ hasKey: false });
     const { result } = renderHook(() => useApiKey());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
@@ -345,9 +377,15 @@ describe('useApiKey', () => {
   // saved status untouched (the key is preserved).
   it('sets error and preserves the saved status after a failed removeApiKey', async () => {
     mockUseSession.mockReturnValue(authenticatedSession);
-    const savedStatus = { hasKey: true, provider: 'openai' as const, updatedAt: '2026-01-01T00:00:00.000Z' };
+    const savedStatus = {
+      hasKey: true,
+      provider: 'openai' as const,
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    };
     service.getApiKeyStatus.mockResolvedValue(savedStatus);
-    service.removeApiKey.mockRejectedValue(Object.assign(new Error('delete failed'), { code: 'network_error' }));
+    service.removeApiKey.mockRejectedValue(
+      Object.assign(new Error('delete failed'), { code: 'network_error' }),
+    );
     const { result } = renderHook(() => useApiKey());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
@@ -404,7 +442,11 @@ describe('ApiKeyProvider', () => {
 
   it('shares one underlying status fetch across multiple useApiKey() consumers nested under one ApiKeyProvider', async () => {
     mockUseSession.mockReturnValue(authenticatedSession);
-    const status = { hasKey: true, provider: 'openai' as const, updatedAt: '2026-01-01T00:00:00.000Z' };
+    const status = {
+      hasKey: true,
+      provider: 'openai' as const,
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    };
     service.getApiKeyStatus.mockResolvedValue(status);
 
     const renders1: Array<ReturnType<typeof useApiKey>> = [];

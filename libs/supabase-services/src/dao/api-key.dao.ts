@@ -28,7 +28,11 @@ export abstract class ApiKeyDao {
 
     const row = (data as UserAiKeyRow[] | null)?.[0];
     if (!row) return { hasKey: false };
-    return { hasKey: true, provider: row.provider as ApiKeyStatus['provider'], updatedAt: row.updated_at };
+    return {
+      hasKey: true,
+      provider: row.provider as ApiKeyStatus['provider'],
+      updatedAt: row.updated_at,
+    };
   }
 
   static async removeApiKey(): Promise<ApiKeyStatus> {

@@ -77,7 +77,11 @@ export const LoginForm = ({
         </Button>
         {isSubmitting ? (
           <View testID={LOADING_INDICATOR_TEST_ID}>
-            <ProgressIndicator variant="circular" size={SUBMIT_SPINNER_SIZE} thickness={SUBMIT_SPINNER_THICKNESS} />
+            <ProgressIndicator
+              variant="circular"
+              size={SUBMIT_SPINNER_SIZE}
+              thickness={SUBMIT_SPINNER_THICKNESS}
+            />
             <Text accessibilityLiveRegion="polite" style={styles.visuallyHidden}>
               {t('auth.signingIn')}
             </Text>

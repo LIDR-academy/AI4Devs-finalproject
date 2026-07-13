@@ -22,7 +22,9 @@ test('Hidden story loads with only the front and Reveal visible', async ({ page 
   await expect(canvas.getByText('Not recalled', { exact: true })).toHaveCount(0);
 });
 
-test('RevealedUnmarked story shows the answer and both self-mark actions, unmarked', async ({ page }) => {
+test('RevealedUnmarked story shows the answer and both self-mark actions, unmarked', async ({
+  page,
+}) => {
   await page.goto(story('revealed-unmarked'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
@@ -55,7 +57,9 @@ test('RevealedNotRecalled story shows the locked Not recalled confirmation', asy
   await expect(canvas.getByText('Not recalled', { exact: true })).toHaveCount(0);
 });
 
-test('WithoutExplanation story reveals the answer with no explanation heading or body', async ({ page }) => {
+test('WithoutExplanation story reveals the answer with no explanation heading or body', async ({
+  page,
+}) => {
   await page.goto(story('without-explanation'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
@@ -64,7 +68,9 @@ test('WithoutExplanation story reveals the answer with no explanation heading or
   await expect(canvas.getByText(EXPLANATION, { exact: true })).toHaveCount(0);
 });
 
-test('UnavailableMissingBack story shows the unavailable notice, nothing interactive', async ({ page }) => {
+test('UnavailableMissingBack story shows the unavailable notice, nothing interactive', async ({
+  page,
+}) => {
   await page.goto(story('unavailable-missing-back'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
@@ -73,7 +79,9 @@ test('UnavailableMissingBack story shows the unavailable notice, nothing interac
   await expect(canvas.getByText('Reveal answer', { exact: true })).toHaveCount(0);
 });
 
-test('UnavailableMissingFront story shows the unavailable notice, nothing interactive', async ({ page }) => {
+test('UnavailableMissingFront story shows the unavailable notice, nothing interactive', async ({
+  page,
+}) => {
   await page.goto(story('unavailable-missing-front'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
@@ -107,7 +115,9 @@ test('Interactive: both self-mark actions appear once revealed', async ({ page }
   await expect(canvas.getByText('Not recalled', { exact: true })).toBeVisible();
 });
 
-test('Interactive: tapping Recalled locks the confirmation and disables both actions', async ({ page }) => {
+test('Interactive: tapping Recalled locks the confirmation and disables both actions', async ({
+  page,
+}) => {
   await page.goto(story('interactive'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
@@ -123,7 +133,9 @@ test('Interactive: tapping Recalled locks the confirmation and disables both act
   await expect(canvas.getByText('Marked not recalled', { exact: true })).toHaveCount(0);
 });
 
-test('Interactive: tapping Not recalled locks the confirmation and disables both actions', async ({ page }) => {
+test('Interactive: tapping Not recalled locks the confirmation and disables both actions', async ({
+  page,
+}) => {
   await page.goto(story('interactive'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 

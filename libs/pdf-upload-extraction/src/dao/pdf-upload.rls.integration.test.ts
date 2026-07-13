@@ -28,7 +28,8 @@ const getLocalSupabaseConfig = (): LocalSupabaseConfig => {
   return { url: status.API_URL, anonKey: status.ANON_KEY, serviceRoleKey: status.SERVICE_ROLE_KEY };
 };
 
-const uniqueEmail = (label: string): string => `pdf-upload-rls-${label}-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`;
+const uniqueEmail = (label: string): string =>
+  `pdf-upload-rls-${label}-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`;
 const TEST_PASSWORD = 'super-secret-1';
 
 const signUpAndSignIn = async (
@@ -45,7 +46,10 @@ const signUpAndSignIn = async (
   if (createError || !created.user) throw createError ?? new Error('user creation failed');
 
   const client = createClient(config.url, config.anonKey);
-  const { error: signInError } = await client.auth.signInWithPassword({ email, password: TEST_PASSWORD });
+  const { error: signInError } = await client.auth.signInWithPassword({
+    email,
+    password: TEST_PASSWORD,
+  });
   if (signInError) throw signInError;
 
   return { client, userId: created.user.id };
@@ -97,14 +101,22 @@ describe('pdf-upload-extraction RLS (@s14, live local Supabase)', () => {
 
     expect(data).toEqual([]);
 
-    const { data: stillOriginal } = await adminClient.from('documents').select('filename').eq('id', documentAId).single();
+    const { data: stillOriginal } = await adminClient
+      .from('documents')
+      .select('filename')
+      .eq('id', documentAId)
+      .single();
     expect(stillOriginal?.filename).toBe('a.pdf');
   });
 
   it("denies another authenticated user's delete of someone else's document row", async () => {
     await userB.client.from('documents').delete().eq('id', documentAId);
 
-    const { data: stillExists } = await adminClient.from('documents').select('id').eq('id', documentAId).single();
+    const { data: stillExists } = await adminClient
+      .from('documents')
+      .select('id')
+      .eq('id', documentAId)
+      .single();
     expect(stillExists?.id).toBe(documentAId);
   });
 
@@ -124,10 +136,16 @@ describe('pdf-upload-extraction RLS (@s14, live local Supabase)', () => {
       .single();
     expect(insertError).toBeNull();
 
-    const { data: seenByOwner } = await userA.client.from('document_images').select('id').eq('id', imageRow!.id);
+    const { data: seenByOwner } = await userA.client
+      .from('document_images')
+      .select('id')
+      .eq('id', imageRow!.id);
     expect(seenByOwner).toEqual([{ id: imageRow!.id }]);
 
-    const { data: seenByOther } = await userB.client.from('document_images').select('id').eq('id', imageRow!.id);
+    const { data: seenByOther } = await userB.client
+      .from('document_images')
+      .select('id')
+      .eq('id', imageRow!.id);
     expect(seenByOther).toEqual([]);
   });
 
@@ -139,7 +157,9 @@ describe('pdf-upload-extraction RLS (@s14, live local Supabase)', () => {
   });
 
   it('denies an unauthenticated (anon, no session) request from inserting a document row', async () => {
-    const { error } = await anonClient.from('documents').insert({ user_id: userA.userId, filename: 'x.pdf', size_bytes: 1 });
+    const { error } = await anonClient
+      .from('documents')
+      .insert({ user_id: userA.userId, filename: 'x.pdf', size_bytes: 1 });
 
     expect(error).not.toBeNull();
   });
@@ -148,14 +168,21 @@ describe('pdf-upload-extraction RLS (@s14, live local Supabase)', () => {
     const path = `${userA.userId}/${documentAId}/source.pdf`;
     const { error: uploadError } = await userA.client.storage
       .from('pdf-uploads')
-      .upload(path, new Blob([new Uint8Array([1, 2, 3])]), { contentType: 'application/pdf', upsert: true });
+      .upload(path, new Blob([new Uint8Array([1, 2, 3])]), {
+        contentType: 'application/pdf',
+        upsert: true,
+      });
     expect(uploadError).toBeNull();
 
-    const { data: ownDownload, error: ownDownloadError } = await userA.client.storage.from('pdf-uploads').download(path);
+    const { data: ownDownload, error: ownDownloadError } = await userA.client.storage
+      .from('pdf-uploads')
+      .download(path);
     expect(ownDownloadError).toBeNull();
     expect(ownDownload).not.toBeNull();
 
-    const { data: otherDownload, error: otherDownloadError } = await userB.client.storage.from('pdf-uploads').download(path);
+    const { data: otherDownload, error: otherDownloadError } = await userB.client.storage
+      .from('pdf-uploads')
+      .download(path);
     expect(otherDownload).toBeNull();
     expect(otherDownloadError).not.toBeNull();
   });

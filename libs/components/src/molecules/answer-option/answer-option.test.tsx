@@ -30,7 +30,14 @@ describe('AnswerOption', () => {
   // override lets composers (the `MultipleChoice` organism) convey correctness through real words
   // instead, without that internal icon-font identifier ever reaching assistive tech.
   it('lets an explicit accessibilityLabel override the default computed name', async () => {
-    await render(<AnswerOption marker="A" label="Paris" state="correct" accessibilityLabel="A Paris, Correct!" />);
+    await render(
+      <AnswerOption
+        marker="A"
+        label="Paris"
+        state="correct"
+        accessibilityLabel="A Paris, Correct!"
+      />,
+    );
 
     const button = screen.getByRole('button');
     expect(button).toHaveAccessibleName('A Paris, Correct!');

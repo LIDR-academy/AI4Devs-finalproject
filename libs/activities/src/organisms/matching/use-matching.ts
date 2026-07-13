@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Platform } from 'react-native';
-
-import { ItemVisualState, MatchingPairSelection, PendingSelection, UseMatchingProps } from './matching.types';
 import { findPairForItem } from './matching.helpers';
+import type {
+  ItemVisualState,
+  MatchingPairSelection,
+  PendingSelection,
+  UseMatchingProps,
+} from './matching.types';
 
 /**
  * Matching interaction + derived state for the matching organism.
@@ -49,7 +53,6 @@ export const useMatching = ({
     if (findPairForItem(formedPairs, id)) return 'paired';
     return undefined;
   };
-
 
   return {
     pending,

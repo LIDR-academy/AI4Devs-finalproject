@@ -9,10 +9,10 @@ jest.mock('@helsoft/localization', () => ({
   }),
 }));
 
-import { AccessibilityInfo, Platform } from 'react-native';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { layout, lightColors, mixHex, shape, spacing } from '@helsoft/components';
 import type { MatchingAnswer, MatchingSlide } from '@helsoft/types';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { AccessibilityInfo, Platform } from 'react-native';
 
 import { Matching } from './matching';
 
@@ -101,7 +101,9 @@ describe('Matching', () => {
   let announceSpy: jest.SpyInstance;
 
   beforeEach(() => {
-    announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
   });
 
@@ -386,9 +388,7 @@ describe('Matching', () => {
   });
 
   it('seeds formed pairs from initialPairs so Submit stays disabled until all paired', async () => {
-    await render(
-      <Matching slide={slide} initialPairs={[{ leftId: 'l1', rightId: 'r1' }]} />,
-    );
+    await render(<Matching slide={slide} initialPairs={[{ leftId: 'l1', rightId: 'r1' }]} />);
 
     expect(itemButton('France').props.accessibilityState.checked).toBe(true);
     expect(itemButton('Paris').props.accessibilityState.checked).toBe(true);
@@ -484,7 +484,10 @@ describe('Matching', () => {
       expect(announceSpy).not.toHaveBeenCalled();
     });
 
-    it.each(['ios', 'web'] as const)('still calls announceForAccessibility on %s once submitted', async (os) => {
+    it.each([
+      'ios',
+      'web',
+    ] as const)('still calls announceForAccessibility on %s once submitted', async (os) => {
       Platform.OS = os;
 
       await render(<Matching slide={slide} initialAnswer={allCorrectAnswer} />);
@@ -609,7 +612,9 @@ describe('Matching', () => {
 
     expect(screen.getByRole('button', { name: `France, ${I18N.correctPair}` })).toBeTruthy();
     expect(screen.getByRole('button', { name: `Paris, ${I18N.correctPair}` })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Germany' }).props.accessibilityLabel).toBe('Germany');
+    expect(screen.getByRole('button', { name: 'Germany' }).props.accessibilityLabel).toBe(
+      'Germany',
+    );
     expect(screen.getByRole('button', { name: 'Berlin' }).props.accessibilityLabel).toBe('Berlin');
     expect(screen.queryByText('cancel')).toBeNull();
     expect(screen.getAllByText('check_circle')).toHaveLength(2);

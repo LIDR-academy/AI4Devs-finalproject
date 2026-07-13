@@ -18,7 +18,11 @@ const labels = {
 };
 
 const noKeyStatus = { hasKey: false as const };
-const savedStatus = { hasKey: true as const, provider: 'openai' as const, updatedAt: '2026-01-01T00:00:00.000Z' };
+const savedStatus = {
+  hasKey: true as const,
+  provider: 'openai' as const,
+  updatedAt: '2026-01-01T00:00:00.000Z',
+};
 
 const meta = {
   title: 'Organisms/ApiKeyForm',

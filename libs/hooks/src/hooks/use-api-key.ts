@@ -1,3 +1,5 @@
+import { ApiKeyService } from '@helsoft/supabase-services';
+import type { ApiKeyError, ApiKeyErrorCode, ApiKeyStatus } from '@helsoft/types';
 import {
   createContext,
   createElement,
@@ -7,11 +9,8 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { ApiKeyService } from '@helsoft/supabase-services';
-import type { ApiKeyError, ApiKeyErrorCode, ApiKeyStatus } from '@helsoft/types';
-
-import { useSession } from './use-session';
 import type { ApiKeyProviderProps, UseApiKeyResult } from './use-api-key.types';
+import { useSession } from './use-session';
 
 const NO_KEY_STATUS: ApiKeyStatus = { hasKey: false };
 
@@ -50,6 +49,7 @@ const useApiKeyState = (skip: boolean): UseApiKeyResult => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<ApiKeyErrorCode | null>(null);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the derived sessionUserId instead of the session object on purpose — see the comment above sessionUserId
   useEffect(() => {
     // A shared ApiKeyProvider ancestor already owns the fetch for this instance — stay inert.
     if (skip) return;
@@ -98,8 +98,14 @@ const useApiKeyState = (skip: boolean): UseApiKeyResult => {
     }
   }, []);
 
-  const saveApiKey = useCallback((rawKey: string) => runMutation(() => ApiKeyService.saveApiKey(rawKey)), [runMutation]);
-  const removeApiKey = useCallback(() => runMutation(() => ApiKeyService.removeApiKey()), [runMutation]);
+  const saveApiKey = useCallback(
+    (rawKey: string) => runMutation(() => ApiKeyService.saveApiKey(rawKey)),
+    [runMutation],
+  );
+  const removeApiKey = useCallback(
+    () => runMutation(() => ApiKeyService.removeApiKey()),
+    [runMutation],
+  );
 
   // Full-review Round 2, Minor 2 — this object is both the standalone useApiKey() return value
   // and ApiKeyProvider's context `value`; without memoization it is a fresh allocation every

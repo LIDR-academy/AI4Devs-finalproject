@@ -16,6 +16,12 @@ export default {
   tsconfigFile: 'tsconfig.json',
   reporters: ['html', 'clear-text', 'progress'],
   coverageAnalysis: 'perTest',
-  mutate: ['src/**/*.ts', 'src/**/*.tsx', '!src/**/*.test.ts', '!src/**/*.test.tsx', '!src/**/index.ts'],
+  mutate: [
+    'src/**/*.ts',
+    'src/**/*.tsx',
+    '!src/**/*.test.ts',
+    '!src/**/*.test.tsx',
+    '!src/**/index.ts',
+  ],
   thresholds: { high: 100, low: 100, break: 100 },
 };

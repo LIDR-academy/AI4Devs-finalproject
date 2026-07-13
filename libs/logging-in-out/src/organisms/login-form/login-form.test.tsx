@@ -2,11 +2,10 @@ jest.mock('@helsoft/localization', () => ({
   useLocalization: jest.fn(),
 }));
 
+import { disabledOpacity, lightColors, spacing } from '@helsoft/components';
 import { useLocalization } from '@helsoft/localization';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { AccessibilityInfo } from 'react-native';
-
-import { disabledOpacity, lightColors, spacing } from '@helsoft/components';
 
 import { localizationValue } from '../../test-utils/auth-test-factories';
 import { LOADING_INDICATOR_TEST_ID, LoginForm } from './login-form';
@@ -85,8 +84,12 @@ describe('LoginForm', () => {
   it('exposes accessibilityState.disabled on both fields while isSubmitting', async () => {
     await render(<LoginForm onSubmit={jest.fn()} isSubmitting />);
 
-    expect(screen.getByLabelText('auth.email').props.accessibilityState).toEqual({ disabled: true });
-    expect(screen.getByLabelText('auth.password').props.accessibilityState).toEqual({ disabled: true });
+    expect(screen.getByLabelText('auth.email').props.accessibilityState).toEqual({
+      disabled: true,
+    });
+    expect(screen.getByLabelText('auth.password').props.accessibilityState).toEqual({
+      disabled: true,
+    });
   });
 
   // @s3 — a visually-hidden, polite live-region announces authentication is in progress to
@@ -103,7 +106,9 @@ describe('LoginForm', () => {
   it('announces "Signing in…" via AccessibilityInfo when isSubmitting becomes true', async () => {
     // react-native's jest preset already auto-mocks this module-level function, so its call
     // history persists across tests in this file — clear it before asserting on it here.
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     const { rerender } = await render(<LoginForm onSubmit={jest.fn()} />);
@@ -123,7 +128,9 @@ describe('LoginForm', () => {
   // @s12 — same iOS-parity gap as the Loading announcement: accessibilityLiveRegion has no
   // effect on iOS VoiceOver, so an auth-error banner also needs the imperative announcement.
   it('announces the error banner via AccessibilityInfo when errorMessage is set', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     await render(<LoginForm onSubmit={jest.fn()} errorMessage="Invalid email or password" />);
@@ -138,7 +145,9 @@ describe('LoginForm', () => {
   // second distinct error replacing the first (e.g. a retry that fails differently) would never
   // be re-announced.
   it('announces the error banner again when errorMessage changes to a different value', async () => {
-    const announceSpy = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation(() => {});
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
     announceSpy.mockClear();
 
     const { rerender } = await render(
@@ -228,12 +237,7 @@ describe('LoginForm', () => {
   // @s9 — an inline emailError renders as the email field's supporting text and marks it in
   // error, and blocks submission even though both fields are non-empty.
   it('renders emailError as inline supporting text on the email field and blocks submit', async () => {
-    await render(
-      <LoginForm
-        onSubmit={jest.fn()}
-        emailError="Enter a valid email address"
-      />,
-    );
+    await render(<LoginForm onSubmit={jest.fn()} emailError="Enter a valid email address" />);
 
     await act(async () => {
       fireEvent.changeText(screen.getByLabelText('auth.email'), 'not-an-email');
@@ -253,7 +257,9 @@ describe('LoginForm', () => {
   it('exposes emailError as an accessibilityHint on the email field', async () => {
     await render(<LoginForm onSubmit={jest.fn()} emailError="Enter a valid email address" />);
 
-    expect(screen.getByLabelText('auth.email').props.accessibilityHint).toBe('Enter a valid email address');
+    expect(screen.getByLabelText('auth.email').props.accessibilityHint).toBe(
+      'Enter a valid email address',
+    );
   });
 
   // Full-review Round 1, Major 3 — accessibilityHint has no effect on react-native-web (its
@@ -305,7 +311,9 @@ describe('LoginForm', () => {
   it('exposes passwordError as an accessibilityHint on the password field', async () => {
     await render(<LoginForm onSubmit={jest.fn()} passwordError="Password is required" />);
 
-    expect(screen.getByLabelText('auth.password').props.accessibilityHint).toBe('Password is required');
+    expect(screen.getByLabelText('auth.password').props.accessibilityHint).toBe(
+      'Password is required',
+    );
   });
 
   // Full-review Round 1, Major 3 — same web accessibilityHint gap as the email field.
@@ -452,7 +460,9 @@ describe('LoginForm', () => {
     await render(<LoginForm onSubmit={jest.fn()} onNavigateToSignUp={jest.fn()} />);
 
     const tree = JSON.stringify(screen.toJSON());
-    const order = ['auth.email', 'auth.password', 'auth.submit', 'auth.toSignUp'].map((text) => tree.indexOf(`"${text}"`));
+    const order = ['auth.email', 'auth.password', 'auth.submit', 'auth.toSignUp'].map((text) =>
+      tree.indexOf(`"${text}"`),
+    );
 
     expect(order.every((index) => index >= 0)).toBe(true);
     expect(order).toEqual([...order].sort((a, b) => a - b));

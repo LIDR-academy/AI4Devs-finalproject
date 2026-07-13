@@ -64,7 +64,11 @@ export const ResultsSummary = ({
         ) : null}
         {loading ? (
           <View testID={RESULTS_LOADING_TEST_ID}>
-            <ProgressIndicator variant="circular" size={LOADING_SPINNER_SIZE} thickness={LOADING_SPINNER_THICKNESS} />
+            <ProgressIndicator
+              variant="circular"
+              size={LOADING_SPINNER_SIZE}
+              thickness={LOADING_SPINNER_THICKNESS}
+            />
           </View>
         ) : null}
         <View style={styles.actions}>

@@ -33,5 +33,6 @@ type AssertExactKeys<T, Keys extends string> = keyof T extends Keys
     ? true
     : never
   : never;
-const _apiKeyStatusShapeLock: AssertExactKeys<ApiKeyStatus, 'hasKey' | 'provider' | 'updatedAt'> = true;
+const _apiKeyStatusShapeLock: AssertExactKeys<ApiKeyStatus, 'hasKey' | 'provider' | 'updatedAt'> =
+  true;
 void _apiKeyStatusShapeLock;

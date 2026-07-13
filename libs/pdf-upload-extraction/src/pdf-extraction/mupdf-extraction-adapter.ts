@@ -15,7 +15,10 @@ const STRUCTURED_TEXT_OPTIONS = 'preserve-images';
  * once per page by the caller below, not rebuilt here) to collect its images, handing each
  * already-decoded `Pixmap` straight through (M2 fix) instead of re-encoding it to PNG bytes just
  * to have `image-downscale.ts` decode it again. */
-const extractPageImages = (structuredText: Mupdf.StructuredText, pageNumber: number): ExtractedImage[] => {
+const extractPageImages = (
+  structuredText: Mupdf.StructuredText,
+  pageNumber: number,
+): ExtractedImage[] => {
   const images: ExtractedImage[] = [];
   structuredText.walk({
     onImageBlock(_bbox, _transform, image) {

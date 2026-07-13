@@ -81,7 +81,14 @@ describe('MupdfExtractionAdapter', () => {
     const result = await MupdfExtractionAdapter.extract(bytes);
 
     expect(result.images).toHaveLength(2);
-    expect(result.images.map((image) => ({ page: image.page, positionIndex: image.positionIndex, width: image.width, height: image.height }))).toEqual([
+    expect(
+      result.images.map((image) => ({
+        page: image.page,
+        positionIndex: image.positionIndex,
+        width: image.width,
+        height: image.height,
+      })),
+    ).toEqual([
       { page: 1, positionIndex: 0, width: 4, height: 4 },
       { page: 1, positionIndex: 1, width: 8, height: 6 },
     ]);

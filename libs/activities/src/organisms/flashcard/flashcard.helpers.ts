@@ -12,7 +12,10 @@ export const isFlashcardSlideValid = (slide: FlashcardSlide): boolean =>
  * Builds the answered state from the learner's self-mark. `isCorrect` mirrors `recalled` —
  * it is never scored by R7 (`isSystemCheckedActivity('flashcard') === false`).
  */
-export const buildFlashcardAnswer = (slide: FlashcardSlide, recalled: boolean): FlashcardAnswer => ({
+export const buildFlashcardAnswer = (
+  slide: FlashcardSlide,
+  recalled: boolean,
+): FlashcardAnswer => ({
   slideId: slide.id,
   activityType: 'flashcard',
   recalled,

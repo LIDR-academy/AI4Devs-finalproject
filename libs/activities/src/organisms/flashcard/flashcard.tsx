@@ -1,8 +1,7 @@
-import { Pressable, Text, View } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-
 import { Button, Card, Icon } from '@helsoft/components';
 import { useLocalization } from '@helsoft/localization';
+import { Pressable, Text, View } from 'react-native';
+import { StyleSheet, useUnistyles } from 'react-native-unistyles';
 
 import { buildFlashcardAnswer } from './flashcard.helpers';
 import type { FlashcardProps } from './flashcard.types';

@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react';
 import { useLessonAttempt } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import type { GradedAnswer, Lesson } from '@helsoft/types';
+import { useEffect, useRef } from 'react';
 
 import { toScorableSlides } from './lesson-results.helpers';
 import { scoreLesson } from './score-lesson';
@@ -26,12 +26,12 @@ export const useLessonResults = ({ lesson, answers }: UseLessonResultsArgs) => {
   const percentLabel = t('results.scorePercent', { percent });
 
   const hasSaved = useRef(false);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: save-once-on-mount effect; hasSaved guards re-entry and the attempt must not re-save on re-render
   useEffect(() => {
     if (!summary.isScorable) return;
     if (hasSaved.current) return;
     hasSaved.current = true;
     saveAttempt({ lessonId: lesson.id, score: summary.correct, total: summary.total });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return {
@@ -41,7 +41,10 @@ export const useLessonResults = ({ lesson, answers }: UseLessonResultsArgs) => {
     labels: {
       score: scoreLabel,
       percent: percentLabel,
-      scoreAnnouncement: t('results.scoreAnnouncement', { score: scoreLabel, percent: percentLabel }),
+      scoreAnnouncement: t('results.scoreAnnouncement', {
+        score: scoreLabel,
+        percent: percentLabel,
+      }),
       retake: t('results.retake'),
       backToLessons: t('results.backHome'),
       completeHeadline: t('results.completeHeadline'),

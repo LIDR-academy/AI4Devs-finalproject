@@ -10,8 +10,16 @@ export { toScorableSlides } from './lesson-results.helpers';
  * ResultsSummary. Completion variant (no save) when nothing system-checked; otherwise
  * score variant with loading/save-failure from useLessonAttempt.
  */
-export const LessonResults = ({ lesson, answers, onRetake, onBackToLessons }: LessonResultsProps) => {
-  const { variant, loading, saveFailed, labels, onRetrySave } = useLessonResults({ lesson, answers });
+export const LessonResults = ({
+  lesson,
+  answers,
+  onRetake,
+  onBackToLessons,
+}: LessonResultsProps) => {
+  const { variant, loading, saveFailed, labels, onRetrySave } = useLessonResults({
+    lesson,
+    answers,
+  });
 
   return (
     <ResultsSummary

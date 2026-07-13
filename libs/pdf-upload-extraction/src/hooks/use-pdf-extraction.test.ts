@@ -15,8 +15,8 @@ jest.mock('../services/pdf-extraction.service', () => ({
 }));
 jest.mock('@helsoft/hooks', () => ({ useSession: jest.fn() }));
 
-import { act, renderHook } from '@testing-library/react';
 import { useSession } from '@helsoft/hooks';
+import { act, renderHook } from '@testing-library/react';
 
 import { PdfExtractionService } from '../services/pdf-extraction.service';
 import { usePdfExtraction } from './use-pdf-extraction';
@@ -48,7 +48,11 @@ describe('usePdfExtraction', () => {
     expect(result.current.stage).toBe('idle');
 
     await act(async () => {
-      await result.current.extract({ filename: 'notes.pdf', sizeBytes: 3, bytes: new Uint8Array() });
+      await result.current.extract({
+        filename: 'notes.pdf',
+        sizeBytes: 3,
+        bytes: new Uint8Array(),
+      });
     });
 
     expect(result.current.stage).toBe('success');
@@ -73,13 +77,24 @@ describe('usePdfExtraction', () => {
 
     let extractPromise!: Promise<void>;
     act(() => {
-      extractPromise = result.current.extract({ filename: 'a.pdf', sizeBytes: 1, bytes: new Uint8Array() });
+      extractPromise = result.current.extract({
+        filename: 'a.pdf',
+        sizeBytes: 1,
+        bytes: new Uint8Array(),
+      });
     });
 
     expect(result.current.stage).toBe('processing');
 
     await act(async () => {
-      resolveExtract({ documentId: 'd1', filename: 'a.pdf', pageCount: 1, imageCount: 0, pages: [], images: [] });
+      resolveExtract({
+        documentId: 'd1',
+        filename: 'a.pdf',
+        pageCount: 1,
+        imageCount: 0,
+        pages: [],
+        images: [],
+      });
       await extractPromise;
     });
 
@@ -89,7 +104,9 @@ describe('usePdfExtraction', () => {
   // @s13/@s14 (Slice 2, task-12) — a typed rejection (PdfExtractionService already normalizes
   // every failure into a { code } shape) flips stage to 'error' and exposes that code as-is.
   it('sets stage to error and exposes the typed error code when extract() rejects', async () => {
-    service.extract.mockRejectedValue(Object.assign(new Error('too many pages'), { code: 'too_many_pages' }));
+    service.extract.mockRejectedValue(
+      Object.assign(new Error('too many pages'), { code: 'too_many_pages' }),
+    );
     const { result } = renderHook(() => usePdfExtraction());
 
     await act(async () => {
@@ -117,8 +134,17 @@ describe('usePdfExtraction', () => {
   // @s13 — retry() re-invokes extract() with the exact same input and documentId as the failed
   // attempt (no duplicate orphaned row, task-12), and a successful retry flips stage to success.
   it('retry() re-invokes extract with the same input and documentId, resolving to success', async () => {
-    service.extract.mockRejectedValueOnce(Object.assign(new Error('offline'), { code: 'network_error' }));
-    const extractionResult = { documentId: 'd1', filename: 'a.pdf', pageCount: 1, imageCount: 0, pages: [], images: [] };
+    service.extract.mockRejectedValueOnce(
+      Object.assign(new Error('offline'), { code: 'network_error' }),
+    );
+    const extractionResult = {
+      documentId: 'd1',
+      filename: 'a.pdf',
+      pageCount: 1,
+      imageCount: 0,
+      pages: [],
+      images: [],
+    };
     service.extract.mockResolvedValueOnce(extractionResult);
     const { result } = renderHook(() => usePdfExtraction());
 

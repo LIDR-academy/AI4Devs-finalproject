@@ -67,7 +67,9 @@ describe('ApiKeySettings', () => {
   // than hardcoded, so this test isn't tied to the runner's local timezone.
   it('renders the masked saved-status text built from the localized template', async () => {
     const updatedAt = '2026-01-01T00:00:00.000Z';
-    mockUseApiKey.mockReturnValue(apiKeyValue({ status: { hasKey: true, provider: 'openai', updatedAt } }));
+    mockUseApiKey.mockReturnValue(
+      apiKeyValue({ status: { hasKey: true, provider: 'openai', updatedAt } }),
+    );
     mockUseLocalization.mockReturnValue(
       localizationValue({
         t: (key: string, options?: Record<string, unknown>) =>
@@ -79,7 +81,9 @@ describe('ApiKeySettings', () => {
 
     const expectedDate = new Date(updatedAt).toLocaleDateString('en');
     expect(
-      screen.getByText(`settings.apiKey.savedStatus:{"provider":"OpenAI","date":"${expectedDate}"}`),
+      screen.getByText(
+        `settings.apiKey.savedStatus:{"provider":"OpenAI","date":"${expectedDate}"}`,
+      ),
     ).toBeTruthy();
   });
 
@@ -100,7 +104,9 @@ describe('ApiKeySettings', () => {
 
     await render(<ApiKeySettings />);
 
-    expect(screen.getByRole('button', { name: 'settings.apiKey.save', disabled: true })).toBeTruthy();
+    expect(
+      screen.getByRole('button', { name: 'settings.apiKey.save', disabled: true }),
+    ).toBeTruthy();
   });
 
   // @s7/@s9 — a network_error maps to the network i18n key (also used for a failed remove).
@@ -117,7 +123,10 @@ describe('ApiKeySettings', () => {
   it('calls removeApiKey when the removal is confirmed', async () => {
     const removeApiKey = jest.fn().mockResolvedValue(undefined);
     mockUseApiKey.mockReturnValue(
-      apiKeyValue({ status: { hasKey: true, provider: 'openai', updatedAt: '2026-01-01T00:00:00.000Z' }, removeApiKey }),
+      apiKeyValue({
+        status: { hasKey: true, provider: 'openai', updatedAt: '2026-01-01T00:00:00.000Z' },
+        removeApiKey,
+      }),
     );
     mockUseLocalization.mockReturnValue(localizationValue());
 
