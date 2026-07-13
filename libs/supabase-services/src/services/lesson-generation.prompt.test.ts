@@ -5,6 +5,9 @@ const pages = [
   { page: 2, text: 'Chlorophyll absorbs mostly red and blue light.' },
 ];
 
+const COMPOSITION_INSTRUCTIONS_BOTH =
+  'Generate a deck that mixes instructional slides (kind: "instructional") and activity slides (kind: "activity") covering the five supported activity types where relevant.';
+
 describe('buildDeckPrompt', () => {
   // @s3 — the full extracted text is available to the model, in page order.
   it('includes every page of extracted text in order', () => {
@@ -12,6 +15,17 @@ describe('buildDeckPrompt', () => {
 
     expect(prompt.indexOf('Photosynthesis converts light into chemical energy.')).toBeLessThan(
       prompt.indexOf('Chlorophyll absorbs mostly red and blue light.'),
+    );
+  });
+
+  // Pins the exact page-join separator ('\n\n' between pages) and the no-images tail (exactly
+  // '', never a manifest section) — a full-string match so a join('\n\n') -> join('') mutant, or
+  // a skipped/mistyped empty-images early return, both fail this assertion.
+  it('joins multiple pages with a blank line and appends nothing when there are no images', () => {
+    const prompt = buildDeckPrompt({ composition: 'both', pages, images: [] });
+
+    expect(prompt).toBe(
+      `${COMPOSITION_INSTRUCTIONS_BOTH}\n\nSource content:\n--- Page 1 ---\nPhotosynthesis converts light into chemical energy.\n\n--- Page 2 ---\nChlorophyll absorbs mostly red and blue light.`,
     );
   });
 
@@ -41,21 +55,42 @@ describe('buildDeckPrompt', () => {
   });
 
   // An image manifest entry may omit `description` (R1 currently leaves it null) — the prompt
-  // still lists the image by id/page/position.
+  // still lists the image by id/page/position, with no dangling separator/placeholder text where
+  // the description would have gone.
   it('omits the description line for an image manifest entry with no description', () => {
     const prompt = buildDeckPrompt({
       composition: 'both',
-      pages,
+      pages: [{ page: 1, text: 'X' }],
       images: [{ imageId: 'image-2', pageNumber: 2, positionIndex: 1 }],
     });
 
-    expect(prompt).toContain('image-2');
+    expect(prompt).toBe(
+      `${COMPOSITION_INSTRUCTIONS_BOTH}\n\nSource content:\n--- Page 1 ---\nX\n\nAvailable images (reference by id only; anchor each to the slide whose content is drawn from its page; do not invent images):\n- id: image-2, page: 2, position: 1`,
+    );
+  });
+
+  // Pins the exact join separator ('\n' between manifest lines) between two image-manifest
+  // entries (one with a description, one without) — a full-string match so a
+  // lines.join('\n') -> lines.join('') mutant fails this assertion.
+  it('joins multiple image-manifest entries with a newline', () => {
+    const prompt = buildDeckPrompt({
+      composition: 'both',
+      pages: [{ page: 1, text: 'X' }],
+      images: [
+        { imageId: 'image-1', pageNumber: 1, positionIndex: 0, description: 'A leaf diagram' },
+        { imageId: 'image-2', pageNumber: 2, positionIndex: 1 },
+      ],
+    });
+
+    expect(prompt).toBe(
+      `${COMPOSITION_INSTRUCTIONS_BOTH}\n\nSource content:\n--- Page 1 ---\nX\n\nAvailable images (reference by id only; anchor each to the slide whose content is drawn from its page; do not invent images):\n- id: image-1, page: 1, position: 0 — A leaf diagram\n- id: image-2, page: 2, position: 1`,
+    );
   });
 
   it('has no image-manifest section at all when there are no images', () => {
     const prompt = buildDeckPrompt({ composition: 'both', pages, images: [] });
 
-    expect(prompt).not.toContain('imageId');
+    expect(prompt).not.toContain('Available images');
   });
 
   // task-11, @s4/@s5/@s6 — the other two compositions are enforced in the prompt too, not just

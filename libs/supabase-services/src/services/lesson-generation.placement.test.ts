@@ -128,6 +128,31 @@ describe('applyVisionPlacements', () => {
     expect(unplaced).toEqual([image]);
   });
 
+  // @s10 — with several vision decisions on the table, the one matching this image's imageId is
+  // picked, never just the first in the list (guards `.find(predicate)` against a predicate that
+  // ignores imageId and always matches the first decision).
+  it('picks the decision matching this image imageId, not the first in a list of several', () => {
+    const { placements, unplaced } = applyVisionPlacements(
+      [image],
+      [
+        { imageId: 'unrelated-image', slideIndex: 5 },
+        { imageId: 'image-1', slideIndex: 2 },
+        { imageId: 'another-unrelated-image', slideIndex: 7 },
+      ],
+      new Map(),
+    );
+
+    expect(placements.get(2)).toEqual({
+      imageId: 'image-1',
+      storagePath: 'u/d/p5-0.png',
+      width: 100,
+      height: 100,
+    });
+    expect(placements.has(5)).toBe(false);
+    expect(placements.has(7)).toBe(false);
+    expect(unplaced).toEqual([]);
+  });
+
   // @s12 — an image with no decision at all (the vision call never returned one for it, e.g. a
   // partial/degraded vision response) degrades to text-only rather than failing.
   it('leaves the image unplaced when no decision was returned for it', () => {

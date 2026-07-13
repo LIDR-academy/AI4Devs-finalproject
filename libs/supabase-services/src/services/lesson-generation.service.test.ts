@@ -48,7 +48,10 @@ describe('LessonGenerationService', () => {
   it('rejects with unauthenticated and never calls the DAO when userId is empty', async () => {
     await expect(
       LessonGenerationService.generate({ documentId: 'doc-1', composition: 'both' }, ''),
-    ).rejects.toMatchObject({ code: 'unauthenticated' });
+    ).rejects.toMatchObject({
+      code: 'unauthenticated',
+      message: 'LessonGenerationService: unauthenticated',
+    });
     expect(dao.generateLesson).not.toHaveBeenCalled();
   });
 
@@ -119,6 +122,16 @@ describe('LessonGenerationService', () => {
 
     it('falls back to generation_failed when the server error body itself resolves to null', async () => {
       dao.generateLesson.mockRejectedValue(httpErrorWithBody(null));
+
+      await expect(
+        LessonGenerationService.generate({ documentId: 'doc-1', composition: 'both' }, 'user-1'),
+      ).rejects.toMatchObject({ code: 'generation_failed' });
+    });
+
+    // Same as the null-body case above but with `undefined` — proves the optional-chaining read
+    // of `errorCode` off a nullish body never throws through to the caller either way.
+    it('falls back to generation_failed when the server error body itself resolves to undefined', async () => {
+      dao.generateLesson.mockRejectedValue(httpErrorWithBody(undefined));
 
       await expect(
         LessonGenerationService.generate({ documentId: 'doc-1', composition: 'both' }, 'user-1'),

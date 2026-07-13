@@ -60,3 +60,44 @@ study-buddy` 117/117, `@helsoft/localization` green except the same pre-existing
 sign-in-form/sign-out `migration-coverage.test.ts` failures. E2e (`playwright test
 --reporter=list generation-progress lesson-generation-panel`) 14/14. Not committed — awaiting
 `reviewer_slice`.
+
+## Mutation-hardening cycle (post-review, `@helsoft/supabase-services`)
+
+Stryker pre-review: 77.72% (41 survivors/6 files). Strengthened assertions only — no production
+change — per file: `assembly.test.ts` (`.name`/`.message` on the 3 thrown-`GenerationSchemaError`
+tests; +1 test: explanation ternary's present-branch on multiple-choice) · `errors.test.ts`
+(+1 test: `GenerationTimeoutError` default message/name; +1 `it.each` of 6: `apiCallStatusCode`
+guard vs. `null`/`undefined`/string/number/`{}`/`{statusCode:'x'}`) · `placement.test.ts` (+1 test:
+3 vision decisions, only one matching `imageId`, asserts the matching one — not the first — is
+picked) · `prompt.test.ts` (3 tests switched to full-string `.toBe()`: page-join `\n\n` +
+empty-images `''` combined, description-fallback `''`, manifest-line-join `\n`; the "no images"
+test now checks `.not.toContain('Available images')`, the real header text) · `schema.test.ts`
+(existing correctOptionId/correctPairs rejection tests now assert `error.issues[0].message`+
+`.path`; +5 `.min()`-boundary tests via the exported `rawSlideSchema` directly — bypasses
+deckSchema's cross-field `superRefine` so only that one field's bound can flip the outcome; +2
+tests isolating each side of the matching length-mismatch `||`; +1 mixed valid/invalid
+`correctPairs` test for `.every()`; +2 duplicate-id tests, one per side, confirming both `||`
+operands are load-bearing) · `service.test.ts` (unauthenticated-rejection test now asserts the
+`LessonGenerationService: ${code}` message prefix; +1 test: server body resolves to `undefined`,
+alongside the existing `null` case).
+
+Re-ran Stryker scoped to these 6 files: **97.77%, 4 survivors** (down from 41), all 3
+remaining-file scores at 100% (`assembly.ts`, `placement.ts`, `prompt.ts`, `schema.ts`).
+Genuine equivalent mutants (verified by exhausting every observably-different input, not just
+asserted) — documented, not silenced:
+- `errors.ts:26` final guard (`typeof statusCode === 'number'` → `true`): any `cause.statusCode`
+  that strictly `===` 401/403/429 downstream must already be typeof `'number'`, so the guard's
+  removal never changes the returned mapping for any input; property access is already proven
+  safe by the untouched first two guards, so no crash-based distinction exists either.
+- `errors.ts:38` both mutants (`if (false)` / empty block for the `instanceof
+  GenerationSchemaError` branch): `GenerationSchemaError` instances carry no `statusCode`, so
+  falling through to `apiCallStatusCode` + the final default returns the byte-identical
+  `{errorCode:'generation_failed', status:502}` the explicit branch would have — same value,
+  same shape, for every possible cause.
+- `service.ts:48` optional chaining (`body?.errorCode` → `body.errorCode`): the whole expression
+  sits inside `readFunctionErrorCode`'s own `try { … } catch { return 'generation_failed'; }` —
+  a null/undefined `body` throws either way the `?.` is written, and that throw is swallowed by
+  the enclosing catch to the same fallback value; the `?.` is a redundant, unobservable
+  belt-and-suspenders guard given the surrounding try/catch.
+
+`pnpm --filter @helsoft/supabase-services test` 143/143 green. `pnpm lint` / `check-types` clean.

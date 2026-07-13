@@ -1,6 +1,17 @@
 import { GenerationSchemaError } from './lesson-generation.assembly';
 import { GenerationTimeoutError, mapGenerationError } from './lesson-generation.errors';
 
+describe('GenerationTimeoutError', () => {
+  // Pins the default message/name a caller that constructs one with no argument gets — the
+  // manual wall-clock guard (risks.md R4) never needs to pass an explicit message.
+  it('defaults to the "Generation timed out" message and the GenerationTimeoutError name', () => {
+    const error = new GenerationTimeoutError();
+
+    expect(error.message).toBe('Generation timed out');
+    expect(error.name).toBe('GenerationTimeoutError');
+  });
+});
+
 describe('mapGenerationError', () => {
   // @s15 — a deck-schema/invariant/composition violation (task-11's assertComposition also
   // throws GenerationSchemaError) maps to the typed generation_failed code.
@@ -16,6 +27,23 @@ describe('mapGenerationError', () => {
     expect(mapGenerationError(new GenerationTimeoutError())).toEqual({
       errorCode: 'timeout',
       status: 504,
+    });
+  });
+
+  // The API-call-error type guard (`typeof cause === 'object' && cause !== null && typeof
+  // statusCode === 'number'`) must reject every shape that doesn't fully satisfy it, falling
+  // through to the generic generation_failed code rather than misreading a nullish/primitive/
+  // malformed cause as a statusCode.
+  describe('API-error type guard rejects a non-conforming cause', () => {
+    it.each([
+      ['null', null],
+      ['undefined', undefined],
+      ['a string primitive', 'not-an-object'],
+      ['a number primitive', 42],
+      ['an object with no statusCode', {}],
+      ['an object whose statusCode is not a number', { statusCode: 'not-a-number' }],
+    ])('falls back to generation_failed for %s', (_label, cause) => {
+      expect(mapGenerationError(cause)).toEqual({ errorCode: 'generation_failed', status: 502 });
     });
   });
 

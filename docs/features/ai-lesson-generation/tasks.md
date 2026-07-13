@@ -1,6 +1,6 @@
 ---
 feature: ai-lesson-generation
-phase: in_progress # pending|spec_drafted|spec_ready|approved|in_progress|in_review|mutation|pr_ready|done
+phase: in_review # pending|spec_drafted|spec_ready|approved|in_progress|in_review|mutation|pr_ready|done
 review_round: 0     # incremented by reviews_lead; cap 2
 ---
 

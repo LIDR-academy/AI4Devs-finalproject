@@ -138,6 +138,27 @@ describe('assembleGeneratedLesson', () => {
     expect(mcq.explanation).toBeUndefined();
   });
 
+  // @s13 — the other branch of the same ternary: a multiple-choice slide the model DID give an
+  // explanation for carries it through unchanged.
+  it('carries explanation through on a multiple-choice slide when the model provided one', () => {
+    const deckWithExplanation = {
+      ...rawDeck,
+      slides: [
+        rawDeck.slides[0],
+        { ...rawDeck.slides[1], explanation: 'Chlorophyll captures light energy' },
+      ],
+    };
+
+    const lesson = assembleGeneratedLesson({
+      composition: 'both',
+      rawDeck: deckWithExplanation,
+      images: [],
+    });
+
+    const mcq = lesson.slides[1] as MultipleChoiceSlide;
+    expect(mcq.explanation).toBe('Chlorophyll captures light energy');
+  });
+
   // @s9/@s11 — an image whose page metadata matches a slide's sourcePage is attached to that
   // slide by reference; a slide with no relevant image is text-only (image omitted, not null).
   it('attaches a SlideImageRef to the slide anchored by matching page metadata, leaving the other text-only', () => {
@@ -170,9 +191,16 @@ describe('assembleGeneratedLesson', () => {
   it('throws a GenerationSchemaError for a model response that fails schema validation', () => {
     const invalidDeck = { title: 'Bad', slides: [{ kind: 'instructional', title: 'Intro' }] };
 
-    expect(() =>
-      assembleGeneratedLesson({ composition: 'both', rawDeck: invalidDeck, images: [] }),
-    ).toThrow(GenerationSchemaError);
+    let thrown: Error | undefined;
+    try {
+      assembleGeneratedLesson({ composition: 'both', rawDeck: invalidDeck, images: [] });
+    } catch (error) {
+      thrown = error as Error;
+    }
+
+    expect(thrown).toBeInstanceOf(GenerationSchemaError);
+    expect(thrown?.name).toBe('GenerationSchemaError');
+    expect(thrown?.message.length).toBeGreaterThan(0);
   });
 
   // Two lessons generated back-to-back never collide on lessonId.
@@ -198,7 +226,7 @@ describe('assembleGeneratedLesson', () => {
 
       expect(() =>
         assembleGeneratedLesson({ composition: 'instructional-only', rawDeck: deck, images: [] }),
-      ).toThrow(GenerationSchemaError);
+      ).toThrow('instructional-only composition must not contain activity slides');
     });
 
     // @s4 — an all-instructional deck is accepted for the instructional-only composition.
@@ -221,7 +249,7 @@ describe('assembleGeneratedLesson', () => {
 
       expect(() =>
         assembleGeneratedLesson({ composition: 'activity-only', rawDeck: deck, images: [] }),
-      ).toThrow(GenerationSchemaError);
+      ).toThrow('activity-only composition must not contain instructional slides');
     });
 
     // @s5 — an all-activity deck is accepted for the activity-only composition.
