@@ -236,3 +236,161 @@ No test coverage gaps. The mutations are **dead code** — logical branches wher
 - `libs/supabase-services/src/services/lesson-generation.service.ts`
 
 No source code changes were made in this measurement pass.
+
+---
+
+# Post-Review Mutation Pass
+
+**Review fix commit:** `bc4ac00` (implementator resolved 7 findings from round-1 review)  
+**Base-ref:** `79d86f5` (pre-review sha)  
+**Scope:** Files changed by review fix only (6 supabase-services files)  
+**Score:** 98.18% (162/165 killed) | **3 survivors** | **All verified as genuine equivalents**
+
+---
+
+## Executive Summary
+
+Post-review re-run after implementator fixed 7 review findings. The review refactored `lesson-generation.errors.ts` (moved `GenerationErrorMapping` type definition to `lesson-generation.types.ts`), leaving the executable logic unchanged. All 3 survivors are the same genuine equivalents confirmed in the pre-review pass, now at shifted line numbers (6-line offset due to removed imports/type definition).
+
+---
+
+## Per-Library Mutation Scores (Review-Changed Files Only)
+
+| File | Total | Killed | Survived | Score |
+|------|-------|--------|----------|-------|
+| `src/services/lesson-generation.assembly.ts` | 32 | 32 | 0 | **100%** ✓ |
+| `src/services/lesson-generation.placement.ts` | 14 | 14 | 0 | **100%** ✓ |
+| `src/services/lesson-generation.prompt.ts` | 17 | 17 | 0 | **100%** ✓ |
+| `src/services/lesson-generation.schema.ts` | 78 | 78 | 0 | **100%** ✓ |
+| `src/services/lesson-generation.types.ts` | — | — | — | **N/A** (pure types) |
+| `src/services/lesson-generation.errors.ts` | 24 | 21 | 3 | 87.50% |
+| **TOTAL** | **165** | **162** | **3** | **98.18%** |
+
+---
+
+## Surviving Mutants — Independent Re-Analysis
+
+All 3 survivors are the same genuine equivalents as the pre-review pass, confirmed via independent code tracing (lines shifted by 6 due to type definition relocation).
+
+### `src/services/lesson-generation.errors.ts`
+
+#### Line 20:3 — ConditionalExpression (Final type guard)
+
+**Mutation:**
+```diff
+- typeof (cause as { statusCode?: unknown }).statusCode === 'number'
++ true
+```
+
+**Code context (lines 17–22):**
+```typescript
+const apiCallStatusCode = (cause: unknown): number | undefined =>
+  typeof cause === 'object' &&
+  cause !== null &&
+  typeof (cause as { statusCode?: unknown }).statusCode === 'number'  // Line 20
+    ? (cause as { statusCode: number }).statusCode
+    : undefined;
+```
+
+**Independent analysis (pre-review conclusion holds):**
+
+When `cause` is an object without a `statusCode` property (or with non-numeric `statusCode`):
+
+**Original:** Guard fails (line 20 → false), returns `undefined`.  
+**Mutant:** Guard passes (line 20 → true), ternary operator accesses `.statusCode` property, which is either absent or non-numeric, returning `undefined` or a non-numeric value.
+
+Downstream usage in `mapGenerationError` (lines 36–40):
+```typescript
+const statusCode = apiCallStatusCode(cause);
+if (statusCode === 401 || statusCode === 403) return { errorCode: 'invalid_key', status: 401 };
+if (statusCode === 429) return { errorCode: 'rate_limited', status: 429 };
+return { errorCode: 'generation_failed', status: 502 };
+```
+
+Both `undefined` (original) and non-numeric values (mutant) fail all three numeric comparisons and fall through to `generation_failed`. **Verified equivalent.**
+
+**Verdict:** Genuine equivalent mutant. The final guard is redundant; downstream checks produce identical observable behavior regardless.
+
+---
+
+#### Line 32:7 — ConditionalExpression (`if(false)`)
+
+**Mutation:**
+```diff
+- if (cause instanceof GenerationSchemaError) {
++ if (false) {
+```
+
+**Code context (lines 30–34):**
+```typescript
+export const mapGenerationError = (cause: unknown): GenerationErrorMapping => {
+  if (cause instanceof GenerationTimeoutError) return { errorCode: 'timeout', status: 504 };
+  if (cause instanceof GenerationSchemaError) {          // Line 32:7
+    return { errorCode: 'generation_failed', status: 502 };
+  }
+```
+
+**Independent analysis (pre-review conclusion holds):**
+
+When `cause` is a `GenerationSchemaError`:
+
+**Original:** instanceof check passes, explicit return `{ errorCode: 'generation_failed', status: 502 }`.  
+**Mutant:** Check always false, falls through to line 36: `const statusCode = apiCallStatusCode(cause)`.
+
+For an Error object:
+- `apiCallStatusCode` guard: `typeof cause === 'object'` ✓, `cause !== null` ✓
+- Final guard: `typeof cause.statusCode === 'number'` → false (Error has no statusCode)
+- Returns `undefined`
+
+Fallthrough logic (lines 37–40) checks `statusCode === 401/403/429` all fail, returning `generation_failed` at line 40.
+
+Both original (explicit return) and mutant (fallthrough) return **`{ errorCode: 'generation_failed', status: 502 }`**. **Verified equivalent.**
+
+**Verdict:** Genuine equivalent mutant. GenerationSchemaError carries no statusCode; fallthrough path is identical to explicit return.
+
+---
+
+#### Line 32:47 — BlockStatement (Empty block)
+
+**Mutation:**
+```diff
+- if (cause instanceof GenerationSchemaError) {
+-   return { errorCode: 'generation_failed', status: 502 };
+- }
++ if (cause instanceof GenerationSchemaError) {}
+```
+
+**Independent analysis (pre-review conclusion holds):**
+
+Identical to Line 32:7 mutant: the check passes, block is entered but empty. Execution falls through to the same fallthrough logic, returning `generation_failed` identically.
+
+**Verdict:** Genuine equivalent mutant. Same reasoning as Line 32:7.
+
+---
+
+## Survivor Summary
+
+| Survivor | File | Lines | Mechanism | Pre-Review Line(s) |
+|----------|------|-------|-----------|-------------------|
+| 1 | `lesson-generation.errors.ts` | 20:3 | Final guard redundancy | 26:3 |
+| 2 | `lesson-generation.errors.ts` | 32:7 | No statusCode property | 38:7 |
+| 3 | `lesson-generation.errors.ts` | 32:47 | No statusCode property | 38:47 |
+
+---
+
+## Verdict
+
+**PASS** — Score 98.18% (162/165 mutants killed on review-changed scope). All 3 surviving mutants are verified as genuine equivalents (same as pre-review, line-shifted due to type definition refactor). **Threshold 100% met** after excluding confirmed equivalent mutants. No test coverage gaps introduced by review fixes.
+
+---
+
+## Files Measured (Post-Review Scope)
+
+- `libs/supabase-services/src/services/lesson-generation.assembly.ts`
+- `libs/supabase-services/src/services/lesson-generation.errors.ts`
+- `libs/supabase-services/src/services/lesson-generation.placement.ts`
+- `libs/supabase-services/src/services/lesson-generation.prompt.ts`
+- `libs/supabase-services/src/services/lesson-generation.schema.ts`
+- `libs/supabase-services/src/services/lesson-generation.types.ts`
+
+No source code logic changes were introduced that would create new survivors.
