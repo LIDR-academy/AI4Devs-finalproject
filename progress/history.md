@@ -28,3 +28,4 @@
 2026-07-13 | ui-tweaks (ad hoc, no story) | n/a | — | SignOut moved to settings headerRight (style prop + WithStyle story); home screen spacing. Branch feature-entrega2-HernanLaura.
 2026-07-13 | component-split (ad hoc, no story) | n/a | — | Repo-wide component-split: *.types.ts + co-located hooks/helpers across 6 libs; 831 tests green. Branch feature-entrega2-HernanLaura.
 2026-07-13 | supabase-services-split (ad hoc, no story) | n/a | — | Split @helsoft/supabase-services out of @helsoft/services (Supabase client/DAOs/services); consumers + agent docs repointed; all suites green. Branch feature-entrega2-HernanLaura.
+2026-07-13 | logging-in-out (ad hoc, no story) | n/a | — | Extracted LoginForm/SignInForm/SignOut into @helsoft/logging-in-out; thin study-buddy wrappers; mutation skill wired. Branch feature-entrega2-HernanLaura.
