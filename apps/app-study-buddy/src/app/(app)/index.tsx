@@ -8,7 +8,7 @@ export default function HomeScreen() {
   const { t } = useLocalization();
 
   return (
-    <ScreenContainer>
+    <ScreenContainer style={{ gap: 10, padding: 20 }}>
       <Text>{t('home.savedLessons')}</Text>
       <Text>{t('lessons.count', { count: 0 })}</Text>
       <Link href="/upload">
