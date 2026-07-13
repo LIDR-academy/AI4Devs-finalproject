@@ -1,10 +1,6 @@
 import { FillInTheBlank } from '@helsoft/activities';
-import type { FillInTheBlankAnswer, FillInTheBlankSlide } from '@helsoft/types';
 
-export type FillInTheBlankActivityProps = {
-  slide: FillInTheBlankSlide;
-  onAnswered?: (answer: FillInTheBlankAnswer) => void;
-};
+import type { FillInTheBlankActivityProps } from './fill-in-the-blank-activity.types';
 
 /** Thin feature wiring — organism owns state + grading. */
 export const FillInTheBlankActivity = ({ slide, onAnswered }: FillInTheBlankActivityProps) => (

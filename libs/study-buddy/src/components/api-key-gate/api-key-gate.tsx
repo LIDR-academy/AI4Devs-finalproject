@@ -1,14 +1,9 @@
-import { ReactNode } from 'react';
 import { ApiKeyRequiredNotice } from '@helsoft/components';
 import { useApiKey } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import { useRouter } from 'expo-router';
 
-export type ApiKeyGateProps = {
-  /** The generation entry point's content (the future R2 generation UI) — only rendered once
-   * a key is present (AC10). */
-  children: ReactNode;
-};
+import type { ApiKeyGateProps } from './api-key-gate.types';
 
 /**
  * ApiKeyGate — feature component guarding the lesson-generation entry point (AC10, @s10):

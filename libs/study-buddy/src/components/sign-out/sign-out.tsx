@@ -1,14 +1,14 @@
 import { Button, Dialog } from '@helsoft/components';
 
+import type { SignOutProps } from './sign-out.types';
 import { useSignOut } from './use-sign-out';
-import { StyleProp, ViewStyle } from 'react-native';
 
 /**
  * SignOut — feature component wiring useAuth().signOut behind a confirmation dialog
  * (session termination is irreversible without re-authenticating). No navigation on
  * confirm: the root Stack.Protected guard reacts to the session change.
  */
-export const SignOut = ({style}: {style?: StyleProp<ViewStyle> }) => {
+export const SignOut = ({ style }: SignOutProps) => {
   const { signOut, t, confirmOpen, setConfirmOpen } = useSignOut();
 
   return (
