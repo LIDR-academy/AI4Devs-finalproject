@@ -1,134 +1,132 @@
-## Índice
+# Entrega Final - ComercIA Marketplace Assistant
 
-0. [Ficha del proyecto](#0-ficha-del-proyecto)
-1. [Descripción general del producto](#1-descripción-general-del-producto)
-2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
-3. [Modelo de datos](#3-modelo-de-datos)
-4. [Especificación de la API](#4-especificación-de-la-api)
-5. [Historias de usuario](#5-historias-de-usuario)
-6. [Tickets de trabajo](#6-tickets-de-trabajo)
-7. [Pull requests](#7-pull-requests)
+Esta carpeta contiene la version funcional preparada para la entrega final.
 
----
+## Objetivo
 
-## 0. Ficha del proyecto
+Publicar ComercIA Marketplace Assistant con:
 
-### **0.1. Tu nombre completo:**
+- Backend desplegable en Railway.
+- Frontend desplegable en Railway.
+- Base de datos PostgreSQL en Railway.
+- Webhook listo para Meta WhatsApp Cloud API.
+- Variables de entorno separadas para frontend y backend.
+- Flujo principal funcional: WhatsApp -> conversacion -> oferta -> orden -> pago -> entrega Maps.
 
-### **0.2. Nombre del proyecto:**
+## Modos de base de datos
 
-### **0.3. Descripción breve del proyecto:**
+El backend soporta dos modos:
 
-### **0.4. URL del proyecto:**
+- Local sin `DATABASE_URL`: usa SQLite local para desarrollo y tests.
+- Railway con `DATABASE_URL`: usa PostgreSQL automaticamente.
 
-> Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/).
+## Instalacion local
 
-### 0.5. URL o archivo comprimido del repositorio
+```powershell
+cd F:\aspis\SergioCursos\AI4Devs-finalproject\entrega3
+npm install
+Copy-Item backend/.env.example backend/.env
+npm run db:migrate
+npm run db:seed
+```
 
-> Puedes tenerlo alojado en público o en privado, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/). También puedes compartir por correo un archivo zip con el contenido
+## Desarrollo local
 
+Terminal 1:
 
----
+```powershell
+npm run dev:backend
+```
 
-## 1. Descripción general del producto
+Terminal 2:
 
-> Describe en detalle los siguientes aspectos del producto:
+```powershell
+npm run dev:frontend
+```
 
-### **1.1. Objetivo:**
+URLs locales:
 
-> Propósito del producto. Qué valor aporta, qué soluciona, y para quién.
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:3000`
+- Health check: `http://localhost:3000/health`
 
-### **1.2. Características y funcionalidades principales:**
+## Validacion
 
-> Enumera y describe las características y funcionalidades específicas que tiene el producto para satisfacer las necesidades identificadas.
+```powershell
+npm test
+npm run build
+```
 
-### **1.3. Diseño y experiencia de usuario:**
+Validado localmente:
 
-> Proporciona imágenes y/o videotutorial mostrando la experiencia del usuario desde que aterriza en la aplicación, pasando por todas las funcionalidades principales.
+- 2 suites de tests pasan.
+- 4 tests pasan.
+- Backend compila.
+- Frontend compila.
 
-### **1.4. Instrucciones de instalación:**
-> Documenta de manera precisa las instrucciones para instalar y poner en marcha el proyecto en local (librerías, backend, frontend, servidor, base de datos, migraciones y semillas de datos, etc.)
+## Railway
 
----
+Crear 3 servicios:
 
-## 2. Arquitectura del Sistema
+1. PostgreSQL.
+2. Backend Node.js.
+3. Frontend Vite.
 
-### **2.1. Diagrama de arquitectura:**
-> Usa el formato que consideres más adecuado para representar los componentes principales de la aplicación y las tecnologías utilizadas. Explica si sigue algún patrón predefinido, justifica por qué se ha elegido esta arquitectura, y destaca los beneficios principales que aportan al proyecto y justifican su uso, así como sacrificios o déficits que implica.
+Backend:
 
+```text
+Root directory: entrega3
+Build command: npm install && npm --workspace backend run build
+Start command: npm --workspace backend start
+Healthcheck path: /health
+```
 
-### **2.2. Descripción de componentes principales:**
+Frontend:
 
-> Describe los componentes más importantes, incluyendo la tecnología utilizada
+```text
+Root directory: entrega3
+Build command: npm install && npm --workspace frontend run build
+Start command: npm --workspace frontend start
+```
 
-### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
+Mas detalle en:
 
-> Representa la estructura del proyecto y explica brevemente el propósito de las carpetas principales, así como si obedece a algún patrón o arquitectura específica.
+- `docs/deployment-railway-meta.md`
+- `docs/env-reference.md`
+- `docs/checklist-final.md`
 
-### **2.4. Infraestructura y despliegue**
+## Meta WhatsApp
 
-> Detalla la infraestructura del proyecto, incluyendo un diagrama en el formato que creas conveniente, y explica el proceso de despliegue que se sigue
+Webhook backend:
 
-### **2.5. Seguridad**
+```text
+GET  /webhooks/whatsapp
+POST /webhooks/whatsapp
+```
 
-> Enumera y describe las prácticas de seguridad principales que se han implementado en el proyecto, añadiendo ejemplos si procede
+Callback URL en Meta:
 
-### **2.6. Tests**
+```text
+https://TU-BACKEND.up.railway.app/webhooks/whatsapp
+```
 
-> Describe brevemente algunos de los tests realizados
+Verify token:
 
----
+```text
+META_WHATSAPP_VERIFY_TOKEN
+```
 
-## 3. Modelo de Datos
+Para activar envio real de mensajes:
 
-### **3.1. Diagrama del modelo de datos:**
+```text
+WHATSAPP_PROVIDER=meta
+META_WHATSAPP_ACCESS_TOKEN=...
+META_WHATSAPP_PHONE_NUMBER_ID=...
+```
 
-> Recomendamos usar mermaid para el modelo de datos, y utilizar todos los parámetros que permite la sintaxis para dar el máximo detalle, por ejemplo las claves primarias y foráneas.
+Para pruebas sin Meta:
 
-
-### **3.2. Descripción de entidades principales:**
-
-> Recuerda incluir el máximo detalle de cada entidad, como el nombre y tipo de cada atributo, descripción breve si procede, claves primarias y foráneas, relaciones y tipo de relación, restricciones (unique, not null…), etc.
-
----
-
-## 4. Especificación de la API
-
-> Si tu backend se comunica a través de API, describe los endpoints principales (máximo 3) en formato OpenAPI. Opcionalmente puedes añadir un ejemplo de petición y de respuesta para mayor claridad
-
----
-
-## 5. Historias de Usuario
-
-> Documenta 3 de las historias de usuario principales utilizadas durante el desarrollo, teniendo en cuenta las buenas prácticas de producto al respecto.
-
-**Historia de Usuario 1**
-
-**Historia de Usuario 2**
-
-**Historia de Usuario 3**
-
----
-
-## 6. Tickets de Trabajo
-
-> Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto. 
-
-**Ticket 1**
-
-**Ticket 2**
-
-**Ticket 3**
-
----
-
-## 7. Pull Requests
-
-> Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
-
-**Pull Request 1**
-
-**Pull Request 2**
-
-**Pull Request 3**
+```text
+WHATSAPP_PROVIDER=simulator
+```
 
