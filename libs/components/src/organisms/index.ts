@@ -5,6 +5,8 @@ export type * from './api-key-required-notice/api-key-required-notice.types';
 export * from './dialog/dialog';
 export type * from './dialog/dialog.types';
 export * from './language-settings/language-settings';
+export * from './lesson-generation-panel/lesson-generation-panel';
+export type * from './lesson-generation-panel/lesson-generation-panel.types';
 export * from './pdf-upload-panel/pdf-upload-panel';
 export type * from './pdf-upload-panel/pdf-upload-panel.types';
 export * from './results-summary/results-summary';

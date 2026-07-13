@@ -49,6 +49,26 @@ export const es: TranslationResource = {
         unauthenticated: 'Inicia sesión para subir el archivo',
       },
     },
+    generation: {
+      composition: {
+        heading: 'Contenido de la lección',
+        instructionalOnly: 'Solo instructivo',
+        activityOnly: 'Solo actividades',
+        both: 'Ambos',
+      },
+      generate: 'Generar lección',
+      step: {
+        reading: 'Leyendo contenido',
+        generating: 'Generando diapositivas',
+        attaching: 'Adjuntando imágenes',
+      },
+      ready: {
+        slideCount_one: '{{count}} diapositiva generada',
+        slideCount_other: '{{count}} diapositivas generadas',
+        composition: 'Composición: {{composition}}',
+        openInPlayer: 'Abrir en el reproductor',
+      },
+    },
     lesson: {
       title: 'Lección {{id}}',
       start: 'Empezar a estudiar',
@@ -101,7 +121,7 @@ export const es: TranslationResource = {
         replace: 'Reemplazar',
         remove: 'Eliminar',
         savedStatus: 'Clave de {{provider}} guardada · Actualizada {{date}}',
-        guidance: '¿No tienes una clave? Consíguela en OpenAI',
+        guidance: '¿No tienes una clave? Consíguela en Groq',
         removeConfirmHeadline: '¿Eliminar clave de API?',
         removeConfirmBody: 'Deberás agregar una nueva clave para volver a generar lecciones.',
         removeConfirmAction: 'Confirmar eliminación',

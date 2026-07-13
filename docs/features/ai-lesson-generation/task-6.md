@@ -3,7 +3,7 @@ id: task-6
 title: LessonGenerationService (orchestrate happy path)
 slice: 1
 scenarios: [s3, s6]
-status: todo
+status: done
 paths:
   - libs/supabase-services/src/services/lesson-generation.service.ts
   - libs/supabase-services/src/services/index.ts
@@ -24,11 +24,11 @@ export abstract class LessonGenerationService {
 ```
 
 ## Done criteria
-- [ ] Scenarios @s3 (returns the ordered typed deck) / @s6 (passes composition through) covered by `lesson-generation.service.test.ts` (mock the DAO)
-- [ ] No React; no direct Supabase/`fetch`; delegates to the DAO (per `hooks-service-dao.mdc`)
-- [ ] `unauthenticated` / `document_not_ready` guard rejections tested at the service layer
-- [ ] Exported through the services barrel
-- [ ] `pnpm lint` + `pnpm check-types` + `pnpm test` green
+- [x] Scenarios @s3 (returns the ordered typed deck) / @s6 (passes composition through) covered by `lesson-generation.service.test.ts` (mock the DAO)
+- [x] No React; no direct Supabase/`fetch`; delegates to the DAO (per `hooks-service-dao.mdc`)
+- [x] `unauthenticated` / `document_not_ready` guard rejections tested at the service layer
+- [x] Exported through the services barrel
+- [x] `pnpm lint` + `pnpm check-types` + `pnpm test` green
 
 ## Notes
 - Shares the `toGenerationError(code)` helper with task-11/12 (single source for the typed-error shape, mirroring `PdfExtractionService`).

@@ -49,7 +49,7 @@ describe('ApiKeySettings', () => {
   // Full-review Round 1, Minor 8 — ApiKeySettings (the wiring layer) owns the guidance
   // destination and passes it down to ApiKeyForm's `guidanceUrl` prop, rather than ApiKeyForm
   // hardcoding a provider-specific URL itself.
-  it('passes the OpenAI guidance URL down to ApiKeyForm', async () => {
+  it('passes the Groq guidance URL down to ApiKeyForm', async () => {
     const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
     mockUseApiKey.mockReturnValue(apiKeyValue());
     mockUseLocalization.mockReturnValue(localizationValue());
@@ -57,7 +57,7 @@ describe('ApiKeySettings', () => {
     await render(<ApiKeySettings />);
     fireEvent.press(screen.getByRole('button', { name: 'settings.apiKey.guidance' }));
 
-    expect(openURL).toHaveBeenCalledWith('https://platform.openai.com/api-keys');
+    expect(openURL).toHaveBeenCalledWith('https://console.groq.com/keys');
     openURL.mockRestore();
   });
 
@@ -68,7 +68,7 @@ describe('ApiKeySettings', () => {
   it('renders the masked saved-status text built from the localized template', async () => {
     const updatedAt = '2026-01-01T00:00:00.000Z';
     mockUseApiKey.mockReturnValue(
-      apiKeyValue({ status: { hasKey: true, provider: 'openai', updatedAt } }),
+      apiKeyValue({ status: { hasKey: true, provider: 'groq', updatedAt } }),
     );
     mockUseLocalization.mockReturnValue(
       localizationValue({
@@ -81,9 +81,7 @@ describe('ApiKeySettings', () => {
 
     const expectedDate = new Date(updatedAt).toLocaleDateString('en');
     expect(
-      screen.getByText(
-        `settings.apiKey.savedStatus:{"provider":"OpenAI","date":"${expectedDate}"}`,
-      ),
+      screen.getByText(`settings.apiKey.savedStatus:{"provider":"Groq","date":"${expectedDate}"}`),
     ).toBeTruthy();
   });
 
@@ -124,7 +122,7 @@ describe('ApiKeySettings', () => {
     const removeApiKey = jest.fn().mockResolvedValue(undefined);
     mockUseApiKey.mockReturnValue(
       apiKeyValue({
-        status: { hasKey: true, provider: 'openai', updatedAt: '2026-01-01T00:00:00.000Z' },
+        status: { hasKey: true, provider: 'groq', updatedAt: '2026-01-01T00:00:00.000Z' },
         removeApiKey,
       }),
     );

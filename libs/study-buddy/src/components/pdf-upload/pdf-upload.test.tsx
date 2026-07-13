@@ -320,4 +320,95 @@ describe('PdfUpload', () => {
 
     expect(screen.getByRole('button', { name: 'upload.retryAction' })).toBeTruthy();
   });
+
+  // task-10 (decision #9) — onExtracted is additive/optional: omitting it is identical to R1's
+  // existing zero-prop behavior (every test above renders <PdfUpload /> with no prop at all).
+  describe('onExtracted (task-10)', () => {
+    const successResult = {
+      documentId: 'doc-1',
+      filename: 'notes.pdf',
+      pageCount: 4,
+      imageCount: 0,
+      pages: [],
+      images: [],
+    };
+
+    // @s16 — fires exactly once with the extracted documentId once stage transitions to success.
+    it('fires onExtracted once with the extracted documentId once stage becomes success', async () => {
+      const onExtracted = jest.fn();
+      mockUsePdfExtraction.mockReturnValue(extractionValue({ stage: 'idle', result: null }));
+      const { rerender } = await render(<PdfUpload onExtracted={onExtracted} />);
+
+      expect(onExtracted).not.toHaveBeenCalled();
+
+      mockUsePdfExtraction.mockReturnValue(
+        extractionValue({ stage: 'success', result: successResult }),
+      );
+      await act(async () => {
+        rerender(<PdfUpload onExtracted={onExtracted} />);
+      });
+
+      expect(onExtracted).toHaveBeenCalledTimes(1);
+      expect(onExtracted).toHaveBeenCalledWith('doc-1');
+    });
+
+    // Does not fire on the idle stage (no result yet).
+    it('does not fire onExtracted while stage is idle', async () => {
+      const onExtracted = jest.fn();
+      mockUsePdfExtraction.mockReturnValue(extractionValue({ stage: 'idle', result: null }));
+
+      await render(<PdfUpload onExtracted={onExtracted} />);
+
+      expect(onExtracted).not.toHaveBeenCalled();
+    });
+
+    // Does not fire on the loading (processing) stage.
+    it('does not fire onExtracted while stage is processing', async () => {
+      const onExtracted = jest.fn();
+      mockUsePdfExtraction.mockReturnValue(extractionValue({ stage: 'processing', result: null }));
+
+      await render(<PdfUpload onExtracted={onExtracted} />);
+
+      expect(onExtracted).not.toHaveBeenCalled();
+    });
+
+    // Does not fire on the error stage (no successful extraction yet).
+    it('does not fire onExtracted while stage is error', async () => {
+      const onExtracted = jest.fn();
+      mockUsePdfExtraction.mockReturnValue(
+        extractionValue({ stage: 'error', error: 'network_error', result: null }),
+      );
+
+      await render(<PdfUpload onExtracted={onExtracted} />);
+
+      expect(onExtracted).not.toHaveBeenCalled();
+    });
+
+    // A re-render with the same already-extracted documentId must not re-fire (guards a naive
+    // effect with no dependency-based de-duplication).
+    it('does not re-fire onExtracted on a re-render with the same documentId', async () => {
+      const onExtracted = jest.fn();
+      mockUsePdfExtraction.mockReturnValue(
+        extractionValue({ stage: 'success', result: successResult }),
+      );
+      const { rerender } = await render(<PdfUpload onExtracted={onExtracted} />);
+      expect(onExtracted).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        rerender(<PdfUpload onExtracted={onExtracted} />);
+      });
+
+      expect(onExtracted).toHaveBeenCalledTimes(1);
+    });
+
+    // Omitting onExtracted entirely (every test above this describe block) is the existing R1
+    // zero-prop behavior — it must not throw.
+    it('does not throw when onExtracted is omitted and stage is success', async () => {
+      mockUsePdfExtraction.mockReturnValue(
+        extractionValue({ stage: 'success', result: successResult }),
+      );
+
+      await expect(render(<PdfUpload />)).resolves.toBeTruthy();
+    });
+  });
 });

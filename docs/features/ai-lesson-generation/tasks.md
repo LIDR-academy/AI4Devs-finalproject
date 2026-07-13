@@ -1,6 +1,6 @@
 ---
 feature: ai-lesson-generation
-phase: approved # pending|spec_drafted|spec_ready|approved|in_progress|in_review|mutation|pr_ready|done
+phase: in_progress # pending|spec_drafted|spec_ready|approved|in_progress|in_review|mutation|pr_ready|done
 review_round: 0     # incremented by reviews_lead; cap 2
 ---
 
@@ -12,16 +12,16 @@ Within **Slice 1**: provider swap (task-1) → contract types + slide image-ref 
 
 | Task | Slice | Scenarios | Status | Paths |
 |---|---|---|---|---|
-| [task-1](./task-1.md) — Provider swap OpenAI → Groq (R6 code) | 1 | @s20 | todo | libs/types/src/api-key.ts, supabase/functions/manage-api-key/provider.ts, libs/supabase-services/src/services/api-key.service.ts, libs/study-buddy/src/components/api-key-settings/, libs/study-buddy/src/components/api-key-gate/, libs/components/tests/e2e/organisms/api-key-form/, libs/localization/src/resources/ |
-| [task-2](./task-2.md) — Generation contract types + slide image-ref | 1 | @s1,@s3,@s11 | todo | libs/types/src/lesson-generation.ts, libs/types/src/lesson.ts |
-| [task-3](./task-3.md) — `get_api_key` service-role Vault read RPC (migration) | 1 | @s7,@s8 | todo | supabase/migrations/ |
-| [task-4](./task-4.md) — `generate-lesson` Edge Function happy path (both) + Groq/AI-SDK spike | 1 | @s3,@s6,@s7,@s8,@s9,@s11,@s13 | todo | supabase/functions/generate-lesson/, libs/supabase-services/src/services/lesson-generation.* |
-| [task-5](./task-5.md) — `LessonGenerationDao` (functions.invoke) | 1 | @s6,@s7 | todo | libs/supabase-services/src/dao/lesson-generation.dao.ts |
-| [task-6](./task-6.md) — `LessonGenerationService` (orchestrate happy path) | 1 | @s3,@s6 | todo | libs/supabase-services/src/services/lesson-generation.service.ts |
-| [task-7](./task-7.md) — `useLessonGeneration` hook (state + progress stepper) | 1 | @s14 | todo | libs/hooks/src/hooks/use-lesson-generation.ts |
-| [task-8](./task-8.md) — `GenerationProgress` molecule (labeled multi-step) | 1 | @s14 | todo | libs/components/src/molecules/generation-progress/ |
-| [task-9](./task-9.md) — `LessonGenerationPanel` organism (picker + Generate + Loading + Content) | 1 | @s1,@s2,@s14,@s16,@s17 | todo | libs/components/src/organisms/lesson-generation-panel/ |
-| [task-10](./task-10.md) — `LessonGeneration` wiring + PdfUpload onExtracted + upload screen + integration | 1 | @s1,@s3,@s16,@s17 | todo | libs/study-buddy/src/components/lesson-generation/, libs/study-buddy/src/components/pdf-upload/, apps/app-study-buddy/src/app/(app)/upload.tsx |
+| [task-1](./task-1.md) — Provider swap OpenAI → Groq (R6 code) | 1 | @s20 | done | libs/types/src/api-key.ts, supabase/functions/manage-api-key/provider.ts, libs/supabase-services/src/services/api-key.service.ts, libs/study-buddy/src/components/api-key-settings/, libs/study-buddy/src/components/api-key-gate/, libs/components/tests/e2e/organisms/api-key-form/, libs/localization/src/resources/ |
+| [task-2](./task-2.md) — Generation contract types + slide image-ref | 1 | @s1,@s3,@s11 | done | libs/types/src/lesson-generation.ts, libs/types/src/lesson.ts |
+| [task-3](./task-3.md) — `get_api_key` service-role Vault read RPC (migration) | 1 | @s7,@s8 | done | supabase/migrations/ |
+| [task-4](./task-4.md) — `generate-lesson` Edge Function happy path (both) + Groq/AI-SDK spike | 1 | @s3,@s6,@s7,@s8,@s9,@s11,@s13 | done | supabase/functions/generate-lesson/, libs/supabase-services/src/services/lesson-generation.* |
+| [task-5](./task-5.md) — `LessonGenerationDao` (functions.invoke) | 1 | @s6,@s7 | done | libs/supabase-services/src/dao/lesson-generation.dao.ts |
+| [task-6](./task-6.md) — `LessonGenerationService` (orchestrate happy path) | 1 | @s3,@s6 | done | libs/supabase-services/src/services/lesson-generation.service.ts |
+| [task-7](./task-7.md) — `useLessonGeneration` hook (state + progress stepper) | 1 | @s14 | done | libs/hooks/src/hooks/use-lesson-generation.ts |
+| [task-8](./task-8.md) — `GenerationProgress` molecule (labeled multi-step) | 1 | @s14 | done | libs/components/src/molecules/generation-progress/ |
+| [task-9](./task-9.md) — `LessonGenerationPanel` organism (picker + Generate + Loading + Content) | 1 | @s1,@s2,@s14,@s16,@s17 | done | libs/components/src/organisms/lesson-generation-panel/ |
+| [task-10](./task-10.md) — `LessonGeneration` wiring + PdfUpload onExtracted + upload screen + integration | 1 | @s1,@s3,@s16,@s17 | done | libs/study-buddy/src/components/lesson-generation/, libs/study-buddy/src/components/pdf-upload/, apps/app-study-buddy/src/app/(app)/upload.tsx |
 | [task-11](./task-11.md) — Composition variants prompt enforcement (instructional-only / activity-only) | 2 | @s4,@s5,@s6 | todo | supabase/functions/generate-lesson/, libs/supabase-services/src/services/lesson-generation.* |
 | [task-12](./task-12.md) — Server error contract + vision fallback + image degradation | 2 | @s10,@s12,@s15 | todo | supabase/functions/generate-lesson/, libs/supabase-services/src/services/lesson-generation.* |
 | [task-13](./task-13.md) — Client error normalization + hook retry + Panel Error state + error integration | 2 | @s12,@s15 | todo | libs/supabase-services/src/services/lesson-generation.service.ts, libs/hooks/src/hooks/use-lesson-generation.ts, libs/components/src/organisms/lesson-generation-panel/, libs/study-buddy/src/components/lesson-generation/ |

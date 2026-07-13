@@ -3,7 +3,7 @@ import type { AiProvider, ApiKeyError, ApiKeyErrorCode, ApiKeyStatus } from '@he
 import { ApiKeyDao } from '../dao/api-key.dao';
 import { toTypedError } from '../utils/typed-error';
 
-const DEFAULT_PROVIDER: AiProvider = 'openai';
+const DEFAULT_PROVIDER: AiProvider = 'groq';
 
 const toApiKeyError = (code: ApiKeyErrorCode, message: string): Error & ApiKeyError =>
   toTypedError(code, message);

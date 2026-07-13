@@ -14,8 +14,8 @@ const labels = {
   loadingStatus: 'Checking your API key status…',
   replace: 'Replace',
   remove: 'Remove',
-  keySavedStatus: 'OpenAI key saved · Updated Jan 1, 2026',
-  guidance: "Don't have a key? Get one from OpenAI",
+  keySavedStatus: 'Groq key saved · Updated Jan 1, 2026',
+  guidance: "Don't have a key? Get one from Groq",
   removeConfirmHeadline: 'Remove API key?',
   removeConfirmBody: "You'll need to add a new key to generate lessons again.",
   removeConfirmAction: 'Confirm removal',
@@ -25,7 +25,7 @@ const labels = {
 const noKeyStatus = { hasKey: false as const };
 const savedStatus = {
   hasKey: true as const,
-  provider: 'openai' as const,
+  provider: 'groq' as const,
   updatedAt: '2026-01-01T00:00:00.000Z',
 };
 // Full-review Round 1, Minor 8 — a fixture URL distinct from the (former) hardcoded
@@ -202,7 +202,7 @@ describe('ApiKeyForm', () => {
       />,
     );
 
-    expect(screen.getByText('OpenAI key saved · Updated Jan 1, 2026')).toBeTruthy();
+    expect(screen.getByText('Groq key saved · Updated Jan 1, 2026')).toBeTruthy();
     expect(screen.queryByLabelText('API key')).toBeNull();
     expect(screen.getByRole('button', { name: 'Replace' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Remove' })).toBeTruthy();
@@ -589,7 +589,7 @@ describe('ApiKeyForm', () => {
     });
 
     expect(screen.queryByLabelText('API key')).toBeNull();
-    expect(screen.getByText('OpenAI key saved · Updated Jan 1, 2026')).toBeTruthy();
+    expect(screen.getByText('Groq key saved · Updated Jan 1, 2026')).toBeTruthy();
 
     // Mutation Round 2 — the field isn't rendered once masked, so the clear itself is only
     // observable on a second interaction: pressing Replace again must reveal a blank input,
@@ -635,7 +635,7 @@ describe('ApiKeyForm', () => {
 
     expect(screen.getByText("Couldn't reach the server.")).toBeTruthy();
     expect(screen.getByLabelText('API key').props.editable).toBe(true);
-    expect(screen.queryByText('OpenAI key saved · Updated Jan 1, 2026')).toBeNull();
+    expect(screen.queryByText('Groq key saved · Updated Jan 1, 2026')).toBeNull();
   });
 
   // No errorMessage means no banner is rendered.
@@ -739,7 +739,7 @@ describe('ApiKeyForm', () => {
     });
 
     expect(screen.queryByText("Couldn't reach the server. Try again.")).toBeNull();
-    expect(screen.getByText('OpenAI key saved · Updated Jan 1, 2026')).toBeTruthy();
+    expect(screen.getByText('Groq key saved · Updated Jan 1, 2026')).toBeTruthy();
   });
 
   // @s9 — a failed remove's errorMessage renders alongside the masked saved state (the key
@@ -756,7 +756,7 @@ describe('ApiKeyForm', () => {
     );
 
     expect(screen.getByText("Couldn't remove the key.")).toBeTruthy();
-    expect(screen.getByText('OpenAI key saved · Updated Jan 1, 2026')).toBeTruthy();
+    expect(screen.getByText('Groq key saved · Updated Jan 1, 2026')).toBeTruthy();
   });
 
   // Mutation Round 2 — the confirmation dialog must start closed; nothing on initial render
@@ -936,7 +936,7 @@ describe('ApiKeyForm', () => {
       />,
     );
 
-    expect(screen.getByText('OpenAI key saved · Updated Jan 1, 2026')).toHaveStyle({
+    expect(screen.getByText('Groq key saved · Updated Jan 1, 2026')).toHaveStyle({
       ...typography.bodyMedium,
       color: lightColors.onSurfaceVariant,
     });

@@ -1,5 +1,18 @@
 export type SlideKind = 'instructional' | 'activity';
 
+/**
+ * A reference to a persisted R1 image (`document_images.id` + `storage_path` + dimensions) —
+ * never the image bytes (ai-lesson-generation @s11). R4 resolves a short-lived signed URL from
+ * `storagePath` at render time; a missing/unresolvable ref degrades to text-only (@s12).
+ */
+export type SlideImageRef = {
+  imageId: string;
+  storagePath: string;
+  width: number;
+  height: number;
+  alt?: string;
+};
+
 type SlideBase = {
   id: string;
   lessonId: string;
@@ -7,6 +20,9 @@ type SlideBase = {
   /** For an activity slide, `content` holds the question prompt. */
   content: string;
   position: number;
+  /** Present only when generation attached a relevant image (@s9/@s11); omitted entirely for a
+   * text-only slide — any slide kind may carry one. */
+  image?: SlideImageRef;
 };
 
 export type InstructionalSlide = SlideBase & { kind: 'instructional' };

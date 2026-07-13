@@ -50,6 +50,26 @@ export const de: TranslationResource = {
         unauthenticated: 'Bitte melde dich an, um hochzuladen',
       },
     },
+    generation: {
+      composition: {
+        heading: 'Lektionsinhalt',
+        instructionalOnly: 'Nur lehrreich',
+        activityOnly: 'Nur Aktivitäten',
+        both: 'Beides',
+      },
+      generate: 'Lektion generieren',
+      step: {
+        reading: 'Inhalt wird gelesen',
+        generating: 'Folien werden erstellt',
+        attaching: 'Bilder werden angehängt',
+      },
+      ready: {
+        slideCount_one: '{{count}} Folie erstellt',
+        slideCount_other: '{{count}} Folien erstellt',
+        composition: 'Zusammensetzung: {{composition}}',
+        openInPlayer: 'Im Player öffnen',
+      },
+    },
     lesson: {
       title: 'Lektion {{id}}',
       start: 'Lernen beginnen',
@@ -102,7 +122,7 @@ export const de: TranslationResource = {
         replace: 'Ersetzen',
         remove: 'Entfernen',
         savedStatus: '{{provider}}-Schlüssel gespeichert · Aktualisiert {{date}}',
-        guidance: 'Noch keinen Schlüssel? Bei OpenAI erhalten',
+        guidance: 'Noch keinen Schlüssel? Bei Groq erhalten',
         removeConfirmHeadline: 'API-Schlüssel entfernen?',
         removeConfirmBody:
           'Du musst einen neuen Schlüssel hinzufügen, um wieder Lektionen zu erstellen.',

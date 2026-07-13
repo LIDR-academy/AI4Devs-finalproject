@@ -18,13 +18,13 @@ describe('ApiKeyDao', () => {
   // @s1 (client half, task-4) — saveApiKey invokes the manage-api-key Edge Function with the
   // save action + the given provider/key, and returns the masked status it replies with.
   it('saveApiKey invokes manage-api-key with the save action and returns the masked status', async () => {
-    const status = { hasKey: true, provider: 'openai', updatedAt: '2026-01-01T00:00:00.000Z' };
+    const status = { hasKey: true, provider: 'groq', updatedAt: '2026-01-01T00:00:00.000Z' };
     invoke.mockResolvedValue({ data: status, error: null });
 
-    const result = await ApiKeyDao.saveApiKey({ provider: 'openai', apiKey: 'sk-test-key' });
+    const result = await ApiKeyDao.saveApiKey({ provider: 'groq', apiKey: 'sk-test-key' });
 
     expect(invoke).toHaveBeenCalledWith('manage-api-key', {
-      body: { action: 'save', provider: 'openai', apiKey: 'sk-test-key' },
+      body: { action: 'save', provider: 'groq', apiKey: 'sk-test-key' },
     });
     expect(result).toBe(status);
   });
@@ -35,7 +35,7 @@ describe('ApiKeyDao', () => {
     const error = { message: 'edge function error' };
     invoke.mockResolvedValue({ data: null, error });
 
-    await expect(ApiKeyDao.saveApiKey({ provider: 'openai', apiKey: 'sk-test-key' })).rejects.toBe(
+    await expect(ApiKeyDao.saveApiKey({ provider: 'groq', apiKey: 'sk-test-key' })).rejects.toBe(
       error,
     );
   });
@@ -43,7 +43,7 @@ describe('ApiKeyDao', () => {
   // @s3 — a saved row maps to a masked, present status.
   it('getApiKeyStatus maps a present row to a masked hasKey: true status', async () => {
     select.mockResolvedValue({
-      data: [{ provider: 'openai', updated_at: '2026-01-01T00:00:00.000Z' }],
+      data: [{ provider: 'groq', updated_at: '2026-01-01T00:00:00.000Z' }],
       error: null,
     });
 
@@ -53,7 +53,7 @@ describe('ApiKeyDao', () => {
     expect(select).toHaveBeenCalledWith('provider, updated_at');
     expect(result).toEqual({
       hasKey: true,
-      provider: 'openai',
+      provider: 'groq',
       updatedAt: '2026-01-01T00:00:00.000Z',
     });
   });
@@ -78,7 +78,7 @@ describe('ApiKeyDao', () => {
   // columns, and the masked result it returns carries no key-shaped field.
   it('getApiKeyStatus selects only non-secret columns and returns no key field', async () => {
     select.mockResolvedValue({
-      data: [{ provider: 'openai', updated_at: '2026-01-01T00:00:00.000Z' }],
+      data: [{ provider: 'groq', updated_at: '2026-01-01T00:00:00.000Z' }],
       error: null,
     });
 

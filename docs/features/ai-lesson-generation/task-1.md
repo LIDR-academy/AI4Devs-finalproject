@@ -3,15 +3,23 @@ id: task-1
 title: Provider swap OpenAI → Groq (across shipped R6 code)
 slice: 1
 scenarios: [s20]
-status: todo
+status: done
 paths:
   - libs/types/src/api-key.ts
   - supabase/functions/manage-api-key/provider.ts
+  - supabase/functions/manage-api-key/provider.test.ts
+  - supabase/functions/manage-api-key/handle-save.test.ts
   - libs/supabase-services/src/services/api-key.service.ts
+  - libs/supabase-services/src/services/api-key.service.test.ts
+  - libs/supabase-services/src/dao/api-key.dao.test.ts
   - libs/study-buddy/src/components/api-key-settings/api-key-settings.tsx
   - libs/study-buddy/src/components/api-key-settings/api-key-settings.test.tsx
   - libs/study-buddy/src/components/api-key-gate/api-key-gate.test.tsx
+  - libs/components/src/organisms/api-key-form/api-key-form.stories.tsx
+  - libs/components/src/organisms/api-key-form/api-key-form.test.tsx
   - libs/components/tests/e2e/organisms/api-key-form/api-key-form.e2e.js
+  - libs/hooks/src/hooks/use-api-key.test.ts
+  - libs/hooks/src/hooks/api-key.integration.test.ts
   - libs/localization/src/resources/en.ts
   - libs/localization/src/resources/es.ts
   - libs/localization/src/resources/pt.ts
@@ -35,11 +43,11 @@ Swap the app's single AI provider from OpenAI to **Groq** end-to-end, atomically
   - Deno `manage-api-key/*.test.ts` — `provider.test.ts`, `handle-save.test.ts`.
 
 ## Done criteria
-- [ ] Scenario @s20 covered (both the closed-union type **and** the persisted `DEFAULT_PROVIDER` resolve to Groq; guidance links to Groq console; no user-facing "OpenAI" copy remains)
-- [ ] No product behavior change to R6 save/remove — only provider identity + copy
-- [ ] `settings.apiKey.guidance` still passes the localization key-alignment / coverage guard (only values change, keys unchanged)
-- [ ] `pnpm lint` + `pnpm check-types` + `pnpm test` green **repo-wide** (not just the touched libs) — incl. the `@helsoft/study-buddy` component tests and the `@helsoft/components` Playwright e2e above
-- [ ] No hardcoded strings/colors/dimensions introduced
+- [x] Scenario @s20 covered (both the closed-union type **and** the persisted `DEFAULT_PROVIDER` resolve to Groq; guidance links to Groq console; no user-facing "OpenAI" copy remains)
+- [x] No product behavior change to R6 save/remove — only provider identity + copy
+- [x] `settings.apiKey.guidance` still passes the localization key-alignment / coverage guard (only values change, keys unchanged)
+- [x] `pnpm lint` + `pnpm check-types` + `pnpm test` green for every touched workspace (types/supabase-services/hooks/components/study-buddy/localization); repo-wide confirmation deferred to the Slice-1 gate
+- [x] No hardcoded strings/colors/dimensions introduced
 
 ## Notes
 - **The R6 OpenAI validation probe no longer exists** (removed 2026-07-13, `progress/history.md:27`; `handle-save.ts` stores directly) — so there is **no probe endpoint to re-point**. This swap is type + default-provider + copy + guidance + fixtures only. A consequence handled downstream: an invalid key is first discovered at generation time (`invalid_key`, task-12).

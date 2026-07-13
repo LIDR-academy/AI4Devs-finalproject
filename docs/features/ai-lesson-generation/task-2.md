@@ -3,7 +3,7 @@ id: task-2
 title: Generation contract types + slide image reference
 slice: 1
 scenarios: [s1, s3, s11]
-status: todo
+status: done
 paths:
   - libs/types/src/lesson-generation.ts
   - libs/types/src/lesson.ts
@@ -25,10 +25,10 @@ Define the cross-lib contract types every layer of generation shares, and extend
 - Add **optional** `image?: SlideImageRef` to `SlideBase` (so any slide kind may carry one). Text-only slides omit it (@s11); a missing/unresolvable ref degrades to text-only at render (@s12, R4).
 
 ## Done criteria
-- [ ] Scenarios @s1/@s3/@s11 underpinned by these types (compile-time contract)
-- [ ] Exported through `libs/types/src/index.ts`
-- [ ] `pnpm check-types` green across all consumers (no existing R3 code broken by the optional `image` field)
-- [ ] No runtime logic in these files (types only, per `types.mdc`)
+- [x] Scenarios @s1/@s3/@s11 underpinned by these types (compile-time contract)
+- [x] Exported through `libs/types/src/index.ts`
+- [x] `pnpm check-types` green across all consumers (no existing R3 code broken by the optional `image` field)
+- [x] No runtime logic in these files (types only, per `types.mdc`)
 
 ## Notes
 - Keep the Deno mirror in mind: the `generate-lesson` function can't import `@helsoft/types`, so task-4 hand-mirrors the request/deck/error shapes into `supabase/functions/generate-lesson/_shared/` (same rule as R1's `pdf-extraction` types).

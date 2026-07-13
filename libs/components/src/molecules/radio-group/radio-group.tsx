@@ -35,7 +35,7 @@ export const RadioGroup = ({
           <Pressable
             key={opt.value}
             accessibilityRole="radio"
-            accessibilityState={{ selected, disabled }}
+            aria-checked={selected}
             disabled={disabled}
             onPress={() => onChange?.(opt.value)}
             style={styles.option(disabled)}

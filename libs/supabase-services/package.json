@@ -13,7 +13,8 @@
   },
   "dependencies": {
     "@helsoft/types": "workspace:*",
-    "@supabase/supabase-js": "^2.49.0"
+    "@supabase/supabase-js": "^2.49.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",

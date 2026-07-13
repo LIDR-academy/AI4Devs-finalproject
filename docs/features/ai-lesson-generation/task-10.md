@@ -3,7 +3,7 @@ id: task-10
 title: LessonGeneration wiring + PdfUpload onExtracted + upload screen + integration
 slice: 1
 scenarios: [s1, s3, s16, s17]
-status: todo
+status: done
 paths:
   - libs/study-buddy/src/components/lesson-generation/
   - libs/study-buddy/src/components/pdf-upload/
@@ -24,13 +24,13 @@ The feature-wiring component that puts the composition picker on the same screen
 - `upload.tsx` composes `<ApiKeyGate>` → `PdfUpload` + `LessonGeneration` siblings; routing + the `documentId` handoff only, no business logic.
 
 ## Done criteria
-- [ ] Scenarios @s1 (default both) / @s3 (end-to-end both → typed deck) / @s16 (gating on `documentId`) / @s17 (deck → player hand-off) covered by `lesson-generation.test.tsx` + a slice integration test (`lesson-generation.integration.test.tsx`) mocking `functions.invoke`
-- [ ] `PdfUpload.onExtracted` fires once with the extracted `documentId` (asserted in `pdf-upload.test.tsx`); no regression to the existing zero-prop R1 behavior
-- [ ] Wiring maps `generation.*` i18n keys + narrows `RadioGroup` value to `LessonComposition`; presentational panel stays i18n-free
-- [ ] `upload.tsx` stays a thin shell (routing + the single `documentId` handoff `useState` + composition only)
-- [ ] `LessonGeneration` exported through the `@helsoft/study-buddy` barrel
-- [ ] `pnpm lint` + `pnpm check-types` + `pnpm test` green
-- [ ] No hardcoded strings/colors/dimensions
+- [x] Scenarios @s1 (default both) / @s3 (end-to-end both → typed deck) / @s16 (gating on `documentId`) / @s17 (deck → player hand-off) covered by `lesson-generation.test.tsx` + a slice integration test (`lesson-generation.integration.test.tsx`) mocking `functions.invoke`
+- [x] `PdfUpload.onExtracted` fires once with the extracted `documentId` (asserted in `pdf-upload.test.tsx`); no regression to the existing zero-prop R1 behavior
+- [x] Composition is narrowed from `RadioGroup`'s raw string via `isLessonComposition`; **deviation**: `generation.*` i18n mapping ended up owned by `LessonGenerationPanel` itself (mirrors the `LanguageSettings` precedent in the same components lib), not `LessonGeneration` — GenerationProgress's step labels are also assembled inside the panel, so there is no leftover chrome copy for the wiring layer to map
+- [x] `upload.tsx` stays a thin shell (routing + the single `documentId` handoff `useState` + composition only)
+- [x] `LessonGeneration` exported through the `@helsoft/study-buddy` barrel
+- [x] `pnpm lint` + `pnpm check-types` + `pnpm test` green
+- [x] No hardcoded strings/colors/dimensions
 
 ## Notes
 - Mirrors the `PdfUpload` / `ApiKeySettings` wiring precedent (hook + `useLocalization` → presentational organism).

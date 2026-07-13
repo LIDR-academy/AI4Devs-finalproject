@@ -3,7 +3,7 @@ id: task-4
 title: generate-lesson Edge Function happy path (both) + Groq/AI-SDK spike
 slice: 1
 scenarios: [s3, s6, s7, s8, s9, s11, s13]
-status: todo
+status: done
 paths:
   - supabase/functions/generate-lesson/
   - libs/supabase-services/src/services/lesson-generation.prompt.ts
@@ -23,12 +23,27 @@ The first LLM call in the repo. Implement the `generate-lesson` Edge Function ha
 - `supabase/functions/generate-lesson/index.ts` — thin orchestration glue (auth, two Supabase clients, storage/DB reads, the SDK adapter call, JSON response). Not run in this sandbox (risks.md R2).
 
 ## Done criteria
-- [ ] Scenarios @s3,@s6,@s9,@s11,@s13 covered by unit tests on the pure modules; @s7,@s8 covered by the function's own asserts + manual smoke (key read server-side, never in the response body or logs)
-- [ ] `generateObject` output that fails the schema → thrown for task-12 to map to `generation_failed` (no partial deck)
-- [ ] Model IDs live in one tunable constant behind the SDK seam; confirmed against Groq's current model list at build (spec.md Open decision #2)
-- [ ] Deck is stamped with a minted `lessonId`; **no `lessons` row written** (Open decision #5)
-- [ ] `pnpm lint` + `pnpm check-types` + `pnpm test` green; function verified manually against a real extracted document after deploy
-- [ ] No hardcoded strings/colors/dimensions
+- [x] Scenarios @s3,@s6,@s9,@s11,@s13 covered by unit tests on the pure modules; @s7,@s8 covered by the function's own asserts (key never in request/response body or logs) + task-3's migration-level manual smoke (service-role-only)
+- [x] `generateObject` output that fails the schema → thrown (`GenerationSchemaError`) for task-12 to map to `generation_failed` (no partial deck)
+- [x] Model IDs live in one tunable constant (`_shared/models.ts`) behind the SDK seam — IDs are the ones spec.md's Open decision #2 names; **not independently reconfirmed against Groq's live model list** (no API key available this session, see spike note below)
+- [x] Deck is stamped with a minted `lessonId` (`crypto.randomUUID()`); **no `lessons` row written** (Open decision #5)
+- [x] `pnpm lint` + `pnpm check-types` + `pnpm test` green for the pure modules (`@helsoft/supabase-services`); `index.ts` + every `_shared/` mirror `deno check` clean and the pure-logic mirror smoke-executed for real under `deno run` (see spike note) — **not** deployed/run against a real extracted document (open manual step before merge)
+- [x] No hardcoded strings/colors/dimensions
+
+## Spike note (risks.md R1 — human-visible before merge)
+Ran in this session, outside the plan's original assumption that Deno is unavailable here: the
+Deno CLI **is** present in this sandbox. `deno check` on `index.ts` (run from outside the pnpm
+workspace tree, since Deno's byonm mode otherwise tries to resolve `npm:` specifiers against this
+repo's node_modules) resolved and type-checked `npm:ai@7`, `npm:@ai-sdk/groq@4`, and
+`npm:@supabase/supabase-js@2` cleanly — `createGroq({ apiKey })` + `generateObject({ model, schema:
+deckSchema, prompt })` compiles against the real installed SDK types. The four pure `_shared/`
+mirrors were also executed for real under `deno run` (not just Jest-mirrored) against a
+hand-built raw deck + image manifest and produced the expected assembled lesson. **What did NOT
+run**: an actual network call to Groq (`generateObject` resolving against the live API) — no Groq
+API key is available in this environment. This remains the one open manual-verification item for
+a human before merge/deploy, exactly as risks.md R1 anticipated, just narrower in scope than
+originally assumed (the SDK-in-Deno-runtime risk is now largely retired; only the live-key round
+trip remains open).
 
 ## Notes
 - Fallback if the SDK misbehaves in Deno: plain `fetch` to Groq's OpenAI-compatible endpoint behind the same adapter seam (risks.md R1).

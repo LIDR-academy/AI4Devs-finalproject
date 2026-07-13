@@ -24,17 +24,17 @@ describe('ApiKeyService', () => {
 
   describe('saveApiKey', () => {
     // @s1 (service half) — a non-blank key is forwarded to the DAO (defaulting to the v1
-    // 'openai' provider) and the masked status it returns is passed straight back.
-    it('saves a non-blank key through the DAO with the default openai provider and returns the masked status', async () => {
+    // 'groq' provider) and the masked status it returns is passed straight back.
+    it('saves a non-blank key through the DAO with the default groq provider and returns the masked status', async () => {
       const status = {
         hasKey: true,
-        provider: 'openai' as const,
+        provider: 'groq' as const,
         updatedAt: '2026-01-01T00:00:00.000Z',
       };
       dao.saveApiKey.mockResolvedValue(status);
 
       await expect(ApiKeyService.saveApiKey('sk-test-key')).resolves.toBe(status);
-      expect(dao.saveApiKey).toHaveBeenCalledWith({ provider: 'openai', apiKey: 'sk-test-key' });
+      expect(dao.saveApiKey).toHaveBeenCalledWith({ provider: 'groq', apiKey: 'sk-test-key' });
     });
 
     // @s4 — replacing an already-saved key runs through the exact same DAO call; the service
@@ -42,12 +42,12 @@ describe('ApiKeyService', () => {
     it('runs the same save path again when a key is already saved (update/replace)', async () => {
       const firstStatus = {
         hasKey: true,
-        provider: 'openai' as const,
+        provider: 'groq' as const,
         updatedAt: '2026-01-01T00:00:00.000Z',
       };
       const secondStatus = {
         hasKey: true,
-        provider: 'openai' as const,
+        provider: 'groq' as const,
         updatedAt: '2026-02-01T00:00:00.000Z',
       };
       dao.saveApiKey.mockResolvedValueOnce(firstStatus).mockResolvedValueOnce(secondStatus);
@@ -56,11 +56,11 @@ describe('ApiKeyService', () => {
       await expect(ApiKeyService.saveApiKey('sk-replacement-key')).resolves.toBe(secondStatus);
 
       expect(dao.saveApiKey).toHaveBeenNthCalledWith(1, {
-        provider: 'openai',
+        provider: 'groq',
         apiKey: 'sk-first-key',
       });
       expect(dao.saveApiKey).toHaveBeenNthCalledWith(2, {
-        provider: 'openai',
+        provider: 'groq',
         apiKey: 'sk-replacement-key',
       });
     });
@@ -100,7 +100,7 @@ describe('ApiKeyService', () => {
       dao.saveApiKey.mockRejectedValueOnce(new Error('offline'));
       const status = {
         hasKey: true,
-        provider: 'openai' as const,
+        provider: 'groq' as const,
         updatedAt: '2026-01-01T00:00:00.000Z',
       };
       dao.saveApiKey.mockResolvedValueOnce(status);
@@ -118,7 +118,7 @@ describe('ApiKeyService', () => {
     it('returns the masked status from the DAO', async () => {
       const status = {
         hasKey: true,
-        provider: 'openai' as const,
+        provider: 'groq' as const,
         updatedAt: '2026-01-01T00:00:00.000Z',
       };
       dao.getApiKeyStatus.mockResolvedValue(status);

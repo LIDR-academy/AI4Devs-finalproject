@@ -9,8 +9,8 @@ const labels = {
   loadingStatus: 'Checking your API key status…',
   replace: 'Replace',
   remove: 'Remove',
-  keySavedStatus: 'OpenAI key saved · Updated Jan 1, 2026',
-  guidance: "Don't have a key? Get one from OpenAI",
+  keySavedStatus: 'Groq key saved · Updated Jan 1, 2026',
+  guidance: "Don't have a key? Get one from Groq",
   removeConfirmHeadline: 'Remove API key?',
   removeConfirmBody: "You'll need to add a new key to generate lessons again.",
   removeConfirmAction: 'Remove',
@@ -20,7 +20,7 @@ const labels = {
 const noKeyStatus = { hasKey: false as const };
 const savedStatus = {
   hasKey: true as const,
-  provider: 'openai' as const,
+  provider: 'groq' as const,
   updatedAt: '2026-01-01T00:00:00.000Z',
 };
 
@@ -31,7 +31,7 @@ const meta = {
     status: noKeyStatus,
     onSave: () => {},
     onRemove: () => {},
-    guidanceUrl: 'https://platform.openai.com/api-keys',
+    guidanceUrl: 'https://console.groq.com/keys',
     labels,
   },
 } satisfies Meta<typeof ApiKeyForm>;

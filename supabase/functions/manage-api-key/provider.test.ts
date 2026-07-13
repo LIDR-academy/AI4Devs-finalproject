@@ -6,7 +6,7 @@ import { isAiProvider } from './provider.ts';
 // of the closed AiProvider union (not just truthy) before dispatching. No check constraint
 // exists on user_ai_keys.provider, so an arbitrary string could otherwise be persisted.
 Deno.test('isAiProvider accepts the known provider', () => {
-  assertEquals(isAiProvider('openai'), true);
+  assertEquals(isAiProvider('groq'), true);
 });
 
 Deno.test('isAiProvider rejects an unrecognized provider string', () => {

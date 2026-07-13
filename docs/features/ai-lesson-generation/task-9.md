@@ -3,7 +3,7 @@ id: task-9
 title: LessonGenerationPanel organism (picker + Generate + Loading + Content)
 slice: 1
 scenarios: [s1, s2, s14, s16, s17]
-status: todo
+status: done
 paths:
   - libs/components/src/organisms/lesson-generation-panel/
   - libs/components/src/organisms/index.ts
@@ -20,11 +20,11 @@ The presentational organism for configuring + triggering generation, Slice-1 sta
 Follow `component-split.mdc`: `lesson-generation-panel.tsx` (layout + handlers), `.types.ts` (Props), a pure `.helpers.ts` for any state→label mapping, `use-*.ts` only if real derived state emerges, `.stories.tsx` for all states.
 
 ## Done criteria
-- [ ] Scenarios @s1,@s2,@s14,@s16,@s17 covered by `lesson-generation-panel.test.tsx` + Storybook stories for each state
-- [ ] Composition picker uses `RadioGroup` (radiogroup/radio roles inherited; fuller a11y in task-15) with `both` default and the three options
-- [ ] Generate is disabled unless `canGenerate` (@s16)
-- [ ] No hardcoded strings/colors/dimensions (theme tokens + `generation.*` keys / injected props only)
-- [ ] `pnpm lint` + `pnpm check-types` + `pnpm test` green
+- [x] Scenarios @s1,@s2,@s14,@s16,@s17 covered by `lesson-generation-panel.test.tsx` + Storybook stories for each state
+- [x] Composition picker uses `RadioGroup` (radiogroup/radio roles inherited; fuller a11y in task-15) with `both` default (set by the wiring layer, task-10) and the three options
+- [x] Generate is disabled unless `canGenerate` (@s16)
+- [x] No hardcoded strings/colors/dimensions (theme tokens + `generation.*` keys / injected props only) — added the `generation.*` chrome-copy keys to all four locale bundles now (compiler-enforced `TranslationResource` parity, same precedent as task-8's `apiKey.*` keys); `generation.error.*` deliberately deferred to task-13
+- [x] `pnpm lint` + `pnpm check-types` + `pnpm test` green
 
 ## Notes
 - Option labels/composition values map to `LessonComposition`; the picker's `value`/`onChange` are `string` (RadioGroup contract) — the wiring narrows to `LessonComposition`.

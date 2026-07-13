@@ -4,14 +4,15 @@ import { useLocalization } from '@helsoft/localization';
 import type { AiProvider, ApiKeyErrorCode } from '@helsoft/types';
 
 /** Provider brand names are not translated (proper nouns) — the seam stays open for more
- * providers alongside the `AiProvider` union (spec.md Open decision 2). */
-const PROVIDER_DISPLAY_NAMES: Record<AiProvider, string> = { openai: 'OpenAI' };
+ * providers alongside the `AiProvider` union (spec.md Open decision 2; ai-lesson-generation
+ * Open decision #1 swaps the v1 provider from OpenAI to Groq). */
+const PROVIDER_DISPLAY_NAMES: Record<AiProvider, string> = { groq: 'Groq' };
 
-/** Where the Empty state's guidance link sends the user (spec.md Open decision 2 — OpenAI is
- * the fixed v1 provider, same fixed-endpoint precedent as the Edge Function's own probe URL).
- * Owned by the wiring layer (Full-review Round 1, Minor 8) and threaded into ApiKeyForm's
- * `guidanceUrl` prop, rather than hardcoded inside the presentational organism. */
-const GUIDANCE_URL = 'https://platform.openai.com/api-keys';
+/** Where the Empty state's guidance link sends the user (spec.md Open decision 2 — Groq is
+ * the fixed v1 provider, ai-lesson-generation Open decision #1). Owned by the wiring layer
+ * (Full-review Round 1, Minor 8) and threaded into ApiKeyForm's `guidanceUrl` prop, rather than
+ * hardcoded inside the presentational organism. */
+const GUIDANCE_URL = 'https://console.groq.com/keys';
 
 /**
  * Maps useApiKey()'s normalized ApiKeyErrorCode to its i18n banner key (@s7/@s9).
