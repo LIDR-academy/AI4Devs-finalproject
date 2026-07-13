@@ -40,6 +40,7 @@ This is a monorepo for react-native/node/next applications.
 - Use Expo Router for react-native applications.
 - Always use functional React. Don't use Redux.
 - Always create a type for React components Props. Types rules: `.agents/rules/types.mdc` (multi-file → `*.types.ts`; only exported types there; no runtime logic).
+- **Comment the *why*, not the *what**.**
 
 ### Testing
 - Use Storybook + Playwright for testing components that use storybook.
