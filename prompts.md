@@ -15,7 +15,7 @@
 | Topbar mobile, duplicate chat, admin-only upgrade | Cursor transcript (Jul 2026 session, `lms-cms-laravel12`) |
 | Responsive all screens, drawer nav, CI e2e bootstrap | Cursor transcript `17d3d3be-a847-4d06-abee-a8643a0a356f` (Jul 2026) |
 
-**Extended prompt log in code repo:** [codigofinal/lms-cms-laravel12/prompts.md](../codigofinal/lms-cms-laravel12/prompts.md)
+**Extended prompt log in code repo:** [lms-cms-laravel12/prompts.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/lms-cms-laravel12/prompts.md)
 
 ---
 
@@ -407,7 +407,7 @@
 
 > Note: Responsive topbar in `public/css/lms.css` (flex-wrap, two-row layout ≤768px, avatar 32px, hide brand name ≤480px), comms panels in `lms-comms.css`, verified at 390px/640px on Docker and production target.
 
-**Prompt 2:** "En remoto envío un mensaje y aparece dos veces en el chat, comprueba cuál es el problema con usuario: teacher@example.es y password: password123."
+**Prompt 2:** "En remoto envío un mensaje y aparece dos veces en el chat, comprueba cuál es el problema con el usuario docente de demo (credenciales solo en el seeder local; no publicadas en esta entrega)."
 
 > Note: Root cause on production — `lms-comms.js` loaded twice (layout + manual FTP install); old JS without bootstrap guards → double POST. Fix: `@once` partial `lms-comms-js.blade.php`, guards in `lms-comms.js`, `CommsMessagingTest`, `comms-diagnostico.php` duplicate-script check. Demo emails use `@example.com`, not `.es`.
 
@@ -419,7 +419,7 @@
 
 - "Sincroniza LMS ↔ deploy como siempre" → `scripts/sync-deploy-packages.ps1`, `docs/DEPLOY-SYNC.md`
 - "Si es correcto" (confirmación commit) → commit `fix(comms): topbar móvil y mensajes duplicados en chat`
-- "¿La contraseña de admin@example.es dentro de proyectolms.asemad.es/login cuál es?" → documented seed `admin@example.com` / `password123`
+- "¿La contraseña de admin dentro de proyectolms.asemad.es/login cuál es?" → refer to seed/admin setup in the implementation repo; passwords are not documented in this delivery
 
 ---
 
@@ -461,7 +461,7 @@
 
 **Deploy package:** `codigofinal/deploy-responsive-all-screens/` — requires `deploy-moodle52-comms` already on production.
 
-**Verification guide:** [deploy-responsive-all-screens/VERIFICAR-PANTALLAS.md](../codigofinal/deploy-responsive-all-screens/VERIFICAR-PANTALLAS.md)
+**Verification guide:** [VERIFICAR-PANTALLAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/deploy-responsive-all-screens/VERIFICAR-PANTALLAS.md)
 
 ---
 

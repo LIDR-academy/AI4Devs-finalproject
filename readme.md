@@ -145,9 +145,7 @@ docker compose exec app php artisan storage:link
 
 **Language switch (local):** `http://localhost:8080/locale/es` or `/locale/en` · **Production:** [https://proyectolms.asemad.es/locale/es](https://proyectolms.asemad.es/locale/es) or `/locale/en`
 
-**Test credentials (after seed):**
-- Teacher: `teacher@example.com` / `password123`
-- Student: `student@example.com` / `password123`
+**Local demo users (after `php artisan migrate --seed`):** defined in `database/seeders/DatabaseSeeder.php` and `LmsDemoSeeder.php` in the [implementation repository](https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r/lms-cms-laravel12/database/seeders). Do not publish or reuse seed passwords on the [production instance](https://proyectolms.asemad.es/).
 
 **Local installation (without Docker):**
 ```bash

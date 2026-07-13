@@ -46,7 +46,7 @@ Same routes as above; kept for traceability when regenerating from automated run
 | [playwright-calendar-event-create.png](./playwright-calendar-event-create.png) | Teacher `/calendar/events/create` |
 | [playwright-calendar-student.png](./playwright-calendar-student.png) | Student `/calendar` |
 
-**Credentials:** `teacher@example.com` / `student@example.com` — password `password123`.
+**Local demo users:** see `database/seeders/` in the [implementation repository](https://github.com/BurgosAngel/codigofinal/tree/angel-burgos-r/lms-cms-laravel12/database/seeders). Passwords are not listed in this documentation.
 
 **Regenerate all screens** (requires LMS at `http://localhost:8080`):
 
