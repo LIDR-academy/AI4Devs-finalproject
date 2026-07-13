@@ -1,0 +1,37 @@
+extensions:
+  security-review:
+    description: "Check specs/plans against OWASP Top 10 2025 controls and constitution security principles"
+    prompts:
+      - ".specify/skills/security-review/SKILL.md"
+
+  data-model-sync:
+    description: "Validate Prisma schema against ER diagram in system-architecture.md"
+    prompts:
+      - ".specify/skills/data-model-sync/SKILL.md"
+
+  api-spec-validator:
+    description: "Cross-check route implementations against docs/api-specifications.md"
+    prompts:
+      - ".specify/skills/api-spec-validator/SKILL.md"
+
+hooks:
+  before_specify:
+    - extension: security-review
+      command: speckit.skill.security-review
+      description: "Check spec for security gaps before writing"
+      optional: true
+      enabled: true
+
+  before_analyze:
+    - extension: data-model-sync
+      command: speckit.skill.data-model-sync
+      description: "Validate data model consistency during analysis"
+      optional: true
+      enabled: true
+
+  after_implement:
+    - extension: api-spec-validator
+      command: speckit.skill.api-spec-validator
+      description: "Validate API implementation against documented spec"
+      optional: true
+      enabled: true

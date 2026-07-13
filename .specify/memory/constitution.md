@@ -1,50 +1,112 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+  Sync Impact Report — v0.0.0 → v1.0.0
+  - Initial population from template (all placeholders replaced)
+  - Principles added: 5 core (Domain Purity, Test-First, Security-by-Default,
+    UX Consistency, Observability) + 2 additional sections (Security Requirements,
+    Development Workflow & Quality Gates)
+  - Templates reviewed: plan-template.md, spec-template.md, tasks-template.md —
+    all compatible with new constitution; no changes needed
+  - No templates required updates
+  - Version bump: MAJOR (initial populated version)
+-->
+
+# Coacher Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Domain Purity (NON-NEGOTIABLE)
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+The domain layer (`src/domain/`) MUST contain zero infrastructure dependencies — no Express,
+no Prisma, no Zod, no HTTP concepts. Domain entities and domain services MUST be pure TypeScript
+classes and functions. Business rules (capacity validation, overlap checking, level reach
+calculation, waiting-list engine) MUST live in domain services, NOT in application use cases
+or infrastructure adapters. Any import from Prisma, Express, or Zod in the domain layer is an
+automatic review rejection.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### II. Test-First for Domain Logic (NON-NEGOTIABLE)
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+Every domain service MUST have its acceptance scenarios specified as Given/When/Then in the
+feature spec BEFORE implementation begins. Tests MUST be written and confirmed failing before
+the corresponding production code is written (Red-Green-Refactor). Minimum coverage:
+- Domain services: 100% branch coverage (all business rule branches — capacity limits,
+  overlap scenarios, level reach boundaries, waiting list full/join/leave)
+- Application use cases: happy path + every error code path (each 4xx/5xx response)
+- Integration (API): every endpoint in the API spec MUST have at least one happy-path test
+  and one validation-error test via Supertest
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+Coverage below 90% overall on `vitest run --coverage` MUST be justified in writing.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+### III. Security-by-Default
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+Every API endpoint MUST enforce authentication and authorization at the middleware level —
+no endpoint (except `POST /auth/login` and `GET /health`) MAY be accessible without a valid JWT,
+and every protected endpoint MUST have a `requireRole` guard for its minimal required role. The
+OWASP Top 10 2025 is the reference threat model (see PRD Section 10 for per-risk mitigations).
+Specific MUST items:
+- Passwords hashed with bcrypt cost factor 12
+- All Zod schemas MUST reject unexpected fields (`strict()` or `.strip()` only with explicit
+  justification)
+- No secrets, stack traces, or internal paths in error responses
+- Google Calendar event titles MUST contain only class type + level (zero PII)
+- Coach financial data MUST be AES-256-GCM encrypted at rest
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+### IV. API Contract Consistency
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+Every API response MUST use the standard envelope: success arrays use `{ data: [...], meta: {...} }`,
+single resources return the resource object directly, and errors use
+`{ error: { code, message, ref } }`. All endpoints live under `/api/v1/` prefix. New endpoints
+MUST be documented in `docs/api-specifications.md` before implementation. Breaking changes to the
+API contract MUST be reviewed and version-bumped.
+
+### V. Dependency Integrity
+
+All npm dependencies MUST be pinned to exact versions (no `^` or `~` ranges committed to `main`).
+The lockfile MUST be committed. Every PR MUST pass `npm audit --audit-level=high` (or equivalent)
+before merge. No raw SQL — all database access MUST use Prisma's parameterized queries.
+No vendored tarballs, git dependencies, or unpublished packages.
+
+## Security Requirements
+
+These controls are mandatory and are derived from the PRD Section 10 (OWASP Top 10 2025) threat
+analysis:
+
+1. **Rate limiting**: `express-rate-limit` at 100 req/min globally, 10 req/min on `/auth/login`.
+2. **Security headers**: All 7 headers from PRD Section 10.7 (HSTS, X-Content-Type-Options,
+   X-Frame-Options, CSP, Referrer-Policy, Permissions-Policy) MUST be set on every response.
+3. **Error handling**: No information leakage — 401 always says "Invalid credentials" regardless
+   of whether the email exists. 503 for external dependency failures. Stack traces NEVER exposed.
+4. **Secrets management**: Every non-public value (Service Account key, DB URL, JWT secret,
+   encryption key) MUST be injected via environment variable — never committed, never in code.
+5. **Security event logging**: Every auth attempt (success + failure), class creation/cancellation,
+   waiting list join/leave, role/level change, and access to coach financial data MUST be logged
+   with actor ID, action, resource, and outcome.
+
+## Performance & UX Requirements
+
+1. Google Calendar is the scheduling single source of truth, accessed EXCLUSIVELY server-side via
+   a Service Account. No Google Calendar API call MAY originate from the browser.
+2. Calendar "free/busy" queries for the Add Class modal MUST respond within 500ms p95. If Google
+   Calendar latency exceeds this, implement server-side caching before degrading the user
+   experience.
+3. The Coachee experience MUST be mobile-first and installable as a PWA.
+4. All class durations are ALWAYS 60 minutes — this is a hard domain invariant, not a configurable
+   value.
+5. Gym capacity limits (max 2 individual + 1 group simultaneous) MUST be enforced by domain
+   services, not by the database or application layer.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+The Constitution is the highest governing document of this project. It supersedes all other
+conventions, style guides, and local practices. Any deviation from a MUST requirement MUST be
+documented with written justification in the relevant spec's `plan.md` under "Complexity
+Tracking". All AI-generated code and AI-assisted PRs MUST pass a constitution compliance review
+before merge.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Amendment process**:
+- Propose changes as a PR to `.specify/memory/constitution.md`.
+- Changes must be reviewed by at least one other team member.
+- MAJOR version (breaking governance or principle removals): requires team consensus.
+- MINOR version (new principle/section): requires one approving review.
+- PATCH version (clarifications, typos): may be self-merged.
+
+**Version**: 1.0.0 | **Ratified**: 2026-07-09 | **Last Amended**: 2026-07-09

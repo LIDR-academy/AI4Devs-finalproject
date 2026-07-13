@@ -36,3 +36,19 @@ All 3 promtps executed in build mode with OpenCode - DeepSeek V4 Flash Free
 Great! Now please provide me a fully detailed step by step instructions in order to start running this project. Be specific and clear. Take into account I'm a frontend developer. So give some extra care to the backend and infra  setup, things related to databases, docker, prisma, etc. 
 
 ---
+
+# 3 - claude.ia - Sonnet 5
+
+### Instructions
+You are an expert in prompt engineering.
+Given the following prompt, prepare it using best-practice structure (role, objective, etc.) and formatting to achieve a precise and comprehensive result. Stick strictly to the requested objective by carefully analyzing what is asked in the original prompt. Make it in md so it's easier to copy-paste.
+
+### Original Prompt:
+I have just installed speckit in my project and I want you to fill out the constitution and create any skill you think it's necessary. I'd also like for you to add an AGENTS.md
+Make sure you place the right info in the right file, specially between the constitution and the AGENTS.md. 
+Follo wthe current best practices to get the best result.
+If there's anything else I'm missingg in order to get the mos out of speckit, please add/do it too.
+
+## RESULT [speckit-prompt.md]()
+
+---
