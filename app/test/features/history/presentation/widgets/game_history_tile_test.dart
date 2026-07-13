@@ -35,4 +35,29 @@ void main() {
     expect(find.text('Local'), findsOneWidget);
     expect(find.byIcon(Icons.smartphone), findsOneWidget);
   });
+
+  testWidgets('shows repeat action in overflow menu', (tester) async {
+    var repeatCalled = false;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light,
+        home: Scaffold(
+          body: GameHistoryTile(
+            item: item,
+            onTap: () {},
+            onRepeat: () => repeatCalled = true,
+            onDelete: () {},
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Repetir partida'), findsOneWidget);
+    await tester.tap(find.text('Repetir partida'));
+    expect(repeatCalled, isTrue);
+  });
 }

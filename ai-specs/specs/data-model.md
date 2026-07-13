@@ -158,6 +158,8 @@ Jugadores **dentro de una partida concreta**, modelados como array embebido en `
 - Un mismo `userId` no debería aparecer dos veces en la misma partida (validar en use case + reglas).
 - `players.length` debe coincidir con `playerCount` antes de iniciar.
 
+**Clonación desde historial (LPT-8):** `RepeatGameUseCase` crea un nuevo borrador local (`status: setup`, nuevo `gameId`) copiando `playerCount`, `totalCards`, `maxCardsPerRound`, `roundSequence` y el roster embebido (`displayName`, `userId`, `isGuest`, `seatOrder`) con `totalScore` en 0. No copia rondas `closed`, `firstDealerPlayerId`, fechas de partida ni metadatos de sync. Para partidas en nube, lee `players[]` del documento `games/{gameId}` (no subcolección).
+
 ---
 
 ## 6. Subcolección `rounds`

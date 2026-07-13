@@ -8,11 +8,13 @@ class DeleteGameSlidable extends StatelessWidget {
     required this.item,
     required this.onTap,
     required this.onDeleteRequested,
+    this.onRepeatRequested,
   });
 
   final GameHistoryItem item;
   final VoidCallback onTap;
   final VoidCallback onDeleteRequested;
+  final VoidCallback? onRepeatRequested;
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +37,7 @@ class DeleteGameSlidable extends StatelessWidget {
       child: GameHistoryTile(
         item: item,
         onTap: onTap,
+        onRepeat: onRepeatRequested,
         onDelete: onDeleteRequested,
       ),
     );

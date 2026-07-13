@@ -9,6 +9,7 @@ import 'package:la_pocha/features/game_setup/data/repositories/round_repository_
 import 'package:la_pocha/features/game_setup/domain/repositories/game_repository.dart';
 import 'package:la_pocha/features/game_setup/domain/repositories/round_repository.dart';
 import 'package:la_pocha/features/game_setup/domain/services/dealer_rotation_service.dart';
+import 'package:la_pocha/features/game_setup/domain/services/game_cloner_service.dart';
 import 'package:la_pocha/features/favorites/data/datasources/favorite_local_datasource.dart';
 import 'package:la_pocha/features/favorites/data/repositories/favorite_repository_impl.dart';
 import 'package:la_pocha/features/favorites/domain/repositories/favorite_repository.dart';
@@ -61,9 +62,11 @@ import 'package:la_pocha/features/history/domain/usecases/delete_local_game_usec
 import 'package:la_pocha/features/history/domain/usecases/get_game_detail_usecase.dart';
 import 'package:la_pocha/features/history/domain/usecases/get_game_history_usecase.dart';
 import 'package:la_pocha/features/history/domain/usecases/hide_cloud_game_usecase.dart';
+import 'package:la_pocha/features/history/domain/usecases/repeat_game_usecase.dart';
 import 'package:la_pocha/features/history/presentation/bloc/delete_game_from_history_cubit.dart';
 import 'package:la_pocha/features/history/presentation/bloc/game_detail_bloc.dart';
 import 'package:la_pocha/features/history/presentation/bloc/history_list_bloc.dart';
+import 'package:la_pocha/features/history/presentation/bloc/repeat_game_cubit.dart';
 import 'package:la_pocha/features/auth/data/datasources/auth_firebase_datasource.dart';
 import 'package:la_pocha/features/auth/data/datasources/user_firestore_datasource.dart';
 import 'package:la_pocha/features/auth/data/repositories/auth_repository_impl.dart';
@@ -288,6 +291,22 @@ Future<void> configureDependencies() async {
 
   getIt.registerFactory<GetGameDetailUseCase>(
     () => GetGameDetailUseCase(getIt<HistoryRepository>()),
+  );
+
+  getIt.registerFactory<GameClonerService>(
+    () => const GameClonerService(),
+  );
+
+  getIt.registerFactory<RepeatGameUseCase>(
+    () => RepeatGameUseCase(
+      getIt<GetGameDetailUseCase>(),
+      getIt<GameRepository>(),
+      getIt<GameClonerService>(),
+    ),
+  );
+
+  getIt.registerFactory<RepeatGameCubit>(
+    () => RepeatGameCubit(repeatGame: getIt<RepeatGameUseCase>()),
   );
 
   getIt.registerFactory<HistoryListBloc>(

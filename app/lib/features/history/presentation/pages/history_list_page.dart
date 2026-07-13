@@ -7,9 +7,11 @@ import 'package:la_pocha/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:la_pocha/features/history/domain/entities/game_history_item.dart';
 import 'package:la_pocha/features/history/presentation/bloc/delete_game_from_history_cubit.dart';
 import 'package:la_pocha/features/history/presentation/bloc/history_list_bloc.dart';
+import 'package:la_pocha/features/history/presentation/bloc/repeat_game_cubit.dart';
 import 'package:la_pocha/features/history/presentation/widgets/delete_game_dialog.dart';
 import 'package:la_pocha/features/history/presentation/widgets/delete_game_slidable.dart';
 import 'package:la_pocha/features/history/presentation/widgets/empty_history_view.dart';
+import 'package:la_pocha/features/history/presentation/widgets/repeat_game_button.dart';
 
 class HistoryListPage extends StatelessWidget {
   const HistoryListPage({super.key});
@@ -23,6 +25,7 @@ class HistoryListPage extends StatelessWidget {
               getIt<HistoryListBloc>()..add(const HistoryListStarted()),
         ),
         BlocProvider(create: (_) => getIt<DeleteGameFromHistoryCubit>()),
+        BlocProvider(create: (_) => getIt<RepeatGameCubit>()),
       ],
       child: const _HistoryListView(),
     );
@@ -43,24 +46,46 @@ class _HistoryListView extends StatelessWidget {
 
     final cubit = context.read<DeleteGameFromHistoryCubit>();
     await cubit.delete(gameId: item.id, source: item.source);
+  }
 
-    if (!context.mounted) {
-      return;
-    }
-
-    final state = cubit.state;
-    if (state is DeleteGameFromHistorySuccess) {
-      context.read<HistoryListBloc>().add(HistoryListGameDeleted(item.id));
-    } else if (state is DeleteGameFromHistoryFailure) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(state.message)),
-      );
-    }
+  Future<void> _requestRepeat(BuildContext context, GameHistoryItem item) async {
+    await requestRepeatGame(
+      context,
+      gameId: item.id,
+      source: item.source,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<DeleteGameFromHistoryCubit, DeleteGameFromHistoryState>(
+          listener: (context, state) {
+            if (state is DeleteGameFromHistorySuccess) {
+              context.read<HistoryListBloc>().add(
+                    HistoryListGameDeleted(state.gameId),
+                  );
+            } else if (state is DeleteGameFromHistoryFailure) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.message)),
+              );
+            }
+          },
+        ),
+        BlocListener<RepeatGameCubit, RepeatGameState>(
+          listener: (context, state) {
+            if (state is RepeatGameSuccess) {
+              handleRepeatGameSuccess(context, state.newGameId);
+            } else if (state is RepeatGameFailure) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.message)),
+              );
+            }
+          },
+        ),
+      ],
+      child: Scaffold(
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -121,6 +146,8 @@ class _HistoryListView extends StatelessWidget {
                               onTap: () => context.push(
                                 '/history/${item.id}?source=${item.source.name}',
                               ),
+                              onRepeatRequested: () =>
+                                  _requestRepeat(context, item),
                               onDeleteRequested: () =>
                                   _requestDelete(context, item),
                             );
@@ -133,6 +160,7 @@ class _HistoryListView extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

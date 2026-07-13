@@ -8,11 +8,13 @@ class GameHistoryTile extends StatelessWidget {
     super.key,
     required this.item,
     required this.onTap,
+    this.onRepeat,
     this.onDelete,
   });
 
   final GameHistoryItem item;
   final VoidCallback onTap;
+  final VoidCallback? onRepeat;
   final VoidCallback? onDelete;
 
   @override
@@ -67,7 +69,7 @@ class GameHistoryTile extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       SourceBadge(source: item.source),
-                      if (onDelete != null) ...[
+                      if (onRepeat != null || onDelete != null) ...[
                         const SizedBox(width: 4),
                         PopupMenuButton<String>(
                           icon: Icon(
@@ -75,18 +77,26 @@ class GameHistoryTile extends StatelessWidget {
                             color: AppTheme.onSurfaceVariant,
                           ),
                           onSelected: (value) {
-                            if (value == 'delete') {
+                            if (value == 'repeat') {
+                              onRepeat!();
+                            } else if (value == 'delete') {
                               onDelete!();
                             }
                           },
                           itemBuilder: (context) => [
-                            const PopupMenuItem(
-                              value: 'delete',
-                              child: Text(
-                                'Eliminar',
-                                style: TextStyle(color: Color(0xFFD9772E)),
+                            if (onRepeat != null)
+                              const PopupMenuItem(
+                                value: 'repeat',
+                                child: Text('Repetir partida'),
                               ),
-                            ),
+                            if (onDelete != null)
+                              const PopupMenuItem(
+                                value: 'delete',
+                                child: Text(
+                                  'Eliminar',
+                                  style: TextStyle(color: Color(0xFFD9772E)),
+                                ),
+                              ),
                           ],
                         ),
                       ],
