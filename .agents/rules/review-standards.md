@@ -39,8 +39,9 @@ Design-system adherence (`.agents/rules/atomic-design.mdc`).
 - Matches the screenshot (if provided) or the spec; consistent with sibling components.
 
 ## 3. reviewer_architecture → `review-architecture.md`
-Layering & dependencies (`.agents/rules/hooks-service-dao.mdc`, `global.mdc`).
-- `Component → Hook → Service → DAO` respected; no cross-layer imports (component never calls a DAO; service has no React).
+Layering & dependencies (`.agents/rules/hooks-service-dao.mdc, .agents/rules/types.mdc, .agents/rules/component-split.mdc`, `global.mdc`).
+- `Component → Hook → Service → DAO` respected; no cross-layer imports (component never calls a DAO; service has no React). 
+- Types are stored in `*.types.ts` files, and not exported from the component, class, service, hook, etc.
 - DTOs not leaked out of the data/DAO layer; hooks wrap services, not DAOs.
 - Business logic lives in `libs/*`, not in `apps/*`; barrels (`index.ts`) updated.
 - No new dependencies without justification; feature lib pairs with its app.
