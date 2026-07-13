@@ -2,33 +2,53 @@
 
 Images captured from `http://localhost:8080` (Docker, `LmsDemoSeeder` data).
 
+**Folder on GitHub:** [docs/screenshots](https://github.com/Angel-31/AI4Devs-finalproject/tree/finalproject-ABR/docs/screenshots) · **Rendered in:** [readme.md §9](../../readme.md#9-screenshots)
+
 ## Original delivery (calendar, dashboard, courses)
 
-| File | Path | Role |
-|------|------|------|
-| `login.png` | `/login` | Guest (legacy capture) |
-| `login-moodle52.png` | `/login` | Guest (Moodle 5.2 style + ASEMAD branding) |
-| `dashboard-teacher.png` | `/dashboard` | Teacher |
-| `courses-teacher.png` | `/courses` | Teacher |
-| `calendar-teacher.png` | `/calendar` | Teacher (Moodle layout) |
-| `calendar-event-create.png` | `/calendar/events/create` | Teacher |
-| `dashboard-student.png` | `/dashboard` | Student |
-| `calendar-student.png` | `/calendar` | Student |
+| File | Path | Role | Linked in readme |
+|------|------|------|------------------|
+| [login.png](./login.png) | `/login` | Guest (legacy capture) | — |
+| [login-moodle52.png](./login-moodle52.png) | `/login` | Guest (Moodle 5.2 + ASEMAD) | [§9 Access](../../readme.md#access) |
+| [dashboard-teacher.png](./dashboard-teacher.png) | `/dashboard` | Teacher | [§9 Teacher](../../readme.md#teacher-role) |
+| [dashboard-full-page.png](./dashboard-full-page.png) | `/dashboard` | Teacher (full page) | — |
+| [courses-teacher.png](./courses-teacher.png) | `/courses` | Teacher | [§9 Teacher](../../readme.md#teacher-role) |
+| [calendar-teacher.png](./calendar-teacher.png) | `/calendar` | Teacher (Moodle layout) | [§9 Teacher](../../readme.md#teacher-role) |
+| [calendar-event-create.png](./calendar-event-create.png) | `/calendar/events/create` | Teacher | [§9 Teacher](../../readme.md#teacher-role) |
+| [dashboard-student.png](./dashboard-student.png) | `/dashboard` | Student | [§9 Student](../../readme.md#student-role) |
+| [calendar-student.png](./calendar-student.png) | `/calendar` | Student | [§9 Student](../../readme.md#student-role) |
 
 ## Moodle 5.2 pack, comms, gradebook, AI (final project)
 
-| File | Path | Role |
-|------|------|------|
-| `upgrade-assistant.png` | `/upgrade-assistant` | Teacher — pre-upgrade health checks |
-| `comms-notifications.png` | `/comms/notifications` | Any authenticated user |
-| `comms-messages.png` | `/comms/messages` | Any authenticated user |
-| `comms-mail.png` | `/comms/mail` | Any authenticated user |
-| `gradebook-teacher.png` | `/courses/{course}/grades` | Teacher — multi-grader gradebook |
-| `ai-grill-me.png` | `/lessons/{lesson}` | Teacher — AI assistant + Grill me panel |
+| File | Path | Role | Linked in readme |
+|------|------|------|------------------|
+| [upgrade-assistant.png](./upgrade-assistant.png) | `/upgrade-assistant` | Admin — pre-upgrade checks | [§9 Teacher](../../readme.md#teacher-role) |
+| [comms-notifications.png](./comms-notifications.png) | `/comms/notifications` | Authenticated | [§9 Teacher](../../readme.md#teacher-role) |
+| [comms-messages.png](./comms-messages.png) | `/comms/messages` | Authenticated | [§9 Teacher](../../readme.md#teacher-role) |
+| [comms-mail.png](./comms-mail.png) | `/comms/mail` | Authenticated | [§9 Teacher](../../readme.md#teacher-role) |
+| [gradebook-teacher.png](./gradebook-teacher.png) | `/courses/1/grades` | Teacher | [§9 Teacher](../../readme.md#teacher-role) |
+| [ai-grill-me.png](./ai-grill-me.png) | `/lessons/1` | Student (enrolled lesson + AI panel) | [§9 Teacher](../../readme.md#teacher-role) |
+
+## Responsive (mobile viewport 390px)
+
+| File | Path | Role | Linked in readme |
+|------|------|------|------------------|
+| [dashboard-teacher-mobile.png](./dashboard-teacher-mobile.png) | `/dashboard` | Teacher | [§9 Responsive](../../readme.md#responsive-mobile) |
+| [calendar-teacher-mobile.png](./calendar-teacher-mobile.png) | `/calendar` | Teacher | [§9 Responsive](../../readme.md#responsive-mobile) |
+
+## Playwright CI alternates
+
+Same routes as above; kept for traceability when regenerating from automated runs.
+
+| File | Source view |
+|------|-------------|
+| [playwright-calendar-teacher.png](./playwright-calendar-teacher.png) | Teacher `/calendar` |
+| [playwright-calendar-event-create.png](./playwright-calendar-event-create.png) | Teacher `/calendar/events/create` |
+| [playwright-calendar-student.png](./playwright-calendar-student.png) | Student `/calendar` |
 
 **Credentials:** `teacher@example.com` / `student@example.com` — password `password123`.
 
-**Regenerate new screens:** from this repo (requires LMS running at `http://localhost:8080`):
+**Regenerate all screens** (requires LMS at `http://localhost:8080`):
 
 ```bash
 npm install

@@ -523,25 +523,32 @@ Transcripts: [362d8b59…](./agent-transcripts/362d8b59-41b4-47ce-89fa-5fe5f7a83
 
 ## 9. Screenshots
 
-Screenshots from Docker (`http://localhost:8080`, `LmsDemoSeeder`). Files in [`docs/screenshots/`](docs/screenshots/). See [docs/screenshots/README.md](docs/screenshots/README.md) for the full index.
+Screenshots from Docker (`http://localhost:8080`, `LmsDemoSeeder`). All files live in [`docs/screenshots/`](docs/screenshots/) and are indexed in [docs/screenshots/README.md](docs/screenshots/README.md).
 
 ### Access
 
 Login (Moodle 5.2 style, ASEMAD branding) with EN/ES language selector.
 
+| View | File |
+|------|------|
+| Login Moodle 5.2 | [login-moodle52.png](docs/screenshots/login-moodle52.png) |
+
 ![Login Moodle 5.2](docs/screenshots/login-moodle52.png)
 
 ### Teacher role
 
-| View | Description |
-|------|-------------|
-| Dashboard | Main panel with courses, timeline, and creation form |
-| My Courses | Listing and management of published courses |
-| Calendar | Monthly view (Moodle layout), academic events; mobile topbar with comms + nav strip |
-| Upgrade Assistant | Pre-deploy health checks for Moodle 5.2 pack |
-| Gradebook | Multi-grader marks per course activity |
-| Comms | Notifications, messages, internal mail |
-| Grill me | AI assistant panel on lesson view |
+| View | File | Description |
+|------|------|-------------|
+| Dashboard | [dashboard-teacher.png](docs/screenshots/dashboard-teacher.png) | Main panel with courses, timeline, and creation form |
+| My Courses | [courses-teacher.png](docs/screenshots/courses-teacher.png) | Listing and management of published courses |
+| Calendar | [calendar-teacher.png](docs/screenshots/calendar-teacher.png) | Monthly view (Moodle layout), academic events |
+| Create event | [calendar-event-create.png](docs/screenshots/calendar-event-create.png) | Academic event form |
+| Upgrade Assistant | [upgrade-assistant.png](docs/screenshots/upgrade-assistant.png) | Pre-deploy health checks for Moodle 5.2 pack |
+| Gradebook | [gradebook-teacher.png](docs/screenshots/gradebook-teacher.png) | Multi-grader marks per course activity |
+| Comms — notifications | [comms-notifications.png](docs/screenshots/comms-notifications.png) | In-app notifications |
+| Comms — messages | [comms-messages.png](docs/screenshots/comms-messages.png) | Private messaging |
+| Comms — mail | [comms-mail.png](docs/screenshots/comms-mail.png) | Internal mail |
+| Grill me | [ai-grill-me.png](docs/screenshots/ai-grill-me.png) | AI assistant panel on lesson view |
 
 ![Teacher dashboard](docs/screenshots/dashboard-teacher.png)
 
@@ -565,16 +572,27 @@ Login (Moodle 5.2 style, ASEMAD branding) with EN/ES language selector.
 
 ### Student role
 
-| View | Description |
-|------|-------------|
-| Dashboard | Enrolled courses and quick access |
-| Calendar | Monthly view with standard LMS layout |
+| View | File | Description |
+|------|------|-------------|
+| Dashboard | [dashboard-student.png](docs/screenshots/dashboard-student.png) | Enrolled courses and quick access |
+| Calendar | [calendar-student.png](docs/screenshots/calendar-student.png) | Monthly view with standard LMS layout |
 
 ![Student dashboard](docs/screenshots/dashboard-student.png)
 
 ![Academic calendar — student](docs/screenshots/calendar-student.png)
 
-> Regenerate captures: `npm run screenshots` (see [docs/screenshots/README.md](docs/screenshots/README.md)). For responsive QA before production deploy, use [deploy-responsive-all-screens/VERIFICAR-PANTALLAS.md](../codigofinal/deploy-responsive-all-screens/VERIFICAR-PANTALLAS.md).
+### Responsive (mobile)
+
+| View | File | Description |
+|------|------|-------------|
+| Dashboard (390px) | [dashboard-teacher-mobile.png](docs/screenshots/dashboard-teacher-mobile.png) | Drawer nav ☰, stacked course cards |
+| Calendar (390px) | [calendar-teacher-mobile.png](docs/screenshots/calendar-teacher-mobile.png) | Moodle topbar + comms icons on narrow viewport |
+
+![Teacher dashboard — mobile](docs/screenshots/dashboard-teacher-mobile.png)
+
+![Teacher calendar — mobile](docs/screenshots/calendar-teacher-mobile.png)
+
+> Regenerate captures: `npm run screenshots` (see [docs/screenshots/README.md](docs/screenshots/README.md)). For responsive QA before production deploy, see [VERIFICAR-PANTALLAS.md](https://github.com/BurgosAngel/codigofinal/blob/angel-burgos-r/deploy-responsive-all-screens/VERIFICAR-PANTALLAS.md).
 
 ---
 
