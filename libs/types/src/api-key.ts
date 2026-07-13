@@ -1,8 +1,9 @@
 /**
  * The supported AI-provider union (spec.md Open decision 2). v1 ships a single provider
- * (OpenAI) -- the union keeps the seam open for more without reshaping callers.
+ * (Groq, via the Vercel AI SDK -- swapped from OpenAI, ai-lesson-generation Open decision #1)
+ * -- the union keeps the seam open for more without reshaping callers.
  */
-export type AiProvider = 'openai';
+export type AiProvider = 'groq';
 
 /**
  * The **only** thing the client ever learns about a saved key (spec.md "No key material in

@@ -76,7 +76,7 @@ describe('ApiKeyGate', () => {
   it('renders children when a key is saved', async () => {
     mockUseApiKey.mockReturnValue(
       apiKeyValue({
-        status: { hasKey: true, provider: 'openai', updatedAt: '2026-01-01T00:00:00.000Z' },
+        status: { hasKey: true, provider: 'groq', updatedAt: '2026-01-01T00:00:00.000Z' },
       }),
     );
 

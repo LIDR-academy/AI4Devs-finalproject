@@ -10,6 +10,9 @@ export type RadioGroupProps = {
   disabled?: boolean;
   direction?: 'column' | 'row';
   style?: StyleProp<ViewStyle>;
+  /** Accessible name for the whole group (e.g. "Lesson content") — WCAG 1.3.1/4.1.2, mirrors
+   * `LanguageSelector`'s own `accessibilityLabel` prop. */
+  accessibilityLabel?: string;
 };
 
 /**
@@ -22,20 +25,25 @@ export const RadioGroup = ({
   disabled = false,
   direction = 'column',
   style,
+  accessibilityLabel,
 }: RadioGroupProps) => {
   const norm: RadioOption[] = options.map((o) =>
     typeof o === 'string' ? { value: o, label: o } : o,
   );
 
   return (
-    <View accessibilityRole="radiogroup" style={[styles.group(direction), style]}>
+    <View
+      accessibilityRole="radiogroup"
+      accessibilityLabel={accessibilityLabel}
+      style={[styles.group(direction), style]}
+    >
       {norm.map((opt) => {
         const selected = value === opt.value;
         return (
           <Pressable
             key={opt.value}
             accessibilityRole="radio"
-            accessibilityState={{ selected, disabled }}
+            aria-checked={selected}
             disabled={disabled}
             onPress={() => onChange?.(opt.value)}
             style={styles.option(disabled)}

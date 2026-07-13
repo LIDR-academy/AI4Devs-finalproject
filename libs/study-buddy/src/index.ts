@@ -7,6 +7,8 @@ export * from './components/fill-in-the-blank-activity/fill-in-the-blank-activit
 export type * from './components/fill-in-the-blank-activity/fill-in-the-blank-activity.types';
 export * from './components/flashcard-activity/flashcard-activity';
 export type * from './components/flashcard-activity/flashcard-activity.types';
+export * from './components/lesson-generation/lesson-generation';
+export type * from './components/lesson-generation/lesson-generation.types';
 export * from './components/lesson-results/lesson-results';
 export * from './components/matching-activity/matching-activity';
 export type * from './components/matching-activity/matching-activity.types';
@@ -15,6 +17,7 @@ export type * from './components/multiple-choice-activity/multiple-choice-activi
 export * from './components/open-ended-activity/open-ended-activity';
 export type * from './components/open-ended-activity/open-ended-activity.types';
 export * from './components/pdf-upload/pdf-upload';
+export type * from './components/pdf-upload/pdf-upload.types';
 export * from './components/sign-in-form/sign-in-form';
 export * from './components/sign-out/sign-out';
 export type * from './components/sign-out/sign-out.types';

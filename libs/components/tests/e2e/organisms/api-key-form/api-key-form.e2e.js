@@ -20,7 +20,7 @@ test('Empty story renders a labelled input, guidance, and a disabled Save contro
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
   await expect(canvas.locator('[aria-label="API key"]')).toBeVisible();
-  await expect(canvas.locator("text=Don't have a key? Get one from OpenAI").first()).toBeVisible();
+  await expect(canvas.locator("text=Don't have a key? Get one from Groq").first()).toBeVisible();
 
   const saveLabel = canvas.locator('text=Save').first();
   const saveControl = saveLabel.locator('xpath=ancestor::button[1]');
@@ -36,7 +36,7 @@ test('Content story renders the masked saved status and enabled Replace/Remove c
   await page.goto(story('content'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
-  await expect(canvas.locator('text=OpenAI key saved · Updated Jan 1, 2026')).toBeVisible();
+  await expect(canvas.locator('text=Groq key saved · Updated Jan 1, 2026')).toBeVisible();
 
   const replaceControl = canvas
     .locator('text=Replace')

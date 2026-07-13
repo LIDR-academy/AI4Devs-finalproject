@@ -1,7 +1,7 @@
 # Current session
 
-**Active feature:** pdf-upload-extraction
-**Folder:** docs/features/pdf-upload-extraction/
-**Phase:** done ✅
-**Status:** All 3 slices complete. Full review (round 2, 6 reviewers, APPROVED). Mutation gate PASS (targeted closure + 3 human-accepted content/presentation categories). DoD validated (PASS). Merged into `feature-entrega2-HernanLaura`.
-**Notes:** Merged from worktree `.worktrees/pdf-upload-extraction` (branch `feat/pdf-upload-extraction`); upload screen now renders `PdfUpload` inside `ApiKeyGate`. Prior features activity-flashcard-recall and score-results-summary merged/pr_ready per history.
+**Active feature:** ai-lesson-generation
+**Folder:** docs/features/ai-lesson-generation/
+**Phase:** pr_ready
+**Status:** All 15 tasks / 3 slices built + reviewer_slice APPROVED + committed. Pre-review mutation 97.92% (4 equivalents), full review APPROVED round 2 (7 round-1 findings fixed), post-review mutation 98.18% (3 equivalents, same class), DoD PASS. Docs compacted, story moved to done. Ready for human to open/merge the PR on branch feat/ai-lesson-generation.
+**Notes:** Cross-cutting provider swap (OpenAI→Groq) touches shipped R6 code. No `lessons` persistence this story (R5, Phase 2) — in-memory deck with minted `lessonId`. Pre-existing, unrelated `@helsoft/localization` `migration-coverage.test.ts` (sign-in-form/sign-out) failure confirmed out of scope (fails identically on HEAD before this feature).

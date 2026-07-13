@@ -125,6 +125,30 @@ const FLASHCARD_DIR = resolve(REPO_ROOT, 'libs/activities/src/organisms/flashcar
 const API_KEY_SETTINGS_DIR = resolve(REPO_ROOT, 'libs/study-buddy/src/components/api-key-settings');
 const API_KEY_GATE_DIR = resolve(REPO_ROOT, 'libs/study-buddy/src/components/api-key-gate');
 
+/**
+ * ai-lesson-generation task-9 (Slice 1) — `LessonGenerationPanel` builds its own `t()` key
+ * literals for the composition picker (`generation.composition.*`), the progress step labels
+ * (`generation.step.*`), Generate, and the ready-state summary (`generation.ready.*`) — same
+ * missing-key guard as the other feature-wiring/presentational components above. The Error
+ * state's message/action label are pre-localized props from the wiring layer below, so they add
+ * no literal keys here.
+ */
+const LESSON_GENERATION_PANEL_DIR = resolve(
+  REPO_ROOT,
+  'libs/components/src/organisms/lesson-generation-panel',
+);
+/**
+ * ai-lesson-generation task-13 (Slice 2) — `lesson-generation.helpers.ts` maps every
+ * `GenerationErrorCode` to a `t()` message key (`GENERATION_ERROR_KEYS`) and every recovery
+ * category to an action-label key (`GENERATION_ERROR_ACTION_LABEL_KEYS`); `lesson-generation.tsx`
+ * calls `t()` with those looked-up keys, not literal ones, so the guard is scoped to the helpers
+ * file where the literals actually live.
+ */
+const LESSON_GENERATION_DIR = resolve(
+  REPO_ROOT,
+  'libs/study-buddy/src/components/lesson-generation',
+);
+
 const isExcluded = (file: string) =>
   file.endsWith('.stories.tsx') || file.endsWith('.test.tsx') || file.endsWith('.test.ts');
 
@@ -172,6 +196,12 @@ const findViolations = (roots: string[]): string[] => {
  * at its own call site. */
 const DOTTED_KEY_LITERAL = /['"]([A-Za-z][\w]*(?:\.[A-Za-z][\w]*)+)['"]/g;
 
+/** i18next's plural-form key suffixes (`count_one`/`count_other`/…, see `en.ts`'s
+ * `lessons.count_*`/`pdf.imageCount_*`/`generation.ready.slideCount_*`) — `t(key, { count })`
+ * looks up `${key}_${plural rule}` at runtime, so code only ever references the bare `key`
+ * literal. Without stripping these, the guard would flag every pluralized key as missing. */
+const PLURAL_SUFFIX = /_(zero|one|two|few|many|other)$/;
+
 const flattenKeys = (node: unknown, prefix = ''): Set<string> => {
   const keys = new Set<string>();
   if (!node || typeof node !== 'object') return keys;
@@ -181,6 +211,7 @@ const flattenKeys = (node: unknown, prefix = ''): Set<string> => {
       for (const nested of flattenKeys(value, path)) keys.add(nested);
     } else {
       keys.add(path);
+      if (PLURAL_SUFFIX.test(path)) keys.add(path.replace(PLURAL_SUFFIX, ''));
     }
   }
   return keys;
@@ -223,6 +254,8 @@ const T_KEY_COMPONENT_DIRS: Array<[name: string, dir: string]> = [
   ['api-key-settings', API_KEY_SETTINGS_DIR],
   ['api-key-gate', API_KEY_GATE_DIR],
   ['flashcard', FLASHCARD_DIR],
+  ['lesson-generation-panel', LESSON_GENERATION_PANEL_DIR],
+  ['lesson-generation', LESSON_GENERATION_DIR],
 ];
 
 describe.each(T_KEY_COMPONENT_DIRS)('t() key existence coverage (%s)', (name, dir) => {
@@ -248,5 +281,15 @@ describe('t() key existence coverage — detector sanity', () => {
     expect([..."t('auth.error.email')".matchAll(DOTTED_KEY_LITERAL)].map((m) => m[1])).toEqual([
       'auth.error.email',
     ]);
+  });
+
+  // ai-lesson-generation task-14 — a plural-form key (`generation.ready.slideCount_one`/
+  // `_other`) must satisfy a reference to the bare `generation.ready.slideCount` literal, since
+  // that's the only form `t(key, { count })` ever appears as in source.
+  it('resolves a bare key referenced via i18next pluralization to its _one/_other forms', () => {
+    const definedKeys = flattenKeys(en.translation);
+
+    expect(definedKeys.has('generation.ready.slideCount')).toBe(true);
+    expect(definedKeys.has('generation.ready.slideCount_one')).toBe(true);
   });
 });

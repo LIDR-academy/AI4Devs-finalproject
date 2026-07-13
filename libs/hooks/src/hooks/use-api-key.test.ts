@@ -32,7 +32,7 @@ describe('useApiKey', () => {
     mockUseSession.mockReturnValue(authenticatedSession);
     const status = {
       hasKey: true,
-      provider: 'openai' as const,
+      provider: 'groq' as const,
       updatedAt: '2026-01-01T00:00:00.000Z',
     };
     service.getApiKeyStatus.mockResolvedValue(status);
@@ -94,7 +94,7 @@ describe('useApiKey', () => {
   it('loads the status once the session resolves from still-loading to authenticated', async () => {
     const status = {
       hasKey: true,
-      provider: 'openai' as const,
+      provider: 'groq' as const,
       updatedAt: '2026-01-01T00:00:00.000Z',
     };
     service.getApiKeyStatus.mockResolvedValue(status);
@@ -121,7 +121,7 @@ describe('useApiKey', () => {
     mockUseSession.mockReturnValue({ session: sessionForUser1, isLoading: false });
     service.getApiKeyStatus.mockResolvedValue({
       hasKey: true,
-      provider: 'openai',
+      provider: 'groq',
       updatedAt: '2026-01-01T00:00:00.000Z',
     });
 
@@ -142,7 +142,7 @@ describe('useApiKey', () => {
     mockUseSession.mockReturnValue(authenticatedSession);
     const status = {
       hasKey: true,
-      provider: 'openai' as const,
+      provider: 'groq' as const,
       updatedAt: '2026-01-01T00:00:00.000Z',
     };
     service.saveApiKey.mockResolvedValue(status);
@@ -178,7 +178,7 @@ describe('useApiKey', () => {
     expect(result.current.isSubmitting).toBe(true);
 
     await act(async () => {
-      resolveSave({ hasKey: true, provider: 'openai', updatedAt: '2026-01-01T00:00:00.000Z' });
+      resolveSave({ hasKey: true, provider: 'groq', updatedAt: '2026-01-01T00:00:00.000Z' });
       await savePromise;
     });
 
@@ -204,7 +204,7 @@ describe('useApiKey', () => {
     mockUseSession.mockReturnValue(authenticatedSession);
     service.saveApiKey.mockResolvedValue({
       hasKey: true,
-      provider: 'openai',
+      provider: 'groq',
       updatedAt: '2026-01-01T00:00:00.000Z',
     });
     const { result } = renderHook(() => useApiKey());
@@ -246,7 +246,7 @@ describe('useApiKey', () => {
     );
     const status = {
       hasKey: true,
-      provider: 'openai' as const,
+      provider: 'groq' as const,
       updatedAt: '2026-01-01T00:00:00.000Z',
     };
     service.saveApiKey.mockResolvedValueOnce(status);
@@ -297,7 +297,7 @@ describe('useApiKey', () => {
     unmount();
 
     await act(async () => {
-      resolveStatus({ hasKey: true, provider: 'openai', updatedAt: '2026-01-01T00:00:00.000Z' });
+      resolveStatus({ hasKey: true, provider: 'groq', updatedAt: '2026-01-01T00:00:00.000Z' });
     });
 
     expect(errorSpy).not.toHaveBeenCalled();
@@ -327,7 +327,7 @@ describe('useApiKey', () => {
     expect(result.current.status).toEqual({ hasKey: false });
 
     await act(async () => {
-      resolveStatus({ hasKey: true, provider: 'openai', updatedAt: '2026-01-01T00:00:00.000Z' });
+      resolveStatus({ hasKey: true, provider: 'groq', updatedAt: '2026-01-01T00:00:00.000Z' });
     });
 
     expect(result.current.status).toEqual({ hasKey: false });
@@ -339,7 +339,7 @@ describe('useApiKey', () => {
     mockUseSession.mockReturnValue(authenticatedSession);
     service.saveApiKey.mockResolvedValue({
       hasKey: true,
-      provider: 'openai',
+      provider: 'groq',
       updatedAt: '2026-01-01T00:00:00.000Z',
     });
     const { result } = renderHook(() => useApiKey());
@@ -357,7 +357,7 @@ describe('useApiKey', () => {
     mockUseSession.mockReturnValue(authenticatedSession);
     service.getApiKeyStatus.mockResolvedValue({
       hasKey: true,
-      provider: 'openai',
+      provider: 'groq',
       updatedAt: '2026-01-01T00:00:00.000Z',
     });
     service.removeApiKey.mockResolvedValue({ hasKey: false });
@@ -379,7 +379,7 @@ describe('useApiKey', () => {
     mockUseSession.mockReturnValue(authenticatedSession);
     const savedStatus = {
       hasKey: true,
-      provider: 'openai' as const,
+      provider: 'groq' as const,
       updatedAt: '2026-01-01T00:00:00.000Z',
     };
     service.getApiKeyStatus.mockResolvedValue(savedStatus);
@@ -444,7 +444,7 @@ describe('ApiKeyProvider', () => {
     mockUseSession.mockReturnValue(authenticatedSession);
     const status = {
       hasKey: true,
-      provider: 'openai' as const,
+      provider: 'groq' as const,
       updatedAt: '2026-01-01T00:00:00.000Z',
     };
     service.getApiKeyStatus.mockResolvedValue(status);

@@ -50,6 +50,48 @@ export const de: TranslationResource = {
         unauthenticated: 'Bitte melde dich an, um hochzuladen',
       },
     },
+    generation: {
+      composition: {
+        heading: 'Lektionsinhalt',
+        instructionalOnly: 'Nur lehrreich',
+        activityOnly: 'Nur Aktivitäten',
+        both: 'Beides',
+      },
+      generate: 'Lektion generieren',
+      step: {
+        reading: 'Inhalt wird gelesen',
+        generating: 'Folien werden erstellt',
+        attaching: 'Bilder werden angehängt',
+        status: {
+          done: 'erledigt',
+          current: 'läuft',
+          upcoming: 'ausstehend',
+        },
+      },
+      ready: {
+        slideCount_one: '{{count}} Folie erstellt',
+        slideCount_other: '{{count}} Folien erstellt',
+        composition: 'Zusammensetzung: {{composition}}',
+        openInPlayer: 'Im Player öffnen',
+      },
+      error: {
+        missingKey: 'Zum Generieren von Lektionen ist ein API-Schlüssel erforderlich.',
+        invalidKey: 'Dein API-Schlüssel wurde abgelehnt. Überprüfe ihn in den Einstellungen.',
+        rateLimited:
+          'Du hast das Ratenlimit des Anbieters erreicht. Versuche es gleich noch einmal.',
+        timeout: 'Die Generierung hat zu lange gedauert. Versuche es erneut.',
+        generationFailed:
+          'Beim Generieren deiner Lektion ist etwas schiefgelaufen. Versuche es erneut.',
+        documentNotReady: 'Dieses Dokument ist noch nicht bereit. Lade dein PDF erneut hoch.',
+        network: 'Netzwerkfehler. Versuche es erneut.',
+        unauthenticated: 'Bitte melde dich an, um eine Lektion zu generieren.',
+        action: {
+          retry: 'Erneut versuchen',
+          settings: 'Zu den Einstellungen',
+          signIn: 'Anmelden',
+        },
+      },
+    },
     lesson: {
       title: 'Lektion {{id}}',
       start: 'Lernen beginnen',
@@ -102,7 +144,7 @@ export const de: TranslationResource = {
         replace: 'Ersetzen',
         remove: 'Entfernen',
         savedStatus: '{{provider}}-Schlüssel gespeichert · Aktualisiert {{date}}',
-        guidance: 'Noch keinen Schlüssel? Bei OpenAI erhalten',
+        guidance: 'Noch keinen Schlüssel? Bei Groq erhalten',
         removeConfirmHeadline: 'API-Schlüssel entfernen?',
         removeConfirmBody:
           'Du musst einen neuen Schlüssel hinzufügen, um wieder Lektionen zu erstellen.',

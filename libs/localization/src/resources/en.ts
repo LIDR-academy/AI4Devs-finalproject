@@ -60,6 +60,53 @@ export const en = {
         unauthenticated: 'Please sign in to upload',
       },
     },
+    // ai-lesson-generation task-9 (Slice 1) — LessonGenerationPanel's chrome copy (composition
+    // picker, Generate action, progress step labels, ready-state summary). Error-state copy
+    // (`generation.error.*`) is Slice-2/task-13, added with the Error state itself.
+    generation: {
+      composition: {
+        heading: 'Lesson content',
+        instructionalOnly: 'Instructional only',
+        activityOnly: 'Activity only',
+        both: 'Both',
+      },
+      generate: 'Generate lesson',
+      step: {
+        reading: 'Reading content',
+        generating: 'Generating slides',
+        attaching: 'Attaching images',
+        // review.md round-1 finding #1 (blocker) — the GenerationProgress step's a11y-label
+        // status suffix, previously hardcoded English inside the molecule itself.
+        status: {
+          done: 'done',
+          current: 'current',
+          upcoming: 'upcoming',
+        },
+      },
+      ready: {
+        slideCount_one: '{{count}} slide generated',
+        slideCount_other: '{{count}} slides generated',
+        composition: 'Composition: {{composition}}',
+        openInPlayer: 'Open in player',
+      },
+      // task-13 (Slice 2) — one message key per GenerationErrorCode (spec.md's Error contract
+      // table names these keys verbatim) + the recovery-affordance action labels.
+      error: {
+        missingKey: 'An API key is required to generate lessons.',
+        invalidKey: 'Your API key was rejected. Check it in Settings.',
+        rateLimited: "You've hit the provider's rate limit. Try again in a moment.",
+        timeout: 'Generation took too long. Try again.',
+        generationFailed: 'Something went wrong while generating your lesson. Try again.',
+        documentNotReady: "This document isn't ready yet. Please re-upload your PDF.",
+        network: 'Network error. Try again.',
+        unauthenticated: 'Please sign in to generate a lesson.',
+        action: {
+          retry: 'Try again',
+          settings: 'Go to Settings',
+          signIn: 'Sign in',
+        },
+      },
+    },
     lesson: {
       title: 'Lesson {{id}}',
       start: 'Start studying',
@@ -125,7 +172,7 @@ export const en = {
         // against this exact shape, so ApiKeyForm's new Empty/Error/Remove-confirm labels
         // had to land (translated) in all four bundles together. Task-13 still owns the
         // full i18n slice (copy review + migration-coverage.test.ts extension).
-        guidance: "Don't have a key? Get one from OpenAI",
+        guidance: "Don't have a key? Get one from Groq",
         removeConfirmHeadline: 'Remove API key?',
         removeConfirmBody: "You'll need to add a new key to generate lessons again.",
         // Full-review Round 1, Minor 6 — distinct from `remove` (the trigger button) to avoid

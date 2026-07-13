@@ -6,5 +6,7 @@ export * from './use-interaction-state';
 export type * from './use-interaction-state.types';
 export * from './use-lesson-attempt';
 export type * from './use-lesson-attempt.types';
+export * from './use-lesson-generation';
+export type * from './use-lesson-generation.types';
 export * from './use-session';
 export type * from './use-session.types';

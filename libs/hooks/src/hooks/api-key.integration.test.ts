@@ -47,7 +47,7 @@ describe('ai-key-management integration (hook -> service -> DAO)', () => {
   // reflects a previously-saved key from the mocked metadata select.
   it('loads the status on mount, reflecting a previously-saved key', async () => {
     const select = jest.fn().mockResolvedValue({
-      data: [{ provider: 'openai', updated_at: '2026-01-01T00:00:00.000Z' }],
+      data: [{ provider: 'groq', updated_at: '2026-01-01T00:00:00.000Z' }],
       error: null,
     });
     jest.spyOn(client, 'from').mockReturnValue({ select } as never);
@@ -59,7 +59,7 @@ describe('ai-key-management integration (hook -> service -> DAO)', () => {
     expect(select).toHaveBeenCalledWith('provider, updated_at');
     expect(result.current.status).toEqual({
       hasKey: true,
-      provider: 'openai',
+      provider: 'groq',
       updatedAt: '2026-01-01T00:00:00.000Z',
     });
   });
@@ -72,7 +72,7 @@ describe('ai-key-management integration (hook -> service -> DAO)', () => {
     } as never);
     const invoke = mockInvoke(() =>
       Promise.resolve({
-        data: { hasKey: true, provider: 'openai', updatedAt: '2026-02-01T00:00:00.000Z' },
+        data: { hasKey: true, provider: 'groq', updatedAt: '2026-02-01T00:00:00.000Z' },
         error: null,
       }),
     );
@@ -86,11 +86,11 @@ describe('ai-key-management integration (hook -> service -> DAO)', () => {
     });
 
     expect(invoke).toHaveBeenCalledWith('manage-api-key', {
-      body: { action: 'save', provider: 'openai', apiKey: 'sk-test-key' },
+      body: { action: 'save', provider: 'groq', apiKey: 'sk-test-key' },
     });
     expect(result.current.status).toEqual({
       hasKey: true,
-      provider: 'openai',
+      provider: 'groq',
       updatedAt: '2026-02-01T00:00:00.000Z',
     });
   });
@@ -100,13 +100,13 @@ describe('ai-key-management integration (hook -> service -> DAO)', () => {
   it('replaces an already-saved key end-to-end and reflects the updated masked status', async () => {
     jest.spyOn(client, 'from').mockReturnValue({
       select: jest.fn().mockResolvedValue({
-        data: [{ provider: 'openai', updated_at: '2026-01-01T00:00:00.000Z' }],
+        data: [{ provider: 'groq', updated_at: '2026-01-01T00:00:00.000Z' }],
         error: null,
       }),
     } as never);
     const invoke = mockInvoke(() =>
       Promise.resolve({
-        data: { hasKey: true, provider: 'openai', updatedAt: '2026-03-01T00:00:00.000Z' },
+        data: { hasKey: true, provider: 'groq', updatedAt: '2026-03-01T00:00:00.000Z' },
         error: null,
       }),
     );
@@ -120,7 +120,7 @@ describe('ai-key-management integration (hook -> service -> DAO)', () => {
     });
 
     expect(invoke).toHaveBeenCalledWith('manage-api-key', {
-      body: { action: 'save', provider: 'openai', apiKey: 'sk-replacement-key' },
+      body: { action: 'save', provider: 'groq', apiKey: 'sk-replacement-key' },
     });
     expect(result.current.status.updatedAt).toBe('2026-03-01T00:00:00.000Z');
   });
@@ -130,7 +130,7 @@ describe('ai-key-management integration (hook -> service -> DAO)', () => {
   it('removes a saved key end-to-end and reflects the no-key status', async () => {
     jest.spyOn(client, 'from').mockReturnValue({
       select: jest.fn().mockResolvedValue({
-        data: [{ provider: 'openai', updated_at: '2026-01-01T00:00:00.000Z' }],
+        data: [{ provider: 'groq', updated_at: '2026-01-01T00:00:00.000Z' }],
         error: null,
       }),
     } as never);
@@ -154,7 +154,7 @@ describe('ai-key-management integration (hook -> service -> DAO)', () => {
   it('normalizes a failed remove end-to-end and preserves the saved status', async () => {
     jest.spyOn(client, 'from').mockReturnValue({
       select: jest.fn().mockResolvedValue({
-        data: [{ provider: 'openai', updated_at: '2026-01-01T00:00:00.000Z' }],
+        data: [{ provider: 'groq', updated_at: '2026-01-01T00:00:00.000Z' }],
         error: null,
       }),
     } as never);
@@ -172,7 +172,7 @@ describe('ai-key-management integration (hook -> service -> DAO)', () => {
     expect(result.current.error).toBe('network_error');
     expect(result.current.status).toEqual({
       hasKey: true,
-      provider: 'openai',
+      provider: 'groq',
       updatedAt: '2026-01-01T00:00:00.000Z',
     });
   });
