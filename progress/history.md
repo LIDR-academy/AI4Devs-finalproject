@@ -25,3 +25,4 @@
 2026-07-13 | pdf-upload-extraction (ad hoc, no story) | n/a | — | Extracted DAO/service/adapters/hook/types into new @helsoft/pdf-upload-extraction lib; all workspaces green.
 2026-07-13 | pdf-upload-extraction | done | docs/features/pdf-upload-extraction/ | merged into feature-entrega2-HernanLaura (upload screen: PdfUpload inside ApiKeyGate)
 2026-07-13 | ai-key-management (ad hoc, no story) | n/a | — | Removed OpenAI key validation: manage-api-key stores keys directly; invalid_key error path stripped client-side. Branch feature-entrega2-HernanLaura.
+2026-07-13 | ui-tweaks (ad hoc, no story) | n/a | — | SignOut moved to settings headerRight (style prop + WithStyle story); home screen spacing. Branch feature-entrega2-HernanLaura.
