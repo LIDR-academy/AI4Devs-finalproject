@@ -3,6 +3,7 @@ export * from './fill-in-the-blank/fill-in-the-blank.types';
 export * from './flashcard/flashcard';
 export * from './flashcard/flashcard.types';
 export * from './lesson-results/lesson-results';
+export type * from './lesson-results/lesson-results.types';
 export * from './matching/matching';
 export * from './matching/matching.types';
 export * from './multiple-choice/multiple-choice';
