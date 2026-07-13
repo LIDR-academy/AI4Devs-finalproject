@@ -1,6 +1,23 @@
 import type { ActivitySlide, InstructionalSlide, MultipleChoiceSlide } from '@helsoft/types';
 
 import { assembleGeneratedLesson, GenerationSchemaError } from './lesson-generation.assembly';
+import { placeImagesByMetadata } from './lesson-generation.placement';
+import type { PageAnchoredImage, PlacementResult } from './lesson-generation.types';
+
+/** review.md round-1 finding #6 — `assembleGeneratedLesson` no longer computes
+ * `placeImagesByMetadata` itself; the caller (the Edge Function in production, this helper in
+ * tests) computes it once and passes the `PlacementResult` in. Mirrors exactly what
+ * `generate-lesson/index.ts` already does to derive `unplaced` for the vision-fallback decision,
+ * so the deck's own `sourcePage` fields drive the anchoring the same way in both places. */
+const emptyPlacement: PlacementResult = { placements: new Map(), unplaced: [] };
+const placementFor = (
+  deck: { slides: { sourcePage?: number }[] },
+  images: PageAnchoredImage[],
+): PlacementResult =>
+  placeImagesByMetadata(
+    deck.slides.map((slide, index) => ({ index, sourcePage: slide.sourcePage })),
+    images,
+  );
 
 const rawDeck = {
   title: 'Photosynthesis',
@@ -24,7 +41,11 @@ const rawDeck = {
 describe('assembleGeneratedLesson', () => {
   // @s3 — validates the model output, mints a lessonId, and returns an ordered, typed deck.
   it('returns an ordered, typed deck with a minted lessonId and the requested composition', () => {
-    const lesson = assembleGeneratedLesson({ composition: 'both', rawDeck, images: [] });
+    const lesson = assembleGeneratedLesson({
+      composition: 'both',
+      rawDeck,
+      metadataPlacement: emptyPlacement,
+    });
 
     expect(lesson.lessonId).toBeTruthy();
     expect(lesson.title).toBe('Photosynthesis');
@@ -35,14 +56,22 @@ describe('assembleGeneratedLesson', () => {
   });
 
   it('stamps every slide with the same lessonId as the deck', () => {
-    const lesson = assembleGeneratedLesson({ composition: 'both', rawDeck, images: [] });
+    const lesson = assembleGeneratedLesson({
+      composition: 'both',
+      rawDeck,
+      metadataPlacement: emptyPlacement,
+    });
 
     expect(lesson.slides.every((slide) => slide.lessonId === lesson.lessonId)).toBe(true);
   });
 
   // @s3 — each slide is typed as either instructional or activity.
   it('maps kind: instructional slides to InstructionalSlide', () => {
-    const lesson = assembleGeneratedLesson({ composition: 'both', rawDeck, images: [] });
+    const lesson = assembleGeneratedLesson({
+      composition: 'both',
+      rawDeck,
+      metadataPlacement: emptyPlacement,
+    });
 
     const instructional = lesson.slides[0] as InstructionalSlide;
     expect(instructional.kind).toBe('instructional');
@@ -51,7 +80,11 @@ describe('assembleGeneratedLesson', () => {
 
   // @s13 — an activity slide carries its correct answer(s), unchanged from the model output.
   it('maps a multiple-choice raw slide to a MultipleChoiceSlide carrying its options/correctOptionId', () => {
-    const lesson = assembleGeneratedLesson({ composition: 'both', rawDeck, images: [] });
+    const lesson = assembleGeneratedLesson({
+      composition: 'both',
+      rawDeck,
+      metadataPlacement: emptyPlacement,
+    });
 
     const mcq = lesson.slides[1] as MultipleChoiceSlide;
     expect(mcq.kind).toBe('activity');
@@ -104,7 +137,11 @@ describe('assembleGeneratedLesson', () => {
       ],
     };
 
-    const lesson = assembleGeneratedLesson({ composition: 'both', rawDeck: deck, images: [] });
+    const lesson = assembleGeneratedLesson({
+      composition: 'both',
+      rawDeck: deck,
+      metadataPlacement: emptyPlacement,
+    });
     const [matching, fillInTheBlank, openEnded, flashcard] = lesson.slides as ActivitySlide[];
 
     expect(matching).toMatchObject({
@@ -132,7 +169,11 @@ describe('assembleGeneratedLesson', () => {
   // @s13 — explanation is optional: a slide the model gave none for omits the field entirely
   // rather than carrying an empty/null placeholder.
   it('omits explanation on an activity slide when the model provided none', () => {
-    const lesson = assembleGeneratedLesson({ composition: 'both', rawDeck, images: [] });
+    const lesson = assembleGeneratedLesson({
+      composition: 'both',
+      rawDeck,
+      metadataPlacement: emptyPlacement,
+    });
 
     const mcq = lesson.slides[1] as MultipleChoiceSlide;
     expect(mcq.explanation).toBeUndefined();
@@ -152,7 +193,7 @@ describe('assembleGeneratedLesson', () => {
     const lesson = assembleGeneratedLesson({
       composition: 'both',
       rawDeck: deckWithExplanation,
-      images: [],
+      metadataPlacement: emptyPlacement,
     });
 
     const mcq = lesson.slides[1] as MultipleChoiceSlide;
@@ -165,7 +206,7 @@ describe('assembleGeneratedLesson', () => {
     const lesson = assembleGeneratedLesson({
       composition: 'both',
       rawDeck,
-      images: [
+      metadataPlacement: placementFor(rawDeck, [
         {
           imageId: 'image-1',
           storagePath: 'u/d/p2-0.png',
@@ -173,7 +214,7 @@ describe('assembleGeneratedLesson', () => {
           height: 300,
           pageNumber: 2,
         },
-      ],
+      ]),
     });
 
     const mcq = lesson.slides[1] as ActivitySlide;
@@ -193,7 +234,11 @@ describe('assembleGeneratedLesson', () => {
 
     let thrown: Error | undefined;
     try {
-      assembleGeneratedLesson({ composition: 'both', rawDeck: invalidDeck, images: [] });
+      assembleGeneratedLesson({
+        composition: 'both',
+        rawDeck: invalidDeck,
+        metadataPlacement: emptyPlacement,
+      });
     } catch (error) {
       thrown = error as Error;
     }
@@ -205,8 +250,16 @@ describe('assembleGeneratedLesson', () => {
 
   // Two lessons generated back-to-back never collide on lessonId.
   it('mints a distinct lessonId per call', () => {
-    const first = assembleGeneratedLesson({ composition: 'both', rawDeck, images: [] });
-    const second = assembleGeneratedLesson({ composition: 'both', rawDeck, images: [] });
+    const first = assembleGeneratedLesson({
+      composition: 'both',
+      rawDeck,
+      metadataPlacement: emptyPlacement,
+    });
+    const second = assembleGeneratedLesson({
+      composition: 'both',
+      rawDeck,
+      metadataPlacement: emptyPlacement,
+    });
 
     expect(first.lessonId).not.toBe(second.lessonId);
   });
@@ -225,7 +278,11 @@ describe('assembleGeneratedLesson', () => {
       const deck = { title: 'Photosynthesis', slides: [instructionalSlide, activitySlide] };
 
       expect(() =>
-        assembleGeneratedLesson({ composition: 'instructional-only', rawDeck: deck, images: [] }),
+        assembleGeneratedLesson({
+          composition: 'instructional-only',
+          rawDeck: deck,
+          metadataPlacement: emptyPlacement,
+        }),
       ).toThrow('instructional-only composition must not contain activity slides');
     });
 
@@ -236,7 +293,7 @@ describe('assembleGeneratedLesson', () => {
       const lesson = assembleGeneratedLesson({
         composition: 'instructional-only',
         rawDeck: deck,
-        images: [],
+        metadataPlacement: emptyPlacement,
       });
 
       expect(lesson.slides.every((slide) => slide.kind === 'instructional')).toBe(true);
@@ -248,7 +305,11 @@ describe('assembleGeneratedLesson', () => {
       const deck = { title: 'Photosynthesis', slides: [instructionalSlide, activitySlide] };
 
       expect(() =>
-        assembleGeneratedLesson({ composition: 'activity-only', rawDeck: deck, images: [] }),
+        assembleGeneratedLesson({
+          composition: 'activity-only',
+          rawDeck: deck,
+          metadataPlacement: emptyPlacement,
+        }),
       ).toThrow('activity-only composition must not contain instructional slides');
     });
 
@@ -259,7 +320,7 @@ describe('assembleGeneratedLesson', () => {
       const lesson = assembleGeneratedLesson({
         composition: 'activity-only',
         rawDeck: deck,
-        images: [],
+        metadataPlacement: emptyPlacement,
       });
 
       expect(lesson.slides.every((slide) => slide.kind === 'activity')).toBe(true);
@@ -272,7 +333,11 @@ describe('assembleGeneratedLesson', () => {
       const deck = { title: 'Photosynthesis', slides: [instructionalSlide, activitySlide] };
 
       expect(() =>
-        assembleGeneratedLesson({ composition: 'both', rawDeck: deck, images: [] }),
+        assembleGeneratedLesson({
+          composition: 'both',
+          rawDeck: deck,
+          metadataPlacement: emptyPlacement,
+        }),
       ).not.toThrow();
     });
   });
@@ -294,7 +359,7 @@ describe('assembleGeneratedLesson', () => {
       const lesson = assembleGeneratedLesson({
         composition: 'both',
         rawDeck,
-        images: [unanchorableImage],
+        metadataPlacement: placementFor(rawDeck, [unanchorableImage]),
         visionDecisions: [{ imageId: 'image-2', slideIndex: 0 }],
       });
 
@@ -312,7 +377,7 @@ describe('assembleGeneratedLesson', () => {
       const lesson = assembleGeneratedLesson({
         composition: 'both',
         rawDeck,
-        images: [unanchorableImage],
+        metadataPlacement: placementFor(rawDeck, [unanchorableImage]),
       });
 
       expect(lesson.slides.every((slide) => slide.image === undefined)).toBe(true);

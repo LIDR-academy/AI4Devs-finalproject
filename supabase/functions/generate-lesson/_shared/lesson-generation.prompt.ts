@@ -1,19 +1,7 @@
 // Mirrors libs/supabase-services/src/services/lesson-generation.prompt.ts -- kept manually in
 // sync by hand (task-4 note, same rule as R1's pdf-extraction/_shared mirrors).
+import type { BuildDeckPromptInput, PromptImageManifestEntry } from './lesson-generation.types.ts';
 import type { LessonComposition } from './types.ts';
-
-export type PromptImageManifestEntry = {
-  imageId: string;
-  pageNumber: number;
-  positionIndex: number;
-  description?: string;
-};
-
-export type BuildDeckPromptInput = {
-  composition: LessonComposition;
-  pages: { page: number; text: string }[];
-  images: PromptImageManifestEntry[];
-};
 
 const COMPOSITION_INSTRUCTIONS: Record<LessonComposition, string> = {
   both: 'Generate a deck that mixes instructional slides (kind: "instructional") and activity slides (kind: "activity") covering the five supported activity types where relevant.',

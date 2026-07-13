@@ -90,7 +90,9 @@ describe('LessonGeneration', () => {
 
     await render(<LessonGeneration documentId="doc-1" />);
 
-    expect(screen.getByLabelText('generation.step.attaching, current')).toBeTruthy();
+    expect(
+      screen.getByLabelText('generation.step.attaching, generation.step.status.current'),
+    ).toBeTruthy();
   });
 
   // @s17 — the Content state shows the ready summary and hands the deck to the player.

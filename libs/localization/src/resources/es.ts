@@ -61,6 +61,11 @@ export const es: TranslationResource = {
         reading: 'Leyendo contenido',
         generating: 'Generando diapositivas',
         attaching: 'Adjuntando imágenes',
+        status: {
+          done: 'listo',
+          current: 'en curso',
+          upcoming: 'próximo',
+        },
       },
       ready: {
         slideCount_one: '{{count}} diapositiva generada',

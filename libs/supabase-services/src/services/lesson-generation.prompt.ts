@@ -1,20 +1,6 @@
 import type { LessonComposition } from '@helsoft/types';
 
-/** One entry of the image manifest handed to the model — ids/page/position only, never bytes
- * (@s9/@s11, spec.md architecture note). `description` is R1's reserved (currently null)
- * per-image field; when present it helps the model anchor the image without a vision call. */
-export type PromptImageManifestEntry = {
-  imageId: string;
-  pageNumber: number;
-  positionIndex: number;
-  description?: string;
-};
-
-export type BuildDeckPromptInput = {
-  composition: LessonComposition;
-  pages: { page: number; text: string }[];
-  images: PromptImageManifestEntry[];
-};
+import type { BuildDeckPromptInput, PromptImageManifestEntry } from './lesson-generation.types';
 
 /** Per-composition instruction enforcing the chosen mix (@s3/@s4/@s5/@s6) — 'both' is the only
  * branch this Slice-1 task builds; the other two land in task-11. */

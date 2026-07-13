@@ -1,6 +1,5 @@
-import type { GenerationErrorCode } from '@helsoft/types';
-
 import { GenerationSchemaError } from './lesson-generation.assembly';
+import type { GenerationErrorMapping } from './lesson-generation.types';
 
 /** Thrown by the Edge Function's own wall-clock guard around the generation call (risks.md R4) —
  * a manual timeout, not something the AI SDK itself throws. Kept in this pure module (rather than
@@ -11,11 +10,6 @@ export class GenerationTimeoutError extends Error {
     this.name = 'GenerationTimeoutError';
   }
 }
-
-export type GenerationErrorMapping = {
-  errorCode: GenerationErrorCode;
-  status: number;
-};
 
 /** Duck-types the Vercel AI SDK's `APICallError` shape (a `statusCode` property) without
  * importing the `ai` package — it's a Deno-only, `npm:` specifier import not installed on the

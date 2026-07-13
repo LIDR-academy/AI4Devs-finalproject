@@ -1,38 +1,11 @@
 import type { SlideImageRef } from '@helsoft/types';
 
-/** One R1 image, by its position metadata only — never bytes (@s9/@s11). */
-export type PageAnchoredImage = {
-  imageId: string;
-  storagePath: string;
-  width: number;
-  height: number;
-  pageNumber: number;
-  alt?: string;
-};
-
-/** An assembled slide's index into the deck plus the page number the model says its content is
- * primarily drawn from (an internal-only field the schema calls `sourcePage`, never exposed on
- * the public `Slide` type). */
-export type AnchoredSlide = {
-  index: number;
-  sourcePage?: number;
-};
-
-export type PlacementResult = {
-  /** Slide index -> the `SlideImageRef` anchored to it. */
-  placements: Map<number, SlideImageRef>;
-  /** Images with no matching slide — task-12's vision fallback decides their placement. */
-  unplaced: PageAnchoredImage[];
-};
-
-/** One vision-model decision for an image metadata couldn't anchor (@s10) — the slide index to
- * place it at, or `null` to drop it. The actual vision-model call is Deno-only (un-Jest-testable
- * per risks.md R2, invoked only for these un-anchorable images to bound cost); this type is the
- * pure, testable seam between that call and placement. */
-export type VisionPlacementDecision = {
-  imageId: string;
-  slideIndex: number | null;
-};
+import type {
+  AnchoredSlide,
+  PageAnchoredImage,
+  PlacementResult,
+  VisionPlacementDecision,
+} from './lesson-generation.types';
 
 const toSlideImageRef = (image: PageAnchoredImage): SlideImageRef => ({
   imageId: image.imageId,

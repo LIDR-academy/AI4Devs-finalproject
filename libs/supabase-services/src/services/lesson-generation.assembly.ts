@@ -1,8 +1,8 @@
 import type { GeneratedLesson, LessonComposition, Slide, SlideImageRef } from '@helsoft/types';
 
-import type { PageAnchoredImage, VisionPlacementDecision } from './lesson-generation.placement';
-import { applyVisionPlacements, placeImagesByMetadata } from './lesson-generation.placement';
-import { deckSchema, type RawSlide } from './lesson-generation.schema';
+import { applyVisionPlacements } from './lesson-generation.placement';
+import { deckSchema } from './lesson-generation.schema';
+import type { AssembleGeneratedLessonInput, RawSlide } from './lesson-generation.types';
 
 /** Thrown when the model's raw response fails `deckSchema` validation (risks.md R3) — the
  * caller (task-12, the Edge Function's own error mapping) catches this and maps it to the
@@ -13,19 +13,6 @@ export class GenerationSchemaError extends Error {
     this.name = 'GenerationSchemaError';
   }
 }
-
-export type AssembleGeneratedLessonInput = {
-  composition: LessonComposition;
-  /** The model's raw, not-yet-validated response (already parsed JSON). */
-  rawDeck: unknown;
-  /** The document's image manifest (position metadata only, never bytes) for placement. */
-  images: PageAnchoredImage[];
-  /** Vision-model placement decisions (task-12, @s10) for images metadata alone couldn't anchor
-   * — computed by the caller (the Edge Function) before this synchronous assembly step runs.
-   * Defaults to none (metadata-only placement); an unplaced image with no decision degrades to
-   * text-only rather than failing the deck (@s12). */
-  visionDecisions?: VisionPlacementDecision[];
-};
 
 /** Belt-and-suspenders composition enforcement (task-11, @s4/@s5/@s6): the prompt already
  * instructs the model, but an LLM that ignores it must still be rejected here rather than
@@ -103,13 +90,14 @@ const buildSlide = (
 /**
  * Validates the model's raw response against `deckSchema` (throwing `GenerationSchemaError` on
  * any failure, risks.md R3), then mints a `lessonId`, orders + stamps every slide, and attaches
- * `SlideImageRef`s via metadata placement (@s3/@s9/@s11). No `lessons` row is written (Open
- * decision #5) — the returned deck is in-memory only.
+ * `SlideImageRef`s from the caller's already-computed metadata placement, layering any vision
+ * decisions on top (@s3/@s9/@s11). No `lessons` row is written (Open decision #5) — the returned
+ * deck is in-memory only.
  */
 export const assembleGeneratedLesson = ({
   composition,
   rawDeck,
-  images,
+  metadataPlacement,
   visionDecisions,
 }: AssembleGeneratedLessonInput): GeneratedLesson => {
   const parsed = deckSchema.safeParse(rawDeck);
@@ -119,10 +107,6 @@ export const assembleGeneratedLesson = ({
   assertComposition(composition, parsed.data.slides);
 
   const lessonId = crypto.randomUUID();
-  const metadataPlacement = placeImagesByMetadata(
-    parsed.data.slides.map((slide, index) => ({ index, sourcePage: slide.sourcePage })),
-    images,
-  );
   const { placements } = visionDecisions?.length
     ? applyVisionPlacements(
         metadataPlacement.unplaced,

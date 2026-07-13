@@ -1,8 +1,9 @@
 import { GENERATION_ERROR_CODES, LessonGenerationService } from '@helsoft/supabase-services';
-import type {
-  GenerateLessonRequest,
-  GenerationError,
-  GenerationProgressStep,
+import {
+  GENERATION_PROGRESS_STEPS,
+  type GenerateLessonRequest,
+  type GenerationError,
+  type GenerationProgressStep,
 } from '@helsoft/types';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -11,11 +12,6 @@ import type {
   UseLessonGenerationResult,
 } from './use-lesson-generation.types';
 import { useSession } from './use-session';
-
-/** The fixed, ordered phase list the stepper advances through (@s14, spec.md "Progress
- * model") — mirrors the real server pipeline order so a later server-driven upgrade slots in
- * behind the same contract without touching the UI. */
-export const GENERATION_STEP_ORDER = ['reading', 'generating', 'attaching'] as const;
 
 /** How long each step is shown before advancing to the next while the single `generate` call
  * is in flight — a tunable estimate (risks.md R9: reflects pipeline *order*, not real-time
@@ -42,7 +38,9 @@ const isGenerationErrorShape = (cause: unknown): cause is GenerationError => {
 export const useLessonGeneration = (): UseLessonGenerationResult => {
   const { session } = useSession();
   const [stage, setStage] = useState<LessonGenerationStage>('idle');
-  const [currentStep, setCurrentStep] = useState<GenerationProgressStep>(GENERATION_STEP_ORDER[0]);
+  const [currentStep, setCurrentStep] = useState<GenerationProgressStep>(
+    GENERATION_PROGRESS_STEPS[0],
+  );
   const [result, setResult] = useState<UseLessonGenerationResult['result']>(undefined);
   const [error, setError] = useState<UseLessonGenerationResult['error']>(undefined);
   const stepperRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -50,6 +48,13 @@ export const useLessonGeneration = (): UseLessonGenerationResult => {
   // documentId/composition rather than requiring the caller to resupply it (no duplicate side
   // effects — mirrors usePdfExtraction's lastAttemptRef).
   const lastRequestRef = useRef<GenerateLessonRequest | null>(null);
+  // review.md round-1 finding #3 (major) — a plain ref (not `stage` state) so the guard is safe
+  // even against two synchronous generate() calls in the same tick, before React ever commits
+  // stage -> 'generating': set synchronously before the first `await`, so a second call made
+  // before the first yields control sees it immediately. Blocks the duplicate in-flight LLM call
+  // outright, which also means a stale first response can never clobber a later one — there is
+  // no later one, the second call is a no-op.
+  const isGeneratingRef = useRef(false);
 
   const stopStepper = useCallback(() => {
     if (stepperRef.current) {
@@ -63,29 +68,35 @@ export const useLessonGeneration = (): UseLessonGenerationResult => {
 
   const generate = useCallback(
     async (request: GenerateLessonRequest) => {
+      // A no-op while a previous call is still in flight (review.md round-1 finding #3) — never
+      // fires a second concurrent LLM call, so there is nothing left that could clobber state.
+      if (isGeneratingRef.current) return;
+      isGeneratingRef.current = true;
+
       lastRequestRef.current = request;
       setStage('generating');
       setResult(undefined);
       setError(undefined);
       let stepIndex = 0;
-      setCurrentStep(GENERATION_STEP_ORDER[0]);
+      setCurrentStep(GENERATION_PROGRESS_STEPS[0]);
 
       stopStepper();
       stepperRef.current = setInterval(() => {
-        stepIndex = Math.min(stepIndex + 1, GENERATION_STEP_ORDER.length - 1);
-        setCurrentStep(GENERATION_STEP_ORDER[stepIndex]);
+        stepIndex = Math.min(stepIndex + 1, GENERATION_PROGRESS_STEPS.length - 1);
+        setCurrentStep(GENERATION_PROGRESS_STEPS[stepIndex]);
       }, GENERATION_STEP_INTERVAL_MS);
 
       const userId = session?.user.id ?? '';
       try {
         const lesson = await LessonGenerationService.generate(request, userId);
-        stopStepper();
         setResult(lesson);
         setStage('content');
       } catch (cause) {
-        stopStepper();
         setError(isGenerationErrorShape(cause) ? cause.code : 'network_error');
         setStage('error');
+      } finally {
+        stopStepper();
+        isGeneratingRef.current = false;
       }
     },
     [session, stopStepper],

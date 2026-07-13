@@ -23,10 +23,14 @@ import { z } from 'npm:zod@4';
 
 import { assembleGeneratedLesson } from './_shared/lesson-generation.assembly.ts';
 import { GenerationTimeoutError, mapGenerationError } from './_shared/lesson-generation.errors.ts';
-import type { PageAnchoredImage, VisionPlacementDecision } from './_shared/lesson-generation.placement.ts';
 import { placeImagesByMetadata } from './_shared/lesson-generation.placement.ts';
-import { buildDeckPrompt, type PromptImageManifestEntry } from './_shared/lesson-generation.prompt.ts';
+import { buildDeckPrompt } from './_shared/lesson-generation.prompt.ts';
 import { deckSchema } from './_shared/lesson-generation.schema.ts';
+import type {
+  PageAnchoredImage,
+  PromptImageManifestEntry,
+  VisionPlacementDecision,
+} from './_shared/lesson-generation.types.ts';
 import { TEXT_MODEL_ID, VISION_MODEL_ID } from './_shared/models.ts';
 import type {
   GeneratedLesson,
@@ -214,7 +218,10 @@ Deno.serve(async (req) => {
     const rawSlides = (rawDeck as { slides?: { title?: string; content?: string; sourcePage?: number }[] })
       .slides ?? [];
     const anchors = rawSlides.map((slide, index) => ({ index, sourcePage: slide.sourcePage }));
-    const { unplaced } = placeImagesByMetadata(anchors, placementImages);
+    // Computed once (review.md round-1 finding #6) -- threaded into assembleGeneratedLesson
+    // below rather than letting it recompute the same placement a second time from scratch.
+    const metadataPlacement = placeImagesByMetadata(anchors, placementImages);
+    const { unplaced } = metadataPlacement;
 
     // @s12 -- downloading/deciding placement for an unplaced image never fails the request: a
     // broken storage ref is skipped (filtered out below) and any vision-call failure degrades
@@ -250,7 +257,7 @@ Deno.serve(async (req) => {
     return assembleGeneratedLesson({
       composition,
       rawDeck,
-      images: placementImages,
+      metadataPlacement,
       visionDecisions,
     });
   };

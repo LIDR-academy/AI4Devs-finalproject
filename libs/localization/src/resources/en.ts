@@ -75,6 +75,13 @@ export const en = {
         reading: 'Reading content',
         generating: 'Generating slides',
         attaching: 'Attaching images',
+        // review.md round-1 finding #1 (blocker) — the GenerationProgress step's a11y-label
+        // status suffix, previously hardcoded English inside the molecule itself.
+        status: {
+          done: 'done',
+          current: 'current',
+          upcoming: 'upcoming',
+        },
       },
       ready: {
         slideCount_one: '{{count}} slide generated',

@@ -1,32 +1,12 @@
 // Mirrors libs/supabase-services/src/services/lesson-generation.placement.ts -- kept manually
 // in sync by hand (task-4 note, same rule as R1's pdf-extraction/_shared mirrors).
+import type {
+  AnchoredSlide,
+  PageAnchoredImage,
+  PlacementResult,
+  VisionPlacementDecision,
+} from './lesson-generation.types.ts';
 import type { SlideImageRef } from './types.ts';
-
-export type PageAnchoredImage = {
-  imageId: string;
-  storagePath: string;
-  width: number;
-  height: number;
-  pageNumber: number;
-  alt?: string;
-};
-
-export type AnchoredSlide = {
-  index: number;
-  sourcePage?: number;
-};
-
-export type PlacementResult = {
-  placements: Map<number, SlideImageRef>;
-  unplaced: PageAnchoredImage[];
-};
-
-// task-12, @s10/@s12 -- one vision-model decision for an image metadata couldn't anchor: the
-// slide index to place it at, or `null` to drop it.
-export type VisionPlacementDecision = {
-  imageId: string;
-  slideIndex: number | null;
-};
 
 const toSlideImageRef = (image: PageAnchoredImage): SlideImageRef => ({
   imageId: image.imageId,

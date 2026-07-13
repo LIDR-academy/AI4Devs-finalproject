@@ -153,7 +153,11 @@ describe('LessonGenerationPanel', () => {
       expect(screen.getByText('generation.step.reading')).toBeTruthy();
       expect(screen.getAllByText('generation.step.generating').length).toBeGreaterThan(0);
       expect(screen.getByText('generation.step.attaching')).toBeTruthy();
-      expect(screen.getByLabelText('generation.step.generating, current')).toBeTruthy();
+      // review.md round-1 finding #1 (blocker) — the status suffix is built from
+      // t('generation.step.status.*'), never a hardcoded English word.
+      expect(
+        screen.getByLabelText('generation.step.generating, generation.step.status.current'),
+      ).toBeTruthy();
       expect(
         screen.getByRole('radio', { name: 'generation.composition.both', disabled: true }),
       ).toBeTruthy();

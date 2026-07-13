@@ -21,83 +21,70 @@ button), wiring dispatch (`GENERATION_ERROR_KEYS`/`_RECOVERY`, retry/settings/si
 i18n `generation.error.*` (4 locales). Gate: lint/check-types clean; suites green (same
 sign-in-form/sign-out baseline exception); e2e `lesson-generation-panel` 9/9.
 
-## Slice 3 (tasks 14–15) — i18n coverage guard + a11y pass — this session
+## Slice 3 (tasks 14–15) — i18n coverage guard + a11y pass — done, committed `406d39c`
 
-### `@s` → test map
-- **@s18** i18n coverage: `migration-coverage.test.ts` two new `T_KEY_COMPONENT_DIRS` entries —
-  `lesson-generation-panel` (task-9's `t()` literals: composition/step/generate/ready keys) and
-  `lesson-generation` (task-13's `GENERATION_ERROR_KEYS`/`_ACTION_LABEL_KEYS` literals in
-  `lesson-generation.helpers.ts`).
-- **@s19** a11y: `radio-group.test.tsx` new case (group `accessibilityLabel` exposed) ·
-  `lesson-generation-panel.test.tsx` new case (picker labelled by `generation.composition.heading`)
-  · pre-existing coverage re-confirmed by audit (not duplicated): `generation-progress.test.tsx`
-  polite live region, panel Error-state alert/assertive-live-region case, Generate
-  accessible-name+disabled-state role queries · e2e: new
-  `lesson-generation-panel.e2e.js` case (`role=radiogroup` + `aria-label`).
-
-### Cycle log
-- **task-14a**: RED — added the two `T_KEY_COMPONENT_DIRS` entries (additive, per orchestrator's
-  explicit exception to Law 1 for this data-driven guard) → one genuinely failed:
-  `generation.ready.slideCount` (i18next `_one`/`_other` plural key) wasn't recognized by
-  `flattenKeys`. GREEN — `flattenKeys` now also registers the plural-stripped base key
-  (`PLURAL_SUFFIX` regex); added a detector-sanity case for it. Only the pre-existing
-  sign-in-form/sign-out cases still fail (untouched, unrelated baseline).
-- **task-15a**: RED `radio-group.test.tsx` — group needs an `accessibilityLabel` prop (mirrors
-  `LanguageSelector`'s own prop; none existed on `RadioGroup`) → GREEN added the prop, forwarded
-  to the `radiogroup` View.
-- **task-15b**: RED `lesson-generation-panel.test.tsx` — the picker's group has no accessible
-  name → GREEN `lesson-generation-panel.tsx` passes
-  `accessibilityLabel={t('generation.composition.heading')}` to `RadioGroup`. e2e: +1 case
-  asserting `role=radiogroup`/`aria-label` on the `EmptyGenerateDisabled` story.
-- Audited (task-15's checklist) rather than duplicated: `GenerationProgress`'s polite live
-  region, the panel's Error-state alert role, and Generate's accessible-name/disabled-state —
-  all already covered by existing tests from slices 1–2; no gap found beyond the group label.
-
-### Gate status (Slice 3)
-`pnpm turbo run lint check-types --output-logs=errors-only` clean repo-wide. `pnpm --filter <ws>
-test` green: `@helsoft/components` 176/176 (incl. panel 14/14, radio-group 2/2), `@helsoft/
-study-buddy` 117/117, `@helsoft/localization` green except the same pre-existing, untouched
-sign-in-form/sign-out `migration-coverage.test.ts` failures. E2e (`playwright test
---reporter=list generation-progress lesson-generation-panel`) 14/14. Not committed — awaiting
-`reviewer_slice`.
+`@s` covered: @s18 i18n coverage (`migration-coverage.test.ts` `T_KEY_COMPONENT_DIRS` +
+plural-key detector), @s19 a11y (`RadioGroup` group `accessibilityLabel`, panel picker labelled
+by `generation.composition.heading`, e2e `role=radiogroup`+`aria-label`). Gate: lint/check-types
+clean; suites green (same baseline exception); e2e 14/14.
 
 ## Mutation-hardening cycle (post-review, `@helsoft/supabase-services`)
 
-Stryker pre-review: 77.72% (41 survivors/6 files). Strengthened assertions only — no production
-change — per file: `assembly.test.ts` (`.name`/`.message` on the 3 thrown-`GenerationSchemaError`
-tests; +1 test: explanation ternary's present-branch on multiple-choice) · `errors.test.ts`
-(+1 test: `GenerationTimeoutError` default message/name; +1 `it.each` of 6: `apiCallStatusCode`
-guard vs. `null`/`undefined`/string/number/`{}`/`{statusCode:'x'}`) · `placement.test.ts` (+1 test:
-3 vision decisions, only one matching `imageId`, asserts the matching one — not the first — is
-picked) · `prompt.test.ts` (3 tests switched to full-string `.toBe()`: page-join `\n\n` +
-empty-images `''` combined, description-fallback `''`, manifest-line-join `\n`; the "no images"
-test now checks `.not.toContain('Available images')`, the real header text) · `schema.test.ts`
-(existing correctOptionId/correctPairs rejection tests now assert `error.issues[0].message`+
-`.path`; +5 `.min()`-boundary tests via the exported `rawSlideSchema` directly — bypasses
-deckSchema's cross-field `superRefine` so only that one field's bound can flip the outcome; +2
-tests isolating each side of the matching length-mismatch `||`; +1 mixed valid/invalid
-`correctPairs` test for `.every()`; +2 duplicate-id tests, one per side, confirming both `||`
-operands are load-bearing) · `service.test.ts` (unauthenticated-rejection test now asserts the
-`LessonGenerationService: ${code}` message prefix; +1 test: server body resolves to `undefined`,
-alongside the existing `null` case).
+Stryker pre-review 77.72% (41 survivors/6 files) → strengthened assertions only, no production
+change, across `assembly/errors/placement/prompt/schema/service.test.ts` (message/name/path
+assertions, boundary + `it.each` cases, full-string `.toBe()`). Re-scored 97.77%, 4 survivors, all
+genuine equivalent mutants (documented in commit `79d86f5`, not re-copied here for budget).
+143/143 green, lint/check-types clean.
 
-Re-ran Stryker scoped to these 6 files: **97.77%, 4 survivors** (down from 41), all 3
-remaining-file scores at 100% (`assembly.ts`, `placement.ts`, `prompt.ts`, `schema.ts`).
-Genuine equivalent mutants (verified by exhausting every observably-different input, not just
-asserted) — documented, not silenced:
-- `errors.ts:26` final guard (`typeof statusCode === 'number'` → `true`): any `cause.statusCode`
-  that strictly `===` 401/403/429 downstream must already be typeof `'number'`, so the guard's
-  removal never changes the returned mapping for any input; property access is already proven
-  safe by the untouched first two guards, so no crash-based distinction exists either.
-- `errors.ts:38` both mutants (`if (false)` / empty block for the `instanceof
-  GenerationSchemaError` branch): `GenerationSchemaError` instances carry no `statusCode`, so
-  falling through to `apiCallStatusCode` + the final default returns the byte-identical
-  `{errorCode:'generation_failed', status:502}` the explicit branch would have — same value,
-  same shape, for every possible cause.
-- `service.ts:48` optional chaining (`body?.errorCode` → `body.errorCode`): the whole expression
-  sits inside `readFunctionErrorCode`'s own `try { … } catch { return 'generation_failed'; }` —
-  a null/undefined `body` throws either way the `?.` is written, and that throw is swallowed by
-  the enclosing catch to the same fallback value; the `?.` is a redundant, unobservable
-  belt-and-suspenders guard given the surrounding try/catch.
+## Re-work round 1 (post full-review, `docs/features/ai-lesson-generation/review.md`)
 
-`pnpm --filter @helsoft/supabase-services test` 143/143 green. `pnpm lint` / `check-types` clean.
+1 blocker + 2 major + 4 minor, all fixed via TDD (Red→Green→Refactor each), re-review pending.
+
+- **#1 blocker** — RED `generation-progress.test.tsx` (statusLabels prop, non-English fixture
+  proves no hardcoding) → GREEN: `GenerationProgress` takes `statusLabels` prop (no more
+  hardcoded `STATUS_LABEL`); `LessonGenerationPanel` builds it from new
+  `generation.step.status.{done,current,upcoming}` keys (en authoritative, es/de/pt added);
+  updated `lesson-generation-panel.test.tsx` + `lesson-generation.test.tsx` (study-buddy) label
+  assertions; story updated. `lesson-generation-panel` dir already in `T_KEY_COMPONENT_DIRS`, no
+  new guard entry needed.
+- **#2 major** — pure refactor, no new test (behavior unchanged): moved `PageAnchoredImage` /
+  `AnchoredSlide` / `PlacementResult` / `VisionPlacementDecision` / `RawSlide` / `Deck` /
+  `AssembleGeneratedLessonInput` / `GenerationErrorMapping` / `PromptImageManifestEntry` /
+  `BuildDeckPromptInput` out of their implementation files into new
+  `lesson-generation.types.ts`; hand-mirrored the same split into
+  `supabase/functions/generate-lesson/_shared/`. 143/143 still green.
+- **#3 major** — RED `use-lesson-generation.test.ts` (two synchronous `generate()` calls before
+  either settles; asserted `service.generate` called once) → GREEN: `isGeneratingRef` guard in
+  `generate()` (set before the first `await`, cleared in `finally`) — a second concurrent call is
+  a no-op, so a stale first response can never clobber a later one. Chose the hook-level guard
+  over disabling the panel's error-action button: that button unmounts the instant `stage`
+  flips (Error state is conditional on `state === 'error'`), so a `disabled` prop there couldn't
+  catch the same-tick double-press the finding describes — the ref guard is the actual fix.
+- **#4 minor** — RED `lesson-generation.test.ts` (types lib, new `GENERATION_PROGRESS_STEPS`
+  export) → GREEN: hoisted into `@helsoft/types`; hook + panel helpers import it instead of each
+  declaring `['reading','generating','attaching']` independently.
+- **#5 minor** — added `export type *` for `generation-progress.types` to
+  `libs/components/src/molecules/index.ts` (barrel-consistency with the organisms barrel). No
+  dedicated test: a type-only re-export is erased at runtime (nothing for Jest to assert either
+  way), enforced instead by `check-types` — mirrors why plain barrel `export type` additions
+  elsewhere in this codebase aren't themselves test-driven.
+- **#6 major** — RED `lesson-generation.assembly.test.ts` (one call site switched to a
+  `metadataPlacement` field the old signature didn't accept) → GREEN: `assembleGeneratedLesson`
+  now takes the caller's already-computed `PlacementResult` instead of recomputing
+  `placeImagesByMetadata` internally; `generate-lesson/index.ts` computes it once and threads it
+  through (mirrored in `_shared/`). Updated all other `assembly.test.ts` call sites
+  (`emptyPlacement`/`placementFor` helpers). 17/17 green.
+- **#7 minor** — perf-only refactor, no new test (behavior unchanged): `useMemo` for
+  `options`/`steps`/`statusLabels` in `lesson-generation-panel.tsx`; `useCallback` for
+  `handleGenerate`/`handleOpenInPlayer`/`handleErrorAction`/`onCompositionChange` in
+  `lesson-generation.tsx` (study-buddy).
+
+### Gate (re-work round 1)
+
+`pnpm turbo run lint check-types` clean repo-wide. `pnpm --filter <ws> test`: `@helsoft/types`
+25/25, `@helsoft/hooks` 70/70, `@helsoft/components` 177/177, `@helsoft/study-buddy` 117/117,
+`@helsoft/supabase-services` 143/143, `@helsoft/localization` green except the same two
+pre-existing sign-in-form/sign-out failures (confirmed unrelated, byte-identical at base
+`b05c083`). E2e `pnpm --filter @helsoft/components exec playwright test --reporter=list` 59/60 —
+the one failure is the other documented pre-existing baseline (`api-key-form` Error-story text
+mismatch); every `generation-progress`/`lesson-generation-panel` e2e case passes.

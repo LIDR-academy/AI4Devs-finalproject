@@ -61,6 +61,11 @@ export const pt: TranslationResource = {
         reading: 'Lendo conteúdo',
         generating: 'Gerando slides',
         attaching: 'Anexando imagens',
+        status: {
+          done: 'concluído',
+          current: 'em andamento',
+          upcoming: 'próximo',
+        },
       },
       ready: {
         slideCount_one: '{{count}} slide gerado',

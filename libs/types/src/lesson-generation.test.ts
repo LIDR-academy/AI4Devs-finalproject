@@ -1,11 +1,12 @@
 import type { InstructionalSlide, SlideImageRef } from './lesson';
-import type {
-  GeneratedLesson,
-  GenerateLessonRequest,
-  GenerationError,
-  GenerationErrorCode,
-  GenerationProgressStep,
-  LessonComposition,
+import {
+  GENERATION_PROGRESS_STEPS,
+  type GeneratedLesson,
+  type GenerateLessonRequest,
+  type GenerationError,
+  type GenerationErrorCode,
+  type GenerationProgressStep,
+  type LessonComposition,
 } from './lesson-generation';
 
 // @s1/@s6 — the only thing the client ever sends to generate-lesson (spec.md architecture note).
@@ -48,6 +49,14 @@ describe('GenerationProgressStep', () => {
     const steps: GenerationProgressStep[] = ['reading', 'generating', 'attaching'];
 
     expect(steps).toEqual(['reading', 'generating', 'attaching']);
+  });
+});
+
+// review.md round-1 finding #4 — the single source of truth both `useLessonGeneration` and
+// `LessonGenerationPanel`'s helpers import, rather than each hardcoding an independent copy.
+describe('GENERATION_PROGRESS_STEPS', () => {
+  it('is the canonical reading -> generating -> attaching order', () => {
+    expect(GENERATION_PROGRESS_STEPS).toEqual(['reading', 'generating', 'attaching']);
   });
 });
 

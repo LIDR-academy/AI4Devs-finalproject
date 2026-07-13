@@ -146,6 +146,67 @@ describe('useLessonGeneration', () => {
     expect(result.current.error).toBe('network_error');
   });
 
+  // review.md round-1 finding #3 (major) — a rapid double-press before React commits
+  // stage -> 'generating' must not fire two concurrent LLM calls, and the first (stale) call's
+  // resolution must never clobber whatever the (ignored) second call would have produced.
+  it('ignores a second concurrent generate() call while one is already in flight', async () => {
+    let resolveFirst!: (value: unknown) => void;
+    service.generate.mockReturnValueOnce(new Promise((r) => (resolveFirst = r)) as never);
+    const { result } = renderHook(() => useLessonGeneration());
+
+    let firstCall!: Promise<void>;
+    let secondCall!: Promise<void>;
+    act(() => {
+      firstCall = result.current.generate(request);
+      secondCall = result.current.generate(request);
+    });
+
+    expect(service.generate).toHaveBeenCalledTimes(1);
+
+    const lesson = {
+      lessonId: 'lesson-1',
+      title: 'Photosynthesis',
+      composition: 'both' as const,
+      slides: [],
+    };
+    await act(async () => {
+      resolveFirst(lesson);
+      await firstCall;
+      await secondCall;
+    });
+
+    expect(result.current.stage).toBe('content');
+    expect(result.current.result).toBe(lesson);
+  });
+
+  // Once the in-flight call settles, a later generate() call is no longer blocked.
+  it('allows a new generate() call once the previous one has settled', async () => {
+    service.generate.mockResolvedValueOnce({
+      lessonId: 'lesson-1',
+      title: 'Photosynthesis',
+      composition: 'both' as const,
+      slides: [],
+    });
+    const { result } = renderHook(() => useLessonGeneration());
+
+    await act(async () => {
+      await result.current.generate(request);
+    });
+
+    service.generate.mockResolvedValueOnce({
+      lessonId: 'lesson-2',
+      title: 'Cell Biology',
+      composition: 'both' as const,
+      slides: [],
+    });
+    await act(async () => {
+      await result.current.generate(request);
+    });
+
+    expect(service.generate).toHaveBeenCalledTimes(2);
+    expect(result.current.result?.lessonId).toBe('lesson-2');
+  });
+
   // Passes documentId/composition through to the service, along with the session's userId.
   it('calls the service with the request and the current session userId', async () => {
     service.generate.mockResolvedValue({

@@ -62,6 +62,11 @@ export const de: TranslationResource = {
         reading: 'Inhalt wird gelesen',
         generating: 'Folien werden erstellt',
         attaching: 'Bilder werden angehängt',
+        status: {
+          done: 'erledigt',
+          current: 'läuft',
+          upcoming: 'ausstehend',
+        },
       },
       ready: {
         slideCount_one: '{{count}} Folie erstellt',

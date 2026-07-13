@@ -88,8 +88,6 @@ const rawActivitySlideSchema = z.discriminatedUnion('activityType', [
 
 export const rawSlideSchema = z.union([rawInstructionalSlideSchema, rawActivitySlideSchema]);
 
-export type RawSlide = z.infer<typeof rawSlideSchema>;
-
 /** True when every `correctPairs` entry references a distinct id in its own column and the
  * three collections are the same length — a perfect one-to-one matching (@s13). */
 const isPerfectMatchingPairing = (slide: z.infer<typeof rawMatchingSlideSchema>): boolean => {
@@ -139,5 +137,3 @@ export const deckSchema = z
       }
     });
   });
-
-export type Deck = z.infer<typeof deckSchema>;

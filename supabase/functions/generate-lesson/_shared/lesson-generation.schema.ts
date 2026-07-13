@@ -81,8 +81,6 @@ const rawActivitySlideSchema = z.discriminatedUnion('activityType', [
 
 export const rawSlideSchema = z.union([rawInstructionalSlideSchema, rawActivitySlideSchema]);
 
-export type RawSlide = z.infer<typeof rawSlideSchema>;
-
 const isPerfectMatchingPairing = (slide: z.infer<typeof rawMatchingSlideSchema>): boolean => {
   const { leftItems, rightItems, correctPairs } = slide;
   if (leftItems.length !== rightItems.length || leftItems.length !== correctPairs.length) {
@@ -130,5 +128,3 @@ export const deckSchema = z
       }
     });
   });
-
-export type Deck = z.infer<typeof deckSchema>;

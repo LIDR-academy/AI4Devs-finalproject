@@ -3,7 +3,7 @@
 // real at the source path above; this copy is verified only by manual smoke against the deployed
 // function (risks.md R2).
 import { GenerationSchemaError } from './lesson-generation.assembly.ts';
-import type { GenerationErrorCode } from './types.ts';
+import type { GenerationErrorMapping } from './lesson-generation.types.ts';
 
 export class GenerationTimeoutError extends Error {
   constructor(message = 'Generation timed out') {
@@ -11,11 +11,6 @@ export class GenerationTimeoutError extends Error {
     this.name = 'GenerationTimeoutError';
   }
 }
-
-export type GenerationErrorMapping = {
-  errorCode: GenerationErrorCode;
-  status: number;
-};
 
 const apiCallStatusCode = (cause: unknown): number | undefined =>
   typeof cause === 'object' && cause !== null && typeof (cause as { statusCode?: unknown }).statusCode === 'number'

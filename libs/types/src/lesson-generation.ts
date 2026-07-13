@@ -35,6 +35,18 @@ export type GeneratedLesson = {
 export type GenerationProgressStep = 'reading' | 'generating' | 'attaching';
 
 /**
+ * The single source of truth for `GenerationProgressStep`'s order (review.md round-1 finding
+ * #4) — `useLessonGeneration` (the stepper) and `LessonGenerationPanel`'s helpers (the
+ * `currentStep` -> `GenerationProgress`'s `currentIndex` mapping) both import this instead of
+ * each hardcoding an independent copy, so a future 4th step can't desync between the two.
+ */
+export const GENERATION_PROGRESS_STEPS = [
+  'reading',
+  'generating',
+  'attaching',
+] as const satisfies readonly GenerationProgressStep[];
+
+/**
  * The closed set of failure codes every generation failure — server result or client transport —
  * normalizes to (spec.md's Error contract table), so the UI never branches on a raw Supabase/
  * function/provider error (mirrors `PdfExtractionErrorCode`).

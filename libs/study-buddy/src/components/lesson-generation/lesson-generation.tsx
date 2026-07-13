@@ -3,7 +3,7 @@ import { useLessonGeneration } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import type { LessonComposition } from '@helsoft/types';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import {
   GENERATION_ERROR_ACTION_LABEL_KEYS,
@@ -30,31 +30,35 @@ export const LessonGeneration = ({ documentId }: LessonGenerationProps) => {
   const { t } = useLocalization();
   const router = useRouter();
 
-  const handleGenerate = () => {
+  // review.md round-1 finding #7 (minor) — stable callback identities across re-renders (a
+  // perf-only refactor, no behavior change).
+  const handleGenerate = useCallback(() => {
     if (!documentId) return;
     void generate({ documentId, composition });
-  };
+  }, [documentId, composition, generate]);
 
-  const handleOpenInPlayer = () => {
+  const handleOpenInPlayer = useCallback(() => {
     if (!result) return;
     router.push({ pathname: '/lesson/[id]/player', params: { id: result.lessonId } });
-  };
+  }, [result, router]);
 
   const recovery = error ? GENERATION_ERROR_RECOVERY[error] : 'none';
 
-  const handleErrorAction = () => {
+  const handleErrorAction = useCallback(() => {
     if (recovery === 'retry') void retry();
     else if (recovery === 'settings') router.push('/settings');
     else if (recovery === 'signIn') router.push('/login');
-  };
+  }, [recovery, retry, router]);
+
+  const handleCompositionChange = useCallback((value: string) => {
+    if (isLessonComposition(value)) setComposition(value);
+  }, []);
 
   return (
     <LessonGenerationPanel
       state={toPanelState(stage)}
       composition={composition}
-      onCompositionChange={(value) => {
-        if (isLessonComposition(value)) setComposition(value);
-      }}
+      onCompositionChange={handleCompositionChange}
       canGenerate={!!documentId}
       onGenerate={handleGenerate}
       currentStep={currentStep}

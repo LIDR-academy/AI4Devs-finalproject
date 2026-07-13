@@ -1,8 +1,8 @@
 // Mirrors libs/supabase-services/src/services/lesson-generation.assembly.ts -- kept manually in
 // sync by hand (task-4 note, same rule as R1's pdf-extraction/_shared mirrors).
-import type { PageAnchoredImage, VisionPlacementDecision } from './lesson-generation.placement.ts';
-import { applyVisionPlacements, placeImagesByMetadata } from './lesson-generation.placement.ts';
-import { deckSchema, type RawSlide } from './lesson-generation.schema.ts';
+import { applyVisionPlacements } from './lesson-generation.placement.ts';
+import { deckSchema } from './lesson-generation.schema.ts';
+import type { AssembleGeneratedLessonInput, RawSlide } from './lesson-generation.types.ts';
 import type { GeneratedLesson, LessonComposition, Slide, SlideImageRef } from './types.ts';
 
 export class GenerationSchemaError extends Error {
@@ -11,15 +11,6 @@ export class GenerationSchemaError extends Error {
     this.name = 'GenerationSchemaError';
   }
 }
-
-export type AssembleGeneratedLessonInput = {
-  composition: LessonComposition;
-  rawDeck: unknown;
-  images: PageAnchoredImage[];
-  // task-12, @s10/@s12 -- vision-model placement decisions for images metadata alone couldn't
-  // anchor; defaults to none (metadata-only placement).
-  visionDecisions?: VisionPlacementDecision[];
-};
 
 // task-11, @s4/@s5/@s6 -- belt-and-suspenders composition enforcement: the prompt already
 // instructs the model, but an LLM that ignores it must still be rejected here rather than
@@ -97,7 +88,7 @@ const buildSlide = (
 export const assembleGeneratedLesson = ({
   composition,
   rawDeck,
-  images,
+  metadataPlacement,
   visionDecisions,
 }: AssembleGeneratedLessonInput): GeneratedLesson => {
   const parsed = deckSchema.safeParse(rawDeck);
@@ -107,10 +98,6 @@ export const assembleGeneratedLesson = ({
   assertComposition(composition, parsed.data.slides);
 
   const lessonId = crypto.randomUUID();
-  const metadataPlacement = placeImagesByMetadata(
-    parsed.data.slides.map((slide, index) => ({ index, sourcePage: slide.sourcePage })),
-    images,
-  );
   const { placements } = visionDecisions?.length
     ? applyVisionPlacements(metadataPlacement.unplaced, visionDecisions, metadataPlacement.placements)
     : metadataPlacement;

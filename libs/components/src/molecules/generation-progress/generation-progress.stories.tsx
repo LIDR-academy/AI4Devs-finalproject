@@ -8,11 +8,17 @@ const steps = [
   { label: 'Attaching images' },
 ];
 
+// Demo copy only — real usage is built from t('generation.step.status.*') by
+// LessonGenerationPanel (review.md round-1 finding #1); stories/demo args are exempt from the
+// hardcoded-copy guard, same as `steps` above.
+const statusLabels = { done: 'done', current: 'current', upcoming: 'upcoming' };
+
 const meta = {
   title: 'Molecules/GenerationProgress',
   component: GenerationProgress,
   args: {
     steps,
+    statusLabels,
   },
 } satisfies Meta<typeof GenerationProgress>;
 

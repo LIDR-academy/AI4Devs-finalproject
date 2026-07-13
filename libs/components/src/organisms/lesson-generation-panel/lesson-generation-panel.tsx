@@ -1,11 +1,13 @@
 import { useLocalization } from '@helsoft/localization';
 import type { LessonComposition } from '@helsoft/types';
+import { useMemo } from 'react';
 import { Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { Button } from '../../atoms/button/button';
 import { Card } from '../../atoms/card/card';
 import { GenerationProgress } from '../../molecules/generation-progress/generation-progress';
+import type { GenerationProgressStepStatus } from '../../molecules/generation-progress/generation-progress.types';
 import { RadioGroup } from '../../molecules/radio-group/radio-group';
 
 import { COMPOSITION_OPTION_VALUES, stepToIndex } from './lesson-generation-panel.helpers';
@@ -22,6 +24,16 @@ const STEP_LABEL_KEYS = [
   'generation.step.generating',
   'generation.step.attaching',
 ];
+
+/** review.md round-1 finding #1 (blocker) — `GenerationProgress`'s per-status accessibility
+ * suffix must come from `t()`, not a literal baked into the presentational molecule. This
+ * organism owns the `generation.*` keys already (see the doc comment below), so the status
+ * words are built here too. */
+const STATUS_LABEL_KEYS: Record<GenerationProgressStepStatus, string> = {
+  done: 'generation.step.status.done',
+  current: 'generation.step.status.current',
+  upcoming: 'generation.step.status.upcoming',
+};
 
 /**
  * LessonGenerationPanel — presentational organism configuring + triggering generation
@@ -46,11 +58,26 @@ export const LessonGenerationPanel = ({
   const { t } = useLocalization();
   const disabled = state === 'loading';
 
-  const options = COMPOSITION_OPTION_VALUES.map((value) => ({
-    value,
-    label: t(COMPOSITION_LABEL_KEYS[value]),
-  }));
-  const steps = STEP_LABEL_KEYS.map((key) => ({ label: t(key) }));
+  // review.md round-1 finding #7 (minor) — stabilizes these derived arrays/objects across
+  // re-renders instead of rebuilding them on every render (fixed 3-item lists; a perf-only
+  // refactor, no behavior change).
+  const options = useMemo(
+    () =>
+      COMPOSITION_OPTION_VALUES.map((value) => ({
+        value,
+        label: t(COMPOSITION_LABEL_KEYS[value]),
+      })),
+    [t],
+  );
+  const steps = useMemo(() => STEP_LABEL_KEYS.map((key) => ({ label: t(key) })), [t]);
+  const statusLabels = useMemo<Record<GenerationProgressStepStatus, string>>(
+    () => ({
+      done: t(STATUS_LABEL_KEYS.done),
+      current: t(STATUS_LABEL_KEYS.current),
+      upcoming: t(STATUS_LABEL_KEYS.upcoming),
+    }),
+    [t],
+  );
 
   return (
     <Card>
@@ -71,7 +98,11 @@ export const LessonGenerationPanel = ({
         </Button>
 
         {state === 'loading' ? (
-          <GenerationProgress steps={steps} currentIndex={stepToIndex(currentStep)} />
+          <GenerationProgress
+            steps={steps}
+            currentIndex={stepToIndex(currentStep)}
+            statusLabels={statusLabels}
+          />
         ) : null}
 
         {state === 'content' ? (

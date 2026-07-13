@@ -11,19 +11,18 @@ import type {
 
 export const GENERATION_PROGRESS_ANNOUNCEMENT_TEST_ID = 'generation-progress-announcement';
 
-const STATUS_LABEL: Record<GenerationProgressStepStatus, string> = {
-  done: 'done',
-  current: 'current',
-  upcoming: 'upcoming',
-};
-
 /**
  * GenerationProgress — presentational molecule for the multi-step generation progress the
  * human chose (spec.md decision #4): an ordered list of labeled steps, each marked
- * upcoming/current/done. Stateless — driven entirely by props; labels are injected by the
- * wiring layer (no i18n inside this component, mirrors `PdfUploadPanel`'s split).
+ * upcoming/current/done. Stateless — driven entirely by props; both `step.label` and the
+ * per-status accessibility suffix (`statusLabels`) are injected by the wiring layer (no i18n
+ * inside this component, mirrors `PdfUploadPanel`'s split — review.md round-1 finding #1).
  */
-export const GenerationProgress = ({ steps, currentIndex }: GenerationProgressProps) => {
+export const GenerationProgress = ({
+  steps,
+  currentIndex,
+  statusLabels,
+}: GenerationProgressProps) => {
   const { theme } = useUnistyles();
   const currentLabel = steps[currentIndex]?.label;
 
@@ -36,7 +35,7 @@ export const GenerationProgress = ({ steps, currentIndex }: GenerationProgressPr
             // biome-ignore lint/suspicious/noArrayIndexKey: steps are purely positional — the index IS the identity
             key={index}
             accessible
-            accessibilityLabel={`${step.label}, ${STATUS_LABEL[status]}`}
+            accessibilityLabel={`${step.label}, ${statusLabels[status]}`}
             style={styles.step}
           >
             <View style={styles.indicator(status)}>
