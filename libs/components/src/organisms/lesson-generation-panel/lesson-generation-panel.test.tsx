@@ -104,6 +104,23 @@ describe('LessonGenerationPanel', () => {
       expect(onGenerate).toHaveBeenCalledTimes(1);
     });
 
+    // task-15/@s19 — the picker exposes an accessible group label (WCAG 1.3.1/4.1.2), not just
+    // per-option labels, so assistive tech announces what the radio options belong to.
+    it('gives the composition picker an accessible group label', async () => {
+      await render(
+        <LessonGenerationPanel
+          state="empty"
+          composition="both"
+          onCompositionChange={jest.fn()}
+          canGenerate={false}
+          onGenerate={jest.fn()}
+        />,
+      );
+
+      const group = screen.getByLabelText('generation.composition.heading');
+      expect(group.props.accessibilityRole).toBe('radiogroup');
+    });
+
     it('shows no progress and no error in the Empty state', async () => {
       await render(
         <LessonGenerationPanel

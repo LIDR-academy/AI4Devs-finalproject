@@ -62,6 +62,7 @@ export const LessonGenerationPanel = ({
             value={composition}
             onChange={onCompositionChange}
             disabled={disabled}
+            accessibilityLabel={t('generation.composition.heading')}
           />
         </View>
 

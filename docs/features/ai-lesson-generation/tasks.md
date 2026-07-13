@@ -25,8 +25,8 @@ Within **Slice 1**: provider swap (task-1) → contract types + slide image-ref 
 | [task-11](./task-11.md) — Composition variants prompt enforcement (instructional-only / activity-only) | 2 | @s4,@s5,@s6 | done | supabase/functions/generate-lesson/, libs/supabase-services/src/services/lesson-generation.* |
 | [task-12](./task-12.md) — Server error contract + vision fallback + image degradation | 2 | @s10,@s12,@s15 | done | supabase/functions/generate-lesson/, libs/supabase-services/src/services/lesson-generation.* |
 | [task-13](./task-13.md) — Client error normalization + hook retry + Panel Error state + error integration | 2 | @s12,@s15 | done | libs/supabase-services/src/services/lesson-generation.service.ts, libs/hooks/src/hooks/use-lesson-generation.ts, libs/components/src/organisms/lesson-generation-panel/, libs/study-buddy/src/components/lesson-generation/ |
-| [task-14](./task-14.md) — i18n `generation.*` keys (en/es/pt/de) + coverage test | 3 | @s18 | todo | libs/localization/src/resources/ |
-| [task-15](./task-15.md) — a11y pass + Playwright e2e | 3 | @s19 | todo | libs/components/src/organisms/lesson-generation-panel/, libs/components/src/molecules/generation-progress/, libs/components/tests/e2e/ |
+| [task-14](./task-14.md) — i18n `generation.*` keys (en/es/pt/de) + coverage test | 3 | @s18 | done | libs/localization/src/resources/ |
+| [task-15](./task-15.md) — a11y pass + Playwright e2e | 3 | @s19 | done | libs/components/src/organisms/lesson-generation-panel/, libs/components/src/molecules/generation-progress/, libs/components/tests/e2e/ |
 
 **Slice 1 — Happy path (both) + Loading + Content + provider swap** · **Slice 2 — Composition variants + Error + vision/degradation** · **Slice 3 — i18n + a11y + e2e**
 

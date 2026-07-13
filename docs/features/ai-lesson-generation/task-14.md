@@ -3,7 +3,7 @@ id: task-14
 title: i18n generation.* keys (en/es/pt/de) + coverage test
 slice: 3
 scenarios: [s18]
-status: todo
+status: done
 paths:
   - libs/localization/src/resources/en.ts
   - libs/localization/src/resources/es.ts

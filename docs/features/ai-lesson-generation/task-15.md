@@ -3,7 +3,7 @@ id: task-15
 title: a11y pass + Playwright e2e
 slice: 3
 scenarios: [s19]
-status: todo
+status: done
 paths:
   - libs/components/src/organisms/lesson-generation-panel/
   - libs/components/src/molecules/generation-progress/

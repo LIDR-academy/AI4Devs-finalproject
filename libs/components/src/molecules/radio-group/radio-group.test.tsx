@@ -31,4 +31,23 @@ describe('RadioGroup', () => {
       selected: undefined,
     });
   });
+
+  // task-15/@s19 — the group itself needs an accessible name (WCAG 1.3.1/4.1.2) so assistive
+  // tech announces what the radio options belong to, not just each option's own label. A true
+  // `getByRole('radiogroup', { name })` query throws on this markup for the same reason
+  // documented in `language-selector.test.tsx` (the container isn't `accessible={true}`), so the
+  // label is asserted directly on the labelled node, mirroring that precedent.
+  it('exposes an accessible label for the group when accessibilityLabel is provided', async () => {
+    await render(
+      <RadioGroup
+        options={options}
+        value="standard"
+        onChange={jest.fn()}
+        accessibilityLabel="Lesson content"
+      />,
+    );
+
+    const group = screen.getByLabelText('Lesson content');
+    expect(group.props.accessibilityRole).toBe('radiogroup');
+  });
 });

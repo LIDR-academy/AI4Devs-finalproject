@@ -95,3 +95,14 @@ test('InteractivePicker story updates the selected composition when a different 
   const radio = option.locator('xpath=ancestor::*[@aria-checked][1]');
   await expect(radio).toHaveAttribute('aria-checked', 'true');
 });
+
+// task-15/@s19 — the composition picker exposes an accessible group label (react-native-web
+// maps `accessibilityRole="radiogroup"` + `accessibilityLabel` to `role`/`aria-label`), not just
+// per-option labels.
+test('EmptyGenerateDisabled story labels the composition picker group', async ({ page }) => {
+  await page.goto(story('empty-generate-disabled'));
+  const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
+
+  const group = canvas.locator('[role="radiogroup"]');
+  await expect(group).toHaveAttribute('aria-label', 'Lesson content');
+});
