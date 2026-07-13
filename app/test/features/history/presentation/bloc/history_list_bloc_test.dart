@@ -93,4 +93,12 @@ void main() {
       isA<HistoryListFailure>(),
     ],
   );
+
+  blocTest<HistoryListBloc, HistoryListState>(
+    'removes deleted game optimistically from loaded list',
+    build: buildBloc,
+    seed: () => HistoryListLoaded(items: items),
+    act: (bloc) => bloc.add(const HistoryListGameDeleted('game-1')),
+    expect: () => [const HistoryListEmpty()],
+  );
 }

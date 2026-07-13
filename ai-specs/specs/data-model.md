@@ -323,6 +323,20 @@ Detalle de reglas en implementación; este documento solo fija intención.
 
 ## 12. Historial
 
+### 12.1 Ocultado de historial (LPT-17)
+
+El historial combina partidas **locales** (Drift) y **en nube** (Firestore). La eliminación desde la app del usuario sigue dos caminos:
+
+| Origen | Acción en dispositivo | Efecto remoto |
+|--------|----------------------|---------------|
+| `GameHistorySource.local` | Borrado físico en Drift (`games` + `rounds` en cascada) | Ninguno, salvo que la partida tuviera `cloudGameId` sincronizado |
+| `GameHistorySource.cloud` | Solo ocultación local | **Nunca** se borra `games/{gameId}` en Firestore |
+
+**Partidas locales sincronizadas** (`cloudGameId != null`): se borra la fila local y se registra el `cloudGameId` como oculto para que no reaparezca al sincronizar.
+
+**Implementación MVP de `hiddenGameIds`:** tabla Drift local `hidden_games` (`gameId TEXT PRIMARY KEY`, schema v6). No se persiste en `users/{uid}` en Firestore en esta fase.
+
 | Fecha | Cambio |
 |-------|--------|
+| 2026-07-13 | LPT-17: borrado local vs ocultación de partidas en nube; tabla `hidden_games` |
 | 2026-06-03 | Reescritura: dominio La Pocha (users, games, players, rounds) en terminología Firestore; eliminado modelo LTI/relacional |

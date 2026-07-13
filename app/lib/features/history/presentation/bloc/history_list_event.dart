@@ -14,3 +14,12 @@ class HistoryListStarted extends HistoryListEvent {
 class HistoryListRefreshed extends HistoryListEvent {
   const HistoryListRefreshed();
 }
+
+class HistoryListGameDeleted extends HistoryListEvent {
+  const HistoryListGameDeleted(this.gameId);
+
+  final String gameId;
+
+  @override
+  List<Object?> get props => [gameId];
+}

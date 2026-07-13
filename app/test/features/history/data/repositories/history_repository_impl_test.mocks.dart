@@ -3,16 +3,24 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i4;
+import 'dart:async' as _i6;
 
 import 'package:la_pocha/features/game_setup/domain/entities/game.dart' as _i2;
-import 'package:la_pocha/features/game_setup/domain/entities/round.dart' as _i6;
-import 'package:la_pocha/features/history/data/datasources/history_firestore_datasource.dart'
-    as _i7;
-import 'package:la_pocha/features/history/data/datasources/history_local_datasource.dart'
+import 'package:la_pocha/features/game_setup/domain/entities/player_embed.dart'
+    as _i11;
+import 'package:la_pocha/features/game_setup/domain/entities/round.dart' as _i4;
+import 'package:la_pocha/features/game_setup/domain/entities/start_game_result.dart'
     as _i3;
-import 'package:la_pocha/features/history/domain/entities/game_history_item.dart'
+import 'package:la_pocha/features/game_setup/domain/repositories/game_repository.dart'
+    as _i10;
+import 'package:la_pocha/features/history/data/datasources/hidden_games_local_datasource.dart'
+    as _i9;
+import 'package:la_pocha/features/history/data/datasources/history_firestore_datasource.dart'
+    as _i8;
+import 'package:la_pocha/features/history/data/datasources/history_local_datasource.dart'
     as _i5;
+import 'package:la_pocha/features/history/domain/entities/game_history_item.dart'
+    as _i7;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -35,92 +43,359 @@ class _FakeGame_0 extends _i1.SmartFake implements _i2.Game {
     : super(parent, parentInvocation);
 }
 
+class _FakeStartGameResult_1 extends _i1.SmartFake
+    implements _i3.StartGameResult {
+  _FakeStartGameResult_1(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
+class _FakeRound_2 extends _i1.SmartFake implements _i4.Round {
+  _FakeRound_2(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
 /// A class which mocks [HistoryLocalDatasource].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockHistoryLocalDatasource extends _i1.Mock
-    implements _i3.HistoryLocalDatasource {
+    implements _i5.HistoryLocalDatasource {
   @override
-  _i4.Future<List<_i5.GameHistoryItem>> getFinishedGames() =>
+  _i6.Future<List<_i7.GameHistoryItem>> getFinishedGames() =>
       (super.noSuchMethod(
             Invocation.method(#getFinishedGames, []),
-            returnValue: _i4.Future<List<_i5.GameHistoryItem>>.value(
-              <_i5.GameHistoryItem>[],
+            returnValue: _i6.Future<List<_i7.GameHistoryItem>>.value(
+              <_i7.GameHistoryItem>[],
             ),
             returnValueForMissingStub:
-                _i4.Future<List<_i5.GameHistoryItem>>.value(
-                  <_i5.GameHistoryItem>[],
+                _i6.Future<List<_i7.GameHistoryItem>>.value(
+                  <_i7.GameHistoryItem>[],
                 ),
           )
-          as _i4.Future<List<_i5.GameHistoryItem>>);
+          as _i6.Future<List<_i7.GameHistoryItem>>);
 
   @override
-  _i4.Future<({_i2.Game game, List<_i6.Round> rounds})> loadFinishedGameDetail(
+  _i6.Future<({_i2.Game game, List<_i4.Round> rounds})> loadFinishedGameDetail(
     String? gameId,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#loadFinishedGameDetail, [gameId]),
             returnValue:
-                _i4.Future<({_i2.Game game, List<_i6.Round> rounds})>.value((
+                _i6.Future<({_i2.Game game, List<_i4.Round> rounds})>.value((
                   game: _FakeGame_0(
                     this,
                     Invocation.method(#loadFinishedGameDetail, [gameId]),
                   ),
-                  rounds: <_i6.Round>[],
+                  rounds: <_i4.Round>[],
                 )),
             returnValueForMissingStub:
-                _i4.Future<({_i2.Game game, List<_i6.Round> rounds})>.value((
+                _i6.Future<({_i2.Game game, List<_i4.Round> rounds})>.value((
                   game: _FakeGame_0(
                     this,
                     Invocation.method(#loadFinishedGameDetail, [gameId]),
                   ),
-                  rounds: <_i6.Round>[],
+                  rounds: <_i4.Round>[],
                 )),
           )
-          as _i4.Future<({_i2.Game game, List<_i6.Round> rounds})>);
+          as _i6.Future<({_i2.Game game, List<_i4.Round> rounds})>);
 }
 
 /// A class which mocks [HistoryFirestoreDatasource].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockHistoryFirestoreDatasource extends _i1.Mock
-    implements _i7.HistoryFirestoreDatasource {
+    implements _i8.HistoryFirestoreDatasource {
   @override
-  _i4.Future<List<_i5.GameHistoryItem>> getFinishedCloudGames() =>
+  _i6.Future<List<_i7.GameHistoryItem>> getFinishedCloudGames() =>
       (super.noSuchMethod(
             Invocation.method(#getFinishedCloudGames, []),
-            returnValue: _i4.Future<List<_i5.GameHistoryItem>>.value(
-              <_i5.GameHistoryItem>[],
+            returnValue: _i6.Future<List<_i7.GameHistoryItem>>.value(
+              <_i7.GameHistoryItem>[],
             ),
             returnValueForMissingStub:
-                _i4.Future<List<_i5.GameHistoryItem>>.value(
-                  <_i5.GameHistoryItem>[],
+                _i6.Future<List<_i7.GameHistoryItem>>.value(
+                  <_i7.GameHistoryItem>[],
                 ),
           )
-          as _i4.Future<List<_i5.GameHistoryItem>>);
+          as _i6.Future<List<_i7.GameHistoryItem>>);
 
   @override
-  _i4.Future<({_i2.Game game, List<_i6.Round> rounds})> loadFinishedGameDetail(
+  _i6.Future<({_i2.Game game, List<_i4.Round> rounds})> loadFinishedGameDetail(
     String? gameId,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#loadFinishedGameDetail, [gameId]),
             returnValue:
-                _i4.Future<({_i2.Game game, List<_i6.Round> rounds})>.value((
+                _i6.Future<({_i2.Game game, List<_i4.Round> rounds})>.value((
                   game: _FakeGame_0(
                     this,
                     Invocation.method(#loadFinishedGameDetail, [gameId]),
                   ),
-                  rounds: <_i6.Round>[],
+                  rounds: <_i4.Round>[],
                 )),
             returnValueForMissingStub:
-                _i4.Future<({_i2.Game game, List<_i6.Round> rounds})>.value((
+                _i6.Future<({_i2.Game game, List<_i4.Round> rounds})>.value((
                   game: _FakeGame_0(
                     this,
                     Invocation.method(#loadFinishedGameDetail, [gameId]),
                   ),
-                  rounds: <_i6.Round>[],
+                  rounds: <_i4.Round>[],
                 )),
           )
-          as _i4.Future<({_i2.Game game, List<_i6.Round> rounds})>);
+          as _i6.Future<({_i2.Game game, List<_i4.Round> rounds})>);
+}
+
+/// A class which mocks [HiddenGamesLocalDatasource].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockHiddenGamesLocalDatasource extends _i1.Mock
+    implements _i9.HiddenGamesLocalDatasource {
+  @override
+  _i6.Future<Set<String>> getHiddenGameIds() =>
+      (super.noSuchMethod(
+            Invocation.method(#getHiddenGameIds, []),
+            returnValue: _i6.Future<Set<String>>.value(<String>{}),
+            returnValueForMissingStub: _i6.Future<Set<String>>.value(
+              <String>{},
+            ),
+          )
+          as _i6.Future<Set<String>>);
+
+  @override
+  _i6.Future<void> hideGame(String? gameId) =>
+      (super.noSuchMethod(
+            Invocation.method(#hideGame, [gameId]),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
+          )
+          as _i6.Future<void>);
+
+  @override
+  _i6.Future<bool> isHidden(String? gameId) =>
+      (super.noSuchMethod(
+            Invocation.method(#isHidden, [gameId]),
+            returnValue: _i6.Future<bool>.value(false),
+            returnValueForMissingStub: _i6.Future<bool>.value(false),
+          )
+          as _i6.Future<bool>);
+}
+
+/// A class which mocks [GameRepository].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockGameRepository extends _i1.Mock implements _i10.GameRepository {
+  @override
+  _i6.Future<_i2.Game> saveDraft(_i2.Game? game) =>
+      (super.noSuchMethod(
+            Invocation.method(#saveDraft, [game]),
+            returnValue: _i6.Future<_i2.Game>.value(
+              _FakeGame_0(this, Invocation.method(#saveDraft, [game])),
+            ),
+            returnValueForMissingStub: _i6.Future<_i2.Game>.value(
+              _FakeGame_0(this, Invocation.method(#saveDraft, [game])),
+            ),
+          )
+          as _i6.Future<_i2.Game>);
+
+  @override
+  _i6.Future<_i2.Game?> getGameById(String? id) =>
+      (super.noSuchMethod(
+            Invocation.method(#getGameById, [id]),
+            returnValue: _i6.Future<_i2.Game?>.value(),
+            returnValueForMissingStub: _i6.Future<_i2.Game?>.value(),
+          )
+          as _i6.Future<_i2.Game?>);
+
+  @override
+  _i6.Future<_i2.Game> updateGamePlayers(
+    String? gameId,
+    List<_i11.PlayerEmbed>? players,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateGamePlayers, [gameId, players]),
+            returnValue: _i6.Future<_i2.Game>.value(
+              _FakeGame_0(
+                this,
+                Invocation.method(#updateGamePlayers, [gameId, players]),
+              ),
+            ),
+            returnValueForMissingStub: _i6.Future<_i2.Game>.value(
+              _FakeGame_0(
+                this,
+                Invocation.method(#updateGamePlayers, [gameId, players]),
+              ),
+            ),
+          )
+          as _i6.Future<_i2.Game>);
+
+  @override
+  _i6.Future<_i3.StartGameResult> startGame({
+    required String? gameId,
+    required List<_i11.PlayerEmbed>? players,
+    required String? firstDealerPlayerId,
+    required _i4.Round? firstRound,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#startGame, [], {
+              #gameId: gameId,
+              #players: players,
+              #firstDealerPlayerId: firstDealerPlayerId,
+              #firstRound: firstRound,
+            }),
+            returnValue: _i6.Future<_i3.StartGameResult>.value(
+              _FakeStartGameResult_1(
+                this,
+                Invocation.method(#startGame, [], {
+                  #gameId: gameId,
+                  #players: players,
+                  #firstDealerPlayerId: firstDealerPlayerId,
+                  #firstRound: firstRound,
+                }),
+              ),
+            ),
+            returnValueForMissingStub: _i6.Future<_i3.StartGameResult>.value(
+              _FakeStartGameResult_1(
+                this,
+                Invocation.method(#startGame, [], {
+                  #gameId: gameId,
+                  #players: players,
+                  #firstDealerPlayerId: firstDealerPlayerId,
+                  #firstRound: firstRound,
+                }),
+              ),
+            ),
+          )
+          as _i6.Future<_i3.StartGameResult>);
+
+  @override
+  _i6.Future<_i4.Round> closeRoundAndUpdateScores({
+    required _i4.Round? closedRound,
+    required List<_i11.PlayerEmbed>? updatedPlayers,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#closeRoundAndUpdateScores, [], {
+              #closedRound: closedRound,
+              #updatedPlayers: updatedPlayers,
+            }),
+            returnValue: _i6.Future<_i4.Round>.value(
+              _FakeRound_2(
+                this,
+                Invocation.method(#closeRoundAndUpdateScores, [], {
+                  #closedRound: closedRound,
+                  #updatedPlayers: updatedPlayers,
+                }),
+              ),
+            ),
+            returnValueForMissingStub: _i6.Future<_i4.Round>.value(
+              _FakeRound_2(
+                this,
+                Invocation.method(#closeRoundAndUpdateScores, [], {
+                  #closedRound: closedRound,
+                  #updatedPlayers: updatedPlayers,
+                }),
+              ),
+            ),
+          )
+          as _i6.Future<_i4.Round>);
+
+  @override
+  _i6.Future<_i4.Round> repeatRoundAndRevertScores({
+    required _i4.Round? resetRound,
+    required List<_i11.PlayerEmbed>? updatedPlayers,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#repeatRoundAndRevertScores, [], {
+              #resetRound: resetRound,
+              #updatedPlayers: updatedPlayers,
+            }),
+            returnValue: _i6.Future<_i4.Round>.value(
+              _FakeRound_2(
+                this,
+                Invocation.method(#repeatRoundAndRevertScores, [], {
+                  #resetRound: resetRound,
+                  #updatedPlayers: updatedPlayers,
+                }),
+              ),
+            ),
+            returnValueForMissingStub: _i6.Future<_i4.Round>.value(
+              _FakeRound_2(
+                this,
+                Invocation.method(#repeatRoundAndRevertScores, [], {
+                  #resetRound: resetRound,
+                  #updatedPlayers: updatedPlayers,
+                }),
+              ),
+            ),
+          )
+          as _i6.Future<_i4.Round>);
+
+  @override
+  _i6.Future<_i4.Round> advanceToNextRound({
+    required _i4.Round? nextRound,
+    required int? nextRoundNumber,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#advanceToNextRound, [], {
+              #nextRound: nextRound,
+              #nextRoundNumber: nextRoundNumber,
+            }),
+            returnValue: _i6.Future<_i4.Round>.value(
+              _FakeRound_2(
+                this,
+                Invocation.method(#advanceToNextRound, [], {
+                  #nextRound: nextRound,
+                  #nextRoundNumber: nextRoundNumber,
+                }),
+              ),
+            ),
+            returnValueForMissingStub: _i6.Future<_i4.Round>.value(
+              _FakeRound_2(
+                this,
+                Invocation.method(#advanceToNextRound, [], {
+                  #nextRound: nextRound,
+                  #nextRoundNumber: nextRoundNumber,
+                }),
+              ),
+            ),
+          )
+          as _i6.Future<_i4.Round>);
+
+  @override
+  _i6.Future<_i2.Game> finishGame({
+    required String? gameId,
+    required DateTime? finishedAt,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#finishGame, [], {
+              #gameId: gameId,
+              #finishedAt: finishedAt,
+            }),
+            returnValue: _i6.Future<_i2.Game>.value(
+              _FakeGame_0(
+                this,
+                Invocation.method(#finishGame, [], {
+                  #gameId: gameId,
+                  #finishedAt: finishedAt,
+                }),
+              ),
+            ),
+            returnValueForMissingStub: _i6.Future<_i2.Game>.value(
+              _FakeGame_0(
+                this,
+                Invocation.method(#finishGame, [], {
+                  #gameId: gameId,
+                  #finishedAt: finishedAt,
+                }),
+              ),
+            ),
+          )
+          as _i6.Future<_i2.Game>);
+
+  @override
+  _i6.Future<void> deleteGame(String? gameId) =>
+      (super.noSuchMethod(
+            Invocation.method(#deleteGame, [gameId]),
+            returnValue: _i6.Future<void>.value(),
+            returnValueForMissingStub: _i6.Future<void>.value(),
+          )
+          as _i6.Future<void>);
 }

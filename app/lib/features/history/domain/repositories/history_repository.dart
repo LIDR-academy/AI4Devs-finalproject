@@ -9,4 +9,8 @@ abstract class HistoryRepository {
     required String gameId,
     required GameHistorySource source,
   });
+
+  Future<void> deleteLocalGame(String gameId);
+
+  Future<void> hideCloudGame(String gameId);
 }

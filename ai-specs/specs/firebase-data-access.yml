@@ -100,6 +100,15 @@ firestore:
             close:
               sdk: doc('games/{gameId}/rounds/{roundNumber}').update({ status: 'closed', closedAt: serverTimestamp, scoresDelta: ... })
 
+    hideGameForUser:
+      description: Oculta una partida del historial del usuario actual sin borrar el documento en Firestore.
+      persistence: local
+      driftTable: hidden_games
+      sdk: HiddenGamesLocalDatasource.hideGame(gameId)
+      notes:
+        - No escribe en games/{gameId}
+        - Usado para GameHistorySource.cloud y para cloudGameId tras borrado local sincronizado
+
 errors:
   mapping:
     firebase_auth/user-not-found: DomainAuthFailure

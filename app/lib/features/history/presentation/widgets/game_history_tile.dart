@@ -8,10 +8,12 @@ class GameHistoryTile extends StatelessWidget {
     super.key,
     required this.item,
     required this.onTap,
+    this.onDelete,
   });
 
   final GameHistoryItem item;
   final VoidCallback onTap;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +63,35 @@ class GameHistoryTile extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  SourceBadge(source: item.source),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SourceBadge(source: item.source),
+                      if (onDelete != null) ...[
+                        const SizedBox(width: 4),
+                        PopupMenuButton<String>(
+                          icon: Icon(
+                            Icons.more_vert,
+                            color: AppTheme.onSurfaceVariant,
+                          ),
+                          onSelected: (value) {
+                            if (value == 'delete') {
+                              onDelete!();
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Text(
+                                'Eliminar',
+                                style: TextStyle(color: Color(0xFFD9772E)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
                   if (item.isSyncPending) ...[
                     const SizedBox(height: 8),
                     const _SyncPendingBadge(),

@@ -43,13 +43,17 @@ import 'package:la_pocha/features/round/presentation/bloc/play_state_bloc.dart';
 import 'package:la_pocha/features/round/presentation/bloc/repeat_round_cubit.dart';
 import 'package:la_pocha/features/round/presentation/bloc/round_result_bloc.dart';
 import 'package:la_pocha/features/round/presentation/bloc/scoring_bloc.dart';
+import 'package:la_pocha/features/history/data/datasources/hidden_games_local_datasource.dart';
 import 'package:la_pocha/features/history/data/datasources/history_firestore_datasource.dart';
 import 'package:la_pocha/features/history/data/datasources/history_local_datasource.dart';
 import 'package:la_pocha/features/history/data/repositories/history_repository_impl.dart';
 import 'package:la_pocha/features/history/domain/repositories/history_repository.dart';
 import 'package:la_pocha/features/history/domain/services/game_detail_mapper.dart';
+import 'package:la_pocha/features/history/domain/usecases/delete_local_game_usecase.dart';
 import 'package:la_pocha/features/history/domain/usecases/get_game_detail_usecase.dart';
 import 'package:la_pocha/features/history/domain/usecases/get_game_history_usecase.dart';
+import 'package:la_pocha/features/history/domain/usecases/hide_cloud_game_usecase.dart';
+import 'package:la_pocha/features/history/presentation/bloc/delete_game_from_history_cubit.dart';
 import 'package:la_pocha/features/history/presentation/bloc/game_detail_bloc.dart';
 import 'package:la_pocha/features/history/presentation/bloc/history_list_bloc.dart';
 import 'package:la_pocha/features/auth/data/datasources/auth_firebase_datasource.dart';
@@ -199,6 +203,10 @@ Future<void> configureDependencies() async {
     () => const GameDetailMapper(),
   );
 
+  getIt.registerLazySingleton<HiddenGamesLocalDatasource>(
+    () => HiddenGamesLocalDatasource(getIt<AppDatabase>()),
+  );
+
   getIt.registerLazySingleton<HistoryLocalDatasource>(
     () => HistoryLocalDatasource(
       getIt<AppDatabase>(),
@@ -215,6 +223,26 @@ Future<void> configureDependencies() async {
     () => HistoryRepositoryImpl(
       getIt<HistoryLocalDatasource>(),
       getIt<HistoryFirestoreDatasource>(),
+      getIt<HiddenGamesLocalDatasource>(),
+      getIt<GameRepository>(),
+    ),
+  );
+
+  getIt.registerFactory<DeleteLocalGameUseCase>(
+    () => DeleteLocalGameUseCase(
+      getIt<HistoryRepository>(),
+      getIt<GameRepository>(),
+    ),
+  );
+
+  getIt.registerFactory<HideCloudGameUseCase>(
+    () => HideCloudGameUseCase(getIt<HistoryRepository>()),
+  );
+
+  getIt.registerFactory<DeleteGameFromHistoryCubit>(
+    () => DeleteGameFromHistoryCubit(
+      deleteLocalGame: getIt<DeleteLocalGameUseCase>(),
+      hideCloudGame: getIt<HideCloudGameUseCase>(),
     ),
   );
 

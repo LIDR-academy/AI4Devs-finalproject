@@ -1577,16 +1577,181 @@ class RoundsCompanion extends UpdateCompanion<RoundEntry> {
   }
 }
 
+class $HiddenGamesTable extends HiddenGames
+    with TableInfo<$HiddenGamesTable, HiddenGameEntry> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HiddenGamesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _gameIdMeta = const VerificationMeta('gameId');
+  @override
+  late final GeneratedColumn<String> gameId = GeneratedColumn<String>(
+    'game_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [gameId];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'hidden_games';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<HiddenGameEntry> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('game_id')) {
+      context.handle(
+        _gameIdMeta,
+        gameId.isAcceptableOrUnknown(data['game_id']!, _gameIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_gameIdMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {gameId};
+  @override
+  HiddenGameEntry map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HiddenGameEntry(
+      gameId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}game_id'],
+      )!,
+    );
+  }
+
+  @override
+  $HiddenGamesTable createAlias(String alias) {
+    return $HiddenGamesTable(attachedDatabase, alias);
+  }
+}
+
+class HiddenGameEntry extends DataClass implements Insertable<HiddenGameEntry> {
+  final String gameId;
+  const HiddenGameEntry({required this.gameId});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['game_id'] = Variable<String>(gameId);
+    return map;
+  }
+
+  HiddenGamesCompanion toCompanion(bool nullToAbsent) {
+    return HiddenGamesCompanion(gameId: Value(gameId));
+  }
+
+  factory HiddenGameEntry.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HiddenGameEntry(gameId: serializer.fromJson<String>(json['gameId']));
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{'gameId': serializer.toJson<String>(gameId)};
+  }
+
+  HiddenGameEntry copyWith({String? gameId}) =>
+      HiddenGameEntry(gameId: gameId ?? this.gameId);
+  HiddenGameEntry copyWithCompanion(HiddenGamesCompanion data) {
+    return HiddenGameEntry(
+      gameId: data.gameId.present ? data.gameId.value : this.gameId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HiddenGameEntry(')
+          ..write('gameId: $gameId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => gameId.hashCode;
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HiddenGameEntry && other.gameId == this.gameId);
+}
+
+class HiddenGamesCompanion extends UpdateCompanion<HiddenGameEntry> {
+  final Value<String> gameId;
+  final Value<int> rowid;
+  const HiddenGamesCompanion({
+    this.gameId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  HiddenGamesCompanion.insert({
+    required String gameId,
+    this.rowid = const Value.absent(),
+  }) : gameId = Value(gameId);
+  static Insertable<HiddenGameEntry> custom({
+    Expression<String>? gameId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (gameId != null) 'game_id': gameId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  HiddenGamesCompanion copyWith({Value<String>? gameId, Value<int>? rowid}) {
+    return HiddenGamesCompanion(
+      gameId: gameId ?? this.gameId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (gameId.present) {
+      map['game_id'] = Variable<String>(gameId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HiddenGamesCompanion(')
+          ..write('gameId: $gameId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $GamesTable games = $GamesTable(this);
   late final $RoundsTable rounds = $RoundsTable(this);
+  late final $HiddenGamesTable hiddenGames = $HiddenGamesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [games, rounds];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+    games,
+    rounds,
+    hiddenGames,
+  ];
 }
 
 typedef $$GamesTableCreateCompanionBuilder =
@@ -2318,6 +2483,118 @@ typedef $$RoundsTableProcessedTableManager =
       RoundEntry,
       PrefetchHooks Function()
     >;
+typedef $$HiddenGamesTableCreateCompanionBuilder =
+    HiddenGamesCompanion Function({required String gameId, Value<int> rowid});
+typedef $$HiddenGamesTableUpdateCompanionBuilder =
+    HiddenGamesCompanion Function({Value<String> gameId, Value<int> rowid});
+
+class $$HiddenGamesTableFilterComposer
+    extends Composer<_$AppDatabase, $HiddenGamesTable> {
+  $$HiddenGamesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get gameId => $composableBuilder(
+    column: $table.gameId,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$HiddenGamesTableOrderingComposer
+    extends Composer<_$AppDatabase, $HiddenGamesTable> {
+  $$HiddenGamesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get gameId => $composableBuilder(
+    column: $table.gameId,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$HiddenGamesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HiddenGamesTable> {
+  $$HiddenGamesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get gameId =>
+      $composableBuilder(column: $table.gameId, builder: (column) => column);
+}
+
+class $$HiddenGamesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $HiddenGamesTable,
+          HiddenGameEntry,
+          $$HiddenGamesTableFilterComposer,
+          $$HiddenGamesTableOrderingComposer,
+          $$HiddenGamesTableAnnotationComposer,
+          $$HiddenGamesTableCreateCompanionBuilder,
+          $$HiddenGamesTableUpdateCompanionBuilder,
+          (
+            HiddenGameEntry,
+            BaseReferences<_$AppDatabase, $HiddenGamesTable, HiddenGameEntry>,
+          ),
+          HiddenGameEntry,
+          PrefetchHooks Function()
+        > {
+  $$HiddenGamesTableTableManager(_$AppDatabase db, $HiddenGamesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HiddenGamesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$HiddenGamesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$HiddenGamesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> gameId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HiddenGamesCompanion(gameId: gameId, rowid: rowid),
+          createCompanionCallback:
+              ({
+                required String gameId,
+                Value<int> rowid = const Value.absent(),
+              }) => HiddenGamesCompanion.insert(gameId: gameId, rowid: rowid),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$HiddenGamesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $HiddenGamesTable,
+      HiddenGameEntry,
+      $$HiddenGamesTableFilterComposer,
+      $$HiddenGamesTableOrderingComposer,
+      $$HiddenGamesTableAnnotationComposer,
+      $$HiddenGamesTableCreateCompanionBuilder,
+      $$HiddenGamesTableUpdateCompanionBuilder,
+      (
+        HiddenGameEntry,
+        BaseReferences<_$AppDatabase, $HiddenGamesTable, HiddenGameEntry>,
+      ),
+      HiddenGameEntry,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -2326,4 +2603,6 @@ class $AppDatabaseManager {
       $$GamesTableTableManager(_db, _db.games);
   $$RoundsTableTableManager get rounds =>
       $$RoundsTableTableManager(_db, _db.rounds);
+  $$HiddenGamesTableTableManager get hiddenGames =>
+      $$HiddenGamesTableTableManager(_db, _db.hiddenGames);
 }

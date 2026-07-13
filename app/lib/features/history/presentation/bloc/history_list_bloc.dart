@@ -14,6 +14,7 @@ class HistoryListBloc extends Bloc<HistoryListEvent, HistoryListState> {
   }) : super(const HistoryListInitial()) {
     on<HistoryListStarted>(_onStarted);
     on<HistoryListRefreshed>(_onRefreshed);
+    on<HistoryListGameDeleted>(_onGameDeleted);
   }
 
   final GetGameHistoryUseCase _getGameHistory;
@@ -32,6 +33,30 @@ class HistoryListBloc extends Bloc<HistoryListEvent, HistoryListState> {
   ) async {
     // Retry pending uploads when auth and upload are available.
     await _loadHistory(emit, showLoading: false);
+  }
+
+  void _onGameDeleted(
+    HistoryListGameDeleted event,
+    Emitter<HistoryListState> emit,
+  ) {
+    final current = state;
+    if (current is! HistoryListLoaded) {
+      return;
+    }
+
+    final updatedItems = current.items
+        .where(
+          (item) =>
+              item.id != event.gameId && item.cloudGameId != event.gameId,
+        )
+        .toList();
+
+    if (updatedItems.isEmpty) {
+      emit(const HistoryListEmpty());
+      return;
+    }
+
+    emit(HistoryListLoaded(items: updatedItems));
   }
 
   Future<void> _loadHistory(
