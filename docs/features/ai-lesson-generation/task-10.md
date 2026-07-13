@@ -14,19 +14,18 @@ paths:
 ## Goal
 The feature-wiring component that puts the composition picker on the same screen as the upload widget (decision #3) and drives generation. Owns composition state (default `both`), calls `useLessonGeneration`, receives the extracted `documentId` as a prop, threads it into `generate`, maps chrome copy via `t('generation.*')`, and hands the returned deck to the player entry point. Keeps `upload.tsx` a thin shell. Also adds the `documentId` hand-off out of R1's `PdfUpload` (decision #9).
 
-## documentId hand-off (decision #9 — concrete mechanism, not "implementation detail")
-- **`libs/study-buddy/src/components/pdf-upload/`** — `PdfUpload` gains an **additive, optional** `onExtracted?: (documentId: string) => void` prop, fired **once** when its own `usePdfExtraction()` result first transitions to a value carrying a `documentId` (guard against re-firing on re-render; a `useEffect` keyed on `result?.documentId` is the shape). Add a `pdf-upload.types.ts` Props type (per `component-split.mdc`, since the component now takes a prop) and extend `pdf-upload.test.tsx` to assert `onExtracted` fires exactly once with the extracted id and does **not** fire on the idle/loading/error stages. Existing R1 callers omit the prop → identical behavior (backward-compatible).
-- **`apps/app-study-buddy/src/app/(app)/upload.tsx`** — lift a single `documentId` value (`useState<string | undefined>`) and thread it to both siblings: `<PdfUpload onExtracted={setDocumentId} />` and `<LessonGeneration documentId={documentId} />`, both still inside `<ApiKeyGate>`. This one handoff value is the **only** state the screen holds; no business logic (composition, orchestration, error handling all stay in the libs) — the screen stays a thin shell.
-- **`LessonGeneration`** takes a `documentId?: string` prop; before extraction it renders the picker but gates Generate (`canGenerate = !!documentId`, @s16).
+## documentId hand-off (decision #9 — concrete mechanism, see spec.md for full rationale)
+- `PdfUpload` gains an additive, optional `onExtracted?: (documentId: string) => void` prop, fired once when `usePdfExtraction()` first resolves a `documentId` (guarded via `useEffect` keyed on `result?.documentId`, no re-fire on re-render). Adds `pdf-upload.types.ts` Props type (`component-split.mdc`). Test asserts it fires exactly once, not on idle/loading/error. Existing R1 callers omit the prop — backward-compatible.
+- `upload.tsx` lifts a single `documentId` (`useState<string | undefined>`), threads it to `<PdfUpload onExtracted={setDocumentId} />` and `<LessonGeneration documentId={documentId} />`, both inside `<ApiKeyGate>`. Only state the screen holds — no business logic.
+- `LessonGeneration` takes `documentId?: string`; gates Generate via `canGenerate = !!documentId` (@s16) before extraction.
 
 ## Coordination
-- On success, navigate to the player with the in-memory deck (placeholder nav until R4; mirrors R1's Content-CTA placeholder).
-- `upload.tsx` composes `<ApiKeyGate>` → `PdfUpload` + `LessonGeneration` siblings; routing + the `documentId` handoff only, no business logic.
+On success, navigate to the player with the in-memory deck (placeholder nav until R4, mirrors R1's Content-CTA). `upload.tsx` composes `<ApiKeyGate>` → `PdfUpload` + `LessonGeneration` siblings; routing + handoff only.
 
 ## Done criteria
 - [x] Scenarios @s1 (default both) / @s3 (end-to-end both → typed deck) / @s16 (gating on `documentId`) / @s17 (deck → player hand-off) covered by `lesson-generation.test.tsx` + a slice integration test (`lesson-generation.integration.test.tsx`) mocking `functions.invoke`
 - [x] `PdfUpload.onExtracted` fires once with the extracted `documentId` (asserted in `pdf-upload.test.tsx`); no regression to the existing zero-prop R1 behavior
-- [x] Composition is narrowed from `RadioGroup`'s raw string via `isLessonComposition`; **deviation**: `generation.*` i18n mapping ended up owned by `LessonGenerationPanel` itself (mirrors the `LanguageSettings` precedent in the same components lib), not `LessonGeneration` — GenerationProgress's step labels are also assembled inside the panel, so there is no leftover chrome copy for the wiring layer to map
+- [x] Composition narrowed from `RadioGroup`'s raw string via `isLessonComposition`; **deviation**: `generation.*` i18n mapping ended up owned by `LessonGenerationPanel` (mirrors the `LanguageSettings` precedent), not `LessonGeneration` — no leftover chrome copy for the wiring layer to map
 - [x] `upload.tsx` stays a thin shell (routing + the single `documentId` handoff `useState` + composition only)
 - [x] `LessonGeneration` exported through the `@helsoft/study-buddy` barrel
 - [x] `pnpm lint` + `pnpm check-types` + `pnpm test` green
