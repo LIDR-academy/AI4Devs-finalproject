@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { useState } from 'react';
 
-import { PdfUploadPanel, type PdfUploadPanelState } from './pdf-upload-panel';
+import { PdfUploadPanel } from './pdf-upload-panel';
+import type { PdfUploadPanelState } from './pdf-upload-panel.types';
 
 const meta = {
   title: 'Organisms/PdfUploadPanel',

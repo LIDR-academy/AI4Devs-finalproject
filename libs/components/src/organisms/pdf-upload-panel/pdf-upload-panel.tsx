@@ -1,50 +1,12 @@
-import { useEffect } from 'react';
-import { AccessibilityInfo, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
-import { useLocalization } from '@helsoft/localization';
 import { Button } from '../../atoms/button/button';
 import { Card } from '../../atoms/card/card';
 import { ProgressIndicator } from '../../atoms/progress-indicator/progress-indicator';
 
-/** 'idle' is the Empty/pristine state (AC7, @s7) — no file chosen yet. 'error' (Slice 2, task-11)
- * covers every `PdfExtractionErrorCode` (@s8-@s13); the wiring layer supplies the per-code
- * message. */
-export type PdfUploadPanelState = 'idle' | 'loading' | 'content' | 'error';
-
-export type PdfUploadPanelProps = {
-  state: PdfUploadPanelState;
-  /** Picks a (new) file — disabled while `state` is 'loading' (@s5); stays enabled in every other
-   * state, including 'error', so the panel is always "usable again". */
-  onChooseFile: () => void;
-  /** Max file size in MB for the idle constraints hint. Default mirrors `PDF_EXTRACTION_LIMITS`;
-   * wiring should pass the live constant so the hint never drifts from the service ceiling. */
-  maxMb?: number;
-  /** Max page count for the idle constraints hint. Default mirrors `PDF_EXTRACTION_LIMITS`;
-   * wiring should pass the live constant so the hint never drifts from the service ceiling. */
-  maxPages?: number;
-  /** Content-state summary fields (@s6). */
-  filename?: string;
-  pageCount?: number;
-  imageCount?: number;
-  /** The image-count row's already-pluralized, screen-reader announcement (e.g. i18next's
-   * `upload.imageCount_one`/`_other`, task-13) — falls back to a plain composed
-   * `"{imageCountLabel}: {imageCount}"` label when omitted (N5, accessibility review round-1 fix). */
-  imageCountAnnouncement?: string;
-  /** Content-state continue affordance (@s6) — the generation hand-off is out of scope here. */
-  onContinue?: () => void;
-  /** Error-state message for the current `PdfExtractionErrorCode` (@s8-@s13) — already localized
-   * by the wiring layer. */
-  errorMessage?: string;
-  /** Error-state retry affordance (@s8-@s13) — re-attempts the last extraction. */
-  onRetry?: () => void;
-  /** Whether the Error-state retry affordance should render at all. Defaults to `true`. The
-   * wiring layer sets this to `false` for the 6 non-transient `PdfExtractionErrorCode`s
-   * (spec.md's Error contract table) — where `retry()` would deterministically reproduce the
-   * same failure — since the persistent choose-file control is already the real recovery action
-   * for those. */
-  canRetry?: boolean;
-};
+import type { PdfUploadPanelProps } from './pdf-upload-panel.types';
+import { usePdfUploadPanel } from './use-pdf-upload-panel';
 
 export const PDF_UPLOAD_PANEL_LOADING_INDICATOR_TEST_ID = 'pdf-upload-panel-loading-indicator';
 
@@ -67,20 +29,7 @@ export const PdfUploadPanel = ({
   onRetry,
   canRetry = true,
 }: PdfUploadPanelProps) => {
-  const { t } = useLocalization();
-  const isLoading = state === 'loading';
-
-  // @s16 (WCAG 4.1.3) — accessibilityLiveRegion (below, on the visible text nodes) only reaches
-  // Android/Web assistive tech; iOS VoiceOver needs the imperative, cross-platform
-  // AccessibilityInfo call fired directly on the transition, mirroring `login-form.tsx`'s
-  // established pattern for its own loading/error announcements.
-  useEffect(() => {
-    if (isLoading) AccessibilityInfo.announceForAccessibility(t('upload.loading'));
-  }, [isLoading, t]);
-
-  useEffect(() => {
-    if (errorMessage) AccessibilityInfo.announceForAccessibility(errorMessage);
-  }, [errorMessage]);
+  const { t, isLoading } = usePdfUploadPanel({ state, errorMessage });
 
   return (
     <Card>

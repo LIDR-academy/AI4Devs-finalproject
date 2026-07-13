@@ -1,38 +1,16 @@
-import { useEffect, useState } from 'react';
-import { AccessibilityInfo, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
-import { useLocalization } from '@helsoft/localization';
 import { Button } from '../../atoms/button/button';
 import { ProgressIndicator } from '../../atoms/progress-indicator/progress-indicator';
 import { TextField } from '../../molecules/text-field/text-field';
 
-export type LoginFormProps = {
-  onSubmit: (credentials: { email: string; password: string }) => void;
-  /** True while AuthService.signIn is in flight — drives the Loading state (@s3). */
-  isSubmitting?: boolean;
-  onNavigateToSignUp?: () => void;
-  /**
-   * Auth-level failure banner (invalid_credentials / network_error, @s5/@s6). The form stays
-   * editable and submit stays enabled once fields are non-empty — retry is just re-submitting.
-   */
-  errorMessage?: string;
-  /** Inline validation message for the email field (@s9, e.g. malformed email). Blocks submit. */
-  emailError?: string;
-  /** Inline validation message for the password field (@s9, e.g. empty password). Blocks submit. */
-  passwordError?: string;
-  /**
-   * Called with the email field's next value on every change. Lets the wiring layer
-   * (SignInForm) re-validate/clear `emailError` reactively as the user edits — without this,
-   * once `emailError` is set the submit control that would re-trigger validation is itself
-   * disabled by that same error, permanently deadlocking the form (@s9 fix).
-   */
-  onEmailChange?: (email: string) => void;
-};
+import type { LoginFormProps } from './login-form.types';
+import { useLoginForm } from './use-login-form';
 
 const SUBMIT_SPINNER_SIZE = 18;
 const SUBMIT_SPINNER_THICKNESS = 2;
-/** testID for the Loading-state affordance (@s3) — the a11y announcement lives on the live-region Text node and the AccessibilityInfo call below. */
+/** testID for the Loading-state affordance (@s3) — the a11y announcement lives on the live-region Text node and the AccessibilityInfo call in the hook. */
 export const LOADING_INDICATOR_TEST_ID = 'login-form-loading-indicator';
 
 /**
@@ -49,34 +27,12 @@ export const LoginForm = ({
   passwordError,
   onEmailChange,
 }: LoginFormProps) => {
-  const { t } = useLocalization();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  // Empty state (@s8): a pristine form (either field still blank) keeps submit disabled.
-  const isPristine = !email.trim() || !password.trim();
-  // Inline validation (@s9): a field-level error blocks submit even once fields are non-empty.
-  const hasFieldError = !!emailError || !!passwordError;
-
-  const handleEmailChange = (value: string) => {
-    setEmail(value);
-    onEmailChange?.(value);
-  };
-
-  // accessibilityLiveRegion (below) is Android/Web-only (@platform android) — iOS VoiceOver
-  // needs this imperative call fired directly on the isSubmitting transition (WCAG 4.1.3).
-  useEffect(() => {
-    if (isSubmitting) {
-      AccessibilityInfo.announceForAccessibility(t('auth.signingIn'));
-    }
-  }, [isSubmitting, t]);
-
-  // Same iOS-parity need for the auth-error banner (@s12, WCAG 4.1.3): the banner's own
-  // accessibilityLiveRegion covers Android/Web only.
-  useEffect(() => {
-    if (errorMessage) {
-      AccessibilityInfo.announceForAccessibility(errorMessage);
-    }
-  }, [errorMessage]);
+  const { t, email, password, setEmail, setPassword, isPristine, hasFieldError } = useLoginForm({
+    isSubmitting,
+    errorMessage,
+    emailError,
+    passwordError,
+  });
 
   return (
     <View style={styles.form}>
@@ -91,7 +47,10 @@ export const LoginForm = ({
         label={t('auth.email')}
         accessibilityLabel={t('auth.email')}
         value={email}
-        onChangeText={handleEmailChange}
+        onChangeText={(value) => {
+          setEmail(value);
+          onEmailChange?.(value);
+        }}
         disabled={isSubmitting}
         accessibilityState={{ disabled: isSubmitting }}
         autoCapitalize="none"
