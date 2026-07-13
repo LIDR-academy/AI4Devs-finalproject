@@ -25,10 +25,31 @@ describe("Health endpoint", () => {
   });
 });
 
-describe("Auth endpoint stubs", () => {
-  it("POST /api/v1/auth/login returns 501", async () => {
+describe("Auth endpoints", () => {
+  it("POST /api/v1/auth/login returns 400 when body is missing", async () => {
     const res = await request(app).post("/api/v1/auth/login");
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(400);
+    expect(res.body.error).toHaveProperty("code", "VALIDATION_ERROR");
+  });
+
+  it("POST /api/v1/auth/login returns 401 for invalid credentials", async () => {
+    const res = await request(app).post("/api/v1/auth/login").send({
+      email: "nonexistent@test.com",
+      password: "wrong",
+    });
+    expect(res.status).toBe(401);
+    expect(res.body.error).toHaveProperty("code", "UNAUTHORIZED");
+  });
+
+  it("POST /api/v1/auth/login returns 200 with tokens for valid admin", async () => {
+    const res = await request(app).post("/api/v1/auth/login").send({
+      email: "admin@coacher.com",
+      password: "Admin123!",
+    });
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty("accessToken");
+    expect(res.body).toHaveProperty("refreshToken");
+    expect(res.body.user).toHaveProperty("role", "ADMIN");
   });
 });
 

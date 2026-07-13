@@ -73,7 +73,21 @@ router.get(
       const limit = Number(req.query.limit) || 20;
 
       const result = await container.listCoachees.execute({ status, levelId, page, limit });
-      res.json(result);
+      res.json({
+        data: result.data.map((c) => ({
+          id: c.id,
+          name: c.name,
+          email: c.email,
+          phone: c.phone,
+          classTypePreference: c.classTypePreference,
+          status: c.status,
+          level: c.levelId ? { id: c.levelId } : null,
+          additionalInfo: c.additionalInfo,
+          createdAt: c.createdAt,
+          updatedAt: c.updatedAt,
+        })),
+        meta: result.meta,
+      });
     } catch (err) {
       next(err);
     }
