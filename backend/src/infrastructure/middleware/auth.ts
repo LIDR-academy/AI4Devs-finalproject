@@ -10,7 +10,7 @@ export function authenticate(req: Request, _res: Response, next: NextFunction): 
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
-    if (env.NODE_ENV === "development") {
+    if (env.NODE_ENV === "development" || env.NODE_ENV === "test") {
       req.user = BYPASS_USER;
       next();
       return;
