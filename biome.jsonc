@@ -1,0 +1,45 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.3/schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": {
+    "includes": [
+      "**",
+      "!**/dist",
+      "!**/storybook-static",
+      "!**/.expo",
+      "!.worktrees",
+      "!playwright-report",
+      "!__deltest__",
+      "!supabase",
+      "!.claude"
+    ]
+  },
+  "formatter": { "enabled": true, "indentStyle": "space", "indentWidth": 2, "lineWidth": 100 },
+  "javascript": { "formatter": { "quoteStyle": "single" } },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "complexity": {
+        // The repo architecture mandates static-only abstract {Feature}Dao/{Feature}Service
+        // classes (.agents/rules/hooks-service-dao.mdc).
+        "noStaticOnlyClass": "off"
+      }
+    },
+    "domains": { "react": "recommended", "test": "recommended" }
+  },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
+  "overrides": [
+    {
+      // Story exports named after UI states (e.g. `Error`) are the naming convention here,
+      // and Playwright e2e tests depend on the derived story IDs.
+      "includes": ["**/*.stories.tsx"],
+      "linter": { "rules": { "suspicious": { "noShadowRestrictedNames": "off" } } }
+    },
+    {
+      // Non-null assertions after existence expectations are idiomatic in tests.
+      "includes": ["**/*.test.ts", "**/*.test.tsx"],
+      "linter": { "rules": { "style": { "noNonNullAssertion": "off" } } }
+    }
+  ]
+}

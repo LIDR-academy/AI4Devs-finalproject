@@ -20,7 +20,8 @@ pnpm workspaces + Turborepo (workspaces declared in `pnpm-workspace.yaml`; inter
 ```bash
 pnpm dev           # turbo run dev (app + storybooks)
 pnpm build         # turbo run build
-pnpm lint          # turbo run lint
+pnpm lint          # turbo run lint (Biome per workspace: biome check .)
+pnpm format        # biome check --write . (fix format + safe lint + import order repo-wide)
 pnpm check-types   # turbo run check-types (tsc --noEmit per workspace)
 pnpm clean         # remove node_modules/.turbo/dist/.expo everywhere + watchman
 ```
@@ -33,6 +34,8 @@ pnpm --filter @helsoft/components dev     # Storybook on port 6007 (lib-with-sto
 pnpm turbo run check-types --filter=@helsoft/supabase-services
 pnpm turbo run check-types --filter=@helsoft/services
 ```
+
+Lint/format is Biome (root `biome.jsonc`: single quotes, 2-space indent, lineWidth 100; version pinned via the pnpm catalog in `pnpm-workspace.yaml`). ESLint/Prettier are not used. Rule deviations live in `biome.jsonc` with a comment (e.g. `noStaticOnlyClass` off — DAO/Service classes are static by design); one-off suppressions use `// biome-ignore <rule>: <reason>`.
 
 There is a `test` turbo task but no workspace defines a `test` script yet — no test runner is installed. When adding one, wire the workspace's `test` script so `pnpm test` picks it up.
 

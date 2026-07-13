@@ -8,6 +8,7 @@
     "dev": "storybook dev -p 6010",
     "build": "storybook build",
     "check-types": "tsc --noEmit",
+    "lint": "biome check .",
     "test": "jest --coverage=false --passWithNoTests --watchman=false",
     "test:watch": "jest --watch",
     "test:e2e": "npx playwright test",
@@ -27,6 +28,7 @@
     "react-native-unistyles": "*"
   },
   "devDependencies": {
+    "@biomejs/biome": "catalog:",
     "@storybook/react-native-web-vite": "^10.2.9",
     "@stryker-mutator/core": "^8.2.6",
     "@stryker-mutator/jest-runner": "^8.2.6",

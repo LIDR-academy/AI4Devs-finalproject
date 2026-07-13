@@ -6,6 +6,7 @@
   "types": "src/index.ts",
   "scripts": {
     "check-types": "tsc --noEmit",
+    "lint": "biome check .",
     "test": "jest --coverage=false --passWithNoTests --watchman=false",
     "test:watch": "jest --watch",
     "mutation": "stryker run"
@@ -15,6 +16,7 @@
     "@supabase/supabase-js": "^2.49.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "catalog:",
     "@stryker-mutator/core": "^8.2.6",
     "@stryker-mutator/jest-runner": "^8.2.6",
     "@stryker-mutator/typescript-checker": "^8.2.6",

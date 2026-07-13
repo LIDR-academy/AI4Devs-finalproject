@@ -8,6 +8,7 @@
     "dev": "storybook dev -p 6006",
     "build": "storybook build",
     "check-types": "tsc --noEmit",
+    "lint": "biome check .",
     "test": "jest --coverage=false --passWithNoTests --watchman=false",
     "test:watch": "jest --watch",
     "test:e2e": "npx playwright test",
@@ -20,6 +21,7 @@
     "react-native": "*"
   },
   "devDependencies": {
+    "@biomejs/biome": "catalog:",
     "@storybook/react-native-web-vite": "^10.2.9",
     "@testing-library/react-native": "^14.0.1",
     "@types/jest": "~29.5.14",
