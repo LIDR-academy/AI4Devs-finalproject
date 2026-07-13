@@ -49,7 +49,8 @@
   },
   "scripts": {
     "start": "expo start",
-    "dev": "bash ./scripts/dev.sh",
+    "dev": "expo start",
+    "dev-with-supabase": "bash ./scripts/dev.sh",
     "build": "expo export --platform web",
     "check-types": "tsc --noEmit",
     "android": "expo start --android",
