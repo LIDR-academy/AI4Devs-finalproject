@@ -101,11 +101,16 @@ Representa una **partida** (sesión de juego): lobby, en curso o finalizada.
 |-------|------|-------------|-------------|
 | `title` | string | no | Nombre opcional de la partida *(TBD)* |
 | `hostId` | string | sí | `userId` del creador / anfitrión |
-| `status` | string | sí | `lobby`, `in_progress`, `finished` *(valores finales TBD)* |
-| `maxPlayers` | number | no | Límite de jugadores *(TBD, p. ej. 4–8)* |
-| `playerCount` | number | no | Contador denormalizado para listados |
-| `currentRoundNumber` | number | no | Última ronda activa o total de rondas jugadas *(TBD)* |
-| `settings` | map | no | Reglas variante, puntuación, etc. *(TBD)* |
+| `participantIds` | array\<string\> | sí (nube) | IDs de usuarios registrados en `players[]`; para consultas `array-contains` |
+| `status` | string | sí | `setup`, `in_progress`, `finished` |
+| `playerCount` | number | sí | Número de jugadores (3–8) |
+| `deckSize` | number | sí | Tamaño del mazo |
+| `maxCardsPerRound` | number | sí | Máximo de cartas por ronda |
+| `totalRounds` | number | sí | Longitud de `roundSequence` |
+| `roundSequence` | array\<number\> | sí | Cartas por ronda (secuencia precalculada) |
+| `players` | array\<map\> | sí | Roster embebido; ver §5 |
+| `firstDealerPlayerId` | string | sí | `playerId` del primer repartidor |
+| `currentRoundNumber` | number | no | Última ronda jugada |
 | `createdAt` | timestamp | sí | Creación |
 | `updatedAt` | timestamp | sí | Último cambio |
 | `startedAt` | timestamp | no | Inicio de partida |
@@ -113,45 +118,45 @@ Representa una **partida** (sesión de juego): lobby, en curso o finalizada.
 
 **Relaciones:**
 
-- **1:N** → subcolección `players` (participantes en esta partida).
-- **1:N** → subcolección `rounds` (manos / rondas de la partida).
-- **N:1** → `users` vía `hostId` (y cada `players.userId`).
+- **1:N** → subcolección `rounds` (detalle ronda a ronda).
+- **N:1** → `users` vía `hostId` y `participantIds`.
+- Roster en `players[]` embebido (no subcolección en Firestore).
 
 **Reglas de negocio *(borrador)*:**
 
-- Solo el `hostId` (o reglas acordadas) puede pasar `status` de `lobby` a `in_progress` *(TBD)*.
+- Tras la última ronda cerrada, `FinishGameUseCase` pasa `status` de `in_progress` a `finished` y establece `finishedAt`.
+- Al subir a Firestore (`syncFinishedGame`, LPT-20): `hostId == Auth.uid`, `participantIds` desde `players[].userId` no nulos, escritura atómica con `WriteBatch`.
 - Borrado: preferir **soft delete** con `status: "cancelled"` *(TBD)* en lugar de borrar documentos con historial.
+
+**Persistencia local (Drift):** la tabla `games` incluye `finishedAt` (schema v4), `cloudGameId` y `syncStatus` (schema v5). Campos de sync solo existen en local:
+
+| Campo local | Tipo | Valores |
+|-------------|------|---------|
+| `cloudGameId` | string? | ID del documento Firestore tras subida (`== gameId`) |
+| `syncStatus` | string? | `local`, `pending`, `synced`, `failed` |
 
 ---
 
-## 5. Subcolección `players`
+## 5. Roster embebido `players[]` en `games`
 
-Jugador **dentro de una partida concreta**. Puede ser el mismo usuario en varias partidas con documentos distintos.
+Jugadores **dentro de una partida concreta**, modelados como array embebido en `games/{gameId}` (Firestore y local Drift).
 
-**Ruta:** `games/{gameId}/players/{playerId}`
+**No usar subcolección** `games/{gameId}/players/` en implementaciones MVP (ver readme.md §3).
 
 | Campo | Tipo | Obligatorio | Descripción |
 |-------|------|-------------|-------------|
-| `userId` | string | sí | Referencia lógica a `users/{userId}` |
-| `displayName` | string | no | Copia denormalizada para UI sin leer `users` |
-| `seatOrder` | number | no | Orden en mesa *(TBD)* |
-| `totalScore` | number | no | Puntuación acumulada en la partida |
-| `isHost` | boolean | no | Si coincide con `games.hostId` |
-| `joinedAt` | timestamp | sí | Alta en la partida |
-| `leftAt` | timestamp | no | Abandono anticipado *(TBD)* |
-| `status` | string | no | `active`, `left` *(TBD)* |
-
-**Relaciones:**
-
-- **N:1** → documento padre `games/{gameId}`.
-- **N:1** → `users/{userId}` vía campo `userId`.
-
-**Alternativa de modelado *(TBD)*:** lista embebida `playerIds` en `games` para partidas muy pequeñas; las subcolecciones escalan mejor para puntuaciones y permisos por jugador.
+| `id` | string | sí | Identificador del jugador en la partida |
+| `displayName` | string | sí | Nombre visible en mesa |
+| `userId` | string | no | `users/{uid}` si registrado; null si invitado |
+| `isGuest` | boolean | sí | true si se añadió por nombre libre |
+| `seatOrder` | number | sí | Orden en mesa (0…n−1) |
+| `totalScore` | number | sí | Puntuación acumulada al cierre |
+| `joinedAt` | timestamp | sí | Alta en el roster |
 
 **Reglas de negocio *(borrador)*:**
 
 - Un mismo `userId` no debería aparecer dos veces en la misma partida (validar en use case + reglas).
-- Máximo de jugadores según `games.maxPlayers` *(TBD)*.
+- `players.length` debe coincidir con `playerCount` antes de iniciar.
 
 ---
 
@@ -164,13 +169,29 @@ Una **ronda** (mano) dentro de la partida: apuestas, bazas, puntuación parcial,
 | Campo | Tipo | Obligatorio | Descripción |
 |-------|------|-------------|-------------|
 | `roundNumber` | number | sí | Orden secuencial (1, 2, 3…) |
-| `dealerPlayerId` | string | no | `playerId` del mano / repartidor *(TBD)* |
-| `status` | string | sí | `open`, `scoring`, `closed` *(TBD)* |
-| `bid` | map / number | no | Apuesta de la ronda *(estructura TBD)* |
-| `tricks` | map / array | no | Bazas por jugador *(TBD)* |
-| `scoresDelta` | map | no | Puntos de la ronda por `playerId` |
+| `cardsInRound` | number | sí | Cartas repartidas a cada jugador en esta ronda |
+| `dealerPlayerId` | string | sí | `playerId` del repartidor de la ronda |
+| `status` | string | sí | `bidding`, `playing`, `closed` (MVP local) |
+| `bids` | map\<string, number\> | no | Apuestas por `playerId` (`playerId` → entero 0…`cardsInRound`) |
+| `tricks` | map\<string, number\> | no | Bazas reales por `playerId` |
+| `scoresDelta` | map\<string, number\> | no | Puntos de la ronda por `playerId` |
 | `createdAt` | timestamp | sí | Apertura de ronda |
 | `closedAt` | timestamp | no | Cierre y reparto de puntos |
+
+**Ejemplo de `bids` (map):**
+
+```json
+{
+  "playerId_abc": 3,
+  "playerId_def": 2,
+  "playerId_ghi": 1,
+  "playerId_jkl": 0
+}
+```
+
+**Persistencia local (Drift):** columna `bids` como `TEXT` serializado con `MapStringIntConverter` (`Map<String, int>`).
+
+**Alineación Firestore:** el campo se documenta como `bids` (map); en borradores anteriores aparecía como `bid` singular — usar `bids` en implementaciones nuevas.
 
 **Ejemplo de `scoresDelta` (map):**
 
@@ -190,6 +211,17 @@ Una **ronda** (mano) dentro de la partida: apuestas, bazas, puntuación parcial,
 
 - `roundNumber` único por partida (transacción al crear la siguiente ronda).
 - No modificar rondas `closed` salvo corrección admin *(TBD)*.
+- **Solo la ronda actual es editable (LPT-12):** las correcciones de datos (apuestas y bazas) solo se permiten mientras la ronda no está `closed`. Las rondas `closed` no son editables desde la UI.
+- **Corrección de apuestas en fase `playing` (LPT-12):** el organizador puede reeditar cualquier apuesta tras cerrar apuestas (`CorrectBidsUseCase`). Se re-valida la restricción del repartidor: si tras la corrección `sum(bids) == cardsInRound`, la corrección se persiste pero **se bloquea el avance** a la introducción de bazas hasta que el repartidor ajuste su apuesta.
+- **Corrección de bazas antes de cerrar (LPT-12):** durante la fase `playing`, las bazas se editan libremente como borrador en la pantalla de bazas y solo se persisten (`tricks`, `scoresDelta`, `totalScore`) al confirmar el cierre; recalcular la suma y los puntos ocurre en ese momento.
+- **Restricción del repartidor (apuestas):** la suma total de `bids` **no puede igualar** `cardsInRound`. El repartidor apuesta siempre el último; al llegar su turno, el **número prohibido** es `cardsInRound - sum(bids de los demás)`. Si intenta apostar ese valor, se bloquea la confirmación.
+- Orden de apuestas: jugador siguiente al repartidor en `seatOrder` primero; repartidor último.
+- Transición de estado al cerrar apuestas: `bidding` → `playing`.
+- Transición al cerrar bazas: `playing` → `closed`; se persisten `tricks`, `scoresDelta` y `closedAt`.
+- **Reglas de puntuación por ronda** (calculadas al cerrar, ver LPT-11):
+  - Si `tricks[playerId] == bids[playerId]`: `scoresDelta = 10 + (5 × tricks)`.
+  - Si difieren: `scoresDelta = -5 × |bids[playerId] - tricks[playerId]|`.
+  - `players.totalScore` se incrementa con `scoresDelta` de la ronda (persistencia local Drift; Firestore en sync futuro).
 
 ---
 
@@ -278,7 +310,9 @@ Detalle de reglas en implementación; este documento solo fija intención.
 ## 11. Checklist al cerrar el modelo definitivo
 
 - [ ] Confirmar valores de `status` en `games`, `players`, `rounds`
-- [ ] Definir estructura de `settings`, `bid`, `tricks`
+- [ ] Definir estructura de `settings`
+- [x] Definir estructura de `tricks` y `scoresDelta` (map `playerId` → entero; ver §6 y reglas LPT-11)
+- [x] Definir estructura de `bids` (map `playerId` → entero; ver §6)
 - [ ] Decidir `DocumentReference` vs `string` para enlaces a `users`
 - [ ] Actualizar `firebase-data-access.yml` y `firestore.rules`
 - [ ] Añadir índices medidos en consola Firebase

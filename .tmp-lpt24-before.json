@@ -1,0 +1,96 @@
+﻿{
+    "changelog":  null,
+    "editmeta":  null,
+    "expand":  "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "fields":  {
+                   "comment":  {
+                                   "comments":  [
+
+                                                ],
+                                   "maxResults":  0,
+                                   "self":  "https://jira-prod-eu-47-3.prod.atl-paas.net/rest/api/3/issue/10132/comment",
+                                   "startAt":  0,
+                                   "total":  0
+                               },
+                   "description":  {
+                                       "content":  [
+                                                       {
+                                                           "content":  [
+                                                                           {
+                                                                               "text":  "Como organizador, quiero poder cancelar una partida en curso en cualquier momento, para poder terminar la sesi├│n o empezar una partida nueva sin tener que completar todas las rondas.\n\nContexto y alcance\n\nSurge durante la sesi├│n de dise├▒o de wireframes del Bloque 2 (ciclo de ronda). No exist├¡a ning├║n ticket que cubriera el abandono de una partida activa (status == in_progress o setup). Decisi├│n de producto: cancelar una partida NO la guarda en ning├║n historial, ni local ni en nube.\n\nIncluye: bot├│n/acci├│n \"Cancelar partida\" accesible desde cualquier pantalla del flujo de partida activa (setup de jugadores, orden de mesa, apuestas, juego, bazas, resultado de ronda). Di├ílogo de confirmaci├│n antes de ejecutar. Borrado completo del Game y sus Round asociados del almacenamiento local (Drift). Navegaci├│n a Home tras confirmar.\n\nExcluye: guardar la partida cancelada como \"incompleta\" en el historial (decisi├│n de producto: no se guarda nada). Deshacer la cancelaci├│n. Cancelaci├│n de partidas ya finalizadas (no aplica, status == finished no es cancelable).\n\nCriterios de aceptaci├│n\n\n1. El bot├│n \"Cancelar partida\" est├í visible/accesible desde cualquier pantalla mientras el Game tiene status == setup o status == in_progress.\n2. Al pulsarlo, se muestra un di├ílogo de confirmaci├│n con texto claro indicando que se perder├í todo el progreso de la partida.\n3. Si el usuario confirma, se elimina el documento Game y todos los Round asociados del almacenamiento local (Drift). No se escribe nada en Firestore.\n4. Tras confirmar, la app navega a Home.\n5. Si el usuario cancela el di├ílogo de confirmaci├│n, no ocurre ning├║n cambio y permanece en la pantalla actual.\n6. La operaci├│n funciona sin conexi├│n y sin requerir cuenta (coherente con el resto del flujo de partida).\n\nImpacto en modelo de datos\n\nNinguno nuevo: usa el borrado est├índar de un registro Game (y sus Round hijos por cascada o borrado expl├¡cito) ya existente en el esquema Drift definido en LPT-23. No requiere nuevo estado en Game.status (no existe estado \"cancelada\"; la partida simplemente deja de existir).\n\nImpacto en Security Rules\n\nNinguno (operaci├│n 100% local, no llega a Firestore).\n\nArquitectura y ficheros sugeridos (lib/features/game/)\n\nlib/features/game/domain/usecases/cancel_game_usecase.dart\nlib/features/game/presentation/widgets/cancel_game_dialog.dart\nlib/features/game/presentation/widgets/cancel_game_button.dart (o integrado en AppBar de las p├íginas del flujo de partida)\n\nDefinici├│n de hecho\n\n- Test unitario: cancel_game_usecase_test.dart, verifica borrado de Game y Rounds asociados en base de datos en memoria.\n- Test widget: di├ílogo de confirmaci├│n se muestra y solo borra si se confirma.\n- flutter analyze sin errores.\n\nNota de backlog relacionada: \"Repetir ronda ya cerrada\" (acceso desde \"Ronda anterior\" en pantalla de Apuestas) se descarta del alcance de Entrega 2 y queda anotado en backlog-futuro.md como Should-Have.\n",
+                                                                               "type":  "text"
+                                                                           }
+                                                                       ],
+                                                           "type":  "paragraph"
+                                                       }
+                                                   ],
+                                       "type":  "doc",
+                                       "version":  1
+                                   },
+                   "issuetype":  {
+                                     "avatarId":  10316,
+                                     "description":  "Subtasks track small pieces of work that are part of a larger task.",
+                                     "entityId":  "44f4d842-399c-40de-84c4-b8c7178614ac",
+                                     "hierarchyLevel":  -1,
+                                     "iconUrl":  "https://jira-prod-eu-47-3.prod.atl-paas.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10316?size=medium",
+                                     "id":  "10045",
+                                     "name":  "Subtask",
+                                     "self":  "https://jira-prod-eu-47-3.prod.atl-paas.net/rest/api/3/issuetype/10045",
+                                     "subtask":  true
+                                 },
+                   "labels":  [
+                                  "moscow-must"
+                              ],
+                   "parent":  {
+                                  "fields":  {
+                                                 "issuetype":  {
+                                                                   "avatarId":  10315,
+                                                                   "description":  "",
+                                                                   "entityId":  "e8379336-29f8-4bb3-88aa-4f6918ad7e1f",
+                                                                   "hierarchyLevel":  0,
+                                                                   "iconUrl":  "https://jira-prod-eu-47-3.prod.atl-paas.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10315?size=medium",
+                                                                   "id":  "10047",
+                                                                   "name":  "Historia",
+                                                                   "self":  "https://jira-prod-eu-47-3.prod.atl-paas.net/rest/api/3/issuetype/10047",
+                                                                   "subtask":  false
+                                                               },
+                                                 "priority":  {
+                                                                  "iconUrl":  "https://jira-prod-eu-47-3.prod.atl-paas.net/images/icons/priorities/high_new.svg",
+                                                                  "id":  "2",
+                                                                  "name":  "High",
+                                                                  "self":  "https://jira-prod-eu-47-3.prod.atl-paas.net/rest/api/3/priority/2"
+                                                              },
+                                                 "status":  {
+                                                                "description":  "",
+                                                                "iconUrl":  "https://jira-prod-eu-47-3.prod.atl-paas.net/images/icons/statuses/generic.png",
+                                                                "id":  "10041",
+                                                                "name":  "Por hacer",
+                                                                "self":  "https://jira-prod-eu-47-3.prod.atl-paas.net/rest/api/3/status/10041",
+                                                                "statusCategory":  {
+                                                                                       "colorName":  "blue-gray",
+                                                                                       "id":  2,
+                                                                                       "key":  "new",
+                                                                                       "name":  "Por hacer",
+                                                                                       "self":  "https://jira-prod-eu-47-3.prod.atl-paas.net/rest/api/3/statuscategory/2"
+                                                                                   }
+                                                            },
+                                                 "summary":  "Reordenar jugadores y elegir primer repartidor"
+                                             },
+                                  "id":  "10051",
+                                  "key":  "LPT-7",
+                                  "self":  "https://jira-prod-eu-47-3.prod.atl-paas.net/rest/api/3/issue/10051"
+                              },
+                   "summary":  "Cancelar partida en curso (sin guardar en historial)"
+               },
+    "fieldsToInclude":  null,
+    "id":  "10132",
+    "key":  "LPT-24",
+    "names":  null,
+    "operations":  null,
+    "properties":  null,
+    "renderedFields":  null,
+    "schema":  null,
+    "self":  "https://jira-prod-eu-47-3.prod.atl-paas.net/rest/api/3/issue/10132",
+    "transitions":  null,
+    "versionedRepresentations":  null
+}

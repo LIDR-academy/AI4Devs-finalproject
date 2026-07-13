@@ -61,38 +61,44 @@ firestore:
       mapsFromModel: Game
       operations:
         listByHost:
-          sdk: collection('games').where('hostId', isEqualTo: uid).orderBy('createdAt', descending: true)
+          sdk: collection('games').where('hostId', isEqualTo: uid).orderBy('finishedAt', descending: true)
+        listByParticipant:
+          sdk: collection('games').where('participantIds', arrayContains: uid).where('status', isEqualTo: 'finished').orderBy('finishedAt', descending: true)
         listActive:
           sdk: collection('games').where('status', isEqualTo: 'in_progress')  # índice requerido
         getById:
           sdk: doc('games/{gameId}').get()
-        create:
-          sdk: collection('games').add({ hostId, status: 'lobby', createdAt: serverTimestamp, ... })
+        syncFinishedGame:
+          description: |
+            Subida atómica al finalizar partida (LPT-20). Escribe games/{gameId} con players[] embebido
+            y subcolección rounds/{roundNumber}. Usar WriteBatch; cloudGameId local == gameId.
+          sdk: |
+            FirebaseFirestore.batch()
+              ..set(doc('games/{gameId}'), { hostId, participantIds, status: 'finished', players: [...], ... })
+              ..set(doc('games/{gameId}/rounds/{roundNumber}'), { roundNumber, bids, tricks, scoresDelta, status: 'closed', ... })
+              ..commit()
         update:
           sdk: doc('games/{gameId}').update(...)
         watchGame:
           sdk: doc('games/{gameId}').snapshots()
-      subcollections:
+      embeddedFields:
         players:
-          path: games/{gameId}/players/{playerId}
-          mapsFromModel: Player
-          operations:
-            list:
-              sdk: collection('games/{gameId}/players').orderBy('seatOrder')
-            add:
-              sdk: collection('games/{gameId}/players').add({ userId, joinedAt: serverTimestamp, ... })
-            updateScore:
-              sdk: doc('.../players/{playerId}').update({ totalScore: ... })
+          description: Roster embebido en el documento games (no subcolección). Ver readme.md §3.
+          fields: [id, displayName, userId, isGuest, seatOrder, totalScore, joinedAt]
+        participantIds:
+          description: userId de jugadores registrados; denormalizado para consultas array-contains
+      subcollections:
         rounds:
-          path: games/{gameId}/rounds/{roundId}
+          path: games/{gameId}/rounds/{roundNumber}
           mapsFromModel: Round
+          documentIdNote: roundNumber como string (p. ej. "1", "22")
           operations:
             list:
               sdk: collection('games/{gameId}/rounds').orderBy('roundNumber')
             create:
-              sdk: collection('games/{gameId}/rounds').add({ roundNumber, status: 'open', ... })
+              sdk: doc('games/{gameId}/rounds/{roundNumber}').set({ roundNumber, status: 'closed', ... })
             close:
-              sdk: doc('.../rounds/{roundId}').update({ status: 'closed', closedAt: serverTimestamp, scoresDelta: ... })
+              sdk: doc('games/{gameId}/rounds/{roundNumber}').update({ status: 'closed', closedAt: serverTimestamp, scoresDelta: ... })
 
 errors:
   mapping:

@@ -1,25 +1,28 @@
 ## Índice
 
-0. [Ficha del proyecto](#0-ficha-del-proyecto)
-1. [Descripción general del producto](#1-descripción-general-del-producto)
-2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
-3. [Modelo de datos](#3-modelo-de-datos)
-4. [Especificación de la API](#4-especificación-de-la-api)
-5. [Historias de usuario](#5-historias-de-usuario)
-6. [Tickets de trabajo](#6-tickets-de-trabajo)
-7. [Pull requests](#7-pull-requests)
+1. [Ficha del proyecto](#0-ficha-del-proyecto)
+2. [Descripción general del producto](#1-descripción-general-del-producto)
+3. [Arquitectura del sistema](#2-arquitectura-del-sistema)
+4. [Modelo de datos](#3-modelo-de-datos)
+5. [Especificación de la API](#4-especificación-de-la-api)
+6. [Historias de usuario](#5-historias-de-usuario)
+7. [Tickets de trabajo](#6-tickets-de-trabajo)
+8. [Pull requests](#7-pull-requests)
 
 ---
 
 ## 0. Ficha del proyecto
 
 ### **0.1. Tu nombre completo:**
+
   Juan Miguel Grau Sánchez
 
 ### **0.2. Nombre del proyecto:**
+
 La Pocha Tracker
 
 ### **0.3. Descripción breve del proyecto:**
+
 App móvil Flutter para llevar el marcador del juego de cartas español La Pocha. 
 Gestiona la secuencia de rondas, calcula puntos automáticamente y valida la restricción del repartidor. 
 Funciona offline y permite sincronizar el historial de partidas en la nube entre jugadores registrados.
@@ -28,12 +31,15 @@ Funciona offline y permite sincronizar el historial de partidas en la nube entre
 
 > Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/).
 
+
+
 ### 0.5. URL o archivo comprimido del repositorio
 
-<https://github.com/juanmigrau/AI4Devs-finalproject/tree/finalproject-entrega1-JMGS>
-
+[https://github.com/juanmigrau/AI4Devs-finalproject/tree/finalproject-entrega2-JMGS](https://github.com/juanmigrau/AI4Devs-finalproject/tree/finalproject-entrega2-JMGS)
 
 ---
+
+
 
 ## 1. Descripción general del producto
 
@@ -44,6 +50,8 @@ Funciona offline y permite sincronizar el historial de partidas en la nube entre
 - **Para el organizador:** elimina el cálculo manual de puntos y valida la restricción del repartidor en tiempo real, reduciendo conflictos y errores.
 - **Para todos los jugadores:** el estado de la partida (apuestas, bazas disponibles, ranking) es visible y legible sin interpretar un papel lleno de tachones.
 - **Para jugadores registrados:** historial de partidas compartido automáticamente en la nube entre participantes, sin pasos adicionales al finalizar.
+
+
 
 ### **1.1. Objetivo**
 
@@ -59,20 +67,250 @@ Digitalizar la experiencia de marcador de La Pocha para grupos de 3 a 8 jugadore
 - Historial unificado (local y nube) con detalle ronda a ronda y función «repetir partida».
 - Registro opcional (email/contraseña); subida automática al finalizar y distribución a participantes registrados.
 
+
+
 ### Flujo E2E prioritario
 
 El organizador crea una partida nueva, define jugadores (nombre libre y/o usuarios registrados) y designa el primer repartidor. La app genera la secuencia de rondas; en cada una recoge apuestas en orden (repartidor al final), muestra bazas disponibles y número prohibido, y tras el juego físico registra las bazas reales para calcular el resultado. Al terminar la última ronda se muestra el ranking final; si el organizador tiene cuenta, la partida se sube a la nube y los jugadores registrados la ven en su historial sin acción adicional.
 
 ### **1.3. Diseño y experiencia de usuario:**
 
-> Proporciona imágenes y/o videotutorial mostrando la experiencia del usuario desde que aterriza en la aplicación, pasando por todas las funcionalidades principales.
+El diagrama siguiente documenta el flujo de navegación completo del MVP: desde
+Home hasta el ciclo de ronda (apuestas → juego → bazas → resultado), pasando
+por la corrección de datos y el cierre de partida con sincronización opcional.
+Diseñado en sesión de arquitectura previa a la implementación de los tickets
+del Bloque 1 y 2 (ver `listOfPrompts.md`).
+
+```mermaid
+flowchart TB
+    HOME["Home<br/>Crear · Historial · Cuenta"]
+
+    CREAR["Crear partida<br/>LPT-5"]
+    HIST1["Historial<br/>LPT-15"]
+    AUTH["Login / registro<br/>LPT-19"]
+
+    HOME --> CREAR
+    HOME --> HIST1
+    HOME --> AUTH
+
+    JUGADORES["Añadir jugadores<br/>LPT-6"]
+    SETUP["Orden y repartidor<br/>LPT-7"]
+
+    CREAR --> JUGADORES --> SETUP
+
+    subgraph ROUND["Ciclo de ronda — editable mientras status != closed"]
+        direction TB
+        APUESTAS["Apuestas<br/>LPT-9"]
+        JUEGO["Pantalla de juego<br/>LPT-10"]
+        BAZAS["Bazas reales<br/>LPT-11"]
+        RESULTADO_R["Resultado de ronda<br/>LPT-14 · cierra status"]
+        CORREC["Corrección<br/>LPT-12 · hasta cerrar ronda"]
+
+        APUESTAS --> JUEGO --> BAZAS --> RESULTADO_R
+        APUESTAS -.-> CORREC
+        JUEGO -.-> CORREC
+        BAZAS -.-> CORREC
+        CORREC -.-> APUESTAS
+        CORREC -.-> JUEGO
+        CORREC -.-> BAZAS
+    end
+
+    SETUP --> APUESTAS
+    RESULTADO_R -->|"siguiente ronda (repartidor rota)<br/>o última ronda"| RESULTADO_F
+
+    RESULTADO_F["Resultado final<br/>Ranking de partida"]
+    CTA["CTA registro<br/>solo si no hay sesión"]
+
+    RESULTADO_F -.->|"sin sesión"| CTA
+    RESULTADO_F -->|"con sesión y red:<br/>sube a Firestore en background<br/>LPT-20 / LPT-21"| HIST2
+
+    HIST2["Historial<br/>LPT-15"]
+    HIST2 --> HOME
+```
+
+
+
+**Notas de diseño:**
+
+- **Home** es la pantalla mínima del MVP: acceso a crear partida, ver historial
+y gestionar cuenta. La app funciona igual con o sin sesión (PRD §6), por lo
+que el acceso a cuenta es discreto, no un bloqueo de entrada.
+- **Registro contextual:** el CTA de registro aparece al finalizar una partida
+sin sesión activa, como invitación a guardar el historial en la nube — nunca
+como requisito antes de jugar.
+- **Corrección de datos (LPT-12):** disponible desde cualquiera de las tres
+pantallas activas del ciclo de ronda (apuestas, juego, bazas) mientras
+`round.status != closed`. Al cerrarse la ronda (tras calcular `scoresDelta`
+en LPT-11/14), la corrección puntual deja de estar disponible; solo cabe
+repetir la ronda completa (LPT-13, post-MVP de esta entrega).
+- **Pantallas pendientes de wireframe visual** (Stitch/Figma): Home, Crear
+partida, Añadir jugadores, Orden y repartidor, Apuestas, Pantalla de juego,
+Bazas reales, Resultado de ronda, Resultado final, Login/registro, Historial.
+
+
 
 ### **1.4. Instrucciones de instalación:**
-> Documenta de manera precisa las instrucciones para instalar y poner en marcha el proyecto en local (librerías, backend, frontend, servidor, base de datos, migraciones y semillas de datos, etc.)
+
+
+
+### **1.4. Instrucciones de instalación:**
+
+
+
+#### Requisitos previos
+
+- Flutter SDK 3.x ([flutter.dev/docs/get-started/install](https://flutter.dev/docs/get-started/install))
+- Dart SDK (incluido con Flutter)
+- Android Studio o VS Code con extensión Flutter/Dart
+- Node.js + Firebase CLI: `npm install -g firebase-tools`
+- Cuenta de Firebase con acceso al proyecto `la-pocha-9d070`
+- Java 17 (requerido por Gradle — usar Android Studio JBR o instalar independientemente)
+
+
+
+#### 1. Clonar el repositorio
+
+```bash
+git clone https://github.com/juanmigrau/AI4Devs-finalproject.git
+cd AI4Devs-finalproject
+git checkout feature-entrega2-JMGS
+```
+
+
+
+#### 2. Instalar dependencias Flutter
+
+```bash
+cd app
+flutter pub get
+```
+
+
+
+#### 3. Configurar Firebase
+
+Los ficheros `firebase_options.dart` y `google-services.json` están en
+`.gitignore` por seguridad. Hay que regenerarlos localmente:
+
+```bash
+# Autenticarse en Firebase (solo la primera vez)
+firebase login
+
+# Regenerar configuración para Android e iOS
+flutterfire configure --project=la-pocha-9d070 --platforms=android,ios --yes
+```
+
+Esto genera automáticamente:
+
+- `app/lib/firebase_options.dart`
+- `app/android/app/google-services.json`
+- `app/ios/Runner/GoogleService-Info.plist`
+
+> **Nota:** Ambos ficheros deben tener el mismo `apiKey` para evitar el error
+> `[core/duplicate-app]`. Si aparece ese error, vuelve a ejecutar
+> `flutterfire configure`.
+
+
+
+#### 4. Generar código de Drift (SQLite)
+
+```bash
+cd app
+dart run build_runner build --delete-conflicting-outputs
+```
+
+Esto regenera `app_database.g.dart` a partir del esquema de tablas definido.
+
+#### 5. Ejecutar la app
+
+```bash
+# En dispositivo físico Android (modo debug)
+flutter run
+
+# En emulador Android
+flutter run -d emulator-5554
+
+# Con secuencia de rondas reducida para testing (6 rondas en vez de 22)
+# Primero editar app/lib/core/config/debug_config.dart:
+# const bool kShortGameMode = kDebugMode && true;
+flutter run
+```
+
+
+
+#### 6. Ejecutar tests
+
+```bash
+cd app
+
+# Tests unitarios y de BLoC
+flutter test
+
+# Test de integración contra Firebase real (requiere credenciales)
+flutter test test/integration/game_sync_firestore_test.dart \
+  --dart-define=TEST_FIREBASE_EMAIL=tu@email.com \
+  --dart-define=TEST_FIREBASE_PASSWORD=tupassword
+
+# Análisis estático
+flutter analyze
+```
+
+
+
+#### 7. Desplegar reglas Firestore (opcional)
+
+Solo necesario si se modifican `firestore.rules` o `firestore.indexes.json`:
+
+```bash
+firebase deploy --only firestore:rules,firestore:indexes
+```
+
+
+
+#### Distribución (APK de release)
+
+La distribución del MVP es un APK instalado directamente en dispositivo
+Android, sin pasar por tiendas de aplicaciones. Para generar el APK
+de release manualmente:
+
+```bash
+cd app
+flutter build apk --release
+# El APK se genera en build/app/outputs/flutter-apk/app-release.apk
+```
+
+Para instalarlo en un dispositivo Android con depuración USB habilitada:
+
+```bash
+flutter install
+# O manualmente: adb install build/app/outputs/flutter-apk/app-release.apk
+```
+
+> **Nota:** En dispositivos con MIUI/HyperOS (Xiaomi) puede ser necesario
+> habilitar "Instalar apps de origen desconocido" y disponer de una SIM
+> activa para la depuración inalámbrica. La depuración USB funciona sin
+> estas restricciones.
 
 ---
 
+
+
+### Decisiones de arquitectura (ADR)
+
+
+| Decisión                  | Opción elegida | Alternativa descartada | Motivo                                                                                                                                                                                                                                    |
+| ------------------------- | -------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Estado inicial de partida | `setup`        | `lobby`                | "Lobby" connota sala de espera multijugador (varios dispositivos); La Pocha es single-device. `setup` refleja el flujo real: configuración de jugadores y repartidor antes de empezar.                                                    |
+| Almacenamiento local      | Drift (SQLite) | Hive                   | Drift ofrece tipado fuerte, migraciones formales y BD en memoria para tests de repositorio. La tabla `rounds` con FK `gameId` e índice `roundNumber` replica exactamente la subcolección Firestore, simplificando los mappers en `data/`. |
+
+
+---
+
+
+
 ## 2. Arquitectura del Sistema
+
+
 
 ### **2.1. Diagrama de arquitectura**
 
@@ -130,6 +368,8 @@ flowchart TB
     end
 ```
 
+
+
 **Escenario offline.** El organizador crea y juega la partida completa sin conexión. Los eventos de la UI llegan al BLoC, que delega en use cases de dominio (cálculo de rondas, validación del repartidor, puntuaciones). Los repositorios persisten y leen exclusivamente del almacenamiento local: partida en curso, favoritos e historial propio.
 
 **Escenario online.** Con conectividad y usuario autenticado, al finalizar la partida el repositorio escribe en Firestore el documento `games/{gameId}` (con el roster `players[]` embebido) y la subcolección `rounds`, y actualiza el historial local. El login y la búsqueda de usuarios registrados pasan por Firebase Authentication y la colección `users`. Los participantes registrados reciben la partida en su historial mediante lecturas de Firestore gobernadas por Security Rules.
@@ -144,18 +384,22 @@ flowchart TB
 
 ### **2.2. Descripción de componentes principales**
 
-| Componente | Tecnología | Responsabilidad |
-|------------|------------|-----------------|
-| **App Flutter** | Flutter (Dart ^3.12), Material/Cupertino | Cliente único para Android e iOS; host de la partida en un solo dispositivo. |
-| **Presentation** | `flutter_bloc`, `equatable`, widgets Flutter | Pantallas, componentes reutilizables, BLoCs (`*Event`, `*State`), navegación (`go_router` cuando aplique). |
-| **Domain** | Dart puro | Entidades (`Game`, `Round`, `Player`, `User`), use cases (`CreateGame`, `SubmitBids`, `SyncFinishedGame`…), interfaces de repositorio. Sin dependencias de Flutter ni Firebase. |
-| **Data — local** | Datasource + local storage (technology to be confirmed in Entrega 2) | Partidas en curso, historial local, favoritos; fuente de verdad durante el juego offline. |
-| **Data — remota** | FlutterFire: `firebase_core`, `cloud_firestore`, `firebase_auth` | Autenticación, perfiles `users/{uid}`, partidas `games/{gameId}` con roster `players[]` embebido y subcolección `rounds`. |
-| **Repositorios** | Implementaciones en `data/repositories/` | Orquestan local y remoto: leen/escriben local siempre; suben a Firestore al cerrar partida si hay sesión; mapean DTOs ↔ entidades de dominio. |
-| **Firebase Authentication** | Email y contraseña | Registro opcional, login, `authStateChanges` para guards de navegación y subida automática al finalizar. |
-| **Cloud Firestore** | Base de datos documental | Persistencia en nube e historial compartido entre jugadores registrados vinculados a la partida. |
-| **Firebase CLI / FlutterFire** | `firebase-tools`, `flutterfire configure` | Proyecto `la-pocha-9d070`, `firebase_options.dart`, despliegue de reglas e índices. |
-| **Inyección de dependencias** | Constructor / `get_it` o `Provider` en raíz | BLoCs reciben use cases; use cases reciben interfaces de repositorio; no se inyectan datasources en presentation. |
+
+| Componente                     | Tecnología                                                       | Responsabilidad                                                                                                                                                                                                                                                                                                                                                                 |
+| ------------------------------ | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **App Flutter**                | Flutter (Dart ^3.12), Material/Cupertino                         | Cliente único para Android e iOS; host de la partida en un solo dispositivo.                                                                                                                                                                                                                                                                                                    |
+| **Presentation**               | `flutter_bloc`, `equatable`, widgets Flutter                     | Pantallas, componentes reutilizables, BLoCs (`*Event`, `*State`), navegación (`go_router` cuando aplique).                                                                                                                                                                                                                                                                      |
+| **Domain**                     | Dart puro                                                        | Entidades (`Game`, `Round`, `Player`, `User`), use cases (`CreateGame`, `SubmitBids`, `SyncFinishedGame`…), interfaces de repositorio. Sin dependencias de Flutter ni Firebase.                                                                                                                                                                                                 |
+| **Data — local**               | Drift (SQLite) — `drift` + `drift_flutter_libs`                  | Partidas en curso, historial local, favoritos; fuente de verdad durante el juego offline. Tablas: `games` (con columnas JSON para `players[]` y `roundSequence[]`), `rounds` (FK `gameId`, índice compuesto `gameId + roundNumber`), `favorites` (columna JSON `items[]`). Campos tipo map (`bids`, `tricks`, `scoresDelta`) serializados como `TEXT` mediante `TypeConverter`. |
+| **Data — remota**              | FlutterFire: `firebase_core`, `cloud_firestore`, `firebase_auth` | Autenticación, perfiles `users/{uid}`, partidas `games/{gameId}` con roster `players[]` embebido y subcolección `rounds`.                                                                                                                                                                                                                                                       |
+| **Repositorios**               | Implementaciones en `data/repositories/`                         | Orquestan local y remoto: leen/escriben local siempre; suben a Firestore al cerrar partida si hay sesión; mapean DTOs ↔ entidades de dominio.                                                                                                                                                                                                                                   |
+| **Firebase Authentication**    | Email y contraseña                                               | Registro opcional, login, `authStateChanges` para guards de navegación y subida automática al finalizar.                                                                                                                                                                                                                                                                        |
+| **Cloud Firestore**            | Base de datos documental                                         | Persistencia en nube e historial compartido entre jugadores registrados vinculados a la partida.                                                                                                                                                                                                                                                                                |
+| **Firebase CLI / FlutterFire** | `firebase-tools`, `flutterfire configure`                        | Proyecto `la-pocha-9d070`, `firebase_options.dart`, despliegue de reglas e índices.                                                                                                                                                                                                                                                                                             |
+| **Inyección de dependencias**  | Constructor / `get_it` o `Provider` en raíz                      | BLoCs reciben use cases; use cases reciben interfaces de repositorio; no se inyectan datasources en presentation.                                                                                                                                                                                                                                                               |
+
+
+
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
@@ -179,7 +423,7 @@ app/lib/
     ├── game/
     │   ├── presentation/     # Flujo de partida y rondas, GameBloc, RoundBloc
     │   ├── domain/           # Entidades Game/Round, use cases de marcador
-    │   └── data/             # local storage (Entrega 2) + Firestore datasources, mappers
+    │   └── data/             # Drift datasource + Firestore datasources, mappers
     ├── players/
     │   ├── presentation/     # Selección de jugadores, favoritos
     │   ├── domain/
@@ -194,12 +438,14 @@ app/lib/
         └── data/
 ```
 
-| Carpeta | Descripción |
-|---------|-------------|
-| `core/` | Infraestructura compartida: routing, tema, DI y errores; sin lógica de negocio de features. |
-| `features/<feature>/presentation/` | UI y BLoC; escucha use cases vía eventos; no importa `cloud_firestore` ni `firebase_auth`. |
-| `features/<feature>/domain/` | Reglas de negocio y contratos; testeable sin emulador ni dispositivo. |
-| `features/<feature>/data/` | Única capa con SDK Firebase y acceso a local storage (technology to be confirmed in Entrega 2); modelos DTO y mappers. |
+
+| Carpeta                            | Descripción                                                                                            |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `core/`                            | Infraestructura compartida: routing, tema, DI y errores; sin lógica de negocio de features.            |
+| `features/<feature>/presentation/` | UI y BLoC; escucha use cases vía eventos; no importa `cloud_firestore` ni `firebase_auth`.             |
+| `features/<feature>/domain/`       | Reglas de negocio y contratos; testeable sin emulador ni dispositivo.                                  |
+| `features/<feature>/data/`         | Única capa con SDK Firebase y Drift (SQLite); modelos DTO, mappers y `TypeConverter` para campos JSON. |
+
 
 Convención de nombres: `game_bloc.dart`, `game_event.dart`, `game_state.dart`, `game_repository.dart` (interfaz en domain, impl en data).
 
@@ -238,6 +484,8 @@ flowchart LR
     FB_PROD --> RULES
 ```
 
+
+
 **Infraestructura Firebase**
 
 - **Proyecto:** `la-pocha-9d070` (Android, iOS y web registrados en consola).
@@ -251,7 +499,7 @@ flowchart LR
 La distribución del MVP es un **APK de release** publicado en **GitHub Releases**, no en tiendas de aplicaciones.
 
 1. **Preparación local (desarrollo):** `cd app && flutter pub get`; `flutterfire configure` si cambia el proyecto Firebase; `flutter analyze` y `flutter test`.
-2. **CI/CD:** al hacer **merge a `main`**, un workflow de **GitHub Actions** ejecuta `flutter build apk --release` y sube el APK como artefacto de un **GitHub Release** con URL pública de descarga.
+2. **CI/CD:** al hacer **merge a** `main`, un workflow de **GitHub Actions** ejecuta `flutter build apk --release` y sube el APK como artefacto de un **GitHub Release** con URL pública de descarga.
 3. **Instalación:** los usuarios descargan el APK desde la página de Releases del repositorio e instalan la app en Android (habilitando «orígenes desconocidos» si el dispositivo lo requiere).
 4. **Firebase backend:** `firebase deploy --only firestore:rules,firestore:indexes` tras cambios de esquema o permisos (manual o pipeline acordado por el equipo).
 
@@ -259,15 +507,17 @@ No hay servidor Node/Express ni base de datos relacional: el backend es Firebase
 
 ### **2.5. Seguridad**
 
-| Área | Práctica |
-|------|----------|
-| **Firebase Authentication** | Identidad centralizada; `userId == Auth.uid` en perfiles Firestore; cierre de sesión y refresco de token en capa `data`, no solo en UI. |
+
+| Área                         | Práctica                                                                                                                                                                                                                                                                  |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Firebase Authentication**  | Identidad centralizada; `userId == Auth.uid` en perfiles Firestore; cierre de sesión y refresco de token en capa `data`, no solo en UI.                                                                                                                                   |
 | **Firestore Security Rules** | Fuente de verdad de permisos: lectura/escritura según `request.auth.uid`, rol de host (`hostId`) y pertenencia (`participantIds`) en `games`, más acceso a la subcolección `rounds`. Las reglas se versionan en `firestore.rules` y se prueban con el emulador de reglas. |
-| **Capa presentation** | No se confía en ocultar botones como única protección; toda operación sensible debe fallar en servidor si las reglas lo impiden. |
-| **Datos locales** | Partidas y favoritos en almacenamiento del dispositivo (sandbox de la app). Sin credenciales de Firebase embebidas más allá de `firebase_options.dart` (config pública de cliente). |
-| **Secretos** | No commitear cuentas de servicio ni claves privadas; `flutterfire configure` para opciones por plataforma; archivos sensibles (`firebase_options.dart`, keystores) según `.gitignore` y política del equipo. |
-| **Transporte** | TLS gestionado por los SDK de Firebase; sin API REST propia que mantener. |
-| **Tests** | Tests automatizados contra emuladores, nunca contra producción con datos reales de usuarios. |
+| **Capa presentation**        | No se confía en ocultar botones como única protección; toda operación sensible debe fallar en servidor si las reglas lo impiden.                                                                                                                                          |
+| **Datos locales**            | Partidas y favoritos en almacenamiento del dispositivo (sandbox de la app). Sin credenciales de Firebase embebidas más allá de `firebase_options.dart` (config pública de cliente).                                                                                       |
+| **Secretos**                 | No commitear cuentas de servicio ni claves privadas; `flutterfire configure` para opciones por plataforma; archivos sensibles (`firebase_options.dart`, keystores) según `.gitignore` y política del equipo.                                                              |
+| **Transporte**               | TLS gestionado por los SDK de Firebase; sin API REST propia que mantener.                                                                                                                                                                                                 |
+| **Tests**                    | Tests automatizados contra emuladores, nunca contra producción con datos reales de usuarios.                                                                                                                                                                              |
+
 
 Ejemplo de intención de regla (ilustrativo): solo el host autenticado puede crear `games/{gameId}` con `hostId == request.auth.uid`; un jugador registrado solo lee partidas donde su `uid` figura en `participantIds` o coincide con `hostId` (derivado del array embebido `players[]` al subir).
 
@@ -275,13 +525,15 @@ Ejemplo de intención de regla (ilustrativo): solo el host autenticado puede cre
 
 Estrategia alineada con TDD y `mobile-standards.mdc`:
 
-| Nivel | Qué se prueba | Herramientas | Ejemplos en La Pocha |
-|-------|----------------|--------------|----------------------|
-| **Unitarios (domain)** | Lógica pura sin I/O | `flutter test`, `package:test` | Secuencia de rondas (ascenso, plateau, descenso); cálculo de puntos; validación de restricción del repartidor; generación de bazas disponibles. |
-| **Unitarios (data)** | Mappers y repositorios con datasources mockeados | `mockito` / `mocktail`, `fake_cloud_firestore` | `GameRepositoryImpl` persiste local y delega subida a Firestore; mapeo `Game` ↔ documento Firestore. |
-| **Integración (BLoC + repository)** | Flujo evento → estado con dependencias dobladas | `bloc_test` | `GameBloc`: cerrar apuestas bloqueadas si viola restricción; `HistoryBloc`: fusionar listado local y nube. |
-| **Widget** | Renderizado e interacción aislada | `flutter_test`, `pumpWidget` | Formulario de apuestas, indicador de bazas restantes, lista de historial con icono local/nube. |
-| **E2E (flujo principal)** | Camino completo del PRD | `integration_test/`, emuladores Firebase | Organizador crea partida de 4 jugadores → 22 rondas con puntuaciones correctas → resultado final → subida a Firestore si hay cuenta → jugador vinculado ve historial. |
+
+| Nivel                               | Qué se prueba                                    | Herramientas                                   | Ejemplos en La Pocha                                                                                                                                                  |
+| ----------------------------------- | ------------------------------------------------ | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Unitarios (domain)**              | Lógica pura sin I/O                              | `flutter test`, `package:test`                 | Secuencia de rondas (ascenso, plateau, descenso); cálculo de puntos; validación de restricción del repartidor; generación de bazas disponibles.                       |
+| **Unitarios (data)**                | Mappers y repositorios con datasources mockeados | `mockito` / `mocktail`, `fake_cloud_firestore` | `GameRepositoryImpl` persiste local y delega subida a Firestore; mapeo `Game` ↔ documento Firestore.                                                                  |
+| **Integración (BLoC + repository)** | Flujo evento → estado con dependencias dobladas  | `bloc_test`                                    | `GameBloc`: cerrar apuestas bloqueadas si viola restricción; `HistoryBloc`: fusionar listado local y nube.                                                            |
+| **Widget**                          | Renderizado e interacción aislada                | `flutter_test`, `pumpWidget`                   | Formulario de apuestas, indicador de bazas restantes, lista de historial con icono local/nube.                                                                        |
+| **E2E (flujo principal)**           | Camino completo del PRD                          | `integration_test/`, emuladores Firebase       | Organizador crea partida de 4 jugadores → 22 rondas con puntuaciones correctas → resultado final → subida a Firestore si hay cuenta → jugador vinculado ve historial. |
+
 
 **Comandos habituales**
 
@@ -296,9 +548,11 @@ Los BLoCs se prueban con use cases mockeados, no con Firebase real. Los flujos E
 
 ---
 
+
+
 ## 3. Modelo de Datos
 
-El modelo sigue un enfoque **offline-first**: toda partida, ronda y favorito existe primero en el almacenamiento local del dispositivo; Firestore solo recibe copias de partidas **finalizadas** cuando el organizador tiene sesión y conectividad. El esquema local **replica** la estructura de Firestore para simplificar mapeos en la capa `data`. El roster de jugadores se modela como array **`players[]` embebido** en el documento `games` (no hay subcolección `players`).
+El modelo sigue un enfoque **offline-first**: toda partida, ronda y favorito existe primero en el almacenamiento local del dispositivo; Firestore solo recibe copias de partidas **finalizadas** cuando el organizador tiene sesión y conectividad. El esquema local **replica** la estructura de Firestore para simplificar mapeos en la capa `data`. El roster de jugadores se modela como array `players[]` **embebido** en el documento `games` (no hay subcolección `players`).
 
 **Convención de consultas:** en el diagrama y las tablas, los campos marcados con **🔍** se usan en filtros u ordenación (historial por usuario, detalle de partida).
 
@@ -324,7 +578,7 @@ erDiagram
         string gameId PK
         string hostId FK "🔍 historial (organizador)"
         array participantIds "🔍 historial (arrayContains)"
-        string status "🔍 lobby | in_progress | finished"
+        string status "🔍 setup | in_progress | finished"
         number playerCount "3-8"
         number deckSize
         number maxCardsPerRound
@@ -363,44 +617,56 @@ erDiagram
     }
 ```
 
+
+
 **Rutas Firestore (nube):** `users/{userId}`, `games/{gameId}`, `games/{gameId}/rounds/{roundId}`.
 
 **Rutas locales (dispositivo):** mismas entidades `games` y `rounds` (anidadas o por `gameId`), más `favorites/{ownerKey}`. La colección `users` en local solo cachea perfiles consultados para búsqueda; el perfil canónico del usuario autenticado vive en Firestore.
 
-**Estructura embebida `players[]` dentro de `games`:**
+**Estructura embebida** `players[]` **dentro de** `games`**:**
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `id` | string | Identificador del jugador en la partida (`playerId`) |
-| `displayName` | string | Nombre visible en mesa |
-| `userId` | string? | `null` si es invitado; `users/{uid}` si está registrado |
-| `isGuest` | boolean | `true` si se añadió por nombre libre |
-| `seatOrder` | number | Orden en mesa (0…n−1) |
-| `totalScore` | number | Puntuación acumulada al cierre de la partida |
-| `joinedAt` | timestamp | Alta en el roster |
 
-**Estructura embebida `items[]` dentro de `favorites`:**
+| Campo         | Tipo      | Descripción                                             |
+| ------------- | --------- | ------------------------------------------------------- |
+| `id`          | string    | Identificador del jugador en la partida (`playerId`)    |
+| `displayName` | string    | Nombre visible en mesa                                  |
+| `userId`      | string?   | `null` si es invitado; `users/{uid}` si está registrado |
+| `isGuest`     | boolean   | `true` si se añadió por nombre libre                    |
+| `seatOrder`   | number    | Orden en mesa (0…n−1)                                   |
+| `totalScore`  | number    | Puntuación acumulada al cierre de la partida            |
+| `joinedAt`    | timestamp | Alta en el roster                                       |
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `id` | string | UUID del favorito |
-| `displayName` | string | Nombre para reutilizar en futuras partidas |
-| `userId` | string? | Opcional, si el favorito es usuario registrado |
-| `createdAt` | timestamp | Fecha de alta en favoritos |
+
+**Estructura embebida** `items[]` **dentro de** `favorites`**:**
+
+
+| Campo         | Tipo      | Descripción                                    |
+| ------------- | --------- | ---------------------------------------------- |
+| `id`          | string    | UUID del favorito                              |
+| `displayName` | string    | Nombre para reutilizar en futuras partidas     |
+| `userId`      | string?   | Opcional, si el favorito es usuario registrado |
+| `createdAt`   | timestamp | Fecha de alta en favoritos                     |
+
+
+
 
 ### **3.2. Descripción de entidades principales:**
+
+
 
 #### `users` — Perfiles de usuario registrado
 
 **Ruta Firestore:** `users/{userId}` · **ID de documento:** `userId == Firebase Auth uid`.
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `displayName` | string | Nombre visible al buscar jugadores registrados en una partida |
-| `email` | string | Email de la cuenta (reflejo del proveedor Auth) |
-| `photoUrl` | string? | URL de avatar opcional |
-| `createdAt` | timestamp | Alta del perfil en Firestore |
-| `updatedAt` | timestamp | Última actualización del perfil |
+
+| Campo         | Tipo      | Descripción                                                   |
+| ------------- | --------- | ------------------------------------------------------------- |
+| `displayName` | string    | Nombre visible al buscar jugadores registrados en una partida |
+| `email`       | string    | Email de la cuenta (reflejo del proveedor Auth)               |
+| `photoUrl`    | string?   | URL de avatar opcional                                        |
+| `createdAt`   | timestamp | Alta del perfil en Firestore                                  |
+| `updatedAt`   | timestamp | Última actualización del perfil                               |
+
 
 **Relaciones:**
 
@@ -416,11 +682,15 @@ erDiagram
 
 **Índices y consultas (🔍):**
 
-| Campo(s) | Uso |
-|----------|-----|
+
+| Campo(s)      | Uso                                                                                                                             |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `displayName` | Búsqueda de usuarios registrados al añadir jugadores (prefijo o filtro en cliente; índice simple si se usa `where` + `orderBy`) |
 
+
 ---
+
+
 
 #### `games` — Sesiones de partida (local y nube)
 
@@ -428,27 +698,29 @@ erDiagram
 
 Representa una partida completa: configuración, roster embebido, estado y metadatos de sincronización. Las partidas en curso y el historial local existen **siempre** en el dispositivo antes de cualquier escritura en Firestore.
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `hostId` | string? | 🔍 `userId` del organizador que creó la partida; `null` en partidas locales sin cuenta |
-| `participantIds` | array\<string\> | 🔍 IDs de usuarios **registrados** que participan; se rellena al subir a Firestore para consultas de historial compartido (`arrayContains`) |
-| `status` | string | 🔍 `lobby`, `in_progress`, `finished` |
-| `playerCount` | number | Número de jugadores configurado (3–8, según PRD) |
-| `deckSize` | number | Cartas del mazo (30, 40, 48 o 49 según jugadores) |
-| `maxCardsPerRound` | number | Máximo de cartas por ronda (M del PRD) |
-| `totalRounds` | number | Total de rondas de la secuencia (p. ej. 22 con 4 jugadores) |
-| `roundSequence` | array\<number\> | Secuencia precalculada (ascenso, plateau, descenso) |
-| `players` | array\<map\> | Roster embebido; ver tabla en §3.1 |
-| `firstDealerPlayerId` | string | `playerId` del primer repartidor |
-| `currentRoundNumber` | number | Ronda activa durante `in_progress` |
-| `createdAt` | timestamp | Creación de la partida |
-| `updatedAt` | timestamp | Última modificación |
-| `startedAt` | timestamp? | Paso de `lobby` a `in_progress` |
-| `finishedAt` | timestamp? | 🔍 Cierre de la última ronda; orden del historial |
-| `source` | string | Solo local: `local` o `cloud` (icono en listado unificado) |
-| `cloudGameId` | string? | Solo local: ID del documento en Firestore tras subida exitosa |
-| `syncStatus` | string? | Solo local: `local`, `pending`, `synced`, `failed` |
-| `hiddenInHistory` | boolean | Solo local: `true` si el usuario eliminó la partida de **su** historial |
+
+| Campo                 | Tipo        | Descripción                                                                                                                                 |
+| --------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `hostId`              | string?     | 🔍 `userId` del organizador que creó la partida; `null` en partidas locales sin cuenta                                                      |
+| `participantIds`      | arraystring | 🔍 IDs de usuarios **registrados** que participan; se rellena al subir a Firestore para consultas de historial compartido (`arrayContains`) |
+| `status`              | string      | 🔍 `setup`, `in_progress`, `finished`                                                                                                       |
+| `playerCount`         | number      | Número de jugadores configurado (3–8, según PRD)                                                                                            |
+| `deckSize`            | number      | Cartas del mazo (30, 40, 48 o 49 según jugadores)                                                                                           |
+| `maxCardsPerRound`    | number      | Máximo de cartas por ronda (M del PRD)                                                                                                      |
+| `totalRounds`         | number      | Total de rondas de la secuencia (p. ej. 22 con 4 jugadores)                                                                                 |
+| `roundSequence`       | arraynumber | Secuencia precalculada (ascenso, plateau, descenso)                                                                                         |
+| `players`             | arraymap    | Roster embebido; ver tabla en §3.1                                                                                                          |
+| `firstDealerPlayerId` | string      | `playerId` del primer repartidor                                                                                                            |
+| `currentRoundNumber`  | number      | Ronda activa durante `in_progress`                                                                                                          |
+| `createdAt`           | timestamp   | Creación de la partida                                                                                                                      |
+| `updatedAt`           | timestamp   | Última modificación                                                                                                                         |
+| `startedAt`           | timestamp?  | Paso de `setup` a `in_progress`                                                                                                             |
+| `finishedAt`          | timestamp?  | 🔍 Cierre de la última ronda; orden del historial                                                                                           |
+| `source`              | string      | Solo local: `local` o `cloud` (icono en listado unificado)                                                                                  |
+| `cloudGameId`         | string?     | Solo local: ID del documento en Firestore tras subida exitosa                                                                               |
+| `syncStatus`          | string?     | Solo local: `local`, `pending`, `synced`, `failed`                                                                                          |
+| `hiddenInHistory`     | boolean     | Solo local: `true` si el usuario eliminó la partida de **su** historial                                                                     |
+
 
 **Relaciones:**
 
@@ -469,14 +741,18 @@ Representa una partida completa: configuración, roster embebido, estado y metad
 
 **Índices y consultas (🔍):**
 
-| Colección | Campo(s) | Uso |
-|-----------|----------|-----|
-| `games` | `hostId` + `finishedAt` desc | Historial del organizador |
-| `games` | `participantIds` `array-contains` + `finishedAt` desc | Historial del participante registrado |
-| `games` | `status` + `finishedAt` desc | Filtrar partidas finalizadas |
-| `games` | `gameId` (documento) | Detalle de partida |
+
+| Colección | Campo(s)                                              | Uso                                   |
+| --------- | ----------------------------------------------------- | ------------------------------------- |
+| `games`   | `hostId` + `finishedAt` desc                          | Historial del organizador             |
+| `games`   | `participantIds` `array-contains` + `finishedAt` desc | Historial del participante registrado |
+| `games`   | `status` + `finishedAt` desc                          | Filtrar partidas finalizadas          |
+| `games`   | `gameId` (documento)                                  | Detalle de partida                    |
+
 
 ---
+
+
 
 #### `games/{gameId}/rounds` — Detalle de cada ronda
 
@@ -484,17 +760,19 @@ Representa una partida completa: configuración, roster embebido, estado y metad
 
 Cada ronda almacena apuestas, bazas reales y puntuación parcial. **No** se modela como array dentro de `games` para permitir consultas ordenadas y escrituras granulares durante la partida.
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `roundNumber` | number | 🔍 Orden secuencial (1…`totalRounds`); clave de ordenación en detalle |
-| `cardsInRound` | number | Cartas repartidas en esta ronda (valor de `roundSequence`) |
-| `dealerPlayerId` | string | `playerId` del repartidor de la ronda |
-| `status` | string | `bidding`, `playing`, `closed` |
-| `bids` | map\<string, number\> | Apuesta por jugador (`playerId` → bazas apostadas) |
-| `tricks` | map\<string, number\> | Bazas reales por jugador tras el juego físico |
-| `scoresDelta` | map\<string, number\> | Puntos ganados o perdidos en la ronda por jugador |
-| `createdAt` | timestamp | Apertura de la ronda |
-| `closedAt` | timestamp? | Cierre tras calcular `scoresDelta` |
+
+| Campo            | Tipo              | Descripción                                                           |
+| ---------------- | ----------------- | --------------------------------------------------------------------- |
+| `roundNumber`    | number            | 🔍 Orden secuencial (1…`totalRounds`); clave de ordenación en detalle |
+| `cardsInRound`   | number            | Cartas repartidas en esta ronda (valor de `roundSequence`)            |
+| `dealerPlayerId` | string            | `playerId` del repartidor de la ronda                                 |
+| `status`         | string            | `bidding`, `playing`, `closed`                                        |
+| `bids`           | mapstring, number | Apuesta por jugador (`playerId` → bazas apostadas)                    |
+| `tricks`         | mapstring, number | Bazas reales por jugador tras el juego físico                         |
+| `scoresDelta`    | mapstring, number | Puntos ganados o perdidos en la ronda por jugador                     |
+| `createdAt`      | timestamp         | Apertura de la ronda                                                  |
+| `closedAt`       | timestamp?        | Cierre tras calcular `scoresDelta`                                    |
+
 
 **Relaciones:**
 
@@ -511,12 +789,16 @@ Cada ronda almacena apuestas, bazas reales y puntuación parcial. **No** se mode
 
 **Índices y consultas (🔍):**
 
-| Colección | Campo(s) | Uso |
-|-----------|----------|-----|
-| `games/{gameId}/rounds` | `roundNumber` asc | Detalle de partida ronda a ronda |
-| `games/{gameId}/rounds` | `roundId` (documento) | Lectura de ronda concreta |
+
+| Colección               | Campo(s)              | Uso                              |
+| ----------------------- | --------------------- | -------------------------------- |
+| `games/{gameId}/rounds` | `roundNumber` asc     | Detalle de partida ronda a ronda |
+| `games/{gameId}/rounds` | `roundId` (documento) | Lectura de ronda concreta        |
+
 
 ---
+
+
 
 #### `favorites` — Jugadores favoritos (solo local)
 
@@ -524,11 +806,13 @@ Cada ronda almacena apuestas, bazas reales y puntuación parcial. **No** se mode
 
 Un **documento por usuario** (o por identidad de dispositivo si no hay cuenta). Contiene la lista completa de jugadores frecuentes para reutilizar al crear partidas.
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `ownerKey` | string | PK: `Auth.uid` si hay sesión; identificador de dispositivo si es invitado |
-| `items` | array\<map\> | Lista de favoritos; ver estructura en §3.1 |
-| `updatedAt` | timestamp | Última modificación de la lista |
+
+| Campo       | Tipo      | Descripción                                                               |
+| ----------- | --------- | ------------------------------------------------------------------------- |
+| `ownerKey`  | string    | PK: `Auth.uid` si hay sesión; identificador de dispositivo si es invitado |
+| `items`     | arraymap  | Lista de favoritos; ver estructura en §3.1                                |
+| `updatedAt` | timestamp | Última modificación de la lista                                           |
+
 
 **Relaciones:**
 
@@ -547,17 +831,23 @@ Un **documento por usuario** (o por identidad de dispositivo si no hay cuenta). 
 
 ---
 
+
+
 #### Resumen de relaciones y principios de diseño
 
-| Principio | Aplicación |
-|-----------|------------|
-| **Offline-first** | `games`, `rounds` y `favorites` se persisten en local en cuanto se crean; Firestore recibe la partida al finalizar si hay sesión. |
+
+| Principio                | Aplicación                                                                                                                                                   |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Offline-first**        | `games`, `rounds` y `favorites` se persisten en local en cuanto se crean; Firestore recibe la partida al finalizar si hay sesión.                            |
 | **Historial compartido** | `participantIds` en `games` permite que jugadores registrados vean partidas sin consultas extra; el roster completo está en `players[]` del mismo documento. |
-| **Borrado per-user** | `hiddenInHistory` (local) u ocultación en consulta; el documento en nube permanece para el resto de participantes. |
-| **Rondas desacopladas** | Subcolección `rounds`, no array embebido en `games`, para ordenación y tamaño de documento acotado. |
-| **IDs estables** | `userId == Auth.uid`; `gameId`, `roundId` y `playerId` generados como UUID en local y reutilizados al subir. |
+| **Borrado per-user**     | `hiddenInHistory` (local) u ocultación en consulta; el documento en nube permanece para el resto de participantes.                                           |
+| **Rondas desacopladas**  | Subcolección `rounds`, no array embebido en `games`, para ordenación y tamaño de documento acotado.                                                          |
+| **IDs estables**         | `userId == Auth.uid`; `gameId`, `roundId` y `playerId` generados como UUID en local y reutilizados al subir.                                                 |
+
 
 ---
+
+
 
 ## 4. Especificación de la API
 
@@ -565,28 +855,36 @@ Este proyecto **no expone una API REST**. Todo el acceso a datos remotos se real
 
 **Convenciones**
 
-| Concepto OpenAPI | Equivalente Firebase |
-|------------------|----------------------|
-| Endpoint | Ruta de colección/documento o método del SDK |
-| POST / PUT | `set()`, `update()`, `WriteBatch.commit()` |
-| GET (lista) | `collection().where().orderBy().get()` |
-| GET (detalle) | `doc().get()` o `snapshots()` |
-| 401 / 403 | `FirebaseException` (`permission-denied`, `unauthenticated`) |
-| 404 | `not-found` |
 
-**Fuente de verdad ampliada:** [`ai-specs/specs/firebase-data-access.yml`](ai-specs/specs/firebase-data-access.yml) · **Reglas de seguridad:** `firestore.rules` (desplegadas con Firebase CLI).
+| Concepto OpenAPI | Equivalente Firebase                                         |
+| ---------------- | ------------------------------------------------------------ |
+| Endpoint         | Ruta de colección/documento o método del SDK                 |
+| POST / PUT       | `set()`, `update()`, `WriteBatch.commit()`                   |
+| GET (lista)      | `collection().where().orderBy().get()`                       |
+| GET (detalle)    | `doc().get()` o `snapshots()`                                |
+| 401 / 403        | `FirebaseException` (`permission-denied`, `unauthenticated`) |
+| 404              | `not-found`                                                  |
+
+
+**Fuente de verdad ampliada:** `[ai-specs/specs/firebase-data-access.yml](ai-specs/specs/firebase-data-access.yml)` · **Reglas de seguridad:** `firestore.rules` (desplegadas con Firebase CLI).
 
 ---
 
+
+
 ### Operación 1 — Crear y sincronizar una partida finalizada
 
-| Atributo | Valor |
-|----------|-------|
-| **Identificador** | `syncFinishedGame` |
-| **SDK** | `FirebaseFirestore.batch()` → `batch.set()` / `batch.commit()` |
-| **Tipo** | Escritura por lotes (*batch write*) |
-| **Rutas** | `games/{gameId}` + subcolección `games/{gameId}/rounds/{roundNumber}` |
-| **Disparador** | Al cerrar la última ronda (`status == finished`) si el organizador tiene sesión activa y conectividad |
+
+| Atributo          | Valor                                                                                                 |
+| ----------------- | ----------------------------------------------------------------------------------------------------- |
+| **Identificador** | `syncFinishedGame`                                                                                    |
+| **SDK**           | `FirebaseFirestore.batch()` → `batch.set()` / `batch.commit()`                                        |
+| **Tipo**          | Escritura por lotes (*batch write*)                                                                   |
+| **Rutas**         | `games/{gameId}` + subcolección `games/{gameId}/rounds/{roundNumber}`                                 |
+| **Disparador**    | Al cerrar la última ronda (`status == finished`) si el organizador tiene sesión activa y conectividad |
+
+
+
 
 #### Descripción
 
@@ -598,38 +896,42 @@ Persiste en Firestore una copia completa de la partida ya jugada en local. El or
 
 **Cabecera implícita:** `request.auth.uid` debe coincidir con `hostId`.
 
-**Documento `games/{gameId}` (obligatorios en nube):**
+**Documento** `games/{gameId}` **(obligatorios en nube):**
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `hostId` | string | `Auth.uid` del organizador |
-| `participantIds` | array\<string\> | `userId` de cada jugador registrado en `players[]` (sin duplicados) |
-| `status` | string | `"finished"` |
-| `playerCount` | number | 3–8 |
-| `deckSize` | number | Tamaño del mazo según jugadores |
-| `maxCardsPerRound` | number | Máximo de cartas por ronda (M) |
-| `totalRounds` | number | Longitud de la secuencia |
-| `roundSequence` | array\<number\> | Secuencia precalculada de cartas por ronda |
-| `players` | array\<map\> | Roster embebido: `id`, `displayName`, `userId?`, `isGuest`, `seatOrder`, `totalScore`, `joinedAt` |
-| `firstDealerPlayerId` | string | `playerId` del primer repartidor |
-| `currentRoundNumber` | number | Última ronda jugada |
-| `createdAt` | timestamp | Creación de la partida |
-| `updatedAt` | timestamp | Última modificación |
-| `finishedAt` | timestamp | Cierre de la última ronda |
 
-**Documento `games/{gameId}/rounds/{roundNumber}` (uno por ronda, obligatorios):**
+| Campo                 | Tipo        | Descripción                                                                                       |
+| --------------------- | ----------- | ------------------------------------------------------------------------------------------------- |
+| `hostId`              | string      | `Auth.uid` del organizador                                                                        |
+| `participantIds`      | arraystring | `userId` de cada jugador registrado en `players[]` (sin duplicados)                               |
+| `status`              | string      | `"finished"`                                                                                      |
+| `playerCount`         | number      | 3–8                                                                                               |
+| `deckSize`            | number      | Tamaño del mazo según jugadores                                                                   |
+| `maxCardsPerRound`    | number      | Máximo de cartas por ronda (M)                                                                    |
+| `totalRounds`         | number      | Longitud de la secuencia                                                                          |
+| `roundSequence`       | arraynumber | Secuencia precalculada de cartas por ronda                                                        |
+| `players`             | arraymap    | Roster embebido: `id`, `displayName`, `userId?`, `isGuest`, `seatOrder`, `totalScore`, `joinedAt` |
+| `firstDealerPlayerId` | string      | `playerId` del primer repartidor                                                                  |
+| `currentRoundNumber`  | number      | Última ronda jugada                                                                               |
+| `createdAt`           | timestamp   | Creación de la partida                                                                            |
+| `updatedAt`           | timestamp   | Última modificación                                                                               |
+| `finishedAt`          | timestamp   | Cierre de la última ronda                                                                         |
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `roundNumber` | number | Orden 1…`totalRounds` (también ID de documento) |
-| `cardsInRound` | number | Valor de `roundSequence[roundNumber - 1]` |
-| `dealerPlayerId` | string | Repartidor de la ronda |
-| `status` | string | `"closed"` |
-| `bids` | map\<string, number\> | `playerId` → apuesta |
-| `tricks` | map\<string, number\> | `playerId` → bazas reales |
-| `scoresDelta` | map\<string, number\> | `playerId` → puntos de la ronda |
-| `createdAt` | timestamp | Apertura de la ronda |
-| `closedAt` | timestamp | Cierre tras calcular puntuación |
+
+**Documento** `games/{gameId}/rounds/{roundNumber}` **(uno por ronda, obligatorios):**
+
+
+| Campo            | Tipo              | Descripción                                     |
+| ---------------- | ----------------- | ----------------------------------------------- |
+| `roundNumber`    | number            | Orden 1…`totalRounds` (también ID de documento) |
+| `cardsInRound`   | number            | Valor de `roundSequence[roundNumber - 1]`       |
+| `dealerPlayerId` | string            | Repartidor de la ronda                          |
+| `status`         | string            | `"closed"`                                      |
+| `bids`           | mapstring, number | `playerId` → apuesta                            |
+| `tricks`         | mapstring, number | `playerId` → bazas reales                       |
+| `scoresDelta`    | mapstring, number | `playerId` → puntos de la ronda                 |
+| `createdAt`      | timestamp         | Apertura de la ronda                            |
+| `closedAt`       | timestamp         | Cierre tras calcular puntuación                 |
+
 
 **Ejemplo de invocación (Dart):**
 
@@ -664,23 +966,33 @@ for (final round in rounds) {
 await batch.commit();
 ```
 
+
+
 #### Respuesta de éxito
 
-| Campo | Valor |
-|-------|-------|
-| **Código SDK** | Sin excepción; `WriteBatch.commit()` resuelve |
-| **Efecto remoto** | Documentos creados en `games/{gameId}` y `rounds/*` |
-| **Efecto local** | `cloudGameId == gameId`, `syncStatus: synced`, `source: cloud` |
+
+| Campo             | Valor                                                          |
+| ----------------- | -------------------------------------------------------------- |
+| **Código SDK**    | Sin excepción; `WriteBatch.commit()` resuelve                  |
+| **Efecto remoto** | Documentos creados en `games/{gameId}` y `rounds/`*            |
+| **Efecto local**  | `cloudGameId == gameId`, `syncStatus: synced`, `source: cloud` |
+
+
+
 
 #### Casos de error
 
-| Código / causa | Descripción | Acción en app |
-|----------------|-------------|---------------|
-| `permission-denied` | Reglas rechazan la escritura (`hostId` ≠ `Auth.uid` o usuario no autenticado) | `syncStatus: failed`; mensaje discreto; reintento manual o automático |
-| `unauthenticated` | Sesión expirada o cerrada | No subir; partida permanece solo local |
-| `unavailable` / red | Sin conectividad o timeout | `syncStatus: pending`; reintento al recuperar red |
-| `invalid-argument` | Datos incompletos o tipos incorrectos | Corregir mapeo en datasource; log de desarrollo |
-| Lote > 500 operaciones | Límite de Firestore por batch | Partir en varios lotes (no aplica al MVP: máx. ~22 rondas) |
+
+| Código / causa         | Descripción                                                                   | Acción en app                                                         |
+| ---------------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `permission-denied`    | Reglas rechazan la escritura (`hostId` ≠ `Auth.uid` o usuario no autenticado) | `syncStatus: failed`; mensaje discreto; reintento manual o automático |
+| `unauthenticated`      | Sesión expirada o cerrada                                                     | No subir; partida permanece solo local                                |
+| `unavailable` / red    | Sin conectividad o timeout                                                    | `syncStatus: pending`; reintento al recuperar red                     |
+| `invalid-argument`     | Datos incompletos o tipos incorrectos                                         | Corregir mapeo en datasource; log de desarrollo                       |
+| Lote > 500 operaciones | Límite de Firestore por batch                                                 | Partir en varios lotes (no aplica al MVP: máx. ~22 rondas)            |
+
+
+
 
 #### Regla de seguridad que aplica
 
@@ -710,15 +1022,21 @@ match /games/{gameId}/rounds/{roundNumber} {
 
 ---
 
+
+
 ### Operación 2 — Obtener historial de partidas del usuario
 
-| Atributo | Valor |
-|----------|-------|
-| **Identificador** | `listUserGameHistory` |
-| **SDK** | `FirebaseFirestore.collection('games').where(...).orderBy(...).get()` |
-| **Tipo** | Consulta (*query*) |
-| **Ruta** | Colección `games` |
-| **Requisito** | Usuario autenticado (`Auth.uid`) |
+
+| Atributo          | Valor                                                                 |
+| ----------------- | --------------------------------------------------------------------- |
+| **Identificador** | `listUserGameHistory`                                                 |
+| **SDK**           | `FirebaseFirestore.collection('games').where(...).orderBy(...).get()` |
+| **Tipo**          | Consulta (*query*)                                                    |
+| **Ruta**          | Colección `games`                                                     |
+| **Requisito**     | Usuario autenticado (`Auth.uid`)                                      |
+
+
+
 
 #### Descripción
 
@@ -728,14 +1046,16 @@ Para el organizador también se puede ejecutar una consulta complementaria con `
 
 #### Parámetros / campos
 
-| Parámetro | Origen | Descripción |
-|-----------|--------|-------------|
-| `userId` | `FirebaseAuth.instance.currentUser!.uid` | Usuario autenticado |
-| `participantIds` | Filtro Firestore | `array-contains: userId` |
-| `status` | Filtro Firestore | `isEqualTo: 'finished'` |
-| `hiddenInHistory` | Filtro **local** | Excluir partidas con `hiddenInHistory == true` en almacenamiento del dispositivo |
-| `orderBy` | Firestore | `finishedAt` descendente |
-| `limit` | Opcional | Paginación con `startAfterDocument` |
+
+| Parámetro         | Origen                                   | Descripción                                                                      |
+| ----------------- | ---------------------------------------- | -------------------------------------------------------------------------------- |
+| `userId`          | `FirebaseAuth.instance.currentUser!.uid` | Usuario autenticado                                                              |
+| `participantIds`  | Filtro Firestore                         | `array-contains: userId`                                                         |
+| `status`          | Filtro Firestore                         | `isEqualTo: 'finished'`                                                          |
+| `hiddenInHistory` | Filtro **local**                         | Excluir partidas con `hiddenInHistory == true` en almacenamiento del dispositivo |
+| `orderBy`         | Firestore                                | `finishedAt` descendente                                                         |
+| `limit`           | Opcional                                 | Paginación con `startAfterDocument`                                              |
+
 
 **Ejemplo de invocación (Dart):**
 
@@ -755,11 +1075,13 @@ final snapshot = await firestore
 
 #### Respuesta de éxito
 
-| Campo | Descripción |
-|-------|-------------|
-| **Tipo** | `QuerySnapshot<Map<String, dynamic>>` |
+
+| Campo          | Descripción                                                                                                                                    |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Tipo**       | `QuerySnapshot<Map<String, dynamic>>`                                                                                                          |
 | **Documentos** | Lista de `games/{gameId}` con resumen: `gameId`, `hostId`, `finishedAt`, `playerCount`, `players[]` (nombres y `totalScore`), `participantIds` |
-| **UI** | Listado unificado local/nube con icono diferenciador (`source`) |
+| **UI**         | Listado unificado local/nube con icono diferenciador (`source`)                                                                                |
+
 
 **Ejemplo de documento en la respuesta (resumido):**
 
@@ -778,15 +1100,21 @@ final snapshot = await firestore
 }
 ```
 
+
+
 #### Casos de error
 
-| Código / causa | Descripción | Acción en app |
-|----------------|-------------|---------------|
-| `permission-denied` | El usuario no es `hostId` ni está en `participantIds` del documento | No mostrar esa partida; error de reglas en desarrollo |
-| `unauthenticated` | Sin sesión | Mostrar solo historial local |
-| `failed-precondition` | Falta índice compuesto | Desplegar `firestore.indexes.json` |
-| `unavailable` / red | Sin conectividad | Mostrar historial local en caché; reintentar al reconectar |
-| `not-found` | Colección vacía para el usuario | Lista vacía (no es error de dominio) |
+
+| Código / causa        | Descripción                                                         | Acción en app                                              |
+| --------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `permission-denied`   | El usuario no es `hostId` ni está en `participantIds` del documento | No mostrar esa partida; error de reglas en desarrollo      |
+| `unauthenticated`     | Sin sesión                                                          | Mostrar solo historial local                               |
+| `failed-precondition` | Falta índice compuesto                                              | Desplegar `firestore.indexes.json`                         |
+| `unavailable` / red   | Sin conectividad                                                    | Mostrar historial local en caché; reintentar al reconectar |
+| `not-found`           | Colección vacía para el usuario                                     | Lista vacía (no es error de dominio)                       |
+
+
+
 
 #### Regla de seguridad que aplica
 
@@ -803,14 +1131,20 @@ Solo lectura para participantes registrados; no pueden modificar ni borrar la pa
 
 ---
 
+
+
 ### Operación 3 — Registro e inicio de sesión (Firebase Authentication)
 
-| Atributo | Valor |
-|----------|-------|
-| **Identificador** | `signUp` / `signIn` |
-| **SDK** | `FirebaseAuth.createUserWithEmailAndPassword`, `FirebaseAuth.signInWithEmailAndPassword` |
-| **Tipo** | Autenticación (no Firestore directamente) |
-| **Efecto en Firestore** | Tras registro exitoso, creación o fusión de `users/{uid}` |
+
+| Atributo                | Valor                                                                                    |
+| ----------------------- | ---------------------------------------------------------------------------------------- |
+| **Identificador**       | `signUp` / `signIn`                                                                      |
+| **SDK**                 | `FirebaseAuth.createUserWithEmailAndPassword`, `FirebaseAuth.signInWithEmailAndPassword` |
+| **Tipo**                | Autenticación (no Firestore directamente)                                                |
+| **Efecto en Firestore** | Tras registro exitoso, creación o fusión de `users/{uid}`                                |
+
+
+
 
 #### Descripción
 
@@ -818,30 +1152,36 @@ Permite el **registro opcional** con email y contraseña para habilitar la sincr
 
 #### Parámetros / campos
 
-**Registro (`signUp`)**
+**Registro (**`signUp`**)**
 
-| Campo | Tipo | Obligatorio | Descripción |
-|-------|------|-------------|-------------|
-| `email` | string | sí | Email válido; único en Firebase Auth |
-| `password` | string | sí | Contraseña del proveedor (mínimo 6 caracteres en Firebase) |
-| `displayName` | string | sí | Nombre visible al buscar jugadores; se persiste en `users/{uid}` |
 
-**Inicio de sesión (`signIn`)**
+| Campo         | Tipo   | Obligatorio | Descripción                                                      |
+| ------------- | ------ | ----------- | ---------------------------------------------------------------- |
+| `email`       | string | sí          | Email válido; único en Firebase Auth                             |
+| `password`    | string | sí          | Contraseña del proveedor (mínimo 6 caracteres en Firebase)       |
+| `displayName` | string | sí          | Nombre visible al buscar jugadores; se persiste en `users/{uid}` |
 
-| Campo | Tipo | Obligatorio | Descripción |
-|-------|------|-------------|-------------|
-| `email` | string | sí | Email de la cuenta |
-| `password` | string | sí | Contraseña |
 
-**Documento Firestore creado en registro — `users/{uid}`:**
+**Inicio de sesión (**`signIn`**)**
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `displayName` | string | Nombre del usuario |
-| `email` | string | Reflejo del email de Auth |
-| `photoUrl` | string? | Opcional |
-| `createdAt` | timestamp | Alta del perfil |
-| `updatedAt` | timestamp | Última actualización |
+
+| Campo      | Tipo   | Obligatorio | Descripción        |
+| ---------- | ------ | ----------- | ------------------ |
+| `email`    | string | sí          | Email de la cuenta |
+| `password` | string | sí          | Contraseña         |
+
+
+**Documento Firestore creado en registro —** `users/{uid}`**:**
+
+
+| Campo         | Tipo      | Descripción               |
+| ------------- | --------- | ------------------------- |
+| `displayName` | string    | Nombre del usuario        |
+| `email`       | string    | Reflejo del email de Auth |
+| `photoUrl`    | string?   | Opcional                  |
+| `createdAt`   | timestamp | Alta del perfil           |
+| `updatedAt`   | timestamp | Última actualización      |
+
 
 **Ejemplo de invocación (Dart):**
 
@@ -864,32 +1204,42 @@ await FirebaseAuth.instance
     .signInWithEmailAndPassword(email: email, password: password);
 ```
 
+
+
 #### Respuesta de éxito
 
-| Operación | Respuesta SDK | Efecto |
-|-----------|---------------|--------|
+
+| Operación    | Respuesta SDK                                 | Efecto                                                                                     |
+| ------------ | --------------------------------------------- | ------------------------------------------------------------------------------------------ |
 | **Registro** | `UserCredential` con `user.uid`, `user.email` | Cuenta Auth creada; documento `users/{uid}` en Firestore; `authStateChanges` emite usuario |
-| **Login** | `UserCredential` con sesión activa | Token refrescado; navegación a flujos con subida/historial en nube |
+| **Login**    | `UserCredential` con sesión activa            | Token refrescado; navegación a flujos con subida/historial en nube                         |
+
+
+
 
 #### Casos de error
 
-| Código Firebase Auth | Operación | Descripción | Mensaje orientativo (UI) |
-|----------------------|-----------|-------------|--------------------------|
-| `email-already-in-use` | Registro | El email ya está registrado | «Este email ya tiene cuenta. Inicia sesión.» |
-| `invalid-email` | Ambas | Formato de email inválido | «Introduce un email válido.» |
-| `weak-password` | Registro | Contraseña demasiado débil | «La contraseña debe tener al menos 6 caracteres.» |
-| `user-not-found` | Login | No existe cuenta con ese email | «No hay cuenta con este email.» |
-| `wrong-password` | Login | Contraseña incorrecta | «Contraseña incorrecta.» |
-| `invalid-credential` | Login | Credenciales inválidas (SDK unificado) | «Email o contraseña incorrectos.» |
-| `user-disabled` | Ambas | Cuenta deshabilitada en consola | «Esta cuenta no está disponible.» |
-| `network-request-failed` | Ambas | Sin conectividad | «Comprueba tu conexión e inténtalo de nuevo.» |
-| `permission-denied` | Registro (Firestore) | Fallo al crear `users/{uid}` | «No se pudo crear el perfil. Inténtalo de nuevo.» |
+
+| Código Firebase Auth     | Operación            | Descripción                            | Mensaje orientativo (UI)                          |
+| ------------------------ | -------------------- | -------------------------------------- | ------------------------------------------------- |
+| `email-already-in-use`   | Registro             | El email ya está registrado            | «Este email ya tiene cuenta. Inicia sesión.»      |
+| `invalid-email`          | Ambas                | Formato de email inválido              | «Introduce un email válido.»                      |
+| `weak-password`          | Registro             | Contraseña demasiado débil             | «La contraseña debe tener al menos 6 caracteres.» |
+| `user-not-found`         | Login                | No existe cuenta con ese email         | «No hay cuenta con este email.»                   |
+| `wrong-password`         | Login                | Contraseña incorrecta                  | «Contraseña incorrecta.»                          |
+| `invalid-credential`     | Login                | Credenciales inválidas (SDK unificado) | «Email o contraseña incorrectos.»                 |
+| `user-disabled`          | Ambas                | Cuenta deshabilitada en consola        | «Esta cuenta no está disponible.»                 |
+| `network-request-failed` | Ambas                | Sin conectividad                       | «Comprueba tu conexión e inténtalo de nuevo.»     |
+| `permission-denied`      | Registro (Firestore) | Fallo al crear `users/{uid}`           | «No se pudo crear el perfil. Inténtalo de nuevo.» |
+
+
+
 
 #### Regla de seguridad que aplica
 
 **Firebase Authentication:** el proveedor email/contraseña debe estar habilitado en la consola del proyecto `la-pocha-9d070`.
 
-**Firestore (`users/{userId}`):**
+**Firestore (**`users/{userId}`**):**
 
 ```javascript
 match /users/{userId} {
@@ -906,9 +1256,13 @@ Solo el propio usuario puede crear o actualizar su perfil; cualquier usuario aut
 
 ---
 
+
+
 ## 5. Historias de Usuario
 
 > Documenta 3 de las historias de usuario principales utilizadas durante el desarrollo, teniendo en cuenta las buenas prácticas de producto al respecto.
+
+
 
 ### Historia de Usuario 1 — LPT-5: Crear partida
 
@@ -921,23 +1275,27 @@ Como organizador, quiero crear una nueva partida seleccionando el número de jug
 1. El organizador puede seleccionar un número de jugadores entre **3 y 8** (inclusive).
 2. Al cambiar el número, la UI muestra en tiempo real: **cartas totales**, **máximo de cartas por jugador por ronda** y **número total de rondas**.
 3. La secuencia de rondas sigue el patrón ascendente-plateau-descendente: 1, 2, …, M (repetido N veces, siendo N el número de jugadores), M-1, …, 2, 1. Ejemplo con 4 jugadores (M=10): 1,2,3,4,5,6,7,8,9,10,10,10,10,9,8,7,6,5,4,3,2,1 = 22 rondas.
-4. Al confirmar, se crea un borrador de partida en estado `lobby` persistido **localmente** (offline-first) con: `playerCount`, `totalCards`, `maxCardsPerRound`, `roundSequence[]` (`roundNumber`, `cardsPerPlayer`).
+4. Al confirmar, se crea un borrador de partida en estado `setup` persistido **localmente** (offline-first) con: `playerCount`, `totalCards`, `maxCardsPerRound`, `roundSequence[]` (`roundNumber`, `cardsPerPlayer`).
 5. Tras confirmar, navega a la pantalla de configuración de jugadores (LPT-6) pasando el `gameId` del borrador.
 6. Si el usuario cancela o vuelve atrás sin confirmar, no se persiste ningún borrador.
 7. La operación funciona **sin conexión** y sin requerir cuenta.
 
 **Tabla de configuración (PRD §6)**
 
+
 | Jugadores | Cartas totales | Máx. por ronda (M) | Rondas |
-|-----------|----------------|--------------------|--------|
-| 3 | 30 | 10 | 21 |
-| 4 | 40 | 10 | 22 |
-| 5 | 40 | 8 | 19 |
-| 6 | 48 | 8 | 21 |
-| 7 | 49 (+ comodín) | 7 | 19 |
-| 8 | 48 | 6 | 18 |
+| --------- | -------------- | ------------------ | ------ |
+| 3         | 30             | 10                 | 21     |
+| 4         | 40             | 10                 | 22     |
+| 5         | 40             | 8                  | 19     |
+| 6         | 48             | 8                  | 21     |
+| 7         | 49 (+ comodín) | 7                  | 19     |
+| 8         | 48             | 6                  | 18     |
+
 
 ---
+
+
 
 ### Historia de Usuario 2 — LPT-9: Apuestas con restricción del repartidor
 
@@ -950,15 +1308,17 @@ Como organizador, quiero introducir las apuestas de cada jugador en orden (repar
 1. Las apuestas se introducen en orden de `seatOrder`, comenzando por el jugador siguiente al repartidor; el **repartidor apuesta el último**.
 2. Cada apuesta es un entero entre **0** y `cardsPerPlayer` de la ronda actual (inclusive).
 3. Durante la introducción se muestra en tiempo real:
-   - Bazas ya apostadas (suma parcial).
-   - Bazas restantes disponibles (`cardsPerPlayer - suma parcial`).
-   - Para el repartidor: **número prohibido** = bazas restantes al llegar su turno.
+  - Bazas ya apostadas (suma parcial).
+  - Bazas restantes disponibles (`cardsPerPlayer - suma parcial`).
+  - Para el repartidor: **número prohibido** = bazas restantes al llegar su turno.
 4. **Restricción del repartidor:** la suma total de apuestas **no puede igualar** `cardsPerPlayer`. Si el repartidor intenta apostar el valor prohibido, se bloquea la confirmación con mensaje explicativo.
 5. Botón "Cerrar apuestas" habilitado solo cuando todas las apuestas están registradas y la restricción se cumple.
 6. Al cerrar: `round.status` pasa a `playing`; navega a pantalla de juego (LPT-10).
 7. Funciona offline.
 
 ---
+
+
 
 ### Historia de Usuario 3 — LPT-11: Bazas reales y puntuación automática
 
@@ -971,8 +1331,8 @@ Como organizador, quiero introducir las bazas reales obtenidas y que la app calc
 1. El organizador introduce las bazas reales (0–`cardsPerPlayer`) para cada jugador.
 2. **Validación:** la suma de bazas reales debe igualar `cardsPerPlayer`; no se puede confirmar si no cuadra.
 3. **Cálculo de puntos por jugador:**
-   - Si `bazas == apuesta`: `puntos = 10 + (5 × bazas)`
-   - Si `bazas != apuesta`: `puntos = -5 × |apuesta - bazas|`
+  - Si `bazas == apuesta`: `puntos = 10 + (5 × bazas)`
+  - Si `bazas != apuesta`: `puntos = -5 × |apuesta - bazas|`
 4. Se actualiza `Player.totalScore` += puntos de la ronda.
 5. Se persiste en la ronda: `tricks` (map por playerId), `scoresDelta` (map por playerId), `status: closed`, `closedAt`.
 6. Al confirmar, navega a pantalla de resultado (LPT-14).
@@ -981,9 +1341,13 @@ Como organizador, quiero introducir las bazas reales obtenidas y que la app calc
 
 ---
 
+
+
 ## 6. Tickets de Trabajo
 
 > Documenta 3 de los tickets de trabajo principales del desarrollo, uno de backend, uno de frontend, y uno de bases de datos. Da todo el detalle requerido para desarrollar la tarea de inicio a fin teniendo en cuenta las buenas prácticas al respecto.
+
+
 
 ### Ticket 1 — LPT-7: Orden de jugadores y primer repartidor (capa domain)
 
@@ -1001,7 +1365,7 @@ Tercer paso del flujo de creación de partida (épica **Gestión de partida**), 
 
 **Criterios de aceptación**
 
-1. El organizador puede reordenar la lista de jugadores mientras `status == lobby`.
+1. El organizador puede reordenar la lista de jugadores mientras `status == setup`.
 2. Cada jugador muestra su posición (`seatOrder` 1-based) actualizada en tiempo real al reordenar.
 3. El primer repartidor por defecto es el jugador en posición 1; el organizador puede seleccionar otro tocando su fila.
 4. Botón **"Repartidor aleatorio"** asigna aleatoriamente el primer repartidor entre los jugadores del roster.
@@ -1011,37 +1375,43 @@ Tercer paso del flujo de creación de partida (épica **Gestión de partida**), 
 
 **Impacto en modelo de datos**
 
-**Actualización local del borrador `Game`:**
+**Actualización local del borrador** `Game`**:**
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `status` | string | `lobby` → `in_progress` al empezar |
-| `firstDealerPlayerId` | string | `playerId` del primer repartidor |
-| `startedAt` | timestamp | Inicio de partida |
-| `currentRoundNumber` | number | `1` al empezar |
 
-**Actualización `Player`:**
+| Campo                 | Tipo      | Descripción                        |
+| --------------------- | --------- | ---------------------------------- |
+| `status`              | string    | `setup` → `in_progress` al empezar |
+| `firstDealerPlayerId` | string    | `playerId` del primer repartidor   |
+| `startedAt`           | timestamp | Inicio de partida                  |
+| `currentRoundNumber`  | number    | `1` al empezar                     |
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
+
+**Actualización** `Player`**:**
+
+
+| Campo       | Tipo   | Descripción                |
+| ----------- | ------ | -------------------------- |
 | `seatOrder` | number | Posición en mesa (1-based) |
 
-**Primera ronda (`Round`):**
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `roundNumber` | number | `1` |
+**Primera ronda (**`Round`**):**
+
+
+| Campo            | Tipo   | Descripción           |
+| ---------------- | ------ | --------------------- |
+| `roundNumber`    | number | `1`                   |
 | `cardsPerPlayer` | number | De `roundSequence[0]` |
-| `dealerPlayerId` | string | Primer repartidor |
-| `status` | string | `bidding` |
+| `dealerPlayerId` | string | Primer repartidor     |
+| `status`         | string | `bidding`             |
+
 
 **Rotación de repartidor (dominio):** en rondas siguientes, `dealerPlayerId` rota según `seatOrder` (repartidor = jugador anterior en orden circular).
 
 **Impacto en Security Rules**
 
-Ninguno en este ticket (solo local). Documentar: transición `lobby` → `in_progress` en Firestore requerirá permisos de `hostId`.
+Ninguno en este ticket (solo local). Documentar: transición `setup` → `in_progress` en Firestore requerirá permisos de `hostId`.
 
-**Arquitectura y ficheros (`lib/features/game_setup/`)**
+**Arquitectura y ficheros (**`lib/features/game_setup/`**)**
 
 ```
 lib/features/game_setup/
@@ -1069,6 +1439,8 @@ lib/features/game_setup/
 - [ ] `flutter analyze` sin errores.
 
 ---
+
+
 
 ### Ticket 2 — LPT-10: Pantalla de juego (capa presentation)
 
@@ -1107,7 +1479,7 @@ Sin escrituras en esta pantalla.
 
 Ninguno (solo lectura local).
 
-**Arquitectura y ficheros (`lib/features/round/`)**
+**Arquitectura y ficheros (**`lib/features/round/`**)**
 
 ```
 lib/features/round/
@@ -1130,6 +1502,8 @@ lib/features/round/
 - [ ] `flutter analyze` sin errores.
 
 ---
+
+
 
 ### Ticket 3 — LPT-20: Sincronización automática al finalizar (capa data / Firebase)
 
@@ -1160,18 +1534,22 @@ Como jugador registrado, quiero que mis partidas se suban automáticamente al fi
 
 **Escritura Firestore:**
 
-| Ruta | Contenido |
-|------|-----------|
-| `games/{gameId}` | `hostId`, `status`, `playerCount`, `finishedAt`, `settings` *(roundSequence, etc.)* |
-| `games/{gameId}/players/{playerId}` | `userId`, `displayName`, `seatOrder`, `totalScore` |
-| `games/{gameId}/rounds/{roundId}` | `roundNumber`, `dealerPlayerId`, `bids`, `tricks`, `scoresDelta`, `status: closed` |
+
+| Ruta                                | Contenido                                                                           |
+| ----------------------------------- | ----------------------------------------------------------------------------------- |
+| `games/{gameId}`                    | `hostId`, `status`, `playerCount`, `finishedAt`, `settings` *(roundSequence, etc.)* |
+| `games/{gameId}/players/{playerId}` | `userId`, `displayName`, `seatOrder`, `totalScore`                                  |
+| `games/{gameId}/rounds/{roundId}`   | `roundNumber`, `dealerPlayerId`, `bids`, `tricks`, `scoresDelta`, `status: closed`  |
+
 
 **Actualización partida local:**
 
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| `cloudGameId` | string | ID del documento en Firestore |
-| `syncStatus` | string | `local`, `pending`, `synced`, `failed` |
+
+| Campo         | Tipo   | Descripción                            |
+| ------------- | ------ | -------------------------------------- |
+| `cloudGameId` | string | ID del documento en Firestore          |
+| `syncStatus`  | string | `local`, `pending`, `synced`, `failed` |
+
 
 **Impacto en Security Rules**
 
@@ -1190,7 +1568,7 @@ match /games/{gameId}/players/{playerId} { /* host write; participants read */ }
 match /games/{gameId}/rounds/{roundId} { /* host write; participants read */ }
 ```
 
-*(Ajustar membership check según modelado final de `players`.)*
+*(Ajustar membership check según modelado final de* `players`*.)*
 
 **Firebase Auth**
 
@@ -1233,13 +1611,37 @@ finish_game → if (authenticated && online) → UploadFinishedGameUseCase
 
 ---
 
+
+
 ## 7. Pull Requests
 
 > Documenta 3 de las Pull Requests realizadas durante la ejecución del proyecto
 
-**Pull Request 1**
+### Pull Request 1 — Entrega 1: Documentación técnica
 
-**Pull Request 2**
+**URL:** <https://github.com/juanmigrau/AI4Devs-finalproject/pull/1>
 
-**Pull Request 3**
+**Estado:** Mergeada a `main`
 
+**Descripción:** Documentación técnica completa del proyecto: README con
+arquitectura, modelo de datos, especificación de API Firebase, historias
+de usuario y tickets de trabajo. Incluye PRD, reglas e índices Firestore,
+configuración del proyecto Firebase y decisiones de arquitectura (Clean
+Architecture + BLoC).
+
+**Rama:** `finalproject-entrega1-JMGS` → `main`
+
+---
+
+### Pull Request 2 — Entrega 2: Implementación Flutter
+
+**URL:** <https://github.com/juanmigrau/AI4Devs-finalproject/pull/2>
+
+**Descripción:** Implementación completa del MVP: 13 tickets (LPT-5 a
+LPT-24), flujo E2E funcional en dispositivo Android (Xiaomi Mi A1),
+138+ tests pasando y flutter analyze limpio. Incluye wireframes generados
+con Figma Make, sistema de diseño en docs/design.md, decisiones ADR
+documentadas (Drift vs Hive, setup vs lobby), instrucciones de instalación
+y prompts.md completo de Entrega 2.
+
+**Rama:** `feature-entrega2-JMGS` → `main`

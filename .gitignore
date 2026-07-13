@@ -1,0 +1,5 @@
+app/android/.kotlin/sessions/kotlin-compiler-*
+app/firebase.json
+app/android/app/google-services.json
+app/ios/Runner/GoogleService-Info.plist
+app/lib/firebase_options.dart

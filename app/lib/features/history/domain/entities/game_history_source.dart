@@ -1,0 +1,4 @@
+enum GameHistorySource {
+  local,
+  cloud,
+}
