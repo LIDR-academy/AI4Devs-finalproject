@@ -37,6 +37,15 @@ class PlayerRemoved extends AddPlayersEvent {
   List<Object?> get props => [playerId];
 }
 
+class PlayerAddedFromFavorite extends AddPlayersEvent {
+  const PlayerAddedFromFavorite({required this.favoriteId});
+
+  final String favoriteId;
+
+  @override
+  List<Object?> get props => [favoriteId];
+}
+
 class ContinueRequested extends AddPlayersEvent {
   const ContinueRequested();
 }

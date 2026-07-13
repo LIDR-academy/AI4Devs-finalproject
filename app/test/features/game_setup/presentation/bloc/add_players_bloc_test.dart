@@ -2,6 +2,7 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/game.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/game_status.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/player_embed.dart';
+import 'package:la_pocha/features/game_setup/domain/usecases/add_player_from_favorite_usecase.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/add_player_usecase.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/get_game_by_id_usecase.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/remove_player_usecase.dart';
@@ -15,11 +16,13 @@ import 'add_players_bloc_test.mocks.dart';
 @GenerateNiceMocks([
   MockSpec<GetGameByIdUseCase>(),
   MockSpec<AddPlayerUseCase>(),
+  MockSpec<AddPlayerFromFavoriteUseCase>(),
   MockSpec<RemovePlayerUseCase>(),
 ])
 void main() {
   late MockGetGameByIdUseCase getGameById;
   late MockAddPlayerUseCase addPlayer;
+  late MockAddPlayerFromFavoriteUseCase addPlayerFromFavorite;
   late MockRemovePlayerUseCase removePlayer;
 
   final baseGame = Game(
@@ -37,12 +40,14 @@ void main() {
   setUp(() {
     getGameById = MockGetGameByIdUseCase();
     addPlayer = MockAddPlayerUseCase();
+    addPlayerFromFavorite = MockAddPlayerFromFavoriteUseCase();
     removePlayer = MockRemovePlayerUseCase();
   });
 
   AddPlayersBloc buildBloc() => AddPlayersBloc(
         getGameById: getGameById,
         addPlayer: addPlayer,
+        addPlayerFromFavorite: addPlayerFromFavorite,
         removePlayer: removePlayer,
       );
 

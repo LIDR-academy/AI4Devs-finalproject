@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:la_pocha/core/di/injection.dart';
+import 'package:la_pocha/features/favorites/presentation/bloc/favorites_bloc.dart';
+import 'package:la_pocha/features/favorites/presentation/widgets/favorites_picker.dart';
 import 'package:la_pocha/features/game_setup/presentation/bloc/add_players_bloc.dart';
-import 'package:la_pocha/features/game_setup/presentation/widgets/favorites_list_stub.dart';
 import 'package:la_pocha/features/game_setup/presentation/widgets/free_name_input.dart';
 import 'package:la_pocha/features/game_setup/presentation/widgets/search_player_stub.dart';
 
@@ -101,7 +103,21 @@ Future<void> _openOption(
                 },
               ),
             _AddPlayerOption.search => const SearchPlayerStub(),
-            _AddPlayerOption.favorites => const FavoritesListStub(),
+            _AddPlayerOption.favorites => MultiBlocProvider(
+                providers: [
+                  BlocProvider.value(value: bloc),
+                  BlocProvider(
+                    create: (_) =>
+                        getIt<FavoritesBloc>()..add(const FavoritesStarted()),
+                  ),
+                ],
+                child: FavoritesPicker(
+                  onSelected: () {
+                    Navigator.of(context).pop();
+                    Navigator.of(sheetContext).pop();
+                  },
+                ),
+              ),
           },
         );
       },

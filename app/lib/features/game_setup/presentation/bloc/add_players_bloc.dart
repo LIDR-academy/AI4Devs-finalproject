@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:la_pocha/features/game_setup/domain/entities/player_embed.dart';
+import 'package:la_pocha/features/game_setup/domain/usecases/add_player_from_favorite_usecase.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/add_player_usecase.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/get_game_by_id_usecase.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/remove_player_usecase.dart';
@@ -12,16 +13,19 @@ class AddPlayersBloc extends Bloc<AddPlayersEvent, AddPlayersState> {
   AddPlayersBloc({
     required this._getGameById,
     required this._addPlayer,
+    required this._addPlayerFromFavorite,
     required this._removePlayer,
   }) : super(const AddPlayersInitial()) {
     on<AddPlayersStarted>(_onStarted);
     on<PlayerAdded>(_onPlayerAdded);
+    on<PlayerAddedFromFavorite>(_onPlayerAddedFromFavorite);
     on<PlayerRemoved>(_onPlayerRemoved);
     on<ContinueRequested>(_onContinueRequested);
   }
 
   final GetGameByIdUseCase _getGameById;
   final AddPlayerUseCase _addPlayer;
+  final AddPlayerFromFavoriteUseCase _addPlayerFromFavorite;
   final RemovePlayerUseCase _removePlayer;
 
   Future<void> _onStarted(
@@ -64,6 +68,33 @@ class AddPlayersBloc extends Bloc<AddPlayersEvent, AddPlayersState> {
     emit(current.copyWith(isLoading: true, errorMessage: null));
     try {
       final game = await _addPlayer(gameId: current.gameId, name: event.name);
+      emit(
+        current.copyWith(
+          players: game.players,
+          isLoading: false,
+          errorMessage: null,
+        ),
+      );
+    } catch (error) {
+      emit(current.copyWith(isLoading: false, errorMessage: error.toString()));
+    }
+  }
+
+  Future<void> _onPlayerAddedFromFavorite(
+    PlayerAddedFromFavorite event,
+    Emitter<AddPlayersState> emit,
+  ) async {
+    final current = state;
+    if (current is! AddPlayersLoaded) {
+      return;
+    }
+
+    emit(current.copyWith(isLoading: true, errorMessage: null));
+    try {
+      final game = await _addPlayerFromFavorite(
+        gameId: current.gameId,
+        favoriteId: event.favoriteId,
+      );
       emit(
         current.copyWith(
           players: game.players,

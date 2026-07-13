@@ -109,6 +109,17 @@ firestore:
         - No escribe en games/{gameId}
         - Usado para GameHistorySource.cloud y para cloudGameId tras borrado local sincronizado
 
+    favorites:
+      description: Lista local de jugadores favoritos para añadir rápido a partidas.
+      persistence: local
+      driftTable: favorites
+      schemaVersion: 7
+      sdk: FavoriteLocalDatasource / FavoriteRepository
+      notes:
+        - Local only; no Firestore en MVP
+        - Una fila por favorito (id, displayName, userId opcional, createdAt)
+        - Deduplicación por userId o displayName (case-insensitive) en FavoriteRepositoryImpl
+
 errors:
   mapping:
     firebase_auth/user-not-found: DomainAuthFailure

@@ -9,6 +9,14 @@ import 'package:la_pocha/features/game_setup/data/repositories/round_repository_
 import 'package:la_pocha/features/game_setup/domain/repositories/game_repository.dart';
 import 'package:la_pocha/features/game_setup/domain/repositories/round_repository.dart';
 import 'package:la_pocha/features/game_setup/domain/services/dealer_rotation_service.dart';
+import 'package:la_pocha/features/favorites/data/datasources/favorite_local_datasource.dart';
+import 'package:la_pocha/features/favorites/data/repositories/favorite_repository_impl.dart';
+import 'package:la_pocha/features/favorites/domain/repositories/favorite_repository.dart';
+import 'package:la_pocha/features/favorites/domain/usecases/add_favorite_usecase.dart';
+import 'package:la_pocha/features/favorites/domain/usecases/get_favorites_usecase.dart';
+import 'package:la_pocha/features/favorites/domain/usecases/remove_favorite_usecase.dart';
+import 'package:la_pocha/features/favorites/presentation/bloc/favorites_bloc.dart';
+import 'package:la_pocha/features/game_setup/domain/usecases/add_player_from_favorite_usecase.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/add_player_usecase.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/cancel_game_usecase.dart';
 import 'package:la_pocha/features/game_setup/domain/usecases/create_game_draft_usecase.dart';
@@ -207,6 +215,34 @@ Future<void> configureDependencies() async {
     () => HiddenGamesLocalDatasource(getIt<AppDatabase>()),
   );
 
+  getIt.registerLazySingleton<FavoriteLocalDatasource>(
+    () => FavoriteLocalDatasource(getIt<AppDatabase>()),
+  );
+
+  getIt.registerLazySingleton<FavoriteRepository>(
+    () => FavoriteRepositoryImpl(getIt<FavoriteLocalDatasource>()),
+  );
+
+  getIt.registerFactory<GetFavoritesUseCase>(
+    () => GetFavoritesUseCase(getIt<FavoriteRepository>()),
+  );
+
+  getIt.registerFactory<AddFavoriteUseCase>(
+    () => AddFavoriteUseCase(getIt<FavoriteRepository>()),
+  );
+
+  getIt.registerFactory<RemoveFavoriteUseCase>(
+    () => RemoveFavoriteUseCase(getIt<FavoriteRepository>()),
+  );
+
+  getIt.registerFactory<FavoritesBloc>(
+    () => FavoritesBloc(
+      getFavorites: getIt<GetFavoritesUseCase>(),
+      addFavorite: getIt<AddFavoriteUseCase>(),
+      removeFavorite: getIt<RemoveFavoriteUseCase>(),
+    ),
+  );
+
   getIt.registerLazySingleton<HistoryLocalDatasource>(
     () => HistoryLocalDatasource(
       getIt<AppDatabase>(),
@@ -354,6 +390,13 @@ Future<void> configureDependencies() async {
     () => AddPlayerUseCase(getIt<GameRepository>()),
   );
 
+  getIt.registerFactory<AddPlayerFromFavoriteUseCase>(
+    () => AddPlayerFromFavoriteUseCase(
+      getIt<GameRepository>(),
+      getIt<FavoriteRepository>(),
+    ),
+  );
+
   getIt.registerFactory<RemovePlayerUseCase>(
     () => RemovePlayerUseCase(getIt<GameRepository>()),
   );
@@ -394,6 +437,7 @@ Future<void> configureDependencies() async {
     () => AddPlayersBloc(
       getGameById: getIt<GetGameByIdUseCase>(),
       addPlayer: getIt<AddPlayerUseCase>(),
+      addPlayerFromFavorite: getIt<AddPlayerFromFavoriteUseCase>(),
       removePlayer: getIt<RemovePlayerUseCase>(),
     ),
   );

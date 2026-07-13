@@ -6,12 +6,14 @@
 import 'dart:async' as _i4;
 
 import 'package:la_pocha/features/game_setup/domain/entities/game.dart' as _i2;
+import 'package:la_pocha/features/game_setup/domain/usecases/add_player_from_favorite_usecase.dart'
+    as _i6;
 import 'package:la_pocha/features/game_setup/domain/usecases/add_player_usecase.dart'
     as _i5;
 import 'package:la_pocha/features/game_setup/domain/usecases/get_game_by_id_usecase.dart'
     as _i3;
 import 'package:la_pocha/features/game_setup/domain/usecases/remove_player_usecase.dart'
-    as _i6;
+    as _i7;
 import 'package:mockito/mockito.dart' as _i1;
 
 // ignore_for_file: type=lint
@@ -73,11 +75,48 @@ class MockAddPlayerUseCase extends _i1.Mock implements _i5.AddPlayerUseCase {
           as _i4.Future<_i2.Game>);
 }
 
+/// A class which mocks [AddPlayerFromFavoriteUseCase].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockAddPlayerFromFavoriteUseCase extends _i1.Mock
+    implements _i6.AddPlayerFromFavoriteUseCase {
+  @override
+  _i4.Future<_i2.Game> call({
+    required String? gameId,
+    required String? favoriteId,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#call, [], {
+              #gameId: gameId,
+              #favoriteId: favoriteId,
+            }),
+            returnValue: _i4.Future<_i2.Game>.value(
+              _FakeGame_0(
+                this,
+                Invocation.method(#call, [], {
+                  #gameId: gameId,
+                  #favoriteId: favoriteId,
+                }),
+              ),
+            ),
+            returnValueForMissingStub: _i4.Future<_i2.Game>.value(
+              _FakeGame_0(
+                this,
+                Invocation.method(#call, [], {
+                  #gameId: gameId,
+                  #favoriteId: favoriteId,
+                }),
+              ),
+            ),
+          )
+          as _i4.Future<_i2.Game>);
+}
+
 /// A class which mocks [RemovePlayerUseCase].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockRemovePlayerUseCase extends _i1.Mock
-    implements _i6.RemovePlayerUseCase {
+    implements _i7.RemovePlayerUseCase {
   @override
   _i4.Future<_i2.Game?> call({
     required String? gameId,

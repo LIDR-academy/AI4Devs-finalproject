@@ -120,6 +120,13 @@ class ProfilePage extends StatelessWidget {
                             ),
                           ),
                           const Spacer(),
+                          ListTile(
+                            leading: const Icon(Icons.star_outline),
+                            title: const Text('Mis favoritos'),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () => context.push('/favorites'),
+                          ),
+                          const SizedBox(height: 8),
                           FilledButton(
                             onPressed: () => context
                                 .read<AuthBloc>()

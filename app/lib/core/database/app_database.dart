@@ -7,13 +7,14 @@ import 'package:la_pocha/features/game_setup/domain/entities/round_definition.da
 import 'converters/map_string_int_converter.dart';
 import 'converters/players_converter.dart';
 import 'converters/round_sequence_converter.dart';
+import 'tables/favorites_table.dart';
 import 'tables/games_table.dart';
 import 'tables/hidden_games_table.dart';
 import 'tables/rounds_table.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [Games, Rounds, HiddenGames])
+@DriftDatabase(tables: [Games, Rounds, HiddenGames, Favorites])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
@@ -22,7 +23,7 @@ class AppDatabase extends _$AppDatabase {
   factory AppDatabase.forTesting() => AppDatabase(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -59,6 +60,9 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 6) {
             await migrator.createTable(hiddenGames);
+          }
+          if (from < 7) {
+            await migrator.createTable(favorites);
           }
         },
       );

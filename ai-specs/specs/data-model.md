@@ -336,7 +336,23 @@ El historial combina partidas **locales** (Drift) y **en nube** (Firestore). La 
 
 **Implementación MVP de `hiddenGameIds`:** tabla Drift local `hidden_games` (`gameId TEXT PRIMARY KEY`, schema v6). No se persiste en `users/{uid}` en Firestore en esta fase.
 
+### 12.2 Favoritos locales (LPT-18)
+
+Los jugadores favoritos se guardan **solo en el dispositivo** (Drift). No hay colección Firestore en el MVP.
+
+**Tabla Drift `favorites`** (schema v7, una fila por favorito):
+
+| Campo | Tipo | Obligatorio | Descripción |
+|-------|------|-------------|-------------|
+| `id` | TEXT | sí | Clave primaria (UUID) |
+| `displayName` | TEXT | sí | Nombre mostrado en listas y al añadir a partida |
+| `userId` | TEXT | no | `null` = invitado; valor = usuario registrado vinculado |
+| `createdAt` | DATETIME | sí | Fecha de alta del favorito |
+
+**Deduplicación en dominio:** no permitir dos favoritos con el mismo `userId` ni con el mismo `displayName` (comparación case-insensitive).
+
 | Fecha | Cambio |
 |-------|--------|
+| 2026-07-13 | LPT-18: favoritos locales en Drift (`favorites`, schema v7); sin Firestore en MVP |
 | 2026-07-13 | LPT-17: borrado local vs ocultación de partidas en nube; tabla `hidden_games` |
 | 2026-06-03 | Reescritura: dominio La Pocha (users, games, players, rounds) en terminología Firestore; eliminado modelo LTI/relacional |

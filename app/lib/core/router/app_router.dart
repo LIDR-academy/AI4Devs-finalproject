@@ -13,6 +13,7 @@ import 'package:la_pocha/features/round/presentation/pages/play_page.dart';
 import 'package:la_pocha/features/round/presentation/pages/game_final_result_page.dart';
 import 'package:la_pocha/features/round/presentation/pages/round_result_page.dart';
 import 'package:la_pocha/features/round/presentation/pages/scoring_page.dart';
+import 'package:la_pocha/features/favorites/presentation/pages/favorites_page.dart';
 import 'package:la_pocha/features/history/domain/entities/game_history_source.dart';
 import 'package:la_pocha/features/history/presentation/pages/game_detail_page.dart';
 import 'package:la_pocha/features/history/presentation/pages/history_list_page.dart';
@@ -52,6 +53,10 @@ GoRouter createAppRouter({
       GoRoute(
         path: '/profile',
         builder: (context, state) => const ProfilePage(),
+      ),
+      GoRoute(
+        path: '/favorites',
+        builder: (context, state) => const FavoritesPage(),
       ),
       GoRoute(
         path: '/games/new',
