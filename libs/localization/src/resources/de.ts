@@ -143,12 +143,17 @@ export const de: TranslationResource = {
       viewResults: 'Ergebnisse ansehen',
     },
     player: {
-      intro: 'Folien-Player für Lektion {{id}}',
-      finish: 'Lektion abschließen',
       loading: 'Lektion wird geladen…',
       next: 'Weiter',
       back: 'Zurück',
       slideOf: 'Folie {{current}} von {{total}}',
+      empty: {
+        message: 'Diese Lektion hat noch keine Folien.',
+      },
+      error: {
+        message: 'Diese Lektion konnte nicht geladen werden.',
+        retry: 'Erneut versuchen',
+      },
     },
     results: {
       score: '{{correct}} / {{total}}',

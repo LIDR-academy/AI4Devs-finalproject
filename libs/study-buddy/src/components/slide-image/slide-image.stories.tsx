@@ -52,3 +52,17 @@ export const NoImage: Story = {
     image: undefined,
   },
 };
+
+// @s9 — ref present but resolution failed → renders nothing (text-only degrade).
+export const UnresolvableImage: Story = {
+  decorators: [withSlideImageUrlMock({ url: null, isLoading: false })],
+  args: {
+    image: {
+      imageId: 'img-missing',
+      storagePath: 'demo/missing.png',
+      width: 400,
+      height: 300,
+      alt: 'Missing diagram',
+    },
+  },
+};

@@ -159,12 +159,17 @@ export const en = {
       viewResults: 'View results',
     },
     player: {
-      intro: 'Slide player for lesson {{id}}',
-      finish: 'Finish lesson',
       loading: 'Loading lesson…',
       next: 'Next',
       back: 'Back',
       slideOf: 'Slide {{current}} of {{total}}',
+      empty: {
+        message: 'This lesson has no slides yet.',
+      },
+      error: {
+        message: "Couldn't load this lesson.",
+        retry: 'Retry',
+      },
     },
     results: {
       score: '{{correct}} / {{total}}',

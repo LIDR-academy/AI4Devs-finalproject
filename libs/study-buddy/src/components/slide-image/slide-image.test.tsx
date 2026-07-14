@@ -30,6 +30,17 @@ describe('SlideImage', () => {
     expect(screen.queryByLabelText('Diagram of mitosis')).toBeNull();
   });
 
+  // @s9 — image ref present but resolution failed → text-only, no error/placeholder.
+  it('renders nothing when the image ref fails to resolve', async () => {
+    mockUseSlideImageUrl.mockReturnValue({ url: null, isLoading: false });
+
+    await render(<SlideImage image={imageRef} />);
+
+    expect(screen.queryByLabelText('Diagram of mitosis')).toBeNull();
+    expect(screen.queryByText(/error/i)).toBeNull();
+    expect(screen.queryByRole('image')).toBeNull();
+  });
+
   // @s7 — present image renders scaled with alt.
   it('renders the image scaled to fit when a url is available', async () => {
     mockUseSlideImageUrl.mockReturnValue({

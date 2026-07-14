@@ -140,12 +140,17 @@ export const pt: TranslationResource = {
       viewResults: 'Ver resultados',
     },
     player: {
-      intro: 'Reprodutor de slides da lição {{id}}',
-      finish: 'Concluir lição',
       loading: 'Carregando lição…',
       next: 'Próximo',
       back: 'Voltar',
       slideOf: 'Slide {{current}} de {{total}}',
+      empty: {
+        message: 'Esta lição ainda não tem slides.',
+      },
+      error: {
+        message: 'Não foi possível carregar esta lição.',
+        retry: 'Tentar novamente',
+      },
     },
     results: {
       score: '{{correct}} / {{total}}',

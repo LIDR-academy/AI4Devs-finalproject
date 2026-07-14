@@ -144,6 +144,9 @@ const t = (key: string, options?: Record<string, unknown>) => {
   if (key === 'player.next') return 'Next';
   if (key === 'player.back') return 'Back';
   if (key === 'player.loading') return 'Loading lesson…';
+  if (key === 'player.empty.message') return 'player.empty.message';
+  if (key === 'player.error.message') return 'player.error.message';
+  if (key === 'player.error.retry') return 'Retry';
   return key;
 };
 
@@ -351,5 +354,84 @@ describe('LessonPlayer', () => {
     });
 
     expect(onBackToLessons).toHaveBeenCalledTimes(1);
+  });
+
+  // @s15 — 0 slides → Empty + Back; no deck, results, or error/retry.
+  it('shows an empty state with Back when the lesson has zero slides', async () => {
+    const onBackToLessons = jest.fn();
+    const emptyLesson: Lesson = { ...lesson, slides: [] };
+
+    await render(<LessonPlayer lesson={emptyLesson} onBackToLessons={onBackToLessons} />);
+
+    expect(screen.getByText('player.empty.message')).toBeTruthy();
+    expect(screen.queryByTestId('slide-s1')).toBeNull();
+    expect(screen.queryByTestId('lesson-results')).toBeNull();
+    expect(screen.queryByText('Slide 1 of 1')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Retry' })).toBeNull();
+    expect(screen.queryByText('player.error.message')).toBeNull();
+
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'Back' }));
+    });
+    expect(onBackToLessons).toHaveBeenCalledTimes(1);
+  });
+
+  // @s16 — load failure → Error + Retry + Back; Retry invokes onRetry.
+  it('shows an error state with Retry and Back when load fails', async () => {
+    const onBackToLessons = jest.fn();
+    const onRetry = jest.fn();
+
+    await render(
+      <LessonPlayer
+        lesson={null}
+        error={new Error('network')}
+        onRetry={onRetry}
+        onBackToLessons={onBackToLessons}
+      />,
+    );
+
+    expect(screen.getByText('player.error.message')).toBeTruthy();
+    expect(screen.queryByTestId('slide-s1')).toBeNull();
+    expect(screen.queryByTestId('lesson-results')).toBeNull();
+    expect(screen.queryByText('player.empty.message')).toBeNull();
+
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'Retry' }));
+    });
+    expect(onRetry).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'Back' }));
+    });
+    expect(onBackToLessons).toHaveBeenCalledTimes(1);
+  });
+
+  // @s16 — after successful retry props, first content slide is shown.
+  it('shows the first content slide when error clears and a lesson is provided', async () => {
+    const { rerender } = await render(
+      <LessonPlayer
+        lesson={null}
+        error={new Error('network')}
+        onRetry={jest.fn()}
+        onBackToLessons={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByText('player.error.message')).toBeTruthy();
+
+    await rerender(<LessonPlayer lesson={lesson} onBackToLessons={jest.fn()} />);
+
+    expect(screen.getByTestId('slide-s1')).toBeTruthy();
+    expect(screen.getByText('Slide 1 of 5')).toBeTruthy();
+    expect(screen.queryByText('player.error.message')).toBeNull();
+  });
+
+  // @s4/@s10 chrome — Back absent on first; progress live region; Next named.
+  it('exposes accessible names on Next and a live progress label', async () => {
+    await render(<LessonPlayer lesson={lesson} onBackToLessons={jest.fn()} />);
+
+    expect(screen.queryByRole('button', { name: 'Back' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Next' })).toBeTruthy();
+    expect(screen.getByText('Slide 1 of 5').props.accessibilityLiveRegion).toBe('polite');
   });
 });

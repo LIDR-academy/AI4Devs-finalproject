@@ -16,4 +16,13 @@ describe('LessonProgressIndicator', () => {
 
     expect(screen.getByText('Slide 5 of 5')).toBeTruthy();
   });
+
+  // @s10/@s20 chrome — progress label exposed to assistive tech (WCAG 4.1.3).
+  it('exposes the progress label as a polite live region with an accessible name', async () => {
+    await render(<LessonProgressIndicator current={2} total={5} label="Slide 2 of 5" />);
+
+    const label = screen.getByText('Slide 2 of 5');
+    expect(label.props.accessibilityLiveRegion).toBe('polite');
+    expect(label.props.accessibilityLabel).toBe('Slide 2 of 5');
+  });
 });

@@ -13,14 +13,14 @@ export default function PlayerScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useLocalization();
   const router = useRouter();
-  const { lesson, isLoading } = useLesson(id ?? '');
+  const { lesson, isLoading, error, refetch } = useLesson(id ?? '');
 
   const onBackToLessons = useCallback(() => {
     router.replace('/');
   }, [router]);
 
-  // @s17 — Loading: spinner, no slide content. Empty/Error are Slice 3.
-  if (isLoading || !lesson) {
+  // @s17 — Loading: spinner, no slide content.
+  if (isLoading) {
     return (
       <ScreenContainer>
         <View
@@ -36,9 +36,15 @@ export default function PlayerScreen() {
     );
   }
 
+  // @s15/@s16 — Empty (0 slides) and Error (+ retry) live inside LessonPlayer.
   return (
     <ScreenContainer>
-      <LessonPlayer lesson={lesson} onBackToLessons={onBackToLessons} />
+      <LessonPlayer
+        lesson={lesson}
+        error={error}
+        onRetry={refetch}
+        onBackToLessons={onBackToLessons}
+      />
     </ScreenContainer>
   );
 }

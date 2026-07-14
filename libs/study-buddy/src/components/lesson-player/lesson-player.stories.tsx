@@ -157,3 +157,41 @@ export const WithImageSlide: Story = {
     },
   },
 };
+
+/** @s15 — slideless lesson → Empty + Back. */
+export const Empty: Story = {
+  args: {
+    lesson: { ...lesson, slides: [] },
+  },
+};
+
+/** @s16 — load failure → Error + Retry + Back. */
+export const ErrorState: Story = {
+  args: {
+    lesson: null,
+    error: new Error('network'),
+    onRetry: () => {},
+  },
+};
+
+/** @s19 — mobile viewport decorator for responsive checks. */
+export const MobileViewport: Story = {
+  decorators: [
+    (Story) => (
+      <View style={{ width: 360, height: 640, padding: 12 }}>
+        <Story />
+      </View>
+    ),
+  ],
+};
+
+/** @s19 — wider web viewport. */
+export const WebViewport: Story = {
+  decorators: [
+    (Story) => (
+      <View style={{ width: 960, height: 720, padding: 24 }}>
+        <Story />
+      </View>
+    ),
+  ],
+};

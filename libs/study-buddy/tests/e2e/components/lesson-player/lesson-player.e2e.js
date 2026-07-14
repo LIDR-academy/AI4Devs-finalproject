@@ -57,3 +57,50 @@ test('Lesson player retake returns to first slide', async ({ page }) => {
   await expect(canvas.getByText('Welcome', { exact: true })).toBeVisible();
   await expect(canvas.getByText('Slide 1 of 5', { exact: true })).toBeVisible();
 });
+
+// @s15 — Empty state for a slideless lesson.
+test('Lesson player shows empty state for zero slides', async ({ page }) => {
+  await page.goto(story('empty'));
+  const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
+
+  await expect(canvas.getByText('This lesson has no slides yet.', { exact: true })).toBeVisible();
+  await expect(canvas.getByText('Back', { exact: true })).toBeVisible();
+  await expect(canvas.getByText('Next', { exact: true })).toHaveCount(0);
+});
+
+// @s16 — Error state with Retry + Back.
+test('Lesson player shows error state with retry', async ({ page }) => {
+  await page.goto(story('error-state'));
+  const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
+
+  await expect(canvas.getByText("Couldn't load this lesson.", { exact: true })).toBeVisible();
+  await expect(canvas.getByText('Retry', { exact: true })).toBeVisible();
+  await expect(canvas.getByText('Back', { exact: true })).toBeVisible();
+});
+
+// @s19 — navigation + progress usable on a mobile viewport.
+test('Lesson player is usable on a mobile viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 667 });
+  await page.goto(story('first-slide'));
+  const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
+
+  await expect(canvas.getByText('Welcome', { exact: true })).toBeVisible();
+  await expect(canvas.getByText('Slide 1 of 5', { exact: true })).toBeVisible();
+  await expect(canvas.getByText('Next', { exact: true })).toBeVisible();
+  await canvas.getByText('Next', { exact: true }).click();
+  await expect(canvas.getByText('France', { exact: true })).toBeVisible();
+  await expect(canvas.getByText('Slide 2 of 5', { exact: true })).toBeVisible();
+});
+
+// @s19 — navigation + progress usable on a web viewport.
+test('Lesson player is usable on a web viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(story('first-slide'));
+  const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
+
+  await expect(canvas.getByText('Welcome', { exact: true })).toBeVisible();
+  await expect(canvas.getByText('Slide 1 of 5', { exact: true })).toBeVisible();
+  await expect(canvas.getByText('Next', { exact: true })).toBeVisible();
+  await canvas.getByText('Next', { exact: true }).click();
+  await expect(canvas.getByText('France', { exact: true })).toBeVisible();
+});

@@ -20,7 +20,12 @@ export const LessonProgressIndicator = ({
   return (
     <View style={styles.root} testID={LESSON_PROGRESS_TEST_ID}>
       <ProgressBar variant="linear" value={value} />
-      <Text accessibilityRole="text" style={styles.label}>
+      <Text
+        accessibilityRole="text"
+        accessibilityLiveRegion="polite"
+        accessibilityLabel={label}
+        style={styles.label}
+      >
         {label}
       </Text>
     </View>
