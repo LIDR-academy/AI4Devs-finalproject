@@ -271,6 +271,44 @@ describe('LessonResults', () => {
     expect(saveAttempt).not.toHaveBeenCalled();
   });
 
+  // Mutation — effect deps include persistOnMount (not []); flip false→true must save.
+  it('saves when persistOnMount flips from false to true on the same mount', async () => {
+    const saveAttempt = jest.fn();
+    mockUseLessonAttempt.mockReturnValue({
+      status: 'idle',
+      attempt: null,
+      saveAttempt,
+      retry: jest.fn(),
+    });
+    mockUseLocalization.mockReturnValue(localizationValue());
+
+    const { rerender } = await render(
+      <LessonResults
+        lesson={scorableLesson}
+        answers={allCorrectAnswers}
+        onRetake={jest.fn()}
+        onBackToLessons={jest.fn()}
+        persistOnMount={false}
+      />,
+    );
+    expect(saveAttempt).not.toHaveBeenCalled();
+
+    await act(async () => {
+      rerender(
+        <LessonResults
+          lesson={scorableLesson}
+          answers={allCorrectAnswers}
+          onRetake={jest.fn()}
+          onBackToLessons={jest.fn()}
+          persistOnMount={true}
+        />,
+      );
+    });
+
+    expect(saveAttempt).toHaveBeenCalledTimes(1);
+    expect(saveAttempt).toHaveBeenCalledWith({ lessonId: 'lesson-1', score: 3, total: 3 });
+  });
+
   // @s6 — a re-render (e.g. a parent state change, not a remount) does not double-save.
   it('does not call saveAttempt again on a re-render with the same lesson/answers', async () => {
     const saveAttempt = jest.fn();
@@ -295,6 +333,46 @@ describe('LessonResults', () => {
         <LessonResults
           lesson={scorableLesson}
           answers={allCorrectAnswers}
+          onRetake={jest.fn()}
+          onBackToLessons={jest.fn()}
+        />,
+      );
+    });
+
+    expect(saveAttempt).toHaveBeenCalledTimes(1);
+  });
+
+  // Mutation — hasSaved stays true across effect re-runs when the score input changes.
+  it('does not call saveAttempt again when answers change after the first save', async () => {
+    const saveAttempt = jest.fn();
+    mockUseLessonAttempt.mockReturnValue({
+      status: 'idle',
+      attempt: null,
+      saveAttempt,
+      retry: jest.fn(),
+    });
+    mockUseLocalization.mockReturnValue(localizationValue());
+
+    const { rerender } = await render(
+      <LessonResults
+        lesson={scorableLesson}
+        answers={allCorrectAnswers}
+        onRetake={jest.fn()}
+        onBackToLessons={jest.fn()}
+      />,
+    );
+    expect(saveAttempt).toHaveBeenCalledTimes(1);
+
+    const oneWrong = [
+      { slideId: 'slide-1', activityType: 'multiple-choice' as const, isCorrect: false },
+      { slideId: 'slide-2', activityType: 'multiple-choice' as const, isCorrect: true },
+      { slideId: 'slide-3', activityType: 'multiple-choice' as const, isCorrect: true },
+    ];
+    await act(async () => {
+      rerender(
+        <LessonResults
+          lesson={scorableLesson}
+          answers={oneWrong}
           onRetake={jest.fn()}
           onBackToLessons={jest.fn()}
         />,

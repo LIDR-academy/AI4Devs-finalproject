@@ -2,6 +2,7 @@ import { LessonImageService } from '@helsoft/supabase-services';
 import type { SlideImageRef } from '@helsoft/types';
 import { useEffect, useRef, useState } from 'react';
 
+import { nextRequestId } from './next-request-id';
 import type { UseSlideImageUrlResult } from './use-slide-image-url.types';
 
 /**
@@ -11,15 +12,7 @@ import type { UseSlideImageUrlResult } from './use-slide-image-url.types';
 export const useSlideImageUrl = (imageRef?: SlideImageRef): UseSlideImageUrlResult => {
   const [url, setUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(Boolean(imageRef?.storagePath));
-  const isMounted = useRef(true);
   const requestId = useRef(0);
-
-  useEffect(
-    () => () => {
-      isMounted.current = false;
-    },
-    [],
-  );
 
   useEffect(() => {
     if (!imageRef?.storagePath) {
@@ -28,12 +21,13 @@ export const useSlideImageUrl = (imageRef?: SlideImageRef): UseSlideImageUrlResu
       return;
     }
 
-    const req = ++requestId.current;
+    const req = nextRequestId(requestId.current);
+    requestId.current = req;
     setIsLoading(true);
     setUrl(null);
 
     void LessonImageService.getSignedImageUrl(imageRef.storagePath).then((signed) => {
-      if (req !== requestId.current || !isMounted.current) return;
+      if (req !== requestId.current) return;
       setUrl(signed);
       setIsLoading(false);
     });

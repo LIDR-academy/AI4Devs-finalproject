@@ -60,4 +60,26 @@ describe('SlideImage', () => {
       }),
     );
   });
+
+  // Mutation — aspectRatio falls back to 1 unless BOTH width and height are > 0.
+  it('falls back to aspect ratio 1 when width or height is non-positive', async () => {
+    mockUseSlideImageUrl.mockReturnValue({
+      url: 'https://example.com/signed.png',
+      isLoading: false,
+    });
+
+    await render(
+      <SlideImage image={{ ...imageRef, width: 0, height: 200, alt: 'zero-width' }} />,
+    );
+    expect(screen.getByLabelText('zero-width').props.style).toEqual(
+      expect.objectContaining({ aspectRatio: 1 }),
+    );
+
+    await render(
+      <SlideImage image={{ ...imageRef, width: 200, height: 0, alt: 'zero-height' }} />,
+    );
+    expect(screen.getByLabelText('zero-height').props.style).toEqual(
+      expect.objectContaining({ aspectRatio: 1 }),
+    );
+  });
 });

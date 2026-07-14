@@ -53,4 +53,19 @@ describe('lessonPlayerReducer', () => {
     expect(state.attemptSaved).toBe(false);
     expect(state.answers).toEqual({});
   });
+
+  // Mutation — enteringResults requires currentIndex < maxIndex (not <= / always true).
+  it('does not re-enter results when next is dispatched while already on results', () => {
+    let state = lessonPlayerInitialState;
+    state = lessonPlayerReducer(state, { type: 'next', maxIndex: 2 });
+    state = lessonPlayerReducer(state, { type: 'next', maxIndex: 2 });
+    expect(state.currentIndex).toBe(2);
+    expect(state.persistOnMount).toBe(true);
+    expect(state.attemptSaved).toBe(true);
+
+    const again = lessonPlayerReducer(state, { type: 'next', maxIndex: 2 });
+    expect(again).toEqual(state);
+    expect(again.persistOnMount).toBe(true);
+    expect(again.attemptSaved).toBe(true);
+  });
 });

@@ -108,4 +108,26 @@ describe('useLessonPlayer', () => {
     expect(result.current.persistOnMount).toBe(true);
     expect(result.current.attemptSaved).toBe(true);
   });
+
+  // Mutation — gradedAnswers memo depends on lesson + answers.
+  it('updates gradedAnswers when an activity is answered', async () => {
+    const { result } = await renderHook(() => useLessonPlayer(lesson));
+    expect(result.current.gradedAnswers).toEqual([
+      { slideId: 's2', activityType: 'multiple-choice', isCorrect: false },
+    ]);
+
+    await act(async () => {
+      result.current.onAnswered({
+        slideId: 's2',
+        activityType: 'multiple-choice',
+        selectedOptionId: 'a',
+        correctOptionId: 'a',
+        isCorrect: true,
+      });
+    });
+
+    expect(result.current.gradedAnswers).toEqual([
+      { slideId: 's2', activityType: 'multiple-choice', isCorrect: true },
+    ]);
+  });
 });

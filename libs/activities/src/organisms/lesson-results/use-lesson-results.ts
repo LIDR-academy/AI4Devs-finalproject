@@ -25,14 +25,20 @@ export const useLessonResults = ({
   const summary = scoreLesson(toScorableSlides(lesson), answers);
 
   const hasSaved = useRef(false);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: save-once-on-mount effect; hasSaved guards re-entry and the attempt must not re-save on re-render
   useEffect(() => {
     if (!persistOnMount) return;
     if (!summary.isScorable) return;
     if (hasSaved.current) return;
     hasSaved.current = true;
     saveAttempt({ lessonId: lesson.id, score: summary.correct, total: summary.total });
-  }, []);
+  }, [
+    persistOnMount,
+    summary.isScorable,
+    summary.correct,
+    summary.total,
+    lesson.id,
+    saveAttempt,
+  ]);
 
   return {
     variant: summary.isScorable ? ('score' as const) : ('completion' as const),

@@ -82,7 +82,12 @@ import type { Lesson } from '@helsoft/types';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
 import { localizationValue } from '../../test-utils/auth-test-factories';
-import { LESSON_PLAYER_TEST_ID, LessonPlayer } from './lesson-player';
+import {
+  LESSON_PLAYER_EMPTY_TEST_ID,
+  LESSON_PLAYER_ERROR_TEST_ID,
+  LESSON_PLAYER_TEST_ID,
+  LessonPlayer,
+} from './lesson-player';
 
 const mockUseLocalization = useLocalization as jest.Mock;
 
@@ -140,6 +145,7 @@ const lesson: Lesson = {
 };
 
 const t = (key: string, options?: Record<string, unknown>) => {
+  if (!key) throw new Error('empty i18n key');
   if (key === 'player.slideOf') return `Slide ${options?.current} of ${options?.total}`;
   if (key === 'player.next') return 'Next';
   if (key === 'player.back') return 'Back';
@@ -175,6 +181,15 @@ describe('LessonPlayer', () => {
     expect(screen.getByTestId('slide-s1')).toBeTruthy();
     expect(screen.queryByTestId('slide-s2')).toBeNull();
     expect(screen.getByText('Slide 1 of 5')).toBeTruthy();
+  });
+
+  // Mutation — ProgressIndicator current is currentIndex+1 (not -1); 1/5 → 20%.
+  it('feeds 1-based current into the progress indicator on the first slide', async () => {
+    await render(<LessonPlayer lesson={lesson} onBackToLessons={jest.fn()} />);
+
+    const progressRoot = screen.getByTestId('lesson-progress-indicator');
+    const bar = progressRoot.children[0] as { props: { accessibilityValue: { now: number } } };
+    expect(bar.props.accessibilityValue.now).toBe(20);
   });
 
   // @s4 — Back unavailable on first slide.
@@ -433,5 +448,86 @@ describe('LessonPlayer', () => {
     expect(screen.queryByRole('button', { name: 'Back' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Next' })).toBeTruthy();
     expect(screen.getByText('Slide 1 of 5').props.accessibilityLiveRegion).toBe('polite');
+  });
+
+  // Mutation — testIDs, i18n keys, progress currentIndex+1, layout styles.
+  it('pins empty/error testIDs, chrome a11y labels, and deck layout styles', async () => {
+    expect(LESSON_PLAYER_TEST_ID).toBe('lesson-player');
+    expect(LESSON_PLAYER_EMPTY_TEST_ID).toBe('lesson-player-empty');
+    expect(LESSON_PLAYER_ERROR_TEST_ID).toBe('lesson-player-error');
+
+    const emptyLesson: Lesson = { ...lesson, slides: [] };
+    await render(<LessonPlayer lesson={emptyLesson} onBackToLessons={jest.fn()} />);
+    expect(screen.getByTestId(LESSON_PLAYER_EMPTY_TEST_ID)).toBeTruthy();
+    const emptyBack = screen.getByRole('button', { name: 'Back' });
+    expect(emptyBack.props.accessibilityLabel).toBe('Back');
+    expect(screen.getByText('Back')).toBeTruthy();
+    expect(screen.getByTestId(LESSON_PLAYER_TEST_ID).props.style).toEqual(
+      expect.objectContaining({ flex: 1, gap: 16 }),
+    );
+    expect(screen.getByTestId(LESSON_PLAYER_EMPTY_TEST_ID).props.style).toEqual(
+      expect.objectContaining({
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+      }),
+    );
+    expect(screen.getByText('player.empty.message').props.style).toEqual(
+      expect.objectContaining({ textAlign: 'center', color: '#1c1a17' }),
+    );
+
+    await render(
+      <LessonPlayer
+        lesson={null}
+        error={new Error('network')}
+        onRetry={jest.fn()}
+        onBackToLessons={jest.fn()}
+      />,
+    );
+    expect(screen.getByTestId(LESSON_PLAYER_ERROR_TEST_ID)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Retry' }).props.accessibilityLabel).toBe('Retry');
+    expect(screen.getByText('Retry')).toBeTruthy();
+    const errorBanner = screen.getByTestId(LESSON_PLAYER_ERROR_TEST_ID);
+    expect(errorBanner.props.style).toEqual(
+      expect.objectContaining({
+        justifyContent: 'center',
+        alignItems: 'center',
+      }),
+    );
+    expect(screen.getByText('player.error.message').props.style).toEqual(
+      expect.objectContaining({ textAlign: 'center' }),
+    );
+    const errorActions = errorBanner.children[1] as { props: { style: unknown } };
+    expect(errorActions.props.style).toEqual(
+      expect.objectContaining({
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+      }),
+    );
+
+    await render(<LessonPlayer lesson={lesson} onBackToLessons={jest.fn()} />);
+    const deckRoot = screen.getAllByTestId(LESSON_PLAYER_TEST_ID).at(-1)!;
+    expect(deckRoot.children[1].props.style).toEqual(expect.objectContaining({ flex: 1 }));
+    expect(deckRoot.children[1].props.contentContainerStyle).toEqual(
+      expect.objectContaining({ flexGrow: 1 }),
+    );
+    expect(deckRoot.children[2].props.style).toEqual(
+      expect.objectContaining({
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: 12,
+      }),
+    );
+    expect(screen.getByText('Slide 1 of 5')).toBeTruthy();
+    const next = screen.getByRole('button', { name: 'Next' });
+    expect(next.props.accessibilityLabel).toBe('Next');
+    expect(screen.getByText('Next')).toBeTruthy();
+
+    await pressNext();
+    expect(screen.getByText('Slide 2 of 5')).toBeTruthy();
+    const back = screen.getByRole('button', { name: 'Back' });
+    expect(back.props.accessibilityLabel).toBe('Back');
+    expect(screen.getByText('Back')).toBeTruthy();
   });
 });

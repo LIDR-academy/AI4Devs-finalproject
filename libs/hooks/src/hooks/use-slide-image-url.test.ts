@@ -4,7 +4,7 @@ jest.mock('@helsoft/supabase-services', () => ({
 
 import { LessonImageService } from '@helsoft/supabase-services';
 import type { SlideImageRef } from '@helsoft/types';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 
 import { useSlideImageUrl } from './use-slide-image-url';
 
@@ -51,5 +51,34 @@ describe('useSlideImageUrl', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     expect(result.current.url).toBeNull();
+  });
+
+  // Mutation — effect depends on storagePath; stale requestId / isMounted guards.
+  it('ignores a stale signed URL that resolves after a newer storagePath', async () => {
+    let resolveFirst: (value: unknown) => void = () => {};
+    let resolveSecond: (value: unknown) => void = () => {};
+    service.getSignedImageUrl
+      .mockReturnValueOnce(new Promise((resolve) => (resolveFirst = resolve)) as never)
+      .mockReturnValueOnce(new Promise((resolve) => (resolveSecond = resolve)) as never);
+
+    const { result, rerender } = renderHook(
+      ({ ref }: { ref: SlideImageRef }) => useSlideImageUrl(ref),
+      { initialProps: { ref: imageRef } },
+    );
+
+    rerender({
+      ref: { ...imageRef, storagePath: 'user/doc/other.png', imageId: 'img-2' },
+    });
+
+    await act(async () => {
+      resolveSecond('https://example.com/other.png');
+    });
+    await waitFor(() => expect(result.current.url).toBe('https://example.com/other.png'));
+
+    await act(async () => {
+      resolveFirst('https://example.com/stale.png');
+    });
+
+    expect(result.current.url).toBe('https://example.com/other.png');
   });
 });

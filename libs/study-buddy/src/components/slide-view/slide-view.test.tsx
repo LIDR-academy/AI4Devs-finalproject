@@ -7,14 +7,16 @@ jest.mock('../multiple-choice-activity/multiple-choice-activity', () => ({
     initialAnswer,
   }: {
     slide: { content: string };
-    initialAnswer?: { selectedOptionId?: string } | null;
+    initialAnswer?: { activityType?: string; selectedOptionId?: string } | null;
   }) => {
     const { Text, View } = require('react-native');
     return (
       <View testID="activity-multiple-choice">
         <Text>{slide.content}</Text>
-        {initialAnswer?.selectedOptionId ? (
-          <Text testID="mc-initial">{initialAnswer.selectedOptionId}</Text>
+        {initialAnswer ? (
+          <Text testID="mc-initial">
+            {`${initialAnswer.activityType}:${initialAnswer.selectedOptionId ?? 'none'}`}
+          </Text>
         ) : null}
       </View>
     );
@@ -83,14 +85,16 @@ jest.mock('../open-ended-activity/open-ended-activity', () => ({
     initialAnswer,
   }: {
     slide: { content: string };
-    initialAnswer?: { submittedAnswer?: string } | null;
+    initialAnswer?: { activityType?: string; submittedAnswer?: string } | null;
   }) => {
     const { Text, View } = require('react-native');
     return (
       <View testID="activity-open-ended">
         <Text>{slide.content}</Text>
-        {initialAnswer?.submittedAnswer ? (
-          <Text testID="oe-initial">{initialAnswer.submittedAnswer}</Text>
+        {initialAnswer ? (
+          <Text testID="oe-initial">
+            {`${initialAnswer.activityType}:${initialAnswer.submittedAnswer ?? 'none'}`}
+          </Text>
         ) : null}
       </View>
     );
@@ -219,7 +223,7 @@ describe('SlideView', () => {
     };
     await render(<SlideView slide={multipleChoice} initialAnswer={answer} />);
 
-    expect(screen.getByTestId('mc-initial').props.children).toBe('opt-a');
+    expect(screen.getByTestId('mc-initial').props.children).toBe('multiple-choice:opt-a');
   });
 
   it('forwards initialAnswer to fill-in-the-blank, matching, flashcard, and open-ended', async () => {
@@ -260,6 +264,56 @@ describe('SlideView', () => {
     expect(screen.getByTestId('flashcard-initial').props.children).toBe('true');
 
     await render(<SlideView slide={openEnded} initialAnswer={oeAns} />);
-    expect(screen.getByTestId('oe-initial').props.children).toBe('prior essay');
+    expect(screen.getByTestId('oe-initial').props.children).toBe('open-ended:prior essay');
+  });
+
+  // Mutation — activityType gate must drop mismatched initialAnswer (not `true ? answer`).
+  it('does not forward a mismatched activityType initialAnswer to the wrapper', async () => {
+    const oeAns: OpenEndedAnswer = {
+      slideId: multipleChoice.id,
+      activityType: 'open-ended',
+      submittedAnswer: 'wrong type',
+    };
+
+    await render(<SlideView slide={multipleChoice} initialAnswer={oeAns} />);
+    expect(screen.queryByTestId('mc-initial')).toBeNull();
+
+    await render(<SlideView slide={fillBlank} initialAnswer={oeAns} />);
+    expect(screen.queryByTestId('fitb-initial')).toBeNull();
+
+    await render(<SlideView slide={matching} initialAnswer={oeAns} />);
+    expect(screen.queryByTestId('matching-initial')).toBeNull();
+
+    await render(<SlideView slide={flashcard} initialAnswer={oeAns} />);
+    expect(screen.queryByTestId('flashcard-initial')).toBeNull();
+
+    const mcAns: MultipleChoiceAnswer = {
+      slideId: openEnded.id,
+      activityType: 'multiple-choice',
+      selectedOptionId: 'opt-a',
+      correctOptionId: 'opt-a',
+      isCorrect: true,
+    };
+    await render(<SlideView slide={openEnded} initialAnswer={mcAns} />);
+    expect(screen.queryByTestId('oe-initial')).toBeNull();
+  });
+
+  // Mutation — instructional content + root/title styles from StyleSheet.
+  it('applies root gap and title/content typography styles on instructional slides', async () => {
+    await render(<SlideView slide={instructional} />);
+
+    const title = screen.getByText('Photosynthesis');
+    const content = screen.getByText('Plants convert light into energy.');
+    expect(title.props.style).toEqual(
+      expect.objectContaining({ fontFamily: 'Sora', fontSize: 24, color: '#1c1a17' }),
+    );
+    expect(content.props.style).toEqual(
+      expect.objectContaining({
+        fontFamily: 'IBM Plex Sans',
+        fontSize: 16,
+        color: '#1c1a17',
+      }),
+    );
+    expect(title.parent?.props.style).toEqual(expect.objectContaining({ gap: 12, flex: 1 }));
   });
 });

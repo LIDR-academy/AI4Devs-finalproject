@@ -1,6 +1,7 @@
 import { LessonsService } from '@helsoft/supabase-services';
 import { useCallback, useEffect, useReducer, useRef } from 'react';
 
+import { nextRequestId } from './next-request-id';
 import { useLessonInitialState, useLessonReducer } from './use-lesson.reducer';
 import type { UseLessonResult } from './use-lesson.types';
 
@@ -10,27 +11,20 @@ import type { UseLessonResult } from './use-lesson.types';
  */
 export const useLesson = (id: string): UseLessonResult => {
   const [state, dispatch] = useReducer(useLessonReducer, useLessonInitialState);
-  const isMounted = useRef(true);
   const requestId = useRef(0);
 
-  useEffect(
-    () => () => {
-      isMounted.current = false;
-    },
-    [],
-  );
-
   const load = useCallback(() => {
-    const req = ++requestId.current;
+    const req = nextRequestId(requestId.current);
+    requestId.current = req;
     dispatch({ type: 'load/start' });
 
     void LessonsService.getLesson(id)
       .then((lesson) => {
-        if (req !== requestId.current || !isMounted.current) return;
+        if (req !== requestId.current) return;
         dispatch({ type: 'load/success', lesson });
       })
       .catch((cause: unknown) => {
-        if (req !== requestId.current || !isMounted.current) return;
+        if (req !== requestId.current) return;
         dispatch({
           type: 'load/failure',
           error: cause instanceof Error ? cause : new Error(String(cause)),

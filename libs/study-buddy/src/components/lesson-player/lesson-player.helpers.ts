@@ -20,13 +20,7 @@ export const buildLessonGradedAnswers = (
           isCorrect: stored.isCorrect,
         };
       }
-      if (stored && stored.activityType === 'open-ended') {
-        return {
-          slideId: slide.id,
-          activityType: slide.activityType,
-          isCorrect: false,
-        };
-      }
+      // Open-ended (no isCorrect) and unanswered alike → isCorrect false.
       return {
         slideId: slide.id,
         activityType: slide.activityType,

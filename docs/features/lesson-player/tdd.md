@@ -29,21 +29,16 @@
 
 ## Cycles
 
-### Slice 1
-- RED/GREEN load/display/nav/results; review rework (persistOnMount in reducer)
+### Slice 1–3
+- RED/GREEN load/nav/results/restore/empty/error/retake; a11y + locale chrome
 
-### Slice 2 (task-6 + task-7)
-- RED @s12 lesson-player restore → GREEN pass `answers[slideId]` as `initialAnswer`
-- RED @s12 SlideView forwards → GREEN ActivityBody threads typed restore props
-- RED/GREEN wrappers forward `initialAnswer` / OE `initialSubmittedAnswer`
-- RED @s18/@s22 Retake UI + hook → GREEN existing `reset` + `onRetake` wiring
-- GREEN stories AnswerRestore/Retake + e2e
-- RED/GREEN review: FITB/matching/flashcard organism-forward tests (@s12)
+### Mutation rework r1 (97 survivors)
+- hooks: stale reject + id reload; drop isMounted; `nextRequestId` + unit
+- components: progress % + styles + TEST_ID
+- activities: hasSaved via answer-change; real effect deps
+- study-buddy: drop dead OE branch; aspectRatio; mismatch restore; styles; t('') throws; gradedAnswers; drop empty useCallbacks
 
-### Slice 3 (task-8 … task-12)
-- RED @s15 empty → GREEN Empty short-circuit + `player.empty.*` (no deck/results)
-- RED @s16 error+retry → GREEN Error UI + screen wires `error`/`refetch`; rerender → first slide
-- RED @s9 image fail → GREEN assert SlideImage null URL; UnresolvableImage story
-- GREEN @s19 ScrollView body + Mobile/Web e2e viewports
-- RED @s10/@s20 progress live region → GREEN `accessibilityLiveRegion` + label
-- GREEN @s4/@s15/@s16 a11y names + `player.*` keys en/es/pt/de + locale-parity
+### Mutation rework r2 (5 survivors)
+- hooks: refetch after id change (kills `[load]`→`[]` on refetch)
+- activities: persistOnMount false→true saves (kills effect deps→`[]`)
+- study-buddy: progress bar now=20 on first slide (kills `currentIndex-1`); MC/OE mocks assert activityType so `true?answer` fails mismatch
