@@ -1,6 +1,7 @@
 import type { MultipleChoiceAnswer, MultipleChoiceSlide } from '@helsoft/types';
 
 export type MultipleChoiceLabels = {
+  submit: string;
   correct: string;
   incorrect: string;
   explanationHeading: string;

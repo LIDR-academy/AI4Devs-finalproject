@@ -7,20 +7,24 @@ import type { UseMultipleChoiceProps } from './multiple-choice.types';
 
 /**
  * Multiple-choice interaction + derived state.
- * Owns graded answer; locks once set. Handlers stay in the component.
+ * Owns pending selection + graded answer; locks once graded. Handlers stay in the component.
  */
 export const useMultipleChoice = ({
   slide,
   initialAnswer = null,
   labels,
 }: UseMultipleChoiceProps) => {
+  const [selectedOptionId, setSelectedOptionId] = useState<string | null>(
+    initialAnswer?.selectedOptionId ?? null,
+  );
   const [answer, setAnswer] = useState<MultipleChoiceAnswer | null>(initialAnswer);
 
   const isUnavailable = !hasCorrectOption(slide);
-  const selectedOptionId = answer?.selectedOptionId ?? null;
   const answered = !!answer;
+  const locked = answered;
   const isCorrect = answer?.isCorrect ?? false;
   const resultLabel = answered ? (isCorrect ? labels.correct : labels.incorrect) : null;
+  const canSubmit = !!selectedOptionId && !locked;
 
   useEffect(() => {
     if (!isUnavailable && answered && Platform.OS !== 'android' && resultLabel) {
@@ -29,14 +33,17 @@ export const useMultipleChoice = ({
   }, [isUnavailable, answered, resultLabel]);
 
   const stateForOption = (optionId: string) =>
-    optionState(optionId, slide.correctOptionId, selectedOptionId);
+    optionState(optionId, slide.correctOptionId, selectedOptionId, answered);
 
   return {
     answer,
     setAnswer,
-    isUnavailable,
     selectedOptionId,
+    setSelectedOptionId,
+    isUnavailable,
     answered,
+    locked,
+    canSubmit,
     isCorrect,
     resultLabel,
     stateForOption,

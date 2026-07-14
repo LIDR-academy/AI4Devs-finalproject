@@ -1,4 +1,4 @@
-import { AnswerOption, Card } from '@helsoft/components';
+import { AnswerOption, Button, Card } from '@helsoft/components';
 import { useLocalization } from '@helsoft/localization';
 import { Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
@@ -21,18 +21,33 @@ export const MultipleChoice = ({
   const { t } = useLocalization();
 
   const labels = {
+    submit: t('activity.mcq.submit'),
     correct: t('activity.mcq.correct'),
     incorrect: t('activity.mcq.incorrect'),
     explanationHeading: t('activity.mcq.explanation'),
     unavailable: t('activity.mcq.unavailable'),
   };
 
-  const { answer, setAnswer, isUnavailable, answered, isCorrect, resultLabel, stateForOption } =
-    useMultipleChoice({ slide, initialAnswer, labels });
+  const {
+    setAnswer,
+    selectedOptionId,
+    setSelectedOptionId,
+    isUnavailable,
+    locked,
+    canSubmit,
+    isCorrect,
+    resultLabel,
+    stateForOption,
+  } = useMultipleChoice({ slide, initialAnswer, labels });
 
   const handleSelect = (optionId: string) => {
-    if (answer) return;
-    const graded = gradeMultipleChoice(slide, optionId);
+    if (locked) return;
+    setSelectedOptionId(optionId);
+  };
+
+  const handleSubmit = () => {
+    if (locked || !selectedOptionId) return;
+    const graded = gradeMultipleChoice(slide, selectedOptionId);
     setAnswer(graded);
     onAnswered?.(graded);
   };
@@ -58,7 +73,7 @@ export const MultipleChoice = ({
               marker={marker}
               label={option.label}
               state={state}
-              disabled={answered}
+              disabled={locked}
               accessibilityLabel={optionAccessibilityLabel(
                 marker,
                 option.label,
@@ -71,7 +86,12 @@ export const MultipleChoice = ({
           );
         })}
       </View>
-      {answered ? (
+      {!locked ? (
+        <Button disabled={!canSubmit} fullWidth onPress={handleSubmit}>
+          {labels.submit}
+        </Button>
+      ) : null}
+      {locked ? (
         <View
           accessibilityRole={isCorrect ? undefined : 'alert'}
           style={[styles.banner, isCorrect ? styles.bannerCorrect : styles.bannerIncorrect]}
@@ -84,7 +104,7 @@ export const MultipleChoice = ({
           </Text>
         </View>
       ) : null}
-      {answered && slide.explanation ? (
+      {locked && slide.explanation ? (
         <View style={styles.explanation}>
           <Text style={styles.explanationHeading}>{labels.explanationHeading}</Text>
           <Text style={styles.explanationBody}>{slide.explanation}</Text>

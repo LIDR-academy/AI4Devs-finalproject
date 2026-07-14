@@ -10,8 +10,12 @@ export const optionState = (
   optionId: string,
   correctOptionId: string,
   selectedOptionId?: string | null,
+  answered = false,
 ): AnswerOptionState => {
   if (!selectedOptionId) return 'default';
+  if (!answered) {
+    return optionId === selectedOptionId ? 'selected' : 'default';
+  }
   if (optionId === correctOptionId) return 'correct';
   if (optionId === selectedOptionId) return 'incorrect';
   return 'default';

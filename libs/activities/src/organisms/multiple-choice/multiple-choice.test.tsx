@@ -11,6 +11,7 @@ import { AccessibilityInfo, Platform } from 'react-native';
 import { MultipleChoice } from './multiple-choice';
 
 const I18N = {
+  submit: 'activity.mcq.submit',
   correct: 'activity.mcq.correct',
   incorrect: 'activity.mcq.incorrect',
   explanation: 'activity.mcq.explanation',
@@ -44,64 +45,94 @@ const gradedAnswer = (
   isCorrect,
 });
 
+const optionButton = (label: string) => screen.getByRole('button', { name: new RegExp(label) });
+const submitButton = () => screen.getByRole('button', { name: I18N.submit });
+
+const selectOption = async (label: string) => {
+  await act(async () => {
+    fireEvent.press(optionButton(label));
+  });
+};
+
+const pressSubmit = async () => {
+  await act(async () => {
+    fireEvent.press(submitButton());
+  });
+};
+
 describe('MultipleChoice', () => {
-  it('renders the question and every option as visible and enabled, with no result banner', async () => {
+  it('renders the question and every option as visible and enabled, with Submit disabled and no result banner', async () => {
     await render(<MultipleChoice slide={slide} />);
 
     expect(screen.getByText(slide.content)).toBeTruthy();
     expect(screen.getByText('Paris')).toBeTruthy();
     expect(screen.getByText('Berlin')).toBeTruthy();
 
-    const buttons = screen.getAllByRole('button');
-    expect(buttons).toHaveLength(2);
-    buttons.forEach((button) => {
-      expect(button.props.accessibilityState.disabled).toBe(false);
-    });
+    expect(optionButton('Paris').props.accessibilityState.disabled).toBe(false);
+    expect(optionButton('Berlin').props.accessibilityState.disabled).toBe(false);
+    expect(submitButton().props.accessibilityState.disabled).toBe(true);
 
     expect(screen.queryByText(I18N.correct)).toBeNull();
     expect(screen.queryByText(I18N.incorrect)).toBeNull();
   });
 
-  it('calls onAnswered with the graded answer once when an option is tapped', async () => {
+  it('enables Submit after selecting an option without grading yet', async () => {
     const onAnswered = jest.fn();
     await render(<MultipleChoice slide={slide} onAnswered={onAnswered} />);
 
-    await act(async () => {
-      fireEvent.press(screen.getAllByRole('button')[1]);
-    });
+    await selectOption('Berlin');
+
+    expect(submitButton().props.accessibilityState.disabled).toBe(false);
+    expect(optionButton('Berlin').props.accessibilityState.selected).toBe(true);
+    expect(onAnswered).not.toHaveBeenCalled();
+    expect(screen.queryByText(I18N.incorrect)).toBeNull();
+  });
+
+  it('allows changing the selection before submit', async () => {
+    await render(<MultipleChoice slide={slide} />);
+
+    await selectOption('Berlin');
+    await selectOption('Paris');
+
+    expect(optionButton('Paris').props.accessibilityState.selected).toBe(true);
+    expect(optionButton('Berlin').props.accessibilityState.selected).toBe(false);
+  });
+
+  it('calls onAnswered with the graded answer once when Submit is pressed', async () => {
+    const onAnswered = jest.fn();
+    await render(<MultipleChoice slide={slide} onAnswered={onAnswered} />);
+
+    await selectOption('Berlin');
+    await pressSubmit();
 
     expect(onAnswered).toHaveBeenCalledTimes(1);
     expect(onAnswered).toHaveBeenCalledWith(gradedAnswer('opt-b', false));
   });
 
-  it('locks every option once answered via tap', async () => {
+  it('locks every option and hides Submit once answered via Submit', async () => {
     await render(<MultipleChoice slide={slide} />);
 
-    await act(async () => {
-      fireEvent.press(screen.getAllByRole('button')[1]);
-    });
+    await selectOption('Berlin');
+    await pressSubmit();
 
-    const buttons = screen.getAllByRole('button');
-    buttons.forEach((button) => {
-      expect(button.props.accessibilityState.disabled).toBe(true);
-    });
+    expect(optionButton('Paris').props.accessibilityState.disabled).toBe(true);
+    expect(optionButton('Berlin').props.accessibilityState.disabled).toBe(true);
+    expect(screen.queryByRole('button', { name: I18N.submit })).toBeNull();
   });
 
-  it('locks every option when initialAnswer is provided', async () => {
+  it('locks every option and hides Submit when initialAnswer is provided', async () => {
     await render(<MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-b', false)} />);
 
-    const buttons = screen.getAllByRole('button');
-    buttons.forEach((button) => {
-      expect(button.props.accessibilityState.disabled).toBe(true);
-    });
+    expect(optionButton('Paris').props.accessibilityState.disabled).toBe(true);
+    expect(optionButton('Berlin').props.accessibilityState.disabled).toBe(true);
+    expect(screen.queryByRole('button', { name: I18N.submit })).toBeNull();
   });
 
-  it('marks the selected tile correct and shows the correct banner when tapped correctly', async () => {
+  it('marks the selected tile correct and shows the correct banner when submitted correctly', async () => {
     await render(<MultipleChoice slide={slide} />);
 
-    await act(async () => {
-      fireEvent.press(screen.getAllByRole('button')[0]);
-    });
+    await selectOption('Paris');
+    await pressSubmit();
 
     expect(screen.getAllByText('check_circle')).toHaveLength(1);
     expect(screen.queryByText('cancel')).toBeNull();
@@ -118,12 +149,11 @@ describe('MultipleChoice', () => {
     expect(screen.queryByText(I18N.incorrect)).toBeNull();
   });
 
-  it('marks the selected tile incorrect, reveals the correct tile, and shows the incorrect banner when tapped incorrectly', async () => {
+  it('marks the selected tile incorrect, reveals the correct tile, and shows the incorrect banner when submitted incorrectly', async () => {
     await render(<MultipleChoice slide={slide} />);
 
-    await act(async () => {
-      fireEvent.press(screen.getAllByRole('button')[1]);
-    });
+    await selectOption('Berlin');
+    await pressSubmit();
 
     expect(screen.getAllByText('check_circle')).toHaveLength(1);
     expect(screen.getAllByText('cancel')).toHaveLength(1);
@@ -173,25 +203,22 @@ describe('MultipleChoice', () => {
     );
 
     await act(async () => {
-      fireEvent.press(screen.getAllByRole('button')[1]);
+      fireEvent.press(optionButton('Berlin'));
     });
 
     expect(onAnswered).not.toHaveBeenCalled();
   });
 
-  it('ignores a second tap and calls onAnswered exactly once', async () => {
+  it('ignores a second submit and calls onAnswered exactly once', async () => {
     const onAnswered = jest.fn();
     await render(<MultipleChoice slide={slide} onAnswered={onAnswered} />);
 
-    await act(async () => {
-      fireEvent.press(screen.getAllByRole('button')[1]);
-    });
-    await act(async () => {
-      fireEvent.press(screen.getAllByRole('button')[0]);
-    });
+    await selectOption('Berlin');
+    await pressSubmit();
 
     expect(onAnswered).toHaveBeenCalledTimes(1);
     expect(onAnswered).toHaveBeenCalledWith(gradedAnswer('opt-b', false));
+    expect(screen.queryByRole('button', { name: I18N.submit })).toBeNull();
   });
 
   it('shows the unavailable notice and nothing selectable when there are no options', async () => {
@@ -220,20 +247,17 @@ describe('MultipleChoice', () => {
   it('exposes a button role and an accessible label for every option', async () => {
     await render(<MultipleChoice slide={slide} />);
 
-    const buttons = screen.getAllByRole('button');
-    expect(buttons[0]).toHaveAccessibleName('A Paris');
-    expect(buttons[1]).toHaveAccessibleName('B Berlin');
+    expect(optionButton('Paris')).toHaveAccessibleName('A Paris');
+    expect(optionButton('Berlin')).toHaveAccessibleName('B Berlin');
   });
 
   it('conveys correctness through the accessible name, not the icon ligature, once answered', async () => {
     await render(<MultipleChoice slide={slide} initialAnswer={gradedAnswer('opt-b', false)} />);
 
-    const buttons = screen.getAllByRole('button');
-    expect(buttons[0]).toHaveAccessibleName(`A Paris, ${I18N.correct}`);
-    expect(buttons[1]).toHaveAccessibleName(`B Berlin, ${I18N.incorrect}`);
-    buttons.forEach((button) => {
-      expect(button).not.toHaveAccessibleName(/check_circle|cancel/);
-    });
+    expect(optionButton('Paris')).toHaveAccessibleName(`A Paris, ${I18N.correct}`);
+    expect(optionButton('Berlin')).toHaveAccessibleName(`B Berlin, ${I18N.incorrect}`);
+    expect(optionButton('Paris')).not.toHaveAccessibleName(/check_circle|cancel/);
+    expect(optionButton('Berlin')).not.toHaveAccessibleName(/check_circle|cancel/);
   });
 
   it('announces a correct result via a polite live region and AccessibilityInfo, without an alert role', async () => {
@@ -281,7 +305,7 @@ describe('MultipleChoice', () => {
     announceSpy.mockRestore();
   });
 
-  it('announces the result when transitioning from unanswered to answered via tap', async () => {
+  it('announces the result when transitioning from unanswered to answered via Submit', async () => {
     const announceSpy = jest
       .spyOn(AccessibilityInfo, 'announceForAccessibility')
       .mockImplementation(() => {});
@@ -290,9 +314,8 @@ describe('MultipleChoice', () => {
     await render(<MultipleChoice slide={slide} />);
     expect(announceSpy).not.toHaveBeenCalled();
 
-    await act(async () => {
-      fireEvent.press(screen.getAllByRole('button')[0]);
-    });
+    await selectOption('Paris');
+    await pressSubmit();
 
     await waitFor(() => expect(announceSpy).toHaveBeenCalledWith(I18N.correct));
     expect(announceSpy).toHaveBeenCalledTimes(1);

@@ -41,17 +41,22 @@ describe('optionState', () => {
     expect(optionState('opt-a', 'opt-a', undefined)).toBe('default');
   });
 
-  it('returns correct for the correct option once selected', () => {
-    expect(optionState('opt-a', 'opt-a', 'opt-b')).toBe('correct');
-    expect(optionState('opt-a', 'opt-a', 'opt-a')).toBe('correct');
+  it('returns selected for the pending choice before submit', () => {
+    expect(optionState('opt-a', 'opt-a', 'opt-a', false)).toBe('selected');
+    expect(optionState('opt-b', 'opt-a', 'opt-a', false)).toBe('default');
   });
 
-  it('returns incorrect for the selected wrong option', () => {
-    expect(optionState('opt-b', 'opt-a', 'opt-b')).toBe('incorrect');
+  it('returns correct for the correct option once answered', () => {
+    expect(optionState('opt-a', 'opt-a', 'opt-b', true)).toBe('correct');
+    expect(optionState('opt-a', 'opt-a', 'opt-a', true)).toBe('correct');
   });
 
-  it('returns default for unselected non-correct options', () => {
-    expect(optionState('opt-c', 'opt-a', 'opt-b')).toBe('default');
+  it('returns incorrect for the selected wrong option once answered', () => {
+    expect(optionState('opt-b', 'opt-a', 'opt-b', true)).toBe('incorrect');
+  });
+
+  it('returns default for unselected non-correct options once answered', () => {
+    expect(optionState('opt-c', 'opt-a', 'opt-b', true)).toBe('default');
   });
 });
 
@@ -68,8 +73,9 @@ describe('optionAccessibilityLabel', () => {
     );
   });
 
-  it('returns undefined for default state', () => {
+  it('returns undefined for default and selected states', () => {
     expect(optionAccessibilityLabel('A', 'Paris', 'default', 'Right', 'Wrong')).toBeUndefined();
+    expect(optionAccessibilityLabel('A', 'Paris', 'selected', 'Right', 'Wrong')).toBeUndefined();
   });
 });
 
