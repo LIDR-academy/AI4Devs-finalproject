@@ -1,10 +1,10 @@
+import { useLocalization } from '@helsoft/localization';
 import { Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-
 import { Button } from '../../atoms/button/button';
 import { Card } from '../../atoms/card/card';
 import { ProgressIndicator } from '../../atoms/progress-indicator/progress-indicator';
-
+import { calculateResultsPercent } from './results-summary.helpers';
 import type { ResultsSummaryProps } from './results-summary.types';
 import { useResultsSummary } from './use-results-summary';
 
@@ -15,25 +15,26 @@ export const RESULTS_LOADING_TEST_ID = 'results-summary-loading-indicator';
 
 /**
  * ResultsSummary — presentational organism (Score, Completion, Loading, and save-failure
- * states). Receives pre-formatted label strings — never self-formats a score/percentage
- * (that's the wiring layer's job, per codebase precedent LoginForm/LanguageSettings).
+ * states). Owns every localized label itself via `t('results.*', …)`; the wiring layer only
+ * hands over the raw correct/total counts and state flags.
  */
 export const ResultsSummary = ({
   variant,
   loading = false,
   saveFailed = false,
-  labels,
+  correct = 0,
+  total = 0,
   onRetake,
   onBackToLessons,
   onRetrySave,
 }: ResultsSummaryProps) => {
+  const { t } = useLocalization();
   const { showSaveFailure } = useResultsSummary({
     variant,
     loading,
     saveFailed,
-    saveFailedLabel: labels.saveFailed,
-    scoreAnnouncement: labels.scoreAnnouncement,
-    completeHeadline: labels.completeHeadline,
+    correct,
+    total,
   });
 
   return (
@@ -41,23 +42,25 @@ export const ResultsSummary = ({
       <View style={styles.content}>
         {variant === 'score' ? (
           <>
-            <Text style={styles.headline}>{labels.score}</Text>
-            <Text style={styles.body}>{labels.percent}</Text>
+            <Text style={styles.headline}>{t('results.score', { correct, total })}</Text>
+            <Text style={styles.body}>
+              {t('results.scorePercent', { percent: calculateResultsPercent(correct, total) })}
+            </Text>
           </>
         ) : (
           <>
-            <Text style={styles.headline}>{labels.completeHeadline}</Text>
-            <Text style={styles.body}>{labels.completeBody}</Text>
+            <Text style={styles.headline}>{t('results.completeHeadline')}</Text>
+            <Text style={styles.body}>{t('results.completeBody')}</Text>
           </>
         )}
         {showSaveFailure ? (
           <View style={styles.notice} accessibilityRole="alert">
             <Text style={styles.noticeText} accessibilityLiveRegion="assertive">
-              {labels.saveFailed}
+              {t('results.saveFailed')}
             </Text>
             {onRetrySave ? (
               <Button variant="text" onPress={onRetrySave}>
-                {labels.retrySave}
+                {t('results.retrySave')}
               </Button>
             ) : null}
           </View>
@@ -73,10 +76,10 @@ export const ResultsSummary = ({
         ) : null}
         <View style={styles.actions}>
           <Button disabled={loading} onPress={onRetake}>
-            {labels.retake}
+            {t('results.retake')}
           </Button>
           <Button variant="text" disabled={loading} onPress={onBackToLessons}>
-            {labels.backToLessons}
+            {t('results.backHome')}
           </Button>
         </View>
       </View>

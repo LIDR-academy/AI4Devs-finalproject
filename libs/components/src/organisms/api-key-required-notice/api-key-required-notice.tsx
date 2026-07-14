@@ -1,3 +1,4 @@
+import { useLocalization } from '@helsoft/localization';
 import { Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
@@ -11,15 +12,16 @@ import type { ApiKeyRequiredNoticeProps } from './api-key-required-notice.types'
  * action is rendered via the Button atom, which sets `accessibilityRole="button"` by
  * construction, so this notice's action always exposes a button role.
  */
-export const ApiKeyRequiredNotice = ({
-  onNavigateToAccount,
-  labels,
-}: ApiKeyRequiredNoticeProps) => (
-  <View style={styles.notice}>
-    <Text style={styles.message}>{labels.message}</Text>
-    <Button onPress={onNavigateToAccount}>{labels.action}</Button>
-  </View>
-);
+export const ApiKeyRequiredNotice = ({ onNavigateToAccount }: ApiKeyRequiredNoticeProps) => {
+  const { t } = useLocalization();
+
+  return (
+    <View style={styles.notice}>
+      <Text style={styles.message}>{t('upload.apiKeyRequired.message')}</Text>
+      <Button onPress={onNavigateToAccount}>{t('upload.apiKeyRequired.action')}</Button>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create((theme) => ({
   notice: {

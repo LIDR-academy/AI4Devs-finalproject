@@ -1,14 +1,16 @@
+import { useLocalization } from '@helsoft/localization';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { AccessibilityInfo } from 'react-native';
 
 import { LESSON_LIST_LOADING_TEST_ID, LessonList } from './lesson-list';
 
-const labels = {
-  loading: 'Loading saved lessons…',
-  empty: 'No saved lessons yet.',
-  error: "We couldn't load your lessons.",
-  retry: 'Try again',
-};
+jest.mock('@helsoft/localization', () => ({
+  useLocalization: jest.fn(),
+}));
+
+const mockUseLocalization = useLocalization as jest.Mock;
+
+const defaultT = (key: string) => key;
 
 const lessons = [
   {
@@ -26,16 +28,14 @@ const lessons = [
 ];
 
 describe('LessonList', () => {
+  beforeEach(() => {
+    mockUseLocalization.mockReturnValue({ t: defaultT });
+  });
+
   // @s13 — loading shows a progress indicator until lessons resolve.
   it('renders the loading indicator while state is loading', async () => {
     await render(
-      <LessonList
-        state="loading"
-        lessons={[]}
-        labels={labels}
-        onOpenLesson={jest.fn()}
-        onRetry={jest.fn()}
-      />,
+      <LessonList state="loading" lessons={[]} onOpenLesson={jest.fn()} onRetry={jest.fn()} />,
     );
 
     // Literal test id — kills LESSON_LIST_LOADING_TEST_ID → "" (shared-constant survivor).
@@ -46,16 +46,10 @@ describe('LessonList', () => {
   // progressbar; polite live-region Text (visuallyHidden) carries the loading label.
   it('renders a polite visually-hidden live-region loading label beside the spinner', async () => {
     await render(
-      <LessonList
-        state="loading"
-        lessons={[]}
-        labels={labels}
-        onOpenLesson={jest.fn()}
-        onRetry={jest.fn()}
-      />,
+      <LessonList state="loading" lessons={[]} onOpenLesson={jest.fn()} onRetry={jest.fn()} />,
     );
 
-    const loadingText = screen.getByText(labels.loading);
+    const loadingText = screen.getByText('home.loading');
     expect(loadingText.props.accessibilityLiveRegion).toBe('polite');
     expect(loadingText).toHaveStyle({
       position: 'absolute',
@@ -69,13 +63,7 @@ describe('LessonList', () => {
   // @s4 — content lists every lesson with title + created-date label in received order.
   it('renders each lesson title and created-date label in received order', async () => {
     await render(
-      <LessonList
-        state="content"
-        lessons={lessons}
-        labels={labels}
-        onOpenLesson={jest.fn()}
-        onRetry={jest.fn()}
-      />,
+      <LessonList state="content" lessons={lessons} onOpenLesson={jest.fn()} onRetry={jest.fn()} />,
     );
 
     expect(screen.getByText('Newer lesson')).toBeTruthy();
@@ -87,13 +75,7 @@ describe('LessonList', () => {
   // Full-review major [perf] — unbounded @s4 list must window via FlatList (not View.map).
   it('renders content lessons in a FlatList for virtualization', async () => {
     await render(
-      <LessonList
-        state="content"
-        lessons={lessons}
-        labels={labels}
-        onOpenLesson={jest.fn()}
-        onRetry={jest.fn()}
-      />,
+      <LessonList state="content" lessons={lessons} onOpenLesson={jest.fn()} onRetry={jest.fn()} />,
     );
 
     expect(screen.getByTestId('lesson-list')).toBeTruthy();
@@ -102,13 +84,7 @@ describe('LessonList', () => {
   // Mutation: keyExtractor → () => undefined — FlatList keys must stay stable per lesson id.
   it('extracts each lesson id as the FlatList key', async () => {
     await render(
-      <LessonList
-        state="content"
-        lessons={lessons}
-        labels={labels}
-        onOpenLesson={jest.fn()}
-        onRetry={jest.fn()}
-      />,
+      <LessonList state="content" lessons={lessons} onOpenLesson={jest.fn()} onRetry={jest.fn()} />,
     );
 
     const list = screen.getByTestId('lesson-list');
@@ -123,7 +99,6 @@ describe('LessonList', () => {
       <LessonList
         state="content"
         lessons={lessons}
-        labels={labels}
         onOpenLesson={onOpenLesson}
         onRetry={jest.fn()}
       />,
@@ -137,16 +112,10 @@ describe('LessonList', () => {
   // @s5 — empty invites creating a lesson; no list rows.
   it('renders the empty-state message when state is empty', async () => {
     await render(
-      <LessonList
-        state="empty"
-        lessons={[]}
-        labels={labels}
-        onOpenLesson={jest.fn()}
-        onRetry={jest.fn()}
-      />,
+      <LessonList state="empty" lessons={[]} onOpenLesson={jest.fn()} onRetry={jest.fn()} />,
     );
 
-    expect(screen.getByText('No saved lessons yet.')).toBeTruthy();
+    expect(screen.getByText('home.empty')).toBeTruthy();
     expect(screen.queryByText('Newer lesson')).toBeNull();
   });
 
@@ -154,17 +123,11 @@ describe('LessonList', () => {
   it('renders the error message and calls onRetry when retry is pressed', async () => {
     const onRetry = jest.fn();
     await render(
-      <LessonList
-        state="error"
-        lessons={[]}
-        labels={labels}
-        onOpenLesson={jest.fn()}
-        onRetry={onRetry}
-      />,
+      <LessonList state="error" lessons={[]} onOpenLesson={jest.fn()} onRetry={onRetry} />,
     );
 
-    expect(screen.getByText("We couldn't load your lessons.")).toBeTruthy();
-    fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
+    expect(screen.getByText('home.error')).toBeTruthy();
+    fireEvent.press(screen.getByRole('button', { name: 'home.retry' }));
     expect(onRetry).toHaveBeenCalledTimes(1);
   });
 
@@ -175,39 +138,21 @@ describe('LessonList', () => {
       .mockImplementation(() => {});
 
     await render(
-      <LessonList
-        state="loading"
-        lessons={[]}
-        labels={labels}
-        onOpenLesson={jest.fn()}
-        onRetry={jest.fn()}
-      />,
+      <LessonList state="loading" lessons={[]} onOpenLesson={jest.fn()} onRetry={jest.fn()} />,
     );
-    expect(announceSpy).toHaveBeenCalledWith('Loading saved lessons…');
+    expect(announceSpy).toHaveBeenCalledWith('home.loading');
 
     announceSpy.mockClear();
     await render(
-      <LessonList
-        state="empty"
-        lessons={[]}
-        labels={labels}
-        onOpenLesson={jest.fn()}
-        onRetry={jest.fn()}
-      />,
+      <LessonList state="empty" lessons={[]} onOpenLesson={jest.fn()} onRetry={jest.fn()} />,
     );
-    expect(announceSpy).toHaveBeenCalledWith('No saved lessons yet.');
+    expect(announceSpy).toHaveBeenCalledWith('home.empty');
 
     announceSpy.mockClear();
     await render(
-      <LessonList
-        state="error"
-        lessons={[]}
-        labels={labels}
-        onOpenLesson={jest.fn()}
-        onRetry={jest.fn()}
-      />,
+      <LessonList state="error" lessons={[]} onOpenLesson={jest.fn()} onRetry={jest.fn()} />,
     );
-    expect(announceSpy).toHaveBeenCalledWith("We couldn't load your lessons.");
+    expect(announceSpy).toHaveBeenCalledWith('home.error');
 
     announceSpy.mockRestore();
   });
@@ -215,34 +160,19 @@ describe('LessonList', () => {
   // @s16 — each lesson exposes an accessible name for the open action.
   it('exposes an accessible open action name per lesson', async () => {
     await render(
-      <LessonList
-        state="content"
-        lessons={lessons}
-        labels={labels}
-        onOpenLesson={jest.fn()}
-        onRetry={jest.fn()}
-      />,
+      <LessonList state="content" lessons={lessons} onOpenLesson={jest.fn()} onRetry={jest.fn()} />,
     );
 
     expect(screen.getByRole('button', { name: 'Open Newer lesson' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open Older lesson' })).toBeTruthy();
   });
 
-  const deleteLabels = {
-    ...labels,
-    deleteConfirmHeadline: 'Delete this lesson?',
-    deleteConfirmBody: 'This cannot be undone.',
-    deleteConfirmAction: 'Delete',
-    deleteConfirmCancelAction: 'Cancel',
-  };
-
-  // @s16 — delete control exposes an accessible name when onDelete is wired.
+  // @s16 — delete control exposes an accessible name when onDelete is provided.
   it('exposes an accessible delete control per lesson when onDelete is provided', async () => {
     await render(
       <LessonList
         state="content"
         lessons={lessons}
-        labels={deleteLabels}
         onOpenLesson={jest.fn()}
         onRetry={jest.fn()}
         onDelete={jest.fn()}
@@ -253,20 +183,13 @@ describe('LessonList', () => {
     expect(screen.getAllByRole('button', { name: 'Delete lesson' })).toHaveLength(2);
   });
 
-  // @s8 — delete → confirm → onDelete(id); dialog copy from labels.
+  // @s8 — delete → confirm → onDelete(id); dialog copy from i18n.
   it('calls onDelete with the lesson id only after the confirmation is accepted', async () => {
     const onDelete = jest.fn();
     await render(
       <LessonList
         state="content"
         lessons={lessons}
-        labels={{
-          ...labels,
-          deleteConfirmHeadline: 'Delete this lesson?',
-          deleteConfirmBody: 'This cannot be undone.',
-          deleteConfirmAction: 'Delete',
-          deleteConfirmCancelAction: 'Cancel',
-        }}
         onOpenLesson={jest.fn()}
         onRetry={jest.fn()}
         onDelete={onDelete}
@@ -279,15 +202,15 @@ describe('LessonList', () => {
     });
 
     expect(onDelete).not.toHaveBeenCalled();
-    expect(screen.getByText('Delete this lesson?')).toBeTruthy();
-    expect(screen.getByText('This cannot be undone.')).toBeTruthy();
+    expect(screen.getByText('home.delete.confirmHeadline')).toBeTruthy();
+    expect(screen.getByText('home.delete.confirmBody')).toBeTruthy();
 
     await act(async () => {
-      fireEvent.press(screen.getByRole('button', { name: 'Delete' }));
+      fireEvent.press(screen.getByRole('button', { name: 'home.delete.confirmAction' }));
     });
 
     expect(onDelete).toHaveBeenCalledWith('lesson-2');
-    expect(screen.queryByText('Delete this lesson?')).toBeNull();
+    expect(screen.queryByText('home.delete.confirmHeadline')).toBeNull();
   });
 
   // @s9 — dismiss keeps the lesson; onDelete never fires.
@@ -297,13 +220,6 @@ describe('LessonList', () => {
       <LessonList
         state="content"
         lessons={lessons}
-        labels={{
-          ...labels,
-          deleteConfirmHeadline: 'Delete this lesson?',
-          deleteConfirmBody: 'This cannot be undone.',
-          deleteConfirmAction: 'Delete',
-          deleteConfirmCancelAction: 'Cancel',
-        }}
         onOpenLesson={jest.fn()}
         onRetry={jest.fn()}
         onDelete={onDelete}
@@ -315,11 +231,11 @@ describe('LessonList', () => {
       fireEvent.press(screen.getAllByRole('button', { name: 'Delete lesson' })[0]);
     });
     await act(async () => {
-      fireEvent.press(screen.getByRole('button', { name: 'Cancel' }));
+      fireEvent.press(screen.getByRole('button', { name: 'home.delete.cancelAction' }));
     });
 
     expect(onDelete).not.toHaveBeenCalled();
-    expect(screen.queryByText('Delete this lesson?')).toBeNull();
+    expect(screen.queryByText('home.delete.confirmHeadline')).toBeNull();
   });
 
   // Mutation: `if (id)` → `if (true)` — empty lesson id must not call onDelete.
@@ -337,13 +253,6 @@ describe('LessonList', () => {
             deleteAccessibilityLabel: 'Delete Untitled',
           },
         ]}
-        labels={{
-          ...labels,
-          deleteConfirmHeadline: 'Delete this lesson?',
-          deleteConfirmBody: 'This cannot be undone.',
-          deleteConfirmAction: 'Delete',
-          deleteConfirmCancelAction: 'Cancel',
-        }}
         onOpenLesson={jest.fn()}
         onRetry={jest.fn()}
         onDelete={onDelete}
@@ -354,7 +263,7 @@ describe('LessonList', () => {
       fireEvent.press(screen.getByRole('button', { name: 'Delete Untitled' }));
     });
     await act(async () => {
-      fireEvent.press(screen.getByRole('button', { name: 'Delete' }));
+      fireEvent.press(screen.getByRole('button', { name: 'home.delete.confirmAction' }));
     });
 
     expect(onDelete).not.toHaveBeenCalled();
@@ -367,47 +276,36 @@ describe('LessonList', () => {
       .mockImplementation(() => {});
 
     await render(
-      <LessonList
-        state="content"
-        lessons={lessons}
-        labels={labels}
-        onOpenLesson={jest.fn()}
-        onRetry={jest.fn()}
-      />,
+      <LessonList state="content" lessons={lessons} onOpenLesson={jest.fn()} onRetry={jest.fn()} />,
     );
 
-    expect(announceSpy).not.toHaveBeenCalledWith(labels.error);
-    expect(announceSpy).not.toHaveBeenCalledWith(labels.empty);
-    expect(announceSpy).not.toHaveBeenCalledWith(labels.loading);
+    expect(announceSpy).not.toHaveBeenCalledWith('home.error');
+    expect(announceSpy).not.toHaveBeenCalledWith('home.empty');
+    expect(announceSpy).not.toHaveBeenCalledWith('home.loading');
     announceSpy.mockRestore();
   });
 
-  // Mutation: announce effect deps → [] — label changes must re-announce for the same state.
+  // Mutation: announce effect deps → [] — a label change (e.g. locale switch) must re-announce
+  // for the same state.
   it('re-announces when the loading label changes while state stays loading', async () => {
     const announceSpy = jest
       .spyOn(AccessibilityInfo, 'announceForAccessibility')
       .mockImplementation(() => {});
+    mockUseLocalization.mockReturnValue({
+      t: (key: string) => (key === 'home.loading' ? 'Loading saved lessons…' : key),
+    });
 
     const { rerender } = await render(
-      <LessonList
-        state="loading"
-        lessons={[]}
-        labels={labels}
-        onOpenLesson={jest.fn()}
-        onRetry={jest.fn()}
-      />,
+      <LessonList state="loading" lessons={[]} onOpenLesson={jest.fn()} onRetry={jest.fn()} />,
     );
     expect(announceSpy).toHaveBeenCalledWith('Loading saved lessons…');
 
     announceSpy.mockClear();
+    mockUseLocalization.mockReturnValue({
+      t: (key: string) => (key === 'home.loading' ? 'Still loading lessons…' : key),
+    });
     await rerender(
-      <LessonList
-        state="loading"
-        lessons={[]}
-        labels={{ ...labels, loading: 'Still loading lessons…' }}
-        onOpenLesson={jest.fn()}
-        onRetry={jest.fn()}
-      />,
+      <LessonList state="loading" lessons={[]} onOpenLesson={jest.fn()} onRetry={jest.fn()} />,
     );
 
     expect(announceSpy).toHaveBeenCalledWith('Still loading lessons…');

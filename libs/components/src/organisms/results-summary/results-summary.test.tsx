@@ -1,3 +1,8 @@
+jest.mock('@helsoft/localization', () => ({
+  useLocalization: jest.fn(),
+}));
+
+import { useLocalization } from '@helsoft/localization';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { AccessibilityInfo } from 'react-native';
 
@@ -7,26 +12,35 @@ import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 import { RESULTS_LOADING_TEST_ID, ResultsSummary } from './results-summary';
 
-const labels = {
-  score: '3 / 3',
-  percent: '100%',
-  scoreAnnouncement: '3 / 3, 100%',
-  retake: 'Retake activities',
-  backToLessons: 'Back to my lessons',
-  completeHeadline: 'Lesson complete',
-  completeBody: "You've reached the end of this lesson.",
-  saveFailed: "We couldn't save this attempt.",
-  retrySave: 'Retry',
+const mockUseLocalization = useLocalization as jest.Mock;
+
+// Mimics the real `results.*` i18next templates so assertions can pin the exact rendered text.
+const t = (key: string, options?: Record<string, unknown>) => {
+  if (key === 'results.score') return `${options?.correct} / ${options?.total}`;
+  if (key === 'results.scorePercent') return `${options?.percent}%`;
+  if (key === 'results.scoreAnnouncement') return `${options?.score}, ${options?.percent}`;
+  if (key === 'results.retake') return 'Retake activities';
+  if (key === 'results.backHome') return 'Back to my lessons';
+  if (key === 'results.completeHeadline') return 'Lesson complete';
+  if (key === 'results.completeBody') return "You've reached the end of this lesson.";
+  if (key === 'results.saveFailed') return "We couldn't save this attempt.";
+  if (key === 'results.retrySave') return 'Retry';
+  return key;
 };
 
 describe('ResultsSummary', () => {
-  // @s1 — the score variant renders the pre-formatted score and percent label strings passed
-  // in (no numeric props, no self-computed percentage).
-  it('renders the pre-formatted score and percent labels for the score variant', async () => {
+  beforeEach(() => {
+    mockUseLocalization.mockReturnValue({ t });
+  });
+
+  // @s1 — the score variant renders the score and percent, derived from the given correct/total
+  // via `t('results.score'/'results.scorePercent', …)` (no pre-formatted strings passed in).
+  it('renders the derived score and percent labels for the score variant', async () => {
     await render(
       <ResultsSummary
         variant="score"
-        labels={labels}
+        correct={3}
+        total={3}
         onRetake={jest.fn()}
         onBackToLessons={jest.fn()}
       />,
@@ -42,7 +56,8 @@ describe('ResultsSummary', () => {
     await render(
       <ResultsSummary
         variant="score"
-        labels={labels}
+        correct={3}
+        total={3}
         onRetake={onRetake}
         onBackToLessons={jest.fn()}
       />,
@@ -59,7 +74,8 @@ describe('ResultsSummary', () => {
     await render(
       <ResultsSummary
         variant="score"
-        labels={labels}
+        correct={3}
+        total={3}
         onRetake={jest.fn()}
         onBackToLessons={onBackToLessons}
       />,
@@ -76,7 +92,8 @@ describe('ResultsSummary', () => {
     await render(
       <ResultsSummary
         variant="score"
-        labels={labels}
+        correct={3}
+        total={3}
         loading
         onRetake={jest.fn()}
         onBackToLessons={jest.fn()}
@@ -94,7 +111,8 @@ describe('ResultsSummary', () => {
     await render(
       <ResultsSummary
         variant="score"
-        labels={labels}
+        correct={3}
+        total={3}
         onRetake={jest.fn()}
         onBackToLessons={jest.fn()}
       />,
@@ -111,12 +129,7 @@ describe('ResultsSummary', () => {
   // still offers both actions (@s10).
   it('renders the completion headline and body for the completion variant, with no score', async () => {
     await render(
-      <ResultsSummary
-        variant="completion"
-        labels={labels}
-        onRetake={jest.fn()}
-        onBackToLessons={jest.fn()}
-      />,
+      <ResultsSummary variant="completion" onRetake={jest.fn()} onBackToLessons={jest.fn()} />,
     );
 
     expect(screen.getByText('Lesson complete')).toBeTruthy();
@@ -133,7 +146,8 @@ describe('ResultsSummary', () => {
     await render(
       <ResultsSummary
         variant="score"
-        labels={labels}
+        correct={3}
+        total={3}
         saveFailed
         onRetake={jest.fn()}
         onBackToLessons={jest.fn()}
@@ -156,7 +170,8 @@ describe('ResultsSummary', () => {
     await render(
       <ResultsSummary
         variant="score"
-        labels={labels}
+        correct={3}
+        total={3}
         saveFailed
         onRetake={jest.fn()}
         onBackToLessons={jest.fn()}
@@ -174,7 +189,8 @@ describe('ResultsSummary', () => {
     await render(
       <ResultsSummary
         variant="score"
-        labels={labels}
+        correct={3}
+        total={3}
         onRetake={jest.fn()}
         onBackToLessons={jest.fn()}
       />,
@@ -190,7 +206,6 @@ describe('ResultsSummary', () => {
     await render(
       <ResultsSummary
         variant="completion"
-        labels={labels}
         saveFailed
         onRetake={jest.fn()}
         onBackToLessons={jest.fn()}
@@ -214,7 +229,8 @@ describe('ResultsSummary', () => {
     await render(
       <ResultsSummary
         variant="score"
-        labels={labels}
+        correct={3}
+        total={3}
         saveFailed
         onRetake={jest.fn()}
         onBackToLessons={jest.fn()}
@@ -239,7 +255,6 @@ describe('ResultsSummary', () => {
     await render(
       <ResultsSummary
         variant="completion"
-        labels={labels}
         saveFailed
         onRetake={jest.fn()}
         onBackToLessons={jest.fn()}
@@ -265,7 +280,8 @@ describe('ResultsSummary', () => {
     const { rerender } = await render(
       <ResultsSummary
         variant="score"
-        labels={labels}
+        correct={3}
+        total={3}
         loading
         saveFailed={false}
         onRetake={jest.fn()}
@@ -279,7 +295,8 @@ describe('ResultsSummary', () => {
       rerender(
         <ResultsSummary
           variant="score"
-          labels={labels}
+          correct={3}
+          total={3}
           loading={false}
           saveFailed
           onRetake={jest.fn()}
@@ -306,7 +323,8 @@ describe('ResultsSummary', () => {
     const { rerender } = await render(
       <ResultsSummary
         variant="score"
-        labels={labels}
+        correct={3}
+        total={3}
         loading
         onRetake={jest.fn()}
         onBackToLessons={jest.fn()}
@@ -318,7 +336,8 @@ describe('ResultsSummary', () => {
       rerender(
         <ResultsSummary
           variant="score"
-          labels={labels}
+          correct={3}
+          total={3}
           loading={false}
           onRetake={jest.fn()}
           onBackToLessons={jest.fn()}
@@ -344,7 +363,6 @@ describe('ResultsSummary', () => {
     const { rerender } = await render(
       <ResultsSummary
         variant="completion"
-        labels={labels}
         loading
         saveFailed
         onRetake={jest.fn()}
@@ -357,7 +375,6 @@ describe('ResultsSummary', () => {
       rerender(
         <ResultsSummary
           variant="completion"
-          labels={labels}
           loading={false}
           saveFailed
           onRetake={jest.fn()}
@@ -383,7 +400,6 @@ describe('ResultsSummary', () => {
     const { rerender } = await render(
       <ResultsSummary
         variant="completion"
-        labels={labels}
         loading
         onRetake={jest.fn()}
         onBackToLessons={jest.fn()}
@@ -395,7 +411,6 @@ describe('ResultsSummary', () => {
       rerender(
         <ResultsSummary
           variant="completion"
-          labels={labels}
           loading={false}
           onRetake={jest.fn()}
           onBackToLessons={jest.fn()}
@@ -408,21 +423,23 @@ describe('ResultsSummary', () => {
     announceSpy.mockRestore();
   });
 
-  // Slice-3 review round 1, Finding 2 — the organism must announce the given
-  // `scoreAnnouncement` label as-is, never compose one itself from `labels.score`/`percent`
-  // (that composition hardcoded a non-localized ", " separator — formatting belongs to the
-  // wiring layer, per this component's own no-self-formatting contract).
-  it('announces the given scoreAnnouncement label instead of composing labels.score and labels.percent', async () => {
+  // Proves the announcement is sourced from `t('results.scoreAnnouncement', …)` rather than a
+  // hardcoded ", " join of the score/percent text — swapping just that translation changes what
+  // gets announced.
+  it('announces whatever t("results.scoreAnnouncement", …) returns, not a hardcoded join', async () => {
     const announceSpy = jest
       .spyOn(AccessibilityInfo, 'announceForAccessibility')
       .mockImplementation(() => {});
     announceSpy.mockClear();
-    const markerLabels = { ...labels, scoreAnnouncement: 'i18n-marker-score-announcement' };
+    const markerT = (key: string, options?: Record<string, unknown>) =>
+      key === 'results.scoreAnnouncement' ? 'i18n-marker-score-announcement' : t(key, options);
+    mockUseLocalization.mockReturnValue({ t: markerT });
 
     const { rerender } = await render(
       <ResultsSummary
         variant="score"
-        labels={markerLabels}
+        correct={3}
+        total={3}
         loading
         onRetake={jest.fn()}
         onBackToLessons={jest.fn()}
@@ -433,7 +450,8 @@ describe('ResultsSummary', () => {
       rerender(
         <ResultsSummary
           variant="score"
-          labels={markerLabels}
+          correct={3}
+          total={3}
           loading={false}
           onRetake={jest.fn()}
           onBackToLessons={jest.fn()}
@@ -453,7 +471,8 @@ describe('ResultsSummary', () => {
     await render(
       <ResultsSummary
         variant="score"
-        labels={labels}
+        correct={3}
+        total={3}
         saveFailed
         onRetake={jest.fn()}
         onBackToLessons={jest.fn()}
@@ -470,7 +489,8 @@ describe('ResultsSummary', () => {
     await render(
       <ResultsSummary
         variant="score"
-        labels={labels}
+        correct={3}
+        total={3}
         onRetake={jest.fn()}
         onBackToLessons={jest.fn()}
       />,
@@ -486,7 +506,8 @@ describe('ResultsSummary', () => {
     await render(
       <ResultsSummary
         variant="score"
-        labels={labels}
+        correct={3}
+        total={3}
         onRetake={jest.fn()}
         onBackToLessons={jest.fn()}
       />,
@@ -503,7 +524,8 @@ describe('ResultsSummary', () => {
     await render(
       <ResultsSummary
         variant="score"
-        labels={labels}
+        correct={3}
+        total={3}
         onRetake={jest.fn()}
         onBackToLessons={jest.fn()}
       />,
@@ -525,7 +547,8 @@ describe('ResultsSummary', () => {
     await render(
       <ResultsSummary
         variant="score"
-        labels={labels}
+        correct={3}
+        total={3}
         saveFailed
         onRetake={jest.fn()}
         onBackToLessons={jest.fn()}

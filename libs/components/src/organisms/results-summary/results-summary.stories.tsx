@@ -2,24 +2,13 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 
 import { ResultsSummary } from './results-summary';
 
-const labels = {
-  score: '3 / 3',
-  percent: '100%',
-  scoreAnnouncement: '3 / 3, 100%',
-  retake: 'Retake activities',
-  backToLessons: 'Back to my lessons',
-  completeHeadline: 'Lesson complete',
-  completeBody: "You've reached the end of this lesson.",
-  saveFailed: "We couldn't save this attempt.",
-  retrySave: 'Retry',
-};
-
 const meta = {
   title: 'Organisms/ResultsSummary',
   component: ResultsSummary,
   args: {
     variant: 'score',
-    labels,
+    correct: 3,
+    total: 3,
     onRetake: () => {},
     onBackToLessons: () => {},
   },

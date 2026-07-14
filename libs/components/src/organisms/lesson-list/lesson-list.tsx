@@ -1,12 +1,11 @@
+import { useLocalization } from '@helsoft/localization';
 import { useCallback } from 'react';
 import { FlatList, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-
 import { Button } from '../../atoms/button/button';
 import { ProgressIndicator } from '../../atoms/progress-indicator/progress-indicator';
 import { LessonListItem } from '../../molecules/lesson-list-item/lesson-list-item';
 import { Dialog } from '../dialog/dialog';
-
 import type { LessonListItemData, LessonListProps } from './lesson-list.types';
 import { useLessonList } from './use-lesson-list';
 
@@ -28,18 +27,13 @@ export const LESSON_LIST_TEST_ID = 'lesson-list';
 export const LessonList = ({
   state,
   lessons,
-  labels,
   onOpenLesson,
   onRetry,
   onDelete,
   deleteLabel,
 }: LessonListProps) => {
-  const { pendingDeleteId, setPendingDeleteId } = useLessonList({
-    state,
-    loadingLabel: labels.loading,
-    emptyLabel: labels.empty,
-    errorLabel: labels.error,
-  });
+  const { t } = useLocalization();
+  const { pendingDeleteId, setPendingDeleteId } = useLessonList({ state });
 
   const keyExtractor = useCallback((item: LessonListItemData) => item.id, []);
 
@@ -66,7 +60,7 @@ export const LessonList = ({
           thickness={LOADING_SPINNER_THICKNESS}
         />
         <Text accessibilityLiveRegion="polite" style={styles.visuallyHidden}>
-          {labels.loading}
+          {t('home.loading')}
         </Text>
       </View>
     );
@@ -75,7 +69,7 @@ export const LessonList = ({
   if (state === 'empty') {
     return (
       <View accessibilityRole="text" accessibilityLiveRegion="polite">
-        <Text style={styles.emptyText}>{labels.empty}</Text>
+        <Text style={styles.emptyText}>{t('home.empty')}</Text>
       </View>
     );
   }
@@ -87,9 +81,9 @@ export const LessonList = ({
         accessibilityRole="alert"
         accessibilityLiveRegion="assertive"
       >
-        <Text style={styles.errorText}>{labels.error}</Text>
+        <Text style={styles.errorText}>{t('home.error')}</Text>
         <Button variant="text" onPress={onRetry}>
-          {labels.retry}
+          {t('home.retry')}
         </Button>
       </View>
     );
@@ -109,16 +103,16 @@ export const LessonList = ({
         <Dialog
           open={pendingDeleteId !== null}
           onClose={() => setPendingDeleteId(null)}
-          headline={labels.deleteConfirmHeadline}
-          confirmLabel={labels.deleteConfirmAction}
-          cancelLabel={labels.deleteConfirmCancelAction}
+          headline={t('home.delete.confirmHeadline')}
+          confirmLabel={t('home.delete.confirmAction')}
+          cancelLabel={t('home.delete.cancelAction')}
           onConfirm={() => {
             const id = pendingDeleteId;
             setPendingDeleteId(null);
             if (id) onDelete(id);
           }}
         >
-          {labels.deleteConfirmBody}
+          {t('home.delete.confirmBody')}
         </Dialog>
       ) : null}
     </View>

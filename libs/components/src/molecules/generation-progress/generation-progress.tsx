@@ -32,8 +32,7 @@ export const GenerationProgress = ({
         const status = getStepStatus(index, currentIndex);
         return (
           <View
-            // biome-ignore lint/suspicious/noArrayIndexKey: steps are purely positional — the index IS the identity
-            key={index}
+            key={step.label}
             accessible
             accessibilityLabel={`${step.label}, ${statusLabels[status]}`}
             style={styles.step}

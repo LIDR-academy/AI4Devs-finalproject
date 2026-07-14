@@ -7,10 +7,6 @@ const meta = {
   component: ApiKeyRequiredNotice,
   args: {
     onNavigateToAccount: () => {},
-    labels: {
-      message: 'An API key is required to generate lessons.',
-      action: 'Add API key',
-    },
   },
 } satisfies Meta<typeof ApiKeyRequiredNotice>;
 

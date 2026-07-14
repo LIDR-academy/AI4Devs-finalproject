@@ -1,26 +1,5 @@
 export type ResultsSummaryVariant = 'score' | 'completion';
 
-export type ResultsSummaryLabels = {
-  score: string;
-  percent: string;
-  /**
-   * Pre-joined, localized announcement for the score variant's loading→content transition
-   * (@s13) — the wiring layer composes this from `labels.score`/`percent` (e.g. via
-   * `t('results.scoreAnnouncement', …)`); the organism never formats it itself.
-   */
-  scoreAnnouncement: string;
-  retake: string;
-  backToLessons: string;
-  /** Completion-variant headline (@s8/@s9) — shown instead of a score. */
-  completeHeadline: string;
-  /** Completion-variant supporting copy (@s8/@s9). */
-  completeBody: string;
-  /** Non-blocking save-failure notice text (@s7). */
-  saveFailed: string;
-  /** Retry action label for the save-failure notice (@s7). */
-  retrySave: string;
-};
-
 export type ResultsSummaryProps = {
   variant: ResultsSummaryVariant;
   /** True while the attempt is being saved — shows the loading affordance and disables actions (@s5). */
@@ -31,7 +10,10 @@ export type ResultsSummaryProps = {
    * (nothing is ever saved there).
    */
   saveFailed?: boolean;
-  labels: ResultsSummaryLabels;
+  /** Correct/total counts for the score variant (ignored for completion); the organism
+   * derives the percent and every localized label itself via `t('results.*', …)`. */
+  correct?: number;
+  total?: number;
   onRetake: () => void;
   onBackToLessons: () => void;
   /**

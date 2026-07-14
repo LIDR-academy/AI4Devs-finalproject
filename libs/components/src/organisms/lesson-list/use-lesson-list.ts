@@ -1,13 +1,10 @@
+import { useLocalization } from '@helsoft/localization';
 import { useEffect, useState } from 'react';
 import { AccessibilityInfo } from 'react-native';
-
 import type { LessonListState } from './lesson-list.types';
 
 type UseLessonListArgs = {
   state: LessonListState;
-  loadingLabel: string;
-  emptyLabel: string;
-  errorLabel: string;
 };
 
 /**
@@ -15,23 +12,19 @@ type UseLessonListArgs = {
  * delete-confirmation Dialog open state (pending lesson id).
  * accessibilityLiveRegion covers Android/Web; iOS needs announceForAccessibility.
  */
-export const useLessonList = ({
-  state,
-  loadingLabel,
-  emptyLabel,
-  errorLabel,
-}: UseLessonListArgs) => {
+export const useLessonList = ({ state }: UseLessonListArgs) => {
+  const { t } = useLocalization();
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     if (state === 'loading') {
-      AccessibilityInfo.announceForAccessibility(loadingLabel);
+      AccessibilityInfo.announceForAccessibility(t('home.loading'));
     } else if (state === 'empty') {
-      AccessibilityInfo.announceForAccessibility(emptyLabel);
+      AccessibilityInfo.announceForAccessibility(t('home.empty'));
     } else if (state === 'error') {
-      AccessibilityInfo.announceForAccessibility(errorLabel);
+      AccessibilityInfo.announceForAccessibility(t('home.error'));
     }
-  }, [state, loadingLabel, emptyLabel, errorLabel]);
+  }, [state, t]);
 
   return { pendingDeleteId, setPendingDeleteId };
 };

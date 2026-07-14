@@ -9,23 +9,6 @@ export type LessonListItemData = {
   deleteAccessibilityLabel?: string;
 };
 
-export type LessonListBaseLabels = {
-  loading: string;
-  empty: string;
-  error: string;
-  retry: string;
-};
-
-/** Delete-confirmation Dialog copy (@s8/@s9) — required when `onDelete` is wired. */
-export type LessonListDeleteLabels = {
-  deleteConfirmHeadline: string;
-  deleteConfirmBody: string;
-  deleteConfirmAction: string;
-  deleteConfirmCancelAction: string;
-};
-
-export type LessonListLabels = LessonListBaseLabels & Partial<LessonListDeleteLabels>;
-
 type LessonListSharedProps = {
   state: LessonListState;
   lessons: LessonListItemData[];
@@ -37,9 +20,7 @@ type LessonListSharedProps = {
 export type LessonListProps =
   | (LessonListSharedProps & {
       onDelete?: undefined;
-      labels: LessonListBaseLabels & Partial<LessonListDeleteLabels>;
     })
   | (LessonListSharedProps & {
       onDelete: (id: string) => void;
-      labels: LessonListBaseLabels & LessonListDeleteLabels;
     });

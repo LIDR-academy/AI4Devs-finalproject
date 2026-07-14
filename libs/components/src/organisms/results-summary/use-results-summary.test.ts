@@ -1,30 +1,40 @@
+jest.mock('@helsoft/localization', () => ({
+  useLocalization: jest.fn(),
+}));
+
+import { useLocalization } from '@helsoft/localization';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { AccessibilityInfo } from 'react-native';
 
 import { useResultsSummary } from './use-results-summary';
 
+const mockUseLocalization = useLocalization as jest.Mock;
+
+const t = (key: string, options?: Record<string, unknown>) => {
+  if (key === 'results.score') return `${options?.correct} / ${options?.total}`;
+  if (key === 'results.scorePercent') return `${options?.percent}%`;
+  if (key === 'results.scoreAnnouncement') return `${options?.score}, ${options?.percent}`;
+  if (key === 'results.saveFailed') return 'save failed';
+  if (key === 'results.completeHeadline') return 'complete';
+  return key;
+};
+
 type HookProps = {
   variant: 'score' | 'completion';
   loading?: boolean;
   saveFailed?: boolean;
-  saveFailedLabel?: string;
-  scoreAnnouncement?: string;
-  completeHeadline?: string;
+  correct?: number;
+  total?: number;
 };
 
 const renderSummaryHook = (initialProps: HookProps) =>
-  renderHook(
-    (props: HookProps) =>
-      useResultsSummary({
-        saveFailedLabel: 'save failed',
-        scoreAnnouncement: 'score ready',
-        completeHeadline: 'complete',
-        ...props,
-      }),
-    { initialProps },
-  );
+  renderHook((props: HookProps) => useResultsSummary(props), { initialProps });
 
 describe('useResultsSummary', () => {
+  beforeEach(() => {
+    mockUseLocalization.mockReturnValue({ t });
+  });
+
   it('showSaveFailure is true only for score + saveFailed', async () => {
     const { result, rerender } = await renderSummaryHook({
       variant: 'score',
@@ -47,19 +57,18 @@ describe('useResultsSummary', () => {
     const { rerender } = await renderSummaryHook({
       variant: 'score',
       saveFailed: false,
-      saveFailedLabel: 'save failed',
     });
     expect(announceSpy).not.toHaveBeenCalled();
 
     await act(async () => {
-      await rerender({ variant: 'score', saveFailed: true, saveFailedLabel: 'save failed' });
+      await rerender({ variant: 'score', saveFailed: true });
     });
 
     await waitFor(() => expect(announceSpy).toHaveBeenCalledWith('save failed'));
     announceSpy.mockRestore();
   });
 
-  it('announces score content when loading resolves without save failure', async () => {
+  it('announces the derived score content when loading resolves without save failure', async () => {
     const announceSpy = jest
       .spyOn(AccessibilityInfo, 'announceForAccessibility')
       .mockImplementation(() => {});
@@ -68,18 +77,20 @@ describe('useResultsSummary', () => {
     const { rerender } = await renderSummaryHook({
       variant: 'score',
       loading: true,
-      scoreAnnouncement: 'score ready',
+      correct: 3,
+      total: 3,
     });
 
     await act(async () => {
       await rerender({
         variant: 'score',
         loading: false,
-        scoreAnnouncement: 'score ready',
+        correct: 3,
+        total: 3,
       });
     });
 
-    await waitFor(() => expect(announceSpy).toHaveBeenCalledWith('score ready'));
+    await waitFor(() => expect(announceSpy).toHaveBeenCalledWith('3 / 3, 100%'));
     announceSpy.mockRestore();
   });
 
@@ -93,8 +104,8 @@ describe('useResultsSummary', () => {
       variant: 'score',
       loading: true,
       saveFailed: false,
-      saveFailedLabel: 'save failed',
-      scoreAnnouncement: 'score ready',
+      correct: 3,
+      total: 3,
     });
 
     await act(async () => {
@@ -102,13 +113,13 @@ describe('useResultsSummary', () => {
         variant: 'score',
         loading: false,
         saveFailed: true,
-        saveFailedLabel: 'save failed',
-        scoreAnnouncement: 'score ready',
+        correct: 3,
+        total: 3,
       });
     });
 
     await waitFor(() => expect(announceSpy).toHaveBeenCalledWith('save failed'));
-    expect(announceSpy).not.toHaveBeenCalledWith('score ready');
+    expect(announceSpy).not.toHaveBeenCalledWith('3 / 3, 100%');
     announceSpy.mockRestore();
   });
 });
