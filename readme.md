@@ -30,6 +30,7 @@ ConstructFlow is a web-based CRM and workflow management platform built for cons
 > Puede ser pública o privada, en cuyo caso deberás compartir los accesos de manera segura. Puedes enviarlos a [alvaro@lidr.co](mailto:alvaro@lidr.co) usando algún servicio como [onetimesecret](https://onetimesecret.com/).
 
 URL del proyecto: https://constructflow-web-main-b39d4e8.kuberns.cloud/
+The demo accesses are provided in the readme.md file in the API repository.
 
 ### 0.5. URL o archivo comprimido del repositorio
 
