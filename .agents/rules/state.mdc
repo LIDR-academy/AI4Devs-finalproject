@@ -63,6 +63,6 @@ const [state, dispatch] = useReducer(reducer, {
 ## Rules of thumb
 
 - **Threshold**: ≥3 related fields → reducer. 1–2 is fine as `useState`.
-- **Co-locate** the `State` / `Action` types (and pure `reducer`) next to the hook — follow `types.mdc` / `component-split.mdc` when splitting files.
+- **File name**: put the pure reducer (+ its private `State` / `Action` + initial state) in a co-located `*.reducer.ts` named after the owner — `use-feature.ts` → `use-feature.reducer.ts`, `component-name` hook → `use-component-name.reducer.ts`. Follow `types.mdc` / `component-split.mdc` for any other split.
 - **Prefer named actions** over a grab-bag `setState` patch; transitions should be explicit and testable.
 - Reducer stays **pure** — no side effects; effects and service calls stay in the hook/component.
