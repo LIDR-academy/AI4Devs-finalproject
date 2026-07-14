@@ -2,7 +2,9 @@
 
 Guía de configuración del entorno de desarrollo y ejecución del proyecto INK·LINK.
 
-> ⚠️ **Estado objetivo**: esta guía describe el entorno una vez completada la Fase 0 de `DEVELOPMENT_PLAN.md`. A la fecha, `backend/`, `frontend/` y `docker-compose.yml` aún no existen — ver `PROJECT_STATUS.md`.
+> ℹ️ **Estado**: la Fase 0 de `DEVELOPMENT_PLAN.md` está completada — `backend/` (.NET 10), `frontend/` (Angular 20), `docker-compose.yml` y CI existen. Las migraciones EF Core y el seed (`dotnet ef database update`, `dotnet run --seed`) se incorporan con US0001 — ver `PROJECT_STATUS.md`.
+>
+> 💡 `docker-compose up -d` levanta solo la infraestructura (PostgreSQL + MinIO). Para el stack completo dockerizado: `docker compose --profile full up --build`.
 
 ## Prerequisites
 

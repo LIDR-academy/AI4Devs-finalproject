@@ -1,0 +1,81 @@
+name: inklink
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: inklink-db
+    environment:
+      POSTGRES_DB: inklink_dev
+      POSTGRES_USER: inklink
+      POSTGRES_PASSWORD: inklink_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inklink -d inklink_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  storage:
+    image: minio/minio:latest
+    container_name: inklink-storage
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - storage_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  create-bucket:
+    image: minio/mc:latest
+    container_name: inklink-create-bucket
+    depends_on:
+      storage:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://storage:9000 minioadmin minioadmin &&
+      mc mb --ignore-existing local/inklink-images &&
+      mc anonymous set download local/inklink-images
+      "
+
+  # Full-stack profile: `docker compose --profile full up --build`
+  # Default `docker compose up -d` starts infrastructure only (db + storage).
+  api:
+    build: ./backend
+    container_name: inklink-api
+    profiles: ["full"]
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=inklink_dev;Username=inklink;Password=inklink_dev_password
+      Storage__Endpoint: storage:9000
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+      storage:
+        condition: service_healthy
+
+  web:
+    build: ./frontend
+    container_name: inklink-web
+    profiles: ["full"]
+    ports:
+      - "4200:80"
+    depends_on:
+      - api
+
+volumes:
+  db_data:
+  storage_data:

@@ -10,11 +10,11 @@
 | Entrega 1 (documentación) | ✅ Completa (con inconsistencias pendientes — `fixs/issue-004.md`) |
 | Entrega 2 (implementación) | ⬜ No iniciada |
 | Backlog vigente | 13 US · 80 SP · 9 Must-Have (52 SP) + 4 Should-Have (28 SP) — `docs/us/all-us.md` |
-| Backend (`backend/`) | ⬜ Vacío — pendiente scaffolding .NET 10 |
-| Frontend (`frontend/`) | ⬜ Vacío — pendiente scaffolding Angular 20 |
-| Docker / infraestructura local | ⬜ No existe (`docker-compose.yml` pendiente — Fase 0) |
-| CI/CD | ⬜ No existe (workflow pendiente — Fase 0) |
-| API oficial | `docs/api-spec.yml` — ⚠️ requiere sincronización (issue-004 §A) |
+| Backend (`backend/`) | ✅ Scaffolding .NET 10 (API por capas + xUnit, health endpoint, tests en verde) |
+| Frontend (`frontend/`) | ✅ Scaffolding Angular 20 (environments, build y tests en verde) |
+| Docker / infraestructura local | ✅ `docker-compose.yml` (PostgreSQL16+PostGIS, MinIO; perfil `full` con api+web) |
+| CI/CD | ✅ `.github/workflows/ci.yml` (build + tests backend y frontend) |
+| API oficial | ✅ `docs/api-spec.yml` v2.0.0 sincronizada con backlog y modelo |
 
 ## Estado por Historia de Usuario
 

@@ -1,2 +1,25 @@
 .DS_Store
 .worktrees/
+
+# .NET
+backend/bin/
+backend/obj/
+backend/Tests/bin/
+backend/Tests/obj/
+backend/appsettings.Development.json
+*.user
+
+# Node / Angular
+node_modules/
+frontend/dist/
+frontend/.angular/
+npm-debug.log*
+
+# IDE
+.idea/
+
+# Docker local overrides
+docker-compose.override.yml
+
+# Environment secrets
+.env
