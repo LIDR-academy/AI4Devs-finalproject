@@ -14,11 +14,10 @@ import type { PdfDocumentsProps } from './pdf-documents.types';
  */
 export const PdfDocuments = ({ onGenerate, onOpenLesson, reloadToken }: PdfDocumentsProps) => {
   const { documents, isLoading, error, refetch, deleteDocument } = usePdfDocuments();
-  const { t, locale } = useLocalization();
+  const { t } = useLocalization();
 
   const state = toPdfDocumentListState(isLoading, error, documents.length);
-  const items = useMemo(() => toPdfDocumentListItems(documents, locale, t), [documents, locale, t]);
-  const deleteFailedLabel = t('pdfList.delete.failed');
+  const items = useMemo(() => toPdfDocumentListItems(documents), [documents]);
 
   // Skip the initial mount — usePdfDocuments already loads once. Refetch only on later bumps.
   const isFirstTokenEffect = useRef(true);
@@ -52,9 +51,9 @@ export const PdfDocuments = ({ onGenerate, onOpenLesson, reloadToken }: PdfDocum
   // accessibilityLiveRegion covers Android/Web; iOS needs announceForAccessibility (WCAG 4.1.3).
   useEffect(() => {
     if (state === 'content' && error) {
-      AccessibilityInfo.announceForAccessibility(deleteFailedLabel);
+      AccessibilityInfo.announceForAccessibility(t('pdfList.delete.failed'));
     }
-  }, [state, error, deleteFailedLabel]);
+  }, [state, error, t]);
 
   return (
     <View style={styles.root}>
@@ -71,7 +70,7 @@ export const PdfDocuments = ({ onGenerate, onOpenLesson, reloadToken }: PdfDocum
       />
       {state === 'content' && error ? (
         <Text accessibilityLiveRegion="assertive" style={styles.deleteError}>
-          {deleteFailedLabel}
+          {t('pdfList.delete.failed')}
         </Text>
       ) : null}
     </View>

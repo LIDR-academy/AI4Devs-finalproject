@@ -2,24 +2,16 @@ import type { PdfDocumentStatus } from '@helsoft/types';
 
 export type PdfDocumentListState = 'loading' | 'content' | 'empty' | 'error';
 
+/** Row payload for PdfDocumentList — raw fields; the molecule owns i18n. */
 export type PdfDocumentListItemData = {
   id: string;
   filename: string;
   status: PdfDocumentStatus;
-  statusLabel: string;
-  createdDateLabel: string;
-  pageCountLabel: string;
-  generateLabel: string;
-  retryLabel: string;
-  openLessonLabel: string;
-  generateAccessibilityLabel: string;
-  retryAccessibilityLabel: string;
-  openLessonAccessibilityLabel: string;
-  /** Per-item delete control name; omit for generated rows (@s11). */
-  deleteAccessibilityLabel?: string;
+  createdAt: string;
+  pageCount: number | null;
 };
 
-type PdfDocumentListSharedProps = {
+export type PdfDocumentListSharedProps = {
   state: PdfDocumentListState;
   documents: PdfDocumentListItemData[];
   onGenerate: (id: string) => void;

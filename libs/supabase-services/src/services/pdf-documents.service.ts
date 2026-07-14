@@ -1,6 +1,7 @@
 import type { PdfDocumentStatus, PdfDocumentSummary } from '@helsoft/types';
 
-import { PdfDocumentsDao, type UserDocumentRow } from '../dao/pdf-documents.dao';
+import { PdfDocumentsDao } from '../dao/pdf-documents.dao';
+import type { UserDocumentRow } from '../dao/pdf-documents.types';
 
 const deriveStatus = (row: UserDocumentRow): PdfDocumentStatus => {
   if (row.lesson_id) return 'generated';

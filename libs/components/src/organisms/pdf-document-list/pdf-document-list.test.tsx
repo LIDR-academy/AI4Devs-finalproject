@@ -10,43 +10,43 @@ jest.mock('@helsoft/localization', () => ({
 
 const mockUseLocalization = useLocalization as jest.Mock;
 
-const defaultT = (key: string) => key;
+/** Resolves pdfList keys so molecule-owned copy matches prior prop-driven expectations. */
+const defaultT = (key: string, options?: Record<string, unknown>) => {
+  if (key === 'pdfList.createdDate') return String(options?.date ?? '');
+  if (key === 'pdfList.pageCount') return `${options?.count} pages`;
+  if (key === 'pdfList.status.ready') return 'Ready to generate';
+  if (key === 'pdfList.status.failed') return 'Generation failed';
+  if (key === 'pdfList.status.generated') return 'Lesson ready';
+  if (key === 'pdfList.action.generate') return 'Generate';
+  if (key === 'pdfList.action.retry') return 'Retry';
+  if (key === 'pdfList.action.openLesson') return 'Open lesson';
+  if (key === 'pdfList.action.generateA11y') return `Generate ${options?.filename}`;
+  if (key === 'pdfList.action.retryA11y') return `Retry ${options?.filename}`;
+  if (key === 'pdfList.action.openLessonA11y') return `Open lesson for ${options?.filename}`;
+  if (key === 'pdfList.delete.action') return `Delete ${options?.filename}`;
+  return key;
+};
 
 const documents = [
   {
     id: 'doc-2',
     filename: 'newer.pdf',
     status: 'ready' as const,
-    statusLabel: 'Ready to generate',
-    createdDateLabel: 'Jul 14, 2026',
-    pageCountLabel: '8 pages',
-    generateLabel: 'Generate',
-    retryLabel: 'Retry',
-    openLessonLabel: 'Open lesson',
-    generateAccessibilityLabel: 'Generate newer.pdf',
-    retryAccessibilityLabel: 'Retry newer.pdf',
-    openLessonAccessibilityLabel: 'Open lesson for newer.pdf',
-    deleteAccessibilityLabel: 'Delete newer.pdf',
+    createdAt: '2026-07-14T12:00:00.000Z',
+    pageCount: 8,
   },
   {
     id: 'doc-1',
     filename: 'older.pdf',
     status: 'generated' as const,
-    statusLabel: 'Lesson ready',
-    createdDateLabel: 'Jul 10, 2026',
-    pageCountLabel: '12 pages',
-    generateLabel: 'Generate',
-    retryLabel: 'Retry',
-    openLessonLabel: 'Open lesson',
-    generateAccessibilityLabel: 'Generate older.pdf',
-    retryAccessibilityLabel: 'Retry older.pdf',
-    openLessonAccessibilityLabel: 'Open lesson for older.pdf',
+    createdAt: '2026-07-10T12:00:00.000Z',
+    pageCount: 12,
   },
 ];
 
 describe('PdfDocumentList', () => {
   beforeEach(() => {
-    mockUseLocalization.mockReturnValue({ t: defaultT });
+    mockUseLocalization.mockReturnValue({ t: defaultT, locale: 'en' });
   });
 
   // @s15 — loading shows a progress indicator.
@@ -102,7 +102,7 @@ describe('PdfDocumentList', () => {
 
     expect(screen.getByText('newer.pdf')).toBeTruthy();
     expect(screen.getByText('Ready to generate')).toBeTruthy();
-    expect(screen.getByText('Jul 14, 2026')).toBeTruthy();
+    expect(screen.getByText(/Jul(y)?\s*14,?\s*2026/)).toBeTruthy();
     expect(screen.getByText('8 pages')).toBeTruthy();
     expect(screen.getByText('older.pdf')).toBeTruthy();
     expect(screen.getByText('Lesson ready')).toBeTruthy();
@@ -282,7 +282,7 @@ describe('PdfDocumentList', () => {
     expect(screen.getByLabelText('older.pdf, Lesson ready')).toBeTruthy();
   });
 
-  // @s11/@s21 — delete only for rows that provide deleteAccessibilityLabel + onDelete.
+  // @s11/@s21 — delete only for ready/failed when onDelete is provided.
   it('exposes an accessible delete control for deletable documents when onDelete is provided', async () => {
     await render(
       <PdfDocumentList
@@ -364,8 +364,6 @@ describe('PdfDocumentList', () => {
             ...documents[0],
             id: '',
             filename: 'blank.pdf',
-            generateAccessibilityLabel: 'Generate blank.pdf',
-            deleteAccessibilityLabel: 'Delete blank.pdf',
           },
         ]}
         onGenerate={jest.fn()}
@@ -412,6 +410,7 @@ describe('PdfDocumentList', () => {
       .mockImplementation(() => {});
     mockUseLocalization.mockReturnValue({
       t: (key: string) => (key === 'pdfList.loading' ? 'Loading PDFs…' : key),
+      locale: 'en',
     });
 
     const { rerender } = await render(
@@ -428,6 +427,7 @@ describe('PdfDocumentList', () => {
     announceSpy.mockClear();
     mockUseLocalization.mockReturnValue({
       t: (key: string) => (key === 'pdfList.loading' ? 'Still loading PDFs…' : key),
+      locale: 'en',
     });
     await rerender(
       <PdfDocumentList
@@ -443,8 +443,8 @@ describe('PdfDocumentList', () => {
     announceSpy.mockRestore();
   });
 
-  // Mutation: `onDelete && deleteAccessibilityLabel` → true / || .
-  it('does not offer delete when onDelete is omitted even if the row has a delete label', async () => {
+  // Mutation: `onDelete &&` → true — omit onDelete and delete must stay hidden.
+  it('does not offer delete when onDelete is omitted', async () => {
     await render(
       <PdfDocumentList
         state="content"
@@ -458,16 +458,12 @@ describe('PdfDocumentList', () => {
     expect(screen.queryByRole('button', { name: 'Delete newer.pdf' })).toBeNull();
   });
 
-  it('does not offer delete when the row omits deleteAccessibilityLabel', async () => {
+  // @s11 — generated rows never expose delete even when onDelete is wired.
+  it('does not offer delete for generated rows when onDelete is provided', async () => {
     await render(
       <PdfDocumentList
         state="content"
-        documents={[
-          {
-            ...documents[0],
-            deleteAccessibilityLabel: undefined,
-          },
-        ]}
+        documents={[documents[1]!]}
         onGenerate={jest.fn()}
         onOpenLesson={jest.fn()}
         onRetry={jest.fn()}
@@ -548,8 +544,6 @@ describe('PdfDocumentList', () => {
         ...documents[0],
         id: 'doc-old',
         filename: 'swap.pdf',
-        generateAccessibilityLabel: 'Generate swap.pdf',
-        deleteAccessibilityLabel: 'Delete swap.pdf',
       },
     ];
     const secondDocs = [
@@ -557,8 +551,6 @@ describe('PdfDocumentList', () => {
         ...documents[0],
         id: 'doc-new',
         filename: 'swap.pdf',
-        generateAccessibilityLabel: 'Generate swap.pdf',
-        deleteAccessibilityLabel: 'Delete swap.pdf',
       },
     ];
 

@@ -1,14 +1,6 @@
 import { getSupabase } from '../supabase/supabase-client';
 
-/** Raw shape of a `user_documents` view row (snake_case, as Supabase returns it). */
-export type UserDocumentRow = {
-  id: string;
-  filename: string;
-  page_count: number | null;
-  created_at: string;
-  generation_error_code: string | null;
-  lesson_id: string | null;
-};
+import type { UserDocumentRow } from './pdf-documents.types';
 
 const PDF_UPLOAD_BUCKET = 'pdf-uploads';
 const PDF_IMAGES_BUCKET = 'pdf-images';

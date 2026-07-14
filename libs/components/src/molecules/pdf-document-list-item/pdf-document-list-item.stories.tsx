@@ -7,19 +7,11 @@ const meta = {
   component: PdfDocumentListItem,
   args: {
     filename: 'notes.pdf',
-    statusLabel: 'Ready to generate',
-    createdDateLabel: 'Jul 14, 2026',
-    pageCountLabel: '12 pages',
-    generateLabel: 'Generate',
-    retryLabel: 'Retry',
-    openLessonLabel: 'Open lesson',
-    generateAccessibilityLabel: 'Generate notes.pdf',
-    retryAccessibilityLabel: 'Retry notes.pdf',
-    openLessonAccessibilityLabel: 'Open lesson for notes.pdf',
+    createdAt: '2026-07-14T12:00:00.000Z',
+    pageCount: 12,
     onGenerate: () => {},
     onOpenLesson: () => {},
     onDelete: () => {},
-    deleteAccessibilityLabel: 'Delete notes.pdf',
   },
 } satisfies Meta<typeof PdfDocumentListItem>;
 
@@ -32,17 +24,12 @@ export const Ready: Story = {
 };
 
 export const Failed: Story = {
-  args: {
-    status: 'failed',
-    statusLabel: 'Generation failed',
-  },
+  args: { status: 'failed' },
 };
 
 export const Generated: Story = {
   args: {
     status: 'generated',
-    statusLabel: 'Lesson ready',
     onDelete: undefined,
-    deleteAccessibilityLabel: undefined,
   },
 };

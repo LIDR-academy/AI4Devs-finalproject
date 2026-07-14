@@ -5,12 +5,10 @@ import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../../atoms/button/button';
 import { ProgressIndicator } from '../../atoms/progress-indicator/progress-indicator';
 import { PdfDocumentListItem } from '../../molecules/pdf-document-list-item/pdf-document-list-item';
+import { layout } from '../../theme/spacing';
 import { Dialog } from '../dialog/dialog';
 import type { PdfDocumentListItemData, PdfDocumentListProps } from './pdf-document-list.types';
 import { usePdfDocumentList } from './use-pdf-document-list';
-
-const LOADING_SPINNER_SIZE = 24;
-const LOADING_SPINNER_THICKNESS = 3;
 
 /** testID for the Loading-state affordance (@s15). */
 export const PDF_DOCUMENT_LIST_LOADING_TEST_ID = 'pdf-document-list-loading-indicator';
@@ -45,26 +43,18 @@ const PdfDocumentListRow = memo(function PdfDocumentListRow({
     <PdfDocumentListItem
       filename={item.filename}
       status={item.status}
-      statusLabel={item.statusLabel}
-      createdDateLabel={item.createdDateLabel}
-      pageCountLabel={item.pageCountLabel}
-      generateLabel={item.generateLabel}
-      retryLabel={item.retryLabel}
-      openLessonLabel={item.openLessonLabel}
-      generateAccessibilityLabel={item.generateAccessibilityLabel}
-      retryAccessibilityLabel={item.retryAccessibilityLabel}
-      openLessonAccessibilityLabel={item.openLessonAccessibilityLabel}
+      createdAt={item.createdAt}
+      pageCount={item.pageCount}
       onGenerate={handleGenerate}
       onOpenLesson={handleOpenLesson}
-      onDelete={onRequestDelete && item.deleteAccessibilityLabel ? handleDelete : undefined}
-      deleteAccessibilityLabel={item.deleteAccessibilityLabel}
+      onDelete={onRequestDelete ? handleDelete : undefined}
     />
   );
 });
 
 /**
  * PdfDocumentList — presentational organism for the upload-screen PDF list
- * (Loading / Content / Empty / Error). Prop-driven row copy; state copy via `t`.
+ * (Loading / Content / Empty / Error). Owns chrome i18n via t(); rows own theirs.
  * Delete confirms via shared Dialog before calling `onDelete` (@s12/@s13).
  */
 export const PdfDocumentList = ({
@@ -102,11 +92,7 @@ export const PdfDocumentList = ({
   if (state === 'loading') {
     return (
       <View testID={PDF_DOCUMENT_LIST_LOADING_TEST_ID}>
-        <ProgressIndicator
-          variant="circular"
-          size={LOADING_SPINNER_SIZE}
-          thickness={LOADING_SPINNER_THICKNESS}
-        />
+        <ProgressIndicator variant="circular" size={layout.iconSize} />
         <Text accessibilityLiveRegion="polite" style={styles.visuallyHidden}>
           {t('pdfList.loading')}
         </Text>
