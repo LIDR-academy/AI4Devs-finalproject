@@ -20,7 +20,7 @@ pending
   → spec_reviewer       → review-spec.md  (loop with spec_partner, ≤ 2 rounds)          [spec_ready]
   → ⏸ HUMAN GATE: approve the spec + Gherkin contract (single approval)                 [approved]
   → implementator       → per vertical slice: build (TDD) → reviewer_slice (ONE agent,
-        code + design lenses) → fix → commit; no slice N+1 until slice N is clean       [in_progress]
+        checks all .agents/rules/ + design) → fix → commit; no slice N+1 until clean    [in_progress]
   ── quality gate (after all slices) ──
   → mutation_tester (pre-review)   → mutation.md; kill every survivor (≤ 2 rounds)      [mutation]
   → reviews_lead (full)            → CI once + the 2 reviewers (engineering, standards),
@@ -42,7 +42,7 @@ Only `orchestrator_lead` writes the feature phase (in `tasks.md` frontmatter); `
 | `spec_partner` | 1 — spec + contract (debate) | spec bundle + `gherkin-scenarios.md` | no |
 | `spec_reviewer` | 1 — spec review (pre-gate) | `review-spec.md` | no |
 | `implementator` | 2 — build (TDD) | `src/`, `tests/`, `tdd.md`, task statuses | **yes** |
-| `reviewer_slice` | 2 — per slice (code + design lenses, one agent) | `review-slice.md` | no |
+| `reviewer_slice` | 2 — per slice (all `.agents/rules/` + design, one agent) | `review-slice.md` | no |
 | `reviews_lead` | 3 — full review round (CI once, reviewer/lens skipping) | `review.md` | no |
 | `reviewer_engineering` (code · architecture · performance) / `reviewer_standards` (security · accessibility) | 3 — full only (2 agents in parallel, as applicable) | `review-engineering.md` / `review-standards.md` | no |
 | `mutation_tester` | 3 — StrykerJS (pre-review; post-review only if the review changed source) | `mutation.md` | no |
