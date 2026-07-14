@@ -8,7 +8,7 @@
 | Aspecto | Estado |
 |---|---|
 | Entrega 1 (documentación) | ✅ Completa (con inconsistencias pendientes — `fixs/issue-004.md`) |
-| Entrega 2 (implementación) | ⬜ No iniciada |
+| Entrega 2 (implementación) | 🔵 En curso — Fase 0 completa, US0001 en revisión |
 | Backlog vigente | 13 US · 80 SP · 9 Must-Have (52 SP) + 4 Should-Have (28 SP) — `docs/us/all-us.md` |
 | Backend (`backend/`) | ✅ Scaffolding .NET 10 (API por capas + xUnit, health endpoint, tests en verde) |
 | Frontend (`frontend/`) | ✅ Scaffolding Angular 20 (environments, build y tests en verde) |
@@ -20,7 +20,7 @@
 
 | US | Historia | MoSCoW | SP | Estado |
 |---|---|---|---|---|
-| US0001 | Inicio de sesión de usuarios | Must | 3 | ⬜ Pendiente |
+| US0001 | Inicio de sesión de usuarios | Must | 3 | 🟣 En revisión (`feature/us0001-login`) |
 | US0003 | Ver vitrina principal de tatuajes | Must | 8 | ⬜ Pendiente |
 | US0004 | Filtrar artistas | Must | 8 | ⬜ Pendiente |
 | US0005 | Buscar artistas por texto | Must | 3 | ⬜ Pendiente |

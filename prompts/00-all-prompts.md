@@ -721,6 +721,18 @@ hay en una rama llamada docs/entrega2 y luego puedes comenzar con el punto 6
 
 ---
 
+## 46 — Continuar: Fase 0 + US0001
+
+> 📋 2026-07-14T21:30:00Z · Claude Code CLI · Claude Fable 5 · medium · ~150K tokens · rodri
+
+```
+continua
+```
+
+*(Desbloquea la ejecución de Fase 0 y US0001 tras las decisiones del prompt 45. Resultado — Fase 0 en rama `chore/fase0-foundations`: docker-compose (PostgreSQL16+PostGIS, MinIO), scaffolding .NET 10 por capas + xUnit, Angular 20 + Material, Dockerfiles, CI GitHub Actions; SDK .NET 10.0.302 instalado. US0001 en rama `feature/us0001-login`: TASK0001 13 entidades EF Core + migración InitialSchema + seed completo + test de integración TestContainers (verde); TASK0002 login JWT con TDD (7 tests rojo→verde), rate limiting, /auth/me, verificado E2E con curl contra BD dockerizada con seed; TASK0003 login Angular con signals, guard, interceptor, /mi-cuenta, 9/9 tests verdes. CA1-CA7 de US0001 cumplidos.)*
+
+---
+
 ## Resumen de archivos modificados (sesión 5)
 
 | Archivo | Acción |
@@ -744,4 +756,4 @@ hay en una rama llamada docs/entrega2 y luego puedes comenzar con el punto 6
 
 ---
 
-*INK·LINK © 2026 · Registro de prompts · 5 sesiones · 45 prompts documentados*
+*INK·LINK © 2026 · Registro de prompts · 5 sesiones · 46 prompts documentados*
