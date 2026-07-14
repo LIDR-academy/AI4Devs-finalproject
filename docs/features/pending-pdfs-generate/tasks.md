@@ -1,6 +1,6 @@
 ---
 feature: pending-pdfs-generate
-phase: approved
+phase: in_progress
 review_round: 0
 ---
 
