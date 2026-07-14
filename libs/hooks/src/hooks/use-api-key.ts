@@ -7,12 +7,11 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useState,
+  useReducer,
 } from 'react';
+import { useApiKeyInitialState, useApiKeyReducer } from './use-api-key.reducer';
 import type { ApiKeyProviderProps, UseApiKeyResult } from './use-api-key.types';
 import { useSession } from './use-session';
-
-const NO_KEY_STATUS: ApiKeyStatus = { hasKey: false };
 
 /** The closed set of codes ApiKeyService is contractually allowed to reject with. */
 const API_KEY_ERROR_CODES: ReadonlySet<ApiKeyErrorCode> = new Set([
@@ -44,10 +43,7 @@ const useApiKeyState = (skip: boolean): UseApiKeyResult => {
   // flicker on those events, while still reloading correctly if a genuinely different user
   // signs in (sessionUserId then changes too).
   const sessionUserId = session?.user?.id;
-  const [status, setStatus] = useState<ApiKeyStatus>(NO_KEY_STATUS);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<ApiKeyErrorCode | null>(null);
+  const [state, dispatch] = useReducer(useApiKeyReducer, useApiKeyInitialState);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: keyed on the derived sessionUserId instead of the session object on purpose — see the comment above sessionUserId
   useEffect(() => {
@@ -64,15 +60,14 @@ const useApiKeyState = (skip: boolean): UseApiKeyResult => {
     if (isSessionLoading) return;
 
     if (!session) {
-      setIsLoading(false);
+      dispatch({ type: 'status/unauthenticated' });
       return;
     }
 
-    setIsLoading(true);
+    dispatch({ type: 'status/load/start' });
     ApiKeyService.getApiKeyStatus().then((nextStatus) => {
       if (cancelled) return;
-      setStatus(nextStatus);
-      setIsLoading(false);
+      dispatch({ type: 'status/load/success', status: nextStatus });
     });
 
     return () => {
@@ -85,16 +80,16 @@ const useApiKeyState = (skip: boolean): UseApiKeyResult => {
   // or sets the normalized error code and rethrows on failure — leaving status untouched
   // (@s9's "the saved key remains").
   const runMutation = useCallback(async (mutate: () => Promise<ApiKeyStatus>) => {
-    setIsSubmitting(true);
+    dispatch({ type: 'mutation/start' });
     try {
       const nextStatus = await mutate();
-      setStatus(nextStatus);
-      setError(null);
+      dispatch({ type: 'mutation/success', status: nextStatus });
     } catch (cause) {
-      setError(isApiKeyErrorShape(cause) ? cause.code : 'network_error');
+      dispatch({
+        type: 'mutation/failure',
+        error: isApiKeyErrorShape(cause) ? cause.code : 'network_error',
+      });
       throw cause;
-    } finally {
-      setIsSubmitting(false);
     }
   }, []);
 
@@ -112,8 +107,15 @@ const useApiKeyState = (skip: boolean): UseApiKeyResult => {
   // render, so React's Context propagation re-renders every nested useApiKey() consumer whenever
   // ApiKeyProvider (or its own ancestor) re-renders, even when none of these fields changed.
   return useMemo(
-    () => ({ status, isLoading, isSubmitting, error, saveApiKey, removeApiKey }),
-    [status, isLoading, isSubmitting, error, saveApiKey, removeApiKey],
+    () => ({
+      status: state.status,
+      isLoading: state.isLoading,
+      isSubmitting: state.isSubmitting,
+      error: state.error,
+      saveApiKey,
+      removeApiKey,
+    }),
+    [state.status, state.isLoading, state.isSubmitting, state.error, saveApiKey, removeApiKey],
   );
 };
 

@@ -3,14 +3,14 @@ import {
   GENERATION_PROGRESS_STEPS,
   type GenerateLessonRequest,
   type GenerationError,
-  type GenerationProgressStep,
 } from '@helsoft/types';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useReducer, useRef } from 'react';
 
-import type {
-  LessonGenerationStage,
-  UseLessonGenerationResult,
-} from './use-lesson-generation.types';
+import {
+  useLessonGenerationInitialState,
+  useLessonGenerationReducer,
+} from './use-lesson-generation.reducer';
+import type { UseLessonGenerationResult } from './use-lesson-generation.types';
 import { useSession } from './use-session';
 
 /** How long each step is shown before advancing to the next while the single `generate` call
@@ -37,12 +37,7 @@ const isGenerationErrorShape = (cause: unknown): cause is GenerationError => {
  */
 export const useLessonGeneration = (): UseLessonGenerationResult => {
   const { session } = useSession();
-  const [stage, setStage] = useState<LessonGenerationStage>('idle');
-  const [currentStep, setCurrentStep] = useState<GenerationProgressStep>(
-    GENERATION_PROGRESS_STEPS[0],
-  );
-  const [result, setResult] = useState<UseLessonGenerationResult['result']>(undefined);
-  const [error, setError] = useState<UseLessonGenerationResult['error']>(undefined);
+  const [state, dispatch] = useReducer(useLessonGenerationReducer, useLessonGenerationInitialState);
   const stepperRef = useRef<ReturnType<typeof setInterval> | null>(null);
   // Remembers the last generate() request so retry() (task-13, @s15) can re-run the exact same
   // documentId/composition rather than requiring the caller to resupply it (no duplicate side
@@ -74,26 +69,24 @@ export const useLessonGeneration = (): UseLessonGenerationResult => {
       isGeneratingRef.current = true;
 
       lastRequestRef.current = request;
-      setStage('generating');
-      setResult(undefined);
-      setError(undefined);
+      dispatch({ type: 'generate/start' });
       let stepIndex = 0;
-      setCurrentStep(GENERATION_PROGRESS_STEPS[0]);
 
       stopStepper();
       stepperRef.current = setInterval(() => {
         stepIndex = Math.min(stepIndex + 1, GENERATION_PROGRESS_STEPS.length - 1);
-        setCurrentStep(GENERATION_PROGRESS_STEPS[stepIndex]);
+        dispatch({ type: 'generate/step', step: GENERATION_PROGRESS_STEPS[stepIndex] });
       }, GENERATION_STEP_INTERVAL_MS);
 
       const userId = session?.user.id ?? '';
       try {
         const lesson = await LessonGenerationService.generate(request, userId);
-        setResult(lesson);
-        setStage('content');
+        dispatch({ type: 'generate/success', result: lesson });
       } catch (cause) {
-        setError(isGenerationErrorShape(cause) ? cause.code : 'network_error');
-        setStage('error');
+        dispatch({
+          type: 'generate/failure',
+          error: isGenerationErrorShape(cause) ? cause.code : 'network_error',
+        });
       } finally {
         stopStepper();
         isGeneratingRef.current = false;
@@ -108,5 +101,12 @@ export const useLessonGeneration = (): UseLessonGenerationResult => {
     return lastRequest ? generate(lastRequest) : Promise.resolve();
   }, [generate]);
 
-  return { stage, currentStep, result, error, generate, retry };
+  return {
+    stage: state.stage,
+    currentStep: state.currentStep,
+    result: state.result,
+    error: state.error,
+    generate,
+    retry,
+  };
 };

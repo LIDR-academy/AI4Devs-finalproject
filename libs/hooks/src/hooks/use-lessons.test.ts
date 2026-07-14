@@ -17,7 +17,7 @@ const lessons = [
 describe('useLessons', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  // Mutation: useState(true) → false — first render must be loading before load() effect runs.
+  // Mutation: isLoading starts true — first render must be loading before load() effect runs.
   it('initializes isLoading to true on the first render before effects flush', () => {
     const loadingOnRender: boolean[] = [];
     service.getLessons.mockReturnValue(new Promise(() => {}) as never);

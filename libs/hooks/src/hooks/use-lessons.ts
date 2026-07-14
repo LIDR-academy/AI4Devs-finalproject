@@ -1,7 +1,7 @@
 import { LessonsService } from '@helsoft/supabase-services';
-import type { LessonSummary } from '@helsoft/types';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useReducer, useRef } from 'react';
 
+import { useLessonsInitialState, useLessonsReducer } from './use-lessons.reducer';
 import type { UseLessonsResult } from './use-lessons.types';
 
 /**
@@ -10,9 +10,7 @@ import type { UseLessonsResult } from './use-lessons.types';
  * `{ lessons, isLoading, error, refetch, deleteLesson }`.
  */
 export const useLessons = (): UseLessonsResult => {
-  const [lessons, setLessons] = useState<LessonSummary[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const [state, dispatch] = useReducer(useLessonsReducer, useLessonsInitialState);
   const isMounted = useRef(true);
   // Incremented to cancel an in-flight load when a newer one starts (mount or refetch).
   const requestId = useRef(0);
@@ -26,20 +24,19 @@ export const useLessons = (): UseLessonsResult => {
 
   const load = useCallback(() => {
     const id = ++requestId.current;
-    setIsLoading(true);
-    setError(null);
+    dispatch({ type: 'load/start' });
 
     void LessonsService.getLessons()
       .then((next) => {
         if (id !== requestId.current || !isMounted.current) return;
-        setLessons(next);
-        setIsLoading(false);
+        dispatch({ type: 'load/success', lessons: next });
       })
       .catch((cause: unknown) => {
         if (id !== requestId.current || !isMounted.current) return;
-        setLessons([]);
-        setError(cause instanceof Error ? cause : new Error(String(cause)));
-        setIsLoading(false);
+        dispatch({
+          type: 'load/failure',
+          error: cause instanceof Error ? cause : new Error(String(cause)),
+        });
       });
   }, []);
 
@@ -55,15 +52,23 @@ export const useLessons = (): UseLessonsResult => {
     try {
       await LessonsService.deleteLesson(id);
       if (!isMounted.current) return;
-      setLessons((prev) => prev.filter((lesson) => lesson.id !== id));
-      setError(null);
+      dispatch({ type: 'delete/success', id });
     } catch (cause) {
       if (isMounted.current) {
-        setError(cause instanceof Error ? cause : new Error(String(cause)));
+        dispatch({
+          type: 'delete/failure',
+          error: cause instanceof Error ? cause : new Error(String(cause)),
+        });
       }
       throw cause;
     }
   }, []);
 
-  return { lessons, isLoading, error, refetch, deleteLesson };
+  return {
+    lessons: state.lessons,
+    isLoading: state.isLoading,
+    error: state.error,
+    refetch,
+    deleteLesson,
+  };
 };

@@ -1,18 +1,17 @@
 import { useSession } from '@helsoft/hooks';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useReducer, useRef } from 'react';
 
 import {
   generateDocumentId,
   PDF_EXTRACTION_ERROR_CODES,
   PdfExtractionService,
 } from '../services/pdf-extraction.service';
-import type {
-  PdfExtractionError,
-  PdfExtractionErrorCode,
-  PdfExtractionInput,
-  PdfExtractionResult,
-} from '../types/pdf-extraction.types';
-import type { PdfExtractionStage, UsePdfExtractionResult } from './use-pdf-extraction.types';
+import type { PdfExtractionError, PdfExtractionInput } from '../types/pdf-extraction.types';
+import {
+  usePdfExtractionInitialState,
+  usePdfExtractionReducer,
+} from './use-pdf-extraction.reducer';
+import type { UsePdfExtractionResult } from './use-pdf-extraction.types';
 
 /** Narrow runtime guard: a rejected PdfExtractionService.extract cause is only trusted as a
  * PdfExtractionError when its `.code` is actually a member of the closed union — a violated
@@ -33,30 +32,28 @@ type LastAttempt = {
 /**
  * React integration over `PdfExtractionService`: exposes the upload+extract action plus the
  * state `PdfUploadPanel` renders (@s1 success, @s5 processing, @s8-@s13 error). Plain-state
- * (`useState`), matching the `useAuth`/`useSession` precedent — not tanstack-query (spec's locked
+ * (`useReducer`), matching the `useAuth`/`useSession` precedent — not tanstack-query (spec's locked
  * hook-style decision). Remembers the last attempt's input/documentId so `retry()` (@s13) can
  * re-run the exact same extraction rather than minting a new document row.
  */
 export const usePdfExtraction = (): UsePdfExtractionResult => {
   const { session } = useSession();
-  const [stage, setStage] = useState<PdfExtractionStage>('idle');
-  const [result, setResult] = useState<PdfExtractionResult | null>(null);
-  const [error, setError] = useState<PdfExtractionErrorCode | null>(null);
+  const [state, dispatch] = useReducer(usePdfExtractionReducer, usePdfExtractionInitialState);
   const lastAttemptRef = useRef<LastAttempt | null>(null);
 
   const run = useCallback(
     async (input: PdfExtractionInput, documentId: string) => {
       lastAttemptRef.current = { input, documentId };
-      setStage('processing');
-      setError(null);
+      dispatch({ type: 'extract/start' });
       const userId = session?.user.id;
       try {
         const extracted = await PdfExtractionService.extract(input, userId ?? '', documentId);
-        setResult(extracted);
-        setStage('success');
+        dispatch({ type: 'extract/success', result: extracted });
       } catch (cause) {
-        setError(isPdfExtractionErrorShape(cause) ? cause.code : 'network_error');
-        setStage('error');
+        dispatch({
+          type: 'extract/failure',
+          error: isPdfExtractionErrorShape(cause) ? cause.code : 'network_error',
+        });
       }
     },
     [session],
@@ -73,5 +70,11 @@ export const usePdfExtraction = (): UsePdfExtractionResult => {
     await run(lastAttempt.input, lastAttempt.documentId);
   }, [run]);
 
-  return { extract, stage, result, error, retry };
+  return {
+    extract,
+    stage: state.stage,
+    result: state.result,
+    error: state.error,
+    retry,
+  };
 };
