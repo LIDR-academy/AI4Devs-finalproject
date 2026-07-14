@@ -2,6 +2,6 @@
 
 **Active feature:** signup-and-lesson-persistence
 **Folder:** docs/features/signup-and-lesson-persistence/
-**Phase:** in_review
-**Status:** Pre-review mutation PASS (89.62%, 38 equivalents). Full review next.
-**Notes:** Model=cursor-grok-4.5-high-fast. Pre-review sha recorded after this commit.
+**Phase:** mutation (post-review)
+**Status:** Full review APPROVED round 2. Post-review mutation next (source changed).
+**Notes:** pre-review sha 4323391. Model=cursor-grok-4.5-high-fast.
