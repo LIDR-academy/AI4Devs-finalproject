@@ -17,6 +17,20 @@ const lessons = [
 describe('useLessons', () => {
   beforeEach(() => jest.clearAllMocks());
 
+  // Mutation: useState(true) → false — first render must be loading before load() effect runs.
+  it('initializes isLoading to true on the first render before effects flush', () => {
+    const loadingOnRender: boolean[] = [];
+    service.getLessons.mockReturnValue(new Promise(() => {}) as never);
+
+    renderHook(() => {
+      const value = useLessons();
+      loadingOnRender.push(value.isLoading);
+      return value;
+    });
+
+    expect(loadingOnRender[0]).toBe(true);
+  });
+
   // @s4 — loads own lessons on mount (newest-first ordering comes from the DAO).
   it('starts loading and resolves with lessons from LessonsService.getLessons', async () => {
     service.getLessons.mockResolvedValue(lessons);
@@ -99,6 +113,156 @@ describe('useLessons', () => {
       resolveLoad(lessons);
     });
 
+    expect(errorSpy).not.toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
+
+  // Mutation: drop isMounted / requestId success guard — stale in-flight must not overwrite.
+  it('ignores a stale successful load that resolves after a newer refetch', async () => {
+    let resolveFirst: (value: unknown) => void = () => {};
+    let resolveSecond: (value: unknown) => void = () => {};
+    service.getLessons
+      .mockReturnValueOnce(new Promise((resolve) => (resolveFirst = resolve)) as never)
+      .mockReturnValueOnce(new Promise((resolve) => (resolveSecond = resolve)) as never);
+
+    const { result } = renderHook(() => useLessons());
+
+    await act(async () => {
+      result.current.refetch();
+    });
+
+    await act(async () => {
+      resolveSecond(lessons);
+    });
+    await waitFor(() => expect(result.current.lessons).toEqual(lessons));
+
+    await act(async () => {
+      resolveFirst([{ id: 'stale', title: 'Stale', createdAt: '2026-01-01T00:00:00.000Z' }]);
+    });
+
+    expect(result.current.lessons).toEqual(lessons);
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  // Mutation: drop isMounted / requestId error guard — stale rejection must not clear a newer success.
+  it('ignores a stale rejected load that settles after a newer refetch succeeds', async () => {
+    let rejectFirst: (reason?: unknown) => void = () => {};
+    let resolveSecond: (value: unknown) => void = () => {};
+    service.getLessons
+      .mockReturnValueOnce(new Promise((_, reject) => (rejectFirst = reject)) as never)
+      .mockReturnValueOnce(new Promise((resolve) => (resolveSecond = resolve)) as never);
+
+    const { result } = renderHook(() => useLessons());
+
+    await act(async () => {
+      result.current.refetch();
+    });
+
+    await act(async () => {
+      resolveSecond(lessons);
+    });
+    await waitFor(() => expect(result.current.lessons).toEqual(lessons));
+
+    await act(async () => {
+      rejectFirst(new Error('stale failure'));
+    });
+
+    expect(result.current.lessons).toEqual(lessons);
+    expect(result.current.error).toBeNull();
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  // Mutation: unmount cleanup / isMounted success guard — no setState after unmount.
+  it('does not apply a successful load after unmount', async () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    let resolveLoad: (value: unknown) => void = () => {};
+    service.getLessons.mockReturnValue(new Promise((resolve) => (resolveLoad = resolve)) as never);
+
+    const { unmount } = renderHook(() => useLessons());
+    unmount();
+
+    await act(async () => {
+      resolveLoad(lessons);
+    });
+
+    expect(errorSpy).not.toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
+
+  // Mutation: unmount cleanup / isMounted error guard — no setState after unmount on reject.
+  it('does not apply a rejected load after unmount', async () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    let rejectLoad: (reason?: unknown) => void = () => {};
+    service.getLessons.mockReturnValue(new Promise((_, reject) => (rejectLoad = reject)) as never);
+
+    const { unmount } = renderHook(() => useLessons());
+    unmount();
+
+    await act(async () => {
+      rejectLoad(new Error('gone'));
+    });
+
+    expect(errorSpy).not.toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
+
+  // Mutation: delete success isMounted guard — setState after unmount must not warn.
+  it('does not update state when delete resolves after unmount', async () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    service.getLessons.mockResolvedValue(lessons);
+    let resolveDelete: () => void = () => {};
+    service.deleteLesson.mockReturnValue(
+      new Promise<void>((resolve) => {
+        resolveDelete = resolve;
+      }) as never,
+    );
+
+    const { result, unmount } = renderHook(() => useLessons());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    let deletePromise: Promise<void> = Promise.resolve();
+    await act(async () => {
+      deletePromise = result.current.deleteLesson('lesson-2');
+    });
+
+    unmount();
+
+    await act(async () => {
+      resolveDelete();
+      await deletePromise;
+    });
+
+    expect(service.deleteLesson).toHaveBeenCalledWith('lesson-2');
+    expect(errorSpy).not.toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
+
+  // Mutation: delete error `if (isMounted)` → `if (true)` — setError after unmount must not warn.
+  it('does not set error state when deleteLesson rejects after unmount', async () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    service.getLessons.mockResolvedValue(lessons);
+    let rejectDelete: (reason?: unknown) => void = () => {};
+    service.deleteLesson.mockReturnValue(
+      new Promise((_, reject) => (rejectDelete = reject)) as never,
+    );
+
+    const { result, unmount } = renderHook(() => useLessons());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    let deletePromise: Promise<void> = Promise.resolve();
+    await act(async () => {
+      deletePromise = result.current.deleteLesson('lesson-2');
+    });
+
+    unmount();
+
+    const failure = new Error('delete failed after unmount');
+    await act(async () => {
+      rejectDelete(failure);
+      await expect(deletePromise).rejects.toBe(failure);
+    });
+
+    expect(service.deleteLesson).toHaveBeenCalledWith('lesson-2');
     expect(errorSpy).not.toHaveBeenCalled();
     errorSpy.mockRestore();
   });

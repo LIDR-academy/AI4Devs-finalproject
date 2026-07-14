@@ -38,7 +38,8 @@ describe('LessonList', () => {
       />,
     );
 
-    expect(screen.getByTestId(LESSON_LIST_LOADING_TEST_ID)).toBeTruthy();
+    // Literal test id — kills LESSON_LIST_LOADING_TEST_ID → "" (shared-constant survivor).
+    expect(screen.getByTestId('lesson-list-loading-indicator')).toBeTruthy();
   });
 
   // Slice-2 reviewer_slice — match ApiKeyForm: wrapper = testID only; ProgressIndicator owns
@@ -279,5 +280,97 @@ describe('LessonList', () => {
 
     expect(onDelete).not.toHaveBeenCalled();
     expect(screen.queryByText('Delete this lesson?')).toBeNull();
+  });
+
+  // Mutation: `if (id)` → `if (true)` — empty lesson id must not call onDelete.
+  it('does not call onDelete when the pending lesson id is empty', async () => {
+    const onDelete = jest.fn();
+    await render(
+      <LessonList
+        state="content"
+        lessons={[
+          {
+            id: '',
+            title: 'Untitled',
+            createdDateLabel: 'Jul 13, 2026',
+            openAccessibilityLabel: 'Open Untitled',
+            deleteAccessibilityLabel: 'Delete Untitled',
+          },
+        ]}
+        labels={{
+          ...labels,
+          deleteConfirmHeadline: 'Delete this lesson?',
+          deleteConfirmBody: 'This cannot be undone.',
+          deleteConfirmAction: 'Delete',
+          deleteConfirmCancelAction: 'Cancel',
+        }}
+        onOpenLesson={jest.fn()}
+        onRetry={jest.fn()}
+        onDelete={onDelete}
+      />,
+    );
+
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'Delete Untitled' }));
+    });
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'Delete' }));
+    });
+
+    expect(onDelete).not.toHaveBeenCalled();
+  });
+
+  // Mutation: `else if (state === 'error')` → `else if (true)` — content must not announce error.
+  it('does not announce error or empty labels while state is content', async () => {
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
+
+    await render(
+      <LessonList
+        state="content"
+        lessons={lessons}
+        labels={labels}
+        onOpenLesson={jest.fn()}
+        onRetry={jest.fn()}
+      />,
+    );
+
+    expect(announceSpy).not.toHaveBeenCalledWith(labels.error);
+    expect(announceSpy).not.toHaveBeenCalledWith(labels.empty);
+    expect(announceSpy).not.toHaveBeenCalledWith(labels.loading);
+    announceSpy.mockRestore();
+  });
+
+  // Mutation: announce effect deps → [] — label changes must re-announce for the same state.
+  it('re-announces when the loading label changes while state stays loading', async () => {
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
+
+    const { rerender } = await render(
+      <LessonList
+        state="loading"
+        lessons={[]}
+        labels={labels}
+        onOpenLesson={jest.fn()}
+        onRetry={jest.fn()}
+      />,
+    );
+    expect(announceSpy).toHaveBeenCalledWith('Loading saved lessons…');
+
+    announceSpy.mockClear();
+    await rerender(
+      <LessonList
+        state="loading"
+        lessons={[]}
+        labels={{ ...labels, loading: 'Still loading lessons…' }}
+        onOpenLesson={jest.fn()}
+        onRetry={jest.fn()}
+      />,
+    );
+
+    expect(announceSpy).toHaveBeenCalledWith('Still loading lessons…');
+    announceSpy.mockRestore();
   });
 });

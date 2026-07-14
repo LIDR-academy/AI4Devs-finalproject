@@ -5,6 +5,24 @@ jest.mock('@helsoft/hooks', () => ({
 jest.mock('@helsoft/localization', () => ({ useLocalization: jest.fn() }));
 jest.mock('expo-router', () => ({ useRouter: jest.fn() }));
 
+/** Capture panel props so tests can invoke `onGenerate` even when Generate is disabled. */
+const capturedPanelProps: {
+  current?: { onGenerate: () => void; canGenerate: boolean };
+} = {};
+jest.mock('@helsoft/components', () => {
+  const actual = jest.requireActual('@helsoft/components') as typeof import('@helsoft/components');
+  return {
+    ...actual,
+    LessonGenerationPanel: (props: {
+      onGenerate: () => void;
+      canGenerate: boolean;
+    }) => {
+      capturedPanelProps.current = props;
+      return actual.LessonGenerationPanel(props);
+    },
+  };
+});
+
 import { useLessonGeneration } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
@@ -61,13 +79,45 @@ describe('LessonGeneration', () => {
 
   // @s16 — Generate is unavailable until a documentId is available.
   it('disables Generate when no documentId has been extracted yet', async () => {
-    mockUseLessonGeneration.mockReturnValue(hookValue());
+    const generate = jest.fn();
+    mockUseLessonGeneration.mockReturnValue(hookValue({ generate }));
 
     await render(<LessonGeneration documentId={undefined} />);
 
     expect(
       screen.getByRole('button', { name: 'generation.generate', disabled: true }),
     ).toBeTruthy();
+    // Mutation: `if (!documentId) return` → false — disabled press must still not generate.
+    fireEvent.press(screen.getByRole('button', { name: 'generation.generate' }));
+    expect(generate).not.toHaveBeenCalled();
+  });
+
+  // Mutation: `if (!documentId) return` → `if (false) return` — callback body must no-op
+  // when documentId is missing/empty even if onGenerate is invoked (panel canGenerate alone
+  // does not exercise the guard).
+  it('does not call generate when onGenerate runs without a documentId', async () => {
+    const generate = jest.fn();
+    mockUseLessonGeneration.mockReturnValue(hookValue({ generate }));
+
+    await render(<LessonGeneration documentId={undefined} />);
+    expect(capturedPanelProps.current?.canGenerate).toBe(false);
+    await act(async () => {
+      capturedPanelProps.current?.onGenerate();
+    });
+    expect(generate).not.toHaveBeenCalled();
+  });
+
+  // Mutation: same guard — empty string documentId must also no-op generate.
+  it('does not call generate when onGenerate runs with an empty documentId', async () => {
+    const generate = jest.fn();
+    mockUseLessonGeneration.mockReturnValue(hookValue({ generate }));
+
+    await render(<LessonGeneration documentId="" />);
+    expect(capturedPanelProps.current?.canGenerate).toBe(false);
+    await act(async () => {
+      capturedPanelProps.current?.onGenerate();
+    });
+    expect(generate).not.toHaveBeenCalled();
   });
 
   // @s3/@s6 — pressing Generate with an extracted document calls the hook's generate with the
@@ -239,6 +289,133 @@ describe('LessonGeneration', () => {
     await render(<LessonGeneration documentId="doc-1" />);
     fireEvent.press(screen.getByRole('button', { name: 'generation.ready.openInPlayer' }));
 
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  // Mutation: handleOpenInPlayer deps → [] — must see the latest result.lessonId after rerender.
+  it('navigates with the latest lessonId after the result updates', async () => {
+    const push = jest.fn();
+    mockUseRouter.mockReturnValue({ push });
+    mockUseLessonGeneration.mockReturnValue(
+      hookValue({
+        stage: 'content',
+        result: {
+          lessonId: 'lesson-old',
+          title: 'Old',
+          composition: 'both',
+          slides: [],
+        },
+      }),
+    );
+
+    const { rerender } = await render(<LessonGeneration documentId="doc-1" />);
+
+    mockUseLessonGeneration.mockReturnValue(
+      hookValue({
+        stage: 'content',
+        result: {
+          lessonId: 'lesson-new',
+          title: 'New',
+          composition: 'both',
+          slides: [],
+        },
+      }),
+    );
+    await rerender(<LessonGeneration documentId="doc-1" />);
+
+    fireEvent.press(screen.getByRole('button', { name: 'generation.ready.openInPlayer' }));
+
+    expect(push).toHaveBeenCalledWith({
+      pathname: '/lesson/[id]/player',
+      params: { id: 'lesson-new' },
+    });
+  });
+
+  // Mutation: drop `.trim()` — whitespace-only lessonId must not navigate.
+  it('does not open the player when the result lessonId is only whitespace', async () => {
+    const push = jest.fn();
+    mockUseRouter.mockReturnValue({ push });
+    mockUseLessonGeneration.mockReturnValue(
+      hookValue({
+        stage: 'content',
+        result: {
+          lessonId: '   ',
+          title: 'Whitespace id',
+          composition: 'both',
+          slides: [],
+        },
+      }),
+    );
+
+    await render(<LessonGeneration documentId="doc-1" />);
+    fireEvent.press(screen.getByRole('button', { name: 'generation.ready.openInPlayer' }));
+
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  // Mutation: drop `.trim()` — surrounding whitespace must be stripped before nav.
+  it('trims lessonId before navigating to the player', async () => {
+    const push = jest.fn();
+    mockUseRouter.mockReturnValue({ push });
+    mockUseLessonGeneration.mockReturnValue(
+      hookValue({
+        stage: 'content',
+        result: {
+          lessonId: '  lesson-1  ',
+          title: 'Trimmed',
+          composition: 'both',
+          slides: [],
+        },
+      }),
+    );
+
+    await render(<LessonGeneration documentId="doc-1" />);
+    fireEvent.press(screen.getByRole('button', { name: 'generation.ready.openInPlayer' }));
+
+    expect(push).toHaveBeenCalledWith({
+      pathname: '/lesson/[id]/player',
+      params: { id: 'lesson-1' },
+    });
+  });
+
+  // Mutation: `result?.lessonId.trim()` / `result.lessonId?.trim()` — missing result/id must not throw.
+  it('does not throw when opening the player with a missing lessonId on the result', async () => {
+    const push = jest.fn();
+    mockUseRouter.mockReturnValue({ push });
+    mockUseLessonGeneration.mockReturnValue(
+      hookValue({
+        stage: 'content',
+        result: {
+          lessonId: undefined as unknown as string,
+          title: 'No id',
+          composition: 'both',
+          slides: [],
+        },
+      }),
+    );
+
+    await render(<LessonGeneration documentId="doc-1" />);
+    expect(() => {
+      fireEvent.press(screen.getByRole('button', { name: 'generation.ready.openInPlayer' }));
+    }).not.toThrow();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  // Mutation: `result.lessonId?.trim()` without optional on result — undefined result must not throw.
+  it('does not throw when opening the player with an undefined result', async () => {
+    const push = jest.fn();
+    mockUseRouter.mockReturnValue({ push });
+    mockUseLessonGeneration.mockReturnValue(
+      hookValue({
+        stage: 'content',
+        result: undefined,
+      }),
+    );
+
+    await render(<LessonGeneration documentId="doc-1" />);
+    expect(() => {
+      fireEvent.press(screen.getByRole('button', { name: 'generation.ready.openInPlayer' }));
+    }).not.toThrow();
     expect(push).not.toHaveBeenCalled();
   });
 });

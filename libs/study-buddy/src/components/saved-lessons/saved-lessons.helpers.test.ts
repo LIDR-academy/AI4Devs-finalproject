@@ -22,6 +22,11 @@ describe('saved-lessons.helpers', () => {
     expect(label).toMatch(/Jul(y)?\s*13,?\s*2026/);
   });
 
+  // Mutation: NaN date guard → false — invalid ISO must return the raw string.
+  it('returns the raw ISO string when createdAt is not a valid date', () => {
+    expect(formatLessonCreatedDate('not-a-date', 'en')).toBe('not-a-date');
+  });
+
   it('builds list items with t()-resolved labels', () => {
     const t = (key: string, options?: Record<string, unknown>) => {
       if (key === 'home.createdDate') return `Created ${options?.date}`;

@@ -104,6 +104,7 @@ describe('persistLesson', () => {
 
     await expect(persistLesson(mock as never, lesson)).rejects.toMatchObject({
       code: 'persist_failed',
+      message: 'persistLesson: failed to persist lesson row',
     });
   });
 
@@ -114,6 +115,7 @@ describe('persistLesson', () => {
 
     await expect(persistLesson(mock as never, lesson)).rejects.toMatchObject({
       code: 'persist_failed',
+      message: 'persistLesson: failed to persist lesson row',
     });
   });
 });

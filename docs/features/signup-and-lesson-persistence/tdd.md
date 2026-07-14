@@ -90,3 +90,20 @@
 - RED→GREEN `toLessonListState`: error + lessons remain → Content (not @s14 load-Error).
 - RED→GREEN SavedLessons: `void deleteLesson(id).catch(() => {})` (SignOut pattern); delete-fail banner via `home.delete.failed` while list stays; locale parity.
 - No commit (orchestrator).
+
+## Mutation survivors round 1
+
+### Killers (behavioral)
+- `use-lessons`: first-render `isLoading=true`; stale success/error race after refetch.
+- `lesson-list-item`: delete requires both `onDelete` + label.
+- `lesson-list`: literal loading testID; empty-id delete gate; content no-announce; label-change re-announce.
+- `saved-lessons.helpers`: invalid ISO → raw string.
+- `saved-lessons`: no count while loading; loading copy; confirm i18n; delete banner only on content+error.
+- `lesson-generation`: no generate without documentId; trim lessonId; optional-chain no-throw; open uses latest result after rerender.
+- `persistLesson`: assert persist error message string.
+
+### Equivalents
+- See `mutation.md` `## Equivalents` (StyleSheet / React-19 unmount / unused deps / redundant schema+optional-chain / unreachable recovery).
+
+## Mutation kill round 2 (final)
+- RED→GREEN `lesson-generation`: invoke captured `onGenerate` with undefined/empty `documentId` — `generate` not called (kills `if (!documentId) return` → `if (false) return`). Guard already correct; panel `canGenerate` alone did not bite callback body.

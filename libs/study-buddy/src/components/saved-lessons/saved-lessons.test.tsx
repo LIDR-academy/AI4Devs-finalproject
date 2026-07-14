@@ -62,6 +62,10 @@ describe('SavedLessons', () => {
     await render(<SavedLessons />);
 
     expect(screen.getByTestId('lesson-list-loading-indicator')).toBeTruthy();
+    // Mutation: t('home.loading') → t("") — live-region must carry the real loading copy.
+    expect(screen.getByText('Loading saved lessons…')).toBeTruthy();
+    // Mutation: `state === 'content' ?` → true — count must stay hidden while loading.
+    expect(screen.queryByText('0 lessons')).toBeNull();
   });
 
   // @s5 — empty list → empty state copy from t().
@@ -153,6 +157,8 @@ describe('SavedLessons', () => {
 
     expect(screen.getByText('Saved lessons')).toBeTruthy();
     expect(screen.getByText('1 lessons')).toBeTruthy();
+    // Mutation: `state === 'content' && error` → `||` — no delete banner without an error.
+    expect(screen.queryByText("We couldn't delete that lesson.")).toBeNull();
   });
 
   // @s8 — confirm delete calls useLessons().deleteLesson with the lesson id.
@@ -271,5 +277,46 @@ describe('SavedLessons', () => {
     expect(screen.getByText('Flags')).toBeTruthy();
     expect(screen.queryByText("We couldn't load your lessons.")).toBeNull();
     expect(screen.getByText("We couldn't delete that lesson.")).toBeTruthy();
+  });
+
+  // Mutation: delete-error banner `state === 'content' && error` → true — hide outside content.
+  it('does not show the delete-failure banner while loading or on load error', async () => {
+    mockUseLessons.mockReturnValue(
+      lessonsValue({ isLoading: true, error: new Error('delete failed') }),
+    );
+    await render(<SavedLessons />);
+    expect(screen.queryByText("We couldn't delete that lesson.")).toBeNull();
+
+    mockUseLessons.mockReturnValue(
+      lessonsValue({ error: new Error('load failed'), lessons: [] }),
+    );
+    await render(<SavedLessons />);
+    expect(screen.queryByText("We couldn't delete that lesson.")).toBeNull();
+    expect(screen.getByText("We couldn't load your lessons.")).toBeTruthy();
+  });
+
+  // Mutation: confirm i18n keys → "" — dialog copy must use the real home.delete.* strings.
+  it('shows localized delete confirmation copy from home.delete.* keys', async () => {
+    mockUseLessons.mockReturnValue(
+      lessonsValue({
+        lessons: [
+          {
+            id: 'lesson-42',
+            title: 'Capitals',
+            createdAt: '2026-07-13T12:00:00.000Z',
+          },
+        ],
+      }),
+    );
+
+    await render(<SavedLessons />);
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'Delete Capitals' }));
+    });
+
+    expect(screen.getByText('Delete this lesson?')).toBeTruthy();
+    expect(
+      screen.getByText('This permanently removes the lesson and its progress.'),
+    ).toBeTruthy();
   });
 });
