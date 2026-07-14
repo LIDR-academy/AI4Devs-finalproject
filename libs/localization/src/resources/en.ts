@@ -21,6 +21,12 @@ export const en = {
     home: {
       savedLessons: 'Saved lessons',
       openDemo: 'Open demo lesson',
+      loading: 'Loading saved lessons…',
+      empty: 'No saved lessons yet. Create one to get started.',
+      error: "We couldn't load your lessons.",
+      retry: 'Try again',
+      openLesson: 'Open {{title}}',
+      createdDate: '{{date}}',
     },
     lessons: {
       count_one: '{{count}} lesson',

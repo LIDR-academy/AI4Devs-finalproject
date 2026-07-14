@@ -16,6 +16,12 @@ export const es: TranslationResource = {
     home: {
       savedLessons: 'Lecciones guardadas',
       openDemo: 'Abrir lección de ejemplo',
+      loading: 'Cargando lecciones guardadas…',
+      empty: 'Aún no tienes lecciones guardadas. Crea una para empezar.',
+      error: 'No pudimos cargar tus lecciones.',
+      retry: 'Intentar de nuevo',
+      openLesson: 'Abrir {{title}}',
+      createdDate: '{{date}}',
     },
     lessons: {
       count_one: '{{count}} lección',

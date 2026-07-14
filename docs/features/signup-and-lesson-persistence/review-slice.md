@@ -1,20 +1,19 @@
 ---
 feature: signup-and-lesson-persistence
 reviewer: reviewer_slice
-slice: 1
+slice: 2
 round: 2
 verdict: APPROVED
 ---
 
-# Slice Review — signup-and-lesson-persistence (Slice 1)
+# Slice Review — signup-and-lesson-persistence (Slice 2)
 
 ## Verdict: APPROVED
 
-## Round-1 fix check
-- `lesson-generation.persist.ts:32-37` (+ Deno mirror) — known-uuid insert (`id: lesson.lessonId`) + rewrites every `slide.lessonId` before write. Fixed.
-- `lesson-generation.persist.test.ts:61-81` — asserts stored slides use persisted row id, not stale minted id. Fixed.
-- Edge `index.ts:269-277` — persist owns rewrite; response still mirrors returned id for the client. OK.
-
 ## Findings
 
-(none)
+None.
+
+## Prior finding (round 1) — resolved
+
+`lesson-list.tsx:39-48` now matches `api-key-form.tsx:49-54`: wrapper = `testID` only; `ProgressIndicator` owns `progressbar`; polite `visuallyHidden` live-region `Text` carries `labels.loading`. Unit assert covers label + live-region + wrapper role absent (`lesson-list.test.tsx:46-66`). `useLessonList` announce retained.

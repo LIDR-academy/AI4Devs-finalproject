@@ -18,6 +18,7 @@ export * from './components/open-ended-activity/open-ended-activity';
 export type * from './components/open-ended-activity/open-ended-activity.types';
 export * from './components/pdf-upload/pdf-upload';
 export type * from './components/pdf-upload/pdf-upload.types';
+export * from './components/saved-lessons/saved-lessons';
 export * from './components/sign-in-form/sign-in-form';
 export * from './components/sign-out/sign-out';
 export type * from './components/sign-out/sign-out.types';

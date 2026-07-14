@@ -3,7 +3,7 @@ id: task-4
 title: LessonList organism (+ LessonListItem molecule) — 4 states
 slice: 2
 scenarios: [s4, s5, s13, s14, s16]
-status: todo
+status: done
 paths: [libs/components/src/organisms/lesson-list/, libs/components/src/molecules/lesson-list-item/]
 ---
 

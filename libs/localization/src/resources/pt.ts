@@ -16,6 +16,12 @@ export const pt: TranslationResource = {
     home: {
       savedLessons: 'Lições salvas',
       openDemo: 'Abrir lição de demonstração',
+      loading: 'Carregando lições salvas…',
+      empty: 'Você ainda não tem lições salvas. Crie uma para começar.',
+      error: 'Não foi possível carregar suas lições.',
+      retry: 'Tentar de novo',
+      openLesson: 'Abrir {{title}}',
+      createdDate: '{{date}}',
     },
     lessons: {
       count_one: '{{count}} lição',

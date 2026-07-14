@@ -16,6 +16,12 @@ export const de: TranslationResource = {
     home: {
       savedLessons: 'Gespeicherte Lektionen',
       openDemo: 'Demo-Lektion öffnen',
+      loading: 'Gespeicherte Lektionen werden geladen…',
+      empty: 'Noch keine gespeicherten Lektionen. Erstelle eine, um zu starten.',
+      error: 'Deine Lektionen konnten nicht geladen werden.',
+      retry: 'Erneut versuchen',
+      openLesson: '{{title}} öffnen',
+      createdDate: '{{date}}',
     },
     lessons: {
       count_one: '{{count}} Lektion',

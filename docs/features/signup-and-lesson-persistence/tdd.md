@@ -1,42 +1,63 @@
 # TDD log — signup-and-lesson-persistence
 
-## @s → test map (Slice 1)
+## @s → test map
 
 | @s | Test | File |
 |---|---|---|
-| @s10 | migration review: FK `lesson_attempts_lesson_id_fkey` on delete cascade + orphan delete | `supabase/migrations/20260714012201_create_lessons_and_lesson_attempts_fk.sql` |
-| @s11/@s12 | migration review: RLS select/insert/delete `user_id = auth.uid()` | same migration |
-| @s1 | `persistLesson` inserts title+slides, returns DB id; never sends `user_id` | `lesson-generation.persist.test.ts` |
-| @s1/@s3 | `persistLesson` known-uuid insert + rewrites slide `lessonId`s before write | `lesson-generation.persist.test.ts` |
-| @s2 | `persistLesson` throws `persist_failed`; `mapGenerationError` maps it; service normalizes | `lesson-generation.persist.test.ts`, `lesson-generation.errors.test.ts`, `lesson-generation.service.test.ts` |
-| @s3 | response `lessonId` = persisted DB id (Edge wires persist before 200) | persist module + Edge `index.ts` (manual live-verify) |
-| @s4/@s7/@s11 | `getLessons` newest-first, no userId filter; service + `useLessons` list | `lessons.dao.test.ts`, `lessons.service.test.ts`, `use-lessons.test.ts` |
+| @s10 | migration review: FK cascade + orphan delete | `supabase/migrations/20260714012201_*.sql` |
+| @s11/@s12 | migration RLS select/insert/delete | same migration |
+| @s1 | `persistLesson` inserts title+slides, returns id | `lesson-generation.persist.test.ts` |
+| @s1/@s3 | known-uuid insert + rewrite slide lessonIds | `lesson-generation.persist.test.ts` |
+| @s2 | persist_failed map + service normalize | persist/errors/service tests |
+| @s3 | response lessonId = persisted DB id | Edge `index.ts` (manual live-verify) |
+| @s4/@s7/@s11 | getLessons newest-first; hook list | dao/service/`use-lessons` tests |
+| @s4 | LessonList content titles+dates; SavedLessons renders | `lesson-list.test.tsx`, `saved-lessons.test.tsx` |
+| @s5 | LessonList empty; SavedLessons empty | same |
+| @s6 | onOpenLesson → `/lesson/[id]` | `saved-lessons.test.tsx` |
+| @s7 | integration hook→service→DAO list | `saved-lessons.integration.test.tsx` |
+| @s13 | LessonList loading + SavedLessons loading | `lesson-list.test.tsx`, `saved-lessons.test.tsx` |
+| @s14 | LessonList error+retry; SavedLessons refetch | same |
+| @s15 | home.* locale parity en/es/pt/de | `home-locale-parity.test.ts` |
+| @s16 | a11y open names + state announcements; loading live-region Text; e2e | `lesson-list.test.tsx`, `lesson-list.e2e.js` |
 
 ## Slice 1 cycles
 
 ### Task-1
-- KEEP migration (orphan DELETE then FK cascade). Fixed header comment to match delete path.
-- RED/GREEN N/A (schema-only; covered by review + later DAO).
+- KEEP migration (orphan DELETE then FK cascade). Fixed header comment.
 
 ### Task-2
 - KEEP `persistLesson` + tests; fix TS in user_id assertion.
-- RED→GREEN `@s2` mapGenerationError persist_failed → status 500.
-- GREEN service already normalizes persist_failed (GENERATION_ERROR_CODES).
-- Mirror `_shared/persist` + wire Edge index (caller JWT, replace lessonId).
-- Types: persist_failed in GenerationErrorCode (9 codes).
+- RED→GREEN `@s2` mapGenerationError persist_failed → 500.
+- Mirror `_shared/persist` + Edge wire; types: persist_failed (9 codes).
 
 ### Task-3
-- RED→GREEN LessonSummary type + barrel.
-- RED→GREEN LessonsDao getLessons (newest-first, no userId) + getLessonById.
-- RED→GREEN LessonsService validation/normalize + barrel export.
-- RED→GREEN useLessons `{lessons,isLoading,error,refetch}` + types barrel.
-- Integration: hook→service→DAO with mocked `from` (@s4/@s7/@s11).
-- Exhaustiveness: persist_failed → helpers recovery=retry + i18n keys (en/es/pt/de).
+- RED→GREEN LessonSummary, LessonsDao/Service, useLessons + integration.
+- Exhaustiveness: persist_failed → helpers recovery=retry + i18n.
 
 ### Slice-1 reviewer_slice rework
-- RED: persist stores slides with stale `slide.lessonId` ≠ returned row id.
-- GREEN: known-uuid insert (`lesson.lessonId`) + rewrite slides before insert; Deno mirror synced.
-- REFACTOR: Edge comment clarifies persist owns rewrite; response still mirrors id.
+- RED/GREEN: rewrite slides before insert; Deno mirror synced.
 
 ### Gate
-- Affected tests green; `pnpm lint` + `pnpm check-types` clean. No commit (orchestrator).
+- Tests green; lint + check-types clean. No commit (orchestrator).
+
+## Slice 2 cycles
+
+### Task-4
+- RED→GREEN `@s13` LessonList loading indicator.
+- RED→GREEN `@s4` content titles/dates + onOpenLesson(id).
+- RED→GREEN `@s5` empty; `@s14` error+retry; `@s16` announce + open a11y.
+- LessonListItem molecule + stories; Playwright e2e (4 states).
+- Optional `onDelete`/`deleteLabel` left open for task-6.
+
+### Task-5
+- RED→GREEN SavedLessons: loading/empty/content/error + nav `/lesson/[id]`.
+- Helpers: toLessonListState / formatLessonCreatedDate / toLessonListItems.
+- Integration: SavedLessons → useLessons → service → DAO.
+- i18n `home.loading|empty|error|retry|openLesson|createdDate` en/es/pt/de + parity test.
+- Home thin shell → `<SavedLessons />`.
+
+### Gate
+- Unit + e2e green; `pnpm lint` + `pnpm check-types` clean. No commit (orchestrator).
+
+### Slice-2 reviewer_slice rework
+- RED→GREEN `@s16` LessonList loading a11y: wrapper = testID only; ProgressIndicator owns progressbar; polite visuallyHidden live-region Text (ApiKeyForm pattern). Keep `useLessonList` announce.

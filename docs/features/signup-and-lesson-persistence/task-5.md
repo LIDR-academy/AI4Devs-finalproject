@@ -3,7 +3,7 @@ id: task-5
 title: SavedLessons wiring + Home screen integration + reopen nav + i18n
 slice: 2
 scenarios: [s4, s5, s6, s7, s13, s14, s15]
-status: todo
+status: done
 paths: [libs/study-buddy/src/components/saved-lessons/, apps/app-study-buddy/src/app/(app)/index.tsx, libs/localization/src/resources/en.ts, libs/localization/src/resources/es.ts, libs/localization/src/resources/pt.ts, libs/localization/src/resources/de.ts]
 ---
 
