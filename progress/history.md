@@ -36,3 +36,4 @@
 2026-07-14 | hooks-usereducer (ad hoc, no story) | n/a | — | Converted useApiKey/useLessonGeneration/useLessons/usePdfExtraction from multi-useState to useReducer per state.mdc (commit 8794ff5). Documented the *.reducer.ts naming convention in state.mdc (commit 995c871). Branch feature-entrega2-HernanLaura.
 2026-07-14 | activity-multiple-choice (ad hoc, no story) | n/a | — | MCQ now requires explicit Submit (new 'selected' option state, disabled-until-picked Submit button) instead of grading on tap; new activity.mcq.submit i18n key (commits 539ca0c, c876fd9). Branch feature-entrega2-HernanLaura.
 2026-07-14 | pending-pdfs-generate | pr_ready | docs/features/pending-pdfs-generate/ | PDF list on upload; generate/retry/open; DoD PASS
+2026-07-14 | generate-lesson (ad hoc) | n/a | — | Groq json_schema break: gpt-oss-20b + nullable schema; generation_failed fixed.
