@@ -2,6 +2,6 @@
 
 **Active feature:** signup-and-lesson-persistence
 **Folder:** docs/features/signup-and-lesson-persistence/
-**Phase:** pending
-**Status:** Worktree created; story moved to in-progress. Spec phase next.
-**Notes:** R5 remainder — sign-up + lessons table/RLS + home list. Login/logout already shipped.
+**Phase:** approved → in_progress (slice 1)
+**Status:** Human approved spec + gherkin. Building slice 1.
+**Notes:** Persistence + delete only; sign-up in pending/sign-up.md.
