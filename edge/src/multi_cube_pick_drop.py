@@ -586,6 +586,7 @@ def _execute_plan(
     sleeper: Callable[[float], None],
     backend_client: BackendClient | None,
     post_drop_snapshot_loader: Callable[[], DetectionSnapshot] | None = None,
+    progress_callback: Callable[[dict[str, Any]], None] | None = None,
 ) -> tuple[list[dict[str, Any]], str | None, str | None]:
     serial = MaxArmSerialAdapter(
         gates.port or "",
@@ -601,6 +602,23 @@ def _execute_plan(
     physical_config = _physical_confirmation_config(config)
     retry_config = _pickup_retry_config(config)
     base_pick_z = config.robot_planning.pick_z if config.robot_planning.pick_z is not None else 0.0
+
+    def notify(current_sequence_number: int | None) -> None:
+        if progress_callback is None:
+            return
+        progress_callback(
+            {
+                "currentSequenceNumber": current_sequence_number,
+                "executedActions": list(executed),
+                "progress": {
+                    "planned": len(planned),
+                    "executed": len(executed),
+                    "physicalConfirmed": len([action for action in executed if _is_physically_executed(action)]),
+                    "backendSynced": len([action for action in executed if action.get("backendSyncStatus") == "SUCCESS"]),
+                    "remaining": max(0, len(planned) - len(executed)),
+                },
+            }
+        )
 
     try:
         serial.open()
@@ -644,6 +662,7 @@ def _execute_plan(
                 "zStep": retry_config.z_step,
                 "minPickZ": retry_config.min_pick_z,
             }
+            notify(index)
             try:
                 for attempt_number, pick_z in enumerate(_retry_pick_z_values(base_pick_z, retry_config), start=1):
                     attempt_config = _config_with_pick_z(config, pick_z)
@@ -812,6 +831,7 @@ def _execute_plan(
                             error_code = "BACKEND_SYNC_FAILED"
                             error_message = str(exc)
                 executed.append(execution)
+                notify(None)
                 if execution.get("status") not in {"SUCCESS", "SUCCESS_WITH_BACKEND_SYNC_FAILED"}:
                     error_code = str(execution.get("errorCode") or execution.get("backendSyncErrorCode") or "PICK_DROP_FAILED")
                     error_message = str(execution.get("errorMessage") or execution.get("backendSyncError") or "Pick/drop failed")
@@ -828,6 +848,7 @@ def _execute_plan(
                 execution["errorCode"] = getattr(exc, "code", "PICK_DROP_FAILED")
                 execution["errorMessage"] = str(exc)
                 executed.append(execution)
+                notify(None)
                 error_code = str(execution["errorCode"])
                 error_message = str(execution["errorMessage"])
                 break
@@ -854,6 +875,7 @@ def run_multi_cube_pick_drop(
     evidence_writer: PickDropEvidenceWriter | None = None,
     backend_client: BackendClient | None = None,
     post_drop_snapshot_loader: Callable[[], DetectionSnapshot] | None = None,
+    progress_callback: Callable[[dict[str, Any]], None] | None = None,
 ) -> dict[str, Any]:
     if max_cubes <= 0:
         raise MultiCubePickDropError("MAX_CUBES_INVALID", "--max-cubes must be greater than 0")
@@ -942,6 +964,7 @@ def run_multi_cube_pick_drop(
         sleeper=sleeper,
         backend_client=backend_client,
         post_drop_snapshot_loader=post_drop_snapshot_loader,
+        progress_callback=progress_callback,
     )
     physically_executed = [action for action in executed if _is_physically_executed(action)]
     backend_synced = [action for action in executed if action.get("backendSyncStatus") == "SUCCESS"]

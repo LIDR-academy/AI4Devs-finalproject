@@ -82,6 +82,8 @@ export type EdgeMultiCubeAction = {
   backendSyncError?: string | null;
   backendActionCode?: string | null;
   finalPickZUsed?: number | null;
+  errorMessage?: string | null;
+  backend?: Record<string, unknown> | null;
 };
 
 export type EdgeMultiCubePlan = {
@@ -118,6 +120,16 @@ export type EdgeMultiCubeStatus = {
   runId: string | null;
   lastPlan: EdgeMultiCubePlan | null;
   lastResult: EdgeMultiCubeResult | null;
+  plannedActions?: EdgeMultiCubeAction[];
+  executedActions?: EdgeMultiCubeAction[];
+  currentSequenceNumber?: number | null;
+  progress?: {
+    planned?: number;
+    executed?: number;
+    physicalConfirmed?: number;
+    backendSynced?: number;
+    remaining?: number;
+  } | null;
   lastError: string | null;
   updatedAt: string | null;
   executing?: boolean;

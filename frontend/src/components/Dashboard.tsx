@@ -6,6 +6,7 @@ import type { EdgeDropZonesResetResult, EdgeMultiCubeAction, EdgeVisionPanelData
 import { ActionsTable } from "./ActionsTable";
 import { PhysicalUnloadPanel } from "./PhysicalUnloadPanel";
 import { VisionSnapshotPanel } from "./VisionSnapshotPanel";
+import { buildExecutionResultRows, type ExecutionResultRow } from "./executionRows";
 
 type LoadState = "loading" | "ready" | "empty" | "error";
 type DetailTab = "plan" | "actions" | "trace" | "vision" | "reset";
@@ -31,6 +32,16 @@ const booleanValue = (input: boolean | null | undefined) => {
   if (input === true) return "Si";
   if (input === false) return "No";
   return "-";
+};
+
+const formatPoseValue = (input: number) => {
+  const rounded = Math.round(input);
+  return Object.is(rounded, -0) ? "0" : String(rounded);
+};
+
+const formatPickupTarget = (values?: number[]) => {
+  if (!values || values.length === 0) return "-";
+  return values.map(formatPoseValue).join(", ");
 };
 
 function formatDate(valueToFormat: string | null | undefined) {
@@ -85,14 +96,62 @@ function latestAction(result: EdgeVisionPanelData["multiCubeStatus"]) {
   return actions.length > 0 ? actions[actions.length - 1] : null;
 }
 
-function physicalStatus(action: { physicalConfirmation?: Record<string, unknown> | null }) {
-  const status = action.physicalConfirmation?.status;
-  return typeof status === "string" ? status : "-";
+function numberGreaterThanZero(input: unknown) {
+  return typeof input === "number" && input > 0;
 }
 
-function attemptsCount(action: { physicalConfirmation?: Record<string, unknown> | null }) {
-  const attempts = action.physicalConfirmation?.attempts;
-  return Array.isArray(attempts) ? attempts.length : "-";
+function hasConfirmedPhysicalAction(actions: EdgeMultiCubeAction[]) {
+  return actions.some((action) => action.physicalConfirmation?.status === "CONFIRMED");
+}
+
+function hasPhysicalConfirmation(status: EdgeVisionPanelData["multiCubeStatus"]) {
+  const result = status?.lastResult;
+  const resultRecord = result as (Record<string, unknown> & { physicalConfirmed?: unknown }) | null | undefined;
+  const actions = status?.executedActions ?? result?.executedActions ?? [];
+
+  return (
+    numberGreaterThanZero(result?.totalPhysicalConfirmedCubes) ||
+    numberGreaterThanZero(status?.progress?.physicalConfirmed) ||
+    numberGreaterThanZero(resultRecord?.physicalConfirmed) ||
+    hasConfirmedPhysicalAction(actions)
+  );
+}
+
+function hasExecutionData(status: EdgeVisionPanelData["multiCubeStatus"]) {
+  return Boolean(
+    status?.lastResult ||
+      (status?.executedActions?.length ?? 0) > 0 ||
+      (status?.lastResult?.executedActions?.length ?? 0) > 0,
+  );
+}
+
+function getPhysicalExecutionNote({
+  hasActiveSession,
+  mode,
+  dryRun,
+  status,
+}: {
+  hasActiveSession: boolean;
+  mode: string | null | undefined;
+  dryRun: boolean | null | undefined;
+  status: EdgeVisionPanelData["multiCubeStatus"];
+}) {
+  if (!hasActiveSession || !hasExecutionData(status)) {
+    return null;
+  }
+
+  const normalizedMode = mode?.toLowerCase() ?? "";
+  if (dryRun || normalizedMode.includes("dry-run") || normalizedMode === "simulation") {
+    return "Ejecución simulada / dry-run. No hubo movimiento físico.";
+  }
+
+  if (normalizedMode === "hardware") {
+    return hasPhysicalConfirmation(status)
+      ? "Confirmación física reportada por Edge Vision. El dashboard refleja el estado informado por Edge."
+      : "Modo hardware reportado por Edge. No hay confirmación física disponible para esta ejecución.";
+  }
+
+  return null;
 }
 
 function getTraceRows(dashboard: OperationalDashboard): Array<[string, string | number]> {
@@ -216,7 +275,7 @@ function SummaryCards({ dashboard, visionData }: { dashboard: OperationalDashboa
 
 function PlanTable({ actions }: { actions: EdgeMultiCubeAction[] }) {
   if (actions.length === 0) {
-    return <div className="table-empty">Sin plan de descarga generado.</div>;
+    return <div className="table-empty">Sin plan de descarga generado todavía.</div>;
   }
 
   return (
@@ -227,8 +286,7 @@ function PlanTable({ actions }: { actions: EdgeMultiCubeAction[] }) {
             <th>#</th>
             <th>Color</th>
             <th>Drop zone</th>
-            <th>Posicion en zona</th>
-            <th>Estado</th>
+            <th>Posición en zona</th>
             <th>Pickup target</th>
           </tr>
         </thead>
@@ -239,10 +297,9 @@ function PlanTable({ actions }: { actions: EdgeMultiCubeAction[] }) {
               <td>{value(action.selectedCubeColor)}</td>
               <td>{value(action.dropZoneCode)}</td>
               <td>{value(action.positionOrder)}</td>
-              <td>{value(action.status ?? action.commandExecutionStatus)}</td>
               <td>
                 {action.pickupTarget
-                  ? `${value(action.pickupTarget.x)}, ${value(action.pickupTarget.y)}, ${value(action.pickupTarget.z)}`
+                  ? formatPickupTarget([action.pickupTarget.x, action.pickupTarget.y, action.pickupTarget.z])
                   : "-"}
               </td>
             </tr>
@@ -253,8 +310,10 @@ function PlanTable({ actions }: { actions: EdgeMultiCubeAction[] }) {
   );
 }
 
-function ExecutedActionsTable({ actions }: { actions: EdgeMultiCubeAction[] }) {
-  if (actions.length === 0) return null;
+function ExecutedActionsTable({ rows }: { rows: ExecutionResultRow[] }) {
+  if (rows.length === 0) {
+    return <div className="table-empty">Sin plan de descarga generado todavía.</div>;
+  }
 
   return (
     <div className="table-wrap physical-plan-table">
@@ -273,21 +332,30 @@ function ExecutedActionsTable({ actions }: { actions: EdgeMultiCubeAction[] }) {
           </tr>
         </thead>
         <tbody>
-          {actions.map((action) => (
-            <tr key={`executed-${action.sequenceNumber}-${action.dropZoneCode ?? "zone"}`}>
-              <td>{action.sequenceNumber}</td>
-              <td>{value(action.selectedCubeColor)}</td>
-              <td>{value(action.dropZoneCode)}</td>
-              <td>{physicalStatus(action)}</td>
-              <td>{value(action.backendSyncStatus)}</td>
-              <td>{attemptsCount(action)}</td>
-              <td>{value(action.finalPickZUsed)}</td>
-              <td>{value(action.backendActionCode)}</td>
-              <td>{value(action.backendSyncError)}</td>
+          {rows.map((row) => (
+            <tr key={`executed-${row.sequenceNumber}-${row.dropZoneCode ?? "zone"}`}>
+              <td>{row.sequenceNumber}</td>
+              <td>{value(row.selectedCubeColor)}</td>
+              <td>{value(row.dropZoneCode)}</td>
+              <td>{row.physicalStatus}</td>
+              <td>{row.backendStatus}</td>
+              <td>{row.attempts}</td>
+              <td>{row.pickZ}</td>
+              <td>{row.actionCode}</td>
+              <td>{row.error}</td>
             </tr>
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function PlanSectionHeader({ id, title, subtitle }: { id: string; title: string; subtitle: string }) {
+  return (
+    <div className="plan-section-header">
+      <h3 className="plan-section-title" id={id}>{title}</h3>
+      <p className="plan-section-subtitle">{subtitle}</p>
     </div>
   );
 }
@@ -321,7 +389,14 @@ function DetailTabs({
   const plan = visionData.multiCubeStatus?.lastPlan;
   const result = visionData.multiCubeStatus?.lastResult;
   const planActions = hasActiveSession ? (plan?.plannedActions ?? []) : [];
-  const executedActions = hasActiveSession ? (result?.executedActions ?? []) : [];
+  const executedActions = hasActiveSession
+    ? (visionData.multiCubeStatus?.executedActions ?? result?.executedActions ?? [])
+    : [];
+  const executionRows = buildExecutionResultRows({
+    planRows: planActions,
+    executedActions,
+    currentSequenceNumber: visionData.multiCubeStatus?.currentSequenceNumber,
+  });
 
   const visionRows: Array<[string, string | number]> = [
     ["Servicio", visionData.enabled ? value(visionData.status?.status) : "No configurado"],
@@ -376,8 +451,22 @@ function DetailTabs({
       <div className="tab-panel" id={`panel-${activeTab}`} role="tabpanel" aria-labelledby={`tab-${activeTab}`}>
         {activeTab === "plan" && (
           <>
-            <PlanTable actions={planActions} />
-            <ExecutedActionsTable actions={executedActions} />
+            <section className="plan-section" aria-labelledby="plan-generated-title">
+              <PlanSectionHeader
+                id="plan-generated-title"
+                title="Plan generado"
+                subtitle="Secuencia planificada de cubos, zonas de descarga y coordenadas pickup."
+              />
+              <PlanTable actions={planActions} />
+            </section>
+            <section className="plan-section" aria-labelledby="execution-result-title">
+              <PlanSectionHeader
+                id="execution-result-title"
+                title="Resultado de ejecución"
+                subtitle="Confirmación física, sincronización backend e intentos realizados."
+              />
+              <ExecutedActionsTable rows={executionRows} />
+            </section>
           </>
         )}
         {activeTab === "actions" && <ActionsTable actions={hasActiveSession ? dashboard.lastActions.slice(0, 10) : []} compact />}
@@ -537,6 +626,12 @@ export function Dashboard() {
   );
 
   const lastAction: RobotAction | undefined = data?.lastActions[0];
+  const physicalExecutionNote = getPhysicalExecutionNote({
+    hasActiveSession: Boolean(data?.activeSession),
+    mode: lastAction?.mode ?? (visionData.status?.hardwareMovement ? "hardware" : "simulation"),
+    dryRun: data?.dryRun ?? lastAction?.execution?.dryRun,
+    status: visionData.multiCubeStatus,
+  });
   const autoRefreshText = useMemo(
     () =>
       `Auto-refresh ${Math.round(dashboardRefreshMs / 1000)}s` +
@@ -620,9 +715,7 @@ export function Dashboard() {
           </section>
           <SummaryCards dashboard={data} visionData={visionData} />
           <DetailTabs dashboard={data} visionData={visionData} resetResult={resetResult} />
-          {lastAction?.mode === "hardware" && (
-            <p className="trace-note">Modo hardware reportado por Edge; el dashboard no confirma movimiento fisico.</p>
-          )}
+          {physicalExecutionNote && <p className="trace-note">{physicalExecutionNote}</p>}
         </>
       )}
     </main>

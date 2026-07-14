@@ -69,6 +69,8 @@ class VisionServiceState:
     multi_cube_last_error: str | None = None
     multi_cube_updated_at: str | None = None
     multi_cube_executing: bool = False
+    multi_cube_current_sequence_number: int | None = None
+    multi_cube_progress: dict[str, object] | None = None
     hardware_port: str | None = None
     hardware_baudrate: int = 115200
 
@@ -186,16 +188,85 @@ def _set_multi_status(
     state.multi_cube_updated_at = _utc_iso()
 
 
+def _multi_progress_payload(planned_total: int, executed_actions: list[dict[str, Any]]) -> dict[str, int]:
+    physical_confirmed = [
+        action
+        for action in executed_actions
+        if isinstance(action.get("physicalConfirmation"), dict)
+        and action["physicalConfirmation"].get("status") in {"CONFIRMED", "DISABLED"}
+    ]
+    backend_synced = [action for action in executed_actions if action.get("backendSyncStatus") == "SUCCESS"]
+    return {
+        "planned": planned_total,
+        "executed": len(executed_actions),
+        "physicalConfirmed": len(physical_confirmed),
+        "backendSynced": len(backend_synced),
+        "remaining": max(0, planned_total - len(executed_actions)),
+    }
+
+
+def _planned_actions_from_state(state: VisionServiceState) -> list[dict[str, Any]]:
+    if not isinstance(state.multi_cube_last_plan, dict):
+        return []
+    actions = state.multi_cube_last_plan.get("plannedActions")
+    return actions if isinstance(actions, list) else []
+
+
+def _executed_actions_from_state(state: VisionServiceState) -> list[dict[str, Any]]:
+    if not isinstance(state.multi_cube_last_result, dict):
+        return []
+    actions = state.multi_cube_last_result.get("executedActions")
+    return actions if isinstance(actions, list) else []
+
+
+def _set_multi_execution_progress(state: VisionServiceState, progress: dict[str, Any]) -> None:
+    planned_actions = _planned_actions_from_state(state)
+    executed_actions = progress.get("executedActions")
+    if not isinstance(executed_actions, list):
+        executed_actions = _executed_actions_from_state(state)
+
+    current_sequence_number = progress.get("currentSequenceNumber")
+    state.multi_cube_current_sequence_number = (
+        current_sequence_number if isinstance(current_sequence_number, int) else None
+    )
+    state.multi_cube_progress = (
+        progress.get("progress")
+        if isinstance(progress.get("progress"), dict)
+        else _multi_progress_payload(len(planned_actions), executed_actions)
+    )
+    base_result = dict(state.multi_cube_last_plan or {})
+    base_result.update(
+        {
+            "status": "RUNNING",
+            "executedActions": executed_actions,
+            "totalAttemptedCubes": len(executed_actions),
+            "totalExecutedCubes": state.multi_cube_progress.get("physicalConfirmed", 0),
+            "totalPhysicalConfirmedCubes": state.multi_cube_progress.get("physicalConfirmed", 0),
+            "totalBackendSyncedActions": state.multi_cube_progress.get("backendSynced", 0),
+            "totalRemainingCubes": state.multi_cube_progress.get("remaining", max(0, len(planned_actions) - len(executed_actions))),
+        }
+    )
+    state.multi_cube_last_result = base_result
+    state.multi_cube_updated_at = _utc_iso()
+
+
 def _multi_status_payload(state: VisionServiceState) -> dict[str, object]:
     try:
         port = _configured_hardware_port(state, {})
     except HTTPException:
         port = None
+    planned_actions = _planned_actions_from_state(state)
+    executed_actions = _executed_actions_from_state(state)
+    progress = state.multi_cube_progress or _multi_progress_payload(len(planned_actions), executed_actions)
     return {
         "status": state.multi_cube_status,
         "runId": state.multi_cube_run_id,
         "lastPlan": state.multi_cube_last_plan,
         "lastResult": state.multi_cube_last_result,
+        "plannedActions": planned_actions,
+        "executedActions": executed_actions,
+        "currentSequenceNumber": state.multi_cube_current_sequence_number,
+        "progress": progress,
         "lastError": state.multi_cube_last_error,
         "updatedAt": state.multi_cube_updated_at,
         "executing": state.multi_cube_executing,
@@ -212,6 +283,8 @@ def _reset_multi_cube_operation(state: VisionServiceState) -> None:
     state.multi_cube_last_error = None
     state.multi_cube_updated_at = _utc_iso()
     state.multi_cube_executing = False
+    state.multi_cube_current_sequence_number = None
+    state.multi_cube_progress = None
 
 
 def _max_cubes_from_payload(payload: dict[str, Any]) -> int:
@@ -822,6 +895,9 @@ def create_app(
         )
         if normalized == "planned":
             state.multi_cube_plan_snapshot = snapshot
+            planned_actions = _planned_actions_from_state(state)
+            state.multi_cube_current_sequence_number = None
+            state.multi_cube_progress = _multi_progress_payload(len(planned_actions), [])
         return _json_no_store(result)
 
     @app.post("/robot/multi-cube/execute")
@@ -852,6 +928,7 @@ def create_app(
 
         state.multi_cube_executing = True
         _set_multi_status(state, "executing", error=None)
+        _set_multi_execution_progress(state, {"currentSequenceNumber": None, "executedActions": []})
         try:
             snapshot = state.multi_cube_plan_snapshot
             result = run_multi_cube_pick_drop(
@@ -871,6 +948,7 @@ def create_app(
                 ),
                 backend_client=state.backend_client,
                 post_drop_snapshot_loader=lambda: refresh_snapshot_if_needed(state, ttl_seconds=0),
+                progress_callback=lambda progress: _set_multi_execution_progress(state, progress),
             )
         except HTTPException:
             raise
@@ -887,6 +965,9 @@ def create_app(
 
         status = str(result.get("status", "FAILED"))
         normalized = _normalize_multi_status(status)
+        final_executed_actions = result.get("executedActions") if isinstance(result.get("executedActions"), list) else []
+        state.multi_cube_current_sequence_number = None
+        state.multi_cube_progress = _multi_progress_payload(len(_planned_actions_from_state(state)), final_executed_actions)
         _set_multi_status(
             state,
             normalized,

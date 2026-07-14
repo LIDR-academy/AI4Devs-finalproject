@@ -52,7 +52,7 @@ export function ExecutionPanel({ dashboard }: Props) {
         </div>
       </div>
       {action?.mode === "hardware" && (
-        <p className="trace-note">Modo hardware reportado por Edge; el dashboard no confirma movimiento fisico.</p>
+        <p className="trace-note">Modo hardware reportado por Edge. No hay confirmación física disponible para esta ejecución.</p>
       )}
     </section>
   );

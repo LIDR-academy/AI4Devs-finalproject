@@ -812,6 +812,88 @@ class VisionApiTests(unittest.TestCase):
             self.assertEqual("COM4", gates.port)
             self.assertEqual(38400, gates.baudrate)
 
+    def test_multi_cube_status_returns_partial_executed_actions_during_execution(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            directory = Path(temporary_directory)
+            config_path = self._write_file_config(directory)
+            unload_config_path = self._write_planning_file_config(directory)
+            unload_payload = json.loads(unload_config_path.read_text(encoding="utf-8"))
+            unload_payload["hardware"] = {"port": "COM4"}
+            write_json(unload_config_path, unload_payload)
+            planned_action = {
+                "sequenceNumber": 1,
+                "selectedCubeColor": "red",
+                "dropZoneCode": "DROP_RED_01",
+                "positionOrder": 1,
+            }
+            executed_action = {
+                **planned_action,
+                "status": "SUCCESS",
+                "physicalConfirmation": {"status": "CONFIRMED", "attempts": [{"attempt": 1}]},
+                "backendSyncStatus": "SUCCESS",
+                "backendActionCode": "ACTION-001",
+                "finalPickZUsed": 138,
+            }
+            app = create_app(config_path, unload_config_path=unload_config_path)
+            app.state.vision_state.multi_cube_status = "planned"
+            app.state.vision_state.multi_cube_run_id = "multi-run"
+            app.state.vision_state.multi_cube_last_plan = {
+                "status": "DRY_RUN_PLANNED",
+                "runId": "multi-run",
+                "totalPlannedCubes": 1,
+                "plannedActions": [planned_action],
+                "evidence": {"json": str(directory / "plan.json")},
+            }
+            app.state.vision_state.multi_cube_plan_snapshot = DetectionSnapshot(
+                "run-api-execute",
+                "opencv-camera",
+                (CubeDetection("red", 80, 80, 20, 20, 0.9, {"sizeValid": True}),),
+                truck_code="TRUCK-001",
+                metadata={"snapshotSignature": "sig-api-execute", "qrDetected": True, "qrValid": True, "qrStatus": "OK"},
+            )
+            client = TestClient(app)
+            observed_statuses: list[dict[str, object]] = []
+
+            def run_with_progress(*_args: object, **kwargs: object) -> dict[str, object]:
+                progress_callback = kwargs["progress_callback"]
+                progress_callback({"currentSequenceNumber": 1, "executedActions": []})
+                observed_statuses.append(client.get("/robot/multi-cube/status").json())
+                progress_callback(
+                    {
+                        "currentSequenceNumber": None,
+                        "executedActions": [executed_action],
+                        "progress": {
+                            "planned": 1,
+                            "executed": 1,
+                            "physicalConfirmed": 1,
+                            "backendSynced": 1,
+                            "remaining": 0,
+                        },
+                    }
+                )
+                observed_statuses.append(client.get("/robot/multi-cube/status").json())
+                return {
+                    "status": "SUCCESS",
+                    "runId": "multi-run",
+                    "totalExecutedCubes": 1,
+                    "executedActions": [executed_action],
+                }
+
+            with patch("src.service.vision_api.run_multi_cube_pick_drop", side_effect=run_with_progress):
+                response = client.post(
+                    "/robot/multi-cube/execute",
+                    json={"runId": "multi-run", "maxCubes": 1, "safety": valid_multi_cube_safety()},
+                )
+            final_status = client.get("/robot/multi-cube/status").json()
+
+            self.assertEqual(200, response.status_code)
+            self.assertEqual(1, observed_statuses[0]["currentSequenceNumber"])
+            self.assertEqual([], observed_statuses[0]["executedActions"])
+            self.assertEqual([executed_action], observed_statuses[1]["executedActions"])
+            self.assertEqual(1, observed_statuses[1]["progress"]["executed"])
+            self.assertEqual("success", final_status["status"])
+            self.assertEqual([executed_action], final_status["executedActions"])
+
     def test_multi_cube_execute_missing_hardware_port_returns_clear_error_without_runner(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
             directory = Path(temporary_directory)
