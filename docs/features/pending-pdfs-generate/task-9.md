@@ -3,7 +3,7 @@ id: task-9
 title: i18n pdfList.* keys (en/es/pt/de) + coverage test
 slice: 2
 scenarios: [s20]
-status: todo
+status: done
 paths: [libs/localization/src/resources/en.ts, libs/localization/src/resources/es.ts, libs/localization/src/resources/pt.ts, libs/localization/src/resources/de.ts]
 ---
 
@@ -16,10 +16,10 @@ page-count label templates, action + delete accessible names, and the delete-con
 (headline/body/confirm/cancel). No hardcoded UI strings anywhere in Slice 2/3.
 
 ## Done criteria
-- [ ] Scenario(s) {s20} covered by the existing localization coverage test (keys aligned across en/es/pt/de)
-- [ ] `TranslationResource` typing stays satisfied (build-time key alignment)
-- [ ] Page-count/date rendered via `t` templates (wiring formats the value — task-11)
-- [ ] `pnpm lint` + `pnpm check-types` + `pnpm test` green
+- [x] Scenario(s) {s20} covered by the existing localization coverage test (keys aligned across en/es/pt/de)
+- [x] `TranslationResource` typing stays satisfied (build-time key alignment)
+- [x] Page-count/date rendered via `t` templates (wiring formats the value — task-11)
+- [x] `pnpm lint` + `pnpm check-types` + `pnpm test` green
 
 ## Notes
 Mirror the `home.*` (saved-lessons) + `upload.*` key shapes; reuse the `home.delete.*` Dialog copy

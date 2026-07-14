@@ -19,6 +19,8 @@ export type ButtonProps = {
   disabled?: boolean;
   fullWidth?: boolean;
   onPress?: () => void;
+  /** Overrides the accessible name derived from children (e.g. filename-qualified actions). */
+  accessibilityLabel?: string;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -60,6 +62,7 @@ export const Button = ({
   disabled = false,
   fullWidth = false,
   onPress,
+  accessibilityLabel,
   style,
 }: ButtonProps) => {
   const { theme } = useUnistyles();
@@ -108,6 +111,7 @@ export const Button = ({
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
       disabled={disabled}
       onPress={onPress}
       hitSlop={HIT_SLOP[size]}

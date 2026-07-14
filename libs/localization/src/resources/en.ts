@@ -36,6 +36,36 @@ export const en = {
         failed: "We couldn't delete that lesson.",
       },
     },
+    // pending-pdfs-generate task-9 — upload-screen PDF list copy (@s20).
+    pdfList: {
+      heading: 'Your PDFs',
+      loading: 'Loading your PDFs…',
+      empty: 'No extracted PDFs yet. Upload one to get started.',
+      error: "We couldn't load your PDFs.",
+      retry: 'Try again',
+      status: {
+        ready: 'Ready to generate',
+        failed: 'Generation failed',
+        generated: 'Lesson ready',
+      },
+      action: {
+        generate: 'Generate',
+        retry: 'Retry',
+        openLesson: 'Open lesson',
+        generateA11y: 'Generate {{filename}}',
+        retryA11y: 'Retry {{filename}}',
+        openLessonA11y: 'Open lesson for {{filename}}',
+      },
+      createdDate: '{{date}}',
+      pageCount: '{{count}} pages',
+      delete: {
+        action: 'Delete {{filename}}',
+        confirmHeadline: 'Delete this PDF?',
+        confirmBody: 'This permanently removes the PDF and its extracted data.',
+        confirmAction: 'Delete',
+        cancelAction: 'Cancel',
+      },
+    },
     lessons: {
       count_one: '{{count}} lesson',
       count_other: '{{count}} lessons',

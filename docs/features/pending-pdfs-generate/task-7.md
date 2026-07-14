@@ -3,7 +3,7 @@ id: task-7
 title: PdfDocumentListItem molecule (filename/status/date/pages + per-status action + conditional delete)
 slice: 2
 scenarios: [s1, s2, s3, s4, s5, s6, s7, s11]
-status: todo
+status: done
 paths: [libs/components/src/molecules/pdf-document-list-item/pdf-document-list-item.tsx, libs/components/src/molecules/pdf-document-list-item/pdf-document-list-item.types.ts, libs/components/src/molecules/pdf-document-list-item/pdf-document-list-item.stories.tsx, libs/components/src/molecules/pdf-document-list-item/pdf-document-list-item.test.tsx, libs/components/src/index.ts]
 ---
 
@@ -16,12 +16,12 @@ status label, created-date label, and page-count label (all copy arrives as prop
 (`ready`/`failed`) and `onDelete` is provided (@s11).
 
 ## Done criteria
-- [ ] Scenario(s) {s1, s2, s3, s4, s5, s6, s7, s11} covered: all four fields; each status's label+action; delete hidden when `generated`
-- [ ] Prop-driven (declares a `Props` type); no `t`, no date formatting inside
-- [ ] Primary action + delete expose accessible names (from props) — feeds @s21
-- [ ] `.stories.tsx` with ready / failed / generated variants
-- [ ] `pnpm lint` + `pnpm check-types` + `pnpm test` green
-- [ ] No hardcoded strings/colors/dimensions (theme tokens only)
+- [x] Scenario(s) {s1, s2, s3, s4, s5, s6, s7, s11} covered: all four fields; each status's label+action; delete hidden when `generated`
+- [x] Prop-driven (declares a `Props` type); no `t`, no date formatting inside
+- [x] Primary action + delete expose accessible names (from props) — feeds @s21
+- [x] `.stories.tsx` with ready / failed / generated variants
+- [x] `pnpm lint` + `pnpm check-types` + `pnpm test` green
+- [x] No hardcoded strings/colors/dimensions (theme tokens only)
 
 ## Notes
 Copy `lesson-list-item` structure; add the status line, pageCount line, and the status→action

@@ -1,32 +1,33 @@
 ---
 feature: pending-pdfs-generate
 reviewer: reviewer_slice
-slice: 1
+slice: 2
 round: 1
 verdict: APPROVED
 ---
 
-# Slice Review — pending-pdfs-generate (Slice 1)
+# Slice Review — pending-pdfs-generate (Slice 2)
 
 ## Verdict: APPROVED
 
-Scope: tasks 1–6 (migration, types, DAO, service, hook, generate-lesson cross-cut).
-Diff: working tree vs `6b250b3` (uncommitted).
+Scope: tasks 7–9 (PdfDocumentListItem, PdfDocumentList, pdfList.* i18n).
+Diff: working tree vs `ea57931` (uncommitted Slice 2).
 
 ## Code lens
 
-- `@s` → test map in `tdd.md` covers every Slice-1 scenario (s1–s4, s8–s10, s12, s15–s19); each has ≥1 concrete test or migration artifact.
-- Red→Green→Refactor logged per task; production surface matches task goals (no UI inflation).
-- Layering: Component→Hook→Service→DAO respected; hook never touches DAO; service never calls `getSupabase()`.
-- Naming/filenames kebab-case; abstract static DAO/Service; `useReducer` for ≥3 related fields; stale-request + unmount guards clone `useLessons`.
-- Status derivation (`lesson_id` → generated → else `generation_error_code` → failed → else ready) tested in DAO + integration.
-- Delete: storage purge both buckets then `documents` row by id only (no client `user_id` filter); blank-id rejected at service.
-- Task-6: `persistLesson(..., documentId)` writes `document_id`; `markDocumentGenerationFailure` after doc identified (`missing_key` + catch path); JS/Deno mirrors behavior-equivalent; pre-doc failures unmarked.
-- No debug leftovers/TODOs; no user-facing copy this slice (i18n N/A until Slice 2).
+- `@s` → test map covers Slice-2 scenarios: s1–s7/s11 (item), s1/s12–s16/s21 (list + e2e), s20 (locale parity).
+- Red→Green logged (T7–T9); surface matches goals — presentational only, no Slice-3 wiring inflation.
+- Molecule prop-driven (no `t`); organism state/Dialog copy via inline `t('pdfList.*')` — no `labels` bag.
+- Filenames kebab-case; `Props` types; component-split (tsx/types/hook) mirrors LessonList; tokens only.
+- Button `accessibilityLabel` additive + unit-tested; delete gated ready/failed + onDelete (@s11); Dialog confirm/dismiss (@s12/@s13).
+- Locale keys en/es/pt/de + parity test; `createdDate` template identical across locales (correctly omitted from “differs from en” list).
+- No debug leftovers/TODOs.
 
 ## Design lens
 
-- No components / tokens / Storybook surfaces in Slice 1 — design N/A; correct deferral to tasks 7–9.
+- Atomic placement correct (molecule → organism); clones LessonList / LessonListItem tokens + structure.
+- Co-located stories: item Ready/Failed/Generated; list Content/ContentWithDelete/Loading/Empty/Error (4 states + mixed status).
+- e2e mirrors LessonList story-load pattern; a11y asserted in unit tests.
 
 ## Findings
 

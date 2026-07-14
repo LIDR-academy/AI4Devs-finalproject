@@ -55,6 +55,18 @@ describe('Button', () => {
     expect(stateLayerOpacity()).toBeGreaterThan(0);
   });
 
+  // Optional a11y name override (PdfDocumentListItem primary action).
+  it('uses accessibilityLabel as the accessible name when provided', async () => {
+    await render(
+      <Button onPress={jest.fn()} accessibilityLabel="Generate notes.pdf">
+        Generate
+      </Button>,
+    );
+
+    expect(screen.getByRole('button', { name: 'Generate notes.pdf' })).toBeTruthy();
+    expect(screen.getByText('Generate')).toBeTruthy();
+  });
+
   // N6 — blurring clears the focus wash again.
   it('clears the state-layer wash when the button loses focus', async () => {
     await render(<Button onPress={jest.fn()}>Log in</Button>);

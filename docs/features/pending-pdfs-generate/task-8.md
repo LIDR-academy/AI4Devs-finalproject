@@ -3,7 +3,7 @@ id: task-8
 title: PdfDocumentList organism (Loading/Content/Empty/Error, FlatList, Dialog confirm)
 slice: 2
 scenarios: [s1, s12, s13, s14, s15, s16, s21]
-status: todo
+status: done
 paths: [libs/components/src/organisms/pdf-document-list/pdf-document-list.tsx, libs/components/src/organisms/pdf-document-list/pdf-document-list.types.ts, libs/components/src/organisms/pdf-document-list/use-pdf-document-list.ts, libs/components/src/organisms/pdf-document-list/pdf-document-list.stories.tsx, libs/components/src/organisms/pdf-document-list/pdf-document-list.test.tsx, libs/components/src/index.ts]
 ---
 
@@ -16,13 +16,13 @@ hook owns the delete-confirm open state + a11y announcements for the three non-c
 (@s21), mirroring `useLessonList`.
 
 ## Done criteria
-- [ ] Scenario(s) {s1, s12, s13, s14, s15, s16, s21} covered by `.test.tsx`
-- [ ] Four states render; Empty invites nothing destructive; Error has a retry action
-- [ ] Delete uses shared `Dialog`; confirm calls `onDelete`, dismiss does not (@s13)
-- [ ] Loading/Empty/Error announced to assistive tech; list + controls have roles/labels (@s21)
-- [ ] `.stories.tsx` covering all four states + mixed-status content
-- [ ] Prop-driven (row content copy from props; state copy from `t` like `LessonList`)
-- [ ] `pnpm lint` + `pnpm check-types` + `pnpm test` green; no hardcoded colors/dims
+- [x] Scenario(s) {s1, s12, s13, s14, s15, s16, s21} covered by `.test.tsx`
+- [x] Four states render; Empty invites nothing destructive; Error has a retry action
+- [x] Delete uses shared `Dialog`; confirm calls `onDelete`, dismiss does not (@s13)
+- [x] Loading/Empty/Error announced to assistive tech; list + controls have roles/labels (@s21)
+- [x] `.stories.tsx` covering all four states + mixed-status content
+- [x] Prop-driven (row content copy from props; state copy from `t` like `LessonList`)
+- [x] `pnpm lint` + `pnpm check-types` + `pnpm test` green; no hardcoded colors/dims
 
 ## Notes
 Structure/tests one-to-one with `lesson-list.tsx` + `use-lesson-list.ts`. `component-split.mdc`:
