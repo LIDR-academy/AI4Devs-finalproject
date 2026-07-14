@@ -2,6 +2,6 @@
 
 **Active feature:** signup-and-lesson-persistence
 **Folder:** docs/features/signup-and-lesson-persistence/
-**Phase:** mutation done → DoD
-**Status:** Post-review mutation PASS. dod_validator next.
-**Notes:** Model=cursor-grok-4.5-high-fast.
+**Phase:** pr_ready
+**Status:** DoD PASS. Docs compacted, risks landed, story moved to done. Human opens/merges PR on feat/signup-and-lesson-persistence.
+**Notes:** Scope = persistence + delete; sign-up carved to pending/sign-up.md. Model=cursor-grok-4.5-high-fast.
