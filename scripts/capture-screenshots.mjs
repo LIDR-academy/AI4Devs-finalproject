@@ -1,0 +1,98 @@
+import { chromium } from 'playwright';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const outDir = path.resolve(__dirname, '../docs/screenshots');
+const baseUrl = process.env.LMS_BASE_URL || 'http://127.0.0.1:8080';
+
+const users = {
+  teacher: { email: 'teacher@example.com', password: 'password123' },
+  student: { email: 'student@example.com', password: 'password123' },
+};
+
+async function login(page, role) {
+  const user = users[role];
+  await page.goto(`${baseUrl}/login`);
+  await page.fill('input[name="email"]', user.email);
+  await page.fill('input[name="password"]', user.password);
+  await page.click('button[type="submit"]');
+  await page.waitForURL('**/dashboard');
+}
+
+async function shot(page, filename, url, setup) {
+  if (url) {
+    await page.goto(`${baseUrl}${url}`);
+    await page.waitForLoadState('networkidle');
+  }
+  if (setup) {
+    await setup(page);
+  }
+  await page.screenshot({
+    path: path.join(outDir, filename),
+    fullPage: true,
+  });
+  console.log(`saved ${filename}`);
+}
+
+const browser = await chromium.launch();
+const desktop = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+const mobile = await browser.newPage({ viewport: { width: 390, height: 844 } });
+
+// Guest — login
+await shot(desktop, 'login-moodle52.png', '/login');
+await shot(desktop, 'login.png', '/login');
+
+// Teacher
+await login(desktop, 'teacher');
+await shot(desktop, 'dashboard-teacher.png', '/dashboard');
+await shot(desktop, 'dashboard-full-page.png', '/dashboard');
+await shot(desktop, 'courses-teacher.png', '/courses');
+await shot(desktop, 'calendar-teacher.png', '/calendar');
+await shot(desktop, 'calendar-event-create.png', '/calendar/events/create');
+await shot(desktop, 'gradebook-teacher.png', '/courses/1/grades');
+await shot(desktop, 'gradebook-mark-teacher.png', null, async (page) => {
+  await page.goto(`${baseUrl}/courses/1/grades`);
+  await page.waitForLoadState('networkidle');
+  const markLink = page.locator('a.btn').filter({ hasText: /Calificar|Editar nota|Grade|Edit grade/i }).first();
+  await markLink.click();
+  await page.waitForLoadState('networkidle');
+});
+await shot(desktop, 'gradebook-course-link.png', '/courses/1');
+await shot(desktop, 'comms-notifications.png', '/comms/notifications');
+await shot(desktop, 'comms-messages.png', '/comms/messages');
+await shot(desktop, 'comms-mail.png', '/comms/mail');
+
+// Upgrade assistant requires admin
+await desktop.context().clearCookies();
+await desktop.evaluate(() => {
+  try {
+    localStorage.clear();
+    sessionStorage.clear();
+  } catch {
+    /* ignore */
+  }
+});
+await login(desktop, 'teacher');
+await shot(desktop, 'upgrade-assistant.png', '/upgrade-assistant');
+
+// Student dashboards
+await desktop.context().clearCookies();
+await login(desktop, 'student');
+await shot(desktop, 'dashboard-student.png', '/dashboard');
+await shot(desktop, 'calendar-student.png', '/calendar');
+await shot(desktop, 'playwright-calendar-student.png', '/calendar');
+
+// Playwright CI alternates — teacher session
+await desktop.context().clearCookies();
+await login(desktop, 'teacher');
+await shot(desktop, 'playwright-calendar-teacher.png', '/calendar');
+await shot(desktop, 'playwright-calendar-event-create.png', '/calendar/events/create');
+
+// Responsive samples (mobile viewport)
+await mobile.context().clearCookies();
+await login(mobile, 'teacher');
+await shot(mobile, 'calendar-teacher-mobile.png', '/calendar');
+await shot(mobile, 'dashboard-teacher-mobile.png', '/dashboard');
+
+await browser.close();
