@@ -49,18 +49,26 @@ const SHARED_COMPONENTS = resolve(REPO_ROOT, 'libs/components/src');
 /**
  * Slice-2 Round-2 review — a t('auth.error.*') key referenced in sign-in-form.tsx didn't exist
  * in any locale bundle (i18next has no missing-key handler, so real users would see the raw key
- * string). Scoped narrowly to this component's own directory rather than the whole `study-buddy`
- * lib: it's the one place this exact regression occurred at the time. `sign-out.tsx`'s own
- * `auth.logOut*` keys are covered by their own entry in T_KEY_COMPONENT_DIRS below (task-8).
+ * string). Scoped narrowly to this component's own directory rather than the whole lib it lives
+ * in. `sign-out.tsx`'s own `auth.logOut*` keys are covered by their own entry in
+ * T_KEY_COMPONENT_DIRS below (task-8).
+ *
+ * Moved from libs/study-buddy/src/components/sign-in-form to libs/logging-in-out/src/organisms/
+ * sign-in-form when the auth organisms were extracted into @helsoft/logging-in-out — the
+ * study-buddy component is now a thin wrapper with no t() calls of its own (same pattern as
+ * API_KEY_SETTINGS_DIR below).
  */
-const SIGN_IN_FORM_DIR = resolve(REPO_ROOT, 'libs/study-buddy/src/components/sign-in-form');
+const SIGN_IN_FORM_DIR = resolve(REPO_ROOT, 'libs/logging-in-out/src/organisms/sign-in-form');
 /**
  * Slice-3/task-8 — review.md's Slice-2 "Flagged forward" note: sign-out.tsx calls
  * `t('auth.logOut'...)`/`t('auth.logOutConfirm*')`, none of which existed in any bundle yet
  * (same class of bug the sign-in-form guard above was scoped to fix). Covered here now that
  * task-8 owns closing that gap.
+ *
+ * Moved from libs/study-buddy/src/components/sign-out to libs/logging-in-out/src/organisms/
+ * sign-out for the same reason as SIGN_IN_FORM_DIR above.
  */
-const SIGN_OUT_DIR = resolve(REPO_ROOT, 'libs/study-buddy/src/components/sign-out');
+const SIGN_OUT_DIR = resolve(REPO_ROOT, 'libs/logging-in-out/src/organisms/sign-out');
 /**
  * activity-multiple-choice, task-6/@s10 — the MultipleChoice organism's chrome copy
  * (`t('activity.mcq.*')`) needs the same missing-key guard as the auth components above: i18next
