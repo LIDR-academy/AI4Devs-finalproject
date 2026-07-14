@@ -1,4 +1,5 @@
-import { Text, View } from 'react-native';
+import { useCallback } from 'react';
+import { FlatList, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { Button } from '../../atoms/button/button';
@@ -6,7 +7,7 @@ import { ProgressIndicator } from '../../atoms/progress-indicator/progress-indic
 import { LessonListItem } from '../../molecules/lesson-list-item/lesson-list-item';
 import { Dialog } from '../dialog/dialog';
 
-import type { LessonListProps } from './lesson-list.types';
+import type { LessonListItemData, LessonListProps } from './lesson-list.types';
 import { useLessonList } from './use-lesson-list';
 
 const LOADING_SPINNER_SIZE = 24;
@@ -15,10 +16,14 @@ const LOADING_SPINNER_THICKNESS = 3;
 /** testID for the Loading-state affordance (@s13). */
 export const LESSON_LIST_LOADING_TEST_ID = 'lesson-list-loading-indicator';
 
+/** testID for the virtualized content list (full-review perf). */
+export const LESSON_LIST_TEST_ID = 'lesson-list';
+
 /**
  * LessonList — presentational organism for Home saved lessons (Loading / Content / Empty / Error).
  * Prop-driven: receives pre-formatted labels; never calls `t` or formats dates.
  * Delete confirms via shared Dialog before calling `onDelete` (@s8/@s9).
+ * Content uses FlatList so unbounded @s4 lists stay windowed.
  */
 export const LessonList = ({
   state,
@@ -35,6 +40,22 @@ export const LessonList = ({
     emptyLabel: labels.empty,
     errorLabel: labels.error,
   });
+
+  const keyExtractor = useCallback((item: LessonListItemData) => item.id, []);
+
+  const renderItem = useCallback(
+    ({ item }: { item: LessonListItemData }) => (
+      <LessonListItem
+        title={item.title}
+        createdDateLabel={item.createdDateLabel}
+        openAccessibilityLabel={item.openAccessibilityLabel}
+        onOpen={() => onOpenLesson(item.id)}
+        onDelete={onDelete ? () => setPendingDeleteId(item.id) : undefined}
+        deleteAccessibilityLabel={item.deleteAccessibilityLabel ?? deleteLabel}
+      />
+    ),
+    [onOpenLesson, onDelete, setPendingDeleteId, deleteLabel],
+  );
 
   if (state === 'loading') {
     return (
@@ -76,37 +97,43 @@ export const LessonList = ({
 
   return (
     <View style={styles.root}>
-      {lessons.map((lesson) => (
-        <LessonListItem
-          key={lesson.id}
-          title={lesson.title}
-          createdDateLabel={lesson.createdDateLabel}
-          openAccessibilityLabel={lesson.openAccessibilityLabel}
-          onOpen={() => onOpenLesson(lesson.id)}
-          onDelete={onDelete ? () => setPendingDeleteId(lesson.id) : undefined}
-          deleteAccessibilityLabel={lesson.deleteAccessibilityLabel ?? deleteLabel}
-        />
-      ))}
-      <Dialog
-        open={pendingDeleteId !== null}
-        onClose={() => setPendingDeleteId(null)}
-        headline={labels.deleteConfirmHeadline}
-        confirmLabel={labels.deleteConfirmAction}
-        cancelLabel={labels.deleteConfirmCancelAction}
-        onConfirm={() => {
-          const id = pendingDeleteId;
-          setPendingDeleteId(null);
-          if (id) onDelete?.(id);
-        }}
-      >
-        {labels.deleteConfirmBody}
-      </Dialog>
+      <FlatList
+        testID={LESSON_LIST_TEST_ID}
+        data={lessons}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
+        style={styles.list}
+        contentContainerStyle={styles.listContent}
+      />
+      {onDelete ? (
+        <Dialog
+          open={pendingDeleteId !== null}
+          onClose={() => setPendingDeleteId(null)}
+          headline={labels.deleteConfirmHeadline}
+          confirmLabel={labels.deleteConfirmAction}
+          cancelLabel={labels.deleteConfirmCancelAction}
+          onConfirm={() => {
+            const id = pendingDeleteId;
+            setPendingDeleteId(null);
+            if (id) onDelete(id);
+          }}
+        >
+          {labels.deleteConfirmBody}
+        </Dialog>
+      ) : null}
     </View>
   );
 };
 
 const styles = StyleSheet.create((theme) => ({
   root: {
+    flex: 1,
+    gap: theme.spacing.s3,
+  },
+  list: {
+    flex: 1,
+  },
+  listContent: {
     gap: theme.spacing.s3,
   },
   emptyText: {

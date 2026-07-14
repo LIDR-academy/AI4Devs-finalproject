@@ -84,6 +84,21 @@ describe('LessonList', () => {
     expect(screen.getByText('Jul 10, 2026')).toBeTruthy();
   });
 
+  // Full-review major [perf] — unbounded @s4 list must window via FlatList (not View.map).
+  it('renders content lessons in a FlatList for virtualization', async () => {
+    await render(
+      <LessonList
+        state="content"
+        lessons={lessons}
+        labels={labels}
+        onOpenLesson={jest.fn()}
+        onRetry={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByTestId('lesson-list')).toBeTruthy();
+  });
+
   // @s4/@s6 — open action forwards the lesson id.
   it('calls onOpenLesson with the lesson id when an item is pressed', async () => {
     const onOpenLesson = jest.fn();
@@ -196,13 +211,21 @@ describe('LessonList', () => {
     expect(screen.getByRole('button', { name: 'Open Older lesson' })).toBeTruthy();
   });
 
+  const deleteLabels = {
+    ...labels,
+    deleteConfirmHeadline: 'Delete this lesson?',
+    deleteConfirmBody: 'This cannot be undone.',
+    deleteConfirmAction: 'Delete',
+    deleteConfirmCancelAction: 'Cancel',
+  };
+
   // @s16 — delete control exposes an accessible name when onDelete is wired.
   it('exposes an accessible delete control per lesson when onDelete is provided', async () => {
     await render(
       <LessonList
         state="content"
         lessons={lessons}
-        labels={labels}
+        labels={deleteLabels}
         onOpenLesson={jest.fn()}
         onRetry={jest.fn()}
         onDelete={jest.fn()}

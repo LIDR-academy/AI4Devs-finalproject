@@ -55,6 +55,8 @@ describe('persistLesson', () => {
       title: lesson.title,
       slides: lesson.slides,
     });
+    // Full-review minor [perf] — only `id` is used; avoid returning full slides jsonb.
+    expect(mock.select).toHaveBeenCalledWith('id');
     expect(id).toBe(lesson.lessonId);
   });
 

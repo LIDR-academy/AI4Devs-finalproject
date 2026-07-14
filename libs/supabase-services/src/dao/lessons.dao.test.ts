@@ -73,58 +73,6 @@ describe('LessonsDao', () => {
     await expect(LessonsDao.getLessons()).rejects.toBe(error);
   });
 
-  // Full Lesson for reopen/player entry (task-5).
-  it('getLessonById maps a full lessons row to camelCase Lesson', async () => {
-    single.mockResolvedValue({
-      data: {
-        id: 'lesson-1',
-        user_id: 'user-1',
-        title: 'Photosynthesis',
-        slides: [
-          {
-            id: 's1',
-            lessonId: 'lesson-1',
-            title: 'Intro',
-            content: 'Welcome',
-            position: 0,
-            kind: 'instructional',
-          },
-        ],
-        created_at: '2026-07-13T00:00:00.000Z',
-      },
-      error: null,
-    });
-
-    const result = await LessonsDao.getLessonById('lesson-1');
-
-    expect(from).toHaveBeenCalledWith('lessons');
-    expect(select).toHaveBeenCalledWith('*');
-    expect(eq).toHaveBeenCalledWith('id', 'lesson-1');
-    expect(result).toEqual({
-      id: 'lesson-1',
-      userId: 'user-1',
-      title: 'Photosynthesis',
-      slides: [
-        {
-          id: 's1',
-          lessonId: 'lesson-1',
-          title: 'Intro',
-          content: 'Welcome',
-          position: 0,
-          kind: 'instructional',
-        },
-      ],
-      createdAt: '2026-07-13T00:00:00.000Z',
-    });
-  });
-
-  it('throws the raw supabase error when getLessonById fails', async () => {
-    const error = { message: 'not found' };
-    single.mockResolvedValue({ data: null, error });
-
-    await expect(LessonsDao.getLessonById('missing')).rejects.toBe(error);
-  });
-
   // @s8/@s12 — delete by id only; RLS scopes to the caller's rows (no client user_id filter).
   it('deleteLesson deletes by id with no user_id filter', async () => {
     const delEq = jest.fn().mockResolvedValue({ error: null });

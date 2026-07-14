@@ -11,7 +11,7 @@ import { toTypedError } from '../utils/typed-error';
 type PersistClient = {
   from(table: string): {
     insert(payload: Record<string, unknown>): {
-      select(): {
+      select(columns: string): {
         single(): Promise<{ data: { id: string } | null; error: unknown | null }>;
       };
     };
@@ -24,6 +24,7 @@ type PersistClient = {
  * Uses a known-uuid insert (`lesson.lessonId`) and rewrites every slide's `lessonId` to that id
  * before insert so `lessons.slides` JSON matches the returned row id (@s1/@s3).
  * On any insert failure, throws a `persist_failed` typed error (@s2).
+ * Returning columns are limited to `id` — callers only need the persisted row id.
  */
 export const persistLesson = async (
   supabase: PersistClient,
@@ -35,7 +36,7 @@ export const persistLesson = async (
   const { data, error } = await supabase
     .from('lessons')
     .insert({ id: lessonId, title: lesson.title, slides })
-    .select()
+    .select('id')
     .single();
 
   if (error || !data) {

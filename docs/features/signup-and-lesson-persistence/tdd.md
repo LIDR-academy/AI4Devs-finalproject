@@ -24,6 +24,12 @@
 | @s14 | LessonList error+retry; SavedLessons refetch | same |
 | @s15 | home.* + home.delete.* + persistFailed locale parity | `home-locale-parity`, `generation-persist-locale-parity` |
 | @s16 | a11y open/delete names + state announcements; e2e | `lesson-list.test.tsx`, `lesson-list.e2e.js` |
+| review-r1 | delete IconButton = `layout.touchTarget` 48 | `lesson-list-item.test.tsx` |
+| review-r1 | Content uses FlatList (`lesson-list` testID) | `lesson-list.test.tsx` |
+| review-r1 | delete-fail → `announceForAccessibility` | `saved-lessons.test.tsx` |
+| review-r1 | persist `.select('id')` only | `lesson-generation.persist.test.ts` |
+| review-r1 | migration orphan wipe guard | `20260714012201_*.sql` |
+| review-r1 | remove unused `getLessonById` | dao/service tests trimmed |
 
 ## Slice 1 cycles
 
@@ -58,55 +64,42 @@
 - RED→GREEN SavedLessons: loading/empty/content/error + nav `/lesson/[id]`.
 - Helpers: toLessonListState / formatLessonCreatedDate / toLessonListItems.
 - Integration: SavedLessons → useLessons → service → DAO.
-- i18n `home.loading|empty|error|retry|openLesson|createdDate` en/es/pt/de + parity test.
-- Home thin shell → `<SavedLessons />`.
+- i18n `home.*` en/es/pt/de + parity; Home → `<SavedLessons />`.
 
 ### Gate
-- Unit + e2e green; `pnpm lint` + `pnpm check-types` clean. No commit (orchestrator).
+- Unit + e2e green; lint + check-types clean. No commit (orchestrator).
 
 ### Slice-2 reviewer_slice rework
-- RED→GREEN `@s16` LessonList loading a11y: wrapper = testID only; ProgressIndicator owns progressbar; polite visuallyHidden live-region Text (ApiKeyForm pattern). Keep `useLessonList` announce.
+- RED→GREEN `@s16` loading a11y: testID wrapper; ProgressIndicator progressbar; polite live-region.
 
 ## Slice 3 cycles
 
 ### Task-6
-- RED→GREEN `@s8/@s12` LessonsDao.deleteLesson (id only; RLS scopes).
-- RED→GREEN LessonsService.deleteLesson (validate + normalize).
-- RED→GREEN useLessons.deleteLesson (remove from list on success; error leaves list).
-- RED→GREEN LessonList confirm Dialog (ApiKeyForm pattern) `@s8` confirm / `@s9` dismiss; delete a11y `@s16`.
-- RED→GREEN SavedLessons wires deleteLesson + `home.delete.*` labels; integration delete chain.
-- i18n `home.delete.*` en/es/pt/de + home-locale-parity; ContentWithDelete story + e2e.
+- RED→GREEN delete DAO/service/hook + Dialog confirm + SavedLessons wire + i18n + e2e.
 
 ### Task-7
-- RED→GREEN `@s2` persist_failed known-code in useLessonGeneration mock guard.
-- RED→GREEN `@s2` persist_failed → retry message, no open-in-player; empty lessonId blocks nav.
-- Player CTA requires trimmed non-empty lessonId.
-- generation.error.persistFailed locale parity es/pt/de.
+- RED→GREEN persist_failed recovery UI + locale parity.
 
 ### Gate
-- Unit + e2e green; `pnpm lint` + `pnpm check-types` clean. No commit (orchestrator).
+- Unit + e2e green; lint + check-types clean. No commit (orchestrator).
 
 ### Slice-3 reviewer_slice rework
-- RED→GREEN `toLessonListState`: error + lessons remain → Content (not @s14 load-Error).
-- RED→GREEN SavedLessons: `void deleteLesson(id).catch(() => {})` (SignOut pattern); delete-fail banner via `home.delete.failed` while list stays; locale parity.
-- No commit (orchestrator).
+- RED→GREEN `toLessonListState` content-with-error; delete-fail banner + catch.
 
-## Mutation survivors round 1
-
-### Killers (behavioral)
-- `use-lessons`: first-render `isLoading=true`; stale success/error race after refetch.
-- `lesson-list-item`: delete requires both `onDelete` + label.
-- `lesson-list`: literal loading testID; empty-id delete gate; content no-announce; label-change re-announce.
-- `saved-lessons.helpers`: invalid ISO → raw string.
-- `saved-lessons`: no count while loading; loading copy; confirm i18n; delete banner only on content+error.
-- `lesson-generation`: no generate without documentId; trim lessonId; optional-chain no-throw; open uses latest result after rerender.
-- `persistLesson`: assert persist error message string.
-
-### Equivalents
-- See `mutation.md` `## Equivalents` (StyleSheet / React-19 unmount / unused deps / redundant schema+optional-chain / unreachable recovery).
-
-## Mutation kill round 2 (final)
-- RED→GREEN `lesson-generation`: invoke captured `onGenerate` with undefined/empty `documentId` — `generate` not called (kills `if (!documentId) return` → `if (false) return`). Guard already correct; panel `canGenerate` alone did not bite callback body.
+## Mutation survivors round 1–2
+- Killers in hooks/list/item/helpers/saved-lessons/generation/persist (see `mutation.md`).
+- Round 2: `lesson-generation` empty `documentId` guard via captured `onGenerate`.
 
 ## CI fix (full-review gate)
-- Adjust `lesson-generation.test.tsx` mock props to `Parameters<typeof LessonGenerationPanel>[0]` (TS) + Biome format on that file + `saved-lessons.test.tsx`.
+- `lesson-generation.test.tsx` mock props typing + Biome format.
+
+## Full-review round 1 rework
+- RED→GREEN blocker a11y: delete `IconButton` size=`layout.touchTarget`.
+- RED→GREEN major perf: LessonList Content → `FlatList` + flex root.
+- RED→GREEN major a11y: SavedLessons delete-fail `announceForAccessibility`.
+- MAJOR security: migration orphan DELETE guarded (refuse wipe when lessons empty + attempts exist).
+- MINOR YAGNI: remove unused `getLessonById` (dao/service/tests).
+- RED→GREEN minor perf: `persistLesson` `.select('id')` (+ Deno mirror).
+- MINOR perf: memoize SavedLessons items/labels/handlers; FlatList `renderItem`/`keyExtractor`.
+- MINOR code: `LessonListProps` discriminated union — deleteConfirm* required when `onDelete` set.
+- Gate: unit + e2e green; lint + check-types clean. No commit (orchestrator).

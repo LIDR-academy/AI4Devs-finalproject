@@ -2,6 +2,7 @@ import { Pressable, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { IconButton } from '../../atoms/icon-button/icon-button';
+import { layout } from '../../theme/spacing';
 
 import type { LessonListItemProps } from './lesson-list-item.types';
 
@@ -28,7 +29,12 @@ export const LessonListItem = ({
       <Text style={styles.date}>{createdDateLabel}</Text>
     </Pressable>
     {onDelete && deleteAccessibilityLabel ? (
-      <IconButton icon="delete" onPress={onDelete} accessibilityLabel={deleteAccessibilityLabel} />
+      <IconButton
+        icon="delete"
+        size={layout.touchTarget}
+        onPress={onDelete}
+        accessibilityLabel={deleteAccessibilityLabel}
+      />
     ) : null}
   </View>
 );

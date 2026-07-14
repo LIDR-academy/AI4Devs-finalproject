@@ -1,8 +1,8 @@
 jest.mock('../dao/lessons.dao', () => ({
-  LessonsDao: { getLessons: jest.fn(), getLessonById: jest.fn(), deleteLesson: jest.fn() },
+  LessonsDao: { getLessons: jest.fn(), deleteLesson: jest.fn() },
 }));
 
-import type { Lesson, LessonSummary } from '@helsoft/types';
+import type { LessonSummary } from '@helsoft/types';
 
 import { LessonsDao } from '../dao/lessons.dao';
 import { LessonsService } from './lessons.service';
@@ -31,36 +31,6 @@ describe('LessonsService', () => {
 
     await expect(LessonsService.getLessons()).rejects.toThrow(
       'LessonsService.getLessons: failed to load lessons',
-    );
-  });
-
-  it('getLessonById rejects an empty id without calling the DAO', async () => {
-    await expect(LessonsService.getLessonById('')).rejects.toThrow(/id/i);
-    await expect(LessonsService.getLessonById('   ')).rejects.toThrow(/id/i);
-    expect(dao.getLessonById).not.toHaveBeenCalled();
-  });
-
-  it('getLessonById delegates a valid id to LessonsDao.getLessonById', async () => {
-    const lesson: Lesson = {
-      id: 'lesson-1',
-      userId: 'user-1',
-      title: 'Photosynthesis',
-      slides: [],
-      createdAt: '2026-07-13T00:00:00.000Z',
-    };
-    dao.getLessonById.mockResolvedValue(lesson);
-
-    const result = await LessonsService.getLessonById('lesson-1');
-
-    expect(dao.getLessonById).toHaveBeenCalledWith('lesson-1');
-    expect(result).toBe(lesson);
-  });
-
-  it('getLessonById normalizes a DAO failure into a clear Error', async () => {
-    dao.getLessonById.mockRejectedValue({ message: 'not found' });
-
-    await expect(LessonsService.getLessonById('lesson-1')).rejects.toThrow(
-      'LessonsService.getLessonById: failed to load lesson',
     );
   });
 

@@ -1,6 +1,11 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
+import { layout } from '../../theme/spacing';
 import { LessonListItem } from './lesson-list-item';
+
+/** Unistyles style fns may return nested/array styles under Jest — flatten for assertions. */
+const flattenStyle = (style: unknown): Record<string, unknown> =>
+  Object.assign({}, ...[style].flat(Infinity).filter(Boolean));
 
 describe('LessonListItem', () => {
   it('renders title and created-date label and calls onOpen', async () => {
@@ -65,5 +70,25 @@ describe('LessonListItem', () => {
 
     fireEvent.press(screen.getByRole('button', { name: 'Delete Photosynthesis' }));
     expect(onDelete).toHaveBeenCalledTimes(1);
+  });
+
+  // Full-review blocker [a11y] WCAG 2.5.5 — delete must meet layout.touchTarget (48), not IconButton default 40.
+  it('sizes the delete control to the 48dp touch-target token', async () => {
+    await render(
+      <LessonListItem
+        title="Photosynthesis"
+        createdDateLabel="Jul 13, 2026"
+        openAccessibilityLabel="Open Photosynthesis"
+        onOpen={jest.fn()}
+        onDelete={jest.fn()}
+        deleteAccessibilityLabel="Delete Photosynthesis"
+      />,
+    );
+
+    const flat = flattenStyle(
+      screen.getByRole('button', { name: 'Delete Photosynthesis' }).props.style,
+    );
+    expect(flat.width).toBe(layout.touchTarget);
+    expect(flat.height).toBe(layout.touchTarget);
   });
 });

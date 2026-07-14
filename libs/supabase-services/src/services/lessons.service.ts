@@ -1,4 +1,4 @@
-import type { Lesson, LessonSummary } from '@helsoft/types';
+import type { LessonSummary } from '@helsoft/types';
 
 import { LessonsDao } from '../dao/lessons.dao';
 
@@ -12,17 +12,6 @@ export abstract class LessonsService {
       return await LessonsDao.getLessons();
     } catch {
       throw new Error('LessonsService.getLessons: failed to load lessons');
-    }
-  }
-
-  static async getLessonById(id: string): Promise<Lesson> {
-    if (!id.trim()) {
-      return Promise.reject(new Error('LessonsService.getLessonById: id must not be empty'));
-    }
-    try {
-      return await LessonsDao.getLessonById(id);
-    } catch {
-      throw new Error('LessonsService.getLessonById: failed to load lesson');
     }
   }
 

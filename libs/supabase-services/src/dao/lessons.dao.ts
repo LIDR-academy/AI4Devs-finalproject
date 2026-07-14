@@ -1,4 +1,4 @@
-import type { Lesson, LessonSummary, Slide } from '@helsoft/types';
+import type { LessonSummary } from '@helsoft/types';
 
 import { getSupabase } from '../supabase/supabase-client';
 
@@ -9,26 +9,9 @@ type LessonSummaryRow = {
   created_at: string;
 };
 
-/** Raw shape of a full `lessons` row (snake_case). */
-type LessonRow = {
-  id: string;
-  user_id: string;
-  title: string;
-  slides: Slide[];
-  created_at: string;
-};
-
 const toLessonSummary = (row: LessonSummaryRow): LessonSummary => ({
   id: row.id,
   title: row.title,
-  createdAt: row.created_at,
-});
-
-const toLesson = (row: LessonRow): Lesson => ({
-  id: row.id,
-  userId: row.user_id,
-  title: row.title,
-  slides: row.slides,
   createdAt: row.created_at,
 });
 
@@ -45,12 +28,6 @@ export abstract class LessonsDao {
       .order('created_at', { ascending: false });
     if (error) throw error;
     return (data as LessonSummaryRow[]).map(toLessonSummary);
-  }
-
-  static async getLessonById(id: string): Promise<Lesson> {
-    const { data, error } = await getSupabase().from('lessons').select('*').eq('id', id).single();
-    if (error) throw error;
-    return toLesson(data as LessonRow);
   }
 
   /** Deletes by id only — RLS scopes to `auth.uid()`; never filter by a client-supplied user id (@s12). */

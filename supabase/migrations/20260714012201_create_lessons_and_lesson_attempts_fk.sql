@@ -3,10 +3,9 @@
 -- Creates public.lessons (RLS mirrors lesson_attempts) and lands the deferred FK
 -- lesson_attempts.lesson_id → lessons.id (on delete cascade).
 --
--- Orphan handling: existing lesson_attempts.lesson_id values reference lesson rows that don't
--- exist yet (the FK was soft until this migration). On a dev/MVP DB those rows are test
--- artefacts — we DELETE them, then add the FK. Lowest-risk vs NOT VALID (unenforced forever)
--- or nulling lesson_id (would require a nullable column).
+-- Orphan handling: existing lesson_attempts.lesson_id values may reference lesson rows that
+-- don't exist yet (the FK was soft until this migration). Cleanup is guarded — never wipe all
+-- attempts solely because lessons is empty on first apply (see Step 2).
 
 -- Step 1: lessons table
 create table public.lessons (
@@ -41,15 +40,33 @@ create policy "lessons_delete_own" on public.lessons
 
 grant select, insert, delete on public.lessons to authenticated;
 
--- Step 2: delete orphan lesson_attempts rows so the FK validation below can succeed.
--- An orphan is any lesson_attempts row whose lesson_id has no matching lessons.id row.
--- On a dev/MVP database these rows are test artefacts; deleting them is the lowest-risk path
--- (compared to setting them to null, which would require the column to be nullable, or keeping
--- them behind NOT VALID, which leaves the constraint unenforced forever).
-delete from public.lesson_attempts
-  where lesson_id not in (select id from public.lessons);
+-- Step 2: orphan lesson_attempts cleanup before FK validation.
+-- An orphan is any lesson_attempts row whose lesson_id has no matching lessons.id.
+-- Guard (OWASP A04): with a freshly created empty `lessons` table, an unconditional
+-- `DELETE … NOT IN (SELECT id FROM lessons)` would wipe ALL lesson_attempts. Refuse that
+-- path — require an explicit operator cleanup when attempts exist but lessons is empty.
+-- When lessons already has rows, delete only true orphans so the FK can validate.
+do $$
+declare
+  lesson_count bigint;
+  attempt_count bigint;
+begin
+  select count(*) into lesson_count from public.lessons;
+  select count(*) into attempt_count from public.lesson_attempts;
 
--- Step 3: land the FK (now that orphans are gone the constraint will validate immediately)
+  if lesson_count = 0 and attempt_count > 0 then
+    raise exception
+      'Refusing to wipe % lesson_attempts row(s) while lessons is empty. Back up or truncate lesson_attempts, then re-run this migration.',
+      attempt_count;
+  end if;
+
+  if attempt_count > 0 then
+    delete from public.lesson_attempts
+      where lesson_id not in (select id from public.lessons);
+  end if;
+end $$;
+
+-- Step 3: land the FK (orphans gone or none — constraint validates immediately)
 alter table public.lesson_attempts
   add constraint lesson_attempts_lesson_id_fkey
   foreign key (lesson_id) references public.lessons (id) on delete cascade;

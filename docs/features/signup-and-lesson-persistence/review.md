@@ -1,20 +1,14 @@
-# Review — signup-and-lesson-persistence (round 1)
+# Review — signup-and-lesson-persistence (round 2)
 
-**Verdict:** CHANGES_REQUESTED — CI red; reviewer fan-out skipped.
+**Verdict:** APPROVED
 
-**CI @** `43233912eecf1c38acf01f4f5b52e487aeaac309`
+**CI green @** `0bc4d08fd5b92fe29900b4d37c49975f87a27eb9` (+ uncommitted round-1 fixes)  
+(`pnpm lint` / `check-types` / `test` green; `@helsoft/components` lesson-list e2e 5 passed)
 
-## CI failures (fix before review)
+**Skipped reviewers/lenses:** none — both fans re-ran (R1 open findings on each); engineering (code·arch·perf) + standards (security·a11y) all applied.
 
-- **blocker** `@helsoft/study-buddy` lint: Biome format fails in `libs/study-buddy/src/components/lesson-generation/lesson-generation.test.tsx` (panel props type layout) and `libs/study-buddy/src/components/saved-lessons/saved-lessons.test.tsx` (collapsed expect/mockReturnValue lines).
-- **blocker** `@helsoft/study-buddy` check-types: `lesson-generation.test.tsx:21` — mock `LessonGenerationPanel` args typed as `{ onGenerate; canGenerate }` but `LessonGenerationPanelProps` also requires `state`, `composition`, `onCompositionChange`.
+**Sources:** [review-engineering.md](./review-engineering.md) · [review-standards.md](./review-standards.md)
 
-## Passed
+## Open findings
 
-- `pnpm test` green
-- Reviewer fan-out / e2e: **not run** (protocol: no fan-out on red CI)
-
-## Skipped reviewers
-
-- `reviewer_engineering` — skipped (CI red)
-- `reviewer_standards` — skipped (CI red)
+(none)

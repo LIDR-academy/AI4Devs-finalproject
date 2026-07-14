@@ -9,6 +9,7 @@ import { useLessons } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { useRouter } from 'expo-router';
+import { AccessibilityInfo } from 'react-native';
 
 import { localizationValue } from '../../test-utils/auth-test-factories';
 import { SavedLessons } from './saved-lessons';
@@ -277,6 +278,31 @@ describe('SavedLessons', () => {
     expect(screen.getByText('Flags')).toBeTruthy();
     expect(screen.queryByText("We couldn't load your lessons.")).toBeNull();
     expect(screen.getByText("We couldn't delete that lesson.")).toBeTruthy();
+  });
+
+  // Full-review major [a11y] WCAG 4.1.3 — iOS needs announceForAccessibility (live-region alone insufficient).
+  it('announces delete failure via AccessibilityInfo when content shows a delete error', async () => {
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
+
+    mockUseLessons.mockReturnValue(
+      lessonsValue({
+        lessons: [
+          {
+            id: 'lesson-42',
+            title: 'Capitals',
+            createdAt: '2026-07-13T12:00:00.000Z',
+          },
+        ],
+        error: new Error('delete failed'),
+      }),
+    );
+
+    await render(<SavedLessons />);
+
+    expect(announceSpy).toHaveBeenCalledWith("We couldn't delete that lesson.");
+    announceSpy.mockRestore();
   });
 
   // Mutation: delete-error banner `state === 'content' && error` → true — hide outside content.
