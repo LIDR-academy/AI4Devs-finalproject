@@ -1,7 +1,7 @@
 # Current session
 
-**Active feature:** pending-pdfs-generate
-**Folder:** docs/features/pending-pdfs-generate/
-**Phase:** pr_ready
-**Status:** DoD PASS. Docs compacted, risks landed, story moved to done. Human opens/merges PR on feat/pending-pdfs-generate.
-**Notes:** All agents on Grok. Product language = PDF list.
+**Active feature:** lesson-player
+**Folder:** docs/features/lesson-player/
+**Phase:** pending
+**Status:** Boot complete. Worktree `.worktrees/lesson-player` on `feat/lesson-player`. Spec phase starting (Opus). Rest of pipeline: Grok.
+**Notes:** Story moved to in-progress. Models: opus=spec_partner+spec_reviewer; grok=all else.
