@@ -33,6 +33,7 @@ const rawDeck = {
         { id: 'opt-b', label: 'Xylem' },
       ],
       correctOptionId: 'opt-a',
+      explanation: null,
       sourcePage: 2,
     },
   ],
@@ -109,6 +110,7 @@ describe('assembleGeneratedLesson', () => {
           rightItems: [{ id: 'r1', label: 'Paris' }],
           correctPairs: [{ leftId: 'l1', rightId: 'r1' }],
           explanation: 'France -> Paris',
+          sourcePage: null,
         },
         {
           kind: 'activity',
@@ -117,6 +119,7 @@ describe('assembleGeneratedLesson', () => {
           content: 'The capital of France is ____',
           acceptedAnswers: ['Paris'],
           explanation: 'Paris is the capital',
+          sourcePage: null,
         },
         {
           kind: 'activity',
@@ -125,6 +128,7 @@ describe('assembleGeneratedLesson', () => {
           content: 'Why is Paris the capital of France?',
           modelAnswer: 'It has been the seat of government since...',
           explanation: 'History context',
+          sourcePage: null,
         },
         {
           kind: 'activity',
@@ -133,6 +137,7 @@ describe('assembleGeneratedLesson', () => {
           content: 'Capital of France',
           back: 'Paris',
           explanation: 'Common trivia',
+          sourcePage: null,
         },
       ],
     };
@@ -166,7 +171,7 @@ describe('assembleGeneratedLesson', () => {
     });
   });
 
-  // @s13 — explanation is optional: a slide the model gave none for omits the field entirely
+  // @s13 — explanation may be null from the model; assembly omits it on the public slide
   // rather than carrying an empty/null placeholder.
   it('omits explanation on an activity slide when the model provided none', () => {
     const lesson = assembleGeneratedLesson({
@@ -269,7 +274,7 @@ describe('assembleGeneratedLesson', () => {
   // than silently returning a wrong-composition deck (risks.md R3, feeds task-12's
   // generation_failed).
   describe('composition enforcement (task-11)', () => {
-    const instructionalSlide = { kind: 'instructional', title: 'Intro', content: 'Welcome' };
+    const instructionalSlide = rawDeck.slides[0];
     const activitySlide = rawDeck.slides[1];
 
     // @s4 — a model response that ignores the "instructional only" instruction and still

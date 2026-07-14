@@ -66,12 +66,20 @@ const isLessonComposition = (value: unknown): value is LessonComposition =>
 
 /** Runs the model call behind one seam so a `fetch`-based fallback (risks.md R1) can slot in
  * without touching any caller. */
+/** Groq provider options for `generateObject`. Deck schema uses `.nullable()` for optional
+ * semantics (`sourcePage`, `explanation`) so properties stay in JSON Schema `required` (Groq
+ * structured outputs). `strictJsonSchema: false` avoids stricter constrained-decoding that
+ * still rejects Zod `anyOf` unions in some cases — keeps `json_schema` without all-or-nothing
+ * decoding (see https://console.groq.com/docs/structured-outputs). */
+const groqObjectOptions = { groq: { strictJsonSchema: false } };
+
 const runGeneration = async (apiKey: string, prompt: string): Promise<unknown> => {
   const groq = createGroq({ apiKey });
   const { object } = await generateObject({
     model: groq(TEXT_MODEL_ID),
     schema: deckSchema,
     prompt,
+    providerOptions: groqObjectOptions,
   });
   return object;
 };
@@ -112,6 +120,7 @@ const runVisionPlacement = async (
   const { object } = await generateObject({
     model: groq(VISION_MODEL_ID),
     schema: visionDecisionResponseSchema,
+    providerOptions: groqObjectOptions,
     messages: [
       {
         role: 'user',

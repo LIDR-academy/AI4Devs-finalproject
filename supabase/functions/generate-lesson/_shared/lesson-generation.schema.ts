@@ -2,9 +2,11 @@
 // the workspace package, so this file is kept manually in sync with that one (task-4 note, same
 // rule as R1's pdf-extraction/_shared mirrors). Jest-tested for real at the source path above;
 // this copy is verified only by manual smoke against the deployed function (risks.md R2).
+// `sourcePage` / `explanation` are `.nullable()` (not `.optional`) for Groq json_schema
+// structured outputs — every property must appear in `required`.
 import { z } from 'npm:zod@4';
 
-const sourcePage = z.number().int().min(1).optional();
+const sourcePage = z.number().int().min(1).nullable();
 
 const rawMultipleChoiceOptionSchema = z.object({ id: z.string().min(1), label: z.string().min(1) });
 
@@ -22,7 +24,7 @@ const rawMultipleChoiceSlideSchema = z.object({
   content: z.string().min(1),
   options: z.array(rawMultipleChoiceOptionSchema).min(2),
   correctOptionId: z.string().min(1),
-  explanation: z.string().optional(),
+  explanation: z.string().nullable(),
   sourcePage,
 });
 
@@ -37,7 +39,7 @@ const rawMatchingSlideSchema = z.object({
   leftItems: z.array(rawMatchingItemSchema).min(1),
   rightItems: z.array(rawMatchingItemSchema).min(1),
   correctPairs: z.array(rawMatchingPairSchema).min(1),
-  explanation: z.string().optional(),
+  explanation: z.string().nullable(),
   sourcePage,
 });
 
@@ -47,7 +49,7 @@ const rawFillInTheBlankSlideSchema = z.object({
   title: z.string().min(1),
   content: z.string().min(1),
   acceptedAnswers: z.array(z.string().min(1)).min(1),
-  explanation: z.string().optional(),
+  explanation: z.string().nullable(),
   sourcePage,
 });
 
@@ -57,7 +59,7 @@ const rawOpenEndedSlideSchema = z.object({
   title: z.string().min(1),
   content: z.string().min(1),
   modelAnswer: z.string().min(1),
-  explanation: z.string().optional(),
+  explanation: z.string().nullable(),
   sourcePage,
 });
 
@@ -67,7 +69,7 @@ const rawFlashcardSlideSchema = z.object({
   title: z.string().min(1),
   content: z.string().min(1),
   back: z.string().min(1),
-  explanation: z.string().optional(),
+  explanation: z.string().nullable(),
   sourcePage,
 });
 

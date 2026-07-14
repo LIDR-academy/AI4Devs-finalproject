@@ -1,6 +1,11 @@
 import { deckSchema, rawSlideSchema } from './lesson-generation.schema';
 
-const validInstructional = { kind: 'instructional', title: 'Intro', content: 'Welcome' };
+const validInstructional = {
+  kind: 'instructional',
+  title: 'Intro',
+  content: 'Welcome',
+  sourcePage: null,
+};
 const validMultipleChoice = {
   kind: 'activity',
   activityType: 'multiple-choice',
@@ -11,6 +16,8 @@ const validMultipleChoice = {
     { id: 'opt-b', label: 'Lyon' },
   ],
   correctOptionId: 'opt-a',
+  explanation: null,
+  sourcePage: null,
 };
 const validMatching = {
   kind: 'activity',
@@ -20,6 +27,8 @@ const validMatching = {
   leftItems: [{ id: 'l1', label: 'France' }],
   rightItems: [{ id: 'r1', label: 'Paris' }],
   correctPairs: [{ leftId: 'l1', rightId: 'r1' }],
+  explanation: null,
+  sourcePage: null,
 };
 const validFillInTheBlank = {
   kind: 'activity',
@@ -27,6 +36,8 @@ const validFillInTheBlank = {
   title: 'Blank',
   content: 'The capital of France is ____',
   acceptedAnswers: ['Paris'],
+  explanation: null,
+  sourcePage: null,
 };
 const validOpenEnded = {
   kind: 'activity',
@@ -34,6 +45,8 @@ const validOpenEnded = {
   title: 'Reflect',
   content: 'Why is Paris the capital of France?',
   modelAnswer: 'It has been the seat of government since...',
+  explanation: null,
+  sourcePage: null,
 };
 const validFlashcard = {
   kind: 'activity',
@@ -41,6 +54,8 @@ const validFlashcard = {
   title: 'Recall',
   content: 'Capital of France',
   back: 'Paris',
+  explanation: null,
+  sourcePage: null,
 };
 
 describe('deckSchema', () => {
