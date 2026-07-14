@@ -704,6 +704,23 @@ Analiza y ejecuta c:\repo\ai4devs\AI4Devs-finalproject\prompts\MASTER_BOOTSTRAP_
 
 ---
 
+## 45 — Decisiones sobre issue-004 y arranque de Entrega 2
+
+> 📋 2026-07-14T21:00:00Z · Claude Code CLI · Claude Fable 5 · medium · ~130K tokens · rodri
+
+```
+1. Si, 2. Agregalo como alcance del MVP, 3. Lo que sea mas coherente y atinente al proyecto, 4. Si,
+5. Deja el modelo como recomendado, pero no obligatorio y openspec no es obligatorio pero sí se debe
+considerar para el futuro hasta que aprenda a implementarlo. A menos que me des instrucciones de como
+implementarlo desde ya con lo qu ya existe si es posible y no es complejo. 6. Confirmo comenzar con la
+Fase 0 y luego US0001 PERO EN UNA RAMA APARTE A TODO LO DEMÁS, primero hacer commit y push de lo que
+hay en una rama llamada docs/entrega2 y luego puedes comenzar con el punto 6
+```
+
+*(Aplica las 6 decisiones — ver fixs/issue-004.md §G: api-spec.yml v2.0.0 regenerada y alineada con 13 US + data-model; cancelación agregada a US0010 (CA10-CA11); endpoints de pago renombrados a create/confirm/return; readme.md completado con secciones 2–7; base-standards.md §5 y §7 flexibilizados. Rama docs/entrega2 creada y pusheada; Fase 0 + US0001 en ramas aparte.)*
+
+---
+
 ## Resumen de archivos modificados (sesión 5)
 
 | Archivo | Acción |
@@ -719,7 +736,12 @@ Analiza y ejecuta c:\repo\ai4devs\AI4Devs-finalproject\prompts\MASTER_BOOTSTRAP_
 | `docs/development_guide.md` | Corregido — bloque duplicado eliminado + nota de estado objetivo |
 | `prompts.md` | Actualizado — prompt de bootstrap registrado, nota obsoleta de sección 4 corregida |
 | `prompts/00-all-prompts.md` | Actualizado — sesión 5 |
+| `docs/api-spec.yml` | Regenerado — v2.0.0 sincronizada con 13 US y data-model |
+| `docs/us/us0010/us0010.md`, `docs/us/all-us.md` | Actualizados — CA10-CA11 cancelación MVP |
+| `readme.md` | Completado — secciones 2–7 |
+| `docs/base-standards.md` | Ajustado — §5 modelo recomendado, §7 OpenSpec opcional |
+| `fixs/issue-004.md`, `PROJECT_STATUS.md` | Actualizados — decisiones aplicadas |
 
 ---
 
-*INK·LINK © 2026 · Registro de prompts · 5 sesiones · 44 prompts documentados*
+*INK·LINK © 2026 · Registro de prompts · 5 sesiones · 45 prompts documentados*

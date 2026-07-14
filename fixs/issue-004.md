@@ -2,7 +2,7 @@
 
 **Fecha:** 2026-07-14
 **Contexto:** Ejecución de `prompts/MASTER_BOOTSTRAP_PROMPT.md`. Análisis completo del repositorio (README, documentación, US, tickets, api-spec.yml, prompts, infraestructura) previo a implementar cualquier funcionalidad.
-**Estado:** 🟡 Abierto — contiene decisiones pendientes que requieren aprobación del usuario.
+**Estado:** ✅ Resuelto (2026-07-14) — las 6 decisiones de §E fueron tomadas por el usuario y aplicadas. Ver §G.
 
 ---
 
@@ -115,6 +115,17 @@ La spec lo atribuye a US0010, pero ningún criterio de aceptación de US0010 cub
 6. **Inicio de implementación**: ¿confirmas el plan de `DEVELOPMENT_PLAN.md` (Fase 0 de infraestructura → US0001)?
 
 ---
+
+## G. Decisiones tomadas (2026-07-14) y su aplicación
+
+| # | Decisión del usuario | Aplicación |
+|---|---|---|
+| 1 | ✅ Regenerar api-spec.yml | `docs/api-spec.yml` v2.0.0: numeración US corregida, schemas alineados a data-model, agregados `/showcase`, `/artists/{id}/availability`, `/bookings/hold`, `/quotes/calculate`, corregido 409 de pagos (§A1–A4 resueltos) |
+| 2 | ✅ Cancelación es alcance MVP | US0010: CA10-CA11 agregados (+ nota técnica `POST /bookings/{id}/cancel`) en `us0010.md` y `all-us.md`. Sin reembolso automático (anti no-show sigue Won't-Have) |
+| 3 | ✅ Nombres más coherentes | Adoptados `/payments/create`, `/payments/confirm` (webhook), `/payments/return` — coherentes con la terminología de la API de Flow, las notas de US0009 y `development_guide.md` (ConfirmUrl). También `GET /bookings/me` y `GET /artists/{slug}/reviews` según notas de US (§A5 resuelto) |
+| 4 | ✅ Completar readme.md | Secciones 2–7 agregadas enlazando la documentación existente (§B1 resuelto) |
+| 5 | ✅ Ajustar base-standards.md | §5: modelo capaz recomendado, no obligatorio, sin auto-modificar configuración. §7: OpenSpec opcional, a considerar en el futuro; reglas doc-first solo si un cambio usa OpenSpec explícitamente (§B7 resuelto) |
+| 6 | ✅ Fase 0 → US0001 | En rama aparte; el trabajo documental se consolidó primero en `docs/entrega2` |
 
 ## F. Acciones ya ejecutadas en este análisis (sin decisiones de requisitos)
 

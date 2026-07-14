@@ -38,7 +38,7 @@ Estados posibles: ⬜ Pendiente · 🔵 En desarrollo · 🟣 En revisión · �
 
 ## Bloqueos actuales
 
-1. **Decisiones pendientes en `fixs/issue-004.md` §E** — en particular la autorización para sincronizar `api-spec.yml` antes de implementar US que dependen de ella (US0003, US0008, US0009, US0011).
+1. ~~Decisiones pendientes en `fixs/issue-004.md` §E~~ — ✅ resueltas el 2026-07-14 (ver issue-004 §G). `api-spec.yml` v2.0.0 sincronizada.
 2. Cuenta sandbox de Flow (necesaria recién para US0009; hasta entonces se usa mock).
 
 ## Inventario de documentación
