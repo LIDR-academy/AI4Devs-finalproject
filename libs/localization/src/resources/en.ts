@@ -64,6 +64,7 @@ export const en = {
         confirmBody: 'This permanently removes the PDF and its extracted data.',
         confirmAction: 'Delete',
         cancelAction: 'Cancel',
+        failed: "We couldn't delete that PDF.",
       },
     },
     lessons: {

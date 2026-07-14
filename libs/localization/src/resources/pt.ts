@@ -58,6 +58,7 @@ export const pt: TranslationResource = {
         confirmBody: 'Isso remove permanentemente o PDF e seus dados extraídos.',
         confirmAction: 'Excluir',
         cancelAction: 'Cancelar',
+        failed: 'Não foi possível excluir esse PDF.',
       },
     },
     lessons: {

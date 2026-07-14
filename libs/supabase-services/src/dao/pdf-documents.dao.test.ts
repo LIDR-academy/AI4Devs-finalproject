@@ -45,6 +45,7 @@ describe('PdfDocumentsDao', () => {
   });
 
   // @s1 — list from the view, newest first; no client-supplied user_id filter (@s18).
+  // Full-review major [arch] — DAO returns raw view rows; service derives status.
   it('selects from user_documents ordered by created_at descending with no user_id filter', async () => {
     order.mockResolvedValue({
       data: [
@@ -79,24 +80,38 @@ describe('PdfDocumentsDao', () => {
       {
         id: 'doc-2',
         filename: 'newer.pdf',
-        pageCount: 5,
-        createdAt: '2026-07-14T12:00:00.000Z',
-        status: 'ready',
-        lessonId: null,
+        page_count: 5,
+        created_at: '2026-07-14T12:00:00.000Z',
+        generation_error_code: null,
+        lesson_id: null,
       },
       {
         id: 'doc-1',
         filename: 'older.pdf',
-        pageCount: 2,
-        createdAt: '2026-07-13T12:00:00.000Z',
-        status: 'ready',
-        lessonId: null,
+        page_count: 2,
+        created_at: '2026-07-13T12:00:00.000Z',
+        generation_error_code: null,
+        lesson_id: null,
       },
     ]);
   });
 
-  // @s4 — lesson_id present → generated (+ lessonId carried).
-  it('derives generated status when lesson_id is present', async () => {
+  // @s17 — view itself filters extracted; DAO never joins client-side and never filters user_id.
+  it('never passes a user_id equality filter on getDocuments', async () => {
+    await PdfDocumentsDao.getDocuments();
+    expect(from).toHaveBeenCalledWith('user_documents');
+    expect(from).not.toHaveBeenCalledWith('documents');
+  });
+
+  it('throws the raw supabase error when getDocuments fails', async () => {
+    const error = { message: 'select failed' };
+    order.mockResolvedValue({ data: null, error });
+
+    await expect(PdfDocumentsDao.getDocuments()).rejects.toBe(error);
+  });
+
+  // Full-review major [arch] — DAO must not invent status / camelCase product fields.
+  it('returns raw view rows without deriving status or remapping field names', async () => {
     order.mockResolvedValue({
       data: [
         {
@@ -117,76 +132,15 @@ describe('PdfDocumentsDao', () => {
       {
         id: 'doc-1',
         filename: 'done.pdf',
-        pageCount: 4,
-        createdAt: '2026-07-14T00:00:00.000Z',
-        status: 'generated',
-        lessonId: 'lesson-1',
+        page_count: 4,
+        created_at: '2026-07-14T00:00:00.000Z',
+        generation_error_code: 'provider_error',
+        lesson_id: 'lesson-1',
       },
     ]);
-  });
-
-  // @s3 — generation_error_code without lesson → failed.
-  it('derives failed status when generation_error_code is set and there is no lesson', async () => {
-    order.mockResolvedValue({
-      data: [
-        {
-          id: 'doc-1',
-          filename: 'fail.pdf',
-          page_count: null,
-          created_at: '2026-07-14T00:00:00.000Z',
-          generation_error_code: 'timeout',
-          lesson_id: null,
-        },
-      ],
-      error: null,
-    });
-
-    const result = await PdfDocumentsDao.getDocuments();
-
-    expect(result[0]).toMatchObject({ status: 'failed', lessonId: null });
-  });
-
-  // Mutation: `status === 'generated' ? row.lesson_id : null` → always row.lesson_id.
-  // Empty-string lesson_id is falsy for deriveStatus (→ ready) but must still map to null.
-  it('maps empty-string lesson_id to null lessonId for a ready document', async () => {
-    order.mockResolvedValue({
-      data: [
-        {
-          id: 'doc-1',
-          filename: 'empty-lesson.pdf',
-          page_count: 1,
-          created_at: '2026-07-14T00:00:00.000Z',
-          generation_error_code: null,
-          lesson_id: '',
-        },
-      ],
-      error: null,
-    });
-
-    const result = await PdfDocumentsDao.getDocuments();
-
-    expect(result[0]).toEqual({
-      id: 'doc-1',
-      filename: 'empty-lesson.pdf',
-      pageCount: 1,
-      createdAt: '2026-07-14T00:00:00.000Z',
-      status: 'ready',
-      lessonId: null,
-    });
-  });
-
-  // @s17 — view itself filters extracted; DAO never joins client-side and never filters user_id.
-  it('never passes a user_id equality filter on getDocuments', async () => {
-    await PdfDocumentsDao.getDocuments();
-    expect(from).toHaveBeenCalledWith('user_documents');
-    expect(from).not.toHaveBeenCalledWith('documents');
-  });
-
-  it('throws the raw supabase error when getDocuments fails', async () => {
-    const error = { message: 'select failed' };
-    order.mockResolvedValue({ data: null, error });
-
-    await expect(PdfDocumentsDao.getDocuments()).rejects.toBe(error);
+    expect(result[0]).not.toHaveProperty('status');
+    expect(result[0]).not.toHaveProperty('pageCount');
+    expect(result[0]).not.toHaveProperty('lessonId');
   });
 
   // @s12/@s19 — purge both buckets then delete the documents row by id (RLS scopes ownership).
@@ -206,12 +160,31 @@ describe('PdfDocumentsDao', () => {
     expect(getUser).toHaveBeenCalled();
     expect(storageFrom).toHaveBeenCalledWith('pdf-images');
     expect(storageFrom).toHaveBeenCalledWith('pdf-uploads');
-    expect(list).toHaveBeenCalledWith('user-1/doc-1');
+    expect(list).toHaveBeenCalledWith('user-1/doc-1', { limit: 100, offset: 0 });
     expect(remove).toHaveBeenCalledWith(['user-1/doc-1/p1-0.png', 'user-1/doc-1/p1-1.png']);
     expect(remove).toHaveBeenCalledWith(['user-1/doc-1/source.pdf']);
     expect(from).toHaveBeenCalledWith('documents');
     expect(delEq).toHaveBeenCalledWith('id', 'doc-1');
     expect(delEq.mock.calls.every((call) => call[0] !== 'user_id')).toBe(true);
+  });
+
+  // Full-review major [security] — paginate storage.list until no residual objects (@s12).
+  it('deleteDocument paginates storage.list until both buckets are empty', async () => {
+    const page = Array.from({ length: 100 }, (_, i) => ({ name: `img-${i}.png` }));
+    list
+      // pdf-images: full page then remainder (< page size → stop)
+      .mockResolvedValueOnce({ data: page, error: null })
+      .mockResolvedValueOnce({ data: [{ name: 'img-100.png' }], error: null })
+      // pdf-uploads: one object (< page size → stop)
+      .mockResolvedValueOnce({ data: [{ name: 'source.pdf' }], error: null });
+
+    await PdfDocumentsDao.deleteDocument('doc-1');
+
+    expect(list).toHaveBeenCalledTimes(3);
+    expect(remove).toHaveBeenCalledWith(page.map((file) => `user-1/doc-1/${file.name}`));
+    expect(remove).toHaveBeenCalledWith(['user-1/doc-1/img-100.png']);
+    expect(remove).toHaveBeenCalledWith(['user-1/doc-1/source.pdf']);
+    expect(delEq).toHaveBeenCalledWith('id', 'doc-1');
   });
 
   it('throws when listing storage objects fails', async () => {

@@ -22,6 +22,7 @@ jest.mock('@helsoft/components', () => {
 import { usePdfDocuments } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { AccessibilityInfo } from 'react-native';
 
 import { localizationValue } from '../../test-utils/auth-test-factories';
 import { PdfDocuments } from './pdf-documents';
@@ -53,6 +54,7 @@ const t = (key: string, options?: Record<string, unknown>) => {
   }
   if (key === 'pdfList.delete.confirmAction') return 'Delete';
   if (key === 'pdfList.delete.cancelAction') return 'Cancel';
+  if (key === 'pdfList.delete.failed') return "We couldn't delete that PDF.";
   return key;
 };
 
@@ -586,5 +588,112 @@ describe('PdfDocuments', () => {
     process.off('unhandledRejection', unhandledRejectionSpy);
     expect(deleteDocument).toHaveBeenCalledWith('doc-ready');
     expect(unhandledRejectionSpy).not.toHaveBeenCalled();
+  });
+
+  // Full-review major [a11y]/[code] WCAG 4.1.3 — surface delete failure while keeping content.
+  it('shows a delete-failure banner when content has an error', async () => {
+    mockUsePdfDocuments.mockReturnValue(
+      docsValue({
+        documents: [
+          {
+            id: 'doc-ready',
+            filename: 'notes.pdf',
+            pageCount: 12,
+            createdAt: '2026-07-13T12:00:00.000Z',
+            status: 'ready',
+            lessonId: null,
+          },
+        ],
+        error: new Error('delete failed'),
+      }),
+    );
+
+    await render(<PdfDocuments onGenerate={onGenerate} onOpenLesson={onOpenLesson} />);
+
+    expect(screen.getByText('notes.pdf')).toBeTruthy();
+    expect(screen.queryByText("We couldn't load your PDFs.")).toBeNull();
+    expect(screen.getByText("We couldn't delete that PDF.")).toBeTruthy();
+  });
+
+  it('announces delete failure via AccessibilityInfo when content shows a delete error', async () => {
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
+
+    mockUsePdfDocuments.mockReturnValue(
+      docsValue({
+        documents: [
+          {
+            id: 'doc-ready',
+            filename: 'notes.pdf',
+            pageCount: 12,
+            createdAt: '2026-07-13T12:00:00.000Z',
+            status: 'ready',
+            lessonId: null,
+          },
+        ],
+        error: new Error('delete failed'),
+      }),
+    );
+
+    await render(<PdfDocuments onGenerate={onGenerate} onOpenLesson={onOpenLesson} />);
+
+    expect(announceSpy).toHaveBeenCalledWith("We couldn't delete that PDF.");
+    announceSpy.mockRestore();
+  });
+
+  it('does not show the delete-failure banner while loading or on load error', async () => {
+    mockUsePdfDocuments.mockReturnValue(
+      docsValue({ isLoading: true, error: new Error('delete failed') }),
+    );
+    await render(<PdfDocuments onGenerate={onGenerate} onOpenLesson={onOpenLesson} />);
+    expect(screen.queryByText("We couldn't delete that PDF.")).toBeNull();
+
+    mockUsePdfDocuments.mockReturnValue(
+      docsValue({ error: new Error('load failed'), documents: [] }),
+    );
+    await render(<PdfDocuments onGenerate={onGenerate} onOpenLesson={onOpenLesson} />);
+    expect(screen.queryByText("We couldn't delete that PDF.")).toBeNull();
+    expect(screen.getByText("We couldn't load your PDFs.")).toBeTruthy();
+  });
+
+  it('does not announce delete failure unless content shows a delete error', async () => {
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
+    const deleteFailed = "We couldn't delete that PDF.";
+
+    mockUsePdfDocuments.mockReturnValue(
+      docsValue({
+        documents: [
+          {
+            id: 'doc-1',
+            filename: 'one.pdf',
+            pageCount: 1,
+            createdAt: '2026-07-13T12:00:00.000Z',
+            status: 'ready',
+            lessonId: null,
+          },
+        ],
+      }),
+    );
+    await render(<PdfDocuments onGenerate={onGenerate} onOpenLesson={onOpenLesson} />);
+    expect(announceSpy).not.toHaveBeenCalledWith(deleteFailed);
+
+    announceSpy.mockClear();
+    mockUsePdfDocuments.mockReturnValue(
+      docsValue({ isLoading: true, error: new Error('delete failed') }),
+    );
+    await render(<PdfDocuments onGenerate={onGenerate} onOpenLesson={onOpenLesson} />);
+    expect(announceSpy).not.toHaveBeenCalledWith(deleteFailed);
+
+    announceSpy.mockClear();
+    mockUsePdfDocuments.mockReturnValue(
+      docsValue({ error: new Error('load failed'), documents: [] }),
+    );
+    await render(<PdfDocuments onGenerate={onGenerate} onOpenLesson={onOpenLesson} />);
+    expect(announceSpy).not.toHaveBeenCalledWith(deleteFailed);
+
+    announceSpy.mockRestore();
   });
 });

@@ -65,6 +65,6 @@ test('Error story renders the alert banner and keeps the input editable', async 
 
   const alert = canvas.locator('[role="alert"]');
   await expect(alert).toBeVisible();
-  await expect(alert).toContainText("That key didn't validate. Check it and try again.");
+  await expect(alert).toContainText("Couldn't reach the server. Try again.");
   await expect(canvas.locator('[aria-label="API key"]')).toBeEditable();
 });

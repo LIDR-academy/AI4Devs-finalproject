@@ -134,6 +134,13 @@ describe('PdfDocumentListItem', () => {
     expect(screen.queryByRole('button', { name: /Delete/i })).toBeNull();
   });
 
+  // @s21 — row exposes an accessible name (filename + status).
+  it('exposes an accessible name on the row info for assistive technology', async () => {
+    await render(<PdfDocumentListItem {...baseProps} status="ready" />);
+
+    expect(screen.getByLabelText('notes.pdf, Ready to generate')).toBeTruthy();
+  });
+
   // WCAG 2.5.5 — delete meets layout.touchTarget (48).
   it('sizes the delete control to the 48dp touch-target token', async () => {
     await render(

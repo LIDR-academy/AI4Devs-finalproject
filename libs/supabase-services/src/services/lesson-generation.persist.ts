@@ -48,6 +48,14 @@ export const persistLesson = async (
     throw toTypedError('persist_failed', 'persistLesson: failed to persist lesson row');
   }
 
+  // Clear a prior failure marker so the PDF list no longer shows "generation failed".
+  const { error: clearError } = await supabase
+    .from('documents')
+    .update({ generation_error_code: null })
+    .eq('id', documentId);
+
+  if (clearError) throw clearError;
+
   return data.id;
 };
 

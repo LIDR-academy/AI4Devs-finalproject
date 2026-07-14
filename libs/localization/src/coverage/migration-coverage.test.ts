@@ -97,19 +97,18 @@ const FILL_IN_THE_BLANK_ACTIVITY_DIR = resolve(
   'libs/activities/src/organisms/fill-in-the-blank',
 );
 /**
- * activity-open-ended, task-6/@s8 — OpenEndedActivity chrome (`t('activity.openEnded.*')`)
- * needs the same missing-key guard. Keys live on the study-buddy wrapper (organism takes labels).
+ * activity-open-ended, task-6/@s8 — OpenEnded chrome (`t('activity.openEnded.*')`) needs the
+ * same missing-key guard. Moved from libs/study-buddy/src/components/open-ended-activity when
+ * that chrome copy migrated into the @helsoft/activities organism (the study-buddy component is
+ * now a thin wrapper with no t() calls of its own).
  */
-const OPEN_ENDED_ACTIVITY_DIR = resolve(
-  REPO_ROOT,
-  'libs/study-buddy/src/components/open-ended-activity',
-);
+const OPEN_ENDED_ACTIVITY_DIR = resolve(REPO_ROOT, 'libs/activities/src/organisms/open-ended');
 /**
- * score-results-summary, task-7/@s1 — LessonResults calls `t('results.score'/'results.scorePercent'
- * /'results.retake'/'results.backHome')`; same missing-key guard as the components above. Moved
- * from libs/study-buddy/src/components/lesson-results for the same reason as above.
+ * score-results-summary, task-7/@s1 — ResultsSummary calls `t('results.score'/'results.scorePercent'
+ * /'results.retake'/'results.backHome')`; same missing-key guard. Keys live on the presentational
+ * organism in libs/components (activities LessonResults wires it; study-buddy is a thin re-export).
  */
-const LESSON_RESULTS_DIR = resolve(REPO_ROOT, 'libs/activities/src/organisms/lesson-results');
+const LESSON_RESULTS_DIR = resolve(REPO_ROOT, 'libs/components/src/organisms/results-summary');
 /**
  * activity-flashcard-recall, task-6/@s9 — Flashcard organism chrome
  * (`t('activity.flashcard.*')`) needs the same missing-key guard: i18next has no
@@ -120,18 +119,16 @@ const FLASHCARD_DIR = resolve(REPO_ROOT, 'libs/activities/src/organisms/flashcar
 
 /**
  * ai-key-management task-13 (Slice 3) — same class of guard, extended for this feature's
- * feature-wiring components. `api-key-settings.tsx` and `api-key-gate.tsx` are the two
- * `study-buddy` components that call `t('settings.apiKey.*'...)`/`t('upload.apiKeyRequired.*'...)`
- * directly; the presentational organisms they wire (`ApiKeyForm`, `ApiKeyRequiredNotice`,
- * `libs/components/src/organisms/...`) are deliberately **not** added here — they receive all
- * copy via `labels` props and contain zero `t()` calls of their own (spec.md's architecture:
- * presentational component vs. feature-wiring split), so adding them to this literal-existence
- * scan would trip its own "guards the guard" sanity assertion (`referencedKeys.length > 0`) for
- * no reason — they're already covered by the lib-wide hardcoded-copy sweep above
- * (`SHARED_COMPONENTS` includes `libs/components/src`).
+ * feature-wiring components. `api-key-settings.tsx` still calls `t('settings.apiKey.*'...)`
+ * directly (builds labels for presentational `ApiKeyForm`). `ApiKeyRequiredNotice` now owns
+ * `t('upload.apiKeyRequired.*')` itself — the study-buddy `api-key-gate` wrapper has no t()
+ * calls, so the gate entry points at the notice organism.
  */
 const API_KEY_SETTINGS_DIR = resolve(REPO_ROOT, 'libs/study-buddy/src/components/api-key-settings');
-const API_KEY_GATE_DIR = resolve(REPO_ROOT, 'libs/study-buddy/src/components/api-key-gate');
+const API_KEY_GATE_DIR = resolve(
+  REPO_ROOT,
+  'libs/components/src/organisms/api-key-required-notice',
+);
 
 /**
  * ai-lesson-generation task-9 (Slice 1) — `LessonGenerationPanel` builds its own `t()` key

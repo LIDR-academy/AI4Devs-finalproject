@@ -23,6 +23,7 @@ test('selecting the correct option grades correct and shows the explanation', as
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
   await canvas.getByText('Paris', { exact: true }).click();
+  await canvas.getByText('Submit', { exact: true }).click();
 
   await expect(canvas.getByText('Correct', { exact: true })).toBeVisible();
   await expect(canvas.getByText('Explanation', { exact: true })).toBeVisible();
@@ -36,6 +37,7 @@ test('locks the attempt — every option becomes non-interactive once answered',
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
   await canvas.getByText('Paris', { exact: true }).click();
+  await canvas.getByText('Submit', { exact: true }).click();
   await expect(canvas.getByText('Correct', { exact: true })).toBeVisible();
 
   // The unselected option is genuinely disabled (not just visually) — Playwright's own
@@ -55,6 +57,7 @@ test('WithoutExplanation story: an incorrect pick reveals the correct option, no
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
   await canvas.getByText('Berlin', { exact: true }).click();
+  await canvas.getByText('Submit', { exact: true }).click();
 
   await expect(canvas.getByText('Incorrect', { exact: true })).toBeVisible();
   // The correct option (Paris) is revealed alongside the learner's incorrect pick.

@@ -13,8 +13,47 @@ describe('PdfDocumentsService', () => {
   beforeEach(() => jest.clearAllMocks());
 
   // @s1 — list delegates to the DAO; RLS + view filter are DB-side.
-  it('getDocuments delegates to PdfDocumentsDao.getDocuments', async () => {
-    const documents: PdfDocumentSummary[] = [
+  // Full-review major [arch] — service owns status derivation; DAO returns raw view rows.
+  it('getDocuments maps raw DAO rows into PdfDocumentSummary with derived status', async () => {
+    dao.getDocuments.mockResolvedValue([
+      {
+        id: 'doc-2',
+        filename: 'newer.pdf',
+        page_count: 5,
+        created_at: '2026-07-14T12:00:00.000Z',
+        generation_error_code: null,
+        lesson_id: null,
+      },
+      {
+        id: 'doc-gen',
+        filename: 'done.pdf',
+        page_count: 4,
+        created_at: '2026-07-14T00:00:00.000Z',
+        generation_error_code: 'provider_error',
+        lesson_id: 'lesson-1',
+      },
+      {
+        id: 'doc-fail',
+        filename: 'fail.pdf',
+        page_count: null,
+        created_at: '2026-07-13T00:00:00.000Z',
+        generation_error_code: 'timeout',
+        lesson_id: null,
+      },
+      {
+        id: 'doc-empty',
+        filename: 'empty-lesson.pdf',
+        page_count: 1,
+        created_at: '2026-07-12T00:00:00.000Z',
+        generation_error_code: null,
+        lesson_id: '',
+      },
+    ]);
+
+    const result = await PdfDocumentsService.getDocuments();
+
+    expect(dao.getDocuments).toHaveBeenCalledWith();
+    expect(result).toEqual([
       {
         id: 'doc-2',
         filename: 'newer.pdf',
@@ -23,13 +62,31 @@ describe('PdfDocumentsService', () => {
         status: 'ready',
         lessonId: null,
       },
-    ];
-    dao.getDocuments.mockResolvedValue(documents);
-
-    const result = await PdfDocumentsService.getDocuments();
-
-    expect(dao.getDocuments).toHaveBeenCalledWith();
-    expect(result).toBe(documents);
+      {
+        id: 'doc-gen',
+        filename: 'done.pdf',
+        pageCount: 4,
+        createdAt: '2026-07-14T00:00:00.000Z',
+        status: 'generated',
+        lessonId: 'lesson-1',
+      },
+      {
+        id: 'doc-fail',
+        filename: 'fail.pdf',
+        pageCount: null,
+        createdAt: '2026-07-13T00:00:00.000Z',
+        status: 'failed',
+        lessonId: null,
+      },
+      {
+        id: 'doc-empty',
+        filename: 'empty-lesson.pdf',
+        pageCount: 1,
+        createdAt: '2026-07-12T00:00:00.000Z',
+        status: 'ready',
+        lessonId: null,
+      },
+    ] satisfies PdfDocumentSummary[]);
   });
 
   it('getDocuments normalizes a DAO failure into a clear Error', async () => {

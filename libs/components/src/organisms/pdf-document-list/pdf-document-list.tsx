@@ -1,5 +1,5 @@
 import { useLocalization } from '@helsoft/localization';
-import { useCallback } from 'react';
+import { memo, useCallback } from 'react';
 import { FlatList, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../../atoms/button/button';
@@ -17,6 +17,50 @@ export const PDF_DOCUMENT_LIST_LOADING_TEST_ID = 'pdf-document-list-loading-indi
 
 /** testID for the virtualized content list. */
 export const PDF_DOCUMENT_LIST_TEST_ID = 'pdf-document-list';
+
+type PdfDocumentListRowProps = {
+  item: PdfDocumentListItemData;
+  onGenerate: (id: string) => void;
+  onOpenLesson: (id: string) => void;
+  onRequestDelete?: (id: string) => void;
+};
+
+/**
+ * Memoized row — keeps per-cell handlers stable across parent FlatList re-renders
+ * (full-review minor [perf]).
+ */
+const PdfDocumentListRow = memo(function PdfDocumentListRow({
+  item,
+  onGenerate,
+  onOpenLesson,
+  onRequestDelete,
+}: PdfDocumentListRowProps) {
+  const handleGenerate = useCallback(() => onGenerate(item.id), [onGenerate, item.id]);
+  const handleOpenLesson = useCallback(() => onOpenLesson(item.id), [onOpenLesson, item.id]);
+  const handleDelete = useCallback(() => {
+    onRequestDelete?.(item.id);
+  }, [onRequestDelete, item.id]);
+
+  return (
+    <PdfDocumentListItem
+      filename={item.filename}
+      status={item.status}
+      statusLabel={item.statusLabel}
+      createdDateLabel={item.createdDateLabel}
+      pageCountLabel={item.pageCountLabel}
+      generateLabel={item.generateLabel}
+      retryLabel={item.retryLabel}
+      openLessonLabel={item.openLessonLabel}
+      generateAccessibilityLabel={item.generateAccessibilityLabel}
+      retryAccessibilityLabel={item.retryAccessibilityLabel}
+      openLessonAccessibilityLabel={item.openLessonAccessibilityLabel}
+      onGenerate={handleGenerate}
+      onOpenLesson={handleOpenLesson}
+      onDelete={onRequestDelete && item.deleteAccessibilityLabel ? handleDelete : undefined}
+      deleteAccessibilityLabel={item.deleteAccessibilityLabel}
+    />
+  );
+});
 
 /**
  * PdfDocumentList — presentational organism for the upload-screen PDF list
@@ -36,29 +80,23 @@ export const PdfDocumentList = ({
 
   const keyExtractor = useCallback((item: PdfDocumentListItemData) => item.id, []);
 
+  const handleRequestDelete = useCallback(
+    (id: string) => {
+      setPendingDeleteId(id);
+    },
+    [setPendingDeleteId],
+  );
+
   const renderItem = useCallback(
     ({ item }: { item: PdfDocumentListItemData }) => (
-      <PdfDocumentListItem
-        filename={item.filename}
-        status={item.status}
-        statusLabel={item.statusLabel}
-        createdDateLabel={item.createdDateLabel}
-        pageCountLabel={item.pageCountLabel}
-        generateLabel={item.generateLabel}
-        retryLabel={item.retryLabel}
-        openLessonLabel={item.openLessonLabel}
-        generateAccessibilityLabel={item.generateAccessibilityLabel}
-        retryAccessibilityLabel={item.retryAccessibilityLabel}
-        openLessonAccessibilityLabel={item.openLessonAccessibilityLabel}
-        onGenerate={() => onGenerate(item.id)}
-        onOpenLesson={() => onOpenLesson(item.id)}
-        onDelete={
-          onDelete && item.deleteAccessibilityLabel ? () => setPendingDeleteId(item.id) : undefined
-        }
-        deleteAccessibilityLabel={item.deleteAccessibilityLabel}
+      <PdfDocumentListRow
+        item={item}
+        onGenerate={onGenerate}
+        onOpenLesson={onOpenLesson}
+        onRequestDelete={onDelete ? handleRequestDelete : undefined}
       />
     ),
-    [onGenerate, onOpenLesson, onDelete, setPendingDeleteId],
+    [onGenerate, onOpenLesson, onDelete, handleRequestDelete],
   );
 
   if (state === 'loading') {

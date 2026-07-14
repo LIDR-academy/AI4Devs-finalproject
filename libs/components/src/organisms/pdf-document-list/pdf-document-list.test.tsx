@@ -266,6 +266,22 @@ describe('PdfDocumentList', () => {
     expect(screen.getByRole('button', { name: 'Open lesson for older.pdf' })).toBeTruthy();
   });
 
+  // @s21 — each row exposes an accessible name.
+  it('exposes an accessible name on each document row', async () => {
+    await render(
+      <PdfDocumentList
+        state="content"
+        documents={documents}
+        onGenerate={jest.fn()}
+        onOpenLesson={jest.fn()}
+        onRetry={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText('newer.pdf, Ready to generate')).toBeTruthy();
+    expect(screen.getByLabelText('older.pdf, Lesson ready')).toBeTruthy();
+  });
+
   // @s11/@s21 — delete only for rows that provide deleteAccessibilityLabel + onDelete.
   it('exposes an accessible delete control for deletable documents when onDelete is provided', async () => {
     await render(
@@ -582,5 +598,36 @@ describe('PdfDocumentList', () => {
 
     expect(screen.getByTestId('pdf-document-list').props.keyExtractor).toBe(first);
     expect(first(documents[0])).toBe('doc-2');
+  });
+
+  // Full-review minor [perf] — renderItem must stay stable when parent callbacks are stable.
+  it('keeps a stable FlatList renderItem identity across rerenders when callbacks are stable', async () => {
+    const onGenerate = jest.fn();
+    const onOpenLesson = jest.fn();
+    const onRetry = jest.fn();
+    const { rerender } = await render(
+      <PdfDocumentList
+        state="content"
+        documents={documents}
+        onGenerate={onGenerate}
+        onOpenLesson={onOpenLesson}
+        onRetry={onRetry}
+      />,
+    );
+    const first = screen.getByTestId('pdf-document-list').props.renderItem;
+
+    await act(async () => {
+      rerender(
+        <PdfDocumentList
+          state="content"
+          documents={documents}
+          onGenerate={onGenerate}
+          onOpenLesson={onOpenLesson}
+          onRetry={onRetry}
+        />,
+      );
+    });
+
+    expect(screen.getByTestId('pdf-document-list').props.renderItem).toBe(first);
   });
 });

@@ -44,6 +44,7 @@ const PDF_LIST_KEYS = [
   'pdfList.delete.confirmBody',
   'pdfList.delete.confirmAction',
   'pdfList.delete.cancelAction',
+  'pdfList.delete.failed',
 ];
 
 describe.each([

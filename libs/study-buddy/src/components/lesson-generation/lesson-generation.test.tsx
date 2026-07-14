@@ -11,7 +11,7 @@ const capturedPanelProps: {
     onGenerate: () => void;
     canGenerate: boolean;
     onCompositionChange: (value: string) => void;
-    onErrorAction: () => void;
+    onErrorAction?: () => void;
     errorActionLabel?: string;
   };
 } = {};
@@ -591,7 +591,7 @@ describe('LessonGeneration', () => {
 
     expect(capturedPanelProps.current?.errorActionLabel).toBeUndefined();
     await act(async () => {
-      capturedPanelProps.current?.onErrorAction();
+      capturedPanelProps.current?.onErrorAction?.();
     });
     expect(push).not.toHaveBeenCalled();
   });

@@ -2,7 +2,7 @@ import { PdfDocumentList } from '@helsoft/components';
 import { usePdfDocuments } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { Text, View } from 'react-native';
+import { AccessibilityInfo, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
 
 import { toPdfDocumentListItems, toPdfDocumentListState } from './pdf-documents.helpers';
@@ -18,6 +18,7 @@ export const PdfDocuments = ({ onGenerate, onOpenLesson, reloadToken }: PdfDocum
 
   const state = toPdfDocumentListState(isLoading, error, documents.length);
   const items = useMemo(() => toPdfDocumentListItems(documents, locale, t), [documents, locale, t]);
+  const deleteFailedLabel = t('pdfList.delete.failed');
 
   // Skip the initial mount — usePdfDocuments already loads once. Refetch only on later bumps.
   const isFirstTokenEffect = useRef(true);
@@ -48,6 +49,13 @@ export const PdfDocuments = ({ onGenerate, onOpenLesson, reloadToken }: PdfDocum
     [deleteDocument],
   );
 
+  // accessibilityLiveRegion covers Android/Web; iOS needs announceForAccessibility (WCAG 4.1.3).
+  useEffect(() => {
+    if (state === 'content' && error) {
+      AccessibilityInfo.announceForAccessibility(deleteFailedLabel);
+    }
+  }, [state, error, deleteFailedLabel]);
+
   return (
     <View style={styles.root}>
       <Text accessibilityRole="header" style={styles.heading}>
@@ -61,6 +69,11 @@ export const PdfDocuments = ({ onGenerate, onOpenLesson, reloadToken }: PdfDocum
         onRetry={refetch}
         onDelete={handleDelete}
       />
+      {state === 'content' && error ? (
+        <Text accessibilityLiveRegion="assertive" style={styles.deleteError}>
+          {deleteFailedLabel}
+        </Text>
+      ) : null}
     </View>
   );
 };
@@ -73,5 +86,9 @@ const styles = StyleSheet.create((theme) => ({
   heading: {
     ...theme.typography.headlineSmall,
     color: theme.colors.onSurface,
+  },
+  deleteError: {
+    ...theme.typography.bodyMedium,
+    color: theme.colors.error,
   },
 }));

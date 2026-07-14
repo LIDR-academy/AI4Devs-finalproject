@@ -58,6 +58,7 @@ export const de: TranslationResource = {
         confirmBody: 'Dadurch werden das PDF und seine extrahierten Daten dauerhaft entfernt.',
         confirmAction: 'Löschen',
         cancelAction: 'Abbrechen',
+        failed: 'Dieses PDF konnte nicht gelöscht werden.',
       },
     },
     lessons: {

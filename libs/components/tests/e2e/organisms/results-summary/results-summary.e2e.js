@@ -26,7 +26,7 @@ test('SaveFailed story shows the score alongside the save-failure notice', async
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
   await expect(canvas.locator('text=3 / 3')).toBeVisible();
-  await expect(canvas.locator("text=We couldn't save this attempt.")).toBeVisible();
+  await expect(canvas.locator("text=Couldn't save this attempt")).toBeVisible();
 });
 
 // @s7 — the retry action is present and operable (re-attempts the save). Clicks the text
@@ -37,7 +37,7 @@ test('SaveFailed story renders an operable retry action', async ({ page }) => {
   await page.goto(story('save-failed'));
   const canvas = page.frameLocator('iframe[title="storybook-preview-iframe"]');
 
-  const retryAction = canvas.locator('text=Retry').first();
+  const retryAction = canvas.locator('text=Try again').first();
   await expect(retryAction).toBeVisible();
   await retryAction.click();
 });

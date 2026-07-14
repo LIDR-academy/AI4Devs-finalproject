@@ -2,7 +2,6 @@
 
 **Active feature:** pending-pdfs-generate
 **Folder:** docs/features/pending-pdfs-generate/
-**Phase:** in_review
-**Status:** Pre-review mutation PASS. Full reviews_lead next.
-**Notes:** All agents on Grok. Pre-review sha recorded after this commit.
-pre_review_sha: 66d3a004e60fade1674a9118363d6a418b10527d
+**Phase:** mutation (post-review)
+**Status:** Full review APPROVED. Committing review fixes; post-review mutation next.
+**Notes:** All agents on Grok. pre_review_sha=8781bee2c998ee2165691bc906210fcaff7392bd

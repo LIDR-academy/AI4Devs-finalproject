@@ -74,6 +74,28 @@ describe('persistLesson', () => {
     expect(mock.insert).toHaveBeenCalledWith(expect.objectContaining({ document_id: 'doc-42' }));
   });
 
+  // Full-review minor [code] — clear stale generation_error_code after a successful persist.
+  it('clears documents.generation_error_code for the source document on success', async () => {
+    const lesson = makeLesson();
+    const mock = makeMockSupabase();
+
+    await persistLesson(mock as never, lesson, 'doc-1');
+
+    expect(mock.from).toHaveBeenCalledWith('documents');
+    expect(mock.update).toHaveBeenCalledWith({ generation_error_code: null });
+    expect(mock.eq).toHaveBeenCalledWith('id', 'doc-1');
+  });
+
+  it('throws when clearing generation_error_code fails after insert', async () => {
+    const lesson = makeLesson();
+    const mock = makeMockSupabase();
+    mock.eq.mockResolvedValue({ error: { message: 'clear failed' } });
+
+    await expect(persistLesson(mock as never, lesson, 'doc-1')).rejects.toEqual({
+      message: 'clear failed',
+    });
+  });
+
   // @s1/@s3 — stored slides must key on the real row id (not a stale minted id)
   it('rewrites slide lessonIds to the persisted row id before insert', async () => {
     const lesson = makeLesson({

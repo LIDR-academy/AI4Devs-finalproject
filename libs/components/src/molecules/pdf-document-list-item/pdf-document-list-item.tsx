@@ -42,7 +42,7 @@ export const PdfDocumentListItem = ({
 
   return (
     <View style={styles.row}>
-      <View style={styles.info}>
+      <View style={styles.info} accessible accessibilityLabel={`${filename}, ${statusLabel}`}>
         <Text style={styles.filename}>{filename}</Text>
         <Text style={styles.meta}>{statusLabel}</Text>
         <Text style={styles.meta}>{createdDateLabel}</Text>
