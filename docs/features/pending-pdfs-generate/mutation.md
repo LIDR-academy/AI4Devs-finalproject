@@ -144,3 +144,85 @@ libs/study-buddy/src/components/pdf-documents/pdf-documents.types.ts
 
 ### `@helsoft/study-buddy`
 - `src/components/lesson-generation/lesson-generation.tsx:68:6` [ArrayDeclaration] `}, []); → }, ["Stryker was here"]);`
+
+---
+
+## Post-review final verify (r2 — after killable fixes)
+**Base-ref:** `8781bee2c998ee2165691bc906210fcaff7392bd` · **Score: 97.65% (208/213 detected)** | **5 survivors** | **PASS** (all equivalents)
+
+Threshold = 100% killed on changed lines since pre-review sha. Met via Equivalents: **0 unjustified survivors**.
+
+Progress: post-review r1 95.74%/4 killable → **r2 97.65%/5 (all justified)**.
+
+Skipped: `@helsoft/services`, `@helsoft/hooks`, `@helsoft/logging-in-out`, `@helsoft/activities` (no changed mutate-able source since base-ref). Localization out of Stryker lib set.
+
+| Lib | Killed | Timeout | Survived | No cov | Score |
+|---|---|---|---|---|---|
+| `@helsoft/supabase-services` | 59 | 7 | 0 | 0 | 100.00% |
+| `@helsoft/components` | 68 | 26 | 5 | 0 | 94.95% |
+| `@helsoft/study-buddy` | 41 | 7 | 0 | 0 | 100.00% |
+| **TOTAL** | **168** | **40** | **5** | **0** | **97.65%** |
+
+Detected = killed + timeout. Score = detected / (detected + survived + no-cov).
+
+### Per-file (review-touched source)
+
+#### `@helsoft/supabase-services`
+| File | Killed | Timeout | Survived | No cov | Score |
+|---|---|---|---|---|---|
+| `pdf-documents.dao.ts` | 26 | 5 | 0 | 0 | 100.00% |
+| `lesson-generation.persist.ts` | 15 | 2 | 0 | 0 | 100.00% |
+| `pdf-documents.service.ts` | 18 | 0 | 0 | 0 | 100.00% |
+
+#### `@helsoft/components`
+| File | Killed | Timeout | Survived | No cov | Score |
+|---|---|---|---|---|---|
+| `pdf-document-list-item.tsx` | 12 | 26 | 0 | 0 | 100.00% |
+| `pdf-document-list.tsx` | 56 | 0 | 5 | 0 | 91.80% |
+
+#### `@helsoft/study-buddy`
+| File | Killed | Timeout | Survived | No cov | Score |
+|---|---|---|---|---|---|
+| `pdf-documents.tsx` | 41 | 7 | 0 | 0 | 100.00% |
+
+---
+
+## Survivors (unjustified / killable) — post-review
+
+None.
+
+### Killed since post-review r1
+1. `pdf-documents.dao.ts:51` NoCoverage `?? []` — null-data → `[]` test.
+2. `pdf-document-list.tsx:39` `handleOpenLesson` deps → `[]` — latest `onOpenLesson` after prop update.
+3. `pdf-documents.tsx:57` announce effect deps → `[]` — content → content+error transition announce.
+4. `pdf-documents.tsx:90` StyleSheet `deleteError` empty — now killed (was r1 equivalent; suite bites paint/tokens here).
+
+---
+
+## Equivalents (5) — post-review r2
+
+All in `@helsoft/components` (`pdf-document-list.tsx`):
+
+- `:41` [OptionalChaining] `onRequestDelete?.(item.id) → onRequestDelete(item.id)` — `handleDelete` only wired when `onRequestDelete` truthy; `?.` unobservable.
+- `:42` [ArrayDeclaration] `handleDelete` deps `[onRequestDelete, item.id] → []` — when provided, `onRequestDelete` is stable `handleRequestDelete` (`setPendingDeleteId`); FlatList `keyExtractor` remounts rows on id change so fresh `[]` closure still sees current `item.id` (document-replace test cannot observe emptied deps).
+- `:87` [ArrayDeclaration] `handleRequestDelete` deps `[setPendingDeleteId] → []` — React setState identity stable.
+- `:81` [ArrayDeclaration] `keyExtractor` deps `[] → ["Stryker was here"]` — unused dep; closes over `item.id` only.
+- `:178` [ObjectLiteral] `listContent: { gap… } → {}` — Unistyles layout token; unit tests assert structure/a11y/behavior, not StyleSheet paint.
+
+---
+
+## Files measured (post-review scope)
+```
+libs/supabase-services/src/dao/pdf-documents.dao.ts
+libs/supabase-services/src/services/lesson-generation.persist.ts
+libs/supabase-services/src/services/pdf-documents.service.ts
+libs/components/src/molecules/pdf-document-list-item/pdf-document-list-item.tsx
+libs/components/src/organisms/pdf-document-list/pdf-document-list.tsx
+libs/study-buddy/src/components/pdf-documents/pdf-documents.tsx
+```
+
+## Notes
+- Post-review r2 re-measure vs `8781bee2` after implementator killable fixes.
+- 5/5 remaining survivors justified as equivalents; 0 killable.
+- Timeouts count as detected (components×26, study-buddy×7, supabase×7).
+- Post-review r1 (95.74% / 4 killable) superseded by this section.

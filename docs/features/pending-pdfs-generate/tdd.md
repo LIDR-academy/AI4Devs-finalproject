@@ -49,3 +49,6 @@ DAO/hook/LG/PdfDocuments/list/Button kill tests. 95→32 survivors.
 - persist minor: RED clear `generation_error_code` on success; GREEN persist (+ edge twin).
 - @s21: RED row `accessibilityLabel`; GREEN info View label `filename, statusLabel`.
 - perf: RED stable `renderItem`; GREEN memo `PdfDocumentListRow` + `useCallback` handlers.
+
+## Post-review mutation (4 survivors)
+- DAO `?? []`: null data → `[]`. List row: latest `onOpenLesson`; delete uses current `item.id` after replace. PdfDocuments: announce on content→content+error transition.

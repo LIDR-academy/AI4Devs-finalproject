@@ -509,6 +509,94 @@ describe('PdfDocumentList', () => {
     expect(first).not.toHaveBeenCalled();
   });
 
+  // Mutation: PdfDocumentListRow handleOpenLesson deps → [] — stale onOpenLesson.
+  it('calls the latest onOpenLesson after the prop updates', async () => {
+    const first = jest.fn();
+    const second = jest.fn();
+    const { rerender } = await render(
+      <PdfDocumentList
+        state="content"
+        documents={documents}
+        onGenerate={jest.fn()}
+        onOpenLesson={first}
+        onRetry={jest.fn()}
+      />,
+    );
+
+    await act(async () => {
+      rerender(
+        <PdfDocumentList
+          state="content"
+          documents={documents}
+          onGenerate={jest.fn()}
+          onOpenLesson={second}
+          onRetry={jest.fn()}
+        />,
+      );
+    });
+
+    fireEvent.press(screen.getByRole('button', { name: 'Open lesson for older.pdf' }));
+    expect(second).toHaveBeenCalledWith('doc-1');
+    expect(first).not.toHaveBeenCalled();
+  });
+
+  // Mutation: PdfDocumentListRow handleDelete deps → [] — stale item.id after list update.
+  it('requests delete for the current row id after documents are replaced', async () => {
+    const onDelete = jest.fn();
+    const firstDocs = [
+      {
+        ...documents[0],
+        id: 'doc-old',
+        filename: 'swap.pdf',
+        generateAccessibilityLabel: 'Generate swap.pdf',
+        deleteAccessibilityLabel: 'Delete swap.pdf',
+      },
+    ];
+    const secondDocs = [
+      {
+        ...documents[0],
+        id: 'doc-new',
+        filename: 'swap.pdf',
+        generateAccessibilityLabel: 'Generate swap.pdf',
+        deleteAccessibilityLabel: 'Delete swap.pdf',
+      },
+    ];
+
+    const { rerender } = await render(
+      <PdfDocumentList
+        state="content"
+        documents={firstDocs}
+        onGenerate={jest.fn()}
+        onOpenLesson={jest.fn()}
+        onRetry={jest.fn()}
+        onDelete={onDelete}
+      />,
+    );
+
+    await act(async () => {
+      rerender(
+        <PdfDocumentList
+          state="content"
+          documents={secondDocs}
+          onGenerate={jest.fn()}
+          onOpenLesson={jest.fn()}
+          onRetry={jest.fn()}
+          onDelete={onDelete}
+        />,
+      );
+    });
+
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'Delete swap.pdf' }));
+    });
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'pdfList.delete.confirmAction' }));
+    });
+
+    expect(onDelete).toHaveBeenCalledWith('doc-new');
+    expect(onDelete).not.toHaveBeenCalledWith('doc-old');
+  });
+
   // Mutation: emptied StyleSheet empty/error tokens.
   it('styles the empty and error copy with theme colors', async () => {
     const flattenStyle = (style: unknown): Record<string, unknown> =>

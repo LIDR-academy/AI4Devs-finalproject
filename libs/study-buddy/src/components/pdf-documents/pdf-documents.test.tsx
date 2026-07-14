@@ -642,6 +642,40 @@ describe('PdfDocuments', () => {
     announceSpy.mockRestore();
   });
 
+  // Mutation: announce effect deps → [] — must re-announce when error appears after content mount.
+  it('announces delete failure when error appears after a successful content load', async () => {
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
+    const deleteFailed = "We couldn't delete that PDF.";
+    const contentDocs = [
+      {
+        id: 'doc-ready',
+        filename: 'notes.pdf',
+        pageCount: 12,
+        createdAt: '2026-07-13T12:00:00.000Z',
+        status: 'ready' as const,
+        lessonId: null,
+      },
+    ];
+
+    mockUsePdfDocuments.mockReturnValue(docsValue({ documents: contentDocs }));
+    const { rerender } = await render(
+      <PdfDocuments onGenerate={onGenerate} onOpenLesson={onOpenLesson} />,
+    );
+    expect(announceSpy).not.toHaveBeenCalledWith(deleteFailed);
+
+    mockUsePdfDocuments.mockReturnValue(
+      docsValue({ documents: contentDocs, error: new Error('delete failed') }),
+    );
+    await act(async () => {
+      rerender(<PdfDocuments onGenerate={onGenerate} onOpenLesson={onOpenLesson} />);
+    });
+
+    expect(announceSpy).toHaveBeenCalledWith(deleteFailed);
+    announceSpy.mockRestore();
+  });
+
   it('does not show the delete-failure banner while loading or on load error', async () => {
     mockUsePdfDocuments.mockReturnValue(
       docsValue({ isLoading: true, error: new Error('delete failed') }),

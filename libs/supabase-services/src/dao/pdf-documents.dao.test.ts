@@ -110,6 +110,13 @@ describe('PdfDocumentsDao', () => {
     await expect(PdfDocumentsDao.getDocuments()).rejects.toBe(error);
   });
 
+  // Mutation/NoCoverage: `(data as UserDocumentRow[]) ?? []` — null data with no error → [].
+  it('returns an empty array when getDocuments resolves null data without an error', async () => {
+    order.mockResolvedValue({ data: null, error: null });
+
+    await expect(PdfDocumentsDao.getDocuments()).resolves.toEqual([]);
+  });
+
   // Full-review major [arch] — DAO must not invent status / camelCase product fields.
   it('returns raw view rows without deriving status or remapping field names', async () => {
     order.mockResolvedValue({
