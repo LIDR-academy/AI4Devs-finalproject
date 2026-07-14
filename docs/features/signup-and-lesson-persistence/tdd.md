@@ -30,6 +30,8 @@
 | review-r1 | persist `.select('id')` only | `lesson-generation.persist.test.ts` |
 | review-r1 | migration orphan wipe guard | `20260714012201_*.sql` |
 | review-r1 | remove unused `getLessonById` | dao/service tests trimmed |
+| mut-post-r1 | FlatList `keyExtractor` → item.id | `lesson-list.test.tsx` |
+| mut-post-r1 | announce only when content+deleteError | `saved-lessons.test.tsx` |
 
 ## Slice 1 cycles
 
@@ -103,3 +105,9 @@
 - MINOR perf: memoize SavedLessons items/labels/handlers; FlatList `renderItem`/`keyExtractor`.
 - MINOR code: `LessonListProps` discriminated union — deleteConfirm* required when `onDelete` set.
 - Gate: unit + e2e green; lint + check-types clean. No commit (orchestrator).
+
+## Post-review mutation survivors round 1
+- RED→GREEN `keyExtractor` returns `item.id` (`lesson-list.test`).
+- RED→GREEN announce guard: NOT called unless content+deleteError (`saved-lessons.test`).
+- StyleSheet / unused-dep / stable-callback deps remain equivalents (see `mutation.md`).
+- No commit (orchestrator).

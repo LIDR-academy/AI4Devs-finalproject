@@ -99,6 +99,23 @@ describe('LessonList', () => {
     expect(screen.getByTestId('lesson-list')).toBeTruthy();
   });
 
+  // Mutation: keyExtractor → () => undefined — FlatList keys must stay stable per lesson id.
+  it('extracts each lesson id as the FlatList key', async () => {
+    await render(
+      <LessonList
+        state="content"
+        lessons={lessons}
+        labels={labels}
+        onOpenLesson={jest.fn()}
+        onRetry={jest.fn()}
+      />,
+    );
+
+    const list = screen.getByTestId('lesson-list');
+    expect(list.props.keyExtractor(lessons[0])).toBe('lesson-2');
+    expect(list.props.keyExtractor(lessons[1])).toBe('lesson-1');
+  });
+
   // @s4/@s6 — open action forwards the lesson id.
   it('calls onOpenLesson with the lesson id when an item is pressed', async () => {
     const onOpenLesson = jest.fn();

@@ -319,6 +319,42 @@ describe('SavedLessons', () => {
     expect(screen.getByText("We couldn't load your lessons.")).toBeTruthy();
   });
 
+  // Mutation: announce guard `if (content && error)` → true / || / state→true — announce only w/ banner.
+  it('does not announce delete failure unless content shows a delete error', async () => {
+    const announceSpy = jest
+      .spyOn(AccessibilityInfo, 'announceForAccessibility')
+      .mockImplementation(() => {});
+    const deleteFailed = "We couldn't delete that lesson.";
+
+    mockUseLessons.mockReturnValue(
+      lessonsValue({
+        lessons: [
+          {
+            id: 'lesson-1',
+            title: 'One',
+            createdAt: '2026-07-13T12:00:00.000Z',
+          },
+        ],
+      }),
+    );
+    await render(<SavedLessons />);
+    expect(announceSpy).not.toHaveBeenCalledWith(deleteFailed);
+
+    announceSpy.mockClear();
+    mockUseLessons.mockReturnValue(
+      lessonsValue({ isLoading: true, error: new Error('delete failed') }),
+    );
+    await render(<SavedLessons />);
+    expect(announceSpy).not.toHaveBeenCalledWith(deleteFailed);
+
+    announceSpy.mockClear();
+    mockUseLessons.mockReturnValue(lessonsValue({ error: new Error('load failed'), lessons: [] }));
+    await render(<SavedLessons />);
+    expect(announceSpy).not.toHaveBeenCalledWith(deleteFailed);
+
+    announceSpy.mockRestore();
+  });
+
   // Mutation: confirm i18n keys → "" — dialog copy must use the real home.delete.* strings.
   it('shows localized delete confirmation copy from home.delete.* keys', async () => {
     mockUseLessons.mockReturnValue(
