@@ -161,6 +161,10 @@ export const en = {
     player: {
       intro: 'Slide player for lesson {{id}}',
       finish: 'Finish lesson',
+      loading: 'Loading lesson…',
+      next: 'Next',
+      back: 'Back',
+      slideOf: 'Slide {{current}} of {{total}}',
     },
     results: {
       score: '{{correct}} / {{total}}',

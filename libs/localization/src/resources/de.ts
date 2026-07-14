@@ -145,6 +145,10 @@ export const de: TranslationResource = {
     player: {
       intro: 'Folien-Player für Lektion {{id}}',
       finish: 'Lektion abschließen',
+      loading: 'Lektion wird geladen…',
+      next: 'Weiter',
+      back: 'Zurück',
+      slideOf: 'Folie {{current}} von {{total}}',
     },
     results: {
       score: '{{correct}} / {{total}}',

@@ -3,7 +3,7 @@ id: task-1
 title: Load full lesson (with slides) by id — DAO → Service → Hook
 slice: 1
 scenarios: [s17]
-status: todo
+status: done
 paths:
   - libs/supabase-services/src/dao/lessons.dao.ts
   - libs/supabase-services/src/services/lessons.service.ts

@@ -3,7 +3,7 @@ id: task-4
 title: LessonPlayer deck — nav, progress, results as final slide
 slice: 1
 scenarios: [s1, s2, s3, s4, s10, s11, s17, s20]
-status: todo
+status: done
 paths:
   - libs/components/src/molecules/progress-indicator/progress-indicator.tsx
   - libs/components/src/molecules/progress-indicator/progress-indicator.types.ts

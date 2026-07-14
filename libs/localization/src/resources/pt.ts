@@ -142,6 +142,10 @@ export const pt: TranslationResource = {
     player: {
       intro: 'Reprodutor de slides da lição {{id}}',
       finish: 'Concluir lição',
+      loading: 'Carregando lição…',
+      next: 'Próximo',
+      back: 'Voltar',
+      slideOf: 'Slide {{current}} de {{total}}',
     },
     results: {
       score: '{{correct}} / {{total}}',

@@ -18,6 +18,7 @@ import type {
   GenerationProgressStep,
   LessonSummary,
   PdfDocumentSummary,
+  SlideImageRef,
 } from '@helsoft/types';
 import { useCallback, useState } from 'react';
 
@@ -325,4 +326,30 @@ export const useLessonGeneration = () => {
   }, [error, generate, result]);
 
   return { stage, currentStep, result, error, generate, retry };
+};
+
+// --- useSlideImageUrl ----------------------------------------------------------
+
+export type SlideImageUrlMockConfig = {
+  url?: string | null;
+  isLoading?: boolean;
+};
+
+let pendingSlideImageConfig: SlideImageUrlMockConfig = {};
+
+export const configureSlideImageUrlMock = (config: SlideImageUrlMockConfig) => {
+  pendingSlideImageConfig = config;
+};
+
+/** Storybook stand-in — never hits Supabase storage. */
+export const useSlideImageUrl = (_imageRef?: SlideImageRef) => {
+  const [config] = useState(() => {
+    const next = pendingSlideImageConfig;
+    pendingSlideImageConfig = {};
+    return next;
+  });
+  return {
+    url: config.url ?? null,
+    isLoading: config.isLoading ?? false,
+  };
 };

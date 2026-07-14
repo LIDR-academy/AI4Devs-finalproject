@@ -3,7 +3,7 @@ id: task-2
 title: SlideView renderer — instructional + activity wiring
 slice: 1
 scenarios: [s5, s6]
-status: todo
+status: done
 paths:
   - libs/study-buddy/src/components/slide-view/slide-view.tsx
   - libs/study-buddy/src/components/slide-view/slide-view.types.ts

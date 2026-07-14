@@ -3,7 +3,7 @@ id: task-5
 title: Results slide — build GradedAnswer[] on entry + render LessonResults inline (save once)
 slice: 1
 scenarios: [s13, s14, s21]
-status: todo
+status: done
 paths:
   - libs/study-buddy/src/components/lesson-player/lesson-player.helpers.ts
   - libs/study-buddy/src/components/lesson-player/lesson-player.helpers.test.ts

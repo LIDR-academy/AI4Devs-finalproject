@@ -15,10 +15,12 @@ export const LessonResults = ({
   answers,
   onRetake,
   onBackToLessons,
+  persistOnMount = true,
 }: LessonResultsProps) => {
   const { variant, loading, saveFailed, correct, total, onRetrySave } = useLessonResults({
     lesson,
     answers,
+    persistOnMount,
   });
 
   return (

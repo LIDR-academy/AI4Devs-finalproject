@@ -247,6 +247,30 @@ describe('LessonResults', () => {
     expect(saveAttempt).toHaveBeenCalledWith({ lessonId: 'lesson-1', score: 3, total: 3 });
   });
 
+  // @s21 feed — persistOnMount false skips save (deck already saved this session).
+  it('does not call saveAttempt when persistOnMount is false', async () => {
+    const saveAttempt = jest.fn();
+    mockUseLessonAttempt.mockReturnValue({
+      status: 'idle',
+      attempt: null,
+      saveAttempt,
+      retry: jest.fn(),
+    });
+    mockUseLocalization.mockReturnValue(localizationValue());
+
+    await render(
+      <LessonResults
+        lesson={scorableLesson}
+        answers={allCorrectAnswers}
+        onRetake={jest.fn()}
+        onBackToLessons={jest.fn()}
+        persistOnMount={false}
+      />,
+    );
+
+    expect(saveAttempt).not.toHaveBeenCalled();
+  });
+
   // @s6 — a re-render (e.g. a parent state change, not a remount) does not double-save.
   it('does not call saveAttempt again on a re-render with the same lesson/answers', async () => {
     const saveAttempt = jest.fn();

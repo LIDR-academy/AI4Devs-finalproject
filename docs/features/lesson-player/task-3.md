@@ -3,7 +3,7 @@ id: task-3
 title: Slide image — signed-URL data stack + SlideImage molecule
 slice: 1
 scenarios: [s7, s8]
-status: todo
+status: done
 paths:
   - libs/supabase-services/src/dao/lesson-image.dao.ts
   - libs/supabase-services/src/services/lesson-image.service.ts
