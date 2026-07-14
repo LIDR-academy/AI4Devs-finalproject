@@ -415,4 +415,97 @@ describe('LessonGeneration', () => {
     }).not.toThrow();
     expect(push).not.toHaveBeenCalled();
   });
+
+  // pending-pdfs-generate task-10 — onGenerated fires once on success (@s9 wiring).
+  describe('onGenerated (task-10)', () => {
+    const readyResult = {
+      lessonId: 'lesson-1',
+      title: 'Photosynthesis',
+      composition: 'both' as const,
+      slides: [],
+    };
+
+    // @s9 — fires exactly once when generation reaches Content/ready.
+    it('fires onGenerated once when stage becomes content with a lessonId', async () => {
+      const onGenerated = jest.fn();
+      mockUseLessonGeneration.mockReturnValue(hookValue({ stage: 'idle' }));
+      const { rerender } = await render(
+        <LessonGeneration documentId="doc-1" onGenerated={onGenerated} />,
+      );
+
+      expect(onGenerated).not.toHaveBeenCalled();
+
+      mockUseLessonGeneration.mockReturnValue(hookValue({ stage: 'content', result: readyResult }));
+      await act(async () => {
+        rerender(<LessonGeneration documentId="doc-1" onGenerated={onGenerated} />);
+      });
+
+      expect(onGenerated).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not fire onGenerated while stage is idle', async () => {
+      const onGenerated = jest.fn();
+      mockUseLessonGeneration.mockReturnValue(hookValue({ stage: 'idle' }));
+
+      await render(<LessonGeneration documentId="doc-1" onGenerated={onGenerated} />);
+
+      expect(onGenerated).not.toHaveBeenCalled();
+    });
+
+    it('does not fire onGenerated while stage is generating', async () => {
+      const onGenerated = jest.fn();
+      mockUseLessonGeneration.mockReturnValue(
+        hookValue({ stage: 'generating', currentStep: 'reading' }),
+      );
+
+      await render(<LessonGeneration documentId="doc-1" onGenerated={onGenerated} />);
+
+      expect(onGenerated).not.toHaveBeenCalled();
+    });
+
+    it('does not fire onGenerated while stage is error', async () => {
+      const onGenerated = jest.fn();
+      mockUseLessonGeneration.mockReturnValue(hookValue({ stage: 'error', error: 'timeout' }));
+
+      await render(<LessonGeneration documentId="doc-1" onGenerated={onGenerated} />);
+
+      expect(onGenerated).not.toHaveBeenCalled();
+    });
+
+    it('does not re-fire onGenerated on a re-render with the same lessonId', async () => {
+      const onGenerated = jest.fn();
+      mockUseLessonGeneration.mockReturnValue(hookValue({ stage: 'content', result: readyResult }));
+      const { rerender } = await render(
+        <LessonGeneration documentId="doc-1" onGenerated={onGenerated} />,
+      );
+      expect(onGenerated).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        rerender(<LessonGeneration documentId="doc-1" onGenerated={onGenerated} />);
+      });
+
+      expect(onGenerated).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not throw when onGenerated is omitted and stage is content', async () => {
+      mockUseLessonGeneration.mockReturnValue(hookValue({ stage: 'content', result: readyResult }));
+
+      await expect(render(<LessonGeneration documentId="doc-1" />)).resolves.toBeTruthy();
+    });
+
+    // Same gate as handleOpenInPlayer — empty/whitespace lessonId must not fire.
+    it('does not fire onGenerated when result lessonId is empty or whitespace', async () => {
+      const onGenerated = jest.fn();
+      mockUseLessonGeneration.mockReturnValue(
+        hookValue({
+          stage: 'content',
+          result: { ...readyResult, lessonId: '   ' },
+        }),
+      );
+
+      await render(<LessonGeneration documentId="doc-1" onGenerated={onGenerated} />);
+
+      expect(onGenerated).not.toHaveBeenCalled();
+    });
+  });
 });

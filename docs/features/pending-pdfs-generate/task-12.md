@@ -3,7 +3,7 @@ id: task-12
 title: upload.tsx composition — Generate targets that doc → shared panel; reload token on extract/generate
 slice: 3
 scenarios: [s1, s5, s6, s9, s10]
-status: todo
+status: done
 paths: [apps/app-study-buddy/src/app/(app)/upload.tsx, libs/study-buddy/src/components/pdf-documents/pdf-documents.integration.test.tsx]
 ---
 
@@ -20,11 +20,11 @@ one `documentId` (`useState`, R2 decision #9); extend the composition minimally:
   new doc extracts (@s10) or a generation resolves and the row flips (@s9).
 
 ## Done criteria
-- [ ] Scenario(s) {s1, s5, s6, s9, s10} covered by an integration test (list + new-upload coexist; Generate targets doc; token bumps refetch)
-- [ ] Screen stays a thin shell: only `useState` glue + composition, no business logic
-- [ ] `onExtracted` still sets `documentId` AND bumps the token; `onGenerated` bumps the token
-- [ ] Generate/Retry set the active `documentId` (feeds the shared panel), not a separate flow
-- [ ] `pnpm lint` + `pnpm check-types` + `pnpm test` green
+- [x] Scenario(s) {s1, s5, s6, s9, s10} covered by an integration test (list + new-upload coexist; Generate targets doc; token bumps refetch)
+- [x] Screen stays a thin shell: only `useState` glue + composition, no business logic
+- [x] `onExtracted` still sets `documentId` AND bumps the token; `onGenerated` bumps the token
+- [x] Generate/Retry set the active `documentId` (feeds the shared panel), not a separate flow
+- [x] `pnpm lint` + `pnpm check-types` + `pnpm test` green
 
 ## Notes
 Keeps R2's sibling-handoff (a lifted `useState`); the row's explicit Generate button replaces the

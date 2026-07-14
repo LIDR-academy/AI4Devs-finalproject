@@ -17,6 +17,7 @@ import type {
   GenerationErrorCode,
   GenerationProgressStep,
   LessonSummary,
+  PdfDocumentSummary,
 } from '@helsoft/types';
 import { useCallback, useState } from 'react';
 
@@ -221,6 +222,42 @@ export const useLessons = () => {
   }, []);
 
   return { lessons, isLoading, error, refetch, deleteLesson };
+};
+
+// --- usePdfDocuments ------------------------------------------------------------
+
+export type PdfDocumentsMockConfig = {
+  documents?: PdfDocumentSummary[];
+  isLoading?: boolean;
+  error?: Error | null;
+};
+
+let pendingPdfDocumentsConfig: PdfDocumentsMockConfig = {};
+
+export const configurePdfDocumentsMock = (config: PdfDocumentsMockConfig) => {
+  pendingPdfDocumentsConfig = config;
+};
+
+export const usePdfDocuments = () => {
+  const [config] = useState(() => {
+    const next = pendingPdfDocumentsConfig;
+    pendingPdfDocumentsConfig = {};
+    return next;
+  });
+  const [documents, setDocuments] = useState<PdfDocumentSummary[]>(config.documents ?? []);
+  const [isLoading] = useState(config.isLoading ?? false);
+  const [error, setError] = useState<Error | null>(config.error ?? null);
+
+  const refetch = useCallback(() => {
+    setError(null);
+  }, []);
+
+  const deleteDocument = useCallback((id: string): Promise<void> => {
+    setDocuments((prev) => prev.filter((doc) => doc.id !== id));
+    return Promise.resolve();
+  }, []);
+
+  return { documents, isLoading, error, refetch, deleteDocument };
 };
 
 // --- useLessonGeneration -------------------------------------------------------

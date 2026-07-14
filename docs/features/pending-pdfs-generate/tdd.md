@@ -18,6 +18,9 @@
 | @s1/@s2/@s3/@s4/@s5/@s6/@s7/@s11 | PdfDocumentListItem fields/actions/delete | `pdf-document-list-item.test.tsx` |
 | @s1/@s12/@s13/@s14/@s15/@s16/@s21 | PdfDocumentList states/Dialog/a11y | `pdf-document-list.test.tsx` + e2e |
 | @s20 | pdfList.* locale parity en/es/pt/de | `pdf-list-locale-parity.test.ts` |
+| @s9 | LessonGeneration onGenerated once on success | `lesson-generation.test.tsx` |
+| @s5/@s6/@s7/@s11/@s12/@s13 | PdfDocuments raises/delete/reloadToken | `pdf-documents.test.tsx` |
+| @s1/@s5/@s6/@s9/@s10 | upload glue + wiring→DAO integration | `pdf-documents.integration.test.tsx` |
 
 ## Slice 1 cycles
 - T1 KEEP migration. T2–T6 RED→GREEN types/DAO/service/hook/persist. Gate green.
@@ -26,4 +29,10 @@
 - T7 RED→GREEN PdfDocumentListItem (status→action, conditional delete); Button `accessibilityLabel`; stories + e2e.
 - T8 RED→GREEN PdfDocumentList (4 states, FlatList, Dialog confirm/dismiss, a11y announce); stories + e2e.
 - T9 RED→GREEN `pdfList.*` keys (en/es/pt/de) + locale-parity coverage.
+- Gate: unit + e2e + lint + check-types. No commit (lead after reviewer_slice).
+
+## Slice 3 cycles
+- T10 RED→GREEN `onGenerated?` (once on content+lessonId; skip idle/error/re-render/omit).
+- T11 RED→GREEN helpers + PdfDocuments wiring (t/date → list; onGenerate/onOpenLesson/delete; reloadToken refetch); stories + e2e.
+- T12 RED→GREEN integration glue (Generate/Retry set docId; extract/onGenerated bump token) + `upload.tsx` thin shell.
 - Gate: unit + e2e + lint + check-types. No commit (lead after reviewer_slice).
