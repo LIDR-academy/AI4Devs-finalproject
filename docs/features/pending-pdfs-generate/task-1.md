@@ -3,7 +3,7 @@ id: task-1
 title: Migration — lessons.document_id FK, documents.generation_error_code, user_documents view
 slice: 1
 scenarios: [s1, s4, s17, s18, s19]
-status: todo
+status: done
 paths: [supabase/migrations/]
 ---
 

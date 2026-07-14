@@ -3,7 +3,7 @@ id: task-2
 title: Types — PdfDocumentSummary + PdfDocumentStatus
 slice: 1
 scenarios: [s2, s3, s4]
-status: todo
+status: done
 paths: [libs/types/src/pdf-document-summary.ts, libs/types/src/index.ts, libs/types/src/index.test.ts]
 ---
 

@@ -23,7 +23,7 @@ import { z } from 'npm:zod@4';
 
 import { assembleGeneratedLesson } from './_shared/lesson-generation.assembly.ts';
 import { GenerationTimeoutError, mapGenerationError } from './_shared/lesson-generation.errors.ts';
-import { persistLesson } from './_shared/lesson-generation.persist.ts';
+import { markDocumentGenerationFailure, persistLesson } from './_shared/lesson-generation.persist.ts';
 import { placeImagesByMetadata } from './_shared/lesson-generation.placement.ts';
 import { buildDeckPrompt } from './_shared/lesson-generation.prompt.ts';
 import { deckSchema } from './_shared/lesson-generation.schema.ts';
@@ -191,6 +191,12 @@ Deno.serve(async (req) => {
   const { data: keyRows } = await adminClient.rpc('get_api_key', { p_user_id: user.id });
   const keyRow = Array.isArray(keyRows) ? keyRows[0] : keyRows;
   if (!keyRow?.api_key) {
+    // Document identified — mark so the PDF list shows Retry (@s3/@s8).
+    try {
+      await markDocumentGenerationFailure(callerClient, documentId, 'missing_key');
+    } catch {
+      // best-effort; still return the typed generation error
+    }
     return errorResponse('missing_key', 422);
   }
 
@@ -267,8 +273,9 @@ Deno.serve(async (req) => {
     // Persist under the caller JWT so RLS stamps user_id = auth.uid() (@s1); never service-role.
     // On failure persistLesson throws persist_failed → mapGenerationError → non-2xx (@s2).
     // persistLesson known-uuid inserts + rewrites slides before write; response mirrors that id (@s3).
+    // document_id links the lesson for PDF-list "lesson ready" (@s4/@s9).
     const lesson = await withTimeout(generateLesson(), GENERATION_TIMEOUT_MS);
-    const lessonId = await persistLesson(callerClient, lesson);
+    const lessonId = await persistLesson(callerClient, lesson, documentId);
     const persisted: GeneratedLesson = {
       ...lesson,
       lessonId,
@@ -279,6 +286,12 @@ Deno.serve(async (req) => {
     // Redacted per @s8 -- never log the request body, the key, or the raw provider error; the
     // typed mapping below is the only thing derived from `cause`.
     const { errorCode, status } = mapGenerationError(cause);
+    // Document identified — mark so the PDF list shows Retry (@s3/@s8).
+    try {
+      await markDocumentGenerationFailure(callerClient, documentId, errorCode);
+    } catch {
+      // best-effort; still return the typed generation error
+    }
     return errorResponse(errorCode, status);
   }
 });

@@ -9,5 +9,6 @@ export * from './lesson-attempt';
 export * from './lesson-generation';
 export * from './lesson-summary';
 export * from './locale';
+export * from './pdf-document-summary';
 export * from './scorable-slide';
 export * from './score-summary';

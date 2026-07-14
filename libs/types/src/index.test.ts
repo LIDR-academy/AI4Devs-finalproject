@@ -1,4 +1,10 @@
-import type { LessonAttempt, LessonSummary, NewLessonAttempt, ScoreSummary } from './index';
+import type {
+  LessonAttempt,
+  LessonSummary,
+  NewLessonAttempt,
+  PdfDocumentSummary,
+  ScoreSummary,
+} from './index';
 
 // Barrel coverage (task-1 Done criteria) — ScoreSummary and LessonAttempt/NewLessonAttempt are
 // plain shapes with no runtime guard of their own; this pins their fields and that they resolve
@@ -46,6 +52,27 @@ describe('types barrel', () => {
       id: 'lesson-1',
       title: 'Photosynthesis',
       createdAt: '2026-07-13T00:00:00.000Z',
+    });
+  });
+
+  // pending-pdfs-generate task-2 — PdfDocumentSummary resolves through the types barrel.
+  it('exposes a PdfDocumentSummary shape with status and lessonId', () => {
+    const summary: PdfDocumentSummary = {
+      id: 'doc-1',
+      filename: 'notes.pdf',
+      pageCount: 3,
+      createdAt: '2026-07-14T00:00:00.000Z',
+      status: 'ready',
+      lessonId: null,
+    };
+
+    expect(summary).toEqual({
+      id: 'doc-1',
+      filename: 'notes.pdf',
+      pageCount: 3,
+      createdAt: '2026-07-14T00:00:00.000Z',
+      status: 'ready',
+      lessonId: null,
     });
   });
 });

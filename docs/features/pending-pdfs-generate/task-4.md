@@ -3,7 +3,7 @@ id: task-4
 title: PdfDocumentsService — validate + normalize failures
 slice: 1
 scenarios: [s1, s12]
-status: todo
+status: done
 paths: [libs/supabase-services/src/services/pdf-documents.service.ts, libs/supabase-services/src/services/pdf-documents.service.test.ts, libs/supabase-services/src/index.ts]
 ---
 

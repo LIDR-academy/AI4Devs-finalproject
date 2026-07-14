@@ -3,7 +3,7 @@ id: task-5
 title: usePdfDocuments hook — reducer state, refetch, deleteDocument
 slice: 1
 scenarios: [s8, s9, s10, s12, s15, s16]
-status: todo
+status: done
 paths: [libs/hooks/src/hooks/use-pdf-documents.ts, libs/hooks/src/hooks/use-pdf-documents.reducer.ts, libs/hooks/src/hooks/use-pdf-documents.types.ts, libs/hooks/src/hooks/use-pdf-documents.test.ts, libs/hooks/src/index.ts]
 ---
 

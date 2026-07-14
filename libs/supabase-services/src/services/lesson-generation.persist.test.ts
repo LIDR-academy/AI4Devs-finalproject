@@ -1,5 +1,6 @@
 import type { GeneratedLesson, InstructionalSlide } from '@helsoft/types';
-import { persistLesson } from './lesson-generation.persist';
+
+import { markDocumentGenerationFailure, persistLesson } from './lesson-generation.persist';
 
 const makeSlide = (overrides: Partial<InstructionalSlide> = {}): InstructionalSlide => ({
   id: 'slide-1',
@@ -37,8 +38,10 @@ const makeMockSupabase = (
     }
     return { select };
   });
-  const from = jest.fn(() => ({ insert }));
-  return { from, insert, select, single };
+  const eq = jest.fn().mockResolvedValue({ error: null });
+  const update = jest.fn(() => ({ eq }));
+  const from = jest.fn(() => ({ insert, update }));
+  return { from, insert, select, single, update, eq };
 };
 
 describe('persistLesson', () => {
@@ -47,17 +50,28 @@ describe('persistLesson', () => {
     const lesson = makeLesson();
     const mock = makeMockSupabase();
 
-    const id = await persistLesson(mock as never, lesson);
+    const id = await persistLesson(mock as never, lesson, 'doc-1');
 
     expect(mock.from).toHaveBeenCalledWith('lessons');
     expect(mock.insert).toHaveBeenCalledWith({
       id: lesson.lessonId,
       title: lesson.title,
       slides: lesson.slides,
+      document_id: 'doc-1',
     });
     // Full-review minor [perf] — only `id` is used; avoid returning full slides jsonb.
     expect(mock.select).toHaveBeenCalledWith('id');
     expect(id).toBe(lesson.lessonId);
+  });
+
+  // pending-pdfs-generate @s4/@s9 — link the lesson to its source document on success.
+  it('writes document_id on the lessons insert', async () => {
+    const lesson = makeLesson();
+    const mock = makeMockSupabase();
+
+    await persistLesson(mock as never, lesson, 'doc-42');
+
+    expect(mock.insert).toHaveBeenCalledWith(expect.objectContaining({ document_id: 'doc-42' }));
   });
 
   // @s1/@s3 — stored slides must key on the real row id (not a stale minted id)
@@ -68,7 +82,7 @@ describe('persistLesson', () => {
     });
     const mock = makeMockSupabase({ data: { id: 'db-row-id' } });
 
-    const id = await persistLesson(mock as never, lesson);
+    const id = await persistLesson(mock as never, lesson, 'doc-1');
 
     expect(mock.insert).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -87,7 +101,7 @@ describe('persistLesson', () => {
     const lesson = makeLesson();
     const mock = makeMockSupabase();
 
-    await persistLesson(mock as never, lesson);
+    await persistLesson(mock as never, lesson, 'doc-1');
 
     expect(mock.insert).toHaveBeenCalledWith(
       expect.not.objectContaining({ user_id: expect.anything() }),
@@ -96,6 +110,7 @@ describe('persistLesson', () => {
       id: lesson.lessonId,
       title: lesson.title,
       slides: lesson.slides,
+      document_id: 'doc-1',
     });
   });
 
@@ -104,7 +119,7 @@ describe('persistLesson', () => {
     const lesson = makeLesson();
     const mock = makeMockSupabase({ data: null, error: { message: 'insert failed' } });
 
-    await expect(persistLesson(mock as never, lesson)).rejects.toMatchObject({
+    await expect(persistLesson(mock as never, lesson, 'doc-1')).rejects.toMatchObject({
       code: 'persist_failed',
       message: 'persistLesson: failed to persist lesson row',
     });
@@ -115,9 +130,31 @@ describe('persistLesson', () => {
     const lesson = makeLesson();
     const mock = makeMockSupabase({ data: null, error: null });
 
-    await expect(persistLesson(mock as never, lesson)).rejects.toMatchObject({
+    await expect(persistLesson(mock as never, lesson, 'doc-1')).rejects.toMatchObject({
       code: 'persist_failed',
       message: 'persistLesson: failed to persist lesson row',
     });
+  });
+});
+
+describe('markDocumentGenerationFailure', () => {
+  // pending-pdfs-generate @s3/@s8 — record generation_error_code after the doc is identified.
+  it('updates documents.generation_error_code for the given document id', async () => {
+    const mock = makeMockSupabase();
+
+    await markDocumentGenerationFailure(mock as never, 'doc-1', 'timeout');
+
+    expect(mock.from).toHaveBeenCalledWith('documents');
+    expect(mock.update).toHaveBeenCalledWith({ generation_error_code: 'timeout' });
+    expect(mock.eq).toHaveBeenCalledWith('id', 'doc-1');
+  });
+
+  it('throws when the documents update fails', async () => {
+    const mock = makeMockSupabase();
+    mock.eq.mockResolvedValue({ error: { message: 'update failed' } });
+
+    await expect(
+      markDocumentGenerationFailure(mock as never, 'doc-1', 'provider_error'),
+    ).rejects.toEqual({ message: 'update failed' });
   });
 });

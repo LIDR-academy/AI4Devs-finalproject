@@ -3,7 +3,7 @@ id: task-3
 title: PdfDocumentsDao — list from view (derive status); delete purges storage + row
 slice: 1
 scenarios: [s1, s4, s12, s17, s18, s19]
-status: todo
+status: done
 paths: [libs/supabase-services/src/dao/pdf-documents.dao.ts, libs/supabase-services/src/dao/pdf-documents.dao.test.ts, libs/supabase-services/src/index.ts]
 ---
 

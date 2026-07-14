@@ -3,7 +3,7 @@ id: task-6
 title: Cross-cutting generate-lesson — persist writes document_id (link); record generation_error_code on failure
 slice: 1
 scenarios: [s3, s4, s8, s9]
-status: todo
+status: done
 paths: [libs/supabase-services/src/services/lesson-generation.persist.ts, supabase/functions/generate-lesson/_shared/lesson-generation.persist.ts, supabase/functions/generate-lesson/index.ts, libs/supabase-services/src/services/lesson-generation.persist.test.ts]
 ---
 
