@@ -111,6 +111,32 @@ export const ResultsSlide: Story = {
   },
 };
 
+/** @s12 — answer France, leave, return → prior answer restored locked. */
+export const AnswerRestore: Story = {
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Next' }));
+    await userEvent.click(canvas.getByText('Paris'));
+    await userEvent.click(canvas.getByRole('button', { name: 'Submit' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Next' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Back' }));
+    await expect(canvas.getByText('Correct')).toBeTruthy();
+    await expect(canvas.getByText('France')).toBeTruthy();
+  },
+};
+
+/** @s18 — retake from results returns to first content slide. */
+export const Retake: Story = {
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole('button', { name: 'Next' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Next' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Next' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Next' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Retake activities' }));
+    await expect(canvas.getByText('Welcome')).toBeTruthy();
+    await expect(canvas.getByText('Slide 1 of 5')).toBeTruthy();
+  },
+};
+
 export const WithImageSlide: Story = {
   args: {
     lesson: {

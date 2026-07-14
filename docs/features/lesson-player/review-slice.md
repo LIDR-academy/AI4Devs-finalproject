@@ -1,11 +1,8 @@
-# review-slice — lesson-player Slice 1 (round 2)
+# review-slice — lesson-player Slice 2 (round 2)
 
 **Verdict:** APPROVED
 
 ## Findings
 
-None. Round-1 items 1–7 verified fixed:
-- `persistOnMount` in reducer; `State`/`Action` private
-- `MidDeck`/`ResultsSlide` play coverage; `WithImage` uses `configureSlideImageUrlMock`
-- molecule renamed `lesson-progress-indicator/`
-- `ActivityBodyProps` named; unused `initialAnswer` removed
+None. Round-1 item verified fixed:
+- FITB / matching / flashcard each have co-located `@s12` organism-forward (or restore) tests — deleting wrapper `initialAnswer={…}` would fail those suites

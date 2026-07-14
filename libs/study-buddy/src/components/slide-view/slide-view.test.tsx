@@ -2,42 +2,112 @@ jest.mock('../slide-image/slide-image', () => ({
   SlideImage: () => null,
 }));
 jest.mock('../multiple-choice-activity/multiple-choice-activity', () => ({
-  MultipleChoiceActivity: ({ slide }: { slide: { content: string } }) => {
-    const { Text } = require('react-native');
-    return <Text testID="activity-multiple-choice">{slide.content}</Text>;
+  MultipleChoiceActivity: ({
+    slide,
+    initialAnswer,
+  }: {
+    slide: { content: string };
+    initialAnswer?: { selectedOptionId?: string } | null;
+  }) => {
+    const { Text, View } = require('react-native');
+    return (
+      <View testID="activity-multiple-choice">
+        <Text>{slide.content}</Text>
+        {initialAnswer?.selectedOptionId ? (
+          <Text testID="mc-initial">{initialAnswer.selectedOptionId}</Text>
+        ) : null}
+      </View>
+    );
   },
 }));
 jest.mock('../fill-in-the-blank-activity/fill-in-the-blank-activity', () => ({
-  FillInTheBlankActivity: ({ slide }: { slide: { content: string } }) => {
-    const { Text } = require('react-native');
-    return <Text testID="activity-fill-in-the-blank">{slide.content}</Text>;
+  FillInTheBlankActivity: ({
+    slide,
+    initialAnswer,
+  }: {
+    slide: { content: string };
+    initialAnswer?: { submittedAnswer?: string } | null;
+  }) => {
+    const { Text, View } = require('react-native');
+    return (
+      <View testID="activity-fill-in-the-blank">
+        <Text>{slide.content}</Text>
+        {initialAnswer?.submittedAnswer ? (
+          <Text testID="fitb-initial">{initialAnswer.submittedAnswer}</Text>
+        ) : null}
+      </View>
+    );
   },
 }));
 jest.mock('../matching-activity/matching-activity', () => ({
-  MatchingActivity: ({ slide }: { slide: { content: string } }) => {
-    const { Text } = require('react-native');
-    return <Text testID="activity-matching">{slide.content}</Text>;
+  MatchingActivity: ({
+    slide,
+    initialAnswer,
+  }: {
+    slide: { content: string };
+    initialAnswer?: { isCorrect?: boolean } | null;
+  }) => {
+    const { Text, View } = require('react-native');
+    return (
+      <View testID="activity-matching">
+        <Text>{slide.content}</Text>
+        {initialAnswer ? (
+          <Text testID="matching-initial">{String(initialAnswer.isCorrect)}</Text>
+        ) : null}
+      </View>
+    );
   },
 }));
 jest.mock('../flashcard-activity/flashcard-activity', () => ({
-  FlashcardActivity: ({ slide }: { slide: { content: string } }) => {
-    const { Text } = require('react-native');
-    return <Text testID="activity-flashcard">{slide.content}</Text>;
+  FlashcardActivity: ({
+    slide,
+    initialAnswer,
+  }: {
+    slide: { content: string };
+    initialAnswer?: { recalled?: boolean } | null;
+  }) => {
+    const { Text, View } = require('react-native');
+    return (
+      <View testID="activity-flashcard">
+        <Text>{slide.content}</Text>
+        {initialAnswer ? (
+          <Text testID="flashcard-initial">{String(initialAnswer.recalled)}</Text>
+        ) : null}
+      </View>
+    );
   },
 }));
 jest.mock('../open-ended-activity/open-ended-activity', () => ({
-  OpenEndedActivity: ({ slide }: { slide: { content: string } }) => {
-    const { Text } = require('react-native');
-    return <Text testID="activity-open-ended">{slide.content}</Text>;
+  OpenEndedActivity: ({
+    slide,
+    initialAnswer,
+  }: {
+    slide: { content: string };
+    initialAnswer?: { submittedAnswer?: string } | null;
+  }) => {
+    const { Text, View } = require('react-native');
+    return (
+      <View testID="activity-open-ended">
+        <Text>{slide.content}</Text>
+        {initialAnswer?.submittedAnswer ? (
+          <Text testID="oe-initial">{initialAnswer.submittedAnswer}</Text>
+        ) : null}
+      </View>
+    );
   },
 }));
 
 import type {
+  FillInTheBlankAnswer,
   FillInTheBlankSlide,
+  FlashcardAnswer,
   FlashcardSlide,
   InstructionalSlide,
+  MatchingAnswer,
   MatchingSlide,
+  MultipleChoiceAnswer,
   MultipleChoiceSlide,
+  OpenEndedAnswer,
   OpenEndedSlide,
 } from '@helsoft/types';
 import { render, screen } from '@testing-library/react-native';
@@ -136,5 +206,60 @@ describe('SlideView', () => {
     expect(screen.getByText(slide.title)).toBeTruthy();
     expect(screen.getByTestId(testId)).toBeTruthy();
     expect(screen.getByText(slide.content)).toBeTruthy();
+  });
+
+  // @s12 — SlideView forwards stored answer to the activity wrapper.
+  it('forwards initialAnswer to the multiple-choice wrapper', async () => {
+    const answer: MultipleChoiceAnswer = {
+      slideId: multipleChoice.id,
+      activityType: 'multiple-choice',
+      selectedOptionId: 'opt-a',
+      correctOptionId: 'opt-a',
+      isCorrect: true,
+    };
+    await render(<SlideView slide={multipleChoice} initialAnswer={answer} />);
+
+    expect(screen.getByTestId('mc-initial').props.children).toBe('opt-a');
+  });
+
+  it('forwards initialAnswer to fill-in-the-blank, matching, flashcard, and open-ended', async () => {
+    const fitb: FillInTheBlankAnswer = {
+      slideId: fillBlank.id,
+      activityType: 'fill-in-the-blank',
+      submittedAnswer: 'Paris',
+      acceptedAnswerShown: 'Paris',
+      isCorrect: true,
+    };
+    const matchAns: MatchingAnswer = {
+      slideId: matching.id,
+      activityType: 'matching',
+      pairs: [{ leftId: 'l1', rightId: 'r1', isCorrect: true }],
+      correctPairCount: 1,
+      totalPairCount: 1,
+      isCorrect: true,
+    };
+    const flashAns: FlashcardAnswer = {
+      slideId: flashcard.id,
+      activityType: 'flashcard',
+      recalled: true,
+      isCorrect: true,
+    };
+    const oeAns: OpenEndedAnswer = {
+      slideId: openEnded.id,
+      activityType: 'open-ended',
+      submittedAnswer: 'prior essay',
+    };
+
+    await render(<SlideView slide={fillBlank} initialAnswer={fitb} />);
+    expect(screen.getByTestId('fitb-initial').props.children).toBe('Paris');
+
+    await render(<SlideView slide={matching} initialAnswer={matchAns} />);
+    expect(screen.getByTestId('matching-initial').props.children).toBe('true');
+
+    await render(<SlideView slide={flashcard} initialAnswer={flashAns} />);
+    expect(screen.getByTestId('flashcard-initial').props.children).toBe('true');
+
+    await render(<SlideView slide={openEnded} initialAnswer={oeAns} />);
+    expect(screen.getByTestId('oe-initial').props.children).toBe('prior essay');
   });
 });

@@ -2,24 +2,76 @@ jest.mock('@helsoft/localization', () => ({
   useLocalization: jest.fn(),
 }));
 jest.mock('../slide-view/slide-view', () => ({
-  SlideView: ({ slide }: { slide: { title: string; id: string } }) => {
-    const { Text } = require('react-native');
-    return <Text testID={`slide-${slide.id}`}>{slide.title}</Text>;
+  SlideView: ({
+    slide,
+    onAnswered,
+    initialAnswer,
+  }: {
+    slide: { title: string; id: string; activityType?: string; correctOptionId?: string };
+    onAnswered?: (answer: {
+      slideId: string;
+      activityType: 'multiple-choice';
+      selectedOptionId: string;
+      correctOptionId: string;
+      isCorrect: boolean;
+    }) => void;
+    initialAnswer?: { selectedOptionId?: string } | null;
+  }) => {
+    const { Text, Pressable, View } = require('react-native');
+    return (
+      <View testID={`slide-${slide.id}`}>
+        <Text>{slide.title}</Text>
+        {initialAnswer?.selectedOptionId ? (
+          <Text testID="restored-answer">{initialAnswer.selectedOptionId}</Text>
+        ) : null}
+        {slide.activityType === 'multiple-choice' ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Answer activity"
+            onPress={() =>
+              onAnswered?.({
+                slideId: slide.id,
+                activityType: 'multiple-choice',
+                selectedOptionId: 'a',
+                correctOptionId: slide.correctOptionId ?? 'a',
+                isCorrect: true,
+              })
+            }
+          >
+            <Text>Answer activity</Text>
+          </Pressable>
+        ) : null}
+      </View>
+    );
   },
 }));
 jest.mock('../lesson-results/lesson-results', () => ({
   LessonResults: ({
     persistOnMount,
     answers,
+    onRetake,
+    onBackToLessons,
   }: {
     persistOnMount?: boolean;
     answers: { slideId: string; isCorrect: boolean }[];
+    onRetake?: () => void;
+    onBackToLessons?: () => void;
   }) => {
-    const { Text, View } = require('react-native');
+    const { Text, Pressable, View } = require('react-native');
     return (
       <View testID="lesson-results">
         <Text testID="persist-flag">{persistOnMount ? 'persist' : 'no-persist'}</Text>
         <Text testID="graded-count">{String(answers.length)}</Text>
+        <Pressable accessibilityRole="button" accessibilityLabel="Retake" onPress={onRetake}>
+          <Text>Retake</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Back to lessons"
+          onPress={onBackToLessons}
+        >
+          <Text>Back to lessons</Text>
+        </Pressable>
       </View>
     );
   },
@@ -212,5 +264,92 @@ describe('LessonPlayer', () => {
 
     expect(screen.getByTestId('lesson-results')).toBeTruthy();
     expect(screen.getByTestId('persist-flag').props.children).toBe('no-persist');
+  });
+
+  // @s12 — returning to an answered activity restores prior answer.
+  it('restores the prior in-session answer when navigating back to an activity', async () => {
+    await render(<LessonPlayer lesson={lesson} onBackToLessons={jest.fn()} />);
+
+    await pressNext(); // → activity s2
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'Answer activity' }));
+    });
+    await pressNext(); // leave s2
+    await pressBack(); // return to s2
+
+    expect(screen.getByTestId('slide-s2')).toBeTruthy();
+    expect(screen.getByTestId('restored-answer').props.children).toBe('a');
+  });
+
+  // @s20 answer-restore — Back from results keeps last content slide's answer.
+  it('restores the last content slide answer when going Back from results', async () => {
+    const lessonEndingOnActivity: Lesson = {
+      ...lesson,
+      slides: lesson.slides.slice(0, 3), // s1, s2, s3 — s3 is last content (activity)
+    };
+    await render(<LessonPlayer lesson={lessonEndingOnActivity} onBackToLessons={jest.fn()} />);
+
+    await pressNext(); // s2
+    await pressNext(); // s3
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'Answer activity' }));
+    });
+    await pressNext(); // results
+    await pressBack(); // back to s3
+
+    expect(screen.getByTestId('slide-s3')).toBeTruthy();
+    expect(screen.getByTestId('restored-answer').props.children).toBe('a');
+  });
+
+  // @s18 — Retake wipes session and returns to first content slide.
+  it('retakes by clearing answers and returning to the first content slide', async () => {
+    await render(<LessonPlayer lesson={lesson} onBackToLessons={jest.fn()} />);
+
+    await pressNext(); // s2
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'Answer activity' }));
+    });
+    for (let i = 0; i < 3; i++) await pressNext(); // → results
+
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'Retake' }));
+    });
+
+    expect(screen.getByTestId('slide-s1')).toBeTruthy();
+    expect(screen.queryByTestId('lesson-results')).toBeNull();
+    expect(screen.getByText('Slide 1 of 5')).toBeTruthy();
+    expect(screen.queryByTestId('restored-answer')).toBeNull();
+
+    await pressNext(); // s2 again — prior answer must be gone
+    expect(screen.queryByTestId('restored-answer')).toBeNull();
+  });
+
+  // @s22 — finishing again after retake persists a new attempt.
+  it('persists again when entering results after a retake', async () => {
+    await render(<LessonPlayer lesson={lesson} onBackToLessons={jest.fn()} />);
+
+    for (let i = 0; i < 4; i++) await pressNext();
+    expect(screen.getByTestId('persist-flag').props.children).toBe('persist');
+
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'Retake' }));
+    });
+    for (let i = 0; i < 4; i++) await pressNext();
+
+    expect(screen.getByTestId('lesson-results')).toBeTruthy();
+    expect(screen.getByTestId('persist-flag').props.children).toBe('persist');
+  });
+
+  // @s18 — onBackToLessons is threaded to results (screen owns the route hop).
+  it('calls onBackToLessons from the results slide', async () => {
+    const onBackToLessons = jest.fn();
+    await render(<LessonPlayer lesson={lesson} onBackToLessons={onBackToLessons} />);
+
+    for (let i = 0; i < 4; i++) await pressNext();
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'Back to lessons' }));
+    });
+
+    expect(onBackToLessons).toHaveBeenCalledTimes(1);
   });
 });

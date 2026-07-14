@@ -4,7 +4,7 @@ jest.mock('@helsoft/localization', () => ({
   }),
 }));
 
-import type { FlashcardSlide } from '@helsoft/types';
+import type { FlashcardAnswer, FlashcardSlide } from '@helsoft/types';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
 import { FlashcardActivity } from './flashcard-activity';
@@ -18,6 +18,13 @@ const slide: FlashcardSlide = {
   kind: 'activity',
   activityType: 'flashcard',
   back: 'Chlorophyll',
+};
+
+const recalledAnswer: FlashcardAnswer = {
+  slideId: 'slide-1',
+  activityType: 'flashcard',
+  recalled: true,
+  isCorrect: true,
 };
 
 describe('FlashcardActivity', () => {
@@ -40,5 +47,21 @@ describe('FlashcardActivity', () => {
       recalled: true,
       isCorrect: true,
     });
+  });
+
+  // @s12 — restore seeds revealed + locked from prior in-session answer.
+  it('restores revealed and locked state from initialAnswer', async () => {
+    const onAnswered = jest.fn();
+    await render(
+      <FlashcardActivity slide={slide} onAnswered={onAnswered} initialAnswer={recalledAnswer} />,
+    );
+
+    expect(screen.getByText(slide.back)).toBeTruthy();
+    expect(screen.getByText('activity.flashcard.recalledConfirmed')).toBeTruthy();
+    expect(
+      screen.getByRole('button', { name: 'activity.flashcard.recalledConfirmed' }).props
+        .accessibilityState.disabled,
+    ).toBe(true);
+    expect(onAnswered).not.toHaveBeenCalled();
   });
 });

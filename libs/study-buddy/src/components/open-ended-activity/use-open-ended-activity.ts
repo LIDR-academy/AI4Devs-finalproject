@@ -8,13 +8,18 @@ import { OPEN_ENDED_MAX_LENGTH } from './open-ended-activity.helpers';
 type UseOpenEndedActivityArgs = {
   slide: OpenEndedSlide;
   onAnswered?: (answer: OpenEndedAnswer) => void;
+  initialAnswer?: OpenEndedAnswer | null;
 };
 
 /**
  * Validity + labels + answered-state emission for OpenEndedActivity.
  */
-export const useOpenEndedActivity = ({ slide, onAnswered }: UseOpenEndedActivityArgs) => {
-  const [answered, setAnswered] = useState<OpenEndedAnswer | null>(null);
+export const useOpenEndedActivity = ({
+  slide,
+  onAnswered,
+  initialAnswer = null,
+}: UseOpenEndedActivityArgs) => {
+  const [answered, setAnswered] = useState<OpenEndedAnswer | null>(initialAnswer);
   const valid = isOpenEndedSlideValid(slide);
 
   const submit = (submittedAnswer: string) => {

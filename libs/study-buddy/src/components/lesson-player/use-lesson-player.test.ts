@@ -65,4 +65,47 @@ describe('useLessonPlayer', () => {
     expect(result.current.isResultsSlide).toBe(true);
     expect(result.current.persistOnMount).toBe(false);
   });
+
+  // @s18 / @s22 — reset clears session so next results entry may persist again.
+  it('reset returns to first slide and allows a fresh persist after retake', async () => {
+    const { result } = await renderHook(() => useLessonPlayer(lesson));
+    await act(async () => {
+      result.current.goNext();
+    });
+    await act(async () => {
+      result.current.onAnswered({
+        slideId: 's2',
+        activityType: 'multiple-choice',
+        selectedOptionId: 'a',
+        correctOptionId: 'a',
+        isCorrect: true,
+      });
+    });
+    await act(async () => {
+      result.current.goNext();
+    });
+    expect(result.current.isResultsSlide).toBe(true);
+    expect(result.current.attemptSaved).toBe(true);
+    expect(Object.keys(result.current.answers)).toHaveLength(1);
+
+    await act(async () => {
+      result.current.reset();
+    });
+
+    expect(result.current.currentIndex).toBe(0);
+    expect(result.current.answers).toEqual({});
+    expect(result.current.attemptSaved).toBe(false);
+    expect(result.current.persistOnMount).toBe(true);
+    expect(result.current.isResultsSlide).toBe(false);
+
+    await act(async () => {
+      result.current.goNext();
+    });
+    await act(async () => {
+      result.current.goNext();
+    });
+    expect(result.current.isResultsSlide).toBe(true);
+    expect(result.current.persistOnMount).toBe(true);
+    expect(result.current.attemptSaved).toBe(true);
+  });
 });

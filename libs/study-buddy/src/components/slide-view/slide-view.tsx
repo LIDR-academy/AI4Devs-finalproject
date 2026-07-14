@@ -13,7 +13,7 @@ import type { ActivityBodyProps, SlideViewProps } from './slide-view.types';
  * SlideView — presentational renderer for one content Slide (instructional or activity).
  * Results slide is NOT rendered here — the player mounts LessonResults for that step.
  */
-export const SlideView = ({ slide, onAnswered }: SlideViewProps) => (
+export const SlideView = ({ slide, onAnswered, initialAnswer }: SlideViewProps) => (
   <View style={styles.root}>
     <Text accessibilityRole="header" style={styles.title}>
       {slide.title}
@@ -22,23 +22,57 @@ export const SlideView = ({ slide, onAnswered }: SlideViewProps) => (
     {slide.kind === 'instructional' ? (
       <Text style={styles.content}>{slide.content}</Text>
     ) : (
-      <ActivityBody slide={slide} onAnswered={onAnswered} />
+      <ActivityBody slide={slide} onAnswered={onAnswered} initialAnswer={initialAnswer} />
     )}
   </View>
 );
 
-const ActivityBody = ({ slide, onAnswered }: ActivityBodyProps) => {
+const ActivityBody = ({ slide, onAnswered, initialAnswer }: ActivityBodyProps) => {
   switch (slide.activityType) {
     case 'multiple-choice':
-      return <MultipleChoiceActivity slide={slide} onAnswered={onAnswered} />;
+      return (
+        <MultipleChoiceActivity
+          slide={slide}
+          onAnswered={onAnswered}
+          initialAnswer={
+            initialAnswer?.activityType === 'multiple-choice' ? initialAnswer : undefined
+          }
+        />
+      );
     case 'fill-in-the-blank':
-      return <FillInTheBlankActivity slide={slide} onAnswered={onAnswered} />;
+      return (
+        <FillInTheBlankActivity
+          slide={slide}
+          onAnswered={onAnswered}
+          initialAnswer={
+            initialAnswer?.activityType === 'fill-in-the-blank' ? initialAnswer : undefined
+          }
+        />
+      );
     case 'matching':
-      return <MatchingActivity slide={slide} onAnswered={onAnswered} />;
+      return (
+        <MatchingActivity
+          slide={slide}
+          onAnswered={onAnswered}
+          initialAnswer={initialAnswer?.activityType === 'matching' ? initialAnswer : undefined}
+        />
+      );
     case 'flashcard':
-      return <FlashcardActivity slide={slide} onAnswered={onAnswered} />;
+      return (
+        <FlashcardActivity
+          slide={slide}
+          onAnswered={onAnswered}
+          initialAnswer={initialAnswer?.activityType === 'flashcard' ? initialAnswer : undefined}
+        />
+      );
     case 'open-ended':
-      return <OpenEndedActivity slide={slide} onAnswered={onAnswered} />;
+      return (
+        <OpenEndedActivity
+          slide={slide}
+          onAnswered={onAnswered}
+          initialAnswer={initialAnswer?.activityType === 'open-ended' ? initialAnswer : undefined}
+        />
+      );
   }
 };
 

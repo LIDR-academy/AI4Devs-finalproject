@@ -136,4 +136,25 @@ describe('OpenEndedActivity', () => {
     expect(screen.queryByRole('button', { name: labels.submit })).toBeNull();
     expect(onAnswered).not.toHaveBeenCalled();
   });
+
+  // @s12 — restore maps stored submittedAnswer → initialSubmittedAnswer (locked).
+  it('restores a prior submitted answer as locked with model answer visible', async () => {
+    const onAnswered = jest.fn();
+    await render(
+      <OpenEndedActivity
+        slide={slide}
+        onAnswered={onAnswered}
+        initialAnswer={{
+          slideId: slide.id,
+          activityType: 'open-ended',
+          submittedAnswer: 'prior essay',
+        }}
+      />,
+    );
+
+    expect(answerInput().props.value).toBe('prior essay');
+    expect(answerInput().props.editable).toBe(false);
+    expect(screen.getByText(slide.modelAnswer)).toBeTruthy();
+    expect(onAnswered).not.toHaveBeenCalled();
+  });
 });

@@ -40,7 +40,11 @@ export const LessonPlayer = ({ lesson, onBackToLessons }: LessonPlayerProps) => 
             persistOnMount={player.persistOnMount}
           />
         ) : player.currentSlide ? (
-          <SlideView slide={player.currentSlide} onAnswered={player.onAnswered} />
+          <SlideView
+            slide={player.currentSlide}
+            onAnswered={player.onAnswered}
+            initialAnswer={player.answers[player.currentSlide.id]}
+          />
         ) : null}
       </View>
       <View style={styles.nav}>

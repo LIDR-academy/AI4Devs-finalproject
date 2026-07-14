@@ -9,8 +9,12 @@ export { OPEN_ENDED_MAX_LENGTH } from './open-ended-activity.helpers';
  * Thin feature wiring — validity + labels + answered-state emission.
  * Organism owns ephemeral draft/lock; no grader.
  */
-export const OpenEndedActivity = ({ slide, onAnswered }: OpenEndedActivityProps) => {
-  const { valid, maxLength, submit } = useOpenEndedActivity({ slide, onAnswered });
+export const OpenEndedActivity = ({ slide, onAnswered, initialAnswer }: OpenEndedActivityProps) => {
+  const { valid, maxLength, submit } = useOpenEndedActivity({
+    slide,
+    onAnswered,
+    initialAnswer,
+  });
 
   return (
     <OpenEnded
@@ -19,6 +23,7 @@ export const OpenEndedActivity = ({ slide, onAnswered }: OpenEndedActivityProps)
       explanation={slide.explanation}
       unavailable={!valid}
       maxLength={maxLength}
+      initialSubmittedAnswer={initialAnswer?.submittedAnswer}
       onSubmit={submit}
     />
   );
