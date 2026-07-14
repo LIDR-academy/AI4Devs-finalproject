@@ -102,6 +102,7 @@ describe('LessonGenerationService', () => {
       ['generation_failed'],
       ['document_not_ready'],
       ['missing_key'],
+      ['persist_failed'],
     ] as const)('normalizes a %s server error', async (errorCode) => {
       dao.generateLesson.mockRejectedValue(httpErrorWithBody({ errorCode }));
 

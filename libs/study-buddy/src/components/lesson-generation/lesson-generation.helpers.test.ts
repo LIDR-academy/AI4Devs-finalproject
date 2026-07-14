@@ -52,6 +52,7 @@ describe('GENERATION_ERROR_KEYS (task-13)', () => {
       document_not_ready: 'generation.error.documentNotReady',
       network_error: 'generation.error.network',
       unauthenticated: 'generation.error.unauthenticated',
+      persist_failed: 'generation.error.persistFailed',
     });
   });
 });
@@ -68,6 +69,7 @@ describe('GENERATION_ERROR_RECOVERY (task-13)', () => {
       document_not_ready: 'none',
       network_error: 'retry',
       unauthenticated: 'signIn',
+      persist_failed: 'retry',
     });
   });
 });

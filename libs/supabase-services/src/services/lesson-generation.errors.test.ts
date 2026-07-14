@@ -76,6 +76,13 @@ describe('mapGenerationError', () => {
     });
   });
 
+  // @s2 — a persist_failed typed error from the Edge persist step maps to persist_failed (retry only).
+  it('maps a persist_failed typed error to persist_failed', () => {
+    const cause = Object.assign(new Error('persistLesson: failed'), { code: 'persist_failed' });
+
+    expect(mapGenerationError(cause)).toEqual({ errorCode: 'persist_failed', status: 500 });
+  });
+
   // @s8 redaction — the mapped result never carries anything from the raw cause (no message,
   // no key material, no provider response body) — only the two typed fields.
   it('never includes any property from the raw cause in the mapped result', () => {

@@ -82,6 +82,7 @@ export const pt: TranslationResource = {
         documentNotReady: 'Este documento ainda não está pronto. Reenvie seu PDF.',
         network: 'Erro de rede. Tente novamente.',
         unauthenticated: 'Entre na sua conta para gerar uma lição.',
+        persistFailed: 'Não foi possível salvar sua lição. Tente novamente.',
         action: {
           retry: 'Tentar novamente',
           settings: 'Ir para Configurações',

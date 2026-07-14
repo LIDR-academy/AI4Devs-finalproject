@@ -32,6 +32,7 @@ export const GENERATION_ERROR_CODES: Record<GenerationErrorCode, true> = {
   document_not_ready: true,
   network_error: true,
   unauthenticated: true,
+  persist_failed: true,
 };
 
 const isKnownErrorCode = (code: unknown): code is GenerationErrorCode =>

@@ -82,6 +82,7 @@ export const es: TranslationResource = {
         documentNotReady: 'Este documento aún no está listo. Vuelve a subir tu PDF.',
         network: 'Error de red. Vuelve a intentarlo.',
         unauthenticated: 'Inicia sesión para generar una lección.',
+        persistFailed: 'No se pudo guardar tu lección. Vuelve a intentarlo.',
         action: {
           retry: 'Volver a intentar',
           settings: 'Ir a Ajustes',

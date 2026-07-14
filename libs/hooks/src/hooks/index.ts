@@ -8,5 +8,7 @@ export * from './use-lesson-attempt';
 export type * from './use-lesson-attempt.types';
 export * from './use-lesson-generation';
 export type * from './use-lesson-generation.types';
+export * from './use-lessons';
+export type * from './use-lessons.types';
 export * from './use-session';
 export type * from './use-session.types';

@@ -1,4 +1,4 @@
-import type { LessonAttempt, NewLessonAttempt, ScoreSummary } from './index';
+import type { LessonAttempt, LessonSummary, NewLessonAttempt, ScoreSummary } from './index';
 
 // Barrel coverage (task-1 Done criteria) — ScoreSummary and LessonAttempt/NewLessonAttempt are
 // plain shapes with no runtime guard of their own; this pins their fields and that they resolve
@@ -32,5 +32,20 @@ describe('types barrel', () => {
     const newAttempt: NewLessonAttempt = { lessonId: 'lesson-1', score: 3, total: 3 };
 
     expect(newAttempt).toEqual({ lessonId: 'lesson-1', score: 3, total: 3 });
+  });
+
+  // signup-and-lesson-persistence task-3 — LessonSummary resolves through the types barrel.
+  it('exposes a LessonSummary shape with id/title/createdAt', () => {
+    const summary: LessonSummary = {
+      id: 'lesson-1',
+      title: 'Photosynthesis',
+      createdAt: '2026-07-13T00:00:00.000Z',
+    };
+
+    expect(summary).toEqual({
+      id: 'lesson-1',
+      title: 'Photosynthesis',
+      createdAt: '2026-07-13T00:00:00.000Z',
+    });
   });
 });

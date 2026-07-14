@@ -17,8 +17,8 @@ export type GenerateLessonRequest = {
 };
 
 /**
- * The in-memory deck generation resolves with (spec.md Open decision #5) — no `lessons` row is
- * written; `lessonId` is the forward-compatible handle R5 will later adopt as its PK.
+ * The deck generation resolves with after server-side persist — `lessonId` is the real
+ * `lessons.id` row (R5); the Edge Function replaces any minted in-memory id before returning.
  */
 export type GeneratedLesson = {
   lessonId: string;
@@ -59,7 +59,8 @@ export type GenerationErrorCode =
   | 'generation_failed'
   | 'document_not_ready'
   | 'network_error'
-  | 'unauthenticated';
+  | 'unauthenticated'
+  | 'persist_failed';
 
 /** The minimal shape a normalized generation failure carries upward from
  * `LessonGenerationService` (mirrors `PdfExtractionError`/`ApiKeyError`). */

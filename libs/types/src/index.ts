@@ -7,6 +7,7 @@ export * from './graded-answer';
 export * from './lesson';
 export * from './lesson-attempt';
 export * from './lesson-generation';
+export * from './lesson-summary';
 export * from './locale';
 export * from './scorable-slide';
 export * from './score-summary';

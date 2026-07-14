@@ -85,6 +85,7 @@ export const de: TranslationResource = {
         documentNotReady: 'Dieses Dokument ist noch nicht bereit. Lade dein PDF erneut hoch.',
         network: 'Netzwerkfehler. Versuche es erneut.',
         unauthenticated: 'Bitte melde dich an, um eine Lektion zu generieren.',
+        persistFailed: 'Deine Lektion konnte nicht gespeichert werden. Versuche es erneut.',
         action: {
           retry: 'Erneut versuchen',
           settings: 'Zu den Einstellungen',

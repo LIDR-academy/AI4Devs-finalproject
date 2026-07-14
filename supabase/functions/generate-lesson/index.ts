@@ -23,6 +23,7 @@ import { z } from 'npm:zod@4';
 
 import { assembleGeneratedLesson } from './_shared/lesson-generation.assembly.ts';
 import { GenerationTimeoutError, mapGenerationError } from './_shared/lesson-generation.errors.ts';
+import { persistLesson } from './_shared/lesson-generation.persist.ts';
 import { placeImagesByMetadata } from './_shared/lesson-generation.placement.ts';
 import { buildDeckPrompt } from './_shared/lesson-generation.prompt.ts';
 import { deckSchema } from './_shared/lesson-generation.schema.ts';
@@ -263,8 +264,17 @@ Deno.serve(async (req) => {
   };
 
   try {
+    // Persist under the caller JWT so RLS stamps user_id = auth.uid() (@s1); never service-role.
+    // On failure persistLesson throws persist_failed → mapGenerationError → non-2xx (@s2).
+    // persistLesson known-uuid inserts + rewrites slides before write; response mirrors that id (@s3).
     const lesson = await withTimeout(generateLesson(), GENERATION_TIMEOUT_MS);
-    return jsonResponse(lesson, 200);
+    const lessonId = await persistLesson(callerClient, lesson);
+    const persisted: GeneratedLesson = {
+      ...lesson,
+      lessonId,
+      slides: lesson.slides.map((slide) => ({ ...slide, lessonId })),
+    };
+    return jsonResponse(persisted, 200);
   } catch (cause) {
     // Redacted per @s8 -- never log the request body, the key, or the raw provider error; the
     // typed mapping below is the only thing derived from `cause`.

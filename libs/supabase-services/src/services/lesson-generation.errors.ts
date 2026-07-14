@@ -32,6 +32,13 @@ export const mapGenerationError = (cause: unknown): GenerationErrorMapping => {
   if (cause instanceof GenerationSchemaError) {
     return { errorCode: 'generation_failed', status: 502 };
   }
+  if (
+    typeof cause === 'object' &&
+    cause !== null &&
+    (cause as { code?: unknown }).code === 'persist_failed'
+  ) {
+    return { errorCode: 'persist_failed', status: 500 };
+  }
 
   const statusCode = apiCallStatusCode(cause);
   if (statusCode === 401 || statusCode === 403) return { errorCode: 'invalid_key', status: 401 };

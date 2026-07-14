@@ -98,7 +98,8 @@ export type GenerationErrorCode =
   | 'generation_failed'
   | 'document_not_ready'
   | 'network_error'
-  | 'unauthenticated';
+  | 'unauthenticated'
+  | 'persist_failed';
 
 /** Mirrors the client-side `GenerationError` shape (`{ code }`) -- the Edge Function's own wire
  * response body uses `{ errorCode }` object literals directly (matching extract-pdf/

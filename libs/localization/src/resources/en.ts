@@ -100,6 +100,7 @@ export const en = {
         documentNotReady: "This document isn't ready yet. Please re-upload your PDF.",
         network: 'Network error. Try again.',
         unauthenticated: 'Please sign in to generate a lesson.',
+        persistFailed: 'Your lesson could not be saved. Try again.',
         action: {
           retry: 'Try again',
           settings: 'Go to Settings',

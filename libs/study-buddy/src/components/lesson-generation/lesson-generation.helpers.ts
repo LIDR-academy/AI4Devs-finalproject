@@ -28,6 +28,7 @@ export const GENERATION_ERROR_KEYS: Record<GenerationErrorCode, string> = {
   document_not_ready: 'generation.error.documentNotReady',
   network_error: 'generation.error.network',
   unauthenticated: 'generation.error.unauthenticated',
+  persist_failed: 'generation.error.persistFailed',
 };
 
 /** The recovery-affordance category per code (task-13.md's "Recovery per code" table): `'none'`
@@ -44,6 +45,7 @@ export const GENERATION_ERROR_RECOVERY: Record<GenerationErrorCode, GenerationEr
   document_not_ready: 'none',
   network_error: 'retry',
   unauthenticated: 'signIn',
+  persist_failed: 'retry',
 };
 
 /** The recovery action's `t()` label key per actionable category (`'none'` has no button, so no

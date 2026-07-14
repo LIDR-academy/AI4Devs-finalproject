@@ -24,7 +24,7 @@ describe('GenerateLessonRequest', () => {
   });
 });
 
-// @s3 — the in-memory deck generation resolves with; no `lessons` row is written (Open decision #5).
+// @s3 — the deck generation resolves with; after Edge persist, lessonId is the real DB id.
 describe('GeneratedLesson', () => {
   it('carries a minted lessonId, title, composition, and an ordered slide list', () => {
     const lesson: GeneratedLesson = {
@@ -63,7 +63,7 @@ describe('GENERATION_PROGRESS_STEPS', () => {
 // spec.md's Error contract table — the closed set of codes LessonGenerationService normalizes
 // every failure to (mirrors PdfExtractionError).
 describe('GenerationError', () => {
-  it('carries one of the 8 closed GenerationErrorCode values', () => {
+  it('carries one of the 9 closed GenerationErrorCode values', () => {
     const codes: GenerationErrorCode[] = [
       'missing_key',
       'invalid_key',
@@ -73,10 +73,11 @@ describe('GenerationError', () => {
       'document_not_ready',
       'network_error',
       'unauthenticated',
+      'persist_failed',
     ];
     const error: GenerationError = { code: 'missing_key' };
 
-    expect(codes).toHaveLength(8);
+    expect(codes).toHaveLength(9);
     expect(error).toEqual({ code: 'missing_key' });
   });
 });
