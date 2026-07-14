@@ -1,6 +1,5 @@
 import { ApiKeyRequiredNotice } from '@helsoft/components';
 import { useApiKey } from '@helsoft/hooks';
-import { useLocalization } from '@helsoft/localization';
 import { useRouter } from 'expo-router';
 
 import type { ApiKeyGateProps } from './api-key-gate.types';
@@ -13,21 +12,12 @@ import type { ApiKeyGateProps } from './api-key-gate.types';
  */
 export const ApiKeyGate = ({ children }: ApiKeyGateProps) => {
   const { status, isLoading } = useApiKey();
-  const { t } = useLocalization();
   const router = useRouter();
 
   if (isLoading) return null;
 
   if (!status.hasKey) {
-    return (
-      <ApiKeyRequiredNotice
-        onNavigateToAccount={() => router.push('/settings')}
-        labels={{
-          message: t('upload.apiKeyRequired.message'),
-          action: t('upload.apiKeyRequired.action'),
-        }}
-      />
-    );
+    return <ApiKeyRequiredNotice onNavigateToAccount={() => router.push('/settings')} />;
   }
 
   return children;

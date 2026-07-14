@@ -1,4 +1,3 @@
-import { useLocalization } from '@helsoft/localization';
 import type { OpenEndedAnswer, OpenEndedSlide } from '@helsoft/types';
 import { useState } from 'react';
 
@@ -15,18 +14,8 @@ type UseOpenEndedActivityArgs = {
  * Validity + labels + answered-state emission for OpenEndedActivity.
  */
 export const useOpenEndedActivity = ({ slide, onAnswered }: UseOpenEndedActivityArgs) => {
-  const { t } = useLocalization();
   const [answered, setAnswered] = useState<OpenEndedAnswer | null>(null);
   const valid = isOpenEndedSlideValid(slide);
-
-  const labels = {
-    submit: t('activity.openEnded.submit'),
-    yourAnswer: t('activity.openEnded.yourAnswer'),
-    modelAnswer: t('activity.openEnded.modelAnswer'),
-    explanationHeading: t('activity.openEnded.explanationHeading'),
-    unavailable: t('activity.openEnded.unavailable'),
-    answerInput: t('activity.openEnded.answerInput'),
-  };
 
   const submit = (submittedAnswer: string) => {
     if (answered || !valid) return;
@@ -41,7 +30,6 @@ export const useOpenEndedActivity = ({ slide, onAnswered }: UseOpenEndedActivity
 
   return {
     valid,
-    labels,
     maxLength: OPEN_ENDED_MAX_LENGTH,
     submit,
   };

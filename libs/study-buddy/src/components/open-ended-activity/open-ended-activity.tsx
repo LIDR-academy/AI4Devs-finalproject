@@ -10,7 +10,7 @@ export { OPEN_ENDED_MAX_LENGTH } from './open-ended-activity.helpers';
  * Organism owns ephemeral draft/lock; no grader.
  */
 export const OpenEndedActivity = ({ slide, onAnswered }: OpenEndedActivityProps) => {
-  const { valid, labels, maxLength, submit } = useOpenEndedActivity({ slide, onAnswered });
+  const { valid, maxLength, submit } = useOpenEndedActivity({ slide, onAnswered });
 
   return (
     <OpenEnded
@@ -19,7 +19,6 @@ export const OpenEndedActivity = ({ slide, onAnswered }: OpenEndedActivityProps)
       explanation={slide.explanation}
       unavailable={!valid}
       maxLength={maxLength}
-      labels={labels}
       onSubmit={submit}
     />
   );

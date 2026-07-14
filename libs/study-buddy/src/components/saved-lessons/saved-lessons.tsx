@@ -20,20 +20,6 @@ export const SavedLessons = () => {
   const items = useMemo(() => toLessonListItems(lessons, locale, t), [lessons, locale, t]);
   const deleteFailedLabel = t('home.delete.failed');
 
-  const labels = useMemo(
-    () => ({
-      loading: t('home.loading'),
-      empty: t('home.empty'),
-      error: t('home.error'),
-      retry: t('home.retry'),
-      deleteConfirmHeadline: t('home.delete.confirmHeadline'),
-      deleteConfirmBody: t('home.delete.confirmBody'),
-      deleteConfirmAction: t('home.delete.confirmAction'),
-      deleteConfirmCancelAction: t('home.delete.cancelAction'),
-    }),
-    [t],
-  );
-
   const onOpenLesson = useCallback(
     (id: string) => {
       router.push({ pathname: '/lesson/[id]', params: { id } });
@@ -67,7 +53,6 @@ export const SavedLessons = () => {
       <LessonList
         state={state}
         lessons={items}
-        labels={labels}
         onOpenLesson={onOpenLesson}
         onRetry={refetch}
         onDelete={onDelete}

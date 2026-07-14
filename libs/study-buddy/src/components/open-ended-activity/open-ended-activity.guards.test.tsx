@@ -14,24 +14,17 @@ jest.mock('@helsoft/activities', () => {
   return {
     OpenEnded: ({
       unavailable,
-      labels,
-      onSubmit,
       explanation,
+      onSubmit,
     }: {
       unavailable?: boolean;
-      labels: {
-        submit: string;
-        unavailable: string;
-        modelAnswer: string;
-        explanationHeading: string;
-      };
-      onSubmit: (text: string) => void;
       explanation?: string;
+      onSubmit: (text: string) => void;
     }) => {
       if (unavailable) {
         return (
           <View>
-            <Text>{labels.unavailable}</Text>
+            <Text>activity.openEnded.unavailable</Text>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="force-invalid-submit"
@@ -45,14 +38,14 @@ jest.mock('@helsoft/activities', () => {
 
       return (
         <View>
-          <Text>{labels.modelAnswer}</Text>
-          {explanation ? <Text>{labels.explanationHeading}</Text> : null}
+          <Text>activity.openEnded.modelAnswer</Text>
+          {explanation ? <Text>activity.openEnded.explanationHeading</Text> : null}
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={labels.submit}
+            accessibilityLabel="activity.openEnded.submit"
             onPress={() => onSubmit('first')}
           >
-            <Text>{labels.submit}</Text>
+            <Text>activity.openEnded.submit</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
