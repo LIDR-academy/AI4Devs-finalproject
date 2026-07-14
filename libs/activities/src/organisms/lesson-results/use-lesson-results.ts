@@ -1,12 +1,9 @@
 import { useLessonAttempt } from '@helsoft/hooks';
-import { useLocalization } from '@helsoft/localization';
 import type { GradedAnswer, Lesson } from '@helsoft/types';
 import { useEffect, useRef } from 'react';
 
 import { toScorableSlides } from './lesson-results.helpers';
 import { scoreLesson } from './score-lesson';
-
-const PERCENT_MULTIPLIER = 100;
 
 type UseLessonResultsArgs = {
   lesson: Lesson;
@@ -14,16 +11,12 @@ type UseLessonResultsArgs = {
 };
 
 /**
- * Score derivation + one-shot attempt save + localized ResultsSummary labels.
+ * Score derivation + one-shot attempt save. ResultsSummary owns every localized label itself.
  */
 export const useLessonResults = ({ lesson, answers }: UseLessonResultsArgs) => {
-  const { t } = useLocalization();
   const { status, saveAttempt, retry } = useLessonAttempt();
 
   const summary = scoreLesson(toScorableSlides(lesson), answers);
-  const percent = Math.round((summary.correct / summary.total) * PERCENT_MULTIPLIER);
-  const scoreLabel = t('results.score', { correct: summary.correct, total: summary.total });
-  const percentLabel = t('results.scorePercent', { percent });
 
   const hasSaved = useRef(false);
   // biome-ignore lint/correctness/useExhaustiveDependencies: save-once-on-mount effect; hasSaved guards re-entry and the attempt must not re-save on re-render
@@ -38,20 +31,8 @@ export const useLessonResults = ({ lesson, answers }: UseLessonResultsArgs) => {
     variant: summary.isScorable ? ('score' as const) : ('completion' as const),
     loading: status === 'saving',
     saveFailed: status === 'error',
-    labels: {
-      score: scoreLabel,
-      percent: percentLabel,
-      scoreAnnouncement: t('results.scoreAnnouncement', {
-        score: scoreLabel,
-        percent: percentLabel,
-      }),
-      retake: t('results.retake'),
-      backToLessons: t('results.backHome'),
-      completeHeadline: t('results.completeHeadline'),
-      completeBody: t('results.completeBody'),
-      saveFailed: t('results.saveFailed'),
-      retrySave: t('results.retrySave'),
-    },
+    correct: summary.correct,
+    total: summary.total,
     onRetrySave: retry,
   };
 };

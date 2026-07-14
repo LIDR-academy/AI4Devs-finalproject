@@ -1,6 +1,6 @@
+import { useLocalization } from '@helsoft/localization';
 import { useEffect, useState } from 'react';
 import { AccessibilityInfo, Platform } from 'react-native';
-
 import { isRehydratedSubmission } from './open-ended.helpers';
 import type { UseOpenEndedProps } from './open-ended.types';
 
@@ -11,8 +11,8 @@ import type { UseOpenEndedProps } from './open-ended.types';
 export const useOpenEnded = ({
   initialSubmittedAnswer = null,
   unavailable = false,
-  labels,
 }: UseOpenEndedProps) => {
+  const { t } = useLocalization();
   const seeded = isRehydratedSubmission(initialSubmittedAnswer);
   const [draft, setDraft] = useState(seeded ? (initialSubmittedAnswer as string) : '');
   const [submitted, setSubmitted] = useState(seeded);
@@ -22,8 +22,8 @@ export const useOpenEnded = ({
 
   useEffect(() => {
     if (!submitted || Platform.OS === 'android') return;
-    AccessibilityInfo.announceForAccessibility(labels.modelAnswer);
-  }, [submitted, labels.modelAnswer]);
+    AccessibilityInfo.announceForAccessibility(t('activity.openEnded.modelAnswer'));
+  }, [submitted, t]);
 
   return {
     draft,

@@ -1,16 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 
 import { OpenEnded } from './open-ended';
-import type { OpenEndedLabels } from './open-ended.types';
-
-const labels: OpenEndedLabels = {
-  submit: 'Submit',
-  yourAnswer: 'Your answer',
-  modelAnswer: 'Model answer',
-  explanationHeading: 'Why',
-  unavailable: 'This activity is unavailable',
-  answerInput: 'Your response',
-};
 
 const meta = {
   title: 'Organisms/OpenEnded',
@@ -20,7 +10,6 @@ const meta = {
     modelAnswer: 'Conversion of light energy into chemical energy.',
     explanation: 'Key process in plants.',
     maxLength: 2000,
-    labels,
     onSubmit: () => {},
   },
 } satisfies Meta<typeof OpenEnded>;

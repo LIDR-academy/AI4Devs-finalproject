@@ -16,7 +16,7 @@ export const LessonResults = ({
   onRetake,
   onBackToLessons,
 }: LessonResultsProps) => {
-  const { variant, loading, saveFailed, labels, onRetrySave } = useLessonResults({
+  const { variant, loading, saveFailed, correct, total, onRetrySave } = useLessonResults({
     lesson,
     answers,
   });
@@ -26,7 +26,8 @@ export const LessonResults = ({
       variant={variant}
       loading={loading}
       saveFailed={saveFailed}
-      labels={labels}
+      correct={correct}
+      total={total}
       onRetake={onRetake}
       onBackToLessons={onBackToLessons}
       onRetrySave={onRetrySave}

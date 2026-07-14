@@ -1,7 +1,7 @@
 import { Button, Card, TextField } from '@helsoft/components';
+import { useLocalization } from '@helsoft/localization';
 import { Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-
 import { shouldShowExplanation, shouldShowLearnerAnswerBody } from './open-ended.helpers';
 import type { OpenEndedProps } from './open-ended.types';
 import { useOpenEnded } from './use-open-ended';
@@ -19,13 +19,12 @@ export const OpenEnded = ({
   unavailable = false,
   initialSubmittedAnswer = null,
   maxLength,
-  labels,
   onSubmit,
 }: OpenEndedProps) => {
+  const { t } = useLocalization();
   const { draft, setDraft, submitted, setSubmitted, locked, isUnavailable } = useOpenEnded({
     initialSubmittedAnswer,
     unavailable,
-    labels,
   });
 
   const handleChangeText = (text: string) => {
@@ -41,7 +40,7 @@ export const OpenEnded = ({
   if (isUnavailable) {
     return (
       <Card testID="open-ended-root" style={styles.root}>
-        <Text style={styles.prompt}>{labels.unavailable}</Text>
+        <Text style={styles.prompt}>{t('activity.openEnded.unavailable')}</Text>
       </Card>
     );
   }
@@ -50,7 +49,7 @@ export const OpenEnded = ({
     <Card testID="open-ended-root" style={styles.root}>
       <Text style={styles.prompt}>{prompt}</Text>
       <TextField
-        accessibilityLabel={labels.answerInput}
+        accessibilityLabel={t('activity.openEnded.answerInput')}
         accessibilityState={{ disabled: locked }}
         value={draft}
         maxLength={maxLength}
@@ -60,12 +59,12 @@ export const OpenEnded = ({
         onChangeText={handleChangeText}
       />
       <Button disabled={locked} fullWidth onPress={handleSubmit}>
-        {labels.submit}
+        {t('activity.openEnded.submit')}
       </Button>
       {submitted ? (
         <View testID="open-ended-comparison" style={styles.comparison}>
           <View testID="open-ended-your-answer" style={styles.block}>
-            <Text style={styles.heading}>{labels.yourAnswer}</Text>
+            <Text style={styles.heading}>{t('activity.openEnded.yourAnswer')}</Text>
             {shouldShowLearnerAnswerBody(draft) ? <Text style={styles.body}>{draft}</Text> : null}
           </View>
           <View
@@ -73,12 +72,12 @@ export const OpenEnded = ({
             style={styles.block}
             accessibilityLiveRegion="polite"
           >
-            <Text style={styles.heading}>{labels.modelAnswer}</Text>
+            <Text style={styles.heading}>{t('activity.openEnded.modelAnswer')}</Text>
             <Text style={styles.body}>{modelAnswer}</Text>
           </View>
           {shouldShowExplanation(submitted, explanation) ? (
             <View testID="open-ended-explanation" style={styles.block}>
-              <Text style={styles.heading}>{labels.explanationHeading}</Text>
+              <Text style={styles.heading}>{t('activity.openEnded.explanationHeading')}</Text>
               <Text style={styles.body}>{explanation}</Text>
             </View>
           ) : null}

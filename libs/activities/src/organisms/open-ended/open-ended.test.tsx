@@ -1,3 +1,9 @@
+jest.mock('@helsoft/localization', () => ({
+  useLocalization: () => ({
+    t: (key: string) => key,
+  }),
+}));
+
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { layout, lightColors, spacing, typography } from '@helsoft/components';
@@ -5,7 +11,6 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-
 import { AccessibilityInfo, Platform } from 'react-native';
 
 import { OpenEnded } from './open-ended';
-import type { OpenEndedLabels } from './open-ended.types';
 
 /** Collect Text nodes whose only content is an empty string (omit-empty guards). */
 const collectEmptyTextNodes = (node: unknown, out: unknown[] = []): unknown[] => {
@@ -31,25 +36,24 @@ const collectEmptyTextNodes = (node: unknown, out: unknown[] = []): unknown[] =>
   return out;
 };
 
-const labels: OpenEndedLabels = {
-  submit: 'Submit',
-  yourAnswer: 'Your answer',
-  modelAnswer: 'Model answer',
-  explanationHeading: 'Why',
-  unavailable: 'Unavailable',
-  answerInput: 'Your response',
-};
+const I18N = {
+  submit: 'activity.openEnded.submit',
+  yourAnswer: 'activity.openEnded.yourAnswer',
+  modelAnswer: 'activity.openEnded.modelAnswer',
+  explanationHeading: 'activity.openEnded.explanationHeading',
+  unavailable: 'activity.openEnded.unavailable',
+  answerInput: 'activity.openEnded.answerInput',
+} as const;
 
 const defaultProps = {
   prompt: 'What is photosynthesis?',
   modelAnswer: 'Conversion of light energy into chemical energy.',
   maxLength: 2000,
-  labels,
   onSubmit: jest.fn(),
 };
 
-const answerInput = () => screen.getByLabelText(labels.answerInput);
-const submitButton = () => screen.getByRole('button', { name: labels.submit });
+const answerInput = () => screen.getByLabelText(I18N.answerInput);
+const submitButton = () => screen.getByRole('button', { name: I18N.submit });
 
 const typeAnswer = async (text: string) => {
   await act(async () => {
@@ -82,8 +86,8 @@ describe('OpenEnded', () => {
     expect(submitButton().props.accessibilityState?.disabled).not.toBe(true);
 
     expect(screen.queryByText(defaultProps.modelAnswer)).toBeNull();
-    expect(screen.queryByText(labels.yourAnswer)).toBeNull();
-    expect(screen.queryByText(labels.modelAnswer)).toBeNull();
+    expect(screen.queryByText(I18N.yourAnswer)).toBeNull();
+    expect(screen.queryByText(I18N.modelAnswer)).toBeNull();
     expect(screen.queryByText('Recalled')).toBeNull();
     expect(screen.queryByText('Not recalled')).toBeNull();
   });
@@ -111,9 +115,9 @@ describe('OpenEnded', () => {
     expect(answerInput().props.editable).toBe(false);
     expect(submitButton().props.accessibilityState.disabled).toBe(true);
 
-    expect(screen.getByText(labels.yourAnswer)).toBeTruthy();
+    expect(screen.getByText(I18N.yourAnswer)).toBeTruthy();
     expect(screen.getByText('plants make food from light')).toBeTruthy();
-    expect(screen.getByText(labels.modelAnswer)).toBeTruthy();
+    expect(screen.getByText(I18N.modelAnswer)).toBeTruthy();
     expect(screen.getByText(defaultProps.modelAnswer)).toBeTruthy();
 
     expect(screen.queryByText('Correct')).toBeNull();
@@ -131,7 +135,7 @@ describe('OpenEnded', () => {
     await typeAnswer('x');
     await pressSubmit();
 
-    expect(screen.getByText(labels.explanationHeading)).toBeTruthy();
+    expect(screen.getByText(I18N.explanationHeading)).toBeTruthy();
     expect(screen.getByText('Key process in plants.')).toBeTruthy();
   });
 
@@ -204,8 +208,8 @@ describe('OpenEnded', () => {
     expect(onSubmit).toHaveBeenCalledWith('');
     expect(answerInput().props.editable).toBe(false);
     expect(submitButton().props.accessibilityState.disabled).toBe(true);
-    expect(screen.getByText(labels.yourAnswer)).toBeTruthy();
-    expect(screen.getByText(labels.modelAnswer)).toBeTruthy();
+    expect(screen.getByText(I18N.yourAnswer)).toBeTruthy();
+    expect(screen.getByText(I18N.modelAnswer)).toBeTruthy();
     expect(screen.getByText(defaultProps.modelAnswer)).toBeTruthy();
     expect(collectEmptyTextNodes(toJSON())).toHaveLength(0);
   });
@@ -215,9 +219,9 @@ describe('OpenEnded', () => {
     const onSubmit = jest.fn();
     await render(<OpenEnded {...defaultProps} unavailable onSubmit={onSubmit} />);
 
-    expect(screen.getByText(labels.unavailable)).toBeTruthy();
-    expect(screen.queryByLabelText(labels.answerInput)).toBeNull();
-    expect(screen.queryByRole('button', { name: labels.submit })).toBeNull();
+    expect(screen.getByText(I18N.unavailable)).toBeTruthy();
+    expect(screen.queryByLabelText(I18N.answerInput)).toBeNull();
+    expect(screen.queryByRole('button', { name: I18N.submit })).toBeNull();
     expect(screen.queryByText(defaultProps.prompt)).toBeNull();
     expect(screen.queryByText(defaultProps.modelAnswer)).toBeNull();
 
@@ -238,7 +242,7 @@ describe('OpenEnded', () => {
   it('exposes an accessible name on the answer input', async () => {
     await render(<OpenEnded {...defaultProps} />);
 
-    expect(screen.getByLabelText(labels.answerInput)).toBeTruthy();
+    expect(screen.getByLabelText(I18N.answerInput)).toBeTruthy();
   });
 
   // @s9 — Submit meets touch-target via Button hitSlop
@@ -274,10 +278,10 @@ describe('OpenEnded', () => {
     await typeAnswer('essay');
     await pressSubmit();
 
-    await waitFor(() => expect(announceSpy).toHaveBeenCalledWith(labels.modelAnswer));
+    await waitFor(() => expect(announceSpy).toHaveBeenCalledWith(I18N.modelAnswer));
     expect(announceSpy).toHaveBeenCalledTimes(1);
 
-    const modelHeading = screen.getByText(labels.modelAnswer);
+    const modelHeading = screen.getByText(I18N.modelAnswer);
     expect(modelHeading.parent?.props.accessibilityLiveRegion).toBe('polite');
 
     announceSpy.mockRestore();
@@ -295,9 +299,7 @@ describe('OpenEnded', () => {
     await render(<OpenEnded {...defaultProps} initialSubmittedAnswer="seed" />);
 
     expect(announceSpy).not.toHaveBeenCalled();
-    expect(screen.getByText(labels.modelAnswer).parent?.props.accessibilityLiveRegion).toBe(
-      'polite',
-    );
+    expect(screen.getByText(I18N.modelAnswer).parent?.props.accessibilityLiveRegion).toBe('polite');
 
     announceSpy.mockRestore();
     Platform.OS = originalOS;
@@ -321,11 +323,11 @@ describe('OpenEnded', () => {
     expect(screen.getByTestId('open-ended-comparison')).toHaveStyle({ gap: spacing.s3 });
     expect(screen.getByTestId('open-ended-your-answer')).toHaveStyle({ gap: spacing.s1 });
     expect(screen.getByTestId('open-ended-model-answer')).toHaveStyle({ gap: spacing.s1 });
-    expect(screen.getByText(labels.yourAnswer)).toHaveStyle({
+    expect(screen.getByText(I18N.yourAnswer)).toHaveStyle({
       ...typography.titleSmall,
       color: lightColors.onSurfaceVariant,
     });
-    expect(screen.getByText(labels.modelAnswer)).toHaveStyle({
+    expect(screen.getByText(I18N.modelAnswer)).toHaveStyle({
       ...typography.titleSmall,
       color: lightColors.onSurfaceVariant,
     });
@@ -338,7 +340,7 @@ describe('OpenEnded', () => {
       color: lightColors.onSurface,
     });
     expect(screen.getByTestId('open-ended-explanation')).toHaveStyle({ gap: spacing.s1 });
-    expect(screen.getByText(labels.explanationHeading)).toHaveStyle({
+    expect(screen.getByText(I18N.explanationHeading)).toHaveStyle({
       ...typography.titleSmall,
       color: lightColors.onSurfaceVariant,
     });
