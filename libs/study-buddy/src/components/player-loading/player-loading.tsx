@@ -13,7 +13,7 @@ export const PlayerLoading = () => {
 
   return (
     <View testID={PLAYER_LOADING_TEST_ID} style={styles.loading}>
-      <ProgressIndicator variant="circular" accessibilityLabel={t('player.loading')} />
+      <ProgressIndicator variant="circular" value={0} accessibilityLabel={t('player.loading')} />
       <Text style={styles.loadingLabel} accessible={false}>
         {t('player.loading')}
       </Text>

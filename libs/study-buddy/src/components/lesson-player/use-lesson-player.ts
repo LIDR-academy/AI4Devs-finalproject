@@ -1,5 +1,5 @@
 import type { ActivityAnswer, Lesson } from '@helsoft/types';
-import { useCallback, useMemo, useReducer, useRef } from 'react';
+import { useMemo, useReducer, useRef } from 'react';
 
 import { buildLessonGradedAnswers } from './lesson-player.helpers';
 import { lessonPlayerInitialState, lessonPlayerReducer } from './use-lesson-player.reducer';
@@ -21,21 +21,21 @@ export const useLessonPlayer = (lesson: Lesson) => {
   const maxIndexRef = useRef(maxIndex);
   maxIndexRef.current = maxIndex;
 
-  const goNext = useCallback(() => {
-    dispatch({ type: 'next', maxIndex: maxIndexRef.current });
-  }, []);
-
-  const goBack = useCallback(() => {
-    dispatch({ type: 'back' });
-  }, []);
-
-  const onAnswered = useCallback((answer: ActivityAnswer) => {
-    dispatch({ type: 'answer', slideId: answer.slideId, answer });
-  }, []);
-
-  const reset = useCallback(() => {
-    dispatch({ type: 'reset' });
-  }, []);
+  // Stable handler identities without useCallback (avoids empty-deps ArrayDeclaration mutants).
+  const handlers = useRef({
+    goNext: () => {
+      dispatch({ type: 'next', maxIndex: maxIndexRef.current });
+    },
+    goBack: () => {
+      dispatch({ type: 'back' });
+    },
+    onAnswered: (answer: ActivityAnswer) => {
+      dispatch({ type: 'answer', slideId: answer.slideId, answer });
+    },
+    reset: () => {
+      dispatch({ type: 'reset' });
+    },
+  }).current;
 
   return {
     currentIndex: state.currentIndex,
@@ -49,9 +49,9 @@ export const useLessonPlayer = (lesson: Lesson) => {
     gradedAnswers,
     canGoBack: state.currentIndex > 0,
     canGoNext: !isResultsSlide,
-    goNext,
-    goBack,
-    onAnswered,
-    reset,
+    goNext: handlers.goNext,
+    goBack: handlers.goBack,
+    onAnswered: handlers.onAnswered,
+    reset: handlers.reset,
   };
 };

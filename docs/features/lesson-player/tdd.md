@@ -4,30 +4,21 @@
 
 | @s | test | file |
 |---|---|---|
-| s17 | isLoading; PlayerLoading single progressbar | use-lesson + player-loading.test |
-| s1 | starts on first content slide | lesson-player.test.tsx |
-| s2 | Next + remount same-type activities | lesson-player.test.tsx |
-| s3 | Back returns to previous | lesson-player.test.tsx |
-| s4 | Back hidden on first; a11y chrome | lesson-player.test.tsx |
-| s5–s6 | instructional + activity wrappers | slide-view.test.tsx |
-| s7–s9 | image scaled / absent / fail; decorative no-alt | slide-image.test.tsx |
-| s10 | progress X of N + named progressbar | lesson-progress-indicator |
-| s11–s14 | skip unanswered; restore; results; grade false | lesson-player* |
-| s15–s16 | empty + error/retry | lesson-player.test + e2e |
-| s18–s22 | retake / persist / back from results | lesson-player* |
-| s19 | viewports | lesson-player.e2e.js |
+| s17 | isLoading; PlayerLoading single progressbar | use-lesson + player-loading |
+| s1–s4 | deck nav + remount same-type | lesson-player.test |
+| s5–s9 | slides + decorative image | slide-view / slide-image |
+| s10 | named progressbar | lesson-progress-indicator |
+| s11–s22 | restore / results / retake / empty / error | lesson-player* |
 
 ## Cycles
 
-### Slice 1–3 + mutation r1–r2
-- load/nav/results/restore; survivor killers (see prior)
+### Post-review mutation r1
+- path / player-loading / use-lesson-player ref handlers
+- progress-indicator helpers + effect deps
 
-### Review r1 CI
-- biome; TS2352 via unknown; ResultsSummary stub for Animated
-
-### Review r2 (9 findings)
-- key={slide.id} + remount test (adjacent MC)
-- progressbar accessibilityLabel; PlayerLoading (no nested role)
-- SlideImage decorative when no alt
-- results route → Redirect to player
-- useCallback + maxIndexRef; storage path shape guard
+### Post-review mutation r2 (13 survivors)
+- arcStyle `left` right/left windows (−size/2 vs 0)
+- rightArcRotate / leftArcRotate extracted + unit + arc transform tests
+- color/trackColor `??` overrides + theme fallback
+- circular accessibilityValue `{min,max,now}`
+- linear indeterminate style keeps `left` interpolate
