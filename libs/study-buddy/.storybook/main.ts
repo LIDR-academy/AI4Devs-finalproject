@@ -54,11 +54,11 @@ const config: StorybookConfig = {
       ...viteConfig.resolve,
       alias: {
         ...viteConfig.resolve?.alias,
-        // Storybook-only seams: sign-in-form.tsx needs a router (no Expo Router tree is
-        // mounted here) and a fake useAuth (the real one needs an initialized Supabase
-        // client). See .storybook/mocks/*.
+        // Storybook-only seams: no Expo Router / Supabase tree here. See .storybook/mocks/*.
         'expo-router': `${dirname}mocks/expo-router.ts`,
+        'expo-document-picker': `${dirname}mocks/expo-document-picker.ts`,
         '@helsoft/hooks': `${dirname}mocks/hooks.ts`,
+        '@helsoft/pdf-upload-extraction': `${dirname}mocks/pdf-upload-extraction.ts`,
       },
     };
     return viteConfig;
