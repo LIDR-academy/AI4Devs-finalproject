@@ -2,6 +2,6 @@
 
 **Active feature:** lesson-player
 **Folder:** docs/features/lesson-player/
-**Phase:** pending
-**Status:** Boot complete. Worktree `.worktrees/lesson-player` on `feat/lesson-player`. Spec phase starting (Opus). Rest of pipeline: Grok.
-**Notes:** Story moved to in-progress. Models: opus=spec_partner+spec_reviewer; grok=all else.
+**Phase:** spec_ready
+**Status:** ⏸ HUMAN GATE — approve spec.md + gherkin-scenarios.md. Spec review APPROVED (Opus).
+**Notes:** Models: opus=spec; grok=rest. Open Qs at gate: load-error UX; results-no-session deferral.
