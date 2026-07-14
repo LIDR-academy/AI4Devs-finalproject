@@ -27,6 +27,8 @@ Images captured from `http://localhost:8080` (Docker, `LmsDemoSeeder` data).
 | [comms-messages.png](./comms-messages.png) | `/comms/messages` | Authenticated | [§9 Teacher](../../readme.md#teacher-role) |
 | [comms-mail.png](./comms-mail.png) | `/comms/mail` | Authenticated | [§9 Teacher](../../readme.md#teacher-role) |
 | [gradebook-teacher.png](./gradebook-teacher.png) | `/courses/1/grades` | Teacher | [§9 Teacher](../../readme.md#teacher-role) |
+| [gradebook-mark-teacher.png](./gradebook-mark-teacher.png) | `/courses/1/grades/.../students/...` | Teacher — edit mark form | [§9 Teacher](../../readme.md#teacher-role) |
+| [gradebook-course-link.png](./gradebook-course-link.png) | `/courses/1` | Teacher — gradebook entry in course summary | [§9 Teacher](../../readme.md#teacher-role) |
 
 ## Responsive (mobile viewport 390px)
 

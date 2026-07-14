@@ -543,6 +543,8 @@ Login (Moodle 5.2 style, ASEMAD branding) with EN/ES language selector.
 | Create event | [calendar-event-create.png](docs/screenshots/calendar-event-create.png) | Academic event form |
 | Upgrade Assistant | [upgrade-assistant.png](docs/screenshots/upgrade-assistant.png) | Pre-deploy health checks for Moodle 5.2 pack |
 | Gradebook | [gradebook-teacher.png](docs/screenshots/gradebook-teacher.png) | Multi-grader marks per course activity |
+| Gradebook — edit mark | [gradebook-mark-teacher.png](docs/screenshots/gradebook-mark-teacher.png) | Teacher scores a student (Calificar / Editar nota) |
+| Course → gradebook | [gradebook-course-link.png](docs/screenshots/gradebook-course-link.png) | «Libro de calificaciones» link in course summary |
 | Comms — notifications | [comms-notifications.png](docs/screenshots/comms-notifications.png) | In-app notifications |
 | Comms — messages | [comms-messages.png](docs/screenshots/comms-messages.png) | Private messaging |
 | Comms — mail | [comms-mail.png](docs/screenshots/comms-mail.png) | Internal mail |
@@ -558,6 +560,10 @@ Login (Moodle 5.2 style, ASEMAD branding) with EN/ES language selector.
 ![Upgrade Assistant](docs/screenshots/upgrade-assistant.png)
 
 ![Gradebook](docs/screenshots/gradebook-teacher.png)
+
+![Gradebook — edit mark](docs/screenshots/gradebook-mark-teacher.png)
+
+![Course summary — gradebook link](docs/screenshots/gradebook-course-link.png)
 
 ![Comms — notifications](docs/screenshots/comms-notifications.png)
 

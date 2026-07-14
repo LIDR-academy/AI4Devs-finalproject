@@ -51,6 +51,14 @@ await shot(desktop, 'courses-teacher.png', '/courses');
 await shot(desktop, 'calendar-teacher.png', '/calendar');
 await shot(desktop, 'calendar-event-create.png', '/calendar/events/create');
 await shot(desktop, 'gradebook-teacher.png', '/courses/1/grades');
+await shot(desktop, 'gradebook-mark-teacher.png', null, async (page) => {
+  await page.goto(`${baseUrl}/courses/1/grades`);
+  await page.waitForLoadState('networkidle');
+  const markLink = page.locator('a.btn').filter({ hasText: /Calificar|Editar nota|Grade|Edit grade/i }).first();
+  await markLink.click();
+  await page.waitForLoadState('networkidle');
+});
+await shot(desktop, 'gradebook-course-link.png', '/courses/1');
 await shot(desktop, 'comms-notifications.png', '/comms/notifications');
 await shot(desktop, 'comms-messages.png', '/comms/messages');
 await shot(desktop, 'comms-mail.png', '/comms/mail');

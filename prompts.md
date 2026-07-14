@@ -493,4 +493,40 @@ Paths relative to [BurgosAngel/codigofinal](https://github.com/BurgosAngel/codig
 
 ---
 
-*Last updated: July 2026 — delivery branch `finalproject-ABR` (Moodle 5.2, comms, responsive all-screens, CI e2e, upgrade admin-only).*
+## 20. Gradebook fix — multi-grader, teacher edit marks, cPanel deploy
+
+**Prompt 1:** "Quiero saber como entrar en gradebook con rol teacher dentro de https://proyectolms.asemad.es/"
+
+> Note: Route `/courses/{id}/grades`; navigation **Mis cursos → curso → Libro de calificaciones** in course summary panel. Documented access matrix (teacher/admin OK; student 403).
+
+**Prompt 2:** "Que error se encuentra en esta pagina https://proyectolms.asemad.es/courses/1/grades"
+
+> Note: Production errors diagnosed — `RelationNotFoundException: graderSetting` (missing models/tables), then `BadMethodCallException: isManualGradable()`. Fix package `deploy-gradebook/` + SQL `sql_scripts/gradebook/cpanel_create_gradebook_tables.sql`.
+
+**Prompt 3:** "Quiero que prepares las migraciones SQL y las traducciones gradebook"
+
+> Note: `ActivityGrader*` models, Laravel migration `2026_07_05_100000_create_moodle52_features_tables.php`, `lang/*/lms.php` block `gradebook`, `aplicar-traducciones-pendientes.php`, `scripts/sync-deploy-gradebook.ps1`.
+
+**Prompt 4:** "Necesito que se puede editar la nota para el profesor en http://localhost:8080/courses/1/grades"
+
+> Note: `isManualGradable()` extended to all plugin types except `local_smartreport`; **Calificar / Editar nota** button per student; mark form prefills from manual mark, auto grade, or final grade; translations `gradebook.edit`, `edit_title`.
+
+**Prompt 5:** "Dentro de la carpeta codigofinal/lms-cms-laravel12 crear commit fix gradebook y actualizar AI4Devs-finalproject con prompts y capturas."
+
+> Note: Commits on `angel-burgos-r` and `finalproject-ABR`; screenshots `gradebook-teacher.png`, `gradebook-mark-teacher.png`, `gradebook-course-link.png`.
+
+**Files (implementation repo):**
+
+| Area | Files |
+|------|-------|
+| Controller / service | `GradebookController.php`, `GradeWorkflowService.php` |
+| Models | `LessonPluginInstance.php`, `ActivityGraderSetting.php`, `ActivityGraderAssignment.php`, `ActivityGraderMark.php`, `ActivityGradeFinal.php` |
+| Views | `resources/views/gradebook/index.blade.php`, `mark.blade.php`; link in `courses/show.blade.php` |
+| Config / i18n | `config/lms.php` (`grades`), `lang/es/lms.php`, `lang/en/lms.php` |
+| SQL / migration | `sql_scripts/gradebook/cpanel_create_gradebook_tables.sql`, `database/migrations/2026_07_05_100000_*` |
+| Deploy | `scripts/sync-deploy-gradebook.ps1`, sibling package `codigofinal/deploy-gradebook/` |
+| Tests | `tests/Feature/GradebookAccessTest.php` |
+
+---
+
+*Last updated: July 2026 — delivery branch `finalproject-ABR` (gradebook fix, teacher mark editing, AI/Grill me, deploy-gradebook FTP pack).*
