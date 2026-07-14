@@ -1,14 +1,15 @@
 # PROJECT_STATUS — INK·LINK
 
 > Estado actual del proyecto. **Este documento debe actualizarse al cerrar cada Historia de Usuario o hito.**
-> Última actualización: 2026-07-14 (análisis bootstrap — ver `fixs/issue-004.md`)
+> Última actualización: 2026-07-14 (US0001 ✅ mergeada a main vía PR #3 — inicio de US0003)
+> **Traspaso entre sesiones/IAs**: ver `HANDOFF.md` (prompt de continuación + protocolo de registro de avance)
 
 ## Resumen
 
 | Aspecto | Estado |
 |---|---|
 | Entrega 1 (documentación) | ✅ Completa (con inconsistencias pendientes — `fixs/issue-004.md`) |
-| Entrega 2 (implementación) | 🔵 En curso — Fase 0 completa, US0001 en revisión |
+| Entrega 2 (implementación) | 🔵 En curso — Fase 0 y US0001 completas; US0003 en desarrollo |
 | Backlog vigente | 13 US · 80 SP · 9 Must-Have (52 SP) + 4 Should-Have (28 SP) — `docs/us/all-us.md` |
 | Backend (`backend/`) | ✅ Scaffolding .NET 10 (API por capas + xUnit, health endpoint, tests en verde) |
 | Frontend (`frontend/`) | ✅ Scaffolding Angular 20 (environments, build y tests en verde) |
@@ -20,8 +21,8 @@
 
 | US | Historia | MoSCoW | SP | Estado |
 |---|---|---|---|---|
-| US0001 | Inicio de sesión de usuarios | Must | 3 | 🟣 En revisión (`feature/us0001-login`) |
-| US0003 | Ver vitrina principal de tatuajes | Must | 8 | ⬜ Pendiente |
+| US0001 | Inicio de sesión de usuarios | Must | 3 | ✅ Done (PR #3 mergeado a main) |
+| US0003 | Ver vitrina principal de tatuajes | Must | 8 | 🔵 En desarrollo (`feature/us0003-vitrina`) |
 | US0004 | Filtrar artistas | Must | 8 | ⬜ Pendiente |
 | US0005 | Buscar artistas por texto | Must | 3 | ⬜ Pendiente |
 | US0006 | Ver perfil de artista completo | Must | 5 | ⬜ Pendiente |
@@ -39,7 +40,7 @@ Estados posibles: ⬜ Pendiente · 🔵 En desarrollo · 🟣 En revisión · �
 ## Bloqueos actuales
 
 1. ~~Decisiones pendientes en `fixs/issue-004.md` §E~~ — ✅ resueltas el 2026-07-14 (ver issue-004 §G). `api-spec.yml` v2.0.0 sincronizada.
-2. Cuenta sandbox de Flow (necesaria recién para US0009; hasta entonces se usa mock).
+2. ~~Cuenta sandbox de Flow~~ — ✅ cuenta Flow creada el 2026-07-14 (rubro declarado: reserva/depósitos de servicios de tatuaje). Falta obtener credenciales sandbox (apiKey/secretKey) al llegar a US0009; hasta entonces se usa mock.
 
 ## Inventario de documentación
 
@@ -61,6 +62,8 @@ Estados posibles: ⬜ Pendiente · 🔵 En desarrollo · 🟣 En revisión · �
 
 ## Próximos pasos
 
-1. Resolver dudas de `fixs/issue-004.md` §E.
-2. Ejecutar Fase 0 de `DEVELOPMENT_PLAN.md` (Docker + scaffolding + CI).
-3. Implementar US0001 (una US a la vez, flujo de `CONTRIBUTING.md`).
+1. **US0003 en curso** (`feature/us0003-vitrina`):
+   - TASK0001 — Backend: endpoint `GET /api/showcase` (TDD, PostGIS para "Cerca de ti") — 🔵 en desarrollo
+   - TASK0002 — Frontend: página vitrina con secciones y cards — ⬜ pendiente
+2. Al cerrar US0003: PR + merge, actualizar este documento y `HANDOFF.md`, registrar prompts.
+3. Siguiente según plan: US0004 (filtros) → US0005 (búsqueda) → US0007 (badge).
