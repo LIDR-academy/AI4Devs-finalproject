@@ -2,124 +2,25 @@
 Puedes añadir adicionalmente la conversación completa como link o archivo adjunto si así lo consideras
 
 
-## Índice
+Prompts usados para la versión 2:
 
-1. [Descripción general del producto](#1-descripción-general-del-producto)
-2. [Arquitectura del sistema](#2-arquitectura-del-sistema)
-3. [Modelo de datos](#3-modelo-de-datos)
-4. [Especificación de la API](#4-especificación-de-la-api)
-5. [Historias de usuario](#5-historias-de-usuario)
-6. [Tickets de trabajo](#6-tickets-de-trabajo)
-7. [Pull requests](#7-pull-requests)
+######
+Usa el archivo README que voy a utilizar para implementar este proyecto. Me gustaría que crearas la versión MVP utilizando entre 3 y 5 historias de usuario que representen los requisitos mínimos necesarios para implementar este proyecto. Evalúalas y propón las mejores candidatas para que yo pueda decidir.
 
----
 
-## 1. Descripción general del producto
+######
+Empieza la implementación de los tickets del backlog uno por uno según se haya definido en el documento @file:mvp-backlog.md
 
-**Prompt 1:**
 
-**Prompt 2:**
+# Multiples iteraciones de Revisión de código y validación como:
 
-**Prompt 3:**
+-- Revisa que todo esté funcionando en lint.
+-- Revisa porque la impleme
 
----
 
-## 2. Arquitectura del Sistema
+####
+Realiza la validación de lo implementado
 
-### **2.1. Diagrama de arquitectura:**
 
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
-### **2.2. Descripción de componentes principales:**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
-### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
-### **2.4. Infraestructura y despliegue**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
-### **2.5. Seguridad**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
-### **2.6. Tests**
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
----
-
-### 3. Modelo de Datos
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
----
-
-### 4. Especificación de la API
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
----
-
-### 5. Historias de Usuario
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
----
-
-### 6. Tickets de Trabajo
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
-
----
-
-### 7. Pull Requests
-
-**Prompt 1:**
-
-**Prompt 2:**
-
-**Prompt 3:**
+####
+crea documentos técnicos para esta version. Indica lo necesario para que pueda ser instalado, ejecutado y validado por el usuario
