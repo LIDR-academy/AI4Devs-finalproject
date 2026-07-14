@@ -377,6 +377,120 @@ Texto opcional + foto del tatuaje. El artista puede responder cada reseña. Rati
 
 ---
 
+## 2. Arquitectura del sistema
+
+### **2.1. Diagrama de arquitectura:**
+
+Monolito modular con SPA desacoplada. El detalle completo (diagramas C4 de Contexto, Contenedores y Componentes en Mermaid) está en [docs/documentacion.md](docs/documentacion.md) §4–5, y el resumen operativo en [ARCHITECTURE.md](ARCHITECTURE.md).
+
+```
+┌─────────────┐   HTTPS/JSON   ┌──────────────────┐        ┌────────────────┐
+│ Angular 20  │ ─────────────► │ .NET 10 Web API  │ ─────► │ PostgreSQL 16  │
+│ SPA (4200)  │                │ (5000)           │        │ + PostGIS      │
+└─────────────┘                │                  │ ─────► │ MinIO (S3)     │
+                               │                  │ ─────► │ Flow (pagos)   │
+                               └──────────────────┘        └────────────────┘
+```
+
+### **2.2. Descripción de componentes principales:**
+
+| Componente | Tecnología | Rol |
+|---|---|---|
+| SPA Frontend | Angular 20 + Angular Material + Leaflet/OSM | Vitrina, perfil, chatbot, reserva, mapa, reseñas |
+| API Backend | .NET 10 / ASP.NET Core Web API + EF Core | Lógica de negocio, contrato REST ([docs/api-spec.yml](docs/api-spec.yml)) |
+| Base de datos | PostgreSQL 16 + PostGIS | Persistencia + consultas geoespaciales |
+| Object Storage | MinIO (dev) / S3-compatible (prod) | Imágenes de portafolio y reseñas |
+| Pasarela de pago | Flow Chile | Depósito de reserva (mock-first en desarrollo) |
+
+### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
+
+Backend por capas (Api / Application / Domain / Infrastructure / Seed) y frontend por features (core / shared / features). Estructura detallada en [docs/development_guide.md](docs/development_guide.md) y [ARCHITECTURE.md](ARCHITECTURE.md).
+
+### **2.4. Infraestructura y despliegue**
+
+Entorno local reproducible con Docker Compose (PostgreSQL + PostGIS, MinIO) — ver [docs/development_guide.md](docs/development_guide.md). CI con GitHub Actions (build + tests en cada PR) se incorpora en la Fase 0 del [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md).
+
+### **2.5. Seguridad**
+
+- Autenticación JWT Bearer (expiración 24 h) con roles `client` / `artist` / `admin`
+- Contraseñas con hash bcrypt; mensajes de error genéricos en login (sin revelar existencia de email)
+- Validación de ownership en bookings/reviews (solo el dueño accede y opera)
+- Anti-fraude en reseñas: 1 reseña por booking (índice único), solo bookings completados
+- Idempotencia en el webhook de pagos; secretos fuera del repositorio
+
+### **2.6. Tests**
+
+TDD como práctica base: xUnit + TestContainers (PostgreSQL) en backend; Karma/Jest y Cypress en frontend. Detalle por ticket en `docs/us/us*/task*.md`.
+
+---
+
+## 3. Modelo de datos
+
+13 entidades: User, ArtistProfile, PortfolioItem, TattooStyle, ArtistStyle, Availability, BlockedDate, Booking, Payment, Review, Certification, Award y Sponsorship (las tres últimas son datos seed en el MVP).
+
+Modelo completo con campos, validaciones, relaciones y diagrama ER Mermaid: **[docs/data-model.md](docs/data-model.md)**.
+
+Máquina de estados del booking: `pending_payment → confirmed → completed | cancelled` — flujo 100 % cliente (el cliente confirma asistencia; el artista no interviene en el MVP).
+
+---
+
+## 4. Especificación de la API
+
+Especificación oficial OpenAPI 3.0: **[docs/api-spec.yml](docs/api-spec.yml)** (fuente de verdad del contrato REST). Endpoints principales:
+
+| Método y ruta | Descripción | US |
+|---|---|---|
+| `POST /auth/login` | Login de usuarios seed, retorna JWT 24 h | US0001 |
+| `GET /showcase` | Vitrina pública por secciones (Cerca de ti, Mejor calificados, …) | US0003 |
+| `GET /artists` | Listado con filtros combinados, búsqueda por texto y geo (mapa) | US0004/05/12 |
+| `GET /artists/{slug}` | Perfil público completo del artista | US0006 |
+| `POST /quotes/calculate` | Cotización determinística del chatbot con tarifas del artista | US0011 |
+| `POST /bookings/hold` | Reserva temporal del slot (TTL 5 min, `pending_payment`) | US0008 |
+| `POST /payments/create` → webhook `POST /payments/confirm` | Depósito vía Flow; el pago confirma la reserva | US0009 |
+| `GET /bookings/me`, `POST /bookings/{id}/complete\|cancel` | Historial, confirmar asistencia y cancelar | US0010 |
+| `POST /bookings/{id}/review` | Calificación en 4 dimensiones | US0013 |
+
+---
+
+## 5. Historias de usuario
+
+Backlog completo (13 US · 80 SP · 9 Must-Have + 4 Should-Have): **[docs/us/all-us.md](docs/us/all-us.md)**. Tres historias principales:
+
+> **US0003 — Ver vitrina principal de tatuajes (Must-Have, 8 SP)**
+> *Como* visitante sin cuenta, *quiero* ver una vitrina visual de tatuajes y artistas al abrir INK·LINK, *para* descubrir artistas cercanos sin barreras de entrada. Secciones dinámicas por geolocalización, sin login, mobile-first. [Detalle](docs/us/us0003/us0003.md)
+
+> **US0009 — Pagar depósito vía Flow y confirmar reserva (Must-Have, 13 SP)**
+> *Como* cliente autenticado con un slot seleccionado, *quiero* pagar el depósito a través de Flow, *para* confirmar mi cita y asegurar el horario. Sin aprobación del artista: slot abierto + pago = reserva firme. [Detalle](docs/us/us0009/us0009.md)
+
+> **US0011 — Cotizar tatuaje con chatbot conversacional (Should-Have, 13 SP)**
+> *Como* visitante o cliente, *quiero* un chatbot que me guíe en 5 pasos (zona, tamaño, estilo, referencias, color/cover-up), *para* obtener un rango de precio inmediato sin esperar respuesta por DM. Wizard determinístico sobre las tarifas publicadas. [Detalle](docs/us/us0011/us0011.md)
+
+---
+
+## 6. Tickets de trabajo
+
+25 tickets técnicos distribuidos en las 13 US (`docs/us/usXXXX/taskXXXX.md`), con TDD, criterios de done y estimación. Tres ejemplos representativos:
+
+> **[US0001/TASK0001](docs/us/us0001/task0001.md) — Migración base de datos: esquema completo** *(Base de datos + Backend, 4 h)*: entidades EF Core de las 13 tablas, DbContext con índices y constraints, migración inicial y seed completo (usuarios, artistas de Santiago, estilos, certificaciones, premios, auspicios). Test de integración con TestContainers.
+
+> **[US0009/TASK0001](docs/us/us0009/task0001.md) — Backend: integración Flow** *(Backend)*: creación de orden de pago, webhook idempotente de confirmación, split de comisión y transición `pending_payment → confirmed`.
+
+> **[US0003/TASK0002](docs/us/us0003/task0002.md) — Frontend: vitrina principal** *(Frontend)*: secciones dinámicas con geolocalización, lazy loading de imágenes, responsive mobile-first.
+
+---
+
+## 7. Pull requests
+
+Se documentan durante la Entrega 2 (implementación):
+
+> **PR-1 — `docs/entrega2`**: preparación de la Entrega 2 — informe de inconsistencias (fixs/issue-004.md), documentos permanentes (PROJECT_STATUS, DEVELOPMENT_PLAN, ARCHITECTURE, CONTRIBUTING, PROMPT_REGISTRY), skill `prompt-registry`, sincronización de `api-spec.yml` con el backlog de 13 US y completado de este README.
+
+> **PR-2** — *(pendiente: Fase 0 — scaffolding backend/frontend + Docker + CI)*
+
+> **PR-3** — *(pendiente: US0001 — login de usuarios)*
+
+---
+
 <p align="center">
   <img src="https://img.shields.io/badge/INK·LINK-Documento_Confidencial-1D3A5E?style=flat-square&labelColor=0A0A0F" />
   <img src="https://img.shields.io/badge/©_2026-Fuente_de_verdad_del_proyecto-1D3A5E?style=flat-square&labelColor=0A0A0F" />

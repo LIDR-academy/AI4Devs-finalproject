@@ -686,4 +686,62 @@ analiza la carpeta US y luego crea los tickets de trabajo necesarios para comple
 
 ---
 
-*INK·LINK © 2026 · Registro de prompts · 4 sesiones · 43 prompts documentados*
+# Sesión 5 — Bootstrap de la Entrega 2 (análisis y documentación permanente)
+
+> 📅 2026-07-14 · Claude Code CLI · Claude Fable 5
+
+---
+
+## 44 — Ejecutar MASTER_BOOTSTRAP_PROMPT
+
+> 📋 2026-07-14T20:00:00Z · Claude Code CLI · Claude Fable 5 · medium · ~100K tokens · rodri
+
+```
+Analiza y ejecuta c:\repo\ai4devs\AI4Devs-finalproject\prompts\MASTER_BOOTSTRAP_PROMPT.md
+```
+
+*(Análisis completo del repositorio previo a la Entrega 2: informe de inconsistencias en `fixs/issue-004.md` (api-spec desincronizada con backlog de 13 US y data-model, README incompleto, docs obsoletas, sin Docker/CI). Creados documentos permanentes: PROJECT_STATUS.md, DEVELOPMENT_PLAN.md, ARCHITECTURE.md, CONTRIBUTING.md, PROMPT_REGISTRY.md. Creada skill `prompt-registry` en ai-specs/skills con enlaces .claude/.cursor. Corregido bloque duplicado en development_guide.md. Quedan 6 decisiones pendientes en issue-004 §E — no se modificó api-spec.yml ni código de negocio.)*
+
+---
+
+## 45 — Decisiones sobre issue-004 y arranque de Entrega 2
+
+> 📋 2026-07-14T21:00:00Z · Claude Code CLI · Claude Fable 5 · medium · ~130K tokens · rodri
+
+```
+1. Si, 2. Agregalo como alcance del MVP, 3. Lo que sea mas coherente y atinente al proyecto, 4. Si,
+5. Deja el modelo como recomendado, pero no obligatorio y openspec no es obligatorio pero sí se debe
+considerar para el futuro hasta que aprenda a implementarlo. A menos que me des instrucciones de como
+implementarlo desde ya con lo qu ya existe si es posible y no es complejo. 6. Confirmo comenzar con la
+Fase 0 y luego US0001 PERO EN UNA RAMA APARTE A TODO LO DEMÁS, primero hacer commit y push de lo que
+hay en una rama llamada docs/entrega2 y luego puedes comenzar con el punto 6
+```
+
+*(Aplica las 6 decisiones — ver fixs/issue-004.md §G: api-spec.yml v2.0.0 regenerada y alineada con 13 US + data-model; cancelación agregada a US0010 (CA10-CA11); endpoints de pago renombrados a create/confirm/return; readme.md completado con secciones 2–7; base-standards.md §5 y §7 flexibilizados. Rama docs/entrega2 creada y pusheada; Fase 0 + US0001 en ramas aparte.)*
+
+---
+
+## Resumen de archivos modificados (sesión 5)
+
+| Archivo | Acción |
+|---|---|
+| `fixs/issue-004.md` | Creado — informe de inconsistencias + dudas pendientes |
+| `PROJECT_STATUS.md` | Creado — estado del proyecto |
+| `DEVELOPMENT_PLAN.md` | Creado — roadmap Fase 0 + 6 fases de US |
+| `ARCHITECTURE.md` | Creado — resumen de arquitectura |
+| `CONTRIBUTING.md` | Creado — flujo Git, DoD, reglas anti-alucinación |
+| `PROMPT_REGISTRY.md` | Creado — especificación del registro de prompts |
+| `ai-specs/skills/prompt-registry/SKILL.md` | Creado — skill de registro de prompts |
+| `.claude/skills/prompt-registry`, `.cursor/skills/prompt-registry` | Creados — symlinks a la skill canónica |
+| `docs/development_guide.md` | Corregido — bloque duplicado eliminado + nota de estado objetivo |
+| `prompts.md` | Actualizado — prompt de bootstrap registrado, nota obsoleta de sección 4 corregida |
+| `prompts/00-all-prompts.md` | Actualizado — sesión 5 |
+| `docs/api-spec.yml` | Regenerado — v2.0.0 sincronizada con 13 US y data-model |
+| `docs/us/us0010/us0010.md`, `docs/us/all-us.md` | Actualizados — CA10-CA11 cancelación MVP |
+| `readme.md` | Completado — secciones 2–7 |
+| `docs/base-standards.md` | Ajustado — §5 modelo recomendado, §7 OpenSpec opcional |
+| `fixs/issue-004.md`, `PROJECT_STATUS.md` | Actualizados — decisiones aplicadas |
+
+---
+
+*INK·LINK © 2026 · Registro de prompts · 5 sesiones · 45 prompts documentados*

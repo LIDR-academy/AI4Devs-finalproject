@@ -4,13 +4,40 @@ info:
   description: |
     REST API for the INK-LINK tattoo marketplace platform.
     Marketplace connecting clients with tattoo artists in Chile.
-  version: 1.0.0
+
+    Source of truth for the REST contract. Kept in sync with:
+    - Backlog: docs/us/all-us.md (13 US)
+    - Data model: docs/data-model.md (13 entities)
+
+    MVP principles:
+    - 100% client-centered flow; artists are seed data only (no artist UI/endpoints).
+    - Booking state machine: pending_payment -> confirmed -> completed | cancelled.
+    - Slot hold with 5-minute TTL while the client pays (expires_at).
+  version: 2.0.0
   contact:
     name: INK-LINK Development Team
 
 servers:
   - url: http://localhost:5000/api
     description: Local development server
+
+tags:
+  - name: Auth
+    description: Authentication (US0001)
+  - name: Showcase
+    description: Public showcase sections (US0003)
+  - name: Artists
+    description: Artist listing, search, filters and public profile (US0004, US0005, US0006, US0012)
+  - name: Quotes
+    description: Chatbot price estimation (US0011)
+  - name: Bookings
+    description: Slot hold, booking lifecycle and history (US0008, US0010)
+  - name: Payments
+    description: Deposit payment via Flow Chile (US0009)
+  - name: Reviews
+    description: Artist reviews (US0006, US0013)
+  - name: Geo
+    description: Geographic helpers (US0012)
 
 components:
   securitySchemes:
@@ -35,6 +62,7 @@ components:
       properties:
         token:
           type: string
+          description: JWT, 24h expiry. Claims include user_id, email, role, first_name and artist_profile_id when role is artist (US0001 CA4-CA5)
         expiresAt:
           type: string
           format: date-time
@@ -56,41 +84,90 @@ components:
         role:
           type: string
           enum: [client, artist, admin]
+        avatarUrl:
+          type: string
+          nullable: true
+        artistProfileId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Present only when role is artist (US0001 CA5)
+
+    SponsorBadge:
+      type: object
+      description: Lightweight sponsorship info shown on showcase cards (US0014 CA3)
+      properties:
+        brandName:
+          type: string
+        brandLogoUrl:
+          type: string
 
     ArtistCard:
       type: object
+      description: Artist summary for showcase, search results and map preview cards
       properties:
         id:
           type: string
           format: uuid
+          description: ArtistProfile id
         artistName:
           type: string
+          description: first_name + last_name of the artist user
         slug:
           type: string
         profilePhotoUrl:
           type: string
+          nullable: true
         bio:
           type: string
+          nullable: true
         styles:
           type: array
+          description: Style slugs the artist specializes in
           items:
             type: string
-        city:
+        artistType:
           type: string
+          enum: [independent, studio]
+        commune:
+          type: string
+          description: Chilean commune/district (data model uses commune, not city)
         latitude:
           type: number
         longitude:
           type: number
-        minPrice:
+        minSessionPrice:
           type: integer
-        maxPrice:
+          description: Minimum price per session in CLP
+        hourlyRate:
           type: integer
+          description: Price per hour in CLP
         isCertified:
           type: boolean
+          description: True when the artist has at least one active certification (US0007 CA1)
         averageRating:
           type: number
+          description: rating_avg (0.00-5.00)
         reviewCount:
           type: integer
+        sponsorBadges:
+          type: array
+          description: Active sponsor badges (US0014 CA3); empty when none
+          items:
+            $ref: '#/components/schemas/SponsorBadge'
+
+    RatingBreakdown:
+      type: object
+      description: Average rating per dimension (US0006 CA8)
+      properties:
+        hygiene:
+          type: number
+        painManagement:
+          type: number
+        customerService:
+          type: number
+        result:
+          type: number
 
     ArtistDetail:
       allOf:
@@ -99,8 +176,18 @@ components:
           properties:
             yearsExperience:
               type: integer
-            instagramUrl:
+            address:
               type: string
+              nullable: true
+            depositPercentage:
+              type: integer
+              description: Deposit percentage required for booking (20-50, default 30)
+            cancellationPolicy:
+              type: string
+              enum: ['24h', '48h', '72h']
+              description: Cancellation window shown before payment (US0008/US0010)
+            ratingBreakdown:
+              $ref: '#/components/schemas/RatingBreakdown'
             portfolioImages:
               type: array
               items:
@@ -117,10 +204,11 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Sponsorship'
-            availableSlots:
+            weeklyAvailability:
               type: array
+              description: Recurring weekly availability windows (informative; bookable slots come from the availability endpoint)
               items:
-                $ref: '#/components/schemas/AvailabilitySlot'
+                $ref: '#/components/schemas/WeeklyAvailability'
 
     PortfolioImage:
       type: object
@@ -130,41 +218,60 @@ components:
           format: uuid
         imageUrl:
           type: string
+        thumbnailUrl:
+          type: string
         style:
           type: string
+          description: Style slug
         description:
           type: string
+          nullable: true
+        isFeatured:
+          type: boolean
 
     Certification:
       type: object
+      description: Seed data in MVP (no upload flow)
       properties:
         id:
           type: string
           format: uuid
+        type:
+          type: string
+          enum: [sanitary, biosecurity, municipal]
         name:
           type: string
-        issuingAuthority:
+        issuer:
           type: string
+        validUntil:
+          type: string
+          format: date
         isActive:
           type: boolean
 
     Award:
       type: object
+      description: Seed data in MVP (no upload flow)
       properties:
         id:
           type: string
           format: uuid
-        name:
+        title:
           type: string
-        event:
+        eventName:
           type: string
         year:
           type: integer
-        position:
+        category:
           type: string
+          nullable: true
+        badgeIconUrl:
+          type: string
+          nullable: true
 
     Sponsorship:
       type: object
+      description: Seed data in MVP (no management panel)
       properties:
         id:
           type: string
@@ -177,41 +284,187 @@ components:
           type: string
           enum: [ambassador, sponsored, certified]
 
-    AvailabilitySlot:
+    WeeklyAvailability:
       type: object
+      description: Recurring weekly availability window (Availability entity)
       properties:
         id:
           type: string
           format: uuid
         dayOfWeek:
           type: integer
+          description: 0=Monday ... 6=Sunday
         startTime:
           type: string
           format: time
         endTime:
           type: string
           format: time
+        slotDurationMinutes:
+          type: integer
 
-    BookingRequest:
+    BookableSlot:
       type: object
-      required: [artistProfileId, bookingDate, description]
+      description: Concrete bookable slot computed from Availability minus confirmed bookings, holds and blocked dates (US0008 CA1-CA3)
+      properties:
+        date:
+          type: string
+          format: date
+        startTime:
+          type: string
+          format: time
+        endTime:
+          type: string
+          format: time
+        isAvailable:
+          type: boolean
+
+    WeekAvailabilityResponse:
+      type: object
+      properties:
+        weekStart:
+          type: string
+          format: date
+        slots:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookableSlot'
+
+    ShowcaseItem:
+      type: object
+      description: A portfolio work displayed in the showcase with its artist (US0003 CA2)
+      properties:
+        imageUrl:
+          type: string
+        thumbnailUrl:
+          type: string
+        style:
+          type: string
+          description: Style slug
+        artist:
+          $ref: '#/components/schemas/ArtistCard'
+
+    ShowcaseSection:
+      type: object
+      properties:
+        key:
+          type: string
+          enum: [near_you, top_rated, popular_styles, awarded_artists]
+        title:
+          type: string
+          description: Localized section title ("Cerca de ti", "Mejor calificados", ...)
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShowcaseItem'
+
+    ShowcaseResponse:
+      type: object
+      properties:
+        sections:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShowcaseSection'
+
+    QuoteRequest:
+      type: object
+      description: Chatbot answers used to estimate a price (US0011 CA2-CA4)
+      required: [artistProfileId, bodyZone, sizeReference, styleId]
+      properties:
+        artistProfileId:
+          type: string
+          format: uuid
+        bodyZone:
+          type: string
+          maxLength: 100
+        sizeReference:
+          type: string
+          maxLength: 50
+          description: Visual size reference (coin/palm/hand/arm)
+        styleId:
+          type: string
+          format: uuid
+        isColor:
+          type: boolean
+          default: false
+        isCoverup:
+          type: boolean
+          default: false
+
+    QuoteResponse:
+      type: object
+      properties:
+        priceMin:
+          type: integer
+          description: CLP
+        priceMax:
+          type: integer
+          description: CLP
+        currency:
+          type: string
+          example: CLP
+        depositAmount:
+          type: integer
+          description: priceMin * artist.deposit_percentage / 100 (CLP)
+
+    BookingHoldRequest:
+      type: object
+      description: Creates a booking in pending_payment with a 5-minute TTL hold on the slot (US0008 CA7-CA8). Chatbot data is optional and carried into the booking when the flow starts from a quote (US0011 CA8)
+      required: [artistProfileId, bookingDate, startTime, endTime]
       properties:
         artistProfileId:
           type: string
           format: uuid
         bookingDate:
           type: string
-          format: date-time
-        description:
+          format: date
+        startTime:
           type: string
-        bodyPlacement:
+          format: time
+        endTime:
           type: string
+          format: time
+        bodyZone:
+          type: string
+          maxLength: 100
+          nullable: true
+        sizeReference:
+          type: string
+          maxLength: 50
+          nullable: true
+        styleId:
+          type: string
+          format: uuid
+          nullable: true
+        isColor:
+          type: boolean
+          default: false
+        isCoverup:
+          type: boolean
+          default: false
         referenceImageUrls:
           type: array
+          maxItems: 3
           items:
             type: string
-        estimatedDurationMinutes:
-          type: integer
+        notes:
+          type: string
+          nullable: true
+
+    ArtistSummary:
+      type: object
+      description: Artist data embedded in bookings for navigation (US0010 technical notes)
+      properties:
+        artistProfileId:
+          type: string
+          format: uuid
+        artistName:
+          type: string
+        slug:
+          type: string
+        profilePhotoUrl:
+          type: string
+          nullable: true
 
     Booking:
       type: object
@@ -222,26 +475,68 @@ components:
         clientId:
           type: string
           format: uuid
-        artistProfileId:
-          type: string
-          format: uuid
+        artist:
+          $ref: '#/components/schemas/ArtistSummary'
         status:
           type: string
           enum: [pending_payment, confirmed, completed, cancelled]
         bookingDate:
           type: string
-          format: date-time
-        description:
+          format: date
+        startTime:
           type: string
-        bodyPlacement:
+          format: time
+        endTime:
           type: string
-        estimatedDurationMinutes:
+          format: time
+        estimatedPriceMin:
           type: integer
+          description: CLP
+        estimatedPriceMax:
+          type: integer
+          description: CLP
         depositAmount:
           type: integer
+          description: CLP. estimated_price_min * artist.deposit_percentage / 100
+        bodyZone:
+          type: string
+          nullable: true
+        sizeReference:
+          type: string
+          nullable: true
+        styleId:
+          type: string
+          format: uuid
+          nullable: true
+        styleName:
+          type: string
+          nullable: true
+        isColor:
+          type: boolean
+        isCoverup:
+          type: boolean
+        referenceImageUrls:
+          type: array
+          items:
+            type: string
+        notes:
+          type: string
+          nullable: true
+        hasReview:
+          type: boolean
+          description: Whether a review exists for this booking (US0010 CA6)
         createdAt:
           type: string
           format: date-time
+        cancelledAt:
+          type: string
+          format: date-time
+          nullable: true
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Hold expiration (only while status is pending_payment)
 
     ReviewRequest:
       type: object
@@ -268,6 +563,8 @@ components:
           maxLength: 2000
         tattooPhotoUrl:
           type: string
+          nullable: true
+          description: Photo of the fresh tattoo (healing photo is out of MVP scope)
 
     Review:
       type: object
@@ -290,15 +587,18 @@ components:
           type: integer
         averageRating:
           type: number
+          description: Average of the 4 dimensions
         comment:
           type: string
+          nullable: true
         tattooPhotoUrl:
           type: string
+          nullable: true
         createdAt:
           type: string
           format: date-time
 
-    PaymentInitRequest:
+    PaymentCreateRequest:
       type: object
       required: [bookingId]
       properties:
@@ -306,7 +606,7 @@ components:
           type: string
           format: uuid
 
-    PaymentInitResponse:
+    PaymentCreateResponse:
       type: object
       properties:
         paymentUrl:
@@ -314,6 +614,16 @@ components:
           description: Flow Chile redirect URL
         token:
           type: string
+
+    Commune:
+      type: object
+      properties:
+        name:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
 
     PaginatedResponse:
       type: object
@@ -341,7 +651,7 @@ paths:
     post:
       tags: [Auth]
       summary: Login with email and password
-      description: "US0001 — Authenticates a seeded user and returns a JWT token (24h expiry)"
+      description: "US0001 — Authenticates a seeded user and returns a JWT token (24h expiry). Invalid credentials return a generic message without revealing whether the email exists (CA3)"
       requestBody:
         required: true
         content:
@@ -356,12 +666,17 @@ paths:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
         '401':
-          description: Invalid credentials
+          description: Invalid credentials (generic message)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /auth/me:
     get:
       tags: [Auth]
       summary: Get current user info
+      description: "US0001 — Current authenticated user"
       security:
         - BearerAuth: []
       responses:
@@ -371,12 +686,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserSummary'
+        '401':
+          description: Missing or invalid token
+
+  /showcase:
+    get:
+      tags: [Showcase]
+      summary: Get showcase sections for the landing page
+      description: "US0003 — Public showcase grouped in sections: near_you (requires lat/lng; falls back to whole city ordering when absent, CA3), top_rated, popular_styles, awarded_artists. No login required (CA8)"
+      parameters:
+        - name: lat
+          in: query
+          description: Browser geolocation latitude (optional)
+          schema:
+            type: number
+        - name: lng
+          in: query
+          description: Browser geolocation longitude (optional)
+          schema:
+            type: number
+        - name: limitPerSection
+          in: query
+          schema:
+            type: integer
+            default: 12
+      responses:
+        '200':
+          description: Showcase sections
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShowcaseResponse'
 
   /artists:
     get:
       tags: [Artists]
-      summary: List artists with filters
-      description: "US0002, US0003, US0004 — Vitrina publica con filtros por estilo, ciudad, precio, rating, certificacion"
+      summary: List artists with combined filters and text search
+      description: "US0004 (filters, AND-combined), US0005 (search param over name/styles/commune/bio), US0012 (lat/lng/radius for map view). Returns only published artists"
       parameters:
         - name: page
           in: query
@@ -388,56 +734,74 @@ paths:
           schema:
             type: integer
             default: 12
-        - name: style
+        - name: search
           in: query
-          description: Filter by tattoo style
+          description: "US0005 — Free text over artist name, styles, commune and bio (min 2 chars)"
           schema:
             type: string
-        - name: city
+        - name: styles
           in: query
-          description: Filter by city
+          description: "US0004 CA2 — Style slugs, comma-separated (multiple checkbox)"
+          schema:
+            type: string
+        - name: commune
+          in: query
           schema:
             type: string
         - name: minPrice
           in: query
+          description: "US0004 CA3 — Lower bound over min_session_price (CLP)"
           schema:
             type: integer
         - name: maxPrice
           in: query
+          description: "US0004 CA3 — Upper bound over min_session_price (CLP)"
           schema:
             type: integer
-        - name: certified
-          in: query
-          description: "US0007 — Only certified artists"
-          schema:
-            type: boolean
         - name: minRating
           in: query
+          description: "US0004 CA4 — Minimum average rating (1-5)"
           schema:
             type: number
+        - name: certified
+          in: query
+          description: "US0004 CA5 — Only artists with an active certification"
+          schema:
+            type: boolean
+        - name: availableThisWeek
+          in: query
+          description: "US0004 CA6 — Only artists with available slots this week"
+          schema:
+            type: boolean
+        - name: artistType
+          in: query
+          description: "US0004 CA7 — Studio vs independent"
+          schema:
+            type: string
+            enum: [independent, studio]
+        - name: lat
+          in: query
+          description: "US0012 — User latitude for geo filtering/sorting (map view)"
+          schema:
+            type: number
+        - name: lng
+          in: query
+          description: "US0012 — User longitude for geo filtering/sorting (map view)"
+          schema:
+            type: number
+        - name: radiusKm
+          in: query
+          description: "US0012 CA5 — Radius in km (1, 5, 10; omit for whole city)"
+          schema:
+            type: integer
         - name: sortBy
           in: query
           schema:
             type: string
             enum: [rating, price_asc, price_desc, distance]
-        - name: lat
-          in: query
-          description: "US0005 — User latitude for geo sorting"
-          schema:
-            type: number
-        - name: lng
-          in: query
-          description: "US0005 — User longitude for geo sorting"
-          schema:
-            type: number
-        - name: radius
-          in: query
-          description: "US0005 — Radius in km"
-          schema:
-            type: integer
       responses:
         '200':
-          description: Paginated artist list
+          description: Paginated artist list. total drives the "X artistas encontrados" counter (US0004 CA10)
           content:
             application/json:
               schema:
@@ -453,8 +817,8 @@ paths:
   /artists/{slug}:
     get:
       tags: [Artists]
-      summary: Get artist detail by slug
-      description: "US0003 — Perfil publico del artista"
+      summary: Get artist public profile by slug
+      description: "US0006 — Full public profile: portfolio, tariffs, certifications, awards, sponsorships (US0014), rating breakdown and weekly availability. No login required (CA1)"
       parameters:
         - name: slug
           in: path
@@ -471,18 +835,17 @@ paths:
         '404':
           description: Artist not found
 
-  /artists/{artistProfileId}/reviews:
+  /artists/{slug}/reviews:
     get:
       tags: [Reviews]
-      summary: Get reviews for an artist
-      description: "US0006 — Visualizar resenas de un artista"
+      summary: Get reviews for an artist (paginated)
+      description: "US0006 CA8 / US0013 CA7 — Reviews shown on the artist profile, ordered by date desc"
       parameters:
-        - name: artistProfileId
+        - name: slug
           in: path
           required: true
           schema:
             type: string
-            format: uuid
         - name: page
           in: query
           schema:
@@ -507,12 +870,66 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/Review'
+        '404':
+          description: Artist not found
 
-  /bookings:
+  /artists/{artistProfileId}/availability:
+    get:
+      tags: [Bookings]
+      summary: Get bookable slots for a week
+      description: "US0008 CA1-CA3 — Concrete bookable slots for the requested week, computed from Availability minus confirmed bookings, active holds and blocked dates"
+      parameters:
+        - name: artistProfileId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: week
+          in: query
+          required: true
+          description: Monday of the requested week (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Week slots
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeekAvailabilityResponse'
+        '404':
+          description: Artist not found
+
+  /quotes/calculate:
+    post:
+      tags: [Quotes]
+      summary: Calculate estimated price range (chatbot)
+      description: "US0011 CA3-CA4 — Deterministic estimation using the artist's published tariffs (min_session_price, hourly_rate) plus complexity factors: cover-up +30%, color +20%, difficult zone +15%. Public (no login required)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteRequest'
+      responses:
+        '200':
+          description: Estimated price range
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteResponse'
+        '404':
+          description: Artist or style not found
+        '422':
+          description: Validation error
+
+  /bookings/hold:
     post:
       tags: [Bookings]
-      summary: Create a booking request
-      description: "US0008 — Solicitar cita con artista"
+      summary: Hold a slot and create the booking in pending_payment (5-minute TTL)
+      description: "US0008 CA7-CA8 — Creates the booking with status pending_payment and expires_at = now + 5 min. The slot is unavailable to others while the hold is active. If the hold expires without payment, the slot is released automatically. estimated_price_min/max and deposit_amount are computed from the artist tariffs (or from the quote data when provided, US0011 CA8)"
       security:
         - BearerAuth: []
       requestBody:
@@ -520,23 +937,26 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BookingRequest'
+              $ref: '#/components/schemas/BookingHoldRequest'
       responses:
         '201':
-          description: Booking created
+          description: Booking created in pending_payment with expiresAt
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Booking'
         '401':
-          description: Unauthorized
+          description: Unauthorized (login required to book, US0008 CA5)
+        '409':
+          description: Slot no longer available (already booked, held or blocked)
         '422':
-          description: Validation error
+          description: Validation error (slot outside availability, past date, etc.)
 
+  /bookings/me:
     get:
       tags: [Bookings]
-      summary: List user's bookings
-      description: "US0010 — Ver historial de reservas del cliente"
+      summary: List the authenticated client's bookings
+      description: "US0010 CA1-CA3 — Booking history filtered by client_id from the JWT, ordered by date (upcoming first, then past). Includes artist summary and hasReview flag"
       security:
         - BearerAuth: []
       parameters:
@@ -550,6 +970,11 @@ paths:
           schema:
             type: integer
             default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
       responses:
         '200':
           description: Paginated bookings
@@ -564,11 +989,14 @@ paths:
                         type: array
                         items:
                           $ref: '#/components/schemas/Booking'
+        '401':
+          description: Unauthorized
 
   /bookings/{bookingId}:
     get:
       tags: [Bookings]
       summary: Get booking detail
+      description: "US0010 CA5 — Full booking detail. Only the booking owner can access it"
       security:
         - BearerAuth: []
       parameters:
@@ -585,14 +1013,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Booking'
+        '403':
+          description: Not the booking owner
         '404':
           description: Not found
 
   /bookings/{bookingId}/cancel:
     post:
       tags: [Bookings]
-      summary: Cancel a booking
-      description: "US0010 — Cancelar reserva"
+      summary: Cancel a confirmed booking
+      description: "US0010 CA10-CA11 — Client cancels a confirmed future booking. Sets status = cancelled and cancelled_at; the slot becomes available again. No automatic deposit refund in the MVP (anti no-show protection is Won't-Have)"
       security:
         - BearerAuth: []
       parameters:
@@ -605,14 +1035,20 @@ paths:
       responses:
         '200':
           description: Booking cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '403':
+          description: Not the booking owner
         '409':
-          description: Booking cannot be cancelled in current status
+          description: Booking cannot be cancelled (status is not confirmed or date already passed)
 
   /bookings/{bookingId}/complete:
     post:
       tags: [Bookings]
       summary: Client confirms attendance (marks booking as completed)
-      description: "US0010 — Cliente confirma asistencia post-sesion (solo si fecha ya paso y status es confirmed)"
+      description: "US0010 CA8-CA9 — Only the booking owner, only when the booking date has passed and status is confirmed. Enables the review CTA (US0013)"
       security:
         - BearerAuth: []
       parameters:
@@ -625,6 +1061,10 @@ paths:
       responses:
         '200':
           description: Booking marked complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
         '403':
           description: Not the booking owner
         '409':
@@ -634,7 +1074,7 @@ paths:
     post:
       tags: [Reviews]
       summary: Submit a review for a completed booking
-      description: "US0011 — Dejar resena post-servicio"
+      description: "US0013 — 4-dimension rating (1-5 each). Only the booking owner, only when status is completed, one review per booking (unique index). Recalculates the artist's rating_avg. Reviews cannot be edited or deleted (CA8)"
       security:
         - BearerAuth: []
       parameters:
@@ -657,14 +1097,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Review'
+        '403':
+          description: Not the booking owner
         '409':
           description: Review already exists or booking not completed
+        '422':
+          description: Validation error
 
-  /payments/init:
+  /payments/create:
     post:
       tags: [Payments]
-      summary: Initialize payment via Flow Chile
-      description: "US0012 — Pagar deposito via Flow"
+      summary: Create a Flow payment order for the booking deposit
+      description: "US0009 CA1-CA2 — Creates the Flow order for deposit_amount (estimated_price_min * deposit_percentage / 100) and returns the redirect URL. The booking must be in pending_payment with an active hold"
       security:
         - BearerAuth: []
       requestBody:
@@ -672,22 +1116,24 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PaymentInitRequest'
+              $ref: '#/components/schemas/PaymentCreateRequest'
       responses:
         '200':
-          description: Payment URL to redirect client
+          description: Payment URL to redirect the client
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaymentInitResponse'
+                $ref: '#/components/schemas/PaymentCreateResponse'
+        '403':
+          description: Not the booking owner
         '409':
-          description: Booking not in confirmed status
+          description: Booking is not in pending_payment status or the hold has expired
 
-  /payments/callback:
+  /payments/confirm:
     post:
       tags: [Payments]
-      summary: Flow payment webhook callback
-      description: "US0012 — Webhook de confirmacion de pago desde Flow"
+      summary: Flow payment webhook (server-to-server)
+      description: "US0009 CA3, CA7-CA8 — Flow confirmation webhook. On successful payment: Payment is completed (flow_transaction_id, amount, platform_fee, artist_amount) and Booking transitions pending_payment -> confirmed (CA9: no artist approval needed). Idempotent: duplicated webhooks must not duplicate effects"
       requestBody:
         required: true
         content:
@@ -699,13 +1145,13 @@ paths:
                   type: string
       responses:
         '200':
-          description: Payment processed
+          description: Payment processed (idempotent)
 
   /payments/return:
     get:
       tags: [Payments]
-      summary: Payment return URL (client redirect after payment)
-      description: "US0012 — Pagina de retorno post-pago"
+      summary: Payment return URL (client redirect after Flow checkout)
+      description: "US0009 CA4-CA6 — Redirects the client back to the frontend with the payment outcome (confirmation screen on success, retry option on rejection)"
       parameters:
         - name: token
           in: query
@@ -714,13 +1160,13 @@ paths:
             type: string
       responses:
         '302':
-          description: Redirect to booking detail
+          description: Redirect to the frontend booking confirmation page
 
   /geo/communes:
     get:
       tags: [Geo]
-      summary: List available communes/cities
-      description: "US0005 — Obtener comunas disponibles para filtro geografico"
+      summary: List available communes with coordinates
+      description: "US0012 CA3 — Commune selector used when geolocation is denied (map centers on Santiago)"
       responses:
         '200':
           description: List of communes with coordinates
@@ -729,11 +1175,4 @@ paths:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    name:
-                      type: string
-                    latitude:
-                      type: number
-                    longitude:
-                      type: number
+                  $ref: '#/components/schemas/Commune'

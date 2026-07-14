@@ -2,6 +2,8 @@
 
 Guía de configuración del entorno de desarrollo y ejecución del proyecto INK·LINK.
 
+> ⚠️ **Estado objetivo**: esta guía describe el entorno una vez completada la Fase 0 de `DEVELOPMENT_PLAN.md`. A la fecha, `backend/`, `frontend/` y `docker-compose.yml` aún no existen — ver `PROJECT_STATUS.md`.
+
 ## Prerequisites
 
 | Herramienta | Versión mínima | Propósito |
@@ -137,37 +139,6 @@ docker-compose down -v                # Detener + eliminar volúmenes (reset BD)
 ```
 
 ## Estructura del Proyecto
-
-```
-AI4Devs-finalproject/
-├── backend/                    # .NET Core 10 Web API
-│   ├── Controllers/            # API Controllers
-│   ├── Domain/                 # Entidades y lógica de dominio
-│   ├── Infrastructure/         # EF Core, repositorios, servicios externos
-│   ├── Migrations/             # Migraciones EF Core
-│   ├── Seed/                   # Datos iniciales
-│   └── Program.cs              # Entry point
-├── frontend/                   # Angular 20 SPA
-│   ├── src/app/
-│   │   ├── core/               # Guards, interceptors, servicios base
-│   │   ├── shared/             # Componentes reutilizables
-│   │   ├── features/           # Módulos por funcionalidad
-│   │   └── app.routes.ts       # Rutas principales
-│   └── src/environments/       # Configuración por entorno
-├── docs/                       # Documentación del proyecto
-├── docker-compose.yml          # Infraestructura local
-└── README.md                   # Descripción general
-```
-
-## Troubleshooting
-
-| Problema | Solución |
-|---|---|
-| Puerto 5432 ocupado | Detener PostgreSQL local o cambiar puerto en docker-compose |
-| Error de migraciones | `dotnet ef database drop` + `dotnet ef database update` |
-| MinIO no accesible | Verificar que el contenedor esté corriendo: `docker ps` |
-| CORS error en frontend | Verificar que backend esté en puerto 5000 y CORS configurado |
-| Seed falla | Verificar que la BD esté vacía (o usar `--force-seed`) |
 
 ```
 AI4Devs-finalproject/

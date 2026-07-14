@@ -80,7 +80,14 @@ ejecuta el plan de master-prompt-docs-plan.md
 
 ### **2.3. Descripción de alto nivel del proyecto y estructura de ficheros**
 
-**Prompt 1** — Cambio de stack tecnológico:
+**Prompt 1** — Bootstrap de la Entrega 2 (análisis y documentación permanente):
+```
+Analiza y ejecuta c:\repo\ai4devs\AI4Devs-finalproject\prompts\MASTER_BOOTSTRAP_PROMPT.md
+```
+> 📋 2026-07-14 · Claude Code CLI · Claude Fable 5 · rodri
+> Resultado: informe de inconsistencias (fixs/issue-004.md), documentos permanentes (PROJECT_STATUS, DEVELOPMENT_PLAN, ARCHITECTURE, CONTRIBUTING, PROMPT_REGISTRY) y skill prompt-registry
+
+**Prompt 2** — Cambio de stack tecnológico:
 ```
 Modifica los archivos ai-specs/agents/backend-developer.md, ai-specs/agents/frontend-developer.md,
 docs/backend-standards.md, docs/frontend-standards.md para que adopten el stack tecnológico de este
@@ -124,7 +131,13 @@ Ejecutalo
 
 ### 4. Especificación de la API
 
-<!-- PENDIENTE: La especificación API (docs/api-spec.yml) fue vaciada intencionalmente durante la corrección de coherencia. Queda pendiente generarla a partir de las historias de usuario implementadas -->
+**Prompt 1** — Regeneración de la especificación API (sesión 4):
+```
+(continuación de sesión anterior — ejecución de fixs/issue-002.md pasos 1-5)
+```
+> 📋 2026-06-10 · VS Code · Claude Opus 4.6 · rodri
+> Resultado: docs/api-spec.yml regenerado a partir de las historias de usuario (auth, artists, bookings, reviews, payments, geo)
+> ⚠️ Pendiente: sincronización con el backlog final de 13 US — ver fixs/issue-004.md §A
 
 ---
 
