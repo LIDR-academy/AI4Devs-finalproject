@@ -1,7 +1,7 @@
 # Current session
 
-**Active feature:** signup-and-lesson-persistence
-**Folder:** docs/features/signup-and-lesson-persistence/
-**Phase:** pr_ready
-**Status:** DoD PASS. Docs compacted, risks landed, story moved to done. Human opens/merges PR on feat/signup-and-lesson-persistence.
-**Notes:** Scope = persistence + delete; sign-up carved to pending/sign-up.md. Model=cursor-grok-4.5-high-fast.
+**Active feature:** pending-pdfs-generate
+**Folder:** docs/features/pending-pdfs-generate/
+**Phase:** pending
+**Status:** Boot — worktree created, story in-progress. Awaiting Phase 1 (spec_partner).
+**Notes:** Story was untracked; copied into in-progress.
