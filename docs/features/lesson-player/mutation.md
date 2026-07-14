@@ -82,4 +82,3 @@ Default-param / `?? ''` fallback never hit by current tests; no surviving (tests
 ## Prior rounds (superseded)
 - Round 1: 72.36% (254/351) · 97 survivors
 - Round 2: 98.43% (313/318) · 5 survivors
-post-review pass skipped — review changed no source
