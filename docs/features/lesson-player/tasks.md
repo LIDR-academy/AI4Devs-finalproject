@@ -1,6 +1,6 @@
 ---
 feature: lesson-player
-phase: in_review
+phase: pr_ready
 review_round: 2     # incremented by reviews_lead; cap 2
 ---
 

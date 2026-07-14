@@ -1,7 +1,7 @@
 ---
 feature: lesson-player
 story: user-stories/in-progress/lesson-player.md
-status: in_progress
+status: pr_ready
 ---
 
 # Spec — lesson-player

@@ -2,6 +2,6 @@
 
 **Active feature:** lesson-player
 **Folder:** docs/features/lesson-player/
-**Phase:** DoD
-**Status:** Pre+post mutation PASS 100%. Full review APPROVED. dod_validator starting (Grok).
-**Notes:** pre_review_sha: 999b2fb808c84d16f71fbb068ddb62097845b550
+**Phase:** pr_ready
+**Status:** DoD PASS. Docs compacted, risks landed, story moved to done. Human opens/merges PR on feat/lesson-player.
+**Notes:** Worktree `.worktrees/lesson-player`. Models: opus=spec; grok=build/review/mutation/dod.
