@@ -1,15 +1,33 @@
 # RoboDock AI Backend
 
-Backend MVP para Entrega 2. Implementa API REST local con Express, TypeScript, Prisma y PostgreSQL para registrar sesiones de descarga, cubos detectados y acciones simuladas del robot.
+Backend REST del Proyecto Final RoboDock AI. Implementa una API local con
+Express, TypeScript, Prisma y PostgreSQL para registrar camiones, sesiones de
+descarga, cubos detectados por simulacion u OpenCV, acciones robot,
+sincronizacion de snapshots de vision y estado operacional para el dashboard.
+
+## Estado actual
+
+- API REST sin prefijo `/api`.
+- Persistencia PostgreSQL via Prisma.
+- Sesiones de descarga por `truckCode`.
+- Registro de cubos desde `simulation`, `opencv-file` u `opencv-camera`.
+- Reemplazo idempotente de cubos de vision por `snapshotSignature`.
+- Registro y transicion de acciones robot.
+- Dashboard operacional para sesion activa, conteos, acciones y trazabilidad.
+- Reset operacional para iniciar jornada o preparar nuevo camion sin borrar
+  historial.
+- Sanitizacion de metadata antes de persistir en PostgreSQL.
+- Proyeccion segura de dry-run/hardware para el dashboard.
+
+El Backend no controla directamente el MaxArm ni abre serial. Las acciones
+fisicas ocurren en Edge Vision y se sincronizan por HTTP.
 
 ## Alcance
 
-- Modo principal: simulation.
-- No implementa control real del MaxArm.
 - No implementa autenticacion, RBAC, WebSockets ni streaming.
-- Recibe datos simulados como si fueran enviados por Edge.
-- Recibe trazabilidad saneada de `edge_dry_run.py` sin controlar hardware.
 - Sanitiza metadata de acciones robot antes de guardarla con Prisma/PostgreSQL.
+- No borra historial operacional durante reset.
+- Mantiene compatibilidad con el flujo historico `simulation` de Entrega 2.
 
 ## Requisitos
 
@@ -333,9 +351,27 @@ npm test
 npm run build
 ```
 
-## Pendientes
+## Simulacion vs hardware
+
+El Backend acepta acciones `mode=simulation` para simulation y dry-run. Para
+`profile=vision-dry-run`, impone flags seguros como `dryRun=true`,
+`serialOpened=false` y `hardwareMovement=false`.
+
+Cuando Edge Vision ejecuta hardware, el Backend solo registra el resultado,
+metadata saneada, confirmacion fisica y errores reportados. La configuracion de
+puerto serial, camara y MaxArm vive en Edge.
+
+## Limitaciones conocidas
 
 - Idempotencia general por `runId` para dry-run; vision snapshots ya usan `snapshotSignature`.
 - Evidencia E2E reproducible con QR/cámara reales.
-- Control fisico de MaxArm no esta implementado.
-- Autenticacion, RBAC y auditoria avanzada quedan fuera de Entrega 2.
+- Autenticacion, RBAC, auditoria avanzada, colas y WebSockets no estan
+  implementados.
+
+## Antecedente Entrega 2
+
+La Entrega 2 valido el MVP simulado inicial: sesiones por `truckCode`, cubos
+simulados, acciones robot simuladas y dashboard operacional contra PostgreSQL.
+Ese flujo sigue disponible como fallback de QA, pero el estado actual de
+`finalproject-ASP` incorpora snapshots de vision, reset operacional, trazabilidad
+dry-run/hardware y sincronizacion con Edge Vision.

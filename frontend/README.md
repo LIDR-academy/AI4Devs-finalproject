@@ -1,10 +1,14 @@
 # RoboDock AI Frontend
 
-Dashboard operacional para Entrega 2.
+Dashboard operacional compacto del Proyecto Final RoboDock AI. Consume el
+Backend REST y, cuando esta disponible, Edge Vision para monitorear camara,
+QR, deteccion de cubos, planificacion multi-cubo, drop zones, dry-run,
+ejecucion MaxArm fisica, confirmacion por vision, reset operacional y feedback
+en vivo de la descarga.
 
-## Alcance
+## Estado actual
 
-Este frontend implementa una pantalla minima:
+Este frontend implementa una consola operacional local:
 
 - Dashboard Operacional.
 - Sesion activa.
@@ -23,7 +27,9 @@ Este frontend implementa una pantalla minima:
 - Flujo operacional para `Iniciar jornada` y `Preparar nuevo camion` sin borrar
   historial.
 
-No declara hardware real como implementado. El frontend consume datos reales del backend, que para Entrega 2 provienen del Edge en modo `simulation`.
+El frontend no controla serial ni calcula movimientos del robot. Las operaciones
+fisicas se solicitan al servicio Edge Vision, que aplica las validaciones y
+confirmaciones correspondientes.
 
 ## Requisitos
 
@@ -231,14 +237,35 @@ En otros equipos el puerto puede ser `COM3`, `COM5`, etc. Si falta
 - al ejecutar, el payload incluye `zoneClear`, `operatorPresent`,
   `emergencyStopReady`, `suctionReady` y `physicalExecutionConfirmed`.
 
+## Simulacion vs hardware
+
+Con solo Backend, el dashboard muestra el estado operacional y el flujo
+historico `simulation`. Con Edge Vision activo, agrega snapshot de camara,
+QR, detecciones, planificacion y control de descarga.
+
+En `vision-dry-run`, los planes y acciones se muestran como dry-run sin
+movimiento. En hardware, el boton de ejecucion requiere plan valido, QR valido,
+cubos detectados, Edge Vision disponible, sesion backend y checks de seguridad.
+El puerto MaxArm se configura en Edge, no en la UI.
+
 ## Build
 
 ```powershell
 npm run build
 ```
 
-## Pendientes
+## Limitaciones conocidas
 
 - Agregar pruebas automatizadas de componentes.
 - Integrar evidencia visual de QA.
-- Mantener el contrato `GET /dashboard/operational` estable para Entrega 3.
+- Polling en lugar de streaming continuo.
+- La calidad de QR/deteccion depende de camara, ROI, HSV e iluminacion local.
+- No implementa autenticacion, RBAC ni permisos por operador.
+
+## Antecedente Entrega 2
+
+La Entrega 2 valido el dashboard operacional inicial contra Backend y Edge en
+`simulation`: sesion activa, `TRUCK-001`, conteos, ultimas acciones y
+`mode=simulation`. Esa vista se mantiene como base compatible, pero la rama
+`finalproject-ASP` agrega vision, planificacion, control fisico, reset y feedback
+de ejecucion.

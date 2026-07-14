@@ -1,31 +1,40 @@
 # RoboDock AI Edge
 
-Módulo Edge de RoboDock AI. Conserva el flujo funcional de Entrega 2 en `simulation` y añade la primera base segura de perfiles, modelos internos y planificación de drop zones para la Entrega Final.
+Modulo Edge del Proyecto Final RoboDock AI. Integra el flujo local de vision,
+QR, deteccion de cubos por color, planificacion multi-cubo, drop zones por
+color, dry-run, ejecucion MaxArm fisica bajo confirmaciones y confirmacion
+fisica por vision. El modo `simulation` se mantiene como fallback historico de
+QA y demo sin hardware.
 
-## Alcance
+## Estado actual
 
-Este modulo simula el flujo Edge de RoboDock AI:
+Este modulo cubre el flujo Edge de RoboDock AI:
 
-1. Simula lectura QR con `TRUCK-001`.
-2. Crea una sesion en backend con `POST /sessions`.
-3. Simula deteccion de cubos por color.
-4. Registra cubos con `POST /sessions/:id/cubes`.
-5. Simula accion robot pick/drop.
-6. Registra accion con `POST /robot/actions`.
-7. Consulta dashboard con `GET /dashboard/operational`.
-8. Muestra resumen en consola.
+1. Detecta o simula QR de camion.
+2. Captura imagen desde fixture o camara autorizada.
+3. Detecta cubos por color con OpenCV/HSV.
+4. Sincroniza snapshots validos con Backend.
+5. Planifica descarga multi-cubo con drop zones por color.
+6. Ejecuta dry-run sin abrir serial ni mover MaxArm.
+7. Ejecuta descarga fisica MaxArm solo con configuracion local y confirmaciones.
+8. Confirma fisicamente por vision y sincroniza acciones con Backend.
+9. Expone estado para feedback en vivo del dashboard.
+10. Permite reset operacional y reset de drop zones.
 
-Implementa procesamiento OpenCV aislado para imagen o un frame de cámara. No integra todavía esa visión con Backend, planificación robot, comunicación serial ni movimiento físico del MaxArm.
+La Entrega 2 valido el runner simulado inicial. En `finalproject-ASP`, ese flujo
+convive con Edge Vision API, planificacion, control fisico y confirmaciones.
 
 ## Perfiles de ejecución
 
 | Perfil | Estado actual | Comportamiento |
 |---|---|---|
-| `simulation` | Implementado y default | Ejecuta el flujo simulado existente contra Backend y admite planificación dry-run con snapshot simulado. |
-| `vision-dry-run` | Implementado sin robot | Procesa archivo/cámara y puede generar un plan integrado sin serial. |
-| `hardware` | Probe serial seguro aislado | El runner principal sigue abortando; solo `maxarm_safe_probe.py` puede abrir serial con confirmación explícita y una pose allowlisted. |
+| `simulation` | Implementado y fallback seguro | Ejecuta el flujo simulado existente contra Backend y admite planificacion dry-run con snapshot simulado. |
+| `vision-dry-run` | Implementado sin movimiento fisico | Procesa archivo/camara, QR y cubos; genera planes y trazabilidad sin abrir serial. |
+| `hardware` | Implementado en flujo Edge Vision con gates | Ejecuta descarga fisica MaxArm desde plan aprobado, puerto local, QR valido, cubos detectados y confirmaciones explicitas. |
 
-El runner principal de Entrega 2 continúa ejecutando únicamente `simulation`. Un perfil no implementado nunca degrada silenciosamente a simulación.
+Un perfil no implementado nunca degrada silenciosamente a simulacion. El runner
+historico `edge_runner.py` sigue disponible para QA en `simulation`; la operacion
+con camara, plan y hardware se realiza desde `src/service/vision_api.py`.
 
 ## Requisitos
 
@@ -1612,21 +1621,33 @@ Los tests cubren perfiles, drop zones y regresión simulation, captura/QR/HSV/RO
 - Si `robotPlanning.enabled=false` o falta calibración/poses, el dry-run integrado se detiene antes de generar un plan.
 - Si no hay slot activo y libre, retorna `ZONE_UNAVAILABLE` y no modifica `occupied`.
 
+## Limitaciones conocidas
+
+- La calidad de QR y deteccion de cubos depende de camara, ROI, HSV,
+  iluminacion y montaje fisico local.
+- El servicio usa snapshot polling, no streaming continuo MJPEG.
+- La calibracion de pickup, workspace y drop zones vive en configuracion local.
+- El modo hardware requiere puerto serial, plan aprobado, QR valido, cubos
+  detectados y confirmaciones explicitas antes de mover MaxArm.
+- La evidencia E2E reproducible con camara/MaxArm reales depende del entorno
+  fisico disponible.
+- Autenticacion, auditoria avanzada, bloqueo distribuido y despliegue cloud no
+  estan implementados.
+
+## Antecedente Entrega 2
+
+La Entrega 2 valido el MVP simulado inicial con `edge_runner.py`: QR simulado,
+sesion en Backend, cubos simulados, accion robot `mode=simulation` y consulta de
+dashboard. Ese flujo sigue disponible para QA y demos sin hardware, pero no es
+el estado actual completo de `finalproject-ASP`.
+
 ## Evolucion futura
 
-Pendiente para los siguientes pasos:
+Pendiente para siguientes iteraciones:
 
-- estabilizar QR y detecciones entre múltiples frames;
-- calibrar ROI y HSV con el montaje final;
-- incorporar homografía y calibración versionada de pickup;
-- integrar la selección del cubo detectado con `DropZonePlanner`;
-- conectar `DetectionSnapshot` con Backend sin duplicar detecciones;
-- sustituir la calibración sintética por calibración final versionada y evidenciada;
-- agregar estabilidad multiframe y validación QR antes de autorizar planes finales;
-- agregar un comando operacional de reset con confirmación humana y auditoría;
-- añadir límites físicos de workspace y Z para coordenadas activas;
-- implementar reservas/persistencia hardware con bloqueo de proceso;
-- implementar adapter serial solo detrás de gates explícitos;
-- crear un executor hardware separado que confirme release antes de marcar `occupied`;
-- validar coordenadas antes de cualquier comando MaxArm;
-- no mover MaxArm sin configuracion segura, zona despejada y dry run previo.
+- estabilizar QR y detecciones entre multiples frames;
+- versionar y evidenciar calibraciones finales de camara, pickup y workspace;
+- endurecer auditoria operacional para ejecuciones hardware;
+- ampliar pruebas E2E repetibles con montaje fisico real;
+- mantener la regla de no mover MaxArm sin configuracion segura, zona despejada,
+  plan previo y confirmaciones humanas.

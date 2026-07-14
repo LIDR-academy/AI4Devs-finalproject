@@ -1,62 +1,69 @@
 # RoboDock AI
 
-RoboDock AI es el proyecto final de AI4Devs. El objetivo es demostrar un MVP local que integra backend, base de datos, dashboard web y un modulo Edge para simular la lectura QR, deteccion de cubos por color y acciones de un brazo MaxArm durante una descarga.
+RoboDock AI es el Proyecto Final de AI4Devs. En la rama `finalproject-ASP`, el
+repositorio integra el flujo local de descarga asistida por vision: Backend REST
+con PostgreSQL, dashboard operacional compacto, servicio Edge Vision con camara
+OpenCV, lectura QR de camion, deteccion de cubos por color, planificacion
+multi-cubo, drop zones por color, ejecucion MaxArm fisica bajo confirmaciones,
+modos dry-run/hardware, confirmacion fisica por vision, reset operacional para
+preparar un nuevo camion y feedback en vivo de ejecucion.
 
-## Estado de Entrega 2
+## Estado actual
 
-La Entrega 2 implementa desarrollo funcional, no solo documentacion. El flujo validado es:
+El flujo final implementado combina componentes reales y controles de seguridad
+locales:
 
 ```text
 PostgreSQL Docker
--> Backend API
--> Edge simulation
--> crear sesion por truckCode
--> registrar cubos simulados
--> registrar accion robot en mode=simulation
--> consultar dashboard operacional
--> visualizar estado en frontend
+-> Backend REST / Prisma
+-> Edge Vision API
+-> camara u origen fixture OpenCV
+-> QR de camion
+-> deteccion de cubos por color
+-> planificacion multi-cubo por drop zone
+-> dashboard operacional compacto
+-> dry-run o ejecucion MaxArm fisica con confirmaciones
+-> sync de acciones, conteos y feedback en vivo
+-> reset operacional / preparar nuevo camion
 ```
 
-La arquitectura funcional completa queda conectada con contratos HTTP reales. El Edge de Entrega 2 corre en modo `simulation`: no usa camara real, no ejecuta OpenCV productivo y no mueve un MaxArm fisico.
+Capacidades principales:
 
-## Alcance Entrega 2
-
-- Backend local con Node.js, Express, TypeScript, Prisma y PostgreSQL.
-- Modelo minimo con camiones, sesiones de descarga, cubos detectados y acciones robot.
-- Endpoints REST reales sin prefijo `/api`.
-- Edge Python en modo `simulation`, consumiendo los endpoints reales del backend.
-- Frontend React/Vite con dashboard operacional.
-- Evidencias QA para backend, Edge simulation y frontend.
-- Documentacion de ejecucion local y contratos.
-
-## Roadmap Entrega 3
-
-Entrega 3 debe reemplazar o complementar los adapters simulados por adapters hardware, manteniendo estables los contratos ya validados:
-
-- lectura QR real con camara;
-- deteccion de cubos por color con OpenCV;
-- integracion MaxArm real solo con bandera explicita;
-- dry run previo antes de cualquier movimiento fisico;
-- validacion de coordenadas y condiciones seguras.
-
-La simulacion de Entrega 2 no es trabajo desechable: es el primer adapter funcional y sirve como fallback permanente para QA, demo y desarrollo sin hardware.
+- Backend REST local con Node.js, Express, TypeScript, Prisma y PostgreSQL.
+- Modelo operacional para camiones, sesiones, cubos detectados y acciones robot.
+- Dashboard React/Vite con vista compacta de sesion, vision, plan, ejecucion,
+  acciones, trazabilidad y reset.
+- Edge Vision API con camara/OpenCV, QR de camion, deteccion HSV por color,
+  snapshot polling y sincronizacion opt-in con Backend.
+- Planificacion multi-cubo con seleccion de drop zones por color.
+- Reset operacional para iniciar jornada o preparar un nuevo camion sin borrar
+  historial.
+- Modos `simulation`, `vision-dry-run` y flujo hardware con gates explicitos.
+- Ejecucion fisica MaxArm desde Edge Vision usando configuracion local, puerto
+  serial local y confirmaciones humanas.
+- Confirmacion fisica por vision y feedback de estado de ejecucion en dashboard.
 
 ## Arquitectura resumida
 
 ```mermaid
 flowchart LR
-    Edge[Edge Python simulation] -->|HTTP JSON| Backend[Backend API Express]
+    Camera[Camara / Fixture OpenCV] --> Edge[Edge Vision API]
+    Edge -->|HTTP JSON| Backend[Backend REST Express]
     Frontend[Dashboard React/Vite] -->|HTTP JSON| Backend
+    Frontend -->|HTTP JSON| Edge
     Backend --> Prisma[Prisma ORM]
     Prisma --> DB[(PostgreSQL 16)]
+    Edge --> MaxArm[MaxArm fisico / dry-run]
 ```
 
 Responsabilidades:
 
-- `backend/`: API, validacion, persistencia, dashboard operacional.
-- `edge/`: simulacion QR, cubos y accion robot contra el backend.
-- `frontend/`: dashboard operacional consumiendo `GET /dashboard/operational`.
-- `docs/`: arquitectura, delivery, ADRs, API y evidencias.
+- `backend/`: API REST, validacion, persistencia, dashboard operacional y reset.
+- `edge/`: vision, QR, deteccion de cubos, planificacion, drop zones, dry-run y
+  adaptadores MaxArm.
+- `frontend/`: dashboard operacional compacto para monitoreo, planificacion,
+  ejecucion y reset.
+- `docs/`: arquitectura, delivery, ADRs, API, evidencias y prompt-runs.
 - `prompts/`: agentes, subagentes, skills, commands y playbooks usados.
 
 ## Estructura del repo
@@ -64,10 +71,10 @@ Responsabilidades:
 ```text
 backend/     API Express + TypeScript + Prisma
 frontend/    Dashboard React + Vite + TypeScript
-edge/        Runner Python en modo simulation
+edge/        Edge Vision, OpenCV, QR, drop zones y MaxArm
 docs/        Documentacion, arquitectura, decisiones y evidencias
 prompts/     Agentes, subagentes, skills, commands y playbooks
-spikes/      Experimentos de factibilidad para Entrega 3
+spikes/      Experimentos de factibilidad
 docker-compose.yml
 ```
 
@@ -78,8 +85,25 @@ docker-compose.yml
 - npm.
 - Python 3.10+.
 - PowerShell en Windows.
+- Camara y MaxArm solo para modo hardware fisico.
 
-## Levantar PostgreSQL con Docker
+## Configuracion local
+
+Mantener los archivos `.env` y configuraciones locales fuera del repositorio.
+Usar los `.example` como base:
+
+- `backend/.env.example` para `DATABASE_URL`, `PORT` y CORS.
+- `frontend/.env.example` para `VITE_BACKEND_URL`, `VITE_EDGE_VISION_URL` y
+  polling.
+- `edge/.env.example` para URL de backend y config Edge.
+- `edge/config/edge.vision.example.json` como base de vision.
+- `edge/config/single-cube-pick-drop.example.json` como base de descarga.
+- `edge/config/drop_zones.example.json` como base de slots.
+
+Los archivos locales de hardware/camara, como `*.local.json` y
+`frontend/.env.local`, no deben commitearse.
+
+## Levantar PostgreSQL
 
 Desde la raiz del proyecto:
 
@@ -133,19 +157,39 @@ Backend disponible en:
 http://localhost:3000
 ```
 
-## Ejecutar Edge simulation
+## Levantar Edge Vision
 
-Con el backend levantado:
+Instalar dependencias:
 
 ```powershell
 cd edge
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
-python src\edge_runner.py --backend-url http://localhost:3000 --config config\edge.config.example.json
 ```
 
-El runner simula `truckCode=TRUCK-001`, registra cubos y registra una accion `PICK_AND_DROP` con `mode=simulation`.
+Modo seguro con fixture/example:
+
+```powershell
+python src\service\vision_api.py --config config\edge.vision.example.json
+```
+
+Modo camara/dry-run con sincronizacion backend:
+
+```powershell
+python src\service\vision_api.py `
+  --config config\edge.vision.local.json `
+  --unload-config config\single-cube-pick-drop.local.json `
+  --allow-camera `
+  --sync-backend `
+  --backend-url http://localhost:3000
+```
+
+El servicio queda por defecto en:
+
+```text
+http://127.0.0.1:8001
+```
 
 ## Levantar frontend
 
@@ -154,10 +198,13 @@ cd frontend
 npm install
 ```
 
-Crear `frontend/.env` desde `frontend/.env.example` si necesitas configurar la URL:
+Crear `frontend/.env` desde `frontend/.env.example` si necesitas configurar URLs:
 
 ```env
 VITE_BACKEND_URL=http://localhost:3000
+VITE_EDGE_VISION_URL=http://localhost:8001
+VITE_DASHBOARD_REFRESH_MS=3000
+VITE_EDGE_VISION_REFRESH_MS=2000
 ```
 
 Ejecutar:
@@ -171,6 +218,21 @@ Abrir:
 ```text
 http://localhost:5173
 ```
+
+## Simulacion vs hardware
+
+`simulation` conserva el flujo inicial sin camara ni robot fisico. Sirve para QA,
+demo y desarrollo sin hardware.
+
+`vision-dry-run` usa vision real o fixture, QR y detecciones para planificar sin
+abrir serial ni mover MaxArm. El Backend guarda acciones seguras con
+`mode=simulation`, `dryRun=true`, `serialOpened=false` y
+`hardwareMovement=false`.
+
+El flujo hardware se ejecuta desde Edge Vision y requiere configuracion local,
+camara autorizada con `--allow-camera`, puerto MaxArm, plan previo, QR valido,
+cubos detectados y confirmaciones de seguridad. El dashboard no habla directo
+con serial.
 
 ## Validar flujo completo
 
@@ -193,119 +255,85 @@ npm run dev
 Invoke-RestMethod -Method GET -Uri "http://localhost:3000/health"
 ```
 
-4. Ejecutar Edge simulation:
+4. Levantar Edge Vision en fixture, dry-run o camara segun el entorno.
 
-```powershell
-cd edge
-python src\edge_runner.py --backend-url http://localhost:3000 --config config\edge.config.example.json
-```
-
-5. Consultar dashboard operacional:
-
-```powershell
-Invoke-RestMethod -Method GET -Uri "http://localhost:3000/dashboard/operational" | ConvertTo-Json -Depth 10
-```
-
-6. Levantar frontend y validar visualmente:
+5. Levantar frontend:
 
 ```powershell
 cd frontend
 npm run dev
 ```
 
-El dashboard debe mostrar sesion activa, `TRUCK-001`, estado `IN_PROGRESS`, conteos por color, total de cubos, ultimas acciones robot y `mode=simulation`.
+6. Validar en dashboard:
 
-## Endpoints implementados
+- sesion activa o estado limpio segun reset;
+- QR/truckCode cuando Edge Vision detecta camion;
+- conteos de cubos registrados y detectados por vision;
+- plan multi-cubo y drop zones por color cuando hay snapshot valido;
+- estado de ejecucion fisica/dry-run;
+- ultimas acciones robot y feedback de errores;
+- reset operacional para iniciar jornada o preparar nuevo camion.
 
-Base URL local:
+## Endpoints principales
 
-```text
-http://localhost:3000
-```
-
-Rutas implementadas:
+Backend:
 
 - `GET /health`
 - `POST /sessions`
 - `GET /sessions`
 - `GET /sessions/:id`
+- `PATCH /sessions/:id`
 - `POST /sessions/:id/cubes`
 - `POST /robot/actions`
+- `PATCH /robot/actions/:id`
 - `GET /dashboard/operational`
+- `POST /dashboard/operational/reset`
+- `POST /vision/snapshots/sync`
 
-La fuente detallada de contratos esta en `docs/api-design.md`.
+Edge Vision:
 
-## Evidencias QA disponibles
+- `GET /health`
+- `GET /vision/status`
+- `GET /vision/snapshot`
+- `GET /vision/snapshot/image`
+- `POST /vision/sync-backend`
+- `POST /vision/plan-dry-run`
+- `POST /drop-zones/reset`
+- `POST /operation/reset`
+- `POST /robot/multi-cube/plan`
+- `POST /robot/multi-cube/execute`
+- `GET /robot/multi-cube/status`
 
-- `docs/evidence/backend-api-test-results.md`: backend aprobado con observaciones menores.
-- `docs/evidence/edge-simulation-test-results.md`: flujo Backend + PostgreSQL + Edge simulation aprobado con observaciones.
-- `docs/evidence/frontend-dashboard-test-results.md`: frontend aprobado con observaciones.
+## Limitaciones conocidas
 
-## Que esta implementado
+- El sistema esta pensado para ejecucion local academica, no despliegue cloud.
+- No incluye autenticacion, RBAC, auditoria empresarial, colas ni WebSockets.
+- El dashboard usa polling, no streaming MJPEG ni eventos server-side.
+- La calibracion de camara, ROI, HSV, pickup y workspace depende del montaje
+  fisico local.
+- El modo hardware requiere validacion operacional del entorno, zona despejada,
+  puerto serial correcto y confirmaciones humanas.
+- Los archivos `*.local.json` son responsabilidad local y no forman parte del
+  repositorio.
 
-- PostgreSQL 16 via Docker Compose.
-- Backend API funcional con persistencia Prisma.
-- Migracion inicial y seed demo.
-- Flujo de sesiones de descarga por `truckCode`.
-- Registro de cubos simulados por color.
-- Registro de acciones robot simuladas.
-- Dashboard operacional agregado.
-- Edge runner en modo `simulation`.
-- Frontend operacional consumiendo backend real.
-- Documentacion de arquitectura, delivery, ADRs, API y evidencias.
+## Antecedente Entrega 2
 
-## Fuera de alcance de Entrega 2
+La Entrega 2 valido el MVP simulado inicial: PostgreSQL, Backend REST, dashboard
+operacional, Edge en `simulation`, creacion de sesion por `truckCode`, registro
+de cubos simulados, acciones robot simuladas y consulta del dashboard. Esa base
+se mantiene como fallback para QA y demos sin hardware, pero ya no representa el
+estado actual de la rama `finalproject-ASP`.
 
-- Movimiento fisico real del MaxArm.
-- Lectura real de camara como parte del flujo MVP.
-- Deteccion OpenCV productiva integrada al runner principal.
-- Calibracion completa camara -> cubo -> robot.
-- Seguridad fisica completa para operacion robotica real.
-- Autenticacion, RBAC, auditoria empresarial, WebSockets, colas o despliegue cloud.
-- Dashboard historico o analytics avanzado.
+Documentacion historica:
 
-## Prompts y agentes usados
-
-Agentes principales:
-
-- `prompts/agents/po.md`
-- `prompts/agents/delivery-manager.md`
-- `prompts/agents/architect.md`
-- `prompts/agents/governance.md`
-- `prompts/agents/backend.md`
-- `prompts/agents/edge.md`
-- `prompts/agents/frontend.md`
-- `prompts/agents/qa.md`
-- `prompts/agents/documenter.md`
-
-Subagentes y skills relevantes:
-
-- `prompts/subagents/backend-prisma.md`
-- `prompts/subagents/backend-api.md`
-- `prompts/subagents/edge-vision.md`
-- `prompts/subagents/edge-maxarm.md`
-- `prompts/subagents/qa-api.md`
-- `prompts/skills/api-design.md`
-- `prompts/skills/prisma-postgres.md`
-- `prompts/skills/opencv.md`
-- `prompts/skills/maxarm.md`
-- `prompts/skills/react-dashboard.md`
-- `prompts/skills/documentation.md`
-
-Commands y playbooks usados:
-
-- `prompts/commands/refine-story.md`
-- `prompts/commands/implement-feature.md`
-- `prompts/commands/create-endpoint.md`
-- `prompts/commands/test-flow.md`
-- `prompts/playbooks/delivery-2.md`
+- `docs/delivery/01-alcance-entrega2.md`
+- `docs/delivery/02-plan-delivery-entrega2.md`
+- `docs/architecture/architecture-entrega2.md`
+- `docs/evidence/edge-simulation-test-results.md`
 
 ## Documentacion relacionada
 
 - `docs/delivery/roadmap-entregas.md`
-- `docs/delivery/01-alcance-entrega2.md`
-- `docs/delivery/02-plan-delivery-entrega2.md`
-- `docs/architecture/architecture-entrega2.md`
 - `docs/api-design.md`
 - `backend/README.md`
 - `edge/README.md`
