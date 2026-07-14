@@ -1,6 +1,6 @@
 # ORCHESTRATOR.md — Agentic Orchestrator (source of truth)
 
-> **Rule of precedence:** if this file conflicts with any agent/command/rule file, **this file wins** — except the canonical project rules in `.agents/rules/global.mdc`, `hooks-service-dao.mdc`, `atomic-design.mdc`, `component-split.mdc`, which always take precedence on _how code is written_. The step-by-step protocol lives in `.agents/agents/orchestrator_lead.md` and is **not** duplicated here.
+> **Rule of precedence:** if this file conflicts with any agent/command/rule file, **this file wins** — except the canonical project rules in `.agents/rules/global.mdc`, `hooks-service-dao.mdc`, `state.mdc`, `atomic-design.mdc`, `component-split.mdc`, which always take precedence on _how code is written_. The step-by-step protocol lives in `.agents/agents/orchestrator_lead.md` and is **not** duplicated here.
 
 Takes one user story from `user-stories/` to a validated, PR-ready feature through four phases, driven by `orchestrator_lead` with **one human gate up front** — a single combined approval of the spec + Gherkin contract. Full rationale: `/ORCHESTRATOR_PLAN.md`.
 
@@ -105,7 +105,7 @@ See `/ORCHESTRATOR_PLAN.md` §7. Validated by `dod_validator`: Functionality · 
 
 ## Rules index (passive standards)
 
-- `.agents/rules/global.mdc` — monorepo spec · `hooks-service-dao.mdc` — layering · `atomic-design.mdc` — component structure · `component-split.mdc` — UI file split · `tdd.mdc` — Three Laws, Red→Green→Refactor
+- `.agents/rules/global.mdc` — monorepo spec · `hooks-service-dao.mdc` — layering · `state.mdc` — ≥3 related local states → `useReducer` · `atomic-design.mdc` — component structure (every component ships a `.stories.tsx`) · `component-split.mdc` — UI file split · `types.mdc` — `*.types.ts` placement · `i18n.mdc` — `t('ns.key')` inline, no `labels` object (key dictionaries excepted) · `tdd.mdc` — Three Laws, Red→Green→Refactor
 - Reviewer rubrics: **in each `.agents/agents/reviewer_*.md` + `spec_reviewer.md`** (no separate rules file)
 
 ## Skills index (invocable procedures)

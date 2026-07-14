@@ -29,7 +29,7 @@ REFACTOR → with the bar green, remove duplication, improve names, shorten func
 ## What "a test" means here (by artifact type)
 
 - **UI component** → `<name>.test.tsx` (Jest + `@testing-library/react-native`), driven first. Assert rendering per prop, each of the 4 UI states (Loading/Content/Error/Empty) where applicable, conditional branches, handler/callback wiring, and accessibility roles/labels. **Required for every component** — this is what makes UI both TDD- and mutation-testable. Then the component, then the Storybook story, then a Playwright e2e via the `storybook-e2e-tests` skill (which owns the `.e2e.js` conventions and location — `libs/<lib>/tests/e2e/…` mirroring `src/`, **not** co-located).
-- **Logic (hook/service/DAO)** → `use-*.test.ts`, `*.service.test.ts`, `*.dao.test.ts` (Jest; mock `getSupabase()`/`fetch` or the layer below). Then implement following `Component→Hook→Service→DAO` (`.agents/rules/hooks-service-dao.mdc`).
+- **Logic (hook/service/DAO)** → `use-*.test.ts`, `*.service.test.ts`, `*.dao.test.ts` (Jest; mock `getSupabase()`/`fetch` or the layer below). Then implement following `Component→Hook→Service→DAO` (`.agents/rules/hooks-service-dao.mdc`); hook/component related local state ≥3 fields → `useReducer` (`.agents/rules/state.mdc`).
 - **Always** → one **integration test** across the vertical slice (e.g. hook→service→DAO with a mocked Supabase client, or a Playwright flow across composed components).
 
 ## Vertical slices (build order)

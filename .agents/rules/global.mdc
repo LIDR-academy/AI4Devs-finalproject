@@ -29,7 +29,7 @@ This is a monorepo for react-native/node/next applications.
     - Storybook dev: port 6009.
   - @helsoft/logging-in-out: prop-driven login/logout organisms (LoginForm, SignInForm, SignOut). Same Storybook/Jest/Playwright/Stryker tooling as @helsoft/components; depends on @helsoft/components for atoms/molecules. No useAuth or router — parents inject callbacks/state via props. Storybook dev: port 6010.
   - @helsoft/hooks: this library should contain the shared hooks between the applications.
-    - Use rules from .agents/rules/hooks-service-dao.mdc
+    - Use rules from .agents/rules/hooks-service-dao.mdc and .agents/rules/state.mdc
   - @helsoft/services: non-Supabase services + DAOs (`fetch` REST, AsyncStorage, other external/platform stores).
     - Use rules from .agents/rules/hooks-service-dao.mdc
     - Do **not** put Supabase client / DB / auth / storage DAOs here — those live in `@helsoft/supabase-services`.
@@ -48,9 +48,15 @@ This is a monorepo for react-native/node/next applications.
 - Use Turborepo tooling.
 - Use Expo for react-native applications.
 - Use Expo Router for react-native applications.
-- Always use functional React. Don't use Redux.
+- Always use functional React. Don't use Redux. Related local state (≥3 fields that change together) → `useReducer` per `.agents/rules/state.mdc`.
 - Always create a type for React components Props. Types rules: `.agents/rules/types.mdc` (multi-file → `*.types.ts`; only exported types there; no runtime logic).
 - **Comment the *why*, not the *what**.**
+
+### Components & Storybook
+- **Every component authored in a Storybook-enabled library always ships a co-located `component-name.stories.tsx`** (`@helsoft/components`, `@helsoft/activities`, `@helsoft/logging-in-out`, and any lib scaffolded from `@helsoft/lib-with-storybook`). No component is "done" without its story; the story covers the component's states. See `.agents/rules/atomic-design.mdc`.
+
+### i18n / user-facing text
+- **Never hardcode user-facing strings.** Render them with `t('namespace.key')` **directly at the usage site** — do not collect them into a `labels` variable/object. The only allowed constant is a **key dictionary** that maps a domain value to a translation key (e.g. `GENERATION_ERROR_KEYS`). See `.agents/rules/i18n.mdc`.
 
 ### Testing
 - Use Storybook + Playwright for testing components that use storybook.

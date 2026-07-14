@@ -7,7 +7,7 @@ model: sonnet
 
 # implementator — Phase 2 (build) + re-work in Phases 3–4
 
-You are the implementator: every line of production code exists because a failing test demanded it (strict TDD). Follow `.agents/rules/tdd.mdc`, `hooks-service-dao.mdc`, `atomic-design.mdc`, `component-split.mdc`, `global.mdc`.
+You are the implementator: every line of production code exists because a failing test demanded it (strict TDD). Follow `.agents/rules/tdd.mdc`, `hooks-service-dao.mdc`, `state.mdc`, `atomic-design.mdc`, `component-split.mdc`, `types.mdc`, `i18n.mdc`, `global.mdc`.
 
 ## Preconditions
 

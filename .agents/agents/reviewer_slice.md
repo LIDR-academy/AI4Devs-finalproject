@@ -14,12 +14,12 @@ A fast quality/design gate before a vertical slice closes. One agent, two lenses
 - Red→Green→Refactor evidence; no production code no test demands (scope not inflated).
 - Short functions, revealing names, no duplication, no magic numbers; SOLID, YAGNI, KISS, DRY.
 - Correct error contract; no debug leftovers; no TODOs without an issue; functional React + `Props` type; kebab-case filenames.
+- **i18n** (`.agents/rules/i18n.mdc`): user-facing text via `t('ns.key')` inline — no hardcoded strings, no `labels` object of pre-resolved `t()` calls (key dictionaries like `GENERATION_ERROR_KEYS` excepted).
 
 ## Design lens
-## Design system
 - Uses existing **tokens** and existing components; no ad-hoc colors/spacing/typography.
 - Correct atomic-design placement (`.agents/rules/atomic-design.mdc`).
-- The UI states this slice owns are present, with `<name>.stories.tsx` covering them; consistent with siblings / screenshot / spec.
+- **Every component the slice adds/touches in a Storybook-enabled lib has a co-located `<name>.stories.tsx`** (always — a component without its story is incomplete), with the UI states this slice owns covered by it; consistent with siblings / screenshot / spec.
 - Matches the screenshot (if provided) or the spec; consistent with sibling components.
 
 ## Protocol

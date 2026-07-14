@@ -79,7 +79,7 @@ Grouped by the core loop. Ordered by priority within each group.
 
 ### Must-Have (P0) — the MVP cannot ship without these
 
-**R1 — PDF upload & backend content extraction (text + images)** *(highest technical risk — build first)*
+~**R1 — PDF upload & backend content extraction (text + images)** *(highest technical risk — build first)*~
 Description: User uploads a PDF; **content extraction runs on the backend (Supabase Edge Function / storage-triggered function), not on the client.** The server extracts both the readable text and the embedded images, stores the images (Supabase Storage), and returns the text plus references to the extracted images. This is the riskiest piece and should be the first task delivered.
 Acceptance criteria:
 - Given a PDF, when the user uploads it, then the backend processes the whole document — every page — and extracts both its selectable text and its embedded images, returning success to the client.
@@ -89,7 +89,7 @@ Acceptance criteria:
 - Given an unsupported or image-only/scanned PDF (text rendered as a scanned image), when extraction runs, then the user sees a clear error explaining the file can't be used (OCR of scanned text is out of scope for v1 — note this differs from extracting embedded figures, which is supported).
 - Given a file over the size limit, then the upload is rejected with a clear message.
 
-**R2 — AI lesson generation (instructional + activity slides)**
+~**R2 — AI lesson generation (instructional + activity slides)**~
 Description: The extracted text **and the extracted images (R1)** are sent to the AI **through a Supabase Edge Function that injects the user's stored key server-side** (the key and the provider call never live in the client). The function uses the **Vercel AI SDK** so providers/models are swappable without reworking generation. It returns a structured deck of typed slides, honoring the lesson composition chosen in R2.1, and may attach relevant extracted images to slides.
 Acceptance criteria:
 - Given extracted text, when generation runs, then the result is an ordered list of slides each typed as `instructional` or `activity`.
@@ -100,7 +100,7 @@ Acceptance criteria:
 - Each activity slide carries the correct answer(s) and, where applicable, an explanation.
 - Generation shows progress state and surfaces a readable error on failure (bad key, rate limit, timeout) without crashing.
 
-**R2.1 — Lesson composition choice (instructional / activity / both)**
+~**R2.1 — Lesson composition choice (instructional / activity / both)**~
 Description: Before generating, the learner chooses what the lesson should contain: instructional slides only, activity slides only, or both.
 Acceptance criteria:
 - Before generation, the learner can pick one of: `instructional only`, `activity only`, `both`. Default is `both`.
@@ -128,7 +128,7 @@ Acceptance criteria:
 - Progress through the deck is visible.
 - The player works on web and on a mobile viewport (responsive), and images scale appropriately to the viewport.
 
-~**R5 — Auth & persistence**~
+**R5 — Auth & persistence**
 Description: Supabase-backed accounts; lessons saved per user.
 Acceptance criteria:
 - User can sign up, log in, and log out.

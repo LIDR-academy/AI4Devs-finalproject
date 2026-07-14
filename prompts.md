@@ -361,3 +361,29 @@ These prompts drove refinement, reconciliation and review across the documents r
    *(aceptando las 10 recomendaciones propuestas: 1 — round 2 re-ejecuta solo reviewers con findings abiertos; 2 — CI una vez por ronda de review, los reviewers no re-ejecutan suites; 3 — review por slice colapsada en un solo agente `reviewer_slice`; 4 — segunda pasada de mutación condicional y acotada al sha pre-review; 5 — borrar `review-standards.md` y embeber cada rúbrica en su agente + sacar las reglas de la inyección global; 6 — lens skipping según el diff; 7 — test runs silenciosos y acotados por workspace/archivo; 8 — dedupe `ORCHESTRATOR.md`/`orchestrator_lead.md` y compactar `hooks-service-dao.mdc`; 9 — solo `reviewer_accessibility` a Haiku; 10 — presupuesto de `tdd.md` verificado en cada slice gate.)*
 
 3. write the prompts of this session in prompts.md
+
+---
+
+## Anexo — Prompts de la sesión: refinamientos del orquestador (kanban de historias, shrink de spec, `risks.md` en tmp, fusión de reviewers, reglas de stories e i18n)
+
+> Prompts del usuario (verbatim, en orden) de la sesión que refinó el orquestador de `.agents/`: mover la historia por el kanban `pending → in-progress → done`, encoger `spec.md` tras generar tasks + gherkin, ejecutar el compact de docs solo como script (sin agente), escribir `risks.md` en una carpeta `tmp/` fuera de contexto (y aterrizarla en `docs/` al crear el PR), fusionar los 6 reviewers de la revisión completa en 2 (`reviewer_engineering` = code · architecture · performance; `reviewer_standards` = security · accessibility, quitando design), y añadir dos convenciones de código (stories obligatorias en libs con Storybook; texto de usuario vía `t('ns.key')` inline sin objeto `labels`, salvo diccionarios de claves).
+
+1. modify the orchestrator so it moves the .md file from user-stories/pending into user-stories/in-progress when it starts to work on it,  and into user-stories/done when finished
+
+2. after creating the spec.md and all the tasks files, review spec.md and shrink it
+
+3. The `Compact docs (pre-PR cleanup).` should only run the script, but dont fead them into a agent/subagent, basically, only run the script
+
+4. ok, and the risks.md file should be created in an tmp folder, and never added to the context, just move it to the docs folder when creating the PR
+
+5. now I want to merge the full review agents into only 2 (instead of 6):
+   1. code, performance and architecture
+   2. desing, security and accessibility
+
+6. actually, remove design review from the reviewer_standards
+
+7. add 2 things:
+   1. always add stories for components in a library with storybook
+   2. don't add a labels variable, use `t('some.label)'` directly, unless is a dictionary, for example like `GENERATION_ERROR_KEYS`
+
+8. add the prompts from "modify the orchestrator so it moves the .md file from user-stories/pending into user-stories/in-progress when it starts to work on it,  and into user-stories/done when finished" until the last one into prompts.md

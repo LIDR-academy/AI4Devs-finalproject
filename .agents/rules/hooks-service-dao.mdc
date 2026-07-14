@@ -88,6 +88,13 @@ Follow `.agents/rules/types.mdc`.
 - Do **not** export types from the DAO / service / hook implementation file
 - Private / single-file types stay next to the implementation (or inline)
 
+## Local state in hooks / components
+
+Follow `.agents/rules/state.mdc`.
+
+- ≥3 related pieces of local state that change together → `useReducer` (not multiple `useState`, not Redux)
+- Independent unrelated scalars may stay as separate `useState`
+
 ## Hard boundaries
 
 - A component never imports a DAO; a hook never calls a DAO; a service never touches React; a DAO never holds business logic.

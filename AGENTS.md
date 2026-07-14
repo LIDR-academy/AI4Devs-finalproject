@@ -12,6 +12,7 @@ Canonical agent rules live in `.agents/rules/` and take precedence:
 - `hooks-service-dao.mdc` — hook/service/DAO layering (read before adding hooks, services, or DAOs)
 - `atomic-design.mdc` — component structure methodology
 - `component-split.mdc` — UI co-location split (tsx / types / hook / helpers) for non-trivial components
+- `state.mdc` — ≥3 related local states that change together → `useReducer`
 
 ## Commands
 
@@ -56,7 +57,7 @@ Turborepo monorepo with three top-level areas:
 - **`libs/*`** — all shared/business code, published as `@helsoft/*` workspace packages: `types` (plain TS types, one `type-name.ts` file each), `components` (shared UI + Storybook stories, atomic design), `activities` (activity-slide organisms — multiple choice, fill-in-the-blank, flashcard, matching, open-ended, etc.; Storybook + Jest + Playwright + Stryker like `components`, depends on `components` for shared atoms/molecules/theme), `logging-in-out` (prop-driven login/logout organisms — LoginForm, SignInForm, SignOut; Storybook on 6010; no useAuth/router), `hooks`, `services` (non-Supabase services + DAOs: REST/`fetch`, AsyncStorage, etc.), `supabase-services` (Supabase services + DAOs + client), `study-buddy` (the app's feature lib — business logic for the app lives here, not in the app), `lib-with-storybook` (template for new Storybook-enabled libs; copy its story patterns).
 - **`supabase/`** — backend is Supabase (auth, Postgres, storage, edge functions). CLI config and migrations only.
 
-### Data-flow layering (enforced — see `hooks-service-dao.mdc`)
+### Data-flow layering (enforced — see `hooks-service-dao.mdc`; local related state → `state.mdc`)
 
 ```
 Component → Hook → Service → DAO → Supabase / external API
@@ -68,7 +69,7 @@ Two service libs — pick by data source:
 - **`@helsoft/supabase-services`** — Supabase DAOs/services + `initSupabase`/`getSupabase`. Paths: `libs/supabase-services/src/dao|services/{feature}.{dao|service}.ts`.
 - **DAOs** (`{Feature}Dao` abstract class, static methods): raw data access only. One DAO class per data source.
 - **Services** (`{Feature}Service` abstract class): validation + business logic; call DAOs, never fetch directly; no React.
-- **Hooks** (`libs/hooks/src/hooks/use-{feature}.ts`): React integration wrapping services (never DAOs directly). tanstack-query is the intended pattern for data-fetching hooks but is not installed yet — add it to `@helsoft/hooks` when first needed.
+- **Hooks** (`libs/hooks/src/hooks/use-{feature}.ts`): React integration wrapping services (never DAOs directly). tanstack-query is the intended pattern for data-fetching hooks but is not installed yet — add it to `@helsoft/hooks` when first needed. Related local state ≥3 fields → `useReducer` (`state.mdc`).
 - Each layer exports through its `index.ts` barrel files.
 
 ### Supabase client wiring

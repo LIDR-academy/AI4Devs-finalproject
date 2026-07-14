@@ -7,7 +7,7 @@ model: sonnet
 
 # reviewer_engineering — code · architecture · performance
 
-Independent lens; runs in parallel with `reviewer_standards`. You apply **three sub-lenses** in one pass over the diff. Rubrics below are canonical (they live in each reviewer file, not in a shared rules doc). Also apply `.agents/rules/hooks-service-dao.mdc`, `types.mdc`, `component-split.mdc`, `global.mdc`.
+Independent lens; runs in parallel with `reviewer_standards`. You apply **three sub-lenses** in one pass over the diff. Rubrics below are canonical (they live in each reviewer file, not in a shared rules doc). Also apply `.agents/rules/hooks-service-dao.mdc`, `state.mdc`, `types.mdc`, `component-split.mdc`, `i18n.mdc`, `global.mdc`.
 
 ## Code quality & TDD
 - Every `@s` in `gherkin-scenarios.md` maps to ≥ 1 concrete test (check `tdd.md`).
@@ -15,10 +15,12 @@ Independent lens; runs in parallel with `reviewer_standards`. You apply **three 
 - Short functions, one reason to change, revealing names, no duplication, no magic numbers; SOLID, YAGNI, KISS, DRY.
 - Correct error contract; no `console.log` / debug leftovers; no TODOs without an issue.
 - Functional React only; `Props` type present; kebab-case filenames.
+- **i18n** (`i18n.mdc`): user-facing text goes through `t('ns.key')` inline — no hardcoded strings, no `labels`/`copy` object of pre-resolved `t()` calls (key dictionaries like `GENERATION_ERROR_KEYS` are the only allowed collection).
 
 ## Architecture & layering
 - `Component → Hook → Service → DAO` respected; no cross-layer imports (component never imports a DAO; service has no React; hook wraps a service, not a DAO).
 - Multi-file types live in `*.types.ts`, not exported from the component / service / hook / DAO implementation (`types.mdc`).
+- ≥3 related local states that change together use `useReducer`, not multiple `useState` (`state.mdc`).
 - DTOs not leaked out of the data/DAO layer.
 - Business logic lives in `libs/*`, not `apps/*`; barrels (`index.ts`) updated.
 - Components as atomic as possible; hooks as reusable as possible.

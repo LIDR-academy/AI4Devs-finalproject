@@ -35,9 +35,10 @@ The result is a 4-phase pipeline (below) driven by an orchestrator that guards t
 Everything the orchestrator generates must obey the project's existing rules (canonical rules live in `.agents/rules/` and take precedence):
 
 - **Monorepo layout** (`global.mdc`): code lives in `libs/*` as `@helsoft/*` packages; `apps/*` stay thin. A feature `app-x` pairs with a lib `libs/x`.
-- **Layering** (`hooks-service-dao.mdc`): `Component → Hook → Service → DAO → Supabase / external API`. DAOs = data access only (Supabase DAO via `getSupabase()` or external-API DAO via `fetch`); Services = validation + business logic, no React; Hooks = React integration (tanstack-query pattern), wrap services never DAOs. Every layer exports via `index.ts`.
-- **Components** (`atomic-design.mdc`): atoms → molecules → organisms → templates → pages. Component files in `component-name/component-name.tsx`, each with `component-name.stories.tsx`. Use existing tokens/components; new Storybook stories follow `libs/lib-with-storybook/src/stories` patterns.
+- **Layering** (`hooks-service-dao.mdc`): `Component → Hook → Service → DAO → Supabase / external API`. DAOs = data access only (Supabase DAO via `getSupabase()` or external-API DAO via `fetch`); Services = validation + business logic, no React; Hooks = React integration (tanstack-query pattern), wrap services never DAOs. Every layer exports via `index.ts`. Related local state ≥3 fields → `useReducer` (`state.mdc`).
+- **Components** (`atomic-design.mdc`): atoms → molecules → organisms → templates → pages. Component files in `component-name/component-name.tsx`, and **every component in a Storybook-enabled lib always ships a co-located `component-name.stories.tsx`** (no exceptions — a component without its story is incomplete). Use existing tokens/components; new Storybook stories follow `libs/lib-with-storybook/src/stories` patterns. Always add e2e tests for components in Storybook.
 - **Component file split** (`component-split.mdc`): non-trivial UI (organisms / complex molecules) splits into `*.tsx` (JSX + handlers) / `*.types.ts` / `use-*.ts` (local state) / `*.helpers.ts` (pure); not the data-layer hook.
+- **i18n / labels** (`i18n.mdc`): user-facing text always via `t('namespace.key')` **inline at the usage site** — never a `labels` variable/object of pre-resolved `t()` calls; the only allowed collection is a **key dictionary** mapping a domain value → translation key (e.g. `GENERATION_ERROR_KEYS`).
 - **Conventions**: functional React only, no Redux; always a `Props` type; kebab-case filenames; `.web.tsx` for platform-specific; Conventional Commits.
 - **Testing** (`global.mdc` + `E2E_TESTS.md`):
   - Storybook components → **Jest + React Native Testing Library** unit tests (`<name>.test.tsx`, co-located — rendering/props/states/handlers/a11y) **plus** **Storybook + Playwright** e2e (`*.e2e.js` under `tests/e2e/`, mirroring the component's `src/` path; stories reached via `/?path=/story/...` inside `frameLocator('iframe[title="storybook-preview-iframe"]')`; components port 6007, lib-with-storybook 6006). The orchestrator **requires the Jest unit test on every component** so TDD and mutation testing apply to UI too — this deliberately extends the base convention, which used Storybook + Playwright alone.
@@ -62,6 +63,8 @@ We extend the existing `.agents/` folder rather than introducing `.claude/`. Orc
 │   ├── atomic-design.mdc
 │   ├── component-split.mdc
 │   ├── types.mdc                 # existing — multi-file types live in *.types.ts
+│   ├── state.mdc                 # ≥3 related local states that change together → useReducer
+│   ├── i18n.mdc                  # NEW — t('ns.key') inline, no labels object (key dictionaries excepted)
 │   └── tdd.mdc                   # NEW — Three Laws of TDD, Red-Green-Refactor for TS
 │                                 #   (reviewer rubrics now live inline in each reviewer agent file — no shared review-standards doc)
 ├── skills/                       # invocable procedures (loaded on demand)
@@ -338,7 +341,7 @@ export default {
 **Security (OWASP)** — no secrets/keys in code or logs; inputs validated; Supabase RLS/auth respected; no PII in logs; TLS for external calls.
 **Accessibility (WCAG 2.2 AA)** — labels/roles present; contrast ≥ 4.5:1; touch targets ≥ 44/48; sensible focus order; dynamic type.
 **Testing rigor** — every `@s` scenario covered; every component and logic unit has Jest unit tests; **mutation score threshold met** on all changed source (component `.tsx` included).
-**Observability & i18n** — analytics events per spec; feature flag wrapping if applicable; no hardcoded strings.
+**Observability & i18n** — analytics events per spec; feature flag wrapping if applicable; no hardcoded user-facing strings — all via `t('ns.key')` inline, no `labels` object (`i18n.mdc`).
 
 ---
 

@@ -24,7 +24,7 @@ You transform an ambiguous ticket into an unambiguous, testable spec **and** dis
 
 ## Gate → spec_drafted → spec review → spec_ready → (human) → approved
 
-Self-check before handing off: every AC is Given/When/Then; 4 UI states defined (if UI); analytics named; risks mitigated; every AC maps to an `@s` scenario; each task maps to `libs/*` paths that obey `.agents/rules/hooks-service-dao.mdc`, `atomic-design.mdc`, and `component-split.mdc`.
+Self-check before handing off: every AC is Given/When/Then; 4 UI states defined (if UI); analytics named; risks mitigated; every AC maps to an `@s` scenario; each task maps to `libs/*` paths that obey `.agents/rules/hooks-service-dao.mdc`, `state.mdc`, `atomic-design.mdc`, and `component-split.mdc`.
 
 **Automated spec review (pre-gate):** the lead then runs `spec_reviewer` over the bundle. If it returns `CHANGES_REQUESTED`, fix every finding (spec / risks / tasks / gherkin) and hand back for re-review, until `APPROVED` → the lead sets `spec_ready`.
 
