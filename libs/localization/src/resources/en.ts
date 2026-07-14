@@ -208,6 +208,7 @@ export const en = {
     },
     activity: {
       mcq: {
+        submit: 'Submit',
         correct: 'Correct',
         incorrect: 'Incorrect',
         explanation: 'Explanation',

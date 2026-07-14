@@ -173,6 +173,7 @@ export const de: TranslationResource = {
     },
     activity: {
       mcq: {
+        submit: 'Absenden',
         correct: 'Richtig',
         incorrect: 'Falsch',
         explanation: 'Erklärung',

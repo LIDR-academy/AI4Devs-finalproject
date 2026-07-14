@@ -169,6 +169,7 @@ export const es: TranslationResource = {
     },
     activity: {
       mcq: {
+        submit: 'Enviar',
         correct: 'Correcto',
         incorrect: 'Incorrecto',
         explanation: 'Explicación',
