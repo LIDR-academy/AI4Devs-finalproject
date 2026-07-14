@@ -6,5 +6,5 @@
 // image attachment (task-4, this Slice). VISION_MODEL_ID -- the raw-image placement fallback,
 // invoked only for images metadata can't place (task-12, Slice 2); defined here now so both
 // model IDs live behind the same single seam from the start.
-export const TEXT_MODEL_ID = 'llama-3.3-70b-versatile';
+export const TEXT_MODEL_ID = 'llama-3.1-8b-instant'; // 'llama-3.3-70b-versatile';
 export const VISION_MODEL_ID = 'meta-llama/llama-4-scout-17b-16e-instruct';
