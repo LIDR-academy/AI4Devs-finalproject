@@ -16,9 +16,11 @@ A fast quality/design gate before a vertical slice closes. One agent, two lenses
 - Correct error contract; no debug leftovers; no TODOs without an issue; functional React + `Props` type; kebab-case filenames.
 
 ## Design lens
-- Existing tokens and components reused; no ad-hoc colors/spacing/typography.
+## Design system
+- Uses existing **tokens** and existing components; no ad-hoc colors/spacing/typography.
 - Correct atomic-design placement (`.agents/rules/atomic-design.mdc`).
 - The UI states this slice owns are present, with `<name>.stories.tsx` covering them; consistent with siblings / screenshot / spec.
+- Matches the screenshot (if provided) or the spec; consistent with sibling components.
 
 ## Protocol
 1. Read the slice's diff (`git diff` since the previous slice commit) + `tdd.md`'s `@s → test` map; `gherkin-scenarios.md`/`spec.md` as needed.

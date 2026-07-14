@@ -5,7 +5,7 @@ status: spec_drafted
 ---
 
 # Spec — <name>
-_Keep terse. **Acceptance criteria are NOT duplicated here** — the `@s` scenarios in `gherkin-scenarios.md` are the ACs. Link, don't copy._
+_A terse **overview** (≤ ~4 KB). After the tasks + Gherkin exist, `spec_partner` shrinks this file — it must not duplicate a linked artifact: ACs/behavior live in `gherkin-scenarios.md`, task/implementation detail in `task-N.md`, risk write-ups in `risks.md`. Link, don't copy._
 
 ## Summary
 _1–2 sentences: what this feature does and the value it delivers._

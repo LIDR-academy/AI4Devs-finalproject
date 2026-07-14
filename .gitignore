@@ -50,3 +50,6 @@ playwright/.auth/
 
 # orchestrator feature worktrees (one per feature, on feat/<name>)
 .worktrees/
+
+# orchestrator scratch — risks.md is written here (never re-read into context), landed in docs/ at PR time
+tmp/
