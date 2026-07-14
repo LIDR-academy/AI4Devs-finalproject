@@ -1,0 +1,219 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  ADMIN
+  PARTNER
+  SELLER
+}
+
+enum ClientType {
+  PROSPECT
+  CUSTOMER
+  DISTRIBUTOR
+  OTHER
+}
+
+enum ClientStatus {
+  PROSPECT
+  ACTIVE
+  INACTIVE
+  LOST
+  BLOCKED
+}
+
+enum ClientMemberRole {
+  OWNER
+  SELLER
+  WATCHER
+}
+
+enum SupplierType {
+  MANUFACTURER
+  PRODUCER
+  EXPORTER
+  DISTRIBUTOR
+  OTHER
+}
+
+enum SupplierStatus {
+  PROSPECT
+  UNDER_REVIEW
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum OrderCommercialStatus {
+  CREATED
+  APPROVED
+  IN_PROCUREMENT
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model UserProfile {
+  id         String   @id @db.Uuid
+  fullName   String
+  role       UserRole
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  ownedClients      Client[]            @relation("ClientPrimaryOwner")
+  clientAssignments ClientAssignment[]
+  customerOrders    CustomerOrder[]
+
+  @@map("user_profiles")
+}
+
+model Client {
+  id              String             @id @default(uuid()) @db.Uuid
+  commercialName  String
+  legalName       String?
+  clientType      ClientType         @default(PROSPECT)
+  status          ClientStatus       @default(PROSPECT)
+  country         String?
+  city            String?
+  address         String?
+  phone           String?
+  email           String?
+  taxId           String?
+  primaryOwnerId  String             @db.Uuid
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  primaryOwner    UserProfile        @relation("ClientPrimaryOwner", fields: [primaryOwnerId], references: [id])
+  assignments     ClientAssignment[]
+  customerOrders  CustomerOrder[]
+
+  @@index([primaryOwnerId])
+  @@index([status])
+  @@index([commercialName])
+  @@map("clients")
+}
+
+model ClientAssignment {
+  id          String           @id @default(uuid()) @db.Uuid
+  clientId    String           @db.Uuid
+  userId      String           @db.Uuid
+  memberRole  ClientMemberRole @default(SELLER)
+  createdAt   DateTime         @default(now())
+
+  client      Client           @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  user        UserProfile      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, userId])
+  @@index([userId])
+  @@index([clientId])
+  @@map("client_assignments")
+}
+
+model Supplier {
+  id                   String          @id @default(uuid()) @db.Uuid
+  commercialName       String
+  legalName            String?
+  supplierType         SupplierType    @default(OTHER)
+  status               SupplierStatus  @default(UNDER_REVIEW)
+  country              String?
+  city                 String?
+  email                String?
+  phone                String?
+  paymentTerms         String?
+  currency             String?
+  incoterm             String?
+  averageLeadTimeDays  Int?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  products             Product[]
+  customerOrders       CustomerOrder[]
+
+  @@index([status])
+  @@index([commercialName])
+  @@map("suppliers")
+}
+
+model Product {
+  id                    String         @id @default(uuid()) @db.Uuid
+  supplierId            String         @db.Uuid
+  sku                   String         @unique
+  supplierSku           String?
+  name                  String
+  brand                 String?
+  category              String?
+  presentation          String?
+  unit                  String?
+  basePrice             Decimal        @default(0) @db.Decimal(12, 2)
+  estimatedCost         Decimal?       @db.Decimal(12, 2)
+  estimatedMargin       Decimal?       @db.Decimal(5, 2)
+  leadTimeDays          Int?
+  minimumOrderQuantity  Int?           @default(1)
+  status                ProductStatus  @default(INACTIVE)
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  supplier              Supplier            @relation(fields: [supplierId], references: [id])
+  orderItems            CustomerOrderItem[]
+
+  @@index([supplierId])
+  @@index([status])
+  @@index([name])
+  @@map("products")
+}
+
+model CustomerOrder {
+  id                 String                 @id @default(uuid()) @db.Uuid
+  clientId           String                 @db.Uuid
+  ownerId            String                 @db.Uuid
+  supplierId         String?                @db.Uuid
+  orderNumber        String                 @unique
+  commercialStatus   OrderCommercialStatus  @default(CREATED)
+  subtotal           Decimal                @default(0) @db.Decimal(12, 2)
+  discount           Decimal                @default(0) @db.Decimal(12, 2)
+  taxes              Decimal                @default(0) @db.Decimal(12, 2)
+  total              Decimal                @default(0) @db.Decimal(12, 2)
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+
+  client             Client                 @relation(fields: [clientId], references: [id])
+  owner              UserProfile            @relation(fields: [ownerId], references: [id])
+  supplier           Supplier?              @relation(fields: [supplierId], references: [id])
+  items              CustomerOrderItem[]
+
+  @@index([clientId])
+  @@index([ownerId])
+  @@index([supplierId])
+  @@index([commercialStatus])
+  @@map("customer_orders")
+}
+
+model CustomerOrderItem {
+  id               String         @id @default(uuid()) @db.Uuid
+  customerOrderId  String         @db.Uuid
+  productId        String         @db.Uuid
+  quantity         Int
+  unitPrice        Decimal        @default(0) @db.Decimal(12, 2)
+  discount         Decimal        @default(0) @db.Decimal(12, 2)
+  total            Decimal        @default(0) @db.Decimal(12, 2)
+
+  customerOrder    CustomerOrder  @relation(fields: [customerOrderId], references: [id], onDelete: Cascade)
+  product          Product        @relation(fields: [productId], references: [id])
+
+  @@index([customerOrderId])
+  @@index([productId])
+  @@map("customer_order_items")
+}

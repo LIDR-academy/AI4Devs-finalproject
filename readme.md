@@ -211,9 +211,29 @@ Al ingresar, ve un dashboard limitado con:
 - Miembros asignados.
 - Historial.
 
+### **1.5. Estado actual de implementación**
+
+La versión implementada actualmente corresponde a la `v1` del proyecto y cubre únicamente los tickets `T-01` a `T-05`:
+
+- autenticación base con Supabase Auth;
+- perfiles internos y control de usuario activo;
+- creación de clientes;
+- visibilidad de clientes según rol y asignación;
+- creación de proveedores.
+
+Quedan fuera de esta versión los flujos de productos, órdenes, pagos, reportes y demás módulos posteriores.
+
+Documentación recomendada para esta versión:
+
+- [docs/v1-quickstart.md](c:/Users/jppa_/Documents/0-Courses/AI4Devs/ProyectoFinal/AI4Devs-finalproject-jpp/docs/v1-quickstart.md)
+- [docs/v1-technical-guide.md](c:/Users/jppa_/Documents/0-Courses/AI4Devs/ProyectoFinal/AI4Devs-finalproject-jpp/docs/v1-technical-guide.md)
+- [docs/mvp-validation-checklist.md](c:/Users/jppa_/Documents/0-Courses/AI4Devs/ProyectoFinal/AI4Devs-finalproject-jpp/docs/mvp-validation-checklist.md)
+
 ### **1.4. Instrucciones de instalación:**
 
 > Documenta de manera precisa las instrucciones para instalar y poner en marcha el proyecto en local (librerías, backend, frontend, servidor, base de datos, migraciones y semillas de datos, etc.)
+
+Las instrucciones de esta sección quedan referidas a la `v1` realmente implementada. Para una versión corta usa [docs/v1-quickstart.md](c:/Users/jppa_/Documents/0-Courses/AI4Devs/ProyectoFinal/AI4Devs-finalproject-jpp/docs/v1-quickstart.md). Para el detalle técnico completo usa [docs/v1-technical-guide.md](c:/Users/jppa_/Documents/0-Courses/AI4Devs/ProyectoFinal/AI4Devs-finalproject-jpp/docs/v1-technical-guide.md).
 
 Estas instrucciones asumen el stack definido para el proyecto:
 
@@ -262,14 +282,16 @@ NEXT_PUBLIC_SUPABASE_URL="https://xxxxx.supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="xxxxx"
 SUPABASE_SERVICE_ROLE_KEY="xxxxx"
 
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
+DEMO_ADMIN_ID="uuid-del-usuario-admin"
+DEMO_PARTNER_ID="uuid-del-usuario-partner"
+DEMO_SELLER_ID="uuid-del-usuario-seller"
 ```
 
 #### Configurar Prisma
 
 ```bash
 npx prisma generate
-npx prisma migrate dev
+npx prisma db push
 ```
 
 #### Ejecutar semillas de datos
@@ -278,7 +300,7 @@ npx prisma migrate dev
 npm run seed
 ```
 
-Pendiente por implementar script de seed.
+Antes de ejecutar el seed, debes crear en Supabase Auth los usuarios demo y copiar sus UUID reales a `.env.local`.
 
 #### Ejecutar el proyecto en local
 
@@ -299,7 +321,7 @@ npm run dev
 npm run build
 npm run start
 npm run lint
-npm run test
+npm run seed
 npx prisma studio
 ```
 
