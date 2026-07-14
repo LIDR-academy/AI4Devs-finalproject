@@ -287,9 +287,7 @@ describe('SavedLessons', () => {
     await render(<SavedLessons />);
     expect(screen.queryByText("We couldn't delete that lesson.")).toBeNull();
 
-    mockUseLessons.mockReturnValue(
-      lessonsValue({ error: new Error('load failed'), lessons: [] }),
-    );
+    mockUseLessons.mockReturnValue(lessonsValue({ error: new Error('load failed'), lessons: [] }));
     await render(<SavedLessons />);
     expect(screen.queryByText("We couldn't delete that lesson.")).toBeNull();
     expect(screen.getByText("We couldn't load your lessons.")).toBeTruthy();
@@ -315,8 +313,6 @@ describe('SavedLessons', () => {
     });
 
     expect(screen.getByText('Delete this lesson?')).toBeTruthy();
-    expect(
-      screen.getByText('This permanently removes the lesson and its progress.'),
-    ).toBeTruthy();
+    expect(screen.getByText('This permanently removes the lesson and its progress.')).toBeTruthy();
   });
 });

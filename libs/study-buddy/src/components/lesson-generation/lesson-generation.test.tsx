@@ -13,10 +13,7 @@ jest.mock('@helsoft/components', () => {
   const actual = jest.requireActual('@helsoft/components') as typeof import('@helsoft/components');
   return {
     ...actual,
-    LessonGenerationPanel: (props: {
-      onGenerate: () => void;
-      canGenerate: boolean;
-    }) => {
+    LessonGenerationPanel: (props: Parameters<typeof actual.LessonGenerationPanel>[0]) => {
       capturedPanelProps.current = props;
       return actual.LessonGenerationPanel(props);
     },

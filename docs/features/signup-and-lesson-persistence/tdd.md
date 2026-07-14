@@ -107,3 +107,6 @@
 
 ## Mutation kill round 2 (final)
 - RED→GREEN `lesson-generation`: invoke captured `onGenerate` with undefined/empty `documentId` — `generate` not called (kills `if (!documentId) return` → `if (false) return`). Guard already correct; panel `canGenerate` alone did not bite callback body.
+
+## CI fix (full-review gate)
+- Adjust `lesson-generation.test.tsx` mock props to `Parameters<typeof LessonGenerationPanel>[0]` (TS) + Biome format on that file + `saved-lessons.test.tsx`.
