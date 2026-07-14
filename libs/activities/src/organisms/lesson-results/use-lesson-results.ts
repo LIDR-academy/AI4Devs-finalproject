@@ -31,14 +31,7 @@ export const useLessonResults = ({
     if (hasSaved.current) return;
     hasSaved.current = true;
     saveAttempt({ lessonId: lesson.id, score: summary.correct, total: summary.total });
-  }, [
-    persistOnMount,
-    summary.isScorable,
-    summary.correct,
-    summary.total,
-    lesson.id,
-    saveAttempt,
-  ]);
+  }, [persistOnMount, summary.isScorable, summary.correct, summary.total, lesson.id, saveAttempt]);
 
   return {
     variant: summary.isScorable ? ('score' as const) : ('completion' as const),

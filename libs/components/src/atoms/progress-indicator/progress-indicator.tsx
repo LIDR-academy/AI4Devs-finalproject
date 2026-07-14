@@ -13,6 +13,8 @@ export type ProgressIndicatorProps = {
   thickness?: number;
   color?: string;
   trackColor?: string;
+  /** Accessible name for the progressbar (WCAG 4.1.2). */
+  accessibilityLabel?: string;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -50,6 +52,7 @@ export const ProgressIndicator = ({
   thickness = 4,
   color,
   trackColor,
+  accessibilityLabel,
   style,
 }: ProgressIndicatorProps) => {
   const { theme } = useUnistyles();
@@ -83,6 +86,7 @@ export const ProgressIndicator = ({
     return (
       <View
         accessibilityRole="progressbar"
+        accessibilityLabel={accessibilityLabel}
         accessibilityValue={determinate ? { min: 0, max: 100, now: value } : undefined}
         style={[{ width: size, height: size }, style]}
       >
@@ -132,6 +136,7 @@ export const ProgressIndicator = ({
   return (
     <View
       accessibilityRole="progressbar"
+      accessibilityLabel={accessibilityLabel}
       accessibilityValue={determinate ? { min: 0, max: 100, now: value } : undefined}
       style={[styles.linearTrack(thickness, track), style]}
     >

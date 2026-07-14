@@ -18,8 +18,12 @@ jest.mock('../slide-view/slide-view', () => ({
     initialAnswer?: { selectedOptionId?: string } | null;
   }) => {
     const { Text, Pressable, View } = require('react-native');
+    const { useRef } = require('react');
+    // Stable per mount — remount (via key) yields a new id; reuse keeps the same.
+    const mountId = useRef(`mount-${slide.id}-${Math.random().toString(36).slice(2, 8)}`).current;
     return (
       <View testID={`slide-${slide.id}`}>
+        <Text testID="slide-mount-id">{mountId}</Text>
         <Text>{slide.title}</Text>
         {initialAnswer?.selectedOptionId ? (
           <Text testID="restored-answer">{initialAnswer.selectedOptionId}</Text>
@@ -188,7 +192,9 @@ describe('LessonPlayer', () => {
     await render(<LessonPlayer lesson={lesson} onBackToLessons={jest.fn()} />);
 
     const progressRoot = screen.getByTestId('lesson-progress-indicator');
-    const bar = progressRoot.children[0] as { props: { accessibilityValue: { now: number } } };
+    const bar = progressRoot.children[0] as unknown as {
+      props: { accessibilityValue: { now: number } };
+    };
     expect(bar.props.accessibilityValue.now).toBe(20);
   });
 
@@ -209,6 +215,20 @@ describe('LessonPlayer', () => {
     expect(screen.getByTestId('slide-s2')).toBeTruthy();
     expect(screen.queryByTestId('slide-s1')).toBeNull();
     expect(screen.getByText('Slide 2 of 5')).toBeTruthy();
+  });
+
+  // @s2/@s12 — key={slide.id} remounts when navigating between adjacent same-type activities.
+  it('remounts SlideView when advancing between consecutive multiple-choice slides', async () => {
+    await render(<LessonPlayer lesson={lesson} onBackToLessons={jest.fn()} />);
+
+    await pressNext(); // instructional → first MC (s2)
+    const firstMountId = screen.getByTestId('slide-mount-id').props.children;
+    expect(screen.getByTestId('slide-s2')).toBeTruthy();
+
+    await pressNext(); // s2 → s3 (same activityType)
+    expect(screen.getByTestId('slide-s3')).toBeTruthy();
+    const secondMountId = screen.getByTestId('slide-mount-id').props.children;
+    expect(secondMountId).not.toBe(firstMountId);
   });
 
   // @s3 — Back returns to previous content slide.
@@ -497,7 +517,7 @@ describe('LessonPlayer', () => {
     expect(screen.getByText('player.error.message').props.style).toEqual(
       expect.objectContaining({ textAlign: 'center' }),
     );
-    const errorActions = errorBanner.children[1] as { props: { style: unknown } };
+    const errorActions = errorBanner.children[1] as unknown as { props: { style: unknown } };
     expect(errorActions.props.style).toEqual(
       expect.objectContaining({
         flexDirection: 'row',
@@ -508,11 +528,13 @@ describe('LessonPlayer', () => {
 
     await render(<LessonPlayer lesson={lesson} onBackToLessons={jest.fn()} />);
     const deckRoot = screen.getAllByTestId(LESSON_PLAYER_TEST_ID).at(-1)!;
-    expect(deckRoot.children[1].props.style).toEqual(expect.objectContaining({ flex: 1 }));
-    expect(deckRoot.children[1].props.contentContainerStyle).toEqual(
-      expect.objectContaining({ flexGrow: 1 }),
-    );
-    expect(deckRoot.children[2].props.style).toEqual(
+    const body = deckRoot.children[1] as unknown as {
+      props: { style: unknown; contentContainerStyle: unknown };
+    };
+    const nav = deckRoot.children[2] as unknown as { props: { style: unknown } };
+    expect(body.props.style).toEqual(expect.objectContaining({ flex: 1 }));
+    expect(body.props.contentContainerStyle).toEqual(expect.objectContaining({ flexGrow: 1 }));
+    expect(nav.props.style).toEqual(
       expect.objectContaining({
         flexDirection: 'row',
         justifyContent: 'space-between',

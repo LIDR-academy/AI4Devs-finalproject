@@ -16,8 +16,10 @@ export const SlideImage = ({ image }: SlideImageProps) => {
 
   return (
     <Image
+      testID="slide-image"
       source={{ uri: url }}
-      accessibilityLabel={image.alt ?? ''}
+      accessible={Boolean(image.alt)}
+      accessibilityLabel={image.alt || undefined}
       resizeMode="contain"
       style={styles.image(aspectRatio)}
     />

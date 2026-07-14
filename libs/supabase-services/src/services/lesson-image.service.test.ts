@@ -32,4 +32,12 @@ describe('LessonImageService', () => {
     await expect(LessonImageService.getSignedImageUrl('   ')).resolves.toBeNull();
     expect(dao.createSignedUrl).not.toHaveBeenCalled();
   });
+
+  // Review r2 — path-shape / traversal rejection before DAO.
+  it('getSignedImageUrl returns null for unsafe storagePath shapes without calling the DAO', async () => {
+    await expect(LessonImageService.getSignedImageUrl('../secret.png')).resolves.toBeNull();
+    await expect(LessonImageService.getSignedImageUrl('/abs/path.png')).resolves.toBeNull();
+    await expect(LessonImageService.getSignedImageUrl('orphan.png')).resolves.toBeNull();
+    expect(dao.createSignedUrl).not.toHaveBeenCalled();
+  });
 });

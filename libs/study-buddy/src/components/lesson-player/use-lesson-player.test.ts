@@ -130,4 +130,22 @@ describe('useLessonPlayer', () => {
       { slideId: 's2', activityType: 'multiple-choice', isCorrect: true },
     ]);
   });
+
+  // Review r2 — nav handlers keep stable identities across renders.
+  it('keeps goNext/goBack/onAnswered/reset identities across re-renders', async () => {
+    const { result, rerender } = await renderHook(() => useLessonPlayer(lesson));
+    const first = {
+      goNext: result.current.goNext,
+      goBack: result.current.goBack,
+      onAnswered: result.current.onAnswered,
+      reset: result.current.reset,
+    };
+
+    rerender(undefined);
+
+    expect(result.current.goNext).toBe(first.goNext);
+    expect(result.current.goBack).toBe(first.goBack);
+    expect(result.current.onAnswered).toBe(first.onAnswered);
+    expect(result.current.reset).toBe(first.reset);
+  });
 });

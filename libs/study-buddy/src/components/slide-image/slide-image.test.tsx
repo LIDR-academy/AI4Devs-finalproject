@@ -68,18 +68,28 @@ describe('SlideImage', () => {
       isLoading: false,
     });
 
-    await render(
-      <SlideImage image={{ ...imageRef, width: 0, height: 200, alt: 'zero-width' }} />,
-    );
+    await render(<SlideImage image={{ ...imageRef, width: 0, height: 200, alt: 'zero-width' }} />);
     expect(screen.getByLabelText('zero-width').props.style).toEqual(
       expect.objectContaining({ aspectRatio: 1 }),
     );
 
-    await render(
-      <SlideImage image={{ ...imageRef, width: 200, height: 0, alt: 'zero-height' }} />,
-    );
+    await render(<SlideImage image={{ ...imageRef, width: 200, height: 0, alt: 'zero-height' }} />);
     expect(screen.getByLabelText('zero-height').props.style).toEqual(
       expect.objectContaining({ aspectRatio: 1 }),
     );
+  });
+
+  // Review r2 — missing alt → decorative (no empty accessible name). WCAG 1.1.1 / 4.1.2.
+  it('marks the image decorative when alt is missing', async () => {
+    mockUseSlideImageUrl.mockReturnValue({
+      url: 'https://example.com/signed.png',
+      isLoading: false,
+    });
+
+    await render(<SlideImage image={{ ...imageRef, alt: undefined }} />);
+
+    const image = screen.getByTestId('slide-image');
+    expect(image.props.accessible).toBe(false);
+    expect(image.props.accessibilityLabel).toBeUndefined();
   });
 });

@@ -1,4 +1,5 @@
 import { LessonImageDao } from '../dao/lesson-image.dao';
+import { isValidLessonImageStoragePath } from './lesson-image-path';
 
 /** Short-lived signed URL TTL (seconds). */
 const SIGNED_URL_TTL_SECONDS = 300;
@@ -8,7 +9,7 @@ const SIGNED_URL_TTL_SECONDS = 300;
  */
 export abstract class LessonImageService {
   static async getSignedImageUrl(storagePath: string): Promise<string | null> {
-    if (!storagePath.trim()) return null;
+    if (!isValidLessonImageStoragePath(storagePath)) return null;
     try {
       return await LessonImageDao.createSignedUrl(storagePath, SIGNED_URL_TTL_SECONDS);
     } catch {

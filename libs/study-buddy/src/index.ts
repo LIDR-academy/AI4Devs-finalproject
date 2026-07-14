@@ -22,6 +22,7 @@ export * from './components/pdf-documents/pdf-documents';
 export type * from './components/pdf-documents/pdf-documents.types';
 export * from './components/pdf-upload/pdf-upload';
 export type * from './components/pdf-upload/pdf-upload.types';
+export * from './components/player-loading/player-loading';
 export * from './components/saved-lessons/saved-lessons';
 export * from './components/sign-in-form/sign-in-form';
 export * from './components/sign-out/sign-out';

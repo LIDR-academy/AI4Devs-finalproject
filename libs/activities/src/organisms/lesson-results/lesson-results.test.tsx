@@ -179,6 +179,7 @@ describe('LessonResults', () => {
   });
 
   // @s5 — while the attempt is saving, the loading state shows.
+  // Stub ResultsSummary so ProgressIndicator's Animated.loop can't hold the Jest event loop.
   it('shows the loading state while useLessonAttempt().status is saving', async () => {
     mockUseLessonAttempt.mockReturnValue({
       status: 'saving',
@@ -187,8 +188,12 @@ describe('LessonResults', () => {
       retry: jest.fn(),
     });
     mockUseLocalization.mockReturnValue(localizationValue());
+    mockResultsSummary.mockImplementationOnce(({ loading }: { loading?: boolean }) => {
+      const { View } = require('react-native');
+      return loading ? <View testID={RESULTS_LOADING_TEST_ID} /> : null;
+    });
 
-    await render(
+    const { unmount } = await render(
       <LessonResults
         lesson={scorableLesson}
         answers={allCorrectAnswers}
@@ -198,6 +203,10 @@ describe('LessonResults', () => {
     );
 
     expect(screen.getByTestId(RESULTS_LOADING_TEST_ID)).toBeTruthy();
+    expect(mockResultsSummary.mock.calls[0]?.[0]).toEqual(
+      expect.objectContaining({ loading: true }),
+    );
+    unmount();
   });
 
   // Content state — outside of "saving", no loading affordance shows.
@@ -642,7 +651,7 @@ describe('LessonResults', () => {
     });
     mockUseLocalization.mockReturnValue(localizationValue());
 
-    const { rerender } = await render(
+    const { rerender, unmount } = await render(
       <LessonResults
         lesson={scorableLesson}
         answers={allCorrectAnswers}
@@ -670,5 +679,6 @@ describe('LessonResults', () => {
     expect(announceSpy).toHaveBeenCalledWith('3 / 3, 100%');
 
     announceSpy.mockRestore();
+    unmount();
   });
 });

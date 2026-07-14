@@ -126,6 +126,7 @@ const LessonPlayerDeck = ({ lesson, onBackToLessons }: DeckProps) => {
           />
         ) : player.currentSlide ? (
           <SlideView
+            key={player.currentSlide.id}
             slide={player.currentSlide}
             onAnswered={player.onAnswered}
             initialAnswer={player.answers[player.currentSlide.id]}

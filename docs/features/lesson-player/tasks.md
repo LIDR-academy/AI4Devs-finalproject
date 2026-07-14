@@ -1,7 +1,7 @@
 ---
 feature: lesson-player
 phase: in_review
-review_round: 0     # incremented by reviews_lead; cap 2
+review_round: 2     # incremented by reviews_lead; cap 2
 ---
 
 # Tasks — lesson-player

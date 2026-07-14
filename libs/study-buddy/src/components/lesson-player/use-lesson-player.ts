@@ -1,5 +1,5 @@
 import type { ActivityAnswer, Lesson } from '@helsoft/types';
-import { useMemo, useReducer } from 'react';
+import { useCallback, useMemo, useReducer, useRef } from 'react';
 
 import { buildLessonGradedAnswers } from './lesson-player.helpers';
 import { lessonPlayerInitialState, lessonPlayerReducer } from './use-lesson-player.reducer';
@@ -18,21 +18,24 @@ export const useLessonPlayer = (lesson: Lesson) => {
     [lesson, state.answers],
   );
 
-  const goNext = () => {
-    dispatch({ type: 'next', maxIndex });
-  };
+  const maxIndexRef = useRef(maxIndex);
+  maxIndexRef.current = maxIndex;
 
-  const goBack = () => {
+  const goNext = useCallback(() => {
+    dispatch({ type: 'next', maxIndex: maxIndexRef.current });
+  }, []);
+
+  const goBack = useCallback(() => {
     dispatch({ type: 'back' });
-  };
+  }, []);
 
-  const onAnswered = (answer: ActivityAnswer) => {
+  const onAnswered = useCallback((answer: ActivityAnswer) => {
     dispatch({ type: 'answer', slideId: answer.slideId, answer });
-  };
+  }, []);
 
-  const reset = () => {
+  const reset = useCallback(() => {
     dispatch({ type: 'reset' });
-  };
+  }, []);
 
   return {
     currentIndex: state.currentIndex,
