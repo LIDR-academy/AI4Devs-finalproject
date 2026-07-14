@@ -1,6 +1,6 @@
 ---
 feature: pending-pdfs-generate
-phase: mutation
+phase: pr_ready
 review_round: 2
 ---
 
