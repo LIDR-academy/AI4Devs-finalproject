@@ -1,6 +1,6 @@
 ---
 feature: lesson-player
-phase: in_progress
+phase: mutation
 review_round: 0     # incremented by reviews_lead; cap 2
 ---
 
