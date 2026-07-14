@@ -7,7 +7,7 @@ import type { UseLessonsResult } from './use-lessons.types';
 /**
  * React integration over LessonsService (tanstack-query not installed → local state,
  * per spec.md Open decisions). Drives Home Loading/Content/Empty/Error via
- * `{ lessons, isLoading, error, refetch }`.
+ * `{ lessons, isLoading, error, refetch, deleteLesson }`.
  */
 export const useLessons = (): UseLessonsResult => {
   const [lessons, setLessons] = useState<LessonSummary[]>([]);
@@ -51,5 +51,19 @@ export const useLessons = (): UseLessonsResult => {
     load();
   }, [load]);
 
-  return { lessons, isLoading, error, refetch };
+  const deleteLesson = useCallback(async (id: string) => {
+    try {
+      await LessonsService.deleteLesson(id);
+      if (!isMounted.current) return;
+      setLessons((prev) => prev.filter((lesson) => lesson.id !== id));
+      setError(null);
+    } catch (cause) {
+      if (isMounted.current) {
+        setError(cause instanceof Error ? cause : new Error(String(cause)));
+      }
+      throw cause;
+    }
+  }, []);
+
+  return { lessons, isLoading, error, refetch, deleteLesson };
 };

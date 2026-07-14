@@ -27,6 +27,14 @@ export const en = {
       retry: 'Try again',
       openLesson: 'Open {{title}}',
       createdDate: '{{date}}',
+      delete: {
+        action: 'Delete {{title}}',
+        confirmHeadline: 'Delete this lesson?',
+        confirmBody: 'This permanently removes the lesson and its progress.',
+        confirmAction: 'Delete',
+        cancelAction: 'Cancel',
+        failed: "We couldn't delete that lesson.",
+      },
     },
     lessons: {
       count_one: '{{count}} lesson',

@@ -8,10 +8,10 @@ import { StyleSheet } from 'react-native-unistyles';
 import { toLessonListItems, toLessonListState } from './saved-lessons.helpers';
 
 /**
- * SavedLessons — Home wiring: useLessons + t()/date format → LessonList + reopen nav.
+ * SavedLessons — Home wiring: useLessons + t()/date format → LessonList + reopen/delete.
  */
 export const SavedLessons = () => {
-  const { lessons, isLoading, error, refetch } = useLessons();
+  const { lessons, isLoading, error, refetch, deleteLesson } = useLessons();
   const { t, locale } = useLocalization();
   const router = useRouter();
 
@@ -34,12 +34,25 @@ export const SavedLessons = () => {
           empty: t('home.empty'),
           error: t('home.error'),
           retry: t('home.retry'),
+          deleteConfirmHeadline: t('home.delete.confirmHeadline'),
+          deleteConfirmBody: t('home.delete.confirmBody'),
+          deleteConfirmAction: t('home.delete.confirmAction'),
+          deleteConfirmCancelAction: t('home.delete.cancelAction'),
         }}
         onOpenLesson={(id) => {
           router.push({ pathname: '/lesson/[id]', params: { id } });
         }}
         onRetry={refetch}
+        onDelete={(id) => {
+          // SignOut pattern: swallow so a rethrown hook error never floats unhandled.
+          void deleteLesson(id).catch(() => {});
+        }}
       />
+      {state === 'content' && error ? (
+        <Text accessibilityLiveRegion="assertive" style={styles.deleteError}>
+          {t('home.delete.failed')}
+        </Text>
+      ) : null}
     </View>
   );
 };
@@ -55,5 +68,9 @@ const styles = StyleSheet.create((theme) => ({
   count: {
     ...theme.typography.bodyMedium,
     color: theme.colors.onSurfaceVariant,
+  },
+  deleteError: {
+    ...theme.typography.bodyMedium,
+    color: theme.colors.error,
   },
 }));

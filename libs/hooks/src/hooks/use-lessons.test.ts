@@ -1,5 +1,5 @@
 jest.mock('@helsoft/supabase-services', () => ({
-  LessonsService: { getLessons: jest.fn() },
+  LessonsService: { getLessons: jest.fn(), deleteLesson: jest.fn() },
 }));
 
 import { LessonsService } from '@helsoft/supabase-services';
@@ -101,5 +101,41 @@ describe('useLessons', () => {
 
     expect(errorSpy).not.toHaveBeenCalled();
     errorSpy.mockRestore();
+  });
+
+  // @s8 — deleteLesson calls the service and removes the lesson from the local list.
+  it('deleteLesson removes the lesson from the list after a successful service delete', async () => {
+    service.getLessons.mockResolvedValue(lessons);
+    service.deleteLesson.mockResolvedValue(undefined);
+    const { result } = renderHook(() => useLessons());
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.lessons).toEqual(lessons);
+
+    await act(async () => {
+      await result.current.deleteLesson('lesson-2');
+    });
+
+    expect(service.deleteLesson).toHaveBeenCalledWith('lesson-2');
+    expect(result.current.lessons).toEqual([
+      { id: 'lesson-1', title: 'Older', createdAt: '2026-07-12T12:00:00.000Z' },
+    ]);
+  });
+
+  // @s8 — a failed delete leaves the list unchanged and surfaces the error.
+  it('deleteLesson leaves the list unchanged and sets error when the service rejects', async () => {
+    const failure = new Error('LessonsService.deleteLesson: failed to delete lesson');
+    service.getLessons.mockResolvedValue(lessons);
+    service.deleteLesson.mockRejectedValue(failure);
+    const { result } = renderHook(() => useLessons());
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await expect(result.current.deleteLesson('lesson-2')).rejects.toBe(failure);
+    });
+
+    expect(result.current.lessons).toEqual(lessons);
+    expect(result.current.error).toBe(failure);
   });
 });

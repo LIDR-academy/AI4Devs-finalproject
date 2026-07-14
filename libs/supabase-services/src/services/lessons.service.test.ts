@@ -1,5 +1,5 @@
 jest.mock('../dao/lessons.dao', () => ({
-  LessonsDao: { getLessons: jest.fn(), getLessonById: jest.fn() },
+  LessonsDao: { getLessons: jest.fn(), getLessonById: jest.fn(), deleteLesson: jest.fn() },
 }));
 
 import type { Lesson, LessonSummary } from '@helsoft/types';
@@ -61,6 +61,30 @@ describe('LessonsService', () => {
 
     await expect(LessonsService.getLessonById('lesson-1')).rejects.toThrow(
       'LessonsService.getLessonById: failed to load lesson',
+    );
+  });
+
+  // @s8 — delete validates id then delegates; empty id never hits the DAO.
+  it('deleteLesson rejects an empty id without calling the DAO', async () => {
+    await expect(LessonsService.deleteLesson('')).rejects.toThrow(/id/i);
+    await expect(LessonsService.deleteLesson('   ')).rejects.toThrow(/id/i);
+    expect(dao.deleteLesson).not.toHaveBeenCalled();
+  });
+
+  // @s8/@s12 — valid id delegates to LessonsDao.deleteLesson (RLS scopes ownership).
+  it('deleteLesson delegates a valid id to LessonsDao.deleteLesson', async () => {
+    dao.deleteLesson.mockResolvedValue(undefined);
+
+    await LessonsService.deleteLesson('lesson-1');
+
+    expect(dao.deleteLesson).toHaveBeenCalledWith('lesson-1');
+  });
+
+  it('deleteLesson normalizes a DAO failure into a clear Error', async () => {
+    dao.deleteLesson.mockRejectedValue({ message: 'delete failed' });
+
+    await expect(LessonsService.deleteLesson('lesson-1')).rejects.toThrow(
+      'LessonsService.deleteLesson: failed to delete lesson',
     );
   });
 });

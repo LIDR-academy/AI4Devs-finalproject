@@ -52,4 +52,10 @@ export abstract class LessonsDao {
     if (error) throw error;
     return toLesson(data as LessonRow);
   }
+
+  /** Deletes by id only — RLS scopes to `auth.uid()`; never filter by a client-supplied user id (@s12). */
+  static async deleteLesson(id: string): Promise<void> {
+    const { error } = await getSupabase().from('lessons').delete().eq('id', id);
+    if (error) throw error;
+  }
 }

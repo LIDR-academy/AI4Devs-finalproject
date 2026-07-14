@@ -38,8 +38,9 @@ export const LessonGeneration = ({ documentId }: LessonGenerationProps) => {
   }, [documentId, composition, generate]);
 
   const handleOpenInPlayer = useCallback(() => {
-    if (!result) return;
-    router.push({ pathname: '/lesson/[id]/player', params: { id: result.lessonId } });
+    const lessonId = result?.lessonId?.trim();
+    if (!lessonId) return;
+    router.push({ pathname: '/lesson/[id]/player', params: { id: lessonId } });
   }, [result, router]);
 
   const recovery = error ? GENERATION_ERROR_RECOVERY[error] : 'none';

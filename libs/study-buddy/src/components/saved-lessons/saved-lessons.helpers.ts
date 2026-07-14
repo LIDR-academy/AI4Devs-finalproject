@@ -8,7 +8,8 @@ export const toLessonListState = (
   lessonCount: number,
 ): LessonListState => {
   if (isLoading) return 'loading';
-  if (error) return 'error';
+  // Load Error only when the list is gone (@s14). Delete failures keep lessons — stay Content.
+  if (error && lessonCount === 0) return 'error';
   if (lessonCount === 0) return 'empty';
   return 'content';
 };
@@ -35,5 +36,6 @@ export const toLessonListItems = (
       title: lesson.title,
       createdDateLabel: t('home.createdDate', { date }),
       openAccessibilityLabel: t('home.openLesson', { title: lesson.title }),
+      deleteAccessibilityLabel: t('home.delete.action', { title: lesson.title }),
     };
   });

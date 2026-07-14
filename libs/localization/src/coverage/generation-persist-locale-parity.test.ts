@@ -4,8 +4,8 @@ import { es } from '../resources/es';
 import { pt } from '../resources/pt';
 
 /**
- * @s15 — home.* saved-lessons list/empty/error/retry (+ open) strings must be real
- * translations in es/pt/de, not English stubs.
+ * @s15 — generation.error.persistFailed (+ retry action) must be real translations in
+ * es/pt/de, not English stubs (@s2 persist-fail copy).
  */
 
 const flattenValues = (node: unknown, prefix = ''): Record<string, string> => {
@@ -24,30 +24,17 @@ const flattenValues = (node: unknown, prefix = ''): Record<string, string> => {
   );
 };
 
-const HOME_KEYS = [
-  'home.savedLessons',
-  'home.loading',
-  'home.empty',
-  'home.error',
-  'home.retry',
-  'home.openLesson',
-  'home.delete.action',
-  'home.delete.confirmHeadline',
-  'home.delete.confirmBody',
-  'home.delete.confirmAction',
-  'home.delete.cancelAction',
-  'home.delete.failed',
-];
+const PERSIST_KEYS = ['generation.error.persistFailed', 'generation.error.action.retry'];
 
 describe.each([
   ['es', es],
   ['pt', pt],
   ['de', de],
-] as const)('home.* locale parity (%s)', (_locale, bundle) => {
+] as const)('generation.error persist locale parity (%s)', (_locale, bundle) => {
   const enValues = flattenValues(en.translation);
   const localeValues = flattenValues(bundle.translation);
 
-  it.each(HOME_KEYS)('translates %s away from English', (key) => {
+  it.each(PERSIST_KEYS)('translates %s away from English', (key) => {
     expect(localeValues[key]).toBeDefined();
     expect(localeValues[key]).not.toBe(enValues[key]);
   });

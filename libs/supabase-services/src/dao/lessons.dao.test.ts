@@ -124,4 +124,28 @@ describe('LessonsDao', () => {
 
     await expect(LessonsDao.getLessonById('missing')).rejects.toBe(error);
   });
+
+  // @s8/@s12 — delete by id only; RLS scopes to the caller's rows (no client user_id filter).
+  it('deleteLesson deletes by id with no user_id filter', async () => {
+    const delEq = jest.fn().mockResolvedValue({ error: null });
+    const del = jest.fn().mockReturnValue({ eq: delEq });
+    from.mockReturnValue({ select, delete: del });
+
+    await LessonsDao.deleteLesson('lesson-1');
+
+    expect(from).toHaveBeenCalledWith('lessons');
+    expect(del).toHaveBeenCalledWith();
+    expect(delEq).toHaveBeenCalledWith('id', 'lesson-1');
+    expect(delEq.mock.calls.every((call) => call[0] !== 'user_id')).toBe(true);
+  });
+
+  // @s8 — Supabase error on delete is thrown raw for the service to normalize.
+  it('throws the raw supabase error when deleteLesson fails', async () => {
+    const error = { message: 'delete failed' };
+    const delEq = jest.fn().mockResolvedValue({ error });
+    const del = jest.fn().mockReturnValue({ eq: delEq });
+    from.mockReturnValue({ select, delete: del });
+
+    await expect(LessonsDao.deleteLesson('lesson-1')).rejects.toBe(error);
+  });
 });

@@ -4,6 +4,7 @@ import { StyleSheet } from 'react-native-unistyles';
 import { Button } from '../../atoms/button/button';
 import { ProgressIndicator } from '../../atoms/progress-indicator/progress-indicator';
 import { LessonListItem } from '../../molecules/lesson-list-item/lesson-list-item';
+import { Dialog } from '../dialog/dialog';
 
 import type { LessonListProps } from './lesson-list.types';
 import { useLessonList } from './use-lesson-list';
@@ -17,6 +18,7 @@ export const LESSON_LIST_LOADING_TEST_ID = 'lesson-list-loading-indicator';
 /**
  * LessonList — presentational organism for Home saved lessons (Loading / Content / Empty / Error).
  * Prop-driven: receives pre-formatted labels; never calls `t` or formats dates.
+ * Delete confirms via shared Dialog before calling `onDelete` (@s8/@s9).
  */
 export const LessonList = ({
   state,
@@ -27,7 +29,7 @@ export const LessonList = ({
   onDelete,
   deleteLabel,
 }: LessonListProps) => {
-  useLessonList({
+  const { pendingDeleteId, setPendingDeleteId } = useLessonList({
     state,
     loadingLabel: labels.loading,
     emptyLabel: labels.empty,
@@ -81,10 +83,24 @@ export const LessonList = ({
           createdDateLabel={lesson.createdDateLabel}
           openAccessibilityLabel={lesson.openAccessibilityLabel}
           onOpen={() => onOpenLesson(lesson.id)}
-          onDelete={onDelete ? () => onDelete(lesson.id) : undefined}
-          deleteAccessibilityLabel={deleteLabel}
+          onDelete={onDelete ? () => setPendingDeleteId(lesson.id) : undefined}
+          deleteAccessibilityLabel={lesson.deleteAccessibilityLabel ?? deleteLabel}
         />
       ))}
+      <Dialog
+        open={pendingDeleteId !== null}
+        onClose={() => setPendingDeleteId(null)}
+        headline={labels.deleteConfirmHeadline}
+        confirmLabel={labels.deleteConfirmAction}
+        cancelLabel={labels.deleteConfirmCancelAction}
+        onConfirm={() => {
+          const id = pendingDeleteId;
+          setPendingDeleteId(null);
+          if (id) onDelete?.(id);
+        }}
+      >
+        {labels.deleteConfirmBody}
+      </Dialog>
     </View>
   );
 };

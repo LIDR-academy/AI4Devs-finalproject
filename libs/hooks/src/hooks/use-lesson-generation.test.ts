@@ -9,6 +9,7 @@ jest.mock('@helsoft/supabase-services', () => ({
     document_not_ready: true,
     network_error: true,
     unauthenticated: true,
+    persist_failed: true,
   },
 }));
 jest.mock('./use-session', () => ({ useSession: jest.fn() }));
@@ -144,6 +145,22 @@ describe('useLessonGeneration', () => {
     });
 
     expect(result.current.error).toBe('network_error');
+  });
+
+  // @s2 — persist_failed is a known GenerationErrorCode (GENERATION_ERROR_CODES guard).
+  it('settles to stage error with persist_failed when the service rejects with that code', async () => {
+    service.generate.mockRejectedValue(
+      Object.assign(new Error('persist failed'), { code: 'persist_failed' }),
+    );
+    const { result } = renderHook(() => useLessonGeneration());
+
+    await act(async () => {
+      await result.current.generate(request);
+    });
+
+    expect(result.current.stage).toBe('error');
+    expect(result.current.error).toBe('persist_failed');
+    expect(result.current.result).toBeUndefined();
   });
 
   // review.md round-1 finding #3 (major) — a rapid double-press before React commits

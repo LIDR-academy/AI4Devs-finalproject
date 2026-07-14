@@ -12,6 +12,11 @@ describe('saved-lessons.helpers', () => {
     expect(toLessonListState(false, null, 2)).toBe('content');
   });
 
+  // Delete failure sets error but keeps lessons — must stay Content, not load-Error (@s8/@s14).
+  it('keeps content when error is set but lessons remain', () => {
+    expect(toLessonListState(false, new Error('delete failed'), 2)).toBe('content');
+  });
+
   it('formats createdAt with the given locale', () => {
     const label = formatLessonCreatedDate('2026-07-13T12:00:00.000Z', 'en');
     expect(label).toMatch(/Jul(y)?\s*13,?\s*2026/);
@@ -21,6 +26,7 @@ describe('saved-lessons.helpers', () => {
     const t = (key: string, options?: Record<string, unknown>) => {
       if (key === 'home.createdDate') return `Created ${options?.date}`;
       if (key === 'home.openLesson') return `Open ${options?.title}`;
+      if (key === 'home.delete.action') return `Delete ${options?.title}`;
       return key;
     };
 
@@ -31,6 +37,7 @@ describe('saved-lessons.helpers', () => {
     );
 
     expect(items[0]?.openAccessibilityLabel).toBe('Open Capitals');
+    expect(items[0]?.deleteAccessibilityLabel).toBe('Delete Capitals');
     expect(items[0]?.createdDateLabel).toMatch(/^Created /);
   });
 });

@@ -9,16 +9,21 @@
 | @s1 | `persistLesson` inserts title+slides, returns id | `lesson-generation.persist.test.ts` |
 | @s1/@s3 | known-uuid insert + rewrite slide lessonIds | `lesson-generation.persist.test.ts` |
 | @s2 | persist_failed map + service normalize | persist/errors/service tests |
+| @s2 | persist_failed → retry; no player CTA; empty lessonId no-nav | `lesson-generation.test.tsx`, `use-lesson-generation.test.ts` |
 | @s3 | response lessonId = persisted DB id | Edge `index.ts` (manual live-verify) |
 | @s4/@s7/@s11 | getLessons newest-first; hook list | dao/service/`use-lessons` tests |
 | @s4 | LessonList content titles+dates; SavedLessons renders | `lesson-list.test.tsx`, `saved-lessons.test.tsx` |
 | @s5 | LessonList empty; SavedLessons empty | same |
 | @s6 | onOpenLesson → `/lesson/[id]` | `saved-lessons.test.tsx` |
 | @s7 | integration hook→service→DAO list | `saved-lessons.integration.test.tsx` |
+| @s8 | deleteLesson DAO/service/hook; confirm → delete | dao/service/`use-lessons`/`lesson-list`/`saved-lessons` + integration |
+| @s8/@s14 | delete fail keeps Content + banner; no unhandled reject | `saved-lessons.helpers`/`saved-lessons` tests |
+| @s9 | dismiss confirm → no delete | `lesson-list.test.tsx`, `saved-lessons.test.tsx` |
+| @s12 | delete by id only (no client user_id filter) | `lessons.dao.test.ts` |
 | @s13 | LessonList loading + SavedLessons loading | `lesson-list.test.tsx`, `saved-lessons.test.tsx` |
 | @s14 | LessonList error+retry; SavedLessons refetch | same |
-| @s15 | home.* locale parity en/es/pt/de | `home-locale-parity.test.ts` |
-| @s16 | a11y open names + state announcements; loading live-region Text; e2e | `lesson-list.test.tsx`, `lesson-list.e2e.js` |
+| @s15 | home.* + home.delete.* + persistFailed locale parity | `home-locale-parity`, `generation-persist-locale-parity` |
+| @s16 | a11y open/delete names + state announcements; e2e | `lesson-list.test.tsx`, `lesson-list.e2e.js` |
 
 ## Slice 1 cycles
 
@@ -61,3 +66,27 @@
 
 ### Slice-2 reviewer_slice rework
 - RED→GREEN `@s16` LessonList loading a11y: wrapper = testID only; ProgressIndicator owns progressbar; polite visuallyHidden live-region Text (ApiKeyForm pattern). Keep `useLessonList` announce.
+
+## Slice 3 cycles
+
+### Task-6
+- RED→GREEN `@s8/@s12` LessonsDao.deleteLesson (id only; RLS scopes).
+- RED→GREEN LessonsService.deleteLesson (validate + normalize).
+- RED→GREEN useLessons.deleteLesson (remove from list on success; error leaves list).
+- RED→GREEN LessonList confirm Dialog (ApiKeyForm pattern) `@s8` confirm / `@s9` dismiss; delete a11y `@s16`.
+- RED→GREEN SavedLessons wires deleteLesson + `home.delete.*` labels; integration delete chain.
+- i18n `home.delete.*` en/es/pt/de + home-locale-parity; ContentWithDelete story + e2e.
+
+### Task-7
+- RED→GREEN `@s2` persist_failed known-code in useLessonGeneration mock guard.
+- RED→GREEN `@s2` persist_failed → retry message, no open-in-player; empty lessonId blocks nav.
+- Player CTA requires trimmed non-empty lessonId.
+- generation.error.persistFailed locale parity es/pt/de.
+
+### Gate
+- Unit + e2e green; `pnpm lint` + `pnpm check-types` clean. No commit (orchestrator).
+
+### Slice-3 reviewer_slice rework
+- RED→GREEN `toLessonListState`: error + lessons remain → Content (not @s14 load-Error).
+- RED→GREEN SavedLessons: `void deleteLesson(id).catch(() => {})` (SignOut pattern); delete-fail banner via `home.delete.failed` while list stays; locale parity.
+- No commit (orchestrator).

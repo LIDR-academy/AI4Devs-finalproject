@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { AccessibilityInfo } from 'react-native';
 
 import { LESSON_LIST_LOADING_TEST_ID, LessonList } from './lesson-list';
@@ -193,5 +193,91 @@ describe('LessonList', () => {
 
     expect(screen.getByRole('button', { name: 'Open Newer lesson' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open Older lesson' })).toBeTruthy();
+  });
+
+  // @s16 — delete control exposes an accessible name when onDelete is wired.
+  it('exposes an accessible delete control per lesson when onDelete is provided', async () => {
+    await render(
+      <LessonList
+        state="content"
+        lessons={lessons}
+        labels={labels}
+        onOpenLesson={jest.fn()}
+        onRetry={jest.fn()}
+        onDelete={jest.fn()}
+        deleteLabel="Delete lesson"
+      />,
+    );
+
+    expect(screen.getAllByRole('button', { name: 'Delete lesson' })).toHaveLength(2);
+  });
+
+  // @s8 — delete → confirm → onDelete(id); dialog copy from labels.
+  it('calls onDelete with the lesson id only after the confirmation is accepted', async () => {
+    const onDelete = jest.fn();
+    await render(
+      <LessonList
+        state="content"
+        lessons={lessons}
+        labels={{
+          ...labels,
+          deleteConfirmHeadline: 'Delete this lesson?',
+          deleteConfirmBody: 'This cannot be undone.',
+          deleteConfirmAction: 'Delete',
+          deleteConfirmCancelAction: 'Cancel',
+        }}
+        onOpenLesson={jest.fn()}
+        onRetry={jest.fn()}
+        onDelete={onDelete}
+        deleteLabel="Delete lesson"
+      />,
+    );
+
+    await act(async () => {
+      fireEvent.press(screen.getAllByRole('button', { name: 'Delete lesson' })[0]);
+    });
+
+    expect(onDelete).not.toHaveBeenCalled();
+    expect(screen.getByText('Delete this lesson?')).toBeTruthy();
+    expect(screen.getByText('This cannot be undone.')).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'Delete' }));
+    });
+
+    expect(onDelete).toHaveBeenCalledWith('lesson-2');
+    expect(screen.queryByText('Delete this lesson?')).toBeNull();
+  });
+
+  // @s9 — dismiss keeps the lesson; onDelete never fires.
+  it('does not call onDelete when the confirmation is dismissed', async () => {
+    const onDelete = jest.fn();
+    await render(
+      <LessonList
+        state="content"
+        lessons={lessons}
+        labels={{
+          ...labels,
+          deleteConfirmHeadline: 'Delete this lesson?',
+          deleteConfirmBody: 'This cannot be undone.',
+          deleteConfirmAction: 'Delete',
+          deleteConfirmCancelAction: 'Cancel',
+        }}
+        onOpenLesson={jest.fn()}
+        onRetry={jest.fn()}
+        onDelete={onDelete}
+        deleteLabel="Delete lesson"
+      />,
+    );
+
+    await act(async () => {
+      fireEvent.press(screen.getAllByRole('button', { name: 'Delete lesson' })[0]);
+    });
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'Cancel' }));
+    });
+
+    expect(onDelete).not.toHaveBeenCalled();
+    expect(screen.queryByText('Delete this lesson?')).toBeNull();
   });
 });

@@ -1,19 +1,23 @@
 ---
 feature: signup-and-lesson-persistence
 reviewer: reviewer_slice
-slice: 2
+slice: 3
 round: 2
 verdict: APPROVED
 ---
 
-# Slice Review — signup-and-lesson-persistence (Slice 2)
+# Slice Review — signup-and-lesson-persistence (Slice 3)
 
 ## Verdict: APPROVED
+
+## Prior findings (round 1) — verified fixed
+
+1. Unhandled rejection — `saved-lessons.tsx:47-49` uses SignOut/SignIn
+   `void deleteLesson(id).catch(() => {})`; test asserts no unhandledRejection.
+2. Delete fail ≠ load-Error — `toLessonListState` keeps Content when
+   `error && lessonCount > 0`; Content + `home.delete.failed` banner
+   (`saved-lessons.tsx:51-55`); helpers + SavedLessons tests cover.
 
 ## Findings
 
 None.
-
-## Prior finding (round 1) — resolved
-
-`lesson-list.tsx:39-48` now matches `api-key-form.tsx:49-54`: wrapper = `testID` only; `ProgressIndicator` owns `progressbar`; polite `visuallyHidden` live-region `Text` carries `labels.loading`. Unit assert covers label + live-region + wrapper role absent (`lesson-list.test.tsx:46-66`). `useLessonList` announce retained.

@@ -161,6 +161,24 @@ describe('LessonGeneration', () => {
       expect(retry).toHaveBeenCalledTimes(1);
     });
 
+    // @s2 — persist_failed → localized message + retry only; no player CTA for an unpersisted deck.
+    it('shows persist_failed with retry and no open-in-player affordance', async () => {
+      const retry = jest.fn();
+      const push = jest.fn();
+      mockUseRouter.mockReturnValue({ push });
+      mockUseLessonGeneration.mockReturnValue(
+        hookValue({ stage: 'error', error: 'persist_failed', retry }),
+      );
+
+      await render(<LessonGeneration documentId="doc-1" />);
+
+      expect(screen.getByText('generation.error.persistFailed')).toBeTruthy();
+      expect(screen.queryByRole('button', { name: 'generation.ready.openInPlayer' })).toBeNull();
+      fireEvent.press(screen.getByRole('button', { name: 'generation.error.action.retry' }));
+      expect(retry).toHaveBeenCalledTimes(1);
+      expect(push).not.toHaveBeenCalled();
+    });
+
     // missing_key/invalid_key -> go to Settings.
     it('shows the settings action for missing_key and navigates to Settings when pressed', async () => {
       const push = jest.fn();
@@ -200,5 +218,27 @@ describe('LessonGeneration', () => {
       expect(screen.getByText('generation.error.documentNotReady')).toBeTruthy();
       expect(screen.queryByRole('button', { name: /error\.action/ })).toBeNull();
     });
+  });
+
+  // @s2/@s3 — player CTA only navigates when a real persisted lessonId is present.
+  it('does not open the player when the result has an empty lessonId', async () => {
+    const push = jest.fn();
+    mockUseRouter.mockReturnValue({ push });
+    mockUseLessonGeneration.mockReturnValue(
+      hookValue({
+        stage: 'content',
+        result: {
+          lessonId: '',
+          title: 'Unpersisted',
+          composition: 'both',
+          slides: [],
+        },
+      }),
+    );
+
+    await render(<LessonGeneration documentId="doc-1" />);
+    fireEvent.press(screen.getByRole('button', { name: 'generation.ready.openInPlayer' }));
+
+    expect(push).not.toHaveBeenCalled();
   });
 });

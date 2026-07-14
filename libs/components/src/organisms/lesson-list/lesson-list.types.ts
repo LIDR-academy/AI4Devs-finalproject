@@ -5,6 +5,8 @@ export type LessonListItemData = {
   title: string;
   createdDateLabel: string;
   openAccessibilityLabel: string;
+  /** Per-item delete control name (@s16); falls back to list-level `deleteLabel`. */
+  deleteAccessibilityLabel?: string;
 };
 
 export type LessonListLabels = {
@@ -12,6 +14,11 @@ export type LessonListLabels = {
   empty: string;
   error: string;
   retry: string;
+  /** Delete-confirmation Dialog copy (@s8/@s9) — required when `onDelete` is wired. */
+  deleteConfirmHeadline?: string;
+  deleteConfirmBody?: string;
+  deleteConfirmAction?: string;
+  deleteConfirmCancelAction?: string;
 };
 
 export type LessonListProps = {
@@ -20,7 +27,7 @@ export type LessonListProps = {
   labels: LessonListLabels;
   onOpenLesson: (id: string) => void;
   onRetry: () => void;
-  /** Optional delete affordance — wired in task-6. */
+  /** Delete affordance — fires only after the confirmation Dialog is accepted (@s8/@s9). */
   onDelete?: (id: string) => void;
   deleteLabel?: string;
 };

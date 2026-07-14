@@ -25,4 +25,15 @@ export abstract class LessonsService {
       throw new Error('LessonsService.getLessonById: failed to load lesson');
     }
   }
+
+  static async deleteLesson(id: string): Promise<void> {
+    if (!id.trim()) {
+      return Promise.reject(new Error('LessonsService.deleteLesson: id must not be empty'));
+    }
+    try {
+      await LessonsDao.deleteLesson(id);
+    } catch {
+      throw new Error('LessonsService.deleteLesson: failed to delete lesson');
+    }
+  }
 }

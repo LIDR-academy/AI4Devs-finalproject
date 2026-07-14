@@ -22,6 +22,14 @@ export const es: TranslationResource = {
       retry: 'Intentar de nuevo',
       openLesson: 'Abrir {{title}}',
       createdDate: '{{date}}',
+      delete: {
+        action: 'Eliminar {{title}}',
+        confirmHeadline: '¿Eliminar esta lección?',
+        confirmBody: 'Esto elimina la lección y su progreso de forma permanente.',
+        confirmAction: 'Eliminar',
+        cancelAction: 'Cancelar',
+        failed: 'No pudimos eliminar esa lección.',
+      },
     },
     lessons: {
       count_one: '{{count}} lección',

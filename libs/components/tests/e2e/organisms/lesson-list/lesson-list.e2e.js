@@ -3,12 +3,12 @@ const { test, expect } = require('@playwright/test');
 // Title 'Organisms/LessonList' → slug 'organisms-lessonlist'.
 const story = (name) => `/?path=/story/organisms-lessonlist--${name}`;
 
-test('Content story loads', async ({ page }) => {
-  await page.goto(story('content'));
+test('Content story with delete affordance loads', async ({ page }) => {
+  await page.goto(story('content-with-delete'));
 
   const iframe = page.locator('iframe[title="storybook-preview-iframe"]');
   await expect(iframe).toBeVisible();
-  expect(page.url()).toContain('organisms-lessonlist--content');
+  expect(page.url()).toContain('organisms-lessonlist--content-with-delete');
 });
 
 // @s4 — content lists title + created date.

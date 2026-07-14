@@ -22,6 +22,14 @@ export const de: TranslationResource = {
       retry: 'Erneut versuchen',
       openLesson: '{{title}} öffnen',
       createdDate: '{{date}}',
+      delete: {
+        action: '{{title}} löschen',
+        confirmHeadline: 'Diese Lektion löschen?',
+        confirmBody: 'Dadurch werden die Lektion und dein Fortschritt dauerhaft entfernt.',
+        confirmAction: 'Löschen',
+        cancelAction: 'Abbrechen',
+        failed: 'Diese Lektion konnte nicht gelöscht werden.',
+      },
     },
     lessons: {
       count_one: '{{count}} Lektion',

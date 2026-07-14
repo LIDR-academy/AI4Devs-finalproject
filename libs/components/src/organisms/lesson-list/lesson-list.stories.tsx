@@ -42,6 +42,20 @@ type Story = StoryObj<typeof meta>;
 
 export const Content: Story = {};
 
+export const ContentWithDelete: Story = {
+  args: {
+    onDelete: () => {},
+    deleteLabel: 'Delete lesson',
+    labels: {
+      ...labels,
+      deleteConfirmHeadline: 'Delete this lesson?',
+      deleteConfirmBody: 'This permanently removes the lesson and its progress.',
+      deleteConfirmAction: 'Delete',
+      deleteConfirmCancelAction: 'Cancel',
+    },
+  },
+};
+
 export const Loading: Story = {
   args: {
     state: 'loading',
