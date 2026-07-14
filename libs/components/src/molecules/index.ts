@@ -4,6 +4,8 @@ export type * from './generation-progress/generation-progress.types';
 export * from './language-selector/language-selector';
 export * from './lesson-list-item/lesson-list-item';
 export type * from './lesson-list-item/lesson-list-item.types';
+export * from './lesson-progress-indicator/lesson-progress-indicator';
+export type * from './lesson-progress-indicator/lesson-progress-indicator.types';
 export * from './pdf-document-list-item/pdf-document-list-item';
 export type * from './pdf-document-list-item/pdf-document-list-item.types';
 export * from './radio-group/radio-group';

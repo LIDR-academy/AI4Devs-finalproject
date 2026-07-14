@@ -1,8 +1,27 @@
 import { useEffect, useMemo } from 'react';
-import { Animated, Easing, Platform, type StyleProp, View, type ViewStyle } from 'react-native';
-import { StyleSheet, useUnistyles } from 'react-native-unistyles';
+import { Animated, Platform, type StyleProp, View, type ViewStyle } from 'react-native';
+import { useUnistyles } from 'react-native-unistyles';
 
-export type ProgressIndicatorVariant = 'linear' | 'circular';
+import {
+  arcStyle,
+  arcWindowStyle,
+  circularBoxStyle,
+  circularProgressAngle,
+  circularSpinnerFrameStyle,
+  circularTrackStyle,
+  clampProgressPercent,
+  indeterminateTiming,
+  leftArcRotate,
+  linearFillStyle,
+  linearIndeterminateStyle,
+  linearTrackStyle,
+  rightArcRotate,
+  runIndeterminateLoop,
+  spinnerArcStyle,
+} from './progress-indicator.helpers';
+import type { ProgressIndicatorVariant } from './progress-indicator.types';
+
+export type { ProgressIndicatorVariant } from './progress-indicator.types';
 
 export type ProgressIndicatorProps = {
   variant?: ProgressIndicatorVariant;
@@ -13,6 +32,8 @@ export type ProgressIndicatorProps = {
   thickness?: number;
   color?: string;
   trackColor?: string;
+  /** Accessible name for the progressbar (WCAG 4.1.2). */
+  accessibilityLabel?: string;
   style?: StyleProp<ViewStyle>;
 };
 
@@ -34,8 +55,8 @@ const CircularArc = ({
   window: 'left' | 'right';
   rotate: number;
 }) => (
-  <View pointerEvents="none" style={styles.arcWindow(size, window)}>
-    <View style={styles.arc(size, thickness, color, window, rotate)} />
+  <View pointerEvents="none" testID={`progress-arc-${window}`} style={arcWindowStyle(size, window)}>
+    <View style={arcStyle(size, thickness, color, window, rotate)} />
   </View>
 );
 
@@ -50,12 +71,14 @@ export const ProgressIndicator = ({
   thickness = 4,
   color,
   trackColor,
+  accessibilityLabel,
   style,
 }: ProgressIndicatorProps) => {
   const { theme } = useUnistyles();
   const barColor = color ?? theme.colors.primary;
   const track = trackColor ?? theme.colors.surfaceContainerHighest;
   const determinate = typeof value === 'number';
+  const fullRadius = theme.shape.full;
 
   // Recreated per variant: a value once driven natively (circular) can't be reused
   // by the JS driver (linear).
@@ -64,29 +87,19 @@ export const ProgressIndicator = ({
 
   useEffect(() => {
     if (determinate) return;
-    const loop = Animated.loop(
-      Animated.timing(anim, {
-        toValue: 1,
-        duration: variant === 'circular' ? 1400 : 1600,
-        easing: Easing.linear,
-        // Linear indeterminate animates `left` (layout prop) — no native driver.
-        // Web doesn't have native animated module, so only use native driver on iOS/Android.
-        useNativeDriver: Platform.OS !== 'web' && variant === 'circular',
-      }),
-    );
-    loop.start();
-    return () => loop.stop();
+    return runIndeterminateLoop(anim, indeterminateTiming(variant, Platform.OS));
   }, [anim, determinate, variant]);
 
   if (variant === 'circular') {
-    const angle = determinate ? (Math.min(100, Math.max(0, value)) / 100) * 360 : 0;
+    const angle = determinate ? circularProgressAngle(value as number) : 0;
     return (
       <View
         accessibilityRole="progressbar"
+        accessibilityLabel={accessibilityLabel}
         accessibilityValue={determinate ? { min: 0, max: 100, now: value } : undefined}
-        style={[{ width: size, height: size }, style]}
+        style={[circularBoxStyle(size), style]}
       >
-        <View style={styles.circularTrack(size, thickness, track)} />
+        <View testID="progress-circular-track" style={circularTrackStyle(size, thickness, track)} />
         {determinate ? (
           <>
             {angle > 0 ? (
@@ -95,7 +108,7 @@ export const ProgressIndicator = ({
                 thickness={thickness}
                 color={barColor}
                 window="right"
-                rotate={Math.min(angle, 180) - 225}
+                rotate={rightArcRotate(angle)}
               />
             ) : null}
             {angle > 180 ? (
@@ -104,25 +117,28 @@ export const ProgressIndicator = ({
                 thickness={thickness}
                 color={barColor}
                 window="left"
-                rotate={angle - 225}
+                rotate={leftArcRotate(angle)}
               />
             ) : null}
           </>
         ) : (
           <Animated.View
-            style={{
-              position: 'absolute',
-              width: size,
-              height: size,
-              transform: [
-                {
-                  rotate: anim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }),
-                },
-              ],
-            }}
+            testID="progress-circular-spinner"
+            style={[
+              circularSpinnerFrameStyle(size),
+              {
+                transform: [
+                  {
+                    rotate: anim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0deg', '360deg'],
+                    }),
+                  },
+                ],
+              },
+            ]}
           >
-            {/* 90° arc (top border only), spun continuously */}
-            <View style={styles.spinnerArc(size, thickness, barColor)} />
+            <View style={spinnerArcStyle(size, thickness, barColor)} />
           </Animated.View>
         )}
       </View>
@@ -132,15 +148,20 @@ export const ProgressIndicator = ({
   return (
     <View
       accessibilityRole="progressbar"
+      accessibilityLabel={accessibilityLabel}
       accessibilityValue={determinate ? { min: 0, max: 100, now: value } : undefined}
-      style={[styles.linearTrack(thickness, track), style]}
+      style={[linearTrackStyle(thickness, track, fullRadius), style]}
     >
       {determinate ? (
-        <View style={styles.linearFill(Math.min(100, Math.max(0, value)), barColor)} />
+        <View
+          testID="progress-linear-fill"
+          style={linearFillStyle(clampProgressPercent(value as number), barColor, fullRadius)}
+        />
       ) : (
         <Animated.View
+          testID="progress-linear-indeterminate"
           style={[
-            styles.linearIndeterminate(barColor),
+            linearIndeterminateStyle(barColor, fullRadius),
             {
               left: anim.interpolate({
                 inputRange: [0, 0.6, 1],
@@ -153,72 +174,3 @@ export const ProgressIndicator = ({
     </View>
   );
 };
-
-const styles = StyleSheet.create((theme) => ({
-  arcWindow: (size: number, window: 'left' | 'right') => ({
-    position: 'absolute',
-    top: 0,
-    left: window === 'right' ? size / 2 : 0,
-    width: size / 2,
-    height: size,
-    overflow: 'hidden',
-  }),
-  arc: (
-    size: number,
-    thickness: number,
-    color: string,
-    window: 'left' | 'right',
-    rotate: number,
-  ) => ({
-    position: 'absolute',
-    left: window === 'right' ? -size / 2 : 0,
-    width: size,
-    height: size,
-    borderRadius: size / 2,
-    borderWidth: thickness,
-    borderTopColor: 'transparent',
-    borderLeftColor: 'transparent',
-    borderRightColor: color,
-    borderBottomColor: color,
-    transform: [{ rotate: `${rotate}deg` }],
-  }),
-  circularTrack: (size: number, thickness: number, track: string) => ({
-    position: 'absolute',
-    width: size,
-    height: size,
-    borderRadius: size / 2,
-    borderWidth: thickness,
-    borderColor: track,
-  }),
-  spinnerArc: (size: number, thickness: number, color: string) => ({
-    width: size,
-    height: size,
-    borderRadius: size / 2,
-    borderWidth: thickness,
-    borderTopColor: color,
-    borderRightColor: 'transparent',
-    borderBottomColor: 'transparent',
-    borderLeftColor: 'transparent',
-  }),
-  linearTrack: (thickness: number, track: string) => ({
-    alignSelf: 'stretch',
-    height: thickness,
-    borderRadius: theme.shape.full,
-    backgroundColor: track,
-    overflow: 'hidden',
-  }),
-  linearFill: (pct: number, color: string) => ({
-    width: `${pct}%`,
-    height: '100%',
-    borderRadius: theme.shape.full,
-    backgroundColor: color,
-  }),
-  linearIndeterminate: (color: string) => ({
-    position: 'absolute',
-    top: 0,
-    height: '100%',
-    width: '40%',
-    borderRadius: theme.shape.full,
-    backgroundColor: color,
-  }),
-}));

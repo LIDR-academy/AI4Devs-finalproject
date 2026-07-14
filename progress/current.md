@@ -1,7 +1,7 @@
 # Current session
 
-**Active feature:** pending-pdfs-generate
-**Folder:** docs/features/pending-pdfs-generate/
+**Active feature:** lesson-player
+**Folder:** docs/features/lesson-player/
 **Phase:** pr_ready
-**Status:** DoD PASS. Docs compacted, risks landed, story moved to done. Human opens/merges PR on feat/pending-pdfs-generate.
-**Notes:** All agents on Grok. Product language = PDF list.
+**Status:** DoD PASS. Docs compacted, risks landed, story moved to done. Human opens/merges PR on feat/lesson-player.
+**Notes:** Worktree `.worktrees/lesson-player`. Models: opus=spec; grok=build/review/mutation/dod.

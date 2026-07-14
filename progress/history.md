@@ -38,3 +38,4 @@
 2026-07-14 | pending-pdfs-generate | pr_ready | docs/features/pending-pdfs-generate/ | PDF list on upload; generate/retry/open; DoD PASS
 2026-07-14 | generate-lesson (ad hoc) | n/a | — | Groq json_schema break: gpt-oss-20b + nullable schema; generation_failed fixed.
 2026-07-14 | pending-pdfs-generate (rules align) | n/a | — | DAO types + molecule-owned i18n + spinner tokens (07b665d).
+2026-07-14 | lesson-player | pr_ready | docs/features/lesson-player/ | DoD PASS; results=last slide; save-once

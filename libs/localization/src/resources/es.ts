@@ -140,8 +140,17 @@ export const es: TranslationResource = {
       viewResults: 'Ver resultados',
     },
     player: {
-      intro: 'Reproductor de diapositivas de la lección {{id}}',
-      finish: 'Finalizar lección',
+      loading: 'Cargando lección…',
+      next: 'Siguiente',
+      back: 'Atrás',
+      slideOf: 'Diapositiva {{current}} de {{total}}',
+      empty: {
+        message: 'Esta lección aún no tiene diapositivas.',
+      },
+      error: {
+        message: 'No se pudo cargar esta lección.',
+        retry: 'Reintentar',
+      },
     },
     results: {
       score: '{{correct}} / {{total}}',

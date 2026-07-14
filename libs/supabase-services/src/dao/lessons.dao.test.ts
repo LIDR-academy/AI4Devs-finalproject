@@ -96,4 +96,50 @@ describe('LessonsDao', () => {
 
     await expect(LessonsDao.deleteLesson('lesson-1')).rejects.toBe(error);
   });
+
+  // @s17 feed — full Lesson by id (slides JSON column); RLS scopes ownership (no user_id filter).
+  it('getLessonById selects full lesson fields and maps snake_case to Lesson', async () => {
+    const slides = [
+      {
+        id: 'slide-1',
+        lessonId: 'lesson-1',
+        title: 'Intro',
+        content: 'Hello',
+        position: 0,
+        kind: 'instructional' as const,
+      },
+    ];
+    single.mockResolvedValue({
+      data: {
+        id: 'lesson-1',
+        title: 'Capitals',
+        slides,
+        created_at: '2026-07-12T12:00:00.000Z',
+        user_id: 'user-1',
+      },
+      error: null,
+    });
+
+    const result = await LessonsDao.getLessonById('lesson-1');
+
+    expect(from).toHaveBeenCalledWith('lessons');
+    expect(select).toHaveBeenCalledWith('id, title, slides, created_at, user_id');
+    expect(eq).toHaveBeenCalledWith('id', 'lesson-1');
+    expect(single).toHaveBeenCalled();
+    expect(eq.mock.calls.every((call) => call[0] !== 'user_id')).toBe(true);
+    expect(result).toEqual({
+      id: 'lesson-1',
+      title: 'Capitals',
+      slides,
+      createdAt: '2026-07-12T12:00:00.000Z',
+      userId: 'user-1',
+    });
+  });
+
+  it('throws the raw supabase error when getLessonById fails', async () => {
+    const error = { message: 'not found' };
+    single.mockResolvedValue({ data: null, error });
+
+    await expect(LessonsDao.getLessonById('missing')).rejects.toBe(error);
+  });
 });

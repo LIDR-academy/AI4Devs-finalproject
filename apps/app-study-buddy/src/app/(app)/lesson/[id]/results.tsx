@@ -1,20 +1,10 @@
-import { ScreenContainer } from '@helsoft/components';
-import { buildStubLessonResultsFixture, LessonResults } from '@helsoft/study-buddy';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Redirect, useLocalSearchParams } from 'expo-router';
 
+/**
+ * Results live as the final slide inside LessonPlayer (@s13). This route redirects so
+ * deep links / stale bookmarks never show the stub fixture deck.
+ */
 export default function ResultsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
-  const { lesson, answers } = buildStubLessonResultsFixture(id);
-
-  return (
-    <ScreenContainer>
-      <LessonResults
-        lesson={lesson}
-        answers={answers}
-        onRetake={() => router.replace({ pathname: '/lesson/[id]/player', params: { id } })}
-        onBackToLessons={() => router.replace('/')}
-      />
-    </ScreenContainer>
-  );
+  return <Redirect href={{ pathname: '/lesson/[id]/player', params: { id: id ?? '' } }} />;
 }
