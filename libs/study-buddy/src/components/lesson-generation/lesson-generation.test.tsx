@@ -5,9 +5,15 @@ jest.mock('@helsoft/hooks', () => ({
 jest.mock('@helsoft/localization', () => ({ useLocalization: jest.fn() }));
 jest.mock('expo-router', () => ({ useRouter: jest.fn() }));
 
-/** Capture panel props so tests can invoke `onGenerate` even when Generate is disabled. */
+/** Capture panel props so tests can invoke handlers even when UI gates them. */
 const capturedPanelProps: {
-  current?: { onGenerate: () => void; canGenerate: boolean };
+  current?: {
+    onGenerate: () => void;
+    canGenerate: boolean;
+    onCompositionChange: (value: string) => void;
+    onErrorAction: () => void;
+    errorActionLabel?: string;
+  };
 } = {};
 jest.mock('@helsoft/components', () => {
   const actual = jest.requireActual('@helsoft/components') as typeof import('@helsoft/components');
@@ -507,5 +513,101 @@ describe('LessonGeneration', () => {
 
       expect(onGenerated).not.toHaveBeenCalled();
     });
+
+    // Mutation: drop `lessonId === lastAnnounced` guard — new callback identity must not re-fire.
+    it('does not re-fire onGenerated when only the callback identity changes', async () => {
+      const calls: string[] = [];
+      mockUseLessonGeneration.mockReturnValue(hookValue({ stage: 'content', result: readyResult }));
+
+      const { rerender } = await render(
+        <LessonGeneration
+          documentId="doc-1"
+          onGenerated={() => {
+            calls.push('a');
+          }}
+        />,
+      );
+      expect(calls).toEqual(['a']);
+
+      await act(async () => {
+        rerender(
+          <LessonGeneration
+            documentId="doc-1"
+            onGenerated={() => {
+              calls.push('b');
+            }}
+          />,
+        );
+      });
+
+      expect(calls).toEqual(['a']);
+    });
+  });
+
+  // Mutation: invalid composition must not update selection (`isLessonComposition` → true).
+  it('ignores composition changes that are not valid LessonComposition values', async () => {
+    mockUseLessonGeneration.mockReturnValue(hookValue());
+
+    await render(<LessonGeneration documentId="doc-1" />);
+    await act(async () => {
+      capturedPanelProps.current?.onCompositionChange('not-a-composition');
+    });
+
+    expect(
+      screen.getByRole('radio', { name: 'generation.composition.both', checked: true }),
+    ).toBeTruthy();
+  });
+
+  // Mutation: composition-change deps `[]` → `["Stryker…"]` — callback identity must stay stable.
+  it('keeps a stable onCompositionChange identity across rerenders', async () => {
+    mockUseLessonGeneration.mockReturnValue(hookValue());
+    const { rerender } = await render(<LessonGeneration documentId="doc-1" />);
+    const first = capturedPanelProps.current?.onCompositionChange;
+
+    await act(async () => {
+      rerender(<LessonGeneration documentId="doc-1" />);
+    });
+
+    expect(capturedPanelProps.current?.onCompositionChange).toBe(first);
+  });
+
+  // Mutation: recovery default `""` / `recovery === 'none'` label guard / signIn `else if (true)`.
+  it('keeps errorActionLabel undefined and does not navigate for document_not_ready', async () => {
+    const push = jest.fn();
+    mockUseRouter.mockReturnValue({ push });
+    mockUseLocalization.mockReturnValue(
+      localizationValue({
+        t: (key: string) => {
+          if (typeof key !== 'string') throw new Error(`t() called with ${String(key)}`);
+          return key;
+        },
+      }),
+    );
+    mockUseLessonGeneration.mockReturnValue(
+      hookValue({ stage: 'error', error: 'document_not_ready' }),
+    );
+
+    await render(<LessonGeneration documentId="doc-1" />);
+
+    expect(capturedPanelProps.current?.errorActionLabel).toBeUndefined();
+    await act(async () => {
+      capturedPanelProps.current?.onErrorAction();
+    });
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it('keeps errorActionLabel undefined when there is no error', async () => {
+    mockUseLocalization.mockReturnValue(
+      localizationValue({
+        t: (key: string) => {
+          if (typeof key !== 'string') throw new Error(`t() called with ${String(key)}`);
+          return key;
+        },
+      }),
+    );
+    mockUseLessonGeneration.mockReturnValue(hookValue({ stage: 'idle' }));
+
+    await expect(render(<LessonGeneration documentId="doc-1" />)).resolves.toBeTruthy();
+    expect(capturedPanelProps.current?.errorActionLabel).toBeUndefined();
   });
 });

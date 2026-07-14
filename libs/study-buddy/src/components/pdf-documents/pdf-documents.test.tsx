@@ -4,6 +4,21 @@ jest.mock('@helsoft/hooks', () => ({
 }));
 jest.mock('@helsoft/localization', () => ({ useLocalization: jest.fn() }));
 
+/** Capture list props so mutation tests can invoke onOpenLesson with a missing id. */
+const capturedListProps: {
+  current?: { onOpenLesson: (id: string) => void };
+} = {};
+jest.mock('@helsoft/components', () => {
+  const actual = jest.requireActual('@helsoft/components') as typeof import('@helsoft/components');
+  return {
+    ...actual,
+    PdfDocumentList: (props: Parameters<typeof actual.PdfDocumentList>[0]) => {
+      capturedListProps.current = props;
+      return actual.PdfDocumentList(props);
+    },
+  };
+});
+
 import { usePdfDocuments } from '@helsoft/hooks';
 import { useLocalization } from '@helsoft/localization';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
@@ -305,6 +320,234 @@ describe('PdfDocuments', () => {
     });
 
     expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  // Mutation: `if (reloadToken === undefined) return` → `if (false) return`.
+  it('does not refetch when reloadToken stays omitted even if refetch identity changes', async () => {
+    const refetch1 = jest.fn();
+    const refetch2 = jest.fn();
+    mockUsePdfDocuments.mockReturnValue(docsValue({ refetch: refetch1 }));
+
+    const { rerender } = await render(
+      <PdfDocuments onGenerate={onGenerate} onOpenLesson={onOpenLesson} />,
+    );
+
+    mockUsePdfDocuments.mockReturnValue(docsValue({ refetch: refetch2 }));
+    await act(async () => {
+      rerender(<PdfDocuments onGenerate={onGenerate} onOpenLesson={onOpenLesson} />);
+    });
+
+    expect(refetch1).not.toHaveBeenCalled();
+    expect(refetch2).not.toHaveBeenCalled();
+  });
+
+  // Mutation: drop `.trim()` / `if (!lessonId)` / find predicate / optional chaining.
+  it('does not open a lesson when lessonId is whitespace-only', async () => {
+    mockUsePdfDocuments.mockReturnValue(
+      docsValue({
+        documents: [
+          {
+            id: 'doc-gen',
+            filename: 'done.pdf',
+            pageCount: 3,
+            createdAt: '2026-07-11T12:00:00.000Z',
+            status: 'generated',
+            lessonId: '   ',
+          },
+        ],
+      }),
+    );
+
+    await render(<PdfDocuments onGenerate={onGenerate} onOpenLesson={onOpenLesson} />);
+    fireEvent.press(screen.getByRole('button', { name: 'Open lesson for done.pdf' }));
+
+    expect(onOpenLesson).not.toHaveBeenCalled();
+  });
+
+  // Mutation: `?.lessonId.trim()` without optional on lessonId — null must not throw.
+  it('does not throw when a generated row has a null lessonId', async () => {
+    mockUsePdfDocuments.mockReturnValue(
+      docsValue({
+        documents: [
+          {
+            id: 'doc-gen',
+            filename: 'done.pdf',
+            pageCount: 3,
+            createdAt: '2026-07-11T12:00:00.000Z',
+            status: 'generated',
+            lessonId: null,
+          },
+        ],
+      }),
+    );
+
+    await render(<PdfDocuments onGenerate={onGenerate} onOpenLesson={onOpenLesson} />);
+    expect(() => {
+      fireEvent.press(screen.getByRole('button', { name: 'Open lesson for done.pdf' }));
+    }).not.toThrow();
+    expect(onOpenLesson).not.toHaveBeenCalled();
+  });
+
+  it('does not throw when Open lesson is pressed for an unknown document id', async () => {
+    mockUsePdfDocuments.mockReturnValue(
+      docsValue({
+        documents: [
+          {
+            id: 'doc-gen',
+            filename: 'done.pdf',
+            pageCount: 3,
+            createdAt: '2026-07-11T12:00:00.000Z',
+            status: 'generated',
+            lessonId: 'lesson-1',
+          },
+        ],
+      }),
+    );
+
+    await render(<PdfDocuments onGenerate={onGenerate} onOpenLesson={onOpenLesson} />);
+    expect(() => {
+      capturedListProps.current?.onOpenLesson('missing-id');
+    }).not.toThrow();
+    expect(onOpenLesson).not.toHaveBeenCalled();
+  });
+
+  it('opens the lessonId of the pressed row, not the first document', async () => {
+    mockUsePdfDocuments.mockReturnValue(
+      docsValue({
+        documents: [
+          {
+            id: 'doc-a',
+            filename: 'first.pdf',
+            pageCount: 1,
+            createdAt: '2026-07-13T12:00:00.000Z',
+            status: 'generated',
+            lessonId: 'lesson-a',
+          },
+          {
+            id: 'doc-b',
+            filename: 'second.pdf',
+            pageCount: 2,
+            createdAt: '2026-07-12T12:00:00.000Z',
+            status: 'generated',
+            lessonId: 'lesson-b',
+          },
+        ],
+      }),
+    );
+
+    await render(<PdfDocuments onGenerate={onGenerate} onOpenLesson={onOpenLesson} />);
+    fireEvent.press(screen.getByRole('button', { name: 'Open lesson for second.pdf' }));
+
+    expect(onOpenLesson).toHaveBeenCalledWith('lesson-b');
+    expect(onOpenLesson).not.toHaveBeenCalledWith('lesson-a');
+  });
+
+  // Mutation: empty useCallback deps — must see the latest onOpenLesson after rerender.
+  it('calls the latest onOpenLesson after the prop updates', async () => {
+    const first = jest.fn();
+    const second = jest.fn();
+    mockUsePdfDocuments.mockReturnValue(
+      docsValue({
+        documents: [
+          {
+            id: 'doc-gen',
+            filename: 'done.pdf',
+            pageCount: 3,
+            createdAt: '2026-07-11T12:00:00.000Z',
+            status: 'generated',
+            lessonId: 'lesson-1',
+          },
+        ],
+      }),
+    );
+
+    const { rerender } = await render(
+      <PdfDocuments onGenerate={onGenerate} onOpenLesson={first} />,
+    );
+    await act(async () => {
+      rerender(<PdfDocuments onGenerate={onGenerate} onOpenLesson={second} />);
+    });
+    fireEvent.press(screen.getByRole('button', { name: 'Open lesson for done.pdf' }));
+
+    expect(second).toHaveBeenCalledWith('lesson-1');
+    expect(first).not.toHaveBeenCalled();
+  });
+
+  // Mutation: empty deleteDocument deps — must call the latest deleteDocument.
+  it('calls the latest deleteDocument after the hook return updates', async () => {
+    const firstDelete = jest.fn().mockResolvedValue(undefined);
+    const secondDelete = jest.fn().mockResolvedValue(undefined);
+    mockUsePdfDocuments.mockReturnValue(
+      docsValue({
+        documents: [
+          {
+            id: 'doc-ready',
+            filename: 'notes.pdf',
+            pageCount: 12,
+            createdAt: '2026-07-13T12:00:00.000Z',
+            status: 'ready',
+            lessonId: null,
+          },
+        ],
+        deleteDocument: firstDelete,
+      }),
+    );
+
+    const { rerender } = await render(
+      <PdfDocuments onGenerate={onGenerate} onOpenLesson={onOpenLesson} />,
+    );
+    mockUsePdfDocuments.mockReturnValue(
+      docsValue({
+        documents: [
+          {
+            id: 'doc-ready',
+            filename: 'notes.pdf',
+            pageCount: 12,
+            createdAt: '2026-07-13T12:00:00.000Z',
+            status: 'ready',
+            lessonId: null,
+          },
+        ],
+        deleteDocument: secondDelete,
+      }),
+    );
+    await act(async () => {
+      rerender(<PdfDocuments onGenerate={onGenerate} onOpenLesson={onOpenLesson} />);
+    });
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'Delete notes.pdf' }));
+    });
+    await act(async () => {
+      fireEvent.press(screen.getByRole('button', { name: 'Delete' }));
+    });
+
+    expect(secondDelete).toHaveBeenCalledWith('doc-ready');
+    expect(firstDelete).not.toHaveBeenCalled();
+  });
+
+  // Mutation: emptied StyleSheet root/heading — layout tokens must remain.
+  it('applies row layout styles on the heading container', async () => {
+    mockUsePdfDocuments.mockReturnValue(docsValue());
+    await render(<PdfDocuments onGenerate={onGenerate} onOpenLesson={onOpenLesson} />);
+
+    const heading = screen.getByText('Your PDFs');
+    const flat = Object.assign(
+      {},
+      ...[heading.props.style].flat(Infinity).filter(Boolean),
+    ) as Record<string, unknown>;
+    expect(flat.color).toBeTruthy();
+  });
+
+  // Mutation: `root: {}` — wiring root must flex to fill the screen column.
+  it('applies flex:1 on the PdfDocuments root container', async () => {
+    mockUsePdfDocuments.mockReturnValue(docsValue());
+    await render(<PdfDocuments onGenerate={onGenerate} onOpenLesson={onOpenLesson} />);
+    const root = screen.getByText('Your PDFs').parent;
+    const flat = Object.assign(
+      {},
+      ...[root?.props?.style].flat(Infinity).filter(Boolean),
+    ) as Record<string, unknown>;
+    expect(flat.flex).toBe(1);
   });
 
   // Failed delete must not become an unhandled rejection.

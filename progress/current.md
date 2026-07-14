@@ -2,6 +2,6 @@
 
 **Active feature:** pending-pdfs-generate
 **Folder:** docs/features/pending-pdfs-generate/
-**Phase:** mutation (pre-review)
-**Status:** All 3 slices built + slice-reviewed. Running pre-review mutation_tester.
-**Notes:** All agents on Grok.
+**Phase:** in_review
+**Status:** Pre-review mutation PASS. Full reviews_lead next.
+**Notes:** All agents on Grok. Pre-review sha recorded after this commit.

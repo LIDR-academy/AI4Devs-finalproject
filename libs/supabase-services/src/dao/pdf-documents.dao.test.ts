@@ -146,6 +146,35 @@ describe('PdfDocumentsDao', () => {
     expect(result[0]).toMatchObject({ status: 'failed', lessonId: null });
   });
 
+  // Mutation: `status === 'generated' ? row.lesson_id : null` → always row.lesson_id.
+  // Empty-string lesson_id is falsy for deriveStatus (→ ready) but must still map to null.
+  it('maps empty-string lesson_id to null lessonId for a ready document', async () => {
+    order.mockResolvedValue({
+      data: [
+        {
+          id: 'doc-1',
+          filename: 'empty-lesson.pdf',
+          page_count: 1,
+          created_at: '2026-07-14T00:00:00.000Z',
+          generation_error_code: null,
+          lesson_id: '',
+        },
+      ],
+      error: null,
+    });
+
+    const result = await PdfDocumentsDao.getDocuments();
+
+    expect(result[0]).toEqual({
+      id: 'doc-1',
+      filename: 'empty-lesson.pdf',
+      pageCount: 1,
+      createdAt: '2026-07-14T00:00:00.000Z',
+      status: 'ready',
+      lessonId: null,
+    });
+  });
+
   // @s17 — view itself filters extracted; DAO never joins client-side and never filters user_id.
   it('never passes a user_id equality filter on getDocuments', async () => {
     await PdfDocumentsDao.getDocuments();
@@ -214,5 +243,33 @@ describe('PdfDocumentsDao', () => {
 
     await expect(PdfDocumentsDao.deleteDocument('doc-1')).rejects.toThrow(/authenticated/i);
     expect(list).not.toHaveBeenCalled();
+  });
+
+  // Mutation: `if (userError) throw` → `if (false) throw` — must surface auth errors.
+  it('throws when getUser returns an error', async () => {
+    const userError = { message: 'auth failed' };
+    getUser.mockResolvedValue({ data: { user: null }, error: userError });
+
+    await expect(PdfDocumentsDao.deleteDocument('doc-1')).rejects.toBe(userError);
+    expect(list).not.toHaveBeenCalled();
+  });
+
+  // Mutation: `if (!files?.length) return` → `if (false) return` — empty folder must skip remove.
+  it('skips storage remove when the folder lists no files', async () => {
+    list.mockResolvedValue({ data: [], error: null });
+
+    await PdfDocumentsDao.deleteDocument('doc-1');
+
+    expect(remove).not.toHaveBeenCalled();
+    expect(delEq).toHaveBeenCalledWith('id', 'doc-1');
+  });
+
+  // Mutation: `files?.length` → `files.length` — null list data must not throw.
+  it('treats a null storage list as empty and skips remove', async () => {
+    list.mockResolvedValue({ data: null, error: null });
+
+    await expect(PdfDocumentsDao.deleteDocument('doc-1')).resolves.toBeUndefined();
+    expect(remove).not.toHaveBeenCalled();
+    expect(delEq).toHaveBeenCalledWith('id', 'doc-1');
   });
 });

@@ -426,4 +426,161 @@ describe('PdfDocumentList', () => {
     expect(announceSpy).toHaveBeenCalledWith('Still loading PDFs…');
     announceSpy.mockRestore();
   });
+
+  // Mutation: `onDelete && deleteAccessibilityLabel` → true / || .
+  it('does not offer delete when onDelete is omitted even if the row has a delete label', async () => {
+    await render(
+      <PdfDocumentList
+        state="content"
+        documents={documents}
+        onGenerate={jest.fn()}
+        onOpenLesson={jest.fn()}
+        onRetry={jest.fn()}
+      />,
+    );
+
+    expect(screen.queryByRole('button', { name: 'Delete newer.pdf' })).toBeNull();
+  });
+
+  it('does not offer delete when the row omits deleteAccessibilityLabel', async () => {
+    await render(
+      <PdfDocumentList
+        state="content"
+        documents={[
+          {
+            ...documents[0],
+            deleteAccessibilityLabel: undefined,
+          },
+        ]}
+        onGenerate={jest.fn()}
+        onOpenLesson={jest.fn()}
+        onRetry={jest.fn()}
+        onDelete={jest.fn()}
+      />,
+    );
+
+    expect(screen.queryByRole('button', { name: /Delete/i })).toBeNull();
+  });
+
+  // Mutation: emptied renderItem deps — must call the latest onGenerate after rerender.
+  it('calls the latest onGenerate after the prop updates', async () => {
+    const first = jest.fn();
+    const second = jest.fn();
+    const { rerender } = await render(
+      <PdfDocumentList
+        state="content"
+        documents={documents}
+        onGenerate={first}
+        onOpenLesson={jest.fn()}
+        onRetry={jest.fn()}
+      />,
+    );
+
+    await act(async () => {
+      rerender(
+        <PdfDocumentList
+          state="content"
+          documents={documents}
+          onGenerate={second}
+          onOpenLesson={jest.fn()}
+          onRetry={jest.fn()}
+        />,
+      );
+    });
+
+    fireEvent.press(screen.getByRole('button', { name: 'Generate newer.pdf' }));
+    expect(second).toHaveBeenCalledWith('doc-2');
+    expect(first).not.toHaveBeenCalled();
+  });
+
+  // Mutation: emptied StyleSheet empty/error tokens.
+  it('styles the empty and error copy with theme colors', async () => {
+    const flattenStyle = (style: unknown): Record<string, unknown> =>
+      Object.assign({}, ...[style].flat(Infinity).filter(Boolean));
+
+    await render(
+      <PdfDocumentList
+        state="empty"
+        documents={[]}
+        onGenerate={jest.fn()}
+        onOpenLesson={jest.fn()}
+        onRetry={jest.fn()}
+      />,
+    );
+    expect(flattenStyle(screen.getByText('pdfList.empty').props.style).color).toBeTruthy();
+
+    await render(
+      <PdfDocumentList
+        state="error"
+        documents={[]}
+        onGenerate={jest.fn()}
+        onOpenLesson={jest.fn()}
+        onRetry={jest.fn()}
+      />,
+    );
+    expect(flattenStyle(screen.getByText('pdfList.error').props.style).color).toBeTruthy();
+  });
+
+  // Mutation: emptied root/list/listContent/errorBanner StyleSheet objects.
+  it('applies flex layout on the content list and error banner container', async () => {
+    const flattenStyle = (style: unknown): Record<string, unknown> =>
+      Object.assign({}, ...[style].flat(Infinity).filter(Boolean));
+
+    await render(
+      <PdfDocumentList
+        state="content"
+        documents={documents}
+        onGenerate={jest.fn()}
+        onOpenLesson={jest.fn()}
+        onRetry={jest.fn()}
+      />,
+    );
+    const list = screen.getByTestId('pdf-document-list');
+    const listFlat = flattenStyle(list.props.style);
+    expect(listFlat.flex).toBe(1);
+    const rootFlat = flattenStyle(list.parent?.props?.style);
+    expect(rootFlat.flex).toBe(1);
+
+    await render(
+      <PdfDocumentList
+        state="error"
+        documents={[]}
+        onGenerate={jest.fn()}
+        onOpenLesson={jest.fn()}
+        onRetry={jest.fn()}
+      />,
+    );
+    const errorText = screen.getByText('pdfList.error');
+    const bannerFlat = flattenStyle(errorText.parent?.props?.style);
+    expect(bannerFlat.backgroundColor).toBeTruthy();
+  });
+
+  // Mutation: keyExtractor deps `[]` → `["Stryker…"]` — extractor must stay referentially stable.
+  it('keeps a stable FlatList keyExtractor identity across rerenders', async () => {
+    const { rerender } = await render(
+      <PdfDocumentList
+        state="content"
+        documents={documents}
+        onGenerate={jest.fn()}
+        onOpenLesson={jest.fn()}
+        onRetry={jest.fn()}
+      />,
+    );
+    const first = screen.getByTestId('pdf-document-list').props.keyExtractor;
+
+    await act(async () => {
+      rerender(
+        <PdfDocumentList
+          state="content"
+          documents={documents}
+          onGenerate={jest.fn()}
+          onOpenLesson={jest.fn()}
+          onRetry={jest.fn()}
+        />,
+      );
+    });
+
+    expect(screen.getByTestId('pdf-document-list').props.keyExtractor).toBe(first);
+    expect(first(documents[0])).toBe('doc-2');
+  });
 });

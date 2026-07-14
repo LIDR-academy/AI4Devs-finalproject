@@ -149,4 +149,34 @@ describe('PdfDocumentListItem', () => {
     expect(flat.width).toBe(layout.touchTarget);
     expect(flat.height).toBe(layout.touchTarget);
   });
+
+  // Mutation: emptied StyleSheet row/info/filename/meta/actions — layout tokens must remain.
+  it('lays out the row and actions as horizontal centered flex rows', async () => {
+    await render(<PdfDocumentListItem {...baseProps} status="ready" />);
+
+    const filename = screen.getByText('notes.pdf');
+    const filenameFlat = flattenStyle(filename.props.style);
+    expect(filenameFlat.color).toBeTruthy();
+
+    const status = screen.getByText('Ready to generate');
+    expect(flattenStyle(status.props.style).color).toBeTruthy();
+
+    // Walk up to the row container (info's parent).
+    const infoParent = filename.parent?.parent;
+    const rowFlat = flattenStyle(infoParent?.props?.style);
+    expect(rowFlat.flexDirection).toBe('row');
+    expect(rowFlat.alignItems).toBe('center');
+
+    const actions = screen.getByRole('button', { name: 'Generate notes.pdf' }).parent;
+    const actionsFlat = flattenStyle(actions?.props?.style);
+    expect(actionsFlat.flexDirection).toBe('row');
+    expect(actionsFlat.alignItems).toBe('center');
+  });
+
+  // Mutation: `info: {}` — info column must flex to fill remaining row space.
+  it('gives the info column flex:1 so the action stays trailing', async () => {
+    await render(<PdfDocumentListItem {...baseProps} status="ready" />);
+    const info = screen.getByText('notes.pdf').parent;
+    expect(flattenStyle(info?.props?.style).flex).toBe(1);
+  });
 });

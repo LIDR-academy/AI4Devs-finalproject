@@ -163,6 +163,190 @@ describe('usePdfDocuments', () => {
     errorSpy.mockRestore();
   });
 
+  // Mutation: catch-path `id !== requestId || !isMounted` → false / drops requestId check.
+  it('ignores a stale failed load that rejects after a newer refetch succeeds', async () => {
+    let rejectFirst: (reason?: unknown) => void = () => {};
+    let resolveSecond: (value: unknown) => void = () => {};
+    service.getDocuments
+      .mockReturnValueOnce(new Promise((_, reject) => (rejectFirst = reject)) as never)
+      .mockReturnValueOnce(new Promise((resolve) => (resolveSecond = resolve)) as never);
+
+    const { result } = renderHook(() => usePdfDocuments());
+
+    await act(async () => {
+      result.current.refetch();
+    });
+
+    await act(async () => {
+      resolveSecond(documents);
+    });
+    await waitFor(() => expect(result.current.documents).toEqual(documents));
+    expect(result.current.error).toBeNull();
+
+    await act(async () => {
+      rejectFirst(new Error('stale failure'));
+    });
+
+    expect(result.current.documents).toEqual(documents);
+    expect(result.current.error).toBeNull();
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  // Mutation: catch `||` → `&&` / cleanup never clears isMounted — unmounted reject must not set error.
+  it('does not apply a failed load after unmount', async () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    let rejectLoad: (reason?: unknown) => void = () => {};
+    service.getDocuments.mockReturnValue(
+      new Promise((_, reject) => (rejectLoad = reject)) as never,
+    );
+
+    const { unmount } = renderHook(() => usePdfDocuments());
+    unmount();
+
+    await act(async () => {
+      rejectLoad(new Error('unmounted failure'));
+    });
+
+    expect(errorSpy).not.toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
+
+  // Mutation: delete success `if (!isMounted) return` → `if (false) return`.
+  it('does not dispatch delete success after unmount', async () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    service.getDocuments.mockResolvedValue(documents);
+    let resolveDelete: () => void = () => {};
+    service.deleteDocument.mockReturnValue(
+      new Promise<void>((resolve) => {
+        resolveDelete = resolve;
+      }),
+    );
+
+    const { result, unmount } = renderHook(() => usePdfDocuments());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    let deletePromise: Promise<void> = Promise.resolve();
+    await act(async () => {
+      deletePromise = result.current.deleteDocument('doc-2');
+    });
+    unmount();
+
+    await act(async () => {
+      resolveDelete();
+      await deletePromise;
+    });
+
+    expect(errorSpy).not.toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
+
+  // Mutation: delete failure `if (isMounted)` → `if (true)`.
+  it('does not dispatch delete failure after unmount', async () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    service.getDocuments.mockResolvedValue(documents);
+    let rejectDelete: (reason?: unknown) => void = () => {};
+    service.deleteDocument.mockReturnValue(
+      new Promise<void>((_, reject) => {
+        rejectDelete = reject;
+      }),
+    );
+
+    const { result, unmount } = renderHook(() => usePdfDocuments());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    let deletePromise: Promise<void> = Promise.resolve();
+    await act(async () => {
+      deletePromise = result.current.deleteDocument('doc-2');
+    });
+    unmount();
+
+    await act(async () => {
+      rejectDelete(new Error('delete after unmount'));
+      await expect(deletePromise).rejects.toThrow('delete after unmount');
+    });
+
+    expect(errorSpy).not.toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
+
+  // Mutation: `++requestId` → `--requestId` — concurrent loads must still cancel the older one.
+  it('cancels an in-flight load when refetch starts before the first resolves', async () => {
+    const calls: Array<{ resolve: (v: unknown) => void; id: number }> = [];
+    let callCount = 0;
+    service.getDocuments.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          callCount += 1;
+          calls.push({ resolve, id: callCount });
+        }) as never,
+    );
+
+    const { result } = renderHook(() => usePdfDocuments());
+    await act(async () => {
+      result.current.refetch();
+    });
+    expect(service.getDocuments).toHaveBeenCalledTimes(2);
+
+    // Resolve the older (first) call last — must not win.
+    await act(async () => {
+      calls[1]?.resolve([
+        {
+          id: 'newer',
+          filename: 'newer.pdf',
+          pageCount: 1,
+          createdAt: '2026-07-14T00:00:00.000Z',
+          status: 'ready',
+          lessonId: null,
+        },
+      ]);
+    });
+    await waitFor(() => expect(result.current.documents[0]?.id).toBe('newer'));
+
+    await act(async () => {
+      calls[0]?.resolve(documents);
+    });
+
+    expect(result.current.documents[0]?.id).toBe('newer');
+  });
+
+  // Mutation: load/deleteDocument deps `[]` → `["Stryker…"]` (new array each render).
+  it('keeps stable load/refetch/deleteDocument identities and does not refetch on rerender', async () => {
+    service.getDocuments.mockResolvedValue(documents);
+    const { result, rerender } = renderHook(() => usePdfDocuments());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    const refetch = result.current.refetch;
+    const deleteDocument = result.current.deleteDocument;
+    const callsAfterLoad = service.getDocuments.mock.calls.length;
+
+    rerender();
+
+    expect(result.current.refetch).toBe(refetch);
+    expect(result.current.deleteDocument).toBe(deleteDocument);
+    expect(service.getDocuments.mock.calls.length).toBe(callsAfterLoad);
+  });
+
+  // Mutation: cleanup deps `[]` → `["Stryker…"]` re-runs cleanup every render and clears isMounted.
+  it('still applies a refetch after a parent rerender', async () => {
+    const flipped = [
+      {
+        ...documents[0],
+        status: 'generated' as const,
+        lessonId: 'lesson-1',
+      },
+    ];
+    service.getDocuments.mockResolvedValueOnce(documents).mockResolvedValueOnce(flipped);
+    const { result, rerender } = renderHook(() => usePdfDocuments());
+    await waitFor(() => expect(result.current.documents).toEqual(documents));
+
+    rerender();
+
+    await act(async () => {
+      result.current.refetch();
+    });
+    await waitFor(() => expect(result.current.documents).toEqual(flipped));
+  });
+
   // @s12 — deleteDocument removes the row from local state on success.
   it('deleteDocument removes the document from the list after a successful service delete', async () => {
     service.getDocuments.mockResolvedValue(documents);
