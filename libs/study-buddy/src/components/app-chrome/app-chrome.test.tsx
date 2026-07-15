@@ -80,6 +80,24 @@ describe('AppChrome', () => {
     expect(navigate).toHaveBeenNthCalledWith(2, '/upload');
   });
 
+  it('uses the latest router for primary navigation after a rerender', async () => {
+    const initialNavigate = jest.fn();
+    const updatedNavigate = jest.fn();
+    mockUseRouter.mockReturnValue({ navigate: initialNavigate });
+    const { rerender } = await render(<AppChrome />);
+
+    mockUseRouter.mockReturnValue({ navigate: updatedNavigate });
+    await rerender(<AppChrome />);
+    await act(async () => {
+      fireEvent.press(screen.getByRole('link', { name: 'nav.myLessons' }));
+      fireEvent.press(screen.getByRole('link', { name: 'nav.newLesson' }));
+    });
+
+    expect(initialNavigate).not.toHaveBeenCalled();
+    expect(updatedNavigate).toHaveBeenNthCalledWith(1, '/');
+    expect(updatedNavigate).toHaveBeenNthCalledWith(2, '/upload');
+  });
+
   it('uses session identity for account actions and the controlled sign-out dialog', async () => {
     const signOut = jest.fn().mockResolvedValue(undefined);
     mockUseAuth.mockReturnValue(authValue({ signOut }));

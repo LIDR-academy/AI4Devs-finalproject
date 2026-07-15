@@ -28,3 +28,32 @@ study-buddy row excludes 1 equivalent mutant (see below). Raw Stryker count was 
 
 None (killable). Threshold met.
 
+---
+
+# Mutation — navigation-menus (Phase 3c post-review)
+
+**Verdict: PASS** — threshold 100% met on review-changed lines.
+
+Base-ref (pre-review): `9b1350d20143c140c74bea9e1bc54613c8b65715`. Scope: `run-mutation.sh 9b1350d20143c140c74bea9e1bc54613c8b65715`.
+
+
+## Per-lib scores
+
+| Library | Total | Killed | Survived | Score |
+|---------|------:|-------:|---------:|------:|
+| @helsoft/components | 30 | 28 (+2 err) | 0 | 100% |
+| @helsoft/study-buddy | 46 | 46 | 0 | 100% |
+
+Skipped (no review-changed source): services, supabase-services, hooks, logging-in-out, activities.
+
+components: 2 compile-error mutants counted detected; 0 survivors. PASS.
+
+
+## Survivors (killable)
+
+None. Added rerender assertions for localization and router replacement; all five ArrayDeclaration mutants are killed.
+
+
+## Equivalent exclusions (post-review)
+
+None.

@@ -57,6 +57,7 @@
 - @s3/@s4/@s12/@s14/@s18 RED strengthened indicator/default, avatar branch/style, token-style, modal, and Escape listener assertions; components mutation re-run 100%.
 - @s2/@s13/@s14/@s19 RED strengthened desktop/mobile routes, root active state, and identity fallback/initials assertions; AppChrome and route mutants killed.
 - @s14 RED added repeated-space and four-word identity initials assertion; helper mutant still survives scoped mutation despite exact `AB` output.
+- @s2/@s17 RED rerendered with replacement router/localization dependencies; all five AppChrome dependency-array mutants killed.
 
 ## CI re-work
 - @s19 RED AppChrome's isolated breakpoint import was unavailable; GREEN published a subpath entry point, kept the root barrel React Native-free, and verified the PDF integrations.

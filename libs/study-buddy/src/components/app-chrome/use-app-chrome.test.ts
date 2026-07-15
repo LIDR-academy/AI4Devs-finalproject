@@ -76,4 +76,22 @@ describe('useAppChrome', () => {
     expect(result.current.home).toBe(home);
     expect(result.current.newLesson).toBe(newLesson);
   });
+
+  it('refreshes the New lesson model when localization changes', async () => {
+    const firstT = (key: string) => `first:${key}`;
+    const updatedT = (key: string) => `updated:${key}`;
+    mockUseLocalization.mockReturnValue({ t: firstT });
+
+    const { result, rerender } = await renderHook(() => useAppChrome('/upload'));
+    const { newLesson } = result.current;
+
+    mockUseLocalization.mockReturnValue({ t: updatedT });
+    await rerender({});
+
+    expect(result.current.newLesson).not.toBe(newLesson);
+    expect(result.current.newLesson).toEqual({
+      active: true,
+      label: 'updated:nav.newLesson',
+    });
+  });
 });
