@@ -38,7 +38,11 @@ import { EventResponse } from '../../../core/models/event.model';
                   </a>
                   <a [routerLink]="['/events', event.slug, 'guests']" 
                      style="padding: 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 6px; text-decoration: none; color: #374151; font-weight: 500; font-size: 0.875rem; text-align: center; flex: 1; background-color: #f9fafb;">
-                    Manage Guests
+                    Guests
+                  </a>
+                  <a [routerLink]="['/events', event.slug, 'dashboard']" 
+                     style="padding: 0.5rem 1rem; border: 1px solid #4f46e5; border-radius: 6px; text-decoration: none; color: #4f46e5; font-weight: 500; font-size: 0.875rem; text-align: center; flex: 1; background-color: #eef2ff;">
+                    Stats
                   </a>
                 </div>
               </div>
