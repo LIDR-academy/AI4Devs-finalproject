@@ -8,6 +8,7 @@
 5. [Historias de usuario](#5-historias-de-usuario)
 6. [Tickets de trabajo](#6-tickets-de-trabajo)
 7. [Pull requests](#7-pull-requests)
+8. [Evidencia de despliegue](#8-evidencia-de-despliegue)
 
 ---
 
@@ -26,7 +27,10 @@ multiples proyectos.
 
 ### **0.4. URL del proyecto:**
 
-> Proyecto en desarrollo activo — no disponible aún para uso público como servicio. El código está disponible en el repositorio de GitHub.
+**Demo en vivo:** [project-vault-demo-web.fly.dev](https://project-vault-demo-web.fly.dev) — despliegue self-hosted real (mismas imágenes Docker, mismo Postgres, mismo código que una instalación de producción). Verificado accesible el 2026-07-15.
+
+- Inicia sesión con `demo@example.com` / *(solicitar la contraseña de demo vigente, o regístrate con tu propia cuenta)*
+- La base de datos de la demo se reinicia cada noche — trátala como un scratchpad de prueba, no para datos que quieras conservar.
 
 ### 0.5. URL o archivo comprimido del repositorio
 
@@ -1128,4 +1132,29 @@ La lista completa de requests pueden ser vistos aqui: https://github.com/nestorm
 - **PR #24:** [Feature/2-2 Credential storage and retrieval with version history](https://github.com/nestormata/project-vault/pull/24)
 - **Descripción:** Implementa el CRUD completo de credenciales: creación con cifrado AES-256-GCM, recuperación del valor actual (descifrado en memoria, nunca persistido en claro), historial de versiones inmutable con `is_current` por versión, worker de retención configurable con destrucción criptográfica de claves para versiones fuera de la ventana de retención, y logging de auditoría en la misma transacción que cada operación. Cada reveal de un secreto genera una entrada en `security_audit_log` con `event_type: secret.revealed`.
 - **Tipo:** Feature — Backend + Base de datos (Epic 2, Story 2.2)
+
+---
+
+## 8. Evidencia de despliegue
+
+### 8.1. Entorno público
+
+**[project-vault-demo-web.fly.dev](https://project-vault-demo-web.fly.dev)** — despliegue self-hosted real en Fly.io: mismas imágenes Docker, mismo Postgres, mismo código que una instalación de producción (no es un mock). Verificado en línea y sirviendo la pantalla de login (`/login`, HTTP 200 tras redirect) el 2026-07-15.
+
+- Login: `demo@example.com` / *(solicitar contraseña de demo vigente, o registrar cuenta propia vía "Register")*
+- La base de datos de la demo se reinicia cada noche — cualquier proyecto/credencial creada se pierde en el siguiente reseed
+- CI y quality gate en verde: ver badges al inicio de este documento (build, SonarCloud, coverage)
+
+### 8.2. Ejecutarlo localmente (instrucciones claras)
+
+Ver [1.4. Instrucciones de instalación](#14-instrucciones-de-instalación) para el detalle completo. Resumen rápido con Docker:
+
+```bash
+git clone https://github.com/nestormata/project-vault.git
+cd project-vault
+cp .env.example .env
+docker compose up --build
+```
+
+Luego abrir `http://localhost:5173`, inicializar el vault (modo Passphrase), registrar el primer usuario, e iniciar sesión. El flujo completo (init → unseal → registro → login → shell autenticado) es el mismo que corre en la demo pública.
 

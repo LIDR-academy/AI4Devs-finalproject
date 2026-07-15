@@ -69,3 +69,16 @@
 ## - then use /bmad-advanced-elicitation to review and improve the story
 ## - then use my skill /pick-story
 ## which is a complete workflow until get the story ready, tested and reviewed, and then I do manual QA
+
+---
+
+## Phase 3 — Delivery documentation (2026-07-15)
+
+## Custom skills used during development
+
+Copies of the custom skills referenced in this history are included under [`skills/`](./skills/):
+
+- [`skills/plan-story`](./skills/plan-story/SKILL.md) — creates a detailed story from the sprint backlog and adversarially reviews it (gaps, inconsistencies, technical debt, security risks) in an isolated git worktree, without implementing anything. Triggered with `plan story` / `plan story [story-id]`.
+- [`skills/pick-story`](./skills/pick-story/SKILL.md) — picks a story from the backlog and drives it to completion: creates the story file, runs advanced elicitation, branches, implements, reviews, pushes, and opens a PR. Triggered with `pick story [story-id]`.
+- [`skills/my-epic-retro`](./skills/my-epic-retro/SKILL.md) — runs a full epic retrospective (bmad-retrospective ceremony) plus a dedicated audit for inconsistencies, gaps, risks, and technical debt, ending with an offer to schedule tracked backlog stories for whatever it finds. Triggered with `run my-epic-retro` / `let's retro epic X`.
+
