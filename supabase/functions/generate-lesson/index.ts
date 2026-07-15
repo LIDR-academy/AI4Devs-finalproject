@@ -89,9 +89,9 @@ const runGeneration = async (apiKey: string, prompt: string): Promise<unknown> =
 const PDF_IMAGES_BUCKET = 'pdf-images';
 
 // @s15/risks.md R4 -- bounds the whole generation pipeline (text call + the rare vision
-// round-trip) to comfortably inside the PRD's ~30s target; a run that exceeds this is surfaced as
-// the typed `timeout` code (mapGenerationError), never left to the platform's own hard cutoff.
-const GENERATION_TIMEOUT_MS = 25_000;
+// round-trip); a run that exceeds this is surfaced as the typed `timeout` code
+// (mapGenerationError), never left to the platform's own hard cutoff.
+const GENERATION_TIMEOUT_MS = 120_000;
 
 const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
   let timer: number | undefined;
