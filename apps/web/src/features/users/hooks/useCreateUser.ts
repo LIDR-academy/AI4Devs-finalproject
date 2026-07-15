@@ -11,6 +11,7 @@ export function useCreateUser() {
     mutationFn: (data: CreateUserRequest) => usersApi.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['work-orders', 'mechanics'] });
     },
   });
 }

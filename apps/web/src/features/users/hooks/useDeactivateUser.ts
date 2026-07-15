@@ -10,6 +10,7 @@ export function useDeactivateUser() {
     mutationFn: (userId: string) => usersApi.deactivate(userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['work-orders', 'mechanics'] });
     },
   });
 }

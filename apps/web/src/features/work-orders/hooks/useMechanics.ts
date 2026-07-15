@@ -5,6 +5,6 @@ export function useMechanics() {
   return useQuery({
     queryKey: ['work-orders', 'mechanics'],
     queryFn: () => workOrdersApi.getMechanics(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000,
   });
 }

@@ -17,6 +17,7 @@ export function useUpdateUser() {
     }) => usersApi.update(id, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['work-orders', 'mechanics'] });
     },
   });
 }
