@@ -12,6 +12,7 @@ import { AdminCoacheeDetailPage } from "@/ui/pages/admin/CoacheeDetailPage";
 import { AdminCoacheesPage } from "@/ui/pages/admin/CoacheesPage";
 import { AdminCoachesPage } from "@/ui/pages/admin/CoachesPage";
 import { AdminTodayPage } from "@/ui/pages/admin/TodayPage";
+import { ChangePasswordPage } from "@/ui/pages/ChangePasswordPage";
 import { CoachCalendarPage } from "@/ui/pages/coach/CalendarPage";
 import { CoachCoacheeDetailPage } from "@/ui/pages/coach/CoacheeDetailPage";
 import { CoachCoacheesPage } from "@/ui/pages/coach/CoacheesPage";
@@ -34,6 +35,10 @@ function RootRedirect() {
     return <Navigate to="/login" replace />;
   }
 
+  if (user?.mustChangePassword) {
+    return <Navigate to="/change-password" replace />;
+  }
+
   switch (user?.role) {
     case UserRole.ADMIN:
       return <Navigate to="/admin/today" replace />;
@@ -48,6 +53,14 @@ function RootRedirect() {
 
 const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
+  {
+    path: "/change-password",
+    element: (
+      <ProtectedRoute>
+        <ChangePasswordPage />
+      </ProtectedRoute>
+    ),
+  },
   { path: "/unauthorized", element: <UnauthorizedPage /> },
   {
     path: "/admin",

@@ -51,12 +51,12 @@ describe("POST /api/v1/coachees", () => {
     await request(app)
       .post("/api/v1/coachees")
       .set("Authorization", `Bearer ${adminToken}`)
-      .send({ name: "First", email, classTypePreference: "GROUP" });
+      .send({ name: "First", email, phone: "+34 600 111 222", classTypePreference: "GROUP" });
 
     const res = await request(app)
       .post("/api/v1/coachees")
       .set("Authorization", `Bearer ${adminToken}`)
-      .send({ name: "Duplicate", email, classTypePreference: "GROUP" });
+      .send({ name: "Duplicate", email, phone: "+34 600 333 444", classTypePreference: "GROUP" });
     expect(res.status).toBe(409);
     expect(res.body.error).toHaveProperty("code", "CONFLICT");
   });

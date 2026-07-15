@@ -11,7 +11,7 @@ const router = Router();
 const createCoacheeSchema = z.object({
   name: z.string().min(1).max(255),
   email: z.string().email(),
-  phone: z.string().max(20).optional().nullable(),
+  phone: z.string().min(1).max(20),
   classTypePreference: z.enum(["INDIVIDUAL", "GROUP", "BOTH"]).optional().nullable(),
   levelId: z.string().uuid().optional().nullable(),
   additionalInfo: z.string().optional().nullable(),

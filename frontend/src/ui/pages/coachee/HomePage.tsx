@@ -1,12 +1,12 @@
-import { useMe } from "@/infrastructure/hooks/useMe";
 import { useLevels } from "@/infrastructure/hooks/useLevels";
+import { useMe } from "@/infrastructure/hooks/useMe";
 
 export function CoacheeHomePage() {
   const { data: me } = useMe();
   const levelsQuery = useLevels();
 
   const levelName = me?.level
-    ? levelsQuery.data?.find((l) => l.id === me.level?.id)?.name ?? "Unknown"
+    ? (levelsQuery.data?.find((l) => l.id === me.level?.id)?.name ?? "Unknown")
     : null;
 
   return (

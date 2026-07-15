@@ -27,7 +27,11 @@ export function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      navigate(getRoleHome(user.role), { replace: true });
+      if (user.mustChangePassword) {
+        navigate("/change-password", { replace: true });
+      } else {
+        navigate(getRoleHome(user.role), { replace: true });
+      }
     }
   }, [isAuthenticated, user, navigate]);
 
@@ -40,6 +44,9 @@ export function LoginPage() {
   }
 
   if (isAuthenticated && user) {
+    if (user.mustChangePassword) {
+      return <Navigate to="/change-password" replace />;
+    }
     return <Navigate to={getRoleHome(user.role)} replace />;
   }
 

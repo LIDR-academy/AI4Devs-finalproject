@@ -115,4 +115,12 @@ https://linear.app/ai4devs/issue/COACHER-189/default-password-for-coachees-phone
 
 [/speckit.plan]
 [/speckit.tasks]
+
+(Here it was suggested to not to it all for the MVP but I asked "Why not include all of them?" and then we decided there was no reason and that we would implement everything)
+
 [/speckit.implement]
+
+What should I run in order to be able to tests the changes?
+
+---
+

@@ -11,7 +11,7 @@ export class CreateCoachee {
 
   async execute(data: CreateCoacheeData): Promise<Coachee> {
     await this.service.assertEmailUnique(data.email);
-    const passwordHash = await bcrypt.hash(crypto.randomUUID(), 12);
+    const passwordHash = await bcrypt.hash(data.phone, 12);
     return this.repository.create({ ...data, passwordHash });
   }
 }

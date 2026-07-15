@@ -4,7 +4,7 @@ export type CoacheeStatus = "ACTIVE" | "INACTIVE";
 export interface CreateCoacheeData {
   name: string;
   email: string;
-  phone?: string | null;
+  phone: string;
   classTypePreference?: ClassTypePreference;
   levelId?: string | null;
   additionalInfo?: string | null;

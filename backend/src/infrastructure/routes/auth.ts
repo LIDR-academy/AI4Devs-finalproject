@@ -60,6 +60,7 @@ router.post("/auth/login", validate(loginSchema), async (req, res, next) => {
         name: user.name,
         role: user.role,
         status: user.status,
+        mustChangePassword: user.must_change_password,
       },
     });
   } catch (err) {
@@ -117,6 +118,7 @@ router.post("/auth/refresh", validate(refreshSchema), async (req, res, next) => 
         name: user.name,
         role: user.role,
         status: user.status,
+        mustChangePassword: user.must_change_password,
       },
     });
   } catch (err) {
@@ -141,12 +143,57 @@ router.post("/auth/logout", authenticate, async (req, res, next) => {
   }
 });
 
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(6),
+});
+
+router.post(
+  "/auth/change-password",
+  authenticate,
+  validate(changePasswordSchema),
+  async (req, res, next) => {
+    try {
+      const userId = (req.user as { id: string }).id;
+      const { currentPassword, newPassword } = req.body;
+
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user) {
+        throw new UnauthorizedError("User not found");
+      }
+
+      const valid = await bcrypt.compare(currentPassword, user.password_hash);
+      if (!valid) {
+        throw new UnauthorizedError("Invalid credentials");
+      }
+
+      const newHash = await bcrypt.hash(newPassword, 12);
+      await prisma.user.update({
+        where: { id: userId },
+        data: { password_hash: newHash, must_change_password: false },
+      });
+
+      res.json({ message: "Password changed successfully" });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 router.get("/auth/me", authenticate, async (req, res, next) => {
   try {
     const userId = (req.user as { id: string }).id;
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, name: true, role: true, status: true, level_id: true },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        status: true,
+        level_id: true,
+        must_change_password: true,
+      },
     });
     if (!user) {
       throw new UnauthorizedError("User not found");

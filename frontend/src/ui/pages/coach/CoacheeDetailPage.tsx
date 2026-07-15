@@ -83,7 +83,9 @@ export function CoachCoacheeDetailPage() {
             <p className="text-sm text-gray-900">{coachee.phone || "—"}</p>
           </div>
           <div>
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Status</p>
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
+              Status
+            </p>
             <span
               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                 coachee.status === "ACTIVE"

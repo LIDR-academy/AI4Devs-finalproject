@@ -10,6 +10,7 @@ export interface User {
   name: string;
   role: UserRole;
   status: "ACTIVE" | "INACTIVE";
+  mustChangePassword?: boolean;
 }
 
 export interface LoginRequest {
