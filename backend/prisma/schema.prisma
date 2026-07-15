@@ -45,6 +45,7 @@ model User {
   password_hash        String
   name                 String
   phone                String
+  specialities         String?
   role                 UserRole
   status               UserStatus @default(ACTIVE)
   level_id             String?   @db.Uuid
@@ -67,6 +68,7 @@ model User {
   coachBlocks     Block[]             @relation("BlockedCoach")
   notifications   Notification[]
   refreshTokens   RefreshToken[]
+  auditLogs       SecurityAuditLog[]
 }
 
 model RefreshToken {
@@ -171,6 +173,18 @@ model Block {
 
   createdBy User  @relation("BlockCreator", fields: [created_by], references: [id])
   coach     User? @relation("BlockedCoach", fields: [coach_id], references: [id])
+}
+
+model SecurityAuditLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  actor_id    String   @db.Uuid
+  action      String
+  resource    String
+  resource_id String?
+  outcome     String
+  created_at  DateTime @default(now())
+
+  actor User @relation(fields: [actor_id], references: [id])
 }
 
 model Notification {
