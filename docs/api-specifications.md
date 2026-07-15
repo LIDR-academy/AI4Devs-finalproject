@@ -830,7 +830,7 @@ All error responses follow this shape:
     "additionalInfo": "string | null"
   }
   ```
-  Password is auto-generated (or set via a temporary password flow — the PRD does not specify a password creation mechanism for new coachees; a welcome email with a password-set link is assumed. This is flagged as ambiguous — see note below.)
+  The coachee's phone number is used as their initial password (hashed with bcrypt cost factor 12 before storage).
 - **Success Response:** `201 Created`
   ```json
   {
