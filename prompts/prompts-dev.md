@@ -63,3 +63,15 @@ More things to correct:
 - When deactivating a cochee, we should show a successfull/error toast. and the status is currrently not getting updated in the detail view. If thhe coachee is inactive, we should show a Activate button instead of the Deactivate. That one should be color green
 
 ---
+
+# 5 - OpenCode - DeepSeek V4 Flash Free 
+
+[/speckit.specify] Now let's continue with this user story. Let's do all the tasks at once with everythinng defined https://linear.app/ai4devs/issue/COACHER-14/us-13-coach-lifecycle-and-financial-data
+
+[/speckit.plan]
+
+I interrupted the last prompt because you said ther was no constitution but there is. @.specify/memory/constitution.md . Please resume considering this
+
+[/speckit.tasks]
+[/speckit.implement]
+
