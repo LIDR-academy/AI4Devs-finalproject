@@ -18,6 +18,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/events/pages/guest-manager.page').then(m => m.GuestManagerPage), 
     canActivate: [authGuard]
   },
+  {
+    path: 'events/:slug/dashboard',
+    loadComponent: () => import('./features/dashboard/pages/control-dashboard.page'),
+    canActivate: [authGuard]
+  },
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
   { path: '**', redirectTo: '/dashboard' }
 ];

@@ -1,12 +1,11 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { GuestResponse } from '../../../core/services/guest.service';
-import { ButtonComponent } from '../../../shared/components/button.component';
 
 @Component({
   selector: 'app-guest-table',
   standalone: true,
-  imports: [CommonModule, DatePipe, ButtonComponent],
+  imports: [CommonModule],
   template: `
     <div class="table-container">
       <table class="guest-table">
