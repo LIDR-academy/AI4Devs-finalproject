@@ -3,7 +3,7 @@ id: task-1
 title: NavItem molecule + active-indicator API (pill|underline|dot)
 slice: 1
 scenarios: [s3, s4, s12]
-status: todo
+status: done
 paths:
   [
     libs/components/src/molecules/nav-item/,

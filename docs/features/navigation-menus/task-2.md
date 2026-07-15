@@ -3,7 +3,7 @@ id: task-2
 title: DesktopBar + MobileBar presentational organisms
 slice: 1
 scenarios: [s1, s2, s9, s11, s15, s18, s20]
-status: todo
+status: done
 paths:
   [
     libs/components/src/organisms/desktop-bar/,
