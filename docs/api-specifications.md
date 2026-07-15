@@ -107,7 +107,8 @@ All error responses follow this shape:
       "email": "string",
       "name": "string",
       "role": "admin | coach | coachee",
-      "status": "active | inactive"
+      "status": "active | inactive",
+      "mustChangePassword": false
     }
   }
   ```
@@ -139,7 +140,15 @@ All error responses follow this shape:
   ```json
   {
     "accessToken": "string (JWT, 15 min)",
-    "refreshToken": "string (opaque, 7 day)"
+    "refreshToken": "string (opaque, 7 day)",
+    "user": {
+      "id": "uuid",
+      "email": "string",
+      "name": "string",
+      "role": "admin | coach | coachee",
+      "status": "active | inactive",
+      "mustChangePassword": false
+    }
   }
   ```
 - **Error Responses:**
@@ -170,6 +179,37 @@ All error responses follow this shape:
 - **Business Rules Applied:**
   - Token is revoked from server-side store; subsequent refresh attempts with the same token fail.
   - Access token remains valid until its natural expiry (15 min).
+
+---
+
+### POST /auth/change-password
+
+- **Description:** Allows an authenticated user to change their password. Requires current password verification. After a successful change, the `mustChangePassword` flag is set to `false`.
+- **Auth/Role:** Authenticated (any role).
+- **Path Params:** None.
+- **Query Params:** None.
+- **Request Body:**
+  ```json
+  {
+    "currentPassword": "string",
+    "newPassword": "string (min 6 characters)"
+  }
+  ```
+- **Success Response:** `200 OK`
+  ```json
+  {
+    "message": "Password changed successfully"
+  }
+  ```
+- **Error Responses:**
+  - `400 VALIDATION_ERROR` — missing fields, new password too short, or new password and confirmation mismatch.
+  - `401 UNAUTHORIZED` — invalid or missing access token.
+  - `401 UNAUTHORIZED` — current password is incorrect.
+- **Business Rules Applied:**
+  - Current password is verified against the stored bcrypt hash.
+  - New password is hashed with bcrypt cost factor 12 before storage.
+  - On success, `must_change_password` is set to `false`.
+  - Rate-limited as part of standard API rate limiting.
 
 ---
 
@@ -811,8 +851,8 @@ All error responses follow this shape:
   - `409 CONFLICT` — email already exists.
 - **Business Rules Applied:**
   - Admin-only action (PRD Section 6.2).
-  - Password is hashed with bcrypt cost factor 12 before storage (PRD Section 10.1).
-  - **Ambiguity note:** The PRD specifies "Save (records current date)" but does not describe how the coachee sets their initial password. A temporary-password or invitation-link flow is expected but not defined in the PRD. This endpoint assumes the backend generates a temporary token and the frontend handles the invitation flow.
+  - Phone is required — the coachee's phone number is used as their initial password, hashed with bcrypt cost factor 12 before storage (PRD Section 10.1).
+  - Newly created coachees have `must_change_password = true`, requiring a password change on first login.
 
 ---
 
@@ -1188,6 +1228,7 @@ All error responses follow this shape:
 |--------|------|------|-------------------|
 | POST | `/auth/login` | None | Authenticate and receive tokens |
 | POST | `/auth/refresh` | None | Refresh access token |
+| POST | `/auth/change-password` | Any | Change password (also clears mustChangePassword flag) |
 | POST | `/auth/logout` | Any | Revoke refresh token |
 | GET | `/classes` | Any | List classes in date range (role-filtered) |
 | POST | `/classes` | Admin, Coach | Create class or recurring series |

@@ -95,3 +95,24 @@ https://linear.app/ai4devs/issue/COACHER-15/us-14-level-system-and-role-based-ui
 [/speckit.plan]
 [/speckit.tasks]
 [/speckit.implement]
+
+---
+
+# 7 - OpenCode - DeepSeek V4 Flash Free - Plan mode
+
+When adding coachees, there's no password input. What's the password by default? I'm okey with having a password by default and make sure that the coachees change it themselves on the first login. Can you help with that?
+
+---
+
+Create me a task in Linear under the epic https://linear.app/ai4devs/issue/COACHER-7/ep-01-auth-and-user-foundation with all the specifics so that I can later execute this with speckit.
+
+---
+
+# 8 - OpenCode - DeepSeek V4 Flash Free 
+[/speckit.specify] I want to do this task and make sure you update any necessary documentation inside the @docs/ directory.
+https://linear.app/ai4devs/issue/COACHER-189/default-password-for-coachees-phone-force-change-on-first-login
+
+
+[/speckit.plan]
+[/speckit.tasks]
+[/speckit.implement]
