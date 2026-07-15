@@ -5,10 +5,10 @@ slice: 1
 scenarios: [s5, s6]
 status: done
 paths:
-  - libs/study-buddy/src/components/slide-view/slide-view.tsx
-  - libs/study-buddy/src/components/slide-view/slide-view.types.ts
-  - libs/study-buddy/src/components/slide-view/slide-view.stories.tsx
-  - libs/study-buddy/src/components/slide-view/slide-view.test.tsx
+  - libs/activities/src/organisms/slide-view/slide-view.tsx
+  - libs/activities/src/organisms/slide-view/slide-view.types.ts
+  - libs/activities/src/organisms/slide-view/slide-view.stories.tsx
+  - libs/activities/src/organisms/slide-view/slide-view.test.tsx
   - libs/study-buddy/src/index.ts
 ---
 

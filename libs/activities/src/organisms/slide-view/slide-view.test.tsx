@@ -1,8 +1,8 @@
 jest.mock('../slide-image/slide-image', () => ({
   SlideImage: () => null,
 }));
-jest.mock('../multiple-choice-activity/multiple-choice-activity', () => ({
-  MultipleChoiceActivity: ({
+jest.mock('../multiple-choice/multiple-choice', () => ({
+  MultipleChoice: ({
     slide,
     initialAnswer,
   }: {
@@ -22,8 +22,8 @@ jest.mock('../multiple-choice-activity/multiple-choice-activity', () => ({
     );
   },
 }));
-jest.mock('../fill-in-the-blank-activity/fill-in-the-blank-activity', () => ({
-  FillInTheBlankActivity: ({
+jest.mock('../fill-in-the-blank/fill-in-the-blank', () => ({
+  FillInTheBlank: ({
     slide,
     initialAnswer,
   }: {
@@ -41,8 +41,8 @@ jest.mock('../fill-in-the-blank-activity/fill-in-the-blank-activity', () => ({
     );
   },
 }));
-jest.mock('../matching-activity/matching-activity', () => ({
-  MatchingActivity: ({
+jest.mock('../matching/matching', () => ({
+  Matching: ({
     slide,
     initialAnswer,
   }: {
@@ -60,8 +60,8 @@ jest.mock('../matching-activity/matching-activity', () => ({
     );
   },
 }));
-jest.mock('../flashcard-activity/flashcard-activity', () => ({
-  FlashcardActivity: ({
+jest.mock('../flashcard/flashcard', () => ({
+  Flashcard: ({
     slide,
     initialAnswer,
   }: {
@@ -79,8 +79,8 @@ jest.mock('../flashcard-activity/flashcard-activity', () => ({
     );
   },
 }));
-jest.mock('../open-ended-activity/open-ended-activity', () => ({
-  OpenEndedActivity: ({
+jest.mock('./open-ended-body', () => ({
+  OpenEndedBody: ({
     slide,
     initialAnswer,
   }: {

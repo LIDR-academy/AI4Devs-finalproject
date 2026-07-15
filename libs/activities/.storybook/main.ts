@@ -54,7 +54,7 @@ const config: StorybookConfig = {
       ...viteConfig.resolve,
       alias: {
         ...viteConfig.resolve?.alias,
-        // LessonResults needs a fake useLessonAttempt (real one needs Supabase).
+        // LessonResults/SlideImage need fake useLessonAttempt/useSlideImageUrl (real one needs Supabase).
         '@helsoft/hooks': `${dirname}mocks/hooks.ts`,
       },
     };

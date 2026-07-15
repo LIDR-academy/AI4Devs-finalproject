@@ -1,7 +1,7 @@
 const { test, expect } = require('@playwright/test');
 
-// Title 'Features/SlideView' → slug 'features-slideview'.
-const story = (name) => `/?path=/story/features-slideview--${name}`;
+// Title 'Organisms/SlideView' → slug 'organisms-slideview'.
+const story = (name) => `/?path=/story/organisms-slideview--${name}`;
 
 test('Slide view instructional story loads', async ({ page }) => {
   await page.goto(story('instructional'));

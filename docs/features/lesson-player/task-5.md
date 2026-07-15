@@ -5,14 +5,14 @@ slice: 1
 scenarios: [s13, s14, s21]
 status: done
 paths:
-  - libs/study-buddy/src/components/lesson-player/lesson-player.helpers.ts
-  - libs/study-buddy/src/components/lesson-player/lesson-player.helpers.test.ts
-  - libs/study-buddy/src/components/lesson-player/lesson-player.tsx
-  - libs/study-buddy/src/components/lesson-player/lesson-player.types.ts
-  - libs/study-buddy/src/components/lesson-player/use-lesson-player.ts
-  - libs/study-buddy/src/components/lesson-player/use-lesson-player.reducer.ts
-  - libs/study-buddy/src/components/lesson-player/lesson-player.stories.tsx
-  - libs/study-buddy/src/components/lesson-player/lesson-player.test.tsx
+  - libs/activities/src/organisms/lesson-player/lesson-player.helpers.ts
+  - libs/activities/src/organisms/lesson-player/lesson-player.helpers.test.ts
+  - libs/activities/src/organisms/lesson-player/lesson-player.tsx
+  - libs/activities/src/organisms/lesson-player/lesson-player.types.ts
+  - libs/activities/src/organisms/lesson-player/use-lesson-player.ts
+  - libs/activities/src/organisms/lesson-player/use-lesson-player.reducer.ts
+  - libs/activities/src/organisms/lesson-player/lesson-player.stories.tsx
+  - libs/activities/src/organisms/lesson-player/lesson-player.test.tsx
   - libs/activities/src/organisms/lesson-results/lesson-results.tsx
   - libs/activities/src/organisms/lesson-results/lesson-results.types.ts
   - libs/activities/src/organisms/lesson-results/use-lesson-results.ts

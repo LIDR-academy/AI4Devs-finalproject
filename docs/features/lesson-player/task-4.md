@@ -9,12 +9,12 @@ paths:
   - libs/components/src/molecules/progress-indicator/progress-indicator.types.ts
   - libs/components/src/molecules/progress-indicator/progress-indicator.stories.tsx
   - libs/components/src/molecules/progress-indicator/progress-indicator.test.tsx
-  - libs/study-buddy/src/components/lesson-player/lesson-player.tsx
-  - libs/study-buddy/src/components/lesson-player/lesson-player.types.ts
-  - libs/study-buddy/src/components/lesson-player/use-lesson-player.ts
-  - libs/study-buddy/src/components/lesson-player/use-lesson-player.reducer.ts
-  - libs/study-buddy/src/components/lesson-player/lesson-player.stories.tsx
-  - libs/study-buddy/src/components/lesson-player/lesson-player.test.tsx
+  - libs/activities/src/organisms/lesson-player/lesson-player.tsx
+  - libs/activities/src/organisms/lesson-player/lesson-player.types.ts
+  - libs/activities/src/organisms/lesson-player/use-lesson-player.ts
+  - libs/activities/src/organisms/lesson-player/use-lesson-player.reducer.ts
+  - libs/activities/src/organisms/lesson-player/lesson-player.stories.tsx
+  - libs/activities/src/organisms/lesson-player/lesson-player.test.tsx
   - libs/study-buddy/src/index.ts
   - apps/app-study-buddy/src/app/(app)/lesson/[id]/player.tsx
 ---

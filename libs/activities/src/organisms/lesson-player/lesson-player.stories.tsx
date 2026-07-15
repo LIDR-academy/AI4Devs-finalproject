@@ -68,7 +68,7 @@ const lesson: Lesson = {
 };
 
 const meta = {
-  title: 'Features/LessonPlayer',
+  title: 'Organisms/LessonPlayer',
   component: LessonPlayer,
   decorators: [
     withLessonAttemptMock({ status: 'idle' }),

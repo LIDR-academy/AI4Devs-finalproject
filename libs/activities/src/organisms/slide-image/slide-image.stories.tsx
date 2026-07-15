@@ -12,7 +12,7 @@ const withSlideImageUrlMock =
   };
 
 const meta = {
-  title: 'Features/SlideImage',
+  title: 'Organisms/SlideImage',
   component: SlideImage,
   decorators: [
     (Story) => (

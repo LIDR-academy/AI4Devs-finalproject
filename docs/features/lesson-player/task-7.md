@@ -5,10 +5,10 @@ slice: 2
 scenarios: [s18, s22]
 status: done
 paths:
-  - libs/study-buddy/src/components/lesson-player/lesson-player.tsx
-  - libs/study-buddy/src/components/lesson-player/use-lesson-player.ts
-  - libs/study-buddy/src/components/lesson-player/use-lesson-player.reducer.ts
-  - libs/study-buddy/src/components/lesson-player/lesson-player.test.tsx
+  - libs/activities/src/organisms/lesson-player/lesson-player.tsx
+  - libs/activities/src/organisms/lesson-player/use-lesson-player.ts
+  - libs/activities/src/organisms/lesson-player/use-lesson-player.reducer.ts
+  - libs/activities/src/organisms/lesson-player/lesson-player.test.tsx
   - apps/app-study-buddy/src/app/(app)/lesson/[id]/player.tsx
 ---
 

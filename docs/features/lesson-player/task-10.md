@@ -5,9 +5,9 @@ slice: 3
 scenarios: [s9]
 status: done
 paths:
-  - libs/study-buddy/src/components/slide-image/slide-image.tsx
-  - libs/study-buddy/src/components/slide-image/slide-image.test.tsx
-  - libs/study-buddy/src/components/slide-image/slide-image.stories.tsx
+  - libs/activities/src/organisms/slide-image/slide-image.tsx
+  - libs/activities/src/organisms/slide-image/slide-image.test.tsx
+  - libs/activities/src/organisms/slide-image/slide-image.stories.tsx
   - libs/supabase-services/src/services/lesson-image.service.ts
   - libs/supabase-services/src/services/lesson-image.service.test.ts
 ---

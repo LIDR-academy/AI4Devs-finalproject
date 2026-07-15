@@ -10,10 +10,10 @@ paths:
   - libs/hooks/src/hooks/use-slide-image-url.ts
   - libs/hooks/src/hooks/use-slide-image-url.types.ts
   - libs/hooks/src/hooks/index.ts
-  - libs/study-buddy/src/components/slide-image/slide-image.tsx
-  - libs/study-buddy/src/components/slide-image/slide-image.types.ts
-  - libs/study-buddy/src/components/slide-image/slide-image.stories.tsx
-  - libs/study-buddy/src/components/slide-image/slide-image.test.tsx
+  - libs/activities/src/organisms/slide-image/slide-image.tsx
+  - libs/activities/src/organisms/slide-image/slide-image.types.ts
+  - libs/activities/src/organisms/slide-image/slide-image.stories.tsx
+  - libs/activities/src/organisms/slide-image/slide-image.test.tsx
 ---
 
 ## Goal

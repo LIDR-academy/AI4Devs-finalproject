@@ -5,9 +5,9 @@ slice: 2
 scenarios: [s12, s20]
 status: done
 paths:
-  - libs/study-buddy/src/components/lesson-player/lesson-player.tsx
-  - libs/study-buddy/src/components/slide-view/slide-view.tsx
-  - libs/study-buddy/src/components/slide-view/slide-view.types.ts
+  - libs/activities/src/organisms/lesson-player/lesson-player.tsx
+  - libs/activities/src/organisms/slide-view/slide-view.tsx
+  - libs/activities/src/organisms/slide-view/slide-view.types.ts
   - libs/study-buddy/src/components/multiple-choice-activity/multiple-choice-activity.tsx
   - libs/study-buddy/src/components/multiple-choice-activity/multiple-choice-activity.types.ts
   - libs/study-buddy/src/components/fill-in-the-blank-activity/fill-in-the-blank-activity.tsx

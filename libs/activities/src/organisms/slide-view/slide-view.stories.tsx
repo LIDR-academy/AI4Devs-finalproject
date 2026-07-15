@@ -91,7 +91,7 @@ const openEnded: OpenEndedSlide = {
 };
 
 const meta = {
-  title: 'Features/SlideView',
+  title: 'Organisms/SlideView',
   component: SlideView,
   decorators: [
     (Story) => (

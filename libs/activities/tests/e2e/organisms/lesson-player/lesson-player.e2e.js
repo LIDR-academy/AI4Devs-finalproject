@@ -1,14 +1,14 @@
 const { test, expect } = require('@playwright/test');
 
-// Title 'Features/LessonPlayer' → slug 'features-lessonplayer'.
-const story = (name) => `/?path=/story/features-lessonplayer--${name}`;
+// Title 'Organisms/LessonPlayer' → slug 'organisms-lessonplayer'.
+const story = (name) => `/?path=/story/organisms-lessonplayer--${name}`;
 
 test('Lesson player story page loads', async ({ page }) => {
   await page.goto(story('first-slide'));
 
   const iframe = page.locator('iframe[title="storybook-preview-iframe"]');
   await expect(iframe).toBeVisible();
-  expect(page.url()).toContain('features-lessonplayer--first-slide');
+  expect(page.url()).toContain('organisms-lessonplayer--first-slide');
 });
 
 test('Lesson player shows first slide and progress', async ({ page }) => {

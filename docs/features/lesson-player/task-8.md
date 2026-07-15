@@ -5,9 +5,9 @@ slice: 3
 scenarios: [s15]
 status: done
 paths:
-  - libs/study-buddy/src/components/lesson-player/lesson-player.tsx
-  - libs/study-buddy/src/components/lesson-player/lesson-player.stories.tsx
-  - libs/study-buddy/src/components/lesson-player/lesson-player.test.tsx
+  - libs/activities/src/organisms/lesson-player/lesson-player.tsx
+  - libs/activities/src/organisms/lesson-player/lesson-player.stories.tsx
+  - libs/activities/src/organisms/lesson-player/lesson-player.test.tsx
   - apps/app-study-buddy/src/app/(app)/lesson/[id]/player.tsx
 ---
 

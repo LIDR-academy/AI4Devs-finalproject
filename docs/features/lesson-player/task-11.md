@@ -5,10 +5,10 @@ slice: 3
 scenarios: [s19]
 status: done
 paths:
-  - libs/study-buddy/src/components/lesson-player/lesson-player.tsx
+  - libs/activities/src/organisms/lesson-player/lesson-player.tsx
   - libs/components/src/molecules/progress-indicator/progress-indicator.tsx
-  - libs/study-buddy/src/components/slide-image/slide-image.tsx
-  - libs/study-buddy/src/components/lesson-player/lesson-player.stories.tsx
+  - libs/activities/src/organisms/slide-image/slide-image.tsx
+  - libs/activities/src/organisms/lesson-player/lesson-player.stories.tsx
 ---
 
 ## Goal

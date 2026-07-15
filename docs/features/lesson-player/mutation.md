@@ -75,7 +75,7 @@ Detected = killed + timeout. Score = detected / (detected + survived).
 | File:line | Mutator | Mutation |
 |---|---|---|
 | `libs/activities/src/organisms/lesson-results/use-lesson-results.ts:21` | BooleanLiteral | `persistOnMount = true` → `persistOnMount = false` |
-| `libs/study-buddy/src/components/slide-image/slide-image.tsx:20` | StringLiteral | `image.alt ?? ''` → `image.alt ?? "Stryker was here!"` |
+| `libs/activities/src/organisms/slide-image/slide-image.tsx:20` | StringLiteral | `image.alt ?? ''` → `image.alt ?? "Stryker was here!"` |
 
 Default-param / `?? ''` fallback never hit by current tests; no surviving (tests-pass-with-mutant) holes remain.
 
