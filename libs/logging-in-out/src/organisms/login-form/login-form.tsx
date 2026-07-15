@@ -100,6 +100,9 @@ export const LoginForm = ({
 const styles = StyleSheet.create((theme) => ({
   form: {
     gap: theme.spacing.s4,
+    width: '100%',
+    maxWidth: theme.layout.contentReading,
+    alignSelf: 'center',
   },
   submitRow: {
     flexDirection: 'row',

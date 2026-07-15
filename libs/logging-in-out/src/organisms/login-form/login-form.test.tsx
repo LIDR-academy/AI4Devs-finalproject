@@ -2,7 +2,7 @@ jest.mock('@helsoft/localization', () => ({
   useLocalization: jest.fn(),
 }));
 
-import { disabledOpacity, lightColors, spacing } from '@helsoft/components';
+import { disabledOpacity, layout, lightColors, spacing } from '@helsoft/components';
 import { useLocalization } from '@helsoft/localization';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { AccessibilityInfo } from 'react-native';
@@ -485,6 +485,19 @@ describe('LoginForm', () => {
     const form = screen.getByRole('button', { name: 'auth.submit' }).parent?.parent;
 
     expect(form).toHaveStyle({ gap: spacing.s4 });
+  });
+
+  // Layout — constrained + centered so web/wide viewports don't stretch the fields full-bleed.
+  it('caps form width at the reading column and centers itself', async () => {
+    await render(<LoginForm onSubmit={jest.fn()} />);
+
+    const form = screen.getByRole('button', { name: 'auth.submit' }).parent?.parent;
+
+    expect(form).toHaveStyle({
+      width: '100%',
+      maxWidth: layout.contentReading,
+      alignSelf: 'center',
+    });
   });
 
   // Layout/a11y — the live-region text stays mounted (so assistive tech can read it) but is
