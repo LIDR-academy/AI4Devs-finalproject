@@ -18,6 +18,7 @@
     "@angular/platform-browser": "22.0.2",
     "@angular/platform-browser-dynamic": "22.0.2",
     "@angular/router": "22.0.2",
+    "@stripe/stripe-js": "^9.10.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.16.0"
