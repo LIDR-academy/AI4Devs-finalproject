@@ -63,7 +63,7 @@ export class PublishDialogComponent implements OnInit, AfterViewInit, OnDestroy 
         this.loading = false;
         setTimeout(() => this.mountPaymentElement(), 0);
       },
-      error: (err) => {
+      error: () => {
         this.error = 'Failed to initialize payment. Please try again.';
         this.loading = false;
       }
