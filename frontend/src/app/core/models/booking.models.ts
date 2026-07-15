@@ -61,3 +61,27 @@ export interface Booking {
   createdAt: string;
   expiresAt: string | null;
 }
+
+// US0013 — Post-session review
+
+export interface ReviewRequest {
+  ratingHygiene: number;
+  ratingPainManagement: number;
+  ratingCustomerService: number;
+  ratingResult: number;
+  comment?: string | null;
+  tattooPhotoUrl?: string | null;
+}
+
+export interface ReviewDto {
+  id: string;
+  clientName: string;
+  ratingHygiene: number;
+  ratingPainManagement: number;
+  ratingCustomerService: number;
+  ratingResult: number;
+  averageRating: number;
+  comment: string | null;
+  tattooPhotoUrl: string | null;
+  createdAt: string;
+}

@@ -43,6 +43,14 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'reservas/:bookingId/calificar',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/booking/review-form/review-form.component').then(
+        (m) => m.ReviewFormComponent
+      )
+  },
+  {
     path: 'reservas/:bookingId',
     canActivate: [authGuard],
     loadComponent: () =>

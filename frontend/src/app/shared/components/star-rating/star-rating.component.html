@@ -1,0 +1,17 @@
+<fieldset class="star-rating">
+  <legend class="star-rating__label">{{ label() }}</legend>
+  <div class="star-rating__stars" (mouseleave)="clearHover()">
+    @for (star of stars; track star) {
+      <button
+        type="button"
+        class="star-rating__star"
+        [class.star-rating__star--filled]="isFilled(star)"
+        [attr.aria-label]="star + ' estrella' + (star === 1 ? '' : 's')"
+        [attr.aria-pressed]="value() === star"
+        (click)="select(star)"
+        (mouseenter)="hover(star)"
+        (keydown)="onKeydown($event, star)"
+      >★</button>
+    }
+  </div>
+</fieldset>

@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { Booking } from '../../../core/models/booking.models';
 import { BookingService } from '../services/booking.service';
@@ -17,6 +17,7 @@ import { BookingCardComponent } from './booking-card/booking-card.component';
 export class MyBookingsComponent implements OnInit {
   private readonly bookingService = inject(BookingService);
   private readonly titleService = inject(Title);
+  private readonly router = inject(Router);
 
   readonly bookings = signal<Booking[]>([]);
   readonly total = signal(0);
@@ -32,6 +33,12 @@ export class MyBookingsComponent implements OnInit {
 
   ngOnInit(): void {
     this.titleService.setTitle('Mis Reservas — INK·LINK');
+    // US0013: pick up toast message from ReviewFormComponent redirect
+    const nav = this.router.getCurrentNavigation();
+    const toastMsg = nav?.extras?.state?.['toast'] as string | undefined;
+    if (toastMsg) {
+      this.showToast(toastMsg);
+    }
     this.load();
   }
 

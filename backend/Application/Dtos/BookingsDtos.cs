@@ -31,6 +31,16 @@ public record ArtistSummaryDto(
 
 public record BookingListResponse(List<BookingDto> Data, int Total, int Page, int PageSize);
 
+// US0013 — Post-session review
+
+public record ReviewRequest(
+    int RatingHygiene,
+    int RatingPainManagement,
+    int RatingCustomerService,
+    int RatingResult,
+    string? Comment = null,
+    string? TattooPhotoUrl = null);
+
 // US0009 — Deposit payment via Flow
 
 public record PaymentCreateRequest(Guid BookingId);

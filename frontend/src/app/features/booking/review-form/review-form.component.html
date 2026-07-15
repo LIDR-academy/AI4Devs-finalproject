@@ -1,0 +1,85 @@
+<div class="review-form-page">
+  <header class="review-form-page__header">
+    <h1 class="review-form-page__title">Calificar artista</h1>
+    <p class="review-form-page__subtitle">Tu opinión ayuda a otros clientes a elegir con confianza.</p>
+  </header>
+
+  <form class="review-form" (ngSubmit)="submit()" novalidate>
+    <!-- CA2: 4 rating dimensions -->
+    <div class="review-form__ratings">
+      <app-star-rating label="Higiene y limpieza del espacio" [(value)]="ratingHygiene" />
+      <app-star-rating label="Manejo del dolor / confort" [(value)]="ratingPainManagement" />
+      <app-star-rating label="Trato y profesionalismo" [(value)]="ratingCustomerService" />
+      <app-star-rating label="Resultado del tatuaje" [(value)]="ratingResult" />
+    </div>
+
+    <!-- CA4: optional comment, max 500 chars -->
+    <div class="review-form__field">
+      <label class="review-form__label" for="review-comment">
+        Comentario <span class="review-form__optional">(opcional)</span>
+      </label>
+      <textarea
+        id="review-comment"
+        class="review-form__textarea"
+        rows="4"
+        [maxlength]="MAX_COMMENT"
+        placeholder="Comparte tu experiencia con esta sesión…"
+        [(ngModel)]="comment"
+        name="comment"
+      ></textarea>
+      <span
+        class="review-form__counter"
+        [class.review-form__counter--warn]="commentLength() >= MAX_COMMENT - 50"
+      >{{ commentLength() }} / {{ MAX_COMMENT }}</span>
+    </div>
+
+    <!-- CA5: optional photo upload -->
+    <div class="review-form__field">
+      <span class="review-form__label">
+        Foto del tatuaje <span class="review-form__optional">(opcional, máx. 10 MB)</span>
+      </span>
+
+      @if (photoPreviewUrl(); as preview) {
+        <div class="review-form__photo-preview">
+          <img [src]="preview" alt="Vista previa de tu tatuaje" class="review-form__photo-img" />
+          <button type="button" class="review-form__photo-remove" (click)="removePhoto()" aria-label="Eliminar foto">✕</button>
+        </div>
+      } @else {
+        <label class="review-form__upload-label" for="review-photo">
+          <span class="material-icons review-form__upload-icon">add_photo_alternate</span>
+          Subir foto
+          <input
+            id="review-photo"
+            type="file"
+            class="review-form__upload-input"
+            accept="image/jpeg,image/png,image/webp"
+            (change)="onPhotoChange($event)"
+          />
+        </label>
+      }
+
+      @if (photoError(); as err) {
+        <p class="review-form__error" role="alert">{{ err }}</p>
+      }
+    </div>
+
+    @if (submitError(); as err) {
+      <p class="review-form__error review-form__error--submit" role="alert">{{ err }}</p>
+    }
+
+    <div class="review-form__actions">
+      <button
+        type="submit"
+        class="review-form__btn review-form__btn--primary"
+        [disabled]="!canSubmit()"
+      >
+        @if (submitting()) {
+          Enviando…
+        } @else {
+          Enviar calificación
+        }
+      </button>
+      <a class="review-form__btn" routerLink="/mis-reservas">Cancelar</a>
+    </div>
+  </form>
+</div>

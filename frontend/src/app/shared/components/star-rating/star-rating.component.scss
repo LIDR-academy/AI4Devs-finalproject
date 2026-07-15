@@ -1,0 +1,40 @@
+.star-rating {
+  border: none;
+  padding: 0;
+  margin: 0;
+
+  &__label {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--ink-text-secondary);
+    margin-bottom: 0.35rem;
+    font-weight: 500;
+  }
+
+  &__stars {
+    display: flex;
+    gap: 0.2rem;
+  }
+
+  &__star {
+    background: none;
+    border: none;
+    padding: 0.1rem;
+    font-size: 1.6rem;
+    line-height: 1;
+    cursor: pointer;
+    color: var(--ink-text-muted);
+    transition: color 0.1s ease, transform 0.1s ease;
+
+    &:hover,
+    &:focus-visible {
+      outline: 2px solid var(--ink-accent);
+      border-radius: 4px;
+      transform: scale(1.15);
+    }
+
+    &--filled {
+      color: var(--ink-accent);
+    }
+  }
+}

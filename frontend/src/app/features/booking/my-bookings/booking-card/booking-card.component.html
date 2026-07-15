@@ -88,14 +88,12 @@
           </button>
         }
         @if (showReviewCta()) {
-          <button
-            type="button"
+          <a
             class="booking-card__btn booking-card__btn--primary"
-            disabled
-            title="Disponible próximamente (US0013)"
+            [routerLink]="['/reservas', b.id, 'calificar']"
           >
             Calificar
-          </button>
+          </a>
         }
       </div>
     }
