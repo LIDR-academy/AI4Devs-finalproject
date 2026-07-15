@@ -62,7 +62,7 @@ public class WhatsAppDispatcherWorkerTests
         var log = new DeliveryLog { Id = payload.DeliveryLogId.Value };
         _deliveryLogRepo.GetByIdAsync(log.Id, Arg.Any<CancellationToken>()).Returns(log);
 
-        _whatsappService.SendTemplateMessageAsync("123", "hello", payload.Variables, Arg.Any<CancellationToken>())
+        _whatsappService.SendTemplateMessageAsync("123", "hello", Arg.Any<System.Collections.Generic.IDictionary<string, string>>(), Arg.Any<CancellationToken>())
             .Returns("wamid.123");
 
         // Act
