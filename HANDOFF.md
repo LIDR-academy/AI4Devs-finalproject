@@ -45,18 +45,15 @@ Retoma el trabajo desde el punto indicado en "Estado detallado" de HANDOFF.md.
 
 ## Estado detallado (actualizar SIEMPRE antes de cerrar sesión)
 
-**Última actualización**: 2026-07-14
+**Última actualización**: 2026-07-15
 
 ### Dónde quedamos
 
 - ✅ **Fase 0** (fundaciones) y **US0001** (login) mergeadas a `main` (PRs #1–#3).
-- 🔵 **US0003 en desarrollo** — rama `feature/us0003-vitrina` (creada desde `main` actualizado).
-  - **TASK0001** (backend `GET /api/showcase`): en desarrollo. Enfoque decidido:
-    - Contrato según `docs/api-spec.yml` (§`/showcase`, schemas `ShowcaseResponse`/`ShowcaseSection`/`ShowcaseItem`/`ArtistCard`) — el spec **prevalece** sobre el ticket `docs/us/us0003/task0001.md` donde difieren (el spec usa `sections[]` con `key: near_you|top_rated|popular_styles|awarded_artists` e items con imagen de portafolio + ArtistCard).
-    - "Cerca de ti": orden por distancia con PostGIS (`ST_DistanceSphere` vía SQL crudo sobre `latitude`/`longitude`); sin coords → fallback por rating (CA3).
-    - Tests de integración con Testcontainers `postgis/postgis:16-3.4` (patrón ya existente en `backend/Tests/DatabaseMigrationAndSeedTests.cs`).
-    - Endpoint público (sin `[Authorize]`), no exponer emails/teléfonos.
-  - **TASK0002** (frontend vitrina): pendiente. Ruta `/` pública, secciones + `ArtistCard` standalone, geolocalización del navegador, lazy loading, skeleton, responsive mobile-first.
+- 🟣 **US0003 lista para PR** — rama `feature/us0003-vitrina`.
+  - **TASK0001** ✅ Backend `GET /api/showcase`: `ShowcaseService` (Haversine + secciones), `ShowcaseController`, DTOs (`ShowcaseResponse`, `ShowcaseSection`, `ShowcaseItem`, `ArtistCardDto`, `SponsorBadgeDto`). 7 tests integración (Testcontainers postgis) en verde.
+  - **TASK0002** ✅ Frontend vitrina: `ShowcaseService`, `ArtistCardComponent`, `ShowcaseSectionComponent`, `ShowcasePageComponent` (ruta `/`, geolocalización, skeleton, error handling). 19 tests en verde.
+- ⬜ Prompts de US0003 pendientes de registrar en `prompts/00-all-prompts.md`.
 
 ### Decisiones/contexto no evidentes en el repo
 

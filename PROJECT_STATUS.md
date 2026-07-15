@@ -1,7 +1,7 @@
 # PROJECT_STATUS — INK·LINK
 
 > Estado actual del proyecto. **Este documento debe actualizarse al cerrar cada Historia de Usuario o hito.**
-> Última actualización: 2026-07-14 (US0001 ✅ mergeada a main vía PR #3 — inicio de US0003)
+> Última actualización: 2026-07-15 (US0003 ✅ lista para PR — TASK0001 backend + TASK0002 frontend completados)
 > **Traspaso entre sesiones/IAs**: ver `HANDOFF.md` (prompt de continuación + protocolo de registro de avance)
 
 ## Resumen
@@ -22,7 +22,7 @@
 | US | Historia | MoSCoW | SP | Estado |
 |---|---|---|---|---|
 | US0001 | Inicio de sesión de usuarios | Must | 3 | ✅ Done (PR #3 mergeado a main) |
-| US0003 | Ver vitrina principal de tatuajes | Must | 8 | 🔵 En desarrollo (`feature/us0003-vitrina`) |
+| US0003 | Ver vitrina principal de tatuajes | Must | 8 | 🟣 En revisión (PR pendiente) |
 | US0004 | Filtrar artistas | Must | 8 | ⬜ Pendiente |
 | US0005 | Buscar artistas por texto | Must | 3 | ⬜ Pendiente |
 | US0006 | Ver perfil de artista completo | Must | 5 | ⬜ Pendiente |
@@ -62,8 +62,8 @@ Estados posibles: ⬜ Pendiente · 🔵 En desarrollo · 🟣 En revisión · �
 
 ## Próximos pasos
 
-1. **US0003 en curso** (`feature/us0003-vitrina`):
-   - TASK0001 — Backend: endpoint `GET /api/showcase` (TDD, PostGIS para "Cerca de ti") — 🔵 en desarrollo
-   - TASK0002 — Frontend: página vitrina con secciones y cards — ⬜ pendiente
-2. Al cerrar US0003: PR + merge, actualizar este documento y `HANDOFF.md`, registrar prompts.
+1. **US0003 lista para merge** (`feature/us0003-vitrina`):
+   - TASK0001 — Backend: endpoint `GET /api/showcase` ✅ (7 tests integración en verde)
+   - TASK0002 — Frontend: vitrina con secciones, ArtistCard, geolocalización ✅ (19 tests en verde)
+2. Al mergear US0003: actualizar este documento, registrar prompts.
 3. Siguiente según plan: US0004 (filtros) → US0005 (búsqueda) → US0007 (badge).
