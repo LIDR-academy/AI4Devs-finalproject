@@ -40,5 +40,7 @@ export type ApiKeyFormProps = {
    * visible; retry is just resubmitting/re-confirming.
    */
   errorMessage?: string;
-  labels: ApiKeyFormLabels;
+  /** Label for the saved status text (provider + last-updated) — the wiring layer builds
+   * this via `t()` so ApiKeyForm stays free of i18n/date-formatting concerns. */
+  keySavedStatusLabel: string;
 };

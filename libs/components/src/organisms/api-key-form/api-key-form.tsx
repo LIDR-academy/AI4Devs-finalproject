@@ -1,11 +1,10 @@
+import { useLocalization } from '@helsoft/localization';
 import { Linking, Text, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-
 import { Button } from '../../atoms/button/button';
 import { ProgressIndicator } from '../../atoms/progress-indicator/progress-indicator';
 import { TextField } from '../../molecules/text-field/text-field';
 import { Dialog } from '../dialog/dialog';
-
 import type { ApiKeyFormProps } from './api-key-form.types';
 import { useApiKeyForm } from './use-api-key-form';
 
@@ -17,6 +16,7 @@ export const LOADING_STATUS_TEST_ID = 'api-key-form-loading-status';
  * toggle, and the remove-confirmation Dialog's open state; reports submissions/removals up via
  * `onSave`/`onRemove`. Never renders the raw key once a saved status is shown (AC1/AC8).
  */
+
 export const ApiKeyForm = ({
   status,
   isLoadingStatus = false,
@@ -25,8 +25,9 @@ export const ApiKeyForm = ({
   onRemove,
   guidanceUrl,
   errorMessage,
-  labels,
+  keySavedStatusLabel,
 }: ApiKeyFormProps) => {
+  const { t } = useLocalization();
   const {
     apiKey,
     setApiKey,
@@ -40,8 +41,6 @@ export const ApiKeyForm = ({
     isLoadingStatus,
     isSubmitting,
     errorMessage,
-    loadingStatusLabel: labels.loadingStatus,
-    savingLabel: labels.saving,
   });
 
   if (isLoadingStatus) {
@@ -49,7 +48,7 @@ export const ApiKeyForm = ({
       <View testID={LOADING_STATUS_TEST_ID}>
         <ProgressIndicator variant="circular" />
         <Text accessibilityLiveRegion="polite" style={styles.visuallyHidden}>
-          {labels.loadingStatus}
+          {t('settings.apiKey.loadingStatus')}
         </Text>
       </View>
     );
@@ -59,7 +58,7 @@ export const ApiKeyForm = ({
   // remove), whichever branch (input or masked) is currently showing. accessibilityLiveRegion
   // covers Android/Web (WCAG 4.1.3) — the isSubmitting effect in the hook covers iOS VoiceOver.
   const progressLabel = isSubmitting ? (
-    <Text accessibilityLiveRegion="polite">{labels.saving}</Text>
+    <Text accessibilityLiveRegion="polite">{t('settings.apiKey.saving')}</Text>
   ) : null;
 
   return (
@@ -86,12 +85,12 @@ export const ApiKeyForm = ({
                 void Linking.openURL(guidanceUrl).catch(() => {});
               }}
             >
-              {labels.guidance}
+              {t('settings.apiKey.guidance')}
             </Button>
           ) : null}
           <TextField
-            label={labels.inputLabel}
-            accessibilityLabel={labels.inputLabel}
+            label={t('settings.apiKey.inputLabel')}
+            accessibilityLabel={t('settings.apiKey.inputLabel')}
             value={apiKey}
             onChangeText={setApiKey}
             disabled={isSubmitting}
@@ -101,24 +100,24 @@ export const ApiKeyForm = ({
           />
           <View style={styles.actionsRow}>
             <Button disabled={isSaveDisabled} onPress={() => onSave(apiKey)}>
-              {labels.save}
+              {t('settings.apiKey.save')}
             </Button>
             {progressLabel}
           </View>
         </>
       ) : (
         <>
-          <Text style={styles.status}>{labels.keySavedStatus}</Text>
+          <Text style={styles.status}>{keySavedStatusLabel}</Text>
           <View style={styles.actionsRow}>
             <Button disabled={isSubmitting} variant="outlined" onPress={() => setIsReplacing(true)}>
-              {labels.replace}
+              {t('settings.apiKey.replace')}
             </Button>
             <Button
               disabled={isSubmitting}
               variant="text"
               onPress={() => setIsConfirmingRemove(true)}
             >
-              {labels.remove}
+              {t('settings.apiKey.remove')}
             </Button>
             {progressLabel}
           </View>
@@ -127,15 +126,15 @@ export const ApiKeyForm = ({
       <Dialog
         open={isConfirmingRemove}
         onClose={() => setIsConfirmingRemove(false)}
-        headline={labels.removeConfirmHeadline}
-        confirmLabel={labels.removeConfirmAction}
-        cancelLabel={labels.removeConfirmCancelAction}
+        headline={t('settings.apiKey.removeConfirmHeadline')}
+        confirmLabel={t('settings.apiKey.removeConfirmAction')}
+        cancelLabel={t('settings.apiKey.removeConfirmCancelAction')}
         onConfirm={() => {
           setIsConfirmingRemove(false);
           onRemove?.();
         }}
       >
-        {labels.removeConfirmBody}
+        {t('settings.apiKey.removeConfirmBody')}
       </Dialog>
     </View>
   );

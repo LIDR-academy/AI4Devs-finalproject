@@ -34,7 +34,7 @@ export const ApiKeySettings = () => {
   const { status, isLoading, isSubmitting, error, saveApiKey, removeApiKey } = useApiKey();
   const { t, locale } = useLocalization();
 
-  const keySavedStatus = status.hasKey
+  const keySavedStatusLabel = status.hasKey
     ? t('settings.apiKey.savedStatus', {
         provider: status.provider ? PROVIDER_DISPLAY_NAMES[status.provider] : '',
         date: status.updatedAt ? new Date(status.updatedAt).toLocaleDateString(locale) : '',
@@ -60,20 +60,7 @@ export const ApiKeySettings = () => {
       }}
       guidanceUrl={GUIDANCE_URL}
       errorMessage={errorMessage}
-      labels={{
-        inputLabel: t('settings.apiKey.inputLabel'),
-        save: t('settings.apiKey.save'),
-        saving: t('settings.apiKey.saving'),
-        loadingStatus: t('settings.apiKey.loadingStatus'),
-        replace: t('settings.apiKey.replace'),
-        remove: t('settings.apiKey.remove'),
-        keySavedStatus,
-        guidance: t('settings.apiKey.guidance'),
-        removeConfirmHeadline: t('settings.apiKey.removeConfirmHeadline'),
-        removeConfirmBody: t('settings.apiKey.removeConfirmBody'),
-        removeConfirmAction: t('settings.apiKey.removeConfirmAction'),
-        removeConfirmCancelAction: t('settings.apiKey.removeConfirmCancelAction'),
-      }}
+      keySavedStatusLabel={keySavedStatusLabel}
     />
   );
 };

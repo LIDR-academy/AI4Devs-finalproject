@@ -1,3 +1,4 @@
+import { useLocalization } from '@helsoft/localization';
 import type { ApiKeyStatus } from '@helsoft/types';
 import { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo } from 'react-native';
@@ -7,8 +8,6 @@ type UseApiKeyFormArgs = {
   isLoadingStatus?: boolean;
   isSubmitting?: boolean;
   errorMessage?: string;
-  loadingStatusLabel: string;
-  savingLabel: string;
 };
 
 /**
@@ -20,9 +19,8 @@ export const useApiKeyForm = ({
   isLoadingStatus = false,
   isSubmitting = false,
   errorMessage,
-  loadingStatusLabel,
-  savingLabel,
 }: UseApiKeyFormArgs) => {
+  const { t } = useLocalization();
   const [apiKey, setApiKey] = useState('');
   const [isReplacing, setIsReplacing] = useState(false);
   const [isConfirmingRemove, setIsConfirmingRemove] = useState(false);
@@ -52,16 +50,16 @@ export const useApiKeyForm = ({
   // (mirrors LoginForm's isSubmitting effect).
   useEffect(() => {
     if (isLoadingStatus) {
-      AccessibilityInfo.announceForAccessibility(loadingStatusLabel);
+      AccessibilityInfo.announceForAccessibility(t('settings.apiKey.loadingStatus'));
     }
-  }, [isLoadingStatus, loadingStatusLabel]);
+  }, [isLoadingStatus, t]);
 
   // Same iOS-parity need for the isSubmitting progress label (WCAG 4.1.3).
   useEffect(() => {
     if (isSubmitting) {
-      AccessibilityInfo.announceForAccessibility(savingLabel);
+      AccessibilityInfo.announceForAccessibility(t('settings.apiKey.saving'));
     }
-  }, [isSubmitting, savingLabel]);
+  }, [isSubmitting, t]);
 
   const showInput = !status.hasKey || isReplacing;
   // @s5 — a blank/whitespace-only key is never submittable (AC7).

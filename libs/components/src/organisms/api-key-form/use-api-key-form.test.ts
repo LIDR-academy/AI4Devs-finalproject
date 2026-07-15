@@ -1,29 +1,38 @@
+jest.mock('@helsoft/localization', () => ({
+  useLocalization: jest.fn(),
+}));
+
+import { useLocalization } from '@helsoft/localization';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { AccessibilityInfo } from 'react-native';
 
 import { useApiKeyForm } from './use-api-key-form';
+
+const mockUseLocalization = useLocalization as jest.Mock;
+
+const t = (key: string) => {
+  const map: Record<string, string> = {
+    'settings.apiKey.loadingStatus': 'loading status',
+    'settings.apiKey.saving': 'saving key',
+  };
+  return map[key] ?? key;
+};
 
 type HookProps = {
   status: { hasKey: boolean };
   isLoadingStatus?: boolean;
   isSubmitting?: boolean;
   errorMessage?: string;
-  loadingStatusLabel?: string;
-  savingLabel?: string;
 };
 
 const renderFormHook = (initialProps: HookProps) =>
-  renderHook(
-    (props: HookProps) =>
-      useApiKeyForm({
-        loadingStatusLabel: 'loading',
-        savingLabel: 'saving',
-        ...props,
-      }),
-    { initialProps },
-  );
+  renderHook((props: HookProps) => useApiKeyForm(props), { initialProps });
 
 describe('useApiKeyForm', () => {
+  beforeEach(() => {
+    mockUseLocalization.mockReturnValue({ t });
+  });
+
   it('starts with empty key, showInput true when no key, save disabled', async () => {
     const { result } = await renderFormHook({ status: { hasKey: false } });
 
@@ -125,7 +134,6 @@ describe('useApiKeyForm', () => {
     const { rerender } = await renderFormHook({
       status: { hasKey: false },
       isLoadingStatus: false,
-      loadingStatusLabel: 'loading status',
     });
     expect(announceSpy).not.toHaveBeenCalled();
 
@@ -133,7 +141,6 @@ describe('useApiKeyForm', () => {
       await rerender({
         status: { hasKey: false },
         isLoadingStatus: true,
-        loadingStatusLabel: 'loading status',
       });
     });
 
@@ -150,7 +157,6 @@ describe('useApiKeyForm', () => {
     const { rerender } = await renderFormHook({
       status: { hasKey: false },
       isSubmitting: false,
-      savingLabel: 'saving key',
     });
     expect(announceSpy).not.toHaveBeenCalled();
 
@@ -158,7 +164,6 @@ describe('useApiKeyForm', () => {
       await rerender({
         status: { hasKey: false },
         isSubmitting: true,
-        savingLabel: 'saving key',
       });
     });
 

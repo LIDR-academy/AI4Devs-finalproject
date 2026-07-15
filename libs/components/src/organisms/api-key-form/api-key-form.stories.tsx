@@ -3,18 +3,7 @@ import type { Meta, StoryObj } from '@storybook/react-native-web-vite';
 import { ApiKeyForm } from './api-key-form';
 
 const labels = {
-  inputLabel: 'API key',
-  save: 'Save',
-  saving: 'Saving…',
-  loadingStatus: 'Checking your API key status…',
-  replace: 'Replace',
-  remove: 'Remove',
   keySavedStatus: 'Groq key saved · Updated Jan 1, 2026',
-  guidance: "Don't have a key? Get one from Groq",
-  removeConfirmHeadline: 'Remove API key?',
-  removeConfirmBody: "You'll need to add a new key to generate lessons again.",
-  removeConfirmAction: 'Remove',
-  removeConfirmCancelAction: 'Cancel',
 };
 
 const noKeyStatus = { hasKey: false as const };
@@ -32,7 +21,7 @@ const meta = {
     onSave: () => {},
     onRemove: () => {},
     guidanceUrl: 'https://console.groq.com/keys',
-    labels,
+    keySavedStatusLabel: labels.keySavedStatus,
   },
 } satisfies Meta<typeof ApiKeyForm>;
 

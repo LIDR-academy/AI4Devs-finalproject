@@ -1,3 +1,8 @@
+jest.mock('@helsoft/localization', () => ({
+  useLocalization: jest.fn(),
+}));
+
+import { useLocalization } from '@helsoft/localization';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { AccessibilityInfo, Linking } from 'react-native';
 
@@ -6,6 +11,8 @@ import { shape } from '../../theme/shape';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 import { ApiKeyForm, LOADING_STATUS_TEST_ID } from './api-key-form';
+
+const mockUseLocalization = useLocalization as jest.Mock;
 
 const labels = {
   inputLabel: 'API key',
@@ -22,6 +29,25 @@ const labels = {
   removeConfirmCancelAction: 'Cancel',
 };
 
+// Mimics the real `settings.apiKey.*` i18next templates so assertions can pin the exact
+// rendered text.
+const t = (key: string) => {
+  const map: Record<string, string> = {
+    'settings.apiKey.inputLabel': labels.inputLabel,
+    'settings.apiKey.save': labels.save,
+    'settings.apiKey.saving': labels.saving,
+    'settings.apiKey.loadingStatus': labels.loadingStatus,
+    'settings.apiKey.replace': labels.replace,
+    'settings.apiKey.remove': labels.remove,
+    'settings.apiKey.guidance': labels.guidance,
+    'settings.apiKey.removeConfirmHeadline': labels.removeConfirmHeadline,
+    'settings.apiKey.removeConfirmBody': labels.removeConfirmBody,
+    'settings.apiKey.removeConfirmAction': labels.removeConfirmAction,
+    'settings.apiKey.removeConfirmCancelAction': labels.removeConfirmCancelAction,
+  };
+  return map[key] ?? key;
+};
+
 const noKeyStatus = { hasKey: false as const };
 const savedStatus = {
   hasKey: true as const,
@@ -34,6 +60,10 @@ const savedStatus = {
 const guidanceUrl = 'https://example.com/get-a-key';
 
 describe('ApiKeyForm', () => {
+  beforeEach(() => {
+    mockUseLocalization.mockReturnValue({ t });
+  });
+
   // @s1 — with no key saved, the input is rendered (labelled) alongside Save.
   it('renders a labelled secure input and the Save control when no key is saved', async () => {
     await render(
@@ -41,7 +71,7 @@ describe('ApiKeyForm', () => {
         status={noKeyStatus}
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -57,7 +87,7 @@ describe('ApiKeyForm', () => {
         status={noKeyStatus}
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -78,7 +108,7 @@ describe('ApiKeyForm', () => {
         status={noKeyStatus}
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -96,7 +126,7 @@ describe('ApiKeyForm', () => {
         status={noKeyStatus}
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -112,7 +142,7 @@ describe('ApiKeyForm', () => {
         status={noKeyStatus}
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -137,7 +167,7 @@ describe('ApiKeyForm', () => {
         status={noKeyStatus}
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
     fireEvent.press(screen.getByRole('button', { name: labels.guidance }));
@@ -158,7 +188,7 @@ describe('ApiKeyForm', () => {
         status={noKeyStatus}
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
     await act(async () => {
@@ -179,7 +209,12 @@ describe('ApiKeyForm', () => {
   it('calls onSave with the entered key when Save is pressed', async () => {
     const onSave = jest.fn();
     await render(
-      <ApiKeyForm status={noKeyStatus} onSave={onSave} guidanceUrl={guidanceUrl} labels={labels} />,
+      <ApiKeyForm
+        status={noKeyStatus}
+        onSave={onSave}
+        guidanceUrl={guidanceUrl}
+        keySavedStatusLabel={labels.keySavedStatus}
+      />,
     );
 
     await act(async () => {
@@ -198,7 +233,7 @@ describe('ApiKeyForm', () => {
         status={savedStatus}
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -216,7 +251,7 @@ describe('ApiKeyForm', () => {
         status={noKeyStatus}
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -229,7 +264,7 @@ describe('ApiKeyForm', () => {
           status={savedStatus}
           onSave={jest.fn()}
           guidanceUrl={guidanceUrl}
-          labels={labels}
+          keySavedStatusLabel={labels.keySavedStatus}
         />,
       );
     });
@@ -247,7 +282,7 @@ describe('ApiKeyForm', () => {
         isLoadingStatus
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -266,7 +301,7 @@ describe('ApiKeyForm', () => {
         isLoadingStatus
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -284,7 +319,7 @@ describe('ApiKeyForm', () => {
         isLoadingStatus
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -305,7 +340,7 @@ describe('ApiKeyForm', () => {
         status={noKeyStatus}
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
     expect(announceSpy).not.toHaveBeenCalled();
@@ -317,7 +352,7 @@ describe('ApiKeyForm', () => {
           isLoadingStatus
           onSave={jest.fn()}
           guidanceUrl={guidanceUrl}
-          labels={labels}
+          keySavedStatusLabel={labels.keySavedStatus}
         />,
       );
     });
@@ -335,7 +370,7 @@ describe('ApiKeyForm', () => {
         isSubmitting
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -352,7 +387,7 @@ describe('ApiKeyForm', () => {
         status={noKeyStatus}
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
     expect(screen.getByLabelText('API key').props.accessibilityState).toEqual({ disabled: false });
@@ -364,7 +399,7 @@ describe('ApiKeyForm', () => {
           isSubmitting
           onSave={jest.fn()}
           guidanceUrl={guidanceUrl}
-          labels={labels}
+          keySavedStatusLabel={labels.keySavedStatus}
         />,
       );
     });
@@ -382,7 +417,7 @@ describe('ApiKeyForm', () => {
         isSubmitting
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -404,7 +439,7 @@ describe('ApiKeyForm', () => {
         status={noKeyStatus}
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
     expect(announceSpy).not.toHaveBeenCalled();
@@ -416,7 +451,7 @@ describe('ApiKeyForm', () => {
           isSubmitting
           onSave={jest.fn()}
           guidanceUrl={guidanceUrl}
-          labels={labels}
+          keySavedStatusLabel={labels.keySavedStatus}
         />,
       );
     });
@@ -433,7 +468,7 @@ describe('ApiKeyForm', () => {
         status={noKeyStatus}
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -450,7 +485,12 @@ describe('ApiKeyForm', () => {
   it('reveals the input when Replace is pressed and submits the new key via onSave', async () => {
     const onSave = jest.fn();
     await render(
-      <ApiKeyForm status={savedStatus} onSave={onSave} guidanceUrl={guidanceUrl} labels={labels} />,
+      <ApiKeyForm
+        status={savedStatus}
+        onSave={onSave}
+        guidanceUrl={guidanceUrl}
+        keySavedStatusLabel={labels.keySavedStatus}
+      />,
     );
 
     await act(async () => {
@@ -478,7 +518,7 @@ describe('ApiKeyForm', () => {
         status={noKeyStatus}
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
     await act(async () => {
@@ -492,7 +532,7 @@ describe('ApiKeyForm', () => {
           isSubmitting
           onSave={jest.fn()}
           guidanceUrl={guidanceUrl}
-          labels={labels}
+          keySavedStatusLabel={labels.keySavedStatus}
         />,
       );
     });
@@ -503,7 +543,7 @@ describe('ApiKeyForm', () => {
           isSubmitting={false}
           onSave={jest.fn()}
           guidanceUrl={guidanceUrl}
-          labels={labels}
+          keySavedStatusLabel={labels.keySavedStatus}
         />,
       );
     });
@@ -521,7 +561,7 @@ describe('ApiKeyForm', () => {
         status={noKeyStatus}
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
     await act(async () => {
@@ -534,7 +574,7 @@ describe('ApiKeyForm', () => {
           status={savedStatus}
           onSave={jest.fn()}
           guidanceUrl={guidanceUrl}
-          labels={labels}
+          keySavedStatusLabel={labels.keySavedStatus}
         />,
       );
     });
@@ -554,7 +594,7 @@ describe('ApiKeyForm', () => {
         status={savedStatus}
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -573,7 +613,7 @@ describe('ApiKeyForm', () => {
           isSubmitting
           onSave={jest.fn()}
           guidanceUrl={guidanceUrl}
-          labels={labels}
+          keySavedStatusLabel={labels.keySavedStatus}
         />,
       );
     });
@@ -583,7 +623,7 @@ describe('ApiKeyForm', () => {
           status={savedStatus}
           onSave={jest.fn()}
           guidanceUrl={guidanceUrl}
-          labels={labels}
+          keySavedStatusLabel={labels.keySavedStatus}
         />,
       );
     });
@@ -611,7 +651,7 @@ describe('ApiKeyForm', () => {
         isSubmitting
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -629,7 +669,7 @@ describe('ApiKeyForm', () => {
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
         errorMessage="Couldn't reach the server."
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -645,7 +685,7 @@ describe('ApiKeyForm', () => {
         status={noKeyStatus}
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -668,7 +708,7 @@ describe('ApiKeyForm', () => {
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
         errorMessage="That key didn't validate."
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -690,7 +730,7 @@ describe('ApiKeyForm', () => {
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
         errorMessage="That key didn't validate."
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
     expect(announceSpy).toHaveBeenCalledWith("That key didn't validate.");
@@ -703,7 +743,7 @@ describe('ApiKeyForm', () => {
           onSave={jest.fn()}
           guidanceUrl={guidanceUrl}
           errorMessage="Couldn't reach the server. Try again."
-          labels={labels}
+          keySavedStatusLabel={labels.keySavedStatus}
         />,
       );
     });
@@ -722,7 +762,7 @@ describe('ApiKeyForm', () => {
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
         errorMessage="Couldn't reach the server. Try again."
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
     expect(screen.getByText("Couldn't reach the server. Try again.")).toBeTruthy();
@@ -733,7 +773,7 @@ describe('ApiKeyForm', () => {
           status={savedStatus}
           onSave={jest.fn()}
           guidanceUrl={guidanceUrl}
-          labels={labels}
+          keySavedStatusLabel={labels.keySavedStatus}
         />,
       );
     });
@@ -751,7 +791,7 @@ describe('ApiKeyForm', () => {
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
         errorMessage="Couldn't remove the key."
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -768,7 +808,7 @@ describe('ApiKeyForm', () => {
         onSave={jest.fn()}
         onRemove={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -785,7 +825,7 @@ describe('ApiKeyForm', () => {
         onSave={jest.fn()}
         onRemove={onRemove}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -807,7 +847,7 @@ describe('ApiKeyForm', () => {
         onSave={jest.fn()}
         onRemove={onRemove}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -831,7 +871,7 @@ describe('ApiKeyForm', () => {
         onSave={jest.fn()}
         onRemove={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -853,7 +893,7 @@ describe('ApiKeyForm', () => {
         status={savedStatus}
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -877,7 +917,7 @@ describe('ApiKeyForm', () => {
         onSave={jest.fn()}
         onRemove={onRemove}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -900,7 +940,7 @@ describe('ApiKeyForm', () => {
         status={noKeyStatus}
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -916,7 +956,7 @@ describe('ApiKeyForm', () => {
         status={noKeyStatus}
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -932,7 +972,7 @@ describe('ApiKeyForm', () => {
         status={savedStatus}
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -950,7 +990,7 @@ describe('ApiKeyForm', () => {
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
         errorMessage="That key didn't validate."
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -969,7 +1009,7 @@ describe('ApiKeyForm', () => {
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
         errorMessage="That key didn't validate."
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
@@ -988,7 +1028,7 @@ describe('ApiKeyForm', () => {
         isLoadingStatus
         onSave={jest.fn()}
         guidanceUrl={guidanceUrl}
-        labels={labels}
+        keySavedStatusLabel={labels.keySavedStatus}
       />,
     );
 
