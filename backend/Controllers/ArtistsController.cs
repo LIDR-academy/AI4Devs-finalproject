@@ -28,6 +28,13 @@ public class ArtistsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("suggestions")]
+    public async Task<IActionResult> GetSuggestions([FromQuery] string? q)
+    {
+        var result = await _service.GetSuggestionsAsync(q ?? string.Empty);
+        return Ok(result);
+    }
+
     private static bool IsValidRequest(ArtistFilterRequest request)
     {
         if (request.MinPrice is < 0 || request.MaxPrice is < 0)

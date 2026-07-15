@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal, WritableSignal } from '@angular/core';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { ActivatedRoute, provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
 import { ArtistsPageComponent } from './artists-page.component';
 import { ArtistListResponse } from '../../core/models/artist-filter.models';
 import { ArtistFilterService } from './services/artist-filter.service';
@@ -67,6 +68,7 @@ describe('ArtistsPageComponent', () => {
       providers: [
         provideRouter([]),
         provideNoopAnimations(),
+        provideHttpClient(),
         { provide: ArtistFilterService, useValue: mockService },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParams: {} } } }
       ]

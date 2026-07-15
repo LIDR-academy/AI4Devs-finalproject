@@ -1,0 +1,55 @@
+<div class="search-bar">
+  <span class="search-bar__icon material-icons">search</span>
+  <input
+    #searchInput
+    class="search-bar__input"
+    type="text"
+    placeholder="Busca por nombre, estilo o ciudad..."
+    [value]="searchText()"
+    (input)="onInput($event)"
+    aria-label="Buscar artistas"
+  />
+  @if (searchText().length > 0) {
+    <button
+      type="button"
+      class="search-bar__clear"
+      (click)="clearSearch()"
+      aria-label="Limpiar búsqueda"
+    >
+      <span class="material-icons">close</span>
+    </button>
+  }
+</div>
+
+@if (showDropdown() && suggestions()) {
+  <div class="search-bar__dropdown" [ngStyle]="dropdownStyle()">
+    @if (suggestions()!.styles.length > 0) {
+      <div class="search-bar__section">
+        <span class="search-bar__section-title">Estilos</span>
+        @for (style of suggestions()!.styles; track style) {
+          <button
+            type="button"
+            class="search-bar__option"
+            (click)="selectSuggestion(getStyleName(style))"
+          >
+            {{ getStyleName(style) }}
+          </button>
+        }
+      </div>
+    }
+    @if (suggestions()!.communes.length > 0) {
+      <div class="search-bar__section">
+        <span class="search-bar__section-title">Ciudades</span>
+        @for (commune of suggestions()!.communes; track commune) {
+          <button
+            type="button"
+            class="search-bar__option"
+            (click)="selectSuggestion(commune)"
+          >
+            {{ commune }}
+          </button>
+        }
+      </div>
+    }
+  </div>
+}

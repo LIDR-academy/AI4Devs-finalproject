@@ -60,6 +60,16 @@ public class ArtistQueryService
             query = query.Where(artist => artist.ArtistType == artistType);
         }
 
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var searchPattern = $"%{request.Search}%";
+            query = query.Where(artist =>
+                EF.Functions.ILike(artist.User.FirstName + " " + artist.User.LastName, searchPattern)
+                || EF.Functions.ILike(artist.Commune, searchPattern)
+                || EF.Functions.ILike(artist.Bio!, searchPattern)
+                || artist.ArtistStyles.Any(s => EF.Functions.ILike(s.Style.Name, searchPattern)));
+        }
+
         query = query.OrderBy(artist => artist.Slug);
 
         if (request.Available.HasValue)
@@ -147,4 +157,31 @@ public class ArtistQueryService
             .Where(sponsorship => sponsorship.IsActive)
             .Select(sponsorship => new SponsorBadgeDto(sponsorship.BrandName, sponsorship.BrandLogoUrl))
             .ToList());
+
+    public async Task<ArtistSuggestionsResponse> GetSuggestionsAsync(string q)
+    {
+        if (string.IsNullOrWhiteSpace(q) || q.Trim().Length < 2)
+        {
+            return new ArtistSuggestionsResponse([], []);
+        }
+
+        var pattern = $"%{q.Trim()}%";
+
+        var styles = await _context.TattooStyles
+            .Where(s => EF.Functions.ILike(s.Name, pattern))
+            .OrderBy(s => s.Name)
+            .Take(5)
+            .Select(s => s.Slug)
+            .ToListAsync();
+
+        var communes = await _context.ArtistProfiles
+            .Where(a => a.IsPublished && EF.Functions.ILike(a.Commune, pattern))
+            .Select(a => a.Commune)
+            .Distinct()
+            .OrderBy(c => c)
+            .Take(5)
+            .ToListAsync();
+
+        return new ArtistSuggestionsResponse(styles, communes);
+    }
 }

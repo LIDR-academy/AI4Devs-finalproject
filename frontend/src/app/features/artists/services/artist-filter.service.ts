@@ -84,6 +84,10 @@ export class ArtistFilterService {
       parsedFilters.type = queryParams['type'];
     }
 
+    if (typeof queryParams['search'] === 'string' && queryParams['search'].trim().length >= 2) {
+      parsedFilters.search = queryParams['search'].trim();
+    }
+
     this.filters.set(parsedFilters);
   }
 
@@ -139,6 +143,10 @@ export class ArtistFilterService {
 
     if (filters.type) {
       params = params.set('type', filters.type);
+    }
+
+    if (filters.search && filters.search.length >= 2) {
+      params = params.set('search', filters.search);
     }
 
     if (filters.page !== DEFAULT_FILTERS.page) {

@@ -13,12 +13,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { ArtistFilters } from '../../core/models/artist-filter.models';
 import { ArtistCardComponent } from '../../shared/components/artist-card/artist-card.component';
 import { FilterPanelComponent } from './components/filter-panel/filter-panel.component';
+import { SearchBarComponent } from './components/search-bar/search-bar.component';
 import { ArtistFilterService } from './services/artist-filter.service';
 
 @Component({
   selector: 'app-artists-page',
   standalone: true,
-  imports: [ArtistCardComponent, FilterPanelComponent, MatButtonModule, MatIconModule],
+  imports: [ArtistCardComponent, FilterPanelComponent, SearchBarComponent, MatButtonModule, MatIconModule],
   templateUrl: './artists-page.component.html',
   styleUrl: './artists-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -102,6 +103,10 @@ export class ArtistsPageComponent implements OnInit {
 
     if (filters.type) {
       queryParams['type'] = filters.type;
+    }
+
+    if (filters.search && filters.search.length >= 2) {
+      queryParams['search'] = filters.search;
     }
 
     if (filters.page !== 1) {

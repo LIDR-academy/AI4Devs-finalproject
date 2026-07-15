@@ -1,7 +1,7 @@
 # PROJECT_STATUS — INK·LINK
 
 > Estado actual del proyecto. **Este documento debe actualizarse al cerrar cada Historia de Usuario o hito.**
-> Última actualización: 2026-07-15 (US0004 🔵 en desarrollo — TASK0001 backend + TASK0002 frontend completados, PR pendiente)
+> Última actualización: 2026-07-15 (US0004 ✅ mergeada — PR #8; US0005 🔵 en desarrollo)
 > **Traspaso entre sesiones/IAs**: ver `HANDOFF.md` (prompt de continuación + protocolo de registro de avance)
 
 ## Resumen
@@ -9,10 +9,10 @@
 | Aspecto | Estado |
 |---|---|
 | Entrega 1 (documentación) | ✅ Completa (con inconsistencias pendientes — `fixs/issue-004.md`) |
-| Entrega 2 (implementación) | 🔵 En curso — Fase 0, US0001, US0003 completas; US0004 en revisión |
+| Entrega 2 (implementación) | 🔵 En curso — Fase 0, US0001, US0003, US0004 completas; US0005 en desarrollo |
 | Backlog vigente | 13 US · 80 SP · 9 Must-Have (52 SP) + 4 Should-Have (28 SP) — `docs/us/all-us.md` |
-| Backend (`backend/`) | ✅ US0001 + US0003 + US0004 implementados (GET /api/artists con filtros combinados, 26 tests en verde) |
-| Frontend (`frontend/`) | ✅ US0001 + US0003 + US0004 implementados (panel filtros reactivo, sidebar/bottom-sheet, 27 tests en verde) |
+| Backend (`backend/`) | ✅ US0001 + US0003 + US0004 implementados (GET /api/artists con filtros multi-select + OR logic, 27 tests en verde) |
+| Frontend (`frontend/`) | ✅ US0001 + US0003 + US0004 implementados (panel filtros dark theme, multi-select, sponsor pill, 27 tests en verde) |
 | Docker / infraestructura local | ✅ `docker-compose.yml` (PostgreSQL16+PostGIS, MinIO; perfil `full` con api+web; perfil `seed-images` para imágenes de muestra) |
 | CI/CD | ✅ `.github/workflows/ci.yml` (build + tests backend y frontend) |
 | API oficial | ✅ `docs/api-spec.yml` v2.0.0 sincronizada con backlog y modelo |
@@ -23,8 +23,8 @@
 |---|---|---|---|---|
 | US0001 | Inicio de sesión de usuarios | Must | 3 | ✅ Done (PR #3 mergeado a main) |
 | US0003 | Ver vitrina principal de tatuajes | Must | 8 | ✅ Done (PRs #4 y #5 mergeados a main) |
-| US0004 | Filtrar artistas | Must | 8 | 🟣 En revisión (PR pendiente) |
-| US0005 | Buscar artistas por texto | Must | 3 | ⬜ Pendiente |
+| US0004 | Filtrar artistas | Must | 8 | ✅ Done (PR #8 mergeado a main) |
+| US0005 | Buscar artistas por texto | Must | 3 | 🔵 En desarrollo |
 | US0006 | Ver perfil de artista completo | Must | 5 | ⬜ Pendiente |
 | US0007 | Badge de certificación sanitaria | Must | 2 | ⬜ Pendiente |
 | US0008 | Seleccionar slot y ver resumen | Must | 5 | ⬜ Pendiente |
@@ -62,8 +62,8 @@ Estados posibles: ⬜ Pendiente · 🔵 En desarrollo · 🟣 En revisión · �
 
 ## Próximos pasos
 
-1. **US0004 lista para PR** (`feature/us0004-filtros-artistas`):
-   - TASK0001 — Backend: `GET /api/artists` con filtros combinados ✅ (10 tests integración en verde)
-   - TASK0002 — Frontend: panel filtros reactivo, sidebar desktop / bottom-sheet mobile ✅ (27 tests en verde)
-2. Al mergear US0004: actualizar este documento, registrar prompts.
-3. Siguiente según plan: US0005 (búsqueda) → US0006 (perfil artista) → US0007 (badge).
+1. **US0005 en desarrollo** (`feature/us0005-busqueda-artistas`):
+   - TASK0001 — Backend: parámetro `search` en GET /api/artists + full-text PostgreSQL + endpoint `/api/artists/suggestions`
+   - TASK0002 — Frontend: SearchBarComponent con debounce, autocompletado, integración con filtros activos
+2. Al mergear US0005: actualizar este documento, registrar prompts.
+3. Siguiente según plan: US0006 (perfil artista) → US0007 (badge certificación).

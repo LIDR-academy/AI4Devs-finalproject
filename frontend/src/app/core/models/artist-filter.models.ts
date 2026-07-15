@@ -8,8 +8,14 @@ export interface ArtistFilters {
   certified?: boolean;
   available?: boolean;
   type?: 'independent' | 'studio' | null;
+  search?: string;
   page: number;
   pageSize: number;
+}
+
+export interface ArtistSuggestionsResponse {
+  styles: string[];
+  communes: string[];
 }
 
 export interface ArtistListResponse {

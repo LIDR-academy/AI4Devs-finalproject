@@ -893,4 +893,104 @@ Listo, ya está. Ahora hay que continuar con el plan. Analiza lo que deberia seg
 
 ---
 
-*INK·LINK © 2026 · Registro de prompts · 7 sesiones · 53 prompts documentados*
+# Sesión 8 — US0004: Filtrar artistas (backend + frontend + fixes)
+
+> 📅 2026-07-15 · Copilot CLI · Claude Sonnet 4.6 / Opus 4.6 / Opus 4.5
+
+---
+
+## 54 — Implementación paralela US0004 backend + frontend
+
+> 📋 2026-07-15T01:49:00Z · Copilot CLI · Claude Sonnet 4.6 · medium · ~120K tokens · rodri
+
+```
+Si es posible, crealas en paralelo. Luego verifica que este todo correcto y funcionando
+```
+
+*(Lanza dos agentes paralelos: backend-us0004 (Sonnet 4.6) crea ArtistQueryService + ArtistsController + ArtistsDtos + 10 tests TDD. frontend-us0004 (Sonnet 4.6) crea ArtistFilterService + FilterPanelComponent + ArtistsPageComponent + models + 27 tests. Backend: 26/26 tests ✅. Frontend: build ✅ 27/27 tests ✅. PR #8 creado.)*
+
+---
+
+## 55 — Fix: entradas de navegación hacia /artistas
+
+> 📋 2026-07-15T02:15:00Z · Copilot CLI · Claude Opus 4.6 · medium · ~130K tokens · rodri
+
+```
+donde estan los filtros en la web? no los veo, corrobora con opus 4.6
+```
+
+*(Detecta que /artistas no tiene puntos de entrada en la UI. Opus 4.6 agrega: link "Artistas" en navbar, CTA "Explorar y filtrar artistas →" en hero, "Ver más →" en secciones enlaza a /artistas. Corrige también ArtistCard para aceptar ambos inputs.)*
+
+---
+
+## 56 — Fix dark theme + multi-select estilos + íconos Material
+
+> 📋 2026-07-15T02:28:00Z · Copilot CLI · Claude Opus 4.5 · medium · ~140K tokens · rodri
+
+```
+En los filtros, los filtros tienen texto negro al parecer, y con el fondo negro, no se ven.
+Tambien Al filtrar por Blackwork me trae realismo (puede que un artista tenga mas de un estilo?)
+El tipo de artista tampoco se ve.
+Los filros no se concatenan, es decir, puedo seleccionar solo un estilo a la misma vez y deberia poder elegir varios.
+Disponibilidad y Artistas certificados no se ve en los filtros, puede que tambien tenga letras negras con fondo negro?
+Los iconos de estrellas no se ven. Dice Star"
+Analia, fixea con Opus 4.5
+```
+
+*(Opus 4.5 aplica 4 fixes: (1) MDC CSS vars para label text en checkbox/radio/toggle; (2) Material Icons font en index.html; (3) style: string → styles: string[] con OR logic en backend + frontend; (4) override .mat-mdc-radio-button color. Backend: 27/27 ✅ Frontend: 27/27 ✅.)*
+
+---
+
+## 57 — Fix sponsor logos invisibles
+
+> 📋 2026-07-15T02:49:00Z · Copilot CLI · Claude Sonnet 4.6 · low · ~100K tokens · rodri
+
+```
+http://localhost:9000/inklink-images/brands/eternal-ink.png ese icono no se ve en el card
+```
+
+*(Diagnóstico: filter: brightness(0) invert(1) + opacity: 0.5 convierte JPEGs del seed a blanco invisible sobre fondo oscuro. Fix: sponsor-pill con background: rgba(255,255,255,0.12) y borde sutil. Imagen se muestra como está. Build ✅.)*
+
+---
+
+## 58 — PR US0004, merge y arranque US0005
+
+> 📋 2026-07-15T03:07:00Z · Copilot CLI · Claude Sonnet 4.6 · low · ~90K tokens · rodri
+
+```
+Esta funcionando bien todo lo que hicimos hasta ahora. Habria que hacer el PR para continuar con el plan
+```
+
+*(PR #8 actualizado con descripción completa de todos los fixes. Usuario mergea.)*
+
+```
+listo, ya esta mergeado. crea una nueva rama para continuar con el plan. Que sigue? recuerda siempre actualizar project status y los .md de prompts
+```
+
+*(Crea rama feature/us0005-busqueda-artistas desde main actualizado. Actualiza PROJECT_STATUS.md: US0004 → Done, US0005 → En desarrollo. Registra sesión 8 en 00-all-prompts.md.)*
+
+---
+
+## Resumen de archivos modificados (sesión 8)
+
+| Archivo | Acción |
+|---|---|
+| `backend/Application/Dtos/ArtistsDtos.cs` | Creado — ArtistFilterRequest (con Styles string[]), ArtistListResponse |
+| `backend/Controllers/ArtistsController.cs` | Creado — GET /api/artists con validación |
+| `backend/Domain/Services/ArtistQueryService.cs` | Creado — query builder dinámico con OR styles |
+| `backend/Tests/ArtistFilterTests.cs` | Creado — 11 tests TDD (multi-estilo incluido) |
+| `backend/Program.cs` | Actualizado — registra ArtistQueryService |
+| `frontend/src/app/core/models/artist-filter.models.ts` | Creado — ArtistFilters, ArtistListResponse, TATTOO_STYLES |
+| `frontend/src/app/features/artists/` | Creado — ArtistsPageComponent + FilterPanelComponent + ArtistFilterService |
+| `frontend/src/app/app.html` | Actualizado — link "Artistas" en navbar |
+| `frontend/src/app/app.routes.ts` | Actualizado — ruta /artistas |
+| `frontend/src/app/features/showcase/showcase-page/` | Actualizado — CTA "Explorar y filtrar artistas" |
+| `frontend/src/app/shared/components/showcase-section/` | Actualizado — "Ver más" → routerLink /artistas |
+| `frontend/src/app/shared/components/artist-card/` | Actualizado — sponsor-pill visible, dual input |
+| `frontend/src/index.html` | Actualizado — Material Icons font |
+| `PROJECT_STATUS.md` | Actualizado — US0004 Done, US0005 En desarrollo |
+| `prompts/00-all-prompts.md` | Actualizado — sesión 8 |
+
+---
+
+*INK·LINK © 2026 · Registro de prompts · 8 sesiones · 58 prompts documentados*

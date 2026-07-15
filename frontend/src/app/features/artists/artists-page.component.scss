@@ -8,6 +8,15 @@
     padding: 4rem 1rem 2rem;
   }
 
+  &__search-section {
+    position: relative;
+    z-index: 20;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem 1.5rem;
+    overflow: visible;
+  }
+
   &__eyebrow {
     margin: 0 0 0.75rem;
     color: var(--ink-accent);
