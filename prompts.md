@@ -387,3 +387,13 @@ These prompts drove refinement, reconciliation and review across the documents r
    2. don't add a labels variable, use `t('some.label)'` directly, unless is a dictionary, for example like `GENERATION_ERROR_KEYS`
 
 8. add the prompts from "modify the orchestrator so it moves the .md file from user-stories/pending into user-stories/in-progress when it starts to work on it,  and into user-stories/done when finished" until the last one into prompts.md
+
+---
+
+## Anexo — Prompts de la sesión: `reviewer_slice` valida contra todas las reglas de `.agents/rules/`
+
+> Prompts del usuario (verbatim, en orden) de la sesión que amplió `reviewer_slice` para revisar el diff de cada slice contra **todas** las reglas de `.agents/rules/` (glob del directorio, autoritativo — recoge reglas nuevas como `state.mdc` automáticamente), dejando solo las lentes que no son reglas (seguridad/OWASP, accesibilidad/WCAG, performance) para la revisión completa; se ajustaron las referencias cruzadas ("code + design lenses" → "todas las reglas + design").
+
+1. modify @reviewer_slice.md so it reviews the code against all the rules in the .agents/rules directory
+
+2. write to prompts.md the prompts since your last write

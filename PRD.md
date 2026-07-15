@@ -128,12 +128,16 @@ Acceptance criteria:
 - Progress through the deck is visible.
 - The player works on web and on a mobile viewport (responsive), and images scale appropriately to the viewport.
 
-**R5 — Auth & persistence**
-Description: Supabase-backed accounts; lessons saved per user.
+~**R5 — Lesson persistence**~
+Description: Lessons saved per user.
 Acceptance criteria:
-- User can sign up, log in, and log out.
 - A generated lesson is persisted to the user's account and reappears after logout/login.
 - A logged-out user cannot access another user's lessons (row-level security).
+
+**R5.1 — Auth & sign-up**
+Description: User can sign up, log in, and log out.
+Acceptance criteria:
+- User can sign up, log in, and log out.
 
 ~**R6 — Bring-your-own AI key (server-side proxy)**~
 Description: User stores their own API key; **all AI calls are proxied through a Supabase Edge Function** so the key is used server-side and never reaches the client at call time.
