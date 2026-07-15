@@ -1,0 +1,12 @@
+<section class="showcase-section">
+  <header class="showcase-section__header">
+    <h2 class="showcase-section__title">{{ section().title }}</h2>
+    <a class="showcase-section__more" href="#">Ver más</a>
+  </header>
+
+  <div class="showcase-section__grid">
+    @for (item of section().items; track item.artist.id) {
+      <app-artist-card [item]="item" />
+    }
+  </div>
+</section>
