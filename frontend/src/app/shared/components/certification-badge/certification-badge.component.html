@@ -1,0 +1,12 @@
+@if (isCertified()) {
+  <span
+    class="cert-badge"
+    [class.cert-badge--md]="size() === 'md'"
+    aria-label="Artista con certificación sanitaria vigente"
+    role="img"
+    title="Certificación sanitaria vigente"
+  >
+    <span class="cert-badge__icon material-icons">verified_user</span>
+    <span class="cert-badge__text">Certificado</span>
+  </span>
+}

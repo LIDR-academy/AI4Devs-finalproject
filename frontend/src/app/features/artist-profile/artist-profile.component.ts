@@ -5,11 +5,12 @@ import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ArtistProfileDto, ReviewDto } from '../../core/models/artist-profile.models';
 import { ArtistProfileService } from './services/artist-profile.service';
+import { CertificationBadgeComponent } from '../../shared/components/certification-badge/certification-badge.component';
 
 @Component({
   selector: 'app-artist-profile',
   standalone: true,
-  imports: [DatePipe],
+  imports: [DatePipe, CertificationBadgeComponent],
   templateUrl: './artist-profile.component.html',
   styleUrl: './artist-profile.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

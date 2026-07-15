@@ -1076,4 +1076,124 @@ Sigue igual mal. Dejalo como un fix adicional para realizar la correccion al fin
 
 ---
 
-*INK·LINK © 2026 · Registro de prompts · 9 sesiones · 63 prompts documentados*
+# Sesión 10 — US0006 perfil de artista + imágenes reales + correcciones de card
+
+> 📅 2026-07-15 · Copilot CLI · Opus 4.6 + Sonnet 4.6 · high
+
+---
+
+## 64 — Implementar US0006 en paralelo
+
+> 📋 2026-07-15T03:40:00Z · Copilot CLI · Claude Opus 4.6 · high · ~80K tokens · rodri
+
+```
+Arranca con la implementacion, incluso en paralelo si es posible resguardando que se comuniquen los agentes y siga una estructura solida
+```
+
+*(Lanzados agentes paralelos backend-us0006 + frontend-us0006. Backend: GET /api/artists/{slug} + GET /api/artists/{slug}/reviews, 11 tests TDD → 47/47. Frontend: ArtistProfileComponent lazy en /artista/:slug, portafolio grid, lightbox, sidebar, reviews paginadas, 4 tests → 37/37.)*
+
+---
+
+## 65 — Fix build error search-bar
+
+> 📋 2026-07-15T03:45:00Z · Copilot CLI · Claude Sonnet 4.6 · low · ~75K tokens · rodri
+
+```
+Search bar esta dando un error: Application bundle generation failed. [0.081 seconds]
+```
+
+*(Error transitorio — servidor de dev recompilando mientras se escribían archivos. Build real pasó ✅.)*
+
+---
+
+## 66 — Integrar imágenes de tattoo-styles.yml en seeds
+
+> 📋 2026-07-15T03:50:00Z · Copilot CLI · Claude Sonnet 4.6 · medium · ~80K tokens · rodri
+
+```
+Antes de hacer el merge, te dejé este archivo para usar las imagenes de ejemplo en los seeds docs/tattoo-styles.yml
+```
+
+*(Creado TattooImageCatalog.cs con 12 estilos y 120+ URLs de Flickr/Wikimedia. Actualizado DatabaseSeeder.cs. TRUNCATE users+tattoo_styles CASCADE, dotnet run --seed → 60 portfolio items con URLs reales.)*
+
+---
+
+## 67 — Fix imágenes en cards de /artistas + awards badge
+
+> 📋 2026-07-15T04:00:00Z · Copilot CLI · Claude Sonnet 4.6 · medium · ~85K tokens · rodri
+
+```
+En la url /artistas no se ven las imagenes en los cards y deberian verse. Tambien agrega que se vea si tienen Premios los artistas en el card
+```
+
+*(Añadido FeaturedImageUrl + HasAwards a ArtistCardDto. ToArtistCard actualizado en ArtistQueryService + ShowcaseService. Frontend: cardImage fallback a featuredImageUrl, trophy badge en ArtistCard. PR #10 creado.)*
+
+---
+
+## 68 — Merge PR #10 y continuar con plan
+
+> 📋 2026-07-15T04:10:00Z · Copilot CLI · Claude Sonnet 4.6 · low · ~80K tokens · rodri
+
+```
+Listo el merge a main. Ahora puedes continuar segun el plan
+```
+
+*(Pull main. PROJECT_STATUS actualizado: US0006 Done. Listo para US0007.)*
+
+---
+
+## Resumen de archivos modificados (sesión 10)
+
+| Archivo | Acción |
+|---|---|
+| `backend/Application/Dtos/ArtistsDtos.cs` | Actualizado — ArtistProfileDto, ReviewDto, PortfolioItemDto, etc. |
+| `backend/Application/Dtos/ShowcaseDtos.cs` | Actualizado — ArtistCardDto: FeaturedImageUrl + HasAwards |
+| `backend/Domain/Services/ArtistQueryService.cs` | Actualizado — GetArtistBySlugAsync, GetArtistReviewsAsync, ToArtistCard con nuevos campos |
+| `backend/Domain/Services/ShowcaseService.cs` | Actualizado — ToArtistCard con FeaturedImageUrl + HasAwards |
+| `backend/Controllers/ArtistsController.cs` | Actualizado — {slug} y {slug}/reviews endpoints |
+| `backend/Seed/TattooImageCatalog.cs` | Creado — 12 estilos, 120+ URLs reales |
+| `backend/Seed/DatabaseSeeder.cs` | Actualizado — usa TattooImageCatalog |
+| `backend/Tests/ArtistProfileTests.cs` | Creado — 11 tests TDD |
+| `frontend/src/app/core/models/artist-profile.models.ts` | Creado — interfaces del perfil |
+| `frontend/src/app/core/models/showcase.models.ts` | Actualizado — ArtistCard: featuredImageUrl + hasAwards |
+| `frontend/src/app/features/artist-profile/` | Creado — componente completo (ts/html/scss/spec + service) |
+| `frontend/src/app/shared/components/artist-card/` | Actualizado — featuredImageUrl fallback + awards badge |
+| `frontend/src/app/app.routes.ts` | Actualizado — /artista/:slug route |
+| `PROJECT_STATUS.md` | Actualizado — US0006 Done |
+| `prompts/00-all-prompts.md` | Actualizado — sesión 10 |
+
+---
+
+# Sesión 11 — US0007 badge de certificación sanitaria
+
+> 📅 2026-07-15 · Copilot CLI · Claude Sonnet 4.6 · medium
+
+---
+
+## 69 — Implementar US0007 CertificationBadge
+
+> 📋 2026-07-15T04:35:00Z · Copilot CLI · Claude Sonnet 4.6 · medium · ~90K tokens · rodri
+
+```
+Listo el merge a main. Ahora puedes continuar segun el plan
+```
+
+*(Creado CertificationBadgeComponent standalone (sm/md), integrado en ArtistCard y ArtistProfileComponent, 5 tests TDD → 42/42 frontend tests. Branch feature/us0007-badge-certificacion.)*
+
+---
+
+## Resumen de archivos modificados (sesión 11)
+
+| Archivo | Acción |
+|---|---|
+| `frontend/src/app/shared/components/certification-badge/` | Creado — 4 archivos (ts/html/scss/spec) |
+| `frontend/src/app/shared/components/artist-card/artist-card.component.ts` | Actualizado — importa CertificationBadgeComponent |
+| `frontend/src/app/shared/components/artist-card/artist-card.component.html` | Actualizado — usa `<app-certification-badge>` en body |
+| `frontend/src/app/features/artist-profile/artist-profile.component.ts` | Actualizado — importa CertificationBadgeComponent |
+| `frontend/src/app/features/artist-profile/artist-profile.component.html` | Actualizado — usa `<app-certification-badge size="md">` |
+| `PROJECT_STATUS.md` | Actualizado — US0007 Done |
+| `prompts/00-all-prompts.md` | Actualizado — sesión 11 |
+
+---
+
+*INK·LINK © 2026 · Registro de prompts · 11 sesiones · 69 prompts documentados*

@@ -1,0 +1,39 @@
+.cert-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  color: var(--ink-certified);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  line-height: 1;
+
+  &__icon {
+    font-size: 12px;
+    height: 12px;
+    width: 12px;
+    line-height: 1;
+  }
+
+  &__text {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  &--md {
+    padding: 5px 12px;
+    font-size: 0.8rem;
+    gap: 6px;
+
+    .cert-badge__icon {
+      font-size: 15px;
+      height: 15px;
+      width: 15px;
+    }
+  }
+}

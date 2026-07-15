@@ -115,12 +115,7 @@
       @if (a.certifications.length > 0) {
         <div class="sidebar-card">
           <h3 class="sidebar-card__title">Certificaciones</h3>
-          @if (getActiveCertifications()) {
-            <div class="cert-badge">
-              <span class="material-icons cert-badge__icon">verified</span>
-              Certificado Sanitario
-            </div>
-          }
+          <app-certification-badge [isCertified]="getActiveCertifications()" size="md" />
           <ul class="cert-list">
             @for (cert of a.certifications; track cert.name) {
               <li class="cert-list__item">
