@@ -1,8 +1,9 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { GuestService, GuestResponse, AddGuestRequest, ImportError } from '../../../core/services/guest.service';
+import { InvitationService } from '../../../core/services/invitation.service';
 import { GuestTableComponent } from '../components/guest-table.component';
 import { GuestImportComponent } from '../components/guest-import.component';
 import { ButtonComponent } from '../../../shared/components/button.component';
@@ -81,8 +82,11 @@ import { ButtonComponent } from '../../../shared/components/button.component';
           </button>
         </div>
         
-        <div class="search-box">
-          <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange()" placeholder="Search guests..." class="form-control">
+        <div class="actions-right" style="display: flex; gap: 1rem; align-items: center;">
+          <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange()" placeholder="Search guests..." class="form-control" style="width: 250px;">
+          <app-button variant="primary" (click)="onSendInvitations()" [disabled]="isSending()">
+            {{ isSending() ? 'Sending...' : 'Send Email Invitations' }}
+          </app-button>
         </div>
       </section>
 
@@ -144,8 +148,9 @@ import { ButtonComponent } from '../../../shared/components/button.component';
     .search-box { width: 300px; }
   `]
 })
-export class GuestManagerPage implements OnInit {
+export class GuestManagerPage implements OnInit, OnDestroy {
   private guestService = inject(GuestService);
+  private invitationService = inject(InvitationService);
   private route = inject(ActivatedRoute);
 
   eventSlug = '';
@@ -165,13 +170,23 @@ export class GuestManagerPage implements OnInit {
   errorMessage = signal<string | null>(null);
   successMessage = signal<string | null>(null);
 
+  isSending = signal(false);
+  pollingInterval: any;
+
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
       this.eventSlug = params.get('slug') || '';
       if (this.eventSlug) {
         this.loadGuests();
+        this.startPolling();
       }
     });
+  }
+
+  ngOnDestroy() {
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+    }
   }
 
   loadGuests() {
@@ -179,8 +194,56 @@ export class GuestManagerPage implements OnInit {
     const search = this.searchQuery || undefined;
     
     this.guestService.getGuests(this.eventSlug, category, search).subscribe({
-      next: (data) => this.guests.set(data),
+      next: (data) => {
+        this.guests.set(data);
+        this.loadInvitations();
+      },
       error: (err) => this.handleError(err)
+    });
+  }
+
+  loadInvitations() {
+    if (!this.eventSlug) return;
+    this.invitationService.getInvitations(this.eventSlug).subscribe({
+      next: (invitations) => {
+        const currentGuests = this.guests();
+        const updatedGuests = currentGuests.map(g => {
+          const inv = invitations.find(i => i.guestId === g.id);
+          if (inv) {
+            return { ...g, inviteStatus: inv.deliveryStatus };
+          }
+          return g;
+        });
+        this.guests.set(updatedGuests);
+      },
+      error: (err) => console.error('Failed to poll invitations', err)
+    });
+  }
+
+  startPolling() {
+    this.pollingInterval = setInterval(() => {
+      this.loadInvitations();
+    }, 10000);
+  }
+
+  onSendInvitations() {
+    const confirmSend = confirm('Are you sure you want to send email invitations to all guests without one?');
+    if (!confirmSend) return;
+
+    this.isSending.set(true);
+    this.errorMessage.set(null);
+    this.successMessage.set(null);
+
+    this.invitationService.sendInvitations(this.eventSlug).subscribe({
+      next: (res) => {
+        this.isSending.set(false);
+        this.successMessage.set(res.message || 'Invitations enqueued for sending!');
+        this.loadInvitations(); // immediate fetch
+      },
+      error: (err) => {
+        this.isSending.set(false);
+        this.handleError(err);
+      }
     });
   }
 
