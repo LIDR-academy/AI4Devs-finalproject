@@ -68,3 +68,11 @@ Tras estas tres ideas, se decidió simplificar la pantalla Home al máximo:
 sin tarjetas secundarias de estadísticas ni de jugadores. Solo cabecera,
 acceso a cuenta, botón "Nueva partida" e historial. Coherente con la
 persona Carlos del PRD (interfaz clara, sin elementos sin función definida).
+
+------------------
+
+- **Búsqueda de usuarios registrados al añadir jugadores** (stub en
+  `search_player_stub.dart`, referenciado como TODO(LPT-19/LPT-21)).
+  Requiere query Firestore sobre colección `users` por `displayName`
+  con índice compuesto. Funcionalidad nueva no especificada en tickets
+  actuales.
