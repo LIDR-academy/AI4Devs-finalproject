@@ -1,7 +1,7 @@
 # PROJECT_STATUS — INK·LINK
 
 > Estado actual del proyecto. **Este documento debe actualizarse al cerrar cada Historia de Usuario o hito.**
-> Última actualización: 2026-07-15 (US0004 ✅ mergeada — PR #8; US0005 🔵 en desarrollo)
+> Última actualización: 2026-07-15 (US0005 ✅ mergeada — PR #9; US0006 🔵 en desarrollo)
 > **Traspaso entre sesiones/IAs**: ver `HANDOFF.md` (prompt de continuación + protocolo de registro de avance)
 
 ## Resumen
@@ -9,7 +9,7 @@
 | Aspecto | Estado |
 |---|---|
 | Entrega 1 (documentación) | ✅ Completa (con inconsistencias pendientes — `fixs/issue-004.md`) |
-| Entrega 2 (implementación) | 🔵 En curso — Fase 0, US0001, US0003, US0004 completas; US0005 en desarrollo |
+| Entrega 2 (implementación) | 🔵 En curso — Fase 0, US0001, US0003, US0004, US0005 completas; US0006 en desarrollo |
 | Backlog vigente | 13 US · 80 SP · 9 Must-Have (52 SP) + 4 Should-Have (28 SP) — `docs/us/all-us.md` |
 | Backend (`backend/`) | ✅ US0001 + US0003 + US0004 implementados (GET /api/artists con filtros multi-select + OR logic, 27 tests en verde) |
 | Frontend (`frontend/`) | ✅ US0001 + US0003 + US0004 implementados (panel filtros dark theme, multi-select, sponsor pill, 27 tests en verde) |
@@ -24,8 +24,8 @@
 | US0001 | Inicio de sesión de usuarios | Must | 3 | ✅ Done (PR #3 mergeado a main) |
 | US0003 | Ver vitrina principal de tatuajes | Must | 8 | ✅ Done (PRs #4 y #5 mergeados a main) |
 | US0004 | Filtrar artistas | Must | 8 | ✅ Done (PR #8 mergeado a main) |
-| US0005 | Buscar artistas por texto | Must | 3 | 🔵 En desarrollo |
-| US0006 | Ver perfil de artista completo | Must | 5 | ⬜ Pendiente |
+| US0005 | Buscar artistas por texto | Must | 3 | ✅ Done (PR #9 mergeado a main) |
+| US0006 | Ver perfil de artista completo | Must | 5 | 🔵 En desarrollo |
 | US0007 | Badge de certificación sanitaria | Must | 2 | ⬜ Pendiente |
 | US0008 | Seleccionar slot y ver resumen | Must | 5 | ⬜ Pendiente |
 | US0009 | Pagar depósito vía Flow | Must | 13 | ⬜ Pendiente |
@@ -62,8 +62,8 @@ Estados posibles: ⬜ Pendiente · 🔵 En desarrollo · 🟣 En revisión · �
 
 ## Próximos pasos
 
-1. **US0005 en desarrollo** (`feature/us0005-busqueda-artistas`):
-   - TASK0001 — Backend: parámetro `search` en GET /api/artists + full-text PostgreSQL + endpoint `/api/artists/suggestions`
-   - TASK0002 — Frontend: SearchBarComponent con debounce, autocompletado, integración con filtros activos
-2. Al mergear US0005: actualizar este documento, registrar prompts.
-3. Siguiente según plan: US0006 (perfil artista) → US0007 (badge certificación).
+1. **US0006 en desarrollo** (`feature/us0006-perfil-artista`):
+   - TASK0001 — Backend: GET /api/artists/{slug} (perfil completo) + GET /api/artists/{slug}/reviews
+   - TASK0002 — Frontend: ArtistProfilePage con portafolio, tarifas, certificaciones, premios, reviews
+2. Al mergear US0006: actualizar este documento, registrar prompts.
+3. Siguiente según plan: US0007 (badge certificación) → US0008 (seleccionar slot).

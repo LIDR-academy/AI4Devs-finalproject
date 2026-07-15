@@ -35,6 +35,26 @@ public class ArtistsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("{slug}")]
+    public async Task<IActionResult> GetArtistProfile(string slug)
+    {
+        var result = await _service.GetArtistBySlugAsync(slug);
+        if (result is null)
+            return NotFound(new { code = "ARTIST_NOT_FOUND" });
+        return Ok(result);
+    }
+
+    [HttpGet("{slug}/reviews")]
+    public async Task<IActionResult> GetArtistReviews(string slug, [FromQuery] int page = 1, [FromQuery] int pageSize = 5)
+    {
+        pageSize = Math.Clamp(pageSize, 1, 20);
+        page = Math.Max(page, 1);
+        var result = await _service.GetArtistReviewsAsync(slug, page, pageSize);
+        if (result is null)
+            return NotFound(new { code = "ARTIST_NOT_FOUND" });
+        return Ok(result);
+    }
+
     private static bool IsValidRequest(ArtistFilterRequest request)
     {
         if (request.MinPrice is < 0 || request.MaxPrice is < 0)

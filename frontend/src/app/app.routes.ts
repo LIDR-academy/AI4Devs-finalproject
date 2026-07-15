@@ -26,5 +26,12 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/account/account.component').then((m) => m.AccountComponent)
   },
+  {
+    path: 'artista/:slug',
+    loadComponent: () =>
+      import('./features/artist-profile/artist-profile.component').then(
+        (m) => m.ArtistProfileComponent
+      )
+  },
   { path: '**', redirectTo: '' }
 ];

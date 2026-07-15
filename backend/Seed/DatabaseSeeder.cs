@@ -166,12 +166,13 @@ public class DatabaseSeeder
             for (var i = 0; i < 12; i++)
             {
                 var style = artistStyles[i % artistStyles.Count];
+                var imageUrl = TattooImageCatalog.GetUrl(style.Slug, i);
                 profile.PortfolioItems.Add(new PortfolioItem
                 {
                     Id = Guid.NewGuid(),
                     ArtistProfileId = profile.Id,
-                    ImageUrl = $"{ImageBaseUrl}/{a.Slug}/work-{i + 1:00}.jpg",
-                    ThumbnailUrl = $"{ImageBaseUrl}/{a.Slug}/work-{i + 1:00}-thumb.jpg",
+                    ImageUrl = imageUrl,
+                    ThumbnailUrl = imageUrl,
                     StyleId = style.Id,
                     IsFeatured = i == 0,
                     SortOrder = i,

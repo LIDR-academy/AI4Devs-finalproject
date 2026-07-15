@@ -993,4 +993,87 @@ listo, ya esta mergeado. crea una nueva rama para continuar con el plan. Que sig
 
 ---
 
-*INK·LINK © 2026 · Registro de prompts · 8 sesiones · 58 prompts documentados*
+# Sesión 9 — US0005: Búsqueda de artistas + inicio US0006
+
+> 📅 2026-07-15 · Copilot CLI · Claude Sonnet 4.6 / Opus 4.6 / Opus 4.5
+
+---
+
+## 59 — Implementación paralela US0005 backend + frontend
+
+> 📋 2026-07-15T03:13:00Z · Copilot CLI · Claude Opus 4.6 · medium · ~130K tokens · rodri
+
+```
+Arranca con la implementacion, incluso en paralelo si es posible resguardando que se comuniquen los agentes y siga una estructura solida
+```
+
+*(Lanza dos agentes paralelos: backend-us0005 (Opus 4.6) añade search ILIKE + endpoint suggestions + 9 tests TDD. frontend-us0005 (Opus 4.6) crea SearchBarComponent con debounce 300ms, dropdown sugerencias, dark theme. Backend: 36/36 ✅. Frontend: 33/33 ✅. Build limpio. Commit + PR #9.)*
+
+---
+
+## 60 — Fix dropdown superpone título Resultados (intento 1)
+
+> 📋 2026-07-15T03:22:00Z · Copilot CLI · Claude Opus 4.5 · low · ~80K tokens · rodri
+
+```
+Search bar esta dando un error: ... Cannot find module './components/search-bar/search-bar.component'
+```
+
+*(El error era transitorio del dev server durante escritura de archivos. Build real pasa limpio ✅.)*
+
+---
+
+## 61 — Fix dropdown superpone título Resultados (intento 2)
+
+> 📋 2026-07-15T03:24:00Z · Copilot CLI · Claude Opus 4.5 · low · ~85K tokens · rodri
+
+```
+Se muestran sugerencias autocompletadas mientras se escribe (estilos y comunas) -> Se superponen las sugerencias sobre el titulo "Resultados" y todo lo que viene abajo. Resuelve con Opus 4.5
+```
+
+*(Opus 4.5 mueve <app-search-bar> del hero a una sección dedicada __search-section con position: relative; z-index: 20. Problema persiste.)*
+
+---
+
+## 62 — Fix dropdown con position:fixed (root cause)
+
+> 📋 2026-07-15T03:30:00Z · Copilot CLI · Claude Sonnet 4.6 · low · ~90K tokens · rodri
+
+```
+Sigue igual mal. El titulo Resultados está encima de las sugerencias
+```
+
+*(Identifica causa raíz: position:sticky del sidebar crea stacking context en CSS moderno, pinta sobre el dropdown. Fix: dropdown usa position:fixed + getBoundingClientRect() via JS, z-index: 9999. Problema persiste según usuario → defer al final del proyecto.)*
+
+---
+
+## 63 — Defer fix dropdown + continuar plan
+
+> 📋 2026-07-15T03:35:00Z · Copilot CLI · Claude Sonnet 4.6 · low · ~70K tokens · rodri
+
+```
+Sigue igual mal. Dejalo como un fix adicional para realizar la correccion al final de todo el proyecto
+```
+
+*(Anota fix-search-dropdown como todo pendiente. Merge PR #9. Crea rama feature/us0006-perfil-artista. Lanza agentes paralelos backend + frontend para US0006.)*
+
+---
+
+## Resumen de archivos modificados (sesión 9)
+
+| Archivo | Acción |
+|---|---|
+| `backend/Application/Dtos/ArtistsDtos.cs` | Actualizado — campo Search en ArtistFilterRequest + ArtistSuggestionsResponse |
+| `backend/Domain/Services/ArtistQueryService.cs` | Actualizado — ILIKE search filter + GetSuggestionsAsync |
+| `backend/Controllers/ArtistsController.cs` | Actualizado — GET /api/artists/suggestions |
+| `backend/Tests/ArtistSearchTests.cs` | Creado — 9 tests TDD |
+| `frontend/src/app/core/models/artist-filter.models.ts` | Actualizado — search + ArtistSuggestionsResponse |
+| `frontend/src/app/features/artists/services/artist-filter.service.ts` | Actualizado — search en buildParams/hydrateFilters |
+| `frontend/src/app/features/artists/components/search-bar/` | Creado — 4 archivos (ts/html/scss/spec) |
+| `frontend/src/app/features/artists/artists-page.component.*` | Actualizado — SearchBar integrada, search-section |
+| `PROJECT_STATUS.md` | Actualizado — US0005 Done, US0006 En desarrollo |
+| `prompts/00-all-prompts.md` | Actualizado — sesión 9 |
+
+---
+
+*INK·LINK © 2026 · Registro de prompts · 9 sesiones · 63 prompts documentados*

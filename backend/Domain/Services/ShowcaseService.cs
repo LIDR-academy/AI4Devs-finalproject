@@ -130,6 +130,10 @@ public class ShowcaseService
         ArtistName: $"{artist.User.FirstName} {artist.User.LastName}",
         Slug: artist.Slug,
         ProfilePhotoUrl: artist.User.AvatarUrl,
+        FeaturedImageUrl: artist.PortfolioItems
+            .OrderBy(p => p.SortOrder)
+            .Select(p => p.ImageUrl)
+            .FirstOrDefault(),
         Bio: artist.Bio is null ? null : (artist.Bio.Length > 100 ? artist.Bio[..100] : artist.Bio),
         Styles: artist.ArtistStyles.Select(s => s.Style.Slug).ToList(),
         ArtistType: artist.ArtistType.ToString().ToLowerInvariant(),
@@ -139,6 +143,7 @@ public class ShowcaseService
         MinSessionPrice: artist.MinSessionPrice,
         HourlyRate: artist.HourlyRate,
         IsCertified: artist.Certifications.Any(c => c.IsActive),
+        HasAwards: artist.Awards.Any(),
         AverageRating: artist.RatingAvg,
         ReviewCount: artist.TotalReviews,
         SponsorBadges: artist.Sponsorships

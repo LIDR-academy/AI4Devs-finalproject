@@ -8,6 +8,7 @@ export interface ArtistCard {
   artistName: string;
   slug: string;
   profilePhotoUrl: string | null;
+  featuredImageUrl?: string | null;
   bio: string | null;
   styles: string[];
   artistType: 'independent' | 'studio';
@@ -17,6 +18,7 @@ export interface ArtistCard {
   minSessionPrice: number;
   hourlyRate: number;
   isCertified: boolean;
+  hasAwards?: boolean;
   averageRating: number;
   reviewCount: number;
   sponsorBadges: SponsorBadge[];

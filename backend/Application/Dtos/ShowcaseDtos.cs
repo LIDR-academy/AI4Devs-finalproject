@@ -7,6 +7,7 @@ public record ArtistCardDto(
     string ArtistName,
     string Slug,
     string? ProfilePhotoUrl,
+    string? FeaturedImageUrl,
     string? Bio,
     List<string> Styles,
     string ArtistType,
@@ -16,6 +17,7 @@ public record ArtistCardDto(
     int MinSessionPrice,
     int HourlyRate,
     bool IsCertified,
+    bool HasAwards,
     decimal AverageRating,
     int ReviewCount,
     List<SponsorBadgeDto> SponsorBadges

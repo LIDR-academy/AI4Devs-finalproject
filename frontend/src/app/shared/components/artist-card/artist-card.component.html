@@ -18,8 +18,13 @@
       <p class="artist-card__style">{{ cardStyle() }}</p>
     </div>
     @if (cardArtist()?.isCertified) {
-      <span class="artist-card__badge" title="Artista certificado">
+      <span class="artist-card__badge artist-card__badge--certified" title="Artista certificado">
         <mat-icon>verified</mat-icon>
+      </span>
+    }
+    @if (cardArtist()?.hasAwards) {
+      <span class="artist-card__badge artist-card__badge--award" title="Artista premiado">
+        <mat-icon>emoji_events</mat-icon>
       </span>
     }
   </div>
