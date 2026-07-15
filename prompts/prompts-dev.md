@@ -109,6 +109,7 @@ Create me a task in Linear under the epic https://linear.app/ai4devs/issue/COACH
 ---
 
 # 8 - OpenCode - DeepSeek V4 Flash Free 
+
 [/speckit.specify] I want to do this task and make sure you update any necessary documentation inside the @docs/ directory.
 https://linear.app/ai4devs/issue/COACHER-189/default-password-for-coachees-phone-force-change-on-first-login
 
@@ -124,3 +125,28 @@ What should I run in order to be able to tests the changes?
 
 ---
 
+# 9 - claude.ai - Claude Sonnet 4.5
+
+(This prompt was used to improve a task description)
+
+### Instructions
+You are an expert in prompt engineering. Given the following prompt, prepare it using best-practice structure (role, objective, etc.) and formatting to achieve a precise and comprehensive result. Stick strictly to the requested objective by carefully analyzing what is asked in the original prompt. Make it in md so it's easier to copy-paste.
+
+### Original Prompt:
+Create the Google Cloud project, enable the Calendar API, provision a Service Account with key, and configure the dedicated system calendar used by the scheduling engine.
+
+---
+
+# 10 - OpenCode - DeepSeek V4 Flash Free 
+
+[/speckit.specify] I'd like to start integrating Google Calendar in my project. To do so, we have this task. At the end of it, besides the code implementation, I'd like for you to provide me with a detailed list of all the things I need to do on my side in order to properly configure the project
+https://linear.app/ai4devs/issue/COACHER-58/t-211-set-up-google-cloud-project-calendar-api-service-account-system
+
+
+[/speckit.clarify]
+[/speckit.plan]
+[/speckit.tasks]
+
+Have you included all the tasks? please if not, do so 
+
+[/speckit.implement]
