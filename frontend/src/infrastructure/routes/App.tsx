@@ -13,6 +13,7 @@ import { AdminCoacheesPage } from "@/ui/pages/admin/CoacheesPage";
 import { AdminCoachesPage } from "@/ui/pages/admin/CoachesPage";
 import { AdminTodayPage } from "@/ui/pages/admin/TodayPage";
 import { CoachCalendarPage } from "@/ui/pages/coach/CalendarPage";
+import { CoachCoacheeDetailPage } from "@/ui/pages/coach/CoacheeDetailPage";
 import { CoachCoacheesPage } from "@/ui/pages/coach/CoacheesPage";
 import { CoachTodayPage } from "@/ui/pages/coach/TodayPage";
 import { CoacheeCalendarPage } from "@/ui/pages/coachee/CalendarPage";
@@ -77,6 +78,7 @@ const router = createBrowserRouter([
       { path: "today", element: <CoachTodayPage /> },
       { path: "calendar", element: <CoachCalendarPage /> },
       { path: "coachees", element: <CoachCoacheesPage /> },
+      { path: "coachees/:id", element: <CoachCoacheeDetailPage /> },
     ],
   },
   {

@@ -141,4 +141,21 @@ router.post("/auth/logout", authenticate, async (req, res, next) => {
   }
 });
 
+router.get("/auth/me", authenticate, async (req, res, next) => {
+  try {
+    const userId = (req.user as { id: string }).id;
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, name: true, role: true, status: true, level_id: true },
+    });
+    if (!user) {
+      throw new UnauthorizedError("User not found");
+    }
+    const level = user.level_id ? { id: user.level_id } : null;
+    res.json({ ...user, level });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

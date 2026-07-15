@@ -85,3 +85,13 @@ Things to fix:
 - When adding a Coach, it is Inactive by default. It should be active
 - In the Coaches page, I see the table with the coach but when I click on the coach menu at the end of the row, the options are not visible. They get displayed inside the table and they get cut.
 - In the coach detail view, I'd like that instead of "Coach Profile" we display the name of the coach. Therefore we don't need it below.
+
+# 6 - OpenCode - DeepSeek V4 Flash Free 
+
+[/speckit.specify] Let's continue with this user story. Ask anything you need 
+https://linear.app/ai4devs/issue/COACHER-15/us-14-level-system-and-role-based-ui
+
+[/speckit.clarify]
+[/speckit.plan]
+[/speckit.tasks]
+[/speckit.implement]

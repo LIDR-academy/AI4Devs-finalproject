@@ -10,7 +10,7 @@ function token(role: string): string {
 }
 
 const adminToken = token("ADMIN");
-const _coachToken = token("COACH");
+const coachToken = token("COACH");
 const coacheeToken = token("COACHEE");
 
 let createdCoacheeId: string;
@@ -195,5 +195,46 @@ describe("PATCH /api/v1/coachees/:id/level", () => {
       .set("Authorization", `Bearer ${adminToken}`)
       .send({ levelId });
     expect(res.status).toBe(404);
+  });
+
+  it("returns 200 when Coach changes level", async () => {
+    const res = await request(app)
+      .patch(`/api/v1/coachees/${createdCoacheeId}/level`)
+      .set("Authorization", `Bearer ${coachToken}`)
+      .send({ levelId });
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty("level");
+    expect(res.body.level).toHaveProperty("id", levelId);
+  });
+
+  it("returns 403 when Coachee changes level", async () => {
+    const res = await request(app)
+      .patch(`/api/v1/coachees/${createdCoacheeId}/level`)
+      .set("Authorization", `Bearer ${coacheeToken}`)
+      .send({ levelId });
+    expect(res.status).toBe(403);
+  });
+});
+
+describe("GET /api/v1/levels", () => {
+  it("returns 200 with all levels (happy path)", async () => {
+    const res = await request(app)
+      .get("/api/v1/levels")
+      .set("Authorization", `Bearer ${adminToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty("data");
+    expect(Array.isArray(res.body.data)).toBe(true);
+    expect(res.body.data.length).toBe(5);
+    expect(res.body.data[0]).toHaveProperty("name");
+    expect(res.body.data[0]).toHaveProperty("color");
+    expect(res.body.data[0]).toHaveProperty("sort_order");
+  });
+
+  it("returns 200 with Coachee token", async () => {
+    const res = await request(app)
+      .get("/api/v1/levels")
+      .set("Authorization", `Bearer ${coacheeToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty("data");
   });
 });

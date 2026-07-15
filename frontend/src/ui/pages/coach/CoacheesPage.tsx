@@ -106,9 +106,9 @@ export function CoachCoacheesPage() {
                 <tr
                   key={c.id}
                   className="hover:bg-gray-50 cursor-pointer"
-                  onClick={() => navigate(`/admin/coachees/${c.id}`)}
+                  onClick={() => navigate(`/coach/coachees/${c.id}`)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") navigate(`/admin/coachees/${c.id}`);
+                    if (e.key === "Enter") navigate(`/coach/coachees/${c.id}`);
                   }}
                   tabIndex={0}
                 >

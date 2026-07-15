@@ -38,7 +38,7 @@ export const container = {
   getCoachee: new GetCoachee(coacheeRepository),
   updateCoachee: new UpdateCoachee(coacheeRepository, coacheeService),
   updateCoacheeStatus: new UpdateCoacheeStatus(coacheeRepository),
-  updateCoacheeLevel: new UpdateCoacheeLevel(coacheeRepository),
+  updateCoacheeLevel: new UpdateCoacheeLevel(coacheeRepository, auditLogger),
   coachRepository,
   coachService,
   encryptionService,
