@@ -4,7 +4,9 @@ using Aura.Core.Services;
 using Aura.Infrastructure.Data;
 using Aura.Infrastructure.Repositories;
 using Aura.Infrastructure.Services;
+using Aura.Infrastructure.Queue;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Minio;
@@ -62,6 +64,11 @@ public static class DependencyInjection
                 .Build();
         });
         services.AddScoped<IObjectStorageService, MinioObjectStorageService>();
+
+        // Queue
+        var redisConn = configuration.GetConnectionString("RedisConnection") ?? "localhost:6379";
+        services.AddSingleton<IConnectionMultiplexer>(sp => ConnectionMultiplexer.Connect(redisConn));
+        services.AddSingleton<IQueueService, DragonflyQueueService>();
 
         return services;
     }

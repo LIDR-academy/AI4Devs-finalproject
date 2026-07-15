@@ -51,4 +51,30 @@ public class SmtpEmailService : IEmailService
             _logger.LogWarning(ex, "Failed to send email to {Email}. If running locally without MailHog, copy the link above.", email);
         }
     }
+
+    public async Task SendEmailAsync(string to, string subject, string htmlBody)
+    {
+        var smtpServer = _configuration["Email:SmtpServer"] ?? "smtp.gmail.com";
+        var smtpPort = int.Parse(_configuration["Email:SmtpPort"] ?? "587");
+        var smtpUsername = _configuration["Email:SmtpUsername"];
+        var smtpPassword = _configuration["Email:SmtpPassword"];
+        var fromEmail = _configuration["Email:FromEmail"] ?? "noreply@aura.com";
+
+        using var client = new SmtpClient(smtpServer, smtpPort)
+        {
+            Credentials = new NetworkCredential(smtpUsername, smtpPassword),
+            EnableSsl = true
+        };
+
+        var mailMessage = new MailMessage
+        {
+            From = new MailAddress(fromEmail),
+            Subject = subject,
+            Body = htmlBody,
+            IsBodyHtml = true,
+        };
+        mailMessage.To.Add(to);
+
+        await client.SendMailAsync(mailMessage);
+    }
 }

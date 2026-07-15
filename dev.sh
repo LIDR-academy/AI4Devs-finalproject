@@ -47,6 +47,14 @@ if [ "$FRONTEND_ONLY" = false ]; then
     echo "  -> Swagger: http://localhost:5000/scalar/v1"
 fi
 
+# Start Email Worker
+if [ "$FRONTEND_ONLY" = false ]; then
+    echo "Starting Email Worker..."
+    dotnet run --project backend/workers/Aura.Workers.Email > .dev-email-worker.log 2>&1 &
+    EMAIL_WORKER_PID=$!
+    echo "Email Worker starting (PID: $EMAIL_WORKER_PID)"
+fi
+
 # Start frontend
 if [ "$BACKEND_ONLY" = false ]; then
     echo "Starting frontend..."
@@ -62,6 +70,7 @@ echo ""
 echo "Useful commands:"
 echo "  docker compose logs -f           # Watch infra logs"
 echo "  tail -f .dev-backend.log         # Backend log"
+echo "  tail -f .dev-email-worker.log    # Email Worker log"
 echo "  tail -f .dev-frontend.log        # Frontend log"
 echo ""
 echo "Press Ctrl+C to stop all services"
@@ -74,6 +83,11 @@ cleanup() {
     if [ -n "$BACKEND_PID" ] && kill -0 $BACKEND_PID 2>/dev/null; then
         kill $BACKEND_PID
         echo "Stopped backend (PID: $BACKEND_PID)"
+    fi
+    
+    if [ -n "$EMAIL_WORKER_PID" ] && kill -0 $EMAIL_WORKER_PID 2>/dev/null; then
+        kill $EMAIL_WORKER_PID
+        echo "Stopped email worker (PID: $EMAIL_WORKER_PID)"
     fi
     
     if [ -n "$FRONTEND_PID" ] && kill -0 $FRONTEND_PID 2>/dev/null; then

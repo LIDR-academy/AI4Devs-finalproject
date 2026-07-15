@@ -182,7 +182,7 @@ export default class ControlDashboardPageComponent implements OnInit, OnDestroy 
   private pollingSub?: Subscription;
 
   ngOnInit() {
-    this.route.parent?.paramMap.subscribe(params => {
+    this.route.paramMap.subscribe(params => {
       this.eventSlug = params.get('slug') || '';
       if (this.eventSlug) {
         this.startPolling();
