@@ -31,6 +31,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ShowcaseService>();
 builder.Services.AddScoped<ArtistQueryService>();
 builder.Services.AddScoped<AvailabilityService>();
+builder.Services.AddScoped<BookingService>();
 
 // US0009 — Flow payments (mock-first until sandbox credentials are available)
 var flowSettings = builder.Configuration.GetSection(FlowSettings.SectionName).Get<FlowSettings>() ?? new FlowSettings();

@@ -1,7 +1,7 @@
 # PROJECT_STATUS — INK·LINK
 
 > Estado actual del proyecto. **Este documento debe actualizarse al cerrar cada Historia de Usuario o hito.**
-> Última actualización: 2026-07-15 (US0008 ✅ mergeada — PR #12; US0009 🟣 En revisión — PR pendiente)
+> Última actualización: 2026-07-15 (US0009 ✅ mergeada — PR #13; US0010 🟣 En revisión — PR pendiente)
 > **Traspaso entre sesiones/IAs**: ver `HANDOFF.md` (prompt de continuación + protocolo de registro de avance)
 
 ## Resumen
@@ -9,10 +9,10 @@
 | Aspecto | Estado |
 |---|---|
 | Entrega 1 (documentación) | ✅ Completa (con inconsistencias pendientes — `fixs/issue-004.md`) |
-| Entrega 2 (implementación) | 🔵 En curso — Fase 0, US0001, US0003–US0008 completas; US0009 en revisión |
+| Entrega 2 (implementación) | 🔵 En curso — Fase 0, US0001, US0003–US0009 completas; US0010 en revisión |
 | Backlog vigente | 13 US · 80 SP · 9 Must-Have (52 SP) + 4 Should-Have (28 SP) — `docs/us/all-us.md` |
-| Backend (`backend/`) | ✅ US0001 + US0003–US0006 + US0008–US0009 implementados (68 tests en verde) |
-| Frontend (`frontend/`) | ✅ US0001 + US0003–US0009 implementados (61 tests en verde) |
+| Backend (`backend/`) | ✅ US0001 + US0003–US0006 + US0008–US0010 implementados (79 tests en verde) |
+| Frontend (`frontend/`) | ✅ US0001 + US0003–US0010 implementados (74 tests en verde) |
 | Docker / infraestructura local | ✅ `docker-compose.yml` (PostgreSQL16+PostGIS, MinIO; perfil `full` con api+web; perfil `seed-images` para imágenes de muestra) |
 | CI/CD | ✅ `.github/workflows/ci.yml` (build + tests backend y frontend) |
 | API oficial | ✅ `docs/api-spec.yml` v2.0.0 sincronizada con backlog y modelo |
@@ -28,8 +28,8 @@
 | US0006 | Ver perfil de artista completo | Must | 5 | ✅ Done (PR #10 mergeado a main) |
 | US0007 | Badge de certificación sanitaria | Must | 2 | ✅ Done (PR #11 mergeado a main) |
 | US0008 | Seleccionar slot y ver resumen | Must | 5 | ✅ Done (PR #12 mergeado a main) |
-| US0009 | Pagar depósito vía Flow | Must | 13 | 🟣 En revisión (feature/us0009-pago-flow, PR pendiente) |
-| US0010 | Historial + confirmar asistencia | Must | 5 | ⬜ Pendiente |
+| US0009 | Pagar depósito vía Flow | Must | 13 | ✅ Done (PR #13 mergeado a main; Flow real deferred — ver Bloqueos §3) |
+| US0010 | Historial + confirmar asistencia | Must | 5 | 🟣 En revisión (feature/us0010-historial-reservas, PR pendiente) |
 | US0011 | Cotizar con chatbot | Should | 13 | ⬜ Pendiente |
 | US0012 | Explorar artistas en mapa | Should | 8 | ⬜ Pendiente |
 | US0013 | Calificar artista post-sesión | Should | 5 | ⬜ Pendiente |
@@ -63,6 +63,6 @@ Estados posibles: ⬜ Pendiente · 🔵 En desarrollo · 🟣 En revisión · �
 
 ## Próximos pasos
 
-1. **US0009** — crear PR de `feature/us0009-pago-flow` → main y mergear
-2. **US0010** (5 SP) — Historial de reservas + confirmar asistencia
+1. **US0010** — crear PR de `feature/us0010-historial-reservas` → main y mergear
+2. Con esto se completan las **9 Must-Have (52 SP)**. Siguientes (Should-Have): **US0013** (calificar, 5 SP — habilita el CTA "Calificar" ya presente en Mis Reservas), US0011 (chatbot, 13 SP), US0012 (mapa, 8 SP), US0014 (auspicios, 2 SP)
 3. **Pendiente deferred**: integración Flow real con sandbox (ver Bloqueos §3) · `fix-search-dropdown` (dropdown sugerencias se superpone con `Resultados`)

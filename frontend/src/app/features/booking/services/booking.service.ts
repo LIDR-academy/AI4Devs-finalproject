@@ -5,6 +5,7 @@ import { environment } from '../../../../environments/environment';
 import {
   Booking,
   BookingHoldRequest,
+  BookingListResponse,
   MockOutcomeResponse,
   PaymentCreateResponse,
   WeekAvailabilityResponse
@@ -31,6 +32,22 @@ export class BookingService {
 
   getBooking(bookingId: string): Observable<Booking> {
     return this.http.get<Booking>(`${environment.apiUrl}/bookings/${bookingId}`);
+  }
+
+  /** US0010 CA1-CA3 — Authenticated client's booking history. */
+  getMyBookings(page = 1, pageSize = 10): Observable<BookingListResponse> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.http.get<BookingListResponse>(`${environment.apiUrl}/bookings/me`, { params });
+  }
+
+  /** US0010 CA8-CA9 — Confirms attendance (confirmed + past date → completed). */
+  completeBooking(bookingId: string): Observable<Booking> {
+    return this.http.post<Booking>(`${environment.apiUrl}/bookings/${bookingId}/complete`, {});
+  }
+
+  /** US0010 CA10-CA11 — Cancels a confirmed future booking. */
+  cancelBooking(bookingId: string): Observable<Booking> {
+    return this.http.post<Booking>(`${environment.apiUrl}/bookings/${bookingId}/cancel`, {});
   }
 
   /** US0009 CA1 — Creates the Flow order and returns the checkout URL. */

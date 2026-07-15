@@ -1,0 +1,167 @@
+.booking-card {
+  background: var(--ink-bg-card);
+  border: 1px solid var(--ink-border);
+  border-radius: var(--ink-radius);
+  overflow: hidden;
+
+  &__main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    padding: 1.1rem 1.25rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+
+  &__artist {
+    color: var(--ink-text-primary);
+    font-weight: 700;
+    text-decoration: none;
+
+    &:hover {
+      color: var(--ink-accent);
+    }
+  }
+
+  &__when {
+    color: var(--ink-text-secondary);
+    font-size: 0.85rem;
+    text-transform: capitalize;
+  }
+
+  &__side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.35rem;
+    flex-shrink: 0;
+  }
+
+  &__badge {
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+
+    // CA4: confirmada=azul, completada=verde, cancelada=rojo
+    &--confirmed {
+      background: rgba(96, 165, 250, 0.15);
+      color: #60a5fa;
+    }
+
+    &--completed {
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--ink-certified);
+    }
+
+    &--cancelled {
+      background: rgba(248, 113, 113, 0.15);
+      color: #f87171;
+    }
+
+    &--pending_payment {
+      background: rgba(201, 164, 70, 0.15);
+      color: var(--ink-accent);
+    }
+  }
+
+  &__amount {
+    color: var(--ink-text-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  &__detail {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0 1.25rem 1rem;
+    border-top: 1px solid var(--ink-border);
+    padding-top: 1rem;
+  }
+
+  &__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+
+    dt {
+      color: var(--ink-text-secondary);
+      font-size: 0.85rem;
+    }
+
+    dd {
+      color: var(--ink-text-primary);
+      font-size: 0.85rem;
+      margin: 0;
+      text-align: right;
+    }
+  }
+
+  &__actions,
+  &__confirm {
+    display: flex;
+    gap: 0.6rem;
+    padding: 0 1.25rem 1.1rem;
+
+    &:empty {
+      display: none;
+      padding: 0;
+    }
+  }
+
+  &__confirm {
+    flex-direction: column;
+
+    p {
+      color: var(--ink-text-primary);
+      font-size: 0.9rem;
+      margin: 0;
+    }
+  }
+
+  &__confirm-actions {
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  &__btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--ink-border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ink-text-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+
+    &--primary {
+      background: var(--ink-accent);
+      border-color: var(--ink-accent);
+      color: var(--ink-bg);
+    }
+
+    &--danger {
+      border-color: rgba(248, 113, 113, 0.4);
+      color: #f87171;
+    }
+  }
+}

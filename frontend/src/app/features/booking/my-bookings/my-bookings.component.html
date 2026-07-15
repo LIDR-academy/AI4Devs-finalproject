@@ -1,0 +1,45 @@
+<div class="my-bookings">
+  <h1 class="my-bookings__title">Mis Reservas</h1>
+
+  @if (toast(); as message) {
+    <div class="my-bookings__toast" role="status">{{ message }}</div>
+  }
+
+  @if (loading() && bookings().length === 0) {
+    <div class="my-bookings__skeleton" aria-hidden="true">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="my-bookings__skeleton-card"></div>
+      }
+    </div>
+  } @else if (error() && bookings().length === 0) {
+    <div class="my-bookings__empty">
+      <p>No pudimos cargar tus reservas.</p>
+      <button type="button" class="my-bookings__cta" (click)="load()">Reintentar</button>
+    </div>
+  } @else if (bookings().length === 0) {
+    <!-- CA7: estado vacío -->
+    <div class="my-bookings__empty">
+      <span class="material-icons my-bookings__empty-icon">event_busy</span>
+      <p>No tienes reservas aún.</p>
+      <a class="my-bookings__cta" routerLink="/">Explorar artistas</a>
+    </div>
+  } @else {
+    <div class="my-bookings__list">
+      @for (booking of bookings(); track booking.id) {
+        <app-booking-card
+          [booking]="booking"
+          [busy]="busyBookingId() === booking.id"
+          (complete)="onComplete($event)"
+          (cancel)="onCancel($event)"
+          (pay)="onPay($event)"
+        />
+      }
+    </div>
+
+    @if (hasMore()) {
+      <button type="button" class="my-bookings__more" [disabled]="loading()" (click)="loadMore()">
+        {{ loading() ? 'Cargando…' : 'Ver más' }}
+      </button>
+    }
+  }
+</div>

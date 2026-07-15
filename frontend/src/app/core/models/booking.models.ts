@@ -35,6 +35,13 @@ export interface MockOutcomeResponse {
   returnUrl: string;
 }
 
+export interface BookingListResponse {
+  data: Booking[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 export interface Booking {
   id: string;
   clientId: string;
@@ -46,6 +53,10 @@ export interface Booking {
   estimatedPriceMin: number;
   estimatedPriceMax: number;
   depositAmount: number;
+  bodyZone?: string | null;
+  sizeReference?: string | null;
+  styleName?: string | null;
+  hasReview?: boolean;
   notes: string | null;
   createdAt: string;
   expiresAt: string | null;

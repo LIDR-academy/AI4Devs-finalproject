@@ -1,0 +1,90 @@
+.my-bookings {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 3rem;
+
+  &__title {
+    font-family: 'Playfair Display', serif;
+    color: var(--ink-text-primary);
+    font-size: 1.6rem;
+    margin: 0 0 1.5rem;
+  }
+
+  &__toast {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink-bg-elevated);
+    color: var(--ink-text-primary);
+    border: 1px solid var(--ink-border-accent);
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    box-shadow: var(--ink-shadow-md);
+    z-index: 10;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__skeleton-card {
+    height: 88px;
+    border-radius: var(--ink-radius);
+    background: var(--ink-bg-elevated);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+
+  &__empty {
+    text-align: center;
+    color: var(--ink-text-secondary);
+    padding: 3rem 0;
+  }
+
+  &__empty-icon {
+    font-size: 3rem;
+    color: var(--ink-text-muted);
+  }
+
+  &__cta {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.7rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--ink-accent);
+    color: var(--ink-bg);
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  &__more {
+    display: block;
+    margin: 1.5rem auto 0;
+    padding: 0.7rem 2rem;
+    border: 1px solid var(--ink-border-accent);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ink-accent);
+    font-weight: 600;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}

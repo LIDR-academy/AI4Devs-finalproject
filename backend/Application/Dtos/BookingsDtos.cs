@@ -27,6 +27,10 @@ public record ArtistSummaryDto(
     string Slug,
     string? ProfilePhotoUrl);
 
+// US0010 — Client booking history
+
+public record BookingListResponse(List<BookingDto> Data, int Total, int Page, int PageSize);
+
 // US0009 — Deposit payment via Flow
 
 public record PaymentCreateRequest(Guid BookingId);

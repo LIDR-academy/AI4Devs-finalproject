@@ -1,0 +1,103 @@
+@if (booking(); as b) {
+  <article class="booking-card" [class.booking-card--expanded]="expanded()">
+    <button type="button" class="booking-card__main" (click)="toggleDetail()">
+      <div class="booking-card__info">
+        <a
+          class="booking-card__artist"
+          [routerLink]="['/artista', b.artist.slug]"
+          (click)="$event.stopPropagation()"
+        >
+          {{ b.artist.artistName }}
+        </a>
+        <span class="booking-card__when">
+          {{ b.bookingDate | date: 'EEEE dd MMM yyyy' }} · {{ b.startTime }} — {{ b.endTime }}
+        </span>
+      </div>
+      <div class="booking-card__side">
+        <span class="booking-card__badge booking-card__badge--{{ b.status }}">{{ statusLabel() }}</span>
+        <span class="booking-card__amount">{{ formatCLP(b.depositAmount) }}</span>
+      </div>
+    </button>
+
+    @if (expanded()) {
+      <dl class="booking-card__detail">
+        @if (b.styleName) {
+          <div class="booking-card__row"><dt>Estilo</dt><dd>{{ b.styleName }}</dd></div>
+        }
+        @if (b.bodyZone) {
+          <div class="booking-card__row"><dt>Zona corporal</dt><dd>{{ b.bodyZone }}</dd></div>
+        }
+        <div class="booking-card__row">
+          <dt>Precio estimado</dt>
+          <dd>{{ formatCLP(b.estimatedPriceMin) }} — {{ formatCLP(b.estimatedPriceMax) }}</dd>
+        </div>
+        <div class="booking-card__row"><dt>Depósito pagado</dt><dd>{{ formatCLP(b.depositAmount) }}</dd></div>
+        @if (b.notes) {
+          <div class="booking-card__row"><dt>Notas</dt><dd>{{ b.notes }}</dd></div>
+        }
+      </dl>
+    }
+
+    @if (pendingAction(); as action) {
+      <div class="booking-card__confirm" role="alertdialog">
+        <p>
+          @if (action === 'complete') {
+            ¿Asististe a esta sesión?
+          } @else {
+            ¿Cancelar esta reserva? Recuerda la política de cancelación del artista (24–72 h).
+            En el MVP el depósito no se reembolsa automáticamente.
+          }
+        </p>
+        <div class="booking-card__confirm-actions">
+          <button type="button" class="booking-card__btn booking-card__btn--primary" (click)="confirmPending()">
+            {{ action === 'complete' ? 'Sí, asistí' : 'Sí, cancelar' }}
+          </button>
+          <button type="button" class="booking-card__btn" (click)="dismiss()">Volver</button>
+        </div>
+      </div>
+    } @else {
+      <div class="booking-card__actions">
+        @if (canPay()) {
+          <button
+            type="button"
+            class="booking-card__btn booking-card__btn--primary"
+            [disabled]="busy()"
+            (click)="pay.emit(booking())"
+          >
+            Continuar pago
+          </button>
+        }
+        @if (canComplete()) {
+          <button
+            type="button"
+            class="booking-card__btn booking-card__btn--primary"
+            [disabled]="busy()"
+            (click)="ask('complete')"
+          >
+            Confirmar asistencia
+          </button>
+        }
+        @if (canCancel()) {
+          <button
+            type="button"
+            class="booking-card__btn booking-card__btn--danger"
+            [disabled]="busy()"
+            (click)="ask('cancel')"
+          >
+            Cancelar reserva
+          </button>
+        }
+        @if (showReviewCta()) {
+          <button
+            type="button"
+            class="booking-card__btn booking-card__btn--primary"
+            disabled
+            title="Disponible próximamente (US0013)"
+          >
+            Calificar
+          </button>
+        }
+      </div>
+    }
+  </article>
+}

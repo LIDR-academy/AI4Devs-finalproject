@@ -6,6 +6,7 @@
   <a class="nav-link" routerLink="/artistas">Artistas</a>
   <span class="spacer"></span>
   @if (authService.isAuthenticated()) {
+    <button mat-button class="nav-link" routerLink="/mis-reservas">Mis reservas</button>
     <button mat-button class="nav-link" routerLink="/mi-cuenta">Mi cuenta</button>
     <button mat-stroked-button class="nav-btn--logout" (click)="authService.logout()">Salir</button>
   } @else {

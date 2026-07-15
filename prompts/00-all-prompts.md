@@ -1254,6 +1254,18 @@ Listo, realizado l merge. Puedes continuar
 
 ---
 
+## 74 — Merge US0009 y continuar con US0010
+
+> 📋 2026-07-15T22:00:00Z · Claude Code · Claude Fable 5 · medium · ~150K tokens · rodri
+
+```
+Listo, el cambio está mergeado con main, continua según el plan
+```
+
+*(US0010 completa en feature/us0010-historial-reservas: GET /bookings/me paginado, complete/cancel con validaciones, página /mis-reservas con badges por estado, detalle expandible, confirmación inline y CTA Calificar. Backend 79/79, frontend 74/74. También en la sesión: fix locale es-CL, corrección comando docker-compose, Flow sandbox marcado como deferred.)*
+
+---
+
 ## Resumen de archivos modificados (sesión 12)
 
 | Archivo | Acción |
@@ -1274,4 +1286,4 @@ Listo, realizado l merge. Puedes continuar
 
 ---
 
-*INK·LINK © 2026 · Registro de prompts · 12 sesiones · 73 prompts documentados*
+*INK·LINK © 2026 · Registro de prompts · 12 sesiones · 74 prompts documentados*
