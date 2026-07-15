@@ -5,6 +5,7 @@ import type { InitialsAvatarProps } from './initials-avatar.types';
 
 export const InitialsAvatar = ({
   accessibilityLabel,
+  accessibilityState,
   initials,
   onPress,
   style,
@@ -19,6 +20,7 @@ export const InitialsAvatar = ({
     <Pressable
       accessibilityLabel={accessibilityLabel}
       accessibilityRole="button"
+      accessibilityState={accessibilityState}
       onPress={onPress}
       style={[styles.root, style]}
     >

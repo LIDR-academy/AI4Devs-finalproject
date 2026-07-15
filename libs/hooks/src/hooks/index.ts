@@ -2,7 +2,6 @@ export * from './use-api-key';
 export type * from './use-api-key.types';
 export * from './use-auth';
 export type * from './use-auth.types';
-export * from './use-breakpoint';
 export * from './use-interaction-state';
 export type * from './use-interaction-state.types';
 export * from './use-lesson';

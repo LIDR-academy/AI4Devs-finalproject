@@ -22,7 +22,11 @@ export const DesktopBar = ({
       <NavItem {...newLesson} indicatorVariant={indicatorVariant} />
     </View>
     <View style={styles.actions}>
-      <View testID="desktop-alerts">
+      <View
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        testID="desktop-alerts"
+      >
         <Badge count={alertsBadgeCount}>
           <Icon name="notifications" />
         </Badge>

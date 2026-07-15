@@ -50,7 +50,10 @@ describe('useAppChrome', () => {
   });
 
   it('marks Home active only at the root pathname', async () => {
-    const { result, rerender } = await renderHook(({ pathname }) => useAppChrome(pathname), {
+    const { result, rerender } = await renderHook<
+      ReturnType<typeof useAppChrome>,
+      { pathname: string }
+    >(({ pathname }) => useAppChrome(pathname), {
       initialProps: { pathname: '/' },
     });
 
@@ -60,5 +63,17 @@ describe('useAppChrome', () => {
 
     expect(result.current.home).toEqual({ active: false, label: 'nav.myLessons' });
     expect(result.current.newLesson).toEqual({ active: false, label: 'nav.newLesson' });
+  });
+
+  it('keeps navigation props stable for unrelated chrome state changes', async () => {
+    const { result } = await renderHook(() => useAppChrome('/'));
+    const { home, newLesson } = result.current;
+
+    await act(async () => {
+      result.current.setSignOutOpen(true);
+    });
+
+    expect(result.current.home).toBe(home);
+    expect(result.current.newLesson).toBe(newLesson);
   });
 });

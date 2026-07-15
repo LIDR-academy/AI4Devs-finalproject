@@ -21,9 +21,23 @@ describe('DesktopBar', () => {
     });
     expect(screen.getByRole('link', { name: 'Home' })).toBeOnTheScreen();
     expect(screen.getByRole('link', { name: 'New lesson' })).toBeOnTheScreen();
-    expect(screen.getByTestId('desktop-alerts')).toBeOnTheScreen();
+    expect(screen.getByTestId('desktop-alerts', { includeHiddenElements: true })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Alerts' })).toBeNull();
     expect(screen.getByText('HL')).toBeOnTheScreen();
+  });
+
+  it('hides the decorative alerts cluster from assistive technology', async () => {
+    await render(
+      <DesktopBar
+        avatar={<Text>HL</Text>}
+        home={{ label: 'Home', onPress: jest.fn() }}
+        newLesson={{ label: 'New lesson', onPress: jest.fn() }}
+      />,
+    );
+
+    const alerts = screen.getByTestId('desktop-alerts', { includeHiddenElements: true });
+    expect(alerts.props.accessibilityElementsHidden).toBe(true);
+    expect(alerts.props.importantForAccessibility).toBe('no-hide-descendants');
   });
 
   it('uses tokenized desktop layout for brand, navigation, and actions', async () => {
@@ -53,7 +67,9 @@ describe('DesktopBar', () => {
       flexDirection: 'row',
       gap: spacing.s1,
     });
-    expect(screen.getByTestId('desktop-alerts').parent?.props.style).toMatchObject({
+    expect(
+      screen.getByTestId('desktop-alerts', { includeHiddenElements: true }).parent?.props.style,
+    ).toMatchObject({
       alignItems: 'center',
       flexDirection: 'row',
       marginLeft: 'auto',

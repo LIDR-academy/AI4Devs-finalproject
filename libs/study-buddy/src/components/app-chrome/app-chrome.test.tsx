@@ -1,8 +1,10 @@
 jest.mock('@helsoft/hooks', () => ({
   ...jest.requireActual('@helsoft/hooks'),
   useAuth: jest.fn(),
-  useBreakpoint: jest.fn(),
   useSession: jest.fn(),
+}));
+jest.mock('@helsoft/hooks/use-breakpoint', () => ({
+  useBreakpoint: jest.fn(),
 }));
 jest.mock('@helsoft/localization', () => ({
   useLocalization: jest.fn(),
@@ -12,7 +14,8 @@ jest.mock('expo-router', () => ({
   useRouter: jest.fn(),
 }));
 
-import { useAuth, useBreakpoint, useSession } from '@helsoft/hooks';
+import { useAuth, useSession } from '@helsoft/hooks';
+import { useBreakpoint } from '@helsoft/hooks/use-breakpoint';
 import { useLocalization } from '@helsoft/localization';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { usePathname, useRouter } from 'expo-router';
@@ -83,7 +86,7 @@ describe('AppChrome', () => {
     await render(<AppChrome />);
 
     await act(async () => {
-      fireEvent.press(screen.getByRole('button', { name: 'Ada Lovelace' }));
+      fireEvent.press(screen.getByRole('button', { name: 'Open Ada Lovelace account menu' }));
     });
 
     expect(screen.getByText('Ada Lovelace')).toBeTruthy();
@@ -99,6 +102,22 @@ describe('AppChrome', () => {
     expect(signOut).toHaveBeenCalledTimes(1);
   });
 
+  it('exposes the account-menu trigger name and expanded state', async () => {
+    await render(<AppChrome />);
+
+    const trigger = screen.getByRole('button', { name: 'Open Ada Lovelace account menu' });
+    expect(trigger.props.accessibilityState).toEqual({ expanded: false });
+
+    await act(async () => {
+      fireEvent.press(trigger);
+    });
+
+    expect(
+      screen.getByRole('button', { name: 'Open Ada Lovelace account menu' }).props
+        .accessibilityState,
+    ).toEqual({ expanded: true });
+  });
+
   it('navigates to settings from the account menu without marking a primary item active', async () => {
     mockUsePathname.mockReturnValue('/settings');
     await render(<AppChrome />);
@@ -111,7 +130,7 @@ describe('AppChrome', () => {
     });
 
     await act(async () => {
-      fireEvent.press(screen.getByRole('button', { name: 'Ada Lovelace' }));
+      fireEvent.press(screen.getByRole('button', { name: 'Open Ada Lovelace account menu' }));
     });
     await act(async () => {
       fireEvent.press(screen.getByRole('menuitem', { name: 'nav.settings' }));

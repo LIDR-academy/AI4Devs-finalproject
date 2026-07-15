@@ -51,7 +51,9 @@ describe('useAccountMenu', () => {
 
       expect(addEventListener).not.toHaveBeenCalled();
       fireEvent.press(screen.getByText('Open menu'));
-      await waitFor(() => expect(addEventListener).toHaveBeenCalledWith('keydown', expect.any(Function)));
+      await waitFor(() =>
+        expect(addEventListener).toHaveBeenCalledWith('keydown', expect.any(Function)),
+      );
 
       await act(async () => {
         keydownListener?.({ key: 'Enter' });

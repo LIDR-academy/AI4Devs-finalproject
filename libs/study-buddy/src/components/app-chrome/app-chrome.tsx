@@ -1,7 +1,8 @@
 import { AccountMenu, DesktopBar, InitialsAvatar, MobileBar } from '@helsoft/components';
-import { useBreakpoint } from '@helsoft/hooks';
+import { useBreakpoint } from '@helsoft/hooks/use-breakpoint';
 import { useLocalization } from '@helsoft/localization';
 import { usePathname, useRouter } from 'expo-router';
+import { useCallback, useMemo } from 'react';
 import { Text } from 'react-native';
 
 import { SignOut } from '../sign-out/sign-out';
@@ -15,6 +16,13 @@ export const AppChrome = (_props: AppChromeProps) => {
   const router = useRouter();
   const { home, identity, mobileTitleKey, newLesson, setSignOutOpen, signOutOpen } =
     useAppChrome(pathname);
+  const navigateHome = useCallback(() => router.navigate('/'), [router]);
+  const navigateNewLesson = useCallback(() => router.navigate('/upload'), [router]);
+  const homeProps = useMemo(() => ({ ...home, onPress: navigateHome }), [home, navigateHome]);
+  const newLessonProps = useMemo(
+    () => ({ ...newLesson, onPress: navigateNewLesson }),
+    [navigateNewLesson, newLesson],
+  );
   const accountMenu = identity ? (
     <AccountMenu
       email={identity.email}
@@ -22,9 +30,10 @@ export const AppChrome = (_props: AppChromeProps) => {
       initials={identity.initials}
       onSettings={() => router.navigate('/settings')}
       onSignOut={() => setSignOutOpen(true)}
-      renderTrigger={({ onPress }) => (
+      renderTrigger={({ expanded, onPress }) => (
         <InitialsAvatar
-          accessibilityLabel={identity.label}
+          accessibilityLabel={`Open ${identity.label} account menu`}
+          accessibilityState={{ expanded }}
           initials={identity.initials}
           onPress={onPress}
         />
@@ -37,16 +46,12 @@ export const AppChrome = (_props: AppChromeProps) => {
   return (
     <>
       {breakpoint === 'desktop' ? (
-        <DesktopBar
-          avatar={accountMenu}
-          home={{ ...home, onPress: () => router.navigate('/') }}
-          newLesson={{ ...newLesson, onPress: () => router.navigate('/upload') }}
-        />
+        <DesktopBar avatar={accountMenu} home={homeProps} newLesson={newLessonProps} />
       ) : (
         <MobileBar
           avatar={accountMenu}
-          home={{ ...home, onPress: () => router.navigate('/') }}
-          newLesson={{ ...newLesson, onPress: () => router.navigate('/upload') }}
+          home={homeProps}
+          newLesson={newLessonProps}
           title={<Text>{t(mobileTitleKey)}</Text>}
         />
       )}

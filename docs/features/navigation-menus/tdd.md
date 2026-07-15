@@ -57,3 +57,14 @@
 - @s3/@s4/@s12/@s14/@s18 RED strengthened indicator/default, avatar branch/style, token-style, modal, and Escape listener assertions; components mutation re-run 100%.
 - @s2/@s13/@s14/@s19 RED strengthened desktop/mobile routes, root active state, and identity fallback/initials assertions; AppChrome and route mutants killed.
 - @s14 RED added repeated-space and four-word identity initials assertion; helper mutant still survives scoped mutation despite exact `AB` output.
+
+## CI re-work
+- @s19 RED AppChrome's isolated breakpoint import was unavailable; GREEN published a subpath entry point, kept the root barrel React Native-free, and verified the PDF integrations.
+- @s14 RED AppChrome Storybook could not resolve the breakpoint subpath; GREEN aliased the subpath to the existing hooks mock and scoped browser checks passed.
+- @s8 RED nullable native modal parent failed type-check; GREEN narrowed it before dispatching `requestClose`.
+- @s2/@s13 RED AppChrome hook props/result inferred unknown; GREEN typed `renderHook` result and pathname props.
+
+## Review re-work
+- @s8/@s18 RED AppChrome account trigger lacked an account-menu name and expanded state; GREEN forwarded `expanded` through InitialsAvatar.
+- @s15 RED decorative desktop alerts remained exposed to AT; GREEN hid the cluster and descendants.
+- @s2 RED nav props changed on unrelated state updates; GREEN memoized nav models, handlers, and bar props.

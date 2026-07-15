@@ -207,7 +207,6 @@ describe('AccountMenu', () => {
       color: expect.any(String),
       fontSize: expect.any(Number),
     });
-
   });
 
   it('dismisses with Escape on web', async () => {
@@ -255,8 +254,12 @@ describe('AccountMenu', () => {
 
     fireEvent.press(screen.getByText('AL'));
     await screen.findByTestId('account-menu-scrim');
+    const modal = screen.getByTestId('account-menu-scrim').parent;
+    if (!modal) {
+      throw new Error('Expected account menu modal');
+    }
     await act(async () => {
-      fireEvent(screen.getByTestId('account-menu-scrim').parent, 'requestClose');
+      fireEvent(modal, 'requestClose');
     });
 
     await waitFor(() => expect(screen.queryByText('ada@example.com')).toBeNull());

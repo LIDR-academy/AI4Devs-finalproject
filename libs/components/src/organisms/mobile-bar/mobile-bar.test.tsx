@@ -32,7 +32,9 @@ describe('MobileBar', () => {
       gap: spacing.s3,
       minHeight: layout.touchTarget,
     });
-    expect(within(screen.getByTestId('mobile-top-bar')).getByText('Home').parent?.props.style).toMatchObject({
+    expect(
+      within(screen.getByTestId('mobile-top-bar')).getByText('Home').parent?.props.style,
+    ).toMatchObject({
       flex: 1,
     });
     expect(screen.getAllByRole('link', { name: 'Home' })).toHaveLength(1);
@@ -58,5 +60,4 @@ describe('MobileBar', () => {
     expect(onHomePress).toHaveBeenCalledTimes(1);
     expect(onNewLessonPress).toHaveBeenCalledTimes(1);
   });
-
 });
