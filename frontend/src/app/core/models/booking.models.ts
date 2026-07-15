@@ -26,6 +26,15 @@ export interface BookingArtistSummary {
   profilePhotoUrl: string | null;
 }
 
+export interface PaymentCreateResponse {
+  paymentUrl: string;
+  token: string;
+}
+
+export interface MockOutcomeResponse {
+  returnUrl: string;
+}
+
 export interface Booking {
   id: string;
   clientId: string;

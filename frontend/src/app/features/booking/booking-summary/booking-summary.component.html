@@ -43,13 +43,18 @@
         </div>
       </dl>
 
+      @if (paymentError()) {
+        <div class="summary__error" role="alert">
+          No pudimos iniciar el pago. Inténtalo de nuevo.
+        </div>
+      }
       <button
         type="button"
         class="summary__pay"
-        [disabled]="expired()"
+        [disabled]="expired() || paying()"
         (click)="payDeposit()"
       >
-        Pagar depósito
+        {{ paying() ? 'Redirigiendo a Flow…' : 'Pagar depósito' }}
       </button>
       <p class="summary__note">
         El depósito se descuenta del precio final de tu tatuaje.

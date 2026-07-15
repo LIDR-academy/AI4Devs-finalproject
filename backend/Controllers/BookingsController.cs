@@ -16,6 +16,25 @@ public class BookingsController : ControllerBase
         _availabilityService = availabilityService;
     }
 
+    /// <summary>US0009 CA4 / US0010 — Booking detail for the authenticated owner.</summary>
+    [HttpGet("{bookingId:guid}")]
+    [Authorize]
+    public async Task<IActionResult> GetBooking(Guid bookingId, CancellationToken cancellationToken)
+    {
+        var userIdClaim = User.FindFirst("user_id")?.Value;
+        if (!Guid.TryParse(userIdClaim, out var clientId))
+        {
+            return Unauthorized();
+        }
+
+        var booking = await _availabilityService.GetBookingAsync(clientId, bookingId, cancellationToken);
+        if (booking is null)
+        {
+            return NotFound(new { message = "Booking not found", code = "BOOKING_NOT_FOUND" });
+        }
+        return Ok(booking);
+    }
+
     /// <summary>
     /// US0008 CA7-CA8 — Holds a slot creating the booking in pending_payment with a 5-minute TTL.
     /// </summary>

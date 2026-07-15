@@ -1,7 +1,7 @@
 # PROJECT_STATUS — INK·LINK
 
 > Estado actual del proyecto. **Este documento debe actualizarse al cerrar cada Historia de Usuario o hito.**
-> Última actualización: 2026-07-15 (US0008 🟣 En revisión — tasks 1 y 2 completas, PR pendiente)
+> Última actualización: 2026-07-15 (US0008 ✅ mergeada — PR #12; US0009 🟣 En revisión — PR pendiente)
 > **Traspaso entre sesiones/IAs**: ver `HANDOFF.md` (prompt de continuación + protocolo de registro de avance)
 
 ## Resumen
@@ -9,10 +9,10 @@
 | Aspecto | Estado |
 |---|---|
 | Entrega 1 (documentación) | ✅ Completa (con inconsistencias pendientes — `fixs/issue-004.md`) |
-| Entrega 2 (implementación) | 🔵 En curso — Fase 0, US0001, US0003–US0007 completas; US0008 en desarrollo |
+| Entrega 2 (implementación) | 🔵 En curso — Fase 0, US0001, US0003–US0008 completas; US0009 en revisión |
 | Backlog vigente | 13 US · 80 SP · 9 Must-Have (52 SP) + 4 Should-Have (28 SP) — `docs/us/all-us.md` |
-| Backend (`backend/`) | ✅ US0001 + US0003–US0006 + US0008 implementados (59 tests en verde) |
-| Frontend (`frontend/`) | ✅ US0001 + US0003–US0008 implementados (54 tests en verde) |
+| Backend (`backend/`) | ✅ US0001 + US0003–US0006 + US0008–US0009 implementados (68 tests en verde) |
+| Frontend (`frontend/`) | ✅ US0001 + US0003–US0009 implementados (61 tests en verde) |
 | Docker / infraestructura local | ✅ `docker-compose.yml` (PostgreSQL16+PostGIS, MinIO; perfil `full` con api+web; perfil `seed-images` para imágenes de muestra) |
 | CI/CD | ✅ `.github/workflows/ci.yml` (build + tests backend y frontend) |
 | API oficial | ✅ `docs/api-spec.yml` v2.0.0 sincronizada con backlog y modelo |
@@ -27,8 +27,8 @@
 | US0005 | Buscar artistas por texto | Must | 3 | ✅ Done (PR #9 mergeado a main) |
 | US0006 | Ver perfil de artista completo | Must | 5 | ✅ Done (PR #10 mergeado a main) |
 | US0007 | Badge de certificación sanitaria | Must | 2 | ✅ Done (PR #11 mergeado a main) |
-| US0008 | Seleccionar slot y ver resumen | Must | 5 | 🟣 En revisión (feature/us0008-seleccionar-slot, PR pendiente) |
-| US0009 | Pagar depósito vía Flow | Must | 13 | ⬜ Pendiente |
+| US0008 | Seleccionar slot y ver resumen | Must | 5 | ✅ Done (PR #12 mergeado a main) |
+| US0009 | Pagar depósito vía Flow | Must | 13 | 🟣 En revisión (feature/us0009-pago-flow, PR pendiente) |
 | US0010 | Historial + confirmar asistencia | Must | 5 | ⬜ Pendiente |
 | US0011 | Cotizar con chatbot | Should | 13 | ⬜ Pendiente |
 | US0012 | Explorar artistas en mapa | Should | 8 | ⬜ Pendiente |
@@ -41,6 +41,7 @@ Estados posibles: ⬜ Pendiente · 🔵 En desarrollo · 🟣 En revisión · �
 
 1. ~~Decisiones pendientes en `fixs/issue-004.md` §E~~ — ✅ resueltas el 2026-07-14 (ver issue-004 §G). `api-spec.yml` v2.0.0 sincronizada.
 2. ~~Cuenta sandbox de Flow~~ — ✅ cuenta Flow creada el 2026-07-14 (rubro declarado: reserva/depósitos de servicios de tatuaje). Falta obtener credenciales sandbox (apiKey/secretKey) al llegar a US0009; hasta entonces se usa mock.
+3. **Integración Flow real con cuenta sandbox** — ⏸️ pendiente (decisión 2026-07-15). US0009 quedó implementada mock-first: el `FlowClient` real (firma HMAC) ya existe en `backend/Infrastructure/External/FlowClient.cs`; cuando se obtengan las credenciales, configurar `Flow:ApiKey`, `Flow:SecretKey` y `Flow:UseMock=false`, y probar el flujo end-to-end contra sandbox.flow.cl. No bloquea el resto del backlog.
 
 ## Inventario de documentación
 
@@ -62,6 +63,6 @@ Estados posibles: ⬜ Pendiente · 🔵 En desarrollo · 🟣 En revisión · �
 
 ## Próximos pasos
 
-1. **US0008** — crear PR de `feature/us0008-seleccionar-slot` → main y mergear
-2. **US0009** (13 SP) — Pagar depósito vía Flow (mock hasta tener credenciales sandbox); la ruta `/pago/:bookingId` referenciada por el resumen de reserva se implementa aquí
-3. **Pendiente deferred**: `fix-search-dropdown` (dropdown sugerencias se superpone con `Resultados`)
+1. **US0009** — crear PR de `feature/us0009-pago-flow` → main y mergear
+2. **US0010** (5 SP) — Historial de reservas + confirmar asistencia
+3. **Pendiente deferred**: integración Flow real con sandbox (ver Bloqueos §3) · `fix-search-dropdown` (dropdown sugerencias se superpone con `Resultados`)

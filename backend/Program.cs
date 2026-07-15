@@ -4,6 +4,7 @@ using FluentValidation;
 using InkLink.Api.Application.Validators;
 using InkLink.Api.Domain.Services;
 using InkLink.Api.Infrastructure.Data;
+using InkLink.Api.Infrastructure.External;
 using InkLink.Api.Infrastructure.Security;
 using InkLink.Api.Seed;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -30,6 +31,19 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ShowcaseService>();
 builder.Services.AddScoped<ArtistQueryService>();
 builder.Services.AddScoped<AvailabilityService>();
+
+// US0009 — Flow payments (mock-first until sandbox credentials are available)
+var flowSettings = builder.Configuration.GetSection(FlowSettings.SectionName).Get<FlowSettings>() ?? new FlowSettings();
+builder.Services.AddSingleton(flowSettings);
+if (flowSettings.UseMock)
+{
+    builder.Services.AddSingleton<IFlowClient, MockFlowClient>();
+}
+else
+{
+    builder.Services.AddHttpClient<IFlowClient, FlowClient>();
+}
+builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<DatabaseSeeder>();
 builder.Services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
 

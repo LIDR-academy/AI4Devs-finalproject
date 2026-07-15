@@ -35,6 +35,21 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'reservas/:bookingId',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/booking/payment-return/payment-return.component').then(
+        (m) => m.PaymentReturnComponent
+      )
+  },
+  {
+    path: 'pago-simulado',
+    loadComponent: () =>
+      import('./features/booking/mock-checkout/mock-checkout.component').then(
+        (m) => m.MockCheckoutComponent
+      )
+  },
+  {
     path: 'artista/:slug',
     loadComponent: () =>
       import('./features/artist-profile/artist-profile.component').then(

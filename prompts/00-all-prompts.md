@@ -1228,6 +1228,32 @@ Sí, actualiza los documentos y empieza con US0008
 
 ---
 
+## 72 — Fix incongruencia disponibilidad sidebar vs calendario
+
+> 📋 2026-07-15T18:40:00Z · Claude Code · Claude Fable 5 · medium · ~90K tokens · rodri
+
+```
+Revisé y por ejemplo http://localhost:4200/artista/cristobal-vidal tiene
+disponibilidad de lunes a viernes, sin embargo, en Reserva una sesión,
+aparece de martes a sábado, lo que no es congruente
+```
+
+*(El calendario US0008 estaba correcto; el widget del sidebar (US0006) mapeaba day_of_week con 0=domingo en vez de 0=lunes. Corregido con test de regresión; 55/55.)*
+
+---
+
+## 73 — Merge US0008 y continuar con US0009
+
+> 📋 2026-07-15T19:10:00Z · Claude Code · Claude Fable 5 · medium · ~110K tokens · rodri
+
+```
+Listo, realizado l merge. Puedes continuar
+```
+
+*(US0009 completa en feature/us0009-pago-flow: integración Flow mock-first (FlowClient real con HMAC listo para sandbox), payments/create+confirm+return, GET /bookings/{id}, checkout simulado /pago-simulado, confirmación /reservas/:id con reintento. Backend 68/68, frontend 61/61.)*
+
+---
+
 ## Resumen de archivos modificados (sesión 12)
 
 | Archivo | Acción |
@@ -1248,4 +1274,4 @@ Sí, actualiza los documentos y empieza con US0008
 
 ---
 
-*INK·LINK © 2026 · Registro de prompts · 12 sesiones · 71 prompts documentados*
+*INK·LINK © 2026 · Registro de prompts · 12 sesiones · 73 prompts documentados*

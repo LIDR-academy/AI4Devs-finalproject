@@ -1,0 +1,73 @@
+<div class="payment-return">
+  @if (loading()) {
+    <div class="payment-return__card">
+      <p class="payment-return__loading">Verificando el estado de tu pago…</p>
+    </div>
+  } @else if (notFound()) {
+    <div class="payment-return__card">
+      <span class="material-icons payment-return__icon payment-return__icon--error">search_off</span>
+      <h1 class="payment-return__title">Reserva no encontrada</h1>
+      <a class="payment-return__cta payment-return__cta--secondary" routerLink="/">Volver a la vitrina</a>
+    </div>
+  } @else if (success()) {
+    @if (booking(); as b) {
+      <!-- CA4: confirmación -->
+      <div class="payment-return__card">
+        <span class="material-icons payment-return__icon payment-return__icon--success">check_circle</span>
+        <h1 class="payment-return__title">¡Reserva confirmada!</h1>
+        <p class="payment-return__subtitle">Nº de reserva <strong>{{ bookingNumber() }}</strong></p>
+
+        <dl class="payment-return__details">
+          <div class="payment-return__row">
+            <dt>Artista</dt>
+            <dd>{{ b.artist.artistName }}</dd>
+          </div>
+          <div class="payment-return__row">
+            <dt>Fecha</dt>
+            <dd>{{ b.bookingDate | date: 'EEEE dd MMMM yyyy' }}</dd>
+          </div>
+          <div class="payment-return__row">
+            <dt>Hora</dt>
+            <dd>{{ b.startTime }} — {{ b.endTime }}</dd>
+          </div>
+          <div class="payment-return__row">
+            <dt>Monto pagado</dt>
+            <dd class="payment-return__paid">{{ formatCLP(b.depositAmount) }}</dd>
+          </div>
+        </dl>
+
+        <div class="payment-return__actions">
+          <a class="payment-return__cta" routerLink="/mi-cuenta">Ver mis reservas</a>
+          <a class="payment-return__cta payment-return__cta--secondary" routerLink="/">Volver a la vitrina</a>
+        </div>
+      </div>
+    }
+  } @else {
+    <!-- CA5: pago rechazado/no completado -->
+    <div class="payment-return__card">
+      <span class="material-icons payment-return__icon payment-return__icon--error">error</span>
+      <h1 class="payment-return__title">El pago no se completó</h1>
+      <p class="payment-return__subtitle">
+        Tu horario se mantiene reservado mientras el tiempo de espera siga activo.
+      </p>
+
+      @if (retryError()) {
+        <div class="payment-return__error" role="alert">
+          No pudimos iniciar el pago. Es posible que el tiempo de reserva haya expirado.
+        </div>
+      }
+
+      <div class="payment-return__actions">
+        <button
+          type="button"
+          class="payment-return__cta"
+          [disabled]="retrying()"
+          (click)="retryPayment()"
+        >
+          {{ retrying() ? 'Redirigiendo…' : 'Reintentar pago' }}
+        </button>
+        <a class="payment-return__cta payment-return__cta--secondary" routerLink="/">Volver a la vitrina</a>
+      </div>
+    </div>
+  }
+</div>

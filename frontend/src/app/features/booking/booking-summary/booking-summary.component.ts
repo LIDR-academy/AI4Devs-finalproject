@@ -27,6 +27,8 @@ export class BookingSummaryComponent implements OnInit, OnDestroy {
   readonly booking = this.bookingService.currentBooking;
   readonly remainingSeconds = signal(0);
   readonly expired = computed(() => this.remainingSeconds() <= 0);
+  readonly paying = signal(false);
+  readonly paymentError = signal(false);
 
   private intervalId: ReturnType<typeof setInterval> | null = null;
 
@@ -62,13 +64,21 @@ export class BookingSummaryComponent implements OnInit, OnDestroy {
     return minutes % 60 === 0 ? `${minutes / 60} h` : `${minutes} min`;
   }
 
+  /** US0009 CA1 — Creates the Flow order and leaves the SPA towards the checkout. */
   payDeposit(): void {
     const booking = this.booking();
-    if (!booking || this.expired()) {
+    if (!booking || this.expired() || this.paying()) {
       return;
     }
-    // US0009 will implement the payment page at this route
-    this.router.navigate(['/pago', booking.id]);
+    this.paying.set(true);
+    this.paymentError.set(false);
+    this.bookingService.createPayment(booking.id).subscribe({
+      next: (response) => this.bookingService.redirectTo(response.paymentUrl),
+      error: () => {
+        this.paying.set(false);
+        this.paymentError.set(true);
+      }
+    });
   }
 
   formatCLP(amount: number): string {

@@ -85,6 +85,15 @@
     }
   }
 
+  &__error {
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(248, 113, 113, 0.4);
+    border-radius: 8px;
+    color: #f87171;
+    font-size: 0.9rem;
+  }
+
   &__pay {
     width: 100%;
     padding: 0.9rem;

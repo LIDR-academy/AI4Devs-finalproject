@@ -186,6 +186,19 @@ public class AvailabilityService
         return new HoldResult(HoldOutcome.Created, ToDto(booking, artist, styleName));
     }
 
+    /// <summary>Returns a booking owned by the client (US0009 confirmation screen / US0010 detail).</summary>
+    public async Task<BookingDto?> GetBookingAsync(
+        Guid clientId, Guid bookingId, CancellationToken cancellationToken = default)
+    {
+        var booking = await _context.Bookings
+            .AsNoTracking()
+            .Include(b => b.ArtistProfile).ThenInclude(p => p.User)
+            .Include(b => b.Style)
+            .Include(b => b.Review)
+            .SingleOrDefaultAsync(b => b.Id == bookingId && b.ClientId == clientId, cancellationToken);
+        return booking is null ? null : ToDto(booking, booking.ArtistProfile, booking.Style?.Name);
+    }
+
     private static BookingDto ToDto(Booking booking, ArtistProfile artist, string? styleName) => new(
         booking.Id,
         booking.ClientId,
@@ -194,7 +207,7 @@ public class AvailabilityService
             $"{artist.User.FirstName} {artist.User.LastName}",
             artist.Slug,
             artist.User.AvatarUrl),
-        "pending_payment",
+        ToStatusString(booking.Status),
         booking.BookingDate,
         booking.StartTime.ToString("HH:mm"),
         booking.EndTime.ToString("HH:mm"),
@@ -209,9 +222,17 @@ public class AvailabilityService
         booking.IsCoverup,
         booking.ReferenceImages,
         booking.Notes,
-        HasReview: false,
+        HasReview: booking.Review is not null,
         booking.CreatedAt,
         booking.ExpiresAt);
+
+    private static string ToStatusString(BookingStatus status) => status switch
+    {
+        BookingStatus.PendingPayment => "pending_payment",
+        BookingStatus.Confirmed => "confirmed",
+        BookingStatus.Completed => "completed",
+        _ => "cancelled"
+    };
 
     private static IEnumerable<(TimeOnly Start, TimeOnly End)> GenerateSlots(Availability availability)
     {

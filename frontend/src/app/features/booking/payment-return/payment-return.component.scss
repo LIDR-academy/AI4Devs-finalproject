@@ -1,0 +1,113 @@
+.payment-return {
+  display: flex;
+  justify-content: center;
+  padding: 3rem 1rem;
+
+  &__card {
+    width: 100%;
+    max-width: 480px;
+    background: var(--ink-bg-card);
+    border: 1px solid var(--ink-border);
+    border-radius: var(--ink-radius);
+    padding: 2.5rem 2rem;
+    text-align: center;
+  }
+
+  &__loading {
+    color: var(--ink-text-secondary);
+    margin: 0;
+  }
+
+  &__icon {
+    font-size: 3.5rem;
+
+    &--success {
+      color: var(--ink-certified);
+    }
+
+    &--error {
+      color: #f87171;
+    }
+  }
+
+  &__title {
+    color: var(--ink-text-primary);
+    font-size: 1.4rem;
+    margin: 0.75rem 0 0.25rem;
+  }
+
+  &__subtitle {
+    color: var(--ink-text-secondary);
+    margin: 0 0 1.5rem;
+  }
+
+  &__details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin: 0 0 1.75rem;
+    text-align: left;
+  }
+
+  &__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+
+    dt {
+      color: var(--ink-text-secondary);
+    }
+
+    dd {
+      color: var(--ink-text-primary);
+      margin: 0;
+      text-align: right;
+      text-transform: capitalize;
+    }
+  }
+
+  &__paid {
+    color: var(--ink-accent) !important;
+    font-weight: 700;
+  }
+
+  &__error {
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(248, 113, 113, 0.4);
+    border-radius: 8px;
+    color: #f87171;
+    font-size: 0.9rem;
+  }
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__cta {
+    display: block;
+    width: 100%;
+    padding: 0.85rem;
+    border: none;
+    border-radius: 8px;
+    background: var(--ink-accent);
+    color: var(--ink-bg);
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    &--secondary {
+      background: transparent;
+      border: 1px solid var(--ink-border-accent);
+      color: var(--ink-accent);
+    }
+  }
+}

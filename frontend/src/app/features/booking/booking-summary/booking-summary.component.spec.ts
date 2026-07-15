@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick, discardPeriodicTasks } from
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter, Router } from '@angular/router';
+import { of, throwError } from 'rxjs';
 import { BookingSummaryComponent } from './booking-summary.component';
 import { BookingService } from '../services/booking.service';
 import { Booking } from '../../../core/models/booking.models';
@@ -96,14 +97,31 @@ describe('BookingSummaryComponent', () => {
     expect(payButton.disabled).toBeTrue();
   }));
 
-  it('el botón pagar navega a la página de pago (US0009)', fakeAsync(() => {
+  it('el botón pagar crea la orden Flow y redirige al checkout (US0009 CA1)', fakeAsync(() => {
     bookingService.currentBooking.set(mockBooking(300));
     createComponent();
-    const navigateSpy = spyOn(router, 'navigate');
+    const createSpy = spyOn(bookingService, 'createPayment').and.returnValue(
+      of({ paymentUrl: 'http://flow.test/checkout?token=t1', token: 't1' })
+    );
+    const redirectSpy = spyOn(bookingService, 'redirectTo');
 
     component.payDeposit();
 
-    expect(navigateSpy).toHaveBeenCalledWith(['/pago', 'b1']);
+    expect(createSpy).toHaveBeenCalledWith('b1');
+    expect(redirectSpy).toHaveBeenCalledWith('http://flow.test/checkout?token=t1');
+    discardPeriodicTasks();
+  }));
+
+  it('muestra error si la creación del pago falla', fakeAsync(() => {
+    bookingService.currentBooking.set(mockBooking(300));
+    createComponent();
+    spyOn(bookingService, 'createPayment').and.returnValue(throwError(() => new Error('fail')));
+
+    component.payDeposit();
+    fixture.detectChanges();
+
+    expect(component.paymentError()).toBeTrue();
+    expect(fixture.nativeElement.textContent).toContain('No pudimos iniciar el pago');
     discardPeriodicTasks();
   }));
 });

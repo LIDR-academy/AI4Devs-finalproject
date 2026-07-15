@@ -1,0 +1,78 @@
+.mock-checkout {
+  display: flex;
+  justify-content: center;
+  padding: 4rem 1rem;
+
+  &__card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--ink-bg-card);
+    border: 1px solid var(--ink-border);
+    border-radius: var(--ink-radius);
+    padding: 2rem;
+    text-align: center;
+  }
+
+  &__badge {
+    display: inline-block;
+    padding: 0.3rem 0.75rem;
+    border: 1px dashed var(--ink-border-accent);
+    border-radius: 999px;
+    color: var(--ink-text-secondary);
+    font-size: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  &__title {
+    color: var(--ink-text-primary);
+    font-size: 1.3rem;
+    margin: 0 0 0.5rem;
+  }
+
+  &__amount {
+    color: var(--ink-accent);
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0 0 1.5rem;
+  }
+
+  &__error {
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(248, 113, 113, 0.4);
+    border-radius: 8px;
+    color: #f87171;
+    font-size: 0.9rem;
+  }
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__btn {
+    padding: 0.85rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    &--pay {
+      background: var(--ink-accent);
+      color: var(--ink-bg);
+    }
+
+    &--reject {
+      background: transparent;
+      border: 1px solid rgba(248, 113, 113, 0.4);
+      color: #f87171;
+    }
+  }
+}

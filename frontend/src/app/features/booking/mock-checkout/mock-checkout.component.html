@@ -1,0 +1,34 @@
+<div class="mock-checkout">
+  <div class="mock-checkout__card">
+    <span class="mock-checkout__badge">Checkout simulado (Flow sandbox pendiente)</span>
+    <h1 class="mock-checkout__title">Pago del depósito</h1>
+    @if (amount > 0) {
+      <p class="mock-checkout__amount">{{ formatCLP(amount) }}</p>
+    }
+
+    @if (error()) {
+      <div class="mock-checkout__error" role="alert">
+        No pudimos procesar la simulación. Inténtalo de nuevo.
+      </div>
+    }
+
+    <div class="mock-checkout__actions">
+      <button
+        type="button"
+        class="mock-checkout__btn mock-checkout__btn--pay"
+        [disabled]="processing()"
+        (click)="simulate(true)"
+      >
+        Simular pago exitoso
+      </button>
+      <button
+        type="button"
+        class="mock-checkout__btn mock-checkout__btn--reject"
+        [disabled]="processing()"
+        (click)="simulate(false)"
+      >
+        Simular rechazo
+      </button>
+    </div>
+  </div>
+</div>
