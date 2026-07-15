@@ -1,6 +1,6 @@
 ---
 feature: navigation-menus
-phase: mutation
+phase: pr_ready
 review_round: 2
 ---
 
