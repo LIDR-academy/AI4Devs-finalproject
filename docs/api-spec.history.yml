@@ -85,7 +85,9 @@ components:
         vehicleLabel:
           type: string
         currentOwner:
+          nullable: true
           type: object
+          description: Null when the vehicle has no active ownership (US-D9).
           properties:
             id:
               type: string
@@ -112,6 +114,8 @@ components:
         - mileage
         - totalAmount
         - ownerAtVisit
+        - broughtByName
+        - broughtByPhone
         - visitNotes
         - tasks
       properties:
@@ -133,10 +137,13 @@ components:
           type: string
         mileage:
           type: integer
+          nullable: true
         totalAmount:
           type: number
         ownerAtVisit:
+          nullable: true
           type: object
+          description: Null for THIRD_PARTY visits without linked owner (US-D9).
           properties:
             id:
               type: string
@@ -145,6 +152,12 @@ components:
               type: string
             nationalId:
               type: string
+        broughtByName:
+          type: string
+          nullable: true
+        broughtByPhone:
+          type: string
+          nullable: true
         visitNotes:
           type: object
         tasks:

@@ -98,7 +98,9 @@ paths:
         '404':
           description: Work order not found
         '409':
-          description: Already contacted or not ready for contact
+          description: |
+            Already contacted, not ready for contact, or work order has no owner (US-D9).
+            Ownerless THIRD_PARTY OTs cannot use mark-contacted; deliver remains allowed.
 
   /delivery/ready/{workOrderId}/deliver:
     patch:
@@ -159,6 +161,8 @@ components:
         - ownerPhone
         - ownerPhoneDisplay
         - ownerEmail
+        - broughtByName
+        - broughtByPhone
         - totalAmount
         - checkedInAt
         - elapsedLabel
@@ -175,6 +179,8 @@ components:
           type: string
         ownerName:
           type: string
+          nullable: true
+          description: Null when intake was THIRD_PARTY without linked owner (US-D9).
         ownerPhone:
           type: string
           nullable: true
@@ -182,6 +188,12 @@ components:
           type: string
           nullable: true
         ownerEmail:
+          type: string
+          nullable: true
+        broughtByName:
+          type: string
+          nullable: true
+        broughtByPhone:
           type: string
           nullable: true
         totalAmount:
@@ -234,6 +246,7 @@ components:
                 year:
                   type: integer
             owner:
+              nullable: true
               type: object
               properties:
                 fullName:

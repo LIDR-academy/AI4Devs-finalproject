@@ -52,18 +52,28 @@ export function VehicleForm({ readOnlyClient = null, onCancel }: VehicleFormProp
       model: '',
       year: new Date().getFullYear(),
       color: '',
+      withoutOwner: false,
       clientId: readOnlyClient?.id ?? '',
     },
   });
 
   const clientId = watch('clientId');
+  const withoutOwner = watch('withoutOwner');
 
   useEffect(() => {
     if (readOnlyClient) {
       setValue('clientId', readOnlyClient.id, { shouldValidate: true });
+      setValue('withoutOwner', false, { shouldValidate: true });
       setSelectedClient(readOnlyClient);
     }
   }, [readOnlyClient, setValue]);
+
+  useEffect(() => {
+    if (withoutOwner) {
+      setSelectedClient(null);
+      setValue('clientId', '', { shouldValidate: true });
+    }
+  }, [withoutOwner, setValue]);
 
   const checkDuplicatePlate = async (licensePlate: string) => {
     const normalized = normalizeLicensePlate(licensePlate);
@@ -92,6 +102,7 @@ export function VehicleForm({ readOnlyClient = null, onCancel }: VehicleFormProp
 
   const handleClientChange = (client: Client) => {
     setSelectedClient(client);
+    setValue('withoutOwner', false, { shouldValidate: true });
     setValue('clientId', client.id, { shouldValidate: true });
   };
 
@@ -107,9 +118,19 @@ export function VehicleForm({ readOnlyClient = null, onCancel }: VehicleFormProp
         model: values.model.trim(),
         year: values.year,
         color: values.color?.trim() || undefined,
-        clientId: values.clientId,
+        ...(values.withoutOwner || !values.clientId
+          ? {}
+          : { clientId: values.clientId }),
       });
-      reset();
+      reset({
+        licensePlate: '',
+        brand: '',
+        model: '',
+        year: new Date().getFullYear(),
+        color: '',
+        withoutOwner: false,
+        clientId: readOnlyClient?.id ?? '',
+      });
       setSelectedClient(readOnlyClient);
       setCreatedVehicle(vehicle);
     } catch (submitError) {
@@ -129,6 +150,11 @@ export function VehicleForm({ readOnlyClient = null, onCancel }: VehicleFormProp
         <p className="text-sm text-green-800">
           {createdVehicle.licensePlate} — {createdVehicle.brand}{' '}
           {createdVehicle.model} {createdVehicle.year}
+        </p>
+        <p className="text-sm text-green-800">
+          {createdVehicle.currentOwner
+            ? `Propietario: ${createdVehicle.currentOwner.fullName}`
+            : 'Sin propietario'}
         </p>
         <div className="flex flex-wrap gap-3">
           <Link href={`/work-orders/new?vehicleId=${createdVehicle.id}`}>
@@ -256,13 +282,34 @@ export function VehicleForm({ readOnlyClient = null, onCancel }: VehicleFormProp
         </div>
       </div>
 
-      <ClientPicker
-        value={clientId || null}
-        onChange={handleClientChange}
-        readOnlyClient={readOnlyClient}
-        selectedClient={selectedClient}
-        error={errors.clientId?.message}
-      />
+      {!readOnlyClient && (
+        <div className="space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
+          <label className="flex items-start gap-2 text-sm text-slate-800">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              {...register('withoutOwner')}
+            />
+            <span>
+              <span className="font-medium">Registrar sin propietario</span>
+              <span className="mt-0.5 block text-slate-600">
+                Útil cuando lo trae un taller externo; se puede asociar dueño
+                después.
+              </span>
+            </span>
+          </label>
+        </div>
+      )}
+
+      {!withoutOwner && (
+        <ClientPicker
+          value={clientId || null}
+          onChange={handleClientChange}
+          readOnlyClient={readOnlyClient}
+          selectedClient={selectedClient}
+          error={errors.clientId?.message}
+        />
+      )}
 
       <div className="flex justify-end gap-3 pt-2">
         {onCancel && (

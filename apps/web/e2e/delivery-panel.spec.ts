@@ -172,6 +172,48 @@ test.describe('Delivery panel (admin)', () => {
     await expect(page.getByText(plate)).not.toBeVisible({ timeout: 10_000 });
   });
 
+  test('ownerless third-party ready OT shows Sin propietario and hides mark contacted', async ({
+    page,
+  }) => {
+    const suffix = uniquePlateSuffix();
+    const plate = `D9${suffix}`;
+
+    await page.goto('/vehicles/new');
+    await page.getByLabel('Placa').fill(plate);
+    await page.getByLabel('Marca').fill('Kia');
+    await page.getByLabel('Modelo').fill('Rio');
+    await page.getByLabel('Año').fill('2021');
+    await page.getByLabel('Registrar sin propietario').check();
+    await page.getByRole('button', { name: 'Registrar vehículo' }).click();
+    await expect(page.getByText('Vehículo registrado')).toBeVisible({
+      timeout: 10_000,
+    });
+
+    await page.getByRole('link', { name: 'Crear orden de trabajo' }).click();
+    await page.getByLabel('Nombre de quien lo trae').fill('Mecánico Externo');
+    await page.getByLabel('Motivo de ingreso').fill('Reparación enviada por taller');
+    await page.getByLabel('Tarea 1').fill('Cambio de frenos');
+    await page.getByRole('button', { name: 'Crear orden de trabajo' }).click();
+    await expect(page).toHaveURL(/\/work-orders\/[0-9a-f-]+$/, { timeout: 10_000 });
+
+    await completeAllTasksOnWorkOrder(page);
+
+    await page.goto('/admin/delivery');
+    await expect(page.getByText(plate)).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Sin propietario').first()).toBeVisible();
+
+    await page.getByRole('button', { name: 'Ver detalle' }).first().click();
+    await expect(page.getByText(/Traído por: Mecánico Externo/)).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(
+      page.getByRole('button', { name: 'Marcar propietario contactado' }),
+    ).not.toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Marcar como entregada' }),
+    ).toBeVisible();
+  });
+
   test('refetch button updates list', async ({ page }) => {
     await createReadyWorkOrder(page);
 

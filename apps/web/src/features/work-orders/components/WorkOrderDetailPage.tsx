@@ -10,6 +10,7 @@ import type { CompleteTaskFormValues } from '../utils/completeTaskSchema';
 import { mapWorkOrdersError } from '../utils/mapWorkOrdersError';
 import { AddTaskForm } from './AddTaskForm';
 import { CompleteTaskModal } from './CompleteTaskModal';
+import { LinkOwnerDialog } from './LinkOwnerDialog';
 import { ReadyForDeliveryBanner } from './ReadyForDeliveryBanner';
 import { TaskList } from './TaskList';
 import { WorkOrderDetailHeader } from './WorkOrderDetailHeader';
@@ -35,6 +36,7 @@ export function WorkOrderDetailPage({ workOrderId }: WorkOrderDetailPageProps) {
   const [taskToComplete, setTaskToComplete] =
     useState<WorkOrderTaskDetail | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [linkOwnerOpen, setLinkOwnerOpen] = useState(false);
 
   useEffect(() => {
     if (!toastMessage) {
@@ -114,6 +116,20 @@ export function WorkOrderDetailPage({ workOrderId }: WorkOrderDetailPageProps) {
       <WorkOrderDetailHeader
         workOrder={workOrder}
         onMileageUpdated={() => setToastMessage('Kilometraje actualizado')}
+        onLinkOwner={() => setLinkOwnerOpen(true)}
+      />
+
+      <LinkOwnerDialog
+        workOrderId={workOrderId}
+        open={linkOwnerOpen}
+        onOpenChange={setLinkOwnerOpen}
+        onSuccess={(vehicleOwnerUnchanged) => {
+          setToastMessage(
+            vehicleOwnerUnchanged
+              ? 'El dueño registrado del vehículo es otro; esta visita queda asociada al cliente seleccionado sin transferir la placa.'
+              : 'Propietario asociado',
+          );
+        }}
       />
 
       <WorkOrderVisitNotesForm

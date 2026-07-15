@@ -99,7 +99,7 @@ model VehicleOwnership {
 model WorkOrder {
   id                   String          @id @default(uuid())
   vehicleId            String
-  ownerClientId        String
+  ownerClientId        String?
   status               WorkOrderStatus @default(EN_PROCESO)
   entryReason          String
   mileage              Int?
@@ -109,6 +109,8 @@ model WorkOrder {
   deliveredAt          DateTime?
   ownerContactedAt     DateTime?
   ownerContactedById   String?
+  broughtByName        String?
+  broughtByPhone       String?
   visitDiagnosis       String?         @db.Text
   visitRepairSummary   String?         @db.Text
   visitPartsUsed       String?         @db.Text
@@ -117,7 +119,7 @@ model WorkOrder {
   updatedAt            DateTime        @updatedAt
 
   vehicle          Vehicle         @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
-  ownerClient      Client          @relation(fields: [ownerClientId], references: [id], onDelete: Restrict)
+  ownerClient      Client?         @relation(fields: [ownerClientId], references: [id], onDelete: Restrict)
   assignedMechanic User?           @relation("AssignedMechanic", fields: [assignedMechanicId], references: [id])
   createdBy        User            @relation("CreatedBy", fields: [createdById], references: [id])
   ownerContactedBy User?           @relation("OwnerContactedBy", fields: [ownerContactedById], references: [id])

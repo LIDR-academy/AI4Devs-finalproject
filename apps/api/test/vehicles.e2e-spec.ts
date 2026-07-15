@@ -177,14 +177,21 @@ describe('VehiclesController (e2e)', () => {
       .expect(404);
   });
 
-  it('GET /api/vehicles/:id/history returns empty visits', async () => {
-    const searchResponse = await request(app.getHttpServer())
-      .get('/api/vehicles/search')
-      .query({ licensePlate: 'ABC123' })
+  it('GET /api/vehicles/:id/history returns empty visits for a new vehicle', async () => {
+    const suffix = uniquePlateSuffix();
+    const createResponse = await request(app.getHttpServer())
+      .post('/api/vehicles')
       .set('Authorization', `Bearer ${adminAccessToken}`)
-      .expect(200);
+      .send({
+        licensePlate: `HIST${suffix}`,
+        brand: 'Toyota',
+        model: 'Yaris',
+        year: 2015,
+        clientId: juanClientId,
+      })
+      .expect(201);
 
-    const vehicleId = searchResponse.body.items[0].id as string;
+    const vehicleId = createResponse.body.id as string;
 
     const response = await request(app.getHttpServer())
       .get(`/api/vehicles/${vehicleId}/history`)
@@ -286,6 +293,22 @@ describe('VehiclesController (e2e)', () => {
         clientId: juanClientId,
       })
       .expect(400);
+  });
+
+  it('POST /api/vehicles without clientId returns 201 with currentOwner null (US-D9)', async () => {
+    const suffix = uniquePlateSuffix();
+    const response = await request(app.getHttpServer())
+      .post('/api/vehicles')
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({
+        licensePlate: `OWN${suffix}`,
+        brand: 'Suzuki',
+        model: 'Swift',
+        year: 2016,
+      })
+      .expect(201);
+
+    expect(response.body.currentOwner).toBeNull();
   });
 
   it('GET /api/vehicles/search without token returns 401', async () => {

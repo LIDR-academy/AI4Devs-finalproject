@@ -55,6 +55,7 @@ export function DeliveryReadyDetail({
 
   const isPendingContact = data.status === 'LISTA_PARA_ENTREGA';
   const isContacted = data.status === 'OWNER_CONTACTED';
+  const hasOwner = data.owner != null && data.ownerName != null;
 
   return (
     <div className="space-y-5 px-4 py-5">
@@ -76,25 +77,51 @@ export function DeliveryReadyDetail({
           <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
             Propietario
           </h3>
-          <p className="mt-1 text-sm font-medium text-slate-900">
-            {data.owner.fullName}
-          </p>
-          <p className="mt-1 text-sm text-slate-600">
-            Teléfono:{' '}
-            <OwnerPhoneCell
-              phone={data.owner.phone}
-              phoneDisplay={data.ownerPhoneDisplay}
-            />
-          </p>
-          {data.owner.email && (
-            <p className="mt-1 text-sm text-slate-600">
-              Correo:{' '}
-              <a
-                href={`mailto:${data.owner.email}`}
-                className="text-blue-600 hover:underline"
-              >
-                {data.owner.email}
-              </a>
+          {hasOwner && data.owner ? (
+            <>
+              <p className="mt-1 text-sm font-medium text-slate-900">
+                {data.owner.fullName}
+              </p>
+              <p className="mt-1 text-sm text-slate-600">
+                Teléfono:{' '}
+                <OwnerPhoneCell
+                  phone={data.owner.phone}
+                  phoneDisplay={data.ownerPhoneDisplay}
+                />
+              </p>
+              {data.owner.email && (
+                <p className="mt-1 text-sm text-slate-600">
+                  Correo:{' '}
+                  <a
+                    href={`mailto:${data.owner.email}`}
+                    className="text-blue-600 hover:underline"
+                  >
+                    {data.owner.email}
+                  </a>
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="mt-1 text-sm font-medium text-slate-900">
+              Sin propietario
+            </p>
+          )}
+          {data.broughtByName && (
+            <p className="mt-2 text-sm text-slate-700">
+              Traído por: {data.broughtByName}
+              {data.broughtByPhone ? (
+                <>
+                  {' '}
+                  (
+                  <a
+                    href={`tel:${data.broughtByPhone}`}
+                    className="text-blue-600 hover:underline"
+                  >
+                    {data.broughtByPhone}
+                  </a>
+                  )
+                </>
+              ) : null}
             </p>
           )}
         </div>
@@ -149,7 +176,7 @@ export function DeliveryReadyDetail({
           >
             Ver OT completa
           </Link>
-          {isPendingContact && (
+          {isPendingContact && hasOwner && (
             <Button type="button" variant="secondary" onClick={onMarkContacted}>
               Marcar propietario contactado
             </Button>

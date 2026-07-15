@@ -225,7 +225,10 @@ components:
           type: string
           nullable: true
         currentOwner:
-          $ref: '#/components/schemas/CurrentOwner'
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/CurrentOwner'
+          description: Null when the vehicle has no active ownership (US-D9).
         createdAt:
           type: string
           format: date-time
@@ -266,7 +269,7 @@ components:
 
     CreateVehicleRequest:
       type: object
-      required: [licensePlate, brand, model, year, clientId]
+      required: [licensePlate, brand, model, year]
       properties:
         licensePlate:
           type: string
@@ -289,6 +292,7 @@ components:
         clientId:
           type: string
           format: uuid
+          description: Optional. When omitted, the vehicle is created without ownership (US-D9).
 
     VehicleHistoryResponse:
       type: object

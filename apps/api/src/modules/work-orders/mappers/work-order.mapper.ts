@@ -7,16 +7,18 @@ import {
   WorkOrderTask,
   WorkOrderTaskStatus,
 } from '@prisma/client';
+import { WorkOrderIntakeMode } from '../constants/intake-mode';
 import {
   WorkOrderDetailResponseDto,
   WorkOrderTaskResponseDto,
 } from '../dto/work-order-detail-response.dto';
+import { deriveIntakeMode } from '../utils/intake-mode';
 import { calculateTotalAmount } from '../utils/work-order-totals';
 
 export type WorkOrderWithRelations = WorkOrder & {
   tasks: WorkOrderTask[];
   vehicle: Pick<Vehicle, 'licensePlate' | 'brand' | 'model'>;
-  ownerClient: Pick<Client, 'fullName' | 'nationalId'>;
+  ownerClient: Pick<Client, 'fullName' | 'nationalId'> | null;
   assignedMechanic?: Pick<User, 'id' | 'fullName' | 'role'> | null;
 };
 
@@ -64,16 +66,23 @@ export function toWorkOrderDetailResponse(
     visitRepairSummary: workOrder.visitRepairSummary,
     visitPartsUsed: workOrder.visitPartsUsed,
     visitAdditionalNotes: workOrder.visitAdditionalNotes,
+    broughtByName: workOrder.broughtByName,
+    broughtByPhone: workOrder.broughtByPhone,
+    intakeMode: deriveIntakeMode(workOrder.broughtByName) as
+      | WorkOrderIntakeMode.OWNER
+      | WorkOrderIntakeMode.THIRD_PARTY,
     tasks: workOrder.tasks.map(toWorkOrderTaskResponse),
     vehicle: {
       licensePlate: workOrder.vehicle.licensePlate,
       brand: workOrder.vehicle.brand,
       model: workOrder.vehicle.model,
     },
-    owner: {
-      fullName: workOrder.ownerClient.fullName,
-      nationalId: workOrder.ownerClient.nationalId,
-    },
+    owner: workOrder.ownerClient
+      ? {
+          fullName: workOrder.ownerClient.fullName,
+          nationalId: workOrder.ownerClient.nationalId,
+        }
+      : null,
   };
 }
 

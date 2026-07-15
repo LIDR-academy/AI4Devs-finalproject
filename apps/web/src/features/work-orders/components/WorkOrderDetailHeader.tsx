@@ -13,6 +13,7 @@ import { WorkOrderStatusBadge } from './WorkOrderStatusBadge';
 interface WorkOrderDetailHeaderProps {
   workOrder: WorkOrderDetail;
   onMileageUpdated?: () => void;
+  onLinkOwner?: () => void;
 }
 
 function formatDate(isoDate: string): string {
@@ -53,12 +54,14 @@ function formatAssignedMechanic(workOrder: WorkOrderDetail): string {
 export function WorkOrderDetailHeader({
   workOrder,
   onMileageUpdated,
+  onLinkOwner,
 }: WorkOrderDetailHeaderProps) {
   const { user } = useAuth();
   const [mileageDialogOpen, setMileageDialogOpen] = useState(false);
 
   const assignedMechanicName = formatAssignedMechanic(workOrder);
   const showMileageEdit = canEditMileage(workOrder.status, user?.role);
+  const canLinkOwner = workOrder.ownerClientId == null;
 
   return (
     <>
@@ -72,8 +75,38 @@ export function WorkOrderDetailHeader({
               {workOrder.vehicle.brand} {workOrder.vehicle.model}
             </p>
             <p className="text-sm text-slate-600">
-              Propietario: {workOrder.owner.fullName} ({workOrder.owner.nationalId})
+              {workOrder.owner
+                ? `Propietario: ${workOrder.owner.fullName} (${workOrder.owner.nationalId})`
+                : 'Sin propietario'}
             </p>
+            {workOrder.broughtByName && (
+              <p className="text-sm text-slate-600">
+                Traído por: {workOrder.broughtByName}
+                {workOrder.broughtByPhone ? (
+                  <>
+                    {' '}
+                    (
+                    <a
+                      href={`tel:${workOrder.broughtByPhone}`}
+                      className="text-blue-600 hover:text-blue-700"
+                    >
+                      {workOrder.broughtByPhone}
+                    </a>
+                    )
+                  </>
+                ) : null}
+              </p>
+            )}
+            {canLinkOwner && onLinkOwner && (
+              <Button
+                type="button"
+                variant="secondary"
+                className="mt-1"
+                onClick={onLinkOwner}
+              >
+                Asociar propietario
+              </Button>
+            )}
             <p className="text-sm text-slate-600">
               Mecánico asignado: {assignedMechanicName}
             </p>

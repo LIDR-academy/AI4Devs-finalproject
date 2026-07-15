@@ -162,8 +162,10 @@ export function VehicleEditForm({ vehicleId, onCancel }: VehicleEditFormProps) {
 
       <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-700">
         <p className="font-medium text-slate-900">Propietario actual</p>
-        <p className="mt-1">{vehicle.currentOwner.fullName}</p>
-        <p>Identificación: {vehicle.currentOwner.nationalId}</p>
+        <p className="mt-1">{vehicle.currentOwner?.fullName ?? 'Sin propietario'}</p>
+        {vehicle.currentOwner && (
+          <p>Identificación: {vehicle.currentOwner.nationalId}</p>
+        )}
         <p className="mt-2 text-xs text-slate-500">
           El cambio de propietario estará disponible en una versión futura.
         </p>

@@ -18,7 +18,7 @@ export function VehicleResultCard({ vehicle }: VehicleResultCardProps) {
         </p>
         <p className="text-sm text-slate-600">
           <span className="font-medium">Propietario:</span>{' '}
-          {vehicle.currentOwner.fullName}
+          {vehicle.currentOwner?.fullName ?? 'Sin propietario'}
         </p>
       </div>
       <div className="mt-4 flex flex-wrap gap-3">

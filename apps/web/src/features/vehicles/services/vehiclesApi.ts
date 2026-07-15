@@ -43,9 +43,18 @@ export const vehiclesApi = {
   },
 
   create(data: CreateVehicleRequest): Promise<Vehicle> {
+    const body: CreateVehicleRequest = {
+      licensePlate: data.licensePlate,
+      brand: data.brand,
+      model: data.model,
+      year: data.year,
+      ...(data.color ? { color: data.color } : {}),
+      ...(data.clientId ? { clientId: data.clientId } : {}),
+    };
+
     return apiClient<Vehicle>('/vehicles', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify(body),
     });
   },
 

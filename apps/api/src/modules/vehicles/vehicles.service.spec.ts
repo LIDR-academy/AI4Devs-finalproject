@@ -109,7 +109,7 @@ describe('VehiclesService', () => {
 
       expect(result.items).toHaveLength(1);
       expect(result.items[0].licensePlate).toBe('ABC123');
-      expect(result.items[0].currentOwner.fullName).toBe('Juan Pérez');
+      expect(result.items[0].currentOwner?.fullName).toBe('Juan Pérez');
     });
 
     it('returns single result for exact licensePlate search', async () => {
@@ -184,7 +184,42 @@ describe('VehiclesService', () => {
 
       expect(prisma.$transaction).toHaveBeenCalled();
       expect(result.licensePlate).toBe('NEW999');
-      expect(result.currentOwner.fullName).toBe('Juan Pérez');
+      expect(result.currentOwner?.fullName).toBe('Juan Pérez');
+    });
+
+    it('creates vehicle without ownership when clientId is omitted', async () => {
+      const createdVehicle = {
+        ...vehicle,
+        id: 'vehicle-orphan',
+        licensePlate: 'ORPHAN1',
+      };
+
+      prisma.vehicle.findUnique
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({
+          ...createdVehicle,
+          ownerships: [],
+        });
+
+      const ownershipCreate = jest.fn();
+      prisma.$transaction.mockImplementation(async (callback) =>
+        callback({
+          client: { findUnique: jest.fn() },
+          vehicle: {
+            create: jest.fn().mockResolvedValue(createdVehicle),
+          },
+          vehicleOwnership: {
+            create: ownershipCreate,
+          },
+        }),
+      );
+
+      const { clientId: _omit, ...withoutClient } = dto;
+      const result = await vehiclesService.create(withoutClient);
+
+      expect(ownershipCreate).not.toHaveBeenCalled();
+      expect(result.currentOwner).toBeNull();
+      expect(result.licensePlate).toBe('ORPHAN1');
     });
 
     it('throws NotFoundException when client does not exist', async () => {
@@ -239,7 +274,7 @@ describe('VehiclesService', () => {
       const result = await vehiclesService.findById('vehicle-1');
 
       expect(result.id).toBe('vehicle-1');
-      expect(result.currentOwner.nationalId).toBe('1-2345-6789');
+      expect(result.currentOwner?.nationalId).toBe('1-2345-6789');
     });
 
     it('throws NotFoundException for unknown id', async () => {

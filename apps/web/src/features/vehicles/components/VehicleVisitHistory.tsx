@@ -50,9 +50,16 @@ export function VehicleVisitHistory({
               </div>
               <p className="mt-2">{visit.entryReason}</p>
               <p className="mt-1 text-slate-600">
-                Propietario en visita: {visit.ownerAtVisit.fullName} (
-                {visit.ownerAtVisit.nationalId})
+                Propietario en visita:{' '}
+                {visit.ownerAtVisit
+                  ? `${visit.ownerAtVisit.fullName} (${visit.ownerAtVisit.nationalId})`
+                  : 'Sin propietario'}
               </p>
+              {visit.broughtByName && (
+                <p className="mt-1 text-slate-600">
+                  Traído por: {visit.broughtByName}
+                </p>
+              )}
               {visit.totalAmount !== null && (
                 <p className="mt-1 font-medium text-slate-900">
                   Total: {formatCrc(visit.totalAmount)}

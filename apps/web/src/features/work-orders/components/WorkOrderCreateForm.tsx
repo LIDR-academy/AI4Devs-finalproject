@@ -65,11 +65,16 @@ export function WorkOrderCreateForm({
       entryReason: '',
       mileage: null,
       assignedMechanicId: '',
+      intakeMode: vehicle.currentOwner ? 'OWNER' : 'THIRD_PARTY',
+      broughtByName: '',
+      broughtByPhone: '',
+      vehicleHasOwner: Boolean(vehicle.currentOwner),
       initialTasks: [{ description: '' }],
     },
   });
 
   const assignedMechanicId = watch('assignedMechanicId') ?? '';
+  const intakeMode = watch('intakeMode');
 
   const baseline = useMemo(
     () =>
@@ -82,7 +87,15 @@ export function WorkOrderCreateForm({
 
   useEffect(() => {
     setValue('vehicleId', vehicle.id, { shouldValidate: true });
-  }, [vehicle.id, setValue]);
+    setValue('vehicleHasOwner', Boolean(vehicle.currentOwner), {
+      shouldValidate: true,
+    });
+    setValue(
+      'intakeMode',
+      vehicle.currentOwner ? 'OWNER' : 'THIRD_PARTY',
+      { shouldValidate: true },
+    );
+  }, [vehicle.id, vehicle.currentOwner, setValue]);
 
   const createWorkOrder = async (values: CreateWorkOrderFormValues) => {
     resetMutation();
@@ -94,9 +107,16 @@ export function WorkOrderCreateForm({
         entryReason: values.entryReason.trim(),
         mileage: values.mileage,
         assignedMechanicId: values.assignedMechanicId || undefined,
+        intakeMode: values.intakeMode,
         initialTasks: values.initialTasks.map((task) => ({
           description: task.description.trim(),
         })),
+        ...(values.intakeMode === 'THIRD_PARTY'
+          ? {
+              broughtByName: values.broughtByName?.trim() ?? '',
+              broughtByPhone: values.broughtByPhone?.trim() || null,
+            }
+          : {}),
       });
       setConfirmLowerOpen(false);
       setPendingValues(null);
@@ -139,8 +159,9 @@ export function WorkOrderCreateForm({
               {vehicle.brand} {vehicle.model} · {vehicle.year}
             </p>
             <p className="mt-2 text-sm text-slate-600">
-              Propietario: {vehicle.currentOwner.fullName} (
-              {vehicle.currentOwner.nationalId})
+              {vehicle.currentOwner
+                ? `Propietario: ${vehicle.currentOwner.fullName} (${vehicle.currentOwner.nationalId})`
+                : 'Sin propietario'}
             </p>
           </div>
           <Button type="button" variant="secondary" onClick={onChangeVehicle}>
@@ -172,6 +193,95 @@ export function WorkOrderCreateForm({
           >
             {mapWorkOrdersError(error)}
           </p>
+        )}
+
+        <fieldset className="space-y-2">
+          <legend className="text-sm font-medium text-slate-700">
+            Quién trae el vehículo
+          </legend>
+          <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
+            <label className="flex items-center gap-2 text-sm text-slate-800">
+              <input
+                type="radio"
+                value="OWNER"
+                disabled={isDisabled || !vehicle.currentOwner}
+                {...register('intakeMode')}
+              />
+              Dueño / cliente
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-800">
+              <input
+                type="radio"
+                value="THIRD_PARTY"
+                disabled={isDisabled}
+                {...register('intakeMode')}
+              />
+              Traído por tercero
+            </label>
+          </div>
+          {errors.intakeMode && (
+            <p className="text-sm text-red-600">{errors.intakeMode.message}</p>
+          )}
+          {!vehicle.currentOwner && (
+            <p className="text-sm text-amber-800">
+              Este vehículo no tiene dueño en ficha; usa “Traído por tercero”.
+            </p>
+          )}
+          {vehicle.currentOwner && intakeMode === 'THIRD_PARTY' && (
+            <p className="text-sm text-amber-800">
+              Esta visita no asociará al dueño de la ficha.
+            </p>
+          )}
+        </fieldset>
+
+        {intakeMode === 'THIRD_PARTY' && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1 sm:col-span-2">
+              <label
+                htmlFor="broughtByName"
+                className="block text-sm font-medium text-slate-700"
+              >
+                Nombre de quien lo trae
+              </label>
+              <input
+                id="broughtByName"
+                disabled={isDisabled}
+                className={cn(
+                  'w-full rounded-lg border px-3 py-2 text-slate-900 outline-none ring-blue-500 focus:ring-2',
+                  errors.broughtByName ? 'border-red-500' : 'border-slate-300',
+                )}
+                {...register('broughtByName')}
+              />
+              {errors.broughtByName && (
+                <p className="text-sm text-red-600">
+                  {errors.broughtByName.message}
+                </p>
+              )}
+            </div>
+            <div className="space-y-1 sm:col-span-2">
+              <label
+                htmlFor="broughtByPhone"
+                className="block text-sm font-medium text-slate-700"
+              >
+                Teléfono (opcional)
+              </label>
+              <input
+                id="broughtByPhone"
+                inputMode="numeric"
+                disabled={isDisabled}
+                className={cn(
+                  'w-full rounded-lg border px-3 py-2 text-slate-900 outline-none ring-blue-500 focus:ring-2',
+                  errors.broughtByPhone ? 'border-red-500' : 'border-slate-300',
+                )}
+                {...register('broughtByPhone')}
+              />
+              {errors.broughtByPhone && (
+                <p className="text-sm text-red-600">
+                  {errors.broughtByPhone.message}
+                </p>
+              )}
+            </div>
+          </div>
         )}
 
         <div className="space-y-1">

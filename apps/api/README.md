@@ -148,8 +148,9 @@ All `/api/work-orders` routes require a valid Bearer token with role `ADMIN` or 
 |--------|------|-------------|
 | `GET` | `/api/work-orders/mechanics` | List assignable users: active `MECHANIC` + active `ADMIN` with `canActAsMechanic` (includes `role`) |
 | `GET` | `/api/work-orders/active?vehicleId=` | Active work order for vehicle (or `null`) |
-| `POST` | `/api/work-orders` | Create work order + initial tasks (transactional); `mileage` optional (`null` allowed) |
-| `GET` | `/api/work-orders/:id` | Work order detail with tasks, `totalAmount`, and `assignedMechanic` summary |
+| `POST` | `/api/work-orders` | Create work order + initial tasks (transactional); `mileage` optional; `intakeMode` `OWNER` (default) or `THIRD_PARTY` with `broughtByName` (+ optional `broughtByPhone`) |
+| `GET` | `/api/work-orders/:id` | Work order detail with tasks, `totalAmount`, `assignedMechanic`, nullable `owner`, `broughtBy*`, derived `intakeMode` |
+| `PATCH` | `/api/work-orders/:id/link-owner` | Link a client to an ownerless work order (US-D9); never silently transfers vehicle ownership |
 | `PATCH` | `/api/work-orders/:id/mileage` | Update mileage (`number` ≥ 0 or `null`); MECHANIC forbidden on `ENTREGADA` |
 | `POST` | `/api/work-orders/:workOrderId/tasks` | Add task (`EN_PROCESO` only) |
 | `PATCH` | `/api/work-orders/:workOrderId/tasks/:taskId` | Update task status / complete with cost |
@@ -159,6 +160,7 @@ All `/api/work-orders` routes require a valid Bearer token with role `ADMIN` or 
 Business rules:
 
 - `mileage` on work orders is nullable (US-D7); omit or send `null` on create when odometer is unknown.
+- **US-D9 — ownerless / third-party intake:** `POST /api/vehicles` may omit `clientId` (no ownership). `POST /api/work-orders` with `intakeMode: THIRD_PARTY` requires `broughtByName`, leaves `ownerClientId` null, and does not use vehicle ownership. `PATCH /api/work-orders/:id/link-owner` associates a client later. Delivery `mark-contacted` returns `409` when there is no owner; deliver still works without an owner.
 - `ownerClientId` is snapshotted from the vehicle's current owner at check-in.
 - `createdById` comes from the JWT — never from the request body.
 - Duplicate active work order returns `409` with `activeWorkOrderId` in the response.

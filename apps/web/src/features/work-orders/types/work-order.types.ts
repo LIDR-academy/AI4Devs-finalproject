@@ -50,12 +50,27 @@ export interface WorkOrderTaskDetail extends TaskTechnicalNotes {
 
 export type WorkOrderTask = WorkOrderTaskDetail;
 
+export type WorkOrderIntakeMode = 'OWNER' | 'THIRD_PARTY';
+
 export interface CreateWorkOrderRequest {
   vehicleId: string;
   entryReason: string;
   mileage?: number | null;
   assignedMechanicId?: string;
   initialTasks: { description: string }[];
+  intakeMode?: WorkOrderIntakeMode;
+  broughtByName?: string;
+  broughtByPhone?: string | null;
+}
+
+export interface LinkWorkOrderOwnerResponse {
+  id: string;
+  ownerClientId: string;
+  owner: { fullName: string; nationalId: string };
+  broughtByName: string | null;
+  broughtByPhone: string | null;
+  vehicleOwnerUnchanged: boolean;
+  updatedAt: string;
 }
 
 export interface UpdateMileageResponse {
@@ -67,7 +82,7 @@ export interface UpdateMileageResponse {
 export interface WorkOrderDetail extends VisitNotes {
   id: string;
   vehicleId: string;
-  ownerClientId: string;
+  ownerClientId: string | null;
   status: WorkOrderStatus;
   entryReason: string;
   mileage: number | null;
@@ -77,9 +92,12 @@ export interface WorkOrderDetail extends VisitNotes {
   updatedAt: string;
   createdById: string;
   totalAmount: number;
+  broughtByName: string | null;
+  broughtByPhone: string | null;
+  intakeMode: WorkOrderIntakeMode;
   tasks: WorkOrderTaskDetail[];
   vehicle: { licensePlate: string; brand: string; model: string };
-  owner: { fullName: string; nationalId: string };
+  owner: { fullName: string; nationalId: string } | null;
 }
 
 export interface ActiveWorkOrderResponse {

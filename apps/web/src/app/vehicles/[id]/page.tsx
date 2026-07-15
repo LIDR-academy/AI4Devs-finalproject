@@ -75,7 +75,7 @@ export default function VehicleDetailPage() {
       <VisitTimeline
         visits={history?.visits ?? []}
         vehicleId={vehicleId}
-        currentOwnerNationalId={vehicle.currentOwner.nationalId}
+        currentOwnerNationalId={vehicle.currentOwner?.nationalId ?? null}
         isLoading={isHistoryLoading}
       />
       <DeleteVehicleDialog

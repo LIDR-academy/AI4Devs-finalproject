@@ -1,7 +1,6 @@
 import {
   ConflictException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma, Vehicle } from '@prisma/client';
@@ -105,12 +104,14 @@ export class VehiclesService {
 
     try {
       const vehicle = await this.prisma.$transaction(async (tx) => {
-        const client = await tx.client.findUnique({
-          where: { id: dto.clientId },
-        });
+        if (dto.clientId) {
+          const client = await tx.client.findUnique({
+            where: { id: dto.clientId },
+          });
 
-        if (!client) {
-          throw new NotFoundException('Client not found');
+          if (!client) {
+            throw new NotFoundException('Client not found');
+          }
         }
 
         const createdVehicle = await tx.vehicle.create({
@@ -123,14 +124,16 @@ export class VehiclesService {
           },
         });
 
-        await tx.vehicleOwnership.create({
-          data: {
-            vehicleId: createdVehicle.id,
-            clientId: dto.clientId,
-            validFrom: new Date(),
-            validTo: null,
-          },
-        });
+        if (dto.clientId) {
+          await tx.vehicleOwnership.create({
+            data: {
+              vehicleId: createdVehicle.id,
+              clientId: dto.clientId,
+              validFrom: new Date(),
+              validTo: null,
+            },
+          });
+        }
 
         return createdVehicle;
       });
@@ -242,14 +245,8 @@ export class VehiclesService {
   private toVehicleResponseFromEntity(
     vehicle: VehicleWithActiveOwnership,
   ): VehicleResponseDto {
-    try {
-      const currentOwner = resolveCurrentOwner(vehicle);
-      return toVehicleResponse(vehicle, currentOwner);
-    } catch {
-      throw new InternalServerErrorException(
-        'Vehicle has no active ownership record',
-      );
-    }
+    const currentOwner = resolveCurrentOwner(vehicle);
+    return toVehicleResponse(vehicle, currentOwner);
   }
 
   private throwLicensePlateConflict(existing: Vehicle): never {

@@ -5,7 +5,7 @@ export class VehicleHistoryResponseDto {
   vehicleId!: string;
   licensePlate!: string;
   vehicleLabel!: string;
-  currentOwner!: CurrentOwnerDto;
+  currentOwner!: CurrentOwnerDto | null;
   visits!: VehicleHistoryVisitDto[];
   total!: number;
 }

@@ -34,7 +34,7 @@ export class AssignedMechanicSummaryDto {
 export class WorkOrderDetailResponseDto {
   id!: string;
   vehicleId!: string;
-  ownerClientId!: string;
+  ownerClientId!: string | null;
   status!: WorkOrderStatus;
   entryReason!: string;
   mileage!: number | null;
@@ -48,7 +48,10 @@ export class WorkOrderDetailResponseDto {
   visitRepairSummary!: string | null;
   visitPartsUsed!: string | null;
   visitAdditionalNotes!: string | null;
+  broughtByName!: string | null;
+  broughtByPhone!: string | null;
+  intakeMode!: 'OWNER' | 'THIRD_PARTY';
   tasks!: WorkOrderTaskResponseDto[];
   vehicle!: WorkOrderVehicleSummaryDto;
-  owner!: WorkOrderOwnerSummaryDto;
+  owner!: WorkOrderOwnerSummaryDto | null;
 }

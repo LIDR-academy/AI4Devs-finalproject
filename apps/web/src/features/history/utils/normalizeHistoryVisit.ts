@@ -8,7 +8,11 @@ export const EMPTY_VISIT_NOTES: VisitNotes = {
 };
 
 export function normalizeHistoryVisit(
-  visit: Partial<VehicleVisit> & Pick<VehicleVisit, 'workOrderId' | 'checkedInAt' | 'status' | 'entryReason' | 'ownerAtVisit'>,
+  visit: Partial<VehicleVisit> &
+    Pick<
+      VehicleVisit,
+      'workOrderId' | 'checkedInAt' | 'status' | 'entryReason'
+    >,
 ): VehicleVisit {
   return {
     workOrderId: visit.workOrderId,
@@ -19,11 +23,15 @@ export function normalizeHistoryVisit(
     entryReason: visit.entryReason,
     mileage: visit.mileage ?? null,
     totalAmount: visit.totalAmount ?? 0,
-    ownerAtVisit: {
-      id: visit.ownerAtVisit.id ?? '',
-      fullName: visit.ownerAtVisit.fullName,
-      nationalId: visit.ownerAtVisit.nationalId,
-    },
+    ownerAtVisit: visit.ownerAtVisit
+      ? {
+          id: visit.ownerAtVisit.id ?? '',
+          fullName: visit.ownerAtVisit.fullName,
+          nationalId: visit.ownerAtVisit.nationalId,
+        }
+      : null,
+    broughtByName: visit.broughtByName ?? null,
+    broughtByPhone: visit.broughtByPhone ?? null,
     visitNotes: visit.visitNotes ?? EMPTY_VISIT_NOTES,
     tasks: (visit.tasks ?? []).map((task) => ({
       id: task.id ?? '',

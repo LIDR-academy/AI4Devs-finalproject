@@ -19,7 +19,7 @@ export interface Vehicle {
   model: string;
   year: number;
   color: string | null;
-  currentOwner: CurrentOwner;
+  currentOwner: CurrentOwner | null;
 }
 
 export interface VehicleSearchResponse {
@@ -33,7 +33,7 @@ export interface CreateVehicleRequest {
   model: string;
   year: number;
   color?: string;
-  clientId: string;
+  clientId?: string;
 }
 
 export interface UpdateVehicleRequest {

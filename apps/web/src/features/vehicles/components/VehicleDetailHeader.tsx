@@ -33,8 +33,14 @@ export function VehicleDetailHeader({
           </p>
           <div className="rounded-lg border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-700">
             <p className="font-medium text-slate-900">Propietario actual</p>
-            <p className="mt-1">{vehicle.currentOwner.fullName}</p>
-            <p>Identificación: {vehicle.currentOwner.nationalId}</p>
+            {vehicle.currentOwner ? (
+              <>
+                <p className="mt-1">{vehicle.currentOwner.fullName}</p>
+                <p>Identificación: {vehicle.currentOwner.nationalId}</p>
+              </>
+            ) : (
+              <p className="mt-1">Sin propietario</p>
+            )}
           </div>
         </div>
         <div className="flex flex-wrap gap-3">

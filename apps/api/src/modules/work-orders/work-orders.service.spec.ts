@@ -10,6 +10,7 @@ import {
 } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateWorkOrderDto } from './dto/create-work-order.dto';
+import { WorkOrderIntakeMode } from './constants/intake-mode';
 import { WorkOrdersService } from './work-orders.service';
 
 describe('WorkOrdersService', () => {
@@ -21,6 +22,13 @@ describe('WorkOrdersService', () => {
     };
     vehicle: {
       findUnique: jest.Mock;
+    };
+    client: {
+      findUnique: jest.Mock;
+    };
+    vehicleOwnership: {
+      findFirst: jest.Mock;
+      create: jest.Mock;
     };
     workOrder: {
       findFirst: jest.Mock;
@@ -57,6 +65,12 @@ describe('WorkOrdersService', () => {
     createdById,
     checkedInAt: new Date('2026-06-19T10:00:00.000Z'),
     updatedAt: new Date('2026-06-19T10:00:00.000Z'),
+    visitDiagnosis: null,
+    visitRepairSummary: null,
+    visitPartsUsed: null,
+    visitAdditionalNotes: null,
+    broughtByName: null,
+    broughtByPhone: null,
     tasks: [
       {
         id: 'task-1',
@@ -64,6 +78,10 @@ describe('WorkOrdersService', () => {
         status: WorkOrderTaskStatus.PENDING,
         cost: null,
         costNotes: null,
+        diagnosis: null,
+        repairPerformed: null,
+        partsUsed: null,
+        additionalNotes: null,
         sortOrder: 0,
         completedAt: null,
       },
@@ -87,6 +105,13 @@ describe('WorkOrdersService', () => {
       },
       vehicle: {
         findUnique: jest.fn(),
+      },
+      client: {
+        findUnique: jest.fn(),
+      },
+      vehicleOwnership: {
+        findFirst: jest.fn(),
+        create: jest.fn(),
       },
       workOrder: {
         findFirst: jest.fn(),
@@ -192,7 +217,7 @@ describe('WorkOrdersService', () => {
       expect(result.tasks).toHaveLength(1);
       expect(result.totalAmount).toBe(0);
       expect(result.vehicle.licensePlate).toBe('ABC123');
-      expect(result.owner.fullName).toBe('Juan Pérez');
+      expect(result.owner?.fullName).toBe('Juan Pérez');
     });
 
     it('throws NotFoundException for unknown id', async () => {
@@ -446,6 +471,152 @@ describe('WorkOrdersService', () => {
       ).rejects.toBeInstanceOf(BadRequestException);
     });
 
+    it('creates THIRD_PARTY work order without owner when vehicle has no ownership', async () => {
+      let capturedData: Record<string, unknown> | undefined;
+
+      prisma.$transaction.mockImplementation(async (callback) =>
+        callback({
+          vehicle: {
+            findUnique: jest.fn().mockResolvedValue({
+              id: vehicleId,
+              ownerships: [],
+            }),
+          },
+          workOrder: {
+            findFirst: jest.fn().mockResolvedValue(null),
+            create: jest.fn().mockImplementation(({ data }) => {
+              capturedData = data;
+              return { id: workOrderId };
+            }),
+          },
+          workOrderTask: {
+            createMany: jest.fn().mockResolvedValue({ count: 1 }),
+          },
+          user: { findFirst: jest.fn() },
+        }),
+      );
+
+      prisma.workOrder.findUnique.mockResolvedValue({
+        ...workOrderDetail,
+        ownerClientId: null,
+        ownerClient: null,
+        broughtByName: 'Carlos Jiménez',
+        broughtByPhone: '88881234',
+        mileage: null,
+      });
+
+      const result = await workOrdersService.create(
+        {
+          ...baseDto,
+          mileage: null,
+          intakeMode: WorkOrderIntakeMode.THIRD_PARTY,
+          broughtByName: 'Carlos Jiménez',
+          broughtByPhone: '88881234',
+        },
+        createdById,
+      );
+
+      expect(capturedData?.ownerClientId).toBeNull();
+      expect(capturedData?.broughtByName).toBe('Carlos Jiménez');
+      expect(result.ownerClientId).toBeNull();
+      expect(result.intakeMode).toBe('THIRD_PARTY');
+      expect(result.broughtByName).toBe('Carlos Jiménez');
+    });
+
+    it('rejects THIRD_PARTY without broughtByName', async () => {
+      prisma.$transaction.mockImplementation(async (callback) =>
+        callback({
+          vehicle: {
+            findUnique: jest.fn().mockResolvedValue(vehicleWithOwnership),
+          },
+          workOrder: { findFirst: jest.fn(), create: jest.fn() },
+          workOrderTask: { createMany: jest.fn() },
+          user: { findFirst: jest.fn() },
+        }),
+      );
+
+      await expect(
+        workOrdersService.create(
+          {
+            ...baseDto,
+            intakeMode: WorkOrderIntakeMode.THIRD_PARTY,
+            broughtByName: '  ',
+          },
+          createdById,
+        ),
+      ).rejects.toMatchObject({
+        message: 'broughtByName is required for THIRD_PARTY intake',
+      });
+    });
+
+    it('rejects OWNER intake with broughtBy fields', async () => {
+      prisma.$transaction.mockImplementation(async (callback) =>
+        callback({
+          vehicle: {
+            findUnique: jest.fn().mockResolvedValue(vehicleWithOwnership),
+          },
+          workOrder: { findFirst: jest.fn(), create: jest.fn() },
+          workOrderTask: { createMany: jest.fn() },
+          user: { findFirst: jest.fn() },
+        }),
+      );
+
+      await expect(
+        workOrdersService.create(
+          {
+            ...baseDto,
+            broughtByName: 'Someone',
+          },
+          createdById,
+        ),
+      ).rejects.toMatchObject({
+        message: 'broughtBy fields are only valid for THIRD_PARTY intake',
+      });
+    });
+
+    it('creates THIRD_PARTY even when vehicle has an active owner', async () => {
+      let capturedData: Record<string, unknown> | undefined;
+
+      prisma.$transaction.mockImplementation(async (callback) =>
+        callback({
+          vehicle: {
+            findUnique: jest.fn().mockResolvedValue(vehicleWithOwnership),
+          },
+          workOrder: {
+            findFirst: jest.fn().mockResolvedValue(null),
+            create: jest.fn().mockImplementation(({ data }) => {
+              capturedData = data;
+              return { id: workOrderId };
+            }),
+          },
+          workOrderTask: {
+            createMany: jest.fn().mockResolvedValue({ count: 1 }),
+          },
+          user: { findFirst: jest.fn() },
+        }),
+      );
+
+      prisma.workOrder.findUnique.mockResolvedValue({
+        ...workOrderDetail,
+        ownerClientId: null,
+        ownerClient: null,
+        broughtByName: 'External Tech',
+        broughtByPhone: null,
+      });
+
+      await workOrdersService.create(
+        {
+          ...baseDto,
+          intakeMode: WorkOrderIntakeMode.THIRD_PARTY,
+          broughtByName: 'External Tech',
+        },
+        createdById,
+      );
+
+      expect(capturedData?.ownerClientId).toBeNull();
+      expect(capturedData?.broughtByName).toBe('External Tech');
+    });
+
     it('throws ConflictException with activeWorkOrderId for duplicate active WO', async () => {
       mockSuccessfulTransaction({
         existingActive: { id: 'existing-wo' },
@@ -562,6 +733,117 @@ describe('WorkOrdersService', () => {
           { userId: createdById, role: UserRole.ADMIN },
         ),
       ).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
+  describe('linkOwner', () => {
+    const clientId = 'client-link';
+
+    it('links owner and creates ownership when vehicle has none', async () => {
+      const ownershipCreate = jest.fn().mockResolvedValue({});
+
+      prisma.$transaction.mockImplementation(async (callback) =>
+        callback({
+          workOrder: {
+            findUnique: jest.fn().mockResolvedValue({
+              id: workOrderId,
+              vehicleId,
+              ownerClientId: null,
+              broughtByName: 'Carlos',
+              broughtByPhone: '88881234',
+            }),
+            update: jest.fn().mockResolvedValue({
+              id: workOrderId,
+              ownerClientId: clientId,
+              broughtByName: 'Carlos',
+              broughtByPhone: '88881234',
+              updatedAt: new Date('2026-07-15T12:00:00.000Z'),
+            }),
+          },
+          client: {
+            findUnique: jest.fn().mockResolvedValue({
+              id: clientId,
+              fullName: 'New Owner',
+              nationalId: '9-9999-9999',
+            }),
+          },
+          vehicleOwnership: {
+            findFirst: jest.fn().mockResolvedValue(null),
+            create: ownershipCreate,
+          },
+        }),
+      );
+
+      const result = await workOrdersService.linkOwner(workOrderId, {
+        clientId,
+      });
+
+      expect(ownershipCreate).toHaveBeenCalled();
+      expect(result.ownerClientId).toBe(clientId);
+      expect(result.broughtByName).toBe('Carlos');
+      expect(result.vehicleOwnerUnchanged).toBe(false);
+    });
+
+    it('sets vehicleOwnerUnchanged when ownership belongs to another client', async () => {
+      prisma.$transaction.mockImplementation(async (callback) =>
+        callback({
+          workOrder: {
+            findUnique: jest.fn().mockResolvedValue({
+              id: workOrderId,
+              vehicleId,
+              ownerClientId: null,
+              broughtByName: 'Carlos',
+              broughtByPhone: null,
+            }),
+            update: jest.fn().mockResolvedValue({
+              id: workOrderId,
+              ownerClientId: clientId,
+              broughtByName: 'Carlos',
+              broughtByPhone: null,
+              updatedAt: new Date(),
+            }),
+          },
+          client: {
+            findUnique: jest.fn().mockResolvedValue({
+              id: clientId,
+              fullName: 'Visit Owner',
+              nationalId: '1-1111-1111',
+            }),
+          },
+          vehicleOwnership: {
+            findFirst: jest.fn().mockResolvedValue({ clientId: 'other-client' }),
+            create: jest.fn(),
+          },
+        }),
+      );
+
+      const result = await workOrdersService.linkOwner(workOrderId, {
+        clientId,
+      });
+
+      expect(result.vehicleOwnerUnchanged).toBe(true);
+    });
+
+    it('throws ConflictException when owner already linked', async () => {
+      prisma.$transaction.mockImplementation(async (callback) =>
+        callback({
+          workOrder: {
+            findUnique: jest.fn().mockResolvedValue({
+              id: workOrderId,
+              vehicleId,
+              ownerClientId: ownerClientId,
+              broughtByName: null,
+              broughtByPhone: null,
+            }),
+          },
+          client: { findUnique: jest.fn() },
+          vehicleOwnership: { findFirst: jest.fn(), create: jest.fn() },
+        }),
+      );
+
+      await expect(
+        workOrdersService.linkOwner(workOrderId, { clientId }),
+      ).rejects.toBeInstanceOf(ConflictException);
     });
   });
 });

@@ -115,7 +115,14 @@ function ItemRows({
           {item.licensePlate}
         </td>
         <td className="px-4 py-3 text-slate-700">{item.vehicleLabel}</td>
-        <td className="px-4 py-3 text-slate-700">{item.ownerName}</td>
+        <td className="px-4 py-3 text-slate-700">
+          {item.ownerName ?? 'Sin propietario'}
+          {!item.ownerName && item.broughtByName ? (
+            <span className="mt-1 block text-xs text-slate-500">
+              Traído por: {item.broughtByName}
+            </span>
+          ) : null}
+        </td>
         <td className="px-4 py-3">
           <OwnerPhoneCell
             phone={item.ownerPhone}

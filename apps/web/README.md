@@ -103,9 +103,10 @@ Mechanics do not see the Usuarios link and are redirected to `/403` if they open
 - **Nav:** **Vehículos** link in admin and mechanic nav (`RoleNav`)
 - **Query params:** `?clientId=` on `/vehicles/new` pre-fills read-only owner from US-003; success/detail CTAs link to `/work-orders/new?vehicleId=` (US-005)
 - **Features:** debounced plate search (300 ms), embedded `ClientPicker` (reuses `ClientSearchBar` from US-003), duplicate plate detection on blur/submit, plate normalization to uppercase, **edit vehicle** (incl. plate correction), **delete vehicle** if no work orders
+- **Ownerless registration (US-D9):** toggle **Registrar sin propietario** omits `clientId`; lists/detail show *Sin propietario*; can still open **Nueva OT**
 - **React Query keys:** `['vehicles', 'search', q]`, `['vehicles', id]`, `['vehicles', id, 'history']` (invalidated after create)
 - **409 handling:** `apiClient` attaches `existingVehicle` on conflict; UI shows `ExistingVehicleAlert`
-- **Requires:** US-004 backend (`GET/POST/PATCH/DELETE /api/vehicles`, `GET /api/vehicles/search`, `GET /api/vehicles/:id/history`)
+- **Requires:** US-004 backend (`GET/POST/PATCH/DELETE /api/vehicles`, `GET /api/vehicles/search`, `GET /api/vehicles/:id/history`); US-D9 optional `clientId`
 
 ## Work order management (US-005)
 
@@ -114,12 +115,13 @@ Mechanics do not see the Usuarios link and are redirected to `/403` if they open
 - **Nav:** **Nueva OT** link in admin and mechanic nav
 - **Query params:** `?vehicleId=` on `/work-orders/new` pre-fills vehicle from US-004; vehicle create success links to `/work-orders/new?vehicleId=`
 - **Wizard flow:** Step 1 — search/select vehicle (reuses `VehicleSearchBar`); Step 2 — entry reason, optional mileage (`null` when empty), optional mechanic, dynamic initial tasks (`useFieldArray`)
+- **Intake mode (US-D9):** radios **Dueño / cliente** | **Traído por tercero**; third-party requires bringer name (phone optional); detail shows *Traído por…* and **Asociar propietario** via `LinkOwnerDialog` when `ownerClientId` is null
 - **Assignable mechanics (US-D8):** `MechanicSelect` lists active mechanics and admins with `canActAsMechanic`, suffix `(Admin)` on admin options; detail header uses `assignedMechanic` from the API (not a client-side mechanics-list lookup)
 - **Mileage (US-D7):** optional on create; edit from detail via `UpdateMileageDialog`; display *Sin registrar* when null (`formatMileage`); **lower-than-previous confirm** before create/update/deliver when new km < baseline (last visit / current WO)
 - **Active WO guard:** `useActiveWorkOrder` shows `ActiveWorkOrderBanner` and disables form; vehicle detail shows **Ver orden activa** instead of **Nueva orden de trabajo**
 - **React Query keys:** `['work-orders', 'mechanics']`, `['work-orders', 'active', vehicleId]`, `['work-orders', id]`; on create invalidates `['vehicles', vehicleId, 'history']` and `['work-orders', 'active', vehicleId]`
 - **409 handling:** `activeWorkOrderId` in API error body; UI shows banner with link to existing work order
-- **Requires:** US-005 backend (`GET/POST /api/work-orders`, `GET /api/work-orders/mechanics`, `GET /api/work-orders/active`, `GET /api/work-orders/:id`)
+- **Requires:** US-005 backend (`GET/POST /api/work-orders`, `GET /api/work-orders/mechanics`, `GET /api/work-orders/active`, `GET /api/work-orders/:id`); US-D9 `intakeMode` / `broughtBy*` / `PATCH .../link-owner`
 
 ## Work order task management (US-006)
 
@@ -147,6 +149,7 @@ Mechanics do not see the Usuarios link and are redirected to `/403` if they open
 
 - **Route:** `/admin/delivery` (admin only; nav link **Listos para entrega** in admin layout)
 - **Features:** table of ready OTs (`LISTA_PARA_ENTREGA` + `OWNER_CONTACTED`) with **Teléfono** and **Estado** columns; expandable billing detail; mark delivered; optional mileage at deliver (US-D7)
+- **Ownerless visits (US-D9):** list/detail show *Sin propietario* and *Traído por…*; **Marcar propietario contactado** hidden when there is no owner; deliver still allowed
 - **US-D1 contact:** **Marcar propietario contactado** (confirm dialog) → badge *Propietario contactado*; audit who/when; filters *Todos / Pendiente de contacto / Contactados*; deliver still works from either status
 - **Phone column:** `tel:` link when owner has phone (`ownerPhoneDisplay` e.g. `8888-7777`); *Sin teléfono* when null (snapshot from check-in, not live client record)
 - **Refresh:** **Actualizar** button; optional **Actualizar automáticamente** checkbox enables 60s polling (no WebSockets in MVP)

@@ -2,6 +2,7 @@ import { apiClient } from '@/shared/lib/apiClient';
 import type {
   ActiveWorkOrderResponse,
   CreateWorkOrderRequest,
+  LinkWorkOrderOwnerResponse,
   MechanicSummary,
   TaskTechnicalNotesResponse,
   UpdateMileageResponse,
@@ -30,6 +31,19 @@ export const workOrdersApi = {
       method: 'POST',
       body: JSON.stringify(data),
     });
+  },
+
+  linkOwner(
+    workOrderId: string,
+    clientId: string,
+  ): Promise<LinkWorkOrderOwnerResponse> {
+    return apiClient<LinkWorkOrderOwnerResponse>(
+      `/work-orders/${workOrderId}/link-owner`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ clientId }),
+      },
+    );
   },
 
   getById(id: string): Promise<WorkOrderDetail> {

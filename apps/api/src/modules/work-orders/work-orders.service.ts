@@ -11,12 +11,15 @@ import {
   WorkOrderTaskStatus,
 } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { WorkOrderIntakeMode } from './constants/intake-mode';
 import {
   ACTIVE_WORK_ORDER_STATUSES,
   MILEAGE_EDITABLE_PRE_DELIVERY_STATUSES,
 } from './constants/work-order-status';
 import { ActiveWorkOrderResponseDto } from './dto/active-work-order-response.dto';
 import { CreateWorkOrderDto } from './dto/create-work-order.dto';
+import { LinkWorkOrderOwnerDto } from './dto/link-work-order-owner.dto';
+import { LinkWorkOrderOwnerResponseDto } from './dto/link-work-order-owner-response.dto';
 import { MechanicSummaryDto } from './dto/mechanic-summary.dto';
 import {
   UpdateWorkOrderMileageDto,
@@ -29,6 +32,10 @@ import {
   WorkOrderWithRelations,
 } from './mappers/work-order.mapper';
 import { assignableMechanicWhere } from './utils/assignable-mechanic';
+import {
+  normalizeBroughtByName,
+  normalizeBroughtByPhone,
+} from './utils/intake-mode';
 
 const ACTIVE_OWNERSHIP_INCLUDE = {
   ownerships: {
@@ -109,9 +116,35 @@ export class WorkOrdersService {
         throw new NotFoundException('Vehicle not found');
       }
 
-      const activeOwnership = vehicle.ownerships[0];
-      if (!activeOwnership) {
-        throw new BadRequestException('Vehicle has no active owner');
+      const mode = dto.intakeMode ?? WorkOrderIntakeMode.OWNER;
+      const broughtByName = normalizeBroughtByName(dto.broughtByName);
+      const broughtByPhone = normalizeBroughtByPhone(dto.broughtByPhone);
+
+      let ownerClientId: string | null = null;
+      let persistedBroughtByName: string | null = null;
+      let persistedBroughtByPhone: string | null = null;
+
+      if (mode === WorkOrderIntakeMode.THIRD_PARTY) {
+        if (!broughtByName || broughtByName.length < 2) {
+          throw new BadRequestException(
+            'broughtByName is required for THIRD_PARTY intake',
+          );
+        }
+        ownerClientId = null;
+        persistedBroughtByName = broughtByName;
+        persistedBroughtByPhone = broughtByPhone;
+      } else {
+        if (broughtByName !== null || broughtByPhone !== null) {
+          throw new BadRequestException(
+            'broughtBy fields are only valid for THIRD_PARTY intake',
+          );
+        }
+
+        const activeOwnership = vehicle.ownerships[0];
+        if (!activeOwnership) {
+          throw new BadRequestException('Vehicle has no active owner');
+        }
+        ownerClientId = activeOwnership.clientId;
       }
 
       const existingActive = await tx.workOrder.findFirst({
@@ -141,12 +174,14 @@ export class WorkOrdersService {
       const workOrder = await tx.workOrder.create({
         data: {
           vehicleId: dto.vehicleId,
-          ownerClientId: activeOwnership.clientId,
+          ownerClientId,
           entryReason: dto.entryReason.trim(),
           mileage: dto.mileage ?? null,
           assignedMechanicId: dto.assignedMechanicId ?? null,
           createdById,
           status: WorkOrderStatus.EN_PROCESO,
+          broughtByName: persistedBroughtByName,
+          broughtByPhone: persistedBroughtByPhone,
         },
       });
 
@@ -163,6 +198,89 @@ export class WorkOrdersService {
     });
 
     return this.findById(workOrderId);
+  }
+
+  async linkOwner(
+    workOrderId: string,
+    dto: LinkWorkOrderOwnerDto,
+  ): Promise<LinkWorkOrderOwnerResponseDto> {
+    return this.prisma.$transaction(async (tx) => {
+      const workOrder = await tx.workOrder.findUnique({
+        where: { id: workOrderId },
+        select: {
+          id: true,
+          vehicleId: true,
+          ownerClientId: true,
+          broughtByName: true,
+          broughtByPhone: true,
+        },
+      });
+
+      if (!workOrder) {
+        throw new NotFoundException('Work order not found');
+      }
+
+      if (workOrder.ownerClientId !== null) {
+        throw new ConflictException('Owner already linked');
+      }
+
+      const client = await tx.client.findUnique({
+        where: { id: dto.clientId },
+        select: { id: true, fullName: true, nationalId: true },
+      });
+
+      if (!client) {
+        throw new NotFoundException('Client not found');
+      }
+
+      const activeOwnership = await tx.vehicleOwnership.findFirst({
+        where: {
+          vehicleId: workOrder.vehicleId,
+          validTo: null,
+        },
+        select: { clientId: true },
+      });
+
+      let vehicleOwnerUnchanged = false;
+
+      if (!activeOwnership) {
+        await tx.vehicleOwnership.create({
+          data: {
+            vehicleId: workOrder.vehicleId,
+            clientId: client.id,
+            validFrom: new Date(),
+            validTo: null,
+          },
+        });
+      } else if (activeOwnership.clientId !== client.id) {
+        vehicleOwnerUnchanged = true;
+      }
+
+      const updated = await tx.workOrder.update({
+        where: { id: workOrderId },
+        data: { ownerClientId: client.id },
+        select: {
+          id: true,
+          ownerClientId: true,
+          broughtByName: true,
+          broughtByPhone: true,
+          updatedAt: true,
+        },
+      });
+
+      return {
+        id: updated.id,
+        ownerClientId: updated.ownerClientId!,
+        owner: {
+          fullName: client.fullName,
+          nationalId: client.nationalId,
+        },
+        broughtByName: updated.broughtByName,
+        broughtByPhone: updated.broughtByPhone,
+        vehicleOwnerUnchanged,
+        updatedAt: updated.updatedAt,
+      };
+    });
   }
 
   async updateMileage(

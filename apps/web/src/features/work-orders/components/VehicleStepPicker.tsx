@@ -82,7 +82,10 @@ export function VehicleStepPicker({
                         {vehicle.brand} {vehicle.model} {vehicle.year}
                       </p>
                       <p className="text-sm text-slate-600">
-                        Propietario: {vehicle.currentOwner.fullName}
+                        Propietario:{' '}
+                        {vehicle.currentOwner
+                          ? vehicle.currentOwner.fullName
+                          : 'Sin propietario'}
                       </p>
                     </div>
                     <Button type="button" onClick={() => onSelect(vehicle)}>

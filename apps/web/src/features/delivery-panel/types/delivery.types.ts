@@ -11,10 +11,12 @@ export interface DeliveryReadyItem {
   workOrderId: string;
   licensePlate: string;
   vehicleLabel: string;
-  ownerName: string;
+  ownerName: string | null;
   ownerPhone: string | null;
   ownerPhoneDisplay: string | null;
   ownerEmail: string | null;
+  broughtByName: string | null;
+  broughtByPhone: string | null;
   totalAmount: number;
   checkedInAt: string;
   elapsedLabel: string;
@@ -50,7 +52,7 @@ export interface DeliveryReadyDetail extends DeliveryReadyItem {
     fullName: string;
     phone: string | null;
     email: string | null;
-  };
+  } | null;
   tasks: Array<{
     id: string;
     description: string;

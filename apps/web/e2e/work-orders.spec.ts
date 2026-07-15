@@ -184,6 +184,54 @@ test.describe('Work orders (admin)', () => {
       page.getByText(`Mecánico asignado: ${adminName} (Admin)`),
     ).toBeVisible();
   });
+  test('third-party intake shows bringer and allows link owner', async ({
+    page,
+  }) => {
+    const suffix = uniquePlateSuffix();
+    const plate = `TP${suffix}`;
+
+    await page.goto('/vehicles/new');
+    await page.getByLabel('Placa').fill(plate);
+    await page.getByLabel('Marca').fill('Nissan');
+    await page.getByLabel('Modelo').fill('Versa');
+    await page.getByLabel('Año').fill('2020');
+    await page.getByLabel('Registrar sin propietario').check();
+    await page.getByRole('button', { name: 'Registrar vehículo' }).click();
+    await expect(page.getByText('Vehículo registrado')).toBeVisible({
+      timeout: 10_000,
+    });
+
+    await page.getByRole('link', { name: 'Crear orden de trabajo' }).click();
+    await expect(page.getByText('Paso 2 de 2')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Sin propietario')).toBeVisible();
+    await expect(page.getByLabel('Traído por tercero')).toBeChecked();
+    await page.getByLabel('Nombre de quien lo trae').fill('Taller Externo SA');
+    await page.getByLabel('Teléfono (opcional)').fill('88887777');
+    await page.getByLabel('Motivo de ingreso').fill('Diagnóstico enviado por taller externo');
+    await page.getByLabel('Tarea 1').fill('Revisión motor');
+    await page.getByRole('button', { name: 'Crear orden de trabajo' }).click();
+
+    await expect(page).toHaveURL(/\/work-orders\/[0-9a-f-]+$/, { timeout: 10_000 });
+    await expect(page.getByText('Sin propietario')).toBeVisible();
+    await expect(page.getByText(/Traído por: Taller Externo SA/)).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Asociar propietario' }),
+    ).toBeVisible();
+
+    await page.getByRole('button', { name: 'Asociar propietario' }).click();
+    await page.getByRole('button', { name: 'Buscar propietario' }).click();
+    await page.getByLabel('Buscar cliente').fill('Juan');
+    await page.getByRole('button', { name: /Juan Pérez/ }).click();
+    await page.getByRole('button', { name: 'Asociar propietario' }).last().click();
+
+    await expect(page.getByText(/Propietario: Juan Pérez/)).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(page.getByText(/Traído por: Taller Externo SA/)).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Asociar propietario' }),
+    ).not.toBeVisible();
+  });
 });
 
 test.describe('Work orders (mechanic)', () => {

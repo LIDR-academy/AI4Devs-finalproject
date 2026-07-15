@@ -52,12 +52,13 @@ export function mapTechnicalNotesError(error: unknown): string {
 
 export function mapWorkOrdersError(error: unknown): string {
   if (error instanceof ApiError) {
-    if (error.statusCode === 409) {
-      const message = Array.isArray(error.messages)
-        ? error.messages.join(', ')
-        : error.messages;
+    const message = Array.isArray(error.messages)
+      ? error.messages.join(', ')
+      : error.messages;
+    const lower = message.toLowerCase();
 
-      if (message.toLowerCase().includes('task')) {
+    if (error.statusCode === 409) {
+      if (lower.includes('task')) {
         return 'La tarea ya está completada';
       }
 
@@ -73,14 +74,19 @@ export function mapWorkOrdersError(error: unknown): string {
     }
 
     if (error.statusCode === 400) {
-      return Array.isArray(error.messages)
-        ? error.messages.join(', ')
-        : error.messages;
+      if (lower.includes('broughtbyname is required')) {
+        return 'Indica el nombre de quien trae el vehículo';
+      }
+      if (lower.includes('broughtby fields are only valid')) {
+        return 'Quita los datos de tercero o cambia el modo de ingreso';
+      }
+      if (lower.includes('vehicle has no active owner')) {
+        return 'El vehículo no tiene dueño; usa “Traído por tercero”';
+      }
+      return message;
     }
 
-    return Array.isArray(error.messages)
-      ? error.messages.join(', ')
-      : error.messages;
+    return message;
   }
 
   return 'Error de conexión. Intenta de nuevo.';

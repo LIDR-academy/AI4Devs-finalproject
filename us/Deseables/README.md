@@ -14,6 +14,7 @@ This folder contains the high-priority V2 desirable features documented in `read
 | US-D6 | `US-D6-edicion-usuarios-taller.md` | Edición de Usuarios del Taller |
 | US-D7 | `US-D7-kilometraje-opcional-orden-trabajo.md` | Kilometraje Opcional en la Orden de Trabajo |
 | US-D8 | `US-D8-administradores-capacidad-mecanico.md` | Administradores con Capacidad de Mecánico |
+| US-D9 | `US-D9-ingreso-sin-propietario-mecanico-externo.md` | Ingreso sin Propietario (Vehículo Traído por Mecánico Externo) |
 
 ## Delivery branch (entrega 2)
 
@@ -33,6 +34,7 @@ For each story, implement **backend first**, then **frontend** (same branch):
 | US-D6 | `docs/plans/US-D6_backend.md` | `docs/plans/US-D6_frontend.md` |
 | US-D7 | `docs/plans/US-D7_backend.md` | `docs/plans/US-D7_frontend.md` |
 | US-D8 | `docs/plans/US-D8_backend.md` | `docs/plans/US-D8_frontend.md` |
+| US-D9 | `docs/plans/US-D9_backend.md` | `docs/plans/US-D9_frontend.md` |
 
 ## Suggested delivery order (business priority)
 
@@ -44,6 +46,7 @@ For each story, implement **backend first**, then **frontend** (same branch):
 6. **US-D2** — Builds on D1 + email provider.
 7. **US-D3** — Ownership historicity (model may already exist from V1).
 8. **US-D4** — Reminders panel + email (shares mail stack with D2).
+9. **US-D9** — Third-party intake without owner; nullable `ownerClientId` + `broughtBy*`; coordinates with D1/D3.
 
 ## Cross-cutting Dependencies
 
@@ -51,3 +54,4 @@ For each story, implement **backend first**, then **frontend** (same branch):
 - **Work order status (D1):** use `OWNER_CONTACTED` and contact audit fields reserved in US-008 / model.
 - **Mileage nullability (D7):** migration on `WorkOrder.mileage`.
 - **Admin-as-mechanic (D8):** `User.canActAsMechanic`; widen assignee eligibility beyond `role = MECHANIC`.
+- **Ownerless intake (D9):** `WorkOrder.ownerClientId` nullable; `broughtByName` / `broughtByPhone`; vehicle create without `clientId`; D1 gated when no owner; does not silently transfer ownership (D3).

@@ -23,6 +23,9 @@ export function mapDeliveryError(error: unknown): string {
     if (message === 'Work order is not ready for delivery') {
       return 'Esta orden no está lista para entrega';
     }
+    if (message === 'Work order has no owner to contact') {
+      return 'Esta orden no tiene propietario para contactar.';
+    }
     if (message === 'Work order is already delivered') {
       return 'Esta orden ya fue entregada';
     }

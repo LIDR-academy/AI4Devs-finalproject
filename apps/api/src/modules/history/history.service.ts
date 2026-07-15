@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   resolveCurrentOwner,
@@ -43,16 +39,9 @@ export class HistoryService {
       throw new NotFoundException('Vehicle not found');
     }
 
-    let currentOwner;
-    try {
-      currentOwner = resolveCurrentOwner(
-        vehicle as VehicleWithActiveOwnership,
-      );
-    } catch {
-      throw new InternalServerErrorException(
-        'Vehicle has no active ownership record',
-      );
-    }
+    const currentOwner = resolveCurrentOwner(
+      vehicle as VehicleWithActiveOwnership,
+    );
 
     const visits = vehicle.workOrders.map(mapWorkOrderToVisit);
 

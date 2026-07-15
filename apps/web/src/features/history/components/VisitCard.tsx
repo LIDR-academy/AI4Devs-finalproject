@@ -11,7 +11,7 @@ import { VisitTechnicalNotesReadOnly } from './VisitTechnicalNotesReadOnly';
 
 interface VisitCardProps {
   visit: VehicleVisit;
-  currentOwnerNationalId: string;
+  currentOwnerNationalId: string | null;
   expanded: boolean;
   onToggle: () => void;
 }
@@ -30,7 +30,9 @@ export function VisitCard({
   onToggle,
 }: VisitCardProps) {
   const ownerDiffers =
-    visit.ownerAtVisit.nationalId !== currentOwnerNationalId;
+    Boolean(visit.ownerAtVisit) &&
+    Boolean(currentOwnerNationalId) &&
+    visit.ownerAtVisit!.nationalId !== currentOwnerNationalId;
   const isInProgress = visit.status === 'EN_PROCESO';
 
   return (
@@ -63,8 +65,16 @@ export function VisitCard({
                 Propietario en la visita
               </p>
               <p className="mt-1 text-sm text-slate-800">
-                {visit.ownerAtVisit.fullName} ({visit.ownerAtVisit.nationalId})
+                {visit.ownerAtVisit
+                  ? `${visit.ownerAtVisit.fullName} (${visit.ownerAtVisit.nationalId})`
+                  : 'Sin propietario'}
               </p>
+              {visit.broughtByName && (
+                <p className="mt-1 text-sm text-slate-700">
+                  Traído por: {visit.broughtByName}
+                  {visit.broughtByPhone ? ` (${visit.broughtByPhone})` : ''}
+                </p>
+              )}
               {ownerDiffers && (
                 <p className="mt-2 text-xs text-amber-700">
                   Propietario al momento de la visita (puede diferir del

@@ -7,7 +7,7 @@ import {
 import { toStatusLabel } from './work-order-status-label';
 
 export type WorkOrderWithHistoryIncludes = WorkOrder & {
-  ownerClient: Client;
+  ownerClient: Client | null;
   tasks: WorkOrderTask[];
 };
 
@@ -37,11 +37,15 @@ export function mapWorkOrderToVisit(
     entryReason: workOrder.entryReason,
     mileage: workOrder.mileage,
     totalAmount: calculateTotalAmount(workOrder.tasks),
-    ownerAtVisit: {
-      id: workOrder.ownerClient.id,
-      fullName: workOrder.ownerClient.fullName,
-      nationalId: workOrder.ownerClient.nationalId,
-    },
+    ownerAtVisit: workOrder.ownerClient
+      ? {
+          id: workOrder.ownerClient.id,
+          fullName: workOrder.ownerClient.fullName,
+          nationalId: workOrder.ownerClient.nationalId,
+        }
+      : null,
+    broughtByName: workOrder.broughtByName,
+    broughtByPhone: workOrder.broughtByPhone,
     visitNotes: {
       visitDiagnosis: workOrder.visitDiagnosis,
       visitRepairSummary: workOrder.visitRepairSummary,

@@ -29,6 +29,6 @@ export class DeliveryReadyDetailDto extends DeliveryReadyItemDto {
   mileage!: number | null;
   vehicleId!: string;
   vehicle!: DeliveryReadyVehicleDto;
-  owner!: DeliveryReadyOwnerDto;
+  owner!: DeliveryReadyOwnerDto | null;
   tasks!: DeliveryReadyTaskDto[];
 }

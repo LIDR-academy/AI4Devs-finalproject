@@ -7,6 +7,6 @@ export class VehicleResponseDto {
   model!: string;
   year!: number;
   color!: string | null;
-  currentOwner!: CurrentOwnerDto;
+  currentOwner!: CurrentOwnerDto | null;
   createdAt!: Date;
 }

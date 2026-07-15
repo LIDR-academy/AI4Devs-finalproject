@@ -2,15 +2,18 @@ import { Type } from 'class-transformer';
 import {
   ArrayMinSize,
   IsArray,
+  IsEnum,
   IsInt,
   IsOptional,
   IsString,
   IsUUID,
   Length,
+  Matches,
   Min,
   ValidateIf,
   ValidateNested,
 } from 'class-validator';
+import { WorkOrderIntakeMode } from '../constants/intake-mode';
 import { InitialTaskDto } from './initial-task.dto';
 
 export class CreateWorkOrderDto {
@@ -31,6 +34,23 @@ export class CreateWorkOrderDto {
   @IsOptional()
   @IsUUID()
   assignedMechanicId?: string;
+
+  @IsOptional()
+  @IsEnum(WorkOrderIntakeMode)
+  intakeMode?: WorkOrderIntakeMode;
+
+  @IsOptional()
+  @IsString()
+  @Length(2, 150)
+  broughtByName?: string;
+
+  @IsOptional()
+  @ValidateIf(
+    (_object, value) => value !== null && value !== undefined && value !== '',
+  )
+  @IsString()
+  @Matches(/^[0-9]{8,15}$/)
+  broughtByPhone?: string | null;
 
   @IsArray()
   @ArrayMinSize(1)

@@ -21,6 +21,8 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { ActiveWorkOrderResponseDto } from './dto/active-work-order-response.dto';
 import { CreateWorkOrderDto } from './dto/create-work-order.dto';
+import { LinkWorkOrderOwnerDto } from './dto/link-work-order-owner.dto';
+import { LinkWorkOrderOwnerResponseDto } from './dto/link-work-order-owner-response.dto';
 import { MechanicSummaryDto } from './dto/mechanic-summary.dto';
 import {
   UpdateWorkOrderMileageDto,
@@ -61,6 +63,15 @@ export class WorkOrdersController {
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<WorkOrderDetailResponseDto> {
     return this.workOrdersService.findById(id);
+  }
+
+  @Patch(':id/link-owner')
+  @HttpCode(HttpStatus.OK)
+  linkOwner(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: LinkWorkOrderOwnerDto,
+  ): Promise<LinkWorkOrderOwnerResponseDto> {
+    return this.workOrdersService.linkOwner(id, dto);
   }
 
   @Patch(':id/mileage')

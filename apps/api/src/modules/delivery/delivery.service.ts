@@ -31,7 +31,7 @@ const DELIVERY_PANEL_STATUSES: WorkOrderStatus[] = [
 
 type ReadyWorkOrder = WorkOrder & {
   vehicle: Vehicle;
-  ownerClient: Client;
+  ownerClient: Client | null;
   tasks: WorkOrderTask[];
   ownerContactedBy: Pick<User, 'id' | 'fullName'> | null;
 };
@@ -99,6 +99,10 @@ export class DeliveryService {
 
     if (!workOrder) {
       throw new NotFoundException('Work order not found');
+    }
+
+    if (workOrder.ownerClientId === null) {
+      throw new ConflictException('Work order has no owner to contact');
     }
 
     if (workOrder.status === WorkOrderStatus.OWNER_CONTACTED) {
@@ -194,10 +198,12 @@ export class DeliveryService {
       workOrderId: workOrder.id,
       licensePlate: workOrder.vehicle.licensePlate,
       vehicleLabel: `${workOrder.vehicle.brand} ${workOrder.vehicle.model} ${workOrder.vehicle.year}`,
-      ownerName: workOrder.ownerClient.fullName,
-      ownerPhone: workOrder.ownerClient.phone,
-      ownerPhoneDisplay: formatPhoneDisplay(workOrder.ownerClient.phone),
-      ownerEmail: workOrder.ownerClient.email,
+      ownerName: workOrder.ownerClient?.fullName ?? null,
+      ownerPhone: workOrder.ownerClient?.phone ?? null,
+      ownerPhoneDisplay: formatPhoneDisplay(workOrder.ownerClient?.phone ?? null),
+      ownerEmail: workOrder.ownerClient?.email ?? null,
+      broughtByName: workOrder.broughtByName,
+      broughtByPhone: workOrder.broughtByPhone,
       totalAmount: calculateTotalAmount(workOrder.tasks),
       checkedInAt: workOrder.checkedInAt,
       elapsedLabel: formatElapsedLabel(workOrder.checkedInAt),
@@ -227,12 +233,14 @@ export class DeliveryService {
         model: workOrder.vehicle.model,
         year: workOrder.vehicle.year,
       },
-      owner: {
-        fullName: workOrder.ownerClient.fullName,
-        nationalId: workOrder.ownerClient.nationalId,
-        phone: workOrder.ownerClient.phone,
-        email: workOrder.ownerClient.email,
-      },
+      owner: workOrder.ownerClient
+        ? {
+            fullName: workOrder.ownerClient.fullName,
+            nationalId: workOrder.ownerClient.nationalId,
+            phone: workOrder.ownerClient.phone,
+            email: workOrder.ownerClient.email,
+          }
+        : null,
       tasks: workOrder.tasks.map((task) => ({
         id: task.id,
         description: task.description,

@@ -1,5 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
+/** DEV web defaults to 3010 — never use production :3000 unless PLAYWRIGHT_BASE_URL overrides. */
+const baseURL =
+  process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3010';
+
 export default defineConfig({
   testDir: './e2e',
   globalSetup: './e2e/global-setup.ts',
@@ -9,7 +13,7 @@ export default defineConfig({
   workers: 1,
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL,
     trace: 'on-first-retry',
   },
   projects: [
@@ -102,7 +106,7 @@ export default defineConfig({
   ],
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:3000',
+    url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },

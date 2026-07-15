@@ -33,6 +33,7 @@ export class CreateVehicleDto {
   @MaxLength(40)
   color?: string;
 
+  @IsOptional()
   @IsUUID()
-  clientId!: string;
+  clientId?: string;
 }

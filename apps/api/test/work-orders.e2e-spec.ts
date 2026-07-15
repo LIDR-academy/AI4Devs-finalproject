@@ -557,4 +557,57 @@ describe('WorkOrdersController (e2e)', () => {
       })
       .expect(401);
   });
+
+  it('US-D9 THIRD_PARTY intake without owner + link-owner', async () => {
+    const suffix = Date.now().toString().slice(-6);
+    const vehicleResponse = await request(app.getHttpServer())
+      .post('/api/vehicles')
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({
+        licensePlate: `D9${suffix}`,
+        brand: 'Nissan',
+        model: 'Versa',
+        year: 2018,
+      })
+      .expect(201);
+
+    const vehicleId = vehicleResponse.body.id as string;
+
+    const createResponse = await request(app.getHttpServer())
+      .post('/api/work-orders')
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({
+        vehicleId,
+        entryReason: 'External shop referral diagnosis',
+        intakeMode: 'THIRD_PARTY',
+        broughtByName: 'Carlos Jiménez',
+        broughtByPhone: '88881234',
+        initialTasks: [{ description: 'Scanner OBD' }],
+      })
+      .expect(201);
+
+    expect(createResponse.body.ownerClientId).toBeNull();
+    expect(createResponse.body.owner).toBeNull();
+    expect(createResponse.body.intakeMode).toBe('THIRD_PARTY');
+    expect(createResponse.body.broughtByName).toBe('Carlos Jiménez');
+
+    const historyResponse = await request(app.getHttpServer())
+      .get(`/api/vehicles/${vehicleId}/history`)
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .expect(200);
+
+    expect(historyResponse.body.currentOwner).toBeNull();
+    expect(historyResponse.body.visits[0].ownerAtVisit).toBeNull();
+    expect(historyResponse.body.visits[0].broughtByName).toBe('Carlos Jiménez');
+
+    const linkResponse = await request(app.getHttpServer())
+      .patch(`/api/work-orders/${createResponse.body.id}/link-owner`)
+      .set('Authorization', `Bearer ${adminAccessToken}`)
+      .send({ clientId: juanClientId })
+      .expect(200);
+
+    expect(linkResponse.body.ownerClientId).toBe(juanClientId);
+    expect(linkResponse.body.broughtByName).toBe('Carlos Jiménez');
+    expect(linkResponse.body.vehicleOwnerUnchanged).toBe(false);
+  });
 });

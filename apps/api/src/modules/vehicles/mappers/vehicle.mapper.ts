@@ -18,10 +18,10 @@ export function toCurrentOwner(
 
 export function resolveCurrentOwner(
   vehicle: VehicleWithActiveOwnership,
-): CurrentOwnerDto {
+): CurrentOwnerDto | null {
   const activeOwnership = vehicle.ownerships[0];
   if (!activeOwnership) {
-    throw new Error(`Vehicle ${vehicle.id} has no active ownership`);
+    return null;
   }
 
   return toCurrentOwner(activeOwnership);
@@ -29,7 +29,7 @@ export function resolveCurrentOwner(
 
 export function toVehicleResponse(
   vehicle: Vehicle,
-  currentOwner: CurrentOwnerDto,
+  currentOwner: CurrentOwnerDto | null,
 ): VehicleResponseDto {
   return {
     id: vehicle.id,

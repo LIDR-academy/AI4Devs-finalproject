@@ -32,7 +32,9 @@ export interface VehicleVisit {
   entryReason: string;
   mileage: number | null;
   totalAmount: number;
-  ownerAtVisit: OwnerAtVisit;
+  ownerAtVisit: OwnerAtVisit | null;
+  broughtByName: string | null;
+  broughtByPhone: string | null;
   visitNotes: VisitNotes;
   tasks: HistoryTask[];
 }
@@ -41,7 +43,7 @@ export interface VehicleHistoryResponse {
   vehicleId: string;
   licensePlate: string;
   vehicleLabel: string;
-  currentOwner: { id: string; fullName: string; nationalId: string };
+  currentOwner: { id: string; fullName: string; nationalId: string } | null;
   visits: VehicleVisit[];
   total: number;
 }

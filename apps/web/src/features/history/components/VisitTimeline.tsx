@@ -9,7 +9,7 @@ import { VisitCard } from './VisitCard';
 interface VisitTimelineProps {
   visits: VehicleVisit[];
   vehicleId: string;
-  currentOwnerNationalId: string;
+  currentOwnerNationalId: string | null;
   isLoading?: boolean;
 }
 

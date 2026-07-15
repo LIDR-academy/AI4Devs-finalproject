@@ -36,6 +36,8 @@ describe('DeliveryService', () => {
     ownerContactedAt: null,
     ownerContactedById: null,
     ownerContactedBy: null,
+    broughtByName: null,
+    broughtByPhone: null,
     visitDiagnosis: null,
     visitRepairSummary: null,
     visitPartsUsed: null,
@@ -205,6 +207,24 @@ describe('DeliveryService', () => {
       expect(result.items[0].ownerPhoneDisplay).toBeNull();
     });
 
+    it('maps ownerless work order with broughtBy fields', async () => {
+      prisma.workOrder.findMany.mockResolvedValue([
+        {
+          ...readyWorkOrder,
+          ownerClientId: null,
+          ownerClient: null,
+          broughtByName: 'External Tech',
+          broughtByPhone: '88881234',
+        },
+      ]);
+
+      const result = await service.listReady({});
+
+      expect(result.items[0].ownerName).toBeNull();
+      expect(result.items[0].broughtByName).toBe('External Tech');
+      expect(result.items[0].broughtByPhone).toBe('88881234');
+    });
+
     it('calculates totalAmount from completed task costs', async () => {
       prisma.workOrder.findMany.mockResolvedValue([readyWorkOrder]);
 
@@ -259,7 +279,7 @@ describe('DeliveryService', () => {
       expect(result.tasks).toHaveLength(2);
       expect(result.totalAmount).toBe(75);
       expect(result.vehicle.licensePlate).toBe('ABC123');
-      expect(result.owner.fullName).toBe('Juan Pérez');
+      expect(result.owner?.fullName).toBe('Juan Pérez');
     });
 
     it('returns full detail for OWNER_CONTACTED work order', async () => {
@@ -302,6 +322,7 @@ describe('DeliveryService', () => {
       prisma.workOrder.findUnique.mockResolvedValue({
         id: 'wo-ready-1',
         status: WorkOrderStatus.LISTA_PARA_ENTREGA,
+        ownerClientId: 'client-1',
       });
       prisma.workOrder.update.mockResolvedValue({
         id: 'wo-ready-1',
@@ -331,6 +352,21 @@ describe('DeliveryService', () => {
         ownerContactedAt: contactedAt,
         ownerContactedBy: { id: 'admin-1', fullName: 'Workshop Admin' },
       });
+    });
+
+    it('rejects contact when work order has no owner', async () => {
+      prisma.workOrder.findUnique.mockResolvedValue({
+        id: 'wo-ready-1',
+        status: WorkOrderStatus.LISTA_PARA_ENTREGA,
+        ownerClientId: null,
+      });
+
+      await expect(
+        service.markContacted('wo-ready-1', 'admin-1'),
+      ).rejects.toThrow(
+        new ConflictException('Work order has no owner to contact'),
+      );
+      expect(prisma.workOrder.update).not.toHaveBeenCalled();
     });
 
     it('throws ConflictException when already OWNER_CONTACTED', async () => {

@@ -189,7 +189,7 @@ describe('HistoryService', () => {
 
       const result = await service.getVehicleHistory('vehicle-1');
 
-      expect(result.currentOwner.id).toBe(mariaClient.id);
+      expect(result.currentOwner?.id).toBe(mariaClient.id);
       expect(result.visits[0].ownerAtVisit).toEqual({
         id: juanClient.id,
         fullName: juanClient.fullName,
@@ -262,7 +262,7 @@ describe('HistoryService', () => {
           total: 2,
         }),
       );
-      expect(result.currentOwner.id).toBe(mariaClient.id);
+      expect(result.currentOwner?.id).toBe(mariaClient.id);
     });
   });
 

@@ -34,7 +34,9 @@ export class VehicleHistoryVisitDto {
   entryReason!: string;
   mileage!: number | null;
   totalAmount!: number;
-  ownerAtVisit!: OwnerAtVisitDto;
+  ownerAtVisit!: OwnerAtVisitDto | null;
+  broughtByName!: string | null;
+  broughtByPhone!: string | null;
   visitNotes!: VisitNotesDto;
   tasks!: HistoryTaskDto[];
 }
