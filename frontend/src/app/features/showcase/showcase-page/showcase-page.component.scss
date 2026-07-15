@@ -58,6 +58,31 @@
   }
 }
 
+/* ── CTA bar ─────────────────────────────────── */
+.showcase-page__cta-bar {
+  text-align: center;
+  padding: 32px 16px 0;
+}
+
+.showcase-page__cta-link {
+  display: inline-block;
+  padding: 12px 32px;
+  border: 1px solid var(--ink-accent);
+  border-radius: 999px;
+  color: var(--ink-accent);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.925rem;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  text-decoration: none;
+  transition: background 0.2s ease, color 0.2s ease;
+
+  &:hover {
+    background: var(--ink-accent);
+    color: #111;
+  }
+}
+
 /* ── Sections ────────────────────────────────── */
 .showcase-page__sections {
   max-width: 1200px;

@@ -1,11 +1,12 @@
 import { Component, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { ArtistCardComponent } from '../artist-card/artist-card.component';
 import { ShowcaseSection } from '../../../core/models/showcase.models';
 
 @Component({
   selector: 'app-showcase-section',
   standalone: true,
-  imports: [ArtistCardComponent],
+  imports: [ArtistCardComponent, RouterLink],
   templateUrl: './showcase-section.component.html',
   styleUrl: './showcase-section.component.scss'
 })

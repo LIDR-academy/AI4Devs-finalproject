@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { ShowcaseSectionComponent } from '../../../shared/components/showcase-section/showcase-section.component';
 import { ShowcaseService } from '../showcase.service';
 import { ShowcaseSection } from '../../../core/models/showcase.models';
@@ -6,7 +7,7 @@ import { ShowcaseSection } from '../../../core/models/showcase.models';
 @Component({
   selector: 'app-showcase-page',
   standalone: true,
-  imports: [ShowcaseSectionComponent],
+  imports: [ShowcaseSectionComponent, RouterLink],
   templateUrl: './showcase-page.component.html',
   styleUrl: './showcase-page.component.scss'
 })
