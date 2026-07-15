@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Aura.Core.Interfaces.Services;
@@ -46,5 +48,26 @@ public class DragonflyQueueService : IQueueService
     {
         var db = _connectionMultiplexer.GetDatabase();
         return await db.ListLengthAsync(queueName);
+    }
+
+    public async Task ScheduleMessageAsync(string queueName, string message, DateTimeOffset visibilityTime, CancellationToken cancellationToken = default)
+    {
+        var db = _connectionMultiplexer.GetDatabase();
+        double score = visibilityTime.ToUnixTimeMilliseconds();
+        await db.SortedSetAddAsync(queueName, message, score);
+    }
+
+    public async Task<IReadOnlyList<string>> GetReadyScheduledMessagesAsync(string queueName, CancellationToken cancellationToken = default)
+    {
+        var db = _connectionMultiplexer.GetDatabase();
+        double currentScore = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        
+        var items = await db.SortedSetRangeByScoreAsync(queueName, double.NegativeInfinity, currentScore);
+        if (items.Length > 0)
+        {
+            await db.SortedSetRemoveAsync(queueName, items);
+        }
+
+        return items.Select(x => x.ToString()).ToList();
     }
 }

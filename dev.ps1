@@ -41,6 +41,17 @@ if (-not $FrontendOnly) {
     Write-Host "Email Worker starting (PID: $($emailWorkerJob.Id))" -ForegroundColor Green
 }
 
+# Start WhatsApp Worker
+if (-not $FrontendOnly) {
+    Write-Host "Starting WhatsApp Worker..." -ForegroundColor Yellow
+    $whatsAppWorkerJob = Start-Process -FilePath "dotnet" `
+        -ArgumentList "run", "--project", "backend/workers/Aura.Workers.WhatsApp" `
+        -PassThru `
+        -RedirectStandardOutput ".dev-whatsapp-worker.log" `
+        -RedirectStandardError ".dev-whatsapp-worker-err.log"
+    Write-Host "WhatsApp Worker starting (PID: $($whatsAppWorkerJob.Id))" -ForegroundColor Green
+}
+
 # Start frontend
 if (-not $BackendOnly) {
     Write-Host "Starting frontend..." -ForegroundColor Yellow
@@ -61,6 +72,7 @@ Write-Host "Useful commands:" -ForegroundColor DarkGray
 Write-Host "  docker compose logs -f           # Watch infra logs" -ForegroundColor DarkGray
 Write-Host "  Get-Content .dev-backend.log -Wait  # Backend log" -ForegroundColor DarkGray
 Write-Host "  Get-Content .dev-email-worker.log -Wait # Email Worker log" -ForegroundColor DarkGray
+Write-Host "  Get-Content .dev-whatsapp-worker.log -Wait # WhatsApp Worker log" -ForegroundColor DarkGray
 Write-Host "  Get-Content .dev-frontend.log -Wait # Frontend log" -ForegroundColor DarkGray
 Write-Host ""
 Write-Host "Press Ctrl+C to stop all services" -ForegroundColor Yellow
@@ -81,6 +93,11 @@ try {
     if ($emailWorkerJob -and -not $emailWorkerJob.HasExited) {
         Stop-Process -Id $emailWorkerJob.Id -Force
         Write-Host "Stopped email worker (PID: $($emailWorkerJob.Id))" -ForegroundColor DarkGray
+    }
+
+    if ($whatsAppWorkerJob -and -not $whatsAppWorkerJob.HasExited) {
+        Stop-Process -Id $whatsAppWorkerJob.Id -Force
+        Write-Host "Stopped whatsapp worker (PID: $($whatsAppWorkerJob.Id))" -ForegroundColor DarkGray
     }
     
     if ($frontendJob -and -not $frontendJob.HasExited) {
