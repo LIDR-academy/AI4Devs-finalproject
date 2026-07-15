@@ -6,10 +6,18 @@
   --mdc-checkbox-selected-icon-color: var(--ink-accent);
   --mdc-checkbox-selected-pressed-icon-color: var(--ink-accent);
   --mdc-checkbox-unselected-icon-color: var(--ink-text-secondary);
+  --mdc-checkbox-label-text-color: var(--ink-text-primary);
+  --mat-checkbox-label-text-color: var(--ink-text-primary);
+  --mdc-checkbox-selected-focus-state-layer-color: var(--ink-accent);
+  --mdc-checkbox-selected-hover-state-layer-color: var(--ink-accent);
   --mdc-radio-selected-icon-color: var(--ink-accent);
   --mdc-radio-selected-hover-icon-color: var(--ink-accent);
   --mdc-radio-selected-focus-icon-color: var(--ink-accent);
   --mdc-radio-unselected-icon-color: var(--ink-text-secondary);
+  --mdc-radio-label-text-color: var(--ink-text-primary);
+  --mat-radio-label-text-color: var(--ink-text-primary);
+  --mdc-radio-selected-focus-state-layer-color: var(--ink-accent);
+  --mdc-radio-selected-hover-state-layer-color: var(--ink-accent);
   --mdc-switch-selected-handle-color: var(--ink-accent);
   --mdc-switch-selected-focus-handle-color: var(--ink-accent);
   --mdc-switch-selected-hover-handle-color: var(--ink-accent-hover);
@@ -18,6 +26,8 @@
   --mdc-switch-selected-focus-track-color: var(--ink-border-accent);
   --mdc-switch-selected-hover-track-color: var(--ink-border-accent);
   --mdc-switch-selected-pressed-track-color: var(--ink-border-accent);
+  --mdc-slide-toggle-label-text-color: var(--ink-text-primary);
+  --mat-slide-toggle-label-text-color: var(--ink-text-primary);
 }
 
 .filter-panel {
@@ -154,6 +164,7 @@
       width: 1.1rem;
       height: 1.1rem;
       font-size: 1.1rem;
+      line-height: 1.1rem;
     }
 
     &:hover {
@@ -170,6 +181,10 @@
 
   &__radio-group {
     color: var(--ink-text-primary);
+
+    .mat-mdc-radio-button {
+      color: var(--ink-text-primary);
+    }
   }
 
   &__clear {

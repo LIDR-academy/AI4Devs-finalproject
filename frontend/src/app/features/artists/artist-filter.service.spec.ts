@@ -51,9 +51,9 @@ describe('ArtistFilterService', () => {
   it('updateFilter changes filters and calls loadArtists', () => {
     const loadArtistsSpy = spyOn(service, 'loadArtists');
 
-    service.updateFilter('style', 'blackwork');
+    service.updateFilter('styles', ['blackwork']);
 
-    expect(service.currentFilters().style).toBe('blackwork');
+    expect(service.currentFilters().styles).toEqual(['blackwork']);
     expect(service.currentFilters().page).toBe(1);
     expect(loadArtistsSpy).toHaveBeenCalled();
   });
@@ -71,7 +71,7 @@ describe('ArtistFilterService', () => {
 
   it('clearFilters resets to defaults', () => {
     spyOn(service, 'loadArtists');
-    service.updateFilter('style', 'realismo');
+    service.updateFilter('styles', ['realismo']);
 
     service.clearFilters();
 

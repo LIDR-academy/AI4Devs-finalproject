@@ -53,8 +53,8 @@ export class ArtistFilterService {
       pageSize: this.parseNumber(queryParams['pageSize']) ?? DEFAULT_FILTERS.pageSize
     };
 
-    if (typeof queryParams['style'] === 'string' && queryParams['style'].trim().length > 0) {
-      parsedFilters.style = queryParams['style'].trim();
+    if (typeof queryParams['styles'] === 'string' && queryParams['styles'].trim().length > 0) {
+      parsedFilters.styles = queryParams['styles'].split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0);
     }
 
     const minPrice = this.parseNumber(queryParams['minPrice']);
@@ -111,8 +111,10 @@ export class ArtistFilterService {
     const filters = this.filters();
     let params = new HttpParams();
 
-    if (filters.style) {
-      params = params.set('style', filters.style);
+    if (filters.styles && filters.styles.length > 0) {
+      filters.styles.forEach((s) => {
+        params = params.append('styles', s);
+      });
     }
 
     if (filters.minPrice != null && filters.minPrice > 0) {

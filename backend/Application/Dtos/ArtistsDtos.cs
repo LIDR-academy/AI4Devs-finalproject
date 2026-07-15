@@ -2,7 +2,7 @@ namespace InkLink.Api.Application.Dtos;
 
 public record ArtistFilterRequest
 {
-    public string? Style { get; init; }
+    public string[]? Styles { get; init; }
     public int? MinPrice { get; init; }
     public int? MaxPrice { get; init; }
     public decimal? MinRating { get; init; }

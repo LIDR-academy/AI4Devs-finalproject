@@ -47,9 +47,12 @@ export class FilterPanelComponent {
       .subscribe(({ min, max }) => this.filterService.updatePriceRange(min, max));
   }
 
-  toggleStyle(style: string, event: MatCheckboxChange): void {
-    const nextStyle = event.checked ? style : undefined;
-    this.filterService.updateFilter('style', nextStyle);
+  toggleStyle(slug: string, event: MatCheckboxChange): void {
+    const current = this.filters().styles ?? [];
+    const next = event.checked
+      ? [...current, slug]
+      : current.filter((s) => s !== slug);
+    this.filterService.updateFilter('styles', next.length > 0 ? next : undefined);
   }
 
   onMinPriceInput(value: string): void {

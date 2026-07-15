@@ -8,14 +8,14 @@
   <section class="filter-panel__section">
     <div class="filter-panel__section-head">
       <h3>Estilos</h3>
-      <span>Selecciona un estilo</span>
+      <span>Selecciona uno o más</span>
     </div>
 
     <div class="filter-panel__styles">
       @for (style of tattooStyles; track style.slug) {
         <mat-checkbox
           class="filter-panel__checkbox"
-          [checked]="filters().style === style.slug"
+          [checked]="filters().styles?.includes(style.slug) ?? false"
           (change)="toggleStyle(style.slug, $event)"
         >
           {{ style.name }}
@@ -69,7 +69,6 @@
           (click)="setMinRating(rating)"
         >
           <mat-icon>star</mat-icon>
-          <span>{{ rating }}</span>
         </button>
       }
     </div>

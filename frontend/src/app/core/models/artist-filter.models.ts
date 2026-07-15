@@ -1,7 +1,7 @@
 import { ArtistCard } from './showcase.models';
 
 export interface ArtistFilters {
-  style?: string;
+  styles?: string[];
   minPrice?: number;
   maxPrice?: number;
   minRating?: number;

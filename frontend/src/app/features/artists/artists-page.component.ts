@@ -76,8 +76,8 @@ export class ArtistsPageComponent implements OnInit {
   private buildQueryParams(filters: ArtistFilters): Params {
     const queryParams: Params = {};
 
-    if (filters.style) {
-      queryParams['style'] = filters.style;
+    if (filters.styles && filters.styles.length > 0) {
+      queryParams['styles'] = filters.styles.join(',');
     }
 
     if (filters.minPrice != null && filters.minPrice > 0) {

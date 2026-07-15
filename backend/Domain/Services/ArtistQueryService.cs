@@ -26,10 +26,10 @@ public class ArtistQueryService
             .Where(artist => artist.IsPublished)
             .AsNoTracking();
 
-        if (!string.IsNullOrWhiteSpace(request.Style))
+        if (request.Styles is { Length: > 0 })
         {
-            var styleSlug = request.Style.Trim().ToLowerInvariant();
-            query = query.Where(artist => artist.ArtistStyles.Any(style => style.Style.Slug == styleSlug));
+            var slugs = request.Styles.Select(s => s.Trim().ToLowerInvariant()).ToArray();
+            query = query.Where(artist => artist.ArtistStyles.Any(s => slugs.Contains(s.Style.Slug)));
         }
 
         if (request.MinPrice.HasValue)

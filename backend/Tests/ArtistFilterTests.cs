@@ -56,12 +56,27 @@ public class ArtistFilterTests : IAsyncLifetime
         await using var factory = CreateFactory();
         var client = factory.CreateClient();
 
-        var payload = await client.GetFromJsonAsync<ArtistListResponse>("/api/artists?style=blackwork");
+        var payload = await client.GetFromJsonAsync<ArtistListResponse>("/api/artists?styles=blackwork");
 
         Assert.NotNull(payload);
         Assert.Equal(3, payload!.Total);
         Assert.Equal(
             ["alice-black", "diego-studio", "elena-budget"],
+            payload.Data.Select(a => a.Slug).ToArray());
+    }
+
+    [Fact]
+    public async Task MultipleStyleFilters_Returns_Artists_With_Any_Of_The_Styles()
+    {
+        await using var factory = CreateFactory();
+        var client = factory.CreateClient();
+
+        var payload = await client.GetFromJsonAsync<ArtistListResponse>("/api/artists?styles=fine-line&styles=realismo");
+
+        Assert.NotNull(payload);
+        Assert.Equal(3, payload!.Total);
+        Assert.Equal(
+            ["bruno-real", "carla-fine", "diego-studio"],
             payload.Data.Select(a => a.Slug).ToArray());
     }
 
@@ -130,7 +145,7 @@ public class ArtistFilterTests : IAsyncLifetime
         var client = factory.CreateClient();
 
         var payload = await client.GetFromJsonAsync<ArtistListResponse>(
-            "/api/artists?style=blackwork&certified=true&minRating=4.5");
+            "/api/artists?styles=blackwork&certified=true&minRating=4.5");
 
         Assert.NotNull(payload);
         Assert.Single(payload!.Data);
