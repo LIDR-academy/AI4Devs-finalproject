@@ -5,6 +5,7 @@ metadata:
   labels:
     app: aura-worker-whatsapp
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: aura-worker-whatsapp

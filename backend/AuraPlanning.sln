@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aura.Infrastructure.Tests",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aura.Workers.Email.Tests", "tests\Aura.Workers.Email.Tests\Aura.Workers.Email.Tests.csproj", "{9A02845A-BF7A-4966-9413-9CA9F1F7F40A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aura.Workers.WhatsApp.Tests", "tests\Aura.Workers.WhatsApp.Tests\Aura.Workers.WhatsApp.Tests.csproj", "{1FC2DFDB-86DF-4C98-8814-77012295B47E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -145,6 +147,18 @@ Global
 		{9A02845A-BF7A-4966-9413-9CA9F1F7F40A}.Release|x64.Build.0 = Release|Any CPU
 		{9A02845A-BF7A-4966-9413-9CA9F1F7F40A}.Release|x86.ActiveCfg = Release|Any CPU
 		{9A02845A-BF7A-4966-9413-9CA9F1F7F40A}.Release|x86.Build.0 = Release|Any CPU
+		{1FC2DFDB-86DF-4C98-8814-77012295B47E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1FC2DFDB-86DF-4C98-8814-77012295B47E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1FC2DFDB-86DF-4C98-8814-77012295B47E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1FC2DFDB-86DF-4C98-8814-77012295B47E}.Debug|x64.Build.0 = Debug|Any CPU
+		{1FC2DFDB-86DF-4C98-8814-77012295B47E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1FC2DFDB-86DF-4C98-8814-77012295B47E}.Debug|x86.Build.0 = Debug|Any CPU
+		{1FC2DFDB-86DF-4C98-8814-77012295B47E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1FC2DFDB-86DF-4C98-8814-77012295B47E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1FC2DFDB-86DF-4C98-8814-77012295B47E}.Release|x64.ActiveCfg = Release|Any CPU
+		{1FC2DFDB-86DF-4C98-8814-77012295B47E}.Release|x64.Build.0 = Release|Any CPU
+		{1FC2DFDB-86DF-4C98-8814-77012295B47E}.Release|x86.ActiveCfg = Release|Any CPU
+		{1FC2DFDB-86DF-4C98-8814-77012295B47E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -159,5 +173,6 @@ Global
 		{094C34FA-E7C2-46C1-A278-1F0E802C2224} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{7A9DE81B-4E25-48C4-9251-E83D44E4884B} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{9A02845A-BF7A-4966-9413-9CA9F1F7F40A} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{1FC2DFDB-86DF-4C98-8814-77012295B47E} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal
