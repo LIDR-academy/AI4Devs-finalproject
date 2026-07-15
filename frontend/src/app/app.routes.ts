@@ -11,6 +11,11 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'artistas',
+    loadComponent: () =>
+      import('./features/artists/artists-page.component').then((m) => m.ArtistsPageComponent)
+  },
+  {
     path: 'login',
     loadComponent: () =>
       import('./features/auth/login/login.component').then((m) => m.LoginComponent)
