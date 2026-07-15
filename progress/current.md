@@ -1,7 +1,7 @@
 # Current session
 
-**Active feature:** lesson-player
-**Folder:** docs/features/lesson-player/
-**Phase:** pr_ready
-**Status:** DoD PASS. Docs compacted, risks landed, story moved to done. Human opens/merges PR on feat/lesson-player.
-**Notes:** Worktree `.worktrees/lesson-player`. Models: opus=spec; grok=build/review/mutation/dod.
+**Active feature:** navigation-menus
+**Folder:** docs/features/navigation-menus/
+**Phase:** pending
+**Status:** Boot — story moved to in-progress; awaiting spec_partner.
+**Notes:** Worktree `.worktrees/navigation-menus` from feature-entrega2-HernanLaura. Models: grok for ALL agents (user override).
