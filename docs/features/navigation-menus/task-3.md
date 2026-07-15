@@ -3,7 +3,7 @@ id: task-3
 title: Initials avatar + session-identity helpers
 slice: 2
 scenarios: [s14]
-status: todo
+status: done
 paths:
   [
     libs/components/src/atoms/initials-avatar/,

@@ -33,3 +33,4 @@ export * from './components/slide-view/slide-view';
 export type * from './components/slide-view/slide-view.types';
 export * from './fixtures/lesson-results-stub';
 export * from './grading/is-open-ended-slide-valid';
+export * from './helpers/session-identity.helpers';

@@ -3,7 +3,7 @@ id: task-4
 title: AccountMenu organism + open/dismiss a11y
 slice: 2
 scenarios: [s5, s6, s7, s8, s10, s18]
-status: todo
+status: done
 paths:
   [
     libs/components/src/organisms/account-menu/,

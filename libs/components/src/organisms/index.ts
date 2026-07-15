@@ -1,3 +1,5 @@
+export * from './account-menu/account-menu';
+export type * from './account-menu/account-menu.types';
 export * from './api-key-form/api-key-form';
 export type * from './api-key-form/api-key-form.types';
 export * from './api-key-required-notice/api-key-required-notice';
